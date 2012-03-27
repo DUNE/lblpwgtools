@@ -1,0 +1,198 @@
+dnl GLoBES -- General LOng Baseline Experiment Simulator
+dnl (C) 2002 - 2007,  The GLoBES Team
+dnl
+dnl GLoBES is mainly intended for academic purposes. Proper
+dnl credit must be given if you use GLoBES or parts of it. Please
+dnl read the section 'Credit' in the README file.
+dnl
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
+dnl
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+dnl
+dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.59)
+
+dnl Versioning of GLoBES
+dnl last digit: increment whenever code has changed
+dnl middle digit: increment when features have been introduced/removed
+dnl first digit: major improvements/rewrites
+dnl In contrast to the result of autoupdate I had to swap the
+dnl the AC_INIT and AC_CONFIG_SRCDIR
+AC_INIT([GLoBES],[3.1.11],[globes@mpi-hd.mpg.de],[globes])
+
+AC_CONFIG_SRCDIR([source/glb_wrapper.c])
+AC_CONFIG_MACRO_DIR([m4])
+
+dnl Tellin autoconf we are going to use automake
+AM_INIT_AUTOMAKE
+AC_CONFIG_HEADERS([config.h:config-h.in])
+dnl To avoid problems due to clock skew and/or lacking autotools on
+dnl user system
+AM_MAINTAINER_MODE
+AM_SILENT_RULES([yes])  # Less verbose output from make
+
+dnl Versioning of libglobes.so
+dnl code changed: c:r+1:a
+dnl API changed: c+1:0:a
+dnl -> API extended: c:0:a+1
+dnl -> API shrunken: c:0:0
+GLBLIBVERSION="9:0:1"
+
+dnl From here no editing !
+AC_SUBST(GLBLIBVERSION)
+AC_DEFINE_UNQUOTED(GLB_LIBVERSION,"$GLBLIBVERSION",[The version of libglb in libtool format c:r:a])
+
+dnl This part serves to convert Makefile.in in examples to a 
+dnl Makefile which works automagically
+
+dnl list of standard targets (the space before the closing quotes is important)
+allowed="/usr /usr/local "
+dnl assume there is a prefix which is not in `allowed'
+standard="no"
+dnl no prefix given
+if test $prefix = NONE; then
+  standard="yes"	
+fi
+dnl prefix is one of the standard targets where only root can install to
+for allow in echo $allowed
+ do
+	if test $prefix = $allow; then
+ 		standard="yes"	
+	fi
+ done
+dnl Output our knowledge to the Makefiles
+
+dnl Checks for programs.
+dnl AC_PROG_AWK
+AC_PROG_CC
+gl_EARLY
+AC_PROG_CC_C99
+if [[ "$ac_cv_prog_cc_stdc" = "no" ]]; then
+  AC_MSG_ERROR([C compiler does not support C99 (required).]);
+fi
+dnl AC_PROG_CXX
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_YACC
+AC_PROG_LEX
+
+dnl Configure libtool
+AC_PROG_LIBTOOL
+
+dnl gnulib support
+dnl FIXME: for some reason this macro has to be called before any
+dnl of the AC_CHECK_LIB stuff below
+gl_INIT
+
+dnl we need libtool first
+AC_PROG_SWIG
+AC_SWIG_PERL
+
+dnl Checks for libraries.
+AC_CHECK_LIB(m,main,[],AC_MSG_ERROR([libm not found]))
+
+dnl check for GSL
+AM_PATH_GSL
+LIBS="$GSL_LIBS $LIBS"
+GSLINC="$GSL_CFLAGS"
+AC_SUBST(GSLINC)
+
+# JK, May 20, 2010: The following has been making trouble on Macs, since ./configure
+# doesn't understand the --disable-rpath option any more after we switched
+# to the new autotools. If the linker has a way of putting hardcoded
+# library search paths into the binary, it should stored in the variable
+# hardcode_libdir_flag_spec - at least that's where libtool looks for it.
+# Therefore, we are now using $hardcode_libdir_flag_spec
+## handling rpath for Mac OS in the globes-config script
+# if test "$enable_rpath" = "no" ; then
+#	linkerflag=""
+#    else
+#	linkerflag='-Wl,--rpath -Wl,$libdir'	
+#    fi
+# AC_SUBST(linkerflag)
+
+AC_SUBST(hardcode_libdir_flag_spec)
+AC_SUBST(wl)
+
+
+dnl check for the headers of GSL (RedHat!)
+TMPCFLAGS=$CFLAGS
+TMPCPPFLAGS=$CPPFLAGS
+CFLAGS="$GSL_CFLAGS $CFLAGS"
+CPPFLAGS="$GSL_CFLAGS $CPPFLAGS"
+AC_CHECK_HEADERS([gsl/gsl_math.h gsl/gsl_sf_erf.h gsl/gsl_errno.h],[],[AC_MSG_WARN([GSL headers are missing])],[])
+CFLAGS=$TMPCFLAGS
+CPPFLAGS=$TMPCPPFLAGS
+
+dnl Checks for header files.
+AC_HEADER_STDC
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS([strdup mkstemp tempnam])
+AC_FUNC_ALLOCA
+LTALLOCA=`echo "$ALLOCA" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
+AC_SUBST(LTALLOCA)
+gl_ARGP
+dnl AM_XGETTEXT_OPTION([--flag=argp_error:2:c-format --flag=argp_failure:4:c-format])
+
+
+dnl Experimental rpm-builing support
+RPM_RELEASE=0
+AC_SUBST(RPM_RELEASE)
+dnl
+AM_RPM_INIT
+dnl   dnl Enable or disable the rpm making rules in Makefile.am
+AM_CONDITIONAL(MAKE_RPMS, test x$make_rpms = xtrue)
+AC_CONFIG_FILES(globes.spec)
+
+
+
+AC_CONFIG_FILES([Makefile lib/Makefile \
+ globes/Makefile globes/example.pl source/Makefile\
+ examples/Makefile\
+ data/Makefile  globes-config doc/Makefile])
+
+
+AC_OUTPUT
+dnl getting the permissions right
+chmod u+x globes/example.pl
+
+dnl pretty printing
+stars=""
+emtpy=""
+while [[  ${#stars} != ${#prefix} ]]
+do
+	stars="${stars}*"
+	empty="${empty} "
+done
+
+dnl Remind the user of things he might need ;-)
+if test $standard = "yes" ; then
+ echo "********************************************"
+ echo "*          After 'make install':           *"
+ echo "* Do not forget to run 'ldconfig' as root! *"
+ echo "********************************************"	
+else
+ echo "***********************${stars}********************" 
+ echo "*              After 'make install':   ${empty}   *"
+ echo "* Do not forget to add ${prefix}/bin to your path! *"
+ echo "***********************${stars}********************"
+fi
+
+
+

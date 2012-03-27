@@ -1,0 +1,262 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2004,2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Huber:2002mx,
+ #*     author    = "Huber, Patrick and Lindner, Manfred and Winter, Walter",
+ #*     title     = "Superbeams versus neutrino factories",
+ #*     journal   = "Nucl. Phys.",
+ #*     volume    = "B645",
+ #*     year      = "2002",
+ #*     pages     = "3-48",
+ #*     eprint    = "hep-ph/0204352",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0204352;%%"
+ #* }
+ #
+ #* %The experiment in this file tries to approximate as closely as possible
+ #* %the following LOI
+ #* Article{Itow:2001ee,
+ #*    author    = "Itow, Y. and others",
+ #*    title     = "The JHF-Kamioka neutrino project",
+ #*    year      = "2001",
+ #*    eprint    = "hep-ex/0106019",
+ #*    SLACcitation  = "%%CITATION = HEP-EX 0106019;%%"
+ #* }
+ *
+ * Systematics similar to
+ * 
+ #* @Article{Ishitsuka:2005qi,
+ #*    author    = "Ishitsuka, Masaki and Kajita, Takaaki and Minakata,
+ #*                 Hisakazu and Nunokawa, Hiroshi",
+ #*    title     = "Resolving neutrino mass hierarchy and CP degeneracy by two
+ #*                 identical  detectors with different baselines",
+ #*    journal   = "Phys. Rev.",
+ #*    volume    = "D72",
+ #*    year      = "2005",
+ #*    pages     = "033003",
+ #*    eprint    = "hep-ph/0504026",
+ #*    SLACcitation  = "%%CITATION = HEP-PH 0504026;%%"
+ #* } *
+ * The initial file was prepared by Patrick Huber and Walter Winter. 
+ *
+ *  Last Update: 12/01/07 
+ *
+ */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#JHFplus)<
+	@flux_file="JHFplus.dat"
+	@time = 2	/* years */
+	@power = 0.77 	/* MW (proton intensity) */
+	@norm = 6.93185
+>
+
+nuflux(#JHFminus)<
+	@flux_file="JHFminus.dat"
+	@time = 6	/* years */
+	@power = 0.77 	/* MW (proton intensity) */
+	@norm = 6.93185
+>
+
+
+/* ####### Detector settings ###### */
+
+$target_mass = 	22.5	/* kt (fiducial mass)*/
+
+
+/* ####### Energy window ####### */
+
+$bins = 	20
+$emin = 	0.4	/* GeV */
+$emax = 	1.2	/* GeV */
+
+
+/* ####### Baseline setting ####### */
+
+$profiletype =	 	1 
+$baseline =		295.0	/* km */
+
+
+/* ####### Technical information ####### */
+
+$filter_state = 0 
+$filter_value = 1000000 
+
+
+/* ####### Energy resolution ####### */
+
+energy(#ERES)<
+	@type = 1
+	@sigma_e = {0.0,0.0,0.085}
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+
+cross(#NC)<
+	@cross_file = "XNC.dat"
+>
+
+cross(#QE)<
+	@cross_file = "XQE.dat"
+>
+
+/* ####### Channel definitions ####### */
+
+/* 0 */ 
+channel(#nu_mu_disappearance_CC)<
+	@channel = 	#JHFplus:	+:	m:	m:	#CC:    #ERES
+>
+
+/* 1 */
+channel(#NC_bckg)<
+	@channel = 	#JHFplus:	+:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+/* 2 */
+channel(#nu_e_beam)<
+	@channel = 	#JHFplus:	+:	e:	e:	#CC:    #ERES
+>
+
+/* 3 */
+channel(#nu_e_bar_beam)<
+	@channel = 	#JHFplus:	-:	e:	e:	#CC:    #ERES
+>
+
+/* 4 */
+channel(#nu_e_appearance_QE)<
+	@channel = 	#JHFplus:	+:	m:	e:	#QE:    #ERES
+>
+
+/* 5 */
+channel(#ANTI_nu_mu_bar_disappearance_CC)<
+	@channel = 	#JHFminus:	-:	m:	m:	#CC:    #ERES
+>
+
+/* 6 */
+channel(#NC_bar_bckg)<
+	@channel = 	#JHFminus:	-:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+/* 7 */
+channel(#ANTI_nu_e_bar_beam)<
+	@channel = 	#JHFminus:	-:	e:	e:	#CC:    #ERES
+>
+
+/* 8 */
+channel(#ANTI_nu_e_beam)<
+	@channel = 	#JHFminus:	+:	e:	e:	#CC:    #ERES
+>
+
+/* 9 */
+channel(#ANTI_nu_e_bar_appearance_QE)<
+	@channel = 	#JHFminus:	-:	m:	e:	#QE:    #ERES
+>
+
+/* 10 */
+channel(#nu_mu_disappearance_QE)<
+	@channel = 	#JHFplus:	+:	m:	m:	#QE:    #ERES
+>
+
+/* 11 */
+channel(#ANTI_nu_mu_bar_disappearance_QE)<
+	@channel = 	#JHFminus:	-:	m:	m:	#QE:    #ERES
+>
+
+/* 12 */
+channel(#nu_e_appearance_CC)<
+	@channel = 	#JHFplus:	+:	m:	e:	#CC:    #ERES
+>
+
+/* 13 */
+channel(#ANTI_nu_e_bar_appearance_CC)<
+	@channel = 	#JHFminus:	-:	m:	e:	#CC:    #ERES
+>
+
+
+/* ####### Setting the rules ####### */
+
+
+rule(#NU_E_Appearance_QE)<
+ 	@signal = 0.50498@#nu_e_appearance_QE
+	@signalerror = 10. : 0.0001
+
+	@background =  0.00032671@#nu_mu_disappearance_CC  : 0.0056373@#NC_bckg  : 0.50498@#nu_e_beam : 0.50498@#nu_e_bar_beam 
+	@backgrounderror = 0.05 : 0.05    /* follow hep-ph/0504026: 5 per cent background tilt error */
+	
+	@sys_on_function = "chiSpectrumTilt"  
+	@sys_off_function = "chiSpectrumTilt" 
+> 
+
+
+rule(#NU_E_BAR_Appearance_QE)<
+	@signal = 0.50498@#ANTI_nu_e_bar_appearance_QE
+	@signalerror = 10. : 0.0001
+
+	@background = 0.00032671@#ANTI_nu_mu_bar_disappearance_CC  : 0.0056373@#NC_bar_bckg  : 0.50498@#ANTI_nu_e_bar_beam  : 0.50498@#ANTI_nu_e_beam  
+	@backgrounderror = 0.05 : 0.05    /* follow hep-ph/0504026: 5 per cent background tilt error */
+	
+	@sys_on_function = "chiSpectrumTilt"  
+	@sys_off_function = "chiSpectrumTilt" 
+>
+
+
+rule(#NU_MU_Disapperance_QE)<
+	@signal = 0.9@#nu_mu_disappearance_QE
+	@signalerror = 0.025 : 0.0001   
+
+	@background = 0.0056373@#NC_bckg
+	@backgrounderror = 0.2 : 0.0001
+	
+	@sys_on_function = "chiSpectrumTilt"  
+	@sys_off_function = "chiNoSysSpectrum" 
+>
+
+rule(#NU_MU_BAR_Disappearance_QE)<
+	@signal = 0.9@#ANTI_nu_mu_bar_disappearance_QE
+	@signalerror = 0.025 : 0.0001
+
+	@background = 0.0056373@#NC_bar_bckg 
+	@backgrounderror = 0.2 : 0.0001
+	
+	@sys_on_function = "chiSpectrumTilt"  
+	@sys_off_function = "chiNoSysSpectrum" 
+>
+
+rule(#NU_E_Appearance_CC)<
+ 	@signal = 0.50498@#nu_e_appearance_CC
+	@signalerror = 0.05 : 0.0001     /* follow hep-ph/0504026: 5 per cent norm errors for appearance */
+
+	@background =  0.00032671@#nu_mu_disappearance_CC  : 0.0056373@#NC_bckg  : 0.50498@#nu_e_beam : 0.50498@#nu_e_bar_beam  
+	@backgrounderror = 0.05 : 0.0001    /* 	do not use 0.05 for BG tilt here, since introduced twice uncorrelated then! */
+	
+	@sys_on_function = "chiTotalRatesTilt"  
+	@sys_off_function = "chiNoSysTotalRates" 
+> 
+
+rule(#NU_E_BAR_Appearance_CC)<
+	@signal = 0.50498@#ANTI_nu_e_bar_appearance_CC
+	@signalerror = 0.05 : 0.0001     /* follow hep-ph/0504026: 5 per cent norm errors for appearance */
+
+	@background = 0.00032671@#ANTI_nu_mu_bar_disappearance_CC  : 0.0056373@#NC_bar_bckg  : 0.50498@#ANTI_nu_e_bar_beam  : 0.50498@#ANTI_nu_e_beam 
+	@backgrounderror = 0.05 : 0.0001
+	
+	@sys_on_function = "chiTotalRatesTilt"  
+	@sys_off_function= "chiNoSysTotalRates" 
+>
+
+/**********************END**********************/

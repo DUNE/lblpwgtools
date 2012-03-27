@@ -1,0 +1,141 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH GLOBES-DISCOVERY 1 "December 2011" Linux "User Manuals"
+.SH NAME
+globes-discovery \- compute discovery reaches of neutrino experiments
+ using GLoBES
+.SH SYNOPSIS
+.B globes-discovery [OPTION ...]
+.I glb-file(s)
+.I output-file
+
+.SH DESCRIPTION
+.B globes-discovery
+uses 
+.BR GLoBES
+to compute the discovery reach of a neutrino experiment, specified in
+one ore several
+.I glb-file(s)
+towards theta_13, CP violation, the mass hierarchy, and if needed
+toward theta_23 being different from pi/4. It does this on a grid of
+true values in log_10 sin^22theta_13 and delta_CP. At each pair of
+true values the attempt is made to locate all degenerate solutions
+first and then, this result is used to compute the various discovery
+reaches. It is important to note, that the algorithm used to locate
+the degenerate solutions are heuristical and while they have been
+rigorously field tested, there is not guarantee how they may perform
+under unusual circumstances. Note, thate execution times typically are
+signficant and of the order of a few hours. All output is put into file with the extension 
+.I .dat
+,ie.
+.I output-file.dat
+
+.SH OPTIONS
+.TP
+\fB -D\fR, \fB\-\-Define=DEFINITION\fR
+Define AEDL variable
+.TP
+\fB -H\fR, \fB\-\-Hierarchy\fR
+Compute chi^2 with dm31->-dm31
+.TP
+\fB -O\fR, \fB\-\-Oktant\fR
+Compute chi^2 with th23->pi/2-th23
+.TP
+\fB -a\fR, \fB\-\-atmospheric=NUMBER\fR
+Relative error on theta23 and dm31 each, default is 0.05
+.TP
+\fB -c\fR, \fB\-\-Theta13=NUMBER\fR       
+prior on sin^22theta13, absolut
+.TP
+\fB -d\fR, \fB\-\-density=NUMBER\fR      
+Relative error on the matter density, default is 0.05
+.TP
+\fB -P\fR, \fB\-\-Plane=PAIR\fR           
+Chose the plane of true values
+.TP
+\fB -q\fR, \fB\-\-quiet\fR                
+silent operation
+.TP
+\fB -s\fR, \fB\-\-solar=NUMBER\fR         
+Relative error on dm21 each, default is 0.1
+.TP
+\fB -T\fR, \fB\-\-Theta12=NUMBER\fR       
+Relative error on theta12 and dm21 each, default is 0.1
+.TP
+\fB -p\fR, \fB\-\-parameters=PARAMETERS\fR 
+Set of oscillation parameters for which the data are computed Format
+th12,th13,th23,delta,dm21,dm31 .
+.TP
+\fB -R\fR, \fB\-\-Resolution=RANGE\fR     
+Number of points to be used in each direction, Format 'a,b'.
+.TP 
+\fB -X\fR, \fB\-\-Xrange=RANGE\fR         
+Range in log(sin^2 2theta13), Format 'a,b'.
+.TP
+\fB -Y\fR, \fB\-\-Yrange=RANGE\fR
+Range in delta in degrees, Format 'a,b'.
+.TP
+\fB -r\fR, \fB\-\-resolution=RANGE\fR 
+Number of points to be used in each direction for locating the inital 
+guess, Format 'a,b'.
+.TP
+\fB  -x\fR, \fB\-\-xrange=RANGE\fR         
+Range in log(sin^2 2theta13) for locating the inital guess, Format 'a,b'.
+.TP
+\fB  -y\fR, \fB\-\-yrange=RANGE\fR         
+Range in delta in degrees for locating the inital guess, Format 'a,b'.
+.TP
+\fB -A\fR, \fB\-\-All\fR                  
+same as -NMCS, default
+.TP
+\fB -C\fR, \fB\-\-CPV\fR
+Compute chi^2 at delta=pi,0
+.TP
+\fB -M\fR, \fB\-\-Maxtheta\fR
+Compute chi^2 at theta23=pi/4
+.TP
+\fB -N\fR, \fB\-\-None\fR
+do none of the above, i.e locate only the degenerate solutions
+.TP
+\fB -S\fR, \fB\-\-Sin22th13\fR
+Compute chi^2 at th13=0
+.TP
+\fB  -F\fR, \fB\-\-Fast\fR
+Fast minimizer.
+
+.SH OUTPUT FORMAT
+
+The output file is line oriented, and each line is identified by its
+first character
+.TP
+\fB #\fR 
+comment
+.TP
+\fB C\fR 
+pair of true values, log_10 sin^22theta_13 delta_CP [degrees]
+
+\fB [GTDA]\fR start lines containing various minimal chi^2 values. The
+first letter in this case is followed by either \fB ++\fR, \fB +-\fR,
+\fB +-\fR or \fB--\fR, where \fB ++\fR stands for true hierarchy and 
+true octant and \fB -+\fR for wrong hierarchy and true octants asf. The first 
+column is the chi^2, the following columns give the position where this chi^2
+was obtained in \fB glb_params\fR format.
+.TP
+\fB G\fR 
+stands for global chi^2 minimum \- the chi^2 for the wrong mass hierarchy is given 
+by the minimum of \fB G-x\fR
+.TP 
+\fB T\fR
+minimal chi^2 for theta_13=0 \- the minimum of \fB Txx\fR yields the discovery reach for theta_13
+.TP
+\fB D\fR
+minimal chi^2 for sin delta=0 \- minimum of \fB Dxx\fR yields the discovery reach for CP violation
+.TP
+\fB A\fR
+minimal chi^2 for theta_23=pi/4 \-  \- minimum of \fB Axx\fR yields the discovery reach for non-maximal atmospheric mixing
+
+.SH AUTHOR
+The GLoBES Team <globes at mpi-hd.mpg.de>
+.SH "SEE ALSO"
+.BR globes

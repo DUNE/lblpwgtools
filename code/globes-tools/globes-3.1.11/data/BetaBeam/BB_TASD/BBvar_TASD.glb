@@ -1,0 +1,203 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #*	@Article{Huber:2005jk,
+ #*	    author    = "Huber, P. and Lindner, M. and Rolinec, M. and Winter, W.",
+ #* 	    title     = "Physics and optimization of beta-beams: From low to very
+ #*  	                high gamma",
+ #*  	   journal   = "Phys. Rev.",
+ #*  	   volume    = "D73",
+ #*  	   year      = "2006",
+ #*  	   pages     = "053002",
+ #*  	   eprint    = "hep-ph/0506237",
+ #*  	   SLACcitation  = "%%CITATION = HEP-PH 0506237;%%"
+ #*	}
+ *
+ * This file describes a first version of a TASD for the beta beam. It is based on 
+ * NoVA-Note-SIM-42, NoVA-Note-SIM-48 and an email exchange with Peter Litchfield.
+ * The problems is that the NoVA people didn't think about the backgrounds to muon
+ * detection in detail, but it is expected to be very small. Thus the number I use
+ * may be far to large (it is essentially the same than for nu_e detection). What 
+ * makes the TASD interesting is that it has excellent energy resolution ~ 5%/sqrt(E) 
+ * for the *neutrino* energy!
+ * Most of numbers in here are based on educated guesswork and may need substantial 
+ * improvement later on. The NC background is assumed to have the same spectral shape
+ * than the signal (no migration), which is a conservative approximation. Besides that
+ * we use:
+ * Efficiency 0.8 for nu_mu and 0.2 for nu_e. Threshold 0.5 GeV. NC fraction 0.001
+ * eres_mu = 3%/sqrt(E) and eres_e = 6%/sqrt(E) (these numbers are really from the NoVA
+ * notes)
+ *
+ * The initial file was prepared by Patrick Huber. 
+ *
+ * 
+ * Last Update: 18/01/06
+ *
+ 
+  */
+
+/* ####### Preliminary remark ####### */
+
+/* The following AEDL variables have to be set properly:
+ *
+ *	gammafactor	: relativistic acceleration factor for Ne18 and He6  
+ *	
+ *	EXP_FACTOR	: isotope decay scaling (see Section 3.3 of hep-ph/0506237)
+ *	
+ *	baselinefactor	: baseline/gammafactor, i.e. sets the baseline depending on gammafactor
+  
+*/
+
+/* ####### Beam flux ####### */
+
+nuflux(#nu_e_flux)<
+@builtin =		3
+@gamma=			gammafactor
+@end_point=		0.0034	/* GeV */
+@stored_ions=		2.2e+18*(100/gammafactor)^EXP_FACTOR
+@time=			4	/* years */
+>
+
+nuflux(#nu_e_bar_flux)<
+@builtin = 		4
+@gamma=			gammafactor
+@end_point=		0.0035	/* GeV */
+@stored_ions=		5.8e+18*(60/gammafactor)^EXP_FACTOR
+@time=			4	/* years */
+>
+
+
+/* ####### Detector settings ###### */
+
+$target_mass = 	        50	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+Delta_E = 2*gammafactor*0.0035/30  
+
+$emin = 	        0.5	/* Gev */
+$emax = 	        2.2*gammafactor*0.0035	/* Gev */
+$bins= 20
+
+
+/* ####### Baseline setting ####### */
+
+$profiletype = 1
+$baseline = 		baselinefactor*gammafactor /* km */
+
+
+/* ####### Technical information ####### */
+
+$filter_state = 	0
+$filter_value = 	1000000
+
+
+/* ####### Energy resolution ####### */		 
+
+energy(#eres_electrons)<
+	@type = 1	
+	@sigma_e = {0.,0.06,0.0}
+>
+
+energy(#eres_muons)<
+	@type = 1	
+	@sigma_e = {0.,0.03,0.0}
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+cross(#NC)<
+	@cross_file = "XNC.dat"
+>
+
+
+/* ####### Channel definitions ####### */
+
+channel(#nu_mu_appearance)<
+	@channel = 	#nu_e_flux:	+:	e:	m:	#CC:    #eres_muons
+>
+
+channel(#nu_mu_bar_appearance)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#CC:    #eres_muons
+>
+
+channel(#nu_e_NC)<
+	@channel = 	#nu_e_flux:	+:	NOSC_e:	NOSC_e:	#NC:    #eres_electrons
+>
+
+channel(#nu_e_bar_NC)<
+	@channel = 	#nu_e_bar_flux:	-:	NOSC_e:	NOSC_e:	#NC:    #eres_electrons
+>
+
+channel(#nu_e_disappearance)<
+	@channel = 	#nu_e_flux:	+:	e:	e:	#CC:    #eres_electrons
+>
+
+channel(#nu_e_bar_disappearance)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#CC:    #eres_electrons
+>
+
+
+/* ####### Setting the rules ####### */
+
+rule(#NU_MU_Appearance)<
+	@signal =	      0.8@#nu_mu_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.001@#nu_e_NC
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+rule(#NU_MU_BAR_Appearance)<
+	@signal =	      0.8@#nu_mu_bar_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.001@#nu_e_bar_NC
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+
+rule(#NU_E_Disappearance)<
+	@signal =	      0.2@#nu_e_disappearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.001@#nu_e_NC
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+rule(#NU_E_BAR_Disappearance)<
+	@signal =	      0.2@#nu_e_bar_disappearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.001@#nu_e_bar_NC
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+
+/**********************END**********************/

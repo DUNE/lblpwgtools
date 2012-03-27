@@ -1,0 +1,23 @@
+The GLoBES Team
+---------------
+
+Currently active authors:
+  Patrick Huber <pahuber@vt.edu>
+          most of the C programs
+  Joachim Kopp <jkopp@fnal.gov>
+          C programming
+  Manfred Lindner <lindner@mpi-hd.mpg.de>
+          web page & testing
+  Walter Winter <winter@physik.uni-wuerzburg.de>
+          documentation & examples
+
+Former contributors:
+  Mark Rolinec
+          glb-files & graphics
+  Martin Freund
+          probability code & interfaces
+
+
+Please do *not* send bug reports to above email addresses,
+use instead <globes@mpi-hd.mpg.de>.
+

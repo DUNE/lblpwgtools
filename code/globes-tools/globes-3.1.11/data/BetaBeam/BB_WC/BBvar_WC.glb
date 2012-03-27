@@ -1,0 +1,259 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #*	@Article{Huber:2005jk,
+ #* 	    author    = "Huber, P. and Lindner, M. and Rolinec, M. and Winter, W.",
+ #* 	    title     = "Physics and optimization of beta-beams: From low to very
+ #*  	                high gamma",
+ #*  	   journal   = "Phys. Rev.",
+ #*  	   volume    = "D73",
+ #*  	   year      = "2006",
+ #*  	   pages     = "053002",
+ #*  	   eprint    = "hep-ph/0506237",
+ #*  	   SLACcitation  = "%%CITATION = HEP-PH 0506237;%%"
+ #*	}
+ *
+ * This files assumes that all NC events are reconstructed with a flat energy 
+ * distribution. The magnitude is matched against setup II in hep-ph/0503021v1.
+ * It includes the disappearance channels and uses our usual total rate and shape
+ * splitting in the appearance channels. It includes the effects of the Cherenkov
+ * threshold of around 200 MeV for muons. It is optimezed to work up to gamma = 350.
+ * The performance till gamma = 500 should be satisfactory.
+ *
+ * The initial file was prepared by Patrick Huber. 
+ *
+ * Modifications: 
+ *
+ * 
+ * Last Update: 18/01/06
+ *
+ 
+  */
+
+/* ####### Preliminary remark ####### */
+
+/* The following AEDL variables have to be set properly:
+ *
+ *	gammafactor	: relativistic acceleration factor for Ne18 and He6  
+ *	
+ *	EXP_FACTOR	: isotope decay scaling (see Section 3.3 of hep-ph/0506237)
+ *	
+ *	baselinefactor	: baseline/gammafactor, i.e. sets the baseline depending on gammafactor 
+  
+*/
+
+
+/* ###### Beam flux ###### */
+
+nuflux(#nu_e_flux)<
+@builtin = 		3
+@gamma=			gammafactor
+@end_point=		0.0034	 /* GeV */
+@stored_ions=		2.2e+18*(100/gammafactor)^EXP_FACTOR /* decays per year */
+@time=			4	/* years */
+>
+
+nuflux(#nu_e_bar_flux)<
+@builtin = 		4
+@gamma=			gammafactor
+@end_point=		0.0035	 /* GeV */
+@stored_ions=		5.8e+18*(60/gammafactor)^EXP_FACTOR /* decays per year */
+@time=			4	/* years */
+>
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 	        500.	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$bins = 		28
+$emin = 	        0.2 	/* GeV */ 
+$emax = 	        3.0 	/* GeV */ 
+
+
+$sampling_points = 	28
+$sampling_min =		0.2 	/* GeV */ 
+$sampling_max =		3.0 	/* GeV */ 
+
+
+/* ###### Baseline setting ###### */
+
+$profiletype = 		1
+$baseline = 		baselinefactor*gammafactor	/* km */
+
+
+/* ###### Technical information ####### */
+
+$filter_state = 	0
+$filter_value = 	1000000
+
+
+/* ####### Energy resolution ######## */		 
+
+energy(#He_bckg)<
+	@energy = include "BckgMig_var.dat"
+>
+
+energy(#ERES)<
+	@type = 1
+	@sigma_e = {0.,0.,0.085}
+>
+
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+cross(#NC)<
+	@cross_file = "XNC.dat"
+>
+cross(#QE)<
+	@cross_file = "XQE.dat"
+>
+
+
+/* ####### Energy dependent efficiencies ####### */
+
+%posteffs = {0.5,1.,1.}
+
+%energ = {0.25,0.35,3.}
+
+%bc = bincenter()
+
+%inter = interpolation(%energ,%posteffs,1,%bc)
+
+
+
+/* ####### Channel definitions ###### */
+
+channel(#nu_mu_appearance_CC)<
+	@channel = 	#nu_e_flux:	+:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+channel(#nu_mu_bar_appearance_CC)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+channel(#nu_NC_background)<
+	@channel = 	#nu_e_flux:	+:	NOSC_e:	NOSC_e:	#NC:    #He_bckg
+>
+
+channel(#nu_bar_NC_background)<
+	@channel = 	#nu_e_bar_flux:	-:	NOSC_e:	NOSC_e:	#NC:    #He_bckg
+>
+
+channel(#nu_mu_appearance_QE)<
+	@channel = 	#nu_e_flux:	+:	e:	m:	#QE:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+channel(#nu_mu_bar_appearance_QE)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#QE:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+channel(#nu_e_dis_QE)<
+	@channel = 	#nu_e_flux:	+:	e:	e:	#QE:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+channel(#nu_e_bar_dis_QE)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	e:	#QE:    #ERES
+	@post_smearing_efficiencies = copy(%inter)
+>
+
+
+
+
+/* ####### Setting the rules ####### */
+
+
+rule(#NU_MU_Appearance_CC)<
+	@signal =	      0.55@#nu_mu_appearance_CC
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.003@#nu_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiTotalRatesTilt"
+	@sys_off_function = 	"chiNoSysTotalRates"
+>
+
+rule(#NU_MU_BAR_Appearance_CC)<
+	@signal =	      0.75@#nu_mu_bar_appearance_CC
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.0025@#nu_bar_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiTotalRatesTilt"
+	@sys_off_function = 	"chiNoSysTotalRates"
+>
+
+
+rule(#NU_MU_Appearance_QE)<
+	@signal =	      0.55@#nu_mu_appearance_QE
+	@signalerror =	     10.  :	    0.0001
+
+	@background =	         0.003@#nu_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiSpectrumTilt"
+>
+
+rule(#NU_MU_BAR_Appearance_QE)<
+	@signal =	      0.75@#nu_mu_bar_appearance_QE
+	@signalerror =	     10.  :	    0.0001
+
+	@background =	         0.0025@#nu_bar_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiSpectrumTilt"
+>
+
+
+rule(#NU_E_Dis_QE)<
+	@signal =	      0.55@#nu_e_dis_QE
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.003@#nu_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+>
+
+rule(#NU_E_BAR_Dis_QE)<
+	@signal =	      0.75@#nu_e_bar_dis_QE
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         0.0025@#nu_bar_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+>
+
+
+
+
+
+/***************************************END****************************************/

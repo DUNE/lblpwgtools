@@ -1,0 +1,205 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Burguet-Castell:2005pa,
+ #*    author    = "Burguet-Castell, J. and Casper, D. and Couce, E. and
+ #*                 Gomez-Cadenas, J. J. and Hernandez, P.",
+ #*    title     = "Optimal beta-beam at the CERN-SPS",
+ #*    journal   = "Nucl. Phys.",
+ #*    volume    = "B725",
+ #*    year      = "2005",
+ #*    pages     = "306-326",
+ #*    eprint    = "hep-ph/0503021",
+ #*    SLACcitation  = "%%CITATION = HEP-PH 0503021;%%"
+ #*    }
+ *
+ * 
+ * This file describes a beta beam scenario following Setup III from the 
+ * above reference. 
+ *
+ * Modifications:
+ * 
+ *  - fiducial mass set to 500kt (MR 20/12/06)
+ *  - running time set to 4 years each polarity (MR 20/12/06)
+ *
+ * Last Update: 12/01/06
+ *
+  */
+
+/* ####### Beam flux ####### */
+
+nuflux(#nu_e_flux)<
+	@flux_file="BB350flux.dat"
+	@time 	= 	4	/* years */
+	@norm	=	5.1989
+	@power 	= 	2.2	/* corresponds to the number of useful
+				   Ne18 decays per year in units of 10^18 */
+>
+
+nuflux(#nu_e_bar_flux)<
+	@flux_file="BB350flux.dat"
+	@time 	= 	4	/* years */
+	@norm	=	5.1989
+	@power 	= 	5.8	/* corresponds to the number of useful
+				   He6 decays per year in units of 10^18 */
+> 
+
+
+/* ####### Detector settings ####### */
+
+$target_mass 	=	500.	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$emin 		=       0.5	/* GeV */
+$emax 		= 	2.5	/* GeV */
+$binsize 	= 	{0.25,0.25,0.25,0.25,0.25,0.25,0.5}
+
+$sampling_min 		=	0.5	/* GeV */
+$sampling_max		=	2.5	/* GeV */
+$sampling_stepsize  	=	{0.25,0.25,0.25,0.25,0.25,0.25,0.5}
+
+
+/* ####### Baseline setting ####### */
+
+$profiletype 	=	1
+$baseline 	=	730.	/* km */
+
+
+/* ####### Technical information ####### */
+
+$filter_state 	= 	0
+$filter_value 	= 	1000000
+
+
+/* ####### Energy resolution ####### */		 
+
+/* 
+ * The migration matrices include the energy smearing and 
+ * the energy dependent signal efficiencies or background 
+ * rejection factors respectively. They are taken from 
+ * Appendix A of:
+ *
+ * @Article{Burguet-Castell:2005pa,
+ *      author    = "Burguet-Castell, J. and Casper, D. and Couce, E. and
+ *                   Gomez-Cadenas, J. J. and Hernandez, P.",
+ *      title     = "Optimal beta-beam at the CERN-SPS",
+ *      journal   = "Nucl. Phys.",
+ *      volume    = "B725",
+ *      year      = "2005",
+ *      pages     = "306-326",
+ *      eprint    = "hep-ph/0503021",
+ *      SLACcitation  = "%%CITATION = HEP-PH 0503021;%%"
+ *      }
+*/
+
+energy(#He_eff)<	@energy = include "HeEffMig350.dat"	>
+
+energy(#He_bckg)<	@energy = include "HeBckgRej350.dat"	>
+
+energy(#Ne_eff)<	@energy = include "NeEffMig350.dat"	>
+
+energy(#Ne_bckg)<	@energy = include "NeBckgRej350.dat"	>
+
+energy(#He_eff_dis)<	@energy = include "HeDisEffMig350.dat"	>
+
+energy(#Ne_eff_dis)<	@energy = include "NeDisEffMig350.dat"	>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<	@cross_file = "XCC.dat"		>
+
+cross(#NC)<	@cross_file = "XNC.dat"		>
+
+
+/* ####### Channel definitions ####### */
+
+channel(#nu_mu_appearance)<
+	@channel = 	#nu_e_flux:	+:	e:	m:	#CC:    #Ne_eff
+>
+
+channel(#nu_mu_bar_appearance)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#CC:    #He_eff
+>
+
+channel(#nu_NC_background)<
+	@channel = 	#nu_e_flux:	+:	NOSC_e:	NOSC_e:	#NC:    #Ne_bckg
+>
+
+channel(#nu_bar_NC_background)<
+	@channel = 	#nu_e_bar_flux:	-:	NOSC_e:	NOSC_e:	#NC:    #He_bckg
+>
+
+channel(#nu_e_disappearance)<
+	@channel = 	#nu_e_flux:	+:	e:	e:	#CC:    #Ne_eff_dis
+>
+
+channel(#nu_e_bar_disappearance)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	e:	#CC:    #He_eff_dis
+>
+
+
+
+/* ####### Setting the rules ####### */
+
+rule(#NU_MU_Appearance)<
+	@signal =	      1@#nu_mu_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1@#nu_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+rule(#NU_MU_BAR_Appearance)<
+	@signal =	      1@#nu_mu_bar_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1@#nu_bar_NC_background
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+rule(#NU_E_Disappearance)<
+	@signal =	      1@#nu_e_disappearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-10@#nu_e_disappearance 
+/* background neglected, systematical uncertainty dominates */
+	
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+rule(#NU_E_BAR_Disappearance)<
+	@signal =	      1@#nu_e_bar_disappearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-10@#nu_e_bar_disappearance
+/* background neglected, systematical uncertainty dominates */
+
+	@backgrounderror = 	     0.05  :	    0.0001
+
+	@sys_on_function = "chiSpectrumTilt"	
+	@sys_off_function = "chiNoSysSpectrum"
+>
+
+
+/***************************************END****************************************/

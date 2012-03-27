@@ -1,0 +1,391 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Huber:2002mx,
+ #*     author    = "Huber, Patrick and Lindner, Manfred and Winter, Walter",
+ #*     title     = "Superbeams versus neutrino factories",
+ #*     journal   = "Nucl. Phys.",
+ #*     volume    = "B645",
+ #*     year      = "2002",
+ #*     pages     = "3-48",
+ #*     eprint    = "hep-ph/0204352",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0204352;%%"
+ #* }
+ *
+ #* @Article{Huber:2006wb,
+ #*     author    = "Huber, P. and Lindner, M. and Rolinec, M. and Winter, W.",
+ #*     title     = "Optimization of a neutrino factory oscillation experiment",
+ #*     journal   = "Phys. Rev.",
+ #*     volume    = "D74",
+ #*     year      = "2006",
+ #*     pages     = "073003",
+ #*     eprint    = "hep-ph/0606119",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0606119;%%"
+ #* }
+ *
+ *
+ * %The disappearance efficiency w/o CID is taken from:
+ *
+ #* @Article{Ables:1995wq,
+ #*    author    = "Ables, E. and others",
+ #*    collaboration = "MINOS",
+ #*    title     = "P-875: A Long baseline neutrino oscillation experiment at
+ #*                 Fermilab",
+ #*    note     = "FERMILAB-PROPOSAL-0875"
+ #* }
+ *
+ *
+ *  %Silver Channel is based on:
+ *
+ #* @Article{Autiero:2003fu,
+ #*    author    = "Autiero, D. and others",
+ #*    title     = "The synergy of the golden and silver channels at the
+ #*                 Neutrino Factory",
+ #*    journal   = "Eur. Phys. J.",
+ #*   volume    = "C33",
+ #*    year      = "2004",
+ #*    pages     = "243-260",
+ #*    eprint    = "hep-ph/0305185",
+ #*    SLACcitation  = "%%CITATION = HEP-PH 0305185;%%"
+ #* }
+ *
+ *
+ * Last Update: 17/01/06
+ *
+ */
+
+
+/* ####### Preliminary remark ####### */
+
+/* The following AEDL variables have to be set properly:
+ *
+ *	emax		: parent energy of the stored muons ( GeV )  
+ *
+ *	BASELINE 	: experiment baseline ( km )
+ *	
+*/
+
+
+/* this glb-file contains disappearance channels without CID! */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#one)<
+@builtin = 2
+@parent_energy = emax	/* GeV */
+@stored_muons = 10.66e+20
+@time = 4	/* years */
+>
+
+nuflux(#two)<
+@builtin = 1
+@parent_energy = emax	/* GeV */
+@stored_muons = 10.66e+20
+@time = 4	/* years */
+>
+
+
+/* ####### stretching factor ####### */
+
+sf = (emax-1)/(50-1)
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 	        50.	/* kt (fiducial mass) GOLD DETECTOR*/ 
+
+ECC_Mass =		 5.	/* kt (fiducial mass) ECC SILVER DETECTOR */			 
+
+
+/* ####### Energy window ####### */
+
+$emin = 	         0.5	/* GeV */
+$emax = 	        emax	/* GeV */
+$binsize = 		{0.25,0.25,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf}
+
+$sampling_min =          0.5	/* GeV */
+$sampling_max =         emax	/* GeV */
+$sampling_stepsize =    {0.25,0.25,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf}
+
+
+/* ######## Baseline setting ######## */
+
+$profiletype = 1
+$baseline = 		BASELINE	/* km */
+
+
+/* ######## Technical information ######## */
+
+/* Filter is used */
+
+$filter_state = 	1
+
+/* filter value: 	must be smaller than energy resolution at 
+			low energies (otherwise segmentation fault)
+                  	should be at least as large as sampling 
+			stepsize to avoid aliasing esp. for long 
+			baselines at low E should be larger than 
+			Fermi motion cutoff */
+
+$filter_value = 	0.090
+
+			/* note that bin size may decrease for 
+			lower emax; but energy resolution is still 
+			about 300 MeV at first significant peak */
+
+
+/* ####### Energy resolution ####### */	 
+
+energy(#ERES)<	
+	@type = 2  /* deduce filter value from energy resolution */
+	@sigma_e = {0.15,0,0}
+>
+
+energy(#smSILVER)<
+	@type = 2  /* deduce filter value from energy resolution */
+	@sigma_e = {0.2,0,0}
+>
+
+
+/* ####### Cross sections ####### */
+
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+
+cross(#NC)<
+	@cross_file = "XNC.dat"
+
+>
+
+/* ####### Energy dependent efficiencies ###### */
+
+%energCID = {0.,4.,20.,100.}
+
+%bc=bincenter()
+
+%CIDthreshold = {0.,0.,1.,1.}
+
+%CIDeffs=interpolation(%energCID,%CIDthreshold,1,%bc)
+
+/* emulate MINOS threshold: since appearance channels are 
+   added to disappearance channels, they have to have the 
+   same threshold properties in this dataset */
+
+%energMINOS = {0.,1.,3.,100.}
+
+%MINOSthreshold = {0.,0.,1.,1.}
+
+%MINOSeffs=interpolation(%energMINOS,%MINOSthreshold,1,%bc)
+
+/* emulate muon identification threshold for the silver channel 
+   at an ECC OPERA like detector (Fig.7 in D. Autiero et al.):  */
+
+%energECC = {0.,2.,8.,100.}
+
+%ECCthreshold = {0.,0.,0.97,0.97}
+
+%ECCeffs=interpolation(%energECC,%ECCthreshold,1,%bc)
+
+
+/* Appearance cuts: */
+
+channel(#nu_mu_appearance)<
+	@channel = 	#two:	+:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%CIDeffs)	
+>
+
+channel(#nu_mu_bar_appearance)<
+	@channel = 	#one:	-:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%CIDeffs)	
+
+>
+
+channel(#nu_mu_bar_disappearance)<
+	@channel = 	#two:	-:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%CIDeffs)	
+>
+
+channel(#nu_mu_disappearance)<
+	@channel = 	#one:	+:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%CIDeffs)	
+>
+
+/* Disappearance cuts: */
+
+channel(#nu_mu_appearance2)<
+	@channel = 	#two:	+:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%MINOSeffs)
+>
+
+channel(#nu_mu_bar_appearance2)<
+	@channel = 	#one:	-:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%MINOSeffs)	
+>
+
+channel(#nu_mu_bar_disappearance2)<
+	@channel = 	#two:	-:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%MINOSeffs)	
+>
+
+channel(#nu_mu_disappearance2)<
+	@channel = 	#one:	+:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies = copy(%MINOSeffs)	
+>
+
+channel(#nu_NC_bckg)<
+	@channel = 	#one:	+:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+channel(#nu_bar_NC_bckg)<
+	@channel = 	#two:	-:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+
+/* Silver Channels */
+
+
+channel(#nu_tau_appearance)<
+	@channel = 	#two:	+:	e:	t:	#CC:    #smSILVER
+	@post_smearing_efficiencies = copy (%ECCeffs)
+>
+
+channel(#no11_S)<
+	@channel = 	#two:	-:	m:	m:	#CC:    #smSILVER
+>
+
+channel(#no12_S)<
+	@channel = 	#two:	-:	m:	t:	#CC:    #smSILVER
+>
+
+
+channel(#no13_S)<
+	@channel = 	#two:	+:	e:	e:	#CC:    #smSILVER
+>
+
+channel(#no14_S)<
+	@channel = 	#two:	+:	e:	m:	#CC:    #smSILVER
+>
+
+channel(#no15_S)<
+	@channel = 	#two:	-:	NOSC_m:	NOSC_m:	#NC:    #smSILVER
+>
+
+channel(#no16_S)<
+	@channel = 	#two:	+:	NOSC_e:	NOSC_e:	#NC:    #smSILVER
+>
+
+
+/*
+# Backgrounds follow D. Autiero et al.:
+# 
+# 1) neutrino induced charm-production:		1e-8@(N_nu_e_CC + N_nu_mu_CC)
+# 2) anti-neutrino induced charm-production:	3.7e-6@N_nu_mu_bar_CC
+# 3) tau_bar to mu_bar decays:			1e-3@N_nu_tau_bar_CC
+# 4) mu matched to hadron track:		7e-9@N_nu_mu_bar_CC
+# 5) punch through hadrons (mostly from NC):	6.97e-7@N_NC + 2.1e-8@N_nu_e_CC 
+# 6) large muon scattering: 			1e-8@N_nu_mu_CC
+*/
+
+/* nu_tau efficiency taken, so that Table 4 in D. Autiero et al. is reproduced */
+
+/*---------------------------------------------------------------------------*/
+
+
+/* ####### Setting the rules ####### */
+
+/* APPEARANCE RULES FIRST BECAUSE DEGFINDER EXPECTS THEM TO BE RULES 0 AND 1! */
+
+rule(#Nu_Mu_Appearance)<
+	@signal =	      0.45@#nu_mu_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	     5e-06@#nu_bar_NC_bckg : 5e-06@#nu_mu_bar_disappearance
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@errordim_sys_on = 	0
+	@errordim_sys_off = 	2
+
+	@energy_window = 	         4  :	        emax
+>
+
+rule(#Nu_Mu_Bar_Appearance)<
+	@signal =	      0.35@#nu_mu_bar_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	     5e-06@#nu_NC_bckg : 5e-06@#nu_mu_disappearance
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@errordim_sys_on = 	0
+	@errordim_sys_off = 	2
+
+	@energy_window = 	         4  :	        emax
+>
+
+/* Now overall efficiencies from MINOS, because no CID cut */
+
+rule(#Nu_Mu_Disappearance)<
+	@signal =	      0.9@#nu_mu_disappearance2 : 0.9@#nu_mu_bar_appearance2  /* now: appearance events added (no CID) */
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-05@#nu_NC_bckg  /* NC background caused by flux; same indep. of channel, since total flux same */
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@errordim_sys_on = 	0
+	@errordim_sys_off = 	2
+
+	@energy_window = 	         1  :	        emax
+>
+
+rule(#Nu_Mu_Bar_Disappearance)<
+	@signal =	      0.9@#nu_mu_bar_disappearance2 : 0.9@#nu_mu_appearance2
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-05@#nu_bar_NC_bckg
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@errordim_sys_on = 	0
+	@errordim_sys_off = 	2
+	
+	@energy_window = 	         1  :	        emax
+>
+
+rule(#Nu_Tau_Appearance)<
+	@signal =	      (ECC_Mass/50.)*0.096@#nu_tau_appearance
+	@signalerror =	     0.15  :	    0.0001
+
+	@background =	    (ECC_Mass/50.)*3.1e-8@#no13_S : (ECC_Mass/50.)*2.e-8@#no14_S : (ECC_Mass/50.)*3.71e-6@#no11_S : (ECC_Mass/50.)*1.e-3@#no12_S : (ECC_Mass/50.)*6.97e-7@#no15_S	: (ECC_Mass/50.)*6.97e-7@#no16_S 	     
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@errordim_sys_on = 	0
+	@errordim_sys_off = 	2
+	
+	@energy_window = 	         2.5  :	        emax
+>
+
+
+
+
+
+
+
+/**********************END**********************/
