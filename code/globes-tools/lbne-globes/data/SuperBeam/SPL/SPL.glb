@@ -1,0 +1,258 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* 
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ @Article{Campagne:2006yx,
+     author    = "Campagne, J. E. and Maltoni, M. and Mezzetto, M. and
+                  Schwetz, T.",
+     title     = "Physics potential of the CERN-MEMPHYS neutrino oscillation
+                  project",
+     year      = "2006",
+     eprint    = "hep-ph/0603172",
+     SLACcitation  = "%%CITATION = HEP-PH 0603172;%%"
+ }
+ @Article{Campagne:2004wt,
+     author    = "Campagne, Jean Eric and Cazes, Antoine",
+     title     = "The theta(13) and delta(CP) sensitivities of the SPL-Frejus
+                  project  revisited",
+     journal   = "Eur. Phys. J.",
+     volume    = "C45",
+     year      = "2006",
+     pages     = "643-657",
+     eprint    = "hep-ex/0411062",
+     SLACcitation  = "%%CITATION = HEP-EX 0411062;%%"
+ }
+ @Article{Mezzetto:2003mm,
+     author    = "Mezzetto, Mauro",
+     title     = "Physics potential of the SPL super beam",
+     journal   = "J. Phys.",
+     volume    = "G29",
+     year      = "2003",
+     pages     = "1781-1784",
+     eprint    = "hep-ex/0302005",
+     SLACcitation  = "%%CITATION = HEP-EX 0302005;%%"
+ }
+
+ *  This file was written by Mauro Mezzetto 
+ *  and adapted by Thomas Schwetz-Mangold (11/07/2006)
+ *
+ * Modifications: 
+ *  - fiducial detector mass is set to 500kt (MR 20/12/06)
+ *
+ * Last Update: 12/01/07
+ *
+  */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#SPLplus)<
+	@flux_file = "SPLplus.dat"
+	@time = 2	/* years */
+  	@norm = 5.0689275e-6
+>
+
+nuflux(#SPLminus)<
+	@flux_file = "SPLminus.dat"
+	@time = 8	/* years */
+	@norm = 5.0689275e-6
+>
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 	        500.	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$sampling_points = 40
+$sampling_min = 0.001	/* GeV */
+$sampling_max = 1.6	/* GeV */
+
+$bins = 		10
+$emin = 	        0.01	/* GeV */
+$emax = 	        1.01	/* GeV */
+
+
+/* ######## Baseline setting ######## */
+
+$profiletype = 		3 
+$densitytab = 		{2.7}
+$lengthtab = 		{130.0}	/* km */
+
+
+/* ######## Technical information ######## */
+
+$filter_state = 0 
+$filter_value = 1000000 
+
+
+/* ####### Energy resolution ####### */
+
+energy(#ERESNuMu)<	
+	@energy=include "Mig_WC_numu.dat"
+>
+
+energy(#ERESNuMuBar)<	
+	@energy=include "Mig_WC_numubar.dat"
+> 
+
+energy(#ERESNue)<	
+	@energy=include "Mig_WC_nue.dat"
+>
+
+energy(#ERESNueBar)<	
+	@energy=include "Mig_WC_nuebar.dat"
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC_spl.dat"        
+>
+cross(#NC)<
+	@cross_file = "XNC_spl.dat"
+>
+
+
+/* ####### Energy dependent efficiencies ####### */
+
+%preeffs   = {0., 0.16986, 0.5624, 0.715028, 0.77302, 0.86964, 0.92296, 0.95628, 0.9996, 0.98294, 0.96628, 0.94296, 0.9263, 0.89964, 0.88298, 0.85966, 0.843, 0.82634, 0.80968, 0.78302, 0.76636, 0.76636}
+%energ     = {0.02, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.58}
+
+%sbc = samplingbincenter()
+
+%inter     = interpolation(%energ,%preeffs,1,%sbc)
+
+
+
+/* ####### Channel definitions ####### */
+
+/* NuE appearance signal */
+
+channel(#nue_app)<
+	@channel = 	#SPLplus:	+:	m:	e:	#CC:	#ERESNue
+>
+
+/* NuE appearance backgrounds */
+
+channel(#nue_Beam)<
+	@channel = 	#SPLplus:	+:	e:	e:	#CC:	#ERESNue
+>
+channel(#nubare_in_nue)<
+	@channel = 	#SPLplus:	-:	e:	e:	#CC:	#ERESNue
+>
+channel(#numu_miss_ID)<
+	@channel = 	#SPLplus:	+:	m:	m:	#CC:	#ERESNue
+>
+channel(#NC_bckg_plus)<
+	@channel = 	#SPLplus:	+:	NOSC_m: NOSC_m:	#NC:	#ERESNue
+>
+channel(#numubar_to_nuebar_plus)<
+	@channel = 	#SPLplus:	-:	m:	e:	#CC:	#ERESNue
+>
+
+
+/* NuE-Bar appearance signal */
+
+channel(#nue_bar_app)<
+	@channel = 	#SPLminus:	-:	m:	e:	#CC:	#ERESNueBar
+>
+
+/* NuE-Bar appearance backgrounds */
+
+channel(#nue_bar_Beam)<
+	@channel = 	#SPLminus:	-:	e:	e:	#CC:	#ERESNueBar
+>
+channel(#nue_in_nubare)<
+	@channel = 	#SPLminus:	+:	e:	e:	#CC:	#ERESNueBar
+>
+channel(#NC_bckg_minus)<
+	@channel = 	#SPLminus:	-:	NOSC_m:	NOSC_m:	#NC:	#ERESNueBar
+>
+channel(#numu_bar_miss_ID)<
+	@channel = 	#SPLminus:	-:	m:	m:	#CC:	#ERESNueBar
+>
+channel(#numu_to_nue_minus)<
+	@channel = 	#SPLminus:	+:	m:	e:	#CC:	#ERESNueBar
+>
+
+
+/* Disappearance signals */
+
+channel(#numu_disa_signal)<
+	@channel = 	#SPLplus:	+:	m:	m:	#CC:	#ERESNuMu
+	@pre_smearing_efficiencies = copy(%inter)
+>
+
+channel(#numu_bar_disa_signal)<
+	@channel = 	#SPLminus:	-:	m:	m:	#CC:	#ERESNuMuBar
+	@pre_smearing_efficiencies = copy(%inter)
+>
+
+
+/* ####### Setting the rules ####### */
+
+ 
+rule(#NU_E_Appearance)<
+ 	@signal = 0.707@#nue_app
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.00054@#numu_miss_ID : 0.707@#nue_Beam : 0.677@#nubare_in_nue : 0.00065@#NC_bckg_plus : 0.7@#numubar_to_nuebar_plus
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+
+	@energy_window = 0.1 : 1.
+> 
+
+
+rule(#NU_E_BAR_Appearance)<
+	@signal = 0.677@#nue_bar_app
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.00054@#numu_bar_miss_ID : 0.707@#nue_in_nubare : 0.677@#nue_bar_Beam : 0.0025@#NC_bckg_minus : 0.7@#numu_to_nue_minus 
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+
+	@energy_window = 0.1 : 1.
+>
+
+rule(#NU_MU_Disappearance)<
+	@signal = 1@#numu_disa_signal
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.000043@#numu_disa_signal 
+	@backgrounderror = 0.02 : 0.0001
+	
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+
+	@energy_window = 0.1 : 1.
+>
+
+rule(#NU_MU_BAR_Disapperance)<
+	@signal = 1@#numu_bar_disa_signal
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.000043@#numu_bar_disa_signal 
+	@backgrounderror = 0.02 : 0.0001
+	
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 0.1 : 1.
+>
+/**********************END******************************/

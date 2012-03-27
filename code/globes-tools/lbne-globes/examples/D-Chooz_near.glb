@@ -1,0 +1,176 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* AEDL file for the Double CHOOZ near detector
+ *
+ * Copyright 2004,2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Huber:2006vr,
+ #*    author    = "Huber, P. and Kopp, Joachim and Lindner, M. and Rolinec, M.
+ #*                 and Winter, W.",
+ #*    title     = "From Double Chooz to Triple Chooz: Neutrino physics at the
+ #*                 Chooz  reactor complex",
+ #*    journal   = "JHEP",
+ #*    volume    = "05",
+ #*    year      = "2006",
+ #*    pages     = "072",
+ #*    eprint    = "hep-ph/0601266",
+ #*    SLACcitation  = "%%CITATION = HEP-PH 0601266;%%"
+ #* }
+ 
+ * The initial file was prepared by J. Kopp. 
+ *
+ * Last Update:12/01/06 
+ *
+  */
+
+
+/* ####### Preliminary remark ####### */
+
+/* --------------------------------------------------------------------------
+
+This file cannot be used alone. The file D-Chooz_far.glb and the systematics
+have to be manually defined. See example5.c or the manual (user-defined
+systematics)
+
+   --------------------------------------------------------------------------
+
+In example5.c D-Chooz_far.glb and D-Chooz_near.glb are used and the chi-squared
+function chiDCNorm is defined in the following way:
+
+ ***************************************************************************
+ * Calculate chi^2 for Double Chooz, including the following systematical  *
+ * errors:                                                                 *
+ *   x[0]: Flux normalization of reactor                                   *
+ *   x[1]: Fiducial mass error - far detector                              *
+ *   x[2]: Fiducial mass error - near detector                             *
+ *   x[3]: Energy calibration error - far detector                         *
+ *   x[4]: Energy calibration error - near detector                        *
+ ***************************************************************************
+
+double chiDCNorm(int exp, int rule, int n_params, double *x, double *errors,
+                 void *user_data)
+{
+  int n_bins = glbGetNumberOfBins(EXP_FAR);
+  double *true_rates_N = glbGetRuleRatePtr(EXP_NEAR, 0);
+  double *true_rates_F = glbGetRuleRatePtr(EXP_FAR, 0);
+  double signal_fit_rates_N[n_bins];
+  double signal_fit_rates_F[n_bins];
+  double signal_norm_N, signal_norm_F;
+  int ew_low, ew_high;
+  double emin, emax;
+  double fit_rate;
+  double chi2 = 0.0;
+  int i;
+
+  glbGetEminEmax(exp, &emin, &emax);
+  glbGetEnergyWindowBins(exp, rule, &ew_low, &ew_high);
+
+  glbShiftEnergyScale(x[3], glbGetSignalFitRatePtr(EXP_FAR, 0),
+                      signal_fit_rates_F, n_bins, emin, emax);
+  glbShiftEnergyScale(x[4], glbGetSignalFitRatePtr(EXP_NEAR, 0),
+                      signal_fit_rates_N, n_bins, emin, emax);
+
+  signal_norm_F = 1.0 + x[0] + x[1];
+  signal_norm_N = 1.0 + x[0] + x[2];
+  for (i=ew_low; i <= ew_high; i++)
+  {
+    fit_rate  = signal_norm_F * signal_fit_rates_F[i];
+    chi2 += likelihood(true_rates_F[i], fit_rate, true_rates_F[i]);
+
+    fit_rate  = signal_norm_N * signal_fit_rates_N[i];
+    chi2 += likelihood(true_rates_N[i], fit_rate, true_rates_N[i]);
+  }
+
+  for (i=0; i < n_params; i++)
+    chi2 += square(x[i] / errors[i]);
+
+  for (i=0; i < n_params; i++)
+    sys_startval[i] = x[i];
+
+  return chi2;
+}  
+
+ ########################################################################## */
+
+
+/* ####### Reactor flux ####### */
+
+nuflux(#Reactor)<
+        @flux_file = "Reactor.dat"
+        @time      = 5		/* years */
+        @power     = 8.4 	/* GWth */
+        @norm      = 3.317709228e-12 /* Near detector is less efficient than far detector */
+>
+
+
+/* ######## Baseline setting ######## */
+
+$profiletype = 3
+$densitytab  = { 1e-6 }
+$lengthtab   = { 0.1 }	/* km */
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 10.16  /* tons (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$bins        = 62
+$emin        = 0.0018	/* GeV */
+$emax        = 0.008	/* GeV */
+
+
+/* ######## Technical information ######## */
+
+$filter_state = 0 
+$filter_value = 1000000 
+
+
+/* ####### Energy resolution ####### */
+
+energy(#ERES)<
+        @type = 1
+        @sigma_function = #inverse_beta
+        @sigma_e = {0.05,0,0}
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#Reactor_CC)<
+        @cross_file = "XCCreactor.dat"
+>
+
+
+/* ####### Channel definitions ####### */
+
+channel(#nu_e_disappearance_CC)<
+        @channel   =    #Reactor:      -  :      e  :      e : #Reactor_CC : #ERES
+>
+
+
+/* ####### Setting the rules ####### */
+
+rule(#NU_E_Disappearance)<
+        @signal     = 1.0@#nu_e_disappearance_CC
+
+        @background = 0.0@#nu_e_disappearance_CC   /* No background */
+        @energy_window = 0.0015 : 0.01
+
+        @sys_off_function = "chiNoSysSpectrum"
+        @sys_off_errors   = {}
+        @sys_on_function  = "chiZero"
+        @sys_on_errors    = {}
+>
+
+

@@ -1,0 +1,8 @@
+- globes standalone binary should not complain if user-defined chi^2
+  function is used
+
+- Add citation information in GLoBES-readable form ($citation) to all
+  AEDL files
+
+- Modify examples to display citation information
+

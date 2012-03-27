@@ -1,0 +1,291 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Huber:2002mx,
+ #*     author    = "Huber, Patrick and Lindner, Manfred and Winter, Walter",
+ #*     title     = "Superbeams versus neutrino factories",
+ #*     journal   = "Nucl. Phys.",
+ #*     volume    = "B645",
+ #*     year      = "2002",
+ #*     pages     = "3-48",
+ #*     eprint    = "hep-ph/0204352",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0204352;%%"
+ #* }
+ *
+ #* @Article{Huber:2006wb,
+ #*     author    = "Huber, P. and Lindner, M. and Rolinec, M. and Winter, W.",
+ #*     title     = "Optimization of a neutrino factory oscillation experiment",
+ #*     journal   = "Phys. Rev.",
+ #*     volume    = "D74",
+ #*     year      = "2006",
+ #*     pages     = "073003",
+ #*     eprint    = "hep-ph/0606119",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0606119;%%"
+ #* }
+ *
+ #* %The disappearance efficiency w/o CID is taken from
+ #* @Article{Ables:1995wq,
+ #*    author    = "Ables, E. and others",
+ #*    collaboration = "MINOS",
+ #*    title     = "P-875: A Long baseline neutrino oscillation experiment at
+ #*                 Fermilab",
+ #*    note     = "FERMILAB-PROPOSAL-0875"
+ #* }
+ *
+ *
+ * Last Update: 17/01/06
+ *
+  */
+
+/* ####### Preliminary remark ####### */
+
+/* The following AEDL variables have to be set properly:
+ *
+ *	emax		: parent energy of the stored muons ( GeV )  
+ *
+ *	BASELINE 	: experiment baseline ( km )
+ *	
+*/
+
+
+/* This glb-file contains disappearance channels WITHOUT CID! */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#one)<
+@builtin = 2
+@parent_energy = emax	/* GeV */
+@stored_muons = 10.66e+20
+@time = 4	/* years */
+>
+
+nuflux(#two)<
+@builtin = 1
+@parent_energy = emax	/* GeV */
+@stored_muons = 10.66e+20
+@time = 4	/* years */
+>
+
+
+/* ####### stretching factor ####### */
+
+sf = (emax-1)/(50-1)
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 	        50	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$emin = 	         1.	/* GeV */
+$emax = 	        emax	/* GeV */
+$binsize = 		{0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf}
+
+$sampling_min =          1.	/* GeV */
+$sampling_max =         emax	/* GeV */
+$sampling_stepsize =    {0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,0.5*sf,
+			 1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,1.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf,
+			 2.0*sf,2.0*sf,2.0*sf,2.0*sf,2.0*sf}
+
+
+/* ######## Baseline setting ######## */
+
+$profiletype = 1
+$baseline = 		BASELINE	/* km */
+
+
+/* ######## Technical information ######## */
+
+/* Filter is used */
+
+$filter_state = 	1
+
+/* filter value: 	must be smaller than energy resolution at 
+			low energies (otherwise segmentation fault)
+                  	should be at least as large as sampling 
+			stepsize to avoid aliasing esp. for long 
+			baselines at low E should be larger than 
+			Fermi motion cutoff */
+
+$filter_value = 	0.150
+
+			/* note that bin size may decrease for 
+			lower emax; but energy resolution is still 
+			about 300 MeV at first significant peak */
+
+
+/* ####### Energy resolution ####### */	 
+
+energy(#ERES)<	
+	@type = 2  /* deduce filter value from energy resolution */
+	@sigma_e = {0.15,0,0}
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+
+cross(#NC)<
+	@cross_file = "XNC.dat"
+
+>
+
+
+/* ####### Energy dependent efficiencies ###### */
+
+%energCID = {0.,4.,20.,100.}
+
+%bc=bincenter()
+
+%CIDthreshold = {0.,0.,1.,1.}
+
+%CIDeffs=interpolation(%energCID,%CIDthreshold,1,%bc)
+
+/* emulate MINOS threshold: since appearance channels are 
+   added to disappearance channels, they have to have the 
+   same threshold properties in this dataset */
+
+%energMINOS = {0.,1.,3.,100.}
+
+%MINOSthreshold = {0.,0.,1.,1.}
+
+%MINOSeffs=interpolation(%energMINOS,%MINOSthreshold,1,%bc)
+
+
+
+/* ####### Channel definitions ####### */
+
+/* Appearance cuts: */
+
+channel(#nu_mu_appearance)<
+	@channel = 	#two:	+:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%CIDeffs)
+>
+
+channel(#nu_mu_bar_appearance)<
+	@channel = 	#one:	-:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%CIDeffs)
+>
+
+channel(#nu_mu_bar_disappearance)<
+	@channel = 	#two:	-:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%CIDeffs)
+>
+
+channel(#nu_mu_disappearance)<
+	@channel = 	#one:	+:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%CIDeffs)
+>
+
+/* Disappearance cuts: */
+
+channel(#nu_mu_appearance2)<
+	@channel = 	#two:	+:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%MINOSeffs)
+>
+
+channel(#nu_mu_bar_appearance2)<
+	@channel = 	#one:	-:	e:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%MINOSeffs)
+>
+
+channel(#nu_mu_bar_disappearance2)<
+	@channel = 	#two:	-:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%MINOSeffs)
+>
+
+channel(#nu_mu_disappearance2)<
+	@channel = 	#one:	+:	m:	m:	#CC:    #ERES
+	@post_smearing_efficiencies=	copy(%MINOSeffs)
+>
+
+channel(#nu_NC_bckg)<
+	@channel = 	#one:	+:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+channel(#nu_bar_NC_bckg)<
+	@channel = 	#two:	-:	NOSC_m:	NOSC_m:	#NC:    #ERES
+>
+
+
+/* ####### Setting the rules ####### */
+
+/* APPEARANCE RULES FIRST BECAUSE DEGFINDER EXPECTS THEM TO BE RULES 0 AND 1! */
+
+rule(#Nu_Mu_Appearance)<
+	@signal =	      0.45@#nu_mu_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	     5e-06@#nu_bar_NC_bckg : 5e-06@#nu_mu_bar_disappearance
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+
+	@energy_window = 	         4  :	        emax
+>
+
+rule(#Nu_Mu_Bar_Appearance)<
+	@signal =	      0.35@#nu_mu_bar_appearance
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	     5e-06@#nu_NC_bckg : 5e-06@#nu_mu_disappearance
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+	
+	@energy_window = 	         4  :	        emax
+>
+
+/* Now overall efficiencies from MINOS, because no CID cut */
+
+rule(#Nu_Mu_Disappearance)<
+	@signal =	      0.9@#nu_mu_disappearance2 : 0.9@#nu_mu_bar_appearance2  /* now: appearance events added (no CID) */
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-05@#nu_NC_bckg  /* NC background caused by flux; same indep. of channel, since total flux same */
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+	
+	@energy_window = 	         1  :	        emax
+>
+
+rule(#Nu_Mu_Bar_Disappearance)<
+	@signal =	      0.9@#nu_mu_bar_disappearance2 : 0.9@#nu_mu_appearance2
+	@signalerror =	     0.025  :	    0.0001
+
+	@background =	         1e-05@#nu_bar_NC_bckg
+	@backgrounderror = 	     0.2  :	    0.0001
+	
+	@sys_on_function = 	"chiSpectrumTilt"
+	@sys_off_function = 	"chiNoSysSpectrum"
+	
+	@energy_window = 	         1  :	        emax
+>
+
+
+/**********************END**********************/

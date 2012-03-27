@@ -1,0 +1,150 @@
+#! /bin/sh
+# GLoBES -- General LOng Baseline Experiment Simulator
+# (C) 2002 - 2007,  The GLoBES Team
+#
+# GLoBES is mainly intended for academic purposes. Proper
+# credit must be given if you use GLoBES or parts of it. Please
+# read the section 'Credit' in the README file.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# This script is based an the gsl-config script of the GNU scientific
+# library
+
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+pkglibdir=@libdir@/globes
+perl_ext=@really_build_perl@
+extension_list=""
+wl="@wl@"
+hardcode_libdir_flag_spec="@hardcode_libdir_flag_spec@"
+
+if test $perl_ext = "yes"; then
+extension_list="$extension_list perl"
+fi
+
+# linkerflag="-Wl,--rpath -Wl,$libdir"
+#linkerflag="@linkerflag@"
+# JK, May 20, 2010, see also comments in configure.in
+linkerflag=$hardcode_libdir_flag_spec
+
+newlibs="-L$libdir $linkerflag -lglobes @LIBS@" 
+lesslibs=${newlibs%"-lglobes"}
+
+
+usage()
+{
+    cat <<EOF
+Usage: globes-config [OPTION]
+
+Known values for OPTION are:
+ 
+  --extensions          show which language extensions for globes 
+                        have been installed
+  --prefix		show GLoBES installation prefix 
+  --libs		print library linking information
+  --ltlibs              print linking information for use with libtool
+  --include             print information, where to find the globes 
+                        header files
+  --cflags		print pre-processor and compiler flags
+  --help		display this help and exit
+  --version		output version information
+
+EOF
+
+    exit $1
+}
+
+if test $# -eq 0; then
+    usage 1
+fi
+
+cflags=false
+libs=false
+
+while test $# -gt 0; do
+    case "$1" in
+    -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+    esac
+
+    case "$1" in
+    --prefix=*)
+	prefix=$optarg
+	;;
+
+    --prefix)
+	echo $prefix
+	;;
+
+    --extensions=*)
+	case "$optarg" in
+	perl)
+	    echo "$pkglibdir/perl"
+	    ;;
+	  
+  	*)
+	    echo "There is no language extension for $optarg"
+	    ;;
+	esac
+	;;
+    --extensions)
+	echo "$extension_list"
+	;;
+
+    --version)
+	echo "Package "@VERSION@
+	echo "Library "@GLBLIBVERSION@
+	exit 0
+	;;
+
+    --help)
+	usage 0
+	;;
+
+    --cflags)
+       	echo @CFLAGS@ 
+       	;;
+
+    --libs)
+	# this simplistic approach turns out not to handle -ldl correctly
+	#   	echo @GLBLDF@ @LIBS@
+	#    echo @GLBLDF@ $depenlib
+	echo $newlibs
+       	;;
+
+
+    --ltlibs)
+	echo "$libdir/libglobes.la"
+
+	;;
+
+
+    --include)
+	    echo "-I$includedir" 
+	;;
+
+    *)
+	usage
+	exit 1
+	;;
+    esac
+    shift
+done
+
+exit 0

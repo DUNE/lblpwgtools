@@ -1,0 +1,94 @@
+GLoBES - General Long Baseline Experiment Simulator
+===================================================
+
+This is GLoBES, a collection of numerical routines for the simulation
+and analysis of neutrino oscillation experiments.
+
+GLoBES is free software, you can redistribute it and/or modify it under
+the terms of the GNU General Public License.
+
+The GNU General Public License does not permit this software to be
+redistributed in proprietary programs.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Limitations
+===========
+
+GLoBES is *not* thread safe.
+GLoBES is *not* designed to be used in *security critical* applications 
+and environments, e.g. no care has been taken to avoid vulnerability
+to heap corruption exploits etc.
+
+Credit
+======
+
+GLoBES is mainly developed for academic use. Thus the authors would
+appreciate being given academic credit for it. Whenever you use GLoBES
+to produce a publication or a talk indicate that you have used GLoBES and
+please cite the following references:
+
+P. Huber, J. Kopp, M. Lindner, M. Rolinec and W. Winter
+New features in the simulation of neutrino oscillation experiments with GLoBES 3.0
+arXiv: help-ph/0701187
+
+P. Huber, M. Lindner and W. Winter
+Simulation of long-baseline neutrino oscillation experiments with GLoBES
+arXiv: hep-ph/0407333.
+
+Besides, many of the data which is used by GLoBES and distributed together
+with it should be correctly referenced where possible. For details see the
+documentation.
+
+Availability
+============
+
+The current stable version of GLoBES as well as the manual is always available
+from http://www.mpi-hd.mpg.de/~globes/
+
+Installation
+============
+
+GLoBES follows the standard GNU installation procedure.  Please consult
+the INSTALL file in this distribution for more detailed instructions.
+
+For information about specific platforms and compilers see the
+"Compilation Notes" section in the INSTALL file.
+
+More information about GLoBES
+=============================
+
+The project homepage is http://www.mpi-hd.mpg.de/~globes/
+
+See the NEWS file for recent changes to the library.
+
+Reporting Bugs
+==============
+
+A list of known bugs can be found in the BUGS file.  
+Details of compilation problems can be found in the INSTALL file.
+
+If you find a bug which is not listed in these files please report it
+to <globes@mpi-hd.mpg.de>.
+
+All bug reports should include:
+
+       The version number of GLoBES, and where you obtained it.
+       The hardware and operating system
+       The compiler used, including version number and compilation options
+       A description of the bug behaviour
+       A short program which reproducibly exercises the bug
+
+It is also useful if you can report whether the same problem occurs
+when the library is compiled without optimization.
+
+Thank you.
+
+Contributing to GLoBES
+======================
+
+If you are interested in participating in GLoBES development, please contact
+us at <globes@mpi-hd.mpg.de>
+

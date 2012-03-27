@@ -1,0 +1,258 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* 
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ #* @Article{Campagne:2006yx,
+ #*     author    = "Campagne, J. E. and Maltoni, M. and Mezzetto, M. and
+ #*                  Schwetz, T.",
+ #*     title     = "Physics potential of the CERN-MEMPHYS neutrino oscillation
+ #*                  project",
+ #*     year      = "2006",
+ #*     eprint    = "hep-ph/0603172",
+ #*     SLACcitation  = "%%CITATION = HEP-PH 0603172;%%"
+ #* }
+ * 
+ * The initial file was prepared by Mauro Mezzetto and Thomas Schwetz-Mangold. 
+ *
+ * Modifications: 
+ *  - fiducial detector mass is set to 500kt (MR 20/12/06)
+ *  - running time set to 4 years in each polarity
+ *
+ * Last Update: 12/01/07 
+ *
+  */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#nu_e_flux)<
+	@flux_file = "BB100flux_Ne.dat" 
+	@time = 4	/* years */
+  	@norm = 2.30406e-9
+	@power = 2.2 	/* corresponds to the number of useful Ne18 decays 
+			   per year in units of 10^18 */
+>
+
+nuflux(#nu_e_bar_flux)<
+	@flux_file = "BB100flux_He.dat"
+	@time = 4	/* years */
+	@norm = 8.73951e-10
+	@power = 5.8 	/* corresponds to the number of useful He6 decays 
+			   per year in units of 10^18 */
+>
+
+nuflux(#beam_bckg_Ne)<
+	@flux_file = "BeamBckg_100.dat"
+	@time = 4	/* years */
+	@norm = 174.872
+	@power = 2.2 	/* corresponds to the number of useful Ne18 decays 
+			   per year in units of 10^18 */
+>
+
+nuflux(#beam_bckg_He)<
+	@flux_file = "BeamBckg_100.dat"
+	@time = 4	/* years */
+	@norm = 66.3307
+	@power = 5.8 	/* corresponds to the number of useful He6 decays 
+			   per year in units of 10^18 */
+>
+
+nuflux(#atm_bckg_Ne)<
+	@flux_file = "AtmBckg_100.dat"
+	@time = 4	/* years */
+	@norm = 87.4361
+	@power = 2.2 	/* corresponds to the number of useful Ne18 decays 
+			   per year in units of 10^18 */
+>
+
+nuflux(#atm_bckg_He)<
+	@flux_file = "AtmBckg_100.dat"
+	@time = 4	/* years */
+	@norm = 33.1654
+	@power = 5.8 	/* corresponds to the number of useful He6 decays 
+			   per year in units of 10^18 */
+>
+
+
+/* ####### Detector settings ####### */
+
+$target_mass = 	        500.	/* kt (fiducial mass) */
+
+
+/* ####### Energy window ####### */
+
+$sampling_points = 40
+$sampling_min = 1.e-4	/* GeV */
+$sampling_max = 1.6	/* GeV */
+
+$bins = 		10
+$emin = 	        0.001	/* GeV */
+$emax = 	        1.001	/* GeV */
+
+
+/* ######## Baseline setting ######## */
+
+$profiletype = 		3 
+$densitytab = 		{2.7}
+$lengthtab = 		{130.0}
+
+
+/* ######## Technical information ######## */
+
+$filter_state = 0 
+$filter_value = 1000000 
+
+
+/* ####### Energy resolution ####### */
+
+/* AtmBckg_100.dat is already defined as reconstructed */
+
+energy(#EATM)<
+	@type = 1
+	@sigma_e = {0.0,0.0,0.00085}
+>
+
+energy(#ERESNuMu)<	
+	@energy=include "Mig_WC_numu.dat"
+>
+
+energy(#ERESNuMuBar)<	
+	@energy=include "Mig_WC_numubar.dat"
+> 
+
+energy(#ERESNue)<	
+	@energy=include "Mig_WC_nue.dat"
+>
+
+energy(#ERESNueBar)<	
+	@energy=include "Mig_WC_nuebar.dat"
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<	
+	@cross_file = "XCC_Nuance.dat"        
+>
+
+cross(#NC)<
+	@cross_file = "XNC_Nuance.dat"
+>
+
+cross(#Null)<
+	@cross_file = "Null.dat"
+>
+
+
+/* ####### Energy dependent efficiencies ####### */
+
+%preeffsNuMu    = {0.000, 0.000, 0.166, 0.463, 0.556, 0.585, 0.585, 0.599, 0.588, 0.616, 0.597, 0.597, 0.597}
+%preeffsNuMuBar = {0.000, 0.000, 0.306, 0.643, 0.728, 0.735, 0.755, 0.770, 0.773, 0.758, 0.773, 0.765, 0.765}
+%energ          = {0.02, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 1.58}
+
+%sbc = samplingbincenter()
+
+%interNuMu    = interpolation(%energ,%preeffsNuMu,1,%sbc)
+%interNuMuBar = interpolation(%energ,%preeffsNuMuBar,1,%sbc)
+
+/* ####### Channel definitions ####### */
+
+channel(#numu_app)<
+	@channel = 	#nu_e_flux:	+:	e:	m:	#CC:	#ERESNuMu
+	@pre_smearing_efficiencies = copy(%interNuMu) 
+>
+
+channel(#numubar_app)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	m:	#CC:	#ERESNuMuBar
+	@pre_smearing_efficiencies = copy(%interNuMuBar)
+>
+
+channel(#nue_disa)<
+	@channel = 	#nu_e_flux:	+:	e:	e:	#CC:	#ERESNue
+>
+
+channel(#nuebar_disa)<
+	@channel = 	#nu_e_bar_flux:	-:	e:	e:	#CC:	#ERESNueBar
+>
+
+channel(#Pions_nue)<
+	@channel = 	#beam_bckg_Ne:	+:	NOSC_e:	NOSC_e:	#Null:	#EATM
+>
+
+channel(#Pions_nuebar)<
+	@channel = 	#beam_bckg_He:	-:	NOSC_e:	NOSC_e:	#Null:	#EATM
+>
+
+channel(#Atm_bck_Ne)<
+	@channel = 	#atm_bckg_Ne:	+:	NOSC_e:	NOSC_e:	#Null:	#EATM
+>
+
+channel(#Atm_bck_He)<
+	@channel = 	#atm_bckg_He:	+:	NOSC_e:	NOSC_e:	#Null:	#EATM
+>
+
+
+/* ####### Setting the rules ####### */
+
+
+rule(#NU_MU_BAR_Appearance)<
+	@signal = 1.0@#numubar_app
+	@signalerror = 0.02 : 0.0001
+	
+	@background = 1.@#Pions_nuebar   : 1.@#Atm_bck_He 
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 0.1 : 1.
+>
+
+ rule(#NU_MU_Appearance)<
+ 	@signal = 1.0@#numu_app
+	@signalerror = 0.02 : 0.0001
+
+	@background = 1.@#Pions_nue : 1.@#Atm_bck_Ne 
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 0.1 : 1.
+> 
+
+rule(#NU_E_BAR_Disappearance)<
+	@signal = 0.677@#nuebar_disa
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.000043@#nuebar_disa 
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 0.1 : 1.
+>
+
+rule(#NU_E_Disappearance)<
+	@signal = 0.707@#nue_disa
+	@signalerror = 0.02 : 0.0001
+
+	@background = 0.000043@#nue_disa 
+	@backgrounderror = 0.02 : 0.0001
+
+	@sys_on_function = "chiSpectrumTilt"
+	@sys_off_function = "chiNoSysSpectrum"
+
+	@energy_window = 0.1 : 1.
+> 
+
+/**********************END**************************/

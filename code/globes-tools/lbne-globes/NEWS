@@ -1,0 +1,245 @@
+**********Version 3.0.1
+
+18/01/2007 JK
+        - Updated copyright notices in all code files
+        - Included title of new paper in README
+        - Removed #include <ltdl.h> from globes.c
+
+**********Version 3.0.2
+
+18/01/2007 MR
+        - glb_fluxes.c modified: now contains exact beta beam spectrum
+                -> no normalization factor needed any more
+        - BBvar_WC.glb and BBvar_TASD.glb modified accordingly
+        - T2K.glb now has same @norm as T2HK.glb (matches Table 1, hep-ph/0204352)
+
+**********Version 3.0.4
+
+19/01/2007 PH
+        - fixed a bug in the defintions parser of globes.c
+
+**********Version 3.0.5
+
+23/01/2007 JK
+        - Added hep-ph number of new paper to README
+        - Fixed minor problem which occurred for duplicate channel definitions
+
+
+**********Version 3.0.6
+
+23/01/2007 PH
+	- Added a distcheck-hook which tests the md5-sums file in data
+
+**********Version 3.0.7
+
+25/01/2007 PH
+	- the configury now handles --disable-rpath correctly, which
+	is what should be used on Mac OS X. Updated to libool 1.5.22
+	and autoconf 2.59.
+
+	- undefined AEDL variables are no longer defaulting to zero
+	but to NaN, which ensures that they create an ERROR
+
+25/01/2007 JK
+        - Corrected correlated flux normalization in D-Chooz_far.glb
+          from 2.0% to 2.8%
+
+**********Version 3.0.8
+
+29/03/2007 JK
+        - Corrected a bug in the glb_likelihood: In the calculation
+          of the Poisson chi^2, the "true" and fitted rates were
+          exchanged. This has a visible effect only for very small
+          event rates.
+
+17/04/2007 JK
+        - Fixed a small bug in glbDefaultExp, leading to a possible read
+          beyond array boundaries of smear_data[0]->bin_center
+
+
+**********Version 3.0.9
+
+24/05/2007 PH
+	- Fixed BUG#18
+
+**********Version 3.0.10
+29/06/2007 JK
+        - Fixed another potential problem in glb_likelihood (chi^2 could
+          become negative for true_rate=0, fit_rate<0)
+        - Fixed problem in glbShiftEnergyScale: for negative shifts, the
+          leftmost bin was always set to 0, instead of some interpolation
+          between 0 and its original value. This is not a big problem, but
+          it leads to glb_likelihood returning 1e200, which can confuse
+          the minimizer if it happens in the very first evaluation of chi^2.
+        - Added DocPlots.nb to the distribution
+
+**********Version 3.0.11
+13/09/2007 JK
+        - Removed libstdc++ from Makefile in source directory
+ 	- Declared fa, fb, fc and fu as long double in
+ 	  glb_hybrid_bracket to avoid problems with extra floating
+ 	  point digits on x86 CPUs (in the case of flat directions in
+ 	  parameter space, comparisons could yield wrong results if
+ 	  the operands were identical, but one of them was stored in
+ 	  main memory while the other was retained in the floating
+ 	  point registers). See also http://gcc.gnu.org/bugzilla/,
+ 	  entry No. #323.
+
+**********Version 3.0.12
+13/02/2008 PH
+	- Fixed BUG#19
+
+
+07/07/2008 JK
+        - Fixed bug in glb_fluxes.c: Wrong number of flux bins (501
+          instead of 500) had been used in glb_flux_calc. See BUG#20.
+
+**********Version 3.0.13
+16/07/08 PH
+
+09/08/2008 JK
+        - Removed "inline" keywords from declaration of zhetrd3
+          (tentatively fixes BUG#22)
+
+16/11/2009 JK
+        - Corrected bug in lexer/parser (possible access to memory
+          that flex/bison have already freed)
+
+23/11/2009 JK (only branch wbb-tweaks)
+        - If low-pass filter is active and smearing matrix is explicitly
+          given, the effect of the filter is now compensated
+        - Pre-compute part of rates to speed things up by O(10%)
+
+27/11/2009 JK
+        - Fixed bug in BB100/BB100_flux_Ne.dat file: Column for \bar{\nu}_e
+          was not zero.
+
+10/01/2010 JK (only branch wbb-tweaks)
+        - Implemented experimental simulated annealing algorithm
+          (is much too slow to be considered seriously)
+        - Modified order of some operations in glb_filtered_probability_matrix_cd
+          and glb_set_new_rates to improve speed a little
+        - Implemented function glbOptimizeSmearingMatrixInExperiment to
+          remove close-to-zero entries from smearing matrices to improve speed
+
+03/02/2010 JK (only branch wbb-tweaks)
+        - Introduced function glbGetAEDLVariable
+
+30/03/2010 JK (only branch wbb-tweaks)
+        - Fixed bug in Lexer leading to wrong line numbers in error messages
+        - Fixed bug in Lexer leading to errors if "//" comments appear
+          inside other contexts
+
+13 Apr 2010 JK
+        - Fixed bug in glbGetFilterInExperiment -- function returned
+          only integer values
+
+22 Apr 2010 JK
+        - Regenerated all autoconf/automake, libtool, gnulib stuff using
+          the latest versions of these packages:
+            aclocal 1.11.1
+            automake 1.11.1
+            autoconf 2.65
+            autoheader 2.65
+            libtool 2.65
+            gnulib-tool 0.0.3828-6d126
+          The procedure is
+            - Remove m4/ and lib/ directories
+            - Run gnulib-tool --import obstack argp mkstemp
+              (to get copy required modules from GNU library to our build tree)
+            - Get rpm.m4, swig.m4, swig_perl.m4, gsl.m4 macros and copy
+              to m4/
+            - Run aclocal -I m4, autoconf, automake, autoheader
+              (in this order)
+
+23 Apr 2010 JK
+        - Significant modifications to parser. Now accepts line breaks
+          anywhere.
+
+27 Apr 2010 JK
+        - Implemented new function glbSetEnergyWindow
+
+5 Jul 2010 JK
+        - New functions glbSetCoefficientInRule
+
+14 Sep 2010 JK
+        - GLoBES now accepts cross section and flux files with an arbitrary number of
+          lines
+
+********** This version tagged 3.1.7 ************
+
+25 Sep 2010 JK
+        - Implemented a bunch of functions that allow the user to assign
+          names to parameters, and then use these names in subsequent calls
+          to glbSetOscParamByName, glbGetOscParamByName
+
+26 Sep 2010 JK
+        - New function glbGetFilenameOfExperiment
+        - Changes to Lexer and parser:
+          * New directive $citation
+          * Strings (with double quotes '"') may now contain arbitrary characters,
+            including line breaks. This was necessary to allow for multi-line
+            citation information in glb files.
+        - New function glbGetCitationForExperiment
+
+********** This version tagged 3.1.8 ************
+
+08 Oct 2010 JK
+        - New function glbGetVerbosityLevel
+        - Standalone globes binary no longer complains if user-defined chi^2
+          function is used
+
+11 Oct 2010 JK
+        - Rebuilt the autoconf/automake system.
+          It is important to use libtoolize -c -f to get copies of dependencies
+          rather than just symlinks.
+
+15 Oct 2010 JK
+        - Added degfinder and NSI probability engine to distribution
+
+22 Oct 2010 JK
+        - Added %option nounistd to glb_lexer.l since getopt.h, included from
+          unistd.h, was causing trouble on Macs
+
+03 Nov 2010 JK
+        - Degfinder and NSI probability engine removed from distribution
+          again; will be made available as separate add-ons
+
+20 Nov 2010 JK
+        - New functions glbSetProjectionFlagByName, glbGetProjectionFlagByName
+
+********** This version tagged 3.1.9 ************
+
+20 Nov 2010 JK
+        - Removed all code related to simulated annealing
+        - Default minimizer is now GLB_POWELL
+
+22 Nov 2010 JK
+        - Changed some error messages in glb_wrapper.c to make them more meaningful
+
+27 Nov 2010 JK
+        - GLoBES now accepts flux and cross section files with non-equidistant
+          sampling points
+        - glb_warning, glb_error, glb_fatal are now more flexible: They now allow
+          a printf-like syntax with a format string and a list of optional arguments
+
+8 Dec 2010 JK
+        - Fixed small bug in glb_multiex.c (Loop in initialization of energy window
+          ran over i=0,n_channels rather than i=0,n_rules. Should be a problem
+          only in experiments with more rules than channels (I've never seen one).
+
+26 Jan 2011 JK
+        - Enclosed #include config.h in %top{ } block in glb_lexer.l to fix
+          another Mac compilation problems. I think Apple should pay
+          me for the time I spend getting software to run on their system ;-)
+
+********** This version tagged 3.1.10 ************
+
+13 feb 2011 JK
+        - Fixed Lexer problem with one-line comments ("//") that led to incorrect
+          line counting
+        - No error message if $emin or $sampling_min is zero
+
+18 Feb 2011 JK
+        - Fixed another small bug in the lexer - occasional syntax error when
+          encountering empty "//" comments

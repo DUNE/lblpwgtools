@@ -1,0 +1,75 @@
+BUG#17 Duplicate AEDL groups may not work properly
+
+From: Joachim Kopp
+Date: 23.01.07
+
+        If an AEDL group (energy, flux, nuflux, rule, cross) appears
+        twice (e.g. empty declaration and later definition), the parser
+        might assign the information from the second definition to the
+        wrong variables, since the counter for that type of environment
+        may already have a different value.
+        Possible solution: Use loc_count instead of num_of_XXX in function
+        grp_end, file glb_parser.y.
+-------------------------------------------------------------------------------
+
+BUG#18 Files opened by include in AEDL are not flclosed
+
+From: Walter Winter
+Date: 22.05.07
+
+	A program repeatedly loading an AEDL file containing 'include'
+	statements will fail with 'Can't open file' error after some
+	time (~1000 includes). 
+-------------------------------------------------------------------------------
+
+BUG#19 Filenames which are an absolute path are not resolved by glb_fopen
+
+From: Patrick Huber
+Date: 13.02.2008
+
+	If a filename starts with '/', glb_fopen will nonetheless try
+	to prepend either the working directory from which the program
+	is called or the path given by GLB_PATH. It will not first try
+	the filename itself.
+-------------------------------------------------------------------------------
+
+BUG#20 Flux times cross section does not match
+
+From: Christine Lewis
+Date: 04.08.2008
+
+	If one multiplies flux times cross section outside of GLoBES
+	the result deviates by 1% or so from the values obtained with
+	GLoBES.
+-------------------------------------------------------------------------------
+
+BUG#21 GLoBES does not compile on some Macs
+
+From: Anselmo Meregaglia
+Date: 13.05.2008
+
+        On some Macs, compilation fails with the message
+          ld: duplicate symbol _argp_fmtstream_write in .libs/libglobes.lax/
+
+-------------------------------------------------------------------------------
+
+BUG#22 Compilation problem under Fedora Core 9
+
+From: Catalina Espinoza
+Date: 22.07.2008
+
+        On Fedora Core 9, compilation fails with
+          /.libs/libglobes.so: undefined reference to `zhetrd3'
+        and some warnings:
+          glb_probability.h:58: warning: inline function 'zhetrd3' declared
+          but never defined
+
+-------------------------------------------------------------------------------
+
+BUG #23 glbTotalRuleRate is broken
+
+From: Joachim Kopp
+Date: 21.04.2010
+
+-------------------------------------------------------------------------------
+

@@ -1,0 +1,232 @@
+%!GLoBES
+
+$version="3.0.0"
+
+/* Copyright 2005,2006,2007 The GLoBES Team
+ *
+ * If you modify this file you have to rename it.
+ *
+ * If you are using this file for producing a scientific publication
+ * or a talk please cite the following references and check the supporting
+ * files for a similar comment.
+ *
+ * The description of NoVA (concerning the nu_e appearance signal) follows 
+ * the proposal as of March 15, 2005.
+ *
+ #* @Article{Ambats:2004js,
+ #*  author    = "Ambats, I. and others",
+ #*  collaboration = "NOvA",
+ #*  title     = "NOvA proposal to build a 30-kiloton off-axis detector to
+ #*               study neutrino oscillations in the Fermilab NuMI beamline",
+ #*  year      = "2004",
+ #*  eprint    = "hep-ex/0503053",
+ #*  SLACcitation  = "%%CITATION = HEP-EX 0503053;%%"
+ #* }
+ *
+ * The description of the nu_mu disappearance signal is taken from
+ *
+ #* @Article{Yang_2004,
+ #*  author    = "T. Yang and S. Woijcicki",
+ #*  collaboration = "NOvA",
+ #*  title     = "Study of physics sensitivity of $\nu_mu$ disappearance in 
+ #*               a totally active version of NoVA detector", 
+ #*  year      = "2004",
+ #*  eprint    = "Off-Axis-Note-SIM-30"
+ #* }
+ *
+ * This represent the new running plan, assuming 1.12 MW beam power
+ * (compared to 0.75MW), 3 year nu and 3 year nu-bar with a 25kt
+ * detector. See email from M. Messier from Sep 21 2006 to the FNAL
+ * long baseline mailing list. Thus we get 30E20 POT nu running and
+ * 30E20 POT nu-bar running.
+ *
+ *  Last Update: 15/01/06 
+ * 
+  */
+
+
+/* ####### Beam flux ####### */
+
+nuflux(#NoVA)<
+	@flux_file="NOvAplus.dat"
+	@time = 3	/* years */
+	@stored_muons = 10e20 /* POT yrs^-1 */
+	@norm = 6.47886918e-19
+>
+
+nuflux(#NoVAanti)<
+	@flux_file="NOvAminus.dat"
+	@time = 3	/* years */
+	@stored_muons = 10e20 /* POT yrs^-1 */
+	@norm = 6.47886918e-19 
+>
+
+
+/* ####### Detector settings ###### */
+
+$target_mass = 	        25.0	/* kt (fiducial mass) */
+
+
+ /* ####### Energy window ####### */
+
+$bins = 		20
+
+/* If you'd like to check this file against the proposal's event numbers
+ * please use 
+ *   $emin=1.0
+ *   $emax=3.5
+ * The larger range actually used is to ensure that the effect of the energy
+ * calibration error is properly taken into account. The events used for the
+ * analysis are taken from the range 1.0 GeV to 3.5 GeV (see the setting of
+ * @energy_window in the rules).
+ */
+
+$emin = 	        1	/* GeV */
+$emax = 	        3.5	/* GeV */
+
+$sampling_points = 		25
+$sampling_min =    		0.5	/* GeV */
+$sampling_max =         	4.0	/* GeV */
+
+
+/* ####### Baseline setting ####### */
+
+$profiletype = 		3 
+
+/* The relatively larger signal is due to matter effects
+ * whereas the event numbers in the proposal assume two-flavour 
+ * vacuum oscillations
+ */
+
+$densitytab = 		{2.8} 
+$lengthtab = 		{812}	/* km */
+
+
+/* ####### Technical information ####### */
+
+$filter_state = 0 
+$filter_value = 1000000 
+
+
+/* ####### Energy resolution ####### */
+
+energy(#electron)<
+	@type = 1
+	@sigma_e = {0,0.10,0}
+>
+
+energy(#muon)<
+	@type = 1
+	@sigma_e = {0,0.05,0}
+>
+
+
+/* ####### Cross sections ####### */
+
+cross(#CC)<
+	@cross_file = "XCC.dat"
+>
+
+cross(#NC)<
+	@cross_file = "XNC.dat"
+>
+
+
+/* ####### Channel definitions ####### */
+
+channel(#nu_mu_CC)<
+	@channel = 	#NoVA:	+:	m:	m:	#CC:    #muon
+>
+
+
+channel(#nu_mu_NC)<
+	@channel = 	#NoVA:	+:	NOSC_m:	NOSC_m:	#NC:    #electron
+>
+
+channel(#nu_e_beam)<
+	@channel = 	#NoVA:	+:	e:	e:	#CC:    #electron
+>
+
+channel(#nu_e_signal)<
+	@channel = 	#NoVA:	+:	m:	e:	#CC:    #electron	
+>
+
+channel(#nu_bar_mu_CC)<
+	@channel = 	#NoVAanti:	-:	m:	m:	#CC:    #muon
+>
+
+channel(#nu_bar_mu_NC)<
+	@channel = 	#NoVAanti:	-:	NOSC_m:	NOSC_m:	#NC:    #electron
+>
+
+channel(#nu_bar_e_beam)<
+	@channel = 	#NoVAanti:	-:	e:	e:	#CC:    #electron
+>
+
+channel(#nu_bar_e_signal)<
+	@channel = 	#NoVAanti:	-:	m:	e:	#CC:    #electron	
+>
+
+
+/* ####### Setting the rules ####### */
+ 
+rule(#Nu_E_Appearance)<
+ 	@signal = 0.24@#nu_e_signal
+	@signalerror = 0.05 : 0.025
+	
+	@background =  0.0004@#nu_mu_CC : 0.0015@#nu_mu_NC : 0.12@#nu_e_beam
+	@backgrounderror = 0.05 : 0.025
+		
+	@sys_on_function = "chiSpectrumCalib"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 1.0 : 3.5
+>
+
+
+rule(#Nu_Mu_Disappearance)<
+ 	@signal = 0.8@#nu_mu_CC
+	@signalerror = 0.05 : 0.025
+	
+	@background =  0.0015@#nu_mu_NC
+	@backgrounderror = 0.05 : 0.025
+		
+	@sys_on_function = "chiSpectrumCalib"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 1.0 : 3.5
+>
+
+
+rule(#Nu_E_Bar_Appearance)<
+ 	@signal = 0.37@#nu_bar_e_signal
+	@signalerror = 0.05 : 0.025
+	
+	@background =  0.0004@#nu_bar_mu_CC : 0.0037@#nu_bar_mu_NC : 0.12@#nu_bar_e_beam
+	@backgrounderror = 0.05 : 0.025
+		
+	@sys_on_function = "chiSpectrumCalib"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 1.0 : 3.5
+>
+
+
+rule(#Nu_Mu_Bar_Disappearance)<
+ 	@signal = 0.8@#nu_bar_mu_CC
+	@signalerror = 0.05 : 0.025
+	
+	@background =  0.0015@#nu_bar_mu_NC
+	@backgrounderror = 0.05 : 0.025
+		
+	@sys_on_function = "chiSpectrumCalib"
+	@sys_off_function = "chiNoSysSpectrum"
+	
+	@energy_window = 1.0 : 3.5
+>
+
+
+
+
+
+/**********************END**********************/
