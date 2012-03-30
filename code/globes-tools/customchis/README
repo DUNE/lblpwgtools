@@ -1,0 +1,5 @@
+customChis: This holds any custom Chi^2 functions for use within GLoBES. The output is an object file for inclusion within other GLoBES based software.
+
+To build it: make customChis.o
+
+
