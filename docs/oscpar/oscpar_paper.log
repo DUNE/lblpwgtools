@@ -1,0 +1,714 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011/Fink) (format=pdflatex 2012.3.21)  17 APR 2014 13:43
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**oscpar_paper
+(./oscpar_paper.tex
+LaTeX2e <2009/09/24>
+Babel <v3.8l> and hyphenation patterns for english, dumylang, nohyphenation, ge
+rman-x-2009-06-19, ngerman-x-2009-06-19, afrikaans, ancientgreek, ibycus, arabi
+c, armenian, basque, bulgarian, catalan, pinyin, coptic, croatian, czech, danis
+h, dutch, ukenglish, usenglishmax, esperanto, estonian, ethiopic, farsi, finnis
+h, french, galician, german, ngerman, swissgerman, monogreek, greek, hungarian,
+ icelandic, assamese, bengali, gujarati, hindi, kannada, malayalam, marathi, or
+iya, panjabi, tamil, telugu, indonesian, interlingua, irish, italian, kurmanji,
+ lao, latin, latvian, lithuanian, mongolian, mongolianlmc, bokmal, nynorsk, pol
+ish, portuguese, romanian, russian, sanskrit, serbian, serbianc, slovak, sloven
+ian, spanish, swedish, turkish, turkmen, ukrainian, uppersorbian, welsh, loaded
+.
+(/sw/share/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/sw/share/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/sw/share/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip10
+Package: url 2006/04/12  ver 3.3  Verb mode for urls, etc.
+)
+(/sw/share/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2011/04/17 v6.82g Hypertext links for LaTeX
+
+(/sw/share/texmf-dist/tex/generic/oberdiek/hobsub-hyperref.sty
+Package: hobsub-hyperref 2011/04/23 v1.4 Bundle oberdiek, subset hyperref (HO)
+
+(/sw/share/texmf-dist/tex/generic/oberdiek/hobsub-generic.sty
+Package: hobsub-generic 2011/04/23 v1.4 Bundle oberdiek, subset generic (HO)
+Package: hobsub 2011/04/23 v1.4 Subsetting bundle oberdiek (HO)
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/message (HO)
+Package: ltxcmds 2011/04/18 v1.20 LaTeX kernel commands for general use (HO)
+Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+Package: ifvtex 2010/03/01 v1.5 Switches for detecting VTeX and its modes (HO)
+Package ifvtex Info: VTeX not detected.
+Package: intcalc 2007/09/27 v1.1 Expandable integer calculations (HO)
+Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in PDF mode is detected.
+Package: etexcmds 2011/02/16 v1.5 Prefix for e-TeX command names (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+Package: kvsetkeys 2011/04/07 v1.13 Key value parser (HO)
+Package: kvdefinekeys 2011/04/07 v1.3 Defining keys (HO)
+Package: pdftexcmds 2011/04/22 v0.16 Utilities of pdfTeX for LuaTeX (HO)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+Package: pdfescape 2011/04/04 v1.12 Provides string conversions (HO)
+Package: bigintcalc 2011/01/30 v1.2 Expandable big integer calculations (HO)
+Package: bitset 2011/01/30 v1.1 Data type bit set (HO)
+Package: uniquecounter 2011/01/30 v1.2 Provides unlimited unique counter (HO)
+)
+Package hobsub Info: Skipping package `hobsub' (already loaded).
+Package: letltxmacro 2010/09/02 v1.4 Let assignment for LaTeX macros (HO)
+Package: hopatch 2011/01/30 v1.0 Wrapper for package hooks (HO)
+Package: xcolor-patch 2011/01/30 xcolor patch
+Package: atveryend 2011/04/23 v1.7 Hooks at very end of document (HO)
+Package atveryend Info: \enddocument detected (standard).
+Package: atbegshi 2011/01/30 v1.15 At begin shipout hook (HO)
+Package: refcount 2010/12/01 v3.2 Data extraction from references (HO)
+Package: hycolor 2011/01/30 v1.7 Color options of hyperref/bookmark (HO)
+)
+(/sw/share/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/sw/share/texmf-dist/tex/generic/ifxetex/ifxetex.sty
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+)
+(/sw/share/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2010/12/23 v3.10 Keyval support for LaTeX options (HO)
+)
+\@linkdim=\dimen103
+\Hy@linkcounter=\count87
+\Hy@pagecounter=\count88
+
+(/sw/share/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2011/04/17 v6.82g Hyperref: PDFDocEncoding definition (HO)
+)
+\Hy@SavedSpaceFactor=\count89
+
+(/sw/share/texmf-dist/tex/latex/latexconfig/hyperref.cfg
+File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
+)
+Package hyperref Info: Hyper figures OFF on input line 4026.
+Package hyperref Info: Link nesting OFF on input line 4031.
+Package hyperref Info: Hyper index ON on input line 4034.
+Package hyperref Info: Plain pages OFF on input line 4041.
+Package hyperref Info: Backreferencing OFF on input line 4046.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4264.
+\c@Hy@tempcnt=\count90
+LaTeX Info: Redefining \url on input line 4617.
+\Fld@menulength=\count91
+\Field@Width=\dimen104
+\Fld@charsize=\dimen105
+Package hyperref Info: Hyper figures OFF on input line 5701.
+Package hyperref Info: Link nesting OFF on input line 5706.
+Package hyperref Info: Hyper index ON on input line 5709.
+Package hyperref Info: backreferencing OFF on input line 5716.
+Package hyperref Info: Link coloring OFF on input line 5721.
+Package hyperref Info: Link coloring with OCG OFF on input line 5726.
+Package hyperref Info: PDF/A mode OFF on input line 5731.
+LaTeX Info: Redefining \ref on input line 5771.
+LaTeX Info: Redefining \pageref on input line 5775.
+\Hy@abspage=\count92
+\c@Item=\count93
+\c@Hfootnote=\count94
+)
+
+Package hyperref Message: Driver (autodetected): hpdftex.
+
+(/sw/share/texmf-dist/tex/latex/hyperref/hpdftex.def
+File: hpdftex.def 2011/04/17 v6.82g Hyperref driver for pdfTeX
+\Fld@listcount=\count95
+\c@bookmark@seq@number=\count96
+
+(/sw/share/texmf-dist/tex/latex/oberdiek/rerunfilecheck.sty
+Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+82.
+)
+\Hy@SectionHShift=\skip43
+)
+(/sw/share/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/sw/share/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/sw/share/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/sw/share/texmf-dist/tex/latex/latexconfig/graphics.cfg
+File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+(/sw/share/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+\Gread@gobject=\count97
+))
+\Gin@req@height=\dimen106
+\Gin@req@width=\dimen107
+)
+(/sw/share/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2000/07/18 v2.13 AMS math features
+\@mathmargin=\skip44
+
+For additional information on amsmath, use the `?' option.
+(/sw/share/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01
+
+(/sw/share/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0
+\@emptytoks=\toks15
+\ex@=\dimen108
+))
+(/sw/share/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d
+\pmbraise@=\dimen109
+)
+(/sw/share/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 1999/12/14 v2.01 operator names
+)
+\inf@bad=\count98
+LaTeX Info: Redefining \frac on input line 211.
+\uproot@=\count99
+\leftroot@=\count100
+LaTeX Info: Redefining \overline on input line 307.
+\classnum@=\count101
+\DOTSCASE@=\count102
+LaTeX Info: Redefining \ldots on input line 379.
+LaTeX Info: Redefining \dots on input line 382.
+LaTeX Info: Redefining \cdots on input line 467.
+\Mathstrutbox@=\box26
+\strutbox@=\box27
+\big@size=\dimen110
+LaTeX Font Info:    Redeclaring font encoding OML on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
+\macc@depth=\count103
+\c@MaxMatrixCols=\count104
+\dotsspace@=\muskip11
+\c@parentequation=\count105
+\dspbrk@lvl=\count106
+\tag@help=\toks16
+\row@=\count107
+\column@=\count108
+\maxfields@=\count109
+\andhelp@=\toks17
+\eqnshift@=\dimen111
+\alignsep@=\dimen112
+\tagshift@=\dimen113
+\tagwidth@=\dimen114
+\totwidth@=\dimen115
+\lineht@=\dimen116
+\@envbody=\toks18
+\multlinegap=\skip45
+\multlinetaggap=\skip46
+\mathdisplay@stack=\toks19
+LaTeX Info: Redefining \[ on input line 2666.
+LaTeX Info: Redefining \] on input line 2667.
+) (./oscpar_paper.aux)
+\openout1 = `oscpar_paper.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 33.
+LaTeX Font Info:    ... okay on input line 33.
+\AtBeginShipoutBox=\box28
+Package hyperref Info: Link coloring OFF on input line 33.
+
+(/sw/share/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2010/04/30 v2.40 Cross-referencing by name of section
+
+(/sw/share/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
+Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
+)
+\c@section@level=\count110
+)
+LaTeX Info: Redefining \ref on input line 33.
+LaTeX Info: Redefining \pageref on input line 33.
+LaTeX Info: Redefining \nameref on input line 33.
+
+(./oscpar_paper.out) (./oscpar_paper.out)
+\@outlinefile=\write3
+\openout3 = `oscpar_paper.out'.
+
+
+(/sw/share/texmf-dist/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count111
+\scratchdimen=\dimen117
+\scratchbox=\box29
+\nofMPsegments=\count112
+\nofMParguments=\count113
+\everyMPshowfont=\toks20
+\MPscratchCnt=\count114
+\MPscratchDim=\dimen118
+\MPnumerator=\count115
+\makeMPintoPDFobject=\count116
+\everyMPtoPDFconversion=\toks21
+) (/sw/share/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
+
+(/sw/share/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2010/08/19 v1.1 Managing graphics extensions (HO)
+)
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 452.
+
+(/sw/share/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+Overfull \hbox (4.0273pt too wide) in paragraph at lines 51--75
+\OT1/cmr/m/n/10.95 It is well-established ex-per-i-men-tally that the fla-vor c
+om-po-si-tion of neu-tri-nos change as they propagate[[]].
+ []
+
+[1
+
+{/sw/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+<figs/fogli13_chisq.pdf, id=67, 614.295pt x 794.97pt>
+File: figs/fogli13_chisq.pdf Graphic file (type pdf)
+
+<use figs/fogli13_chisq.pdf>
+Package pdftex.def Info: figs/fogli13_chisq.pdf used on input line 164.
+(pdftex.def)             Requested size: 389.17947pt x 419.0538pt.
+
+<figs/LBNE_smear_NC_all.pdf, id=84, 569.12625pt x 552.0625pt>
+File: figs/LBNE_smear_NC_all.pdf Graphic file (type pdf)
+
+<use figs/LBNE_smear_NC_all.pdf>
+Package pdftex.def Info: figs/LBNE_smear_NC_all.pdf used on input line 252.
+(pdftex.def)             Requested size: 218.91113pt x 212.34676pt.
+
+<figs/tau_smear_prd.pdf, id=85, 569.12625pt x 552.0625pt>
+File: figs/tau_smear_prd.pdf Graphic file (type pdf)
+
+<use figs/tau_smear_prd.pdf>
+Package pdftex.def Info: figs/tau_smear_prd.pdf used on input line 253.
+(pdftex.def)             Requested size: 218.91113pt x 212.34676pt.
+ [2] [3]
+<figs/spectra_35kt_nue_dcpvar.pdf, id=117, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 29
+7.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_dcpvar.pdf, id=118, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
+ 298.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 29
+9.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
+ 300.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+
+LaTeX Warning: Citation `NOVA/T2K' on page 4 undefined on input line 329.
+
+<figs/asym_vs_dcp_1300km.pdf, id=121, 569.12625pt x 384.43625pt>
+File: figs/asym_vs_dcp_1300km.pdf Graphic file (type pdf)
+
+<use figs/asym_vs_dcp_1300km.pdf>
+Package pdftex.def Info: figs/asym_vs_dcp_1300km.pdf used on input line 337.
+(pdftex.def)             Requested size: 364.85435pt x 246.46657pt.
+ [4 <./figs/fogli13_chisq.pdf>] [5 <./figs/LBNE_smear_NC_all.pdf> <./figs/tau_s
+mear_prd.pdf>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 344.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 344.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\theta' on input line 344.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 344.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 344.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 344.
+
+<figs/spectra_35kt_nue_th13var.pdf, id=181, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th13var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th13var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th13var.pdf used on input line 3
+52.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_th13var.pdf, id=182, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th13var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th13var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var.pdf used on input lin
+e 353.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nue_th13var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th13var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th13var.pdf used on input line 3
+54.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_th13var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th13var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var.pdf used on input lin
+e 355.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_nh_th13.pdf, id=185, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_nh_th13.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_nh_th13.pdf>
+Package pdftex.def Info: figs/mh_35kt_nh_th13.pdf used on input line 385.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_nh_th13.pdf, id=186, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_nh_th13.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_nh_th13.pdf>
+Package pdftex.def Info: figs/cpv_35kt_nh_th13.pdf used on input line 386.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_ih_th13.pdf, id=187, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_ih_th13.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_ih_th13.pdf>
+Package pdftex.def Info: figs/mh_35kt_ih_th13.pdf used on input line 387.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_ih_th13.pdf, id=188, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_ih_th13.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_ih_th13.pdf>
+Package pdftex.def Info: figs/cpv_35kt_ih_th13.pdf used on input line 388.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+ [6 <./figs/spectra_35kt_nue_dcpvar.pdf> <./figs/spectra_35kt_nuebar_dcpvar.pdf
+>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 400.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 400.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\theta' on input line 400.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 400.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 400.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 400.
+
+<figs/spectra_35kt_nue_th23var.pdf, id=208, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th23var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th23var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th23var.pdf used on input line 4
+10.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_th23var.pdf, id=209, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th23var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th23var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var.pdf used on input lin
+e 411.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nue_th23var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th23var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th23var.pdf used on input line 4
+12.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_th23var.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th23var.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var.pdf used on input lin
+e 413.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+
+LaTeX Warning: Reference `fig:mh_th23_dependance' on page 7 undefined on input 
+line 450.
+
+<figs/mh_35kt_nh_th23.pdf, id=214, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_nh_th23.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_nh_th23.pdf>
+Package pdftex.def Info: figs/mh_35kt_nh_th23.pdf used on input line 454.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_nh_th23.pdf, id=215, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_nh_th23.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_nh_th23.pdf>
+Package pdftex.def Info: figs/cpv_35kt_nh_th23.pdf used on input line 455.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_ih_th23.pdf, id=216, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_ih_th23.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_ih_th23.pdf>
+Package pdftex.def Info: figs/mh_35kt_ih_th23.pdf used on input line 456.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_ih_th23.pdf, id=217, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_ih_th23.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_ih_th23.pdf>
+Package pdftex.def Info: figs/cpv_35kt_ih_th23.pdf used on input line 457.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spec_nh90_ih-90_80gev.pdf, id=218, 569.12625pt x 385.44pt>
+File: figs/spec_nh90_ih-90_80gev.pdf Graphic file (type pdf)
+
+<use figs/spec_nh90_ih-90_80gev.pdf>
+Package pdftex.def Info: figs/spec_nh90_ih-90_80gev.pdf used on input line 472.
+
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spec_nh90_ih-90_80gev_th23max.pdf, id=219, 569.12625pt x 385.44pt>
+File: figs/spec_nh90_ih-90_80gev_th23max.pdf Graphic file (type pdf)
+
+<use figs/spec_nh90_ih-90_80gev_th23max.pdf>
+Package pdftex.def Info: figs/spec_nh90_ih-90_80gev_th23max.pdf used on input l
+ine 473.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\Delta' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `superscript' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 485.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 485.
+
+<figs/spectra_35kt_nue_dmvar.pdf, id=221, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dmvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_dmvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dmvar.pdf used on input line 493
+.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_dmvar.pdf, id=222, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dmvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dmvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar.pdf used on input line 
+494.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nue_dmvar.pdf Graphic file (type pdf)
+ <use figs/spectra_35kt_nue_dmvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dmvar.pdf used on input line 495
+.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_dmvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dmvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar.pdf used on input line 
+496.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_nh_dmsq.pdf, id=224, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_nh_dmsq.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_nh_dmsq.pdf>
+Package pdftex.def Info: figs/mh_35kt_nh_dmsq.pdf used on input line 517.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_nh_dmsq.pdf, id=225, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_nh_dmsq.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_nh_dmsq.pdf>
+Package pdftex.def Info: figs/cpv_35kt_nh_dmsq.pdf used on input line 518.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_ih_dmsq.pdf, id=226, 569.12625pt x 385.44pt>
+File: figs/mh_35kt_ih_dmsq.pdf Graphic file (type pdf)
+
+<use figs/mh_35kt_ih_dmsq.pdf>
+Package pdftex.def Info: figs/mh_35kt_ih_dmsq.pdf used on input line 519.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/cpv_35kt_ih_dmsq.pdf, id=227, 569.12625pt x 385.44pt>
+File: figs/cpv_35kt_ih_dmsq.pdf Graphic file (type pdf)
+
+<use figs/cpv_35kt_ih_dmsq.pdf>
+Package pdftex.def Info: figs/cpv_35kt_ih_dmsq.pdf used on input line 520.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+ [7 <./figs/asym_vs_dcp_1300km.pdf, page is rotated 90 degrees>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 532.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\delta' on input line 532.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 532.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 532.
+
+File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+<use figs/spectra_35kt_nue_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 53
+9.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
+ 540.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 54
+1.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dcpvar.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
+ 542.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+ (./oscpar_paper.bbl [8 <./figs/spectra_35kt_nue_th13var.pdf> <./figs/spectra_3
+5kt_nuebar_th13var.pdf>] [9 <./figs/mh_35kt_nh_th13.pdf> <./figs/cpv_35kt_nh_th
+13.pdf> <./figs/mh_35kt_ih_th13.pdf> <./figs/cpv_35kt_ih_th13.pdf>])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 562.
+ [10 <./figs/spectra_35kt_nue_th23var.pdf> <./figs/spectra_35kt_nuebar_th23var.
+pdf>] [11 <./figs/mh_35kt_nh_th23.pdf> <./figs/cpv_35kt_nh_th23.pdf> <./figs/mh
+_35kt_ih_th23.pdf> <./figs/cpv_35kt_ih_th23.pdf> <./figs/spec_nh90_ih-90_80gev.
+pdf> <./figs/spec_nh90_ih-90_80gev_th23max.pdf>]
+[12 <./figs/spectra_35kt_nue_dmvar.pdf> <./figs/spectra_35kt_nuebar_dmvar.pdf>]
+[13 <./figs/mh_35kt_nh_dmsq.pdf> <./figs/cpv_35kt_nh_dmsq.pdf> <./figs/mh_35kt_
+ih_dmsq.pdf> <./figs/cpv_35kt_ih_dmsq.pdf>] [14]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 562.
+ (./oscpar_paper.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 562.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 562.
+Package rerunfilecheck Info: File `oscpar_paper.out' has not changed.
+(rerunfilecheck)             Checksum: 92A4617B68103293CE7D4B49F1CE95F5;520.
+
+
+LaTeX Warning: There were undefined references.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 562.
+ ) 
+Here is how much of TeX's memory you used:
+ 5769 strings out of 493633
+ 84473 string characters out of 3149115
+ 196191 words of memory out of 3000000
+ 8953 multiletter control sequences out of 15000+200000
+ 12448 words of font info for 45 fonts, out of 3000000 for 9000
+ 831 hyphenation exceptions out of 8191
+ 29i,10n,31p,824b,444s stack positions out of 5000i,500n,10000p,200000b,50000s
+</sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></sw/share/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></sw/share/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmex10.pfb></sw/share/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmmi10.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi1
+2.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></sw/share
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></sw/share/texmf-dist/font
+s/type1/public/amsfonts/cm/cmr10.pfb></sw/share/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmr12.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17
+.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></sw/share/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></sw/share/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr8.pfb></sw/share/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr9.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
+></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></sw/share/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></sw/share/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmti10.pfb></sw/share/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmtt10.pfb></sw/share/texmf-dist/fonts/type1/public/tex-gyre/qhvr.pfb>
+Output written on oscpar_paper.pdf (14 pages, 556642 bytes).
+PDF statistics:
+ 502 PDF objects out of 1000 (max. 8388607)
+ 383 compressed objects within 4 object streams
+ 59 named destinations out of 1000 (max. 500000)
+ 201 words of extra memory for PDF output out of 10000 (max. 10000000)
+
