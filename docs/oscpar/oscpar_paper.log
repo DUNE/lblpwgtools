@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011/Fink) (format=pdflatex 2012.3.21)  17 APR 2014 13:43
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011/Fink) (format=pdflatex 2012.3.21)  22 APR 2014 17:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -316,32 +316,32 @@ File: figs/tau_smear_prd.pdf Graphic file (type pdf)
 Package pdftex.def Info: figs/tau_smear_prd.pdf used on input line 253.
 (pdftex.def)             Requested size: 218.91113pt x 212.34676pt.
  [2] [3]
-<figs/spectra_35kt_nue_dcpvar.pdf, id=117, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nue_dcpvar_nh.pdf, id=117, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dcpvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 29
-7.
+<use figs/spectra_35kt_nue_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar_nh.pdf used on input line
+ 297.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spectra_35kt_nuebar_dcpvar.pdf, id=118, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nuebar_dcpvar_nh.pdf, id=118, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dcpvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
- 298.
+<use figs/spectra_35kt_nuebar_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar_nh.pdf used on input l
+ine 298.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
+File: figs/spectra_35kt_nue_dcpvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 29
-9.
+<use figs/spectra_35kt_nue_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar_nh.pdf used on input line
+ 299.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+File: figs/spectra_35kt_nuebar_dcpvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
- 300.
+<use figs/spectra_35kt_nuebar_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar_nh.pdf used on input l
+ine 300.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
 
@@ -379,63 +379,67 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 344.
 
-<figs/spectra_35kt_nue_th13var.pdf, id=181, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nue_th13var.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nue_th13var_nh.pdf, id=181, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th13var_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_th13var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_th13var.pdf used on input line 3
-52.
+<use figs/spectra_35kt_nue_th13var_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th13var_nh.pdf used on input lin
+e 352.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spectra_35kt_nuebar_th13var.pdf, id=182, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nuebar_th13var.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nuebar_th13var_nh.pdf, id=182, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th13var_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_th13var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var.pdf used on input lin
-e 353.
-(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nue_th13var.pdf Graphic file (type pdf)
-
-<use figs/spectra_35kt_nue_th13var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_th13var.pdf used on input line 3
-54.
-(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_th13var.pdf Graphic file (type pdf)
-
-<use figs/spectra_35kt_nuebar_th13var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var.pdf used on input lin
-e 355.
+<use figs/spectra_35kt_nuebar_th13var_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var_nh.pdf used on input 
+line 353.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/mh_35kt_nh_th13.pdf, id=185, 569.12625pt x 385.44pt>
+<figs/spectra_35kt_nue_th13var_ih.pdf, id=183, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th13var_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th13var_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th13var_ih.pdf used on input lin
+e 354.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_th13var_ih.pdf, id=184, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th13var_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th13var_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th13var_ih.pdf used on input 
+line 355.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_nh_th13.pdf, id=187, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_nh_th13.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_nh_th13.pdf>
 Package pdftex.def Info: figs/mh_35kt_nh_th13.pdf used on input line 385.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_nh_th13.pdf, id=186, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_nh_th13.pdf, id=188, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_nh_th13.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_nh_th13.pdf>
 Package pdftex.def Info: figs/cpv_35kt_nh_th13.pdf used on input line 386.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/mh_35kt_ih_th13.pdf, id=187, 569.12625pt x 385.44pt>
+<figs/mh_35kt_ih_th13.pdf, id=189, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_ih_th13.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_ih_th13.pdf>
 Package pdftex.def Info: figs/mh_35kt_ih_th13.pdf used on input line 387.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_ih_th13.pdf, id=188, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_ih_th13.pdf, id=190, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_ih_th13.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_ih_th13.pdf>
 Package pdftex.def Info: figs/cpv_35kt_ih_th13.pdf used on input line 388.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
- [6 <./figs/spectra_35kt_nue_dcpvar.pdf> <./figs/spectra_35kt_nuebar_dcpvar.pdf
->]
+ [6 <./figs/spectra_35kt_nue_dcpvar_nh.pdf> <./figs/spectra_35kt_nuebar_dcpvar_
+nh.pdf>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 400.
@@ -460,67 +464,71 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 400.
 
-<figs/spectra_35kt_nue_th23var.pdf, id=208, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nue_th23var.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nue_th23var_nh.pdf, id=210, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th23var_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_th23var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_th23var.pdf used on input line 4
-10.
+<use figs/spectra_35kt_nue_th23var_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th23var_nh.pdf used on input lin
+e 410.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spectra_35kt_nuebar_th23var.pdf, id=209, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nuebar_th23var.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nuebar_th23var_nh.pdf, id=211, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th23var_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_th23var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var.pdf used on input lin
-e 411.
+<use figs/spectra_35kt_nuebar_th23var_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var_nh.pdf used on input 
+line 411.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nue_th23var.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_th23var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_th23var.pdf used on input line 4
-12.
+<figs/spectra_35kt_nue_th23var_ih.pdf, id=212, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_th23var_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_th23var_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_th23var_ih.pdf used on input lin
+e 412.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_th23var.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_th23var.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var.pdf used on input lin
-e 413.
+<figs/spectra_35kt_nuebar_th23var_ih.pdf, id=213, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_th23var_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_th23var_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_th23var_ih.pdf used on input 
+line 413.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
 
 LaTeX Warning: Reference `fig:mh_th23_dependance' on page 7 undefined on input 
 line 450.
 
-<figs/mh_35kt_nh_th23.pdf, id=214, 569.12625pt x 385.44pt>
+<figs/mh_35kt_nh_th23.pdf, id=218, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_nh_th23.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_nh_th23.pdf>
 Package pdftex.def Info: figs/mh_35kt_nh_th23.pdf used on input line 454.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_nh_th23.pdf, id=215, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_nh_th23.pdf, id=219, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_nh_th23.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_nh_th23.pdf>
 Package pdftex.def Info: figs/cpv_35kt_nh_th23.pdf used on input line 455.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/mh_35kt_ih_th23.pdf, id=216, 569.12625pt x 385.44pt>
+<figs/mh_35kt_ih_th23.pdf, id=220, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_ih_th23.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_ih_th23.pdf>
 Package pdftex.def Info: figs/mh_35kt_ih_th23.pdf used on input line 456.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_ih_th23.pdf, id=217, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_ih_th23.pdf, id=221, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_ih_th23.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_ih_th23.pdf>
 Package pdftex.def Info: figs/cpv_35kt_ih_th23.pdf used on input line 457.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spec_nh90_ih-90_80gev.pdf, id=218, 569.12625pt x 385.44pt>
+<figs/spec_nh90_ih-90_80gev.pdf, id=222, 569.12625pt x 385.44pt>
 File: figs/spec_nh90_ih-90_80gev.pdf Graphic file (type pdf)
 
 <use figs/spec_nh90_ih-90_80gev.pdf>
@@ -528,7 +536,7 @@ Package pdftex.def Info: figs/spec_nh90_ih-90_80gev.pdf used on input line 472.
 
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spec_nh90_ih-90_80gev_th23max.pdf, id=219, 569.12625pt x 385.44pt>
+<figs/spec_nh90_ih-90_80gev_th23max.pdf, id=223, 569.12625pt x 385.44pt>
 File: figs/spec_nh90_ih-90_80gev_th23max.pdf Graphic file (type pdf)
 
 <use figs/spec_nh90_ih-90_80gev_th23max.pdf>
@@ -564,55 +572,60 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 485.
 
-<figs/spectra_35kt_nue_dmvar.pdf, id=221, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nue_dmvar.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nue_dmvar_nh.pdf, id=225, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dmvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_dmvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dmvar.pdf used on input line 493
-.
+<use figs/spectra_35kt_nue_dmvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dmvar_nh.pdf used on input line 
+493.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/spectra_35kt_nuebar_dmvar.pdf, id=222, 569.12625pt x 385.44pt>
-File: figs/spectra_35kt_nuebar_dmvar.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nuebar_dmvar_nh.pdf, id=226, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dmvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_dmvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar.pdf used on input line 
-494.
-(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nue_dmvar.pdf Graphic file (type pdf)
- <use figs/spectra_35kt_nue_dmvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dmvar.pdf used on input line 495
-.
-(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_dmvar.pdf Graphic file (type pdf)
-
-<use figs/spectra_35kt_nuebar_dmvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar.pdf used on input line 
-496.
+<use figs/spectra_35kt_nuebar_dmvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar_nh.pdf used on input li
+ne 494.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/mh_35kt_nh_dmsq.pdf, id=224, 569.12625pt x 385.44pt>
+<figs/spectra_35kt_nue_dmvar_ih.pdf, id=227, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dmvar_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nue_dmvar_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dmvar_ih.pdf used on input line 
+495.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/spectra_35kt_nuebar_dmvar_ih.pdf, id=228, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dmvar_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dmvar_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dmvar_ih.pdf used on input li
+ne 496.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+
+<figs/mh_35kt_nh_dmsq.pdf, id=230, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_nh_dmsq.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_nh_dmsq.pdf>
 Package pdftex.def Info: figs/mh_35kt_nh_dmsq.pdf used on input line 517.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_nh_dmsq.pdf, id=225, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_nh_dmsq.pdf, id=231, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_nh_dmsq.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_nh_dmsq.pdf>
 Package pdftex.def Info: figs/cpv_35kt_nh_dmsq.pdf used on input line 518.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/mh_35kt_ih_dmsq.pdf, id=226, 569.12625pt x 385.44pt>
+<figs/mh_35kt_ih_dmsq.pdf, id=232, 569.12625pt x 385.44pt>
 File: figs/mh_35kt_ih_dmsq.pdf Graphic file (type pdf)
 
 <use figs/mh_35kt_ih_dmsq.pdf>
 Package pdftex.def Info: figs/mh_35kt_ih_dmsq.pdf used on input line 519.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
 
-<figs/cpv_35kt_ih_dmsq.pdf, id=227, 569.12625pt x 385.44pt>
+<figs/cpv_35kt_ih_dmsq.pdf, id=233, 569.12625pt x 385.44pt>
 File: figs/cpv_35kt_ih_dmsq.pdf Graphic file (type pdf)
 
 <use figs/cpv_35kt_ih_dmsq.pdf>
@@ -635,40 +648,49 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 532.
 
-File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
-<use figs/spectra_35kt_nue_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 53
-9.
+File: figs/spectra_35kt_nue_dcpvar_nh.pdf Graphic file (type pdf)
+<use figs/spectra_35kt_nue_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar_nh.pdf used on input line
+ 539.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+File: figs/spectra_35kt_nuebar_dcpvar_nh.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
- 540.
+<use figs/spectra_35kt_nuebar_dcpvar_nh.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar_nh.pdf used on input l
+ine 540.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nue_dcpvar.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nue_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar.pdf used on input line 54
-1.
-(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
-File: figs/spectra_35kt_nuebar_dcpvar.pdf Graphic file (type pdf)
+<figs/spectra_35kt_nue_dcpvar_ih.pdf, id=288, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nue_dcpvar_ih.pdf Graphic file (type pdf)
 
-<use figs/spectra_35kt_nuebar_dcpvar.pdf>
-Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar.pdf used on input line
- 542.
+<use figs/spectra_35kt_nue_dcpvar_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nue_dcpvar_ih.pdf used on input line
+ 541.
 (pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
- (./oscpar_paper.bbl [8 <./figs/spectra_35kt_nue_th13var.pdf> <./figs/spectra_3
-5kt_nuebar_th13var.pdf>] [9 <./figs/mh_35kt_nh_th13.pdf> <./figs/cpv_35kt_nh_th
-13.pdf> <./figs/mh_35kt_ih_th13.pdf> <./figs/cpv_35kt_ih_th13.pdf>])
+
+<figs/spectra_35kt_nuebar_dcpvar_ih.pdf, id=289, 569.12625pt x 385.44pt>
+File: figs/spectra_35kt_nuebar_dcpvar_ih.pdf Graphic file (type pdf)
+
+<use figs/spectra_35kt_nuebar_dcpvar_ih.pdf>
+Package pdftex.def Info: figs/spectra_35kt_nuebar_dcpvar_ih.pdf used on input l
+ine 542.
+(pdftex.def)             Requested size: 218.91113pt x 148.25664pt.
+ (./oscpar_paper.bbl [8 <./figs/spectra_35kt_nue_th13var_nh.pdf> <./figs/spectr
+a_35kt_nuebar_th13var_nh.pdf> <./figs/spectra_35kt_nue_th13var_ih.pdf> <./figs/
+spectra_35kt_nuebar_th13var_ih.pdf>] [9 <./figs/mh_35kt_nh_th13.pdf> <./figs/cp
+v_35kt_nh_th13.pdf> <./figs/mh_35kt_ih_th13.pdf> <./figs/cpv_35kt_ih_th13.pdf>]
+)
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 562.
- [10 <./figs/spectra_35kt_nue_th23var.pdf> <./figs/spectra_35kt_nuebar_th23var.
-pdf>] [11 <./figs/mh_35kt_nh_th23.pdf> <./figs/cpv_35kt_nh_th23.pdf> <./figs/mh
-_35kt_ih_th23.pdf> <./figs/cpv_35kt_ih_th23.pdf> <./figs/spec_nh90_ih-90_80gev.
-pdf> <./figs/spec_nh90_ih-90_80gev_th23max.pdf>]
-[12 <./figs/spectra_35kt_nue_dmvar.pdf> <./figs/spectra_35kt_nuebar_dmvar.pdf>]
-[13 <./figs/mh_35kt_nh_dmsq.pdf> <./figs/cpv_35kt_nh_dmsq.pdf> <./figs/mh_35kt_
-ih_dmsq.pdf> <./figs/cpv_35kt_ih_dmsq.pdf>] [14]
+ [10 <./figs/spectra_35kt_nue_th23var_nh.pdf> <./figs/spectra_35kt_nuebar_th23v
+ar_nh.pdf> <./figs/spectra_35kt_nue_th23var_ih.pdf> <./figs/spectra_35kt_nuebar
+_th23var_ih.pdf>] [11 <./figs/mh_35kt_nh_th23.pdf> <./figs/cpv_35kt_nh_th23.pdf
+> <./figs/mh_35kt_ih_th23.pdf> <./figs/cpv_35kt_ih_th23.pdf> <./figs/spec_nh90_
+ih-90_80gev.pdf> <./figs/spec_nh90_ih-90_80gev_th23max.pdf>] [12 <./figs/spectr
+a_35kt_nue_dmvar_nh.pdf> <./figs/spectra_35kt_nuebar_dmvar_nh.pdf> <./figs/spec
+tra_35kt_nue_dmvar_ih.pdf> <./figs/spectra_35kt_nuebar_dmvar_ih.pdf>] [13 <./fi
+gs/mh_35kt_nh_dmsq.pdf> <./figs/cpv_35kt_nh_dmsq.pdf> <./figs/mh_35kt_ih_dmsq.p
+df> <./figs/cpv_35kt_ih_dmsq.pdf>] [14 <./figs/spectra_35kt_nue_dcpvar_ih.pdf> 
+<./figs/spectra_35kt_nuebar_dcpvar_ih.pdf>]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 562.
  (./oscpar_paper.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 562.
@@ -682,10 +704,10 @@ LaTeX Warning: There were undefined references.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 562.
  ) 
 Here is how much of TeX's memory you used:
- 5769 strings out of 493633
- 84473 string characters out of 3149115
- 196191 words of memory out of 3000000
- 8953 multiletter control sequences out of 15000+200000
+ 5809 strings out of 493633
+ 86175 string characters out of 3149115
+ 196145 words of memory out of 3000000
+ 8985 multiletter control sequences out of 15000+200000
  12448 words of font info for 45 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  29i,10n,31p,824b,444s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -705,10 +727,10 @@ nts/cm/cmr9.pfb></sw/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 f-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></sw/share/texmf-dist/fonts/typ
 e1/public/amsfonts/cm/cmti10.pfb></sw/share/texmf-dist/fonts/type1/public/amsfo
 nts/cm/cmtt10.pfb></sw/share/texmf-dist/fonts/type1/public/tex-gyre/qhvr.pfb>
-Output written on oscpar_paper.pdf (14 pages, 556642 bytes).
+Output written on oscpar_paper.pdf (14 pages, 594096 bytes).
 PDF statistics:
- 502 PDF objects out of 1000 (max. 8388607)
- 383 compressed objects within 4 object streams
+ 543 PDF objects out of 1000 (max. 8388607)
+ 415 compressed objects within 5 object streams
  59 named destinations out of 1000 (max. 500000)
- 201 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 241 words of extra memory for PDF output out of 10000 (max. 10000000)
 
