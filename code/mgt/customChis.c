@@ -113,7 +113,7 @@ double chiSpectrumTiltSplitBG(int exp, int rule, int n_params, double *x, double
   
   //copy parameter array into globally accessible variable
   for(i=0; i<n_params; i++){
-		xmin[exp][i]=x[i];
+		xmin[exp][rule][i]=x[i];
 	}
   
   return chi2;
@@ -123,6 +123,7 @@ double chiSpectrumTiltSplitBG(int exp, int rule, int n_params, double *x, double
 double chiSpectrumSplitBG(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data)
 {
+  //Note that anything done pre 2014 with this function was using glbGetChannelRatePtr instead of glbGetChannelFitRatePtr
   double *true_rates       = glbGetRuleRatePtr(exp, rule);
   double *signal_fit_rates = glbGetSignalFitRatePtr(exp, rule);
   double signal_norm;
@@ -149,7 +150,7 @@ double chiSpectrumSplitBG(int exp, int rule, int n_params, double *x, double *er
   for (i=ew_low; i <= ew_high; i++) ebins++;
   double bg_fit_rates_per_channel[bg_channels][ebins];
   for(i=0;i<bg_channels;i++){
-	  double * trates=glbGetChannelRatePtr(exp,i,GLB_POST);
+	  double * trates=glbGetChannelFitRatePtr(exp,i,GLB_POST);
 		for(ebin=0;ebin<ebins;ebin++){
 			bg_fit_rates_per_channel[i][ebin] = trates[ebin];
 	  }
@@ -184,7 +185,7 @@ double chiSpectrumSplitBG(int exp, int rule, int n_params, double *x, double *er
   }
   //copy parameter array into globally accessible variable
   for(i=0; i<n_params; i++){
-		xmin[exp][i]=x[i];
+		xmin[exp][rule][i]=x[i];
 	}
   
   return chi2;
@@ -255,7 +256,7 @@ double chiSpectrumSplitBG_BtoB(int exp, int rule, int n_params, double *x, doubl
   }
   //copy parameter array into globally accessible variable
   for(i=0; i<n_params; i++){
-		xmin[exp][i]=x[i];
+		xmin[exp][rule][i]=x[i];
 	}
   
   return chi2;
@@ -298,25 +299,50 @@ double chiSpectrumTiltCustom(int exp, int rule, int n_params, double *x, double 
   }
   fchi1=chi2;
   
-  chi2 += myprior(x[0], 0.0, errors[0])
+  fchi2=0;
+  fchi2 += myprior(x[0], 0.0, errors[0])
             + myprior(x[1], 0.0, errors[1])
             + myprior(bg_norm, bg_norm_center, errors[2])
             + myprior(bg_tilt, bg_tilt_center, errors[3]);
 
-  fchi2=chi2;
   priors[0]=myprior(x[0], 0.0, errors[0]);
   priors[1]=myprior(x[1], 0.0, errors[1]);
   priors[2]=myprior(bg_norm, bg_norm_center, errors[2]);
   priors[3]=myprior(bg_tilt, bg_tilt_center, errors[3]);
-  xmin[exp][0]=x[0];
-  xmin[exp][1]=x[1];
-  xmin[exp][2]=x[2];
-  xmin[exp][3]=bg_tilt;
+  xmin[exp][rule][0]=x[0];
+  xmin[exp][rule][1]=x[1];
+  xmin[exp][rule][2]=x[2];
+  xmin[exp][rule][3]=bg_tilt;
 	
-           
-  return chi2;
+  //printf("%f, %f, %f\n", fchi1, fchi2, chi2);
+  return fchi1+fchi2;
 }
 
+double chiSpectrumNormCustom(int exp, int rule, int n_params, double *x, double *errors,
+                          void *user_data){
+  //only sig/bg norm systematics (no tilt)
+  double *true_rates       = glbGetRuleRatePtr(exp, rule);
+  double *signal_fit_rates = glbGetSignalFitRatePtr(exp, rule);
+  double *bg_fit_rates     = glbGetBGFitRatePtr(exp, rule);
+  int ew_low, ew_high;
+  double fit_rate;//, true_rate
+  double chi2 = 0.0;
+  
+  glbGetEnergyWindowBins(exp, rule, &ew_low, &ew_high);
+  for (int i=ew_low; i <= ew_high; i++){
+    fit_rate = (1+x[0])*signal_fit_rates[i]
+                + (1+x[1])*bg_fit_rates[i];
+    chi2 += mylikelihood(true_rates[i], fit_rate);
+
+  }
+  fchi1=chi2;
+  
+  fchi2 = myprior(x[0], 0.0, errors[0]) + myprior(x[1], 0.0, errors[1]);
+  xmin[exp][rule][0]=x[0];
+  xmin[exp][rule][1]=x[1];
+
+  return fchi1+fchi2;
+}
 //same as globes, but customized to copy values to xmin for later use
 //and to fix the pivot point elsewhere
 double chiSpectrumTiltCustomPivot(int exp, int rule, int n_params, double *x, double *errors,
@@ -367,10 +393,10 @@ double chiSpectrumTiltCustomPivot(int exp, int rule, int n_params, double *x, do
   priors[2]=myprior(bg_norm, bg_norm_center, errors[2]);
   priors[3]=myprior(bg_tilt, bg_tilt_center, errors[3]);
 
-  xmin[exp][0]=x[0];
-  xmin[exp][1]=x[1];
-  xmin[exp][2]=x[2];
-  xmin[exp][3]=bg_tilt;
+  xmin[exp][rule][0]=x[0];
+  xmin[exp][rule][1]=x[1];
+  xmin[exp][rule][2]=x[2];
+  xmin[exp][rule][3]=bg_tilt;
            
   return chi2;
 }
@@ -392,7 +418,7 @@ double chiSpectrumTiltCustom_BtoB(int exp, int rule, int n_params, double *x, do
   double fit_rate;//, true_rate
   double chi2 = 0.0;
   int i;
-
+  
   glbGetEminEmax(exp, &emin, &emax);
   ecenter = 0.5 * (emax + emin);
   glbGetEnergyWindowBins(exp, rule, &ew_low, &ew_high);
@@ -423,11 +449,10 @@ double chiSpectrumTiltCustom_BtoB(int exp, int rule, int n_params, double *x, do
   priors[2]=myprior(bg_norm, bg_norm_center, errors[2]);
   priors[3]=myprior(bg_tilt, bg_tilt_center, errors[3]);
 
-  xmin[exp][0]=x[0];
-  xmin[exp][1]=x[1];
-  xmin[exp][2]=x[2];
-  xmin[exp][3]=bg_tilt;
-           
+  xmin[exp][rule][0]=x[0];
+  xmin[exp][rule][1]=x[1];
+  xmin[exp][rule][2]=x[2];
+  xmin[exp][rule][3]=bg_tilt;
   return chi2;
 }
 
@@ -452,91 +477,70 @@ double chiNormPerBin(int exp, int rule, int n_params, double *x, double *errors,
   return fchi1+fchi2;
 }
 
-
-//Uses supplied Fast MC response functions (one per channel) to compute
-//changes in event rates channel by channel.
-//This is done by modifying pre-smearing efficiencies so they must not
-//be in use for this to work.
-double chi_ResponseFunction(int exp, int rule, int n_params, double *x, double *errors,
+double chiCorrSplitBGs_LBNEFMC(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data)
 {
-  //This function applies the response functions as a function of x to the true rates.
-  //Assumes that pre smearing effs aren't in use (i.e they are set to 1).
-  //Assumes first exp has systs enabled, rest are disabled
-  double tresp;
-  int rfi;
-  double sigmult=1, bgmult=1;
+  //4 nuisance parameters: f_sig, f_nue, f_nutau, f_nc+numu
+  //correlated between
+  //Assumes LBNE FMC ordering of channels: 
+  //    0      1          2           3     4      5       6           7      8
+  //    numu, numubar, nue_bkg, nuebar_bkg, NC, nue_sig, nuebar_sig, nutau, nutaubar
+  //4 experiments in order: nue,nuebar,numu,numubar  (1 rule/exp)
+  
   fchi1=fchi2=0;
-  //ensure point is within boundaries
-  for(int syst=0;syst<arguments.systs;syst++){
-    if(x[syst]>5.0 || x[syst]<-5.0) return 1e10;
-  }
 
   for(int curexp=0;curexp<glb_num_of_exps;curexp++){
     double *true_rates       = glbGetRuleRatePtr(curexp, rule);
-    double *signal_fit_rates = glbGetSignalFitRatePtr(curexp, rule);
-    double *bg_fit_rates     = glbGetBGFitRatePtr(curexp, rule);
-    int sampbins = glbGetNumberOfSamplingPoints(curexp);
+    //double *signal_fit_rates = glbGetSignalFitRatePtr(curexp, rule);
+    //double *bg_fit_rates     = glbGetBGFitRatePtr(curexp, rule);
     int bins = glbGetNumberOfBins(curexp);
     int channels=glbGetNumberOfChannels(curexp); 
 
-    //set pre smearing effs to response function values
-    for(int ch=0;ch<channels;ch++){
-      for(int sbin=0; sbin<sampbins; sbin++){
-        tresp=0;
-        //add up contribution from each systematic for this bin and channel
-        for(int syst=0; syst<arguments.systs; syst++){
-          if(x[syst] != 0.0){
-            rfi=sampbins*arguments.systs*ch+sampbins*syst+sbin;
-            tresp+=gsl_spline_eval(rf_spline[curexp][rfi], x[syst], rf_acc[curexp][rfi])-1;
-          }
-        }
-        mult_presmear_effs[curexp][ch][sbin]=tresp<=-1?0:1+tresp; 
+    //get pointers to channels for this exp
+    double *cr[channels];
+		for(int curchan=0;curchan<channels;curchan++){
+			cr[curchan]=glbGetChannelFitRatePtr(curexp,curchan,GLB_POST);
+		}
+    
+    //stat term of chisq
+    if(curexp==0 || curexp==1){ //appearance
+      for (int e=0; e < bins; e++){
+        fchi1 += mylikelihood(true_rates[e], (1+x[0])*(cr[5][e]+cr[6][e])  //f_sig (nue)
+                              + (1+x[1])*(cr[2][e]+cr[3][e]) //f_nue
+                              + (1+x[2])*(cr[7][e]+cr[8][e]) //f_nutau
+                              + (1+x[3])*(cr[0][e]+cr[1][e]+cr[4][e]) //f_nc+numu
+                              );
       }
+    }else{ //disappearance
+      for (int e=0; e < bins; e++){
+        fchi1 += mylikelihood(true_rates[e], 
+                              (1+x[0])*(cr[0][e]+cr[1][e])  //f_sig (numu)
+                              + (1+x[1])*(cr[2][e]+cr[3][e]+cr[5][e]+cr[6][e]) //f_nue (beam + osc)
+                              + (1+x[2])*(cr[7][e]+cr[8][e]) //f_nutau
+                              + (1+x[3])*(cr[4][e]) //f_nc+numu (only nc for disapp)
+                              );
+      }   
     }
-
-    //recompute rates using these multiplicative smearing effs
-    mgt_set_new_rates(curexp, mult_presmear_effs);
-
-    if(arguments.chimode==18){
-      //populate signal and background normalization multipliers
-      sigmult=1+x[arguments.systs+2*curexp];
-      bgmult=1+x[arguments.systs+2*curexp+1];
-      //add penalty term
-      fchi2+=pow(x[arguments.systs+2*curexp]/errors[2*curexp],2)+pow(x[arguments.systs+2*curexp+1]/errors[2*curexp+1],2);
-    }
-    for (int ebin=0; ebin < bins; ebin++){
-      fchi1 += mylikelihood(true_rates[ebin], sigmult*signal_fit_rates[ebin]+bgmult*bg_fit_rates[ebin]);
-      if(arguments.debug==1){
-        double a[]={ebin,true_rates[ebin],(signal_fit_rates[ebin]+bg_fit_rates[ebin]),x[0], arguments.systs>1?x[1]:0};
-        AddArrayToOutput(a,5);
-      }
-    }
-
-    if(arguments.debug==1){
-      AddToOutputBlankline();
-      AddToOutputBlankline();
-    }
+    //printf("%d,%d, %f, %f, %f,,,%f,%f,%f,%f\n", curexp,glb_num_of_exps, fchi1, fchi2, fchi1+fchi2,x[0],x[1],x[2],x[3]);
   }
   
-  //add penalty term
-  for(int syst=0;syst<arguments.systs;syst++)
-    fchi2 += x[syst]*x[syst];
-
-      
+  //penalty term + store nuisances
+  for(int i=0;i<4;i++){
+        fchi2 += pow(x[i]/errors[i],2);
+        xmin[0][0][i]=x[i];
+  }
+  //printf("%f, %f, %f,,,%f,%f,%f,%f\n", fchi1, fchi2, fchi1+fchi2,x[0],x[1],x[2],x[3]);
   return fchi1+fchi2;
 }
 
-//Loads file containing covariance matrix and/or nuisance parameter uncertainties
-void LoadRFCovMatrix()
-{
+void LoadRFCovMatrixInputs(){
+  //Loads file containing covariance matrix inputs
   FILE *covFile;
   float buf;
   if(!arguments.covmatrixfile){
     printf("Covariance matrix file location (covmatrixfile) not set! Exiting...\n");
     exit(1);
   }
-			
   printf("Opening covmatrixfile file: %s\n",arguments.covmatrixfile);
   covFile = fopen(arguments.covmatrixfile, "r");
   if(covFile==NULL){
@@ -544,19 +548,172 @@ void LoadRFCovMatrix()
     exit(1);
   }
   
-  rfCovMatrix = (double*)malloc(5*arguments.systs*sizeof(double));	
+  //get extracted response value for each systematic
+  double responses[arguments.systs];
+  for(int syst=0;syst<arguments.systs;syst++){
+    responses[syst]=extract1sResponse(syst);
+    printf("Found response for syst %d: %f\n",syst, responses[syst]);
+  }
   
-  for(int i=0; i<5*arguments.systs; i++){
+  //load array of (4*syst) values
+  //the array has 12 values per systematic,
+  //the first 4 of every syst are populated from the file
+  //the rest are populated from the 1s response extraction
+  rfCovMatrixInputs = (double*)malloc(12*arguments.systs*sizeof(double));	
+  printf("Setting sigmas to:\n");
+  for(int i=0; i<12*arguments.systs; i++){
     if(fscanf(covFile, "%f", &buf)==EOF){
       printf("Covar. matrix file has improper size. Exiting.\n");
       exit(1);
     }
-    rfCovMatrix[i]=buf;
+    rfCovMatrixInputs[i]=buf;
+    if(i%12>=4){
+      //add extracted response value
+      rfCovMatrixInputs[i]+=responses[i/12];
+    }
+    //if anything is zero, set to be small so that it is tightly constrained
+    //and won't cause a divide by zero error
+    if(fabs(rfCovMatrixInputs[i])<1e-8){
+      rfCovMatrixInputs[i]=1e-8;
+    }
+    printf("%d, %f\n", i, rfCovMatrixInputs[i]);
   }
-              
   fclose(covFile);
 }
 
+void SetupRFCovMatrix(){
+  //sets up gsl matrix object containing V^-1 covariance matrix
+  //V has systs*9 by systs*9 elements
+  
+  LoadRFCovMatrixInputs();
+  printf("inp=%f,%f\n",rfCovMatrixInputs[0],rfCovMatrixInputs[1]);
+  //initialize the globally defined inverse covariance matrix
+  rfCovMatrix = gsl_matrix_alloc(arguments.systs*9, arguments.systs*9);
+  //initialize matrix to identity so penalty term is just sigma^2
+  gsl_matrix_set_identity(rfCovMatrix);
+  //compute 1s reponse that makes up sigma_stat
+  double s_stat=extract1sResponse();
+  printf("s_stat=%f\n",s_stat);
+
+  //create nine rotation matrices
+  //gsl_matrix* m_rot[11]; //extra elements are to store product
+  //for(int i=0;i<11;i++){
+  //  m_rot[i]=gsl_matrix_alloc(arguments.systs*9, arguments.systs*9);
+  //  gsl_matrix_set_zero(m_rot[i]);
+  //}
+  
+  gsl_matrix* cov=gsl_matrix_alloc(arguments.systs*9, arguments.systs*9); // covar matrix
+  gsl_matrix_set_zero(cov);
+  matrixPrint(cov, 9*arguments.systs);
+    
+  //populate them
+  //double sig1=0,sig2=0;
+  //sig1=pow(1+rfCovMatrixInputs[0]+s_stat,2);
+  /*for(int i=0;i<9;i++){
+    sig2=pow(rfCovMatrixInputs[i]+s_stat,2);
+    gsl_matrix_set(m_rot[i],0,0,(sig1+sig2)/2);
+    gsl_matrix_set(m_rot[i],0,i,(sig1-sig2)/2);
+    gsl_matrix_set(m_rot[i],i,0,(sig1-sig2)/2);
+    gsl_matrix_set(m_rot[i],i,i,(sig1+sig2)/2);
+    matrixPrint(m_rot[i], 9*arguments.systs);
+  }*/
+  
+  double s[9];
+  s[0]=1;
+  printf("s:%f\n",s[0]);
+  for(int i=1;i<9;i++){
+    s[i]=pow(rfCovMatrixInputs[i]+s_stat,2);
+    printf("s:%f\n",s[i]);
+  }
+
+  
+
+  for (int i=0;i<9;i++){
+    for(int j=0;j<9;j++){
+      //if(i==1&&j==1) gsl_matrix_set(cov,i,j,(2*s[0]+s[1]+s[2]+s[3]+s[4]+s[5]+s[6]+s[7]+s[8])/2);
+      if(j==i) gsl_matrix_set(cov,i,j,(s[0]+s[1]+s[2]+s[3]+s[4]+s[5]+s[6]+s[7]+s[8])/2);
+      else if(i==0) gsl_matrix_set(cov,0,j,9*(s[0]-s[j])/4);
+      else if(j==0) gsl_matrix_set(cov,i,0,9*(s[0]-s[i])/4);
+      //else gsl_matrix_set(cov,i,j,63*(s[0])/16);
+      else gsl_matrix_set(cov,i,j,(i%2==1?-1:1)*(j%2==1?-1:1)*63*(s[0])/16); //yellow
+      //else gsl_matrix_set(cov,i,j,(i%2==1?-1:1)*(j%2==1?-1:1)*(s[0]));
+    }
+  }
+  
+  //multiply or add them
+  //for(int i=1;i<9;i++){
+    //alternate storage matrix, evens store in 9, odds store in 10
+    //gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, m_rot[9+(i%2==1?0:1)], m_rot[i], 0.0, m_rot[9+(i%2==1?1:0)]);
+  //  gsl_matrix_add(m_rot[0],m_rot[i]);
+  //}
+  
+  matrixPrint(cov, 9*arguments.systs);
+  
+  //invert and store for penalty term calculation in rfCovMatrix
+  pinv(cov, arguments.systs*9, rfCovMatrix);
+  
+  matrixPrint(rfCovMatrix, 9*arguments.systs);
+  //exit(0);
+}
+
+double extract1sResponse(int syst){
+  //find 1 sigma range (=0.5(up-down)) for syst
+  //Note, if it never crosses zero, this returns zero
+  int nuisances=arguments.systs*(arguments.chimode==19?12:1);
+  double narray[nuisances];
+  double s_up=0, s_down=0, chi2=0;
+  int chiuserdata=1;
+  
+  //set event rates to input values
+  glbSetOscillationParameters(true_values);
+  glbSetRates();
+  //switch systematics off and call glbchisys so that event rates are set
+  glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
+  glbChiSys(test_values, GLB_ALL, GLB_ALL);
+  glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
+  
+  //scan up from zero
+  for(int ud =-1;ud<=1;ud+=2){ //scan down then scan up
+    for(double s=0;s<5;s=s+ud*0.01){
+      for(int i=0; i<nuisances; i++){
+        narray[i]=0;
+      }
+      if(arguments.chimode==19)
+        narray[12*syst]=s;//only modify the numu nuisance parameter for the current systs
+      else  
+        narray[0]=s;
+      for(int i=0; i<nuisances; i++){
+        //printf("%f, ",narray[i]);
+      }
+      //printf("\ns=%f, nuisances=%d\n",s,nuisances);
+      chi2=chi_ResponseFunctionCov(0,0,nuisances,narray,NULL,&chiuserdata);
+      //printf("s=%f, chi2(%d)=%f\n",s,ud,chi2);
+      if(chi2>1){
+        if(ud==-1)s_down=s;
+        if(ud==1)s_up=s;
+        break;
+      }
+    }
+  }
+  
+  //scan down from zero
+  /*for(double s=0;s>-5;s=s-0.01){
+    for(int i=0; i<nuisances; i++){
+      if(arguments.chimode==19)
+        narray[i]=(i%12==0?s:0); //only modify the numu nuisance param.
+      else  
+        narray[i]=s;
+    }
+    chi2=chi_ResponseFunctionCov(0,0,nuisances,narray,NULL,&chiuserdata);
+    //printf("s=%f, chi2(down)=%f\n",s,chi2);
+    if(chi2>1){
+      s_down=s;
+      break;
+    }
+  }*/
+  //printf("s_up=%f, s_down=%f\n",s_up,s_down);
+  return 0.5*(s_up-s_down);
+}
 
 //Similar to chi_responseFunction, but adds multiple nuisance parameters
 //so that channels are not strictly correlated in their systematics responses
@@ -564,15 +721,16 @@ void LoadRFCovMatrix()
 double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data)
 {
-  //x will have dimensions 5*number of systematics
-  //5 nuisance parameters are numu, numubar/numu, nue/numu, nutau/numu, stat
-  //this function expects channel order:
-  //  numu, numubar, nue_bkg, nuebar_bkg, NC, nue_sig, nuebar_sig, nutau, nutaubar
+  //x will have dimensions 12*number of systematics
+  //12 nuisance parameters are numu, numubar/numu, nue/numu, nutau/numu
+  //stat parameters for numubar, nue_bkg, nuebar_bkg, NC, nue_sig, nuebar_sig, nutau, nutaubar
+  //if user_data is not null, then use sigma^2 for penalty term
   double tresp;
   double xsigma=0;
   int rfi;
   fchi1=fchi2=0;
 
+           
   for(int curexp=0;curexp<glb_num_of_exps;curexp++){
     double *true_rates       = glbGetRuleRatePtr(curexp, rule);
     double *signal_fit_rates = glbGetSignalFitRatePtr(curexp, rule);
@@ -587,35 +745,43 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
         tresp=0;
         //add up contribution from each systematic for this bin and channel
         for(int syst=0; syst<arguments.systs; syst++){
-          //compute sigma contribution for this channel based on nuisance parameters
+        //for(int syst=1; syst<arguments.systs; syst++){
           xsigma=0;
           switch(ch){
             case 0: case 4://numu, NC
-              xsigma=x[5*syst];
+              xsigma=x[12*syst];
               break;
             case 1: //numubar
-              xsigma=x[5*syst]+x[5*syst+1] + x[5*syst+4];
+              xsigma=x[12*syst]+x[12*syst+1] + x[12*syst+4];
               break;
             case 2: case 5: //nue_bkg, nue_sig
-              xsigma=x[5*syst]+x[5*syst+2] + x[5*syst+4];
+              xsigma=x[12*syst]+x[12*syst+2] + x[12*syst+3+ch];
               break;
             case 3: case 6: //nuebar_bkg, nuebar_sig
-              xsigma=x[5*syst]+x[5*syst+1]+x[5*syst+2] + x[5*syst+4];
+              xsigma=x[12*syst]+x[12*syst+1]+x[12*syst+2] + x[12*syst+3+ch];
               break;
             case 7: //nutau
-              xsigma=x[5*syst]+x[5*syst+3] + x[5*syst+4];
+              xsigma=x[12*syst]+x[12*syst+3] + x[12*syst+10];
               break;
             case 8: //nutaubar
-              xsigma=x[5*syst]+x[5*syst+1]+x[5*syst+3] + x[5*syst+4];
+              xsigma=x[12*syst]+x[12*syst+1]+x[12*syst+3] + x[12*syst+11];
               break;
           }
-          if(xsigma>5.0 || xsigma<-5.0) return 1e10;
-          if(x[syst] != 0.0){
+          if(xsigma>5.0 || xsigma<-5.0) {fchi2=1e10; return fchi2;}
+          if(xsigma != 0.0){
             rfi=sampbins*arguments.systs*ch+sampbins*syst+sbin;
             tresp+=gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1;
           }
+          //if(ch==0 && sbin==10) printf("xsigma=%f\ttresp=%f, rfi=%d\n",xsigma, tresp,rfi);
         }
         mult_presmear_effs[curexp][ch][sbin]=tresp<=-1?0:1+tresp; 
+        //if(x[0]!=0){
+        //    for(int i=0; i<n_params; i++){
+        //      printf("x[%d]=%f",i, x[i]);
+        //    }
+          //printf("\nx0=%f, total resp=%f\n, systs=%d\n", x[0], mult_presmear_effs[curexp][ch][sbin],arguments.systs);
+          //exit(0);
+        //}
       }
     }
 
@@ -624,6 +790,7 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
 
     for (int ebin=0; ebin < bins; ebin++){
       fchi1 += mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]);
+      //printf("ebin=%i, true=%f, fit=%f\n",ebin,true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin]);
       if(arguments.debug==1){
         double a[]={ebin,true_rates[ebin],(signal_fit_rates[ebin]+bg_fit_rates[ebin]),x[0], x[1], x[2], x[3], x[4]};
         AddArrayToOutput(a,8);
@@ -638,11 +805,39 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
   
   //add penalty term
   for(int syst=0;syst<arguments.systs;syst++){
-    for(int i=0;i<5;i++){
-      fchi2 += x[5*syst+i]*x[5*syst+i]/pow(rfCovMatrix[5*syst+i],2);
+    for(int i=0;i<12;i++){
+      if(user_data!=NULL){
+        fchi2 += pow(x[12*syst+i],2);
+      }else{
+        fchi2 += pow(x[12*syst+i]/rfCovMatrixInputs[12*syst+i],2);
+      }
     }
   }
-      
+  /*if(arguments.chimode==19){
+    for(int i=0;i<arguments.systs*9;i++){
+      for(int j=0;j<arguments.systs*9;j++){
+        fchi2 += x[i] * gsl_matrix_get(rfCovMatrix, i, j) * x[j];
+      }
+    }
+  }else{
+    for(int syst=0;syst<arguments.systs;syst++){
+      for(int i=0;i<9;i++){
+        fchi2 += pow(x[9*syst+i],2);
+      }
+    }
+  }*/
+
+  
+  //store nuisance parameters for output, if enabled
+  if(arguments.nuis_output>0){
+    for(int syst=0;syst<arguments.systs;syst++){
+      for(int i=0;i<12;i++){
+        //only store first 32 nuisance parameters
+        if(12*syst+i<32) xmin[0][0][12*syst+i]=x[12*syst+i];
+      }
+    }
+  }
+  //printf("fchi1=%f, fchi2=%f\n",fchi1, fchi2);
   return fchi1+fchi2;
 }
 
@@ -731,14 +926,16 @@ double CalcDeterminant( float **mat, int order){
 }
 
 void matrixPrint(const gsl_matrix* M, const int n){
-	printf("[");
+	
 	for(int i=0;i<n;i++){
+    printf("[");
 		for(int j=0;j<n;j++){
-			printf("%1.15e",gsl_matrix_get (M, i, j));
-			if(j!=n-1) printf(",");
+			printf("%g",gsl_matrix_get (M, i, j));
+			if(j!=n-1) printf(",\t");
 		}
-		printf( "],\n[");
+		printf( "],\n");
 	}
+  printf("\n");
 }
 
 void pinv(const gsl_matrix* in, const int n, gsl_matrix* Inv_Matrix){
@@ -1039,7 +1236,7 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
 
   //copy parameter array into globally accessible variable
   for(int i=0; i<n_params; i++){
-    xmin[exp][i]=x[i];
+    xmin[exp][rule][i]=x[i];
   }
 
 
@@ -1076,51 +1273,103 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
   return chi2;
 }
 
-
-double my_prior_t23_opoct(const glb_params in, void* user_data)
-{
-	/* This prior only contrains t23 to the opposite octant
-	 * all other parameters are treated normally.
-	 * It does this by keeping t23 fit in the same octant as the central
-	 * value. The inputerror on t23 has no effect for this prior.
-	*/
-	glb_params central_values = glbAllocParams();
-	glb_params input_errors = glbAllocParams();
-	glb_projection p = glbAllocProjection();
-	glbGetCentralValues(central_values);
-	glbGetInputErrors(input_errors);
-	glbGetProjection(p);
-	int i;
-	double pv = 0.0;
-	double fitvalue,centralvalue,inputerror;
-	/* Add oscillation parameter priors */
-	for(i=0;i<6;i++)
-		if(glbGetProjectionFlag(p,i)==GLB_FREE){
-			fitvalue=glbGetOscParams(in,i);
-			centralvalue=glbGetOscParams(central_values,i);
-			inputerror=glbGetOscParams(input_errors,i);
-			if(i==GLB_THETA_23){
-				if(centralvalue>M_PI/4){
-					if(fitvalue<M_PI/4) pv+=1e6;
-				}else{
-					if(fitvalue>M_PI/4) pv+=1e6;
-				}
-			}else{
-				if(inputerror>1e-12) pv+=pow((centralvalue-fitvalue)/inputerror,2);
-			}
-		}
-	/* Add matter parameter priors */
-	for(i=0;i<glb_num_of_exps;i++)
-		if(glbGetDensityProjectionFlag(p,i)==GLB_FREE){
-			fitvalue=glbGetDensityParams(in,i);
-			centralvalue=1.0;
-			inputerror=glbGetDensityParams(input_errors,i);
-			if(inputerror>1e-12)
-				pv+=pow((centralvalue-fitvalue)/inputerror,2);
-		}
-		
-	glbFreeParams(central_values);
-	glbFreeParams(input_errors);
-	glbFreeProjection(p);
-	return pv;
+double ChiAllDeltaPrescan(glb_params in_values,glb_params out_values, int exp){
+  //wrapper for glbChiAll that performs a prescan over dcp
+  glb_params test_values = glbAllocParams();
+  glbCopyParams(in_values,test_values);
+  
+  //find minimum in dcp with glbchisys
+  glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
+  double tchi2,chi2min=1e6,mindcp=0;
+  for(double this_tdcp=-M_PI;this_tdcp<M_PI;this_tdcp=this_tdcp+(M_PI/18)){
+    glbSetOscParams(test_values, this_tdcp, GLB_DELTA_CP);
+    tchi2=glbChiSys(test_values,exp,GLB_ALL);
+    if(tchi2<chi2min){
+      chi2min=tchi2;
+      mindcp=this_tdcp;
+    }
+  }
+ //only switch systs back on if they were enabled to begin with
+  if(arguments.chimode!=101){
+    glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
+  } 
+  
+  //set test_values dcp back to mindcp found
+  glbSetOscParams(test_values, mindcp, GLB_DELTA_CP);
+  glbSetCentralValues(test_values);
+  tchi2=glbChiAll(test_values, out_values, exp);  
+  
+  glbFreeParams(test_values);
+  return tchi2;
 }
+
+double ChiNPDeltaPrescan(glb_params in_values,glb_params out_values, int exp){
+  //wrapper for glbChiNP that performs a prescan over dcp
+  glb_params test_values = glbAllocParams();
+  glbCopyParams(in_values,test_values);
+  
+  //find minimum in dcp with glbchisys and no systs
+  glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
+  double tchi2,chi2min=1e6,mindcp=0;
+  for(double this_tdcp=-M_PI;this_tdcp<M_PI;this_tdcp=this_tdcp+(M_PI/18)){
+    glbSetOscParams(test_values, this_tdcp, GLB_DELTA_CP);
+    tchi2=glbChiSys(test_values,exp,GLB_ALL);
+    if(tchi2<chi2min){
+      chi2min=tchi2;
+      mindcp=this_tdcp;
+    }
+    //printf("%f,%f,%f,%f\n",this_tdcp+(M_PI/18),chi2min,tchi2,mindcp);
+  }
+ //only switch systs back on if they were enabled to begin with
+  if(arguments.chimode!=101){
+    glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
+  } 
+  //set test_values dcp back to mindcp found
+  //mindcp=0;
+  glbSetOscParams(test_values, mindcp, GLB_DELTA_CP);
+  glbSetCentralValues(test_values);
+  //printf("%f,%f\n",glbGetOscParams(test_values,GLB_DELTA_CP),glbGetOscParams(test_values,2));
+  tchi2=glbChiNP(test_values, out_values, exp);  
+  //printf("%f,%f\n",glbGetOscParams(out_values,GLB_DELTA_CP),glbGetOscParams(out_values,2)); exit(0);
+  glbFreeParams(test_values);
+  return tchi2;
+}
+
+double ChiAllDeltaOctPrescan(glb_params in_values,glb_params out_values, int exp){
+  //wrapper for glbChiAll that performs a prescan over dcp and the octant
+  glb_params test_values = glbAllocParams();
+  glbCopyParams(in_values,test_values);
+  
+  //values of t23 to prescan
+  double thist23=glbGetOscParams(in_values,2);
+  double osc2[] = {thist23, M_PI/2, (M_PI/2) - thist23};
+  
+  //find minimum in dcp with glbchisys and NO systematics
+  glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
+  double tchi2,chi2min=1e6,mindcp=0, mint23=0;
+  for(int i_t23=0; i_t23<3; i_t23++){
+    glbSetOscParams(test_values, osc2[i_t23], 2);
+    for(double this_tdcp=-M_PI;this_tdcp<M_PI;this_tdcp=this_tdcp+(M_PI/18)){
+      glbSetOscParams(test_values, this_tdcp, 3);
+      tchi2=glbChiSys(test_values,exp,GLB_ALL);
+      if(tchi2<chi2min){
+        chi2min=tchi2;
+        mindcp=this_tdcp;
+        mint23=osc2[i_t23];
+      }
+    }
+  }
+  //only switch systs back on if they were enabled to begin with
+  if(arguments.chimode!=101){
+    glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
+  }
+  //set test_values dcp back to mindcp found
+  glbSetOscParams(test_values, mindcp, 3);
+  glbSetOscParams(test_values, mint23, 2);
+  glbSetCentralValues(test_values);
+  tchi2=glbChiAll(test_values, out_values, exp);  
+  
+  glbFreeParams(test_values);
+  return tchi2;
+}
+

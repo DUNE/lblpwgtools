@@ -13,6 +13,7 @@
 #include "glb_rate_engine.h" //for access to set_new_rates
 #include "globes/globes.h"   /* GLoBES library */
 #include "customChis.h"
+#include "priors.h"
 #include "glb_tools_eightfold.h"
 #include <gsl/gsl_math.h>    /* GNU Scientific library (required for root finding) */
 #include <gsl/gsl_roots.h>
@@ -52,6 +53,8 @@ static struct argp_option options[] ={
   {"systs",'s',"NUMBER",0,"number of systematics response functions to load"},
   {"part",'P',"RANGE",0,"Part x of y to run, Format 'x,y'",4},
   {"pflucts",'f',"NUMBER",0,"Number of pseudo experiments to run (if enabled)"},
+  {"nuisoutput",'n',"NUMBER",0,"Add nuisance parameters to output"},
+  {"regprior",'R',"NUMBER",0,"Register prior number x, default to GLoBES default prior"},
   { 0 }
 };
 
@@ -77,6 +80,11 @@ struct arguments{
 	int preScan, scanVar; //these are used by some runtypes to setup scanning and prescanning
   int part[2]; //stores part to run, and number of parts to run, respectively
   int pflucts; //determines the number of pseduo experiments to run
+  int nuis_output; //if enabled, add nuisance parameters to output
+  int regprior; //0 is default for GLoBES built-in prior
+  
+  //not input variables, just want global access to these:
+  int nuisances; //total number of nuisance parameters
 };
 /* argp parser. */
 error_t parse_opt (int key, char *arg, struct argp_state *state);
@@ -99,6 +107,8 @@ void parse_definition(const char *in);
 int vector_read_double(const char *str, double *result, 
 		       size_t n, void (*parse_error)(void));
 void parse_error();
+void parse_setdefaults();
+void definechifunctions();
 
 int compare(const void *x, const void *y);
 int compare_asc(const void *x, const void *y);
@@ -116,3 +126,4 @@ double pend(double low, double high, double inc);
 double pinc(double low, double high, double inc);
 
 void pfluctTrueSpectra();
+void PrintRatesToFile(int truefit, int curexp, int rule);

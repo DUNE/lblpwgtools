@@ -909,6 +909,89 @@ void ComputeMHSigCurve_bruteForce(double osc[])
   }
 }
 
+void ComputeMHSigCurveFrac_glbchiAll(double osc[])
+{
+  //Compute MH sensitivity as a function of exposure (actually using glbchiAll)
+  //Compute for all dcp values
+  double t_factor = pow(arguments.max_runtime/arguments.min_runtime, 1.0/arguments.tSteps);
+  double t;
+  int i,j,k,exp;
+  const int dcpsteps=32;
+  double chi2s[dcpsteps];
+  
+  //populate osc3 with dcp values
+  double osc3[dcpsteps];
+	for(i=0;i<dcpsteps;i++){
+		osc3[i]=-M_PI+(((float)i/(float)dcpsteps)*(2*M_PI));
+	}
+
+  /* Loop over all data points in this dataset, using log stepping */
+  for (j=(arguments.zero==YES ? -1 : 0); j <= arguments.tSteps; j++){
+    /* Set running times */
+    t = (j==-1) ? 0.00001 : arguments.min_runtime * pow(t_factor,j);
+    if(arguments.varied==0)
+			glbSetRunningTime(GLB_ALL, GLB_ALL, t);
+		else{
+			for(exp=0;exp<arguments.varied;exp++){
+				glbSetRunningTime(exp, GLB_ALL, t);
+			}
+		}
+		
+		for(k=0;k<dcpsteps;k++){
+			glbDefineParams(true_values,osc[0],osc[1],osc[2],osc3[k],osc[4],osc[5]);
+			glbSetDensityParams(true_values,1.0,GLB_ALL);
+			glbSetOscillationParameters(true_values);
+			glbSetRates();
+      
+      glbDefineParams(test_values,osc[0],osc[1],osc[2],osc[3],osc[4],-osc[5]+osc[4]);  
+      glbSetCentralValues(test_values);
+      glbSetDensityParams(test_values,1.0,GLB_ALL);			
+      if(arguments.test){
+        chi2s[k]=glbChiSys(test_values, GLB_ALL,GLB_ALL);
+      }else{
+        chi2s[k]=ChiAllDeltaPrescan(test_values,test_values, GLB_ALL);
+      }
+      //printf("%f\n",chi2s[k]);
+		}
+		
+    /* Save results */
+    /*compute exposure using mass of each experiment and time*/
+    float exposure=0;
+    for(i=0;i<glb_num_of_exps;i++){
+			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
+		}
+		
+		//find min,max in chi2s array
+		double chi2min  = 1.0e10;
+		double chi2max  = 0;
+		for(i=0;i<dcpsteps;i++){
+			if(chi2s[i]<chi2min){
+				chi2min=chi2s[i];
+			}
+			if(chi2s[i]>chi2max){
+				chi2max=chi2s[i];
+			}
+		}
+    //printf("        %f,%f\n",chi2min,chi2max);
+    //now sort the list of chi2s and find the cp fraction for which we can determine the MH to 2,3, and 5 sigma
+    qsort(chi2s,dcpsteps,sizeof(double),compare);
+    /*find the value for which 25% of the entries are less than*/
+		double sig25=0.0,sig50=0.0,sig75=0.0;
+    double frac2sig, frac3sig, frac5sig;
+		frac2sig=frac3sig=frac5sig=1.00;
+		for(i=0;i<dcpsteps;i++){
+			if(((float)i/(float)dcpsteps)>0.25 && sig25==0.0) sig25=sqrt(chi2s[i]);
+			if(((float)i/(float)dcpsteps)>0.50 && sig50==0.0) sig50=sqrt(chi2s[i]);
+			if(((float)i/(float)dcpsteps)>0.75 && sig75==0.0) sig75=sqrt(chi2s[i]);
+			
+			if(chi2s[i]<4.0 && frac2sig==1.00) frac2sig=(float)i/(float)dcpsteps;
+			if(chi2s[i]<9.0 && frac3sig==1.00) frac3sig=(float)i/(float)dcpsteps;
+			if(chi2s[i]<25.0 && frac5sig==1.00) frac5sig=(float)i/(float)dcpsteps;
+		}   
+    double a[]={exposure,sqrt(chi2min),sqrt(chi2max),frac2sig,frac3sig,frac5sig,sig25,sig50,sig75};
+    AddArrayToOutput(a,9);
+  }
+}
 
 void ComputeMHSensitivityCurve(double osc[])
 {

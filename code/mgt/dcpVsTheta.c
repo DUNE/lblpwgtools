@@ -7,6 +7,13 @@ void dcpvst13(double osc[], double vrange[2])
   double mindeltas[2];
   double lowt13=vrange[0];
   double hight13=vrange[1];
+  double res;
+  //set resolution
+  if(arguments.tSteps==10){
+    res=35;
+  }else{
+    res=arguments.tSteps;
+  }
   
   glb_projection projT13dcp = glbAllocProjection();
   glbDefineProjection(projT13dcp, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FREE);
@@ -18,8 +25,8 @@ void dcpvst13(double osc[], double vrange[2])
   glbSetOscillationParameters(true_values);
   glbSetRates();
   double osc5[]={osc[5],-osc[5]+osc[4]};
-  for(double this_dcp=-M_PI;this_dcp<=M_PI;this_dcp=this_dcp+(M_PI/35)){
-    for(double thist13=lowt13;thist13<=hight13;thist13+=(hight13-lowt13)/35){
+  for(double this_dcp=-M_PI;this_dcp<=M_PI;this_dcp=this_dcp+(M_PI/res)){
+    for(double thist13=lowt13;thist13<=hight13;thist13+=(hight13-lowt13)/res){
 			for(int k=0;k<2;k++){ //profile MH
 				glbDefineParams(test_values,osc[0],thist13,osc[2],this_dcp,osc[4],osc5[k]);
 				glbSetDensityParams(test_values,1.0,GLB_ALL);
@@ -87,7 +94,13 @@ void dcpvst23(double osc[], double vrange[2])
   double chi2[2];
   double lowt23=vrange[0];
   double hight23=vrange[1];
-  
+  double res;
+  //set resolution
+  if(arguments.tSteps==10){
+    res=40;
+  }else{
+    res=arguments.tSteps;
+  }  
   glb_projection projT23dcp = glbAllocProjection();
   glbDefineProjection(projT23dcp, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FIXED, GLB_FREE, GLB_FREE);
   glbSetDensityProjectionFlag(projT23dcp, GLB_FREE, GLB_ALL);
@@ -99,8 +112,8 @@ void dcpvst23(double osc[], double vrange[2])
   glbSetRates();
 	double osc5[]={osc[5],-osc[5]+osc[4]};
 	
-  for(double this_dcp=-M_PI;this_dcp<=M_PI;this_dcp=this_dcp+(M_PI/40)){
-    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/40){
+  for(double this_dcp=-M_PI;this_dcp<=M_PI;this_dcp=this_dcp+(M_PI/res)){
+    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/res){
 			for(int k=0;k<2;k++){ //profile MH
 				glbDefineParams(test_values,osc[0],osc[1],thist23,this_dcp,osc[4],osc5[k]);  
 				glbSetDensityParams(test_values,1.0,GLB_ALL);
@@ -389,9 +402,15 @@ void dm31vst23(double osc[], double vrange[2])
   double chi2[2];
   double lowt23=vrange[0];
   double hight23=vrange[1];
-  double lowdm31=2.4e-3;
-  double highdm31=2.55e-3;
-  
+  double lowdm31=2.1e-3;
+  double highdm31=2.9e-3;
+  double res;
+  //set resolution
+  if(arguments.tSteps==10){
+    res=40;
+  }else{
+    res=arguments.tSteps;
+  }  
   glb_projection projT23dm31 = glbAllocProjection();
   glbDefineProjection(projT23dm31, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FIXED);
   glbSetDensityProjectionFlag(projT23dm31, GLB_FREE, GLB_ALL);
@@ -402,8 +421,8 @@ void dm31vst23(double osc[], double vrange[2])
   glbSetOscillationParameters(true_values);
   glbSetRates();
 	
-  for(double thisdm31=lowdm31;thisdm31<highdm31;thisdm31+=(highdm31-lowdm31)/40){
-    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/40){
+  for(double thisdm31=lowdm31;thisdm31<highdm31;thisdm31+=(highdm31-lowdm31)/res){
+    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/res){
 			double osc5[]={thisdm31,-thisdm31+osc[4]};
 			for(int k=0;k<2;k++){ //profile MH
 				glbDefineParams(test_values,osc[0],osc[1],thist23,osc[3],osc[4],osc5[k]);
@@ -425,25 +444,30 @@ void dm31vst23(double osc[], double vrange[2])
 
 void t13vst23(double osc[])
 {
-  //Compute allowed regions in t13 and t23
+  //Compute region where  octant can be termined? in t13 and t23
   //for input true values in osc
   double chi2[2];
   double lowt23=osc[2];
   double hight23=M_PI/4;
   double lowt13=0;
   double hight13=osc[1];
-  int divisions = 40;
   double tminchi2, tchi2;
   double mindcp[]={osc[3],osc[3]};
-  
+  double res;
+  //set resolution
+  if(arguments.tSteps==10){
+    res=40;
+  }else{
+    res=arguments.tSteps;
+  }  
   glb_projection projT23T13 = glbAllocProjection();
   glbDefineProjection(projT23T13, GLB_FREE, GLB_FIXED, GLB_FIXED, GLB_FIXED, GLB_FREE, GLB_FREE);
   glbSetDensityProjectionFlag(projT23T13, GLB_FREE, GLB_ALL);
   glbSetProjection(projT23T13);
   double osc5[]={osc[5],-osc[5]+osc[4]};
   
-  for(double thist13=lowt13;thist13<=hight13;thist13+=(hight13-lowt13)/divisions){
-    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/divisions){
+  for(double thist13=lowt13;thist13<=hight13;thist13+=(hight13-lowt13)/res){
+    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/res){
 			glbDefineParams(true_values,osc[0],thist13,thist23,osc[3],osc[4],osc[5]);
 			glbSetDensityParams(true_values,1.0,GLB_ALL);
 			glbSetOscillationParameters(true_values);
@@ -479,4 +503,52 @@ void t13vst23(double osc[])
   }
 }
 
+void t13vst23_AR(double osc[])
+{
+  //Compute actual allowed regions in t13 and t23
+  //for input true values in osc
+  double chi2[2];
+  double lowt23=0.3;//osc[2];
+  double hight23=1.0;//M_PI/4;
+  double lowt13=0;
+  double hight13=0.2318;
+  double res;
+  //set resolution
+  if(arguments.tSteps==10){
+    res=40;
+  }else{
+    res=arguments.tSteps;
+  }  
+  //setup projection into t23 and t13 plane
+  glb_projection projT23T13 = glbAllocProjection();
+  glbDefineProjection(projT23T13, GLB_FREE, GLB_FIXED, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FREE);
+  glbSetDensityProjectionFlag(projT23T13, GLB_FREE, GLB_ALL);
+  glbSetProjection(projT23T13);
+  
+  //set true values and rates
+  glbDefineParams(true_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
+  glbSetDensityParams(true_values,1.0,GLB_ALL);
+  glbSetOscillationParameters(true_values);
+  glbSetRates();
 
+  double osc5[]={osc[5],-osc[5]+osc[4]};
+  
+  for(double thist13=lowt13;thist13<=hight13;thist13+=(hight13-lowt13)/res){
+    for(double thist23=lowt23;thist23<=hight23;thist23+=(hight23-lowt23)/res){
+			for(int k=0;k<2;k++){ //about chisq for both MHs
+				glbDefineParams(test_values,osc[0],thist13,thist23,osc[3],osc[4],osc5[k]);  
+				glbSetDensityParams(test_values,1.0,GLB_ALL);
+				//glbDefineParams(central_values,osc[0],thist13,thist23,osc[3],osc[4],osc5[k]);
+        //glbDefineParams(central_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc5[k]);
+				//glbSetCentralValues(central_values);  
+				if(arguments.test)
+					chi2[k]=glbChiSys(test_values,GLB_ALL,GLB_ALL);
+				else
+					chi2[k]=glbChiNP(test_values,test_values,GLB_ALL);
+			}
+			double a[]={thist13,thist23, chi2[0], chi2[1]};
+			AddArrayToOutput(a,4);
+		}
+	AddToOutputBlankline();
+  }
+}

@@ -30,7 +30,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_spline.h>
 
-double xmin[2][32]; //stores minimization results
+double xmin[32][8][32]; //stores minimization results (first 32, at least), indices are exp,rule,nuisance
 double fchi1,fchi2; //stores stat and penalty terms respectively
 double priors[4];
 double sigma_binbin;
@@ -40,6 +40,8 @@ double chiSpectrumTiltSplitBG(int exp, int rule, int n_params, double *x, double
                           void *user_data);
 double chiSpectrumTiltCustom(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data);
+double chiSpectrumNormCustom(int exp, int rule, int n_params, double *x, double *errors,
+                          void *user_data);
 double chiSpectrumTiltCustom_BtoB(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data);
 double chiSpectrumSplitBG(int exp, int rule, int n_params, double *x, double *errors,
@@ -48,7 +50,9 @@ double chiSpectrumSplitBG_BtoB(int exp, int rule, int n_params, double *x, doubl
                           void *user_data);
 double chiNormPerBin(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data);
-
+double chiCorrSplitBGs_LBNEFMC(int exp, int rule, int n_params, double *x, double *errors,
+                          void *user_data);
+                          
 //Error matrix
 double* errorMatrix[32];
 gsl_matrix* Total_Input_Matrix[32];
@@ -58,6 +62,8 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
 double CalcDeterminant( float **mat, int order);
 int GetMinor(float **src, float **dest, int row, int col, int order);
 void MatrixInversion(float **A, int order, float **Y);
+void pinv(const gsl_matrix* in, const int n, gsl_matrix* Inv_Matrix);
+void matrixPrint(const gsl_matrix* M, const int n);
 
 //Response functions
 gsl_interp_accel **rf_acc[32];
@@ -65,15 +71,17 @@ gsl_spline **rf_spline[32];
 int rfCols[32][32]; //number of sigma entries for RFs
 int penalty[32][32]; //whether or not there is a penalty term
 double** mult_presmear_effs[32]; //presmearing effs from response functions
-double* rfCovMatrix; //covariance matrix for reponse functions
-void LoadRFCovMatrix();
-double chi_ResponseFunction(int exp, int rule, int n_params, double *x, double *errors,
-                          void *user_data);
+double* rfCovMatrixInputs; //array of sigma_theory values per channel
+gsl_matrix* rfCovMatrix; //9*systs x 9*systs matrix
+void LoadRFCovMatrixInputs();
+void SetupRFCovMatrix();
 double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data);
+double extract1sResponse();
                           
 //Other
-double my_prior_t23_opoct(const glb_params in, void* user_data);
-
+double ChiAllDeltaPrescan(glb_params,glb_params, int);
+double ChiAllDeltaOctPrescan(glb_params,glb_params, int);
+double ChiNPDeltaPrescan(glb_params,glb_params, int);
 
 

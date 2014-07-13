@@ -13,4 +13,7 @@ void OscProbs(double osc[]);
 void EventRates(double osc[]);
 void dchisquared(double osc[], int proj, double xrange[], int dcpPreScan);
 void ComputeRFCurve(double osc[], int truefitspectra);
+void ComputeRFCurve2d(double osc[]);
 void TrueFitSpectraMinOutput(double osc[]);
+void FCMap_1D(double osc[], int proj, double xrange[]);
+void ComputeNuisanceReponse(double osc[], int nuis);

@@ -94,7 +94,18 @@ void AddArrayToOutput(double a[],int n){
    else
    {
 		for(i=0;i<n;i++) fprintf(f,"%g\t",a[i]);
-    fprintf(f,"\n");
+    //output nuisance parameters, if enabled
+    if(arguments.nuis_output>0){
+      if(arguments.chimode==19 || arguments.chimode==17 || arguments.chimode==31 || arguments.chimode==32){//only first exp
+        for(int n=0;n<32;n++){
+          fprintf(f,"%g\t",xmin[0][0][n]);
+        }
+        //also output stat/penalty chisq terms
+        fprintf(f,"%g\t%g\t",fchi1,fchi2);
+      }
+    }
+    //only print a newline if some array was passed
+    if(n>0) fprintf(f,"\n");
     fclose(f);
    }
  }
@@ -179,11 +190,17 @@ error_t parse_opt (int key, char *arg, struct argp_state *state){
     case 's':
       arguments->systs = atoi(arg);
       break;
+    case 'n':
+      arguments->nuis_output = atoi(arg);
+      break;
     case 'P':
       arguments->inpart = arg;
       break;
     case 'f':
       arguments->pflucts = atoi(arg);
+      break;
+    case 'R':
+      arguments->regprior = atoi(arg);
       break;
 	            
     case ARGP_KEY_ARG:
@@ -208,6 +225,48 @@ error_t parse_opt (int key, char *arg, struct argp_state *state){
   return 0;
 }
 
+void parse_setdefaults(){
+  //set default arguments
+  arguments.args[0]="-";
+  arguments.params=NULL;
+  arguments.paramse=NULL;
+  arguments.xrange=NULL;
+  arguments.chimode=-1;
+  arguments.bintobin=0.0;
+  arguments.runType=1;
+  arguments.runCat=1;
+  arguments.hier=NO;
+  arguments.debug=NO;
+  arguments.min_runtime=1e-2;/* Minimum running time to consider [years] */
+  arguments.max_runtime=10; /* Maximum running time to consider [years] */
+  arguments.tSteps=10;/* Number of data points for each curve */
+  arguments.chi2_goal=1.0;/* Desired chi^2 value 3 sigma */
+  arguments.logs22th13_precision = 0.0001;/* Desired precision of log(sin[th13]^2) in root finder */
+	arguments.varied=0;
+  arguments.systs=1;
+  arguments.zero=NO;
+  arguments.preScan=0;
+  arguments.scanVar=0;
+  arguments.part[0]=0;
+  arguments.part[1]=0;
+  arguments.pflucts=0;
+  arguments.nuis_output=0;
+  arguments.regprior=0; //default to GLoBES built-in prior, i.e. do nothing
+}
+
+void definechifunctions(){
+  glbDefineChiFunction(&chiSpectrumTiltSplitBG,7,"chiSpectrumTiltSplitBG7",NULL);
+  glbDefineChiFunction(&chiSpectrumTiltSplitBG,11,"chiSpectrumTiltSplitBG11",NULL);
+  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,4,"chiSpectrumSplitBG4",NULL);
+  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,5,"chiSpectrumSplitBG5",NULL);
+  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,7,"chiSpectrumSplitBG7",NULL);
+  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,9,"chiSpectrumSplitBG9",NULL);
+  glbDefineChiFunction(&chiSpectrumTiltCustom,4,"chiSpectrumTiltCustom",NULL);
+  glbDefineChiFunction(&chiSpectrumNormCustom,2,"chiSpectrumNormCustom",NULL);
+  glbDefineChiFunction(&chiSpectrumTiltCustom_BtoB,4,"chiSpectrumTiltCustom_BtoB",NULL);
+}
+
+ 
 /*gsl error handling*/
 void gslError(const char *reason, const char *file, int line, int gsl_errno){
   static int n_errors=0;
@@ -445,3 +504,59 @@ void pfluctTrueSpectra(){
 
 }
 
+void PrintRatesToFile(int truefit, int curexp, int rule){
+    double *true_sig          = glbGetSignalRatePtr(curexp, rule);
+    double *true_bg           = glbGetBGRatePtr(curexp, rule);
+    double *fit_sig           = glbGetSignalFitRatePtr(curexp, rule);
+    double *fit_bg            = glbGetBGFitRatePtr(curexp, rule);
+    double *bincenters = glbGetBinCentersListPtr(curexp);
+    int bins = glbGetNumberOfBins(curexp);    
+    //get pointers to channels for this exp
+    int channels=glbGetNumberOfChannels(curexp); 
+    double *cr[channels];
+    for(int curchan=0;curchan<channels;curchan++){
+      cr[curchan]=glbGetChannelFitRatePtr(curexp,curchan,GLB_POST);
+    }
+          
+    for (int ebin=0; ebin < bins; ebin++){
+      if(truefit==0){
+        //true values
+        double a[]={bincenters[ebin],true_sig[ebin],true_bg[ebin]};
+        AddArrayToOutput(a,3);
+      }else{
+        //fit values
+        if(arguments.chimode==30){
+          //apply sig/bg normalization for this exp/rule
+          double a[]={bincenters[ebin],(1+xmin[curexp][rule][0])*fit_sig[ebin],(1+xmin[curexp][rule][1])*fit_bg[ebin],(1+xmin[curexp][rule][0]),(1+xmin[curexp][rule][1])};
+          AddArrayToOutput(a,5);          
+        }else if(arguments.chimode==31 ||arguments.chimode==32){
+          //apply normalizations for chiCorrSplitBGs_LBNEFMC custom chisq. function
+          if(curexp==0 || curexp==1){ //appearance
+            double a[]={bincenters[ebin],
+                  (1+xmin[0][0][0])*(cr[5][ebin]+cr[6][ebin]), //sig
+                  (1+xmin[0][0][1])*(cr[2][ebin]+cr[3][ebin]) + (1+xmin[0][0][2])*(cr[7][ebin]+cr[8][ebin]) + (1+xmin[0][0][3])*(cr[0][ebin]+cr[1][ebin]+cr[4][ebin]), //bg
+                  (1+xmin[0][0][0]),
+                  (1+xmin[0][0][1]),
+                  (1+xmin[0][0][2]),
+                  (1+xmin[0][0][3])};
+            AddArrayToOutput(a,7); 
+          }else{ //disappearance
+            double a[]={bincenters[ebin],
+                  (1+xmin[0][0][0])*(cr[0][ebin]+cr[1][ebin]), //sig
+                  (1+xmin[0][0][1])*(cr[2][ebin]+cr[3][ebin]+cr[5][ebin]+cr[6][ebin]) + (1+xmin[0][0][2])*(cr[7][ebin]+cr[8][ebin]) + (1+xmin[0][0][3])*(cr[4][ebin]),
+                  (1+xmin[0][0][0]),
+                  (1+xmin[0][0][1]),
+                  (1+xmin[0][0][2]),
+                  (1+xmin[0][0][3])};
+            AddArrayToOutput(a,7); 
+          }
+          
+                   
+        }else{
+          double a[]={bincenters[ebin],fit_sig[ebin],fit_bg[ebin]};
+          AddArrayToOutput(a,3);
+        }
+      }
+      
+    }
+}

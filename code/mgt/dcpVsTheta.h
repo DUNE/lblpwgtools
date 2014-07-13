@@ -11,4 +11,5 @@ void dcpvst23_cpv(double osc[], double vrange[2]);
 void dcpvst23_mh(double osc[], double vrange[2]);
 void dm31vst23(double osc[], double vrange[2]);
 void t13vst23(double osc[]);
+void t13vst23_AR(double osc[]);
 

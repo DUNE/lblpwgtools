@@ -5,33 +5,13 @@
 #include "sigdcp.h"
 #include "senseVlum.h"
 #include "dcpVsTheta.h"
+#include "priors.h"
+#include "mctools.h"
 
 int main(int argc, char *argv[])
 { 
-  /* defaults */
-  arguments.args[0]="-";
-  arguments.params=NULL;
-  arguments.paramse=NULL;
-  arguments.xrange=NULL;
-  arguments.chimode=-1;
-  arguments.bintobin=0.0;
-  arguments.runType=1;
-  arguments.runCat=1;
-  arguments.hier=NO;
-  arguments.debug=NO;
-  arguments.min_runtime=1e-2;/* Minimum running time to consider [years] */
-  arguments.max_runtime=10; /* Maximum running time to consider [years] */
-  arguments.tSteps=10;/* Number of data points for each curve */
-  arguments.chi2_goal=1.0;/* Desired chi^2 value 3 sigma */
-  arguments.logs22th13_precision = 0.0001;/* Desired precision of log(sin[th13]^2) in root finder */
-	arguments.varied=0;
-  arguments.systs=1;
-  arguments.zero=NO;
-  arguments.preScan=0;
-  arguments.scanVar=0;
-  arguments.part[0]=0;
-  arguments.part[1]=0;
-  arguments.pflucts=0;
+  //set default arguments
+  parse_setdefaults();
   /* parsing the comand line */
   argp_parse (&argp, argc, argv, 0, 0, &arguments);  
 
@@ -60,18 +40,11 @@ int main(int argc, char *argv[])
     printf("Runing part %d of %d.\n",arguments.part[0],arguments.part[1]);
 
   
-  /* Initialize GLoBES and define chi^2 functions */
-  glbInit(argv[0]);                    
-  glbDefineChiFunction(&chiSpectrumTiltSplitBG,7,"chiSpectrumTiltSplitBG7",NULL);
-  glbDefineChiFunction(&chiSpectrumTiltSplitBG,11,"chiSpectrumTiltSplitBG11",NULL);
-  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,4,"chiSpectrumSplitBG4",NULL);
-  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,5,"chiSpectrumSplitBG5",NULL);
-  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,7,"chiSpectrumSplitBG7",NULL);
-  glbDefineChiFunction(&chiSpectrumSplitBG_BtoB,9,"chiSpectrumSplitBG9",NULL);
-  glbDefineChiFunction(&chiSpectrumTiltCustom,4,"chiSpectrumTiltCustom",NULL);
-  glbDefineChiFunction(&chiSpectrumTiltCustom_BtoB,4,"chiSpectrumTiltCustom_BtoB",NULL);
-
-	
+  /* Initialize GLoBES and define chi^2 functions and prior*/
+  glbInit(argv[0]);
+  definechifunctions();
+	registerprior();
+  
   //load experiments from command line arguments
   for(int i=0;i<arguments.exp-1;i++){
 		printf("Loading glb file:%s\n",arguments.args[i]);
@@ -81,6 +54,24 @@ int main(int argc, char *argv[])
           argv[0]);exit(1);}
   }
 
+  /* Initialize parameter vectors */
+  true_values  = glbAllocParams();
+  test_values  = glbAllocParams();
+  input_errors = glbAllocParams();
+  central_values = glbAllocParams();
+  glbDefineParams(true_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
+  glbSetDensityParams(true_values,1.0,GLB_ALL);
+  glbDefineParams(central_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
+  glbSetDensityParams(central_values,1.0,GLB_ALL);
+  glbDefineParams(test_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);  
+  glbSetDensityParams(test_values,1.0,GLB_ALL);
+  glbDefineParams(input_errors,osce[0]*osc[0],osce[1]*osc[1],osce[2]*osc[2],osce[3]*osc[3],osce[4]*osc[4],fabs(osce[5]*osc[5]));
+  glbSetDensityParams(input_errors, 0.02, GLB_ALL);
+  glbSetOscillationParameters(true_values);
+  glbSetCentralValues(central_values);
+  glbSetInputErrors(input_errors);
+  glbSetRates();
+  
   //setup systematics
   FILE *emFile;
   float buf; int dbuf;
@@ -170,7 +161,7 @@ int main(int argc, char *argv[])
 				
         sprintf(chiname,"chiSpectrum_ErrorMatrix_exp%d",j);
         glbDefineChiFunction(&chiSpectrum_ErrorMatrix,analysis_bins,chiname,NULL);
-      
+
 				glbSetChiFunction(j,0,GLB_ON,chiname,new_errors);
 			}
 			fclose(emFile);
@@ -225,15 +216,10 @@ int main(int argc, char *argv[])
 			}
 			fclose(emFile);
 			break;
-    case 17: case 18: case 19:
+    case 19:
 			//chiSpectrum_ResponseFunctions
 			printf("Using chiSpectrum_ResponseFunctions...\n");
-      
-      if(arguments.chimode==19){
-        //load sigmas for channel2channel nuisance parameters
-        LoadRFCovMatrix();
-      }
-      
+           
 			if(!arguments.ematrixfile){
 				printf("Response functions file location (ematrixfile) not set! Exiting...\n");
 				exit(1);
@@ -283,11 +269,9 @@ int main(int argc, char *argv[])
               exit(1);
             }
             sigmas[i]=buf;
-            //printf("%f, ",sigmas[i]);
           }
           double resp[rfCols[exp][syst]];
           for(int ch=0; ch<channels; ch++){
-            //printf("\n\nCHANNEL %d\n",ch);
             for(int ebin=0; ebin<sampbins; ebin++){
               for(int i=0; i<rfCols[exp][syst]; i++){
                   if(fscanf(emFile, "%f", &buf)==EOF){
@@ -295,13 +279,10 @@ int main(int argc, char *argv[])
                     exit(1);
                   }
                   resp[i]=buf;
-                  //printf("%f, ",resp[i]);
               }
-              //printf("\n");
               //initialize spline
               int index=sampbins*arguments.systs*ch+sampbins*syst+ebin;
               rf_acc[exp][index] = gsl_interp_accel_alloc ();
-              //rf_spline[exp][index] = gsl_spline_alloc(gsl_interp_cspline, rfCols[exp][syst]);
               rf_spline[exp][index] = gsl_spline_alloc(gsl_interp_linear, rfCols[exp][syst]);
               gsl_spline_init (rf_spline[exp][index], sigmas, resp, rfCols[exp][syst]);
             }
@@ -313,30 +294,13 @@ int main(int argc, char *argv[])
           char chiname[64];
           sprintf(chiname,"chi_ResponseFunction_exp%d",exp);
           double errors[2*glb_num_of_exps];
-          if(arguments.chimode==18){
-            //add uncorrelated s/bg normalization systs to each experiment
-            for(int exp2=0;exp2<glb_num_of_exps;exp2++){
-              errors[2*exp2]=new_errors[0];
-              errors[2*exp2+1]=new_errors[2];
-              //printf("%f, %f\n",errors[2*exp2],errors[2*exp2+1]);
-            }
-          }
           int nuisances=0;
           switch(arguments.chimode){
-            case 17:
-              nuisances=arguments.systs;
-              break;
-            case 18:
-              nuisances=arguments.systs+2*glb_num_of_exps;
-              break;
             case 19:
-              nuisances=5*arguments.systs;
+              nuisances=12*arguments.systs;
               break;
           }
-          if(arguments.chimode==19)
-            glbDefineChiFunction(&chi_ResponseFunctionCov,nuisances,chiname,NULL);
-          else
-            glbDefineChiFunction(&chi_ResponseFunction,nuisances,chiname,NULL);
+          glbDefineChiFunction(&chi_ResponseFunctionCov,nuisances,chiname,NULL);
             
           glbSetChiFunction(exp,GLB_ALL,GLB_ON,chiname,errors);
         }else{
@@ -344,10 +308,55 @@ int main(int argc, char *argv[])
         }
 			}
 			fclose(emFile);
+      //load sigmas for channel2channel nuisance parameters
+      LoadRFCovMatrixInputs();
+			break;
+    case 30:
+			//chiSpectrumNormCustom
+      //use norm/bg from each exp/rule
+      for(int exp=0;exp<glb_num_of_exps;exp++){
+        for(int rule=0;rule<glbGetNumberOfRules(exp);rule++){
+            double *old_sys_errors = glbGetSysErrorsListPtr(exp, rule, GLB_ON); 
+            int sys_dim = glbGetSysDimInExperiment(exp, rule, GLB_ON);
+            if(sys_dim<4){
+              printf("Error: sys_dim(=%d) is less than 4, can not use -I30\n",sys_dim);
+              exit(1);
+            }
+            double normerrors[2];
+            normerrors[0]=old_sys_errors[0];
+            normerrors[1]=old_sys_errors[2];
+            printf("Setting errors on sig:%f and bg:%f in exp %d, rule%d\n", normerrors[0],normerrors[1],exp,rule);
+            glbSetChiFunction(exp,rule,GLB_ON,"chiSpectrumNormCustom",normerrors);
+        }
+      }
+			break;
+    case 31: case 32:
+			//chiCorrSplitBGs_LBNEFMC
+			printf("Using chiCorrSplitBGs LBNEFMC...\n");
+      
+			for(int exp=0;exp<glb_num_of_exps;exp++){
+        //only enable systematics for first experiment
+        //other experiments get their systs from first exp
+        if(exp==0){
+          char chiname[64];
+          sprintf(chiname,"chiCorrSplitBGs_LBNEFMC_exp%d",exp);
+          glbDefineChiFunction(&chiCorrSplitBGs_LBNEFMC,4,chiname,NULL);
+          double terrors[4];
+          if(arguments.chimode==31){
+            terrors[0]=0.05;terrors[1]=0.05;terrors[2]=0.5;terrors[3]=0.1;
+          }else{
+            terrors[0]=0.05;terrors[1]=0.05;terrors[2]=0.2;terrors[3]=0.1;
+          }
+          glbSetChiFunction(exp,GLB_ALL,GLB_ON,chiname,terrors);
+        }else{
+          glbSetChiFunction(exp,GLB_ALL,GLB_ON,"chiZero",NULL);
+        }
+      }
 
 			break;
   }
-  //output chi sys setting for each experiment, rule
+  //output chi sys setting for each experiment, rule and computer number of nuisance paramters
+  arguments.nuisances=0;
   for(int exp=0;exp<glb_num_of_exps;exp++){
     for(int rule=0;rule<glbGetNumberOfRules(exp);rule++){
       char sys_id[255];
@@ -355,9 +364,12 @@ int main(int argc, char *argv[])
       printf("Experiment %d, rule %d chi function (turned %s) is set to %s with %d parameters\n"
         ,exp,rule,
         glbGetSysOnOffState(exp, rule)==1?"ON":"OFF",
-        sys_id,glbGetSysDimInExperiment(exp, rule, GLB_ON)); 
+        sys_id,glbGetSysDimInExperiment(exp, rule, GLB_ON));
+      arguments.nuisances += glbGetSysDimInExperiment(exp, rule, GLB_ON);
     }
   }
+  printf("Total number of nuisance parameters: %d\n",arguments.nuisances);
+  
   
   if(arguments.bintobin>0){
     sigma_binbin=arguments.bintobin;
@@ -367,27 +379,7 @@ int main(int argc, char *argv[])
   gsl_set_error_handler(&gslError);    /* Initialize GSL root finder */
   gsl_func.params   = NULL;
   T = gsl_root_fsolver_brent;
-  //T = gsl_root_fsolver_falsepos;
-  //T = gsl_root_fsolver_bisection;
   s = gsl_root_fsolver_alloc(T);
-
-  /* Initialize parameter vectors */
-  true_values  = glbAllocParams();
-  test_values  = glbAllocParams();
-  input_errors = glbAllocParams();
-  central_values = glbAllocParams();
-  glbDefineParams(true_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
-  glbSetDensityParams(true_values,1.0,GLB_ALL);
-  glbDefineParams(central_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
-  glbSetDensityParams(central_values,1.0,GLB_ALL);
-  glbDefineParams(test_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);  
-  glbSetDensityParams(test_values,1.0,GLB_ALL);
-  glbDefineParams(input_errors,osce[0]*osc[0],osce[1]*osc[1],osce[2]*osc[2],osce[3]*osc[3],osce[4]*osc[4],osce[5]*osc[5]);
-  glbSetDensityParams(input_errors, 0.02, GLB_ALL);
-  glbSetOscillationParameters(true_values);
-  glbSetCentralValues(central_values);
-  glbSetInputErrors(input_errors);
-  glbSetRates();
 
 
   //initialize output file if it ends in *.dat, otherwise exit
@@ -403,6 +395,7 @@ int main(int argc, char *argv[])
   //Note: this must be done after experiments are initialized
   if(arguments.chimode==101){
     glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
+    printf("Systematics are switched off.\n");
   }
 
   /*compute exposure using mass of each experiment and time*/
@@ -413,6 +406,7 @@ int main(int argc, char *argv[])
   printf("Exposure is set to:%f\n",exposure);
   
   glb_projection projtNP; //projection for senseVlum runtypes
+  double osctest[]={osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]}; //test oscs for functions that need it
   //handle runType settings
   printf("runCat, runtype is %d, %d\n",arguments.runCat,arguments.runType);
   switch (arguments.runCat){
@@ -466,7 +460,31 @@ int main(int argc, char *argv[])
         case 32:
           //utility function for response function testing
           ComputeRFCurve(osc,1);
-          break;         
+          break;    
+        case 33:
+          //utility function for response function testing
+          if(arguments.systs==2){
+            ComputeRFCurve2d(osc);
+          }else{
+						printf("Not enough systs defined for this type. Exiting...\n");
+						return(0);
+						break; 
+          }
+          break;
+        case 34:
+          //utility function for response function testing
+          ComputeNuisanceReponse(osc,arguments.nuis_output);
+          break;   
+				case 40: case 41: case 42: case 43: case 44: case 45:
+					//1d FC Maps
+          //40=t12, 41=t13, 42=t23, 43=dcp, 44=DM21, 45=DM31
+					FCMap_1D(osc,arguments.runType-40,xrange);
+					break;
+				case 50: case 51: case 52: case 53: case 54: case 55:
+					//Prior test scans
+          //50=t12, 51=t13, 52=t23, 53=dcp, 54=DM21, 55=DM31
+					test_priors(osc,arguments.runType-50,xrange);
+					break;     
 				default:
 						printf("No runType set... exiting...\n");
 						return(0);
@@ -509,7 +527,6 @@ int main(int argc, char *argv[])
 			case 9:
 				//theta_23
 				if(!arguments.test) arguments.preScan=1; //enable dcp prescan
-				//printf("test\n");
 				projtNP = glbAllocProjection();
 				glbDefineProjection(projtNP, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FREE);
 				glbSetDensityProjectionFlag(projtNP, GLB_FREE, GLB_ALL);
@@ -567,6 +584,10 @@ int main(int argc, char *argv[])
 				break;
 			case 16:
 				ComputeNMQCurve(osc);
+				break;
+      case 17:
+        //this one uses glbChiAll AND computes dcp coverage at each exposure
+				ComputeMHSigCurveFrac_glbchiAll(osc);
 				break;
 			default:
 				printf("No runType set... exiting...\n");
@@ -635,12 +656,61 @@ int main(int argc, char *argv[])
 				}
 				dcpvst13_nzt(osc,xrange);
 				break;
-			default:
+      case 10:
+				t13vst23_AR(osc);
+				break;
+      default:
 				printf("No runType set... exiting...\n");
 				return(0);
 				break; 
-			}		
+			}
 		break;
+    case 4: //mc runs
+			switch (arguments.runType){
+				case 1:
+          bestfitmc(osc);
+          break;
+				case 2: //MC with not fitting, no priors
+          nofitmc(osc,0,0);
+          break;
+				case 3: //MC with not fitting, with priors
+          nofitmc(osc,1,0);
+          break; 
+				case 4: //MC with not fitting, with priors, no bin-to-bin fluctuations
+          nofitmc(osc,1,1);
+          break;     
+        case 10:
+          osctest[5]=-osc[5]+osc[4];
+          EventSpectraOutputTruePrePost(osc, osctest, 1);
+          break;
+        case 11:
+          osctest[3]=-M_PI/2; //pi/2
+          EventSpectraOutputTruePrePost(osc, osctest, 2);
+          break;
+        case 12:
+          //compare to maximal
+          projtNP = glbAllocProjection();
+          glbDefineProjection(projtNP, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FREE);
+          glbSetDensityProjectionFlag(projtNP, GLB_FREE, GLB_ALL);
+          glbSetProjection(projtNP);
+          osc[2]=M_PI/4; 
+          EventSpectraOutputTruePrePost(osc, osctest, 3);
+          break;
+        case 13:
+          //compare to opposite octant
+          projtNP = glbAllocProjection();
+          glbDefineProjection(projtNP, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FREE);
+          glbSetDensityProjectionFlag(projtNP, GLB_FREE, GLB_ALL);
+          glbSetProjection(projtNP);
+          osc[2]=M_PI/2 - osc[2]; 
+          EventSpectraOutputTruePrePost(osc, osctest, 3);
+          break;
+        default:
+          printf("No runType set... exiting...\n");
+          return(0);
+          break; 
+      }
+    break;
 	}
    /* Clean up */
   glbFreeParams(true_values);
