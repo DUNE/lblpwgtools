@@ -11,6 +11,7 @@ void ComputeResolutionCurve(double osc[]);
 void ComputeCPResolutionCurveSVL(double osc[]);
 void ComputeNonZeroT13(double osc[]);
 void ComputeCPVSigFracCurve(double osc[]);
+void ComputeCPVSVLCurve(double osc[]);
 void ComputeCPBubblesCurve(double osc[]);
 void ComputeOctCurve(double osc[]);
 void ComputeNMQCurve(double osc[]);
