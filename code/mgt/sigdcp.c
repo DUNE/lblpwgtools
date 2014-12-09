@@ -200,12 +200,12 @@ void ComputeCPVCurve(double osc[]){
       if(arguments.pflucts>0){
         //also compute a difference with this_dcp (for both MHs), so that a delta-chisq can be computed
         for(int k=0;k<2;k++){
-          //set the fit start values at 0 and pi
+          //set the fit start values at 0 and pi, though it shouldn't matter if the fitter works properly
           glbDefineParams(test_values,osc[0],osc[1],osc[2],osc3[k],osc[4],osc5_thisdcp[k]);
           glbSetDensityParams(test_values,1.0,GLB_ALL);
           if(arguments.test){
             //even with osc parms fixed, we still want the best fit to vary dcp
-            chi2_thisdcp[k]=glbChiNP(test_values,test_values,GLB_ALL);
+            chi2_thisdcp[k]=ChiNPDeltaPrescan(test_values,test_values,GLB_ALL);
           }else{
             glbSetCentralValues(test_values);
             //chi2_thisdcp[k]=glbChiDelta(test_values,NULL, GLB_ALL);
@@ -281,7 +281,7 @@ void ComputeMHSigCurve(double osc[]){
 	}
 }
 
-void ComputeMHSigCurve_v2(double osc[], double dcpin)
+void ComputeMHSigCurve_v2(double osc[], double dcpin, int disableScanSysts)
 {
   //Compute MH sensitivity as a function of deltaCP.
 	//This version computes mh sig without eightfold by prescanning
@@ -302,6 +302,8 @@ void ComputeMHSigCurve_v2(double osc[], double dcpin)
       glbSetRates();
       if(arguments.pflucts>0) pfluctTrueSpectra();
       
+      //if enabled, disable systs to speed up dcp prescan
+      if(disableScanSysts==1) glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
       for(int i=0;i<2;i++){
         chi2min=1e8;
         if(dcpin!=0){
@@ -320,7 +322,7 @@ void ComputeMHSigCurve_v2(double osc[], double dcpin)
             }
           }
         }
-        
+        if(disableScanSysts==1 && arguments.chimode!=101) glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
         if(arguments.test==NO){
           glbDefineParams(test_values,osc[0],osc[1],osc[2],oscmins[3][i],osc[4],osc5[i]);  
           glbSetDensityParams(test_values,1.0,GLB_ALL);
