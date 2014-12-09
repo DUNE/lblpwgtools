@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
   //set default arguments
   parse_setdefaults();
   /* parsing the comand line */
-  argp_parse (&argp, argc, argv, 0, 0, &arguments);  
+  argp_parse (&_argp, argc, argv, 0, 0, &arguments);  
 
   //set default oscillation parameters 
   double osc[]={0.593,0.154,0.705,0,7.58e-5,2.35e-3};

@@ -88,7 +88,7 @@ struct arguments{
 };
 /* argp parser. */
 error_t parse_opt (int key, char *arg, struct argp_state *state);
-static struct argp argp = { options, parse_opt, "glb-file(s) output-file", doc };
+static struct argp _argp = { options, parse_opt, "glb-file(s) output-file", doc };
 
 
 /* GLoBES parameter structures */
