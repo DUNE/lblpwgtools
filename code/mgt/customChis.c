@@ -782,14 +782,14 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
         }
         mult_presmear_effs[curexp][ch][sbin]=tresppre<=-1?1e-8:1+tresppre;
         mult_postsmear_effs[curexp][ch][sbin]=tresppost<=-1?1e-8:1+tresppost;  
-        if(fabs(x[0])<0.001 && mult_postsmear_effs[curexp][ch][sbin]>1.0 ){
+        /*if(fabs(x[0])<0.001 && mult_postsmear_effs[curexp][ch][sbin]>1.0 ){
             for(int i=0; i<n_params; i++){
               printf("x[%d]=%f",i, x[i]*1e10);
             }
           rfi=sampbins*arguments.systs*ch+sampbins*1+sbin;
           printf("\ncurexp=%d, ch=%d, sbin=%d, x0=%f, total resp pre=%f,total resp post=%f, systs=%d, spline=%f\n",curexp,ch,sbin, x[0], mult_presmear_effs[curexp][ch][sbin]*1e10, 1e10*mult_postsmear_effs[curexp][ch][sbin],arguments.systs,1e10*(gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1));
           exit(0);
-        }
+        }*/
       }
     }
 
@@ -847,7 +847,7 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
       }
     }
   }
-  printf("fchi1=%f, fchi2=%f\n",fchi1, fchi2);
+  //printf("fchi1=%f, fchi2=%f\n",fchi1, fchi2);
   return fchi1+fchi2;
 }
 
