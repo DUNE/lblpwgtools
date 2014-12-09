@@ -379,6 +379,66 @@ void ComputeCPVSigFracCurve(double osc[])
   }
 }
 
+void ComputeCPVSVLCurve(double osc[])
+{
+  //Compute CPV sensitivity as a function of exposure at a particular value of dcp (in osc)
+  double t_factor = pow(arguments.max_runtime/arguments.min_runtime, 1.0/arguments.tSteps);
+  double t;
+  int i,j,k,exp;
+  double chis, chi2min;
+  double chi2[4];
+
+  int opconsidered = (arguments.hier==YES ? 4 : 2);
+	double osc5[]={osc[5],osc[5],-osc[5]+osc[4],-osc[5]+osc[4]};
+	double osc3[]={0,M_PI,0,M_PI};
+			  
+  /* Loop over all data points in this dataset, using log stepping */
+  for (j=(arguments.zero==YES ? -1 : 0); j <= arguments.tSteps; j++){
+    /* Set running times */
+    t = (j==-1) ? 0.00001 : arguments.min_runtime * pow(t_factor,j);
+    if(arguments.varied==0)
+			glbSetRunningTime(GLB_ALL, GLB_ALL, t);
+		else{
+			for(exp=0;exp<arguments.varied;exp++){
+				//printf("setting exp %d to t=%f\n",exp,t);
+				glbSetRunningTime(exp, GLB_ALL, t);
+			}
+		}
+			
+
+		glbDefineParams(true_values,osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
+		glbSetOscillationParameters(true_values);
+		glbSetRates();
+		 
+		for(k=0;k<opconsidered;k++){
+			glbDefineParams(test_values,osc[0],osc[1],osc[2],osc3[k],osc[4],osc5[k]); 
+			glbSetDensityParams(test_values,1.0,GLB_ALL);
+			if(arguments.test){
+				chi2[k]=glbChiSys(test_values, GLB_ALL,GLB_ALL);
+			}else{
+				glbSetCentralValues(test_values);
+				chi2[k]=glbChiDelta(test_values,NULL, GLB_ALL);
+			}
+		}
+		
+		chi2min=chi2[0];
+		for(k=0;k<opconsidered;k++){
+			if(chi2[k]<chi2min) chi2min=chi2[k];
+		}
+		chis=chi2min;
+
+
+    /* Save results */
+    /*compute exposure using mass of each experiment and time*/
+    float exposure=0;
+    for(i=0;i<glb_num_of_exps;i++){
+			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
+		}
+    double a[]={exposure,chis, chi2[0], chi2[1], chi2[2], chi2[3]};
+    AddArrayToOutput(a,6);
+  }
+}
+
 void ComputeCPBubblesCurve(double osc[])
 {
   //Compute deltachisq for all deltaCP values as a function of exposure
@@ -917,7 +977,7 @@ void ComputeMHSigCurveFrac_glbchiAll(double osc[])
   double t;
   int i,j,k,exp;
   const int dcpsteps=32;
-  double chi2s[dcpsteps];
+  double chi2s[dcpsteps],chi2smax[dcpsteps];
   
   //populate osc3 with dcp values
   double osc3[dcpsteps];
