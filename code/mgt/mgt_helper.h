@@ -119,7 +119,7 @@ void AddToOutputBlankline();
 void gslError(const char *reason, const char *file, int line, int gsl_errno);
 double min(double x, double y);
 void dprintf( const char* format, ... );
-void mgt_set_new_rates(int exp, double** mult_presmear_effs[]);
+void mgt_set_new_rates(int exp, double** mult_presmear_effs[], double** mult_postsmear_effs[]);
 
 double pstart(double low, double high, double inc);
 double pend(double low, double high, double inc);

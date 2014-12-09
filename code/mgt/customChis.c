@@ -725,7 +725,8 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
   //12 nuisance parameters are numu, numubar/numu, nue/numu, nutau/numu
   //stat parameters for numubar, nue_bkg, nuebar_bkg, NC, nue_sig, nuebar_sig, nutau, nutaubar
   //if user_data is not null, then use sigma^2 for penalty term
-  double tresp;
+  double tresppre;
+  double tresppost;
   double xsigma=0;
   int rfi;
   fchi1=fchi2=0;
@@ -735,18 +736,19 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
     double *true_rates       = glbGetRuleRatePtr(curexp, rule);
     double *signal_fit_rates = glbGetSignalFitRatePtr(curexp, rule);
     double *bg_fit_rates     = glbGetBGFitRatePtr(curexp, rule);
-    int sampbins = glbGetNumberOfSamplingPoints(curexp);
+    //note: only sampbins is used so postsmearing will only work if sampbins (pre)=bins (post)
+    int sampbins = glbGetNumberOfSamplingPoints(curexp); 
     int bins = glbGetNumberOfBins(curexp);
     int channels=glbGetNumberOfChannels(curexp); 
 
     //set pre smearing effs to response function values
     for(int ch=0;ch<channels;ch++){
       for(int sbin=0; sbin<sampbins; sbin++){
-        tresp=0;
+        tresppre=0;tresppost=0;
         //add up contribution from each systematic for this bin and channel
         for(int syst=0; syst<arguments.systs; syst++){
         //for(int syst=1; syst<arguments.systs; syst++){
-          xsigma=0;
+          xsigma=0.0;
           switch(ch){
             case 0: case 4://numu, NC
               xsigma=x[12*syst];
@@ -770,27 +772,35 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
           if(xsigma>5.0 || xsigma<-5.0) {fchi2=1e10; return fchi2;}
           if(xsigma != 0.0){
             rfi=sampbins*arguments.systs*ch+sampbins*syst+sbin;
-            tresp+=gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1;
+            if(prepost[curexp][syst]==0){
+              tresppre+=gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1;
+            }else{
+              tresppost+=gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1;
+            }
           }
           //if(ch==0 && sbin==10) printf("xsigma=%f\ttresp=%f, rfi=%d\n",xsigma, tresp,rfi);
         }
-        mult_presmear_effs[curexp][ch][sbin]=tresp<=-1?0:1+tresp; 
-        //if(x[0]!=0){
-        //    for(int i=0; i<n_params; i++){
-        //      printf("x[%d]=%f",i, x[i]);
-        //    }
-          //printf("\nx0=%f, total resp=%f\n, systs=%d\n", x[0], mult_presmear_effs[curexp][ch][sbin],arguments.systs);
-          //exit(0);
-        //}
+        mult_presmear_effs[curexp][ch][sbin]=tresppre<=-1?1e-8:1+tresppre;
+        mult_postsmear_effs[curexp][ch][sbin]=tresppost<=-1?1e-8:1+tresppost;  
+        if(fabs(x[0])<0.001 && mult_postsmear_effs[curexp][ch][sbin]>1.0 ){
+            for(int i=0; i<n_params; i++){
+              printf("x[%d]=%f",i, x[i]*1e10);
+            }
+          rfi=sampbins*arguments.systs*ch+sampbins*1+sbin;
+          printf("\ncurexp=%d, ch=%d, sbin=%d, x0=%f, total resp pre=%f,total resp post=%f, systs=%d, spline=%f\n",curexp,ch,sbin, x[0], mult_presmear_effs[curexp][ch][sbin]*1e10, 1e10*mult_postsmear_effs[curexp][ch][sbin],arguments.systs,1e10*(gsl_spline_eval(rf_spline[curexp][rfi], xsigma, rf_acc[curexp][rfi])-1));
+          exit(0);
+        }
       }
     }
 
-    //recompute rates using these multiplicative smearing effs
-    mgt_set_new_rates(curexp, mult_presmear_effs);
+    //recompute rates using these multiplicative pre/post smearing effs
+    mgt_set_new_rates(curexp, mult_presmear_effs, mult_postsmear_effs);
 
     for (int ebin=0; ebin < bins; ebin++){
       fchi1 += mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]);
-      //printf("ebin=%i, true=%f, fit=%f\n",ebin,true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin]);
+      /*if(fabs(x[0])<0.001){
+        printf("x[0]=%f, ebin=%i, true=%f, fit=%f, like=%f\n",x[0], ebin,true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin],mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]));
+      }*/
       if(arguments.debug==1){
         double a[]={ebin,true_rates[ebin],(signal_fit_rates[ebin]+bg_fit_rates[ebin]),x[0], x[1], x[2], x[3], x[4]};
         AddArrayToOutput(a,8);
@@ -837,7 +847,7 @@ double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, doubl
       }
     }
   }
-  //printf("fchi1=%f, fchi2=%f\n",fchi1, fchi2);
+  printf("fchi1=%f, fchi2=%f\n",fchi1, fchi2);
   return fchi1+fchi2;
 }
 

@@ -70,7 +70,9 @@ gsl_interp_accel **rf_acc[32];
 gsl_spline **rf_spline[32];
 int rfCols[32][32]; //number of sigma entries for RFs
 int penalty[32][32]; //whether or not there is a penalty term
+int prepost[32][32]; //whether this systematic is pre or post smearing
 double** mult_presmear_effs[32]; //presmearing effs from response functions
+double** mult_postsmear_effs[32]; //postsmearing effs from response functions
 double* rfCovMatrixInputs; //array of sigma_theory values per channel
 gsl_matrix* rfCovMatrix; //9*systs x 9*systs matrix
 void LoadRFCovMatrixInputs();

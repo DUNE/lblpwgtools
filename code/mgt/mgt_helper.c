@@ -45,7 +45,7 @@ int compare_asc(const void *x, const void *y) {
 static char* THEFILE;
 void InitOutput(char* filename, char* headline){
  THEFILE=filename;
- if(strlen(THEFILE)==0) printf(headline);
+ if(THEFILE==NULL || strlen(THEFILE)==0) printf(headline);
  else 
  {
    FILE* f=fopen(THEFILE, "w");
@@ -61,7 +61,7 @@ void InitOutput(char* filename, char* headline){
  }
 }
 void AddToOutput2(double n1,double n2){
- if(strlen(THEFILE)==0) printf("%g %g \n",n1,n2);
+ if(THEFILE==NULL || strlen(THEFILE)==0) printf("%g %g \n",n1,n2);
  else 
  {
    FILE* f=fopen(THEFILE, "a");
@@ -79,7 +79,7 @@ void AddToOutput2(double n1,double n2){
 }
 void AddArrayToOutput(double a[],int n){
  int i=0;
- if(strlen(THEFILE)==0){
+ if(THEFILE==NULL || strlen(THEFILE)==0){
 	 for(i=0;i<n;i++) printf("%g\t",a[i]);
 	 printf("\n");
  }
@@ -111,7 +111,7 @@ void AddArrayToOutput(double a[],int n){
  }
 }
 void AddToOutputBlankline(){
- if(strlen(THEFILE)==0) printf("\n");
+ if(THEFILE==NULL || strlen(THEFILE)==0) printf("\n");
  else 
  {
    FILE* f=fopen(THEFILE, "a");
@@ -363,7 +363,7 @@ static void mgt_CalcAllProbs(struct glb_experiment *e, double en, double baselin
     glb_error("Calculation of oscillation probabilities failed.");
 }
 
-void mgt_set_new_rates(int exp, double** mult_presmear_effs[32])
+void mgt_set_new_rates(int exp, double** mult_presmear_effs[32], double** mult_postsmear_effs[32])
 {
   //glb_exp e = glb_experiment_list[exp];
   struct glb_experiment *e = glb_experiment_list[exp];
@@ -393,7 +393,7 @@ void mgt_set_new_rates(int exp, double** mult_presmear_effs[32])
       k_high = e->uprange[s][j] + 1;
       for(int k=k_low; k < k_high; k++)
         e->chra_1[i][j] += e->smear[s][j][k-k_low] * e->chrb_1[i][k];
-      e->chra_1[i][j] = e->chra_1[i][j] * e->user_post_smearing_channel[i][j]
+      e->chra_1[i][j] = e->chra_1[i][j] * e->user_post_smearing_channel[i][j] * mult_postsmear_effs[exp][i][j]
                                   + e->user_post_smearing_background[i][j];
     }
   }
@@ -517,8 +517,10 @@ void PrintRatesToFile(int truefit, int curexp, int rule){
     for(int curchan=0;curchan<channels;curchan++){
       cr[curchan]=glbGetChannelFitRatePtr(curexp,curchan,GLB_POST);
     }
+    double x = (1+xmin[0][0][0])*(cr[5][0]+cr[6][0]);
           
     for (int ebin=0; ebin < bins; ebin++){
+      //printf("ebin=%i, true=%f, fit=%f\n",ebin,true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin]);
       if(truefit==0){
         //true values
         double a[]={bincenters[ebin],true_sig[ebin],true_bg[ebin]};
