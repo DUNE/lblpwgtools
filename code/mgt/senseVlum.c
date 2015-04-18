@@ -977,7 +977,7 @@ void ComputeMHSigCurveFrac_glbchiAll(double osc[])
   double t;
   int i,j,k,exp;
   const int dcpsteps=32;
-  double chi2s[dcpsteps],chi2smax[dcpsteps];
+  double chi2s[dcpsteps];
   
   //populate osc3 with dcp values
   double osc3[dcpsteps];
