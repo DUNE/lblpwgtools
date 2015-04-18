@@ -1054,7 +1054,7 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
 	if(firstLoop[exp]!=1){
 		for(int i=0; i<ebins; i++){
 			if(prior_fit_rates[exp][i]!=signal_fit_rates[i]){
-				//if(checkDif==0) dprintf("True rates have changed...\n");
+				//if(checkDif==0) debugprintf("True rates have changed...\n");
 				checkDif=1;
         prior_fit_rates[exp][i]=signal_fit_rates[i];
 			}
@@ -1093,7 +1093,7 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
 				sum_i=0.0;sum_j=0.0;
 				for(int k=0;k<channels;k++){
 					for(int kp=0;kp<channels;kp++){
-							//dprintf("i=%d,j=%d,k=%d,kp=%d,channel_rates[k][i]=%f,channel_rates[kp][i]=%f,errorMatrix[%d][%d]=%f, mult=%f\n",i,j,k,kp,channel_rates[k][i],channel_rates[kp][j],(kp*ebins+j),(k*ebins+i),errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)],channel_rates[k][i]*channel_rates[kp][j]*errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)]);
+							//debugprintf("i=%d,j=%d,k=%d,kp=%d,channel_rates[k][i]=%f,channel_rates[kp][i]=%f,errorMatrix[%d][%d]=%f, mult=%f\n",i,j,k,kp,channel_rates[k][i],channel_rates[kp][j],(kp*ebins+j),(k*ebins+i),errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)],channel_rates[k][i]*channel_rates[kp][j]*errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)]);
 							//gsl_matrix_set(test_total_matrix,(k*ebins+i),(kp*ebins+j),gsl_matrix_get(test_total_matrix,(k*ebins+i),(kp*ebins+j))+channel_rates[k][i]*channel_rates[kp][j]*errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)]);
 							sum_i+=(channel_rates[k][i]*channel_rates[kp][j]*errorMatrix[exp][(channels*ebins)*(kp*ebins+j)+(k*ebins+i)]);
 							
@@ -1147,7 +1147,7 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
 		cholRet[exp]=gsl_linalg_cholesky_decomp(Inv_Matrix[exp]);
     //cholRet[exp]=1; //uncomment to force everything to pinv
 		if(cholRet[exp]==1){
-				dprintf("Cholesky decomposition failed!\nComputing pseudo-inverse...\n");
+				debugprintf("Cholesky decomposition failed!\nComputing pseudo-inverse...\n");
 				pinv(Total_Input_Matrix[exp],ebins,Inv_Matrix[exp]);
     }
 		
@@ -1205,10 +1205,10 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
     chi2_1 = mylikelihood( true_rates[i],signal_fit_rates[i] + gsl_vector_get(signal_bin_flucts,i)+ bg_fit_rates[i] + gsl_vector_get(bg_bin_flucts,i));
     chi2_1=chi2_1<0.0?0:chi2_1;
     //printf("%f\t%f",sum_sig + gsl_vector_get(signal_bin_flucts,i) + gsl_vector_get(bg_bin_flucts,i) + sum_bkg,sum_data);
-    dprintf("chi2_1 = %e    sig = %e   bkg = %e     Nobs = %e\n",chi2_1,gsl_vector_get(signal_bin_flucts, i)+signal_fit_rates[i+ew_low], gsl_vector_get(bg_bin_flucts, i)+bg_fit_rates[i+ew_low], true_rates[i+ew_low]);
+    debugprintf("chi2_1 = %e    sig = %e   bkg = %e     Nobs = %e\n",chi2_1,gsl_vector_get(signal_bin_flucts, i)+signal_fit_rates[i+ew_low], gsl_vector_get(bg_bin_flucts, i)+bg_fit_rates[i+ew_low], true_rates[i+ew_low]);
     chi2 += chi2_1;
   }
-  dprintf("chi2 1 = %e\n",chi2);
+  debugprintf("chi2 1 = %e\n",chi2);
 
 
 	//compute penalty term for the bin to bin fluctuations = [f][V^-1][f*]
@@ -1231,17 +1231,17 @@ double chiSpectrum_ErrorMatrix(int exp, int rule, int n_params, double *x, doubl
       }
       for(int j=0; j<ebins; j++){
           chi22 += (gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * gsl_matrix_get(Inv_Matrix[exp], i, j)  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j));
-          //dprintf("inv_chi2=%e=(%e)*(%e)*(%e)\n",(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * gsl_matrix_get(Inv_Matrix[exp], i, j)  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)),(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)),gsl_matrix_get(Inv_Matrix[exp], i, j),(gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)));
+          //debugprintf("inv_chi2=%e=(%e)*(%e)*(%e)\n",(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * gsl_matrix_get(Inv_Matrix[exp], i, j)  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)),(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)),gsl_matrix_get(Inv_Matrix[exp], i, j),(gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)));
           //non-inverted version:
           //if( (gsl_matrix_get(Inv_Matrix[exp], i, j))>1e-4) chi22 += (i==j?1:-1)*(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * (1/gsl_matrix_get(Inv_Matrix[exp], i, j))  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j));
           //if((gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * (1/gsl_matrix_get(Inv_Matrix[exp], i, j))  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j))>0)
-          //	dprintf("inv_chi2=%e=(%e)*(%e)*(%e)\n",(i==j?1:-1)*(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * (1/gsl_matrix_get(Inv_Matrix[exp], i, j))  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)),(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)),(i==j?1:-1)*(1/gsl_matrix_get(Inv_Matrix[exp], i, j)),(gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)));
+          //	debugprintf("inv_chi2=%e=(%e)*(%e)*(%e)\n",(i==j?1:-1)*(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)) * (1/gsl_matrix_get(Inv_Matrix[exp], i, j))  * (gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)),(gsl_vector_get(signal_bin_flucts, i)+gsl_vector_get(bg_bin_flucts, i)),(i==j?1:-1)*(1/gsl_matrix_get(Inv_Matrix[exp], i, j)),(gsl_vector_get(signal_bin_flucts, j)+gsl_vector_get(bg_bin_flucts, j)));
       }
     }
   }
 
 	/*if(chi22>0)*/ chi2+=chi22;
-	dprintf("chi22:%e\n",chi22);
+	debugprintf("chi22:%e\n",chi22);
 	//printf("chi22_2:%e\n",chi22_2);
 
   //copy parameter array into globally accessible variable
