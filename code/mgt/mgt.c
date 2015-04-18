@@ -1,12 +1,15 @@
 /*based on example5.c from GLoBES examples*/
 
+#ifndef MGT_HELPER_H
 #include "mgt_helper.h"
+#endif
 #include "customChis.h"
 #include "sigdcp.h"
 #include "senseVlum.h"
 #include "dcpVsTheta.h"
 #include "priors.h"
 #include "mctools.h"
+#include "globes-REdiscovery.h"
 
 int main(int argc, char *argv[])
 { 
@@ -216,9 +219,9 @@ int main(int argc, char *argv[])
 	    exit(1);
 	  }
 	  errorMatrix[iRule][i]=buf;
-	  dprintf("%f,",errorMatrix[iRule][i]); 
+	  debugprintf("%f,",errorMatrix[iRule][i]); 
 	}
-	dprintf("\n");
+	debugprintf("\n");
 	char chiname[64];
 	sprintf(chiname,"chiNormPerBin%d",iRule);
 	glbDefineChiFunction(&chiNormPerBin,analysis_bins,chiname,NULL);
@@ -739,6 +742,17 @@ int main(int argc, char *argv[])
       osctest[3]=0;
       osc[3]=-M_PI/2;
       EventSpectraOutputTruePrePost(osc, osctest, 2);
+      break;
+    default:
+      printf("No runType set... exiting...\n");
+      return(0);
+      break; 
+    }
+    break;
+  case 5: //mc runs
+    switch (arguments.runType){
+    case 1:
+      globesREdiscovery(osc, xrange);
       break;
     default:
       printf("No runType set... exiting...\n");
