@@ -2,8 +2,39 @@
 #include "mgt_helper.h"
 #endif
 
+struct argp _argp = { options, parse_opt, "glb-file(s) output-file", "" };
+struct argp_option options[] ={
+  {"Define",'D',"DEFINITION",0,"Define AEDL variable",0},
+  {"xrange",'x',"RANGE",0,"Range in exposure or variable , Format 'a,b'",4},
+  {"parameters",'p',"PARAMETERS",0,
+   "Set of oscillation parameters\n   for which the data are computed\n"
+   "   Format 'th12,th13,th23,delta,dm21,dm31'",0},
+  {"parameterse",'E',"PARAMETERS",0,
+   "Set of relative oscillation parameter errors\n"
+   "   Format 'th12e,th13e,th23e,deltae,dm21e,dm31e'",0},
+  {"chi",'I',"NUMBER",0,"dim of systematics function to use, otherwise defaults are used"},
+  {"bintobin",'b',"NUMBER",0,"uncorellated bin to bin error to use (if enabled in chi function)"},
+  {"runCat",'C',"NUMBER",0,"category of run to do; see code"},
+  {"runType",'T',"NUMBER",0,"type of run to do with run category; see code"},
+  {"test",'t',0,0,"will produce output using only glbChiSys (good for fast testing)"},
+  {"hierarchy",'h',0,0,"Minimize over the opposite mass hierarchy"},
+  {"ematrixfile",'e',"RANGE",0,"Filename template for ematrix input files (with %d).",4},
+  {"covmatrixfile",'i',"RANGE",0,"Filename template for covar matrix input file.",4},
+  {"debug",'d',0,0,"Print debug output."},
+	{"chigoal",'c',"NUMBER",0,"Chi^2 goal for runtypes that minimize (1sigma=1.0 is default, e.g. 3sigma=9.0)"},
+	{"resolution",'r',"NUMBER",0,"number of points in exposure or variable to use"},
+	{"varied",'v',"NUMBER",0,"number of configs that are varied in terms of runtime, rest are held fixed (0= all varied (default))"},
+	{"zero",'z',0,0,"Include a zero point (regardless of xrange)"},
+  {"systs",'s',"NUMBER",0,"number of systematics response functions to load"},
+  {"part",'P',"RANGE",0,"Part x of y to run, Format 'x,y'",4},
+  {"pflucts",'f',"NUMBER",0,"Number of pseudo experiments to run (if enabled)"},
+  {"nuisoutput",'n',"NUMBER",0,"Add nuisance parameters to output"},
+  {"regprior",'R',"NUMBER",0,"Register prior number x, default to GLoBES default prior"},
+  { 0 }
+};
+
 //only prints if debug is turned on
-void dprintf( const char* format, ... ) {
+void debugprintf( const char* format, ... ) {
     if(arguments.debug==1){
 			va_list args;
 			va_start( args, format );
@@ -77,6 +108,58 @@ void AddToOutput2(double n1,double n2){
    }
  }
 }
+void AddToOutputprintf( const char* format, ... ) {
+  va_list args;
+  va_start( args, format );
+  
+  if(THEFILE==NULL || strlen(THEFILE)==0) vprintf( format, args );
+  else 
+  {
+   FILE* f=fopen(THEFILE, "a");
+   if (!f)
+   {
+     printf("File cannot be opened!\n");
+     THEFILE[0]=0;
+   }
+   else
+   {
+    vfprintf(f, format, args );
+    fclose(f);
+   }
+  }
+
+  va_end( args );
+
+}
+
+void mgt_print_params(const glb_params iv){
+  int i;
+  if(THEFILE==NULL || strlen(THEFILE)==0){
+    for(i=0;i<GLB_OSCP;i++) {
+      if(i==GLB_DELTA_CP) printf("%6.6e\t",fmod(glbGetOscParams(iv,i),2*M_PI));
+      else printf("%6.6e\t",glbGetOscParams(iv,i));
+        }
+    for(i=0;i<glb_num_of_exps;i++) printf("%6.6f\t",glbGetDensityParams(iv,i));
+  }else{
+    FILE* f=fopen(THEFILE, "a");
+    if (!f)
+    {
+      printf("File cannot be opened!\n");
+      THEFILE[0]=0;
+    }
+    else
+    {
+      for(i=0;i<GLB_OSCP;i++) {
+        if(i==GLB_DELTA_CP) fprintf(f,"%6.6e\t",fmod(glbGetOscParams(iv,i),2*M_PI));
+        else fprintf(f,"%6.6e\t",glbGetOscParams(iv,i));
+          }
+      for(i=0;i<glb_num_of_exps;i++) fprintf(f,"%6.6f\t",glbGetDensityParams(iv,i));
+      fclose(f);
+    }
+  }
+ 
+}
+
 void AddArrayToOutput(double a[],int n){
  int i=0;
  if(THEFILE==NULL || strlen(THEFILE)==0){
@@ -517,7 +600,7 @@ void PrintRatesToFile(int truefit, int curexp, int rule){
     for(int curchan=0;curchan<channels;curchan++){
       cr[curchan]=glbGetChannelFitRatePtr(curexp,curchan,GLB_POST);
     }
-    double x = (1+xmin[0][0][0])*(cr[5][0]+cr[6][0]);
+    //double x = (1+xmin[0][0][0])*(cr[5][0]+cr[6][0]);
           
     for (int ebin=0; ebin < bins; ebin++){
       //printf("ebin=%i, true=%f, fit=%f\n",ebin,true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin]);
