@@ -249,6 +249,123 @@ void ComputeCPVCurve(double osc[]){
   glbFreeProjection(projDeltaFree);
 }
 
+void ComputeCPVCurve_minOct(double osc[], double osce[]){
+  //Compute CP violation sensitivity as a function of deltaCP, now with octant minimization!
+  double this_dcp;
+  double chi2[8],chi2min;
+  int opconsidered = (arguments.hier==YES ? 8 : 4);
+  double mindcp=0;
+  double mindm=0;
+	double osc5[]={osc[5],osc[5],osc[5],osc[5],-osc[5]+osc[4],-osc[5]+osc[4],-osc[5]+osc[4],-osc[5]+osc[4]};		
+	double osc3[]={0,M_PI,0,M_PI,0,M_PI,0,M_PI};
+  double osc2[]={osc[2],osc[2],(M_PI/2)-osc[2],(M_PI/2)-osc[2],osc[2],osc[2],(M_PI/2)-osc[2],(M_PI/2)-osc[2]};
+	double chi2_thisdcp[2];
+	double osc5_thisdcp[2]={osc[5],-osc[5]+osc[4]};
+	double bfs[6][8]; //store best fit values
+
+  //define projection with only delta free, so that chisq (best_fit) can be calculated in the no osc systs case
+	glb_projection projnp = glbAllocProjection();
+	glbDefineProjection(projnp, GLB_FIXED, GLB_FIXED, GLB_FIXED, GLB_FREE, GLB_FIXED, GLB_FIXED);
+	glbSetDensityProjectionFlag(projnp, GLB_FIXED, GLB_ALL);
+	if(arguments.test) glbSetProjection(projnp);
+	
+  //define projection with delta, t12, dm21, and matt density fixed
+	glb_projection projDeltaFixed = glbAllocProjection();
+	glbDefineProjection(projDeltaFixed, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FIXED, GLB_FREE);
+	glbSetDensityProjectionFlag(projDeltaFixed, GLB_FIXED, GLB_ALL);
+	//glbSetProjection(projDeltaFixed);
+
+  //define projection with t12, dm21, and matt density fixed
+	glb_projection projDeltaFree = glbAllocProjection();
+	glbDefineProjection(projDeltaFree, GLB_FIXED, GLB_FREE, GLB_FREE, GLB_FREE, GLB_FIXED, GLB_FREE);
+	glbSetDensityProjectionFlag(projDeltaFree, GLB_FIXED, GLB_ALL);
+	//glbSetProjection(projDeltaFree);
+	
+  for(this_dcp=pstart(-M_PI,M_PI,M_PI/36);this_dcp<=pend(-M_PI,M_PI,M_PI/36);this_dcp=this_dcp+pinc(-M_PI,M_PI,M_PI/36)){
+    for(int pfluct=0;pfluct<=(arguments.pflucts>0?arguments.pflucts-1:0);pfluct++){ //loop for statistical fluctuations
+      glbDefineParams(true_values,osc[0],osc[1],osc[2],this_dcp,osc[4],osc[5]);
+      glbSetOscillationParameters(true_values);
+      glbSetRates();
+      if(arguments.pflucts>0) pfluctTrueSpectra();
+      for(int k=0;k<opconsidered;k++){
+        glbDefineParams(test_values,osc[0],osc[1],osc2[k],osc3[k],osc[4],osc5[k]);
+        glbSetDensityParams(test_values,1.0,GLB_ALL);
+        if(arguments.test){
+          chi2[k]=glbChiSys(test_values, GLB_ALL,GLB_ALL);
+        }else{
+          glbSetCentralValues(test_values);
+          //glbDefineParams(input_errors,osce[0]*osc[0],osce[1]*osc[1],osce[2]*osc2[k],osce[3]*osc3[k],osce[4]*osc[4],fabs(osce[5]*osc5[k]));
+          g//lbSetInputErrors(input_errors);
+          glbSetProjection(projDeltaFixed);
+          //chi2[k]=glbChiDelta(test_values,NULL, GLB_ALL);
+          chi2[k]=glbChiNP(test_values,test_values, GLB_ALL);
+        }
+          //output xmin, fchi1, and fchi2 for testing
+          if(arguments.nuis_output>0) AddArrayToOutput(NULL,0);
+        //store osc parameter values
+        for(int osci=0;osci<6;osci++)
+          bfs[osci][k]=glbGetOscParams(test_values,osci);
+      }
+      if(arguments.pflucts>0){
+        //also compute a difference with this_dcp (for both MHs), so that a delta-chisq can be computed
+        for(int k=0;k<2;k++){
+          //set the fit start values at 0 and pi, though it shouldn't matter if the fitter works properly
+          glbDefineParams(test_values,osc[0],osc[1],osc[2],osc3[k],osc[4],osc5_thisdcp[k]);
+          glbSetDensityParams(test_values,1.0,GLB_ALL);
+          if(arguments.test){
+            //even with osc parms fixed, we still want the best fit to vary dcp
+            chi2_thisdcp[k]=ChiNPDeltaPrescan(test_values,test_values,GLB_ALL);
+          }else{
+            glbSetCentralValues(test_values);
+            //chi2_thisdcp[k]=glbChiDelta(test_values,NULL, GLB_ALL);
+            //chi2_thisdcp[k]=ChiAllDeltaPrescan(test_values,NULL, GLB_ALL);
+            //chi2_thisdcp[k]=glbChiAll(test_values,NULL, GLB_ALL);
+            glbSetProjection(projDeltaFree);
+            //chi2_thisdcp[k]=glbChiNP(test_values,test_values, GLB_ALL);
+            chi2_thisdcp[k]=ChiNPDeltaPrescan(test_values,test_values, GLB_ALL);
+          }
+          bfs[3][k]=glbGetOscParams(test_values,GLB_DELTA_CP);
+        }
+      }
+      chi2min=1e6;
+      int kmin=0;
+      for(int k=0;k<opconsidered;k++){
+        if(chi2[k]<chi2min){
+          chi2min=chi2[k];
+          mindcp=osc3[k];
+          mindm=osc5[k];
+          kmin=k;
+        }
+      }
+      
+      //print output
+      double a[18];
+      a[0]=this_dcp;
+      a[1]=(chi2min);
+      a[2]=mindcp;
+      a[3]=mindm;
+      a[4]=chi2[0];
+      a[5]=chi2[1];
+      a[6]=chi2[2];
+      a[7]=chi2[3]; 
+      a[8]=chi2[4];
+      a[9]=chi2[5];
+      a[10]=chi2[6];
+      a[11]=chi2[7];
+      a[12]=bfs[0][kmin];
+      a[13]=bfs[1][kmin];
+      a[14]=bfs[2][kmin];
+      a[15]=bfs[3][kmin];
+      a[16]=bfs[4][kmin];
+      a[17]=bfs[5][kmin];
+      AddArrayToOutput(a,18);
+    }
+  }
+  glbFreeProjection(projnp);
+  glbFreeProjection(projDeltaFixed);
+  glbFreeProjection(projDeltaFree);
+}
+
 void ComputeMHSigCurve(double osc[]){
   //Compute MH sensitivity as a function of deltaCP
   //Uses GLoBES eightfold degeneracy finder

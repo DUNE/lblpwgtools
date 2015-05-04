@@ -466,6 +466,9 @@ int main(int argc, char *argv[])
     case 9:
       ComputeCPResolutionCurve2(osc);
       break;
+    case 10:
+      ComputeCPVCurve_minOct(osc,osce);
+      break; 
     case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27:
       //1d chisquareds
       //20=t12, 21=t13, 22=t23, 23=dcp, 24=DM21, 25=DM31

@@ -4,6 +4,7 @@
 
 double DoChiSquareCPR(double x, void *dummy);
 void ComputeCPVCurve(double osc[]);
+void ComputeCPVCurve_minOct(double osc[], double osce[]);
 void ComputeMHSigCurve(double osc[]);
 void ComputeMHSigCurve_v2(double osc[], double dcpin, int disableScanSysts);
 void ComputeAllowedCP(double osc[]);
