@@ -295,7 +295,7 @@ void ComputeCPVCurve_minOct(double osc[], double osce[]){
         }else{
           glbSetCentralValues(test_values);
           //glbDefineParams(input_errors,osce[0]*osc[0],osce[1]*osc[1],osce[2]*osc2[k],osce[3]*osc3[k],osce[4]*osc[4],fabs(osce[5]*osc5[k]));
-          g//lbSetInputErrors(input_errors);
+          //glbSetInputErrors(input_errors);
           glbSetProjection(projDeltaFixed);
           //chi2[k]=glbChiDelta(test_values,NULL, GLB_ALL);
           chi2[k]=glbChiNP(test_values,test_values, GLB_ALL);
