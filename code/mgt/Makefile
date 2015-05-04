@@ -28,6 +28,9 @@ dcpVsTheta.o: dcpVsTheta.c dcpVsTheta.h
 	gcc -std=c99 ${copts} -static -g -Wall -g -O2 -c -o dcpVsTheta.o dcpVsTheta.c ${enablegp}
 	
 mgt: mgt.c sigdcp.o customChis.o priors.o mgt_helper.o senseVlum.o dcpVsTheta.o mctools.o globes-REdiscovery.o
-	gcc  -std='c99' ${copts} -o mgt ${GLBT_LIB_PATH}/glb_tools_parser.o ${GLBT_LIB_PATH}/glb_tools_header.o ${GLBT_LIB_PATH}/glb_tools_eightfold.o priors.o mctools.o sigdcp.o customChis.o mgt_helper.o senseVlum.o dcpVsTheta.o globes-REdiscovery.o -lglobes -lgsl -lgslcblas -lm -L${GLBT_LIB_PATH}/lib -L${INSTALLATION}/lib mgt.c ${enablegp}
+	gcc  -std='c99' ${copts} -z muldefs -o mgt ${GLBT_LIB_PATH}/glb_tools_parser.o ${GLBT_LIB_PATH}/glb_tools_header.o ${GLBT_LIB_PATH}/glb_tools_eightfold.o priors.o mctools.o sigdcp.o customChis.o mgt_helper.o senseVlum.o dcpVsTheta.o globes-REdiscovery.o -lglobes -lgsl -lgslcblas -lm -L${GLBT_LIB_PATH}/lib -L${INSTALLATION}/lib mgt.c ${enablegp}
 
 all: mgt
+
+clean:
+	rm -f *.o mgt
