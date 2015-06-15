@@ -5,14 +5,14 @@
 /***********************************************************************
 //custom chi functions*/
 double sigma_binbin = 0.05;
-inline double myprior(double x, double center, double sigma)
+double myprior(double x, double center, double sigma)
 {
   double tmp = (x - center)/sigma;
   return tmp*tmp;
 }
 
 //log likelihood ratio
-inline double mylikelihood(double true_rate, double fit_rate)
+double mylikelihood(double true_rate, double fit_rate)
 {
   double res;
   res = fit_rate - true_rate;
@@ -30,7 +30,7 @@ inline double mylikelihood(double true_rate, double fit_rate)
  }
 
 /* Gaussian likelihood*/
-inline double glikelihood(double true_rate, double fit_rate, double sqr_sigma)
+double glikelihood(double true_rate, double fit_rate, double sqr_sigma)
 {
   if (sqr_sigma > 0)
     return (true_rate - fit_rate)*(true_rate - fit_rate) / sqr_sigma;

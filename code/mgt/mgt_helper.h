@@ -5,16 +5,16 @@
 #include <string.h>
 #include <argp.h>
 #include <float.h>
-#include "glb_multiex.h"
-#include "glb_types.h"
-#include "glb_error.h"
-#include "glb_fluxes.h"
-#include "glb_probability.h"
-#include "glb_rate_engine.h" //for access to set_new_rates
+#include "globes/glb_multiex.h"
+#include "globes/glb_types.h"
+#include "globes/glb_error.h"
+#include "globes/glb_fluxes.h"
+#include "globes/glb_probability.h"
+#include "globes/glb_rate_engine.h" //for access to set_new_rates
 #include "globes/globes.h"   /* GLoBES library */
 #include "customChis.h"
 #include "priors.h"
-#include "glb_tools_eightfold.h"
+#include "globes/glb_tools_eightfold.h"
 #include <gsl/gsl_math.h>    /* GNU Scientific library (required for root finding) */
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_errno.h>

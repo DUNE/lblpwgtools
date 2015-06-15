@@ -1,0 +1,37 @@
+top = '.'
+out = 'tmp'
+
+def options(opt):
+    opt.load('compiler_c')
+    opt.add_option('--with-globes', default=None,
+                   help="Installation location for GLoBES")
+
+
+def configure(cfg):
+    path_list = list()
+    globes = getattr(cfg.options, 'with_globes', None)
+    if globes: path_list.append(globes+'/bin')
+
+    cfg.load('compiler_c')
+    cfg.find_program('globes-config', var='GLOBES-CONFIG', path_list=path_list)
+    cfg.check_cfg(package='gsl')
+    cfg.check_cfg(package='globes', 
+                  path=cfg.env['GLOBES-CONFIG'],
+                  args='--libs --include --cflags --prefix')
+    cfg.check(header_name = 'globes/glb_types.h', 
+              features='c cprogram', uselib='GLOBES')
+
+def build(bld):
+    bld.stlib(
+        cflags = '-std=c99 -Wno-format-security',
+        source = bld.path.ant_glob('*.c', exclude=['mgt.c']),
+        target = 'mgt_lib',
+        uselib='GLOBES')
+
+    bld(features = 'c cprogram',
+        source     = 'mgt.c',
+        includes   = '.',
+        cflags    = '-std=c99 -Wno-format-security',
+        use='mgt_lib',
+        uselib='GLOBES GLOBESTOOLS',
+        target     = 'mgt')

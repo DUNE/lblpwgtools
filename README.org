@@ -1,0 +1,61 @@
+#+TITLE: Long baseline physics working group tools
+
+This repository contains code and documents writing by the DUNE
+long-baseline physics working group.
+
+* Code
+
+** MGT
+
+My Globes Tool
+
+*** Prerequisites
+
+Install the version of Globes from:
+
+  https://dune.bnl.gov/globes/globes-3.2.13-dune1.tar.gz
+
+#+BEGIN_EXAMPLE
+  $ tar -xvf globes-3.2.13-dune1.tar.gz
+  $ cd globes-3.2.13-dune1
+  $ ./configure --prefix=/path/to/install/globes-3.2.13-dune1
+  $ make install
+#+END_EXAMPLE
+
+Notes:
+
+- This is version 3.2.13 with some additional, required files from 3.1.11.
+
+*** Get Source
+
+#+BEGIN_EXAMPLE
+  $ git clone https://github.com/DUNE/lblpwgtools.git
+  $ cd lblpwgtools
+  $ git checkout X.Y.Z
+#+END_EXAMPLE
+
+Notes:
+
+- use =git tag= to see what tags are available
+- releases can also be download from https://github.com/DUNE/lblpwgtools/releases
+
+*** Build =mgt=
+
+#+BEGIN_EXAMPLE
+  $ cd code/mgt
+  $ ./waf --with-globes=/path/to/install/globes-3.2.13-dune1 \
+              --prefix=/path/to/install/mgt-X.Y.Z \
+              configure build install
+#+END_EXAMPLE
+
+Notes:
+
+- the =--with-globes= can be omitted if the =globes-config= scriopt is in your =PATH=.
+- the =--prefix= and =install= can be omitted if you just want to copy the resulting =tmp/mgt= program somewhere
+
+
+
+* History
+
+This repository is a fork of and older [[https://cdcvs.fnal.gov/redmine/projects/lbne-lblpwgtools][redmine]].
+
