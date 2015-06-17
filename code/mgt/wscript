@@ -5,19 +5,29 @@ def options(opt):
     opt.load('compiler_c')
     opt.add_option('--with-globes', default=None,
                    help="Installation location for GLoBES")
+    opt.add_option('--with-gsl', default=None,
+                   help="Installation location for GSL")
 
 
 def configure(cfg):
     path_list = list()
     globes = getattr(cfg.options, 'with_globes', None)
     if globes: path_list.append(globes+'/bin')
+    gsl = getattr(cfg.options, 'with_gsl', None)
+    if gsl: path_list.append(gsl+'/bin')
 
     cfg.load('compiler_c')
     cfg.find_program('globes-config', var='GLOBES-CONFIG', path_list=path_list)
-    cfg.check_cfg(package='gsl')
+    cfg.find_program('gsl-config', var='GSL-CONFIG', path_list=path_list)
+
+    cfg.check_cfg(package='gsl',
+                  path=cfg.env['GSL-CONFIG'],
+                  args='--libs --cflags --prefix')
+
     cfg.check_cfg(package='globes', 
                   path=cfg.env['GLOBES-CONFIG'],
                   args='--libs --include --cflags --prefix')
+
     cfg.check(header_name = 'globes/glb_types.h', 
               features='c cprogram', uselib='GLOBES')
 
@@ -26,12 +36,12 @@ def build(bld):
         cflags = '-std=c99 -Wno-format-security',
         source = bld.path.ant_glob('*.c', exclude=['mgt.c']),
         target = 'mgt_lib',
-        uselib='GLOBES')
+        uselib='GLOBES GSL')
 
     bld(features = 'c cprogram',
         source     = 'mgt.c',
         includes   = '.',
         cflags    = '-std=c99 -Wno-format-security',
         use='mgt_lib',
-        uselib='GLOBES GLOBESTOOLS',
+        uselib='GLOBES GSL',
         target     = 'mgt')
