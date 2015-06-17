@@ -1,6 +1,8 @@
 top = '.'
 out = 'tmp'
 
+import os
+
 def options(opt):
     opt.load('compiler_c')
     opt.add_option('--with-globes', default=None,
@@ -10,9 +12,11 @@ def options(opt):
 
 
 def configure(cfg):
-    path_list = list()
+    path_list = os.environ['PATH'].split(':')
+
     globes = getattr(cfg.options, 'with_globes', None)
     if globes: path_list.append(globes+'/bin')
+
     gsl = getattr(cfg.options, 'with_gsl', None)
     if gsl: path_list.append(gsl+'/bin')
 
@@ -36,12 +40,12 @@ def build(bld):
         cflags = '-std=c99 -Wno-format-security',
         source = bld.path.ant_glob('*.c', exclude=['mgt.c']),
         target = 'mgt_lib',
-        uselib='GLOBES GSL')
+        uselib = ['GLOBES','GSL'])
 
     bld(features = 'c cprogram',
         source     = 'mgt.c',
         includes   = '.',
         cflags    = '-std=c99 -Wno-format-security',
         use='mgt_lib',
-        uselib='GLOBES GSL',
+        uselib = ['GLOBES','GSL'],
         target     = 'mgt')
