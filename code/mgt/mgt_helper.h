@@ -93,6 +93,8 @@ void gslError(const char *reason, const char *file, int line, int gsl_errno);
 double min(double x, double y);
 void debugprintf( const char* format, ... );
 void mgt_set_new_rates(int exp, double** mult_presmear_effs[], double** mult_postsmear_effs[]);
+void mgt_set_new_rates_e(int exp, double** mult_presmear_effs[], double*** mult_postsmear_matrix[]);
+void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, double* syst_sigmas, double xsigma, double** tresppost);
 
 double pstart(double low, double high, double inc);
 double pend(double low, double high, double inc);

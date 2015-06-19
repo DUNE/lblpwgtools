@@ -35,15 +35,17 @@ void ComputeRFCurve(double osc[], int truefitspectra){
   double inc =(truefitspectra==1?0.5:0.1);
   double osc3[]={0,-M_PI/2,M_PI/2}; 
   double chi2[3];
-  int nuisances=arguments.systs*(arguments.chimode==19?12:1);
+  int nuisances=arguments.systs*((arguments.chimode==19||arguments.chimode==29)?12:1);
   double narray[nuisances];
   for(double n=pstart(-4,4,inc);n<=pend(-4,4,inc);n=n+pinc(-4,4,inc)){
     for(int i=0; i<nuisances; i++){
-      if(arguments.chimode==19)
+      if(arguments.chimode==19||arguments.chimode==29)
         narray[i]=(i%12==0?n:0); //only modify the numu nuisance param.
       else  
         narray[i]=n;
     }
+
+
     for(int k=0;k<(truefitspectra==1?1:3);k++){
       glbDefineParams(test_values,osc[0],osc[1],osc[2],osc3[k],osc[4],osc[5]);
       
@@ -51,7 +53,13 @@ void ComputeRFCurve(double osc[], int truefitspectra){
       glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_OFF);
       glbChiSys(test_values, GLB_ALL, GLB_ALL);
       glbSwitchSystematics(GLB_ALL, GLB_ALL, GLB_ON);
-      chi2[k]=chi_ResponseFunctionCov(0, 0, nuisances, narray, NULL, NULL);
+
+      if (arguments.chimode==29){
+	chi2[k]=chi_ResponseFunctionCovE(0, 0, nuisances, narray, NULL, NULL);
+      }
+      else {
+	chi2[k]=chi_ResponseFunctionCov(0, 0, nuisances, narray, NULL, NULL);
+      }
     }
     double a[]={n,chi2[0],chi2[1],chi2[2]};
     if(truefitspectra==0) AddArrayToOutput(a,4);
@@ -109,7 +117,7 @@ void ComputeRFCurve2d(double osc[]){
  
   double inc=0.1;
   double chi2;
-  int nuisances=arguments.systs*(arguments.chimode==19?12:1);
+  int nuisances=arguments.systs*((arguments.chimode==19||arguments.chimode==29)?12:1);
   double narray[nuisances];
   for(double n1=pstart(-4,4,inc);n1<=pend(-4,4,inc);n1=n1+pinc(-4,4,inc)){
     for(double n2=pstart(-4,4,inc);n2<=pend(-4,4,inc);n2=n2+pinc(-4,4,inc)){
