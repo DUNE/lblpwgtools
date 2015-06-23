@@ -562,6 +562,7 @@ void mgt_set_new_rates_e(int exp, double** mult_presmear_effs[32], double*** mul
     int sbins = e->simbins;
     int nbins = e->numofbins;
     double mysmear[nbins][sbins];
+    double corrsmear[nbins][sbins];
     memset(mysmear,0,nbins*sbins*sizeof(double));
     //printf("Channel %d\n",i);
     for(int j=0; j < nbins; j++){

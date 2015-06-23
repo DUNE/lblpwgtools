@@ -864,6 +864,10 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
     double *bg_fit_rates     = glbGetBGFitRatePtr(curexp, rule);
     int sampbins = glbGetNumberOfSamplingPoints(curexp); 
     int recbins = glbGetNumberOfBins(curexp); //post-smearing bins
+    int reclobin, rechibin;
+    int temp = glbGetEnergyWindowBins(curexp,rule,&reclobin,&rechibin); //post-smearing bins to include in chi2
+    //printf("sampbins = %d, recbins = %d, lo = %d, hi = %d\n",sampbins,recbins,reclobin,rechibin);
+    
 
     //initialize smearing matrix
     double *tresppost[recbins];
@@ -971,29 +975,33 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
     }
 
     //Temporary, check chi2 with old rates
-    float oldchi;
-    float oldrates, newrates;
-    oldrates = 0;
+    float oldchi = 0;
+    float newrates;
+    float oldrates[recbins];
+    float oldchi2cont[recbins];
     newrates = 0;
-    for (int ebin=0; ebin < recbins; ebin++){
+    for (int ebin=reclobin; ebin < rechibin; ebin++){
       oldchi += mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]);
-      oldrates += signal_fit_rates[ebin];
+      oldchi2cont[ebin] = mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]);
+      oldrates[ebin] = signal_fit_rates[ebin]+bg_fit_rates[ebin];
     }
 
     //recompute rates using these multiplicative pre/post smearing effs
     mgt_set_new_rates_e(curexp, mult_presmear_effs, mult_postsmear_matrix);
 
-    for (int ebin=0; ebin < recbins; ebin++){
+    //only add up chi2 over analysis bins
+    for (int ebin=reclobin; ebin < rechibin+1; ebin++){
       fchi1 += mylikelihood(true_rates[ebin], signal_fit_rates[ebin]+bg_fit_rates[ebin]);
-      newrates += signal_fit_rates[ebin]; 
+      newrates = signal_fit_rates[ebin]+bg_fit_rates[ebin];
+      //printf("xsigma: %f: ebin %d: truerate = %f, oldrate = %f, newrate = %f\n",xsigma,ebin,true_rates[ebin],oldrates[ebin],newrates);
+      //printf("xsigma: %f: ebin %d: truerate = %f, oldrate = %f, oldchi2cont = %f, newrate = %f, chi2cont = %f\n",xsigma,ebin,true_rates[ebin],oldrates[ebin],oldchi2cont[ebin],newrates,mylikelihood(true_rates[ebin],signal_fit_rates[ebin]+bg_fit_rates[ebin]));      
       if(arguments.debug==1){
         double a[]={ebin,true_rates[ebin],(signal_fit_rates[ebin]+bg_fit_rates[ebin]),x[0], x[1], x[2], x[3], x[4]};
         AddArrayToOutput(a,8);
       }
     }
 
-    //printf("oldchi = %f, newchi = %f\n",oldchi,fchi1);
-    //printf("oldrate = %f, newrate = %f\n",oldrates,newrates);
+    printf("xsigma %f: oldchi = %f, newchi = %f\n",xsigma,oldchi,fchi1);
 
     if(arguments.debug==1){
       AddToOutputBlankline();
@@ -1011,7 +1019,7 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
       }
     }
   }
-  
+
   //store nuisance parameters for output, if enabled
   if(arguments.nuis_output>0){
     for(int syst=0;syst<arguments.systs;syst++){

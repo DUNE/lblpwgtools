@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
 	      mult_postsmear_matrix_in[exp][syst] = (double****)malloc(channels*sizeof(double***));
 	      syst_sigmas[exp][syst] = (double*)malloc(rfCols[exp][syst]*sizeof(double));
 	      size_sigmas[exp][syst] = rfCols[exp][syst];
-	      printf("rfCols[%d][%d]=%d, penalty[%d][%d]=%d, prepost[%d][%d]=%d\n",exp,syst,rfCols[exp][syst],exp,syst,penalty[exp][syst],exp,syst,prepost[exp][syst]);
+	      //printf("rfCols[%d][%d]=%d, penalty[%d][%d]=%d, prepost[%d][%d]=%d\n",exp,syst,rfCols[exp][syst],exp,syst,penalty[exp][syst],exp,syst,prepost[exp][syst]);
 	      //read in sigma values
 	      double sigmas[rfCols[exp][syst]];
 	      for(int i=0;i<rfCols[exp][syst];i++){
@@ -450,19 +450,20 @@ int main(int argc, char *argv[])
 		    mult_postsmear_matrix_in[exp][syst][ch][sbin] = (double**)malloc(recbins*sizeof(double*));
 		    for(int rbin=0; rbin<recbins; rbin++){
 		      mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin] = (double*)malloc(recbins*sizeof(double));
+		    }
+		    for(int rbin=0; rbin<recbins; rbin++){		    
 		      for (int rrbin=0; rrbin<recbins; rrbin++){
 			if(fscanf(emFile, "%f", &buf)==EOF){
 			  printf("Response function has improper size. Exiting.\n");
 			  exit(1);
 			}
-			mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin][rrbin] = buf;
+			mult_postsmear_matrix_in[exp][syst][ch][sbin][rrbin][rbin] = buf;
 		      }
 		    }
 		  }
 		}
 	      }
       }
-
     //only enable systematics for first experiment
       //other experiments get their systs from first exp
       if(exp==0){
