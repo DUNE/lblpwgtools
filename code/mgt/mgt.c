@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
   for(int i=0;i<arguments.exp-1;i++){
     printf("Loading glb file:%s\n",arguments.args[i]);
     int s=glbInitExperiment(arguments.args[i],&glb_experiment_list[0],&glb_num_of_exps);
+
     /* Testing for failure */
     if(s<-1) {fprintf(stderr,"%s: FATAL: Unrecoverable parse error\n",
 		      argv[0]);exit(1);}
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
   glbSetCentralValues(central_values);
   glbSetInputErrors(input_errors);
   glbSetRates();
-  
+
   //setup systematics
   FILE *emFile;
   float buf; int dbuf;
@@ -239,8 +240,10 @@ int main(int argc, char *argv[])
       printf("Response functions file location (ematrixfile) not set! Exiting...\n");
       exit(1);
     }
-			
+
+
     printf("Opening response function file: %s\n",arguments.ematrixfile);
+
     emFile = fopen(arguments.ematrixfile, "r");
     if(emFile==NULL){
       printf("Response function file does not exist, exiting!\n");
@@ -292,7 +295,7 @@ int main(int argc, char *argv[])
 	      }
 	      double resp[rfCols[exp][syst]];
 	      for(int ch=0; ch<channels; ch++){
-	        //printf("\n\nCHANNEL %d\n",ch);
+	        printf("\n\nCHANNEL %d\n",ch);
 	        for(int ebin=0; ebin<sampbins; ebin++){
 	          for(int i=0; i<rfCols[exp][syst]; i++){
 	            if(fscanf(emFile, "%f", &buf)==EOF){
@@ -335,6 +338,169 @@ int main(int argc, char *argv[])
     //load sigmas for channel2channel nuisance parameters
     LoadRFCovMatrixInputs();
     break;
+
+  case 29:
+    //ETW June 2015, copying case 19 with changes to accomodate 3d energy response functions
+    //chiSpectrum_ResponseFunctions with energy response treatment
+    printf("Using chiSpectrum_ResponseFunctions with Energy Response...\n");
+
+    if(!arguments.ematrixfile){
+      printf("Response functions file location (ematrixfile) not set! Exiting...\n");
+      exit(1);
+    }
+
+    printf("Opening response function file: %s\n",arguments.ematrixfile);
+    emFile = fopen(arguments.ematrixfile, "r");
+
+
+    if(emFile==NULL){
+      printf("Response function file does not exist, exiting!\n");
+      exit(1);
+    }
+
+    for(int exp=0;exp<glb_num_of_exps;exp++){
+      int sampbins = glbGetNumberOfSamplingPoints(exp); //pre-smearing bins
+      int recbins = glbGetNumberOfBins(exp); //post-smearing bins
+      int channels=glbGetNumberOfChannels(exp);
+
+      //initialize pre-smearing effs and smearing adjustment matrices
+      mult_presmear_effs[exp] = (double**) malloc(channels*sizeof(double*));
+      mult_postsmear_matrix[exp] = (double***)malloc(channels*sizeof(double**));
+      mult_postsmear_matrix_in[exp] = (double*****)malloc(arguments.systs*sizeof(double****));
+      syst_sigmas[exp] = (double**)malloc(arguments.systs*sizeof(double*));
+      size_sigmas[exp] = (int*)malloc(arguments.systs*sizeof(int));
+      for(int ch=0;ch<channels;ch++){
+        mult_presmear_effs[exp][ch]= (double*) malloc(sampbins*sizeof(double));
+	mult_postsmear_matrix[exp][ch] = (double**)malloc(recbins*sizeof(double*));
+        for(int b=0;b<sampbins;b++){
+          mult_presmear_effs[exp][ch][b]=1;
+        }
+	for(int b=0;b<recbins;b++){
+	  mult_postsmear_matrix[exp][ch][b] = (double*)malloc(recbins*sizeof(double));
+	  for (int bb=0;bb<recbins;bb++){
+	    if (b==bb) {
+	      mult_postsmear_matrix[exp][ch][b][bb] = 1;
+	    }
+	    else {
+	      mult_postsmear_matrix[exp][ch][b][bb] = 0;
+	    }
+	  }		    
+	}
+      }
+
+      //setup splines array for this experiment	
+      //ETW Splines will only be filled with the presmearing rfs, will do manual linear interpolation for
+      //smearing adjustment matrices, so just set up regular arrays
+      rf_acc[exp] = (gsl_interp_accel**) malloc(arguments.systs*sampbins*channels*sizeof(gsl_interp_accel));
+      rf_spline[exp] = (gsl_spline**) malloc(arguments.systs*sampbins*channels*sizeof(gsl_spline));
+	
+
+      for(int syst=0; syst<arguments.systs; syst++){
+	      //read in header information
+	      //first four lines are number of sigmas, sigma low, sigma high, penalty
+	      for(int i=0;i<5;i++){
+	        if((i==0||i==3?fscanf(emFile, "%d", &dbuf):fscanf(emFile, "%f", &buf))==EOF){
+	          printf("Response function has improper size. Exiting.\n");
+	          exit(1);
+	        }
+	        if(i==0) rfCols[exp][syst]=(int)dbuf;
+	        if(i==3) penalty[exp][syst]=(int)dbuf;
+	        if(i==4) prepost[exp][syst]=(int)dbuf; //0=pre- 1=post-smearing systematic
+	      }
+	      mult_postsmear_matrix_in[exp][syst] = (double****)malloc(channels*sizeof(double***));
+	      syst_sigmas[exp][syst] = (double*)malloc(rfCols[exp][syst]*sizeof(double));
+	      size_sigmas[exp][syst] = rfCols[exp][syst];
+	      //printf("rfCols[%d][%d]=%d, penalty[%d][%d]=%d, prepost[%d][%d]=%d\n",exp,syst,rfCols[exp][syst],exp,syst,penalty[exp][syst],exp,syst,prepost[exp][syst]);
+	      //read in sigma values
+	      double sigmas[rfCols[exp][syst]];
+	      for(int i=0;i<rfCols[exp][syst];i++){
+	        if(fscanf(emFile, "%f", &buf)==EOF){
+	          printf("Response function has improper size. Exiting.\n");
+	          exit(1);
+	        }
+	        sigmas[i]=buf;
+		syst_sigmas[exp][syst][i] = sigmas[i];
+	        //printf("%f, ",sigmas[i]);
+	      }
+	      double resp[rfCols[exp][syst]];
+	      for(int ch=0; ch<channels; ch++){
+		mult_postsmear_matrix_in[exp][syst][ch] = (double***)malloc(rfCols[exp][syst]*sizeof(double**));
+	        //printf("\n\nCHANNEL %d\n",ch);
+		//ETW seperate treatment for reading in pre and post, pre unchanged
+		if (prepost[exp][syst]==0){
+		  for(int ebin=0; ebin<sampbins; ebin++){
+		    for(int i=0; i<rfCols[exp][syst]; i++){
+		      if(fscanf(emFile, "%f", &buf)==EOF){
+			printf("Response function has improper size. Exiting.\n");
+			exit(1);
+		      }
+		      resp[i]=buf;
+		      //printf("%f, ",resp[i]);
+		    }
+		    //printf("\n");
+		    //initialize spline
+		    int index=sampbins*arguments.systs*ch+sampbins*syst+ebin;
+		    rf_acc[exp][index] = gsl_interp_accel_alloc ();
+		    rf_spline[exp][index] = gsl_spline_alloc(gsl_interp_linear, rfCols[exp][syst]);
+		    gsl_spline_init (rf_spline[exp][index], sigmas, resp, rfCols[exp][syst]);
+		  }
+		}
+		else if (prepost[exp][syst]==1){
+		  for(int sbin=0; sbin<rfCols[exp][syst]; sbin++){
+		    mult_postsmear_matrix_in[exp][syst][ch][sbin] = (double**)malloc(recbins*sizeof(double*));
+		    for(int rbin=0; rbin<recbins; rbin++){
+		      mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin] = (double*)malloc(recbins*sizeof(double));
+		    }
+		    for(int rbin=0; rbin<recbins; rbin++){		    
+		      for (int rrbin=0; rrbin<recbins; rrbin++){
+			if(fscanf(emFile, "%f", &buf)==EOF){
+			  printf("Response function has improper size. Exiting.\n");
+			  exit(1);
+			}
+			mult_postsmear_matrix_in[exp][syst][ch][sbin][rrbin][rbin] = buf;
+		      }
+		    }
+
+		    for(int rrbin=0; rrbin<recbins; rrbin++){
+		      double mysum = 0;
+		      for(int rbin=0; rbin<recbins; rbin++){
+			mysum += mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin][rrbin];
+			//printf("exp = %d, syst = %d, ch = %d, sbin = %d, rrbin = %d, rbin = %d, value = %f\n",exp,syst,ch,sbin,rrbin,rbin,mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin][rrbin]);
+		      }
+		      if (rrbin==17 && mysum==0.){ 
+			//printf("bin = %d, sum = %f\n",rrbin,mysum);
+			//printf("exp = %d, syst = %d, ch = %d, sbin = %d, rrbin = %d\n",exp,syst,ch,sbin,rrbin);
+		      }
+		    }
+		  
+		  }
+		}
+	      }
+      }
+    //only enable systematics for first experiment
+      //other experiments get their systs from first exp
+      if(exp==0){
+	      char chiname[64];
+	      sprintf(chiname,"chi_ResponseFunction_exp%d",exp);
+	      double errors[2*glb_num_of_exps];
+	      int nuisances=0;
+	      switch(arguments.chimode){
+	        case 29:
+	          nuisances=12*arguments.systs;
+	          break;
+	      }
+	      glbDefineChiFunction(&chi_ResponseFunctionCovE,nuisances,chiname,NULL);
+	      glbSetChiFunction(exp,GLB_ALL,GLB_ON,chiname,errors);
+      }
+      else{
+	glbSetChiFunction(exp,GLB_ALL,GLB_ON,"chiZero",NULL);
+      }
+    }
+    fclose(emFile);
+    //load sigmas for channel2channel nuisance parameters
+    LoadRFCovMatrixInputs();
+    break;
+
   case 30:
     //chiSpectrumNormCustom
     //use norm/bg from each exp/rule

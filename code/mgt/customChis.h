@@ -73,11 +73,17 @@ int penalty[32][32]; //whether or not there is a penalty term
 int prepost[32][32]; //whether this systematic is pre or post smearing
 double** mult_presmear_effs[32]; //presmearing effs from response functions
 double** mult_postsmear_effs[32]; //postsmearing effs from response functions
+double*** mult_postsmear_matrix[32]; //smearing matrix multiplier from response functions
+double***** mult_postsmear_matrix_in[32]; //smearing matrix inputs
+double** syst_sigmas[32]; //sigma binning for smearing matrix inputs
+int* size_sigmas[32]; //sigma number of bins for smearing matrix inputs
 double* rfCovMatrixInputs; //array of sigma_theory values per channel
 gsl_matrix* rfCovMatrix; //9*systs x 9*systs matrix
 void LoadRFCovMatrixInputs();
 void SetupRFCovMatrix();
 double chi_ResponseFunctionCov(int exp, int rule, int n_params, double *x, double *errors,
+                          void *user_data);
+double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, double *errors,
                           void *user_data);
 double extract1sResponse();
                           

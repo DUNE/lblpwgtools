@@ -82,7 +82,7 @@ void InitOutput(char* filename, char* headline){
    FILE* f=fopen(THEFILE, "w");
    if (!f)
    {
-     printf("File cannot be opened!\n");
+     printf("File %s cannot be opened!\n",filename);
      THEFILE[0]=0;
    }
    else {
@@ -179,7 +179,7 @@ void AddArrayToOutput(double a[],int n){
 		for(i=0;i<n;i++) fprintf(f,"%g\t",a[i]);
     //output nuisance parameters, if enabled
     if(arguments.nuis_output>0){
-      if(arguments.chimode==19 || arguments.chimode==17 || arguments.chimode==31 || arguments.chimode==32){//only first exp
+      if(arguments.chimode==29 || arguments.chimode==19 || arguments.chimode==17 || arguments.chimode==31 || arguments.chimode==32){//only first exp
         for(int n=0;n<32;n++){
           fprintf(f,"%g\t",xmin[0][0][n]);
         }
@@ -446,6 +446,51 @@ static void mgt_CalcAllProbs(struct glb_experiment *e, double en, double baselin
     glb_error("Calculation of oscillation probabilities failed.");
 }
 
+//ETW June 2015 Linearly interpolate between bins of sigma
+//Note: Does not yet check that new smearing preserves column sums, but quick look at output suggests it
+//      is very close.
+void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, double* syst_sigmas, double xsigma, double** tresppost)
+{
+  //printf("size = %d, xsigma = %f\n",size_sigmas, xsigma);
+  int lobin = 99999;
+  int hibin = 0;
+  //Find sigma bins to interpolate between
+  for (int sbin=0; sbin<size_sigmas; sbin++) {
+    if (xsigma >= syst_sigmas[sbin] && xsigma < syst_sigmas[sbin+1]) {
+      lobin = sbin;
+      hibin = sbin+1;
+      break;
+    }
+  }
+  //printf("xsigma = %f, lobin = %d, hibin = %d\n",xsigma,lobin,hibin);
+
+  double hiweight = (xsigma-syst_sigmas[lobin])/(syst_sigmas[hibin]-syst_sigmas[lobin]);
+  //printf("SIGWEIGHT %f is between %f and %f with hiweight %f\n",xsigma,syst_sigmas[lobin],syst_sigmas[hibin],hiweight);
+  //Loop over Ereco and interpolate Ereco->Ereco bin-by-bin
+  double inlo; double inhi;
+  for (int b=0;b<recbins;b++) {
+    tresppost[b] = (double*) malloc(recbins*sizeof(double));
+    for (int bb=0;bb<recbins;bb++) {
+      inlo = matrix_in[lobin][b][bb];
+      inhi = matrix_in[hibin][b][bb];
+      tresppost[b][bb] = inlo*(1-hiweight) + inhi*hiweight;
+      //printf("%f is between %f and %f\n", tresppost[b][bb], inlo, inhi);
+    }
+  }
+
+  //tmp for debugging
+  for (int b=0;b<recbins;b++){
+    float mysum = 0;
+    for (int bb=0;bb<recbins;bb++){
+      mysum += matrix_in[lobin][bb][b];
+    }
+    //if (mysum != 1.0){
+    //printf("For recbin %d, sum = %f\n",b,mysum);
+    //}
+  }
+
+}
+
 void mgt_set_new_rates(int exp, double** mult_presmear_effs[32], double** mult_postsmear_effs[32])
 {
   //glb_exp e = glb_experiment_list[exp];
@@ -474,6 +519,7 @@ void mgt_set_new_rates(int exp, double** mult_presmear_effs[32], double** mult_p
       e->chra_1[i][j] = 0.0;
       k_low  = e->lowrange[s][j];
       k_high = e->uprange[s][j] + 1;
+      //printf("Klow = %d, Khigh = %d\n",k_low,k_high);
       for(int k=k_low; k < k_high; k++)
         e->chra_1[i][j] += e->smear[s][j][k-k_low] * e->chrb_1[i][k];
       e->chra_1[i][j] = e->chra_1[i][j] * e->user_post_smearing_channel[i][j] * mult_postsmear_effs[exp][i][j]
@@ -495,6 +541,98 @@ void mgt_set_new_rates(int exp, double** mult_presmear_effs[32], double** mult_p
   }
 }
 
+//ETW June 2015 Set rates for "case 29" - using energy response functions
+void mgt_set_new_rates_e(int exp, double** mult_presmear_effs[32], double*** mult_postsmear_matrix[32])
+{
+  struct glb_experiment *e = glb_experiment_list[exp];
+  int s=0;
+  
+  for (int j=0; j<e->simbins; j++){
+    /* Calculate probability matrix */
+    mgt_CalcAllProbs(e, e->smear_data[s]->simbincenter[j],e->baseline);
+    for(int i=0; i < e->numofchannels; i++){
+      s = e->listofchannels[5][i];
+      e->chrb_1[i][j] = mgt_calc_channel(e, i, e->smear_data[s]->simbincenter[j],e->baseline)
+              * e->user_pre_smearing_channel[i][j]
+              * e->smear_data[s]->simbinsize[j]
+              * mult_presmear_effs[exp][i][j]
+              + e->user_pre_smearing_background[i][j];
+      //printf("rate in %d,%d: %f\n",i,j,e->chrb_1[i][j]);
+    }
+  }
+
+
+  /* Calculate post-smearing rates for all channels */
+  // This is where the changes are for new energy systs - multiply the smearing matrices first
+  // This is only set up to work for single systematics so far. Additional systematics will be
+  // multiplied in descending order (eg:syst2*syst1*smear) - but multiplication is not commutative
+  // Needs testing to figure out if this matters enough to fix.
+  int k_low, k_high;
+
+  for(int i=0; i < e->numofchannels; i++)
+  {
+    s = e->listofchannels[5][i];
+    int sbins = e->simbins;
+    int nbins = e->numofbins;
+    double mysmear[nbins][sbins];
+    double corrsmear[nbins][sbins];
+    memset(mysmear,0,nbins*sbins*sizeof(double));
+    //printf("Channel %d\n",i);
+    for(int j=0; j < nbins; j++){
+      for (int k=0; k < sbins; k++) {
+	for (int l=0; l < nbins; l++){
+	  k_low =  e->lowrange[s][l];
+	  //printf("j%d k%d l%d klow=%d mult_postsmear_matrix=%f origsmear=%f\n",j,k,l,k_low,mult_postsmear_matrix[exp][i][j][l], e->smear[s][l][k-k_low]);
+	  mysmear[j][k] += mult_postsmear_matrix[exp][i][j][l] * e->smear[s][l][k-k_low] ;
+	}
+	//printf("Mysmear %d %d %f\n",j,k,mysmear[j][k]);
+      }
+    }
+
+    //tmp for debugging
+    for (int k=0; k<sbins; k++){
+      float smearsum = 0;
+      float origsmearsum = 0;
+      for (int j=0; j<nbins; j++){
+	origsmearsum += e->smear[s][j][k];
+	smearsum += mysmear[j][k];
+      }
+      //printf("For simbin %d Orig smearsum = %f and Smearsum = %f\n",k,origsmearsum,smearsum);
+    }
+    for (int k=0; k<nbins; k++){
+      float adjustsum = 0;
+      for (int j=0; j<nbins; j++){
+	adjustsum += mult_postsmear_matrix[exp][i][j][k];
+      }
+      //printf("For recbin %d Adjustsum = %f\n",k,adjustsum);
+    }
+    
+    for(int j=0; j < nbins; j++){
+      float before; //tmp
+      before = e->chra_1[i][j];
+      e->chra_1[i][j] = 0.0;
+      for(int k=0; k < sbins; k++){
+        e->chra_1[i][j] += mysmear[j][k] * e->chrb_1[i][k];
+      }
+      //printf("before = %f and after = %f\n",before,e->chra_1[i][j]);
+      e->chra_1[i][j] = e->chra_1[i][j] * e->user_post_smearing_channel[i][j]
+                                  + e->user_post_smearing_background[i][j];
+    }
+  }
+
+  /* Merge channel rates into signal and background rates */
+  for(int i=0; i < e->numofrules; i++){
+    for(int j=0; j < e->numofbins; j++){
+      e->rates1BG[i][j] = 0.0;
+      for (int k=0; k < e->lengthofbgrules[i]; k++)
+        e->rates1BG[i][j] += e->bgrulescoeff[i][k] * e->chra_1[e->bgrulechannellist[i][k]][j];
+
+      e->rates1[i][j] = 0.0;
+      for (int k=0; k < e->lengthofrules[i]; k++)
+        e->rates1[i][j] += e->rulescoeff[i][k] * e->chra_1[e->rulechannellist[i][k]][j];
+    }
+  }
+}
 
 //Part handling
 //Generate start argument for loop
