@@ -462,6 +462,8 @@ void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, dou
       break;
     }
   }
+  //printf("xsigma = %f, lobin = %d, hibin = %d\n",xsigma,lobin,hibin);
+
   double hiweight = (xsigma-syst_sigmas[lobin])/(syst_sigmas[hibin]-syst_sigmas[lobin]);
   //printf("SIGWEIGHT %f is between %f and %f with hiweight %f\n",xsigma,syst_sigmas[lobin],syst_sigmas[hibin],hiweight);
   //Loop over Ereco and interpolate Ereco->Ereco bin-by-bin
@@ -475,8 +477,19 @@ void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, dou
       //printf("%f is between %f and %f\n", tresppost[b][bb], inlo, inhi);
     }
   }
-}
 
+  //tmp for debugging
+  for (int b=0;b<recbins;b++){
+    float mysum = 0;
+    for (int bb=0;bb<recbins;bb++){
+      mysum += matrix_in[lobin][bb][b];
+    }
+    //if (mysum != 1.0){
+    //printf("For recbin %d, sum = %f\n",b,mysum);
+    //}
+  }
+
+}
 
 void mgt_set_new_rates(int exp, double** mult_presmear_effs[32], double** mult_postsmear_effs[32])
 {
@@ -585,8 +598,14 @@ void mgt_set_new_rates_e(int exp, double** mult_presmear_effs[32], double*** mul
 	smearsum += mysmear[j][k];
       }
       //printf("For simbin %d Orig smearsum = %f and Smearsum = %f\n",k,origsmearsum,smearsum);
-    }	  
-
+    }
+    for (int k=0; k<nbins; k++){
+      float adjustsum = 0;
+      for (int j=0; j<nbins; j++){
+	adjustsum += mult_postsmear_matrix[exp][i][j][k];
+      }
+      //printf("For recbin %d Adjustsum = %f\n",k,adjustsum);
+    }
     
     for(int j=0; j < nbins; j++){
       float before; //tmp

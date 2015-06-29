@@ -954,10 +954,18 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
 	}
 	if(xsigma>5.0 || xsigma<-5.0) {fchi2=1e10; return fchi2;}
 	//printf("channel %d syst %d sigma %f\n",ch,syst,xsigma);
-	if(xsigma != 0.0){
-            if (prepost[curexp][syst]==1){
-              mgt_get_smear_interp(mult_postsmear_matrix_in[curexp][syst][ch], recbins, size_sigmas[curexp][syst], syst_sigmas[curexp][syst], xsigma, tresppost);
+	if (prepost[curexp][syst]==1){
+	  mgt_get_smear_interp(mult_postsmear_matrix_in[curexp][syst][ch], recbins, size_sigmas[curexp][syst], syst_sigmas[curexp][syst], xsigma, tresppost);
+
+	  //tmp for debugging
+	    for (int b=0;b<recbins;b++){
+	      float mysum = 0;
+	      for (int bb=0;bb<recbins;bb++){
+		mysum += mult_postsmear_matrix_in[curexp][syst][ch][50][bb][b];
+	      }
+	      //printf("For recbin %d, sum = %f\n",b,mysum);
 	    }
+
 	}
 
       }
@@ -972,8 +980,17 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
 	  //printf("Matrix %d %d = %f\n",b,bb,tresppost[b][bb]);
 	}
       }
-    }
 
+      //Tmp for debugging
+      for (int b = 0; b<recbins; b++){
+	float tresppostsum = 0;
+	for (int bb=0; bb<recbins; bb++){
+	  tresppostsum += tresppost[bb][b];
+	}
+	//printf("For ch %d, recbin %d, sum = %f\n",ch,b,tresppostsum);
+      }
+
+    }
     //Temporary, check chi2 with old rates
     float oldchi = 0;
     float newrates;
@@ -1001,7 +1018,7 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
       }
     }
 
-    printf("xsigma %f: oldchi = %f, newchi = %f\n",xsigma,oldchi,fchi1);
+    //printf("xsigma %f: oldchi = %f, newchi = %f\n",xsigma,oldchi,fchi1);
 
     if(arguments.debug==1){
       AddToOutputBlankline();

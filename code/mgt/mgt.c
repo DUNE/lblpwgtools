@@ -460,6 +460,19 @@ int main(int argc, char *argv[])
 			mult_postsmear_matrix_in[exp][syst][ch][sbin][rrbin][rbin] = buf;
 		      }
 		    }
+
+		    for(int rrbin=0; rrbin<recbins; rrbin++){
+		      double mysum = 0;
+		      for(int rbin=0; rbin<recbins; rbin++){
+			mysum += mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin][rrbin];
+			//printf("exp = %d, syst = %d, ch = %d, sbin = %d, rrbin = %d, rbin = %d, value = %f\n",exp,syst,ch,sbin,rrbin,rbin,mult_postsmear_matrix_in[exp][syst][ch][sbin][rbin][rrbin]);
+		      }
+		      if (rrbin==17 && mysum==0.){ 
+			//printf("bin = %d, sum = %f\n",rrbin,mysum);
+			//printf("exp = %d, syst = %d, ch = %d, sbin = %d, rrbin = %d\n",exp,syst,ch,sbin,rrbin);
+		      }
+		    }
+		  
 		  }
 		}
 	      }
