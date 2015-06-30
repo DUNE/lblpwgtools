@@ -394,7 +394,6 @@ int main(int argc, char *argv[])
       rf_acc[exp] = (gsl_interp_accel**) malloc(arguments.systs*sampbins*channels*sizeof(gsl_interp_accel));
       rf_spline[exp] = (gsl_spline**) malloc(arguments.systs*sampbins*channels*sizeof(gsl_spline));
 	
-
       for(int syst=0; syst<arguments.systs; syst++){
 	      //read in header information
 	      //first four lines are number of sigmas, sigma low, sigma high, penalty

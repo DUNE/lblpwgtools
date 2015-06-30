@@ -577,7 +577,7 @@ void LoadRFCovMatrixInputs(){
     if(fabs(rfCovMatrixInputs[i])<1e-8){
       rfCovMatrixInputs[i]=1e-8;
     }
-    //printf("%d, %f\n", i, rfCovMatrixInputs[i]);
+    printf("%d, %f\n", i, rfCovMatrixInputs[i]);
   }
   fclose(covFile);
 }
