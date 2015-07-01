@@ -215,7 +215,7 @@ void EventSpectraOutputTruePrePost(double osctrue[], double osctest[], int fitty
   //Add xmin values to end of file
   AddToOutputBlankline();
   AddToOutputBlankline();
-  if(arguments.chimode==19){
+  if(arguments.chimode==19 || arguments.chimode==29){
     //output nuisance parameters for response function systematics
     int noutput=12*arguments.systs>32?32:12*arguments.systs;
     double b[noutput];

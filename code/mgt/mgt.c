@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 	      //read in header information
 	      //first four lines are number of sigmas, sigma low, sigma high, penalty
 	      for(int i=0;i<5;i++){
-	        if((i==0||i==3?fscanf(emFile, "%d", &dbuf):fscanf(emFile, "%f", &buf))==EOF){
+	        if((i==0||i==3||i==4?fscanf(emFile, "%d", &dbuf):fscanf(emFile, "%f", &buf))==EOF){
 	          printf("Response function has improper size. Exiting.\n");
 	          exit(1);
 	        }
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 	      //read in header information
 	      //first four lines are number of sigmas, sigma low, sigma high, penalty
 	      for(int i=0;i<5;i++){
-	        if((i==0||i==3?fscanf(emFile, "%d", &dbuf):fscanf(emFile, "%f", &buf))==EOF){
+	        if((i==0||i==3||i==4?fscanf(emFile, "%d", &dbuf):fscanf(emFile, "%f", &buf))==EOF){
 	          printf("Response function has improper size. Exiting.\n");
 	          exit(1);
 	        }
