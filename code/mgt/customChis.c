@@ -870,7 +870,7 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
     
 
     //initialize smearing matrix
-    double *tresppost[recbins];
+    double **tresppost = (double**)malloc(recbins*sizeof(double*));
     for (int i=0;i<recbins;i++){
       tresppost[i] = (double*)malloc(recbins*sizeof(double));
       for (int j=0;j<recbins;j++){
@@ -989,8 +989,14 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
 	}
 	//printf("For ch %d, recbin %d, sum = %f\n",ch,b,tresppostsum);
       }
-
     }
+
+    //Free tresppost
+    for (int i=0; i<recbins; i++){
+      free(tresppost[i]);
+    }
+    free(tresppost);
+
     //Temporary, check chi2 with old rates
     float oldchi = 0;
     float newrates;

@@ -469,7 +469,6 @@ void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, dou
   //Loop over Ereco and interpolate Ereco->Ereco bin-by-bin
   double inlo; double inhi;
   for (int b=0;b<recbins;b++) {
-    tresppost[b] = (double*) malloc(recbins*sizeof(double));
     for (int bb=0;bb<recbins;bb++) {
       inlo = matrix_in[lobin][b][bb];
       inhi = matrix_in[hibin][b][bb];
