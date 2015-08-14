@@ -997,6 +997,7 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
     }
     free(tresppost);
 
+
     //Temporary, check chi2 with old rates
     float oldchi = 0;
     float newrates;
@@ -1030,6 +1031,8 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
       AddToOutputBlankline();
       AddToOutputBlankline();
     }
+
+
   }
   
   //add penalty term

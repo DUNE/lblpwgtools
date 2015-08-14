@@ -452,19 +452,22 @@ static void mgt_CalcAllProbs(struct glb_experiment *e, double en, double baselin
 void mgt_get_smear_interp(double*** matrix_in, int recbins, int size_sigmas, double* syst_sigmas, double xsigma, double** tresppost)
 {
   //printf("size = %d, xsigma = %f\n",size_sigmas, xsigma);
-  int lobin = 99999;
+  int lobin = 0;
   int hibin = 0;
   //Find sigma bins to interpolate between
   for (int sbin=0; sbin<size_sigmas; sbin++) {
     if (xsigma >= syst_sigmas[sbin] && xsigma < syst_sigmas[sbin+1]) {
       lobin = sbin;
       hibin = sbin+1;
-      break;
     }
   }
   //printf("xsigma = %f, lobin = %d, hibin = %d\n",xsigma,lobin,hibin);
 
-  double hiweight = (xsigma-syst_sigmas[lobin])/(syst_sigmas[hibin]-syst_sigmas[lobin]);
+  double hiweight = 0;
+  if (hibin<size_sigmas) {
+    hiweight = (xsigma-syst_sigmas[lobin])/(syst_sigmas[hibin]-syst_sigmas[lobin]);
+  }
+
   //printf("SIGWEIGHT %f is between %f and %f with hiweight %f\n",xsigma,syst_sigmas[lobin],syst_sigmas[hibin],hiweight);
   //Loop over Ereco and interpolate Ereco->Ereco bin-by-bin
   double inlo; double inhi;
