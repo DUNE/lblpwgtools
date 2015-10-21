@@ -690,7 +690,9 @@ double extract1sResponse(int syst){
       //printf("\ns=%f, nuisances=%d\n",s,nuisances);
       //printf("chimode = %d\n",arguments.chimode);
       if (arguments.chimode==29){
+	//printf("syst = %d\n",syst);
 	//printf("narray0 = %f\n",narray[0]);
+	//printf("narray12 = %f\n",narray[12]);
 	chi2=chi_ResponseFunctionCovE(0,0,nuisances,narray,NULL,&chiuserdata);
       }
       else {
@@ -871,21 +873,30 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
 
     //initialize smearing matrix
     double **tresppost = (double**)malloc(recbins*sizeof(double*));
+    double **tmpmatrix = (double**)malloc(recbins*sizeof(double*));
     for (int i=0;i<recbins;i++){
       tresppost[i] = (double*)malloc(recbins*sizeof(double));
-      for (int j=0;j<recbins;j++){
-	if (i==j) {
-	  tresppost[i][j]=1;
-	}
-	else
-	  tresppost[i][j]=0;
-      }
+      tmpmatrix[i] = (double*)malloc(recbins*sizeof(double));
     }
 
     int channels=glbGetNumberOfChannels(curexp); 
 
     //set pre smearing effs to response function values
     for(int ch=0;ch<channels;ch++){
+
+      //reinitialize postsmear matrix
+      for (int i=0;i<recbins;i++){
+	for (int j=0;j<recbins;j++){
+	  if (i==j){
+	    mult_postsmear_matrix[curexp][ch][i][j] = 1;
+	  }
+	  else {
+	    mult_postsmear_matrix[curexp][ch][i][j] = 0;
+	  }
+	}
+      }
+
+
       for(int sbin=0; sbin<sampbins; sbin++){
         tresppre=0;
         //add up contribution from each systematic for this bin and channel
@@ -955,31 +966,61 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
 	if(xsigma>5.0 || xsigma<-5.0) {fchi2=1e10; return fchi2;}
 	//printf("channel %d syst %d sigma %f\n",ch,syst,xsigma);
 	if (prepost[curexp][syst]==1){
+
+	  for (int i=0;i<recbins;i++){
+	    for (int j=0;j<recbins;j++){
+	      tmpmatrix [i][j] = 0;
+	      if (i==j) {
+		tresppost[i][j]=1;
+	      }
+	      else
+		tresppost[i][j]=0;
+	    }
+	  }
+
 	  mgt_get_smear_interp(mult_postsmear_matrix_in[curexp][syst][ch], recbins, size_sigmas[curexp][syst], syst_sigmas[curexp][syst], xsigma, tresppost);
 
 	  //tmp for debugging
-	    for (int b=0;b<recbins;b++){
-	      float mysum = 0;
-	      for (int bb=0;bb<recbins;bb++){
-		mysum += mult_postsmear_matrix_in[curexp][syst][ch][50][bb][b];
-	      }
-	      //printf("For recbin %d, sum = %f\n",b,mysum);
+	  for (int b=0;b<recbins;b++){
+	    float mysum = 0;
+	    for (int bb=0;bb<recbins;bb++){
+	      mysum += mult_postsmear_matrix_in[curexp][syst][ch][50][bb][b];
 	    }
+	    //printf("For recbin %d, sum = %f\n",b,mysum);
+	  }
+
+            //Fill smearing matrix
+	    //Currently just naive multiplication of matrixes in order they come in. But matrix multiplication does not commute, so...
+
+	  for(int b=0;b<recbins;b++){
+	    for (int bb=0;bb<recbins;bb++){
+	      for (int k=0;k<recbins;k++){
+		tmpmatrix[b][bb] += tresppost[b][k] * mult_postsmear_matrix[curexp][ch][k][bb];
+	      }
+	    }
+	  }
+
+	  for(int b=0;b<recbins;b++){
+	    for (int bb=0;bb<recbins;bb++){
+	      mult_postsmear_matrix[curexp][ch][b][bb] = tmpmatrix[b][bb];
+	    }
+	  }
+
+	  //tmp for debugging
+	  for (int b=0;b<recbins;b++){
+	    float mysum = 0;
+	    for (int bb=0;bb<recbins;bb++){
+	      mysum += mult_postsmear_matrix[curexp][ch][bb][b];
+	      //mysum += tresppost[bb][b];
+	    }
+	    //printf("For recbin %d, sum = %f\n",b,mysum);
+	  }
 
 	}
+	
+      } //End loop over systs
 
-      }
 
-      //Have to figure out what to do. For single syst it's ok to just copy tresppost in, but ultimately have to combine - not clear how to do that since
-      //matrix multiplication does not commute
-
-      //Fill smearing matrix
-      for(int b=0;b<recbins;b++){
-	for (int bb=0;bb<recbins;bb++){
-	  mult_postsmear_matrix[curexp][ch][b][bb]=tresppost[b][bb];
-	  //printf("Matrix %d %d = %f\n",b,bb,tresppost[b][bb]);
-	}
-      }
 
       //Tmp for debugging
       for (int b = 0; b<recbins; b++){
@@ -994,8 +1035,10 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
     //Free tresppost
     for (int i=0; i<recbins; i++){
       free(tresppost[i]);
+      free(tmpmatrix[i]);
     }
     free(tresppost);
+    free(tmpmatrix);
 
 
     //Temporary, check chi2 with old rates
@@ -1031,8 +1074,6 @@ double chi_ResponseFunctionCovE(int exp, int rule, int n_params, double *x, doub
       AddToOutputBlankline();
       AddToOutputBlankline();
     }
-
-
   }
   
   //add penalty term

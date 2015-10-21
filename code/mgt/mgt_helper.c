@@ -566,7 +566,7 @@ void mgt_set_new_rates_e(int exp, double** mult_presmear_effs[32], double*** mul
 
   /* Calculate post-smearing rates for all channels */
   // This is where the changes are for new energy systs - multiply the smearing matrices first
-  // This is only set up to work for single systematics so far. Additional systematics will be
+  // Currently additional systematics will be
   // multiplied in descending order (eg:syst2*syst1*smear) - but multiplication is not commutative
   // Needs testing to figure out if this matters enough to fix.
   int k_low, k_high;
