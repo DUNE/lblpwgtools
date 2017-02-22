@@ -75,4 +75,4 @@ cd ..
 time SRT_NOVA/scripts/novasoft_build -rel development
 
 echo
-echo 'In future, type "source setup.sh" to use this release"
+echo 'In future, type "source setup.sh" to use this release'
