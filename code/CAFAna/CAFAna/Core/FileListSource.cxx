@@ -64,7 +64,7 @@ namespace ana
 
 	if(!fgGotTickets){
           // This comes from NovaGridUtils, v02.10 onwards.
-          system("setup_fnal_security -b");
+          //          system("setup_fnal_security -b");
 
 	  fgGotTickets = true;
 	  break;
@@ -95,7 +95,7 @@ namespace ana
 
     // If the file is on pnfs rewrite it to an xrootd address
     std::string loc = *fIt;
-    loc = pnfs2xrootd(loc); // no-op for non /pnfs locations
+    // loc = pnfs2xrootd(loc); // no-op for non /pnfs locations
 
     fFile = TFile::Open(loc.c_str()); // This pattern allows xrootd
     assert(fFile);
