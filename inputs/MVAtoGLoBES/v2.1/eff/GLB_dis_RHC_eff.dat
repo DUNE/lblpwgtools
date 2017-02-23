@@ -1,0 +1,10 @@
+include "./eff/post_dis_RHC_numu_sig.txt"
+
+include "./eff/post_dis_RHC_numubar_sig.txt"
+
+include "./eff/post_dis_RHC_NC_bkg.txt"
+
+include "./eff/post_dis_RHC_nutau_bkg.txt"
+
+include "./eff/post_dis_RHC_nutaubar_bkg.txt"
+
