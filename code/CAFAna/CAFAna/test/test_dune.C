@@ -7,6 +7,7 @@ void test_dune(){}
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Plots.h"
+#include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Analysis/Surface.h"
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
@@ -20,16 +21,30 @@ using namespace ana;
 #include "Utilities/rootlogon.C"
 
 #include "TCanvas.h"
-#include "TH1.h"
+#include "TGraph.h"
+#include "TH2.h"
+#include "TLegend.h"
 #include "TPad.h"
 
-//#include "Rtypes.h"
-//R__LOAD_LIBRARY(libCAFAna)
-//R__LOAD_LIBRARY(/dune/app/users/bckhouse/lbl_workshop/releases/development/lib/Linux2.6-GCC-maxopt/libCAFAna.so)
+void Legend()
+{
+  TLegend* leg = new TLegend(.6, .6, .9, .85);
+  leg->SetFillStyle(0);
 
+  TH1* dummy = new TH1F("", "", 1, 0, 1);
+  dummy->SetMarkerStyle(kFullCircle);
+  leg->AddEntry(dummy->Clone(), "Fake Data", "lep");
+  dummy->SetLineColor(kTotalMCColor);
+  leg->AddEntry(dummy->Clone(), "Total MC", "l");
+  dummy->SetLineColor(kNCBackgroundColor);
+  leg->AddEntry(dummy->Clone(), "NC", "l");
+  dummy->SetLineColor(kNumuBackgroundColor);
+  leg->AddEntry(dummy->Clone(), "#nu_{#mu} CC", "l");
+  dummy->SetLineColor(kBeamNueBackgroundColor);
+  leg->AddEntry(dummy->Clone(), "Beam #nu_{e} CC", "l");
 
-//R__ADD_LIBRARY_PATH(/dune/app/users/bckhouse/lbl_workshop/releases/development/lib/Linux2.6-GCC-maxopt/)
-//R__LOAD_LIBRARY(libCAFAna)
+  leg->Draw();
+}
 
 void test_dune()
 {
@@ -59,9 +74,9 @@ void test_dune()
 
   PredictionNoExtrap predNuePID(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
 
-  PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNueNC, "Reco E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
+  PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
 
-  PredictionNoExtrap predNue(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "Reco E (GeV)", Binning::Simple(24, 0, 6), Enu_reco, kSelNue);
+  PredictionNoExtrap predNue(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_reco, kSelNue);
 
   loader.Go();
   loaderNue.Go();
@@ -89,21 +104,33 @@ void test_dune()
 
 
   new TCanvas;
-  DataMCComparisonComponents(mock, &pred, calc);
+  TH1* h3 = DataMCComparisonComponents(mock, &pred, calc);
+  h3->SetTitle("#nu_{#mu} selection (MVA>0) 3.5yrs #times 40kt");
+  CenterTitles(h3);
+  Legend();
   gPad->Print("components.eps");
 
   new TCanvas;
-  DataMCComparisonComponents(mockNue, &predNue, calc);
+  TH1* h4 = DataMCComparisonComponents(mockNue, &predNue, calc);
+  h4->SetTitle("#nu_{e} selection (MVA>0) 3.5yrs #times 40kt");
+  CenterTitles(h4);
+  Legend();
   gPad->Print("components_nue.eps");
 
   new TCanvas;
   TH1* h2 = DataMCComparisonComponents(mockNumuPID, &predNumuPID, calc);
+  h2->SetTitle("#nu_{#mu} selection (MVA>0) 3.5yrs #times 40kt");
+  CenterTitles(h2);
+  Legend();
   h2->GetYaxis()->SetRangeUser(1, 1e4);
   gPad->SetLogy();
   gPad->Print("components_pid.eps");
 
   new TCanvas;
   TH1* h = DataMCComparisonComponents(mockNuePID, &predNuePID, calc);
+  h->SetTitle("#nu_{e} selection (MVA>0) 3.5yrs #times 40kt");
+  CenterTitles(h);
+  Legend();
   h->GetYaxis()->SetRangeUser(0, 600);
   gPad->Print("components_nue_pid.eps");
 
@@ -118,6 +145,45 @@ void test_dune()
   surfNue.DrawContour(Gaussian90Percent2D(surfNue), kSolid, kRed);
   surfNue.DrawBestFit(kRed);
   gPad->Print("cont_nue.eps");
+
+
+  new TCanvas;
+
+  // This is a very cheesy way to make the McD plot - would have to be very
+  // different if we were varying any other parameters
+  calc->SetdCP(0);
+  Spectrum zeroNumu = pred.Predict(calc).FakeData(pot);
+  Spectrum zeroNue = predNue.Predict(calc).FakeData(pot);
+  calc->SetdCP(TMath::Pi());
+  Spectrum oneNumu = pred.Predict(calc).FakeData(pot);
+  Spectrum oneNue = predNue.Predict(calc).FakeData(pot);
+
+  TGraph* g = new TGraph;
+
+  for(int i = 0; i <= 200; ++i){
+    calc->SetdCP(i/100.*TMath::Pi());
+
+    Spectrum mockNumu = pred.Predict(calc).FakeData(pot);
+    Spectrum mockNue = predNue.Predict(calc).FakeData(pot);
+
+    const double llZero = LogLikelihood(zeroNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
+      LogLikelihood(zeroNue.ToTH1(pot), mockNue.ToTH1(pot));
+
+    const double llOne = LogLikelihood(oneNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
+      LogLikelihood(oneNue.ToTH1(pot), mockNue.ToTH1(pot));
+
+    const double ll = std::min(llZero, llOne);
+
+    g->SetPoint(i, i/100., sqrt(ll));
+  }
+
+  TH2* axes = new TH2F("", "3.5yrs #times 40kt, stats only;#delta / #pi;#sqrt{#chi^{2}}", 100, 0, 2, 100, 0, 6);
+  CenterTitles(axes);
+  axes->Draw();
+  g->SetLineWidth(2);
+  g->Draw("l same");
+
+  gPad->Print("mcd.eps");
 }
 
 #endif
