@@ -74,17 +74,30 @@ void test_dune()
 
   PredictionNoExtrap predNuePID(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
 
-  PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
+  PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
 
   PredictionNoExtrap predNue(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_reco, kSelNue);
 
   loader.Go();
   loaderNue.Go();
 
+  SaveToFile(pred, "pred_numu.root", "pred");
+  SaveToFile(predNue, "pred_nue.root", "pred");
 
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
   calc->SetL(1300);
   calc->SetdCP(TMath::Pi()*1.5);
+
+
+  // Standard DUNE numbers from Matt Bass
+  calc->SetTh12(0.5857);
+  calc->SetTh13(0.148);
+  calc->SetTh23(0.726);
+  calc->SetDmsq21(0.000075);
+  calc->SetDmsq32(0.002524-0.000075); // quoted value is 31
+
+  // One sigma errors
+  // (t12,t13,t23,dm21,dm32)=(0.023,0.018,0.058,0.0,0.024,0.016)
 
 
   Spectrum mock = pred.Predict(calc).FakeData(pot);
@@ -109,6 +122,7 @@ void test_dune()
   CenterTitles(h3);
   Legend();
   gPad->Print("components.eps");
+  gPad->Print("components.C");
 
   new TCanvas;
   TH1* h4 = DataMCComparisonComponents(mockNue, &predNue, calc);
@@ -116,6 +130,7 @@ void test_dune()
   CenterTitles(h4);
   Legend();
   gPad->Print("components_nue.eps");
+  gPad->Print("components_nue.C");
 
   new TCanvas;
   TH1* h2 = DataMCComparisonComponents(mockNumuPID, &predNumuPID, calc);
@@ -125,6 +140,7 @@ void test_dune()
   h2->GetYaxis()->SetRangeUser(1, 1e4);
   gPad->SetLogy();
   gPad->Print("components_pid.eps");
+  gPad->Print("components_pid.C");
 
   new TCanvas;
   TH1* h = DataMCComparisonComponents(mockNuePID, &predNuePID, calc);
@@ -133,6 +149,7 @@ void test_dune()
   Legend();
   h->GetYaxis()->SetRangeUser(0, 600);
   gPad->Print("components_nue_pid.eps");
+  gPad->Print("components_nue_pid.C");
 
   new TCanvas;
   surf.DrawContour(Gaussian68Percent2D(surf), 7, kRed);
@@ -160,30 +177,34 @@ void test_dune()
 
   TGraph* g = new TGraph;
 
-  for(int i = 0; i <= 200; ++i){
+  for(int i = -100; i <= 200; ++i){
     calc->SetdCP(i/100.*TMath::Pi());
 
     Spectrum mockNumu = pred.Predict(calc).FakeData(pot);
     Spectrum mockNue = predNue.Predict(calc).FakeData(pot);
 
-    const double llZero = LogLikelihood(zeroNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
+    const double llZero = //LogLikelihood(zeroNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
       LogLikelihood(zeroNue.ToTH1(pot), mockNue.ToTH1(pot));
 
-    const double llOne = LogLikelihood(oneNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
+    const double llOne = //LogLikelihood(oneNumu.ToTH1(pot), mockNumu.ToTH1(pot))+
       LogLikelihood(oneNue.ToTH1(pot), mockNue.ToTH1(pot));
 
     const double ll = std::min(llZero, llOne);
 
-    g->SetPoint(i, i/100., sqrt(ll));
+    g->SetPoint(g->GetN(), i/100., sqrt(ll));
   }
 
-  TH2* axes = new TH2F("", "3.5yrs #times 40kt, stats only;#delta / #pi;#sqrt{#chi^{2}}", 100, 0, 2, 100, 0, 6);
+  TH2* axes = new TH2F("", "3.5yrs #times 40kt, stats only;#delta / #pi;#sqrt{#chi^{2}}", 100, -1, +1, 100, 0, 6);
   CenterTitles(axes);
   axes->Draw();
   g->SetLineWidth(2);
   g->Draw("l same");
 
+  gPad->SetGridx();
+  gPad->SetGridy();
+
   gPad->Print("mcd.eps");
+  gPad->Print("mcd.C");
 }
 
 #endif
