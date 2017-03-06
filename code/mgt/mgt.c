@@ -59,12 +59,12 @@ int main(int argc, char *argv[])
   }
 
   //ETW 4/10/2015 Uncomment the following to correlate experiments for version 3.2.13
-  /* for (int i=0;i<glb_num_of_exps;i++)
+  for (int i=0;i<glb_num_of_exps;i++)
     {
       for (int j=i+1;j<glb_num_of_exps;j++){
         int t = glbCorrelateSys(glb_experiment_list[i],glb_experiment_list[j]);
       }
-      } */
+    }
 
   /* Initialize parameter vectors */
   true_values  = glbAllocParams();
