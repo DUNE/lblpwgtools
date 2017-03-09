@@ -1,7 +1,10 @@
 This module converts the outputs from the MVA selection to GLoBES formatted inputs.
 
-TODO:
+Usage for making full GLoBES configuration:
+make_configs.py [PATH = directory with MVA trees] [LABEL = directory name for output GLoBES configs]
 
-Update module to include (or pull) base GLoBES files.
+Places full GLoBES configurations based on trees in PATH in lblpwgtools/inputs/MVAtoGLoBES/LABEL/
+
+TODO:
 
 Add GLoBES smearing & efficiency plotting scripts.
