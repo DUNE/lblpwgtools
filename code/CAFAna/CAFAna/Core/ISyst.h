@@ -70,15 +70,17 @@ namespace ana
       // need to get back to for each variable is stored after its other
       // values.
       for(auto it: fFloats) *it.first = it.second;
+      for(auto it: fDoubles) *it.first = it.second;
       for(auto it: fInts  ) *it.first = it.second;
       for(auto it: fBools ) *it.first = it.second;
     }
 
     // Restoration runs front to back, so put newest entries on the front so
     // that oldest entries eventually win.
-    void Add(float& f){fFloats.emplace_front(&f, f);}
-    void Add(int&   i){fInts  .emplace_front(&i, i);}
-    void Add(bool&  b){fBools .emplace_front(&b, b);}
+    void Add(float&  f){fFloats.emplace_front(&f, f);}
+    void Add(double& d){fDoubles.emplace_front(&d, d);}
+    void Add(int&    i){fInts  .emplace_front(&i, i);}
+    void Add(bool&   b){fBools .emplace_front(&b, b);}
 
     /// Can specify many fields of different types in one call
     template<class T, class... U> void Add(T& x, U&... xs)
@@ -91,7 +93,7 @@ namespace ana
 
     bool Empty() const
     {
-      return fFloats.empty() && fInts.empty() && fBools.empty();
+      return fFloats.empty() && fInts.empty() && fBools.empty() && fDoubles.empty();
     }
 
   protected:
@@ -99,6 +101,7 @@ namespace ana
     // there's one missing, it's easy to add. Too few to be worth figuring out
     // a template way of doing this.
     std::list<std::pair<float*, float>> fFloats;
+    std::list<std::pair<double*, double>> fDoubles;
     std::list<std::pair<int*,   int  >> fInts;
     std::list<std::pair<bool*,  bool >> fBools;
   };

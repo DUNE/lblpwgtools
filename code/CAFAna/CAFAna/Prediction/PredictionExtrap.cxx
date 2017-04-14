@@ -5,6 +5,7 @@
 
 #include "TDirectory.h"
 #include "TObjString.h"
+#include "TH1D.h"
 
 namespace ana
 {
@@ -39,7 +40,9 @@ namespace ana
     ret.Clear();
 
     if(curr & Current::kCC){
-      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
+      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     {
+	ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
+      }
       if(flav & Flavors::kNuEToNuE    && sign & Sign::kAntiNu) ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
 
       if(flav & Flavors::kNuEToNuMu   && sign & Sign::kNu)     ret += fExtrap->NumuAppComponent().    Oscillated(calc, +12, +14);

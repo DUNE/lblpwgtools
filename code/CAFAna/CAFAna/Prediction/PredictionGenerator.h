@@ -7,6 +7,7 @@
 #include "CAFAna/Core/Var.h"
 //#include "CAFAna/Vars/GenieWeights.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/SpectrumLoader.h"
 
 namespace ana
 {
@@ -23,7 +24,8 @@ namespace ana
   {
     public:
     virtual std::unique_ptr<IPrediction> Generate(
-      Loaders& loaders, const SystShifts& shiftMC = kNoShift ) const = 0;
+    						  Loaders& loaders, const SystShifts& shiftMC = kNoShift ) const = 0;
+
   };
 
   //---------------------------------------------------------------------------
@@ -36,9 +38,11 @@ namespace ana
       const HistAxis axis,
       const Cut cut,
       const Var wei = kUnweighted );
+
     std::unique_ptr<IPrediction> Generate(
-      Loaders& loaders,
-      const SystShifts& shiftMC = kNoShift ) const override;
+    					  Loaders& loaders,
+					  const SystShifts& shiftMC = kNoShift ) const override;
+
     private:
     const HistAxis fAxis;
     const Cut fCut;

@@ -20,7 +20,8 @@ namespace ana
   {
   public:
     enum DataMC{kData, kMC};
-    enum SwappingConfig{kNonSwap, kFluxSwap, kTauSwap};
+    //    enum SwappingConfig{kNonSwap, kFluxSwap, kTauSwap};
+    enum SwappingConfig{kNonSwap, kNue, kTau, kNC};
     enum FluxType{kFHC, kRHC};
 
     /// No loaders initialized. Use \ref SetLoaderPath to configure
@@ -36,6 +37,12 @@ namespace ana
 
     /// Configure loader via explicit file list
     void SetLoaderFiles(const std::vector<std::string>& files,
+                        caf::Det_t det,
+                        DataMC datamc,
+                        DataSource src = kBeam,
+                        SwappingConfig swap = kNonSwap);
+
+    void AddLoader(SpectrumLoader*,
                         caf::Det_t det,
                         DataMC datamc,
                         DataSource src = kBeam,

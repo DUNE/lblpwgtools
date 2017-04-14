@@ -48,8 +48,9 @@ namespace ana
                   const Var& wei = kUnweighted);
 
     TrivialExtrap(SpectrumLoaderBase& loader,
-                  SpectrumLoaderBase& loaderSwap,
+                  SpectrumLoaderBase& loaderNue,
                   SpectrumLoaderBase& loaderTau,
+                  SpectrumLoaderBase& loaderNC,
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift,
@@ -58,6 +59,17 @@ namespace ana
     TrivialExtrap(SpectrumLoaderBase& loader,
                   SpectrumLoaderBase& loaderSwap,
                   SpectrumLoaderBase& loaderTau,
+                  std::string label,
+                  const Binning& bins,
+                  const Var& var,
+                  const Cut& cut,
+                  const SystShifts& shift = kNoShift,
+                  const Var& wei = kUnweighted);
+
+    TrivialExtrap(SpectrumLoaderBase& loader,
+                  SpectrumLoaderBase& loaderNue,
+                  SpectrumLoaderBase& loaderTau,
+                  SpectrumLoaderBase& loaderNC,
                   std::string label,
                   const Binning& bins,
                   const Var& var,

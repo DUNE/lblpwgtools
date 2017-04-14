@@ -24,6 +24,16 @@ namespace ana
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
 
+    PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
+                       DUNERunPOTSpectrumLoader& loaderNue,
+                       DUNERunPOTSpectrumLoader& loaderNuTau,
+                       DUNERunPOTSpectrumLoader& loaderNC,
+		       const HistAxis& axis,
+		       const Cut& cut,
+                       const SystShifts& shift = kNoShift,
+                       const Var& wei = kUnweighted);
+
+
     PredictionNoExtrap(Loaders& loaders,
                        const std::string& label,
                        const Binning& bins,

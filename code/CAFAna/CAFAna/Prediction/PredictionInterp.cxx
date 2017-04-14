@@ -22,6 +22,45 @@
 namespace ana
 {
   //----------------------------------------------------------------------
+  //DUNE constructor
+  /*  PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
+                                     osc::IOscCalculator* osc,
+                                     const IPredictionGenerator& predGen,
+                                     DUNERunPOTSpectrumLoader& loaderBeam,
+				     DUNERunPOTSpectrumLoader& loaderNue,
+				     DUNERunPOTSpectrumLoader& loaderNuTau,
+				     DUNERunPOTSpectrumLoader& loaderNC,
+                                     const SystShifts& shiftMC)
+    : fOscOrigin(osc->Copy()),
+      fBinning(0, {}, {}, 0, 0)
+  {
+    for(const ISyst* syst: systs){
+      ShiftedPreds sp;
+      sp.systName = syst->ShortName();
+
+      // Genie reweight shifts aren't able to provide +/-3 sigma
+      if(syst->IsGenieReweight())
+        sp.shifts = {-2, -1, 0, +1, +2};
+      else
+        sp.shifts = {-3, -2, -1, 0, +1, +2, +3};
+
+      for(int sigma: sp.shifts){
+        SystShifts shiftHere = shiftMC;
+        shiftHere.SetShift(syst, sigma);
+        sp.preds.push_back(predGen.Generate(loaderBeam, loaderNue, loaderNuTau, loaderNC, shiftHere).release());
+      }
+
+      fPreds.emplace(syst, sp);
+    } // end for syst
+
+    fPredNom = predGen.Generate(loaderBeam, loaderNue, loaderNuTau, loaderNC, shiftMC);
+
+    // We need to know when all our predictions are filled so that we can
+    // compute the fits
+    loaders.RegisterCompletionCallback(this, &PredictionInterp::LoadedCallback);
+    }*/
+
+  //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
                                      osc::IOscCalculator* osc,
                                      const IPredictionGenerator& predGen,
@@ -307,6 +346,8 @@ namespace ana
         it->second = {*hash, nom};
     }
 
+    Spectrum temp = ShiftSpectrum(nom, type, shift);
+
     return ShiftSpectrum(nom, type, shift);
   }
 
@@ -317,8 +358,11 @@ namespace ana
                                                   Current::Current_t curr,
                                                   Sign::Sign_t sign) const
   {
-    Spectrum& ret = fBinning;
+    //    Spectrum& ret = fBinning;
+    Spectrum ret = fPredNom->Predict(fOscOrigin);
     ret.Clear();
+
+    if(ret.POT()==0) ret.OverridePOT(1e24);
 
     // Check that we're able to handle all the systs we were passed
     for(const ISyst* syst: shift.ActiveSysts()){
@@ -343,14 +387,13 @@ namespace ana
       }
     } // end for syst
 
-
     const TMD5* hash = calc->GetParamsHash();
+
 
     if(curr & Current::kCC){
       if(flav & Flavors::kNuEToNuE)    ret += ShiftedComponent(calc, hash, shift, Flavors::kNuEToNuE,    Current::kCC, sign, kNueSurv);
       if(flav & Flavors::kNuEToNuMu)   ret += ShiftedComponent(calc, hash, shift, Flavors::kNuEToNuMu,   Current::kCC, sign, kOther  );
       if(flav & Flavors::kNuEToNuTau)  ret += ShiftedComponent(calc, hash, shift, Flavors::kNuEToNuTau,  Current::kCC, sign, kOther  );
-
       if(flav & Flavors::kNuMuToNuE)   ret += ShiftedComponent(calc, hash, shift, Flavors::kNuMuToNuE,   Current::kCC, sign, kNueApp  );
       if(flav & Flavors::kNuMuToNuMu)  ret += ShiftedComponent(calc, hash, shift, Flavors::kNuMuToNuMu,  Current::kCC, sign, kNumuSurv);
       if(flav & Flavors::kNuMuToNuTau) ret += ShiftedComponent(calc, hash, shift, Flavors::kNuMuToNuTau, Current::kCC, sign, kOther   );
@@ -358,7 +401,7 @@ namespace ana
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
       assert(sign == Sign::kBoth);   // Why would you want to split NCs out by sign?
-
+      
       ret += ShiftedComponent(calc, hash, shift, Flavors::kAll, Current::kNC, Sign::kBoth, kNC);
     }
 

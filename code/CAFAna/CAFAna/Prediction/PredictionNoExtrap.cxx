@@ -29,6 +29,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  PredictionNoExtrap::PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
+                                         DUNERunPOTSpectrumLoader& loaderNue,
+                                         DUNERunPOTSpectrumLoader& loaderNuTau,
+                                         DUNERunPOTSpectrumLoader& loaderNC,
+					 const HistAxis& axis,
+                                         const Cut& cut,
+                                         const SystShifts& shift,
+                                         const Var& wei)
+    : PredictionExtrap(new TrivialExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+                                         axis, cut, shift, wei))
+  {
+  }
+
+  //----------------------------------------------------------------------
   PredictionNoExtrap::PredictionNoExtrap(PredictionExtrap* pred) : PredictionExtrap(pred->GetExtrap())
   {
   }

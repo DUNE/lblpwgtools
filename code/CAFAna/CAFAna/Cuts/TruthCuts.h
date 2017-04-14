@@ -29,7 +29,7 @@ namespace ana
 
     bool operator()(const caf::StandardRecord* sr) const
     {
-      return sr->dune.ccnc == 0 && sr->dune.beamPdg == fPdgOrig && sr->dune.neu == fPdg;
+      return sr->dune.ccnc == 0 && abs(sr->dune.beamPdg) == fPdgOrig && abs(sr->dune.neu) == fPdg;
     }
   protected:
     int fPdg, fPdgOrig;

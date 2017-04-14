@@ -59,6 +59,25 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  void Loaders::AddLoader(SpectrumLoader* file,
+                               caf::Det_t det,
+                               DataMC datamc,
+                               DataSource src,
+                               SwappingConfig swap)
+  {
+    assert(datamc == kMC || swap == kNonSwap);
+    assert(det == caf::kFARDET || swap == kNonSwap);
+    assert(src == kBeam || swap == kNonSwap);
+
+    const Key_t key(det, datamc, src, swap);
+
+    // Clear out the old one if necessary
+    DisableLoader(det, datamc, src, swap);
+
+    fLoaders[key] = file;
+  }
+
+  //----------------------------------------------------------------------
   void Loaders::DisableLoader(caf::Det_t det,
                               DataMC datamc,
                               DataSource src,

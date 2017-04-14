@@ -80,52 +80,58 @@ namespace ana
                                const SystShifts& shift,
                                const Var& wei)
     : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kFluxSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTauSwap),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNue),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTau),
+		    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNC),
                     axis, cut, shift, wei)
   {
   }
 
   //----------------------------------------------------------------------
-  TrivialExtrap::TrivialExtrap(SpectrumLoaderBase& loader,
-                               SpectrumLoaderBase& loaderSwap,
-                               SpectrumLoaderBase& loaderTau,
+  TrivialExtrap::TrivialExtrap(SpectrumLoaderBase& loaderBeam,
+                               SpectrumLoaderBase& loaderNue,
+                               SpectrumLoaderBase& loaderNuTau,
+                               SpectrumLoaderBase& loaderNC,
                                const HistAxis& axis,
                                const Cut& cut,
                                const SystShifts& shift,
-                               const Var& wei) :
-    fNueApp       (loaderSwap, axis, cut && kIsSig       && !kIsAntiNu, shift, wei),
-    fNueAppAnti   (loaderSwap, axis, cut && kIsSig       &&  kIsAntiNu, shift, wei),
-    fNumuSurv     (loader,     axis, cut && kIsNumuCC    && !kIsAntiNu, shift, wei),
-    fNumuSurvAnti (loader,     axis, cut && kIsNumuCC    &&  kIsAntiNu, shift, wei),
-    fNumuApp      (loaderSwap, axis, cut && kIsNumuApp   && !kIsAntiNu, shift, wei),
-    fNumuAppAnti  (loaderSwap, axis, cut && kIsNumuApp   &&  kIsAntiNu, shift, wei),
-    fNueSurv      (loader,     axis, cut && kIsBeamNue   && !kIsAntiNu, shift, wei),
-    fNueSurvAnti  (loader,     axis, cut && kIsBeamNue   &&  kIsAntiNu, shift, wei),
-    fTauFromE     (loaderTau,  axis, cut && kIsTauFromE  && !kIsAntiNu, shift, wei),
-    fTauFromEAnti (loaderTau,  axis, cut && kIsTauFromE  &&  kIsAntiNu, shift, wei),
-    fTauFromMu    (loaderTau,  axis, cut && kIsTauFromMu && !kIsAntiNu, shift, wei),
-    fTauFromMuAnti(loaderTau,  axis, cut && kIsTauFromMu &&  kIsAntiNu, shift, wei),
-    fNC           (loader,     axis, cut && kIsNC,                    shift, wei)
+                               const Var& wei)
+
+    :
+    fNueApp       (loaderNue,   axis, cut && kIsSig       && !kIsAntiNu, shift, wei),
+    fNueAppAnti   (loaderNue,   axis, cut && kIsSig       &&  kIsAntiNu, shift, wei),
+
+    fNumuSurv     (loaderBeam,  axis, cut && kIsNumuCC    && !kIsAntiNu, shift, wei),
+    fNumuSurvAnti (loaderBeam,  axis, cut && kIsNumuCC    &&  kIsAntiNu, shift, wei),
+
+    fNumuApp      (loaderNuTau, axis, cut && kIsNumuApp   && !kIsAntiNu, shift, wei),
+    fNumuAppAnti  (loaderNuTau, axis, cut && kIsNumuApp   &&  kIsAntiNu, shift, wei),
+
+    fNueSurv      (loaderBeam,  axis, cut && kIsBeamNue   && !kIsAntiNu, shift, wei),
+    fNueSurvAnti  (loaderBeam,  axis, cut && kIsBeamNue   &&  kIsAntiNu, shift, wei),
+
+    fTauFromE     (loaderNue,   axis, cut && kIsTauFromE  && !kIsAntiNu, shift, wei),
+    fTauFromEAnti (loaderNue,   axis, cut && kIsTauFromE  &&  kIsAntiNu, shift, wei),
+
+    fTauFromMu    (loaderNuTau, axis, cut && kIsTauFromMu && !kIsAntiNu, shift, wei),
+    fTauFromMuAnti(loaderNuTau, axis, cut && kIsTauFromMu &&  kIsAntiNu, shift, wei),
+
+    fNC           (loaderNC,  axis, cut && kIsNC,                      shift, wei)
   {
-    // Swapped files are just as valid a source of NCs as unswapped. This
-    // approximately doubles our statistics. SpectrumLoader just adds events
-    // and POT for both cases, which is the right thing to do.
-    loaderSwap.AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
-    loaderTau .AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
   }
 
   //----------------------------------------------------------------------
   TrivialExtrap::TrivialExtrap(SpectrumLoaderBase& loader,
                                SpectrumLoaderBase& loaderSwap,
                                SpectrumLoaderBase& loaderTau,
+                               SpectrumLoaderBase& loaderNC,
                                std::string label,
                                const Binning& bins,
                                const Var& var,
                                const Cut& cut,
                                const SystShifts& shift,
                                const Var& wei) :
-    TrivialExtrap(loader, loaderSwap, loaderTau,
+    TrivialExtrap(loader, loaderSwap, loaderTau, loaderNC,
                   HistAxis(label, bins, var),
                   cut, shift, wei)
   {

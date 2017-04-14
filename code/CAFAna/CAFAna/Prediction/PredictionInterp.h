@@ -29,6 +29,15 @@ namespace ana
     /// \param shiftMC Underlying shift. Use with care. Mostly for
     ///                PredictionNumuFAHadE. Should not contain any of of
     ///                \a systs
+    /*    PredictionInterp(std::vector<const ISyst*> systs,
+		     osc::IOscCalculator* osc,
+		     const IPredictionGenerator& predGen,
+		     DUNERunPOTSpectrumLoader& loaderBeam,
+		     DUNERunPOTSpectrumLoader& loaderNue,
+		     DUNERunPOTSpectrumLoader& loaderNuTau,
+		     DUNERunPOTSpectrumLoader& loaderNC,
+		     const SystShifts& shiftMC);*/
+
     PredictionInterp(std::vector<const ISyst*> systs,
                      osc::IOscCalculator* osc,
                      const IPredictionGenerator& predGen,
