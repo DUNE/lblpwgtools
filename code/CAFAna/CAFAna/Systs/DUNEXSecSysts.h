@@ -4,8 +4,11 @@
 #include "CAFAna/Core/ISyst.h"
 
 #include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Prediction/PredictionScaleComp.h"
 
 class TH2;
+
+#include "TMatrixD.h"
 
 namespace ana
 {
@@ -42,7 +45,7 @@ namespace ana
     k_int_nubar_coh = 29,
     k_int_nu_nc = 30,
     k_int_nubar_nc = 31,
-    k_int_nuenumu_dummy = 32
+    k_int_nuenumu_dummy = 32 // TODO TODO
   };
 
   std::string VALORCategoryName(EVALORCategory c);
@@ -78,12 +81,16 @@ namespace ana
   class DUNEXSecCorrelation: public IExperiment
   {
   public:
-    DUNEXSecCorrelation();
+    DUNEXSecCorrelation(const PredictionScaleComp* psc);
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
   protected:
-    TH2* fMatrix;
+    TMatrixD fMatrix;
+
+    std::vector<double> fScales;
+
+    std::vector<const ISyst*> fSysts;
   };
 }

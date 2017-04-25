@@ -46,10 +46,10 @@ namespace ana
 
     /// Use these systematics in PredictSyst to vary the corresponding
     /// components
-    std::vector<const ISyst*> GetSysts()
+    std::vector<const ISyst*> GetSysts() const
     { return fSysts; }
 
-    std::vector<Spectrum*> GetSpectra()
+    std::vector<Spectrum*> GetSpectra() const
     { return fSpectra; }
 
     static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
