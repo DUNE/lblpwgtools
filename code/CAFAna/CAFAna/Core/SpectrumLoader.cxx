@@ -179,9 +179,9 @@ namespace ana
 
     tr->SetBranchAddress("run", &sr.dune.run);
 
-    tr->SetBranchAddress("lep", &sr.dune.lep);
-    tr->SetBranchAddress("scat", &sr.dune.scat);
-    tr->SetBranchAddress("nipiz", &sr.dune.nipiz);
+    tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
+    tr->SetBranchAddress("mode", &sr.dune.mode);
+    tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
     tr->SetBranchAddress("nipip", &sr.dune.nipip);
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
     tr->SetBranchAddress("Q2", &sr.dune.Q2);

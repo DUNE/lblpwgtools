@@ -49,11 +49,13 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  int VALORCategory(const caf::StandardRecord* sr)
+  EVALORCategory GetVALORCategory(const caf::StandardRecord* sr)
   {
-    const int lep = sr->dune.lep;
-    const int scat = sr->dune.scat;
-    const int npiz = sr->dune.nipiz;
+    // TODO interpret FD modes
+
+    const int lep = sr->dune.LepPDG;
+    const int scat = sr->dune.mode; // scat;
+    const int npiz = sr->dune.nipi0;
     const int npic = sr->dune.nipip + sr->dune.nipim;
     const float Enu = sr->dune.Ev;
     const float Q2 = sr->dune.Q2;
@@ -125,9 +127,10 @@ namespace ana
 
     assert(vc >= 0);
 
-    return vc;
+    return EVALORCategory(vc);
   }
 
+  //----------------------------------------------------------------------
   DUNEXSecSyst::DUNEXSecSyst(EVALORCategory cat)
     : fCat(cat)
   {
@@ -137,5 +140,21 @@ namespace ana
     TH2* h = (TH2*)f.Get("xs_covariance");
 
     fScale = h->GetBinContent(int(cat)+1, int(cat)+1);
+  }
+
+  //----------------------------------------------------------------------
+  DUNEXSecCorrelation::DUNEXSecCorrelation()
+  {
+    TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
+
+    fMatrix = (TH2*)f.Get("xs_covariance")->Clone();
+    fMatrix->SetDirectory(0);
+  }
+
+  //----------------------------------------------------------------------
+  double DUNEXSecCorrelation::ChiSq(osc::IOscCalculatorAdjustable* osc,
+                                    const SystShifts& syst) const
+  {
+    return 0;
   }
 } // namespace

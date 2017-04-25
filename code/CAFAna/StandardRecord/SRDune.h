@@ -18,9 +18,9 @@ namespace caf
 
     int run;
 
-    int lep;
-    int scat;
-    int nipiz;
+    int LepPDG;
+    int mode;
+    int nipi0;
     int nipip;
     int nipim;
     float Q2;

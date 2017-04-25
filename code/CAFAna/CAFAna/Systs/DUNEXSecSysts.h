@@ -3,6 +3,10 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/ISyst.h"
 
+#include "CAFAna/Experiment/IExperiment.h"
+
+class TH2;
+
 namespace ana
 {
   enum EVALORCategory{
@@ -69,5 +73,17 @@ namespace ana
   protected:
     EVALORCategory fCat;
     double fScale;
+  };
+
+  class DUNEXSecCorrelation: public IExperiment
+  {
+  public:
+    DUNEXSecCorrelation();
+
+    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+                         const SystShifts& syst = SystShifts::Nominal()) const override;
+
+  protected:
+    TH2* fMatrix;
   };
 }
