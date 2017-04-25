@@ -2,6 +2,8 @@
 
 #include "StandardRecord/StandardRecord.h"
 
+#include "Utilities/func/MathUtil.h"
+
 #include "TFile.h"
 #include "TH2.h"
 
@@ -143,18 +145,37 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  DUNEXSecCorrelation::DUNEXSecCorrelation()
+  DUNEXSecCorrelation::DUNEXSecCorrelation(const PredictionScaleComp* psc)
+    : fMatrix(32, 32), fSysts(psc->GetSysts())
   {
+    assert(fSysts.size() == 32);
+
     TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
 
-    fMatrix = (TH2*)f.Get("xs_covariance")->Clone();
-    fMatrix->SetDirectory(0);
+    TH2* h = (TH2*)f.Get("xs_covariance");
+
+    for(int i = 0; i < 32; ++i){
+      fScales.push_back(sqrt(h->GetBinContent(i+1, i+1)));
+      for(int j = 0; j < 32; ++j){
+        fMatrix(i, j) = h->GetBinContent(i+1, j+1);
+      }
+    }
+
+    fMatrix.Invert();
   }
 
   //----------------------------------------------------------------------
   double DUNEXSecCorrelation::ChiSq(osc::IOscCalculatorAdjustable* osc,
                                     const SystShifts& syst) const
   {
-    return 0;
+    double ret = 0;
+    // Don't double-count diagonals
+    for(int i = 0; i < 32; ++i) ret -= util::sqr(syst.GetShift(fSysts[i]));
+
+    TVectorD v(32);
+    for(int i = 0; i < 32; ++i)
+      v[i] = syst.GetShift(fSysts[i]) * fScales[i];
+
+    return ret + fMatrix.Similarity(v);
   }
 } // namespace
