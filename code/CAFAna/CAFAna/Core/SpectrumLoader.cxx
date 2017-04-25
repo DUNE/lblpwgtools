@@ -186,6 +186,9 @@ namespace ana
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
 
+    tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
+    tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
+
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){
       //      HandleRecord(branches.GetEntry(n));
