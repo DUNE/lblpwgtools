@@ -15,5 +15,7 @@ namespace caf
     int ccnc;
     int beamPdg;
     int neu;
+
+    int run;
   };
 }

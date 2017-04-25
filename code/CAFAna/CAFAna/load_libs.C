@@ -42,7 +42,7 @@ void load_libs()
 
   if (qmrb == "") {    // This is the SRT build
     // List of libraries to load. Dependency order.
-    const int kNumLibs = 11;//20;
+    const int kNumLibs = 12;//20;
     const std::string libs[kNumLibs] =
       {
         "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
@@ -52,7 +52,7 @@ void load_libs()
         "CAFAnaCore",
         "CAFAnaVars",
         "CAFAnaCuts",
-        // "CAFAnaSysts",
+        "CAFAnaSysts",
         // "CAFAnaUnfold",
         // "CAFAnaDecomp",
         "CAFAnaExtrap",

@@ -177,6 +177,8 @@ namespace ana
     tr->SetBranchAddress("beamPdg", &sr.dune.beamPdg);
     tr->SetBranchAddress("neu", &sr.dune.neu);
 
+    tr->SetBranchAddress("run", &sr.dune.run);
+
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){
       //      HandleRecord(branches.GetEntry(n));
