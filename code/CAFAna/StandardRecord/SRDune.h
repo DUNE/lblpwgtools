@@ -17,5 +17,12 @@ namespace caf
     int neu;
 
     int run;
+
+    int lep;
+    int scat;
+    int nipiz;
+    int nipip;
+    int nipim;
+    float Q2;
   };
 }

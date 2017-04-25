@@ -179,6 +179,13 @@ namespace ana
 
     tr->SetBranchAddress("run", &sr.dune.run);
 
+    tr->SetBranchAddress("lep", &sr.dune.lep);
+    tr->SetBranchAddress("scat", &sr.dune.scat);
+    tr->SetBranchAddress("nipiz", &sr.dune.nipiz);
+    tr->SetBranchAddress("nipip", &sr.dune.nipip);
+    tr->SetBranchAddress("nipim", &sr.dune.nipim);
+    tr->SetBranchAddress("Q2", &sr.dune.Q2);
+
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){
       //      HandleRecord(branches.GetEntry(n));
