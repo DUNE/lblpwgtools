@@ -23,9 +23,9 @@ namespace caf
     int nipi0;
     int nipip;
     int nipim;
-    float Q2;
+    double Q2;
 
-    float numu_pid;
-    float nue_pid;
+    double numu_pid;
+    double nue_pid;
   };
 }
