@@ -8,6 +8,8 @@ void plot_nd(){}
 
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Analysis/Fit.h"
 using namespace ana;
 
 #include "Utilities/rootlogon.C"
@@ -33,6 +35,7 @@ void plot_nd()
   const Var kRecoE = SIMPLEVAR(dune.Ev_reco);
   const Var kPIDmu = SIMPLEVAR(dune.numu_pid);
   const Var kPIDe = SIMPLEVAR(dune.nue_pid);
+  const Var kQ = SIMPLEVAR(dune.reco_q);
 
   const HistAxis axis("Reconstructed energy (GeV)",
                       Binning::Simple(40, 0, 10),
@@ -53,22 +56,28 @@ void plot_nd()
   Spectrum sEPIDFHCNC(*loaderFHCPOT, axisPIDe, kIsNC);
   Spectrum sEPIDFHCNue(*loaderFHCPOT, axisPIDe, kIsBeamNue);
   
-  Spectrum sRecoEFHCNumuSelTot(*loaderFHCPOT, axis, kPIDmu > 0.5);
-  Spectrum sRecoEFHCNumuSelNumu(*loaderFHCPOT, axis, kIsNumuCC && kPIDmu > 0.5);
-  Spectrum sRecoEFHCNumuSelNC(*loaderFHCPOT, axis, kIsNC && kPIDmu > 0.5);
-  Spectrum sRecoEFHCNumuSelNue(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5);
+  Spectrum sRecoEFHCNumuSelTot(*loaderFHCPOT, axis, kPIDmu > 0.5 && kQ < 0.);
+  Spectrum sRecoEFHCNumuSelNumu(*loaderFHCPOT, axis, kIsNumuCC && !kIsAntiNu && kPIDmu > 0.5 && kQ < 0.);
+  Spectrum sRecoEFHCNumuSelNumubar(*loaderFHCPOT, axis, kIsNumuCC && kIsAntiNu && kPIDmu > 0.5 && kQ < 0.);
+  Spectrum sRecoEFHCNumuSelNC(*loaderFHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ < 0.);
+  Spectrum sRecoEFHCNumuSelNue(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ < 0.);
 
   Spectrum sRecoEFHCNueSelTot(*loaderFHCPOT, axis, kPIDe > 0.5);
   Spectrum sRecoEFHCNueSelNumu(*loaderFHCPOT, axis, kIsNumuCC && kPIDe > 0.5);
   Spectrum sRecoEFHCNueSelNC(*loaderFHCPOT, axis, kIsNC && kPIDe > 0.5);
   Spectrum sRecoEFHCNueSelNue(*loaderFHCPOT, axis, kIsBeamNue && kPIDe > 0.5);
 
-  DUNEXSecSyst shift(k_int_nu_MEC_dummy);
-  SystShifts shifts( &shift, +1);
-  Spectrum sRecoEFHCNumuSelTotUp(*loaderFHCPOT, axis, kPIDmu > 0.5, shifts);
-  Spectrum sRecoEFHCNumuSelNumuUp(*loaderFHCPOT, axis, kIsNumuCC && kPIDmu > 0.5, shifts);
-  Spectrum sRecoEFHCNumuSelNCUp(*loaderFHCPOT, axis, kIsNC && kPIDmu > 0.5, shifts);
-  Spectrum sRecoEFHCNumuSelNueUp(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5, shifts);
+  DUNEXSecSyst nushift(k_int_nu_MEC_dummy);
+  DUNEXSecSyst nubarshift(k_int_nubar_MEC_dummy);
+  std::map<const ISyst*,double> shiftmap;
+  shiftmap.emplace(&nushift, +1.);
+  shiftmap.emplace(&nubarshift, +1.);
+  SystShifts shifts(shiftmap);
+  Spectrum sRecoEFHCNumuSelTotUp(*loaderFHCPOT, axis, kPIDmu > 0.5 && kQ < 0., shifts);
+  Spectrum sRecoEFHCNumuSelNumuUp(*loaderFHCPOT, axis, kIsNumuCC && !kIsAntiNu && kPIDmu > 0.5 && kQ < 0., shifts);
+  Spectrum sRecoEFHCNumuSelNumubarUp(*loaderFHCPOT, axis, kIsNumuCC && kIsAntiNu && kPIDmu > 0.5 && kQ < 0., shifts);
+  Spectrum sRecoEFHCNumuSelNCUp(*loaderFHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ < 0., shifts);
+  Spectrum sRecoEFHCNumuSelNueUp(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ < 0., shifts);
 
   std::vector<Cut> truthcuts;
   for( int i = 0; i < 32; ++i ) {
@@ -77,7 +86,7 @@ void plot_nd()
 
   PredictionScaleComp pred(*loaderFHCPOT, 
                             axis,
-                            kPIDmu > 0.5,
+                            kPIDmu > 0.5 && kQ < 0.,
                             truthcuts);
 
   loaderFHC.Go();
@@ -97,23 +106,142 @@ void plot_nd()
   new TCanvas;
   sRecoEFHCNumuSelTot.ToTH1(1.47e21)->Draw("hist");
   sRecoEFHCNumuSelNumu.ToTH1(1.47e21, kRed)->Draw("hist same");
+  sRecoEFHCNumuSelNumubar.ToTH1(1.47e21, kGreen+2)->Draw("hist same");
   sRecoEFHCNumuSelNC.ToTH1(1.47e21, kBlue)->Draw("hist same");
   sRecoEFHCNumuSelNue.ToTH1(1.47e21, kMagenta)->Draw("hist same");
-  gPad->Print( "numu_selection.png" );
+  gPad->Print( "fhc_numu_selection.png" );
 
   new TCanvas;
   sRecoEFHCNueSelTot.ToTH1(1.47e21)->Draw("hist");
   sRecoEFHCNueSelNumu.ToTH1(1.47e21, kRed)->Draw("hist same");
   sRecoEFHCNueSelNC.ToTH1(1.47e21, kBlue)->Draw("hist same");
   sRecoEFHCNueSelNue.ToTH1(1.47e21, kMagenta)->Draw("hist same");
-  gPad->Print( "nue_selection.png" );
+  gPad->Print( "fhc_nue_selection.png" );
 
   new TCanvas;
   sRecoEFHCNumuSelTotUp.ToTH1(1.47e21)->Draw("hist");
   sRecoEFHCNumuSelNumuUp.ToTH1(1.47e21, kRed)->Draw("hist same");
+  sRecoEFHCNumuSelNumubarUp.ToTH1(1.47e21, kGreen+2)->Draw("hist same");
   sRecoEFHCNumuSelNCUp.ToTH1(1.47e21, kBlue)->Draw("hist same");
   sRecoEFHCNumuSelNueUp.ToTH1(1.47e21, kMagenta)->Draw("hist same");
-  gPad->Print( "numu_selection_shift.png" );
+  gPad->Print( "fhc_numu_selection_shift.png" );
+
+  new TCanvas;
+
+  osc::NoOscillations noosc;
+
+  SystShifts fakeDataShift(pred.GetSysts()[k_int_nu_MEC_dummy], +1);
+  Spectrum fake = pred.PredictSyst(&noosc, fakeDataShift).FakeData(1.47e21);
+
+  fake.ToTH1(1.47e21, kRed)->Draw("hist");
+  pred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
+
+  SingleSampleExperiment expt(&pred, fake);
+
+  Fitter fit(&expt, {}, pred.GetSysts());
+  SystShifts seed = SystShifts::Nominal();
+  fit.Fit(seed);
+
+  SystShifts bfs(pred.GetSysts()[k_int_nu_MEC_dummy], seed.GetShift(pred.GetSysts()[k_int_nu_MEC_dummy]));
+  Spectrum bf = pred.PredictSyst(&noosc, bfs);
+  Spectrum bf2 = pred.PredictSyst(&noosc, seed);
+  bf.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
+
+  gPad->Print("fhc_fit.png");
+
+
+  // RHC
+  Spectrum sMuPIDRHCNumu(*loaderRHCPOT, axisPIDmu, kIsNumuCC);
+  Spectrum sMuPIDRHCNC(*loaderRHCPOT, axisPIDmu, kIsNC);
+  Spectrum sMuPIDRHCNue(*loaderRHCPOT, axisPIDmu, kIsBeamNue);
+
+  Spectrum sEPIDRHCNumu(*loaderRHCPOT, axisPIDe, kIsNumuCC);
+  Spectrum sEPIDRHCNC(*loaderRHCPOT, axisPIDe, kIsNC);
+  Spectrum sEPIDRHCNue(*loaderRHCPOT, axisPIDe, kIsBeamNue);
+  
+  Spectrum sRecoERHCNumuSelTot(*loaderRHCPOT, axis, kPIDmu > 0.5 && kQ > 0.);
+  Spectrum sRecoERHCNumuSelNumu(*loaderRHCPOT, axis, kIsNumuCC && kPIDmu > 0.5 && kQ > 0. && !kIsAntiNu);
+  Spectrum sRecoERHCNumuSelNumubar(*loaderRHCPOT, axis, kIsNumuCC && kPIDmu > 0.5 && kQ > 0. && kIsAntiNu);
+  Spectrum sRecoERHCNumuSelNC(*loaderRHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ > 0.);
+  Spectrum sRecoERHCNumuSelNue(*loaderRHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ > 0.);
+
+  Spectrum sRecoERHCNueSelTot(*loaderRHCPOT, axis, kPIDe > 0.5);
+  Spectrum sRecoERHCNueSelNumu(*loaderRHCPOT, axis, kIsNumuCC && kPIDe > 0.5);
+  Spectrum sRecoERHCNueSelNC(*loaderRHCPOT, axis, kIsNC && kPIDe > 0.5);
+  Spectrum sRecoERHCNueSelNue(*loaderRHCPOT, axis, kIsBeamNue && kPIDe > 0.5);
+
+//  DUNEXSecSyst nubarshift(k_int_nubar_MEC_dummy);
+//  SystShifts nubarshifts( &nubarshift, +1);
+  Spectrum sRecoERHCNumuSelTotUp(*loaderRHCPOT, axis, kPIDmu > 0.5 && kQ > 0., shifts);
+  Spectrum sRecoERHCNumuSelNumuUp(*loaderRHCPOT, axis, kIsNumuCC && kPIDmu > 0.5 && kQ > 0. && !kIsAntiNu, shifts);
+  Spectrum sRecoERHCNumuSelNumubarUp(*loaderRHCPOT, axis, kIsNumuCC && kPIDmu > 0.5 && kQ > 0. && kIsAntiNu, shifts);
+  Spectrum sRecoERHCNumuSelNCUp(*loaderRHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ > 0., shifts);
+  Spectrum sRecoERHCNumuSelNueUp(*loaderRHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ > 0., shifts);
+
+  std::vector<Cut> truthcutsRHC;
+  for( int i = 0; i < 32; ++i ) {
+    truthcutsRHC.push_back( kVALORCategory == i );
+  }
+
+  PredictionScaleComp RHCpred(*loaderRHCPOT, 
+                            axis,
+                            kPIDmu > 0.5 && kQ > 0.,
+                            truthcutsRHC);
+
+  loaderRHC.Go();
+
+  new TCanvas;
+  sRecoERHCNumuSelTot.ToTH1(1.47e21)->Draw("hist");
+  sRecoERHCNumuSelNumu.ToTH1(1.47e21, kRed)->Draw("hist same");
+  sRecoERHCNumuSelNumubar.ToTH1(1.47e21, kGreen+2)->Draw("hist same");
+  sRecoERHCNumuSelNC.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  sRecoERHCNumuSelNue.ToTH1(1.47e21, kMagenta)->Draw("hist same");
+  gPad->Print( "rhc_numu_selection.png" );
+
+  new TCanvas;
+  sRecoERHCNueSelTot.ToTH1(1.47e21)->Draw("hist");
+  sRecoERHCNueSelNumu.ToTH1(1.47e21, kRed)->Draw("hist same");
+  sRecoERHCNueSelNC.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  sRecoERHCNueSelNue.ToTH1(1.47e21, kMagenta)->Draw("hist same");
+  gPad->Print( "rhc_nue_selection.png" );
+
+  new TCanvas;
+  sRecoERHCNumuSelTotUp.ToTH1(1.47e21)->Draw("hist");
+  sRecoERHCNumuSelNumuUp.ToTH1(1.47e21, kRed)->Draw("hist same");
+  sRecoERHCNumuSelNumubarUp.ToTH1(1.47e21, kGreen+2)->Draw("hist same");
+  sRecoERHCNumuSelNCUp.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  sRecoERHCNumuSelNueUp.ToTH1(1.47e21, kMagenta)->Draw("hist same");
+  gPad->Print( "rhc_numu_selection_shift.png" );
+
+  new TCanvas;
+
+  //osc::NoOscillations noosc;
+
+  SystShifts fakeDataShiftRHC(RHCpred.GetSysts()[k_int_nubar_MEC_dummy], +1);
+  Spectrum fakeRHC = RHCpred.PredictSyst(&noosc, fakeDataShiftRHC).FakeData(1.47e21);
+
+  fakeRHC.ToTH1(1.47e21, kRed)->Draw("hist");
+  RHCpred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
+
+  SingleSampleExperiment exptRHC(&RHCpred, fakeRHC);
+
+  Fitter RHCfit(&exptRHC, {}, RHCpred.GetSysts());
+  SystShifts RHCseed = SystShifts::Nominal();
+  RHCfit.Fit(RHCseed);
+
+  SystShifts RHCbfs(RHCpred.GetSysts()[k_int_nubar_MEC_dummy], RHCseed.GetShift(RHCpred.GetSysts()[k_int_nubar_MEC_dummy]));
+  Spectrum RHCbf = RHCpred.PredictSyst(&noosc, RHCbfs);
+  Spectrum RHCbf2 = RHCpred.PredictSyst(&noosc, RHCseed);
+  RHCbf.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  RHCbf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
+
+  gPad->Print("rhc_fit.png");
+
+
+
+
+
 
 
 
