@@ -193,7 +193,7 @@ namespace ana
     tr->SetBranchAddress("isFHC", &sr.dune.isFHC);
 
 
-    const int Nentries = tr->GetEntries();
+    const int Nentries = tr->GetEntries()/100; // HACK HACK HACK
     for(int n = 0; n < Nentries; ++n){
       //      HandleRecord(branches.GetEntry(n));
 

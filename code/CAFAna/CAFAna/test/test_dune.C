@@ -70,6 +70,21 @@ void test_dune()
   const Cut kSelNumu = SIMPLEVAR(dune.mvaresult) > 0;
   const Cut kSelNue = SIMPLEVAR(dune.mvaresult) > 0;
 
+  // const Var kTrueE({"dune.Ev"},
+  //                  [](const caf::StandardRecord* sr)
+  //                  {
+  //                    return sr->dune.Ev;
+  //                  });
+
+  // const Cut kPassesSelection({"dune.mvaresult"},
+  //                            [](const caf::StandardRecord* sr)
+  //                            {
+  //                              return sr->dune.mvaresult > 0.8;
+  //                            });
+
+  // const Var kMVAValue = SIMPLEVAR(dune.mvaresult);
+  // const Cut kPassesSelection = kMVAValue > 0.8;
+
   PredictionNoExtrap predNumuPID(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
 
   PredictionNoExtrap predNuePID(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
@@ -87,7 +102,6 @@ void test_dune()
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
   calc->SetL(1300);
   calc->SetdCP(TMath::Pi()*1.5);
-
 
   // Standard DUNE numbers from Matt Bass
   calc->SetTh12(0.5857);

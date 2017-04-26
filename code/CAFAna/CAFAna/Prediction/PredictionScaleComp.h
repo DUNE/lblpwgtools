@@ -1,6 +1,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Systs/SystComponentScale.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -21,7 +22,7 @@ namespace ana
     PredictionScaleComp(SpectrumLoaderBase& loader,
                         const HistAxis&     axis,
                         Cut                 cut,
-                        std::vector<Cut>    truthcuts,
+                        const std::vector<const SystComponentScale*>& systs,
                         const SystShifts&   shift = kNoShift,
                         const Var&          wei = kUnweighted);
     /// Constructor to take two HistAxis's to weight 2D spectra
@@ -29,7 +30,7 @@ namespace ana
                         const HistAxis&     axis1,
                         const HistAxis&     axis2,
                         Cut                 cut,
-                        std::vector<Cut>    truthcuts,
+                        const std::vector<const SystComponentScale*>& systs,
                         const SystShifts&   shift = kNoShift,
                         const Var&          wei = kUnweighted);
 
@@ -40,7 +41,7 @@ namespace ana
                         DUNERunPOTSpectrumLoader& loaderNC,
                         const HistAxis&     axis,
                         Cut                 cut,
-                        std::vector<Cut>    truthcuts,
+                        const std::vector<const SystComponentScale*>& systs,
                         const SystShifts&   shift = kNoShift,
                         const Var&          wei = kUnweighted);
 
@@ -57,10 +58,6 @@ namespace ana
       assert(0 && "Please don't use PredictionScaleComp::PredictComponent");
     }
 
-    /// Use these systematics in PredictSyst to vary the corresponding
-    /// components
-    std::vector<const ISyst*> GetSysts() const { return fSysts; }
-
     //    std::vector<Spectrum*> GetSpectra() const { return fSpectra; }
 
     static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
@@ -68,9 +65,10 @@ namespace ana
 
   private:
     PredictionScaleComp(const IPrediction* complement,
-                        std::vector<const IPrediction*> preds);
+                        const std::vector<const IPrediction*>& preds,
+                        const std::vector<const SystComponentScale*>& systs);
 
-    std::vector<const ISyst*> fSysts;
+    std::vector<const SystComponentScale*> fSysts;
     std::vector<const IPrediction*> fPreds;
 
     const IPrediction* fComplement;

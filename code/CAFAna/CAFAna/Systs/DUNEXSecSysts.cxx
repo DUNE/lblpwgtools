@@ -56,11 +56,67 @@ namespace ana
     // TODO interpret FD modes
 
     const int lep = sr->dune.LepPDG;
-    const int scat = sr->dune.mode; // scat;
+    int scat = sr->dune.mode;
     const int npiz = sr->dune.nipi0;
     const int npic = sr->dune.nipip + sr->dune.nipim;
     const float Enu = sr->dune.Ev;
     const float Q2 = sr->dune.Q2;
+
+    // These are the FD codes
+    // kUnknownMode               = -1
+    // kQE                        = 0
+    // kRes                       = 1
+    // kDIS                       = 2
+    // kCoh                       = 3
+    // kCohElastic                = 4
+    // kElectronScattering        = 5
+    // kIMDAnnihilation           = 6
+    // kInverseBetaDecay          = 7
+    // kGlashowResonance          = 8
+    // kAMNuGamma                 = 9
+    // kMEC                       = 10
+    // kDiffractive               = 11
+    // kEM                        = 12
+    // kWeakMix                   = 13
+
+    // ND codes
+    // 0 Null,
+    // 1 QE
+    // 2 SingleKaon
+    // 3 DIS
+    // 4 Resonant
+    // 5 COH
+    // 6 Diffractive
+    // 7 nu+e
+    // 8 IMD
+    // 9 AMNuGamma
+    // 10 MEC
+    // 11 coherent elastic
+    // 12 IBD
+    // 13 Glashow resonance
+    // 14 IMD annihilation
+
+    // Different conventions ND (weird (new?)) and FD (like NOvA)
+    if(sr->dune.isFD){
+      switch(scat){
+      case 0: scat = 1; break; // QE -> QE
+      case 1: scat = 4; break; // RES -> RES
+      case 2: scat = 3; break; // DIS -> DIS
+      case 3: scat = 5; break; // COH -> COH
+      case 4: scat = 11; break; // COHElastic
+      case 5: scat = 7; break; // nu-on-e
+      case 6: scat = 8; break; // IMD
+        // InverseBetaDecay can never happen
+      case 8: scat = 13; break; // Glashow
+      case 9: scat = 9; break; // AMNuGamma
+      case 10: scat = 10; break; // MEC
+      case 11: scat = 6; break; // diffractive
+        // EM and WeakMix can never happen
+      default:
+        std::cout << "Unhandled GENIE FD code " << scat << std::endl;
+        abort();
+      }
+    }
 
     int vc = -1;
 
@@ -134,19 +190,22 @@ namespace ana
 
   //----------------------------------------------------------------------
   DUNEXSecSyst::DUNEXSecSyst(EVALORCategory cat)
-    : fCat(cat)
+    : SystComponentScale(VALORCategoryName(cat)+"_scale",
+                         VALORCategoryName(cat)+" Scale",
+                         kVALORCategory == cat, 0)
   {
     // TODO - official location
     TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
 
     TH2* h = (TH2*)f.Get("xs_covariance");
 
-    fScale = h->GetBinContent(int(cat)+1, int(cat)+1);
+    fOneSigma = h->GetBinContent(int(cat)+1, int(cat)+1);
   }
+
 
   //----------------------------------------------------------------------
   DUNEXSecCorrelation::DUNEXSecCorrelation(const PredictionScaleComp* psc)
-    : fMatrix(32, 32), fSysts(psc->GetSysts())
+    : fMatrix(32, 32)//, fSysts(psc->GetSysts()) // TODO TODO TODO
   {
     assert(fSysts.size() == 32);
 

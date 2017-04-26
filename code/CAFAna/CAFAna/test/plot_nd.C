@@ -10,6 +10,7 @@ void plot_nd(){}
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Analysis/Fit.h"
+
 using namespace ana;
 
 #include "Utilities/rootlogon.C"
@@ -79,15 +80,16 @@ void plot_nd()
   Spectrum sRecoEFHCNumuSelNCUp(*loaderFHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ < 0., shifts);
   Spectrum sRecoEFHCNumuSelNueUp(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ < 0., shifts);
 
-  std::vector<Cut> truthcuts;
-  for( int i = 0; i < 32; ++i ) {
-    truthcuts.push_back( kVALORCategory == i );
-  }
-
   PredictionScaleComp pred(*loaderFHCPOT, 
+<<<<<<< Updated upstream
                             axis,
                             kPIDmu > 0.5 && kQ < 0.,
                             truthcuts);
+=======
+                           axis,
+                           kPIDmu > 0.5,
+                           GetDUNEXSecSysts());
+>>>>>>> Stashed changes
 
   loaderFHC.Go();
 
@@ -243,8 +245,28 @@ void plot_nd()
 
 
 
+  new TCanvas;
 
+  osc::NoOscillations noosc;
 
+  Spectrum fake = pred.PredictSyst(&noosc, shifts).FakeData(1.47e21);
+
+  fake.ToTH1(1.47e21, kRed)->Draw("hist");
+  pred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
+
+  SingleSampleExperiment expt(&pred, fake);
+
+  Fitter fit(&expt, {}, GetDUNEXSecSysts());
+  SystShifts seed = SystShifts::Nominal();
+  fit.Fit(seed);
+
+  SystShifts bfs(GetDUNEXSecSyst(k_int_nu_MEC_dummy), seed.GetShift(GetDUNEXSecSyst(k_int_nu_MEC_dummy)));
+  Spectrum bf = pred.PredictSyst(&noosc, bfs);
+  Spectrum bf2 = pred.PredictSyst(&noosc, seed);
+  bf.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
+
+  gPad->Print("fit.eps");
 }
 
 #endif

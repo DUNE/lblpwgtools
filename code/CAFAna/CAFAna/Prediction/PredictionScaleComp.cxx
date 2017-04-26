@@ -47,21 +47,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionScaleComp::PredictionScaleComp(SpectrumLoaderBase& loader,
-                                           const HistAxis& axis,
-                                           Cut cut,
-                                           std::vector<Cut> truthcuts,
-                                           const SystShifts& shift,
-                                           const Var& wei)
+  PredictionScaleComp::
+  PredictionScaleComp(SpectrumLoaderBase& loader,
+                      const HistAxis& axis,
+                      Cut cut,
+                      const std::vector<const SystComponentScale*>& systs,
+                      const SystShifts& shift,
+                      const Var& wei)
+    : fSysts(systs)
   {
     Cut complementCut = kNoCut;
 
-    assert(!truthcuts.empty() && "Please give at least one truth selection.");
-    for(unsigned int i = 0; i < truthcuts.size(); ++i){
+    assert(!systs.empty() && "Please give at least one systematic.");
+    for(const SystComponentScale* syst: systs){
       fPreds.push_back(new PredictionNoOsc(loader, axis,
-                                           cut && truthcuts[i], shift, wei));
-      fSysts.push_back(new DummyScaleCompSyst(i));
-      complementCut = complementCut && !truthcuts[i];
+                                           cut && syst->GetCut(), shift, wei));
+      complementCut = complementCut && !syst->GetCut();
     }
 
     // The idea is that if truthcuts are exhaustive, this Spectrum should wind
@@ -71,24 +72,24 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionScaleComp::PredictionScaleComp(DUNERunPOTSpectrumLoader& loaderBeam,
-                                           DUNERunPOTSpectrumLoader& loaderNue,
-                                           DUNERunPOTSpectrumLoader& loaderNuTau,
-                                           DUNERunPOTSpectrumLoader& loaderNC,
-                                           const HistAxis&     axis,
-                                           Cut                 cut,
-                                           std::vector<Cut>    truthcuts,
-                                           const SystShifts&   shift,
-                                           const Var&          wei)
+  PredictionScaleComp::
+  PredictionScaleComp(DUNERunPOTSpectrumLoader& loaderBeam,
+                      DUNERunPOTSpectrumLoader& loaderNue,
+                      DUNERunPOTSpectrumLoader& loaderNuTau,
+                      DUNERunPOTSpectrumLoader& loaderNC,
+                      const HistAxis&     axis,
+                      Cut                 cut,
+                      const std::vector<const SystComponentScale*>& systs,
+                      const SystShifts&   shift,
+                      const Var&          wei)
   {
     Cut complementCut = kNoCut;
 
-    assert(!truthcuts.empty() && "Please give at least one truth selection.");
-    for(unsigned int i = 0; i < truthcuts.size(); ++i){
+    assert(!systs.empty() && "Please give at least one systematic.");
+    for(const SystComponentScale* syst: systs){
       fPreds.push_back(new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
-                                              axis, cut && truthcuts[i], shift, wei));
-      fSysts.push_back(new DummyScaleCompSyst(i));
-      complementCut = complementCut && !truthcuts[i];
+                                              axis, cut && syst->GetCut(), shift, wei));
+      complementCut = complementCut && !syst->GetCut();
     }
 
     // This is the set of events that didn't wind up in any of the scaleable
@@ -98,13 +99,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionScaleComp::PredictionScaleComp(SpectrumLoaderBase& loader,
-                                           const HistAxis& axis1,
-                                           const HistAxis& axis2,
-                                           Cut cut,
-                                           std::vector<Cut> truthcuts,
-                                           const SystShifts& shift,
-                                           const Var& wei)
+  PredictionScaleComp::
+  PredictionScaleComp(SpectrumLoaderBase& loader,
+                      const HistAxis& axis1,
+                      const HistAxis& axis2,
+                      Cut cut,
+                      const std::vector<const SystComponentScale*>& systs,
+                      const SystShifts& shift,
+                      const Var& wei)
   {
     assert(0 && "unimplemented");
 
@@ -126,13 +128,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionScaleComp::PredictionScaleComp(const IPrediction* complement,
-                                           std::vector<const IPrediction*> preds)
-    : fPreds(preds),
+  PredictionScaleComp::
+  PredictionScaleComp(const IPrediction* complement,
+                      const std::vector<const IPrediction*>& preds,
+                      const std::vector<const SystComponentScale*>& systs)
+    : fSysts(systs),
+      fPreds(preds),
       fComplement(complement)
   {
-    for(unsigned int i = 0; i < preds.size(); ++i)
-      fSysts.push_back(new DummyScaleCompSyst(i));
   }
 
   //----------------------------------------------------------------------
@@ -165,6 +168,9 @@ namespace ana
     for(unsigned int i = 0; i < fPreds.size(); ++i){
       Spectrum si = fPreds[i]->PredictSyst(calc, shiftClean);
       si.Scale(1 + shift.GetShift(fSysts[i]));
+
+      si.Scale(pow(1+fSysts[i].OneSigmaScale(), shift.GetShift(fSysts[i])));
+
       ret += si;
     }
 
@@ -174,6 +180,8 @@ namespace ana
   //----------------------------------------------------------------------
   void PredictionScaleComp::SaveTo(TDirectory* dir) const
   {
+    assert(0 && "No solution for serializing Systs...");
+
     TDirectory* tmp = gDirectory;
     dir->cd();
 
@@ -191,6 +199,8 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionScaleComp> PredictionScaleComp::LoadFrom(TDirectory* dir)
   {
+    assert(0 && "No solution for serializing Systs...");
+
     IPrediction* complement = ana::LoadFrom<IPrediction>(dir->GetDirectory("complement")).release();
 
     std::vector<const IPrediction*> preds;
@@ -202,7 +212,7 @@ namespace ana
       preds.push_back(p);
     }
 
-    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(complement, preds));
+    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(complement, preds, {}));
   }
 
 }

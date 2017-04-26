@@ -16,9 +16,9 @@ namespace ana
   {
   public:
     std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev_reco"};
-      }
+    {
+      return {"dune.Ev_reco"};
+    }
     std::string ShortName() const override {return "eScale";}
     std::string LatexName() const override {return "Energy Scale";}
 
@@ -26,9 +26,9 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      const double scale = 1 + .02*sigma;
-
       restore.Add(sr->dune.Ev_reco);
+
+      const double scale = 1 + .02*sigma;
       sr->dune.Ev_reco *= scale;
     }
   };
