@@ -141,7 +141,6 @@ namespace ana
   //----------------------------------------------------------------------
   PredictionScaleComp::~PredictionScaleComp()
   {
-    for(const ISyst* s: fSysts) delete s;
     for(const IPrediction* p: fPreds) delete p;
     delete fComplement;
   }

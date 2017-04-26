@@ -68,8 +68,8 @@ void plot_nd()
   Spectrum sRecoEFHCNueSelNC(*loaderFHCPOT, axis, kIsNC && kPIDe > 0.5);
   Spectrum sRecoEFHCNueSelNue(*loaderFHCPOT, axis, kIsBeamNue && kPIDe > 0.5);
 
-  DUNEXSecSyst nushift(k_int_nu_MEC_dummy);
-  DUNEXSecSyst nubarshift(k_int_nubar_MEC_dummy);
+  DUNEXSecSyst nushift(nu_MEC_dummy);
+  DUNEXSecSyst nubarshift(nubar_MEC_dummy);
   std::map<const ISyst*,double> shiftmap;
   shiftmap.emplace(&nushift, +1.);
   shiftmap.emplace(&nubarshift, +1.);
@@ -126,20 +126,18 @@ void plot_nd()
 
   osc::NoOscillations noosc;
 
-  SystShifts fakeDataShift(pred.GetSysts()[k_int_nu_MEC_dummy], +1);
-  Spectrum fake = pred.PredictSyst(&noosc, fakeDataShift).FakeData(1.47e21);
+  Spectrum fake = pred.PredictSyst(&noosc, shiftmap).FakeData(1.47e21);
 
   fake.ToTH1(1.47e21, kRed)->Draw("hist");
   pred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
 
   SingleSampleExperiment expt(&pred, fake);
 
-  Fitter fit(&expt, {}, pred.GetSysts());
+  Fitter fit(&expt, {}, GetDUNEXSecSysts());
   SystShifts seed = SystShifts::Nominal();
   fit.Fit(seed);
 
-  SystShifts bfs(pred.GetSysts()[k_int_nu_MEC_dummy], seed.GetShift(pred.GetSysts()[k_int_nu_MEC_dummy]));
-  Spectrum bf = pred.PredictSyst(&noosc, bfs);
+  Spectrum bf = pred.PredictSyst(&noosc, shiftmap);
   Spectrum bf2 = pred.PredictSyst(&noosc, seed);
   bf.ToTH1(1.47e21, kBlue)->Draw("hist same");
   bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
@@ -167,7 +165,7 @@ void plot_nd()
   Spectrum sRecoERHCNueSelNC(*loaderRHCPOT, axis, kIsNC && kPIDe > 0.5);
   Spectrum sRecoERHCNueSelNue(*loaderRHCPOT, axis, kIsBeamNue && kPIDe > 0.5);
 
-//  DUNEXSecSyst nubarshift(k_int_nubar_MEC_dummy);
+//  DUNEXSecSyst nubarshift(_nubar_MEC_dummy);
 //  SystShifts nubarshifts( &nubarshift, +1);
   Spectrum sRecoERHCNumuSelTotUp(*loaderRHCPOT, axis, kPIDmu > 0.5 && kQ > 0., shifts);
   Spectrum sRecoERHCNumuSelNumuUp(*loaderRHCPOT, axis, kIsNumuCC && kPIDmu > 0.5 && kQ > 0. && !kIsAntiNu, shifts);
@@ -209,53 +207,24 @@ void plot_nd()
 
   //osc::NoOscillations noosc;
 
-  SystShifts fakeDataShiftRHC(RHCpred.GetSysts()[k_int_nubar_MEC_dummy], +1);
-  Spectrum fakeRHC = RHCpred.PredictSyst(&noosc, fakeDataShiftRHC).FakeData(1.47e21);
+  Spectrum fakeRHC = RHCpred.PredictSyst(&noosc, shiftmap).FakeData(1.47e21);
 
   fakeRHC.ToTH1(1.47e21, kRed)->Draw("hist");
   RHCpred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
 
   SingleSampleExperiment exptRHC(&RHCpred, fakeRHC);
 
-  Fitter RHCfit(&exptRHC, {}, RHCpred.GetSysts());
+  Fitter RHCfit(&exptRHC, {}, GetDUNEXSecSysts());
   SystShifts RHCseed = SystShifts::Nominal();
   RHCfit.Fit(RHCseed);
 
-  SystShifts RHCbfs(RHCpred.GetSysts()[k_int_nubar_MEC_dummy], RHCseed.GetShift(RHCpred.GetSysts()[k_int_nubar_MEC_dummy]));
-  Spectrum RHCbf = RHCpred.PredictSyst(&noosc, RHCbfs);
+  Spectrum RHCbf = RHCpred.PredictSyst(&noosc, shiftmap);
   Spectrum RHCbf2 = RHCpred.PredictSyst(&noosc, RHCseed);
   RHCbf.ToTH1(1.47e21, kBlue)->Draw("hist same");
   RHCbf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
 
   gPad->Print("rhc_fit.png");
 
-
-
-
-
-
-  new TCanvas;
-
-  osc::NoOscillations noosc;
-
-  Spectrum fake = pred.PredictSyst(&noosc, shifts).FakeData(1.47e21);
-
-  fake.ToTH1(1.47e21, kRed)->Draw("hist");
-  pred.Predict(&noosc).ToTH1(1.47e21)->Draw("hist same");
-
-  SingleSampleExperiment expt(&pred, fake);
-
-  Fitter fit(&expt, {}, GetDUNEXSecSysts());
-  SystShifts seed = SystShifts::Nominal();
-  fit.Fit(seed);
-
-  SystShifts bfs(GetDUNEXSecSyst(k_int_nu_MEC_dummy), seed.GetShift(GetDUNEXSecSyst(k_int_nu_MEC_dummy)));
-  Spectrum bf = pred.PredictSyst(&noosc, bfs);
-  Spectrum bf2 = pred.PredictSyst(&noosc, seed);
-  bf.ToTH1(1.47e21, kBlue)->Draw("hist same");
-  bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
-
-  gPad->Print("fit.eps");
 }
 
 #endif
