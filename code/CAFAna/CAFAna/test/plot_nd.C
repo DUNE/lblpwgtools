@@ -81,15 +81,9 @@ void plot_nd()
   Spectrum sRecoEFHCNumuSelNueUp(*loaderFHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ < 0., shifts);
 
   PredictionScaleComp pred(*loaderFHCPOT, 
-<<<<<<< Updated upstream
-                            axis,
-                            kPIDmu > 0.5 && kQ < 0.,
-                            truthcuts);
-=======
                            axis,
-                           kPIDmu > 0.5,
+                           kPIDmu > 0.5 && kQ < 0.,
                            GetDUNEXSecSysts());
->>>>>>> Stashed changes
 
   loaderFHC.Go();
 
@@ -181,15 +175,10 @@ void plot_nd()
   Spectrum sRecoERHCNumuSelNCUp(*loaderRHCPOT, axis, kIsNC && kPIDmu > 0.5 && kQ > 0., shifts);
   Spectrum sRecoERHCNumuSelNueUp(*loaderRHCPOT, axis, kIsBeamNue && kPIDmu > 0.5 && kQ > 0., shifts);
 
-  std::vector<Cut> truthcutsRHC;
-  for( int i = 0; i < 32; ++i ) {
-    truthcutsRHC.push_back( kVALORCategory == i );
-  }
-
   PredictionScaleComp RHCpred(*loaderRHCPOT, 
                             axis,
                             kPIDmu > 0.5 && kQ > 0.,
-                            truthcutsRHC);
+                            GetDUNEXSecSysts());
 
   loaderRHC.Go();
 

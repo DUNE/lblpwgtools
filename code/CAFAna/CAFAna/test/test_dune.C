@@ -9,10 +9,13 @@ void test_dune(){}
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Systs/DUNEXSecSysts.h"
+
 using namespace ana;
 
 #include "StandardRecord/StandardRecord.h"
@@ -70,21 +73,6 @@ void test_dune()
   const Cut kSelNumu = SIMPLEVAR(dune.mvaresult) > 0;
   const Cut kSelNue = SIMPLEVAR(dune.mvaresult) > 0;
 
-  // const Var kTrueE({"dune.Ev"},
-  //                  [](const caf::StandardRecord* sr)
-  //                  {
-  //                    return sr->dune.Ev;
-  //                  });
-
-  // const Cut kPassesSelection({"dune.mvaresult"},
-  //                            [](const caf::StandardRecord* sr)
-  //                            {
-  //                              return sr->dune.mvaresult > 0.8;
-  //                            });
-
-  // const Var kMVAValue = SIMPLEVAR(dune.mvaresult);
-  // const Cut kPassesSelection = kMVAValue > 0.8;
-
   PredictionNoExtrap predNumuPID(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
 
   PredictionNoExtrap predNuePID(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
@@ -92,6 +80,16 @@ void test_dune()
   PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
 
   PredictionNoExtrap predNue(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_reco, kSelNue);
+
+  // separate by true interaction category
+  std::vector<Cut> truthcuts;
+  for( int i = 0; i < 32; ++i ) {
+    truthcuts.push_back( kVALORCategory == i );
+  }
+  const HistAxis axis("Reconstructed energy (GeV)",
+                      Binning::Simple(40, 0, 10),
+                      Enu_reco);
+  PredictionScaleComp predNumu(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, axis, kSelNumu, truthcuts);
 
   loader.Go();
   loaderNue.Go();
@@ -102,6 +100,7 @@ void test_dune()
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
   calc->SetL(1300);
   calc->SetdCP(TMath::Pi()*1.5);
+
 
   // Standard DUNE numbers from Matt Bass
   calc->SetTh12(0.5857);
@@ -219,6 +218,28 @@ void test_dune()
 
   gPad->Print("mcd.eps");
   gPad->Print("mcd.C");
+
+
+  SystShifts fakeDataShift(predNumu.GetSysts()[k_int_nu_MEC_dummy], +1);
+  Spectrum fake = predNumu.PredictSyst(calc, fakeDataShift).FakeData(1.47e21);
+
+  fake.ToTH1(1.47e21, kRed)->Draw("hist");
+  predNumu.Predict(calc).ToTH1(1.47e21)->Draw("hist same");
+
+  SingleSampleExperiment mecexpt(&predNumu, fake);
+
+  Fitter fit(&mecexpt, {}, predNumu.GetSysts());
+  SystShifts seed = SystShifts::Nominal();
+  fit.Fit(seed);
+
+  SystShifts bfs(predNumu.GetSysts()[k_int_nu_MEC_dummy], seed.GetShift(predNumu.GetSysts()[k_int_nu_MEC_dummy]));
+  Spectrum bf = predNumu.PredictSyst(calc, bfs);
+  Spectrum bf2 = predNumu.PredictSyst(calc, seed);
+  bf.ToTH1(1.47e21, kBlue)->Draw("hist same");
+  bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
+
+  gPad->Print("FD_mec_fit.eps");
+
 }
 
 #endif

@@ -169,7 +169,7 @@ namespace ana
       Spectrum si = fPreds[i]->PredictSyst(calc, shiftClean);
       si.Scale(1 + shift.GetShift(fSysts[i]));
 
-      si.Scale(pow(1+fSysts[i].OneSigmaScale(), shift.GetShift(fSysts[i])));
+      si.Scale(pow(1+fSysts[i]->OneSigmaScale(), shift.GetShift(fSysts[i])));
 
       ret += si;
     }
