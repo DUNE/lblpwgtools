@@ -10,39 +10,39 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  const std::string valor_categories[33] = { "f_int_nu_ccqe_1",       // 0
-                                             "f_int_nu_ccqe_2",       // 1
-                                             "f_int_nu_ccqe_3",       // 2
-                                             "f_int_nubar_ccqe_1",    // 3
-                                             "f_int_nubar_ccqe_2",    // 4
-                                             "f_int_nubar_ccqe_3",    // 5
-                                             "f_int_nu_MEC_dummy",    // 6
-                                             "f_int_nubar_MEC_dummy", // 7
-                                             "f_int_nu_cc1piz_1",     // 8
-                                             "f_int_nu_cc1piz_2",     // 9
-                                             "f_int_nu_cc1piz_3",     // 10
-                                             "f_int_nu_cc1pic_1",     // 11
-                                             "f_int_nu_cc1pic_2",     // 12
-                                             "f_int_nu_cc1pic_3",     // 13
-                                             "f_int_nubar_cc1piz_1",  // 14
-                                             "f_int_nubar_cc1piz_2",  // 15
-                                             "f_int_nubar_cc1piz_3",  // 16
-                                             "f_int_nubar_cc1pic_1",  // 17
-                                             "f_int_nubar_cc1pic_2",  // 18
-                                             "f_int_nubar_cc1pic_3",  // 19
-                                             "f_int_nu_2pi",          // 20
-                                             "f_int_nubar_2pi",       // 21
-                                             "f_int_nu_dis_1",        // 22
-                                             "f_int_nu_dis_2",        // 23
-                                             "f_int_nu_dis_3",        // 24
-                                             "f_int_nubar_dis_1",     // 25
-                                             "f_int_nubar_dis_2",     // 26
-                                             "f_int_nubar_dis_3",     // 27
-                                             "f_int_nu_coh",          // 28
-                                             "f_int_nubar_coh",       // 29
-                                             "f_int_nu_nc",           // 30
-                                             "f_int_nubar_nc",        // 31
-                                             "f_int_nuenumu_dummy" }; // 32
+  const std::string valor_categories[33] = { "nu_ccqe_1",       // 0
+                                             "nu_ccqe_2",       // 1
+                                             "nu_ccqe_3",       // 2
+                                             "nubar_ccqe_1",    // 3
+                                             "nubar_ccqe_2",    // 4
+                                             "nubar_ccqe_3",    // 5
+                                             "nu_MEC_dummy",    // 6
+                                             "nubar_MEC_dummy", // 7
+                                             "nu_cc1piz_1",     // 8
+                                             "nu_cc1piz_2",     // 9
+                                             "nu_cc1piz_3",     // 10
+                                             "nu_cc1pic_1",     // 11
+                                             "nu_cc1pic_2",     // 12
+                                             "nu_cc1pic_3",     // 13
+                                             "nubar_cc1piz_1",  // 14
+                                             "nubar_cc1piz_2",  // 15
+                                             "nubar_cc1piz_3",  // 16
+                                             "nubar_cc1pic_1",  // 17
+                                             "nubar_cc1pic_2",  // 18
+                                             "nubar_cc1pic_3",  // 19
+                                             "nu_2pi",          // 20
+                                             "nubar_2pi",       // 21
+                                             "nu_dis_1",        // 22
+                                             "nu_dis_2",        // 23
+                                             "nu_dis_3",        // 24
+                                             "nubar_dis_1",     // 25
+                                             "nubar_dis_2",     // 26
+                                             "nubar_dis_3",     // 27
+                                             "nu_coh",          // 28
+                                             "nubar_coh",       // 29
+                                             "nu_nc",           // 30
+                                             "nubar_nc",        // 31
+                                             "nuenumu_dummy" }; // 32
 
   //----------------------------------------------------------------------
   std::string VALORCategoryName(EVALORCategory c)
@@ -183,7 +183,18 @@ namespace ana
       vc = 32;
     }
 
-    assert(vc >= 0);
+    if(vc == -1 && 
+       abs(lep) != 15 &&
+       abs(lep) != 16){ // we know taus need something doing to them
+      std::cout << "Could not determine VALOR category for event with\n"
+                << "lep:  " << lep << std::endl
+                << "scat: " << scat << std::endl
+                << "npiz: " << npiz << std::endl
+                << "npic: " << npic << std::endl
+                << "Enu:  " << Enu << std::endl
+                << "Q2:   " << Q2 << std::endl
+                << "Returning -1. Please come and fix this!" << std::endl;
+    }
 
     return EVALORCategory(vc);
   }
