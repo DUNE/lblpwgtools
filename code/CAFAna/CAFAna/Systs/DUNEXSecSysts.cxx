@@ -53,9 +53,7 @@ namespace ana
   //----------------------------------------------------------------------
   EVALORCategory GetVALORCategory(const caf::StandardRecord* sr)
   {
-    // TODO interpret FD modes
-
-    const int lep = sr->dune.LepPDG;
+    int lep = sr->dune.LepPDG;
     int scat = sr->dune.mode;
     const int npiz = sr->dune.nipi0;
     const int npic = sr->dune.nipip + sr->dune.nipim;
@@ -117,6 +115,12 @@ namespace ana
         abort();
       }
     }
+
+    // Treat nutaus as if they were numus for now
+    if(lep == -16) lep = -14;
+    if(lep == -15) lep = -13;
+    if(lep == +15) lep = +13;
+    if(lep == +16) lep = +14;
 
     int vc = -1;
 
@@ -183,9 +187,7 @@ namespace ana
       vc = 32;
     }
 
-    if(vc == -1 && 
-       abs(lep) != 15 &&
-       abs(lep) != 16){ // we know taus need something doing to them
+    if(vc == -1){
       std::cout << "Could not determine VALOR category for event with\n"
                 << "lep:  " << lep << std::endl
                 << "scat: " << scat << std::endl
