@@ -15,37 +15,6 @@
 
 namespace ana
 {
-  namespace
-  {
-    // We need some way to identify what components the user wants to vary in
-    // the fit. We just create N copies of this class, each one identifying one
-    // component. They're distinguished by their pointer values.
-    class DummyScaleCompSyst : public ana::ISyst
-    {
-    public:
-      DummyScaleCompSyst(int i) : fN(i) {}
-
-      std::set<std::string> Requires() const override { return {}; }
-
-      std::string ShortName() const override
-      {
-        return "CompNormShift_" + std::to_string(fN);
-      }
-
-      std::string LatexName() const override
-      {
-        return "Component Normalization Shift " + std::to_string(fN);
-      }
-
-      void Shift(double sigma, ana::Restorer&, caf::StandardRecord* sr,
-                 double& weight) const override
-      {
-      }
-    private:
-      int fN;
-    };
-  }
-
   //----------------------------------------------------------------------
   PredictionScaleComp::
   PredictionScaleComp(SpectrumLoaderBase& loader,
@@ -65,8 +34,8 @@ namespace ana
       complementCut = complementCut && !syst->GetCut();
     }
 
-    // The idea is that if truthcuts are exhaustive, this Spectrum should wind
-    // up empty
+    // This is the set of events that didn't wind up in any of the scaleable
+    // categories.
     fComplement = new PredictionNoOsc(loader, axis,
                                       cut && complementCut, shift, wei);
   }
@@ -82,6 +51,7 @@ namespace ana
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts&   shift,
                       const Var&          wei)
+    : fSysts(systs)
   {
     Cut complementCut = kNoCut;
 
