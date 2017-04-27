@@ -56,16 +56,16 @@ void kirk_dune()
   //  this binning is a primary determinant of the time this macro takes to run
 
   //  very coarse binning, just to test macro, will worsen results: ~ 45 min
-  int binsnumuE = 4;
-  int binsnumuPID = 4;
-  int binsnueE = 4;
-  int binsnuePID = 4;
+  //  int binsnumuE = 4;
+  //  int binsnumuPID = 4;
+  //  int binsnueE = 4;
+  //  int binsnuePID = 4;
 
   // full binning: 2-3 hours
-  //  int binsnumuE = 15;
-  //  int binsnumuPID = 15;
-  //  int binsnueE = 15;
-  //  int binsnuePID = 20;
+  int binsnumuE = 15;
+  int binsnumuPID = 15;
+  int binsnueE = 15;
+  int binsnuePID = 20;
 
   int binsnumu2d = binsnumuE*binsnumuPID;
   int binsnue2d = binsnumuE*binsnumuPID;
