@@ -170,12 +170,28 @@ namespace ana
 
     caf::StandardRecord sr;
     tr->SetBranchAddress("Ev_reco", &sr.dune.Ev_reco);
+    tr->SetBranchAddress("Elep_reco", &sr.dune.Elep_reco);
     tr->SetBranchAddress("mvaresult", &sr.dune.mvaresult);
+    tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
+    tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
+    tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
 
     tr->SetBranchAddress("Ev", &sr.dune.Ev);
+    tr->SetBranchAddress("Elep", &sr.dune.Elep);
     tr->SetBranchAddress("ccnc", &sr.dune.ccnc);
     tr->SetBranchAddress("beamPdg", &sr.dune.beamPdg);
     tr->SetBranchAddress("neu", &sr.dune.neu);
+    tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
+    tr->SetBranchAddress("mode", &sr.dune.mode);
+    tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
+    tr->SetBranchAddress("nipip", &sr.dune.nipip);
+    tr->SetBranchAddress("nipim", &sr.dune.nipim);
+    tr->SetBranchAddress("Q2", &sr.dune.Q2);
+
+    tr->SetBranchAddress("run", &sr.dune.run);
+    tr->SetBranchAddress("isFD", &sr.dune.isFD);
+    tr->SetBranchAddress("isFHC", &sr.dune.isFHC);
+
 
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){

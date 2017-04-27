@@ -13,6 +13,7 @@
 // To implement LoadFrom()
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
+#include "CAFAna/Prediction/PredictionNoOsc.h"
 
 namespace ana
 {
@@ -30,6 +31,8 @@ namespace ana
     // Backwards compatibility
     if(tag == "PredictionInterp" ||
        tag == "PredictionInterp2") return PredictionInterp::LoadFrom(dir);
+
+    if(tag == "PredictionNoOsc") return PredictionNoOsc::LoadFrom(dir);
 
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();

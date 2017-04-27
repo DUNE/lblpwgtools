@@ -1,7 +1,7 @@
 PACKAGE     := CAFAna
 LIB_TYPE    := shared
 LIB         := lib$(PACKAGE)
-SUBDIRS     := Core Vars Cuts Experiment Extrap Prediction Analysis # Vars Cuts Systs Unfold Decomp Experiment Extrap FC Prediction Analysis XSec grid
+SUBDIRS     := Core Vars Cuts Experiment Extrap Prediction Analysis Systs # Vars Cuts Systs Unfold Decomp Experiment Extrap FC Prediction Analysis XSec grid
 LIBCXXFILES := $(wildcard *.cxx)
 
 
