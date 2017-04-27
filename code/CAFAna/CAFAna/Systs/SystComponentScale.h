@@ -35,6 +35,11 @@ namespace ana
                caf::StandardRecord* sr,
                double& weight) const override;
 
+    // Some derived classes might have a back-channel allowing them to
+    // implement this.
+    static std::unique_ptr<SystComponentScale> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir) const {assert(0 && "unimplemented");}
+
   protected:
     std::string fShortName;
     std::string fLatexName;

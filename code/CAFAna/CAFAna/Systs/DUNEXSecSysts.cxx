@@ -6,6 +6,7 @@
 
 #include "TFile.h"
 #include "TH2.h"
+#include "TObjString.h"
 
 namespace ana
 {
@@ -215,6 +216,49 @@ namespace ana
     fOneSigma = h->GetBinContent(int(cat)+1, int(cat)+1);
   }
 
+  //----------------------------------------------------------------------
+  void DUNEXSecSyst::SaveTo(TDirectory* dir) const
+  {
+    TDirectory* tmp = gDirectory;
+    dir->cd();
+
+    TObjString("DUNEXSecSyst").Write("type");
+    TObjString(fShortName.c_str()).Write("name");
+
+    tmp->cd();
+  }
+
+  //----------------------------------------------------------------------
+  std::unique_ptr<DUNEXSecSyst> DUNEXSecSyst::LoadFrom(TDirectory* dir)
+  {
+    TObjString* pname = (TObjString*)dir->Get("name");
+    assert(pname);
+
+    for(int i = 0; i < 32; ++i){
+      const DUNEXSecSyst* s = GetDUNEXSecSyst(EVALORCategory(i));
+      if(s->ShortName() == pname->GetString())
+        return std::unique_ptr<DUNEXSecSyst>((DUNEXSecSyst*)s);
+    }
+    std::cout << "DUNEXSecSyst::LoadFrom(): unknown name " << pname->GetString() << std::endl;
+    abort();
+  }
+
+  //----------------------------------------------------------------------
+  const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory cat)
+  {
+    // Make sure we always give the same one back
+    static std::vector<const DUNEXSecSyst*> scs(32);
+    if(!scs[cat]) scs[cat] = new DUNEXSecSyst(cat);
+    return scs[cat];
+  }
+
+  //----------------------------------------------------------------------
+  SystComponentScaleVector GetDUNEXSecSysts()
+  {
+    SystComponentScaleVector ret;
+    for(int i = 0; i < 32; ++i) ret.push_back(GetDUNEXSecSyst(EVALORCategory(i)));
+    return ret;
+  }
 
   //----------------------------------------------------------------------
   DUNEXSecCorrelation::DUNEXSecCorrelation(const PredictionScaleComp* psc)

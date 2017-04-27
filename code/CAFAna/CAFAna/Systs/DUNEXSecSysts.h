@@ -56,18 +56,15 @@ namespace ana
 
   class DUNEXSecSyst: public SystComponentScale
   {
+  public:
+    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir) const override;
   protected:
-    friend const SystComponentScale* GetDUNEXSecSyst(EVALORCategory);
+    friend const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory);
     DUNEXSecSyst(EVALORCategory cat);
   };
 
-  const SystComponentScale* GetDUNEXSecSyst(EVALORCategory cat)
-  {
-    // Make sure we always give the same one back
-    static std::vector<const SystComponentScale*> scs(32);
-    if(!scs[cat]) scs[cat] = new DUNEXSecSyst(cat);
-    return scs[cat];
-  }
+  const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory cat);
 
   // Because vector<T*> won't automatically convert to vector<U*> even when U
   // inherits from V.
@@ -79,12 +76,7 @@ namespace ana
     }    
   };
 
-  SystComponentScaleVector GetDUNEXSecSysts()
-  {
-    SystComponentScaleVector ret;
-    for(int i = 0; i < 32; ++i) ret.push_back(GetDUNEXSecSyst(EVALORCategory(i)));
-    return ret;
-  }
+  SystComponentScaleVector GetDUNEXSecSysts();
 
 
   class DUNEXSecCorrelation: public IExperiment

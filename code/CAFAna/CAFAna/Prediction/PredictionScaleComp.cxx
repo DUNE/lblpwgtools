@@ -149,8 +149,6 @@ namespace ana
   //----------------------------------------------------------------------
   void PredictionScaleComp::SaveTo(TDirectory* dir) const
   {
-    assert(0 && "No solution for serializing Systs...");
-
     TDirectory* tmp = gDirectory;
     dir->cd();
 
@@ -162,26 +160,35 @@ namespace ana
       fPreds[i]->SaveTo(dir->mkdir(("pred"+std::to_string(i)).c_str()));
     }
 
+    for(unsigned int i = 0; i < fSysts.size(); ++i){
+      fSysts[i]->SaveTo(dir->mkdir(("syst"+std::to_string(i)).c_str()));
+    }
+
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionScaleComp> PredictionScaleComp::LoadFrom(TDirectory* dir)
   {
-    assert(0 && "No solution for serializing Systs...");
-
     IPrediction* complement = ana::LoadFrom<IPrediction>(dir->GetDirectory("complement")).release();
 
     std::vector<const IPrediction*> preds;
-
     for(unsigned int i = 0; ; ++i){
-      const IPrediction* p = ana::LoadFrom<IPrediction>(dir->GetDirectory(("pred"+std::to_string(i)).c_str())).release();
-      if(!p) break; // We got all the predictions
+      TDirectory* di = dir->GetDirectory(("pred"+std::to_string(i)).c_str());
+      if(!di) break; // We got all the predictions
 
-      preds.push_back(p);
+      preds.push_back(ana::LoadFrom<IPrediction>(di).release());
     }
 
-    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(complement, preds, {}));
+    std::vector<const SystComponentScale*> systs;
+    for(unsigned int i = 0; ; ++i){
+      TDirectory* si = dir->GetDirectory(("syst"+std::to_string(i)).c_str());
+      if(!si) break; // We got all the predictions
+
+      systs.push_back(ana::LoadFrom<SystComponentScale>(si).release());
+    }
+
+    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(complement, preds, systs));
   }
 
 }
