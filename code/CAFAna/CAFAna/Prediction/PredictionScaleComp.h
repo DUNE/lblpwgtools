@@ -64,13 +64,13 @@ namespace ana
     virtual void SaveTo(TDirectory* dir) const;
 
   private:
-    PredictionScaleComp(const IPrediction* complement,
+    PredictionScaleComp(const IPrediction* total,
                         const std::vector<const IPrediction*>& preds,
                         const std::vector<const SystComponentScale*>& systs);
 
     std::vector<const SystComponentScale*> fSysts;
     std::vector<const IPrediction*> fPreds;
 
-    const IPrediction* fComplement;
+    const IPrediction* fTotal;
   };
 }

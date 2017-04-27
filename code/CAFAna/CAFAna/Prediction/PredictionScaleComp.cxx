@@ -31,13 +31,9 @@ namespace ana
     for(const SystComponentScale* syst: systs){
       fPreds.push_back(new PredictionNoOsc(loader, axis,
                                            cut && syst->GetCut(), shift, wei));
-      complementCut = complementCut && !syst->GetCut();
     }
 
-    // This is the set of events that didn't wind up in any of the scaleable
-    // categories.
-    fComplement = new PredictionNoOsc(loader, axis,
-                                      cut && complementCut, shift, wei);
+    fTotal = new PredictionNoOsc(loader, axis, cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
@@ -53,19 +49,14 @@ namespace ana
                       const Var&          wei)
     : fSysts(systs)
   {
-    Cut complementCut = kNoCut;
-
     assert(!systs.empty() && "Please give at least one systematic.");
     for(const SystComponentScale* syst: systs){
       fPreds.push_back(new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
                                               axis, cut && syst->GetCut(), shift, wei));
-      complementCut = complementCut && !syst->GetCut();
     }
 
-    // This is the set of events that didn't wind up in any of the scaleable
-    // categories.
-    fComplement = new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
-                                         axis, cut && complementCut, shift, wei);
+    fTotal = new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+                                    axis, cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
@@ -99,12 +90,12 @@ namespace ana
 
   //----------------------------------------------------------------------
   PredictionScaleComp::
-  PredictionScaleComp(const IPrediction* complement,
+  PredictionScaleComp(const IPrediction* total,
                       const std::vector<const IPrediction*>& preds,
                       const std::vector<const SystComponentScale*>& systs)
     : fSysts(systs),
       fPreds(preds),
-      fComplement(complement)
+      fTotal(total)
   {
   }
 
@@ -112,17 +103,13 @@ namespace ana
   PredictionScaleComp::~PredictionScaleComp()
   {
     for(const IPrediction* p: fPreds) delete p;
-    delete fComplement;
+    delete fTotal;
   }
 
   //----------------------------------------------------------------------
   Spectrum PredictionScaleComp::Predict(osc::IOscCalculator* calc) const
   {
-    Spectrum ret = fComplement->Predict(calc);
-
-    for(const IPrediction* p: fPreds) ret += p->Predict(calc);
-
-    return ret;
+    return fTotal->Predict(calc);
   }
 
   //----------------------------------------------------------------------
@@ -132,13 +119,17 @@ namespace ana
     SystShifts shiftClean = shift;
     for(const ISyst* s: fSysts) shiftClean.SetShift(s, 0);
 
-    Spectrum ret = fComplement->PredictSyst(calc, shiftClean);
+    // Starting with the total and adding in the differences for components
+    // that need to change is faster if most of the knobs are set to zero.
+    Spectrum ret = fTotal->PredictSyst(calc, shiftClean);
 
     for(unsigned int i = 0; i < fPreds.size(); ++i){
-      Spectrum si = fPreds[i]->PredictSyst(calc, shiftClean);
-      si.Scale(1 + shift.GetShift(fSysts[i]));
+      const double x = shift.GetShift(fSysts[i]);
+      if(x == 0) continue; // Nominal, can skip
 
-      si.Scale(pow(1+fSysts[i]->OneSigmaScale(), shift.GetShift(fSysts[i])));
+      Spectrum si = fPreds[i]->PredictSyst(calc, shiftClean);
+
+      si.Scale(pow(1+fSysts[i]->OneSigmaScale(), x) - 1);
 
       ret += si;
     }
@@ -154,7 +145,7 @@ namespace ana
 
     TObjString("PredictionScaleComp").Write("type");
 
-    fComplement->SaveTo(dir->mkdir("complement"));
+    fTotal->SaveTo(dir->mkdir("total"));
 
     for(unsigned int i = 0; i < fPreds.size(); ++i){
       fPreds[i]->SaveTo(dir->mkdir(("pred"+std::to_string(i)).c_str()));
@@ -170,7 +161,7 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionScaleComp> PredictionScaleComp::LoadFrom(TDirectory* dir)
   {
-    IPrediction* complement = ana::LoadFrom<IPrediction>(dir->GetDirectory("complement")).release();
+    IPrediction* total = ana::LoadFrom<IPrediction>(dir->GetDirectory("total")).release();
 
     std::vector<const IPrediction*> preds;
     for(unsigned int i = 0; ; ++i){
@@ -188,7 +179,7 @@ namespace ana
       systs.push_back(ana::LoadFrom<SystComponentScale>(si).release());
     }
 
-    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(complement, preds, systs));
+    return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(total, preds, systs));
   }
 
 }
