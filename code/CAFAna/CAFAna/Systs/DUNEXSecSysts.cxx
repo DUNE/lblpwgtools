@@ -261,9 +261,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  DUNEXSecCorrelation::DUNEXSecCorrelation(const PredictionScaleComp* psc)
-    : fMatrix(32, 32)//, fSysts(psc->GetSysts()) // TODO TODO TODO
+  DUNEXSecCorrelation::DUNEXSecCorrelation()
+    : fMatrix(32, 32)
   {
+    fSysts = GetDUNEXSecSysts();
     assert(fSysts.size() == 32);
 
     TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
@@ -285,9 +286,11 @@ namespace ana
                                     const SystShifts& syst) const
   {
     double ret = 0;
-    // Don't double-count diagonals
+    // Don't double-count diagonal terms which SystShifts::Penalty() already
+    // applied
     for(int i = 0; i < 32; ++i) ret -= util::sqr(syst.GetShift(fSysts[i]));
 
+    // Scale the shift vector from sigmas into fractional shifts
     TVectorD v(32);
     for(int i = 0; i < 32; ++i)
       v[i] = syst.GetShift(fSysts[i]) * fScales[i];

@@ -82,7 +82,7 @@ namespace ana
   class DUNEXSecCorrelation: public IExperiment
   {
   public:
-    DUNEXSecCorrelation(const PredictionScaleComp* psc);
+    DUNEXSecCorrelation();
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
