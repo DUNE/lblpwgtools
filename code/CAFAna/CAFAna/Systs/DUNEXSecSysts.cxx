@@ -213,7 +213,7 @@ namespace ana
 
     TH2* h = (TH2*)f.Get("xs_covariance");
 
-    fOneSigma = h->GetBinContent(int(cat)+1, int(cat)+1);
+    fOneSigma = sqrt( h->GetBinContent(int(cat)+1, int(cat)+1) );
   }
 
   //----------------------------------------------------------------------
