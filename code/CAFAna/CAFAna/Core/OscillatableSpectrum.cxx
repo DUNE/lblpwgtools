@@ -8,6 +8,8 @@
 
 #include "StandardRecord/StandardRecord.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
 #include "TDirectory.h"
 #include "TH2.h"
 #include "TObjString.h"
@@ -35,7 +37,8 @@ namespace ana
                        const SystShifts& shift,
                        const Var& wei,
                        int potRun)
-    : ReweightableSpectrum(label, bins, kTrueE)
+    : ReweightableSpectrum(label, bins, kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
     fPOTRun = potRun;
 
@@ -55,7 +58,8 @@ namespace ana
                                              const SystShifts& shift,
                                              const Var& wei,
                                              int potRun)
-    : ReweightableSpectrum(axis.GetLabels(), axis.GetBinnings(), kTrueE)
+    : ReweightableSpectrum(axis.GetLabels(), axis.GetBinnings(), kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
     fPOTRun = potRun;
 
@@ -91,7 +95,8 @@ namespace ana
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(std::string label,
                                              const Binning& bins)
-    : ReweightableSpectrum(label, bins, kTrueE)
+    : ReweightableSpectrum(label, bins, kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
     fTrueLabel = "True Energy (GeV)";
 
@@ -106,7 +111,8 @@ namespace ana
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(std::string label, double pot, double livetime,
                                              const Binning& bins)
-    : ReweightableSpectrum(label, bins, kTrueE)
+    : ReweightableSpectrum(label, bins, kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
     fTrueLabel = "True Energy (GeV)";
 
@@ -123,7 +129,8 @@ namespace ana
                                              const std::vector<std::string>& labels,
                                              const std::vector<Binning>& bins,
                                              double pot, double livetime)
-    : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime)
+    : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
     fTrueLabel = "True Energy (GeV)";
   }
@@ -140,8 +147,12 @@ namespace ana
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(const OscillatableSpectrum& rhs)
-    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE)
+    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(rhs.fOscHash),
+      fOscCacheFrom(rhs.fOscCacheFrom), fOscCacheTo(rhs.fOscCacheTo)
   {
+    if(rhs.fOscHash != kUninitHash) fOscCache = rhs.fOscCache;
+
     DontAddDirectory guard;
 
     fHist = HistCache::Copy(rhs.fHist);
@@ -154,8 +165,12 @@ namespace ana
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(OscillatableSpectrum&& rhs)
-    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE)
+    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
+      fOscCache(0, {}, {}, 0, 0), fOscHash(rhs.fOscHash),
+      fOscCacheFrom(rhs.fOscCacheFrom), fOscCacheTo(rhs.fOscCacheTo)
   {
+    if(rhs.fOscHash != kUninitHash) fOscCache = rhs.fOscCache;
+
     DontAddDirectory guard;
 
     fHist = rhs.fHist;
@@ -171,6 +186,13 @@ namespace ana
   OscillatableSpectrum& OscillatableSpectrum::operator=(const OscillatableSpectrum& rhs)
   {
     if(this == &rhs) return *this;
+
+    if(rhs.fOscHash != kUninitHash){
+      fOscCache = rhs.fOscCache;
+      fOscHash = rhs.fOscHash;
+      fOscCacheFrom = rhs.fOscCacheFrom;
+      fOscCacheTo = rhs.fOscCacheTo;
+    }
 
     DontAddDirectory guard;
 
@@ -191,6 +213,13 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
+    if(rhs.fOscHash != kUninitHash){
+      fOscCache = rhs.fOscCache;
+      fOscHash = rhs.fOscHash;
+      fOscCacheFrom = rhs.fOscCacheFrom;
+      fOscCacheTo = rhs.fOscCacheTo;
+    }
+
     DontAddDirectory guard;
 
     HistCache::Delete(fHist);
@@ -210,9 +239,23 @@ namespace ana
   Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalculator* calc,
                                             int from, int to) const
   {
+    std::unique_ptr<TMD5> hash(calc->GetParamsHash());
+
+    if(from == fOscCacheFrom && to == fOscCacheTo &&
+       hash && *hash == fOscHash){
+      return fOscCache;
+    }
+
     const OscCurve curve(calc, from, to);
     std::unique_ptr<TH1> Ps(curve.ToTH1()); // Don't leak the histogram
-    return WeightedBy(Ps.get());
+    Spectrum ret = WeightedBy(Ps.get());
+    if(hash){
+      fOscHash = *hash;
+      fOscCache = ret;
+      fOscCacheFrom = from;
+      fOscCacheTo = to;
+    }
+    return ret;
   }
 
   //----------------------------------------------------------------------

@@ -86,25 +86,25 @@ namespace ana
                   const SystShifts& shift = kNoShift,
                   const Var& wei = kUnweighted);
 
-    virtual OscillatableSpectrum NueSurvComponent()       {return fNueSurv;}
-    virtual OscillatableSpectrum AntiNueSurvComponent()   {return fNueSurvAnti;}
+    virtual const OscillatableSpectrum & NueSurvComponent()       {return fNueSurv;}
+    virtual const OscillatableSpectrum & AntiNueSurvComponent()   {return fNueSurvAnti;}
 
-    virtual OscillatableSpectrum NumuSurvComponent()      {return fNumuSurv;}
-    virtual OscillatableSpectrum AntiNumuSurvComponent()  {return fNumuSurvAnti;}
+    virtual const OscillatableSpectrum & NumuSurvComponent()      {return fNumuSurv;}
+    virtual const OscillatableSpectrum & AntiNumuSurvComponent()  {return fNumuSurvAnti;}
 
-    virtual OscillatableSpectrum NueAppComponent()        {return fNueApp;}
-    virtual OscillatableSpectrum AntiNueAppComponent()    {return fNueAppAnti;}
+    virtual const OscillatableSpectrum & NueAppComponent()        {return fNueApp;}
+    virtual const OscillatableSpectrum & AntiNueAppComponent()    {return fNueAppAnti;}
 
-    virtual OscillatableSpectrum NumuAppComponent()       {return fNumuApp;}
-    virtual OscillatableSpectrum AntiNumuAppComponent()   {return fNumuAppAnti;}
+    virtual const OscillatableSpectrum & NumuAppComponent()       {return fNumuApp;}
+    virtual const OscillatableSpectrum & AntiNumuAppComponent()   {return fNumuAppAnti;}
 
-    virtual OscillatableSpectrum TauFromEComponent()      {return fTauFromE;}
-    virtual OscillatableSpectrum AntiTauFromEComponent()  {return fTauFromEAnti;}
+    virtual const OscillatableSpectrum & TauFromEComponent()      {return fTauFromE;}
+    virtual const OscillatableSpectrum & AntiTauFromEComponent()  {return fTauFromEAnti;}
 
-    virtual OscillatableSpectrum TauFromMuComponent()     {return fTauFromMu;}
-    virtual OscillatableSpectrum AntiTauFromMuComponent() {return fTauFromMuAnti;}
+    virtual const OscillatableSpectrum & TauFromMuComponent()     {return fTauFromMu;}
+    virtual const OscillatableSpectrum & AntiTauFromMuComponent() {return fTauFromMuAnti;}
 
-    virtual Spectrum NCComponent() {return fNC;}
+    virtual const Spectrum& NCComponent() {return fNC;}
 
     virtual void SaveTo(TDirectory* dir) const;
     static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir);

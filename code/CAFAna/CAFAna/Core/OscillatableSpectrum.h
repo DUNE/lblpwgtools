@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "TMD5.h"
+
 class TH2;
 class TH2D;
 
@@ -88,15 +90,27 @@ namespace ana
     OscillatableSpectrum(const std::vector<std::string>& labels,
                          const std::vector<Binning>& bins,
                          const Var& rwVar)
-      : ReweightableSpectrum(labels, bins, rwVar)
+      : ReweightableSpectrum(labels, bins, rwVar),
+        fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
     {
     }
 
     OscillatableSpectrum(const std::string& label,
                          const Binning& bins,
                          const Var& rwVar)
-      : ReweightableSpectrum(label, bins, rwVar)
+      : ReweightableSpectrum(label, bins, rwVar),
+        fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
     {
     }
+
+    const unsigned char kUninitHashData[16] = {0, 0, 0, 0,
+                                               0, 0, 0, 0,
+                                               0, 0, 0, 0,
+                                               0, 0, 0, 0};
+    const TMD5 kUninitHash = TMD5(kUninitHashData);
+          
+    mutable Spectrum fOscCache;
+    mutable TMD5 fOscHash;
+    mutable int fOscCacheFrom, fOscCacheTo;
   };
 }
