@@ -36,10 +36,16 @@ const HistAxis axis("Reconstructed energy (GeV)",
                     Binning::Simple(40, 0, 10),
                     kRecoE);
 
+const HistAxis axisPID("MVA result",
+                       Binning::Simple(60, -1.1, +1.1),
+                       kPIDFD);
+
 // One year
 const double potND = 1.47e21;
 // POT/yr * 3.5yrs * mass correction
 const double potFD = 3.5 * 1.47e21 * 40/1.13;
+
+const char* stateFname = "joint_fit_state.root";
 
 void Legend(const std::string& title)
 {
@@ -96,6 +102,10 @@ void StackPlot(const PredictionScaleComp& pred,
   cols[nu_nc] = kGray+1;
   cols[nubar_nc] = kGray;
 
+  // Draw the total first, so we can check if there are any uncategorized
+  // events.
+  pred.Predict(calc).ToTH1(pot)->Draw("hist");
+
   std::vector<std::pair<Spectrum, Color_t>> cats;
 
   for(int i = 0; i < 32; ++i){
@@ -104,7 +114,7 @@ void StackPlot(const PredictionScaleComp& pred,
     cats.emplace_back(s, cols[e]);
   }
   THStack* stack = ToTHStack(cats, pot);
-  stack->Draw();
+  stack->Draw("same");
   stack->GetXaxis()->SetTitle("Reconstructed energy (GeV)");
   stack->GetYaxis()->SetTitle("Events");
 
@@ -124,7 +134,7 @@ void joint_fit(bool reload = false)
 {
   rootlogon(); // style
 
-  if(reload || TFile("joint_fit_state.root").IsZombie()){
+  if(reload || TFile(stateFname).IsZombie()){
     SpectrumLoader loaderNDFHC("/dune/data/users/marshalc/NDTF_FGT_FHC.root");
     SpectrumLoader loaderNDRHC("/dune/data/users/marshalc/NDTF_FGT_RHC.root");
 
@@ -181,7 +191,7 @@ void joint_fit(bool reload = false)
                                      *loaderFDNueFHCNuTau,
                                      *loaderFDNueFHCNC,
                                      axis,
-                                     kPIDFD > 0.8,
+                                     kPIDFD > 0.95,
                                      GetDUNEXSecSysts());
 
     PredictionScaleComp predFDNumuRHC(*loaderFDNumuRHCBeam, 
@@ -197,7 +207,7 @@ void joint_fit(bool reload = false)
                                      *loaderFDNueRHCNuTau,
                                      *loaderFDNueRHCNC,
                                      axis,
-                                     kPIDFD > 0.8,
+                                     kPIDFD > 0.95,
                                      GetDUNEXSecSysts());
 
     loaderNDFHC.Go();
@@ -207,20 +217,20 @@ void joint_fit(bool reload = false)
     loaderFDNumuRHC.Go();
     loaderFDNueRHC.Go();
 
-    TFile fout("joint_fit_state.root", "RECREATE");
+    TFile fout(stateFname, "RECREATE");
     predNDFHC.SaveTo(fout.mkdir("nd_fhc"));
     predNDRHC.SaveTo(fout.mkdir("nd_rhc"));
     predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
     predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
     predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
     predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
-    std::cout << "Saved state to joint_fit_state.root" << std::endl;
+    std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
-    std::cout << "Loading state from joint_fit_state.root" << std::endl;
+    std::cout << "Loading state from " << stateFname << std::endl;
   }
 
-  TFile fin("joint_fit_state.root");
+  TFile fin(stateFname);
   PredictionScaleComp& predNDFHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("nd_fhc")).release();
   PredictionScaleComp& predNDRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("nd_rhc")).release();
   PredictionScaleComp& predFDNumuFHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_numu_fhc")).release();
@@ -228,6 +238,7 @@ void joint_fit(bool reload = false)
   PredictionScaleComp& predFDNumuRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_numu_rhc")).release();
   PredictionScaleComp& predFDNueRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_nue_rhc")).release();
   fin.Close();
+  std::cout << "Done loading state" << std::endl;
 
   // Make matching FD Asimov fake data, plus some oscillations
   osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
