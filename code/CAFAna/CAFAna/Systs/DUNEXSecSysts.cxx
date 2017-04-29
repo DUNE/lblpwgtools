@@ -270,6 +270,7 @@ namespace ana
     TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
 
     TH2* h = (TH2*)f.Get("xs_covariance");
+    EnsurePositiveDefinite(h);
 
     for(int i = 0; i < 32; ++i){
       fScales.push_back(sqrt(h->GetBinContent(i+1, i+1)));

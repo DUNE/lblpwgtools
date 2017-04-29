@@ -231,4 +231,6 @@ namespace ana
     const int    fNOsc; // Highest harmonic to include
     
   };
+
+  void EnsurePositiveDefinite(TH2* mat);
 }

@@ -294,10 +294,10 @@ void joint_fit(bool reload = false)
                                                   &kFitDeltaInPiUnits};
 
   // Use everything - slow
-  //  const std::vector<const ISyst*> systFitVars = GetDUNEXSecSysts();
+  const std::vector<const ISyst*> systFitVars = GetDUNEXSecSysts();
   // Fit a reduced list of variables of interest
-    const std::vector<const ISyst*> systFitVars = {GetDUNEXSecSyst(nu_MEC_dummy),
-                                                   GetDUNEXSecSyst(nubar_MEC_dummy)};
+  //    const std::vector<const ISyst*> systFitVars = {GetDUNEXSecSyst(nu_MEC_dummy),
+  //                                                   GetDUNEXSecSyst(nubar_MEC_dummy)};
 
   // Set up the fit
   Fitter fit(&expt, oscFitVars, systFitVars);

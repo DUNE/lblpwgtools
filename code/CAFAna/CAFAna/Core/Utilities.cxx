@@ -659,4 +659,36 @@ namespace ana
     f->GetYaxis()->SetRangeUser(0.8*min, 1.2*max);
     return f;
   }
+
+  //----------------------------------------------------------------------
+  void EnsurePositiveDefinite(TH2* mat)
+  {
+    // Convert histogram to a proper matrix
+    assert(mat->GetNbinsX() == mat->GetNbinsY());
+    const int N = mat->GetNbinsX();
+    TMatrixD m(N, N);
+    for(int i = 0; i < N; ++i)
+      for(int j = 0; j < N; ++j)
+        m(i, j) = mat->GetBinContent(i+1, j+1);
+
+    // Decompose it
+    TVectorD evals;
+    TMatrixD evecs = m.EigenVectors(evals);
+    TMatrixD evalmat(N, N);
+    // Force any negative eigenvalues slightly positive (floating point errors)
+    for(int i = 0; i < N; ++i) evalmat(i, i) = std::max(1e-14, evals[i]);
+
+    // Put the original matrix back together
+    const TMatrixD evecs_inv(TMatrixD::kTransposed, evecs);
+    m = evecs*evalmat*evecs_inv;
+
+    // Decompose again to check for floating point problems
+    m.EigenVectors(evals);
+    for(int i = 0; i < N; ++i) assert(evals[i] > 0);
+
+    // Copy the new matrix contents back into the histogram
+    for(int i = 0; i < N; ++i)
+      for(int j = 0; j < N; ++j)
+        mat->SetBinContent(i+1, j+1, m(i, j));
+  }
 }
