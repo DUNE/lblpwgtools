@@ -58,7 +58,8 @@ namespace ana
       assert(0 && "Please don't use PredictionScaleComp::PredictComponent");
     }
 
-    //    std::vector<Spectrum*> GetSpectra() const { return fSpectra; }
+    Spectrum PredictCategory(osc::IOscCalculator* osc,
+                             const SystComponentScale* syst) const;
 
     static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
     virtual void SaveTo(TDirectory* dir) const;

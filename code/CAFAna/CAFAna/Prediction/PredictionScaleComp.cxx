@@ -138,6 +138,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum PredictionScaleComp::
+  PredictCategory(osc::IOscCalculator* osc,
+                  const SystComponentScale* syst) const
+  {
+    for(unsigned int i = 0; i < fSysts.size(); ++i){
+      if(fSysts[i] == syst) return fPreds[i]->Predict(osc);
+    }
+
+    std::cout << "PredictionScaleComp::PredictCategory(): Unknown systematic " << syst->ShortName() << std::endl;
+    abort();
+  }
+
+  //----------------------------------------------------------------------
   void PredictionScaleComp::SaveTo(TDirectory* dir) const
   {
     TDirectory* tmp = gDirectory;

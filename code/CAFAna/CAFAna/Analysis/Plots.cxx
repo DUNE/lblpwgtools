@@ -315,7 +315,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  THStack* ToTHStack(const std::vector<std::pair<const Spectrum&, Color_t>>& s,
+  THStack* ToTHStack(const std::vector<std::pair<Spectrum, Color_t>>& s,
                      double pot)
   {
     THStack* ret = new THStack;

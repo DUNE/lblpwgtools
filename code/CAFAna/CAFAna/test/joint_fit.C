@@ -12,6 +12,7 @@ void joint_fit(bool reload = false){}
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Vars/FitVars.h"
 
 using namespace ana;
@@ -23,6 +24,7 @@ using namespace ana;
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TLegend.h"
+#include "THStack.h"
 
 const Var kRecoE = SIMPLEVAR(dune.Ev_reco);
 const Var kPIDmu = SIMPLEVAR(dune.numu_pid);
@@ -52,6 +54,69 @@ void Legend(const std::string& title)
   leg->AddEntry(dummy->Clone(), "Nominal MC", "l");
   dummy->SetLineColor(kBlue);
   leg->AddEntry(dummy->Clone(), "Best fit", "l");
+  leg->Draw();
+}
+
+void StackPlot(const PredictionScaleComp& pred,
+               const std::string& title,
+               double pot,
+               osc::IOscCalculator* calc = 0)
+{
+  std::map<EVALORCategory, Color_t> cols;
+  cols[nu_ccqe_1] = kRed;
+  cols[nu_ccqe_2] = kRed+1;
+  cols[nu_ccqe_3] = kRed+2;
+  cols[nubar_ccqe_1] = kRed-7;
+  cols[nubar_ccqe_2] = kRed-9;
+  cols[nubar_ccqe_3] = kRed-10;
+  cols[nu_MEC_dummy] = kYellow;
+  cols[nubar_MEC_dummy] = kYellow+1;
+  cols[nu_cc1piz_1] = kBlue+1;
+  cols[nu_cc1piz_2] = kBlue+2;
+  cols[nu_cc1piz_3] = kBlue+3;
+  cols[nu_cc1pic_1] = kGreen;
+  cols[nu_cc1pic_2] = kGreen+1;
+  cols[nu_cc1pic_3] = kGreen+2;
+  cols[nubar_cc1piz_1] = kBlue-7;
+  cols[nubar_cc1piz_2] = kBlue-9;
+  cols[nubar_cc1piz_3] = kBlue-10;
+  cols[nubar_cc1pic_1] = kGreen-7;
+  cols[nubar_cc1pic_2] = kGreen-9;
+  cols[nubar_cc1pic_3] = kGreen-10;
+  cols[nu_2pi] = kOrange+7;
+  cols[nubar_2pi] = kOrange-3;
+  cols[nu_dis_1] = kMagenta;
+  cols[nu_dis_2] = kMagenta+1;
+  cols[nu_dis_3] = kMagenta+2;
+  cols[nubar_dis_1] = kMagenta-7;
+  cols[nubar_dis_2] = kMagenta-9;
+  cols[nubar_dis_3] = kMagenta-10;
+  cols[nu_coh] = kCyan;
+  cols[nubar_coh] = kCyan+1;
+  cols[nu_nc] = kGray+1;
+  cols[nubar_nc] = kGray;
+
+  std::vector<std::pair<Spectrum, Color_t>> cats;
+
+  for(int i = 0; i < 32; ++i){
+    const EVALORCategory e = EVALORCategory(i);
+    Spectrum s = pred.PredictCategory(calc, GetDUNEXSecSyst(e));
+    cats.emplace_back(s, cols[e]);
+  }
+  THStack* stack = ToTHStack(cats, pot);
+  stack->Draw();
+  stack->GetXaxis()->SetTitle("Reconstructed energy (GeV)");
+  stack->GetYaxis()->SetTitle("Events");
+
+  TLegend* leg = new TLegend(.7, .3, .9, .85);
+  leg->SetFillStyle(0);
+  leg->AddEntry((TObject*)0, ("#bf{"+title+"}").c_str(), "");
+  for(int i = 0; i < 32; ++i){
+    const EVALORCategory e = EVALORCategory(i);
+    TH1* dummy = new TH1F("", "", 1, 0, 1);
+    dummy->SetFillColor(cols[e]);
+    leg->AddEntry(dummy, VALORCategoryName(e).c_str(), "bf");
+  }
   leg->Draw();
 }
 
@@ -164,6 +229,31 @@ void joint_fit(bool reload = false)
   PredictionScaleComp& predFDNueRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_nue_rhc")).release();
   fin.Close();
 
+  // Make matching FD Asimov fake data, plus some oscillations
+  osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
+  inputOsc->SetdCP(1.5*TMath::Pi());
+
+  new TCanvas;
+  StackPlot(predNDFHC, "ND FHC", potND);
+  gPad->Print("cats_nd_fhc_numu.pdf");
+  new TCanvas;
+  StackPlot(predNDRHC, "ND RHC", potND);
+  gPad->Print("cats_nd_rhc_numu.pdf");
+
+  new TCanvas;
+  StackPlot(predFDNumuFHC, "FD FHC #nu_{#mu}", potFD, inputOsc);
+  gPad->Print("cats_fd_fhc_numu.pdf");
+  new TCanvas;
+  StackPlot(predFDNueFHC,  "FD FHC #nu_{e}",   potFD, inputOsc);
+  gPad->Print("cats_fd_fhc_nue.pdf");
+  new TCanvas;
+  StackPlot(predFDNumuRHC, "FD RHC #nu_{#mu}", potFD, inputOsc);
+  gPad->Print("cats_fd_rhc_numu.pdf");
+  new TCanvas;
+  StackPlot(predFDNueRHC,  "FD RHC #nu_{e}",   potFD, inputOsc);
+  gPad->Print("cats_fd_rhc_nue.pdf");
+
+
   // What systematic parameters will we shift in the fake data?
   DUNEXSecSyst nushift(nu_MEC_dummy);
   DUNEXSecSyst nubarshift(nubar_MEC_dummy);
@@ -175,10 +265,6 @@ void joint_fit(bool reload = false)
   // Make some ND Asimov fake data
   Spectrum fakeNDFHC = predNDFHC.PredictSyst(0, shifts).FakeData(potND);
   Spectrum fakeNDRHC = predNDRHC.PredictSyst(0, shifts).FakeData(potND);
-
-  // Make matching FD Asimov fake data, plus some oscillations
-  osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
-  inputOsc->SetdCP(1.5*TMath::Pi());
 
   Spectrum fakeFDNumuFHC = predFDNumuFHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
   Spectrum fakeFDNueFHC = predFDNueFHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
@@ -210,8 +296,8 @@ void joint_fit(bool reload = false)
   // Use everything - slow
   //  const std::vector<const ISyst*> systFitVars = GetDUNEXSecSysts();
   // Fit a reduced list of variables of interest
-  const std::vector<const ISyst*> systFitVars = {GetDUNEXSecSyst(nu_MEC_dummy),
-                                                 GetDUNEXSecSyst(nubar_MEC_dummy)};
+    const std::vector<const ISyst*> systFitVars = {GetDUNEXSecSyst(nu_MEC_dummy),
+                                                   GetDUNEXSecSyst(nubar_MEC_dummy)};
 
   // Set up the fit
   Fitter fit(&expt, oscFitVars, systFitVars);

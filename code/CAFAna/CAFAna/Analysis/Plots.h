@@ -101,7 +101,7 @@ namespace ana
                              float headroom = 1.3, bool newaxis=true);
 
   /// Can call like ToTHStack({{h1, kRed}, {h2, kBlue}}, pot)
-  THStack* ToTHStack(const std::vector<std::pair<const Spectrum&, Color_t>>& s,
+  THStack* ToTHStack(const std::vector<std::pair<Spectrum, Color_t>>& s,
                      double pot);
 
 
