@@ -123,6 +123,16 @@ namespace ana
     if(lep == +15) lep = +13;
     if(lep == +16) lep = +14;
 
+    // Treat nues as numus too. So basically we shouldn't be switching on
+    // category at all. The 32 at the bottom there is the totally independent
+    // nue scale factor.
+    if(lep == -12) lep = -14;
+    if(lep == -11) lep = -13;
+    if(lep == +11) lep = +13;
+    if(lep == +12) lep = +14;
+
+    if(scat == 7) return EVALORCategory(-1); // nu-on-e is currently uncategorized, skip the rror messages
+
     int vc = -1;
 
     // Email from Chris Marshall
