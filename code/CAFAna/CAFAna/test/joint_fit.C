@@ -7,6 +7,7 @@ void joint_fit(bool reload = false){}
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/Systs/DUNEXSecSysts.h"
+#include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
@@ -128,6 +129,65 @@ void StackPlot(const PredictionScaleComp& pred,
     leg->AddEntry(dummy, VALORCategoryName(e).c_str(), "bf");
   }
   leg->Draw();
+}
+
+void PlotXSecShiftEffects(osc::IOscCalculator* osc,
+                          IPrediction& predNDFHC, IPrediction& predNDRHC,
+                          IPrediction& predFDNumuFHC, IPrediction& predFDNueFHC,
+                          IPrediction& predFDNumuRHC, IPrediction& predFDNueRHC)
+{
+  new TCanvas;
+
+  TLegend* leg = new TLegend(.7, .7, .85, .85);
+  leg->SetFillStyle(0);
+  TH1* dummy = new TH1F("", "", 1, 0, 1);
+  dummy->SetLineColor(kRed);
+  leg->AddEntry(dummy->Clone(), "+1#sigma", "l");
+  dummy->SetLineColor(kBlue);
+  leg->AddEntry(dummy->Clone(), "-1#sigma", "l");
+  leg->Draw();
+
+  for(int i = 0; i < 32; ++i){
+    const ISyst* syst = GetDUNEXSecSyst(EVALORCategory(i));
+
+    for(bool fd: {false, true}){
+      for(bool fhc: {false, true}){
+        for(bool nue: {false, true}){
+          if(!fhc && nue) continue;
+
+          // Triply-nested trinaries. The mark of readable code ;)
+          const IPrediction& pred = fd ? (fhc ? (nue ? predFDNueFHC : predFDNumuFHC) : (nue ? predFDNueRHC : predFDNumuRHC)) : (fhc ? predNDFHC : predNDRHC);
+
+          const Spectrum nom = pred.Predict(fd ? osc : 0);
+
+          for(double shift: {-1, +1}){
+            const SystShifts ss(syst, shift);
+
+            const Spectrum fake = pred.PredictSyst(fd ? osc : 0, ss);
+
+            const Ratio ratio(fake, nom);
+            TH1* h = ratio.ToTH1(shift < 0 ? kBlue : kRed);
+            h->Draw(shift < 0 ? "hist" : "hist same");
+            h->GetYaxis()->SetRangeUser(0.8, 1.2);
+          } // end for shift
+
+          leg->Draw();
+
+          if(fd){
+            gPad->Print(TString::Format("plots/syst_ratio_fd_%s_%s_%d.pdf",
+                                        nue ? "nue" : "numu",
+                                        fhc ? "fhc" : "rhc",
+                                        i).Data());
+          }
+          else{
+            gPad->Print(TString::Format("plots/syst_ratio_nd_%s_%d.pdf",
+                                        fhc ? "fhc" : "rhc",
+                                        i).Data());
+          }
+        } // end for nue
+      } // end for fhc
+    } // end for fd
+  } // end for i
 }
 
 void joint_fit(bool reload = false)
@@ -264,6 +324,10 @@ void joint_fit(bool reload = false)
   StackPlot(predFDNueRHC,  "FD RHC #nu_{e}",   potFD, inputOsc);
   gPad->Print("cats_fd_rhc_nue.pdf");
 
+  PlotXSecShiftEffects(inputOsc,
+                       predNDFHC, predNDRHC,
+                       predFDNumuFHC, predFDNueFHC,
+                       predFDNumuRHC, predFDNueRHC);
 
   // What systematic parameters will we shift in the fake data?
   DUNEXSecSyst nushift(nu_MEC_dummy);
