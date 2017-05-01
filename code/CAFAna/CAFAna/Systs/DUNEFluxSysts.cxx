@@ -58,10 +58,10 @@ namespace ana
 
     if(abs(sr->dune.beamPdg) == 16) return;
 
-    const int det = (sr->dune.run == 1) ? 0 : 1; // run 1 is ND
+    const int det = sr->dune.isFD ? 0 : 1;
     const int pdg = (abs(sr->dune.beamPdg) == 12) ? 0 : 1;
     const int anti = (sr->dune.beamPdg > 0) ? 0 : 1;
-    const int hc = 0; // always FHC TODO TODO TODO
+    const int hc = sr->dune.isFHC ? 0 : 1;
 
     TH1* h = fScale[det][pdg][anti][hc];
     assert(h);
