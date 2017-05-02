@@ -71,4 +71,22 @@ namespace ana
 
     weight *= 1 + h->GetBinContent(bin)*sigma;
   }
+
+  //----------------------------------------------------------------------
+  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i)
+  {
+    // Make sure we always give the same one back
+    static std::vector<const DUNEFluxSyst*> cache;
+    if(i >= cache.size()) cache.resize(i+1);
+    if(!cache[i]) cache[i] = new DUNEFluxSyst(i);
+    return cache[i];
+  }
+
+  //----------------------------------------------------------------------
+  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N)
+  {
+    DUNEFluxSystVector ret;
+    for(unsigned int i = 0; i < N; ++i) ret.push_back(GetDUNEFluxSyst(i));
+    return ret;
+  }
 } // namespace

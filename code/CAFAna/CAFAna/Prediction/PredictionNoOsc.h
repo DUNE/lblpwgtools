@@ -1,4 +1,5 @@
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Prediction/PredictionGenerator.h"
 
 namespace ana
 {
@@ -27,7 +28,7 @@ namespace ana
     static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory* dir);
     virtual void SaveTo(TDirectory* dir) const;
 
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const override
+    virtual Spectrum Predict(osc::IOscCalculator* /*calc*/) const override
     {
       return fSpectrum;
     }
@@ -35,14 +36,52 @@ namespace ana
     virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
-                                      Sign::Sign_t sign) const override
-    {
-      assert(0 && "PredictionNoOsc::PredictComponent() not implemented");
-    }
+                                      Sign::Sign_t sign) const override;
 
   protected:
-    PredictionNoOsc(const Spectrum& s) : fSpectrum(s) {}
+    PredictionNoOsc(const Spectrum& s,
+                    const Spectrum& sNC,
+                    const Spectrum& sNumu, const Spectrum& sNumubar,
+                    const Spectrum& sNue, const Spectrum& sNuebar)
+      : fSpectrum(s),
+        fSpectrumNC(sNC),
+        fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar),
+        fSpectrumNue(sNue), fSpectrumNuebar(sNuebar)
+    {
+    }
 
     Spectrum fSpectrum;
+
+    Spectrum fSpectrumNC;
+    Spectrum fSpectrumNumu;
+    Spectrum fSpectrumNumubar;
+    Spectrum fSpectrumNue;
+    Spectrum fSpectrumNuebar;
   };
+
+
+  class NoOscPredictionGenerator: public IPredictionGenerator
+  {
+  public:
+    NoOscPredictionGenerator(SpectrumLoaderBase& loader,
+                             HistAxis axis,
+                             Cut cut)
+      : fLoader(loader), fAxis(axis), fCut(cut)
+    {
+    }
+
+    virtual std::unique_ptr<IPrediction>
+    Generate(Loaders& loaders, const SystShifts& shiftMC = kNoShift) const override
+    {
+      return std::unique_ptr<IPrediction>(new PredictionNoOsc(fLoader,
+                                                              fAxis,
+                                                              fCut,
+                                                              shiftMC));
+    }
+  protected:
+    SpectrumLoaderBase& fLoader;
+    HistAxis fAxis;
+    Cut fCut;
+  };
+
 }

@@ -66,7 +66,7 @@ namespace ana
                                      const IPredictionGenerator& predGen,
                                      Loaders& loaders,
                                      const SystShifts& shiftMC)
-    : fOscOrigin(osc->Copy()),
+    : fOscOrigin(osc ? osc->Copy() : 0),
       fBinning(0, {}, {}, 0, 0)
   {
     for(const ISyst* syst: systs){
@@ -99,7 +99,7 @@ namespace ana
   PredictionInterp::~PredictionInterp()
   {
     //    for(auto it: fPreds) for(IPrediction* p: it.second.preds) delete p;
-    //    delete fOscOrigin;
+    delete fOscOrigin;
 
     // It isn't really a unique ptr when we use PredictionInterpTemplates
     fPredNom.release();
@@ -387,7 +387,7 @@ namespace ana
       }
     } // end for syst
 
-    const TMD5* hash = calc->GetParamsHash();
+    const TMD5* hash = calc ? calc->GetParamsHash() : 0;
 
 
     if(curr & Current::kCC){
@@ -432,7 +432,7 @@ namespace ana
       } // end for i
     } // end for it
 
-    ana::SaveTo(*fOscOrigin, dir->mkdir("osc_origin"));
+    if(fOscOrigin) ana::SaveTo(*fOscOrigin, dir->mkdir("osc_origin"));
 
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
@@ -505,7 +505,8 @@ namespace ana
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir->GetDirectory("osc_origin")).release();
+    TDirectory* oscDir = dir->GetDirectory("osc_origin");
+    if(oscDir) ret->fOscOrigin = oscDir ? ana::LoadFrom<osc::IOscCalculator>(oscDir).release() : 0;
 
     // Recalculate sp.fits and fBinning from information in the file
     ret->LoadedCallback();
