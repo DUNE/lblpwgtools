@@ -26,6 +26,7 @@ namespace caf
     int nipip;
     int nipim;
     double Q2;
+    double W;
 
     // config
     int run;

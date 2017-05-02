@@ -187,6 +187,7 @@ namespace ana
     tr->SetBranchAddress("nipip", &sr.dune.nipip);
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
+    tr->SetBranchAddress("W", &sr.dune.W);
 
     tr->SetBranchAddress("run", &sr.dune.run);
     tr->SetBranchAddress("isFD", &sr.dune.isFD);
