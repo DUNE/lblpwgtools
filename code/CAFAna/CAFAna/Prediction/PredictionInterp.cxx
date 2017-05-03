@@ -594,4 +594,44 @@ namespace ana
     } // end for it
   }
 
+  //----------------------------------------------------------------------
+  void PredictionInterp::DebugPlotsColz(osc::IOscCalculator* calc,
+                                        const std::string& savePattern,
+                                        Flavors::Flavors_t flav,
+                                        Current::Current_t curr,
+                                        Sign::Sign_t sign) const
+  {
+    std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
+    const int nbins = nom->GetNbinsX();
+
+    for(auto it: fPreds){
+      TH2* h2 = new TH2F("", ";;#sigma",
+                         nbins, nom->GetXaxis()->GetXmin(), nom->GetXaxis()->GetXmax(),
+                         80, -4, +4);
+      h2->GetXaxis()->SetTitle(nom->GetXaxis()->GetTitle());
+
+      for(int i = 1; i <= 80; ++i){
+        const double y = h2->GetYaxis()->GetBinCenter(i);
+        const SystShifts ss(it.first, y);
+        std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
+
+        for(int bin = 0; bin < nbins; ++bin){
+          const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
+
+          if(!isnan(ratio) && !isinf(ratio))
+            h2->Fill(h2->GetXaxis()->GetBinCenter(bin), y, ratio);
+        } // end for bin
+      } // end for i (x)
+
+      h2->Draw("colz");
+      h2->SetMinimum(0.5);
+      h2->SetMaximum(1.5);
+
+      if(!savePattern.empty()){
+	assert(savePattern.find("%s") != 0);
+	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
+      }
+    } // end for it
+  }
+
 } // namespace

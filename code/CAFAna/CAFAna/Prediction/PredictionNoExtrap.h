@@ -1,5 +1,7 @@
 #include "CAFAna/Prediction/PredictionExtrap.h"
 
+#include "CAFAna/Prediction/PredictionGenerator.h"
+
 namespace ana
 {
   class Loaders;
@@ -72,5 +74,36 @@ namespace ana
     static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory* dir);
     virtual void SaveTo(TDirectory* dir) const;
 
+  };
+
+  class DUNENoExtrapPredictionGenerator: public IPredictionGenerator
+  {
+  public:
+    DUNENoExtrapPredictionGenerator(DUNERunPOTSpectrumLoader& loaderBeam, 
+                                    DUNERunPOTSpectrumLoader& loaderNue,
+                                    DUNERunPOTSpectrumLoader& loaderNuTau,
+                                    DUNERunPOTSpectrumLoader& loaderNC,
+                                    HistAxis axis,
+                                    Cut cut)
+      : fLoaderBeam(loaderBeam), fLoaderNue(loaderNue),
+        fLoaderNuTau(loaderNuTau), fLoaderNC(loaderNC),
+        fAxis(axis), fCut(cut)
+    {
+    }
+
+    virtual std::unique_ptr<IPrediction>
+    Generate(Loaders& loaders, const SystShifts& shiftMC = kNoShift) const override
+    {
+      return std::unique_ptr<IPrediction>(
+        new PredictionNoExtrap(fLoaderBeam, fLoaderNue, fLoaderNuTau, fLoaderNC,
+                               fAxis, fCut, shiftMC));
+    }
+  protected:
+    DUNERunPOTSpectrumLoader& fLoaderBeam;
+    DUNERunPOTSpectrumLoader& fLoaderNue;
+    DUNERunPOTSpectrumLoader& fLoaderNuTau;
+    DUNERunPOTSpectrumLoader& fLoaderNC;
+    HistAxis fAxis;
+    Cut fCut;
   };
 }
