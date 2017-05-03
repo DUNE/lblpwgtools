@@ -24,7 +24,7 @@ namespace ana
     DUNENeutNuWROReweight(const std::string& fname,
                           EGenerator gen,
                           ERWVars vars)
-      : fFname(fname), fGen(gen), fVars(vars)
+      : fFname(fname), fGen(gen), fVars(vars), fHist(0), fHist2D(0)
     {
     }
 
