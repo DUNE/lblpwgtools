@@ -539,7 +539,8 @@ namespace ana
 
           const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
 
-          curves[bin]->SetPoint(curves[bin]->GetN(), x, ratio);
+          if(!isnan(ratio) && !isinf(ratio))
+            curves[bin]->SetPoint(curves[bin]->GetN(), x, ratio);
         } // end for bin
       } // end for i (x)
 
@@ -579,9 +580,9 @@ namespace ana
                                   nom->GetXaxis()->GetTitle(),
                                   nom->GetXaxis()->GetBinUpEdge(bin+1)),
                   100, -4, +4, 100, .5, 1.5))->Draw();
-        curves[bin]->Draw("l same");
+        if(curves[bin]->GetN() > 0) curves[bin]->Draw("l same");
         points[bin]->SetMarkerStyle(kFullCircle);
-        points[bin]->Draw("p same");
+        if(points[bin]->GetN() > 0) points[bin]->Draw("p same");
       } // end for bin
 
       c->cd(0);
