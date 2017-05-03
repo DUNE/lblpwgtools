@@ -42,7 +42,7 @@ namespace ana
     mutable TH2* fHist2D;
   };
 
-  const std::string kNeutNuWROReweightFname;
+  const std::string kNeutNuWROReweightFname = "/dune/data/users/marshalc/NEUT_GENIE_ratio.root";
 
   const Var kReweightEnuToNeut({}, DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnu));
   const Var kReweightEnuQ2ToNeut({}, DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuQ2));

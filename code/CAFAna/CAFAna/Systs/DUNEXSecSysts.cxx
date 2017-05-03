@@ -131,7 +131,9 @@ namespace ana
     if(lep == +11) lep = +13;
     if(lep == +12) lep = +14;
 
-    if(scat == 7) return EVALORCategory(-1); // nu-on-e is currently uncategorized, skip the rror messages
+    // these have no cross section uncertainty, so it's OK to leave them as -1
+    if(scat == 7) return EVALORCategory(-1);
+    if(scat == 8) return EVALORCategory(-1);
 
     int vc = -1;
 
@@ -218,12 +220,18 @@ namespace ana
                          VALORCategoryName(cat)+" Scale",
                          kVALORCategory == cat, 0)
   {
-    // TODO - official location
-    TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
+    // explicitly set sigma to 0 for category -1
+    // currently used for pure EW processes with ~0 XS uncertainty
+    if( cat == EVALORCategory(-1) ) fOneSigma = 0.;
+    else {
 
-    TH2* h = (TH2*)f.Get("xs_covariance");
+      // TODO - official location
+      TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
 
-    fOneSigma = sqrt( h->GetBinContent(int(cat)+1, int(cat)+1) );
+      TH2* h = (TH2*)f.Get("xs_covariance");
+
+      fOneSigma = sqrt( h->GetBinContent(int(cat)+1, int(cat)+1) );
+    }
   }
 
   //----------------------------------------------------------------------

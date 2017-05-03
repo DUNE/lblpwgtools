@@ -35,7 +35,7 @@ namespace ana
       if(x > fHist2D->GetXaxis()->GetXmax()) return 1; // overflow bin
       if(y < 0) return 1; // underflow bin
       if(y > fHist2D->GetYaxis()->GetXmax()) return 1; // overflow bin
-      const double w = fHist2D->GetBinContent(fHist->FindBin(x, y));
+      const double w = fHist2D->GetBinContent(fHist2D->FindBin(x, y));
       if(w == 0) return 1; // probably a low-stats bin
       return w;
     }
