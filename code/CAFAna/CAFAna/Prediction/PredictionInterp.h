@@ -73,6 +73,12 @@ namespace ana
 		    Current::Current_t curr = Current::kBoth,
 		    Sign::Sign_t sign = Sign::kBoth) const;
 
+    void DebugPlotsColz(osc::IOscCalculator* calc,
+                        const std::string& savePattern = "",
+                        Flavors::Flavors_t flav = Flavors::kAll,
+                        Current::Current_t curr = Current::kBoth,
+                        Sign::Sign_t sign = Sign::kBoth) const;
+
     void LoadedCallback();
 
   protected:

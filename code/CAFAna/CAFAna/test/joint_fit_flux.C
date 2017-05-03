@@ -274,12 +274,22 @@ void joint_fit_flux(bool reload = false)
 
   predFDNumuRHC.DebugPlots(inputOsc, "plots/debug_fd_numu_rhc_%s.pdf");
   predFDNueRHC.DebugPlots(inputOsc, "plots/debug_fd_nue_rhc_%s.pdf");
-  */
+
+  predNDFHC.DebugPlotsColz(0, "plots/debug_colz_nd_fhc_%s.pdf");
+  predNDRHC.DebugPlotsColz(0, "plots/debug_colz_nd_rhc_%s.pdf");
+
+  predFDNumuFHC.DebugPlotsColz(inputOsc, "plots/debug_colz_fd_numu_fhc_%s.pdf");
+  predFDNueFHC.DebugPlotsColz(inputOsc, "plots/debug_colz_fd_nue_fhc_%s.pdf");
+
+  predFDNumuRHC.DebugPlotsColz(inputOsc, "plots/debug_colz_fd_numu_rhc_%s.pdf");
+  predFDNueRHC.DebugPlotsColz(inputOsc, "plots/debug_colz_fd_nue_rhc_%s.pdf");
+
   PlotFluxShiftEffects(inputOsc,
                        predNDFHC, predNDRHC,
                        predFDNumuFHC, predFDNueFHC,
                        predFDNumuRHC, predFDNueRHC);
   return;
+  */
 
   // What systematic parameters will we shift in the fake data?
   SystShifts shifts(GetDUNEFluxSyst(0), +1);
