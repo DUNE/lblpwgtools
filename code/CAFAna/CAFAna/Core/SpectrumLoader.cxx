@@ -61,8 +61,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoader SpectrumLoader::FromSAMProject(const std::string& proj,
-						DataSource src,
-						int fileLimit)
+                                                DataSource src,
+                                                int fileLimit)
   {
     SpectrumLoader ret;
     ret.fSource = src;
@@ -280,35 +280,35 @@ namespace ana
 
       const TestVals* save = 0;
       if(++iterationNo % kTestIterations == 0)
-	save = GetVals(sr, shiftdef.second);
+        save = GetVals(sr, shiftdef.second);
 
       Restorer* restore = 0;
       double systWeight = 1;
       bool shifted = false;
       // Can special-case nominal to not pay cost of Shift() or Restorer
       if(!shift.IsNominal()){
-	restore = new Restorer;
-	shift.Shift(*restore, sr, systWeight);
+        restore = new Restorer;
+        shift.Shift(*restore, sr, systWeight);
         // Did the Shift actually modify the event at all?
         shifted = !restore->Empty();
       }
 
       for(auto& cutdef: shiftdef.second){
-	const Cut& cut = cutdef.first;
+        const Cut& cut = cutdef.first;
 
         const bool pass = shifted ? cut(sr) : nomCutCache.Get(cut, sr);
         // Cut failed, skip all the histograms that depended on it
         if(!pass) continue;
 
-	for(auto& weidef: cutdef.second){
-	  const Var& weivar = weidef.first;
+        for(auto& weidef: cutdef.second){
+          const Var& weivar = weidef.first;
 
           double wei = shifted ? weivar(sr) : nomWeiCache.Get(weivar, sr);
 
           wei *= systWeight;
-	  if(wei == 0) continue;
+          if(wei == 0) continue;
 
-	  for(auto& vardef: weidef.second){
+          for(auto& vardef: weidef.second){
             if(vardef.first.IsMulti()){
               for(double val: vardef.first.GetMultiVar()(sr)){
                 for(Spectrum* s: vardef.second.spects)
@@ -317,40 +317,40 @@ namespace ana
               continue;
             }
 
-	    const Var& var = vardef.first.GetVar();
+            const Var& var = vardef.first.GetVar();
 
             const double val = shifted ? var(sr) : nomVarCache.Get(var, sr);
 
-	    if(std::isnan(val) || std::isinf(val)){
-	      std::cerr << "Warning: Bad value: " << val
-			<< " returned from a Var. The input variable(s) could "
+            if(std::isnan(val) || std::isinf(val)){
+              std::cerr << "Warning: Bad value: " << val
+                        << " returned from a Var. The input variable(s) could "
                         << "be NaN in the CAF, you could have forgotten to "
                         << "Require() one or more of them, or perhaps your "
                         << "Var code computed 0/0? The input variables that "
                         << "were required from the CAF for this Var were: ";
-	      for(const std::string& r: var.Requires()) std::cerr << " " << r;
-	      std::cout << ". Not filling into this histogram for this slice." << std::endl;
-	      continue;
-	    }
+              for(const std::string& r: var.Requires()) std::cerr << " " << r;
+              std::cout << ". Not filling into this histogram for this slice." << std::endl;
+              continue;
+            }
 
-	    for(Spectrum* s: vardef.second.spects) s->Fill(val, wei);
+            for(Spectrum* s: vardef.second.spects) s->Fill(val, wei);
 
             for(ReweightableSpectrum* rw: vardef.second.rwSpects){
               const double yval = rw->ReweightVar()(sr);
 
-	      if(std::isnan(yval) || std::isinf(yval)){
-		std::cerr << "Warning: Bad value: " << yval
-			  << " for reweighting Var requiring";
-		for(const std::string& r: rw->ReweightVar().Requires()) std::cerr << " " << r;
-		std::cout << ". Not filling into histogram." << std::endl;
-		continue;
-	      }
+              if(std::isnan(yval) || std::isinf(yval)){
+                std::cerr << "Warning: Bad value: " << yval
+                          << " for reweighting Var requiring";
+                for(const std::string& r: rw->ReweightVar().Requires()) std::cerr << " " << r;
+                std::cout << ". Not filling into histogram." << std::endl;
+                continue;
+              }
 
               // TODO: ignoring events with no true neutrino etc
               if(yval != 0) rw->fHist->Fill(val, yval, wei);
             } // end for rw
-	  } // end for vardef
-	} // end for weidef
+          } // end for vardef
+        } // end for weidef
       } // end for cutdef
 
       // Delete Restorer at this point and return StandardRecord to its
@@ -359,8 +359,8 @@ namespace ana
 
       // Make sure the record went back the way we found it
       if(save){
-	CheckVals(save, sr, shift.ShortName(), shiftdef.second);
-	delete save;
+        CheckVals(save, sr, shift.ShortName(), shiftdef.second);
+        delete save;
       }
     } // end for shiftdef
   }
@@ -413,15 +413,15 @@ namespace ana
 
     for(auto& shiftdef: fHistDefs){
       for(auto& cutdef: shiftdef.second){
-	const Cut& cut = cutdef.first;
+        const Cut& cut = cutdef.first;
         const int id = cut.ID();
 
-	for(auto& weidef: cutdef.second){
-	  for(auto& vardef: weidef.second){
-	    for(Spectrum* s: vardef.second.spects){
+        for(auto& weidef: cutdef.second){
+          for(auto& vardef: weidef.second){
+            for(Spectrum* s: vardef.second.spects){
               s->fPOT += pot[id];
               s->fLivetime += livetime[id];
-	    }
+            }
 
             for(ReweightableSpectrum* rw: vardef.second.rwSpects){
               rw->fPOT += pot[id];
@@ -436,7 +436,7 @@ namespace ana
   //----------------------------------------------------------------------
   const SpectrumLoader::TestVals* SpectrumLoader::
   GetVals(const caf::StandardRecord* sr,
-	  IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const
+          IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const
   {
     TestVals* ret = new TestVals;
 
@@ -448,12 +448,12 @@ namespace ana
       if(!cutval) continue;
 
       for(auto& weidef: cutdef.second){
-	ret->weis.push_back(weidef.first(sr));
+        ret->weis.push_back(weidef.first(sr));
 
-	for(auto& vardef: weidef.second){
+        for(auto& vardef: weidef.second){
           if(!vardef.first.IsMulti())
             ret->vars.push_back((vardef.first.GetVar())(sr));
-	}
+        }
       }
     }
 
@@ -492,8 +492,8 @@ namespace ana
   //----------------------------------------------------------------------
   void SpectrumLoader::CheckVals(const TestVals* v,
                                  const caf::StandardRecord* sr,
-				 const std::string& shiftName,
-				 IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const
+                                 const std::string& shiftName,
+                                 IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const
   {
     unsigned int cutIdx = 0;
     unsigned int weiIdx = 0;
@@ -505,8 +505,8 @@ namespace ana
       const bool cutval = cutdef.first(sr);
 
       if(cutval != v->cuts[cutIdx]){
-	ValError("Cut", shiftName, cutdef.first.Requires(),
-		 v->cuts[cutIdx], cutval);
+        ValError("Cut", shiftName, cutdef.first.Requires(),
+                 v->cuts[cutIdx], cutval);
       }
       ++cutIdx;
 
@@ -514,22 +514,22 @@ namespace ana
       if(!cutval) continue;
 
       for(auto& weidef: cutdef.second){
-	const double weival = weidef.first(sr);
-	if(!std::isnan(weival) && weival != v->weis[weiIdx]){
+        const double weival = weidef.first(sr);
+        if(!std::isnan(weival) && weival != v->weis[weiIdx]){
           ValError("Cut", shiftName, weidef.first.Requires(),
                    v->weis[weiIdx], weival);
-	}
-	++weiIdx;
+        }
+        ++weiIdx;
 
-	for(auto& vardef: weidef.second){
+        for(auto& vardef: weidef.second){
           if(vardef.first.IsMulti()) continue;
-	  const double varval = vardef.first.GetVar()(sr);
-	  if(!std::isnan(varval) && varval != v->vars[varIdx]){
-	    ValError("Var", shiftName, vardef.first.Requires(),
-		     v->vars[varIdx], varval);
-	  }
-	  ++varIdx;
-	} // end for vardef
+          const double varval = vardef.first.GetVar()(sr);
+          if(!std::isnan(varval) && varval != v->vars[varIdx]){
+            ValError("Var", shiftName, vardef.first.Requires(),
+                     v->vars[varIdx], varval);
+          }
+          ++varIdx;
+        } // end for vardef
       } // end for weidef
     } // end for cutdef
   }
