@@ -24,7 +24,9 @@ namespace ana
     DUNENeutNuWROReweight(const std::string& fname,
                           EGenerator gen,
                           ERWVars vars)
-      : fFname(fname), fGen(gen), fVars(vars), fHist(0), fHist2D(0)
+      : fFname(fname), fGen(gen), fVars(vars),
+        fHistNu(0), fHistAnu(0),
+        fHist2DNu(0), fHist2DAnu(0)
     {
     }
 
@@ -38,8 +40,10 @@ namespace ana
     std::string fFname;
     EGenerator fGen;
     ERWVars fVars;
-    mutable TH1* fHist;
-    mutable TH2* fHist2D;
+    mutable TH1* fHistNu;
+    mutable TH1* fHistAnu;
+    mutable TH2* fHist2DNu;
+    mutable TH2* fHist2DAnu;
   };
 
   const std::string kNeutNuWROReweightFname = "/dune/data/users/marshalc/NEUT_GENIE_ratio.root";

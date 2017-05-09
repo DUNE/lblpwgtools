@@ -12,30 +12,34 @@ namespace ana
   //----------------------------------------------------------------------
   DUNENeutNuWROReweight::~DUNENeutNuWROReweight()
   {
-    delete fHist;
-    delete fHist2D;
+    delete fHistNu; delete fHistAnu;
+    delete fHist2DNu; delete fHist2DAnu;
   }
 
   //----------------------------------------------------------------------
   double DUNENeutNuWROReweight::operator()(const caf::StandardRecord* sr)
   {
-    if(!fHist && !fHist2D) LoadHists();
+    if(!fHistNu && !fHist2DNu) LoadHists();
 
     const double x = sr->dune.Ev;
     if(x < 0) return 1; // How?
 
+    const bool anti = (sr->dune.neu < 0);
+
     if(fVars == kEnu){
-      if(x > fHist->GetXaxis()->GetXmax()) return 1; // overflow bin
-      const double w = fHist->GetBinContent(fHist->FindBin(x));
+      TH1* h = (anti ? fHistAnu : fHistNu);
+      if(x > h->GetXaxis()->GetXmax()) return 1; // overflow bin
+      const double w = h->GetBinContent(h->FindBin(x));
       if(w == 0) return 1; // probably a low-stats bin
       return w;
     }
     else{
+      TH2* h = (anti ? fHist2DAnu : fHist2DNu);
       const double y = (fVars == kEnuQ2) ? sr->dune.Q2 : sr->dune.W;
-      if(x > fHist2D->GetXaxis()->GetXmax()) return 1; // overflow bin
+      if(x > h->GetXaxis()->GetXmax()) return 1; // overflow bin
       if(y < 0) return 1; // underflow bin
-      if(y > fHist2D->GetYaxis()->GetXmax()) return 1; // overflow bin
-      const double w = fHist2D->GetBinContent(fHist2D->FindBin(x, y));
+      if(y > h->GetYaxis()->GetXmax()) return 1; // overflow bin
+      const double w = h->GetBinContent(h->FindBin(x, y));
       if(w == 0) return 1; // probably a low-stats bin
       return w;
     }
@@ -50,29 +54,47 @@ namespace ana
       abort();
     }
 
-    std::string histName;
-    if(fVars == kEnu) histName = "Ev";
-    if(fVars == kEnuQ2) histName = "Ev_Q2";
-    if(fVars == kEnuW) histName = "Ev_W";
-    histName += "_";
-    if(fGen == kNeut) histName += "neut";
-    if(fGen == kNuWRO) histName += "nuwro";
-    histName += "ratio";
+    for(bool anti : {false, true}){
+      std::string histName;
+      if(fVars == kEnu) histName = "Ev";
+      if(fVars == kEnuQ2) histName = "Ev_Q2";
+      if(fVars == kEnuW) histName = "Ev_W";
+      histName += "_";
+      if(fGen == kNeut){
+        if(anti) histName += "anuneut"; else histName += "nuneut";
+      }
+      if(fGen == kNuWRO){
+        if(anti) histName += "anuwro"; else histName += "nunuwro";
+      }
+      histName += "ratio";
 
-    TObject* h = f.Get(histName.c_str());
+      TObject* h = f.Get(histName.c_str());
 
-    if(!h){
-      std::cout << "DUNENeutNuWroReweight: couldn't find " << histName << " in " << fFname << std::endl;
-      abort();
-    }
+      if(!h){
+        std::cout << "DUNENeutNuWroReweight: couldn't find " << histName << " in " << fFname << std::endl;
+        abort();
+      }
 
-    if(fVars == kEnu){
-      fHist = (TH1*)h;
-      fHist->SetDirectory(0);
-    }
-    else{
-      fHist2D = (TH2*)h;
-      fHist2D->SetDirectory(0);
-    }
+      if(fVars == kEnu){
+        if(anti){
+          fHistAnu = (TH1*)h;
+          fHistAnu->SetDirectory(0);
+        }
+        else {
+          fHistNu = (TH1*)h;
+          fHistNu->SetDirectory(0);
+        }
+      }
+      else{
+        if(anti){
+          fHist2DAnu = (TH2*)h;
+          fHist2DAnu->SetDirectory(0);
+        }
+        else{
+          fHist2DNu = (TH2*)h;
+          fHist2DNu->SetDirectory(0);
+        }
+      }
+    } // end for anti
   }
 }
