@@ -17,7 +17,11 @@ def MakeConfigs(datadir,label,seltype):
  if (ok==0): 
         if not os.path.exists(directory):
                os.makedirs(directory)
-        os.system("cp -r ../../inputs/MVAtoGLoBES/v2.1/* "+directory+"/.")
+        os.system("cp ../../inputs/MVAtoGLoBES/v2.1/DUNE_GLoBES.glb "+directory+"/.")
+        os.system("cp ../../inputs/MVAtoGLoBES/v2.1/definitions.inc "+directory+"/.")
+        os.system("cp ../../inputs/MVAtoGLoBES/v2.1/syst_list.inc "+directory+"/.")
+        os.system("cp -r ../../inputs/MVAtoGLoBES/v2.1/flux "+directory+"/.")
+        os.system("cp -r ../../inputs/MVAtoGLoBES/v2.1/eff "+directory+"/.")
         os.system ("mv post*.txt "+directory+"/eff/.")
         os.system ("mv *.txt "+directory+"/smr/.")
  else:

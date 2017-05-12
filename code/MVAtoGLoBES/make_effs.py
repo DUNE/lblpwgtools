@@ -138,7 +138,7 @@ def MakeEfficiencies(datadir,seltype):
  i = 0
  for eff in efflist_anue:
      thisfidcut = fidcut+cutlist_nue[i]
-     selcut = selcut_nue+cutlist_nue[i]
+     thisselcut = selcut_nue+cutlist_nue[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
      anue_MVA.Draw("Ev_reco >> hall", thisfidcut)
