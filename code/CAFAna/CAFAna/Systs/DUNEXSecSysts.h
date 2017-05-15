@@ -49,6 +49,7 @@ namespace ana
   };
 
   std::string VALORCategoryName(EVALORCategory c);
+  std::string VALORCategoryLatexName(EVALORCategory c);
 
   EVALORCategory GetVALORCategory(const caf::StandardRecord* sr);
 

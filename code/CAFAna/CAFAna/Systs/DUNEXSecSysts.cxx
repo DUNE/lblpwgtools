@@ -11,44 +11,86 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  const std::string valor_categories[33] = { "nu_ccqe_1",       // 0
-                                             "nu_ccqe_2",       // 1
-                                             "nu_ccqe_3",       // 2
-                                             "nubar_ccqe_1",    // 3
-                                             "nubar_ccqe_2",    // 4
-                                             "nubar_ccqe_3",    // 5
-                                             "nu_MEC_dummy",    // 6
-                                             "nubar_MEC_dummy", // 7
-                                             "nu_cc1piz_1",     // 8
-                                             "nu_cc1piz_2",     // 9
-                                             "nu_cc1piz_3",     // 10
-                                             "nu_cc1pic_1",     // 11
-                                             "nu_cc1pic_2",     // 12
-                                             "nu_cc1pic_3",     // 13
-                                             "nubar_cc1piz_1",  // 14
-                                             "nubar_cc1piz_2",  // 15
-                                             "nubar_cc1piz_3",  // 16
-                                             "nubar_cc1pic_1",  // 17
-                                             "nubar_cc1pic_2",  // 18
-                                             "nubar_cc1pic_3",  // 19
-                                             "nu_2pi",          // 20
-                                             "nubar_2pi",       // 21
-                                             "nu_dis_1",        // 22
-                                             "nu_dis_2",        // 23
-                                             "nu_dis_3",        // 24
-                                             "nubar_dis_1",     // 25
-                                             "nubar_dis_2",     // 26
-                                             "nubar_dis_3",     // 27
-                                             "nu_coh",          // 28
-                                             "nubar_coh",       // 29
-                                             "nu_nc",           // 30
-                                             "nubar_nc",        // 31
-                                             "nuenumu_dummy" }; // 32
+  const std::string valor_categories[33] = { 
+    "nu_ccqe_1",       // 0
+    "nu_ccqe_2",       // 1
+    "nu_ccqe_3",       // 2
+    "nubar_ccqe_1",    // 3
+    "nubar_ccqe_2",    // 4
+    "nubar_ccqe_3",    // 5
+    "nu_MEC_dummy",    // 6
+    "nubar_MEC_dummy", // 7
+    "nu_cc1piz_1",     // 8
+    "nu_cc1piz_2",     // 9
+    "nu_cc1piz_3",     // 10
+    "nu_cc1pic_1",     // 11
+    "nu_cc1pic_2",     // 12
+    "nu_cc1pic_3",     // 13
+    "nubar_cc1piz_1",  // 14
+    "nubar_cc1piz_2",  // 15
+    "nubar_cc1piz_3",  // 16
+    "nubar_cc1pic_1",  // 17
+    "nubar_cc1pic_2",  // 18
+    "nubar_cc1pic_3",  // 19
+    "nu_2pi",          // 20
+    "nubar_2pi",       // 21
+    "nu_dis_1",        // 22
+    "nu_dis_2",        // 23
+    "nu_dis_3",        // 24
+    "nubar_dis_1",     // 25
+    "nubar_dis_2",     // 26
+    "nubar_dis_3",     // 27
+    "nu_coh",          // 28
+    "nubar_coh",       // 29
+    "nu_nc",           // 30
+    "nubar_nc",        // 31
+    "nuenumu_dummy" }; // 32
+
+  const std::string valor_categories_long[33] =
+    { "#nu CCQE 1",       // 0
+      "#nu CCQE 2",       // 1
+      "#nu CCQE 3",       // 2
+      "#bar{#nu} CCQE 1",    // 3
+      "#bar{#nu} CCQE 2",    // 4
+      "#bar{#nu} CCQE 3",    // 5
+      "#nu MEC dummy",    // 6
+      "#bar{#nu} MEC dummy", // 7
+      "#nu CC1#pi^{0} 1",     // 8
+      "#nu CC1#pi^{0} 2",     // 9
+      "#nu CC1#pi^{0} 3",     // 10
+      "#nu CC1#pi^{#pm} 1",     // 11
+      "#nu CC1#pi^{#pm} 2",     // 12
+      "#nu CC1#pi^{#pm} 3",     // 13
+      "#bar{#nu} CC1#pi^{0} 1",  // 14
+      "#bar{#nu} CC1#pi^{0} 2",  // 15
+      "#bar{#nu} CC1#pi^{0} 3",  // 16
+      "#bar{#nu} CC1#pi^{#pm} 1",  // 17
+      "#bar{#nu} CC1#pi^{#pm} 2",  // 18
+      "#bar{#nu} CC1#pi^{#pm} 3",  // 19
+      "#nu 2#pi",          // 20
+      "#bar{#nu} 2#pi",       // 21
+      "#nu DIS 1",        // 22
+      "#nu DIS 2",        // 23
+      "#nu DIS 3",        // 24
+      "#bar{#nu} DIS 1",     // 25
+      "#bar{#nu} DIS 2",     // 26
+      "#bar{#nu} DIS 3",     // 27
+      "#nu COH",          // 28
+      "#bar{#nu} COH",       // 29
+      "#nu NC",           // 30
+      "#bar{#nu} NC",        // 31
+      "#nu_{e}/#nu_{#mu} dummy" }; // 32
 
   //----------------------------------------------------------------------
   std::string VALORCategoryName(EVALORCategory c)
   {
     return valor_categories[c];
+  }
+
+  //----------------------------------------------------------------------
+  std::string VALORCategoryLatexName(EVALORCategory c)
+  {
+    return valor_categories_long[c];
   }
 
   //----------------------------------------------------------------------
@@ -217,7 +259,7 @@ namespace ana
   //----------------------------------------------------------------------
   DUNEXSecSyst::DUNEXSecSyst(EVALORCategory cat)
     : SystComponentScale(VALORCategoryName(cat)+"_scale",
-                         VALORCategoryName(cat)+" Scale",
+                         VALORCategoryLatexName(cat)+" Scale",
                          kVALORCategory == cat, 0)
   {
     // explicitly set sigma to 0 for category -1
