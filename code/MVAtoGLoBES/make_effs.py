@@ -6,11 +6,13 @@ import ROOT
 from array import array
 from MVAtoGLoBES import *
 
-def MakeEfficiencies(datadir):
+def MakeEfficiencies(datadir,seltype):
  """Function to make efficiency and smearing files in GLoBES format from MVA selection tree
 
  Args:
-   datadir: path to root files with default names"""
+   datadir: path to root files with default names
+   seltype: selections available in MVASelection tree: mva, cvn """
+   
 
 
  ROOT.gROOT.SetStyle("Plain")
@@ -37,19 +39,7 @@ def MakeEfficiencies(datadir):
  anue = ROOT.TFile(anuefile)
  anumu = ROOT.TFile(anumufile)
 
- nue_MVA = nue.Get("mvaselect/MVASelection")
- numu_MVA = numu.Get("mvaselect/MVASelection")
- anue_MVA = anue.Get("mvaselect/MVASelection")
- anumu_MVA = anumu.Get("mvaselect/MVASelection")
- 
- nueboth_MVA = ROOT.TChain("mvaselect/MVASelection")
- nueboth_MVA.Add(nuefile)
- nueboth_MVA.Add(anuefile)
-
- numuboth_MVA = ROOT.TChain("mvaselect/MVASelection")
- numuboth_MVA.Add(numufile)
- numuboth_MVA.Add(anumufile)
-
+#Need these for any analysis
  efflist_nue = ["app_FHC_nue_sig", "app_FHC_nuebar_sig", "app_FHC_nue_bkg", "app_FHC_nuebar_bkg", "app_FHC_numu_bkg", "app_FHC_numubar_bkg", "app_FHC_nutau_bkg", "app_FHC_nutaubar_bkg", "app_FHC_NC_bkg", "app_FHC_aNC_bkg"]
 
  efflist_anue = ["app_RHC_nue_sig", "app_RHC_nuebar_sig", "app_RHC_nue_bkg", "app_RHC_nuebar_bkg", "app_RHC_numu_bkg", "app_RHC_numubar_bkg", "app_RHC_nutau_bkg", "app_RHC_nutaubar_bkg", "app_RHC_NC_bkg", "app_RHC_aNC_bkg"]
@@ -62,8 +52,36 @@ def MakeEfficiencies(datadir):
 
  smearlist_numu = ["dis_numu_sig", "dis_numubar_sig", "dis_nutau_bkg", "dis_nutaubar_bkg", "dis_NC_bkg", "dis_aNC_bkg"]
 
- mva_fid_cut = -1.5
- mva_select_cut = 0.0
+ nue_MVA = nue.Get("mvaselect/MVASelection")
+ numu_MVA = numu.Get("mvaselect/MVASelection")
+ anue_MVA = anue.Get("mvaselect/MVASelection")
+ anumu_MVA = anumu.Get("mvaselect/MVASelection")
+ 
+ nueboth_MVA = ROOT.TChain("mvaselect/MVASelection")
+ nueboth_MVA.Add(nuefile)
+ nueboth_MVA.Add(anuefile)
+    
+ numuboth_MVA = ROOT.TChain("mvaselect/MVASelection")
+ numuboth_MVA.Add(numufile)
+ numuboth_MVA.Add(anumufile)
+
+ if (seltype == "mva"):
+
+     mva_fid_cut = -1.5
+     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "
+     
+     mva_select_cut = 0.8
+     selcut_numu = "mvaresult>"+str(mva_select_cut)+" && "
+     selcut_nue = "mvaresult>"+str(mva_select_cut)+ "&& "
+
+ elif (seltype == "cvn"):
+     fidcut = ""
+     selcut_numu = "numuCVN>0.2 && "
+     selcut_nue = "nueCVN>0.7 && "
+
+ else:
+     print "Selection type must be mva or cvn"
+     return -99
 
  cutlist_nue = ["ccnc==0 && neu==12 && beamPdg!=12",   # nueapp
                 "ccnc==0 && neu==-12 && beamPdg!=-12",  # anueapp
@@ -101,12 +119,12 @@ def MakeEfficiencies(datadir):
 
  i = 0
  for eff in efflist_nue:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_nue[i]
-     selcut = "mvaresult>"+str(mva_select_cut)+" && "+cutlist_nue[i]
+     thisfidcut = fidcut+cutlist_nue[i]
+     thisselcut = selcut_nue+cutlist_nue[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     nue_MVA.Draw("Ev_reco >> hall", fidcut)
-     nue_MVA.Draw("Ev_reco >> hsel", selcut)
+     nue_MVA.Draw("Ev_reco >> hall", thisfidcut)
+     nue_MVA.Draw("Ev_reco >> hsel", thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -119,12 +137,12 @@ def MakeEfficiencies(datadir):
 
  i = 0
  for eff in efflist_anue:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_nue[i]
-     selcut = "mvaresult>"+str(mva_select_cut)+" && "+cutlist_nue[i]
+     thisfidcut = fidcut+cutlist_nue[i]
+     thisselcut = selcut_nue+cutlist_nue[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     anue_MVA.Draw("Ev_reco >> hall", fidcut)
-     anue_MVA.Draw("Ev_reco >> hsel", selcut)
+     anue_MVA.Draw("Ev_reco >> hall", thisfidcut)
+     anue_MVA.Draw("Ev_reco >> hsel", thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -137,12 +155,12 @@ def MakeEfficiencies(datadir):
 
  i = 0
  for eff in efflist_numu:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_numu[i]
-     selcut = "mvaresult>"+str(mva_select_cut)+" && "+cutlist_numu[i]
+     thisfidcut = fidcut+cutlist_numu[i]
+     thisselcut = selcut_numu+cutlist_numu[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     numu_MVA.Draw("Ev_reco >> hall", fidcut)
-     numu_MVA.Draw("Ev_reco >> hsel", selcut)
+     numu_MVA.Draw("Ev_reco >> hall", thisfidcut)
+     numu_MVA.Draw("Ev_reco >> hsel", thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -155,12 +173,12 @@ def MakeEfficiencies(datadir):
 
  i = 0
  for eff in efflist_anumu:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_numu[i]
-     selcut = "mvaresult>"+str(mva_select_cut)+" && "+cutlist_numu[i]
+     thisfidcut = fidcut+cutlist_numu[i]
+     thisselcut = selcut_numu+cutlist_numu[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     anumu_MVA.Draw("Ev_reco >> hall", fidcut)
-     anumu_MVA.Draw("Ev_reco >> hsel", selcut)
+     anumu_MVA.Draw("Ev_reco >> hall", thisfidcut)
+     anumu_MVA.Draw("Ev_reco >> hsel", thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -174,9 +192,9 @@ def MakeEfficiencies(datadir):
 #Smearings
  i=0
  for smear in smearlist_nue:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_nue[i]
+     thisfidcut = fidcut+cutlist_nue[i]
      hsmr = ROOT.TH2D("hsmr","hsmr",n,postbins,nbins_pre,prebins)    
-     nueboth_MVA.Draw("Ev:Ev_reco >> hsmr", fidcut)
+     nueboth_MVA.Draw("Ev:Ev_reco >> hsmr", thisfidcut)
      hsmr = ROOT.gDirectory.FindObject("hsmr")
      hsmr.SetNameTitle(smear,smear)
      hsmr.GetXaxis().SetTitle("Ereco")
@@ -187,9 +205,9 @@ def MakeEfficiencies(datadir):
 
  i=0
  for smear in smearlist_numu:
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "+cutlist_numu[i]
+     thisfidcut = fidcut+cutlist_numu[i]
      hsmr = ROOT.TH2D("hsmr","hsmr",n,postbins,nbins_pre,prebins)    
-     numuboth_MVA.Draw("Ev:Ev_reco >> hsmr", fidcut)
+     numuboth_MVA.Draw("Ev:Ev_reco >> hsmr", thisfidcut)
      hsmr = ROOT.gDirectory.FindObject("hsmr")
      hsmr.SetNameTitle(smear,smear)
      hsmr.GetXaxis().SetTitle("Ereco")
@@ -268,8 +286,10 @@ def MakeEfficiencies(datadir):
      i += 1
  d6.SaveAs("numu_smear.png")
 
+ return 0
+
 def main():
-    MakeEfficiencies("/data0/lbne/etw/dunemva/")
+    MakeEfficiencies("/data0/lbne/etw/dunemva/","mva")
 
 if __name__ == "__main__":
     main()
