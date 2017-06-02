@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Prediction/IPrediction.h"
