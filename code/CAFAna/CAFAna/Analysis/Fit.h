@@ -96,7 +96,7 @@ namespace ana
   /// \brief \f$\chi^2\f$ scan in one variable, profiling over all others
   ///
   /// \param expt   The experiment to retrieve chisq values from
-  /// \param calc   Initial values of all oscillation parametes
+  /// \param calc   Initial values of all oscillation parameters
   /// \param v      Scan over this variable
   /// \param nbinsx Binning
   /// \param minx   Binning
@@ -124,6 +124,17 @@ namespace ana
                std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
 
+  TH1* Profile(const IExperiment* expt,
+	       osc::IOscCalculatorAdjustable* calc,
+               const ISyst* s,
+	       int nbinsx, double minx, double maxx,
+	       double minchi = -1,
+               const std::vector<const IFitVar*>& profVars = {},
+               const std::vector<const ISyst*>& profSysts = {},
+               const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
+               std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
+
   /// Forward to \ref Profile but sqrt the result for a crude significance
   TH1* SqrtProfile(const IExperiment* expt,
                    osc::IOscCalculatorAdjustable* calc,
@@ -137,6 +148,12 @@ namespace ana
   /// \f$\chi^2\f$ scan in one variable, holding all others constant
   TH1* Slice(const IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+             int nbinsx, double minx, double maxx,
+             double minchi = -1);
+
+  /// \f$\chi^2\f$ scan in one systematic variable, holding all others constant
+  TH1* Slice(const IExperiment* expt,
+             osc::IOscCalculatorAdjustable* calc, const ISyst* s,
              int nbinsx, double minx, double maxx,
              double minchi = -1);
 
