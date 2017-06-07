@@ -313,28 +313,30 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SystComponentScaleVector GetDUNEXSecSysts()
+  SystVector<DUNEXSecSyst> GetDUNEXSecSysts()
   {
-    SystComponentScaleVector ret;
+    SystVector<DUNEXSecSyst> ret;
     for(int i = 0; i < 32; ++i) ret.push_back(GetDUNEXSecSyst(EVALORCategory(i)));
     return ret;
   }
 
+  const int N = 32;
+
   //----------------------------------------------------------------------
   DUNEXSecCorrelation::DUNEXSecCorrelation()
-    : fMatrix(32, 32)
+    : fMatrix(N, N)
   {
     fSysts = GetDUNEXSecSysts();
-    assert(fSysts.size() == 32);
+    assert(fSysts.size() == N);
 
     TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
 
     TH2* h = (TH2*)f.Get("xs_covariance");
     EnsurePositiveDefinite(h);
 
-    for(int i = 0; i < 32; ++i){
+    for(int i = 0; i < N; ++i){
       fScales.push_back(sqrt(h->GetBinContent(i+1, i+1)));
-      for(int j = 0; j < 32; ++j){
+      for(int j = 0; j < N; ++j){
         fMatrix(i, j) = h->GetBinContent(i+1, j+1);
       }
     }
@@ -349,11 +351,11 @@ namespace ana
     double ret = 0;
     // Don't double-count diagonal terms which SystShifts::Penalty() already
     // applied
-    for(int i = 0; i < 32; ++i) ret -= util::sqr(syst.GetShift(fSysts[i]));
+    for(int i = 0; i < N; ++i) ret -= util::sqr(syst.GetShift(fSysts[i]));
 
     // Scale the shift vector from sigmas into fractional shifts
-    TVectorD v(32);
-    for(int i = 0; i < 32; ++i)
+    TVectorD v(N);
+    for(int i = 0; i < N; ++i)
       v[i] = syst.GetShift(fSysts[i]) * fScales[i];
 
     return ret + fMatrix.Similarity(v);
