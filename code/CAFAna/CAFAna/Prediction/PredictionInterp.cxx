@@ -38,11 +38,9 @@ namespace ana
       ShiftedPreds sp;
       sp.systName = syst->ShortName();
 
-      // Genie reweight shifts aren't able to provide +/-3 sigma
-      if(syst->IsGenieReweight())
-        sp.shifts = {-2, -1, 0, +1, +2};
-      else
-        sp.shifts = {-3, -2, -1, 0, +1, +2, +3};
+      for(int x = -syst->PredInterpMaxNSigma(); x <= +syst->PredInterpMaxNSigma(); ++x){
+        sp.shifts.push_back(x);
+      }
 
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
@@ -73,11 +71,9 @@ namespace ana
       ShiftedPreds sp;
       sp.systName = syst->ShortName();
 
-      // Genie reweight shifts aren't able to provide +/-3 sigma
-      if(syst->IsGenieReweight())
-        sp.shifts = {-2, -1, 0, +1, +2};
-      else
-        sp.shifts = {-3, -2, -1, 0, +1, +2, +3};
+      for(int x = -syst->PredInterpMaxNSigma(); x <= +syst->PredInterpMaxNSigma(); ++x){
+        sp.shifts.push_back(x);
+      }
 
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
