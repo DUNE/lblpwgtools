@@ -33,5 +33,10 @@ namespace caf
     int isFD;
     int isFHC;
 
+    // sigmas
+    double sigma_Ev_reco;
+    double sigma_Elep_reco;
+    double sigma_numu_pid;
+    double sigma_nue_pid;
   };
 }

@@ -193,6 +193,10 @@ namespace ana
     tr->SetBranchAddress("isFD", &sr.dune.isFD);
     tr->SetBranchAddress("isFHC", &sr.dune.isFHC);
 
+    tr->SetBranchAddress("sigma_Ev_reco", &sr.dune.sigma_Ev_reco);
+    tr->SetBranchAddress("sigma_Elep_reco", &sr.dune.sigma_Elep_reco);
+    tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
+    tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){
