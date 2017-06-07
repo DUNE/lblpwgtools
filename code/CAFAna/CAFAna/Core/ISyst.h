@@ -54,7 +54,7 @@ namespace ana
     /// PredictionInterp normally interpolates between spectra made at
     /// +/-1,2,3sigma. For some systematics that's overkill. Override this
     /// function to specify different behaviour for this systematic.
-    virtual bool PredInterpMaxNSigma() const
+    virtual int PredInterpMaxNSigma() const
     {
       return IsGenieReweight() ? 2 : 3;
     }
