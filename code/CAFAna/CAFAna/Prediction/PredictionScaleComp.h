@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Prediction/IPrediction.h"
@@ -64,7 +66,7 @@ namespace ana
     static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
     virtual void SaveTo(TDirectory* dir) const;
 
-  private:
+  protected:
     PredictionScaleComp(const IPrediction* total,
                         const std::vector<const IPrediction*>& preds,
                         const std::vector<const SystComponentScale*>& systs);

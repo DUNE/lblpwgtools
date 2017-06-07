@@ -3,6 +3,8 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Ratio.h"
 
+#include "Utilities/func/MathUtil.h"
+
 #include "TArrayD.h"
 #include "TClass.h"
 #include "TDirectory.h"
@@ -23,6 +25,8 @@
 
 namespace ana
 {
+  double LLPerBinFracSystErr::fgErr = -1;
+
   //----------------------------------------------------------------------
   std::string UniqueName()
   {
@@ -116,6 +120,15 @@ namespace ana
   //----------------------------------------------------------------------
   double LogLikelihood(double e, double o)
   {
+    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
+    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
+    const double S = LLPerBinFracSystErr::GetError();
+    if(S > 0){
+      const double S2 = util::sqr(S);
+      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
+      e *= 1+s;
+    }
+
     // With this value, negative expected events and one observed
     // event gives a chisq from this one bin of 182.
     const double minexp = 1e-40; // Don't let expectation go lower than this

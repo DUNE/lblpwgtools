@@ -69,15 +69,17 @@ namespace ana
 
   // Because vector<T*> won't automatically convert to vector<U*> even when U
   // inherits from V.
-  struct SystComponentScaleVector: public std::vector<const SystComponentScale*>
+  template<class T> struct SystVector: public std::vector<const T*>
   {
-    operator std::vector<const ISyst*>()
+    // U = any parent class
+    template<class U> operator std::vector<const U*>()
     {
-      return std::vector<const ISyst*>(begin(), end());
-    }    
+      return std::vector<const U*>(std::vector<const T*>::begin(),
+                                   std::vector<const T*>::end());
+    }
   };
 
-  SystComponentScaleVector GetDUNEXSecSysts();
+  SystVector<DUNEXSecSyst> GetDUNEXSecSysts();
 
 
   class DUNEXSecCorrelation: public IExperiment

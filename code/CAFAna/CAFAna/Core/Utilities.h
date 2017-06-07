@@ -77,6 +77,14 @@ namespace ana
   **/
   std::unique_ptr<TMatrixD> CalcCovMx(const std::vector<TArrayD*> & binSets, int firstBin=0, int lastBin=-1);
 
+  class LLPerBinFracSystErr
+  {
+  public:
+    static void SetError(double e) {fgErr = e;}
+    static double GetError() {return fgErr;}
+  protected:
+    static double fgErr;
+  };
 
   /** \brief The log-likelihood formula from the PDG.
 
