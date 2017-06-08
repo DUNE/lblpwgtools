@@ -11,7 +11,7 @@ void test_xsec_diag(bool reload = false){}
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Prediction/PredictionScaleCompXSecDiag.h"
+#include "CAFAna/Prediction/PredictionXSecDiag.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/Plots.h"
@@ -91,42 +91,43 @@ void test_xsec_diag(bool reload = false)
     auto* loaderFDNueRHCNuTau = loaderFDNueRHC.LoaderForRunPOT(20000006);
     auto* loaderFDNueRHCNC    = loaderFDNueRHC.LoaderForRunPOT(0);
 
-    PredictionScaleCompXSecDiag predNDFHC(*loaderNDFHCPOT, 
-                                          axis,
-                                          kPIDmu > 0.5 && kQ < 0.);
+    PredictionXSecDiag predNDFHC(*loaderNDFHCPOT, 
+                                 axis,
+                                 kPIDmu > 0.5 && kQ < 0.);
 
-    PredictionScaleCompXSecDiag predNDRHC(*loaderNDRHCPOT, 
-                                          axis,
-                                          kPIDmu > 0.5 && kQ > 0.);
+    PredictionXSecDiag predNDRHC(*loaderNDRHCPOT, 
+                                 axis,
+                                 kPIDmu > 0.5 && kQ > 0.);
 
     // 0.8 is a random guess at a cut position - should be studied
-    PredictionScaleCompXSecDiag predFDNumuFHC(*loaderFDNumuFHCBeam, 
+    PredictionXSecDiag predFDNumuFHC(*loaderFDNumuFHCBeam, 
                                               *loaderFDNumuFHCNue,
                                               *loaderFDNumuFHCNuTau,
                                               *loaderFDNumuFHCNC,
                                               axis,
                                               kPIDFD > 0.8);
 
-    PredictionScaleCompXSecDiag predFDNueFHC(*loaderFDNueFHCBeam, 
-                                             *loaderFDNueFHCNue,
-                                             *loaderFDNueFHCNuTau,
-                                             *loaderFDNueFHCNC,
-                                             axis,
-                                             kPIDFD > 0.95);
+    // As is 0.95
+    PredictionXSecDiag predFDNueFHC(*loaderFDNueFHCBeam, 
+                                    *loaderFDNueFHCNue,
+                                    *loaderFDNueFHCNuTau,
+                                    *loaderFDNueFHCNC,
+                                    axis,
+                                    kPIDFD > 0.95);
 
-    PredictionScaleCompXSecDiag predFDNumuRHC(*loaderFDNumuRHCBeam, 
-                                              *loaderFDNumuRHCNue,
-                                              *loaderFDNumuRHCNuTau,
-                                              *loaderFDNumuRHCNC,
-                                              axis,
-                                              kPIDFD > 0.8);
+    PredictionXSecDiag predFDNumuRHC(*loaderFDNumuRHCBeam, 
+                                     *loaderFDNumuRHCNue,
+                                     *loaderFDNumuRHCNuTau,
+                                     *loaderFDNumuRHCNC,
+                                     axis,
+                                     kPIDFD > 0.8);
 
-    PredictionScaleCompXSecDiag predFDNueRHC(*loaderFDNueRHCBeam, 
-                                             *loaderFDNueRHCNue,
-                                             *loaderFDNueRHCNuTau,
-                                             *loaderFDNueRHCNC,
-                                             axis,
-                                             kPIDFD > 0.95);
+    PredictionXSecDiag predFDNueRHC(*loaderFDNueRHCBeam, 
+                                    *loaderFDNueRHCNue,
+                                    *loaderFDNueRHCNuTau,
+                                    *loaderFDNueRHCNC,
+                                    axis,
+                                    kPIDFD > 0.95);
 
     loaderNDFHC.Go();
     loaderNDRHC.Go();
@@ -149,14 +150,14 @@ void test_xsec_diag(bool reload = false)
   }
 
   TFile fin(stateFname);
-  //  PredictionScaleCompXSecDiag& predNDFHC = *PredictionScaleCompXSecDiag::LoadFrom2(fin.GetDirectory("nd_fhc")).release();
+  //  PredictionXSecDiag& predNDFHC = *PredictionXSecDiag::LoadFrom2(fin.GetDirectory("nd_fhc")).release();
 
-  PredictionScaleCompXSecDiag& predNDFHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("nd_fhc")).release();
-  PredictionScaleCompXSecDiag& predNDRHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("nd_rhc")).release();
-  PredictionScaleCompXSecDiag& predFDNumuFHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionScaleCompXSecDiag& predFDNueFHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionScaleCompXSecDiag& predFDNumuRHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionScaleCompXSecDiag& predFDNueRHC = *ana::LoadFrom<PredictionScaleCompXSecDiag>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionXSecDiag& predNDFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("nd_fhc")).release();
+  PredictionXSecDiag& predNDRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("nd_rhc")).release();
+  PredictionXSecDiag& predFDNumuFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_fhc")).release();
+  PredictionXSecDiag& predFDNueFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_fhc")).release();
+  PredictionXSecDiag& predFDNumuRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_rhc")).release();
+  PredictionXSecDiag& predFDNueRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_rhc")).release();
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 

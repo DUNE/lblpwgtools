@@ -14,6 +14,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
+#include "CAFAna/Prediction/PredictionScaleComp.h"
 
 namespace ana
 {
@@ -33,6 +34,8 @@ namespace ana
        tag == "PredictionInterp2") return PredictionInterp::LoadFrom(dir);
 
     if(tag == "PredictionNoOsc") return PredictionNoOsc::LoadFrom(dir);
+
+    if(tag == "PredictionScaleComp") return PredictionScaleComp::LoadFrom(dir);
 
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();
