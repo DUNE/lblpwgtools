@@ -31,6 +31,7 @@ using namespace ana;
 
 #include "TCanvas.h"
 #include "TH1.h"
+#include "TGraph.h"
 #include "TLegend.h"
 #include "THStack.h"
 
@@ -53,6 +54,8 @@ const double potND = 1.47e21;
 // POT/yr * 3.5yrs * mass correction
 const double potFD = 3.5 * 1.47e21 * 40/1.13;
 
+const double pi = 3.14159265359;
+
 const char* stateFname = "nd_fit_state.root";
 
 void Legend(const std::string& title)
@@ -68,6 +71,8 @@ void Legend(const std::string& title)
   leg->AddEntry(dummy->Clone(), "Nominal MC", "l");
   dummy->SetLineColor(kBlue);
   leg->AddEntry(dummy->Clone(), "Best fit", "l");
+  dummy->SetLineStyle(kDashed);
+  leg->AddEntry(dummy->Clone(), "Best fit #delta = 0", "l");
   leg->Draw();
 }
 
@@ -76,8 +81,8 @@ void joint_fit_ND(bool reload = false)
   rootlogon(); // style
   Loaders dummyLoaders; // PredictionGenerator insists on this
 
-  osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
-  inputOsc->SetdCP(1.5*TMath::Pi());
+  osc::IOscCalculatorAdjustable* oscNH = DefaultOscCalc(); // NH, dCP == 0
+  osc::IOscCalculatorAdjustable* oscIH = DefaultOscCalcIH(); // IH, dCP == 0
 
   // all the systematics
   const std::vector<const ISyst*> xsecSysts = GetDUNEXSecSysts(); // uses correlation matrix
@@ -133,7 +138,7 @@ void joint_fit_ND(bool reload = false)
 
     NoOscPredictionGenerator genNDRHC(*loaderNDRHCPOT,
                                       axis,
-                                      kPIDmu > 0.5 && kQ < 0.);
+                                      kPIDmu > 0.5 && kQ > 0.);
     PredictionInterp predNDRHC(allSysts,
                                0,
                                genNDRHC,
@@ -147,7 +152,7 @@ void joint_fit_ND(bool reload = false)
                                                  axis,
                                                  kPIDFD > 0.8);
     PredictionInterp predFDNumuFHC(allSysts,
-                                   inputOsc,
+                                   oscNH,
                                    genFDNumuFHC,
                                    dummyLoaders);
 
@@ -159,7 +164,7 @@ void joint_fit_ND(bool reload = false)
                                                  axis,
                                                  kPIDFD > 0.95);
     PredictionInterp predFDNueFHC(allSysts,
-                                  inputOsc,
+                                  oscNH,
                                   genFDNueFHC,
                                   dummyLoaders);
 
@@ -171,7 +176,7 @@ void joint_fit_ND(bool reload = false)
                                                  axis,
                                                  kPIDFD > 0.8);
     PredictionInterp predFDNumuRHC(allSysts,
-                                   inputOsc,
+                                   oscNH,
                                    genFDNumuRHC,
                                    dummyLoaders);
 
@@ -182,7 +187,7 @@ void joint_fit_ND(bool reload = false)
                                                  axis,
                                                  kPIDFD > 0.95);
     PredictionInterp predFDNueRHC(allSysts,
-                                  inputOsc,
+                                  oscNH,
                                   genFDNueRHC,
                                   dummyLoaders);
 
@@ -218,102 +223,152 @@ void joint_fit_ND(bool reload = false)
   std::cout << "Done loading state" << std::endl;
 
   // test a shifted fake data set
-  DUNEXSecSyst xsshift(nu_ccqe_3);
+/*
+  DUNEXSecSyst xsshift3(nu_ccqe_3);
+  DUNEXSecSyst xsshift2(nu_ccqe_2);
+  DUNEXSecSyst xsshift1(nu_ccqe_1);
   std::map<const ISyst*,double> shiftmap;
-  shiftmap.emplace(&xsshift, +1.);
-  shiftmap.emplace(&kNDEvSyst, +2.);
+  shiftmap.emplace(&xsshift3, +3.);
+  shiftmap.emplace(&xsshift2, +3.);
+  shiftmap.emplace(&xsshift1, +3.);
+  shiftmap.emplace(&kNDEvSyst, -1.5);
   SystShifts shifts(shiftmap);
 
-
-
-  // Make some ND Asimov fake data
   Spectrum fakeNDFHC = predNDFHC.PredictSyst(0, shifts).FakeData(potND);
   Spectrum fakeNDRHC = predNDRHC.PredictSyst(0, shifts).FakeData(potND);
 
-  Spectrum fakeFDNumuFHC = predFDNumuFHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
-  Spectrum fakeFDNueFHC = predFDNueFHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
+  Spectrum fakeFDNumuFHC = predFDNumuFHC.PredictSyst(oscNH, shifts).FakeData(potFD);
+  Spectrum fakeFDNueFHC = predFDNueFHC.PredictSyst(oscNH, shifts).FakeData(potFD);
 
-  Spectrum fakeFDNumuRHC = predFDNumuRHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
-  Spectrum fakeFDNueRHC = predFDNueRHC.PredictSyst(inputOsc, shifts).FakeData(potFD);
+  Spectrum fakeFDNumuRHC = predFDNumuRHC.PredictSyst(oscNH, shifts).FakeData(potFD);
+  Spectrum fakeFDNueRHC = predFDNueRHC.PredictSyst(oscNH, shifts).FakeData(potFD);
+*/
 
-  SingleSampleExperiment exptNDFHC(&predNDFHC, fakeNDFHC);
-  SingleSampleExperiment exptNDRHC(&predNDRHC, fakeNDRHC);
+  // Scan 20 values of delta for IH and NH
+  // ND predictions will not change with delta CP
+  Spectrum fakeNDFHC = predNDFHC.Predict(0).FakeData(potND);
+  Spectrum fakeNDRHC = predNDRHC.Predict(0).FakeData(potND);
 
-  SingleSampleExperiment exptFDNumuFHC(&predFDNumuFHC, fakeFDNumuFHC);
-  SingleSampleExperiment exptFDNueFHC(&predFDNueFHC, fakeFDNueFHC);
+  const int npoints = 20; // really there will be one more than this
+  TGraph * g = new TGraph();
+  g->SetName("mcdonals");
+  g->SetTitle(";#delta_{CP}/#pi;#Delta#chi^{2}");
+  for( int i = 0; i <= npoints; ++i ) {
+    double deltaCPpi = -1 + (2*((float)i)/npoints);
+    double deltaCP = deltaCPpi*pi; // in units of radians, not pis
 
-  SingleSampleExperiment exptFDNumuRHC(&predFDNumuRHC, fakeFDNumuRHC);
-  SingleSampleExperiment exptFDNueRHC(&predFDNueRHC, fakeFDNueRHC);
+    oscNH->SetdCP( deltaCP );
+    oscIH->SetdCP( deltaCP );
 
-  // Joint fit between ND and FD and the covariance matrix
-  MultiExperiment expt({&exptNDFHC, &exptNDRHC,
-                        &exptFDNumuFHC, &exptFDNueFHC,
-                        &exptFDNumuRHC, &exptFDNueRHC,
-                        new DUNEXSecCorrelation
-                       });
+    Spectrum fakeFDNumuFHC = predFDNumuFHC.Predict(oscNH).FakeData(potFD);
+    Spectrum fakeFDNueFHC = predFDNueFHC.Predict(oscNH).FakeData(potFD);
+    Spectrum fakeFDNumuRHC = predFDNumuRHC.Predict(oscNH).FakeData(potFD);
+    Spectrum fakeFDNueRHC = predFDNueRHC.Predict(oscNH).FakeData(potFD);
 
-  // Just fit for delta, fix everything else from external data?
-  const std::vector<const IFitVar*> oscFitVars = {&kFitDeltaInPiUnits};
+    SingleSampleExperiment exptNDFHC(&predNDFHC, fakeNDFHC);
+    SingleSampleExperiment exptNDRHC(&predNDRHC, fakeNDRHC);
 
-  // Use everything - slow
-  //const std::vector<const ISyst*> systFitVars = GetDUNEXSecSysts();
-  // Fit a reduced list of variables of interest
-  //    const std::vector<const ISyst*> systFitVars = {GetDUNEXSecSyst(nu_MEC_dummy),
-  //                                                   GetDUNEXSecSyst(nubar_MEC_dummy)};
+    SingleSampleExperiment exptFDNumuFHC(&predFDNumuFHC, fakeFDNumuFHC);
+    SingleSampleExperiment exptFDNueFHC(&predFDNueFHC, fakeFDNueFHC);
 
-  // Set up the fit
-  Fitter fit(&expt, oscFitVars, allSysts);
-  // Where will we start our search?
-  osc::IOscCalculatorAdjustable* oscSeed = DefaultOscCalc();
-  SystShifts systSeed = SystShifts::Nominal();
-  // Do the fit - updates the "seed" variables with the best fit point
-  fit.Fit(oscSeed, systSeed);
+    SingleSampleExperiment exptFDNumuRHC(&predFDNumuRHC, fakeFDNumuRHC);
+    SingleSampleExperiment exptFDNueRHC(&predFDNueRHC, fakeFDNueRHC);
 
-  // Best fit spectra for all the samples
-  Spectrum bfNDFHC = predNDFHC.PredictSyst(0, systSeed);
-  Spectrum bfNDRHC = predNDRHC.PredictSyst(0, systSeed);
-  Spectrum bfFDNumuFHC = predFDNumuFHC.PredictSyst(oscSeed, systSeed);
-  Spectrum bfFDNueFHC = predFDNueFHC.PredictSyst(oscSeed, systSeed);
-  Spectrum bfFDNumuRHC = predFDNumuRHC.PredictSyst(oscSeed, systSeed);
-  Spectrum bfFDNueRHC = predFDNueRHC.PredictSyst(oscSeed, systSeed);
+    // Joint fit between ND and FD and the covariance matrix
+    MultiExperiment expt({&exptNDFHC, &exptNDRHC,
+                          &exptFDNumuFHC, &exptFDNueFHC,
+                          &exptFDNumuRHC, &exptFDNueRHC,
+                          new DUNEXSecCorrelation
+                         });
 
-  // Future work - show the numu/nue/NC sub-components of these
+    // Just fit for delta, fix everything else from external data?
+    const std::vector<const IFitVar*> oscFitVars = {&kFitDeltaInPiUnits};
+    const std::vector<const IFitVar*> emptyOscVars;
+
+    // Set up the fit
+    Fitter fit(&expt, oscFitVars, allSysts);
+    Fitter fit0(&expt, emptyOscVars, allSysts);
+    // Where will we start our search?
+    osc::IOscCalculatorAdjustable* oscSeed = DefaultOscCalc();
+    SystShifts systSeed = SystShifts::Nominal();
+    osc::IOscCalculatorAdjustable* oscSeed0 = DefaultOscCalc();
+    SystShifts systSeed0 = SystShifts::Nominal();
+    // Do the fit - updates the "seed" variables with the best fit point
+    double chi2_floatDelta = fit.Fit(oscSeed, systSeed, Fitter::kQuiet);
+    double chi2_delta0 = fit0.Fit(oscSeed0, systSeed0, Fitter::kQuiet);
+
+    std::cout << "True dCP " << deltaCPpi << "pi, best fit " << oscSeed->GetdCP()/pi << "pi, chi2 " << chi2_floatDelta << " delta=0 chi2 " << chi2_delta0 << std::endl;
+
+    g->SetPoint( i, deltaCPpi, chi2_delta0 - chi2_floatDelta );
+
+    // Best fit spectra for all the samples
+    Spectrum bfNDFHC = predNDFHC.PredictSyst(0, systSeed);
+    Spectrum bfNDRHC = predNDRHC.PredictSyst(0, systSeed);
+    Spectrum bfFDNumuFHC = predFDNumuFHC.PredictSyst(oscSeed, systSeed);
+    Spectrum bfFDNueFHC = predFDNueFHC.PredictSyst(oscSeed, systSeed);
+    Spectrum bfFDNumuRHC = predFDNumuRHC.PredictSyst(oscSeed, systSeed);
+    Spectrum bfFDNueRHC = predFDNueRHC.PredictSyst(oscSeed, systSeed);
+
+    Spectrum bfNDFHC0 = predNDFHC.PredictSyst(0, systSeed0);
+    Spectrum bfNDRHC0 = predNDRHC.PredictSyst(0, systSeed0);
+    Spectrum bfFDNumuFHC0 = predFDNumuFHC.PredictSyst(oscSeed0, systSeed0);
+    Spectrum bfFDNueFHC0 = predFDNueFHC.PredictSyst(oscSeed0, systSeed0);
+    Spectrum bfFDNumuRHC0 = predFDNumuRHC.PredictSyst(oscSeed0, systSeed0);
+    Spectrum bfFDNueRHC0 = predFDNueRHC.PredictSyst(oscSeed0, systSeed0);
+
+    new TCanvas;
+    predNDFHC.Predict(0).ToTH1(potND)->Draw("hist");
+    bfNDFHC.ToTH1(potND, kBlue)->Draw("hist same");
+    fakeNDFHC.ToTH1(potND, kRed)->Draw("ep same");
+    Legend("ND FHC");
+    gPad->Print( Form("plots/nd_fhc_%1.1fpi.png",deltaCPpi) );
+
+    new TCanvas;
+    predNDRHC.Predict(0).ToTH1(potND)->Draw("hist");
+    bfNDRHC.ToTH1(potND, kBlue)->Draw("hist same");
+    fakeNDRHC.ToTH1(potND, kRed)->Draw("ep same");
+    Legend("ND RHC");
+    gPad->Print( Form("plots/nd_rhc_%1.1fpi.png",deltaCPpi) );
+
+    new TCanvas;
+    predFDNumuFHC.Predict(oscNH).ToTH1(potFD)->Draw("hist");
+    bfFDNumuFHC.ToTH1(potFD, kBlue)->Draw("hist same");
+    bfFDNumuFHC0.ToTH1(potFD, kBlue, kDashed)->Draw("hist same");
+    fakeFDNumuFHC.ToTH1(potFD, kRed)->Draw("ep same");
+    Legend("FD FHC #nu_{#mu}");
+    gPad->Print( Form("plots/fd_fhc_numu_%1.1fpi.png",deltaCPpi) );
+
+    new TCanvas;
+    predFDNueFHC.Predict(oscNH).ToTH1(potFD)->Draw("hist");
+    bfFDNueFHC.ToTH1(potFD, kBlue)->Draw("hist same");
+    bfFDNueFHC0.ToTH1(potFD, kBlue, kDashed)->Draw("hist same");
+    fakeFDNueFHC.ToTH1(potFD, kRed)->Draw("ep same");
+    Legend("FD FHC #nu_{e}");
+    gPad->Print( Form("plots/fd_fhc_nue_%1.1fpi.png",deltaCPpi) );
+
+    new TCanvas;
+    predFDNumuRHC.Predict(oscNH).ToTH1(potFD)->Draw("hist");
+    bfFDNumuRHC.ToTH1(potFD, kBlue)->Draw("hist same");
+    bfFDNumuRHC0.ToTH1(potFD, kBlue, kDashed)->Draw("hist same");
+    fakeFDNumuRHC.ToTH1(potFD, kRed)->Draw("ep same");
+    Legend("FD RHC #nu_{#mu}");
+    gPad->Print( Form("plots/fd_rhc_numu_%1.1fpi.png",deltaCPpi) );
+
+    new TCanvas;
+    predFDNueRHC.Predict(oscNH).ToTH1(potFD)->Draw("hist");
+    bfFDNueRHC.ToTH1(potFD, kBlue)->Draw("hist same");
+    bfFDNueRHC0.ToTH1(potFD, kBlue, kDashed)->Draw("hist same");
+    fakeFDNueRHC.ToTH1(potFD, kRed)->Draw("ep same");
+    Legend("FD RHC #nu_{e}");
+    gPad->Print( Form("plots/fd_rhc_nue_%1.1fpi.png",deltaCPpi) );
+  }
 
   new TCanvas;
-  fakeNDFHC.ToTH1(potND, kRed)->Draw("ep");
-  predNDFHC.Predict(0).ToTH1(potND)->Draw("hist same");
-  bfNDFHC.ToTH1(potND, kBlue)->Draw("hist same");
-  Legend("ND FHC");
+  g->SetMarkerSize(0.5);
+  g->Draw("APL");
+  gPad->Print( "plots/mcdonalds.png" );
 
-  new TCanvas;
-  fakeNDRHC.ToTH1(potND, kRed)->Draw("ep");
-  predNDRHC.Predict(0).ToTH1(potND)->Draw("hist same");
-  bfNDRHC.ToTH1(potND, kBlue)->Draw("hist same");
-  Legend("ND RHC");
 
-  new TCanvas;
-  fakeFDNumuFHC.ToTH1(potFD, kRed)->Draw("ep");
-  predFDNumuFHC.Predict(oscSeed).ToTH1(potFD)->Draw("hist same");
-  bfFDNumuFHC.ToTH1(potFD, kBlue)->Draw("hist same");
-  Legend("FD FHC #nu_{#mu}");
-
-  new TCanvas;
-  fakeFDNueFHC.ToTH1(potFD, kRed)->Draw("ep");
-  predFDNueFHC.Predict(oscSeed).ToTH1(potFD)->Draw("hist same");
-  bfFDNueFHC.ToTH1(potFD, kBlue)->Draw("hist same");
-  Legend("FD FHC #nu_{e}");
-
-  new TCanvas;
-  fakeFDNumuRHC.ToTH1(potFD, kRed)->Draw("ep");
-  predFDNumuRHC.Predict(oscSeed).ToTH1(potFD)->Draw("hist same");
-  bfFDNumuRHC.ToTH1(potFD, kBlue)->Draw("hist same");
-  Legend("FD RHC #nu_{#mu}");
-
-  new TCanvas;
-  fakeFDNueRHC.ToTH1(potFD, kRed)->Draw("ep");
-  predFDNueRHC.Predict(oscSeed).ToTH1(potFD)->Draw("hist same");
-  bfFDNueRHC.ToTH1(potFD, kBlue)->Draw("hist same");
-  Legend("FD RHC #nu_{e}");
 }
 
 #endif
