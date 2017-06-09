@@ -196,16 +196,21 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Profile(const IExperiment* expt,
-	       osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
-	       int nbinsx, double minx, double maxx,
-	       double input_minchi,
-               const std::vector<const IFitVar*>& profVars,
-               const std::vector<const ISyst*>& profSysts,
-               const std::map<const IFitVar*, std::vector<double>>& seedPts,
-               std::map<const IFitVar*, TGraph*>& profVarsMap,
-               std::map<const ISyst*, TGraph*>& profSystsMap)
+  TH1* ProfileHelper(const IExperiment* expt,
+                     osc::IOscCalculatorAdjustable* calc,
+                     const IFitVar* v,
+                     const ISyst* s,
+                     int nbinsx, double minx, double maxx,
+                     double input_minchi,
+                     const std::vector<const IFitVar*>& profVars,
+                     const std::vector<const ISyst*>& profSysts,
+                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     std::map<const IFitVar*, TGraph*>& profVarsMap,
+                     std::map<const ISyst*, TGraph*>& profSystsMap)
   {
+    assert(!v || !s);
+    assert(v || s);
+
     // If we're called with the default arguments they could already have stuff
     // in from before.
     for(auto it: profVarsMap) delete it.second;
@@ -233,13 +238,14 @@ namespace ana
 
     for(int n = 0; n < nbinsx; ++n){
       const double x = ret->GetXaxis()->GetBinCenter(n+1);
-      v->SetValue(calc, x);
+      if(v) v->SetValue(calc, x);
 
       // Put oscillation values back to their seed position each iteration
       for(unsigned int i = 0; i < seedValues.size(); ++i)
         profVars[i]->SetValue( calc, seedValues[i] );
 
       SystShifts systshift = SystShifts::Nominal();
+      if(s) systshift.SetShift(s, x);
       const double chi = fit.Fit(calc, systshift, seedPts, Fitter::kQuiet);
 
       ret->Fill(x, chi);
@@ -279,6 +285,40 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  TH1* Profile(const IExperiment* expt,
+               osc::IOscCalculatorAdjustable* calc,
+               const IFitVar* v,
+               int nbinsx, double minx, double maxx,
+               double input_minchi,
+               const std::vector<const IFitVar*>& profVars,
+               const std::vector<const ISyst*>& profSysts,
+               const std::map<const IFitVar*, std::vector<double>>& seedPts,
+               std::map<const IFitVar*, TGraph*>& profVarsMap,
+               std::map<const ISyst*, TGraph*>& profSystsMap)
+  {
+    return ProfileHelper(expt, calc, v, 0, nbinsx, minx, maxx,
+                         input_minchi, profVars, profSysts, seedPts,
+                         profVarsMap, profSystsMap);
+  }
+
+  //----------------------------------------------------------------------
+  TH1* Profile(const IExperiment* expt,
+               osc::IOscCalculatorAdjustable* calc,
+               const ISyst* s,
+               int nbinsx, double minx, double maxx,
+               double input_minchi,
+               const std::vector<const IFitVar*>& profVars,
+               const std::vector<const ISyst*>& profSysts,
+               const std::map<const IFitVar*, std::vector<double>>& seedPts,
+               std::map<const IFitVar*, TGraph*>& profVarsMap,
+               std::map<const ISyst*, TGraph*>& profSystsMap)
+  {
+    return ProfileHelper(expt, calc, 0, s, nbinsx, minx, maxx,
+                         input_minchi, profVars, profSysts, seedPts,
+                         profVarsMap, profSystsMap);
+  }
+
+  //----------------------------------------------------------------------
   TH1* SqrtProfile(const IExperiment* expt,
 		   osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
 		   int nbinsx, double minx, double maxx, double minchi,
@@ -304,6 +344,15 @@ namespace ana
              double minchi)
   {
     return Profile(expt, calc, v, nbinsx, minx, maxx, minchi);
+  }
+
+  //----------------------------------------------------------------------
+  TH1* Slice(const IExperiment* expt,
+             osc::IOscCalculatorAdjustable* calc, const ISyst* s,
+             int nbinsx, double minx, double maxx,
+             double minchi)
+  {
+    return Profile(expt, calc, s, nbinsx, minx, maxx, minchi);
   }
 
   //----------------------------------------------------------------------

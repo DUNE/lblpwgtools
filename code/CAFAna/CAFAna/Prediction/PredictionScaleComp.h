@@ -49,16 +49,31 @@ namespace ana
 
     virtual ~PredictionScaleComp();
 
-    Spectrum Predict(osc::IOscCalculator* osc) const override;
-    Spectrum PredictSyst(osc::IOscCalculator* osc,
-                         const SystShifts&    syst) const override;
-    Spectrum PredictComponent(osc::IOscCalculator* calc,
-                              Flavors::Flavors_t flav,
-                              Current::Current_t curr,
-                              Sign::Sign_t sign) const override
+    virtual Spectrum Predict(osc::IOscCalculator* osc) const override
     {
-      assert(0 && "Please don't use PredictionScaleComp::PredictComponent");
+      return fTotal->Predict(osc);
     }
+
+    virtual Spectrum PredictSyst(osc::IOscCalculator* osc,
+                                 const SystShifts&    syst) const override
+    {
+      return PredictComponentSyst(osc, syst,
+                                  Flavors::kAll, Current::kBoth, Sign::kBoth);
+    }
+
+    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+                                      Flavors::Flavors_t flav,
+                                      Current::Current_t curr,
+                                      Sign::Sign_t sign) const override
+    {
+      return fTotal->PredictComponent(calc, flav, curr, sign);
+    }
+
+    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+                                          const SystShifts& syst,
+                                          Flavors::Flavors_t flav,
+                                          Current::Current_t curr,
+                                          Sign::Sign_t sign) const override;
 
     Spectrum PredictCategory(osc::IOscCalculator* osc,
                              const SystComponentScale* syst) const;

@@ -107,14 +107,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionScaleComp::Predict(osc::IOscCalculator* calc) const
-  {
-    return fTotal->Predict(calc);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum PredictionScaleComp::PredictSyst(osc::IOscCalculator* calc,
-                                            const SystShifts&    shift) const
+  Spectrum PredictionScaleComp::PredictComponentSyst(osc::IOscCalculator* calc,
+                                                     const SystShifts& shift,
+                                                     Flavors::Flavors_t flav,
+                                                     Current::Current_t curr,
+                                                     Sign::Sign_t sign) const
   {
     SystShifts shiftClean = shift;
     for(const ISyst* s: fSysts) shiftClean.SetShift(s, 0);
@@ -127,7 +124,8 @@ namespace ana
       const double x = shift.GetShift(fSysts[i]);
       if(x == 0) continue; // Nominal, can skip
 
-      Spectrum si = fPreds[i]->PredictSyst(calc, shiftClean);
+      Spectrum si = fPreds[i]->PredictComponentSyst(calc, shiftClean,
+                                                    flav, curr, sign);
 
       si.Scale(pow(1+fSysts[i]->OneSigmaScale(), x) - 1);
 
