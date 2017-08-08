@@ -20,13 +20,13 @@ using namespace ana;
 const Var kRecoE = SIMPLEVAR(dune.Ev_reco);
 const Var kPIDFD = SIMPLEVAR(dune.mvaresult);
 
-// 250 MeV bins from 0 to 10GeV
+// 250 MeV bins from 0 to 8GeV
 const HistAxis axis("Reconstructed energy (GeV)",
-                    Binning::Simple(40, 0, 10),
+                    Binning::Simple(32, 0, 8),
                     kRecoE);
 
-// POT/yr * 10yrs * mass correction
-const double potFD = 10 * 1.47e21 * 40/1.13;
+// POT/yr * 5yrs * mass correction
+const double potFD = 5 * 1.47e21 * 40/1.13;
 
 const char* stateFname = "fitter_validation_state.root";
 const char* outputFname = "fitter_validation_cafana.root";
@@ -38,7 +38,7 @@ osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
 
   osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
   ret->SetL(1300);
-  ret->SetRho(2.84); // g/cm^3
+  ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
 
   ret->SetDmsq21(7.50e-5);
   ret->SetTh12(33.56*TMath::Pi()/180);
@@ -183,8 +183,20 @@ void fitter_validation(bool reload = false)
       inputOsc->SetdCP(deltaIdx/2.*TMath::Pi());
       const std::string dcpStr = TString::Format("%gpi", deltaIdx/2.).Data();
 
-      FILE* f = fopen((hieStr+"_"+dcpStr+".txt").c_str(), "w");
+      FILE* f = fopen(("numu_fhc_"+hieStr+"_"+dcpStr+".txt").c_str(), "w");
       table(f, &predFDNumuFHC, inputOsc);
+      fclose(f);
+
+      f = fopen(("nue_fhc_"+hieStr+"_"+dcpStr+".txt").c_str(), "w");
+      table(f, &predFDNueFHC, inputOsc);
+      fclose(f);
+
+      f = fopen(("numu_rhc_"+hieStr+"_"+dcpStr+".txt").c_str(), "w");
+      table(f, &predFDNumuRHC, inputOsc);
+      fclose(f);
+
+      f = fopen(("nue_rhc_"+hieStr+"_"+dcpStr+".txt").c_str(), "w");
+      table(f, &predFDNueRHC, inputOsc);
       fclose(f);
       
       TH1* hnumufhc = predFDNumuFHC.Predict(inputOsc).ToTH1(potFD);
