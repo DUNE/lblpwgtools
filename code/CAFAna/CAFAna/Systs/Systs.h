@@ -88,7 +88,7 @@ namespace ana
 
 
 
-  /// 5% normalization syst for NC on numu analysis
+  /// 50% normalization syst for NC on numu analysis
   class NCSyst2: public ISyst
   {
   public:
@@ -111,7 +111,7 @@ namespace ana
 
 
 
-  /// 5% normalization syst for NC on numu analysis
+  /// 20% normalization syst for nutau
   class NutauSyst: public ISyst
   {
   public:
@@ -157,7 +157,7 @@ namespace ana
 
 
 
-  /// 5% normalization syst for NC on numu analysis
+  /// 5% normalization syst for numu
   class NueNumuSyst: public ISyst
   {
   public:
@@ -179,7 +179,7 @@ namespace ana
   static const NueNumuSyst kNueNumuSyst;
 
 
-  /// 5% normalization syst for NC on numu analysis
+  /// 5% normalization syst for beam nues
   class NueBeamSyst: public ISyst
   {
   public:
@@ -194,7 +194,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && fabs(sr->dune.neu==12) && fabs(sr->dune.beamPdg)==12) weight *= 1 + .05*sigma;
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12) weight *= 1 + .05*sigma;
     }
   };
 
