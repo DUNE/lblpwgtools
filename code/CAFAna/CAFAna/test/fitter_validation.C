@@ -324,8 +324,8 @@ void fitter_validation(bool reload = false)
       
       TH1* hnumufhc = predFDNumuFHC.Predict(inputOsc).ToTH1(potFD);
       TH1* hnuefhc = predFDNueFHC.Predict(inputOsc).ToTH1(potFD);
-      TH1* hnumurhc = predFDNumuFHC.Predict(inputOsc).ToTH1(potFD);
-      TH1* hnuerhc = predFDNueFHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnumurhc = predFDNumuRHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnuerhc = predFDNueRHC.Predict(inputOsc).ToTH1(potFD);
 
       hnumufhc->Write(("numu_fhc_"+hieStr+"_"+dcpStr).c_str());
       hnuefhc->Write(("nue_fhc_"+hieStr+"_"+dcpStr).c_str());
@@ -339,8 +339,8 @@ void fitter_validation(bool reload = false)
 
   TH1* hnumufhc2a = predFDNumuFHC2a->Predict(inputOsc).ToTH1(potFD);
   TH1* hnuefhc2a = predFDNueFHC2a->Predict(inputOsc).ToTH1(potFD);
-  TH1* hnumurhc2a = predFDNumuFHC2a->Predict(inputOsc).ToTH1(potFD);
-  TH1* hnuerhc2a = predFDNueFHC2a->Predict(inputOsc).ToTH1(potFD);
+  TH1* hnumurhc2a = predFDNumuRHC2a->Predict(inputOsc).ToTH1(potFD);
+  TH1* hnuerhc2a = predFDNueRHC2a->Predict(inputOsc).ToTH1(potFD);
 
   hnumufhc2a->Write("numu_fhc_2a");
   hnuefhc2a->Write("nue_fhc_2a");
@@ -349,8 +349,8 @@ void fitter_validation(bool reload = false)
 
   TH1* hnumufhc2b = predFDNumuFHC2b->Predict(inputOsc).ToTH1(potFD);
   TH1* hnuefhc2b = predFDNueFHC2b->Predict(inputOsc).ToTH1(potFD);
-  TH1* hnumurhc2b = predFDNumuFHC2b->Predict(inputOsc).ToTH1(potFD);
-  TH1* hnuerhc2b = predFDNueFHC2b->Predict(inputOsc).ToTH1(potFD);
+  TH1* hnumurhc2b = predFDNumuRHC2b->Predict(inputOsc).ToTH1(potFD);
+  TH1* hnuerhc2b = predFDNueRHC2b->Predict(inputOsc).ToTH1(potFD);
 
   hnumufhc2b->Write("numu_fhc_2b");
   hnuefhc2b->Write("nue_fhc_2b");
@@ -361,8 +361,8 @@ void fitter_validation(bool reload = false)
 
   TH1* hnumufhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
   TH1* hnuefhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
-  TH1* hnumurhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
-  TH1* hnuerhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
+  TH1* hnumurhc2e = predFDNumuRHC.Predict(osc2e).ToTH1(potFD);
+  TH1* hnuerhc2e = predFDNueRHC.Predict(osc2e).ToTH1(potFD);
 
   hnumufhc2e->Write("numu_fhc_2e");
   hnuefhc2e->Write("nue_fhc_2e");

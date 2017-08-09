@@ -26,15 +26,18 @@ void plot_fitter_validation()
 
         new TCanvas;
 
-        // 3pi/2 is the tallest histogram, draw it first
-        for(int deltaIdx = 3; deltaIdx >= 0; --deltaIdx){
+        for(int deltaIdx2 = 0; deltaIdx2 < 4; ++deltaIdx2){
+          // For neutrinos 3pi/2 is the tallest histogram, draw it first, for
+          // antineutrinos we need pi/2 first.
+          const int deltaIdx = (hcStr == "fhc") ? 3-deltaIdx2 : (deltaIdx2+1)%4;
+
           const std::string dcpStr = TString::Format("%gpi", deltaIdx/2.).Data();
 
           TH1* h = (TH1*)fin->Get((chanStr+"_"+hcStr+"_"+hieStr+"_"+dcpStr).c_str());
           h->SetLineColor(dcpCols[deltaIdx]);
           h->Draw("same");
 
-          h->SetTitle(("10 yrs "+HCStr+" "+CHANStr+" "+HIEStr).c_str());
+          h->SetTitle(("5 yrs "+HCStr+" "+CHANStr+" "+HIEStr).c_str());
         } // end for deltaIdx
 
         TLegend* leg = new TLegend(.6, .6, .85, .85);
