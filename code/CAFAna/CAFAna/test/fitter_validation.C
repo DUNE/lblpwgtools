@@ -46,12 +46,14 @@ osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
   ret->SetTh12(33.56*TMath::Pi()/180);
 
   if(hie > 0){
+    // TODO TODO 32 != 3l, need to read nufit's footnote
     ret->SetDmsq32(+2.524e-3);
     ret->SetTh23(41.6*TMath::Pi()/180);
     ret->SetTh13(8.46*TMath::Pi()/180);
     ret->SetdCP(261*TMath::Pi()/180);
   }
   else{
+    // TODO TODO 32 != 3l, need to read nufit's footnote
     ret->SetDmsq32(-2.514e-3);
     ret->SetTh23(50.0*TMath::Pi()/180);
     ret->SetTh13(8.49*TMath::Pi()/180);
@@ -60,6 +62,29 @@ osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
 
   return ret;
 }
+
+
+osc::IOscCalculatorAdjustable* NuFitOscCalcNHPlusOneSig()
+{
+  assert(hie == +1 || hie == -1);
+
+  osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+  ret->SetL(1300);
+  ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
+
+  ret->SetDmsq21((7.50+(8.90-7.50)/3)*1e-5);
+  ret->SetTh12((33.56+(35.99-33.56)/3)*TMath::Pi()/180);
+
+  // TODO TODO 32 != 3l, need to read nufit's footnote
+  ret->SetDmsq32((+2.524+(2.643-2.524)/3)*1e-3);
+  ret->SetTh23((41.6+(52.8-41.6)/3)*TMath::Pi()/180);
+  ret->SetTh13((8.46+(8.90-8.46)/3)*TMath::Pi()/180);
+
+  ret->SetdCP(0); // a little ambiguous in the instructions
+
+  return ret;
+}
+
 
 void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
 {
@@ -331,6 +356,18 @@ void fitter_validation(bool reload = false)
   hnuefhc2b->Write("nue_fhc_2b");
   hnumurhc2b->Write("numu_rhc_2b");
   hnuerhc2b->Write("nue_rhc_2b");
+
+  osc::IOscCalculatorAdjustable* osc2e = NuFitOscCalcNHPlusOneSig();
+
+  TH1* hnumufhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
+  TH1* hnuefhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
+  TH1* hnumurhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
+  TH1* hnuerhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
+
+  hnumufhc2e->Write("numu_fhc_2e");
+  hnuefhc2e->Write("nue_fhc_2e");
+  hnumurhc2e->Write("numu_rhc_2e");
+  hnuerhc2e->Write("nue_rhc_2e");
 
   std::cout << "Wrote " << outputFname << std::endl;
 }
