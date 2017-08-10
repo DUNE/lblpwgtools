@@ -46,14 +46,13 @@ osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
   ret->SetTh12(33.56*TMath::Pi()/180);
 
   if(hie > 0){
-    // TODO TODO 32 != 3l, need to read nufit's footnote
-    ret->SetDmsq32(+2.524e-3);
+    // Weird nu-fit convention for NH
+    ret->SetDmsq32(+2.524e-3 - ret->GetDmsq21());
     ret->SetTh23(41.6*TMath::Pi()/180);
     ret->SetTh13(8.46*TMath::Pi()/180);
     ret->SetdCP(261*TMath::Pi()/180);
   }
   else{
-    // TODO TODO 32 != 3l, need to read nufit's footnote
     ret->SetDmsq32(-2.514e-3);
     ret->SetTh23(50.0*TMath::Pi()/180);
     ret->SetTh13(8.49*TMath::Pi()/180);
@@ -75,8 +74,8 @@ osc::IOscCalculatorAdjustable* NuFitOscCalcNHPlusOneSig()
   ret->SetDmsq21((7.50+(8.90-7.50)/3)*1e-5);
   ret->SetTh12((33.56+(35.99-33.56)/3)*TMath::Pi()/180);
 
-  // TODO TODO 32 != 3l, need to read nufit's footnote
-  ret->SetDmsq32((+2.524+(2.643-2.524)/3)*1e-3);
+  // NH here, so have to adjust for nu-fit's weird convention
+  ret->SetDmsq32((+2.524+(2.643-2.524)/3)*1e-3 - ret->GetDmsq21());
   ret->SetTh23((41.6+(52.8-41.6)/3)*TMath::Pi()/180);
   ret->SetTh13((8.46+(8.90-8.46)/3)*TMath::Pi()/180);
 
