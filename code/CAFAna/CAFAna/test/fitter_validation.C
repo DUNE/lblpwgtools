@@ -2,22 +2,30 @@
 void fitter_validation(bool reload = false){}
 #else
 
+#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/Progress.h"
+#include "CAFAna/Experiment/MultiExperiment.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/Systs.h"
+#include "CAFAna/Vars/FitVars.h"
 
 using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/func/IOscCalculator.h"
 
 #include "StandardRecord/StandardRecord.h"
 
+#include "TCanvas.h"
 #include "TFile.h"
-#include "TH1.h"
+#include "TGraph.h"
+#include "TH2.h"
 
 const Var kRecoE = SIMPLEVAR(dune.Ev_reco);
 const Var kPIDFD = SIMPLEVAR(dune.mvaresult);
@@ -32,57 +40,6 @@ const double potFD = 5 * 1.47e21 * 40/1.13;
 
 const char* stateFname = "fitter_validation_state.root";
 const char* outputFname = "fitter_validation_cafana.root";
-
-// http://www.nu-fit.org/?q=node/139
-osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
-{
-  assert(hie == +1 || hie == -1);
-
-  osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-  ret->SetL(1300);
-  ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
-
-  ret->SetDmsq21(7.50e-5);
-  ret->SetTh12(33.56*TMath::Pi()/180);
-
-  if(hie > 0){
-    // Weird nu-fit convention for NH
-    ret->SetDmsq32(+2.524e-3 - ret->GetDmsq21());
-    ret->SetTh23(41.6*TMath::Pi()/180);
-    ret->SetTh13(8.46*TMath::Pi()/180);
-    ret->SetdCP(261*TMath::Pi()/180);
-  }
-  else{
-    ret->SetDmsq32(-2.514e-3);
-    ret->SetTh23(50.0*TMath::Pi()/180);
-    ret->SetTh13(8.49*TMath::Pi()/180);
-    ret->SetdCP(277*TMath::Pi()/180);
-  }
-
-  return ret;
-}
-
-
-osc::IOscCalculatorAdjustable* NuFitOscCalcNHPlusOneSig()
-{
-  assert(hie == +1 || hie == -1);
-
-  osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-  ret->SetL(1300);
-  ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
-
-  ret->SetDmsq21((7.50+(8.90-7.50)/3)*1e-5);
-  ret->SetTh12((33.56+(35.99-33.56)/3)*TMath::Pi()/180);
-
-  // NH here, so have to adjust for nu-fit's weird convention
-  ret->SetDmsq32((+2.524+(2.643-2.524)/3)*1e-3 - ret->GetDmsq21());
-  ret->SetTh23((41.6+(52.8-41.6)/3)*TMath::Pi()/180);
-  ret->SetTh13((8.46+(8.90-8.46)/3)*TMath::Pi()/180);
-
-  ret->SetdCP(0); // a little ambiguous in the instructions
-
-  return ret;
-}
 
 
 void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
@@ -116,6 +73,32 @@ void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
             hnc->GetBinContent(i));
   }
 }
+
+
+double Chisq(IExperiment* expt,
+             osc::IOscCalculatorAdjustable* calc,
+             bool oscErr)
+{
+  if(!oscErr) return expt->ChiSq(calc);
+
+  NuFitPenalizer penalty;
+
+  MultiExperiment exptOscErr({expt, &penalty});
+
+  const std::vector<const IFitVar*> oscVars =
+    {&kFitDmSq21, &kFitTanSqTheta12,
+     &kFitDmSq32Scaled, &kFitSinSqTheta23,
+     &kFitTheta13};
+
+  Fitter fit(&exptOscErr, oscVars);
+
+  // Caller doesn't expect all the parameters to get messed up by the fit
+  osc::IOscCalculatorAdjustable* calcCopy = calc->Copy();
+  const double ret = fit.Fit(calcCopy, Fitter::kQuiet);
+  delete calcCopy;
+  return ret;
+}
+
 
 void fitter_validation(bool reload = false)
 {
@@ -356,7 +339,7 @@ void fitter_validation(bool reload = false)
   hnumurhc2b->Write("numu_rhc_2b");
   hnuerhc2b->Write("nue_rhc_2b");
 
-  osc::IOscCalculatorAdjustable* osc2e = NuFitOscCalcNHPlusOneSig();
+  osc::IOscCalculatorAdjustable* osc2e = NuFitOscCalcPlusOneSigma(+1);
 
   TH1* hnumufhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
   TH1* hnuefhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
@@ -369,6 +352,83 @@ void fitter_validation(bool reload = false)
   hnuerhc2e->Write("nue_rhc_2e");
 
   std::cout << "Wrote " << outputFname << std::endl;
+
+  new TCanvas;
+  TH2* axes = new TH2F("", ";#delta_{CP} / #pi;#sigma = #sqrt{#Delta#chi^{2}}", 100, 0, 2, 100, 0, 8);
+  axes->Draw();
+  
+  TGraph* gNH = new TGraph;
+  TGraph* gIH = new TGraph;
+
+  TGraph* gNHOscErr = new TGraph;
+  TGraph* gIHOscErr = new TGraph;
+
+  for(int hie = -1; hie <= +1; hie += 2){
+    Progress prog(hie > 0 ? "NH" : "IH");
+    // Chisq explodes at precise CP conservation for some reason
+    for(double delta = .001; delta < 2.01; delta += .1){
+      osc::IOscCalculatorAdjustable* oscFakeData = NuFitOscCalc(hie);
+      oscFakeData->SetdCP(delta*TMath::Pi());
+
+      SingleSampleExperiment exptNueFHC(&predFDNueFHC, predFDNueFHC.Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNueRHC(&predFDNueRHC, predFDNueRHC.Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuFHC(&predFDNumuFHC, predFDNumuFHC.Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuRHC(&predFDNumuRHC, predFDNumuRHC.Predict(oscFakeData).FakeData(potFD));
+      MultiExperiment expt({&exptNueFHC, &exptNueRHC, &exptNumuFHC, &exptNumuRHC});
+
+      osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
+      oscTest->SetdCP(0);
+      const double chisq0NH = expt.ChiSq(oscTest);
+      const double chisq0NHOscErr = Chisq(&expt, oscTest, true);
+      oscTest->SetdCP(TMath::Pi());
+      const double chisq1NH = expt.ChiSq(oscTest);
+      const double chisq1NHOscErr = Chisq(&expt, oscTest, true);
+      const double chisqNH = std::min(chisq0NH, chisq1NH);
+      const double chisqNHOscErr = std::min(chisq0NHOscErr, chisq1NHOscErr);
+
+      oscTest = NuFitOscCalc(-1);
+      oscTest->SetdCP(0);
+      const double chisq0IH = expt.ChiSq(oscTest);
+      const double chisq0IHOscErr = Chisq(&expt, oscTest, true);
+      oscTest->SetdCP(TMath::Pi());
+      const double chisq1IH = expt.ChiSq(oscTest);
+      const double chisq1IHOscErr = Chisq(&expt, oscTest, true);
+      const double chisqIH = std::min(chisq0IH, chisq1IH);
+      const double chisqIHOscErr = std::min(chisq0IHOscErr, chisq1IHOscErr);
+
+      const double chisq = std::min(chisqNH, chisqIH);
+      const double chisqOscErr = std::min(chisqNHOscErr, chisqIHOscErr);
+
+      if(hie > 0)
+        gNH->SetPoint(gNH->GetN(), delta, sqrt(chisq));
+      else
+        gIH->SetPoint(gIH->GetN(), delta, sqrt(chisq));
+
+      if(hie > 0)
+        gNHOscErr->SetPoint(gNHOscErr->GetN(), delta, sqrt(chisqOscErr));
+      else
+        gIHOscErr->SetPoint(gIHOscErr->GetN(), delta, sqrt(chisqOscErr));
+
+      prog.SetProgress(delta/2);
+    } // end for delta
+    prog.Done();
+  } // end for hie
+
+  gNH->SetLineColor(kRed);
+  gIH->SetLineColor(kBlue);
+  gNH->SetLineWidth(2);
+  gNH->Draw("l same");
+  gIH->SetLineWidth(2);
+  gIH->Draw("l same");
+
+  gNHOscErr->SetLineColor(kRed);
+  gIHOscErr->SetLineColor(kBlue);
+  gNHOscErr->SetLineStyle(7);
+  gNHOscErr->SetLineWidth(2);
+  gNHOscErr->Draw("l same");
+  gIHOscErr->SetLineStyle(7);
+  gIHOscErr->SetLineWidth(2);
+  gIHOscErr->Draw("l same");
 }
 
 #endif
