@@ -2,7 +2,8 @@
 
 #include "TCanvas.h"
 #include "TFile.h"
-#include "TH1.h"
+#include "TGraph.h"
+#include "TH2.h"
 #include "TLegend.h"
 #include "TPad.h"
 
@@ -53,4 +54,31 @@ void plot_fitter_validation()
       } // end for hieStr
     } // end for chanStr
   } // end for hcStr
+
+
+  TGraph* gNH = (TGraph*)fin->Get("sens_nh");
+  TGraph* gIH = (TGraph*)fin->Get("sens_ih");
+  TGraph* gNHOscErr = (TGraph*)fin->Get("sens_nh_oscerr");
+  TGraph* gIHOscErr = (TGraph*)fin->Get("sens_ih_oscerr");
+
+  TH2* axes = new TH2F("", ";#delta_{CP} / #pi;#sigma = #sqrt{#Delta#chi^{2}}", 100, 0, 2, 100, 0, 8);
+  axes->GetXaxis()->CenterTitle();
+  axes->GetYaxis()->SetTitleOffset(.75);
+  axes->GetYaxis()->CenterTitle();
+  axes->Draw();
+
+  gNH->Draw("l same");
+  gIH->Draw("l same");
+  gNHOscErr->Draw("l same");
+  gIHOscErr->Draw("l same");
+
+  TLegend* leg = new TLegend(.4, .65, .6, .875);
+  leg->SetFillStyle(0);
+  leg->AddEntry(gNH, "NH", "l");
+  leg->AddEntry(gIH, "IH", "l");
+  leg->AddEntry(gNHOscErr, "NH osc err", "l");
+  leg->AddEntry(gIHOscErr, "IH osc err", "l");
+  leg->Draw();
+
+  gPad->Print("mcd.pdf");
 }

@@ -351,8 +351,6 @@ void fitter_validation(bool reload = false)
   hnumurhc2e->Write("numu_rhc_2e");
   hnuerhc2e->Write("nue_rhc_2e");
 
-  std::cout << "Wrote " << outputFname << std::endl;
-
   new TCanvas;
   TH2* axes = new TH2F("", ";#delta_{CP} / #pi;#sigma = #sqrt{#Delta#chi^{2}}", 100, 0, 2, 100, 0, 8);
   axes->Draw();
@@ -429,6 +427,13 @@ void fitter_validation(bool reload = false)
   gIHOscErr->SetLineStyle(7);
   gIHOscErr->SetLineWidth(2);
   gIHOscErr->Draw("l same");
+
+  gNH->Write("sens_nh");
+  gIH->Write("sens_ih");
+  gNHOscErr->Write("sens_nh_oscerr");
+  gIHOscErr->Write("sens_ih_oscerr");
+
+  std::cout << "Wrote " << outputFname << std::endl;
 }
 
 #endif
