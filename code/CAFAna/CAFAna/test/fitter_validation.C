@@ -12,7 +12,9 @@ void fitter_validation(bool fit = false, bool reload = false){}
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
+#include "CAFAna/Prediction/PredictionXSecDiag.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
+#include "CAFAna/Systs/DUNEXSecSysts.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Vars/FitVars.h"
 
@@ -79,9 +81,9 @@ void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
 
 double Chisq(IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc,
-             bool oscErr, int nfluxErr)
+             bool oscErr, int nfluxErr, int nxsecErr)
 {
-  if(!oscErr && nfluxErr == 0) return expt->ChiSq(calc);
+  if(!oscErr && nfluxErr == 0 && nxsecErr == 0) return expt->ChiSq(calc);
 
   NuFitPenalizer penalty;
 
@@ -95,6 +97,7 @@ double Chisq(IExperiment* expt,
 
   std::vector<const ISyst*> systVars;
   for(int i = 0; i < nfluxErr; ++i) systVars.push_back(GetDUNEFluxSyst(i));
+  for(int i = 0; i < nxsecErr; ++i) systVars.push_back(GetDUNEXSecDiagSyst(i));
 
   Fitter fit(&exptOscErr, oscVars, systVars);
 
@@ -106,20 +109,20 @@ double Chisq(IExperiment* expt,
   return ret;
 }
 
-double ChisqAllCombos(IExperiment* expt, bool oscErr, int nfluxErr)
+double ChisqAllCombos(IExperiment* expt, bool oscErr, int nfluxErr, int nxsecErr)
 {
   osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
   oscTest->SetdCP(0);
-  const double chisq0NH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisq0NH = Chisq(expt, oscTest, oscErr, nfluxErr, nxsecErr);
   oscTest->SetdCP(TMath::Pi());
-  const double chisq1NH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisq1NH = Chisq(expt, oscTest, oscErr, nfluxErr, nxsecErr);
   const double chisqNH = std::min(chisq0NH, chisq1NH);
 
   oscTest = NuFitOscCalc(-1);
   oscTest->SetdCP(0);
-  const double chisq0IH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisq0IH = Chisq(expt, oscTest, oscErr, nfluxErr, nxsecErr);
   oscTest->SetdCP(TMath::Pi());
-  const double chisq1IH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisq1IH = Chisq(expt, oscTest, oscErr, nfluxErr, nxsecErr);
   const double chisqIH = std::min(chisq0IH, chisq1IH);
 
   const double chisq = std::min(chisqNH, chisqIH);
@@ -309,6 +312,37 @@ void fitter_validation(bool fit = false, bool reload = false)
                                       dummyLoaders);
 
 
+    // XSec systs
+
+    PredictionXSecDiag predFDNumuFHCXSec(*loaderFDNumuFHCBeam, 
+                                         *loaderFDNumuFHCNue,
+                                         *loaderFDNumuFHCNuTau,
+                                         *loaderFDNumuFHCNC,
+                                         axis,
+                                         kPIDFD > 0.8);
+
+    PredictionXSecDiag predFDNueFHCXSec(*loaderFDNueFHCBeam, 
+                                        *loaderFDNueFHCNue,
+                                        *loaderFDNueFHCNuTau,
+                                        *loaderFDNueFHCNC,
+                                        axis,
+                                        kPIDFD > 0.8);
+
+    PredictionXSecDiag predFDNumuRHCXSec(*loaderFDNumuRHCBeam, 
+                                         *loaderFDNumuRHCNue,
+                                         *loaderFDNumuRHCNuTau,
+                                         *loaderFDNumuRHCNC,
+                                         axis,
+                                         kPIDFD > 0.8);
+
+    PredictionXSecDiag predFDNueRHCXSec(*loaderFDNueRHCBeam, 
+                                        *loaderFDNueRHCNue,
+                                        *loaderFDNueRHCNuTau,
+                                        *loaderFDNueRHCNC,
+                                        axis,
+                                        kPIDFD > 0.8);
+
+
     loaderFDNumuFHC.Go();
     loaderFDNueFHC.Go();
     loaderFDNumuRHC.Go();
@@ -334,6 +368,11 @@ void fitter_validation(bool fit = false, bool reload = false)
     predFDNueFHCFlux.SaveTo(fout.mkdir("fd_nue_fhc_flux"));
     predFDNumuRHCFlux.SaveTo(fout.mkdir("fd_numu_rhc_flux"));
     predFDNueRHCFlux.SaveTo(fout.mkdir("fd_nue_rhc_flux"));
+
+    predFDNumuFHCXSec.SaveTo(fout.mkdir("fd_numu_fhc_xsec"));
+    predFDNueFHCXSec.SaveTo(fout.mkdir("fd_nue_fhc_xsec"));
+    predFDNumuRHCXSec.SaveTo(fout.mkdir("fd_numu_rhc_xsec"));
+    predFDNueRHCXSec.SaveTo(fout.mkdir("fd_nue_rhc_xsec"));
 
     std::cout << "Saved state to " << stateFname << std::endl;
   }
@@ -361,6 +400,14 @@ void fitter_validation(bool fit = false, bool reload = false)
   IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_flux")).release();
   IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_flux")).release();
   IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_flux")).release();
+
+  // Has to be explicitly PredictionXSecDiag, otherwise you get back a bare
+  // PredictionScaleComp that doesn't do the translation from the diagonalized
+  // to underlying space.
+  PredictionXSecDiag* predFDNumuFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_fhc_xsec")).release();
+  PredictionXSecDiag* predFDNueFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_fhc_xsec")).release();
+  PredictionXSecDiag* predFDNumuRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_rhc_xsec")).release();
+  PredictionXSecDiag* predFDNueRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_rhc_xsec")).release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
@@ -456,6 +503,13 @@ void fitter_validation(bool fit = false, bool reload = false)
     gIHFlux[i] = new TGraph;
   }
 
+  TGraph* gNHXSec[10];
+  TGraph* gIHXSec[10];
+  for(int i = 0; i < 10; ++i){
+    gNHXSec[i] = new TGraph;
+    gIHXSec[i] = new TGraph;
+  }
+
   for(int hie = -1; hie <= +1; hie += 2){
     Progress prog(hie > 0 ? "NH" : "IH");
     // Chisq explodes at precise CP conservation for some reason
@@ -475,12 +529,23 @@ void fitter_validation(bool fit = false, bool reload = false)
       SingleSampleExperiment exptNumuRHCFlux(predFDNumuRHCFlux, predFDNumuRHCFlux->Predict(oscFakeData).FakeData(potFD));
       MultiExperiment exptFlux({&exptNueFHCFlux, &exptNueRHCFlux, &exptNumuFHCFlux, &exptNumuRHCFlux});
 
-      const double chisq = ChisqAllCombos(&expt, false, 0);
-      const double chisqOscErr = ChisqAllCombos(&expt, true, 0);
+      SingleSampleExperiment exptNueFHCXSec(predFDNueFHCXSec, predFDNueFHCXSec->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNueRHCXSec(predFDNueRHCXSec, predFDNueRHCXSec->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuFHCXSec(predFDNumuFHCXSec, predFDNumuFHCXSec->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuRHCXSec(predFDNumuRHCXSec, predFDNumuRHCXSec->Predict(oscFakeData).FakeData(potFD));
+      MultiExperiment exptXSec({&exptNueFHCXSec, &exptNueRHCXSec, &exptNumuFHCXSec, &exptNumuRHCXSec});
+
+      const double chisq = ChisqAllCombos(&expt, false, 0, 0);
+      const double chisqOscErr = ChisqAllCombos(&expt, true, 0, 0);
 
       double chisqFlux[10];
       for(int i = 0; i < 10; ++i){
-        chisqFlux[i] = ChisqAllCombos(&exptFlux, false, i);
+        chisqFlux[i] = ChisqAllCombos(&exptFlux, false, i, 0);
+      }
+
+      double chisqXSec[10];
+      for(int i = 0; i < 10; ++i){
+        chisqXSec[i] = ChisqAllCombos(&exptXSec, false, 0, i);
       }
 
       if(hie > 0){
@@ -488,12 +553,16 @@ void fitter_validation(bool fit = false, bool reload = false)
         gNHOscErr->SetPoint(gNHOscErr->GetN(), delta, sqrt(chisqOscErr));
         for(int i = 0; i < 10; ++i)
           gNHFlux[i]->SetPoint(gNHFlux[i]->GetN(), delta, sqrt(chisqFlux[i]));
+        for(int i = 0; i < 10; ++i)
+          gNHXSec[i]->SetPoint(gNHXSec[i]->GetN(), delta, sqrt(chisqXSec[i]));
       }
       else{
         gIH->SetPoint(gIH->GetN(), delta, sqrt(chisq));
         gIHOscErr->SetPoint(gIHOscErr->GetN(), delta, sqrt(chisqOscErr));
         for(int i = 0; i < 10; ++i)
           gIHFlux[i]->SetPoint(gIHFlux[i]->GetN(), delta, sqrt(chisqFlux[i]));
+        for(int i = 0; i < 10; ++i)
+          gIHXSec[i]->SetPoint(gIHXSec[i]->GetN(), delta, sqrt(chisqXSec[i]));
       }
 
       prog.SetProgress(delta/2);
@@ -521,9 +590,18 @@ void fitter_validation(bool fit = false, bool reload = false)
     gNHFlux[i]->SetLineColor(kRed-7);
     gIHFlux[i]->SetLineColor(kBlue-7);
     gNHFlux[i]->SetLineWidth(1);
-    gNHFlux[i]->Draw("l same");
+    //    gNHFlux[i]->Draw("l same");
     gIHFlux[i]->SetLineWidth(1);
-    gIHFlux[i]->Draw("l same");
+    //    gIHFlux[i]->Draw("l same");
+  }
+
+  for(int i = 0; i < 10; ++i){
+    gNHXSec[i]->SetLineColor(kRed-7);
+    gIHXSec[i]->SetLineColor(kBlue-7);
+    gNHXSec[i]->SetLineWidth(1);
+    gNHXSec[i]->Draw("l same");
+    gIHXSec[i]->SetLineWidth(1);
+    gIHXSec[i]->Draw("l same");
   }
 
   gNH->Write("sens_nh");
@@ -534,6 +612,11 @@ void fitter_validation(bool fit = false, bool reload = false)
   for(int i = 0; i < 10; ++i){
     gNHFlux[i]->Write(TString::Format("sens_nh_flux%d", i).Data());
     gIHFlux[i]->Write(TString::Format("sens_ih_flux%d", i).Data());
+  }
+
+  for(int i = 0; i < 10; ++i){
+    gNHXSec[i]->Write(TString::Format("sens_nh_xsec%d", i).Data());
+    gIHXSec[i]->Write(TString::Format("sens_ih_xsec%d", i).Data());
   }
 
   std::cout << "Wrote " << outputFname << std::endl;
