@@ -1,15 +1,17 @@
 #ifdef __CINT__
-void fitter_validation(bool reload = false){}
+void fitter_validation(bool fit = false, bool reload = false){}
 #else
 
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
+#include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Vars/FitVars.h"
@@ -77,30 +79,54 @@ void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
 
 double Chisq(IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc,
-             bool oscErr)
+             bool oscErr, int nfluxErr)
 {
-  if(!oscErr) return expt->ChiSq(calc);
+  if(!oscErr && nfluxErr == 0) return expt->ChiSq(calc);
 
   NuFitPenalizer penalty;
 
   MultiExperiment exptOscErr({expt, &penalty});
 
-  const std::vector<const IFitVar*> oscVars =
+  std::vector<const IFitVar*> oscVars =
     {&kFitDmSq21, &kFitTanSqTheta12,
      &kFitDmSq32Scaled, &kFitSinSqTheta23,
      &kFitTheta13};
+  if(!oscErr) oscVars.clear();
 
-  Fitter fit(&exptOscErr, oscVars);
+  std::vector<const ISyst*> systVars;
+  for(int i = 0; i < nfluxErr; ++i) systVars.push_back(GetDUNEFluxSyst(i));
+
+  Fitter fit(&exptOscErr, oscVars, systVars);
 
   // Caller doesn't expect all the parameters to get messed up by the fit
   osc::IOscCalculatorAdjustable* calcCopy = calc->Copy();
-  const double ret = fit.Fit(calcCopy, Fitter::kQuiet);
+  SystShifts systSeed;
+  const double ret = fit.Fit(calcCopy, systSeed, Fitter::kQuiet);
   delete calcCopy;
   return ret;
 }
 
+double ChisqAllCombos(IExperiment* expt, bool oscErr, int nfluxErr)
+{
+  osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
+  oscTest->SetdCP(0);
+  const double chisq0NH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  oscTest->SetdCP(TMath::Pi());
+  const double chisq1NH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisqNH = std::min(chisq0NH, chisq1NH);
 
-void fitter_validation(bool reload = false)
+  oscTest = NuFitOscCalc(-1);
+  oscTest->SetdCP(0);
+  const double chisq0IH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  oscTest->SetdCP(TMath::Pi());
+  const double chisq1IH = Chisq(expt, oscTest, oscErr, nfluxErr);
+  const double chisqIH = std::min(chisq0IH, chisq1IH);
+
+  const double chisq = std::min(chisqNH, chisqIH);
+  return chisq;
+}
+
+void fitter_validation(bool fit = false, bool reload = false)
 {
   rootlogon(); // style
 
@@ -130,6 +156,8 @@ void fitter_validation(bool reload = false)
     auto* loaderFDNueRHCNue   = loaderFDNueRHC.LoaderForRunPOT(20000005);
     auto* loaderFDNueRHCNuTau = loaderFDNueRHC.LoaderForRunPOT(20000006);
     auto* loaderFDNueRHCNC    = loaderFDNueRHC.LoaderForRunPOT(0);
+
+    Loaders dummyLoaders; // PredictionGenerator insists on this
 
     PredictionNoExtrap predFDNumuFHC(*loaderFDNumuFHCBeam, 
                                      *loaderFDNumuFHCNue,
@@ -233,6 +261,53 @@ void fitter_validation(bool reload = false)
                                       kPIDFD > 0.8,
                                       shifts2b);
 
+    // Flux systematics
+    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+    DUNENoExtrapPredictionGenerator genFDNumuFHC(*loaderFDNumuFHCBeam, 
+                                                 *loaderFDNumuFHCNue,
+                                                 *loaderFDNumuFHCNuTau,
+                                                 *loaderFDNumuFHCNC,
+                                                 axis,
+                                                 kPIDFD > 0.8);
+    PredictionInterp predFDNumuFHCFlux(GetDUNEFluxSysts(10),
+                                       inputOsc,
+                                       genFDNumuFHC,
+                                       dummyLoaders);
+
+    DUNENoExtrapPredictionGenerator genFDNueFHC(*loaderFDNueFHCBeam, 
+                                                 *loaderFDNueFHCNue,
+                                                 *loaderFDNueFHCNuTau,
+                                                 *loaderFDNueFHCNC,
+                                                 axis,
+                                                 kPIDFD > 0.8);
+    PredictionInterp predFDNueFHCFlux(GetDUNEFluxSysts(10),
+                                      inputOsc,
+                                      genFDNueFHC,
+                                      dummyLoaders);
+
+
+    DUNENoExtrapPredictionGenerator genFDNumuRHC(*loaderFDNumuRHCBeam, 
+                                                 *loaderFDNumuRHCNue,
+                                                 *loaderFDNumuRHCNuTau,
+                                                 *loaderFDNumuRHCNC,
+                                                 axis,
+                                                 kPIDFD > 0.8);
+    PredictionInterp predFDNumuRHCFlux(GetDUNEFluxSysts(10),
+                                       inputOsc,
+                                       genFDNumuRHC,
+                                       dummyLoaders);
+
+    DUNENoExtrapPredictionGenerator genFDNueRHC(*loaderFDNueRHCBeam, 
+                                                 *loaderFDNueRHCNue,
+                                                 *loaderFDNueRHCNuTau,
+                                                 *loaderFDNueRHCNC,
+                                                 axis,
+                                                 kPIDFD > 0.8);
+    PredictionInterp predFDNueRHCFlux(GetDUNEFluxSysts(10),
+                                      inputOsc,
+                                      genFDNueRHC,
+                                      dummyLoaders);
+
 
     loaderFDNumuFHC.Go();
     loaderFDNueFHC.Go();
@@ -255,6 +330,11 @@ void fitter_validation(bool reload = false)
     predFDNumuRHC2b.SaveTo(fout.mkdir("fd_numu_rhc_2b"));
     predFDNueRHC2b.SaveTo(fout.mkdir("fd_nue_rhc_2b"));
 
+    predFDNumuFHCFlux.SaveTo(fout.mkdir("fd_numu_fhc_flux"));
+    predFDNueFHCFlux.SaveTo(fout.mkdir("fd_nue_fhc_flux"));
+    predFDNumuRHCFlux.SaveTo(fout.mkdir("fd_numu_rhc_flux"));
+    predFDNueRHCFlux.SaveTo(fout.mkdir("fd_nue_rhc_flux"));
+
     std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
@@ -276,6 +356,12 @@ void fitter_validation(bool reload = false)
   IPrediction* predFDNueFHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_2b")).release();
   IPrediction* predFDNumuRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_2b")).release();
   IPrediction* predFDNueRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_2b")).release();
+
+  IPrediction* predFDNumuFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_flux")).release();
+  IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_flux")).release();
+  IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_flux")).release();
+  IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_flux")).release();
+
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 
@@ -351,6 +437,8 @@ void fitter_validation(bool reload = false)
   hnumurhc2e->Write("numu_rhc_2e");
   hnuerhc2e->Write("nue_rhc_2e");
 
+  if(!fit) return;
+
   new TCanvas;
   TH2* axes = new TH2F("", ";#delta_{CP} / #pi;#sigma = #sqrt{#Delta#chi^{2}}", 100, 0, 2, 100, 0, 8);
   axes->Draw();
@@ -360,6 +448,13 @@ void fitter_validation(bool reload = false)
 
   TGraph* gNHOscErr = new TGraph;
   TGraph* gIHOscErr = new TGraph;
+
+  TGraph* gNHFlux[10];
+  TGraph* gIHFlux[10];
+  for(int i = 0; i < 10; ++i){
+    gNHFlux[i] = new TGraph;
+    gIHFlux[i] = new TGraph;
+  }
 
   for(int hie = -1; hie <= +1; hie += 2){
     Progress prog(hie > 0 ? "NH" : "IH");
@@ -374,38 +469,32 @@ void fitter_validation(bool reload = false)
       SingleSampleExperiment exptNumuRHC(&predFDNumuRHC, predFDNumuRHC.Predict(oscFakeData).FakeData(potFD));
       MultiExperiment expt({&exptNueFHC, &exptNueRHC, &exptNumuFHC, &exptNumuRHC});
 
-      osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
-      oscTest->SetdCP(0);
-      const double chisq0NH = expt.ChiSq(oscTest);
-      const double chisq0NHOscErr = Chisq(&expt, oscTest, true);
-      oscTest->SetdCP(TMath::Pi());
-      const double chisq1NH = expt.ChiSq(oscTest);
-      const double chisq1NHOscErr = Chisq(&expt, oscTest, true);
-      const double chisqNH = std::min(chisq0NH, chisq1NH);
-      const double chisqNHOscErr = std::min(chisq0NHOscErr, chisq1NHOscErr);
+      SingleSampleExperiment exptNueFHCFlux(predFDNueFHCFlux, predFDNueFHCFlux->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNueRHCFlux(predFDNueRHCFlux, predFDNueRHCFlux->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuFHCFlux(predFDNumuFHCFlux, predFDNumuFHCFlux->Predict(oscFakeData).FakeData(potFD));
+      SingleSampleExperiment exptNumuRHCFlux(predFDNumuRHCFlux, predFDNumuRHCFlux->Predict(oscFakeData).FakeData(potFD));
+      MultiExperiment exptFlux({&exptNueFHCFlux, &exptNueRHCFlux, &exptNumuFHCFlux, &exptNumuRHCFlux});
 
-      oscTest = NuFitOscCalc(-1);
-      oscTest->SetdCP(0);
-      const double chisq0IH = expt.ChiSq(oscTest);
-      const double chisq0IHOscErr = Chisq(&expt, oscTest, true);
-      oscTest->SetdCP(TMath::Pi());
-      const double chisq1IH = expt.ChiSq(oscTest);
-      const double chisq1IHOscErr = Chisq(&expt, oscTest, true);
-      const double chisqIH = std::min(chisq0IH, chisq1IH);
-      const double chisqIHOscErr = std::min(chisq0IHOscErr, chisq1IHOscErr);
+      const double chisq = ChisqAllCombos(&expt, false, 0);
+      const double chisqOscErr = ChisqAllCombos(&expt, true, 0);
 
-      const double chisq = std::min(chisqNH, chisqIH);
-      const double chisqOscErr = std::min(chisqNHOscErr, chisqIHOscErr);
+      double chisqFlux[10];
+      for(int i = 0; i < 10; ++i){
+        chisqFlux[i] = ChisqAllCombos(&exptFlux, false, i);
+      }
 
-      if(hie > 0)
+      if(hie > 0){
         gNH->SetPoint(gNH->GetN(), delta, sqrt(chisq));
-      else
-        gIH->SetPoint(gIH->GetN(), delta, sqrt(chisq));
-
-      if(hie > 0)
         gNHOscErr->SetPoint(gNHOscErr->GetN(), delta, sqrt(chisqOscErr));
-      else
+        for(int i = 0; i < 10; ++i)
+          gNHFlux[i]->SetPoint(gNHFlux[i]->GetN(), delta, sqrt(chisqFlux[i]));
+      }
+      else{
+        gIH->SetPoint(gIH->GetN(), delta, sqrt(chisq));
         gIHOscErr->SetPoint(gIHOscErr->GetN(), delta, sqrt(chisqOscErr));
+        for(int i = 0; i < 10; ++i)
+          gIHFlux[i]->SetPoint(gIHFlux[i]->GetN(), delta, sqrt(chisqFlux[i]));
+      }
 
       prog.SetProgress(delta/2);
     } // end for delta
@@ -428,10 +517,24 @@ void fitter_validation(bool reload = false)
   gIHOscErr->SetLineWidth(2);
   gIHOscErr->Draw("l same");
 
+  for(int i = 0; i < 10; ++i){
+    gNHFlux[i]->SetLineColor(kRed-7);
+    gIHFlux[i]->SetLineColor(kBlue-7);
+    gNHFlux[i]->SetLineWidth(1);
+    gNHFlux[i]->Draw("l same");
+    gIHFlux[i]->SetLineWidth(1);
+    gIHFlux[i]->Draw("l same");
+  }
+
   gNH->Write("sens_nh");
   gIH->Write("sens_ih");
   gNHOscErr->Write("sens_nh_oscerr");
   gIHOscErr->Write("sens_ih_oscerr");
+
+  for(int i = 0; i < 10; ++i){
+    gNHFlux[i]->Write(TString::Format("sens_nh_flux%d", i).Data());
+    gIHFlux[i]->Write(TString::Format("sens_ih_flux%d", i).Data());
+  }
 
   std::cout << "Wrote " << outputFname << std::endl;
 }

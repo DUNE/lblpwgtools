@@ -61,6 +61,13 @@ void plot_fitter_validation()
   TGraph* gNHOscErr = (TGraph*)fin->Get("sens_nh_oscerr");
   TGraph* gIHOscErr = (TGraph*)fin->Get("sens_ih_oscerr");
 
+  TGraph* gNHFlux[10];
+  TGraph* gIHFlux[10];
+  for(int i = 0; i < 10; ++i){
+    gNHFlux[i] = (TGraph*)fin->Get(TString::Format("sens_nh_flux%d", i).Data());
+    gIHFlux[i] = (TGraph*)fin->Get(TString::Format("sens_ih_flux%d", i).Data());
+  }
+
   TH2* axes = new TH2F("", ";#delta_{CP} / #pi;#sigma = #sqrt{#Delta#chi^{2}}", 100, 0, 2, 100, 0, 8);
   axes->GetXaxis()->CenterTitle();
   axes->GetYaxis()->SetTitleOffset(.75);
@@ -81,4 +88,24 @@ void plot_fitter_validation()
   leg->Draw();
 
   gPad->Print("mcd.pdf");
+
+
+  new TCanvas;
+  axes->Draw();
+  for(int i = 0; i < 10; ++i){
+    gNHFlux[i]->Draw("l same");
+    gIHFlux[i]->Draw("l same");
+  }
+  gNH->Draw("l same");
+  gIH->Draw("l same");
+
+  leg = new TLegend(.4, .65, .6, .875);
+  leg->SetFillStyle(0);
+  leg->AddEntry(gNH, "NH", "l");
+  leg->AddEntry(gIH, "IH", "l");
+  leg->AddEntry(gNHFlux[0], "NH flux err", "l");
+  leg->AddEntry(gIHFlux[0], "IH flux err", "l");
+  leg->Draw();
+
+  gPad->Print("mcd_flux.pdf");
 }
