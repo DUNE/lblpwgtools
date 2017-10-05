@@ -4,7 +4,7 @@
 
 namespace caf{
   typedef int Det_t;
-  const int kNEARDER = 1;
+  const int kNEARDET = 1;
   const int kFARDET = 2;
 }
 //#include "StandardRecord/SRHeader.h" // For Det_t
