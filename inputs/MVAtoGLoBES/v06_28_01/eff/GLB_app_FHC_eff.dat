@@ -1,0 +1,21 @@
+
+include "./eff/post_app_FHC_numu_bkg.txt"
+
+include "./eff/post_app_FHC_numubar_bkg.txt"
+
+include "./eff/post_app_FHC_nue_bkg.txt"
+
+include "./eff/post_app_FHC_nuebar_bkg.txt"
+
+include "./eff/post_app_FHC_NC_bkg.txt"
+
+include "./eff/post_app_FHC_aNC_bkg.txt"
+
+include "./eff/post_app_FHC_nue_sig.txt"
+
+include "./eff/post_app_FHC_nuebar_sig.txt"
+
+include "./eff/post_app_FHC_nutau_bkg.txt"
+
+include "./eff/post_app_FHC_nutaubar_bkg.txt"
+
