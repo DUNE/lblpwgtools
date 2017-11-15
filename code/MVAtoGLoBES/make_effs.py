@@ -6,13 +6,14 @@ import ROOT
 from array import array
 from MVAtoGLoBES import *
 
-def MakeEfficiencies(datadir,seltype):
+def MakeEfficiencies(nuefile,seltype):
  """Function to make efficiency and smearing files in GLoBES format from MVA selection tree
 
  Args:
-   datadir: path to root files with default names
-   seltype: selections available in MVASelection tree: mva, cvn """
-   
+   nuefile: nuefilename including path (assumes other files follow same format
+   seltype: selections available in MVASelection tree: mva, cvn
+
+ Update notes: Nov 2017: Update variable names/paths to new file format """
 
 
  ROOT.gROOT.SetStyle("Plain")
@@ -29,10 +30,9 @@ def MakeEfficiencies(datadir,seltype):
  ROOT.gStyle.SetLineColor(1)
  ROOT.gStyle.SetTitleSize(0.06,"t")
 
- nuefile = datadir+"nuetest.root"
- numufile = datadir+"numutest.root"
- anuefile = datadir+"anuetest.root"
- anumufile = datadir+"anumutest.root"
+ numufile = nuefile.replace("nue","numu") 
+ anuefile = nuefile.replace("nue","anue")
+ anumufile = nuefile.replace("nue","anumu")
 
  nue = ROOT.TFile(nuefile)
  numu = ROOT.TFile(numufile)
@@ -52,32 +52,32 @@ def MakeEfficiencies(datadir,seltype):
 
  smearlist_numu = ["dis_numu_sig", "dis_numubar_sig", "dis_nutau_bkg", "dis_nutaubar_bkg", "dis_NC_bkg", "dis_aNC_bkg"]
 
- nue_MVA = nue.Get("mvaselect/MVASelection")
- numu_MVA = numu.Get("mvaselect/MVASelection")
- anue_MVA = anue.Get("mvaselect/MVASelection")
- anumu_MVA = anumu.Get("mvaselect/MVASelection")
+ caf = "cafmaker/caf"
+ nue_MVA = nue.Get(caf)
+ numu_MVA = numu.Get(caf)
+ anue_MVA = anue.Get(caf)
+ anumu_MVA = anumu.Get(caf)
  
- nueboth_MVA = ROOT.TChain("mvaselect/MVASelection")
+ nueboth_MVA = ROOT.TChain(caf)
  nueboth_MVA.Add(nuefile)
  nueboth_MVA.Add(anuefile)
     
- numuboth_MVA = ROOT.TChain("mvaselect/MVASelection")
+ numuboth_MVA = ROOT.TChain(caf)
  numuboth_MVA.Add(numufile)
  numuboth_MVA.Add(anumufile)
 
- if (seltype == "mva"):
+#Make common fiducial cut based on truth information
+ fidcut = "abs(nuvtxx_truth)<310 && abs(nuvtxy_truth<550) && nuvtxz_truth>50 && nuvtxz_truth<1244 &&"
 
-     mva_fid_cut = -1.5
-     fidcut = "mvaresult>"+str(mva_fid_cut)+" && "
-     
+#etw made it to here
+ if (seltype == "mva"):
      mva_select_cut = 0.8
-     selcut_numu = "mvaresult>"+str(mva_select_cut)+" && "
-     selcut_nue = "mvaresult>"+str(mva_select_cut)+ "&& "
+     selcut_nue = fidcut+"mvanue>"+str(mva_select_cut)+ "&& "
+     selcut_numu = fidcut+"mvanumu>"+str(mva_select_cut)+" && "
 
  elif (seltype == "cvn"):
-     fidcut = ""
-     selcut_numu = "numuCVN>0.2 && "
-     selcut_nue = "nueCVN>0.7 && "
+     selcut_nue = fidcut+"cvnnue>0.7 && "
+     selcut_numu = fidcut+"cvnnumu>0.5 && "
 
  else:
      print "Selection type must be mva or cvn"
@@ -218,6 +218,7 @@ def MakeEfficiencies(datadir,seltype):
     
 
 #Make output files and plots    
+ hout = ROOT.TFile("mvatoglobes_effs.root","RECREATE")
  d1 = ROOT.TCanvas("d1","d1",1600,1600)
  d1.Divide(5,2)
  i = 0
@@ -225,6 +226,7 @@ def MakeEfficiencies(datadir,seltype):
      d1.cd(i+1)
      h.GetXaxis().SetRangeUser(0.5,10.)
      h.Draw()
+     h.Write()
      HistToFile1D(h,"post_"+efflist_nue[i]+".txt","post_"+efflist_nue[i], None)
      i += 1
  d1.SaveAs("nue_eff.png")
@@ -236,6 +238,7 @@ def MakeEfficiencies(datadir,seltype):
      d2.cd(i+1)
      h.GetXaxis().SetRangeUser(0.5,10.)
      h.Draw()
+     h.Write()
      HistToFile1D(h,"post_"+efflist_anue[i]+".txt","post_"+efflist_anue[i], None)
      i += 1
  d2.SaveAs("anue_eff.png")
@@ -247,6 +250,7 @@ def MakeEfficiencies(datadir,seltype):
      d3.cd(i+1)
      h.GetXaxis().SetRangeUser(0.5,10.)
      h.Draw()
+     h.Write()
      HistToFile1D(h,"post_"+efflist_numu[i]+".txt","post_"+efflist_numu[i], None)
      i += 1
  d3.SaveAs("numu_eff.png")
@@ -258,9 +262,12 @@ def MakeEfficiencies(datadir,seltype):
      d4.cd(i+1)
      h.GetXaxis().SetRangeUser(0.5,10.)
      h.Draw()
+     h.Write()
      HistToFile1D(h,"post_"+efflist_anumu[i]+".txt","post_"+efflist_anumu[i], None)
      i += 1
  d4.SaveAs("anumu_eff.png")
+
+ hout.Close()
 
  d5 = ROOT.TCanvas("d5","d5",1600,1600)
  d5.Divide(5,2)
@@ -289,7 +296,7 @@ def MakeEfficiencies(datadir,seltype):
  return 0
 
 def main():
-    MakeEfficiencies("/data0/lbne/etw/dunemva/","mva")
+    MakeEfficiencies("/data0/lbne/etw/dunemva/cbtest/caf_nue.root","mva","cbtest")
 
 if __name__ == "__main__":
     main()
