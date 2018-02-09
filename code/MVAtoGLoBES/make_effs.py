@@ -6,12 +6,13 @@ import ROOT
 from array import array
 from MVAtoGLoBES import *
 
-def MakeEfficiencies(nufile,seltype):
+def MakeEfficiencies(nufile,seltype,escale=1.0):
  """Function to make efficiency and smearing files in GLoBES format from MVA selection tree
 
  Args:
    nufile: nufilename including path (assumes antineutrino file is same except anu)
    seltype: selections available in MVASelection tree: mva, cvn
+   escale: optional scaling for reconstructed energy
 
  Update notes: Nov 2017: Update variable names/paths to new file format """
 
@@ -114,8 +115,10 @@ def MakeEfficiencies(nufile,seltype):
      thisselcut = selcut_nue+cutlist_nue[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     nu_MVA.Draw("Ev_reco_nue >> hall", thisfidcut)
-     nu_MVA.Draw("Ev_reco_nue >> hsel", thisselcut)
+     allcmd = "{}*Ev_reco_nue >> hall".format(escale)
+     selcmd = "{}*Ev_reco_nue >> hsel".format(escale)    
+     nu_MVA.Draw(allcmd, thisfidcut)
+     nu_MVA.Draw(selcmd, thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -133,8 +136,10 @@ def MakeEfficiencies(nufile,seltype):
      thisselcut = selcut_nue+cutlist_nue[i]
      hall = ROOT.TH1D("hall","hall",n,postbins)
      hsel = ROOT.TH1D("hsel","hsel",n,postbins)
-     anu_MVA.Draw("Ev_reco_nue >> hall", thisfidcut)
-     anu_MVA.Draw("Ev_reco_nue >> hsel", thisselcut)
+     allcmd = "{}*Ev_reco_nue >> hall".format(escale)
+     selcmd = "{}*Ev_reco_nue >> hsel".format(escale)    
+     anu_MVA.Draw(allcmd, thisfidcut)
+     anu_MVA.Draw(selcmd, thisselcut)
      hall = ROOT.gDirectory.FindObject("hall")
      hsel = ROOT.gDirectory.FindObject("hsel")
      ratio = hsel.Clone()
@@ -189,7 +194,8 @@ def MakeEfficiencies(nufile,seltype):
  for smear in smearlist_nue:
      thisfidcut = fidcut+cutlist_nue[i]
      hsmr = ROOT.TH2D("hsmr","hsmr",n,postbins,nbins_pre,prebins)    
-     nuboth_MVA.Draw("Ev:Ev_reco_nue >> hsmr", thisfidcut)
+     smrcmd = "Ev:{}*Ev_reco_nue >> hsmr".format(escale)
+     nuboth_MVA.Draw(smrcmd, thisfidcut)
      hsmr = ROOT.gDirectory.FindObject("hsmr")
      hsmr.SetNameTitle(smear,smear)
      hsmr.GetXaxis().SetTitle("Ereco")

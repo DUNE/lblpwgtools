@@ -3,19 +3,20 @@
 import os
 from make_effs import *
 
-def MakeConfigs(nufile,label,seltype):
+def MakeConfigs(nufile,label,seltype,scale=1):
  """Function to create GLoBES configuration given MVA selection tree input
 
  Args:
    nufile: path to nu file (assumes anu file same with nu->anu)
    label: name of directory in lblpwgtools/inputs/MVAtoGLoBES where configs will be written
-   seltype: mva, cvn """
+   seltype: mva, cvn
+   scale: Correct the nue reco energy by this factor """
 
  directory = "../../inputs/MVAtoGLoBES/"+label
  plotdir = directory+"/plots"
  rootdir = directory+"/root"
 
- ok = MakeEfficiencies(nufile,seltype)
+ ok = MakeEfficiencies(nufile,seltype,scale)
  if (ok==0): 
         if not os.path.exists(directory):
                os.makedirs(directory)
@@ -42,7 +43,11 @@ def main():
     a1 = sys.argv[1]
     a2 = sys.argv[2]
     a3 = sys.argv[3]
-    MakeConfigs(a1,a2,a3)
+    if len(sys.argv) > 4:
+     a4 = sys.argv[4]
+    else:
+     a4 = 1.0
+    MakeConfigs(a1,a2,a3,a4)
 
 if __name__ == "__main__":
     main()
