@@ -6,15 +6,18 @@ import ROOT
 from array import array
 from MVAtoGLoBES import *
 
-def MakeEfficiencies(nufile,seltype,escale=1.0):
+def MakeEfficiencies(nufile,seltype,nuecut,escale=1.0):
  """Function to make efficiency and smearing files in GLoBES format from MVA selection tree
 
  Args:
    nufile: nufilename including path (assumes antineutrino file is same except anu)
    seltype: selections available in MVASelection tree: mva, cvn
+   nuecut: PID cut for nue selection
    escale: optional scaling for reconstructed energy
 
- Update notes: Nov 2017: Update variable names/paths to new file format """
+ Update notes: Nov 2017: Update variable names/paths to new file format 
+               Feb 2018  Add option to scale nue reco energy
+               Feb 2018  Add option to decide on cut value"""
 
 
  ROOT.gROOT.SetStyle("Plain")
@@ -32,8 +35,6 @@ def MakeEfficiencies(nufile,seltype,escale=1.0):
  ROOT.gStyle.SetTitleSize(0.06,"t")
 
  anufile = nufile.replace("nu","anu")
-
- print nufile, anufile
 
  nu = ROOT.TFile(nufile)
  anu = ROOT.TFile(anufile)
@@ -63,13 +64,14 @@ def MakeEfficiencies(nufile,seltype,escale=1.0):
  fidcut = "abs(nuvtxx_truth)<310 && abs(nuvtxy_truth<550) && nuvtxz_truth>50 && nuvtxz_truth<1244 &&"
 
  if (seltype == "mva"):
-     mva_select_cut = 0.8
-     selcut_nue = fidcut+"mvanue>"+str(mva_select_cut)+ "&& "
-     selcut_numu = fidcut+"mvanumu>"+str(mva_select_cut)+" && "
+     mva_select_cut = nuecut
+     selcut_nue = fidcut+"mvanumu < 0.5 && mvanue>"+str(mva_select_cut)+" && "
+     selcut_numu = fidcut+"mvanue<"+str(mva_select_cut)+" && mvanumu>0.5 && "
 
  elif (seltype == "cvn"):
-     selcut_nue = fidcut+"cvnnue>0.7 && "
-     selcut_numu = fidcut+"cvnnumu>0.5 && "
+     cvn_select_cut = nuecut
+     selcut_nue = fidcut+"cvnnumu < 0.5 && cvnnue>"+str(cvn_select_cut)+" && "
+     selcut_numu = fidcut+"cvnnue<"+str(cvn_select_cut)+ " && cvnnumu>0.5 && "
 
  else:
      print "Selection type must be mva or cvn"
@@ -297,7 +299,7 @@ def MakeEfficiencies(nufile,seltype,escale=1.0):
  return 0
 
 def main():
-    MakeEfficiencies("/data0/lbne/etw/dunemva/cbtest/caf_nue.root","mva","cbtest")
+    MakeEfficiencies("/data0/lbne/etw/dunemva/caftest/ana_nu_mcc10.1.root","cvn","0.5")
 
 if __name__ == "__main__":
     main()
