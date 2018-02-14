@@ -402,4 +402,29 @@ namespace ana
     return g;
   }
 
+  //----------------------------------------------------------------------
+  std::vector<double> FindCurveCrossings(TH1* h, double critVal)
+  {
+    std::vector<double> ret;
+
+    // Don't look at the under/overflow bins because they don't have properly
+    // defined centre positions in any case. Stop one short because we compare
+    // i and i+1 inside the loop.
+    for(int i = 1; i < h->GetNbinsX(); ++i){
+      const double x0 = h->GetXaxis()->GetBinCenter(i);
+      const double x1 = h->GetXaxis()->GetBinCenter(i+1);
+
+      const double y0 = h->GetBinContent(i);
+      const double y1 = h->GetBinContent(i+1);
+
+      // Passed the critical value between the two points
+      if((y0 < critVal) != (y1 < critVal)){
+        // Interpolate the actual crossing point
+        const double x = x0 + (x1-x0)*(critVal-y0)/(y1-y0);
+        ret.push_back(x);
+      }
+    } // end for i
+
+    return ret;
+  }
 }

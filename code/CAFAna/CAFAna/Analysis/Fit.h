@@ -174,4 +174,11 @@ namespace ana
 		     const std::vector<const ISyst*>& profSysts = {},
                      const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
 		     bool transpose = false);
+
+  /// \brief Intended for use on the output of \ref Profile
+  ///
+  /// Returns a list of all the x-coordinates at which the curve described by
+  /// \a h crosses \a critVal. eg using critVal=1 will find the 1sigma lower
+  /// and upper bounds.
+  std::vector<double> FindCurveCrossings(TH1* h, double critVal);
 }
