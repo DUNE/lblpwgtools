@@ -582,7 +582,7 @@ namespace ana
     if (hist->GetDimension() != 2)
             throw std::runtime_error(Form("Can't profile a histogram with other than 2 dimensions.  Yours is a %d-D histogram...", hist->GetDimension()));
 
-    TAxis * axis = nullptr;
+    const TAxis * axis = nullptr;
     std::function<TH1D*(const char *, Int_t, Int_t, Option_t*)> projectionMethod;
     if (axisName == "x" || axisName == "X")
     {
