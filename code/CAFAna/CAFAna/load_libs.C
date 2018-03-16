@@ -5,7 +5,10 @@ void load(std::string lib)
   int ret = gSystem->Load(("lib"+lib).c_str());
   // In case of error, exit immediately with the error clearly showing, instead
   // of with a confusing secondary error about a page of output later.
-  if(ret != 0) exit(1);
+  if(ret != 0){
+    std::cout << std::endl << "gSystem->Load(lib"+lib+") failed with code " << ret << std::endl;
+    exit(ret);
+  }
 }
 
 void load_libs()
@@ -42,7 +45,7 @@ void load_libs()
 
   if (qmrb == "") {    // This is the SRT build
     // List of libraries to load. Dependency order.
-    const int kNumLibs = 13;//20;
+    const int kNumLibs = 10;//20;
     const std::string libs[kNumLibs] =
       {
         "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
@@ -57,14 +60,14 @@ void load_libs()
         "CAFAnaDecomp",
         "CAFAnaExtrap",
         "CAFAnaPrediction",
-        "CAFAnaExperiment",
+        //        "CAFAnaExperiment",
         // "CAFAnaFC",
         "CAFAnaAnalysis",
         // "CAFAnaXSec",
         // "CAFAna",
-        "OscLibFunc",
+        //        "OscLibFunc",
         // "MCReweightFunc",
-        "ifdh"
+        //        "ifdh"
       };
 
     // Actually load the libraries
