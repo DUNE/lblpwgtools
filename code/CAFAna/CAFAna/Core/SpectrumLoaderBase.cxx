@@ -306,7 +306,11 @@ namespace ana
     TFile* f = fFileSource->GetNextFile();
     if(!f) return 0; // out of files
 
-    TTree* trPot = (TTree*)f->Get("mvaselect/pottree");
+    //    TTree* trPot = (TTree*)f->Get("mvaselect/pottree");
+    TTree* trPot;
+    if (f->GetListOfKeys()->Contains("cafmaker")) trPot = (TTree*)f->Get("mvaselectnumu/pottree");
+    //    else  trPot = (TTree*)f->Get("mvaselectnumu/pottree");
+    else  trPot = (TTree*)f->Get("mvaselect/pottree");
     assert(trPot);
 
     double pot;

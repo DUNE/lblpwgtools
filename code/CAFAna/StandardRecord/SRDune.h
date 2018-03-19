@@ -7,17 +7,24 @@ namespace caf
   public:
     // Reco info
     double Ev_reco;
+    double Ev_reco_nue;
+    double Ev_reco_numu;
     double mvaresult;
-    double numu_pid;
-    double nue_pid;
+    double mvanue;
+    double mvanumu;
     int reco_q;
     double Elep_reco;
+
+    // To prevent errors when compiling DUNENDSysts
+    double nue_pid;
+    double numu_pid;
 
     // Truth info
     double Ev;
     double Elep;
     //  float enu_truth; // so what's this one?
     int ccnc;
+    int cc;
     int beamPdg;
     int neu;
     int LepPDG;
@@ -27,6 +34,7 @@ namespace caf
     int nipim;
     double Q2;
     double W;
+    double Y;
 
     // config
     int run;

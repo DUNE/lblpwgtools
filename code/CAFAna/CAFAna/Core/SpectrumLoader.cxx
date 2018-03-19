@@ -160,8 +160,9 @@ namespace ana
   void SpectrumLoader::HandleFile(TFile* f, Progress* prog)
   {
     assert(!f->IsZombie());
-
-    TTree* tr = (TTree*)f->Get("mvaselect/MVASelection");//"recTree");
+    TTree* tr;
+    if (f->GetListOfKeys()->Contains("cafmaker")) { tr = (TTree*)f->Get("cafmaker/caf"); }//"recTree");
+    else { tr = (TTree*)f->Get("mvaselect/MVASelection"); }//"recTree");
     assert(tr);
 
     //    BranchList<caf::StandardRecord> branches(tr, "rec", fBranchNames);
@@ -170,8 +171,12 @@ namespace ana
 
     caf::StandardRecord sr;
     tr->SetBranchAddress("Ev_reco", &sr.dune.Ev_reco);
+    tr->SetBranchAddress("Ev_reco_nue", &sr.dune.Ev_reco_nue);
+    tr->SetBranchAddress("Ev_reco_numu", &sr.dune.Ev_reco_numu);
     tr->SetBranchAddress("Elep_reco", &sr.dune.Elep_reco);
     tr->SetBranchAddress("mvaresult", &sr.dune.mvaresult);
+    tr->SetBranchAddress("mvanue", &sr.dune.mvanue);
+    tr->SetBranchAddress("mvanumu", &sr.dune.mvanumu);
     tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
     tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
@@ -188,6 +193,8 @@ namespace ana
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
     tr->SetBranchAddress("W", &sr.dune.W);
+    tr->SetBranchAddress("Y", &sr.dune.Y);
+    tr->SetBranchAddress("cc", &sr.dune.cc);
 
     tr->SetBranchAddress("run", &sr.dune.run);
     tr->SetBranchAddress("isFD", &sr.dune.isFD);
