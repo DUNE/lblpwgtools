@@ -114,9 +114,9 @@ namespace ana
     fPOTByCut.resize(fAllCuts.size());
 
 
-    std::cout << "Active branches: ";
-    for(const std::string& s: fBranchNames) std::cout << s << " ";
-    std::cout << std::endl;
+    //    std::cout << "Active branches: ";
+    //    for(const std::string& s: fBranchNames) std::cout << s << " ";
+    //    std::cout << std::endl;
 
     const int Nfiles = NFiles();
 
