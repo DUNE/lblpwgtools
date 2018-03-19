@@ -47,4 +47,4 @@ namespace ana
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
-};
+}

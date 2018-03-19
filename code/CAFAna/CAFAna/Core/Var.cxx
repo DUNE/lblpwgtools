@@ -1,6 +1,7 @@
 #include "CAFAna/Core/Var.h"
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <set>
 
