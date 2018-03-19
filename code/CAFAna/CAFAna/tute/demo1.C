@@ -22,11 +22,11 @@ void demo1()
 {
   // See demo0.C for explanation of these repeated parts
   rootlogon();
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/anu.mcc10.1_def.root";
+  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
   SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000004);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000005);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000006);
+  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
+  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
+  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
   auto* loaderNC    = loader.LoaderForRunPOT(0);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Var kMVANumu = SIMPLEVAR(dune.mvanumu);
