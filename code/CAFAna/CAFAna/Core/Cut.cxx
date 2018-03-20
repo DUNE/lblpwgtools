@@ -171,6 +171,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<class T> GenericCut<T>
+  operator!=(const GenericVar<T>& v, double c)
+  {
+    return !(v == c);
+  }
+
+  //----------------------------------------------------------------------
+  template<class T> GenericCut<T>
   operator>(const GenericVar<T>& a, const GenericVar<T>& b)
   {
     return GenericCut<T>(a.Requires()+b.Requires(),
@@ -199,9 +206,11 @@ namespace ana
   template<class T> GenericCut<T> operator<(double c, const GenericVar<T>& v){return v > c;}
   template<class T> GenericCut<T> operator>=(double c, const GenericVar<T>& v){return v <= c;}
   template<class T> GenericCut<T> operator<=(double c, const GenericVar<T>& v){return v >= c;}
+  template<class T> GenericCut<T> operator!=(double c, const GenericVar<T>& v){return v != c;}
 
   template<class T> GenericCut<T> operator<(const GenericVar<T>& a, const GenericVar<T>& b){return !(b >= a);}
   template<class T> GenericCut<T> operator<=(const GenericVar<T>& a, const GenericVar<T>& b){return !(b > a);}
+  template<class T> GenericCut<T> operator!=(const GenericVar<T>& a, const GenericVar<T>& b){return !(b == a);}
 
 
   // explicitly instantiate the templates for the types we know we have
@@ -210,12 +219,14 @@ namespace ana
   template Cut operator>=(const Var&, double);
   template Cut operator<=(const Var&, double);
   template Cut operator==(const Var&, double);
+  template Cut operator!=(const Var&, double);
 
   template Cut operator>(const Var&, const Var&);
   template Cut operator<(const Var&, const Var&);
   template Cut operator>=(const Var&, const Var&);
   template Cut operator<=(const Var&, const Var&);
   template Cut operator==(const Var&, const Var&);
+  template Cut operator!=(const Var&, const Var&);
 
   template Cut operator>(double, const Var&);
   template Cut operator<(double, const Var&);
@@ -244,12 +255,14 @@ namespace ana
   template SpillTruthCut operator>=(const SpillTruthVar&, double);
   template SpillTruthCut operator<=(const SpillTruthVar&, double);
   template SpillTruthCut operator==(const SpillTruthVar&, double);
+  template SpillTruthCut operator!=(const SpillTruthVar&, double);
 
   template SpillTruthCut operator>(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthCut operator<(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthCut operator>=(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthCut operator<=(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthCut operator==(const SpillTruthVar&, const SpillTruthVar&);
+  template SpillTruthCut operator!=(const SpillTruthVar&, const SpillTruthVar&);
 
   template SpillTruthCut operator>(double, const SpillTruthVar&);
   template SpillTruthCut operator<(double, const SpillTruthVar&);

@@ -92,11 +92,7 @@ namespace ana
   /// caf::StandardRecord object
   ///
   /// A Cut consists of a function, taking a StandardRecord and returning a
-  /// boolean indicating if that event passes the cut, plus a list of the
-  /// branch names that must be active in the tree. This explicit naming of
-  /// required branches leads to a significant speedup in CAF loading. However,
-  /// if you neglect a necessary branch, that field will be uninitialized in
-  /// the StandardRecord you are passed.
+  /// boolean indicating if that event passes the cut.
   ///
   /// Cut objects may be combined with the standard boolean operations && ||
   /// and !
@@ -115,17 +111,20 @@ namespace ana
   template<class T> GenericCut<T> operator>=(const GenericVar<T>& v, double c);
   template<class T> GenericCut<T> operator<=(const GenericVar<T>& v, double c);
   template<class T> GenericCut<T> operator==(const GenericVar<T>& v, double c);
+  template<class T> GenericCut<T> operator!=(const GenericVar<T>& v, double c);
 
   template<class T> GenericCut<T> operator>(const GenericVar<T>& a, const GenericVar<T>& b);
   template<class T> GenericCut<T> operator<(const GenericVar<T>& a, const GenericVar<T>& b);
   template<class T> GenericCut<T> operator>=(const GenericVar<T>& a, const GenericVar<T>& b);
   template<class T> GenericCut<T> operator<=(const GenericVar<T>& a, const GenericVar<T>& b);
   template<class T> GenericCut<T> operator==(const GenericVar<T>& a, const GenericVar<T>& b);
+  template<class T> GenericCut<T> operator!=(const GenericVar<T>& a, const GenericVar<T>& b);
 
   template<class T> GenericCut<T> operator>(double c, const GenericVar<T>& v);
   template<class T> GenericCut<T> operator<(double c, const GenericVar<T>& v);
   template<class T> GenericCut<T> operator>=(double c, const GenericVar<T>& v);
   template<class T> GenericCut<T> operator<=(double c, const GenericVar<T>& v);
+  template<class T> GenericCut<T> operator!=(double c, const GenericVar<T>& v);
 
   /// The simplest possible cut: pass everything, used as a default
   const Cut kNoCut({}, [](const caf::StandardRecord*){return true;});
