@@ -550,11 +550,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum Spectrum::MockData(double pot) const
+  Spectrum Spectrum::MockData(double pot, int seed) const
   {
     Spectrum ret = FakeData(pot);
 
-    TRandom3 rnd(0); // zero seeds randomly
+    TRandom3 rnd(seed); // zero seeds randomly
 
     if(ret.fHist){
       for(int i = 0; i < ret.fHist->GetNbinsX()+2; ++i){
