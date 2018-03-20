@@ -20,8 +20,6 @@ namespace ana
 
     virtual ~SystComponentScale();
 
-    std::set<std::string> Requires() const override {return fCut.Requires();}
-
     std::string ShortName() const override {return fShortName;}
     std::string LatexName() const override {return fLatexName;}
 

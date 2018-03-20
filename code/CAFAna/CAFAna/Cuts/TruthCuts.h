@@ -35,27 +35,22 @@ namespace ana
     int fPdg, fPdgOrig;
   };
 
-  /// List of CAF variables that are required to select on CC flavour
-  const std::set<std::string> kCCFlavorReqs = {"dune.ccnc",
-                                               "dune.beamPdg",
-                                               "dune.neu"};
-
   // Finally, the function argument to the Cut constructor can be a "functor"
   // object (one with operator()). This allows similar logic but with different
   // constants to be easily duplicated.
 
   /// Select CC \f$ \nu_\mu\to\nu_e \f$
-  const Cut kIsSig    (kCCFlavorReqs, CCFlavSel(12, 14));
+  const Cut kIsSig    ({}, CCFlavSel(12, 14));
   /// Select CC \f$ \nu_\mu\to\nu_\mu \f$
-  const Cut kIsNumuCC (kCCFlavorReqs, CCFlavSel(14, 14));
+  const Cut kIsNumuCC ({}, CCFlavSel(14, 14));
   /// Select CC \f$ \nu_e\to\nu_e \f$
-  const Cut kIsBeamNue(kCCFlavorReqs, CCFlavSel(12, 12));
+  const Cut kIsBeamNue({}, CCFlavSel(12, 12));
   /// Select CC \f$ \nu_e\to\nu_\mu \f$
-  const Cut kIsNumuApp(kCCFlavorReqs, CCFlavSel(14, 12));
+  const Cut kIsNumuApp({}, CCFlavSel(14, 12));
   /// Select CC \f$ \nu_\mu\to\nu_\tau \f$
-  const Cut kIsTauFromMu(kCCFlavorReqs, CCFlavSel(16, 14));
+  const Cut kIsTauFromMu({}, CCFlavSel(16, 14));
   /// Select CC \f$ \nu_e\to\nu_\tau \f$
-  const Cut kIsTauFromE(kCCFlavorReqs, CCFlavSel(16, 12));
+  const Cut kIsTauFromE({}, CCFlavSel(16, 12));
 
   /// Is this truly an antineutrino?
   const Cut kIsAntiNu({"dune.neu"},

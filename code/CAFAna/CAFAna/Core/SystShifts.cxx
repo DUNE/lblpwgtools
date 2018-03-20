@@ -98,17 +98,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::set<std::string> SystShifts::Requires() const
-  {
-    std::set<std::string> ret;
-    for(auto it: fSysts){
-      std::set<std::string> itreq = it.first->Requires();
-      ret.insert(itreq.begin(), itreq.end());
-    }
-    return ret;
-  }
-
-  //----------------------------------------------------------------------
   void SystShifts::Shift(Restorer& restore,
                          caf::StandardRecord* sr,
                          double& weight) const

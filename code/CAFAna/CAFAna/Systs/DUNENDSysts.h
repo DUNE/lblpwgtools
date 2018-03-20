@@ -13,11 +13,6 @@ namespace ana
   public:
     std::string ShortName() const override {return "NDEv";}
     std::string LatexName() const override {return "Near Detector reco Ev";}
-
-    std::set<std::string> Requires() const override
-    {
-      return {"dune.Ev_reco", "dune.sigma_Ev_reco"};
-    }
     
     void Shift(double sigma,
                        Restorer& restore,
@@ -37,11 +32,6 @@ namespace ana
   public:
     std::string ShortName() const override {return "NDPID";}
     std::string LatexName() const override {return "Near Detector lepton PID";}
-
-    std::set<std::string> Requires() const override
-    {
-      return {"dune.numu_pid", "dune.nue_pid", "dune.sigma_numu_pid", "dune.sigma_nue_pid"};
-    }
     
     void Shift(double sigma,
                        Restorer& restore,

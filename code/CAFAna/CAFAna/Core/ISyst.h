@@ -13,11 +13,6 @@ namespace ana
   /// \brief Encapsulate code to systematically shift a \ref
   /// caf::StandardRecord
   ///
-  /// First up, you need to list the branches your systematic will access. This
-  /// explicit naming of required branches leads to a significant speedup in
-  /// CAF loading. However, if you neglect a necessary branch, that field will
-  /// be uninitialized in the StandardRecord you are passed.
-  ///
   /// The Shift() function alters the \ref caf::StandardRecord or the weight
   /// associated with the event. You must be careful to add any variables you
   /// modify to \ref Restorer (before you modify them!) so that the framework
@@ -27,9 +22,6 @@ namespace ana
   public:
     ISyst();
     virtual ~ISyst();
-
-    /// The list of branches required to be active
-    virtual std::set<std::string> Requires() const = 0;
 
     /// The name printed out to the screen
     virtual std::string ShortName() const = 0;

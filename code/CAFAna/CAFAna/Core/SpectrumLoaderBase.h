@@ -110,11 +110,6 @@ namespace ana
     /// Figure out if \a str is a wildcard or SAM query and return a source
     IFileSource* WildcardOrSAMQuery(const std::string& str) const;
 
-    /// Ensure this branch is activated
-    void RequireVariable(const std::string& var);
-    /// Ensure these branches are activated
-    void RequireVariables(const std::set<std::string>& vars);
-
     friend class SpectrumLoaderMockData;
     virtual void RemoveSpectrum(Spectrum*);
     virtual void RemoveReweightableSpectrum(ReweightableSpectrum*);
@@ -227,7 +222,6 @@ namespace ana
       const MultiVar& GetMultiVar() const {assert(fMultiVar); return *fMultiVar;}
 
       int ID() const {return fVar ? fVar->ID() : fMultiVar->ID();}
-      std::set<std::string> Requires() const {return fVar ? fVar->Requires() : fMultiVar->Requires();}
 
     protected:
       const Var* fVar;

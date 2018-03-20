@@ -195,18 +195,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SpectrumLoaderBase::RequireVariable(const std::string& var)
-  {
-    fBranchNames.insert(var);
-  }
-
-  //----------------------------------------------------------------------
-  void SpectrumLoaderBase::RequireVariables(const std::set<std::string>& vars)
-  {
-    fBranchNames.insert(vars.begin(), vars.end());
-  }
-
-  //----------------------------------------------------------------------
   void SpectrumLoaderBase::AddSpectrum(Spectrum& spect,
                                        const Var& var,
                                        const Cut& cut,
@@ -219,11 +207,6 @@ namespace ana
     }
 
     fHistDefs[shift][cut][wei][var].spects.push_back(&spect);
-
-    RequireVariables(var.Requires());
-    RequireVariables(cut.Requires());
-    RequireVariables(shift.Requires());
-    RequireVariables(wei.Requires());
 
     spect.AddLoader(this); // Remember we have a Go() pending
   }
@@ -241,11 +224,6 @@ namespace ana
     }
 
     fHistDefs[shift][cut][wei][var].spects.push_back(&spect);
-
-    RequireVariables(var.Requires());
-    RequireVariables(cut.Requires());
-    RequireVariables(shift.Requires());
-    RequireVariables(wei.Requires());
 
     spect.AddLoader(this); // Remember we have a Go() pending
   }
@@ -269,13 +247,6 @@ namespace ana
     }
 
     fHistDefs[shift][cut][wei][var].rwSpects.push_back(&spect);
-
-    RequireVariables(spect.ReweightVar().Requires());
-
-    RequireVariables(var.Requires());
-    RequireVariables(cut.Requires());
-    RequireVariables(shift.Requires());
-    RequireVariables(wei.Requires());
 
     spect.AddLoader(this); // Remember we have a Go() pending
   }

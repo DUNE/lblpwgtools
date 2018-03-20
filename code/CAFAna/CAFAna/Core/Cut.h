@@ -36,9 +36,6 @@ namespace ana
                const std::function<ExposureFunc_t>& liveFunc = 0,
                const std::function<ExposureFunc_t>& potFunc = 0);
 
-    /// The list of branches required to be active
-    const std::set<std::string>& Requires() const {return fReqs;}
-
     /// Allows a cut to be called with bool result = myCut(sr) syntax
     bool operator()(const T* sr) const
     {
@@ -75,11 +72,10 @@ namespace ana
                const std::function<ExposureFunc_t>& liveFunc,
                const std::function<ExposureFunc_t>& potFunc,
                int id)
-      : fReqs(reqs), fFunc(fun), fLiveFunc(liveFunc), fPOTFunc(potFunc), fID(id)
+      : fFunc(fun), fLiveFunc(liveFunc), fPOTFunc(potFunc), fID(id)
     {
     }
 
-    std::set<std::string> fReqs;
     std::function<CutFunc_t> fFunc;
     std::function<ExposureFunc_t> fLiveFunc, fPOTFunc;
 

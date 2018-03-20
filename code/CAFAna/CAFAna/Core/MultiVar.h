@@ -20,12 +20,9 @@ namespace ana
     /// std::function can wrap a real function, function object, or lambda
     MultiVar(const std::set<std::string>& reqs,
              const std::function<VarFunc_t>& fun)
-      : fReqs(reqs), fFunc(fun), fID(fgNextID--)
+      : fFunc(fun), fID(fgNextID--)
     {
     }
-
-    /// The list of branches required to be active
-    const std::set<std::string>& Requires() const {return fReqs;}
 
     /// Allows a variable to be called with double value = myVar(sr) syntax
     std::vector<double> operator()(const caf::StandardRecord* sr) const
@@ -38,7 +35,6 @@ namespace ana
 
     static int MaxID() {return fgNextID-1;}
   protected:
-    std::set<std::string> fReqs;
     std::function<VarFunc_t> fFunc;
 
     int fID;

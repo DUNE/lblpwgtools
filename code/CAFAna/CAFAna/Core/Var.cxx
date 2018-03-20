@@ -16,9 +16,9 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<class T> GenericVar<T>::
-  GenericVar(const std::set<std::string>& reqs,
+  GenericVar(const std::set<std::string>& /*reqs*/,
              const std::function<VarFunc_t>& fun)
-    : fReqs(reqs), fFunc(fun), fID(fgNextID++)
+    : fFunc(fun), fID(fgNextID++)
   {
   }
 
@@ -111,7 +111,7 @@ namespace ana
   Var2D(const GenericVar<T>& a, const Binning& binsa,
         const GenericVar<T>& b, const Binning& binsb)
   {
-    return GenericVar<T>(a.Requires()+b.Requires(),
+    return GenericVar<T>({},
                          Var2DFunc<T>(a, binsa, b, binsb));
   }
 
@@ -139,7 +139,7 @@ namespace ana
         const GenericVar<T>& b, const Binning& binsb,
         const GenericVar<T>& c, const Binning& binsc)
   {
-    return GenericVar<T>(a.Requires()+b.Requires()+c.Requires(),
+    return GenericVar<T>({},
                          Var3DFunc<T>(a, binsa, b, binsb, c, binsc));
   }
 
@@ -166,7 +166,7 @@ namespace ana
   //----------------------------------------------------------------------
   Var Scaled(const Var& v, double s)
   {
-    return Var(v.Requires(),
+    return Var({},
                [v, s](const caf::StandardRecord* sr){return s*v(sr);});
   }
 
@@ -180,7 +180,7 @@ namespace ana
 
   Var Sqrt(const Var& v)
   {
-    return Var(v.Requires(),
+    return Var({},
                [v](const caf::StandardRecord* sr){return sqrt(v(sr));});
   }
 
@@ -192,12 +192,12 @@ namespace ana
     const std::pair<int, int> key(a.ID(), b.ID());
 
     if(ids.count(key)){
-      return GenericVar<T>(a.Requires()+b.Requires(),
+      return GenericVar<T>({},
                            [a, b](const T* sr){return a(sr) * b(sr);},
                            ids[key]);
     }
     else{
-      const GenericVar<T> ret(a.Requires()+b.Requires(),
+      const GenericVar<T> ret({},
                               [a, b](const T* sr){return a(sr) * b(sr);});
       ids[key] = ret.ID();
       return ret;
@@ -212,7 +212,7 @@ namespace ana
     const std::pair<int, int> key(a.ID(), b.ID());
 
     if(ids.count(key)){
-      return GenericVar<T>(a.Requires()+b.Requires(),
+      return GenericVar<T>({},
                            [a, b](const T* sr)
                            {
                              const double denom = b(sr);
@@ -224,7 +224,7 @@ namespace ana
                            ids[key]);
     }
     else{
-      const GenericVar<T> ret(a.Requires()+b.Requires(),
+      const GenericVar<T> ret({},
                               [a, b](const T* sr)
                               {
                                 const double denom = b(sr);
@@ -246,12 +246,12 @@ namespace ana
     const std::pair<int, int> key(a.ID(), b.ID());
 
     if(ids.count(key)){
-      return GenericVar<T>(a.Requires()+b.Requires(),
+      return GenericVar<T>({},
                            [a, b](const T* sr){return a(sr) + b(sr);},
                            ids[key]);
     }
     else{
-      const GenericVar<T> ret(a.Requires()+b.Requires(),
+      const GenericVar<T> ret({},
                               [a, b](const T* sr){return a(sr) + b(sr);});
       ids[key] = ret.ID();
       return ret;
@@ -266,12 +266,12 @@ namespace ana
     const std::pair<int, int> key(a.ID(), b.ID());
 
     if(ids.count(key)){
-      return GenericVar<T>(a.Requires()+b.Requires(),
+      return GenericVar<T>({},
                            [a, b](const T* sr){return a(sr) - b(sr);},
                            ids[key]);
     }
     else{
-      const GenericVar<T> ret(a.Requires()+b.Requires(),
+      const GenericVar<T> ret({},
                               [a, b](const T* sr){return a(sr) - b(sr);});
       ids[key] = ret.ID();
       return ret;
@@ -292,17 +292,4 @@ namespace ana
   template SpillTruthVar operator/(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthVar operator+(const SpillTruthVar&, const SpillTruthVar&);
   template SpillTruthVar operator-(const SpillTruthVar&, const SpillTruthVar&);
-
-
-  //----------------------------------------------------------------------
-  std::set<std::string> operator+(const std::set<std::string>& r1,
-                                  const std::set<std::string>& r2)
-  {
-    std::set<std::string> ret;
-    std::set_union(r1.begin(), r1.end(),
-                   r2.begin(), r2.end(),
-                   std::inserter(ret, ret.end())
-    );
-    return std::move(ret);
-  }
 }

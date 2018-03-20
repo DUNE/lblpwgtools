@@ -490,7 +490,6 @@ namespace ana
         // yet. Store under a dummy syst that won't match any existing pointer.
         class DummySyst: public ISyst
         {
-          virtual std::set<std::string> Requires() const {return {};}
           virtual std::string ShortName() const {return "";}
           virtual std::string LatexName() const {return "";}
           virtual void Shift(double sigma, Restorer& restore,

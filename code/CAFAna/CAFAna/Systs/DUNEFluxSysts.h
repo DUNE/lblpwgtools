@@ -15,11 +15,6 @@ namespace ana
 
     virtual std::string ShortName() const override {return TString::Format("flux%i", fIdx).Data();}
     virtual std::string LatexName() const override {return TString::Format("Flux #%i", fIdx).Data();}
-
-    virtual std::set<std::string> Requires() const override
-    {
-      return {"dune.beamPdg", "dune.Ev", "dune.run"};
-    }
     
     virtual void Shift(double sigma,
                        Restorer& restore,

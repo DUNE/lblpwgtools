@@ -323,12 +323,9 @@ namespace ana
             if(std::isnan(val) || std::isinf(val)){
               std::cerr << "Warning: Bad value: " << val
                         << " returned from a Var. The input variable(s) could "
-                        << "be NaN in the CAF, you could have forgotten to "
-                        << "Require() one or more of them, or perhaps your "
-                        << "Var code computed 0/0? The input variables that "
-                        << "were required from the CAF for this Var were: ";
-              for(const std::string& r: var.Requires()) std::cerr << " " << r;
-              std::cout << ". Not filling into this histogram for this slice." << std::endl;
+                        << "be NaN in the CAF, or perhaps your "
+                        << "Var code computed 0/0?";
+              std::cout << " Not filling into this histogram for this slice." << std::endl;
               continue;
             }
 
@@ -339,8 +336,7 @@ namespace ana
 
               if(std::isnan(yval) || std::isinf(yval)){
                 std::cerr << "Warning: Bad value: " << yval
-                          << " for reweighting Var requiring";
-                for(const std::string& r: rw->ReweightVar().Requires()) std::cerr << " " << r;
+                          << " for reweighting Var";
                 std::cout << ". Not filling into histogram." << std::endl;
                 continue;
               }
@@ -462,7 +458,7 @@ namespace ana
   //----------------------------------------------------------------------
   void SpectrumLoader::ValError(const std::string& type,
                                 const std::string& shift,
-                                const std::set<std::string>& req,
+                                const std::set<std::string>& /*req*/,
                                 double orig, double now) const
   {
     // Try and print a comprehensive error message, I imagine this might be
@@ -474,10 +470,7 @@ namespace ana
               << " changed after it was shifted and then restored."
               << std::endl;
 
-    std::cerr << "While applying shift " << shift
-              << ", " << type << " requiring variables";
-
-    for(const std::string& r: req) std::cerr << " " << r;
+    std::cerr << "While applying shift " << shift;
 
     std::cerr << " initially had value " << orig
               << " now has " << now << std::endl;
@@ -504,7 +497,7 @@ namespace ana
       const bool cutval = cutdef.first(sr);
 
       if(cutval != v->cuts[cutIdx]){
-        ValError("Cut", shiftName, cutdef.first.Requires(),
+        ValError("Cut", shiftName, {},
                  v->cuts[cutIdx], cutval);
       }
       ++cutIdx;
@@ -515,7 +508,7 @@ namespace ana
       for(auto& weidef: cutdef.second){
         const double weival = weidef.first(sr);
         if(!std::isnan(weival) && weival != v->weis[weiIdx]){
-          ValError("Cut", shiftName, weidef.first.Requires(),
+          ValError("Cut", shiftName, {},
                    v->weis[weiIdx], weival);
         }
         ++weiIdx;
@@ -524,7 +517,7 @@ namespace ana
           if(vardef.first.IsMulti()) continue;
           const double varval = vardef.first.GetVar()(sr);
           if(!std::isnan(varval) && varval != v->vars[varIdx]){
-            ValError("Var", shiftName, vardef.first.Requires(),
+            ValError("Var", shiftName, {},
                      v->vars[varIdx], varval);
           }
           ++varIdx;

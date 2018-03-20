@@ -28,8 +28,6 @@ namespace ana
     /// Penalty term for chi-squared fits
     double Penalty() const;
 
-    std::set<std::string> Requires() const;
-
     void Shift(Restorer& restore,
                caf::StandardRecord* sr,
                double& weight) const;

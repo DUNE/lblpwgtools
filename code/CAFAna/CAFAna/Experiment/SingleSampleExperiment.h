@@ -10,8 +10,6 @@ namespace ana
   class CosmicBkgScaleSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const {return {};}
-
     std::string ShortName() const {return "cosmicScale";}
     std::string LatexName() const {return "Cosmic background scale";}
     void Shift(double, Restorer&, caf::StandardRecord*, double&) const {}

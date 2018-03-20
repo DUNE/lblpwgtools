@@ -35,9 +35,6 @@ namespace ana
     GenericVar(const std::set<std::string>& reqs,
                const std::function<VarFunc_t>& fun);
 
-    /// The list of branches required to be active
-    const std::set<std::string>& Requires() const {return fReqs;}
-
     /// Allows a variable to be called with double value = myVar(sr) syntax
     double operator()(const T* sr) const
     {
@@ -58,11 +55,10 @@ namespace ana
     GenericVar(const std::set<std::string>& reqs,
                const std::function<VarFunc_t>& fun,
 	       int id)
-      : fReqs(reqs), fFunc(fun), fID(id)
+      : fFunc(fun), fID(id)
     {
     }
 
-    std::set<std::string> fReqs;
     std::function<VarFunc_t> fFunc;
 
     int fID;
@@ -138,11 +134,4 @@ namespace ana
 
   /// Use to take sqrt of a var
   Var Sqrt(const Var& v);
-
-  /// Enable combining requirements with 'v1.Requires() + v2.Requires()' syntax
-  //  (Note that this function could in principle be written to work for
-  //   any type, not just std::string, by templating it.  I'm not sure that this
-  //   is the right header for something as global as that -- plus it'd need
-  //   to live somewhere besides ana:: namespace -- so it's left specialized.)
-  std::set<std::string> operator+(const std::set<std::string>& r1, const std::set<std::string>& r2);
 } // namespace

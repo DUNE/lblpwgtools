@@ -9,8 +9,6 @@ namespace ana
   class DUNEXSecDiagSyst: public ISyst
   {
   public:
-    virtual std::set<std::string> Requires() const override {return {};}
-
     virtual std::string ShortName() const override;
     virtual std::string LatexName() const override;
 

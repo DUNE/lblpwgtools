@@ -15,10 +15,6 @@ namespace ana
   class EnergyScaleSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-    {
-      return {"dune.Ev_reco"};
-    }
     std::string ShortName() const override {return "eScale";}
     std::string LatexName() const override {return "Energy Scale";}
 
@@ -40,10 +36,6 @@ namespace ana
   class EnergyResSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco"};
-      }
     std::string ShortName() const override {return "eRes";}
     std::string LatexName() const override {return "Energy Resolution";}
 
@@ -69,10 +61,6 @@ namespace ana
   class NCSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc"};
-      }
     std::string ShortName() const override {return "NC";}
     std::string LatexName() const override {return "NC Norm Syst";}
 
@@ -92,10 +80,6 @@ namespace ana
   class NCSyst2: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc"};
-      }
     std::string ShortName() const override {return "NC";}
     std::string LatexName() const override {return "NC Norm Syst";}
 
@@ -115,10 +99,6 @@ namespace ana
   class NutauSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc", "dune.neu"};
-      }
     std::string ShortName() const override {return "nutau";}
     std::string LatexName() const override {return "nutau Norm Syst";}
 
@@ -138,10 +118,6 @@ namespace ana
   class NumuNCSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc"};
-      }
     std::string ShortName() const override {return "numuNC";}
     std::string LatexName() const override {return "Numu NC Syst";}
 
@@ -161,10 +137,6 @@ namespace ana
   class NueNumuSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc", "dune.neu"};
-      }
     std::string ShortName() const override {return "nuenumuNC";}
     std::string LatexName() const override {return "Nue Numu Norm Syst";}
 
@@ -183,10 +155,6 @@ namespace ana
   class NueBeamSyst: public ISyst
   {
   public:
-    std::set<std::string> Requires() const override
-      {
-	return {"dune.Ev","dune.Ev_reco", "dune.ccnc", "dune.neu", "dune.beamPdg"};
-      }
     std::string ShortName() const override {return "nuebeam";}
     std::string LatexName() const override {return "Nue Beam Norm Syst";}
 
