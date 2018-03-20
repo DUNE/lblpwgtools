@@ -34,12 +34,7 @@ namespace ana
     GenericCut(const std::set<std::string>& reqs,
                const std::function<CutFunc_t>& func,
                const std::function<ExposureFunc_t>& liveFunc = 0,
-               const std::function<ExposureFunc_t>& potFunc = 0)
-      : fReqs(reqs),
-        fFunc(func), fLiveFunc(liveFunc), fPOTFunc(potFunc),
-        fID(fgNextID++)
-    {
-    }
+               const std::function<ExposureFunc_t>& potFunc = 0);
 
     /// The list of branches required to be active
     const std::set<std::string>& Requires() const {return fReqs;}

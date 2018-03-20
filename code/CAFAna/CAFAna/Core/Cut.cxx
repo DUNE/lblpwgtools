@@ -5,12 +5,23 @@
 
 namespace ana
 {
-  // Make sure both versions get generated
+  // Make sure all three versions get generated
   template class GenericCut<caf::StandardRecord>;
   template class GenericCut<caf::SRSpill>;
   template class GenericCut<caf::SRSpillTruthBranch>;
 
   template<class T> int GenericCut<T>::fgNextID = 0;
+
+  //----------------------------------------------------------------------
+  template<class T> GenericCut<T>::
+  GenericCut(const std::set<std::string>& reqs,
+             const std::function<CutFunc_t>& func,
+	     const std::function<ExposureFunc_t>& liveFunc,
+	     const std::function<ExposureFunc_t>& potFunc)
+    : fReqs(reqs), fFunc(func), fLiveFunc(liveFunc), fPOTFunc(potFunc),
+      fID(fgNextID++)
+  {
+  }
 
   //----------------------------------------------------------------------
   std::function<ExposureFunc_t>

@@ -15,6 +15,14 @@ namespace ana
   template<class T> int GenericVar<T>::fgNextID = 0;
 
   //----------------------------------------------------------------------
+  template<class T> GenericVar<T>::
+  GenericVar(const std::set<std::string>& reqs,
+             const std::function<VarFunc_t>& fun)
+    : fReqs(reqs), fFunc(fun), fID(fgNextID++)
+  {
+  }
+
+  //----------------------------------------------------------------------
   /// Helper for \ref Var2D
   template<class T> class Var2DFunc
   {

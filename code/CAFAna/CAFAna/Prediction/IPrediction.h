@@ -77,9 +77,9 @@ namespace ana
                                           Sign::Sign_t sign) const;
 
     virtual OscillatableSpectrum ComponentCC(int from, int to) const
-    {assert(0 && "unimplemented");}
+    {std::cout << "OscillatableSpectrum::ComponentCC() unimplemented" << std::endl; abort();}
     virtual Spectrum ComponentNC() const
-    {assert(0 && "unimplemented");}
+    {std::cout << "OscillatableSpectrum::ComponentNC() unimplemented" << std::endl; abort();}
 
     virtual void SaveTo(TDirectory* dir) const;
   };

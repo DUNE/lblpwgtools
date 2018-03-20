@@ -33,10 +33,7 @@ namespace ana
 
     /// std::function can wrap a real function, function object, or lambda
     GenericVar(const std::set<std::string>& reqs,
-               const std::function<VarFunc_t>& fun)
-      : fReqs(reqs), fFunc(fun), fID(fgNextID++)
-    {
-    }
+               const std::function<VarFunc_t>& fun);
 
     /// The list of branches required to be active
     const std::set<std::string>& Requires() const {return fReqs;}
