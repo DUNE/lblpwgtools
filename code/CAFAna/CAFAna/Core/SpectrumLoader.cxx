@@ -87,16 +87,6 @@ namespace ana
   //----------------------------------------------------------------------
   void SpectrumLoader::Go()
   {
-    // When embedded in Loaders, can be called even if no-one needs us
-    if(fBranchNames.empty()){
-      // But still need to notify Loaders itself
-      for(auto c: fCallbacks) c();
-      // And let everyone know we won't be bothering with them anymore
-      fHistDefs.RemoveLoader(this);
-      fHistDefs.Clear();
-      return;
-    }
-
     if(fGone){
       std::cerr << "Error: can only call Go() once on a SpectrumLoader" << std::endl;
       abort();
@@ -113,10 +103,6 @@ namespace ana
     fLivetimeByCut.resize(fAllCuts.size());
     fPOTByCut.resize(fAllCuts.size());
 
-
-    //    std::cout << "Active branches: ";
-    //    for(const std::string& s: fBranchNames) std::cout << s << " ";
-    //    std::cout << std::endl;
 
     const int Nfiles = NFiles();
 
