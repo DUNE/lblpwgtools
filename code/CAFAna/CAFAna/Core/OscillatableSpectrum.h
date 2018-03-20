@@ -67,7 +67,7 @@ namespace ana
 
     /// Rescale bins so that \ref TrueEnergy will return \a target
     using ReweightableSpectrum::ReweightToTrueSpectrum;
-    /// Recale bins so that \ref Unoscillated will return \a target
+    /// Rescale bins so that \ref Unoscillated will return \a target
     using ReweightableSpectrum::ReweightToRecoSpectrum;
 
     // These under a different name

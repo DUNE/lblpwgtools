@@ -72,7 +72,7 @@ namespace ana
     virtual ~PredictionNoExtrap();
 
     static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir) const override;
 
   };
 

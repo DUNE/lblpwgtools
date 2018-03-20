@@ -62,7 +62,7 @@ namespace ana
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const override;
 
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir);
 
     // If \a savePattern is not empty, print each pad. Must contain a "%s" to

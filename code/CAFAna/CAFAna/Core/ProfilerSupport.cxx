@@ -19,9 +19,10 @@ namespace ana
         char tmp[] = "/tmp/XXXXXX.pdf";
         mkstemps(tmp, 4);
 
-        // Try Caltech and FNAL locations
+        // Try various locations
         const std::vector<std::string> locs =
 	  {"/nfs/raid11/novasoft/externals/", // Caltech
+           "/unix/nova/perftools/", // UCL
 	   "/grid/fermiapp/nova/perftools/"}; // FNAL
 
 	std::string perfdir;

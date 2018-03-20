@@ -35,6 +35,8 @@ def makeParser():
                           help = 'quit at end of job')
     parser.add_argument('-bq', action = 'store_true',
                           help = 'shorthand for -b -q')
+    parser.add_argument('-nr', '--no-recompile', action = 'store_true',
+                        help = "don't unconditionally recompile, ie .C+ not .C++")
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
@@ -57,7 +59,7 @@ def makeParser():
                           help = 'run with google perftools profiler')
 
     parser.add_argument('script.C',
-                        help = 'the root script to run. Append a + to force recompilation')
+                        help = 'the root script to run')
     parser.add_argument('args', nargs = '*',
                         help = 'optional arguments passed to script main function')
 
@@ -103,6 +105,7 @@ if __name__ == '__main__':
     exe = 'root'
     rootargs = ['-l', '-n']
     script = opts['script.C']
+    while script[-1] == '+': script = script[:-1] # Strip back to raw .C
     # Drop the last argument, because it's the space hack from above
     args = opts['args'][:-1]
 
@@ -147,11 +150,14 @@ if __name__ == '__main__':
         os.environ['CAFANA_USE_SNAPSHOTS'] = 'yes'
 
     if (script.endswith('.C') or script.endswith('.C+')):
-        # root, then library loading, then script with an explicit "+" added to
-        # ensure compiled mode (use a single + to get the "++" recompile
-        # behaviour) then the function parameters
+        # Usually use .C++ to ensure the macro will always be recompiled, with
+        # no possibility of version skew. .C+ if the speed-freak option has
+        # been enabled.
+        suffix = '+' if opts['no_recompile'] else '++'
+
+        # root, then library loading, then script, then the function parameters
         rootargs.append(libsPath())
-        rootargs.append(script+'+'+toFunctionParams(args))
+        rootargs.append(script+suffix+toFunctionParams(args))
     else:
         # Not a .C script. Maybe the user's trying to open a root file. In any
         # case, just pass through all the arguments uninterpreted.

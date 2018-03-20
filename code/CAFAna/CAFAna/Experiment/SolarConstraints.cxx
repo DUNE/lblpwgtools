@@ -16,6 +16,9 @@ namespace ana
   {
     // These value are from the 2014 PDG
     // http://pdg.lbl.gov/2014/tables/rpp2014-sum-leptons.pdf
+    std::cerr << "WARNING: Using 2014 Solar constraints."
+	      << "Are you sure you don't want kSolarConstraintsPDG2017 ?" 
+	      << std::endl;
 
     fCentralDmsq = 7.53e-5;
     fErrorDmsq   = 0.18e-5;
@@ -23,6 +26,13 @@ namespace ana
     fCentralAngle = 0.846;
     fErrorAngle   = 0.021;
   }
+
+  //----------------------------------------------------------------------
+  SolarConstraints::SolarConstraints(const double dmsq,  const double errorDmsq,
+				     const double ss2th, const double errorSs2th)
+    :fCentralDmsq (dmsq),  fErrorDmsq (errorDmsq),
+     fCentralAngle(ss2th), fErrorAngle(errorSs2th)
+  { }
 
   //----------------------------------------------------------------------
   double SolarConstraints::ChiSq(osc::IOscCalculatorAdjustable* osc,

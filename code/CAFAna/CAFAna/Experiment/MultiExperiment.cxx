@@ -50,6 +50,8 @@ namespace ana
     // Sanity-check the mapping
     std::map<const ISyst*, const ISyst*> already;
     for(auto it: corrs){
+      assert(it.first != it.second);
+
       // Don't worry if second element is null pointer
       if (!it.second) continue;
       if(already.find(it.second) == already.end()){

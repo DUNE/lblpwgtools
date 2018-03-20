@@ -76,4 +76,12 @@ namespace ana
     // PDG website as of Jun 2016
     return new ReactorExperiment(.085, .005);
   }
+
+  //----------------------------------------------------------------------
+  const ReactorExperiment* WorldReactorConstraint2017()
+  {
+    // http://pdg.lbl.gov/2017/tables/rpp2017-sum-leptons.pdf
+    // ssth13=0.021+/-0.0011 -> ss2th13=0.082+/-0.004
+    return new ReactorExperiment(.082, .004);
+  }
 }

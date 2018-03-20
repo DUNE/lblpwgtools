@@ -74,11 +74,7 @@ namespace ana
   /// caf::StandardRecord object
   ///
   /// A Var consists of a function, taking a StandardRecord and returning the
-  /// value of the variable (which may be some complicated function), plus a
-  /// list of the branch names that must be active in the tree. This explicit
-  /// naming of required branches leads to a significant speedup in CAF
-  /// loading. However, if you neglect a necessary branch, that field will be
-  /// uninitialized in the StandardRecord you are passed.
+  /// value of the variable (which may be some complicated function).
   typedef GenericVar<caf::StandardRecord> Var;
 
   /// \brief Equivalent of \ref Var acting on \ref caf::SRSpill. For use in

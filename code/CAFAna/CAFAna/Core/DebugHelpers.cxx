@@ -5,6 +5,7 @@
 
 #include <csignal>
 #include <cstring>
+#include <fstream>
 
 #include <unistd.h>
 
@@ -14,8 +15,10 @@ namespace ana
 {
   void gdb_backtrace()
   {
+    // Have to end with a 'kill' command, otherwise GDB winds up sending us
+    // SIGSTOP and never resuming us afterwards.
     char s[1024];
-    sprintf(s, "gdb --batch -ex sharedlibrary -ex bt root.exe %d", getpid());
+    sprintf(s, "gdb --batch -ex 'set confirm off' -ex sharedlibrary -ex bt -ex kill root.exe %d", getpid());
     system(s);
   }
 
@@ -41,7 +44,9 @@ namespace ana
 
     gdb_backtrace();
 
-    if(sig != SIGABRT) abort();
+    // gdb_backtrace() never returns. But if it did, this would be the right
+    // way to exit with the correct code.
+    _exit(sig+128);
   }
 
   class InstallHandlers
@@ -51,6 +56,17 @@ namespace ana
     {
       // We're already being debugged somehow. Don't complicate things
       if(getenv("CAFE_NO_BACKTRACE")) return;
+
+      // Check that this is really a CAFAna job. Somehow this library gets
+      // loaded into art jobs too??
+      char s[1024];
+      sprintf(s, "/proc/%d/cmdline", getpid());
+      std::ifstream f(s);
+      if(f){
+        std::string ss;
+        f >> ss;
+        if(ss.size() < 8 || &ss[ss.size()-8] != std::string("root.exe")) return;
+      }
 
       // Handle uncaught exceptions
       std::set_terminate(handle_terminate);
