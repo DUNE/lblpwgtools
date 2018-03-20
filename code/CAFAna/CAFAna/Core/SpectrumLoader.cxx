@@ -147,11 +147,13 @@ namespace ana
   {
     assert(!f->IsZombie());
     TTree* tr;
-    if (f->GetListOfKeys()->Contains("cafmaker")) { tr = (TTree*)f->Get("cafmaker/caf"); }//"recTree");
-    else { tr = (TTree*)f->Get("mvaselect/MVASelection"); }//"recTree");
+    if(f->GetListOfKeys()->Contains("cafmaker")){
+      tr = (TTree*)f->Get("cafmaker/caf");
+    }
+    else{
+      tr = (TTree*)f->Get("mvaselect/MVASelection");
+    }
     assert(tr);
-
-    //    BranchList<caf::StandardRecord> branches(tr, "rec", fBranchNames);
 
     FloatingExceptionOnNaN fpnan(false);
 

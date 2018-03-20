@@ -277,11 +277,11 @@ namespace ana
     TFile* f = fFileSource->GetNextFile();
     if(!f) return 0; // out of files
 
-    //    TTree* trPot = (TTree*)f->Get("mvaselect/pottree");
     TTree* trPot;
-    if (f->GetListOfKeys()->Contains("cafmaker")) trPot = (TTree*)f->Get("mvaselectnumu/pottree");
-    //    else  trPot = (TTree*)f->Get("mvaselectnumu/pottree");
-    else  trPot = (TTree*)f->Get("mvaselect/pottree");
+    if(f->GetListOfKeys()->Contains("cafmaker"))
+      trPot = (TTree*)f->Get("mvaselectnumu/pottree");
+    else
+      trPot = (TTree*)f->Get("mvaselect/pottree");
     assert(trPot);
 
     double pot;
@@ -298,116 +298,6 @@ namespace ana
 
     return f;
   }
-
-  //----------------------------------------------------------------------
-  template<class T> SpectrumLoaderBase::BranchList<T>::
-  BranchList(TTree* tr, const std::string& recName,
-             const std::set<std::string>& branchNames)
-    : fTree(tr), fRecName(recName)
-  {
-    // Constructing the StandardRecord can involve NaNs. That's not a
-    // problem. The idea is that they trip when someone tries to /use/ them.
-    FloatingExceptionOnNaN fpnan(false);
-
-    fRec = 0;
-    tr->SetBranchAddress(recName.c_str(), &fRec);
-
-    // If we haven't been requested to do anything that actually signals to
-    // load the entire StandardRecord object.
-    if(branchNames.empty()) return;
-
-    tr->SetBranchStatus("*", 0);
-
-    fBranches.reserve(branchNames.size());
-    for(std::string brName: branchNames){
-      // Components of branches can be marked with '~' to indicate
-      // that they may not exist (for backwards-compatibility).
-      // If one of these doesn't, just make sure the parent branch is enabled
-      // (so that the default constructor takes care of filling
-      //  the desired branch with default values).
-      std::string workStr(brName);
-      boost::algorithm::erase_all(workStr, "~");
-      std::vector<std::string> brToTry { workStr };
-      std::string::size_type tildePos = brName.size()-1;
-      // work backwards through the occurrences of '~'...
-      while ((tildePos = brName.rfind("~", tildePos-1)) != std::string::npos)
-      {
-        workStr = brName.substr(0, tildePos-1);
-        boost::algorithm::erase_all(workStr, "~");
-        brToTry.push_back(workStr);
-        if (workStr[workStr.size()-1] == '.')
-          brToTry.back().resize(workStr.size()-1);
-      }
-
-      // we're going to be trying various possibly nonexistent
-      // branch names.  we don't need any error message for every one.
-      decltype(kWarning) errLevel = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kFatal;
-
-      TBranch * branch = nullptr;
-      for (auto br : brToTry)
-      {
-        tr->SetBranchStatus(br.c_str(), 1);
-
-        // If branch name ends with ".*" then it's right to set the branch status
-        // with the star included, but GetBranch needs it removed. Because C++'s
-        // string handling sucks this is pretty clumsy.
-        if(br.size() > 2 &&
-            br[brName.size()-2] == '.' &&
-            br[br.size()-1] == '*')
-          br.resize(br.size()-2);
-
-        // don't keep looking if we've found a match
-        if ( (branch = tr->GetBranch(br.c_str())) )
-          break;
-      }
-
-      if(!branch){
-        std::cerr << "Tree has no branch \"" << brName
-                  << "\". Aborting" << std::endl;
-        abort();
-      }
-
-      gErrorIgnoreLevel = errLevel;
-
-      fBranches.push_back(branch);
-      tr->AddBranchToCache(branch);
-    }
-  }
-
-  //----------------------------------------------------------------------
-  template<class T> SpectrumLoaderBase::BranchList<T>::~BranchList()
-  {
-    // Disclaim any interest in this tree, so that subsequent users don't end
-    // up also trying to fill our now-freed fRec
-    fTree->SetBranchAddress(fRecName.c_str(), 0);
-  }
-
-  //----------------------------------------------------------------------
-  template<class T> T* SpectrumLoaderBase::BranchList<T>::GetEntry(int n)
-  {
-    // Reading the StandardRecord can involve NaNs. That's not a problem. The
-    // idea is that they trip when someone tries to /use/ them.
-    FloatingExceptionOnNaN fpnan(false);
-
-    assert(n >= 0);
-    const unsigned int NBr = fBranches.size();
-
-    if(NBr == 0){
-      // If we haven't been requested to do anything that actually signals to
-      // load the entire StandardRecord object.
-      fTree->GetEntry(n);
-    }
-    else{
-      for(unsigned int i = 0; i < NBr; ++i){
-        fBranches[i]->GetEntry(n);
-      }
-    }
-    return fRec;
-  }
-
-  // Instantiate the two types people need
-  template class SpectrumLoaderBase::BranchList<caf::StandardRecord>;
 
   //----------------------------------------------------------------------
   void NullLoader::Go()

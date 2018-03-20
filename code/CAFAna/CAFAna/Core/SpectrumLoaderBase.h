@@ -15,7 +15,6 @@
 
 namespace caf{class StandardRecord;}
 
-class TBranch;
 class TFile;
 class TH1;
 class TTree;
@@ -125,8 +124,6 @@ namespace ana
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
 
-    std::set<std::string> fBranchNames;
-    std::set<std::string> fNuBranchNames;
     DataSource fSource;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
@@ -178,21 +175,6 @@ namespace ana
       void GetReweightableSpectra(std::vector<ReweightableSpectrum*>& ss);
     protected:
       std::vector<std::pair<T, U>> fElems;
-    };
-
-    /// Helper for \ref SpectrumLoaderBase, activates branches requested
-    template<class T> class BranchList
-    {
-    public:
-      BranchList(TTree* tr, const std::string& recName,
-                 const std::set<std::string>& branchNames);
-      ~BranchList();
-      T* GetEntry(int n);
-    protected:
-      TTree* fTree;
-      std::string fRecName;
-      std::vector<TBranch*> fBranches;
-      T* fRec;
     };
 
     class VarOrMultiVar
