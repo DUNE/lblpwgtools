@@ -184,6 +184,11 @@ namespace ana
     tr->SetBranchAddress("Y", &sr.dune.Y);
     tr->SetBranchAddress("cc", &sr.dune.cc);
 
+    tr->SetBranchAddress("nuvtxx_truth",  &sr.dune.nuvtxx_truth);
+    tr->SetBranchAddress("nuvtxy_truth",  &sr.dune.nuvtxy_truth);
+    tr->SetBranchAddress("nuvtxz_truth",  &sr.dune.nuvtxz_truth);
+
+
     tr->SetBranchAddress("run", &sr.dune.run);
     tr->SetBranchAddress("isFD", &sr.dune.isFD);
     tr->SetBranchAddress("isFHC", &sr.dune.isFHC);
