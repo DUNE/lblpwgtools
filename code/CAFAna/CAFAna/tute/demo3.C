@@ -10,7 +10,6 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "StandardRecord/StandardRecord.h"
-#include "Utilities/rootlogon.C"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
@@ -25,7 +24,6 @@ using namespace ana;
 void demo3()
 {
   // Repeat most of demo2.C
-  rootlogon();
   const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
   SpectrumLoader loader(fname);
   auto* loaderBeam  = loader.LoaderForRunPOT(20000001);

@@ -10,7 +10,6 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "StandardRecord/StandardRecord.h"
-#include "Utilities/rootlogon.C"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -24,7 +23,6 @@ using namespace ana;
 void demo2()
 {
   // Repeat all of demo1.C to get us our Prediction object
-  rootlogon();
   const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
   SpectrumLoader loader(fname);
   auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
@@ -43,7 +41,7 @@ void demo2()
   // manipulate it.
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
-  // To make a contour we need to have a "data" spectrum to compare to our MC
+  // To make a fit we need to have a "data" spectrum to compare to our MC
   // Prediction object
   const Spectrum data = pred.Predict(calc).MockData(pot);
 

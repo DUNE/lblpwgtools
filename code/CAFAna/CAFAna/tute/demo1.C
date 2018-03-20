@@ -7,7 +7,6 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "StandardRecord/StandardRecord.h"
-#include "Utilities/rootlogon.C"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -21,7 +20,6 @@ using namespace ana;
 void demo1()
 {
   // See demo0.C for explanation of these repeated parts
-  rootlogon();
   const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
   SpectrumLoader loader(fname);
   auto* loaderBeam  = loader.LoaderForRunPOT(20000001);

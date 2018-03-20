@@ -10,8 +10,6 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "Utilities/rootlogon.C"
-
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TPad.h"
@@ -20,10 +18,7 @@ using namespace ana;
 
 void demo0()
 {
-  // Get prettier plots
-  rootlogon();
-
-  // Environment variables and wildcards work. As do SAM datasets dataset.
+  // Environment variables and wildcards work. As do SAM datasets.
   const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
 
   // Source of events
