@@ -12,6 +12,8 @@ namespace caf
     double mvaresult;
     double mvanue;
     double mvanumu;
+    double cvnnue;
+    double cvnnumu;
     int reco_q;
     double Elep_reco;
 
