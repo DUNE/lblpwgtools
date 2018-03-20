@@ -37,7 +37,7 @@ void load_libs()
   // Colorize error messages. Would be better if we could just pick up the
   // flags novasoft uses, but they don't seem to be in any env var.
   gSystem->SetFlagsDebug(TString(gSystem->GetFlagsDebug())+" -fdiagnostics-color=auto");
-  gSystem->SetFlagsOpt(TString(gSystem->GetFlagsOpt())+" -fdiagnostics-color=auto");
+  gSystem->SetFlagsOpt(TString(gSystem->GetFlagsOpt())+" -fdiagnostics-color=auto -UNDEBUG"); // match gcc's maxopt behaviour of retaining assert()
 
 
   // Include path
@@ -45,8 +45,7 @@ void load_libs()
 
   if (qmrb == "") {    // This is the SRT build
     // List of libraries to load. Dependency order.
-    const int kNumLibs = 10;//20;
-    const std::string libs[kNumLibs] =
+    const std::vector<std::string> libs =
       {
         "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
         // "Cintex",
@@ -72,13 +71,12 @@ void load_libs()
 
     // Actually load the libraries
     std::cout << "Loading libraries";
-    for(unsigned int i = 0; i < kNumLibs; ++i) load(libs[i]);
+    for(const std::string& lib: libs) load(lib);
     std::cout << std::endl;
   }
   else {   // This is the MRB build
     // List of libraries to load. Dependency order.
-    const int kNumLibs = 10;
-    const std::string libs[kNumLibs] =
+    const std::vector<std::string> libs =
       {
         "Geom", "Tree", "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
         "Cintex",
@@ -91,7 +89,7 @@ void load_libs()
 
     // Actually load the libraries
     std::cout << "Loading libraries (mrb)";
-    for(unsigned int i = 0; i < kNumLibs; ++i) load(libs[i]);
+    for(const std::string& lib: libs) load(lib);
     std::cout << std::endl;
 
     // MRB requires an extra include path
@@ -109,8 +107,7 @@ void load_libs()
   //  gSystem->Setenv("IFDH_DEBUG", "0"); // shut ifdh up
 
   // Pick up standard NOvA style
-  gROOT->LoadMacro("$SRT_PUBLIC_CONTEXT/Utilities/rootlogon.C");
-  //  rootlogon();
+  gROOT->Macro("$SRT_PUBLIC_CONTEXT/Utilities/rootlogon.C");
   gROOT->ForceStyle();
 
   TRint* rint = dynamic_cast<TRint*>(gApplication);
@@ -135,6 +132,10 @@ void load_libs()
     // Caltech location
     if(gSystem->AccessPathName("/nfs/raid11/novasoft/externals/lib/libprofiler.so") == false) // yes, bizarre convention...
       gSystem->Load("/nfs/raid11/novasoft/externals/lib/libprofiler.so");
+
+    // UCL location
+    if(gSystem->AccessPathName("/unix/nova/perftools/lib/libprofiler.so") == false)
+      gSystem->Load("/unix/nova/perftools/lib/libprofiler.so");
 
     // Fermilab location
     if(gSystem->AccessPathName("/grid/fermiapp/nova/perftools/lib/libprofiler.so") == false)
