@@ -38,6 +38,10 @@ namespace caf
     double W;
     double Y;
 
+    double nuvtxx_truth;
+    double nuvtxy_truth;
+    double nuvtxz_truth;
+
     // config
     int run;
     int isFD;

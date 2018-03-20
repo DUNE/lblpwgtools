@@ -58,4 +58,14 @@ namespace ana
                       {
                         return sr->dune.neu < 0;
                       });
+
+  const Cut kIsTrueFV({},
+                      [](const caf::StandardRecord* sr)
+                      {
+                        return ( abs(sr->dune.nuvtxx_truth) < 310 &&
+				 abs(sr->dune.nuvtxy_truth) < 550 &&
+				 sr->dune.nuvtxz_truth >  50      &&
+				 sr->dune.nuvtxz_truth < 1244 );
+                      });
+
 }
