@@ -177,6 +177,8 @@ namespace ana
     tr->SetBranchAddress("mvaresult", &sr.dune.mvaresult);
     tr->SetBranchAddress("mvanue", &sr.dune.mvanue);
     tr->SetBranchAddress("mvanumu", &sr.dune.mvanumu);
+    tr->SetBranchAddress("cvnnue", &sr.dune.cvnnue);
+    tr->SetBranchAddress("cvnnumu", &sr.dune.cvnnumu);
     tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
     tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
