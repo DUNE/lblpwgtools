@@ -79,7 +79,7 @@ namespace ana
                              const SystComponentScale* syst) const;
 
     static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir) const override;
 
   protected:
     PredictionScaleComp(const IPrediction* total,
