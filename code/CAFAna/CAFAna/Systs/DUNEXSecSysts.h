@@ -55,6 +55,9 @@ namespace ana
 
   const Var kVALORCategory({}, GetVALORCategory);
 
+  /// Warning, these aren't orthogonal. Need to include DUNEXSecCorrelation in
+  /// the fit (which gives MINUIT a seizure) for correctness. You may well want
+  /// DUNEXSecSystPCA instead.
   class DUNEXSecSyst: public SystComponentScale
   {
   public:

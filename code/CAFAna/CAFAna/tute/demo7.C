@@ -24,7 +24,7 @@
 
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
-#include "CAFAna/Systs/DUNEXSecSysts.h"
+#include "CAFAna/Systs/DUNEXSecSystsPCA.h"
 
 using namespace ana;
 
@@ -48,12 +48,9 @@ void demo7()
 
   // First 10 principal components of diagonalized flux covariance matrix
   std::vector<const ISyst*> fluxsysts = GetDUNEFluxSysts(10);
-  // WARNING WARNING WARNING!
-  //
-  // This formulation is NOT correctly including correlations between the
-  // different systs in the VALOR parameterization. More development is
-  // required here.
-  std::vector<const ISyst*> xsecsysts = GetDUNEXSecSysts();
+  // First 20 principal components of the (VALOR parameterization of) the GENIE
+  // cross section uncertainties.
+  std::vector<const ISyst*> xsecsysts = GetDUNEXSecSystsPCA(20);
   std::vector<const ISyst*> allSysts;
   allSysts.insert(allSysts.end(), xsecsysts.begin(), xsecsysts.end());
   allSysts.insert(allSysts.end(), fluxsysts.begin(), fluxsysts.end());
@@ -101,7 +98,7 @@ void demo7()
   // reasonable.
   Surface surfSyst(&expt, calc,
                    &kFitSinSqTheta23, 10, 0.45, 0.6,
-                   &kFitDmSq32Scaled, 10, 2.4, 2.5,
+                   &kFitDmSq32Scaled, 10, 2.35, 2.5,
                    {}, // list of oscillation parameters to profile over
                    allSysts); // list of systs to profile over
 
