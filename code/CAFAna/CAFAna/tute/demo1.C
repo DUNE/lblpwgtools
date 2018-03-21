@@ -47,7 +47,7 @@ void demo1()
   PredictionNoExtrap pred(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC,
                           axEnergy, kPassesMVA);
 
-  // This call will fill all of the constituent parts of the predictin
+  // This call will fill all of the constituent parts of the prediction
   loader.Go();
 
   // We can extract a total prediction unoscillated

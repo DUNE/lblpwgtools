@@ -28,6 +28,7 @@ void demo4()
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
+  const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // This is the nominal energy spectrum
   Spectrum sEnergy(*loaderBeam, axEnergy, kIsNumuCC);
@@ -86,7 +87,6 @@ void demo4()
   // Fill all the various shifted spectra
   loader.Go();
 
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   sEnergyDn.ToTH1(pot, kBlue)->Draw("hist");
   sEnergyUp.ToTH1(pot, kRed)->Draw("hist same");
