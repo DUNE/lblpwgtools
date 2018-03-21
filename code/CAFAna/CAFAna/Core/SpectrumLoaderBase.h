@@ -65,29 +65,10 @@ namespace ana
                                          const SystShifts& shift,
                                          const Var& wei);
 
-    /// The type of the callback functions
-    typedef void (CallbackFunc_t)();
-    /// Register a function to be called when Go() is finished for this loader
-    ///
-    /// \param func A global function, lambda, or function object. The
-    ///             signature is void function with no parameters.
-    void RegisterCompletionCallback(std::function<CallbackFunc_t> func);
-
-    /// Register a member function to be called when Go() is finished
-    ///
-    /// \param obj  Pointer to the object whose method to call
-    /// \param meth The method to call, void, no arguments
-    template<class T> void RegisterCompletionCallback(T* obj, void (T::*meth)())
-    {
-      // This has to be inline in the header so that the required versions get
-      // instantiated when used.
-      RegisterCompletionCallback(std::bind(meth, obj));
-    }
-
     /// Load all the registered spectra
     virtual void Go() = 0;
 
-    /// Indicate whether or not \ref Go has been called 
+    /// Indicate whether or not \ref Go has been called
     virtual bool Gone() const {return fGone;}
 
   protected:
@@ -127,9 +108,6 @@ namespace ana
     DataSource fSource;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
-
-    /// Sites we need to notify when loading is finished
-    std::vector<std::function<CallbackFunc_t>> fCallbacks;
 
     std::map<int, double> fPOTMap;
 

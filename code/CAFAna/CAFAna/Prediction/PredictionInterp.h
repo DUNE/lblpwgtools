@@ -79,7 +79,8 @@ namespace ana
                         Current::Current_t curr = Current::kBoth,
                         Sign::Sign_t sign = Sign::kBoth) const;
 
-    void LoadedCallback();
+    // Some legacy macros call this function. It's not needed anymore
+    void LoadedCallback() {}
 
   protected:
     enum CoeffsType{
@@ -92,6 +93,8 @@ namespace ana
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});
+
+    void InitFits() const;
 
     struct Coeffs{
       Coeffs(double _a, double _b, double _c, double _d)

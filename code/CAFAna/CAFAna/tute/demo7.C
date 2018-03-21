@@ -64,7 +64,6 @@ void demo7()
   PredictionInterp predInterp(allSysts, calc, gen, dummyLoaders);
 
   loader.Go();
-  predInterp.LoadedCallback();
 
   new TCanvas;
   TH1* hnom = predInterp.Predict(calc).ToTH1(pot);

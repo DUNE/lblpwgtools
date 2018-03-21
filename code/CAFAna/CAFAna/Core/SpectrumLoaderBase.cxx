@@ -259,13 +259,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SpectrumLoaderBase::
-  RegisterCompletionCallback(std::function<CallbackFunc_t> func)
-  {
-    fCallbacks.push_back(func);
-  }
-
-  //----------------------------------------------------------------------
   int SpectrumLoaderBase::NFiles() const
   {
     return fFileSource->NFiles();
@@ -302,8 +295,6 @@ namespace ana
   //----------------------------------------------------------------------
   void NullLoader::Go()
   {
-    // Polite to signal everyone in case they're relying on it
-    for(auto c: fCallbacks) c();
   }
 
   //----------------------------------------------------------------------

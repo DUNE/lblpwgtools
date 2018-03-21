@@ -92,13 +92,8 @@ void demo6()
   // needs to make.
   loader.Go();
 
-  // Sorry about this one too. This is a straight up bug, but for now we need
-  // to intervene manually to make sure everything is initialized properly.
-  predInterp.LoadedCallback();
-
   // Make some nice plots of what the interpolation looks like in each bin
   predInterp.DebugPlots(calc);
-
 
   // We can generate predictions at whatever values of the systematic shifts we
   // want. Prove it by plotting 100 different possible "universes".

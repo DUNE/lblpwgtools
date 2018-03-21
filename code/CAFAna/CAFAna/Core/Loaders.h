@@ -59,33 +59,10 @@ namespace ana
                                   DataSource src = kBeam,
                                   SwappingConfig swap = kNonSwap);
 
-    /// The type of the callback functions
-    typedef void (CallbackFunc_t)();
-    /// Register a function to be called when Go() is finished for all loaders
-    ///
-    /// \param func A global function, lambda, or function object. The
-    ///             signature is a void function with no parameters.
-    void RegisterCompletionCallback(std::function<CallbackFunc_t> func);
-
-    /// \brief Register a member function to be called when Go() is finished
-    /// for all loaders
-    ///
-    /// \param obj  Pointer to the object whose method to call
-    /// \param meth The method to call, void, no arguments
-    template<class T> void RegisterCompletionCallback(T* obj, void (T::*meth)())
-    {
-      // This has to be inline in the header so that the required versions get
-      // instantiated when used.
-      RegisterCompletionCallback(std::bind(meth, obj));
-    }
-
     /// Call Go() on all the loaders
     void Go();
 
   protected:
-    /// Internal function to keep track if all our loaders have gone yet
-    void LoadedCallback();
-
     typedef std::tuple<caf::Det_t, DataMC, DataSource, SwappingConfig> Key_t;
 
     // Hold a list of paths that have been set
@@ -96,9 +73,5 @@ namespace ana
 
     /// We give this back when a loader isn't set for some configuration
     NullLoader fNull;
-
-    unsigned int fNumChildCallbacks; ///< Variable for \ref LoadedCallback
-
-    std::vector<std::function<CallbackFunc_t>> fCallbacks;
   };
 } // namespace

@@ -130,10 +130,6 @@ namespace ana
 
     fHistDefs.RemoveLoader(this);
     fHistDefs.Clear();
-
-    // Notify everyone this call to Go() has completed
-    for(auto c: fCallbacks) c();
-
   }
 
   //----------------------------------------------------------------------

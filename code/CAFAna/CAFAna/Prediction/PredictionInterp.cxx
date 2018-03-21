@@ -85,10 +85,6 @@ namespace ana
     } // end for syst
 
     fPredNom = predGen.Generate(loaders, shiftMC);
-
-    // We need to know when all our predictions are filled so that we can
-    // compute the fits
-    loaders.RegisterCompletionCallback(this, &PredictionInterp::LoadedCallback);
   }
 
   //----------------------------------------------------------------------
@@ -224,8 +220,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::LoadedCallback()
+  void PredictionInterp::InitFits() const
   {
+    if(fPreds.empty() ||
+       !fPreds.begin()->second.fits[0].empty()) return; // Already initialized
+
     for(auto& it: fPreds){
       ShiftedPreds& sp = it.second;
 
@@ -261,6 +260,7 @@ namespace ana
   Spectrum PredictionInterp::PredictSyst(osc::IOscCalculator* calc,
                                          const SystShifts& shift) const
   {
+    InitFits();
     return PredictComponentSyst(calc, shift,
                                 Flavors::kAll,
                                 Current::kBoth,
@@ -354,6 +354,8 @@ namespace ana
                                                   Current::Current_t curr,
                                                   Sign::Sign_t sign) const
   {
+    InitFits();
+
     //    Spectrum& ret = fBinning;
     Spectrum ret = fPredNom->Predict(fOscOrigin);
     ret.Clear();
@@ -504,7 +506,7 @@ namespace ana
     if(oscDir) ret->fOscOrigin = oscDir ? ana::LoadFrom<osc::IOscCalculator>(oscDir).release() : 0;
 
     // Recalculate sp.fits and fBinning from information in the file
-    ret->LoadedCallback();
+    ret->InitFits();
   }
 
   //----------------------------------------------------------------------
@@ -514,6 +516,8 @@ namespace ana
 				    Current::Current_t curr,
 				    Sign::Sign_t sign) const
   {
+    InitFits();
+
     std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
     const int nbins = nom->GetNbinsX();
 
@@ -596,10 +600,13 @@ namespace ana
                                         Current::Current_t curr,
                                         Sign::Sign_t sign) const
   {
+    InitFits();
+
     std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
     const int nbins = nom->GetNbinsX();
 
     for(auto it: fPreds){
+      new TCanvas;
       TH2* h2 = new TH2F("", ";;#sigma",
                          nbins, nom->GetXaxis()->GetXmin(), nom->GetXaxis()->GetXmax(),
                          80, -4, +4);
