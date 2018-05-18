@@ -87,4 +87,52 @@ namespace ana
 
     return ret;
   }
+
+  //----------------------------------------------------------------------
+  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue) {
+
+    fDmsq21 = cvcalc->GetDmsq21();
+    fTh12 = cvcalc->GetTh12();
+    fDmsq32 = cvcalc->GetDmsq32();
+    fTh23 = cvcalc->GetTh23();
+    fTh13 = cvcalc->GetTh13();
+    fRho = cvcalc->GetRho();
+
+    //Set the errors by hand for now.
+    //Fractional errors in GLoBES convention
+    //NH: 0.023, 0.018, 0.058, 0.0, 0.024, 0.016
+    //IH: 0.023, 0.018, 0.048, 0.0, 0.024, 0.016
+
+    fDmsq21Err = 0.024*fDmsq21;
+    fTh12Err = 0.023*fTh12;
+    fDmsq32Err = 0.016*fDmsq32;
+    fTh13Err = 0.018*fTh13;
+    fTh23Err = (hietrue > 0) ? 0.058*fTh23 : 0.048*fTh23;
+
+    fRhoErr = 0.02*fRho;
+    
+  }
+    
+  double Penalizer_GlbLike::ChiSq(osc::IOscCalculatorAdjustable* calc,
+				  const SystShifts& /*syst*/) const {
+
+  //Usage: calc is the fit parameters as above
+  //Starting fit parameters and errors are set in constructor - this is equivalent to SetCentralValues in globes
+
+    double ret =
+      util::sqr((calc->GetDmsq21() - fDmsq21)/fDmsq21Err) +
+      util::sqr((calc->GetTh12() - fTh12)/fTh12Err);
+
+    ret +=
+      util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err) +
+      util::sqr((calc->GetTh23() - fTh23)/fTh23Err) +
+      util::sqr((calc->GetTh13() - fTh13)/fTh13Err) +
+      util::sqr((calc->GetRho() - fRho)/fRhoErr);
+
+    // No term in delta
+
+    return ret;
+  }
+
+
 }

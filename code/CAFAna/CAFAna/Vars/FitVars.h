@@ -53,6 +53,19 @@ namespace ana
   const FitDeltaInPiUnits kFitDeltaInPiUnits = FitDeltaInPiUnits();
 
   //----------------------------------------------------------------------
+  /// \f$ \theta_{13} \f$
+  class FitTheta23: public IFitVar
+  {
+  public:
+    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
+    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
+    virtual std::string ShortName() const {return "th23";}
+    virtual std::string LatexName() const {return "#theta_{23}";}
+  };
+
+  /// \f$ \theta_{13} \f$
+  const FitTheta23 kFitTheta23 = FitTheta23();
+  //----------------------------------------------------------------------
 
   /// \f$ \sin^2\theta_{23} \f$
   class FitSinSqTheta23: public IConstrainedFitVar
@@ -184,4 +197,27 @@ namespace ana
 
   /// \f$ \Delta m^2_{21} \f$
   const FitDmSq21 kFitDmSq21 = FitDmSq21();
+
+  /// \f$ \rho \f$
+  class FitRho: public IConstrainedFitVar
+  {
+  public:
+    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
+    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
+    virtual std::string ShortName() const {return "rho";}
+    virtual std::string LatexName() const {return "#rho";}
+
+    //Density should be greater than zero (set a ridiculously high high limit)
+    virtual double LowLimit() const {return 0;}
+    virtual double HighLimit() const {return 10.0;}
+
+  };
+
+  /// \f$ \rho \f$
+  const FitRho kFitRho = FitRho();
+
+  //----------------------------------------------------------------------
+
+
+
 } // namespace
