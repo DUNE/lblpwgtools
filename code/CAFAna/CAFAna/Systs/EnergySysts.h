@@ -238,7 +238,7 @@ namespace ana
 
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev * 1000)); 
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
       } 
       // Otherwise is FD
@@ -300,7 +300,7 @@ namespace ana
       const double scale = 1 + .15*sigma;
       // Checks if ND
       if(sr->dune.run == 1){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev * 1000));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = sr->dune.Ev_reco * YCalc * scale + (sr->dune.Ev_reco * (1. - YCalc));
       }
       // Otherwise is FD
@@ -334,7 +334,7 @@ namespace ana
       const double scale = 1 + .02*sigma;
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
       }
       // Otherwise is FD
@@ -374,7 +374,7 @@ namespace ana
       const double scale = 1 + .02*sigma;
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
       }
       // Otherwise is FD
@@ -458,7 +458,7 @@ namespace ana
       const double scale = 1 + .02*sigma;
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
       }
       // Otherwise is FD
@@ -530,7 +530,7 @@ namespace ana
       const double scale = 1 + .02*sigma;
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
       }
       // Otherwise is FD
