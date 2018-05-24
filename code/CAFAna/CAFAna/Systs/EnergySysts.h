@@ -29,7 +29,7 @@ namespace ana
 
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev));
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
       }
       // Otherwise is FD
@@ -177,7 +177,7 @@ namespace ana
 
       // Checks if ND
       if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/(sr->dune.Ev * 1000)); 
+	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
       } 
       // Otherwise is FD
