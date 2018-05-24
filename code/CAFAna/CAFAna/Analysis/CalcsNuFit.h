@@ -47,4 +47,36 @@ namespace ana
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
+
+  class Penalizer_GlbLike: public IExperiment
+  {
+  public:
+    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue);
+
+    double Dmsq21CV() const {return fDmsq21;}
+    double Th12CV() const {return fTh12;}
+    double Dmsq32CV() const {return fDmsq32;}
+    double Th23CV() const {return fTh23;}
+    double Th13CV() const {return fTh13;}
+
+    double ChiSq(osc::IOscCalculatorAdjustable* calc,
+                 const SystShifts& syst = SystShifts::Nominal()) const override;
+
+  protected:
+    double fDmsq21;
+    double fTh12;
+    double fDmsq32;
+    double fTh23;
+    double fTh13;
+    double fRho;
+
+    double fDmsq21Err;
+    double fTh12Err;
+    double fDmsq32Err;
+    double fTh23Err;
+    double fTh13Err;
+    double fRhoErr;
+
+  };
+
 }

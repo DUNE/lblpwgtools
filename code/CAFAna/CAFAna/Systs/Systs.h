@@ -61,45 +61,115 @@ namespace ana
 
 
 
-  /// 5% normalization syst for NC on numu analysis
-  class NCSyst: public ISyst
+  ///ETW Rework of Normalization Systematics
+
+  //Signal normalization
+
+  /// 5% normalization syst for numu signal
+  class NumuFHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "NC";}
-    std::string LatexName() const override {return "NC Norm Syst";}
+    std::string ShortName() const override {return "numufhcnorm";}
+    std::string LatexName() const override {return "Numu FHC Norm Syst";}
 
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==1) weight *= 1 + .05*sigma;
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==14 && sr->dune.run==20000001) weight *= 1 + .05*sigma;
     }
   };
 
-  static const NCSyst kNCSyst;
+  static const NumuFHCSyst kNumuFHCSyst;
 
-
-
-  /// 50% normalization syst for NC on numu analysis
-  class NCSyst2: public ISyst
+  /// 5% normalization syst for numubar
+  class NumuRHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "NC";}
-    std::string LatexName() const override {return "NC Norm Syst";}
+    std::string ShortName() const override {return "numurhcnorm";}
+    std::string LatexName() const override {return "Numu RHC Norm Syst";}
 
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==1) weight *= 1 + .5*sigma;
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==14 && sr->dune.run==20000004) weight *= 1 + .05*sigma;
     }
   };
 
-  static const NCSyst2 kNCSyst2;
+  static const NumuRHCSyst kNumuRHCSyst;
 
+  /// 2% normalization syst for nue
+  class NueFHCSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "nuefhcnorm";}
+    std::string LatexName() const override {return "Nue FHC Norm Syst";}
 
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==12 && sr->dune.run==20000002) weight *= 1 + .02*sigma;
+    }
+  };
 
-  /// 20% normalization syst for nutau
+  static const NueFHCSyst kNueFHCSyst;
+
+  /// 2% normalization syst for nuebar
+  class NueRHCSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "nuerhcnorm";}
+    std::string LatexName() const override {return "Nue RHC Norm Syst";}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==12 && sr->dune.run==20000005) weight *= 1 + .02*sigma;
+    }
+  };
+
+  static const NueRHCSyst kNueRHCSyst;
+
+  //Background normalization following CDR
+
+  /// 10% normalization syst for NC on disappearance analysis (uncorrelated to NC on appearance analysis)
+  class NCDisSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "NCDis";}
+    std::string LatexName() const override {return "NC Dis Norm Syst";}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      if(sr->dune.ccnc==1 && sr->dune.cvnnumu>0.5 && sr->dune.cvnnue<0.7) weight *= 1 + .1*sigma;
+    }
+  };
+
+  static const NCDisSyst kNCDisSyst;
+
+  /// 5% normalization syst for NC on nue analysis, correlated with numu-CC background
+  class NCAppSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "NCApp";}
+    std::string LatexName() const override {return "NC App Norm Syst";}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      if((sr->dune.ccnc==1 && sr->dune.cvnnumu<0.5 && sr->dune.cvnnue>0.7) || (sr->dune.ccnc=0 && abs(sr->dune.neu)==14)) weight *= 1 + .05*sigma;
+    }
+  };
+
+  static const NCAppSyst kNCAppSyst;
+
+  /// 20% normalization syst for nutau - correlated for app/dis and fhc/rhc
   class NutauSyst: public ISyst
   {
   public:
@@ -116,60 +186,38 @@ namespace ana
 
   static const NutauSyst kNutauSyst;
 
-
-
-  /// 5% normalization syst for NC on numu analysis
-  class NumuNCSyst: public ISyst
+  /// 5% normalization syst for beam nues - uncorrelated in fhc/rhc
+  class NueBeamFHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "numuNC";}
-    std::string LatexName() const override {return "Numu NC Syst";}
+    std::string ShortName() const override {return "nuebeamfhc";}
+    std::string LatexName() const override {return "Nue Beam FHC Norm Syst";}
 
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==1) weight *= 1 + .05*sigma;
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12 && sr->dune.isFHC) weight *= 1 + .05*sigma;
     }
   };
 
-  static const NumuNCSyst kNumuNCSyst;
-
-
-
-  /// 5% normalization syst for numu
-  class NueNumuSyst: public ISyst
-  {
-  public:
-    std::string ShortName() const override {return "nuenumuNC";}
-    std::string LatexName() const override {return "Nue Numu Norm Syst";}
-
-    void Shift(double sigma,
-               Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
-    {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==14) weight *= 1 + .05*sigma;
-    }
-  };
-
-  static const NueNumuSyst kNueNumuSyst;
-
+  static const NueBeamFHCSyst kNueBeamFHCSyst;
 
   /// 5% normalization syst for beam nues
-  class NueBeamSyst: public ISyst
+  class NueBeamRHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nuebeam";}
-    std::string LatexName() const override {return "Nue Beam Norm Syst";}
+    std::string ShortName() const override {return "nuebeamrhc";}
+    std::string LatexName() const override {return "Nue Beam RHC Norm Syst";}
 
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12) weight *= 1 + .05*sigma;
+      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12 && !sr->dune.isFHC) weight *= 1 + .05*sigma;
     }
   };
 
-  static const NueBeamSyst kNueBeamSyst;
+  static const NueBeamRHCSyst kNueBeamRHCSyst;
 
 }

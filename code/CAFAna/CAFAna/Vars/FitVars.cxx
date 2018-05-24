@@ -52,6 +52,19 @@ namespace ana
   {
     osc->SetdCP(M_PI*val);
   }
+  //----------------------------------------------------------------------
+  double FitTheta23::GetValue(const osc::IOscCalculatorAdjustable* osc) const
+  {
+    return osc->GetTh23();
+  }
+
+  //----------------------------------------------------------------------
+  void FitTheta23::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
+  {
+    osc->SetTh23(val);
+  }
+
+  //----------------------------------------------------------------------
 
   //----------------------------------------------------------------------
   double FitSinSqTheta23::GetValue(const osc::IOscCalculatorAdjustable* osc) const
@@ -136,4 +149,16 @@ namespace ana
   {
     osc->SetDmsq21(Clamp(val));
   }
+  //----------------------------------------------------------------------
+  double FitRho::GetValue(const osc::IOscCalculatorAdjustable* osc) const
+  {
+    return osc->GetRho();
+  }
+
+  //----------------------------------------------------------------------
+  void FitRho::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
+  {
+    osc->SetRho(Clamp(val));
+  }
+
 } // namespace
