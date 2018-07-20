@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void joint_fit_ND(bool reload = false){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -370,5 +366,3 @@ void joint_fit_ND(bool reload = false)
 
 
 }
-
-#endif

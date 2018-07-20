@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void plot_nd(){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -226,5 +222,3 @@ void plot_nd()
   gPad->Print("rhc_fit.png");
 
 }
-
-#endif

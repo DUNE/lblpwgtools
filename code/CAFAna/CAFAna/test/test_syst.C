@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void test_syst(){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -57,5 +53,3 @@ void test_syst()
   sRecoEFHCNumuSelTotUp.ToTH1(1.47e21, kRed)->Draw("hist same");
   sRecoEFHCNumuSelTotDn.ToTH1(1.47e21, kBlue)->Draw("hist same");
 }
-
-#endif

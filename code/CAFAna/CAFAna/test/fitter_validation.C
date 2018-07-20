@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void fitter_validation(bool fit = false, bool reload = false){}
-#else
-
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Core/SpectrumLoader.h"
@@ -621,5 +617,3 @@ void fitter_validation(bool fit = false, bool reload = false)
 
   std::cout << "Wrote " << outputFname << std::endl;
 }
-
-#endif

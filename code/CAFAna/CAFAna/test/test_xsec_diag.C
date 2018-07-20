@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void test_xsec_diag(bool reload = false){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -206,5 +202,3 @@ void test_xsec_diag(bool reload = false)
     std::cout << predNDFHC.Undiagonalize(result).ShortName() << std::endl;
   }
 }
-
-#endif

@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void test_dune(){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -241,5 +237,3 @@ void test_dune()
   gPad->Print("FD_mec_fit.eps");
 
 }
-
-#endif

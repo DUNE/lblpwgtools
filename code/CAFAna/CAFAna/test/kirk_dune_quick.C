@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void kirk_dune_quick(){} // starts from Chris's test_dune.C, expands
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Loaders.h"
@@ -299,5 +295,3 @@ void kirk_dune_quick()
   gPad->Print("mcd_quick.pdf");
   gPad->Print("mcd_quick.C");
 }
-
-#endif

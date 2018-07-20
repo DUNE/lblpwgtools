@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void joint_fit(bool reload = false){}
-#else
-
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -428,5 +424,3 @@ void joint_fit(bool reload = false)
   bfFDNueRHC.ToTH1(potFD, kBlue)->Draw("hist same");
   Legend("FD RHC #nu_{e}");
 }
-
-#endif
