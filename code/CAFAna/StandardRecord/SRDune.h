@@ -16,6 +16,7 @@ namespace caf
     double mvanumu;
     double cvnnue;
     double cvnnumu;
+    double cvnnutau;
     int reco_q;
     double Elep_reco;
 
@@ -27,6 +28,7 @@ namespace caf
     double Ev;
     double Elep;
     //  float enu_truth; // so what's this one?
+    int isCC;
     int ccnc;
     int cc;
     int beamPdg;

@@ -90,6 +90,8 @@ void cpv(bool reload = false)
   
   if(reload || TFile(stateFname).IsZombie()){
     SpectrumLoader loaderFDFHC("/dune/data/users/kqi/oscillation_sample/merged_nu.root");
+    //Example FD spectrum w/ new variables
+    //SpectrumLoader loaderFDFHC("/pnfs/dune/persistent/users/marshalc/CAF/FarDetector/example_FD_CAF.root");
 
     auto* loaderFDFHCBeam  = loaderFDFHC.LoaderForRunPOT(20000001);
     auto* loaderFDFHCNue   = loaderFDFHC.LoaderForRunPOT(20000002);
