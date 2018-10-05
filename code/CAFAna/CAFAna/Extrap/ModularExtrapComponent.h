@@ -1,3 +1,6 @@
+#if 0
+// Currently dead code
+
 #pragma once
 
 #include "CAFAna/Core/HistAxis.h"
@@ -223,3 +226,5 @@ namespace ana
   };
 
 }
+
+#endif

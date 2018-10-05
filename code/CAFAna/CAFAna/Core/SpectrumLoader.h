@@ -8,8 +8,6 @@ namespace ana
 {
   class Progress;
 
-  class DUNERunPOTSpectrumLoader;
-
   /// \brief Collaborates with \ref Spectrum and \ref OscillatableSpectrum to
   /// fill spectra from CAF files.
   ///
@@ -21,8 +19,6 @@ namespace ana
   class SpectrumLoader: public SpectrumLoaderBase
   {
   public:
-    friend class DUNERunPOTSpectrumLoader;
-
     SpectrumLoader(const std::string& wildcard, DataSource src = kBeam);
     SpectrumLoader(const std::vector<std::string>& fnames,
                    DataSource src = kBeam);
@@ -33,8 +29,6 @@ namespace ana
     virtual ~SpectrumLoader();
 
     virtual void Go() override;
-
-    DUNERunPOTSpectrumLoader* LoaderForRunPOT(int run);
 
   protected:
     SpectrumLoader(DataSource src = kBeam);
@@ -83,44 +77,5 @@ namespace ana
     std::vector<Cut> fAllCuts;
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
-
-    std::map<int, std::vector<Spectrum*>> fSpectrumRunMap;
-    std::map<int, std::vector<ReweightableSpectrum*>> fReweightableSpectrumRunMap;
-  };
-
-
-  class DUNERunPOTSpectrumLoader: public SpectrumLoader
-  {
-  public:
-    friend class SpectrumLoader; // Allow it to construct us
-
-    virtual void AddSpectrum(Spectrum& spect,
-                             const Var& var,
-                             const Cut& cut,
-                             const SystShifts& shift,
-                             const Var& wei);
-
-    virtual void AddSpectrum(Spectrum& spect,
-                             const MultiVar& var,
-                             const Cut& cut,
-                             const SystShifts& shift,
-                             const Var& wei = kUnweighted){abort();}
-
-    virtual void AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                         const Var& var,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Var& wei);
-
-    // Things I'm forced to implement
-    virtual void Go(){abort();}
-    virtual void AccumulateExposures(const caf::SRSpill*){abort();}
-
-  protected:
-    DUNERunPOTSpectrumLoader(SpectrumLoader* parent,
-                             int run) : fParent(parent), fRun(run){}
-
-    SpectrumLoader* fParent;
-    int fRun;
   };
 }

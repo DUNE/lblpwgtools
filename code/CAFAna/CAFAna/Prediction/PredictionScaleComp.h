@@ -37,10 +37,9 @@ namespace ana
                         const Var&          wei = kUnweighted);
 
     /// This is for the FD via PredictionNoExtrap
-    PredictionScaleComp(DUNERunPOTSpectrumLoader& loaderBeam,
-                        DUNERunPOTSpectrumLoader& loaderNue,
-                        DUNERunPOTSpectrumLoader& loaderNuTau,
-                        DUNERunPOTSpectrumLoader& loaderNC,
+    PredictionScaleComp(SpectrumLoaderBase& loaderNumu,
+                        SpectrumLoaderBase& loaderNue,
+                        SpectrumLoaderBase& loaderNuTau,
                         const HistAxis&     axis,
                         Cut                 cut,
                         const std::vector<const SystComponentScale*>& systs,

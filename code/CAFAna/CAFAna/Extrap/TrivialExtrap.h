@@ -13,19 +13,17 @@ namespace ana
   {
   public:
     // This is the DUNE constructor
-    TrivialExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                  DUNERunPOTSpectrumLoader& loaderNue,
-                  DUNERunPOTSpectrumLoader& loaderNuTau,
-                  DUNERunPOTSpectrumLoader& loaderNC,
+    TrivialExtrap(SpectrumLoaderBase& loaderNumu,
+                  SpectrumLoaderBase& loaderNue,
+                  SpectrumLoaderBase& loaderNuTau,
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift,
                   const Var& wei);
 
-    TrivialExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                  DUNERunPOTSpectrumLoader& loaderNue,
-                  DUNERunPOTSpectrumLoader& loaderNuTau,
-                  DUNERunPOTSpectrumLoader& loaderNC,
+    TrivialExtrap(SpectrumLoaderBase& loaderNumu,
+                  SpectrumLoaderBase& loaderNue,
+                  SpectrumLoaderBase& loaderNuTau,
                   std::string label,
                   const Binning& bins,
                   const Var& var,
@@ -43,45 +41,6 @@ namespace ana
 
     TrivialExtrap(Loaders& loaders,
                   const HistAxis& axis,
-                  const Cut& cut,
-                  const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
-
-    TrivialExtrap(SpectrumLoaderBase& loader,
-                  SpectrumLoaderBase& loaderNue,
-                  SpectrumLoaderBase& loaderTau,
-                  SpectrumLoaderBase& loaderNC,
-                  const HistAxis& axis,
-                  const Cut& cut,
-                  const SystShifts& shift,
-                  const Var& wei);
-
-    TrivialExtrap(SpectrumLoaderBase& loader,
-                  SpectrumLoaderBase& loaderSwap,
-                  SpectrumLoaderBase& loaderTau,
-                  std::string label,
-                  const Binning& bins,
-                  const Var& var,
-                  const Cut& cut,
-                  const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
-
-    TrivialExtrap(SpectrumLoaderBase& loader,
-                  SpectrumLoaderBase& loaderNue,
-                  SpectrumLoaderBase& loaderTau,
-                  SpectrumLoaderBase& loaderNC,
-                  std::string label,
-                  const Binning& bins,
-                  const Var& var,
-                  const Cut& cut,
-                  const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
-
-    TrivialExtrap(SpectrumLoaderBase& loader,
-                  SpectrumLoaderBase& loaderSwap,
-                  std::string label,
-                  const Binning& bins,
-                  const Var& var,
                   const Cut& cut,
                   const SystShifts& shift = kNoShift,
                   const Var& wei = kUnweighted);

@@ -41,10 +41,9 @@ namespace ana
                        const Var&        wei = kUnweighted);
 
     /// PredictionScaleComp for the FD
-    PredictionXSecDiag(DUNERunPOTSpectrumLoader& loaderBeam,
-                       DUNERunPOTSpectrumLoader& loaderNue,
-                       DUNERunPOTSpectrumLoader& loaderNuTau,
-                       DUNERunPOTSpectrumLoader& loaderNC,
+    PredictionXSecDiag(SpectrumLoaderBase& loaderNumu,
+                       SpectrumLoaderBase& loaderNue,
+                       SpectrumLoaderBase& loaderNuTau,
                        const HistAxis&   axis,
                        Cut               cut,
                        const SystShifts& shift = kNoShift,

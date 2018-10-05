@@ -13,31 +13,29 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                                         DUNERunPOTSpectrumLoader& loaderNue,
-                                         DUNERunPOTSpectrumLoader& loaderNuTau,
-                                         DUNERunPOTSpectrumLoader& loaderNC,
+  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+                                         SpectrumLoaderBase& loaderNue,
+                                         SpectrumLoaderBase& loaderNuTau,
                                          const std::string& label,
                                          const Binning& bins,
                                          const Var& var,
                                          const Cut& cut,
                                          const SystShifts& shift,
                                          const Var& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+    : PredictionExtrap(new TrivialExtrap(loaderNumu, loaderNue, loaderNuTau,
                                          label, bins, var, cut, shift, wei))
   {
   }
 
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                                         DUNERunPOTSpectrumLoader& loaderNue,
-                                         DUNERunPOTSpectrumLoader& loaderNuTau,
-                                         DUNERunPOTSpectrumLoader& loaderNC,
+  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+                                         SpectrumLoaderBase& loaderNue,
+                                         SpectrumLoaderBase& loaderNuTau,
 					 const HistAxis& axis,
                                          const Cut& cut,
                                          const SystShifts& shift,
                                          const Var& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+    : PredictionExtrap(new TrivialExtrap(loaderNumu, loaderNue, loaderNuTau,
                                          axis, cut, shift, wei))
   {
   }
@@ -66,35 +64,6 @@ namespace ana
                                          const SystShifts& shift,
                                          const Var& wei)
     : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei))
-  {
-  }
-
-  //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loader,
-                                         SpectrumLoaderBase& loaderSwap,
-                                         SpectrumLoaderBase& loaderTau,
-                                         const std::string& label,
-                                         const Binning& bins,
-                                         const Var& var,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Var& wei)
-    : PredictionExtrap(new TrivialExtrap(loader, loaderSwap, loaderTau,
-                                         label, bins, var, cut, shift, wei))
-  {
-  }
-
-  //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loader,
-                                         SpectrumLoaderBase& loaderSwap,
-                                         const std::string& label,
-                                         const Binning& bins,
-                                         const Var& var,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Var& wei)
-    : PredictionNoExtrap(loader, loaderSwap, kNullLoader,
-                         label, bins, var, cut, shift, wei)
   {
   }
 

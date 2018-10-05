@@ -68,16 +68,14 @@ namespace ana
 
   //----------------------------------------------------------------------
   PredictionXSecDiag::
-  PredictionXSecDiag(DUNERunPOTSpectrumLoader& loaderBeam,
-                     DUNERunPOTSpectrumLoader& loaderNue,
-                     DUNERunPOTSpectrumLoader& loaderNuTau,
-                     DUNERunPOTSpectrumLoader& loaderNC,
+  PredictionXSecDiag(SpectrumLoaderBase& loaderNumu,
+                     SpectrumLoaderBase& loaderNue,
+                     SpectrumLoaderBase& loaderNuTau,
                      const HistAxis&     axis,
                      Cut                 cut,
                      const SystShifts&   shift,
                      const Var&          wei)
-    : PredictionXSecDiag(new PredictionScaleComp(loaderBeam, loaderNue, loaderNuTau, loaderNC,
-                                                 axis, cut, GetDUNEXSecSysts(), shift, wei))
+    : PredictionXSecDiag(new PredictionScaleComp(loaderNumu, loaderNue, loaderNuTau, axis, cut, GetDUNEXSecSysts(), shift, wei))
   {
   }
 

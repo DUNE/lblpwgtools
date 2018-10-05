@@ -20,8 +20,7 @@ namespace ana
   {
   public:
     enum DataMC{kData, kMC};
-    //    enum SwappingConfig{kNonSwap, kFluxSwap, kTauSwap};
-    enum SwappingConfig{kNonSwap, kNue, kTau, kNC};
+    enum SwappingConfig{kNonSwap, kNumu, kNue, kNuTau};
     enum FluxType{kFHC, kRHC};
 
     /// No loaders initialized. Use \ref SetLoaderPath to configure

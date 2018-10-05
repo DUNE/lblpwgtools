@@ -1,3 +1,6 @@
+#if 0
+// Currently dead code
+
 #include "CAFAna/Extrap/ModularExtrapComponent.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
@@ -322,3 +325,5 @@ namespace ana
   }
 
 }
+
+#endif

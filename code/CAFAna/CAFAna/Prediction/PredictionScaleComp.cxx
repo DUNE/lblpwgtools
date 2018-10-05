@@ -38,10 +38,9 @@ namespace ana
 
   //----------------------------------------------------------------------
   PredictionScaleComp::
-  PredictionScaleComp(DUNERunPOTSpectrumLoader& loaderBeam,
-                      DUNERunPOTSpectrumLoader& loaderNue,
-                      DUNERunPOTSpectrumLoader& loaderNuTau,
-                      DUNERunPOTSpectrumLoader& loaderNC,
+  PredictionScaleComp(SpectrumLoaderBase& loaderNumu,
+                      SpectrumLoaderBase& loaderNue,
+                      SpectrumLoaderBase& loaderNuTau,
                       const HistAxis&     axis,
                       Cut                 cut,
                       const std::vector<const SystComponentScale*>& systs,
@@ -51,11 +50,11 @@ namespace ana
   {
     assert(!systs.empty() && "Please give at least one systematic.");
     for(const SystComponentScale* syst: systs){
-      fPreds.push_back(new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+      fPreds.push_back(new PredictionNoExtrap(loaderNumu, loaderNue, loaderNuTau,
                                               axis, cut && syst->GetCut(), shift, wei));
     }
 
-    fTotal = new PredictionNoExtrap(loaderBeam, loaderNue, loaderNuTau, loaderNC,
+    fTotal = new PredictionNoExtrap(loaderNumu, loaderNue, loaderNuTau,
                                     axis, cut, shift, wei);
   }
 

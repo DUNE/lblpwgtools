@@ -1,3 +1,6 @@
+#if 0
+// Currently dead code
+
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Extrap/ModularExtrap.h"
 #include "CAFAna/Core/Loaders.h"
@@ -422,3 +425,5 @@ namespace ana
     {return fETAntiextrap->Return();}
 
 }
+
+#endif

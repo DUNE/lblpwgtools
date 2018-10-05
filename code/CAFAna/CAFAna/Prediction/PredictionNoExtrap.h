@@ -15,10 +15,9 @@ namespace ana
     PredictionNoExtrap(PredictionExtrap* pred);
 
     // This is the DUNE constructor
-    PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                       DUNERunPOTSpectrumLoader& loaderNue,
-                       DUNERunPOTSpectrumLoader& loaderNuTau,
-                       DUNERunPOTSpectrumLoader& loaderNC,
+    PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+                       SpectrumLoaderBase& loaderNue,
+                       SpectrumLoaderBase& loaderNuTau,
                        const std::string& label,
                        const Binning& bins,
                        const Var& var,
@@ -26,15 +25,13 @@ namespace ana
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
 
-    PredictionNoExtrap(DUNERunPOTSpectrumLoader& loaderBeam,
-                       DUNERunPOTSpectrumLoader& loaderNue,
-                       DUNERunPOTSpectrumLoader& loaderNuTau,
-                       DUNERunPOTSpectrumLoader& loaderNC,
+    PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+                       SpectrumLoaderBase& loaderNue,
+                       SpectrumLoaderBase& loaderNuTau,
 		       const HistAxis& axis,
 		       const Cut& cut,
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
-
 
     PredictionNoExtrap(Loaders& loaders,
                        const std::string& label,
@@ -50,25 +47,6 @@ namespace ana
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
 
-    PredictionNoExtrap(SpectrumLoaderBase& loader,
-                       SpectrumLoaderBase& loaderSwap,
-                       SpectrumLoaderBase& loaderTau,
-                       const std::string& label,
-                       const Binning& bins,
-                       const Var& var,
-                       const Cut& cut,
-                       const SystShifts& shift = kNoShift,
-                       const Var& wei = kUnweighted);
-
-    PredictionNoExtrap(SpectrumLoaderBase& loader,
-                       SpectrumLoaderBase& loaderSwap,
-                       const std::string& label,
-                       const Binning& bins,
-                       const Var& var,
-                       const Cut& cut,
-                       const SystShifts& shift = kNoShift,
-                       const Var& wei = kUnweighted);
-
     virtual ~PredictionNoExtrap();
 
     static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory* dir);
@@ -76,18 +54,11 @@ namespace ana
 
   };
 
-  class DUNENoExtrapPredictionGenerator: public IPredictionGenerator
+  class NoExtrapPredictionGenerator: public IPredictionGenerator
   {
   public:
-    DUNENoExtrapPredictionGenerator(DUNERunPOTSpectrumLoader& loaderBeam, 
-                                    DUNERunPOTSpectrumLoader& loaderNue,
-                                    DUNERunPOTSpectrumLoader& loaderNuTau,
-                                    DUNERunPOTSpectrumLoader& loaderNC,
-                                    HistAxis axis,
-                                    Cut cut)
-      : fLoaderBeam(loaderBeam), fLoaderNue(loaderNue),
-        fLoaderNuTau(loaderNuTau), fLoaderNC(loaderNC),
-        fAxis(axis), fCut(cut)
+    NoExtrapPredictionGenerator(HistAxis axis, Cut cut)
+      : fAxis(axis), fCut(cut)
     {
     }
 
@@ -95,14 +66,10 @@ namespace ana
     Generate(Loaders& loaders, const SystShifts& shiftMC = kNoShift) const override
     {
       return std::unique_ptr<IPrediction>(
-        new PredictionNoExtrap(fLoaderBeam, fLoaderNue, fLoaderNuTau, fLoaderNC,
-                               fAxis, fCut, shiftMC));
+                                          new PredictionNoExtrap(loaders, fAxis, fCut, shiftMC));
     }
+
   protected:
-    DUNERunPOTSpectrumLoader& fLoaderBeam;
-    DUNERunPOTSpectrumLoader& fLoaderNue;
-    DUNERunPOTSpectrumLoader& fLoaderNuTau;
-    DUNERunPOTSpectrumLoader& fLoaderNC;
     HistAxis fAxis;
     Cut fCut;
   };

@@ -21,28 +21,6 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  void DUNERunPOTSpectrumLoader::AddSpectrum(Spectrum& spect,
-                                             const Var& var,
-                                             const Cut& cut,
-                                             const SystShifts& shift,
-                                             const Var& wei)
-  {
-    fParent->AddSpectrum(spect, var, cut, shift, wei);
-    fParent->fSpectrumRunMap[fRun].push_back(&spect);
-  }
-
-  //----------------------------------------------------------------------
-  void DUNERunPOTSpectrumLoader::AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                                         const Var& var,
-                                                         const Cut& cut,
-                                                         const SystShifts& shift,
-                                                         const Var& wei)
-  {
-    fParent->AddReweightableSpectrum(spect, var, cut, shift, wei);
-    fParent->fReweightableSpectrumRunMap[fRun].push_back(&spect);
-  }
-
-  //----------------------------------------------------------------------
   SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src)
     : SpectrumLoaderBase(wildcard, src)
   {
@@ -132,12 +110,6 @@ namespace ana
 
     fHistDefs.RemoveLoader(this);
     fHistDefs.Clear();
-  }
-
-  //----------------------------------------------------------------------
-  DUNERunPOTSpectrumLoader* SpectrumLoader::LoaderForRunPOT(int run)
-  {
-    return new DUNERunPOTSpectrumLoader(this, run);
   }
 
   //----------------------------------------------------------------------
@@ -427,16 +399,6 @@ namespace ana
       livetime.emplace(id, fLivetimeByCut[i]);
       pot.emplace(id, fPOTByCut[i]);
     }
-
-    for(auto it: fSpectrumRunMap)
-      for(auto s: it.second)
-        s->fPOT += fPOTMap[it.first];
-
-    for(auto it: fReweightableSpectrumRunMap)
-      for(auto rw: it.second)
-        rw->fPOT += fPOTMap[it.first];
-
-    std::map<int, std::vector<Spectrum*>> fSpectrumRunMap;
 
     for(auto& shiftdef: fHistDefs){
       for(auto& cutdef: shiftdef.second){

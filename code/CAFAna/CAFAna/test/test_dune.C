@@ -52,31 +52,24 @@ void test_dune()
   // POT/yr * 3.5yrs * mass correction
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
-  SpectrumLoader loader("/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v2.1/numutest.root");
-  SpectrumLoader loaderNue("/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v2.1/nuetest.root");
+  SpectrumLoader loaderNumu("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_numu.root");
+  SpectrumLoader loaderNue("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nue.root");
+  SpectrumLoaderBase& loaderNuTau = kNullLoader;
 
-  auto* loaderNumuBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNumuNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNumuNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNumuNC    = loader.LoaderForRunPOT(0);
+  const Var Enu_recoNumu = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var Enu_recoNue = SIMPLEVAR(dune.Ev_reco_nue);
+  const Cut kSelNumu = SIMPLEVAR(dune.cvnnumu) > 0.7;
+  const Cut kSelNue = SIMPLEVAR(dune.cvnnue) > 0.7;
 
-  auto* loaderNueBeam  = loaderNue.LoaderForRunPOT(20000001);
-  auto* loaderNueNue   = loaderNue.LoaderForRunPOT(20000002);
-  auto* loaderNueNuTau = loaderNue.LoaderForRunPOT(20000003);
-  auto* loaderNueNC    = loaderNue.LoaderForRunPOT(0);
+  PredictionNoExtrap predNumuPID(loaderNumu, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnumu), kNoCut);
 
-  const Var Enu_reco = SIMPLEVAR(dune.Ev_reco);
-  const Cut kSelNumu = SIMPLEVAR(dune.mvaresult) > 0;
-  const Cut kSelNue = SIMPLEVAR(dune.mvaresult) > 0;
+  PredictionNoExtrap predNuePID(loaderNumu, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnue), kNoCut);
 
-  PredictionNoExtrap predNumuPID(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
+  PredictionNoExtrap pred(loaderNumu, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_recoNumu, kSelNumu);
 
-  PredictionNoExtrap predNuePID(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.mvaresult), kNoCut);
+  PredictionNoExtrap predNue(loaderNumu, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_recoNue, kSelNue);
 
-  PredictionNoExtrap pred(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_reco, kSelNumu);
-
-  PredictionNoExtrap predNue(*loaderNueBeam, *loaderNueNue, *loaderNueNuTau, *loaderNueNC, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_reco, kSelNue);
-
+  /*
   // separate by true interaction category
   std::vector<Cut> truthcuts;
   for( int i = 0; i < 32; ++i ) {
@@ -84,10 +77,11 @@ void test_dune()
   }
   const HistAxis axis("Reconstructed energy (GeV)",
                       Binning::Simple(40, 0, 10),
-                      Enu_reco);
-  PredictionScaleComp predNumu(*loaderNumuBeam, *loaderNumuNue, *loaderNumuNuTau, *loaderNumuNC, axis, kSelNumu, truthcuts);
+                      Enu_recoNumu);
+  PredictionScaleComp predNumu(loaderNumu, loaderNue, loaderNuTau, axis, kSelNumu, truthcuts);
+  */
 
-  loader.Go();
+  loaderNumu.Go();
   loaderNue.Go();
 
   SaveToFile(pred, "pred_numu.root", "pred");
@@ -216,6 +210,7 @@ void test_dune()
   gPad->Print("mcd.C");
 
 
+  /*
   SystShifts fakeDataShift(predNumu.GetSysts()[k_int_nu_MEC_dummy], +1);
   Spectrum fake = predNumu.PredictSyst(calc, fakeDataShift).FakeData(1.47e21);
 
@@ -235,5 +230,5 @@ void test_dune()
   bf2.ToTH1(1.47e21, kBlue, 7)->Draw("hist same");
 
   gPad->Print("FD_mec_fit.eps");
-
+  */
 }

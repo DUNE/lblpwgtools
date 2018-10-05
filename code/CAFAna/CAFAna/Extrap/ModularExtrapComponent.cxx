@@ -1,3 +1,6 @@
+#if 0
+// Currently dead code
+
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Extrap/ModularExtrapComponent.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
@@ -376,3 +379,5 @@ namespace ana
   }
 
 }
+
+#endif
