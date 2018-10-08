@@ -13,7 +13,7 @@ namespace ana
   {
   public:
     // This is the DUNE constructor
-    TrivialExtrap(SpectrumLoaderBase& loaderNumu,
+    TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
                   SpectrumLoaderBase& loaderNue,
                   SpectrumLoaderBase& loaderNuTau,
                   const HistAxis& axis,
@@ -21,7 +21,7 @@ namespace ana
                   const SystShifts& shift,
                   const Var& wei);
 
-    TrivialExtrap(SpectrumLoaderBase& loaderNumu,
+    TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
                   SpectrumLoaderBase& loaderNue,
                   SpectrumLoaderBase& loaderNuTau,
                   std::string label,

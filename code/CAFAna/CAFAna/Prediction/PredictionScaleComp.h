@@ -37,7 +37,7 @@ namespace ana
                         const Var&          wei = kUnweighted);
 
     /// This is for the FD via PredictionNoExtrap
-    PredictionScaleComp(SpectrumLoaderBase& loaderNumu,
+    PredictionScaleComp(SpectrumLoaderBase& loaderNonswap,
                         SpectrumLoaderBase& loaderNue,
                         SpectrumLoaderBase& loaderNuTau,
                         const HistAxis&     axis,

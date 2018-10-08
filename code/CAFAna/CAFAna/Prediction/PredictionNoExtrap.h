@@ -15,7 +15,7 @@ namespace ana
     PredictionNoExtrap(PredictionExtrap* pred);
 
     // This is the DUNE constructor
-    PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+    PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
                        SpectrumLoaderBase& loaderNue,
                        SpectrumLoaderBase& loaderNuTau,
                        const std::string& label,
@@ -25,7 +25,7 @@ namespace ana
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
 
-    PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+    PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
                        SpectrumLoaderBase& loaderNue,
                        SpectrumLoaderBase& loaderNuTau,
 		       const HistAxis& axis,

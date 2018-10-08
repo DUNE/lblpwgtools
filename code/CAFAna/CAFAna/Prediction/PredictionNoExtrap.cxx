@@ -13,7 +13,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
                                          SpectrumLoaderBase& loaderNue,
                                          SpectrumLoaderBase& loaderNuTau,
                                          const std::string& label,
@@ -22,20 +22,20 @@ namespace ana
                                          const Cut& cut,
                                          const SystShifts& shift,
                                          const Var& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNumu, loaderNue, loaderNuTau,
+    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                          label, bins, var, cut, shift, wei))
   {
   }
 
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNumu,
+  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
                                          SpectrumLoaderBase& loaderNue,
                                          SpectrumLoaderBase& loaderNuTau,
 					 const HistAxis& axis,
                                          const Cut& cut,
                                          const SystShifts& shift,
                                          const Var& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNumu, loaderNue, loaderNuTau,
+    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                          axis, cut, shift, wei))
   {
   }

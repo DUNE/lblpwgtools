@@ -38,7 +38,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   PredictionScaleComp::
-  PredictionScaleComp(SpectrumLoaderBase& loaderNumu,
+  PredictionScaleComp(SpectrumLoaderBase& loaderNonswap,
                       SpectrumLoaderBase& loaderNue,
                       SpectrumLoaderBase& loaderNuTau,
                       const HistAxis&     axis,
@@ -50,11 +50,11 @@ namespace ana
   {
     assert(!systs.empty() && "Please give at least one systematic.");
     for(const SystComponentScale* syst: systs){
-      fPreds.push_back(new PredictionNoExtrap(loaderNumu, loaderNue, loaderNuTau,
+      fPreds.push_back(new PredictionNoExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                               axis, cut && syst->GetCut(), shift, wei));
     }
 
-    fTotal = new PredictionNoExtrap(loaderNumu, loaderNue, loaderNuTau,
+    fTotal = new PredictionNoExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                     axis, cut, shift, wei);
   }
 
