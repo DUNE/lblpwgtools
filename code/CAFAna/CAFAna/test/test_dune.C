@@ -52,8 +52,8 @@ void test_dune()
   // POT/yr * 3.5yrs * mass correction
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
-  SpectrumLoader loaderNumu("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_numu.root");
-  SpectrumLoader loaderNue("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nue.root");
+  SpectrumLoader loaderNonswap("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nonswap.root");
+  SpectrumLoader loaderNue("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nueswap.root");
   SpectrumLoaderBase& loaderNuTau = kNullLoader;
 
   const Var Enu_recoNumu = SIMPLEVAR(dune.Ev_reco_numu);
@@ -61,13 +61,13 @@ void test_dune()
   const Cut kSelNumu = SIMPLEVAR(dune.cvnnumu) > 0.7;
   const Cut kSelNue = SIMPLEVAR(dune.cvnnue) > 0.7;
 
-  PredictionNoExtrap predNumuPID(loaderNumu, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnumu), kNoCut);
+  PredictionNoExtrap predNumuPID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnumu), kNoCut);
 
-  PredictionNoExtrap predNuePID(loaderNumu, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnue), kNoCut);
+  PredictionNoExtrap predNuePID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnue), kNoCut);
 
-  PredictionNoExtrap pred(loaderNumu, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_recoNumu, kSelNumu);
+  PredictionNoExtrap pred(loaderNonswap, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_recoNumu, kSelNumu);
 
-  PredictionNoExtrap predNue(loaderNumu, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_recoNue, kSelNue);
+  PredictionNoExtrap predNue(loaderNonswap, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(24, 0, 6), Enu_recoNue, kSelNue);
 
   /*
   // separate by true interaction category
@@ -78,10 +78,10 @@ void test_dune()
   const HistAxis axis("Reconstructed energy (GeV)",
                       Binning::Simple(40, 0, 10),
                       Enu_recoNumu);
-  PredictionScaleComp predNumu(loaderNumu, loaderNue, loaderNuTau, axis, kSelNumu, truthcuts);
+  PredictionScaleComp predNumu(loaderNonswap, loaderNue, loaderNuTau, axis, kSelNumu, truthcuts);
   */
 
-  loaderNumu.Go();
+  loaderNonswap.Go();
   loaderNue.Go();
 
   SaveToFile(pred, "pred_numu.root", "pred");
