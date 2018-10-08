@@ -109,10 +109,7 @@ namespace ana
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 
-    std::map<int, double> fPOTMap;
-
     double fPOT; ///< Accumulated by calls to \ref GetNextFile
-    double fRunPOT; ///< Crude measure, not including spill cuts
 
     /// \brief Helper class for \ref SpectrumLoaderBase
     ///

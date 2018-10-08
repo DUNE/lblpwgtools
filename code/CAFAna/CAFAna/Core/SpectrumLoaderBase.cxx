@@ -125,7 +125,7 @@ namespace ana
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectrumLoaderBase(DataSource src)
     : fSource(src), fGone(false),
-      fPOT(0), fRunPOT(0)
+      fPOT(0)
   {
   }
 
@@ -271,22 +271,20 @@ namespace ana
     if(!f) return 0; // out of files
 
     TTree* trPot;
-    if(f->GetListOfKeys()->Contains("cafmaker"))
-      trPot = (TTree*)f->Get("mvaselectnumu/pottree");
-    else
-      trPot = (TTree*)f->Get("mvaselect/pottree");
+    //    if(f->GetListOfKeys()->Contains("cafmaker"))
+    //      trPot = (TTree*)f->Get("mvaselectnumu/pottree");
+    //    else
+    //      trPot = (TTree*)f->Get("mvaselect/pottree");
+    trPot = (TTree*)f->Get("pottree");
     assert(trPot);
 
     double pot;
-    int run;
     trPot->SetBranchAddress("pot", &pot);
-    trPot->SetBranchAddress("run", &run);
 
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
 
-      fPOTMap[run] += pot;
-      fPOTMap[0] += pot; // Run-agnostic total
+      fPOT += pot;
     }
 
     return f;

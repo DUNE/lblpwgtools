@@ -117,20 +117,21 @@ namespace ana
   {
     assert(!f->IsZombie());
     TTree* tr;
-    if(f->GetListOfKeys()->Contains("cafmaker")){
-      tr = (TTree*)f->Get("cafmaker/caf");
-    }
-    else{
-      tr = (TTree*)f->Get("mvaselect/MVASelection");
-    }
+    //    if(f->GetListOfKeys()->Contains("cafmaker")){
+    //      tr = (TTree*)f->Get("cafmaker/caf");
+    //    }
+    //    else{
+    //      tr = (TTree*)f->Get("mvaselect/MVASelection");
+    //    }
+    tr = (TTree*)f->Get("caf");
     assert(tr);
 
     // Surely no-one will generate 1000 universes?
-    std::vector<std::array<double, 1000>> genie_tmp;
-    const std::vector<std::string> genie_names = GetGenieWeightNames();
-    genie_tmp.resize(genie_names.size());
-    std::vector<int> genie_size_tmp;
-    genie_size_tmp.resize(genie_names.size());
+    //    std::vector<std::array<double, 1000>> genie_tmp;
+    //    const std::vector<std::string> genie_names = GetGenieWeightNames();
+    //    genie_tmp.resize(genie_names.size());
+    //    std::vector<int> genie_size_tmp;
+    //    genie_size_tmp.resize(genie_names.size());
 
     FloatingExceptionOnNaN fpnan(false);
 
@@ -177,14 +178,14 @@ namespace ana
     tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
     tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
-    sr.dune.genie_wgt.resize(genie_names.size());
+    //    sr.dune.genie_wgt.resize(genie_names.size());
 
-    for(unsigned int i = 0; i < genie_names.size(); ++i){
-      tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
-                           &genie_tmp[i]);
-      tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
-                           &genie_size_tmp[i]);
-    }
+    //    for(unsigned int i = 0; i < genie_names.size(); ++i){
+    //      tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
+    //                           &genie_tmp[i]);
+    //      tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
+    //                           &genie_size_tmp[i]);
+    //    }
 
 
     const int Nentries = tr->GetEntries();
@@ -214,14 +215,14 @@ namespace ana
       }
 
       // Reformat the genie systs
-      for(unsigned int i = 0; i < genie_names.size(); ++i){
-        const int Nuniv = genie_size_tmp[i];
-        assert(Nuniv <= int(genie_tmp[i].size()));
-        sr.dune.genie_wgt[i].resize(Nuniv);
-        for(int j = 0; j < Nuniv; ++j){
-          sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
-        }
-      }
+      // for(unsigned int i = 0; i < genie_names.size(); ++i){
+      //   const int Nuniv = genie_size_tmp[i];
+      //   assert(Nuniv <= int(genie_tmp[i].size()));
+      //   sr.dune.genie_wgt[i].resize(Nuniv);
+      //   for(int j = 0; j < Nuniv; ++j){
+      //     sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
+      //   }
+      // }
 
       HandleRecord(&sr);
 
@@ -373,10 +374,7 @@ namespace ana
     // Let's just assume no-one is using the Cut::POT() function yet, so this
     // printout remains relevant...
 
-    for(auto it: fPOTMap){
-      if(it.first) std::cout << "Run " << it.first; else std::cout << "All runs";
-      std::cout << " -> " << it.second << " POT" << std::endl;
-    }
+    std::cout << fPOT << " POT" << std::endl;
   }
 
   //----------------------------------------------------------------------
@@ -387,39 +385,50 @@ namespace ana
   //----------------------------------------------------------------------
   void SpectrumLoader::StoreExposures()
   {
-    std::map<int, double> livetime;
-    std::map<int, double> pot;
-
-    for(unsigned int i = 0; i < fAllCuts.size(); ++i){
-      const int id = fAllCuts[i].ID();
-      if(fLivetimeByCut[i] < 0){
-        fLivetimeByCut[i] = 0;
-        std::cout << "WARNING: no way to compute livetime for FD data spectrum. If you want a livetime you need to be applying one of the cuts from TimingCuts.h or similar. You probably should be anyway to remove bad data near the spill ends." << std::endl;
-      }
-      livetime.emplace(id, fLivetimeByCut[i]);
-      pot.emplace(id, fPOTByCut[i]);
-    }
-
     for(auto& shiftdef: fHistDefs){
       for(auto& cutdef: shiftdef.second){
-        const Cut& cut = cutdef.first;
-        const int id = cut.ID();
-
         for(auto& weidef: cutdef.second){
           for(auto& vardef: weidef.second){
-            for(Spectrum* s: vardef.second.spects){
-              s->fPOT += pot[id];
-              s->fLivetime += livetime[id];
-            }
-
-            for(ReweightableSpectrum* rw: vardef.second.rwSpects){
-              rw->fPOT += pot[id];
-              rw->fLivetime += livetime[id];
-            }
+            for(Spectrum* s: vardef.second.spects) s->fPOT += fPOT;
+            for(ReweightableSpectrum* rw: vardef.second.rwSpects) rw->fPOT += fPOT;
           }
         }
       }
     }
+
+    // std::map<int, double> livetime;
+    // std::map<int, double> pot;
+
+    // for(unsigned int i = 0; i < fAllCuts.size(); ++i){
+    //   const int id = fAllCuts[i].ID();
+    //   if(fLivetimeByCut[i] < 0){
+    //     fLivetimeByCut[i] = 0;
+    //     std::cout << "WARNING: no way to compute livetime for FD data spectrum. If you want a livetime you need to be applying one of the cuts from TimingCuts.h or similar. You probably should be anyway to remove bad data near the spill ends." << std::endl;
+    //   }
+    //   livetime.emplace(id, fLivetimeByCut[i]);
+    //   pot.emplace(id, fPOTByCut[i]);
+    // }
+
+    // for(auto& shiftdef: fHistDefs){
+    //   for(auto& cutdef: shiftdef.second){
+    //     const Cut& cut = cutdef.first;
+    //     const int id = cut.ID();
+
+    //     for(auto& weidef: cutdef.second){
+    //       for(auto& vardef: weidef.second){
+    //         for(Spectrum* s: vardef.second.spects){
+    //           s->fPOT += pot[id];
+    //           s->fLivetime += livetime[id];
+    //         }
+
+    //         for(ReweightableSpectrum* rw: vardef.second.rwSpects){
+    //           rw->fPOT += pot[id];
+    //           rw->fLivetime += livetime[id];
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   //----------------------------------------------------------------------
