@@ -127,11 +127,11 @@ namespace ana
     assert(tr);
 
     // Surely no-one will generate 1000 universes?
-    //    std::vector<std::array<double, 1000>> genie_tmp;
-    //    const std::vector<std::string> genie_names = GetGenieWeightNames();
-    //    genie_tmp.resize(genie_names.size());
-    //    std::vector<int> genie_size_tmp;
-    //    genie_size_tmp.resize(genie_names.size());
+    std::vector<std::array<double, 1000>> genie_tmp;
+    const std::vector<std::string> genie_names = GetGenieWeightNames();
+    genie_tmp.resize(genie_names.size());
+    std::vector<int> genie_size_tmp;
+    genie_size_tmp.resize(genie_names.size());
 
     FloatingExceptionOnNaN fpnan(false);
 
@@ -181,14 +181,14 @@ namespace ana
     tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
     tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
-    //    sr.dune.genie_wgt.resize(genie_names.size());
+    sr.dune.genie_wgt.resize(genie_names.size());
 
-    //    for(unsigned int i = 0; i < genie_names.size(); ++i){
-    //      tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
-    //                           &genie_tmp[i]);
-    //      tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
-    //                           &genie_size_tmp[i]);
-    //    }
+    for(unsigned int i = 0; i < genie_names.size(); ++i){
+      tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
+                           &genie_tmp[i]);
+      tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
+                           &genie_size_tmp[i]);
+    }
 
 
     const int Nentries = tr->GetEntries();
@@ -218,14 +218,14 @@ namespace ana
       // }
 
       // Reformat the genie systs
-      // for(unsigned int i = 0; i < genie_names.size(); ++i){
-      //   const int Nuniv = genie_size_tmp[i];
-      //   assert(Nuniv <= int(genie_tmp[i].size()));
-      //   sr.dune.genie_wgt[i].resize(Nuniv);
-      //   for(int j = 0; j < Nuniv; ++j){
-      //     sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
-      //   }
-      // }
+      for(unsigned int i = 0; i < genie_names.size(); ++i){
+        const int Nuniv = genie_size_tmp[i];
+        assert(Nuniv >= 0 && Nuniv <= int(genie_tmp[i].size()));
+        sr.dune.genie_wgt[i].resize(Nuniv);
+        for(int j = 0; j < Nuniv; ++j){
+          sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
+        }
+      }
 
       HandleRecord(&sr);
 
