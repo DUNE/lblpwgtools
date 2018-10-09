@@ -114,7 +114,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-   template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::
+  template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::
   GetReweightableSpectra(std::vector<ReweightableSpectrum*>& ss)
   {
     for(auto& it: fElems) it.second.GetReweightableSpectra(ss);
@@ -124,8 +124,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectrumLoaderBase(DataSource src)
-    : fSource(src), fGone(false),
-      fPOT(0)
+    : fSource(src), fGone(false), fPOT(0)
   {
   }
 
