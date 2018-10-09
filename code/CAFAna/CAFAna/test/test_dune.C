@@ -121,7 +121,7 @@ void test_dune()
 
   new TCanvas;
   TH1* h3 = DataMCComparisonComponents(mock, &pred, calc);
-  h3->SetTitle("#nu_{#mu} selection (MVA>0) 3.5yrs #times 40kt");
+  h3->SetTitle("#nu_{#mu} selection (CVNm>0.7) 3.5yrs #times 40kt");
   CenterTitles(h3);
   Legend();
   gPad->Print("components.eps");
@@ -129,7 +129,7 @@ void test_dune()
 
   new TCanvas;
   TH1* h4 = DataMCComparisonComponents(mockNue, &predNue, calc);
-  h4->SetTitle("#nu_{e} selection (MVA>0) 3.5yrs #times 40kt");
+  h4->SetTitle("#nu_{e} selection (CVNe>0.7) 3.5yrs #times 40kt");
   CenterTitles(h4);
   Legend();
   gPad->Print("components_nue.eps");
@@ -137,7 +137,7 @@ void test_dune()
 
   new TCanvas;
   TH1* h2 = DataMCComparisonComponents(mockNumuPID, &predNumuPID, calc);
-  h2->SetTitle("#nu_{#mu} selection (MVA>0) 3.5yrs #times 40kt");
+  h2->SetTitle("#nu_{#mu} selection (CVNm>0.7) 3.5yrs #times 40kt");
   CenterTitles(h2);
   Legend();
   h2->GetYaxis()->SetRangeUser(1, 1e4);
@@ -147,7 +147,7 @@ void test_dune()
 
   new TCanvas;
   TH1* h = DataMCComparisonComponents(mockNuePID, &predNuePID, calc);
-  h->SetTitle("#nu_{e} selection (MVA>0) 3.5yrs #times 40kt");
+  h->SetTitle("#nu_{e} selection (CVNe>0.7) 3.5yrs #times 40kt");
   CenterTitles(h);
   Legend();
   h->GetYaxis()->SetRangeUser(0, 600);
