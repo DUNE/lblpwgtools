@@ -8,7 +8,7 @@ namespace caf
   {
   public:
     // Reco info
-    double Ev_reco;
+    double Ev_reco; // for ND?
     double Ev_reco_nue;
     double Ev_reco_numu;
     double mvaresult;
@@ -29,10 +29,12 @@ namespace caf
     double Elep;
     //  float enu_truth; // so what's this one?
     int isCC;
-    int ccnc;
-    int cc;
-    int beamPdg;
-    int neu;
+    //    int ccnc;
+    //    int cc;
+    //    int beamPdg;
+    //    int neu;
+    int nuPDG;
+    int nuPDGunosc;
     int LepPDG;
     int mode;
     int nipi0;

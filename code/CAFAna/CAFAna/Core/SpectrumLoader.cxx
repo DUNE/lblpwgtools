@@ -151,9 +151,12 @@ namespace ana
 
     tr->SetBranchAddress("Ev", &sr.dune.Ev);
     tr->SetBranchAddress("Elep", &sr.dune.Elep);
-    tr->SetBranchAddress("ccnc", &sr.dune.ccnc);
-    tr->SetBranchAddress("beamPdg", &sr.dune.beamPdg);
-    tr->SetBranchAddress("neu", &sr.dune.neu);
+    //    tr->SetBranchAddress("ccnc", &sr.dune.ccnc);
+    tr->SetBranchAddress("isCC", &sr.dune.isCC);
+    //    tr->SetBranchAddress("beamPdg", &sr.dune.beamPdg);
+    //    tr->SetBranchAddress("neu", &sr.dune.neu);
+    tr->SetBranchAddress("nuPDG", &sr.dune.nuPDG);
+    tr->SetBranchAddress("nuPDGunosc", &sr.dune.nuPDGunosc);
     tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
     tr->SetBranchAddress("mode", &sr.dune.mode);
     tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
@@ -162,7 +165,7 @@ namespace ana
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
     tr->SetBranchAddress("W", &sr.dune.W);
     tr->SetBranchAddress("Y", &sr.dune.Y);
-    tr->SetBranchAddress("cc", &sr.dune.cc);
+    //    tr->SetBranchAddress("cc", &sr.dune.cc);
 
     tr->SetBranchAddress("nuvtxx_truth",  &sr.dune.nuvtxx_truth);
     tr->SetBranchAddress("nuvtxy_truth",  &sr.dune.nuvtxy_truth);
@@ -192,27 +195,27 @@ namespace ana
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
 
-      // Patch up isFD and isFHC which aren't in MVAResult files
-      if(sr.dune.run == 20000001 ||
-         sr.dune.run == 20000002 ||
-         sr.dune.run == 20000003){
-        sr.dune.isFD = true;
-        sr.dune.isFHC = true;
-      }
-      else if(sr.dune.run == 20000004 ||
-              sr.dune.run == 20000005 ||
-              sr.dune.run == 20000006){
-        sr.dune.isFD = true;
-        sr.dune.isFHC = false;
-      }
-      else if(sr.dune.run == 1){
-        // ND all is already set
-      }
-      else{
-        std::cout << "SpectrumLoader: Unrecognized run: "
-                  << sr.dune.run << std::endl;
-        abort();
-      }
+      // // Patch up isFD and isFHC which aren't in MVAResult files
+      // if(sr.dune.run == 20000001 ||
+      //    sr.dune.run == 20000002 ||
+      //    sr.dune.run == 20000003){
+      //   sr.dune.isFD = true;
+      //   sr.dune.isFHC = true;
+      // }
+      // else if(sr.dune.run == 20000004 ||
+      //         sr.dune.run == 20000005 ||
+      //         sr.dune.run == 20000006){
+      //   sr.dune.isFD = true;
+      //   sr.dune.isFHC = false;
+      // }
+      // else if(sr.dune.run == 1){
+      //   // ND all is already set
+      // }
+      // else{
+      //   std::cout << "SpectrumLoader: Unrecognized run: "
+      //             << sr.dune.run << std::endl;
+      //   abort();
+      // }
 
       // Reformat the genie systs
       // for(unsigned int i = 0; i < genie_names.size(); ++i){

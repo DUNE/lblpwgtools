@@ -61,9 +61,9 @@ void test_dune()
   const Cut kSelNumu = SIMPLEVAR(dune.cvnnumu) > 0.7;
   const Cut kSelNue = SIMPLEVAR(dune.cvnnue) > 0.7;
 
-  PredictionNoExtrap predNumuPID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnumu), kNoCut);
+  PredictionNoExtrap predNumuPID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(60, -.1, +1.1), SIMPLEVAR(dune.cvnnumu), kNoCut);
 
-  PredictionNoExtrap predNuePID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(100, -1, +1), SIMPLEVAR(dune.cvnnue), kNoCut);
+  PredictionNoExtrap predNuePID(loaderNonswap, loaderNue, loaderNuTau, "PID", Binning::Simple(60, -.1, +1.1), SIMPLEVAR(dune.cvnnue), kNoCut);
 
   PredictionNoExtrap pred(loaderNonswap, loaderNue, loaderNuTau, "Reconstructed E (GeV)", Binning::Simple(80, 0, 10), Enu_recoNumu, kSelNumu);
 

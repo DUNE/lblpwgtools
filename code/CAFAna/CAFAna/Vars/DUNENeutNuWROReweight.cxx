@@ -24,7 +24,7 @@ namespace ana
     const double x = sr->dune.Ev;
     if(x < 0) return 1; // How?
 
-    const bool anti = (sr->dune.neu < 0);
+    const bool anti = (sr->dune.nuPDG < 0);
 
     if(fVars == kEnu){
       TH1* h = (anti ? fHistAnu : fHistNu);

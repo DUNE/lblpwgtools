@@ -19,9 +19,11 @@ namespace ana
                        caf::StandardRecord* sr,
                        double& weight) const override
     {
-      restore.Add( sr->dune.Ev_reco );
+      restore.Add( sr->dune.Ev_reco, sr->dune.Ev_reco_numu, sr->dune.Ev_reco_nue );
       double scale = pow( 1. + sr->dune.sigma_Ev_reco, sigma );
       sr->dune.Ev_reco *= scale;
+      sr->dune.Ev_reco_numu *= scale;
+      sr->dune.Ev_reco_nue *= scale;
     }    
   };
 

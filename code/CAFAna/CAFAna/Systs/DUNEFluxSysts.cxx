@@ -56,11 +56,11 @@ namespace ana
       }
     } // end if
 
-    if(abs(sr->dune.beamPdg) == 16) return;
+    if(abs(sr->dune.nuPDGunosc) == 16) return;
 
     const int det = sr->dune.isFD ? 0 : 1;
-    const int pdg = (abs(sr->dune.beamPdg) == 12) ? 0 : 1;
-    const int anti = (sr->dune.beamPdg > 0) ? 0 : 1;
+    const int pdg = (abs(sr->dune.nuPDGunosc) == 12) ? 0 : 1;
+    const int anti = (sr->dune.nuPDGunosc > 0) ? 0 : 1;
     const int hc = sr->dune.isFHC ? 0 : 1;
 
     TH1* h = fScale[det][pdg][anti][hc];

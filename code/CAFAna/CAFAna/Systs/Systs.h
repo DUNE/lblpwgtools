@@ -76,7 +76,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==14 && sr->dune.run==20000001) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG)==14 && sr->dune.run==20000001) weight *= 1 + .05*sigma;
     }
   };
 
@@ -93,7 +93,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==14 && sr->dune.run==20000004) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG)==14 && sr->dune.run==20000004) weight *= 1 + .05*sigma;
     }
   };
 
@@ -110,7 +110,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==12 && sr->dune.run==20000002) weight *= 1 + .02*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG)==12 && sr->dune.run==20000002) weight *= 1 + .02*sigma;
     }
   };
 
@@ -127,7 +127,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==12 && sr->dune.run==20000005) weight *= 1 + .02*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG)==12 && sr->dune.run==20000005) weight *= 1 + .02*sigma;
     }
   };
 
@@ -146,7 +146,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==1 && sr->dune.cvnnumu>0.5 && sr->dune.cvnnue<0.7) weight *= 1 + .1*sigma;
+      if(!sr->dune.isCC && sr->dune.cvnnumu>0.5 && sr->dune.cvnnue<0.7) weight *= 1 + .1*sigma;
     }
   };
 
@@ -163,7 +163,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if((sr->dune.ccnc==1 && sr->dune.cvnnumu<0.5 && sr->dune.cvnnue>0.7) || (sr->dune.ccnc=0 && abs(sr->dune.neu)==14)) weight *= 1 + .05*sigma;
+      if((!sr->dune.isCC && sr->dune.cvnnumu<0.5 && sr->dune.cvnnue>0.7) || (sr->dune.isCC && abs(sr->dune.nuPDG)==14)) weight *= 1 + .05*sigma;
     }
   };
 
@@ -180,7 +180,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu)==16) weight *= 1 + .2*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG)==16) weight *= 1 + .2*sigma;
     }
   };
 
@@ -197,7 +197,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12 && sr->dune.isFHC) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && sr->dune.isFHC) weight *= 1 + .05*sigma;
     }
   };
 
@@ -214,7 +214,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.ccnc==0 && abs(sr->dune.neu) == 12 && abs(sr->dune.beamPdg) == 12 && !sr->dune.isFHC) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && !sr->dune.isFHC) weight *= 1 + .05*sigma;
     }
   };
 

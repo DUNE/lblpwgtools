@@ -15,7 +15,7 @@ namespace ana
   const Cut kIsNC({"dune.ccnc"},
                   [](const caf::StandardRecord* sr)
                   {
-                    return sr->dune.ccnc == 1;
+                    return !sr->dune.isCC;
                   });
 
   //----------------------------------------------------------------------
@@ -29,7 +29,7 @@ namespace ana
 
     bool operator()(const caf::StandardRecord* sr) const
     {
-      return sr->dune.ccnc == 0 && abs(sr->dune.beamPdg) == fPdgOrig && abs(sr->dune.neu) == fPdg;
+      return sr->dune.isCC && abs(sr->dune.nuPDGunosc) == fPdgOrig && abs(sr->dune.nuPDG) == fPdg;
     }
   protected:
     int fPdg, fPdgOrig;
@@ -53,10 +53,10 @@ namespace ana
   const Cut kIsTauFromE({}, CCFlavSel(16, 12));
 
   /// Is this truly an antineutrino?
-  const Cut kIsAntiNu({"dune.neu"},
+  const Cut kIsAntiNu({},
                       [](const caf::StandardRecord* sr)
                       {
-                        return sr->dune.neu < 0;
+                        return sr->dune.nuPDG < 0;
                       });
 
   const Cut kIsTrueFV({},

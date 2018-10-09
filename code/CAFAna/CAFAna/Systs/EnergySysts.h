@@ -28,18 +28,19 @@ namespace ana
       const double scale = 1 + .02*sigma;
 
       // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+      if(!sr->dune.isFD){
+        if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
+          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
+          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+        }
       }
       // Otherwise is FD
       else {
-	if(sr->dune.ccnc == 0 && abs(sr->dune.neu) == 14){
+	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 14){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
 	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (1 - Y) * scale + (sr->dune.Ev_reco_numu * Y);
 	}
-	else {}
       }
     }
   };
@@ -65,18 +66,19 @@ namespace ana
       const double scale = 1 + .02*sigma;
 
       // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+      if(!sr->dune.isFD){
+        if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
+          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
+          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+        }
       }
       // Otherwise is FD
       else {
-	if(sr->dune.ccnc == 0 && abs(sr->dune.neu) == 12){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
-	  sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (1 - Y) * scale + (sr->dune.Ev_reco_nue * Y);
-	}
-	else {}
+        if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12){
+          double Y = sr->dune.Y;
+          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
+          sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (1 - Y) * scale + (sr->dune.Ev_reco_nue * Y);
+        }
       }
     }
   };
@@ -103,22 +105,16 @@ namespace ana
 
       const double scale = 1 + .15*sigma;
       // Checks if ND
-      if(sr->dune.run == 1){
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * YCalc * scale + (sr->dune.Ev_reco * (1. - YCalc));
-	}
-	else {}
+      if(!sr->dune.isFD){
+        double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
+        sr->dune.Ev_reco = sr->dune.Ev_reco * YCalc * scale + (sr->dune.Ev_reco * (1. - YCalc));
       }
       // Otherwise is FD
       else {
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * Y * scale + (sr->dune.Ev_reco * (1 - Y));
-	  sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * Y * scale + (sr->dune.Ev_reco_nue * (1 - Y));
-	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * Y * scale + (sr->dune.Ev_reco_numu * (1 - Y));
-	}
-	else {}
+        double Y = sr->dune.Y;
+        sr->dune.Ev_reco = sr->dune.Ev_reco * Y * scale + (sr->dune.Ev_reco * (1 - Y));
+        sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * Y * scale + (sr->dune.Ev_reco_nue * (1 - Y));
+        sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * Y * scale + (sr->dune.Ev_reco_numu * (1 - Y));
       }
     }
   };
@@ -142,16 +138,12 @@ namespace ana
 
       const double scale = 1 + .02*sigma;
 
-      // Checks if ND
-      if(sr->dune.run == 1) { } // Does nothing
-      // Otherwise is FD
-      else {
-	if(sr->dune.ccnc == 0 && abs(sr->dune.neu) == 14){
+      if(sr->dune.isFD){
+	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 14){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
 	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (1 - Y) * scale + (sr->dune.Ev_reco_numu * Y);
 	}
-	else {}
       }
     }
   };
@@ -175,13 +167,10 @@ namespace ana
 
       const double scale = 1 + .02*sigma;
 
-      // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
 	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
       } 
-      // Otherwise is FD
-      else { } // Do nothing
     }
   };
 
@@ -204,16 +193,12 @@ namespace ana
 
       const double scale = 1 + .02*sigma;
 
-      // Checks if ND
-      if(sr->dune.run == 1) { } // Does nothing
-      // Otherwise is FD
-      else {
-	if(sr->dune.ccnc == 0 && abs(sr->dune.neu) == 12){
+      if(sr->dune.isFD){
+	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
 	  sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (1 - Y) * scale + (sr->dune.Ev_reco_nue * Y);
 	}
-	else {}
       }
     }
   };
@@ -236,13 +221,10 @@ namespace ana
 
       const double scale = 1 + .02*sigma;
 
-      // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
 	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
-      } 
-      // Otherwise is FD
-      else { } // Do nothing
+      }
     }
   };
 
@@ -266,17 +248,11 @@ namespace ana
 
       const double scale = 1 + .15*sigma;
 
-      // Checks if ND
-      if(sr->dune.run == 1) { } // Does nothing
-      // Otherwise is FD
-      else {
-	if(sr->dune.ccnc == 0 || sr->dune.ccnc == 1){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * Y * scale + (sr->dune.Ev_reco * (1 - Y));
-	  sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * Y * scale + (sr->dune.Ev_reco_nue * (1 - Y));
-	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * Y * scale + (sr->dune.Ev_reco_numu * (1 - Y));
-	}
-	else {}
+      if(sr->dune.isFD){
+        double Y = sr->dune.Y;
+        sr->dune.Ev_reco = sr->dune.Ev_reco * Y * scale + (sr->dune.Ev_reco * (1 - Y));
+        sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * Y * scale + (sr->dune.Ev_reco_nue * (1 - Y));
+        sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * Y * scale + (sr->dune.Ev_reco_numu * (1 - Y));
       }
     }
   };
@@ -298,13 +274,10 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
 
       const double scale = 1 + .15*sigma;
-      // Checks if ND
-      if(sr->dune.run == 1){
+      if(!sr->dune.isFD){
 	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = sr->dune.Ev_reco * YCalc * scale + (sr->dune.Ev_reco * (1. - YCalc));
       }
-      // Otherwise is FD
-      else { } // Do nothing       
     }
   };
 
@@ -333,18 +306,19 @@ namespace ana
       restore.Add(sr->dune.Ev_reco_numu);
       const double scale = 1 + .02*sigma;
       // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-	sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
+      if(!sr->dune.isFD){
+        if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
+          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
+          sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
+        }
       }
       // Otherwise is FD
       else{
-	if(abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
+	if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - Y) * scale + sr->dune.Ev_reco * Y ) + (1 - fFracCorr) * sr->dune.Ev_reco;
 	  sr->dune.Ev_reco_numu = fFracCorr * ( sr->dune.Ev_reco_numu * (1 - Y) * scale + sr->dune.Ev_reco_numu * Y ) + (1 - fFracCorr) * sr->dune.Ev_reco_numu;
 	}
-	else{ }
       }
     }
   };
@@ -373,18 +347,19 @@ namespace ana
       restore.Add(sr->dune.Ev_reco_nue);
       const double scale = 1 + .02*sigma;
       // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-	sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
+      if(!sr->dune.isFD){
+        if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
+          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
+          sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracCorr) * sr->dune.Ev_reco;
+        }
       }
       // Otherwise is FD
       else{
-	if(abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
+	if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * (1 - Y) * scale + sr->dune.Ev_reco * Y) + (1 - fFracCorr) * sr->dune.Ev_reco;
 	  sr->dune.Ev_reco_nue = fFracCorr * ( sr->dune.Ev_reco_nue * (1 - Y) * scale + sr->dune.Ev_reco_nue * Y ) + (1 - fFracCorr) * sr->dune.Ev_reco_nue;
 	}
-	else{ }
       }
     }
   };
@@ -413,22 +388,16 @@ namespace ana
 
       const double scale = 1 + .15*sigma;
       // Checks if ND
-      if(sr->dune.run == 1){
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
-	  sr->dune.Ev_reco = fFracCorr * sr->dune.Ev_reco * YCalc * scale + (1 - fFracCorr) * sr->dune.Ev_reco * (1. - YCalc);
-	}
-	else {}
+      if(!sr->dune.isFD){
+        double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
+        sr->dune.Ev_reco = fFracCorr * sr->dune.Ev_reco * YCalc * scale + (1 - fFracCorr) * sr->dune.Ev_reco * (1. - YCalc);
       }
       // Otherwise is FD
       else {
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * Y * scale + sr->dune.Ev_reco * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco;
-	  sr->dune.Ev_reco_nue  = fFracCorr * ( sr->dune.Ev_reco_nue * Y * scale + sr->dune.Ev_reco_nue * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco_nue;
-	  sr->dune.Ev_reco_numu = fFracCorr * ( sr->dune.Ev_reco_numu * Y * scale + sr->dune.Ev_reco_numu * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco_numu;
-	}
-	else {}
+        double Y = sr->dune.Y;
+        sr->dune.Ev_reco = fFracCorr * ( sr->dune.Ev_reco * Y * scale + sr->dune.Ev_reco * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco;
+        sr->dune.Ev_reco_nue  = fFracCorr * ( sr->dune.Ev_reco_nue * Y * scale + sr->dune.Ev_reco_nue * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco_nue;
+        sr->dune.Ev_reco_numu = fFracCorr * ( sr->dune.Ev_reco_numu * Y * scale + sr->dune.Ev_reco_numu * (1 - Y) ) + (1 - fFracCorr) * sr->dune.Ev_reco_numu;
       }
     }
   };
@@ -456,14 +425,11 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);      
       const double scale = 1 + .02*sigma;
-      // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
+
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
 	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
 	sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
       }
-      // Otherwise is FD
-      // Do nothing
-      else { }
     }
   };
 
@@ -490,17 +456,13 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);      
       restore.Add(sr->dune.Ev_reco_numu);
       const double scale = 1 + .02*sigma;
-      // Checks if ND
-      // Do nothing
-      if(sr->dune.run == 1){ }
-      // Otherwise is FD
-      else{
-	if(abs(sr->dune.neu) == 14 && sr->dune.ccnc == 0){
+
+      if(sr->dune.isFD){
+	if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco      = fFracUncorr * ( sr->dune.Ev_reco      * (1 - Y) * scale + sr->dune.Ev_reco      * Y ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
 	  sr->dune.Ev_reco_numu = fFracUncorr * ( sr->dune.Ev_reco_numu * (1 - Y) * scale + sr->dune.Ev_reco_numu * Y ) + (1 - fFracUncorr) * sr->dune.Ev_reco_numu;
 	}
-	else{ }
       }
     }
   };
@@ -528,14 +490,12 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
       const double scale = 1 + .02*sigma;
-      // Checks if ND
-      if(sr->dune.run == 1 && abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-	sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
+      if(!sr->dune.isFD){
+        if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
+          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
+          sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - YCalc) * scale + sr->dune.Ev_reco * YCalc ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
+        }
       }
-      // Otherwise is FD
-      // Do nothing
-      else { }
     }
   };
 
@@ -563,17 +523,13 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       const double scale = 1 + .02*sigma;
-      // Checks if ND
-      // Do nothing
-      if(sr->dune.run == 1){ }
-      // Otherwise is FD
-      else{
-	if(abs(sr->dune.neu) == 12 && sr->dune.ccnc == 0){
+
+      if(sr->dune.isFD){
+	if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
 	  double Y = sr->dune.Y;
 	  sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * (1 - Y) * scale + sr->dune.Ev_reco * Y) + (1 - fFracUncorr) * sr->dune.Ev_reco;
 	  sr->dune.Ev_reco_nue = fFracUncorr * ( sr->dune.Ev_reco_nue * (1 - Y) * scale + sr->dune.Ev_reco_nue * Y ) + (1 - fFracUncorr) * sr->dune.Ev_reco_nue;
 	}
-	else{ }
       }
     }
   };
@@ -601,17 +557,11 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
 
       const double scale = 1 + .15*sigma;
-      // Checks if ND
-      if(sr->dune.run == 1){
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
-	  sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * YCalc * scale + sr->dune.Ev_reco * (1. - YCalc) ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
-	}
-	else { }
+
+      if(!sr->dune.isFD){
+        double YCalc = 1. - (sr->dune.Elep/sr->dune.Ev);
+        sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * YCalc * scale + sr->dune.Ev_reco * (1. - YCalc) ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
       }
-      // Otherwise is FD
-      // Do nothing
-      else { }
     }
   };
 
@@ -640,17 +590,12 @@ namespace ana
       restore.Add(sr->dune.Ev_reco_numu);
 
       const double scale = 1 + .15*sigma;
-      // Checks if ND
-      if(sr->dune.run == 1){ }
-      // Otherwise is FD
-      else {
-	if(sr->dune.ccnc == 1 || sr->dune.ccnc == 0){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * Y * scale + sr->dune.Ev_reco * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
-	  sr->dune.Ev_reco_nue  = fFracUncorr * ( sr->dune.Ev_reco_nue * Y * scale + sr->dune.Ev_reco_nue * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco_nue;
-	  sr->dune.Ev_reco_numu = fFracUncorr * ( sr->dune.Ev_reco_numu * Y * scale + sr->dune.Ev_reco_numu * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco_numu;
-	}
-	else {}
+
+      if(sr->dune.isFD){
+        double Y = sr->dune.Y;
+        sr->dune.Ev_reco = fFracUncorr * ( sr->dune.Ev_reco * Y * scale + sr->dune.Ev_reco * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco;
+        sr->dune.Ev_reco_nue  = fFracUncorr * ( sr->dune.Ev_reco_nue * Y * scale + sr->dune.Ev_reco_nue * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco_nue;
+        sr->dune.Ev_reco_numu = fFracUncorr * ( sr->dune.Ev_reco_numu * Y * scale + sr->dune.Ev_reco_numu * (1 - Y) ) + (1 - fFracUncorr) * sr->dune.Ev_reco_numu;
       }
     }
   };
