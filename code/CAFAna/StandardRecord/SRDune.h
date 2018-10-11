@@ -20,6 +20,10 @@ namespace caf
     int reco_q;
     double Elep_reco;
 
+    // CW: added for the ND cuts Chris (M) wants
+    int muon_exit;
+    double Ehad_veto;
+
     // To prevent errors when compiling DUNENDSysts
     double nue_pid;
     double numu_pid;
