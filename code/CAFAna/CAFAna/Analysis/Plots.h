@@ -36,6 +36,12 @@ namespace ana
   TH1* DataMCComparisonComponents(const Spectrum& data,
                                   const IPrediction* mc,
                                   osc::IOscCalculator* calc);
+  /// A vector of histograms for the MC components. Easier to manipulate elsewhere
+  /// Not ideal as returned pointers probably won't get deleted... but very useful...
+  std::vector<TH1*> GetMCComponents(const IPrediction* mc,
+				    osc::IOscCalculator* calc,
+				    std::string hist_name,
+				    double pot);
 
   /// Plot data/MC ratio for the given spectrum. Normalize MC to Data by area
   void DataMCAreaNormalizedRatio(const Spectrum& data, const Spectrum& mc,

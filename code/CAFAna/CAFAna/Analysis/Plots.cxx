@@ -145,6 +145,46 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  std::vector<TH1*> GetMCComponents(const IPrediction* mc,
+				    osc::IOscCalculator* calc,
+				    std::string hist_name,
+				    double pot)
+  {
+    std::vector<TH1*> ret;
+    
+    TH1* hMC = mc->Predict(calc).ToTHX(pot);
+    hMC->SetLineColor(kTotalMCColor);
+    hMC->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
+    ret .push_back(hMC);
+    
+    TH1* hNC = mc->PredictComponent(calc,
+                                    Flavors::kAll,
+                                    Current::kNC,
+                                    Sign::kBoth).ToTHX(pot);
+    hNC->SetLineColor(kNCBackgroundColor);
+    hNC->SetNameTitle((hist_name+"_NC").c_str(), (hist_name+"_NC").c_str());
+    ret .push_back(hNC);
+    
+    TH1* hCC = mc->PredictComponent(calc,
+                                    Flavors::kAllNuMu,
+                                    Current::kCC,
+                                    Sign::kBoth).ToTHX(pot);
+    hCC->SetLineColor(kNumuBackgroundColor);
+    hCC->SetNameTitle((hist_name+"_Numu").c_str(), (hist_name+"_Numu").c_str());
+
+    ret .push_back(hCC);
+    
+    TH1* hBeam = mc->PredictComponent(calc,
+                                      Flavors::kNuEToNuE,
+                                      Current::kCC,
+                                      Sign::kBoth).ToTHX(pot);
+    hBeam->SetNameTitle((hist_name+"_BeamNue").c_str(), (hist_name+"_BeamNue").c_str());
+    hBeam->SetLineColor(kBeamNueBackgroundColor);
+    ret .push_back(hBeam);
+    return ret;
+  }
+  
+  //----------------------------------------------------------------------
   void DataMCRatio(const Spectrum& data,
                    const IPrediction* mc,
                    osc::IOscCalculator* calc,
