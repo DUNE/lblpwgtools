@@ -177,6 +177,9 @@ namespace ana
     /// Spectrum must be 3D to obtain TH3
     TH3*  ToTH3     (double exposure, EExposureType expotype = kPOT) const;
 
+    /// Function decides what is the appropriate projection based on fBins, and does that
+    TH1*  ToTHX     (double exposure, EExposureType expotype = kPOT) const;
+
     /// \brief Return total number of events scaled to \a pot
     ///
     /// \param exposure POT/livetime to scale to
