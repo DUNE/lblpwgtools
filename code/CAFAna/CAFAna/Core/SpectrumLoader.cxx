@@ -149,6 +149,10 @@ namespace ana
     tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
 
+    // CW: add variables that Chris (M) wants for ND selections
+    tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
+    tr->SetBranchAddress("Ehad_veto", &sr.dune.Ehad_veto);
+
     tr->SetBranchAddress("Ev", &sr.dune.Ev);
     tr->SetBranchAddress("Elep", &sr.dune.Elep);
     //    tr->SetBranchAddress("ccnc", &sr.dune.ccnc);
