@@ -58,7 +58,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Loaders::AddLoader(SpectrumLoader* file,
+  void Loaders::AddLoader(SpectrumLoaderBase* file,
                                caf::Det_t det,
                                DataMC datamc,
                                DataSource src,

@@ -41,7 +41,7 @@ namespace ana
                         DataSource src = kBeam,
                         SwappingConfig swap = kNonSwap);
 
-    void AddLoader(SpectrumLoader*,
+    void AddLoader(SpectrumLoaderBase*,
                         caf::Det_t det,
                         DataMC datamc,
                         DataSource src = kBeam,
@@ -68,7 +68,7 @@ namespace ana
     std::map<Key_t, std::string> fLoaderPaths;
     std::map<Key_t, std::vector<std::string>> fLoaderFiles;
     // Only reify them when someone actually calls GetLoader()
-    std::map<Key_t, SpectrumLoader*> fLoaders;
+    std::map<Key_t, SpectrumLoaderBase*> fLoaders;
 
     /// We give this back when a loader isn't set for some configuration
     NullLoader fNull;
