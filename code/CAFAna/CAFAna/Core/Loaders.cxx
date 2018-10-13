@@ -16,7 +16,7 @@ namespace ana
   //----------------------------------------------------------------------
   Loaders::~Loaders()
   {
-    for(auto it: fLoaders) delete it.second;
+    // for(auto it: fLoaders) delete it.second;
   }
 
   //----------------------------------------------------------------------
