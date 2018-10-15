@@ -151,36 +151,98 @@ namespace ana
 				    double pot)
   {
     std::vector<TH1*> ret;
+
+    // Want total, AllNumu, AllNue, AllNutau, Numu, Numubar, AllBeamNue, AllSignalNue, BeamNue BeamNuebar, SignalNue, SignalNuebar, NC
     
-    TH1* hMC = mc->Predict(calc).ToTHX(pot);
-    hMC->SetLineColor(kTotalMCColor);
-    hMC->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
-    ret .push_back(hMC);
+    TH1* hTotal = mc->Predict(calc).ToTHX(pot);
+    hTotal->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
+    ret .push_back(hTotal);
     
     TH1* hNC = mc->PredictComponent(calc,
                                     Flavors::kAll,
                                     Current::kNC,
                                     Sign::kBoth).ToTHX(pot);
-    hNC->SetLineColor(kNCBackgroundColor);
     hNC->SetNameTitle((hist_name+"_NC").c_str(), (hist_name+"_NC").c_str());
     ret .push_back(hNC);
     
-    TH1* hCC = mc->PredictComponent(calc,
-                                    Flavors::kAllNuMu,
-                                    Current::kCC,
-                                    Sign::kBoth).ToTHX(pot);
-    hCC->SetLineColor(kNumuBackgroundColor);
-    hCC->SetNameTitle((hist_name+"_Numu").c_str(), (hist_name+"_Numu").c_str());
+    TH1* hAllNumu = mc->PredictComponent(calc,
+					 Flavors::kAllNuMu,
+					 Current::kCC,
+					 Sign::kBoth).ToTHX(pot);
+    hAllNumu->SetNameTitle((hist_name+"_AllNumu").c_str(), (hist_name+"_AllNumu").c_str());
+    ret .push_back(hAllNumu);
 
-    ret .push_back(hCC);
+    TH1* hNumu = mc->PredictComponent(calc,
+				      Flavors::kAllNuMu,
+				      Current::kCC,
+				      Sign::kNu).ToTHX(pot);
+    hNumu->SetNameTitle((hist_name+"_Numu").c_str(), (hist_name+"_Numu").c_str());
+    ret .push_back(hNumu);
     
-    TH1* hBeam = mc->PredictComponent(calc,
-                                      Flavors::kNuEToNuE,
-                                      Current::kCC,
-                                      Sign::kBoth).ToTHX(pot);
-    hBeam->SetNameTitle((hist_name+"_BeamNue").c_str(), (hist_name+"_BeamNue").c_str());
-    hBeam->SetLineColor(kBeamNueBackgroundColor);
-    ret .push_back(hBeam);
+    TH1* hNumubar = mc->PredictComponent(calc,
+					 Flavors::kAllNuMu,
+					 Current::kCC,
+					 Sign::kAntiNu).ToTHX(pot);
+    hNumubar->SetNameTitle((hist_name+"_Numubar").c_str(), (hist_name+"_Numubar").c_str());
+    ret .push_back(hNumubar);
+
+    TH1* hAllNutau = mc->PredictComponent(calc,
+					  Flavors::kAllNuTau,
+					  Current::kCC,
+					  Sign::kBoth).ToTHX(pot);
+    hAllNutau->SetNameTitle((hist_name+"_AllNutau").c_str(), (hist_name+"_AllNutau").c_str());
+    ret .push_back(hAllNutau);    
+
+    // Want AllSignalNue, SignalNue, SignalNuebar
+    TH1* hAllNue = mc->PredictComponent(calc,
+					Flavors::kAllNuE,
+					Current::kCC,
+					Sign::kBoth).ToTHX(pot);
+    hAllNue->SetNameTitle((hist_name+"_AllNue").c_str(), (hist_name+"_AllNue").c_str());
+    ret .push_back(hAllNue);    
+    
+    TH1* hAllBeamNue = mc->PredictComponent(calc,
+					    Flavors::kNuEToNuE,
+					    Current::kCC,
+					    Sign::kBoth).ToTHX(pot);
+    hAllBeamNue->SetNameTitle((hist_name+"_AllBeamNue").c_str(), (hist_name+"_AllBeamNue").c_str());
+    ret .push_back(hAllBeamNue);
+
+    TH1* hBeamNue = mc->PredictComponent(calc,
+					 Flavors::kNuEToNuE,
+					 Current::kCC,
+					 Sign::kNu).ToTHX(pot);
+    hBeamNue->SetNameTitle((hist_name+"_BeamNue").c_str(), (hist_name+"_BeamNue").c_str());
+    ret .push_back(hBeamNue);
+
+    TH1* hBeamNuebar = mc->PredictComponent(calc,
+					 Flavors::kNuEToNuE,
+					 Current::kCC,
+					 Sign::kAntiNu).ToTHX(pot);
+    hBeamNuebar->SetNameTitle((hist_name+"_BeamNuebar").c_str(), (hist_name+"_BeamNuebar").c_str());
+    ret .push_back(hBeamNuebar);
+    
+    TH1* hAllSignalNue = mc->PredictComponent(calc,
+					      Flavors::kNuMuToNuE,
+					      Current::kCC,
+					      Sign::kBoth).ToTHX(pot);
+    hAllSignalNue->SetNameTitle((hist_name+"_AllSignalNue").c_str(), (hist_name+"_AllSignalNue").c_str());
+    ret .push_back(hAllSignalNue);
+    
+    TH1* hSignalNue = mc->PredictComponent(calc,
+					   Flavors::kNuMuToNuE,
+					   Current::kCC,
+					   Sign::kNu).ToTHX(pot);
+    hSignalNue->SetNameTitle((hist_name+"_SignalNue").c_str(), (hist_name+"_SignalNue").c_str());
+    ret .push_back(hSignalNue);
+    
+    TH1* hSignalNuebar = mc->PredictComponent(calc,
+					      Flavors::kNuMuToNuE,
+					      Current::kCC,
+					      Sign::kAntiNu).ToTHX(pot);
+    hSignalNuebar->SetNameTitle((hist_name+"_SignalNuebar").c_str(), (hist_name+"_SignalNuebar").c_str());
+    ret .push_back(hSignalNuebar);
+    
     return ret;
   }
   
