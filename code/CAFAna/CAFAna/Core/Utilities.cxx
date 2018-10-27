@@ -704,4 +704,43 @@ namespace ana
       for(int j = 0; j < N; ++j)
         mat->SetBinContent(i+1, j+1, m(i, j));
   }
+
+  //----------------------------------------------------------------------       
+  // Note that this does not work for 3D!
+  TH1* GetMaskHist(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
+  {
+    if (s.GetBinnings().size() > 2){
+      std::cout << "Error: unable to apply a mask in " << s.GetBinnings().size() << " dimensions" << std::endl;
+      abort();
+    }
+
+    // The exposure isn't important here
+    TH1* fMaskND  = s.ToTHX(s.POT());
+    TH1D* fMask1D = s.ToTH1(s.POT());
+    
+    int ybins = fMaskND->GetNbinsY();
+
+    for(int i = 0; i < fMask1D->GetNbinsX(); ++i){
+      
+      int ix = i / ybins;
+      int iy = i % ybins;
+
+      bool isMask = false;
+
+      if (xmin < xmax){
+	if (fMaskND->GetXaxis()->GetBinLowEdge(ix+1) < xmin) isMask=true;
+	if (fMaskND->GetXaxis()->GetBinUpEdge(ix+1) > xmax) isMask=true;
+      }
+
+      if (ymin < ymax){
+	if (fMaskND->GetYaxis()->GetBinLowEdge(iy+1) < ymin) isMask=true;
+	if (fMaskND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
+      }
+
+      if (isMask) fMask1D->SetBinContent(i+1, 0);
+      else fMask1D->SetBinContent(i+1, 1);
+
+    }
+    return fMask1D;
+  }
 }

@@ -241,4 +241,9 @@ namespace ana
   };
 
   void EnsurePositiveDefinite(TH2* mat);
+
+  /// Returns a masking histogram based on axis limits
+  TH1* GetMaskHist(const Spectrum& s, 
+		   double xmin=0, double xmax=-1, 
+		   double ymin=0, double ymax=-1);
 }

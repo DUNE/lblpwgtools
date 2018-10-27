@@ -69,11 +69,15 @@ namespace ana
       s.fCosmicScaleError = 0;
     };
 
+    void SetMaskHist(double xmin=0, double xmax=-1, 
+		     double ymin=0, double ymax=-1);
+
   protected:
     const IPrediction* fMC;
     Spectrum fData;
     TH1* fCosmic;
-
+    TH1* fMask;
+    
     double fCosmicScaleError;
   };
 }

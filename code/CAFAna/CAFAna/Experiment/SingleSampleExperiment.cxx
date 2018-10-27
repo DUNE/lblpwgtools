@@ -52,7 +52,7 @@ namespace ana
 
     TH1D* hpred = pred.ToTH1(pot);
     TH1D* hdata = fData.ToTH1(pot);
-
+    
     if(fCosmic){
       if(fCosmicScaleError != 0){
         const double scale = 1 + syst.GetShift(&kCosmicBkgScaleSyst) * fCosmicScaleError;
@@ -60,6 +60,18 @@ namespace ana
       }
       else{
         hpred->Add(fCosmic);
+      }
+    }
+
+    // If a valid mask has been set, zero out the offending bins
+    if (fMask){
+      assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+      assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+      for(int i = 0; i < fMask->GetNbinsX(); ++i){	
+	if (fMask->GetBinContent(i+1) == 1) continue;
+	hpred->SetBinContent(i+1, 0);
+	hdata->SetBinContent(i+1, 0);
       }
     }
 
@@ -107,5 +119,10 @@ namespace ana
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
     if(cosmic) ret->fCosmic = cosmic;
     return ret;
+  }
+
+  void SingleSampleExperiment::SetMaskHist(double xmin, double xmax, double ymin, double ymax)
+  {
+    fMask = GetMaskHist(fData, xmin, xmax, ymin, ymax);
   }
 }
