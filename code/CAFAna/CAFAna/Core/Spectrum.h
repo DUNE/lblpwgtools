@@ -178,8 +178,8 @@ namespace ana
     TH3*  ToTH3     (double exposure, EExposureType expotype = kPOT) const;
 
     /// Function decides what is the appropriate projection based on fBins, and does that
-    TH1*  ToTHX     (double exposure, EExposureType expotype = kPOT) const;
-
+    TH1*  ToTHX     (double exposure, bool force1D = false, EExposureType expotype = kPOT) const;
+    
     /// \brief Return total number of events scaled to \a pot
     ///
     /// \param exposure POT/livetime to scale to

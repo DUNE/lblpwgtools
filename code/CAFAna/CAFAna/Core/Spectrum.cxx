@@ -509,8 +509,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Spectrum::ToTHX(double exposure, EExposureType expotype) const
+  TH1* Spectrum::ToTHX(double exposure, bool force1D, EExposureType expotype) const
   {
+    if (force1D) return this->ToTH1(exposure, expotype);
     switch(fBins.size()){
     case 1: 
       return this->ToTH1(exposure, expotype);
