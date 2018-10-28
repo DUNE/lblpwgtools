@@ -44,7 +44,7 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0)
+      : fMC(pred), fData(data), fCosmic(0), fMask(0)
     {
     }
 

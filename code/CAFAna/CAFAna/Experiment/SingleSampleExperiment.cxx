@@ -19,7 +19,7 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
-      fCosmicScaleError(cosmicScaleError)
+      fMask(0), fCosmicScaleError(cosmicScaleError)
   {
   }
 
@@ -29,7 +29,7 @@ namespace ana
                                                  const TH1D* cosmic,
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
-      fCosmicScaleError(cosmicScaleError)
+      fMask(0), fCosmicScaleError(cosmicScaleError)
   {
   }
 
@@ -37,6 +37,7 @@ namespace ana
   SingleSampleExperiment::~SingleSampleExperiment()
   {
     delete fCosmic;
+    delete fMask;
   }
 
   //----------------------------------------------------------------------
