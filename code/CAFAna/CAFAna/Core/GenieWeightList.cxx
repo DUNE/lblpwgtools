@@ -29,7 +29,9 @@ namespace ana
         "NonRESBGvnCC1pi", "NonRESBGvnCC2pi",
         "NonRESBGvnNC1pi", "NonRESBGvnNC2pi",
         "NonRESBGvpCC1pi", "NonRESBGvpCC2pi",
-        "NonRESBGvpNC1pi", "NonRESBGvpNC2pi"
+        "NonRESBGvpNC1pi", "NonRESBGvpNC2pi",
+	"RDecBR1gamma", "RDecBR1eta",
+	"Theta_Delta2Npi", "R0COHpi"
         };
   }
 
@@ -50,4 +52,10 @@ namespace ana
 
     return it-names.begin();
   }
+
+  std::string GetGenieWeightName(int index){
+    const std::vector<std::string> names = GetGenieWeightNames();
+    return names[index];
+  }
+
 }
