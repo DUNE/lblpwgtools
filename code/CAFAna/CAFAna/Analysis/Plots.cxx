@@ -153,8 +153,6 @@ namespace ana
   {
     std::vector<TH1*> ret;
 
-    // Want total, AllNumu, AllNue, AllNutau, Numu, Numubar, AllBeamNue, AllSignalNue, BeamNue BeamNuebar, SignalNue, SignalNuebar, NC
-    
     TH1* hTotal = mc->Predict(calc).ToTHX(pot, force1D);
     hTotal->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
     ret .push_back(hTotal);
@@ -246,6 +244,27 @@ namespace ana
     
     return ret;
   }
+
+  //----------------------------------------------------------------------
+  std::vector<TH1*> GetMCTotalForSystShifts(const IPrediction* mc,
+					    osc::IOscCalculator* calc,
+					    const ISyst* syst, 
+					    std::string hist_base_name,
+					    double pot,
+					    bool force1D)
+  {
+    std::vector<TH1*> ret;
+    std::string syst_name = syst->ShortName();
+    for (int i = -3; i < 4; ++i){
+      SystShifts s(syst, double(i));
+      TH1* hTotal = mc->PredictSyst(calc, s).ToTHX(pot, force1D);
+      hTotal->SetNameTitle((hist_base_name+"_total_"+syst_name+"_"+std::to_string(i)).c_str(), 
+			   (hist_base_name+"_total_"+syst_name+"_"+std::to_string(i)).c_str());
+      ret .push_back(hTotal);
+    }
+    return ret;
+  }
+
   
   //----------------------------------------------------------------------
   void DataMCRatio(const Spectrum& data,
