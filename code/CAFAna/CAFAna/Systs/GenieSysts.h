@@ -4,6 +4,7 @@
 #include "CAFAna/Core/GenieWeightList.h"
 #include "StandardRecord/StandardRecord.h"
 #include <cmath>
+#include <cassert>
 
 namespace ana
 {
@@ -23,8 +24,24 @@ namespace ana
 	       caf::StandardRecord* sr,
 	       double& weight) const override{
 
-      int index = int(std::round(sigma)/0.5) + 6;
-      weight *= sr->dune.genie_wgt[id][index];
+      assert(std::abs(sigma) > 3 && "GENIE XSECs only valid up to +/-3 sigma!");
+      
+      // How far apart are the points
+      const double spacing = 0.5;
+
+      // Get the top and bottom values in the array
+      int low_index  = std::floor(sigma/spacing) + 6;
+      int high_index = std::ceil(sigma/spacing) + 6;
+
+      double diff = (sigma-double(low_index))/spacing;
+
+      double low_weight  = sr->dune.genie_wgt[id][low_index];
+      double high_weight = sr->dune.genie_wgt[id][high_index];
+
+      weight *= low_weight + (high_weight - low_weight)*diff;
+
+      // int index = int(std::round(sigma)/0.5) + 6;
+      // weight *= sr->dune.genie_wgt[id][index];
     }
 
   protected:
