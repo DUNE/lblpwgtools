@@ -59,14 +59,14 @@ namespace ana
                         return sr->dune.nuPDG < 0;
                       });
 
-  //  const Cut kIsTrueFV({},
-  //                    [](const caf::StandardRecord* sr)
-  //                    {
-  //                      return ( abs(sr->dune.nuvtxx_truth) < 310 &&
-  //				 abs(sr->dune.nuvtxy_truth) < 550 &&
-  //				 sr->dune.nuvtxz_truth >  50      &&
-  //				 sr->dune.nuvtxz_truth < 1244 );
-  //                  });
+  const Cut kIsTrueFV({},
+                      [](const caf::StandardRecord* sr)
+                      {
+                        return ( abs(sr->dune.nuvtxx_truth) < 310 &&
+  				 abs(sr->dune.nuvtxy_truth) < 550 &&
+  				 sr->dune.nuvtxz_truth >  50      &&
+  				 sr->dune.nuvtxz_truth < 1244 );
+		      });
 
   //ETW 11/5/2018 Add fiducial cut using MVA variable
   //Should use the previous one (kIsTrueFV) once we have true vertex variables back in caf
