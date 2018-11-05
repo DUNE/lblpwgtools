@@ -24,7 +24,7 @@ namespace ana
 	       caf::StandardRecord* sr,
 	       double& weight) const override{
 
-      assert(std::abs(sigma) > 3 && "GENIE XSECs only valid up to +/-3 sigma!");
+      assert(std::abs(sigma) <= 3 && "GENIE XSECs only valid up to +/-3 sigma!");
       
       // How far apart are the points
       const double spacing = 0.5;
@@ -40,8 +40,6 @@ namespace ana
 
       weight *= low_weight + (high_weight - low_weight)*diff;
 
-      // int index = int(std::round(sigma)/0.5) + 6;
-      // weight *= sr->dune.genie_wgt[id][index];
     }
 
   protected:
