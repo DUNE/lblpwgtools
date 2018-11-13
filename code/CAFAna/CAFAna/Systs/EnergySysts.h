@@ -600,4 +600,134 @@ namespace ana
     }
   };
 
+  /// Energy scale systematics for hadronic final state particles
+  // Neutron energy scale
+  class EnergyScaleNSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScaleN";}
+    std::string LatexName() const override {return "Neutron Energy Scale";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Ev_reco_numu);
+
+      const double scale = 1 + .4*sigma;
+      const double fracN = (sr->dune.eN / sr->dune.Ev);
+
+      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracN * scale + (1 - fracN));
+      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracN * scale + (1 - fracN));
+      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracN * scale + (1 - fracN));
+    }
+  };
+
+  static const EnergyScaleNSyst kEnergyScaleNSyst;  
+
+  // Proton energy scale
+  class EnergyScalePSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScaleP";}
+    std::string LatexName() const override {return "Proton Energy Scale";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Ev_reco_numu);
+
+      const double scale = 1 + .1 * sigma;
+      const double fracP = (sr->dune.eP / sr->dune.Ev);
+
+      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracP * scale + (1 - fracP));
+      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracP * scale + (1 - fracP));
+      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracP * scale + (1 - fracP));
+    }
+  };
+
+  static const EnergyScalePSyst kEnergyScalePSyst;  
+
+  // Pi plus energy scale
+  class EnergyScalePipSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScalePip";}
+    std::string LatexName() const override {return "Pi plus Energy Scale";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Ev_reco_numu);
+
+      const double scale = 1 + .05 * sigma;
+      const double fracPip = (sr->dune.ePip / sr->dune.Ev);
+
+      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPip * scale + (1 - fracPip));
+      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPip * scale + (1 - fracPip));
+      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPip * scale + (1 - fracPip));
+    }
+  };
+
+  static const EnergyScalePipSyst kEnergyScalePipSyst;
+
+  // Pi minus energy scale
+  class EnergyScalePimSyst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScalePim";}
+    std::string LatexName() const override {return "Pi minus Energy Scale";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Ev_reco_numu);
+
+      const double scale = 1 + .05 * sigma;
+      const double fracPim = (sr->dune.ePim / sr->dune.Ev);
+
+      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPim * scale + (1 - fracPim));
+      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPim * scale + (1 - fracPim));
+      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPim * scale + (1 - fracPim));
+    }
+  };
+
+  static const EnergyScalePimSyst kEnergyScalePimSyst;
+
+  // Pi0 energy scale
+  class EnergyScalePi0Syst: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScalePi0";}
+    std::string LatexName() const override {return "Pi0 Energy Scale";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Ev_reco_numu);
+
+      const double scale = 1 + .1 * sigma;
+      const double fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
+
+      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
+      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
+      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
+    }
+  };
+
+  static const EnergyScalePi0Syst kEnergyScalePi0Syst;
 }
