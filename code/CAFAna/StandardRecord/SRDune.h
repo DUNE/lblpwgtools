@@ -51,6 +51,13 @@ namespace caf
     double nuvtxx_truth;
     double nuvtxy_truth;
     double nuvtxz_truth;
+    // True energy of particles by species
+    double eP;
+    double eN;
+    double ePip;
+    double ePim;
+    double ePi0;
+    double eOther;
 
     // config
     int run;
