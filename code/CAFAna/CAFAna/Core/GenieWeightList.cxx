@@ -19,20 +19,38 @@ namespace ana
     //     "RvbarnNC1pi", "RvbarnNC2pi",
     //     "BR1gamma", "BR1eta", "Theta_Delta2Npi"};
 
-    return {"EtaNCEL",
-        "MaCCQE", "MaCCRES", "MaCOHpi", "MaNCEL", "MaNCRES",
-        "MvCCRES", "MvNCRES", 
-        "NonRESBGvbarnCC1pi", "NonRESBGvbarnCC2pi",
-        "NonRESBGvbarnNC1pi", "NonRESBGvbarnNC2pi",
-        "NonRESBGvbarpCC1pi", "NonRESBGvbarpCC2pi",
-        "NonRESBGvbarpNC1pi", "NonRESBGvbarpNC2pi",
-        "NonRESBGvnCC1pi", "NonRESBGvnCC2pi",
-        "NonRESBGvnNC1pi", "NonRESBGvnNC2pi",
-        "NonRESBGvpCC1pi", "NonRESBGvpCC2pi",
-        "NonRESBGvpNC1pi", "NonRESBGvpNC2pi",
-	"RDecBR1gamma", "RDecBR1eta",
-	"Theta_Delta2Npi", "R0COHpi"
-        };
+    // return {"EtaNCEL",
+    //     "MaCCQE", "MaCCRES", "MaCOHpi", "MaNCEL", "MaNCRES",
+    //     "MvCCRES", "MvNCRES", 
+    //     "NonRESBGvbarnCC1pi", "NonRESBGvbarnCC2pi",
+    //     "NonRESBGvbarnNC1pi", "NonRESBGvbarnNC2pi",
+    //     "NonRESBGvbarpCC1pi", "NonRESBGvbarpCC2pi",
+    //     "NonRESBGvbarpNC1pi", "NonRESBGvbarpNC2pi",
+    //     "NonRESBGvnCC1pi", "NonRESBGvnCC2pi",
+    //     "NonRESBGvnNC1pi", "NonRESBGvnNC2pi",
+    //     "NonRESBGvpCC1pi", "NonRESBGvpCC2pi",
+    //     "NonRESBGvpNC1pi", "NonRESBGvpNC2pi",
+    // 	"RDecBR1gamma", "RDecBR1eta",
+    // 	"Theta_Delta2Npi", "R0COHpi"
+    //     };
+
+    return {"MaCCQE", "MaNCEL", "EtaNCEL", "MaCCRES", 
+	"MvCCRES", "RDecBR1gamma", "RDecBR1eta", 
+	"Theta_Delta2Npi", "CCQEPauliSupViaKF", "Mnv2p2hGaussEnhancement_CV", 
+	"Mnv2p2hGaussEnhancement_NN", "Mnv2p2hGaussEnhancement_np", 
+	"Mnv2p2hGaussEnhancement_QE", "E2p2h_A_nu", 
+	"E2p2h_B_nu", "E2p2h_A_nubar", "E2p2h_B_nubar", "NR_nu_n_CC_2Pi", 
+	"NR_nu_n_CC_3Pi", "NR_nu_p_CC_2Pi", "NR_nu_p_CC_3Pi", "NR_nu_np_CC_1Pi", 
+	"NR_nu_n_NC_1Pi", "NR_nu_n_NC_2Pi", "NR_nu_n_NC_3Pi", "NR_nu_p_NC_1Pi", 
+	"NR_nu_p_NC_2Pi", "NR_nu_p_NC_3Pi", "NR_nubar_n_CC_1Pi", "NR_nubar_n_CC_2Pi", 
+	"NR_nubar_n_CC_3Pi", "NR_nubar_p_CC_1Pi", "NR_nubar_p_CC_2Pi", "NR_nubar_p_CC_3Pi", 
+	"NR_nubar_n_NC_1Pi", "NR_nubar_n_NC_2Pi", "NR_nubar_n_NC_3Pi", "NR_nubar_p_NC_1Pi", 
+	"NR_nubar_p_NC_2Pi", "NR_nubar_p_NC_3Pi", "BeRPA_A", "BeRPA_B", "BeRPA_D", "BeRPA_E", 
+	"C12ToAr40_2p2hScaling_nu", "C12ToAr40_2p2hScaling_nubar", 
+	"nuenuebar_xsec_ratio", "nuenumu_xsec_ratio", "SPPLowQ2Suppression"
+	// "NormNCRES", "MaNCRESshape", "MvNCRESshape"
+	// "MKSPP_ReWeight", "EbFSLepMomShift"
+    };
   }
 
   //----------------------------------------------------------------------
