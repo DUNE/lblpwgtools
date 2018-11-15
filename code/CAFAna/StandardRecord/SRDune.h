@@ -20,6 +20,11 @@ namespace caf
     int reco_q;
     double Elep_reco;
 
+    double RecoLepEnNue;
+    double RecoHadEnNue;
+    double RecoLepEnNumu;
+    double RecoHadEnNumu;
+
     // CW: added for the ND cuts Chris (M) wants
     int muon_exit;
     double Ehad_veto;
@@ -27,6 +32,9 @@ namespace caf
     // To prevent errors when compiling DUNENDSysts
     double nue_pid;
     double numu_pid;
+
+    // Containment flag
+    int LongestTrackContNumu;
 
     // Truth info
     double Ev;
@@ -41,6 +49,8 @@ namespace caf
     int nuPDGunosc;
     int LepPDG;
     int mode;
+    int nP;
+    int nN;
     int nipi0;
     int nipip;
     int nipim;
@@ -48,9 +58,10 @@ namespace caf
     double W;
     double Y;
 
-    double nuvtxx_truth;
-    double nuvtxy_truth;
-    double nuvtxz_truth;
+    double vtx_x;
+    double vtx_y;
+    double vtx_z;
+
     // True energy of particles by species
     double eP;
     double eN;
@@ -58,6 +69,15 @@ namespace caf
     double ePim;
     double ePi0;
     double eOther;
+
+    double NuMomX;
+    double NuMomY;
+    double NuMomZ;
+    double LepMomX;
+    double LepMomY;
+    double LepMomZ;
+    double LepE;
+    double LepNuAngle;
 
     // config
     int run;

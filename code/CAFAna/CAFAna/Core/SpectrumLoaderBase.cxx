@@ -278,11 +278,11 @@ namespace ana
     //      trPot = (TTree*)f->Get("mvaselectnumu/pottree");
     //    else
     //      trPot = (TTree*)f->Get("mvaselect/pottree");
+
     if (f->GetListOfKeys()->Contains("meta"))
       trPot = (TTree*)f->Get("meta");
     else
       trPot = (TTree*)f->Get("pottree");
-    
     assert(trPot);
 
     double pot;

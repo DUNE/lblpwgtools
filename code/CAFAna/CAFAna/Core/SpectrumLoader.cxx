@@ -148,6 +148,10 @@ namespace ana
     tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
     tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
+    tr->SetBranchAddress("RecoLepEnNue", &sr.dune.RecoLepEnNue);
+    tr->SetBranchAddress("RecoHadEnNue", &sr.dune.RecoHadEnNue);
+    tr->SetBranchAddress("RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
+    tr->SetBranchAddress("RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
 
     // CW: add variables that Chris (M) wants for ND selections
     tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
@@ -163,6 +167,8 @@ namespace ana
     tr->SetBranchAddress("nuPDGunosc", &sr.dune.nuPDGunosc);
     tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
     tr->SetBranchAddress("mode", &sr.dune.mode);
+    tr->SetBranchAddress("nP", &sr.dune.nP);
+    tr->SetBranchAddress("nN", &sr.dune.nN);
     tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
     tr->SetBranchAddress("nipip", &sr.dune.nipip);
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
@@ -170,10 +176,21 @@ namespace ana
     tr->SetBranchAddress("W", &sr.dune.W);
     tr->SetBranchAddress("Y", &sr.dune.Y);
     //    tr->SetBranchAddress("cc", &sr.dune.cc);
+    tr->SetBranchAddress("NuMomX", &sr.dune.NuMomX);
+    tr->SetBranchAddress("NuMomY", &sr.dune.NuMomY);
+    tr->SetBranchAddress("NuMomZ", &sr.dune.NuMomZ);
+    tr->SetBranchAddress("LepMomX", &sr.dune.LepMomX);
+    tr->SetBranchAddress("LepMomY", &sr.dune.LepMomY);
+    tr->SetBranchAddress("LepMomZ", &sr.dune.LepMomZ);
+    tr->SetBranchAddress("LepE", &sr.dune.LepE);
+    tr->SetBranchAddress("LepNuAngle", &sr.dune.LepNuAngle);
 
-    tr->SetBranchAddress("nuvtxx_truth",  &sr.dune.nuvtxx_truth);
-    tr->SetBranchAddress("nuvtxy_truth",  &sr.dune.nuvtxy_truth);
-    tr->SetBranchAddress("nuvtxz_truth",  &sr.dune.nuvtxz_truth);
+    // Numu track containment flag
+    tr->SetBranchAddress("LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
+
+    tr->SetBranchAddress("vtx_x",  &sr.dune.vtx_x);
+    tr->SetBranchAddress("vtx_y",  &sr.dune.vtx_y);
+    tr->SetBranchAddress("vtx_z",  &sr.dune.vtx_z);
 
     tr->SetBranchAddress("eP", &sr.dune.eP);
     tr->SetBranchAddress("eN", &sr.dune.eN);
