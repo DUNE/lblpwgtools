@@ -171,6 +171,9 @@ namespace ana
     tr->SetBranchAddress("Y", &sr.dune.Y);
     //    tr->SetBranchAddress("cc", &sr.dune.cc);
 
+    // Numu track containment flag
+    tr->SetBranchAddress("LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
+
     tr->SetBranchAddress("vtx_x",  &sr.dune.vtx_x);
     tr->SetBranchAddress("vtx_y",  &sr.dune.vtx_y);
     tr->SetBranchAddress("vtx_z",  &sr.dune.vtx_z);

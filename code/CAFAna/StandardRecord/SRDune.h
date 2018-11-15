@@ -31,6 +31,9 @@ namespace caf
     double nue_pid;
     double numu_pid;
 
+    // Containment flag
+    int LongestTrackContNumu;
+
     // Truth info
     double Ev;
     double Elep;
