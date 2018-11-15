@@ -12,7 +12,7 @@ namespace ana
   {
   public:
     
-    GenieSyst(int genie_id): id(genie_id) {}
+  GenieSyst(int genie_id): id(genie_id) {}
     
     virtual ~GenieSyst(){};
 
@@ -27,11 +27,11 @@ namespace ana
       assert(std::abs(sigma) <= 3 && "GENIE XSECs only valid up to +/-3 sigma!");
       
       // How far apart are the points
-      const double spacing = 0.5;
+      const double spacing = 1;
 
       // Get the top and bottom values in the array
-      int low_index  = std::floor(sigma/spacing) + 6;
-      int high_index = std::ceil(sigma/spacing) + 6;
+      int low_index  = std::floor(sigma/spacing) + 3;
+      int high_index = std::ceil(sigma/spacing) + 3;
 
       double diff = (sigma-double(low_index))/spacing;
 
