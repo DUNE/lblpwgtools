@@ -150,7 +150,8 @@ namespace ana
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
     tr->SetBranchAddress("RecoLepEnNue", &sr.dune.RecoLepEnNue);
     tr->SetBranchAddress("RecoHadEnNue", &sr.dune.RecoHadEnNue);
-
+    tr->SetBranchAddress("RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
+    tr->SetBranchAddress("RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
 
     // CW: add variables that Chris (M) wants for ND selections
     tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);

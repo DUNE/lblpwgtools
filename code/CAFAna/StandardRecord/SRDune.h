@@ -22,6 +22,8 @@ namespace caf
 
     double RecoLepEnNue;
     double RecoHadEnNue;
+    double RecoLepEnNumu;
+    double RecoHadEnNumu;
 
     // CW: added for the ND cuts Chris (M) wants
     int muon_exit;

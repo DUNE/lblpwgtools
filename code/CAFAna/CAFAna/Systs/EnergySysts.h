@@ -601,6 +601,7 @@ namespace ana
   };
 
   /// Energy scale systematics for hadronic final state particles
+  // Assume 25% of the neutron energy is visible - this is fairly crude and should be changed later
   // Neutron energy scale
   class EnergyScaleNSyst: public ISyst
   {
@@ -615,13 +616,18 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoHadEnNumu);
+      restore.Add(sr->dune.RecoHadEnNue);
 
-      const double scale = 1 + .4*sigma;
-      const double fracN = (sr->dune.eN / sr->dune.Ev);
+      const double scale = 1 + .25*sigma;
+      const double fracN = ((sr->dune.eN*.25) / sr->dune.Ev);
+      const double fracNY = ((sr->dune.eN*.25) / (sr->dune.Ev*sr->dune.Y));
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracN * scale + (1 - fracN));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracN * scale + (1 - fracN));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracN * scale + (1 - fracN));
+      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracNY * scale + (1 - fracNY));
+      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracNY * scale + (1 - fracNY));
     }
   };
 
@@ -641,13 +647,18 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoHadEnNumu);
+      restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
       const double fracP = (sr->dune.eP / sr->dune.Ev);
+      const double fracPY = (sr->dune.eP / (sr->dune.Ev * sr->dune.Y));
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracP * scale + (1 - fracP));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracP * scale + (1 - fracP));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracP * scale + (1 - fracP));
+      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPY * scale + (1 - fracPY));
+      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPY * scale + (1 - fracPY));
     }
   };
 
@@ -667,13 +678,18 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoHadEnNumu);
+      restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
       const double fracPip = (sr->dune.ePip / sr->dune.Ev);
+      const double fracPipY = (sr->dune.ePip / (sr->dune.Ev*sr->dune.Y));
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPip * scale + (1 - fracPip));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPip * scale + (1 - fracPip));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPip * scale + (1 - fracPip));
+      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPipY * scale + (1 - fracPipY));
+      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPipY * scale + (1 - fracPipY));
     }
   };
 
@@ -693,13 +709,18 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoHadEnNumu);
+      restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
       const double fracPim = (sr->dune.ePim / sr->dune.Ev);
+      const double fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y));
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPim * scale + (1 - fracPim));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPim * scale + (1 - fracPim));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPim * scale + (1 - fracPim));
+      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPimY * scale + (1 - fracPimY));
+      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPimY * scale + (1 - fracPimY));
     }
   };
 
@@ -719,13 +740,18 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoHadEnNumu);
+      restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
       const double fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
+      const double fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
+      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scale + (1 - fracPi0Y));
+      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPi0Y * scale + (1 - fracPi0Y));
     }
   };
 
