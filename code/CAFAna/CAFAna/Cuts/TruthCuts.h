@@ -62,14 +62,25 @@ namespace ana
   const Cut kIsTrueFV({},
                       [](const caf::StandardRecord* sr)
                       {
-                        return ( abs(sr->dune.nuvtxx_truth) < 310 &&
-  				 abs(sr->dune.nuvtxy_truth) < 550 &&
-  				 sr->dune.nuvtxz_truth >  50      &&
-  				 sr->dune.nuvtxz_truth < 1244 );
+			if (sr->dune.isFD){
+			  return ( 
+				  abs(sr->dune.vtx_x) < 310 &&
+				  abs(sr->dune.vtx_y) < 550 &&
+  				  sr->dune.vtx_z >  50      &&
+  				  sr->dune.vtx_z < 1244 );
+			}
+			else{
+			  return (
+				  abs(sr->dune.vtx_x) < 300 &&
+				  abs(sr->dune.vtx_y) < 100 &&
+				  sr->dune.vtx_z > 50 &&
+				  sr->dune.vtx_z < 350
+				  );
+			}
 		      });
 
-  //ETW 11/5/2018 Add fiducial cut using MVA variable
-  //Should use the previous one (kIsTrueFV) once we have true vertex variables back in caf
+  //ETW 11/5/2018 Fiducial cut using MVA variable
+  //Should use the previous one (kIsTrueFV) for nominal analysis
   const Cut kPassFid_MVA({},
 			[](const caf::StandardRecord* sr)
 			{
