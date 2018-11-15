@@ -20,6 +20,9 @@ namespace caf
     int reco_q;
     double Elep_reco;
 
+    double RecoLepEnNue;
+    double RecoHadEnNue;
+
     // CW: added for the ND cuts Chris (M) wants
     int muon_exit;
     double Ehad_veto;
@@ -41,6 +44,8 @@ namespace caf
     int nuPDGunosc;
     int LepPDG;
     int mode;
+    int nP;
+    int nN;
     int nipi0;
     int nipip;
     int nipim;
@@ -48,9 +53,19 @@ namespace caf
     double W;
     double Y;
 
-    double nuvtxx_truth;
-    double nuvtxy_truth;
-    double nuvtxz_truth;
+    double vtx_x;
+    double vtx_y;
+    double vtx_z;
+
+    double NuMomX;
+    double NuMomY;
+    double NuMomZ;
+    double LepMomX;
+    double LepMomY;
+    double LepMomZ;
+    double LepE;
+    double LepNuAngle;
+
 
     // config
     int run;
