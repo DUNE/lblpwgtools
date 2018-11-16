@@ -21,10 +21,10 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Elep_reco);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoLepEnNumu);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoLepEnNumu);
 
       const double scale = 1 + .01*sigma;
 
@@ -61,8 +61,8 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Elep_reco);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
 
       const double scale = 1 + .01*sigma;
 
@@ -87,10 +87,10 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Elep_reco);
-      restore.Add(sr->dune.RecoLepEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Elep_reco,
+                  sr->dune.RecoLepEnNue);
 
       const double scale = 1 + .02*sigma;
 
@@ -126,11 +126,11 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
       const double scale = 1 + .25*sigma;
@@ -164,11 +164,11 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
       double fracP = 0;
@@ -203,11 +203,11 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
       double fracPip = 0;
@@ -241,11 +241,11 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
       double fracPim = 0;
@@ -279,11 +279,11 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
       double fracPi0 = 0;
