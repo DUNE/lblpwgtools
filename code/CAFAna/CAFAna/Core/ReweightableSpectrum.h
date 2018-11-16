@@ -18,7 +18,6 @@ namespace ana
     friend class SpectrumLoader;
     friend class NullLoader;
     friend class MRCCLoader;
-    friend class DUNERunPOTSpectrumLoader;
 
     ReweightableSpectrum(SpectrumLoaderBase& loader,
                          const HistAxis& recoAxis,

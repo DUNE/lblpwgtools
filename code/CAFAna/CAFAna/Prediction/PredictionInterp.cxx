@@ -22,43 +22,6 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  //DUNE constructor
-  /*  PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
-                                     osc::IOscCalculator* osc,
-                                     const IPredictionGenerator& predGen,
-                                     DUNERunPOTSpectrumLoader& loaderBeam,
-				     DUNERunPOTSpectrumLoader& loaderNue,
-				     DUNERunPOTSpectrumLoader& loaderNuTau,
-				     DUNERunPOTSpectrumLoader& loaderNC,
-                                     const SystShifts& shiftMC)
-    : fOscOrigin(osc->Copy()),
-      fBinning(0, {}, {}, 0, 0)
-  {
-    for(const ISyst* syst: systs){
-      ShiftedPreds sp;
-      sp.systName = syst->ShortName();
-
-      for(int x = -syst->PredInterpMaxNSigma(); x <= +syst->PredInterpMaxNSigma(); ++x){
-        sp.shifts.push_back(x);
-      }
-
-      for(int sigma: sp.shifts){
-        SystShifts shiftHere = shiftMC;
-        shiftHere.SetShift(syst, sigma);
-        sp.preds.push_back(predGen.Generate(loaderBeam, loaderNue, loaderNuTau, loaderNC, shiftHere).release());
-      }
-
-      fPreds.emplace(syst, sp);
-    } // end for syst
-
-    fPredNom = predGen.Generate(loaderBeam, loaderNue, loaderNuTau, loaderNC, shiftMC);
-
-    // We need to know when all our predictions are filled so that we can
-    // compute the fits
-    loaders.RegisterCompletionCallback(this, &PredictionInterp::LoadedCallback);
-    }*/
-
-  //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
                                      osc::IOscCalculator* osc,
                                      const IPredictionGenerator& predGen,
