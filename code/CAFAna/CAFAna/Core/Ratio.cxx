@@ -1,5 +1,6 @@
 #include "CAFAna/Core/Ratio.h"
 
+#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TH1.h"
@@ -14,14 +15,14 @@ namespace ana
   {
     // Scale to same arbitrary POT
     fHist = num.ToTH1(1e20);
-    const TH1D* temp = denom.ToTH1(1e20);
+    TH1D* temp = denom.ToTH1(1e20);
     if(purOrEffErrs){
       fHist->Divide(fHist, temp, 1, 1, "B");
     }
     else{
       fHist->Divide(temp);
     }
-    delete temp;
+    HistCache::Delete(temp);
 
     fHist->GetYaxis()->SetTitle("Ratio");
 
@@ -42,19 +43,11 @@ namespace ana
 
     if(className == "TH1D"){
       // Shortcut if types match
-      fHist = new TH1D(*((TH1D*)h));
+      fHist = HistCache::Copy((TH1D*)h);
     }
     else{
-      const TAxis* ax = h->GetXaxis();
-      if(ax->GetXbins()->GetArray()){
-        fHist = new TH1D(UniqueName().c_str(), "",
-                         ax->GetNbins(), ax->GetXbins()->GetArray());
-      }
-      else{
-        fHist = new TH1D(UniqueName().c_str(), "",
-                         ax->GetNbins(), ax->GetXmin(), ax->GetXmax());
-      }
-      fHist->GetXaxis()->SetTitle(ax->GetTitle());
+      fHist = HistCache::New(UniqueName(), h->GetXaxis());
+      fHist->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
       fHist->Add(h);
     }
 
@@ -64,7 +57,7 @@ namespace ana
   //----------------------------------------------------------------------
   Ratio::~Ratio()
   {
-    delete fHist;
+    HistCache::Delete(fHist);
   }
 
   //----------------------------------------------------------------------
@@ -73,7 +66,7 @@ namespace ana
     DontAddDirectory guard;
 
     assert(rhs.fHist);
-    fHist = new TH1D(*rhs.fHist);
+    fHist = HistCache::Copy(rhs.fHist);
   }
 
   //----------------------------------------------------------------------
@@ -83,9 +76,9 @@ namespace ana
 
     DontAddDirectory guard;
 
-    delete fHist;
+    HistCache::Delete(fHist);
     assert(rhs.fHist);
-    fHist = new TH1D(*rhs.fHist);
+    fHist = HistCache::Copy(rhs.fHist);
     return *this;
   }
 
@@ -125,7 +118,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = new TH1D(*fHist);
+    TH1D* ret = HistCache::Copy(fHist);
     ret->SetLineColor(col);
     ret->SetLineStyle(style);
     return ret;
