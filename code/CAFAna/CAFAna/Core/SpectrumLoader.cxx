@@ -208,15 +208,20 @@ namespace ana
     tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
     tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
-    sr.dune.genie_wgt.resize(genie_names.size());
+    // GENIE uncertainties and CVs
+    sr.dune.genie_wgt    .resize(genie_names.size());
+    sr.dune.genie_cv_wgt .resize(genie_names.size());
+    sr.dune.total_cv_wgt = 1;
 
     for(unsigned int i = 0; i < genie_names.size(); ++i){
       tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
                            &genie_tmp[i]);
       tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
                            &genie_size_tmp[i]);
+      tr->SetBranchAddress((genie_names[i]+"_cvwgt").c_str(),
+			   &sr.dune.genie_cv_wgt[i]);
+      sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
     }
-
 
     const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){

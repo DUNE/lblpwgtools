@@ -57,8 +57,8 @@ namespace ana
   class NoExtrapPredictionGenerator: public IPredictionGenerator
   {
   public:
-    NoExtrapPredictionGenerator(HistAxis axis, Cut cut)
-      : fAxis(axis), fCut(cut)
+  NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
+    : fAxis(axis), fCut(cut), fWei(wei)
     {
     }
 
@@ -72,5 +72,6 @@ namespace ana
   protected:
     HistAxis fAxis;
     Cut fCut;
+    Var fWei;
   };
 }

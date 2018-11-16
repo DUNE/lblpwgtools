@@ -65,8 +65,9 @@ namespace ana
   public:
     NoOscPredictionGenerator(SpectrumLoaderBase& loader,
                              HistAxis axis,
-                             Cut cut)
-      : fLoader(loader), fAxis(axis), fCut(cut)
+                             Cut cut,
+			     Var wei = kUnweighted)
+      : fLoader(loader), fAxis(axis), fCut(cut), fWei(wei)
     {
     }
 
@@ -76,12 +77,13 @@ namespace ana
       return std::unique_ptr<IPrediction>(new PredictionNoOsc(fLoader,
                                                               fAxis,
                                                               fCut,
-                                                              shiftMC));
+                                                              shiftMC, fWei));
     }
   protected:
     SpectrumLoaderBase& fLoader;
     HistAxis fAxis;
     Cut fCut;
+    Var fWei;
   };
 
 }
