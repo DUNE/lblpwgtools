@@ -68,8 +68,8 @@ namespace ana
 
       const double scale = 1 + .01*sigma;
 
-      // Is a numu CC and stops somewhere in the ND
-      if(!sr->dune.isFD && abs(sr->dune.nuPDG)==14 && sr->dune.isCC==1 && (sr->dune.muon_contained==1 || sr->dune.muon_tracker==1 || sr->dune.muon_ecal==1)){ 
+      // Is a numu CC and enters the tracker
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG)==14 && sr->dune.isCC==1 && sr->dune.muon_tracker==1){ 
 	sr->dune.Ev_reco = sr->dune.Ev_reco * ( (1 - sr->dune.Y) * scale + sr->dune.Y );
 	sr->dune.Elep_reco = sr->dune.Elep_reco * scale;
       } 
@@ -92,111 +92,29 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_nue);
+      restore.Add(sr->dune.Elep_reco);
+      restore.Add(sr->dune.RecoLepEnNue);
 
       const double scale = 1 + .02*sigma;
 
       // Checks if ND
       if(!sr->dune.isFD){
         if(abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
-          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+	  sr->dune.Ev_reco = sr->dune.Ev_reco * ( (1 - sr->dune.Y) * scale + sr->dune.Y);
+	  sr->dune.Elep_reco = sr->dune.Elep_reco * scale;
         }
       }
       // Otherwise is FD
       else {
         if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12){
-          double Y = sr->dune.Y;
-          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
-          sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (1 - Y) * scale + (sr->dune.Ev_reco_nue * Y);
+          sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * ( (1 - sr->dune.Y) * scale + sr->dune.Y );
+	  sr->dune.RecoLepEnNue = sr->dune.RecoLepEnNue * scale;
         }
       }
     }
   };
 
   static const EnergyScaleESyst kEnergyScaleESyst;
-
-
-  /// 2% muon energy scale syst, applies to FD only
-  class EnergyScaleMuSystFD: public ISyst
-  {
-  public:
-    std::string ShortName() const override {return "eScaleMuFD";}
-    std::string LatexName() const override {return "Muon Energy Scale Far Detector";}
-
-    void Shift(double sigma,
-	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override
-    {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_numu);
-
-      const double scale = 1 + .02*sigma;
-
-      if(sr->dune.isFD){
-	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 14){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
-	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (1 - Y) * scale + (sr->dune.Ev_reco_numu * Y);
-	}
-      }
-    }
-  };
-
-  static const EnergyScaleMuSystFD kEnergyScaleMuSystFD;
-
-
-  /// 2% electron energy scale systematic in FD only
-  class EnergyScaleESystFD: public ISyst
-  {
-  public:
-    std::string ShortName() const override {return "eScaleEFD";}
-    std::string LatexName() const override {return "Electron Energy Scale Far Detector";}
-
-    void Shift(double sigma,
-	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override
-    {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_nue);
-
-      const double scale = 1 + .02*sigma;
-
-      if(sr->dune.isFD){
-	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
-	  sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (1 - Y) * scale + (sr->dune.Ev_reco_nue * Y);
-	}
-      }
-    }
-  };
-
-  static const EnergyScaleESystFD kEnergyScaleESystFD;
-
-
-  /// 2% electron energy scale systematic in ND only
-  class EnergyScaleESystND: public ISyst
-  {
-  public:
-    std::string ShortName() const override {return "eScaleEND";}
-    std::string LatexName() const override {return "Electron Energy Scale Near Detector";}
-
-    void Shift(double sigma,
-	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override
-    {
-      restore.Add(sr->dune.Ev_reco);
-
-      const double scale = 1 + .02*sigma;
-
-      if(!sr->dune.isFD && abs(sr->dune.nuPDG) == 12 && sr->dune.isCC){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
-	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
-      }
-    }
-  };
-
-  static const EnergyScaleESystND kEnergyScaleESystND;
 
 
   /// Energy scale systematics for hadronic final state particles
