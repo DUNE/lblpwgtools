@@ -35,13 +35,10 @@ namespace ana
                        const Var& var,
                        const Cut& cut,
                        const SystShifts& shift,
-                       const Var& wei,
-                       int potRun)
+                       const Var& wei)
     : ReweightableSpectrum(label, bins, kTrueE),
       fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
-    fPOTRun = potRun;
-
     fTrueLabel = "True Energy (GeV)";
 
     DontAddDirectory guard;
@@ -56,13 +53,10 @@ namespace ana
                                              const HistAxis& axis,
                                              const Cut& cut,
                                              const SystShifts& shift,
-                                             const Var& wei,
-                                             int potRun)
+                                             const Var& wei)
     : ReweightableSpectrum(axis.GetLabels(), axis.GetBinnings(), kTrueE),
       fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
   {
-    fPOTRun = potRun;
-
     fTrueLabel = "True Energy (GeV)";
 
     Binning bins1D = fBins[0];

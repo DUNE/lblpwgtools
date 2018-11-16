@@ -25,14 +25,12 @@ namespace ana
                          const HistAxis& trueAxis,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted,
-                         int potRun = -1);
+                         const Var& wei = kUnweighted);
 
     ReweightableSpectrum(const Var& rwVar,
                          std::string xlabel, std::string ylabel, double pot,
                          int nbinsx, double xmin, double xmax,
-                         int nbinsy, double ymin, double ymax,
-                         int potRun = -1);
+                         int nbinsy, double ymin, double ymax);
 
     ReweightableSpectrum(const Var& rwVar,
                          TH2* h,
@@ -127,7 +125,5 @@ namespace ana
 
     /// This count is maintained by SpectrumLoader, as a sanity check
     std::set<SpectrumLoaderBase*> fLoaderCount;
-
-    double fPOTRun;
   };
 }

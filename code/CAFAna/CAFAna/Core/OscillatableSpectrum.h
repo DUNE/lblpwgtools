@@ -33,15 +33,13 @@ namespace ana
                          const Var& var,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted,
-                         int potRun = -1);
+                         const Var& wei = kUnweighted);
 
     OscillatableSpectrum(SpectrumLoaderBase& loader,
                          const HistAxis& axis,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted,
-                         int potRun = -1);
+                         const Var& wei = kUnweighted);
 
     OscillatableSpectrum(std::string label, const Binning& bins);
     OscillatableSpectrum(std::string label, double pot, double livetime,

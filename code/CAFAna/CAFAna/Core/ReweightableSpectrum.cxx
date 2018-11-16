@@ -23,13 +23,10 @@ namespace ana
                                              const HistAxis& trueAxis,
                                              const Cut& cut,
                                              const SystShifts& shift,
-                                             const Var& wei,
-                                             int potRun)
+                                             const Var& wei)
     : ReweightableSpectrum(recoAxis.GetLabels(), recoAxis.GetBinnings(),
                            trueAxis.GetVars()[0])
   {
-    fPOTRun = potRun;
-
     assert(trueAxis.NDimensions() == 1);
 
     fTrueLabel = trueAxis.GetLabels()[0];
@@ -79,14 +76,11 @@ namespace ana
   ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar,
                                              std::string xlabel, std::string ylabel, double pot,
                                              int nbinsx, double xmin, double xmax,
-                                             int nbinsy, double ymin, double ymax,
-                                             int potRun)
+                                             int nbinsy, double ymin, double ymax)
     : ReweightableSpectrum(xlabel,
                            Binning::Simple(nbinsx, xmin, xmax),
                            rwVar)
   {
-    fPOTRun = potRun;
-
     DontAddDirectory guard;
 
     fHist = new TH2D(UniqueName().c_str(), "",
