@@ -15,7 +15,7 @@ namespace ana
   class eScaleMuLArSyst: public ISyst
   {
   public:
-    eScaleMuLArSyst() : ISyst("eScaleMuLAr", "Muon Energy Scale LAr") {}
+  eScaleMuLArSyst() : ISyst("eScaleMuLAr", "Muon Energy Scale LAr") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -55,7 +55,7 @@ namespace ana
   class EnergyScaleMuSystND: public ISyst
   {
   public:
-    EnergyScaleMuSystND() : ISyst("eScaleMuND", "Muon Energy Scale Near Detector") {}
+  EnergyScaleMuSystND() : ISyst("eScaleMuND", "Muon Energy Scale Near Detector") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -81,7 +81,7 @@ namespace ana
   class EnergyScaleESyst: public ISyst
   {
   public:
-    EnergyScaleESyst() : ISyst("eScaleE", "Electron Energy Scale") {}
+  EnergyScaleESyst() : ISyst("eScaleE", "Electron Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -119,8 +119,8 @@ namespace ana
   class ChargedHadCorrSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "ChargedHadCorr";}
-    std::string LatexName() const override {return "Charged Hadron Correlated Syst";}
+  ChargedHadCorrSyst() : ISyst("ChargedHadCorr", "Charged Hadron Correlated Syst") {}
+
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
@@ -150,14 +150,14 @@ namespace ana
     }
   };
 
-  static const ChargedHadCorrSyst kChargedHadCorrSyst;
+  extern const ChargedHadCorrSyst kChargedHadCorrSyst;
 
   // 1% uncorrelated FD syst for charged hadrons
   class ChargedHadUncorrFDSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "ChargedHadUncorrFD";}
-    std::string LatexName() const override {return "Charged Hadron Uncorrelated FD Syst";}
+  ChargedHadUncorrFDSyst() : ISyst("ChargedHadUncorrFD", "Charged Hadron Uncorrelated FD Syst") {}
+
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
@@ -184,14 +184,14 @@ namespace ana
     }
   };
   
-  static const ChargedHadUncorrFDSyst kChargedHadUncorrFDSyst;
+  extern const ChargedHadUncorrFDSyst kChargedHadUncorrFDSyst;
 
   /// 1% uncorrelated ND syst for charged hadrons
   class ChargedHadUncorrNDSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "ChargedHadUncorrND";}
-    std::string LatexName() const override {return "Charged Hadron Uncorrelated ND Syst";}
+  ChargedHadUncorrNDSyst() : ISyst("ChargedHadUncorrND", "Charged Hadron Uncorrelated ND Syst") {}
+
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
@@ -209,16 +209,14 @@ namespace ana
     }
   };
   
-  static const ChargedHadUncorrNDSyst kChargedHadUncorrNDSyst;
+  extern const ChargedHadUncorrNDSyst kChargedHadUncorrNDSyst;
 
   // Assume 25% of the neutron energy is visible - this is fairly crude and should be changed later
   // Neutron energy scale
   class NUncorrNDSyst: public ISyst
   {
   public:
-
-    std::string ShortName() const override {return "eScaleN_ND";}
-   std::string LatexName() const override {return "Neutron Energy Scale ND";}
+  NUncorrNDSyst() : ISyst("eScaleN_ND", "Neutron Energy Scale ND") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -241,7 +239,7 @@ namespace ana
     }
   };
 
-  static const NUncorrNDSyst kNUncorrNDSyst;  
+  extern const NUncorrNDSyst kNUncorrNDSyst;  
 
 
   // Assume 25% of the neutron energy is visible - this is fairly crude and should be changed later
@@ -249,8 +247,7 @@ namespace ana
   class NUncorrFDSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleN_FD";}
-   std::string LatexName() const override {return "Neutron Energy Scale FD";}
+  NUncorrFDSyst() : ISyst("eScaleN_ND", "Neutron Energy Scale FD") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -288,16 +285,14 @@ namespace ana
     }
   };
 
-  static const NUncorrFDSyst kNUncorrFDSyst;  
+  extern const NUncorrFDSyst kNUncorrFDSyst;  
 
   // Pi0 energy scale correlated between near and far
   // 5% on reconstructed energy
   class Pi0CorrSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScalePi0Corr";}
-    std::string LatexName() const override {return "Pi0 Correlated Energy Scale";}
-
+  Pi0CorrSyst() : ISyst("eScalePi0Corr", "Pi0 Correlated Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -329,14 +324,14 @@ namespace ana
     }
   };
 
-  static const Pi0CorrSyst kEnergyScalePi0Syst;
+  extern const Pi0CorrSyst kEnergyScalePi0Syst;
 
   // 2% uncorrelated FD syst for pi0
   class Pi0UncorrFDSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "Pi0UncorrFD";}
-    std::string LatexName() const override {return "Pi0 Uncorrelated FD Syst";}
+  Pi0UncorrFDSyst() : ISyst("Pi0UncorrFD", "Pi0 Uncorrelated FD Syst") {}
+
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
@@ -360,15 +355,15 @@ namespace ana
     }
   };
   
-  static const Pi0UncorrFDSyst kPi0UncorrFDSyst;
+  extern const Pi0UncorrFDSyst kPi0UncorrFDSyst;
 
 
   /// 2% uncorrelated ND syst for pi0
   class Pi0UncorrNDSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "Pi0UncorrND";}
-    std::string LatexName() const override {return "Pi0 Uncorrelated ND Syst";}
+  Pi0UncorrNDSyst() : ISyst("Pi0UncorrND", "Pi0Uncorrelated ND Syst") {}
+
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
@@ -384,7 +379,7 @@ namespace ana
     }
   };
   
-  static const Pi0UncorrNDSyst kPi0UncorrNDSyst;
+  extern const Pi0UncorrNDSyst kPi0UncorrNDSyst;
 
 
 }
