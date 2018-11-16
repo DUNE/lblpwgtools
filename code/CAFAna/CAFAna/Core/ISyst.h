@@ -40,15 +40,12 @@ namespace ana
                        caf::StandardRecord* sr,
                        double& weight) const = 0;
 
-    /// GENIE reweights can only provide +/-1,2sigma
-    virtual bool IsGenieReweight() const {return false;}
-
     /// PredictionInterp normally interpolates between spectra made at
     /// +/-1,2,3sigma. For some systematics that's overkill. Override this
     /// function to specify different behaviour for this systematic.
     virtual int PredInterpMaxNSigma() const
     {
-      return IsGenieReweight() ? 2 : 3;
+      return 3;
     }
   };
 
