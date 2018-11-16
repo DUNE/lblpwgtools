@@ -455,8 +455,8 @@ namespace ana
         // yet. Store under a dummy syst that won't match any existing pointer.
         class DummySyst: public ISyst
         {
-          virtual std::string ShortName() const {return "";}
-          virtual std::string LatexName() const {return "";}
+	public:
+	  DummySyst() : ISyst("", "") {}
           virtual void Shift(double sigma, Restorer& restore,
                              caf::StandardRecord* sr, double& weight) const {}
         };
