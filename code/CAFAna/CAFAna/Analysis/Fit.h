@@ -5,9 +5,14 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnMinimize.h"
+#include "Minuit2/MnHesse.h"
+#include "Minuit2/MnMinos.h"
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnUserParameters.h"
+#include "Minuit2/MnUserCovariance.h"
+#include "Minuit2/CombinedMinimizer.h"
 
 class TGraph;
 
@@ -69,6 +74,24 @@ namespace ana
     {
       return Fit(0, systSeed, {}, verb);
     }
+    
+    /// Return the fit covariance
+    TMatrixDSym* GetCovariance(){ return this->fCovar;}
+
+    /// Return the fit names
+    std::vector<std::string> GetParamNames(){ return this->fParamNames;}
+
+    /// Return the prefit values
+    std::vector<double> GetPreFitValues(){ return this->fPreFitValues;}
+
+    /// Return the prefit errors
+    std::vector<double> GetPreFitErrors(){ return this->fPreFitErrors;}
+
+    /// Return the postfit values
+    std::vector<double> GetPostFitValues(){ return this->fPostFitValues;}
+
+    /// Return the postfit errors
+    std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
 
     /// Evaluate the log-likelihood, as required by MINUT interface
     virtual double operator()(const std::vector<double>& pars) const;
@@ -87,6 +110,14 @@ namespace ana
     std::vector<const ISyst*> fSysts;
     mutable osc::IOscCalculatorAdjustable* fCalc;
     mutable SystShifts fShifts;
+
+    // Some information for post-fit evaluation if necessary
+    mutable TMatrixDSym* fCovar;
+    mutable std::vector<std::string> fParamNames;
+    mutable std::vector<double> fPreFitValues;
+    mutable std::vector<double> fPreFitErrors;
+    mutable std::vector<double> fPostFitValues;
+    mutable std::vector<double> fPostFitErrors;
   };
 
   // Default values for Profile()
