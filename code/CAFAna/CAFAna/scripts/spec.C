@@ -1,6 +1,6 @@
 // ETW May 2018
 // Standard script for DUNE spectra
-// Input files use TensorFlow CVN training from May 2018 
+// Input files TensorFlow CVN training from Fall 2018 
 
 
 #ifdef __CINT__
@@ -13,6 +13,7 @@ void spec(bool reload = false){}
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/Progress.h"
+#include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
 using namespace ana;
@@ -32,26 +33,27 @@ const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 const Var kPIDFD_NUMU = SIMPLEVAR(dune.cvnnumu);
 const Var kPIDFD_NUE = SIMPLEVAR(dune.cvnnue);
+const Var kPID_MVA_NUMU = SIMPLEVAR(dune.mvanumu);
 
-const Var kvtxx_truth = SIMPLEVAR(dune.nuvtxx_truth);
-const Var kvtxy_truth = SIMPLEVAR(dune.nuvtxy_truth);
-const Var kvtxz_truth = SIMPLEVAR(dune.nuvtxz_truth);
+const Var kvtxx_truth = SIMPLEVAR(dune.vtx_x);
+const Var kvtxy_truth = SIMPLEVAR(dune.vtx_y);
+const Var kvtxz_truth = SIMPLEVAR(dune.vtx_z);
 
 const Cut kPassCVN_NUE = kPIDFD_NUE>0.7 && kPIDFD_NUMU<0.5;
 const Cut kPassCVN_NUMU = kPIDFD_NUMU>0.5 && kPIDFD_NUE<0.7;
-const Cut kPassFid_MC = kvtxx_truth<310 && kvtxx_truth>-310 && kvtxy_truth<550 && kvtxy_truth>-550 && kvtxz_truth>50 && kvtxz_truth<1244;
 
-// 125 MeV bins from 0.5 to 8GeV
+// 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
-                    Binning::Simple(60, 0.5, 8.0),
+                    Binning::Simple(64, 0.0, 8.0),
                     kRecoE_nue);
 
 const HistAxis axis_numu("Reconstructed energy (GeV)",
-                    Binning::Simple(60, 0.5, 8.0),
+                    Binning::Simple(64, 0.0, 8.0),
                     kRecoE_numu);
 
+
 // POT/yr * 3.5yrs * mass correction
-const double potFD = 3.5 * 1.47e21 * 40/1.13;
+const double potFD = 3.5 * 1.1e21 * 40/1.13;
 
 const char* stateFname = "spec_state.root";
 const char* outputFname = "spec_hist.root";
@@ -61,82 +63,72 @@ void spec(bool reload = false)
   rootlogon(); // style
   
   if(reload || TFile(stateFname).IsZombie()){
-    SpectrumLoader loaderFDFHC("/dune/data/users/kqi/oscillation_sample/merged_nu.root");
 
-    auto* loaderFDFHCBeam  = loaderFDFHC.LoaderForRunPOT(20000001);
-    auto* loaderFDFHCNue   = loaderFDFHC.LoaderForRunPOT(20000002);
-    auto* loaderFDFHCNuTau = loaderFDFHC.LoaderForRunPOT(20000003);
-    auto* loaderFDFHCNC    = loaderFDFHC.LoaderForRunPOT(0);
+    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nonswap.root");
+    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nueswap.root");
+    SpectrumLoaderBase& loaderFDFHCNuTau = kNullLoader;
 
-    SpectrumLoader loaderFDRHC("/dune/data/users/kqi/oscillation_sample/merged_anu.root");
-
-    auto* loaderFDRHCBeam  = loaderFDRHC.LoaderForRunPOT(20000004);
-    auto* loaderFDRHCNue   = loaderFDRHC.LoaderForRunPOT(20000005);
-    auto* loaderFDRHCNuTau = loaderFDRHC.LoaderForRunPOT(20000006);
-    auto* loaderFDRHCNC    = loaderFDRHC.LoaderForRunPOT(0);
+    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nonswap.root");
+    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nueswap.root");
+    SpectrumLoaderBase& loaderFDRHCNuTau = kNullLoader;
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
 
     //Selection applied
-    PredictionNoExtrap predFDNumuFHC(*loaderFDFHCBeam, 
-                                     *loaderFDFHCNue,
-                                     *loaderFDFHCNuTau,
-                                     *loaderFDFHCNC,
+    PredictionNoExtrap predFDNumuFHC(loaderFDFHCNonswap,
+                                     loaderFDFHCNue,
+                                     loaderFDFHCNuTau,
                                      axis_numu,
-                                     kPassCVN_NUMU && kPassFid_MC);
+                                     kPassCVN_NUMU && kIsTrueFV);
 
-    PredictionNoExtrap predFDNueFHC(*loaderFDFHCBeam, 
-                                    *loaderFDFHCNue,
-                                    *loaderFDFHCNuTau,
-                                    *loaderFDFHCNC,
+    PredictionNoExtrap predFDNueFHC(loaderFDFHCNonswap,
+                                    loaderFDFHCNue,
+                                    loaderFDFHCNuTau,
                                     axis_nue,
-                                    kPassCVN_NUE && kPassFid_MC);
+                                    kPassCVN_NUE && kIsTrueFV);
 
-    PredictionNoExtrap predFDNumuRHC(*loaderFDRHCBeam, 
-                                     *loaderFDRHCNue,
-                                     *loaderFDRHCNuTau,
-                                     *loaderFDRHCNC,
+    PredictionNoExtrap predFDNumuRHC(loaderFDRHCNonswap,
+                                     loaderFDRHCNue,
+                                     loaderFDRHCNuTau,
                                      axis_numu,
-                                     kPassCVN_NUMU && kPassFid_MC);
+                                     kPassCVN_NUMU && kIsTrueFV);
 
-    PredictionNoExtrap predFDNueRHC(*loaderFDRHCBeam, 
-                                    *loaderFDRHCNue,
-                                    *loaderFDRHCNuTau,
-                                    *loaderFDRHCNC,
+    PredictionNoExtrap predFDNueRHC(loaderFDRHCNonswap,
+                                    loaderFDRHCNue,
+                                    loaderFDRHCNuTau,
                                     axis_nue,
-                                    kPassCVN_NUE && kPassFid_MC);
+                                    kPassCVN_NUE && kIsTrueFV);
+
 
     //Fiducial Only for Efficiencies
-    PredictionNoExtrap predFDNumuFHC_Fid(*loaderFDFHCBeam, 
-                                     *loaderFDFHCNue,
-                                     *loaderFDFHCNuTau,
-                                     *loaderFDFHCNC,
+    PredictionNoExtrap predFDNumuFHC_Fid(loaderFDFHCNonswap,
+                                     loaderFDFHCNue,
+                                     loaderFDFHCNuTau,
                                      axis_numu,
-                                     kPassFid_MC);
+                                     kIsTrueFV);
 
-    PredictionNoExtrap predFDNueFHC_Fid(*loaderFDFHCBeam, 
-                                    *loaderFDFHCNue,
-                                    *loaderFDFHCNuTau,
-                                    *loaderFDFHCNC,
+    PredictionNoExtrap predFDNueFHC_Fid(loaderFDFHCNonswap,
+                                    loaderFDFHCNue,
+                                    loaderFDFHCNuTau,
                                     axis_nue,
-                                    kPassFid_MC);
+                                    kIsTrueFV);
 
-    PredictionNoExtrap predFDNumuRHC_Fid(*loaderFDRHCBeam, 
-                                     *loaderFDRHCNue,
-                                     *loaderFDRHCNuTau,
-                                     *loaderFDRHCNC,
+    PredictionNoExtrap predFDNumuRHC_Fid(loaderFDRHCNonswap,
+                                     loaderFDRHCNue,
+                                     loaderFDRHCNuTau,
                                      axis_numu,
-                                     kPassFid_MC);
+                                     kIsTrueFV);
 
-    PredictionNoExtrap predFDNueRHC_Fid(*loaderFDRHCBeam, 
-					*loaderFDRHCNue,
-					*loaderFDRHCNuTau,
-					*loaderFDRHCNC,
-					axis_nue,
-					kPassFid_MC);
+    PredictionNoExtrap predFDNueRHC_Fid(loaderFDRHCNonswap,
+                                    loaderFDRHCNue,
+                                    loaderFDRHCNuTau,
+                                    axis_nue,
+                                    kIsTrueFV);
 
-    loaderFDFHC.Go();
-    loaderFDRHC.Go();
+    loaderFDFHCNonswap.Go();
+    loaderFDFHCNue.Go();
+    loaderFDRHCNonswap.Go();
+    loaderFDRHCNue.Go();
 
     TFile fout(stateFname, "RECREATE");
     predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
@@ -148,6 +140,9 @@ void spec(bool reload = false)
     predFDNueFHC_Fid.SaveTo(fout.mkdir("fd_nue_fhc_fid"));
     predFDNumuRHC_Fid.SaveTo(fout.mkdir("fd_numu_rhc_fid"));
     predFDNueRHC_Fid.SaveTo(fout.mkdir("fd_nue_rhc_fid"));
+
+
+    std::cout << "All done making state..." << std::endl;
 
     }
   else{    
@@ -163,6 +158,7 @@ void spec(bool reload = false)
   PredictionNoExtrap& predFDNueFHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_fhc_fid")).release();
   PredictionNoExtrap& predFDNumuRHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_rhc_fid")).release();
   PredictionNoExtrap& predFDNueRHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_rhc_fid")).release();
+
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
