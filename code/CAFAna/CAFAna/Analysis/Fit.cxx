@@ -10,6 +10,7 @@
 #include "TError.h"
 #include "TGraph.h"
 #include "TH1.h"
+#include "TMatrixDSym.h"
 
 #include <cassert>
 #include <memory>
@@ -46,7 +47,7 @@ namespace ana
   Fitter::Fitter(const IExperiment* expt,
                  std::vector<const IFitVar*> vars,
                  std::vector<const ISyst*> systs)
-    : fExpt(expt), fVars(vars), fSysts(systs)
+    : fExpt(expt), fVars(vars), fSysts(systs), fCovar(0)
   {
   }
 
@@ -105,6 +106,9 @@ namespace ana
       const double val = v->GetValue(seed);
       // name, value, error
       mnPars.Add(v->ShortName(), val, val ? val/2 : .1);
+      fParamNames  .push_back(v->ShortName());
+      fPreFitValues.push_back(val);
+      fPreFitErrors.push_back(val ? val/2 : .1);
     }
     // One way this can go wrong is if two variables have the same ShortName
     assert(mnPars.Params().size() == fVars.size());
@@ -112,30 +116,61 @@ namespace ana
       const double val = systSeed.GetShift(s);
       // name, value, error
       mnPars.Add(s->ShortName(), val, 1);
+      fParamNames  .push_back(s->ShortName());
+      fPreFitValues.push_back(val);
+      fPreFitErrors.push_back(1);
     }
     // One way this can go wrong is if two variables have the same ShortName
     assert(mnPars.Params().size() == fVars.size()+fSysts.size());
 
-    ROOT::Minuit2::MnMigrad mnMigrad(*this, mnPars);
+    //ROOT::Minuit2::MnMigrad mnMigrad(*this, mnPars);
 
     // Minuit2 doesn't give a good way to control verbosity...
     const int olderr = gErrorIgnoreLevel;
     if(verb == kQuiet) gErrorIgnoreLevel = 1001; // Ignore warnings
+    gErrorIgnoreLevel = kInfo;
+    
+    // Minimize is better because it defaults to SIMPLEX if migrad fails
+    // Could use a proper MnStrategy as the third argument if it would help
+    ROOT::Minuit2::MnMinimize mnMigrad(*this, mnPars, 2);
+
     ROOT::Minuit2::FunctionMinimum minpt = mnMigrad();
-    gErrorIgnoreLevel = olderr;
+    //gErrorIgnoreLevel = olderr;
 
-    if(!minpt.IsValid())
+    // If this isn't valid, we probably should worry more...
+    if(!minpt.IsValid()){
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
+    }
 
-    const std::vector<double> minvec = minpt.UserParameters().Params();
+    fPostFitValues = minpt.UserParameters().Params();
+    fPostFitErrors = minpt.UserParameters().Errors();
 
+    ROOT::Minuit2::MnHesse hesse(2);
+
+    // hesse(*this, minpt, 1e5);
+    gErrorIgnoreLevel = olderr;
     // Store results back to the "seed" variable
     for(unsigned int i = 0; i < fVars.size(); ++i){
-      fVars[i]->SetValue(seed, minvec[i]);
+      fVars[i]->SetValue(seed, fPostFitValues[i]);
     }
     // Store systematic results back into "systSeed"
     for(unsigned int j = 0; j < fSysts.size(); ++j){
-      systSeed.SetShift(fSysts[j], minvec[fVars.size()+j]);
+      systSeed.SetShift(fSysts[j], fPostFitValues[fVars.size()+j]);
+    }
+
+    // Store covariances
+    const ROOT::Minuit2::MnUserCovariance mncov = minpt.UserCovariance();
+    // Slightly tedious
+    std::vector<double> covdata = mncov.Data();
+    if (this->fCovar) delete this->fCovar;
+    this->fCovar = new TMatrixDSym(mncov.Nrow());
+    
+    for (uint row = 0; row < mncov.Nrow(); ++row){
+      for (uint col = 0; col < mncov.Nrow(); ++col){
+	if (row > col)
+	  (*this->fCovar)(row, col) = covdata[col+row*(row+1)/2];
+	else (*this->fCovar)(row, col) = covdata[row+col*(col+1)/2];
+      }
     }
 
     return minpt.Fval();
