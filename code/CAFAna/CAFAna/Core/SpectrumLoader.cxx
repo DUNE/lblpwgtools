@@ -21,15 +21,15 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src)
-    : SpectrumLoaderBase(wildcard, src)
+  SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src, int max)
+    : SpectrumLoaderBase(wildcard, src), max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
   SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames,
-                                 DataSource src)
-    : SpectrumLoaderBase(fnames, src)
+                                 DataSource src, int max)
+    : SpectrumLoaderBase(fnames, src), max_entries(max)
   {
   }
 
@@ -211,7 +211,6 @@ namespace ana
     // GENIE uncertainties and CVs
     sr.dune.genie_wgt    .resize(genie_names.size());
     sr.dune.genie_cv_wgt .resize(genie_names.size());
-    sr.dune.total_cv_wgt = 1;
 
     for(unsigned int i = 0; i < genie_names.size(); ++i){
       tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
@@ -220,10 +219,11 @@ namespace ana
                            &genie_size_tmp[i]);
       tr->SetBranchAddress((genie_names[i]+"_cvwgt").c_str(),
 			   &sr.dune.genie_cv_wgt[i]);
-      sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
     }
 
-    const int Nentries = tr->GetEntries();
+    int Nentries = tr->GetEntries();
+    if (max_entries != 0 && max_entries < Nentries) Nentries = max_entries;
+
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
 
@@ -250,10 +250,22 @@ namespace ana
       // }
 
       // Reformat the genie systs
+      sr.dune.total_cv_wgt = 1;
+
       for(unsigned int i = 0; i < genie_names.size(); ++i){
         const int Nuniv = genie_size_tmp[i];
         assert(Nuniv >= 0 && Nuniv <= int(genie_tmp[i].size()));
         sr.dune.genie_wgt[i].resize(Nuniv);
+	
+	// Do some error checking here
+	if (std::isnan(sr.dune.genie_cv_wgt[i]) || 
+	    std::isinf(sr.dune.genie_cv_wgt[i]) ||
+	    sr.dune.genie_cv_wgt[i] == 0)
+	  std::cout << "Warning: " << genie_names[i] << " has a bad CV of " 
+		    << sr.dune.genie_cv_wgt[i] << std::endl;
+	else
+	  sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
+
         for(int j = 0; j < Nuniv; ++j){
           sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
         }
