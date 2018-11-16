@@ -10,44 +10,73 @@
 
 namespace ana
 {
-  /// 1% systematic on muon energy
+  /// 1% systematic on muon energy for energy deposition in liquid argon
   /// 100% correlated between near and far detectors for those ND events that stop in the LAr
-  class EnergyScaleMuSyst: public ISyst
+  class eScaleMuLArSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleMu";}
-    std::string LatexName() const override {return "Muon Energy Scale";}
+    std::string ShortName() const override {return "eScaleMuLAr";}
+    std::string LatexName() const override {return "Muon Energy Scale LAr";}
 
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
       restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Elep_reco);
       restore.Add(sr->dune.Ev_reco_numu);
       restore.Add(sr->dune.RecoLepEnNumu);
 
       const double scale = 1 + .01*sigma;
-
+ 
       // Checks if ND
       if(!sr->dune.isFD){
-        if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
-          double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev);
-          sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
+	// Select only CC muon neutrino events that stop in LAr
+        if(abs(sr->dune.nuPDG) == 14 && sr->dune.isCC == 1 && sr->dune.muon_contained == 1){
+          sr->dune.Ev_reco   = sr->dune.Ev_reco * ( (1 - sr->dune.Y) * scale + sr->dune.Y );
+	  sr->dune.Elep_reco = sr->dune.Elep_reco * scale;
         }
+	else { }
       }
       // Otherwise is FD
       else {
 	if(sr->dune.isCC && abs(sr->dune.nuPDG) == 14){
-	  double Y = sr->dune.Y;
-	  sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - Y) * scale + (sr->dune.Ev_reco * Y);
-	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (1 - Y) * scale + (sr->dune.Ev_reco_numu * Y);
+	  sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu *( (1 - sr->dune.Y) * scale + sr->dune.Y);
+	  sr->dune.RecoLepEnNumu = sr->dune.RecoLepEnNumu * scale;
 	}
       }
     }
   };
 
-  static const EnergyScaleMuSyst kEnergyScaleMuSyst;
+  static const eScaleMuLArSyst keScaleMuLArSyst;
 
+  /// 1% systematics on muon energy for those tracks that are measured by the magnetic field
+  // Uncorrelated between ND and FD
+  // This is a temporary solution - need some momentum dependent function
+  class EnergyScaleMuSystND: public ISyst
+  {
+  public:
+    std::string ShortName() const override {return "eScaleMuND";}
+    std::string LatexName() const override {return "Muon Energy Scale Near Detector";}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Elep_reco);
+
+      const double scale = 1 + .01*sigma;
+
+      // Is a numu CC and stops somewhere in the ND
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG)==14 && sr->dune.isCC==1 && (sr->dune.muon_contained==1 || sr->dune.muon_tracker==1 || sr->dune.muon_ecal==1)){ 
+	sr->dune.Ev_reco = sr->dune.Ev_reco * ( (1 - sr->dune.Y) * scale + sr->dune.Y );
+	sr->dune.Elep_reco = sr->dune.Elep_reco * scale;
+      } 
+    }
+  };
+
+  static const EnergyScaleMuSystND kEnergyScaleMuSystND;
 
   /// 2% energy scale systematic on electron energy
   /// 100% correlated between near and far detectors
@@ -114,32 +143,6 @@ namespace ana
   };
 
   static const EnergyScaleMuSystFD kEnergyScaleMuSystFD;
-
-
-  /// 2% muon energy scale systematic in ND only
-  class EnergyScaleMuSystND: public ISyst
-  {
-  public:
-    std::string ShortName() const override {return "eScaleMuND";}
-    std::string LatexName() const override {return "Muon Energy Scale Near Detector";}
-
-    void Shift(double sigma,
-	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override
-    {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_numu);
-
-      const double scale = 1 + .02*sigma;
-
-      if(!sr->dune.isFD && abs(sr->dune.nuPDG) == 14 && sr->dune.isCC){
-	double YCalc = 1 - (sr->dune.Elep/sr->dune.Ev); 
-	sr->dune.Ev_reco = sr->dune.Ev_reco * (1 - YCalc) * scale + (sr->dune.Ev_reco * YCalc);
-      } 
-    }
-  };
-
-  static const EnergyScaleMuSystND kEnergyScaleMuSystND;
 
 
   /// 2% electron energy scale systematic in FD only

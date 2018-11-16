@@ -155,6 +155,9 @@ namespace ana
 
     // CW: add variables that Chris (M) wants for ND selections
     tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
+    tr->SetBranchAddress("muon_contained", &sr.dune.muon_contained);
+    tr->SetBranchAddress("muon_ecal", &sr.dune.muon_ecal);
+    tr->SetBranchAddress("muon_tracker", &sr.dune.muon_tracker);
     tr->SetBranchAddress("Ehad_veto", &sr.dune.Ehad_veto);
 
     tr->SetBranchAddress("Ev", &sr.dune.Ev);

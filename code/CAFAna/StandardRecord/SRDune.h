@@ -26,6 +26,10 @@ namespace caf
     double RecoHadEnNumu;
 
     // CW: added for the ND cuts Chris (M) wants
+    // ND containment flags
+    int muon_contained;
+    int muon_tracker;
+    int muon_ecal;
     int muon_exit;
     double Ehad_veto;
 
