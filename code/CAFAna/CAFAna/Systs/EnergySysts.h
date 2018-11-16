@@ -247,7 +247,7 @@ namespace ana
   class NUncorrFDSyst: public ISyst
   {
   public:
-  NUncorrFDSyst() : ISyst("eScaleN_ND", "Neutron Energy Scale FD") {}
+  NUncorrFDSyst() : ISyst("eScaleN_FD", "Neutron Energy Scale FD") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
