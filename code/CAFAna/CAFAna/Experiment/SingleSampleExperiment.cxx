@@ -43,19 +43,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double SingleSampleExperiment::ChiSq(osc::IOscCalculatorAdjustable* osc,
-                                       const SystShifts& syst) const
+  TH1D* SingleSampleExperiment::
+  PredHistIncCosmics(osc::IOscCalculator* calc,
+                     const SystShifts& syst) const
   {
     SystShifts systNoCosmic = syst;
     systNoCosmic.SetShift(&kCosmicBkgScaleSyst, 0);
 
-    const Spectrum pred = fMC->PredictSyst(osc, systNoCosmic);
+    const Spectrum pred = fMC->PredictSyst(calc, systNoCosmic);
 
-    const double pot = fData.POT();
+    TH1D* hpred = pred.ToTH1(fData.POT());
+    TH1D* hdata = fData.ToTH1(fData.POT());
 
-    TH1D* hpred = pred.ToTH1(pot);
-    TH1D* hdata = fData.ToTH1(pot);
-    
     if(fCosmic){
       if(fCosmicScaleError != 0){
         const double scale = 1 + syst.GetShift(&kCosmicBkgScaleSyst) * fCosmicScaleError;
@@ -78,12 +77,59 @@ namespace ana
       }
     }
 
+    return hpred;
+  }
+
+  //----------------------------------------------------------------------
+  double SingleSampleExperiment::ChiSq(osc::IOscCalculatorAdjustable* calc,
+                                       const SystShifts& syst) const
+  {
+    TH1D* hpred = PredHistIncCosmics(calc, syst);
+    TH1D* hdata = fData.ToTH1(fData.POT());
+
     const double ll = LogLikelihood(hpred, hdata);
 
     HistCache::Delete(hpred);
     HistCache::Delete(hdata);
 
     return ll;
+  }
+
+  //----------------------------------------------------------------------
+  void SingleSampleExperiment::
+  Derivative(osc::IOscCalculator* calc,
+             const SystShifts& shift,
+             std::unordered_map<const ISyst*, double>& dchi) const
+  {
+    const double pot = fData.POT();
+
+    std::unordered_map<const ISyst*, std::vector<double>> dp;
+    for(auto it: dchi) dp[it.first] = {};
+    fMC->Derivative(calc, shift, pot, dp);
+
+    if(dp.empty()){ // prediction doesn't implement derivatives
+      dchi.clear(); // pass on that info to our caller
+      return;
+    }
+
+    TH1D* hpred = PredHistIncCosmics(calc, shift);
+    TH1D* hdata = fData.ToTH1(pot);
+
+    for(auto& it: dchi){
+      if(it.first != &kCosmicBkgScaleSyst){
+        it.second += LogLikelihoodDerivative(hpred, hdata, dp[it.first]);
+      }
+      else{
+        const unsigned int N = fCosmic->GetNbinsX()+2;
+        const double* ca = fCosmic->GetArray();
+        std::vector<double> cosErr(N);
+        for(unsigned int i = 0; i < N; ++i) cosErr[i] = ca[i]*fCosmicScaleError;
+        it.second += LogLikelihoodDerivative(hpred, hdata, cosErr);
+      }
+    }
+
+    HistCache::Delete(hpred);
+    HistCache::Delete(hdata);
   }
 
   //----------------------------------------------------------------------
@@ -116,8 +162,8 @@ namespace ana
     const IPrediction* mc = ana::LoadFrom<IPrediction>(dir->GetDirectory("mc")).release();
     const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir->GetDirectory("data"));
 
-    TH1* cosmic = 0;
-    if(dir->Get("cosmic")) cosmic = (TH1*)dir->Get("cosmic");
+    TH1D* cosmic = 0;
+    if(dir->Get("cosmic")) cosmic = (TH1D*)dir->Get("cosmic");
 
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
     if(cosmic) ret->fCosmic = cosmic;

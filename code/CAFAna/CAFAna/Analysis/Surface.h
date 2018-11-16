@@ -1,5 +1,10 @@
 #pragma once
 
+#include "CAFAna/Core/ISyst.h"
+#include "CAFAna/Core/SystShifts.h"
+
+#include "CAFAna/Analysis/Fit.h"
+
 #include "Rtypes.h"
 #include "TAttMarker.h"
 
@@ -17,7 +22,6 @@ namespace ana
 {
   class IExperiment;
   class IFitVar;
-  class ISyst;
 
   /// Log-likelihood scan across two parameters
   class Surface
@@ -37,6 +41,8 @@ namespace ana
     /// \param ymax Maximum value of y axis
     /// \param profVars Oscillation parameters to profile over
     /// \param profSysts Systematic parameters to profile over
+    /// \param seedPts Try all combinations of these params as seeds
+    /// \param systSeedPts Try all of these systematic combinations as seeds
     /// \param parallel Use all the cores on this machine? Be careful...
     Surface(const IExperiment* expt,
             osc::IOscCalculatorAdjustable* calc,
@@ -45,13 +51,18 @@ namespace ana
             const std::vector<const IFitVar*>& profVars = {},
             const std::vector<const ISyst*>& profSysts = {},
             const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
-            bool parallel = false);
+            const std::vector<SystShifts>& systSeedPts = {},
+            bool parallel = false,
+            Fitter::Precision prec = Fitter::kNormal);
 
     /// Draw the surface itself
     void Draw() const;
     /// Draw the best fit point
     void DrawBestFit(Color_t color, Int_t marker=kFullCircle) const;
     double MinChi() const {return fMinChi;}
+    double GetMinX() const {return fMinX;} 
+    double GetMinY() const {return fMinY;}
+
     /// \param fc Surface to compare against for this significance level
     /// \param style Line style for TAttLine, solid, dotted, dashed etc
     /// \param color Line color for TAttLine
@@ -84,7 +95,8 @@ namespace ana
                      const IFitVar* xvar, const IFitVar* yvar,
                      const std::vector<const IFitVar*>& profVars,
                      const std::vector<const ISyst*>& profSysts,
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts);
+                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     const std::vector<SystShifts>& systSeedPts);
 
     void FillSurfacePoint(const IExperiment* expt,
                           osc::IOscCalculatorAdjustable* calc,
@@ -92,9 +104,11 @@ namespace ana
                           const IFitVar* yvar, double y,
                           const std::vector<const IFitVar*>& profVars,
                           const std::vector<const ISyst*>& profSysts,
-                          const std::map<const IFitVar*, std::vector<double>>& seedPts);
+                          const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                          const std::vector<SystShifts>& systSeedPts);
 
     bool fParallel;
+    Fitter::Precision fPrec;
 
     double fMinChi;
     double fMinX, fMinY; // Best fit point

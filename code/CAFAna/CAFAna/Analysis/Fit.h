@@ -9,6 +9,7 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnMinos.h"
 #include "Minuit2/FCNBase.h"
+#include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnUserCovariance.h"
@@ -33,24 +34,37 @@ namespace ana
   /// \f[ \sqrt{\sum_i^{\rm bins}\left({s_i\over\sqrt{s_i+b_i}}\right)^2} \f]
   double SimpleFOM(const Spectrum& obs, const Spectrum& unosc, double pot = 0);
 
+  namespace{SystShifts junkShifts;}
+
   /// Perform MINUIT fits in one or two dimensions
-  class Fitter: public ROOT::Minuit2::FCNBase
+  class Fitter: public ROOT::Minuit2::FCNGradientBase
   {
   public:
+    enum Verbosity{kQuiet, kVerbose};
+
+    // These match the codes used by migrad
+    enum Precision{kFast = 0,
+                   kNormal = 1,
+                   kCareful = 2,
+                   kGradDesc = 3};
+    void SetPrecision(Precision prec);
+
     Fitter(const IExperiment* expt,
            std::vector<const IFitVar*> vars,
-           std::vector<const ISyst*> systs = {});
+           std::vector<const ISyst*> systs = {},
+           Precision prec = kNormal);
 
-    enum Verbosity{kQuiet, kVerbose};
     /// \param[out] seed Seed parameter and output best-fit point
-    /// \param      systSeed Seed for systematics fit
+    /// \param[out] bestSysts Best systematics result returned here
     /// \param      seedPts Set each var to each of the values. Try all
     ///                     combinations. Beware of combinatorical explosion...
+    /// \param      systSeedPts If non-empty, try fit starting at each of these
     /// \param      verb If quiet, no printout
     /// \return     -2x the log-likelihood of the best-fit point
     double Fit(osc::IOscCalculatorAdjustable* seed,
-               SystShifts& systSeed,
+               SystShifts& bestSysts = junkShifts,
                const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               const std::vector<SystShifts>& systSeedPts = {},
                Verbosity verb = kVerbose) const;
 
     /// Variant with no seedPts
@@ -58,21 +72,20 @@ namespace ana
                SystShifts& systSeed,
                Verbosity verb) const
     {
-      return Fit(seed, systSeed, {}, verb);
+      return Fit(seed, systSeed, {}, std::vector<SystShifts>(1, systSeed), verb);
     }
 
     /// Variant with no seedPts and no systematics result returned
     double Fit(osc::IOscCalculatorAdjustable* seed,
-               Verbosity verb = kVerbose) const
+               Verbosity verb) const
     {
-      SystShifts systs = SystShifts::Nominal();
-      return Fit(seed, systs, {}, verb);
+      return Fit(seed, junkShifts, {}, {}, verb);
     }
 
     /// Variant with no oscillations - useful for ND fits
     double Fit(SystShifts& systSeed, Verbosity verb = kVerbose) const
     {
-      return Fit(0, systSeed, {}, verb);
+      return Fit(0, systSeed, {}, std::vector<SystShifts>(1, systSeed), verb);
     }
     
     /// Return the fit covariance
@@ -93,23 +106,58 @@ namespace ana
     /// Return the postfit errors
     std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
 
+    
+    SystShifts GetSystShifts() const {return fShifts;}
+
     /// Evaluate the log-likelihood, as required by MINUT interface
-    virtual double operator()(const std::vector<double>& pars) const;
+    virtual double operator()(const std::vector<double>& pars) const override;
+
+    std::vector<double> Gradient(const std::vector<double>& pars) const override;
+    bool CheckGradient() const override {return fPrec != kFast;}
 
     /// Definition of one-sigma, required by MINUIT
-    virtual double Up() const {return 1;}
+    virtual double Up() const override {return 1;}
   protected:
+    struct SeedPt
+    {
+      std::map<const IFitVar*, double> fitvars;
+      SystShifts shift;
+    };
+    std::vector<SeedPt> ExpandSeeds(const std::map<const IFitVar*,
+                                                   std::vector<double>>& seedPts,
+                                    std::vector<SystShifts> systSeedPts) const;
+
+    /// Helper for \ref FitHelper
+    double FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
+                           SystShifts& systSeed,
+                           Verbosity verb) const;
+
     /// Helper for \ref Fit
     double FitHelper(osc::IOscCalculatorAdjustable* seed,
-                     SystShifts& systSeed,
+                     SystShifts& bestSysts,
                      const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     std::vector<SystShifts> systSeedPts,
                      Verbosity verb) const;
+
+    /// Updates mutable fCalc and fShifts
+    void DecodePars(const std::vector<double>& pars) const;
+
+    /// Intended to be called only once (from constructor) to initialize
+    /// fSupportsDerivatives
+    bool SupportsDerivatives() const;
 
     const IExperiment* fExpt;
     std::vector<const IFitVar*> fVars;
     std::vector<const ISyst*> fSysts;
+    Precision fPrec = kNormal;
     mutable osc::IOscCalculatorAdjustable* fCalc;
     mutable SystShifts fShifts;
+
+    bool fSupportsDerivatives;
+
+    mutable int fNEval = 0;
+    mutable int fNEvalGrad = 0;
+    mutable int fNEvalFiniteDiff = 0;
 
     // Some information for post-fit evaluation if necessary
     mutable TMatrixDSym* fCovar;
@@ -118,6 +166,7 @@ namespace ana
     mutable std::vector<double> fPreFitErrors;
     mutable std::vector<double> fPostFitValues;
     mutable std::vector<double> fPostFitErrors;
+
   };
 
   // Default values for Profile()
@@ -140,6 +189,7 @@ namespace ana
   /// \param profSysts Profile over these systematics
   /// \param seedPts   Set each var to each of the values. Try all
   ///                  combinations. Beware of combinatorical explosion...
+  /// \param      systSeedPts If non-empty, try fit starting at each of these
   /// \param[out] profVarsMap Pass empty map. Returns best values of each var.
   /// \param[out] systsMap    Pass empty map. Returns best values of each syst.
   ///
@@ -152,17 +202,7 @@ namespace ana
                const std::vector<const IFitVar*>& profVars = {},
                const std::vector<const ISyst*>& profSysts = {},
                const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
-               std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
-               std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
-
-  TH1* Profile(const IExperiment* expt,
-	       osc::IOscCalculatorAdjustable* calc,
-               const ISyst* s,
-	       int nbinsx, double minx, double maxx,
-	       double minchi = -1,
-               const std::vector<const IFitVar*>& profVars = {},
-               const std::vector<const ISyst*>& profSysts = {},
-               const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               const std::vector<SystShifts>& systsSeedPts = {},
                std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
 
@@ -174,17 +214,14 @@ namespace ana
                    double minchi = -1,
                    std::vector<const IFitVar*> profVars = {},
                    std::vector<const ISyst*> profSysts = {},
-                   const std::map<const IFitVar*, std::vector<double>>& seedPts = {});
+                   const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                   const std::vector<SystShifts>& systsSeedPts = {},
+                   std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
+                   std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
 
   /// \f$\chi^2\f$ scan in one variable, holding all others constant
   TH1* Slice(const IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
-             int nbinsx, double minx, double maxx,
-             double minchi = -1);
-
-  /// \f$\chi^2\f$ scan in one systematic variable, holding all others constant
-  TH1* Slice(const IExperiment* expt,
-             osc::IOscCalculatorAdjustable* calc, const ISyst* s,
              int nbinsx, double minx, double maxx,
              double minchi = -1);
 
@@ -204,6 +241,7 @@ namespace ana
 		     const std::vector<const IFitVar*>& profVars = {},
 		     const std::vector<const ISyst*>& profSysts = {},
                      const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                     const std::vector<SystShifts>& systsSeedPts = {},
 		     bool transpose = false);
 
   /// \brief Intended for use on the output of \ref Profile
