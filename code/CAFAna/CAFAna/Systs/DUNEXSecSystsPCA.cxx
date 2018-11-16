@@ -7,7 +7,10 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  DUNEXSecSystPCA::DUNEXSecSystPCA(int idx) : fIdx(idx)
+  DUNEXSecSystPCA::DUNEXSecSystPCA(int idx) :
+    ISyst(TString::Format("xsecpca%d", fIdx).Data(),
+          TString::Format("Cross section principal component %d", fIdx).Data()),
+    fIdx(idx)
   {
     TFile f((FindCAFAnaDir()+"Systs/xsec_shifts.root").c_str());
     assert(!f.IsZombie());
@@ -15,18 +18,6 @@ namespace ana
     TH1* h = (TH1*)f.Get(TString::Format("syst%d", idx).Data());
     assert(h);
     for(int i = 0; i < nuenumu_dummy; ++i) fCoeffs[i] = h->GetBinContent(i+1);
-  }
-
-  //----------------------------------------------------------------------
-  std::string DUNEXSecSystPCA::ShortName() const
-  {
-    return TString::Format("xsecpca%d", fIdx).Data();
-  }
-
-  //----------------------------------------------------------------------
-  std::string DUNEXSecSystPCA::LatexName() const
-  {
-    return TString::Format("Cross section principal component %d", fIdx).Data();
   }
 
   //----------------------------------------------------------------------

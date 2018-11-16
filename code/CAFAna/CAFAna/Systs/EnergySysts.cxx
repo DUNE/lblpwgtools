@@ -1,6 +1,14 @@
 #include "CAFAna/Systs/EnergySysts.h"
 
 namespace ana {
+  const eScaleMuLArSyst keScaleMuLArSyst;
+  const EnergyScaleMuSystND kEnergyScaleMuSystND;
+  const EnergyScaleESyst kEnergyScaleESyst;
+  const EnergyScaleNSyst kEnergyScaleNSyst;
+  const EnergyScalePSyst kEnergyScalePSyst;
+  const EnergyScalePipSyst kEnergyScalePipSyst;
+  const EnergyScalePimSyst kEnergyScalePimSyst;
+  const EnergyScalePi0Syst kEnergyScalePi0Syst;
 
   /*  void HadronCorr::Shift(double sigma,
 			Restorer& restore,

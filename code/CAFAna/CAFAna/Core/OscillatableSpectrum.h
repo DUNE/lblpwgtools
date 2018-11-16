@@ -8,10 +8,9 @@
 
 #include <string>
 
-#include "TMD5.h"
-
 class TH2;
 class TH2D;
+class TMD5;
 
 namespace osc{class IOscCalculator;}
 
@@ -24,8 +23,6 @@ namespace ana
     friend class SpectrumLoaderBase;
     friend class SpectrumLoader;
     friend class NullLoader;
-    friend class MRCCLoader;
-    friend class DUNERunPOTSpectrumLoader;
 
     OscillatableSpectrum(std::string label,
                          const Binning& bins,
@@ -33,15 +30,13 @@ namespace ana
                          const Var& var,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted,
-                         int potRun = -1);
+                         const Var& wei = kUnweighted);
 
     OscillatableSpectrum(SpectrumLoaderBase& loader,
                          const HistAxis& axis,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted,
-                         int potRun = -1);
+                         const Var& wei = kUnweighted);
 
     OscillatableSpectrum(std::string label, const Binning& bins);
     OscillatableSpectrum(std::string label, double pot, double livetime,
@@ -91,7 +86,8 @@ namespace ana
                          const std::vector<Binning>& bins,
                          const Var& rwVar)
       : ReweightableSpectrum(labels, bins, rwVar),
-        fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
+        fCachedOsc(0, {}, {}, 0, 0),
+        fCachedHash(0)
     {
     }
 
@@ -99,18 +95,12 @@ namespace ana
                          const Binning& bins,
                          const Var& rwVar)
       : ReweightableSpectrum(label, bins, rwVar),
-        fOscCache(0, {}, {}, 0, 0), fOscHash(kUninitHash)
+        fCachedOsc(0, {}, {}, 0, 0),
+        fCachedHash(0)
     {
     }
 
-    const unsigned char kUninitHashData[16] = {0, 0, 0, 0,
-                                               0, 0, 0, 0,
-                                               0, 0, 0, 0,
-                                               0, 0, 0, 0};
-    const TMD5 kUninitHash = TMD5(kUninitHashData);
-          
-    mutable Spectrum fOscCache;
-    mutable TMD5 fOscHash;
-    mutable int fOscCacheFrom, fOscCacheTo;
+    mutable Spectrum fCachedOsc;
+    mutable TMD5* fCachedHash;
   };
 }

@@ -21,7 +21,10 @@ class TH1;
 class TH2;
 class TH3;
 class TF1;
+class TH1D;
 class TH2F;
+class TH2D;
+class TH3D;
 class TVector3;
 
 namespace ana
@@ -29,6 +32,20 @@ namespace ana
   class Binning;
   class Spectrum;
   class Ratio;
+
+  enum EBinType
+  {
+    kBinContent, ///< Regular histogram
+    kBinDensity  ///< Divide bin contents by bin widths
+  };
+
+
+  /// For use as an argument to \ref Spectrum::ToTH1
+  enum EExposureType{
+    kPOT,
+    kLivetime
+  };
+
 
   /// Return a different string each time, for creating histograms
   std::string UniqueName();
@@ -55,12 +72,6 @@ namespace ana
     ~FloatingExceptionOnNaN();
   protected:
     fexcept_t fBackup;
-  };
-
-  /// For use as an argument to \ref Spectrum::ToTH1
-  enum EExposureType{
-    kPOT,
-    kLivetime
   };
 
   /** \brief Compute bin-to-bin covariance matrix from a collection of sets of bin contents.
@@ -94,8 +105,8 @@ namespace ana
       \returns The log-likelihood formula from the PDG
       \f[ \chi^2=2\sum_i^{\rm bins}\left(e_i-o_i+o_i\ln\left({o_i\over e_i}\right)\right) \f]
 
-      Includes underflow bin and an option for 
-      overflow bin (off by default) and handles 
+      Includes underflow bin and an option for
+      overflow bin (off by default) and handles
       zero observed or expected events correctly.
   **/
   double LogLikelihood(const TH1* exp, const TH1* obs, bool useOverflow = false);
@@ -111,6 +122,11 @@ namespace ana
       Handles zero observed or expected events correctly.
   **/
   double LogLikelihood(double exp, double obs);
+
+  double LogLikelihoodDerivative(double e, double o, double dedx);
+
+  double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
+                                 const std::vector<double>& dedx);
 
   /**  \brief Chi-squared calculation using a covariance matrix.
 
@@ -149,17 +165,26 @@ namespace ana
   /// the null rows/columns.
   std::unique_ptr<TMatrixD> SymmMxInverse(const TMatrixD& mx);
 
+  /// Utility function to avoid need to switch on bins.IsSimple()
+  TH1D* MakeTH1D(const char* name, const char* title, const Binning& bins);
+  /// Utility function to avoid 4-way combinatorial explosion on the bin types
+  TH2D* MakeTH2D(const char* name, const char* title,
+                 const Binning& binsx,
+                 const Binning& binsy);
+
   /// \brief For use with \ref Var2D
   ///
   /// Re-expand a histogram flattened by \ref Var2D into a 2D histogram for
   /// plotting purposes. The binning scheme must match that used in the
   /// original Var.
-  TH2* ToTH2(const Spectrum& s, double exposure, EExposureType expotype,
-             const Binning& binsx, const Binning& binsy);
+  TH2* ToTH2(const Spectrum& s, double exposure, ana::EExposureType expotype,
+             const Binning& binsx, const Binning& binsy,
+	     ana::EBinType bintype = ana::EBinType::kBinContent);
 
   /// Same as ToTH2, but with 3 dimensions
-  TH3* ToTH3(const Spectrum& s, double exposure, EExposureType expotype,
-             const Binning& binsx, const Binning& binsy, const Binning& binsz);
+  TH3* ToTH3(const Spectrum& s, double exposure, ana::EExposureType expotype,
+             const Binning& binsx, const Binning& binsy, const Binning& binsz,
+	     ana::EBinType bintype = ana::EBinType::kBinContent);
 
   /// \brief For use with \ref Var2D
   ///
@@ -169,20 +194,22 @@ namespace ana
   TH2* ToTH2(const Ratio& r, const Binning& binsx, const Binning& binsy);
 
   /// Same as ToTH2, but with 3 dimensions
-  TH3* ToTH3(const Ratio& r, const Binning& binsx, 
+  TH3* ToTH3(const Ratio& r, const Binning& binsx,
 	     const Binning& binsy, const Binning& binsz);
 
   /// Helper for ana::ToTH2
-  TH2* ToTH2Helper(std::unique_ptr<TH1> h1, 
-		   const Binning& binsx, 
-		   const Binning& binsy);
-  
+  TH2* ToTH2Helper(std::unique_ptr<TH1> h1,
+		   const Binning& binsx,
+		   const Binning& binsy,
+		   ana::EBinType bintype = ana::EBinType::kBinContent);
+
   /// Helper for ana::ToTH3
-  TH3* ToTH3Helper(std::unique_ptr<TH1> h1, 
-		   const Binning& binsx, 
-		   const Binning& binsy, 
-		   const Binning& binsz);
-  
+  TH3* ToTH3Helper(std::unique_ptr<TH1> h1,
+		   const Binning& binsx,
+		   const Binning& binsy,
+		   const Binning& binsz,
+		   ana::EBinType bintype = ana::EBinType::kBinContent);
+
   /// Find files matching a UNIX glob, plus expand environment variables
   std::vector<std::string> Wildcard(const std::string& wildcardString);
 
@@ -220,7 +247,7 @@ namespace ana
 
   bool AlmostEqual(double a, double b);
 
-  std::string pnfs2xrootd(std::string loc);
+  std::string pnfs2xrootd(std::string loc, bool unauth = false);
 
   // Calling this function will return a Fourier series, fit to the input
   // histogram.  Assumes x-axis covers one period
@@ -237,13 +264,13 @@ namespace ana
     const double fxlo;  // Lower bound
     const double fxhi;  // Upper bound - assumed to be 1 osc from the low end
     const int    fNOsc; // Highest harmonic to include
-    
+
   };
 
   void EnsurePositiveDefinite(TH2* mat);
 
   /// Returns a masking histogram based on axis limits
-  TH1* GetMaskHist(const Spectrum& s, 
-		   double xmin=0, double xmax=-1, 
+  TH1* GetMaskHist(const Spectrum& s,
+		   double xmin=0, double xmax=-1,
 		   double ymin=0, double ymax=-1);
 }

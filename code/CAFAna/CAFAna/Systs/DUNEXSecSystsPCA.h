@@ -8,9 +8,6 @@ namespace ana
   class DUNEXSecSystPCA: public ISyst
   {
   public:
-    virtual std::string ShortName() const override;
-    virtual std::string LatexName() const override;
-
     virtual void Shift(double sigma,
                        Restorer& restore,
                        caf::StandardRecord* sr,

@@ -12,6 +12,8 @@
 
 namespace ana
 {
+  const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
+
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
