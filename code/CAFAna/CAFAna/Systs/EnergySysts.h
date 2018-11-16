@@ -10,8 +10,8 @@
 
 namespace ana
 {
-  /// 2% systematic on muon energy
-  /// 100% correlated between near and far detectos
+  /// 1% systematic on muon energy
+  /// 100% correlated between near and far detectors for those ND events that stop in the LAr
   class EnergyScaleMuSyst: public ISyst
   {
   public:
@@ -24,8 +24,9 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
       restore.Add(sr->dune.Ev_reco_numu);
+      restore.Add(sr->dune.RecoLepEnNumu);
 
-      const double scale = 1 + .02*sigma;
+      const double scale = 1 + .01*sigma;
 
       // Checks if ND
       if(!sr->dune.isFD){
@@ -214,10 +215,18 @@ namespace ana
       restore.Add(sr->dune.RecoHadEnNumu);
       restore.Add(sr->dune.RecoHadEnNue);
 
+      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
       const double scale = 1 + .25*sigma;
-      const double fracN = ((sr->dune.eN*.25) / sr->dune.Ev);
-      const double fracNY = ((sr->dune.eN*.25) / (sr->dune.Ev*sr->dune.Y));
-
+      double fracN = 0;
+      double fracNY = 0;
+      if(sr->dune.isFD) {
+        fracN = ((sr->dune.eN*.25) / sr->dune.Ev);
+	fracNY = ((sr->dune.eN*.25) / (sr->dune.Ev*sr->dune.Y));
+      }
+      else {
+        fracN = ((sr->dune.eN*.25) / (sr->dune.Ev*1000));
+	fracNY = ((sr->dune.eN*.25) / (sr->dune.Ev*sr->dune.Y*1000));
+      }
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracN * scale + (1 - fracN));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracN * scale + (1 - fracN));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracN * scale + (1 - fracN));
@@ -246,8 +255,17 @@ namespace ana
       restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
-      const double fracP = (sr->dune.eP / sr->dune.Ev);
-      const double fracPY = (sr->dune.eP / (sr->dune.Ev * sr->dune.Y));
+      double fracP = 0;
+      double fracPY = 0;
+      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
+      if(sr->dune.isFD) {
+	fracP = (sr->dune.eP / sr->dune.Ev); 
+	fracPY = (sr->dune.eP / (sr->dune.Ev * sr->dune.Y));
+      }
+      else {
+	fracP = (sr->dune.eP / (sr->dune.Ev*1000)); 
+	fracPY = (sr->dune.eP / (sr->dune.Ev*sr->dune.Y*1000));
+      }
 
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracP * scale + (1 - fracP));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracP * scale + (1 - fracP));
@@ -277,9 +295,17 @@ namespace ana
       restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
-      const double fracPip = (sr->dune.ePip / sr->dune.Ev);
-      const double fracPipY = (sr->dune.ePip / (sr->dune.Ev*sr->dune.Y));
-
+      double fracPip = 0;
+      double fracPipY = 0;
+      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
+      if(sr->dune.isFD) {
+	fracPip = (sr->dune.ePip / sr->dune.Ev);
+	fracPipY = (sr->dune.ePip / (sr->dune.Ev*sr->dune.Y));
+      }
+      else {
+	fracPip = (sr->dune.ePip / (sr->dune.Ev*1000));
+	fracPipY = (sr->dune.ePip / (sr->dune.Ev*sr->dune.Y*1000));
+      }
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPip * scale + (1 - fracPip));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPip * scale + (1 - fracPip));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPip * scale + (1 - fracPip));
@@ -308,9 +334,17 @@ namespace ana
       restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
-      const double fracPim = (sr->dune.ePim / sr->dune.Ev);
-      const double fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y));
-
+      double fracPim = 0;
+      double fracPimY = 0;
+      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
+      if(sr->dune.isFD) {
+	fracPim = (sr->dune.ePim / sr->dune.Ev); 
+	fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y));
+      }
+      else {
+	fracPim = (sr->dune.ePim / (sr->dune.Ev*1000)); 
+	fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y*1000));
+      }
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPim * scale + (1 - fracPim));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPim * scale + (1 - fracPim));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPim * scale + (1 - fracPim));
@@ -339,9 +373,17 @@ namespace ana
       restore.Add(sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .1 * sigma;
-      const double fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
-      const double fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
-
+      double fracPi0 = 0;
+      double fracPi0Y = 0;
+      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
+      if(sr->dune.isFD) {
+	fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
+	fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
+      }
+      else {
+	fracPi0 = (sr->dune.ePi0 / (sr->dune.Ev*1000));
+	fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y*1000));
+      }
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
