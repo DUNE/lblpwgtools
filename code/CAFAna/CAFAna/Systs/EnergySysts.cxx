@@ -10,7 +10,7 @@ namespace ana {
   const EnergyScalePimSyst kEnergyScalePimSyst;
   const EnergyScalePi0Syst kEnergyScalePi0Syst;
 
-  void HadronCorr::Shift(double sigma,
+  /*  void HadronCorr::Shift(double sigma,
 			Restorer& restore,
 			caf::StandardRecord* sr, double& weight) const
   {
@@ -52,5 +52,5 @@ namespace ana {
     sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue*( scaleP*EfracPY + scaleN*EfracNY + scalePi0*EfracPi0Y + scalePim*EfracPimY + scalePip*EfracPipY + (1 - (EfracPY + EfracNY + EfracPi0Y + EfracPimY + EfracPipY)) );
 
   }
-
+  */
 }
