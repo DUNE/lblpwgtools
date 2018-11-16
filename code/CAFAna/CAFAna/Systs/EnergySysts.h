@@ -336,10 +336,10 @@ namespace ana
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_nue);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.RecoHadEnNumu);
-      restore.Add(sr->dune.RecoHadEnNue);
+      restore.Add(sr->dune.Ev_reco_nue,
+                  sr->dune.Ev_reco_numu,
+                  sr->dune.RecoHadEnNumu,
+                  sr->dune.RecoHadEnNue);
 
       const double scale = 1. + 0.02*sigma;
       
