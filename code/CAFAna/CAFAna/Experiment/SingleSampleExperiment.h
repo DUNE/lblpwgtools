@@ -10,12 +10,11 @@ namespace ana
   class CosmicBkgScaleSyst: public ISyst
   {
   public:
-    std::string ShortName() const {return "cosmicScale";}
-    std::string LatexName() const {return "Cosmic background scale";}
+    CosmicBkgScaleSyst() : ISyst("cosmicScale", "Cosmic background scale") {}
     void Shift(double, Restorer&, caf::StandardRecord*, double&) const {}
   };
 
-  const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
+  extern const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
 
   /// Compare a single data spectrum to the MC + cosmics expectation
   class SingleSampleExperiment: public IExperiment

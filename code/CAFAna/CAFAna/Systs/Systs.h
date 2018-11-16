@@ -10,13 +10,11 @@
 
 namespace ana
 {
-
   /// Absolute energy scale systematic
   class EnergyScaleSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScale";}
-    std::string LatexName() const override {return "Energy Scale";}
+    EnergyScaleSyst() : ISyst("eScale", "Energy Scale") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -33,15 +31,14 @@ namespace ana
     }
   };
 
-  static const EnergyScaleSyst kEnergyScaleSyst;
+  extern const EnergyScaleSyst kEnergyScaleSyst;
 
 
   /// Energy resolution systematic
   class EnergyResSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eRes";}
-    std::string LatexName() const override {return "Energy Resolution";}
+    EnergyResSyst() : ISyst("eRes", "Energy Resolution") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -57,7 +54,7 @@ namespace ana
     }
   };
 
-  static const EnergyResSyst kEnergyResSyst;
+  extern const EnergyResSyst kEnergyResSyst;
 
 
 
@@ -69,8 +66,7 @@ namespace ana
   class NumuFHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "numufhcnorm";}
-    std::string LatexName() const override {return "Numu FHC Norm Syst";}
+    NumuFHCSyst() : ISyst("numufhcnorm", "Numu FHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -80,14 +76,13 @@ namespace ana
     }
   };
 
-  static const NumuFHCSyst kNumuFHCSyst;
+  extern const NumuFHCSyst kNumuFHCSyst;
 
   /// 5% normalization syst for numubar
   class NumuRHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "numurhcnorm";}
-    std::string LatexName() const override {return "Numu RHC Norm Syst";}
+    NumuRHCSyst() : ISyst("numurhcnorm", "Numu RHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -97,14 +92,13 @@ namespace ana
     }
   };
 
-  static const NumuRHCSyst kNumuRHCSyst;
+  extern const NumuRHCSyst kNumuRHCSyst;
 
   /// 2% normalization syst for nue
   class NueFHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nuefhcnorm";}
-    std::string LatexName() const override {return "Nue FHC Norm Syst";}
+    NueFHCSyst() : ISyst("nuefhcnorm", "Nue FHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -114,14 +108,13 @@ namespace ana
     }
   };
 
-  static const NueFHCSyst kNueFHCSyst;
+  extern const NueFHCSyst kNueFHCSyst;
 
   /// 2% normalization syst for nuebar
   class NueRHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nuerhcnorm";}
-    std::string LatexName() const override {return "Nue RHC Norm Syst";}
+    NueRHCSyst() : ISyst("nuerhcnorm", "Nue RHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -131,7 +124,7 @@ namespace ana
     }
   };
 
-  static const NueRHCSyst kNueRHCSyst;
+  extern const NueRHCSyst kNueRHCSyst;
 
   //Background normalization following CDR
 
@@ -139,8 +132,7 @@ namespace ana
   class NCDisSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "NCDis";}
-    std::string LatexName() const override {return "NC Dis Norm Syst";}
+    NCDisSyst() : ISyst("NCDis", "NC Dis Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -150,14 +142,13 @@ namespace ana
     }
   };
 
-  static const NCDisSyst kNCDisSyst;
+  extern const NCDisSyst kNCDisSyst;
 
   /// 5% normalization syst for NC on nue analysis, correlated with numu-CC background
   class NCAppSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "NCApp";}
-    std::string LatexName() const override {return "NC App Norm Syst";}
+    NCAppSyst() : ISyst("NCApp", "NC App Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -167,14 +158,13 @@ namespace ana
     }
   };
 
-  static const NCAppSyst kNCAppSyst;
+  extern const NCAppSyst kNCAppSyst;
 
   /// 20% normalization syst for nutau - correlated for app/dis and fhc/rhc
   class NutauSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nutau";}
-    std::string LatexName() const override {return "nutau Norm Syst";}
+    NutauSyst() : ISyst("nutau", "nutau Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -184,14 +174,13 @@ namespace ana
     }
   };
 
-  static const NutauSyst kNutauSyst;
+  extern const NutauSyst kNutauSyst;
 
   /// 5% normalization syst for beam nues - uncorrelated in fhc/rhc
   class NueBeamFHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nuebeamfhc";}
-    std::string LatexName() const override {return "Nue Beam FHC Norm Syst";}
+    NueBeamFHCSyst() : ISyst("nuebeamfhc", "Nue Beam FHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -201,14 +190,13 @@ namespace ana
     }
   };
 
-  static const NueBeamFHCSyst kNueBeamFHCSyst;
+  extern const NueBeamFHCSyst kNueBeamFHCSyst;
 
   /// 5% normalization syst for beam nues
   class NueBeamRHCSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "nuebeamrhc";}
-    std::string LatexName() const override {return "Nue Beam RHC Norm Syst";}
+    NueBeamRHCSyst() : ISyst("nuebeamrhc", "Nue Beam RHC Norm Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -218,6 +206,6 @@ namespace ana
     }
   };
 
-  static const NueBeamRHCSyst kNueBeamRHCSyst;
+  extern const NueBeamRHCSyst kNueBeamRHCSyst;
 
 }

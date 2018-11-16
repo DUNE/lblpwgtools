@@ -20,14 +20,20 @@ namespace ana
   class ISyst
   {
   public:
-    ISyst();
+    ISyst(const std::string& shortName,
+          const std::string& latexName);
+    ISyst(const ISyst &) = delete;   // no copying.
+    ISyst(ISyst && rhs) = delete;    // no moving either.
     virtual ~ISyst();
 
+    void operator=(const ISyst &) = delete;  // still no copying.
+    void operator=(ISyst &&)      = delete;  // etc.
+
     /// The name printed out to the screen
-    virtual std::string ShortName() const = 0;
+    virtual std::string ShortName() const final {return fShortName;}
 
     /// The name used on plots (ROOT's TLatex syntax)
-    virtual std::string LatexName() const = 0;
+    virtual std::string LatexName() const final {return fLatexName;}
 
     /// \brief Perform the systematic shift
     ///
@@ -47,6 +53,10 @@ namespace ana
     {
       return 3;
     }
+
+  private:
+    std::string fShortName;
+    std::string fLatexName;
   };
 
 

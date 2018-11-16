@@ -15,8 +15,7 @@ namespace ana
   class eScaleMuLArSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleMuLAr";}
-    std::string LatexName() const override {return "Muon Energy Scale LAr";}
+    eScaleMuLArSyst() : ISyst("eScaleMuLAr", "Muon Energy Scale LAr") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -28,7 +27,7 @@ namespace ana
       restore.Add(sr->dune.RecoLepEnNumu);
 
       const double scale = 1 + .01*sigma;
- 
+
       // Checks if ND
       if(!sr->dune.isFD){
 	// Select only CC muon neutrino events that stop in LAr
@@ -48,7 +47,7 @@ namespace ana
     }
   };
 
-  static const eScaleMuLArSyst keScaleMuLArSyst;
+  extern const eScaleMuLArSyst keScaleMuLArSyst;
 
   /// 1% systematics on muon energy for those tracks that are measured by the magnetic field
   // Uncorrelated between ND and FD
@@ -56,8 +55,7 @@ namespace ana
   class EnergyScaleMuSystND: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleMuND";}
-    std::string LatexName() const override {return "Muon Energy Scale Near Detector";}
+    EnergyScaleMuSystND() : ISyst("eScaleMuND", "Muon Energy Scale Near Detector") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -69,22 +67,21 @@ namespace ana
       const double scale = 1 + .01*sigma;
 
       // Is a numu CC and enters the tracker
-      if(!sr->dune.isFD && abs(sr->dune.nuPDG)==14 && sr->dune.isCC==1 && sr->dune.muon_tracker==1){ 
+      if(!sr->dune.isFD && abs(sr->dune.nuPDG)==14 && sr->dune.isCC==1 && sr->dune.muon_tracker==1){
 	sr->dune.Ev_reco = sr->dune.Ev_reco * ( (1 - sr->dune.Y) * scale + sr->dune.Y );
 	sr->dune.Elep_reco = sr->dune.Elep_reco * scale;
-      } 
+      }
     }
   };
 
-  static const EnergyScaleMuSystND kEnergyScaleMuSystND;
+  extern const EnergyScaleMuSystND kEnergyScaleMuSystND;
 
   /// 2% energy scale systematic on electron energy
   /// 100% correlated between near and far detectors
   class EnergyScaleESyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleE";}
-    std::string LatexName() const override {return "Electron Energy Scale";}
+    EnergyScaleESyst() : ISyst("eScaleE", "Electron Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -114,7 +111,7 @@ namespace ana
     }
   };
 
-  static const EnergyScaleESyst kEnergyScaleESyst;
+  extern const EnergyScaleESyst kEnergyScaleESyst;
 
 
   /// Energy scale systematics for hadronic final state particles
@@ -123,8 +120,7 @@ namespace ana
   class EnergyScaleNSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleN";}
-    std::string LatexName() const override {return "Neutron Energy Scale";}
+    EnergyScaleNSyst() : ISyst("eScaleN", "Neutron Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -156,14 +152,13 @@ namespace ana
     }
   };
 
-  static const EnergyScaleNSyst kEnergyScaleNSyst;  
+  extern const EnergyScaleNSyst kEnergyScaleNSyst;
 
   // Proton energy scale
   class EnergyScalePSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScaleP";}
-    std::string LatexName() const override {return "Proton Energy Scale";}
+    EnergyScalePSyst() : ISyst("eScaleP", "Proton Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -180,11 +175,11 @@ namespace ana
       double fracPY = 0;
       // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
       if(sr->dune.isFD) {
-	fracP = (sr->dune.eP / sr->dune.Ev); 
+	fracP = (sr->dune.eP / sr->dune.Ev);
 	fracPY = (sr->dune.eP / (sr->dune.Ev * sr->dune.Y));
       }
       else {
-	fracP = (sr->dune.eP / (sr->dune.Ev*1000)); 
+	fracP = (sr->dune.eP / (sr->dune.Ev*1000));
 	fracPY = (sr->dune.eP / (sr->dune.Ev*sr->dune.Y*1000));
       }
 
@@ -196,14 +191,13 @@ namespace ana
     }
   };
 
-  static const EnergyScalePSyst kEnergyScalePSyst;  
+  extern const EnergyScalePSyst kEnergyScalePSyst;
 
   // Pi plus energy scale
   class EnergyScalePipSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScalePip";}
-    std::string LatexName() const override {return "Pi plus Energy Scale";}
+    EnergyScalePipSyst() : ISyst("eScalePip", "Pi plus Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -235,14 +229,13 @@ namespace ana
     }
   };
 
-  static const EnergyScalePipSyst kEnergyScalePipSyst;
+  extern const EnergyScalePipSyst kEnergyScalePipSyst;
 
   // Pi minus energy scale
   class EnergyScalePimSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScalePim";}
-    std::string LatexName() const override {return "Pi minus Energy Scale";}
+    EnergyScalePimSyst() : ISyst("eScalePim", "Pi minus Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -259,11 +252,11 @@ namespace ana
       double fracPimY = 0;
       // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
       if(sr->dune.isFD) {
-	fracPim = (sr->dune.ePim / sr->dune.Ev); 
+	fracPim = (sr->dune.ePim / sr->dune.Ev);
 	fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y));
       }
       else {
-	fracPim = (sr->dune.ePim / (sr->dune.Ev*1000)); 
+	fracPim = (sr->dune.ePim / (sr->dune.Ev*1000));
 	fracPimY = (sr->dune.ePim / (sr->dune.Ev*sr->dune.Y*1000));
       }
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPim * scale + (1 - fracPim));
@@ -274,14 +267,13 @@ namespace ana
     }
   };
 
-  static const EnergyScalePimSyst kEnergyScalePimSyst;
+  extern const EnergyScalePimSyst kEnergyScalePimSyst;
 
   // Pi0 energy scale
   class EnergyScalePi0Syst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "eScalePi0";}
-    std::string LatexName() const override {return "Pi0 Energy Scale";}
+    EnergyScalePi0Syst() : ISyst("eScalePi0", "Pi0 Energy Scale") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -313,16 +305,13 @@ namespace ana
     }
   };
 
-  static const EnergyScalePi0Syst kEnergyScalePi0Syst;
+  extern const EnergyScalePi0Syst kEnergyScalePi0Syst;
 
   // Adjustable energy scale systematics which is correlated between all hadronic species
   class HadronCorr: public ISyst
   {
   public:
-    std::string ShortName() const override {return "HadronCorr";}
-    std::string LatexName() const override {return "Hadron Correlated energy";}
-
-    HadronCorr(double Nfrac, double Pfrac, double Pimfrac, double Pipfrac, double Pi0frac)
+    HadronCorr(double Nfrac, double Pfrac, double Pimfrac, double Pipfrac, double Pi0frac) : HadronCorr()
       {
 	fNfrac = Nfrac;
 	fPfrac = Pfrac;
@@ -331,7 +320,7 @@ namespace ana
 	fPi0frac = Pi0frac;
       }
 
-    HadronCorr()
+    HadronCorr() : ISyst("HadronCorr", "Hadron Correlated energy")
       {
 	fNfrac = .25;
 	fPfrac = .1;
@@ -351,7 +340,7 @@ namespace ana
     void SetPipFraction(const double Pipfrac) { fPipfrac = Pipfrac; }
     void SetPi0Fraction(const double Pi0frac) { fPi0frac = Pi0frac;}
 
-    void SetAllFraction(const double frac) 
+    void SetAllFraction(const double frac)
     {
       fNfrac = frac;
       fPfrac = frac;

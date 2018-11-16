@@ -13,20 +13,10 @@ namespace ana
 
   //----------------------------------------------------------------------
   DUNEXSecDiagSyst::DUNEXSecDiagSyst(int i)
-    : fIdx(i)
+    : ISyst(TString::Format("xsec_diag%d", fIdx).Data(),
+            TString::Format("Diagonalized xsec #%d", fIdx).Data()),
+    fIdx(i)
   {
-  }
-
-  //----------------------------------------------------------------------
-  std::string DUNEXSecDiagSyst::ShortName() const
-  {
-    return TString::Format("xsec_diag%d", fIdx).Data();
-  }
-
-  //----------------------------------------------------------------------
-  std::string DUNEXSecDiagSyst::LatexName() const
-  {
-    return TString::Format("Diagonalized xsec #%d", fIdx).Data();
   }
 
   //----------------------------------------------------------------------
