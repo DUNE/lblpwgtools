@@ -21,7 +21,13 @@ namespace ana
   {
     if(!fCut(sr)) return;
 
-    weight *= pow(1+fOneSigma, sigma);
+    if(fType == kExponential){
+      weight *= pow(1+fOneSigma, sigma);
+    }
+    else{
+      weight *= 1+sigma*fOneSigma;
+      weight = std::max(0., weight);
+    }
   }
 
   //----------------------------------------------------------------------

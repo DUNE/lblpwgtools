@@ -37,8 +37,10 @@ namespace ana
                    const std::vector<const IFitVar*>& profVars,
                    const std::vector<const ISyst*>& profSysts,
                    const std::map<const IFitVar*, std::vector<double>>& seedPts,
-                   bool parallel)
-    : fParallel(parallel)
+                   const std::vector<SystShifts>& systSeedPts,
+                   bool parallel,
+                   Fitter::Precision prec)
+    : fParallel(parallel), fPrec(prec)
   {
     fHist = ExpandedHistogram(";"+xvar->LatexName()+";"+yvar->LatexName(),
                               nbinsx, xmin, xmax,
@@ -73,7 +75,7 @@ namespace ana
       progTitle += ")";
     }
 
-    FillSurface(progTitle, expt, calc, xvar, yvar, profVars, profSysts, seedPts);
+    FillSurface(progTitle, expt, calc, xvar, yvar, profVars, profSysts, seedPts, systSeedPts);
 
     // Location of the best minimum found from filled surface
     double minchi = 1e10;
@@ -93,6 +95,7 @@ namespace ana
     std::vector<const IFitVar*> allVars = {xvar, yvar};
     allVars.insert(allVars.end(), profVars.begin(), profVars.end());
     Fitter fit(expt, allVars, profSysts);
+    fit.SetPrecision(fPrec);
     // Seed from best grid point
     xvar->SetValue(calc, fHist->GetXaxis()->GetBinCenter(minx));
     yvar->SetValue(calc, fHist->GetYaxis()->GetBinCenter(miny));
@@ -117,7 +120,8 @@ namespace ana
                             const IFitVar* xvar, const IFitVar* yvar,
                             const std::vector<const IFitVar*>& profVars,
                             const std::vector<const ISyst*>& profSysts,
-                            const std::map<const IFitVar*, std::vector<double>>& seedPts)
+                            const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                            const std::vector<SystShifts>& systSeedPts)
   {
     if(fParallel && !(profVars.empty() && profSysts.empty())){
       // Minuit calls this at some point, and it creates a static. Which
@@ -185,12 +189,12 @@ namespace ana
         pool->AddMemberTask(this, &Surface::FillSurfacePoint,
                             expt, calc,
                             xvar, xv, yvar, yv,
-                            profVars, profSysts, seedPts);
+                            profVars, profSysts, seedPts, systSeedPts);
       }
       else{
         FillSurfacePoint(expt, calc,
                          xvar, xv, yvar, yv,
-                         profVars, profSysts, seedPts);
+                         profVars, profSysts, seedPts, systSeedPts);
         ++neval;
         prog->SetProgress(neval/double(Nx*Ny));
       }
@@ -209,6 +213,36 @@ namespace ana
     }
   }
 
+  /// \brief Helper for Surface::FillSurfacePoint
+  ///
+  /// The cacheing of the nominal done in PredictionInterp is not
+  /// threadsafe. This is an inelegant but pragmatic way of surpressing it.
+  class OscCalcNoHash: public osc::IOscCalculatorAdjustable
+  {
+  public:
+    OscCalcNoHash(osc::IOscCalculatorAdjustable* c) : fCalc(c) {}
+
+    osc::IOscCalculatorAdjustable* Copy() const override
+    {
+      std::cout << "Surface::OscCalcNoHash not copyable." << std::endl;
+      abort();
+    }
+    double P(int a, int b, double E) override {return fCalc->P(a, b, E);}
+    /// Marks this calculator "unhashable" so the cacheing won't occur
+    TMD5* GetParamsHash() const override {return 0;}
+
+    // It's a shame we have to forward all the getters and setters explicitly,
+    // but I don't see how to avoid it. Take away some drudgery with a macro.
+#define F(v)\
+    void Set##v(double x) override {fCalc->Set##v(x);}\
+    double Get##v() const override {return fCalc->Get##v();}
+    F(L); F(Rho); F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
+#undef F
+
+  protected:
+    osc::IOscCalculatorAdjustable* fCalc;
+  };
+
   //----------------------------------------------------------------------
   void Surface::FillSurfacePoint(const IExperiment* expt,
                                  osc::IOscCalculatorAdjustable* calc,
@@ -216,14 +250,19 @@ namespace ana
                                  const IFitVar* yvar, double y,
                                  const std::vector<const IFitVar*>& profVars,
                                  const std::vector<const ISyst*>& profSysts,
-                                 const std::map<const IFitVar*, std::vector<double>>& seedPts)
+                                 const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                                 const std::vector<SystShifts>& systSeedPts)
   {
+    osc::IOscCalculatorAdjustable* calcNoHash = 0; // specific to parallel mode
+
     if(fParallel){
       // Need to take our own copy so that we don't get overwritten by someone
       // else's changes.
       calc = calc->Copy();
       xvar->SetValue(calc, x);
       yvar->SetValue(calc, y);
+
+      calcNoHash = new OscCalcNoHash(calc);
     }
 
     //Make sure that the profiled values of fitvars do not persist between steps.
@@ -231,24 +270,28 @@ namespace ana
 
     double chi;
     if(profVars.empty() && profSysts.empty()){
-      chi = expt->ChiSq(calc);
+      chi = expt->ChiSq(fParallel ? calcNoHash : calc);
     }
     else{
       Fitter fitter(expt, profVars, profSysts);
-      SystShifts systSeed = SystShifts::Nominal();
-      chi = fitter.Fit(calc, systSeed, seedPts, Fitter::kQuiet);
+      fitter.SetPrecision(fPrec);
+      SystShifts bestSysts;
+      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, Fitter::kQuiet);
 
       for(unsigned int i = 0; i < profVars.size(); ++i){
         fProfHists[i]->Fill(x, y, profVars[i]->GetValue(calc));
       }
       for(unsigned int j = 0; j < profSysts.size(); ++j){
-        fProfHists[j+profVars.size()]->Fill(x, y, systSeed.GetShift(profSysts[j]));
+        fProfHists[j+profVars.size()]->Fill(x, y, bestSysts.GetShift(profSysts[j]));
       }
     }
 
     fHist->Fill(x, y, chi);
 
-    if(fParallel) delete calc;
+    if(fParallel){
+      delete calc;
+      delete calcNoHash;
+    }
   }
 
   //---------------------------------------------------------------------

@@ -13,9 +13,6 @@ namespace ana
   public:
     virtual ~DUNEFluxSyst();
 
-    virtual std::string ShortName() const override {return TString::Format("flux%i", fIdx).Data();}
-    virtual std::string LatexName() const override {return TString::Format("Flux #%i", fIdx).Data();}
-    
     virtual void Shift(double sigma,
                        Restorer& restore,
                        caf::StandardRecord* sr,
@@ -23,7 +20,12 @@ namespace ana
 
   protected:
     friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i);
-    DUNEFluxSyst(int i) : fIdx(i), fScale() {}
+    DUNEFluxSyst(int i) :
+      ISyst(TString::Format("flux%i", i).Data(),
+            TString::Format("Flux #%i", i).Data()),
+      fIdx(i), fScale()
+    {
+    }
 
     int fIdx;
 
@@ -39,7 +41,7 @@ namespace ana
     operator std::vector<const ISyst*>()
     {
       return std::vector<const ISyst*>(begin(), end());
-    }    
+    }
   };
 
   DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N);

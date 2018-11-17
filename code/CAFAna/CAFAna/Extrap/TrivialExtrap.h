@@ -6,8 +6,6 @@ namespace ana
 {
   class Loaders;
 
-  class DUNERunPOTSpectrumLoader;
-
   /// "Extrapolation" that simply returns the FD MC prediction
   class TrivialExtrap: public IExtrap
   {

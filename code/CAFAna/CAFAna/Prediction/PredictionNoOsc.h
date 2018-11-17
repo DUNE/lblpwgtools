@@ -5,8 +5,6 @@ namespace ana
 {
   class Loaders;
 
-  class DUNERunPOTSpectrumLoader;
-
   /// Prediction that wraps a simple Spectrum
   class PredictionNoOsc: public IPrediction
   {

@@ -10,12 +10,11 @@ namespace ana
   class CosmicBkgScaleSyst: public ISyst
   {
   public:
-    std::string ShortName() const {return "cosmicScale";}
-    std::string LatexName() const {return "Cosmic background scale";}
+    CosmicBkgScaleSyst() : ISyst("cosmicScale", "Cosmic background scale") {}
     void Shift(double, Restorer&, caf::StandardRecord*, double&) const {}
   };
 
-  const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
+  extern const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
 
   /// Compare a single data spectrum to the MC + cosmics expectation
   class SingleSampleExperiment: public IExperiment
@@ -53,6 +52,10 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
+    virtual void Derivative(osc::IOscCalculator* calc,
+                            const SystShifts& shift,
+                            std::unordered_map<const ISyst*, double>& dch) const override;
+
     virtual void SaveTo(TDirectory* dir) const override;
     static std::unique_ptr<SingleSampleExperiment> LoadFrom(TDirectory* dir);
 
@@ -73,9 +76,12 @@ namespace ana
 		     double ymin=0, double ymax=-1);
 
   protected:
+    TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
+                             const SystShifts& syst) const;
+
     const IPrediction* fMC;
     Spectrum fData;
-    TH1* fCosmic;
+    TH1D* fCosmic;
     TH1* fMask;
     
     double fCosmicScaleError;
