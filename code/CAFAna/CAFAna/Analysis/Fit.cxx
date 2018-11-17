@@ -172,8 +172,8 @@ namespace ana
     fPostFitErrors = minpt.UserParameters().Errors();
 
     ROOT::Minuit2::MnHesse hesse(2);
+    hesse(*this, minpt, 1e5);
 
-    // hesse(*this, minpt, 1e5);
     gErrorIgnoreLevel = olderr;
     // Store results back to the "seed" variable
     for(unsigned int i = 0; i < fVars.size(); ++i){
