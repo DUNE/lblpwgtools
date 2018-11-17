@@ -16,10 +16,12 @@
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/EnergySysts.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TTree.h"
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Vars/FitVars.h"
 
@@ -44,13 +46,16 @@ const Var kFDNumuPid  = SIMPLEVAR(dune.cvnnumu);
 const Var kFDNuePid   = SIMPLEVAR(dune.cvnnue);
 const Var kMVANUMU    = SIMPLEVAR(dune.mvanumu);
 
-const Var kvtxx_truth = SIMPLEVAR(dune.nuvtxx_truth);
-const Var kvtxy_truth = SIMPLEVAR(dune.nuvtxy_truth);
-const Var kvtxz_truth = SIMPLEVAR(dune.nuvtxz_truth);
+// const Var kvtxx_truth = SIMPLEVAR(dune.nuvtxx_truth);
+// const Var kvtxy_truth = SIMPLEVAR(dune.nuvtxy_truth);
+// const Var kvtxz_truth = SIMPLEVAR(dune.nuvtxz_truth);
 
 // -->ND
 const Var kRecoEnergyND = SIMPLEVAR(dune.Ev_reco);
 const Var kRecoYND      = (SIMPLEVAR(dune.Ev_reco) - SIMPLEVAR(dune.Elep_reco))/SIMPLEVAR(dune.Ev_reco);
+
+// CV weighting
+const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 
 // FD cut
 const Cut kFDSelNue     = kFDNuePid > 0.7;
@@ -83,26 +88,25 @@ const double pot_fd = 3.5 * 1.47e21 * 40/1.13;
 const double pot_nd = 3.5 * 1.47e21;
 
 // FD spectra
-SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nonswap.root");
-SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/FHC_nueswap.root");
+SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nonswap.root", kBeam); // ,1e5);
+SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nueswap.root", kBeam); // ,1e5);
 SpectrumLoaderBase& FD_loaderFHCNutau = kNullLoader;
 
-SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/RHC_nonswap.root");
-SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc10_test/FarDetector/RHC_nueswap.root");
+SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nonswap.root", kBeam); // ,1e5);
+SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nueswap.root", kBeam); // ,1e5);
 SpectrumLoaderBase& FD_loaderRHCNutau = kNullLoader;
 
 // FD predictions
-PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV);
-PredictionNoExtrap FD_predFHCNue (FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV);
-PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV); // should the cuts be changed?
-PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV); // should the cuts be changed?
+PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predFHCNue (FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV, kNoShift, kGENIEWeights);
 
 // ND predictions
-SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc10_test/NearDetector/LAr/FHC_CAF.root");
-SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc10_test/NearDetector/LAr/RHC_CAF.root");
-
-PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto);
-PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto);
+SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_FHC_CAF.root", kBeam); // ,1e5);
+SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_RHC_CAF.root", kBeam); // ,1e5);
+PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto, kNoShift, kGENIEWeights);
+PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto, kNoShift, kGENIEWeights);
 
 // For the ND prediction generator
 Loaders dummyLoaders;
@@ -110,38 +114,24 @@ Loaders dummyLoaders;
 // To get the oscillation probabilities
 osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
-// Deal with systematics (could be a separate file)
-//Signal Normalization Systs
-const NueFHCSyst appnorm_sig_fhc;
-const NumuFHCSyst disnorm_sig_fhc;
-const NueRHCSyst appnorm_sig_rhc;
-const NumuRHCSyst disnorm_sig_rhc;
-
-//BG Normalization Systs
-const NueBeamFHCSyst appnorm_beamnue_fhc;
-const NueBeamRHCSyst appnorm_beamnue_rhc;
-const NCAppSyst appnorm_nc;
-const NCDisSyst disnorm_nc; 
-const NutauSyst norm_tau;
-
-// CW: need to make these systematics work for ND too. I guess add a flag, whether to apply them or not to ND
 std::vector<const ISyst*> systlist;
-std::vector<const ISyst*> normlist_sig = {&appnorm_sig_fhc, &disnorm_sig_fhc, &appnorm_sig_rhc, &disnorm_sig_rhc};
-std::vector<const ISyst*> normlist_bg = {&appnorm_beamnue_fhc, &appnorm_beamnue_rhc, &appnorm_nc, &disnorm_nc, &norm_tau};
 std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10);
-//std::vector<const ISyst*> xseclist = {new GenieSyst(1)};
 std::vector<const ISyst*> xseclist = GetGenieSysts();
+std::vector<const ISyst*> detlist  = {&keScaleMuLArSyst, &kEnergyScaleMuSystND, &kEnergyScaleESyst,
+				      &kChargedHadCorrSyst, &kChargedHadUncorrFDSyst, &kChargedHadUncorrNDSyst,
+				      &kNUncorrNDSyst, &kNUncorrFDSyst, &kEnergyScalePi0Syst,
+				      &kPi0UncorrFDSyst, &kPi0UncorrNDSyst};
 
-std::vector<const ISyst*> GetListOfSysts(bool fluxsyst, bool xsecsyst, bool normsyst){
+std::vector<const ISyst*> GetListOfSysts(bool fluxsyst, bool xsecsyst, bool detsyst){
 
   std::vector<const ISyst*> systlist;
   if (fluxsyst){
     std::cout << "Adding flux systematics" << std::endl;
     systlist.insert(systlist.end(), fluxlist.begin(), fluxlist.end());
   }
-  if (normsyst) {
-    std::cout << "Adding norm. systematics" << std::endl;
-    systlist.insert(systlist.end(), normlist_sig.begin(), normlist_sig.end()); 
+  if (detsyst) {
+    std::cout << "Adding det. systematics" << std::endl;
+    systlist.insert(systlist.end(), detlist.begin(), detlist.end()); 
   }
   if (xsecsyst) {
     std::cout << "Adding XSEC systematics" << std::endl;
@@ -175,18 +165,18 @@ std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string file
     FD_RHC_loaders .AddLoader(&FD_loaderRHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
     FD_RHC_loaders .AddLoader(&FD_loaderRHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
 
-    NoExtrapPredictionGenerator genFDNumuFHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV);
+    NoExtrapPredictionGenerator genFDNumuFHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kGENIEWeights);
 
-    NoExtrapPredictionGenerator genFDNumuRHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV);
+    NoExtrapPredictionGenerator genFDNumuRHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kGENIEWeights);
     
-    NoExtrapPredictionGenerator genFDNueFHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV);
+    NoExtrapPredictionGenerator genFDNueFHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV, kGENIEWeights);
     
-    NoExtrapPredictionGenerator genFDNueRHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV);
+    NoExtrapPredictionGenerator genFDNueRHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV, kGENIEWeights);
   
     // CW: Still need loaders at this stage for ND...
-    NoOscPredictionGenerator genNDNumuFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto);
+    NoOscPredictionGenerator genNDNumuFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto, kGENIEWeights);
     
-    NoOscPredictionGenerator genNDNumuRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto);
+    NoOscPredictionGenerator genNDNumuRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto, kGENIEWeights);
     
     osc::IOscCalculatorAdjustable* this_calc = NuFitOscCalc(1);      
     
@@ -221,29 +211,41 @@ std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string file
 					 dummyLoaders);
 
     // Start all of the loaders
-    FD_FHC_loaders.Go();
-    FD_RHC_loaders.Go();
     ND_loaderFHC  .Go();
     ND_loaderRHC  .Go();
+    FD_FHC_loaders.Go();
+    FD_RHC_loaders.Go();
     
     TFile fout(fileName.c_str(), "RECREATE");
+    std::cout << "Saving FD FHC numu" << std::endl;
     predInterpFDNumuFHC.SaveTo(fout.mkdir("fd_interp_numu_fhc"));
+    std::cout << "Saving FD FHC nue" << std::endl;
     predInterpFDNueFHC .SaveTo(fout.mkdir("fd_interp_nue_fhc"));
+    std::cout << "Saving FD RHC numu" << std::endl;
     predInterpFDNumuRHC.SaveTo(fout.mkdir("fd_interp_numu_rhc"));
+    std::cout << "Saving FD RHC nue" << std::endl;
     predInterpFDNueRHC .SaveTo(fout.mkdir("fd_interp_nue_rhc"));
+    std::cout << "Saving ND FHC" << std::endl;
     predInterpNDNumuFHC.SaveTo(fout.mkdir("nd_interp_numu_fhc"));
+    std::cout << "Saving ND RHC" << std::endl;
     predInterpNDNumuRHC.SaveTo(fout.mkdir("nd_interp_numu_rhc"));
     fout .Close();
   }
   // Argh so ugly
   std::vector<unique_ptr<PredictionInterp> > return_list;
   TFile fin(fileName.c_str());
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("fd_interp_numu_fhc")).release()));
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("fd_interp_nue_fhc")).release()));
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("fd_interp_numu_rhc")).release()));
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("fd_interp_nue_rhc")).release()));
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("nd_interp_numu_fhc")).release()));
-  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (PredictionInterp::LoadFrom(fin.GetDirectory("nd_interp_numu_rhc")).release()));
+  std::cout << "Retrieving FD FHC numu" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_fhc")).release()));
+  std::cout << "Retrieving FD FHC nue" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_fhc")).release()));
+  std::cout << "Retrieving FD RHC numu" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_rhc")).release()));
+  std::cout << "Retrieving FD RHC nue" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_rhc")).release()));
+  std::cout << "Retrieving ND FHC" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("nd_interp_numu_fhc")).release()));
+  std::cout << "Retrieving ND RHC" << std::endl;
+  return_list.push_back(std::unique_ptr<ana::PredictionInterp> (LoadFrom<PredictionInterp>(fin.GetDirectory("nd_interp_numu_rhc")).release()));
   fin.Close();
   return return_list;
 };
