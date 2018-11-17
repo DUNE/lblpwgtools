@@ -329,6 +329,12 @@ namespace ana
                          Ny-1, ay->GetBinCenter(1), ay->GetBinCenter(Ny));
     axes->Draw();
 
+    if(fHist){
+      // "colz same" will reuse axis's min and max, so set them helpfully here
+      axes->SetMinimum(fHist->GetMinimum());
+      axes->SetMaximum(fHist->GetMaximum());
+    }
+
     axes->SetTitle(fHist->GetTitle());
     axes->GetXaxis()->SetLabelSize(ax->GetLabelSize());
     axes->GetYaxis()->SetLabelSize(ay->GetLabelSize());
