@@ -2,11 +2,6 @@
 // Standard script for DUNE spectra
 // Input files TensorFlow CVN training from Fall 2018 
 
-
-#ifdef __CINT__
-void spec(bool reload = false){}
-#else
-
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Core/SpectrumLoader.h"
@@ -1567,4 +1562,4 @@ void spec_effs(bool reload = false)
   }
   fout->Close();
 }
-#endif
+

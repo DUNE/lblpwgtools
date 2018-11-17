@@ -20,6 +20,7 @@
 
 #include "CAFAna/Core/Loaders.h"
 
+#include <algorithm>
 #include <malloc.h>
 
 namespace ana
@@ -706,7 +707,7 @@ namespace ana
 	if(it.second.shifts[shiftIdx] == 0) pNom = it.second.preds[shiftIdx];
       }
       assert(pNom);
-      std::unique_ptr<TH1> hnom;
+      std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
       for(unsigned int shiftIdx = 0; shiftIdx < it.second.shifts.size(); ++shiftIdx){
         if(!it.second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
@@ -739,14 +740,14 @@ namespace ana
                                   nom->GetXaxis()->GetBinUpEdge(bin+1)),
                   100, -4, +4, 100, .5, 1.5))->Draw();
         curves[bin]->Draw("l same");
-        points[bin]->SetMarkerStyle(kFullCircle);
+        points[bin]->SetMarkerStyle(kFullDotMedium);
         points[bin]->Draw("p same");
       } // end for bin
 
       c->cd(0);
 
       if(!savePattern.empty()){
-	assert(savePattern.find("%s") != 0);
+	assert(savePattern.find("%s") != std::string::npos);
 	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
       }
     } // end for it

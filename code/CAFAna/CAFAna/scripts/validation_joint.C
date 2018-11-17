@@ -1,7 +1,3 @@
-#ifdef __CINT__
-void validation_joint(bool reload = false){}
-#else
-
 #include "common_fit_definitions.C"
 
 std::string stateFname  = "common_state_ndfd_xsecflux.root";
@@ -71,4 +67,4 @@ void validation_joint(bool reload = false){
   
   fout->Close();
 }
-#endif
+
