@@ -152,7 +152,10 @@ namespace ana
     tr->SetBranchAddress("RecoHadEnNue", &sr.dune.RecoHadEnNue);
     tr->SetBranchAddress("RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
     tr->SetBranchAddress("RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
-
+    // ND pseudo-reconstruction flags
+    tr->SetBranchAddress("reco_numu", &sr.dune.reco_numu);
+    tr->SetBranchAddress("reco_nue", &sr.dune.reco_nue);
+    tr->SetBranchAddress("reco_nc", &sr.dune.reco_nc);
     // CW: add variables that Chris (M) wants for ND selections
     tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
     tr->SetBranchAddress("muon_contained", &sr.dune.muon_contained);
