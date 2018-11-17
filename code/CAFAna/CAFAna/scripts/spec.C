@@ -15,6 +15,7 @@ void spec(bool reload = false){}
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
+#include "CAFAna/Analysis/Exposures.h"
 
 using namespace ana;
 
@@ -53,7 +54,7 @@ const HistAxis axis_numu("Reconstructed energy (GeV)",
 
 
 // POT/yr * 3.5yrs * mass correction
-const double potFD = 3.5 * 1.1e21 * 40/1.13;
+const double potFD = 3.5 * POT120 * 40/1.13;
 
 const char* stateFname = "spec_state.root";
 const char* outputFname = "spec_hist.root";
