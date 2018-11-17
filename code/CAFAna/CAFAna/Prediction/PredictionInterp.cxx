@@ -747,7 +747,7 @@ namespace ana
       c->cd(0);
 
       if(!savePattern.empty()){
-	assert(savePattern.find("%s") != 0);
+	assert(savePattern.find("%s") != std::string::npos);
 	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
       }
     } // end for it
