@@ -11,10 +11,6 @@ namespace ana
   class GenieSyst: public ISyst
   {
   public:
-    GenieSyst(int genie_id) :
-    ISyst(GetGenieWeightName(genie_id), GetGenieWeightName(genie_id)),
-      fID(genie_id) {}
-
     virtual ~GenieSyst(){};
 
     void Shift(double sigma,
@@ -41,6 +37,12 @@ namespace ana
     }
 
   protected:
+    GenieSyst(int genie_id) :
+      ISyst(GetGenieWeightName(genie_id),
+            GetGenieWeightName(genie_id)),
+      fID(genie_id) {}
+
+    friend std::vector<const ISyst*> GetGenieSysts();
 
     int fID;
   };

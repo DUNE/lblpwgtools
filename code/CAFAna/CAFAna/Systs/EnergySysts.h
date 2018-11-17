@@ -10,6 +10,60 @@
 
 namespace ana
 {
+  // Takes the particle type and applies some slope to it or proportional to 1/sqrt(E)
+  class UncorrNDSyst: public ISyst
+  {
+  public:
+    enum Particle{kChargedHad, kPi0, kN};
+  UncorrNDSyst(Particle p) : ISyst("UncorrNDSyst", "Uncorrelated ND shaped systs") 
+      {
+	assert(p == kChargedHad || p == kPi0 || p == kN);
+	part = p;
+      }
+    
+    void SetParticle(Particle p) 
+    {
+      assert(p == kChargedHad || p == kPi0 || p == kN);
+      part = p;
+    }
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+
+      double sumE = 0.;
+
+      const double scale = .01 * sigma;
+      if (!sr->dune.isFD) {
+	if (part == kChargedHad) {
+	  sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
+	  const double fracE = sumE / sr->dune.Ev;
+	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	}
+	else if (part == kPi0) {
+	  sumE = sr->dune.ePi0;
+	  const double fracE = sumE / sr->dune.Ev;
+	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	}
+	else if (part == kN) {
+	  sumE = 0.25 * sr->dune.eN;
+	  const double fracE = sumE / sr->dune.Ev;
+	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	}
+	else {
+	  std::cout<<"Error: UncorrNDSyst not set to a particle type"<<std::endl;
+	}	
+
+
+
+      }
+    }
+  private:
+    Particle part;
+  };
+
   /// 1% systematic on muon energy for energy deposition in liquid argon
   /// 100% correlated between near and far detectors for those ND events that stop in the LAr
   class eScaleMuLArSyst: public ISyst
@@ -147,6 +201,16 @@ namespace ana
       sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (fracE * scale + (1 - fracE));
       sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracEY * scale + (1 - fracEY));
       sr->dune.RecoHadEnNue = sr->dune.RecoHadEnNue * (fracEY * scale + (1 - fracEY));
+      // Want to apply this syst to the reco lepton energy if we have a pion misID'd as a muon
+      /*
+      if (!sr->dune.isFD && sr->dune.reco_numu == 1 && !sr->dune.isCC) {
+	sr->dune.Elep_reco = sr->dune.Elep_reco * ( (1 - fracE) * scale + fracE );
+      }
+      else if (sr->dune.isFD && !sr->dune.isCC && sr->dune.cvnnumu > 0.5) {
+	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * ( (1 - fracE) * scale + fracE);
+	sr->dune.RecoLepEnNumu = sr->dune.RecoLepEnNumu * ( (1 - fracEY) * scale + fracEY);
+      } 
+      */
     }
   };
 
