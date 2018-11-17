@@ -25,6 +25,11 @@ namespace caf
     double RecoLepEnNumu;
     double RecoHadEnNumu;
 
+    // ND pseudo-reconstruction flags
+    int reco_numu;
+    int reco_nue;
+    int reco_nc;
+
     // CW: added for the ND cuts Chris (M) wants
     // ND containment flags
     int muon_contained;
