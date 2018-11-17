@@ -24,7 +24,7 @@ namespace ana {
       // Is ND
       if(!sr->dune.isFD) {
 	// CC event selection but is NC
-	if(sr->dune.reco_numu && (sr->dune.muon_contained || sr->dune.muon_tracker) && sr->dune.reco_q == -1 && sr->dune.Ehad_veto<30 && !sr->dune.isCC) {
+	if((sr->dune.reco_numu || sr->dune.reco_nue) && (sr->dune.muon_contained || sr->dune.muon_tracker) && (sr->dune.reco_q == -1 || sr->dune.reco_q == 1) && sr->dune.Ehad_veto<30 && !sr->dune.isCC) {
 	  weight *= 1 + .2*sigma;
 	}
       }

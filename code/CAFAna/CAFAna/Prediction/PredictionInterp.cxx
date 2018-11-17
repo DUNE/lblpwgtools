@@ -31,7 +31,7 @@ namespace ana
                                      Loaders& loaders,
                                      const SystShifts& shiftMC,
                                      EMode_t mode)
-    : fOscOrigin(osc->Copy()),
+    : fOscOrigin(osc ? osc->Copy() : 0),
       fBinning(0, {}, {}, 0, 0),
       fSplitBySign(mode == kSplitBySign)
   {
@@ -405,7 +405,7 @@ namespace ana
     } // end for syst
 
 
-    const TMD5* hash = calc->GetParamsHash();
+    const TMD5* hash = calc ? calc->GetParamsHash() : 0;
 
     if(curr & Current::kCC){
       if(flav & Flavors::kNuEToNuE)    ret += ShiftedComponent(calc, hash, shift, Flavors::kNuEToNuE,    Current::kCC, sign, kNueSurv);
