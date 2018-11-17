@@ -96,8 +96,8 @@ namespace ana
   //----------------------------------------------------------------------
   bool Fitter::SupportsDerivatives() const
   {
-    // Make completely opt-in for now
-    if(getenv("CAFANA_ANALYTIC_DERIVATIVES") == 0) return false;
+    //    // Make completely opt-in for now
+    //    if(getenv("CAFANA_ANALYTIC_DERIVATIVES") == 0) return false;
 
     // No point using derivatives for FitVars only, we do finite differences,
     // probably worse than MINUIT would.
@@ -144,15 +144,27 @@ namespace ana
 
     ROOT::Minuit2::MnApplication* mnApp = 0;
 
-    if(fPrec == kGradDesc){
+    if((fPrec & kAlgoMask) == kGradDesc){
       mnApp = new GradientDescent(*this, mnPars);
     }
     else{
+      // TODO - could this be handled with templates?
       if(fSupportsDerivatives){
-        mnApp = new ROOT::Minuit2::MnMinimize(*this, mnPars, int(fPrec));
+        if(fPrec & kIncludeSimplex){
+          // MnMinimize will try Simplex if the migrad minimum is invalid
+          mnApp = new ROOT::Minuit2::MnMinimize(*this, mnPars, int(fPrec & kAlgoMask));
+        }
+        else{
+          mnApp = new ROOT::Minuit2::MnMigrad(*this, mnPars, int(fPrec & kAlgoMask));
+        }
       }
       else{
-        mnApp = new ROOT::Minuit2::MnMinimize(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec));
+        if(fPrec & kIncludeSimplex){
+          mnApp = new ROOT::Minuit2::MnMinimize(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec & kAlgoMask));
+        }
+        else{
+          mnApp = new ROOT::Minuit2::MnMigrad(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec & kAlgoMask));
+        }
       }
     }
 
@@ -171,8 +183,10 @@ namespace ana
     fPostFitValues = minpt.UserParameters().Params();
     fPostFitErrors = minpt.UserParameters().Errors();
 
-    ROOT::Minuit2::MnHesse hesse(2);
-    hesse(*this, minpt, 1e5);
+    if(fPrec & kIncludeHesse){
+      ROOT::Minuit2::MnHesse hesse(2);
+      hesse(*this, minpt, 1e5);
+    }
 
     gErrorIgnoreLevel = olderr;
     // Store results back to the "seed" variable
@@ -190,7 +204,7 @@ namespace ana
     std::vector<double> covdata = mncov.Data();
     if (this->fCovar) delete this->fCovar;
     this->fCovar = new TMatrixDSym(mncov.Nrow());
-    
+
     for (uint row = 0; row < mncov.Nrow(); ++row){
       for (uint col = 0; col < mncov.Nrow(); ++col){
 	if (row > col)
@@ -246,7 +260,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Fitter::SetPrecision(Precision prec)
   {
-    if(prec == kGradDesc && !fSysts.empty() && !fSupportsDerivatives){
+    if((prec & kAlgoMask) == kGradDesc && !fSysts.empty() && !fSupportsDerivatives){
       std::cout << "Warning - not setting precision to kGradDesc, since analytic gradients are not supported by this experiment" << std::endl;
       return;
     }

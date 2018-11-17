@@ -42,11 +42,21 @@ namespace ana
   public:
     enum Verbosity{kQuiet, kVerbose};
 
-    // These match the codes used by migrad
-    enum Precision{kFast = 0,
-                   kNormal = 1,
-                   kCareful = 2,
-                   kGradDesc = 3};
+    enum Precision{
+      // You must select one of these. The first three codes match the settings
+      // used by migrad. The fourth is a custom minimizer.
+      kFast = 0,
+      kNormal = 1,
+      kCareful = 2,
+      kGradDesc = 3,
+      // Allow bitmask operations to extract these first four options
+      kAlgoMask = 4,
+      // You may optionally specify this (eg kNormal | kIncludeSimplex) to
+      // improve the chances of escaping from invalid minima
+      kIncludeSimplex = 4,
+      // You may optionally specify this to improve the final error estimates
+      kIncludeHesse = 8
+    };
     void SetPrecision(Precision prec);
 
     Fitter(const IExperiment* expt,
@@ -106,14 +116,13 @@ namespace ana
     /// Return the postfit errors
     std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
 
-    
     SystShifts GetSystShifts() const {return fShifts;}
 
     /// Evaluate the log-likelihood, as required by MINUT interface
     virtual double operator()(const std::vector<double>& pars) const override;
 
     std::vector<double> Gradient(const std::vector<double>& pars) const override;
-    bool CheckGradient() const override {return fPrec != kFast;}
+    bool CheckGradient() const override {return (fPrec & Fitter::kAlgoMask) != kFast;}
 
     /// Definition of one-sigma, required by MINUIT
     virtual double Up() const override {return 1;}
@@ -168,6 +177,13 @@ namespace ana
     mutable std::vector<double> fPostFitErrors;
 
   };
+
+  // Modern C++ thinks that enum | enum == int. Make things work like we expect
+  // for this bitmask.
+  inline Fitter::Precision operator|(Fitter::Precision a, Fitter::Precision b)
+  {
+    return Fitter::Precision(a | b);
+  }
 
   // Default values for Profile()
   static std::map<const IFitVar*, TGraph*> empty_vars_map;
