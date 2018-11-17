@@ -12,8 +12,8 @@ namespace ana
   {
   public:
     GenieSyst(int genie_id) :
-      ISyst(GetGenieWeightName(id), GetGenieWeightName(id)),
-      id(genie_id) {}
+    ISyst(GetGenieWeightName(genie_id), GetGenieWeightName(genie_id)),
+      fID(genie_id) {}
 
     virtual ~GenieSyst(){};
 
@@ -33,8 +33,8 @@ namespace ana
 
       double diff = (sigma-double(low_index))/spacing;
 
-      double low_weight  = sr->dune.genie_wgt[id][low_index];
-      double high_weight = sr->dune.genie_wgt[id][high_index];
+      double low_weight  = sr->dune.genie_wgt[fID][low_index];
+      double high_weight = sr->dune.genie_wgt[fID][high_index];
 
       weight *= low_weight + (high_weight - low_weight)*diff;
 
@@ -42,7 +42,7 @@ namespace ana
 
   protected:
 
-    int id;
+    int fID;
   };
 
   std::vector<const ISyst*> GetGenieSysts(){

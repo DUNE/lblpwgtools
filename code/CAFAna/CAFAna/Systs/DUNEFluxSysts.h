@@ -21,8 +21,8 @@ namespace ana
   protected:
     friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i);
     DUNEFluxSyst(int i) :
-      ISyst(TString::Format("flux%i", fIdx).Data(),
-            TString::Format("Flux #%i", fIdx).Data()),
+      ISyst(TString::Format("flux%i", i).Data(),
+            TString::Format("Flux #%i", i).Data()),
       fIdx(i), fScale()
     {
     }

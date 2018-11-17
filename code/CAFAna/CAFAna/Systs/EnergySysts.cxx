@@ -11,4 +11,5 @@ namespace ana {
   const NUncorrFDSyst kNUncorrFDSyst;  
   const Pi0CorrSyst kEnergyScalePi0Syst;
   const Pi0UncorrNDSyst kPi0UncorrNDSyst;
+  const Pi0UncorrFDSyst kPi0UncorrFDSyst;
 }
