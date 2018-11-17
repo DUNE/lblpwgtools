@@ -2,10 +2,6 @@
 // Standard script for DUNE MH sensitivity
 // Input files use TensorFlow CVN training from May 2018 
 
-#ifdef __CINT__
-void mh(bool reload = false){}
-#else
-
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 
@@ -333,5 +329,3 @@ void mh(bool reload = false)
   }
   fout->Close();
 }
-
-#endif
