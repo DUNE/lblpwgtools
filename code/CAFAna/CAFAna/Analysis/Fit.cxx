@@ -108,6 +108,7 @@ namespace ana
     std::unordered_map<const ISyst*, double> dchi = {{fSysts[0], 0}};
     osc::NoOscillations calc;
     fExpt->Derivative(&calc, SystShifts::Nominal(), dchi);
+
     return !dchi.empty();
   }
 
@@ -116,6 +117,7 @@ namespace ana
                                  SystShifts& systSeed,
                                  Verbosity verb) const
   {
+
     fCalc = seed;
     fShifts = systSeed;
 
@@ -180,13 +182,14 @@ namespace ana
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
     }
 
-    fPostFitValues = minpt.UserParameters().Params();
-    fPostFitErrors = minpt.UserParameters().Errors();
-
     if(fPrec & kIncludeHesse){
+      std::cout << "Notice: attempting to build the Hessian matrix" << std::endl;
       ROOT::Minuit2::MnHesse hesse(2);
       hesse(*this, minpt, 1e5);
     }
+
+    fPostFitValues = minpt.UserParameters().Params();
+    fPostFitErrors = minpt.UserParameters().Errors();
 
     gErrorIgnoreLevel = olderr;
     // Store results back to the "seed" variable

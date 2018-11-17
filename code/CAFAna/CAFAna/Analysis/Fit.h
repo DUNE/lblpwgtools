@@ -182,7 +182,7 @@ namespace ana
   // for this bitmask.
   inline Fitter::Precision operator|(Fitter::Precision a, Fitter::Precision b)
   {
-    return Fitter::Precision(a | b);
+    return Fitter::Precision(int(a) | int(b));
   }
 
   // Default values for Profile()
