@@ -48,7 +48,6 @@ namespace ana
   //----------------------------------------------------------------------
   Fitter::Fitter(const IExperiment* expt,
                  std::vector<const IFitVar*> vars,
-    : fExpt(expt), fVars(vars), fSysts(systs), fCovar(0)
                  std::vector<const ISyst*> systs,
                  Precision prec)
     : fExpt(expt), fVars(vars), fSysts(systs), fPrec(prec), fCalc(0),
