@@ -38,7 +38,7 @@ namespace ana
                        const SystShifts& shift,
                        const Var& wei)
     : ReweightableSpectrum(label, bins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     fTrueLabel = "True Energy (GeV)";
@@ -57,7 +57,7 @@ namespace ana
                                              const SystShifts& shift,
                                              const Var& wei)
     : ReweightableSpectrum(axis.GetLabels(), axis.GetBinnings(), kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     fTrueLabel = "True Energy (GeV)";
@@ -93,7 +93,7 @@ namespace ana
   OscillatableSpectrum::OscillatableSpectrum(std::string label,
                                              const Binning& bins)
     : ReweightableSpectrum(label, bins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     fTrueLabel = "True Energy (GeV)";
@@ -110,7 +110,7 @@ namespace ana
   OscillatableSpectrum::OscillatableSpectrum(std::string label, double pot, double livetime,
                                              const Binning& bins)
     : ReweightableSpectrum(label, bins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     fTrueLabel = "True Energy (GeV)";
@@ -129,7 +129,7 @@ namespace ana
                                              const std::vector<Binning>& bins,
                                              double pot, double livetime)
     : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     fTrueLabel = "True Energy (GeV)";
@@ -150,7 +150,7 @@ namespace ana
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(const OscillatableSpectrum& rhs)
     : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     DontAddDirectory guard;
@@ -171,7 +171,7 @@ namespace ana
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(OscillatableSpectrum&& rhs)
     : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedOsc((TH1*)0, {}, {}, 0, 0),
       fCachedHash(0)
   {
     DontAddDirectory guard;

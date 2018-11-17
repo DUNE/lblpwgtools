@@ -8,7 +8,6 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "TAttLine.h"
-#include "THnSparse.h"
 
 #include <memory>
 #include <string>
@@ -33,8 +32,6 @@ namespace ana
     friend class SpectrumLoader;
     friend class NullLoader;
 
-    enum ESparse{kDense, kSparse};
-
     Spectrum(const std::string& label, const Binning& bins,
              SpectrumLoaderBase& loader,
              const Var& var,
@@ -56,7 +53,7 @@ namespace ana
              const SystShifts& shift = kNoShift,
              const Var& wei = kUnweighted);
 
-    Spectrum(const std::string& label, const Binning& bins, ESparse sparse = kDense);
+    Spectrum(const std::string& label, const Binning& bins);
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
 
     /// Copies \a h
@@ -67,6 +64,12 @@ namespace ana
 
     /// Takes possession of \a h
     Spectrum(std::unique_ptr<TH1D> h,
+             const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
+             double pot, double livetime);
+
+    /// Takes possession of \a vec
+    Spectrum(double* vec,
              const std::vector<std::string>& labels,
              const std::vector<Binning>& bins,
              double pot, double livetime);
@@ -103,8 +106,7 @@ namespace ana
              const Binning& binsz, const Var& varz,
              const Cut& cut,
              const SystShifts& shift = kNoShift,
-             const Var& wei = kUnweighted,
-	     ESparse sparse = kDense);
+             const Var& wei = kUnweighted);
 
     Spectrum(const std::string& xLabel,
 	     const std::string& yLabel,
@@ -115,8 +117,7 @@ namespace ana
              const Binning& binsz, const Var& varz,
              const Cut& cut,
              const SystShifts& shift = kNoShift,
-             const Var& wei = kUnweighted,
-	     ESparse sparse = kDense);
+             const Var& wei = kUnweighted);
 
     /// 3D Spectrum taking 3 HistAxis
     Spectrum(SpectrumLoaderBase& loader,
@@ -125,8 +126,7 @@ namespace ana
 	     const HistAxis& zAxis,
              const Cut& cut,
              const SystShifts& shift = kNoShift,
-             const Var& wei = kUnweighted,
-	     ESparse sparse = kDense);
+             const Var& wei = kUnweighted);
 
 
     virtual ~Spectrum();
@@ -235,10 +235,9 @@ namespace ana
 
   protected:
     Spectrum(const std::vector<std::string>& labels,
-             const std::vector<Binning>& bins,
-             ESparse sparse = kDense);
+             const std::vector<Binning>& bins);
 
-    void ConstructHistogram(ESparse sparse = kDense);
+    void ConstructHistogram();
 
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
@@ -246,8 +245,10 @@ namespace ana
     /// Helper for operator+= and operator-=
     Spectrum& PlusEqualsHelper(const Spectrum& rhs, int sign);
 
+    Binning Bins1D() const;
+
     TH1D* fHist;
-    THnSparseD* fHistSparse;
+    double* fArray;
     double fPOT;
     double fLivetime;
 

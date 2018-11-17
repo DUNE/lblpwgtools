@@ -33,7 +33,7 @@ namespace ana
                                      const SystShifts& shiftMC,
                                      EMode_t mode)
     : fOscOrigin(osc ? osc->Copy() : 0),
-      fBinning(0, {}, {}, 0, 0),
+      fBinning((TH1*)0, {}, {}, 0, 0),
       fSplitBySign(mode == kSplitBySign)
   {
     for(const ISyst* syst: systs){
@@ -790,7 +790,7 @@ namespace ana
       h2->SetMaximum(1.5);
 
       if(!savePattern.empty()){
-	assert(savePattern.find("%s") != std::string npos);
+	assert(savePattern.find("%s") != std::string::npos);
 	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
       }
     } // end for it

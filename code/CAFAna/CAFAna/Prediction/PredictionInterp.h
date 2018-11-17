@@ -97,7 +97,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {}
+    PredictionInterp() : fBinning((TH1*)0, {}, {}, 0, 0) {}
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});

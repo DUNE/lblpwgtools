@@ -68,6 +68,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  template<class T> std::string GenericHistAxis<T>::GetMultiDLabel() const
+  {
+    std::string label;
+    for(const std::string& l: fLabels) label += l + " and ";
+    label.resize(label.size()-5); // drop the last "and"
+    return label;
+  }
+
+  //----------------------------------------------------------------------
   template<class T> T GenericHistAxis<T>::GetMultiDVar() const
   {
     switch(fVars.size()){

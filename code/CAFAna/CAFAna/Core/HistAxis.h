@@ -52,6 +52,8 @@ namespace ana
     /// A variable "flattening" all the dimensions into one 1D value. Use
     /// sparingly.
     T GetMultiDVar() const;
+    Binning GetMultiDBinning() const;
+    std::string GetMultiDLabel() const;
 
   protected:
     std::vector<std::string> fLabels;
@@ -63,3 +65,13 @@ namespace ana
   typedef GenericHistAxis<SpillVar> SpillHistAxis;
   typedef GenericHistAxis<SpillTruthVar> SpillTruthHistAxis;
 }
+
+  //----------------------------------------------------------------------
+template<class T> inline ana::Binning ana::GenericHistAxis<T>::GetMultiDBinning() const
+  {
+    if(fBins.size() == 1) return fBins[0];
+
+    int n = 1;
+    for(const Binning& b: fBins) n *= b.NBins();
+    return Binning::Simple(n, 0, n);
+  }

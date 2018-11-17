@@ -313,6 +313,9 @@ namespace ana
     TAxis* ax = fHist->GetXaxis();
     TH1D* hRet = HistCache::New("", ax);
 
+    double* aRet = new double[ax->GetNbins()+2];
+    for(int i = 0; i < ax->GetNbins()+2; ++i) aRet[i] = 0;
+
     const int X = fHist->GetNbinsX();
     const int Y = fHist->GetNbinsY();
 
@@ -331,12 +334,15 @@ namespace ana
         // assert(bin == fHist->GetBin(x, y));
 
         retArr[x] += histArr[bin]*w;
+        aRet[x] += histArr[bin]*w;
         ++bin;
       }
     }
 
     // TODO: can this all be more efficient?
-    return Spectrum(std::unique_ptr<TH1D>(hRet), fLabels, fBins, fPOT, fLivetime);
+    //    return Spectrum(std::unique_ptr<TH1D>(hRet), fLabels, fBins, fPOT, fLivetime);
+
+    return Spectrum(aRet, fLabels, fBins, fPOT, fLivetime);
   }
 
 

@@ -86,7 +86,7 @@ namespace ana
                          const std::vector<Binning>& bins,
                          const Var& rwVar)
       : ReweightableSpectrum(labels, bins, rwVar),
-        fCachedOsc(0, {}, {}, 0, 0),
+        fCachedOsc((TH1*)0, {}, {}, 0, 0),
         fCachedHash(0)
     {
     }
@@ -95,7 +95,7 @@ namespace ana
                          const Binning& bins,
                          const Var& rwVar)
       : ReweightableSpectrum(label, bins, rwVar),
-        fCachedOsc(0, {}, {}, 0, 0),
+        fCachedOsc((TH1*)0, {}, {}, 0, 0),
         fCachedHash(0)
     {
     }
