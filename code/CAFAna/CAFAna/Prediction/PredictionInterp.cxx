@@ -20,6 +20,7 @@
 
 #include "CAFAna/Core/Loaders.h"
 
+#include <algorithm>
 #include <malloc.h>
 
 namespace ana
