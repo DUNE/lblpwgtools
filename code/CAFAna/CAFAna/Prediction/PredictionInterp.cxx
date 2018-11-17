@@ -740,7 +740,7 @@ namespace ana
                                   nom->GetXaxis()->GetBinUpEdge(bin+1)),
                   100, -4, +4, 100, .5, 1.5))->Draw();
         curves[bin]->Draw("l same");
-        points[bin]->SetMarkerStyle(kFullCircle);
+        points[bin]->SetMarkerStyle(kFullDotMedium);
         points[bin]->Draw("p same");
       } // end for bin
 
