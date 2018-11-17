@@ -33,6 +33,9 @@
 #include "CAFAna/Core/Progress.h"
 
 #include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Analysis/Exposures.h"
+#include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Cuts/AnaCuts.h"
 #include <tuple>
 #include "Utilities/rootlogon.C"
 
@@ -84,8 +87,8 @@ const HistAxis axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco, kRecoE_nue);
 const HistAxis axErecYrecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND, "y_{rec}", binsY, kRecoYND);
 
 // POT for 3.5 years
-const double pot_fd = 3.5 * 1.47e21 * 40/1.13;
-const double pot_nd = 3.5 * 1.47e21;
+const double pot_fd = 3.5 * POT120 * 40/1.13;
+const double pot_nd = 3.5 * POT120;
 
 // FD spectra
 SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nonswap.root", kBeam); // ,1e5);
@@ -97,16 +100,16 @@ SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC
 SpectrumLoaderBase& FD_loaderRHCNutau = kNullLoader;
 
 // FD predictions
-PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kNoShift, kGENIEWeights);
-PredictionNoExtrap FD_predFHCNue (FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV, kNoShift, kGENIEWeights);
-PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kNoShift, kGENIEWeights);
-PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kFDSelNue  && kFDPassFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predFHCNue (FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnue , kPassFD_CVN_NUE && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kPassFD_CVN_NUE && kIsTrueFV, kNoShift, kGENIEWeights);
 
 // ND predictions
 SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_FHC_CAF.root", kBeam); // ,1e5);
 SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_RHC_CAF.root", kBeam); // ,1e5);
-PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto, kNoShift, kGENIEWeights);
-PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto, kNoShift, kGENIEWeights);
+PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 
 // For the ND prediction generator
 Loaders dummyLoaders;
@@ -165,18 +168,18 @@ std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string file
     FD_RHC_loaders .AddLoader(&FD_loaderRHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
     FD_RHC_loaders .AddLoader(&FD_loaderRHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
 
-    NoExtrapPredictionGenerator genFDNumuFHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNumuFHC(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
 
-    NoExtrapPredictionGenerator genFDNumuRHC(axRecoEnuFDnumu, kFDSelNumu && kFDPassFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNumuRHC(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
     
-    NoExtrapPredictionGenerator genFDNueFHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNueFHC(axRecoEnuFDnue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
     
-    NoExtrapPredictionGenerator genFDNueRHC(axRecoEnuFDnue, kFDSelNue && kFDPassFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNueRHC(axRecoEnuFDnue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
   
     // CW: Still need loaders at this stage for ND...
-    NoOscPredictionGenerator genNDNumuFHC(ND_loaderFHC, axErecYrecND, kRecoNegMu && kMuonCont && kEhad_veto, kGENIEWeights);
+    NoOscPredictionGenerator genNDNumuFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kGENIEWeights);
     
-    NoOscPredictionGenerator genNDNumuRHC(ND_loaderRHC, axErecYrecND, kRecoPosMu && kMuonCont && kEhad_veto, kGENIEWeights);
+    NoOscPredictionGenerator genNDNumuRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kGENIEWeights);
     
     osc::IOscCalculatorAdjustable* this_calc = NuFitOscCalc(1);      
     
