@@ -707,7 +707,7 @@ namespace ana
 	if(it.second.shifts[shiftIdx] == 0) pNom = it.second.preds[shiftIdx];
       }
       assert(pNom);
-      std::unique_ptr<TH1> hnom;
+      std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
       for(unsigned int shiftIdx = 0; shiftIdx < it.second.shifts.size(); ++shiftIdx){
         if(!it.second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
