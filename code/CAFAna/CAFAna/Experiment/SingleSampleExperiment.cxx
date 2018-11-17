@@ -53,7 +53,6 @@ namespace ana
     const Spectrum pred = fMC->PredictSyst(calc, systNoCosmic);
 
     TH1D* hpred = pred.ToTH1(fData.POT());
-    TH1D* hdata = fData.ToTH1(fData.POT());
 
     if(fCosmic){
       if(fCosmicScaleError != 0){
@@ -62,18 +61,6 @@ namespace ana
       }
       else{
         hpred->Add(fCosmic);
-      }
-    }
-
-    // If a valid mask has been set, zero out the offending bins
-    if (fMask){
-      assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-      assert(hdata->GetNbinsX() == fMask->GetNbinsX());
-
-      for(int i = 0; i < fMask->GetNbinsX(); ++i){	
-	if (fMask->GetBinContent(i+1) == 1) continue;
-	hpred->SetBinContent(i+1, 0);
-	hdata->SetBinContent(i+1, 0);
       }
     }
 
@@ -86,6 +73,18 @@ namespace ana
   {
     TH1D* hpred = PredHistIncCosmics(calc, syst);
     TH1D* hdata = fData.ToTH1(fData.POT());
+
+    // If a valid mask has been set, zero out the offending bins
+    if (fMask){
+      assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+      assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+      for(int i = 0; i < fMask->GetNbinsX(); ++i){	
+	if (fMask->GetBinContent(i+1) == 1) continue;
+	hpred->SetBinContent(i+1, 0);
+	hdata->SetBinContent(i+1, 0);
+      }
+    }
 
     const double ll = LogLikelihood(hpred, hdata);
 
