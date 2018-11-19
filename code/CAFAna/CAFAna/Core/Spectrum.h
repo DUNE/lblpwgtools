@@ -56,12 +56,6 @@ namespace ana
     Spectrum(const std::string& label, const Binning& bins);
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
 
-    /// Copies \a h
-    Spectrum(TH1* h,
-             const std::vector<std::string>& labels,
-             const std::vector<Binning>& bins,
-             double pot, double livetime);
-
     /// Takes possession of \a h
     Spectrum(std::unique_ptr<TH1D> h,
              const std::vector<std::string>& labels,

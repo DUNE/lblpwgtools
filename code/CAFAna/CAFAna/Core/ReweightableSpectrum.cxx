@@ -311,7 +311,7 @@ namespace ana
     assert(ws->GetNbinsX() == fHist->GetNbinsY());
 
     TAxis* ax = fHist->GetXaxis();
-    TH1D* hRet = HistCache::New("", ax);
+    //    TH1D* hRet = HistCache::New("", ax);
 
     double* aRet = new double[ax->GetNbins()+2];
     for(int i = 0; i < ax->GetNbins()+2; ++i) aRet[i] = 0;
@@ -320,7 +320,7 @@ namespace ana
     const int Y = fHist->GetNbinsY();
 
     // Direct access to the bins is faster
-    double* retArr = hRet->GetArray();
+    //    double* retArr = hRet->GetArray();
     double* histArr = fHist->GetArray();
 
     int bin = 0;
@@ -333,7 +333,7 @@ namespace ana
 
         // assert(bin == fHist->GetBin(x, y));
 
-        retArr[x] += histArr[bin]*w;
+        //        retArr[x] += histArr[bin]*w;
         aRet[x] += histArr[bin]*w;
         ++bin;
       }

@@ -74,7 +74,7 @@ namespace ana
         fNueSurv(0, {}, {}, 0, 0),   fNueSurvAnti(0, {}, {}, 0, 0),
         fTauFromE(0, {}, {}, 0, 0),  fTauFromEAnti(0, {}, {}, 0, 0),
         fTauFromMu(0, {}, {}, 0, 0), fTauFromMuAnti(0, {}, {}, 0, 0),
-        fNC((TH1*)0, {}, {}, 0, 0)
+        fNC(0, {}, {}, 0, 0)
     {}
 
     OscillatableSpectrum fNueApp,    fNueAppAnti;

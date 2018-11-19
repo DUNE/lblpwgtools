@@ -82,43 +82,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(TH1* h,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     double pot, double livetime)
-    : fHist(0), fArray(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
-  {
-    if(!h){
-      fHist = 0;
-      return;
-    }
-
-    DontAddDirectory guard;
-
-    const TString className = h->ClassName();
-
-    // TODO TODO HIST
-    abort();
-    if(className == "TH1D"){
-      // Shortcut if types match
-      fHist = HistCache::Copy((TH1D*)h);
-    }
-    else{
-      fHist = HistCache::New("", h->GetXaxis());
-      fHist->Add(h);
-    }
-  }
-
-  //----------------------------------------------------------------------
   Spectrum::Spectrum(std::unique_ptr<TH1D> h,
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(h.release()), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fHist(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
     // TODO TODO HIST
-    fArray = new double[fHist->GetNbinsX()+2];
-    for(int i = 0; i < fHist->GetNbinsX()+2; ++i) fArray[i] = fHist->GetBinContent(i);
+    fArray = new double[h->GetNbinsX()+2];
+    for(int i = 0; i < h->GetNbinsX()+2; ++i) fArray[i] = h->GetBinContent(i);
   }
 
   //----------------------------------------------------------------------
@@ -352,17 +324,10 @@ namespace ana
     assert(!fArray);
     assert(!fHist);
 
-    Binning bins1D = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      bins1D = Binning::Simple(n, 0, n);
-    }
+    fArray = new double[Bins1D().NBins()+2];
+    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = 0;
 
-    fArray = new double[bins1D.NBins()+2];
-    for(int i = 0; i < bins1D.NBins()+2; ++i) fArray[i] = 0;
-
-    fHist = HistCache::New("", bins1D);
+    fHist = HistCache::New("", Bins1D());
 
     // Ensure errors get accumulated properly
     fHist->Sumw2();
@@ -551,7 +516,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
   {
-    fHist->Scale(c);
+    if(fHist) fHist->Scale(c);
 
     // TODO TODO HIST
     for(int i = 0; i < fHist->GetNbinsX()+2; ++i) fArray[i] *= c;
@@ -646,7 +611,7 @@ namespace ana
   void Spectrum::Clear()
   {
     // TODO TODO HIST
-    for(int i = 0; i < fHist->GetNbinsX()+2; ++i) fArray[i] = 0;
+    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = 0;
 
     if(fHist) fHist->Reset();
   }
