@@ -249,7 +249,7 @@ namespace ana
     fLabels(rhs.fLabels),
     fBins(rhs.fBins)
   {
-    assert(rhs.fHist);
+    assert(rhs.fHist || rhs.fArray);
 
     if(rhs.fHist){
       fHist = rhs.fHist;
@@ -297,7 +297,7 @@ namespace ana
 
     HistCache::Delete(fHist);
 
-    assert(rhs.fHist);
+    assert(rhs.fHist || rhs.fArray);
 
     fHist = rhs.fHist;
 
@@ -352,7 +352,7 @@ namespace ana
     }
 
     TH1D* ret = HistCache::New("TODO title", bins1D);
-    for(int i = 0; i < fHist->GetNbinsX()+2; ++i) ret->SetBinContent(i, fArray[i]);
+    for(int i = 0; i < Bins1D().NBins()+2; ++i) ret->SetBinContent(i, fArray[i]);
 
     if(expotype == kPOT){
       const double pot = exposure;
@@ -518,8 +518,7 @@ namespace ana
   {
     if(fHist) fHist->Scale(c);
 
-    // TODO TODO HIST
-    for(int i = 0; i < fHist->GetNbinsX()+2; ++i) fArray[i] *= c;
+    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] *= c;
   }
 
   //----------------------------------------------------------------------
