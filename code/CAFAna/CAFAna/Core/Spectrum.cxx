@@ -86,11 +86,12 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fArray(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
-    // TODO TODO HIST
-    fArray = new double[h->GetNbinsX()+2];
-    for(int i = 0; i < h->GetNbinsX()+2; ++i) fArray[i] = h->GetBinContent(i);
+    assert(h->GetNbinsX() == Bins1D().NBins());
+
+    ConstructHistogram();
+    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = h->GetBinContent(i);
   }
 
   //----------------------------------------------------------------------
@@ -205,8 +206,7 @@ namespace ana
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveSpectrum(this); }
 
-    // TODO TODO HIST
-    //    delete fArray;
+    delete fArray;
   }
 
   //----------------------------------------------------------------------
@@ -295,7 +295,8 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = HistCache::New("TODO TODO HIST title", Bins1D());
+    // TODO do we need a mechanism to set the title?
+    TH1D* ret = HistCache::New("", Bins1D());
     for(int i = 0; i < Bins1D().NBins()+2; ++i) ret->SetBinContent(i, fArray[i]);
 
     if(expotype == kPOT){
@@ -467,35 +468,43 @@ namespace ana
   double Spectrum::Integral(double exposure, double* err,
 			    EExposureType expotype) const
   {
-    //    const double ratio = (expotype == kPOT) ? exposure/fPOT : exposure/fLivetime;
+    const double ratio = (expotype == kPOT) ? exposure/fPOT : exposure/fLivetime;
 
-    // TODO TODO HIST
-    abort();
+    double ret = 0;
+    for(int i = 0; i < Bins1D().NBins()+2; ++i)
+      ret += fArray[i];
 
-    /*
     if(err){
       *err = 0;
-
-      for(int i = 0; i < fHist->GetNbinsX()+2; ++i){
-        *err += util::sqr(fHist->GetBinError(i));
-      }
-      *err = sqrt(*err) * ratio;
+      std::cout << "Warning: err argument for Spectrum::Integral() no longer implemented" << std::endl;
     }
 
-    return fHist->Integral(0, -1) * ratio;
-    */
+    return ret*ratio;
   }
 
   //----------------------------------------------------------------------
   double Spectrum::Mean() const
   {
-    // TODO TODO HIST
-    abort();
+    const std::vector<double> edges = Bins1D().Edges();
 
-    // Allow GetMean() to work even if this histogram never had any explicit
-    // Fill() calls made.
-    //    if(fHist->GetEntries() == 0) fHist->SetEntries(1);
-    //    return fHist->GetMean();
+    const int N = Bins1D().NBins();
+
+    // Underflow and overflow bins don't have true bin centres
+    if(fArray[0] != 0){
+      std::cout << "Warning: underflow contents of "
+                << fArray[0] << " ignored in Spectrum::Mean()" << std::endl;
+    }
+    if(fArray[N+1] != 0){
+      std::cout << "Warning: overflow contents of "
+                << fArray[N+1] << " ignored in Spectrum::Mean()" << std::endl;
+    }
+
+    double mean = 0;
+    for(int i = 1; i <= N; ++i){
+      mean += fArray[i]*(edges[i-1]+edges[i])/2;
+    }
+
+    return mean;
   }
 
   //----------------------------------------------------------------------
@@ -511,20 +520,11 @@ namespace ana
 
     TRandom3 rnd(seed); // zero seeds randomly
 
-    // TODO TODO HIST
-    abort();
-    /*
-    for(int i = 0; i < ret.fHist->GetNbinsX()+2; ++i){
-      ret.fHist->SetBinContent(i, rnd.Poisson(ret.fHist->GetBinContent(i)));
+    for(int i = 0; i < Bins1D().NBins()+2; ++i){
+      ret.fArray[i] = rnd.Poisson(ret.fArray[i]);
     }
 
-    // Drop old errors, which are based on the MC statistics, and create new
-    // ones that are based on the prediction for the data_numu_rhc_syst
-    ret.fHist->Sumw2(false);
-    ret.fHist->Sumw2();
-
     return ret;
-    */
   }
 
   //----------------------------------------------------------------------
@@ -536,17 +536,7 @@ namespace ana
     }
     ret.fPOT = pot;
 
-    // TODO TODO HIST
-    /*
-    // Drop old errors, which are based on the MC statistics, and create new
-    // ones that are based on the prediction for the data
-    if(ret.fHist){
-      ret.fHist->Sumw2(false);
-      ret.fHist->Sumw2();
-    }
-    */
     return ret;
-
   }
 
   //----------------------------------------------------------------------
@@ -567,7 +557,6 @@ namespace ana
   Spectrum& Spectrum::PlusEqualsHelper(const Spectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    // TODO TODO HIST Integral function?
     if(rhs.fArray){
       double integral = 0;
       for(int i = 0; i < rhs.Bins1D().NBins()+2; ++i) integral += rhs.fArray[i];
@@ -714,7 +703,13 @@ namespace ana
 
     TObjString("Spectrum").Write("type");
 
-    ToTH1(fPOT)->Write("hist"); // TODO TODO HIST with livetime?
+    if(fPOT != 0){
+      ToTH1(fPOT)->Write("hist");
+    }
+    else{
+      ToTH1(fLivetime, kLivetime)->Write("hist");
+    }
+
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
