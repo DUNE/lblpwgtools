@@ -790,7 +790,7 @@ namespace ana
       h2->SetMaximum(1.5);
 
       if(!savePattern.empty()){
-	assert(savePattern.find("%s") != std::string npos);
+	assert(savePattern.find("%s") != std::string::npos);
 	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
       }
     } // end for it
