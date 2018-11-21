@@ -21,7 +21,7 @@ namespace ana
   // The one constructor to rule them all. (Almost) everyone forwards here
   Spectrum::Spectrum(const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins)
-    : fHist(0), fArray(0), fPOT(0), fLivetime(0),
+    : fArray(0), fPOT(0), fLivetime(0),
       fLabels(labels), fBins(bins)
   {
     ConstructHistogram();
@@ -31,7 +31,7 @@ namespace ana
   // Or here...
   Spectrum::Spectrum(const std::string& label,
                      const Binning& bins)
-    : fHist(0), fArray(0), fPOT(0), fLivetime(0),
+    : fArray(0), fPOT(0), fLivetime(0),
       fLabels(1, label), fBins(1, bins)
   {
     ConstructHistogram();
@@ -86,7 +86,7 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
     // TODO TODO HIST
     fArray = new double[h->GetNbinsX()+2];
@@ -98,7 +98,7 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(0), fArray(vec), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fArray(vec), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
   }
 
@@ -202,18 +202,8 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum::~Spectrum()
   {
-    if(fHist && fHist->GetDirectory()){
-      static bool once = true;
-      if(once){
-        once = false;
-        std::cerr << "Spectrum's fHist (" << fHist << ") is associated with a directory (" << fHist->GetDirectory() << ". How did that happen?" << std::endl;
-      }
-    }
-
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveSpectrum(this); }
-
-    HistCache::Delete(fHist);
 
     // TODO TODO HIST
     //    delete fArray;
@@ -221,7 +211,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   Spectrum::Spectrum(const Spectrum& rhs):
-    fHist(0),
     fArray(0),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
@@ -230,10 +219,6 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    //    assert(rhs.fHist);
-    fHist = rhs.fHist ? HistCache::Copy(rhs.fHist) : 0;
-
-    // TODO TODO HIST
     fArray = new double[Bins1D().NBins()+2];
     for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = rhs.fArray[i];
 
@@ -242,19 +227,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   Spectrum::Spectrum(Spectrum&& rhs):
-    fHist(0),
     fArray(0),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
     fLabels(rhs.fLabels),
     fBins(rhs.fBins)
   {
-    assert(rhs.fHist || rhs.fArray);
-
-    if(rhs.fHist){
-      fHist = rhs.fHist;
-      rhs.fHist = 0;
-    }
+    assert(rhs.fArray);
 
     fArray = rhs.fArray;
     rhs.fArray = 0;
@@ -267,20 +246,11 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
-    DontAddDirectory guard;
-
-    HistCache::Delete(fHist);
-
-    //    assert(rhs.fHist);
-
-    fHist = rhs.fHist ? HistCache::Copy(rhs.fHist) : 0;
-
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
 
-    // TODO TODO HIST
     delete fArray;
     fArray = new double[Bins1D().NBins()+2];
     for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = rhs.fArray[i];
@@ -295,18 +265,12 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
-    HistCache::Delete(fHist);
-
-    assert(rhs.fHist || rhs.fArray);
-
-    fHist = rhs.fHist;
+    assert(rhs.fArray);
 
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
-
-    rhs.fHist = 0;
 
     fArray = rhs.fArray;
     rhs.fArray = 0;
@@ -319,18 +283,8 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::ConstructHistogram()
   {
-    DontAddDirectory guard;
-
     assert(!fArray);
-    assert(!fHist);
-
     fArray = new double[Bins1D().NBins()+2];
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = 0;
-
-    fHist = HistCache::New("", Bins1D());
-
-    // Ensure errors get accumulated properly
-    fHist->Sumw2();
   }
 
   //----------------------------------------------------------------------
@@ -341,17 +295,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    //    TH1D* ret = HistCache::Copy(fHist);
-
-    // TODO TODO HIST
-    Binning bins1D = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      bins1D = Binning::Simple(n, 0, n);
-    }
-
-    TH1D* ret = HistCache::New("TODO title", bins1D);
+    TH1D* ret = HistCache::New("TODO TODO HIST title", Bins1D());
     for(int i = 0; i < Bins1D().NBins()+2; ++i) ret->SetBinContent(i, fArray[i]);
 
     if(expotype == kPOT){
@@ -516,8 +460,6 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
   {
-    if(fHist) fHist->Scale(c);
-
     for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] *= c;
   }
 
@@ -525,11 +467,12 @@ namespace ana
   double Spectrum::Integral(double exposure, double* err,
 			    EExposureType expotype) const
   {
-    const double ratio = (expotype == kPOT) ? exposure/fPOT : exposure/fLivetime;
+    //    const double ratio = (expotype == kPOT) ? exposure/fPOT : exposure/fLivetime;
 
     // TODO TODO HIST
     abort();
 
+    /*
     if(err){
       *err = 0;
 
@@ -540,6 +483,7 @@ namespace ana
     }
 
     return fHist->Integral(0, -1) * ratio;
+    */
   }
 
   //----------------------------------------------------------------------
@@ -550,18 +494,13 @@ namespace ana
 
     // Allow GetMean() to work even if this histogram never had any explicit
     // Fill() calls made.
-    if(fHist->GetEntries() == 0) fHist->SetEntries(1);
-    return fHist->GetMean();
+    //    if(fHist->GetEntries() == 0) fHist->SetEntries(1);
+    //    return fHist->GetMean();
   }
 
   //----------------------------------------------------------------------
   void Spectrum::Fill(double x, double w)
   {
-    assert(fHist);
-
-    fHist->Fill(x, w);
-
-    // TODO TODO HIST
     fArray[Bins1D().FindBin(x)] += w;
   }
 
@@ -574,7 +513,7 @@ namespace ana
 
     // TODO TODO HIST
     abort();
-
+    /*
     for(int i = 0; i < ret.fHist->GetNbinsX()+2; ++i){
       ret.fHist->SetBinContent(i, rnd.Poisson(ret.fHist->GetBinContent(i)));
     }
@@ -585,6 +524,7 @@ namespace ana
     ret.fHist->Sumw2();
 
     return ret;
+    */
   }
 
   //----------------------------------------------------------------------
@@ -596,23 +536,23 @@ namespace ana
     }
     ret.fPOT = pot;
 
+    // TODO TODO HIST
+    /*
     // Drop old errors, which are based on the MC statistics, and create new
     // ones that are based on the prediction for the data
     if(ret.fHist){
       ret.fHist->Sumw2(false);
       ret.fHist->Sumw2();
     }
-
+    */
     return ret;
+
   }
 
   //----------------------------------------------------------------------
   void Spectrum::Clear()
   {
-    // TODO TODO HIST
     for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = 0;
-
-    if(fHist) fHist->Reset();
   }
 
   //----------------------------------------------------------------------
@@ -627,8 +567,7 @@ namespace ana
   Spectrum& Spectrum::PlusEqualsHelper(const Spectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fHist && rhs.fHist->Integral(0, -1) == 0) return *this;
-    // TODO TODO HIST
+    // TODO TODO HIST Integral function?
     if(rhs.fArray){
       double integral = 0;
       for(int i = 0; i < rhs.Bins1D().NBins()+2; ++i) integral += rhs.fArray[i];
@@ -661,9 +600,6 @@ namespace ana
 
     if(fPOT && rhs.fPOT){
       // Scale by POT when possible
-      if(fHist && rhs.fHist) fHist->Add(rhs.fHist, sign*fPOT/rhs.fPOT);
-
-      // TODO TODO HIST
       for(int i = 0; i < Bins1D().NBins()+2; ++i){
         fArray[i] += sign*fPOT/rhs.fPOT * rhs.fArray[i];
       }
@@ -685,10 +621,7 @@ namespace ana
 
     if(fLivetime && rhs.fLivetime){
       // Scale by livetime, the only thing in common
-      if(fHist && rhs.fHist) fHist->Add(rhs.fHist, sign*fLivetime/rhs.fLivetime);
-
-      // TODO TODO HIST
-      for(int i = 0; i < fHist->GetNbinsX()+2; ++i){
+      for(int i = 0; i < Bins1D().NBins()+2; ++i){
         fArray[i] += sign*fLivetime/rhs.fLivetime * rhs.fArray[i];
       }
 
@@ -743,8 +676,8 @@ namespace ana
     // TODO TODO HIST
     abort();
 
-    fHist->Multiply(rhs.fHist);
-    return *this;
+    //    fHist->Multiply(rhs.fHist);
+    //    return *this;
   }
 
   //----------------------------------------------------------------------
@@ -761,8 +694,8 @@ namespace ana
     // TODO TODO HIST
     abort();
 
-    fHist->Divide(rhs.fHist);
-    return *this;
+    //    fHist->Divide(rhs.fHist);
+    //    return *this;
   }
 
   //----------------------------------------------------------------------

@@ -241,7 +241,6 @@ namespace ana
 
     Binning Bins1D() const;
 
-    TH1D* fHist;
     double* fArray;
     double fPOT;
     double fLivetime;
