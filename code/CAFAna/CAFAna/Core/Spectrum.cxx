@@ -88,10 +88,10 @@ namespace ana
                      double pot, double livetime)
     : fArray(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
-    assert(h->GetNbinsX() == Bins1D().NBins());
+    assert(h->GetNbinsX() == NBins1D());
 
     ConstructHistogram();
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = h->GetBinContent(i);
+    for(int i = 0; i < NBins1D()+2; ++i) fArray[i] = h->GetBinContent(i);
   }
 
   //----------------------------------------------------------------------
@@ -219,8 +219,8 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    fArray = new double[Bins1D().NBins()+2];
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = rhs.fArray[i];
+    fArray = new double[NBins1D()+2];
+    for(int i = 0; i < NBins1D()+2; ++i) fArray[i] = rhs.fArray[i];
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
   }
@@ -252,8 +252,8 @@ namespace ana
     fBins = rhs.fBins;
 
     delete fArray;
-    fArray = new double[Bins1D().NBins()+2];
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = rhs.fArray[i];
+    fArray = new double[NBins1D()+2];
+    for(int i = 0; i < NBins1D()+2; ++i) fArray[i] = rhs.fArray[i];
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
@@ -284,7 +284,7 @@ namespace ana
   void Spectrum::ConstructHistogram()
   {
     assert(!fArray);
-    fArray = new double[Bins1D().NBins()+2];
+    fArray = new double[NBins1D()+2];
   }
 
   //----------------------------------------------------------------------
@@ -297,7 +297,7 @@ namespace ana
 
     // TODO do we need a mechanism to set the title?
     TH1D* ret = HistCache::New("", Bins1D());
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) ret->SetBinContent(i, fArray[i]);
+    for(int i = 0; i < NBins1D()+2; ++i) ret->SetBinContent(i, fArray[i]);
 
     if(expotype == kPOT){
       const double pot = exposure;
@@ -461,7 +461,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
   {
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] *= c;
+    for(int i = 0; i < NBins1D()+2; ++i) fArray[i] *= c;
   }
 
   //----------------------------------------------------------------------
@@ -471,7 +471,7 @@ namespace ana
     const double ratio = (expotype == kPOT) ? exposure/fPOT : exposure/fLivetime;
 
     double ret = 0;
-    for(int i = 0; i < Bins1D().NBins()+2; ++i)
+    for(int i = 0; i < NBins1D()+2; ++i)
       ret += fArray[i];
 
     if(err){
@@ -487,7 +487,7 @@ namespace ana
   {
     const std::vector<double> edges = Bins1D().Edges();
 
-    const int N = Bins1D().NBins();
+    const int N = NBins1D();
 
     // Underflow and overflow bins don't have true bin centres
     if(fArray[0] != 0){
@@ -520,7 +520,7 @@ namespace ana
 
     TRandom3 rnd(seed); // zero seeds randomly
 
-    for(int i = 0; i < Bins1D().NBins()+2; ++i){
+    for(int i = 0; i < NBins1D()+2; ++i){
       ret.fArray[i] = rnd.Poisson(ret.fArray[i]);
     }
 
@@ -542,7 +542,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Clear()
   {
-    for(int i = 0; i < Bins1D().NBins()+2; ++i) fArray[i] = 0;
+    for(int i = 0; i < NBins1D()+2; ++i) fArray[i] = 0;
   }
 
   //----------------------------------------------------------------------
@@ -559,7 +559,7 @@ namespace ana
     // In this case it would be OK to have no POT/livetime
     if(rhs.fArray){
       double integral = 0;
-      for(int i = 0; i < rhs.Bins1D().NBins()+2; ++i) integral += rhs.fArray[i];
+      for(int i = 0; i < rhs.NBins1D()+2; ++i) integral += rhs.fArray[i];
       if(integral == 0) return *this;
     }
 
@@ -589,7 +589,7 @@ namespace ana
 
     if(fPOT && rhs.fPOT){
       // Scale by POT when possible
-      for(int i = 0; i < Bins1D().NBins()+2; ++i){
+      for(int i = 0; i < NBins1D()+2; ++i){
         fArray[i] += sign*fPOT/rhs.fPOT * rhs.fArray[i];
       }
 
@@ -610,7 +610,7 @@ namespace ana
 
     if(fLivetime && rhs.fLivetime){
       // Scale by livetime, the only thing in common
-      for(int i = 0; i < Bins1D().NBins()+2; ++i){
+      for(int i = 0; i < NBins1D()+2; ++i){
         fArray[i] += sign*fLivetime/rhs.fLivetime * rhs.fArray[i];
       }
 
@@ -767,14 +767,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  int Spectrum::NBins1D() const
+  {
+    int nbins = 1;
+    for(const Binning& b: fBins) nbins *= b.NBins();
+    return nbins;
+  }
+
+  //----------------------------------------------------------------------
   Binning Spectrum::Bins1D() const
   {
-    Binning bins1D = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      bins1D = Binning::Simple(n, 0, n);
-    }
-    return bins1D;
+    if(fBins.size() == 1)
+      return fBins[0];
+
+    return Binning::Simple(NBins1D(), 0, NBins1D());
   }
 }

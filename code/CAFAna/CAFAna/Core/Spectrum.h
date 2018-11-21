@@ -239,6 +239,7 @@ namespace ana
     /// Helper for operator+= and operator-=
     Spectrum& PlusEqualsHelper(const Spectrum& rhs, int sign);
 
+    int NBins1D() const;
     Binning Bins1D() const;
 
     double* fArray;
