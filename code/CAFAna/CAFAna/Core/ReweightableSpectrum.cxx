@@ -74,7 +74,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar,
-                                             std::string xlabel, std::string ylabel, double pot,
+                                             const std::string& xlabel, const std::string& ylabel,
+                                             double pot,
                                              int nbinsx, double xmin, double xmax,
                                              int nbinsy, double ymin, double ymax)
     : ReweightableSpectrum(xlabel,
@@ -136,6 +137,21 @@ namespace ana
     }
 
     fTrueLabel = h->GetYaxis()->GetTitle();
+  }
+
+    //----------------------------------------------------------------------
+  ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar,
+                                             std::unique_ptr<TH2D> h,
+                                             const std::vector<std::string>& labels,
+                                             const std::vector<Binning>& bins,
+                                             double pot, double livetime)
+    : ReweightableSpectrum(labels, bins, rwVar)
+  {
+    fHist = h.release();
+    fPOT = pot;
+    fLivetime = livetime;
+
+    fTrueLabel = fHist->GetYaxis()->GetTitle();
   }
 
   //----------------------------------------------------------------------

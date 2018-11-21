@@ -31,7 +31,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::
-  OscillatableSpectrum(std::string label, const Binning& bins,
+  OscillatableSpectrum(const std::string& label, const Binning& bins,
                        SpectrumLoaderBase& loader,
                        const Var& var,
                        const Cut& cut,
@@ -90,7 +90,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(std::string label,
+  OscillatableSpectrum::OscillatableSpectrum(const std::string& label,
                                              const Binning& bins)
     : ReweightableSpectrum(label, bins, kTrueE),
       fCachedOsc(0, {}, {}, 0, 0),
@@ -107,7 +107,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(std::string label, double pot, double livetime,
+  OscillatableSpectrum::OscillatableSpectrum(const std::string& label, double pot, double livetime,
                                              const Binning& bins)
     : ReweightableSpectrum(label, bins, kTrueE),
       fCachedOsc(0, {}, {}, 0, 0),
@@ -129,6 +129,18 @@ namespace ana
                                              const std::vector<Binning>& bins,
                                              double pot, double livetime)
     : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime),
+      fCachedOsc(0, {}, {}, 0, 0),
+      fCachedHash(0)
+  {
+    fTrueLabel = "True Energy (GeV)";
+  }
+
+  //----------------------------------------------------------------------
+  OscillatableSpectrum::OscillatableSpectrum(std::unique_ptr<TH2D> h,
+                                             const std::vector<std::string>& labels,
+                                             const std::vector<Binning>& bins,
+                                             double pot, double livetime)
+    : ReweightableSpectrum(kTrueE, std::move(h), labels, bins, pot, livetime),
       fCachedOsc(0, {}, {}, 0, 0),
       fCachedHash(0)
   {
@@ -345,6 +357,8 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<OscillatableSpectrum> OscillatableSpectrum::LoadFrom(TDirectory* dir)
   {
+    DontAddDirectory guard;
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "OscillatableSpectrum");
@@ -376,11 +390,11 @@ namespace ana
       labels.push_back(spect->GetXaxis()->GetTitle());
     }
 
-    std::unique_ptr<OscillatableSpectrum> ret = std::make_unique<OscillatableSpectrum>(spect,
-                                                  				       labels, bins,
-				                                                       hPot->GetBinContent(1),
-                                     					               hLivetime->GetBinContent(1));
-    delete spect;
+    auto ret = std::make_unique<OscillatableSpectrum>(std::unique_ptr<TH2D>(spect),
+                                                      labels, bins,
+                                                      hPot->GetBinContent(1),
+                                                      hLivetime->GetBinContent(1));
+
     delete hPot;
     delete hLivetime;
     return ret;
