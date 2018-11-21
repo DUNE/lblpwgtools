@@ -27,12 +27,19 @@ namespace ana
                          const Var& wei = kUnweighted);
 
     ReweightableSpectrum(const Var& rwVar,
-                         std::string xlabel, std::string ylabel, double pot,
+                         const std::string& xlabel, const std::string& ylabel,
+                         double pot,
                          int nbinsx, double xmin, double xmax,
                          int nbinsy, double ymin, double ymax);
 
     ReweightableSpectrum(const Var& rwVar,
                          TH2* h,
+                         const std::vector<std::string>& labels,
+                         const std::vector<Binning>& bins,
+                         double pot, double livetime);
+
+    ReweightableSpectrum(const Var& rwVar,
+                         std::unique_ptr<TH2D> h,
                          const std::vector<std::string>& labels,
                          const std::vector<Binning>& bins,
                          double pot, double livetime);
