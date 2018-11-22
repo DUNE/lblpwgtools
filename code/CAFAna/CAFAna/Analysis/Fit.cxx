@@ -96,8 +96,8 @@ namespace ana
   //----------------------------------------------------------------------
   bool Fitter::SupportsDerivatives() const
   {
-    //    // Make completely opt-in for now
-    //    if(getenv("CAFANA_ANALYTIC_DERIVATIVES") == 0) return false;
+    // Make completely opt-in again (some issues for stats. throws)
+    if(getenv("CAFANA_ANALYTIC_DERIVATIVES") == 0) return false;
 
     // No point using derivatives for FitVars only, we do finite differences,
     // probably worse than MINUIT would.
