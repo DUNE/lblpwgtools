@@ -37,22 +37,22 @@ namespace ana
     }
 
   protected:
-    GenieSyst(int genie_id) :
+  GenieSyst(int genie_id, bool applyPenalty=true) :
       ISyst(GetGenieWeightName(genie_id),
-            GetGenieWeightName(genie_id)),
+            GetGenieWeightName(genie_id),
+	    applyPenalty),
       fID(genie_id) {}
-
-    friend std::vector<const ISyst*> GetGenieSysts();
+      friend std::vector<const ISyst*> GetGenieSysts(bool applyPenalty);
 
     int fID;
   };
 
-  std::vector<const ISyst*> GetGenieSysts(){
+  std::vector<const ISyst*> GetGenieSysts(bool applyPenalty=true){
     static std::vector<const ISyst*> ret;
 
     if(ret.empty()){
       for (uint i = 0; i < GetGenieWeightNames().size(); ++i){
-        ret.push_back(new GenieSyst(i));
+        ret.push_back(new GenieSyst(i, applyPenalty));
       }
     }
     return ret;

@@ -73,20 +73,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i)
+  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty)
   {
     // Make sure we always give the same one back
     static std::vector<const DUNEFluxSyst*> cache;
     if(i >= cache.size()) cache.resize(i+1);
-    if(!cache[i]) cache[i] = new DUNEFluxSyst(i);
+    if(!cache[i]) cache[i] = new DUNEFluxSyst(i, applyPenalty);
     return cache[i];
   }
 
   //----------------------------------------------------------------------
-  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N)
+  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty)
   {
     DUNEFluxSystVector ret;
-    for(unsigned int i = 0; i < N; ++i) ret.push_back(GetDUNEFluxSyst(i));
+    for(unsigned int i = 0; i < N; ++i) ret.push_back(GetDUNEFluxSyst(i, applyPenalty));
     return ret;
   }
 } // namespace
