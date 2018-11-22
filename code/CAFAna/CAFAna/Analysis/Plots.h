@@ -19,6 +19,7 @@ namespace ana
   class IPrediction;
   class ISyst;
   class Spectrum;
+  class SystShifts;
 
   /// Overlay MC spectrum with data spectrum
   ///
@@ -36,6 +37,21 @@ namespace ana
   TH1* DataMCComparisonComponents(const Spectrum& data,
                                   const IPrediction* mc,
                                   osc::IOscCalculator* calc);
+
+  TH1* GetMCSystTotal(const IPrediction* mc,
+                      osc::IOscCalculator* calc,
+                      const SystShifts& shift,
+		      std::string hist_name,
+                      double pot,
+                      bool force1D=false);
+
+  TH1* GetMCTotal(const IPrediction* mc,
+                  osc::IOscCalculator* calc,
+                  std::string hist_name,
+                  double pot,
+                  bool force1D=false);
+
+
   /// A vector of histograms for the MC components. Easier to manipulate elsewhere
   /// Not ideal as returned pointers probably won't get deleted... but very useful...
   std::vector<TH1*> GetMCComponents(const IPrediction* mc,
@@ -44,6 +60,14 @@ namespace ana
 				    double pot,
 				    bool force1D = false);
   
+  std::vector<TH1*> GetMCSystComponents(const IPrediction* mc,
+					osc::IOscCalculator* calc,
+					const SystShifts& shift,
+					std::string hist_name,
+					double pot,
+					bool force1D=false);
+
+
   std::vector<TH1*> GetMCTotalForSystShifts(const IPrediction* mc,
 					    osc::IOscCalculator* calc,
 					    const ISyst* syst,
