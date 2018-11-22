@@ -4,6 +4,8 @@
 
 #include "TMath.h"
 
+#include "TRandom3.h"
+
 namespace ana{class IOscCalculatorAdjustable;}
 
 namespace ana
@@ -40,6 +42,9 @@ namespace ana
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
+
+  // Add in a throw for toys
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie);
 
   class NuFitPenalizer: public IExperiment
   {

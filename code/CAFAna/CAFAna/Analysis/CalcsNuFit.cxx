@@ -35,6 +35,41 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie)
+  {
+    assert(hie == +1 || hie == -1);
+
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    ret->SetL(1300);
+
+    // Throw 12 and rho within errors
+    ret->SetRho(2.95674*(1+0.02*gRandom->Gaus()));
+    ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+    ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+
+    // Uniform throws within +/-3 sigma
+    if(hie > 0){
+      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH, 
+				      kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+      ret->SetTh23(gRandom->Uniform(kNuFitTh23CVNH-3*kNuFitTh23ErrNH,
+				    kNuFitTh23CVNH+3*kNuFitTh23ErrNH));
+      ret->SetTh13(gRandom->Uniform(kNuFitTh13CVNH-3*kNuFitTh13ErrNH,
+				    kNuFitTh13CVNH+3*kNuFitTh13ErrNH));
+    } else {
+      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
+                                      kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
+      ret->SetTh23(gRandom->Uniform(kNuFitTh23CVIH-3*kNuFitTh23ErrIH,
+                                    kNuFitTh23CVIH+3*kNuFitTh23ErrIH));
+      ret->SetTh13(gRandom->Uniform(kNuFitTh13CVIH-3*kNuFitTh13ErrIH,
+                                    kNuFitTh13CVIH+3*kNuFitTh13ErrIH));
+    }
+    ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+		  
+    return ret;
+  }
+
+
+  //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
