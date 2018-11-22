@@ -6,8 +6,9 @@ namespace ana
 {
   //----------------------------------------------------------------------
   ISyst::ISyst(const std::string& shortName,
-               const std::string& latexName)
-    : fShortName(shortName), fLatexName(latexName)
+               const std::string& latexName,
+	       bool applyPenalty)
+    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty)
   {
     SystRegistry::Register(this);
   }

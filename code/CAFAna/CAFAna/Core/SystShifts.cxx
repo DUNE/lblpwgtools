@@ -93,7 +93,11 @@ namespace ana
   {
     double ret = 0;
     // Systematics are all expressed in terms of sigmas
-    for(auto it: fSysts) ret += util::sqr(it.second);
+    for(auto it: fSysts) {
+      // Only apply a penalty for systematics where this has been requested
+      if (it.first->ApplyPenalty())
+	ret += util::sqr(it.second);
+    }
     return ret;
   }
 

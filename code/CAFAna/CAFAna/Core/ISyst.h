@@ -21,7 +21,8 @@ namespace ana
   {
   public:
     ISyst(const std::string& shortName,
-          const std::string& latexName);
+          const std::string& latexName, 
+	  bool applyPenalty=true);
     ISyst(const ISyst &) = delete;   // no copying.
     ISyst(ISyst && rhs) = delete;    // no moving either.
     virtual ~ISyst();
@@ -34,6 +35,9 @@ namespace ana
 
     /// The name used on plots (ROOT's TLatex syntax)
     virtual std::string LatexName() const final {return fLatexName;}
+
+    /// Should a penalty be applied for this shift?
+    virtual bool ApplyPenalty() const {return fApplyPenalty;}
 
     /// \brief Perform the systematic shift
     ///
@@ -57,6 +61,7 @@ namespace ana
   private:
     std::string fShortName;
     std::string fLatexName;
+    mutable bool fApplyPenalty;
   };
 
 
