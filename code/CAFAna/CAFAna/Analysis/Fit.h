@@ -116,6 +116,15 @@ namespace ana
     /// Return the postfit errors
     std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
 
+    /// Return number of function calls
+    int GetNFCN(){return this->fNEval;}
+
+    /// Return edm form the fit
+    double GetEDM(){return this->fEdm;}
+
+    /// Say whether the fit was good
+    bool GetIsValid(){return this->fIsValid;}
+
     SystShifts GetSystShifts() const {return fShifts;}
 
     /// Evaluate the log-likelihood, as required by MINUT interface
@@ -169,6 +178,8 @@ namespace ana
     mutable int fNEvalFiniteDiff = 0;
 
     // Some information for post-fit evaluation if necessary
+    mutable double fEdm = -1;
+    mutable bool fIsValid = false;
     mutable TMatrixDSym* fCovar;
     mutable std::vector<std::string> fParamNames;
     mutable std::vector<double> fPreFitValues;

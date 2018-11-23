@@ -137,6 +137,8 @@ namespace ana
       const double val = systSeed.GetShift(s);
       // name, value, error
       mnPars.Add(s->ShortName(), val, 1);
+      // Try to add a limit on each
+      mnPars.SetLimits(mnPars.Params().size()-1, -5, 5);
       fParamNames  .push_back(s->ShortName());
       fPreFitValues.push_back(val);
       fPreFitErrors.push_back(1);
@@ -177,17 +179,22 @@ namespace ana
     ROOT::Minuit2::FunctionMinimum minpt = (*mnApp)();
     gErrorIgnoreLevel = olderr;
 
-    // If this isn't valid, we probably should worry more...
-    if(!minpt.IsValid()){
-      std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
-    }
-
+    // Hesse can find a better minimum, so let's do this before panicking
     if(fPrec & kIncludeHesse){
       std::cout << "Notice: attempting to build the Hessian matrix" << std::endl;
       ROOT::Minuit2::MnHesse hesse(2);
       hesse(*this, minpt, 1e5);
     }
+    
+    // Okay, time to panic! If this isn't valid, we probably should worry more...
+    if(!minpt.IsValid()){
+      std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
+    }
 
+    // Store some basic fit information
+    this->fEdm = minpt.Edm();
+    this->fIsValid = minpt.IsValid();
+      
     fPostFitValues = minpt.UserParameters().Params();
     fPostFitErrors = minpt.UserParameters().Errors();
 
