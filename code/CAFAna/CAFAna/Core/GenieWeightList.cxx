@@ -35,8 +35,7 @@ namespace ana
     //     };
 
     return {"MaCCQE", "MaNCEL", "EtaNCEL", "MaCCRES", 
-	"MvCCRES", "RDecBR1gamma", "RDecBR1eta", "E2p2h_A_nu", 
-	"E2p2h_B_nu", "E2p2h_A_nubar", "E2p2h_B_nubar", "NR_nu_n_CC_2Pi", 
+	"MvCCRES", "RDecBR1gamma", "RDecBR1eta", "NR_nu_n_CC_2Pi", 
 	"NR_nu_n_CC_3Pi", "NR_nu_p_CC_2Pi", "NR_nu_p_CC_3Pi", "NR_nu_np_CC_1Pi", 
 	"NR_nu_n_NC_1Pi", "NR_nu_n_NC_2Pi", "NR_nu_n_NC_3Pi", "NR_nu_p_NC_1Pi", 
 	"NR_nu_p_NC_2Pi", "NR_nu_p_NC_3Pi", "NR_nubar_n_CC_1Pi", "NR_nubar_n_CC_2Pi", 
@@ -44,6 +43,7 @@ namespace ana
 	"NR_nubar_n_NC_1Pi", "NR_nubar_n_NC_2Pi", "NR_nubar_n_NC_3Pi", "NR_nubar_p_NC_1Pi", 
 	"NR_nubar_p_NC_2Pi", "NR_nubar_p_NC_3Pi", "BeRPA_A", "BeRPA_B", "BeRPA_D", "BeRPA_E", 
 	"SPPLowQ2Suppression"
+	// Stil a bit dodge: "E2p2h_A_nu","E2p2h_B_nu", "E2p2h_A_nubar", "E2p2h_B_nubar",
 	// "Mnv2p2hGaussEnhancement_CV", "Mnv2p2hGaussEnhancement_NN", "Mnv2p2hGaussEnhancement_np", "Mnv2p2hGaussEnhancement_QE", "nuenumu_xsec_ratio"
         // "C12ToAr40_2p2hScaling_nu", "C12ToAr40_2p2hScaling_nubar",
 	// "NormNCRES", "MaNCRESshape", "MvNCRESshape"
