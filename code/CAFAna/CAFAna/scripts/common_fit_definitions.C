@@ -49,10 +49,6 @@ const Var kFDNumuPid  = SIMPLEVAR(dune.cvnnumu);
 const Var kFDNuePid   = SIMPLEVAR(dune.cvnnue);
 const Var kMVANUMU    = SIMPLEVAR(dune.mvanumu);
 
-// const Var kvtxx_truth = SIMPLEVAR(dune.nuvtxx_truth);
-// const Var kvtxy_truth = SIMPLEVAR(dune.nuvtxy_truth);
-// const Var kvtxz_truth = SIMPLEVAR(dune.nuvtxz_truth);
-
 // -->ND
 const Var kRecoEnergyND = SIMPLEVAR(dune.Ev_reco);
 const Var kRecoYND      = (SIMPLEVAR(dune.Ev_reco) - SIMPLEVAR(dune.Elep_reco))/SIMPLEVAR(dune.Ev_reco);
@@ -63,12 +59,6 @@ const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // FD cut
 const Cut kFDSelNue     = kFDNuePid > 0.7;
 const Cut kFDSelNumu    = kFDNumuPid > 0.7;
-// This isn't currently working, so... get rid of it for now...
-// Chris M says: The cut for the ND will be x in (-300, +300), y in (-100, +100), z in (+50, +350)
-// I guess we keep the old one for the FD
-// const Cut kFDPassFV     = kFDNuePid == kFDNuePid; //kvtxx_truth<310 && kvtxx_truth>-310 && kvtxy_truth<550 && kvtxy_truth>-550 && kvtxz_truth>50 && kvtxz_truth<1244;
-const Cut kFDPassFV     = kMVANUMU > -1; // From Elizabeth to mock up FV cut kPID_MVA_NUMU>-1
-
   
 // --> ND cuts, from Chris: For the numu sample: reco_numu ==1, reco_q == -1 for FHC and +1 for RHC.  Also muon_exit == 0, which means that the muon is well-reconstructed.  And Ehad_veto < 30, which means the hadronic system is (probably) well-reconstructed
 const Cut kRecoNegMu    = SIMPLEVAR(dune.reco_q) == -1; // Note that for these to be true, reco_numu == 1
@@ -91,13 +81,13 @@ const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
 
 // FD spectra
-SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nonswap.root", kBeam); // ,1e5);
-SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nueswap.root", kBeam); // ,1e5);
-SpectrumLoaderBase& FD_loaderFHCNutau = kNullLoader;
+SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nonswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nueswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderFHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_tauswap.root", kBeam); //,1e5);
 
-SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nonswap.root", kBeam); // ,1e5);
-SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nueswap.root", kBeam); // ,1e5);
-SpectrumLoaderBase& FD_loaderRHCNutau = kNullLoader;
+SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nonswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nueswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderRHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_tauswap.root", kBeam); //,1e5);
 
 // FD predictions
 PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
@@ -106,8 +96,8 @@ PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRH
 PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kPassFD_CVN_NUE && kIsTrueFV, kNoShift, kGENIEWeights);
 
 // ND predictions
-SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_FHC_CAF.root", kBeam); // ,1e5);
-SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_test/ND_RHC_CAF.root", kBeam); // ,1e5);
+SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_FHC_CAF.root", kBeam); //,1e5);
+SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_RHC_CAF.root", kBeam); //,1e5);
 PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 
@@ -117,41 +107,70 @@ Loaders dummyLoaders;
 // To get the oscillation probabilities
 osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
-std::vector<const ISyst*> systlist;
-std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10);
-std::vector<const ISyst*> xseclist = GetGenieSysts();
-std::vector<const ISyst*> detlist  = {&keScaleMuLArSyst, &kEnergyScaleMuSystND, &kEnergyScaleESyst,
-				      &kChargedHadCorrSyst, &kChargedHadUncorrFDSyst, &kChargedHadUncorrNDSyst,
-				      &kNUncorrNDSyst, &kNUncorrFDSyst, &kEnergyScalePi0Syst,
-				      &kPi0UncorrFDSyst, &kPi0UncorrNDSyst};
+// std::vector<const ISyst*> systlist;
+// std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10, false);
+// std::vector<const ISyst*> xseclist = GetGenieSysts(false);
+std::vector<const ISyst*> detlist_nd  = {&kEnergyScaleMuSystND, &kChargedHadUncorrNDSyst, &kNUncorrNDSyst}; //, &kPi0UncorrNDSyst}; removed as dodgy in current CAFs
+std::vector<const ISyst*> detlist_fd  = {&keScaleMuLArSyst, &kEnergyScaleESyst,
+					 &kChargedHadCorrSyst, &kChargedHadUncorrFDSyst,
+					 &kNUncorrFDSyst, &kEnergyScalePi0Syst,
+					 &kPi0UncorrFDSyst};
 
-std::vector<const ISyst*> GetListOfSysts(bool fluxsyst, bool xsecsyst, bool detsyst){
+std::vector<const ISyst*> detlist_dis  = {&keScaleMuLArSyst, &kChargedHadCorrSyst,
+					  &kChargedHadUncorrFDSyst, &kNUncorrFDSyst,
+					  &kEnergyScalePi0Syst, &kPi0UncorrFDSyst};
+std::vector<const ISyst*> detlist_app  = {&kEnergyScaleESyst, &kChargedHadCorrSyst,
+					  &kChargedHadUncorrFDSyst, &kNUncorrFDSyst,
+					  &kEnergyScalePi0Syst, &kPi0UncorrFDSyst};
+
+enum DetSystType {kFDAll, kFDApp, kFDDis};
+
+// This is getting a little complicated
+std::vector<const ISyst*> GetListOfSysts(bool fluxsyst, bool xsecsyst, bool detsyst,
+					 bool fluxXsecPenalties = true, bool useND=true,
+					 DetSystType det=kFDAll){
 
   std::vector<const ISyst*> systlist;
   if (fluxsyst){
-    std::cout << "Adding flux systematics" << std::endl;
+    std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10, fluxXsecPenalties);
     systlist.insert(systlist.end(), fluxlist.begin(), fluxlist.end());
   }
   if (detsyst) {
-    std::cout << "Adding det. systematics" << std::endl;
-    systlist.insert(systlist.end(), detlist.begin(), detlist.end()); 
+    if (useND) systlist.insert(systlist.end(), detlist_nd.begin(), detlist_nd.end());
+    switch(det){
+    case kFDApp: systlist.insert(systlist.end(), detlist_app.begin(), detlist_app.end()); break;
+    case kFDDis: systlist.insert(systlist.end(), detlist_dis.begin(), detlist_dis.end()); break;
+    case kFDAll: systlist.insert(systlist.end(), detlist_fd.begin(), detlist_fd.end()); break;
+    }
   }
   if (xsecsyst) {
-    std::cout << "Adding XSEC systematics" << std::endl;
+    std::vector<const ISyst*> xseclist = GetGenieSysts(fluxXsecPenalties);    
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
-
-  // List all of the systematics we'll be using
-  std::cout << "Systematics in this fit: " << std::endl;
-  for(const ISyst* s: systlist) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
-  if (systlist.size()==0) {std::cout << "None" << std::endl;}
 
   return systlist;
 };
 
+TH2D* make_corr_from_covar(TH2D* covar){
+
+  TH2D *corr = (TH2D*)covar->Clone();
+  corr      ->SetNameTitle("corr", "corr");
+
+  for (int i = 0; i < covar->GetNbinsX(); ++i){
+    double istddev = sqrt(covar->GetBinContent(i+1, i+1));
+    for (int j = 0; j < covar->GetNbinsX(); ++j){
+      double jstddev  = sqrt(covar->GetBinContent(j+1, j+1));
+      double new_corr = covar->GetBinContent(i+1, j+1)/istddev/jstddev; 
+      corr ->SetBinContent(i+1, j+1, new_corr);
+    }
+  }
+  return corr;
+}
 
 // Wow, this is ugly
-std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string fileName, std::vector<const ISyst*> systlist, bool reload=false){
+std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string fileName,
+								std::vector<const ISyst*> systlist,
+								bool reload=false){
 
   if(reload || TFile(fileName.c_str()).IsZombie()){
     
