@@ -3,7 +3,6 @@
 #include "CAFAna/Core/ISyst.h"
 #include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Cuts/AnaCuts.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -139,7 +138,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && sr->dune.isFHC) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && sr->dune.run<20000004) weight *= 1 + .05*sigma;
     }
   };
 
@@ -155,7 +154,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && !sr->dune.isFHC) weight *= 1 + .05*sigma;
+      if(sr->dune.isCC && abs(sr->dune.nuPDG) == 12 && abs(sr->dune.nuPDGunosc) == 12 && !(sr->dune.run<20000004)) weight *= 1 + .05*sigma;
     }
   };
 
