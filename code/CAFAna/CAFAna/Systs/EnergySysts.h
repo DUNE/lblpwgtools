@@ -15,16 +15,25 @@ namespace ana
   {
   public:
     enum Particle{kChargedHad, kPi0, kN};
-  UncorrNDSyst(Particle p) : ISyst("UncorrNDSyst", "Uncorrelated ND shaped systs") 
+    enum Scale{kLinear, kSqrt};
+  UncorrNDSyst(Particle p, Scale s = kLinear) : ISyst("UncorrNDSyst", "Uncorrelated ND syst") 
       {
 	assert(p == kChargedHad || p == kPi0 || p == kN);
+	assert(s == kLinear || s == kSqrt);
 	part = p;
+	scale = s;
       }
     
     void SetParticle(Particle p) 
     {
       assert(p == kChargedHad || p == kPi0 || p == kN);
       part = p;
+    }
+
+    void SetScale(Scale s)
+    {
+      assert(s == kLinear || s == kSqrt);
+      scale = s;
     }
 
     void Shift(double sigma,
@@ -34,13 +43,17 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
 
       double sumE = 0.;
-
       const double scale = .01 * sigma;
       if (!sr->dune.isFD) {
 	if (part == kChargedHad) {
 	  sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
 	  const double fracE = sumE / sr->dune.Ev;
-	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	  if (scale == kLinear) {
+	    sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	  }
+	  else if (scale == kSqrt) {
+	    sr->dune.Ev_reco += sr->dune.Ev_reco * (1 / (sumE + 1)) * scale * fracE;
+	  }
 	}
 	else if (part == kPi0) {
 	  sumE = sr->dune.ePi0;
@@ -55,13 +68,11 @@ namespace ana
 	else {
 	  std::cout<<"Error: UncorrNDSyst not set to a particle type"<<std::endl;
 	}	
-
-
-
       }
     }
   private:
     Particle part;
+    Scale scale;
   };
 
   /// 1% systematic on muon energy for energy deposition in liquid argon
@@ -437,7 +448,7 @@ namespace ana
       const double scale = 1. + 0.02*sigma;
       
       if(!sr->dune.isFD) { 
-	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
+	const double fracPi0 = sr->dune.ePi0 / (sr->dune.Ev * 1000);
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       }
     }
