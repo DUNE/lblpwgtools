@@ -2,8 +2,6 @@
 
 namespace ana
 {
-  const EnergyScaleSyst kEnergyScaleSyst;
-  const EnergyResSyst kEnergyResSyst;
   const NumuFHCSyst kNumuFHCSyst;
   const NumuRHCSyst kNumuRHCSyst;
   const NueFHCSyst kNueFHCSyst;

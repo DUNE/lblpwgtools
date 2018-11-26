@@ -3,6 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Cuts/AnaCuts.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -10,54 +11,6 @@
 
 namespace ana
 {
-  /// Absolute energy scale systematic
-  class EnergyScaleSyst: public ISyst
-  {
-  public:
-    EnergyScaleSyst() : ISyst("eScale", "Energy Scale") {}
-
-    void Shift(double sigma,
-               Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
-    {
-      restore.Add(sr->dune.Ev_reco);
-      restore.Add(sr->dune.Ev_reco_numu);
-      restore.Add(sr->dune.Ev_reco_nue);
-
-      const double scale = 1 + .02*sigma;
-      sr->dune.Ev_reco *= scale;
-      sr->dune.Ev_reco_numu *= scale;
-      sr->dune.Ev_reco_nue *= scale;
-    }
-  };
-
-  extern const EnergyScaleSyst kEnergyScaleSyst;
-
-
-  /// Energy resolution systematic
-  class EnergyResSyst: public ISyst
-  {
-  public:
-    EnergyResSyst() : ISyst("eRes", "Energy Resolution") {}
-
-    void Shift(double sigma,
-               Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
-    {
-      const double scale = 1 + .06*sigma;
-      const float trueE = sr->dune.Ev;
-
-      restore.Add(sr->dune.Ev_reco);
-
-      sr->dune.Ev_reco = trueE + scale*(sr->dune.Ev_reco - trueE);
-
-    }
-  };
-
-  extern const EnergyResSyst kEnergyResSyst;
-
-
-
   ///ETW Rework of Normalization Systematics
 
   //Signal normalization
@@ -138,7 +91,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if(!sr->dune.isCC && sr->dune.cvnnumu>0.5 && sr->dune.cvnnue<0.7) weight *= 1 + .1*sigma;
+      if(!sr->dune.isCC && sr->dune.cvnnumu > 0.5 && sr->dune.cvnnue < 0.5) weight *= 1 + .1*sigma;
     }
   };
 
@@ -154,7 +107,7 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      if((!sr->dune.isCC && sr->dune.cvnnumu<0.5 && sr->dune.cvnnue>0.7) || (sr->dune.isCC && abs(sr->dune.nuPDG)==14)) weight *= 1 + .05*sigma;
+      if((!sr->dune.isCC && sr->dune.cvnnue > 0.5 && sr->dune.cvnnumu < 0.5) || (sr->dune.isCC && abs(sr->dune.nuPDG)==14)) weight *= 1 + .05*sigma;
     }
   };
 
