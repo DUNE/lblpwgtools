@@ -66,6 +66,7 @@ namespace caf
     double Q2;
     double W;
     double Y;
+    double X;
 
     double vtx_x;
     double vtx_y;
