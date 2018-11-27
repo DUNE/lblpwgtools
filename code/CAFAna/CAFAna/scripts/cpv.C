@@ -32,15 +32,6 @@ using namespace ana;
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 
-// 125 MeV bins from 0.0 to 8GeV (May want to revisit)
-const HistAxis axis_nue("Reconstructed energy (GeV)",
-                    Binning::Simple(64, 0.0, 8.0),
-                    kRecoE_nue);
-
-const HistAxis axis_numu("Reconstructed energy (GeV)",
-                    Binning::Simple(64, 0.0, 8.0),
-                    kRecoE_numu);
-
 // 3.5yrs * POT/yr * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;
 
@@ -107,15 +98,19 @@ void cpv()
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment app_expt_fhc_syst(&predInt_FDNueFHC, data_nue_fhc_syst);
+      app_expt_fhc_syst.SetMaskHist(0.5,8.0);
 
       const Spectrum data_nue_rhc_syst = predInt_FDNueRHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment app_expt_rhc_syst(&predInt_FDNueRHC, data_nue_rhc_syst);
+      app_expt_rhc_syst.SetMaskHist(0.5,8.0);
 
       const Spectrum data_numu_fhc_syst = predInt_FDNumuFHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment dis_expt_fhc_syst(&predInt_FDNumuFHC, data_numu_fhc_syst);
+      dis_expt_fhc_syst.SetMaskHist(0.5,8.0);
 
       const Spectrum data_numu_rhc_syst = predInt_FDNumuRHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment dis_expt_rhc_syst(&predInt_FDNumuRHC, data_numu_rhc_syst);
+      dis_expt_rhc_syst.SetMaskHist(0.5,8.0);
 
       std::vector<const IFitVar*> oscVars =
 	{&kFitDmSq32Scaled, &kFitSinSqTheta23,
