@@ -1,6 +1,5 @@
 // ETW May 2018
 // Standard script for DUNE spectra
-// Input files TensorFlow CVN training from Fall 2018 
 
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
@@ -9,8 +8,11 @@
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
+#include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Analysis/Exposures.h"
+#include "CAFAna/Systs/Systs.h"
 
 using namespace ana;
 
@@ -27,16 +29,6 @@ using namespace ana;
 
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
-const Var kPIDFD_NUMU = SIMPLEVAR(dune.cvnnumu);
-const Var kPIDFD_NUE = SIMPLEVAR(dune.cvnnue);
-const Var kPID_MVA_NUMU = SIMPLEVAR(dune.mvanumu);
-
-const Var kvtxx_truth = SIMPLEVAR(dune.vtx_x);
-const Var kvtxy_truth = SIMPLEVAR(dune.vtx_y);
-const Var kvtxz_truth = SIMPLEVAR(dune.vtx_z);
-
-const Cut kPassCVN_NUE = kPIDFD_NUE>0.7 && kPIDFD_NUMU<0.5;
-const Cut kPassCVN_NUMU = kPIDFD_NUMU>0.5 && kPIDFD_NUE<0.7;
 
 // 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
@@ -54,89 +46,82 @@ const double potFD = 3.5 * POT120 * 40/1.13;
 const char* stateFname = "spec_state.root";
 const char* outputFname = "spec_hist.root";
 
+//Set systematics style by hand for now
+bool nosyst = false;
+bool normsyst = true;
+bool fullsyst = false;
+
+std::vector<const ISyst*> systlist;
+std::vector<const ISyst*> normlist_sig = {&kNueFHCSyst, &kNumuFHCSyst, &kNueRHCSyst, &kNumuRHCSyst};
+std::vector<const ISyst*> normlist_bg = {&kNueBeamFHCSyst, &kNueBeamRHCSyst, &kNCAppSyst, &kNCDisSyst, &kNutauSyst};
+
 void spec(bool reload = false)
 {
   rootlogon(); // style
   
   if(reload || TFile(stateFname).IsZombie()){
 
-    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nonswap.root");
-    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_FHC_nueswap.root");
-    SpectrumLoaderBase& loaderFDFHCNuTau = kNullLoader;
+    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nonswap.root");
+    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nueswap.root");
+    SpectrumLoader loaderFDFHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_tauswap.root");
 
-    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nonswap.root");
-    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_test/FD_RHC_nueswap.root");
-    SpectrumLoaderBase& loaderFDRHCNuTau = kNullLoader;
+    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nonswap.root");
+    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nueswap.root");
+    SpectrumLoader loaderFDRHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
-
-    //Selection applied
-    PredictionNoExtrap predFDNumuFHC(loaderFDFHCNonswap,
-                                     loaderFDFHCNue,
-                                     loaderFDFHCNuTau,
-                                     axis_numu,
-                                     kPassCVN_NUMU && kIsTrueFV);
-
-    PredictionNoExtrap predFDNueFHC(loaderFDFHCNonswap,
-                                    loaderFDFHCNue,
-                                    loaderFDFHCNuTau,
-                                    axis_nue,
-                                    kPassCVN_NUE && kIsTrueFV);
-
-    PredictionNoExtrap predFDNumuRHC(loaderFDRHCNonswap,
-                                     loaderFDRHCNue,
-                                     loaderFDRHCNuTau,
-                                     axis_numu,
-                                     kPassCVN_NUMU && kIsTrueFV);
-
-    PredictionNoExtrap predFDNueRHC(loaderFDRHCNonswap,
-                                    loaderFDRHCNue,
-                                    loaderFDRHCNuTau,
-                                    axis_nue,
-                                    kPassCVN_NUE && kIsTrueFV);
+    osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+    //Note that systlist must be filled both here and after the state load
+    if (normsyst) {
+      systlist.insert(systlist.end(), normlist_sig.begin(), normlist_sig.end()); 
+      systlist.insert(systlist.end(), normlist_bg.begin(), normlist_bg.end()); 
+    }
+    // List all of the systematics we'll be using
+    std::cout << "Systematics in these spectra: " << std::endl;
+    for(const ISyst* s: systlist) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
+    if (systlist.size()==0) {std::cout << "None" << std::endl;}
 
 
-    //Fiducial Only for Efficiencies
-    PredictionNoExtrap predFDNumuFHC_Fid(loaderFDFHCNonswap,
-                                     loaderFDFHCNue,
-                                     loaderFDFHCNuTau,
-                                     axis_numu,
-                                     kIsTrueFV);
-
-    PredictionNoExtrap predFDNueFHC_Fid(loaderFDFHCNonswap,
-                                    loaderFDFHCNue,
-                                    loaderFDFHCNuTau,
-                                    axis_nue,
-                                    kIsTrueFV);
-
-    PredictionNoExtrap predFDNumuRHC_Fid(loaderFDRHCNonswap,
-                                     loaderFDRHCNue,
-                                     loaderFDRHCNuTau,
-                                     axis_numu,
-                                     kIsTrueFV);
-
-    PredictionNoExtrap predFDNueRHC_Fid(loaderFDRHCNonswap,
-                                    loaderFDRHCNue,
-                                    loaderFDRHCNuTau,
-                                    axis_nue,
-                                    kIsTrueFV);
+    NoExtrapPredictionGenerator genFDNumu(axis_numu, kPassFD_CVN_NUMU && kIsTrueFV);
+    NoExtrapPredictionGenerator genFDNue(axis_nue, kPassFD_CVN_NUE && kIsTrueFV);
+    NoExtrapPredictionGenerator genFDNumu_fid(axis_numu, kIsTrueFV);
+    NoExtrapPredictionGenerator genFDNue_fid(axis_nue, kIsTrueFV);
+    
+    Loaders FD_FHC_loaders;
+    Loaders FD_RHC_loaders;
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+      
+    PredictionInterp predInt_FDNumuFHC(systlist, calc, genFDNumu, FD_FHC_loaders);
+    PredictionInterp predInt_FDNumuRHC(systlist, calc, genFDNumu, FD_RHC_loaders);
+    PredictionInterp predInt_FDNueFHC(systlist, calc, genFDNue, FD_FHC_loaders);
+    PredictionInterp predInt_FDNueRHC(systlist, calc, genFDNue, FD_RHC_loaders);
+    PredictionInterp predInt_FDNumuFHC_fid(systlist, calc, genFDNumu_fid, FD_FHC_loaders);
+    PredictionInterp predInt_FDNumuRHC_fid(systlist, calc, genFDNumu_fid, FD_RHC_loaders);
+    PredictionInterp predInt_FDNueFHC_fid(systlist, calc, genFDNue_fid, FD_FHC_loaders);
+    PredictionInterp predInt_FDNueRHC_fid(systlist, calc, genFDNue_fid, FD_RHC_loaders);
 
     loaderFDFHCNonswap.Go();
     loaderFDFHCNue.Go();
+    loaderFDFHCNuTau.Go();
     loaderFDRHCNonswap.Go();
     loaderFDRHCNue.Go();
+    loaderFDRHCNuTau.Go();
 
+    std::cout << stateFname << std::endl;
     TFile fout(stateFname, "RECREATE");
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
-
-    predFDNumuFHC_Fid.SaveTo(fout.mkdir("fd_numu_fhc_fid"));
-    predFDNueFHC_Fid.SaveTo(fout.mkdir("fd_nue_fhc_fid"));
-    predFDNumuRHC_Fid.SaveTo(fout.mkdir("fd_numu_rhc_fid"));
-    predFDNueRHC_Fid.SaveTo(fout.mkdir("fd_nue_rhc_fid"));
-
+    predInt_FDNumuFHC.SaveTo(fout.mkdir("pred_fd_numu_fhc"));
+    predInt_FDNumuRHC.SaveTo(fout.mkdir("pred_fd_numu_rhc"));
+    predInt_FDNueFHC.SaveTo(fout.mkdir("pred_fd_nue_fhc"));
+    predInt_FDNueRHC.SaveTo(fout.mkdir("pred_fd_nue_rhc"));
+    predInt_FDNumuFHC_fid.SaveTo(fout.mkdir("pred_fd_numu_fhc_fid"));
+    predInt_FDNumuRHC_fid.SaveTo(fout.mkdir("pred_fd_numu_rhc_fid"));
+    predInt_FDNueFHC_fid.SaveTo(fout.mkdir("pred_fd_nue_fhc_fid"));
+    predInt_FDNueRHC_fid.SaveTo(fout.mkdir("pred_fd_nue_rhc_fid"));
 
     std::cout << "All done making state..." << std::endl;
 
@@ -146,15 +131,14 @@ void spec(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionNoExtrap& predFDNumuFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionNoExtrap& predFDNueFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionNoExtrap& predFDNumuRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionNoExtrap& predFDNueRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_rhc")).release();
-  PredictionNoExtrap& predFDNumuFHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_fhc_fid")).release();
-  PredictionNoExtrap& predFDNueFHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_fhc_fid")).release();
-  PredictionNoExtrap& predFDNumuRHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_rhc_fid")).release();
-  PredictionNoExtrap& predFDNueRHC_Fid = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_rhc_fid")).release();
-
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
+  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc_fid")).release();
+  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc_fid")).release();
+  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc_fid")).release();
+  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc_fid")).release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
@@ -162,8 +146,8 @@ void spec(bool reload = false)
   TFile* fout = new TFile(outputFname, "RECREATE");
 
   osc::NoOscillations noOsc;
-  TH1* hnumufhc_sig_unosc = predFDNumuFHC.PredictComponent(&noOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
-  TH1* hnumufhc_sig_unosc_fid = predFDNumuFHC_Fid.PredictComponent(&noOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+  TH1* hnumufhc_sig_unosc = predInt_FDNumuFHC.PredictComponent(&noOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+  TH1* hnumufhc_sig_unosc_fid = predInt_FDNumuFHC_fid.PredictComponent(&noOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
 
   std::string dcpnames[4] = {"0pi","piover2","pi","3piover2"};
 
@@ -177,61 +161,61 @@ void spec(bool reload = false)
       inputOsc->SetdCP(deltaIdx/2.*TMath::Pi());
       const std::string dcpStr = dcpnames[deltaIdx];
 
-      TH1* hnumufhc = predFDNumuFHC.Predict(inputOsc).ToTH1(potFD);
-      TH1* hnuefhc = predFDNueFHC.Predict(inputOsc).ToTH1(potFD);
-      TH1* hnumurhc = predFDNumuRHC.Predict(inputOsc).ToTH1(potFD);
-      TH1* hnuerhc = predFDNueRHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnumufhc = predInt_FDNumuFHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnuefhc = predInt_FDNueFHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnumurhc = predInt_FDNumuRHC.Predict(inputOsc).ToTH1(potFD);
+      TH1* hnuerhc = predInt_FDNueRHC.Predict(inputOsc).ToTH1(potFD);
 
       //FHC Dis
-      TH1* hnumufhc_sig = predFDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
-      TH1* hnumufhc_ncbg = predFDNumuFHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumufhc_nutaubg = predFDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumufhc_wsbg = predFDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
-      TH1* hnumufhc_nuebg = predFDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_sig = predInt_FDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnumufhc_ncbg = predInt_FDNumuFHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_nutaubg = predInt_FDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_wsbg = predInt_FDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
+      TH1* hnumufhc_nuebg = predInt_FDNumuFHC.PredictComponent(inputOsc, Flavors::kAllNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
       
-      TH1* hnumufhc_sig_fid = predFDNumuFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
-      TH1* hnumufhc_ncbg_fid = predFDNumuFHC_Fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumufhc_nutaubg_fid = predFDNumuFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumufhc_wsbg_fid = predFDNumuFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
-      TH1* hnumufhc_nuebg_fid = predFDNumuFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_sig_fid = predInt_FDNumuFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnumufhc_ncbg_fid = predInt_FDNumuFHC_fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_nutaubg_fid = predInt_FDNumuFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumufhc_wsbg_fid = predInt_FDNumuFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
+      TH1* hnumufhc_nuebg_fid = predInt_FDNumuFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
       //RHC Dis
-      TH1* hnumurhc_sig = predFDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
-      TH1* hnumurhc_ncbg = predFDNumuRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumurhc_nutaubg = predFDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumurhc_wsbg = predFDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnumurhc_sig = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
+      TH1* hnumurhc_ncbg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumurhc_nutaubg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumurhc_wsbg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
 
-      TH1* hnumurhc_sig_fid = predFDNumuRHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
-      TH1* hnumurhc_ncbg_fid = predFDNumuRHC_Fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumurhc_nutaubg_fid = predFDNumuRHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnumurhc_wsbg_fid = predFDNumuRHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnumurhc_sig_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
+      TH1* hnumurhc_ncbg_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumurhc_nutaubg_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnumurhc_wsbg_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
 
       //FHC App
-      TH1* hnuefhc_sig = predFDNueFHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_ncbg = predFDNueFHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_beambg = predFDNueFHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_nutaubg = predFDNueFHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_numubg = predFDNueFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_sig = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_ncbg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_beambg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_nutaubg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_numubg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
-      TH1* hnuefhc_sig_fid = predFDNueFHC_Fid.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_ncbg_fid = predFDNueFHC_Fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_beambg_fid = predFDNueFHC_Fid.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_nutaubg_fid = predFDNueFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuefhc_numubg_fid = predFDNueFHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_sig_fid = predInt_FDNueFHC_fid.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_ncbg_fid = predInt_FDNueFHC_fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_beambg_fid = predInt_FDNueFHC_fid.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_nutaubg_fid = predInt_FDNueFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_numubg_fid = predInt_FDNueFHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
       //RHC App
-      TH1* hnuerhc_sig = predFDNueRHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_ncbg = predFDNueRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_beambg = predFDNueRHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_nutaubg = predFDNueRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_numubg = predFDNueRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_sig = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_ncbg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_beambg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_nutaubg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_numubg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
-      TH1* hnuerhc_sig_fid = predFDNueRHC_Fid.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_ncbg_fid = predFDNueRHC_Fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_beambg_fid = predFDNueRHC_Fid.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_nutaubg_fid = predFDNueRHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
-      TH1* hnuerhc_numubg_fid = predFDNueRHC_Fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_sig_fid = predInt_FDNueRHC_fid.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_ncbg_fid = predInt_FDNueRHC_fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_beambg_fid = predInt_FDNueRHC_fid.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_nutaubg_fid = predInt_FDNueRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_numubg_fid = predInt_FDNueRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
       hnumufhc_sig_unosc->Write("numu_fhc_unosc_sig");
       hnumufhc_sig_unosc_fid->Write("fid_numu_fhc_unosc_sig");

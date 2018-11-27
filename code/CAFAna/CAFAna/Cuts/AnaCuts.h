@@ -10,13 +10,13 @@ namespace ana
   const Cut kPassFD_CVN_NUE({},
                   [](const caf::StandardRecord* sr)
                   {
-                    return (sr->dune.cvnnue > 0.7 && sr->dune.cvnnumu < 0.5);
+                    return (sr->dune.cvnnue > 0.5 && sr->dune.cvnnumu < 0.5);
                   });
 
   const Cut kPassFD_CVN_NUMU({},
                   [](const caf::StandardRecord* sr)
                   {
-                    return (sr->dune.cvnnumu > 0.5 && sr->dune.cvnnue < 0.7);
+                    return (sr->dune.cvnnumu > 0.5 && sr->dune.cvnnue < 0.5);
                   });
 
   const Cut kPassND_FHC_NUMU({},
