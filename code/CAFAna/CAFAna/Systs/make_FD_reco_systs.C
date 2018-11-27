@@ -143,14 +143,14 @@ void make_FD_reco_systs(const char* geniefile, const char* neutfile) {
   make_hists(neutTreerhc, "neutrhc");
 
   std::cout<<"Making ratio plots"<<std::endl;
-  make_ratio_plot(fout, "hEvQ2_geniefhc", "hEvQ2_neutfhc", "Q2", "geniefhc", "neutfhc");
-  make_ratio_plot(fout, "hEvQ2_genierhc", "hEvQ2_neutrhc", "Q2", "genierhc", "neutrhc");
-  make_ratio_plot(fout, "hEvW_geniefhc", "hEvW_neutfhc", "W", "geniefhc", "neutfhc");
-  make_ratio_plot(fout, "hEvW_genierhc", "hEvW_neutrhc", "W", "genierhc", "neutrhc");
-  make_ratio_plot(fout, "hEvX_geniefhc", "hEvX_neutfhc", "X", "geniefhc", "neutfhc");
-  make_ratio_plot(fout, "hEvX_genierhc", "hEvX_neutrhc", "X", "genierhc", "neutrhc");
-  make_ratio_plot(fout, "hEvY_geniefhc", "hEvY_neutfhc", "Y", "geniefhc", "neutfhc");
-  make_ratio_plot(fout, "hEvY_genierhc", "hEvY_neutrhc", "Y", "genierhc", "neutrhc");
+  make_ratio_plot(fout, "hEvQ2_neutfhc", "hEvQ2_geniefhc", "Q2", "neutfhc", "geniefhc");
+  make_ratio_plot(fout, "hEvQ2_neutrhc", "hEvQ2_genierhc", "Q2", "neutrhc", "genierhc");
+  make_ratio_plot(fout, "hEvW_neutfhc", "hEvW_geniefhc", "W", "neutfhc", "geniefhc");
+  make_ratio_plot(fout, "hEvW_neutrhc", "hEvW_genierhc", "W", "neutrhc", "genierhc");
+  make_ratio_plot(fout, "hEvX_neutfhc", "hEvX_geniefhc", "X", "neutfhc", "geniefhc");
+  make_ratio_plot(fout, "hEvX_neutrhc", "hEvX_genierhc", "X", "neutrhc", "genierhc");
+  make_ratio_plot(fout, "hEvY_neutfhc", "hEvY_geniefhc", "Y", "neutfhc", "geniefhc");
+  make_ratio_plot(fout, "hEvY_neutrhc", "hEvY_genierhc", "Y", "neutrhc", "genierhc");
 
   fout->Write();
 }

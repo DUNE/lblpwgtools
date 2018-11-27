@@ -16,27 +16,46 @@ namespace ana {
   class FDRecoSyst: public ISyst
   {
   public:
-    // Kinematic variable
+    // Kinematic variable & horn current
     enum Variable{kX, kY, kW, kQ2};
+    enum HC{kFHC, kRHC};
 
-  FDRecoSyst(Variable v) : ISyst("FDRecoSyst", "Far Detector Reconstruction Syst") 
+  FDRecoSyst(Variable v, HC h) : ISyst("FDRecoSyst", "Far Detector Reconstruction Syst") 
       {
 	assert(v==kX || v==kY || v==kW || v==kQ2);
+	assert(h==kFHC || h==kRHC);
 	var = v;
+	hc = h;
 	//TFile f((FindCAFAnaDir()+"/Systs/modelComp.root").c_str());
 	TFile *f = new TFile((FindCAFAnaDir()+"/Systs/modelComp.root").c_str(), "read");
 	assert(!f->IsZombie());
-	if (var == kX) {
-	  hist = (TH2*)f->Get("hx_ratiofhc");
+	if (hc == kFHC) {
+	  if (var == kX) {
+	    hist = (TH2*)f->Get("hXratio_neutfhc_geniefhc");
+	  }
+	  else if (var == kY) {
+	    hist = (TH2*)f->Get("hYratio_neutfhc_geniefhc");
+	  }
+	  else if (var == kW) {
+	    hist = (TH2*)f->Get("hWratio_neutfhc_geniefhc");
+	  }
+	  else if (var == kQ2) {
+	    hist = (TH2*)f->Get("hQ2ratio_neutfhc_geniefhc");
+	  }
 	}
-	else if (var == kY) {
-	  hist = (TH2*)f->Get("hy_ratiofhc");
-	}
-	else if (var == kW) {
-	  hist = (TH2*)f->Get("hw_ratiofhc");
-	}
-	else if (var == kQ2) {
-	  hist = (TH2*)f->Get("hq2_ratiofhc");
+	else if (hc == kRHC) {
+	  if (var == kX) {
+	    hist = (TH2*)f->Get("hXratio_neutrhc_genierhc");
+	  }
+	  else if (var == kY) {
+	    hist = (TH2*)f->Get("hYratio_neutrhc_genierhc");
+	  }
+	  else if (var == kW) {
+	    hist = (TH2*)f->Get("hWratio_neutrhc_genierhc");
+	  }
+	  else if (var == kQ2) {
+	    hist = (TH2*)f->Get("hQ2ratio_neutrhc_genierhc");
+	  }
 	}
 	assert(hist);
       }
@@ -51,6 +70,7 @@ namespace ana {
     TH2* hist;
     TFile *f;
     Variable var;
+    HC hc;
   };
 
   //  extern const FDRecoSyst kFDRecoSyst(v);
