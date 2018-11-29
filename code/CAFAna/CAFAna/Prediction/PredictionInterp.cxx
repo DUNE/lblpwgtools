@@ -667,13 +667,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::DebugPlots(osc::IOscCalculator* calc,
-				    const std::string& savePattern,
-				    Flavors::Flavors_t flav,
-				    Current::Current_t curr,
-				    Sign::Sign_t sign) const
+  void PredictionInterp::DebugPlot(const ISyst* syst,
+                                   osc::IOscCalculator* calc,
+                                   Flavors::Flavors_t flav,
+                                   Current::Current_t curr,
+                                   Sign::Sign_t sign) const
   {
     InitFits();
+
+    auto it = fPreds.find(syst);
+    if(it == fPreds.end()){
+      std::cout << "PredictionInterp::DebugPlots(): "
+                << syst->ShortName() << " not found" << std::endl;
+      return;
+    }
 
     std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
     const int nbins = nom->GetNbinsX();
@@ -681,76 +688,121 @@ namespace ana
     TGraph* curves[nbins];
     TGraph* points[nbins];
 
-    for(auto& it: fPreds){
-      for(int i = 0; i <= 80; ++i){
-        const double x = .1*i-4;
-        const SystShifts ss(it.first, x);
-        std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
-
-        for(int bin = 0; bin < nbins; ++bin){
-          if(i == 0){
-            curves[bin] = new TGraph;
-            points[bin] = new TGraph;
-          }
-
-          const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
-
-          if(!std::isnan(ratio)) curves[bin]->SetPoint(curves[bin]->GetN(), x, ratio);
-	  else curves[bin]->SetPoint(curves[bin]->GetN(), x, 1);
-        } // end for bin
-      } // end for i (x)
-
-      // As elswhere, to allow BirksC etc that need a different nominal to plot
-      // right.
-      IPrediction* pNom = 0;
-      for(unsigned int shiftIdx = 0; shiftIdx < it.second.shifts.size(); ++shiftIdx){
-	if(it.second.shifts[shiftIdx] == 0) pNom = it.second.preds[shiftIdx];
-      }
-      assert(pNom);
-      std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
-
-      for(unsigned int shiftIdx = 0; shiftIdx < it.second.shifts.size(); ++shiftIdx){
-        if(!it.second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
-	std::unique_ptr<TH1> h;
-        h = std::move(std::unique_ptr<TH1>(it.second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
-
-        for(int bin = 0; bin < nbins; ++bin){
-	  const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);
-	  if(!std::isnan(ratio)) points[bin]->SetPoint(points[bin]->GetN(), it.second.shifts[shiftIdx], ratio);
-	  else points[bin]->SetPoint(points[bin]->GetN(), it.second.shifts[shiftIdx], 1);
-	}
-      } // end for shiftIdx
-
-
-      int nx = int(sqrt(nbins));
-      int ny = int(sqrt(nbins));
-      if(nx*ny < nbins) ++nx;
-      if(nx*ny < nbins) ++ny;
-
-      TCanvas* c = new TCanvas;
-      c->Divide(nx, ny);
+    for(int i = 0; i <= 80; ++i){
+      const double x = .1*i-4;
+      const SystShifts ss(it->first, x);
+      std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
-        c->cd(bin+1);
-        (new TH2F("",
-                  TString::Format("%s %g < %s < %g;Shift;Ratio",
-                                  it.second.systName.c_str(),
-                                  nom->GetXaxis()->GetBinLowEdge(bin+1),
-                                  nom->GetXaxis()->GetTitle(),
-                                  nom->GetXaxis()->GetBinUpEdge(bin+1)),
-                  100, -4, +4, 100, .5, 1.5))->Draw();
-        curves[bin]->Draw("l same");
-        points[bin]->SetMarkerStyle(kFullDotMedium);
-        points[bin]->Draw("p same");
-      } // end for bin
+        if(i == 0){
+          curves[bin] = new TGraph;
+          points[bin] = new TGraph;
+        }
 
-      c->cd(0);
+        const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
+
+        if(!std::isnan(ratio)) curves[bin]->SetPoint(curves[bin]->GetN(), x, ratio);
+        else curves[bin]->SetPoint(curves[bin]->GetN(), x, 1);
+      } // end for bin
+    } // end for i (x)
+
+    // As elswhere, to allow BirksC etc that need a different nominal to plot
+    // right.
+    IPrediction* pNom = 0;
+    for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
+      if(it->second.shifts[shiftIdx] == 0) pNom = it->second.preds[shiftIdx];
+    }
+    assert(pNom);
+    std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
+
+    for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
+      if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
+      std::unique_ptr<TH1> h;
+      h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+
+      for(int bin = 0; bin < nbins; ++bin){
+        const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);
+        if(!std::isnan(ratio)) points[bin]->SetPoint(points[bin]->GetN(), it->second.shifts[shiftIdx], ratio);
+        else points[bin]->SetPoint(points[bin]->GetN(), it->second.shifts[shiftIdx], 1);
+      }
+    } // end for shiftIdx
+
+
+    int nx = int(sqrt(nbins));
+    int ny = int(sqrt(nbins));
+    if(nx*ny < nbins) ++nx;
+    if(nx*ny < nbins) ++ny;
+
+    TCanvas* c = new TCanvas;
+    c->Divide(nx, ny);
+
+    for(int bin = 0; bin < nbins; ++bin){
+      c->cd(bin+1);
+      (new TH2F("",
+                TString::Format("%s %g < %s < %g;Shift;Ratio",
+                                it->second.systName.c_str(),
+                                nom->GetXaxis()->GetBinLowEdge(bin+1),
+                                nom->GetXaxis()->GetTitle(),
+                                nom->GetXaxis()->GetBinUpEdge(bin+1)),
+                100, -4, +4, 100, .5, 1.5))->Draw();
+      curves[bin]->Draw("l same");
+      points[bin]->SetMarkerStyle(kFullDotMedium);
+      points[bin]->Draw("p same");
+    } // end for bin
+
+    c->cd(0);
+  }
+
+  //----------------------------------------------------------------------
+  void PredictionInterp::DebugPlots(osc::IOscCalculator* calc,
+				    const std::string& savePattern,
+				    Flavors::Flavors_t flav,
+				    Current::Current_t curr,
+				    Sign::Sign_t sign) const
+  {
+    for(auto& it: fPreds){
+      DebugPlot(it.first, calc, flav, curr, sign);
 
       if(!savePattern.empty()){
 	assert(savePattern.find("%s") != std::string::npos);
 	gPad->Print(TString::Format(savePattern.c_str(), it.second.systName.c_str()).Data());
       }
     } // end for it
+  }
+
+  //----------------------------------------------------------------------
+  void PredictionInterp::DebugPlotColz(const ISyst* syst,
+                                       osc::IOscCalculator* calc,
+                                       Flavors::Flavors_t flav,
+                                       Current::Current_t curr,
+                                       Sign::Sign_t sign) const
+  {
+    InitFits();
+
+    std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
+    const int nbins = nom->GetNbinsX();
+
+    TH2* h2 = new TH2F("", (syst->LatexName()+";;#sigma").c_str(),
+                       nbins, nom->GetXaxis()->GetXmin(), nom->GetXaxis()->GetXmax(),
+                       80, -4, +4);
+    h2->GetXaxis()->SetTitle(nom->GetXaxis()->GetTitle());
+
+    for(int i = 1; i <= 80; ++i){
+      const double y = h2->GetYaxis()->GetBinCenter(i);
+      const SystShifts ss(syst, y);
+      std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
+
+      for(int bin = 0; bin < nbins; ++bin){
+        const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
+
+        if(!isnan(ratio) && !isinf(ratio))
+          h2->Fill(h2->GetXaxis()->GetBinCenter(bin), y, ratio);
+      } // end for bin
+    } // end for i (x)
+
+    h2->Draw("colz");
+    h2->SetMinimum(0.5);
+    h2->SetMaximum(1.5);
   }
 
   //----------------------------------------------------------------------
@@ -762,32 +814,9 @@ namespace ana
   {
     InitFits();
 
-    std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
-    const int nbins = nom->GetNbinsX();
-
     for(auto it: fPreds){
       new TCanvas;
-      TH2* h2 = new TH2F("", ";;#sigma",
-                         nbins, nom->GetXaxis()->GetXmin(), nom->GetXaxis()->GetXmax(),
-                         80, -4, +4);
-      h2->GetXaxis()->SetTitle(nom->GetXaxis()->GetTitle());
-
-      for(int i = 1; i <= 80; ++i){
-        const double y = h2->GetYaxis()->GetBinCenter(i);
-        const SystShifts ss(it.first, y);
-        std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
-
-        for(int bin = 0; bin < nbins; ++bin){
-          const double ratio = h->GetBinContent(bin+1)/nom->GetBinContent(bin+1);
-
-          if(!isnan(ratio) && !isinf(ratio))
-            h2->Fill(h2->GetXaxis()->GetBinCenter(bin), y, ratio);
-        } // end for bin
-      } // end for i (x)
-
-      h2->Draw("colz");
-      h2->SetMinimum(0.5);
-      h2->SetMaximum(1.5);
+      DebugPlotColz(it.first, calc, flav, curr, sign);
 
       if(!savePattern.empty()){
 	assert(savePattern.find("%s") != std::string::npos);
