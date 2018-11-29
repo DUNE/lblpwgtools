@@ -21,14 +21,17 @@ namespace ana {
     // Kinematic variable & horn current
     enum Variable{kX, kY, kW, kQ2};
     enum HC{kFHC, kRHC};
+    enum Flavour{kNue, kNumu};
 
-  FDRecoSyst(Variable v, HC h) : ISyst("FDRecoSyst", "Far Detector Reconstruction Syst") 
+  FDRecoSyst(Variable v, HC h, Flavour fl) : ISyst("FDRecoSyst", "Far Detector Reconstruction Syst") 
       {
 	assert(v==kX || v==kY || v==kW || v==kQ2);
 	assert(h==kFHC || h==kRHC);
+	assert(fl==kNue || fl==kNumu);
 	var = v;
 	hc = h;
-	//TFile f((FindCAFAnaDir()+"/Systs/modelComp.root").c_str());
+	flav = fl;
+
 	TFile *f = new TFile((FindCAFAnaDir()+"/Systs/modelComp.root").c_str(), "read");
 	assert(!f->IsZombie());
 	if (hc == kFHC) {
@@ -73,6 +76,7 @@ namespace ana {
     TFile *f;
     Variable var;
     HC hc;
+    Flavour flav;
   };
 
   //  extern const FDRecoSyst kFDRecoSyst(v);
