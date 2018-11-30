@@ -8,6 +8,8 @@
 #include "TH1.h"
 #include "TRandom3.h"
 
+#include <cassert>
+
 namespace ana
 {
   // Takes the particle type and applies some slope to it or proportional to 1/sqrt(E)
