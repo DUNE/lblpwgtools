@@ -2,11 +2,6 @@
 // Standard script for DUNE spectra
 // Input files use TensorFlow CVN training from May 2018 
 
-
-#ifdef __CINT__
-void spec_joint(bool reload = false){}
-#else
-
 #include "common_fit_definitions.C"
 
 std::string stateFname  = "common_state_ndfd_nosyst.root";
@@ -87,4 +82,4 @@ void spec_joint(bool reload = false){
   }
   fout->Close();
 }
-#endif
+

@@ -21,15 +21,15 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src)
-    : SpectrumLoaderBase(wildcard, src)
+  SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src, int max)
+    : SpectrumLoaderBase(wildcard, src), max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
   SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames,
-                                 DataSource src)
-    : SpectrumLoaderBase(fnames, src)
+                                 DataSource src, int max)
+    : SpectrumLoaderBase(fnames, src), max_entries(max)
   {
   }
 
@@ -148,9 +148,19 @@ namespace ana
     tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
     tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
     tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
-
+    tr->SetBranchAddress("RecoLepEnNue", &sr.dune.RecoLepEnNue);
+    tr->SetBranchAddress("RecoHadEnNue", &sr.dune.RecoHadEnNue);
+    tr->SetBranchAddress("RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
+    tr->SetBranchAddress("RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
+    // ND pseudo-reconstruction flags
+    tr->SetBranchAddress("reco_numu", &sr.dune.reco_numu);
+    tr->SetBranchAddress("reco_nue", &sr.dune.reco_nue);
+    tr->SetBranchAddress("reco_nc", &sr.dune.reco_nc);
     // CW: add variables that Chris (M) wants for ND selections
     tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
+    tr->SetBranchAddress("muon_contained", &sr.dune.muon_contained);
+    tr->SetBranchAddress("muon_ecal", &sr.dune.muon_ecal);
+    tr->SetBranchAddress("muon_tracker", &sr.dune.muon_tracker);
     tr->SetBranchAddress("Ehad_veto", &sr.dune.Ehad_veto);
 
     tr->SetBranchAddress("Ev", &sr.dune.Ev);
@@ -163,13 +173,27 @@ namespace ana
     tr->SetBranchAddress("nuPDGunosc", &sr.dune.nuPDGunosc);
     tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
     tr->SetBranchAddress("mode", &sr.dune.mode);
+    tr->SetBranchAddress("nP", &sr.dune.nP);
+    tr->SetBranchAddress("nN", &sr.dune.nN);
     tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
     tr->SetBranchAddress("nipip", &sr.dune.nipip);
     tr->SetBranchAddress("nipim", &sr.dune.nipim);
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
     tr->SetBranchAddress("W", &sr.dune.W);
     tr->SetBranchAddress("Y", &sr.dune.Y);
+    tr->SetBranchAddress("X", &sr.dune.X);
     //    tr->SetBranchAddress("cc", &sr.dune.cc);
+    tr->SetBranchAddress("NuMomX", &sr.dune.NuMomX);
+    tr->SetBranchAddress("NuMomY", &sr.dune.NuMomY);
+    tr->SetBranchAddress("NuMomZ", &sr.dune.NuMomZ);
+    tr->SetBranchAddress("LepMomX", &sr.dune.LepMomX);
+    tr->SetBranchAddress("LepMomY", &sr.dune.LepMomY);
+    tr->SetBranchAddress("LepMomZ", &sr.dune.LepMomZ);
+    tr->SetBranchAddress("LepE", &sr.dune.LepE);
+    tr->SetBranchAddress("LepNuAngle", &sr.dune.LepNuAngle);
+
+    // Numu track containment flag
+    tr->SetBranchAddress("LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
 
     tr->SetBranchAddress("vtx_x",  &sr.dune.vtx_x);
     tr->SetBranchAddress("vtx_y",  &sr.dune.vtx_y);
@@ -191,17 +215,22 @@ namespace ana
     tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
     tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
-    sr.dune.genie_wgt.resize(genie_names.size());
+    // GENIE uncertainties and CVs
+    sr.dune.genie_wgt    .resize(genie_names.size());
+    sr.dune.genie_cv_wgt .resize(genie_names.size());
 
     for(unsigned int i = 0; i < genie_names.size(); ++i){
       tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
                            &genie_tmp[i]);
       tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
                            &genie_size_tmp[i]);
+      tr->SetBranchAddress((genie_names[i]+"_cvwgt").c_str(),
+			   &sr.dune.genie_cv_wgt[i]);
     }
 
+    int Nentries = tr->GetEntries();
+    if (max_entries != 0 && max_entries < Nentries) Nentries = max_entries;
 
-    const int Nentries = tr->GetEntries();
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
 
@@ -228,10 +257,22 @@ namespace ana
       // }
 
       // Reformat the genie systs
+      sr.dune.total_cv_wgt = 1;
+
       for(unsigned int i = 0; i < genie_names.size(); ++i){
         const int Nuniv = genie_size_tmp[i];
         assert(Nuniv >= 0 && Nuniv <= int(genie_tmp[i].size()));
         sr.dune.genie_wgt[i].resize(Nuniv);
+	
+	// Do some error checking here
+	if (std::isnan(sr.dune.genie_cv_wgt[i]) || 
+	    std::isinf(sr.dune.genie_cv_wgt[i]) ||
+	    sr.dune.genie_cv_wgt[i] == 0)
+	  std::cout << "Warning: " << genie_names[i] << " has a bad CV of " 
+		    << sr.dune.genie_cv_wgt[i] << std::endl;
+	else
+	  sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
+
         for(int j = 0; j < Nuniv; ++j){
           sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
         }

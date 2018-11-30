@@ -13,24 +13,27 @@ namespace ana
   public:
     virtual ~DUNEFluxSyst();
 
-    virtual std::string ShortName() const override {return TString::Format("flux%i", fIdx).Data();}
-    virtual std::string LatexName() const override {return TString::Format("Flux #%i", fIdx).Data();}
-    
     virtual void Shift(double sigma,
                        Restorer& restore,
                        caf::StandardRecord* sr,
                        double& weight) const override;
 
   protected:
-    friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i);
-    DUNEFluxSyst(int i) : fIdx(i), fScale() {}
+    friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty);
+  DUNEFluxSyst(int i, bool applyPenalty) :
+      ISyst(TString::Format("flux%i", i).Data(),
+            TString::Format("Flux #%i", i).Data(),
+	    applyPenalty),
+      fIdx(i), fScale()
+    {
+    }
 
     int fIdx;
 
     mutable TH1* fScale[2][2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
   };
 
-  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i);
+  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty=true);
 
   // Because vector<T*> won't automatically convert to vector<U*> even when U
   // inherits from V.
@@ -39,8 +42,8 @@ namespace ana
     operator std::vector<const ISyst*>()
     {
       return std::vector<const ISyst*>(begin(), end());
-    }    
+    }
   };
 
-  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N);
+  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty=true);
 }

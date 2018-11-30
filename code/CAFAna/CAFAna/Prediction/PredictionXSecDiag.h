@@ -9,9 +9,6 @@ namespace ana
   class DUNEXSecDiagSyst: public ISyst
   {
   public:
-    virtual std::string ShortName() const override;
-    virtual std::string LatexName() const override;
-
     virtual void Shift(double, ana::Restorer&, caf::StandardRecord*, double&) const
     {
       assert(0 && "unimplemented");

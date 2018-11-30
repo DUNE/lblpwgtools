@@ -19,9 +19,9 @@ namespace ana
   class SpectrumLoader: public SpectrumLoaderBase
   {
   public:
-    SpectrumLoader(const std::string& wildcard, DataSource src = kBeam);
+    SpectrumLoader(const std::string& wildcard, DataSource src = kBeam, int max = 0);
     SpectrumLoader(const std::vector<std::string>& fnames,
-                   DataSource src = kBeam);
+                   DataSource src = kBeam, int max = 0);
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
 					 DataSource src = kBeam,
@@ -77,5 +77,6 @@ namespace ana
     std::vector<Cut> fAllCuts;
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
+    int max_entries;
   };
 }

@@ -6,8 +6,6 @@ namespace ana
 {
   class Loaders;
 
-  class DUNERunPOTSpectrumLoader;
-
   /// Prediction that just uses FD MC, with no extrapolation
   class PredictionNoExtrap: public PredictionExtrap
   {
@@ -21,7 +19,7 @@ namespace ana
                        const std::string& label,
                        const Binning& bins,
                        const Var& var,
-                       const Cut& cut,                       
+                       const Cut& cut,
                        const SystShifts& shift = kNoShift,
                        const Var& wei = kUnweighted);
 
@@ -57,8 +55,8 @@ namespace ana
   class NoExtrapPredictionGenerator: public IPredictionGenerator
   {
   public:
-    NoExtrapPredictionGenerator(HistAxis axis, Cut cut)
-      : fAxis(axis), fCut(cut)
+  NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
+    : fAxis(axis), fCut(cut), fWei(wei)
     {
     }
 
@@ -72,5 +70,6 @@ namespace ana
   protected:
     HistAxis fAxis;
     Cut fCut;
+    Var fWei;
   };
 }

@@ -22,14 +22,28 @@ namespace caf
 
     double RecoLepEnNue;
     double RecoHadEnNue;
+    double RecoLepEnNumu;
+    double RecoHadEnNumu;
+
+    // ND pseudo-reconstruction flags
+    int reco_numu;
+    int reco_nue;
+    int reco_nc;
 
     // CW: added for the ND cuts Chris (M) wants
+    // ND containment flags
+    int muon_contained;
+    int muon_tracker;
+    int muon_ecal;
     int muon_exit;
     double Ehad_veto;
 
     // To prevent errors when compiling DUNENDSysts
     double nue_pid;
     double numu_pid;
+
+    // Containment flag
+    int LongestTrackContNumu;
 
     // Truth info
     double Ev;
@@ -52,6 +66,7 @@ namespace caf
     double Q2;
     double W;
     double Y;
+    double X;
 
     double vtx_x;
     double vtx_y;
@@ -84,8 +99,10 @@ namespace caf
     double sigma_Elep_reco;
     double sigma_numu_pid;
     double sigma_nue_pid;
+    double total_cv_wgt;
 
     // First index is systematic ID
     std::vector<std::vector<double>> genie_wgt;
+    std::vector<double> genie_cv_wgt;
   };
 }

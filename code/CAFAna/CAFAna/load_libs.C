@@ -32,7 +32,7 @@ void load_libs()
   // crashes. HistCache now avoids almost all of that histogram destruction, so
   // now we can leave this at the default setting and get both speed and
   // stability.
-  //  gROOT->SetMustClean(false);
+  gROOT->SetMustClean(false);
 
   // Colorize error messages. Would be better if we could just pick up the
   // flags novasoft uses, but they don't seem to be in any env var.

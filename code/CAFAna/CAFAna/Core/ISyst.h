@@ -20,14 +20,24 @@ namespace ana
   class ISyst
   {
   public:
-    ISyst();
+    ISyst(const std::string& shortName,
+          const std::string& latexName, 
+	  bool applyPenalty=true);
+    ISyst(const ISyst &) = delete;   // no copying.
+    ISyst(ISyst && rhs) = delete;    // no moving either.
     virtual ~ISyst();
 
+    void operator=(const ISyst &) = delete;  // still no copying.
+    void operator=(ISyst &&)      = delete;  // etc.
+
     /// The name printed out to the screen
-    virtual std::string ShortName() const = 0;
+    virtual std::string ShortName() const final {return fShortName;}
 
     /// The name used on plots (ROOT's TLatex syntax)
-    virtual std::string LatexName() const = 0;
+    virtual std::string LatexName() const final {return fLatexName;}
+
+    /// Should a penalty be applied for this shift?
+    virtual bool ApplyPenalty() const {return fApplyPenalty;}
 
     /// \brief Perform the systematic shift
     ///
@@ -40,16 +50,18 @@ namespace ana
                        caf::StandardRecord* sr,
                        double& weight) const = 0;
 
-    /// GENIE reweights can only provide +/-1,2sigma
-    virtual bool IsGenieReweight() const {return false;}
-
     /// PredictionInterp normally interpolates between spectra made at
     /// +/-1,2,3sigma. For some systematics that's overkill. Override this
     /// function to specify different behaviour for this systematic.
     virtual int PredInterpMaxNSigma() const
     {
-      return IsGenieReweight() ? 2 : 3;
+      return 3;
     }
+
+  private:
+    std::string fShortName;
+    std::string fLatexName;
+    mutable bool fApplyPenalty;
   };
 
 

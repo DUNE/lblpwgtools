@@ -6,7 +6,9 @@
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
 
+#include <map>
 #include <memory>
+#include <unordered_map>
 
 #include "TMD5.h"
 
@@ -20,6 +22,9 @@ namespace ana
   class PredictionInterp: public IPrediction
   {
   public:
+    enum EMode_t{
+      kCombineSigns, kSplitBySign
+    };
 
     /// \param systs What systematics we should be capable of interpolating
     /// \param osc The oscillation point to expand around
@@ -29,20 +34,15 @@ namespace ana
     /// \param shiftMC Underlying shift. Use with care. Mostly for
     ///                PredictionNumuFAHadE. Should not contain any of of
     ///                \a systs
-    /*    PredictionInterp(std::vector<const ISyst*> systs,
-		     osc::IOscCalculator* osc,
-		     const IPredictionGenerator& predGen,
-		     DUNERunPOTSpectrumLoader& loaderBeam,
-		     DUNERunPOTSpectrumLoader& loaderNue,
-		     DUNERunPOTSpectrumLoader& loaderNuTau,
-		     DUNERunPOTSpectrumLoader& loaderNC,
-		     const SystShifts& shiftMC);*/
-
+    /// \param mode    In FHC the wrong-sign has bad stats and probably the
+    ///                fits can't be split out reasonably. For RHC it's
+    ///                important not to conflate them.
     PredictionInterp(std::vector<const ISyst*> systs,
                      osc::IOscCalculator* osc,
                      const IPredictionGenerator& predGen,
                      Loaders& loaders,
-                     const SystShifts& shiftMC = kNoShift);
+                     const SystShifts& shiftMC = kNoShift,
+                     EMode_t mode = kCombineSigns);
 
     virtual ~PredictionInterp();
 
@@ -62,8 +62,23 @@ namespace ana
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const override;
 
+    virtual void Derivative(osc::IOscCalculator* calc,
+                            const SystShifts& shift,
+                            double pot,
+                            std::unordered_map<const ISyst*, std::vector<double>>& dp) const override;
+
     virtual void SaveTo(TDirectory* dir) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir);
+
+    /// After calling this DebugPlots won't work fully and SaveTo won't work at
+    /// all.
+    void MinimizeMemory();
+
+    void DebugPlot(const ISyst* syst,
+                   osc::IOscCalculator* calc,
+                   Flavors::Flavors_t flav = Flavors::kAll,
+                   Current::Current_t curr = Current::kBoth,
+                   Sign::Sign_t sign = Sign::kBoth) const;
 
     // If \a savePattern is not empty, print each pad. Must contain a "%s" to
     // contain the name of the systematic.
@@ -73,16 +88,21 @@ namespace ana
 		    Current::Current_t curr = Current::kBoth,
 		    Sign::Sign_t sign = Sign::kBoth) const;
 
+    void SetOscSeed(osc::IOscCalculator* oscSeed);
+
+    void DebugPlotColz(const ISyst* syst,
+                       osc::IOscCalculator* calc,
+                       Flavors::Flavors_t flav = Flavors::kAll,
+                       Current::Current_t curr = Current::kBoth,
+                       Sign::Sign_t sign = Sign::kBoth) const;
+
     void DebugPlotsColz(osc::IOscCalculator* calc,
                         const std::string& savePattern = "",
                         Flavors::Flavors_t flav = Flavors::kAll,
                         Current::Current_t curr = Current::kBoth,
                         Sign::Sign_t sign = Sign::kBoth) const;
 
-    // Some legacy macros call this function. It's not needed anymore
-    void LoadedCallback() {}
-
-  protected:
+    bool SplitBySign() const {return fSplitBySign;}
     enum CoeffsType{
       kNueApp, kNueSurv, kNumuSurv, kNC,
       kOther, ///< Taus, numu appearance
@@ -93,8 +113,6 @@ namespace ana
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});
-
-    void InitFits() const;
 
     struct Coeffs{
       Coeffs(double _a, double _b, double _c, double _d)
@@ -117,6 +135,7 @@ namespace ana
 
     Spectrum ShiftSpectrum(const Spectrum& s,
                            CoeffsType type,
+                           bool nubar, // try to use fitsNubar if it exists
                            const SystShifts& shift) const;
 
     /// Helper for PredictComponentSyst
@@ -132,16 +151,22 @@ namespace ana
 
     struct ShiftedPreds
     {
+      double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
+
       std::string systName; ///< What systematic we're interpolating
       std::vector<double> shifts; ///< Shift values sampled
       std::vector<IPrediction*> preds;
 
+      int nCoeffs; // Faster than calling size()
+
       /// Indices: [type][histogram bin][shift bin]
-      std::vector<std::vector<Coeffs>> fits[kNCoeffTypes];
+      std::vector<std::vector<std::vector<Coeffs>>> fits;
+      /// Will be filled if signs are separated, otherwise not
+      std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
     };
 
-    mutable std::map<const ISyst*, ShiftedPreds> fPreds;
-
+  protected:
+    mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
 
     /// The oscillation values we assume when evaluating the coefficients
     osc::IOscCalculator* fOscOrigin;
@@ -165,6 +190,24 @@ namespace ana
       Spectrum nom;
     };
     mutable std::map<Key_t, Val_t> fNomCache;
+
+    bool fSplitBySign;
+
+    void InitFits() const;
+
+    void InitFitsHelper(ShiftedPreds& sp,
+                        std::vector<std::vector<std::vector<Coeffs>>>& fits,
+                        Sign::Sign_t sign) const;
+
+     /// Helper for \ref Derivative
+    void ComponentDerivative(osc::IOscCalculator* calc,
+                             Flavors::Flavors_t flav,
+                             Current::Current_t curr,
+                             Sign::Sign_t sign,
+                             CoeffsType type,
+                             const SystShifts& shift,
+                             double pot,
+                             std::unordered_map<const ISyst*, std::vector<double>>& dp) const;
   };
 
 }

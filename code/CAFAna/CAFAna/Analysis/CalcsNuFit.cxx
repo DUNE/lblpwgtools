@@ -12,8 +12,8 @@ namespace ana
     assert(hie == +1 || hie == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-    ret->SetL(1300);
-    ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
+    ret->SetL(kBaseline);
+    ret->SetRho(kEarthDensity);
 
     ret->SetDmsq21(kNuFitDmsq21CV);
     ret->SetTh12(kNuFitTh12CV);
@@ -35,13 +35,47 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie)
+  {
+    assert(hie == +1 || hie == -1);
+
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    ret->SetL(kBaseline);
+
+    // Throw 12 and rho within errors
+    ret->SetRho(2.95674*(1+0.02*gRandom->Gaus()));
+    ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+    ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+
+    // Uniform throws within +/-3 sigma
+    if(hie > 0){
+      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH, 
+				      kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+      ret->SetTh23(gRandom->Uniform(kNuFitTh23CVNH-3*kNuFitTh23ErrNH,
+				    kNuFitTh23CVNH+3*kNuFitTh23ErrNH));
+      ret->SetTh13(gRandom->Uniform(kNuFitTh13CVNH-3*kNuFitTh13ErrNH,
+				    kNuFitTh13CVNH+3*kNuFitTh13ErrNH));
+    } else {
+      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
+                                      kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
+      ret->SetTh23(gRandom->Uniform(kNuFitTh23CVIH-3*kNuFitTh23ErrIH,
+                                    kNuFitTh23CVIH+3*kNuFitTh23ErrIH));
+      ret->SetTh13(gRandom->Uniform(kNuFitTh13CVIH-3*kNuFitTh13ErrIH,
+                                    kNuFitTh13CVIH+3*kNuFitTh13ErrIH));
+    }
+    ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+		  
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-    ret->SetL(1300);
-    ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
+    ret->SetL(kBaseline);
+    ret->SetRho(kEarthDensity);
 
     ret->SetDmsq21(kNuFitDmsq21CV + kNuFitDmsq21Err);
     ret->SetTh12(kNuFitTh12CV + kNuFitTh12Err);
@@ -89,7 +123,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue) {
+  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly) : fWeakOnly(weakOnly) {
 
     fDmsq21 = cvcalc->GetDmsq21();
     fTh12 = cvcalc->GetTh12();
@@ -103,11 +137,11 @@ namespace ana
     //NH: 0.023, 0.018, 0.058, 0.0, 0.024, 0.016
     //IH: 0.023, 0.018, 0.048, 0.0, 0.024, 0.016
 
-    fDmsq21Err = 0.024*fDmsq21;
-    fTh12Err = 0.023*fTh12;
-    fDmsq32Err = 0.016*fDmsq32;
-    fTh13Err = 0.018*fTh13;
-    fTh23Err = (hietrue > 0) ? 0.058*fTh23 : 0.048*fTh23;
+    fDmsq21Err = kNuFitDmsq21Err;
+    fTh12Err = kNuFitTh12Err;
+    fDmsq32Err = (hietrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
+    fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
+    fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
 
     fRhoErr = 0.02*fRho;
     
@@ -121,13 +155,15 @@ namespace ana
 
     double ret =
       util::sqr((calc->GetDmsq21() - fDmsq21)/fDmsq21Err) +
-      util::sqr((calc->GetTh12() - fTh12)/fTh12Err);
-
-    ret +=
-      util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err) +
-      util::sqr((calc->GetTh23() - fTh23)/fTh23Err) +
-      util::sqr((calc->GetTh13() - fTh13)/fTh13Err) +
+      util::sqr((calc->GetTh12() - fTh12)/fTh12Err) +
       util::sqr((calc->GetRho() - fRho)/fRhoErr);
+
+    // if fWeakOnly is set, only apply a constraint to the parameter we can only weakly constrain in DUNE
+    if (!fWeakOnly)
+      ret +=
+	util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err) +
+	util::sqr((calc->GetTh23() - fTh23)/fTh23Err) +
+	util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
 
     // No term in delta
 

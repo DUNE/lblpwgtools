@@ -9,19 +9,20 @@ namespace ana
   class SystComponentScale: public ISyst
   {
   public:
+    enum ESystType{kLinear, kExponential};
+
     /// \param cut Select the component to be scaled
     SystComponentScale(const std::string& shortName,
                        const std::string& latexName,
-                       const Cut& cut, double oneSigma)
-      : fShortName(shortName), fLatexName(latexName),
-        fCut(cut), fOneSigma(oneSigma)
+                       const Cut& cut,
+                       double oneSigma,
+                       ESystType type = kExponential)
+      : ISyst(shortName, latexName),
+        fCut(cut), fOneSigma(oneSigma), fType(type)
     {
     }
 
-    virtual ~SystComponentScale();
-
-    std::string ShortName() const override {return fShortName;}
-    std::string LatexName() const override {return fLatexName;}
+    ~SystComponentScale();
 
     /// Scaling this component between 1/(1+x) and (1+x) is the 1-sigma range
     double OneSigmaScale() const {return fOneSigma;}
@@ -39,9 +40,8 @@ namespace ana
     virtual void SaveTo(TDirectory* dir) const {assert(0 && "unimplemented");}
 
   protected:
-    std::string fShortName;
-    std::string fLatexName;
     Cut fCut;
     double fOneSigma;
+    ESystType fType;
   };
 } // namespace
