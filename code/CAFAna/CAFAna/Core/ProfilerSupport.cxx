@@ -19,22 +19,12 @@ namespace ana
         char tmp[] = "/tmp/XXXXXX.pdf";
         mkstemps(tmp, 4);
 
-        // Try various locations
-        const std::vector<std::string> locs =
-	  {"/nfs/raid11/novasoft/externals/", // Caltech
-           "/unix/nova/perftools/", // UCL
-	   "/grid/fermiapp/nova/perftools/"}; // FNAL
-
-	std::string perfdir;
-        for(const std::string& loc: locs){
-          struct stat junk;
-          if(stat((loc+"/bin/pprof").c_str(), &junk) == 0) perfdir = loc;
-        }
-
-        if(perfdir.empty()){
+	const char* pd = getenv("GPERFTOOLS_DIR");
+        if(!pd){
           std::cout << "Couldn't find pprof executable" << std::endl;
           return;
         }
+        const std::string perfdir = pd;
 
         const std::string pprof = perfdir + "/bin/pprof";
 
