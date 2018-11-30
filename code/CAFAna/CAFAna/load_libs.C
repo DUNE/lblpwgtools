@@ -129,21 +129,15 @@ void load_libs()
       std::cout << "Note: profiling works much better in debug mode." << std::endl;
     }
 
-    // Caltech location
-    if(gSystem->AccessPathName("/nfs/raid11/novasoft/externals/lib/libprofiler.so") == false) // yes, bizarre convention...
-      gSystem->Load("/nfs/raid11/novasoft/externals/lib/libprofiler.so");
-
-    // UCL location
-    if(gSystem->AccessPathName("/unix/nova/perftools/lib/libprofiler.so") == false)
-      gSystem->Load("/unix/nova/perftools/lib/libprofiler.so");
-
-    // Fermilab location
-    if(gSystem->AccessPathName("/grid/fermiapp/nova/perftools/lib/libprofiler.so") == false)
-      gSystem->Load("/grid/fermiapp/nova/perftools/lib/libprofiler.so");
-
-    // Would be much better to have it packaged as a ups product of course
-
-    // Apparently the library load manages to corrupt the env var? Put it back.
-    gSystem->Setenv("CPUPROFILE", cpuprof.c_str());
+    const char* pd = getenv("GPERFTOOLS_DIR");
+    if(pd){
+      gSystem->Load((std::string(pd)+"/lib/libprofiler.so").c_str());
+      // Apparently the library load manages to corrupt the env var? Put it
+      // back.
+      gSystem->Setenv("CPUPROFILE", cpuprof.c_str());
+    }
+    else{
+      std::cout << "Couldn't find gperftools library" << std::endl;
+    }
   }
 }
