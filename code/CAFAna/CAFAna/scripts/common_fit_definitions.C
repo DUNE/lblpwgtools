@@ -56,10 +56,6 @@ const Var kRecoYND      = (SIMPLEVAR(dune.Ev_reco) - SIMPLEVAR(dune.Elep_reco))/
 // CV weighting
 const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 
-// FD cut
-const Cut kFDSelNue     = kFDNuePid > 0.7;
-const Cut kFDSelNumu    = kFDNumuPid > 0.7;
-  
 // --> ND cuts, from Chris: For the numu sample: reco_numu ==1, reco_q == -1 for FHC and +1 for RHC.  Also muon_exit == 0, which means that the muon is well-reconstructed.  And Ehad_veto < 30, which means the hadronic system is (probably) well-reconstructed
 const Cut kRecoNegMu    = SIMPLEVAR(dune.reco_q) == -1; // Note that for these to be true, reco_numu == 1
 const Cut kRecoPosMu    = SIMPLEVAR(dune.reco_q) == +1; // reco_q == 0 if reco_numu != 1
@@ -107,7 +103,7 @@ PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTr
 Loaders dummyLoaders;
 
 // To get the oscillation probabilities
-osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
 
 // std::vector<const ISyst*> systlist;
 // std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10, false);

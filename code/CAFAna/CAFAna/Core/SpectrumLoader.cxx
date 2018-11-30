@@ -181,6 +181,7 @@ namespace ana
     tr->SetBranchAddress("Q2", &sr.dune.Q2);
     tr->SetBranchAddress("W", &sr.dune.W);
     tr->SetBranchAddress("Y", &sr.dune.Y);
+    tr->SetBranchAddress("X", &sr.dune.X);
     //    tr->SetBranchAddress("cc", &sr.dune.cc);
     tr->SetBranchAddress("NuMomX", &sr.dune.NuMomX);
     tr->SetBranchAddress("NuMomY", &sr.dune.NuMomY);

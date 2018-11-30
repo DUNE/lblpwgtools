@@ -1,4 +1,4 @@
-#include "CAFAna/Analysis/CalcsNuFit.h"
+#include "CAFAna/Analysis/CalcsNuFit_cdr.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -7,13 +7,13 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
+  osc::IOscCalculatorAdjustable* NuFitOscCalcCDR(int hie)
   {
     assert(hie == +1 || hie == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-    ret->SetL(kBaseline);
-    ret->SetRho(kEarthDensity);
+    ret->SetL(1300);
+    ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
 
     ret->SetDmsq21(kNuFitDmsq21CV);
     ret->SetTh12(kNuFitTh12CV);
@@ -35,12 +35,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie)
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalcCDR(int hie)
   {
     assert(hie == +1 || hie == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-    ret->SetL(kBaseline);
+    ret->SetL(1300);
 
     // Throw 12 and rho within errors
     ret->SetRho(2.95674*(1+0.02*gRandom->Gaus()));
@@ -68,14 +68,15 @@ namespace ana
     return ret;
   }
 
+
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
+  osc::IOscCalculatorAdjustable* NuFitOscCalcCDRPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
-    ret->SetL(kBaseline);
-    ret->SetRho(kEarthDensity);
+    ret->SetL(1300);
+    ret->SetRho(2.95674); // g/cm^3. Dan Cherdack's doc "used in GLOBES"
 
     ret->SetDmsq21(kNuFitDmsq21CV + kNuFitDmsq21Err);
     ret->SetTh12(kNuFitTh12CV + kNuFitTh12Err);
@@ -97,7 +98,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double NuFitPenalizer::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double NuFitPenalizerCDR::ChiSq(osc::IOscCalculatorAdjustable* calc,
                                const SystShifts& /*syst*/) const
   {
     double ret =
@@ -123,7 +124,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly) : fWeakOnly(weakOnly) {
+  Penalizer_GlbLikeCDR::Penalizer_GlbLikeCDR(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly) : fWeakOnly(weakOnly) {
 
     fDmsq21 = cvcalc->GetDmsq21();
     fTh12 = cvcalc->GetTh12();
@@ -137,17 +138,17 @@ namespace ana
     //NH: 0.023, 0.018, 0.058, 0.0, 0.024, 0.016
     //IH: 0.023, 0.018, 0.048, 0.0, 0.024, 0.016
 
-    fDmsq21Err = kNuFitDmsq21Err;
-    fTh12Err = kNuFitTh12Err;
-    fDmsq32Err = (hietrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
-    fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
-    fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
+    fDmsq21Err = 0.024*fDmsq21;
+    fTh12Err = 0.023*fTh12;
+    fDmsq32Err = 0.016*fDmsq32;
+    fTh13Err = 0.018*fTh13;
+    fTh23Err = (hietrue > 0) ? 0.058*fTh23 : 0.048*fTh23;
 
     fRhoErr = 0.02*fRho;
     
   }
     
-  double Penalizer_GlbLike::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double Penalizer_GlbLikeCDR::ChiSq(osc::IOscCalculatorAdjustable* calc,
 				  const SystShifts& /*syst*/) const {
 
   //Usage: calc is the fit parameters as above
@@ -155,7 +156,7 @@ namespace ana
 
     double ret =
       util::sqr((calc->GetDmsq21() - fDmsq21)/fDmsq21Err) +
-      util::sqr((calc->GetTh12() - fTh12)/fTh12Err) +
+      util::sqr((calc->GetTh12() - fTh12)/fTh12Err) + 
       util::sqr((calc->GetRho() - fRho)/fRhoErr);
 
     // if fWeakOnly is set, only apply a constraint to the parameter we can only weakly constrain in DUNE
