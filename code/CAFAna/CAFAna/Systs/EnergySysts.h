@@ -200,13 +200,7 @@ namespace ana
 
       const double scale = 1. + 0.05*sigma;
       double sumE = 0.;
-      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
-      if(sr->dune.isFD) { 
-	sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
-      }
-      else {
-	sumE = (sr->dune.eP + sr->dune.ePim + sr->dune.ePip) / 1000;
-      }
+      sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
       const double fracE = sumE / sr->dune.Ev;
       const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
       sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scale + (1 - fracE));
@@ -278,8 +272,7 @@ namespace ana
       const double scale = 1. + 0.01*sigma;
       
       if(!sr->dune.isFD) { 
-	// TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
-	const double sumE = (sr->dune.eP + sr->dune.ePim + sr->dune.ePip) / 1000;
+	const double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scale + (1 - fracE));
       }
@@ -306,8 +299,7 @@ namespace ana
       double visE = 0.; // neutron visible energy
 
       if(!sr->dune.isFD) {
-	// CHANGE THIS ONCE CAFs ARE RERUN
-	visE = (sr->dune.eN * .25) / 1000; // crude assumption
+	visE = sr->dune.eN * .25; // crude assumption
 	
 	sr->dune.Ev_reco       += (visE * scale);
 	sr->dune.Ev_reco_numu  += (visE * scale);
@@ -384,15 +376,10 @@ namespace ana
       const double scale = 1 + .05 * sigma;
       double fracPi0 = 0;
       double fracPi0Y = 0;
-      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
-      if(sr->dune.isFD) {
-	fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
-	fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
-      }
-      else {
-	fracPi0 = (sr->dune.ePi0 / (sr->dune.Ev*1000));
-	fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y*1000));
-      }
+           
+      fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
+      fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
+      
       sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
       sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
@@ -450,7 +437,7 @@ namespace ana
       const double scale = 1. + 0.02*sigma;
       
       if(!sr->dune.isFD) { 
-	const double fracPi0 = sr->dune.ePi0 / (sr->dune.Ev * 1000);
+	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       }
     }
