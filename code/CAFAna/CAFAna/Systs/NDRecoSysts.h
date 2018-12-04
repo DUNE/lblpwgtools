@@ -9,12 +9,11 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TRandom3.h"
 
 #include <cassert>
 
 namespace ana {
-
+  
   // Take ND events which pass the CC selection cuts but are NC and reweight by 20%
   class RecoNCSyst: public ISyst
   {
@@ -36,61 +35,68 @@ namespace ana {
   extern const RecoNCSyst kRecoNCSyst;
 
   // Systematic designed to mimic effect of lepton acceptance in the ND
-  class LeptonContSyst: public ISyst
+  class LeptonAccSyst: public ISyst
   {
   public:
-  LeptonContSyst() : ISyst("LeptonContSyst", "ND Lepton Containment Syst") 
-      {
+  LeptonAccSyst() : ISyst("LeptonAccSyst", "ND Lepton Acceptance Syst") {}
+          
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      // Load hist if it hasn't been loaded already
+      const double m_mu = 0.105658;
+      if (!hist) {
 	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+	assert(!f->IsZombie());
 	hist = (TH2*)f->Get("unc");
       }
-    void Shift(double sigma,
-	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override
-    {
-      const double m_mu = 0.105658;
-      // Is ND
-      if (!sr->dune.isFD) {
-	// Is a true numu CC event
-	if (sr->dune.isCC && abs(sr->dune.nuPDG) == 14) {
-	  double LepE = sr->dune.LepE;
-	  int bin = hist->FindBin(sqrt(LepE*LepE - m_mu*m_mu) * cos(sr->dune.LepNuAngle), sqrt(LepE*LepE - m_mu*m_mu) * sin(sr->dune.LepNuAngle));
-	  double w = hist->GetBinContent(bin);
-	  weight *= 1. + w*sigma;
-	}
+   
+      // Is ND and is a true numu CC event
+      if (!sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG) == 14) {
+	double LepE = sr->dune.LepE;
+	int bin = hist->FindBin(sqrt(LepE*LepE - m_mu*m_mu) * cos(sr->dune.LepNuAngle), sqrt(LepE*LepE - m_mu*m_mu) * sin(sr->dune.LepNuAngle));
+	double w = hist->GetBinContent(bin);
+	weight *= 1. + w*sigma;
+     
       }
     }
+    
   protected:
-    TH2 *hist;
-    TFile *f;
+    mutable TH2 *hist;
+    
   };
-  extern const LeptonContSyst kLeptonContSyst;
+  extern const LeptonAccSyst kLeptonAccSyst;
 
   // Systematic designed to mimic effect of hadron acceptance in the ND
-  class HadronContSyst: public ISyst
+  class HadronAccSyst: public ISyst
   {
   public:
-  HadronContSyst() : ISyst("HadronContSyst", "ND Hadron Containment Syst") 
-      {
-	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
-	hist = (TH1*)f->Get("hunc");
-      }
+  HadronAccSyst() : ISyst("HadronAccSyst", "ND Hadron Acceptance Syst") {}
+      
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-
-      // All ND events
+      // Load hist if it hasn't been loaded already
+      if (!hist) {
+	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+	assert(!f->IsZombie());
+	hist = (TH1*)f->Get("hunc");
+      }
+      
+      // Is ND and is a true numu CC event
       if (!sr->dune.isFD) {
 	double HadE = sr->dune.Ev - sr->dune.LepE;
 	int bin = hist->FindBin(HadE);
 	double w = hist->GetBinContent(bin);
-	weight *= 1. + w*sigma;
+	weight *= 1. + w*sigma;  
       }
     }
+   
   protected:
-    TH1 *hist;
-    TFile *f;
+    mutable TH1 *hist;
+    //    TFile *f;
   };
-  extern const HadronContSyst kHadronContSyst;
+  extern const HadronAccSyst kHadronAccSyst;
 }

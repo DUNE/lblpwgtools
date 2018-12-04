@@ -2,6 +2,7 @@
 
 namespace ana {
   const RecoNCSyst kRecoNCSyst;
-  const LeptonContSyst kLeptonContSyst;
-  const HadronContSyst kHadronContSyst;
+  const LeptonAccSyst kLeptonAccSyst;
+  const HadronAccSyst kHadronAccSyst;
+
 }
