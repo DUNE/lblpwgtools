@@ -7,8 +7,10 @@ namespace ana
   //----------------------------------------------------------------------
   ISyst::ISyst(const std::string& shortName,
                const std::string& latexName,
-	       bool applyPenalty)
-    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty)
+	       bool applyPenalty,
+	       double min,
+	       double max)
+    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
   {
     SystRegistry::Register(this);
   }

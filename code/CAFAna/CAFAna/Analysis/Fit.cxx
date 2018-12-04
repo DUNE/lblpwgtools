@@ -137,8 +137,8 @@ namespace ana
       const double val = systSeed.GetShift(s);
       // name, value, error
       mnPars.Add(s->ShortName(), val, 1);
-      // Try to add a limit on each
-      mnPars.SetLimits(mnPars.Params().size()-1, -5, 5);
+      // Add a limit on each
+      mnPars.SetLimits(mnPars.Params().size()-1, s->Min(), s->Max());
       fParamNames  .push_back(s->ShortName());
       fPreFitValues.push_back(val);
       fPreFitErrors.push_back(1);

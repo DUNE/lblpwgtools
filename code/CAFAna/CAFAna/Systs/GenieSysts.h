@@ -38,21 +38,25 @@ namespace ana
 
   protected:
   GenieSyst(int genie_id, bool applyPenalty=true) :
-      ISyst(GetGenieWeightName(genie_id),
-            GetGenieWeightName(genie_id),
-	    applyPenalty),
-      fID(genie_id) {}
-      friend std::vector<const ISyst*> GetGenieSysts(bool applyPenalty);
-
+    ISyst(GetGenieWeightName(genie_id),
+	  GetGenieWeightName(genie_id),
+	  applyPenalty,
+	  GetGenieMin(genie_id),
+	  GetGenieMax(genie_id)),
+	  fID(genie_id) {}
+    friend std::vector<const ISyst*> GetGenieSysts(std::vector<std::string> names, bool applyPenalty);
+	  
     int fID;
   };
 
-  std::vector<const ISyst*> GetGenieSysts(bool applyPenalty=true){
+  std::vector<const ISyst*> GetGenieSysts(std::vector<std::string> names = {}, bool applyPenalty=true){
     static std::vector<const ISyst*> ret;
 
+    if (names.empty()) names = GetGenieWeightNames();
+
     if(ret.empty()){
-      for (uint i = 0; i < GetGenieWeightNames().size(); ++i){
-        ret.push_back(new GenieSyst(i, applyPenalty));
+      for (auto & it : names){
+        ret.push_back(new GenieSyst(GetGenieIndex(it), applyPenalty));
       }
     }
     return ret;
