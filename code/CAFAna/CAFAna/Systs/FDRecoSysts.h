@@ -33,7 +33,7 @@ namespace ana {
 	flav = fl;
 
 	TFile *f = new TFile((FindCAFAnaDir()+"/Systs/modelComp.root").c_str(), "read");
-	assert(!f->IsZombie());
+
 	if (hc == kFHC) {
 	  if (var == kX) {
 	    hist = (TH2*)f->Get("hXratio_neutfhc_geniefhc");
@@ -62,7 +62,7 @@ namespace ana {
 	    hist = (TH2*)f->Get("hQ2ratio_neutrhc_genierhc");
 	  }
 	}
-	assert(hist);
+
       }
     virtual ~FDRecoSyst();
 
@@ -79,5 +79,5 @@ namespace ana {
     Flavour flav;
   };
 
-  //  extern const FDRecoSyst kFDRecoSyst(v);
+  //  extern const FDRecoSyst kFDRecoNumuFHC(FDRecoSyst::kY, FDRecoSyst::kFHC, FDRecoSyst::kNumu);
 }

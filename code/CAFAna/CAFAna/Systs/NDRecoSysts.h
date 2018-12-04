@@ -42,9 +42,7 @@ namespace ana {
   LeptonContSyst() : ISyst("LeptonContSyst", "ND Lepton Containment Syst") 
       {
 	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
-	assert(!f->IsZombie());
 	hist = (TH2*)f->Get("unc");
-	assert(hist);
       }
     void Shift(double sigma,
 	       Restorer& restore,
@@ -75,9 +73,7 @@ namespace ana {
   HadronContSyst() : ISyst("HadronContSyst", "ND Hadron Containment Syst") 
       {
 	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
-	assert(!f->IsZombie());
 	hist = (TH1*)f->Get("hunc");
-	assert(hist);
       }
     void Shift(double sigma,
 	       Restorer& restore,
