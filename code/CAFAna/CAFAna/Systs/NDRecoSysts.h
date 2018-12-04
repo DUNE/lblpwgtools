@@ -38,7 +38,10 @@ namespace ana {
   class LeptonAccSyst: public ISyst
   {
   public:
-  LeptonAccSyst() : ISyst("LeptonAccSyst", "ND Lepton Acceptance Syst") {}
+  LeptonAccSyst() : ISyst("LeptonAccSyst", "ND Lepton Acceptance Syst") 
+      {
+	hist = 0;
+      }
           
     void Shift(double sigma,
 	       Restorer& restore,
@@ -72,7 +75,10 @@ namespace ana {
   class HadronAccSyst: public ISyst
   {
   public:
-  HadronAccSyst() : ISyst("HadronAccSyst", "ND Hadron Acceptance Syst") {}
+  HadronAccSyst() : ISyst("HadronAccSyst", "ND Hadron Acceptance Syst") 
+      {
+	hist = 0;
+      }
       
     void Shift(double sigma,
 	       Restorer& restore,
