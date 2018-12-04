@@ -50,9 +50,10 @@ namespace ana {
       // Load hist if it hasn't been loaded already
       const double m_mu = 0.105658;
       if (!hist) {
-	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
-	assert(!f->IsZombie());
-	hist = (TH2*)f->Get("unc");
+	TFile f("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+	assert(!f.IsZombie());
+	hist = (TH2*)f.Get("unc");
+        hist->SetDirectory(0);
       }
    
       // Is ND and is a true numu CC event
@@ -86,12 +87,13 @@ namespace ana {
     {
       // Load hist if it hasn't been loaded already
       if (!hist) {
-	TFile *f = new TFile("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
-	assert(!f->IsZombie());
-	hist = (TH1*)f->Get("hunc");
+	TFile f("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+	assert(!f.IsZombie());
+	hist = (TH1*)f.Get("hunc");
+        hist->SetDirectory(0);
       }
       
-      // Is ND and is a true numu CC event
+      // Is ND
       if (!sr->dune.isFD) {
 	double HadE = sr->dune.Ev - sr->dune.LepE;
 	int bin = hist->FindBin(HadE);
