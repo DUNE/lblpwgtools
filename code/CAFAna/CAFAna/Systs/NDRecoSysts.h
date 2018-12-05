@@ -96,6 +96,9 @@ namespace ana {
       // Is ND
       if (!sr->dune.isFD) {
 	double HadE = sr->dune.Ev - sr->dune.LepE;
+	if (HadE > 5.) {
+	  HadE = 5.;
+	}
 	int bin = hist->FindBin(HadE);
 	double w = hist->GetBinContent(bin);
 	weight *= 1. + w*sigma;  
