@@ -64,8 +64,10 @@ const Cut kEhad_veto    = SIMPLEVAR(dune.Ehad_veto) < 30;
 
 // Binnings
 const Binning binsFDEreco = Binning::Simple(80, 0, 10);
-const Binning binsNDEreco = Binning::Simple(40, 0, 10);
-const Binning binsY       = Binning::Simple(40, 0, 1);
+const Binning binsNDEreco = Binning::Simple(10, 0, 10);
+const Binning binsY       = Binning::Simple(10, 0, 1);						      
+//const Binning binsNDEreco = Binning::Simple(40, 0, 10);
+//const Binning binsY       = Binning::Simple(40, 0, 1);
 
 // Axes
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);

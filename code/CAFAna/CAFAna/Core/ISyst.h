@@ -22,7 +22,9 @@ namespace ana
   public:
     ISyst(const std::string& shortName,
           const std::string& latexName, 
-	  bool applyPenalty=true);
+	  bool applyPenalty=true,
+	  double min=-3,
+	  double max=3);
     ISyst(const ISyst &) = delete;   // no copying.
     ISyst(ISyst && rhs) = delete;    // no moving either.
     virtual ~ISyst();
@@ -39,6 +41,10 @@ namespace ana
     /// Should a penalty be applied for this shift?
     virtual bool ApplyPenalty() const {return fApplyPenalty;}
 
+    /// Return the min/max value for this syst
+    virtual double Min() const{return fMin;}
+    virtual double Max() const{return fMax;}
+    
     /// \brief Perform the systematic shift
     ///
     /// \param sigma   Number of sigma to shift record by
@@ -61,7 +67,9 @@ namespace ana
   private:
     std::string fShortName;
     std::string fLatexName;
-    mutable bool fApplyPenalty;
+    bool fApplyPenalty;
+    double fMin;
+    double fMax;
   };
 
 
