@@ -12,8 +12,7 @@ namespace ana
   int SystShifts::fgNextID = 1;
 
   //----------------------------------------------------------------------
-  SystShifts::SystShifts()
-    : fID(0)
+  SystShifts::SystShifts() : fID(0)
   {
   }
 
@@ -21,14 +20,14 @@ namespace ana
   SystShifts::SystShifts(const ISyst* syst, double shift)
     : fID(fgNextID++)
   {
-    if(shift != 0) fSysts.push_back(std::make_pair(syst, shift));
+    if(shift != 0) fSysts.emplace(syst, shift);
   }
 
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst*, double>& shifts)
     : fID(fgNextID++)
   {
-    for(auto it: shifts) if(it.second != 0) fSysts.push_back(it);
+    for(auto it: shifts) if(it.second != 0) fSysts.emplace(it.first, it.second);
   }
 
   //----------------------------------------------------------------------
@@ -36,19 +35,8 @@ namespace ana
   {
     fID = fgNextID++;
 
-    for(auto it = fSysts.begin(); it != fSysts.end(); ++it){
-      if(it->first == syst){
-        if(shift == 0)
-          fSysts.erase(it);
-        else
-          it->second = shift;
-        return;
-      }
-    }
-
-    // Didn't find it. They must want to add it (unless they're trying to clear
-    // it)
-    if(shift != 0) fSysts.push_back(std::make_pair(syst, shift));
+    fSysts.erase(syst);
+    if(shift != 0) fSysts.emplace(syst, shift);
   }
 
   //----------------------------------------------------------------------
@@ -56,10 +44,8 @@ namespace ana
   {
     assert(syst);
 
-    // TODO: maybe better as a map?
-    for(auto it: fSysts) if(it.first == syst) return it.second;
-
-    return 0;
+    auto it = fSysts.find(syst);
+    return (it == fSysts.end()) ? 0 : it->second;
   }
 
   //----------------------------------------------------------------------
@@ -97,10 +83,9 @@ namespace ana
     if(fSysts.empty()) return "nominal";
 
     std::string ret;
-    for(unsigned int i = 0; i < fSysts.size(); ++i){
-      if(i != 0) ret += ",";
-      ret += fSysts[i].first->ShortName();
-      ret += TString::Format("=%+g", fSysts[i].second).Data();
+    for(auto it: fSysts){
+      if(!ret.empty()) ret += ",";
+      ret += it.first->ShortName() + TString::Format("=%+g", it.second).Data();
     }
 
     return ret;
@@ -112,10 +97,9 @@ namespace ana
     if(fSysts.empty()) return "Nominal";
 
     std::string ret;
-    for(unsigned int i = 0; i < fSysts.size(); ++i){
-      if(i != 0) ret += ", ";
-      ret += fSysts[i].first->LatexName();
-      ret += TString::Format(" = %+g", fSysts[i].second).Data();
+    for(auto it: fSysts){
+      if(!ret.empty()) ret += ", ";
+      ret += it.first->LatexName() + TString::Format(" = %+g", it.second).Data();
     }
 
     return ret;

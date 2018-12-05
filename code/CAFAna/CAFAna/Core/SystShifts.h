@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ana
@@ -42,7 +43,7 @@ namespace ana
 
     std::vector<const ISyst*> ActiveSysts() const;
   protected:
-    std::vector<std::pair<const ISyst*, double>> fSysts;
+    std::unordered_map<const ISyst*, double> fSysts;
 
     int fID;
     /// The next unused ID
