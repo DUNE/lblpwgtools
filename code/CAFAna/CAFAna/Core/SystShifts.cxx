@@ -21,14 +21,14 @@ namespace ana
   SystShifts::SystShifts(const ISyst* syst, double shift)
     : fID(fgNextID++)
   {
-    fSysts.push_back(std::make_pair(syst, shift));
+    if(shift != 0) fSysts.push_back(std::make_pair(syst, shift));
   }
 
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst*, double>& shifts)
     : fID(fgNextID++)
   {
-    for(auto it: shifts) fSysts.push_back(it);
+    for(auto it: shifts) if(it.second != 0) fSysts.push_back(it);
   }
 
   //----------------------------------------------------------------------
