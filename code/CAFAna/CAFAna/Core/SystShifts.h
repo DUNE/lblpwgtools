@@ -41,11 +41,6 @@ namespace ana
     int ID() const {return fID;}
 
     std::vector<const ISyst*> ActiveSysts() const;
-
-    /// \brief Look up an ISyst in this object from its name
-    ///
-    /// \return 0 if not found
-    const ISyst* SystFromShortName(const std::string& name) const;
   protected:
     std::vector<std::pair<const ISyst*, double>> fSysts;
 

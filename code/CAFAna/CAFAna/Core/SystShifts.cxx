@@ -46,19 +46,6 @@ namespace ana
       }
     }
 
-    // We didn't find it by pointer. Let's try by name. TODO - this whole
-    // "pointers are unreliable IDs" thing is a total mess.
-    const std::string sn = syst->ShortName();
-    for(auto it = fSysts.begin(); it != fSysts.end(); ++it){
-      if(it->first->ShortName() == sn){
-        if(shift == 0)
-          fSysts.erase(it);
-        else
-          it->second = shift;
-        return;
-      }
-    }
-
     // Didn't find it. They must want to add it (unless they're trying to clear
     // it)
     if(shift != 0) fSysts.push_back(std::make_pair(syst, shift));
@@ -71,11 +58,6 @@ namespace ana
 
     // TODO: maybe better as a map?
     for(auto it: fSysts) if(it.first == syst) return it.second;
-
-    // We didn't find it by pointer. Let's try by name. TODO - this whole
-    // "pointers are unreliable IDs" thing is a total mess.
-    const std::string sn = syst->ShortName();
-    for(auto it: fSysts) if(it.first->ShortName() == sn) return it.second;
 
     return 0;
   }
@@ -145,14 +127,5 @@ namespace ana
     std::vector<const ISyst*> ret;
     for(auto it: fSysts) ret.push_back(it.first);
     return ret;
-  }
-
-  //----------------------------------------------------------------------
-  const ISyst* SystShifts::SystFromShortName(const std::string& name) const
-  {
-    for(auto it: fSysts){
-      if(it.first->ShortName() == name) return it.first;
-    }
-    return 0;
   }
 }
