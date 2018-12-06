@@ -597,9 +597,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum Spectrum::MockData(double pot, int seed) const
+  Spectrum Spectrum::MockData(double pot, bool makethrow, int seed) const
   {
     Spectrum ret = FakeData(pot);
+
+    if (!makethrow) return ret;
 
     TRandom3 rnd(seed); // zero seeds randomly
 

@@ -4,6 +4,8 @@
 
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 
+#include "CAFAna/Vars/FitVars.h"
+
 namespace ana
 {
   //----------------------------------------------------------------------
@@ -34,8 +36,13 @@ namespace ana
     return ret;
   }
 
+  bool HasVar(std::vector<const IFitVar*> oscVars, std::string name){
+    for(auto *s :oscVars ) if(s->ShortName() == name) return true;
+    return false;
+  }
+
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie)
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars)
   {
     assert(hie == +1 || hie == -1);
 
@@ -43,28 +50,59 @@ namespace ana
     ret->SetL(kBaseline);
 
     // Throw 12 and rho within errors
-    ret->SetRho(2.95674*(1+0.02*gRandom->Gaus()));
-    ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
-    ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+    if (HasVar(oscVars, kFitRho.ShortName())) 
+      ret->SetRho(2.95674*(1+0.02*gRandom->Gaus()));
+    else ret->SetRho(2.95674);
 
+    if (HasVar(oscVars, kFitDmSq21.ShortName()))
+      ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+    else ret->SetDmsq21(kNuFitDmsq21CV);
+    
+    if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
+      ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+    else ret->SetTh12(kNuFitTh12CV);
+	
     // Uniform throws within +/-3 sigma
     if(hie > 0){
-      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH, 
-				      kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName())){
+	ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH, 
+					kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+      else ret->SetDmsq32(kNuFitDmsq32CVNH); 
+
+      if (HasVar(oscVars, kFitSinSqTheta23.ShortName()))
       ret->SetTh23(gRandom->Uniform(kNuFitTh23CVNH-3*kNuFitTh23ErrNH,
 				    kNuFitTh23CVNH+3*kNuFitTh23ErrNH));
+      else ret->SetTh23(kNuFitTh23CVNH);
+
+      if (HasVar(oscVars, kFitTheta13.ShortName()))
       ret->SetTh13(gRandom->Uniform(kNuFitTh13CVNH-3*kNuFitTh13ErrNH,
 				    kNuFitTh13CVNH+3*kNuFitTh13ErrNH));
+      else ret->SetTh13(kNuFitTh13CVNH);
+
+      if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
+        ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+      else ret->SetdCP(kNuFitdCPCVNH);
+
     } else {
-      ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
-                                      kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
+      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
+	ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
+					kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
+      else ret->SetDmsq32(kNuFitDmsq32CVIH);
+
+      if (HasVar(oscVars, kFitSinSqTheta23.ShortName()))
       ret->SetTh23(gRandom->Uniform(kNuFitTh23CVIH-3*kNuFitTh23ErrIH,
                                     kNuFitTh23CVIH+3*kNuFitTh23ErrIH));
+      else ret->SetTh23(kNuFitTh23CVIH);
+
+      if (HasVar(oscVars, kFitTheta13.ShortName()))
       ret->SetTh13(gRandom->Uniform(kNuFitTh13CVIH-3*kNuFitTh13ErrIH,
                                     kNuFitTh13CVIH+3*kNuFitTh13ErrIH));
+      else ret->SetTh13(kNuFitTh13CVIH);
+
+      if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
+	ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+      else ret->SetdCP(kNuFitdCPCVIH);
     }
-    ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
-		  
     return ret;
   }
 
