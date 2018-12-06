@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Core/IFitVar.h"
 
 #include "TMath.h"
 
@@ -48,7 +49,10 @@ namespace ana
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
   // Add in a throw for toys
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie);
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars);
+
+  bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
+
 
   class NuFitPenalizer: public IExperiment
   {
