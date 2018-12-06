@@ -69,8 +69,8 @@ const Cut kEhad_veto    = SIMPLEVAR(dune.Ehad_veto) < 30;
 
 // Binnings
 const Binning binsFDEreco = Binning::Simple(80, 0, 10);
-const Binning binsNDEreco = Binning::Simple(10, 0, 10);
-const Binning binsY       = Binning::Simple(10, 0, 1);
+const Binning binsNDEreco = Binning::Simple(40, 0, 10);
+const Binning binsY       = Binning::Simple(5, 0, 1);
 						      
 // Axes
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
@@ -82,13 +82,13 @@ const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
 
 // FD spectra
-SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nonswap.root", kBeam); //,1e5);
-SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nueswap.root", kBeam); //,1e5);
-SpectrumLoader FD_loaderFHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_tauswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderFHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_FHC_nonswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_FHC_nueswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderFHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_FHC_tauswap.root", kBeam); //,1e5);
 
-SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nonswap.root", kBeam); //,1e5);
-SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nueswap.root", kBeam); //,1e5);
-SpectrumLoader FD_loaderRHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_tauswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderRHCNumu("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_RHC_nonswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_RHC_nueswap.root", kBeam); //,1e5);
+SpectrumLoader FD_loaderRHCNutau("/dune/data/users/marshalc/CAFs/mcc11_v2/FD_RHC_tauswap.root", kBeam); //,1e5);
 
 // FD predictions
 PredictionNoExtrap FD_predFHCNumu(FD_loaderFHCNumu, FD_loaderFHCNue, FD_loaderFHCNutau, axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
@@ -97,8 +97,8 @@ PredictionNoExtrap FD_predRHCNumu(FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRH
 PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRHCNutau, axRecoEnuFDnue , kPassFD_CVN_NUE && kIsTrueFV, kNoShift, kGENIEWeights);
 
 // ND predictions
-SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_FHC_CAF.root", kBeam); //,1e5);
-SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_RHC_CAF.root", kBeam); //,1e5);
+SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_v2/ND_FHC_CAF.root", kBeam); //,1e5);
+SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_v2/ND_RHC_CAF.root", kBeam); //,1e5);
 PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 // PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecNPions, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
@@ -111,7 +111,7 @@ Loaders dummyLoaders;
 osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
 std::vector<const ISyst*> detlist_nd  = {&kEnergyScaleMuSystND, &kChargedHadUncorrNDSyst, &kNUncorrNDSyst,
-					 &kPi0UncorrNDSyst, &kRecoNCSyst, &kLeptonContSyst, &kHadronContSyst};
+					 &kPi0UncorrNDSyst, &kRecoNCSyst, &kLeptonAccSyst, &kHadronAccSyst};
 std::vector<const ISyst*> detlist_fd  = {&keScaleMuLArSyst, &kEnergyScaleESyst,
 					 &kChargedHadCorrSyst, &kChargedHadUncorrFDSyst,
 					 &kNUncorrFDSyst, &kEnergyScalePi0Syst,
