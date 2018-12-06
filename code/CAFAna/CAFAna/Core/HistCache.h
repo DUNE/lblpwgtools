@@ -51,5 +51,6 @@ namespace ana
     static int fgOut, fgIn;
 
     static long fgEstMemUsage;
+    static long fgMemHandedOut;
   };
 }

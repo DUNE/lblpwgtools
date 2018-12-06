@@ -15,11 +15,13 @@ namespace ana
   int HistCache::fgIn = 0;
 
   long HistCache::fgEstMemUsage = 0;
+  long HistCache::fgMemHandedOut = 0;
 
   //---------------------------------------------------------------------
   TH1D* HistCache::New(const std::string& title, const Binning& bins)
   {
     ++fgOut;
+    fgMemHandedOut += 16*bins.NBins();
 
     // Look in the cache
     auto it = fgMap.find(bins.ID());
@@ -60,6 +62,8 @@ namespace ana
   TH2D* HistCache::NewTH2D(const std::string& title, const Binning& xbins, const Binning& ybins)
   {
     ++fgOut;
+    fgMemHandedOut += 16*xbins.NBins()*ybins.NBins();
+
     std::pair<int, int> IDs (xbins.ID(), ybins.ID());
     auto it = fgMap2D.find(IDs);
     if(it != fgMap2D.end()){
@@ -102,6 +106,7 @@ namespace ana
     if(!h) return;
 
     ++fgIn;
+    fgMemHandedOut -= 16*h->GetNbinsX();
 
     fgMap.emplace(Binning::FromTAxis(h->GetXaxis()).ID(),
                   std::unique_ptr<TH1D>(h));
@@ -118,7 +123,8 @@ namespace ana
     if(!h) return;
 
     ++fgIn;
-    
+    fgMemHandedOut -= 16*h->GetNbinsX()*h->GetNbinsY();
+
     fgMap2D.emplace(std::pair<int, int>(Binning::FromTAxis(h->GetXaxis()).ID(), Binning::FromTAxis(h->GetYaxis()).ID()), 
                     std::unique_ptr<TH2D>(h));
 
@@ -162,7 +168,8 @@ namespace ana
     for(auto& it: fgMap) keys.insert(it.first);
 
     std::cout << "Gave out " << fgOut << " histograms, got back "
-              << fgIn << " of them (" << fgOut-fgIn << " lost), in "
+              << fgIn << " of them (" << fgOut-fgIn << " still out, totalling "
+              << fgMemHandedOut << " bytes), in "
               << keys.size() << " different shapes." << std::endl
               << "Holding " << fgMap.size()+fgMap2D.size()
               << " histograms for an estimated memory usage of "
