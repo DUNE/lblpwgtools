@@ -445,5 +445,17 @@ namespace ana
   
   extern const Pi0UncorrNDSyst kPi0UncorrNDSyst;
 
+  // Vector of energy scale systematics
+  struct EnergySystVector: public std::vector<const ISyst*>
+  {
+    /*
+    operator std::vector<const ISyst*>()
+    {
+      return std::vector<const ISyst*>(begin(), end());
+    }
+    */
+  };
+
+  EnergySystVector GetEnergySysts();
 
 }
