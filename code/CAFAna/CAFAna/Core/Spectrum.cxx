@@ -860,21 +860,18 @@ namespace ana
       }
     }
 
+    std::unique_ptr<Spectrum> ret;
     if(spect){
-      std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>(std::unique_ptr<TH1D>(spect), labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
-      delete spectSparse;
-      delete hPot;
-      delete hLivetime;
-      return ret;
+      ret = std::make_unique<Spectrum>(std::unique_ptr<TH1D>(spect), labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
     }
     else{
-      std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
+      ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
       ret->fHistSparse = spectSparse;
-
-      delete spect;
-      delete hPot;
-      delete hLivetime;
-      return ret;
     }
+
+    delete hPot;
+    delete hLivetime;
+
+    return ret;
   }
 }
