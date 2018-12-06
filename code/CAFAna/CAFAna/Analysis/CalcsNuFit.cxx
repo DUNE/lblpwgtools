@@ -64,7 +64,7 @@ namespace ana
 	
     // Uniform throws within +/-3 sigma
     if(hie > 0){
-      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName())){
+      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
 	ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH, 
 					kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
       else ret->SetDmsq32(kNuFitDmsq32CVNH); 
