@@ -197,7 +197,9 @@ void make_toy_throws(int nthrows=100, bool reload = false){
     Fitter this_fit(&expt_ndfd_pen, oscVars, systlist_ndfd, Fitter::kCareful);
 
     // Now do a fit with thrown seeds
-    double thischisq = this_fit.Fit(fitThrowOsc, fitThrowSyst, Fitter::kVerbose);
+    std::map<const IFitVar*, std::vector<double>> oscSeeds;
+    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
+    double thischisq = this_fit.Fit(fitThrowOsc, fitThrowSyst, oscSeeds, {}, Fitter::kVerbose);
     std::cout << "Throw " << i << ": found minimum chi2 = " << thischisq << std::endl;
     
     // Information to keep
