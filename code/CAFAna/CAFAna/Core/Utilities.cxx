@@ -794,7 +794,7 @@ namespace ana
 
     int ybins = fMaskND->GetNbinsY();
 
-    for(int i = 0; i < fMask1D->GetNbinsX(); ++i){
+    for(int i = 0; i < fMask1D->GetNbinsX()+2; ++i){
 
       int ix = i / ybins;
       int iy = i % ybins;
