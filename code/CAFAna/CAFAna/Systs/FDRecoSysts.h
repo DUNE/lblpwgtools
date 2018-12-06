@@ -9,75 +9,84 @@
 
 #include "TFile.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TRandom3.h"
 
 #include <cassert>
 
 namespace ana {
 
-  class FDRecoSyst: public ISyst
+  class FDRecoNumuSyst: public ISyst
   {
   public:
-    // Kinematic variable & horn current
-    enum Variable{kX, kY, kW, kQ2};
-    enum HC{kFHC, kRHC};
-    enum Flavour{kNue, kNumu};
+  FDRecoNumuSyst() : ISyst("FDRecoNumuSyst", "Far Detector Numu Reconstruction Syst") {}
 
-  FDRecoSyst(Variable v, HC h, Flavour fl) : ISyst("FDRecoSyst", "Far Detector Reconstruction Syst") 
-      {
-	assert(v==kX || v==kY || v==kW || v==kQ2);
-	assert(h==kFHC || h==kRHC);
-	assert(fl==kNue || fl==kNumu);
-	var = v;
-	hc = h;
-	flav = fl;
-
-	TFile *f = new TFile((FindCAFAnaDir()+"/Systs/modelComp.root").c_str(), "read");
-
-	if (hc == kFHC) {
-	  if (var == kX) {
-	    hist = (TH2*)f->Get("hXratio_neutfhc_geniefhc");
-	  }
-	  else if (var == kY) {
-	    hist = (TH2*)f->Get("hYratio_neutfhc_geniefhc");
-	  }
-	  else if (var == kW) {
-	    hist = (TH2*)f->Get("hWratio_neutfhc_geniefhc");
-	  }
-	  else if (var == kQ2) {
-	    hist = (TH2*)f->Get("hQ2ratio_neutfhc_geniefhc");
-	  }
-	}
-	else if (hc == kRHC) {
-	  if (var == kX) {
-	    hist = (TH2*)f->Get("hXratio_neutrhc_genierhc");
-	  }
-	  else if (var == kY) {
-	    hist = (TH2*)f->Get("hYratio_neutrhc_genierhc");
-	  }
-	  else if (var == kW) {
-	    hist = (TH2*)f->Get("hWratio_neutrhc_genierhc");
-	  }
-	  else if (var == kQ2) {
-	    hist = (TH2*)f->Get("hQ2ratio_neutrhc_genierhc");
-	  }
-	}
-
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override 
+    {
+      // Load histograms if they have not been loaded already
+      if (!hist) {
+	TFile f((FindCAFAnaDir()+"/Systs/modelComp.root").c_str());
+	assert(!f.IsZombie());
+	hist = (TH2*)f.Get("hYratio_neutfhc_geniefhc");
+	hist->SetDirectory(0);
+	assert(hist);
       }
-    virtual ~FDRecoSyst();
-
-    virtual void Shift(double sigma,
-		       Restorer& restore,
-		       caf::StandardRecord* sr,
-		       double& weight) const override; 
-
+      // Passes FD selection cut
+      if (sr->dune.isFD && sr->dune.cvnnumu >= 0.5) {
+	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
+	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
+	double w   = hist->GetBinContent(EBin, VarBin);
+	weight    *= 1. + sigma * (1. - w) ;
+      }
+    }
+    
   protected:
-    TH2* hist;
-    TFile *f;
-    Variable var;
-    HC hc;
-    Flavour flav;
+    mutable TH2* hist;
+  }; 
+
+  extern const FDRecoNumuSyst kFDRecoNumuSyst;
+
+  // Nue reco syst
+  class FDRecoNueSyst: public ISyst
+  {
+  public:
+  FDRecoNueSyst() : ISyst("FDRecoNueSyst", "Far Detector Nue Reconstruction Syst") {}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override 
+    {
+      // Load histograms if they have not been loaded already
+      if (!hist) {
+	TFile f((FindCAFAnaDir()+"/Systs/modelComp.root").c_str());
+	assert(!f.IsZombie());
+	hist = (TH2*)f.Get("hYratio_neutfhc_geniefhc");
+	hist->SetDirectory(0);
+	assert(hist);
+      }
+      // Passes FD nue selection
+      if (sr->dune.isFD && sr->dune.cvnnue >= 0.5) {
+	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
+	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
+	double w   = hist->GetBinContent(EBin, VarBin);
+	weight    *= 1. + sigma * (1. - w) ;
+      }
+    }
+    
+  protected:
+    mutable TH2* hist;
   };
 
-  //  extern const FDRecoSyst kFDRecoNumuFHC(FDRecoSyst::kY, FDRecoSyst::kFHC, FDRecoSyst::kNumu);
+  extern const FDRecoNueSyst kFDRecoNueSyst;
+
+  struct FDRecoSystVector: public std::vector<const ISyst*>
+  {
+  };
+
+  FDRecoSystVector GetFDRecoSysts();
+  
 }

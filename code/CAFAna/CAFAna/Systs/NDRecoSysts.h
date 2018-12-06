@@ -110,4 +110,11 @@ namespace ana {
     //    TFile *f;
   };
   extern const HadronAccSyst kHadronAccSyst;
+
+  struct NDRecoSystVector: public std::vector<const ISyst*>
+  {
+
+  };
+  NDRecoSystVector GetNDRecoSysts();
+
 }
