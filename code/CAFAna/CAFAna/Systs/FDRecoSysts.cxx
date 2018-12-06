@@ -112,5 +112,5 @@ namespace ana {
     } // flav == Nue
   }
 
-  //  const FDRecoSyst kFDRecoSyst(v);
+  //  const FDRecoSyst kFDRecoNumuFHC(FDRecoSyst::kY, FDRecoSyst::kFHC, FDRecoSyst::kNumu);
 }

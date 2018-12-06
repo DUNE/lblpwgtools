@@ -77,6 +77,14 @@ namespace ana
     double Dmsq32CV() const {return fDmsq32;}
     double Th23CV() const {return fTh23;}
     double Th13CV() const {return fTh13;}
+    double RhoCV() const {return fRho;}
+
+    double Dmsq21Err() const {return fDmsq21Err;}
+    double Th12Err() const {return fTh12Err;}
+    double Dmsq32Err() const {return fDmsq32Err;}
+    double Th23Err() const {return fTh23Err;}
+    double Th13Err() const {return fTh13Err;}
+    double RhoErr() const {return fRhoErr;}
 
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;

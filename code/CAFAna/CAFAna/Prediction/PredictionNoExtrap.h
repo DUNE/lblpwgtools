@@ -55,16 +55,15 @@ namespace ana
   class NoExtrapPredictionGenerator: public IPredictionGenerator
   {
   public:
-  NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
-    : fAxis(axis), fCut(cut), fWei(wei)
+    NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
+      : fAxis(axis), fCut(cut), fWei(wei)
     {
     }
 
     virtual std::unique_ptr<IPrediction>
     Generate(Loaders& loaders, const SystShifts& shiftMC = kNoShift) const override
     {
-      return std::unique_ptr<IPrediction>(
-                                          new PredictionNoExtrap(loaders, fAxis, fCut, shiftMC));
+      return std::unique_ptr<IPrediction>(new PredictionNoExtrap(loaders, fAxis, fCut, shiftMC, fWei));
     }
 
   protected:
