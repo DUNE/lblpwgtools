@@ -17,6 +17,7 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/GenieSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/NDRecoSysts.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
@@ -56,6 +57,10 @@ const Var kRecoYND      = (SIMPLEVAR(dune.Ev_reco) - SIMPLEVAR(dune.Elep_reco))/
 // CV weighting
 const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 
+// FD cut
+const Cut kFDSelNue     = kFDNuePid > 0.7;
+const Cut kFDSelNumu    = kFDNumuPid > 0.7;
+  
 // --> ND cuts, from Chris: For the numu sample: reco_numu ==1, reco_q == -1 for FHC and +1 for RHC.  Also muon_exit == 0, which means that the muon is well-reconstructed.  And Ehad_veto < 30, which means the hadronic system is (probably) well-reconstructed
 const Cut kRecoNegMu    = SIMPLEVAR(dune.reco_q) == -1; // Note that for these to be true, reco_numu == 1
 const Cut kRecoPosMu    = SIMPLEVAR(dune.reco_q) == +1; // reco_q == 0 if reco_numu != 1
@@ -65,10 +70,8 @@ const Cut kEhad_veto    = SIMPLEVAR(dune.Ehad_veto) < 30;
 // Binnings
 const Binning binsFDEreco = Binning::Simple(80, 0, 10);
 const Binning binsNDEreco = Binning::Simple(10, 0, 10);
-const Binning binsY       = Binning::Simple(10, 0, 1);						      
-//const Binning binsNDEreco = Binning::Simple(40, 0, 10);
-//const Binning binsY       = Binning::Simple(40, 0, 1);
-
+const Binning binsY       = Binning::Simple(10, 0, 1);
+						      
 // Axes
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
 const HistAxis axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco, kRecoE_nue);
@@ -98,17 +101,17 @@ SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_FHC_CAF.
 SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_v1/ND_RHC_CAF.root", kBeam); //,1e5);
 PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+// PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecNPions, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+// PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecNPions, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 
 // For the ND prediction generator
 Loaders dummyLoaders;
 
 // To get the oscillation probabilities
-osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
-// std::vector<const ISyst*> systlist;
-// std::vector<const ISyst*> fluxlist = GetDUNEFluxSysts(10, false);
-// std::vector<const ISyst*> xseclist = GetGenieSysts(false);
-std::vector<const ISyst*> detlist_nd  = {&kEnergyScaleMuSystND, &kChargedHadUncorrNDSyst, &kNUncorrNDSyst}; //, &kPi0UncorrNDSyst}; removed as dodgy in current CAFs
+std::vector<const ISyst*> detlist_nd  = {&kEnergyScaleMuSystND, &kChargedHadUncorrNDSyst, &kNUncorrNDSyst,
+					 &kPi0UncorrNDSyst, &kRecoNCSyst, &kLeptonContSyst, &kHadronContSyst};
 std::vector<const ISyst*> detlist_fd  = {&keScaleMuLArSyst, &kEnergyScaleESyst,
 					 &kChargedHadCorrSyst, &kChargedHadUncorrFDSyst,
 					 &kNUncorrFDSyst, &kEnergyScalePi0Syst,
@@ -142,12 +145,24 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst, bool xsecsyst, bool dets
     }
   }
   if (xsecsyst) {
-    std::vector<const ISyst*> xseclist = GetGenieSysts(fluxXsecPenalties);    
+    std::vector<const ISyst*> xseclist = GetGenieSysts(GetGenieWeightNames(), fluxXsecPenalties);    
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
 
   return systlist;
 };
+
+void RemoveSysts(std::vector<const ISyst *> &systlist,
+                 std::vector<std::string> const &namesToRemove) {
+  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
+                                [&](const ISyst *s) {
+                                  return (std::find(namesToRemove.begin(),
+                                                    namesToRemove.end(),
+                                                    s->ShortName()) !=
+                                          namesToRemove.end());
+                                }),
+                 systlist.end());
+}
 
 TH2D* make_corr_from_covar(TH2D* covar){
 
