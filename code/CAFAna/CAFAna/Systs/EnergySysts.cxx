@@ -13,6 +13,10 @@ namespace ana {
   const Pi0UncorrNDSyst kPi0UncorrNDSyst;
   const Pi0UncorrFDSyst kPi0UncorrFDSyst;
 
+  const UncorrNDHadLinSyst kUncorrNDHadLinSyst;
+  const UncorrNDPi0LinSyst kUncorrNDPi0LinSyst;
+  const UncorrNDNLinSyst kUncorrNDNLinSyst;
+
   EnergySystVector GetEnergySysts()
   {
     EnergySystVector vec;
@@ -27,13 +31,9 @@ namespace ana {
     vec.push_back(&kEnergyScalePi0Syst);
     vec.push_back(&kPi0UncorrFDSyst);
     vec.push_back(&kPi0UncorrNDSyst);
-    // Uncorrelated ND energy scale systs
-    //    UncorrNDSyst HadLin(UncorrNDSyst::kChargedHad, UncorrNDSyst::kLinear);
-    //    UncorrNDSyst Pi0Lin(UncorrNDSyst::kPi0, UncorrNDSyst::kLinear);
-    //    UncorrNDSyst NLin(UncorrNDSyst::kN, UncorrNDSyst::kLinear);
-    //    vec.push_back(&HadLin);
-    //    vec.push_back(&Pi0Lin);
-    //    vec.push_back(&NLin);
+    vec.push_back(&kUncorrNDHadLinSyst);
+    vec.push_back(&kUncorrNDPi0LinSyst);
+    vec.push_back(&kUncorrNDNLinSyst);
 
     return vec;
   }
