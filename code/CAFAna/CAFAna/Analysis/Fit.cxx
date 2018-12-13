@@ -113,11 +113,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
-                                 SystShifts& systSeed,
-                                 Verbosity verb) const
+  ROOT::Minuit2::FunctionMinimum Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
+							 SystShifts& systSeed,
+							 Verbosity verb) const
   {
-
+    
+    // Why, when this is called for each seed?
     fCalc = seed;
     fShifts = systSeed;
 
@@ -148,6 +149,13 @@ namespace ana
 
     ROOT::Minuit2::MnApplication* mnApp = 0;
 
+    // ROOT::Minuit2::MnStrategy strategy(int(fPrec & kAlgoMask));
+    // // Do a scan and pass the minimum back
+    // mnApp = new ROOT::Minuit2::MnScan(*this, mnPars, int(fPrec & kAlgoMask));
+    // ROOT::Minuit2::FunctionMinimum scan_minpt = (*mnApp)();
+    // ROOT::Minuit2::MnUserParameterState mnParState = scan_minpt.UserState();    
+    // delete mnApp;
+    
     if((fPrec & kAlgoMask) == kGradDesc){
       mnApp = new GradientDescent(*this, mnPars);
     }
@@ -168,6 +176,7 @@ namespace ana
         }
         else{
           mnApp = new ROOT::Minuit2::MnMigrad(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec & kAlgoMask));
+	  // mnApp = new ROOT::Minuit2::MnMigrad(*((ROOT::Minuit2::FCNBase*)this), mnParState, strategy);
         }
       }
     }
@@ -176,7 +185,7 @@ namespace ana
     const int olderr = gErrorIgnoreLevel;
     if(verb == kQuiet) gErrorIgnoreLevel = 1001; // Ignore warnings
 
-    ROOT::Minuit2::FunctionMinimum minpt = (*mnApp)();
+    ROOT::Minuit2::FunctionMinimum minpt = (*mnApp)(1e8);
     gErrorIgnoreLevel = olderr;
 
     // Hesse can find a better minimum, so let's do this before panicking
@@ -191,41 +200,8 @@ namespace ana
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
     }
 
-    // Store some basic fit information
-    this->fEdm = minpt.Edm();
-    this->fIsValid = minpt.IsValid();
-      
-    fPostFitValues = minpt.UserParameters().Params();
-    fPostFitErrors = minpt.UserParameters().Errors();
-
-    gErrorIgnoreLevel = olderr;
-    // Store results back to the "seed" variable
-    for(unsigned int i = 0; i < fVars.size(); ++i){
-      fVars[i]->SetValue(seed, fPostFitValues[i]);
-    }
-    // Store systematic results back into "systSeed"
-    for(unsigned int j = 0; j < fSysts.size(); ++j){
-      systSeed.SetShift(fSysts[j], fPostFitValues[fVars.size()+j]);
-    }
-
-    // Store covariances
-    const ROOT::Minuit2::MnUserCovariance mncov = minpt.UserCovariance();
-    // Slightly tedious
-    std::vector<double> covdata = mncov.Data();
-    if (this->fCovar) delete this->fCovar;
-    this->fCovar = new TMatrixDSym(mncov.Nrow());
-
-    for (uint row = 0; row < mncov.Nrow(); ++row){
-      for (uint col = 0; col < mncov.Nrow(); ++col){
-	if (row > col)
-	  (*this->fCovar)(row, col) = covdata[col+row*(row+1)/2];
-	else (*this->fCovar)(row, col) = covdata[row+col*(col+1)/2];
-      }
-    }
-
     delete mnApp;
-
-    return minpt.Fval();
+    return minpt;
   }
 
   //----------------------------------------------------------------------
@@ -244,20 +220,68 @@ namespace ana
       for(auto it: pt.fitvars) it.first->SetValue(seed, it.second);
 
       SystShifts shift = pt.shift;
-      const double chi = FitHelperSeeded(seed, shift, verb);
-      if(chi < minchi){
-        minchi = chi;
-        // Store the best fit values of all the parameters we know are being
-        // varied.
+      
+      ROOT::Minuit2::FunctionMinimum thisMin = FitHelperSeeded(seed, shift, verb);
+
+      // Check whether this is the best minimum we've found so far
+      if (thisMin.Fval() < minchi){
+	minchi = thisMin.Fval();
+
+	// Need to do Prefit here too...
+	fParamNames    .clear();
+	fPreFitValues  .clear();
+	fPreFitErrors  .clear();
+	fPostFitValues .clear();
+	fPostFitErrors .clear();
+
+	// Save pre-fit info	
+	// In principle, these can change with the seed, so have to save them here...
+	for(const IFitVar* v: fVars){
+	  const double val = v->GetValue(seed);
+	  fParamNames  .push_back(v->ShortName());
+	  fPreFitValues.push_back(val);
+	  fPreFitErrors.push_back(val ? val/2 : .1);
+	}
+	for(const ISyst* s: fSysts){
+	  const double val = shift.GetShift(s);
+	  fParamNames  .push_back(s->ShortName());
+	  fPreFitValues.push_back(val);
+	  fPreFitErrors.push_back(1);
+	}
+
+	// Now save postfit
+	fPostFitValues = thisMin.UserParameters().Params();
+	fPostFitErrors = thisMin.UserParameters().Errors();
+
+	this->fEdm = thisMin.Edm();
+	this->fIsValid = thisMin.IsValid();
+	
+	// Store covariances
+	ROOT::Minuit2::MnUserCovariance mncov = thisMin.UserCovariance();
+	
+	// Slightly tedious
+	std::vector<double> covdata = mncov.Data();
+	if (this->fCovar) delete this->fCovar;
+	this->fCovar = new TMatrixDSym(mncov.Nrow());
+	
+	for (uint row = 0; row < mncov.Nrow(); ++row){
+	  for (uint col = 0; col < mncov.Nrow(); ++col){
+	    if (row > col)
+	      (*this->fCovar)(row, col) = covdata[col+row*(row+1)/2];
+	    else (*this->fCovar)(row, col) = covdata[row+col*(col+1)/2];
+	  }
+	}	
+
+        // Store the best fit values of all the parameters we know are being varied.
         bestFitPars.clear();
         bestSystPars.clear();
-        for(const IFitVar* v: fVars)
-          bestFitPars.push_back(v->GetValue(seed));
-        for(const ISyst* s: fSysts)
-          bestSystPars.push_back(shift.GetShift(s));
+	for(unsigned int i = 0; i < fVars.size(); ++i)
+	  bestFitPars.push_back(fPostFitValues[i]);
+	for(unsigned int j = 0; j < fSysts.size(); ++j)
+	  bestSystPars.push_back(fPostFitValues[fVars.size()+j]);
       }
     }
-
+    
     // Stuff the results of the actual best fit back into the seeds
     for(unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(seed, bestFitPars[i]);
