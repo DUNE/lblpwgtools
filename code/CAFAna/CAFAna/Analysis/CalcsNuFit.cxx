@@ -151,12 +151,13 @@ namespace ana
   //----------------------------------------------------------------------
   Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly) : fWeakOnly(weakOnly) {
 
-    fDmsq21 = cvcalc->GetDmsq21();
-    fTh12 = cvcalc->GetTh12();
-    fDmsq32 = cvcalc->GetDmsq32();
-    fTh23 = cvcalc->GetTh23();
-    fTh13 = cvcalc->GetTh13();
-    fRho = cvcalc->GetRho();
+    fDmsq21 = kNuFitDmsq21CV;
+    fTh12 = kNuFitTh12CV;
+    fRho = kEarthDensity;
+
+    fDmsq32 = (hietrue > 0) ? kNuFitDmsq32CVNH : kNuFitDmsq32CVIH;
+    fTh23 = (hietrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
+    fTh13 = (hietrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
 
     //Set the errors by hand for now.
     //Fractional errors in GLoBES convention
@@ -169,7 +170,7 @@ namespace ana
     fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
     fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
 
-    fRhoErr = 0.02*fRho;
+    fRhoErr = 0.02*kEarthDensity;
 
   }
 
