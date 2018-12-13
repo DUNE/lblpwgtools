@@ -16,6 +16,9 @@ namespace ana {
   const UncorrNDHadLinSyst kUncorrNDHadLinSyst;
   const UncorrNDPi0LinSyst kUncorrNDPi0LinSyst;
   const UncorrNDNLinSyst kUncorrNDNLinSyst;
+  const UncorrNDHadSqrtSyst kUncorrNDHadSqrtSyst;
+  const UncorrNDPi0SqrtSyst kUncorrNDPi0SqrtSyst;
+  const UncorrNDNSqrtSyst kUncorrNDNSqrtSyst;
 
   EnergySystVector GetEnergySysts()
   {
@@ -34,6 +37,9 @@ namespace ana {
     vec.push_back(&kUncorrNDHadLinSyst);
     vec.push_back(&kUncorrNDPi0LinSyst);
     vec.push_back(&kUncorrNDNLinSyst);
+    vec.push_back(&kUncorrNDHadSqrtSyst);
+    vec.push_back(&kUncorrNDPi0SqrtSyst);
+    vec.push_back(&kUncorrNDNSqrtSyst);
 
     return vec;
   }

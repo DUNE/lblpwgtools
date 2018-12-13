@@ -14,6 +14,7 @@ namespace ana
 { 
   // Slope energy scale systematics
   // Affect ND only
+  // Charged hadrons
   class UncorrNDHadLinSyst: public ISyst
   {
   public:
@@ -24,7 +25,7 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
-	const double scale = .01 * sigma;
+	const double scale = .05 * sigma;
 	double sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
@@ -34,7 +35,7 @@ namespace ana
 
   extern const UncorrNDHadLinSyst kUncorrNDHadLinSyst;
 
-
+  // Pi0s
   class UncorrNDPi0LinSyst: public ISyst
   {
   public:
@@ -45,7 +46,7 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
-	const double scale = .01 * sigma;
+	const double scale = .05 * sigma;
 	double sumE = sr->dune.ePi0;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
@@ -59,14 +60,14 @@ namespace ana
   class UncorrNDNLinSyst: public ISyst
   {
   public:
-  UncorrNDNLinSyst() : ISyst("UncorrNDNLinSyst", "Uncorrelated ND Linear N Syst") {}
+  UncorrNDNLinSyst() : ISyst("UncorrNDNLinSyst", "Uncorrelated ND Linear Neutron Syst") {}
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
-	const double scale = .01 * sigma;
+	const double scale = .05 * sigma;
 	double visE = 0.25 * sr->dune.eN; // crude approximation
 	const double fracE = visE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * visE * scale * fracE;
@@ -76,6 +77,69 @@ namespace ana
 
   extern const UncorrNDNLinSyst kUncorrNDNLinSyst;
 
+  // Energy scale systematics proportional to 1 / sqrt(E)
+  // Charged hadrons
+  class UncorrNDHadSqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDHadSqrtSyst() : ISyst("UncorrNDHadSqrtSyst", "Uncorrelated ND Inverse Sqrt Hadron Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDHadSqrtSyst kUncorrNDHadSqrtSyst;
+
+  // Pi0s
+  class UncorrNDPi0SqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDPi0SqrtSyst() : ISyst("UncorrNDPi0SqrtSyst", "Uncorrelated ND Inverse Sqrt Pi0 Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double sumE = sr->dune.ePi0;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDPi0SqrtSyst kUncorrNDPi0SqrtSyst;
+
+  // Neutrons
+  class UncorrNDNSqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDNSqrtSyst() : ISyst("UncorrNDNSqrtSyst", "Uncorrelated ND Inverse Sqrt Neutron Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double visE = sr->dune.ePi0 * .25; // crude approximation
+	const double fracE = visE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(visE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDNSqrtSyst kUncorrNDNSqrtSyst;
 
   /// 1% systematic on muon energy for energy deposition in liquid argon
   /// 100% correlated between near and far detectors for those ND events that stop in the LAr
