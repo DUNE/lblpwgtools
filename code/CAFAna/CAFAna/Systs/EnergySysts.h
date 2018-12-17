@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
@@ -524,9 +525,9 @@ namespace ana
 		  sr->dune.Ev_reco_nue,
 		  sr->dune.RecoHadEnNumu,
 		  sr->dune.RecoHadEnNue);
-
-      const double scaleFD = 1 + 0.0125 * sigma;
-      const double scaleND = 1 - 0.0125 * sigma;
+      // +/-1sigmas based upon pre-existing uncorrND and uncorrFD systs
+      const double scaleFD = 1 + 0.01021 * sigma;
+      const double scaleND = 1 - 0.01021 * sigma;
       const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
       // Is FD
       if (sr->dune.isFD) {
@@ -563,9 +564,9 @@ namespace ana
 		  sr->dune.Ev_reco_nue,
 		  sr->dune.RecoHadEnNumu,
 		  sr->dune.RecoHadEnNue);
-
-      const double scaleFD = 1 + (0.05 / 9.) * sigma;
-      const double scaleND = 1 - (0.05 / 9.) * sigma;
+      // +/-1sigmas based upon pre-existing uncorrFD and uncorrND
+      const double scaleFD = 1 + 0.005025 * sigma;
+      const double scaleND = 1 - 0.005025 * sigma;
       const double sumE    = sr->dune.ePi0 + sr->dune.ePip + sr->dune.ePim;
       const double fracE   = sumE / sr->dune.Ev;
       // Is FD
