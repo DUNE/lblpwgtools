@@ -7,8 +7,9 @@ include "syst_list.inc"
 
 
 /* Baseline */
-$profiletype =          1 
-$baseline =             1300
+$profiletype = 3
+$densitytab = {2.848}
+$lengthtab = {1284.9} 
 
 /* Beam data */
 include "./flux/Beam.inc"
