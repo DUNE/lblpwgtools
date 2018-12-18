@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
@@ -11,71 +12,135 @@
 #include <cassert>
 
 namespace ana
-{
-  // Takes the particle type and applies some slope to it or proportional to 1/sqrt(E)
-  class UncorrNDSyst: public ISyst
+{ 
+  // Slope energy scale systematics
+  // Affect ND only
+  // Charged hadrons
+  class UncorrNDHadLinSyst: public ISyst
   {
   public:
-    enum Particle{kChargedHad, kPi0, kN};
-    enum Scale{kLinear, kSqrt};
-  UncorrNDSyst(Particle p, Scale s = kLinear) : ISyst("UncorrNDSyst", "Uncorrelated ND syst") 
-      {
-	assert(p == kChargedHad || p == kPi0 || p == kN);
-	assert(s == kLinear || s == kSqrt);
-	part = p;
-	scale = s;
-      }
-    
-    void SetParticle(Particle p) 
-    {
-      assert(p == kChargedHad || p == kPi0 || p == kN);
-      part = p;
-    }
-
-    void SetScale(Scale s)
-    {
-      assert(s == kLinear || s == kSqrt);
-      scale = s;
-    }
-
+  UncorrNDHadLinSyst() : ISyst("UncorrNDHadLinSyst", "Uncorrelated ND Linear Hadron Syst") {}
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
       restore.Add(sr->dune.Ev_reco);
-
-      double sumE = 0.;
-      const double scale = .01 * sigma;
       if (!sr->dune.isFD) {
-	if (part == kChargedHad) {
-	  sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
-	  const double fracE = sumE / sr->dune.Ev;
-	  if (scale == kLinear) {
-	    sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
-	  }
-	  else if (scale == kSqrt) {
-	    sr->dune.Ev_reco += sr->dune.Ev_reco * (1 / (sumE + 1)) * scale * fracE;
-	  }
-	}
-	else if (part == kPi0) {
-	  sumE = sr->dune.ePi0;
-	  const double fracE = sumE / sr->dune.Ev;
-	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
-	}
-	else if (part == kN) {
-	  sumE = 0.25 * sr->dune.eN;
-	  const double fracE = sumE / sr->dune.Ev;
-	  sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
-	}
-	else {
-	  std::cout<<"Error: UncorrNDSyst not set to a particle type"<<std::endl;
-	}	
+	const double scale = .05 * sigma;
+	double sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
       }
     }
-  private:
-    Particle part;
-    Scale scale;
   };
+
+  extern const UncorrNDHadLinSyst kUncorrNDHadLinSyst;
+
+  // Pi0s
+  class UncorrNDPi0LinSyst: public ISyst
+  {
+  public:
+  UncorrNDPi0LinSyst() : ISyst("UncorrNDPi0LinSyst", "Uncorrelated ND Linear Pi0 Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      if (!sr->dune.isFD) {
+	const double scale = .05 * sigma;
+	double sumE = sr->dune.ePi0;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDPi0LinSyst kUncorrNDPi0LinSyst;
+
+  // Neutron
+  class UncorrNDNLinSyst: public ISyst
+  {
+  public:
+  UncorrNDNLinSyst() : ISyst("UncorrNDNLinSyst", "Uncorrelated ND Linear Neutron Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      if (!sr->dune.isFD) {
+	const double scale = .05 * sigma;
+	double visE = 0.25 * sr->dune.eN; // crude approximation
+	const double fracE = visE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * visE * scale * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDNLinSyst kUncorrNDNLinSyst;
+
+  // Energy scale systematics proportional to 1 / sqrt(E)
+  // Charged hadrons
+  class UncorrNDHadSqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDHadSqrtSyst() : ISyst("UncorrNDHadSqrtSyst", "Uncorrelated ND Inverse Sqrt Hadron Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDHadSqrtSyst kUncorrNDHadSqrtSyst;
+
+  // Pi0s
+  class UncorrNDPi0SqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDPi0SqrtSyst() : ISyst("UncorrNDPi0SqrtSyst", "Uncorrelated ND Inverse Sqrt Pi0 Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double sumE = sr->dune.ePi0;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDPi0SqrtSyst kUncorrNDPi0SqrtSyst;
+
+  // Neutrons
+  class UncorrNDNSqrtSyst: public ISyst
+  {
+  public:
+  UncorrNDNSqrtSyst() : ISyst("UncorrNDNSqrtSyst", "Uncorrelated ND Inverse Sqrt Neutron Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+	double visE = sr->dune.ePi0 * .25; // crude approximation
+	const double fracE = visE / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(visE)+1)) * fracE;
+      }
+    }
+  };
+
+  extern const UncorrNDNSqrtSyst kUncorrNDNSqrtSyst;
 
   /// 1% systematic on muon energy for energy deposition in liquid argon
   /// 100% correlated between near and far detectors for those ND events that stop in the LAr
@@ -240,7 +305,6 @@ namespace ana
 
       const double scale = 1. + 0.01*sigma;
       
-      // TEMPORARY FIX: CHANGE BACK AFTER CAFs HAVE BEEN RERUN
       if(sr->dune.isFD) { 
 	const double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
 
@@ -332,7 +396,6 @@ namespace ana
       double visE = 0.; // neutron visible energy
 
       if(sr->dune.isFD) {
-	// CHANGE THIS ONCE CAFs ARE RERUN
 	visE = sr->dune.eN * .25; // crude assumption
 	
 	double recoNueTmp = sr->dune.RecoHadEnNue;
@@ -445,6 +508,84 @@ namespace ana
   
   extern const Pi0UncorrNDSyst kPi0UncorrNDSyst;
 
+  // Anticorrelated pi0 energy scale systematic (between ND & FD)
+  // For use in combination with the correlated syst
+  // Supercedes Pi0UncorrNDSyst & Pi0UncorrFDSyst
+  class Pi0AnticorrSyst: public ISyst
+  {
+  public:
+  Pi0AnticorrSyst() : ISyst("Pi0AnticorrSyst", "Pi0 Anticorrelated Energy Scale Syst") {}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+		  sr->dune.Ev_reco_numu,
+		  sr->dune.Ev_reco_nue,
+		  sr->dune.RecoHadEnNumu,
+		  sr->dune.RecoHadEnNue);
+      // +/-1sigmas based upon pre-existing uncorrND and uncorrFD systs
+      const double scaleFD = 1 + 0.01021 * sigma;
+      const double scaleND = 1 - 0.01021 * sigma;
+      const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
+      // Is FD
+      if (sr->dune.isFD) {
+	const double fracPi0Y  = sr->dune.ePi0 / (sr->dune.Ev * sr->dune.Y);
+	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracPi0 * scaleFD + (1 - fracPi0));
+	sr->dune.Ev_reco_nue   = sr->dune.Ev_reco_nue * (fracPi0 * scaleFD + (1 - fracPi0));
+	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scaleFD + (1 - fracPi0Y));
+	sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPi0Y * scaleFD + (1 - fracPi0Y));
+      }
+      // Is ND
+      else {
+	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scaleND + (1 - fracPi0));
+      }
+    }
+  };
+
+  extern const Pi0AnticorrSyst kPi0AnticorrSyst;
+
+
+  // Anticorrelated charged hadron energy scale systematic (between ND & FD)
+  // For use in combination with the correlated syst
+  // Supercedes ChargedHadUncorrNDSyst & ChargedHadUncorrFDSyst
+  class ChargedHadAnticorrSyst: public ISyst
+  {
+  public:
+  ChargedHadAnticorrSyst() : ISyst("ChargedHadAnticorrSyst", "Charged Hadron Anticorrelated Energy Scale Syst") {}
+
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+		  sr->dune.Ev_reco_numu,
+		  sr->dune.Ev_reco_nue,
+		  sr->dune.RecoHadEnNumu,
+		  sr->dune.RecoHadEnNue);
+      // +/-1sigmas based upon pre-existing uncorrFD and uncorrND
+      const double scaleFD = 1 + 0.005025 * sigma;
+      const double scaleND = 1 - 0.005025 * sigma;
+      const double sumE    = sr->dune.ePi0 + sr->dune.ePip + sr->dune.ePim;
+      const double fracE   = sumE / sr->dune.Ev;
+      // Is FD
+      if (sr->dune.isFD) {
+	const double fracEY    = sumE / (sr->dune.Ev * sr->dune.Y);
+	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracE * scaleFD + (1 - fracE));
+	sr->dune.Ev_reco_nue   = sr->dune.Ev_reco_nue * (fracE * scaleFD + (1 - fracE));
+	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracEY * scaleFD + (1 - fracEY));
+	sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracEY * scaleFD + (1 - fracEY));
+      }
+      // Is ND
+      else {
+	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scaleND + (1 - fracE));
+      }
+    }
+  };
+
+  extern const ChargedHadAnticorrSyst kChargedHadAnticorrSyst;
+
   // Vector of energy scale systematics
   struct EnergySystVector: public std::vector<const ISyst*>
   {
@@ -455,6 +596,7 @@ namespace ana
     }
     */
   };
+
 
   EnergySystVector GetEnergySysts();
 

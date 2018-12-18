@@ -8,6 +8,7 @@
 #include "Minuit2/MnMinimize.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnMinos.h"
+#include "Minuit2/MnScan.h"
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/FunctionMinimum.h"
@@ -146,9 +147,9 @@ namespace ana
                                     std::vector<SystShifts> systSeedPts) const;
 
     /// Helper for \ref FitHelper
-    double FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
-                           SystShifts& systSeed,
-                           Verbosity verb) const;
+    ROOT::Minuit2::FunctionMinimum FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
+						   SystShifts& systSeed,
+						   Verbosity verb) const;
 
     /// Helper for \ref Fit
     double FitHelper(osc::IOscCalculatorAdjustable* seed,
