@@ -4,13 +4,13 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Cuts/AnaCuts.h"
+
+#include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
-#include "TH1.h"
 #include "TH2.h"
-#include "TRandom3.h"
 
 #include <cassert>
 
@@ -35,7 +35,7 @@ namespace ana {
 	assert(hist);
       }
       // Passes FD selection cut
-      if (sr->dune.isFD && sr->dune.cvnnumu >= 0.5) {
+      if (sr->dune.isFD && kPassFD_CVN_NUMU(sr)) {
 	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
 	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
 	double w   = hist->GetBinContent(EBin, VarBin);
@@ -69,7 +69,7 @@ namespace ana {
 	assert(hist);
       }
       // Passes FD nue selection
-      if (sr->dune.isFD && sr->dune.cvnnue >= 0.5) {
+      if (sr->dune.isFD && kPassFD_CVN_NUE(sr)) {
 	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
 	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
 	double w   = hist->GetBinContent(EBin, VarBin);
