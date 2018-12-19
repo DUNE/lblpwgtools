@@ -26,9 +26,6 @@ namespace ana
     double GetShift(const ISyst* syst) const;
     void ResetToNominal();
 
-    /// Penalty term for chi-squared fits
-    double Penalty() const;
-
     void Shift(Restorer& restore,
                caf::StandardRecord* sr,
                double& weight) const;

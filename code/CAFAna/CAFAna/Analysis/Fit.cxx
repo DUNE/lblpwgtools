@@ -138,8 +138,6 @@ namespace ana
       const double val = systSeed.GetShift(s);
       // name, value, error
       mnPars.Add(s->ShortName(), val, 1);
-      // Add a limit on each
-      mnPars.SetLimits(mnPars.Params().size()-1, s->Min(), s->Max());
       fParamNames  .push_back(s->ShortName());
       fPreFitValues.push_back(val);
       fPreFitErrors.push_back(1);
@@ -389,14 +387,17 @@ namespace ana
 
     DecodePars(pars); // Updates fCalc and fShifts
 
-    // Have to re-fetch the FitVar values because DecodePars() will have
-    // truncated values to the physical range where necessary.
+    // Have to re-fetch the values because DecodePars() will have truncated
+    // values to the physical range where necessary.
     double penalty = 0;
     for(unsigned int i = 0; i < fVars.size(); ++i){
       penalty += fVars[i]->Penalty(pars[i], fCalc);
     }
+    for(unsigned int j = 0; j < fSysts.size(); ++j){
+      penalty += fSysts[j]->Penalty(pars[fVars.size()+j]);
+    }
 
-    return fExpt->ChiSq(fCalc, fShifts) + penalty + fShifts.Penalty();
+    return fExpt->ChiSq(fCalc, fShifts) + penalty;
   }
 
   //----------------------------------------------------------------------

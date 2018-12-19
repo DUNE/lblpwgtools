@@ -35,8 +35,11 @@ namespace ana
   {
     fID = fgNextID++;
 
+    // Clamp into allowed range
+    const double x = std::min(std::max(shift, syst->Min()), syst->Max());
+
     fSysts.erase(syst);
-    if(shift != 0) fSysts.emplace(syst, shift);
+    if(shift != 0) fSysts.emplace(syst, x);
   }
 
   //----------------------------------------------------------------------
@@ -54,19 +57,6 @@ namespace ana
     fID = 0;
 
     fSysts.clear();
-  }
-
-  //----------------------------------------------------------------------
-  double SystShifts::Penalty() const
-  {
-    double ret = 0;
-    // Systematics are all expressed in terms of sigmas
-    for(auto it: fSysts) {
-      // Only apply a penalty for systematics where this has been requested
-      if (it.first->ApplyPenalty())
-	ret += util::sqr(it.second);
-    }
-    return ret;
   }
 
   //----------------------------------------------------------------------
