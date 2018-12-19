@@ -431,10 +431,11 @@ namespace ana
     for(const ISyst* s: fSysts) dchi[s] = 0;
     fExpt->Derivative(fCalc, fShifts, dchi);
 
-    for(unsigned int i = 0; i < fSysts.size(); ++i){
-      // Include the derivative of the penalty terms too. TODO this is only
-      // right for quadratic penalties (ie all the currently existing ones)
-      ret[fVars.size()+i] = dchi[fSysts[i]] + 2*fShifts.GetShift(fSysts[i]);
+    for(unsigned int j = 0; j < fSysts.size(); ++j){
+      // Get the un-truncated systematic shift
+      const double x = pars[fVars.size()+j];
+
+      ret[fVars.size()+j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
     }
 
     return ret;
