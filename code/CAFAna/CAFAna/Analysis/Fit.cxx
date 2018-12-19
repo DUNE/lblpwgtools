@@ -407,8 +407,6 @@ namespace ana
 
     std::vector<double> ret(pars.size());
 
-    // TODO handling of FitVars including penalty terms
-
     if(!fVars.empty()){
       // Have to use finite differences to calculate these derivatives
       const double dx = 1e-9;
