@@ -44,9 +44,7 @@ namespace ana
       const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
       const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
 
-      for(int x = x0; x <= x1; ++x){
-        sp.shifts.push_back(x);
-      }
+      for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
 
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
@@ -630,9 +628,16 @@ namespace ana
 
         if(std::find(veto.begin(), veto.end(), syst) != veto.end()) continue;
 
-        for(int shift = -3; shift <= +3; ++shift){
+        // Use whichever of these gives the most restrictive range
+        const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
+        const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
+
+        for(int shift = x0; shift <= x1; ++shift){
           TDirectory* preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
-          if(!preddir) continue; // Can happen for genie systs
+          if(!preddir){
+            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in " << dir->GetName() << std::endl;
+            continue;
+          }
 
           IPrediction* pred = ana::LoadFrom<IPrediction>(preddir).release();
 
