@@ -40,7 +40,11 @@ namespace ana
       ShiftedPreds sp;
       sp.systName = syst->ShortName();
 
-      for(int x = -syst->PredInterpMaxNSigma(); x <= +syst->PredInterpMaxNSigma(); ++x){
+      // Use whichever of these gives the most restrictive range
+      const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
+      const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
+
+      for(int x = x0; x <= x1; ++x){
         sp.shifts.push_back(x);
       }
 
