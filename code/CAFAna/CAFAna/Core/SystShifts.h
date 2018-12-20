@@ -42,6 +42,11 @@ namespace ana
   protected:
     std::unordered_map<const ISyst*, double> fSysts;
 
+    double Clamp(double x, const ISyst* s)
+    {
+      return std::min(std::max(x, s->Min()), s->Max());
+    }
+
     int fID;
     /// The next unused ID
     static int fgNextID;

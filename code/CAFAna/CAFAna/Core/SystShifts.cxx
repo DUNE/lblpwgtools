@@ -20,14 +20,14 @@ namespace ana
   SystShifts::SystShifts(const ISyst* syst, double shift)
     : fID(fgNextID++)
   {
-    if(shift != 0) fSysts.emplace(syst, shift);
+    if(shift != 0) fSysts.emplace(syst, Clamp(shift, syst));
   }
 
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst*, double>& shifts)
     : fID(fgNextID++)
   {
-    for(auto it: shifts) if(it.second != 0) fSysts.emplace(it.first, it.second);
+    for(auto it: shifts) if(it.second != 0) fSysts.emplace(it.first, Clamp(it.second, it.first));
   }
 
   //----------------------------------------------------------------------
@@ -35,11 +35,8 @@ namespace ana
   {
     fID = fgNextID++;
 
-    // Clamp into allowed range
-    const double x = std::min(std::max(shift, syst->Min()), syst->Max());
-
     fSysts.erase(syst);
-    if(shift != 0) fSysts.emplace(syst, x);
+    if(shift != 0) fSysts.emplace(syst, Clamp(shift, syst));
   }
 
   //----------------------------------------------------------------------
