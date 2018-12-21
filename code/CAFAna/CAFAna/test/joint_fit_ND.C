@@ -124,17 +124,13 @@ void joint_fit_ND(bool reload = false)
     auto* loaderFDNueRHCNuTau = loaderFDNueRHC.LoaderForRunPOT(20000006);
     auto* loaderFDNueRHCNC    = loaderFDNueRHC.LoaderForRunPOT(0);
 
-    NoOscPredictionGenerator genNDFHC(*loaderNDFHCPOT,
-                                      axis,
-                                      kPIDmu > 0.5 && kQ < 0.);
+    NoOscPredictionGenerator genNDFHC(axis, kPIDmu > 0.5 && kQ < 0.);
     PredictionInterp predNDFHC(allSysts,
                                0,
                                genNDFHC,
                                dummyLoaders);
 
-    NoOscPredictionGenerator genNDRHC(*loaderNDRHCPOT,
-                                      axis,
-                                      kPIDmu > 0.5 && kQ > 0.);
+    NoOscPredictionGenerator genNDRHC(axis, kPIDmu > 0.5 && kQ > 0.);
     PredictionInterp predNDRHC(allSysts,
                                0,
                                genNDRHC,

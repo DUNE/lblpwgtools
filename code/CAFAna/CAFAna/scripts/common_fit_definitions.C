@@ -99,13 +99,10 @@ PredictionNoExtrap FD_predRHCNue (FD_loaderRHCNumu, FD_loaderRHCNue, FD_loaderRH
 // ND predictions
 SpectrumLoader ND_loaderFHC("/dune/data/users/marshalc/CAFs/mcc11_v2/ND_FHC_CAF.root", kBeam); //,1e5);
 SpectrumLoader ND_loaderRHC("/dune/data/users/marshalc/CAFs/mcc11_v2/ND_RHC_CAF.root", kBeam); //,1e5);
-PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
-PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoOsc ND_predFHC(axErecYrecND, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
+PredictionNoOsc ND_predRHC(axErecYrecND, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 // PredictionNoOsc ND_predFHC(ND_loaderFHC, axErecNPions, kPassND_FHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
 // PredictionNoOsc ND_predRHC(ND_loaderRHC, axErecNPions, kPassND_RHC_NUMU && kIsTrueFV, kNoShift, kGENIEWeights);
-
-// For the ND prediction generator
-Loaders dummyLoaders;
 
 // To get the oscillation probabilities
 osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
@@ -188,17 +185,21 @@ std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string file
   if(reload || TFile(fileName.c_str()).IsZombie()){
     
     // Need to start some loaders
-    Loaders FD_FHC_loaders;
-    Loaders FD_RHC_loaders;
+    Loaders FHC_loaders;
+    Loaders RHC_loaders;
     
     // Now fill the loaders
-    FD_FHC_loaders .AddLoader(&FD_loaderFHCNumu,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_FHC_loaders .AddLoader(&FD_loaderFHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_FHC_loaders .AddLoader(&FD_loaderFHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    FHC_loaders .AddLoader(&FD_loaderFHCNumu,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
+    FHC_loaders .AddLoader(&FD_loaderFHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
+    FHC_loaders .AddLoader(&FD_loaderFHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
 
-    FD_RHC_loaders .AddLoader(&FD_loaderRHCNumu,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_RHC_loaders .AddLoader(&FD_loaderRHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_RHC_loaders .AddLoader(&FD_loaderRHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    FHC_loaders .AddLoader(&ND_loaderFHC, caf::kNEARDET, Loaders::kMC);
+
+    RHC_loaders .AddLoader(&FD_loaderRHCNumu,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
+    RHC_loaders .AddLoader(&FD_loaderRHCNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
+    RHC_loaders .AddLoader(&FD_loaderRHCNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+
+    RHC_loaders .AddLoader(&ND_loaderRHC, caf::kNEARDET, Loaders::kMC);
 
     NoExtrapPredictionGenerator genFDNumuFHC(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
 
@@ -218,38 +219,36 @@ std::vector<unique_ptr<PredictionInterp> > GetPredictionInterps(std::string file
     PredictionInterp predInterpFDNumuFHC(systlist,
 					 this_calc, 
 					 genFDNumuFHC, 
-					 FD_FHC_loaders);
+					 FHC_loaders);
     
     PredictionInterp predInterpFDNumuRHC(systlist,
 					 this_calc, 
 					 genFDNumuRHC, 
-					 FD_RHC_loaders);
+					 RHC_loaders);
     
     PredictionInterp predInterpFDNueFHC(systlist,
 					this_calc, 
 					genFDNueFHC, 
-					FD_FHC_loaders);
+					FHC_loaders);
       
     PredictionInterp predInterpFDNueRHC(systlist,
 					this_calc, 
 					genFDNueRHC, 
-					FD_RHC_loaders);
+					RHC_loaders);
 
     PredictionInterp predInterpNDNumuFHC(systlist,
 					 this_calc,
 					 genNDNumuFHC,
-					 dummyLoaders);
+					 FHC_loaders);
 
     PredictionInterp predInterpNDNumuRHC(systlist,
 					 this_calc,
 					 genNDNumuRHC,
-					 dummyLoaders);
+					 RHC_loaders);
 
     // Start all of the loaders
-    ND_loaderFHC  .Go();
-    ND_loaderRHC  .Go();
-    FD_FHC_loaders.Go();
-    FD_RHC_loaders.Go();
+    FHC_loaders.Go();
+    RHC_loaders.Go();
     
     TFile fout(fileName.c_str(), "RECREATE");
     std::cout << "Saving FD FHC numu" << std::endl;

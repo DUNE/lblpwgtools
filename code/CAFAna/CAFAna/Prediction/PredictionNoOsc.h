@@ -1,10 +1,10 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
+#include "CAFAna/Core/Loaders.h"
+
 namespace ana
 {
-  class Loaders;
-
   /// Prediction that wraps a simple Spectrum
   class PredictionNoOsc: public IPrediction
   {
@@ -61,24 +61,24 @@ namespace ana
   class NoOscPredictionGenerator: public IPredictionGenerator
   {
   public:
-    NoOscPredictionGenerator(SpectrumLoaderBase& loader,
-                             HistAxis axis,
+    NoOscPredictionGenerator(HistAxis axis,
                              Cut cut,
 			     Var wei = kUnweighted)
-      : fLoader(loader), fAxis(axis), fCut(cut), fWei(wei)
+      : fAxis(axis), fCut(cut), fWei(wei)
     {
     }
 
     virtual std::unique_ptr<IPrediction>
     Generate(Loaders& loaders, const SystShifts& shiftMC = kNoShift) const override
     {
-      return std::unique_ptr<IPrediction>(new PredictionNoOsc(fLoader,
+      SpectrumLoaderBase& loader = loaders.GetLoader(caf::kNEARDET,
+                                                     Loaders::kMC);
+      return std::unique_ptr<IPrediction>(new PredictionNoOsc(loader,
                                                               fAxis,
                                                               fCut,
                                                               shiftMC, fWei));
     }
   protected:
-    SpectrumLoaderBase& fLoader;
     HistAxis fAxis;
     Cut fCut;
     Var fWei;
