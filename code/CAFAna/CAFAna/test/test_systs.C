@@ -88,17 +88,19 @@ void test_systs(bool nd = false, bool reload = false)
   gPad->Print("test_systs.pdf[");
 
   for(const ISyst* s: systs){
-    Spectrum up = pred->PredictSyst(calc, SystShifts(s, +1));
-    Spectrum dn = pred->PredictSyst(calc, SystShifts(s, -1));
+    for(int sigma = 1; sigma <= 3; ++sigma){
+      Spectrum up = pred->PredictSyst(calc, SystShifts(s, +sigma));
+      Spectrum dn = pred->PredictSyst(calc, SystShifts(s, -sigma));
 
-    Ratio rup(up, nom);
-    Ratio rdn(dn, nom);
+      Ratio rup(up, nom);
+      Ratio rdn(dn, nom);
 
-    TH1* hup = rup.ToTH1(kRed);
-    hup->Draw("hist");
-    hup->SetTitle(s->LatexName().c_str());
-    hup->GetYaxis()->SetRangeUser(.8, 1.2);
-    rdn.ToTH1(kBlue)->Draw("hist same");
+      TH1* hup = rup.ToTH1(kRed+sigma-1);
+      hup->Draw(sigma == 1 ? "hist" : "hist same");
+      hup->SetTitle(s->LatexName().c_str());
+      hup->GetYaxis()->SetRangeUser(.8, 1.2);
+      rdn.ToTH1(kBlue+sigma-1)->Draw("hist same");
+    }
 
     gPad->Print("test_systs.pdf");
   }
