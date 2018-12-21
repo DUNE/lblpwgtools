@@ -325,7 +325,7 @@ namespace ana
   class ChargedHadUncorrNDSyst: public ISyst
   {
   public:
-  ChargedHadUncorrNDSyst() : ISyst("ChargedHadUncorrND", "Charged Hadron Uncorrelated ND Syst") {}
+    ChargedHadUncorrNDSyst() : ISyst("ChargedHadUncorrND", "Charged Hadron Uncorrelated ND Syst") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
@@ -350,13 +350,13 @@ namespace ana
   class NUncorrNDSyst: public ISyst
   {
   public:
-  NUncorrNDSyst() : ISyst("eScaleN_ND", "Neutron Energy Scale ND") {}
+    NUncorrNDSyst() : ISyst("eScaleN_ND", "Neutron Energy Scale ND") {}
 
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco);
+      restore.Add(sr->dune.Ev_reco, sr->dune.Ev_reco_numu, sr->dune.Ev_reco_nue);
 
       const double scale = .20 * sigma;
 
