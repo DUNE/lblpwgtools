@@ -55,8 +55,29 @@ void res(string paramname)
 {
   rootlogon(); // style
 
+  int parcode; // 0=dcp, 1=th12, 2=th23, 3=dm2
+  double dcpstep = 1;
+  double dcplo = -999;
+  int nstep = 1;
+
   if (paramname == "dcp") {
     std::cout << "Fitting deltaCP resolution" << std::endl;
+    dcpstep = 2*TMath::Pi()/36;
+    dcplo = -TMath::Pi();
+    nstep = 37;
+    parcode = 0;
+  }
+  else if (paramname == "th13") {
+    std::cout << "Fitting theta13 resolution" << std::endl;
+    parcode = 1;
+  }
+  else if (paramname == "th23") {
+    std::cout << "Fitting theta23 resolution" << std::endl;
+    parcode = 2;
+  }
+  else if (paramname == "Dmsq") {
+    std::cout << "Fitting Dmsq32 resolution" << std::endl;
+    parcode = 3;
   }
   else {
     std::cout << "Parameter " << paramname << " not supported" << std::endl;
@@ -100,15 +121,22 @@ void res(string paramname)
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
     bool oscvar = true;
-    double dcpstep = 2*TMath::Pi()/36;
     double thisdcp;
-    for(double idcp = 0; idcp < 37; ++idcp) {
-	
-      thisdcp = -TMath::Pi() + idcp*dcpstep;
-      //std::cout << idcp << " " << thisdcp << std::endl;
+    for(int idcp = 0; idcp < nstep; ++idcp) {
 	
       osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
-      trueOsc->SetdCP(thisdcp);
+
+      // Set dcp value. Note for all except dcp resolution scan, leave this at nominal value from fit.
+      // Could also run at zero, which is what has been done before...
+      if (parcode==0) {
+	thisdcp = dcplo + idcp*dcpstep;
+	trueOsc->SetdCP(thisdcp);
+      }
+      else {
+	thisdcp = trueOsc->GetdCP();
+	//thisdcp = 0.0;
+	//trueOsc->SetdCP(thisdcp);
+      }
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment app_expt_fhc_syst(&predInt_FDNueFHC, data_nue_fhc_syst);
@@ -126,34 +154,91 @@ void res(string paramname)
       SingleSampleExperiment dis_expt_rhc_syst(&predInt_FDNumuRHC, data_numu_rhc_syst);
       dis_expt_rhc_syst.SetMaskHist(0.5,8.0);
 
-      std::vector<const IFitVar*> oscVars =
-	{&kFitDmSq32Scaled, &kFitSinSqTheta23,
-	 &kFitTheta13, &kFitRho};
+      double pmin, pmax, funclo, funchi, thispar;
+      std::vector<const IFitVar*> oscVars;      
+      bool arg1 = false, arg2=false, arg3= false, arg4=false;
+      double prec1 = 1e-5, prec2 = 1e-7;
+      if (parcode == 0) {
+	oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13, &kFitRho};
+	pmin = thisdcp-TMath::Pi()/2;
+	pmax = thisdcp+TMath::Pi()/2;
+	funclo = -1.5*TMath::Pi();
+	funchi = 1.5*TMath::Pi();
+	thispar = thisdcp;
+      }
+      else if (parcode == 1) {
+	oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitDeltaInPiUnits, &kFitRho};
+	thispar = trueOsc->GetTh13() ;
+	pmin =  thispar - 1*TMath::Pi()/180;
+	pmax = thispar + 1*TMath::Pi()/180;
+	funclo = pmin - 0.5*TMath::Pi()/180;
+	funchi = pmax + 0.5*TMath::Pi()/180;
+	arg2 = true; //turn off external constrain on th13
+      }
+      else if (parcode == 2) {
+	oscVars = {&kFitDmSq32Scaled, &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
+	thispar = trueOsc->GetTh23() ;
+	pmin =  thispar - 1*TMath::Pi()/180;
+	pmax = thispar + 1*TMath::Pi()/180;
+	funclo = pmin - 0.5*TMath::Pi()/180;
+	funchi = pmax + 0.5*TMath::Pi()/180;
+	arg3 = true; //turn off external constrain on th23
+      }
+      else if (parcode == 3) {
+	oscVars = {&kFitSinSqTheta23, &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
+	thispar = trueOsc->GetDmsq32() ;
+	pmin =  thispar - 2e-5;
+	pmax = thispar + 2e-5;
+	funclo = pmin - 1e-5;
+	funchi = pmax + 1e-5;
+	arg4 = true; //turn off external constrain on Dmsq
+	prec1 = 1e-7;
+	prec2 = 1e-9;
+      }
 
-      double pmin = thisdcp-TMath::Pi()/2;
-      double pmax = thisdcp+TMath::Pi()/2;
       osc::IOscCalculatorAdjustable* testOsc = trueOsc->Copy();
       osc::IOscCalculatorAdjustable* cvcalc = trueOsc->Copy();
-      Penalizer_GlbLike penalty(cvcalc,hie);
+      Penalizer_GlbLike penalty(cvcalc,hie,arg1,arg2,arg3,arg4);
       MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
+
       Fitter fit_syst(&full_expt_syst, oscVars, systlist);
-      Resolution *res = new Resolution(fit_syst, testOsc);
-      TF1 *f = new TF1("f",res,&Resolution::FitResult,-1.5*TMath::Pi(),1.5*TMath::Pi(),0,"Resolution","FitResult"); 
+      Resolution *res = new Resolution(fit_syst, testOsc, parcode);
+      TF1 *f = new TF1("f",res,&Resolution::FitResult,funclo,funchi,0,"Resolution","FitResult"); 
+
       ROOT::Math::WrappedTF1 wf1(*f);
       ROOT::Math::BrentRootFinder brf_up;
       ROOT::Math::BrentRootFinder brf_down;
-      brf_up.SetFunction( wf1, thisdcp, pmax);
+      brf_up.SetFunction( wf1, thispar, pmax);
       brf_up.SetNpx(15);
-      brf_up.Solve(100,1e-5,1e-7);
+      brf_up.Solve(100,prec1,prec2);
       double root_up = brf_up.Root();
 
-      brf_down.SetFunction( wf1, pmin, thisdcp);
+      brf_down.SetFunction( wf1, pmin, thispar);
       brf_down.SetNpx(15);
-      brf_down.Solve(100,1e-5,1e-7);
+      brf_down.Solve(100,prec1,prec2);
       double root_down = brf_down.Root();
 
-      std::cout << thisdcp << " " << TMath::Abs(root_down-thisdcp)*180/TMath::Pi() << " " << TMath::Abs(root_up-thisdcp)*180/TMath::Pi() << std::endl;
-      double result = (TMath::Abs(root_down-thisdcp)+TMath::Abs(root_up-thisdcp))*180/TMath::Pi()/2;
+      double result;
+      if (parcode==0) {
+	std::cout << thisdcp << " " << TMath::Abs(root_down-thisdcp)*180/TMath::Pi() << " " << TMath::Abs(root_up-thisdcp)*180/TMath::Pi() << std::endl;
+	result = (TMath::Abs(root_down-thisdcp)+TMath::Abs(root_up-thisdcp))*180/TMath::Pi()/2;
+      }
+      else if (parcode==1) {
+	double diffavg = (TMath::Abs(root_down-thispar)+TMath::Abs(root_up-thispar))/2;
+	result = TMath::Sin(2*(thispar+diffavg))*TMath::Sin(2*(thispar+diffavg)) - TMath::Sin(2*thispar)*TMath::Sin(2*thispar);
+	std::cout << thisdcp << " " << thispar << " " << TMath::Abs(root_down-thispar) << " " << TMath::Abs(root_up-thispar) << " " << result << std::endl;
+      }
+      else if (parcode==2) {
+	double diffavg = (TMath::Abs(root_down-thispar)+TMath::Abs(root_up-thispar))/2;
+	result = TMath::Sin(thispar+diffavg)*TMath::Sin(thispar+diffavg) - TMath::Sin(thispar)*TMath::Sin(thispar);
+	std::cout << thisdcp << " " << thispar << " " << TMath::Abs(root_down-thispar) << " " << TMath::Abs(root_up-thispar) << " " << result << std::endl;
+      }
+      else if (parcode==3) {
+	double diffavg = (TMath::Abs(root_down-thispar)+TMath::Abs(root_up-thispar))/2;
+	result = diffavg*1e5;
+	std::cout << thisdcp << " " << thispar << " " << TMath::Abs(root_down-thispar) << " " << TMath::Abs(root_up-thispar) << " " << result << std::endl;
+      }
+
       if (hie > 0) {
 	gRes_NH->SetPoint(gRes_NH->GetN(), thisdcp/TMath::Pi(),result);
       }

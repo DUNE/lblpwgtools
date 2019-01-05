@@ -149,7 +149,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly) : fWeakOnly(weakOnly) {
+  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly,
+				       bool noTh13, bool noTh23, bool noDmsq) : fWeakOnly(weakOnly), fnoTh13(noTh13),
+										fnoTh23(noTh23), fnoDmsq(noDmsq){
 
     fDmsq21 = kNuFitDmsq21CV;
     fTh12 = kNuFitTh12CV;
@@ -186,11 +188,11 @@ namespace ana
       util::sqr((calc->GetRho() - fRho)/fRhoErr);
 
     // if fWeakOnly is set, only apply a constraint to the parameter we can only weakly constrain in DUNE
-    if (!fWeakOnly)
-      ret +=
-	util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err) +
-	util::sqr((calc->GetTh23() - fTh23)/fTh23Err) +
-	util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
+    if (!fWeakOnly) {
+      if (!fnoDmsq) ret += util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err);
+      if (!fnoTh23) ret += util::sqr((calc->GetTh23() - fTh23)/fTh23Err);
+      if (!fnoTh13) ret += util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
+    }
 
     // No term in delta
 

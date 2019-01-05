@@ -74,7 +74,7 @@ namespace ana
   class Penalizer_GlbLike: public IExperiment
   {
   public:
-    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly=false);
+    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly=false, bool noTh13=false, bool noTh23=false, bool noDmsq=false);
 
     double Dmsq21CV() const {return fDmsq21;}
     double Th12CV() const {return fTh12;}
@@ -118,7 +118,11 @@ namespace ana
   private:
     // Okay, I'm bad at naming things. This is a flag to apply a penalty to all parameters
     // or only those that are weakly constained in DUNE (12 sector, rho)
+    // Adding options to remove individual constraints for parameter fits
     bool fWeakOnly;
+    bool fnoTh13;
+    bool fnoTh23;
+    bool fnoDmsq;
   };
 
 }

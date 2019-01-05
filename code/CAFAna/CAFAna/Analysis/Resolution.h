@@ -10,10 +10,11 @@ namespace ana
 
   class Resolution{
   public:
-    Resolution(Fitter myfit, osc::IOscCalculatorAdjustable* testOsc);
+    Resolution(Fitter myfit, osc::IOscCalculatorAdjustable* testOsc, int which);
     double FitResult(double *thisparam, double *dummy);
  private:
   Fitter fmyfit;
   osc::IOscCalculatorAdjustable* ftestOsc;
+  int fwhich; //defines projection 0=dcp, 1=th12, 2=th23, 3=dm2
   };
 }
