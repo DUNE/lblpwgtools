@@ -81,13 +81,14 @@ void cpv()
 
   TFile* fout = new TFile(outputFname, "RECREATE");
 
+  TGraph* gCPV_NH = new TGraph();
+  TGraph* gCPV_IH = new TGraph();
+
   for(int hie = -1; hie <= +1; hie += 2){
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
     bool oscvar = true;
     double dcpstep = 2*TMath::Pi()/36;
-    TGraph* gCPV_NH = new TGraph();
-    TGraph* gCPV_IH = new TGraph();
     double thisdcp;
     for(double idcp = 0; idcp < 37; ++idcp) {
 	
@@ -143,7 +144,7 @@ void cpv()
 	      continue; //etw figure out how to do this
 	    }
 	    else {
-	      thischisq = fit_syst.Fit(testOsc);
+	      thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
 	    }
 	    chisqmin = TMath::Min(thischisq,chisqmin);
 	  }
@@ -159,15 +160,8 @@ void cpv()
 	gCPV_IH->SetPoint(gCPV_IH->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));
       }
     }
-
-    if (hie > 0) {
-      gCPV_NH->Draw("ALP");
-      gCPV_NH->Write("sens_cpv_nh");
-    }
-    else {
-      gCPV_IH->Draw("ALP");
-      gCPV_IH->Write("sens_cpv_ih");
-    }
   }
+  gCPV_NH->Write("sens_cpv_nh");
+  gCPV_IH->Write("sens_cpv_ih");
   fout->Close();
 }

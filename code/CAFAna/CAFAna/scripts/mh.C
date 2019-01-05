@@ -79,12 +79,12 @@ void mh()
 
   TFile* fout = new TFile(outputFname, "RECREATE");
 
+  TGraph* gMH_NH = new TGraph();
+  TGraph* gMH_IH = new TGraph();
   for(int hie = -1; hie <= +1; hie += 2){
 
     bool oscvar = true;
     double dcpstep = 2*TMath::Pi()/36;
-    TGraph* gMH_NH = new TGraph();
-    TGraph* gMH_IH = new TGraph();
     double thisdcp;
 
     for(double idcp = 0; idcp < 37; ++idcp) {
@@ -136,7 +136,7 @@ void mh()
 	  continue; //etw figure out how to do this
 	}
 	else {
-	  thischisq = fit_syst.Fit(testOsc);
+	  thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
 	}
 
 	chisqmin = TMath::Min(thischisq,chisqmin);
@@ -151,15 +151,8 @@ void mh()
 	gMH_IH->SetPoint(gMH_IH->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));
       }
     }
-
-    if (hie > 0) {
-      gMH_NH->Draw("ALP");
-      gMH_NH->Write("sens_mh_nh");
-    }
-    else {
-      gMH_IH->Draw("ALP");
-      gMH_IH->Write("sens_mh_ih");
-    }
   }
+  gMH_NH->Write("sens_mh_nh");
+  gMH_IH->Write("sens_mh_ih");
   fout->Close();
 }
