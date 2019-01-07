@@ -127,9 +127,9 @@ void make_ratio_plot(TFile* f, const char* nomname, const char* denomname, const
 }
 // Makes all the relevant systematics plots
 // Current location /pnfs/dune/persistent/users/marshalc/modelComp/
-void make_FD_reco_systs(const char* geniefile, const char* neutfile) {
-  TFile *gfile = new TFile(geniefile, "read");
-  TFile *nfile = new TFile(neutfile, "read");
+void make_FD_reco_systs() {
+  TFile *gfile = new TFile("/pnfs/dune/persistent/users/marshalc/modelComp/GENIE_ntuple.root", "read");
+  TFile *nfile = new TFile("/pnfs/dune/persistent/users/marshalc/modelComp/NEUT_ntuple.root", "read");
   TTree *neutTreefhc = (TTree*)nfile->Get("NEUT_FHC");
   TTree *neutTreerhc = (TTree*)nfile->Get("NEUT_RHC");
   TTree *genieTreefhc = (TTree*)gfile->Get("GENIE_FHC");
