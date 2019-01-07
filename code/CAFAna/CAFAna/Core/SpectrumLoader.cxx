@@ -205,6 +205,12 @@ namespace ana
     tr->SetBranchAddress("ePim", &sr.dune.ePim);
     tr->SetBranchAddress("ePi0", &sr.dune.ePi0);
     tr->SetBranchAddress("eOther", &sr.dune.eOther);
+    tr->SetBranchAddress("eRecoP", &sr.dune.eRecoP);
+    tr->SetBranchAddress("eRecoN", &sr.dune.eRecoN);
+    tr->SetBranchAddress("eRecoPip", &sr.dune.eRecoPip);
+    tr->SetBranchAddress("eRecoPim", &sr.dune.eRecoPim);
+    tr->SetBranchAddress("eRecoPi0", &sr.dune.eRecoPi0);
+    tr->SetBranchAddress("eRecoOther", &sr.dune.eRecoOther);
 
     tr->SetBranchAddress("run", &sr.dune.run);
     tr->SetBranchAddress("isFD", &sr.dune.isFD);

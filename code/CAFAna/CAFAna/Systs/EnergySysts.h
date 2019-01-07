@@ -27,7 +27,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
 	const double scale = .05 * sigma;
-	double sumE = sr->dune.eP + sr->dune.ePip + sr->dune.ePim;
+	double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
       }
@@ -48,9 +48,8 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
 	const double scale = .05 * sigma;
-	double sumE = sr->dune.ePi0;
-	const double fracE = sumE / sr->dune.Ev;
-	sr->dune.Ev_reco += sr->dune.Ev_reco * sumE * scale * fracE;
+	const double fracE = sr->dune.eRecoPi0 / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * sr->dune.eRecoPi0 * scale * fracE;
       }
     }
   };
@@ -69,7 +68,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       if (!sr->dune.isFD) {
 	const double scale = .05 * sigma;
-	double visE = 0.25 * sr->dune.eN; // crude approximation
+	double visE = sr->dune.eRecoN;
 	const double fracE = visE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * visE * scale * fracE;
       }
@@ -91,7 +90,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       const double scale = .05 * sigma;
       if (!sr->dune.isFD) {
-	double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
       }
@@ -112,9 +111,8 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       const double scale = .05 * sigma;
       if (!sr->dune.isFD) {
-	double sumE = sr->dune.ePi0;
-	const double fracE = sumE / sr->dune.Ev;
-	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sumE)+1)) * fracE;
+	const double fracE = sr->dune.eRecoPi0 / sr->dune.Ev;
+	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(sr->dune.eRecoPi0)+1)) * fracE;
       }
     }
   };
@@ -133,7 +131,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco);
       const double scale = .05 * sigma;
       if (!sr->dune.isFD) {
-	double visE = sr->dune.ePi0 * .25; // crude approximation
+	double visE = sr->dune.eRecoN;
 	const double fracE = visE / sr->dune.Ev;
 	sr->dune.Ev_reco += sr->dune.Ev_reco * scale * (1. / (sqrt(visE)+1)) * fracE;
       }
@@ -265,14 +263,21 @@ namespace ana
 
       const double scale = 1. + 0.05*sigma;
       double sumE = 0.;
-      sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
-      const double fracE = sumE / sr->dune.Ev;
-      const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
-      sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scale + (1 - fracE));
-      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracE * scale + (1 - fracE));
-      sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (fracE * scale + (1 - fracE));
-      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracEY * scale + (1 - fracEY));
-      sr->dune.RecoHadEnNue = sr->dune.RecoHadEnNue * (fracEY * scale + (1 - fracEY));
+      if(sr->dune.isFD) {
+	sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	const double fracE = sumE / sr->dune.Ev;
+	const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
+	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracE * scale + (1 - fracE));
+	sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (fracE * scale + (1 - fracE));
+	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracEY * scale + (1 - fracEY));
+	sr->dune.RecoHadEnNue = sr->dune.RecoHadEnNue * (fracEY * scale + (1 - fracEY));
+      }
+      else {
+	sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
+	const double fracE = sumE / sr->dune.Ev;
+	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scale + (1 - fracE));
+      }
+      
       // Want to apply this syst to the reco lepton energy if we have a pion misID'd as a muon
       /*
       if (!sr->dune.isFD && sr->dune.reco_numu == 1 && !sr->dune.isCC) {
@@ -336,7 +341,7 @@ namespace ana
       const double scale = 1. + 0.01*sigma;
       
       if(!sr->dune.isFD) { 
-	const double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scale + (1 - fracE));
       }
@@ -360,12 +365,9 @@ namespace ana
 
       const double scale = .20 * sigma;
 
-      double visE = 0.; // neutron visible energy
-
       if(!sr->dune.isFD) {
-	visE = sr->dune.eN * .25; // crude assumption
-	
-	sr->dune.Ev_reco       += (visE * scale);
+	double visE = sr->dune.eRecoN;
+       	sr->dune.Ev_reco       += (visE * scale);
 	sr->dune.Ev_reco_numu  += (visE * scale);
 	sr->dune.Ev_reco_nue   += (visE * scale);
       }   
@@ -437,17 +439,19 @@ namespace ana
                   sr->dune.RecoHadEnNue);
 
       const double scale = 1 + .05 * sigma;
-      double fracPi0 = 0;
-      double fracPi0Y = 0;
-           
-      fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
-      fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
-      
-      sr->dune.Ev_reco      = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
-      sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
-      sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
-      sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scale + (1 - fracPi0Y));
-      sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPi0Y * scale + (1 - fracPi0Y));
+
+      if (sr->dune.isFD) {               
+	double fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
+	double fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
+	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
+	sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
+	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scale + (1 - fracPi0Y));
+	sr->dune.RecoHadEnNue  = sr->dune.RecoHadEnNue * (fracPi0Y * scale + (1 - fracPi0Y));
+      }
+      else {
+	double fracPi0 = (sr->dune.eRecoPi0 / sr->dune.Ev);
+	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
+      }
     }
   };
 
@@ -500,7 +504,7 @@ namespace ana
       const double scale = 1. + 0.02*sigma;
       
       if(!sr->dune.isFD) { 
-	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
+	const double fracPi0 = sr->dune.eRecoPi0 / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scale + (1 - fracPi0));
       }
     }
@@ -528,9 +532,10 @@ namespace ana
       // +/-1sigmas based upon pre-existing uncorrND and uncorrFD systs
       const double scaleFD = 1 + 0.01021 * sigma;
       const double scaleND = 1 - 0.01021 * sigma;
-      const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
+      
       // Is FD
       if (sr->dune.isFD) {
+	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
 	const double fracPi0Y  = sr->dune.ePi0 / (sr->dune.Ev * sr->dune.Y);
 	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracPi0 * scaleFD + (1 - fracPi0));
 	sr->dune.Ev_reco_nue   = sr->dune.Ev_reco_nue * (fracPi0 * scaleFD + (1 - fracPi0));
@@ -539,6 +544,7 @@ namespace ana
       }
       // Is ND
       else {
+	const double fracPi0 = sr->dune.eRecoPi0 / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracPi0 * scaleND + (1 - fracPi0));
       }
     }
@@ -567,10 +573,10 @@ namespace ana
       // +/-1sigmas based upon pre-existing uncorrFD and uncorrND
       const double scaleFD = 1 + 0.005025 * sigma;
       const double scaleND = 1 - 0.005025 * sigma;
-      const double sumE    = sr->dune.ePi0 + sr->dune.ePip + sr->dune.ePim;
-      const double fracE   = sumE / sr->dune.Ev;
       // Is FD
       if (sr->dune.isFD) {
+	const double sumE      = sr->dune.ePi0 + sr->dune.ePip + sr->dune.ePim;
+	const double fracE     = sumE / sr->dune.Ev;
 	const double fracEY    = sumE / (sr->dune.Ev * sr->dune.Y);
 	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracE * scaleFD + (1 - fracE));
 	sr->dune.Ev_reco_nue   = sr->dune.Ev_reco_nue * (fracE * scaleFD + (1 - fracE));
@@ -579,6 +585,8 @@ namespace ana
       }
       // Is ND
       else {
+	const double sumE   = sr->dune.eRecoPi0 + sr->dune.eRecoPip + sr->dune.eRecoPim;
+	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scaleND + (1 - fracE));
       }
     }

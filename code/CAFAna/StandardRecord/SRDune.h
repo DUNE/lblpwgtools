@@ -80,6 +80,14 @@ namespace caf
     double ePi0;
     double eOther;
 
+    // Reconstructed energy of particles by species
+    double eRecoP;
+    double eRecoN;
+    double eRecoPip;
+    double eRecoPim;
+    double eRecoPi0;
+    double eRecoOther;
+
     double NuMomX;
     double NuMomY;
     double NuMomZ;
