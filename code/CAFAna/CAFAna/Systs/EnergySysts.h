@@ -12,7 +12,7 @@
 #include <cassert>
 
 namespace ana
-{ 
+{  
   // Slope energy scale systematics
   // Affect ND only
   // Charged hadrons
@@ -242,7 +242,7 @@ namespace ana
   };
 
   extern const EnergyScaleESyst kEnergyScaleESyst;
-
+ 
 
   /// Energy scale systematics for hadronic final state particles
   // 5% near/far correlated part for charged hadrons
@@ -264,7 +264,7 @@ namespace ana
       const double scale = 1. + 0.05*sigma;
       double sumE = 0.;
       if(sr->dune.isFD) {
-	sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
 	const double fracE = sumE / sr->dune.Ev;
 	const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
 	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracE * scale + (1 - fracE));
@@ -311,7 +311,7 @@ namespace ana
       const double scale = 1. + 0.01*sigma;
       
       if(sr->dune.isFD) { 
-	const double sumE = sr->dune.eP + sr->dune.ePim + sr->dune.ePip;
+	const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
 
 	const double fracE = sumE / sr->dune.Ev;
 	const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
@@ -398,11 +398,11 @@ namespace ana
       double visE = 0.; // neutron visible energy
 
       if(sr->dune.isFD) {
-	visE = sr->dune.eN * .25; // crude assumption
-	
+	visE = sr->dune.eRecoN; // crude assumption
+	/*
 	double recoNueTmp = sr->dune.RecoHadEnNue;
 	double recoNumuTmp = sr->dune.RecoHadEnNumu;
-
+	
 	if (sr->dune.RecoHadEnNumu < 0) { 
 	  sr->dune.RecoHadEnNumu = 0.;
 	  sr->dune.Ev_reco_numu -=recoNumuTmp;
@@ -411,10 +411,11 @@ namespace ana
 	  sr->dune.RecoHadEnNue = 0.;
 	  sr->dune.Ev_reco_nue -=recoNueTmp;
 	}
-	else {
+	*/
+	//else {
 	  sr->dune.Ev_reco_numu  += (visE * scale);
 	  sr->dune.Ev_reco_nue   += (visE * scale);
-	}
+	  //}
       }
     }
   };
@@ -441,8 +442,8 @@ namespace ana
       const double scale = 1 + .05 * sigma;
 
       if (sr->dune.isFD) {               
-	double fracPi0 = (sr->dune.ePi0 / sr->dune.Ev);
-	double fracPi0Y = (sr->dune.ePi0 / (sr->dune.Ev*sr->dune.Y));
+	double fracPi0 = (sr->dune.eRecoPi0 / sr->dune.Ev);
+	double fracPi0Y = (sr->dune.eRecoPi0 / (sr->dune.Ev*sr->dune.Y));
 	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
 	sr->dune.Ev_reco_nue  = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
 	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scale + (1 - fracPi0Y));
@@ -475,8 +476,8 @@ namespace ana
       const double scale = 1. + 0.02*sigma;
       
       if(sr->dune.isFD) { 
-	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
-	const double fracPi0Y = sr->dune.ePi0 / (sr->dune.Ev * sr->dune.Y);
+	const double fracPi0 = sr->dune.eRecoPi0 / sr->dune.Ev;
+	const double fracPi0Y = sr->dune.eRecoPi0 / (sr->dune.Ev * sr->dune.Y);
 
 	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracPi0 * scale + (1 - fracPi0));
 	sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (fracPi0 * scale + (1 - fracPi0));
@@ -535,8 +536,8 @@ namespace ana
       
       // Is FD
       if (sr->dune.isFD) {
-	const double fracPi0 = sr->dune.ePi0 / sr->dune.Ev;
-	const double fracPi0Y  = sr->dune.ePi0 / (sr->dune.Ev * sr->dune.Y);
+	const double fracPi0 = sr->dune.eRecoPi0 / sr->dune.Ev;
+	const double fracPi0Y  = sr->dune.eRecoPi0 / (sr->dune.Ev * sr->dune.Y);
 	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracPi0 * scaleFD + (1 - fracPi0));
 	sr->dune.Ev_reco_nue   = sr->dune.Ev_reco_nue * (fracPi0 * scaleFD + (1 - fracPi0));
 	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracPi0Y * scaleFD + (1 - fracPi0Y));
@@ -575,7 +576,7 @@ namespace ana
       const double scaleND = 1 - 0.005025 * sigma;
       // Is FD
       if (sr->dune.isFD) {
-	const double sumE      = sr->dune.ePi0 + sr->dune.ePip + sr->dune.ePim;
+	const double sumE      = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
 	const double fracE     = sumE / sr->dune.Ev;
 	const double fracEY    = sumE / (sr->dune.Ev * sr->dune.Y);
 	sr->dune.Ev_reco_numu  = sr->dune.Ev_reco_numu * (fracE * scaleFD + (1 - fracE));
@@ -585,7 +586,7 @@ namespace ana
       }
       // Is ND
       else {
-	const double sumE   = sr->dune.eRecoPi0 + sr->dune.eRecoPip + sr->dune.eRecoPim;
+	const double sumE   = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
 	const double fracE = sumE / sr->dune.Ev;
 	sr->dune.Ev_reco = sr->dune.Ev_reco * (fracE * scaleND + (1 - fracE));
       }
