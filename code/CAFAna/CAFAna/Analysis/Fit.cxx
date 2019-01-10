@@ -397,6 +397,7 @@ namespace ana
       penalty += fSysts[j]->Penalty(pars[fVars.size()+j]);
     }
 
+    if(fNEval%1000 == 0) std::cout << fNEval << ": EXPT chi2 = " << fExpt->ChiSq(fCalc, fShifts) << "; penalty = " << penalty << std::endl;
     return fExpt->ChiSq(fCalc, fShifts) + penalty;
   }
 
