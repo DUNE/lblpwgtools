@@ -62,29 +62,42 @@ namespace ana
   const Cut kIsTrueFV({},
                       [](const caf::StandardRecord* sr)
                       {
-			if (sr->dune.isFD){
-			  return ( 
-				  abs(sr->dune.vtx_x) < 310 &&
-				  abs(sr->dune.vtx_y) < 550 &&
-  				  sr->dune.vtx_z >  50      &&
-  				  sr->dune.vtx_z < 1244 );
-			}
-			else{
-			  return (
-				  abs(sr->dune.vtx_x) < 300 &&
-				  abs(sr->dune.vtx_y) < 100 &&
-				  sr->dune.vtx_z > 50 &&
-				  sr->dune.vtx_z < 350
-				  );
-			}
-		      });
+                        if (sr->dune.isFD){
+                          return ( 
+                                  abs(sr->dune.vtx_x) < 310 &&
+                                  abs(sr->dune.vtx_y) < 550 &&
+                                    sr->dune.vtx_z >  50      &&
+                                    sr->dune.vtx_z < 1244 );
+                        }
+                        else{
+                          bool inDeadRegion = false;
+                          for( int i = -3; i < 4; ++i ) {
+                            // 0.5cm cathode in the middle of each module, plus 0.5cm buffer
+                            double cathode_center = i*102.1;
+                            if( sr->dune.vtx_x > cathode_center - 0.75 && sr->dune.vtx_x < cathode_center + 0.75 ) inDeadRegion = true;
+
+                            // 1.6cm dead region between modules (0.5cm module wall and 0.3cm pixel plane, x2)
+                            // don't worry about outer boundary because events are only generated in active Ar + insides
+                            double module_boundary = i*102.1 + 51.05;
+                            if( i < 3 && sr->dune.vtx_x > module_boundary - 1.3 && sr->dune.vtx_x < module_boundary + 1.3 ) inDeadRegion = true;
+                          }
+
+                          return (
+                                  abs(sr->dune.vtx_x) < 300 &&
+                                  abs(sr->dune.vtx_y) < 100 &&
+                                  sr->dune.vtx_z > 50 &&
+                                  sr->dune.vtx_z < 350 &&
+                                  !inDeadRegion
+                                  );
+                        }
+                      });
 
   //ETW 11/5/2018 Fiducial cut using MVA variable
   //Should use the previous one (kIsTrueFV) for nominal analysis
   const Cut kPassFid_MVA({},
-			[](const caf::StandardRecord* sr)
-			{
-			  return ( sr->dune.mvanumu > -1 );
-			});
+                        [](const caf::StandardRecord* sr)
+                        {
+                          return ( sr->dune.mvanumu > -1 );
+                        });
 
 }
