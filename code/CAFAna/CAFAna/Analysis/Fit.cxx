@@ -203,20 +203,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Fitter::FitHelper(osc::IOscCalculatorAdjustable* seed,
+  double Fitter::FitHelper(osc::IOscCalculatorAdjustable* initseed,
                            SystShifts& bestSysts,
                            const std::map<const IFitVar*, std::vector<double>>& seedPts,
                            std::vector<SystShifts> systSeedPts,
                            Verbosity verb) const
   {
     const std::vector<SeedPt> pts = ExpandSeeds(seedPts, systSeedPts);
-
     double minchi = 1e10;
     std::vector<double> bestFitPars, bestSystPars;
 
     for(const SeedPt& pt: pts){
+      osc::IOscCalculatorAdjustable *seed = initseed->Copy();
+      
       for(auto it: pt.fitvars) it.first->SetValue(seed, it.second);
 
+      // Need to deal with parameters that are not fit values!
       SystShifts shift = pt.shift;
       
       ROOT::Minuit2::FunctionMinimum thisMin = FitHelperSeeded(seed, shift, verb);
@@ -278,11 +280,12 @@ namespace ana
 	for(unsigned int j = 0; j < fSysts.size(); ++j)
 	  bestSystPars.push_back(fPostFitValues[fVars.size()+j]);
       }
+      delete seed;
     }
     
     // Stuff the results of the actual best fit back into the seeds
     for(unsigned int i = 0; i < fVars.size(); ++i)
-      fVars[i]->SetValue(seed, bestFitPars[i]);
+      fVars[i]->SetValue(initseed, bestFitPars[i]);
     for(unsigned int i = 0; i < fSysts.size(); ++i)
       bestSysts.SetShift(fSysts[i], bestSystPars[i]);
 
@@ -316,7 +319,7 @@ namespace ana
         std::cout << "ERROR Fitter::Fit() trying to seed '"
                   << it.first->ShortName()
                   << "' which is not part of the fit." << std::endl;
-        abort();
+	 abort();
       }
     }
     for(const auto& it: systSeedPts){
