@@ -155,6 +155,18 @@ namespace ana
     hTotal->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
     return hTotal;
   }
+
+  TH1* GetMCSystTotalProjectX(const IPrediction* mc,
+			      osc::IOscCalculator* calc,
+			      const SystShifts& shift,
+			      std::string hist_name,
+			      double pot)
+  {
+    TH1* hTotal = mc->PredictSyst(calc, shift).ToTH1ProjectX(pot);
+    hTotal->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
+    return hTotal;
+  }
+
   
   TH1* GetMCTotal(const IPrediction* mc,
 		  osc::IOscCalculator* calc,
