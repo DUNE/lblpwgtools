@@ -549,6 +549,24 @@ namespace ana
     return NULL;
   }
 
+  //----------------------------------------------------------------------
+  TH1* Spectrum::ToTH1ProjectX(double exposure, EExposureType expotype) const
+  {
+    switch(fBins.size()){
+    case 1:
+      return this->ToTH1(exposure, expotype);
+    case 2:
+      return this->ToTH2(exposure, expotype)->ProjectionX();
+    case 3:
+      return this->ToTH3(exposure, expotype)->ProjectionX();
+    default:
+      std::cout << "Error: unable to hande number of dimensions (" << fBins.size() << ")" << std::endl;
+      abort();
+    }
+
+    return NULL;
+  }
+
 
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
