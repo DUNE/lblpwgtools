@@ -90,6 +90,7 @@ const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v2";
 // osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
 
+
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false){
@@ -122,6 +123,29 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   return systlist;
 };
 
+
+std::vector<const ISyst*> GetListOfSysts(std::string systString,
+					 bool useND=true, bool useFD=true,
+					 bool useNueOnE=false){
+  bool detsyst  = false;
+  bool fluxsyst = false;
+  bool xsecsyst = false;
+
+  std::transform(systString.begin(), systString.end(), systString.begin(), ::tolower);
+  
+  if (systString.find("xsec") != string::npos) xsecsyst = true;
+  if (systString.find("flux") != string::npos) fluxsyst = true;
+  if (systString.find("det")  != string::npos) detsyst = true;
+  if (systString.find("allsyst") != string::npos) {
+    xsecsyst = true;
+    fluxsyst = true;
+    detsyst = true;
+  }
+  
+  // Just convert this to the usual function
+  return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
+			useND, useFD, useNueOnE);
+};
 
 // Use a sample enum, maybe this should live elsewhere?
 enum SampleType{kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kUnknown};
@@ -260,7 +284,7 @@ TH2D* make_corr_from_covar(TH2D* covar){
 std::vector<ana::IExperiment*> iHateThisSoMuch;
 
 MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc, double pot_fd_fhc, double pot_fd_rhc,
-				   osc::IOscCalculatorAdjustable* fakeThrowOsc, SystShifts fakeThrowSyst=kNoShift,
+				   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst=kNoShift,
 				   bool stats_throw=false){
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
@@ -278,32 +302,32 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
   }
   iHateThisSoMuch.clear();
     
-  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_fd_fhc, stats_throw);
+  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, stats_throw);
   SingleSampleExperiment *app_expt_fhc = new SingleSampleExperiment(&predFDNueFHC, data_nue_fhc);
   app_expt_fhc->SetMaskHist(0.5, 8);
   iHateThisSoMuch.push_back(app_expt_fhc);
   
-  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_fd_fhc, stats_throw);
+  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, stats_throw);
   SingleSampleExperiment *app_expt_rhc = new SingleSampleExperiment(&predFDNueRHC, data_nue_rhc);
   app_expt_rhc->SetMaskHist(0.5, 8);
   iHateThisSoMuch.push_back(app_expt_rhc);
   
-  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_fd_rhc, stats_throw);
+  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, stats_throw);
   SingleSampleExperiment *dis_expt_fhc = new SingleSampleExperiment(&predFDNumuFHC, data_numu_fhc);
   dis_expt_fhc->SetMaskHist(0.5, 8);
   iHateThisSoMuch.push_back(dis_expt_fhc);  
   
-  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_fd_rhc, stats_throw);
+  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, stats_throw);
   SingleSampleExperiment *dis_expt_rhc = new SingleSampleExperiment(&predFDNumuRHC, data_numu_rhc);
   dis_expt_rhc->SetMaskHist(0.5, 8);
   iHateThisSoMuch.push_back(dis_expt_rhc);  
   
-  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_nd_fhc, stats_throw);
+  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, stats_throw);
   SingleSampleExperiment *nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC, nd_data_numu_fhc);
   //nd_expt_fhc.SetMaskHist(0, -1, 0.1, 1);
   iHateThisSoMuch.push_back(nd_expt_fhc);  
 
-  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeThrowOsc, fakeThrowSyst).MockData(pot_nd_rhc, stats_throw);
+  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, stats_throw);
   SingleSampleExperiment *nd_expt_rhc = new SingleSampleExperiment(&predNDNumuRHC, nd_data_numu_rhc);
   //nd_expt_rhc.SetMaskHist(0, -1, 0.1, 1);
   iHateThisSoMuch.push_back(nd_expt_rhc);  
@@ -321,4 +345,228 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
     ret.Add(dis_expt_rhc);
   }  
   return ret;
+};
+
+
+int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc, double pot_fd_fhc, double pot_fd_rhc,
+		osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
+		std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
+		osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
+		std::map<const IFitVar*, std::vector<double>> oscSeeds={},
+		IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
+		TDirectory *outDir=NULL){
+  
+  // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
+  // Note that all systs are used to load the PredictionInterps
+  static std::vector<unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
+  static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
+  static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
+  static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
+  static PredictionInterp& predFDNueRHC  = *interp_list[3].release();
+  static PredictionInterp& predNDNumuFHC = *interp_list[4].release();
+  static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
+
+  // If a directory has been given, a whole mess of stuff will be saved there.
+  if (outDir) outDir->cd();
+  
+  // Need to make a fake throw list for later book-keeping
+  std::vector<double> fFakeDataVals;
+  for(const IFitVar* v: oscVars) fFakeDataVals.push_back(v->GetValue(fakeDataOsc));
+  for(const ISyst* s: systlist) fFakeDataVals.push_back(fakeDataSyst.GetShift(s));
+  
+  // One problem with this method is that the experiments are reproduced for every single call...
+  // Set up the fake data histograms, and save them if relevant...
+  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, fakeDataStats);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, data_nue_fhc);
+  app_expt_fhc.SetMaskHist(0.5, 8);
+  
+  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, fakeDataStats);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, data_numu_fhc);
+  dis_expt_fhc.SetMaskHist(0.5, 8);
+  
+  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, fakeDataStats);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, data_nue_rhc);
+  app_expt_rhc.SetMaskHist(0.5, 8);
+  
+  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, fakeDataStats);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, data_numu_rhc);
+  dis_expt_rhc.SetMaskHist(0.5, 8);
+
+  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
+  //nd_expt_fhc.SetMaskHist(0, -1, 0.1, 1);
+
+  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
+  //nd_expt_rhc.SetMaskHist(0, -1, 0.1, 1);
+
+  // What is the chi2 between the data, and the thrown prefit distribution?
+  std::cout << "Prefit chi-square:" << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+
+  // Save prefit starting distributions
+  if (outDir){
+    if (pot_fd_fhc > 0){
+      TH1* data_nue_fhc_hist = data_nue_fhc.ToTHX(pot_fd_fhc);
+      data_nue_fhc_hist ->SetName("data_fd_nue_fhc");
+      data_nue_fhc_hist ->Write();
+      TH1* data_numu_fhc_hist = data_numu_fhc.ToTHX(pot_fd_fhc);
+      data_numu_fhc_hist ->SetName("data_fd_numu_fhc");
+      data_numu_fhc_hist ->Write();
+      
+      TH1* pre_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst, "prefit_fd_nue_fhc", pot_fd_fhc);
+      pre_fd_nue_fhc   ->SetTitle(std::to_string(app_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_fd_nue_fhc   ->Write();
+      TH1* pre_fd_numu_fhc = GetMCSystTotal(&predFDNumuFHC, fitOsc, fitSyst, "prefit_fd_numu_fhc", pot_fd_fhc);
+      pre_fd_numu_fhc   ->SetTitle(std::to_string(dis_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_fd_numu_fhc   ->Write();
+    }
+    if (pot_fd_rhc > 0){
+      TH1* data_nue_rhc_hist = data_nue_rhc.ToTHX(pot_fd_rhc);
+      data_nue_rhc_hist ->SetName("data_fd_nue_rhc");
+      data_nue_rhc_hist ->Write();
+      TH1* data_numu_rhc_hist = data_numu_rhc.ToTHX(pot_fd_rhc);
+      data_numu_rhc_hist ->SetName("data_fd_numu_rhc");
+      data_numu_rhc_hist ->Write();
+
+      TH1* pre_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst, "prefit_fd_nue_rhc", pot_fd_rhc);
+      pre_fd_nue_rhc   ->SetTitle(std::to_string(app_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_fd_nue_rhc   ->Write();
+      TH1* pre_fd_numu_rhc = GetMCSystTotal(&predFDNumuRHC, fitOsc, fitSyst, "prefit_fd_numu_rhc", pot_fd_rhc);
+      pre_fd_numu_rhc   ->SetTitle(std::to_string(dis_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_fd_numu_rhc   ->Write();
+    }
+    if (pot_nd_fhc > 0){
+      TH1* nd_data_numu_fhc_hist = nd_data_numu_fhc.ToTHX(pot_nd_fhc);
+      TH1* nd_data_numu_fhc_hist_1D = nd_data_numu_fhc.ToTH1(pot_nd_fhc);
+      nd_data_numu_fhc_hist ->SetName("data_nd_numu_fhc");
+      nd_data_numu_fhc_hist_1D ->SetName("data_nd_numu_fhc_1D");
+      nd_data_numu_fhc_hist ->Write();
+      nd_data_numu_fhc_hist_1D ->Write();
+      
+      TH1* pre_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst, "prefit_nd_numu_fhc", pot_nd_fhc);
+      pre_nd_numu_fhc   ->SetTitle(std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_nd_numu_fhc   ->Write();
+      TH1* pre_nd_numu_fhc_1D = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst, "prefit_nd_numu_fhc_1D", pot_nd_fhc, true);
+      pre_nd_numu_fhc_1D   ->SetTitle(std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_nd_numu_fhc_1D   ->Write();
+    }
+    if (pot_nd_rhc){
+      TH1* nd_data_numu_rhc_hist = nd_data_numu_rhc.ToTHX(pot_nd_rhc);
+      TH1* nd_data_numu_rhc_hist_1D = nd_data_numu_rhc.ToTH1(pot_nd_rhc);
+      nd_data_numu_rhc_hist ->SetName("data_nd_numu_rhc");
+      nd_data_numu_rhc_hist_1D ->SetName("data_nd_numu_rhc_1D");
+      nd_data_numu_rhc_hist ->Write();
+      nd_data_numu_rhc_hist_1D ->Write();
+      
+      TH1* pre_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst, "prefit_nd_numu_rhc", pot_nd_rhc);
+      pre_nd_numu_rhc   ->SetTitle(std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_nd_numu_rhc   ->Write();
+      TH1* pre_nd_numu_rhc_1D = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst, "prefit_nd_numu_rhc_1D", pot_nd_rhc, true);
+      pre_nd_numu_rhc_1D   ->SetTitle(std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      pre_nd_numu_rhc_1D   ->Write();
+    }
+  }
+
+  // Now sort out the experiment
+  MultiExperiment this_expt;
+  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
+  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
+  if (pot_fd_fhc > 0) {
+    this_expt.Add(&app_expt_fhc);
+    this_expt.Add(&dis_expt_fhc);
+  }
+  if (pot_fd_rhc > 0) {
+    this_expt.Add(&app_expt_rhc);
+    this_expt.Add(&dis_expt_rhc);
+  }
+  // Add in the penalty...
+  if (penaltyTerm) this_expt.Add(penaltyTerm);
+
+  // Now set up the fit itself
+  Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
+  double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+  
+  std::cout << "Postfit chi-square:" << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  
+  // If we have a directory to save to... save some stuff...
+  if (outDir){
+    std::vector<std::string> fParamNames = this_fit.GetParamNames();
+    std::vector<double> fPreFitValues  = this_fit.GetPreFitValues();
+    std::vector<double> fPreFitErrors  = this_fit.GetPreFitErrors();
+    std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
+    std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();   
+    double fNFCN = this_fit.GetNFCN(); 
+    double fEDM = this_fit.GetEDM();
+    bool fIsValid = this_fit.GetIsValid();
+    
+    TMatrixDSym* covar = (TMatrixDSym*)this_fit.GetCovariance();
+    TH2D hist_covar = TH2D(*covar);
+    hist_covar .SetName("covar");
+    TH2D hist_corr = *make_corr_from_covar(&hist_covar);
+    
+    if (pot_fd_fhc){
+      TH1* post_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst, "postfit_fd_nue_fhc", pot_fd_fhc);
+      post_fd_nue_fhc   ->SetTitle(std::to_string(app_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_fd_nue_fhc   ->Write();
+      TH1* post_fd_numu_fhc = GetMCSystTotal(&predFDNumuFHC, fitOsc, fitSyst, "postfit_fd_numu_fhc", pot_fd_fhc);
+      post_fd_numu_fhc   ->SetTitle(std::to_string(dis_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_fd_numu_fhc   ->Write();
+    }
+    if (pot_fd_rhc){    
+      TH1* post_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst, "postfit_fd_nue_rhc", pot_fd_rhc);
+      post_fd_nue_rhc   ->SetTitle(std::to_string(app_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_fd_nue_rhc   ->Write();
+      TH1* post_fd_numu_rhc = GetMCSystTotal(&predFDNumuRHC, fitOsc, fitSyst, "postfit_fd_numu_rhc", pot_fd_rhc);
+      post_fd_numu_rhc   ->SetTitle(std::to_string(dis_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_fd_numu_rhc   ->Write();
+    }
+    if (pot_nd_fhc){    
+      TH1* post_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst, "postfit_nd_numu_fhc", pot_nd_fhc);
+      post_nd_numu_fhc   ->SetTitle(std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_nd_numu_fhc   ->Write();
+      TH1* post_nd_numu_fhc_1D = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst, "postfit_nd_numu_fhc_1D", pot_nd_fhc, true);
+      post_nd_numu_fhc_1D   ->SetTitle(std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_nd_numu_fhc_1D   ->Write();
+    }
+    if (pot_nd_rhc){    
+      TH1* post_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst, "postfit_nd_numu_rhc", pot_nd_rhc);
+      post_nd_numu_rhc   ->SetTitle(std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_nd_numu_rhc   ->Write();
+      TH1* post_nd_numu_rhc_1D = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst, "postfit_nd_numu_rhc_1D", pot_nd_rhc, true);
+      post_nd_numu_rhc_1D   ->SetTitle(std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+      post_nd_numu_rhc_1D   ->Write();
+    }
+    
+    // Save information
+    TTree *t = new TTree("fit_info", "fit_info");
+    t->Branch("chisq", &thischisq);
+    t->Branch("NFCN", &fNFCN);
+    t->Branch("EDM", &fEDM);
+    t->Branch("IsValid", &fIsValid);
+    t->Branch("fParamNames",&fParamNames);
+    t->Branch("fFakeDataVals",&fFakeDataVals);
+    t->Branch("fPreFitValues",&fPreFitValues);
+    t->Branch("fPreFitErrors",&fPreFitErrors);
+    t->Branch("fPostFitValues",&fPostFitValues);
+    t->Branch("fPostFitErrors",&fPostFitErrors);
+    t->Fill();
+    t->Write();
+    hist_covar.Write();
+    hist_corr.Write();
+    delete t;
+  }
+  
+  return thischisq;
 };
