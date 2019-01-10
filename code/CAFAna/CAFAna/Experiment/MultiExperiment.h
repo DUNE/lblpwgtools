@@ -16,7 +16,10 @@ namespace ana
       fSystCorrelations.resize(expts.size());
     }
 
-    void Add(const IExperiment* expt){fExpts.push_back(expt);}
+    void Add(const IExperiment* expt){
+      fExpts.push_back(expt); 
+      fSystCorrelations.resize(fExpts.size());
+    }
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
