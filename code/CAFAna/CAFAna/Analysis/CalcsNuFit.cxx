@@ -149,7 +149,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly,
+  Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, bool weakOnly,
 				       bool noTh13, bool noTh23, bool noDmsq) : fWeakOnly(weakOnly), fnoTh13(noTh13),
 										fnoTh23(noTh23), fnoDmsq(noDmsq){
 

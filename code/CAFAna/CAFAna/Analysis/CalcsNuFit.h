@@ -74,7 +74,7 @@ namespace ana
   class Penalizer_GlbLike: public IExperiment
   {
   public:
-    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly=false, bool noTh13=false, bool noTh23=false, bool noDmsq=false);
+    Penalizer_GlbLike(int hietrue, bool weakOnly=false, bool noTh13=false, bool noTh23=false, bool noDmsq=false);
 
     double Dmsq21CV() const {return fDmsq21;}
     double Th12CV() const {return fTh12;}
