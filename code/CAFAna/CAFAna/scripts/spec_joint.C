@@ -1,23 +1,12 @@
-// ETW May 2018
-// Standard script for DUNE spectra
-// Input files use TensorFlow CVN training from May 2018 
-
 #include "common_fit_definitions.C"
 
-std::string stateFname  = "common_state_ndfd_nosyst.root";
-std::string outputFname = "spec_hist.root";
-
-//Set systematics style by hand for now
-bool normsyst = false;
-bool fluxsyst = false;
-bool use_nd   = true;
-
-void spec_joint(bool reload = false){
+void spec_joint(std::string stateFname  = "common_state_mcc11v3.root",
+		std::string outputFname = "spec_hists_mcc11v3.root"){
   
-  gROOT->SetBatch(1);
-  
+   gROOT->SetBatch(1);
+
   // Get the systematics to use
-  std::vector<const ISyst*> systlist = {};
+   std::vector<const ISyst*> systlist = GetListOfSysts();
 
   // Get the prediction interpolators
   std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, systlist);
@@ -34,21 +23,21 @@ void spec_joint(bool reload = false){
   osc::NoOscillations noOsc;
 
   // Unoscillated FD histograms
-  std::vector<TH1*> FD_FHCNumu_uohists = GetMCComponents(&FD_predFHCNumu, &noOsc, "FD_FHC_Numu_unosc", pot_fd);
-  std::vector<TH1*> FD_FHCNue_uohists  = GetMCComponents(&FD_predFHCNue, &noOsc, "FD_FHC_Nue_unosc", pot_fd);
-  std::vector<TH1*> FD_RHCNumu_uohists = GetMCComponents(&FD_predRHCNumu, &noOsc, "FD_RHC_Numu_unosc", pot_fd);
-  std::vector<TH1*> FD_RHCNue_uohists  = GetMCComponents(&FD_predRHCNue, &noOsc, "FD_RHC_Nue_unosc", pot_fd);
+  std::vector<TH1*> FD_FHCNumu_uohists = GetMCComponents(&predInterpFDNumuFHC, &noOsc, "FD_FHC_Numu_unosc", pot_fd);
+  std::vector<TH1*> FD_FHCNue_uohists  = GetMCComponents(&predInterpFDNueFHC, &noOsc, "FD_FHC_Nue_unosc", pot_fd);
+  std::vector<TH1*> FD_RHCNumu_uohists = GetMCComponents(&predInterpFDNumuRHC, &noOsc, "FD_RHC_Numu_unosc", pot_fd);
+  std::vector<TH1*> FD_RHCNue_uohists  = GetMCComponents(&predInterpFDNueRHC, &noOsc, "FD_RHC_Nue_unosc", pot_fd);
   for (auto & hist : FD_FHCNumu_uohists) hist->Write();
   for (auto & hist : FD_FHCNue_uohists)  hist->Write();
   for (auto & hist : FD_RHCNumu_uohists) hist->Write();
   for (auto & hist : FD_RHCNue_uohists)  hist->Write();
   
   // Sort out the ND histograms
-  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&ND_predFHC, &noOsc, "ND_FHC", pot_nd);
-  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&ND_predRHC, &noOsc, "ND_RHC", pot_nd);    
+  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC", pot_nd);
+  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC", pot_nd);    
 
-  std::vector<TH1*> ND_FHC_1Dhists   = GetMCComponents(&ND_predFHC, &noOsc, "ND_FHC_1D", pot_nd, true);
-  std::vector<TH1*> ND_RHC_1Dhists   = GetMCComponents(&ND_predRHC, &noOsc, "ND_RHC_1D", pot_nd, true);  
+  std::vector<TH1*> ND_FHC_1Dhists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_1D", pot_nd, true);
+  std::vector<TH1*> ND_RHC_1Dhists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_1D", pot_nd, true);  
   
   for (auto & hist : ND_FHC_hists)   hist->Write();
   for (auto & hist : ND_RHC_hists)   hist->Write();
@@ -68,10 +57,10 @@ void spec_joint(bool reload = false){
       const std::string dcpStr = dcpnames[deltaIdx];
 
       // FD components for this set of parameters
-      std::vector<TH1*> FD_FHCNumu_hists = GetMCComponents(&FD_predFHCNumu, inputOsc, "FD_FHC_Numu_"+hieStr+"_"+dcpStr, pot_fd);
-      std::vector<TH1*> FD_FHCNue_hists  = GetMCComponents(&FD_predFHCNue, inputOsc, "FD_FHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
-      std::vector<TH1*> FD_RHCNumu_hists = GetMCComponents(&FD_predRHCNumu, inputOsc, "FD_RHC_Numu_"+hieStr+"_"+dcpStr, pot_fd);
-      std::vector<TH1*> FD_RHCNue_hists  = GetMCComponents(&FD_predRHCNue, inputOsc, "FD_RHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
+      std::vector<TH1*> FD_FHCNumu_hists = GetMCComponents(&predInterpFDNumuFHC, inputOsc, "FD_FHC_Numu_"+hieStr+"_"+dcpStr, pot_fd);
+      std::vector<TH1*> FD_FHCNue_hists  = GetMCComponents(&predInterpFDNueFHC, inputOsc, "FD_FHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
+      std::vector<TH1*> FD_RHCNumu_hists = GetMCComponents(&predInterpFDNumuRHC, inputOsc, "FD_RHC_Numu_"+hieStr+"_"+dcpStr, pot_fd);
+      std::vector<TH1*> FD_RHCNue_hists  = GetMCComponents(&predInterpFDNueRHC, inputOsc, "FD_RHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
             
       for (auto & hist : FD_FHCNumu_hists) hist->Write();
       for (auto & hist : FD_FHCNue_hists)  hist->Write();
