@@ -69,10 +69,22 @@ const Cut kRecoPosMu    = SIMPLEVAR(dune.reco_q) == +1; // reco_q == 0 if reco_n
 const Cut kMuonCont     = SIMPLEVAR(dune.muon_exit) == 0;
 const Cut kEhad_veto    = SIMPLEVAR(dune.Ehad_veto) < 30;
 
+// Seb's ND binning
+std::vector<double> binEEdges = {0., 0.5, 0.875, 1., 1.125, 1.25, 1.375, 1.5, 1.625, 1.75, 1.875,
+				 2., 2.125, 2.25, 2.375, 2.5, 2.625, 2.75, 2.875,
+				 3., 3.125, 3.25, 3.375, 3.5, 3.625, 3.75, 3.875,
+				 4., 4.125, 4.25, 4.375, 4.5, 4.625, 4.75, 4.875,
+				 5., 5.125, 5.25, 5.5, 5.75,
+				 6., 6.5,
+				 7., 7.5,
+				 8., 8.5,
+				 9., 9.5, 10.};
+std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0};
+
 // Binnings
 const Binning binsFDEreco = Binning::Simple(80, 0, 10);
-const Binning binsNDEreco = Binning::Simple(40, 0, 10);
-const Binning binsY       = Binning::Simple(5, 0, 1);
+const Binning binsNDEreco = Binning::Custom(binEEdges); //Binning::Simple(40, 0, 10);
+const Binning binsY       = Binning::Custom(binYEdges); //Binning::Simple(5, 0, 1);
 						      
 // Axes
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
@@ -84,12 +96,16 @@ const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
 
 // Global file path...
-const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v2";
+const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 
 // To get the oscillation probabilities
 // osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
 
-
+double GetBoundedGausThrow(double min, double max){
+  double val = -999;
+  while (val > max || val < min) val = gRandom->Gaus();
+  return val;
+}
 
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
@@ -324,7 +340,7 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
   
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, stats_throw);
   SingleSampleExperiment *nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC, nd_data_numu_fhc);
-  //nd_expt_fhc.SetMaskHist(0, -1, 0.1, 1);
+  //nd_expt_fhc.SetMaskHist(0.5, -1, 0.1, 1);
   iHateThisSoMuch.push_back(nd_expt_fhc);  
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, stats_throw);
@@ -380,11 +396,11 @@ int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc,
   SingleSampleExperiment app_expt_fhc(&predFDNueFHC, data_nue_fhc);
   app_expt_fhc.SetMaskHist(0.5, 8);
   
-  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, fakeDataStats);
+  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, fakeDataStats);
   SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, data_numu_fhc);
   dis_expt_fhc.SetMaskHist(0.5, 8);
   
-  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc, fakeDataStats);
+  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc, fakeDataStats);
   SingleSampleExperiment app_expt_rhc(&predFDNueRHC, data_nue_rhc);
   app_expt_rhc.SetMaskHist(0.5, 8);
   
@@ -394,20 +410,20 @@ int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc,
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
   SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
-  //nd_expt_fhc.SetMaskHist(0, -1, 0.1, 1);
+  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
-  //nd_expt_rhc.SetMaskHist(0, -1, 0.1, 1);
+  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
   std::cout << "Prefit chi-square:" << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
+  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
+  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
+  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_fhc << std::endl;
+  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_rhc << std::endl;
 
   // Save prefit starting distributions
   if (outDir){
