@@ -9,9 +9,10 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie)
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct)
   {
     assert(hie == +1 || hie == -1);
+    assert(oct == +1 || oct == -1);
 
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
     ret->SetL(kBaseline);
@@ -32,6 +33,8 @@ namespace ana
       ret->SetTh13(kNuFitTh13CVIH);
       ret->SetdCP(kNuFitdCPCVIH);
     }
+
+    if (oct < 0) ret->SetTh23(TMath::Pi()/2 - ret->GetTh23());
 
     return ret;
   }
@@ -149,7 +152,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, bool weakOnly,
+  Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, int octtrue, bool weakOnly,
 				       bool noTh13, bool noTh23, bool noDmsq) : fWeakOnly(weakOnly), fnoTh13(noTh13),
 										fnoTh23(noTh23), fnoDmsq(noDmsq){
 
@@ -160,6 +163,9 @@ namespace ana
     fDmsq32 = (hietrue > 0) ? kNuFitDmsq32CVNH : kNuFitDmsq32CVIH;
     fTh23 = (hietrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
     fTh13 = (hietrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
+
+    // This is sort of an assumption...
+    if (octtrue < 0) fTh23 = TMath::Pi()/2 - fTh23;
 
     //Set the errors by hand for now.
     //Fractional errors in GLoBES convention

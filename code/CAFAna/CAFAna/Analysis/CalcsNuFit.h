@@ -44,7 +44,7 @@ namespace ana
   const double kEarthDensity = 2.848;  // g/cm^3
 
   // hie = +/-1
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie);
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
@@ -74,7 +74,7 @@ namespace ana
   class Penalizer_GlbLike: public IExperiment
   {
   public:
-    Penalizer_GlbLike(int hietrue, bool weakOnly=false, bool noTh13=false, bool noTh23=false, bool noDmsq=false);
+    Penalizer_GlbLike(int hietrue, int octtrue, bool weakOnly=false, bool noTh13=false, bool noTh23=false, bool noDmsq=false);
 
     double Dmsq21CV() const {return fDmsq21;}
     double Th12CV() const {return fTh12;}
