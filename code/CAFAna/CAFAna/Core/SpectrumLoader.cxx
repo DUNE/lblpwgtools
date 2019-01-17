@@ -199,6 +199,8 @@ namespace ana
     tr->SetBranchAddress("vtx_y",  &sr.dune.vtx_y);
     tr->SetBranchAddress("vtx_z",  &sr.dune.vtx_z);
 
+    tr->SetBranchAddress("det_x",  &sr.dune.det_x);
+
     tr->SetBranchAddress("eP", &sr.dune.eP);
     tr->SetBranchAddress("eN", &sr.dune.eN);
     tr->SetBranchAddress("ePip", &sr.dune.ePip);
@@ -211,6 +213,13 @@ namespace ana
     tr->SetBranchAddress("eRecoPim", &sr.dune.eRecoPim);
     tr->SetBranchAddress("eRecoPi0", &sr.dune.eRecoPi0);
     tr->SetBranchAddress("eRecoOther", &sr.dune.eRecoOther);
+
+    tr->SetBranchAddress("eDepP", &sr.dune.eDepP);
+    tr->SetBranchAddress("eDepN", &sr.dune.eDepN);
+    tr->SetBranchAddress("eDepPip", &sr.dune.eDepPip);
+    tr->SetBranchAddress("eDepPim", &sr.dune.eDepPim);
+    tr->SetBranchAddress("eDepPi0", &sr.dune.eDepPi0);
+    tr->SetBranchAddress("eDepOther", &sr.dune.eDepOther);
 
     tr->SetBranchAddress("run", &sr.dune.run);
     tr->SetBranchAddress("isFD", &sr.dune.isFD);
@@ -239,6 +248,18 @@ namespace ana
 
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
+
+      //Set eRec_FromDep
+      if (sr.dune.isFD) {
+        sr.dune.eRec_FromDep = sr.dune.eDepP + sr.dune.eDepN + sr.dune.eDepPip +
+                               sr.dune.eDepPim + sr.dune.eDepPi0 +
+                               sr.dune.eDepOther + sr.dune.LepE;
+      } else {
+        sr.dune.eRec_FromDep = sr.dune.eRecoP + sr.dune.eRecoN +
+                               sr.dune.eRecoPip + sr.dune.eRecoPim +
+                               sr.dune.eRecoPi0 + sr.dune.eRecoOther +
+                               sr.dune.LepE;
+      }
 
       // // Patch up isFD and isFHC which aren't in MVAResult files
       // if(sr.dune.run == 20000001 ||
@@ -269,12 +290,12 @@ namespace ana
         const int Nuniv = genie_size_tmp[i];
         assert(Nuniv >= 0 && Nuniv <= int(genie_tmp[i].size()));
         sr.dune.genie_wgt[i].resize(Nuniv);
-	
+
 	// Do some error checking here
-	if (std::isnan(sr.dune.genie_cv_wgt[i]) || 
+	if (std::isnan(sr.dune.genie_cv_wgt[i]) ||
 	    std::isinf(sr.dune.genie_cv_wgt[i]) ||
 	    sr.dune.genie_cv_wgt[i] == 0)
-	  std::cout << "Warning: " << genie_names[i] << " has a bad CV of " 
+	  std::cout << "Warning: " << genie_names[i] << " has a bad CV of "
 		    << sr.dune.genie_cv_wgt[i] << std::endl;
 	else
 	  sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
