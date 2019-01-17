@@ -123,29 +123,16 @@ void cpv()
       for(int ihie = -1; ihie <= +1; ihie += 2) {
 	for (int idcp = 0; idcp < 2; ++idcp) {
 	  for (int ioct = -1; ioct <= 1; ioct +=2) {
-	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie);	
+	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie,ioct);	
 	    double dcptest = idcp*TMath::Pi();
 	    testOsc->SetdCP(dcptest);
-	    if (ihie < 0) {
-	      testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
-	    }
-	    if (ioct < 0) {
-	      testOsc->SetTh23(TMath::Pi()/2 - testOsc->GetTh23());
-	    }
-
-	    osc::IOscCalculatorAdjustable* cvcalc = testOsc->Copy();	  
-	    Penalizer_GlbLike penalty(cvcalc,hie);
+	    Penalizer_GlbLike penalty(ihie,ioct);
 
 	    MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
 	    Fitter fit_syst(&full_expt_syst, oscVars, systlist);
 
-	    if (nosyst) {
-	      continue; //etw figure out how to do this
-	    }
-	    else {
-	      thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
-	    }
+	    thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
 	    chisqmin = TMath::Min(thischisq,chisqmin);
 	  }
 	}
