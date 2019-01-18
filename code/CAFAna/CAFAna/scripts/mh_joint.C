@@ -9,7 +9,8 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars =
     {&kFitDmSq32Scaled, &kFitSinSqTheta23,
