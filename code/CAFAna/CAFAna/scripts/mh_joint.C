@@ -12,9 +12,8 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
   
   // Oscillation parameters to use
-  std::vector<const IFitVar*> oscVars =
-    {&kFitDmSq32Scaled, &kFitSinSqTheta23,
-     &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
+  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
+					 &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
