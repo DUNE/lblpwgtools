@@ -5,6 +5,7 @@
 #include "TString.h"
 
 class TH1;
+class TH2;
 
 namespace ana
 {
@@ -19,21 +20,24 @@ namespace ana
                        double& weight) const override;
 
   protected:
-    friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty);
-  DUNEFluxSyst(int i, bool applyPenalty) :
+    friend const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty, bool includeOffAxis);
+  DUNEFluxSyst(int i, bool applyPenalty, bool includeOffAxis) :
       ISyst(TString::Format("flux%i", i).Data(),
             TString::Format("Flux #%i", i).Data(),
 	    applyPenalty),
-      fIdx(i), fScale()
+      fIdx(i), fScale(), fIncludeOffAxis(includeOffAxis)
     {
     }
 
     int fIdx;
 
     mutable TH1* fScale[2][2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
+    mutable TH2* fScale2D[2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
+
+    bool fIncludeOffAxis;
   };
 
-  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty=true);
+  const DUNEFluxSyst* GetDUNEFluxSyst(unsigned int i, bool applyPenalty=true, bool includeOffAxis=false);
 
   // Because vector<T*> won't automatically convert to vector<U*> even when U
   // inherits from V.
@@ -45,5 +49,5 @@ namespace ana
     }
   };
 
-  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty=true);
+  DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty=true, bool includeOffAxis=false);
 }

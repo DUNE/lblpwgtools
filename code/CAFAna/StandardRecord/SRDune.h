@@ -8,6 +8,7 @@ namespace caf
   {
   public:
     // Reco info
+    double eRec_FromDep; // Unified parameterized reco that can be used at near and far. Should only be used for missing proton energy fake data studies that cannot use the CVN FD Reco
     double Ev_reco; // for ND?
     double Ev_reco_nue;
     double Ev_reco_numu;
@@ -72,6 +73,9 @@ namespace caf
     double vtx_y;
     double vtx_z;
 
+    // Near detector offset in m
+    double det_x;
+
     // True energy of particles by species
     double eP;
     double eN;
@@ -87,6 +91,14 @@ namespace caf
     double eRecoPim;
     double eRecoPi0;
     double eRecoOther;
+
+    //At FD
+    double eDepP;
+    double eDepN;
+    double eDepPip;
+    double eDepPim;
+    double eDepPi0;
+    double eDepOther;
 
     double NuMomX;
     double NuMomY;
