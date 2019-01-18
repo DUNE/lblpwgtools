@@ -42,7 +42,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	// Force it into the wrong hierarchy
 	testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
 
-	IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString);
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
 	SystShifts trueSyst = kNoShift;
 	SystShifts testSyst = kNoShift;
 
