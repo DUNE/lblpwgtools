@@ -156,7 +156,7 @@ void res(string paramname)
 
       double pmin, pmax, funclo, funchi, thispar;
       std::vector<const IFitVar*> oscVars;      
-      bool arg1 = false, arg2=false, arg3= false, arg4=false;
+      bool arg1 = true, arg2=true, arg3= true;
       double prec1 = 1e-5, prec2 = 1e-7;
       if (parcode == 0) {
 	oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13, &kFitRho};
@@ -198,7 +198,7 @@ void res(string paramname)
 
       osc::IOscCalculatorAdjustable* testOsc = trueOsc->Copy();
       osc::IOscCalculatorAdjustable* cvcalc = trueOsc->Copy();
-      Penalizer_GlbLike penalty(cvcalc,hie,arg1,arg2,arg3,arg4);
+      Penalizer_GlbLike penalty(cvcalc,hie,arg1,arg2,arg3);
       MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
       Fitter fit_syst(&full_expt_syst, oscVars, systlist);
