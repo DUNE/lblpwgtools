@@ -69,14 +69,23 @@ void res(string paramname)
   }
   else if (paramname == "th13") {
     std::cout << "Fitting theta13 resolution" << std::endl;
+    dcpstep = 2*TMath::Pi()/36;
+    dcplo = -TMath::Pi();
+    nstep = 37;
     parcode = 1;
   }
   else if (paramname == "th23") {
     std::cout << "Fitting theta23 resolution" << std::endl;
+    dcpstep = 2*TMath::Pi()/36;
+    dcplo = -TMath::Pi();
+    nstep = 37;
     parcode = 2;
   }
   else if (paramname == "Dmsq") {
     std::cout << "Fitting Dmsq32 resolution" << std::endl;
+    dcpstep = 2*TMath::Pi()/36;
+    dcplo = -TMath::Pi();
+    nstep = 37;
     parcode = 3;
   }
   else {
@@ -126,17 +135,8 @@ void res(string paramname)
 	
       osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
 
-      // Set dcp value. Note for all except dcp resolution scan, leave this at nominal value from fit.
-      // Could also run at zero, which is what has been done before...
-      if (parcode==0) {
-	thisdcp = dcplo + idcp*dcpstep;
-	trueOsc->SetdCP(thisdcp);
-      }
-      else {
-	thisdcp = trueOsc->GetdCP();
-	//thisdcp = 0.0;
-	//trueOsc->SetdCP(thisdcp);
-      }
+      thisdcp = dcplo + idcp*dcpstep;
+      trueOsc->SetdCP(thisdcp);
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
       SingleSampleExperiment app_expt_fhc_syst(&predInt_FDNueFHC, data_nue_fhc_syst);
@@ -173,7 +173,7 @@ void res(string paramname)
 	pmax = thispar + 1*TMath::Pi()/180;
 	funclo = pmin - 0.5*TMath::Pi()/180;
 	funchi = pmax + 0.5*TMath::Pi()/180;
-	arg2 = true; //turn off external constrain on th13
+	arg2 = false; //turn off external constrain on th13
       }
       else if (parcode == 2) {
 	oscVars = {&kFitDmSq32Scaled, &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
@@ -182,7 +182,7 @@ void res(string paramname)
 	pmax = thispar + 1*TMath::Pi()/180;
 	funclo = pmin - 0.5*TMath::Pi()/180;
 	funchi = pmax + 0.5*TMath::Pi()/180;
-	arg3 = true; //turn off external constrain on th23
+	arg3 = false; //turn off external constrain on th23
       }
       else if (parcode == 3) {
 	oscVars = {&kFitSinSqTheta23, &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
@@ -191,7 +191,7 @@ void res(string paramname)
 	pmax = thispar + 2e-5;
 	funclo = pmin - 1e-5;
 	funchi = pmax + 1e-5;
-	arg4 = true; //turn off external constrain on Dmsq
+	arg4 = false; //turn off external constrain on Dmsq
 	prec1 = 1e-7;
 	prec2 = 1e-9;
       }
