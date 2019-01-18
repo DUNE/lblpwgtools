@@ -9,11 +9,11 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
-					 &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
-					 &kFitRho};
+					 &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
