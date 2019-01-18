@@ -152,9 +152,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, int octtrue, bool weakOnly,
-				       bool noTh13, bool noTh23, bool noDmsq) : fWeakOnly(weakOnly), fnoTh13(noTh13),
-										fnoTh23(noTh23), fnoDmsq(noDmsq){
+  Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, int octtrue, bool useTh13, 
+				       bool useTh23, bool useDmsq) 
+    : fTh13Pen(useTh13),fTh23Pen(useTh23), fDmsqPen(useDmsq){
 
     fDmsq21 = kNuFitDmsq21CV;
     fTh12 = kNuFitTh12CV;
@@ -182,6 +182,28 @@ namespace ana
 
   }
 
+  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, 
+				       int hietrue, bool useTh13,
+                                       bool useTh23, bool useDmsq) 
+    : fTh13Pen(useTh13), fTh23Pen(useTh23), fDmsqPen(useDmsq){
+
+    fDmsq21 = cvcalc->GetDmsq21();
+    fTh12 = cvcalc->GetTh12();
+    fDmsq32 = cvcalc->GetDmsq32();
+    fTh23 = cvcalc->GetTh23();
+    fTh13 = cvcalc->GetTh13();
+    fRho = cvcalc->GetRho();
+
+    fDmsq21Err = kNuFitDmsq21Err;
+    fTh12Err = kNuFitTh12Err;
+    fDmsq32Err = (hietrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
+    fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
+    fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
+
+    fRhoErr = 0.02*kEarthDensity;
+  }
+
+
   double Penalizer_GlbLike::ChiSq(osc::IOscCalculatorAdjustable* calc,
 				  const SystShifts& /*syst*/) const {
 
@@ -193,14 +215,9 @@ namespace ana
       util::sqr((calc->GetTh12() - fTh12)/fTh12Err) +
       util::sqr((calc->GetRho() - fRho)/fRhoErr);
 
-    // if fWeakOnly is set, only apply a constraint to the parameter we can only weakly constrain in DUNE
-    if (!fWeakOnly) {
-      if (!fnoDmsq) ret += util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err);
-      if (!fnoTh23) ret += util::sqr((calc->GetTh23() - fTh23)/fTh23Err);
-      if (!fnoTh13) ret += util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
-    }
-
-    // No term in delta
+    if (fDmsqPen) ret += util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err);
+    if (fTh23Pen) ret += util::sqr((calc->GetTh23() - fTh23)/fTh23Err);
+    if (fTh13Pen) ret += util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
 
     return ret;
   }
