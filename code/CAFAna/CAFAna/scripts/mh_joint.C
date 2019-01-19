@@ -13,7 +13,8 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
-					 &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
+					 &kFitSinSq2Theta12, &kFitDmSq21,
+					 &kFitDeltaInPiUnits, &kFitRho};
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
