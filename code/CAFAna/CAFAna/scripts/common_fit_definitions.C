@@ -123,9 +123,9 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty){
   bool useTh23   = false;
 
   for (auto & str : penalties){
-    if (str == "th13") useTh13 = true;
-    if (str == "dmsq32") useDmsq32 = true;
-    if (str == "th23") useTh23 = true;
+    if (str == "th13" || str == "allsyst") useTh13 = true;
+    if (str == "dmsq32" || str == "allsyst") useDmsq32 = true;
+    if (str == "th23" || str == "allsyst") useTh23 = true;
   }
 
   IExperiment *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23);
