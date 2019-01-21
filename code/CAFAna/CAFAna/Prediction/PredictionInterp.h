@@ -163,6 +163,11 @@ namespace ana
       std::vector<std::vector<std::vector<Coeffs>>> fits;
       /// Will be filled if signs are separated, otherwise not
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
+
+      // Same info as above but with more-easily-iterable index order
+      // [type][shift bin][histogram bin]. TODO this is ugly
+      std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
+      std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
     };
 
   protected:

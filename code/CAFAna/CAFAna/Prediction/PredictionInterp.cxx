@@ -224,7 +224,6 @@ namespace ana
   //----------------------------------------------------------------------
   void PredictionInterp::InitFits() const
   {
-
     // No systs
     if(fPreds.empty()){
       if(fBinning.POT() > 0 || fBinning.Livetime() > 0) return;
@@ -243,6 +242,38 @@ namespace ana
         InitFitsHelper(sp, sp.fits, Sign::kBoth);
       }
       sp.nCoeffs = sp.fits[0][0].size();
+
+      // Copy the outputs into the remapped indexing order. TODO this is very
+      // ugly. Best would be to generate things in this order natively.
+
+      sp.fitsRemap.resize(sp.fits.size());
+      for(auto& it: sp.fitsRemap){
+        it.resize(sp.fits[0][0].size());
+        for(auto& it2: it) it2.resize(sp.fits[0].size(), Coeffs(0, 0, 0, 0));
+      }
+
+      for(unsigned int i = 0; i < sp.fitsRemap.size(); ++i){
+        for(unsigned int j = 0; j < sp.fitsRemap[i].size(); ++j){
+          for(unsigned int k = 0; k < sp.fitsRemap[i][j].size(); ++k){
+            sp.fitsRemap[i][j][k] = sp.fits[i][k][j];
+          }
+        }
+      }
+
+      sp.fitsNubarRemap.resize(sp.fitsNubar.size());
+      for(auto& it: sp.fitsNubarRemap){
+        it.resize(sp.fitsNubar[0][0].size());
+        for(auto& it2: it) it2.resize(sp.fitsNubar[0].size(), Coeffs(0, 0, 0, 0));
+      }
+
+      for(unsigned int i = 0; i < sp.fitsNubarRemap.size(); ++i){
+        for(unsigned int j = 0; j < sp.fitsNubarRemap[i].size(); ++j){
+          for(unsigned int k = 0; k < sp.fitsNubarRemap[i][j].size(); ++k){
+            sp.fitsNubarRemap[i][j][k] = sp.fitsNubar[i][k][j];
+          }
+        }
+      }
+
     }
 
     // Predict something, anything, so that we can know what binning to use
@@ -304,8 +335,6 @@ namespace ana
       const ISyst* syst = it.first;
       const ShiftedPreds& sp = it.second;
 
-      auto& fits = nubar ? sp.fitsNubar : sp.fits;
-
       double x = shift.GetShift(syst);
 
       if(x == 0) continue;
@@ -313,6 +342,8 @@ namespace ana
       int shiftBin = (x - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
       shiftBin = std::min(shiftBin, sp.nCoeffs-1);
+
+      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
 
       x -= sp.shifts[shiftBin];
 
@@ -324,7 +355,8 @@ namespace ana
         // assert(type < fits.size());
         // assert(n < sp.fits[type].size());
         // assert(shiftBin < int(sp.fits[type][n].size()));
-        const Coeffs& f = fits[type][n][shiftBin];
+
+        const Coeffs& f = fits[n];
 
         corr[n] *= f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
       } // end for n
@@ -449,6 +481,7 @@ namespace ana
 
     const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
     TH1D* h = base.ToTH1(pot);
+    double* arr = h->GetArray();
     const unsigned int N = h->GetNbinsX()+2;
 
 
@@ -463,13 +496,13 @@ namespace ana
       assert(fPreds.find(syst) != fPreds.end());
       const ShiftedPreds& sp = fPreds[syst];
 
-      auto& fits = nubar ? sp.fitsNubar : sp.fits;
-
       double x = shift.GetShift(syst);
 
       int shiftBin = (x - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
       shiftBin = std::min(shiftBin, sp.nCoeffs-1);
+
+      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
 
       x -= sp.shifts[shiftBin];
 
@@ -481,10 +514,10 @@ namespace ana
         // assert(type < fits.size());
         // assert(n < sp.fits[type].size());
         // assert(shiftBin < int(sp.fits[type][n].size()));
-        const Coeffs& f = fits[type][n][shiftBin];
+        const Coeffs& f = fits[n];
 
         const double corr = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-        if(corr > 0) diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*h->GetBinContent(n);
+        if(corr > 0) diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
       } // end for n
     } // end for syst
 
