@@ -123,9 +123,9 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty){
   bool useTh23   = false;
 
   for (auto & str : penalties){
-    if (str == "th13" || str == "allsyst") useTh13 = true;
-    if (str == "dmsq32" || str == "allsyst") useDmsq32 = true;
-    if (str == "th23" || str == "allsyst") useTh23 = true;
+    if (str == "th13" || str == "allpen") useTh13 = true;
+    if (str == "dmsq32" || str == "allpen") useDmsq32 = true;
+    if (str == "th23" || str == "allpen") useTh23 = true;
   }
 
   IExperiment *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23);
@@ -183,6 +183,22 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     fluxsyst = true;
     detsyst = true;
   }
+  // This might need more thought because of the above... but...
+  if (systString.find("nodet") != string::npos){
+    xsecsyst = true;
+    fluxsyst = true;
+    detsyst = false;
+  }
+  if (systString.find("noflux") != string::npos){
+    xsecsyst = true;
+    fluxsyst = false;
+    detsyst = true;
+  }
+  if (systString.find("noxsec") != string::npos){
+    xsecsyst = false;
+    fluxsyst = true;
+    detsyst = true;
+  }  
   
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
@@ -390,13 +406,13 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 };
 
 
-int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc, double pot_fd_fhc, double pot_fd_rhc,
-		osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
-		std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
-		osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
-		std::map<const IFitVar*, std::vector<double>> oscSeeds={},
-		IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		TDirectory *outDir=NULL){
+double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc, double pot_fd_fhc, double pot_fd_rhc,
+		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
+		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
+		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
+		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
+		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
+		   TDirectory *outDir=NULL){
   
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
@@ -443,13 +459,13 @@ int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc,
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
-  std::cout << "Prefit chi-square:" << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
-  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_fhc << std::endl;
-  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_rhc << std::endl;
+  // std::cout << "Prefit chi-square:" << std::endl;
+  // if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
+  // if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc << std::endl;
+  // if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
+  // if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc << std::endl;
+  // if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_fhc << std::endl;
+  // if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_rhc << std::endl;
 
   // Save prefit starting distributions
   if (outDir){
@@ -534,13 +550,13 @@ int RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_rhc,
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
   
-  std::cout << "Postfit chi-square:" << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // std::cout << "Postfit chi-square:" << std::endl;
+  // if (pot_fd_fhc > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // if (pot_fd_fhc > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // if (pot_fd_rhc > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // if (pot_fd_rhc > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
+  // if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
   
   // If we have a directory to save to... save some stuff...
   if (outDir){
