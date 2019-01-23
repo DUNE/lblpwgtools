@@ -2,17 +2,19 @@
 
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
-	      std::string systSet = "nosyst", bool useND=true){
+	      std::string systSet = "nosyst", bool useND=true,
+	      std::string penaltyString=""){
   
   gROOT->SetBatch(1);
 
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  
   // Oscillation parameters to use
-  std::vector<const IFitVar*> oscVars =
-    {&kFitDmSq32Scaled, &kFitSinSqTheta23,
-     &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
+  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
+					 &kFitSinSq2Theta12, &kFitDmSq21,
+					 &kFitDeltaInPiUnits, &kFitRho};
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
@@ -38,8 +40,10 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	
 	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);	
 	testOsc->SetdCP(thisdcp);
+	// Force it into the wrong hierarchy
+	testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
 
-	Penalizer_GlbLike penalty(hie, ioct);
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
 	SystShifts trueSyst = kNoShift;
 	SystShifts testSyst = kNoShift;
 
@@ -49,9 +53,10 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 				trueOsc, trueSyst, false,
 				oscVars, systlist,
 				testOsc, testSyst,
-				oscSeeds, &penalty);
+				oscSeeds, penalty);
 	
 	chisqmin = TMath::Min(thischisq,chisqmin);
+	delete penalty;
       }
       
       chisqmin = TMath::Max(chisqmin,1e-6);

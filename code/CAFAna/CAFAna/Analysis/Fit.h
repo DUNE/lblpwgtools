@@ -51,7 +51,7 @@ namespace ana
       kCareful = 2,
       kGradDesc = 3,
       // Allow bitmask operations to extract these first four options
-      kAlgoMask = 4,
+      kAlgoMask = 3,
       // You may optionally specify this (eg kNormal | kIncludeSimplex) to
       // improve the chances of escaping from invalid minima
       kIncludeSimplex = 4,

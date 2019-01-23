@@ -2,7 +2,9 @@
 
 void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
 	       std::string outputFname = "covar_various_asimov.root",
-	       std::string systSet = "flux", bool useND=true, bool usePenalty=true){  
+	       std::string systSet = "flux", bool useND=true,
+	       std::string penaltyString=""){
+  
   gROOT->SetBatch(1);
 
   // Get the systematics to use
@@ -30,14 +32,15 @@ void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
   std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
   
   // Add a penalty term (maybe)
-  Penalizer_GlbLike penalty(hie, 1, (!usePenalty));
+  IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
   
   double thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				 trueOsc, trueSyst, false,
 				 oscVars, systlist,
 				 testOsc, testSyst,
-				 oscSeeds, &penalty,
+				 oscSeeds, penalty,
 				 Fitter::kNormal|Fitter::kIncludeHesse, fout);
+  delete penalty;
   
   // Now close the file
   fout->Close();

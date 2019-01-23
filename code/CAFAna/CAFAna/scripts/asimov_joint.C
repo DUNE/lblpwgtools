@@ -1,0 +1,224 @@
+#include "common_fit_definitions.C"
+
+// I miss python
+std::string sanitize (std::string word) {
+  uint i = 0;
+  
+  while (i < word.size()) {
+    if(word[i] == '(' || word[i] == ')') {
+      word.erase(i,1);
+      continue;
+    }
+    i++;
+  }
+  return word;
+}
+
+void RemovePars(std::vector<const IFitVar *> &osclist,
+                 std::vector<std::string> const &namesToRemove) {
+  osclist.erase(std::remove_if(osclist.begin(), osclist.end(),
+			       [&](const IFitVar *s) {
+				 return (std::find(namesToRemove.begin(),
+						   namesToRemove.end(),
+						   sanitize(s->ShortName())) !=
+					 namesToRemove.end());
+			       }),
+		osclist.end());
+}
+
+// Function to set the binning based on the parameter short name
+void GetParameterBinning(std::string parName, int& nBins, double& min, double& max){
+
+  // Defaults
+  nBins = 25;
+  min = 0;
+  max = 1;
+  
+  if (parName == "th13"){
+    nBins = 25;
+    min = 0.1;
+    max = 0.3;
+    return;
+  }
+  if (parName == "deltapi"){
+    nBins = 25;
+    min = -1;
+    max = 1;
+  }
+  if (parName == "dmsq32scaled"){
+    nBins = 25;
+    min = 2;
+    max = 3;
+  }
+  if (parName == "ssth23"){
+    nBins = 25;
+    min = 0.3;
+    max = 0.7;
+  }
+  if (parName == "ss2th12"){
+    nBins = 25;
+    min = 0.8;
+    max = 0.9;
+  }
+  if (parName == "dmsq21"){
+    nBins = 25;
+    min = 6e-5;
+    max = 9e-5;
+  }
+  if (parName == "rho"){
+    nBins = 25;
+    min = 2.5;
+    max = 3.0;
+  }
+  return;
+}
+
+// Likely to have bugs in the translation between what I want to look at, and what CAFAna wants to show me...
+void SetOscillationParameter(osc::IOscCalculatorAdjustable* calc, std::string parName, double parVal, int hie){
+
+  if (parName == "th13") calc->SetTh13(parVal);
+  else if (parName == "deltapi") calc->SetdCP(TMath::Pi()*parVal);
+  else if (parName == "dmsq32scaled") calc->SetDmsq32(hie < 0 ? -1*parVal/1000. : parVal/1000.);
+  else if (parName == "ssth23") calc->SetTh23(asin(sqrt(parVal)));
+  else if (parName == "ss2th12") calc->SetTh12(asin(sqrt(parVal))/2);
+  else if (parName == "dmsq21") calc->SetDmsq21(parVal);
+  else if (parName == "rho") calc->SetRho(parVal);
+  return;
+}
+
+// This function unpacks the 
+TH1* GetAsimovHist(std::vector<std::string> plotVarVect){
+  TH1* returnHist = NULL;
+
+  int nBinsX=0, nBinsY=0;
+  double minX=0, maxX=0, minY=0, maxY=0;
+
+  // Now get the binnings etc for the histograms
+  if (plotVarVect.size() > 0) GetParameterBinning(plotVarVect[0], nBinsX, minX, maxX);
+  if (plotVarVect.size() > 1) GetParameterBinning(plotVarVect[1], nBinsY, minY, maxY);
+    
+  if (plotVarVect.size() == 1)
+    returnHist = new TH1D(plotVarVect[0].c_str(), (plotVarVect[0]+";"+plotVarVect[0]).c_str(),
+			  5*nBinsX, minX, maxX);
+  else if (plotVarVect.size() == 2)
+    returnHist = new TH2D((plotVarVect[0]+"_"+plotVarVect[1]).c_str(),
+			  (plotVarVect[0]+"_"+plotVarVect[1]+";"+
+			   plotVarVect[0]+";"+plotVarVect[1]).c_str(),
+			  nBinsX, minX, maxX,
+			  nBinsY, minY, maxY);
+  
+  return returnHist;
+}
+
+// Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23, dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
+void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
+		  std::string outputFname="asimov_test.root",
+		  std::string plotVars="th13:deltapi",
+		  std::string systSet = "nosyst",
+		  bool useND=true, std::string penaltyString=""){
+  
+  gROOT->SetBatch(1);
+
+  std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
+  
+  // Get the systematics to use
+  std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
+
+  // Oscillation parameters to start with
+  std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
+					    &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
+					    &kFitRho};
+
+  // Remove the parameters to be scanned
+  std::vector<const IFitVar*> oscVarsFree = oscVarsAll;
+  if (plotVarVect.size() > 0) RemovePars(oscVarsFree, {plotVarVect[0]});
+  if (plotVarVect.size() > 1) RemovePars(oscVarsFree, {plotVarVect[1]}); 
+  
+  TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
+  fout->cd();
+
+  // Produce Asimovs for both hierarchies in all cases
+  for(int hie = -1; hie <= +1; hie += 2){
+
+    // This remains the same throughout... there is one true parameter set for this Asimov set
+    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+    
+    // Start by performing a minimization across the whole space, this defines the minimum chi2!
+    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie);
+    
+    IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString);
+    SystShifts trueSyst = kNoShift;
+    SystShifts testSyst = kNoShift;
+    
+    std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+    
+    // Directory to save best fit info to
+    TDirectory* nomDir = (TDirectory*) fout->mkdir(hie > 0 ? "nom_dir_nh" : "nom_dir_ih");
+    
+    // Get the best fit
+    double globalmin = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+				   trueOsc, trueSyst, false,
+				   oscVarsAll, systlist,
+				   testOsc, testSyst,
+				   oscSeeds, penalty_nom,
+				   Fitter::kNormal, nomDir);
+
+    std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
+    fout->cd();
+    nomDir->Write();
+    delete penalty_nom;
+  
+    // Need to set up the histogram to fill
+    TH1* sens_hist = GetAsimovHist(plotVarVect);
+    if (!sens_hist){
+      std::cout << "ERROR: sens_hist not correctly produced!" << std::endl;
+      abort();
+    }
+    sens_hist->SetName((sens_hist->GetName() + std::string(hie > 0 ? "_nh" : "_ih")).c_str());
+      
+    // Now loop over the bins in both x and y (if 1D, one loop does nothing)
+    for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
+      for (int yBin = 0; yBin < sens_hist->GetNbinsY(); ++yBin){
+	
+	double chisqmin = 99999;
+	double thischisq;
+	
+	// If the parameters of interest don't include theta23, need to loop over octant too...
+	// for theta23, this *should* be fine if I only change the ioct in the penalty term... it'll just be terrible in the wrong octant
+	for(int ioct = -1; ioct <= 1; ioct += 2) {
+	  //int ioct = 1;
+	  // Figure out what the fixed parameters are, and put them into the true osc parameters. Also need to do the same for the test osc
+	  // Fix whatever I need to!
+	  // Probably need a function here to do the fixing
+	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);	
+	  if (plotVarVect.size() > 0)	  
+	    SetOscillationParameter(testOsc, plotVarVect[0], sens_hist->GetXaxis()->GetBinCenter(xBin+1), hie);
+	  if (plotVarVect.size() > 1)
+	    SetOscillationParameter(testOsc, plotVarVect[1], sens_hist->GetYaxis()->GetBinCenter(yBin+1), hie);
+	  
+	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
+	  
+	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+	  
+	  thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+				  trueOsc, trueSyst, false,
+				  oscVarsFree, systlist,
+				  testOsc, testSyst,
+				  oscSeeds, penalty);
+	  
+	  chisqmin = TMath::Min(thischisq,chisqmin);
+	  delete penalty;
+	}
+	// Save the value into the hist
+	sens_hist->SetBinContent(xBin+1, yBin+1, chisqmin - globalmin);
+      }
+    }
+
+    // Save the histogram, and do something sensible with the name
+    fout->cd();
+    sens_hist->Write();
+    delete sens_hist;
+  }
+  fout->Close();
+}
+
