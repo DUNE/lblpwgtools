@@ -14,21 +14,25 @@ class MissingProtonFakeDataGenerator : public ana::ISyst {
 public:
   virtual ~MissingProtonFakeDataGenerator(){};
 
-  std::vector<std::unique_ptr<TH2>> FHC_Histos;
-  std::vector<std::unique_ptr<TH2>> RHC_Histos;
+  std::vector<std::unique_ptr<TH2>> nu_Histos;
+  std::vector<std::unique_ptr<TH2>> nubar_Histos;
 
   bool fDoWeight;
 
-  TH2 const *GetWeightingHisto(int gmode, bool isFHC) const {
+  TH2 const *GetWeightingHisto(int gmode, bool is_matter) const {
     if ((gmode < 1) || (gmode > 14)) {
       return nullptr;
     }
 
-    return (isFHC ? FHC_Histos : RHC_Histos)[gmode].get();
+    return (is_matter ? nu_Histos : nubar_Histos)[gmode].get();
   }
 
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
+
+    if (!sr->dune.isCC) {
+      return;
+    }
 
     if (sigma != 1) {
       return;
@@ -47,7 +51,7 @@ public:
     }
 
     TH2 const *wght =
-        GetWeightingHisto(sr->dune.GENIE_ScatteringMode, sr->dune.isFHC);
+        GetWeightingHisto(sr->dune.GENIE_ScatteringMode, (sr->dune.nuPDG > 0));
     if (!wght) {
       return;
     }
@@ -85,18 +89,18 @@ public:
         EpFrac(epfrac), fDoWeight(DoWeight) {
 
     std::vector<std::string> fnames = {
-        "ProtonEdepm20pc_binnedWeights_FHC.root",
-        "ProtonEdepm20pc_binnedWeights_RHC.root"};
+        "ProtonEdepm20pc_binnedWeights_nu.root",
+        "ProtonEdepm20pc_binnedWeights_nubar.root"};
     for (size_t bm = 0; bm < 2; ++bm) {
       TFile inp((FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
       assert(!inp.IsZombie());
       for (size_t i = 0; i < 15; ++i) {
         std::stringstream ss("");
         ss << "EnuTp_" << i;
-        (bm ? FHC_Histos : RHC_Histos)
+        (bm ? nu_Histos : nubar_Histos)
             .emplace_back(
                 dynamic_cast<TH2 *>(inp.Get(ss.str().c_str())->Clone()));
-        (bm ? FHC_Histos : RHC_Histos).back()->SetDirectory(nullptr);
+        (bm ? nu_Histos : nubar_Histos).back()->SetDirectory(nullptr);
       }
     }
   }

@@ -51,7 +51,7 @@ namespace ana
                  std::vector<const ISyst*> systs,
                  Precision prec)
     : fExpt(expt), fVars(vars), fSysts(systs), fPrec(prec), fCalc(0),
-      fSupportsDerivatives(SupportsDerivatives()), fCovar(0)
+      fSupportsDerivatives(SupportsDerivatives()), fCovar(0), fCovarStatus(-1)
   {
   }
 
@@ -117,7 +117,7 @@ namespace ana
 							 SystShifts& systSeed,
 							 Verbosity verb) const
   {
-    
+
     // Why, when this is called for each seed?
     fCalc = seed;
     fShifts = systSeed;
@@ -151,9 +151,9 @@ namespace ana
     // // Do a scan and pass the minimum back
     // mnApp = new ROOT::Minuit2::MnScan(*this, mnPars, int(fPrec & kAlgoMask));
     // ROOT::Minuit2::FunctionMinimum scan_minpt = (*mnApp)();
-    // ROOT::Minuit2::MnUserParameterState mnParState = scan_minpt.UserState();    
+    // ROOT::Minuit2::MnUserParameterState mnParState = scan_minpt.UserState();
     // delete mnApp;
-    
+
     if((fPrec & kAlgoMask) == kGradDesc){
       mnApp = new GradientDescent(*this, mnPars);
     }
@@ -186,13 +186,19 @@ namespace ana
     ROOT::Minuit2::FunctionMinimum minpt = (*mnApp)(1e8);
     gErrorIgnoreLevel = olderr;
 
+    // covariance matrix status (0 = not valid, 1 approximate, 2, full but made pos def, 3 accurate and not pos def
+    fCovarStatus = minpt.UserState().CovarianceStatus();
+    std::cout << "Notice: MINUIT Covar state: " << fCovarStatus << std::endl;
+
     // Hesse can find a better minimum, so let's do this before panicking
     if(fPrec & kIncludeHesse){
       std::cout << "Notice: attempting to build the Hessian matrix" << std::endl;
       ROOT::Minuit2::MnHesse hesse(2);
       hesse(*this, minpt, 1e5);
+      fCovarStatus = minpt.UserState().CovarianceStatus();
+      std::cout << "Notice: HESSE Covar state: " << fCovarStatus << std::endl;
     }
-    
+
     // Okay, time to panic! If this isn't valid, we probably should worry more...
     if(!minpt.IsValid()){
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
@@ -215,12 +221,12 @@ namespace ana
 
     for(const SeedPt& pt: pts){
       osc::IOscCalculatorAdjustable *seed = initseed->Copy();
-      
+
       for(auto it: pt.fitvars) it.first->SetValue(seed, it.second);
 
       // Need to deal with parameters that are not fit values!
       SystShifts shift = pt.shift;
-      
+
       ROOT::Minuit2::FunctionMinimum thisMin = FitHelperSeeded(seed, shift, verb);
 
       // Check whether this is the best minimum we've found so far
@@ -234,7 +240,7 @@ namespace ana
 	fPostFitValues .clear();
 	fPostFitErrors .clear();
 
-	// Save pre-fit info	
+	// Save pre-fit info
 	// In principle, these can change with the seed, so have to save them here...
 	for(const IFitVar* v: fVars){
 	  const double val = v->GetValue(seed);
@@ -255,22 +261,22 @@ namespace ana
 
 	this->fEdm = thisMin.Edm();
 	this->fIsValid = thisMin.IsValid();
-	
+
 	// Store covariances
 	ROOT::Minuit2::MnUserCovariance mncov = thisMin.UserCovariance();
-	
+
 	// Slightly tedious
 	std::vector<double> covdata = mncov.Data();
 	if (this->fCovar) delete this->fCovar;
 	this->fCovar = new TMatrixDSym(mncov.Nrow());
-	
+
 	for (uint row = 0; row < mncov.Nrow(); ++row){
 	  for (uint col = 0; col < mncov.Nrow(); ++col){
 	    if (row > col)
 	      (*this->fCovar)(row, col) = covdata[col+row*(row+1)/2];
 	    else (*this->fCovar)(row, col) = covdata[row+col*(col+1)/2];
 	  }
-	}	
+	}
 
         // Store the best fit values of all the parameters we know are being varied.
         bestFitPars.clear();
@@ -282,7 +288,7 @@ namespace ana
       }
       delete seed;
     }
-    
+
     // Stuff the results of the actual best fit back into the seeds
     for(unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(initseed, bestFitPars[i]);
