@@ -104,7 +104,13 @@ namespace ana
       return ret;
     }
 
-    //   protected:
+    double Derivative(unsigned int varIdx)
+    {
+      if(fDiff.empty()) return 0;
+      assert(varIdx < fDiff.size());
+      return fDiff[varIdx];
+    }
+    //  protected:
     double fVal;
     std::vector<double> fDiff;
 

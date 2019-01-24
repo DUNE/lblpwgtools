@@ -171,6 +171,11 @@ namespace ana
     };
 
   protected:
+    template<class T> void ApplyCorrection(const std::vector<T>& shifts,
+                                           CoeffsType type,
+                                           bool nubar,
+                                           std::vector<T>& corr) const;
+
     mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
 
     /// The oscillation values we assume when evaluating the coefficients

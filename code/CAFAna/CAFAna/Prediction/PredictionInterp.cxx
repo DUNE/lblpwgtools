@@ -1,4 +1,5 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
+#include "CAFAna/Core/AutoDiff.h"
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Ratio.h"
@@ -316,6 +317,46 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  template<class T> void PredictionInterp::
+  ApplyCorrection(const std::vector<T>& shifts,
+                  CoeffsType type,
+                  bool nubar,
+                  std::vector<T>& corr) const
+  {
+    const unsigned int N = corr.size();
+
+    unsigned int systIdx = 0;
+    for(const auto& it: fPreds){
+      T x = shifts[systIdx++];
+      if(x == 0) continue;
+
+      const ShiftedPreds& sp = it.second;
+
+      int shiftBin = int((x - sp.shifts[0])/sp.Stride());
+      shiftBin = std::max(0, shiftBin);
+      shiftBin = std::min(shiftBin, sp.nCoeffs-1);
+
+      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
+
+      x -= sp.shifts[shiftBin];
+
+      const T x_cube = util::cube(x);
+      const T x_sqr = util::sqr(x);
+
+      for(unsigned int n = 0; n < N; ++n){
+        // Uncomment to debug crashes in this function
+        // assert(type < fits.size());
+        // assert(n < sp.fits[type].size());
+        // assert(shiftBin < int(sp.fits[type][n].size()));
+
+        const Coeffs& f = fits[n];
+
+        corr[n] *= std::max(f.a*x_cube + f.b*x_sqr + f.c*x + f.d, T(0.));
+      } // end for n
+    } // end for syst
+  }
+
+  //----------------------------------------------------------------------
   Spectrum PredictionInterp::
   ShiftSpectrum(const Spectrum& s,
                 CoeffsType type,
@@ -327,45 +368,18 @@ namespace ana
     // TODO histogram operations could be too slow
     TH1D* h = s.ToTH1(s.POT());
 
+    // TODO - waste to apply zero shifts?
+    std::vector<double> numericShifts;
+    numericShifts.reserve(fPreds.size());
+    for(const auto& it: fPreds) numericShifts.push_back(shift.GetShift(it.first));
+
     const unsigned int N = h->GetNbinsX()+2;
-    double corr[N];
-    for(unsigned int i = 0; i < N; ++i) corr[i] = 1;
-
-    for(auto& it: fPreds){
-      const ISyst* syst = it.first;
-      const ShiftedPreds& sp = it.second;
-
-      double x = shift.GetShift(syst);
-
-      if(x == 0) continue;
-
-      int shiftBin = (x - sp.shifts[0])/sp.Stride();
-      shiftBin = std::max(0, shiftBin);
-      shiftBin = std::min(shiftBin, sp.nCoeffs-1);
-
-      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
-
-      x -= sp.shifts[shiftBin];
-
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
-
-      for(unsigned int n = 0; n < N; ++n){
-        // Uncomment to debug crashes in this function
-        // assert(type < fits.size());
-        // assert(n < sp.fits[type].size());
-        // assert(shiftBin < int(sp.fits[type][n].size()));
-
-        const Coeffs& f = fits[n];
-
-        corr[n] *= f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-      } // end for n
-    } // end for syst
-
     double* arr = h->GetArray();
-    for(unsigned int n = 0; n < N; ++n){
-      arr[n] *= std::max(corr[n], 0.);
-    }
+    std::vector<double> corr(arr, arr+N); // initialize with bin contents
+    ApplyCorrection(numericShifts, type, nubar, corr);
+
+    // Copy back into histogram's array
+    for(unsigned int n = 0; n < N; ++n) arr[n] = corr[n];
 
     return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
   }
@@ -479,47 +493,36 @@ namespace ana
       return;
     }
 
+    // Should the interpolation use the nubar fits?
+    const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
+
     const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
     TH1D* h = base.ToTH1(pot);
     double* arr = h->GetArray();
     const unsigned int N = h->GetNbinsX()+2;
 
+    // TODO - waste to apply zero shifts?
+    std::vector<DiffVar> diffShifts;
+    diffShifts.reserve(fPreds.size());
+    int systIdx = 0;
+    for(const auto& it: fPreds){
+      diffShifts.emplace_back(shift.GetShift(it.first), systIdx++, fPreds.size());
+    }
 
-    // Should the interpolation use the nubar fits?
-    const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
+    std::vector<DiffVar> corr(arr, arr+N); // initialize with the bin contents
+    ApplyCorrection(diffShifts, type, nubar, corr);
 
+    systIdx = 0;
     for(auto& it: dp){
-      const ISyst* syst = it.first;
       std::vector<double>& diff = it.second;
       if(diff.empty()) diff.resize(N);
-      assert(diff.size() == N);
-      assert(fPreds.find(syst) != fPreds.end());
-      const ShiftedPreds& sp = fPreds[syst];
-
-      double x = shift.GetShift(syst);
-
-      int shiftBin = (x - sp.shifts[0])/sp.Stride();
-      shiftBin = std::max(0, shiftBin);
-      shiftBin = std::min(shiftBin, sp.nCoeffs-1);
-
-      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
-
-      x -= sp.shifts[shiftBin];
-
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
 
       for(unsigned int n = 0; n < N; ++n){
-        // Uncomment to debug crashes in this function
-        // assert(type < fits.size());
-        // assert(n < sp.fits[type].size());
-        // assert(shiftBin < int(sp.fits[type][n].size()));
-        const Coeffs& f = fits[n];
-
-        const double corr = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-        if(corr > 0) diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
+        diff[n] += corr[n].Derivative(systIdx);
       } // end for n
-    } // end for syst
+
+      ++systIdx;
+    } // end for it
 
     HistCache::Delete(h);
   }
