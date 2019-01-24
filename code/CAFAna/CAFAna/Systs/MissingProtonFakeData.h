@@ -19,12 +19,12 @@ public:
 
   bool fDoWeight;
 
-  TH2 const *GetWeightingHisto(int gmode, bool is_matter) const {
+  TH2 const *GetWeightingHisto(int gmode, bool is_nu) const {
     if ((gmode < 1) || (gmode > 14)) {
       return nullptr;
     }
 
-    return (is_matter ? nu_Histos : nubar_Histos)[gmode].get();
+    return (is_nu ? nu_Histos : nubar_Histos)[gmode].get();
   }
 
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
@@ -67,16 +67,6 @@ public:
 
     double wght_val = wght->GetBinContent(binx, biny);
 
-    // std::cout << "Enu: " << sr->dune.Ev << ", xbin = " << binx << std::endl;
-    // std::cout << "Ep: " << sr->dune.eP << ", ybin = " << biny << std::endl;
-    // std::cout << "Wght: " << wght->GetBinContent(binx, biny) << std::endl;
-
-    if (!std::isnormal(wght_val)) {
-      std::cout << "Ep: " << sr->dune.eP << std::endl;
-      std::cout << "Enu: " << sr->dune.Ev << std::endl;
-      std::cout << "Wght: " << wght_val << std::endl;
-    }
-
     weight *= wght_val;
   }
 
@@ -92,15 +82,16 @@ public:
         "ProtonEdepm20pc_binnedWeights_nu.root",
         "ProtonEdepm20pc_binnedWeights_nubar.root"};
     for (size_t bm = 0; bm < 2; ++bm) {
+      bool is_nu = (bm == 0);
       TFile inp((FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
       assert(!inp.IsZombie());
       for (size_t i = 0; i < 15; ++i) {
         std::stringstream ss("");
         ss << "EnuTp_" << i;
-        (bm ? nu_Histos : nubar_Histos)
+        (is_nu ? nu_Histos : nubar_Histos)
             .emplace_back(
                 dynamic_cast<TH2 *>(inp.Get(ss.str().c_str())->Clone()));
-        (bm ? nu_Histos : nubar_Histos).back()->SetDirectory(nullptr);
+        (is_nu ? nu_Histos : nubar_Histos).back()->SetDirectory(nullptr);
       }
     }
   }
