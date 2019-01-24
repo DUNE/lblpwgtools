@@ -207,7 +207,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   std::vector<const ISyst *> systlist;
   if (fluxsyst) {
     std::vector<const ISyst *> fluxlist =
-        GetDUNEFluxSysts(30, fluxXsecPenalties, UseOffAxisFluxUncertainties);
+        GetDUNEFluxSysts(10, fluxXsecPenalties, UseOffAxisFluxUncertainties);
     systlist.insert(systlist.end(), fluxlist.begin(), fluxlist.end());
   }
 
