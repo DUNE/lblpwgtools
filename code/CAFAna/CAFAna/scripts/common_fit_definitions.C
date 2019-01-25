@@ -133,6 +133,19 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty){
 }
 
 
+// Take a list of all the systs known about, and retain the named systs...
+void KeepSysts(std::vector<const ISyst *> &systlist,
+	       std::vector<std::string> const &systsToInclude) {
+  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
+                                [&](const ISyst *s) {
+                                  return (std::find(systsToInclude.begin(),
+						    systsToInclude.end(),
+						    s->ShortName()) ==
+                                          systsToInclude.end());
+                                }),
+                 systlist.end());
+}
+
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false){
@@ -173,6 +186,28 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   bool fluxsyst = false;
   bool xsecsyst = false;
 
+// Okay, I am definitely now doing too much with this function... sorry all!
+  // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
+  // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
+  if (systString.find("list") != string::npos){
+
+    // 1) Get a default list with everything
+    std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE);
+    // for (auto & syst : namedList) std::cout << syst->ShortName() << std::endl;
+    // 2) Interpret the list of short names
+    std::vector<std::string> systs = SplitString(systString, ':');
+    
+    // 3) Don't include "list"
+    systs.erase(systs.begin());
+    
+    // 4) Regret nothing
+    KeepSysts(namedList, systs);
+
+    // 5) $$$ Profit
+    return namedList;
+  }
+
+  // For ordinary uses, transform to lowercase... just incase
   std::transform(systString.begin(), systString.end(), systString.begin(), ::tolower);
   
   if (systString.find("xsec") != string::npos) xsecsyst = true;
@@ -199,7 +234,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     fluxsyst = true;
     detsyst = true;
   }  
-  
+
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
 			useND, useFD, useNueOnE);
