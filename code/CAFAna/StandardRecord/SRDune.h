@@ -58,7 +58,27 @@ namespace caf
     int nuPDG;
     int nuPDGunosc;
     int LepPDG;
+
+    // This mode depends on whether the file is ND/FD
+    // See converter in SpectrumLoader.cxx that fills GENIE_ScatteringMode
     int mode;
+
+    /// Modes list:
+    /// * QE: 1
+    /// * Single Kaon: 2
+    /// * DIS: 3
+    /// * RES: 4
+    /// * COH: 5
+    /// * Diffractive: 6
+    /// * Nu-e El: 7
+    /// * IMD: 8
+    /// * AMnuGamma: 9
+    /// * MEC: 10
+    /// * COHEl: 11
+    /// * IBD: 12
+    /// * GlashowRES: 13
+    /// * IMDAnnihalation: 14
+    int GENIE_ScatteringMode;
     int nP;
     int nN;
     int nipi0;

@@ -75,8 +75,8 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     TH2 *h = fScale2D[pdg][anti][hc];
     assert(h);
     const int xbin = h->GetXaxis()->FindFixBin(sr->dune.Ev);
-    const int ybin =
-        h->GetYaxis()->FindFixBin(sr->dune.det_x + (sr->dune.vtx_x * 1E-2));
+    double pos_off_axis_m = std::fabs(sr->dune.det_x + (sr->dune.vtx_x * 1E-2));
+    const int ybin = h->GetYaxis()->FindFixBin(pos_off_axis_m);
 
     if (xbin == 0 || xbin == h->GetXaxis()->GetNbins() + 1) {
       return;

@@ -12,7 +12,60 @@
 #include <cassert>
 
 namespace ana
-{  
+{
+  // Overall energy scale systematics applied to all interactions
+  // Uncorrelated between ND & FD
+  class EnergyScaleNDSyst: public ISyst
+  {
+  public:
+  EnergyScaleNDSyst() : ISyst("eScaleND", "Global ND Energy Scale Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+		  sr->dune.Elep_reco);
+
+      double scale = 1 + 0.02 * sigma;
+      if (!sr->dune.isFD) {
+	sr->dune.Ev_reco   *= scale;
+	sr->dune.Elep_reco *= scale;
+      }
+    }
+  };  
+  
+  extern const EnergyScaleNDSyst kEnergyScaleNDSyst;
+
+  // FD global energy scale syst
+  class EnergyScaleFDSyst: public ISyst
+  {
+  public:
+  EnergyScaleFDSyst() : ISyst("eScaleFD", "Global FD Energy Scale Syst") {}
+    void Shift(double sigma,
+	       Restorer& restore,
+	       caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco_numu,
+		  sr->dune.Ev_reco_nue,
+		  sr->dune.RecoHadEnNumu,
+		  sr->dune.RecoHadEnNue,
+		  sr->dune.RecoLepEnNumu,
+		  sr->dune.RecoLepEnNue);
+
+      double scale = 1 + 0.02 * sigma;
+      if (sr->dune.isFD) {
+	sr->dune.Ev_reco_numu  *= scale;
+	sr->dune.Ev_reco_nue   *= scale;
+	sr->dune.RecoHadEnNumu *= scale;
+	sr->dune.RecoHadEnNue  *= scale;
+	sr->dune.RecoLepEnNumu *= scale;
+	sr->dune.RecoLepEnNue  *= scale;
+      }
+    }
+  };  
+  
+  extern const EnergyScaleFDSyst kEnergyScaleFDSyst;
+
   // Slope energy scale systematics
   // Affect ND only
   // Charged hadrons

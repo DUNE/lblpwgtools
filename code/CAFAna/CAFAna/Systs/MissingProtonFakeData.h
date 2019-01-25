@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -14,37 +16,25 @@ class MissingProtonFakeDataGenerator : public ana::ISyst {
 public:
   virtual ~MissingProtonFakeDataGenerator(){};
 
-  std::vector<std::unique_ptr<TH2>> FHC_Histos;
-  std::vector<std::unique_ptr<TH2>> RHC_Histos;
+  std::vector<std::unique_ptr<TH2>> nu_Histos;
+  std::vector<std::unique_ptr<TH2>> nubar_Histos;
 
-  TH2 const *GetWeightingHisto(int mode, bool isFHC) const {
-    size_t indx = std::numeric_limits<size_t>::max();
+  bool fDoWeight;
 
-    switch (mode) {
-    case 0: { // QE
-      indx = 0;
-      break;
-    }
-    case 1: { // RES
-      indx = 2;
-      break;
-    }
-    case 2: { // DIS
-      indx = 3;
-      break;
-    }
-    case 10: { // MEC
-      indx = 1;
-      break;
-    }
-    default: { return nullptr; }
+  TH2 const *GetWeightingHisto(int gmode, bool is_nu) const {
+    if ((gmode < 1) || (gmode > 14)) {
+      return nullptr;
     }
 
-    return (isFHC ? FHC_Histos : RHC_Histos)[indx].get();
+    return (is_nu ? nu_Histos : nubar_Histos)[gmode].get();
   }
 
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
+
+    if (!sr->dune.isCC) {
+      return;
+    }
 
     if (sigma != 1) {
       return;
@@ -53,18 +43,17 @@ public:
     restore.Add(sr->dune.eRec_FromDep);
 
     if (sr->dune.isFD) {
-      sr->dune.eRec_FromDep = ((1 - EpFrac) * sr->dune.eDepP) + sr->dune.eDepN +
-                              sr->dune.eDepPip + sr->dune.eDepPim +
-                              sr->dune.eDepPi0 + sr->dune.eDepOther +
-                              sr->dune.LepE;
+      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
     } else {
-      sr->dune.eRec_FromDep = ((1 - EpFrac) * sr->dune.eRecoP) +
-                              sr->dune.eRecoN + sr->dune.eRecoPip +
-                              sr->dune.eRecoPim + sr->dune.eRecoPi0 +
-                              sr->dune.eRecoOther + sr->dune.LepE;
+      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
     }
 
-    TH2 const *wght = GetWeightingHisto(sr->dune.mode, sr->dune.isFHC);
+    if (!fDoWeight) {
+      return;
+    }
+
+    TH2 const *wght =
+        GetWeightingHisto(sr->dune.GENIE_ScatteringMode, (sr->dune.nuPDG > 0));
     if (!wght) {
       return;
     }
@@ -78,43 +67,41 @@ public:
       return;
     }
 
-    double wght_val = 1;//wght->GetBinContent(binx, biny);
-
-    // std::cout << "Enu: " << sr->dune.Ev << ", xbin = " << binx << std::endl;
-    // std::cout << "Ep: " << sr->dune.eP << ", ybin = " << biny << std::endl;
-    // std::cout << "Wght: " << wght->GetBinContent(binx, biny) << std::endl;
-
-    if (!std::isnormal(wght_val)) {
-      std::cout << "Ep: " << sr->dune.eP << std::endl;
-      std::cout << "Enu: " << sr->dune.Ev << std::endl;
-      std::cout << "Wght: " << wght_val << std::endl;
-    }
+    double wght_val = wght->GetBinContent(binx, biny);
 
     weight *= wght_val;
   }
 
 public:
-  MissingProtonFakeDataGenerator(double epfrac = 0.2)
-      : ISyst("MissingProtonFakeDataGenerator",
-              "MissingProtonFakeDataGenerator"),
-        EpFrac(epfrac) {
+  MissingProtonFakeDataGenerator(double epfrac = 0.2, bool DoWeight = true)
+      : ana::ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
+                       : "MissingProtonEnergyGenerator",
+              DoWeight ? "MissingProtonFakeDataGenerator"
+                       : "MissingProtonEnergyGenerator"),
+        EpFrac(epfrac), fDoWeight(DoWeight) {
 
     std::vector<std::string> fnames = {
-        "ProtonEdepm20pc_binnedWeights_FHC.root",
-        "ProtonEdepm20pc_binnedWeights_RHC.root"};
+        "ProtonEdepm20pc_binnedWeights_nu.root",
+        "ProtonEdepm20pc_binnedWeights_nubar.root"};
     for (size_t bm = 0; bm < 2; ++bm) {
-      TFile inp((FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
+      bool is_nu = (bm == 0);
+      TFile inp((ana::FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
       assert(!inp.IsZombie());
-      for (size_t i = 0; i < 4; ++i) {
+      for (size_t i = 0; i < 15; ++i) {
         std::stringstream ss("");
-        ss << "EnuTp_" << (i + 1);
-        (bm ? FHC_Histos : RHC_Histos)
+        ss << "EnuTp_" << i;
+        (is_nu ? nu_Histos : nubar_Histos)
             .emplace_back(
                 dynamic_cast<TH2 *>(inp.Get(ss.str().c_str())->Clone()));
-        (bm ? FHC_Histos : RHC_Histos).back()->SetDirectory(nullptr);
+        (is_nu ? nu_Histos : nubar_Histos).back()->SetDirectory(nullptr);
       }
     }
   }
 
   double EpFrac;
 };
+
+std::vector<const ana::ISyst *> GetMissingProtonEnergyFakeDataSyst() {
+  static MissingProtonFakeDataGenerator mpfd(0.2);
+  return {&mpfd};
+}

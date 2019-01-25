@@ -98,9 +98,12 @@ namespace ana
     {
       return Fit(0, systSeed, {}, std::vector<SystShifts>(1, systSeed), verb);
     }
-    
+
     /// Return the fit covariance
     TMatrixDSym* GetCovariance(){ return this->fCovar;}
+
+    /// covariance matrix status (0 = not valid, 1 approximate, 2, full but made pos def, 3 accurate and not pos def)
+    int GetCovarianceStatus() {return this->fCovarStatus;}
 
     /// Return the fit names
     std::vector<std::string> GetParamNames(){ return this->fParamNames;}
@@ -182,6 +185,7 @@ namespace ana
     mutable double fEdm = -1;
     mutable bool fIsValid = false;
     mutable TMatrixDSym* fCovar;
+    mutable bool fCovarStatus;
     mutable std::vector<std::string> fParamNames;
     mutable std::vector<double> fPreFitValues;
     mutable std::vector<double> fPreFitErrors;

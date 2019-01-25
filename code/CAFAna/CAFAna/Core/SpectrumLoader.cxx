@@ -8,6 +8,8 @@
 
 #include "CAFAna/Core/GenieWeightList.h"
 
+#include "CAFAna/Core/ModeConversionUtilities.h"
+
 #include "StandardRecord/StandardRecord.h"
 
 #include <cassert>
@@ -249,16 +251,19 @@ namespace ana
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
 
-      //Set eRec_FromDep
+      //Set GENIE_ScatteringMode and eRec_FromDep
       if (sr.dune.isFD) {
         sr.dune.eRec_FromDep = sr.dune.eDepP + sr.dune.eDepN + sr.dune.eDepPip +
                                sr.dune.eDepPim + sr.dune.eDepPi0 +
                                sr.dune.eDepOther + sr.dune.LepE;
+
+        sr.dune.GENIE_ScatteringMode = ana::GetGENIEModeFromSimbMode(sr.dune.mode);
       } else {
         sr.dune.eRec_FromDep = sr.dune.eRecoP + sr.dune.eRecoN +
                                sr.dune.eRecoPip + sr.dune.eRecoPim +
                                sr.dune.eRecoPi0 + sr.dune.eRecoOther +
                                sr.dune.LepE;
+        sr.dune.GENIE_ScatteringMode = sr.dune.mode;
       }
 
       // // Patch up isFD and isFHC which aren't in MVAResult files

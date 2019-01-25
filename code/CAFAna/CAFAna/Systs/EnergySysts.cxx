@@ -1,6 +1,8 @@
 #include "CAFAna/Systs/EnergySysts.h"
 
 namespace ana {
+  const EnergyScaleNDSyst kEnergyScaleNDSyst;
+  const EnergyScaleFDSyst kEnergyScaleFDSyst;
   const eScaleMuLArSyst keScaleMuLArSyst;
   const EnergyScaleMuSystND kEnergyScaleMuSystND;
   const EnergyScaleESyst kEnergyScaleESyst;
@@ -25,6 +27,8 @@ namespace ana {
   EnergySystVector GetEnergySysts()
   {
     EnergySystVector vec;
+    vec.push_back(&kEnergyScaleNDSyst);
+    vec.push_back(&kEnergyScaleFDSyst);
     vec.push_back(&keScaleMuLArSyst);
     vec.push_back(&kEnergyScaleMuSystND);
     vec.push_back(&kEnergyScaleESyst);
