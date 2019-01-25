@@ -265,7 +265,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 // Okay, I am definitely now doing too much with this function... sorry all!
   // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
-  if (systString.find("list") != string::npos){
+  if (systString.find("list") != std::string::npos){
 
     // 1) Get a default list with everything
     std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE);
