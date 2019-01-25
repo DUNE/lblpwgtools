@@ -20,6 +20,7 @@
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
+#include "CAFAna/Systs/MissingProtonFakeData.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
@@ -97,7 +98,7 @@ const HistAxis axErecYrecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND,
                             "y_{rec}", binsY, kRecoYND);
 const HistAxis axErecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND);
 
-const HistAxis axRecoEnuFD_FromDep("Reco energy (GeV)", binsFDEreco,
+const HistAxis axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
                                    kRecoE_FromDep);
 const HistAxis axErecYrecND_FromDep("Reco energy (GeV)", binsNDEreco,
                                     kRecoE_FromDep, "y_{rec}", binsY,
@@ -105,7 +106,7 @@ const HistAxis axErecYrecND_FromDep("Reco energy (GeV)", binsNDEreco,
 const HistAxis axErecYrecNDOA_FromDep("Reco energy (GeV)", binsNDEreco_OA,
                                       kRecoE_FromDep, "y_{rec}", binsY,
                                       kRecoY_FromDep);
-const HistAxis axErec_FromDep("#it{E}_{#nu}^{Rec.} (GeV)", binsNDEreco,
+const HistAxis axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)", binsNDEreco,
                               kRecoE_FromDep);
 
 const HistAxis axTrueE_unibin("#it{E}_{#nu} (GeV)", binsETrue, kTrueEnergy);
@@ -149,6 +150,8 @@ struct AxisBlob {
 };
 
 AxisBlob const default_axes{&axErecYrecND,&axRecoEnuFDnumu,&axRecoEnuFDnue};
+AxisBlob const fake_data_axes{&axErecND_FromDep,&axErecFD_FromDep,&axErecFD_FromDep};
+
 
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
 AxisBlob const Ax1DND_FromDep_unibin{&axErec_FromDep_unibin,&axErec_FromDep_unibin,&axErec_FromDep_unibin};
@@ -161,7 +164,8 @@ const double pot_nd = 3.5 * POT120;
 // Global file path...
 const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 
-bool const UseOffAxisFluxUncertainties = false;
+bool const UseOffAxisFluxUncertainties = false; //true;
+size_t const NFluxParametersToUse = 10; //30;
 
 double GetBoundedGausThrow(double min, double max){
   double val = -999;
@@ -200,14 +204,15 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty){
 
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false){
+					 bool useNueOnE=false,
+				 bool useMissingProtonFakeData=true){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
   std::vector<const ISyst *> systlist;
   if (fluxsyst) {
     std::vector<const ISyst *> fluxlist =
-        GetDUNEFluxSysts(30, fluxXsecPenalties, UseOffAxisFluxUncertainties);
+        GetDUNEFluxSysts(NFluxParametersToUse, fluxXsecPenalties, UseOffAxisFluxUncertainties);
     systlist.insert(systlist.end(), fluxlist.begin(), fluxlist.end());
   }
 
@@ -228,39 +233,44 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
 
+	if(useMissingProtonFakeData){
+		 systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
+	}
+
   return systlist;
 };
 
-
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false){
+					 bool useNueOnE=false,
+				 	 bool useMissingProtonFakeData=false){
   bool detsyst  = false;
   bool fluxsyst = false;
   bool xsecsyst = false;
 
   std::transform(systString.begin(), systString.end(), systString.begin(), ::tolower);
 
-  if (systString.find("xsec") != string::npos) {xsecsyst = true;}
-  if (systString.find("flux") != string::npos) {fluxsyst = true;}
-  if (systString.find("det")  != string::npos) {detsyst = true;}
-  if (systString.find("allsyst") != string::npos) {
+  if (systString.find("xsec") != std::string::npos) {xsecsyst = true;}
+  if (systString.find("flux") != std::string::npos) {fluxsyst = true;}
+  if (systString.find("det")  != std::string::npos) {detsyst = true;}
+  if (systString.find("allsyst") != std::string::npos) {
     xsecsyst = true;
     fluxsyst = true;
     detsyst = true;
   }
+  if (systString.find("prot_fakedata") != std::string::npos) {useMissingProtonFakeData = true;}
   // This might need more thought because of the above... but...
-  if (systString.find("nodet") != string::npos){
+  if (systString.find("nodet") != std::string::npos){
     xsecsyst = true;
     fluxsyst = true;
     detsyst = false;
   }
-  if (systString.find("noflux") != string::npos){
+  if (systString.find("noflux") != std::string::npos){
     xsecsyst = true;
     fluxsyst = false;
     detsyst = true;
   }
-  if (systString.find("noxsec") != string::npos){
+  if (systString.find("noxsec") != std::string::npos){
     xsecsyst = false;
     fluxsyst = true;
     detsyst = true;
@@ -268,8 +278,15 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-			useND, useFD, useNueOnE);
-};
+			useND, useFD, useNueOnE, useMissingProtonFakeData);
+}
+
+std::vector<const ISyst*> GetListOfSysts(char const *systCString,
+					 bool useND=true, bool useFD=true,
+					 bool useNueOnE=false,
+				 	 bool useMissingProtonFakeData=false){
+						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
+					 }
 
 // Use a sample enum, maybe this should live elsewhere?
 enum SampleType{kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown};
@@ -431,7 +448,7 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
-  static std::vector<unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
+  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
   static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
@@ -501,7 +518,7 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
-  static std::vector<unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts(), max, false, stateFileNameIsStub);
+  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts(), max, false, stateFileNameIsStub);
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
   static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
