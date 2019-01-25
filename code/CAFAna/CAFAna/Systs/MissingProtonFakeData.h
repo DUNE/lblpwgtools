@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -72,7 +74,7 @@ public:
 
 public:
   MissingProtonFakeDataGenerator(double epfrac = 0.2, bool DoWeight = true)
-      : ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
+      : ana::ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
                        : "MissingProtonEnergyGenerator",
               DoWeight ? "MissingProtonFakeDataGenerator"
                        : "MissingProtonEnergyGenerator"),
@@ -83,7 +85,7 @@ public:
         "ProtonEdepm20pc_binnedWeights_nubar.root"};
     for (size_t bm = 0; bm < 2; ++bm) {
       bool is_nu = (bm == 0);
-      TFile inp((FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
+      TFile inp((ana::FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(), "READ");
       assert(!inp.IsZombie());
       for (size_t i = 0; i < 15; ++i) {
         std::stringstream ss("");
@@ -98,3 +100,8 @@ public:
 
   double EpFrac;
 };
+
+std::vector<const ana::ISyst *> GetMissingProtonEnergyFakeDataSyst() {
+  static MissingProtonFakeDataGenerator mpfd(0.2);
+  return {&mpfd};
+}
