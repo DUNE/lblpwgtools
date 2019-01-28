@@ -17,6 +17,10 @@ namespace ana
     DiffVar(double val) : fVal(val) // empty fDiff
     {
     }
+
+    // Would overwrite our valuable derivative information
+    DiffVar& operator=(double) = delete;
+
     /*
     static DiffVar Zero(int tot)
     {
@@ -88,12 +92,14 @@ namespace ana
     DiffVar& operator*=(const DiffVar& x)
     {
       Match(x);
-      // Update fVal and half of the product rule
-      *this *= x.fVal;
+
+      // Product rule
       for(unsigned int i = 0; i < x.fDiff.size(); ++i){
-        // Other half of the product rule
-        fDiff[i] += fVal * x.fDiff[i];
+        fDiff[i] = x.fVal * fDiff[i] + fVal * x.fDiff[i];
       }
+
+      fVal *= x.fVal;
+
       return *this;
     }
 
@@ -104,12 +110,13 @@ namespace ana
       return ret;
     }
 
-    double Derivative(unsigned int varIdx)
+    double Derivative(unsigned int varIdx) const
     {
       if(fDiff.empty()) return 0;
       assert(varIdx < fDiff.size());
       return fDiff[varIdx];
     }
+
     //  protected:
     double fVal;
     std::vector<double> fDiff;
