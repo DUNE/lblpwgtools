@@ -14,6 +14,7 @@ namespace ana
   const RecoNCSyst kRecoNCSyst;
   const LeptonAccSyst kLeptonAccSyst;
   const HadronAccSyst kHadronAccSyst;
+  const FVNumuNDSyst kFVNumuNDSyst;
 
   //----------------------------------------------------------------------
   NDRecoSystVector GetNDRecoSysts()
@@ -22,6 +23,7 @@ namespace ana
     vec.push_back(&kRecoNCSyst);
     vec.push_back(&kLeptonAccSyst);
     vec.push_back(&kHadronAccSyst);
+    vec.push_back(&kFVNumuNDSyst);
     return vec;
   }
 
