@@ -79,17 +79,6 @@ namespace ana
 
     const int binMax = ratios[0]->GetNbinsX();
 
-    // Linear interpolation
-    if(ratios.size() == 2){
-      for(int binIdx = 0; binIdx < binMax+2; ++binIdx){
-	ret.push_back({});
-	const double y1 = ratios[0]->GetBinContent(binIdx);
-        const double y2 = ratios[1]->GetBinContent(binIdx);
-	ret.back().emplace_back(0, 0, y2-y1, y1);
-      }
-      return ret;
-    }
-
     for(int binIdx = 0; binIdx < binMax+2; ++binIdx){
       ret.push_back({});
 
@@ -103,6 +92,15 @@ namespace ana
       // slope. The coordinate conventions are that point y1 sits at x=0 and y2
       // at x=1. The matrices are simply the inverses of writing out the
       // constraints expressed above.
+
+      // Special-case for linear interpolation
+      if(ratios.size() == 2){
+        const double y0 = ratios[0]->GetBinContent(binIdx);
+        const double y1 = ratios[1]->GetBinContent(binIdx);
+
+        ret.back().emplace_back(0, 0, y1-y0, y0);
+        continue;
+      }
 
       {
         const double y1 = ratios[0]->GetBinContent(binIdx);
