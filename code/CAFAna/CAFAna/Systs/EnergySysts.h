@@ -867,7 +867,7 @@ namespace ana
   class MuonResNDSyst: public ISyst
   {
   public:
-  MuonResNDSyst() : ISyst("MuonResND", "Muon Far Detector Resolution Syst") {}
+  MuonResNDSyst() : ISyst("MuonResND", "Muon Near Detector Resolution Syst") {}
     void Shift(double sigma,
 	       Restorer& restore,
 	       caf::StandardRecord* sr, double& weight) const override
