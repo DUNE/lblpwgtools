@@ -133,3 +133,9 @@ namespace ana
   DiffVar operator-(double x, DiffVar y){return (y*-1.)+x;}
   DiffVar operator*(double x, DiffVar y){return y*x;}
 }
+
+namespace std
+{
+  ana::DiffVar min(const ana::DiffVar& a, const ana::DiffVar& b){return (a.fVal < b.fVal) ? a : b;}
+  ana::DiffVar max(const ana::DiffVar& a, const ana::DiffVar& b){return (a.fVal > b.fVal) ? a : b;}
+}

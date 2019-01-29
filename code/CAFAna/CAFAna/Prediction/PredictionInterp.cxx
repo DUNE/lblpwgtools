@@ -328,7 +328,6 @@ namespace ana
     unsigned int systIdx = 0;
     for(const auto& it: fPreds){
       T x = shifts[systIdx++];
-      if(x == 0) continue;
 
       const ShiftedPreds& sp = it.second;
 
