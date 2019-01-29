@@ -142,7 +142,9 @@ namespace ana
     }
 
     chi += 2*(e-o);
-    if(o) chi += 2*o*log(o/e);
+    // Use high precision in the logarithm - surprisingly required to have
+    // smooth scores down to the 1e-12 level
+    if(o) chi += 2*o*logl((long double)o/(long double)e);
 
     return chi;
   }
