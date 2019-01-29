@@ -142,9 +142,20 @@ namespace ana
     }
 
     chi += 2*(e-o);
-    // Use high precision in the logarithm - surprisingly required to have
-    // smooth scores down to the 1e-12 level
-    if(o) chi += 2*o*logl((long double)o/(long double)e);
+
+    if(o){
+      const double eps = (o-e)/e;
+      if(fabs(eps) < 1e-7){
+        // For o/e very close to 1, the power expansion is much more stable
+        // than the logarithm.
+        chi += 2*o*(eps-util::sqr(eps)/2+util::cube(eps)/3);
+      }
+      else{
+        chi += 2*o*log(o/e);
+      }
+    }
+
+
 
     return chi;
   }
