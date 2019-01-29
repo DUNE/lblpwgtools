@@ -1,7 +1,9 @@
 // Standard script for DUNE MH sensitivity
 // Now uses state file created by spec.C
 
+
 #include "CAFAna/Analysis/Fit.h"
+
 #include "CAFAna/Analysis/CalcsNuFit.h"
 
 #include "CAFAna/Core/SpectrumLoader.h"
@@ -10,9 +12,18 @@
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Prediction/PredictionNoExtrap.h"
+//#include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
+#include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Systs/Systs.h"
+#include "CAFAna/Systs/DUNEFluxSysts.h"
+#include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/NDRecoSysts.h"
+#include "CAFAna/Systs/FDRecoSysts.h"
+#include "CAFAna/Systs/NuOnESysts.h"
+#include "CAFAna/Systs/MissingProtonFakeData.h"
+
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Analysis/Exposures.h"
 
@@ -22,20 +33,24 @@ using namespace ana;
 
 #include "OscLib/func/IOscCalculator.h"
 
-#include "StandardRecord/StandardRecord.h"
 
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH2.h"
 
-const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
-const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
+#include "common_fit_definitions.C"
+
+//Set up some options for testing
+bool globesscalefactor = false; // scale POT down by 0.95
+bool prescan = false; //option to prescan for MH fits
+bool th13penalty = true;
 
 // POT/yr * 3.5yrs * mass correction
-const double potFD = 3.5 * POT120 * 40/1.13;
+double potFD = 3.5 * POT120 * 40/1.13;
 
-const char* stateFname = "spec_state.root";
+const char* stateFname = "spec_state_v3_wt.root";
+//const char* stateFname = "/nashome/c/callumw/OA_studies/analysis_scripts/common_state_mcc11v3.root";
 const char* outputFname = "mh_sens.root";
 
 //Set systematics style by hand for now
@@ -50,6 +65,8 @@ std::vector<const ISyst*> normlist_bg = {&kNueBeamFHCSyst, &kNueBeamRHCSyst, &kN
 void mh()
 {
   rootlogon(); // style
+
+  if (globesscalefactor) potFD = potFD * 0.95;
   
   if(TFile(stateFname).IsZombie()){
     std::cout << "No state available, please run spec.C true" << std::endl;
@@ -69,10 +86,16 @@ void mh()
   }
 
   TFile fin(stateFname);
+  //GetListOfSysts();
   PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
   PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
   PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
   PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
+
+  //PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_fhc")).release();
+  //PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_fhc")).release();
+  //PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_rhc")).release();
+  //PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_rhc")).release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
@@ -81,7 +104,8 @@ void mh()
 
   TGraph* gMH_NH = new TGraph();
   TGraph* gMH_IH = new TGraph();
-  for(int hie = -1; hie <= +1; hie += 2){
+  //for(int hie = -1; hie <= +1; hie += 2){
+  for(int hie = 1; hie <= +1; hie += 2){
 
     bool oscvar = true;
     double dcpstep = 2*TMath::Pi()/36;
@@ -90,8 +114,9 @@ void mh()
     for(double idcp = 0; idcp < 37; ++idcp) {
 	
       thisdcp = -TMath::Pi() + idcp*dcpstep;
-	
+
       osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+
       trueOsc->SetdCP(thisdcp);
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
@@ -111,33 +136,61 @@ void mh()
       dis_expt_rhc_syst.SetMaskHist(0.5,8.0);
 
       std::vector<const IFitVar*> oscVars =
-	{&kFitDmSq32Scaled, &kFitSinSqTheta23,
-	 &kFitTheta13, &kFitDeltaInPiUnits, &kFitRho};
+	{&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13, 
+	 &kFitSinSq2Theta12, &kFitDmSq21,
+	 &kFitDeltaInPiUnits, &kFitRho};
+
+      std::vector<const IFitVar*> oscVars_scan = {};
 
       double chisqmin = 99999;
       double thischisq;
 
-      osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie);	
-      testOsc->SetdCP(thisdcp);
-      testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
       for(int ioct = -1; ioct <= 1; ioct += 2) {
-	if (ioct < 0) {
-	  testOsc->SetTh23(TMath::PiOver2() - testOsc->GetTh23());
+	//osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalcCDR(hie);	
+	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie,ioct);	
+	testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
+
+	//if (ioct < 0) {
+	//testOsc->SetTh23(TMath::PiOver2() - testOsc->GetTh23());
+	//}
+
+	if (prescan) {
+	  double scanmin = 99999;
+	  for (int idcp_scan = 0; idcp_scan < 41; ++idcp_scan) {
+	    double dcp_scan = -TMath::Pi() + idcp_scan*2*TMath::Pi()/40;
+	    for (int ith_scan = 0; ith_scan < 41; ++ith_scan) {
+	      double th13_scan = (2.5 + ith_scan*9.0/40)*TMath::Pi()/180;
+	      osc::IOscCalculatorAdjustable* scanOsc = testOsc->Copy();
+	      scanOsc->SetdCP(dcp_scan);
+	      scanOsc->SetTh13(th13_scan);
+	      osc::IOscCalculatorAdjustable* cvcalc = scanOsc->Copy();	  
+	      MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst});
+	      Fitter fit_scan(&full_expt_syst, oscVars_scan, {});
+	      double scanchisq = fit_scan.Fit(scanOsc, Fitter::kQuiet);
+	      if (scanchisq < scanmin) {
+		scanmin = scanchisq;
+		testOsc->SetdCP(dcp_scan);
+		testOsc->SetTh13(th13_scan);
+	      }
+	      //std::cout << "scanning: " << thisdcp << " " << dcp_scan << " " << th13_scan << " " << scanchisq << " " << scanmin << std::endl;
+	    }
+	  }
+	}
+	else {
+	  testOsc->SetdCP(thisdcp);
 	}
 
-	osc::IOscCalculatorAdjustable* cvcalc = testOsc->Copy();	  
-	Penalizer_GlbLike penalty(cvcalc,hie);
+	//osc::IOscCalculatorAdjustable* cvcalc = testOsc->Copy();	  
+	//Penalizer_GlbLikeCDR penalty(cvcalc,hie); 
+	Penalizer_GlbLike penalty(hie,ioct,th13penalty,false,false);
 
 	MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
 	Fitter fit_syst(&full_expt_syst, oscVars, systlist);
 
-	if (nosyst) {
-	  continue; //etw figure out how to do this
-	}
-	else {
-	  thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
-	}
+	//std::cout << "before: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << std::endl;
+	thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
+	//std::cout << "after: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << " " << thischisq << std::endl;
 
 	chisqmin = TMath::Min(thischisq,chisqmin);
       }

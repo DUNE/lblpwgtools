@@ -32,10 +32,14 @@ using namespace ana;
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 
+//Set up some options for testing
+bool th13penalty = true;
+
 // 3.5yrs * POT/yr * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;
 
-const char* stateFname = "spec_state.root";
+const char* stateFname = "spec_state_v3_wt.root";
+//const char* stateFname = "/nashome/c/callumw/OA_studies/analysis_scripts/common_state_mcc11v3.root";
 const char* outputFname = "cpv_sens.root";
 
 //Set systematics style by hand for now
@@ -84,13 +88,14 @@ void cpv()
   TGraph* gCPV_NH = new TGraph();
   TGraph* gCPV_IH = new TGraph();
 
-  for(int hie = -1; hie <= +1; hie += 2){
+  //for(int hie = -1; hie <= +1; hie += 2){
+  for(int hie = 1; hie <= +1; hie += 2){
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
     bool oscvar = true;
     double dcpstep = 2*TMath::Pi()/36;
     double thisdcp;
-    for(double idcp = 0; idcp < 37; ++idcp) {
+    for(int idcp = 0; idcp < 37; ++idcp) {
 	
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 	
@@ -115,24 +120,25 @@ void cpv()
 
       std::vector<const IFitVar*> oscVars =
 	{&kFitDmSq32Scaled, &kFitSinSqTheta23,
+	 &kFitSinSq2Theta12, &kFitDmSq21,
 	 &kFitTheta13, &kFitRho};
 
       double chisqmin = 99999;
       double thischisq;
 
       for(int ihie = -1; ihie <= +1; ihie += 2) {
-	for (int idcp = 0; idcp < 2; ++idcp) {
+	for (int jdcp = 0; jdcp < 2; ++jdcp) {
 	  for (int ioct = -1; ioct <= 1; ioct +=2) {
 	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie,ioct);	
-	    double dcptest = idcp*TMath::Pi();
+	    double dcptest = jdcp*TMath::Pi();
 	    testOsc->SetdCP(dcptest);
-	    Penalizer_GlbLike penalty(ihie,ioct);
+	    Penalizer_GlbLike penalty(ihie,ioct,th13penalty,false,false);
 
 	    MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
 	    Fitter fit_syst(&full_expt_syst, oscVars, systlist);
 
-	    thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
+	    thischisq = fit_syst.Fit(testOsc); //, Fitter::kVerbose);
 	    chisqmin = TMath::Min(thischisq,chisqmin);
 	  }
 	}
