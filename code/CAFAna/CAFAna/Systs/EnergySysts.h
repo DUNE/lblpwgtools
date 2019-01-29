@@ -764,10 +764,9 @@ namespace ana
       restore.Add(sr->dune.Ev_reco_numu,
 		  sr->dune.RecoLepEnNumu);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // FD charged current numus only
       if (sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG)==14) {
-
 	sr->dune.Ev_reco_numu  += (sr->dune.LepE - sr->dune.RecoLepEnNumu) * scale;
 	sr->dune.RecoLepEnNumu += (sr->dune.LepE - sr->dune.RecoLepEnNumu) * scale;
       }
@@ -791,7 +790,7 @@ namespace ana
 		  sr->dune.RecoHadEnNue,
 		  sr->dune.RecoLepEnNue);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // FD charged current numus only
       if (sr->dune.isFD){
 	sr->dune.Ev_reco_nue  += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
@@ -822,7 +821,7 @@ namespace ana
 		  sr->dune.RecoHadEnNue,
 		  sr->dune.RecoHadEnNumu);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // FD charged current numus only
       if (sr->dune.isFD) {
 	const double trueSum = sr->dune.ePip + sr->dune.ePim + sr->dune.eP;
@@ -851,7 +850,7 @@ namespace ana
 		  sr->dune.RecoHadEnNue,
 		  sr->dune.RecoHadEnNumu);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // FD charged current numus only
       if (sr->dune.isFD) {
 	sr->dune.Ev_reco_nue   += (sr->dune.eN - sr->dune.eRecoN) * scale;
@@ -876,7 +875,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco,
 		  sr->dune.Elep_reco);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // ND charged current numus only
       if (!sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG)==14) {
 
@@ -900,7 +899,7 @@ namespace ana
       restore.Add(sr->dune.Ev_reco,
 		  sr->dune.Elep_reco);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // ND charged current numus only
       if (!sr->dune.isFD){
 	sr->dune.Ev_reco += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
@@ -925,7 +924,7 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // ND charged current numus only
       if (!sr->dune.isFD) {
 	const double trueSum = sr->dune.ePip + sr->dune.ePim + sr->dune.eP;
@@ -948,7 +947,7 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco);
 
-      const double scale = .25*sigma;      
+      const double scale = .1*sigma;      
       // ND charged current numus only
       if (!sr->dune.isFD) {
 	sr->dune.Ev_reco += (sr->dune.eN - sr->dune.eRecoN) * scale;
