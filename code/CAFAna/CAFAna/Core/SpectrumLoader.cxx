@@ -115,6 +115,17 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  // Helper function that can give us a friendlier error message
+  template<class T> void
+  SetBranchChecked(TTree* tr, const std::string& bname, T* dest)
+  {
+    if(tr->FindBranch(bname.c_str()))
+      tr->SetBranchAddress(bname.c_str(), dest);
+    else
+      std::cout << "Warning: Branch '" << bname << "' not found, field will not be filled" << std::endl;
+  }
+
+  //----------------------------------------------------------------------
   void SpectrumLoader::HandleFile(TFile* f, Progress* prog)
   {
     assert(!f->IsZombie());
@@ -138,111 +149,108 @@ namespace ana
     FloatingExceptionOnNaN fpnan(false);
 
     caf::StandardRecord sr;
-    tr->SetBranchAddress("Ev_reco", &sr.dune.Ev_reco);
-    tr->SetBranchAddress("Ev_reco_nue", &sr.dune.Ev_reco_nue);
-    tr->SetBranchAddress("Ev_reco_numu", &sr.dune.Ev_reco_numu);
-    tr->SetBranchAddress("Elep_reco", &sr.dune.Elep_reco);
-    tr->SetBranchAddress("mvaresult", &sr.dune.mvaresult);
-    tr->SetBranchAddress("mvanue", &sr.dune.mvanue);
-    tr->SetBranchAddress("mvanumu", &sr.dune.mvanumu);
-    tr->SetBranchAddress("cvnnue", &sr.dune.cvnnue);
-    tr->SetBranchAddress("cvnnumu", &sr.dune.cvnnumu);
-    tr->SetBranchAddress("numu_pid", &sr.dune.numu_pid);
-    tr->SetBranchAddress("nue_pid", &sr.dune.nue_pid);
-    tr->SetBranchAddress("reco_q", &sr.dune.reco_q);
-    tr->SetBranchAddress("RecoLepEnNue", &sr.dune.RecoLepEnNue);
-    tr->SetBranchAddress("RecoHadEnNue", &sr.dune.RecoHadEnNue);
-    tr->SetBranchAddress("RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
-    tr->SetBranchAddress("RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
+    SetBranchChecked(tr, "Ev_reco", &sr.dune.Ev_reco);
+    SetBranchChecked(tr, "Ev_reco_nue", &sr.dune.Ev_reco_nue);
+    SetBranchChecked(tr, "Ev_reco_numu", &sr.dune.Ev_reco_numu);
+    SetBranchChecked(tr, "Elep_reco", &sr.dune.Elep_reco);
+    SetBranchChecked(tr, "mvaresult", &sr.dune.mvaresult);
+    SetBranchChecked(tr, "mvanue", &sr.dune.mvanue);
+    SetBranchChecked(tr, "mvanumu", &sr.dune.mvanumu);
+    SetBranchChecked(tr, "cvnnue", &sr.dune.cvnnue);
+    SetBranchChecked(tr, "cvnnumu", &sr.dune.cvnnumu);
+    SetBranchChecked(tr, "numu_pid", &sr.dune.numu_pid);
+    SetBranchChecked(tr, "nue_pid", &sr.dune.nue_pid);
+    SetBranchChecked(tr, "reco_q", &sr.dune.reco_q);
+    SetBranchChecked(tr, "RecoLepEnNue", &sr.dune.RecoLepEnNue);
+    SetBranchChecked(tr, "RecoHadEnNue", &sr.dune.RecoHadEnNue);
+    SetBranchChecked(tr, "RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
+    SetBranchChecked(tr, "RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
     // ND pseudo-reconstruction flags
-    tr->SetBranchAddress("reco_numu", &sr.dune.reco_numu);
-    tr->SetBranchAddress("reco_nue", &sr.dune.reco_nue);
-    tr->SetBranchAddress("reco_nc", &sr.dune.reco_nc);
+    SetBranchChecked(tr, "reco_numu", &sr.dune.reco_numu);
+    SetBranchChecked(tr, "reco_nue", &sr.dune.reco_nue);
+    SetBranchChecked(tr, "reco_nc", &sr.dune.reco_nc);
     // CW: add variables that Chris (M) wants for ND selections
-    tr->SetBranchAddress("muon_exit", &sr.dune.muon_exit);
-    tr->SetBranchAddress("muon_contained", &sr.dune.muon_contained);
-    tr->SetBranchAddress("muon_ecal", &sr.dune.muon_ecal);
-    tr->SetBranchAddress("muon_tracker", &sr.dune.muon_tracker);
-    tr->SetBranchAddress("Ehad_veto", &sr.dune.Ehad_veto);
+    SetBranchChecked(tr, "muon_exit", &sr.dune.muon_exit);
+    SetBranchChecked(tr, "muon_contained", &sr.dune.muon_contained);
+    SetBranchChecked(tr, "muon_ecal", &sr.dune.muon_ecal);
+    SetBranchChecked(tr, "muon_tracker", &sr.dune.muon_tracker);
+    SetBranchChecked(tr, "Ehad_veto", &sr.dune.Ehad_veto);
 
-    tr->SetBranchAddress("Ev", &sr.dune.Ev);
-    tr->SetBranchAddress("Elep", &sr.dune.Elep);
-    //    tr->SetBranchAddress("ccnc", &sr.dune.ccnc);
-    tr->SetBranchAddress("isCC", &sr.dune.isCC);
-    //    tr->SetBranchAddress("beamPdg", &sr.dune.beamPdg);
-    //    tr->SetBranchAddress("neu", &sr.dune.neu);
-    tr->SetBranchAddress("nuPDG", &sr.dune.nuPDG);
-    tr->SetBranchAddress("nuPDGunosc", &sr.dune.nuPDGunosc);
-    tr->SetBranchAddress("LepPDG", &sr.dune.LepPDG);
-    tr->SetBranchAddress("mode", &sr.dune.mode);
-    tr->SetBranchAddress("nP", &sr.dune.nP);
-    tr->SetBranchAddress("nN", &sr.dune.nN);
-    tr->SetBranchAddress("nipi0", &sr.dune.nipi0);
-    tr->SetBranchAddress("nipip", &sr.dune.nipip);
-    tr->SetBranchAddress("nipim", &sr.dune.nipim);
-    tr->SetBranchAddress("Q2", &sr.dune.Q2);
-    tr->SetBranchAddress("W", &sr.dune.W);
-    tr->SetBranchAddress("Y", &sr.dune.Y);
-    tr->SetBranchAddress("X", &sr.dune.X);
-    //    tr->SetBranchAddress("cc", &sr.dune.cc);
-    tr->SetBranchAddress("NuMomX", &sr.dune.NuMomX);
-    tr->SetBranchAddress("NuMomY", &sr.dune.NuMomY);
-    tr->SetBranchAddress("NuMomZ", &sr.dune.NuMomZ);
-    tr->SetBranchAddress("LepMomX", &sr.dune.LepMomX);
-    tr->SetBranchAddress("LepMomY", &sr.dune.LepMomY);
-    tr->SetBranchAddress("LepMomZ", &sr.dune.LepMomZ);
-    tr->SetBranchAddress("LepE", &sr.dune.LepE);
-    tr->SetBranchAddress("LepNuAngle", &sr.dune.LepNuAngle);
+    SetBranchChecked(tr, "Ev", &sr.dune.Ev);
+    SetBranchChecked(tr, "Elep", &sr.dune.Elep);
+    //    SetBranchChecked(tr, "ccnc", &sr.dune.ccnc);
+    SetBranchChecked(tr, "isCC", &sr.dune.isCC);
+    //    SetBranchChecked(tr, "beamPdg", &sr.dune.beamPdg);
+    //    SetBranchChecked(tr, "neu", &sr.dune.neu);
+    SetBranchChecked(tr, "nuPDG", &sr.dune.nuPDG);
+    SetBranchChecked(tr, "nuPDGunosc", &sr.dune.nuPDGunosc);
+    SetBranchChecked(tr, "LepPDG", &sr.dune.LepPDG);
+    SetBranchChecked(tr, "mode", &sr.dune.mode);
+    SetBranchChecked(tr, "nP", &sr.dune.nP);
+    SetBranchChecked(tr, "nN", &sr.dune.nN);
+    SetBranchChecked(tr, "nipi0", &sr.dune.nipi0);
+    SetBranchChecked(tr, "nipip", &sr.dune.nipip);
+    SetBranchChecked(tr, "nipim", &sr.dune.nipim);
+    SetBranchChecked(tr, "Q2", &sr.dune.Q2);
+    SetBranchChecked(tr, "W", &sr.dune.W);
+    SetBranchChecked(tr, "Y", &sr.dune.Y);
+    SetBranchChecked(tr, "X", &sr.dune.X);
+    //    SetBranchChecked(tr, "cc", &sr.dune.cc);
+    SetBranchChecked(tr, "NuMomX", &sr.dune.NuMomX);
+    SetBranchChecked(tr, "NuMomY", &sr.dune.NuMomY);
+    SetBranchChecked(tr, "NuMomZ", &sr.dune.NuMomZ);
+    SetBranchChecked(tr, "LepMomX", &sr.dune.LepMomX);
+    SetBranchChecked(tr, "LepMomY", &sr.dune.LepMomY);
+    SetBranchChecked(tr, "LepMomZ", &sr.dune.LepMomZ);
+    SetBranchChecked(tr, "LepE", &sr.dune.LepE);
+    SetBranchChecked(tr, "LepNuAngle", &sr.dune.LepNuAngle);
 
     // Numu track containment flag
-    tr->SetBranchAddress("LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
+    SetBranchChecked(tr, "LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
 
-    tr->SetBranchAddress("vtx_x",  &sr.dune.vtx_x);
-    tr->SetBranchAddress("vtx_y",  &sr.dune.vtx_y);
-    tr->SetBranchAddress("vtx_z",  &sr.dune.vtx_z);
+    SetBranchChecked(tr, "vtx_x",  &sr.dune.vtx_x);
+    SetBranchChecked(tr, "vtx_y",  &sr.dune.vtx_y);
+    SetBranchChecked(tr, "vtx_z",  &sr.dune.vtx_z);
 
-    tr->SetBranchAddress("det_x",  &sr.dune.det_x);
+    SetBranchChecked(tr, "det_x",  &sr.dune.det_x);
 
-    tr->SetBranchAddress("eP", &sr.dune.eP);
-    tr->SetBranchAddress("eN", &sr.dune.eN);
-    tr->SetBranchAddress("ePip", &sr.dune.ePip);
-    tr->SetBranchAddress("ePim", &sr.dune.ePim);
-    tr->SetBranchAddress("ePi0", &sr.dune.ePi0);
-    tr->SetBranchAddress("eOther", &sr.dune.eOther);
-    tr->SetBranchAddress("eRecoP", &sr.dune.eRecoP);
-    tr->SetBranchAddress("eRecoN", &sr.dune.eRecoN);
-    tr->SetBranchAddress("eRecoPip", &sr.dune.eRecoPip);
-    tr->SetBranchAddress("eRecoPim", &sr.dune.eRecoPim);
-    tr->SetBranchAddress("eRecoPi0", &sr.dune.eRecoPi0);
-    tr->SetBranchAddress("eRecoOther", &sr.dune.eRecoOther);
+    SetBranchChecked(tr, "eP", &sr.dune.eP);
+    SetBranchChecked(tr, "eN", &sr.dune.eN);
+    SetBranchChecked(tr, "ePip", &sr.dune.ePip);
+    SetBranchChecked(tr, "ePim", &sr.dune.ePim);
+    SetBranchChecked(tr, "ePi0", &sr.dune.ePi0);
+    SetBranchChecked(tr, "eOther", &sr.dune.eOther);
+    SetBranchChecked(tr, "eRecoP", &sr.dune.eRecoP);
+    SetBranchChecked(tr, "eRecoN", &sr.dune.eRecoN);
+    SetBranchChecked(tr, "eRecoPip", &sr.dune.eRecoPip);
+    SetBranchChecked(tr, "eRecoPim", &sr.dune.eRecoPim);
+    SetBranchChecked(tr, "eRecoPi0", &sr.dune.eRecoPi0);
+    SetBranchChecked(tr, "eRecoOther", &sr.dune.eRecoOther);
 
-    tr->SetBranchAddress("eDepP", &sr.dune.eDepP);
-    tr->SetBranchAddress("eDepN", &sr.dune.eDepN);
-    tr->SetBranchAddress("eDepPip", &sr.dune.eDepPip);
-    tr->SetBranchAddress("eDepPim", &sr.dune.eDepPim);
-    tr->SetBranchAddress("eDepPi0", &sr.dune.eDepPi0);
-    tr->SetBranchAddress("eDepOther", &sr.dune.eDepOther);
+    SetBranchChecked(tr, "eDepP", &sr.dune.eDepP);
+    SetBranchChecked(tr, "eDepN", &sr.dune.eDepN);
+    SetBranchChecked(tr, "eDepPip", &sr.dune.eDepPip);
+    SetBranchChecked(tr, "eDepPim", &sr.dune.eDepPim);
+    SetBranchChecked(tr, "eDepPi0", &sr.dune.eDepPi0);
+    SetBranchChecked(tr, "eDepOther", &sr.dune.eDepOther);
 
-    tr->SetBranchAddress("run", &sr.dune.run);
-    tr->SetBranchAddress("isFD", &sr.dune.isFD);
-    tr->SetBranchAddress("isFHC", &sr.dune.isFHC);
+    SetBranchChecked(tr, "run", &sr.dune.run);
+    SetBranchChecked(tr, "isFD", &sr.dune.isFD);
+    SetBranchChecked(tr, "isFHC", &sr.dune.isFHC);
 
-    tr->SetBranchAddress("sigma_Ev_reco", &sr.dune.sigma_Ev_reco);
-    tr->SetBranchAddress("sigma_Elep_reco", &sr.dune.sigma_Elep_reco);
-    tr->SetBranchAddress("sigma_numu_pid", &sr.dune.sigma_numu_pid);
-    tr->SetBranchAddress("sigma_nue_pid", &sr.dune.sigma_nue_pid);
+    SetBranchChecked(tr, "sigma_Ev_reco", &sr.dune.sigma_Ev_reco);
+    SetBranchChecked(tr, "sigma_Elep_reco", &sr.dune.sigma_Elep_reco);
+    SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
+    SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
     // GENIE uncertainties and CVs
     sr.dune.genie_wgt    .resize(genie_names.size());
     sr.dune.genie_cv_wgt .resize(genie_names.size());
 
     for(unsigned int i = 0; i < genie_names.size(); ++i){
-      tr->SetBranchAddress(("wgt_"+genie_names[i]).c_str(),
-                           &genie_tmp[i]);
-      tr->SetBranchAddress((genie_names[i]+"_nshifts").c_str(),
-                           &genie_size_tmp[i]);
-      tr->SetBranchAddress((genie_names[i]+"_cvwgt").c_str(),
-			   &sr.dune.genie_cv_wgt[i]);
+      SetBranchChecked(tr, "wgt_"+genie_names[i], &genie_tmp[i]);
+      SetBranchChecked(tr, genie_names[i]+"_nshifts", &genie_size_tmp[i]);
+      SetBranchChecked(tr, genie_names[i]+"_cvwgt", &sr.dune.genie_cv_wgt[i]);
     }
 
     int Nentries = tr->GetEntries();
