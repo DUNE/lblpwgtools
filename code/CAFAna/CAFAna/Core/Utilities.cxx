@@ -133,17 +133,14 @@ namespace ana
     // event gives a chisq from this one bin of 182.
     const double minexp = 1e-40; // Don't let expectation go lower than this
 
-    double chi = 0;
-
     assert(o >= 0);
     if(e < minexp){
       if(!o) return 0;
       e = minexp;
     }
 
-    chi += 2*(e-o);
-
     if(o){
+      /*
       const double x = (o-e)/e;
       if(fabs(x) < 1e-3){
         // For o/e very close to 1, the power expansion is much more stable
@@ -155,14 +152,16 @@ namespace ana
         const double x5 = x4*x;
         const double x6 = x5*x;
         const double x7 = x6*x;
-        chi += 2*o*(x - x2/2 + x3/3 - x4/4 + x5/5 - x6/6 + x7/7);
+        return 2*(e-o) + 2*o*(x - x2/2 + x3/3 - x4/4 + x5/5 - x6/6 + x7/7);
       }
-      else{
-        chi += 2*o*log(o/e);
-      }
-    }
+      */
 
-    return chi;
+      // This strange form is for numerical stability when e~o
+      return 2*o*((e-o)/o + log1p((o-e)/e));
+    }
+    else{
+      return 2*(e-o);
+    }
   }
 
   //----------------------------------------------------------------------
