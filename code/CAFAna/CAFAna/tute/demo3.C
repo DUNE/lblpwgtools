@@ -8,6 +8,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
+#include "CAFAna/Analysis/TDRLoaders.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "StandardRecord/StandardRecord.h"
 #include "TCanvas.h"
@@ -24,19 +25,17 @@ using namespace ana;
 void demo3()
 {
   // Repeat most of demo2.C
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  //
+  // Except we're introducing "Loaders", which knows the latest CAF locations
+  // and packages the three types of loader together into one handy class.
+  TDRLoaders loaders(Loaders::kFHC);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesMVA = SIMPLEVAR(dune.mvanumu) > 0;
-  PredictionNoExtrap pred(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC, axEnergy, kPassesMVA);
-  loader.Go();
+  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  PredictionNoExtrap pred(loaders, axEnergy, kPassesCVN);
+  loaders.Go();
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
   const Spectrum data = pred.Predict(calc).MockData(pot);
   SingleSampleExperiment expt(&pred, data);
@@ -58,17 +57,10 @@ void demo3()
   surf.DrawContour(crit1sig, 7, kBlue);
   surf.DrawContour(crit2sig, kSolid, kBlue);
 
-
   // Let's try to add in the effect of 3.5yrs of RHC data too
-  const std::string fnameRHC = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/anu.mcc10.1_def.root";
-  SpectrumLoader loaderRHC(fnameRHC);
-  // Annoyingly the magic numbers are different for RHC
-  auto* loaderBeamRHC  = loaderRHC.LoaderForRunPOT(20000004);
-  auto* loaderNueRHC   = loaderRHC.LoaderForRunPOT(20000005);
-  auto* loaderNuTauRHC = loaderRHC.LoaderForRunPOT(20000006);
-  auto* loaderNCRHC    = loaderRHC.LoaderForRunPOT(0);
-  PredictionNoExtrap predRHC(*loaderBeamRHC, *loaderNueRHC, *loaderNuTauRHC, *loaderNCRHC, axEnergy, kPassesMVA);
-  loaderRHC.Go();
+  TDRLoaders loadersRHC(Loaders::kRHC);
+  PredictionNoExtrap predRHC(loadersRHC, axEnergy, kPassesCVN);
+  loadersRHC.Go();
   calc = DefaultOscCalc(); // Remember to reset, since fits modified it
   const Spectrum dataRHC = predRHC.Predict(calc).MockData(pot);
   SingleSampleExperiment exptRHC(&predRHC, dataRHC);
