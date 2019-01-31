@@ -145,17 +145,22 @@ namespace ana
 
     if(o){
       const double eps = (o-e)/e;
-      if(fabs(eps) < 1e-7){
+      if(fabs(eps) < 1e-3){
         // For o/e very close to 1, the power expansion is much more stable
-        // than the logarithm.
-        chi += 2*o*(eps-util::sqr(eps)/2+util::cube(eps)/3);
+        // than the logarithm. With this many orders we're good to 1 part in
+        // 10^21
+        const double e2 = e*e;
+        const double e3 = e2*e;
+        const double e4 = e3*e;
+        const double e5 = e4*e;
+        const double e6 = e5*e;
+        const double e7 = e6*e;
+        chi += 2*o*(eps - e2/2 + e3/3 - e4/4 + e5/5 - e6/6 + e7/7);
       }
       else{
         chi += 2*o*log(o/e);
       }
     }
-
-
 
     return chi;
   }
@@ -180,14 +185,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihoodDerivative(double e, double o, double dedx)
+  // dLL/de
+  double LogLikelihoodDerivative(double e, double o)
   {
-    double ret = 2*dedx;
-    if(o) ret -= 2*o*dedx / e;
-    return ret;
+    if(e == 0) return 2;
+    return 2-2*o/e;
   }
 
   //----------------------------------------------------------------------
+  // dLL/dx
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
                                  const std::vector<double>& dedx)
   {
@@ -196,7 +202,7 @@ namespace ana
 
     double ret = 0;
     for(unsigned int i = 0; i < dedx.size(); ++i){
-      ret += LogLikelihoodDerivative(ea[i], oa[i], dedx[i]);
+      ret += LogLikelihoodDerivative(ea[i], oa[i]) * dedx[i];
     }
     return ret;
   }
