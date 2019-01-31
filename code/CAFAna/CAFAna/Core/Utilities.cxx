@@ -144,18 +144,18 @@ namespace ana
     chi += 2*(e-o);
 
     if(o){
-      const double eps = (o-e)/e;
-      if(fabs(eps) < 1e-3){
+      const double x = (o-e)/e;
+      if(fabs(x) < 1e-3){
         // For o/e very close to 1, the power expansion is much more stable
         // than the logarithm. With this many orders we're good to 1 part in
         // 10^21
-        const double e2 = e*e;
-        const double e3 = e2*e;
-        const double e4 = e3*e;
-        const double e5 = e4*e;
-        const double e6 = e5*e;
-        const double e7 = e6*e;
-        chi += 2*o*(eps - e2/2 + e3/3 - e4/4 + e5/5 - e6/6 + e7/7);
+        const double x2 = x*x;
+        const double x3 = x2*x;
+        const double x4 = x3*x;
+        const double x5 = x4*x;
+        const double x6 = x5*x;
+        const double x7 = x6*x;
+        chi += 2*o*(x - x2/2 + x3/3 - x4/4 + x5/5 - x6/6 + x7/7);
       }
       else{
         chi += 2*o*log(o/e);
