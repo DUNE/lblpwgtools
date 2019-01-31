@@ -5,9 +5,9 @@ using namespace ana;
 
 void test_autodiff()
 {
-  DiffVar x(1, 0, 3);
-  DiffVar y(-2, 1, 3);
-  DiffVar z(3.5, 2, 3);
+  DiffVar x = DiffVar::Variable(1, 0, 3);
+  DiffVar y = DiffVar::Variable(-2, 1, 3);
+  DiffVar z = DiffVar::Variable(3.5, 2, 3);
 
   //  x = 1;
   //  y = -2;

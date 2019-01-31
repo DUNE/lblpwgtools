@@ -316,6 +316,9 @@ namespace ana
                                 Sign::kBoth);
   }
 
+  double Zero(double){return 0;}
+  DiffVar Zero(const DiffVar&){return DiffVar::Constant(0);}
+                                       
   //----------------------------------------------------------------------
   template<class T> void PredictionInterp::
   ApplyCorrection(const std::vector<T>& shifts,
@@ -331,7 +334,7 @@ namespace ana
 
       const ShiftedPreds& sp = it.second;
 
-      int shiftBin = int((x - sp.shifts[0])/sp.Stride());
+      int shiftBin = std::floor((x - sp.shifts[0])/sp.Stride());
       shiftBin = std::max(0, shiftBin);
       shiftBin = std::min(shiftBin, sp.nCoeffs-1);
 
@@ -350,7 +353,11 @@ namespace ana
 
         const Coeffs& f = fits[n];
 
-        corr[n] *= std::max(f.a*x_cube + f.b*x_sqr + f.c*x + f.d, T(0.));
+        const T factor = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
+        if(factor > 0.)
+          corr[n] *= factor;
+        else
+          corr[n] = Zero(factor);
       } // end for n
     } // end for syst
   }
@@ -505,10 +512,12 @@ namespace ana
     diffShifts.reserve(fPreds.size());
     int systIdx = 0;
     for(const auto& it: fPreds){
-      diffShifts.emplace_back(shift.GetShift(it.first), systIdx++, fPreds.size());
+      diffShifts.push_back(DiffVar::Variable(shift.GetShift(it.first), systIdx++, fPreds.size()));
     }
 
-    std::vector<DiffVar> corr(arr, arr+N); // initialize with the bin contents
+    std::vector<DiffVar> corr;
+    corr.reserve(N);
+    for(unsigned int i = 0; i < N; ++i) corr.push_back(DiffVar::Constant(arr[i]));
     ApplyCorrection(diffShifts, type, nubar, corr);
 
     systIdx = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
 #include <vector>
 
 namespace ana
@@ -8,37 +9,20 @@ namespace ana
   class DiffVar
   {
   public:
-    explicit DiffVar(double val, int idx, int tot)
-      : fVal(val), fDiff(tot, 0)
+    static DiffVar Variable(double val, int idx, int tot)
     {
-      fDiff[idx] = 1;
-    }
-
-    DiffVar(double val) : fVal(val) // empty fDiff
-    {
-    }
-
-    // Would overwrite our valuable derivative information
-    DiffVar& operator=(double) = delete;
-
-    /*
-    static DiffVar Zero(int tot)
-    {
-      DiffVar ret(0, 0, tot);
-      ret.fDiff[0] = 0;
+      DiffVar ret;
+      ret.fVal = val;
+      ret.fDiff.resize(tot);
+      ret.fDiff[idx] = 1;
       return ret;
     }
 
-    static DiffVar One(int tot)
+    static DiffVar Constant(double x)
     {
-      DiffVar ret(1, 0, tot);
-      ret.fDiff[0] = 0;
+      DiffVar ret;
+      ret.fVal = x;
       return ret;
-    }
-    */
-    explicit operator int() const
-    {
-      return int(fVal);
     }
 
     bool operator==(double x) const {return fVal == x;}
@@ -121,6 +105,9 @@ namespace ana
     double fVal;
     std::vector<double> fDiff;
 
+  private:
+    DiffVar(){}
+
     /// Ensure size of 'this' is large enough for combination with 'x'
     void Match(const DiffVar& x)
     {
@@ -129,13 +116,18 @@ namespace ana
     }
   };
 
-  DiffVar operator+(double x, DiffVar y){return y+x;}
-  DiffVar operator-(double x, DiffVar y){return (y*-1.)+x;}
-  DiffVar operator*(double x, DiffVar y){return y*x;}
+  DiffVar operator+(double x, const DiffVar& y){return y+x;}
+  DiffVar operator-(double x, const DiffVar& y){return (y*-1.)+x;}
+  DiffVar operator*(double x, const DiffVar& y){return y*x;}
+
+  bool operator<(const ana::DiffVar& a, double b){return a.fVal < b;}
+  bool operator>(const ana::DiffVar& a, double b){return a.fVal > b;}
 }
 
 namespace std
 {
   ana::DiffVar min(const ana::DiffVar& a, const ana::DiffVar& b){return (a.fVal < b.fVal) ? a : b;}
   ana::DiffVar max(const ana::DiffVar& a, const ana::DiffVar& b){return (a.fVal > b.fVal) ? a : b;}
+
+  int floor(const ana::DiffVar& a){return std::floor(a.fVal);}
 }
