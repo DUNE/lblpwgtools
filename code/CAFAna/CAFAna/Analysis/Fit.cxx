@@ -20,7 +20,6 @@
 #include "Math/Functor.h"
 
 #include <cassert>
-#include <memory>
 #include <iostream>
 
 namespace ana

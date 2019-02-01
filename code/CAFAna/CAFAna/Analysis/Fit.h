@@ -4,19 +4,6 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Core/SystShifts.h"
 
-#include "Minuit2/MnMigrad.h"
-#include "Minuit2/MnPrint.h"
-#include "Minuit2/MnMinimize.h"
-#include "Minuit2/MnHesse.h"
-#include "Minuit2/MnMinos.h"
-#include "Minuit2/MnScan.h"
-#include "Minuit2/FCNBase.h"
-#include "Minuit2/FCNGradientBase.h"
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnUserParameters.h"
-#include "Minuit2/MnUserCovariance.h"
-#include "Minuit2/CombinedMinimizer.h"
-
 #include "Math/Minimizer.h"
 
 #include <memory>
