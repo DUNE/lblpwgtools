@@ -5,6 +5,7 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnPrint.h"
 #include "Minuit2/MnMinimize.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnMinos.h"
@@ -15,6 +16,10 @@
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnUserCovariance.h"
 #include "Minuit2/CombinedMinimizer.h"
+
+#include "Math/Minimizer.h"
+
+#include <memory>
 
 class TGraph;
 
@@ -38,7 +43,7 @@ namespace ana
   namespace{SystShifts junkShifts;}
 
   /// Perform MINUIT fits in one or two dimensions
-  class Fitter: public ROOT::Minuit2::FCNGradientBase
+  class Fitter: public ROOT::Math::IGradientFunctionMultiDim
   {
   public:
     enum Verbosity{kQuiet, kVerbose};
@@ -132,13 +137,28 @@ namespace ana
     SystShifts GetSystShifts() const {return fShifts;}
 
     /// Evaluate the log-likelihood, as required by MINUT interface
-    virtual double operator()(const std::vector<double>& pars) const override;
+    virtual double DoEval(const double* pars) const override;
 
-    std::vector<double> Gradient(const std::vector<double>& pars) const override;
-    bool CheckGradient() const override {return (fPrec & Fitter::kAlgoMask) != kFast;}
+    // Part of the fitter interface
+    virtual unsigned int NDim() const override {return fVars.size()+fSysts.size();}
 
-    /// Definition of one-sigma, required by MINUIT
-    virtual double Up() const override {return 1;}
+    virtual void Gradient(const double* x, double* grad) const override;
+
+    virtual double DoDerivative(const double* x, unsigned int icoord) const override
+    {
+      std::cout << "Fitter::DoDerivative() not implemented" << std::endl;
+      abort();
+    }
+
+    Fitter* Clone() const override
+    {
+      std::cout << "Fitter::Clone() not implemented" << std::endl;
+      abort();
+    }
+
+
+    // TODO unused
+    bool CheckGradient() const{return (fPrec & Fitter::kAlgoMask) != kFast;}
   protected:
     struct SeedPt
     {
@@ -150,9 +170,10 @@ namespace ana
                                     std::vector<SystShifts> systSeedPts) const;
 
     /// Helper for \ref FitHelper
-    ROOT::Minuit2::FunctionMinimum FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
-						   SystShifts& systSeed,
-						   Verbosity verb) const;
+    std::unique_ptr<ROOT::Math::Minimizer>
+    FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
+                    SystShifts& systSeed,
+                    Verbosity verb) const;
 
     /// Helper for \ref Fit
     double FitHelper(osc::IOscCalculatorAdjustable* seed,
@@ -162,7 +183,7 @@ namespace ana
                      Verbosity verb) const;
 
     /// Updates mutable fCalc and fShifts
-    void DecodePars(const std::vector<double>& pars) const;
+    void DecodePars(const double* pars) const;
 
     /// Intended to be called only once (from constructor) to initialize
     /// fSupportsDerivatives

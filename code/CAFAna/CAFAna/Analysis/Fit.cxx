@@ -14,6 +14,11 @@
 #include "TH1.h"
 #include "TMatrixDSym.h"
 
+// ROOT fitter interface
+#include "Fit/Fitter.h"
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+
 #include <cassert>
 #include <memory>
 #include <iostream>
@@ -113,99 +118,61 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  ROOT::Minuit2::FunctionMinimum Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
-							 SystShifts& systSeed,
-							 Verbosity verb) const
+  std::unique_ptr<ROOT::Math::Minimizer>
+  Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable* seed,
+                          SystShifts& systSeed, Verbosity verb) const
   {
-
     // Why, when this is called for each seed?
     fCalc = seed;
     fShifts = systSeed;
 
-    ROOT::Minuit2::MnUserParameters mnPars;
+    if(fPrec & kIncludeSimplex) std::cout << "Simplex option specified but not implemented. Ignored." << std::endl;
+    if(fPrec & kIncludeHesse) std::cout << "Hesse option specified but not implemented. Ignored." << std::endl;
+    if((fPrec & kAlgoMask) == kGradDesc){
+      std::cout << "GradDesc option specified but not implemented. Abort." << std::endl;
+      abort();
+    }
+
+    std::unique_ptr<ROOT::Math::Minimizer> mnMin(
+        ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+    mnMin->SetStrategy(int(fPrec & kAlgoMask));
 
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
       // name, value, error
-      mnPars.Add(v->ShortName(), val, val ? val/2 : .1);
-      fParamNames  .push_back(v->ShortName());
+      mnMin->SetVariable(mnMin->NFree(), v->ShortName(), val, val ? fabs(val/2) : .1);
+      fParamNames.push_back(v->ShortName());
       fPreFitValues.push_back(val);
       fPreFitErrors.push_back(val ? val/2 : .1);
     }
     // One way this can go wrong is if two variables have the same ShortName
-    assert(mnPars.Params().size() == fVars.size());
-    for(const ISyst* s: fSysts){
+    assert(mnMin->NFree() == fVars.size());
+    for(const ISyst*s: fSysts){
       const double val = systSeed.GetShift(s);
       // name, value, error
-      mnPars.Add(s->ShortName(), val, 1);
-      fParamNames  .push_back(s->ShortName());
+      mnMin->SetVariable(mnMin->NFree(), s->ShortName(), val, 1);
+      fParamNames.push_back(s->ShortName());
       fPreFitValues.push_back(val);
       fPreFitErrors.push_back(1);
     }
     // One way this can go wrong is if two variables have the same ShortName
-    assert(mnPars.Params().size() == fVars.size()+fSysts.size());
+    assert(mnMin->NFree() == fVars.size()+fSysts.size());
 
-    ROOT::Minuit2::MnApplication* mnApp = 0;
-
-    // ROOT::Minuit2::MnStrategy strategy(int(fPrec & kAlgoMask));
-    // // Do a scan and pass the minimum back
-    // mnApp = new ROOT::Minuit2::MnScan(*this, mnPars, int(fPrec & kAlgoMask));
-    // ROOT::Minuit2::FunctionMinimum scan_minpt = (*mnApp)();
-    // ROOT::Minuit2::MnUserParameterState mnParState = scan_minpt.UserState();
-    // delete mnApp;
-
-    if((fPrec & kAlgoMask) == kGradDesc){
-      mnApp = new GradientDescent(*this, mnPars);
+    if(fSupportsDerivatives){
+      mnMin->SetFunction(*this);
     }
     else{
-      // TODO - could this be handled with templates?
-      if(fSupportsDerivatives){
-        if(fPrec & kIncludeSimplex){
-          // MnMinimize will try Simplex if the migrad minimum is invalid
-          mnApp = new ROOT::Minuit2::MnMinimize(*this, mnPars, int(fPrec & kAlgoMask));
-        }
-        else{
-          mnApp = new ROOT::Minuit2::MnMigrad(*this, mnPars, int(fPrec & kAlgoMask));
-        }
-      }
-      else{
-        if(fPrec & kIncludeSimplex){
-          mnApp = new ROOT::Minuit2::MnMinimize(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec & kAlgoMask));
-        }
-        else{
-          mnApp = new ROOT::Minuit2::MnMigrad(*((ROOT::Minuit2::FCNBase*)this), mnPars, int(fPrec & kAlgoMask));
-	  // mnApp = new ROOT::Minuit2::MnMigrad(*((ROOT::Minuit2::FCNBase*)this), mnParState, strategy);
-        }
-      }
+      mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim&)*this);
     }
 
-    // Minuit2 doesn't give a good way to control verbosity...
-    const int olderr = gErrorIgnoreLevel;
-    if(verb == kQuiet) gErrorIgnoreLevel = 1001; // Ignore warnings
+    if(verb == Verbosity::kQuiet) mnMin->SetPrintLevel(0);
 
-    ROOT::Minuit2::FunctionMinimum minpt = (*mnApp)(1e8);
-    gErrorIgnoreLevel = olderr;
-
-    // covariance matrix status (0 = not valid, 1 approximate, 2, full but made pos def, 3 accurate and not pos def
-    fCovarStatus = minpt.UserState().CovarianceStatus();
-    std::cout << "Notice: MINUIT Covar state: " << fCovarStatus << std::endl;
-
-    // Hesse can find a better minimum, so let's do this before panicking
-    if(fPrec & kIncludeHesse){
-      std::cout << "Notice: attempting to build the Hessian matrix" << std::endl;
-      ROOT::Minuit2::MnHesse hesse(2);
-      hesse(*this, minpt, 1e5);
-      fCovarStatus = minpt.UserState().CovarianceStatus();
-      std::cout << "Notice: HESSE Covar state: " << fCovarStatus << std::endl;
-    }
-
-    // Okay, time to panic! If this isn't valid, we probably should worry more...
-    if(!minpt.IsValid()){
+    if(!mnMin->Minimize()){
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
+      std::cout << "*** Precision: " << mnMin->Precision() << std::endl;
     }
 
-    delete mnApp;
-    return minpt;
+    return mnMin;
   }
 
   //----------------------------------------------------------------------
@@ -227,11 +194,12 @@ namespace ana
       // Need to deal with parameters that are not fit values!
       SystShifts shift = pt.shift;
 
-      ROOT::Minuit2::FunctionMinimum thisMin = FitHelperSeeded(seed, shift, verb);
+      std::unique_ptr<ROOT::Math::Minimizer> thisMin =
+          FitHelperSeeded(seed, shift, verb);
 
       // Check whether this is the best minimum we've found so far
-      if (thisMin.Fval() < minchi){
-	minchi = thisMin.Fval();
+      if (thisMin->MinValue() < minchi) {
+        minchi = thisMin->MinValue();
 
 	// Need to do Prefit here too...
 	fParamNames    .clear();
@@ -256,32 +224,23 @@ namespace ana
 	}
 
 	// Now save postfit
-	fPostFitValues = thisMin.UserParameters().Params();
-	fPostFitErrors = thisMin.UserParameters().Errors();
+	fPostFitValues = std::vector<double>(thisMin->X(), thisMin->X()+thisMin->NDim());
+	fPostFitErrors = std::vector<double>(thisMin->Errors(), thisMin->Errors()+thisMin->NDim());
 
-	this->fEdm = thisMin.Edm();
-	this->fIsValid = thisMin.IsValid();
+        fEdm = thisMin->Edm();
+        fIsValid = !thisMin->Status();
 
-	// Store covariances
-	ROOT::Minuit2::MnUserCovariance mncov = thisMin.UserCovariance();
+        delete fCovar;
+        fCovar = new TMatrixDSym(thisMin->NDim());
 
-	// Slightly tedious
-	std::vector<double> covdata = mncov.Data();
-	if (this->fCovar) delete this->fCovar;
-	this->fCovar = new TMatrixDSym(mncov.Nrow());
-
-	for (uint row = 0; row < mncov.Nrow(); ++row){
-	  for (uint col = 0; col < mncov.Nrow(); ++col){
-	    if (row > col)
-	      (*this->fCovar)(row, col) = covdata[col+row*(row+1)/2];
-	    else (*this->fCovar)(row, col) = covdata[row+col*(col+1)/2];
-	  }
-	}
+        for(unsigned int row = 0; row < thisMin->NDim(); ++row){
+          for(unsigned int col = 0; col < thisMin->NDim(); ++col){
+            (*fCovar)(row, col) = thisMin->CovMatrix(row, col);
+          }
+        }
 
         // Store the best fit values of all the parameters we know are being varied.
-        bestFitPars.clear();
-        bestSystPars.clear();
-	for(unsigned int i = 0; i < fVars.size(); ++i)
+        for(unsigned int i = 0; i < fVars.size(); ++i)
 	  bestFitPars.push_back(fPostFitValues[i]);
 	for(unsigned int j = 0; j < fSysts.size(); ++j)
 	  bestSystPars.push_back(fPostFitValues[fVars.size()+j]);
@@ -373,10 +332,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Fitter::DecodePars(const std::vector<double>& pars) const
+  void Fitter::DecodePars(const double* pars) const
   {
-    assert(pars.size() == fVars.size()+fSysts.size());
-
     for(unsigned int i = 0; i < fVars.size(); ++i){
       const double val = pars[i];
       fVars[i]->SetValue(fCalc, val);
@@ -388,11 +345,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Fitter::operator()(const std::vector<double>& pars) const
+  double Fitter::DoEval(const double* pars) const
   {
     ++fNEval;
-
-    assert(pars.size() == fVars.size()+fSysts.size());
 
     DecodePars(pars); // Updates fCalc and fShifts
 
@@ -411,21 +366,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::vector<double> Fitter::Gradient(const std::vector<double>& pars) const
+  void Fitter::Gradient(const double* pars, double* ret) const
   {
     ++fNEvalGrad;
-
-    std::vector<double> ret(pars.size());
 
     if(!fVars.empty()){
       // Have to use finite differences to calculate these derivatives
       const double dx = 1e-9;
-      const double nom = (*this)(pars);
+      const double nom = DoEval(pars);
       ++fNEvalFiniteDiff;
-      std::vector<double> parsCopy = pars;
+      std::vector<double> parsCopy(pars, pars+NDim());
       for(unsigned int i = 0; i < fVars.size(); ++i){
         parsCopy[i] += dx;
-        ret[i] = ((*this)(parsCopy)-nom)/dx;
+        ret[i] = (DoEval(parsCopy.data())-nom)/dx;
         ++fNEvalFiniteDiff;
         parsCopy[i] = pars[i];
       }
@@ -445,8 +398,6 @@ namespace ana
 
       ret[fVars.size()+j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
     }
-
-    return ret;
   }
 
   //----------------------------------------------------------------------
