@@ -8,6 +8,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
+#include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "TCanvas.h"
@@ -24,15 +25,12 @@ using namespace ana;
 class ToyEnergyScaleSyst: public ISyst
 {
 public:
-  std::string ShortName() const override {return "toyEScale";}
-  std::string LatexName() const override {return "Toy Energy Scale";}
-  void Shift(double sigma,
-             Restorer& restore,
-             caf::StandardRecord* sr,
-             double& weight) const override
+  ToyEnergyScaleSyst() : ISyst("toyEScale", "Toy Energy Scale") {}
+  void Shift(double sigma, Restorer& restore,
+             caf::StandardRecord* sr, double& weight) const override
   {
     restore.Add(sr->dune.Ev_reco_numu);
-    sr->dune.Ev_reco_numu *= (1+.05*sigma);
+    sr->dune.Ev_reco_numu *= (1+.1*sigma);
   }
 };
 const ToyEnergyScaleSyst eSyst;
@@ -40,57 +38,41 @@ const ToyEnergyScaleSyst eSyst;
 class ToyNormSyst: public ISyst
 {
 public:
-  std::string ShortName() const override {return "toyNorm";}
-  std::string LatexName() const override {return "Toy Norm syst";}
-  void Shift(double sigma,
-             Restorer& restore,
-             caf::StandardRecord* sr,
-             double& weight) const override
+  ToyNormSyst() : ISyst("toyNorm", "Toy Norm Syst") {}
+  void Shift(double sigma, Restorer& restore,
+             caf::StandardRecord* sr, double& weight) const override
   {
-    if(sr->dune.Ev_reco_numu > 7) weight *= 1+0.1*sigma;
+    if(sr->dune.Ev_reco_numu > 7) weight *= 1+0.2*sigma;
   }
 };
 const ToyNormSyst nSyst;
 
 void demo6()
 {
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  TDRLoaders loaders(Loaders::kFHC);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Binning binsEnergy = Binning::Simple(20, 0, 10);
+  const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const Cut kPassesMVA = SIMPLEVAR(dune.mvanumu) > 0;
   const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
   osc::IOscCalculator* calc = DefaultOscCalc();
 
   // We're going to use a PredictionInterp that will allow us to interpolate to
   // any values of the systematic parameters. Internally that works by creating
-  // various predictions at different values of the paramters, so we need to
+  // various predictions at different values of the parameters, so we need to
   // add this extra layer of indirection to allow it to create those.
-  DUNENoExtrapPredictionGenerator gen(*loaderBeam,  *loaderNue,
-                                      *loaderNuTau, *loaderNC,
-                                      axEnergy, kPassesMVA);
-
-  // Apologies for this. Interface wart.
-  Loaders dummyLoaders;
+  NoExtrapPredictionGenerator gen(axEnergy, kPassesCVN);
 
   // PredictionInterp needs:
   // - The list of systematics it should be ready to interpolate over
   // - A "seed" oscillation calculator it will do its expansions around
   // - The generator from above
-  // - The dummy loaders (sorry)
-  PredictionInterp predInterp({&eSyst, &nSyst},
-                              calc,
-                              gen,
-                              dummyLoaders);
+  // - The loaders
+  PredictionInterp predInterp({&eSyst, &nSyst}, calc, gen, loaders);
 
   // Fill all the different variants of the predictions that PredictionInterp
   // needs to make.
-  loader.Go();
+  loaders.Go();
 
   // Make some nice plots of what the interpolation looks like in each bin
   predInterp.DebugPlots(calc);
