@@ -376,10 +376,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1D* Spectrum::ToTH1(double exposure, Color_t col, Style_t style,
-                        EExposureType expotype,
-                        EBinType bintype) const
+  TH1D* Spectrum::ToTH1(double exposure,
+			EExposureType expotype,
+			EBinType bintype) const
   {
+
     // Could have a file temporarily open
     DontAddDirectory guard;
 
@@ -432,23 +433,34 @@ namespace ana
       }
     }
 
-    std::string label;
-    for(const std::string& l: fLabels) label += l + " and ";
-    label.resize(label.size()-5); // drop the last "and"
-    ret->GetXaxis()->SetTitle(label.c_str());
-
-    ret->GetYaxis()->SetTitle("Events");
-
-
-    ret->SetLineColor(col);
-    ret->SetMarkerColor(col);
-    ret->SetLineStyle(style);
-
     if(bintype == kBinDensity) ret->Scale(1, "width");
 
     // Allow GetMean() and friends to work even if this histogram never had any
     // explicit Fill() calls made.
     if(ret->GetEntries() == 0) ret->SetEntries(1);
+
+    return ret;
+
+  }
+
+  TH1D* Spectrum::ToTH1(double exposure, Color_t col, Style_t style,
+			EExposureType expotype,
+			EBinType bintype) const
+  {
+    // Could have a file temporarily open
+    DontAddDirectory guard;
+    
+    TH1D* ret = ToTH1(exposure, expotype, bintype);
+    
+    std::string label;
+    for(const std::string& l: fLabels) label += l + " and ";
+    label.resize(label.size()-5); // drop the last "and"
+    ret->GetXaxis()->SetTitle(label.c_str());
+    ret->GetYaxis()->SetTitle("Events");
+
+    ret->SetLineColor(col);
+    ret->SetMarkerColor(col);
+    ret->SetLineStyle(style);
 
     return ret;
   }
