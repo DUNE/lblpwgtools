@@ -142,7 +142,20 @@ namespace ana
     }
 
     chi += 2*(e-o);
-    if(o) chi += 2*o*log(o/e);
+
+    if(o){
+      const double eps = (o-e)/e;
+      if(fabs(eps) < 1e-7){
+        // For o/e very close to 1, the power expansion is much more stable
+        // than the logarithm.
+        chi += 2*o*(eps-util::sqr(eps)/2+util::cube(eps)/3);
+      }
+      else{
+        chi += 2*o*log(o/e);
+      }
+    }
+
+
 
     return chi;
   }
