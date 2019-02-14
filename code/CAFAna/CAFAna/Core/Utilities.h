@@ -123,7 +123,7 @@ namespace ana
   **/
   double LogLikelihood(double exp, double obs);
 
-  double LogLikelihoodDerivative(double e, double o, double dedx);
+  double LogLikelihoodDerivative(double e, double o);
 
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
                                  const std::vector<double>& dedx);

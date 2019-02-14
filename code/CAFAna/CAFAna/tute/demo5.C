@@ -8,6 +8,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
+#include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "TCanvas.h"
@@ -18,8 +19,10 @@ using namespace ana;
 class ToyEnergyScaleSyst: public ISyst
 {
 public:
-  std::string ShortName() const override {return "toyEScale";}
-  std::string LatexName() const override {return "Toy Energy Scale";}
+  ToyEnergyScaleSyst() : ISyst("toyEScale", "Toy Energy Scale")
+  {
+  }
+
   void Shift(double sigma,
              Restorer& restore,
              caf::StandardRecord* sr,
@@ -34,8 +37,10 @@ const ToyEnergyScaleSyst eSyst;
 class ToyNormSyst: public ISyst
 {
 public:
-  std::string ShortName() const override {return "toyNorm";}
-  std::string LatexName() const override {return "Toy Norm syst";}
+  ToyNormSyst() : ISyst("toyNorm", "Toy Norm Syst")
+  {
+  }
+
   void Shift(double sigma,
              Restorer& restore,
              caf::StandardRecord* sr,
@@ -50,21 +55,16 @@ const ToyNormSyst nSyst;
 
 void demo5()
 {
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  TDRLoaders loaders(Loaders::kFHC);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const Cut kPassesMVA = SIMPLEVAR(dune.mvanumu) > 0;
   const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
   osc::IOscCalculator* calc = DefaultOscCalc();
 
-  PredictionNoExtrap predNom(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC,
-                             axEnergy, kPassesMVA);
+  PredictionNoExtrap predNom(loaders, axEnergy, kPassesCVN);
+
 
   // Can set multiple systematics at once like this
   SystShifts bothUp;
@@ -78,15 +78,11 @@ void demo5()
   // Each of the constituent OscillatableSpectrum objects within these
   // predictions will be systematically altered as specified in the last
   // argument.
-  PredictionNoExtrap predUp(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC,
-                            axEnergy, kPassesMVA,
-                            bothUp);
-  PredictionNoExtrap predDn(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC,
-                            axEnergy, kPassesMVA,
-                            bothDn);
+  PredictionNoExtrap predUp(loaders, axEnergy, kPassesCVN, bothUp);
+  PredictionNoExtrap predDn(loaders, axEnergy, kPassesCVN, bothDn);
 
   // Fill all the nominal and shifted spectra within all three predictions
-  loader.Go();
+  loaders.Go();
 
   const Spectrum sOscNom = predNom.Predict(calc);
   const Spectrum sOscUp = predUp.Predict(calc);

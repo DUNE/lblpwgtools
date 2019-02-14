@@ -8,8 +8,8 @@ namespace ana
 {
   //----------------------------------------------------------------------
   DUNEXSecSystPCA::DUNEXSecSystPCA(int idx) :
-    ISyst(TString::Format("xsecpca%d", fIdx).Data(),
-          TString::Format("Cross section principal component %d", fIdx).Data()),
+    ISyst(TString::Format("xsecpca%d", idx).Data(),
+          TString::Format("Cross section principal component %d", idx).Data()),
     fIdx(idx)
   {
     TFile f((FindCAFAnaDir()+"Systs/xsec_shifts.root").c_str());
