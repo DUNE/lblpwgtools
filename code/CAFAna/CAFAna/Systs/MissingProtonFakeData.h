@@ -73,8 +73,7 @@ public:
   }
 
 public:
-  MissingProtonFakeDataGenerator(bool UseLepEOnlyTemplates = false,
-                                 bool DoWeight = true, double epfrac = 0.2)
+  MissingProtonFakeDataGenerator(bool DoWeight = true, double epfrac = 0.2)
       : ana::ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
                             : "MissingProtonEnergyGenerator",
                    DoWeight ? "MissingProtonFakeDataGenerator"
@@ -82,18 +81,11 @@ public:
         EpFrac(epfrac), fDoWeight(DoWeight) {
 
     std::vector<std::string> fnames = {
-        "ProtonEdepm20pc_binnedWeights_nu_LepERecY.root",
-        "ProtonEdepm20pc_binnedWeights_nubar_LepERecY.root",
-        "ProtonEdepm20pc_binnedWeights_nu_LepE.root",
-        "ProtonEdepm20pc_binnedWeights_nubar_LepE.root"};
+        "ProtonEdepm20pc_binnedWeights_nu.root",
+        "ProtonEdepm20pc_binnedWeights_nubar.root"};
     for (size_t bm = 0; bm < 2; ++bm) {
       bool is_nu = (bm == 0);
-      // If we are just using the training that fixes LepE at the near detector,
-      // load those inputs. By default the training attempts to fix LepE, RecY,
-      // eDep{P,Pi,N,Other}
-      TFile inp((ana::FindCAFAnaDir() + "/Systs/" +
-                 fnames[bm + 2 * UseLepEOnlyTemplates])
-                    .c_str(),
+      TFile inp((ana::FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(),
                 "READ");
       assert(!inp.IsZombie());
       for (size_t i = 0; i < 15; ++i) {
@@ -110,8 +102,7 @@ public:
   double EpFrac;
 };
 
-std::vector<const ana::ISyst *>
-GetMissingProtonEnergyFakeDataSyst(bool UseLepEOnlyTemplates = false) {
-  static MissingProtonFakeDataGenerator mpfd(UseLepEOnlyTemplates);
+std::vector<const ana::ISyst *> GetMissingProtonEnergyFakeDataSyst() {
+  static MissingProtonFakeDataGenerator mpfd();
   return {&mpfd};
 }
