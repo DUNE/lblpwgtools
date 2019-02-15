@@ -126,7 +126,6 @@ namespace ana
     fShifts = systSeed;
 
     if(fPrec & kIncludeSimplex) std::cout << "Simplex option specified but not implemented. Ignored." << std::endl;
-    if(fPrec & kIncludeHesse) std::cout << "Hesse option specified but not implemented. Ignored." << std::endl;
     if((fPrec & kAlgoMask) == kGradDesc){
       std::cout << "GradDesc option specified but not implemented. Abort." << std::endl;
       abort();
@@ -135,6 +134,8 @@ namespace ana
     std::unique_ptr<ROOT::Math::Minimizer> mnMin(
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
     mnMin->SetStrategy(int(fPrec & kAlgoMask));
+    mnMin->SetMaxFunctionCalls(1E8);
+    mnMin->SetMaxIterations(1E8);
 
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
@@ -169,6 +170,26 @@ namespace ana
     if(!mnMin->Minimize()){
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
       std::cout << "*** Precision: " << mnMin->Precision() << std::endl;
+
+      std::cout << "-- Stopped at: \n";
+      for(uint i = 0; i < mnMin->NFree(); ++i){
+	std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i] << "\n";
+      }
+    }
+
+    if (fPrec & kIncludeHesse){
+      std::cout << "It's Hesse o'clock" << std::endl;
+      mnMin->Hesse();
+    }
+
+    if (fPrec & kIncludeMinos){
+      std::cout << "It's minos time" << std::endl;
+      fTempMinosErrors.clear();
+      for (uint i = 0; i < mnMin->NDim(); ++i){
+	double errLow = 0, errHigh = 0;
+	mnMin->GetMinosError(i, errLow, errHigh);
+	fTempMinosErrors.push_back(std::make_pair(errLow,errHigh));
+      }      
     }
 
     return mnMin;
@@ -206,6 +227,8 @@ namespace ana
 	fPreFitErrors  .clear();
 	fPostFitValues .clear();
 	fPostFitErrors .clear();
+	fMinosErrors   .clear();
+	fMinosErrors   = fTempMinosErrors;
 
 	// Save pre-fit info
 	// In principle, these can change with the seed, so have to save them here...
