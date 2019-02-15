@@ -9,6 +9,7 @@
 #include "TDirectory.h"
 #include "TObjString.h"
 #include "TH1.h"
+#include "TH2.h"
 
 namespace ana
 {
@@ -21,7 +22,8 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
-      fMask(0), fCosmicScaleError(cosmicScaleError)
+      fMask(0), fCosmicScaleError(cosmicScaleError),
+      fCovMx(0), fCovMxInv(0)
   {
   }
 
@@ -31,8 +33,34 @@ namespace ana
                                                  const TH1D* cosmic,
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
-      fMask(0), fCosmicScaleError(cosmicScaleError)
+      fMask(0), fCosmicScaleError(cosmicScaleError),
+      fCovMx(0), fCovMxInv(0)
   {
+  }
+
+  //----------------------------------------------------------------------
+  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
+                                                 const Spectrum& data,
+                                                 const TMatrixD* cov)
+    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
+  {
+    fCovMxInv = new TMatrixD( fCovMx->Invert() );
+  }
+
+  //----------------------------------------------------------------------
+  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
+                                                 const Spectrum& data,
+                                                 const std::string covMatFilename,
+                                                 const std::string covMatName)
+
+    : fMC(pred), fData(data), fCosmic(0), fMask(0)
+  {
+    TFile * covMatFile = new TFile( covMatFilename.c_str() );
+    fCovMx = (TMatrixD*) covMatFile->Get( covMatName.c_str() );
+    if( !fCovMx ) {
+      std::cout << "Could not obtain covariance matrix named " << covMatName << " from " << covMatFilename << std::endl;
+    }
+    fCovMxInv = new TMatrixD( fCovMx->Invert() );
   }
 
   //----------------------------------------------------------------------
@@ -40,6 +68,8 @@ namespace ana
   {
     delete fCosmic;
     delete fMask;
+    delete fCovMx;
+    delete fCovMxInv;
   }
 
   //----------------------------------------------------------------------
@@ -80,13 +110,19 @@ namespace ana
       assert(hdata->GetNbinsX() == fMask->GetNbinsX());
 
       for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-	if (fMask->GetBinContent(i+1) == 1) continue;
-	hpred->SetBinContent(i+1, 0);
-	hdata->SetBinContent(i+1, 0);
+        if (fMask->GetBinContent(i+1) == 1) continue;
+        hpred->SetBinContent(i+1, 0);
+        hdata->SetBinContent(i+1, 0);
       }
     }
 
-    const double ll = LogLikelihood(hpred, hdata);
+    // if there is a covariance matrix, use it
+    double ll;
+    if( fCovMx ) {
+      ll = Chi2CovMx( hpred, hdata, fCovMxInv );
+    } else {
+      ll = LogLikelihood(hpred, hdata);
+    }
 
     HistCache::Delete(hpred);
     HistCache::Delete(hdata);
