@@ -696,6 +696,7 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
     std::vector<double> fPreFitErrors  = this_fit.GetPreFitErrors();
     std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
     std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();
+    std::vector<std::pair<double,double>> fMinosErrors   = this_fit.GetMinosErrors();
     double fNFCN = this_fit.GetNFCN();
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
@@ -750,6 +751,7 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
     t->Branch("fPreFitErrors",&fPreFitErrors);
     t->Branch("fPostFitValues",&fPostFitValues);
     t->Branch("fPostFitErrors",&fPostFitErrors);
+    t->Branch("fMinosErrors",&fMinosErrors);
     t->Fill();
     t->Write();
     hist_covar.Write();
