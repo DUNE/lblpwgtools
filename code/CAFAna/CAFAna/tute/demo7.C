@@ -11,6 +11,7 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "TCanvas.h"
@@ -24,33 +25,25 @@
 
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
-#include "CAFAna/Systs/DUNEXSecSystsPCA.h"
+#include "CAFAna/Systs/GenieSysts.h"
 
 using namespace ana;
 
 void demo7()
 {
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  TDRLoaders loaders(Loaders::kFHC);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Binning binsEnergy = Binning::Simple(20, 0, 10);
+  const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const Cut kPassesMVA = SIMPLEVAR(dune.mvanumu) > 0;
   const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
-  DUNENoExtrapPredictionGenerator gen(*loaderBeam,  *loaderNue, *loaderNuTau, *loaderNC,
-                                      axEnergy, kPassesMVA);
-  Loaders dummyLoaders;
+  NoExtrapPredictionGenerator gen(axEnergy, kPassesCVN);
 
   // First 10 principal components of diagonalized flux covariance matrix
   std::vector<const ISyst*> fluxsysts = GetDUNEFluxSysts(10);
-  // First 20 principal components of the (VALOR parameterization of) the GENIE
-  // cross section uncertainties.
-  std::vector<const ISyst*> xsecsysts = GetDUNEXSecSystsPCA(20);
+  // Curated GENIE cross section uncertainties list
+  std::vector<const ISyst*> xsecsysts = GetGenieSysts();
   std::vector<const ISyst*> allSysts;
   allSysts.insert(allSysts.end(), xsecsysts.begin(), xsecsysts.end());
   allSysts.insert(allSysts.end(), fluxsysts.begin(), fluxsysts.end());
@@ -58,9 +51,9 @@ void demo7()
   // List all of the systematics we'll be using
   for(const ISyst* s: allSysts) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
 
-  PredictionInterp predInterp(allSysts, calc, gen, dummyLoaders);
+  PredictionInterp predInterp(allSysts, calc, gen, loaders);
 
-  loader.Go();
+  loaders.Go();
 
   new TCanvas;
   TH1* hnom = predInterp.Predict(calc).ToTH1(pot);

@@ -67,20 +67,13 @@ const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // Cuts are now defined in CAFAna/Cuts/AnaCuts.h Removed from here to elide any
 // confusion
 
-// Seb's ND binning
-std::vector<double> binEEdges = {0., 0.5, 0.875, 1., 1.125, 1.25, 1.375, 1.5, 1.625, 1.75, 1.875,
-				 2., 2.125, 2.25, 2.375, 2.5, 2.625, 2.75, 2.875,
-				 3., 3.125, 3.25, 3.375, 3.5, 3.625, 3.75, 3.875,
-				 4., 4.125, 4.25, 4.375, 4.5, 4.625, 4.75, 4.875,
-				 5., 5.125, 5.25, 5.5, 5.75,
-				 6., 6.5,
-				 7., 7.5,
-				 8., 8.5,
-				 9., 9.5, 10.};
-std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0};
+// ND binning
+std::vector<double> binEEdges = {0., 0.5, 0.75, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75,
+                        				 4., 4.25, 4.5, 5., 5.5, 6., 7., 8., 10.};
+std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0};
 
 // Binnings
-const Binning binsFDEreco = Binning::Simple(80, 0, 10);
+const Binning binsFDEreco = Binning::Custom(binEEdges);//Binning::Simple(80, 0, 10);
 const Binning binsNDEreco =
     Binning::Custom(binEEdges); // Binning::Simple(40, 0, 10);
 const Binning binsNDEreco_OA = Binning::Simple(20, 0, 4);
@@ -703,6 +696,7 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
     std::vector<double> fPreFitErrors  = this_fit.GetPreFitErrors();
     std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
     std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();
+    std::vector<std::pair<double,double>> fMinosErrors   = this_fit.GetMinosErrors();
     double fNFCN = this_fit.GetNFCN();
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
@@ -757,6 +751,7 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
     t->Branch("fPreFitErrors",&fPreFitErrors);
     t->Branch("fPostFitValues",&fPostFitValues);
     t->Branch("fPostFitErrors",&fPostFitErrors);
+    t->Branch("fMinosErrors",&fMinosErrors);
     t->Fill();
     t->Write();
     hist_covar.Write();

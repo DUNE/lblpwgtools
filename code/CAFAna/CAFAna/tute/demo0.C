@@ -19,19 +19,10 @@ using namespace ana;
 void demo0()
 {
   // Environment variables and wildcards work. As do SAM datasets.
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
+  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
 
   // Source of events
   SpectrumLoader loader(fname);
-
-  // Various ways of swapping the neutrino flavours are all mixed together in
-  // the current files. Extract each specific swapping type by its particular
-  // run number.
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  // NC is special, you can safely sum the contribution from all swappings 
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
 
   // A Var is a little snippet of code that takes a record representing the
   // event record and returns a single number to plot.
@@ -42,22 +33,22 @@ void demo0()
                         });
 
   // For such a simple variable you can use a shortcut like this
-  const Var kMVANumu = SIMPLEVAR(dune.mvanumu);
+  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
 
   // Define a spectrum, ie a histogram with associated POT information
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   // kIsNumuCC here is a "Cut". Same as a Var but returning a boolean. In this
   // case, we're only keeping events that are truly numu CC interactions.
-  Spectrum sEnergy(*loaderBeam, axEnergy, kIsNumuCC);
+  Spectrum sEnergy(loader, axEnergy, kIsNumuCC);
 
-  Spectrum sEnergyNC(*loaderNC, axEnergy, kIsNC);
+  Spectrum sEnergyNC(loader, axEnergy, kIsNC);
 
   // And another
-  const Binning binsMVA = Binning::Simple(50, -1, 1);
-  const HistAxis axMVA("MVA_{#mu}", binsMVA, kMVANumu);
-  Spectrum sMVA(*loaderBeam, axMVA, kIsNumuCC);
-  Spectrum sMVANC(*loaderNC, axMVA, kIsNC);
+  const Binning binsCVN = Binning::Simple(50, 0, 1);
+  const HistAxis axCVN("CVN_{#mu}", binsCVN, kCVNNumu);
+  Spectrum sCVN(loader, axCVN, kIsNumuCC);
+  Spectrum sCVNNC(loader, axCVN, kIsNC);
 
   // This is the call that actually fills in those spectra
   loader.Go();
@@ -69,7 +60,7 @@ void demo0()
   sEnergy.ToTH1(pot)->Draw("hist");
   sEnergyNC.ToTH1(pot, kBlue)->Draw("hist same");
   new TCanvas;
-  sMVA.ToTH1(pot)->Draw("hist");
-  sMVANC.ToTH1(pot, kBlue)->Draw("hist same");
+  sCVN.ToTH1(pot)->Draw("hist");
+  sCVNNC.ToTH1(pot, kBlue)->Draw("hist same");
   gPad->SetLogy();
 }
