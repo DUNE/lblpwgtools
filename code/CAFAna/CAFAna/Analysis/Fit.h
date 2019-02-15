@@ -47,8 +47,9 @@ namespace ana
       // You may optionally specify this (eg kNormal | kIncludeSimplex) to
       // improve the chances of escaping from invalid minima
       kIncludeSimplex = 4,
-      // You may optionally specify this to improve the final error estimates
-      kIncludeHesse = 8
+      // You may optionally specify these to improve the final error estimates
+      kIncludeHesse = 8,
+      kIncludeMinos = 16
     };
     void SetPrecision(Precision prec);
 
@@ -111,6 +112,9 @@ namespace ana
 
     /// Return the postfit errors
     std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
+
+    /// Return the minos errors
+    std::vector<std::pair<double,double>> GetMinosErrors(){ return this->fMinosErrors;}
 
     /// Return number of function calls
     int GetNFCN(){return this->fNEval;}
@@ -199,7 +203,8 @@ namespace ana
     mutable std::vector<double> fPreFitErrors;
     mutable std::vector<double> fPostFitValues;
     mutable std::vector<double> fPostFitErrors;
-
+    mutable std::vector<std::pair<double, double> > fMinosErrors;
+    mutable std::vector<std::pair<double, double> > fTempMinosErrors; // Bit of a hack
   };
 
   // Modern C++ thinks that enum | enum == int. Make things work like we expect
