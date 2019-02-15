@@ -103,6 +103,6 @@ public:
 };
 
 std::vector<const ana::ISyst *> GetMissingProtonEnergyFakeDataSyst() {
-  static MissingProtonFakeDataGenerator mpfd();
+  static MissingProtonFakeDataGenerator mpfd;
   return {&mpfd};
 }
