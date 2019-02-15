@@ -133,18 +133,35 @@ namespace ana
     // event gives a chisq from this one bin of 182.
     const double minexp = 1e-40; // Don't let expectation go lower than this
 
-    double chi = 0;
-
     assert(o >= 0);
     if(e < minexp){
       if(!o) return 0;
       e = minexp;
     }
 
-    chi += 2*(e-o);
-    if(o) chi += 2*o*log(o/e);
+    if(o){
+      /*
+      const double x = (o-e)/e;
+      if(fabs(x) < 1e-3){
+        // For o/e very close to 1, the power expansion is much more stable
+        // than the logarithm. With this many orders we're good to 1 part in
+        // 10^21
+        const double x2 = x*x;
+        const double x3 = x2*x;
+        const double x4 = x3*x;
+        const double x5 = x4*x;
+        const double x6 = x5*x;
+        const double x7 = x6*x;
+        return 2*(e-o) + 2*o*(x - x2/2 + x3/3 - x4/4 + x5/5 - x6/6 + x7/7);
+      }
+      */
 
-    return chi;
+      // This strange form is for numerical stability when e~o
+      return 2*o*((e-o)/o + log1p((o-e)/e));
+    }
+    else{
+      return 2*(e-o);
+    }
   }
 
   //----------------------------------------------------------------------
@@ -167,14 +184,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihoodDerivative(double e, double o, double dedx)
+  // dLL/de
+  double LogLikelihoodDerivative(double e, double o)
   {
-    double ret = 2*dedx;
-    if(o) ret -= 2*o*dedx / e;
-    return ret;
+    if(e == 0) return 2;
+    return 2-2*o/e;
   }
 
   //----------------------------------------------------------------------
+  // dLL/dx
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
                                  const std::vector<double>& dedx)
   {
@@ -183,7 +201,7 @@ namespace ana
 
     double ret = 0;
     for(unsigned int i = 0; i < dedx.size(); ++i){
-      ret += LogLikelihoodDerivative(ea[i], oa[i], dedx[i]);
+      ret += LogLikelihoodDerivative(ea[i], oa[i]) * dedx[i];
     }
     return ret;
   }

@@ -43,9 +43,20 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0), fMask(0)
+      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0)
     {
     }
+
+    /// Include a covariance matrix
+    SingleSampleExperiment(const IPrediction* pred,
+                           const Spectrum& data,
+                           const TMatrixD* cov);
+
+    /// Include a covariance matrix file path
+    SingleSampleExperiment(const IPrediction* pred,
+                           const Spectrum& data,
+                           const std::string covMatFilename,
+                           const std::string covMatName);
 
     virtual ~SingleSampleExperiment();
 
@@ -83,7 +94,11 @@ namespace ana
     Spectrum fData;
     TH1D* fCosmic;
     TH1* fMask;
-    
+
     double fCosmicScaleError;
+
+    TMatrixD* fCovMx;
+    TMatrixD* fCovMxInv;
+
   };
 }

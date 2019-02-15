@@ -23,19 +23,21 @@ using namespace ana;
 void demo2()
 {
   // Repeat all of demo1.C to get us our Prediction object
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root";
+  SpectrumLoader loaderNonSwap(fnameNonSwap);
+  SpectrumLoader loaderNueSwap(fnameNueSwap);
+  SpectrumLoader loaderTauSwap(fnameTauSwap);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesMVA = SIMPLEVAR(dune.mvanumu) > 0;
-  PredictionNoExtrap pred(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC, axEnergy, kPassesMVA);
-  loader.Go();
+  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  PredictionNoExtrap pred(loaderNonSwap, loaderNueSwap, loaderTauSwap, axEnergy, kPassesCVN);
+  loaderNonSwap.Go();
+  loaderNueSwap.Go();
+  loaderTauSwap.Go();
 
   // We make the oscillation calculator "adjustable" so the fitter can
   // manipulate it.

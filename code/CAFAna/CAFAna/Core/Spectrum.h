@@ -156,10 +156,7 @@ namespace ana
     /// \param expotype How to interpret exposure (kPOT (default) or kLivetime)
     TH1D* ToTH1(double exposure,
                 EExposureType expotype,
-                EBinType bintype = kBinContent) const
-    {
-      return ToTH1(exposure, kBlack, kSolid, expotype, bintype);
-    }
+                EBinType bintype = kBinContent) const;
 
     /// Spectrum must be 2D to obtain TH2
     TH2*  ToTH2     (double exposure, EExposureType expotype = kPOT,
@@ -191,7 +188,7 @@ namespace ana
     ///
     /// Use for low-budget MDCs, or just getting a sense of the expected scale
     /// of statistical variation
-    Spectrum MockData(double pot, bool makethrow=false, int seed=0) const;
+    Spectrum MockData(double pot, bool makethrow=true, int seed=0) const;
     /// \brief Fake data is a MC spectrum scaled to the POT expected in the data
     ///
     /// Use for sensitivity plots and testing fit convergence

@@ -19,19 +19,15 @@ using namespace ana;
 void demo4()
 {
   // Copying basic setup from demo0.C
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
+  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
   SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // This is the nominal energy spectrum
-  Spectrum sEnergy(*loaderBeam, axEnergy, kIsNumuCC);
+  Spectrum sEnergy(loader, axEnergy, kIsNumuCC);
 
   // Systematics work by modifying the event record before it's filled into the
   // spectrum. These generally should be added into a header like Systs.h
@@ -39,8 +35,9 @@ void demo4()
   class ToyEnergyScaleSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "toyEScale";}
-    std::string LatexName() const override {return "Toy Energy Scale";}
+    ToyEnergyScaleSyst() : ISyst("toyEScale", "Toy Energy Scale")
+    {
+    }
 
     // Function that will be called to actually do the shift
     void Shift(double sigma,
@@ -60,14 +57,15 @@ void demo4()
   const ToyEnergyScaleSyst eSyst;
 
   // Make systematically shifted variants of the spectrum above
-  Spectrum sEnergyUp(*loaderBeam, axEnergy, kIsNumuCC, SystShifts(&eSyst, +1));
-  Spectrum sEnergyDn(*loaderBeam, axEnergy, kIsNumuCC, SystShifts(&eSyst, -1));
+  Spectrum sEnergyUp(loader, axEnergy, kIsNumuCC, SystShifts(&eSyst, +1));
+  Spectrum sEnergyDn(loader, axEnergy, kIsNumuCC, SystShifts(&eSyst, -1));
 
   class ToyNormSyst: public ISyst
   {
   public:
-    std::string ShortName() const override {return "toyNorm";}
-    std::string LatexName() const override {return "Toy Norm syst";}
+    ToyNormSyst() : ISyst("toyNorm", "Toy Norm Syst")
+    {
+    }
 
     void Shift(double sigma,
                Restorer& restore,
@@ -81,8 +79,8 @@ void demo4()
   };
   const ToyNormSyst nSyst;
 
-  Spectrum sNormUp(*loaderBeam, axEnergy, kIsNumuCC, SystShifts(&nSyst, +1));
-  Spectrum sNormDn(*loaderBeam, axEnergy, kIsNumuCC, SystShifts(&nSyst, -1));
+  Spectrum sNormUp(loader, axEnergy, kIsNumuCC, SystShifts(&nSyst, +1));
+  Spectrum sNormDn(loader, axEnergy, kIsNumuCC, SystShifts(&nSyst, -1));
 
   // Fill all the various shifted spectra
   loader.Go();

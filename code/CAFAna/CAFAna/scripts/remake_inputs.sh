@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build the exe so that backgrounded root processes don't fight.
-if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ../../releases/development/OscLib/ -I ../../releases/development/ ../../releases/development/lib/Linux4.1-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
+if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
   echo "[ERROR]: Failed to build remake_inputs."
   exit 1
 fi
@@ -19,7 +19,7 @@ for STATE in FakeData_state,FakeData; do
   mkdir -p ${STATEDIR}
   baseFileName=${STATEDIR}/common_state_mcc11v3
   for sample in FD_FHC FD_RHC ND_FHC ND_RHC; do
-      ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 ${STATESTR} &> /dev/null &
+      ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 ${STATESTR} &
   done
 
   wait

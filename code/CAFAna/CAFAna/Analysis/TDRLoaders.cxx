@@ -16,7 +16,7 @@ namespace ana
     if(std::string(host).find(".ucl.") != std::string::npos)
       base = "/unix/dune/CAFs/";
 
-    base += "/mcc11_v2/";
+    base += "/mcc11_v3/";
 
     const std::string hc = (flux == kFHC) ? "FHC" : "RHC";
 

@@ -20,35 +20,37 @@ using namespace ana;
 void demo1()
 {
   // See demo0.C for explanation of these repeated parts
-  const std::string fname = "/pnfs/dune/persistent/TaskForce_AnaTree/far/train/v3.2/nu.mcc10.1_def.root";
-  SpectrumLoader loader(fname);
-  auto* loaderBeam  = loader.LoaderForRunPOT(20000001);
-  auto* loaderNue   = loader.LoaderForRunPOT(20000002);
-  auto* loaderNuTau = loader.LoaderForRunPOT(20000003);
-  auto* loaderNC    = loader.LoaderForRunPOT(0);
+  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root";
+  SpectrumLoader loaderNonSwap(fnameNonSwap);
+  SpectrumLoader loaderNueSwap(fnameNueSwap);
+  SpectrumLoader loaderTauSwap(fnameTauSwap);
   const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Var kMVANumu = SIMPLEVAR(dune.mvanumu);
+  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // A cut is structured like a Var, but returning bool
-  const Cut kPassesMVA({},
+  const Cut kPassesCVN({},
                        [](const caf::StandardRecord* sr)
                        {
-                         return sr->dune.mvanumu > 0;
+                         return sr->dune.cvnnumu > 0.5;
                        });
 
   // In many cases it's easier to form them from existing Vars like this
-  //  const Cut kPassesMVA = kMVANumu > 0;
+  //  const Cut kPassesCVN = kCVNNumu > 0;
 
   // A Prediction is an objects holding a variety of "OscillatableSpectrum"
   // objects, one for each original and final flavour combination.
-  PredictionNoExtrap pred(*loaderBeam, *loaderNue, *loaderNuTau, *loaderNC,
-                          axEnergy, kPassesMVA);
+  PredictionNoExtrap pred(loaderNonSwap, loaderNueSwap, loaderTauSwap,
+                          axEnergy, kPassesCVN);
 
-  // This call will fill all of the constituent parts of the prediction
-  loader.Go();
+  // These calls will fill all of the constituent parts of the prediction
+  loaderNonSwap.Go();
+  loaderNueSwap.Go();
+  loaderTauSwap.Go();
 
   // We can extract a total prediction unoscillated
   const Spectrum sUnosc = pred.PredictUnoscillated();

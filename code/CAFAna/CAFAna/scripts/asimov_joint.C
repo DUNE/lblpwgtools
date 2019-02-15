@@ -15,16 +15,17 @@ std::string sanitize (std::string word) {
 }
 
 void RemovePars(std::vector<const IFitVar *> &osclist,
-                 std::vector<std::string> const &namesToRemove) {
+                std::vector<std::string> const &namesToRemove) {
   osclist.erase(std::remove_if(osclist.begin(), osclist.end(),
-			       [&](const IFitVar *s) {
-				 return (std::find(namesToRemove.begin(),
-						   namesToRemove.end(),
-						   sanitize(s->ShortName())) !=
-					 namesToRemove.end());
-			       }),
+                               [&](const IFitVar *s) {
+                                 return (std::find(namesToRemove.begin(),
+                                                   namesToRemove.end(),
+                                                   sanitize(s->ShortName())) !=
+                                         namesToRemove.end());
+                               }),
 		osclist.end());
 }
+
 
 // Function to set the binning based on the parameter short name
 void GetParameterBinning(std::string parName, int& nBins, double& min, double& max){
@@ -35,25 +36,25 @@ void GetParameterBinning(std::string parName, int& nBins, double& min, double& m
   max = 1;
   
   if (parName == "th13"){
-    nBins = 25;
-    min = 0.1;
-    max = 0.3;
+    nBins = 35;
+    min = 0.12;
+    max = 0.21;
     return;
   }
   if (parName == "deltapi"){
-    nBins = 25;
+    nBins = 40;
     min = -1;
     max = 1;
   }
   if (parName == "dmsq32scaled"){
-    nBins = 25;
-    min = 2;
-    max = 3;
+    nBins = 40;
+    min = 2.25;
+    max = 2.65;
   }
   if (parName == "ssth23"){
-    nBins = 25;
-    min = 0.3;
-    max = 0.7;
+    nBins = 60;
+    min = 0.38;
+    max = 0.62;
   }
   if (parName == "ss2th12"){
     nBins = 25;
@@ -66,9 +67,9 @@ void GetParameterBinning(std::string parName, int& nBins, double& min, double& m
     max = 9e-5;
   }
   if (parName == "rho"){
-    nBins = 25;
+    nBins = 50;
     min = 2.5;
-    max = 3.0;
+    max = 3.2;
   }
   return;
 }
@@ -123,7 +124,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  
   // Oscillation parameters to start with
   std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
 					    &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
@@ -158,7 +160,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     // Get the best fit
     double globalmin = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				   trueOsc, trueSyst, false,
-				   oscVarsAll, systlist,
+				   oscVarsFree, systlist,
 				   testOsc, testSyst,
 				   oscSeeds, penalty_nom,
 				   Fitter::kNormal, nomDir);
@@ -182,11 +184,16 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	
 	double chisqmin = 99999;
 	double thischisq;
-	
+
+	// Save information if this is 1D only (for now)
+	TDirectory* minDir = NULL;
+	if (plotVarVect.size() == 1)
+	  minDir = (TDirectory*) fout->mkdir((std::string(hie > 0 ? "nh" : "ih") + "_" + plotVarVect[0]+"_"+std::to_string(xBin)).c_str());
+
 	// If the parameters of interest don't include theta23, need to loop over octant too...
 	// for theta23, this *should* be fine if I only change the ioct in the penalty term... it'll just be terrible in the wrong octant
 	for(int ioct = -1; ioct <= 1; ioct += 2) {
-	  //int ioct = 1;
+
 	  // Figure out what the fixed parameters are, and put them into the true osc parameters. Also need to do the same for the test osc
 	  // Fix whatever I need to!
 	  // Probably need a function here to do the fixing
@@ -199,18 +206,42 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
 	  
 	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+
+	  // Add something to save a directory here
+	  TDirectory* tempDir = (TDirectory*) fout->mkdir("tempdir");
 	  
 	  thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				  trueOsc, trueSyst, false,
 				  oscVarsFree, systlist,
 				  testOsc, testSyst,
-				  oscSeeds, penalty);
-	  
-	  chisqmin = TMath::Min(thischisq,chisqmin);
+				  oscSeeds, penalty,
+				  Fitter::kNormal|Fitter::kIncludeHesse,
+				  tempDir);
+
+	  if (thischisq < chisqmin){
+	    chisqmin = thischisq;
+
+	    // Maybe not the best way to ensure only the best fit option is kept...
+	    if (minDir){
+	      minDir->Delete("*;*");
+	      TKey *key;
+	      TIter nextkey(tempDir->GetListOfKeys());
+	      while ((key = (TKey*)nextkey())) {
+		TObject *obj = key->ReadObj();
+		minDir->cd();
+		obj->Write();
+		delete obj;
+	      }
+	    }
+	  }
 	  delete penalty;
+	  fout->Delete("tempdir;*");
 	}
 	// Save the value into the hist
 	sens_hist->SetBinContent(xBin+1, yBin+1, chisqmin - globalmin);
+	fout->cd();
+	if (minDir) minDir->Write();
+	delete minDir;
       }
     }
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
+#include "CAFAna/Cuts/AnaCuts.h"
 
 #include <vector>
 
@@ -50,6 +51,25 @@ namespace ana
     mutable TH1* fHist;
   };
   extern const HadronAccSyst kHadronAccSyst;
+
+  // Fiducial volume normalization for numus
+  class FVNumuNDSyst: public ISyst
+  {
+  public:
+  FVNumuNDSyst() : ISyst("FVNumuND", "Near Detector Numu Fiducial Volume") {}
+    void Shift(double sigma, 
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override
+    {
+      const double scale = 1. + 0.01 * sigma;
+      if (!sr->dune.isFD && (kPassND_FHC_NUMU(sr) || kPassND_RHC_NUMU(sr))) {
+	weight *= scale;
+      }
+    }
+  };
+
+  extern const FVNumuNDSyst kFVNumuNDSyst;
 
   struct NDRecoSystVector: public std::vector<const ISyst*>
   {

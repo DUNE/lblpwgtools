@@ -83,6 +83,65 @@ namespace ana {
 
   extern const FDRecoNueSyst kFDRecoNueSyst;
 
+  // Fiducial volume normalization for nues
+  class FVNueFDSyst: public ISyst
+  {
+  public:
+  FVNueFDSyst() : ISyst("FVNueFD", "Far Detector Nue Fiducial Volume") {}
+    void Shift(double sigma, 
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override
+    {
+      const double scale = 1. + 0.01 * sigma;
+      if (sr->dune.isFD && kPassFD_CVN_NUE(sr)) {
+	weight *= scale;
+      }
+    }
+  };
+
+  extern const FVNueFDSyst kFVNueFDSyst;
+
+  // Fiducial volume normalization for numus
+  class FVNumuFDSyst: public ISyst
+  {
+  public:
+  FVNumuFDSyst() : ISyst("FVNumuFD", "Far Detector Numu Fiducial Volume") {}
+    void Shift(double sigma, 
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override
+    {
+      const double scale = 1. + 0.01 * sigma;
+      if (sr->dune.isFD && kPassFD_CVN_NUMU(sr)) {
+	weight *= scale;
+      }
+    }
+  };
+
+  extern const FVNumuFDSyst kFVNumuFDSyst;
+
+  // Fiducial volume normalization
+  // Correlated between nues and numus
+  class FVCorrFDSyst: public ISyst
+  {
+  public:
+  FVCorrFDSyst() : ISyst("FVCorrFD", "Far Detector Correlated Fiducial Volume") {}
+    void Shift(double sigma, 
+	       Restorer& restore,
+	       caf::StandardRecord* sr,
+	       double& weight) const override
+    {
+      const double scale = 1. + 0.01 * sigma;
+      if (sr->dune.isFD && (kPassFD_CVN_NUMU(sr) || kPassFD_CVN_NUMU(sr))) {
+	weight *= scale;
+      }
+    }
+  };
+
+  extern const FVCorrFDSyst kFVCorrFDSyst;
+
+
   struct FDRecoSystVector: public std::vector<const ISyst*>
   {
   };
