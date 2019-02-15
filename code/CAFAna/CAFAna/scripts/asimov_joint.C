@@ -35,25 +35,25 @@ void GetParameterBinning(std::string parName, int& nBins, double& min, double& m
   max = 1;
   
   if (parName == "th13"){
-    nBins = 25;
-    min = 0.1;
-    max = 0.3;
+    nBins = 35;
+    min = 0.12;
+    max = 0.21;
     return;
   }
   if (parName == "deltapi"){
-    nBins = 25;
+    nBins = 40;
     min = -1;
     max = 1;
   }
   if (parName == "dmsq32scaled"){
-    nBins = 25;
-    min = 2;
-    max = 3;
+    nBins = 40;
+    min = 2.25;
+    max = 2.65;
   }
   if (parName == "ssth23"){
-    nBins = 25;
-    min = 0.3;
-    max = 0.7;
+    nBins = 60;
+    min = 0.38;
+    max = 0.62;
   }
   if (parName == "ss2th12"){
     nBins = 25;
@@ -66,9 +66,9 @@ void GetParameterBinning(std::string parName, int& nBins, double& min, double& m
     max = 9e-5;
   }
   if (parName == "rho"){
-    nBins = 25;
+    nBins = 50;
     min = 2.5;
-    max = 3.0;
+    max = 3.2;
   }
   return;
 }
@@ -123,7 +123,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  
   // Oscillation parameters to start with
   std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
 					    &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
@@ -158,7 +159,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     // Get the best fit
     double globalmin = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				   trueOsc, trueSyst, false,
-				   oscVarsAll, systlist,
+				   oscVarsFree, systlist,
 				   testOsc, testSyst,
 				   oscSeeds, penalty_nom,
 				   Fitter::kNormal, nomDir);
