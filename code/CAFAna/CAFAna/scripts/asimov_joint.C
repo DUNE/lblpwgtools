@@ -185,7 +185,10 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	double chisqmin = 99999;
 	double thischisq;
 
-	TDirectory* minDir = (TDirectory*) fout->mkdir((std::string(hie > 0 ? "nh" : "ih") + "_" + plotVarVect[0]+"_"+std::to_string(xBin)).c_str());
+	// Save information if this is 1D only (for now)
+	TDirectory* minDir = NULL;
+	if (plotVarVect.size() == 1)
+	  minDir = (TDirectory*) fout->mkdir((std::string(hie > 0 ? "nh" : "ih") + "_" + plotVarVect[0]+"_"+std::to_string(xBin)).c_str());
 
 	// If the parameters of interest don't include theta23, need to loop over octant too...
 	// for theta23, this *should* be fine if I only change the ioct in the penalty term... it'll just be terrible in the wrong octant
@@ -219,14 +222,16 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	    chisqmin = thischisq;
 
 	    // Maybe not the best way to ensure only the best fit option is kept...
-	    minDir->Delete("*;*");
-	    TKey *key;
-	    TIter nextkey(tempDir->GetListOfKeys());
-	    while ((key = (TKey*)nextkey())) {
-	      TObject *obj = key->ReadObj();
-	      minDir->cd();
-	      obj->Write();
-	      delete obj;
+	    if (minDir){
+	      minDir->Delete("*;*");
+	      TKey *key;
+	      TIter nextkey(tempDir->GetListOfKeys());
+	      while ((key = (TKey*)nextkey())) {
+		TObject *obj = key->ReadObj();
+		minDir->cd();
+		obj->Write();
+		delete obj;
+	      }
 	    }
 	  }
 	  delete penalty;
@@ -235,7 +240,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	// Save the value into the hist
 	sens_hist->SetBinContent(xBin+1, yBin+1, chisqmin - globalmin);
 	fout->cd();
-	minDir->Write();
+	if (minDir) minDir->Write();
 	delete minDir;
       }
     }
