@@ -23,7 +23,7 @@ namespace ana
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0)
+      fCovMx(0)
   {
   }
 
@@ -34,7 +34,7 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0)
+      fCovMx(0)
   {
   }
 
@@ -44,7 +44,6 @@ namespace ana
                                                  const TMatrixD* cov)
     : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
   {
-    fCovMxInv = new TMatrixD( fCovMx->Invert() );
   }
 
   //----------------------------------------------------------------------
@@ -72,7 +71,6 @@ namespace ana
     delete fCosmic;
     delete fMask;
     delete fCovMx;
-    delete fCovMxInv;
   }
 
   //----------------------------------------------------------------------
@@ -122,7 +120,17 @@ namespace ana
     // if there is a covariance matrix, use it
     double ll;
     if( fCovMx ) {
-      ll = Chi2CovMx( hpred, hdata, fCovMxInv );
+      TMatrixD absCov( *fCovMx );
+      // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
+      for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
+        for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
+          absCov[b0][b1] *= (hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1));
+        }
+        // Add statistical uncertainty in quadrature
+        absCov[b0][b0] += hpred->GetBinContent(b0+1);
+      }
+
+      ll = Chi2CovMx( hpred, hdata, new TMatrixD(TMatrixD::kInverted, absCov) );
     } else {
       ll = LogLikelihood(hpred, hdata);
     }

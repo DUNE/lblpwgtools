@@ -32,8 +32,10 @@ namespace ana
       double low_weight  = sr->dune.genie_wgt[fID][low_index];
       double high_weight = sr->dune.genie_wgt[fID][high_index];
 
-      weight *= low_weight + (high_weight - low_weight)*diff;
+      double factor = low_weight + (high_weight - low_weight)*diff;
+      factor = std::min(factor, 10.); // cap very large weights
 
+      weight *= factor;
     }
 
   protected:
