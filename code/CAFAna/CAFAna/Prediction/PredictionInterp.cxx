@@ -168,7 +168,8 @@ namespace ana
                const std::vector<IPrediction*>& preds,
                Flavors::Flavors_t flav,
                Current::Current_t curr,
-               Sign::Sign_t sign) const
+               Sign::Sign_t sign,
+               const std::string& systName) const
   {
     IPrediction* pNom = 0;
     for(unsigned int i = 0; i < shifts.size(); ++i){
@@ -188,14 +189,16 @@ namespace ana
                                                     flav, curr, sign),
                                 nom).ToTH1());
 
-      // Check none of the ratio values is utterly crazy
+      // Check none of the ratio values is crazy
       std::unique_ptr<TH1>& r = ratios.back();
       for(int i = 0; i < r->GetNbinsX()+2; ++i){
 	const double y = r->GetBinContent(i);
-	if(y > 500){
+	if(y > 2){
 	  std::cout << "PredictionInterp: WARNING, ratio in bin "
-		    << i << " is " << y << ". Ignoring." << std::endl;
-	  r->SetBinContent(i, 1);
+		    << i << " for " << shifts[&p-&preds.front()]
+                    << " sigma shift of " << systName << " is " << y
+                    << " which exceeds limit of 2. Capping." << std::endl;
+	  r->SetBinContent(i, 2);
 	}
       }
     }
@@ -210,13 +213,13 @@ namespace ana
   {
     fits.resize(kNCoeffTypes);
 
-    fits[kNueApp]   = FitComponent(sp.shifts, sp.preds, Flavors::kNuMuToNuE,  Current::kCC, sign);
-    fits[kNueSurv]  = FitComponent(sp.shifts, sp.preds, Flavors::kNuEToNuE,   Current::kCC, sign);
-    fits[kNumuSurv] = FitComponent(sp.shifts, sp.preds, Flavors::kNuMuToNuMu, Current::kCC, sign);
+    fits[kNueApp]   = FitComponent(sp.shifts, sp.preds, Flavors::kNuMuToNuE,  Current::kCC, sign, sp.systName);
+    fits[kNueSurv]  = FitComponent(sp.shifts, sp.preds, Flavors::kNuEToNuE,   Current::kCC, sign, sp.systName);
+    fits[kNumuSurv] = FitComponent(sp.shifts, sp.preds, Flavors::kNuMuToNuMu, Current::kCC, sign, sp.systName);
 
-    fits[kNC]       = FitComponent(sp.shifts, sp.preds, Flavors::kAll, Current::kNC, sign);
+    fits[kNC]       = FitComponent(sp.shifts, sp.preds, Flavors::kAll, Current::kNC, sign, sp.systName);
 
-    fits[kOther] = FitComponent(sp.shifts, sp.preds, Flavors::kNuEToNuMu | Flavors::kAllNuTau, Current::kCC, sign);
+    fits[kOther] = FitComponent(sp.shifts, sp.preds, Flavors::kNuEToNuMu | Flavors::kAllNuTau, Current::kCC, sign, sp.systName);
   }
 
   //----------------------------------------------------------------------
