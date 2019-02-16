@@ -55,12 +55,15 @@ namespace ana
 
     : fMC(pred), fData(data), fCosmic(0), fMask(0)
   {
+    TDirectory *thisDir = gDirectory->CurrentDirectory();
     TFile * covMatFile = new TFile( covMatFilename.c_str() );
     fCovMx = (TMatrixD*) covMatFile->Get( covMatName.c_str() );
     if( !fCovMx ) {
       std::cout << "Could not obtain covariance matrix named " << covMatName << " from " << covMatFilename << std::endl;
     }
     fCovMxInv = new TMatrixD( fCovMx->Invert() );
+    covMatFile ->Close();
+    thisDir->cd();
   }
 
   //----------------------------------------------------------------------
