@@ -60,7 +60,6 @@ namespace ana
     if( !fCovMx ) {
       std::cout << "Could not obtain covariance matrix named " << covMatName << " from " << covMatFilename << std::endl;
     }
-    fCovMxInv = new TMatrixD( fCovMx->Invert() );
     covMatFile ->Close();
     thisDir->cd();
   }
