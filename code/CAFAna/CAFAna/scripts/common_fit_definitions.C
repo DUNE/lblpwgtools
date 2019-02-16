@@ -555,6 +555,10 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
   static PredictionInterp& predNDNumuFHC = *interp_list[4].release();
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
 
+  // Get the ndCov
+  std::string covFileName = "/dune/data/users/marshalc/CAFs/mcc11_v3/ND_syst_cov.root";
+  std::string covName = "nd_frac_cov";
+
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) outDir->cd();
 
@@ -582,11 +586,11 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);//, covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);//, covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
