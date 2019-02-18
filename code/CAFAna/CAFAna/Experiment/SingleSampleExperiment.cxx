@@ -129,7 +129,7 @@ namespace ana
         absCov[b0][b0] += hpred->GetBinContent(b0+1);
       }
 
-      ll = Chi2CovMx( hpred, hdata, new TMatrixD(TMatrixD::kInverted, absCov) );
+      ll = Chi2CovMx( hpred, hdata, TMatrixD(TMatrixD::kInverted, absCov) );
     } else {
       ll = LogLikelihood(hpred, hdata);
     }

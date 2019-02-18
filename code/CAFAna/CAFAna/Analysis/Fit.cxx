@@ -158,12 +158,23 @@ namespace ana
     // One way this can go wrong is if two variables have the same ShortName
     assert(mnMin->NFree() == fVars.size()+fSysts.size());
 
+    ROOT::Math::Functor lhood([&](double const *step_param_values) {
+      return this->operator()(step_param_values);
+      }, mnMin->NDim());
+    mnMin->SetFunction(lhood);
+
+    mnMin->SetPrintLevel(0);
+
+/*
+    ROOT::Minuit2::MnApplication* mnApp = 0;
+
     if(fSupportsDerivatives){
       mnMin->SetFunction(*this);
     }
     else{
       mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim&)*this);
     }
+*/
 
     if(verb == Verbosity::kQuiet) mnMin->SetPrintLevel(0);
 
@@ -368,6 +379,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   double Fitter::DoEval(const double* pars) const
+  {
+    assert(pars.size() == fVars.size()+fSysts.size());
+    return operator()(pars.data());
+  }
+
+  //----------------------------------------------------------------------
+  double Fitter::operator()(const double* pars) const
   {
     ++fNEval;
 

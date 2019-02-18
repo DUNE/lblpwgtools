@@ -139,10 +139,10 @@ namespace ana
 
        Note that this implicitly assumes Gaussian statistics for the bin counts!
   **/
-  double Chi2CovMx(const TVectorD* exp, const TVectorD* obs, const TMatrixD* covmxinv);
+  double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
 
   /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
-  double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD* covmxinv);
+  double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
   ///
