@@ -1,9 +1,17 @@
 #!/bin/bash
 
-# Build the exe so that backgrounded root processes don't fight.
-if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
-  echo "[ERROR]: Failed to build remake_inputs."
-  exit 1
+if [ -z ${CAFANA} ]; then
+  # Build the exe so that backgrounded root processes don't fight.
+  if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
+    echo "[ERROR]: Failed to build remake_inputs."
+    exit 1
+  fi
+else
+  # Build the exe so that backgrounded root processes don't fight.
+  if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
+    echo "[ERROR]: Failed to build remake_inputs."
+    exit 1
+  fi
 fi
 
 # for STATE in standard_state, FromDep_state,FromDep 1DND_state,1DND CoarseBin1D_state,CoarseBin1D VeryCoarseBin1D_state,VeryCoarseBin1D OneBin_state,OneBin; do

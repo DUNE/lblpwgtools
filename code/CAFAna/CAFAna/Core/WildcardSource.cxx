@@ -2,7 +2,9 @@
 
 #include "CAFAna/Core/Utilities.h"
 
+#ifndef DONT_USE_SAM
 #include "ifdh.h"
+#endif
 
 #include <algorithm>
 
