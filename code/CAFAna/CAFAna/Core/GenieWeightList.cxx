@@ -181,6 +181,29 @@ int GetGenieIndex(const std::string &name, bool quiet) {
   return it - names.begin();
 }
 
+bool GetGenieIsOnOff(const std::string &name) {
+
+  static std::vector<std::string> const OnOffDialNames = {
+      "VecFFCCQEshape",
+      "Theta_Delta2Npi",
+      "CCQEPauliSupViaKF",
+      "Mnv2p2hGaussEnhancement",
+      "MKSPP_ReWeight",
+      "E2p2h_A_nu",
+      "E2p2h_B_nu",
+      "E2p2h_A_nubar",
+      "E2p2h_B_nubar",
+      "C12ToAr40_2p2hScaling_nu",
+      "C12ToAr40_2p2hScaling_nubar",
+      "nuenuebar_xsec_ratio",
+      "nuenumu_xsec_ratio",
+      "SPPLowQ2Suppression",
+      "FSILikeEAvailSmearing"};
+
+  return std::find(OnOffDialNames.begin(), OnOffDialNames.end(), name) !=
+         OnOffDialNames.end();
+}
+
 std::string GetGenieWeightName(int index) {
   const std::vector<std::string> names = GetGenieWeightNames();
   return names[index];
