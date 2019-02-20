@@ -1,0 +1,15 @@
+#!/bin/bash
+
+INPFILE=$1
+
+echo "[INFO]: Attempting to build ${INPFILE}"
+
+EXEFILE=${BLA%.*}.exe
+
+BCMD="g++ ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -lUtilities -lOscLib $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+
+echo ${BCMD}
+if ! ${BCMD}; then
+  echo "[ERROR]: Failed to build ${INPFILE}."
+  exit 1
+fi
