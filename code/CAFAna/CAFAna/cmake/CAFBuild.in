@@ -6,7 +6,7 @@ echo "[INFO]: Attempting to build ${INPFILE}"
 
 EXEFILE=${BLA%.*}.exe
 
-BCMD="g++ ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -lUtilities -lOscLib $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+BCMD="g++ ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -lUtilities -lOscLib $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
 
 echo ${BCMD}
 if ! ${BCMD}; then

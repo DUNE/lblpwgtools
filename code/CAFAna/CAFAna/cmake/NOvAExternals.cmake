@@ -83,13 +83,13 @@ set(OscLib_header_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_Sterile.h
 )
 
-add_library(OscLib SHARED ${OscLib_implementation_files})
-target_compile_options(OscLib PUBLIC ${GSL_INC_STR})
+add_library(OscLibFunc SHARED ${OscLib_implementation_files})
+target_compile_options(OscLibFunc PUBLIC ${GSL_INC_STR})
 
 CatStringsIfNotEmpty(GSL_LINKER_FLAGS ${GSL_LIB_DIR_STR} ${GSL_LIBS_STR})
-target_link_libraries(OscLib ${GSL_LINKER_FLAGS})
+target_link_libraries(OscLibFunc ${GSL_LINKER_FLAGS})
 
-install(TARGETS OscLib DESTINATION lib)
+install(TARGETS OscLibFunc DESTINATION lib)
 
 install(FILES ${OscLib_header_files} DESTINATION include/OscLib/func)
 
@@ -129,12 +129,12 @@ set(Utilities_header_files
   ${CMAKE_BINARY_DIR}/Ext/Utilities/func/EnvExpand.h
 )
 
-add_library(Utilities SHARED ${Utilities_implementation_files})
-target_compile_options(Utilities PUBLIC -I${CLHEP_PREFIX}/include)
+add_library(UtilitiesFunc SHARED ${Utilities_implementation_files})
+target_compile_options(UtilitiesFunc PUBLIC -I${CLHEP_PREFIX}/include)
 
-target_link_libraries(Utilities -L${CLHEP_PREFIX}/lib -lCLHEP)
+target_link_libraries(UtilitiesFunc -L${CLHEP_PREFIX}/lib -lCLHEP)
 
-install(TARGETS Utilities DESTINATION lib)
+install(TARGETS UtilitiesFunc DESTINATION lib)
 
 install(FILES ${Utilities_header_files} DESTINATION include/Utilities/func)
 

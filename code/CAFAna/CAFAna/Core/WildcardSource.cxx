@@ -60,6 +60,15 @@ namespace ana
       //      ret = i.ls(wildcard, 0);
     }
 
+#ifdef ALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE
+    if (wildcard.find("root://") == 0) {
+      std::cout
+          << "[INFO]: Ignoring shell expansion attempts on xrootd file path: "
+          << wildcard << std::endl;
+      ret.push_back(wildcard);
+    }
+#endif
+
     return ret;
   }
 }

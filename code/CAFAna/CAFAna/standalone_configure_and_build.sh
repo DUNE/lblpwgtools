@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ${1} == "-f" ]; then
+if [ "${1}" == "-f" ]; then
   rm -rf build
 fi
 
@@ -20,7 +20,7 @@ svn checkout http://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
-source cmake/ups_env_setup.sh
+source ../cmake/ups_env_setup.sh
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../)
+cmake ../ -DCMAKE_BUILD_TYPE=DEBUG -DSRC_ROOT_PARENT=$(readlink -f ../../)
 make install

@@ -43,7 +43,7 @@ include_directories(
   ${CMAKE_BINARY_DIR}/Ext
   $ENV{BOOST_INC})
 
-LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1)
+LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 ################################## COMPILER ####################################
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 
@@ -60,6 +60,8 @@ add_subdirectory(Extrap)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
+
+add_subdirectory(scripts)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
@@ -94,7 +96,9 @@ install(
 
 install(
   FILES
-    ${CMAKE_SOURCE_DIR}/load_libs.C
+    ${CMAKE_SOURCE_DIR}/load_libs_dune.C
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
+  RENAME
+    load_libs.C
   )
