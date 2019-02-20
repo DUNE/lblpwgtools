@@ -158,7 +158,7 @@ const double pot_nd = 3.5 * POT120;
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
 const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 #else
-const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv3";
+const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/dune/persistent/users/LBL_TDR/CAFs/v3/";
 #endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
@@ -415,7 +415,14 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
                      bool fileNameIsStub = kFileContainsAllSamples,
                      AxisBlob const &axes = default_axes) {
 
-  if (!fileNameIsStub && (reload || TFile(fileName.c_str()).IsZombie())) {
+  //To allow XRootD input files.
+  TFile *testF = !fileNameIsStub ? TFile::Open(fileName.c_str(),"READ") : nullptr;
+  if (!fileNameIsStub && (reload || testF->IsZombie())) {
+    if(fileName.find("root://") == 0){
+      std::cout << "Passed xrootd path that cannot be opened, we cannot regenerate input histograms with this. Aborting."
+      abort();
+    }
+
     std::cout << "Now creating PredictionInterps in series... maybe you should "
                  "use the other scripts to do them in parallel?"
               << std::endl;
@@ -434,13 +441,13 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     std::string state_fname =
         fileNameIsStub ? fileName + "_" + sample_suffix_order[s_it] + ".root"
                        : fileName;
-    TFile fin(state_fname.c_str());
-    assert(!fin.IsZombie());
+    TFile *fin = TFile::Open(state_fname.c_str(),"READ"); // Allows xrootd streaming
+    assert(fin && !fin->IsZombie());
     std::cout << "Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
     return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin.GetDirectory(sample_dir_order[s_it].c_str())));
-    fin.Close();
+        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+    delete fin;
   }
   return return_list;
 };
