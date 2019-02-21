@@ -27,6 +27,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/SupportSourceCheck.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/parseConfigApp.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/StringAndListUtils.cmake)
 
+if(USED_UPS STREQUAL "")
+  set(USED_UPS "0")
+elseif(NOT DEFINED USED_UPS)
+  set(USED_UPS "0")
+endif()
+
 cmessage(STATUS "CMAKE_INSTALL_PREFIX: \"${CMAKE_INSTALL_PREFIX}\"")
 cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 

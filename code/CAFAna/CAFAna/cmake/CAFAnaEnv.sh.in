@@ -49,4 +49,6 @@ fi
 add_to_PATH "${CAFANA}/bin"
 add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
 
-source ${CAFANA}/ups_env_setup.sh
+if [ "@USED_UPS@" == "1" ]; then
+  source ${CAFANA}/ups_env_setup.sh
+fi

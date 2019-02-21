@@ -419,7 +419,7 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
   TFile *testF = !fileNameIsStub ? TFile::Open(fileName.c_str(),"READ") : nullptr;
   if (!fileNameIsStub && (reload || testF->IsZombie())) {
     if(fileName.find("root://") == 0){
-      std::cout << "Passed xrootd path that cannot be opened, we cannot regenerate input histograms with this. Aborting."
+      std::cout << "Passed xrootd path that cannot be opened, we cannot regenerate input histograms with this. Aborting." << std::endl;
       abort();
     }
 
