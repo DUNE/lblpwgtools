@@ -69,10 +69,11 @@ void llh_scans(std::string stateFname  = "common_state_mcc11v3.root",
   
   // Make a list of dial values to scan over, common to all...
   std::vector<double> syst_vals;
-  for (int i=0; i<201;++i){
-    double range = 10;
-    double stride = range/200;
-    syst_vals .push_back(stride*i-5);
+  int nsteps = 401;
+  for (int i=0; i<nsteps;++i){
+    double range = 8;
+    double stride = range/(nsteps-1);
+    syst_vals .push_back(stride*i-range/2.);
   }
   
   // Loop over the systematics and make a LLH scan for each one
@@ -93,19 +94,19 @@ void llh_scans(std::string stateFname  = "common_state_mcc11v3.root",
 	this_llh_chisq  .push_back(expt.second->ChiSq(trueOsc, thisShift));
 	this_llh_penalty.push_back(syst->Penalty(shift));	
       }
-      TGraph *thisTotal = new TGraph(201, &syst_vals[0], &this_llh_total[0]);
+      TGraph *thisTotal = new TGraph(nsteps, &syst_vals[0], &this_llh_total[0]);
       thisTotal ->Write((expt.first + "_" +syst->ShortName()+"_total").c_str());
       delete thisTotal;
       
-      TGraph *thisChisq = new TGraph(201, &syst_vals[0], &this_llh_chisq[0]);
+      TGraph *thisChisq = new TGraph(nsteps, &syst_vals[0], &this_llh_chisq[0]);
       thisChisq ->Write((expt.first + "_" +syst->ShortName()+"_chisq").c_str());
       delete thisChisq;
 
-      TGraph *thisPenalty = new TGraph(201, &syst_vals[0], &this_llh_penalty[0]);
+      TGraph *thisPenalty = new TGraph(nsteps, &syst_vals[0], &this_llh_penalty[0]);
       thisPenalty ->Write((expt.first + "_" +syst->ShortName()+"_penalty").c_str());
       delete thisPenalty;
     }
   }
-  
+  std::cout << "Closing file" << std::endl;
   fout->Close();
 }
