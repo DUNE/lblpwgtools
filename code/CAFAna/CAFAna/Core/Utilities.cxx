@@ -552,6 +552,7 @@ namespace ana
     struct stat junk;
     if(stat(cafana, &junk) == 0) {return cafana;}
     assert(false);
+    return "";//to stop the compiler error.
     #endif
   }
 
