@@ -188,6 +188,7 @@ namespace ana
       for (uint i = 0; i < mnMin->NDim(); ++i){
 	double errLow = 0, errHigh = 0;
 	mnMin->GetMinosError(i, errLow, errHigh);
+	std::cout << i << "/" << mnMin->NDim() << " " << fParamNames[i] << ": " << errLow << ", +" << errHigh << " (" << mnMin->Errors()[i] << ")" << std::endl;
 	fTempMinosErrors.push_back(std::make_pair(errLow,errHigh));
       }      
     }
