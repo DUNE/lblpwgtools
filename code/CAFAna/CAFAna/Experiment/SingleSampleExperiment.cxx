@@ -104,18 +104,6 @@ namespace ana
     TH1D* hpred = PredHistIncCosmics(calc, syst);
     TH1D* hdata = fData.ToTH1(fData.POT());
 
-    // If a valid mask has been set, zero out the offending bins
-    if (fMask){
-      assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-      assert(hdata->GetNbinsX() == fMask->GetNbinsX());
-
-      for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-        if (fMask->GetBinContent(i+1) == 1) continue;
-        hpred->SetBinContent(i+1, 0);
-        hdata->SetBinContent(i+1, 0);
-      }
-    }
-
     // if there is a covariance matrix, use it
     double ll;
     if( fCovMx ) {
@@ -129,8 +117,33 @@ namespace ana
         absCov[b0][b0] += hpred->GetBinContent(b0+1);
       }
 
+      // Mask after the ND covariance is dealt with
+      if (fMask){
+	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+	  if (fMask->GetBinContent(i+1) == 1) continue;
+	  hpred->SetBinContent(i+1, 0);
+	  hdata->SetBinContent(i+1, 0);
+	}
+      }
+
+
       ll = Chi2CovMx( hpred, hdata, TMatrixD(TMatrixD::kInverted, absCov) );
     } else {
+      // Still have to mask
+      if (fMask){
+	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+	  if (fMask->GetBinContent(i+1) == 1) continue;
+	  hpred->SetBinContent(i+1, 0);
+	  hdata->SetBinContent(i+1, 0);
+	}
+      }
+
       ll = LogLikelihood(hpred, hdata);
     }
 
