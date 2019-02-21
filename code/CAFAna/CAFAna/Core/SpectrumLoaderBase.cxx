@@ -2,15 +2,19 @@
 
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
+#ifndef DONT_USE_SAM
 #include "CAFAna/Core/SAMQuerySource.h"
 #include "CAFAna/Core/SAMProjectSource.h"
+#endif
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/WildcardSource.h"
 
 #include "StandardRecord/StandardRecord.h"
 
+#ifndef DONT_USE_SAM
 #include "ifdh.h"
+#endif
 
 #include "TFile.h"
 #include "TH1.h"
@@ -179,6 +183,7 @@ namespace ana
       delete ret;
     }
 
+#ifndef DONT_USE_SAM
     // Maybe this the name of a SAM project?
     ifdh_ns::ifdh i;
     const std::string info = i.dumpProject(i.findProject(str, "nova"));
@@ -195,6 +200,10 @@ namespace ana
 
     // Maybe this is a SAM dataset or query?
     return new SAMQuerySource(str, stride, offset);
+#else
+    std::cout << "[ERROR]: Built without SAM support but found apparent SAM query in WildcardOrSAMQuery." << std::endl;
+    abort();
+#endif
   }
 
   //----------------------------------------------------------------------
@@ -308,4 +317,3 @@ namespace ana
   }
 
 } // namespace
-

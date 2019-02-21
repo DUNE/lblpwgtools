@@ -535,6 +535,7 @@ namespace ana
   //----------------------------------------------------------------------
   std::string FindCAFAnaDir()
   {
+    #ifndef USE_CAFANA_ENVVAR
     const char* pub = getenv("SRT_PUBLIC_CONTEXT");
     const char* priv = getenv("SRT_PRIVATE_CONTEXT");
 
@@ -545,6 +546,14 @@ namespace ana
     }
     assert(pub);
     return std::string(pub)+"/CAFAna/";
+    #else
+    const char *cafana = getenv("CAFANA");
+    assert(cafana);
+    struct stat junk;
+    if(stat(cafana, &junk) == 0) {return cafana;}
+    assert(false);
+    return "";//to stop the compiler error.
+    #endif
   }
 
   //----------------------------------------------------------------------

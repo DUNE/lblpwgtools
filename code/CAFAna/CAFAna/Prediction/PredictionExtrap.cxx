@@ -92,6 +92,7 @@ namespace ana
     if(from == -14 && to == -16) return fExtrap->AntiTauFromMuComponent();
 
     assert(0 && "Not reached");
+    throw;//shuts up compiler error.
   }
 
   //----------------------------------------------------------------------

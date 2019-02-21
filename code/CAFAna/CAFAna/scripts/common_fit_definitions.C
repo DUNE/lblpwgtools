@@ -143,7 +143,7 @@ struct AxisBlob {
 };
 
 AxisBlob const default_axes{&axErecYrecND,&axRecoEnuFDnumu,&axRecoEnuFDnue};
-AxisBlob const fake_data_axes{&axErecND_FromDep,&axErecFD_FromDep,&axErecFD_FromDep};
+AxisBlob const fake_data_axes{&axErecYrecND_FromDep,&axErecFD_FromDep,&axErecFD_FromDep};
 
 
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
@@ -155,7 +155,11 @@ const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
 
 // Global file path...
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
 const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
+#else
+const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/dune/persistent/users/LBL_TDR/CAFs/v3/";
+#endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
 size_t const NFluxParametersToUse = 10; //30;
@@ -236,7 +240,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   }
 
   if (xsecsyst) {
-    std::vector<const ISyst*> xseclist = GetGenieSysts(GetGenieWeightNames(), fluxXsecPenalties);
+    std::vector<const ISyst*> xseclist = GetGenieSysts(GetGenieWeightNames(), fluxXsecPenalties, true); // the trailing true says on/off dials should extrapolate to -1 rather than mirror.
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
 
@@ -265,10 +269,10 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     // for (auto & syst : namedList) std::cout << syst->ShortName() << std::endl;
     // 2) Interpret the list of short names
     std::vector<std::string> systs = SplitString(systString, ':');
-    
+
     // 3) Don't include "list"
     systs.erase(systs.begin());
-    
+
     // 4) Regret nothing
     KeepSysts(namedList, systs);
 
@@ -411,7 +415,14 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
                      bool fileNameIsStub = kFileContainsAllSamples,
                      AxisBlob const &axes = default_axes) {
 
-  if (!fileNameIsStub && (reload || TFile(fileName.c_str()).IsZombie())) {
+  //To allow XRootD input files.
+  TFile *testF = !fileNameIsStub ? TFile::Open(fileName.c_str(),"READ") : nullptr;
+  if (!fileNameIsStub && (reload || testF->IsZombie())) {
+    if(fileName.find("root://") == 0){
+      std::cout << "Passed xrootd path that cannot be opened, we cannot regenerate input histograms with this. Aborting." << std::endl;
+      abort();
+    }
+
     std::cout << "Now creating PredictionInterps in series... maybe you should "
                  "use the other scripts to do them in parallel?"
               << std::endl;
@@ -430,13 +441,13 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     std::string state_fname =
         fileNameIsStub ? fileName + "_" + sample_suffix_order[s_it] + ".root"
                        : fileName;
-    TFile fin(state_fname.c_str());
-    assert(!fin.IsZombie());
+    TFile *fin = TFile::Open(state_fname.c_str(),"READ"); // Allows xrootd streaming
+    assert(fin && !fin->IsZombie());
     std::cout << "Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
     return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin.GetDirectory(sample_dir_order[s_it].c_str())));
-    fin.Close();
+        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+    delete fin;
   }
   return return_list;
 };

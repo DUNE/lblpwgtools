@@ -22,7 +22,7 @@ void remake_inputs(std::string outFileName, std::string sampleName, int max = 0,
     AxToUse.NDAx = &axErecYrecND_FromDep;
     AxToUse.FDAx_numu = &axErecFD_FromDep;
     AxToUse.FDAx_nue = &axErecFD_FromDep;
-  } else if ((ax == "1DNDFromDep") || (ax == "FakeData")) {
+  } else if (ax == "1DNDFromDep") {
     AxToUse.NDAx = &axErecND_FromDep;
     AxToUse.FDAx_numu = &axErecFD_FromDep;
     AxToUse.FDAx_nue = &axErecFD_FromDep;
@@ -46,6 +46,8 @@ void remake_inputs(std::string outFileName, std::string sampleName, int max = 0,
     AxToUse.NDAx = &axTrueE_unibin_coarse;
     AxToUse.FDAx_numu = &axTrueE_unibin_coarse;
     AxToUse.FDAx_nue = &axTrueE_unibin_coarse;
+  } else if(ax == "FakeData"){
+    AxToUse = fake_data_axes;
   }
 
   MakePredictionInterp(&fout, GetSampleType(sampleName), systlist, max,
