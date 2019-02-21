@@ -2,6 +2,7 @@
 
 FORCE_REMOVE="0"
 USE_UPS="0"
+CORES=1
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -20,10 +21,23 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will source dependencies from ups."
       ;;
 
+      -j|--n-cores)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      CORES="$2"
+      echo "[OPT]: Will build with \"${CORES}\" cores."
+      shift # past argument
+      ;;
+
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
+      echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
       echo -e "\t-?|--help              : Print this message."
       exit 0
       ;;
@@ -85,4 +99,4 @@ else
 fi
 
 cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS}
-make install
+make install -j ${CORES}

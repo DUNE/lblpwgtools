@@ -47,7 +47,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
 include_directories(
   ${SRC_ROOT_PARENT}
   ${CMAKE_BINARY_DIR}/Ext
-  $ENV{BOOST_INC})
+  ${BOOST_INC})
 
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 ################################## COMPILER ####################################

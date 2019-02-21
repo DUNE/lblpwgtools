@@ -26,3 +26,5 @@ if($ENV{BOOST_INC} STREQUAL "")
 elseif(NOT DEFINED ENV{BOOST_INC})
   cmessage(FATAL_ERROR "Expected to be able to evaluate \$ENV{BOOST_INC}=\"$ENV{BOOST_INC}\" to an existing directory, is BOOST set up in the environment?")
 endif()
+
+SET(BOOST_INC $ENV{BOOST_INC})
