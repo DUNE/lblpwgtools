@@ -53,8 +53,6 @@ cd $_CONDOR_SCRATCH_DIR
 export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
 
-kx509
-voms-proxy-init -rfc -noregen -voms dune:/dune/Role=Analysis
 voms-proxy-info --all
 
 setup ifdhc v2_3_9
@@ -79,6 +77,7 @@ cp ${CAFANA}/scripts/remake_inputs.C .
 
 echo "Building interps @ $(date)"
 
+echo "cafe -q -b remake_inputs.C common_state_mcc11v3_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v3_${SAMPLE_NAME}.log"
 cafe -q -b remake_inputs.C common_state_mcc11v3_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v3_${SAMPLE_NAME}.log
 
 echo "Copying output @ $(date)"

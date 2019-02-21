@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${1}" == "-f" ]; then
+if [ ${1} == "-f" ]; then
   rm -rf build
 fi
 
@@ -22,5 +22,5 @@ cd ../
 
 source ../cmake/ups_env_setup.sh
 
-cmake ../ -DCMAKE_BUILD_TYPE=DEBUG -DSRC_ROOT_PARENT=$(readlink -f ../../)
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../)
 make install
