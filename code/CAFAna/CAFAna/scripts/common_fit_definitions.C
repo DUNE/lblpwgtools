@@ -212,6 +212,19 @@ void KeepSysts(std::vector<const ISyst *> &systlist,
                  systlist.end());
 }
 
+void RemoveSysts(std::vector<const ISyst *> &systlist,
+                 std::vector<std::string> const &namesToRemove) {
+  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
+                                [&](const ISyst *s) {
+                                  return (std::find(namesToRemove.begin(),
+                                                    namesToRemove.end(),
+                                                    s->ShortName()) !=
+                                          namesToRemove.end());
+                                }),
+                 systlist.end());
+}
+
+
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
@@ -244,9 +257,16 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
 
-	if(useMissingProtonFakeData){
-		 systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
-	}
+  if(useMissingProtonFakeData){
+    systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
+  }
+
+  // For now, hard code this part... too many damned scripts to change...
+  RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst", 
+	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", 
+	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
+  // Get rid of these too...
+  RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
 
   return systlist;
 };
@@ -332,7 +352,7 @@ std::string GetSampleName(SampleType sample){
   case kNDRHC : return "ND_RHC";
   case kNDNue : return "ND_nue";
   case kNDFHC_OA /*how you like this space, Callum?*/     : return "ND_FHC_OA";
-  case kUnknown :
+  case  /* LOVE IT M8                */ kUnknown :
   default : return "NONE";
   }
 };
@@ -451,18 +471,6 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
   }
   return return_list;
 };
-
-void RemoveSysts(std::vector<const ISyst *> &systlist,
-                 std::vector<std::string> const &namesToRemove) {
-  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
-                                [&](const ISyst *s) {
-                                  return (std::find(namesToRemove.begin(),
-                                                    namesToRemove.end(),
-                                                    s->ShortName()) !=
-                                          namesToRemove.end());
-                                }),
-                 systlist.end());
-}
 
 TH2D* make_corr_from_covar(TH2D* covar){
 
@@ -597,11 +605,11 @@ double RunFitPoint(std::string stateFileName, double pot_nd_fhc, double pot_nd_r
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);//, covFileName, covName);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);//, covFileName, covName);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
