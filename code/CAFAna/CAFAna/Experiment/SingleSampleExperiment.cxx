@@ -23,7 +23,7 @@ namespace ana
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0)
+      fCovMx(0), fAddUncorrUnc(0)
   {
   }
 
@@ -34,15 +34,16 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0)
+      fCovMx(0), fAddUncorrUnc(0)
   {
   }
 
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
-                                                 const TMatrixD* cov)
-    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
+                                                 const TMatrixD* cov,
+                                                 const double uncorrUnc)
+    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov)), fAddUncorrUnc(uncorrUnc)
   {
   }
 
@@ -50,7 +51,8 @@ namespace ana
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
                                                  const std::string covMatFilename,
-                                                 const std::string covMatName)
+                                                 const std::string covMatName,
+                                                 const double uncorrUnc)
 
     : fMC(pred), fData(data), fCosmic(0), fMask(0)
   {
@@ -62,6 +64,7 @@ namespace ana
     }
     covMatFile ->Close();
     thisDir->cd();
+    fAddUncorrUnc = uncorrUnc;
   }
 
   //----------------------------------------------------------------------
@@ -115,6 +118,8 @@ namespace ana
         }
         // Add statistical uncertainty in quadrature
         absCov[b0][b0] += hpred->GetBinContent(b0+1);
+        // Add additional uncorrelated uncertainty
+        absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
       }
 
       // Mask after the ND covariance is dealt with
