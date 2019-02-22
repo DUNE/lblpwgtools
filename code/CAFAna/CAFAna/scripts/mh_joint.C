@@ -48,7 +48,8 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	SystShifts testSyst = kNoShift;
 
 	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-
+        oscSeeds[&kFitDeltaInPiUnits] = {-1.5, -1, -0.5, 0, 0.5, 1, 1.5};
+	
 	thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				trueOsc, trueSyst, false,
 				oscVars, systlist,
