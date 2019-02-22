@@ -2,7 +2,7 @@
 
 void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
-	       std::string systSet = "nosyst", bool useND=true,
+	       std::string systSet = "nosyst", std::string sampleString="ndfd",
 	       std::string penaltyString=""){
   
   gROOT->SetBatch(1);
@@ -53,7 +53,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	    SystShifts trueSyst = kNoShift;
 	    SystShifts testSyst = kNoShift;
 	    
-	    thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+	    thischisq = RunFitPoint(stateFname, sampleString,
 				    trueOsc, trueSyst, false,
 				    oscVars, systlist,
 				    testOsc, testSyst,

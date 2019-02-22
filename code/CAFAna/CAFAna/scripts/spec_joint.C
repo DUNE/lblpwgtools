@@ -33,14 +33,19 @@ void spec_joint(std::string stateFname  = "common_state_mcc11v3.root",
   for (auto & hist : FD_RHCNue_uohists)  hist->Write();
   
   // Sort out the ND histograms
-  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC", pot_nd);
-  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC", pot_nd);    
+  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_MCSTAT", pot_nd);
+  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_MCSTAT", pot_nd);
+
+  std::vector<TH1*> ND_FHC_MChists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_MCSTAT", pot_0);
+  std::vector<TH1*> ND_RHC_MChists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_MCSTAT", pot_0);
 
   std::vector<TH1*> ND_FHC_1Dhists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_1D", pot_nd, true);
   std::vector<TH1*> ND_RHC_1Dhists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_1D", pot_nd, true);  
   
   for (auto & hist : ND_FHC_hists)   hist->Write();
   for (auto & hist : ND_RHC_hists)   hist->Write();
+  for (auto & hist : ND_FHC_MChists) hist->Write();
+  for (auto & hist : ND_RHC_MChists) hist->Write();
   for (auto & hist : ND_FHC_1Dhists) hist->Write();
   for (auto & hist : ND_RHC_1Dhists) hist->Write();  
   
@@ -61,7 +66,7 @@ void spec_joint(std::string stateFname  = "common_state_mcc11v3.root",
       std::vector<TH1*> FD_FHCNue_hists  = GetMCComponents(&predInterpFDNueFHC, inputOsc, "FD_FHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
       std::vector<TH1*> FD_RHCNumu_hists = GetMCComponents(&predInterpFDNumuRHC, inputOsc, "FD_RHC_Numu_"+hieStr+"_"+dcpStr, pot_fd);
       std::vector<TH1*> FD_RHCNue_hists  = GetMCComponents(&predInterpFDNueRHC, inputOsc, "FD_RHC_Nue_"+hieStr+"_"+dcpStr, pot_fd);
-            
+      
       for (auto & hist : FD_FHCNumu_hists) hist->Write();
       for (auto & hist : FD_FHCNue_hists)  hist->Write();
       for (auto & hist : FD_RHCNumu_hists) hist->Write();

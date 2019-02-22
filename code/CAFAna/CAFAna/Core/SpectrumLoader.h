@@ -22,10 +22,13 @@ namespace ana
     SpectrumLoader(const std::string& wildcard, DataSource src = kBeam, int max = 0);
     SpectrumLoader(const std::vector<std::string>& fnames,
                    DataSource src = kBeam, int max = 0);
+
+#ifndef DONT_USE_SAM
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
 					 DataSource src = kBeam,
 					 int fileLimit = -1);
+#endif
     virtual ~SpectrumLoader();
 
     virtual void Go() override;

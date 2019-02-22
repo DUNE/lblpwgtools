@@ -207,16 +207,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TVectorD* e, const TVectorD* o, const TMatrixD* covmxinv)
+  double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
   {
-    assert (e->GetNrows() == o->GetNrows());
+    assert (e.GetNrows() == o.GetNrows());
 
-    TVectorD diff = *o - *e;
-    return diff * ((*covmxinv) * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
+    const TVectorD diff = o - e;
+    return diff * (covmxinv * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TH1* e, const TH1* o, const TMatrixD* covmxinv)
+  double Chi2CovMx(const TH1* e, const TH1* o, const TMatrixD& covmxinv)
   {
     TVectorD eVec(e->GetNbinsX());
     TVectorD oVec(o->GetNbinsX());
@@ -225,7 +225,7 @@ namespace ana
     for (int bin = 1; bin <= o->GetNbinsX(); bin++)
       oVec[bin-1] = o->GetBinContent(bin);
 
-    return Chi2CovMx(&eVec, &oVec, covmxinv);
+    return Chi2CovMx(eVec, oVec, covmxinv);
   }
 
   //----------------------------------------------------------------------
@@ -535,6 +535,7 @@ namespace ana
   //----------------------------------------------------------------------
   std::string FindCAFAnaDir()
   {
+    #ifndef USE_CAFANA_ENVVAR
     const char* pub = getenv("SRT_PUBLIC_CONTEXT");
     const char* priv = getenv("SRT_PRIVATE_CONTEXT");
 
@@ -545,6 +546,14 @@ namespace ana
     }
     assert(pub);
     return std::string(pub)+"/CAFAna/";
+    #else
+    const char *cafana = getenv("CAFANA");
+    assert(cafana);
+    struct stat junk;
+    if(stat(cafana, &junk) == 0) {return cafana;}
+    assert(false);
+    return "";//to stop the compiler error.
+    #endif
   }
 
   //----------------------------------------------------------------------

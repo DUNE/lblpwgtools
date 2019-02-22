@@ -23,7 +23,7 @@ namespace ana
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0)
+      fCovMx(0), fAddUncorrUnc(0)
   {
   }
 
@@ -34,15 +34,16 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0)
+      fCovMx(0), fAddUncorrUnc(0)
   {
   }
 
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
-                                                 const TMatrixD* cov)
-    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
+                                                 const TMatrixD* cov,
+                                                 const double uncorrUnc)
+    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov)), fAddUncorrUnc(uncorrUnc)
   {
   }
 
@@ -50,7 +51,8 @@ namespace ana
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
                                                  const std::string covMatFilename,
-                                                 const std::string covMatName)
+                                                 const std::string covMatName,
+                                                 const double uncorrUnc)
 
     : fMC(pred), fData(data), fCosmic(0), fMask(0)
   {
@@ -62,6 +64,7 @@ namespace ana
     }
     covMatFile ->Close();
     thisDir->cd();
+    fAddUncorrUnc = uncorrUnc;
   }
 
   //----------------------------------------------------------------------
@@ -104,24 +107,16 @@ namespace ana
     TH1D* hpred = PredHistIncCosmics(calc, syst);
     TH1D* hdata = fData.ToTH1(fData.POT());
 
-    // If a valid mask has been set, zero out the offending bins
-    if (fMask){
-      assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-      assert(hdata->GetNbinsX() == fMask->GetNbinsX());
-
-      for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-        if (fMask->GetBinContent(i+1) == 1) continue;
-        hpred->SetBinContent(i+1, 0);
-        hdata->SetBinContent(i+1, 0);
-      }
-    }
-
     // if there is a covariance matrix, use it
     double ll;
     if( fCovMx ) {
       TMatrixD absCov( *fCovMx );
       // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
       for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
+
+        // Add additional uncorrelated uncertainty
+	absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
+
         for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
           absCov[b0][b1] *= (hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1));
         }
@@ -129,8 +124,33 @@ namespace ana
         absCov[b0][b0] += hpred->GetBinContent(b0+1);
       }
 
-      ll = Chi2CovMx( hpred, hdata, new TMatrixD(TMatrixD::kInverted, absCov) );
+      // Mask after the ND covariance is dealt with
+      if (fMask){
+	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+	  if (fMask->GetBinContent(i+1) == 1) continue;
+	  hpred->SetBinContent(i+1, 0);
+	  hdata->SetBinContent(i+1, 0);
+	}
+      }
+
+
+      ll = Chi2CovMx( hpred, hdata, TMatrixD(TMatrixD::kInverted, absCov) );
     } else {
+      // Still have to mask
+      if (fMask){
+	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+	  if (fMask->GetBinContent(i+1) == 1) continue;
+	  hpred->SetBinContent(i+1, 0);
+	  hdata->SetBinContent(i+1, 0);
+	}
+      }
+
       ll = LogLikelihood(hpred, hdata);
     }
 

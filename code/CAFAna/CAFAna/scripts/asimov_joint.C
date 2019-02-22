@@ -3,7 +3,7 @@
 // I miss python
 std::string sanitize (std::string word) {
   uint i = 0;
-  
+
   while (i < word.size()) {
     if(word[i] == '(' || word[i] == ')') {
       word.erase(i,1);
@@ -34,7 +34,7 @@ void GetParameterBinning(std::string parName, int& nBins, double& min, double& m
   nBins = 25;
   min = 0;
   max = 1;
-  
+
   if (parName == "th13"){
     nBins = 35;
     min = 0.12;
@@ -87,7 +87,7 @@ void SetOscillationParameter(osc::IOscCalculatorAdjustable* calc, std::string pa
   return;
 }
 
-// This function unpacks the 
+// This function unpacks the
 TH1* GetAsimovHist(std::vector<std::string> plotVarVect){
   TH1* returnHist = NULL;
 
@@ -97,7 +97,7 @@ TH1* GetAsimovHist(std::vector<std::string> plotVarVect){
   // Now get the binnings etc for the histograms
   if (plotVarVect.size() > 0) GetParameterBinning(plotVarVect[0], nBinsX, minX, maxX);
   if (plotVarVect.size() > 1) GetParameterBinning(plotVarVect[1], nBinsY, minY, maxY);
-    
+
   if (plotVarVect.size() == 1)
     returnHist = new TH1D(plotVarVect[0].c_str(), (plotVarVect[0]+";"+plotVarVect[0]).c_str(),
 			  5*nBinsX, minX, maxX);
@@ -107,7 +107,7 @@ TH1* GetAsimovHist(std::vector<std::string> plotVarVect){
 			   plotVarVect[0]+";"+plotVarVect[1]).c_str(),
 			  nBinsX, minX, maxX,
 			  nBinsY, minY, maxY);
-  
+
   return returnHist;
 }
 
@@ -116,16 +116,18 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string outputFname="asimov_test.root",
 		  std::string plotVars="th13:deltapi",
 		  std::string systSet = "nosyst",
-		  bool useND=true, std::string penaltyString=""){
-  
+		  std::string sampleString="ndfd", std::string penaltyString="",
+      bool useProtonFakeData=false,
+      bool fileNameIsStub=kFileContainsAllSamples ){
+
   gROOT->SetBatch(1);
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
-  
+
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
   RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
-  
+
   // Oscillation parameters to start with
   std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
 					    &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
@@ -134,8 +136,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   // Remove the parameters to be scanned
   std::vector<const IFitVar*> oscVarsFree = oscVarsAll;
   if (plotVarVect.size() > 0) RemovePars(oscVarsFree, {plotVarVect[0]});
-  if (plotVarVect.size() > 1) RemovePars(oscVarsFree, {plotVarVect[1]}); 
-  
+  if (plotVarVect.size() > 1) RemovePars(oscVarsFree, {plotVarVect[1]});
+
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
@@ -144,32 +146,35 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 
     // This remains the same throughout... there is one true parameter set for this Asimov set
     osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
-    
+
     // Start by performing a minimization across the whole space, this defines the minimum chi2!
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie);
-    
+
     IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString);
     SystShifts trueSyst = kNoShift;
+    if(useProtonFakeData){
+      trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(),1);
+    }
     SystShifts testSyst = kNoShift;
-    
+
     std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-    
+
     // Directory to save best fit info to
     TDirectory* nomDir = (TDirectory*) fout->mkdir(hie > 0 ? "nom_dir_nh" : "nom_dir_ih");
-    
+
     // Get the best fit
-    double globalmin = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+    double globalmin = RunFitPoint(stateFname, sampleString,
 				   trueOsc, trueSyst, false,
 				   oscVarsFree, systlist,
 				   testOsc, testSyst,
 				   oscSeeds, penalty_nom,
-				   Fitter::kNormal, nomDir);
+				   Fitter::kNormal, nomDir, 0, fileNameIsStub);
 
     std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
     fout->cd();
     nomDir->Write();
     delete penalty_nom;
-  
+
     // Need to set up the histogram to fill
     TH1* sens_hist = GetAsimovHist(plotVarVect);
     if (!sens_hist){
@@ -177,11 +182,11 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
       abort();
     }
     sens_hist->SetName((sens_hist->GetName() + std::string(hie > 0 ? "_nh" : "_ih")).c_str());
-      
+
     // Now loop over the bins in both x and y (if 1D, one loop does nothing)
     for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
       for (int yBin = 0; yBin < sens_hist->GetNbinsY(); ++yBin){
-	
+
 	double chisqmin = 99999;
 	double thischisq;
 
@@ -197,26 +202,26 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	  // Figure out what the fixed parameters are, and put them into the true osc parameters. Also need to do the same for the test osc
 	  // Fix whatever I need to!
 	  // Probably need a function here to do the fixing
-	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);	
-	  if (plotVarVect.size() > 0)	  
+	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);
+	  if (plotVarVect.size() > 0)
 	    SetOscillationParameter(testOsc, plotVarVect[0], sens_hist->GetXaxis()->GetBinCenter(xBin+1), hie);
 	  if (plotVarVect.size() > 1)
 	    SetOscillationParameter(testOsc, plotVarVect[1], sens_hist->GetYaxis()->GetBinCenter(yBin+1), hie);
-	  
+
 	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
-	  
+
 	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 
 	  // Add something to save a directory here
 	  TDirectory* tempDir = (TDirectory*) fout->mkdir("tempdir");
-	  
+
 	  thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
 				  trueOsc, trueSyst, false,
 				  oscVarsFree, systlist,
 				  testOsc, testSyst,
 				  oscSeeds, penalty,
 				  Fitter::kNormal|Fitter::kIncludeHesse,
-				  tempDir);
+				  tempDir, 0, fileNameIsStub);
 
 	  if (thischisq < chisqmin){
 	    chisqmin = thischisq;
@@ -252,4 +257,3 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   }
   fout->Close();
 }
-

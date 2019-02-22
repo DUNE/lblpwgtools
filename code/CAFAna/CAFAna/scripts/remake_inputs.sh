@@ -1,8 +1,16 @@
 #!/bin/bash
 
-# Build the exe so that backgrounded root processes don't fight.
-if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
-  echo "[ERROR]: Failed to build remake_inputs."
+if [ -z ${CAFANA} ]; then
+  # Build the exe so that backgrounded root processes don't fight.
+  if ! g++ remake_inputs.C -o remake_inputs.exe $(root-config --cflags) -I ${SRT_DIST}/releases/development/OscLib/ -I ${SRT_DIST}/releases/development/ ${SRT_DIST}/releases/development/lib/Linux*-GCC-maxopt/lib*.so $(root-config --glibs) -lMinuit2 ${CLHEP_LIB_DIR}/libCLHEP.a; then
+    echo "[ERROR]: Failed to build remake_inputs."
+    exit 1
+  fi
+else
+  CAFBuild remake_inputs.C
+fi
+
+if [ ! -e remake_inputs.exe ]; then
   exit 1
 fi
 
@@ -19,58 +27,7 @@ for STATE in FakeData_state,FakeData; do
   mkdir -p ${STATEDIR}
   baseFileName=${STATEDIR}/common_state_mcc11v3
   for sample in FD_FHC FD_RHC ND_FHC ND_RHC; do
-      ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 ${STATESTR} &
+      ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 ${STATESTR}
   done
 
-  wait
-
 done
-
-# STATEDIR="standard_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in FD_FHC FD_RHC ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 &
-# done
-
-# STATEDIR="FromDep_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in FD_FHC FD_RHC ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 "FromDep" &
-# done
-#
-# STATEDIR="1DND_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 "1DND" &
-# done
-
-# STATEDIR="CoarseBin1D_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in FD_FHC FD_RHC ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 10000000 "CoarseBin1D" &
-# done
-
-# STATEDIR="VeryCoarseBin1D_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in FD_FHC FD_RHC ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 1000000 "VeryCoarseBin1D" &
-# done
-
-# STATEDIR="OneBin_state"
-# mkdir -p ${STATEDIR}
-# baseFileName=${STATEDIR}/common_state_mcc11v3
-# for sample in FD_FHC FD_RHC ND_FHC ND_RHC
-# do
-#     ./remake_inputs.exe "${baseFileName}_${sample}.root" "$sample" 1000000 "OneBin" &
-# done
-# Now hadd the files together: hadd ${baseFileName}.root ${baseFileName}\*.root

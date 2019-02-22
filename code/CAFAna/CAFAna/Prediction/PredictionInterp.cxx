@@ -358,14 +358,14 @@ namespace ana
         // assert(shiftBin < int(sp.fits[type][n].size()));
 
         const Coeffs& f = fits[n];
-
-        corr[n] *= f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
+	corr[n] *= f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
       } // end for n
     } // end for syst
 
     double* arr = h->GetArray();
     for(unsigned int n = 0; n < N; ++n){
-      arr[n] *= std::max(corr[n], 0.);
+      if (arr[n] > 50)
+	arr[n] *= std::max(corr[n], 0.);
     }
 
     return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());

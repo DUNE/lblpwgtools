@@ -45,6 +45,7 @@ int GetGENIEModeFromSimbMode(int simbmode) {
   switch (simbmode) {
   case -1: { // Unknwon
     gmode = 0;
+    break;
   }
   case 0: { // QE
     gmode = 1;

@@ -2,7 +2,7 @@
 
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
-	      std::string systSet = "nosyst", bool useND=true,
+	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
 	      std::string penaltyString=""){
   
   gROOT->SetBatch(1);
@@ -49,8 +49,8 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
 	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
         oscSeeds[&kFitDeltaInPiUnits] = {-1.5, -1, -0.5, 0, 0.5, 1, 1.5};
-	
-	thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+
+	thischisq = RunFitPoint(stateFname, sampleString,
 				trueOsc, trueSyst, false,
 				oscVars, systlist,
 				testOsc, testSyst,
