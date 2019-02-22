@@ -569,7 +569,7 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   // Separate into "nominal" and "full" exposure... probably need something smarter later
   // But, the LBNC waits for no one!
   double exposure = 1.;
-  if (input.find("full") != std::string::npos) exposure = 10;
+  if (input.find("full") != std::string::npos) exposure = 13./7;
 
   // Hacky McHackerson is here to stay!
   additional_smear = 0;
