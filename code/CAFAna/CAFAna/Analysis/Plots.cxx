@@ -195,6 +195,9 @@ namespace ana
   {
     std::vector<TH1*> ret;
     
+    double mc_pot = mc->PredictSyst(calc, shift).POT();
+    if (pot == 0) pot = mc_pot;
+
     TH1* hTotal = mc->PredictSyst(calc, shift).ToTHX(pot, force1D);
     hTotal->SetNameTitle((hist_name+"_total").c_str(), (hist_name+"_total").c_str());
     ret .push_back(hTotal);

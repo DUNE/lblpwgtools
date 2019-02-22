@@ -156,10 +156,7 @@ namespace ana
     /// \param expotype How to interpret exposure (kPOT (default) or kLivetime)
     TH1D* ToTH1(double exposure,
                 EExposureType expotype,
-                EBinType bintype = kBinContent) const
-    {
-      return ToTH1(exposure, kBlack, kSolid, expotype, bintype);
-    }
+                EBinType bintype = kBinContent) const;
 
     /// Spectrum must be 2D to obtain TH2
     TH2*  ToTH2     (double exposure, EExposureType expotype = kPOT,

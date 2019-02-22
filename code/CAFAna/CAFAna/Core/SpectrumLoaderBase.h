@@ -225,4 +225,3 @@ namespace ana
   /// Useful when a loader is required for a component you want to ignore
   static NullLoader kNullLoader;
 }
-

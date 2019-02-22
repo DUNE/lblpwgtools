@@ -20,7 +20,7 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake, bo
 void make_toy_throws(std::string stateFname="common_state_mcc11v3.root",
 		     std::string outputFname="throws_ndfd_nosyst.root",
 		     int nthrows = 100,
-		     std::string systSet = "nosyst", bool useND=true,
+		     std::string systSet = "nosyst", std::string sampleString = "ndfd",
 		     std::string throwString="fake:start",
 		     std::string penaltyString=""){
   
@@ -82,7 +82,7 @@ void make_toy_throws(std::string stateFname="common_state_mcc11v3.root",
     
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
     
-    double thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, 0, 0, // now with no FD
+    double thischisq = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
