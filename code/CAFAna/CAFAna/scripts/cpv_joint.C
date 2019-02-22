@@ -3,7 +3,7 @@
 void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
 	       std::string systSet = "nosyst", std::string sampleString="ndfd",
-	       std::string penaltyString=""){
+	       std::string penaltyString="nopen", int asimov_set=0){
   
   gROOT->SetBatch(1);
 
@@ -29,7 +29,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
       
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
       trueOsc->SetdCP(thisdcp);
       
       double chisqmin = 99999;
@@ -43,7 +43,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 
 	  for (int ioct = -1; ioct <= 1; ioct +=2) {
 
-	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, ioct);	
+	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, ioct, asimov_set);	
 	    testOsc->SetdCP(dcptest);
 	  
 	    // Make a map of seed points to try (replaces the old loops)

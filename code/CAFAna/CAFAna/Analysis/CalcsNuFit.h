@@ -44,7 +44,7 @@ namespace ana
   const double kEarthDensity = 2.848;  // g/cm^3
 
   // hie = +/-1
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1);
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
