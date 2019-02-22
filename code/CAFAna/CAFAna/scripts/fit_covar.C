@@ -2,7 +2,7 @@
 
 void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
 	       std::string outputFname = "covar_various_asimov.root",
-	       std::string systSet = "flux", bool useND=true,
+	       std::string systSet = "flux", std::string sampleString="ndfd",
 	       std::string penaltyString="", double NDStatsFactor = 1){
 
   gROOT->SetBatch(1);
@@ -36,7 +36,7 @@ void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
   // Add a penalty term (maybe)
   IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
-  double thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+  double thischisq = RunFitPoint(stateFname, sampleString,
 				 trueOsc, trueSyst, false,
 				 oscVars, systlist,
 				 testOsc, testSyst,

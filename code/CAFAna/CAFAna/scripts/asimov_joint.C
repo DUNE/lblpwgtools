@@ -215,7 +215,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	  // Add something to save a directory here
 	  TDirectory* tempDir = (TDirectory*) fout->mkdir("tempdir");
 
-	  thischisq = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+	  thischisq = RunFitPoint(stateFname, sampleString,
 				  trueOsc, trueSyst, false,
 				  oscVarsFree, systlist,
 				  testOsc, testSyst,
