@@ -612,6 +612,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   TDirectory *outDir=NULL, size_t max = 0,
        bool stateFileNameIsStub = kFileContainsAllSamples){
 
+  // Hackity hackity hack hack
+  if (stateFileName.find(".root") == std::string::npos) stateFileNameIsStub = true;
+
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
   static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts(), max, false, stateFileNameIsStub);
