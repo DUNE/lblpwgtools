@@ -116,7 +116,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string outputFname="asimov_test.root",
 		  std::string plotVars="th13:deltapi",
 		  std::string systSet = "nosyst",
-		  bool useND=true, std::string penaltyString="",
+		  std::string sampleString="ndfd", std::string penaltyString="",
       bool useProtonFakeData=false,
       bool fileNameIsStub=kFileContainsAllSamples ){
 
@@ -163,7 +163,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     TDirectory* nomDir = (TDirectory*) fout->mkdir(hie > 0 ? "nom_dir_nh" : "nom_dir_ih");
 
     // Get the best fit
-    double globalmin = RunFitPoint(stateFname, (useND) ? pot_nd : 0, (useND) ? pot_nd : 0, pot_fd, pot_fd,
+    double globalmin = RunFitPoint(stateFname, sampleString,
 				   trueOsc, trueSyst, false,
 				   oscVarsFree, systlist,
 				   testOsc, testSyst,
