@@ -9,7 +9,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct)
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, int asimov_set)
   {
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
@@ -34,8 +34,11 @@ namespace ana
       ret->SetdCP(kNuFitdCPCVIH);
     }
 
-    if (oct < 0) ret->SetTh23(TMath::Pi()/2 - ret->GetTh23());
+    if (asimov_set == 1 && hie == +1) ret->SetTh23(0.54035385249);
+    if (asimov_set == 2 && hie == +1) ret->SetTh23(0.607423976869);
 
+    if (oct < 0) ret->SetTh23(TMath::Pi()/2 - ret->GetTh23());
+    
     return ret;
   }
 
