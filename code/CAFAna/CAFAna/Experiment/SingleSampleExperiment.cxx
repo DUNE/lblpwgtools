@@ -113,13 +113,15 @@ namespace ana
       TMatrixD absCov( *fCovMx );
       // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
       for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
+
+        // Add additional uncorrelated uncertainty
+	absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
+
         for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
           absCov[b0][b1] *= (hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1));
         }
         // Add statistical uncertainty in quadrature
         absCov[b0][b0] += hpred->GetBinContent(b0+1);
-        // Add additional uncorrelated uncertainty
-        absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
       }
 
       // Mask after the ND covariance is dealt with
