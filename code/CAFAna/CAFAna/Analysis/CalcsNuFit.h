@@ -27,6 +27,13 @@ namespace ana
   const double kNuFitTh13CVIH = 8.65 * TMath::Pi()/180;
   const double kNuFitdCPCVIH = 284 * TMath::Pi()/180;
 
+  //Additional values of oscillation parameters
+  const double kNuFitTh23HiNH = 51.2 * TMath::Pi()/180;
+  const double kNuFitTh23LoNH = 47.3 * TMath::Pi()/180;
+  const double kNuFitTh23HiIH = 51.4 * TMath::Pi()/180;
+  const double kNuFitTh23LoIH = 47.8 * TMath::Pi()/180;
+
+
   // Based on 1/6 of the +/- 3sigma error
   const double kNuFitDmsq21Err = ((8.01-6.79)/6)*1e-5;
   const double kNuFitTh12Err = ((36.27-31.61)/6) * TMath::Pi()/180;
@@ -44,12 +51,16 @@ namespace ana
   const double kEarthDensity = 2.848;  // g/cm^3
 
   // hie = +/-1
+  // Asimov set values:
+  // 0 NuFit 4.0 Central Values
+  // 1 Th23 set to 90% CL lower value
+  // 2 Th23 set to 90% CL upper value
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
   // Add in a throw for toys
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars);
+  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
 
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
@@ -75,7 +86,7 @@ namespace ana
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
-		      bool useTh13=true, bool useTh23=true, bool useDmsq=true);
+		      bool useTh13=true, bool useTh23=true, bool useDmsq=true,int asimov_set=0);
     Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
 		      bool useTh13=true, bool useTh23=true, bool useDmsq=true);
 

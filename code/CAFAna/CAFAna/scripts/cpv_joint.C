@@ -49,7 +49,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	    // Make a map of seed points to try (replaces the old loops)
 	    std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 
-	    IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString);
+	    IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString, asimov_set);
 	    SystShifts trueSyst = kNoShift;
 	    SystShifts testSyst = kNoShift;
 	    

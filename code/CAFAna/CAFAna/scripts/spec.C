@@ -30,6 +30,7 @@ using namespace ana;
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 
+const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
                     Binning::Simple(64, 0.0, 8.0),
@@ -43,8 +44,8 @@ const HistAxis axis_numu("Reconstructed energy (GeV)",
 // POT/yr * 3.5yrs * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;
 
-const char* stateFname = "spec_state.root";
-const char* outputFname = "spec_hist.root";
+const char* stateFname = "spec_state_v3_wt.root";
+const char* outputFname = "spec_hist_v3_wt.root";
 
 //Set systematics style by hand for now
 bool nosyst = false;
@@ -61,13 +62,13 @@ void spec(bool reload = false)
   
   if(reload || TFile(stateFname).IsZombie()){
 
-    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nonswap.root");
-    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_nueswap.root");
-    SpectrumLoader loaderFDFHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_FHC_tauswap.root");
+    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root");
+    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root");
+    SpectrumLoader loaderFDFHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root");
 
-    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nonswap.root");
-    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_nueswap.root");
-    SpectrumLoader loaderFDRHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v1/FD_RHC_tauswap.root");
+    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_nonswap.root");
+    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_nueswap.root");
+    SpectrumLoader loaderFDRHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
     osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
@@ -81,9 +82,8 @@ void spec(bool reload = false)
     for(const ISyst* s: systlist) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
     if (systlist.size()==0) {std::cout << "None" << std::endl;}
 
-
-    NoExtrapPredictionGenerator genFDNumu(axis_numu, kPassFD_CVN_NUMU && kIsTrueFV);
-    NoExtrapPredictionGenerator genFDNue(axis_nue, kPassFD_CVN_NUE && kIsTrueFV);
+    NoExtrapPredictionGenerator genFDNumu(axis_numu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNue(axis_nue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
     NoExtrapPredictionGenerator genFDNumu_fid(axis_numu, kIsTrueFV);
     NoExtrapPredictionGenerator genFDNue_fid(axis_nue, kIsTrueFV);
     
@@ -105,12 +105,8 @@ void spec(bool reload = false)
     PredictionInterp predInt_FDNueFHC_fid(systlist, calc, genFDNue_fid, FD_FHC_loaders);
     PredictionInterp predInt_FDNueRHC_fid(systlist, calc, genFDNue_fid, FD_RHC_loaders);
 
-    loaderFDFHCNonswap.Go();
-    loaderFDFHCNue.Go();
-    loaderFDFHCNuTau.Go();
-    loaderFDRHCNonswap.Go();
-    loaderFDRHCNue.Go();
-    loaderFDRHCNuTau.Go();
+    FD_FHC_loaders.Go();
+    FD_RHC_loaders.Go();
 
     std::cout << stateFname << std::endl;
     TFile fout(stateFname, "RECREATE");
@@ -185,6 +181,7 @@ void spec(bool reload = false)
       TH1* hnumurhc_ncbg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
       TH1* hnumurhc_nutaubg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
       TH1* hnumurhc_wsbg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnumurhc_nuebg = predInt_FDNumuRHC.PredictComponent(inputOsc, Flavors::kAllNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
 
       TH1* hnumurhc_sig_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAllNuMu, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
       TH1* hnumurhc_ncbg_fid = predInt_FDNumuRHC_fid.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
@@ -193,6 +190,8 @@ void spec(bool reload = false)
 
       //FHC App
       TH1* hnuefhc_sig = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuefhc_sig_nu = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnuefhc_sig_anu = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
       TH1* hnuefhc_ncbg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
       TH1* hnuefhc_beambg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
       TH1* hnuefhc_nutaubg = predInt_FDNueFHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
@@ -206,6 +205,8 @@ void spec(bool reload = false)
 
       //RHC App
       TH1* hnuerhc_sig = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
+      TH1* hnuerhc_sig_nu = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kNu).ToTH1(potFD);
+      TH1* hnuerhc_sig_anu = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuMuToNuE, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
       TH1* hnuerhc_ncbg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kAll, Current::kNC, Sign::kBoth).ToTH1(potFD);
       TH1* hnuerhc_beambg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kNuEToNuE, Current::kCC, Sign::kBoth).ToTH1(potFD);
       TH1* hnuerhc_nutaubg = predInt_FDNueRHC.PredictComponent(inputOsc, Flavors::kAllNuTau, Current::kCC, Sign::kBoth).ToTH1(potFD);
@@ -229,6 +230,8 @@ void spec(bool reload = false)
 
       hnuefhc->Write(("nue_fhc_"+hieStr+"_"+dcpStr).c_str());
       hnuefhc_sig->Write(("nue_fhc_sig_"+hieStr+"_"+dcpStr).c_str());
+      hnuefhc_sig_nu->Write(("nue_fhc_sig_nu_"+hieStr+"_"+dcpStr).c_str());
+      hnuefhc_sig_anu->Write(("nue_fhc_sig_anu_"+hieStr+"_"+dcpStr).c_str());
       hnuefhc_ncbg->Write(("nue_fhc_ncbg_"+hieStr+"_"+dcpStr).c_str());
       hnuefhc_beambg->Write(("nue_fhc_beambg_"+hieStr+"_"+dcpStr).c_str());
       hnuefhc_nutaubg->Write(("nue_fhc_nutaubg_"+hieStr+"_"+dcpStr).c_str());
@@ -238,10 +241,13 @@ void spec(bool reload = false)
       hnumurhc_sig->Write(("numu_rhc_sig_"+hieStr+"_"+dcpStr).c_str());
       hnumurhc_ncbg->Write(("numu_rhc_ncbg_"+hieStr+"_"+dcpStr).c_str());
       hnumurhc_nutaubg->Write(("numu_rhc_nutaubg_"+hieStr+"_"+dcpStr).c_str());
+      hnumurhc_nuebg->Write(("numu_rhc_nuebg_"+hieStr+"_"+dcpStr).c_str());
       hnumurhc_wsbg->Write(("numu_rhc_wsbg_"+hieStr+"_"+dcpStr).c_str());
 
       hnuerhc->Write(("nue_rhc_"+hieStr+"_"+dcpStr).c_str());
       hnuerhc_sig->Write(("nue_rhc_sig_"+hieStr+"_"+dcpStr).c_str());
+      hnuerhc_sig_nu->Write(("nue_rhc_sig_nu_"+hieStr+"_"+dcpStr).c_str());
+      hnuerhc_sig_anu->Write(("nue_rhc_sig_anu_"+hieStr+"_"+dcpStr).c_str());
       hnuerhc_ncbg->Write(("nue_rhc_ncbg_"+hieStr+"_"+dcpStr).c_str());
       hnuerhc_beambg->Write(("nue_rhc_beambg_"+hieStr+"_"+dcpStr).c_str());
       hnuerhc_nutaubg->Write(("nue_rhc_nutaubg_"+hieStr+"_"+dcpStr).c_str());

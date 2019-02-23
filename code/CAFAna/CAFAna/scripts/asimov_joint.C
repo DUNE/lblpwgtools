@@ -116,9 +116,9 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string outputFname="asimov_test.root",
 		  std::string plotVars="th13:deltapi",
 		  std::string systSet = "nosyst",
-		  std::string sampleString="ndfd", std::string penaltyString="",
-      bool useProtonFakeData=false,
-      bool fileNameIsStub=kFileContainsAllSamples ){
+		  std::string sampleString="ndfd", std::string penaltyString="",int asimov_set=0
+		  bool useProtonFakeData=false,
+		  bool fileNameIsStub=kFileContainsAllSamples ){
 
   gROOT->SetBatch(1);
 
@@ -145,12 +145,12 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   for(int hie = -1; hie <= +1; hie += 2){
 
     // This remains the same throughout... there is one true parameter set for this Asimov set
-    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
     // Start by performing a minimization across the whole space, this defines the minimum chi2!
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie);
+    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-    IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
     SystShifts trueSyst = kNoShift;
     if(useProtonFakeData){
       trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(),1);
@@ -202,13 +202,13 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 	  // Figure out what the fixed parameters are, and put them into the true osc parameters. Also need to do the same for the test osc
 	  // Fix whatever I need to!
 	  // Probably need a function here to do the fixing
-	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);
+	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
 	  if (plotVarVect.size() > 0)
 	    SetOscillationParameter(testOsc, plotVarVect[0], sens_hist->GetXaxis()->GetBinCenter(xBin+1), hie);
 	  if (plotVarVect.size() > 1)
 	    SetOscillationParameter(testOsc, plotVarVect[1], sens_hist->GetYaxis()->GetBinCenter(yBin+1), hie);
 
-	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
+	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_set);
 
 	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 

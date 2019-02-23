@@ -3,7 +3,7 @@
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
 	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
-	      std::string penaltyString=""){
+	      std::string penaltyString="", int asimov_joint=0){
   
   gROOT->SetBatch(1);
 
@@ -30,7 +30,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 	
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_joint);
       trueOsc->SetdCP(thisdcp);
 
       double chisqmin = 99999;
@@ -38,12 +38,12 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
       for(int ioct = -1; ioct <= 1; ioct += 2) {
 	
-	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);	
+	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_joint);	
 	testOsc->SetdCP(thisdcp);
 	// Force it into the wrong hierarchy
 	testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
 
-	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_joint);
 	SystShifts trueSyst = kNoShift;
 	SystShifts testSyst = kNoShift;
 
