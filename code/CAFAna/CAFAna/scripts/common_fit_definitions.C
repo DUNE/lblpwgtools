@@ -569,7 +569,7 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   // Separate into "nominal" and "full" exposure... probably need something smarter later
   // But, the LBNC waits for no one!
   double exposure = 1.;
-  if (input.find("full") != std::string::npos) exposure = 10;
+  if (input.find("full") != std::string::npos) exposure = 13./7;
 
   // Hacky McHackerson is here to stay!
   additional_smear = 0;
@@ -611,6 +611,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
 		   TDirectory *outDir=NULL, size_t max = 0,
        bool stateFileNameIsStub = kFileContainsAllSamples){
+
+  // Hackity hackity hack hack
+  if (stateFileName.find(".root") == std::string::npos) stateFileNameIsStub = true;
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
