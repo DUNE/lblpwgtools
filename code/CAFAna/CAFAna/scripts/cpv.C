@@ -39,13 +39,17 @@ bool th13penalty = true;
 const double potFD = 3.5 * POT120 * 40/1.13;
 
 const char* stateFname = "spec_state_v3_wt.root";
-//const char* stateFname = "/nashome/c/callumw/OA_studies/analysis_scripts/common_state_mcc11v3.root";
 const char* outputFname = "cpv_sens.root";
 
 //Set systematics style by hand for now
 bool nosyst = false;
 bool normsyst = true;
 bool fullsyst = false;
+
+//Choice of oscillation parameters
+//int asimov_set = 0; //nominal
+//int asimov_set = 1; //th23lo
+int asimov_set = 2; //th23hi
 
 std::vector<const ISyst*> systlist;
 std::vector<const ISyst*> normlist_sig = {&kNueFHCSyst, &kNumuFHCSyst, &kNueRHCSyst, &kNumuRHCSyst};
@@ -99,7 +103,7 @@ void cpv()
 	
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 	
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie,1,asimov_set);
       trueOsc->SetdCP(thisdcp);
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
@@ -129,10 +133,10 @@ void cpv()
       for(int ihie = -1; ihie <= +1; ihie += 2) {
 	for (int jdcp = 0; jdcp < 2; ++jdcp) {
 	  for (int ioct = -1; ioct <= 1; ioct +=2) {
-	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie,ioct);	
+	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie,ioct,asimov_set);	
 	    double dcptest = jdcp*TMath::Pi();
 	    testOsc->SetdCP(dcptest);
-	    Penalizer_GlbLike penalty(ihie,ioct,th13penalty,false,false);
+	    Penalizer_GlbLike penalty(ihie,ioct,th13penalty,false,false,asimov_set);
 
 	    MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
