@@ -197,7 +197,7 @@ namespace ana
     else if (asimov_set == 1) {
       fTh23 = (hietrue > 0) ? kNuFitTh23LoNH : kNuFitTh23LoIH;
     }
-    else if (asimov_set == 1) {
+    else if (asimov_set == 2) {
       fTh23 = (hietrue > 0) ? kNuFitTh23HiNH : kNuFitTh23HiIH;
     }
 
