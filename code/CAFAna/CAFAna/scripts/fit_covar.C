@@ -41,8 +41,7 @@ void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
 				 oscVars, systlist,
 				 testOsc, testSyst,
 				 oscSeeds, penalty,
-				 Fitter::kNormal|Fitter::kIncludeHesse, fout, 0,
-	       kAddSampleTypeToFilename);
+				 Fitter::kNormal|Fitter::kIncludeHesse, fout);
   delete penalty;
 
   // Now close the file

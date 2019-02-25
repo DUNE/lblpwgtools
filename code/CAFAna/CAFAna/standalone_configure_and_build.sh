@@ -53,7 +53,7 @@ done
 
 if [ -e build ]; then
   if [ "${FORCE_REMOVE}" == "1" ]; then
-    rm -r build
+    rm -rf build
   else
     echo "[ERROR]: Extant build directory, will not overwrite, remove it or rebuild within it."
     exit 1

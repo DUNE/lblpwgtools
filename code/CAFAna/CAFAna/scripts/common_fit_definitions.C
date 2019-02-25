@@ -262,8 +262,8 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   }
 
   // For now, hard code this part... too many damned scripts to change...
-  RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst", 
-	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", 
+  RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst",
+	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst",
 	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
   // Get rid of these too...
   RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
@@ -432,8 +432,10 @@ static std::vector<std::string> const sample_suffix_order = {
 std::vector<std::unique_ptr<ana::PredictionInterp>>
 GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
                      int max = 0, bool reload = false,
-                     bool fileNameIsStub = kFileContainsAllSamples,
                      AxisBlob const &axes = default_axes) {
+
+  // Hackity hackity hack hack
+  bool fileNameIsStub = (fileName.find(".root") == std::string::npos);
 
   //To allow XRootD input files.
   TFile *testF = !fileNameIsStub ? TFile::Open(fileName.c_str(),"READ") : nullptr;
@@ -556,8 +558,8 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 };
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc, 
-		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu, 
+void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
+		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
 		      double& pot_fd_rhc_numu, double& additional_smear){
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
@@ -587,7 +589,7 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   if (input.find("fhc") != std::string::npos){
     pot_nd_rhc = pot_fd_rhc_nue = pot_fd_rhc_numu = 0;
   }
-  
+
   if (input.find("rhc") != std::string::npos){
     pot_nd_fhc = pot_fd_fhc_nue = pot_fd_fhc_numu = 0;
   }
@@ -609,15 +611,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, size_t max = 0,
-       bool stateFileNameIsStub = kFileContainsAllSamples){
-
-  // Hackity hackity hack hack
-  if (stateFileName.find(".root") == std::string::npos) stateFileNameIsStub = true;
+		   TDirectory *outDir=NULL){
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
-  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts(), max, false, stateFileNameIsStub);
+  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
   static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
@@ -626,14 +624,20 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
 
   // Get the ndCov
-  std::string covFileName = cafFilePath+"/ND_syst_cov_withRes.root";
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+  std::string covFileName =
+      cafFilePath+"/ND_syst_cov_withRes.root";
+#else
+  std::string covFileName =
+      FindCAFAnaDir() + "/Syst/ND_syst_cov_withEscale.root";
+#endif
   std::string covName = "nd_frac_cov";
 
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, additional_smear;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc,
 		   pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu,
-		   pot_fd_rhc_numu, additional_smear);  
+		   pot_fd_rhc_numu, additional_smear);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) outDir->cd();

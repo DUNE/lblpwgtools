@@ -64,6 +64,7 @@ void load_libs() {
   gROOT->ForceStyle();
 
   TRint *rint = dynamic_cast<TRint *>(gApplication);
-  if (rint)
+  if (rint) {
     rint->SetPrompt("cafe [%d] ");
+  }
 }

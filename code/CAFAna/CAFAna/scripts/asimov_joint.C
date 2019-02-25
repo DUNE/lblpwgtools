@@ -117,8 +117,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string plotVars="th13:deltapi",
 		  std::string systSet = "nosyst",
 		  std::string sampleString="ndfd", std::string penaltyString="",int asimov_set=0
-		  bool useProtonFakeData=false,
-		  bool fileNameIsStub=kFileContainsAllSamples ){
+		  bool useProtonFakeData=false){
 
   gROOT->SetBatch(1);
 
@@ -168,7 +167,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 				   oscVarsFree, systlist,
 				   testOsc, testSyst,
 				   oscSeeds, penalty_nom,
-				   Fitter::kNormal, nomDir, 0, fileNameIsStub);
+				   Fitter::kNormal, nomDir);
 
     std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
     fout->cd();
@@ -221,7 +220,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 				  testOsc, testSyst,
 				  oscSeeds, penalty,
 				  Fitter::kNormal|Fitter::kIncludeHesse,
-				  tempDir, 0, fileNameIsStub);
+				  tempDir);
 
 	  if (thischisq < chisqmin){
 	    chisqmin = thischisq;

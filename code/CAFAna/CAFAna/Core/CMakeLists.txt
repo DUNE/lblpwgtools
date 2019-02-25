@@ -24,7 +24,8 @@ set(Core_implementation_files
   SpectrumLoaderBase.cxx
   SystRegistry.cxx
   SystShifts.cxx
-  ThreadPool.cxx
+  # Don't need threading
+  # ThreadPool.cxx
   Utilities.cxx
   Var.cxx
   WildcardSource.cxx)
@@ -54,7 +55,7 @@ set(Core_header_files
   SpectrumLoaderBase.h
   SystRegistry.h
   SystShifts.h
-  ThreadPool.h
+  # ThreadPool.h
   Utilities.h
   Var.h
   WildcardSource.h
