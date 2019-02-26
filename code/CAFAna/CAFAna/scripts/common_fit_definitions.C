@@ -629,7 +629,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       cafFilePath+"/ND_syst_cov_withRes.root";
 #else
   std::string covFileName =
-      FindCAFAnaDir() + "/Syst/ND_syst_cov_withEscale.root";
+      FindCAFAnaDir() + "/Systs/ND_syst_cov_withRes.root";
 #endif
   std::string covName = "nd_frac_cov";
 
