@@ -605,13 +605,14 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 }
 
 
+static SystShifts junkShifts;
 double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
 		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL){
+		   TDirectory *outDir=NULL, SystShifts &bf = junkShifts){
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
@@ -763,6 +764,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Now set up the fit itself
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+
+  bf = fitSyst;
 
   // std::cout << "Postfit chi-square:" << std::endl;
   // if (pot_fd_fhc_nue > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
