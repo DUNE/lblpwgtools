@@ -605,7 +605,6 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 }
 
 
-static SystShifts junkShifts;
 double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
 		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,

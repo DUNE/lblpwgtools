@@ -4,7 +4,8 @@ void cpv_joint_twopoint(
     std::string stateFname = "common_state_mcc11v3.root",
     std::string outputFname = "cpv_twopoint_ndfd_nosyst.root",
     std::string systSet = "nosyst", std::string sampleString = "ndfd",
-    std::string penaltyString = "nopen", int asimov_set = 0) {
+    std::string penaltyString = "nopen", std::string SetsToInclude = "",
+    int asimov_set = 0, bool RunGlobalMin = false, bool Onlydcp0 = false) {
 
   gROOT->SetBatch(1);
 
@@ -20,18 +21,17 @@ void cpv_joint_twopoint(
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
+  assert(fout && !fout->IsZombie());
+
   std::vector<double> test_hies = {1 /*, -1*/};
   std::vector<double> test_octs = {1 /*, -1*/};
-  std::vector<double> test_dcps = {0 /*, TMath::Pi()*/};
+  std::vector<double> test_dcps = Onlydcp0 ? std::vector<double>{0,} :std::vector<double>{0, TMath::Pi()};
 
   // Sense hierarchies
   for (int hie : {1 /*, -1*/}) {
 
-    TTree *syst_chi2 = new TTree((std::string("syst_chi2_") + (hie > 0 "NH"
-                                                               : "IH"))
-                                     .c_str(),
-                                 "");
-    syst_chi2->SetDirectory(fout);
+    TTree *syst_chi2 = new TTree(
+        (std::string("syst_chi2_") + (hie > 0 ? "NH" : "IH")).c_str(), "");
 
     std::string *syst_name = nullptr;
     double chi2;
@@ -41,11 +41,11 @@ void cpv_joint_twopoint(
     syst_chi2->Branch("chi2", &chi2);
     syst_chi2->Branch("deltachi2", &deltachi2);
 
-    double hmin = std::numeric_limits<double>::max();
+    double hmin = RunGlobalMin ? std::numeric_limits<double>::max() : 0;
 
     osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-    for (int idcp : test_dcps) {
+    if (RunGlobalMin) {
       for (int ihie : test_hies) {
         for (int ioct : test_octs) {
 
@@ -55,7 +55,6 @@ void cpv_joint_twopoint(
 
           osc::IOscCalculatorAdjustable *testOsc =
               NuFitOscCalc(ihie, ioct, asimov_set);
-          testOsc->SetdCP(idcp);
 
           IExperiment *penalty =
               GetPenalty(ihie, ioct, penaltyString, asimov_set);
@@ -82,7 +81,7 @@ void cpv_joint_twopoint(
     std::map<double, SystShifts> AllSystBestFits;
 
     double allsyst_min = std::numeric_limits<double>::max();
-    for (int idcp : test_dcps) {
+    for (double idcp : test_dcps) {
       for (int ihie : test_hies) {
         for (int ioct : test_octs) {
 
@@ -101,9 +100,10 @@ void cpv_joint_twopoint(
 
           SystShifts best_fit_syst;
 
-          double thischisq = RunFitPoint(
-              stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
-              systlist, testOsc, testSyst, {}, penalty, nullptr, best_fit_syst);
+          double thischisq =
+              RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
+                          oscVars, systlist, testOsc, testSyst, {}, penalty,
+                          Fitter::kNormal, nullptr, best_fit_syst);
 
           AllSystBestFits[ceil(idcp / TMath::Pi()) + 10 * ihie + 100 * ioct] =
               best_fit_syst;
@@ -120,8 +120,8 @@ void cpv_joint_twopoint(
     }
 
     (*syst_name) = "allsyst";
-    chi2 = test_min;
-    deltachi2 = test_min - hmin;
+    chi2 = allsyst_min;
+    deltachi2 = allsyst_min - hmin;
     syst_chi2->Fill();
 
     std::map<std::string, std::vector<std::string>> syst_blocks = {
@@ -208,7 +208,8 @@ void cpv_joint_twopoint(
              "FSILikeEAvailSmearing",
          }},
 
-        {"FlavorRatios", {"nuenuebar_xsec_ratio", "nuenumu_xsec_ratio"}},
+        {"nuenuebar_xsec_ratio", {"nuenuebar_xsec_ratio"}},
+        {"nuenumu_xsec_ratio", {"nuenumu_xsec_ratio"}},
 
         {"2p2h_systs",
          {
@@ -223,6 +224,17 @@ void cpv_joint_twopoint(
 
     };
 
+    if (SetsToInclude.size()) {
+      for (auto iter = syst_blocks.begin(); iter != syst_blocks.end();) {
+        if (SetsToInclude.find(iter->first) == std::string::npos) {
+          std::cout << "Removing block: " << iter->first << std::endl;
+          syst_blocks.erase(iter++);
+        } else {
+          ++iter;
+        }
+      }
+    }
+
     for (auto const &systs_to_remove : syst_blocks) {
 
       double test_min = std::numeric_limits<double>::max();
@@ -235,7 +247,7 @@ void cpv_joint_twopoint(
         continue;
       }
 
-      for (int idcp : test_dcps) {
+      for (double idcp : test_dcps) {
         for (int ihie : test_hies) {
           for (int ioct : test_octs) {
 
@@ -286,7 +298,10 @@ void cpv_joint_twopoint(
     }
 
     syst_chi2->ResetBranchAddresses();
+    fout->cd();
+    syst_chi2->SetDirectory(fout);
     syst_chi2->Write();
   }
+	fout->Write();
   fout->Close();
 }

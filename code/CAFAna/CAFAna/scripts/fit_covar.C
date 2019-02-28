@@ -1,9 +1,10 @@
 #include "common_fit_definitions.C"
 
-void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
-	       std::string outputFname = "covar_various_asimov.root",
-	       std::string systSet = "flux", std::string sampleString="ndfd",
-	       std::string penaltyString="", double NDStatsFactor = 1){
+void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
+               std::string outputFname = "covar_various_asimov.root",
+               std::string systSet = "flux", std::string sampleString = "ndfd",
+               std::string penaltyString = "", std::string FakeDataSysts = "",
+               double FakeDataValue = 1) {
 
   gROOT->SetBatch(1);
 
@@ -19,9 +20,25 @@ void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
 
   int hie = 1;
 
-  // No fake data throw here
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
+
   SystShifts trueSyst = kNoShift;
+
+  // Can build fake data fits easily by passing syst parameter names to fix to 1
+  // and then remove from the fit.
+  if (FakeDataSysts.size()) {
+    // Get all of the systs (notably including missing proton energy fake data)
+    std::vector<const ISyst *> all_systs = GetListOfSysts();
+    for (ISyst const *s : all_systs) {
+      if (FakeDataSysts.find(s->ShortName()) != std::string::npos) {
+        trueSyst.SetShift(s, FakeDataValue);
+        auto it = std::find(systlist.begin(), systlist.end(), s);
+        if (it != systlist.end()) {
+          systlist.erase(it);
+        }
+      }
+    }
+  }
 
   // Move the input parameters a little, just to avoid asimov fit issues in
   // MINUIT
@@ -36,12 +53,10 @@ void fit_covar(std::string stateFname  = "common_state_mcc11v3.root",
   // Add a penalty term (maybe)
   IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
-  double thischisq = RunFitPoint(stateFname, sampleString,
-				 trueOsc, trueSyst, false,
-				 oscVars, systlist,
-				 testOsc, testSyst,
-				 oscSeeds, penalty,
-				 Fitter::kNormal|Fitter::kIncludeHesse, fout);
+  double thischisq =
+      RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
+                  systlist, testOsc, testSyst, oscSeeds, penalty,
+                  Fitter::kNormal | Fitter::kIncludeHesse, fout);
   delete penalty;
 
   // Now close the file
