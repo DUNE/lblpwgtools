@@ -4,7 +4,7 @@ void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
                std::string outputFname = "covar_various_asimov.root",
                std::string systSet = "flux", std::string sampleString = "ndfd",
                std::string penaltyString = "", std::string FakeDataSysts = "",
-               double FakeDataValue = 1) {
+               double FakeDataValue = 1, std::string OtherSystsToExclude = "") {
 
   gROOT->SetBatch(1);
 
@@ -32,6 +32,12 @@ void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
     for (ISyst const *s : all_systs) {
       if (FakeDataSysts.find(s->ShortName()) != std::string::npos) {
         trueSyst.SetShift(s, FakeDataValue);
+        auto it = std::find(systlist.begin(), systlist.end(), s);
+        if (it != systlist.end()) {
+          systlist.erase(it);
+        }
+      }
+      if (OtherSystsToExclude.find(s->ShortName()) != std::string::npos) {
         auto it = std::find(systlist.begin(), systlist.end(), s);
         if (it != systlist.end()) {
           systlist.erase(it);
