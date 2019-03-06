@@ -128,11 +128,16 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
     TH1 *nd_data_numu_fhc_hist_1D = nd_data_numu_fhc.ToTH1(pot_nd_fhc);
     nd_data_numu_fhc_hist->SetName("data_nd_numu_fhc");
     nd_data_numu_fhc_hist_1D->SetName("data_nd_numu_fhc_1D");
+    TH1 *nd_data_numu_fhc_hist_px = static_cast<TH2 *>(nd_data_numu_fhc_hist)
+                                        ->ProjectionX("data_nd_numu_fhc_px");
     nd_data_numu_fhc_hist->Write();
     nd_data_numu_fhc_hist_1D->Write();
+    nd_data_numu_fhc_hist_px->Write();
 
     TH1 *pre_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, trueOsc, mcSyst,
                                           "prefit_nd_numu_fhc", pot_nd_fhc);
+    TH1 *pre_nd_numu_fhc_px = static_cast<TH2 *>(pre_nd_numu_fhc)
+                                  ->ProjectionX("prefit_nd_numu_fhc_px");
     pre_nd_numu_fhc->SetTitle(
         std::to_string(nd_expt_fhc.ChiSq(trueOsc, mcSyst)).c_str());
     pre_nd_numu_fhc->Write();
@@ -142,17 +147,24 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
     pre_nd_numu_fhc_1D->SetTitle(
         std::to_string(nd_expt_fhc.ChiSq(trueOsc, mcSyst)).c_str());
     pre_nd_numu_fhc_1D->Write();
+    pre_nd_numu_fhc_px->Write();
   }
   if (pot_nd_rhc) {
     TH1 *nd_data_numu_rhc_hist = nd_data_numu_rhc.ToTHX(pot_nd_rhc);
     TH1 *nd_data_numu_rhc_hist_1D = nd_data_numu_rhc.ToTH1(pot_nd_rhc);
     nd_data_numu_rhc_hist->SetName("data_nd_numu_rhc");
     nd_data_numu_rhc_hist_1D->SetName("data_nd_numu_rhc_1D");
+    TH1 *nd_data_numu_rhc_hist_px = static_cast<TH2 *>(nd_data_numu_rhc_hist)
+                                        ->ProjectionX("data_nd_numu_rhc_px");
     nd_data_numu_rhc_hist->Write();
     nd_data_numu_rhc_hist_1D->Write();
+    nd_data_numu_rhc_hist_px->Write();
 
     TH1 *pre_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, trueOsc, mcSyst,
                                           "prefit_nd_numu_rhc", pot_nd_rhc);
+    TH1 *pre_nd_numu_rhc_px = static_cast<TH2 *>(pre_nd_numu_rhc)
+                                  ->ProjectionX("prefit_nd_numu_rhc_px");
+
     pre_nd_numu_rhc->SetTitle(
         std::to_string(nd_expt_rhc.ChiSq(trueOsc, mcSyst)).c_str());
     pre_nd_numu_rhc->Write();
@@ -162,6 +174,7 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
     pre_nd_numu_rhc_1D->SetTitle(
         std::to_string(nd_expt_rhc.ChiSq(trueOsc, mcSyst)).c_str());
     pre_nd_numu_rhc_1D->Write();
+    pre_nd_numu_rhc_px->Write();
   }
 
   // Now close the file

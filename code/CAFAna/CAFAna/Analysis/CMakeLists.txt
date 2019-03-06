@@ -6,7 +6,8 @@ set(Analysis_implementation_files
   Plots.cxx
   Resolution.cxx
   Surface.cxx
-  TDRLoaders.cxx)
+  TDRLoaders.cxx
+  PRISMFluxMatcher.cxx)
 
 set(Analysis_header_files
   Calcs.h
@@ -18,7 +19,8 @@ set(Analysis_header_files
   Surface.h
   TDRLoaders.h
   Exposures.h
-  Style.h)
+  Style.h
+  PRISMFluxMatcher.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis)

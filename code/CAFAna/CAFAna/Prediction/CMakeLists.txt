@@ -6,7 +6,8 @@ set(Prediction_implementation_files
   PredictionNoExtrap.cxx
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
-  PredictionXSecDiag.cxx)
+  PredictionXSecDiag.cxx
+  PredictionPRISM.cxx)
 
 set(Prediction_header_files
   IPrediction.h
@@ -16,7 +17,8 @@ set(Prediction_header_files
   PredictionNoExtrap.h
   PredictionNoOsc.h
   PredictionScaleComp.h
-  PredictionXSecDiag.h)
+  PredictionXSecDiag.h
+  PredictionPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction)

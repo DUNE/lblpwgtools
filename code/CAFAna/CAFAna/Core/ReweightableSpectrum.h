@@ -59,6 +59,8 @@ namespace ana
 
     TH2D* ToTH2(double pot) const;
 
+    TAxis const *GetReweightTAxis() const;
+
     Spectrum UnWeighted() const;
 
     Spectrum WeightingVariable() const;
@@ -69,6 +71,16 @@ namespace ana
     void ReweightToTrueSpectrum(const Spectrum& target);
     /// Recale bins so that \ref Unweighted will return \a target
     void ReweightToRecoSpectrum(const Spectrum& target);
+
+
+    // Arithmetic operators are as if these are unlike samples, each a
+    // contribution to one total, not seperate sources of stats for the same
+    // sample.
+    ReweightableSpectrum& operator+=(const ReweightableSpectrum& rhs);
+    ReweightableSpectrum operator+(const ReweightableSpectrum& rhs) const;
+
+    ReweightableSpectrum& operator-=(const ReweightableSpectrum& rhs);
+    ReweightableSpectrum operator-(const ReweightableSpectrum& rhs) const;
 
     void Clear();
 
@@ -114,6 +126,8 @@ namespace ana
       : ReweightableSpectrum(kUnweighted, h, labels, bins, pot, livetime)
     {
     }
+
+    ReweightableSpectrum& PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign);
 
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
