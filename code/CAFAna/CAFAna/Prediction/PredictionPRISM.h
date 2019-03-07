@@ -61,6 +61,8 @@ protected:
   ReweightableSpectrum fOffAxisSpectrumNue;
   ReweightableSpectrum fOffAxisSpectrumNuebar;
 
+  // Add unselected predictions for eff correction
+
   PRISMFluxMatcher *fFluxMatcher;
 
   PRISMFluxMatcher::FluxPredSpecies fNDFluxSpecies;

@@ -1,6 +1,5 @@
 // -*- mode: c++; c-basic-offset: 2; -*-
 void load(std::string lib) {
-  std::cout << "." << std::flush;
   int ret = gSystem->Load(("lib" + lib).c_str());
   std::cout << "Loading lib: " << ("lib" + lib) << std::endl;
   // In case of error, exit immediately with the error clearly showing, instead

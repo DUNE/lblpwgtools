@@ -113,8 +113,12 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
   return matches;
 }
 
+// If CombiningCombinedCAFs = true, then take the POT for the input file from
+// histograms produced by a previous invocation of this script.
 void OffAxisNDCAFCombiner(std::string InputFilePattern,
-                          std::string OutputFileName) {
+                          std::string OutputFileName,
+                          bool CombiningCombinedCAFs = false,
+                          std::string cafTreeName = "cafTree") {
 
   size_t asterisk_loc = InputFilePattern.find_first_of('*');
   size_t last_slash_loc = InputFilePattern.find_last_of('/');
@@ -177,8 +181,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
     assert(!f.IsZombie());
 
     TTree *f_caf;
-    f.GetObject("cafTree", f_caf);
-
+    f.GetObject(cafTreeName.c_str(), f_caf);
     assert(f_caf);
 
     // Assume input file was generated with a single stop.
@@ -186,39 +189,50 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
     f_caf->SetBranchAddress("det_x", &det_x);
     f_caf->GetEntry(0);
 
-    TTree *f_meta;
-    f.GetObject("meta", f_meta);
+    if (CombiningCombinedCAFs) {
+      TH1D *f_POTExposure;
+      f.GetObject("POTExposure", f_POTExposure);
+      assert(f_POTExposure);
+      POTExposure->Add(f_POTExposure);
+      TH1D *f_FileExposure;
+      f.GetObject("FileExposure", f_FileExposure);
+      assert(f_FileExposure);
+      FileExposure->Add(f_FileExposure);
+    } else {
+      TTree *f_meta;
+      f.GetObject("meta", f_meta);
 
-    assert(f_meta);
+      assert(f_meta);
 
-    double file_pot = 0;
-    double pot;
-    f_meta->SetBranchAddress("pot", &pot);
+      double file_pot = 0;
+      double pot;
+      f_meta->SetBranchAddress("pot", &pot);
 
-    size_t nmeta_ents = f_meta->GetEntries();
-    for (size_t meta_it = 0; meta_it < nmeta_ents; ++meta_it) {
-      f_meta->GetEntry(meta_it);
-      file_pot += pot;
-    }
-
-    std::cout << "[INFO]: Found ND file with detector at " << det_x
-              << " m off axis which contained " << file_pot << " POT from "
-              << nmeta_ents << " files." << std::endl;
-
-    double det_min_m = -3;
-    double det_max_m = 3;
-    size_t det_steps = (det_max_m - det_min_m) / step_m;
-
-    for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
-      double det_x_pos_m = det_min_m + pos_it * step_m;
-
-      if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
-                         /*Dummy z_pos_m*/ 100)) {
-        continue;
+      size_t nmeta_ents = f_meta->GetEntries();
+      for (size_t meta_it = 0; meta_it < nmeta_ents; ++meta_it) {
+        f_meta->GetEntry(meta_it);
+        file_pot += pot;
       }
 
-      POTExposure->Fill(det_x_pos_m + det_x, file_pot);
-      FileExposure->Fill(det_x_pos_m + det_x, nmeta_ents);
+      std::cout << "[INFO]: Found ND file with detector at " << det_x
+                << " m off axis which contained " << file_pot << " POT from "
+                << nmeta_ents << " files." << std::endl;
+
+      double det_min_m = -3;
+      double det_max_m = 3;
+      size_t det_steps = (det_max_m - det_min_m) / step_m;
+
+      for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
+        double det_x_pos_m = det_min_m + pos_it * step_m;
+
+        if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
+                           /*Dummy z_pos_m*/ 100)) {
+          continue;
+        }
+
+        POTExposure->Fill(det_x_pos_m + det_x, file_pot);
+        FileExposure->Fill(det_x_pos_m + det_x, nmeta_ents);
+      }
     }
 
     caf->Add((dir + file_name).c_str());
