@@ -157,16 +157,16 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
 
   double min_m = -4;
   double max_m = 40;
-  double step_m = 5E-4; // 1/2 mm
+  double step_m = 0.5E-3; // 1/2 mm
   size_t NStep = (max_m - min_m) / step_m;
 
   TH1D *POTExposure =
       new TH1D("POTExposure", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               min_m, max_m);
+               min_m - (step_m / 2.0), max_m - (step_m / 2.0));
   POTExposure->SetDirectory(nullptr);
   TH1D *FileExposure =
       new TH1D("FileExposure", ";OffAxisPosition (m);Exposure (NFiles)", NStep,
-               min_m, max_m);
+               min_m - (step_m / 2.0), max_m - (step_m / 2.0));
   FileExposure->SetDirectory(nullptr);
 
   TChain *caf = new TChain(cafTreeName.c_str());
@@ -226,7 +226,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
         double det_x_pos_m = det_min_m + pos_it * step_m;
 
         if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
-                           /*Dummy z_pos_m*/ 100)) {
+                           /*Dummy z_pos_m*/ 150)) {
           continue;
         }
 
