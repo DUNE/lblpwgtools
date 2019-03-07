@@ -169,7 +169,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
                min_m, max_m);
   FileExposure->SetDirectory(nullptr);
 
-  TChain *caf = new TChain("cafTree");
+  TChain *caf = new TChain(cafTreeName.c_str());
   TChain *meta = new TChain("meta");
 
   for (std::string file_name : CAFs) {
@@ -242,6 +242,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
   TFile *fout = TFile::Open(OutputFileName.c_str(), "RECREATE");
   std::cout << "[INFO]: Copying caf tree..." << std::endl;
   TTree *treecopy = caf->CloneTree(-1, "fast");
+  treecopy->SetName("cafTree");
   delete caf;
   std::cout << "[INFO]: Copying meta tree..." << std::endl;
   TTree *metacopy = meta->CloneTree(-1, "fast");
