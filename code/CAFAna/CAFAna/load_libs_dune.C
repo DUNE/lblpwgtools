@@ -1,7 +1,7 @@
 // -*- mode: c++; c-basic-offset: 2; -*-
 void load(std::string lib) {
   int ret = gSystem->Load(("lib" + lib).c_str());
-  std::cout << "Loading lib: " << ("lib" + lib) << std::endl;
+  std::cout << "\tLoading lib: " << ("lib" + lib) << std::endl;
   // In case of error, exit immediately with the error clearly showing, instead
   // of with a confusing secondary error about a page of output later.
   if (ret != 0) {
@@ -49,7 +49,7 @@ void load_libs(bool MustClean = true) {
       "CAFAnaPrediction", "CAFAnaAnalysis"};
 
   // Actually load the libraries
-  std::cout << "Loading libraries";
+  std::cout << "Loading libraries:" << std::endl;
   for (const std::string &lib : libs)
     load(lib);
   std::cout << std::endl;
