@@ -35,14 +35,17 @@ void FillTH1FromEigenVector(TH1 *rh, Eigen::VectorXd const &vals) {
   abort();
 }
 
-Eigen::MatrixXd FillEigenMatrixFromTH2(TH2 const *h2, bool swap_axes = false) {
+Eigen::MatrixXd
+FillEigenMatrixFromTH2(TH2 const *h2,
+                       int MaxCols = std::numeric_limits<int>::max(),
+                       bool swap_axes = false) {
 
   TAxis const *row_axis = swap_axes ? h2->GetYaxis() : h2->GetXaxis();
   TAxis const *col_axis = swap_axes ? h2->GetXaxis() : h2->GetYaxis();
 
-  Eigen::MatrixXd matrix =
-      Eigen::MatrixXd::Zero(row_axis->GetNbins(), col_axis->GetNbins());
-  for (Int_t oabi_it = 0; oabi_it < col_axis->GetNbins(); ++oabi_it) {
+  Int_t NCols = std::min(MaxCols, col_axis->GetNbins());
+  Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(row_axis->GetNbins(), NCols);
+  for (Int_t oabi_it = 0; oabi_it < NCols; ++oabi_it) {
     for (Int_t ebi_it = 0; ebi_it < row_axis->GetNbins(); ++ebi_it) {
       matrix(ebi_it, oabi_it) = h2->GetBinContent(ebi_it + 1, oabi_it + 1);
     }
@@ -53,7 +56,8 @@ Eigen::MatrixXd FillEigenMatrixFromTH2(TH2 const *h2, bool swap_axes = false) {
 PRISMFluxMatcher::PRISMFluxMatcher(std::string const &FluxFilePath,
                                    int OffAxisBinMerge, int NDEnergyBinMerge,
                                    int FDEnergyBinMerge)
-    : fStoreDebugMatches(false) {
+    : fRegFactor(0), fENuMin(0xdeadbeef), fENuMax(0xdeadbeef),
+      fLowEGaussFallOff(false), fStoreDebugMatches(false) {
   assert(FluxFilePath.size());
 
   std::unique_ptr<TFile> f(TFile::Open(FluxFilePath.c_str()));
@@ -106,7 +110,7 @@ PRISMFluxMatcher::PRISMFluxMatcher(std::string const &FluxFilePath,
 }
 
 bool PRISMFluxMatcher::CheckOffAxisBinningConsistency(
-    ana::Binning const &off_axis_binning) {
+    ana::Binning const &off_axis_binning) const {
   std::vector<double> binning_edges = off_axis_binning.Edges();
   std::vector<double> flux_off_axis_edge;
 
@@ -136,7 +140,7 @@ bool PRISMFluxMatcher::CheckOffAxisBinningConsistency(
 TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMFluxMatcher::FluxPredSpecies NDMode,
-    PRISMFluxMatcher::FluxPredSpecies FDMode) {
+    PRISMFluxMatcher::FluxPredSpecies FDMode) const {
 
   std::string uniq_soln_name =
       std::string(osc->GetParamsHash()->AsString()) + "_" +
@@ -195,11 +199,18 @@ TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
            FDUnosc->GetXaxis()->GetNbins());
 
     int NEBins = FDUnosc->GetXaxis()->GetNbins();
+
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
 
-    Eigen::MatrixXd NDFluxMatrix = FillEigenMatrixFromTH2(NDOffAxis);
-    if (NDFluxMatrix.cols() > NCoeffs) {
-      NDFluxMatrix = NDFluxMatrix.leftCols(NCoeffs);
+    Eigen::MatrixXd NDFluxMatrix = FillEigenMatrixFromTH2(NDOffAxis, NCoeffs);
+    Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
+
+    if (fRegFactor) {
+      for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
+        RegMatrix(row_it, row_it) = fRegFactor;
+        RegMatrix(row_it, row_it + 1) = -fRegFactor;
+      }
+      RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
     }
 
     Eigen::VectorXd Target(FDUnosc->GetXaxis()->GetNbins());
@@ -213,7 +224,9 @@ TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
     assert(NDFluxMatrix.rows() == Target.size());
 
     Eigen::VectorXd OffAxisWeights =
-        (NDFluxMatrix.transpose() * NDFluxMatrix).inverse() *
+        ((NDFluxMatrix.transpose() * NDFluxMatrix) +
+         RegMatrix.transpose() * RegMatrix)
+            .inverse() *
         NDFluxMatrix.transpose() * Target;
 
     fMatchCache[uniq_soln_name] = std::unique_ptr<TH1>(
@@ -248,7 +261,7 @@ void PRISMFluxMatcher::Write(TDirectory *dir) {
   if (fStoreDebugMatches) {
 
     for (auto &fit : fDebugTarget) {
-      dir->WriteObject(fit.second.get(), (fit.first+"_DebugTarget").c_str());
+      dir->WriteObject(fit.second.get(), (fit.first + "_DebugTarget").c_str());
     }
 
     for (auto &fit : fDebugBF) {

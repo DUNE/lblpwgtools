@@ -39,25 +39,39 @@ public:
   /// Use to check whether the ND flux histograms are binned consistently with
   /// the proposed ND analysis off axis binning. Will not merge bins, but will
   /// ignore extra bins in the flux prediction
-  bool CheckOffAxisBinningConsistency(ana::Binning const &);
+  bool CheckOffAxisBinningConsistency(ana::Binning const &) const;
 
-  void SetStoreDebugMatches() { fStoreDebugMatches = true;}
+  void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
   TH1 *GetFluxMatchCoefficients(
       osc::IOscCalculator *, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
-      FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode);
+      FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
 
   void Write(TDirectory *);
+
+  void SetTargetConditioning(double RegFactor = 1E-8,
+                             double LowECutoff = 0xdeadbeef,
+                             double HighECutoff = 0xdeadbeef,
+                             bool LowEGaussTail = false) {
+    fRegFactor = RegFactor;
+    fENuMin = LowECutoff;
+    fENuMax = HighECutoff;
+    fLowEGaussFallOff = LowEGaussTail;
+  }
 
 protected:
   std::vector<std::unique_ptr<TH2>> NDOffAxisPrediction;
   std::vector<std::unique_ptr<TH1>> FDUnOscPrediction;
 
-  std::map<std::string, std::unique_ptr<TH1>> fMatchCache;
+  double fRegFactor;
+  double fENuMin;
+  double fENuMax;
+  bool fLowEGaussFallOff;
+
+  mutable std::map<std::string, std::unique_ptr<TH1>> fMatchCache;
 
   bool fStoreDebugMatches;
-  std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
-  std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
-
+  mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
+  mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
 };
