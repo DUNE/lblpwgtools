@@ -115,10 +115,10 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 
 // If CombiningCombinedCAFs = true, then take the POT for the input file from
 // histograms produced by a previous invocation of this script.
-void OffAxisNDCAFCombiner(std::string InputFilePattern,
-                          std::string OutputFileName,
-                          bool CombiningCombinedCAFs = false,
-                          std::string cafTreeName = "cafTree") {
+void OffAxisNDCAFCombiner(
+    std::string InputFilePattern, std::string OutputFileName,
+    bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
+    size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
 
   size_t asterisk_loc = InputFilePattern.find_first_of('*');
   size_t last_slash_loc = InputFilePattern.find_last_of('/');
@@ -146,6 +146,12 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
   if (asterisk_loc == std::string::npos) {
     CAFs.push_back(pattern);
   } else {
+    if (NMaxEvents != std::numeric_limits<size_t>::max()) {
+      std::cout << "Set NMaxEvents but found a wildcard, this will not do what "
+                   "you want, aborting."
+                << std::endl;
+      abort();
+    }
     try {
       CAFs = GetMatchingFiles(dir, pattern);
     } catch (std::regex_error const &e) {
@@ -157,7 +163,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
 
   double min_m = -4;
   double max_m = 40;
-  double step_m = 0.5E-3; // 1/2 mm
+  double step_m = 0.5; // 50 cm
   size_t NStep = (max_m - min_m) / step_m;
 
   TH1D *POTExposure =
@@ -214,13 +220,22 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
         file_pot += pot;
       }
 
+      if (NMaxEvents != std::numeric_limits<size_t>::max()) {
+        double nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
+        file_pot *= nevs / double(f_caf->GetEntries());
+        std::cout << "Rescaling POT by: " << nevs / double(f_caf->GetEntries())
+                  << " as only taking " << nevs << "/" << f_caf->GetEntries()
+                  << " file entries." << std::endl;
+      }
+
       std::cout << "[INFO]: Found ND file with detector at " << det_x
                 << " m off axis which contained " << file_pot << " POT from "
                 << nmeta_ents << " files." << std::endl;
 
       double det_min_m = -3;
       double det_max_m = 3;
-      size_t det_steps = (det_max_m - det_min_m) / step_m;
+      double average_step = 1E-6;
+      size_t det_steps = (det_max_m - det_min_m) / (step_m * average_step);
 
       for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
         double det_x_pos_m = det_min_m + pos_it * step_m;
@@ -230,10 +245,12 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
           continue;
         }
 
-        POTExposure->Fill(det_x_pos_m + det_x, file_pot);
-        FileExposure->Fill(det_x_pos_m + det_x, nmeta_ents);
+        POTExposure->Fill(det_x_pos_m + det_x, average_step * file_pot);
+        FileExposure->Fill(det_x_pos_m + det_x, average_step * nmeta_ents);
       }
     }
+
+    f.Close();
 
     caf->Add((dir + file_name).c_str());
     meta->Add((dir + file_name).c_str());
@@ -241,7 +258,7 @@ void OffAxisNDCAFCombiner(std::string InputFilePattern,
 
   TFile *fout = TFile::Open(OutputFileName.c_str(), "RECREATE");
   std::cout << "[INFO]: Copying caf tree..." << std::endl;
-  TTree *treecopy = caf->CloneTree(-1, "fast");
+  TTree *treecopy = caf->CloneTree(NMaxEvents, "fast");
   treecopy->SetName("cafTree");
   delete caf;
   std::cout << "[INFO]: Copying meta tree..." << std::endl;
