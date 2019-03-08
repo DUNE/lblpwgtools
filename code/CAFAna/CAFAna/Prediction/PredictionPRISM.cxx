@@ -8,34 +8,43 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "TAxis.h"
 #include "TDirectory.h"
 #include "TObjString.h"
-#include "TAxis.h"
 
 namespace ana {
 
 PredictionPRISM::PredictionPRISM(
-    SpectrumLoaderBase &loader, const HistAxis &recoAxis,
+    SpectrumLoaderBase &ND_loader, const HistAxis &recoAxis,
     const HistAxis &offAxis, const Cut &cut, const SystShifts &shift,
-    const Var &wei, PRISMFluxMatcher *flux_matcher,
+    const Var &wei, PRISMFluxMatcher const *flux_matcher,
     PRISMFluxMatcher::FluxPredSpecies NDFluxSpecies,
     PRISMFluxMatcher::FluxPredSpecies FDFluxSpecies)
-    : fOffAxisSpectrum(loader, recoAxis, offAxis, cut, shift, wei),
-      fOffAxisSpectrumNC(loader, recoAxis, offAxis, cut && kIsNC, shift, wei),
-      fOffAxisSpectrumNumu(loader, recoAxis, offAxis,
-                           cut && !kIsNC && kIsNumuCC && !kIsAntiNu, shift,
-                           wei),
-      fOffAxisSpectrumNumubar(loader, recoAxis, offAxis,
-                              cut && !kIsNC && kIsNumuCC && kIsAntiNu, shift,
-                              wei),
-      fOffAxisSpectrumNue(loader, recoAxis, offAxis,
-                          cut && !kIsNC && kIsBeamNue && !kIsAntiNu, shift,
-                          wei),
-      fOffAxisSpectrumNuebar(loader, recoAxis, offAxis,
-                             cut && !kIsNC && kIsBeamNue && kIsAntiNu, shift,
-                             wei),
-      fFluxMatcher(flux_matcher), fNDFluxSpecies(NDFluxSpecies),
-      fFDFluxSpecies(FDFluxSpecies) {
+    : fPredictionAxis(recoAxis), fOffAxis(offAxis) {
+
+  // When default initialization is cheap, its easier to read explicit
+  // assignments
+  fOffAxisSpectrum = std::make_unique<ReweightableSpectrum>(
+      ND_loader, recoAxis, offAxis, cut, shift, wei);
+  fOffAxisSpectrumNumu = std::make_unique<ReweightableSpectrum>(
+      ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && !kIsAntiNu,
+      shift, wei);
+  fOffAxisSpectrumNumubar = std::make_unique<ReweightableSpectrum>(
+      ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && kIsAntiNu,
+      shift, wei);
+
+  fNDBkg = NDBackgroundSpectra{nullptr, nullptr, nullptr};
+  fHaveNDBkgPred = false;
+
+  fFarDetSpectrumNC = nullptr;
+  fFarDetSpectrumNumu = nullptr;
+  fFarDetSpectrumNumubar = nullptr;
+  fHaveFDPred = false;
+
+  fFluxMatcher = flux_matcher;
+  fNDFluxSpecies = NDFluxSpecies;
+  fFDFluxSpecies = FDFluxSpecies;
+
   if (fFluxMatcher) {
     assert(fFluxMatcher->CheckOffAxisBinningConsistency(
         offAxis.GetBinnings().front()));
@@ -43,16 +52,86 @@ PredictionPRISM::PredictionPRISM(
 }
 
 //----------------------------------------------------------------------
+void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
+                                    const Cut &cut, const SystShifts &shift,
+                                    const Var &wei) {
+  fFarDetSpectrumNC = std::make_unique<Spectrum>(
+      FD_loader, fPredictionAxis, cut && kIsNC, shift, wei);
+  fFarDetSpectrumNumu = std::make_unique<OscillatableSpectrum>(
+      FD_loader, fPredictionAxis, cut && kIsNC && kIsNumuCC && !kIsAntiNu,
+      shift, wei);
+  fFarDetSpectrumNumubar = std::make_unique<OscillatableSpectrum>(
+      FD_loader, fPredictionAxis, cut && !kIsNC && kIsNumuCC && kIsAntiNu,
+      shift, wei);
+  fHaveFDPred = true;
+}
+
+//----------------------------------------------------------------------
+void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
+                                    const Cut &cut, const SystShifts &shift,
+                                    const Var &wei) {
+
+  fNDBkg.fOffAxisSpectrumNC = std::make_unique<ReweightableSpectrum>(
+      ND_loader, fPredictionAxis, fOffAxis, cut && kIsNC, shift, wei);
+  fNDBkg.fOffAxisSpectrumNue = std::make_unique<ReweightableSpectrum>(
+      ND_loader, fPredictionAxis, fOffAxis,
+      cut && !kIsNC && kIsBeamNue && !kIsAntiNu, shift, wei);
+  fNDBkg.fOffAxisSpectrumNuebar = std::make_unique<ReweightableSpectrum>(
+      ND_loader, fPredictionAxis, fOffAxis,
+      cut && !kIsNC && kIsBeamNue && kIsAntiNu, shift, wei);
+  fHaveNDBkgPred = true;
+}
+
+//----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
-  if (fFluxMatcher) {
 
-    double max_off_axis_pos = fOffAxisSpectrum.GetReweightTAxis()->GetBinCenter(
-        fOffAxisSpectrum.GetReweightTAxis()->GetNbins());
+  ReweightableSpectrum ret = *fOffAxisSpectrum;
+  ret.OverridePOT(1);
 
-    return fOffAxisSpectrum.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
-        calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+  bool SignalIsNumode = (static_cast<int>(fFDFluxSpecies) < 4);
+
+  // If we have the ND background subtract it, if not, assume we can just cheat
+  // and take the ND NumuCC spectrum
+  if (fHaveNDBkgPred) {
+    fNDBkg.fOffAxisSpectrumNC->OverridePOT(1);
+    fNDBkg.fOffAxisSpectrumNue->OverridePOT(1);
+    fNDBkg.fOffAxisSpectrumNuebar->OverridePOT(1);
+    fOffAxisSpectrumNumubar->OverridePOT(1);
+    fOffAxisSpectrumNumu->OverridePOT(1);
+
+    ret -= *fNDBkg.fOffAxisSpectrumNC;
+    ret -= *fNDBkg.fOffAxisSpectrumNue;
+    ret -= *fNDBkg.fOffAxisSpectrumNuebar;
+    ret -= *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
   } else {
-    return fOffAxisSpectrum.UnWeighted();
+    fOffAxisSpectrumNumubar->OverridePOT(1);
+    fOffAxisSpectrumNumu->OverridePOT(1);
+    ret = *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
+  }
+
+  if (fFluxMatcher) {
+    double max_off_axis_pos = ret.GetReweightTAxis()->GetBinCenter(
+        ret.GetReweightTAxis()->GetNbins());
+
+    // If we have the FD background predictions add them back in
+    if (fHaveFDPred) {
+      // Scale this up to match the FD POT before adding it back in
+      ret.ScaleToPOT(fFarDetSpectrumNC->POT());
+
+      Spectrum rets = ret.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
+          calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+
+      rets += *fFarDetSpectrumNC;
+      rets += (SignalIsNumode ? fFarDetSpectrumNumu : fFarDetSpectrumNumubar)
+                  ->Oscillated(calc, 14, 14);
+      return rets;
+    } else {
+      return ret.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
+          calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+    }
+
+  } else {
+    return ret.UnWeighted();
   }
 }
 
@@ -62,38 +141,8 @@ Spectrum PredictionPRISM::PredictComponent(osc::IOscCalculator *calc,
                                            Current::Current_t curr,
                                            Sign::Sign_t sign) const {
 
-  assert(fFluxMatcher);
-
-  double max_off_axis_pos = fOffAxisSpectrum.GetReweightTAxis()->GetBinCenter(
-      fOffAxisSpectrum.GetReweightTAxis()->GetNbins());
-
-  if (flav == Flavors::kAll && curr == Current::kBoth && sign == Sign::kBoth)
-    return Predict(0); // Faster
-
-  if (curr & Current::kNC) {
-    // We don't have NC broken down by sign or flavour
-    assert(flav & Flavors::kAll && sign & Sign::kBoth);
-    return fOffAxisSpectrumNC.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
-        calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
-  }
-
-  assert(curr == Current::kCC);
-
-  ReweightableSpectrum ret = fOffAxisSpectrum;
-  ret.Clear();
-
-  // Safe to assume by this point that it's 100% CC
-  if (flav & Flavors::kNuMuToNuMu && sign & Sign::kNu)
-    ret += fOffAxisSpectrumNumu;
-  if (flav & Flavors::kNuMuToNuMu && sign & Sign::kAntiNu)
-    ret += fOffAxisSpectrumNumubar;
-  if (flav & Flavors::kNuEToNuE && sign & Sign::kNu)
-    ret += fOffAxisSpectrumNue;
-  if (flav & Flavors::kNuEToNuE && sign & Sign::kAntiNu)
-    ret += fOffAxisSpectrumNuebar;
-
-  return ret.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
-      calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+  // Fill in later
+  return fOffAxisSpectrum->UnWeighted();
 }
 
 //----------------------------------------------------------------------
@@ -104,28 +153,52 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
 
   TObjString("PredictionPRISM").Write("type");
 
-  fOffAxisSpectrum.SaveTo(dir->mkdir("spect"));
-  fOffAxisSpectrumNC.SaveTo(dir->mkdir("spect_nc"));
-  fOffAxisSpectrumNumu.SaveTo(dir->mkdir("spect_numu"));
-  fOffAxisSpectrumNumubar.SaveTo(dir->mkdir("spect_numubar"));
-  fOffAxisSpectrumNue.SaveTo(dir->mkdir("spect_nue"));
-  fOffAxisSpectrumNuebar.SaveTo(dir->mkdir("spect_nuebar"));
+  fOffAxisSpectrum->SaveTo(dir->mkdir("spect"));
+  fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numu"));
+  fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numubar"));
+
+  if (fHaveNDBkgPred) {
+    fNDBkg.fOffAxisSpectrumNC->SaveTo(dir->mkdir("spect_nd_NC"));
+    fNDBkg.fOffAxisSpectrumNue->SaveTo(dir->mkdir("spect_nd_nue"));
+    fNDBkg.fOffAxisSpectrumNuebar->SaveTo(dir->mkdir("spect_nd_nuebar"));
+  }
+
+  if (fHaveFDPred) {
+    fFarDetSpectrumNC->SaveTo(dir->mkdir("spect_fd_NC"));
+    fFarDetSpectrumNumu->SaveTo(dir->mkdir("spect_fd_numu"));
+    fFarDetSpectrumNumubar->SaveTo(dir->mkdir("spect_fd_numubar"));
+  }
 
   tmp->cd();
 }
 
 //----------------------------------------------------------------------
 std::unique_ptr<PredictionPRISM>
-PredictionPRISM::LoadFrom(TDirectory *dir, PRISMFluxMatcher *flux_matcher,
+PredictionPRISM::LoadFrom(TDirectory *dir, PRISMFluxMatcher const *flux_matcher,
                           PRISMFluxMatcher::FluxPredSpecies NDFluxSpecies,
                           PRISMFluxMatcher::FluxPredSpecies FDFluxSpecies) {
-  return std::unique_ptr<PredictionPRISM>(new PredictionPRISM(
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect")),
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_nc")),
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_numu")),
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_numubar")),
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_nue")),
-      *ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_nuebar")),
+  std::unique_ptr<PredictionPRISM> pred(new PredictionPRISM(
+      ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect")),
+      ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_numu")),
+      ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_numubar")),
       flux_matcher, NDFluxSpecies, FDFluxSpecies));
+
+  if (dir->GetDirectory("spect_nd_NC")) {
+    pred->SetNDBkgPredicitions(
+        ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_nd_NC")),
+        ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_nd_nue")),
+        ana::LoadFrom<ReweightableSpectrum>(
+            dir->GetDirectory("spect_nd_nuebar")));
+  }
+
+  if (dir->GetDirectory("spect_fd_NC")) {
+    pred->SetFDPredicitions(
+        ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_fd_NC")),
+        ana::LoadFrom<OscillatableSpectrum>(dir->GetDirectory("spect_fd_numu")),
+        ana::LoadFrom<OscillatableSpectrum>(
+            dir->GetDirectory("spect_fd_numubar")));
+  }
+
+  return pred;
 }
 } // namespace ana
