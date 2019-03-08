@@ -610,4 +610,6 @@ namespace ana
                                                   hLivetime->GetBinContent(1));
   }
 
+void ReweightableSpectrum::Scale(double scale) { fHist->Scale(scale); }
+
 }

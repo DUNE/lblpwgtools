@@ -96,6 +96,21 @@ namespace ana
     std::vector<std::string> GetLabels() const {return fLabels;}
     std::vector<Binning> GetBinnings() const {return fBins;}
 
+    /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
+    void OverridePOT(double newpot) {fPOT = newpot;}
+
+    /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
+    void OverrideLivetime(double newlive) {fLivetime = newlive;}
+
+    double POT() {return fPOT;}
+
+    double Livetime() {return fLivetime;}
+
+    void ScaleToPOT(double POTScale) {
+      OverridePOT(POTScale / POT());
+      Scale(POTScale/ POT());
+    }
+
   protected:
     // Derived classes can be trusted take care of their own construction
     ReweightableSpectrum(const std::vector<std::string>& labels,
@@ -131,6 +146,8 @@ namespace ana
 
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
+
+    void Scale(double);
 
     Var fRWVar; ///< What goes on the y axis?
 
