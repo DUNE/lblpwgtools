@@ -149,6 +149,43 @@ AxisBlob const fake_data_axes{&axErecYrecND_FromDep,&axErecFD_FromDep,&axErecFD_
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
 AxisBlob const Ax1DND_FromDep_unibin{&axErec_FromDep_unibin,&axErec_FromDep_unibin,&axErec_FromDep_unibin};
 
+AxisBlob GetAxisBlob(std::string blob_name) {
+  AxisBlob AxToUse = default_axes;
+  if (blob_name == "1DND") {
+    AxToUse.NDAx = &axErecND;
+  } else if (blob_name == "FromDep") {
+    AxToUse.NDAx = &axErecYrecND_FromDep;
+    AxToUse.FDAx_numu = &axErecFD_FromDep;
+    AxToUse.FDAx_nue = &axErecFD_FromDep;
+  } else if (blob_name == "1DNDFromDep") {
+    AxToUse.NDAx = &axErecND_FromDep;
+    AxToUse.FDAx_numu = &axErecFD_FromDep;
+    AxToUse.FDAx_nue = &axErecFD_FromDep;
+  } else if (blob_name == "CoarseBin1D") {
+    AxToUse.NDAx = &axErecND_coarsebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_coarsebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_coarsebin;
+  } else if (blob_name == "VeryCoarseBin1D") {
+    AxToUse.NDAx = &axErecND_verycoarsebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_verycoarsebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_verycoarsebin;
+  } else if (blob_name == "OneBin") {
+    AxToUse.NDAx = &axErecND_onebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_onebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_onebin;
+  } else if (blob_name == "ETrue") {
+    AxToUse.NDAx = &axTrueE_unibin;
+    AxToUse.FDAx_numu = &axTrueE_unibin;
+    AxToUse.FDAx_nue = &axTrueE_unibin;
+  } else if (blob_name == "ETrueCoarse") {
+    AxToUse.NDAx = &axTrueE_unibin_coarse;
+    AxToUse.FDAx_numu = &axTrueE_unibin_coarse;
+    AxToUse.FDAx_nue = &axTrueE_unibin_coarse;
+  } else if (blob_name == "FakeData") {
+    AxToUse = fake_data_axes;
+  }
+  return AxToUse;
+}
 
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40/1.13;
@@ -367,6 +404,7 @@ SampleType GetSampleType(std::string sample){
   if (sample == "ND_FHC_OA") return kNDFHC_OA;
   return kUnknown;
 }
+
 
 void MakePredictionInterp(TDirectory* saveDir, SampleType sample,
 			  std::vector<const ISyst*> systlist,
