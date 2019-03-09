@@ -10,6 +10,7 @@ class IOscCalculator;
 }
 namespace ana {
 class Binning;
+class PredictionInterp;
 }
 
 class TH1;
@@ -17,7 +18,7 @@ class TH2;
 class TDirectory;
 
 // Caching flux matcher.
-class PRISMFluxMatcher {
+class PRISMExtrapolator {
 public:
   enum class FluxPredSpecies {
     kNumu_numode = 0,
@@ -33,8 +34,14 @@ public:
     kUnhandled = 8
   };
 
-  PRISMFluxMatcher(std::string const &FluxFilePath, int OffAxisBinMerge = 1,
-                   int NDEnergyBinMerge = 1, int FDEnergyBinMerge = 1);
+  PRISMExtrapolator();
+
+  void InitializeFluxMatcher(std::string const &FluxFilePath,
+                        int OffAxisBinMerge = 1, int NDEnergyBinMerge = 1,
+                        int FDEnergyBinMerge = 1);
+
+  void InitializeEventRateMatcher(ana::PredictionInterp const *NDEventRateInterp,
+                             ana::PredictionInterp const *FDEventRateInterp);
 
   /// Use to check whether the ND flux histograms are binned consistently with
   /// the proposed ND analysis off axis binning. Will not merge bins, but will
@@ -43,8 +50,14 @@ public:
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
-  TH1 *GetFluxMatchCoefficients(
-      osc::IOscCalculator *, double max_OffAxis_m,
+  TH1 *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
+                                 double max_OffAxis_m) const;
+  TH1 *GetMatchCoefficientsFlux(
+      osc::IOscCalculator *osc, double max_OffAxis_m,
+      FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
+      FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
+  TH1 *GetMatchCoefficients(
+      osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
 
@@ -63,6 +76,11 @@ public:
 protected:
   std::vector<std::unique_ptr<TH2>> NDOffAxisPrediction;
   std::vector<std::unique_ptr<TH1>> FDUnOscPrediction;
+
+  ana::PredictionInterp const *fFDEventRateInterp;
+  ana::PredictionInterp const *fNDEventRateInterp;
+
+  bool fMatchEventRates;
 
   double fRegFactor;
   double fENuMin;

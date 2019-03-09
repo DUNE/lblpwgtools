@@ -21,8 +21,8 @@ set(Analysis_header_files
   Style.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
-  LIST(APPEND Analysis_implementation_files PRISMFluxMatcher.cxx)
-  LIST(APPEND Analysis_header_files PRISMFluxMatcher.h)
+  LIST(APPEND Analysis_implementation_files PRISMExtrapolator.cxx)
+  LIST(APPEND Analysis_header_files PRISMExtrapolator.h)
 endif()
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})

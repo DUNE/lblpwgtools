@@ -238,7 +238,7 @@ void OffAxisNDCAFCombiner(
       size_t det_steps = (det_max_m - det_min_m) / (step_m * average_step);
 
       for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
-        double det_x_pos_m = det_min_m + pos_it * step_m;
+        double det_x_pos_m = det_min_m + pos_it * (step_m * average_step);
 
         if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
                            /*Dummy z_pos_m*/ 150)) {

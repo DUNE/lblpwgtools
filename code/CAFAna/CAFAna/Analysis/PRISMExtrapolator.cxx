@@ -1,4 +1,6 @@
-#include "CAFAna/Analysis/PRISMFluxMatcher.h"
+#include "CAFAna/Analysis/PRISMExtrapolator.h"
+
+#include "CAFAna/Prediction/PredictionInterp.h"
 
 #include "CAFAna/Core/Binning.h"
 
@@ -53,11 +55,24 @@ FillEigenMatrixFromTH2(TH2 const *h2,
   return matrix;
 }
 
-PRISMFluxMatcher::PRISMFluxMatcher(std::string const &FluxFilePath,
-                                   int OffAxisBinMerge, int NDEnergyBinMerge,
-                                   int FDEnergyBinMerge)
+Eigen::VectorXd FillEigenVectorFromTH1(TH1 const *h) {
+  int nb = h->GetXaxis()->GetNbins();
+  Eigen::VectorXd vec = Eigen::VectorXd::Zero(nb);
+  for (Int_t bi_it = 0; bi_it < nb; ++bi_it) {
+    vec[bi_it] = h->GetBinContent(bi_it + 1);
+  }
+  return vec;
+}
+
+PRISMExtrapolator::PRISMExtrapolator()
     : fRegFactor(0), fENuMin(0xdeadbeef), fENuMax(0xdeadbeef),
-      fLowEGaussFallOff(false), fStoreDebugMatches(false) {
+      fLowEGaussFallOff(false), fStoreDebugMatches(false) {}
+
+void PRISMExtrapolator::InitializeFluxMatcher(std::string const &FluxFilePath,
+                                              int OffAxisBinMerge,
+                                              int NDEnergyBinMerge,
+                                              int FDEnergyBinMerge) {
+
   assert(FluxFilePath.size());
 
   std::unique_ptr<TFile> f(TFile::Open(FluxFilePath.c_str()));
@@ -67,7 +82,7 @@ PRISMFluxMatcher::PRISMFluxMatcher(std::string const &FluxFilePath,
   size_t is_ND = true; // ND
 
   // The order here will line up with the definition of
-  // PRISMFluxMatcher::FluxPredSpecies
+  // PRISMExtrapolator::FluxPredSpecies
   for (std::string const &det : {"ND", "FD"}) {
     for (std::string const &beammode : {"numode", "nubarmode"}) {
       for (std::string const &nu_name : {"numu", "nue", "numubar", "nuebar"}) {
@@ -107,40 +122,124 @@ PRISMFluxMatcher::PRISMFluxMatcher(std::string const &FluxFilePath,
       abort();
     }
   }
+  fMatchEventRates = false;
 }
 
-bool PRISMFluxMatcher::CheckOffAxisBinningConsistency(
+void PRISMExtrapolator::InitializeEventRateMatcher(
+    ana::PredictionInterp const *NDEventRateInterp,
+    ana::PredictionInterp const *FDEventRateInterp) {
+  fNDEventRateInterp = NDEventRateInterp;
+  fFDEventRateInterp = FDEventRateInterp;
+
+  fMatchEventRates = true;
+}
+
+bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
     ana::Binning const &off_axis_binning) const {
+
+  if (fMatchEventRates) { // Assume true...
+    return true;
+  }
+
   std::vector<double> binning_edges = off_axis_binning.Edges();
-  std::vector<double> flux_off_axis_edge;
+  std::vector<double> matcher_off_axis_edges;
 
   for (int bi_it = 0;
        bi_it < NDOffAxisPrediction.front()->GetYaxis()->GetNbins(); ++bi_it) {
     if (!bi_it) {
-      flux_off_axis_edge.push_back(
+      matcher_off_axis_edges.push_back(
           NDOffAxisPrediction.front()->GetYaxis()->GetBinLowEdge(bi_it + 1));
     }
-    flux_off_axis_edge.push_back(
+    matcher_off_axis_edges.push_back(
         NDOffAxisPrediction.front()->GetYaxis()->GetBinUpEdge(bi_it + 1));
   }
 
   for (size_t be_it = 0; be_it < binning_edges.size(); ++be_it) {
-    if (fabs(binning_edges[be_it] - flux_off_axis_edge[be_it]) > 1E-6) {
-      std::cout << "In PRISMFluxMatcher::CheckOffAxisBinningConsistency:  "
+    if (fabs(binning_edges[be_it] - matcher_off_axis_edges[be_it]) > 1E-6) {
+      std::cout << "In PRISMExtrapolator::CheckOffAxisBinningConsistency:  "
                    "Analysis bin("
                 << be_it << ") edge @ " << binning_edges[be_it]
                 << " but corresponding flux bin edge is @ "
-                << flux_off_axis_edge[be_it] << std::endl;
+                << matcher_off_axis_edges[be_it] << std::endl;
       return false;
     }
   }
   return true;
 }
 
-TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
+Eigen::VectorXd SolveLinComb(TH2 const *NDPred, TH1 const *FDOsc,
+                             double max_OffAxis_m, double reg_factor = 0) {
+  assert(NDPred->GetXaxis()->GetNbins() == FDOsc->GetXaxis()->GetNbins());
+
+  int NEBins = FDOsc->GetXaxis()->GetNbins();
+  int NCoeffs = NDPred->GetYaxis()->FindFixBin(max_OffAxis_m);
+  assert(NCoeffs);
+  if (NCoeffs > NDPred->GetYaxis()->GetNbins()) {
+    NCoeffs = NDPred->GetYaxis()->GetNbins();
+  }
+
+  Eigen::MatrixXd NDFluxMatrix = FillEigenMatrixFromTH2(NDPred, NCoeffs);
+  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
+
+  if (reg_factor) {
+    for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
+      RegMatrix(row_it, row_it) = reg_factor;
+      RegMatrix(row_it, row_it + 1) = -reg_factor;
+    }
+    RegMatrix(NCoeffs - 1, NCoeffs - 1) = reg_factor;
+  }
+
+  Eigen::VectorXd Target = FillEigenVectorFromTH1(FDOsc);
+
+  assert(NDFluxMatrix.rows() == Target.size());
+
+  return ((NDFluxMatrix.transpose() * NDFluxMatrix) +
+          RegMatrix.transpose() * RegMatrix)
+             .inverse() *
+         NDFluxMatrix.transpose() * Target;
+}
+
+TH1 *PRISMExtrapolator::GetMatchCoefficientsEventRate(
+    osc::IOscCalculator *osc, double max_OffAxis_m) const {
+  assert(fNDEventRateInterp);
+  assert(fFDEventRateInterp);
+
+  std::unique_ptr<TH2> NDOffAxis(fNDEventRateInterp->Predict(nullptr).ToTH2(1));
+  std::unique_ptr<TH1> FDOsc(fFDEventRateInterp->Predict(osc).ToTH1(1));
+
+  Eigen::VectorXd soln =
+      SolveLinComb(NDOffAxis.get(), FDOsc.get(), max_OffAxis_m, fRegFactor);
+
+  fMatchCache["last_match"] = std::unique_ptr<TH1>(
+      new TH1D("soln", ";OffAxisSlice;Weight", soln.size(), 0, soln.size()));
+  fMatchCache["last_match"]->SetDirectory(nullptr);
+  FillTH1FromEigenVector(fMatchCache["last_match"].get(), soln);
+
+  if (fStoreDebugMatches) {
+    int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
+
+    Eigen::MatrixXd NDFluxMatrix =
+        FillEigenMatrixFromTH2(NDOffAxis.get(), NCoeffs);
+    Eigen::VectorXd Target = FillEigenVectorFromTH1(FDOsc.get());
+
+    fDebugTarget["last_match"] = std::unique_ptr<TH1>(
+        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+    fDebugTarget["last_match"]->SetDirectory(nullptr);
+    FillTH1FromEigenVector(fDebugTarget["last_match"].get(), Target);
+
+    fDebugBF["last_match"] = std::unique_ptr<TH1>(
+        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+    fDebugBF["last_match"]->SetDirectory(nullptr);
+    FillTH1FromEigenVector(fDebugBF["last_match"].get(), NDFluxMatrix * soln);
+  }
+
+  return fMatchCache["last_match"].get();
+}
+
+TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
     osc::IOscCalculator *osc, double max_OffAxis_m,
-    PRISMFluxMatcher::FluxPredSpecies NDMode,
-    PRISMFluxMatcher::FluxPredSpecies FDMode) const {
+    PRISMExtrapolator::FluxPredSpecies NDMode,
+    PRISMExtrapolator::FluxPredSpecies FDMode) const {
 
   std::string uniq_soln_name =
       std::string(osc->GetParamsHash()->AsString()) + "_" +
@@ -148,7 +247,7 @@ TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
       std::to_string(static_cast<size_t>(FDMode)) + "_" +
       std::to_string(max_OffAxis_m);
 
-  std::cout << "In PRISMFluxMatcher::GetFluxMatchCoefficients Osc has hash = "
+  std::cout << "In PRISMExtrapolator::GetMatchCoefficients Osc has hash = "
             << uniq_soln_name << std::endl;
 
   if (!fMatchCache.count(uniq_soln_name)) {
@@ -252,7 +351,16 @@ TH1 *PRISMFluxMatcher::GetFluxMatchCoefficients(
   return fMatchCache[uniq_soln_name].get();
 }
 
-void PRISMFluxMatcher::Write(TDirectory *dir) {
+TH1 *PRISMExtrapolator::GetMatchCoefficients(
+    osc::IOscCalculator *osc, double max_OffAxis_m,
+    PRISMExtrapolator::FluxPredSpecies NDMode,
+    PRISMExtrapolator::FluxPredSpecies FDMode) const {
+  return fMatchEventRates
+             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m)
+             : GetMatchCoefficientsFlux(osc, max_OffAxis_m, NDMode, FDMode);
+}
+
+void PRISMExtrapolator::Write(TDirectory *dir) {
   for (auto &fit : fMatchCache) {
     std::cout << "Writing Match: " << fit.first << std::endl;
     dir->WriteObject(fit.second.get(), fit.first.c_str());

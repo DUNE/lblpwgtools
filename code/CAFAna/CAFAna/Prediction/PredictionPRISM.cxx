@@ -17,10 +17,24 @@ namespace ana {
 PredictionPRISM::PredictionPRISM(
     SpectrumLoaderBase &ND_loader, const HistAxis &recoAxis,
     const HistAxis &offAxis, const Cut &cut, const SystShifts &shift,
-    const Var &wei, PRISMFluxMatcher const *flux_matcher,
-    PRISMFluxMatcher::FluxPredSpecies NDFluxSpecies,
-    PRISMFluxMatcher::FluxPredSpecies FDFluxSpecies)
+    const Var &wei, PRISMExtrapolator const *flux_matcher,
+    PRISMExtrapolator::FluxPredSpecies NDFluxSpecies,
+    PRISMExtrapolator::FluxPredSpecies FDFluxSpecies, TH3 const *SelectedNumuCC,
+    TH3 const *AllNumuCC)
     : fPredictionAxis(recoAxis), fOffAxis(offAxis) {
+
+  bool SignalIsNumode = (static_cast<int>(fFDFluxSpecies) < 4);
+  bool HaveEff = (SelectedNumuCC && AllNumuCC);
+
+  // Use to weight by cheating Efficiency
+  Var kEffWeight({}, [&](const caf::StandardRecord *sr) -> double {
+    int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->dune.Ev);
+    int by = AllNumuCC->GetYaxis()->FindFixBin(sr->dune.vtx_x);
+    int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->dune.det_x);
+    int ev_bin = AllNumuCC->GetBin(bx, by, bz);
+    return AllNumuCC->GetBinContent(ev_bin) /
+           SelectedNumuCC->GetBinContent(ev_bin);
+  });
 
   // When default initialization is cheap, its easier to read explicit
   // assignments
@@ -28,10 +42,10 @@ PredictionPRISM::PredictionPRISM(
       ND_loader, recoAxis, offAxis, cut, shift, wei);
   fOffAxisSpectrumNumu = std::make_unique<ReweightableSpectrum>(
       ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && !kIsAntiNu,
-      shift, wei);
+      shift, wei * (HaveEff ? kEffWeight : ana::Constant(1)));
   fOffAxisSpectrumNumubar = std::make_unique<ReweightableSpectrum>(
       ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && kIsAntiNu,
-      shift, wei);
+      shift, wei * (HaveEff ? kEffWeight : ana::Constant(1)));
 
   fNDBkg = NDBackgroundSpectra{nullptr, nullptr, nullptr};
   fHaveNDBkgPred = false;
@@ -55,8 +69,8 @@ PredictionPRISM::PredictionPRISM(
 void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
                                     const Cut &cut, const SystShifts &shift,
                                     const Var &wei) {
-  fFarDetSpectrumNC = std::make_unique<Spectrum>(
-      FD_loader, fPredictionAxis, cut && kIsNC, shift, wei);
+  fFarDetSpectrumNC = std::make_unique<Spectrum>(FD_loader, fPredictionAxis,
+                                                 cut && kIsNC, shift, wei);
   fFarDetSpectrumNumu = std::make_unique<OscillatableSpectrum>(
       FD_loader, fPredictionAxis, cut && kIsNC && kIsNumuCC && !kIsAntiNu,
       shift, wei);
@@ -118,7 +132,7 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
       // Scale this up to match the FD POT before adding it back in
       ret.ScaleToPOT(fFarDetSpectrumNC->POT());
 
-      Spectrum rets = ret.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
+      Spectrum rets = ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
           calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
 
       rets += *fFarDetSpectrumNC;
@@ -126,7 +140,7 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
                   ->Oscillated(calc, 14, 14);
       return rets;
     } else {
-      return ret.WeightedBy(fFluxMatcher->GetFluxMatchCoefficients(
+      return ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
           calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
     }
 
@@ -174,9 +188,9 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
 
 //----------------------------------------------------------------------
 std::unique_ptr<PredictionPRISM>
-PredictionPRISM::LoadFrom(TDirectory *dir, PRISMFluxMatcher const *flux_matcher,
-                          PRISMFluxMatcher::FluxPredSpecies NDFluxSpecies,
-                          PRISMFluxMatcher::FluxPredSpecies FDFluxSpecies) {
+PredictionPRISM::LoadFrom(TDirectory *dir, PRISMExtrapolator const *flux_matcher,
+                          PRISMExtrapolator::FluxPredSpecies NDFluxSpecies,
+                          PRISMExtrapolator::FluxPredSpecies FDFluxSpecies) {
   std::unique_ptr<PredictionPRISM> pred(new PredictionPRISM(
       ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect")),
       ana::LoadFrom<ReweightableSpectrum>(dir->GetDirectory("spect_numu")),
