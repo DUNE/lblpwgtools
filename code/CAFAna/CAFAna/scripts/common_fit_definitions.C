@@ -195,7 +195,7 @@ const double pot_nd = 3.5 * POT120;
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
 const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 #else
-const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/dune/persistent/users/LBL_TDR/CAFs/v3/";
+const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
