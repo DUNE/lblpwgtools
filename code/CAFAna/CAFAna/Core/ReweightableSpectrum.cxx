@@ -233,6 +233,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  TAxis const *ReweightableSpectrum::GetReweightTAxis() const {
+    return fHist->GetYaxis();
+  }
+
+
+  //----------------------------------------------------------------------
   void ReweightableSpectrum::Fill(double x, double y, double w)
   {
     fHist->Fill(x, y, w);
@@ -429,6 +435,104 @@ namespace ana
     HistCache::Delete(todel);
   }
 
+  ReweightableSpectrum& ReweightableSpectrum::PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign)
+  {
+    // In this case it would be OK to have no POT/livetime
+    if(rhs.fHist && rhs.fHist->Integral(0, -1) == 0) return *this;
+
+
+    if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
+      std::cout << "Error: can't sum ReweightableSpectrum with no POT or livetime."
+                << fPOT << " " << rhs.fPOT
+                << std::endl;
+      //      abort();
+      return *this;
+    }
+
+    if(!fLivetime && !rhs.fPOT){
+      std::cout << "Error: can't sum ReweightableSpectrum with POT ("
+                << fPOT << ") but no livetime and ReweightableSpectrum with livetime ("
+                << rhs.fLivetime << " sec) but no POT." << std::endl;
+      abort();
+    }
+
+    if(!fPOT && !rhs.fLivetime){
+      std::cout << "Error: can't sum ReweightableSpectrum with livetime ("
+                << fLivetime << " sec) but no POT and ReweightableSpectrum with POT ("
+                << rhs.fPOT << ") but no livetime." << std::endl;
+      abort();
+    }
+
+    // And now there are still a bunch of good cases to consider
+
+    if(fPOT && rhs.fPOT){
+      // Scale by POT when possible
+      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fPOT/rhs.fPOT);
+
+      if(fLivetime && rhs.fLivetime){
+        // If POT/livetime ratios match, keep regular lifetime, otherwise zero
+        // it out.
+        if(AlmostEqual(fLivetime*rhs.fPOT, rhs.fLivetime*fPOT))
+          fLivetime = 0;
+      }
+      if(!fLivetime && rhs.fLivetime){
+        // If the RHS has a livetime and we don't, copy it in (suitably scaled)
+        fLivetime = rhs.fLivetime * fPOT/rhs.fPOT;
+      }
+      // Otherwise, keep our own livetime (if any)
+
+      return *this;
+    }
+
+    if(fLivetime && rhs.fLivetime){
+      // Scale by livetime, the only thing in common
+      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fLivetime/rhs.fLivetime);
+
+      if(!fPOT && rhs.fPOT){
+        // If the RHS has a POT and we don't, copy it in (suitably scaled)
+        fPOT = rhs.fPOT * fLivetime/rhs.fLivetime;
+      }
+      // Otherwise, keep our own POT (if any)
+
+      return *this;
+    }
+
+    // That should have been all the cases. I definitely want to know what
+    // happened if it wasn't.
+    std::cout << "ReweightableSpectrum::operator+=(). How did we get here? "
+              << fPOT << " " << fLivetime << " "
+              << rhs.fPOT << " " << rhs.fLivetime << std::endl;
+    abort();
+  }
+
+  //----------------------------------------------------------------------
+  ReweightableSpectrum& ReweightableSpectrum::operator+=(const ReweightableSpectrum& rhs)
+  {
+    return PlusEqualsHelper(rhs, +1);
+  }
+
+  //----------------------------------------------------------------------
+  ReweightableSpectrum ReweightableSpectrum::operator+(const ReweightableSpectrum& rhs) const
+  {
+    ReweightableSpectrum ret = *this;
+    ret += rhs;
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  ReweightableSpectrum& ReweightableSpectrum::operator-=(const ReweightableSpectrum& rhs)
+  {
+    return PlusEqualsHelper(rhs, -1);
+  }
+
+  //----------------------------------------------------------------------
+  ReweightableSpectrum ReweightableSpectrum::operator-(const ReweightableSpectrum& rhs) const
+  {
+    ReweightableSpectrum ret = *this;
+    ret -= rhs;
+    return ret;
+  }
+
   //----------------------------------------------------------------------
   void ReweightableSpectrum::Clear()
   {
@@ -505,5 +609,7 @@ namespace ana
                                                   hPot->GetBinContent(1),
                                                   hLivetime->GetBinContent(1));
   }
+
+void ReweightableSpectrum::Scale(double scale) { fHist->Scale(scale); }
 
 }

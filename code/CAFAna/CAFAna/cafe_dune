@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 # Welcome banner
 print '** NOvA Common Analysis Format Executor **'
@@ -19,6 +19,8 @@ def makeParser():
                           help = 'shorthand for -b -q')
     parser.add_argument('-nr', '--no-recompile', action = 'store_true',
                         help = "don't unconditionally recompile, ie .C+ not .C++")
+    parser.add_argument('-mc', '--must-clean', action = 'store_true',
+                        help = "Run the script with gROOT->SetMustClean(true);")
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
@@ -142,7 +144,10 @@ if __name__ == '__main__':
         suffix = '+' if opts['no_recompile'] else '++'
 
         # root, then library loading, then script, then the function parameters
-        rootargs.append(libsPath())
+
+        must_clean = "true" if opts['must_clean'] else "false"
+
+        rootargs.append(libsPath()+"(%s)" % must_clean)
         rootargs.append(script+suffix+toFunctionParams(args))
     else:
         # Not a .C script. Maybe the user's trying to open a root file. In any

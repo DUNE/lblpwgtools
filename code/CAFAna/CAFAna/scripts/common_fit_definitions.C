@@ -149,6 +149,43 @@ AxisBlob const fake_data_axes{&axErecYrecND_FromDep,&axErecFD_FromDep,&axErecFD_
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
 AxisBlob const Ax1DND_FromDep_unibin{&axErec_FromDep_unibin,&axErec_FromDep_unibin,&axErec_FromDep_unibin};
 
+AxisBlob GetAxisBlob(std::string blob_name) {
+  AxisBlob AxToUse = default_axes;
+  if (blob_name == "1DND") {
+    AxToUse.NDAx = &axErecND;
+  } else if (blob_name == "FromDep") {
+    AxToUse.NDAx = &axErecYrecND_FromDep;
+    AxToUse.FDAx_numu = &axErecFD_FromDep;
+    AxToUse.FDAx_nue = &axErecFD_FromDep;
+  } else if (blob_name == "1DNDFromDep") {
+    AxToUse.NDAx = &axErecND_FromDep;
+    AxToUse.FDAx_numu = &axErecFD_FromDep;
+    AxToUse.FDAx_nue = &axErecFD_FromDep;
+  } else if (blob_name == "CoarseBin1D") {
+    AxToUse.NDAx = &axErecND_coarsebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_coarsebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_coarsebin;
+  } else if (blob_name == "VeryCoarseBin1D") {
+    AxToUse.NDAx = &axErecND_verycoarsebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_verycoarsebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_verycoarsebin;
+  } else if (blob_name == "OneBin") {
+    AxToUse.NDAx = &axErecND_onebin;
+    AxToUse.FDAx_numu = &axRecoEnuFDnumu_onebin;
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_onebin;
+  } else if (blob_name == "ETrue") {
+    AxToUse.NDAx = &axTrueE_unibin;
+    AxToUse.FDAx_numu = &axTrueE_unibin;
+    AxToUse.FDAx_nue = &axTrueE_unibin;
+  } else if (blob_name == "ETrueCoarse") {
+    AxToUse.NDAx = &axTrueE_unibin_coarse;
+    AxToUse.FDAx_numu = &axTrueE_unibin_coarse;
+    AxToUse.FDAx_nue = &axTrueE_unibin_coarse;
+  } else if (blob_name == "FakeData") {
+    AxToUse = fake_data_axes;
+  }
+  return AxToUse;
+}
 
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40/1.13;
@@ -159,7 +196,7 @@ const double pot_nd = 3.5 * POT120;
 const std::string cafFilePath="/home/ubelix/lhep/wilkinson/DUNE_LBL/input_files";
 //const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 #else
-const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/dune/persistent/users/LBL_TDR/CAFs/v3/";
+const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
@@ -263,8 +300,8 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   }
 
   // For now, hard code this part... too many damned scripts to change...
-  RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst", 
-	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", 
+  RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst",
+	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst",
 	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
   // Get rid of these too...
   RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
@@ -369,6 +406,7 @@ SampleType GetSampleType(std::string sample){
   return kUnknown;
 }
 
+
 void MakePredictionInterp(TDirectory* saveDir, SampleType sample,
 			  std::vector<const ISyst*> systlist,
 			  int max=0, AxisBlob const &axes = default_axes){
@@ -433,8 +471,10 @@ static std::vector<std::string> const sample_suffix_order = {
 std::vector<std::unique_ptr<ana::PredictionInterp>>
 GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
                      int max = 0, bool reload = false,
-                     bool fileNameIsStub = kFileContainsAllSamples,
                      AxisBlob const &axes = default_axes) {
+
+  // Hackity hackity hack hack
+  bool fileNameIsStub = (fileName.find(".root") == std::string::npos);
 
   //To allow XRootD input files.
   TFile *testF = !fileNameIsStub ? TFile::Open(fileName.c_str(),"READ") : nullptr;
@@ -557,8 +597,8 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 };
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc, 
-		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu, 
+void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
+		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
 		      double& pot_fd_rhc_numu, double& additional_smear){
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
@@ -588,7 +628,7 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   if (input.find("fhc") != std::string::npos){
     pot_nd_rhc = pot_fd_rhc_nue = pot_fd_rhc_numu = 0;
   }
-  
+
   if (input.find("rhc") != std::string::npos){
     pot_nd_fhc = pot_fd_fhc_nue = pot_fd_fhc_numu = 0;
   }
@@ -604,21 +644,48 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 }
 
 
+struct FitTreeBlob {
+  FitTreeBlob(){
+    throw_tree = new TTree("fit_info", "fit_info");
+    throw_tree->Branch("chisq", &fChiSq);
+    throw_tree->Branch("NFCN", &fNFCN);
+    throw_tree->Branch("EDM", &fEDM);
+    throw_tree->Branch("IsValid", &fIsValid);
+    throw_tree->Branch("fParamNames", &fParamNames);
+    throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
+    throw_tree->Branch("fPreFitValues", &fPreFitValues);
+    throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
+    throw_tree->Branch("fPostFitValues", &fPostFitValues);
+    throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
+    throw_tree->Branch("fMinosErrors", &fMinosErrors);
+  }
+  TTree *throw_tree;
+  std::vector<double> fFakeDataVals;
+  std::vector<std::string> fParamNames;
+  std::vector<double> fPreFitValues;
+  std::vector<double> fPreFitErrors;
+  std::vector<double> fPostFitValues;
+  std::vector<double> fPostFitErrors;
+  std::vector<std::pair<double,double>> fMinosErrors;
+  double fChiSq;
+  double fNFCN;
+  double fEDM;
+  bool fIsValid;
+};
+
 double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
 		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, size_t max = 0,
-       bool stateFileNameIsStub = kFileContainsAllSamples){
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, SystShifts &bf = junkShifts){
 
-  // Hackity hackity hack hack
-  if (stateFileName.find(".root") == std::string::npos) stateFileNameIsStub = true;
+  assert(systlist.size()+oscVars.size());
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
-  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts(), max, false, stateFileNameIsStub);
+  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
   static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
@@ -627,14 +694,20 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
 
   // Get the ndCov
-  std::string covFileName = cafFilePath+"/ND_syst_cov_withRes.root";
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+  std::string covFileName =
+      cafFilePath+"/ND_syst_cov_withRes.root";
+#else
+  std::string covFileName =
+      FindCAFAnaDir() + "/Systs/ND_syst_cov_withRes.root";
+#endif
   std::string covName = "nd_frac_cov";
 
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, additional_smear;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc,
 		   pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu,
-		   pot_fd_rhc_numu, additional_smear);  
+		   pot_fd_rhc_numu, additional_smear);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) outDir->cd();
@@ -761,6 +834,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
 
+  bf = fitSyst;
+
   // std::cout << "Postfit chi-square:" << std::endl;
   // if (pot_fd_fhc_nue > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
   // if (pot_fd_fhc_numu > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
@@ -841,6 +916,22 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     hist_covar.Write();
     hist_corr.Write();
     delete t;
+  }
+
+  if(PostFitTreeBlob){
+    PostFitTreeBlob->fParamNames = this_fit.GetParamNames();
+    PostFitTreeBlob->fPreFitValues  = this_fit.GetPreFitValues();
+    PostFitTreeBlob->fPreFitErrors  = this_fit.GetPreFitErrors();
+    PostFitTreeBlob->fPostFitValues = this_fit.GetPostFitValues();
+    PostFitTreeBlob->fPostFitErrors = this_fit.GetPostFitErrors();
+    PostFitTreeBlob->fMinosErrors   = this_fit.GetMinosErrors();
+    PostFitTreeBlob->fFakeDataVals = fFakeDataVals;
+    PostFitTreeBlob->fNFCN = this_fit.GetNFCN();
+    PostFitTreeBlob->fEDM = this_fit.GetEDM();
+    PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
+    PostFitTreeBlob->fChiSq = thischisq;
+
+    PostFitTreeBlob->throw_tree->Fill();
   }
 
   return thischisq;

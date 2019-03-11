@@ -140,6 +140,9 @@ namespace ana
     //      tr = (TTree*)f->Get("mvaselect/MVASelection");
     //    }
     tr = (TTree*)f->Get("caf");
+    if(!tr){
+      tr = (TTree*)f->Get("cafTree");
+    }
     assert(tr);
 
     // Surely no-one will generate 1000 universes?
