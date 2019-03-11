@@ -137,6 +137,9 @@ namespace ana
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
 
+    // Please give us all the decimal places
+    mnMin->SetTolerance(mnMin->Precision());
+
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
       // name, value, error
