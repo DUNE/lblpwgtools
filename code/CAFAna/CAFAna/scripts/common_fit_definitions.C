@@ -643,13 +643,44 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 }
 
 
+struct FitTreeBlob {
+  FitTreeBlob(){
+    throw_tree = new TTree("fit_info", "fit_info");
+    throw_tree->Branch("chisq", &fChiSq);
+    throw_tree->Branch("NFCN", &fNFCN);
+    throw_tree->Branch("EDM", &fEDM);
+    throw_tree->Branch("IsValid", &fIsValid);
+    throw_tree->Branch("fParamNames", &fParamNames);
+    throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
+    throw_tree->Branch("fPreFitValues", &fPreFitValues);
+    throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
+    throw_tree->Branch("fPostFitValues", &fPostFitValues);
+    throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
+    throw_tree->Branch("fMinosErrors", &fMinosErrors);
+  }
+  TTree *throw_tree;
+  std::vector<double> fFakeDataVals;
+  std::vector<std::string> fParamNames;
+  std::vector<double> fPreFitValues;
+  std::vector<double> fPreFitErrors;
+  std::vector<double> fPostFitValues;
+  std::vector<double> fPostFitErrors;
+  std::vector<std::pair<double,double>> fMinosErrors;
+  double fChiSq;
+  double fNFCN;
+  double fEDM;
+  bool fIsValid;
+};
+
 double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
 		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, SystShifts &bf = junkShifts){
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, SystShifts &bf = junkShifts){
+
+  assert(systlist.size()+oscVars.size());
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
@@ -884,6 +915,22 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     hist_covar.Write();
     hist_corr.Write();
     delete t;
+  }
+
+  if(PostFitTreeBlob){
+    PostFitTreeBlob->fParamNames = this_fit.GetParamNames();
+    PostFitTreeBlob->fPreFitValues  = this_fit.GetPreFitValues();
+    PostFitTreeBlob->fPreFitErrors  = this_fit.GetPreFitErrors();
+    PostFitTreeBlob->fPostFitValues = this_fit.GetPostFitValues();
+    PostFitTreeBlob->fPostFitErrors = this_fit.GetPostFitErrors();
+    PostFitTreeBlob->fMinosErrors   = this_fit.GetMinosErrors();
+    PostFitTreeBlob->fFakeDataVals = fFakeDataVals;
+    PostFitTreeBlob->fNFCN = this_fit.GetNFCN();
+    PostFitTreeBlob->fEDM = this_fit.GetEDM();
+    PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
+    PostFitTreeBlob->fChiSq = thischisq;
+
+    PostFitTreeBlob->throw_tree->Fill();
   }
 
   return thischisq;
