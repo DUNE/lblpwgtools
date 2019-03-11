@@ -236,6 +236,38 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0)
   return ret;
 }
 
+std::vector<const IFitVar *> GetOscVars(std::string oscVarString) {
+
+  std::vector<std::string> osc_vars = SplitString(oscVarString, ':');
+
+  std::vector<const IFitVar *> rtn_vars;
+
+  for (auto &v : osc_vars) {
+    if (v == "th13" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitTheta13);
+    }
+    if (v == "dmsq32" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq32Scaled);
+    }
+    if (v == "th23" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSqTheta23);
+    }
+    if (v == "dmsq21" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq21);
+    }
+    if (v == "rho" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitRho);
+    }
+    if (v == "th12" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSq2Theta12);
+    }
+    if (v == "deltapi" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDeltaInPiUnits);
+    }
+  }
+  return rtn_vars;
+}
+
 
 // Take a list of all the systs known about, and retain the named systs...
 void KeepSysts(std::vector<const ISyst *> &systlist,
@@ -645,19 +677,34 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 
 
 struct FitTreeBlob {
-  FitTreeBlob(){
-    throw_tree = new TTree("fit_info", "fit_info");
-    throw_tree->Branch("chisq", &fChiSq);
-    throw_tree->Branch("NFCN", &fNFCN);
-    throw_tree->Branch("EDM", &fEDM);
-    throw_tree->Branch("IsValid", &fIsValid);
-    throw_tree->Branch("fParamNames", &fParamNames);
-    throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
-    throw_tree->Branch("fPreFitValues", &fPreFitValues);
-    throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
-    throw_tree->Branch("fPostFitValues", &fPostFitValues);
-    throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
-    throw_tree->Branch("fMinosErrors", &fMinosErrors);
+  FitTreeBlob(std::string tree_name = "") {
+    if (tree_name.size()) {
+      throw_tree = new TTree(tree_name.c_str(), tree_name.c_str());
+      throw_tree->Branch("chisq", &fChiSq);
+      throw_tree->Branch("NFCN", &fNFCN);
+      throw_tree->Branch("EDM", &fEDM);
+      throw_tree->Branch("IsValid", &fIsValid);
+      throw_tree->Branch("fParamNames", &fParamNames);
+      throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
+      throw_tree->Branch("fPreFitValues", &fPreFitValues);
+      throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
+      throw_tree->Branch("fPostFitValues", &fPostFitValues);
+      throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
+      throw_tree->Branch("fMinosErrors", &fMinosErrors);
+    }
+  }
+  void CopyVals(FitTreeBlob const &fb) {
+    fFakeDataVals = fb.fFakeDataVals;
+    fParamNames = fb.fParamNames;
+    fPreFitValues = fb.fPreFitValues;
+    fPreFitErrors = fb.fPreFitErrors;
+    fPostFitValues = fb.fPostFitValues;
+    fPostFitErrors = fb.fPostFitErrors;
+    fMinosErrors = fb.fMinosErrors;
+    fChiSq = fb.fChiSq;
+    fNFCN = fb.fNFCN;
+    fEDM = fb.fEDM;
+    fIsValid = fb.fIsValid;
   }
   TTree *throw_tree;
   std::vector<double> fFakeDataVals;
@@ -930,8 +977,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     PostFitTreeBlob->fEDM = this_fit.GetEDM();
     PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
     PostFitTreeBlob->fChiSq = thischisq;
-
-    PostFitTreeBlob->throw_tree->Fill();
   }
 
   return thischisq;
