@@ -1,3 +1,5 @@
+#ifdef CAF_USE_PRISM
+
 #include "CAFAna/Prediction/PredictionPRISM.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
@@ -216,3 +218,5 @@ PredictionPRISM::LoadFrom(TDirectory *dir, PRISMExtrapolator const *flux_matcher
   return pred;
 }
 } // namespace ana
+
+#endif

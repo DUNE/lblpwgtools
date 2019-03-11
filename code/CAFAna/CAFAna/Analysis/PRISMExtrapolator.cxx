@@ -1,3 +1,5 @@
+#ifdef CAF_USE_PRISM
+
 #include "CAFAna/Analysis/PRISMExtrapolator.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
@@ -377,3 +379,5 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
     }
   }
 }
+
+#endif
