@@ -50,8 +50,8 @@ int main(int argc, char const *argv[]) {
         *axes.NDAx, (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV,
         kGENIEWeights);
 
-    PredictionInterp predInterpNDNumu(GetListOfSysts(), nullptr, genNDNumu,
-                                      these_loaders);
+    PredictionInterp predInterpNDNumu(GetListOfSysts(), NuFitOscCalc(1),
+                                      genNDNumu, these_loaders);
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(stype) << std::endl;
