@@ -38,13 +38,10 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to use
-  // std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled,
-  // &kFitSinSqTheta23, &kFitTheta13,
-  // &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
-
-  // Now with no OA
-  std::vector<const IFitVar *> oscVars = {};
-
+  std::vector<const IFitVar*> oscVars = {};
+  if (sampleString.find("fd") != std::string::npos) oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
+							       &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
+							       &kFitRho};
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
@@ -82,12 +79,23 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie);
     }
+<<<<<<< HEAD
+    Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
+    // Now do a fit with thrown seeds
+    std::map<const IFitVar*, std::vector<double>> oscSeeds;
+    if (sampleString.find("fd") != std::string::npos) {
+      oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
+      oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
+    }
+    
+=======
     Fitter::Precision fitStrategy = Fitter::kNormal | Fitter::kIncludeHesse;
     // Now do a fit with thrown seeds
     std::map<const IFitVar *, std::vector<double>> oscSeeds;
     // oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
     // oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
 
+>>>>>>> 755a54c8e764fbbaf18d41b3b8b9f7dad8e5273c
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double thischisq =

@@ -193,7 +193,8 @@ const double pot_nd = 3.5 * POT120;
 
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
+const std::string cafFilePath="/home/ubelix/lhep/wilkinson/DUNE_LBL/input_files";
+//const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 #else
 const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
@@ -620,7 +621,7 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
     pot_nd_fhc = pot_nd_rhc = pot_nd*exposure;
   }
   if (input.find("fd") != std::string::npos){
-    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd;
+    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd*exposure;
   }
 
   // Now allow specific subsets
