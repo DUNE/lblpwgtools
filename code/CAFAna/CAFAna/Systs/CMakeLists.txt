@@ -40,10 +40,7 @@ set(SYST_INPUT_ROOT_FILES
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root
-<<<<<<< Updated upstream
 #  ND_syst_cov_withEscale.root
-=======
->>>>>>> Stashed changes
   ND_syst_cov_withRes.root)
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
