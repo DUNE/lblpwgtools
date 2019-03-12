@@ -84,6 +84,56 @@ namespace ana
   const FitSinSqTheta23 kFitSinSqTheta23 = FitSinSqTheta23();
 
   //----------------------------------------------------------------------
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  class FitSinSqTheta23LowerOctant: public FitSinSqTheta23
+  {
+  public:
+    virtual double LowLimit() const {return 0;}
+    virtual double HighLimit() const {return 0.5;}
+  };
+
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant;
+
+  //----------------------------------------------------------------------
+  /// \f$ \sin^2\theta_{23} \f$ constrained to upper octant
+  class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
+  {
+  public:
+    virtual double LowLimit() const {return 0.5;}
+    virtual double HighLimit() const {return 1;}
+  };
+
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
+
+  //----------------------------------------------------------------------
+  class FitSinSqTheta23Symmetry: public IFitVar
+  {
+  public:
+    FitSinSqTheta23Symmetry(int sign) : fSign(sign) {}
+
+    virtual std::string ShortName() const override {return "ssth23";}
+    virtual std::string LatexName() const override {return "sin^{2}#theta_{23}";}
+
+    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+
+    virtual void SetValue(osc::IOscCalculatorAdjustable* osc,
+                          double val) const override;
+
+    virtual double Penalty(double val,
+                           osc::IOscCalculatorAdjustable* calc) const override;
+  protected:
+    double SymmPt(double dmsq) const;
+
+    int fSign;
+  };
+
+  // These are for use in ensuring we explore all regions of th23 space
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry(-1);
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry(+1);
+
+  //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{23} \f$
   class FitSinSq2Theta23: public IConstrainedFitVar

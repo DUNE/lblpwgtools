@@ -18,6 +18,11 @@ set(Prediction_header_files
   PredictionScaleComp.h
   PredictionXSecDiag.h)
 
+if(DEFINED USE_EIGEN AND USE_EIGEN)
+  LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
+  LIST(APPEND Prediction_header_files PredictionPRISM.h)
+endif()
+
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction)
 

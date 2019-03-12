@@ -59,6 +59,8 @@ namespace ana
 
     TH2D* ToTH2(double pot) const;
 
+    TAxis const *GetReweightTAxis() const;
+
     Spectrum UnWeighted() const;
 
     Spectrum WeightingVariable() const;
@@ -69,6 +71,16 @@ namespace ana
     void ReweightToTrueSpectrum(const Spectrum& target);
     /// Recale bins so that \ref Unweighted will return \a target
     void ReweightToRecoSpectrum(const Spectrum& target);
+
+
+    // Arithmetic operators are as if these are unlike samples, each a
+    // contribution to one total, not seperate sources of stats for the same
+    // sample.
+    ReweightableSpectrum& operator+=(const ReweightableSpectrum& rhs);
+    ReweightableSpectrum operator+(const ReweightableSpectrum& rhs) const;
+
+    ReweightableSpectrum& operator-=(const ReweightableSpectrum& rhs);
+    ReweightableSpectrum operator-(const ReweightableSpectrum& rhs) const;
 
     void Clear();
 
@@ -83,6 +95,21 @@ namespace ana
     unsigned int NDimensions() const{return fLabels.size();}
     std::vector<std::string> GetLabels() const {return fLabels;}
     std::vector<Binning> GetBinnings() const {return fBins;}
+
+    /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
+    void OverridePOT(double newpot) {fPOT = newpot;}
+
+    /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
+    void OverrideLivetime(double newlive) {fLivetime = newlive;}
+
+    double POT() {return fPOT;}
+
+    double Livetime() {return fLivetime;}
+
+    void ScaleToPOT(double POTScale) {
+      OverridePOT(POTScale / POT());
+      Scale(POTScale/ POT());
+    }
 
   protected:
     // Derived classes can be trusted take care of their own construction
@@ -115,8 +142,12 @@ namespace ana
     {
     }
 
+    ReweightableSpectrum& PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign);
+
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
+
+    void Scale(double);
 
     Var fRWVar; ///< What goes on the y axis?
 

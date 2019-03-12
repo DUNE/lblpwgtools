@@ -140,6 +140,9 @@ namespace ana
     //      tr = (TTree*)f->Get("mvaselect/MVASelection");
     //    }
     tr = (TTree*)f->Get("caf");
+    if(!tr){
+      tr = (TTree*)f->Get("cafTree");
+    }
     assert(tr);
 
     // Surely no-one will generate 1000 universes?
@@ -156,6 +159,7 @@ namespace ana
     SetBranchChecked(tr, "Ev_reco_nue", &sr.dune.Ev_reco_nue);
     SetBranchChecked(tr, "Ev_reco_numu", &sr.dune.Ev_reco_numu);
     SetBranchChecked(tr, "Elep_reco", &sr.dune.Elep_reco);
+    SetBranchChecked(tr, "theta_reco", &sr.dune.theta_reco);
     SetBranchChecked(tr, "mvaresult", &sr.dune.mvaresult);
     SetBranchChecked(tr, "mvanue", &sr.dune.mvanue);
     SetBranchChecked(tr, "mvanumu", &sr.dune.mvanumu);

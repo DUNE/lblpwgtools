@@ -79,6 +79,41 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  double FitSinSqTheta23Symmetry::
+  GetValue(const osc::IOscCalculatorAdjustable* osc) const
+  {
+    return util::sqr(sin(osc->GetTh23()));
+  }
+
+  //----------------------------------------------------------------------
+  void FitSinSqTheta23Symmetry::
+  SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
+  {
+    const double v0 = SymmPt(osc->GetDmsq32());
+    if(fSign*val < fSign*v0) val = v0;
+    osc->SetTh23(asin(sqrt(val)));
+  }
+
+  //----------------------------------------------------------------------
+  double FitSinSqTheta23Symmetry::
+  Penalty(double val, osc::IOscCalculatorAdjustable* calc) const
+  {
+    const double v0 = SymmPt(calc->GetDmsq32());
+    if(fSign*val < fSign*v0) return util::sqr(val-v0);
+    return 0;
+  }
+
+  //----------------------------------------------------------------------
+  double FitSinSqTheta23Symmetry::SymmPt(double dmsq) const
+  {
+    // Determined empirically based on the NuFit 4.0 best fits
+    const double kTh23SymmPtNH = 0.516413;
+    const double kTh23SymmPtIH = 0.506624;
+
+    if(dmsq > 0) return kTh23SymmPtNH; else return kTh23SymmPtIH;
+  }
+
+  //----------------------------------------------------------------------
   double FitSinSq2Theta23::GetValue(const osc::IOscCalculatorAdjustable* osc) const
   {
     return util::sqr(sin(2*osc->GetTh23()));

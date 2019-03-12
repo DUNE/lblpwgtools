@@ -54,3 +54,6 @@ if [ "@USED_UPS@" == "1" ]; then
 fi
 
 export BOOST_INC=@BOOST_INC@
+
+#Recent versions of ROOT may enable omp for minuit2 by default
+export OMP_NUM_THREADS=1

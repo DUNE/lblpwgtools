@@ -27,6 +27,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/SupportSourceCheck.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/parseConfigApp.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/StringAndListUtils.cmake)
 
+include(${CMAKE_SOURCE_DIR}/cmake/eigenSetup.cmake)
+
 if(USED_UPS STREQUAL "")
   set(USED_UPS "0")
 elseif(NOT DEFINED USED_UPS)
