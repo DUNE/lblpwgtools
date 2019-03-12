@@ -33,11 +33,11 @@ void spec_joint(std::string stateFname  = "common_state_mcc11v3.root",
   for (auto & hist : FD_RHCNue_uohists)  hist->Write();
   
   // Sort out the ND histograms
-  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_MCSTAT", pot_nd);
-  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_MCSTAT", pot_nd);
+  std::vector<TH1*> ND_FHC_hists     = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC", pot_nd);
+  std::vector<TH1*> ND_RHC_hists     = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC", pot_nd);
 
-  std::vector<TH1*> ND_FHC_MChists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_MCSTAT", pot_0);
-  std::vector<TH1*> ND_RHC_MChists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_MCSTAT", pot_0);
+  std::vector<TH1*> ND_FHC_MChists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_MCSTAT", 0);
+  std::vector<TH1*> ND_RHC_MChists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_MCSTAT", 0);
 
   std::vector<TH1*> ND_FHC_1Dhists   = GetMCComponents(&predInterpNDNumuFHC, &noOsc, "ND_FHC_1D", pot_nd, true);
   std::vector<TH1*> ND_RHC_1Dhists   = GetMCComponents(&predInterpNDNumuRHC, &noOsc, "ND_RHC_1D", pot_nd, true);  

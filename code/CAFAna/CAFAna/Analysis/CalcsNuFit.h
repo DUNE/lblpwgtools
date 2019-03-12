@@ -86,9 +86,9 @@ namespace ana
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
-		      bool useTh13=true, bool useTh23=true, bool useDmsq=true,int asimov_set=0);
+		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,int asimov_set=0);
     Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
-		      bool useTh13=true, bool useTh23=true, bool useDmsq=true);
+		      bool useTh13=true, bool useTh23=false, bool useDmsq=false);
 
 
     double Dmsq21CV() const {return fDmsq21;}
