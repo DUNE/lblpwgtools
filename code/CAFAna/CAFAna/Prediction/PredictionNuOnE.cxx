@@ -43,13 +43,27 @@ namespace ana
     return fSig+fCCBkg+fNCBkg;
   }
 
-  // --------------------------------------------------------------------------
+  //----------------------------------------------------------------------
   Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalculator* calc,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
   {
-    assert(0 && "PredictionNuOnE::PredictComponent() not implemented");
+    // Get binning
+    Spectrum ret = fSig;
+    ret.Clear();
+    
+    if(curr & Current::kCC){
+      if(flav & Flavors::kNuMuToNuMu) ret += fSig; // mostly...
+      if(flav & Flavors::kNuEToNuE) ret += fCCBkg;
+    }
+
+    if(curr & Current::kNC){
+      assert(flav == Flavors::kAll);
+      ret += fNCBkg;
+    }
+
+    return ret;
   }
 
   // --------------------------------------------------------------------------
@@ -85,4 +99,20 @@ namespace ana
 
     return std::unique_ptr<PredictionNuOnE>(ret);
   }
+
+  //----------------------------------------------------------------------
+  std::unique_ptr<IPrediction> PredictionNuOnEGenerator::
+  Generate(Loaders& loaders, const SystShifts& shiftMC) const
+  {
+    NuOnELoaders* noel = dynamic_cast<NuOnELoaders*>(&loaders);
+    if(!noel){
+      std::cout << "PredictionNuOnEGenerator must be used in conjunction with NuOnELoaders" << std::endl;
+      abort();
+    }
+
+    return std::unique_ptr<IPrediction>
+      (new PredictionNuOnE(noel->Signal(), noel->CCBkg(), noel->NCBkg(),
+                           shiftMC, fWei));
+  }
+
 }
