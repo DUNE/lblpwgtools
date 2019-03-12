@@ -90,7 +90,7 @@ namespace ana
   SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
   {
     const double v0 = SymmPt(osc->GetDmsq32());
-    if(fSign*val > fSign*v0) val = v0;
+    if(fSign*val < fSign*v0) val = v0;
     osc->SetTh23(asin(sqrt(val)));
   }
 
@@ -99,7 +99,7 @@ namespace ana
   Penalty(double val, osc::IOscCalculatorAdjustable* calc) const
   {
     const double v0 = SymmPt(calc->GetDmsq32());
-    if(fSign*val > fSign*v0) return util::sqr(val-v0);
+    if(fSign*val < fSign*v0) return util::sqr(val-v0);
     return 0;
   }
 
