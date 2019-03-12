@@ -128,8 +128,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 
   // Oscillation parameters to start with
   std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
-					    &kFitDeltaInPiUnits};//, &kFitSinSq2Theta12, &kFitDmSq21,
-  //					    &kFitRho};
+					    &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
+					    &kFitRho};
 
   // Remove the parameters to be scanned
   std::vector<const IFitVar*> oscVarsFree = oscVarsAll;
