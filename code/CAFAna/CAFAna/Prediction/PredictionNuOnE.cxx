@@ -1,5 +1,7 @@
 #include "CAFAna/Prediction/PredictionNuOnE.h"
 
+#include "CAFAna/Cuts/TruthCuts.h"
+
 #include "StandardRecord/StandardRecord.h"
 
 #include "TDirectory.h"
@@ -12,7 +14,16 @@ namespace ana
 
   const Var kThetaReco = SIMPLEVAR(dune.theta_reco);
   const Var kElepReco = SIMPLEVAR(dune.Elep_reco);
-  const Cut kNuOnECut = kElepReco * kThetaReco * kThetaReco < .002 && kElepReco > .5;
+  const Var kEsqTheta = kElepReco * kThetaReco * kThetaReco;
+
+  const Var kEhadVeto = SIMPLEVAR(dune.Ehad_veto);
+
+  // Private communication from Chris M
+  const Cut kNuOnECut = kEsqTheta < .002 && kElepReco > .5 && kIsTrueFV && kEhadVeto < 20;
+
+  // Account for reduced efficiency of selecting photon shower as backgrounds
+  // into an analysis looking for electron showers.
+  const Var kNCScaleFactor = Constant(.1);
 
   // --------------------------------------------------------------------------
   PredictionNuOnE::PredictionNuOnE(SpectrumLoaderBase& sigLoader,
@@ -22,7 +33,7 @@ namespace ana
                                    const Var& wei)
     : fSig  (  sigLoader, kNuOnEaxis, kNuOnECut, shift, wei),
       fCCBkg(ccBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei),
-      fNCBkg(ncBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei)
+      fNCBkg(ncBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei * kNCScaleFactor)
   {
   }
 
