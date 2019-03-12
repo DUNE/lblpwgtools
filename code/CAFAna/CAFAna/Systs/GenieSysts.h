@@ -13,7 +13,11 @@ public:
   virtual ~GenieSyst(){};
 
   void Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
-             double &weight) const override {
+             double &weight) const override
+  {
+    // No GENIE weights in this event, skip reweighting it
+    if(sr->dune.genie_wgt.empty()) return;
+    if(sr->dune.genie_wgt[0].empty()) return;
 
     assert(std::abs(sigma) <= 3 && "GENIE XSECs only valid up to +/-3 sigma!");
 
