@@ -84,6 +84,30 @@ namespace ana
   const FitSinSqTheta23 kFitSinSqTheta23 = FitSinSqTheta23();
 
   //----------------------------------------------------------------------
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  class FitSinSqTheta23LowerOctant: public FitSinSqTheta23
+  {
+  public:
+    virtual double LowLimit() const {return 0;}
+    virtual double HighLimit() const {return 0.5;}
+  };
+
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant;
+
+  //----------------------------------------------------------------------
+  /// \f$ \sin^2\theta_{23} \f$ constrained to upper octant
+  class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
+  {
+  public:
+    virtual double LowLimit() const {return 0.5;}
+    virtual double HighLimit() const {return 1;}
+  };
+
+  /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
+  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
+
+  //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{23} \f$
   class FitSinSq2Theta23: public IConstrainedFitVar
