@@ -288,11 +288,21 @@ namespace ana
              sr.dune.run == 20000002 ||
              sr.dune.run == 20000003){
             sr.dune.isFHC = true;
+            static bool once = true;
+            if(once){
+              std::cout << "\nPatching up FD file to be considered FHC" << std::endl;
+              once = false;
+            }
           }
           else if(sr.dune.run == 20000004 ||
                   sr.dune.run == 20000005 ||
                   sr.dune.run == 20000006){
             sr.dune.isFHC = false;
+            static bool once = true;
+            if(once){
+              std::cout << "\nPatching up FD file to be considered RHC" << std::endl;
+              once = false;
+            }
           }
           else{
             std::cout << "When patching FD CAF with unknown isFHC, saw unknown run " << sr.dune.run << std::endl;
@@ -302,7 +312,16 @@ namespace ana
       }
       else{
         // ND
-        if(sr.dune.isFHC != 0 && sr.dune.isFHC != 1){
+        if(sr.dune.isFHC == -1){
+          // nu-on-e files
+          sr.dune.isFHC = 0;
+          static bool once = true;
+          if(once){
+            std::cout << "\nPatching up nu-on-e file to be considered FHC" << std::endl;
+            once = false;
+          }
+        }
+        else if(sr.dune.isFHC != 0 && sr.dune.isFHC != 1){
           std::cout << "isFHC not set properly in ND file: " << sr.dune.isFHC << std::endl;
           abort();
         }
