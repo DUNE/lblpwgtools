@@ -26,6 +26,11 @@ endif()
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction)
 
+if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
+  add_dependencies(CAFAnaPrediction gperftools)
+  target_link_libraries(CAFAnaPrediction ${GPERF_LINKER_FLAGS})
+endif()
+
 install(TARGETS CAFAnaPrediction DESTINATION lib)
 
 install(FILES ${Prediction_header_files} DESTINATION include/CAFAna/Prediction)

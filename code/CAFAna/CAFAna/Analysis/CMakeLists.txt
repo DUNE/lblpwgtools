@@ -28,6 +28,11 @@ endif()
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis)
 
+if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
+  add_dependencies(CAFAnaAnalysis gperftools)
+  target_link_libraries(CAFAnaAnalysis ${GPERF_LINKER_FLAGS})
+endif()
+
 install(TARGETS CAFAnaAnalysis DESTINATION lib)
 
 install(FILES ${Analysis_header_files} DESTINATION include/CAFAna/Analysis)

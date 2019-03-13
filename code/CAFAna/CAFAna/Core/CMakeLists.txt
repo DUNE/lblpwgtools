@@ -12,7 +12,7 @@ set(Core_implementation_files
   MultiVar.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
-  ProfilerSupport.cxx
+  # ProfilerSupport.cxx
   Progress.cxx
   Ratio.cxx
   ReweightableSpectrum.cxx
@@ -63,6 +63,11 @@ set(Core_header_files
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore)
+
+if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
+  add_dependencies(CAFAnaCore gperftools)
+  target_link_libraries(CAFAnaCore ${GPERF_LINKER_FLAGS})
+endif()
 
 install(TARGETS CAFAnaCore DESTINATION lib)
 

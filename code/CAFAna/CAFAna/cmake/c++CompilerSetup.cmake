@@ -17,6 +17,8 @@
 #    along with NUISANCE.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
+include(${CMAKE_SOURCE_DIR}/cmake/gperftools.cmake)
+
 set(CXX_WARNINGS -Wall -Wextra -Wno-unused-result)
 
 LIST(APPEND EXTRA_CXX_FLAGS ${CXX_WARNINGS} -Werror -Wno-delete-non-virtual-dtor -Wno-unused "-D__FILENAME__=\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"")

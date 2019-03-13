@@ -235,6 +235,38 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0)
   return ret;
 }
 
+std::vector<const IFitVar *> GetOscVars(std::string oscVarString) {
+
+  std::vector<std::string> osc_vars = SplitString(oscVarString, ':');
+
+  std::vector<const IFitVar *> rtn_vars;
+
+  for (auto &v : osc_vars) {
+    if (v == "th13" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitTheta13);
+    }
+    if (v == "dmsq32" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq32Scaled);
+    }
+    if (v == "th23" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSqTheta23);
+    }
+    if (v == "dmsq21" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq21);
+    }
+    if (v == "rho" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitRho);
+    }
+    if (v == "th12" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSq2Theta12);
+    }
+    if (v == "deltapi" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDeltaInPiUnits);
+    }
+  }
+  return rtn_vars;
+}
+
 
 // Take a list of all the systs known about, and retain the named systs...
 void KeepSysts(std::vector<const ISyst *> &systlist,
@@ -598,7 +630,7 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 // Yet another string parser that does far too much. I can't be stopped!
 void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
-		      double& pot_fd_rhc_numu, double& additional_smear){
+		      double& pot_fd_rhc_numu){
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
@@ -612,10 +644,6 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   if (input.find("full") != std::string::npos) exposure = 13./7;
 
   // Hacky McHackerson is here to stay!
-  additional_smear = 0;
-  if (input.find("1uncorr") != std::string::npos) additional_smear = 0.01;
-  if (input.find("2uncorr") != std::string::npos) additional_smear = 0.02;
-
   if (input.find("nd") != std::string::npos){
     pot_nd_fhc = pot_nd_rhc = pot_nd*exposure;
   }
@@ -644,19 +672,34 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 
 
 struct FitTreeBlob {
-  FitTreeBlob(){
-    throw_tree = new TTree("fit_info", "fit_info");
-    throw_tree->Branch("chisq", &fChiSq);
-    throw_tree->Branch("NFCN", &fNFCN);
-    throw_tree->Branch("EDM", &fEDM);
-    throw_tree->Branch("IsValid", &fIsValid);
-    throw_tree->Branch("fParamNames", &fParamNames);
-    throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
-    throw_tree->Branch("fPreFitValues", &fPreFitValues);
-    throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
-    throw_tree->Branch("fPostFitValues", &fPostFitValues);
-    throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
-    throw_tree->Branch("fMinosErrors", &fMinosErrors);
+  FitTreeBlob(std::string tree_name = "") {
+    if (tree_name.size()) {
+      throw_tree = new TTree(tree_name.c_str(), tree_name.c_str());
+      throw_tree->Branch("chisq", &fChiSq);
+      throw_tree->Branch("NFCN", &fNFCN);
+      throw_tree->Branch("EDM", &fEDM);
+      throw_tree->Branch("IsValid", &fIsValid);
+      throw_tree->Branch("fParamNames", &fParamNames);
+      throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
+      throw_tree->Branch("fPreFitValues", &fPreFitValues);
+      throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
+      throw_tree->Branch("fPostFitValues", &fPostFitValues);
+      throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
+      throw_tree->Branch("fMinosErrors", &fMinosErrors);
+    }
+  }
+  void CopyVals(FitTreeBlob const &fb) {
+    fFakeDataVals = fb.fFakeDataVals;
+    fParamNames = fb.fParamNames;
+    fPreFitValues = fb.fPreFitValues;
+    fPreFitErrors = fb.fPreFitErrors;
+    fPostFitValues = fb.fPostFitValues;
+    fPostFitErrors = fb.fPostFitErrors;
+    fMinosErrors = fb.fMinosErrors;
+    fChiSq = fb.fChiSq;
+    fNFCN = fb.fNFCN;
+    fEDM = fb.fEDM;
+    fIsValid = fb.fIsValid;
   }
   TTree *throw_tree;
   std::vector<double> fFakeDataVals;
@@ -703,10 +746,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   std::string covName = "nd_frac_cov";
 
   // String parsing time!
-  double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, additional_smear;
+  double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc,
 		   pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu,
-		   pot_fd_rhc_numu, additional_smear);
+		   pot_fd_rhc_numu);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) outDir->cd();
@@ -735,11 +778,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName, additional_smear);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName, additional_smear);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
@@ -929,8 +972,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     PostFitTreeBlob->fEDM = this_fit.GetEDM();
     PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
     PostFitTreeBlob->fChiSq = thischisq;
-
-    PostFitTreeBlob->throw_tree->Fill();
   }
 
   return thischisq;
