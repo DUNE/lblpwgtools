@@ -115,7 +115,7 @@ namespace ana
       for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
 
         // Add additional uncorrelated uncertainty
-	absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
+        absCov[b0][b0] += fAddUncorrUnc*fAddUncorrUnc;
 
         for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
           absCov[b0][b1] *= (hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1));
@@ -126,14 +126,14 @@ namespace ana
 
       // Mask after the ND covariance is dealt with
       if (fMask){
-	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
 
-	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-	  if (fMask->GetBinContent(i+1) == 1) continue;
-	  hpred->SetBinContent(i+1, 0);
-	  hdata->SetBinContent(i+1, 0);
-	}
+        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+          if (fMask->GetBinContent(i+1) == 1) continue;
+          hpred->SetBinContent(i+1, 0);
+          hdata->SetBinContent(i+1, 0);
+        }
       }
 
 
@@ -141,14 +141,14 @@ namespace ana
     } else {
       // Still have to mask
       if (fMask){
-	assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-	assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
 
-	for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-	  if (fMask->GetBinContent(i+1) == 1) continue;
-	  hpred->SetBinContent(i+1, 0);
-	  hdata->SetBinContent(i+1, 0);
-	}
+        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+          if (fMask->GetBinContent(i+1) == 1) continue;
+          hpred->SetBinContent(i+1, 0);
+          hdata->SetBinContent(i+1, 0);
+        }
       }
 
       ll = LogLikelihood(hpred, hdata);
