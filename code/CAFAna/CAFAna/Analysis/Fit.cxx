@@ -266,6 +266,8 @@ namespace ana
         }
 
         // Store the best fit values of all the parameters we know are being varied.
+        bestFitPars.clear();
+        bestSystPars.clear();
         for(unsigned int i = 0; i < fVars.size(); ++i)
 	  bestFitPars.push_back(fPostFitValues[i]);
 	for(unsigned int j = 0; j < fSysts.size(); ++j)
@@ -275,8 +277,10 @@ namespace ana
     }
 
     // Stuff the results of the actual best fit back into the seeds
+    assert(bestFitPars.size() == fVars.size());
     for(unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(initseed, bestFitPars[i]);
+    assert(bestSystPars.size() == fSysts.size());
     for(unsigned int i = 0; i < fSysts.size(); ++i)
       bestSysts.SetShift(fSysts[i], bestSystPars[i]);
 
