@@ -3,6 +3,8 @@
 FORCE_REMOVE="0"
 USE_UPS="0"
 CORES=1
+USE_GPERF=0
+CMAKE_BUILD_TYPE=DEBUG
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -21,6 +23,19 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will source dependencies from ups."
       ;;
 
+      --use-gperftools)
+
+      USE_GPERF="1"
+      echo "[OPT]: Will compile in gperftools support."
+      ;;
+
+      -r|--release)
+
+      CMAKE_BUILD_TYPE="RELEASE"
+      echo "[OPT]: Will compile release build type."
+      ;;
+
+
       -j|--n-cores)
 
       if [[ ${#} -lt 2 ]]; then
@@ -36,6 +51,9 @@ while [[ ${#} -gt 0 ]]; do
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
+      echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
+      echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
+
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
       echo -e "\t-?|--help              : Print this message."
@@ -89,14 +107,16 @@ else
     exit 1
   fi
 
-  if [ -z "${BOOST_INC}" ] && [ -e /usr/include/boost ]; then
-    export BOOST_INC=/usr/include
-  else
-    echo "[ERROR]: Not using UPS, but couldn't find system boost (/usr/include/boost) and BOOST_INC wasn't defined in the environment."
-    exit 1
+  if [ -z "${BOOST_INC}" ]; then
+    if [ -e /usr/include/boost ]; then
+      export BOOST_INC=/usr/include
+    else
+      echo "[ERROR]: Not using UPS, but couldn't find system boost (/usr/include/boost) and BOOST_INC wasn't defined in the environment."
+      exit 1
+    fi
   fi
 
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 make install -j ${CORES}
