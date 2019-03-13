@@ -118,11 +118,11 @@ namespace ana
     if( fCovMxInv ) {
       TMatrixD absCovInv( *fCovMxInv );
       // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
+      double* array = hpred->GetArray();
       for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
-
         for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
-          if( hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1) != 0. ) {
-            absCovInv[b0][b1] /= (hpred->GetBinContent(b0+1) * hpred->GetBinContent(b1+1));
+          if( array[b0] * array[b1] != 0. ) {
+            absCovInv[b0][b1] /= (array[b0] * array[b1]);
           }
         }
       }
