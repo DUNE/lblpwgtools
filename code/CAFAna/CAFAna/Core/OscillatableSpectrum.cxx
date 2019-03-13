@@ -151,7 +151,9 @@ namespace ana
   OscillatableSpectrum::~OscillatableSpectrum()
   {
     // Nulls fHist out, so it's safe that ~ReweightableSpectrum tries too
-    HistCache::Delete(fHist);
+    HistCache::Delete(fHist,
+                      fBins.size() == 1 ? fBins[0].ID() : -1,
+                      kTrueEnergyBins.ID());
 
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveReweightableSpectrum(this); }
