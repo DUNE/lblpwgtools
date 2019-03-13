@@ -20,6 +20,7 @@ namespace caf
     double cvnnutau;
     int reco_q;
     double Elep_reco;
+    double theta_reco;
 
     double RecoLepEnNue;
     double RecoHadEnNue;

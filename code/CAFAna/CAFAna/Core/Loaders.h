@@ -25,7 +25,7 @@ namespace ana
 
     /// No loaders initialized. Use \ref SetLoaderPath to configure
     Loaders();
-    ~Loaders();
+    virtual ~Loaders();
 
     /// Configure loader via wildcard \a path
     void SetLoaderPath(const std::string& path,

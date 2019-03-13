@@ -123,23 +123,20 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   return returnHist;
 }
 
-// Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23,
-// dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
-void asimov_joint(std::string stateFname = "common_state_mcc11v3_broken.root",
-                  std::string outputFname = "asimov_test.root",
-                  std::string plotVars = "th13:deltapi",
-                  std::string systSet = "nosyst",
-                  std::string sampleString = "ndfd",
-                  std::string penaltyString = "", int asimov_set = 0,
-                  bool useProtonFakeData = false) {
+// Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23, dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
+void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
+		  std::string outputFname="asimov_test.root",
+		  std::string plotVars="th13:deltapi",
+		  std::string systSet = "nosyst",
+		  std::string sampleString="ndfd", std::string penaltyString="",int asimov_set=0,
+		  bool useProtonFakeData=false){
 
   gROOT->SetBatch(1);
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
   // Get the systematics to use
-  std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
-  RemoveSysts(systlist, {"MFP_N", "MFP_pi"});
+  std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to start with
   std::vector<const IFitVar *> oscVarsAll = {
@@ -162,13 +159,13 @@ void asimov_joint(std::string stateFname = "common_state_mcc11v3_broken.root",
   // Produce Asimovs for both hierarchies in all cases
   for (int hie = -1; hie <= +1; hie += 2) {
 
-    // This remains the same throughout... there is one true parameter set for
-    // this Asimov set
-    osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+    TDirectory* nomDir = (TDirectory*) fout->mkdir(hie > 0 ? "nom_dir_nh" : "nom_dir_ih");
 
-    // Start by performing a minimization across the whole space, this defines
-    // the minimum chi2!
-    osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
+    // This remains the same throughout... there is one true parameter set for this Asimov set
+    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+
+    // Start by performing a minimization across the whole space, this defines the minimum chi2!
+    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
     IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
     SystShifts trueSyst = kNoShift;
@@ -177,23 +174,27 @@ void asimov_joint(std::string stateFname = "common_state_mcc11v3_broken.root",
     }
     SystShifts testSyst = kNoShift;
 
-    std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
+    // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
+    std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 
-    // Directory to save best fit info to
-    TDirectory *nomDir =
-        (TDirectory *)fout->mkdir(hie > 0 ? "nom_dir_nh" : "nom_dir_ih");
+    if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") == plotVarVect.end()){
+      oscSeeds[&kFitSinSqTheta23] = {.4, .6};
+    }
+    if (std::find(plotVarVect.begin(), plotVarVect.end(), "deltapi") == plotVarVect.end()){
+      oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5};
+    }
 
-    // Get the best fit
-    double globalmin =
-        RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
-                    oscVarsFree, systlist, testOsc, testSyst, oscSeeds,
-                    penalty_nom, Fitter::kNormal, nomDir, &pftree);
-    pftree.throw_tree->Fill();
+    double globalmin = RunFitPoint(stateFname, sampleString,
+				   trueOsc, trueSyst, false,
+				   oscVarsFree, systlist,
+				   testOsc, testSyst,
+				   oscSeeds, penalty_nom,
+				   Fitter::kNormal, nomDir);
+    delete penalty_nom;
 
     std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
     fout->cd();
     nomDir->Write();
-    delete penalty_nom;
 
     // Need to set up the histogram to fill
     TH1 *sens_hist = GetAsimovHist(plotVarVect);
@@ -205,82 +206,74 @@ void asimov_joint(std::string stateFname = "common_state_mcc11v3_broken.root",
         (sens_hist->GetName() + std::string(hie > 0 ? "_nh" : "_ih")).c_str());
 
     // Now loop over the bins in both x and y (if 1D, one loop does nothing)
-    for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin) {
-      for (int yBin = 0; yBin < sens_hist->GetNbinsY(); ++yBin) {
+    for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
+      for (int yBin = 0; yBin < sens_hist->GetNbinsY(); ++yBin){
 
-        double chisqmin = 99999;
-        double thischisq;
+	double chisqmin = 99999;
+	double thischisq;
 
-        // Save information if this is 1D only (for now)
-        TDirectory *minDir = NULL;
-        if (plotVarVect.size() == 1)
-          minDir = (TDirectory *)fout->mkdir(
-              (std::string(hie > 0 ? "nh" : "ih") + "_" + plotVarVect[0] + "_" +
-               std::to_string(xBin))
-                  .c_str());
+	// Save information if this is 1D only (for now)
+	TDirectory* minDir = NULL;
+	// if (plotVarVect.size() == 1)
+	//   minDir = (TDirectory*) fout->mkdir((std::string(hie > 0 ? "nh" : "ih") + "_" + plotVarVect[0]+"_"+std::to_string(xBin)).c_str());
 
-        // If the parameters of interest don't include theta23, need to loop
-        // over octant too... for theta23, this *should* be fine if I only
-        // change the ioct in the penalty term... it'll just be terrible in the
-        // wrong octant
-        for (int ioct = -1; ioct <= 1; ioct += 2) {
+	// If the parameters of interest don't include theta23, need to loop over octant too...
+	// for theta23, this *should* be fine if I only change the ioct in the penalty term... it'll just be terrible in the wrong octant
+	for(int ioct = -1; ioct <= 1; ioct += 2) {
 
-          // Figure out what the fixed parameters are, and put them into the
-          // true osc parameters. Also need to do the same for the test osc Fix
-          // whatever I need to! Probably need a function here to do the fixing
-          osc::IOscCalculatorAdjustable *testOsc =
-              NuFitOscCalc(hie, ioct, asimov_set);
-          if (plotVarVect.size() > 0)
-            SetOscillationParameter(
-                testOsc, plotVarVect[0],
-                sens_hist->GetXaxis()->GetBinCenter(xBin + 1), hie);
-          if (plotVarVect.size() > 1)
-            SetOscillationParameter(
-                testOsc, plotVarVect[1],
-                sens_hist->GetYaxis()->GetBinCenter(yBin + 1), hie);
+	  // Figure out what the fixed parameters are, and put them into the true osc parameters. Also need to do the same for the test osc
+	  // Fix whatever I need to!
+	  // Probably need a function here to do the fixing
+	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
+	  if (plotVarVect.size() > 0)
+	    SetOscillationParameter(testOsc, plotVarVect[0], sens_hist->GetXaxis()->GetBinCenter(xBin+1), hie);
+	  if (plotVarVect.size() > 1)
+	    SetOscillationParameter(testOsc, plotVarVect[1], sens_hist->GetYaxis()->GetBinCenter(yBin+1), hie);
 
-          IExperiment *penalty =
-              GetPenalty(hie, ioct, penaltyString, asimov_set);
+	  IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_set);
 
-          std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
+	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 
-          // Add something to save a directory here
-          TDirectory *tempDir = (TDirectory *)fout->mkdir("tempdir");
+	  // If deltaCP not fixed, seed it!
+	  if (std::find(plotVarVect.begin(), plotVarVect.end(), "deltapi") == plotVarVect.end()){
+	    oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5};
+	  }
 
-          FitTreeBlob ft;
-          thischisq = RunFitPoint(
-              stateFname, sampleString, trueOsc, trueSyst, false, oscVarsFree,
-              systlist, testOsc, testSyst, oscSeeds, penalty,
-              Fitter::kNormal | Fitter::kIncludeHesse, tempDir, &ft);
+	  // Add something to save a directory here
+	  TDirectory* tempDir = (TDirectory*) fout->mkdir("tempdir");
 
-          if (thischisq < chisqmin) {
-            chisqmin = thischisq;
-            pftree.CopyVals(ft);
+	  thischisq = RunFitPoint(stateFname, sampleString,
+				  trueOsc, trueSyst, false,
+				  oscVarsFree, systlist,
+				  testOsc, testSyst,
+				  oscSeeds, penalty,
+				  Fitter::kNormal,
+				  tempDir);
 
-            // Maybe not the best way to ensure only the best fit option is
-            // kept...
-            if (minDir) {
-              minDir->Delete("*;*");
-              TKey *key;
-              TIter nextkey(tempDir->GetListOfKeys());
-              while ((key = (TKey *)nextkey())) {
-                TObject *obj = key->ReadObj();
-                minDir->cd();
-                obj->Write();
-                delete obj;
-              }
-            }
-          }
-          delete penalty;
-          fout->Delete("tempdir;*");
-        }
-        pftree.throw_tree->Fill();
-        // Save the value into the hist
-        sens_hist->SetBinContent(xBin + 1, yBin + 1, chisqmin - globalmin);
-        fout->cd();
-        if (minDir)
-          minDir->Write();
-        delete minDir;
+	  if (thischisq < chisqmin){
+	    chisqmin = thischisq;
+
+	    // Maybe not the best way to ensure only the best fit option is kept...
+	    if (minDir){
+	      minDir->Delete("*;*");
+	      TKey *key;
+	      TIter nextkey(tempDir->GetListOfKeys());
+	      while ((key = (TKey*)nextkey())) {
+		TObject *obj = key->ReadObj();
+		minDir->cd();
+		obj->Write();
+		delete obj;
+	      }
+	    }
+	  }
+	  delete penalty;
+	  fout->Delete("tempdir;*");
+	}
+	// Save the value into the hist
+	sens_hist->SetBinContent(xBin+1, yBin+1, chisqmin - globalmin);
+	fout->cd();
+	if (minDir) minDir->Write();
+	delete minDir;
       }
     }
 
