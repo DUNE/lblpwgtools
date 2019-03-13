@@ -630,7 +630,7 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 // Yet another string parser that does far too much. I can't be stopped!
 void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
 		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
-		      double& pot_fd_rhc_numu, double& additional_smear){
+		      double& pot_fd_rhc_numu){
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
@@ -644,10 +644,6 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   if (input.find("full") != std::string::npos) exposure = 13./7;
 
   // Hacky McHackerson is here to stay!
-  additional_smear = 0;
-  if (input.find("1uncorr") != std::string::npos) additional_smear = 0.01;
-  if (input.find("2uncorr") != std::string::npos) additional_smear = 0.02;
-
   if (input.find("nd") != std::string::npos){
     pot_nd_fhc = pot_nd_rhc = pot_nd*exposure;
   }
@@ -750,10 +746,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   std::string covName = "nd_frac_cov";
 
   // String parsing time!
-  double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, additional_smear;
+  double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc,
 		   pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu,
-		   pot_fd_rhc_numu, additional_smear);
+		   pot_fd_rhc_numu);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) outDir->cd();
@@ -782,11 +778,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName, additional_smear);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName, additional_smear);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
