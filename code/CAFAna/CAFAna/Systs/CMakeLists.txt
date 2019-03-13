@@ -30,6 +30,11 @@ target_link_libraries(CAFAnaSysts)
 
 install(TARGETS CAFAnaSysts DESTINATION lib)
 
+if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
+  add_dependencies(CAFAnaSysts gperftools)
+  target_link_libraries(CAFAnaSysts ${GPERF_LINKER_FLAGS})
+endif()
+
 install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
 
 set(SYST_INPUT_ROOT_FILES
