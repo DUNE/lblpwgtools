@@ -43,8 +43,8 @@ namespace ana {
                caf::StandardRecord* sr, double& weight) const override
     {
       if(!sr->dune.isFD) { // ND only
-        // apply unc. only to NC gamma background
-        if( !sr->dune.isCC ) {
+        // apply unc. only to NC gamma background (and not nu-on-e)
+        if( !sr->dune.isCC && sr->dune.mode != 7) {
           // apply it to everything?  or just selected?
           //double reco_ehad = sr->dune.Ehad_veto; // re-using this variable for "extra energy" cut in nu+e
           //double eth2 = sr->dune.Elep_reco * sr->dune.Elep_reco * sr->dune.reco_theta; // E * theta^2
