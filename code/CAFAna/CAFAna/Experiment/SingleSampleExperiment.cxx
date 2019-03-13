@@ -67,6 +67,8 @@ namespace ana
         if( hist->GetBinContent(b+1) > 0. ) toInvert[b][b] += 1. / hist->GetBinContent(b+1);
       }
       fCovMxInv = new TMatrixD(TMatrixD::kInverted, toInvert);
+
+      HistCache::Delete(hist);
     }
 
     covMatFile ->Close();
@@ -79,6 +81,7 @@ namespace ana
     delete fCosmic;
     delete fMask;
     delete fCovMx;
+    delete fCovMxInv;
   }
 
   //----------------------------------------------------------------------
@@ -119,11 +122,11 @@ namespace ana
       TMatrixD absCovInv( *fCovMxInv );
       // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
       double* array = hpred->GetArray();
-      for( int b0 = 0; b0 < hpred->GetNbinsX(); ++b0 ) {
-        for( int b1 = 0; b1 < hpred->GetNbinsX(); ++b1 ) {
-          if( array[b0] * array[b1] != 0. ) {
-            absCovInv[b0][b1] /= (array[b0] * array[b1]);
-          }
+      const int N = hpred->GetNbinsX();
+      for( int b0 = 0; b0 < N; ++b0 ) {
+        for( int b1 = 0; b1 < N; ++b1 ) {
+          const double f = array[b0] * array[b1];
+          if(f != 0) absCovInv(b0, b1) /= f;
         }
       }
 
