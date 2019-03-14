@@ -23,7 +23,7 @@ namespace ana
     : fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0)
+      fCovMx(0), fCovMxInv(0), fPreInvert(0)
   {
   }
 
@@ -34,27 +34,32 @@ namespace ana
                                                  double cosmicScaleError)
     : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0)
+      fCovMx(0), fCovMxInv(0), fPreInvert(0)
   {
   }
 
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
-                                                 const TMatrixD* cov)
+                                                 const TMatrixD* cov,
+                                                 const bool preInvert)
     : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov)) 
   {
-    InitInverseMatrix();
+    fPreInvert = preInvert;
+    if( fPreInvert ) InitInverseMatrix();
+    else fCovMxInv = 0;
   }
 
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
                                                  const std::string covMatFilename,
-                                                 const std::string covMatName)
+                                                 const std::string covMatName,
+                                                 const bool preInvert)
 
     : fMC(pred), fData(data), fCosmic(0), fMask(0)
   {
+    fPreInvert = preInvert;
     TDirectory *thisDir = gDirectory->CurrentDirectory();
 
     TFile covMatFile( covMatFilename.c_str() );
@@ -66,7 +71,8 @@ namespace ana
       abort();
     }
 
-    InitInverseMatrix();
+    if( fPreInvert ) InitInverseMatrix();
+    else fCovMxInv = 0;
 
     thisDir->cd();
   }
@@ -134,7 +140,7 @@ namespace ana
 
     // if there is a covariance matrix, use it
     double ll;
-    if( fCovMxInv ) {
+    if( fCovMxInv && fPreInvert ) { // Use pre-inverted covariance matrix
       TMatrixD absCovInv( *fCovMxInv );
       // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
       double* array = hpred->GetArray();
@@ -159,6 +165,34 @@ namespace ana
       }
 
       ll = Chi2CovMx( hpred, hdata, absCovInv );
+    } else if( fCovMx && !fPreInvert ) { // covariance matrix must be inverted each time
+
+      TMatrixD absCov( *fCovMx );
+
+      // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
+      double* array = hpred->GetArray();
+      const int N = hpred->GetNbinsX();
+      for( int b0 = 0; b0 < N; ++b0 ) {
+        for( int b1 = 0; b1 < N; ++b1 ) {
+          absCov(b0, b1) *= (array[b0] * array[b1]);
+        }
+        // Add statistical uncertainty in quadrature
+        absCov(b0, b0) += array[b0];
+      }
+
+      // Mask after the ND covariance is dealt with
+      if (fMask){
+        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
+        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+
+        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+          if (fMask->GetBinContent(i+1) == 1) continue;
+          hpred->SetBinContent(i+1, 0);
+          hdata->SetBinContent(i+1, 0);
+        }
+      }
+
+      ll = Chi2CovMx( hpred, hdata, TMatrixD(TMatrixD::kInverted, absCov) );
     } else {
       // Still have to mask
       if (fMask){
