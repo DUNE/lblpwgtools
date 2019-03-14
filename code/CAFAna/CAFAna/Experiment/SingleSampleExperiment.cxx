@@ -138,73 +138,52 @@ namespace ana
     TH1D* hpred = PredHistIncCosmics(calc, syst);
     TH1D* hdata = fData.ToTH1(fData.POT());
 
-    // if there is a covariance matrix, use it
     double ll;
-    if( fCovMxInv && fPreInvert ) { // Use pre-inverted covariance matrix
-      TMatrixD absCovInv( *fCovMxInv );
-      // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
+
+    // if there is a covariance matrix, use it
+    if(fCovMx){
+      // The inverse relative covariance matrix comes from one of two sources
+      TMatrixD covInv;
+
       double* array = hpred->GetArray();
       const int N = hpred->GetNbinsX();
+
+      if(fPreInvert){
+        // Either we precomputed it
+        assert(fCovMxInv);
+        covInv = *fCovMxInv;
+      }
+      else{
+        // Or we have to manually add statistical uncertainty in quadrature
+        TMatrixD cov = *fCovMx;
+        for( int b = 0; b < N; ++b ) {
+          const double N = array[b+1];
+          if(N > 0) cov(b, b) += 1/N;
+        }
+        
+        // And then invert
+        covInv = TMatrixD(TMatrixD::kInverted, cov);
+      }
+
+      // In either case - covariance matrix is fractional; convert it to
+      // absolute by multiplying out the prediction
       for( int b0 = 0; b0 < N; ++b0 ) {
         for( int b1 = 0; b1 < N; ++b1 ) {
           const double f = array[b0] * array[b1];
-          if(f != 0) absCovInv(b0, b1) /= f;
+          if(f != 0) covInv(b0, b1) /= f;
         }
       }
 
-      // Mask after the ND covariance is dealt with
-      if (fMask){
-        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
+      // Now the matrix is in order apply the mask to the two histograms
+      if(fMask) ApplyMask(hpred, hdata);
 
-        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-          if (fMask->GetBinContent(i+1) == 1) continue;
-          hpred->SetBinContent(i+1, 0);
-          hdata->SetBinContent(i+1, 0);
-        }
-      }
+      // Now it's absolute it's suitable for use in the chisq calculation
+      ll = Chi2CovMx( hpred, hdata, covInv );
+    }
+    else{
+      // No covariance matrix - use standard LL
 
-      ll = Chi2CovMx( hpred, hdata, absCovInv );
-    } else if( fCovMx && !fPreInvert ) { // covariance matrix must be inverted each time
-
-      TMatrixD absCov( *fCovMx );
-
-      // Input covariance matrix is fractional; convert it to absolute by multiplying out the prediction
-      double* array = hpred->GetArray();
-      const int N = hpred->GetNbinsX();
-      for( int b0 = 0; b0 < N; ++b0 ) {
-        for( int b1 = 0; b1 < N; ++b1 ) {
-          absCov(b0, b1) *= (array[b0] * array[b1]);
-        }
-        // Add statistical uncertainty in quadrature
-        absCov(b0, b0) += array[b0];
-      }
-
-      // Mask after the ND covariance is dealt with
-      if (fMask){
-        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
-
-        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-          if (fMask->GetBinContent(i+1) == 1) continue;
-          hpred->SetBinContent(i+1, 0);
-          hdata->SetBinContent(i+1, 0);
-        }
-      }
-
-      ll = Chi2CovMx( hpred, hdata, TMatrixD(TMatrixD::kInverted, absCov) );
-    } else {
-      // Still have to mask
-      if (fMask){
-        assert(hpred->GetNbinsX() == fMask->GetNbinsX());
-        assert(hdata->GetNbinsX() == fMask->GetNbinsX());
-
-        for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-          if (fMask->GetBinContent(i+1) == 1) continue;
-          hpred->SetBinContent(i+1, 0);
-          hdata->SetBinContent(i+1, 0);
-        }
-      }
+      if(fMask) ApplyMask(hpred, hdata);
 
       ll = LogLikelihood(hpred, hdata);
     }
@@ -214,6 +193,22 @@ namespace ana
 
     return ll;
   }
+
+  //----------------------------------------------------------------------
+  void SingleSampleExperiment::ApplyMask(TH1* a, TH1* b) const
+  {
+    if(!fMask) return;
+
+    assert(a->GetNbinsX() == fMask->GetNbinsX());
+    assert(b->GetNbinsX() == fMask->GetNbinsX());
+
+    for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
+      if (fMask->GetBinContent(i+1) == 1) continue;
+      a->SetBinContent(i+1, 0);
+      b->SetBinContent(i+1, 0);
+    }
+  }
+
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::
@@ -290,6 +285,7 @@ namespace ana
     return ret;
   }
 
+  //----------------------------------------------------------------------
   void SingleSampleExperiment::SetMaskHist(double xmin, double xmax, double ymin, double ymax)
   {
     fMask = GetMaskHist(fData, xmin, xmax, ymin, ymax);

@@ -91,6 +91,8 @@ namespace ana
   protected:
     void InitInverseMatrix();
 
+    void ApplyMask(TH1* a, TH1* b) const;
+
     TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
                              const SystShifts& syst) const;
 
