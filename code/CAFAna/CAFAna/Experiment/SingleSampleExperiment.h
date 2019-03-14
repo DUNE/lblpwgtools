@@ -87,6 +87,8 @@ namespace ana
 		     double ymin=0, double ymax=-1);
 
   protected:
+    void InitInverseMatrix();
+
     TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
                              const SystShifts& syst) const;
 

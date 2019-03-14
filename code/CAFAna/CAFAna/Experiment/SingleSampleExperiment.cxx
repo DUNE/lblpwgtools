@@ -44,7 +44,7 @@ namespace ana
                                                  const TMatrixD* cov)
     : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov)) 
   {
-    fCovMxInv = new TMatrixD(TMatrixD::kInverted, *cov);
+    InitInverseMatrix();
   }
 
   //----------------------------------------------------------------------
@@ -56,22 +56,18 @@ namespace ana
     : fMC(pred), fData(data), fCosmic(0), fMask(0)
   {
     TDirectory *thisDir = gDirectory->CurrentDirectory();
-    TFile * covMatFile = new TFile( covMatFilename.c_str() );
-    fCovMx = (TMatrixD*) covMatFile->Get( covMatName.c_str() );
-    if( !fCovMx ) {
-      std::cout << "Could not obtain covariance matrix named " << covMatName << " from " << covMatFilename << std::endl;
-    } else {
-      TMatrixD toInvert( *fCovMx );
-      TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
-      for( int b = 0; b < hist->GetNbinsX(); ++b ) {
-        if( hist->GetBinContent(b+1) > 0. ) toInvert[b][b] += 1. / hist->GetBinContent(b+1);
-      }
-      fCovMxInv = new TMatrixD(TMatrixD::kInverted, toInvert);
 
-      HistCache::Delete(hist);
+    TFile covMatFile( covMatFilename.c_str() );
+    fCovMx = (TMatrixD*) covMatFile.Get( covMatName.c_str() );
+
+    if( !fCovMx ) {
+      std::cout << "Could not obtain covariance matrix named "
+                << covMatName << " from " << covMatFilename << std::endl;
+      abort();
     }
 
-    covMatFile ->Close();
+    InitInverseMatrix();
+
     thisDir->cd();
   }
 
@@ -82,6 +78,26 @@ namespace ana
     delete fMask;
     delete fCovMx;
     delete fCovMxInv;
+  }
+
+  //----------------------------------------------------------------------
+  void SingleSampleExperiment::InitInverseMatrix()
+  {
+    TMatrixD toInvert( *fCovMx );
+
+    TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+    for( int b = 0; b < hist->GetNbinsX(); ++b ) {
+      // We add the squared fractional statistical errors to the diagonal. In
+      // principle this should vary with the predicted number of events, but in
+      // the ND using the no-syst-shifts number should be a pretty good
+      // approximation, and it's much faster than needing to re-invert the
+      // matrix every time.
+      const double N = hist->GetBinContent(b+1);
+      if(N > 0) toInvert(b, b) += 1/N;
+    }
+    HistCache::Delete(hist);
+
+    fCovMxInv = new TMatrixD(TMatrixD::kInverted, toInvert);
   }
 
   //----------------------------------------------------------------------
