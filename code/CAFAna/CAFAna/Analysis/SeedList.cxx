@@ -11,6 +11,17 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  std::ostream& operator<<(std::ostream& os, const Seed& seed)
+  {
+    os << "(";
+    for(auto it: seed.fVals){
+      os << " " << it.first->ShortName() << "=" << it.second;
+    }
+    os << " )";
+    return os;
+  }
+
+  //----------------------------------------------------------------------
   SeedList::SeedList(const std::map<const IFitVar*, std::vector<double>>& seedBasis)
   {
     fSeeds.push_back(Seed({}));
@@ -28,5 +39,12 @@ namespace ana
       } // end for val
       fSeeds = newseeds;
     } // end for it
+  }
+
+  //----------------------------------------------------------------------
+  std::ostream& operator<<(std::ostream& os, const SeedList& seeds)
+  {
+    for(Seed s: seeds.GetSeeds()) os << s << std::endl;
+    return os;
   }
 }

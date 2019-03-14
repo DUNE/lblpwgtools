@@ -248,7 +248,7 @@ namespace ana
 	       double minchi = -1,
                const std::vector<const IFitVar*>& profVars = {},
                const std::vector<const ISyst*>& profSysts = {},
-               const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               const SeedList& seedPts = SeedList(),
                const std::vector<SystShifts>& systsSeedPts = {},
                std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
@@ -261,7 +261,7 @@ namespace ana
                    double minchi = -1,
                    std::vector<const IFitVar*> profVars = {},
                    std::vector<const ISyst*> profSysts = {},
-                   const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                   const SeedList& seedPts = SeedList(),
                    const std::vector<SystShifts>& systsSeedPts = {},
                    std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                    std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
@@ -287,7 +287,7 @@ namespace ana
 		     int nbinsx, double xmin, double xmax,
 		     const std::vector<const IFitVar*>& profVars = {},
 		     const std::vector<const ISyst*>& profSysts = {},
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                     const SeedList& seedPts = SeedList(),
                      const std::vector<SystShifts>& systsSeedPts = {},
 		     bool transpose = false);
 

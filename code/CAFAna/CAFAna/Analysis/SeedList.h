@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -13,6 +14,8 @@ namespace ana
   class Seed
   {
   public:
+    friend std::ostream& operator<<(std::ostream&, const Seed&);
+
     Seed(const std::map<const IFitVar*, double>& vals) : fVals(vals.begin(), vals.end()) {}
 
     void Set(const IFitVar* v, double x) {fVals[v] = x;}
@@ -23,10 +26,13 @@ namespace ana
     std::unordered_map<const IFitVar*, double> fVals;
   };
 
+  std::ostream& operator<<(std::ostream& os, const Seed& seed);
+
   class SeedList
   {
   public:
-    SeedList() {}
+    /// "empty" seed list actually consists of one no-op seed
+    SeedList() : fSeeds(1, Seed({})) {}
 
     /// Explicit list of seeds
     SeedList(const std::vector<Seed>& seeds) : fSeeds(seeds) {}
@@ -38,4 +44,6 @@ namespace ana
   protected:
     std::vector<Seed> fSeeds;
   };
+
+  std::ostream& operator<<(std::ostream& os, const SeedList& seeds);
 }
