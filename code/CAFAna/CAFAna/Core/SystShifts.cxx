@@ -102,7 +102,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Clamp(double x, const ISyst* s)
+  double SystShifts::Clamp(double x, const ISyst* s)
   {
     static bool once = true;
     static bool shouldClamp;
