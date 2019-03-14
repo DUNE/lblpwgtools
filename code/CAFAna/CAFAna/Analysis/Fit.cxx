@@ -61,27 +61,12 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::vector<Fitter::SeedPt> Fitter::
-  ExpandSeeds(const std::map<const IFitVar*,
-                             std::vector<double>>& seedPts,
-              std::vector<SystShifts> systSeedPts) const
+  ExpandSeeds(const SeedList& seedPts,
+              const std::vector<SystShifts>& systSeedPts) const
   {
     std::vector<SeedPt> ret;
-    ret.push_back(SeedPt());
-
-    for(auto it: seedPts){
-      // For every variable, duplicate every entry in ret with the value set to
-      // each possibility.
-      const IFitVar* fv = it.first;
-      std::vector<SeedPt> newret;
-      for(double val: it.second){
-        for(SeedPt pt: ret){
-          pt.fitvars[fv] = val;
-          newret.push_back(pt);
-        }
-      } // end for val
-      ret = newret;
-    } // end for it
-
+    for(Seed seed: seedPts.GetSeeds()) ret.push_back(SeedPt(seed, {}));
+      
     // Now duplicate as many times as required for the syst seeds
     if(!systSeedPts.empty()){
       std::vector<SeedPt> newret;
@@ -202,18 +187,19 @@ namespace ana
   //----------------------------------------------------------------------
   double Fitter::FitHelper(osc::IOscCalculatorAdjustable* initseed,
                            SystShifts& bestSysts,
-                           const std::map<const IFitVar*, std::vector<double>>& seedPts,
-                           std::vector<SystShifts> systSeedPts,
+                           const SeedList& seedPts,
+                           const std::vector<SystShifts>& systSeedPts,
                            Verbosity verb) const
   {
-    const std::vector<SeedPt> pts = ExpandSeeds(seedPts, systSeedPts);
+    const std::vector<SeedPt>& pts = ExpandSeeds(seedPts.GetSeeds(), systSeedPts);
+
     double minchi = 1e10;
     std::vector<double> bestFitPars, bestSystPars;
 
     for(const SeedPt& pt: pts){
       osc::IOscCalculatorAdjustable *seed = initseed->Copy();
 
-      for(auto it: pt.fitvars) it.first->SetValue(seed, it.second);
+      pt.fitvars.ResetCalc(seed);
 
       // Need to deal with parameters that are not fit values!
       SystShifts shift = pt.shift;
@@ -266,6 +252,8 @@ namespace ana
         }
 
         // Store the best fit values of all the parameters we know are being varied.
+        bestFitPars.clear();
+        bestSystPars.clear();
         for(unsigned int i = 0; i < fVars.size(); ++i)
 	  bestFitPars.push_back(fPostFitValues[i]);
 	for(unsigned int j = 0; j < fSysts.size(); ++j)
@@ -275,8 +263,10 @@ namespace ana
     }
 
     // Stuff the results of the actual best fit back into the seeds
+    assert(bestFitPars.size() == fVars.size());
     for(unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(initseed, bestFitPars[i]);
+    assert(bestSystPars.size() == fSysts.size());
     for(unsigned int i = 0; i < fSysts.size(); ++i)
       bestSysts.SetShift(fSysts[i], bestSystPars[i]);
 
@@ -297,7 +287,7 @@ namespace ana
   //----------------------------------------------------------------------
   double Fitter::Fit(osc::IOscCalculatorAdjustable* seed,
                      SystShifts& bestSysts,
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     const SeedList& seedPts,
                      const std::vector<SystShifts>& systSeedPts,
                      Verbosity verb) const
   {
@@ -305,7 +295,8 @@ namespace ana
     // oscilation parameters...
     assert(seed || fVars.empty());
 
-    for(const auto& it: seedPts){
+    /* TODO TODO TODO
+    for(const std::vector<Seed>& seed: seedPts.GetSeeds()){
       if(std::find(fVars.begin(), fVars.end(), it.first) == fVars.end()){
         std::cout << "ERROR Fitter::Fit() trying to seed '"
                   << it.first->ShortName()
@@ -313,6 +304,7 @@ namespace ana
 	 abort();
       }
     }
+    */
     for(const auto& it: systSeedPts){
       for(const ISyst* s: it.ActiveSysts()){
         if(std::find(fSysts.begin(), fSysts.end(), s) == fSysts.end()){
@@ -433,7 +425,7 @@ namespace ana
 	       double input_minchi,
                const std::vector<const IFitVar*>& profVars,
                const std::vector<const ISyst*>& profSysts,
-               const std::map<const IFitVar*, std::vector<double>>& seedPts,
+               const SeedList& seedPts,
                const std::vector<SystShifts>& systSeedPts,
                std::map<const IFitVar*, TGraph*>& profVarsMap,
                std::map<const ISyst*, TGraph*>& profSystsMap)
@@ -519,7 +511,7 @@ namespace ana
 		   int nbinsx, double minx, double maxx, double minchi,
 		   std::vector<const IFitVar*> profVars,
 		   std::vector<const ISyst*> profSysts,
-                   const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                   const SeedList& seedPts,
                    const std::vector<SystShifts>& systSeedPts,
                    std::map<const IFitVar*, TGraph*>& profVarsMap,
                    std::map<const ISyst*, TGraph*>& systsMap)
@@ -567,7 +559,7 @@ namespace ana
 		     int nbinsx, double xmin, double xmax,
 		     const std::vector<const IFitVar*>& profVars,
 		     const std::vector<const ISyst*>& profSysts,
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     const SeedList& seedPts,
                      const std::vector<SystShifts>& systSeedPts,
 		     bool transpose)
   {

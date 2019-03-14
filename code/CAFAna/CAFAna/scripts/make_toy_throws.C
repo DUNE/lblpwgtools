@@ -26,7 +26,8 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      int nthrows = 100, std::string systSet = "nosyst",
                      std::string sampleString = "ndfd",
                      std::string throwString = "fake:start",
-                     std::string penaltyString = "") {
+                     std::string penaltyString = "",
+                     std::string oscVarString = "alloscvars") {
 
   gROOT->SetBatch(1);
 
@@ -39,13 +40,15 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
 
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = {};
-  if (sampleString.find("fd") != std::string::npos) oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
-							       &kFitDeltaInPiUnits};//, &kFitSinSq2Theta12, &kFitDmSq21,
-  //							       &kFitRho};
+
+  if (sampleString.find("fd") != std::string::npos) {
+    oscVars = GetOscVars(oscVarString);
+  }
+
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
-  FitTreeBlob pftree;
+  FitTreeBlob pftree("fit_info");
   pftree.throw_tree->SetDirectory(fout);
 
   int hie = 1;
@@ -79,7 +82,6 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie);
     }
-<<<<<<< HEAD
     Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
     // Now do a fit with thrown seeds
     std::map<const IFitVar*, std::vector<double>> oscSeeds;
@@ -87,22 +89,14 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
       oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
       oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
     }
-    
-=======
-    Fitter::Precision fitStrategy = Fitter::kNormal | Fitter::kIncludeHesse;
-    // Now do a fit with thrown seeds
-    std::map<const IFitVar *, std::vector<double>> oscSeeds;
-    // oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-    // oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
 
->>>>>>> 755a54c8e764fbbaf18d41b3b8b9f7dad8e5273c
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                     stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
                     oscSeeds, penalty, fitStrategy, nullptr, &pftree);
-
+    pftree.throw_tree->Fill();
     std::cout << "Throw " << i << ": found minimum chi2 = " << thischisq
               << std::endl;
     // Done with this systematic throw

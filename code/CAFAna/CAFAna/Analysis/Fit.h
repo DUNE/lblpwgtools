@@ -4,6 +4,8 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Core/SystShifts.h"
 
+#include "CAFAna/Analysis/SeedList.h"
+
 #include "Math/Minimizer.h"
 
 #include <memory>
@@ -60,14 +62,13 @@ namespace ana
 
     /// \param[out] seed Seed parameter and output best-fit point
     /// \param[out] bestSysts Best systematics result returned here
-    /// \param      seedPts Set each var to each of the values. Try all
-    ///                     combinations. Beware of combinatorical explosion...
+    /// \param      seedPts List of oscillation parameter seeds
     /// \param      systSeedPts If non-empty, try fit starting at each of these
     /// \param      verb If quiet, no printout
     /// \return     -2x the log-likelihood of the best-fit point
     double Fit(osc::IOscCalculatorAdjustable* seed,
                SystShifts& bestSysts = junkShifts,
-               const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               const SeedList& seedPts = SeedList(),
                const std::vector<SystShifts>& systSeedPts = {},
                Verbosity verb = kVerbose) const;
 
@@ -153,12 +154,13 @@ namespace ana
   protected:
     struct SeedPt
     {
-      std::map<const IFitVar*, double> fitvars;
+      SeedPt(Seed f, SystShifts s) : fitvars(f), shift(s) {}
+
+      Seed fitvars;
       SystShifts shift;
     };
-    std::vector<SeedPt> ExpandSeeds(const std::map<const IFitVar*,
-                                                   std::vector<double>>& seedPts,
-                                    std::vector<SystShifts> systSeedPts) const;
+    std::vector<SeedPt> ExpandSeeds(const SeedList& seedPts,
+                                    const std::vector<SystShifts>& systSeedPts) const;
 
     /// Helper for \ref FitHelper
     std::unique_ptr<ROOT::Math::Minimizer>
@@ -169,8 +171,8 @@ namespace ana
     /// Helper for \ref Fit
     double FitHelper(osc::IOscCalculatorAdjustable* seed,
                      SystShifts& bestSysts,
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
-                     std::vector<SystShifts> systSeedPts,
+                     const SeedList& seedPts,
+                     const std::vector<SystShifts>& systSeedPts,
                      Verbosity verb) const;
 
     /// Updates mutable fCalc and fShifts
@@ -246,7 +248,7 @@ namespace ana
 	       double minchi = -1,
                const std::vector<const IFitVar*>& profVars = {},
                const std::vector<const ISyst*>& profSysts = {},
-               const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+               const SeedList& seedPts = SeedList(),
                const std::vector<SystShifts>& systsSeedPts = {},
                std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
@@ -259,7 +261,7 @@ namespace ana
                    double minchi = -1,
                    std::vector<const IFitVar*> profVars = {},
                    std::vector<const ISyst*> profSysts = {},
-                   const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                   const SeedList& seedPts = SeedList(),
                    const std::vector<SystShifts>& systsSeedPts = {},
                    std::map<const IFitVar*, TGraph*>& profVarsMap = empty_vars_map,
                    std::map<const ISyst*, TGraph*>& systsMap = empty_syst_map);
@@ -285,7 +287,7 @@ namespace ana
 		     int nbinsx, double xmin, double xmax,
 		     const std::vector<const IFitVar*>& profVars = {},
 		     const std::vector<const ISyst*>& profSysts = {},
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+                     const SeedList& seedPts = SeedList(),
                      const std::vector<SystShifts>& systsSeedPts = {},
 		     bool transpose = false);
 

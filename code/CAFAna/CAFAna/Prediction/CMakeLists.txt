@@ -6,7 +6,8 @@ set(Prediction_implementation_files
   PredictionNoExtrap.cxx
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
-  PredictionXSecDiag.cxx)
+  PredictionXSecDiag.cxx
+  PredictionNuOnE.cxx)
 
 set(Prediction_header_files
   IPrediction.h
@@ -16,7 +17,8 @@ set(Prediction_header_files
   PredictionNoExtrap.h
   PredictionNoOsc.h
   PredictionScaleComp.h
-  PredictionXSecDiag.h)
+  PredictionXSecDiag.h
+  PredictionNuOnE.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
@@ -25,6 +27,11 @@ endif()
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction)
+
+if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
+  add_dependencies(CAFAnaPrediction gperftools)
+  target_link_libraries(CAFAnaPrediction ${GPERF_LINKER_FLAGS})
+endif()
 
 install(TARGETS CAFAnaPrediction DESTINATION lib)
 

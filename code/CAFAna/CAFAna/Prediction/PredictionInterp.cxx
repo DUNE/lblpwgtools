@@ -618,10 +618,12 @@ namespace ana
       for(auto it: fPreds){
         hSystNames.GetXaxis()->SetBinLabel(binIdx++, it.second.systName.c_str());
       }
+      dir->cd();
       hSystNames.Write("syst_names");
     }
 
     TObjString split_sign = fSplitBySign ? "yes" : "no";
+    dir->cd();
     split_sign.Write("split_sign");
 
     tmp->cd();

@@ -101,14 +101,14 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void HistCache::Delete(TH1D*& h)
+  void HistCache::Delete(TH1D*& h, int binid)
   {
     if(!h) return;
 
     ++fgIn;
     fgMemHandedOut -= 16*h->GetNbinsX();
 
-    fgMap.emplace(Binning::FromTAxis(h->GetXaxis()).ID(),
+    fgMap.emplace(binid >= 0 ? binid : Binning::FromTAxis(h->GetXaxis()).ID(),
                   std::unique_ptr<TH1D>(h));
 
     fgEstMemUsage += 16*h->GetNbinsX();
@@ -118,15 +118,17 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void HistCache::Delete(TH2D*& h)
+  void HistCache::Delete(TH2D*& h, int binidx, int binidy)
   {
     if(!h) return;
 
     ++fgIn;
     fgMemHandedOut -= 16*h->GetNbinsX()*h->GetNbinsY();
 
-    fgMap2D.emplace(std::pair<int, int>(Binning::FromTAxis(h->GetXaxis()).ID(), Binning::FromTAxis(h->GetYaxis()).ID()), 
-                    std::unique_ptr<TH2D>(h));
+    if(binidx < 0) binidx = Binning::FromTAxis(h->GetXaxis()).ID();
+    if(binidy < 0) binidy = Binning::FromTAxis(h->GetYaxis()).ID();
+
+    fgMap2D.emplace(std::pair<int, int>(binidx, binidy), std::unique_ptr<TH2D>(h));
 
     fgEstMemUsage += 16*h->GetNbinsX()*h->GetNbinsY();
     CheckMemoryUse();
