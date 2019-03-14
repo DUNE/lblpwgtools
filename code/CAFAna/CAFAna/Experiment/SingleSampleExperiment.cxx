@@ -43,7 +43,7 @@ namespace ana
                                                  const Spectrum& data,
                                                  const TMatrixD* cov,
                                                  const bool preInvert)
-    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov)) 
+    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
   {
     fPreInvert = preInvert;
     if( fPreInvert ) InitInverseMatrix();
@@ -143,7 +143,8 @@ namespace ana
     // if there is a covariance matrix, use it
     if(fCovMx){
       // The inverse relative covariance matrix comes from one of two sources
-      TMatrixD covInv;
+      // If you don't set the size the assignment operator won't do what you expect.
+      TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
 
       double* array = hpred->GetArray();
       const int N = hpred->GetNbinsX();
@@ -160,7 +161,7 @@ namespace ana
           const double N = array[b+1];
           if(N > 0) cov(b, b) += 1/N;
         }
-        
+
         // And then invert
         covInv = TMatrixD(TMatrixD::kInverted, cov);
       }
@@ -272,7 +273,7 @@ namespace ana
 
     assert(dir->GetDirectory("mc"));
     assert(dir->GetDirectory("data"));
-    
+
 
     const IPrediction* mc = ana::LoadFrom<IPrediction>(dir->GetDirectory("mc")).release();
     const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir->GetDirectory("data"));
