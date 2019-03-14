@@ -68,9 +68,9 @@ const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // confusion
 
 // ND binning
-std::vector<double> binEEdges = {0., 0.75, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75,
-                        				 4., 4.25, 4.5, 5., 5.5, 6., 7., 8., 10.};
-std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0};
+std::vector<double> binEEdges = {0., 0.75, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75,
+                        				 4., 5., 6., 10.};
+std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
 
 // Binnings
 const Binning binsFDEreco = Binning::Custom(binEEdges);//Binning::Simple(80, 0, 10);
