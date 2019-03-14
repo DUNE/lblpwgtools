@@ -40,8 +40,8 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = {};
   if (sampleString.find("fd") != std::string::npos) oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13,
-							       &kFitDeltaInPiUnits, &kFitSinSq2Theta12, &kFitDmSq21,
-							       &kFitRho};
+							       &kFitDeltaInPiUnits};//, &kFitSinSq2Theta12, &kFitDmSq21,
+  //							       &kFitRho};
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
