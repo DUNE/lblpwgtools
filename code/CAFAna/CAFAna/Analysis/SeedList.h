@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <map>
-#include <unordered_map>
 #include <vector>
 
 namespace osc{class IOscCalculatorAdjustable;}
@@ -22,8 +21,9 @@ namespace ana
 
     void ResetCalc(osc::IOscCalculatorAdjustable* calc) const;
 
+    const std::map<const IFitVar*, double> GetVals() const {return fVals;}
   protected:
-    std::unordered_map<const IFitVar*, double> fVals;
+    std::map<const IFitVar*, double> fVals;
   };
 
   std::ostream& operator<<(std::ostream& os, const Seed& seed);
