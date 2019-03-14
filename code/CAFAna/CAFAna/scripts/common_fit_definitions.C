@@ -193,7 +193,8 @@ const double pot_nd = 3.5 * POT120;
 
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
+const std::string cafFilePath="/home/ubelix/lhep/wilkinson/DUNE_LBL/input_files";
+//const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
 #else
 const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
@@ -304,6 +305,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
   // Get rid of these too...
   RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
+  RemoveSysts(systlist, {"RDecBR1gamma", "RDecBR1eta", "EtaNCEL", "BeRPA_E", "FSILikeEAvailSmearing"});
 
   return systlist;
 };
