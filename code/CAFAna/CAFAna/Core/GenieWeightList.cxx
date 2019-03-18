@@ -181,8 +181,7 @@ int GetGenieIndex(const std::string &name, bool quiet) {
   return it - names.begin();
 }
 
-bool GetGenieIsOnOff(const std::string &name) {
-
+std::vector<std::string> const &GenieOnOffList() {
   static std::vector<std::string> const OnOffDialNames = {
       "VecFFCCQEshape",
       "Theta_Delta2Npi",
@@ -199,7 +198,24 @@ bool GetGenieIsOnOff(const std::string &name) {
       "nuenumu_xsec_ratio",
       "SPPLowQ2Suppression",
       "FSILikeEAvailSmearing"};
+  return OnOffDialNames;
+}
 
+std::vector<std::string> const &GetGenieBadDialList() {
+  static std::vector<std::string> const BadDialNames = {"MFP_N", "MFP_pi",
+                                                        "FormZone"};
+  return BadDialNames;
+}
+std::vector<std::string> const &GetGenieDoNotFitList() {
+  static std::vector<std::string> const DoNotFitNames = {
+      "RDecBR1gamma", "RDecBR1eta", "EtaNCEL", "BeRPA_E",
+      "FSILikeEAvailSmearing"};
+  return DoNotFitNames;
+}
+
+bool GetGenieIsOnOff(const std::string &name) {
+
+  std::vector<std::string> const &OnOffDialNames = GenieOnOffList();
   return std::find(OnOffDialNames.begin(), OnOffDialNames.end(), name) !=
          OnOffDialNames.end();
 }
