@@ -39,8 +39,10 @@ namespace ana
     /// \param seedBasis Set each var to each of the values. Try all
     ///                  combinations. Beware of combinatorical explosion...
     SeedList(const std::map<const IFitVar*, std::vector<double>>& seedBasis);
-    
+
     const std::vector<Seed>& GetSeeds() const {return fSeeds;}
+
+    size_t size() { return fSeeds.size(); }
   protected:
     std::vector<Seed> fSeeds;
   };
