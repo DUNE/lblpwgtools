@@ -146,6 +146,7 @@ namespace ana
       // If you don't set the size the assignment operator won't do what you expect.
       TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
 
+      // Array contains the underflow too!
       double* array = hpred->GetArray();
       const int N = hpred->GetNbinsX();
 
@@ -170,7 +171,7 @@ namespace ana
       // absolute by multiplying out the prediction
       for( int b0 = 0; b0 < N; ++b0 ) {
         for( int b1 = 0; b1 < N; ++b1 ) {
-          const double f = array[b0] * array[b1];
+          const double f = array[b0+1] * array[b1+1];
           if(f != 0) covInv(b0, b1) /= f;
         }
       }
