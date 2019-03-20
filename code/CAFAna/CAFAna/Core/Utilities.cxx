@@ -229,6 +229,71 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  double LogLikelihoodCovMx(const TH1D* e, const TH1D* o, const TMatrixD& M)
+  {
+    // Don't use under/overflow bins (the covariance matrix doesn't have them)
+    const double* m0 = e->GetArray()+1;
+    const double* d = o->GetArray()+1;
+    const unsigned int N = e->GetNbinsX();
+
+    assert(M.GetNrows() == int(N));
+
+    // We're trying to solve for the best expectation in each bin. A good seed
+    // value is the nominal MC.
+    std::vector<double> m(m0, m0+N);
+
+    double prev = -999;
+    double ret = 0;
+
+    while(true){
+      // The derivatives of the chisq are quadratic functions, so it's not easy
+      // to solved for all the variables simultaneously. Instead, we iterate
+      // through the m's and solve them holding all the others fixed, and
+      // repeat until we converge.
+      for(unsigned int k = 0; k < N; ++k){
+        // Coefficients for the quadratic formula for this term
+        const double a = M(k, k);
+        double b = 1 - m0[k]*M(k, k);
+        for(unsigned int i = 0; i < N; ++i){
+          if(i != k){
+            b += (m[i]-m0[i])*M(i, k);
+          }
+        }
+        const double c = -d[k];
+
+        if(a == 0){
+          m[k] = -c/b;
+        }
+        else{
+          const double desc = b*b-4*a*c;
+          assert(desc >= 0);
+          // Empirically the other solution is always negative
+          m[k] = ( -b + sqrt(desc) ) / (2*a);
+        }
+
+        // Only physically meaningful to have a positive prediction (or
+        // potentially zero is OK if there's zero data). If this goes wrong it
+        // probably means your input matrix is badly formed.
+        assert(m[k] > 0 || (d[k] == 0 && m[k] == 0));
+      } // end for k
+
+      // Update the chisq
+      ret = 0;
+      // There's the LL of the data to the updated prediction...
+      for(unsigned int i = 0; i < N; ++i) ret += LogLikelihood(m[i], d[i]);
+
+      // ...plus the penalty the prediction picks up from its covariance
+      for(unsigned int i = 0; i < N; ++i)
+        for(unsigned int j = 0; j < N; ++j)
+          ret += (m[i]-m0[i]) * M(i, j) * (m[j]-m0[j]);
+
+      // If the updates didn't change anything at all then we're done
+      if(ret == prev) return ret;
+      prev = ret;
+    } // end while
+  }
+
+  //----------------------------------------------------------------------
   TH2F* ExpandedHistogram(const std::string& title,
                           int nbinsx, double xmin, double xmax,
                           int nbinsy, double ymin, double ymax)
