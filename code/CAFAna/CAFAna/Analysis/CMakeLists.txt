@@ -6,7 +6,9 @@ set(Analysis_implementation_files
   Plots.cxx
   Resolution.cxx
   Surface.cxx
-  TDRLoaders.cxx)
+  # TDRLoaders.cxx
+  SeedList.cxx
+  RefineSeeds.cxx)
 
 set(Analysis_header_files
   Calcs.h
@@ -16,9 +18,11 @@ set(Analysis_header_files
   Plots.h
   Resolution.h
   Surface.h
-  TDRLoaders.h
+  # TDRLoaders.h
   Exposures.h
-  Style.h)
+  Style.h
+  SeedList.h
+  RefineSeeds.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Analysis_implementation_files PRISMExtrapolator.cxx)
