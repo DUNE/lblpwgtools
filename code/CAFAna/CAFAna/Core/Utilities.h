@@ -144,6 +144,19 @@ namespace ana
   /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
   double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
 
+  /// \brief For use with low-statistics data in combination with a MC
+  /// prediction whose bins have a correlated uncertainty.
+  ///
+  /// \param exp The nominal expectation
+  /// \param obs The observed data
+  /// \param covmxinv The inverse of the correlation matrix between MC bins.
+  ///                 DO NOT include any contribution for the statistical
+  ///                 uncertainty on the data.
+  ///
+  /// The matrix must be symmetric and have dimension equal to the number of
+  /// non-overflow bins in the histograms.
+  double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv);
+
   /// \brief Internal helper for \ref Surface and \ref FCSurface
   ///
   /// Creates a histogram having bins \em centred at the min and max
