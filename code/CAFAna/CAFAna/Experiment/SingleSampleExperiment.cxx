@@ -159,8 +159,8 @@ namespace ana
         // Or we have to manually add statistical uncertainty in quadrature
         TMatrixD cov = *fCovMx;
         for( int b = 0; b < N; ++b ) {
-          const double N = array[b+1];
-          if(N > 0) cov(b, b) += 1/N;
+          const double Nevt = array[b+1];
+          if(Nevt > 0) cov(b, b) += 1/Nevt;
         }
 
         // And then invert
@@ -173,6 +173,7 @@ namespace ana
         for( int b1 = 0; b1 < N; ++b1 ) {
           const double f = array[b0+1] * array[b1+1];
           if(f != 0) covInv(b0, b1) /= f;
+          else covInv(b0, b1) = 0.;
         }
       }
 
