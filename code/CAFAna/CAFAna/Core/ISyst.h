@@ -23,7 +23,8 @@ namespace ana
           const std::string& latexName,
 	  bool applyPenalty = true,
 	  double min = -3,
-	  double max = +3);
+	  double max = +3,
+	  double cv = 0);
     ISyst(const ISyst &) = delete;   // no copying.
     ISyst(ISyst && rhs) = delete;    // no moving either.
     virtual ~ISyst();
@@ -46,6 +47,9 @@ namespace ana
     /// Return the min/max value for this syst
     virtual double Min() const{return fMin;}
     virtual double Max() const{return fMax;}
+
+    /// Return the central value used
+    virtual void SetCentral(double val) const{fCentral = val;}
 
     /// \brief Perform the systematic shift
     ///
@@ -72,6 +76,7 @@ namespace ana
     bool fApplyPenalty;
     double fMin;
     double fMax;
+    mutable double fCentral; // I make no apologies for this
   };
 
 
