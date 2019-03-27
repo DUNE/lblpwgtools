@@ -1,13 +1,14 @@
 #include "common_fit_definitions.C"
 
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
-                            bool &start) {
+                            bool &start, bool &central) {
 
   std::vector<std::string> instructions = SplitString(throwString, ':');
 
   stats = false;
   fake = false;
   start = false;
+  central = false;
 
   for (auto &str : instructions) {
     if (str == "stat" || str == "all")
@@ -16,6 +17,8 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
       fake = true;
     if (str == "start" || str == "all")
       start = true;
+    if (str == "central" || str == "all")
+      central = true;
   }
   return;
 }
@@ -25,15 +28,16 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      std::string outputFname = "throws_ndfd_nosyst.root",
                      int nthrows = 100, std::string systSet = "nosyst",
                      std::string sampleString = "ndfd",
-                     std::string throwString = "fake:start",
+                     std::string throwString = "stat:fake:start",
                      std::string penaltyString = "",
-                     std::string oscVarString = "alloscvars") {
+                     std::string oscVarString = "th13:deltapi:th23:dmsq32") {
 
   gROOT->SetBatch(1);
+  gRandom->SetSeed(0);
 
   // Decide what is to be thrown
-  bool stats_throw, fake_throw, start_throw;
-  ParseThrowInstructions(throwString, stats_throw, fake_throw, start_throw);
+  bool stats_throw, fake_throw, start_throw, central_throw;
+  ParseThrowInstructions(throwString, stats_throw, fake_throw, start_throw, central_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
@@ -58,11 +62,16 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
-    if (fake_throw) {
+    if (fake_throw || central_throw) {
       fakeThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
-      for (auto s : systlist)
-        fakeThrowSyst.SetShift(
-            s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+      for (uint n = 0; n < systlist.size(); ++n){
+	auto s = systlist[n];
+	double this_throw = GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8);
+        fakeThrowSyst.SetShift(s, this_throw);
+	if (central_throw){
+	  systlist[n]->SetCentral(this_throw);
+	}
+      }
     } else {
       fakeThrowSyst = kNoShift;
       fakeThrowOsc = NuFitOscCalc(hie);
