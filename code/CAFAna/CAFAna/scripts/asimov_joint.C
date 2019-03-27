@@ -132,6 +132,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  bool useProtonFakeData=false){
 
   gROOT->SetBatch(1);
+  gRandom->SetSeed(0);
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
