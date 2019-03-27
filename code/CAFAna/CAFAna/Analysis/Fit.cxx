@@ -132,13 +132,19 @@ namespace ana
     }
 
     std::unique_ptr<ROOT::Math::Minimizer> mnMin(
-        ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+		    ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+    //ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
     mnMin->SetStrategy(int(fPrec & kAlgoMask));
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
 
+    static double tol = getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
+    static double prec = getenv("FIT_PRECISION") != 0 ? atof(getenv("FIT_PRECISION")) : 1e-15;
+    std::cout << "Using tolerance = " << tol << "; precision = " << prec << std::endl;
+    
     // Please give us all the decimal places
-    mnMin->SetTolerance(mnMin->Precision());
+    mnMin->SetTolerance(tol);
+    mnMin->SetPrecision(prec);
 
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
@@ -169,6 +175,7 @@ namespace ana
     }
 
     if(verb == Verbosity::kQuiet) mnMin->SetPrintLevel(0);
+    mnMin->SetPrintLevel(1);
 
     if(!mnMin->Minimize()){
       std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
@@ -179,6 +186,8 @@ namespace ana
 	std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i] << "\n";
       }
     }
+    
+    std::cout << "POSTFIT: tolerance = " << mnMin->Tolerance() << "; precision = " << mnMin->Precision() << std::endl;
 
     if (fPrec & kIncludeHesse){
       std::cout << "It's Hesse o'clock" << std::endl;
