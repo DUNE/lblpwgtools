@@ -125,7 +125,7 @@ namespace ana
       const int N = hpred->GetNbinsX();
       for( int b0 = 0; b0 < N; ++b0 ) {
         for( int b1 = 0; b1 < N; ++b1 ) {
-          const double f = array[b0] * array[b1];
+          const double f = array[b0+1] * array[b1+1];
           if(f != 0) absCovInv(b0, b1) /= f;
         }
       }
