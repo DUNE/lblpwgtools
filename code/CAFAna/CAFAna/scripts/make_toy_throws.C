@@ -75,7 +75,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
  
     if (central_throw){
       for (auto s : systlist)
-	systlist[n]->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+	s->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     }
 
     // Prefit
