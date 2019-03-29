@@ -62,19 +62,20 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
-    if (fake_throw || central_throw) {
-      fakeThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
-      for (uint n = 0; n < systlist.size(); ++n){
-	auto s = systlist[n];
-	double this_throw = GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8);
-        fakeThrowSyst.SetShift(s, this_throw);
-	if (central_throw){
-	  systlist[n]->SetCentral(this_throw);
-	}
-      }
-    } else {
-      fakeThrowSyst = kNoShift;
-      fakeThrowOsc = NuFitOscCalc(hie);
+    
+    // First deal with OA parameters
+    if (fake_throw || central_throw) fakeThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
+    else fakeThrowOsc = NuFitOscCalc(hie);
+      
+    // Now deal with systematics
+    if (fake_throw and not central_throw){
+      for (auto s : systlist)
+	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+    } else fakeThrowSyst = kNoShift;
+ 
+    if (central_throw){
+      for (auto s : systlist)
+	systlist[n]->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     }
 
     // Prefit
@@ -82,8 +83,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
-        fitThrowSyst.SetShift(
-            s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+        fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
       fitThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
