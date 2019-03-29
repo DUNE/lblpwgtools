@@ -48,8 +48,11 @@ namespace ana
     virtual double Min() const{return fMin;}
     virtual double Max() const{return fMax;}
 
-    /// Return the central value used
+    /// Set the central value used
     virtual void SetCentral(double val) const{fCentral = val;}
+
+    /// Return the central value used
+    virtual double Central() const{return fCentral;}
 
     /// \brief Perform the systematic shift
     ///

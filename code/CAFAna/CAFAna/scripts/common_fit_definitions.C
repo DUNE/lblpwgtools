@@ -686,6 +686,7 @@ struct FitTreeBlob {
       throw_tree->Branch("fPostFitValues", &fPostFitValues);
       throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
+      throw_tree->Branch("fCentralValues", &fCentralValues);
     }
   }
   void CopyVals(FitTreeBlob const &fb) {
@@ -696,6 +697,7 @@ struct FitTreeBlob {
     fPostFitValues = fb.fPostFitValues;
     fPostFitErrors = fb.fPostFitErrors;
     fMinosErrors = fb.fMinosErrors;
+    fCentralValues = fb.fCentralValues;
     fChiSq = fb.fChiSq;
     fNFCN = fb.fNFCN;
     fEDM = fb.fEDM;
@@ -708,6 +710,7 @@ struct FitTreeBlob {
   std::vector<double> fPreFitErrors;
   std::vector<double> fPostFitValues;
   std::vector<double> fPostFitErrors;
+  std::vector<double> fCentralValues;
   std::vector<std::pair<double,double>> fMinosErrors;
   double fChiSq;
   double fNFCN;
@@ -893,6 +896,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     std::vector<double> fPreFitErrors  = this_fit.GetPreFitErrors();
     std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
     std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();
+    std::vector<double> fCentralValues = this_fit.GetCentralValues();
     std::vector<std::pair<double,double>> fMinosErrors   = this_fit.GetMinosErrors();
     double fNFCN = this_fit.GetNFCN();
     double fEDM = this_fit.GetEDM();
@@ -953,6 +957,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     t->Branch("fPostFitValues",&fPostFitValues);
     t->Branch("fPostFitErrors",&fPostFitErrors);
     t->Branch("fMinosErrors",&fMinosErrors);
+    t->Branch("fCentralValues",&fCentralValues);
     t->Fill();
     t->Write();
     hist_covar.Write();
@@ -967,6 +972,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     PostFitTreeBlob->fPostFitValues = this_fit.GetPostFitValues();
     PostFitTreeBlob->fPostFitErrors = this_fit.GetPostFitErrors();
     PostFitTreeBlob->fMinosErrors   = this_fit.GetMinosErrors();
+    PostFitTreeBlob->fCentralValues = this_fit.GetCentralValues();
     PostFitTreeBlob->fFakeDataVals = fFakeDataVals;
     PostFitTreeBlob->fNFCN = this_fit.GetNFCN();
     PostFitTreeBlob->fEDM = this_fit.GetEDM();

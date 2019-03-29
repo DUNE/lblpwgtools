@@ -113,6 +113,9 @@ namespace ana
     /// Return the postfit errors
     std::vector<double> GetPostFitErrors(){ return this->fPostFitErrors;}
 
+    /// Return the postfit errors
+    std::vector<double> GetCentralValues(){ return this->fCentralValues;}
+
     /// Return the minos errors
     std::vector<std::pair<double,double>> GetMinosErrors(){ return this->fMinosErrors;}
 
@@ -203,6 +206,7 @@ namespace ana
     mutable std::vector<double> fPreFitErrors;
     mutable std::vector<double> fPostFitValues;
     mutable std::vector<double> fPostFitErrors;
+    mutable std::vector<double> fCentralValues;
     mutable std::vector<std::pair<double, double> > fMinosErrors;
     mutable std::vector<std::pair<double, double> > fTempMinosErrors; // Bit of a hack
   };

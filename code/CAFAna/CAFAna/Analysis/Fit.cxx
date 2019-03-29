@@ -240,6 +240,7 @@ namespace ana
 	fPreFitErrors  .clear();
 	fPostFitValues .clear();
 	fPostFitErrors .clear();
+	fCentralValues .clear();
 	fMinosErrors   .clear();
 	fMinosErrors   = fTempMinosErrors;
 
@@ -250,12 +251,14 @@ namespace ana
 	  fParamNames  .push_back(v->ShortName());
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(val ? val/2 : .1);
+	  fCentralValues.push_back(0);
 	}
 	for(const ISyst* s: fSysts){
 	  const double val = shift.GetShift(s);
 	  fParamNames  .push_back(s->ShortName());
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(1);
+	  fCentralValues.push_back(s->Central());
 	}
 
 	// Now save postfit
