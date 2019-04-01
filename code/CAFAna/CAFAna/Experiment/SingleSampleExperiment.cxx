@@ -8,7 +8,6 @@
 
 #include "TDirectory.h"
 #include "TObjString.h"
-#include "TH1.h"
 #include "TH2.h"
 
 namespace ana
@@ -107,9 +106,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1D* SingleSampleExperiment::
-  PredHistIncCosmics(osc::IOscCalculator* calc,
-                     const SystShifts& syst) const
+  TH1D* SingleSampleExperiment::PredHist(osc::IOscCalculator* calc,
+                                         const SystShifts& syst) const
   {
     SystShifts systNoCosmic = syst;
     systNoCosmic.SetShift(&kCosmicBkgScaleSyst, 0);
@@ -132,10 +130,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  TH1D* SingleSampleExperiment::DataHist() const
+  {
+    return fData.ToTH1(fData.POT());
+  }
+
+  //----------------------------------------------------------------------
   double SingleSampleExperiment::ChiSq(osc::IOscCalculatorAdjustable* calc,
                                        const SystShifts& syst) const
   {
-    TH1D* hpred = PredHistIncCosmics(calc, syst);
+    TH1D* hpred = PredHist(calc, syst);
     TH1D* hdata = fData.ToTH1(fData.POT());
 
     double ll;
@@ -230,7 +234,7 @@ namespace ana
       return;
     }
 
-    TH1D* hpred = PredHistIncCosmics(calc, shift);
+    TH1D* hpred = PredHist(calc, shift);
     TH1D* hdata = fData.ToTH1(pot);
 
     for(auto& it: dchi){

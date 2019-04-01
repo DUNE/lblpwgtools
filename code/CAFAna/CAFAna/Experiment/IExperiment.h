@@ -5,6 +5,8 @@ namespace osc{class IOscCalculatorAdjustable;}
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/LoadFromFile.h"
 
+#include "TH1.h"
+
 #include <unordered_map>
 
 class TDirectory;
@@ -33,5 +35,18 @@ namespace ana
     }
 
     virtual void SaveTo(TDirectory* dir) const;
+
+    // For MultiExperiment covariance matrix, need to be able to access prediction and data histograms
+    virtual TH1D* PredHist( osc::IOscCalculator* calc,
+                            const SystShifts& syst) const
+    {
+      // Only required if you want to use MultiExperiment covariance, so include 
+      // default implementation that returns null
+      return nullptr;
+    }
+    virtual TH1D* DataHist() const
+    {
+      return nullptr;
+    }
   };
 }
