@@ -62,6 +62,9 @@ namespace ana
   // Add in a throw for toys
   osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
 
+  // Add a different type of throw which depends less on NuFit
+  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
+
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
 

@@ -126,6 +126,49 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13)
+  {
+    assert(hie == +1 || hie == -1);
+
+    osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);
+
+    // Throw 12 and rho within errors if here
+    if (HasVar(oscVars, kFitRho.ShortName()))
+      ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
+
+    if (HasVar(oscVars, kFitDmSq21.ShortName()))
+      ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+
+    if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
+      ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+
+    // Throw dmsq32 flat between 2.3 and 2.7 in the correct hierarchy
+    if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
+      ret->SetDmsq32(float(hie)*gRandom->Uniform(2.3, 2.7));
+
+    // Throw sin2th23 flat between 0.4 and 0.6
+    static double th23_low  = asin(sqrt(0.4));
+    static double th23_high = asin(sqrt(0.6));
+    if (HasVar(oscVars, kFitSinSqTheta23.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_low, th23_high));
+    
+    // Throw th13
+    if (HasVar(oscVars, kFitTheta13.ShortName())){
+      if (flatth13)
+	ret->SetTh13(gRandom->Uniform(0.13, 0.2));
+      else
+	ret->SetTh13((hie > 0 ? kNuFitTh13CVNH : kNuFitTh13CVIH) *
+		     (1 + (hie > 0 ? kNuFitTh13ErrNH : kNuFitTh13ErrIH)*gRandom->Gaus()));
+    }
+
+    // dCP is just flat
+    if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
+      ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
