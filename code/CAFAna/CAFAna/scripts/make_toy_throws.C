@@ -1,28 +1,5 @@
 #include "common_fit_definitions.C"
 
-void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
-                            bool &start, bool &central) {
-
-  std::vector<std::string> instructions = SplitString(throwString, ':');
-
-  stats = false;
-  fake = false;
-  start = false;
-  central = false;
-
-  for (auto &str : instructions) {
-    if (str == "stat" || str == "all")
-      stats = true;
-    if (str == "fake" || str == "all")
-      fake = true;
-    if (str == "start" || str == "all")
-      start = true;
-    if (str == "central" || str == "all")
-      central = true;
-  }
-  return;
-}
-
 // Need to accept filename, ND/FD, systs and reload as arguments
 void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      std::string outputFname = "throws_ndfd_nosyst.root",
@@ -47,6 +24,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   if (sampleString.find("fd") != std::string::npos) {
     oscVars = GetOscVars(oscVarString);
   }
+
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 

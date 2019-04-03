@@ -672,6 +672,29 @@ void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
   return;
 }
 
+void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
+                            bool &start, bool &central) {
+
+  std::vector<std::string> instructions = SplitString(throwString, ':');
+
+  stats = false;
+  fake = false;
+  start = false;
+  central = false;
+
+  for (auto &str : instructions) {
+    if (str == "stat" || str == "all")
+      stats = true;
+    if (str == "fake" || str == "all")
+      fake = true;
+    if (str == "start" || str == "all")
+      start = true;
+    if (str == "central" || str == "all")
+      central = true;
+  }
+  return;
+}
+
 
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "") {
