@@ -336,6 +336,8 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
   // Get rid of these too...
   RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
+  // Woops, this got lost when reverting to the pre-Hack days version
+  RemoveSysts(systlist, {"RDecBR1gamma", "RDecBR1eta", "EtaNCEL", "BeRPA_E", "FSILikeEAvailSmearing"});
 
   return systlist;
 };
