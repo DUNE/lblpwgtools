@@ -6,8 +6,9 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      int nthrows = 100, std::string systSet = "nosyst",
                      std::string sampleString = "ndfd",
                      std::string throwString = "stat:fake:start",
-                     std::string penaltyString = "",
-                     std::string oscVarString = "th13:deltapi:th23:dmsq32") {
+                     std::string penaltyString = "nopen",
+                     std::string oscVarString = "th13:deltapi:th23:dmsq32",
+		     int hie=1) {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -30,8 +31,6 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
 
   FitTreeBlob pftree("fit_info");
   pftree.throw_tree->SetDirectory(fout);
-
-  int hie = 1;
 
   for (int i = 0; i < nthrows; ++i) {
 
