@@ -144,7 +144,7 @@ namespace ana
 
     // Throw dmsq32 flat between 2.3 and 2.7 in the correct hierarchy
     if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
-      ret->SetDmsq32(float(hie)*gRandom->Uniform(2.3, 2.7));
+      ret->SetDmsq32(float(hie)*gRandom->Uniform(2.3e-3, 2.7e-3));
 
     // Throw sin2th23 flat between 0.4 and 0.6
     static double th23_low  = asin(sqrt(0.4));
