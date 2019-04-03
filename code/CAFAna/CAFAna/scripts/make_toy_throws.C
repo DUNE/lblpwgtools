@@ -42,7 +42,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
     
     // First deal with OA parameters
-    if (fake_throw || central_throw) fakeThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
+    if (fake_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
     else fakeThrowOsc = NuFitOscCalc(hie);
       
     // Now deal with systematics
@@ -62,7 +62,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     if (start_throw) {
       for (auto s : systlist)
         fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
-      fitThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
+      fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie);
