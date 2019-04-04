@@ -749,7 +749,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, SystShifts &bf = junkShifts){
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, 
+		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts){
 
   assert(systlist.size()+oscVars.size());
 
@@ -789,28 +790,44 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // One problem with this method is that the experiments are reproduced for every single call...
   // Set up the fake data histograms, and save them if relevant...
-  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, data_nue_fhc);
+  // This came back to bite me. I need to do multiple fits with the same fake data throw, so I need these to persist between calls to this function
+  // Sadly, the locked down ownership etc means I can't think of a better solution to this
+  // And the alternative CAFAna is probably just copy-pasta-ing this function in all of the scripts that use it...
+  std::vector<unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
+  if(!spectra){ spectra = &LastShredsOfMyDignityAndSanity; }
+
+  if (!spectra->size()){
+    std::cout << "Remaking spectra" << std::endl;
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats))));
+  }
+
+  // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, data_numu_fhc);
+  // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, data_nue_rhc);
+  // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, data_numu_rhc);
+  // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
+  // const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *(*spectra)[4], covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
-  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
+  // const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5], covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
@@ -825,7 +842,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Save prefit starting distributions
   if (outDir){
     if (pot_fd_fhc_nue > 0){
-      TH1* data_nue_fhc_hist = data_nue_fhc.ToTHX(pot_fd_fhc_nue);
+      TH1* data_nue_fhc_hist = (*spectra)[0]->ToTHX(pot_fd_fhc_nue);
       data_nue_fhc_hist ->SetName("data_fd_nue_fhc");
       data_nue_fhc_hist ->Write();
       TH1* pre_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst, "prefit_fd_nue_fhc", pot_fd_fhc_nue);
@@ -833,7 +850,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_fhc   ->Write();
     }
     if (pot_fd_fhc_numu > 0){
-      TH1* data_numu_fhc_hist = data_numu_fhc.ToTHX(pot_fd_fhc_numu);
+      TH1* data_numu_fhc_hist = (*spectra)[1]->ToTHX(pot_fd_fhc_numu);
       data_numu_fhc_hist ->SetName("data_fd_numu_fhc");
       data_numu_fhc_hist ->Write();
       TH1* pre_fd_numu_fhc = GetMCSystTotal(&predFDNumuFHC, fitOsc, fitSyst, "prefit_fd_numu_fhc", pot_fd_fhc_numu);
@@ -841,7 +858,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_fhc   ->Write();
     }
     if (pot_fd_rhc_nue > 0){
-      TH1* data_nue_rhc_hist = data_nue_rhc.ToTHX(pot_fd_rhc_nue);
+      TH1* data_nue_rhc_hist = (*spectra)[2]->ToTHX(pot_fd_rhc_nue);
       data_nue_rhc_hist ->SetName("data_fd_nue_rhc");
       data_nue_rhc_hist ->Write();
       TH1* pre_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst, "prefit_fd_nue_rhc", pot_fd_rhc_nue);
@@ -849,7 +866,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_rhc   ->Write();
     }
     if (pot_fd_rhc_numu > 0){
-      TH1* data_numu_rhc_hist = data_numu_rhc.ToTHX(pot_fd_rhc_numu);
+      TH1* data_numu_rhc_hist = (*spectra)[3]->ToTHX(pot_fd_rhc_numu);
       data_numu_rhc_hist ->SetName("data_fd_numu_rhc");
       data_numu_rhc_hist ->Write();
       TH1* pre_fd_numu_rhc = GetMCSystTotal(&predFDNumuRHC, fitOsc, fitSyst, "prefit_fd_numu_rhc", pot_fd_rhc_numu);
@@ -857,8 +874,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_rhc   ->Write();
     }
     if (pot_nd_fhc > 0){
-      TH1* nd_data_numu_fhc_hist = nd_data_numu_fhc.ToTHX(pot_nd_fhc);
-      TH1* nd_data_numu_fhc_hist_1D = nd_data_numu_fhc.ToTH1(pot_nd_fhc);
+      TH1* nd_data_numu_fhc_hist = (*spectra)[4]->ToTHX(pot_nd_fhc);
+      TH1* nd_data_numu_fhc_hist_1D = (*spectra)[4]->ToTH1(pot_nd_fhc);
       nd_data_numu_fhc_hist ->SetName("data_nd_numu_fhc");
       nd_data_numu_fhc_hist_1D ->SetName("data_nd_numu_fhc_1D");
       nd_data_numu_fhc_hist ->Write();
@@ -872,8 +889,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_nd_numu_fhc_1D   ->Write();
     }
     if (pot_nd_rhc){
-      TH1* nd_data_numu_rhc_hist = nd_data_numu_rhc.ToTHX(pot_nd_rhc);
-      TH1* nd_data_numu_rhc_hist_1D = nd_data_numu_rhc.ToTH1(pot_nd_rhc);
+      TH1* nd_data_numu_rhc_hist = (*spectra)[5]->ToTHX(pot_nd_rhc);
+      TH1* nd_data_numu_rhc_hist_1D = (*spectra)[5]->ToTH1(pot_nd_rhc);
       nd_data_numu_rhc_hist ->SetName("data_nd_numu_rhc");
       nd_data_numu_rhc_hist_1D ->SetName("data_nd_numu_rhc_1D");
       nd_data_numu_rhc_hist ->Write();
