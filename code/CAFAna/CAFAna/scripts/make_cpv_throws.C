@@ -84,7 +84,7 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     // Seeds for good measure...
     std::map<const IFitVar*, std::vector<double>> oscSeedsAll;
     oscSeedsAll[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-    oscSeedsAll[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Maybe not necessary...
+    oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5, thisdcp}; // Maybe not necessary...
 
     // Slightly incorrect, but it'll do
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
@@ -92,7 +92,7 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVarsAll, systlist,
-				   fitThrowOsc, fitThrowSyst,
+				   fakeThrowOsc, fakeThrowSyst,
 				   oscSeedsAll, gpenalty, Fitter::kNormal, 
 				   nullptr, &global_tree, &mad_spectra_yo);     
     global_tree.throw_tree->Fill();
@@ -138,6 +138,7 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     cpv_tree.throw_tree->Branch("globalmin", &globalmin);
     cpv_tree.throw_tree->Branch("hie", &hie);
     cpv_tree.throw_tree->Branch("idcp", &idcp);
+    cpv_tree.throw_tree->Branch("dcp", &thisdcp);
     cpv_tree.throw_tree->Branch("dchi2", &dchi2);
     cpv_tree.throw_tree->Branch("significance", &significance);
     cpv_tree.throw_tree->Fill();
