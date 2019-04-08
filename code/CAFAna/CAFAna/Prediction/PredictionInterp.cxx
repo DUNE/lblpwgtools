@@ -364,7 +364,6 @@ namespace ana
 
     double* arr = h->GetArray();
     for(unsigned int n = 0; n < N; ++n){
-      if (arr[n] > 50)
 	arr[n] *= std::max(corr[n], 0.);
     }
 
