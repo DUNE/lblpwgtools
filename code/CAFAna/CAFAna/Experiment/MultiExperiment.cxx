@@ -122,6 +122,8 @@ namespace ana
 
         TH1D * histMC = fExpts[idx]->PredHist(osc, localShifts);
         TH1D * histData = fExpts[idx]->DataHist();
+        // Mask bins with too low statistics
+        fExpts[idx]->ApplyMask( histMC, histData );
         for( int b = 0; b < histMC->GetNbinsX(); ++b ) {
           pred[n_bins] = histMC->GetBinContent(b+1);
           data[n_bins++] = histData->GetBinContent(b+1);

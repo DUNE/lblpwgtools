@@ -88,14 +88,14 @@ namespace ana
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
 
+    virtual void ApplyMask(TH1* a, TH1* b) const override;
+
     virtual TH1D* PredHist(osc::IOscCalculator* calc,
                            const SystShifts& syst) const override;
     virtual TH1D* DataHist() const override;
 
   protected:
     void InitInverseMatrix();
-
-    void ApplyMask(TH1* a, TH1* b) const;
 
     const IPrediction* fMC;
     Spectrum fData;
