@@ -10,6 +10,8 @@ MEM_EXP="2GB"
 
 FORCE_REMOVE="0"
 
+DRY_RUN="0"
+
 if [ -z "${CAFANA}" ]; then
   echo "[ERROR]: (NOvA-less)CAFAna is not set up, cannot farm jobs."
   exit 1
@@ -39,8 +41,20 @@ while [[ ${#} -gt 0 ]]; do
         exit 1
       fi
 
-      CAFE_COMMAND_FILE="$2"
+      CAFE_COMMAND_FILE="$(readlink -f $2)"
       echo "[OPT]: Running jobs for each line in \"${CAFE_COMMAND_FILE}\"."
+      shift # past argument
+      ;;
+
+      -S|--cafe-script)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      SCRIPT_TO_INCLUDE="$2"
+      echo "[OPT]: Will add \"${SCRIPT_TO_INCLUDE}\" to the job tarball."
       shift # past argument
       ;;
 
@@ -50,6 +64,12 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will remove extant files in output directory."
       ;;
 
+      -d|--dry-run)
+
+      DRY_RUN="1"
+      echo "[OPT]: Will not submit any jobs."
+      ;;
+
       --cafe-commands)
 
       shift
@@ -57,12 +77,53 @@ while [[ ${#} -gt 0 ]]; do
       break;
       ;;
 
+      --expected-walltime)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      LIFETIME_EXP="$2"
+      echo "[OPT]: Expecting a run time of \"${LIFETIME_EXP}\"."
+      shift # past argument
+      ;;
+
+      --expected-disk)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      DISK_EXP="$2"
+      echo "[OPT]: Expecting to use \"${DISK_EXP}\" node disk space."
+      shift # past argument
+      ;;
+
+      --expected-mem)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      MEM_EXP="$2"
+      echo "[OPT]: Expecting a maximum of \"${MEM_EXP}\" memory usage."
+      shift # past argument
+      ;;
+
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME} [opts] --cafe-comands <args>"
       echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
       echo -e "\t-c|--cafe-command-file     : File containing <script name>: [arg1 [arg2 [...]]]. One job is submitted per line in the input file."
       echo -e "\t--cafe-commands            : All arguments passed after this will be passed to cafe on the node."
+      echo -e "\t-S|--cafe-script           : Path to non-standard (i.e. not in \${CAFANA}/scripts) cafe script that should be included in the tarball."
       echo -e "\t-f|--force-remove          : Removes output directory before starting."
+      echo -e "\t-d|--dry-run               : Will not submit anything to the grid."
+      echo -e "\t--expected-disk            : Expected disk usage to pass to jobsub (default: 1GB)"
+      echo -e "\t--expected-mem             : Expected mem usage to pass to jobsub (default: 2GB)"
+      echo -e "\t--expected-walltime        : Expected disk usage to pass to jobsub (default: 4h)"
       echo -e "\t-?|--help                  : Print this message."
       exit 0
       ;;
@@ -88,7 +149,17 @@ if [ ${#} -gt 0 ]; then
 fi
 
 if [ ! -z ${CAFE_COMMAND_FILE} ]; then
+  if [ ! -e ${CAFE_COMMAND_FILE}]; then
+    echo "[ERROR]: Passed cafe Command file: \"${CAFE_COMMAND_FILE}\" could not be found."
+    exit
+  fi
+  echo "[INFO]: cp ${CAFE_COMMAND_FILE} CAFECommands.cmd"
   cp ${CAFE_COMMAND_FILE} CAFECommands.cmd
+fi
+
+if [ ! -e CAFECommands.cmd ]; then
+  echo "[ERROR]: Expected to have CAFECommands.cmd by this point."
+  exit
 fi
 
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
@@ -108,16 +179,22 @@ fi
 ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
 
 if [ $? -ne 0 ]; then
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  if [ $? -ne 0 ]; then
-    echo "Unable to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}."
-    exit 2
+  if [ ${DRY_RUN} -eq 0 ]; then
+    mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+    ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+    if [ $? -ne 0 ]; then
+      echo "Unable to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}."
+      exit 2
+    fi
+  else
+    echo "Would try to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
 elif [ ${FORCE_REMOVE} == "1" ]; then
   echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
-  rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  if [ ${DRY_RUN} -eq 0 ]; then
+    rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+    mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  fi
 fi
 
 NJOBSTORUN=$(cat CAFECommands.cmd | wc -l)
@@ -143,10 +220,14 @@ for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
 
 done
 
-if [ ${NJOBSTORUN} -eq 1 ]; then
-  JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+if [ ${DRY_RUN} -eq 0 ]; then
+  if [ ${NJOBSTORUN} -eq 1 ]; then
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+  else
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+  fi
 else
-  JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+  JID="DRY RUN"
 fi
 
 echo "JID = ${JID}"
