@@ -206,9 +206,10 @@ namespace ana
     assert(b->GetNbinsX() == fMask->GetNbinsX());
 
     for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-      if (fMask->GetBinContent(i+1) == 1) continue;
-      a->SetBinContent(i+1, 0);
-      b->SetBinContent(i+1, 0);
+      if(fMask->GetBinContent(i) == 0){
+        a->SetBinContent(i, 0);
+        b->SetBinContent(i, 0);
+      }
     }
   }
 
