@@ -52,15 +52,27 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=1;
 
-PNFS_OUTDIR=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
-echo "Output dir is ${PNFS_OUTDIR}"
+PNFS_OUTDIR_STUB=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+echo "Output stub dir is ${PNFS_OUTDIR_STUB}"
 
-ifdh ls ${PNFS_OUTDIR}
+ifdh ls ${PNFS_OUTDIR_STUB}
 
 if [ $? -ne 0 ]; then
   echo "Unable to read ${PNFS_OUTDIR}. Make sure that you have created this directory and given it group write permission (chmod g+w ${PNFS_OUTDIR})."
   exit 5
 fi
+
+PNFS_OUTDIR=${PNFS_OUTDIR_STUB}/${CLUSTER}.${PROCESS}/
+
+ifdh mkdir ${PNFS_OUTDIR}
+ifdh ls ${PNFS_OUTDIR}
+if [ $? -ne 0 ]; then
+  echo "Unable to make ${PNFS_OUTDIR}."
+  exit 2
+fi
+
+echo "Output dir is ${PNFS_OUTDIR}"
+
 
 (( LINE_N = ${PROCESS} + 1 ))
 
@@ -83,13 +95,13 @@ cp ${CAFANA}/scripts/${SCRIPT_NAME} .
 
 echo "Running script @ $(date)"
 
-echo "cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.${CLUSTER}.${PROCESS}.log"
-cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.${CLUSTER}.${PROCESS}.log
+echo "cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.log"
+cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.log
 
 echo "Copying output @ $(date)"
 
-echo "ifdh cp -D $IFDH_OPTION ${SCRIPT_NAME}.${CLUSTER}.${PROCESS}.log ${PNFS_OUTDIR}/"
-ifdh cp -D $IFDH_OPTION ${SCRIPT_NAME}.${CLUSTER}.${PROCESS}.log ${PNFS_OUTDIR}/
+echo "ifdh cp -D $IFDH_OPTION ${SCRIPT_NAME}.log ${PNFS_OUTDIR}/"
+ifdh cp -D $IFDH_OPTION ${SCRIPT_NAME}.log ${PNFS_OUTDIR}/
 
 if [ ! -e ${OUTPUT_NAME} ]; then
   echo "[WARN]: Failed to produce expected output file."

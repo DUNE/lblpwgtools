@@ -30,7 +30,7 @@ while [[ ${#} -gt 0 ]]; do
       fi
 
       PNFS_PATH_APPEND="$2"
-      echo "[OPT]: Writing output to /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}"
+      echo "[OPT]: Writing output to /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}/<CLUSTERID>.<JOBID>"
       shift # past argument
       ;;
 
@@ -53,7 +53,7 @@ while [[ ${#} -gt 0 ]]; do
         exit 1
       fi
 
-      SCRIPT_TO_INCLUDE="$2"
+      SCRIPT_TO_INCLUDE="$(readlink -f $2)"
       echo "[OPT]: Will add \"${SCRIPT_TO_INCLUDE}\" to the job tarball."
       shift # past argument
       ;;
@@ -116,7 +116,7 @@ while [[ ${#} -gt 0 ]]; do
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME} [opts] --cafe-comands <args>"
       echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
-      echo -e "\t-c|--cafe-command-file     : File containing <script name>: [arg1 [arg2 [...]]]. One job is submitted per line in the input file."
+      echo -e "\t-c|--cafe-command-file     : File containing '<script name>  [arg1 [arg2 [...]]]'. One job is submitted per line in the input file."
       echo -e "\t--cafe-commands            : All arguments passed after this will be passed to cafe on the node."
       echo -e "\t-S|--cafe-script           : Path to non-standard (i.e. not in \${CAFANA}/scripts) cafe script that should be included in the tarball."
       echo -e "\t-f|--force-remove          : Removes output directory before starting."
@@ -149,7 +149,7 @@ if [ ${#} -gt 0 ]; then
 fi
 
 if [ ! -z ${CAFE_COMMAND_FILE} ]; then
-  if [ ! -e ${CAFE_COMMAND_FILE}]; then
+  if [ ! -e ${CAFE_COMMAND_FILE} ]; then
     echo "[ERROR]: Passed cafe Command file: \"${CAFE_COMMAND_FILE}\" could not be found."
     exit
   fi
@@ -161,6 +161,33 @@ if [ ! -e CAFECommands.cmd ]; then
   echo "[ERROR]: Expected to have CAFECommands.cmd by this point."
   exit
 fi
+
+if [ ! -z "${SCRIPT_TO_INCLUDE}" ]; then
+  SCRIPT_NAME=${SCRIPT_TO_INCLUDE##*/}
+  ${CAFANA}/scripts/FermiGridScripts/tarball.sh ${SCRIPT_TO_INCLUDE}
+else
+  ${CAFANA}/scripts/FermiGridScripts/tarball.sh
+fi
+
+if [ ! -e CAFAna.Blob.tar.gz ]; then
+  echo "[ERROR]: Failed to build source tarball."
+  exit 2
+fi
+
+NJOBSTORUN=$(cat CAFECommands.cmd | wc -l)
+
+LN=0
+for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
+
+  if ! tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts/${i}; then
+    echo -e "[ERROR]: In CAFECommands.cmd on line ${LN}:\n  $(cat CAFECommands.cmd | head -$(( LN + 1 )) | tail -1)\n[ERROR]: Trying to run job for script ${i}. But it doesn't exist in the tarball at CAFAna/scripts/ and wasn't passed with -S. The script needs to be installed with CAFAna or passed to this submission script to run."
+    echo -e "[INFO]: tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts:\n$(tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts | grep -v FermiGridScripts)"
+    exit
+  fi
+
+  LN=$(( LN + 1 ))
+done
+
 
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
@@ -190,35 +217,14 @@ if [ $? -ne 0 ]; then
     echo "Would try to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
 elif [ ${FORCE_REMOVE} == "1" ]; then
-  echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
   if [ ${DRY_RUN} -eq 0 ]; then
+    echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
     rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
     mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  else
+    echo "Would force remove and remake /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
 fi
-
-NJOBSTORUN=$(cat CAFECommands.cmd | wc -l)
-
-if [ ! -z "${SCRIPT_TO_INCLUDE}" ]; then
-  SCRIPT_NAME=${SCRIPT_TO_INCLUDE##*/}
-  ${CAFANA}/scripts/FermiGridScripts/tarball.sh ${SCRIPT_TO_INCLUDE}
-else
-  ${CAFANA}/scripts/FermiGridScripts/tarball.sh
-fi
-
-if [ ! -e CAFAna.Blob.tar.gz ]; then
-  echo "[ERROR]: Failed to build source tarball."
-  exit 2
-fi
-
-for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
-
-  if [ ! -e ${CAFANA}/scripts/${i} ] && [ "${i}" != "${SCRIPT_NAME}" ]; then
-    echo "Trying to run job for script ${i}. But it doesn't exist in ${CAFANA}/scripts/ and wasn't passed with -s. The script needs to be installed with CAFAna or passed to this submission script to run."
-    exit
-  fi
-
-done
 
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
@@ -232,4 +238,8 @@ fi
 
 echo "JID = ${JID}"
 
-cd ../; rm -r sub_dir
+cd ../
+
+if [ ${DRY_RUN} -eq 0 ]; then
+  rm -r sub_dir
+fi
