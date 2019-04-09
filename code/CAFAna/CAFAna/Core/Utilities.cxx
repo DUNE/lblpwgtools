@@ -883,6 +883,7 @@ namespace ana
     // The exposure isn't important here
     TH1* fMaskND  = s.ToTHX(s.POT());
     TH1D* fMask1D = s.ToTH1(s.POT());
+    fMask1D->Reset();
 
     int ybins = fMaskND->GetNbinsY();
 
@@ -903,9 +904,7 @@ namespace ana
 	if (fMaskND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
       }
 
-      if (isMask) fMask1D->SetBinContent(i+1, 0);
-      else fMask1D->SetBinContent(i+1, 1);
-
+      if(!isMask) fMask1D->SetBinContent(i+1, 1);
     }
     return fMask1D;
   }
