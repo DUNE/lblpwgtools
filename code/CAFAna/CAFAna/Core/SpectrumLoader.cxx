@@ -327,6 +327,17 @@ namespace ana
         }
       }
 
+    TTree *potFriend;
+    f->GetObject("POTWeightFriend", potFriend);
+    if (potFriend) {
+      tr->AddFriend(potFriend);
+      SetBranchChecked(potFriend, "perPOTWeight", &sr.dune.perPOTWeight);
+      std::cout << "[INFO]: Found POT friend tree in input file, hooking up!"
+                << std::endl;
+    } else {
+      sr.dune.perPOTWeight = 1;
+    }
+
       // Reformat the genie systs
       sr.dune.total_cv_wgt = 1;
 
