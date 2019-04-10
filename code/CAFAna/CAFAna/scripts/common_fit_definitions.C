@@ -21,7 +21,7 @@
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/MissingProtonFakeData.h"
-#include "CAFAna/Systs/NuWroReweightFakeData.h~"
+#include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
