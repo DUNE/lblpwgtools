@@ -198,6 +198,7 @@ namespace ana
     SetBranchChecked(tr, "nipi0", &sr.dune.nipi0);
     SetBranchChecked(tr, "nipip", &sr.dune.nipip);
     SetBranchChecked(tr, "nipim", &sr.dune.nipim);
+    SetBranchChecked(tr, "niem", &sr.dune.niem);
     SetBranchChecked(tr, "Q2", &sr.dune.Q2);
     SetBranchChecked(tr, "W", &sr.dune.W);
     SetBranchChecked(tr, "Y", &sr.dune.Y);
