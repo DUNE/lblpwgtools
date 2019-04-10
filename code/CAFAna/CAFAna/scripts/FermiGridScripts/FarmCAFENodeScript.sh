@@ -11,6 +11,7 @@ MEM_EXP="2GB"
 FORCE_REMOVE="0"
 
 DRY_RUN="0"
+LOG_TO_IFDH="0"
 
 if [ -z "${CAFANA}" ]; then
   echo "[ERROR]: (NOvA-less)CAFAna is not set up, cannot farm jobs."
@@ -70,6 +71,12 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will not submit any jobs."
       ;;
 
+      # -L|--IFDH-log)
+      #
+      # LOG_TO_IFDH="1"
+      # echo "[OPT]: Will log echos on the node to IFDH log so that failed/held jobs still give some log output."
+      # ;;
+
       --cafe-commands)
 
       shift
@@ -121,6 +128,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-S|--cafe-script           : Path to non-standard (i.e. not in \${CAFANA}/scripts) cafe script that should be included in the tarball."
       echo -e "\t-f|--force-remove          : Removes output directory before starting."
       echo -e "\t-d|--dry-run               : Will not submit anything to the grid."
+      # echo -e "\t-L|--IFDH-log              : Will log node script echos to ifdh log (N.B. this does not hook up stdout from the cafe invocation to ifdh log)."
       echo -e "\t--expected-disk            : Expected disk usage to pass to jobsub (default: 1GB)"
       echo -e "\t--expected-mem             : Expected mem usage to pass to jobsub (default: 2GB)"
       echo -e "\t--expected-walltime        : Expected disk usage to pass to jobsub (default: 4h)"
@@ -228,9 +236,11 @@ fi
 
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+    #--role=Analysis --subgroup=analysis
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
   else
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} )
+    #--role=Analysis --subgroup=analysis
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
   fi
 else
   JID="DRY RUN"
