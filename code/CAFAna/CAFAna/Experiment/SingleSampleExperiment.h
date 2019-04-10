@@ -16,6 +16,13 @@ namespace ana
 
   extern const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
 
+  enum ETestStatistic{
+    kLogLikelihood, ///< No covariance matrix
+    kCovMxChiSq,
+    kCovMxChiSqPreInvert, ///< good approximation for ND
+    kCovMxLogLikelihood ///< for FD
+  };
+
   /// Compare a single data spectrum to the MC + cosmics expectation
   class SingleSampleExperiment: public IExperiment
   {
@@ -43,7 +50,7 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0), fPreInvert(0)
+      : fTestStatistic(kLogLikelihood), fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMxInfo(0)
     {
     }
 
@@ -51,14 +58,14 @@ namespace ana
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const TMatrixD* cov,
-                           const bool preInvert = true);
+                           ETestStatistic stat);
 
     /// Include a covariance matrix file path
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const std::string covMatFilename,
                            const std::string covMatName,
-                           const bool preInvert = true);
+                           ETestStatistic stat);
 
     virtual ~SingleSampleExperiment();
 
@@ -95,7 +102,7 @@ namespace ana
     virtual TH1D* DataHist() const override;
 
   protected:
-    void InitInverseMatrix();
+    ETestStatistic fTestStatistic;
 
     const IPrediction* fMC;
     Spectrum fData;
@@ -104,9 +111,8 @@ namespace ana
 
     double fCosmicScaleError;
 
-    TMatrixD* fCovMx;
-    TMatrixD* fCovMxInv;
-    bool fPreInvert;
+    TMatrixD* fCovMxInfo; ///< Represents different things depending on fTestStatistic
 
+    mutable std::vector<double> fCovLLState;
   };
 }

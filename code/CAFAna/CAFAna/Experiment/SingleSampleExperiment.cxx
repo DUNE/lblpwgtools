@@ -19,10 +19,11 @@ namespace ana
                                                  const Spectrum& data,
                                                  const Spectrum& cosmic,
                                                  double cosmicScaleError)
-    : fMC(pred), fData(data),
+    : fTestStatistic(kLogLikelihood),
+      fMC(pred), fData(data),
       fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0), fPreInvert(0)
+      fCovMxInfo(0)
   {
   }
 
@@ -31,9 +32,10 @@ namespace ana
                                                  const Spectrum& data,
                                                  const TH1D* cosmic,
                                                  double cosmicScaleError)
-    : fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
+    : fTestStatistic(kLogLikelihood),
+      fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
       fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMx(0), fCovMxInv(0), fPreInvert(0)
+      fCovMxInfo(0)
   {
   }
 
@@ -41,12 +43,65 @@ namespace ana
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data,
                                                  const TMatrixD* cov,
-                                                 const bool preInvert)
-    : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(new TMatrixD(*cov))
+                                                 ETestStatistic stat)
+    : fTestStatistic(stat),
+      fMC(pred), fData(data), fCosmic(0), fMask(0),
+      fCovMxInfo(0)
   {
-    fPreInvert = preInvert;
-    if( fPreInvert ) InitInverseMatrix();
-    else fCovMxInv = 0;
+    switch(stat){
+    case kLogLikelihood:
+      // No need for any matrix
+      break;
+    case kCovMxChiSq:
+      // Store the covariance matrix as-is
+      fCovMxInfo = new TMatrixD(*cov);
+      break;
+    case kCovMxChiSqPreInvert:
+      {
+        TMatrixD toInvert(*cov);
+
+        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        for( int b = 0; b < hist->GetNbinsX(); ++b ) {
+          // We add the squared fractional statistical errors to the
+          // diagonal. In principle this should vary with the predicted number
+          // of events, but in the ND using the no-syst-shifts number should be
+          // a pretty good approximation, and it's much faster than needing to
+          // re-invert the matrix every time.
+          const double N = hist->GetBinContent(b+1);
+          if(N > 0) toInvert(b, b) += 1/N;
+        }
+        HistCache::Delete(hist);
+
+        fCovMxInfo = new TMatrixD(TMatrixD::kInverted, toInvert);
+      }
+      break;
+    case kCovMxLogLikelihood:
+      // Also pre-invert the matrix but with no stats
+      fCovMxInfo = new TMatrixD(TMatrixD::kInverted, *cov);
+      break;
+    default:
+      std::cout << "Unknown test statistic " << stat << std::endl;
+      abort();
+    }
+  }
+
+  // Helper for constructor
+  TMatrixD* GetCov(const std::string& fname, const std::string& matname)
+  {
+    TDirectory *thisDir = gDirectory->CurrentDirectory();
+
+    TFile f(fname.c_str());
+    TMatrixD* ret = (TMatrixD*)f.Get(matname.c_str());
+
+    if(!ret){
+      std::cout << "Could not obtain covariance matrix named "
+                << matname << " from " << fname << std::endl;
+      abort();
+    }
+
+    thisDir->cd();
+
+    return ret;
   }
 
   //----------------------------------------------------------------------
@@ -54,26 +109,12 @@ namespace ana
                                                  const Spectrum& data,
                                                  const std::string covMatFilename,
                                                  const std::string covMatName,
-                                                 const bool preInvert)
+                                                 ETestStatistic stat)
 
-    : fMC(pred), fData(data), fCosmic(0), fMask(0)
+    : SingleSampleExperiment(pred, data,
+                             GetCov(covMatFilename, covMatName),
+                             stat)
   {
-    fPreInvert = preInvert;
-    TDirectory *thisDir = gDirectory->CurrentDirectory();
-
-    TFile covMatFile( covMatFilename.c_str() );
-    fCovMx = (TMatrixD*) covMatFile.Get( covMatName.c_str() );
-
-    if( !fCovMx ) {
-      std::cout << "Could not obtain covariance matrix named "
-                << covMatName << " from " << covMatFilename << std::endl;
-      abort();
-    }
-
-    if( fPreInvert ) InitInverseMatrix();
-    else fCovMxInv = 0;
-
-    thisDir->cd();
   }
 
   //----------------------------------------------------------------------
@@ -81,28 +122,7 @@ namespace ana
   {
     delete fCosmic;
     delete fMask;
-    delete fCovMx;
-    delete fCovMxInv;
-  }
-
-  //----------------------------------------------------------------------
-  void SingleSampleExperiment::InitInverseMatrix()
-  {
-    TMatrixD toInvert( *fCovMx );
-
-    TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
-    for( int b = 0; b < hist->GetNbinsX(); ++b ) {
-      // We add the squared fractional statistical errors to the diagonal. In
-      // principle this should vary with the predicted number of events, but in
-      // the ND using the no-syst-shifts number should be a pretty good
-      // approximation, and it's much faster than needing to re-invert the
-      // matrix every time.
-      const double N = hist->GetBinContent(b+1);
-      if(N > 0) toInvert(b, b) += 1/N;
-    }
-    HistCache::Delete(hist);
-
-    fCovMxInv = new TMatrixD(TMatrixD::kInverted, toInvert);
+    delete fCovMxInfo;
   }
 
   //----------------------------------------------------------------------
@@ -144,24 +164,26 @@ namespace ana
 
     double ll;
 
-    // if there is a covariance matrix, use it
-    if(fCovMx){
+    // if there is a covariance matrix of any sort, use it
+    if(fCovMxInfo){
       // The inverse relative covariance matrix comes from one of two sources
-      // If you don't set the size the assignment operator won't do what you expect.
-      TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
+
+      // If you don't set the size the assignment operator won't do what you
+      // expect
+      TMatrixD covInv(fCovMxInfo->GetNrows(), fCovMxInfo->GetNcols());
 
       // Array contains the underflow too!
       double* array = hpred->GetArray();
       const int N = hpred->GetNbinsX();
 
-      if(fPreInvert){
+      if(fTestStatistic == kCovMxChiSqPreInvert ||
+         fTestStatistic == kCovMxLogLikelihood){
         // Either we precomputed it
-        assert(fCovMxInv);
-        covInv = *fCovMxInv;
+        covInv = *fCovMxInfo;
       }
       else{
         // Or we have to manually add statistical uncertainty in quadrature
-        TMatrixD cov = *fCovMx;
+        TMatrixD cov = *fCovMxInfo;
         for( int b = 0; b < N; ++b ) {
           const double Nevt = array[b+1];
           if(Nevt > 0) cov(b, b) += 1/Nevt;
@@ -185,7 +207,13 @@ namespace ana
       if(fMask) ApplyMask(hpred, hdata);
 
       // Now it's absolute it's suitable for use in the chisq calculation
-      ll = Chi2CovMx( hpred, hdata, covInv );
+      if(fTestStatistic == kCovMxChiSq ||
+         fTestStatistic == kCovMxChiSqPreInvert){
+        ll = Chi2CovMx( hpred, hdata, covInv );
+      }
+      else{
+        ll = LogLikelihoodCovMx(hpred, hdata, covInv, &fCovLLState);
+      }
     }
     else{
       // No covariance matrix - use standard LL
