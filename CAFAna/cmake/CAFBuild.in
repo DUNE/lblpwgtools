@@ -1,0 +1,21 @@
+#!/bin/bash
+
+DEBUG=""
+if [ "${1}" == "-g" ]; then
+  DEBUG="-g -O0"
+  shift
+fi
+
+INPFILE=$1
+
+echo "[INFO]: Attempting to build ${INPFILE}"
+
+EXEFILE=${INPFILE/.C/.exe}
+
+BCMD="g++ ${DEBUG} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -L${OSCLIB_LIB} -lOscLib $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+
+echo ${BCMD}
+if ! ${BCMD}; then
+  echo "[ERROR]: Failed to build ${INPFILE}."
+  exit 1
+fi
