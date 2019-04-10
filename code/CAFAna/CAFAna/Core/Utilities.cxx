@@ -218,43 +218,82 @@ namespace ana
   //----------------------------------------------------------------------
   double Chi2CovMx(const TH1* e, const TH1* o, const TMatrixD& covmxinv)
   {
-    TVectorD eVec(e->GetNbinsX());
-    TVectorD oVec(o->GetNbinsX());
-    for (int bin = 1; bin <= e->GetNbinsX(); bin++)
+    const unsigned int N = e->GetNbinsX();
+    TVectorD eVec(N);
+    TVectorD oVec(N);
+    for(unsigned int bin = 1; bin <= N; bin++)
       eVec[bin-1] = e->GetBinContent(bin);
-    for (int bin = 1; bin <= o->GetNbinsX(); bin++)
+    for(unsigned int bin = 1; bin <= N; bin++)
       oVec[bin-1] = o->GetBinContent(bin);
 
     return Chi2CovMx(eVec, oVec, covmxinv);
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihoodCovMx(const TH1D* e, const TH1D* o, const TMatrixD& M)
+  /// TMatrixD::operator() does various sanity checks and shows up in profiles
+  class TMatrixAccessor
+  {
+  public:
+    TMatrixAccessor(const TMatrixD& m)
+      : fN(m.GetNrows()),
+        fArray(m.GetMatrixArray())
+    {
+    }
+    inline double operator()(unsigned int i, unsigned int j) const
+    {
+      return fArray[fN*i+j];
+    }
+  protected:
+    unsigned int fN;
+    const double* fArray;
+  };
+
+  //----------------------------------------------------------------------
+  double LogLikelihoodCovMx(const TH1D* e, const TH1D* o, const TMatrixD& M2,
+                            std::vector<double>* hint)
   {
     // Don't use under/overflow bins (the covariance matrix doesn't have them)
     const double* m0 = e->GetArray()+1;
     const double* d = o->GetArray()+1;
     const unsigned int N = e->GetNbinsX();
 
-    assert(M.GetNrows() == int(N));
+    assert(M2.GetNrows() == int(N));
 
-    // We're trying to solve for the best expectation in each bin. A good seed
-    // value is the nominal MC.
-    std::vector<double> m(m0, m0+N);
+    const TMatrixAccessor M(M2); // faster access to matrix elements
+
+    // We're trying to solve for the best expectation in each bin 'm'
+
+    // if no hint is provided, use this as our working area
+    std::vector<double> localm;
+    // The hint is hopefully our m's from a similar problem that was previously
+    // posed, which should be a good starting point.
+    std::vector<double>& mv = hint ? *hint : localm;
+    // If not...
+    if(mv.size() != N){
+      mv.resize(N);
+      // A good seed value is the nominal MC
+      for(unsigned int i = 0; i < N; ++i) mv[i] = m0[i];
+    }
+    double* m = mv.data();
+
 
     double prev = -999;
     double ret = 0;
 
-    while(true){
+    // Normally converges in ~200 iterations
+    for(int n = 0; n < 1000; ++n){
       // The derivatives of the chisq are quadratic functions, so it's not easy
       // to solved for all the variables simultaneously. Instead, we iterate
       // through the m's and solve them holding all the others fixed, and
       // repeat until we converge.
       for(unsigned int k = 0; k < N; ++k){
+        if(m0[k] == 0) continue;
+
         // Coefficients for the quadratic formula for this term
         const double a = M(k, k);
         double b = 1 - m0[k]*M(k, k);
         for(unsigned int i = 0; i < N; ++i){
+          if(m0[i] == 0) continue;
           if(i != k){
             b += (m[i]-m0[i])*M(i, k);
           }
@@ -269,6 +308,7 @@ namespace ana
           assert(desc >= 0);
           // Empirically the other solution is always negative
           m[k] = ( -b + sqrt(desc) ) / (2*a);
+          //          assert(( -b - sqrt(desc) ) / (2*a) < 0);
         }
 
         // Only physically meaningful to have a positive prediction (or
@@ -278,6 +318,7 @@ namespace ana
       } // end for k
 
       // Update the chisq
+      prev = ret;
       ret = 0;
       // There's the LL of the data to the updated prediction...
       for(unsigned int i = 0; i < N; ++i) ret += LogLikelihood(m[i], d[i]);
@@ -289,8 +330,22 @@ namespace ana
 
       // If the updates didn't change anything at all then we're done
       if(ret == prev) return ret;
-      prev = ret;
-    } // end while
+    } // end for n
+
+    // We're most likely flipping between two extremely similar numbers at the
+    // <1e-14 scale.
+    if(fabs(ret-prev) < 1e-6){
+      //      std::cout << "Warning: partially stalled LLCovMx "
+      //                << fabs(ret-prev) << std::endl;
+      return ret;
+    }
+
+    // If not, we have an actual problem. Print out the bins to give some hints
+    std::cout << "LogLikelihoodCovMx stalled" << std::endl;
+    for(unsigned int i = 0; i < N; ++i){
+      std::cout << i << " " << d[i] << " " << m0[i] << " -> " << m[i] << " " << LogLikelihood(m[i], d[i]) << std::endl;
+    }
+    abort();
   }
 
   //----------------------------------------------------------------------

@@ -152,10 +152,13 @@ namespace ana
   /// \param covmxinv The inverse of the correlation matrix between MC bins.
   ///                 DO NOT include any contribution for the statistical
   ///                 uncertainty on the data.
+  /// \param hint Optional. It's a substantial optimization to pass the same
+  ///             vector here each time so that we can learn from a previous
+  ///             similar problem.
   ///
   /// The matrix must be symmetric and have dimension equal to the number of
   /// non-overflow bins in the histograms.
-  double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv);
+  double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv, std::vector<double>* hint = 0);
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
   ///
