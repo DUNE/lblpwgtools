@@ -835,11 +835,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName, kCovMxChiSqPreInvert);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName, kCovMxChiSqPreInvert);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
