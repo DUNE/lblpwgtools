@@ -263,7 +263,7 @@ void OffAxisNDCAFCombiner(
       }
 
       if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-        double nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
+        double nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
         file_pot *= nevs / double(f_caf->GetEntries());
         std::cout << "Rescaling POT by: " << nevs / double(f_caf->GetEntries())
                   << " as only taking " << nevs << "/" << f_caf->GetEntries()
@@ -297,28 +297,21 @@ void OffAxisNDCAFCombiner(
       }
 
       if (!CombiningCombinedCAFs) {
-        Long64_t nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
-        std::cout << "NMaxEvents: " << NMaxEvents
-                  << ", f_caf->GetEntries(): " << f_caf->GetEntries()
-                  << std::endl;
-
+        size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
         perPOT = 1.0 / file_pot;
-        for (Long64_t e_it = 0; e_it < nevs; ++e_it) {
+        for (size_t e_it = 0; e_it < nevs; ++e_it) {
           if (preSelect) {
             f_caf->GetEntry(e_it);
             if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-              std::cout << "FAIL [" << e_it << "]: { " << vtx_x << ", " << vtx_y
-                        << ", " << vtx_z << "}." << std::endl;
               continue;
             }
-            std::cout << "PASS [" << e_it << "]: { " << vtx_x << ", " << vtx_y
-                      << ", " << vtx_z << "}." << std::endl;
           }
           POTWeightFriend->Fill();
         }
+        std::cout << "POTWeightFriend->GetEntries(): "
+                  << POTWeightFriend->GetEntries() << " / " << nevs << " events."
+                  << std::endl;
       }
-      std::cout << "POTWeightFriend->GetEntries(): "
-                << POTWeightFriend->GetEntries() << std::endl;
     }
 
     f.Close();
@@ -341,7 +334,7 @@ void OffAxisNDCAFCombiner(
     caf->SetBranchAddress("vtx_x", &vtx_x);
     caf->SetBranchAddress("vtx_y", &vtx_y);
     caf->SetBranchAddress("vtx_z", &vtx_z);
-    size_t nents = std::min(Long64_t(NMaxEvents), caf->GetEntries());
+    size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
     ana::Progress preselprog("Copy with selection progress.");
     for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
       if (ent_it && !(ent_it % 10000)) {
