@@ -3,6 +3,7 @@
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
+#include "TH2.h"
 
 #include <dirent.h>
 
@@ -121,6 +122,7 @@ void OffAxisNDCAFCombiner(
     size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
 
   size_t asterisk_loc = InputFilePattern.find_first_of('*');
+  size_t class_loc = InputFilePattern.find_first_of('[');
   size_t last_slash_loc = InputFilePattern.find_last_of('/');
 
   if ((asterisk_loc != std::string::npos) &&
@@ -143,13 +145,14 @@ void OffAxisNDCAFCombiner(
 
   std::vector<std::string> CAFs;
 
-  if (asterisk_loc == std::string::npos) {
+  if ((asterisk_loc == std::string::npos) && (class_loc == std::string::npos)) {
     CAFs.push_back(pattern);
   } else {
     if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-      std::cout << "Set NMaxEvents but found a wildcard, this will not do what "
-                   "you want, aborting."
-                << std::endl;
+      std::cout
+          << "Set NMaxEvents but found a regex pattern, this will not do what "
+             "you want, aborting."
+          << std::endl;
       abort();
     }
     try {
@@ -163,22 +166,39 @@ void OffAxisNDCAFCombiner(
 
   double min_m = -4;
   double max_m = 40;
-  double step_m = 0.5; // 50 cm
+  double step_m = 0.25; // 25 cm
+  double offset_m = 0;  // (step_m / 2.0)
   size_t NStep = (max_m - min_m) / step_m;
 
   TH1D *POTExposure =
       new TH1D("POTExposure", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               min_m - (step_m / 2.0), max_m - (step_m / 2.0));
+               min_m - offset_m, max_m - offset_m);
   POTExposure->SetDirectory(nullptr);
+  TH2D *POTExposure_stop =
+      new TH2D("POTExposure_stop", ";OffAxisPosition (m);Exposure (POT)", NStep,
+               min_m - offset_m, max_m - offset_m, 10, -2, 38);
+  POTExposure_stop->SetDirectory(nullptr);
   TH1D *FileExposure =
       new TH1D("FileExposure", ";OffAxisPosition (m);Exposure (NFiles)", NStep,
-               min_m - (step_m / 2.0), max_m - (step_m / 2.0));
+               min_m - offset_m, max_m - offset_m);
   FileExposure->SetDirectory(nullptr);
 
   TChain *caf = new TChain(cafTreeName.c_str());
   TChain *meta = new TChain("meta");
+  TTree *POTWeightFriend;
+  double perPOT;
 
-  for (std::string file_name : CAFs) {
+  if (CombiningCombinedCAFs) {
+    POTWeightFriend = new TChain("POTWeightFriend");
+  } else {
+    POTWeightFriend = new TTree("POTWeightFriend", "");
+    POTWeightFriend->Branch("perPOT", &perPOT, "perPOT/D");
+    POTWeightFriend->SetDirectory(nullptr);
+  }
+
+  for (size_t fctr = 0; fctr < CAFs.size(); ++fctr) {
+
+    std::string const &file_name = CAFs[fctr];
 
     std::cout << "[INFO]: Opening file: " << file_name << std::endl;
 
@@ -200,6 +220,12 @@ void OffAxisNDCAFCombiner(
       f.GetObject("POTExposure", f_POTExposure);
       assert(f_POTExposure);
       POTExposure->Add(f_POTExposure);
+
+      TH2D *f_POTExposure_stop;
+      f.GetObject("POTExposure_stop", f_POTExposure_stop);
+      assert(f_POTExposure_stop);
+      POTExposure_stop->Add(f_POTExposure_stop);
+
       TH1D *f_FileExposure;
       f.GetObject("FileExposure", f_FileExposure);
       assert(f_FileExposure);
@@ -228,9 +254,11 @@ void OffAxisNDCAFCombiner(
                   << " file entries." << std::endl;
       }
 
-      std::cout << "[INFO]: Found ND file with detector at " << det_x
-                << " m off axis which contained " << file_pot << " POT from "
-                << nmeta_ents << " files." << std::endl;
+      std::cout << "[INFO]: Found ND file (" << (fctr+1) << "/" << CAFs.size()
+                << ") with detector at " << det_x
+                << " m off axis which contained " << file_pot << " POT and "
+                << f_caf->GetEntries() << " events from " << nmeta_ents
+                << " files." << std::endl;
 
       double det_min_m = -3;
       double det_max_m = 3;
@@ -238,21 +266,26 @@ void OffAxisNDCAFCombiner(
       size_t det_steps = (det_max_m - det_min_m) / (step_m * average_step);
 
       for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
-<<<<<<< Updated upstream
         double det_x_pos_m = det_min_m + pos_it * (step_m * average_step);
 
-=======
-        double det_x_pos_m = det_min_m + pos_it * step_m * average_step;
-        
->>>>>>> Stashed changes
         if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
                            /*Dummy z_pos_m*/ 150)) {
-          //std::cout << "out of FV: " << (det_x_pos_m + det_x) << std::endl;
+          // std::cout << "out of FV: " << (det_x_pos_m + det_x) << std::endl;
           continue;
         }
 
         POTExposure->Fill(det_x_pos_m + det_x, average_step * file_pot);
+        POTExposure_stop->Fill(det_x_pos_m + det_x, det_x,
+                               average_step * file_pot);
         FileExposure->Fill(det_x_pos_m + det_x, average_step * nmeta_ents);
+      }
+
+      if (!CombiningCombinedCAFs) {
+        Long64_t nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
+        for (Long64_t e_it = 0; e_it < nevs; ++e_it) {
+          perPOT = 1.0 / file_pot;
+          POTWeightFriend->Fill();
+        }
       }
     }
 
@@ -260,6 +293,9 @@ void OffAxisNDCAFCombiner(
 
     caf->Add((dir + file_name).c_str());
     meta->Add((dir + file_name).c_str());
+    if (CombiningCombinedCAFs) {
+      static_cast<TChain *>(POTWeightFriend)->Add((dir + file_name).c_str());
+    }
   }
 
   TFile *fout = TFile::Open(OutputFileName.c_str(), "RECREATE");
@@ -270,7 +306,9 @@ void OffAxisNDCAFCombiner(
   std::cout << "[INFO]: Copying meta tree..." << std::endl;
   TTree *metacopy = meta->CloneTree(-1, "fast");
   delete meta;
+  POTWeightFriend->SetDirectory(fout);
   POTExposure->Write("POTExposure");
+  POTExposure_stop->Write("POTExposure_stop");
   FileExposure->Write("FileExposure");
   fout->Write();
 }
