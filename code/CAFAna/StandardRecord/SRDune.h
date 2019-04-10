@@ -145,5 +145,7 @@ namespace caf
     // First index is systematic ID
     std::vector<std::vector<double>> genie_wgt;
     std::vector<double> genie_cv_wgt;
+
+    double perPOTWeight;
   };
 }
