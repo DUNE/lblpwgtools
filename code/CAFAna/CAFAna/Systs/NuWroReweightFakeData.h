@@ -27,8 +27,8 @@ public:
 
   virtual ~NuWroReweightFakeDataGenerator(){};
 
-  std::map<std::string, BDTReweighter*> bdt_reweighters;
-
+  //  std::map<std::string, BDTReweighter*> bdt_reweighters;
+  std::vector<BDTReweighter*> bdt_reweighters;
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
 
@@ -56,12 +56,12 @@ public:
     features[5].fvalue = sr->dune.X;
     features[6].fvalue = sr->dune.Y;
 
-    features[7].ivalue = sr->dune.nP;
-    features[8].ivalue = sr->dune.nN;
-    features[9].ivalue = sr->dune.nipip;
-    features[10].ivalue = sr->dune.npim;
-    features[11].ivalue = sr->dune.nipi0;
-    features[12].ivalue = sr->dune.niem;
+    features[7].fvalue = sr->dune.nP;
+    features[8].fvalue = sr->dune.nN;
+    features[9].fvalue = sr->dune.nipip;
+    features[10].fvalue = sr->dune.nipim;
+    features[11].fvalue = sr->dune.nipi0;
+    features[12].fvalue = sr->dune.niem;
 
     features[13].fvalue = sr->dune.eP;
     features[14].fvalue = sr->dune.eN;
@@ -70,10 +70,10 @@ public:
     features[17].fvalue = sr->dune.ePi0;
 
     // These last 4 are legacy of an initial attempt and I don't think the BDT is using them but let's fill them properly to be on the safe side.
-    features[18].ivalue = (sr->dune.isFD == 0 ? 1 : 0); // FD files have isFD = 999
-    features[19].ivalue = sr->dune.isFHC;
-    features[20].ivalue = (sr->dune.nuPDG > 0 ? 1 : 0); // Is a neutrino, as opposed to antineutrino
-    features[21].ivalue = (abs(sr->dune.nuPDG) == 14 ? 1 : 0); // Is (anti)numu, as opposed to (anti)nue
+    features[18].fvalue = (sr->dune.isFD == 0 ? 1 : 0); // FD files have isFD = 999
+    features[19].fvalue = sr->dune.isFHC;
+    features[20].fvalue = (sr->dune.nuPDG > 0 ? 1 : 0); // Is a neutrino, as opposed to antineutrino
+    features[21].fvalue = (abs(sr->dune.nuPDG) == 14 ? 1 : 0); // Is (anti)numu, as opposed to (anti)nue
 
     // BDT_norm_weight normalizes weights predicted by the BDT to Genie absolute normalization
     double BDT_norm_weight = 1.;
@@ -90,55 +90,55 @@ public:
       absolute_NuWro_over_Genie_weight = 1.013;
       plattA = -1.24585102;
       plattB = -0.01783353;
-      thisReweighter = bdt_reweighters["numu_ND_FHC"];
+      thisReweighter = bdt_reweighters[6]; // 6 numu_ND_FHC
     } else if ((sr->dune.isFD == 0) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.046;
       absolute_NuWro_over_Genie_weight = 0.917;
       plattA = -1.22806734;
       plattB = -0.01548346;
-      thisReweighter = bdt_reweighters["numu_ND_RHC"];
+      thisReweighter = bdt_reweighters[7]; // 7 numu_ND_RHC 
     } else if ((sr->dune.isFD == 0) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (!(sr->dune.nuPDG > 0))){
       BDT_norm_weight = 1.019;
       absolute_NuWro_over_Genie_weight = 0.917;
       plattA = -1.3029002;
       plattB = -0.0314188;
-      thisReweighter = bdt_reweighters["numubar_ND_RHC"];
+      thisReweighter = bdt_reweighters[8]; // 8 numubar_ND_RHC
     } else if ((!(sr->dune.isFD == 0)) && (sr->dune.isFHC) && (abs(sr->dune.nuPDG) == 14) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.042;
       absolute_NuWro_over_Genie_weight = 1.011;
       plattA = -1.21073292;
       plattB = -0.02231727;
-      thisReweighter = bdt_reweighters["numu_FD_FHC"];
+      thisReweighter = bdt_reweighters[3]; // 3 numu_FD_FHC
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.040;
       absolute_NuWro_over_Genie_weight = 0.981;
       plattA = -1.21420542;
       plattB = -0.02423824;
-      thisReweighter = bdt_reweighters["numu_FD_RHC"];
+      thisReweighter = bdt_reweighters[4]; // 4 numu_FD_RHC 
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (!(sr->dune.nuPDG > 0))){
       BDT_norm_weight = 1.036;
       absolute_NuWro_over_Genie_weight = 0.904;
       plattA = -1.24604201;
       plattB = -0.03690337;
-      thisReweighter = bdt_reweighters["numubar_FD_RHC"];
+      thisReweighter = bdt_reweighters[5];  // 5 numubar_FD_RHC
     } else if ((!(sr->dune.isFD == 0)) && (sr->dune.isFHC) && (!(abs(sr->dune.nuPDG) == 14)) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.041;
       absolute_NuWro_over_Genie_weight = 1.038;
       plattA = -1.22058287;
       plattB = -0.01992826;
-      thisReweighter = bdt_reweighters["nue_FD_FHC"];
+      thisReweighter = bdt_reweighters[0]; // 0 nue_FD_FHC  
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (!(abs(sr->dune.nuPDG) == 14)) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.056;
       absolute_NuWro_over_Genie_weight = 0.988;
       plattA = -1.17760748;
       plattB = -0.02129378;
-      thisReweighter = bdt_reweighters["nue_FD_RHC"];
+      thisReweighter = bdt_reweighters[1]; // 1 nue_FD_RHC
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (!(abs(sr->dune.nuPDG) == 14)) && (!(sr->dune.nuPDG > 0))){
       BDT_norm_weight = 1.029;
       absolute_NuWro_over_Genie_weight = 0.912;
       plattA = -1.27055928;
       plattB = -0.0294727;
-      thisReweighter = bdt_reweighters["nuebar_FD_RHC"]-;
+      thisReweighter = bdt_reweighters[2]; // 2 nuebar_FD_RHC  
     } 
 
     if (thisReweighter) {
@@ -152,16 +152,15 @@ public:
     : ana::ISyst("NuWroReweightFakeDataGenerator",
 		 "NuWroReweightFakeDataGenerator"){
     
-    bdt_reweighters["nue_FD_FHC"] = new GeneratorReweight_nue_FD_FHC();
-    bdt_reweighters["nue_FD_RHC"] = new GeneratorReweight_nue_FD_RHC();
-    bdt_reweighters["nuebar_FD_RHC"] = new GeneratorReweight_nuebar_FD_RHC();
-    bdt_reweighters["numu_FD_FHC"] = new GeneratorReweight_numu_FD_FHC();
-    bdt_reweighters["numu_FD_RHC"] = new GeneratorReweight_numu_FD_RHC();
-    bdt_reweighters["numubar_FD_RHC"] = new GeneratorReweight_numubar_FD_RHC();
-    bdt_reweighters["numu_ND_FHC"] = new GeneratorReweight_numu_ND_FHC();
-    bdt_reweighters["numu_ND_RHC"] = new GeneratorReweight_numu_ND_RHC();
-    bdt_reweighters["numubar_ND_RHC"] = new GeneratorReweight_numubar_ND_RHC();
-
+    bdt_reweighters.emplace_back(new GeneratorReweight_nue_FD_FHC()); // 0 nue_FD_FHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_nue_FD_RHC()); // 1 nue_FD_RHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_nuebar_FD_RHC()); // 2 nuebar_FD_RHC 
+    bdt_reweighters.emplace_back(new GeneratorReweight_numu_FD_FHC()); // 3 numu_FD_FHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_numu_FD_RHC()); // 4 numu_FD_RHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_numubar_FD_RHC()); // 5 numubar_FD_RHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_numu_ND_FHC()); // 6 numu_ND_FHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_numu_ND_RHC()); // 7 numu_ND_RHC
+    bdt_reweighters.emplace_back(new GeneratorReweight_numubar_ND_RHC()); // 8 numubar_ND_RHC
   }
 };
 
