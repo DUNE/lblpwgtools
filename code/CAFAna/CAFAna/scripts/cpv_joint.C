@@ -46,12 +46,14 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 	  
 	  IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString, asimov_set);
+	  SystShifts trueSyst = kNoShift;
+	  SystShifts testSyst = kNoShift;
 
 	  thischisq = RunFitPoint(stateFname, sampleString,
-				  fakeThrowOsc, fakeThrowSyst, stats_throw,
+				  trueOsc, trueSyst, false,
 				  oscVars, systlist,
-				  fitThrowOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal, nullptr, &pftree);
+				  testOsc, testSyst,
+				  oscSeeds, penalty, Fitter::kNormal, nullptr);
 	  
 	  chisqmin = TMath::Min(thischisq,chisqmin);
 	  delete penalty;
