@@ -5,7 +5,9 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "TH2.h"
+#include "BDTReweighter.h"
+#include "MissingProtonFakeData_BDTRW_FHC.h"
+#include "MissingProtonFakeData_BDTRW_RHC.h"
 
 #include <memory>
 #include <sstream>
@@ -14,20 +16,12 @@
 
 class MissingProtonFakeDataGenerator : public ana::ISyst {
 public:
+
   virtual ~MissingProtonFakeDataGenerator(){};
 
-  std::vector<std::unique_ptr<TH2>> nu_Histos;
-  std::vector<std::unique_ptr<TH2>> nubar_Histos;
+  std::vector<BDTReweighter*> bdt_reweighter;
 
   bool fDoWeight;
-
-  TH2 const *GetWeightingHisto(int gmode, bool is_nu) const {
-    if ((gmode < 1) || (gmode > 14)) {
-      return nullptr;
-    }
-
-    return (is_nu ? nu_Histos : nubar_Histos)[gmode].get();
-  }
 
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
@@ -52,24 +46,34 @@ public:
       return;
     }
 
-    TH2 const *wght =
-        GetWeightingHisto(sr->dune.GENIE_ScatteringMode, (sr->dune.nuPDG > 0));
-    if (!wght) {
-      return;
+    union BDTReweighter::BDTReweighterFeature features[8];
+      
+    features[5].fvalue = sr->dune.Ev; // Etrue
+    features[6].fvalue = sr->dune.eP; // True proton kinetic energy
+    features[7].fvalue = 1-sr->dune.LepE/sr->dune.Ev; // ytrue
+      
+    for (int i = 0; i < 5; i++) features[i].fvalue = 0;
+      
+    bool foundMode = true;
+    switch(sr->dune.GENIE_ScatteringMode) {
+    case 1 : features[0].fvalue = 1.;
+      break;
+    case 3:  features[1].fvalue = 1.;
+      break;
+    case 4:  features[2].fvalue = 1.;
+      break;
+    case 5:  features[3].fvalue = 1.;
+      break;
+    case 10:  features[4].fvalue = 1.;
+      break;
+    default :
+      foundMode = false;
     }
 
-    int binx = wght->GetXaxis()->FindFixBin(sr->dune.Ev);
-    if ((binx == 0) || (binx == wght->GetXaxis()->GetNbins() + 1)) {
-      return;
+    if (foundMode) {
+      double wght_val = bdt_reweighter[sr->dune.nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
+      weight *= wght_val;
     }
-    int biny = wght->GetYaxis()->FindFixBin(sr->dune.eP);
-    if ((biny == 0) || (biny == wght->GetYaxis()->GetNbins() + 1)) {
-      return;
-    }
-
-    double wght_val = wght->GetBinContent(binx, biny);
-
-    weight *= wght_val;
   }
 
 public:
@@ -80,25 +84,10 @@ public:
                             : "MissingProtonEnergyGenerator"),
         EpFrac(epfrac), fDoWeight(DoWeight) {
 
-    std::vector<std::string> fnames = {
-        "ProtonEdepm20pc_binnedWeights_nu.root",
-        "ProtonEdepm20pc_binnedWeights_nubar.root"};
-    for (size_t bm = 0; bm < 2; ++bm) {
-      bool is_nu = (bm == 0);
-      TFile inp((ana::FindCAFAnaDir() + "/Systs/" + fnames[bm]).c_str(),
-                "READ");
-      assert(!inp.IsZombie());
-      for (size_t i = 0; i < 15; ++i) {
-        std::stringstream ss("");
-        ss << "EnuTp_" << i;
-        (is_nu ? nu_Histos : nubar_Histos)
-            .emplace_back(
-                dynamic_cast<TH2 *>(inp.Get(ss.str().c_str())->Clone()));
-        (is_nu ? nu_Histos : nubar_Histos).back()->SetDirectory(nullptr);
-      }
-    }
-  }
+    bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_FHC());
+    bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_RHC());
 
+  }
   double EpFrac;
 };
 
