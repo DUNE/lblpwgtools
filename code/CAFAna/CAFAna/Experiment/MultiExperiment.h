@@ -21,7 +21,6 @@ namespace ana
       fExpts.push_back(expt); 
       fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
-      std::cout << "Adding experiment there are now " << fExpts.size() << std::endl;
     }
 
     void AddCovarianceMatrix(const std::string covMatFileName, 
