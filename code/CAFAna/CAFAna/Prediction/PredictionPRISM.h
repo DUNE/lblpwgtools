@@ -5,11 +5,57 @@
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
+#include "CAFAna/Cuts/TruthCuts.h"
+
 #include "CAFAna/Analysis/PRISMExtrapolator.h"
 
 #include "TH3.h"
 
 namespace ana {
+
+class FVMassCorrection {
+  size_t fOverflow;
+
+public:
+  TH1D *fvmasscor;
+
+  FVMassCorrection() {
+    double det_min_cm = -400;
+    double det_max_cm = 400;
+    double step_cm = 25;
+    size_t NDetSteps = (det_max_cm - det_min_cm) / step_cm;
+
+    fvmasscor = new TH1D("fvmasscor", "", NDetSteps, det_min_cm, det_max_cm);
+    fvmasscor->SetDirectory(nullptr);
+    double avg_step = 1E-4;
+    size_t const navg_steps = step_cm / avg_step;
+
+    fOverflow = fvmasscor->GetXaxis()->GetNbins() + 1;
+    for (int bi_it = 0; bi_it < fvmasscor->GetXaxis()->GetNbins(); ++bi_it) {
+      double bin_low_edge = fvmasscor->GetXaxis()->GetBinLowEdge(bi_it + 1);
+      for (size_t avg_step_it = 0; avg_step_it < navg_steps; ++avg_step_it) {
+        double pos_cm = bin_low_edge + (double(avg_step_it) * avg_step);
+        if (!ana::IsInNDFV(pos_cm, 0, 150)) {
+          continue;
+        }
+        fvmasscor->Fill(pos_cm, 1.0 / double(navg_steps));
+      }
+
+      if (fvmasscor->GetBinContent(bi_it + 1) > 0) {
+        fvmasscor->SetBinContent(bi_it + 1,
+                                 1.0 / fvmasscor->GetBinContent(bi_it + 1));
+      }
+    }
+  }
+  double GetWeight(double vtx_x_cm) {
+    size_t bi_it = fvmasscor->FindFixBin(vtx_x_cm);
+    if ((bi_it == 0) || (bi_it == fOverflow)) {
+      return 0;
+    }
+    return fvmasscor->GetBinContent(bi_it);
+  }
+};
+
 /// Prediction that wraps a simple Spectrum
 class PredictionPRISM : public IPrediction {
 public:
@@ -48,6 +94,10 @@ public:
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
+  void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
+    fFluxMatcher = flux_matcher;
+  }
+
 protected:
   PredictionPRISM(std::unique_ptr<ReweightableSpectrum> &&spec,
                   std::unique_ptr<ReweightableSpectrum> &&specNumu,
@@ -61,7 +111,7 @@ protected:
 
     fOffAxisSpectrum = std::move(spec);
     fOffAxisSpectrumNumu = std::move(specNumu);
-    fOffAxisSpectrumNumu = std::move(specNumubar);
+    fOffAxisSpectrumNumubar = std::move(specNumubar);
     fNDBkg = NDBackgroundSpectra{nullptr, nullptr, nullptr};
     fHaveNDBkgPred = false;
     fFarDetSpectrumNC = nullptr;

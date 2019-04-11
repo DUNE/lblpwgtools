@@ -5,6 +5,7 @@ USE_UPS="0"
 CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
+USE_EIGEN=0
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -27,6 +28,12 @@ while [[ ${#} -gt 0 ]]; do
 
       USE_GPERF="1"
       echo "[OPT]: Will compile in gperftools support."
+      ;;
+
+      --use-eigen)
+
+      USE_EIGEN="1"
+      echo "[OPT]: Will compile in Eigen support."
       ;;
 
       -r|--release)
@@ -53,6 +60,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
+      echo -e "\t--use-eigen            : Build in Eigen support, required for PRISM components."
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
@@ -118,5 +126,5 @@ else
 
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_EIGEN=${USE_EIGEN} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 make install -j ${CORES}

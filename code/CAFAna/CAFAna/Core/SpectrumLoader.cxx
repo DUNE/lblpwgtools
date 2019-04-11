@@ -263,6 +263,18 @@ namespace ana
     int Nentries = tr->GetEntries();
     if (max_entries != 0 && max_entries < Nentries) Nentries = max_entries;
 
+    TTree *potFriend;
+    f->GetObject("POTWeightFriend", potFriend);
+    if (potFriend) {
+      tr->AddFriend(potFriend);
+      SetBranchChecked(potFriend, "perPOT", &sr.dune.perPOTWeight);
+      SetBranchChecked(potFriend, "perFile", &sr.dune.perFileWeight);
+      std::cout << "[INFO]: Found POT friend tree in input file, hooking up!"
+                << std::endl;
+    } else {
+      sr.dune.perPOTWeight = 1;
+    }
+
     for(int n = 0; n < Nentries; ++n){
       tr->GetEntry(n);
 
@@ -326,17 +338,6 @@ namespace ana
           abort();
         }
       }
-
-    TTree *potFriend;
-    f->GetObject("POTWeightFriend", potFriend);
-    if (potFriend) {
-      tr->AddFriend(potFriend);
-      SetBranchChecked(potFriend, "perPOTWeight", &sr.dune.perPOTWeight);
-      std::cout << "[INFO]: Found POT friend tree in input file, hooking up!"
-                << std::endl;
-    } else {
-      sr.dune.perPOTWeight = 1;
-    }
 
       // Reformat the genie systs
       sr.dune.total_cv_wgt = 1;

@@ -171,7 +171,7 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
 
   fOffAxisSpectrum->SaveTo(dir->mkdir("spect"));
   fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numu"));
-  fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numubar"));
+  fOffAxisSpectrumNumubar->SaveTo(dir->mkdir("spect_numubar"));
 
   if (fHaveNDBkgPred) {
     fNDBkg.fOffAxisSpectrumNC->SaveTo(dir->mkdir("spect_nd_NC"));

@@ -147,5 +147,6 @@ namespace caf
     std::vector<double> genie_cv_wgt;
 
     double perPOTWeight;
+    double perFileWeight;
   };
 }
