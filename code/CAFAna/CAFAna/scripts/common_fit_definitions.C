@@ -191,6 +191,8 @@ AxisBlob GetAxisBlob(std::string blob_name) {
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT MW yr
+const double nom_exposure = 336.;
 
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
@@ -350,7 +352,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
 				 	 bool useMissingProtonFakeData=false,
-				 	 bool useNuWroReweightFakeData=false){){
+				 	 bool useNuWroReweightFakeData=false){
   bool detsyst  = false;
   bool fluxsyst = false;
   bool xsecsyst = false;
@@ -637,27 +639,44 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 };
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
+void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_nd_rhc,
 		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
 		      double& pot_fd_rhc_numu){
+
+  // Did somebody say overextend the command line arguments even further?
+  // Well okay!
+  std::vector<std::string> input_vect = SplitString(cmdLineInput, ':');
+  
+  // Default to 7 years staged. Value is actually in kt MW yr
+  double exposure = 336;
+  if (input_vect.size() > 1) exposure = stod(input_vect[1]);
+  std::string input = input_vect[0];
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
-  // I guess I should do this
-  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
+  // Look for some other magic information
+  if (input.find("full") != std::string::npos or input.find("15year") != std::string::npos)
+    exposure = 1104;
 
-  // Separate into "nominal" and "full" exposure... probably need something smarter later
-  // But, the LBNC waits for no one!
-  double exposure = 1.;
-  if (input.find("full") != std::string::npos) exposure = 13./7;
+  if (input.find("nom") != std::string::npos or input.find("7year") != std::string::npos)
+    exposure = 336;
+
+  if (input.find("10year") != std::string::npos)
+    exposure = 624;
+
+  double exposure_ratio = exposure/nom_exposure;
+
+  
+  // Now sort out which samples to include
+  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
 
   // Hacky McHackerson is here to stay!
   if (input.find("nd") != std::string::npos){
-    pot_nd_fhc = pot_nd_rhc = pot_nd*exposure;
+    pot_nd_fhc = pot_nd_rhc = pot_nd*exposure_ratio;
   }
   if (input.find("fd") != std::string::npos){
-    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd*exposure;
+    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd*exposure_ratio;
   }
 
   // Now allow specific subsets
