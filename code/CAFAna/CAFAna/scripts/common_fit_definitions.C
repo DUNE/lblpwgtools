@@ -299,7 +299,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 bool useMissingProtonFakeData=true, bool removeNonFitDials=false){
+				 bool useMissingProtonFakeData=true, bool useNuWroFakeData=true, bool removeNonFitDials=true){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
@@ -330,6 +330,9 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 
   if(useMissingProtonFakeData){
     systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
+  }
+  if(useNuWroFakeData){
+    systlist.push_back(GetNuWroReweightFakeDataSyst().front());
   }
 
   if (removeNonFitDials) {
@@ -772,6 +775,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   assert(systlist.size()+oscVars.size());
 
+  //std::vector<const ISyst*> systs = GetListOfSysts();
+  //for( std::vector<const ISyst*>::const_iterator it = systs.begin(); it != systs.end(); ++it )
+  //  std::cout << (*it)->ShortName() << std::endl;
+
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
   static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
@@ -785,7 +792,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Get the ndCov
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
   std::string covFileName =
-      cafFilePath+"/det_syst_cov.root";
+      cafFilePath+"/det_sys_cov_oldBins.root";
 #else
   std::string covFileName =
       FindCAFAnaDir() + "/Systs/ND_syst_cov_withRes.root";
