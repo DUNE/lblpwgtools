@@ -21,6 +21,7 @@
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/MissingProtonFakeData.h"
+#include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
@@ -297,7 +298,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 bool useMissingProtonFakeData=true){
+					 bool useMissingProtonFakeData=true, bool useNuWroReweightFakeData=true){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
@@ -329,6 +330,9 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   if(useMissingProtonFakeData){
     systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
   }
+  if(useNuWroReweightFakeData){
+    systlist.push_back(GetNuWroReweightFakeDataSyst().front());
+  }
 
   // For now, hard code this part... too many damned scripts to change...
   RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst",
@@ -345,7 +349,8 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false,
+				 	 bool useNuWroReweightFakeData=false){){
   bool detsyst  = false;
   bool fluxsyst = false;
   bool xsecsyst = false;
@@ -383,6 +388,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     detsyst = true;
   }
   if (systString.find("prot_fakedata") != std::string::npos) {useMissingProtonFakeData = true;}
+  if (systString.find("nuwro_fakedata") != std::string::npos) {useNuWroReweightFakeData = true;}
   // This might need more thought because of the above... but...
   if (systString.find("nodet") != std::string::npos){
     xsecsyst = true;
@@ -402,13 +408,14 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-			useND, useFD, useNueOnE, useMissingProtonFakeData);
+			useND, useFD, useNueOnE, useMissingProtonFakeData, useNuWroReweightFakeData);
 }
 
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false,
+					 bool useNuWroReweightFakeData=false){
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
