@@ -1,3 +1,4 @@
+#include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "TChain.h"
@@ -119,7 +120,13 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 void OffAxisNDCAFCombiner(
     std::string InputFilePattern, std::string OutputFileName,
     bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
+    bool preSelect = false,
     size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
+
+  if (CombiningCombinedCAFs && preSelect) {
+    std::cout << "[ERROR]: Cannot run event preselection when combining CAFs."
+              << std::endl;
+  }
 
   size_t asterisk_loc = InputFilePattern.find_first_of('*');
   size_t class_loc = InputFilePattern.find_first_of('[');
@@ -162,6 +169,11 @@ void OffAxisNDCAFCombiner(
                 << std::endl;
       throw;
     }
+  }
+
+  if (!CAFs.size()) {
+    std::cout << "[WARN]: Found no matching files." << std::endl;
+    return;
   }
 
   double min_m = -4;
@@ -213,6 +225,10 @@ void OffAxisNDCAFCombiner(
     // Assume input file was generated with a single stop.
     double det_x;
     f_caf->SetBranchAddress("det_x", &det_x);
+    double vtx_x, vtx_y, vtx_z;
+    f_caf->SetBranchAddress("vtx_x", &vtx_x);
+    f_caf->SetBranchAddress("vtx_y", &vtx_y);
+    f_caf->SetBranchAddress("vtx_z", &vtx_z);
     f_caf->GetEntry(0);
 
     if (CombiningCombinedCAFs) {
@@ -247,14 +263,14 @@ void OffAxisNDCAFCombiner(
       }
 
       if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-        double nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
+        double nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
         file_pot *= nevs / double(f_caf->GetEntries());
         std::cout << "Rescaling POT by: " << nevs / double(f_caf->GetEntries())
                   << " as only taking " << nevs << "/" << f_caf->GetEntries()
                   << " file entries." << std::endl;
       }
 
-      std::cout << "[INFO]: Found ND file (" << (fctr+1) << "/" << CAFs.size()
+      std::cout << "[INFO]: Found ND file (" << (fctr + 1) << "/" << CAFs.size()
                 << ") with detector at " << det_x
                 << " m off axis which contained " << file_pot << " POT and "
                 << f_caf->GetEntries() << " events from " << nmeta_ents
@@ -281,11 +297,20 @@ void OffAxisNDCAFCombiner(
       }
 
       if (!CombiningCombinedCAFs) {
-        Long64_t nevs = std::min(Long64_t(NMaxEvents), f_caf->GetEntries());
-        for (Long64_t e_it = 0; e_it < nevs; ++e_it) {
-          perPOT = 1.0 / file_pot;
+        size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
+        perPOT = 1.0 / file_pot;
+        for (size_t e_it = 0; e_it < nevs; ++e_it) {
+          if (preSelect) {
+            f_caf->GetEntry(e_it);
+            if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+              continue;
+            }
+          }
           POTWeightFriend->Fill();
         }
+        std::cout << "POTWeightFriend->GetEntries(): "
+                  << POTWeightFriend->GetEntries() << " / " << nevs << " events."
+                  << std::endl;
       }
     }
 
@@ -300,15 +325,47 @@ void OffAxisNDCAFCombiner(
 
   TFile *fout = TFile::Open(OutputFileName.c_str(), "RECREATE");
   std::cout << "[INFO]: Copying caf tree..." << std::endl;
-  TTree *treecopy = caf->CloneTree(NMaxEvents, "fast");
+  TTree *treecopy =
+      caf->CloneTree(preSelect ? 0 : NMaxEvents, preSelect ? "" : "fast");
   treecopy->SetName("cafTree");
+
+  if (preSelect) {
+    double vtx_x, vtx_y, vtx_z;
+    caf->SetBranchAddress("vtx_x", &vtx_x);
+    caf->SetBranchAddress("vtx_y", &vtx_y);
+    caf->SetBranchAddress("vtx_z", &vtx_z);
+    size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
+    ana::Progress preselprog("Copy with selection progress.");
+    for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
+      if (ent_it && !(ent_it % 10000)) {
+        preselprog.SetProgress(double(ent_it) / double(nents));
+      }
+      caf->GetEntry(ent_it);
+      if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+        continue;
+      }
+      treecopy->Fill();
+    }
+    preselprog.Done();
+  }
+
   delete caf;
   std::cout << "[INFO]: Copying meta tree..." << std::endl;
   TTree *metacopy = meta->CloneTree(-1, "fast");
   delete meta;
-  POTWeightFriend->SetDirectory(fout);
+  if (CombiningCombinedCAFs) {
+    std::cout << "[INFO]: Copying POTWeightFriend tree..." << std::endl;
+    TTree *POTWeightFriendcopy = POTWeightFriend->CloneTree(-1, "fast");
+    delete POTWeightFriend;
+  } else {
+    std::cout << "[INFO]: Writing POTWeightFriend tree..." << std::endl;
+    POTWeightFriend->SetDirectory(fout);
+    POTWeightFriend->Write();
+  }
+
   POTExposure->Write("POTExposure");
   POTExposure_stop->Write("POTExposure_stop");
   FileExposure->Write("FileExposure");
+
   fout->Write();
 }
