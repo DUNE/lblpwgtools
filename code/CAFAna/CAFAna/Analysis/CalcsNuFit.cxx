@@ -38,7 +38,7 @@ namespace ana
     if (asimov_set == 2 && hie == +1) ret->SetTh23(kNuFitTh23HiNH);
     if (asimov_set == 1 && hie == -1) ret->SetTh23(kNuFitTh23LoIH);
     if (asimov_set == 2 && hie == -1) ret->SetTh23(kNuFitTh23HiIH);
-
+    if (asimov_set == 3) ret->SetTh23(kNuFitTh23Max);
 
     if (oct < 0) ret->SetTh23(TMath::Pi()/2 - ret->GetTh23());
     
@@ -82,7 +82,7 @@ namespace ana
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23LoNH-3*kNuFitTh23ErrNH,
 					kNuFitTh23LoNH+3*kNuFitTh23ErrNH));
 	}
-        else if (asimov_set ==2) {
+        else if (asimov_set == 2) {
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23HiNH-3*kNuFitTh23ErrNH,
 					kNuFitTh23HiNH+3*kNuFitTh23ErrNH));
 	}

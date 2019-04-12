@@ -32,7 +32,7 @@ namespace ana
   const double kNuFitTh23LoNH = 47.3 * TMath::Pi()/180;
   const double kNuFitTh23HiIH = 51.4 * TMath::Pi()/180;
   const double kNuFitTh23LoIH = 47.8 * TMath::Pi()/180;
-
+  const double kNuFitTh23Max  = 45.0 * TMath::Pi()/180;
 
   // Based on 1/6 of the +/- 3sigma error
   const double kNuFitDmsq21Err = ((8.01-6.79)/6)*1e-5;
@@ -55,6 +55,7 @@ namespace ana
   // 0 NuFit 4.0 Central Values
   // 1 Th23 set to 90% CL lower value
   // 2 Th23 set to 90% CL upper value
+  // 3 Th23 set to maximal(ish) sin2th23 = 0.5
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
