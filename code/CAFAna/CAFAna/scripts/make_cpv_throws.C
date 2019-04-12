@@ -86,7 +86,7 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     oscSeedsAll[&kFitSinSqTheta23] = {.4, .6}; // try both octants
     oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5}; // Maybe not necessary...
 
-    // Slightly incorrect, but it'll do
+    // Ignoring the possibility of a theta23 penalty here
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
@@ -96,6 +96,7 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
 				   oscSeedsAll, gpenalty, Fitter::kNormal, 
 				   nullptr, &global_tree, &mad_spectra_yo);     
     global_tree.throw_tree->Fill();
+    delete gpenalty;
 
     // Now fit several times to find the best fit when dCP = 0, pi
     double chisqmin = 99999;
