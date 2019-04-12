@@ -105,27 +105,25 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     for (int tdcp = 0; tdcp < 2; ++tdcp) {
       double dcptest = tdcp*TMath::Pi();
 
-      for(int ihie = -1; ihie <= +1; ihie += 2) {
-        for (int ioct = -1; ioct <= 1; ioct +=2) {
-	  
-	  // Now testOsc is restricted to CP conservation
-	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, ioct);
-          testOsc->SetdCP(dcptest);
+      for (int ioct = -1; ioct <= 1; ioct +=2) {
+	
+	// Now testOsc is restricted to CP conservation
+	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);
+	testOsc->SetdCP(dcptest);
 
-	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-
-          IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString);
-
-          thischisq = RunFitPoint(stateFname, sampleString,
-                                  fakeThrowOsc, fakeThrowSyst, stats_throw,
-                                  oscVars, systlist,
-                                  testOsc, fitThrowSyst,
-                                  oscSeeds, penalty, Fitter::kNormal, 
-				  nullptr, &cpv_tree, &mad_spectra_yo);
-	  
-          chisqmin = TMath::Min(thischisq,chisqmin);
-          delete penalty;
-	}
+	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+	
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
+	
+	thischisq = RunFitPoint(stateFname, sampleString,
+				fakeThrowOsc, fakeThrowSyst, stats_throw,
+				oscVars, systlist,
+				testOsc, fitThrowSyst,
+				oscSeeds, penalty, Fitter::kNormal, 
+				nullptr, &cpv_tree, &mad_spectra_yo);
+	
+	chisqmin = TMath::Min(thischisq,chisqmin);
+	delete penalty;
       }
     }
     
