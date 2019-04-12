@@ -71,7 +71,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     std::map<const IFitVar*, std::vector<double>> oscSeeds;
     if (sampleString.find("fd") != std::string::npos) {
       oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-      oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
+      oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
     }
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
