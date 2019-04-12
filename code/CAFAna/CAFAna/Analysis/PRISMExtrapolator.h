@@ -146,6 +146,7 @@ Getstdvector(std::vector<std::unique_ptr<THN>> const &rhv) {
 
 Eigen::MatrixXd
 GetEigenMatrix(TH2 const *,
+               size_t max_rows = std::numeric_limits<size_t>::max(),
                size_t max_cols = std::numeric_limits<size_t>::max());
 Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &);
 Eigen::VectorXd GetEigenFlatVector(TH1 const *);

@@ -102,16 +102,16 @@ size_t FillHistFromEigenVector(TH1 *rh, Eigen::VectorXd const &vals,
   throw;
 }
 
-Eigen::MatrixXd GetEigenMatrix(TH2 const *h, size_t max_cols) {
-  Int_t NCols = std::min(max_cols, size_t(h->GetNbinsY()));
-  Eigen::MatrixXd em(h->GetNbinsX(), NCols);
+Eigen::MatrixXd GetEigenMatrix(TH2 const *h, size_t max_rows, size_t max_cols) {
+  Int_t NRows = std::min(max_rows, size_t(h->GetNbinsY()));
+  Int_t NCols = std::min(max_cols, size_t(h->GetNbinsX()));
 
+  Eigen::MatrixXd em(NRows, NCols);
   for (Int_t ir = 0; ir < em.rows(); ++ir) {
     for (Int_t ic = 0; ic < em.cols(); ++ic) {
       em(ir, ic) = h->GetBinContent(ic + 1, ir + 1);
     }
   }
-
   return em;
 }
 
@@ -257,20 +257,16 @@ Eigen::VectorXd SolveLinComb(TH2 const *NDPred, TH1 const *FDOsc,
   int col_min = 0;
   if (EBinLow != 0) {
     col_min = EBinLow - 1;
-    std::cout << "[INFO]: Applying Flux cut: EMin = " << EMin
-              << " -> Hist bin = " << EBinLow << " Col min = " << col_min
-              << std::endl;
   }
   int EBinUp = FDOsc->GetXaxis()->FindFixBin(EMax);
   int col_max = NEBins - 1;
   if (EBinUp != NEBins) {
     col_max = EBinUp - 1;
-    std::cout << "[INFO]: Applying Flux cut: EMax = " << EMax
-              << " -> Hist bin = " << EBinUp << " Col max = " << col_max
-              << std::endl;
   }
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDPred, NCoeffs);
+  NDFluxMatrix.transposeInPlace();
+
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
 
   if (reg_factor) {
@@ -284,9 +280,6 @@ Eigen::VectorXd SolveLinComb(TH2 const *NDPred, TH1 const *FDOsc,
   Eigen::VectorXd Target = GetEigenFlatVector(FDOsc);
 
   // // Apply energy cut
-  std::cout << "[INFO]: Taking the first " << col_max << "/ " << NEBins
-            << " rows, and then the " << (col_max - col_min)
-            << " bottom rows of that." << std::endl;
   NDFluxMatrix = NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
   Target = Target.topRows(col_max).bottomRows(col_max - col_min);
 
@@ -327,6 +320,8 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsEventRate(
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
 
     Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
+    NDFluxMatrix.transposeInPlace();
+
     Eigen::VectorXd Target = GetEigenFlatVector(FDOsc.get());
 
     fDebugTarget["last_match"] = std::unique_ptr<TH1>(
@@ -353,9 +348,6 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
       std::to_string(static_cast<size_t>(NDMode)) + "_" +
       std::to_string(static_cast<size_t>(FDMode)) + "_" +
       std::to_string(max_OffAxis_m);
-
-  std::cout << "In PRISMExtrapolator::GetMatchCoefficients Osc has hash = "
-            << uniq_soln_name << std::endl;
 
   if (!fMatchCache.count(uniq_soln_name)) {
 
@@ -409,6 +401,7 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
 
     Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis, NCoeffs);
+    NDFluxMatrix.transposeInPlace();
     Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
 
     if (fRegFactor) {
@@ -426,6 +419,21 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
                         osc->P(flavBefore, flavAfter,
                                FDUnosc->GetXaxis()->GetBinCenter(ebin_it + 1));
     }
+
+    int EBinLow = FDUnosc->GetXaxis()->FindFixBin(fENuMin);
+    int col_min = 0;
+    if (EBinLow != 0) {
+      col_min = EBinLow - 1;
+    }
+    int EBinUp = FDUnosc->GetXaxis()->FindFixBin(fENuMax);
+    int col_max = NEBins - 1;
+    if (EBinUp != NEBins) {
+      col_max = EBinUp - 1;
+    }
+
+    // // Apply energy cut
+    NDFluxMatrix = NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
+    Target = Target.topRows(col_max).bottomRows(col_max - col_min);
 
     assert(NDFluxMatrix.rows() == Target.size());
 

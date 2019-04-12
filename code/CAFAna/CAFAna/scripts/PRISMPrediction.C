@@ -36,6 +36,13 @@ const HistAxis PosDetAx("Det_x (m)", binsOffAxisPos, kDetX,
                         "Off axis position (m)", binsOffAxisPos,
                         kTrueOffAxisPos);
 
+inline double FD_ND_FVRatio(double x_slice) {
+  double NDSliceFV = x_slice * 200 * (350 - 50);
+  double FDFV = 620 * 1100 * (1244 - 50);
+
+  return FDFV / NDSliceFV;
+}
+
 void PRISMPrediction(std::string const &off_axis_file,
                      std::string const &output_file, bool isfhc = true,
                      std::string const &state_file = "", bool reload = false) {
@@ -228,11 +235,11 @@ void PRISMPrediction(std::string const &off_axis_file,
   //
 
   PRISMExtrapolator pfm;
-  // pfm.InitializeFluxMatcher("DUNEFluxFineOptEngNov2017.2019_03_06.root", 1);
-  pfm.InitializeEventRateMatcher(predInterpNDNumu.get(),
-                                 predInterpFDNumu.get());
+  pfm.InitializeFluxMatcher("DUNEFluxFineOptEngNov2017.2019_03_06.root", 1);
+  // pfm.InitializeEventRateMatcher(predInterpNDNumu.get(),
+  //                                predInterpFDNumu.get());
   pfm.SetStoreDebugMatches();
-  pfm.SetTargetConditioning(5E-9, 0.5, 3.5);
+  pfm.SetTargetConditioning(5E-9, 0.5, 3.75);
 
   ETruePred_NoSel->SetFluxMatcher(&pfm);
 
@@ -314,8 +321,8 @@ void PRISMPrediction(std::string const &off_axis_file,
     double reg_factor = 5E-9;
     int NCoeffs = NDHist->GetYaxis()->FindFixBin(33);
 
-    NDHist->RebinY(2);
     Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDHist, NCoeffs);
+    NDFluxMatrix.transposeInPlace();
     Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
 
     if (reg_factor) {
@@ -328,9 +335,12 @@ void PRISMPrediction(std::string const &off_axis_file,
 
     Eigen::VectorXd Target = GetEigenFlatVector(FDHist);
 
+    NDFluxMatrix = NDFluxMatrix.topRows(50);
+    Target = Target.topRows(50);
+
     Eigen::MatrixXd RHS = NDFluxMatrix.transpose() * Target;
-    Eigen::MatrixXd LHS = (NDFluxMatrix.transpose() * NDFluxMatrix);
-    // +      (RegMatrix.transpose() * RegMatrix);
+    Eigen::MatrixXd LHS = (NDFluxMatrix.transpose() * NDFluxMatrix) +
+                          (RegMatrix.transpose() * RegMatrix);
 
     Eigen::VectorXd soln = LHS.inverse() * RHS;
 
@@ -339,11 +349,15 @@ void PRISMPrediction(std::string const &off_axis_file,
     SolnHist->Write("SolnHist");
   }
 
-  TH1 *ETruePred_NoSel_h = ETruePred_NoSel->Predict(this_calc).ToTHX(1);
+  double NDSliceVolumeRatio = FD_ND_FVRatio(50);
+
+  TH1 *ETruePred_NoSel_h =
+      ETruePred_NoSel->Predict(this_calc).ToTHX(pot_fd * NDSliceVolumeRatio);
   ETruePred_NoSel_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
   ETruePred_NoSel_h->Write("ETruePred_NoSel");
 
-  TH1 *ETruePred_NoSel_FD_h = ETruePred_NoSel_FD->Predict(this_calc).ToTHX(1);
+  TH1 *ETruePred_NoSel_FD_h =
+      ETruePred_NoSel_FD->Predict(this_calc).ToTHX(pot_fd);
   ETruePred_NoSel_FD_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   ETruePred_NoSel_FD_h->Write("ETruePred_NoSel_FD");
 
