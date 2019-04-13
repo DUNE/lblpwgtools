@@ -38,9 +38,26 @@ namespace ana
     if (asimov_set == 2 && hie == +1) ret->SetTh23(kNuFitTh23HiNH);
     if (asimov_set == 1 && hie == -1) ret->SetTh23(kNuFitTh23LoIH);
     if (asimov_set == 2 && hie == -1) ret->SetTh23(kNuFitTh23HiIH);
+    if (asimov_set == 3) ret->SetTh23(kNuFitTh23MM);
+    if (asimov_set == 4 && hie == +1) ret->SetTh23(kNuFitTh23MinNH);
+    if (asimov_set == 4 && hie == -1) ret->SetTh23(kNuFitTh23MinIH);
+    if (asimov_set == 5 && hie == +1) ret->SetTh23(kNuFitTh23MaxNH);
+    if (asimov_set == 5 && hie == -1) ret->SetTh23(kNuFitTh23MaxIH);
+    if (asimov_set == 6 && hie == +1) ret->SetTh13(kNuFitTh13MinNH);
+    if (asimov_set == 6 && hie == -1) ret->SetTh13(kNuFitTh13MinIH);
+    if (asimov_set == 7 && hie == +1) ret->SetTh13(kNuFitTh13MaxNH);
+    if (asimov_set == 7 && hie == -1) ret->SetTh13(kNuFitTh13MaxIH);
+    if (asimov_set == 8 && hie == +1) ret->SetDmsq32(kNuFitDmsq32MinNH);
+    if (asimov_set == 8 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MinIH);
+    if (asimov_set == 9 && hie == +1) ret->SetDmsq32(kNuFitDmsq32MaxNH);
+    if (asimov_set == 9 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MaxIH);
 
 
-    if (oct < 0) ret->SetTh23(TMath::Pi()/2 - ret->GetTh23());
+
+    if (oct < 0) {
+      double dum = TMath::Pi()/2 - ret->GetTh23();
+      ret->SetTh23(dum);
+    }
     
     return ret;
   }
@@ -69,16 +86,24 @@ namespace ana
 
     // Uniform throws within +/-3 sigma
     if(hie > 0){
-      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
-	ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH,
-					kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName())) {
+        if (asimov_set ==8) {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32MinNH-3*kNuFitDmsq32ErrNH,
+					  kNuFitDmsq32MinNH+3*kNuFitDmsq32ErrNH));
+	}
+        else if (asimov_set ==9) {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32MaxNH-3*kNuFitDmsq32ErrNH,
+					  kNuFitDmsq32MaxNH+3*kNuFitDmsq32ErrNH));
+	}
+	else {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVNH-3*kNuFitDmsq32ErrNH,
+					  kNuFitDmsq32CVNH+3*kNuFitDmsq32ErrNH));
+	}
+      }
+
 
       if (HasVar(oscVars, kFitSinSqTheta23.ShortName())) {
-	if (asimov_set == 0) {
-	  ret->SetTh23(gRandom->Uniform(kNuFitTh23CVNH-3*kNuFitTh23ErrNH,
-					kNuFitTh23CVNH+3*kNuFitTh23ErrNH));
-	}
-        else if (asimov_set == 1) {
+        if (asimov_set == 1) {
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23LoNH-3*kNuFitTh23ErrNH,
 					kNuFitTh23LoNH+3*kNuFitTh23ErrNH));
 	}
@@ -86,26 +111,60 @@ namespace ana
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23HiNH-3*kNuFitTh23ErrNH,
 					kNuFitTh23HiNH+3*kNuFitTh23ErrNH));
 	}
+        else if (asimov_set ==3) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MM-3*kNuFitTh23ErrNH,
+					kNuFitTh23MM+3*kNuFitTh23ErrNH));
+	}
+        else if (asimov_set ==4) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MinNH-3*kNuFitTh23ErrNH,
+					kNuFitTh23MinNH+3*kNuFitTh23ErrNH));
+	}
+        else if (asimov_set ==5) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MaxNH-3*kNuFitTh23ErrNH,
+					kNuFitTh23MaxNH+3*kNuFitTh23ErrNH));
+	}
+	else {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23CVNH-3*kNuFitTh23ErrNH,
+					kNuFitTh23CVNH+3*kNuFitTh23ErrNH));
+	}
       }
         
-      if (HasVar(oscVars, kFitTheta13.ShortName()))
-        ret->SetTh13(gRandom->Uniform(kNuFitTh13CVNH-3*kNuFitTh13ErrNH,
-                                      kNuFitTh13CVNH+3*kNuFitTh13ErrNH));
+      if (HasVar(oscVars, kFitTheta13.ShortName())) {
+        if (asimov_set ==6) {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13MinNH-3*kNuFitTh13ErrNH,
+					kNuFitTh13MinNH+3*kNuFitTh13ErrNH));
+	}
+        else if (asimov_set ==7) {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13MaxNH-3*kNuFitTh13ErrNH,
+					kNuFitTh13MaxNH+3*kNuFitTh13ErrNH));
+	}
+	else {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13CVNH-3*kNuFitTh13ErrNH,
+					kNuFitTh13CVNH+3*kNuFitTh13ErrNH));
+	}
+
+      }
 
       if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
         ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
 
     } else {
-      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
-	ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
-					kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
-
-      if (HasVar(oscVars, kFitSinSqTheta23.ShortName())) {
-	if (asimov_set == 0) {
-	  ret->SetTh23(gRandom->Uniform(kNuFitTh23CVIH-3*kNuFitTh23ErrIH,
-					kNuFitTh23CVIH+3*kNuFitTh23ErrIH));
+      if (HasVar(oscVars, kFitDmSq32Scaled.ShortName())) {
+        if (asimov_set ==8) {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32MinIH-3*kNuFitDmsq32ErrIH,
+					  kNuFitDmsq32MinIH+3*kNuFitDmsq32ErrIH));
 	}
-        else if (asimov_set == 1) {
+        else if (asimov_set ==9) {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32MaxIH-3*kNuFitDmsq32ErrIH,
+					  kNuFitDmsq32MaxIH+3*kNuFitDmsq32ErrIH));
+	}
+	else {
+	  ret->SetDmsq32(gRandom->Uniform(kNuFitDmsq32CVIH-3*kNuFitDmsq32ErrIH,
+					kNuFitDmsq32CVIH+3*kNuFitDmsq32ErrIH));
+	}
+      }
+      if (HasVar(oscVars, kFitSinSqTheta23.ShortName())) {
+        if (asimov_set == 1) {
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23LoIH-3*kNuFitTh23ErrIH,
 					kNuFitTh23LoIH+3*kNuFitTh23ErrIH));
 	}
@@ -113,11 +172,38 @@ namespace ana
 	  ret->SetTh23(gRandom->Uniform(kNuFitTh23HiIH-3*kNuFitTh23ErrIH,
 					kNuFitTh23HiIH+3*kNuFitTh23ErrIH));
 	}
+        else if (asimov_set ==3) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MM-3*kNuFitTh23ErrIH,
+					kNuFitTh23MM+3*kNuFitTh23ErrIH));
+	}
+        else if (asimov_set ==4) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MinIH-3*kNuFitTh23ErrIH,
+					kNuFitTh23MinIH+3*kNuFitTh23ErrIH));
+	}
+        else if (asimov_set ==5) {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23MaxIH-3*kNuFitTh23ErrIH,
+					kNuFitTh23MaxIH+3*kNuFitTh23ErrIH));
+	}
+	else {
+	  ret->SetTh23(gRandom->Uniform(kNuFitTh23CVIH-3*kNuFitTh23ErrIH,
+					kNuFitTh23CVIH+3*kNuFitTh23ErrIH));
+	}
       }
 
-      if (HasVar(oscVars, kFitTheta13.ShortName()))
-        ret->SetTh13(gRandom->Uniform(kNuFitTh13CVIH-3*kNuFitTh13ErrIH,
-                                      kNuFitTh13CVIH+3*kNuFitTh13ErrIH));
+      if (HasVar(oscVars, kFitTheta13.ShortName())) {
+        if (asimov_set ==6) {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13MinIH-3*kNuFitTh13ErrIH,
+					kNuFitTh13MinIH+3*kNuFitTh13ErrIH));
+	}
+        else if (asimov_set ==7) {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13MaxIH-3*kNuFitTh13ErrIH,
+					kNuFitTh13MaxIH+3*kNuFitTh13ErrIH));
+	}
+	else {
+	  ret->SetTh13(gRandom->Uniform(kNuFitTh13CVIH-3*kNuFitTh13ErrIH,
+					kNuFitTh13CVIH+3*kNuFitTh13ErrIH));
+	}
+      }
 
       if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
 	ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
@@ -190,18 +276,36 @@ namespace ana
 
 
     fDmsq32 = (hietrue > 0) ? kNuFitDmsq32CVNH : kNuFitDmsq32CVIH;
+    fTh13 = (hietrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
+    fTh23 = (hietrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
 
-    if (asimov_set == 0) {
-      fTh23 = (hietrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
-    }
-    else if (asimov_set == 1) {
+    if (asimov_set == 1) {
       fTh23 = (hietrue > 0) ? kNuFitTh23LoNH : kNuFitTh23LoIH;
     }
     else if (asimov_set == 2) {
       fTh23 = (hietrue > 0) ? kNuFitTh23HiNH : kNuFitTh23HiIH;
     }
-
-    fTh13 = (hietrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
+    else if (asimov_set == 3) {
+      fTh23 = kNuFitTh23MM;
+    }
+    else if (asimov_set == 4) {
+      fTh23 = (hietrue > 0) ? kNuFitTh23MinNH : kNuFitTh23MinIH;
+    }
+    else if (asimov_set == 5) {
+      fTh23 = (hietrue > 0) ? kNuFitTh23MaxNH : kNuFitTh23MaxIH;
+    }
+    else if (asimov_set == 6) {
+      fTh13 = (hietrue > 0) ? kNuFitTh13MinNH : kNuFitTh13MinIH;
+    }
+    else if (asimov_set == 7) {
+      fTh13 = (hietrue > 0) ? kNuFitTh13MaxNH : kNuFitTh13MaxIH;
+    }
+    else if (asimov_set == 8) {
+      fDmsq32 = (hietrue > 0) ? kNuFitDmsq32MinNH : kNuFitDmsq32MinIH;
+    }
+    else if (asimov_set == 9) {
+      fDmsq32 = (hietrue > 0) ? kNuFitDmsq32MaxNH : kNuFitDmsq32MaxIH;
+    }
 
     // This is sort of an assumption...
     if (octtrue < 0) fTh23 = TMath::Pi()/2 - fTh23;
@@ -252,6 +356,8 @@ namespace ana
     if (fDmsqPen) ret += util::sqr((calc->GetDmsq32() - fDmsq32)/fDmsq32Err);
     if (fTh23Pen) ret += util::sqr((calc->GetTh23() - fTh23)/fTh23Err);
     if (fTh13Pen) ret += util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
+
+    //std::cout << calc->GetTh23() << " " << fTh23 << " " << fTh23Err << " " << ret << std::endl;
 
     return ret;
   }
