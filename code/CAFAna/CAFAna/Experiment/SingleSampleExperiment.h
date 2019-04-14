@@ -43,20 +43,22 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0)
+      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0), fPreInvert(0)
     {
     }
 
     /// Include a covariance matrix
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
-                           const TMatrixD* cov);
+                           const TMatrixD* cov,
+                           const bool preInvert = true);
 
     /// Include a covariance matrix file path
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const std::string covMatFilename,
-                           const std::string covMatName);
+                           const std::string covMatName,
+                           const bool preInvert = true);
 
     virtual ~SingleSampleExperiment();
 
@@ -87,6 +89,10 @@ namespace ana
 		     double ymin=0, double ymax=-1);
 
   protected:
+    void InitInverseMatrix();
+
+    void ApplyMask(TH1* a, TH1* b) const;
+
     TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
                              const SystShifts& syst) const;
 
@@ -99,6 +105,7 @@ namespace ana
 
     TMatrixD* fCovMx;
     TMatrixD* fCovMxInv;
+    bool fPreInvert;
 
   };
 }
