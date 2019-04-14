@@ -14,8 +14,8 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   gRandom->SetSeed(0);
 
   // Decide what is to be thrown
-  bool stats_throw, fake_throw, start_throw, central_throw;
-  ParseThrowInstructions(throwString, stats_throw, fake_throw, start_throw, central_throw);
+  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
@@ -41,11 +41,11 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
     
     // First deal with OA parameters
-    if (fake_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
+    if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
     else fakeThrowOsc = NuFitOscCalc(hie);
       
     // Now deal with systematics
-    if (fake_throw and not central_throw){
+    if (fakenuis_throw and not central_throw){
       for (auto s : systlist)
 	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     } else fakeThrowSyst = kNoShift;

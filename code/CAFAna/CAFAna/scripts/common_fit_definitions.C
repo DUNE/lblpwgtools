@@ -357,7 +357,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   bool fluxsyst = false;
   bool xsecsyst = false;
 
-// Okay, I am definitely now doing too much with this function... sorry all!
+  // Okay, I am definitely now doing too much with this function... sorry all!
   // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
   if (systString.find("list") != std::string::npos){
@@ -698,21 +698,29 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   return;
 }
 
-void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
-                            bool &start, bool &central) {
+void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA, 
+			    bool &fakeNuis, bool &start, bool &central) {
 
   std::vector<std::string> instructions = SplitString(throwString, ':');
 
   stats = false;
-  fake = false;
+  fakeOA = false;
+  fakeNuis = false;
   start = false;
   central = false;
 
   for (auto &str : instructions) {
+
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
     if (str == "stat" || str == "all")
       stats = true;
     if (str == "fake" || str == "all")
-      fake = true;
+      fakeOA = fakeNuis = true;
+    if (str == "fakeoa" || str == "all")
+      fakeOA = true;
+    if (str == "fakenuis"|| str == "all")
+      fakeNuis = true;
     if (str == "start" || str == "all")
       start = true;
     if (str == "central" || str == "all")
