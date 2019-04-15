@@ -3,6 +3,7 @@
 #include "Utilities/func/MathUtil.h"
 
 #include <cassert>
+#include <iostream>
 
 #include "TString.h"
 
@@ -98,5 +99,25 @@ namespace ana
     std::vector<const ISyst*> ret;
     for(auto it: fSysts) ret.push_back(it.first);
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  double SystShifts::Clamp(double x, const ISyst* s)
+  {
+    static bool once = true;
+    static bool shouldClamp;
+    if(once){
+      once = false;
+      char* e = getenv("CAFANA_DONT_CLAMP_SYSTS");
+      shouldClamp = (e && TString(e) != "0");
+      if(!shouldClamp){
+        std::cout << "SystShifts.cxx: clamping disabled by environment variable" << std::endl;
+      }
+    }
+
+    if(shouldClamp)
+      return std::min(std::max(x, s->Min()), s->Max());
+    else
+      return x;
   }
 }

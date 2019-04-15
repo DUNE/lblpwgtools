@@ -16,6 +16,13 @@ namespace ana
 
   extern const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
 
+  enum ETestStatistic{
+    kLogLikelihood, ///< No covariance matrix
+    kCovMxChiSq,
+    kCovMxChiSqPreInvert, ///< good approximation for ND
+    kCovMxLogLikelihood ///< for FD
+  };
+
   /// Compare a single data spectrum to the MC + cosmics expectation
   class SingleSampleExperiment: public IExperiment
   {
@@ -43,20 +50,22 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0)
+      : fTestStatistic(kLogLikelihood), fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMxInfo(0)
     {
     }
 
     /// Include a covariance matrix
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
-                           const TMatrixD* cov);
+                           const TMatrixD* cov,
+                           ETestStatistic stat);
 
     /// Include a covariance matrix file path
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const std::string covMatFilename,
-                           const std::string covMatName);
+                           const std::string covMatName,
+                           ETestStatistic stat);
 
     virtual ~SingleSampleExperiment();
 
@@ -86,9 +95,14 @@ namespace ana
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
 
+    virtual void ApplyMask(TH1* a, TH1* b) const override;
+
+    virtual TH1D* PredHist(osc::IOscCalculator* calc,
+                           const SystShifts& syst) const override;
+    virtual TH1D* DataHist() const override;
+
   protected:
-    TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
-                             const SystShifts& syst) const;
+    ETestStatistic fTestStatistic;
 
     const IPrediction* fMC;
     Spectrum fData;
@@ -97,8 +111,8 @@ namespace ana
 
     double fCosmicScaleError;
 
-    TMatrixD* fCovMx;
-    TMatrixD* fCovMxInv;
+    TMatrixD* fCovMxInfo; ///< Represents different things depending on fTestStatistic
 
+    mutable std::vector<double> fCovLLState;
   };
 }
