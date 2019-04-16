@@ -1,39 +1,21 @@
 #include "common_fit_definitions.C"
 
-void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
-                            bool &start) {
-
-  std::vector<std::string> instructions = SplitString(throwString, ':');
-
-  stats = false;
-  fake = false;
-  start = false;
-
-  for (auto &str : instructions) {
-    if (str == "stat" || str == "all")
-      stats = true;
-    if (str == "fake" || str == "all")
-      fake = true;
-    if (str == "start" || str == "all")
-      start = true;
-  }
-  return;
-}
-
 // Need to accept filename, ND/FD, systs and reload as arguments
 void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      std::string outputFname = "throws_ndfd_nosyst.root",
                      int nthrows = 100, std::string systSet = "nosyst",
                      std::string sampleString = "ndfd",
-                     std::string throwString = "fake:start",
-                     std::string penaltyString = "",
-                     std::string oscVarString = "alloscvars") {
+                     std::string throwString = "stat:fake:start",
+                     std::string penaltyString = "nopen",
+                     std::string oscVarString = "th13:deltapi:th23:dmsq32",
+		     int hie=1) {
 
   gROOT->SetBatch(1);
+  gRandom->SetSeed(0);
 
   // Decide what is to be thrown
-  bool stats_throw, fake_throw, start_throw;
-  ParseThrowInstructions(throwString, stats_throw, fake_throw, start_throw);
+  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
@@ -51,8 +33,6 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   FitTreeBlob pftree("fit_info");
   pftree.throw_tree->SetDirectory(fout);
 
-  int hie = 1;
-
   for (int i = 0; i < nthrows; ++i) {
 
     std::cout << "Starting throw " << i << std::endl;
@@ -60,14 +40,20 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
-    if (fake_throw) {
-      fakeThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
+    
+    // First deal with OA parameters
+    if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
+    else fakeThrowOsc = NuFitOscCalc(hie);
+      
+    // Now deal with systematics
+    if (fakenuis_throw and not central_throw){
       for (auto s : systlist)
-        fakeThrowSyst.SetShift(
-            s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
-    } else {
-      fakeThrowSyst = kNoShift;
-      fakeThrowOsc = NuFitOscCalc(hie);
+	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+    } else fakeThrowSyst = kNoShift;
+ 
+    if (central_throw){
+      for (auto s : systlist)
+	s->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     }
 
     // Prefit
@@ -75,9 +61,8 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
-        fitThrowSyst.SetShift(
-            s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
-      fitThrowOsc = ThrownNuFitOscCalc(hie, oscVars);
+        fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
+      fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie);
@@ -87,7 +72,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     std::map<const IFitVar*, std::vector<double>> oscSeeds;
     if (sampleString.find("fd") != std::string::npos) {
       oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-      oscSeeds[&kFitDeltaInPiUnits] = {0, 0.5, 1, 1.5}; // Hold CAFAna's hand
+      oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
     }
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);

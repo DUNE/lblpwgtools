@@ -85,6 +85,7 @@ namespace caf
     int nipi0;
     int nipip;
     int nipim;
+    int niem;
     double Q2;
     double W;
     double Y;

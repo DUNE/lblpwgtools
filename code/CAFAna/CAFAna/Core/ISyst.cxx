@@ -11,8 +11,9 @@ namespace ana
                const std::string& latexName,
 	       bool applyPenalty,
 	       double min,
-	       double max)
-    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
+	       double max,
+	       double cv)
+    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
   {
     SystRegistry::Register(this);
   }
@@ -30,7 +31,8 @@ namespace ana
   {
     if(fApplyPenalty){
       // Regular quadratic penalty term
-      return x*x;
+      // Error is always 1, so can ignore that
+      return (x-fCentral)*(x-fCentral);
     }
     else{
       // Otherwise, no penalty within range, but still apply one outside

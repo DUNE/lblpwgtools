@@ -117,13 +117,22 @@ namespace ana
     }
 
     std::unique_ptr<ROOT::Math::Minimizer> mnMin(
-        ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+		    ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+    //ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
     mnMin->SetStrategy(int(fPrec & kAlgoMask));
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
 
+    static double tol = getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
+    static double prec = getenv("FIT_PRECISION") != 0 ? atof(getenv("FIT_PRECISION")) : 1e-15;
+    
     // Please give us all the decimal places
+<<<<<<< HEAD
     mnMin->SetTolerance(1e-6);
+=======
+    mnMin->SetTolerance(tol);
+    mnMin->SetPrecision(prec);
+>>>>>>> origin/strong_and_stable
 
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
@@ -164,7 +173,7 @@ namespace ana
 	std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i] << "\n";
       }
     }
-
+    
     if (fPrec & kIncludeHesse){
       std::cout << "It's Hesse o'clock" << std::endl;
       mnMin->Hesse();
@@ -218,6 +227,7 @@ namespace ana
 	fPreFitErrors  .clear();
 	fPostFitValues .clear();
 	fPostFitErrors .clear();
+	fCentralValues .clear();
 	fMinosErrors   .clear();
 	fMinosErrors   = fTempMinosErrors;
 
@@ -228,12 +238,14 @@ namespace ana
 	  fParamNames  .push_back(v->ShortName());
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(val ? val/2 : .1);
+	  fCentralValues.push_back(0);
 	}
 	for(const ISyst* s: fSysts){
 	  const double val = shift.GetShift(s);
 	  fParamNames  .push_back(s->ShortName());
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(1);
+	  fCentralValues.push_back(s->Central());
 	}
 
 	// Now save postfit

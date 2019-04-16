@@ -23,7 +23,20 @@ set(Systs_header_files
   NuOnESysts.h
   SystComponentScale.h
   Systs.h
-  MissingProtonFakeData.h)
+  MissingProtonFakeData.h
+  BDTReweighter.h
+  GeneratorReweight_nuebar_FD_RHC.h
+  GeneratorReweight_nue_FD_FHC.h
+  GeneratorReweight_nue_FD_RHC.h
+  GeneratorReweight_numubar_FD_RHC.h
+  GeneratorReweight_numubar_ND_RHC.h
+  GeneratorReweight_numu_FD_FHC.h
+  GeneratorReweight_numu_FD_RHC.h
+  GeneratorReweight_numu_ND_FHC.h
+  GeneratorReweight_numu_ND_RHC.h
+  MissingProtonFakeData_BDTRW_FHC.h
+  MissingProtonFakeData_BDTRW_RHC.h
+  NuWroReweightFakeData.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts)
@@ -38,8 +51,6 @@ endif()
 install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
 
 set(SYST_INPUT_ROOT_FILES
-  ProtonEdepm20pc_binnedWeights_nu.root
-  ProtonEdepm20pc_binnedWeights_nubar.root
   flux_shifts.root
   flux_shifts_wOffAxis.root
   xsec_shifts.root

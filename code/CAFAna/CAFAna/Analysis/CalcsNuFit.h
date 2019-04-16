@@ -28,11 +28,26 @@ namespace ana
   const double kNuFitdCPCVIH = 284 * TMath::Pi()/180;
 
   //Additional values of oscillation parameters
+  //Th23 variations
   const double kNuFitTh23HiNH = 51.2 * TMath::Pi()/180;
   const double kNuFitTh23LoNH = 47.3 * TMath::Pi()/180;
   const double kNuFitTh23HiIH = 51.4 * TMath::Pi()/180;
   const double kNuFitTh23LoIH = 47.8 * TMath::Pi()/180;
-
+  const double kNuFitTh23MM = 45 * TMath::Pi()/180;
+  const double kNuFitTh23MaxNH = 52.4 * TMath::Pi()/180;
+  const double kNuFitTh23MaxIH = 52.5 * TMath::Pi()/180;
+  const double kNuFitTh23MinNH = 40.3 * TMath::Pi()/180;
+  const double kNuFitTh23MinIH = 40.6 * TMath::Pi()/180;
+  //Th13 variations
+  const double kNuFitTh13MaxNH = 8.99 * TMath::Pi()/180;
+  const double kNuFitTh13MinNH = 8.22 * TMath::Pi()/180;
+  const double kNuFitTh13MaxIH = 9.03 * TMath::Pi()/180;
+  const double kNuFitTh13MinIH = 8.27 * TMath::Pi()/180;
+  //Dmsq32 variations
+  const double kNuFitDmsq32MaxNH = 2.625e-3 - kNuFitDmsq21CV;
+  const double kNuFitDmsq32MinNH = 2.427e-3 - kNuFitDmsq21CV;
+  const double kNuFitDmsq32MaxIH = -2.412e-3;
+  const double kNuFitDmsq32MinIH = -2.611e-3;
 
   // Based on 1/6 of the +/- 3sigma error
   const double kNuFitDmsq21Err = ((8.01-6.79)/6)*1e-5;
@@ -55,12 +70,22 @@ namespace ana
   // 0 NuFit 4.0 Central Values
   // 1 Th23 set to 90% CL lower value
   // 2 Th23 set to 90% CL upper value
+  // 3 Th23 set to maximal mixing
+  // 4 Th23 set to 3sig lower value
+  // 5 Th23 set to 3sig upper value
+  // 6 Th13 set to 3sig lower value
+  // 7 Th13 set to 3sig upper value
+  // 8 Dmsq32 set to 3sig lower value
+  // 9 Dmsq32 set to 3sig upper value
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
   // Add in a throw for toys
   osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
+
+  // Add a different type of throw which depends less on NuFit
+  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
 
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 

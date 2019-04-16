@@ -22,6 +22,7 @@
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/MissingProtonFakeData.h"
+#include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "TFile.h"
 #include "TGraph.h"
 #include "TH1.h"
@@ -191,6 +192,8 @@ AxisBlob GetAxisBlob(std::string blob_name) {
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40/1.13;
 const double pot_nd = 3.5 * POT120;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT MW yr
+const double nom_exposure = 336.;
 
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
@@ -299,7 +302,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 bool useMissingProtonFakeData=true, bool removeNonFitDials=false){
+					 bool useMissingProtonFakeData=true, bool useNuWroReweightFakeData=true, bool removeNonFitDials=false){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
@@ -331,6 +334,9 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   if(useMissingProtonFakeData){
     systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
   }
+  if(useNuWroReweightFakeData){
+    systlist.push_back(GetNuWroReweightFakeDataSyst().front());
+  }
 
   if (removeNonFitDials) {
     // For now, hard code this part... too many damned scripts to change...
@@ -352,12 +358,13 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false,
+				 	 bool useNuWroReweightFakeData=false){
   bool detsyst  = false;
   bool fluxsyst = false;
   bool xsecsyst = false;
 
-// Okay, I am definitely now doing too much with this function... sorry all!
+  // Okay, I am definitely now doing too much with this function... sorry all!
   // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
   if (systString.find("list") != std::string::npos){
@@ -390,6 +397,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     detsyst = true;
   }
   if (systString.find("prot_fakedata") != std::string::npos) {useMissingProtonFakeData = true;}
+  if (systString.find("nuwro_fakedata") != std::string::npos) {useNuWroReweightFakeData = true;}
   // This might need more thought because of the above... but...
   if (systString.find("nodet") != std::string::npos){
     xsecsyst = true;
@@ -409,13 +417,14 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-			useND, useFD, useNueOnE, useMissingProtonFakeData, true);
+			useND, useFD, useNueOnE, useMissingProtonFakeData, useNuWroReweightFakeData, true);
 }
 
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false,
+					 bool useNuWroReweightFakeData=false){
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
@@ -578,27 +587,44 @@ MultiExperiment GetMultiExperiment(std::string stateFileName, double pot_nd_fhc,
 };
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string input, double& pot_nd_fhc, double& pot_nd_rhc,
+void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_nd_rhc,
 		      double& pot_fd_fhc_nue, double& pot_fd_rhc_nue, double& pot_fd_fhc_numu,
 		      double& pot_fd_rhc_numu){
+
+  // Did somebody say overextend the command line arguments even further?
+  // Well okay!
+  std::vector<std::string> input_vect = SplitString(cmdLineInput, ':');
+
+  // Default to 7 years staged. Value is actually in kt MW yr
+  double exposure = 336;
+  if (input_vect.size() > 1) exposure = stod(input_vect[1]);
+  std::string input = input_vect[0];
 
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
-  // I guess I should do this
-  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
+  // Look for some other magic information
+  if (input.find("full") != std::string::npos or input.find("15year") != std::string::npos)
+    exposure = 1104;
 
-  // Separate into "nominal" and "full" exposure... probably need something smarter later
-  // But, the LBNC waits for no one!
-  double exposure = 1.;
-  if (input.find("full") != std::string::npos) exposure = 13./7;
+  if (input.find("nom") != std::string::npos or input.find("7year") != std::string::npos)
+    exposure = 336;
+
+  if (input.find("10year") != std::string::npos)
+    exposure = 624;
+
+  double exposure_ratio = exposure/nom_exposure;
+
+
+  // Now sort out which samples to include
+  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
 
   // Hacky McHackerson is here to stay!
   if (input.find("nd") != std::string::npos){
-    pot_nd_fhc = pot_nd_rhc = pot_nd*exposure;
+    pot_nd_fhc = pot_nd_rhc = pot_nd*exposure_ratio;
   }
   if (input.find("fd") != std::string::npos){
-    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd*exposure;
+    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = pot_fd*exposure_ratio;
   }
 
   // Now allow specific subsets
@@ -698,6 +724,38 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
   return mat;
 }
 
+void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
+			    bool &fakeNuis, bool &start, bool &central) {
+
+  std::vector<std::string> instructions = SplitString(throwString, ':');
+
+  stats = false;
+  fakeOA = false;
+  fakeNuis = false;
+  start = false;
+  central = false;
+
+  for (auto &str : instructions) {
+
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+    if (str == "stat" || str == "all")
+      stats = true;
+    if (str == "fake" || str == "all")
+      fakeOA = fakeNuis = true;
+    if (str == "fakeoa" || str == "all")
+      fakeOA = true;
+    if (str == "fakenuis"|| str == "all")
+      fakeNuis = true;
+    if (str == "start" || str == "all")
+      start = true;
+    if (str == "central" || str == "all")
+      central = true;
+  }
+  return;
+}
+
+
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "") {
     if (tree_name.size()) {
@@ -713,6 +771,7 @@ struct FitTreeBlob {
       throw_tree->Branch("fPostFitValues", &fPostFitValues);
       throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
+      throw_tree->Branch("fCentralValues", &fCentralValues);
     }
   }
   void CopyVals(FitTreeBlob const &fb) {
@@ -723,6 +782,7 @@ struct FitTreeBlob {
     fPostFitValues = fb.fPostFitValues;
     fPostFitErrors = fb.fPostFitErrors;
     fMinosErrors = fb.fMinosErrors;
+    fCentralValues = fb.fCentralValues;
     fChiSq = fb.fChiSq;
     fNFCN = fb.fNFCN;
     fEDM = fb.fEDM;
@@ -735,6 +795,7 @@ struct FitTreeBlob {
   std::vector<double> fPreFitErrors;
   std::vector<double> fPostFitValues;
   std::vector<double> fPostFitErrors;
+  std::vector<double> fCentralValues;
   std::vector<std::pair<double,double>> fMinosErrors;
   double fChiSq;
   double fNFCN;
@@ -766,7 +827,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   ana::SeedList oscSeeds = ana::SeedList(),
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, SystShifts &bf = junkShifts,
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
+		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts,
        bool UseSeedRefiner=true,
        bool UseXSecCovmat=true){
 
@@ -818,28 +880,44 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // One problem with this method is that the experiments are reproduced for every single call...
   // Set up the fake data histograms, and save them if relevant...
-  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, data_nue_fhc);
+  // This came back to bite me. I need to do multiple fits with the same fake data throw, so I need these to persist between calls to this function
+  // Sadly, the locked down ownership etc means I can't think of a better solution to this
+  // And the alternative CAFAna is probably just copy-pasta-ing this function in all of the scripts that use it...
+  std::vector<unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
+  if(!spectra){ spectra = &LastShredsOfMyDignityAndSanity; }
+
+  if (!spectra->size()){
+    std::cout << "Remaking spectra" << std::endl;
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats))));
+  }
+
+  // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, data_numu_fhc);
+  // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, data_nue_rhc);
+  // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, data_numu_rhc);
+  // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, covName);
+  // const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *(*spectra)[4], covFileName, covName);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
-  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, covName);
+  // const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5], covFileName, covName);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
@@ -854,7 +932,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Save prefit starting distributions
   if (outDir){
     if (pot_fd_fhc_nue > 0){
-      TH1* data_nue_fhc_hist = data_nue_fhc.ToTHX(pot_fd_fhc_nue);
+      TH1* data_nue_fhc_hist = (*spectra)[0]->ToTHX(pot_fd_fhc_nue);
       data_nue_fhc_hist ->SetName("data_fd_nue_fhc");
       data_nue_fhc_hist ->Write();
       TH1* pre_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst, "prefit_fd_nue_fhc", pot_fd_fhc_nue);
@@ -862,7 +940,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_fhc   ->Write();
     }
     if (pot_fd_fhc_numu > 0){
-      TH1* data_numu_fhc_hist = data_numu_fhc.ToTHX(pot_fd_fhc_numu);
+      TH1* data_numu_fhc_hist = (*spectra)[1]->ToTHX(pot_fd_fhc_numu);
       data_numu_fhc_hist ->SetName("data_fd_numu_fhc");
       data_numu_fhc_hist ->Write();
       TH1* pre_fd_numu_fhc = GetMCSystTotal(&predFDNumuFHC, fitOsc, fitSyst, "prefit_fd_numu_fhc", pot_fd_fhc_numu);
@@ -870,7 +948,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_fhc   ->Write();
     }
     if (pot_fd_rhc_nue > 0){
-      TH1* data_nue_rhc_hist = data_nue_rhc.ToTHX(pot_fd_rhc_nue);
+      TH1* data_nue_rhc_hist = (*spectra)[2]->ToTHX(pot_fd_rhc_nue);
       data_nue_rhc_hist ->SetName("data_fd_nue_rhc");
       data_nue_rhc_hist ->Write();
       TH1* pre_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst, "prefit_fd_nue_rhc", pot_fd_rhc_nue);
@@ -878,7 +956,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_rhc   ->Write();
     }
     if (pot_fd_rhc_numu > 0){
-      TH1* data_numu_rhc_hist = data_numu_rhc.ToTHX(pot_fd_rhc_numu);
+      TH1* data_numu_rhc_hist = (*spectra)[3]->ToTHX(pot_fd_rhc_numu);
       data_numu_rhc_hist ->SetName("data_fd_numu_rhc");
       data_numu_rhc_hist ->Write();
       TH1* pre_fd_numu_rhc = GetMCSystTotal(&predFDNumuRHC, fitOsc, fitSyst, "prefit_fd_numu_rhc", pot_fd_rhc_numu);
@@ -886,8 +964,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_rhc   ->Write();
     }
     if (pot_nd_fhc > 0){
-      TH1* nd_data_numu_fhc_hist = nd_data_numu_fhc.ToTHX(pot_nd_fhc);
-      TH1* nd_data_numu_fhc_hist_1D = nd_data_numu_fhc.ToTH1(pot_nd_fhc);
+      TH1* nd_data_numu_fhc_hist = (*spectra)[4]->ToTHX(pot_nd_fhc);
+      TH1* nd_data_numu_fhc_hist_1D = (*spectra)[4]->ToTH1(pot_nd_fhc);
       nd_data_numu_fhc_hist ->SetName("data_nd_numu_fhc");
       nd_data_numu_fhc_hist_1D ->SetName("data_nd_numu_fhc_1D");
       nd_data_numu_fhc_hist ->Write();
@@ -901,8 +979,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_nd_numu_fhc_1D   ->Write();
     }
     if (pot_nd_rhc){
-      TH1* nd_data_numu_rhc_hist = nd_data_numu_rhc.ToTHX(pot_nd_rhc);
-      TH1* nd_data_numu_rhc_hist_1D = nd_data_numu_rhc.ToTH1(pot_nd_rhc);
+      TH1* nd_data_numu_rhc_hist = (*spectra)[5]->ToTHX(pot_nd_rhc);
+      TH1* nd_data_numu_rhc_hist_1D = (*spectra)[5]->ToTH1(pot_nd_rhc);
       nd_data_numu_rhc_hist ->SetName("data_nd_numu_rhc");
       nd_data_numu_rhc_hist_1D ->SetName("data_nd_numu_rhc_1D");
       nd_data_numu_rhc_hist ->Write();
@@ -969,6 +1047,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     std::vector<double> fPreFitErrors  = this_fit.GetPreFitErrors();
     std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
     std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();
+    std::vector<double> fCentralValues = this_fit.GetCentralValues();
     std::vector<std::pair<double,double>> fMinosErrors   = this_fit.GetMinosErrors();
     double fNFCN = this_fit.GetNFCN();
     double fEDM = this_fit.GetEDM();
@@ -1029,6 +1108,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     t->Branch("fPostFitValues",&fPostFitValues);
     t->Branch("fPostFitErrors",&fPostFitErrors);
     t->Branch("fMinosErrors",&fMinosErrors);
+    t->Branch("fCentralValues",&fCentralValues);
     t->Fill();
     t->Write();
     hist_covar.Write();
@@ -1043,6 +1123,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     PostFitTreeBlob->fPostFitValues = this_fit.GetPostFitValues();
     PostFitTreeBlob->fPostFitErrors = this_fit.GetPostFitErrors();
     PostFitTreeBlob->fMinosErrors   = this_fit.GetMinosErrors();
+    PostFitTreeBlob->fCentralValues = this_fit.GetCentralValues();
     PostFitTreeBlob->fFakeDataVals = fFakeDataVals;
     PostFitTreeBlob->fNFCN = this_fit.GetNFCN();
     PostFitTreeBlob->fEDM = this_fit.GetEDM();
