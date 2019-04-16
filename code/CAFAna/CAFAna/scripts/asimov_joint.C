@@ -31,43 +31,43 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
                          double &max) {
 
   // Defaults
-  nBins = 25;
+  nBins = 200;
   min = 0;
   max = 1;
 
   if (parName == "th13") {
-    nBins = 35;
+    nBins = 200;
     min = 0.12;
     max = 0.21;
     return;
   }
   if (parName == "deltapi") {
-    nBins = 40;
+    nBins = 200;
     min = -1;
     max = 1;
   }
   if (parName == "dmsq32scaled") {
-    nBins = 40;
+    nBins = 200;
     min = 2.25;
     max = 2.65;
   }
   if (parName == "ssth23") {
-    nBins = 60;
+    nBins = 200;
     min = 0.38;
     max = 0.62;
   }
   if (parName == "ss2th12") {
-    nBins = 25;
+    nBins = 200;
     min = 0.8;
     max = 0.9;
   }
   if (parName == "dmsq21") {
-    nBins = 25;
+    nBins = 200;
     min = 6e-5;
     max = 9e-5;
   }
   if (parName == "rho") {
-    nBins = 50;
+    nBins = 200;
     min = 2.5;
     max = 3.2;
   }
@@ -112,7 +112,7 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   if (plotVarVect.size() == 1)
     returnHist = new TH1D(plotVarVect[0].c_str(),
                           (plotVarVect[0] + ";" + plotVarVect[0]).c_str(),
-                          5 * nBinsX, minX, maxX);
+                          nBinsX, minX, maxX);
   else if (plotVarVect.size() == 2)
     returnHist = new TH2D((plotVarVect[0] + "_" + plotVarVect[1]).c_str(),
                           (plotVarVect[0] + "_" + plotVarVect[1] + ";" +
@@ -143,16 +143,20 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to start with
-  std::vector<const IFitVar *> oscVarsAll = {&kFitDmSq32Scaled,  &kFitSinSqTheta23,
-					     &kFitTheta13, &kFitDeltaInPiUnits};
+  std::vector<const IFitVar *> oscVarsAll = GetOscVars("alloscvars", hie);
 
   // Remove the parameters to be scanned
   std::vector<const IFitVar *> oscVarsFree = oscVarsAll;
+
+  // This is very hacky... third elements in the list are used to define the strip to loop at this time
+  int yVal = -1;
   if (plotVarVect.size() > 0)
     RemovePars(oscVarsFree, {plotVarVect[0]});
   if (plotVarVect.size() > 1)
     RemovePars(oscVarsFree, {plotVarVect[1]});
-
+  if (plotVarVect.size() > 2)
+    yVal = stoi(plotVarVect[2]);
+  
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
@@ -206,6 +210,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   
   // Now loop over the bins in both x and y (if 1D, one loop does nothing)
   for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
+
+    // If yVal is set, only scan over that value... serialise these
     for (int yBin = 0; yBin < sens_hist->GetNbinsY(); ++yBin){
       
       double chisqmin = 99999;

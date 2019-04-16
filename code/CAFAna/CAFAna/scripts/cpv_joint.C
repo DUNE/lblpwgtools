@@ -12,7 +12,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to use
-  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13};
+  std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();

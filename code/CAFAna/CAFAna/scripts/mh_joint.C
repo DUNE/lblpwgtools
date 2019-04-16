@@ -11,10 +11,11 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
   
-  // Oscillation parameters to use
-  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, 
-					 &kFitTheta13, &kFitDeltaInPiUnits};
-  // &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
+  // For the global fit
+  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie) ;
+
+  // For the wrong sign fit
+  std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie) ;
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
@@ -49,7 +50,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
       thischisq = RunFitPoint(stateFname, sampleString,
 			      trueOsc, trueSyst, false,
-			      oscVars, systlist,
+			      oscVarsWrong, systlist,
 			      testOsc, testSyst,
 			      oscSeeds, penalty);
       
