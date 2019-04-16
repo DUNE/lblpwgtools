@@ -2,7 +2,9 @@
 
 #include "CAFAna/Prediction/PredictionPRISM.h"
 
+#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Extrap/IExtrap.h"
 
 #include "CAFAna/Core/Loaders.h"
@@ -23,7 +25,7 @@ PredictionPRISM::PredictionPRISM(
     PRISMExtrapolator::FluxPredSpecies NDFluxSpecies,
     PRISMExtrapolator::FluxPredSpecies FDFluxSpecies, TH3 const *SelectedNumuCC,
     TH3 const *AllNumuCC)
-    : fPredictionAxis(recoAxis), fOffAxis(offAxis) {
+    : fPredictionAxis(recoAxis), fOffAxis(offAxis), fFDTrueEnergyBins() {
 
   bool SignalIsNumode = (static_cast<int>(fFDFluxSpecies) < 4);
   bool HaveEff = (SelectedNumuCC && AllNumuCC);
@@ -74,7 +76,7 @@ void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
   fFarDetSpectrumNC = std::make_unique<Spectrum>(FD_loader, fPredictionAxis,
                                                  cut && kIsNC, shift, wei);
   fFarDetSpectrumNumu = std::make_unique<OscillatableSpectrum>(
-      FD_loader, fPredictionAxis, cut && kIsNC && kIsNumuCC && !kIsAntiNu,
+      FD_loader, fPredictionAxis, cut && !kIsNC && kIsNumuCC && !kIsAntiNu,
       shift, wei);
   fFarDetSpectrumNumubar = std::make_unique<OscillatableSpectrum>(
       FD_loader, fPredictionAxis, cut && !kIsNC && kIsNumuCC && kIsAntiNu,
@@ -83,9 +85,9 @@ void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
 }
 
 //----------------------------------------------------------------------
-void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
-                                    const Cut &cut, const SystShifts &shift,
-                                    const Var &wei) {
+void PredictionPRISM::AddNDMCBkgLoader(SpectrumLoaderBase &ND_loader,
+                                       const Cut &cut, const SystShifts &shift,
+                                       const Var &wei) {
 
   fNDBkg.fOffAxisSpectrumNC = std::make_unique<ReweightableSpectrum>(
       ND_loader, fPredictionAxis, fOffAxis, cut && kIsNC, shift, wei);
@@ -100,55 +102,172 @@ void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
 
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
+  std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps =
+      PredictPRISMComponents(calc);
 
-  ReweightableSpectrum ret = *fOffAxisSpectrum;
-  ret.OverridePOT(1);
+  assert(Comps.size());
+
+  Spectrum pred = Comps.begin()->second;
+  pred.Clear();
+
+  for (auto const &Cmp : Comps) {
+    std::cout << "[PRISM]: Component "
+              << PredictionPRISM::GetComponentString(Cmp.first)
+              << " POT = " << Cmp.second.POT() << std::endl;
+    pred += Cmp.second;
+  }
+
+  return pred;
+}
+
+std::map<PredictionPRISM::PRISMComponent, Spectrum>
+PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
+
+  DontAddDirectory guard;
+
+  // Using maps for non-default constructible classes is awful...
+  std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
+  std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
+
+  NDComps.emplace(kNDData, *fOffAxisSpectrum);
+  NDComps.emplace(kNDDataCorr, *fOffAxisSpectrum);
+
+  NDComps.emplace(kNDDataSig, *fOffAxisSpectrum);
+  NDComps.emplace(kNDWSBkg, *fOffAxisSpectrum);
+  NDComps.emplace(kNDNCBkg, *fOffAxisSpectrum);
+  NDComps.emplace(kNDNueBkg, *fOffAxisSpectrum);
+
+  NDComps.at(kNDDataSig).Clear();
+  NDComps.at(kNDWSBkg).Clear();
+  NDComps.at(kNDNCBkg).Clear();
+  NDComps.at(kNDNueBkg).Clear();
+
+  double xslice_width_cm =
+      NDComps.at(kNDData).GetReweightTAxis()->GetBinWidth(1) * 1E2;
+  double POT = 1.0 / FD_ND_FVRatio(xslice_width_cm);
 
   bool SignalIsNumode = (static_cast<int>(fFDFluxSpecies) < 4);
 
   // If we have the ND background subtract it, if not, assume we can just cheat
   // and take the ND NumuCC spectrum
   if (fHaveNDBkgPred) {
-    fNDBkg.fOffAxisSpectrumNC->OverridePOT(1);
-    fNDBkg.fOffAxisSpectrumNue->OverridePOT(1);
-    fNDBkg.fOffAxisSpectrumNuebar->OverridePOT(1);
-    fOffAxisSpectrumNumubar->OverridePOT(1);
-    fOffAxisSpectrumNumu->OverridePOT(1);
+    NDComps.at(kNDNCBkg) -= *fNDBkg.fOffAxisSpectrumNC;
+    NDComps.at(kNDNueBkg) -= *fNDBkg.fOffAxisSpectrumNue;
+    NDComps.at(kNDNueBkg) -= *fNDBkg.fOffAxisSpectrumNuebar;
+    NDComps.at(kNDWSBkg) -=
+        *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
 
-    ret -= *fNDBkg.fOffAxisSpectrumNC;
-    ret -= *fNDBkg.fOffAxisSpectrumNue;
-    ret -= *fNDBkg.fOffAxisSpectrumNuebar;
-    ret -= *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
-  } else {
-    fOffAxisSpectrumNumubar->OverridePOT(1);
-    fOffAxisSpectrumNumu->OverridePOT(1);
-    ret = *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
+    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNC;
+    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNue;
+    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNuebar;
+    NDComps.at(kNDDataCorr) -=
+        *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
+  } else { // Cheat and use the truth signal
+    NDComps.at(kNDDataCorr).Clear();
+    NDComps.at(kNDDataCorr) +=
+        *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
+  }
+  
+  NDComps.at(kNDDataSig) +=
+      *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
+
+  for (auto &NDC : NDComps) {
+    NDC.second.OverridePOT(POT);
   }
 
   if (fFluxMatcher) {
-    double max_off_axis_pos = ret.GetReweightTAxis()->GetBinCenter(
-        ret.GetReweightTAxis()->GetNbins());
+    double max_off_axis_pos =
+        NDComps.at(kNDData).GetReweightTAxis()->GetBinCenter(
+            NDComps.at(kNDData).GetReweightTAxis()->GetNbins());
+
+    TH1 const *LinearCombination = fFluxMatcher->GetMatchCoefficients(
+        calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies);
+
+    Comps.emplace(kNDDataSig,
+                  NDComps.at(kNDDataSig).WeightedByErrors(LinearCombination));
+
+    Comps.emplace(kNDDataCorr,
+                  NDComps.at(kNDDataCorr).WeightedByErrors(LinearCombination));
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
-      // Scale this up to match the FD POT before adding it back in
-      ret.ScaleToPOT(fFarDetSpectrumNC->POT());
+      // Scale this to match the ND POT before adding it back in
+      Comps.emplace(kFDNCBkg, *fFarDetSpectrumNC);
 
-      Spectrum rets = ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
-          calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+      int rightSignNumuPDG = SignalIsNumode ? 14 : -14;
+      Comps.emplace(
+          kFDWSBkg,
+          (SignalIsNumode ? fFarDetSpectrumNumubar : fFarDetSpectrumNumu)
+              ->Oscillated(calc, rightSignNumuPDG, rightSignNumuPDG));
 
-      rets += *fFarDetSpectrumNC;
-      rets += (SignalIsNumode ? fFarDetSpectrumNumu : fFarDetSpectrumNumubar)
-                  ->Oscillated(calc, 14, 14);
-      return rets;
-    } else {
-      return ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
-          calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
+      std::unique_ptr<TH1> flux_miss_match(static_cast<TH1 *>(
+          fFluxMatcher->GetLastResidual()->Clone("flux_miss_match")));
+      flux_miss_match->SetDirectory(nullptr);
+
+      if (!fFDTrueEnergyBins.size()) {
+        TAxis const *offAxis = fFarDetSpectrumNumu->GetReweightTAxis();
+        for (int i = 0; i < offAxis->GetNbins(); ++i) {
+          fFDTrueEnergyBins.push_back(offAxis->GetBinLowEdge(i + 1));
+        }
+        fFDTrueEnergyBins.push_back(offAxis->GetBinUpEdge(offAxis->GetNbins()));
+      }
+
+      assert(fFDTrueEnergyBins.size());
+
+      std::unique_ptr<TH1> FluxMissWeighter(new TH1D(
+          "fmw", "", fFDTrueEnergyBins.size() - 1, fFDTrueEnergyBins.data()));
+
+      double miss_Emax = flux_miss_match->GetXaxis()->GetBinUpEdge(
+          flux_miss_match->GetXaxis()->GetNbins());
+
+      for (size_t bin_it = 0; bin_it < (fFDTrueEnergyBins.size() - 1);
+           ++bin_it) {
+        bool done = false;
+
+        size_t nint_steps = 100;
+        double bin_low_edge = fFDTrueEnergyBins[bin_it];
+        double bin_up_edge = fFDTrueEnergyBins[bin_it + 1];
+        double step = (bin_up_edge - bin_low_edge) / double(nint_steps);
+        double sum = 0;
+        size_t s_it = 0;
+        for (; s_it < nint_steps; ++s_it) {
+          double E = bin_low_edge + double(s_it) * step;
+          if (E > miss_Emax) {
+            done = true;
+            break;
+          }
+          sum += flux_miss_match->Interpolate(E);
+        }
+        FluxMissWeighter->SetBinContent(bin_it, sum / double(s_it));
+        if (done) {
+          break;
+        }
+      }
+      FluxMissWeighter->SetDirectory(nullptr);
+
+      const OscCurve curve(calc, rightSignNumuPDG, rightSignNumuPDG);
+      TH1D *Ps = curve.ToTH1();
+      FluxMissWeighter->Multiply(Ps);
+
+      Comps.emplace(
+          kFDFluxCorr,
+          (SignalIsNumode ? fFarDetSpectrumNumu : fFarDetSpectrumNumubar)
+              ->WeightedByErrors(FluxMissWeighter.get()));
+      HistCache::Delete(Ps);
+
+      for (auto &cmp : Comps) { // Set these to /POT for combination
+        cmp.second.ScaleToPOT(1);
+      }
     }
-
-  } else {
-    return ret.UnWeighted();
   }
+
+  for (auto const &NDC : NDComps) { // If you haven't been added, just add the
+                                    // unweighted spectrum.
+    // if (!Comps.count(NDC.first)) {
+    //   Comps.emplace(NDC.first, NDC.second.ToSpectrum());
+    // }
+  }
+  return Comps;
 }
 
 //----------------------------------------------------------------------
@@ -190,7 +309,8 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
 
 //----------------------------------------------------------------------
 std::unique_ptr<PredictionPRISM>
-PredictionPRISM::LoadFrom(TDirectory *dir, PRISMExtrapolator const *flux_matcher,
+PredictionPRISM::LoadFrom(TDirectory *dir,
+                          PRISMExtrapolator const *flux_matcher,
                           PRISMExtrapolator::FluxPredSpecies NDFluxSpecies,
                           PRISMExtrapolator::FluxPredSpecies FDFluxSpecies) {
   std::unique_ptr<PredictionPRISM> pred(new PredictionPRISM(

@@ -270,6 +270,21 @@ namespace ana
     }
   }
 
+  // Spectrum ReweightableSpectrum::ToSpectrum() const {
+  //   DontAddDirectory guard;
+  //
+  //   std::unique_ptr<TH1> h(ToTH2(fPOT));
+  //
+  //   Binning truebin = ana::Binning::FromTAxis(GetReweightTAxis());
+  //
+  //   std::vector<std::string> labels = fLabels;
+  //   labels.push_back(fTrueLabel);
+  //   std::vector<Binning> bins = fBins;
+  //   bins.push_back(truebin);
+  //
+  //   return Spectrum(std::move(h), labels, bins, fPOT, fLivetime);
+  // }
+
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::UnWeighted() const
   {
@@ -355,6 +370,32 @@ namespace ana
         retArr[x] += histArr[bin]*w;
         ++bin;
       }
+    }
+
+    // TODO: can this all be more efficient?
+    return Spectrum(std::unique_ptr<TH1D>(hRet), fLabels, fBins, fPOT, fLivetime);
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum ReweightableSpectrum::WeightedByErrors(const TH1* ws) const
+  {
+    // This function is in the inner loop of oscillation fits, so some
+    // optimization has been done.
+
+    DontAddDirectory guard;
+
+    assert(ws->GetNbinsX() == fHist->GetNbinsY());
+
+    TAxis* ax = fHist->GetXaxis();
+    TH1D* hRet = HistCache::New("", ax);
+
+    const int Y = fHist->GetNbinsY();
+
+    int bin = 0;
+    for(int y = 0; y < Y+2; ++y){
+      const double w = ws->GetBinContent(y);
+      std::unique_ptr<TH1D> px(fHist->ProjectionX("px", y, y));
+      hRet->Add(px.get(),w);
     }
 
     // TODO: can this all be more efficient?

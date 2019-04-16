@@ -41,6 +41,7 @@ execute_process (COMMAND root-config
 LIST(APPEND EXTRA_LINK_DIRS ${ROOT_LIBDIR})
 
 LIST(APPEND ROOT_LIBS
+  -Wl,--no-as--needed
   Core
   Cint
   RIO
@@ -59,7 +60,8 @@ LIST(APPEND ROOT_LIBS
   Thread
   EG
   Geom
-  GenVector)
+  GenVector
+  -Wl,--as--needed)
 
 if(USE_MINIMIZER)
 

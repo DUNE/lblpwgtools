@@ -46,16 +46,21 @@ std::vector<double> Getstdvector(TH1 const *rh) {
 }
 
 size_t FillHistFromEigenVector(TH2 *rh, Eigen::VectorXd const &vals,
-                               size_t offset, Eigen::VectorXd const &error) {
-  for (Int_t y_it = 0; y_it < rh->GetYaxis()->GetNbins(); ++y_it) {
-    for (Int_t x_it = 0; x_it < rh->GetXaxis()->GetNbins(); ++x_it) {
-      rh->SetBinContent(x_it + 1, y_it + 1, vals(offset));
+                               size_t vect_offset, size_t histx_offset,
+                               size_t histy_offset,
+                               Eigen::VectorXd const &error) {
+  for (Int_t y_it = histy_offset; y_it < rh->GetYaxis()->GetNbins(); ++y_it) {
+    for (Int_t x_it = histx_offset; x_it < rh->GetXaxis()->GetNbins(); ++x_it) {
+      if (vect_offset == size_t(vals.size())) {
+        return vect_offset;
+      }
+      rh->SetBinContent(x_it + 1, y_it + 1, vals(vect_offset));
       if (error.size()) {
-        rh->SetBinError(x_it + 1, y_it + 1, error(offset));
+        rh->SetBinError(x_it + 1, y_it + 1, error(vect_offset));
       } else {
         rh->SetBinError(x_it + 1, y_it + 1, 0);
       }
-      offset++;
+      vect_offset++;
     }
     // Reset flow bins
     rh->SetBinContent(0, y_it + 1, 0);
@@ -64,7 +69,8 @@ size_t FillHistFromEigenVector(TH2 *rh, Eigen::VectorXd const &vals,
     rh->SetBinError(rh->GetXaxis()->GetNbins() + 1, y_it + 1, 0);
   }
 
-  for (Int_t x_it = 0; x_it < rh->GetXaxis()->GetNbins() + 2; ++x_it) {
+  for (Int_t x_it = histx_offset; x_it < rh->GetXaxis()->GetNbins() + 2;
+       ++x_it) {
     // Reset flow bins
     rh->SetBinContent(x_it, 0, 0);
     rh->SetBinError(x_it, 0, 0);
@@ -72,30 +78,36 @@ size_t FillHistFromEigenVector(TH2 *rh, Eigen::VectorXd const &vals,
     rh->SetBinContent(x_it, rh->GetYaxis()->GetNbins() + 1, 0);
     rh->SetBinError(x_it, rh->GetYaxis()->GetNbins() + 1, 0);
   }
-  return offset;
+  return vect_offset;
 }
 
 size_t FillHistFromEigenVector(TH1 *rh, Eigen::VectorXd const &vals,
-                               size_t offset, Eigen::VectorXd const &error) {
+                               size_t vect_offset, size_t histx_offset,
+                               size_t histy_offset,
+                               Eigen::VectorXd const &error) {
   Int_t dim = rh->GetDimension();
   if (dim == 1) {
-    for (Int_t x_it = 0; x_it < rh->GetXaxis()->GetNbins(); ++x_it) {
-      rh->SetBinContent(x_it + 1, vals(offset));
+    for (Int_t x_it = histx_offset; x_it < rh->GetXaxis()->GetNbins(); ++x_it) {
+      if (vect_offset == size_t(vals.size())) {
+        return vect_offset;
+      }
+      rh->SetBinContent(x_it + 1, vals(vect_offset));
       if (error.size()) {
-        rh->SetBinError(x_it + 1, error(offset));
+        rh->SetBinError(x_it + 1, error(vect_offset));
       } else {
         rh->SetBinError(x_it + 1, 0);
       }
-      offset++;
+      vect_offset++;
     }
     // Reset flow bins
     rh->SetBinContent(0, 0);
     rh->SetBinError(0, 0);
     rh->SetBinContent(rh->GetXaxis()->GetNbins() + 1, 0);
     rh->SetBinError(rh->GetXaxis()->GetNbins() + 1, 0);
-    return offset;
+    return vect_offset;
   } else if (dim == 2) {
-    return FillHistFromEigenVector(static_cast<TH2 *>(rh), vals, offset, error);
+    return FillHistFromEigenVector(static_cast<TH2 *>(rh), vals, vect_offset,
+                                   histx_offset, histy_offset, error);
   }
   std::cout << "[ERROR]: FillHistFromEigenVector cannot handle THND where N = "
             << dim << std::endl;
@@ -231,73 +243,14 @@ bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
   return true;
 }
 
-Eigen::VectorXd SolveLinComb(TH2 const *NDPred, TH1 const *FDOsc,
-                             double max_OffAxis_m, double EMin, double EMax,
-                             double reg_factor) {
-  if (NDPred->GetXaxis()->GetNbins() != FDOsc->GetXaxis()->GetNbins()) {
-    std::cout << "[ERROR]: ND Energy (" << NDPred->GetXaxis()->GetNbins()
-              << ", " << NDPred->GetXaxis()->GetBinLowEdge(1) << ", "
-              << NDPred->GetXaxis()->GetBinUpEdge(
-                     NDPred->GetXaxis()->GetNbins())
-              << "), FD Energy (" << FDOsc->GetXaxis()->GetNbins() << ", "
-              << FDOsc->GetXaxis()->GetBinLowEdge(1) << ", "
-              << FDOsc->GetXaxis()->GetBinUpEdge(FDOsc->GetXaxis()->GetNbins())
-              << ")" << std::endl;
-  }
-  assert(NDPred->GetXaxis()->GetNbins() == FDOsc->GetXaxis()->GetNbins());
-
-  int NEBins = FDOsc->GetXaxis()->GetNbins();
-  int NCoeffs = NDPred->GetYaxis()->FindFixBin(max_OffAxis_m);
-  assert(NCoeffs);
-  if (NCoeffs > NDPred->GetYaxis()->GetNbins()) {
-    NCoeffs = NDPred->GetYaxis()->GetNbins();
-  }
-
-  int EBinLow = FDOsc->GetXaxis()->FindFixBin(EMin);
-  int col_min = 0;
-  if (EBinLow != 0) {
-    col_min = EBinLow - 1;
-  }
-  int EBinUp = FDOsc->GetXaxis()->FindFixBin(EMax);
-  int col_max = NEBins - 1;
-  if (EBinUp != NEBins) {
-    col_max = EBinUp - 1;
-  }
-
-  Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDPred, NCoeffs);
-  NDFluxMatrix.transposeInPlace();
-
-  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
-
-  if (reg_factor) {
-    for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
-      RegMatrix(row_it, row_it) = reg_factor;
-      RegMatrix(row_it, row_it + 1) = -reg_factor;
-    }
-    RegMatrix(NCoeffs - 1, NCoeffs - 1) = reg_factor;
-  }
-
-  Eigen::VectorXd Target = GetEigenFlatVector(FDOsc);
-
-  // // Apply energy cut
-  NDFluxMatrix = NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
-  Target = Target.topRows(col_max).bottomRows(col_max - col_min);
-
-  assert(NDFluxMatrix.rows() == Target.size());
-
-  return ((NDFluxMatrix.transpose() * NDFluxMatrix) +
-          RegMatrix.transpose() * RegMatrix)
-             .inverse() *
-         NDFluxMatrix.transpose() * Target;
-}
-
-TH1 *PRISMExtrapolator::GetMatchCoefficientsEventRate(
-    osc::IOscCalculator *osc, double max_OffAxis_m) const {
+TH1 const *
+PRISMExtrapolator::GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
+                                                 double max_OffAxis_m) const {
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
   ana::Spectrum NDSpect = fNDEventRateInterp->PredictComponent(
-      nullptr, ana::Flavors::kAllNuMu, ana::Current::kCC, ana::Sign::kNu);
+      osc, ana::Flavors::kAllNuMu, ana::Current::kCC, ana::Sign::kNu);
   NDSpect.OverridePOT(1);
 
   ana::Spectrum FDSpect = fFDEventRateInterp->PredictComponent(
@@ -307,14 +260,70 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(1));
   std::unique_ptr<TH1> FDOsc(FDSpect.ToTH1(1));
 
-  Eigen::VectorXd soln =
-      SolveLinComb(NDOffAxis.get(), FDOsc.get(), max_OffAxis_m, fENuMin,
-                   fENuMax, fRegFactor);
+  assert(NDOffAxis->GetXaxis()->GetNbins() == FDOsc->GetXaxis()->GetNbins());
+
+  int NEBins = FDOsc->GetXaxis()->GetNbins();
+
+  int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
+  std::cout << "[INFO]: Fitting with " << NCoeffs << "coefficients."
+            << std::endl;
+
+  Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
+  NDFluxMatrix.transposeInPlace();
+  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
+
+  if (fRegFactor) {
+    for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
+      RegMatrix(row_it, row_it) = fRegFactor;
+      RegMatrix(row_it, row_it + 1) = -fRegFactor;
+    }
+    RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
+  }
+
+  Eigen::VectorXd Target = GetEigenFlatVector(FDOsc.get());
+
+  int EBinLow = FDOsc->GetXaxis()->FindFixBin(fENuMin);
+  int col_min = 0;
+  if (EBinLow != 0) {
+    col_min = EBinLow - 1;
+  }
+  int EBinUp = FDOsc->GetXaxis()->FindFixBin(fENuMax);
+  int col_max = NEBins - 1;
+  if (EBinUp != NEBins) {
+    col_max = EBinUp - 1;
+  }
+
+  // // Apply energy cut
+  Eigen::MatrixXd NDFluxMatrix_cut =
+      NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
+  Target = Target.topRows(col_max).bottomRows(col_max - col_min);
+
+  assert(NDFluxMatrix_cut.rows() == Target.size());
+
+  Eigen::VectorXd OffAxisWeights =
+      ((NDFluxMatrix_cut.transpose() * NDFluxMatrix_cut) +
+       RegMatrix.transpose() * RegMatrix)
+          .inverse() *
+      NDFluxMatrix_cut.transpose() * Target;
 
   fMatchCache["last_match"] = std::unique_ptr<TH1>(
-      new TH1D("soln", ";OffAxisSlice;Weight", soln.size(), 0, soln.size()));
+      new TH1D("soln", ";OffAxisSlice;Weight", OffAxisWeights.size(), 0,
+               OffAxisWeights.size()));
   fMatchCache["last_match"]->SetDirectory(nullptr);
-  FillHistFromEigenVector(fMatchCache["last_match"].get(), soln);
+  FillHistFromEigenVector(fMatchCache["last_match"].get(), OffAxisWeights);
+
+  fLastResidual =
+      std::unique_ptr<TH1>(static_cast<TH1 *>(FDOsc->Clone("LastResidual")));
+  fLastResidual->SetDirectory(nullptr);
+  fLastResidual->Clear();
+
+  Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights;
+
+  for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
+       ++bin_it) {
+    double bc = FDOsc->GetBinContent(bin_it + 1);
+    fLastResidual->SetBinContent(bin_it + 1, (bc - BestFit[bin_it]) / bc);
+  }
 
   if (fStoreDebugMatches) {
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
@@ -332,13 +341,13 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsEventRate(
     fDebugBF["last_match"] = std::unique_ptr<TH1>(
         new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
     fDebugBF["last_match"]->SetDirectory(nullptr);
-    FillHistFromEigenVector(fDebugBF["last_match"].get(), NDFluxMatrix * soln);
+    FillHistFromEigenVector(fDebugBF["last_match"].get(), BestFit);
   }
 
   return fMatchCache["last_match"].get();
 }
 
-TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
+TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMExtrapolator::FluxPredSpecies NDMode,
     PRISMExtrapolator::FluxPredSpecies FDMode) const {
@@ -399,6 +408,8 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
     int NEBins = FDUnosc->GetXaxis()->GetNbins();
 
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
+    std::cout << "[INFO]: Fitting with " << NCoeffs << "coefficients."
+              << std::endl;
 
     Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis, NCoeffs);
     NDFluxMatrix.transposeInPlace();
@@ -420,6 +431,10 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
                                FDUnosc->GetXaxis()->GetBinCenter(ebin_it + 1));
     }
 
+    std::unique_ptr<TH1> FDOsc(static_cast<TH1 *>(FDUnosc->Clone("target")));
+    FDOsc->SetDirectory(nullptr);
+    FillHistFromEigenVector(FDOsc.get(), Target);
+
     int EBinLow = FDUnosc->GetXaxis()->FindFixBin(fENuMin);
     int col_min = 0;
     if (EBinLow != 0) {
@@ -432,16 +447,17 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
     }
 
     // // Apply energy cut
-    NDFluxMatrix = NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
+    Eigen::MatrixXd NDFluxMatrix_cut =
+        NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
     Target = Target.topRows(col_max).bottomRows(col_max - col_min);
 
-    assert(NDFluxMatrix.rows() == Target.size());
+    assert(NDFluxMatrix_cut.rows() == Target.size());
 
     Eigen::VectorXd OffAxisWeights =
-        ((NDFluxMatrix.transpose() * NDFluxMatrix) +
+        ((NDFluxMatrix_cut.transpose() * NDFluxMatrix_cut) +
          RegMatrix.transpose() * RegMatrix)
             .inverse() *
-        NDFluxMatrix.transpose() * Target;
+        NDFluxMatrix_cut.transpose() * Target;
 
     fMatchCache[uniq_soln_name] = std::unique_ptr<TH1>(
         new TH1D("soln", ";OffAxisSlice;Weight", OffAxisWeights.size(), 0,
@@ -449,24 +465,33 @@ TH1 *PRISMExtrapolator::GetMatchCoefficientsFlux(
     fMatchCache[uniq_soln_name]->SetDirectory(nullptr);
     FillHistFromEigenVector(fMatchCache[uniq_soln_name].get(), OffAxisWeights);
 
-    if (fStoreDebugMatches) {
-      fDebugTarget[uniq_soln_name] = std::unique_ptr<TH1>(
-          new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
-      fDebugTarget[uniq_soln_name]->SetDirectory(nullptr);
-      FillHistFromEigenVector(fDebugTarget[uniq_soln_name].get(), Target);
+    fLastResidual = std::unique_ptr<TH1>(
+        static_cast<TH1 *>(FDUnosc->Clone("LastResidual")));
+    fLastResidual->SetDirectory(nullptr);
+    fLastResidual->Clear();
+    Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights;
 
-      fDebugBF[uniq_soln_name] = std::unique_ptr<TH1>(
-          new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+    for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
+         ++bin_it) {
+      double bc = FDOsc->GetBinContent(bin_it + 1);
+      fLastResidual->SetBinContent(bin_it + 1, (bc - BestFit[bin_it]) / bc);
+    }
+
+    if (fStoreDebugMatches) {
+      fDebugTarget[uniq_soln_name] = std::move(FDOsc);
+
+      fDebugBF[uniq_soln_name] =
+          std::unique_ptr<TH1>(static_cast<TH1 *>(FDUnosc->Clone("best_fit")));
+      fDebugBF[uniq_soln_name]->Clear();
       fDebugBF[uniq_soln_name]->SetDirectory(nullptr);
-      FillHistFromEigenVector(fDebugBF[uniq_soln_name].get(),
-                              NDFluxMatrix * OffAxisWeights);
+      FillHistFromEigenVector(fDebugBF[uniq_soln_name].get(), BestFit);
     }
   }
 
   return fMatchCache[uniq_soln_name].get();
 }
 
-TH1 *PRISMExtrapolator::GetMatchCoefficients(
+TH1 const *PRISMExtrapolator::GetMatchCoefficients(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMExtrapolator::FluxPredSpecies NDMode,
     PRISMExtrapolator::FluxPredSpecies FDMode) const {

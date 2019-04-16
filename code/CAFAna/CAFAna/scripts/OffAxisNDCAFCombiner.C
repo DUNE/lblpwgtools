@@ -1,6 +1,8 @@
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "common_fit_definitions.C"
+
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -23,34 +25,34 @@ std::string EnsureTrailingSlash(std::string str) {
   return str;
 }
 
-string parseCode(regex_constants::error_type etype) {
+std::string parseCode(std::regex_constants::error_type etype) {
   switch (etype) {
-  case regex_constants::error_collate:
+  case std::regex_constants::error_collate:
     return "error_collate: invalid collating element request";
-  case regex_constants::error_ctype:
+  case std::regex_constants::error_ctype:
     return "error_ctype: invalid character class";
-  case regex_constants::error_escape:
+  case std::regex_constants::error_escape:
     return "error_escape: invalid escape character or trailing escape";
-  case regex_constants::error_backref:
+  case std::regex_constants::error_backref:
     return "error_backref: invalid back reference";
-  case regex_constants::error_brack:
+  case std::regex_constants::error_brack:
     return "error_brack: mismatched bracket([ or ])";
-  case regex_constants::error_paren:
+  case std::regex_constants::error_paren:
     return "error_paren: mismatched parentheses(( or ))";
-  case regex_constants::error_brace:
+  case std::regex_constants::error_brace:
     return "error_brace: mismatched brace({ or })";
-  case regex_constants::error_badbrace:
+  case std::regex_constants::error_badbrace:
     return "error_badbrace: invalid range inside a { }";
-  case regex_constants::error_range:
+  case std::regex_constants::error_range:
     return "erro_range: invalid character range(e.g., [z-a])";
-  case regex_constants::error_space:
+  case std::regex_constants::error_space:
     return "error_space: insufficient memory to handle this regular expression";
-  case regex_constants::error_badrepeat:
+  case std::regex_constants::error_badrepeat:
     return "error_badrepeat: a repetition character (*, ?, +, or {) was not "
            "preceded by a valid regular expression";
-  case regex_constants::error_complexity:
+  case std::regex_constants::error_complexity:
     return "error_complexity: the requested match is too complex";
-  case regex_constants::error_stack:
+  case std::regex_constants::error_stack:
     return "error_stack: insufficient memory to evaluate a match";
   default:
     return "";
@@ -115,12 +117,20 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
   return matches;
 }
 
+struct fileSummary {
+  fileSummary() : NEvents(0), POT(0), det_x(0), fileName(nullptr) {}
+  int NEvents;
+  double POT;
+  double det_x;
+  std::string *fileName;
+};
+
 // If CombiningCombinedCAFs = true, then take the POT for the input file from
 // histograms produced by a previous invocation of this script.
 void OffAxisNDCAFCombiner(
-    std::string InputFilePattern, std::string OutputFileName,
+    std::string InputFilePatterns, std::string OutputFileName,
     bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
-    bool preSelect = false,
+    bool preSelect = false, bool justDoSummaryTree = false,
     size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
 
   if (CombiningCombinedCAFs && preSelect) {
@@ -128,47 +138,55 @@ void OffAxisNDCAFCombiner(
               << std::endl;
   }
 
-  size_t asterisk_loc = InputFilePattern.find_first_of('*');
-  size_t class_loc = InputFilePattern.find_first_of('[');
-  size_t last_slash_loc = InputFilePattern.find_last_of('/');
+  std::map<std::string, std::vector<std::string>> CAFs;
+  size_t NFiles = 0;
 
-  if ((asterisk_loc != std::string::npos) &&
-      (last_slash_loc != std::string::npos) &&
-      (asterisk_loc < last_slash_loc)) {
+  for (std::string const &InputFilePattern :
+       SplitString(InputFilePatterns, ',')) {
+    size_t asterisk_loc = InputFilePattern.find_first_of('*');
+    size_t class_loc = InputFilePattern.find_first_of('[');
+    size_t last_slash_loc = InputFilePattern.find_last_of('/');
 
-    std::cout << "[ERROR]: Can only wildcard filenames, not directories."
-              << std::endl;
-    return;
-  }
+    if ((asterisk_loc != std::string::npos) &&
+        (last_slash_loc != std::string::npos) &&
+        (asterisk_loc < last_slash_loc)) {
 
-  std::string dir = (last_slash_loc == std::string::npos)
-                        ? std::string("")
-                        : InputFilePattern.substr(0, last_slash_loc + 1);
-  std::string pattern =
-      (last_slash_loc == std::string::npos)
-          ? InputFilePattern
-          : InputFilePattern.substr(last_slash_loc + 1,
-                                    InputFilePattern.size() - last_slash_loc);
-
-  std::vector<std::string> CAFs;
-
-  if ((asterisk_loc == std::string::npos) && (class_loc == std::string::npos)) {
-    CAFs.push_back(pattern);
-  } else {
-    if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-      std::cout
-          << "Set NMaxEvents but found a regex pattern, this will not do what "
-             "you want, aborting."
-          << std::endl;
-      abort();
-    }
-    try {
-      CAFs = GetMatchingFiles(dir, pattern);
-    } catch (std::regex_error const &e) {
-      std::cout << "[ERROR]: " << e.what() << ", " << parseCode(e.code())
+      std::cout << "[ERROR]: Can only wildcard filenames, not directories."
                 << std::endl;
-      throw;
+      return;
     }
+
+    std::string dir = (last_slash_loc == std::string::npos)
+                          ? std::string("")
+                          : InputFilePattern.substr(0, last_slash_loc + 1);
+    std::string pattern =
+        (last_slash_loc == std::string::npos)
+            ? InputFilePattern
+            : InputFilePattern.substr(last_slash_loc + 1,
+                                      InputFilePattern.size() - last_slash_loc);
+
+    std::vector<std::string> files;
+    if ((asterisk_loc == std::string::npos) &&
+        (class_loc == std::string::npos)) {
+      files.push_back(pattern);
+    } else {
+      if (NMaxEvents != std::numeric_limits<size_t>::max()) {
+        std::cout << "Set NMaxEvents but found a regex pattern, this will not "
+                     "do what "
+                     "you want, aborting."
+                  << std::endl;
+        abort();
+      }
+      try {
+        files = GetMatchingFiles(dir, pattern);
+      } catch (std::regex_error const &e) {
+        std::cout << "[ERROR]: " << e.what() << ", " << parseCode(e.code())
+                  << std::endl;
+        throw;
+      }
+    }
+    std::copy(files.begin(), files.end(), std::back_inserter(CAFs[dir]));
+    NFiles += files.size();
   }
 
   if (!CAFs.size()) {
@@ -198,174 +216,339 @@ void OffAxisNDCAFCombiner(
   TChain *caf = new TChain(cafTreeName.c_str());
   TChain *meta = new TChain("meta");
   TTree *POTWeightFriend;
-  double perPOT;
+  double perPOT, perFile;
+  TTree *FileSummaryTree;
+  fileSummary fs;
+
+  std::map<double, int> det_x_files;
+  std::vector<std::pair<double, double>> EventPOTEventFiles;
 
   if (CombiningCombinedCAFs) {
     POTWeightFriend = new TChain("POTWeightFriend");
+    FileSummaryTree = new TChain("FileSummaryTree");
   } else {
     POTWeightFriend = new TTree("POTWeightFriend", "");
     POTWeightFriend->Branch("perPOT", &perPOT, "perPOT/D");
+    POTWeightFriend->Branch("perFile", &perFile, "perFile/D");
     POTWeightFriend->SetDirectory(nullptr);
+
+    FileSummaryTree = new TTree("FileSummaryTree", "");
+    FileSummaryTree->Branch("NEvents", &fs.NEvents, "NEvents/I");
+    FileSummaryTree->Branch("POT", &fs.POT, "POT/D");
+    FileSummaryTree->Branch("det_x", &fs.det_x, "det_x/D");
+    FileSummaryTree->Branch("fileName", &fs.fileName);
+    FileSummaryTree->SetDirectory(nullptr);
   }
+  size_t NPrevPOTWeightFriendEntries = 0;
+  size_t fctr = 0;
+  for (auto dir_files : CAFs) {
+    std::string dir = dir_files.first;
+    for (std::string const &file_name : dir_files.second) {
+      fctr++;
 
-  for (size_t fctr = 0; fctr < CAFs.size(); ++fctr) {
+      std::cout << "[INFO]: Opening file: " << file_name << "(" << fctr << "/"
+                << NFiles << ")" << std::endl;
 
-    std::string const &file_name = CAFs[fctr];
+      TFile f((dir + file_name).c_str());
 
-    std::cout << "[INFO]: Opening file: " << file_name << std::endl;
+      assert(!f.IsZombie());
 
-    TFile f((dir + file_name).c_str());
+      TTree *f_caf;
+      f.GetObject(cafTreeName.c_str(), f_caf);
+      assert(f_caf);
 
-    assert(!f.IsZombie());
+      // Assume input file was generated with a single stop.
+      double det_x;
+      f_caf->SetBranchAddress("det_x", &det_x);
+      double vtx_x, vtx_y, vtx_z;
+      f_caf->SetBranchAddress("vtx_x", &vtx_x);
+      f_caf->SetBranchAddress("vtx_y", &vtx_y);
+      f_caf->SetBranchAddress("vtx_z", &vtx_z);
+      f_caf->GetEntry(0);
+      double file_det_x = det_x;
 
-    TTree *f_caf;
-    f.GetObject(cafTreeName.c_str(), f_caf);
-    assert(f_caf);
+      if (CombiningCombinedCAFs) {
+        TH1D *f_POTExposure;
+        f.GetObject("POTExposure", f_POTExposure);
+        assert(f_POTExposure);
+        POTExposure->Add(f_POTExposure);
 
-    // Assume input file was generated with a single stop.
-    double det_x;
-    f_caf->SetBranchAddress("det_x", &det_x);
-    double vtx_x, vtx_y, vtx_z;
-    f_caf->SetBranchAddress("vtx_x", &vtx_x);
-    f_caf->SetBranchAddress("vtx_y", &vtx_y);
-    f_caf->SetBranchAddress("vtx_z", &vtx_z);
-    f_caf->GetEntry(0);
+        TH2D *f_POTExposure_stop;
+        f.GetObject("POTExposure_stop", f_POTExposure_stop);
+        assert(f_POTExposure_stop);
+        POTExposure_stop->Add(f_POTExposure_stop);
 
-    if (CombiningCombinedCAFs) {
-      TH1D *f_POTExposure;
-      f.GetObject("POTExposure", f_POTExposure);
-      assert(f_POTExposure);
-      POTExposure->Add(f_POTExposure);
+        TH1D *f_FileExposure;
+        f.GetObject("FileExposure", f_FileExposure);
+        assert(f_FileExposure);
+        FileExposure->Add(f_FileExposure);
+      } else {
+        TTree *f_meta;
+        f.GetObject("meta", f_meta);
 
-      TH2D *f_POTExposure_stop;
-      f.GetObject("POTExposure_stop", f_POTExposure_stop);
-      assert(f_POTExposure_stop);
-      POTExposure_stop->Add(f_POTExposure_stop);
+        assert(f_meta);
 
-      TH1D *f_FileExposure;
-      f.GetObject("FileExposure", f_FileExposure);
-      assert(f_FileExposure);
-      FileExposure->Add(f_FileExposure);
-    } else {
-      TTree *f_meta;
-      f.GetObject("meta", f_meta);
+        double file_pot = 0;
+        double pot;
+        f_meta->SetBranchAddress("pot", &pot);
 
-      assert(f_meta);
+        size_t nmeta_ents = f_meta->GetEntries();
+        for (size_t meta_it = 0; meta_it < nmeta_ents; ++meta_it) {
+          f_meta->GetEntry(meta_it);
+          file_pot += pot;
+        }
 
-      double file_pot = 0;
-      double pot;
-      f_meta->SetBranchAddress("pot", &pot);
+        fs.NEvents = f_caf->GetEntries();
+        fs.POT = file_pot;
+        fs.det_x = file_det_x;
+        (*fs.fileName) = file_name;
+        FileSummaryTree->Fill();
 
-      size_t nmeta_ents = f_meta->GetEntries();
-      for (size_t meta_it = 0; meta_it < nmeta_ents; ++meta_it) {
-        f_meta->GetEntry(meta_it);
-        file_pot += pot;
-      }
-
-      if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-        double nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
-        file_pot *= nevs / double(f_caf->GetEntries());
-        std::cout << "Rescaling POT by: " << nevs / double(f_caf->GetEntries())
-                  << " as only taking " << nevs << "/" << f_caf->GetEntries()
-                  << " file entries." << std::endl;
-      }
-
-      std::cout << "[INFO]: Found ND file (" << (fctr + 1) << "/" << CAFs.size()
-                << ") with detector at " << det_x
-                << " m off axis which contained " << file_pot << " POT and "
-                << f_caf->GetEntries() << " events from " << nmeta_ents
-                << " files." << std::endl;
-
-      double det_min_m = -3;
-      double det_max_m = 3;
-      double average_step = 1E-6;
-      size_t det_steps = (det_max_m - det_min_m) / (step_m * average_step);
-
-      for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
-        double det_x_pos_m = det_min_m + pos_it * (step_m * average_step);
-
-        if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
-                           /*Dummy z_pos_m*/ 150)) {
-          // std::cout << "out of FV: " << (det_x_pos_m + det_x) << std::endl;
+        if (justDoSummaryTree) {
+          if (CombiningCombinedCAFs) {
+            static_cast<TChain *>(FileSummaryTree)
+                ->Add((dir + file_name).c_str());
+          }
+          f.Close();
           continue;
         }
 
-        POTExposure->Fill(det_x_pos_m + det_x, average_step * file_pot);
-        POTExposure_stop->Fill(det_x_pos_m + det_x, det_x,
-                               average_step * file_pot);
-        FileExposure->Fill(det_x_pos_m + det_x, average_step * nmeta_ents);
+        if (NMaxEvents != std::numeric_limits<size_t>::max()) {
+          double nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
+          file_pot *= nevs / double(f_caf->GetEntries());
+          std::cout << "Rescaling POT by: "
+                    << nevs / double(f_caf->GetEntries()) << " as only taking "
+                    << nevs << "/" << f_caf->GetEntries() << " file entries."
+                    << std::endl;
+        }
+
+        std::cout << "[INFO]: Found ND file with detector at " << det_x
+                  << " m off axis which contained " << file_pot << " POT and "
+                  << f_caf->GetEntries() << " events from " << nmeta_ents
+                  << " files." << std::endl;
+
+        if (!det_x_files.count(file_det_x)) {
+          det_x_files[file_det_x] = 0;
+        }
+        det_x_files[file_det_x]++;
+
+        double det_min_m = -3;
+        double det_max_m = 3;
+        double average_step = 1E-6;
+        size_t det_steps = (det_max_m - det_min_m) / (step_m * average_step);
+
+        for (size_t pos_it = 0; pos_it < det_steps; ++pos_it) {
+          double det_x_pos_m = det_min_m + pos_it * (step_m * average_step);
+
+          FileExposure->Fill(det_x_pos_m + det_x, average_step * nmeta_ents);
+
+          if (!ana::IsInNDFV(det_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
+                             /*Dummy z_pos_m*/ 150)) {
+            // std::cout << "out of FV: " << (det_x_pos_m + det_x) << std::endl;
+            continue;
+          }
+
+          POTExposure->Fill(det_x_pos_m + det_x, average_step * file_pot);
+          POTExposure_stop->Fill(det_x_pos_m + det_x, det_x,
+                                 average_step * file_pot);
+        }
+
+        if (!CombiningCombinedCAFs) {
+          NPrevPOTWeightFriendEntries = EventPOTEventFiles.size();
+          size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
+          perPOT = 1.0 / file_pot;
+          for (size_t e_it = 0; e_it < nevs; ++e_it) {
+            if (preSelect) {
+              f_caf->GetEntry(e_it);
+              if (file_det_x != det_x) {
+                std::cout << "[ERROR]: In file " << file_name
+                          << " found an event with det_x = " << det_x
+                          << ", but the first event had det_x = " << file_det_x
+                          << std::endl;
+                throw;
+              }
+              if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+                continue;
+              }
+            }
+            EventPOTEventFiles.emplace_back(det_x, perPOT);
+          }
+          if (preSelect) {
+            std::cout << "\t-FV selection efficiency: "
+                      << (double(EventPOTEventFiles.size() -
+                                 NPrevPOTWeightFriendEntries) /
+                          double(nevs))
+                      << std::endl;
+          }
+        }
       }
 
-      if (!CombiningCombinedCAFs) {
-        size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
-        perPOT = 1.0 / file_pot;
-        for (size_t e_it = 0; e_it < nevs; ++e_it) {
-          if (preSelect) {
-            f_caf->GetEntry(e_it);
-            if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-              continue;
-            }
-          }
-          POTWeightFriend->Fill();
+      f.Close();
+
+      caf->Add((dir + file_name).c_str());
+      meta->Add((dir + file_name).c_str());
+      if (CombiningCombinedCAFs) {
+        static_cast<TChain *>(POTWeightFriend)->Add((dir + file_name).c_str());
+        static_cast<TChain *>(FileSummaryTree)->Add((dir + file_name).c_str());
+      }
+    }
+  }
+
+  TFile *fout = TFile::Open(justDoSummaryTree ? "CAFFileSummaryTree.root"
+                                              : OutputFileName.c_str(),
+                            "RECREATE");
+
+  if (CombiningCombinedCAFs) {
+    std::cout << "[INFO]: Rebuilding File count at each stop..." << std::endl;
+
+    double det_x;
+    FileSummaryTree->SetBranchAddress("det_x", &det_x);
+    Long64_t NFSEnts = FileSummaryTree->GetEntries();
+    for (size_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
+      FileSummaryTree->GetEntry(ent_it);
+
+      if (!det_x_files.count(det_x)) {
+        det_x_files[det_x] = 0;
+      }
+      det_x_files[det_x]++;
+    }
+    std::cout << "[INFO]: Copying FileSummaryTree tree..." << std::endl;
+    TTree *FileSummaryTreecopy = FileSummaryTree->CloneTree(-1, "fast");
+    delete FileSummaryTree;
+  } else {
+    std::cout << "[INFO]: Writing FileSummaryTree tree..." << std::endl;
+    FileSummaryTree->SetDirectory(fout);
+    FileSummaryTree->Write();
+  }
+
+  if (!justDoSummaryTree) {
+    std::cout << "[INFO]: Copying caf tree..." << std::endl;
+    TTree *treecopy =
+        caf->CloneTree(preSelect ? 0 : NMaxEvents, preSelect ? "" : "fast");
+    treecopy->SetName("cafTree");
+
+    if (preSelect) {
+      double vtx_x, vtx_y, vtx_z;
+      caf->SetBranchAddress("vtx_x", &vtx_x);
+      caf->SetBranchAddress("vtx_y", &vtx_y);
+      caf->SetBranchAddress("vtx_z", &vtx_z);
+      size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
+      ana::Progress preselprog("Copy with selection progress.");
+      for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
+        if (ent_it && !(ent_it % 10000)) {
+          preselprog.SetProgress(double(ent_it) / double(nents));
         }
-        std::cout << "POTWeightFriend->GetEntries(): "
-                  << POTWeightFriend->GetEntries() << " / " << nevs << " events."
+        caf->GetEntry(ent_it);
+        if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+          continue;
+        }
+        treecopy->Fill();
+      }
+      preselprog.Done();
+    }
+    delete caf;
+
+    std::cout << "[INFO]: Copying meta tree..." << std::endl;
+    TTree *metacopy = meta->CloneTree(-1, "fast");
+    delete meta;
+    if (!CombiningCombinedCAFs) {
+      std::cout << "[INFO]: Writing POTWeightFriend tree..." << std::endl;
+      size_t NPOTWeightFriends = EventPOTEventFiles.size();
+      ana::Progress potfillprog("Writing POTWeightFriend tree.");
+      for (size_t ev_it = 0; ev_it < NPOTWeightFriends; ++ev_it) {
+        perFile = 1.0 / double(det_x_files[EventPOTEventFiles[ev_it].first]);
+        perPOT = EventPOTEventFiles[ev_it].second;
+        POTWeightFriend->Fill();
+        if (ev_it && !(ev_it % 10000)) {
+          potfillprog.SetProgress(double(ev_it) / double(NPOTWeightFriends));
+        }
+      }
+      potfillprog.Done();
+      POTWeightFriend->SetDirectory(fout);
+      POTWeightFriend->Write();
+    } else {
+      std::cout << "[INFO]: Updating POTWeightFriend tree with combined NFiles "
+                   "per det_x info..."
+                << std::endl;
+      double perFile;
+      double det_x;
+      treecopy->SetBranchAddress("det_x", &det_x);
+      POTWeightFriend->SetBranchAddress("perFile", &perFile);
+      TTree *POTWeightFriendcopy = POTWeightFriend->CloneTree(0, "");
+
+      size_t NPOTWeightEntries = POTWeightFriend->GetEntries();
+
+      if (NPOTWeightEntries != treecopy->GetEntries()) {
+        std::cout << "[ERROR]: The number of entries in the POT friend tree "
+                     "has got out of synch with the event tree. This is bad."
                   << std::endl;
       }
-    }
+      assert(NPOTWeightEntries == treecopy->GetEntries());
 
-    f.Close();
-
-    caf->Add((dir + file_name).c_str());
-    meta->Add((dir + file_name).c_str());
-    if (CombiningCombinedCAFs) {
-      static_cast<TChain *>(POTWeightFriend)->Add((dir + file_name).c_str());
-    }
-  }
-
-  TFile *fout = TFile::Open(OutputFileName.c_str(), "RECREATE");
-  std::cout << "[INFO]: Copying caf tree..." << std::endl;
-  TTree *treecopy =
-      caf->CloneTree(preSelect ? 0 : NMaxEvents, preSelect ? "" : "fast");
-  treecopy->SetName("cafTree");
-
-  if (preSelect) {
-    double vtx_x, vtx_y, vtx_z;
-    caf->SetBranchAddress("vtx_x", &vtx_x);
-    caf->SetBranchAddress("vtx_y", &vtx_y);
-    caf->SetBranchAddress("vtx_z", &vtx_z);
-    size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
-    ana::Progress preselprog("Copy with selection progress.");
-    for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
-      if (ent_it && !(ent_it % 10000)) {
-        preselprog.SetProgress(double(ent_it) / double(nents));
+      ana::Progress filerecalcprog("Updating POTWeightFriend tree");
+      for (size_t ent_it = 0; ent_it < NPOTWeightEntries; ++ent_it) {
+        POTWeightFriend->GetEntry(ent_it);
+        treecopy->GetEntry(ent_it);
+        perFile = 1.0 / double(det_x_files[det_x]);
+        POTWeightFriendcopy->Fill();
+        if (ent_it && !(ent_it % 10000)) {
+          filerecalcprog.SetProgress(double(ent_it) /
+                                     double(NPOTWeightEntries));
+        }
       }
-      caf->GetEntry(ent_it);
-      if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-        continue;
-      }
-      treecopy->Fill();
+      delete POTWeightFriend;
+      filerecalcprog.Done();
     }
-    preselprog.Done();
-  }
 
-  delete caf;
-  std::cout << "[INFO]: Copying meta tree..." << std::endl;
-  TTree *metacopy = meta->CloneTree(-1, "fast");
-  delete meta;
-  if (CombiningCombinedCAFs) {
-    std::cout << "[INFO]: Copying POTWeightFriend tree..." << std::endl;
-    TTree *POTWeightFriendcopy = POTWeightFriend->CloneTree(-1, "fast");
-    delete POTWeightFriend;
-  } else {
-    std::cout << "[INFO]: Writing POTWeightFriend tree..." << std::endl;
-    POTWeightFriend->SetDirectory(fout);
-    POTWeightFriend->Write();
+    POTExposure->Write("POTExposure");
+    POTExposure_stop->Write("POTExposure_stop");
+    FileExposure->Write("FileExposure");
   }
-
-  POTExposure->Write("POTExposure");
-  POTExposure_stop->Write("POTExposure_stop");
-  FileExposure->Write("FileExposure");
 
   fout->Write();
 }
+
+#ifndef __CINT__
+
+bool strToBool(std::string const &str) {
+  if (str == "true") {
+    return true;
+  }
+  if (str == "True") {
+    return true;
+  }
+  if (str == "1") {
+    return true;
+  }
+  if (str == "false") {
+    return false;
+  }
+  if (str == "False") {
+    return false;
+  }
+  if (str == "0") {
+    return false;
+  }
+
+  std::cout << "[ERROR]: Failed to parse " << str << " as bool." << std::endl;
+  throw std::runtime_error(str);
+}
+
+int main(int argc, char const *argv[]) {
+
+  if (argc < 3) {
+    std::cout << "[ERROR]: Expect at least 2 arguments." << std::endl;
+    return 1;
+  }
+  std::string InputFilePattern = argv[1];
+  std::string OutputFileName = argv[2];
+  bool CombiningCombinedCAFs = (argc >= 4) ? strToBool(argv[3]) : false;
+  std::string cafTreeName = (argc >= 5) ? argv[4] : "cafTree";
+  bool preSelect = (argc >= 6) ? strToBool(argv[5]) : false;
+  bool justDoSummaryTree = (argc >= 7) ? strToBool(argv[6]) : false;
+  size_t NMaxEvents = (argc >= 8) ? size_t(std::strtol(argv[7], nullptr, 10))
+                                  : std::numeric_limits<size_t>::max();
+  OffAxisNDCAFCombiner(InputFilePattern, OutputFileName, CombiningCombinedCAFs,
+                       cafTreeName, preSelect, justDoSummaryTree, NMaxEvents);
+}
+#endif

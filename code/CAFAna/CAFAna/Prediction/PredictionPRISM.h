@@ -56,9 +56,61 @@ public:
   }
 };
 
+inline double FD_ND_FVRatio(double x_slice_cm) {
+  double NDSliceFV = x_slice_cm * 200 * (350 - 50);
+  double FDFV = 620 * 1100 * (1244 - 50);
+
+  return FDFV / NDSliceFV;
+}
+
 /// Prediction that wraps a simple Spectrum
 class PredictionPRISM : public IPrediction {
 public:
+  enum PRISMComponent {
+    kNDData = (1 << 0),
+    kNDDataCorr = (1 << 1),
+    kNDDataSig = (1 << 2),
+    kNDWSBkg = (1 << 3),
+    kNDNCBkg = (1 << 4),
+    kNDNueBkg = (1 << 5),
+    kFDFluxCorr = (1 << 6),
+    kFDNCBkg = (1 << 7),
+    kFDWSBkg = (1 << 8)
+  };
+
+  static std::string GetComponentString(PRISMComponent pc) {
+    switch (pc) {
+    case kNDData: {
+      return "kNDData";
+    }
+    case kNDDataCorr: {
+      return "kNDDataCorr";
+    }
+    case kNDDataSig: {
+      return "kNDDataSig";
+    }
+    case kNDWSBkg: {
+      return "kNDWSBkg";
+    }
+    case kNDNCBkg: {
+      return "kNDNCBkg";
+    }
+    case kNDNueBkg: {
+      return "kNDNueBkg";
+    }
+    case kFDFluxCorr: {
+      return "kFDFluxCorr";
+    }
+    case kFDNCBkg: {
+      return "kFDNCBkg";
+    }
+    case kFDWSBkg: {
+      return "kFDWSBkg";
+    }
+    }
+    return "";
+  }
+
   PredictionPRISM(SpectrumLoaderBase &ND_loader, const HistAxis &recoAxis,
                   const HistAxis &offAxis, const Cut &cut,
                   const SystShifts &shift = kNoShift,
@@ -75,9 +127,9 @@ public:
                      const SystShifts &shift = kNoShift,
                      const Var &wei = kUnweighted);
 
-  void AddNDMCLoader(SpectrumLoaderBase &ND_loader, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Var &wei = kUnweighted);
+  void AddNDMCBkgLoader(SpectrumLoaderBase &ND_loader, const Cut &cut,
+                        const SystShifts &shift = kNoShift,
+                        const Var &wei = kUnweighted);
 
   static std::unique_ptr<PredictionPRISM>
   LoadFrom(TDirectory *dir, PRISMExtrapolator const *flux_matcher = nullptr,
@@ -88,6 +140,8 @@ public:
   virtual void SaveTo(TDirectory *dir) const override;
 
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
+  virtual std::map<PRISMComponent, Spectrum>
+  PredictPRISMComponents(osc::IOscCalculator *calc) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
@@ -107,7 +161,7 @@ protected:
                       PRISMExtrapolator::FluxPredSpecies::kNumu_numode,
                   PRISMExtrapolator::FluxPredSpecies FDFluxSpecies =
                       PRISMExtrapolator::FluxPredSpecies::kNumu_numode)
-      : fPredictionAxis({}, {}, {}), fOffAxis({}, {}, {}) {
+      : fPredictionAxis({}, {}, {}), fOffAxis({}, {}, {}), fFDTrueEnergyBins() {
 
     fOffAxisSpectrum = std::move(spec);
     fOffAxisSpectrumNumu = std::move(specNumu);
@@ -175,6 +229,7 @@ protected:
 
   HistAxis fPredictionAxis;
   HistAxis fOffAxis;
+  mutable std::vector<double> fFDTrueEnergyBins;
 };
 
 class PredictionPRISMGenerator : public IPredictionGenerator {
@@ -224,7 +279,7 @@ public:
 
     SpectrumLoaderBase &loader_ND_corr =
         loaders.GetLoader(caf::kNEARDET, Loaders::kMC);
-    ppred->AddNDMCLoader(loader_ND_corr, fCutND, shiftMC, fWeiND);
+    ppred->AddNDMCBkgLoader(loader_ND_corr, fCutND, shiftMC, fWeiND);
 
     SpectrumLoaderBase &loader_FD_corr =
         loaders.GetLoader(caf::kFARDET, Loaders::kMC);

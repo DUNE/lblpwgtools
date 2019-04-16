@@ -210,6 +210,12 @@ namespace ana
     /// Multiply this spectrum by a constant c
     void Scale(double c);
 
+    /// Change the internal POT while maintaining the Norm/POT ratio, any predictions should be unaffected, this is probably uncessesary as PlusEqualsHelper scales by POT.
+    void ScaleToPOT(double POTScale) {
+      Scale(POTScale / POT());
+      OverridePOT(POTScale);
+    }
+
     // Arithmetic operators are as if these are unlike samples, each a
     // contribution to one total, not seperate sources of stats for the same
     // sample.

@@ -53,16 +53,18 @@ public:
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
-  TH1 *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
-                                     double max_OffAxis_m) const;
-  TH1 *GetMatchCoefficientsFlux(
+  TH1 const *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
+                                           double max_OffAxis_m) const;
+  TH1 const *GetMatchCoefficientsFlux(
       osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
-  TH1 *GetMatchCoefficients(
+  TH1 const *GetMatchCoefficients(
       osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
+
+  TH1 const *GetLastResidual() const { return fLastResidual.get(); }
 
   void Write(TDirectory *);
 
@@ -79,6 +81,8 @@ public:
 protected:
   std::vector<std::unique_ptr<TH2>> NDOffAxisPrediction;
   std::vector<std::unique_ptr<TH1>> FDUnOscPrediction;
+
+  mutable std::unique_ptr<TH1> fLastResidual;
 
   ana::PredictionInterp const *fFDEventRateInterp;
   ana::PredictionInterp const *fNDEventRateInterp;
@@ -98,21 +102,25 @@ protected:
 };
 
 size_t
-FillHistFromEigenVector(TH2 *, Eigen::VectorXd const &, size_t offset = 0,
+FillHistFromEigenVector(TH2 *, Eigen::VectorXd const &, size_t vect_offset = 0,
+                        size_t histx_offset = 0, size_t histy_offset = 0,
                         Eigen::VectorXd const &error = Eigen::VectorXd());
 size_t
-FillHistFromEigenVector(TH1 *, Eigen::VectorXd const &, size_t offset = 0,
+FillHistFromEigenVector(TH1 *, Eigen::VectorXd const &, size_t vect_offset = 0,
+                        size_t histx_offset = 0, size_t histy_offset = 0,
                         Eigen::VectorXd const &error = Eigen::VectorXd());
 template <typename THN>
 inline size_t
 FillHistFromEigenVector(std::vector<std::unique_ptr<THN>> &rhv,
-                        Eigen::VectorXd const &vals, size_t offset = 0,
+                        Eigen::VectorXd const &vals, size_t vect_offset = 0,
+                        size_t histx_offset = 0, size_t histy_offset = 0,
                         Eigen::VectorXd const &error = Eigen::VectorXd()) {
 
   for (std::unique_ptr<THN> const &rh : rhv) {
-    offset = FillHistFromEigenVector(rh.get(), vals, offset, error);
+    vect_offset = FillHistFromEigenVector(rh.get(), vals, vect_offset,
+                                          histx_offset, histy_offset, error);
   }
-  return offset;
+  return vect_offset;
 }
 
 std::vector<double> Getstdvector(TH2 const *);

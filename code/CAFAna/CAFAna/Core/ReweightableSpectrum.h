@@ -61,11 +61,16 @@ namespace ana
 
     TAxis const *GetReweightTAxis() const;
 
+    // Spectrum ToSpectrum() const;
+
     Spectrum UnWeighted() const;
 
     Spectrum WeightingVariable() const;
 
     Spectrum WeightedBy(const TH1* weights) const;
+
+    //As above, but includes statistical error propagation
+    Spectrum WeightedByErrors(const TH1* ws) const;
 
     /// Rescale bins so that \ref WeightingVariable will return \a target
     void ReweightToTrueSpectrum(const Spectrum& target);
@@ -107,8 +112,8 @@ namespace ana
     double Livetime() {return fLivetime;}
 
     void ScaleToPOT(double POTScale) {
-      OverridePOT(POTScale / POT());
-      Scale(POTScale/ POT());
+      Scale(POTScale / POT());
+      OverridePOT(POTScale);
     }
 
   protected:
