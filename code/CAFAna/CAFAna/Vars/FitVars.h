@@ -172,6 +172,38 @@ namespace ana
   /// \f$ \Delta m^2_{32} \f$
   const FitDmSq32 kFitDmSq32 = FitDmSq32();
 
+  //----------------------------------------------------------------------
+
+  /// \f$ \Delta m^2_{32} constrained to normal hierarchy \f$
+  class FitDmSq32NH: public FitDmSq32
+  {
+  public:
+    virtual std::string ShortName() const {return "dmsq32NH";}
+
+    // "1eV^2 splitting should be enough for anyone"
+    virtual double LowLimit() const {return 0;}
+    virtual double HighLimit() const {return 1;}
+  };
+
+  /// \f$ \Delta m^2_{32} constrained to normal hierarchy \f$
+  const FitDmSq32NH kFitDmSq32NH = FitDmSq32NH();
+
+  //----------------------------------------------------------------------
+
+  /// \f$ \Delta m^2_{32} constrained to inverted hierarchy \f$
+  class FitDmSq32IH: public FitDmSq32
+  {
+  public:
+    virtual std::string ShortName() const {return "dmsq32IH";}
+
+    // "1eV^2 splitting should be enough for anyone"
+    virtual double LowLimit() const {return -1;}
+    virtual double HighLimit() const {return 0;}
+  };
+
+  /// \f$ \Delta m^2_{32} constrained to inverted hierarchy \f$
+  const FitDmSq32IH kFitDmSq32IH = FitDmSq32IH();
+
   //-------------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
