@@ -125,14 +125,10 @@ namespace ana
 
     static double tol = getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
     static double prec = getenv("FIT_PRECISION") != 0 ? atof(getenv("FIT_PRECISION")) : 1e-15;
-    
+
     // Please give us all the decimal places
-<<<<<<< HEAD
-    mnMin->SetTolerance(1e-6);
-=======
     mnMin->SetTolerance(tol);
     mnMin->SetPrecision(prec);
->>>>>>> origin/strong_and_stable
 
     for(const IFitVar* v: fVars){
       const double val = v->GetValue(seed);
@@ -173,7 +169,7 @@ namespace ana
 	std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i] << "\n";
       }
     }
-    
+
     if (fPrec & kIncludeHesse){
       std::cout << "It's Hesse o'clock" << std::endl;
       mnMin->Hesse();
