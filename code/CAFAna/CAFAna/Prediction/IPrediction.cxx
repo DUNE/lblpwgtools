@@ -16,6 +16,7 @@
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 #include "CAFAna/Prediction/PredictionNuOnE.h"
+#include "CAFAna/Prediction/PredictionPRISM.h"
 
 namespace ana
 {
@@ -39,6 +40,8 @@ namespace ana
     if(tag == "PredictionScaleComp") return PredictionScaleComp::LoadFrom(dir);
 
     if(tag == "PredictionNuOnE") return PredictionNuOnE::LoadFrom(dir);
+
+    if(tag == "PredictionPRISM") return PredictionPRISM::LoadFrom(dir);
 
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();
