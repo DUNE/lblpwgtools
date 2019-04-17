@@ -197,7 +197,7 @@ const double nom_exposure = 336.;
 
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-const std::string cafFilePath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
+const std::string cafFilePath="/pnfs/dune/persistent/users/picker24/CAFv4/";
 #else
 const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
@@ -366,7 +366,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   bool fluxsyst = false;
   bool xsecsyst = false;
 
-// Okay, I am definitely now doing too much with this function... sorry all!
+  // Okay, I am definitely now doing too much with this function... sorry all!
   // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
   if (systString.find("list") != std::string::npos){
@@ -649,21 +649,29 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   return;
 }
 
-void ParseThrowInstructions(std::string throwString, bool &stats, bool &fake,
-                            bool &start, bool &central) {
+void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA, 
+			    bool &fakeNuis, bool &start, bool &central) {
 
   std::vector<std::string> instructions = SplitString(throwString, ':');
 
   stats = false;
-  fake = false;
+  fakeOA = false;
+  fakeNuis = false;
   start = false;
   central = false;
 
   for (auto &str : instructions) {
+
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
     if (str == "stat" || str == "all")
       stats = true;
     if (str == "fake" || str == "all")
-      fake = true;
+      fakeOA = fakeNuis = true;
+    if (str == "fakeoa" || str == "all")
+      fakeOA = true;
+    if (str == "fakenuis"|| str == "all")
+      fakeNuis = true;
     if (str == "start" || str == "all")
       start = true;
     if (str == "central" || str == "all")
@@ -844,9 +852,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
 
   // Get the ndCov
+const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
   std::string covFileName =
-      cafFilePath+"/det_sys_cov_oldBins.root";
+      detCovPath+"/det_sys_cov.root";
 #else
   std::string covFileName =
       FindCAFAnaDir() + "/Systs/ND_syst_cov_withRes.root";
@@ -896,19 +905,19 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0], covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1], covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2], covFileName, "fd_rhc_e_frac_cov", kCovMxLogLikelihood);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3], covFileName, "fd_rhc_mu_frac_cov", kCovMxLogLikelihood);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);

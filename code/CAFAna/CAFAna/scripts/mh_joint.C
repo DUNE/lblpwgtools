@@ -14,6 +14,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, 
 					 &kFitTheta13, &kFitDeltaInPiUnits};
+  // &kFitSinSq2Theta12, &kFitDmSq21, &kFitRho};
   
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
@@ -45,7 +46,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
       
       std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
       oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-      
+
       thischisq = RunFitPoint(stateFname, sampleString,
 			      trueOsc, trueSyst, false,
 			      oscVars, systlist,

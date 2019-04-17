@@ -102,6 +102,7 @@ namespace ana
     virtual TH1D* DataHist() const override;
 
   protected:
+
     ETestStatistic fTestStatistic;
 
     const IPrediction* fMC;
@@ -111,7 +112,9 @@ namespace ana
 
     double fCosmicScaleError;
 
+
     TMatrixD* fCovMxInfo; ///< Represents different things depending on fTestStatistic
+
 
     mutable std::vector<double> fCovLLState;
   };
