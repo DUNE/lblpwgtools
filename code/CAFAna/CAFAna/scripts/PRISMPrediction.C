@@ -67,6 +67,7 @@ const HistAxis ElepAxes("True E_{lep.} (GeV)", binsETrue_PRISM, kTrueELep);
 
 struct PRISMComp {
   std::unique_ptr<PredictionPRISM> PRISM;
+  std::unique_ptr<PredictionInterp> PRISMInterp;
   std::unique_ptr<PredictionInterp> NDInterp;
   std::unique_ptr<PredictionInterp> FDInterp;
   std::unique_ptr<PredictionNoExtrap> FarDet;
@@ -101,7 +102,8 @@ void PRISMPrediction(std::string const &off_axis_file,
                      std::string const &state_file = "", bool reload = false) {
 
   osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
-  std::vector<ana::ISyst const *> systlist = {};
+  std::vector<ana::ISyst const *> systlist =
+      GetListOfSysts("prot_fakedata,nuwro_fakedata");
 
   std::map<std::string, PRISMComp> Predictions;
 
@@ -146,6 +148,7 @@ void PRISMPrediction(std::string const &off_axis_file,
       return fvmc.GetWeight(sr->dune.vtx_x);
     });
 
+    std::vector<std::unique_ptr<PredictionPRISMGenerator>> PRISMPredGens;
     std::vector<std::unique_ptr<NoOscPredictionGenerator>> NDPredGens;
     std::vector<std::unique_ptr<NoExtrapPredictionGenerator>> FDPredGens;
 
@@ -162,6 +165,17 @@ void PRISMPrediction(std::string const &off_axis_file,
       projComp.PRISM->AddNDMCBkgLoader(
           SpecLoader, kIsTrueFV && kETrueLT10GeV, kNoShift,
           kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight);
+
+      PRISMPredGens.emplace_back(new PredictionPRISMGenerator(
+          proj.Ax, trueOffAxisPos,
+          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert &&
+              kETrueLT10GeV,
+          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kETrueLT10GeV,
+          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight,
+          kGENIEWeights * proj.ExtraWeight));
+
+      projComp.PRISMInterp = std::make_unique<PredictionInterp>(
+          systlist, calc, *PRISMPredGens.back(), these_loaders);
 
       // Make the ND prediction interp include the same off-axis axis used for
       // PRISM weighting.
@@ -209,6 +223,10 @@ void PRISMPrediction(std::string const &off_axis_file,
                       std::string(isfhc ? "_fhc" : "_rhc"))
                          .c_str()));
 
+        projComp.second.PRISMInterp->SaveTo(
+            fs.mkdir((std::string("PRISMInterp_") + projComp.first +
+                      std::string(isfhc ? "_fhc" : "_rhc"))
+                         .c_str()));
         projComp.second.NDInterp->SaveTo(
             fs.mkdir((std::string("NDInterp_") + projComp.first +
                       std::string(isfhc ? "_fhc" : "_rhc"))
@@ -238,6 +256,10 @@ void PRISMPrediction(std::string const &off_axis_file,
                            std::string(isfhc ? "_fhc" : "_rhc"))
                               .c_str()));
 
+      Predictions[proj.Name].PRISMInterp = PredictionInterp::LoadFrom(
+          fs.GetDirectory((std::string("PRISMInterp_") + proj.Name +
+                           std::string(isfhc ? "_fhc" : "_rhc"))
+                              .c_str()));
       Predictions[proj.Name].NDInterp = PredictionInterp::LoadFrom(
           fs.GetDirectory((std::string("NDInterp_") + proj.Name +
                            std::string(isfhc ? "_fhc" : "_rhc"))
