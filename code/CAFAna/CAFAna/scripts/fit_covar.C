@@ -7,18 +7,17 @@ void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
                double FakeDataValue = 1, std::string OtherSystsToExclude = "") {
 
   gROOT->SetBatch(1);
-
+  gRandom->SetSeed(0);
+  
+  int hie = 1;
+  
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to use
-  std::vector<const IFitVar *> oscVars = {
-      &kFitDmSq32Scaled,  &kFitSinSqTheta23, &kFitTheta13, &kFitDeltaInPiUnits,
-      &kFitSinSq2Theta12, &kFitDmSq21,       &kFitRho};
+  std::vector<const IFitVar *> oscVars = GetOscVars("alloscvars", hie);
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
-
-  int hie = 1;
 
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
 

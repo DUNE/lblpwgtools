@@ -24,7 +24,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   std::vector<const IFitVar*> oscVars = {};
 
   if (sampleString.find("fd") != std::string::npos) {
-    oscVars = GetOscVars(oscVarString);
+    oscVars = GetOscVars(oscVarString, hie);
   }
 
   // Setup output file

@@ -18,10 +18,10 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to use for a fixed dCP value
-  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13};
+  std::vector<const IFitVar*> oscVars = GetOscVars("dmsq32:th23:th13", hie);
 
   // Oscillation parameters when finding the global minimum
-  std::vector<const IFitVar*> oscVarsAll = {&kFitDmSq32Scaled, &kFitSinSqTheta23, &kFitTheta13, &kFitDeltaInPiUnits};
+  std::vector<const IFitVar*> oscVarsAll = GetOscVars("alloscvars", hie);
 
   // Setup an output file
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
