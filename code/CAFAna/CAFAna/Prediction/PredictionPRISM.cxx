@@ -107,11 +107,11 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 
   assert(Comps.size());
 
-  Spectrum pred = Comps[kNDDataCorr];
+  Spectrum pred = Comps.at(kNDDataCorr);
 
   for (auto const &cmp : {kFDFluxCorr, kFDNCBkg, kFDWSBkg}) {
     if (Comps.count(cmp)) {
-      pred += Cmp.second;
+      pred += Comps.at(cmp);
     }
   }
 
