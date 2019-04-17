@@ -107,14 +107,12 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 
   assert(Comps.size());
 
-  Spectrum pred = Comps.begin()->second;
-  pred.Clear();
+  Spectrum pred = Comps[kNDDataCorr];
 
-  for (auto const &Cmp : Comps) {
-    std::cout << "[PRISM]: Component "
-              << PredictionPRISM::GetComponentString(Cmp.first)
-              << " POT = " << Cmp.second.POT() << std::endl;
-    pred += Cmp.second;
+  for (auto const &cmp : {kFDFluxCorr, kFDNCBkg, kFDWSBkg}) {
+    if (Comps.count(cmp)) {
+      pred += Cmp.second;
+    }
   }
 
   return pred;
@@ -167,7 +165,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
     NDComps.at(kNDDataCorr) +=
         *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
   }
-  
+
   NDComps.at(kNDDataSig) +=
       *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
 
@@ -263,9 +261,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
 
   for (auto const &NDC : NDComps) { // If you haven't been added, just add the
                                     // unweighted spectrum.
-    // if (!Comps.count(NDC.first)) {
-    //   Comps.emplace(NDC.first, NDC.second.ToSpectrum());
-    // }
+    if (!Comps.count(NDC.first)) {
+      Comps.emplace(NDC.first, NDC.second.ToSpectrum());
+    }
   }
   return Comps;
 }
