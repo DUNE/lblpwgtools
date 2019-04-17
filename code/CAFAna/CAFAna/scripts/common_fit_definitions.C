@@ -828,7 +828,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   ana::SeedList oscSeeds = ana::SeedList(),
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
 		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
-		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts,
+		   std::vector<std::unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts,
        bool UseSeedRefiner=true,
        bool UseXSecCovmat=true){
 
@@ -883,7 +883,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // This came back to bite me. I need to do multiple fits with the same fake data throw, so I need these to persist between calls to this function
   // Sadly, the locked down ownership etc means I can't think of a better solution to this
   // And the alternative CAFAna is probably just copy-pasta-ing this function in all of the scripts that use it...
-  std::vector<unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
+  std::vector<std::unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
   if(!spectra){ spectra = &LastShredsOfMyDignityAndSanity; }
 
   if (!spectra->size()){
