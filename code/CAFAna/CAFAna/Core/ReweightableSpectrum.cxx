@@ -270,20 +270,24 @@ namespace ana
     }
   }
 
-  // Spectrum ReweightableSpectrum::ToSpectrum() const {
-  //   DontAddDirectory guard;
-  //
-  //   std::unique_ptr<TH1> h(ToTH2(fPOT));
-  //
-  //   Binning truebin = ana::Binning::FromTAxis(GetReweightTAxis());
-  //
-  //   std::vector<std::string> labels = fLabels;
-  //   labels.push_back(fTrueLabel);
-  //   std::vector<Binning> bins = fBins;
-  //   bins.push_back(truebin);
-  //
-  //   return Spectrum(std::move(h), labels, bins, fPOT, fLivetime);
-  // }
+  Spectrum ReweightableSpectrum::ToSpectrum() const {
+    DontAddDirectory guard;
+
+    std::unique_ptr<TH1> h(ToTH2(1));
+
+    Binning truebin = ana::Binning::FromTAxis(GetReweightTAxis());
+
+    std::vector<std::string> labels = fLabels;
+    labels.push_back(fTrueLabel);
+    std::vector<Binning> bins = fBins;
+    bins.push_back(truebin);
+
+    Spectrum ret(labels, bins);
+    ret.FillFromHistogram(h.get());
+    ret.OverridePOT(fPOT);
+    ret.OverrideLivetime(fLivetime);
+    return ret;
+  }
 
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::UnWeighted() const

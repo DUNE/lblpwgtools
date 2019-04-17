@@ -61,7 +61,8 @@ namespace ana
 
     TAxis const *GetReweightTAxis() const;
 
-    // Spectrum ToSpectrum() const;
+    //Gets an N+1D spectrum where the weighting axis becomes a normal axis.
+    Spectrum ToSpectrum() const;
 
     Spectrum UnWeighted() const;
 

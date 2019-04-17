@@ -128,6 +128,12 @@ namespace ana
              const Var& wei = kUnweighted,
 	     ESparse sparse = kDense);
 
+    /// Construct an empty unfilled spectrum
+    ///
+    /// Can be filled with Fill or FillFromHistogram
+    Spectrum(const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
+             ESparse sparse = kDense);
 
     virtual ~Spectrum();
 
@@ -137,6 +143,11 @@ namespace ana
     Spectrum& operator=(Spectrum&& rhs);
 
     void Fill(double x, double w = 1);
+
+    /// \brief Attempts to fill this spectrum from an external histogram.
+    ///
+    /// \note The external histogram is not expected to be flattened, but is expected to have matching axes as those thatthis instance was instantiated with.
+    void FillFromHistogram(TH1 const*);
 
     /// \brief Histogram made from this Spectrum, scaled to some exposure
     ///
@@ -239,9 +250,6 @@ namespace ana
     std::vector<Binning> GetBinnings() const {return fBins;}
 
   protected:
-    Spectrum(const std::vector<std::string>& labels,
-             const std::vector<Binning>& bins,
-             ESparse sparse = kDense);
 
     void ConstructHistogram(ESparse sparse = kDense);
 

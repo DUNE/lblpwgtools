@@ -449,9 +449,9 @@ namespace ana
   {
     // Could have a file temporarily open
     DontAddDirectory guard;
-    
+
     TH1D* ret = ToTH1(exposure, expotype, bintype);
-    
+
     std::string label;
     for(const std::string& l: fLabels) label += l + " and ";
     label.resize(label.size()-5); // drop the last "and"
@@ -624,6 +624,120 @@ namespace ana
       fHist->Fill(x, w);
     else if (fHistSparse)
       fHistSparse->Fill(&x, w);
+  }
+
+  void Spectrum::FillFromHistogram(TH1 const*h) {
+
+    if(!fHist){
+      std::cout << "Error: In Spectrum::FillFromHistogram this functionality is not implemented for sparse spectra." << std::endl;
+      abort();
+    }
+
+    if (fBins.size() == 3 && h->GetDimension() != 3) {
+      std::cout << "Error: In Spectrum::FillFromHistogram external histogram "
+                   "was dimension "
+                << h->GetDimension() << " but this spectrum has "
+                << fBins.size() << " binnings." << std::endl;
+      abort();
+    }
+
+    switch (fBins.size()) {
+    case 3: {
+      if (h->GetZaxis()->GetNbins() != fBins[2].NBins()) {
+        std::cout << "Error: In Spectrum::FillFromHistogram Z axis of external "
+                     "histogram does not match NBins of the third binning."
+                  << std::endl;
+        abort();
+      }
+      // fall through
+      [[gnu::fallthrough]];
+    }
+    case 2: {
+      if (h->GetYaxis()->GetNbins() != fBins[1].NBins()) {
+        std::cout << "Error: In Spectrum::FillFromHistogram X axis of external "
+                     "histogram does not match NBins of the first binning."
+                  << std::endl;
+        abort();
+      }
+      // fall through
+      [[gnu::fallthrough]];
+    }
+    case 1: {
+      if (h->GetXaxis()->GetNbins() != fBins[0].NBins()) {
+        std::cout << "Error: In Spectrum::FillFromHistogram X axis of external "
+                     "histogram does not match NBins of the first binning."
+                  << std::endl;
+        abort();
+      }
+
+      break;
+    }
+    default:
+      std::cout << "Error: unable to hande number of dimensions ("
+                << fBins.size() << ")" << std::endl;
+      abort();
+    }
+
+    // Could do more checks than this on the exact binning, but I'm going to
+    // trust people here.
+
+    // Inverse of ToTH[2,3] as found in Utilities.cxx
+    switch (fBins.size()) {
+    case 1: {
+      for (int i = 0; i < fHist->GetNbinsX(); ++i) {
+
+        double bc = h->GetBinContent(i + 1);
+        double be = h->GetBinError(i + 1);
+
+        double obc = fHist->GetBinContent(i + 1);
+        double obe = fHist->GetBinError(i + 1);
+
+        fHist->SetBinContent(i + 1, bc + obc);
+        fHist->SetBinError(i + 1, sqrt(pow(be, 2) + pow(obe, 2)));
+      }
+      break;
+    }
+    case 2: {
+      int ny = fBins[1].NBins();
+      
+      for (int i = 0; i < fHist->GetNbinsX(); ++i) {
+        const int ix = i / ny;
+        const int iy = i % ny;
+
+        double bc = h->GetBinContent(ix + 1, iy + 1);
+        double be = h->GetBinError(ix + 1, iy + 1);
+
+        double obc = fHist->GetBinContent(i + 1);
+        double obe = fHist->GetBinError(i + 1);
+
+        fHist->SetBinContent(i + 1, bc + obc);
+        fHist->SetBinError(i + 1, sqrt(pow(be, 2) + pow(obe, 2)));
+      }
+      break;
+    }
+    case 3: {
+      int ny = fBins[1].NBins();
+      int nz = fBins[2].NBins();
+
+      for (int i = 0; i < fHist->GetNbinsX(); ++i) {
+        const int nynz = ny * nz;
+        const int nmodnynz = i % nynz;
+        const int ix = i / nynz;
+        const int iy = nmodnynz / nz;
+        const int iz = i % nz;
+
+        double bc = h->GetBinContent(ix + 1, iy + 1, iz + 1);
+        double be = h->GetBinError(ix + 1, iy + 1, iz + 1);
+
+        double obc = fHist->GetBinContent(i + 1);
+        double obe = fHist->GetBinError(i + 1);
+
+        fHist->SetBinContent(i + 1, bc + obc);
+        fHist->SetBinError(i + 1, sqrt(pow(be, 2) + pow(obe, 2)));
+      }
+      break;
+    }
+    }
   }
 
   //----------------------------------------------------------------------
