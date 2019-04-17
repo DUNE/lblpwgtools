@@ -649,8 +649,12 @@ namespace ana
                   << std::endl;
         abort();
       }
+#ifdef __GNUC__ 
+#if (__GNUC__ > 7)
       // fall through
       [[gnu::fallthrough]];
+#endif
+#endif
     }
     case 2: {
       if (h->GetYaxis()->GetNbins() != fBins[1].NBins()) {
@@ -659,8 +663,12 @@ namespace ana
                   << std::endl;
         abort();
       }
+#ifdef __GNUC__
+#if (__GNUC__ > 7)
       // fall through
       [[gnu::fallthrough]];
+#endif
+#endif
     }
     case 1: {
       if (h->GetXaxis()->GetNbins() != fBins[0].NBins()) {
