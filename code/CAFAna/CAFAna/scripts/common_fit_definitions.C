@@ -350,7 +350,9 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
                  "MuonResND", "EMResND", "ChargedHadResND",
                  "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", "UncorrNDNLinSyst",
                  "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst",
-                 "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
+		 "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst",
+		 "eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", 
+		 "MuonResFD", "EMResFD", "ChargedHadResFD"});
 
     RemoveSysts(systlist, GetGenieBadDialList());
     RemoveSysts(systlist, GetGenieDoNotFitList());
