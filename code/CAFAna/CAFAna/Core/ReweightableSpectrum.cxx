@@ -273,7 +273,7 @@ namespace ana
   Spectrum ReweightableSpectrum::ToSpectrum() const {
     DontAddDirectory guard;
 
-    std::unique_ptr<TH1> h(ToTH2(1));
+    std::unique_ptr<TH1> h(ToTH2(fPOT));
 
     Binning truebin = ana::Binning::FromTAxis(GetReweightTAxis());
 
