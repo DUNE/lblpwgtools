@@ -276,7 +276,6 @@ namespace ana
     }
     double* m = mv.data();
 
-
     double prev = -999;
     double ret = 0;
 
@@ -288,7 +287,6 @@ namespace ana
       // repeat until we converge.
       for(unsigned int k = 0; k < N; ++k){
         if(m0[k] == 0) continue;
-
         // Coefficients for the quadratic formula for this term
         const double a = M(k, k);
         double b = 1 - m0[k]*M(k, k);

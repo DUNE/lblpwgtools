@@ -210,7 +210,6 @@ LN=0
 #   LN=$(( LN + 1 ))
 # done
 
-
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
 setup jobsub_client
@@ -246,21 +245,31 @@ elif [ ${FORCE_REMOVE} == "1" ]; then
   else
     echo "Would force remove and remake /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
+<<<<<<< HEAD
 fi
 
 SUBMIT_SCRIPT=${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh
 if [ ! -z "${RENAME_SUBMIT_SCRIPT}" ]; then
     cp ${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PWD}/${RENAME_SUBMIT_SCRIPT}
     SUBMIT_SCRIPT=${PWD}/${RENAME_SUBMIT_SCRIPT}
+=======
+>>>>>>> master
 fi
 
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
     #--role=Analysis --subgroup=analysis
+<<<<<<< HEAD
     JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
   else
     #--role=Analysis --subgroup=analysis
     JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+=======
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+  else
+    #--role=Analysis --subgroup=analysis
+    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+>>>>>>> master
   fi
 else
   JID="DRY RUN"

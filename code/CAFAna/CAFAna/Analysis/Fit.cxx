@@ -66,7 +66,7 @@ namespace ana
   {
     std::vector<SeedPt> ret;
     for(Seed seed: seedPts.GetSeeds()) ret.push_back(SeedPt(seed, {}));
-      
+
     // Now duplicate as many times as required for the syst seeds
     if(!systSeedPts.empty()){
       std::vector<SeedPt> newret;
@@ -183,7 +183,7 @@ namespace ana
 	mnMin->GetMinosError(i, errLow, errHigh);
 	std::cout << i << "/" << mnMin->NDim() << " " << fParamNames[i] << ": " << errLow << ", +" << errHigh << " (" << mnMin->Errors()[i] << ")" << std::endl;
 	fTempMinosErrors.push_back(std::make_pair(errLow,errHigh));
-      }      
+      }
     }
 
     return mnMin;
@@ -203,6 +203,7 @@ namespace ana
 
     for(const SeedPt& pt: pts){
       osc::IOscCalculatorAdjustable *seed = initseed->Copy();
+      osc::IOscCalculatorAdjustable *seed_orig = initseed->Copy();
 
       pt.fitvars.ResetCalc(seed);
 
@@ -229,7 +230,7 @@ namespace ana
 	// Save pre-fit info
 	// In principle, these can change with the seed, so have to save them here...
 	for(const IFitVar* v: fVars){
-	  const double val = v->GetValue(seed);
+	  const double val = v->GetValue(seed_orig);
 	  fParamNames  .push_back(v->ShortName());
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(val ? val/2 : .1);
@@ -268,6 +269,7 @@ namespace ana
 	  bestSystPars.push_back(fPostFitValues[fVars.size()+j]);
       }
       delete seed;
+      delete seed_orig;
     }
 
     // Stuff the results of the actual best fit back into the seeds
