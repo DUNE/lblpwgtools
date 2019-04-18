@@ -119,7 +119,7 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
-PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
+PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps) const {
 
   DontAddDirectory guard;
 
@@ -128,7 +128,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
 
   NDComps.emplace(kNDData, *fOffAxisSpectrum);
-  NDComps.emplace(kNDDataCorr, *fOffAxisSpectrum);
+  NDComps.emplace(kNDDataCorr2D, *fOffAxisSpectrum);
 
   NDComps.emplace(kNDDataSig, *fOffAxisSpectrum);
   NDComps.emplace(kNDWSBkg, *fOffAxisSpectrum);
@@ -155,14 +155,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
     NDComps.at(kNDWSBkg) -=
         *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
 
-    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNC;
-    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNue;
-    NDComps.at(kNDDataCorr) -= *fNDBkg.fOffAxisSpectrumNuebar;
-    NDComps.at(kNDDataCorr) -=
+    NDComps.at(kNDDataCorr2D) -= *fNDBkg.fOffAxisSpectrumNC;
+    NDComps.at(kNDDataCorr2D) -= *fNDBkg.fOffAxisSpectrumNue;
+    NDComps.at(kNDDataCorr2D) -= *fNDBkg.fOffAxisSpectrumNuebar;
+    NDComps.at(kNDDataCorr2D) -=
         *(SignalIsNumode ? fOffAxisSpectrumNumubar : fOffAxisSpectrumNumu);
   } else { // Cheat and use the truth signal
-    NDComps.at(kNDDataCorr).Clear();
-    NDComps.at(kNDDataCorr) +=
+    NDComps.at(kNDDataCorr2D).Clear();
+    NDComps.at(kNDDataCorr2D) +=
         *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
   }
 
@@ -185,7 +185,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc) const {
                   NDComps.at(kNDDataSig).WeightedByErrors(LinearCombination));
 
     Comps.emplace(kNDDataCorr,
-                  NDComps.at(kNDDataCorr).WeightedByErrors(LinearCombination));
+                  NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {

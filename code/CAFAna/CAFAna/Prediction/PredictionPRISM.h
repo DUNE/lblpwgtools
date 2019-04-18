@@ -69,13 +69,14 @@ public:
   enum PRISMComponent {
     kNDData = (1 << 0),
     kNDDataCorr = (1 << 1),
-    kNDDataSig = (1 << 2),
-    kNDWSBkg = (1 << 3),
-    kNDNCBkg = (1 << 4),
-    kNDNueBkg = (1 << 5),
-    kFDFluxCorr = (1 << 6),
-    kFDNCBkg = (1 << 7),
-    kFDWSBkg = (1 << 8)
+    kNDDataCorr2D = (1 << 2),
+    kNDDataSig = (1 << 3),
+    kNDWSBkg = (1 << 4),
+    kNDNCBkg = (1 << 5),
+    kNDNueBkg = (1 << 6),
+    kFDFluxCorr = (1 << 7),
+    kFDNCBkg = (1 << 8),
+    kFDWSBkg = (1 << 9)
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -85,6 +86,9 @@ public:
     }
     case kNDDataCorr: {
       return "kNDDataCorr";
+    }
+    case kNDDataCorr2D: {
+      return "kNDDataCorr2D";
     }
     case kNDDataSig: {
       return "kNDDataSig";
@@ -141,7 +145,7 @@ public:
 
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
   virtual std::map<PRISMComponent, Spectrum>
-  PredictPRISMComponents(osc::IOscCalculator *calc) const;
+  PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps=false) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
