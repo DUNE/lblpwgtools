@@ -907,29 +907,29 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats))));
     spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats))));
   }
-
+  // If using the multi sample covariances then they must be added to the MultiExperiment
   // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0], covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);//, covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1], covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);//, covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2], covFileName, "fd_rhc_e_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);//, covFileName, "fd_rhc_e_frac_cov", kCovMxLogLikelihood);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3], covFileName, "fd_rhc_mu_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);//, covFileName, "fd_rhc_mu_frac_cov", kCovMxLogLikelihood);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc, covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);//, covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc, covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);//, covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
@@ -1009,13 +1009,16 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 
   // Now sort out the experiment
   MultiExperiment this_expt;
-  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
-  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   if (pot_fd_fhc_nue > 0)  this_expt.Add(&app_expt_fhc);
   if (pot_fd_fhc_numu > 0) this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_nue > 0)  this_expt.Add(&app_expt_rhc);
   if (pot_fd_rhc_numu > 0) this_expt.Add(&dis_expt_rhc);
-
+  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
+  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
+  // Add in the covariance matrices via the MultiExperiment
+  // idx must be in correct order to access correct part of matrix
+  this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {1, 3, 0, 2});
+  this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
 
