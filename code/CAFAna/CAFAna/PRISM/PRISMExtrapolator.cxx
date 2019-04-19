@@ -1,6 +1,6 @@
 #ifdef CAF_USE_PRISM
 
-#include "CAFAna/Analysis/PRISMExtrapolator.h"
+#include "CAFAna/PRISM/PRISMExtrapolator.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 

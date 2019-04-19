@@ -24,11 +24,6 @@ set(Analysis_header_files
   SeedList.h
   RefineSeeds.h)
 
-if(DEFINED USE_EIGEN AND USE_EIGEN)
-  LIST(APPEND Analysis_implementation_files PRISMExtrapolator.cxx)
-  LIST(APPEND Analysis_header_files PRISMExtrapolator.h)
-endif()
-
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis)
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Prediction/PredictionExtrap.h"
 
 #include "CAFAna/Prediction/PredictionGenerator.h"
@@ -11,6 +13,7 @@ namespace ana
   {
   public:
     PredictionNoExtrap(PredictionExtrap* pred);
+    PredictionNoExtrap(IExtrap* extrap);
 
     // This is the DUNE constructor
     PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,

@@ -4,6 +4,7 @@ set(Prediction_implementation_files
   PredictionGenerator.cxx
   PredictionInterp.cxx
   PredictionNoExtrap.cxx
+  PredictionModifiedNoExtrap.cxx
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
@@ -15,15 +16,11 @@ set(Prediction_header_files
   PredictionGenerator.h
   PredictionInterp.h
   PredictionNoExtrap.h
+  PredictionModifiedNoExtrap.h
   PredictionNoOsc.h
   PredictionScaleComp.h
   PredictionXSecDiag.h
   PredictionNuOnE.h)
-
-if(DEFINED USE_EIGEN AND USE_EIGEN)
-  LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
-  LIST(APPEND Prediction_header_files PredictionPRISM.h)
-endif()
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction)

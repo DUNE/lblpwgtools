@@ -148,6 +148,10 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
+    template <typename T> T *GetPredNomAs() {
+      return dynamic_cast<T *>(fPredNom.get());
+    }
+
     std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
     struct ShiftedPreds
@@ -170,6 +174,10 @@ namespace ana
       std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
     };
+
+    void SetDontUseCache(bool v=true){
+      fDontUseCache = v;
+    }
 
   protected:
     mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
@@ -214,6 +222,9 @@ namespace ana
                              const SystShifts& shift,
                              double pot,
                              std::unordered_map<const ISyst*, std::vector<double>>& dp) const;
+
+    bool fDontUseCache;
+
   };
 
 }

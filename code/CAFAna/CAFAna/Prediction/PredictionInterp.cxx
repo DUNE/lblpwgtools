@@ -34,7 +34,8 @@ namespace ana
                                      EMode_t mode)
     : fOscOrigin(osc ? osc->Copy() : 0),
       fBinning(0, {}, {}, 0, 0),
-      fSplitBySign(mode == kSplitBySign)
+      fSplitBySign(mode == kSplitBySign),
+      fDontUseCache(false)
   {
     for(const ISyst* syst: systs){
       ShiftedPreds sp;
@@ -388,7 +389,7 @@ namespace ana
     // Must be the base case of the recursion to use the cache. Otherwise we
     // can cache systematically shifted versions of our children, which is
     // wrong. Also, some calculators won't hash themselves.
-    const bool canCache = (hash != 0);
+    const bool canCache = !fDontUseCache && (hash != 0);
 
     const Key_t key = {flav, curr, sign};
     auto it = fNomCache.find(key);

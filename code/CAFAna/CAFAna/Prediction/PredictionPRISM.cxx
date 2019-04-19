@@ -119,7 +119,8 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
-PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps) const {
+PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
+                                        bool AllComps) const {
 
   DontAddDirectory guard;
 
@@ -130,12 +131,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps
   NDComps.emplace(kNDData, *fOffAxisSpectrum);
   NDComps.emplace(kNDDataCorr2D, *fOffAxisSpectrum);
 
-  NDComps.emplace(kNDDataSig, *fOffAxisSpectrum);
+  NDComps.emplace(kNDSig, *fOffAxisSpectrum);
   NDComps.emplace(kNDWSBkg, *fOffAxisSpectrum);
   NDComps.emplace(kNDNCBkg, *fOffAxisSpectrum);
   NDComps.emplace(kNDNueBkg, *fOffAxisSpectrum);
 
-  NDComps.at(kNDDataSig).Clear();
+  NDComps.at(kNDSig).Clear();
   NDComps.at(kNDWSBkg).Clear();
   NDComps.at(kNDNCBkg).Clear();
   NDComps.at(kNDNueBkg).Clear();
@@ -166,7 +167,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps
         *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
   }
 
-  NDComps.at(kNDDataSig) +=
+  NDComps.at(kNDSig) +=
       *(SignalIsNumode ? fOffAxisSpectrumNumu : fOffAxisSpectrumNumubar);
 
   for (auto &NDC : NDComps) {
@@ -181,11 +182,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps
     TH1 const *LinearCombination = fFluxMatcher->GetMatchCoefficients(
         calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies);
 
-    Comps.emplace(kNDDataSig,
-                  NDComps.at(kNDDataSig).WeightedByErrors(LinearCombination));
+    Comps.emplace(kNDSig,
+                  NDComps.at(kNDSig).WeightedByErrors(LinearCombination));
 
-    Comps.emplace(kNDDataCorr,
-                  NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
+    Comps.emplace(
+        kNDDataCorr,
+        NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
@@ -257,6 +259,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps
         cmp.second.ScaleToPOT(1);
       }
     }
+  } else {
+    Comps.emplace(kNDDataCorr, NDComps.at(kNDDataCorr2D).UnWeighted());
   }
 
   for (auto const &NDC : NDComps) { // If you haven't been added, just add the

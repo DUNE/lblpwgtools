@@ -70,7 +70,7 @@ public:
     kNDData = (1 << 0),
     kNDDataCorr = (1 << 1),
     kNDDataCorr2D = (1 << 2),
-    kNDDataSig = (1 << 3),
+    kNDSig = (1 << 3),
     kNDWSBkg = (1 << 4),
     kNDNCBkg = (1 << 5),
     kNDNueBkg = (1 << 6),
@@ -90,8 +90,8 @@ public:
     case kNDDataCorr2D: {
       return "kNDDataCorr2D";
     }
-    case kNDDataSig: {
-      return "kNDDataSig";
+    case kNDSig: {
+      return "kNDSig";
     }
     case kNDWSBkg: {
       return "kNDWSBkg";
@@ -145,7 +145,8 @@ public:
 
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
   virtual std::map<PRISMComponent, Spectrum>
-  PredictPRISMComponents(osc::IOscCalculator *calc, bool AllComps=false) const;
+  PredictPRISMComponents(osc::IOscCalculator *calc,
+                         bool AllComps = false) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
@@ -234,85 +235,6 @@ protected:
   HistAxis fPredictionAxis;
   HistAxis fOffAxis;
   mutable std::vector<double> fFDTrueEnergyBins;
-};
-
-class PredictionPRISMGenerator : public IPredictionGenerator {
-public:
-  PredictionPRISMGenerator(const HistAxis &recoAxis, const HistAxis &offAxis,
-                           const Cut &cutND, const Cut &cutFD,
-                           const Var &weiND = kUnweighted,
-                           const Var &weiFD = kUnweighted,
-                           PRISMExtrapolator const *flux_matcher = nullptr,
-                           PRISMExtrapolator::FluxPredSpecies NDFluxSpecies =
-                               PRISMExtrapolator::FluxPredSpecies::kNumu_numode,
-                           PRISMExtrapolator::FluxPredSpecies FDFluxSpecies =
-                               PRISMExtrapolator::FluxPredSpecies::kNumu_numode)
-      : fPredictionAxis(recoAxis), fOffAxis(offAxis), fCutND(cutND),
-        fWeiND(weiND), fCutFD(cutFD), fWeiFD(weiFD), fFluxMatcher(flux_matcher),
-        fNDFluxSpecies(NDFluxSpecies), fFDFluxSpecies(FDFluxSpecies),
-        fSelectedNumuCCInterp(nullptr), fAllNumuCCInterp(nullptr) {}
-
-  void SetMCEfficiencyPredictors(PredictionInterp const *SelectedNumuCCInterp,
-                                 PredictionInterp const *AllNumuCCInterp) {
-    fSelectedNumuCCInterp = SelectedNumuCCInterp;
-    fAllNumuCCInterp = AllNumuCCInterp;
-  }
-
-  virtual std::unique_ptr<IPrediction>
-  Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override {
-
-    // When we have data, this becomes data.
-    SpectrumLoaderBase &loader_ND =
-        loaders.GetLoader(caf::kNEARDET, Loaders::kMC);
-
-    bool HaveEff = (fSelectedNumuCCInterp && fAllNumuCCInterp);
-
-    if (HaveEff) {
-      SelectedNumuCCPredCache.emplace_back(
-          fSelectedNumuCCInterp->PredictSyst(nullptr, shiftMC).ToTH3(1));
-      AllNumuCCPredCache.emplace_back(
-          fAllNumuCCInterp->PredictSyst(nullptr, shiftMC).ToTH3(1));
-    }
-
-    std::unique_ptr<PredictionPRISM> ppred = std::make_unique<PredictionPRISM>(
-        loader_ND, fPredictionAxis, fOffAxis, fCutND, shiftMC, fWeiND,
-        fFluxMatcher, fNDFluxSpecies, fFDFluxSpecies,
-        HaveEff ? SelectedNumuCCPredCache.back().get() : nullptr,
-        HaveEff ? AllNumuCCPredCache.back().get() : nullptr);
-
-    SpectrumLoaderBase &loader_ND_corr =
-        loaders.GetLoader(caf::kNEARDET, Loaders::kMC);
-    ppred->AddNDMCBkgLoader(loader_ND_corr, fCutND, shiftMC, fWeiND);
-
-    SpectrumLoaderBase &loader_FD_corr =
-        loaders.GetLoader(caf::kFARDET, Loaders::kMC);
-    ppred->AddFDMCLoader(loader_FD_corr, fCutFD, shiftMC, fWeiFD);
-
-    return ppred;
-  }
-
-protected:
-  HistAxis fPredictionAxis;
-  HistAxis fOffAxis;
-  Cut fCutND;
-  Var fWeiND;
-
-  Cut fCutFD;
-  Var fWeiFD;
-
-  PRISMExtrapolator const *fFluxMatcher;
-  PRISMExtrapolator::FluxPredSpecies fNDFluxSpecies;
-  PRISMExtrapolator::FluxPredSpecies fFDFluxSpecies;
-
-  bool fSubtractBackgrounds;
-  bool fHaveFDPrediction;
-
-  PredictionInterp const *fSelectedNumuCCInterp;
-  PredictionInterp const *fAllNumuCCInterp;
-
-  mutable std::vector<std::unique_ptr<TH3>> SelectedNumuCCPredCache;
-  mutable std::vector<std::unique_ptr<TH3>> AllNumuCCPredCache;
 };
 
 } // namespace ana

@@ -41,9 +41,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(PredictionExtrap* pred) : PredictionExtrap(pred->GetExtrap())
-  {
-  }
+  PredictionNoExtrap::PredictionNoExtrap(IExtrap *extrap)
+      : PredictionExtrap(extrap) {}
+
+  //----------------------------------------------------------------------
+  PredictionNoExtrap::PredictionNoExtrap(PredictionExtrap *pred)
+      : PredictionNoExtrap(pred->GetExtrap()) {}
 
   //----------------------------------------------------------------------
   PredictionNoExtrap::PredictionNoExtrap(Loaders& loaders,

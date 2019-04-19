@@ -73,6 +73,7 @@ add_subdirectory(Extrap)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
+add_subdirectory(PRISM)
 
 add_subdirectory(scripts)
 

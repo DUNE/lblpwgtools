@@ -534,10 +534,27 @@ bool strToBool(std::string const &str) {
   throw std::runtime_error(str);
 }
 
-int main(int argc, char const *argv[]) {
+void HelpText(char const *argv[] {
+  std::cout << "[USAGE]: " << argv[0]
+            << " \"<InputFilePattern1>[,<InputFilePattern2>,...]\" "
+               "OutputFile.root <Running on the output of this script? false> "
+               "<Input CAF Tree Name: cafTree> <Filter events in ND FV? false> "
+               "<Just write out a summary tree detailing POT and event rate at "
+               "each stop? false> <Maximum number of events>"
+            << std::endl;
+})
+
+    int main(int argc, char const *argv[]) {
+
+  if ((argc == 2) && ((argv[1] == "-?") || (argv[1] == "--help"))) {
+    HelpText(argv);
+    return 0;
+  }
 
   if (argc < 3) {
     std::cout << "[ERROR]: Expect at least 2 arguments." << std::endl;
+    HelpText(argv);
+
     return 1;
   }
   std::string InputFilePattern = argv[1];
