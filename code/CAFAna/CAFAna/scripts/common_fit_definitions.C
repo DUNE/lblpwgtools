@@ -837,7 +837,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, 
 		   SystShifts &bf = junkShifts,
 		   bool UseSeedRefiner=true,
-		   bool UseXSecCovmat=true){
+		   bool UseXSecCovmat=true,
+		   bool useCorrelatedCovMx=true){
 
   assert(systlist.size()+oscVars.size());
 
@@ -932,6 +933,15 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);//, covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
+  if (!useCorrelatedCovMx) {
+    app_expt_fhc.AddCovarianceMatrix(covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
+    dis_expt_fhc.AddCovarianceMatrix(covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
+    app_expt_rhc.AddCovarianceMatrix(covFileName, "fd_rhc_e_frac_cov", kCovMxLogLikelihood);
+    dis_expt_rhc.AddCovarianceMatrix(covFileName, "fd_rhc_mu_frac_cov", kCovMxLogLikelihood);
+    nd_expt_fhc.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+    nd_expt_rhc.AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
+  }
+
   // What is the chi2 between the data, and the thrown prefit distribution?
   // std::cout << "Prefit chi-square:" << std::endl;
   // if (pot_fd_fhc_nue > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc_nue << std::endl;
@@ -1017,8 +1027,14 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
-  this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {1, 3, 0, 2});
-  this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+  if (useCorrelatedCovMx) {    
+    if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
+      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {1, 3, 0, 2});   
+      if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
+	this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+      }
+    }
+  }
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
 
