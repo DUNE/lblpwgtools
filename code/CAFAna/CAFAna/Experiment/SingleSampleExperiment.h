@@ -91,6 +91,14 @@ namespace ana
       s.fCosmic = nullptr;
       s.fCosmicScaleError = 0;
     };
+    // Add in a covariance matrix to an existing SingleSampleExperiment 
+    // Only works with the uncorrelated matrices
+    void AddCovarianceMatrix(const TMatrixD* cov,
+			     ETestStatistic stat);
+
+    void AddCovarianceMatrix(const std::string covMatFilename,
+			     const std::string covMatName,
+			     ETestStatistic stat);
 
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);

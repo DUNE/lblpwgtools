@@ -246,6 +246,59 @@ namespace ana
     }
   }
 
+  //----------------------------------------------------------------------
+  void SingleSampleExperiment::AddCovarianceMatrix(const TMatrixD* cov,
+						   ETestStatistic stat) 
+  {
+    // Check there is not a covariance matrix already associated with this experiment
+    if (fCovMxInfo) {
+      std::cout << "Error: trying to add a covariance matrix to a SingleSampleExperiment where one already exists" << std::endl;
+      abort();
+    }
+    switch(stat){
+    case kLogLikelihood:
+      std::cout << "Trying to add a covariance matrix while specifying a Test Statistic method that does not allow it. Matrix not added." << std::endl;
+      break;
+    case kCovMxChiSq:
+      // Store the covariance matrix as-is
+      fCovMxInfo = new TMatrixD(*cov);
+      break;
+    case kCovMxChiSqPreInvert:
+      {
+        TMatrixD toInvert(*cov);
+
+        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        for( int b = 0; b < hist->GetNbinsX(); ++b ) {
+          // We add the squared fractional statistical errors to the
+          // diagonal. In principle this should vary with the predicted number
+          // of events, but in the ND using the no-syst-shifts number should be
+          // a pretty good approximation, and it's much faster than needing to
+          // re-invert the matrix every time.
+          const double N = hist->GetBinContent(b+1);
+          if(N > 0) toInvert(b, b) += 1/N;
+        }
+        HistCache::Delete(hist);
+
+        fCovMxInfo = new TMatrixD(TMatrixD::kInverted, toInvert);
+      }
+      break;
+    case kCovMxLogLikelihood:
+      // Also pre-invert the matrix but with no stats
+      fCovMxInfo = new TMatrixD(TMatrixD::kInverted, *cov);
+      break;
+    default:
+      std::cout << "Unknown test statistic " << stat << std::endl;
+      abort();
+    }
+  }
+
+  //----------------------------------------------------------------------
+  void SingleSampleExperiment::AddCovarianceMatrix(const std::string covMatFilename,
+						   const std::string covMatName,
+						   ETestStatistic stat) 
+  {
+    AddCovarianceMatrix(GetCov(covMatFilename, covMatName), stat);
+  }
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::
