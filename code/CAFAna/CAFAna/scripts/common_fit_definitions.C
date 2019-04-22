@@ -1030,10 +1030,14 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   if (useCorrelatedCovMx) {    
     if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
       this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {1, 3, 0, 2});   
+      if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
+	this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+      }
     }
-    if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
-    }
+    // ND only fits
+    else if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0) {
+      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
+    }    
   }
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
