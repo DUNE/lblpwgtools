@@ -17,10 +17,12 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
 
-  // All parameters are always used
-  std::vector<const IFitVar*> oscVars = {&kFitDmSq32Scaled, &kFitSinSqTheta23, 
-					 &kFitTheta13, &kFitDeltaInPiUnits};
+  // Fit in the correct hierachy for the global fit
+  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie);
 
+  // Fit in the incorrect hierarchy for the exclusion
+  std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie);
+  
   // Setup an output file
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   FitTreeBlob global_tree("global_fit_info");
@@ -95,13 +97,13 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     // Now force the testOsc to be in the wrong hierarchy 
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
     testOsc->SetdCP(thisdcp);
-    
+    fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember
     IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
     
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
-				  oscVars, systlist,
+				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
 				  oscSeeds, penalty, Fitter::kNormal, 
 				  nullptr, &mh_tree, &mad_spectra_yo);
