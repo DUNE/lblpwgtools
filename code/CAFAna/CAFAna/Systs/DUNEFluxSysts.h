@@ -32,7 +32,7 @@ namespace ana
     int fIdx;
 
     mutable TH1* fScale[2][2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
-    mutable TH2* fScale2D[2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
+    mutable TH2* fScale2D[2][2][2]; // ND, numu/nue, bar, FHC/RHC
 
     bool fIncludeOffAxis;
   };

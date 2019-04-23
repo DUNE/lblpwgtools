@@ -1,8 +1,8 @@
 #include "common_fit_definitions.C"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
+#include "CAFAna/PRISM/PredictionPRISM.h"
 
 const Var kTrueOffAxisPos =
     (SIMPLEVAR(dune.det_x) + (SIMPLEVAR(dune.vtx_x) * ana::Constant(1.0E-2)));
@@ -63,8 +63,6 @@ const HistAxis ElepAxes("True E_{lep.} (GeV)", binsETrue_PRISM, kTrueELep);
 
 struct PRISMComp {
   std::unique_ptr<PredictionPRISM> PRISM;
-  std::unique_ptr<PredictionPRISM> PRISM_prote;
-  std::unique_ptr<PredictionPRISM> PRISM_nuwro;
   std::unique_ptr<PredictionInterp> NDInterp;
   std::unique_ptr<PredictionInterp> FDInterp;
   std::unique_ptr<PredictionNoExtrap> FarDet;
@@ -90,8 +88,9 @@ void PRISMPrediction(std::string const &off_axis_file,
   pfm.SetTargetConditioning(10E-9, 0.5, 3.5);
 
   osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
-  std::vector<ana::ISyst const *> systlist =
-      GetListOfSysts("prot_fakedata,nuwro_fakedata");
+  std::vector<ana::ISyst const *> systlist = {
+      GetMissingProtonEnergyFakeDataSyst().front(),
+      GetNuWroReweightFakeDataSyst().front()};
 
   std::map<std::string, PRISMComp> Predictions;
 
@@ -101,56 +100,49 @@ void PRISMPrediction(std::string const &off_axis_file,
   std::vector<ProjectionDef> Projections;
   Projections.emplace_back("ETrue", trueEvAxes, ana::Constant(1));
   // Projections.emplace_back("ETrueNDEff", trueEvAxes, kNDEff);
-  // Projections.emplace_back("ETrueNDFDEff", trueEvAxes, kNDEff * kFDEff);
-  Projections.emplace_back("ERecProxy", proxyEvAxes, ana::Constant(1));
+  Projections.emplace_back("ETrueNDFDEff", trueEvAxes, kNDEff * kFDEff);
+  // Projections.emplace_back("ERecProxy", proxyEvAxes, ana::Constant(1));
   Projections.emplace_back("ERecProxyEff", proxyEvAxes, kNDEff * kFDEff);
   // Projections.emplace_back("ERecDep", ERecFromDepAxes, ana::Constant(1));
   // Projections.emplace_back("ELepTrue", ElepAxes, ana::Constant(1));
 
   if (reload || !state_file.length() || TFile(state_file.c_str()).IsZombie()) {
-    Loaders these_loaders;
-    SpectrumLoader SpecLoader(off_axis_file, kBeam);
-    these_loaders.AddLoader(&SpecLoader, caf::kNEARDET, Loaders::kMC);
-    SpectrumLoader loaderFDNumu("/dune/data/users/marshalc/CAFs/mcc11_v3/" +
-                                    GetSampleName(kFDFHC) + "_nonswap.root",
-                                kBeam);
-    these_loaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNonSwap);
+    Loaders TheLoaders;
+    SpectrumLoader PRISMNDLoader(off_axis_file, kBeam);
+    TheLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
+    SpectrumLoader loaderFDNumu(
+        "/home/picker24/software/CAFAna/inputs/MCC11/mcc11_v3/" +
+            GetSampleName(kFDFHC) + "_nonswap.root",
+        kBeam);
+    TheLoaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+                         Loaders::kNonSwap);
 
     std::vector<std::unique_ptr<NoOscPredictionGenerator>> NDPredGens;
     std::vector<std::unique_ptr<NoExtrapPredictionGenerator>> FDPredGens;
 
     for (auto const &proj : Projections) {
       PRISMComp projComp;
+
+      ana::Cut kSelectSignalND =
+          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert;
+      ana::Var kNDWeight =
+          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight;
+
       projComp.PRISM = std::make_unique<PredictionPRISM>(
-          SpecLoader, proj.Ax, trueOffAxisPos,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert &&
-              kETrueLT10GeV,
-          kNoShift,
-          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight);
-      projComp.PRISM->AddFDMCLoader(
-          loaderFDNumu, kIsNumuCC && !kIsAntiNu && kIsTrueFV && kETrueLT10GeV,
-          kNoShift, kGENIEWeights * proj.ExtraWeight);
+          PRISMNDLoader, proj.Ax, trueOffAxisPos, kSelectSignalND, kNDWeight);
 
-      projComp.PRISM_prote = std::make_unique<PredictionPRISM>(
-          SpecLoader, proj.Ax, trueOffAxisPos,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert &&
-              kETrueLT10GeV,
-          kMissProtEFD,
-          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight);
-      projComp.PRISM_prote->AddFDMCLoader(
-          loaderFDNumu, kIsTrueFV && kETrueLT10GeV, kMissProtEFD,
-          kGENIEWeights * proj.ExtraWeight);
+      // Don't need to specify full truth signal here as it will not apply any
+      // corrections by default, allows us to debug what the corrections would
+      // be.
+      // If you aren't doing systematic studies then this is just a waste of
+      // time, but if you are you should pass a loader here and call
+      // SetIgnoreData to use the 'MC' near detector signal prediction in the
+      // linear combination.
+      projComp.PRISM->AddNDMCLoader(TheLoaders, kIsTrueFV && kIsOutOfTheDesert,
+                                    kNDWeight, systlist);
 
-      projComp.PRISM_nuwro = std::make_unique<PredictionPRISM>(
-          SpecLoader, proj.Ax, trueOffAxisPos,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert &&
-              kETrueLT10GeV,
-          kNuWroFD,
-          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight);
-      projComp.PRISM_nuwro->AddFDMCLoader(loaderFDNumu,
-                                          kIsTrueFV && kETrueLT10GeV, kNuWroFD,
-                                          kGENIEWeights * proj.ExtraWeight);
+      projComp.PRISM->AddFDMCLoader(TheLoaders, kIsTrueFV,
+                                    kGENIEWeights * proj.ExtraWeight, systlist);
 
       // Make the ND prediction interp include the same off-axis axis used for
       // PRISM weighting.
@@ -165,29 +157,27 @@ void PRISMPrediction(std::string const &off_axis_file,
       // Gotta make sure these hang around until  after Loaders::Go has been
       // called.
       NDPredGens.emplace_back(new NoOscPredictionGenerator(
-          NDSpectaAxis,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert &&
-              kETrueLT10GeV,
-          kGENIEWeights * kRunPlanWeight * kMassCorrection * proj.ExtraWeight));
-      FDPredGens.emplace_back(new NoExtrapPredictionGenerator(
-          EventRateMatchAxis,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kETrueLT10GeV,
-          kGENIEWeights * proj.ExtraWeight));
+          NDSpectaAxis, kSelectSignalND, kNDWeight));
+
+      ana::Cut kSelectSignalFD = kIsNumuCC && !kIsAntiNu && kIsTrueFV;
+
+      FDPredGens.emplace_back(
+          new NoExtrapPredictionGenerator(EventRateMatchAxis, kSelectSignalFD,
+                                          kGENIEWeights * proj.ExtraWeight));
 
       projComp.NDInterp = std::make_unique<PredictionInterp>(
-          systlist, calc, *NDPredGens.back(), these_loaders);
+          systlist, calc, *NDPredGens.back(), TheLoaders);
       projComp.FDInterp = std::make_unique<PredictionInterp>(
-          systlist, calc, *FDPredGens.back(), these_loaders);
+          systlist, calc, *FDPredGens.back(), TheLoaders);
 
       projComp.FarDet = std::make_unique<PredictionNoExtrap>(
-          these_loaders, proj.Ax,
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kETrueLT10GeV, kNoShift,
+          TheLoaders, proj.Ax, kSelectSignalFD, kNoShift,
           kGENIEWeights * proj.ExtraWeight);
 
       Predictions[proj.Name] = std::move(projComp);
     }
 
-    these_loaders.Go();
+    TheLoaders.Go();
 
     if (state_file.length()) {
       TFile fs(state_file.c_str(), "RECREATE");
@@ -198,16 +188,8 @@ void PRISMPrediction(std::string const &off_axis_file,
                       std::string(isfhc ? "_fhc" : "_rhc"))
                          .c_str()));
 
-        projComp.second.PRISM_prote->SaveTo(
-            fs.mkdir((std::string("PRISM_prote_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-
-        projComp.second.PRISM_nuwro->SaveTo(
-            fs.mkdir((std::string("PRISM_nuwro_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-
+        projComp.second.NDInterp->GetPredNomAs<PredictionNoOsc>()->OverridePOT(
+            1);
         projComp.second.NDInterp->SaveTo(
             fs.mkdir((std::string("NDInterp_") + projComp.first +
                       std::string(isfhc ? "_fhc" : "_rhc"))
@@ -234,16 +216,6 @@ void PRISMPrediction(std::string const &off_axis_file,
     for (auto &proj : Projections) {
       Predictions[proj.Name].PRISM = PredictionPRISM::LoadFrom(
           fs.GetDirectory((std::string("PRISM_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-
-      Predictions[proj.Name].PRISM_prote = PredictionPRISM::LoadFrom(
-          fs.GetDirectory((std::string("PRISM_prote_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-
-      Predictions[proj.Name].PRISM_nuwro = PredictionPRISM::LoadFrom(
-          fs.GetDirectory((std::string("PRISM_nuwro_") + proj.Name +
                            std::string(isfhc ? "_fhc" : "_rhc"))
                               .c_str()));
 
@@ -293,6 +265,8 @@ void PRISMPrediction(std::string const &off_axis_file,
       auto pdir = dir->mkdir(proj.Name.c_str());
       pdir->cd();
 
+      projComp.PRISM->SetIgnoreData();
+
       projComp.PRISM->SetFluxMatcher(&pfm);
 
       Spectrum PRISMPredFluxMatchSpec = projComp.PRISM->Predict(clc.second);
@@ -310,48 +284,20 @@ void PRISMPrediction(std::string const &off_axis_file,
                         .c_str());
       }
 
-      projComp.PRISM_prote->SetFluxMatcher(&pfm);
-
-      Spectrum PRISMPredFluxMatchSpec_prote =
-          projComp.PRISM_prote->Predict(clc.second);
-
       TH1 *PRISMPredFluxMatch_prote_h =
-          PRISMPredFluxMatchSpec_prote.ToTHX(pot_fd);
+          projComp.PRISM->PredictSyst(clc.second, kMissProtEFD).ToTHX(pot_fd);
       PRISMPredFluxMatch_prote_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
       PRISMPredFluxMatch_prote_h->Write("PRISMPredFluxMatch_prote");
 
-      for (auto &compspec :
-           projComp.PRISM_prote->PredictPRISMComponents(clc.second)) {
-        TH1 *comp = compspec.second.ToTHX(pot_fd);
-        comp->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-        comp->Write((std::string("PRISMPredFluxMatch_prote_") +
-                     PredictionPRISM::GetComponentString(compspec.first))
-                        .c_str());
-      }
-
-      projComp.PRISM_nuwro->SetFluxMatcher(&pfm);
-
-      Spectrum PRISMPredFluxMatchSpec_nuwro =
-          projComp.PRISM_nuwro->Predict(clc.second);
-
       TH1 *PRISMPredFluxMatch_nuwro_h =
-          PRISMPredFluxMatchSpec_nuwro.ToTHX(pot_fd);
+          projComp.PRISM->PredictSyst(clc.second, kNuWroFD).ToTHX(pot_fd);
       PRISMPredFluxMatch_nuwro_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
       PRISMPredFluxMatch_nuwro_h->Write("PRISMPredFluxMatch_nuwro");
-
-      for (auto &compspec :
-           projComp.PRISM_nuwro->PredictPRISMComponents(clc.second)) {
-        TH1 *comp = compspec.second.ToTHX(pot_fd);
-        comp->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-        comp->Write((std::string("PRISMPredFluxMatch_nuwro_") +
-                     PredictionPRISM::GetComponentString(compspec.first))
-                        .c_str());
-      }
 
       proj.PRISMEventRateMatcher.InitializeEventRateMatcher(
           projComp.NDInterp.get(), projComp.FDInterp.get());
       proj.PRISMEventRateMatcher.SetStoreDebugMatches();
-      proj.PRISMEventRateMatcher.SetTargetConditioning(1E-15, 0.5, 3.5);
+      proj.PRISMEventRateMatcher.SetTargetConditioning(5E-17, 0.5, 3.5);
       projComp.PRISM->SetFluxMatcher(&proj.PRISMEventRateMatcher);
 
       Spectrum PRISMPredEvRateMatchSpec = projComp.PRISM->Predict(clc.second);
@@ -359,15 +305,6 @@ void PRISMPrediction(std::string const &off_axis_file,
       TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot_fd);
       PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
       PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
-
-      for (auto &compspec :
-           projComp.PRISM->PredictPRISMComponents(clc.second)) {
-        TH1 *comp = compspec.second.ToTHX(pot_fd);
-        comp->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-        comp->Write((std::string("PRISMPredEvRateMatch_") +
-                     PredictionPRISM::GetComponentString(compspec.first))
-                        .c_str());
-      }
 
       TH1 *FarDet_h = projComp.FarDet->Predict(clc.second).ToTHX(pot_fd);
 

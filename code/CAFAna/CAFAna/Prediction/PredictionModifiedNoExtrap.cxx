@@ -18,7 +18,7 @@ namespace ana {
 
 //----------------------------------------------------------------------
 PredictionModifiedNoExtrap::PredictionModifiedNoExtrap(PredictionExtrap *pred)
-    : PredictionNoExtrap(pred->GetExtrap()) {}
+    : PredictionNoExtrap(pred->GetExtrap()), fExtraWeight(nullptr) {}
 
 //----------------------------------------------------------------------
 PredictionModifiedNoExtrap::PredictionModifiedNoExtrap(Loaders &loaders,
@@ -26,7 +26,8 @@ PredictionModifiedNoExtrap::PredictionModifiedNoExtrap(Loaders &loaders,
                                                        const Cut &cut,
                                                        const SystShifts &shift,
                                                        const Var &wei)
-    : PredictionNoExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)) {}
+    : PredictionNoExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)),
+      fExtraWeight(nullptr) {}
 
 //----------------------------------------------------------------------
 Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
@@ -45,7 +46,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
         osc->Multiply(fExtraWeight);
       }
 
-      ret += fExtrap->NueSurvComponent().WeightedBy(osc);
+      ret += fExtrap->NueSurvComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuEToNuE && sign & Sign::kAntiNu) {
@@ -54,7 +55,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiNueSurvComponent().WeightedBy(osc);
+      ret += fExtrap->AntiNueSurvComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
 
@@ -64,7 +65,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->NumuAppComponent().WeightedBy(osc);
+      ret += fExtrap->NumuAppComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuEToNuMu && sign & Sign::kAntiNu) {
@@ -73,7 +74,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiNumuAppComponent().WeightedBy(osc);
+      ret += fExtrap->AntiNumuAppComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
 
@@ -83,7 +84,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->TauFromEComponent().WeightedBy(osc);
+      ret += fExtrap->TauFromEComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuEToNuTau && sign & Sign::kAntiNu) {
@@ -92,7 +93,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiTauFromEComponent().WeightedBy(osc);
+      ret += fExtrap->AntiTauFromEComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
 
@@ -102,7 +103,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->NueAppComponent().WeightedBy(osc);
+      ret += fExtrap->NueAppComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuMuToNuE && sign & Sign::kAntiNu) {
@@ -111,7 +112,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiNueAppComponent().WeightedBy(osc);
+      ret += fExtrap->AntiNueAppComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
 
@@ -121,7 +122,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->NumuSurvComponent().WeightedBy(osc);
+      ret += fExtrap->NumuSurvComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuMuToNuMu && sign & Sign::kAntiNu) {
@@ -130,7 +131,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiNumuSurvComponent().WeightedBy(osc);
+      ret += fExtrap->AntiNumuSurvComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
 
@@ -140,7 +141,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->TauFromMuComponent().WeightedBy(osc);
+      ret += fExtrap->TauFromMuComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
     if (flav & Flavors::kNuMuToNuTau && sign & Sign::kAntiNu) {
@@ -149,7 +150,7 @@ Spectrum PredictionModifiedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
       if (fExtraWeight) {
         osc->Multiply(fExtraWeight);
       }
-      ret += fExtrap->AntiTauFromMuComponent().WeightedBy(osc);
+      ret += fExtrap->AntiTauFromMuComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
   }

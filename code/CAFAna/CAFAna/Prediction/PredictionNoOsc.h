@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
@@ -29,6 +31,15 @@ namespace ana
     virtual Spectrum Predict(osc::IOscCalculator* /*calc*/) const override
     {
       return fSpectrum;
+    }
+
+    void OverridePOT(double pot){
+      fSpectrum.OverridePOT(1);
+      fSpectrumNC.OverridePOT(1);
+      fSpectrumNumu.OverridePOT(1);
+      fSpectrumNumubar.OverridePOT(1);
+      fSpectrumNue.OverridePOT(1);
+      fSpectrumNuebar.OverridePOT(1);
     }
 
     virtual Spectrum PredictComponent(osc::IOscCalculator* calc,

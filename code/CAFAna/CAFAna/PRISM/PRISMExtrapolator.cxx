@@ -6,6 +6,8 @@
 
 #include "CAFAna/Core/Binning.h"
 
+#include "CAFAna/Systs/DUNEFluxSysts.h"
+
 #include "OscLib/func/IOscCalculator.h"
 
 #include "TDirectory.h"
@@ -140,6 +142,8 @@ Eigen::VectorXd GetEigenFlatVector(TH1 const *th) {
   return GetEigenFlatVector(Getstdvector(th));
 }
 
+namespace ana {
+
 PRISMExtrapolator::PRISMExtrapolator()
     : fRegFactor(0), fENuMin(0xdeadbeef), fENuMax(0xdeadbeef),
       fLowEGaussFallOff(false), fStoreDebugMatches(false) {}
@@ -202,8 +206,8 @@ void PRISMExtrapolator::InitializeFluxMatcher(std::string const &FluxFilePath,
 }
 
 void PRISMExtrapolator::InitializeEventRateMatcher(
-    ana::PredictionInterp const *NDEventRateInterp,
-    ana::PredictionInterp const *FDEventRateInterp) {
+    PredictionInterp const *NDEventRateInterp,
+    PredictionInterp const *FDEventRateInterp) {
   fNDEventRateInterp = NDEventRateInterp;
   fFDEventRateInterp = FDEventRateInterp;
 
@@ -211,7 +215,7 @@ void PRISMExtrapolator::InitializeEventRateMatcher(
 }
 
 bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
-    ana::Binning const &off_axis_binning) const {
+    Binning const &off_axis_binning) const {
 
   if (fMatchEventRates) { // Assume true...
     return true;
@@ -243,18 +247,27 @@ bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
   return true;
 }
 
-TH1 const *
-PRISMExtrapolator::GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
-                                                 double max_OffAxis_m) const {
+TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
+    osc::IOscCalculator *osc, double max_OffAxis_m, SystShifts shift) const {
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
-  ana::Spectrum NDSpect = fNDEventRateInterp->PredictComponent(
-      osc, ana::Flavors::kAllNuMu, ana::Current::kCC, ana::Sign::kNu);
+  static std::vector<ISyst const *> flux_systs = GetDUNEFluxSysts(10);
+
+  // Only want to fiddle with flux systs
+  for (auto s : shift.ActiveSysts()) {
+    if (std::find(flux_systs.begin(), flux_systs.end(), s) ==
+        flux_systs.end()) {
+      shift.SetShift(s, 0);
+    }
+  }
+
+  Spectrum NDSpect = fNDEventRateInterp->PredictComponentSyst(
+      osc, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
   NDSpect.OverridePOT(1);
 
-  ana::Spectrum FDSpect = fFDEventRateInterp->PredictComponent(
-      osc, ana::Flavors::kAllNuMu, ana::Current::kCC, ana::Sign::kNu);
+  Spectrum FDSpect = fFDEventRateInterp->PredictComponentSyst(
+      osc, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
   FDSpect.OverridePOT(1);
 
   std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(1));
@@ -494,9 +507,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
 TH1 const *PRISMExtrapolator::GetMatchCoefficients(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMExtrapolator::FluxPredSpecies NDMode,
-    PRISMExtrapolator::FluxPredSpecies FDMode) const {
+    PRISMExtrapolator::FluxPredSpecies FDMode, SystShifts const &shift) const {
   return fMatchEventRates
-             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m)
+             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m, shift)
              : GetMatchCoefficientsFlux(osc, max_OffAxis_m, NDMode, FDMode);
 }
 
@@ -516,6 +529,8 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
       dir->WriteObject(fit.second.get(), (fit.first + "_DebugMatch").c_str());
     }
   }
+}
+
 }
 
 #endif

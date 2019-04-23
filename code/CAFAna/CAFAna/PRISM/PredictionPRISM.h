@@ -29,7 +29,8 @@ public:
     kNDNueBkg = (1 << 6),
     kFDFluxCorr = (1 << 7),
     kFDNCBkg = (1 << 8),
-    kFDWSBkg = (1 << 9)
+    kFDWSBkg = (1 << 9),
+    kFDNueBkg = (1 << 10)
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -64,6 +65,9 @@ public:
     case kFDWSBkg: {
       return "kFDWSBkg";
     }
+    case kFDNueBkg: {
+      return "kFDNueBkg";
+    }
     }
     return "";
   }
@@ -93,8 +97,7 @@ public:
                                ana::SystShifts shift = kNoShift) const;
   virtual std::map<PRISMComponent, Spectrum>
   PredictPRISMComponents(osc::IOscCalculator *calc,
-                         ana::SystShifts shift = kNoShift,
-                         bool AllComps = false) const;
+                         ana::SystShifts shift = kNoShift) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
@@ -107,7 +110,15 @@ public:
     fFluxMatcher = flux_matcher;
   }
 
+  void SetNCCorrection(bool v = true) { fNCCorrection = v; }
+  void SetWSBCorrection(bool v = true) { fWSBCorrection = v; }
+  void SetNueCorrection(bool v = true) { fNueCorrection = v; }
+
+  void SetIgnoreData(bool v = true) {fIgnoreData = v;}
+
 protected:
+  void InterpolateFluxMissMatcher() const;
+
   /// The 'data'
   std::unique_ptr<ReweightableSpectrum> fOffAxisData;
   bool fHaveData;
@@ -117,6 +128,10 @@ protected:
   std::unique_ptr<NoOscPredictionGenerator> fOffAxisPredGen;
   std::unique_ptr<PredictionInterp> fOffAxisPrediction;
   bool fHaveNDPred;
+
+  bool fNCCorrection;
+  bool fWSBCorrection;
+  bool fNueCorrection;
 
   // Use for background re-addition
   std::unique_ptr<ModifiedNoExtrapPredictionGenerator> fFDPredGen;
@@ -131,7 +146,11 @@ protected:
   HistAxis fPredictionAxis;
   HistAxis fOffAxis;
   std::unique_ptr<HistAxis> fOffPredictionAxis;
-  mutable std::vector<double> fFDTrueEnergyBins;
+  double fMaxOffAxis;
+  double fDefaultOffAxisPOT;
+  mutable std::unique_ptr<TH1> fFluxMissWeighter;
+
+  bool fIgnoreData;
 };
 
 } // namespace ana

@@ -79,6 +79,11 @@ add_subdirectory(scripts)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
+
+set(PRISMLIB)
+if(DEFINED USE_EIGEN AND USE_EIGEN)
+  set(PRISMLIB "-lCAFAnaPRISM")
+endif()
 configure_file(cmake/CAFBuild.in
 ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild @ONLY)
 

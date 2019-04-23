@@ -649,8 +649,8 @@ namespace ana
                   << std::endl;
         abort();
       }
-#ifdef __GNUC__ 
-#if (__GNUC__ > 7)
+#ifdef __GNUC__
+#if (__GNUC__ >= 7)
       // fall through
       [[gnu::fallthrough]];
 #endif
@@ -664,7 +664,7 @@ namespace ana
         abort();
       }
 #ifdef __GNUC__
-#if (__GNUC__ > 7)
+#if (__GNUC__ >= 7)
       // fall through
       [[gnu::fallthrough]];
 #endif
@@ -707,7 +707,7 @@ namespace ana
     }
     case 2: {
       int ny = fBins[1].NBins();
-      
+
       for (int i = 0; i < fHist->GetNbinsX(); ++i) {
         const int ix = i / ny;
         const int iy = i % ny;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CAFAna/Core/SystShifts.h"
+
 #include "Eigen/Dense"
 
 #include <map>
@@ -18,6 +20,8 @@ class PredictionInterp;
 class TH1;
 class TH2;
 class TDirectory;
+
+namespace ana {
 
 // Caching flux matcher.
 class PRISMExtrapolator {
@@ -43,26 +47,28 @@ public:
                              int FDEnergyBinMerge = 1);
 
   void
-  InitializeEventRateMatcher(ana::PredictionInterp const *NDEventRateInterp,
-                             ana::PredictionInterp const *FDEventRateInterp);
+  InitializeEventRateMatcher(PredictionInterp const *NDEventRateInterp,
+                             PredictionInterp const *FDEventRateInterp);
 
   /// Use to check whether the ND flux histograms are binned consistently with
   /// the proposed ND analysis off axis binning. Will not merge bins, but will
   /// ignore extra bins in the flux prediction
-  bool CheckOffAxisBinningConsistency(ana::Binning const &) const;
+  bool CheckOffAxisBinningConsistency(Binning const &) const;
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
   TH1 const *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
-                                           double max_OffAxis_m) const;
+                                           double max_OffAxis_m,
+                                           SystShifts shift = kNoShift) const;
   TH1 const *GetMatchCoefficientsFlux(
       osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
-  TH1 const *GetMatchCoefficients(
-      osc::IOscCalculator *osc, double max_OffAxis_m,
-      FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
-      FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
+  TH1 const *
+  GetMatchCoefficients(osc::IOscCalculator *osc, double max_OffAxis_m,
+                       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
+                       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode,
+                       SystShifts const &shift = kNoShift) const;
 
   TH1 const *GetLastResidual() const { return fLastResidual.get(); }
 
@@ -84,8 +90,8 @@ protected:
 
   mutable std::unique_ptr<TH1> fLastResidual;
 
-  ana::PredictionInterp const *fFDEventRateInterp;
-  ana::PredictionInterp const *fNDEventRateInterp;
+  PredictionInterp const *fFDEventRateInterp;
+  PredictionInterp const *fNDEventRateInterp;
 
   bool fMatchEventRates;
 
@@ -100,6 +106,8 @@ protected:
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
 };
+
+}
 
 size_t
 FillHistFromEigenVector(TH2 *, Eigen::VectorXd const &, size_t vect_offset = 0,
