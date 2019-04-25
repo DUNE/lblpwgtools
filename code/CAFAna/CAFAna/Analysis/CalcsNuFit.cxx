@@ -51,7 +51,8 @@ namespace ana
     if (asimov_set == 8 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MinIH);
     if (asimov_set == 9 && hie == +1) ret->SetDmsq32(kNuFitDmsq32MaxNH);
     if (asimov_set == 9 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MaxIH);
-
+    if (asimov_set == 10) ret->SetdCP(0);
+    if (asimov_set == 11) ret->SetdCP(-TMath::Pi()/2);
 
 
     if (oct < 0) {

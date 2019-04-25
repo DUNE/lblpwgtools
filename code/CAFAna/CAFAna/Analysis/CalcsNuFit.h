@@ -77,6 +77,8 @@ namespace ana
   // 7 Th13 set to 3sig upper value
   // 8 Dmsq32 set to 3sig lower value
   // 9 Dmsq32 set to 3sig upper value
+  // 10 dCP = 0
+  // 11 dCP = -pi/2
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
