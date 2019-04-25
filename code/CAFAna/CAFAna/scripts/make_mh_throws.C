@@ -34,6 +34,11 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
   double dcpstep = 2*TMath::Pi()/36;
   double thisdcp = -TMath::Pi() + idcp*dcpstep;
 
+  // Deal with seeds once
+  std::map<const IFitVar*, std::vector<double>> oscSeeds;
+  oscSeeds[&kFitSinSqTheta23] = {.4, .6};
+  oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+
   // Loop over requested throws
   for (int i = 0; i < nthrows; ++i) {
 
@@ -78,10 +83,6 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     std::vector<std::unique_ptr<Spectrum> > mad_spectra_yo = {};
 
     // Need to find the best fit in the correct hierachy
-    std::map<const IFitVar*, std::vector<double>> oscSeeds;
-    oscSeeds[&kFitSinSqTheta23] = {.4, .6};
-    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-
     // Note that I'm ignoring the octant here
     // This actually doesn't matter unless we apply a theta23 constraint, which I think we shouldn't anyway...
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);

@@ -26,6 +26,13 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     oscVars = GetOscVars(oscVarString, hie);
   }
 
+  // Deal with seeds once
+  std::map<const IFitVar*, std::vector<double>> oscSeeds;
+  if (sampleString.find("fd") != std::string::npos) {
+    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants                                                                                                              
+    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  }
+
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
@@ -67,12 +74,6 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
       fitThrowOsc = NuFitOscCalc(hie);
     }
     Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
-    // Now do a fit with thrown seeds
-    std::map<const IFitVar*, std::vector<double>> oscSeeds;
-    if (sampleString.find("fd") != std::string::npos) {
-      oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-      oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-    }
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
@@ -84,6 +85,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     std::cout << "Throw " << i << ": found minimum chi2 = " << thischisq
               << std::endl;
     // Done with this systematic throw
+    delete penalty;
   }
 
   // Now close the file

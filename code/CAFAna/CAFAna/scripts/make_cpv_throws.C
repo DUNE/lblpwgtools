@@ -31,7 +31,14 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
   FitTreeBlob cpv_tree("cpv_fit_info");
   cpv_tree.throw_tree->SetDirectory(fout);
 
-  // Also need to set up a tree to save everything here...
+  // Sort out seeds once at the start
+  std::map<const IFitVar*, std::vector<double>> oscSeedsAll;
+  oscSeedsAll[&kFitSinSqTheta23] = {.4, .6}; // try both octants                                                                                                             
+  oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5}; // Maybe not necessary...
+  
+  // For dCP=0/pi
+  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+  oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
 
   // Interpret the dcpstep once
   double dcpstep = 2*TMath::Pi()/36;
@@ -80,12 +87,6 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     std::vector<std::unique_ptr<Spectrum> > mad_spectra_yo = {};
     
     // Need to do the initial fit for this throw... find the minimum chi2 for this throw
-    // Also need to float dCP here...
-    // Seeds for good measure...
-    std::map<const IFitVar*, std::vector<double>> oscSeedsAll;
-    oscSeedsAll[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-    oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5}; // Maybe not necessary...
-
     // Ignoring the possibility of a theta23 penalty here
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
@@ -105,26 +106,21 @@ void make_cpv_throws(std::string stateFname="common_state_mcc11v3.root",
     for (int tdcp = 0; tdcp < 2; ++tdcp) {
       double dcptest = tdcp*TMath::Pi();
 
-      for (int ioct = -1; ioct <= 1; ioct +=2) {
-	
-	// Now testOsc is restricted to CP conservation
-	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct);
-	testOsc->SetdCP(dcptest);
-
-	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-	
-	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString);
-	
-	thischisq = RunFitPoint(stateFname, sampleString,
-				fakeThrowOsc, fakeThrowSyst, stats_throw,
-				oscVars, systlist,
-				testOsc, fitThrowSyst,
-				oscSeeds, penalty, Fitter::kNormal, 
-				nullptr, &cpv_tree, &mad_spectra_yo);
-	
-	chisqmin = TMath::Min(thischisq,chisqmin);
-	delete penalty;
-      }
+      // Now testOsc is restricted to CP conservation
+      osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1);
+      testOsc->SetdCP(dcptest);
+      
+      IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+      
+      thischisq = RunFitPoint(stateFname, sampleString,
+			      fakeThrowOsc, fakeThrowSyst, stats_throw,
+			      oscVars, systlist,
+			      testOsc, fitThrowSyst,
+			      oscSeeds, penalty, Fitter::kNormal, 
+			      nullptr, &cpv_tree, &mad_spectra_yo);
+      
+      chisqmin = TMath::Min(thischisq,chisqmin);
+      delete penalty;
     }
     
     double dchi2 = chisqmin - globalmin;
