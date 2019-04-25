@@ -658,17 +658,19 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
   // Look for some other magic information
-  if (input.find("full") != std::string::npos or input.find("15year") != std::string::npos)
-    exposure = 1104;
-
-  if (input.find("nom") != std::string::npos or input.find("7year") != std::string::npos)
-    exposure = 336;
-
-  if (input.find("10year") != std::string::npos)
-    exposure = 624;
+  for (auto str : input_vect){
+    if (str.find("full") != std::string::npos or str.find("15year") != std::string::npos)
+      exposure = 1104;
+    
+    if (str.find("nom") != std::string::npos or str.find("7year") != std::string::npos)
+      exposure = 336;
+    
+    if (str.find("10year") != std::string::npos)
+      exposure = 624;
+  }
 
   double exposure_ratio = exposure/nom_exposure;
-
+  std::cout << "Using exposure: " << exposure << "; and ratio: " << exposure_ratio << std::endl;
   
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
