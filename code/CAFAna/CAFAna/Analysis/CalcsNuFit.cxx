@@ -128,7 +128,7 @@ namespace ana
       if (pair.first == "dmsq32")
       	ret->SetDmsq32(pair.second);
       if (pair.first == "ssth23")
-	ret->SetTh23(sqrt(asin(pair.second)));
+	ret->SetTh23(asin(sqrt(pair.second)));
     }
     
     if (oct < 0) {
@@ -463,7 +463,7 @@ namespace ana
 	if (pair.first == "dmsq32")
           fDmsq32 = pair.second;
 	if (pair.first == "ssth23")
-          fTh23 = sqrt(asin(pair.second));
+          fTh23 = asin(sqrt(pair.second));
       }
     }
   }
