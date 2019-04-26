@@ -735,6 +735,34 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 }
 
 
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, std::string tree_name="true_OA"){
+  
+  outDir->cd();
+  double L = calc->GetL();
+  double rho = calc->GetRho();
+  double dmsq21 = calc->GetDmsq21();
+  double dmsq32 = calc->GetDmsq32();
+  double th12 = calc->GetTh12();
+  double th13 = calc->GetTh13();
+  double th23 = calc->GetTh23();
+  double ssth23 = sin(calc->GetTh23())*sin(calc->GetTh23());
+  double deltapi = calc->GetdCP()/TMath::Pi();
+
+  TTree *tree = new TTree(tree_name.c_str(), tree_name.c_str());
+  tree->Branch("L", &L);
+  tree->Branch("rho", &rho);
+  tree->Branch("dmsq21", &dmsq21);
+  tree->Branch("dmsq32", &dmsq32);
+  tree->Branch("th12", &th12);
+  tree->Branch("th13", &th13);
+  tree->Branch("th23", &th23);
+  tree->Branch("ssth23", &ssth23);
+  tree->Branch("deltapi", &deltapi);
+  tree->Fill();
+  tree->Write();
+  return;
+}
+
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "") {
     if (tree_name.size()) {
