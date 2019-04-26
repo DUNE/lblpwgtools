@@ -7,8 +7,9 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
                      std::string sampleString = "ndfd",
                      std::string throwString = "stat:fake:start",
                      std::string penaltyString = "nopen",
-                     std::string oscVarString = "th13:deltapi:th23:dmsq32",
-		     int hie=1) {
+                     int hie=1,
+		     std::string asimov_set="0",
+		     std::string oscVarString = "th13:deltapi:th23:dmsq32") {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -49,7 +50,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
-    else fakeThrowOsc = NuFitOscCalc(hie);
+    else fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
       
     // Now deal with systematics
     if (fakenuis_throw and not central_throw){
@@ -71,7 +72,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
       fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = NuFitOscCalc(hie);
+      fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
     }
     Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
 

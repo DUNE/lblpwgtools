@@ -5,7 +5,7 @@ void cpv_joint_twopoint(
     std::string outputFname = "cpv_twopoint_ndfd_nosyst.root",
     std::string systSet = "nosyst", std::string sampleString = "ndfd",
     std::string penaltyString = "nopen", std::string SetsToInclude = "",
-    int asimov_set = 0, bool RunGlobalMin = false, bool Onlydcp0 = false) {
+    std::string asimov_set = "0", bool RunGlobalMin = false, bool Onlydcp0 = false) {
 
   gROOT->SetBatch(1);
 

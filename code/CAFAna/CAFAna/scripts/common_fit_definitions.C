@@ -220,7 +220,7 @@ std::vector<std::string> SplitString(std::string input, char delim = ' '){
 }
 
 // For ease of penalty terms...
-IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0){
+IExperiment* GetPenalty(int hie, int oct, std::string penalty, std::string asimov_set="0", bool modConstraint=false){
 
   // First, decide which to use
   std::vector<std::string> penalties = SplitString(penalty, ':');
@@ -234,7 +234,8 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0)
     if (str == "th23" || str == "allpen") useTh23 = true;
   }
 
-  IExperiment *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23, asimov_set);
+  Penalizer_GlbLike *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23, 0);
+  ret->SetAsimovPoint(asimov_set, modConstraint);
   return ret;
 }
 
