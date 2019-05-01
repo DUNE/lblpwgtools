@@ -90,6 +90,8 @@ namespace ana
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str)
   {
     // Pretty funky stuff
+    if (asimov_str.find("asimov") != std::string::npos)
+      return NuFitOscCalc(hie, oct, std::stoi(asimov_str.erase(0, 6)));
     if (asimov_str.find(':') == std::string::npos)
       return NuFitOscCalc(hie, oct, std::stoi(asimov_str));
 
@@ -449,10 +451,18 @@ namespace ana
 
     // Now for some funky times
     if (modConstraint){
-      if (asimov_str.find(':') == std::string::npos){
-	SetAsimovPoint(stoi(asimov_str));
+
+      // Argh, so bad
+      if (asimov_str.find("asimov") != std::string::npos){
+        SetAsimovPoint(std::stoi(asimov_str.erase(0, 6)));
 	return;
       }
+
+      if (asimov_str.find(':') == std::string::npos){
+	SetAsimovPoint(std::stoi(asimov_str));
+	return;
+      }
+      
       auto asimov_set = ParseAsimovSet(asimov_str);
 
       for (auto & pair : asimov_set){

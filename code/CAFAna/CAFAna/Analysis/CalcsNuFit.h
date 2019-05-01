@@ -83,7 +83,7 @@ namespace ana
   // 11 dCP = -pi/2
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
   
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str="0");
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
