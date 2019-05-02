@@ -389,7 +389,7 @@ namespace ana
   // asimov_set here is a legacy option for Elizabeth's code.
   // The preferred method is to call SetAsimovPoint after the constructor
   Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, int octtrue, bool useTh13, 
-				       bool useTh23, bool useDmsq, int asimov_set) 
+				       bool useTh23, bool useDmsq, int asimov_set)
     : fHieTrue(hietrue), fOctTrue(octtrue), fTh13Pen(useTh13),fTh23Pen(useTh23), fDmsqPen(useDmsq){
 
     fDmsq21 = kNuFitDmsq21CV;
@@ -413,6 +413,7 @@ namespace ana
 
     if (asimov_set != 0) SetAsimovPoint(asimov_set);
   }
+
 
   void Penalizer_GlbLike::SetAsimovPoint(int asimov_set){
     
@@ -468,6 +469,11 @@ namespace ana
     }
   }
 
+  void Penalizer_GlbLike::SetHugeOctPenalty(bool useHugeOct) {
+    fHugeOct = useHugeOct;
+    if (fHugeOct) std::cout << "Huge octant penalty on. Should be used for octant test only!" << std::endl;
+  }
+
   // This should be removed as it's 99% the same as other functions
   Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, 
   				       int hietrue, bool useTh13,
@@ -507,7 +513,12 @@ namespace ana
     if (fTh23Pen) ret += util::sqr((calc->GetTh23() - fTh23)/fTh23Err);
     if (fTh13Pen) ret += util::sqr((calc->GetTh13() - fTh13)/fTh13Err);
 
-    //std::cout << calc->GetTh23() << " " << fTh23 << " " << fTh23Err << " " << ret << std::endl;
+
+    if (fHugeOct && ( (calc->GetTh23()-TMath::Pi()/4)/(fTh23-TMath::Pi()/4) > 0)) ret += 1e6;
+
+    //std::cout << fHugeOct << " " << calc->GetTh23() << " " << fTh23 << " " << calc->GetTh23()-TMath::Pi()/4 << " " << fTh23-TMath::Pi()/4 << " " << ret  << std::endl;
+
+    //if (ret > 100) std::cout << calc->GetTh23() << " " << fTh23 << " " << fTh23Err << " " << ret << std::endl;
 
     return ret;
   }

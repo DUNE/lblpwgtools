@@ -118,6 +118,7 @@ namespace ana
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,int asimov_set=0);
+
     Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false);
     Penalizer_GlbLike(int hietrue, int octtrue,
@@ -126,6 +127,7 @@ namespace ana
     
     void SetAsimovPoint(int asimov_set);
     void SetAsimovPoint(std::string asimov_str, bool modConstraint=false);
+    void SetHugeOctPenalty(bool useHugeOct=false);
 
     double Dmsq21CV() const {return fDmsq21;}
     double Th12CV() const {return fTh12;}
@@ -173,6 +175,7 @@ namespace ana
     bool fTh13Pen;
     bool fTh23Pen;
     bool fDmsqPen;
+    bool fHugeOct;
   };
 
 }
