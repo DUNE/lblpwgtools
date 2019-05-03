@@ -15,6 +15,8 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
   
   // For the global fit
   std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie) ;
+  // hardcode this b/c I am dumb, but it's true as long as passing alloscvars
+  int kdelta = 3;
 
   // For the wrong sign fit
   std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie) ;
@@ -41,11 +43,11 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
     trueOsc->SetTh23(thisth23);
     
     double thischisq;
+    std::vector<double> fBestSeedValues;
 
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_joint);	
     testOsc->SetTh23(TMath::Pi()/2 - thisth23);
 
-    IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_joint);
     std::string this_asimov = "th23:"+to_string(thisth23);
     IExperiment *penalty_oct = GetPenalty(hie, 1, penaltyString, this_asimov, true, true);
 
@@ -54,32 +56,39 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
 
     //Prescan in finely binned delta space without full systs
     std::map<const IFitVar*, std::vector<double>> tmposcSeeds = {};
-    for (int idcp=0; idcp < 80; ++idcp){
-      tmposcSeeds[&kFitDeltaInPiUnits].push_back(-1 + idcp*2/80);
+    int prescan_steps = 5; //nominally 80 but doesn't seem to be helping much
+    for (int idcp=0; idcp < prescan_steps+1; ++idcp){
+      tmposcSeeds[&kFitDeltaInPiUnits].push_back(-1. + idcp*2./prescan_steps);
     }
     thischisq = RunFitPoint(stateFname, "fd",
 			    trueOsc, trueSyst, false,
 			    oscVars, systlist_none,
 			    testOsc, testSyst,
-			    tmposcSeeds, penalty_oct);
+			    fBestSeedValues,
+			    tmposcSeeds, penalty_oct,
+			    Fitter::kNormal,
+			    NULL, nullptr,
+			    nullptr, junkShifts);
 
-    //Plan is to use minimum dcp value from previous prescan to seed real fit which happens here:
+    //Use minimum seed values from previous prescan to seed real fit which happens here:
+    std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+    oscSeeds[&kFitDeltaInPiUnits] = {fBestSeedValues[kdelta]};
+    
 
-    //std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-    //oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-
-    //thischisq = RunFitPoint(stateFname, sampleString,
-    //	    trueOsc, trueSyst, false,
-    //			    oscVarsWrong, systlist,
-    //			    testOsc, testSyst,
-    //			    oscSeeds, penalty);
+    thischisq = RunFitPoint(stateFname, sampleString,
+			    trueOsc, trueSyst, false,
+			    oscVars, systlist,
+			    testOsc, testSyst,
+			    fBestSeedValues,
+			    oscSeeds, penalty_oct);
       
     chisqmin = TMath::Min(thischisq,chisqmin);
-    delete penalty;
     delete penalty_oct;
+    tmposcSeeds.clear();
+    oscSeeds.clear();
     
     chisqmin = TMath::Max(chisqmin,1e-6);
-    gOct->SetPoint(gOct->GetN(),thisth23,TMath::Sqrt(chisqmin));
+    gOct->SetPoint(gOct->GetN(),sin(thisth23)*sin(thisth23),TMath::Sqrt(chisqmin));
 
   }
 

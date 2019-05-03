@@ -219,6 +219,7 @@ namespace ana
       osc::IOscCalculatorAdjustable *seed = initseed->Copy();
 
       for(auto it: pt.fitvars) it.first->SetValue(seed, it.second);
+      osc::IOscCalculatorAdjustable *saveseed = seed->Copy();
 
       // Need to deal with parameters that are not fit values!
       SystShifts shift = pt.shift;
@@ -237,6 +238,7 @@ namespace ana
 	fPostFitValues .clear();
 	fPostFitErrors .clear();
 	fCentralValues .clear();
+	fBestSeedValues.clear();
 	fMinosErrors   .clear();
 	fMinosErrors   = fTempMinosErrors;
 
@@ -248,6 +250,7 @@ namespace ana
 	  fPreFitValues.push_back(val);
 	  fPreFitErrors.push_back(val ? val/2 : .1);
 	  fCentralValues.push_back(0);
+	  fBestSeedValues.push_back(v->GetValue(saveseed));
 	}
 	for(const ISyst* s: fSysts){
 	  const double val = shift.GetShift(s);
@@ -282,6 +285,7 @@ namespace ana
 	  bestSystPars.push_back(fPostFitValues[fVars.size()+j]);
       }
       delete seed;
+      delete saveseed;
     }
 
     // Stuff the results of the actual best fit back into the seeds

@@ -815,7 +815,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fakeDataOsc, SystShifts fakeDataSyst, bool fakeDataStats,
 		   std::vector<const IFitVar*> oscVars, std::vector<const ISyst*> systlist,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
-		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
+		   std::vector<double> &fBestSeedValues,
+		   std::map<const IFitVar*,std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
 		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, 
 		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts){
@@ -988,7 +989,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Now set up the fit itself
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
-
+  fBestSeedValues  = this_fit.GetBestSeed();
   bf = fitSyst;
 
   // std::cout << "Postfit chi-square:" << std::endl;
