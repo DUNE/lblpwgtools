@@ -239,7 +239,7 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, std::string asimo
   return ret;
 }
 
-std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0) {
+std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0, int oct = 0) {
 
   std::vector<std::string> osc_vars = SplitString(oscVarString, ':');
 
@@ -250,21 +250,17 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0) {
       rtn_vars.push_back(&kFitTheta13);
     }
     // Deal with bounded dmsq32
-    if (hie == -1){
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32IHScaled);
-      }
-    } else if (hie == 1){
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32NHScaled);
-      }
-    } else {
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32Scaled);
-      }
+    if (v == "dmsq32" || v == "alloscvars") {
+      if (hie == -1) rtn_vars.push_back(&kFitDmSq32IHScaled);
+      else if (hie == 1) rtn_vars.push_back(&kFitDmSq32NHScaled);
+      else rtn_vars.push_back(&kFitDmSq32Scaled);
     }
+    
+    // Deal with octant boundaries
     if (v == "th23" || v == "alloscvars") {
-      rtn_vars.push_back(&kFitSinSqTheta23);
+      if (oct == -1) rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
+      else if (oct == 1) rtn_vars.push_back(&kFitSinSqTheta23UpperOctant);
+      else rtn_vars.push_back(&kFitSinSqTheta23);
     }
     if (v == "deltapi" || v == "alloscvars") {
       rtn_vars.push_back(&kFitDeltaInPiUnits);
