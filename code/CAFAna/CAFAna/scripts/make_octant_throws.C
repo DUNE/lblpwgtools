@@ -4,7 +4,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 			std::string outputFname="octant_sens_ndfd_nosyst.root",
 			int nthrows = 50, std::string systSet = "nosyst", 
 			std::string sampleString="ndfd",
-			std::string throwString = "stat:fake:start",
+			std::string throwString = "start",
 			std::string penaltyString="nopen", int hie=1, int issth23=0){
   
   gROOT->SetBatch(1);
@@ -17,9 +17,6 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
   
-  // Decide which is the true octant based on ith23:
-  // Then figure out what parameters are right and wrong
-
   // Interpret the octant step once
   // Care about ssth23 = 0.3--0.7, have 31 steps
   double minVal = 0.3;
@@ -32,10 +29,10 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
   int oct = (this_ssth23 > 0.5) ? 1 : -1;
   std::cout << "ssth23 = " << this_ssth23 << "; found octant = " << oct << std::endl;
 
-  // Fit in the correct hierachy for the global fit
-  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie, oct);
+  // Fit in BOTH octants for the global fit
+  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie, 0);
   
-  // Fit in the incorrect hierarchy for the exclusion
+  // Fit in the incorrect octant for the exclusion
   std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", hie, -1*oct);
   
   // Setup an output file
@@ -48,7 +45,13 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
   oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-
+  oscSeeds[&kFitTheta13] = {0.12, 0.18};
+  
+  std::map<const IFitVar*, std::vector<double>> oscSeedsG;
+  oscSeedsG[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  oscSeedsG[&kFitSinSqTheta23] = {0.4, 0.6};
+  oscSeedsG[&kFitTheta13] = {0.12, 0.18};
+  
   // Loop over requested throws
   for (int i = 0; i < nthrows; ++i) {
 
@@ -60,7 +63,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
-    else fakeThrowOsc = NuFitOscCalc(hie, 1);
+    else fakeThrowOsc = NuFitOscCalc(hie, oct);
 
     // Set theta23
     fakeThrowOsc->SetTh23(this_th23);
@@ -85,7 +88,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
       fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = NuFitOscCalc(hie, 1);
+      fitThrowOsc = NuFitOscCalc(hie, oct);
     }
 
     // Somebody stop him, the absolute madman!
@@ -99,15 +102,14 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeeds, gpenalty, Fitter::kNormal, 
+				   oscSeedsG, gpenalty, Fitter::kNormal, 
 				   nullptr, &global_tree, &mad_spectra_yo);     
     global_tree.throw_tree->Fill();
 
     // Now force the testOsc to be in the wrong octant
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1);
-    testOsc->SetTh23(TMath::Pi()/2 - testOsc->GetTh23());
+    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, -1*oct);
 
-    // Wrong hierarchy remember
+    // No penalty on the octant, so ignore it...
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
     
     double chisqmin = RunFitPoint(stateFname, sampleString,
