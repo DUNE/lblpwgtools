@@ -33,10 +33,10 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
     double this_th23   = asin(sqrt(this_ssth23));    
     std::cout << "Trying issth23 = " << issth23 << "; ssth23 = " << this_ssth23 << std::endl;
 
-    // Use limited osc vars
+    // Use limited osc vars (in the wrong octant!)
     int oct = 0;
-    if (this_ssth23 < 0.5) oct = -1;
-    else if (this_ssth23 > 0.5) oct = 1;
+    if (this_ssth23 < 0.5) oct = 1;
+    else if (this_ssth23 > 0.5) oct = -1;
     
     std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie, oct);
     
@@ -55,10 +55,10 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
 				   oscVars, systlist,
 				   testOsc, testSyst,
 				   oscSeeds, penalty);
-      
-    double chisqmin = TMath::Min(thischisq, 1e-6);
+
+    double chisqmin = TMath::Max(thischisq,1e-6);
     gOct->SetPoint(gOct->GetN(),this_ssth23,TMath::Sqrt(chisqmin));
-    delete penalty_oct;
+    delete penalty;
   }
 
   fout->cd();
