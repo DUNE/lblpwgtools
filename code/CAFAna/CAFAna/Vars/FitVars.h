@@ -88,6 +88,8 @@ namespace ana
   class FitSinSqTheta23LowerOctant: public FitSinSqTheta23
   {
   public:
+    virtual std::string ShortName() const {return "ssth23_lower";}
+
     virtual double LowLimit() const {return 0;}
     virtual double HighLimit() const {return 0.5;}
   };
@@ -100,6 +102,8 @@ namespace ana
   class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
   {
   public:
+    virtual std::string ShortName() const {return "ssth23_upper";}
+
     virtual double LowLimit() const {return 0.5;}
     virtual double HighLimit() const {return 1;}
   };
