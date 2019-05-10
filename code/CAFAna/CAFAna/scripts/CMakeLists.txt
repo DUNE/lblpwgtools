@@ -11,6 +11,7 @@ set(scripts_to_install
   make_octant_throws.C
   make_mh_throws.C	
   mh_joint.C
+  octant_joint.C
   spec_joint.C
   spec_variations.C)
 
