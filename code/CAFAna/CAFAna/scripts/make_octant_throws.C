@@ -45,12 +45,10 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
   oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-  oscSeeds[&kFitTheta13] = {0.12, 0.18};
   
   std::map<const IFitVar*, std::vector<double>> oscSeedsG;
   oscSeedsG[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   oscSeedsG[&kFitSinSqTheta23] = {0.4, 0.6};
-  oscSeedsG[&kFitTheta13] = {0.12, 0.18};
   
   // Loop over requested throws
   for (int i = 0; i < nthrows; ++i) {
