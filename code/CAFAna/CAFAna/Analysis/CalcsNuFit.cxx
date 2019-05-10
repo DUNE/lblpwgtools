@@ -308,15 +308,25 @@ namespace ana
       ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
 
     // Throw dmsq32 flat between 2.3 and 2.7 in the correct hierarchy
-    if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()))
+    if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()) or
+	HasVar(oscVars, kFitDmSq32NHScaled.ShortName()) or
+	HasVar(oscVars, kFitDmSq32IHScaled.ShortName()))
       ret->SetDmsq32(float(hie)*gRandom->Uniform(2.3e-3, 2.7e-3));
 
     // Throw sin2th23 flat between 0.4 and 0.6
     static double th23_low  = asin(sqrt(0.4));
     static double th23_high = asin(sqrt(0.6));
+    static double th23_med = asin(sqrt(0.5));
+
     if (HasVar(oscVars, kFitSinSqTheta23.ShortName()))
       ret->SetTh23(gRandom->Uniform(th23_low, th23_high));
     
+    if (HasVar(oscVars, kFitSinSqTheta23UpperOctant.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_med, th23_high));
+
+    if (HasVar(oscVars, kFitSinSqTheta23LowerOctant.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_low, th23_med));
+
     // Throw th13
     if (HasVar(oscVars, kFitTheta13.ShortName())){
       if (flatth13)
