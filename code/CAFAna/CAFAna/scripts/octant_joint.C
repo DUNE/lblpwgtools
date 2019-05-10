@@ -17,7 +17,6 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
   oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-  oscSeeds[&kFitTheta13] = {0.12, 0.18};
   
   double minVal = 0.3;
   double maxVal = 0.7;
