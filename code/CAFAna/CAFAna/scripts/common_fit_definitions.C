@@ -355,10 +355,11 @@ std::vector<std::string> fd_det_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD
 					"EMResFD", "ChargedHadResFD", "FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // FD detector subsets
-std::vector<std::string> fd_escale_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD"};
+std::vector<std::string> fd_escale_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD"};
 std::vector<std::string> fd_muon_escale_list = {"eScaleMuLArFD"};
 std::vector<std::string> fd_eres_list = {"MuonResFD", "EMResFD", "ChargedHadResFD"};
 std::vector<std::string> fd_muon_eres_list = {"MuonResFD"};
+std::vector<std::string> fd_other_det_list = {"FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // All QE XSEC parameters
 std::vector<std::string> xsec_qe_list = {"MaCCQE", "VecFFCCQEshape","CCQEPauliSupViaKF", "Mnv2p2hGaussEnhancement","E2p2h_A_nu", 
@@ -463,6 +464,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     else if (syst == "nofd_det") RemoveSysts(namedList, fd_det_list);
     else if (syst == "nofd_escale") RemoveSysts(namedList, fd_escale_list);
     else if (syst == "nofd_muon_escale") RemoveSysts(namedList, fd_muon_escale_list);
+    else if (syst == "nofd_other_det") RemoveSysts(namedList, fd_other_det_list);
     else if (syst == "noxsec_qe") RemoveSysts(namedList, xsec_qe_list);
     else if (syst == "noxsec_res") RemoveSysts(namedList, xsec_res_list);
     else if (syst == "noxsec_dis") RemoveSysts(namedList, xsec_dis_list);
