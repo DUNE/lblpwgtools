@@ -8,8 +8,10 @@ set(scripts_to_install
   llh_scans.C
   make_cpv_throws.C
   make_toy_throws.C
+  make_octant_throws.C
   make_mh_throws.C	
   mh_joint.C
+  octant_joint.C
   spec_joint.C
   spec_variations.C)
 

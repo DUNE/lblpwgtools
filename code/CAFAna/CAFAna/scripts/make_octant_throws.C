@@ -1,44 +1,55 @@
 #include "common_fit_definitions.C"
 
-void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
-		    std::string outputFname="mh_sens_ndfd_nosyst.root",
-		    int nthrows = 100, std::string systSet = "nosyst", 
-		    std::string sampleString="ndfd",
-		    std::string throwString = "stat:fake:start",
-		    std::string penaltyString="nopen", int hie=1, int idcp=0){
-
+void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
+			std::string outputFname="octant_sens_ndfd_nosyst.root",
+			int nthrows = 50, std::string systSet = "nosyst", 
+			std::string sampleString="ndfd",
+			std::string throwString = "start",
+			std::string penaltyString="nopen", int hie=1, int issth23=0){
+  
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
-
+  
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw);
-
+  
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
+  
+  // Interpret the octant step once
+  // Care about ssth23 = 0.3--0.7, have 31 steps
+  double minVal = 0.3;
+  double maxVal = 0.7;
+  int nsteps = 31;
+  double ssth23_step = (maxVal - minVal)/nsteps;
+  double this_ssth23 = minVal + issth23*ssth23_step;
+  double this_th23   = asin(sqrt(this_ssth23));
 
-  // Fit in the correct hierachy for the global fit
-  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie);
+  int oct = (this_ssth23 > 0.5) ? 1 : -1;
+  std::cout << "ssth23 = " << this_ssth23 << "; found octant = " << oct << std::endl;
 
-  // Fit in the incorrect hierarchy for the exclusion
-  std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie);
+  // Fit in BOTH octants for the global fit
+  std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie, 0);
+  
+  // Fit in the incorrect octant for the exclusion
+  std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", hie, -1*oct);
   
   // Setup an output file
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   FitTreeBlob global_tree("global_fit_info");
   global_tree.throw_tree->SetDirectory(fout);
-  FitTreeBlob mh_tree("mh_fit_info");
-  mh_tree.throw_tree->SetDirectory(fout);
-
-  // Interpret the dcpstep once
-  double dcpstep = 2*TMath::Pi()/36;
-  double thisdcp = -TMath::Pi() + idcp*dcpstep;
+  FitTreeBlob oct_tree("oct_fit_info");
+  oct_tree.throw_tree->SetDirectory(fout);
 
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
-  oscSeeds[&kFitSinSqTheta23] = {.4, .6};
   oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-
+  
+  std::map<const IFitVar*, std::vector<double>> oscSeedsG;
+  oscSeedsG[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  oscSeedsG[&kFitSinSqTheta23] = {0.4, 0.6};
+  
   // Loop over requested throws
   for (int i = 0; i < nthrows; ++i) {
 
@@ -50,10 +61,10 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
-    else fakeThrowOsc = NuFitOscCalc(hie, 1);
+    else fakeThrowOsc = NuFitOscCalc(hie, oct);
 
-    // Set dCP correctly for this throw...
-    fakeThrowOsc->SetdCP(thisdcp);
+    // Set theta23
+    fakeThrowOsc->SetTh23(this_th23);
 
     // Now deal with systematics
     if (fakenuis_throw and not central_throw){
@@ -75,39 +86,36 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
       fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = NuFitOscCalc(hie, 1);
+      fitThrowOsc = NuFitOscCalc(hie, oct);
     }
 
     // Somebody stop him, the absolute madman!
     // Keep the same stats throw for both fits to get the delta chi2
     std::vector<std::unique_ptr<Spectrum> > mad_spectra_yo = {};
 
-    // Need to find the best fit in the correct hierachy
-    // Note that I'm ignoring the octant here
-    // This actually doesn't matter unless we apply a theta23 constraint, which I think we shouldn't anyway...
+    // Need to find the best fit in the correct octant
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeeds, gpenalty, Fitter::kNormal, 
+				   oscSeedsG, gpenalty, Fitter::kNormal, 
 				   nullptr, &global_tree, &mad_spectra_yo);     
     global_tree.throw_tree->Fill();
 
-    // Now force the testOsc to be in the wrong hierarchy 
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
-    testOsc->SetdCP(thisdcp);
-    fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
-    // Wrong hierarchy remember
-    IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
+    // Now force the testOsc to be in the wrong octant
+    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, -1*oct);
+
+    // No penalty on the octant, so ignore it...
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
     
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
 				  oscSeeds, penalty, Fitter::kNormal, 
-				  nullptr, &mh_tree, &mad_spectra_yo);
+				  nullptr, &oct_tree, &mad_spectra_yo);
   
     double dchi2 = chisqmin - globalmin;
     double significance = 0;
@@ -115,14 +123,15 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     else std::cout << "ERROR: dchi2 of " << dchi2 << "; " << chisqmin << " - " << globalmin << std::endl;
 
     // Add the variables of interest to the tree
-    mh_tree.throw_tree->Branch("chisqmin", &chisqmin);
-    mh_tree.throw_tree->Branch("globalmin", &globalmin);
-    mh_tree.throw_tree->Branch("hie", &hie);
-    mh_tree.throw_tree->Branch("idcp", &idcp);
-    mh_tree.throw_tree->Branch("dcp", &thisdcp);
-    mh_tree.throw_tree->Branch("dchi2", &dchi2);
-    mh_tree.throw_tree->Branch("significance", &significance);
-    mh_tree.throw_tree->Fill();
+    oct_tree.throw_tree->Branch("chisqmin", &chisqmin);
+    oct_tree.throw_tree->Branch("globalmin", &globalmin);
+    oct_tree.throw_tree->Branch("hie", &hie);
+    oct_tree.throw_tree->Branch("issth23", &issth23);
+    oct_tree.throw_tree->Branch("ssth23", &this_ssth23);
+    oct_tree.throw_tree->Branch("th23", &this_th23);
+    oct_tree.throw_tree->Branch("dchi2", &dchi2);
+    oct_tree.throw_tree->Branch("significance", &significance);
+    oct_tree.throw_tree->Fill();
 
     delete penalty;
     delete gpenalty;

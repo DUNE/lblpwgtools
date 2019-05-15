@@ -138,11 +138,11 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string sampleString="ndfd",
 		  std::string penaltyString="",
 		  int hie = 1,
-		  int asimov_set=0,
+		  std::string asimov_set="0",
 		  bool useProtonFakeData=false){
 
   gROOT->SetBatch(1);
-  gRandom->SetSeed(0);
+  gRandom->SetSeed(0);  
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
@@ -173,6 +173,9 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   // This remains the same throughout... there is one true parameter set for this Asimov set
   osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
   
+  // Save the true information
+  SaveTrueOAParams(fout, trueOsc);
+
   // Start by performing a minimization across the whole space, this defines the minimum chi2!
   osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
   

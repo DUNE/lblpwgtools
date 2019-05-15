@@ -3,7 +3,7 @@
 void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
 	       std::string systSet = "nosyst", std::string sampleString="ndfd",
-	       std::string penaltyString="nopen", int hie=1, int asimov_set=0){
+	       std::string penaltyString="nopen", int hie=1, std::string asimov_set="0"){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -35,31 +35,31 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
     for (int idcp = 0; idcp < 2; ++idcp) {
       double dcptest = idcp*TMath::Pi();
       
-      for(int ihie = -1; ihie <= +1; ihie += 2) {
+      //for(int ihie = -1; ihie <= +1; ihie += 2) {
 	
-	for (int ioct = -1; ioct <= 1; ioct +=2) {
-	  
-	  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, ioct, asimov_set);
-	  testOsc->SetdCP(dcptest);
-
-	  // Make a map of seed points to try (replaces the old loops)
-	  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-	  
-	  IExperiment *penalty = GetPenalty(ihie, ioct, penaltyString, asimov_set);
-	  SystShifts trueSyst = kNoShift;
-	  SystShifts testSyst = kNoShift;
-
-	  thischisq = RunFitPoint(stateFname, sampleString,
-				  trueOsc, trueSyst, false,
-				  oscVars, systlist,
-				  testOsc, testSyst,
-				  oscSeeds, penalty, Fitter::kNormal, nullptr);
-	  
-	  chisqmin = TMath::Min(thischisq,chisqmin);
-	  delete penalty;
-	}
+      for (int ioct = -1; ioct <= 1; ioct +=2) {
+	
+	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
+	testOsc->SetdCP(dcptest);
+	
+	// Make a map of seed points to try (replaces the old loops)
+	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+	
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_set);
+	SystShifts trueSyst = kNoShift;
+	SystShifts testSyst = kNoShift;
+	
+	thischisq = RunFitPoint(stateFname, sampleString,
+				trueOsc, trueSyst, false,
+				oscVars, systlist,
+				testOsc, testSyst,
+				oscSeeds, penalty, Fitter::kNormal, nullptr);
+	
+	chisqmin = TMath::Min(thischisq,chisqmin);
+	delete penalty;
       }
     }
+    //    }
     
     chisqmin = TMath::Max(chisqmin,1e-6);
     gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));

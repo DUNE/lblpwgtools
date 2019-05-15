@@ -3,7 +3,7 @@
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
 	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
-	      std::string penaltyString="", int hie=1, int asimov_joint=0){
+	      std::string penaltyString="", int hie=1, std::string asimov_joint="0"){
   
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);

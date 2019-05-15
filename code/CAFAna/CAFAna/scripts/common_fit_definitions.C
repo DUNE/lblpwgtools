@@ -221,7 +221,7 @@ std::vector<std::string> SplitString(std::string input, char delim = ' '){
 }
 
 // For ease of penalty terms...
-IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0){
+IExperiment* GetPenalty(int hie, int oct, std::string penalty, std::string asimov_set="0", bool modConstraint=false){
 
   // First, decide which to use
   std::vector<std::string> penalties = SplitString(penalty, ':');
@@ -235,11 +235,12 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, int asimov_set=0)
     if (str == "th23" || str == "allpen") useTh23 = true;
   }
 
-  IExperiment *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23, asimov_set);
+  Penalizer_GlbLike *ret = new Penalizer_GlbLike(hie, oct, useTh13, useDmsq32, useTh23, 0);
+  ret->SetAsimovPoint(asimov_set, modConstraint);
   return ret;
 }
 
-std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0) {
+std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0, int oct = 0) {
 
   std::vector<std::string> osc_vars = SplitString(oscVarString, ':');
 
@@ -250,21 +251,17 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0) {
       rtn_vars.push_back(&kFitTheta13);
     }
     // Deal with bounded dmsq32
-    if (hie == -1){
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32IHScaled);
-      }
-    } else if (hie == 1){
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32NHScaled);
-      }
-    } else {
-      if (v == "dmsq32" || v == "alloscvars") {
-	rtn_vars.push_back(&kFitDmSq32Scaled);
-      }
+    if (v == "dmsq32" || v == "alloscvars") {
+      if (hie == -1) rtn_vars.push_back(&kFitDmSq32IHScaled);
+      else if (hie == 1) rtn_vars.push_back(&kFitDmSq32NHScaled);
+      else rtn_vars.push_back(&kFitDmSq32Scaled);
     }
+    
+    // Deal with octant boundaries
     if (v == "th23" || v == "alloscvars") {
-      rtn_vars.push_back(&kFitSinSqTheta23);
+      if (oct == -1) rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
+      else if (oct == 1) rtn_vars.push_back(&kFitSinSqTheta23UpperOctant);
+      else rtn_vars.push_back(&kFitSinSqTheta23);
     }
     if (v == "deltapi" || v == "alloscvars") {
       rtn_vars.push_back(&kFitDeltaInPiUnits);
@@ -361,18 +358,55 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   return systlist;
 };
 
+// Define a few groups of systematics:
+//nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
+
+// All detector nuisance parameters
+std::vector<std::string> fd_det_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", "MuonResFD", 
+					"EMResFD", "ChargedHadResFD", "FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
+
+// FD detector subsets
+std::vector<std::string> fd_escale_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD"};
+std::vector<std::string> fd_muon_escale_list = {"eScaleMuLArFD"};
+std::vector<std::string> fd_eres_list = {"MuonResFD", "EMResFD", "ChargedHadResFD"};
+std::vector<std::string> fd_muon_eres_list = {"MuonResFD"};
+std::vector<std::string> fd_other_det_list = {"FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
+
+// All QE XSEC parameters
+std::vector<std::string> xsec_qe_list = {"MaCCQE", "VecFFCCQEshape","CCQEPauliSupViaKF", "Mnv2p2hGaussEnhancement","E2p2h_A_nu", 
+					 "E2p2h_B_nu", "E2p2h_A_nubar", "E2p2h_B_nubar","BeRPA_A", "BeRPA_B", "BeRPA_D",
+					 "C12ToAr40_2p2hScaling_nu", "C12ToAr40_2p2hScaling_nubar"};
+
+// All RES XSEC parameters
+std::vector<std::string> xsec_res_list = {"MaCCRES", "MvCCRES", "MaNCRES", "MvNCRES", "NR_nu_np_CC_1Pi", 
+					  "NR_nu_n_NC_1Pi", "NR_nu_p_NC_1Pi", "NR_nubar_n_CC_1Pi", "NR_nubar_p_CC_1Pi", 
+					  "NR_nubar_n_NC_1Pi", "NR_nubar_p_NC_1Pi", "SPPLowQ2Suppression"};
+
+// All NR_* and AKGY
+std::vector<std::string> xsec_dis_list = {"AhtBY", "BhtBY", "CV1uBY", "CV2uBY","NR_nu_n_CC_2Pi", "NR_nu_n_CC_3Pi", "NR_nu_p_CC_2Pi", 
+					  "NR_nu_p_CC_3Pi", "NR_nu_n_NC_2Pi", "NR_nu_n_NC_3Pi", "NR_nu_p_NC_2Pi", "NR_nu_p_NC_3Pi", 
+					  "NR_nubar_n_CC_2Pi", "NR_nubar_n_CC_3Pi", "NR_nubar_p_CC_2Pi","NR_nubar_p_CC_3Pi", 
+					  "NR_nubar_n_NC_2Pi", "NR_nubar_n_NC_3Pi", "NR_nubar_p_NC_2Pi", "NR_nubar_p_NC_3Pi",
+					  "Theta_Delta2Npi"};
+
+// All nuclear effects/FSI
+std::vector<std::string> xsec_fsi_list = {"FrCEx_pi", "FrElas_pi", "FrInel_pi", "FrAbs_pi", "FrPiProd_pi", 
+					  "FrCEx_N", "FrElas_N", "FrInel_N", "FrAbs_N", "FrPiProd_N"};
+
+std::vector<std::string> xsec_ratios_list = {"nuenuebar_xsec_ratio", "nuenumu_xsec_ratio"};
+
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
 				 	 bool useMissingProtonFakeData=false,
 				 	 bool useNuWroReweightFakeData=false){
-  bool detsyst  = false;
-  bool fluxsyst = false;
-  bool xsecsyst = false;
+  // Now defaults to true!
+  bool detsyst  = true;
+  bool fluxsyst = true;
+  bool xsecsyst = true;
 
-  // Okay, I am definitely now doing too much with this function... sorry all!
-  // Maybe I should keep this in make_toy_throws.C, just to make it less violently unpleasant for all
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
+  // This is pretty much a magic option to allow single parameters... there must be a better way, but for now I'm just going to continue to support it
   if (systString.find("list") != std::string::npos){
 
     // 1) Get a default list with everything
@@ -391,40 +425,68 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     return namedList;
   }
 
-  // For ordinary uses, transform to lowercase... just incase
-  std::transform(systString.begin(), systString.end(), systString.begin(), ::tolower);
+  // Can't transform anymore, so... BEHAVE YOURSELF
+  // std::transform(systString.begin(), systString.end(), systString.begin(), ::tolower);
 
-  if (systString.find("xsec") != std::string::npos) {xsecsyst = true;}
-  if (systString.find("flux") != std::string::npos) {fluxsyst = true;}
-  if (systString.find("det")  != std::string::npos) {detsyst = true;}
-  if (systString.find("allsyst") != std::string::npos) {
-    xsecsyst = true;
-    fluxsyst = true;
-    detsyst = true;
-  }
-  if (systString.find("prot_fakedata") != std::string::npos) {useMissingProtonFakeData = true;}
-  if (systString.find("nuwro_fakedata") != std::string::npos) {useNuWroReweightFakeData = true;}
-  // This might need more thought because of the above... but...
-  if (systString.find("nodet") != std::string::npos){
-    xsecsyst = true;
-    fluxsyst = true;
-    detsyst = false;
-  }
-  if (systString.find("noflux") != std::string::npos){
-    xsecsyst = true;
-    fluxsyst = false;
-    detsyst = true;
-  }
-  if (systString.find("noxsec") != std::string::npos){
-    xsecsyst = false;
-    fluxsyst = true;
-    detsyst = true;
+  // Do even more horrific things...
+  std::vector<std::string> systs = SplitString(systString, ':');
+
+  // Start off by checking for certain keywords
+  for (auto syst : systs){
+    if (syst == "allsyst"){
+      xsecsyst = true;
+      fluxsyst = true;
+      detsyst = true;
+    }
+    
+    if (syst == "nosyst"){
+      xsecsyst = false;
+      fluxsyst = false;
+      detsyst = false;
+    }
+
+    // Now we're getting a bit funky as these options now conflict.
+    // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
+    if (syst == "nodet") detsyst = false;
+    if (syst == "noflux") fluxsyst = false;
+    if (syst == "noxsec") xsecsyst = false;
+
+    // Something else really horrible to keep this supported...
+    if (syst == "prot_fakedata") useMissingProtonFakeData = true;
+    if (syst == "nuwro_fakedata") useNuWroReweightFakeData = true;
   }
 
-  // Just convert this to the usual function
-  return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-			useND, useFD, useNueOnE, useMissingProtonFakeData, useNuWroReweightFakeData);
+  // Okay, now get the list, and start from there...
+  std::vector<const ISyst*> namedList = GetListOfSysts(fluxsyst, xsecsyst, detsyst,
+						       useND, useFD, useNueOnE, 
+						       useMissingProtonFakeData, 
+						       useNuWroReweightFakeData);
 
+  // Now do something REALLY FUNKY. Remove specific dials from the list we already have
+  // Need to allow single dials, and a few specific groups...
+  for (auto syst : systs){
+    // ignore anything we previously dealt with
+    if (syst == "noxsec" ||
+	syst == "nodet" ||
+	syst == "noflux")
+      continue;
+    // Now remove some specific groups
+    // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
+    else if (syst == "nofd_det") RemoveSysts(namedList, fd_det_list);
+    else if (syst == "nofd_escale") RemoveSysts(namedList, fd_escale_list);
+    else if (syst == "nofd_muon_escale") RemoveSysts(namedList, fd_muon_escale_list);
+    else if (syst == "nofd_other_det") RemoveSysts(namedList, fd_other_det_list);
+    else if (syst == "noxsec_qe") RemoveSysts(namedList, xsec_qe_list);
+    else if (syst == "noxsec_res") RemoveSysts(namedList, xsec_res_list);
+    else if (syst == "noxsec_dis") RemoveSysts(namedList, xsec_dis_list);
+    else if (syst == "noxsec_fsi") RemoveSysts(namedList, xsec_fsi_list);
+    else if (syst == "noxsec_ratios") RemoveSysts(namedList, xsec_ratios_list);
+    // If not, remove as if it's a single parameter instruction
+    else RemoveSysts(namedList, {syst.erase(0, 2)});
+  }  
+  
+  // Now return the list
+  return namedList;
 }
 
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
@@ -611,17 +673,19 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
   // Look for some other magic information
-  if (input.find("full") != std::string::npos or input.find("15year") != std::string::npos)
-    exposure = 1104;
-
-  if (input.find("nom") != std::string::npos or input.find("7year") != std::string::npos)
-    exposure = 336;
-
-  if (input.find("10year") != std::string::npos)
-    exposure = 624;
+  for (auto str : input_vect){
+    if (str.find("full") != std::string::npos or str.find("15year") != std::string::npos)
+      exposure = 1104;
+    
+    if (str.find("nom") != std::string::npos or str.find("7year") != std::string::npos)
+      exposure = 336;
+    
+    if (str.find("10year") != std::string::npos)
+      exposure = 624;
+  }
 
   double exposure_ratio = exposure/nom_exposure;
-
+  std::cout << "Using exposure: " << exposure << "; and ratio: " << exposure_ratio << std::endl;
   
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
@@ -760,6 +824,34 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
     }
   }
   return mat;
+}
+
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, std::string tree_name="true_OA"){
+  
+  outDir->cd();
+  double L = calc->GetL();
+  double rho = calc->GetRho();
+  double dmsq21 = calc->GetDmsq21();
+  double dmsq32 = calc->GetDmsq32();
+  double th12 = calc->GetTh12();
+  double th13 = calc->GetTh13();
+  double th23 = calc->GetTh23();
+  double ssth23 = sin(calc->GetTh23())*sin(calc->GetTh23());
+  double deltapi = calc->GetdCP()/TMath::Pi();
+
+  TTree *tree = new TTree(tree_name.c_str(), tree_name.c_str());
+  tree->Branch("L", &L);
+  tree->Branch("rho", &rho);
+  tree->Branch("dmsq21", &dmsq21);
+  tree->Branch("dmsq32", &dmsq32);
+  tree->Branch("th12", &th12);
+  tree->Branch("th13", &th13);
+  tree->Branch("th23", &th23);
+  tree->Branch("ssth23", &ssth23);
+  tree->Branch("deltapi", &deltapi);
+  tree->Fill();
+  tree->Write();
+  return;
 }
 
 struct FitTreeBlob {

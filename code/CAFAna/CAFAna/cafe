@@ -1,8 +1,5 @@
 #!/bin/env python
 
-# Welcome banner
-print '** NOvA Common Analysis Format Executor **'
-
 import os, sys
 import argparse
 import tempfile
@@ -72,14 +69,15 @@ def libsPath():
 
 def escapeArg(arg):
     try:
-        # If it's "true" or "false" or we can parse it as a number,
-        # pass it through.
-        arg == 'true' or arg == 'false' or float(arg)
+        ## If it can be parsed as a number, pass it through
+        float(arg)
         return arg
     except:
-        # Otherwise it must be a string, add quotes.
-        return '"'+arg+'"'
-
+        ## If it's a bool, or a string, also pass it through, otherwise pass it as a string
+        if arg == 'true' or arg == 'false' or arg.find('"') != -1:
+            return arg
+        else:
+            return '"'+arg+'"'
 
 def toFunctionParams(args):
     """Comma seperated list of parameters"""
