@@ -15,7 +15,7 @@
 #include "TCanvas.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
-#include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
@@ -324,7 +324,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   }
 
   if (xsecsyst) {
-    std::vector<const ISyst*> xseclist = GetGenieSysts(GetGenieWeightNames(), fluxXsecPenalties, true); // the trailing true says on/off dials should extrapolate to -1 rather than mirror.
+    std::vector<const ISyst*> xseclist = GetXSecSysts(GetGenieWeightNames(), fluxXsecPenalties, true); // the trailing true says on/off dials should extrapolate to -1 rather than mirror.
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
 

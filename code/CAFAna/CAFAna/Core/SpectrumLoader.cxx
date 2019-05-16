@@ -8,7 +8,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "CAFAna/Core/GenieWeightList.h"
+#include "CAFAna/Core/XSecSystList.h"
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 
@@ -145,13 +145,6 @@ namespace ana
     }
     assert(tr);
 
-    // Surely no-one will generate 1000 universes?
-    std::vector<std::array<double, 1000>> genie_tmp;
-    const std::vector<std::string> genie_names = GetGenieWeightNames();
-    genie_tmp.resize(genie_names.size());
-    std::vector<int> genie_size_tmp;
-    genie_size_tmp.resize(genie_names.size());
-
     FloatingExceptionOnNaN fpnan(false);
 
     caf::StandardRecord sr;
@@ -251,14 +244,22 @@ namespace ana
     SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
     SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
-    // GENIE uncertainties and CVs
-    sr.dune.genie_wgt    .resize(genie_names.size());
-    sr.dune.genie_cv_wgt .resize(genie_names.size());
+    // XSec uncertainties and CVs
+    std::vector<std::array<double, 100>> XSSyst_tmp;
+    std::vector<double> XSSyst_cv_tmp;
+    std::vector<int> XSSyst_size_tmp;
 
-    for(unsigned int i = 0; i < genie_names.size(); ++i){
-      SetBranchChecked(tr, "wgt_"+genie_names[i], &genie_tmp[i]);
-      SetBranchChecked(tr, genie_names[i]+"_nshifts", &genie_size_tmp[i]);
-      SetBranchChecked(tr, genie_names[i]+"_cvwgt", &sr.dune.genie_cv_wgt[i]);
+    std::vector<std::string> const &XSSyst_names = GetAllXSecSystNames();
+    XSSyst_tmp.resize(XSSyst_names.size());
+    XSSyst_cv_tmp.resize(XSSyst_names.size());
+    XSSyst_size_tmp.resize(XSSyst_names.size());
+
+    sr.dune.xsSyst_wgt.resize(XSSyst_names.size());
+
+    for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
+      SetBranchChecked(tr, "wgt_"+XSSyst_names[syst_it], &XSSyst_tmp[syst_it]);
+      SetBranchChecked(tr, XSSyst_names[syst_it]+"_nshifts", &XSSyst_size_tmp[syst_it]);
+      SetBranchChecked(tr, XSSyst_names[syst_it]+"_cvwgt", &XSSyst_cv_tmp[syst_it]);
     }
 
     int Nentries = tr->GetEntries();
@@ -329,26 +330,45 @@ namespace ana
       }
 
       // Reformat the genie systs
-      sr.dune.total_cv_wgt = 1;
+      sr.dune.total_xsSyst_cv_wgt = 1;
 
-      for(unsigned int i = 0; i < genie_names.size(); ++i){
-        const int Nuniv = genie_size_tmp[i];
-        assert(Nuniv >= 0 && Nuniv <= int(genie_tmp[i].size()));
-        sr.dune.genie_wgt[i].resize(Nuniv);
+      for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
+        const int Nuniv = XSSyst_size_tmp[syst_it];
+        assert(Nuniv >= 0 && Nuniv <= int(XSSyst_tmp[syst_it].size()));
+        sr.dune.xsSyst_wgt[syst_it].resize(Nuniv);
 
-	// Do some error checking here
-	if (std::isnan(sr.dune.genie_cv_wgt[i]) ||
-	    std::isinf(sr.dune.genie_cv_wgt[i]) ||
-	    sr.dune.genie_cv_wgt[i] == 0)
-	  std::cout << "Warning: " << genie_names[i] << " has a bad CV of "
-		    << sr.dune.genie_cv_wgt[i] << std::endl;
-	else
-	  sr.dune.total_cv_wgt *= sr.dune.genie_cv_wgt[i];
+        if (IsDoNotIncludeSyst(syst_it)) { // Multiply CV weight back into
+                                          // response splines.
+          if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
+              std::isinf(XSSyst_cv_tmp[syst_it]) ||
+              XSSyst_cv_tmp[syst_it] == 0) {
+            std::cout << "Warning: " << XSSyst_names[syst_it]
+                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                      << std::endl;
+          } else {
+            for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
+              XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
+            }
+          }
+        } else { // Include CV weight in the total
 
-        for(int j = 0; j < Nuniv; ++j){
-          sr.dune.genie_wgt[i][j] = genie_tmp[i][j];
+          // Do some error checking here
+          if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
+              std::isinf(XSSyst_cv_tmp[syst_it]) ||
+              XSSyst_cv_tmp[syst_it] == 0) {
+            std::cout << "Warning: " << XSSyst_names[syst_it]
+                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                      << std::endl;
+          } else {
+            sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
+          }
+        }
+
+        for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
+          sr.dune.xsSyst_wgt[syst_it][univ_it] = XSSyst_tmp[syst_it][univ_it];
         }
       }
+
 
       HandleRecord(&sr);
 

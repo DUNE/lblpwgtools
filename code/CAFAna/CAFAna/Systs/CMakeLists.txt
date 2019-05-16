@@ -5,7 +5,7 @@ set(Systs_implementation_files
   DUNEXSecSystsPCA.cxx
   EnergySysts.cxx
   FDRecoSysts.cxx
-  GenieSysts.cxx
+  XSecSysts.cxx
   NDRecoSysts.cxx
   NuOnESysts.cxx
   SystComponentScale.cxx
@@ -18,7 +18,7 @@ set(Systs_header_files
   DUNEXSecSystsPCA.h
   EnergySysts.h
   FDRecoSysts.h
-  GenieSysts.h
+  XSecSysts.h
   NDRecoSysts.h
   NuOnESysts.h
   SystComponentScale.h

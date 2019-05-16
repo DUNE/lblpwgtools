@@ -17,7 +17,7 @@
 #include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
-#include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
