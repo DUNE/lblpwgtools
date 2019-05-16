@@ -464,6 +464,8 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     else if (syst == "nofd_det") RemoveSysts(namedList, fd_det_list);
     else if (syst == "nofd_escale") RemoveSysts(namedList, fd_escale_list);
     else if (syst == "nofd_muon_escale") RemoveSysts(namedList, fd_muon_escale_list);
+    else if (syst == "nofd_eres") RemoveSysts(namedList, fd_eres_list);
+    else if (syst == "nofd_muon_eres") RemoveSysts(namedList, fd_muon_eres_list);
     else if (syst == "nofd_other_det") RemoveSysts(namedList, fd_other_det_list);
     else if (syst == "noxsec_qe") RemoveSysts(namedList, xsec_qe_list);
     else if (syst == "noxsec_res") RemoveSysts(namedList, xsec_res_list);
