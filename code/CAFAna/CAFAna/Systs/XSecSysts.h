@@ -31,7 +31,7 @@ public:
 
     if (IsFakeDataGenerationSyst(
             fID)) { // Separate out hard coded logic for fake data dials.
-      FakeDataDialShift(sigma, restore, csr, weight);
+      FakeDataDialShift(sigma, restore, sr, weight);
       return;
     }
 
