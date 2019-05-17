@@ -35,7 +35,7 @@ public:
     if (!sr->dune.isCC) {
       return;
     }
-    
+
     // To be on the safe side. BDT does not know about taus.
     if (abs(sr->dune.nuPDG) == 16) return;
 
@@ -45,9 +45,9 @@ public:
     if (sigma != 1) {
       return;
     }
-    
+
     union BDTReweighter::BDTReweighterFeature features[22];
-    
+
     features[0].fvalue = sr->dune.Ev;
     features[1].fvalue = sr->dune.LepE;
     features[2].fvalue = sr->dune.LepNuAngle;
@@ -84,7 +84,7 @@ public:
     double plattB = 0.;
     // Pointer to BDT to use
     BDTReweighter * thisReweighter = 0;
-    
+
     if ((sr->dune.isFD == 0) && (sr->dune.isFHC) && (abs(sr->dune.nuPDG) == 14) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.035;
       absolute_NuWro_over_Genie_weight = 1.013;
@@ -96,7 +96,7 @@ public:
       absolute_NuWro_over_Genie_weight = 0.917;
       plattA = -1.22806734;
       plattB = -0.01548346;
-      thisReweighter = bdt_reweighters[7]; // 7 numu_ND_RHC 
+      thisReweighter = bdt_reweighters[7]; // 7 numu_ND_RHC
     } else if ((sr->dune.isFD == 0) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (!(sr->dune.nuPDG > 0))){
       BDT_norm_weight = 1.019;
       absolute_NuWro_over_Genie_weight = 0.917;
@@ -114,7 +114,7 @@ public:
       absolute_NuWro_over_Genie_weight = 0.981;
       plattA = -1.21420542;
       plattB = -0.02423824;
-      thisReweighter = bdt_reweighters[4]; // 4 numu_FD_RHC 
+      thisReweighter = bdt_reweighters[4]; // 4 numu_FD_RHC
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (abs(sr->dune.nuPDG) == 14) && (!(sr->dune.nuPDG > 0))){
       BDT_norm_weight = 1.036;
       absolute_NuWro_over_Genie_weight = 0.904;
@@ -126,7 +126,7 @@ public:
       absolute_NuWro_over_Genie_weight = 1.038;
       plattA = -1.22058287;
       plattB = -0.01992826;
-      thisReweighter = bdt_reweighters[0]; // 0 nue_FD_FHC  
+      thisReweighter = bdt_reweighters[0]; // 0 nue_FD_FHC
     } else if ((!(sr->dune.isFD == 0)) && (!(sr->dune.isFHC)) && (!(abs(sr->dune.nuPDG) == 14)) && (sr->dune.nuPDG > 0)){
       BDT_norm_weight = 1.056;
       absolute_NuWro_over_Genie_weight = 0.988;
@@ -138,23 +138,23 @@ public:
       absolute_NuWro_over_Genie_weight = 0.912;
       plattA = -1.27055928;
       plattB = -0.0294727;
-      thisReweighter = bdt_reweighters[2]; // 2 nuebar_FD_RHC  
-    } 
+      thisReweighter = bdt_reweighters[2]; // 2 nuebar_FD_RHC
+    }
 
     if (thisReweighter) {
       weight *= absolute_NuWro_over_Genie_weight*BDT_norm_weight*exp(plattA*thisReweighter->predict(features,1) + plattB);
     }
-    
+
   }
 
 public:
   NuWroReweightFakeDataGenerator()
     : ana::ISyst("NuWroReweightFakeDataGenerator",
-		 "NuWroReweightFakeDataGenerator"){
-    
+		 "NuWroReweightFakeDataGenerator", false, 0, 1){
+
     bdt_reweighters.emplace_back(new GeneratorReweight_nue_FD_FHC()); // 0 nue_FD_FHC
     bdt_reweighters.emplace_back(new GeneratorReweight_nue_FD_RHC()); // 1 nue_FD_RHC
-    bdt_reweighters.emplace_back(new GeneratorReweight_nuebar_FD_RHC()); // 2 nuebar_FD_RHC 
+    bdt_reweighters.emplace_back(new GeneratorReweight_nuebar_FD_RHC()); // 2 nuebar_FD_RHC
     bdt_reweighters.emplace_back(new GeneratorReweight_numu_FD_FHC()); // 3 numu_FD_FHC
     bdt_reweighters.emplace_back(new GeneratorReweight_numu_FD_RHC()); // 4 numu_FD_RHC
     bdt_reweighters.emplace_back(new GeneratorReweight_numubar_FD_RHC()); // 5 numubar_FD_RHC

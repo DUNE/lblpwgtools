@@ -16,7 +16,8 @@ enum FitSyst {
 
 enum ExtrapolatedSyst { kExtrapolated, kContinuous };
 
-static std::pair<double, double> const kStandardRange{3, 3};
+static std::pair<double, double> const kStandardRange{-3, 3};
+static std::pair<double, double> const kFakeDataRange{0, 1};
 
 struct XSecDialDescriptor {
   std::string Name;
@@ -55,8 +56,8 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
     {"FrAbs_N", kFitSyst, kContinuous, {-2, 2}},
     {"FrPiProd_N", kFitSyst, kContinuous, {-2, 2}},
     {"CCQEPauliSupViaKF", kFitSyst, kExtrapolated, kStandardRange},
-    {"Mnv2p2hGaussEnhancement", kUsedAsFakeData, kContinuous, kStandardRange},
-    {"MKSPP_ReWeight", kFitSyst, kContinuous, kStandardRange},
+    {"Mnv2p2hGaussEnhancement", kUsedAsFakeData, kContinuous, kFakeDataRange},
+    {"MKSPP_ReWeight", kFitSyst, kContinuous, kFakeDataRange},
     {"E2p2h_A_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"E2p2h_B_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"E2p2h_A_nubar", kFitSyst, kExtrapolated, kStandardRange},
@@ -92,8 +93,8 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
     {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange},
     {"nuenuebar_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
     {"nuenumu_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
-    {"SPPLowQ2Suppression", kUsedAsFakeData, kContinuous, kStandardRange},
-    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kStandardRange}};
+    {"SPPLowQ2Suppression", kUsedAsFakeData, kContinuous, kFakeDataRange},
+    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kFakeDataRange}};
 
 /// All dial names that should go into a state file
 std::vector<std::string> const &GetAllXSecSystNames() {

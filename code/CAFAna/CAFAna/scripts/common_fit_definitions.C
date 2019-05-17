@@ -195,11 +195,11 @@ const double pot_nd = 3.5 * POT120;
 const double nom_exposure = 336.;
 
 // Global file path...
-#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+//#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
 const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
-#else
-const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
-#endif
+//#else
+//const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
+//#endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
 size_t const NFluxParametersToUse = 10; //30;

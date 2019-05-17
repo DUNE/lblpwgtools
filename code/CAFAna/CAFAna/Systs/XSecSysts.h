@@ -57,11 +57,11 @@ public:
   }
 
 protected:
-  XSecSyst(int genie_id, bool applyPenalty = true,
+  XSecSyst(int syst_id, bool applyPenalty = true,
            bool NegateNegativeSigmaShifts = false)
-      : ISyst(GetXSecSystName(genie_id), GetXSecSystName(genie_id),
-              applyPenalty, GetXSecSystMin(genie_id), GetXSecSystMax(genie_id)),
-        fID(genie_id), fNegateNegativeSigmaShifts(NegateNegativeSigmaShifts) {}
+      : ISyst(GetXSecSystName(syst_id), GetXSecSystName(syst_id),
+              applyPenalty, GetXSecSystMin(syst_id), GetXSecSystMax(syst_id)),
+        fID(syst_id), fNegateNegativeSigmaShifts(NegateNegativeSigmaShifts) {}
   friend std::vector<const ISyst *> GetXSecSysts(std::vector<std::string>, bool,
                                                  bool);
 

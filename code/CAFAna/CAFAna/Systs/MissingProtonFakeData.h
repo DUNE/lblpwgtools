@@ -47,13 +47,13 @@ public:
     }
 
     union BDTReweighter::BDTReweighterFeature features[8];
-      
+
     features[5].fvalue = sr->dune.Ev; // Etrue
     features[6].fvalue = sr->dune.eP; // True proton kinetic energy
     features[7].fvalue = 1-sr->dune.LepE/sr->dune.Ev; // ytrue
-      
+
     for (int i = 0; i < 5; i++) features[i].fvalue = 0;
-      
+
     bool foundMode = true;
     switch(sr->dune.GENIE_ScatteringMode) {
     case 1 : features[0].fvalue = 1.;
@@ -81,7 +81,7 @@ public:
       : ana::ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
                             : "MissingProtonEnergyGenerator",
                    DoWeight ? "MissingProtonFakeDataGenerator"
-                            : "MissingProtonEnergyGenerator"),
+                            : "MissingProtonEnergyGenerator", false, 0, 1),
         EpFrac(epfrac), fDoWeight(DoWeight) {
 
     bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_FHC());
