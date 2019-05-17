@@ -223,7 +223,7 @@ bool IsDoNotIncludeSyst(std::string const &name) {
 bool IsDoNotIncludeSyst(int index) {
   static std::map<int, bool> cache;
   if (!cache.count(index)) {
-    cache[index] = IsDoNotIncludeSyst(GetXSecSystName(name));
+    cache[index] = IsDoNotIncludeSyst(GetXSecSystName(index));
   }
   return cache[index];
 }
