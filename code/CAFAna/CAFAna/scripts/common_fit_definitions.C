@@ -484,6 +484,17 @@ std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
+SystShifts GetFakeDataGeneratorSystShift(std::string const &FakeDataSystName){
+  assert(IsFakeDataGenerationSyst(FakeDataSystName));
+
+  std::vector<ISyst const *> FDSyst = GetListOfSysts();
+  KeepSysts(FDSyst, {FakeDataSystName,});
+
+  assert(FDSyst.size());
+
+  return SystShifts(FDSyst.front(),1);
+}
+
 // Use a sample enum, maybe this should live elsewhere?
 enum SampleType{kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown};
 

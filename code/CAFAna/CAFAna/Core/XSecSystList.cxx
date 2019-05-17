@@ -229,6 +229,21 @@ bool IsDoNotIncludeSyst(int index) {
   return cache[index];
 }
 
+bool IsFakeDataGenerationSyst(std::string const &name) {
+  static std::map<std::string, bool> cache;
+  if (!cache.count(name)) {
+    cache[name] = SystNameIsInList(name, GetFakeDataGenerationSystNames());
+  }
+  return cache[name];
+}
+bool IsFakeDataGenerationSyst(int index) {
+  static std::map<int, bool> cache;
+  if (!cache.count(index)) {
+    cache[index] = IsFakeDataGenerationSyst(GetXSecSystName(index));
+  }
+  return cache[index];
+}
+
 std::pair<double, double> GetXSecSystLimits(int index) {
   assert((index >= 0) && (index < int(XSecSystDials.size())));
   return XSecSystDials[index].FitLimits;

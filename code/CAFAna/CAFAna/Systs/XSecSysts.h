@@ -12,13 +12,28 @@ class XSecSyst : public ISyst {
 public:
   virtual ~XSecSyst(){};
 
+  void FakeDataDialShift(double sigma, Restorer &restore,
+                         caf::StandardRecord *sr, double &weight) const {
+
+    // First time hook up known fake data dial IDs, logic then in switch
+    // statement.
+  }
+
   void Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
     // No xs weights in this event, skip reweighting it
-    if (sr->dune.xsSyst_wgt.empty())
+    if (sr->dune.xsSyst_wgt.empty()) {
       return;
-    if (sr->dune.xsSyst_wgt[0].empty())
+    }
+    if (sr->dune.xsSyst_wgt[0].empty()) {
       return;
+    }
+
+    if (IsFakeDataGenerationSyst(
+            fID)) { // Separate out hard coded logic for fake data dials.
+      FakeDataDialShift(sigma, restore, csr, weight);
+      return;
+    }
 
     assert(std::abs(sigma) <= 3 &&
            "XSecs responses only valid up to +/-3 sigma!");
@@ -59,8 +74,8 @@ public:
 protected:
   XSecSyst(int syst_id, bool applyPenalty = true,
            bool NegateNegativeSigmaShifts = false)
-      : ISyst(GetXSecSystName(syst_id), GetXSecSystName(syst_id),
-              applyPenalty, GetXSecSystMin(syst_id), GetXSecSystMax(syst_id)),
+      : ISyst(GetXSecSystName(syst_id), GetXSecSystName(syst_id), applyPenalty,
+              GetXSecSystMin(syst_id), GetXSecSystMax(syst_id)),
         fID(syst_id), fNegateNegativeSigmaShifts(NegateNegativeSigmaShifts) {}
   friend std::vector<const ISyst *> GetXSecSysts(std::vector<std::string>, bool,
                                                  bool);

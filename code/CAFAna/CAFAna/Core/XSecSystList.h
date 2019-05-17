@@ -27,6 +27,8 @@ bool IsExtrapolateOffToOnSyst(std::string const &);
 bool IsExtrapolateOffToOnSyst(int);
 bool IsDoNotIncludeSyst(std::string const &);
 bool IsDoNotIncludeSyst(int);
+bool IsFakeDataGenerationSyst(std::string const &);
+bool IsFakeDataGenerationSyst(int);
 
 std::pair<double, double> GetXSecSystLimits(const std::string &name);
 double GetXSecSystMax(int index);
