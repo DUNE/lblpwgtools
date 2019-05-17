@@ -63,7 +63,7 @@ const Var kRecoY_FromDep  = (SIMPLEVAR(dune.eRec_FromDep) - SIMPLEVAR(dune.LepE)
 const Var kTrueEnergy  = SIMPLEVAR(dune.Ev);
 
 // CV weighting
-const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
+const Var kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
 
 // Cuts are now defined in CAFAna/Cuts/AnaCuts.h Removed from here to elide any
 // confusion
@@ -877,7 +877,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
 		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
-		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts){
+		   std::vector<std::unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts){
 
   assert(systlist.size()+oscVars.size());
 
@@ -920,7 +920,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // This came back to bite me. I need to do multiple fits with the same fake data throw, so I need these to persist between calls to this function
   // Sadly, the locked down ownership etc means I can't think of a better solution to this
   // And the alternative CAFAna is probably just copy-pasta-ing this function in all of the scripts that use it...
-  std::vector<unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
+  std::vector<std::unique_ptr<Spectrum> > LastShredsOfMyDignityAndSanity;
   if(!spectra){ spectra = &LastShredsOfMyDignityAndSanity; }
 
   if (!spectra->size()){
