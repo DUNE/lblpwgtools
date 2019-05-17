@@ -255,7 +255,7 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0, i
       else if (hie == 1) rtn_vars.push_back(&kFitDmSq32NHScaled);
       else rtn_vars.push_back(&kFitDmSq32Scaled);
     }
-    
+
     // Deal with octant boundaries
     if (v == "th23" || v == "alloscvars") {
       if (oct == -1) rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
@@ -298,8 +298,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false,
-					 bool useMissingProtonFakeData=true, bool useNuWroReweightFakeData=true){
+					 bool useNueOnE=false, bool useFakeDataDials=true){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
@@ -324,14 +323,24 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   }
 
   if (xsecsyst) {
-    std::vector<const ISyst*> xseclist = GetXSecSysts(GetGenieWeightNames(), fluxXsecPenalties, true); // the trailing true says on/off dials should extrapolate to -1 rather than mirror.
+    std::vector<const ISyst *> xseclist =
+        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties,
+                     true); // the trailing true says on/off dials should
+                            // extrapolate to -1 rather than mirror.
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
+
+    // Always remove these dials
+    RemoveSysts(systlist, GetDoNotIncludeSystNames());
+
+    // If using fake data dials (for state generation) add them back in
+    if (useFakeDataDials) {
+      KeepSysts(xseclist, GetFakeDataGenerationSystNames());
+      systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
+    }
   }
 
-  if(useMissingProtonFakeData){
+  if(useFakeDataDials){
     systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
-  }
-  if(useNuWroReweightFakeData){
     systlist.push_back(GetNuWroReweightFakeDataSyst().front());
   }
 
@@ -339,10 +348,6 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst",
 	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst",
 	"UncorrNDNLinSyst", "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst", "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
-  // Get rid of these too...
-  RemoveSysts(systlist, {"MFP_N", "MFP_pi", "FormZone"});
-  // Woops, this got lost when reverting to the pre-Hack days version
-  RemoveSysts(systlist, {"RDecBR1gamma", "RDecBR1eta", "EtaNCEL", "BeRPA_E", "FSILikeEAvailSmearing"});
 
   return systlist;
 };
@@ -351,7 +356,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 //nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
 
 // All detector nuisance parameters
-std::vector<std::string> fd_det_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", "MuonResFD", 
+std::vector<std::string> fd_det_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", "MuonResFD",
 					"EMResFD", "ChargedHadResFD", "FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // FD detector subsets
@@ -362,33 +367,31 @@ std::vector<std::string> fd_muon_eres_list = {"MuonResFD"};
 std::vector<std::string> fd_other_det_list = {"FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // All QE XSEC parameters
-std::vector<std::string> xsec_qe_list = {"MaCCQE", "VecFFCCQEshape","CCQEPauliSupViaKF", "Mnv2p2hGaussEnhancement","E2p2h_A_nu", 
+std::vector<std::string> xsec_qe_list = {"MaCCQE", "VecFFCCQEshape","CCQEPauliSupViaKF", "Mnv2p2hGaussEnhancement","E2p2h_A_nu",
 					 "E2p2h_B_nu", "E2p2h_A_nubar", "E2p2h_B_nubar","BeRPA_A", "BeRPA_B", "BeRPA_D",
 					 "C12ToAr40_2p2hScaling_nu", "C12ToAr40_2p2hScaling_nubar"};
 
 // All RES XSEC parameters
-std::vector<std::string> xsec_res_list = {"MaCCRES", "MvCCRES", "MaNCRES", "MvNCRES", "NR_nu_np_CC_1Pi", 
-					  "NR_nu_n_NC_1Pi", "NR_nu_p_NC_1Pi", "NR_nubar_n_CC_1Pi", "NR_nubar_p_CC_1Pi", 
+std::vector<std::string> xsec_res_list = {"MaCCRES", "MvCCRES", "MaNCRES", "MvNCRES", "NR_nu_np_CC_1Pi",
+					  "NR_nu_n_NC_1Pi", "NR_nu_p_NC_1Pi", "NR_nubar_n_CC_1Pi", "NR_nubar_p_CC_1Pi",
 					  "NR_nubar_n_NC_1Pi", "NR_nubar_p_NC_1Pi", "SPPLowQ2Suppression"};
 
 // All NR_* and AKGY
-std::vector<std::string> xsec_dis_list = {"AhtBY", "BhtBY", "CV1uBY", "CV2uBY","NR_nu_n_CC_2Pi", "NR_nu_n_CC_3Pi", "NR_nu_p_CC_2Pi", 
-					  "NR_nu_p_CC_3Pi", "NR_nu_n_NC_2Pi", "NR_nu_n_NC_3Pi", "NR_nu_p_NC_2Pi", "NR_nu_p_NC_3Pi", 
-					  "NR_nubar_n_CC_2Pi", "NR_nubar_n_CC_3Pi", "NR_nubar_p_CC_2Pi","NR_nubar_p_CC_3Pi", 
+std::vector<std::string> xsec_dis_list = {"AhtBY", "BhtBY", "CV1uBY", "CV2uBY","NR_nu_n_CC_2Pi", "NR_nu_n_CC_3Pi", "NR_nu_p_CC_2Pi",
+					  "NR_nu_p_CC_3Pi", "NR_nu_n_NC_2Pi", "NR_nu_n_NC_3Pi", "NR_nu_p_NC_2Pi", "NR_nu_p_NC_3Pi",
+					  "NR_nubar_n_CC_2Pi", "NR_nubar_n_CC_3Pi", "NR_nubar_p_CC_2Pi","NR_nubar_p_CC_3Pi",
 					  "NR_nubar_n_NC_2Pi", "NR_nubar_n_NC_3Pi", "NR_nubar_p_NC_2Pi", "NR_nubar_p_NC_3Pi",
 					  "Theta_Delta2Npi"};
 
 // All nuclear effects/FSI
-std::vector<std::string> xsec_fsi_list = {"FrCEx_pi", "FrElas_pi", "FrInel_pi", "FrAbs_pi", "FrPiProd_pi", 
+std::vector<std::string> xsec_fsi_list = {"FrCEx_pi", "FrElas_pi", "FrInel_pi", "FrAbs_pi", "FrPiProd_pi",
 					  "FrCEx_N", "FrElas_N", "FrInel_N", "FrAbs_N", "FrPiProd_N"};
 
 std::vector<std::string> xsec_ratios_list = {"nuenuebar_xsec_ratio", "nuenumu_xsec_ratio"};
 
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false,
-				 	 bool useNuWroReweightFakeData=false){
+					 bool useNueOnE=false){
   // Now defaults to true!
   bool detsyst  = true;
   bool fluxsyst = true;
@@ -399,7 +402,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   if (systString.find("list") != std::string::npos){
 
     // 1) Get a default list with everything
-    std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE);
+    std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE, false /*no fake data*/);
     // for (auto & syst : namedList) std::cout << syst->ShortName() << std::endl;
     // 2) Interpret the list of short names
     std::vector<std::string> systs = SplitString(systString, ':');
@@ -427,7 +430,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
       fluxsyst = true;
       detsyst = true;
     }
-    
+
     if (syst == "nosyst"){
       xsecsyst = false;
       fluxsyst = false;
@@ -440,16 +443,11 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     if (syst == "noflux") fluxsyst = false;
     if (syst == "noxsec") xsecsyst = false;
 
-    // Something else really horrible to keep this supported...
-    if (syst == "prot_fakedata") useMissingProtonFakeData = true;
-    if (syst == "nuwro_fakedata") useNuWroReweightFakeData = true;
   }
 
   // Okay, now get the list, and start from there...
   std::vector<const ISyst*> namedList = GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-						       useND, useFD, useNueOnE, 
-						       useMissingProtonFakeData, 
-						       useNuWroReweightFakeData);
+						       useND, useFD, useNueOnE, false /*no fake data*/);
 
   // Now do something REALLY FUNKY. Remove specific dials from the list we already have
   // Need to allow single dials, and a few specific groups...
@@ -474,17 +472,15 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     else if (syst == "noxsec_ratios") RemoveSysts(namedList, xsec_ratios_list);
     // If not, remove as if it's a single parameter instruction
     else RemoveSysts(namedList, {syst.erase(0, 2)});
-  }  
-  
+  }
+
   // Now return the list
   return namedList;
 }
 
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false,
-					 bool useNuWroReweightFakeData=false){
+					 bool useNueOnE=false){
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
@@ -713,7 +709,7 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   // Did somebody say overextend the command line arguments even further?
   // Well okay!
   std::vector<std::string> input_vect = SplitString(cmdLineInput, ':');
-  
+
   // Default to 7 years staged. Value is actually in kt MW yr
   double exposure = 336;
   if (input_vect.size() > 1) exposure = stod(input_vect[1]);
@@ -726,17 +722,17 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   for (auto str : input_vect){
     if (str.find("full") != std::string::npos or str.find("15year") != std::string::npos)
       exposure = 1104;
-    
+
     if (str.find("nom") != std::string::npos or str.find("7year") != std::string::npos)
       exposure = 336;
-    
+
     if (str.find("10year") != std::string::npos)
       exposure = 624;
   }
 
   double exposure_ratio = exposure/nom_exposure;
   std::cout << "Using exposure: " << exposure << "; and ratio: " << exposure_ratio << std::endl;
-  
+
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
 
@@ -767,7 +763,7 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   return;
 }
 
-void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA, 
+void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 			    bool &fakeNuis, bool &start, bool &central) {
 
   std::vector<std::string> instructions = SplitString(throwString, ':');
@@ -800,7 +796,7 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 
 
 void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, std::string tree_name="true_OA"){
-  
+
   outDir->cd();
   double L = calc->GetL();
   double rho = calc->GetRho();
@@ -880,7 +876,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   std::map<const IFitVar*, std::vector<double>> oscSeeds={},
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, 
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
 		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, SystShifts &bf = junkShifts){
 
   assert(systlist.size()+oscVars.size());
