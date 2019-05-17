@@ -484,15 +484,24 @@ std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
-SystShifts GetFakeDataGeneratorSystShift(std::string const &FakeDataSystName){
-  assert(IsFakeDataGenerationSyst(FakeDataSystName));
+SystShifts GetFakeDataGeneratorSystShift(std::string input){
+  
+  std::vector<std::string> fake_data_names = SplitString(input, ':');
+  
+  // Default to nominal
+  SystShifts thisShift = kNoShift;
 
+  // Check nobody did anything dumb...
+  // This is for you LUUK
+  for (auto name : fake_data_names) {assert(IsFakeDataGenerationSyst(name));}
+    
   std::vector<ISyst const *> FDSyst = GetListOfSysts();
-  KeepSysts(FDSyst, {FakeDataSystName,});
-
-  assert(FDSyst.size());
-
-  return SystShifts(FDSyst.front(),1);
+  KeepSysts(FDSyst, fake_data_names);
+  
+  // Also for you LUUUUUUUUK
+  for (auto syst : FDSyst) {thisShift.SetShift(syst,1);}
+  
+  return thisShift;
 }
 
 // Use a sample enum, maybe this should live elsewhere?
