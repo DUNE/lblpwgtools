@@ -16,6 +16,7 @@ std::string sanitize(std::string word) {
 
 void RemovePars(std::vector<const IFitVar *> &osclist,
                 std::vector<std::string> const &namesToRemove) {
+
   osclist.erase(std::remove_if(osclist.begin(), osclist.end(),
                                [&](const IFitVar *s) {
                                  return (std::find(namesToRemove.begin(),
@@ -163,7 +164,13 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     RemovePars(oscVars, {plotVarVect[1]});
   if (plotVarVect.size() > 2)
     yVal = stoi(plotVarVect[2]);
-  
+
+  // One man's continuing struggle with hacky fixes stemming from the oscillation probability being buggy as hell
+  if (std::find(plotVarVect.begin(), plotVarVect.end(), "dmsq32") == plotVarVect.end()){
+    std::cout << "Found dmsq32" << std::endl;
+    RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
+  } else std::cout << "No dmsq32" << std::endl;
+
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
