@@ -163,8 +163,3 @@ public:
     bdt_reweighters.emplace_back(new GeneratorReweight_numubar_ND_RHC()); // 8 numubar_ND_RHC
   }
 };
-
-std::vector<const ana::ISyst *> GetNuWroReweightFakeDataSyst() {
-  static NuWroReweightFakeDataGenerator nuwrofd;
-  return {&nuwrofd};
-}
