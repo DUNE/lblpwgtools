@@ -11,6 +11,7 @@ enum FitSyst {
   kFitSyst,
   kRemovedOverconstraint,
   kRemovedOddResponse,
+  kRemovedOther,
   kUsedAsFakeData
 };
 
@@ -56,7 +57,15 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
     {"FrAbs_N", kFitSyst, kContinuous, {-2, 2}},
     {"FrPiProd_N", kFitSyst, kContinuous, {-2, 2}},
     {"CCQEPauliSupViaKF", kFitSyst, kExtrapolated, kStandardRange},
-    {"Mnv2p2hGaussEnhancement", kUsedAsFakeData, kContinuous, kFakeDataRange},
+    // Must be here to fill branch in SpectrumLoader but shouldn't be used as
+    // the dials below separate out the responses into multiple fake data sets.
+    {"Mnv2p2hGaussEnhancement", kRemovedOther, kContinuous, {0, 0}},
+    {"Mnv2p2hGaussEnhancement_NN", kUsedAsFakeData, kContinuous,
+     kFakeDataRange},
+    {"Mnv2p2hGaussEnhancement_2p2h", kUsedAsFakeData, kContinuous,
+     kFakeDataRange},
+    {"Mnv2p2hGaussEnhancement_1p1h", kUsedAsFakeData, kContinuous,
+     kFakeDataRange},
     {"MKSPP_ReWeight", kFitSyst, kContinuous, kFakeDataRange},
     {"E2p2h_A_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"E2p2h_B_nu", kFitSyst, kExtrapolated, kStandardRange},
@@ -94,7 +103,9 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
     {"nuenuebar_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
     {"nuenumu_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
     {"SPPLowQ2Suppression", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kFakeDataRange}};
+    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kFakeDataRange},
+    {"MissingProtonFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange},
+    {"NuWroReweightFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange}};
 
 /// All dial names that should go into a state file
 std::vector<std::string> const &GetAllXSecSystNames() {

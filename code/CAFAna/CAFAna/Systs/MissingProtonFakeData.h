@@ -82,7 +82,7 @@ public:
                             : "MissingProtonEnergyGenerator",
                    DoWeight ? "MissingProtonFakeDataGenerator"
                             : "MissingProtonEnergyGenerator", false, 0, 1),
-        EpFrac(epfrac), fDoWeight(DoWeight) {
+        fDoWeight(DoWeight), EpFrac(epfrac) {
 
     bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_FHC());
     bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_RHC());
@@ -90,8 +90,3 @@ public:
   }
   double EpFrac;
 };
-
-std::vector<const ana::ISyst *> GetMissingProtonEnergyFakeDataSyst() {
-  static MissingProtonFakeDataGenerator mpfd;
-  return {&mpfd};
-}

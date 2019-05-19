@@ -334,8 +334,11 @@ namespace ana
 
       for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
         const int Nuniv = XSSyst_size_tmp[syst_it];
-        assert(Nuniv >= 0 && Nuniv <= int(XSSyst_tmp[syst_it].size()));
-        sr.dune.xsSyst_wgt[syst_it].resize(Nuniv);
+        if(!Nuniv){
+          continue;
+        }
+
+        assert(Nuniv <= int(XSSyst_tmp[syst_it].size()));
 
         if (IsDoNotIncludeSyst(syst_it)) { // Multiply CV weight back into
                                           // response splines.
@@ -351,7 +354,6 @@ namespace ana
             }
           }
         } else { // Include CV weight in the total
-
           // Do some error checking here
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
@@ -364,9 +366,9 @@ namespace ana
           }
         }
 
-        for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
-          sr.dune.xsSyst_wgt[syst_it][univ_it] = XSSyst_tmp[syst_it][univ_it];
-        }
+        sr.dune.xsSyst_wgt[syst_it].clear();
+        std::copy(XSSyst_tmp[syst_it].begin(), XSSyst_tmp[syst_it].end(),
+                  std::back_inserter(sr.dune.xsSyst_wgt[syst_it]));
       }
 
 

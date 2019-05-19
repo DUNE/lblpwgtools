@@ -324,9 +324,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 
   if (xsecsyst) {
     std::vector<const ISyst *> xseclist =
-        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties,
-                     true); // the trailing true says on/off dials should
-                            // extrapolate to -1 rather than mirror.
+        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
 
     // Always remove these dials
@@ -337,11 +335,6 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
       KeepSysts(xseclist, GetFakeDataGenerationSystNames());
       systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
     }
-  }
-
-  if(useFakeDataDials){
-    systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
-    systlist.push_back(GetNuWroReweightFakeDataSyst().front());
   }
 
   // For now, hard code this part... too many damned scripts to change...
