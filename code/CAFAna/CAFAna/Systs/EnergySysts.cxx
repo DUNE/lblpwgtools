@@ -38,6 +38,17 @@ namespace ana {
   const ChargedHadResNDSyst kChargedHadResNDSyst;
   const NResNDSyst kNResNDSyst;
 
+  const UncorrFDTotLinSyst kUncorrFDTotLinSyst;
+  const UncorrFDTotSqrtSyst kUncorrFDTotSqrtSyst;
+  const UncorrFDMuLinSyst kUncorrFDMuLinSyst;
+  const UncorrFDMuSqrtSyst kUncorrFDMuSqrtSyst;
+  const UncorrFDHadLinSyst kUncorrFDHadLinSyst;
+  const UncorrFDHadSqrtSyst kUncorrFDHadSqrtSyst;
+  const UncorrFDNLinSyst kUncorrFDNLinSyst;
+  const UncorrFDNSqrtSyst kUncorrFDNSqrtSyst;
+  const UncorrFDEMLinSyst kUncorrFDEMLinSyst;
+  const UncorrFDEMSqrtSyst kUncorrFDEMSqrtSyst;
+
   EnergySystVector GetEnergySysts()
   {
     EnergySystVector vec;
@@ -68,6 +79,17 @@ namespace ana {
     vec.push_back(&kUncorrNDHadSqrtSyst);
     vec.push_back(&kUncorrNDPi0SqrtSyst);
     vec.push_back(&kUncorrNDNSqrtSyst);
+
+    vec.push_back(&kUncorrFDTotLinSyst);
+    vec.push_back(&kUncorrFDTotSqrtSyst);
+    vec.push_back(&kUncorrFDMuLinSyst);
+    vec.push_back(&kUncorrFDMuSqrtSyst);
+    vec.push_back(&kUncorrFDHadLinSyst);
+    vec.push_back(&kUncorrFDHadSqrtSyst);
+    vec.push_back(&kUncorrFDNLinSyst);
+    vec.push_back(&kUncorrFDNSqrtSyst);
+    vec.push_back(&kUncorrFDEMLinSyst);
+    vec.push_back(&kUncorrFDEMSqrtSyst);
 
     return vec;
   }
