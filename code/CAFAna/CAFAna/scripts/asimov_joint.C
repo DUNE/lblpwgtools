@@ -139,7 +139,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string penaltyString="",
 		  int hie = 1,
 		  std::string asimov_set="0",
-		  bool useProtonFakeData=false){
+		  std::string fakeDataShift=""){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);  
@@ -180,10 +180,10 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
   
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
-  SystShifts trueSyst = kNoShift;
-  if (useProtonFakeData) {
-    trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(), 1);
-  }
+  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
+  // if (useProtonFakeData) {
+  //   trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(), 1);
+  // }
   SystShifts testSyst = kNoShift;
   
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
