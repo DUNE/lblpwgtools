@@ -1,6 +1,8 @@
-#include "CAFAna/Systs/XSecSysts.h"
+#include "CAFAna/Core/ModeConversionUtilities.h"
+
 #include "CAFAna/Systs/MissingProtonFakeData.h"
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
+#include "CAFAna/Systs/XSecSysts.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -15,21 +17,19 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
 
   // First time hook up known fake data dial IDs, logic then in switch
   // statement.
-
-  int Mnv2p2hGaussEnhancement_id = 0;
-  int Mnv2p2hGaussEnhancement_NN_id = 0;
-  int Mnv2p2hGaussEnhancement_2p2h_id = 0;
-  int Mnv2p2hGaussEnhancement_1p1h_id = 0;
-  int MKSPP_ReWeight_id = 0;
-  int SPPLowQ2Suppression_id = 0;
-  int FSILikeEAvailSmearing_id = 0;
-  int MissingProtonFakeData_id = 0;
-  int NuWroReweightFakeData_id = 0;
+  static int Mnv2p2hGaussEnhancement_id = 0;
+  static int Mnv2p2hGaussEnhancement_NN_id = 0;
+  static int Mnv2p2hGaussEnhancement_2p2h_id = 0;
+  static int Mnv2p2hGaussEnhancement_1p1h_id = 0;
+  static int MKSPP_ReWeight_id = 0;
+  static int SPPLowQ2Suppression_id = 0;
+  static int FSILikeEAvailSmearing_id = 0;
+  static int MissingProtonFakeData_id = 0;
+  static int NuWroReweightFakeData_id = 0;
 
   static bool first = true;
   if (first) {
     first = false;
-
     Mnv2p2hGaussEnhancement_id = GetXSecSystIndex("Mnv2p2hGaussEnhancement");
     Mnv2p2hGaussEnhancement_NN_id =
         GetXSecSystIndex("Mnv2p2hGaussEnhancement_NN");
@@ -45,17 +45,49 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   }
 
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
-    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][1];
+    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4];
+    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4] != 1) {
+    //   std::cout << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_NN = "
+    //             << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4]
+    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
   } else if (fID == Mnv2p2hGaussEnhancement_2p2h_id) {
-    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2];
-  } else if (fID == Mnv2p2hGaussEnhancement_1p1h_id) {
     weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3];
+    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3] != 1) {
+    //   std::cout
+    //       << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_2p2h = "
+    //       << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3]
+    //       << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
+  } else if (fID == Mnv2p2hGaussEnhancement_1p1h_id) {
+    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2];
+    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2] != 1) {
+    //   std::cout
+    //       << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_1p1h = "
+    //       << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2]
+    //       << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
   } else if (fID == MKSPP_ReWeight_id) {
-    weight *= sr->dune.xsSyst_wgt[fID][3];
+    weight *= sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2];
+    // if (sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2] != 1) {
+    //   std::cout << "[INFO]: Fake data Weight for MKSPP_ReWeight = "
+    //             << sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2]
+    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
   } else if (fID == SPPLowQ2Suppression_id) {
-    weight *= sr->dune.xsSyst_wgt[fID][3];
+    weight *= sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2];
+    // if (sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2] != 1) {
+    //   std::cout << "[INFO]: Fake data Weight for SPPLowQ2Suppression = "
+    //             << sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2]
+    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
   } else if (fID == FSILikeEAvailSmearing_id) {
-    weight *= sr->dune.xsSyst_wgt[fID][3];
+    weight *= sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2];
+    // if (sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2] != 1) {
+    //   std::cout << "[INFO]: Fake data Weight for FSILikeEAvailSmearing = "
+    //             << sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2]
+    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
+    // }
   } else if (fID == MissingProtonFakeData_id) {
     mpfd.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
@@ -71,7 +103,6 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
   if (sr->dune.xsSyst_wgt[0].empty()) {
     return;
   }
-
   if (fabs(sigma) < 1E-5) {
     return;
   }
