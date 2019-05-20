@@ -109,6 +109,7 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
 
   if (IsFakeDataGenerationSyst(
           fID)) { // Separate out hard coded logic for fake data dials.
+    assert(fabs(sigma - 1) < 1E-5);
     FakeDataDialShift(sigma, restore, sr, weight);
     return;
   }
@@ -127,15 +128,17 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
 
   double fact = 1;
   if (IsExtrapolatedSyst) {
+
     double diff = sigma / spacing;
 
-    double low_weight = sr->dune.xsSyst_wgt[fID][2];
-    double high_weight = sr->dune.xsSyst_wgt[fID][3];
+    double weight_at_cv = 1;
+    double weight_at_one_sig = sr->dune.xsSyst_wgt[fID][4];
 
-    double dx = sigma;
-    double dy = ((low_weight + (high_weight - low_weight) * diff) - 1);
+    double dx = 1;
+    double dy = weight_at_one_sig - weight_at_cv;
 
-    fact = 1 + (dy / dx) * sigma;
+    // y = m*x + c
+    fact =  (dy / dx) * sigma + weight_at_cv;
 
   } else {
     double diff = (sigma - double(low_index)) / spacing;
