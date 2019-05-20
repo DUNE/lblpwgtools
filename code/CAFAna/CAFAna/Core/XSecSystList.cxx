@@ -183,7 +183,6 @@ std::vector<std::string> const &GetFakeDataGenerationSystNames() {
 }
 
 int GetXSecSystIndex(std::string const &name) {
-
   static std::map<std::string, int> cache;
   if (!cache.count(name)) {
     int found = -1;
@@ -198,6 +197,7 @@ int GetXSecSystIndex(std::string const &name) {
   }
   return cache[name];
 }
+
 std::string GetXSecSystName(int index) {
   assert((index >= 0) && (index < int(XSecSystDials.size())));
   return XSecSystDials[index].Name;
