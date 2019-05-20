@@ -203,7 +203,7 @@ const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dun
 #endif
 
 bool const UseOffAxisFluxUncertainties = false; //true;
-size_t const NFluxParametersToUse = 10; //30;
+size_t const NFluxParametersToUse = 13; //30;
 
 double GetBoundedGausThrow(double min, double max){
   double val = -999;
@@ -301,7 +301,8 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
 					 bool useMissingProtonFakeData=true, 
-					 bool useNuWroFakeData=true, bool removeNonFitDials=true){
+					 bool useNuWroFakeData=true, bool removeNonFitDials=true,
+					 bool removeFDNonFitDials = false){
 
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
@@ -347,12 +348,21 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
                  "MuonResND", "EMResND", "ChargedHadResND",
                  "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", "UncorrNDNLinSyst",
                  "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst",
-		 "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst",
-		 "eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", 
-		 "MuonResFD", "EMResFD", "ChargedHadResFD"});
+		 "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
 
     RemoveSysts(systlist, GetGenieBadDialList());
     RemoveSysts(systlist, GetGenieDoNotFitList());
+  }
+  // If we want to use the FD energy scale covariance matrix need to remove 
+  // all FD escale and resolution systematics
+  if (removeFDNonFitDials) {
+    RemoveSysts(systlist,
+		{"eScaleFD", "UncorrFDTotLinSyst", "UncorrFDTotSqrtSyst",
+		 "ChargedHadUncorrFD", "UncorrFDHadLinSyst", "UncorrFDHadSqrtSyst",
+		 "eScaleMuLArFD", "UncorrFDMuLinSyst", "UncorrFDMuSqrtSyst", 
+		 "EMUncorrFD", "UncorrFDEMLinSyst", "UncorrFDEMSqrtSyst", 
+		 "eScaleN_FD", "UncorrFDNLinSyst", "UncorrFDNSqrtSyst",
+		 "EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD"});
   }
 
   return systlist;

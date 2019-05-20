@@ -678,18 +678,16 @@ namespace ana
                   sr->dune.RecoHadEnNumu,
                   sr->dune.RecoHadEnNue);
 
-      const double scale = 1. + 0.02*sigma;
+      const double scale = 1. + 0.05*sigma;
       
       if(sr->dune.isFD) { 
 	const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
-
-	const double fracE = sumE / sr->dune.Ev;
-	const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
-
-	sr->dune.Ev_reco_numu = sr->dune.Ev_reco_numu * (fracE * scale + (1 - fracE));
-	sr->dune.Ev_reco_nue = sr->dune.Ev_reco_nue * (fracE * scale + (1 - fracE));
-	sr->dune.RecoHadEnNumu = sr->dune.RecoHadEnNumu * (fracEY * scale + (1 - fracEY));
-	sr->dune.RecoHadEnNue = sr->dune.RecoHadEnNue * (fracEY * scale + (1 - fracEY));
+	//	const double fracE = sumE / sr->dune.Ev;
+	//	const double fracEY = sumE / (sr->dune.Ev * sr->dune.Y);
+	sr->dune.Ev_reco_numu += sumE * scale;
+	sr->dune.Ev_reco_nue  += sumE * scale;
+	sr->dune.RecoHadEnNumu += sumE * scale;
+	sr->dune.RecoHadEnNue  += sumE * scale;
       }
     }
   };
