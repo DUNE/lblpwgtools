@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
 
 #Use the compilers found in the path
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
@@ -35,6 +35,8 @@ elseif(NOT DEFINED USED_UPS)
   set(USED_UPS "0")
 endif()
 
+set(VERBOSE true)
+
 cmessage(STATUS "CMAKE_INSTALL_PREFIX: \"${CMAKE_INSTALL_PREFIX}\"")
 cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 
@@ -43,6 +45,7 @@ cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 ################################################################################
 
 ##################################  ROOT  ######################################
+set(USE_MINIMIZER 1)
 include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
 
 #Want this after fhiclcpp which will add the install directory
