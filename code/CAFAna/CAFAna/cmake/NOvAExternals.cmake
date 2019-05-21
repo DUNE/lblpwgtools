@@ -42,6 +42,9 @@ PrefixList(GSL_INC_STR "-I" ${GSL_INC})
 PrefixList(GSL_LIB_DIR_STR "-L" ${GSL_LIB})
 PrefixList(GSL_LIBS_STR "-l" ${GSL_LIB_LIST})
 
+LIST(APPEND EXTERNAL_LINK_DIRS ${GSL_LIB})
+LIST(APPEND EXTERNAL_LIBS ${GSL_LIB_LIST})
+
 ################################################################################
 
 
@@ -95,7 +98,7 @@ install(FILES ${OscLib_header_files} DESTINATION include/OscLib/func)
 
 ##### Utilities
 
-###############################  GSL  ######################################
+###############################  CLHEP  ######################################
 if(NOT DEFINED CLHEP_PREFIX OR CLHEP_PREFIX STREQUAL "")
 
   SET(CLHEP_CONFIG "CLHEP_CONFIG-NOTFOUND")
@@ -113,6 +116,9 @@ if(NOT DEFINED CLHEP_PREFIX OR CLHEP_PREFIX STREQUAL "")
   string(REPLACE "\"" "" CLHEP_PREFIX ${CLHEP_PREFIX})
 
 endif()
+
+LIST(APPEND EXTERNAL_LINK_DIRS ${CLHEP_PREFIX}/lib)
+LIST(APPEND EXTERNAL_LIBS CLHEP)
 
 set(Utilities_implementation_files
   ${CMAKE_BINARY_DIR}/Ext/Utilities/func/MathUtil.cxx

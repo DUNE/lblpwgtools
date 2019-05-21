@@ -114,7 +114,7 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
     yVal = plotVarVect[2];
     plotVarVect.pop_back();
   }
-  
+
   if (plotVarVect.size() == 1)
     returnHist = new TH1D(plotVarVect[0].c_str(),
                           (plotVarVect[0] + ";" + plotVarVect[0]).c_str(),
@@ -127,23 +127,33 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
                           nBinsX, minX, maxX, nBinsY, minY, maxY);
 
   // if (not yVal.empty()) returnHist->SetName((plotVarVect[0] + "_" + plotVarVect[1]+"_"+yVal).c_str());
-  
+
   return returnHist;
 }
 
+char const *def_stateFname = "common_state_mcc11v3_broken.root";
+char const *def_outputFname = "asimov_test.root";
+char const *def_plotVars = "th13:deltapi";
+char const *def_systSet = "nosyst";
+char const *def_sampleString = "ndfd";
+char const *def_penaltyString = "";
+int const def_hie = 1;
+char const *def_asimov_set = "0";
+char const *def_fakeDataShift = "";
+
 // Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23, dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
-void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
-		  std::string outputFname="asimov_test.root",
-		  std::string plotVars="th13:deltapi",
-		  std::string systSet = "nosyst",
-		  std::string sampleString="ndfd",
-		  std::string penaltyString="",
-		  int hie = 1,
-		  std::string asimov_set="0",
-		  std::string fakeDataShift=""){
+void asimov_joint(std::string stateFname=def_stateFname,
+		  std::string outputFname=def_outputFname,
+		  std::string plotVars=def_plotVars,
+		  std::string systSet = def_systSet,
+		  std::string sampleString=def_sampleString,
+		  std::string penaltyString=def_penaltyString,
+		  int hie = def_hie,
+		  std::string asimov_set=def_asimov_set,
+		  std::string fakeDataShift=def_fakeDataShift){
 
   gROOT->SetBatch(1);
-  gRandom->SetSeed(0);  
+  gRandom->SetSeed(0);
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
@@ -176,23 +186,23 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 
   FitTreeBlob asimov_tree("asimov_tree");
   asimov_tree.throw_tree->SetDirectory(fout);
-  
+
   // This remains the same throughout... there is one true parameter set for this Asimov set
   osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
-  
+
   // Save the true information
   SaveTrueOAParams(fout, trueOsc);
 
   // Start by performing a minimization across the whole space, this defines the minimum chi2!
   osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
-  
+
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   // if (useProtonFakeData) {
   //   trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(), 1);
   // }
   SystShifts testSyst = kNoShift;
-  
+
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
   std::map<const IFitVar*, std::vector<double>> oscSeedsAll = {};
   oscSeedsAll[&kFitSinSqTheta23] = {.4, .6};
@@ -204,24 +214,24 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") == plotVarVect.end())
     oscSeeds[&kFitSinSqTheta23] = {.4, .6};
-  
-  
+
+
   double globalmin = RunFitPoint(stateFname, sampleString,
 				 trueOsc, trueSyst, false,
 				 oscVarsAll, systlist,
 				 testOsc, testSyst,
 				 oscSeedsAll, penalty_nom,
 				 Fitter::kNormal, nullptr);
-  delete penalty_nom;  
+  delete penalty_nom;
   std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
-  
+
   // Need to set up the histogram to fill
   TH1 *sens_hist = GetAsimovHist(plotVarVect);
   if (!sens_hist) {
     std::cout << "ERROR: sens_hist not correctly produced!" << std::endl;
     abort();
   }
-  
+
   int yMin = 0;
   int yMax = sens_hist->GetNbinsY();
 
@@ -229,7 +239,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     yMin = yVal;
     yMax = yVal+1;
   }
-  
+
   // Now loop over the bins in both x and y (if 1D, one loop does nothing)
   for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
 
@@ -237,13 +247,13 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     // If yVal is set, only scan over that value... serialise these
     for (int yBin = yMin; yBin < yMax; ++yBin){
       double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin+1);
-      
+
       osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
       if (plotVarVect.size() > 0)
 	SetOscillationParameter(testOsc, plotVarVect[0], xCenter, hie);
       if (plotVarVect.size() > 1)
 	SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
-      
+
       IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
       double chisqmin = RunFitPoint(stateFname, sampleString,
@@ -268,7 +278,7 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
       delete penalty;
     }
   }
-  
+
   // Save the histogram, and do something sensible with the name
   fout->cd();
   sens_hist->Write();
@@ -276,3 +286,20 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   fout->Close();
   delete sens_hist;
 }
+
+#ifndef __CINT__
+int main(int argc, char const *argv[]) {
+  std::string stateFname = (argc > 1) ? argv[1] : def_stateFname;
+  std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
+  std::string plotVars = (argc > 3) ? argv[3] : def_plotVars;
+  std::string systSet = (argc > 4) ? argv[4] : def_systSet;
+  std::string sampleString = (argc > 5) ? argv[5] : def_sampleString;
+  std::string penaltyString = (argc > 6) ? argv[6] : def_penaltyString;
+  int hie = (argc > 7) ? atoi(argv[7]) : def_hie;
+  std::string asimov_set = (argc > 8) ? argv[8] : def_asimov_set;
+  std::string fakeDataShift = (argc > 9) ? argv[9] : def_fakeDataShift;
+
+  asimov_joint(stateFname, outputFname, plotVars, systSet, sampleString,
+               penaltyString, hie, asimov_set, fakeDataShift);
+}
+#endif
