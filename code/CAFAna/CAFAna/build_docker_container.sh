@@ -9,7 +9,10 @@ echo -e '#!/bin/bash\nsource /opt/lblpwgtools/code/CAFAna/CAFAna/build/Linux/CAF
 sudo docker rm CAFAnaCENTOS7
 
 sudo docker run --name CAFAnaCENTOS7 -v /cvmfs:/cvmfs:shared -v $(pwd):/build_scripts  centos:latest bash /build_scripts/CAFBuildScript.sh
-sudo docker commit CAFAnaCENTOS7 cafana/centos7
+REV=$(sudo docker run --rm -v /cvmfs:/cvmfs:shared cafana/centos7 bash -c "source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh &> /dev/null; cd /opt/lblpwgtools;git rev-parse --short HEAD")
+sudo docker commit CAFAnaCENTOS7 cafana_dune:$REV
+sudo docker rmi cafana_dune:latest
+sudo docker commit CAFAnaCENTOS7 cafana_dune:latest
 
   if [ "$1" == "build" ]; then
     shift;
@@ -19,11 +22,17 @@ fi
 
 if [ "$1" == "test" ]; then
   mkdir -p workdir
-  sudo docker run -v /cvmfs:/cvmfs:shared -v $(pwd)/statefiles:/statefiles:shared -v $(pwd)/workdir:/workdir:shared --rm cafana/centos7 ./CAFEnvWrapper.sh \
-    asimov_joint /statefiles/common_state_mcc11v3  \
-      asimov_test.root \
-      deltapi \
-      nosyst \
-      fd
+  sudo docker run \
+    -v /cvmfs:/cvmfs:shared \
+    -v $(pwd)/statefiles:/statefiles:shared \
+    -v $(pwd)/workdir:/workdir:shared \
+    --rm \
+    cafana_dune:latest \
+      ./CAFEnvWrapper.sh asimov_joint \
+        /statefiles/common_state_mcc11v3  \
+        asimov_test.root \
+        deltapi \
+        nosyst \
+        fd
 fi
 
