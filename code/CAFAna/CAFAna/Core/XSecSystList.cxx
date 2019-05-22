@@ -66,7 +66,7 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
      kFakeDataRange},
     {"Mnv2p2hGaussEnhancement_1p1h", kUsedAsFakeData, kContinuous,
      kFakeDataRange},
-    {"MKSPP_ReWeight", kFitSyst, kContinuous, kFakeDataRange},
+    {"MKSPP_ReWeight", kUsedAsFakeData, kContinuous, kFakeDataRange},
     {"E2p2h_A_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"E2p2h_B_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"E2p2h_A_nubar", kFitSyst, kExtrapolated, kStandardRange},
