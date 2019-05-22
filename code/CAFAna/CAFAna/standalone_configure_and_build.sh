@@ -5,6 +5,7 @@ USE_UPS="0"
 CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
+INSTALL_DIR=""
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -48,6 +49,18 @@ while [[ ${#} -gt 0 ]]; do
       shift # past argument
       ;;
 
+      -I|--install-to)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      INSTALL_DIR="$2"
+      echo "[OPT]: Will install to \"${INSTALL_DIR}\"."
+      shift # past argument
+      ;;
+
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
@@ -56,6 +69,7 @@ while [[ ${#} -gt 0 ]]; do
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
+      echo -e "\t-I|--install-to        : Directory to install to."
       echo -e "\t-?|--help              : Print this message."
       exit 0
       ;;
@@ -118,5 +132,5 @@ else
 
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_DIR=${INSTALL_DIR}
 make install -j ${CORES}
