@@ -478,15 +478,17 @@ std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 }
 
 SystShifts GetFakeDataGeneratorSystShift(std::string input){
-  
-  std::vector<std::string> fake_data_names = SplitString(input, ':');
-  
+
   // Default to nominal
   SystShifts thisShift = kNoShift;
 
+  if (input.empty() || input == "nominal") return thisShift;
+  
+  std::vector<std::string> fake_data_names = SplitString(input, ':');
+  
   // Check nobody did anything dumb...
   // This is for you LUUK
-  for (auto name : fake_data_names) {assert(IsFakeDataGenerationSyst(name));}
+  for (auto name : fake_data_names) assert(IsFakeDataGenerationSyst(name));
     
   std::vector<ISyst const *> FDSyst = GetListOfSysts();
   KeepSysts(FDSyst, fake_data_names);
