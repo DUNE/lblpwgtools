@@ -286,6 +286,9 @@ void asimov_joint(std::string stateFname=def_stateFname,
 
 #ifndef __CINT__
 int main(int argc, char const *argv[]) {
+
+  gROOT->SetMustClean(false);
+
   std::string stateFname = (argc > 1) ? argv[1] : def_stateFname;
   std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
   std::string plotVars = (argc > 3) ? argv[3] : def_plotVars;

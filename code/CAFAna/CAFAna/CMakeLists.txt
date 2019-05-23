@@ -21,6 +21,13 @@ elseif(NOT DEFINED CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE DEBUG)
 endif()
 
+if(KNL STREQUAL "")
+  set(KNL FALSE)
+elseif(NOT DEFINED KNL)
+  set(KNL FALSE)
+endif()
+
+
 SET(BUILD_DEBUG_MSGS TRUE)
 include(${CMAKE_SOURCE_DIR}/cmake/cmessage.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/SupportSourceCheck.cmake)

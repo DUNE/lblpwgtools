@@ -23,6 +23,10 @@ set(CXX_WARNINGS -Wall -Wextra -Wno-unused-result)
 
 LIST(APPEND EXTRA_CXX_FLAGS ${CXX_WARNINGS} -Werror -Wno-delete-non-virtual-dtor -Wno-unused "-D__FILENAME__=\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"")
 
+if(KNL)
+  LIST(APPEND EXTRA_CXX_FLAGS -march=knl)
+endif()
+
 BuildFlagString(NUISANCE_LINK_DIRS "-L" ${EXTRA_LINK_DIRS})
 
 LIST(APPEND EXTRA_LIBS dl)
@@ -50,6 +54,7 @@ if (VERBOSE)
   cmessage (STATUS "    Flags         : ${NUISANCE_CXX_FLAGS}")
   cmessage (STATUS "    Release Flags : ${CMAKE_CXX_FLAGS_RELEASE}")
   cmessage (STATUS "    Debug Flags   : ${CMAKE_CXX_FLAGS_DEBUG}")
+  cmessage (STATUS "    RelDeb Flags  : ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   cmessage (STATUS "    Include Dirs  : ${NUISANCE_INCLUDE_DIRS}")
   cmessage (STATUS "    Linker Flags  : ${CMAKE_LINK_FLAGS}")
   cmessage (STATUS "    Link Dirs     : ${NUISANCE_LINK_DIRS}")

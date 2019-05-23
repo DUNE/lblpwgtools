@@ -1,15 +1,27 @@
 #include "common_fit_definitions.C"
 
+char const *def_stateFname = "common_state_mcc11v3.root";
+char const *def_outputFname = "throws_ndfd_nosyst.root";
+int const def_nthrows = 100;
+char const *def_systSet = "nosyst";
+char const *def_sampleString = "ndfd";
+char const *def_throwString = "stat:fake:start";
+char const *def_penaltyString = "nopen";
+int const def_hie = 1;
+char const *def_asimov_set = "0";
+char const *def_oscVarString = "th13:deltapi:th23:dmsq32";
+
+
 // Need to accept filename, ND/FD, systs and reload as arguments
-void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
-                     std::string outputFname = "throws_ndfd_nosyst.root",
-                     int nthrows = 100, std::string systSet = "nosyst",
-                     std::string sampleString = "ndfd",
-                     std::string throwString = "stat:fake:start",
-                     std::string penaltyString = "nopen",
-                     int hie=1,
-		     std::string asimov_set="0",
-		     std::string oscVarString = "th13:deltapi:th23:dmsq32") {
+void make_toy_throws(std::string stateFname = def_stateFname,
+                     std::string outputFname = def_outputFname,
+                     int nthrows = def_nthrows, std::string systSet = def_systSet,
+                     std::string sampleString = def_sampleString,
+                     std::string throwString = def_throwString,
+                     std::string penaltyString = def_penaltyString,
+                     int hie=def_hie,
+		     std::string asimov_set=def_asimov_set,
+		     std::string oscVarString = def_oscVarString) {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -30,7 +42,7 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
   if (sampleString.find("fd") != std::string::npos) {
-    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants                                                                                                              
+    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   }
 
@@ -47,17 +59,17 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
-    
+
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
     else fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
-      
+
     // Now deal with systematics
     if (fakenuis_throw and not central_throw){
       for (auto s : systlist)
 	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     } else fakeThrowSyst = kNoShift;
- 
+
     if (central_throw){
       for (auto s : systlist)
 	s->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -93,3 +105,24 @@ void make_toy_throws(std::string stateFname = "common_state_mcc11v3.root",
   fout->Write();
   fout->Close();
 }
+
+#ifndef __CINT__
+int main(int argc, char const *argv[]) {
+
+  gROOT->SetMustClean(false);
+
+  std::string stateFname = (argc > 1) ? argv[1] : def_stateFname;
+  std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
+  int nthrows = (argc > 3) ? atoi(argv[3]) : def_nthrows;
+  std::string systSet = (argc > 4) ? argv[4] : def_systSet;
+  std::string sampleString = (argc > 5) ? argv[5] : def_sampleString;
+  std::string throwString = (argc > 6) ? argv[6] : def_throwString;
+  std::string penaltyString = (argc > 7) ? argv[7] : def_penaltyString;
+  int hie = (argc > 8) ? atoi(argv[8]) : def_hie;
+  std::string asimov_set = (argc > 9) ? argv[9] : def_asimov_set;
+  std::string oscVarString = (argc > 10) ? argv[10] : def_oscVarString;
+
+  make_toy_throws(stateFname, outputFname, nthrows, systSet, sampleString,
+                  throwString, penaltyString, hie, asimov_set, oscVarString);
+}
+#endif

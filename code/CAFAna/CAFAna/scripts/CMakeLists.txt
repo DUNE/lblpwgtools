@@ -6,7 +6,6 @@ set(scripts_to_install
   cpv_joint.C
   llh_scans.C
   make_cpv_throws.C
-  make_toy_throws.C
   make_octant_throws.C
   make_mh_throws.C
   mh_joint.C
@@ -16,6 +15,7 @@ set(scripts_to_install
 
 set(scripts_to_build
   asimov_joint
+  make_toy_throws
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
