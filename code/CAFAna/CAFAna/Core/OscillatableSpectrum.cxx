@@ -169,7 +169,7 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    fHist = HistCache::Copy(rhs.fHist);
+    fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
 
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
@@ -213,7 +213,7 @@ namespace ana
     DontAddDirectory guard;
 
     HistCache::Delete(fHist);
-    fHist = HistCache::Copy(rhs.fHist);
+    fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
     fLabels = rhs.fLabels;

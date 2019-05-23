@@ -109,6 +109,14 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
+  TH2D* HistCache::Copy(const TH2D* h, const Binning& xbins, const Binning& ybins)
+  {
+    TH2D* ret = NewTH2D(h->GetTitle(), xbins, ybins);
+    *ret = *h;
+    return ret;
+  }
+
+  //---------------------------------------------------------------------
   void HistCache::Delete(TH1D*& h, int binid)
   {
     if(!h) return;

@@ -48,6 +48,7 @@ namespace ana
     static TH2D* NewTH2D(const std::string& title, const Binning& xbins, const Binning& ybins);
     static TH2D* NewTH2D(const std::string& title, const TAxis* xbins, const TAxis* ybins);
     static TH2D* Copy(const TH2D* h);
+    static TH2D* Copy(const TH2D* h, const Binning& xbins, const Binning& ybins);
 
     static void Delete(TH1D*& h, int binid = -1);
     static void Delete(TH2D*& h, int binidx = -1, int binidy = -1);
