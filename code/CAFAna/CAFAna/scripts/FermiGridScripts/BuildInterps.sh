@@ -77,20 +77,20 @@ cp ${CAFANA}/scripts/remake_inputs.C .
 
 echo "Building interps @ $(date)"
 
-echo "cafe -q -b remake_inputs.C common_state_mcc11v3_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v3_${SAMPLE_NAME}.log"
-cafe -q -b remake_inputs.C common_state_mcc11v3_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v3_${SAMPLE_NAME}.log
+echo "cafe -q -b remake_inputs.C common_state_mcc11v4_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v4_${SAMPLE_NAME}.log"
+cafe -q -b remake_inputs.C common_state_mcc11v4_${SAMPLE_NAME}.root ${SAMPLE_NAME} ${NMAX_EVENTS} ${AXBLOBNAME} &> common_state_mcc11v4_${SAMPLE_NAME}.log
 
 echo "Copying output @ $(date)"
 
-echo "ifdh cp -D $IFDH_OPTION common_state_mcc11v3_${SAMPLE_NAME}.log ${PNFS_OUTDIR}/"
-ifdh cp -D $IFDH_OPTION common_state_mcc11v3_${SAMPLE_NAME}.log ${PNFS_OUTDIR}/
+echo "ifdh cp -D $IFDH_OPTION common_state_mcc11v4_${SAMPLE_NAME}.log ${PNFS_OUTDIR}/"
+ifdh cp -D $IFDH_OPTION common_state_mcc11v4_${SAMPLE_NAME}.log ${PNFS_OUTDIR}/
 
-if [ ! -e common_state_mcc11v3_${SAMPLE_NAME}.root ]; then
+if [ ! -e common_state_mcc11v4_${SAMPLE_NAME}.root ]; then
   echo "[ERROR]: Failed to produce expected output file."
   exit 1
 fi
 
-echo "ifdh cp -D $IFDH_OPTION common_state_mcc11v3_${SAMPLE_NAME}.root ${PNFS_OUTDIR}/"
-ifdh cp -D $IFDH_OPTION common_state_mcc11v3_${SAMPLE_NAME}.root ${PNFS_OUTDIR}/
+echo "ifdh cp -D $IFDH_OPTION common_state_mcc11v4_${SAMPLE_NAME}.root ${PNFS_OUTDIR}/"
+ifdh cp -D $IFDH_OPTION common_state_mcc11v4_${SAMPLE_NAME}.root ${PNFS_OUTDIR}/
 
 echo "All stop @ $(date)"
