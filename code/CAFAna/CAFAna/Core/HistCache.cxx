@@ -8,8 +8,8 @@
 
 namespace ana
 {
-  std::multimap<int, std::unique_ptr<TH1D>> HistCache::fgMap;
-  std::multimap<std::pair<int, int>, std::unique_ptr<TH2D>> HistCache::fgMap2D;
+  std::unordered_multimap<int, std::unique_ptr<TH1D>> HistCache::fgMap;
+  std::unordered_multimap<std::pair<int, int>, std::unique_ptr<TH2D>> HistCache::fgMap2D;
 
   int HistCache::fgOut = 0;
   int HistCache::fgIn = 0;
