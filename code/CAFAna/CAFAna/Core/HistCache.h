@@ -10,6 +10,17 @@ class TAxis;
 class TH1D;
 class TH2D;
 
+namespace std
+{
+  template<> struct hash<std::pair<int, int>>
+  {
+    size_t operator()(const std::pair<int, int>& p) const
+    {
+      return 65536 * p.first + p.second;
+    }
+  };
+}
+
 namespace ana
 {
   /// \brief Helper for \ref Spectrum
@@ -46,8 +57,8 @@ namespace ana
     static void CheckMemoryUse();
 
     // Key to the maps is Binning::ID()
-    static std::multimap<int, std::unique_ptr<TH1D>> fgMap;
-    static std::multimap<std::pair<int, int>, std::unique_ptr<TH2D>> fgMap2D;
+    static std::unordered_multimap<int, std::unique_ptr<TH1D>> fgMap;
+    static std::unordered_multimap<std::pair<int, int>, std::unique_ptr<TH2D>> fgMap2D;
 
     static int fgOut, fgIn;
 
