@@ -233,7 +233,7 @@ namespace ana
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveSpectrum(this); }
 
-    HistCache::Delete(fHist, Bins1D().ID());
+    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
 
     delete fHistSparse;
   }
@@ -291,7 +291,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    HistCache::Delete(fHist, Bins1D().ID());
+    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
     delete fHistSparse;
 
     assert(rhs.fHist || rhs.fHistSparse);
@@ -321,7 +321,7 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
-    HistCache::Delete(fHist, Bins1D().ID());
+    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
     delete fHistSparse;
 
     assert(rhs.fHist || rhs.fHistSparse);
@@ -903,6 +903,8 @@ namespace ana
   //----------------------------------------------------------------------
   Binning Spectrum::Bins1D() const
   {
+    assert(!fBins.empty());
+
     Binning bins1D = fBins[0];
     if(fBins.size() > 1){
       int n = 1;
