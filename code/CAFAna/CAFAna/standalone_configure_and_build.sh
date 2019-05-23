@@ -6,6 +6,7 @@ CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
 INSTALL_DIR=""
+USE_KNL="0"
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -36,6 +37,17 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile release build type."
       ;;
 
+      --rdb)
+
+      CMAKE_BUILD_TYPE="RELWITHDEBINFO"
+      echo "[OPT]: Will compile release with debug build type."
+      ;;
+
+      --knl)
+
+      USE_KNL="1"
+      echo "[OPT]: Will compile for KNL arch."
+      ;;
 
       -j|--n-cores)
 
@@ -132,5 +144,5 @@ else
 
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL}
 make install -j ${CORES}
