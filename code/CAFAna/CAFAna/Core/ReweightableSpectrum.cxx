@@ -608,6 +608,8 @@ void ReweightableSpectrum::Scale(double scale) { fHist->Scale(scale); }
   //----------------------------------------------------------------------
   Binning ReweightableSpectrum::Bins1DX() const
   {
+    assert(!fBins.empty());
+
     Binning xbins = fBins[0];
     if(fBins.size() > 1){
       int n = 1;

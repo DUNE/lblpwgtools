@@ -210,7 +210,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    HistCache::Delete(fHist, Bins1DX().ID());
+    if(fHist) HistCache::Delete(fHist, Bins1DX().ID());
     fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
@@ -236,7 +236,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    HistCache::Delete(fHist, Bins1DX().ID());
+    if(fHist) HistCache::Delete(fHist, Bins1DX().ID());
     fHist = rhs.fHist;
     rhs.fHist = 0;
     fPOT = rhs.fPOT;
