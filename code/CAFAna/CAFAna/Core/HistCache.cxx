@@ -93,6 +93,14 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
+  TH1D* HistCache::Copy(const TH1D* h, const Binning& bins)
+  {
+    TH1D* ret = New(h->GetTitle(), bins);
+    *ret = *h;
+    return ret;
+  }
+
+  //---------------------------------------------------------------------
   TH2D* HistCache::Copy(const TH2D* h)
   {
     TH2D* ret = NewTH2D(h->GetTitle(), h->GetXaxis(), h->GetYaxis());

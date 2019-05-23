@@ -242,6 +242,8 @@ namespace ana
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
 
+    Binning Bins1D() const;
+
     /// Helper for operator+= and operator-=
     Spectrum& PlusEqualsHelper(const Spectrum& rhs, int sign);
 

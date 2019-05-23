@@ -27,6 +27,7 @@ namespace ana
     static TH1D* New(const std::string& title, const Binning& bins);
     static TH1D* New(const std::string& title, const TAxis* bins);
     static TH1D* Copy(const TH1D* h);
+    static TH1D* Copy(const TH1D* h, const Binning& bins);
 
     /// WARNING - the first two TH2D functions are kept for backward compatibility,
     /// they take kTrueEnergyBins on the y-axis.

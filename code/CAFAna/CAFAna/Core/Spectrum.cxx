@@ -251,7 +251,7 @@ namespace ana
 
     assert(rhs.fHist || rhs.fHistSparse);
     if(rhs.fHist)
-      fHist = HistCache::Copy(rhs.fHist);
+      fHist = HistCache::Copy(rhs.fHist, rhs.Bins1D());
     if(rhs.fHistSparse){
       // Doesn't exist?
       // fHistSparse = new THnSparseD(*rhs.fHistSparse);
@@ -297,7 +297,7 @@ namespace ana
     assert(rhs.fHist || rhs.fHistSparse);
 
     if(rhs.fHist){
-      fHist = HistCache::Copy(rhs.fHist);
+      fHist = HistCache::Copy(rhs.fHist, rhs.Bins1D());
       fHistSparse = 0;
     }
 
@@ -349,12 +349,7 @@ namespace ana
 
     assert(!fHist && !fHistSparse);
 
-    Binning bins1D = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      bins1D = Binning::Simple(n, 0, n);
-    }
+    const Binning bins1D = Bins1D();
 
     if(sparse){
       assert(bins1D.IsSimple());
@@ -386,7 +381,7 @@ namespace ana
 
     TH1D* ret = 0;
     if(fHist){
-      ret = HistCache::Copy(fHist);
+      ret = HistCache::Copy(fHist, Bins1D());
     }
     else{
       ret = fHistSparse->Projection(0);
@@ -903,5 +898,17 @@ namespace ana
     delete hLivetime;
 
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  Binning Spectrum::Bins1D() const
+  {
+    Binning bins1D = fBins[0];
+    if(fBins.size() > 1){
+      int n = 1;
+      for(const Binning& b: fBins) n *= b.NBins();
+      bins1D = Binning::Simple(n, 0, n);
+    }
+    return bins1D;
   }
 }
