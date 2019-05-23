@@ -38,6 +38,17 @@ namespace ana {
   const ChargedHadResNDSyst kChargedHadResNDSyst;
   const NResNDSyst kNResNDSyst;
 
+  const UncorrFDTotLinSyst kUncorrFDTotLinSyst;
+  const UncorrFDTotSqrtSyst kUncorrFDTotSqrtSyst;
+  const UncorrFDMuLinSyst kUncorrFDMuLinSyst;
+  const UncorrFDMuSqrtSyst kUncorrFDMuSqrtSyst;
+  const UncorrFDHadLinSyst kUncorrFDHadLinSyst;
+  const UncorrFDHadSqrtSyst kUncorrFDHadSqrtSyst;
+  const UncorrFDNLinSyst kUncorrFDNLinSyst;
+  const UncorrFDNSqrtSyst kUncorrFDNSqrtSyst;
+  const UncorrFDEMLinSyst kUncorrFDEMLinSyst;
+  const UncorrFDEMSqrtSyst kUncorrFDEMSqrtSyst;
+
   EnergySystVector GetEnergySysts()
   {
     EnergySystVector vec;
@@ -46,29 +57,34 @@ namespace ana {
     vec.push_back(&keScaleMuLArFDSyst);
     vec.push_back(&keScaleMuLArNDSyst);
     vec.push_back(&kEnergyScaleMuSystND);
-
     vec.push_back(&kChargedHadCorrSyst);
     vec.push_back(&kChargedHadAnticorrSyst);
-
+    vec.push_back(&kChargedHadUncorrFDSyst);
     vec.push_back(&kNUncorrFDSyst);
     vec.push_back(&kNUncorrNDSyst);
     vec.push_back(&kEMUncorrNDSyst);
     vec.push_back(&kEMUncorrFDSyst);
-
     vec.push_back(&kMuonResFDSyst);
     vec.push_back(&kMuonResNDSyst);
     vec.push_back(&kEMResFDSyst);
     vec.push_back(&kEMResNDSyst);
     vec.push_back(&kChargedHadResFDSyst);
     vec.push_back(&kChargedHadResNDSyst);
-
     vec.push_back(&kUncorrNDHadLinSyst);
-    vec.push_back(&kUncorrNDPi0LinSyst);
-    vec.push_back(&kUncorrNDNLinSyst);
     vec.push_back(&kUncorrNDHadSqrtSyst);
-    vec.push_back(&kUncorrNDPi0SqrtSyst);
+    vec.push_back(&kUncorrNDNLinSyst);
     vec.push_back(&kUncorrNDNSqrtSyst);
-
+    vec.push_back(&kNResFDSyst);
+    vec.push_back(&kUncorrFDTotLinSyst);
+    vec.push_back(&kUncorrFDTotSqrtSyst);
+    vec.push_back(&kUncorrFDMuLinSyst);
+    vec.push_back(&kUncorrFDMuSqrtSyst);
+    vec.push_back(&kUncorrFDHadLinSyst);
+    vec.push_back(&kUncorrFDHadSqrtSyst);
+    vec.push_back(&kUncorrFDNLinSyst);
+    vec.push_back(&kUncorrFDNSqrtSyst);
+    vec.push_back(&kUncorrFDEMLinSyst);
+    vec.push_back(&kUncorrFDEMSqrtSyst);
     return vec;
   }
 } // namespace
