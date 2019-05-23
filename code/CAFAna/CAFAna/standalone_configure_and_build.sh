@@ -77,6 +77,8 @@ while [[ ${#} -gt 0 ]]; do
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
+      echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
+      echo -e "\t--knl                  : Build with -march=knl"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
