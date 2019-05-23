@@ -151,9 +151,7 @@ namespace ana
   OscillatableSpectrum::~OscillatableSpectrum()
   {
     // Nulls fHist out, so it's safe that ~ReweightableSpectrum tries too
-    HistCache::Delete(fHist,
-                      fBins.size() == 1 ? fBins[0].ID() : -1,
-                      kTrueEnergyBins.ID());
+    HistCache::Delete(fHist, Bins1DX().ID(), kTrueEnergyBins.ID());
 
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveReweightableSpectrum(this); }
@@ -212,7 +210,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    HistCache::Delete(fHist);
+    HistCache::Delete(fHist, Bins1DX().ID());
     fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
@@ -238,7 +236,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    HistCache::Delete(fHist);
+    HistCache::Delete(fHist, Bins1DX().ID());
     fHist = rhs.fHist;
     rhs.fHist = 0;
     fPOT = rhs.fPOT;
@@ -278,7 +276,7 @@ namespace ana
       delete fCachedHash;
       fCachedHash = hash;
     }
-    HistCache::Delete(Ps);
+    HistCache::Delete(Ps, kTrueEnergyBins.ID());
     return ret;
   }
 
