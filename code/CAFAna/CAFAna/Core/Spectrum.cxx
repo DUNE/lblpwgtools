@@ -23,7 +23,7 @@ namespace ana
   Spectrum::Spectrum(const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      ESparse sparse)
-    : fHist(0), fHistSparse(0), fPOT(0), fLivetime(0),
+    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0),
       fLabels(labels), fBins(bins)
   {
     ConstructHistogram(sparse);
@@ -34,7 +34,7 @@ namespace ana
   Spectrum::Spectrum(const std::string& label,
                      const Binning& bins,
                      ESparse sparse)
-    : fHist(0), fHistSparse(0), fPOT(0), fLivetime(0),
+    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0),
       fLabels(1, label), fBins(1, bins)
   {
     ConstructHistogram(sparse);
@@ -89,10 +89,9 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(0), fHistSparse(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
     if(!h){
-      fHist = 0;
       return;
     }
 
@@ -102,11 +101,10 @@ namespace ana
 
     if(className == "TH1D"){
       // Shortcut if types match
-      fHist = HistCache::Copy((TH1D*)h);
+      fHist = Hist::Copy((TH1D*)h, Binning::FromTAxis(h->GetXaxis()));
     }
     else{
-      fHist = HistCache::New("", h->GetXaxis());
-      fHist->Add(h);
+      fHist = Hist::Copy(h, Binning::FromTAxis(h->GetXaxis()));
     }
   }
 
@@ -115,7 +113,7 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(h.release()), fHistSparse(0), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fHist(Hist::Adopt(std::move(h), Binning::FromTAxis(h->GetXaxis()))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins) // TODO is ordering here safe with the move?
   {
   }
 
@@ -222,65 +220,29 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum::~Spectrum()
   {
-    if(fHist && fHist->GetDirectory()){
-      static bool once = true;
-      if(once){
-        once = false;
-        std::cerr << "Spectrum's fHist (" << fHist << ") is associated with a directory (" << fHist->GetDirectory() << ". How did that happen?" << std::endl;
-      }
-    }
-
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveSpectrum(this); }
-
-    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
-
-    delete fHistSparse;
   }
 
   //----------------------------------------------------------------------
   Spectrum::Spectrum(const Spectrum& rhs):
-    fHist(0),
-    fHistSparse(0),
+    fHist(rhs.fHist),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
     fLabels(rhs.fLabels),
     fBins(rhs.fBins)
   {
-    DontAddDirectory guard;
-
-    assert(rhs.fHist || rhs.fHistSparse);
-    if(rhs.fHist)
-      fHist = HistCache::Copy(rhs.fHist, rhs.Bins1D());
-    if(rhs.fHistSparse){
-      // Doesn't exist?
-      // fHistSparse = new THnSparseD(*rhs.fHistSparse);
-      fHistSparse = (THnSparseD*)rhs.fHistSparse->Clone();
-    }
-
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
   }
 
   //----------------------------------------------------------------------
   Spectrum::Spectrum(Spectrum&& rhs):
-    fHist(0),
-    fHistSparse(0),
+    fHist(std::move(rhs.fHist)),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
     fLabels(rhs.fLabels),
     fBins(rhs.fBins)
   {
-    assert(rhs.fHist || rhs.fHistSparse);
-
-    if(rhs.fHist){
-      fHist = rhs.fHist;
-      rhs.fHist = 0;
-    }
-    if(rhs.fHistSparse){
-      fHistSparse = rhs.fHistSparse;
-      rhs.fHistSparse = 0;
-    }
-
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
   }
 
@@ -289,23 +251,7 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
-    DontAddDirectory guard;
-
-    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
-    delete fHistSparse;
-
-    assert(rhs.fHist || rhs.fHistSparse);
-
-    if(rhs.fHist){
-      fHist = HistCache::Copy(rhs.fHist, rhs.Bins1D());
-      fHistSparse = 0;
-    }
-
-    if(rhs.fHistSparse){
-      fHistSparse = (THnSparseD*)rhs.fHistSparse->Clone();
-      fHist = 0;
-    }
-
+    fHist = rhs.fHist;
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
     fLabels = rhs.fLabels;
@@ -321,21 +267,11 @@ namespace ana
   {
     if(this == &rhs) return *this;
 
-    if(fHist) HistCache::Delete(fHist, Bins1D().ID());
-    delete fHistSparse;
-
-    assert(rhs.fHist || rhs.fHistSparse);
-
-    fHist = rhs.fHist;
-    fHistSparse = rhs.fHistSparse;
-
+    fHist = std::move(rhs.fHist);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
-
-    rhs.fHist = 0;
-    rhs.fHistSparse = 0;
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
@@ -347,7 +283,7 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    assert(!fHist && !fHistSparse);
+    //    assert(!fHist && !fHistSparse);
 
     const Binning bins1D = Bins1D();
 
@@ -356,17 +292,21 @@ namespace ana
       const int nbins = bins1D.NBins();
       const double xmin = bins1D.Min();
       const double xmax = bins1D.Max();
-      fHistSparse = new THnSparseD(UniqueName().c_str(), UniqueName().c_str(),
-				   1, &nbins, &xmin, &xmax);
+      THnSparseD* h = new THnSparseD(UniqueName().c_str(), UniqueName().c_str(),
+                                     1, &nbins, &xmin, &xmax);
 
       // Ensure errors get accumulated properly
-      fHistSparse->Sumw2();
+      h->Sumw2();
+
+      fHist = Hist::Adopt(std::unique_ptr<THnSparseD>(h), bins1D);
     }
     else{
-      fHist = HistCache::New("", bins1D);
+      TH1D* h = HistCache::New("", bins1D);
 
       // Ensure errors get accumulated properly
-      fHist->Sumw2();
+      h->Sumw2();
+
+      fHist = Hist::Adopt(std::unique_ptr<TH1D>(h), bins1D);
     }
   }
 
@@ -379,13 +319,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = 0;
-    if(fHist){
-      ret = HistCache::Copy(fHist, Bins1D());
-    }
-    else{
-      ret = fHistSparse->Projection(0);
-    }
+    TH1D* ret = fHist.ToTH1();
 
     if(expotype == kPOT){
       const double pot = exposure;
@@ -578,7 +512,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
   {
-    fHist->Scale(c);
+    fHist.Scale(c);
   }
 
   //----------------------------------------------------------------------
@@ -590,35 +524,25 @@ namespace ana
     if(err){
       *err = 0;
 
-      for(int i = 0; i < fHist->GetNbinsX()+2; ++i){
-        *err += util::sqr(fHist->GetBinError(i));
+      for(int i = 0; i < fHist.GetNbinsX()+2; ++i){
+        *err += util::sqr(fHist.GetBinError(i));
       }
       *err = sqrt(*err) * ratio;
     }
 
-    // TODO how to integrate fHistSparse?
-
-    return fHist->Integral(0, -1) * ratio;
+    return fHist.Integral(0, -1) * ratio;
   }
 
   //----------------------------------------------------------------------
   double Spectrum::Mean() const
   {
-    // Allow GetMean() to work even if this histogram never had any explicit
-    // Fill() calls made.
-    if(fHist->GetEntries() == 0) fHist->SetEntries(1);
-    return fHist->GetMean();
+    return fHist.GetMean();
   }
 
   //----------------------------------------------------------------------
   void Spectrum::Fill(double x, double w)
   {
-    assert( (fHist || fHistSparse) && "Somehow both fHist and fHistSparse are null in Spectrum::Fill" );
-
-    if(fHist)
-      fHist->Fill(x, w);
-    else if (fHistSparse)
-      fHistSparse->Fill(&x, w);
+    fHist.Fill(x, w);
   }
 
   //----------------------------------------------------------------------
@@ -630,22 +554,13 @@ namespace ana
 
     TRandom3 rnd(seed); // zero seeds randomly
 
-    if(ret.fHist){
-      for(int i = 0; i < ret.fHist->GetNbinsX()+2; ++i){
-	ret.fHist->SetBinContent(i, rnd.Poisson(ret.fHist->GetBinContent(i)));
-      }
-    }
-    if(ret.fHistSparse){
-      for(int i = 0; i < ret.fHistSparse->GetNbins(); ++i)
-	ret.fHistSparse->SetBinContent(i, rnd.Poisson(ret.fHistSparse->GetBinContent(i)));
+    for(int i = 0; i < ret.fHist.GetNbinsX()+2; ++i){
+      ret.fHist.SetBinContent(i, rnd.Poisson(ret.fHist.GetBinContent(i)));
     }
 
     // Drop old errors, which are based on the MC statistics, and create new
     // ones that are based on the prediction for the data
-    if(ret.fHist){
-      ret.fHist->Sumw2(false);
-      ret.fHist->Sumw2();
-    }
+    ret.fHist.ResetErrors();
 
     return ret;
   }
@@ -654,20 +569,12 @@ namespace ana
   Spectrum Spectrum::FakeData(double pot) const
   {
     Spectrum ret = *this;
-    if(fPOT > 0){
-      if(ret.fHist)
-	ret.fHist->Scale(pot/fPOT);
-      if(ret.fHistSparse)
-	ret.fHistSparse->Scale(pot/fPOT);
-    }
+    if(fPOT > 0) ret.fHist.Scale(pot/fPOT);
     ret.fPOT = pot;
 
     // Drop old errors, which are based on the MC statistics, and create new
     // ones that are based on the prediction for the data
-    if(ret.fHist){
-      ret.fHist->Sumw2(false);
-      ret.fHist->Sumw2();
-    }
+    ret.fHist.ResetErrors();
 
     return ret;
   }
@@ -675,8 +582,7 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Clear()
   {
-    if(fHist) fHist->Reset();
-    if(fHistSparse) fHistSparse->Reset();
+    fHist.Reset();
   }
 
   //----------------------------------------------------------------------
@@ -691,8 +597,7 @@ namespace ana
   Spectrum& Spectrum::PlusEqualsHelper(const Spectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fHist && rhs.fHist->Integral(0, -1) == 0) return *this;
-
+    if(rhs.fHist.Initialized() && rhs.fHist.Integral(0, -1) == 0) return *this;
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum Spectrum with no POT or livetime."
@@ -720,8 +625,7 @@ namespace ana
 
     if(fPOT && rhs.fPOT){
       // Scale by POT when possible
-      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fPOT/rhs.fPOT);
-      if(rhs.fHistSparse) fHistSparse->Add(rhs.fHistSparse, sign*fPOT/rhs.fPOT);
+      fHist.Add(rhs.fHist, sign*fPOT/rhs.fPOT);
 
       if(fLivetime && rhs.fLivetime){
         // If POT/livetime ratios match, keep regular lifetime, otherwise zero
@@ -740,8 +644,7 @@ namespace ana
 
     if(fLivetime && rhs.fLivetime){
       // Scale by livetime, the only thing in common
-      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fLivetime/rhs.fLivetime);
-      if(rhs.fHistSparse) fHistSparse->Add(rhs.fHistSparse, sign*fLivetime/rhs.fLivetime);
+      fHist.Add(rhs.fHist, sign*fLivetime/rhs.fLivetime);
 
       if(!fPOT && rhs.fPOT){
         // If the RHS has a POT and we don't, copy it in (suitably scaled)
@@ -791,7 +694,7 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum& Spectrum::operator*=(const Ratio& rhs)
   {
-    fHist->Multiply(rhs.fHist);
+    fHist.Multiply(rhs.fHist);
     return *this;
   }
 
@@ -806,7 +709,7 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum& Spectrum::operator/=(const Ratio& rhs)
   {
-    fHist->Divide(rhs.fHist);
+    fHist.Divide(rhs.fHist);
     return *this;
   }
 
@@ -826,8 +729,7 @@ namespace ana
 
     TObjString("Spectrum").Write("type");
 
-    if(fHist) fHist->Write("hist");
-    if(fHistSparse) fHistSparse->Write("hist_sparse");
+    fHist.Write();
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
@@ -853,9 +755,6 @@ namespace ana
     assert(tag->GetString() == "Spectrum");
     delete tag;
 
-    TH1D* spect = (TH1D*)dir->Get("hist");
-    THnSparseD* spectSparse = (THnSparseD*)dir->Get("hist_sparse");
-    assert(spect || spectSparse);
     TH1* hPot = (TH1*)dir->Get("pot");
     assert(hPot);
     TH1* hLivetime = (TH1*)dir->Get("livetime");
@@ -874,6 +773,8 @@ namespace ana
     }
 
     if(bins.empty() && labels.empty()){
+      abort();
+      /*
       // Must be an old file. Make an attempt at backwards compatibility.
       if(spect){
         bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
@@ -883,16 +784,11 @@ namespace ana
         bins.push_back(Binning::FromTAxis(spectSparse->GetAxis(0)));
         labels.push_back(spectSparse->GetAxis(0)->GetTitle());
       }
+      */
     }
 
-    std::unique_ptr<Spectrum> ret;
-    if(spect){
-      ret = std::make_unique<Spectrum>(std::unique_ptr<TH1D>(spect), labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
-    }
-    else{
-      ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
-      ret->fHistSparse = spectSparse;
-    }
+    std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
+    ret->fHist = Hist::FromDirectory(dir, ret->Bins1D());
 
     delete hPot;
     delete hLivetime;
