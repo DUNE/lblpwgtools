@@ -4,6 +4,7 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
+#include "CAFAna/Core/Hist.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -247,8 +248,7 @@ namespace ana
     /// Helper for operator+= and operator-=
     Spectrum& PlusEqualsHelper(const Spectrum& rhs, int sign);
 
-    TH1D* fHist;
-    THnSparseD* fHistSparse;
+    Hist fHist;
     double fPOT;
     double fLivetime;
 
