@@ -6,16 +6,16 @@ namespace ana {
   const NUncorrFDSyst kNUncorrFDSyst;  
   const EMUncorrFDSyst kEMUncorrFDSyst;
   const eScaleMuLArFDSyst keScaleMuLArFDSyst;
-  const UncorrFDTotLinSyst kUncorrFDTotLinSyst;
   const UncorrFDTotSqrtSyst kUncorrFDTotSqrtSyst;
-  const UncorrFDMuLinSyst kUncorrFDMuLinSyst;
+  const UncorrFDTotInvSqrtSyst kUncorrFDTotInvSqrtSyst;
   const UncorrFDMuSqrtSyst kUncorrFDMuSqrtSyst;
-  const UncorrFDHadLinSyst kUncorrFDHadLinSyst;
+  const UncorrFDMuInvSqrtSyst kUncorrFDMuInvSqrtSyst;
   const UncorrFDHadSqrtSyst kUncorrFDHadSqrtSyst;
-  const UncorrFDNLinSyst kUncorrFDNLinSyst;
+  const UncorrFDHadInvSqrtSyst kUncorrFDHadInvSqrtSyst;
   const UncorrFDNSqrtSyst kUncorrFDNSqrtSyst;
-  const UncorrFDEMLinSyst kUncorrFDEMLinSyst;
+  const UncorrFDNInvSqrtSyst kUncorrFDNInvSqrtSyst;
   const UncorrFDEMSqrtSyst kUncorrFDEMSqrtSyst;
+  const UncorrFDEMInvSqrtSyst kUncorrFDEMInvSqrtSyst;
 
   const MuonResFDSyst kMuonResFDSyst;
   const EMResFDSyst kEMResFDSyst;
@@ -30,16 +30,16 @@ namespace ana {
     vec.push_back(&kChargedHadUncorrFDSyst);
     vec.push_back(&kNUncorrFDSyst);
     vec.push_back(&kEMUncorrFDSyst);
-    vec.push_back(&kUncorrFDTotLinSyst);
     vec.push_back(&kUncorrFDTotSqrtSyst);
-    vec.push_back(&kUncorrFDMuLinSyst);
+    vec.push_back(&kUncorrFDTotInvSqrtSyst);
     vec.push_back(&kUncorrFDMuSqrtSyst);
-    vec.push_back(&kUncorrFDHadLinSyst);
+    vec.push_back(&kUncorrFDMuInvSqrtSyst);
     vec.push_back(&kUncorrFDHadSqrtSyst);
-    vec.push_back(&kUncorrFDNLinSyst);
+    vec.push_back(&kUncorrFDHadInvSqrtSyst);
     vec.push_back(&kUncorrFDNSqrtSyst);
-    vec.push_back(&kUncorrFDEMLinSyst);
+    vec.push_back(&kUncorrFDNInvSqrtSyst);
     vec.push_back(&kUncorrFDEMSqrtSyst);
+    vec.push_back(&kUncorrFDEMInvSqrtSyst);
 
     vec.push_back(&kMuonResFDSyst);
     vec.push_back(&kEMResFDSyst);
