@@ -27,7 +27,8 @@ set(Core_implementation_files
   ThreadPool.cxx
   Utilities.cxx
   Var.cxx
-  WildcardSource.cxx)
+  WildcardSource.cxx
+  Hist.cxx)
 
 set(Core_header_files
   Binning.h
@@ -59,7 +60,8 @@ set(Core_header_files
   Var.h
   WildcardSource.h
   IFileSource.h
-  ModeConversionUtilities.h)
+  ModeConversionUtilities.h
+  Hist.h)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore)
