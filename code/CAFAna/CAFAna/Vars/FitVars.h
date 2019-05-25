@@ -95,7 +95,7 @@ namespace ana
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
-  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant;
+  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant = FitSinSqTheta23LowerOctant();
 
   //----------------------------------------------------------------------
   /// \f$ \sin^2\theta_{23} \f$ constrained to upper octant
@@ -109,7 +109,7 @@ namespace ana
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
-  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
+  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant = FitSinSqTheta23UpperOctant();
 
   //----------------------------------------------------------------------
   class FitSinSqTheta23Symmetry: public IFitVar
@@ -134,8 +134,8 @@ namespace ana
   };
 
   // These are for use in ensuring we explore all regions of th23 space
-  const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry(-1);
-  const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry(+1);
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry = FitSinSqTheta23Symmetry(-1);
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry = FitSinSqTheta23Symmetry(+1);
 
   //----------------------------------------------------------------------
 
@@ -226,7 +226,7 @@ namespace ana
   const FitDmSq32IHScaled kFitDmSq32IHScaled = FitDmSq32IHScaled();
 
   //----------------------------------------------------------------------
-  
+
   /// \f$ \tan^2\theta_{12} \f$
   class FitTanSqTheta12: public IConstrainedFitVar
   {
