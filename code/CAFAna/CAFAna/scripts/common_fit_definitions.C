@@ -901,7 +901,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Note that all systs are used to load the PredictionInterps
   #ifdef PROFILE_COUTS
   static bool first = true;
-  static std::chrono::time_point start_load = std::chrono::system_clock::now();
+  static auto start_load = std::chrono::system_clock::now();
   #endif
   static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
@@ -912,9 +912,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
   #ifdef PROFILE_COUTS
   if(first){
-    static std::chrono::time_point end_load = std::chrono::system_clock::now();
+    static auto end_load = std::chrono::system_clock::now();
 
-    std::cout << "PROFILE: LOAD = " << (end_load-start_load).count() << std::endl;
+    std::cout << "PROFILE: LOAD = " << std::chrono::duration_cast<std::chrono::seconds>(end_load-start_load).count() << std::endl;
     first = false;
   }
   #endif
@@ -1073,14 +1073,14 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   if (penaltyTerm) this_expt.Add(penaltyTerm);
 
 #ifdef PROFILE_COUTS
-  std::chrono::time_point start_fit = std::chrono::system_clock::now();
+  auto start_fit = std::chrono::system_clock::now();
 #endif
   // Now set up the fit itself
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
 #ifdef PROFILE_COUTS
-  std::chrono::time_point end_fit = std::chrono::system_clock::now();
-  std::cout << "PROFILE: FIT = " << (end_fit - start_fit).count() << std::endl;
+  auto end_fit = std::chrono::system_clock::now();
+  std::cout << "PROFILE: FIT = " << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count() << std::endl;
 #endif
 
   bf = fitSyst;
