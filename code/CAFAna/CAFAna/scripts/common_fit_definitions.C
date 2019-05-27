@@ -900,11 +900,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
   #ifdef PROFILE_COUTS
-  static first = true;
-  static std::chrono::time_point start_load;
-  if(first){
-    start_load= std::chrono::system_clock::now();
-  }
+  static bool first = true;
+  static std::chrono::time_point start_load = std::chrono::system_clock::now();
   #endif
   static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
@@ -914,11 +911,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predNDNumuFHC = *interp_list[4].release();
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
   #ifdef PROFILE_COUTS
-    static std::chrono::time_point end_load;
   if(first){
-    end_load = std::chrono::system_clock::now();
+    static std::chrono::time_point end_load = std::chrono::system_clock::now();
 
-    std::cout << "PROFILE: LOAD = " << (end-start).count() << std::endl;
+    std::cout << "PROFILE: LOAD = " << (end_load-start_load).count() << std::endl;
     first = false;
   }
   #endif

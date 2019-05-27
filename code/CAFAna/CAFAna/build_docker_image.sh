@@ -6,12 +6,15 @@ USE_GPERF="0"
 DO_PUSH="0"
 BASE_IMAGE="centos:latest"
 TAGNAME="latest"
+DO_KNL="0"
+REMOVE_SOURCE="1"
 
 NCORES=8
 
 IMAGE_NAME="${USER}/dune_cafana"
 BRANCH_NAME="strong_and_stable"
 REPO_URL="https://github.com/DUNE/lblpwgtools.git"
+STATE_FILE_LOC=""
 
 SCRIPTNAME=${0}
 
@@ -38,6 +41,12 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile in gperftools support."
       ;;
 
+      --keep-source)
+
+      REMOVE_SOURCE="0"
+      echo "[OPT]: Will not remove the source."
+      ;;
+
       -d|--debug)
 
       DO_RELEASE="0"
@@ -56,6 +65,12 @@ while [[ ${#} -gt 0 ]]; do
       shift # past argument
       ;;
 
+      --knl)
+
+      DO_KNL="1"
+      echo "[OPT]: Will compile for KNL arch."
+      ;;
+
       -I|--image-name)
 
       if [[ ${#} -lt 2 ]]; then
@@ -65,6 +80,22 @@ while [[ ${#} -gt 0 ]]; do
 
       IMAGE_NAME="$2"
       echo "[OPT]: Will name image: \"${IMAGE_NAME}\"."
+      shift # past argument
+      ;;
+
+      -S|--state-files)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      STATE_FILE_LOC="$(readlink -f $2)"
+      if [ ! -e ${STATE_FILE_LOC} ]; then
+        echo "[ERROR]: When trying to specify packaged statefiles from: \"${STATE_FILE_LOC}\", they do not appear to exist."
+        exit
+      fi
+      echo "[OPT]: Will pull in statefiles from: \"${STATE_FILE_LOC}\"."
       shift # past argument
       ;;
 
@@ -112,7 +143,10 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
       echo -e "\t--base-image           : Base image to use (default: centos:latest)."
+      echo -e "\t--knl                  : Build CAFAna copy with -march=knl"
+      echo -e "\t--keep-source          : Do not remove CAFAna source"
       echo -e "\t-I|--image-name        : Built image name (default: ${USER}/dune_cafana)."
+      echo -e "\t-S|--state-files <stub>: Include input state files in the container."
       echo -e "\t-T|--tag-name          : Built/pushed tag name (default: latest)."
       echo -e "\t-R|--repo-url          : git repository to use (default: ${REPO_URL})."
       echo -e "\t-B|--branch-name       : Remote branch to use (default: ${BRANCH_NAME})."
@@ -142,14 +176,27 @@ if [ "${LATEST_EXISTS}" == "" ] || [ "${DO_BUILD}" == "1" ]; then
   GOPT=""
   if [ "${USE_GPERF}" == "1" ]; then
     GOPT="--use-gperftools "
+    ROPT="--rdb "
   fi
 
-  echo -e "#!/bin/bash\nyum install -y --setopt=tsflags=nodocs svn which make redhat-lsb-core glibc-devel automake libtool && yum clean all;cd /opt;source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh;git clone ${REPO_URL} lblpwgtools;cd lblpwgtools;git checkout ${BRANCH_NAME};cd code/CAFAna/CAFAna;./standalone_configure_and_build.sh -j ${NCORES} -u ${ROPT}${GOPT}-I /opt/CAFAna/; cat /build_scripts/CAFEnvWrapper.sh > /opt/CAFAna/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna; rm -rf /opt/lblpwgtools; yum remove -y svn glibc-devel automake libtool && sudo yum autoremove && yum clean all;" > CAFBuildScript.sh
+  echo -e "#!/bin/bash\nyum install -y --setopt=tsflags=nodocs svn which make redhat-lsb-core glibc-devel automake libtool && yum clean all;cd /opt;source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh;git clone ${REPO_URL} lblpwgtools;cd lblpwgtools;git checkout ${BRANCH_NAME};cd code/CAFAna/CAFAna;./standalone_configure_and_build.sh -j ${NCORES} -u ${ROPT}${GOPT}-I /opt/CAFAna/; cat /build_scripts/CAFEnvWrapper.sh > /opt/CAFAna/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna; if [ \"${DO_KNL}\" == \"1\" ]; then ./standalone_configure_and_build.sh -f -j ${NCORES} --knl -u ${ROPT}${GOPT}-I /opt/CAFAna_knl/; cat /build_scripts/CAFEnvWrapper.sh > /opt/CAFAna_knl/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna_knl; fi; if [ \"${REMOVE_SOURCE}\" == \"1\" ]; then rm -rf /opt/lblpwgtools; fi; if [ -e /statefiles_in ]; then cp -r /statefiles_in /statefiles; chmod -R 744 /statefiles; fi" > CAFBuildScript.sh
   echo -e '#!/bin/bash\nsource /opt/CAFAna/CAFAnaEnv.sh; echo "[CAFENV]: $@"; $@' > CAFEnvWrapper.sh
 
   sudo docker rm CAFAnaImageBuild_tmp
 
-  sudo docker run --name CAFAnaImageBuild_tmp -v /cvmfs:/cvmfs:shared -v $(pwd):/build_scripts ${BASE_IMAGE} bash /build_scripts/CAFBuildScript.sh
+  ETAG=""
+  if [ ! -z "${STATE_FILE_LOC}" ]; then
+    ETAG="_wsf"
+    CMD="sudo docker run --name CAFAnaImageBuild_tmp -v /cvmfs:/cvmfs:shared -v $(pwd):/build_scripts -v ${STATE_FILE_LOC}:/statefiles_in ${BASE_IMAGE} bash /build_scripts/CAFBuildScript.sh"
+    echo "${CMD}"
+    ${CMD}
+  else
+    CMD="sudo docker run --name CAFAnaImageBuild_tmp -v /cvmfs:/cvmfs:shared -v $(pwd):/build_scripts ${BASE_IMAGE} bash /build_scripts/CAFBuildScript.sh"
+    echo "${CMD}"
+    ${CMD}
+  fi
+  TAGNAME="${TAGNAME}${ETAG}"
+
 
   BRANCH_HEAD_REV=$(git ls-remote ${REPO_URL} | awk "/${BRANCH_NAME}/ {print \$1}" | cut -f 1 | cut -c-10)
 
@@ -158,7 +205,7 @@ if [ "${LATEST_EXISTS}" == "" ] || [ "${DO_BUILD}" == "1" ]; then
     REV_TAG="${BRANCH_HEAD_REV}_${TAGNAME}"
   fi
 
-  sudo docker rmi ${USER}/dune_cafana:${TAGNAME}
+  sudo docker rmi ${USER}/dune_cafana:${REV_TAG}
   sudo docker commit CAFAnaImageBuild_tmp ${USER}/dune_cafana:${REV_TAG}
   sudo docker rmi ${USER}/dune_cafana:${TAGNAME}
   sudo docker commit CAFAnaImageBuild_tmp ${USER}/dune_cafana:${TAGNAME}
