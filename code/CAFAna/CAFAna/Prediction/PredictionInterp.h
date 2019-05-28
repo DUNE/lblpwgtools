@@ -2,6 +2,7 @@
 
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
+#include "CAFAna/Prediction/PredictionInterpKernel.h"
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
@@ -114,11 +115,7 @@ namespace ana
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});
 
-    struct Coeffs{
-      Coeffs(double _a, double _b, double _c, double _d)
-        : a(_a), b(_b), c(_c), d(_d) {}
-      double a, b, c, d;
-    };
+    typedef ana::PredIntKern::Coeffs Coeffs;
 
     /// Find coefficients describing this set of shifts
     std::vector<std::vector<Coeffs>>

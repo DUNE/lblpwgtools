@@ -351,15 +351,7 @@ namespace ana
       const double x_cube = util::cube(x);
       const double x_sqr = util::sqr(x);
 
-      for(unsigned int n = 0; n < N; ++n){
-        // Uncomment to debug crashes in this function
-        // assert(type < fits.size());
-        // assert(n < sp.fits[type].size());
-        // assert(shiftBin < int(sp.fits[type][n].size()));
-
-        const Coeffs& f = fits[n];
-	corr[n] *= f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-      } // end for n
+      ShiftSpectrumKernel(fits, N, x, x_sqr, x_cube, corr);
     } // end for syst
 
     double* arr = h->GetArray();
