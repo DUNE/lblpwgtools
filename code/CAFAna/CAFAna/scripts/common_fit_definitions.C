@@ -914,7 +914,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   if(first){
     static auto end_load = std::chrono::system_clock::now();
 
-    std::cout << "PROFILE: LOAD = " << std::chrono::duration_cast<std::chrono::seconds>(end_load-start_load).count() << std::endl;
+    std::cout << "PROFILE: LOAD = " << std::chrono::duration_cast<std::chrono::seconds>(end_load-start_load).count() << " s." << std::endl;
     first = false;
   }
   #endif
@@ -1080,7 +1080,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
 #ifdef PROFILE_COUTS
   auto end_fit = std::chrono::system_clock::now();
-  std::cout << "PROFILE: FIT = " << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count() << std::endl;
+  std::cout << "PROFILE: FIT = " << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count() << " s." << std::endl;
 #endif
 
   bf = fitSyst;
