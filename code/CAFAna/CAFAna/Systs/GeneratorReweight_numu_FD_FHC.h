@@ -21,7 +21,7 @@ static inline float pred_transform(float margin) {
    float predict(union BDTReweighter::BDTReweighterFeature* data, int pred_margin) {
 
   float sum = 0.0f;
-  unsigned int tmp;
+  //  unsigned int tmp;
   if ( (data[7].fvalue < 5.5)) {
     if ( (data[14].fvalue < 0.062635034)) {
       if ( (data[13].fvalue < 1.0892229)) {

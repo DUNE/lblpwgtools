@@ -129,7 +129,7 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
   double fact = 1;
   if (IsExtrapolatedSyst) {
 
-    double diff = sigma / spacing;
+    //    double diff = sigma / spacing;
 
     double weight_at_cv = 1;
     double weight_at_one_sig = sr->dune.xsSyst_wgt[fID][4];
