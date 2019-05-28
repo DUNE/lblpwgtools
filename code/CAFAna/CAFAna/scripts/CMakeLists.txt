@@ -16,6 +16,7 @@ set(scripts_to_install
 set(scripts_to_build
   asimov_joint
   make_toy_throws
+  make_toy_throws_fixed_seed
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
