@@ -198,6 +198,7 @@ const double nom_exposure = 336.;
 // Global file path...
 #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
 const std::string cafFilePath="/pnfs/dune/persistent/users/picker24/CAFv4/";
+//const std::string cafFilePath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 #else
 const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 #endif
@@ -342,14 +343,6 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 
   if (removeNonFitDials) {
     // For now, hard code this part... too many damned scripts to change...
-    RemoveSysts(systlist,
-                {"eScaleND", "eScaleMuLArND", "eScaleMuND", "ChargedHadCorr",
-                 "ChargedHadAnticorrSyst", "eScaleN_ND", "EMUncorrND",
-                 "MuonResND", "EMResND", "ChargedHadResND",
-                 "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst", "UncorrNDNLinSyst",
-                 "UncorrNDHadSqrtSyst", "UncorrNDPi0SqrtSyst",
-		 "UncorrNDNSqrtSyst", "LeptonAccSyst", "HadronAccSyst"});
-
     RemoveSysts(systlist, GetGenieBadDialList());
     RemoveSysts(systlist, GetGenieDoNotFitList());
   }
@@ -357,11 +350,11 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
   // all FD escale and resolution systematics
   if (removeFDNonFitDials) {
     RemoveSysts(systlist,
-		{"eScaleFD", "UncorrFDTotLinSyst", "UncorrFDTotSqrtSyst",
-		 "ChargedHadUncorrFD", "UncorrFDHadLinSyst", "UncorrFDHadSqrtSyst",
-		 "eScaleMuLArFD", "UncorrFDMuLinSyst", "UncorrFDMuSqrtSyst", 
-		 "EMUncorrFD", "UncorrFDEMLinSyst", "UncorrFDEMSqrtSyst", 
-		 "eScaleN_FD", "UncorrFDNLinSyst", "UncorrFDNSqrtSyst",
+		{"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
+		 "ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
+		 "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
+		 "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+		 "eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst",
 		 "EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD"});
   }
 
@@ -372,11 +365,20 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 //nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
 
 // All detector nuisance parameters
-std::vector<std::string> fd_det_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD", "MuonResFD", 
-					"EMResFD", "ChargedHadResFD", "FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
+std::vector<std::string> fd_det_list = {"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
+					"ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
+					"eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
+					"EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+					"eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst",
+					"EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD", 
+					"FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // FD detector subsets
-std::vector<std::string> fd_escale_list = {"eScaleFD", "eScaleMuLArFD", "eScaleN_FD", "EMUncorrFD"};
+std::vector<std::string> fd_escale_list = {"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
+					   "ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
+					   "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
+					   "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+					   "eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst"};
 std::vector<std::string> fd_muon_escale_list = {"eScaleMuLArFD"};
 std::vector<std::string> fd_eres_list = {"MuonResFD", "EMResFD", "ChargedHadResFD"};
 std::vector<std::string> fd_muon_eres_list = {"MuonResFD"};
@@ -940,7 +942,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   SystShifts &bf = junkShifts,
 		   bool UseSeedRefiner=true,
 		   bool UseXSecCovmat=true,
-		   bool useCorrelatedCovMx=true){
+		   bool useFDCovMx=false){
 
   assert(systlist.size()+oscVars.size());
 
@@ -1012,29 +1014,30 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   }
   // If using the multi sample covariances then they must be added to the MultiExperiment
   // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);//, covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);//, covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);//, covFileName, "fd_rhc_e_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
   // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);//, covFileName, "fd_rhc_mu_frac_cov", kCovMxLogLikelihood);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);//, covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);//, covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
+  /*
   if (!useCorrelatedCovMx) {
     app_expt_fhc.AddCovarianceMatrix(covFileName, "fd_fhc_e_frac_cov", kCovMxLogLikelihood);
     dis_expt_fhc.AddCovarianceMatrix(covFileName, "fd_fhc_mu_frac_cov", kCovMxLogLikelihood);
@@ -1043,6 +1046,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     nd_expt_fhc.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
     nd_expt_rhc.AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", kCovMxChiSqPreInvert);
   }
+  */
 
   // What is the chi2 between the data, and the thrown prefit distribution?
   // std::cout << "Prefit chi-square:" << std::endl;
@@ -1121,25 +1125,32 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 
   // Now sort out the experiment
   MultiExperiment this_expt;
-  if (pot_fd_fhc_nue > 0)  this_expt.Add(&app_expt_fhc);
-  if (pot_fd_fhc_numu > 0) this_expt.Add(&dis_expt_fhc);
-  if (pot_fd_rhc_nue > 0)  this_expt.Add(&app_expt_rhc);
+  if (pot_fd_fhc_numu > 0)  this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0) this_expt.Add(&dis_expt_rhc);
+  if (pot_fd_fhc_nue > 0)  this_expt.Add(&app_expt_fhc);
+  if (pot_fd_rhc_nue > 0) this_expt.Add(&app_expt_rhc);
   if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
   if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
-  if (useCorrelatedCovMx) {    
+  if (useFDCovMx) {    
     if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {1, 3, 0, 2});   
+      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {0, 1, 2, 3});   
       if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
 	this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
       }
     }
-    // ND only fits
-    else if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0) {
+  }
+  // Don't use FD covmx fits
+  else {
+    // ND only
+    if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0) {
       this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
-    }    
+    }
+    // ND + FD
+    else if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
+      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+    }
   }
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
