@@ -142,40 +142,7 @@ namespace ana
 
     // if there is a covariance matrix, use it
     if(fCovMx){
-      // The inverse relative covariance matrix comes from one of two sources
-      // If you don't set the size the assignment operator won't do what you expect.
-      TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
-
-      // Array contains the underflow too!
-      double* array = hpred->GetArray();
-      const int N = hpred->GetNbinsX();
-
-      if(fPreInvert){
-        // Either we precomputed it
-        assert(fCovMxInv);
-        covInv = *fCovMxInv;
-      }
-      else{
-        // Or we have to manually add statistical uncertainty in quadrature
-        TMatrixD cov = *fCovMx;
-        for( int b = 0; b < N; ++b ) {
-          const double Nevt = array[b+1];
-          if(Nevt > 0) cov(b, b) += 1/Nevt;
-        }
-
-        // And then invert
-        covInv = TMatrixD(TMatrixD::kInverted, cov);
-      }
-
-      // In either case - covariance matrix is fractional; convert it to
-      // absolute by multiplying out the prediction
-      for( int b0 = 0; b0 < N; ++b0 ) {
-        for( int b1 = 0; b1 < N; ++b1 ) {
-          const double f = array[b0+1] * array[b1+1];
-          if(f != 0) covInv(b0, b1) /= f;
-          else covInv(b0, b1) = 0.;
-        }
-      }
+      const TMatrixD covInv = GetAbsInvCovMat(hpred);
 
       // Now the matrix is in order apply the mask to the two histograms
       if(fMask) ApplyMask(hpred, hdata);
@@ -195,6 +162,47 @@ namespace ana
     HistCache::Delete(hdata);
 
     return ll;
+  }
+
+  //----------------------------------------------------------------------
+  TMatrixD SingleSampleExperiment::GetAbsInvCovMat(TH1D* hpred) const
+  {
+    // The inverse relative covariance matrix comes from one of two sources
+    // If you don't set the size the assignment operator won't do what you expect.
+    TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
+
+    // Array contains the underflow too!
+    double* array = hpred->GetArray();
+    const int N = hpred->GetNbinsX();
+
+    if(fPreInvert){
+      // Either we precomputed it
+      assert(fCovMxInv);
+      covInv = *fCovMxInv;
+    }
+    else{
+      // Or we have to manually add statistical uncertainty in quadrature
+      TMatrixD cov = *fCovMx;
+      for( int b = 0; b < N; ++b ) {
+        const double Nevt = array[b+1];
+        if(Nevt > 0) cov(b, b) += 1/Nevt;
+      }
+
+      // And then invert
+      covInv = TMatrixD(TMatrixD::kInverted, cov);
+    }
+
+    // In either case - covariance matrix is fractional; convert it to
+    // absolute by multiplying out the prediction
+    for( int b0 = 0; b0 < N; ++b0 ) {
+      for( int b1 = 0; b1 < N; ++b1 ) {
+        const double f = array[b0+1] * array[b1+1];
+        if(f != 0) covInv(b0, b1) /= f;
+        else covInv(b0, b1) = 0.;
+      }
+    }
+
+    return covInv;
   }
 
   //----------------------------------------------------------------------
@@ -234,17 +242,33 @@ namespace ana
     TH1D* hpred = PredHistIncCosmics(calc, shift);
     TH1D* hdata = fData.ToTH1(pot);
 
-    for(auto& it: dchi){
-      if(it.first != &kCosmicBkgScaleSyst){
-        it.second += LogLikelihoodDerivative(hpred, hdata, dp[it.first]);
-      }
-      else{
-        const unsigned int N = fCosmic->GetNbinsX()+2;
-        const double* ca = fCosmic->GetArray();
-        std::vector<double> cosErr(N);
-        for(unsigned int i = 0; i < N; ++i) cosErr[i] = ca[i]*fCosmicScaleError;
-        it.second += LogLikelihoodDerivative(hpred, hdata, cosErr);
-      }
+    if(fCovMx){
+      const TMatrixD covInv = GetAbsInvCovMat(hpred);
+      if(fMask) ApplyMask(hpred, hdata);
+
+      for(auto& it: dchi){
+        assert(it.first != &kCosmicBkgScaleSyst); // not implemented
+
+        // TODO there is matrix work done inside this function that doesn't
+        // need to be repeated
+        it.second += Chi2CovMxDerivative(hpred, hdata, covInv, dp[it.first]);
+      } // end for it
+    }
+    else{ // otherwise it's a LL calculation
+      if(fMask) ApplyMask(hpred, hdata);
+
+      for(auto& it: dchi){
+        if(it.first != &kCosmicBkgScaleSyst){
+          it.second += LogLikelihoodDerivative(hpred, hdata, dp[it.first]);
+        }
+        else{
+          const unsigned int N = fCosmic->GetNbinsX()+2;
+          const double* ca = fCosmic->GetArray();
+          std::vector<double> cosErr(N);
+          for(unsigned int i = 0; i < N; ++i) cosErr[i] = ca[i]*fCosmicScaleError;
+          it.second += LogLikelihoodDerivative(hpred, hdata, cosErr);
+        }
+      } // end for it
     }
 
     HistCache::Delete(hpred);
