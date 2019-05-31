@@ -92,7 +92,7 @@ namespace ana
   {
   public:
     static void SetError(double e) {fgErr = e;}
-    static double GetError() {return fgErr;}
+    static double GetError() {return std::max(fgErr, 0.);}
   protected:
     static double fgErr;
   };
@@ -142,12 +142,14 @@ namespace ana
   **/
   double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
 
-  double Chi2CovMxDerivative(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv, const TVectorD& dedx);
+  double Chi2CovMxDerivative(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv, TVectorD dedx, bool matScales);
 
   /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
   double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
 
-  double Chi2CovMxDerivative(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv, const std::vector<double>& dedx);
+  /// \param matScales Was the covariance matrix produced by scaling a
+  ///                  fractional matrix?
+  double Chi2CovMxDerivative(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales);
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
   ///

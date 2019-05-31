@@ -227,15 +227,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv, const TVectorD& dedx)
+  double Chi2CovMxDerivative(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv, TVectorD dedx, bool matScales)
   {
     assert(e.GetNrows() == o.GetNrows());
     assert(e.GetNrows() == dedx.GetNrows());
 
-    // I think this is correct for a non-symmetric matrix
-    //    return (dedx * (covmxinv * (e-o))) + ((e-o) * (covmxinv * dedx));
+    if(matScales){
+      // If the matrix also depends on the expectations (like M_ij/(e_i*e_j))
+      // then there's an additional term in the derivative. We attach it to the
+      // de/dx for convenience.
+      for(int i = 0; i < e.GetNrows(); ++i){
+        if(e[i] != 0){
+          dedx[i] *= o[i]/e[i];
+        }
+      }
+    }
 
-    // But ours is symmetric
     return 2*(dedx * (covmxinv * (e-o)));
   }
 
@@ -253,7 +260,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TH1* e, const TH1* o, const TMatrixD& covmxinv, const std::vector<double>& dedx)
+  double Chi2CovMxDerivative(const TH1* e, const TH1* o, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales)
   {
     assert(e->GetNbinsX() == o->GetNbinsX());
     assert(e->GetNbinsX()+2 == int(dedx.size()));
@@ -265,10 +272,10 @@ namespace ana
     for (int bin = 1; bin <= e->GetNbinsX(); bin++){
       eVec[bin-1] = e->GetBinContent(bin);
       oVec[bin-1] = o->GetBinContent(bin);
-      dedxVec[bin-1] = dedx[bin];
+      dedxVec[bin-1] = eVec[bin-1] ? dedx[bin] : 0;
     }
 
-    return Chi2CovMxDerivative(eVec, oVec, covmxinv, dedxVec);
+    return Chi2CovMxDerivative(eVec, oVec, covmxinv, dedxVec, matScales);
   }
 
   //----------------------------------------------------------------------

@@ -170,6 +170,7 @@ namespace ana
     // The inverse relative covariance matrix comes from one of two sources
     // If you don't set the size the assignment operator won't do what you expect.
     TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
+    assert(fCovMx->GetNrows() == fCovMx->GetNcols());
 
     // Array contains the underflow too!
     double* array = hpred->GetArray();
@@ -249,9 +250,12 @@ namespace ana
       for(auto& it: dchi){
         assert(it.first != &kCosmicBkgScaleSyst); // not implemented
 
-        // TODO there is matrix work done inside this function that doesn't
-        // need to be repeated
-        it.second += Chi2CovMxDerivative(hpred, hdata, covInv, dp[it.first]);
+        if(shift.GetShift(it.first) > it.first->Min() &&
+           shift.GetShift(it.first) < it.first->Max()){
+          // TODO there is matrix work done inside this function that shouldn't
+          // need to be repeated when just de/dx changes
+          it.second += Chi2CovMxDerivative(hpred, hdata, covInv, dp[it.first], true);
+        }
       } // end for it
     }
     else{ // otherwise it's a LL calculation
