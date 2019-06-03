@@ -61,7 +61,7 @@ source ${CAFANA}/CAFAnaEnv.sh
 
 voms-proxy-info --all
 
-setup ifdhc v2_3_9
+setup ifdhc
 
 ups active
 
