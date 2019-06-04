@@ -131,6 +131,9 @@ namespace ana
 	if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
 	if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
 	double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
+	sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE, 0.5);
+	sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE, 0.5);
+	sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE, 0.5);
 	sr->dune.Ev_reco_numu += sumE * scale * pow(sumE, 0.5);
 	sr->dune.Ev_reco_nue  += sumE * scale * pow(sumE, 0.5);
 	sr->dune.RecoHadEnNumu += sumE * scale * pow(sumE, 0.5);
@@ -164,6 +167,9 @@ namespace ana
 	double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
 	sr->dune.Ev_reco_numu += sumE * scale * pow(sumE+0.1, -0.5);
 	sr->dune.Ev_reco_nue  += sumE * scale * pow(sumE+0.1, -0.5);
+	sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE+0.1, -0.5);
+	sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE+0.1, -0.5);
+	sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE+0.1, -0.5);
 	sr->dune.RecoHadEnNumu += sumE * scale * pow(sumE+0.1, -0.5);
 	sr->dune.RecoHadEnNue  += sumE * scale * pow(sumE+0.1, -0.5);
       }
@@ -234,6 +240,7 @@ namespace ana
       if (sr->dune.isFD && sr->dune.eRecoN > 0) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoN < 0) sr->dune.eRecoN = 0.;
+	sr->dune.eRecoN += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
 	sr->dune.Ev_reco_numu += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
@@ -260,6 +267,7 @@ namespace ana
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoN < 0) sr->dune.eRecoN = 0.;
+	sr->dune.eRecoN += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
 	sr->dune.Ev_reco_numu += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
@@ -290,6 +298,7 @@ namespace ana
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
+	sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
 	sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
@@ -322,6 +331,7 @@ namespace ana
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
+	sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
 	sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
@@ -383,6 +393,9 @@ namespace ana
 	if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
 	if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
 	const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
+	sr->dune.eRecoP   += sr->dune.eRecoP * scale;
+	sr->dune.eRecoPim += sr->dune.eRecoPim * scale;
+	sr->dune.eRecoPip += sr->dune.eRecoPip * scale;
 	sr->dune.Ev_reco_numu += sumE * scale;
 	sr->dune.Ev_reco_nue  += sumE * scale;
 	sr->dune.RecoHadEnNumu += sumE * scale;
@@ -413,6 +426,7 @@ namespace ana
       if(sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
+ 	sr->dune.eRecoN += sr->dune.eRecoN * scale;
  	sr->dune.Ev_reco_numu  += sr->dune.eRecoN * scale;
 	sr->dune.Ev_reco_nue   += sr->dune.eRecoN * scale;
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoN * scale;
@@ -443,6 +457,7 @@ namespace ana
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
+	sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale;
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * scale;
 	sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * scale;
 	sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * scale; 
@@ -500,6 +515,7 @@ namespace ana
       if (sr->dune.isFD){
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
+	sr->dune.eRecoPi0     += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
 	sr->dune.Ev_reco_nue  += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
 	sr->dune.Ev_reco_numu += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
 	sr->dune.RecoHadEnNumu += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
@@ -567,6 +583,7 @@ namespace ana
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
+	sr->dune.eRecoN += (sr->dune.eN - sr->dune.eRecoN) * scale;
 	sr->dune.Ev_reco_nue   += (sr->dune.eN - sr->dune.eRecoN) * scale;
 	sr->dune.Ev_reco_numu  += (sr->dune.eN - sr->dune.eRecoN) * scale;
 	sr->dune.RecoHadEnNue  += (sr->dune.eN - sr->dune.eRecoN) * scale;
