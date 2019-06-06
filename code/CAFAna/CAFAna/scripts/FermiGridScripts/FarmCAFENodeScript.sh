@@ -212,7 +212,6 @@ LN=0
 #   LN=$(( LN + 1 ))
 # done
 
-
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
 setup jobsub_client

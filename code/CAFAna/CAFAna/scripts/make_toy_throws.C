@@ -38,6 +38,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   // Oscillation parameters to use
   std::vector<const IFitVar *> oscVars = {};
+
   if (sampleString.find("fd") != std::string::npos) {
     oscVars = GetOscVars(oscVarString, hie);
   }
