@@ -198,7 +198,7 @@ const double nom_exposure = 336.;
 
 // Global file path...
 //#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-const std::string cafFilePath="/dune/data/users/marshalc/CAFs/mcc11_v3";
+const std::string cafFilePath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 //#else
 //const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 //#endif
