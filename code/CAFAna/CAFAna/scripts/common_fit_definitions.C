@@ -553,61 +553,96 @@ SampleType GetSampleType(std::string sample){
   return kUnknown;
 }
 
+void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
+                          std::vector<const ISyst *> systlist, int max = 0,
+                          AxisBlob const &axes = default_axes,
+                          std::vector<std::string> const &file_list = {}) {
 
-void MakePredictionInterp(TDirectory* saveDir, SampleType sample,
-			  std::vector<const ISyst*> systlist,
-			  int max=0, AxisBlob const &axes = default_axes){
+  bool use_default_files = !file_list.size();
 
   // Move to the save directory
   saveDir->cd();
-  osc::IOscCalculatorAdjustable* this_calc = NuFitOscCalc(1);
+  osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
 
-bool isfhc = ((sample == kNDFHC) ||
-(sample == kNDFHC_OA) || (sample == kFDFHC));
+  bool isfhc =
+      ((sample == kNDFHC) || (sample == kNDFHC_OA) || (sample == kFDFHC));
 
   // FD samples
-  if ((sample == kFDFHC) || (sample == kFDRHC)){
+  if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(cafFilePath+"/"+ GetSampleName(sample)+"_nonswap.root", kBeam, max);
-    SpectrumLoader loaderNue(cafFilePath+"/"+ GetSampleName(sample)+"_nueswap.root", kBeam, max);
-    SpectrumLoader loaderNutau(cafFilePath+"/"+ GetSampleName(sample)+"_tauswap.root", kBeam, max);
+    SpectrumLoader loaderNumu(
+        use_default_files
+            ? std::vector<std::string>{cafFilePath + "/" +
+                                       GetSampleName(sample) + "_nonswap.root"}
+            : file_list,
+        kBeam, max);
+    SpectrumLoader loaderNue(
+        use_default_files
+            ? std::vector<std::string>{cafFilePath + "/" +
+                                       GetSampleName(sample) + "_nueswap.root"}
+            : file_list,
+        kBeam, max);
+    SpectrumLoader loaderNutau(
+        use_default_files
+            ? std::vector<std::string>{cafFilePath + "/" +
+                                       GetSampleName(sample) + "_tauswap.root"}
+            : file_list,
+        kBeam, max);
 
-    these_loaders .AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    these_loaders .AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    these_loaders .AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+                            Loaders::kNonSwap);
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+                            Loaders::kNueSwap);
+    these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
+                            ana::kBeam, Loaders::kNuTauSwap);
 
-    NoExtrapPredictionGenerator genFDNumu(*axes.FDAx_numu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
-    NoExtrapPredictionGenerator genFDNue(*axes.FDAx_nue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
-    PredictionInterp predInterpFDNumu(systlist, this_calc, genFDNumu, these_loaders);
-    PredictionInterp predInterpFDNue(systlist, this_calc, genFDNue, these_loaders);
+    NoExtrapPredictionGenerator genFDNumu(
+        *axes.FDAx_numu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNue(
+        *axes.FDAx_nue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
+    PredictionInterp predInterpFDNumu(systlist, this_calc, genFDNumu,
+                                      these_loaders);
+    PredictionInterp predInterpFDNue(systlist, this_calc, genFDNue,
+                                     these_loaders);
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNumu.SaveTo(saveDir->mkdir((std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc")).c_str()));
+    predInterpFDNumu.SaveTo(saveDir->mkdir(
+        (std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
+            .c_str()));
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNue .SaveTo(saveDir->mkdir((std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc")).c_str()));
+    predInterpFDNue.SaveTo(saveDir->mkdir(
+        (std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc"))
+            .c_str()));
 
-  } else if ((sample == kNDFHC) || (sample == kNDRHC) || (sample == kNDFHC_OA)){
+  } else if ((sample == kNDFHC) || (sample == kNDRHC) ||
+             (sample == kNDFHC_OA)) {
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(cafFilePath+"/"+ GetSampleName(sample)+"_CAF.root", kBeam, max);
-    these_loaders .AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
+    SpectrumLoader loaderNumu(
+        use_default_files
+            ? std::vector<std::string>{cafFilePath + "/" +
+                                       GetSampleName(sample) + "_CAF.root"}
+            : file_list,
+        kBeam, max);
+    these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
-    NoOscPredictionGenerator genNDNumu(*axes.NDAx, (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU)
-     				       && kIsTrueFV, kGENIEWeights);
+    NoOscPredictionGenerator genNDNumu(
+        *axes.NDAx, (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV,
+        kGENIEWeights);
 
-    PredictionInterp predInterpNDNumu(systlist, this_calc, genNDNumu, these_loaders);
+    PredictionInterp predInterpNDNumu(systlist, this_calc, genNDNumu,
+                                      these_loaders);
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpNDNumu.SaveTo(saveDir->mkdir((std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc")).c_str()));
+    predInterpNDNumu.SaveTo(saveDir->mkdir(
+        (std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
+            .c_str()));
   }
 }
-
-bool const kAddSampleTypeToFilename = true;
-bool const kFileContainsAllSamples = false;
 
 static std::vector<std::string> const sample_dir_order = {
     "fd_interp_numu_fhc", "fd_interp_nue_fhc",  "fd_interp_numu_rhc",
