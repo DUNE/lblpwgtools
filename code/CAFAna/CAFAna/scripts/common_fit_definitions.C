@@ -421,7 +421,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   if (systString.find("list") != std::string::npos){
 
     // 1) Get a default list with everything
-    std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE, false /*no fake data*/);
+    std::vector<const ISyst*> namedList = GetListOfSysts(true, true, true, useND, useFD, useNueOnE, false /*no fake data*/, true /*Get CDR flux systs*/);
     // for (auto & syst : namedList) std::cout << syst->ShortName() << std::endl;
     // 2) Interpret the list of short names
     std::vector<std::string> systs = SplitString(systString, ':');
