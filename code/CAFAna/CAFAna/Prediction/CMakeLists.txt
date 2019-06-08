@@ -7,7 +7,8 @@ set(Prediction_implementation_files
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
-  PredictionNuOnE.cxx)
+  PredictionNuOnE.cxx
+  PredictionInterpKernel.cxx)
 
 set(Prediction_header_files
   IPrediction.h
@@ -18,7 +19,8 @@ set(Prediction_header_files
   PredictionNoOsc.h
   PredictionScaleComp.h
   PredictionXSecDiag.h
-  PredictionNuOnE.h)
+  PredictionNuOnE.h
+  PredictionInterpKernel.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
