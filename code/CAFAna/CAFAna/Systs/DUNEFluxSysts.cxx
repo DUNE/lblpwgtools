@@ -24,9 +24,19 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
                          caf::StandardRecord *sr, double &weight) const {
   if (!fScale[0][0][0][0]) {
-    TFile f((FindCAFAnaDir() + "/Systs/flux_shifts" +
-             (fIncludeOffAxis ? "_wOffAxis" : "") + ".root")
-                .c_str());
+    std::string InputFileName;
+    if (fUseCDR) {
+      // CDROpt flux
+      InputFileName = "flux_shifts_CDR.root";
+    } else if (fIncludeOffAxis) {
+      // Nov17 opt engineered 2D @ ND
+      InputFileName = "flux_shifts_wOffAxis.root";
+    } else {
+      // Nov17 opt engineered
+      InputFileName = "flux_shifts_Nov17.root";
+    }
+
+    TFile f((FindCAFAnaDir() + "/Systs/" + InputFileName).c_str());
     assert(!f.IsZombie());
 
     for (int det : {0, 1}) {
@@ -100,22 +110,22 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
 
 //----------------------------------------------------------------------
 const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
-                                    bool includeOffAxis) {
+                                    bool useCDR, bool includeOffAxis) {
   // Make sure we always give the same one back
   static std::vector<const DUNEFluxSyst *> cache;
   if (i >= cache.size())
     cache.resize(i + 1);
   if (!cache[i])
-    cache[i] = new DUNEFluxSyst(i, applyPenalty, includeOffAxis);
+    cache[i] = new DUNEFluxSyst(i, applyPenalty, useCDR, includeOffAxis);
   return cache[i];
 }
 
 //----------------------------------------------------------------------
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
-                                    bool includeOffAxis) {
+                                    bool useCDR, bool includeOffAxis) {
   DUNEFluxSystVector ret;
   for (unsigned int i = 0; i < N; ++i)
-    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, includeOffAxis));
+    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR, includeOffAxis));
   return ret;
 }
 } // namespace ana
