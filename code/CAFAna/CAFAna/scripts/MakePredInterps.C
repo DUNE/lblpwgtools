@@ -199,7 +199,7 @@ int main(int argc, char const *argv[]) {
     std::vector<std::string> CAFs;
 
     if ((earliest_regex == std::string::npos)) {
-      CAFs.push_back(pattern);
+      CAFs.push_back(dir + pattern);
     } else {
       try {
         CAFs = GetMatchingFiles(dir, pattern);
