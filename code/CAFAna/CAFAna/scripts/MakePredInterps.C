@@ -84,7 +84,8 @@ std::string DeGlobPattern(std::string const &pattern) {
 }
 
 std::vector<std::string> GetMatchingFiles(std::string directory,
-                                          std::string pattern) {
+                                          std::string pattern,
+                                          bool IncDir = true) {
 
   directory = EnsureTrailingSlash(directory);
   pattern = DeGlobPattern(pattern);
@@ -102,7 +103,8 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
   if (dir != NULL) {
     while ((ent = readdir(dir)) != NULL) {
       if (std::regex_match(ent->d_name, rpattern)) {
-        matches.push_back(ent->d_name);
+        matches.push_back(IncDir ? directory + std::string(ent->d_name)
+                                 : std::string(ent->d_name));
       }
     }
   }
