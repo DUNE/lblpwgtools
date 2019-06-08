@@ -994,7 +994,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
       detCovPath+"/det_sys_cov.root";
 #else
   std::string covFileName =
-      FindCAFAnaDir() + "/Systs/ND_syst_cov_withRes.root";
+      FindCAFAnaDir() + "/Systs/det_sys_cov.root";
 #endif
   //std::string covName = "nd_frac_cov";
 
@@ -1143,7 +1143,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
       this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {0, 1, 2, 3});
       if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
-	this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+	       this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
       }
     }
   }
