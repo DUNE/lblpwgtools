@@ -111,7 +111,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 
 SampleType sample;
 std::string output_file_name;
-AxisBlob axes;
+AxisBlob axes = default_axes;
 std::vector<std::string> input_patterns;
 
 void SayUsage(char const *argv[]) {
