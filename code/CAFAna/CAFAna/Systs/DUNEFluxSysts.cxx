@@ -28,9 +28,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     if (fUseCDR) {
       // CDROpt flux
       InputFileName = "flux_shifts_CDR.root";
-    } else if (fIncludeOffAxis) {
-      // Nov17 opt engineered 2D @ ND
-      InputFileName = "flux_shifts_wOffAxis.root";
     } else {
       // Nov17 opt engineered
       InputFileName = "flux_shifts_Nov17.root";
@@ -58,10 +55,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
                                  .Data());
             h = (TH1 *)h->Clone(UniqueName().c_str());
             assert(h);
-            if (fIncludeOffAxis && !det) {
-              fScale2D[pdg][anti][hc] = dynamic_cast<TH2 *>(h);
-              assert(fScale2D[pdg][anti][hc]);
-            }
             h->SetDirectory(0);
           }
         }
@@ -79,53 +72,41 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
 
   double rel_weight = 1;
 
-  if (fIncludeOffAxis && !sr->dune.isFD) {
-    // ND is a TH2 where x is enu and y is absolute
-    // off-axis position in m
-    TH2 *h = fScale2D[pdg][anti][hc];
-    assert(h);
-    const int xbin = h->GetXaxis()->FindFixBin(sr->dune.Ev);
-    double pos_off_axis_m = std::fabs(sr->dune.det_x + (sr->dune.vtx_x * 1E-2));
-    const int ybin = h->GetYaxis()->FindFixBin(pos_off_axis_m);
-
-    if (xbin == 0 || xbin == h->GetXaxis()->GetNbins() + 1) {
-      return;
-    }
-    if (ybin == 0 || ybin == h->GetYaxis()->GetNbins() + 1) {
-      return;
-    }
-    rel_weight = h->GetBinContent(xbin, ybin);
-  } else {
-    TH1 *h = fScale[det][pdg][anti][hc];
-    assert(h);
-    const int bin = h->FindBin(sr->dune.Ev);
-    if (bin == 0 || bin == h->GetNbinsX() + 1) {
-      return;
-    }
-    rel_weight = h->GetBinContent(bin);
+  TH1 *h = fScale[det][pdg][anti][hc];
+  assert(h);
+  const int bin = h->FindBin(sr->dune.Ev);
+  if (bin == 0 || bin == h->GetNbinsX() + 1) {
+    return;
   }
+  rel_weight = h->GetBinContent(bin);
 
   weight *= 1 + rel_weight * sigma;
 }
 
 //----------------------------------------------------------------------
 const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
-                                    bool useCDR, bool includeOffAxis) {
+                                    bool useCDR) {
   // Make sure we always give the same one back
-  static std::vector<const DUNEFluxSyst *> cache;
-  if (i >= cache.size())
-    cache.resize(i + 1);
-  if (!cache[i])
-    cache[i] = new DUNEFluxSyst(i, applyPenalty, useCDR, includeOffAxis);
-  return cache[i];
+  static std::vector<const DUNEFluxSyst *> cache_CDR;
+  static std::vector<const DUNEFluxSyst *> cache_Nov17;
+
+  auto c = useCDR ? &cache_CDR : &cache_Nov17;
+  if (i >= c->size()) {
+    c->resize(i + 1);
+  }
+  if (!c->at(i)) {
+    c->at(i) = new DUNEFluxSyst(i, applyPenalty, useCDR);
+  }
+  return c->at(i);
 }
 
 //----------------------------------------------------------------------
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
-                                    bool useCDR, bool includeOffAxis) {
+                                    bool useCDR) {
   DUNEFluxSystVector ret;
   for (unsigned int i = 0; i < N; ++i)
-    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR, includeOffAxis));
+    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR));
   return ret;
 }
+
 } // namespace ana

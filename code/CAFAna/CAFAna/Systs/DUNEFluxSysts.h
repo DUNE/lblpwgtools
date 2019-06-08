@@ -16,26 +16,23 @@ public:
                      double &weight) const override;
 
 protected:
-  friend const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int, bool, bool, bool);
-  DUNEFluxSyst(int i, bool applyPenalty, bool useCDR, bool includeOffAxis)
+  friend const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int, bool, bool);
+  DUNEFluxSyst(int i, bool applyPenalty, bool useCDR)
       : ISyst(TString::Format("flux_%s_%i", useCDR ? "CDR" : "Nov17", i).Data(),
               TString::Format("Flux #%i (%s)", i, useCDR ? "CDR" : "Nov17")
                   .Data(),
               applyPenalty),
-        fIdx(i), fScale(), fUseCDR(useCDR), fIncludeOffAxis(includeOffAxis) {}
+        fIdx(i), fScale(), fUseCDR(useCDR) {}
 
   int fIdx;
 
   mutable TH1 *fScale[2][2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
-  mutable TH2 *fScale2D[2][2][2];  // ND/FD, numu/nue, bar, FHC/RHC
 
   bool fUseCDR;
-  bool fIncludeOffAxis;
 };
 
 const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty = true,
-                                    bool useCDR = true,
-                                    bool includeOffAxis = false);
+                                    bool useCDR = true);
 
 // Because vector<T*> won't automatically convert to vector<U*> even when U
 // inherits from V.
@@ -46,6 +43,5 @@ struct DUNEFluxSystVector : public std::vector<const DUNEFluxSyst *> {
 };
 
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty = true,
-                                    bool useCDR = true,
-                                    bool includeOffAxis = false);
+                                    bool useCDR = true);
 } // namespace ana

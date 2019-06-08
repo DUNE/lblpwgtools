@@ -212,12 +212,23 @@ int main(int argc, char const *argv[]) {
     std::copy(CAFs.begin(), CAFs.end(), std::back_inserter(file_list));
   }
 
+  if (!file_list.size()) {
+    std::cout << "[ERROR]: Failed to find any matching input files."
+              << std::endl;
+    exit(4);
+  }
   for (auto f : file_list) {
-    std::cout << "[INFO]: Using " << f << std::endl;
+    std::cout << "[INFO]: Reading from: " << f << std::endl;
   }
 
   TFile fout(output_file_name.c_str(), "RECREATE");
-  MakePredictionInterp(&fout, sample, GetListOfSysts(), 0, axes, file_list);
+  auto los = GetListOfSysts();
+  std::cout << "[INFO]: Using " << los.size()
+            << " systematic dials: " << std::endl;
+  for (auto s : los) {
+    std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
+  }
+  MakePredictionInterp(&fout, sample, los, 0, axes, file_list);
   fout.Write();
   fout.Close();
 }
