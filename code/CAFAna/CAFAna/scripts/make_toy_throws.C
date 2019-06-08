@@ -11,9 +11,6 @@ int const def_hie = 1;
 char const *def_asimov_set = "0";
 char const *def_oscVarString = "th13:deltapi:th23:dmsq32";
 
-// Used to force seed
-int gseed = 0;
-
 // Need to accept filename, ND/FD, systs and reload as arguments
 void make_toy_throws(std::string stateFname = def_stateFname,
                      std::string outputFname = def_outputFname,
@@ -26,7 +23,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
                      std::string oscVarString = def_oscVarString) {
 
   gROOT->SetBatch(1);
-  gRandom->SetSeed(gseed);
+  gRandom->SetSeed(gRNGSeed);
 
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;

@@ -48,6 +48,8 @@
 
 using namespace ana;
 
+int gRNGSeed = 0;
+
 // List of vars
 // -->FD
 const Var kRecoE_nue  = SIMPLEVAR(dune.Ev_reco_nue);
@@ -203,8 +205,7 @@ const std::string cafFilePath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 //const std::string cafFilePath="root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/picker24/CAFv4/";
 //#endif
 
-bool const UseOffAxisFluxUncertainties = false; //true;
-size_t const NFluxParametersToUse = 13; //30;
+size_t const NFluxParametersToAddToStatefile = 30;
 
 double GetBoundedGausThrow(double min, double max){
   double val = -999;
@@ -298,20 +299,25 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 }
 
 
-std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
+std::vector<const ISyst*> GetListOfSysts(bool fluxsyst_Nov17=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false, bool useFakeDataDials=true,
+					 bool useNueOnE=false, bool useFakeDataDials=true, bool fluxsyst_CDR = true,
 					 bool removeFDNonFitDials = false){
 
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
   std::vector<const ISyst *> systlist;
-  if (fluxsyst) {
-    std::vector<const ISyst *> fluxlist =
-        GetDUNEFluxSysts(NFluxParametersToUse, fluxXsecPenalties, UseOffAxisFluxUncertainties);
+  if (fluxsyst_Nov17) {
+    std::vector<const ISyst *> fluxlist_Nov17 =
+        GetDUNEFluxSysts(NFluxParametersToAddToStatefile, fluxXsecPenalties, false);
+    systlist.insert(systlist.end(), fluxlist_Nov17.begin(), fluxlist_Nov17.end());
+  }
 
-    systlist.insert(systlist.end(), fluxlist.begin(), fluxlist.end());
+  if(fluxsyst_CDR){
+        std::vector<const ISyst *> fluxlist_CDR =
+            GetDUNEFluxSysts(NFluxParametersToAddToStatefile, fluxXsecPenalties, true);
+        systlist.insert(systlist.end(), fluxlist_CDR.begin(), fluxlist_CDR.end());
   }
 
   if (detsyst) {
@@ -340,14 +346,14 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
       systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
     }
   }
-  // If we want to use the FD energy scale covariance matrix need to remove 
+  // If we want to use the FD energy scale covariance matrix need to remove
   // all FD escale and resolution systematics
   if (removeFDNonFitDials) {
     RemoveSysts(systlist,
 		{"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
 		 "ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
-		 "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
-		 "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+		 "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst",
+		 "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst",
 		 "eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst",
 		 "EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD"});
   }
@@ -361,17 +367,17 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 // All detector nuisance parameters
 std::vector<std::string> fd_det_list = {"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
 					"ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
-					"eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
-					"EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+					"eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst",
+					"EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst",
 					"eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst",
-					"EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD", 
+					"EMResFD", "MuonResFD", "ChargedHadResFD", "NResFD",
 					"FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
 
 // FD detector subsets
 std::vector<std::string> fd_escale_list = {"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
 					   "ChargedHadUncorrFD", "UncorrFDHadSqrtSyst", "UncorrFDHadInvSqrtSyst",
-					   "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", 
-					   "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", 
+					   "eScaleMuLArFD", "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst",
+					   "EMUncorrFD", "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst",
 					   "eScaleN_FD", "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst"};
 std::vector<std::string> fd_muon_escale_list = {"eScaleMuLArFD"};
 std::vector<std::string> fd_eres_list = {"MuonResFD", "EMResFD", "ChargedHadResFD"};
@@ -406,7 +412,8 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useNueOnE=false){
   // Now defaults to true!
   bool detsyst  = true;
-  bool fluxsyst = true;
+  bool fluxsyst_Nov17 = true;
+  bool fluxsyst_CDR = false;
   bool xsecsyst = true;
 
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
@@ -439,27 +446,28 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   for (auto syst : systs){
     if (syst == "allsyst"){
       xsecsyst = true;
-      fluxsyst = true;
+      fluxsyst_Nov17 = true;
       detsyst = true;
     }
 
     if (syst == "nosyst"){
       xsecsyst = false;
-      fluxsyst = false;
+      fluxsyst_Nov17 = false;
       detsyst = false;
     }
 
     // Now we're getting a bit funky as these options now conflict.
     // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
     if (syst == "nodet") detsyst = false;
-    if (syst == "noflux") fluxsyst = false;
+    if (syst == "noflux") fluxsyst_Nov17 = false;
+    if (syst == "cdrflux") {fluxsyst_CDR = true; fluxsyst_Nov17 = false; }
     if (syst == "noxsec") xsecsyst = false;
 
   }
 
   // Okay, now get the list, and start from there...
-  std::vector<const ISyst*> namedList = GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-						       useND, useFD, useNueOnE, false /*no fake data*/);
+  std::vector<const ISyst*> namedList = GetListOfSysts(fluxsyst_Nov17, xsecsyst, detsyst,
+						       useND, useFD, useNueOnE, false /*no fake data*/, fluxsyst_CDR);
 
   // Now do something REALLY FUNKY. Remove specific dials from the list we already have
   // Need to allow single dials, and a few specific groups...
@@ -946,11 +954,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   osc::IOscCalculatorAdjustable* fitOsc, SystShifts fitSyst,
 		   ana::SeedList oscSeeds = ana::SeedList(),
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
-		   std::vector<unique_ptr<Spectrum> > *spectra = nullptr, 
-		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr, 
+		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
+       std::vector<std::unique_ptr<Spectrum> > *spectra = nullptr,
 		   SystShifts &bf = junkShifts,
-		   bool UseSeedRefiner=true,
-		     // bool UseXSecCovmat=true,
 		   bool useFDCovMx=false){
 
   assert(systlist.size()+oscVars.size());
@@ -1006,16 +1012,6 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   for(const IFitVar* v: oscVars) fFakeDataVals.push_back(v->GetValue(fakeDataOsc));
   for(const ISyst* s: systlist) fFakeDataVals.push_back(fakeDataSyst.GetShift(s));
 
-  // if (UseXSecCovmat) {
-  //   std::vector<const ISyst *> cm_systlist = GetListOfSysts();
-  //   KeepSysts(cm_systlist, GetGenieDoNotFitList());
-  //   std::unique_ptr<TMatrixD> mat(
-  //       MakeCovmat(predNDNumuFHC, cm_systlist, fitOsc));
-  //   if (outDir) {
-  //     mat->Write("xsec_covmat");
-  //   }
-  // }
-
   // One problem with this method is that the experiments are reproduced for every single call...
   // Set up the fake data histograms, and save them if relevant...
   // This came back to bite me. I need to do multiple fits with the same fake data throw, so I need these to persist between calls to this function
@@ -1026,12 +1022,12 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 
   if (!spectra->size()){
     std::cout << "Remaking spectra" << std::endl;
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats,gRNGSeed ? gRNGSeed+10 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats,gRNGSeed ? gRNGSeed+11 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats,gRNGSeed ? gRNGSeed+12 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats,gRNGSeed ? gRNGSeed+13 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats,gRNGSeed ? gRNGSeed+14 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats,gRNGSeed ? gRNGSeed+15 : 0))));
   }
   // If using the multi sample covariances then they must be added to the MultiExperiment
   // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
@@ -1143,9 +1139,9 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
-  if (useFDCovMx) {    
+  if (useFDCovMx) {
     if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {0, 1, 2, 3});   
+      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {0, 1, 2, 3});
       if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
 	this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
       }
@@ -1164,25 +1160,6 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   }
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
-
-  if(UseSeedRefiner){
-    MultiExperiment seed_expt;
-    if (pot_fd_fhc_nue > 0) {
-      seed_expt.Add(&app_expt_fhc);
-    }
-    if (pot_fd_fhc_numu > 0) {
-      seed_expt.Add(&dis_expt_fhc);
-    }
-    if (pot_fd_rhc_nue > 0) {
-      seed_expt.Add(&app_expt_rhc);
-    }
-    if (pot_fd_rhc_numu > 0) {
-      seed_expt.Add(&dis_expt_rhc);
-    }
-    int pre_size = oscSeeds.size();
-    oscSeeds = RefineSeeds(oscSeeds, &seed_expt, oscVars, fitOsc);
-    std::cout << "[INFO]: RefineSeeds took us from " << pre_size << " to " << oscSeeds.size() << " fit seeds." << std::endl;
-  }
 
 #ifdef PROFILE_COUTS
   auto start_fit = std::chrono::system_clock::now();
