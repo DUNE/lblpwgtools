@@ -1162,15 +1162,14 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
       pre_nd_numu_rhc_1D   ->Write();
     }
   }
-
   // Now sort out the experiment
   MultiExperiment this_expt;
+  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
+  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   if (pot_fd_fhc_numu > 0)  this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0) this_expt.Add(&dis_expt_rhc);
   if (pot_fd_fhc_nue > 0)  this_expt.Add(&app_expt_fhc);
   if (pot_fd_rhc_nue > 0) this_expt.Add(&app_expt_rhc);
-  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
-  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
