@@ -70,11 +70,7 @@ const Var kTrueEnergy  = SIMPLEVAR(dune.Ev);
 const Var kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
 
 // ND binning
-<<<<<<< HEAD
-std::vector<double> binEEdges = { 0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10. };
-=======
 std::vector<double> binEEdges = {0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10.};
->>>>>>> 048fc30f9d37847e03a27fb64c2e89514bb73477
 std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
 
 // Binnings
