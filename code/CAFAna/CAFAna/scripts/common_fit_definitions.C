@@ -70,7 +70,11 @@ const Var kTrueEnergy  = SIMPLEVAR(dune.Ev);
 const Var kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
 
 // ND binning
+<<<<<<< HEAD
 std::vector<double> binEEdges = { 0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10. };
+=======
+std::vector<double> binEEdges = {0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10.};
+>>>>>>> 048fc30f9d37847e03a27fb64c2e89514bb73477
 std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
 
 // Binnings
@@ -1159,36 +1163,21 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
       pre_nd_numu_rhc_1D   ->Write();
     }
   }
-
   // Now sort out the experiment
   MultiExperiment this_expt;
+  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
+  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   if (pot_fd_fhc_numu > 0)  this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0) this_expt.Add(&dis_expt_rhc);
   if (pot_fd_fhc_nue > 0)  this_expt.Add(&app_expt_fhc);
   if (pot_fd_rhc_nue > 0) this_expt.Add(&app_expt_rhc);
-  if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
-  if (pot_nd_rhc > 0) this_expt.Add(&nd_expt_rhc);
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
-  if (useFDCovMx) {
-    if (pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "fd_all_frac_cov", false, {0, 1, 2, 3});
-      if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
-	       this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
-      }
-    }
-  }
   // Don't use FD covmx fits
-  else {
-    // ND only
-    if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0 && pot_fd_fhc_nue == 0 && pot_fd_fhc_numu == 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
-    }
-    // ND + FD
-    else if (pot_nd_rhc > 0 && pot_nd_fhc > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0 && pot_fd_fhc_nue > 0 && pot_fd_fhc_numu > 0) {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
-    }
+  if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
+    this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
   }
+
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
 

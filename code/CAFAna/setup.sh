@@ -6,6 +6,9 @@ then
     exit 1
 fi
 
+# SL7 seems to work well for us - allow it always
+export NOVASOFT_BYPASS_OS_CHECK=1
+
 source srt/srt.sh
 
 export CVMFS_DISTRO_BASE=/cvmfs/nova.opensciencegrid.org/ || exit 1

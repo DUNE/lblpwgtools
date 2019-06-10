@@ -92,7 +92,7 @@ namespace ana
   {
   public:
     static void SetError(double e) {fgErr = e;}
-    static double GetError() {return fgErr;}
+    static double GetError() {return std::max(fgErr, 0.);}
   protected:
     static double fgErr;
   };
@@ -126,7 +126,8 @@ namespace ana
   double LogLikelihoodDerivative(double e, double o);
 
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
-                                 const std::vector<double>& dedx);
+                                 const std::vector<double>& dedx,
+                                 bool useOverflow = false);
 
   /**  \brief Chi-squared calculation using a covariance matrix.
 
@@ -141,8 +142,14 @@ namespace ana
   **/
   double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
 
+  double Chi2CovMxDerivative(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv, TVectorD dedx, bool matScales);
+
   /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
   double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
+
+  /// \param matScales Was the covariance matrix produced by scaling a
+  ///                  fractional matrix?
+  double Chi2CovMxDerivative(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales);
 
   /// \brief For use with low-statistics data in combination with a MC
   /// prediction whose bins have a correlated uncertainty.
@@ -159,6 +166,7 @@ namespace ana
   /// The matrix must be symmetric and have dimension equal to the number of
   /// non-overflow bins in the histograms.
   double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv, std::vector<double>* hint = 0);
+
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
   ///
@@ -261,7 +269,7 @@ namespace ana
   /// Is this a grid (condor) job?
   bool RunningOnGrid();
 
-  bool AlmostEqual(double a, double b);
+  bool AlmostEqual(double a, double b, double eps = .0001); // allow 0.01% error by default
 
   std::string pnfs2xrootd(std::string loc, bool unauth = false);
 

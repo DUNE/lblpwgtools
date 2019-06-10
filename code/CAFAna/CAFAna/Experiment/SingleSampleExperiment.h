@@ -110,6 +110,7 @@ namespace ana
     virtual TH1D* DataHist() const override;
 
   protected:
+    TMatrixD GetAbsInvCovMat(TH1D* hpred) const;
 
     ETestStatistic fTestStatistic;
 
