@@ -23,6 +23,9 @@
 #include <algorithm>
 #include <malloc.h>
 
+// Don't apply systs to bins with fewer than this many MC stats
+const double kMinMCStats = 50;
+
 namespace ana
 {
   //----------------------------------------------------------------------
@@ -356,7 +359,7 @@ namespace ana
 
     double* arr = h->GetArray();
     for(unsigned int n = 0; n < N; ++n){
-      if (arr[n] > 50)
+      if (arr[n] > kMinMCStats)
 	arr[n] *= std::max(corr[n], 0.);
     }
 
@@ -472,6 +475,10 @@ namespace ana
       return;
     }
 
+    const Spectrum snom = fPredNom->PredictComponent(calc, flav, curr, sign);
+    TH1D* hnom = snom.ToTH1(snom.POT());
+    const double* arr_nom = hnom->GetArray();
+
     const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
     TH1D* h = base.ToTH1(pot);
     double* arr = h->GetArray();
@@ -503,6 +510,9 @@ namespace ana
       const double x_sqr = util::sqr(x);
 
       for(unsigned int n = 0; n < N; ++n){
+        // Wasn't corrected, so derivative is zero
+        if(arr_nom[n] <= kMinMCStats) continue;
+
         // Uncomment to debug crashes in this function
         // assert(type < fits.size());
         // assert(n < sp.fits[type].size());
@@ -510,11 +520,14 @@ namespace ana
         const Coeffs& f = fits[n];
 
         const double corr = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-        if(corr > 0) diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
+        if(corr > 0){
+          diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
+        }
       } // end for n
     } // end for syst
 
     HistCache::Delete(h);
+    HistCache::Delete(hnom);
   }
 
   //----------------------------------------------------------------------
