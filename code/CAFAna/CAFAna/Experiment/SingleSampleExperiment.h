@@ -16,6 +16,13 @@ namespace ana
 
   extern const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
 
+  enum ETestStatistic{
+    kLogLikelihood, ///< No covariance matrix
+    kCovMxChiSq,
+    kCovMxChiSqPreInvert, ///< good approximation for ND
+    kCovMxLogLikelihood ///< for FD
+  };
+
   /// Compare a single data spectrum to the MC + cosmics expectation
   class SingleSampleExperiment: public IExperiment
   {
@@ -43,7 +50,7 @@ namespace ana
     /// In MC studies you might not want to bother with cosmics
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data)
-      : fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMx(0), fCovMxInv(0), fPreInvert(0)
+      : fTestStatistic(kLogLikelihood), fMC(pred), fData(data), fCosmic(0), fMask(0), fCovMxInfo(0)
     {
     }
 
@@ -51,14 +58,14 @@ namespace ana
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const TMatrixD* cov,
-                           const bool preInvert = true);
+                           ETestStatistic stat);
 
     /// Include a covariance matrix file path
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data,
                            const std::string covMatFilename,
                            const std::string covMatName,
-                           const bool preInvert = true);
+                           ETestStatistic stat);
 
     virtual ~SingleSampleExperiment();
 
@@ -84,19 +91,28 @@ namespace ana
       s.fCosmic = nullptr;
       s.fCosmicScaleError = 0;
     };
+    // Add in a covariance matrix to an existing SingleSampleExperiment 
+    // Only works with the uncorrelated matrices
+    void AddCovarianceMatrix(const TMatrixD* cov,
+			     ETestStatistic stat);
+
+    void AddCovarianceMatrix(const std::string covMatFilename,
+			     const std::string covMatName,
+			     ETestStatistic stat);
 
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
 
-  protected:
-    void InitInverseMatrix();
+    virtual void ApplyMask(TH1* a, TH1* b) const override;
 
+    virtual TH1D* PredHist(osc::IOscCalculator* calc,
+                           const SystShifts& syst) const override;
+    virtual TH1D* DataHist() const override;
+
+  protected:
     TMatrixD GetAbsInvCovMat(TH1D* hpred) const;
 
-    void ApplyMask(TH1* a, TH1* b) const;
-
-    TH1D* PredHistIncCosmics(osc::IOscCalculator* calc,
-                             const SystShifts& syst) const;
+    ETestStatistic fTestStatistic;
 
     const IPrediction* fMC;
     Spectrum fData;
@@ -105,9 +121,10 @@ namespace ana
 
     double fCosmicScaleError;
 
-    TMatrixD* fCovMx;
-    TMatrixD* fCovMxInv;
-    bool fPreInvert;
 
+    TMatrixD* fCovMxInfo; ///< Represents different things depending on fTestStatistic
+
+
+    mutable std::vector<double> fCovLLState;
   };
 }

@@ -83,6 +83,7 @@ add_subdirectory(Extrap)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
+add_subdirectory(bin)
 
 add_subdirectory(scripts)
 

@@ -51,12 +51,12 @@ endif()
 install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
 
 set(SYST_INPUT_ROOT_FILES
-  flux_shifts.root
-  flux_shifts_wOffAxis.root
+  flux_shifts_CDR.root
+  flux_shifts_Nov17.root
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root
-#  ND_syst_cov_withEscale.root
-  ND_syst_cov_withRes.root)
+  det_sys_cov.root
+)
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
