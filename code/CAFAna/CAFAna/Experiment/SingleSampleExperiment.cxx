@@ -166,7 +166,7 @@ namespace ana
     double ll;
 
     // if there is a covariance matrix, use it
-    if(fCovMx){
+    if(fCovMxInfo){
       const TMatrixD covInv = GetAbsInvCovMat(hpred);
 
       // Now the matrix is in order apply the mask to the two histograms
@@ -200,21 +200,20 @@ namespace ana
   {
     // The inverse relative covariance matrix comes from one of two sources
     // If you don't set the size the assignment operator won't do what you expect.
-    TMatrixD covInv(fCovMx->GetNrows(), fCovMx->GetNcols());
-    assert(fCovMx->GetNrows() == fCovMx->GetNcols());
+    TMatrixD covInv(fCovMxInfo->GetNrows(), fCovMxInfo->GetNcols());
+    assert(fCovMxInfo->GetNrows() == fCovMxInfo->GetNcols());
 
     // Array contains the underflow too!
     double* array = hpred->GetArray();
     const int N = hpred->GetNbinsX();
 
-    if(fPreInvert){
+    if(fTestStatistic == kCovMxChiSqPreInvert){
       // Either we precomputed it
-      assert(fCovMxInv);
-      covInv = *fCovMxInv;
+      covInv = *fCovMxInfo;
     }
     else{
       // Or we have to manually add statistical uncertainty in quadrature
-      TMatrixD cov = *fCovMx;
+      TMatrixD cov = *fCovMxInfo;
       for( int b = 0; b < N; ++b ) {
         const double Nevt = array[b+1];
         if(Nevt > 0) cov(b, b) += 1/Nevt;
@@ -313,6 +312,12 @@ namespace ana
              const SystShifts& shift,
              std::unordered_map<const ISyst*, double>& dchi) const
   {
+    if(fTestStatistic == kCovMxLogLikelihood){
+      std::cout << "Analytic derivatives will be disabled because LogLikelihoodCovMx() does not yet support them" << std::endl;
+      dchi.clear();
+      return;
+    }
+
     const double pot = fData.POT();
 
     std::unordered_map<const ISyst*, std::vector<double>> dp;
@@ -327,7 +332,7 @@ namespace ana
     TH1D* hpred = PredHist(calc, shift);
     TH1D* hdata = fData.ToTH1(pot);
 
-    if(fCovMx){
+    if(fCovMxInfo){
       const TMatrixD covInv = GetAbsInvCovMat(hpred);
       if(fMask) ApplyMask(hpred, hdata);
 
