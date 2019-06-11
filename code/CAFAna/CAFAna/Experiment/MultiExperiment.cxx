@@ -211,6 +211,12 @@ namespace ana
              const SystShifts& shift,
              std::unordered_map<const ISyst*, double>& dchi) const
   {
+    if(!fCovMx.empty()){
+      std::cout << "MultiExperiment::Derivative() not implemented for case with covariance matrices" << std::endl;
+      dchi.clear();
+      return;
+    }
+
     // Each one should sum into the total so far
     for(unsigned int n = 0; n < fExpts.size(); ++n){
       if(fSystCorrelations[n].empty()){
