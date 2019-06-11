@@ -69,9 +69,6 @@ const Var kTrueEnergy  = SIMPLEVAR(dune.Ev);
 // CV weighting
 const Var kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
 
-// Cuts are now defined in CAFAna/Cuts/AnaCuts.h Removed from here to elide any
-// confusion
-
 // ND binning
 std::vector<double> binEEdges = {0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10.};
 std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
