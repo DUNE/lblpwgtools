@@ -53,7 +53,7 @@ namespace ana
                  std::vector<const IFitVar*> vars,
                  std::vector<const ISyst*> systs,
                  Precision prec)
-    : fExpt(expt), fVars(vars), fSysts(systs), fPrec(prec), fCalc(0),
+    : fExpt(expt), fVars(vars), fSysts(systs), fPrec(kGradDesc/*prec*/), fCalc(0),
       fSupportsDerivatives(SupportsDerivatives()), fCovar(0), fCovarStatus(-1)
   {
   }
@@ -110,15 +110,22 @@ namespace ana
     fShifts = systSeed;
 
     if(fPrec & kIncludeSimplex) std::cout << "Simplex option specified but not implemented. Ignored." << std::endl;
-    if((fPrec & kAlgoMask) == kGradDesc){
-      std::cout << "GradDesc option specified but not implemented. Abort." << std::endl;
-      abort();
-    }
+    // if((fPrec & kAlgoMask) == kGradDesc){
+    //   std::cout << "GradDesc option specified but not implemented. Abort." << std::endl;
+    //   abort();
+    // }
 
-    std::unique_ptr<ROOT::Math::Minimizer> mnMin(
-		    ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
-    //ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
-    mnMin->SetStrategy(int(fPrec & kAlgoMask));
+    std::unique_ptr<ROOT::Math::Minimizer> mnMin;
+
+    if((fPrec & kAlgoMask) == kGradDesc){
+      //      mnMin = std::make_unique<ROOT::Math::Minimizer>(new GradientDescent(*this));
+      mnMin = std::make_unique<GradientDescent>(*this);
+    }
+    else{
+      mnMin = std::unique_ptr<ROOT::Math::Minimizer>(ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
+      //ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
+      mnMin->SetStrategy(int(fPrec & kAlgoMask));
+    }
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
 
