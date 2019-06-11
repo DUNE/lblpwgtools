@@ -4,6 +4,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Analysis/GradientDescent.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
