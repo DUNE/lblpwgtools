@@ -1,7 +1,5 @@
 set(scripts_to_install
   common_fit_definitions.C
-  fit_covar.C
-  remake_inputs.C
   bin_splines.C
   cpv_joint.C
   llh_scans.C
@@ -18,6 +16,7 @@ set(scripts_to_build
   make_toy_throws
   make_toy_throws_fixed_seed
   MakePredInterps
+  fit_covar
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)

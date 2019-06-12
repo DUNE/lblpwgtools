@@ -113,6 +113,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 
 SampleType sample;
 std::string output_file_name;
+std::string syst_descriptor = "";
 AxisBlob axes = default_axes;
 std::vector<std::string> input_patterns;
 
@@ -151,6 +152,8 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-i") ||
                (std::string(argv[opt]) == "--input-pattern")) {
       input_patterns.push_back(argv[++opt]);
+    } else if (std::string(argv[opt]) == "--syst-descriptor") {
+      syst_descriptor = argv[++opt];
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -222,7 +225,8 @@ int main(int argc, char const *argv[]) {
   }
 
   TFile fout(output_file_name.c_str(), "RECREATE");
-  auto los = GetListOfSysts();
+  auto los = syst_descriptor.size() ? GetListOfSysts(syst_descriptor)
+                                    : GetListOfSysts();
   std::cout << "[INFO]: Using " << los.size()
             << " systematic dials: " << std::endl;
   for (auto s : los) {

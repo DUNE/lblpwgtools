@@ -297,7 +297,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst_Nov17=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
-					 bool useNueOnE=false, bool useFakeDataDials=true, bool fluxsyst_CDR = true,
+					 bool useNueOnE=false, bool useFakeDataDials=true, bool fluxsyst_CDR = true, int NFluxSysts= NFluxParametersToAddToStatefile,
 					 bool removeFDNonFitDials = false){
 
   // This doesn't need to be an argument because I basically never change it:
@@ -306,14 +306,16 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst_Nov17=true, bool xsecsyst
   std::vector<const ISyst *> systlist;
   if (fluxsyst_Nov17) {
     std::vector<const ISyst *> fluxlist_Nov17 =
-        GetDUNEFluxSysts(NFluxParametersToAddToStatefile, fluxXsecPenalties, false);
-    systlist.insert(systlist.end(), fluxlist_Nov17.begin(), fluxlist_Nov17.end());
+        GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
+    systlist.insert(systlist.end(), fluxlist_Nov17.begin(),
+                    fluxlist_Nov17.end());
   }
 
-  if(fluxsyst_CDR){
-        std::vector<const ISyst *> fluxlist_CDR =
-            GetDUNEFluxSysts(NFluxParametersToAddToStatefile, fluxXsecPenalties, true);
-        systlist.insert(systlist.end(), fluxlist_CDR.begin(), fluxlist_CDR.end());
+  if (fluxsyst_CDR) {
+    std::vector<const ISyst *> fluxlist_CDR =
+        GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
+    systlist.insert(systlist.end(), fluxlist_CDR.begin(),
+                    fluxlist_CDR.end());
   }
 
   if (detsyst) {
@@ -411,6 +413,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
   bool fluxsyst_Nov17 = true;
   bool fluxsyst_CDR = false;
   bool xsecsyst = true;
+  int NFluxSysts = NFluxParametersToAddToStatefile;
 
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep only those systematics
   // This is pretty much a magic option to allow single parameters... there must be a better way, but for now I'm just going to continue to support it
@@ -457,22 +460,32 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     if (syst == "nodet") detsyst = false;
     if (syst == "noflux") fluxsyst_Nov17 = false;
     if (syst == "cdrflux") {fluxsyst_CDR = true; fluxsyst_Nov17 = false; }
+    if (syst.find("NFlux") == 0){
+      auto NFluxSplit = SplitString(syst,'=');
+      if (NFluxSplit.size() != 2){
+        std::cout << "[ERROR]: Found NFlux option, but couldn't parse how many to include, expected to find NFlux=<0--" << NFluxParametersToAddToStatefile << "> but found: \"" << syst << "\".";
+        abort();
+      }
+
+      NFluxSysts = atoi(NFluxSplit[1].c_str());
+
+    }
     if (syst == "noxsec") xsecsyst = false;
 
   }
 
   // Okay, now get the list, and start from there...
   std::vector<const ISyst*> namedList = GetListOfSysts(fluxsyst_Nov17, xsecsyst, detsyst,
-						       useND, useFD, useNueOnE, false /*no fake data*/, fluxsyst_CDR);
+						       useND, useFD, useNueOnE, false /*no fake data*/, fluxsyst_CDR, NFluxSysts);
 
   // Now do something REALLY FUNKY. Remove specific dials from the list we already have
   // Need to allow single dials, and a few specific groups...
   for (auto syst : systs){
     // ignore anything we previously dealt with
-    if (syst == "noxsec" ||
-	syst == "nodet" ||
-	syst == "noflux")
-      continue;
+    if ((syst == "noxsec") ||
+	(syst == "nodet") ||
+	(syst == "noflux") || (syst.find("NFlux=") == 0)){
+      continue;}
     // Now remove some specific groups
     // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
     else if (syst == "nofd_det") RemoveSysts(namedList, fd_det_list);
@@ -987,8 +1000,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 		   IExperiment *penaltyTerm=NULL, Fitter::Precision fitStrategy=Fitter::kNormal,
 		   TDirectory *outDir=NULL, FitTreeBlob *PostFitTreeBlob=nullptr,
        std::vector<std::unique_ptr<Spectrum> > *spectra = nullptr,
-		   SystShifts &bf = junkShifts,
-		   bool useFDCovMx=false){
+		   SystShifts &bf = junkShifts){
 
   assert(systlist.size()+oscVars.size());
 
