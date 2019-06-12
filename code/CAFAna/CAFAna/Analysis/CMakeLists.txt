@@ -2,7 +2,7 @@ set(Analysis_implementation_files
   Calcs.cxx
   CalcsNuFit.cxx
   Fit.cxx
-#  GradientDescent.cxx
+ GradientDescent.cxx
   Plots.cxx
   Resolution.cxx
   Surface.cxx
@@ -14,7 +14,7 @@ set(Analysis_header_files
   Calcs.h
   CalcsNuFit.h
   Fit.h
-#  GradientDescent.h
+ GradientDescent.h
   Plots.h
   Resolution.h
   Surface.h
