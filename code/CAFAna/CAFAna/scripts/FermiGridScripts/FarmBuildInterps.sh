@@ -70,6 +70,12 @@ while [[ ${#} -gt 0 ]]; do
       shift # past argument
       ;;
 
+      --no-fakedata-dials)
+
+      NOFAKEDATA="1"
+      echo "[OPT]: Don't use fake data dials."
+      ;;
+
       -i|--input-dir)
 
       if [[ ${#} -lt 2 ]]; then
