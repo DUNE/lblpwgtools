@@ -116,6 +116,8 @@ std::string output_file_name;
 std::string syst_descriptor = "";
 AxisBlob axes = default_axes;
 std::vector<std::string> input_patterns;
+bool addfakedata = true;
+bool do_no_op = false;
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -131,6 +133,12 @@ void SayUsage(char const *argv[]) {
          "files\n"
       << "\t                         and not within directory names.\n"
       << "\t                         i.e. /a/b/c/nd_[0-9]*.root\n"
+      << "\t--syst-descriptor <str>: Only add dials matching the syst\n"
+         "\t                         descriptor <str> to the state file.\n"
+      << "\t--no-fakedata-dials    : Do not add the fake data dials to the\n"
+         "\t                         state file\n"
+      << "\t--no-op              : Do nothing but dump dials that would be "
+         "included.\n"
       << std::endl;
 }
 
@@ -154,6 +162,10 @@ void handleOpts(int argc, char const *argv[]) {
       input_patterns.push_back(argv[++opt]);
     } else if (std::string(argv[opt]) == "--syst-descriptor") {
       syst_descriptor = argv[++opt];
+    } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
+      addfakedata = false;
+    } else if (std::string(argv[opt]) == "--no-op") {
+      do_no_op = true;
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -167,11 +179,13 @@ int main(int argc, char const *argv[]) {
 
   handleOpts(argc, argv);
 
-  if (!input_patterns.size()) {
-    std::cout << "[ERROR]: Expected to recieve at least one input pattern."
-              << std::endl;
-    SayUsage(argv);
-    exit(2);
+  if (!do_no_op) {
+    if (!input_patterns.size()) {
+      std::cout << "[ERROR]: Expected to recieve at least one input pattern."
+                << std::endl;
+      SayUsage(argv);
+      exit(2);
+    }
   }
 
   std::vector<std::string> file_list;
@@ -215,24 +229,40 @@ int main(int argc, char const *argv[]) {
     std::copy(CAFs.begin(), CAFs.end(), std::back_inserter(file_list));
   }
 
-  if (!file_list.size()) {
-    std::cout << "[ERROR]: Failed to find any matching input files."
-              << std::endl;
-    exit(4);
+  if (!do_no_op) {
+    if (!file_list.size()) {
+      std::cout << "[ERROR]: Failed to find any matching input files."
+                << std::endl;
+      exit(4);
+    }
   }
   for (auto f : file_list) {
     std::cout << "[INFO]: Reading from: " << f << std::endl;
   }
 
-  TFile fout(output_file_name.c_str(), "RECREATE");
-  auto los = syst_descriptor.size() ? GetListOfSysts(syst_descriptor)
-                                    : GetListOfSysts();
+  std::vector<ana::ISyst const *> los;
+  if (syst_descriptor.size()) {
+    los = GetListOfSysts(syst_descriptor);
+
+    // Have to add fake data systs too.
+    std::vector<ana::ISyst const *> fdlos = GetListOfSysts(
+        false, false, false, false, false, false, addfakedata, false);
+    los.insert(los.end(), fdlos.begin(), fdlos.end());
+
+  } else {
+    // Default but allow fake data fials to be turned off
+    los = GetListOfSysts(true, true, true, true, true, false, addfakedata);
+  }
   std::cout << "[INFO]: Using " << los.size()
             << " systematic dials: " << std::endl;
   for (auto s : los) {
     std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
   }
-  MakePredictionInterp(&fout, sample, los, 0, axes, file_list);
-  fout.Write();
-  fout.Close();
+
+  if (!do_no_op) {
+    TFile fout(output_file_name.c_str(), "RECREATE");
+    MakePredictionInterp(&fout, sample, los, 0, axes, file_list);
+    fout.Write();
+    fout.Close();
+  }
 }

@@ -31,6 +31,16 @@ if [ ! -z ${3} ]; then
   AXBLOBARG=" -A ${3}"
 fi
 
+SYSTDESCRIPTORARG=""
+if [ ! -z ${4} ]; then
+  SYSTDESCRIPTORARG=" --syst-descriptor ${4}"
+fi
+
+NOFAKEDATAARG=""
+if [ ! -z ${4} ]; then
+  NOFAKEDATAARG=" --no-fakedata-dials"
+fi
+
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
   ls CAFAna
@@ -91,8 +101,10 @@ fi
 
 LOGYLOG "Building interps @ $(date)"
 
-LOGYLOG "MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} -o ${OUTFILENAME}"
-MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} -o ${OUTFILENAME}
+OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER_ID}.${PROCESS_ID}.root
+
+LOGYLOG "MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}"
+MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}
 
 LOGYLOG "Copying output @ $(date)"
 

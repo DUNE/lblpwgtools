@@ -337,13 +337,16 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst_Nov17=true, bool xsecsyst
 
     // Always remove these dials
     RemoveSysts(systlist, GetDoNotIncludeSystNames());
-
-    // If using fake data dials (for state generation) add them back in
-    if (useFakeDataDials) {
-      KeepSysts(xseclist, GetFakeDataGenerationSystNames());
-      systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
-    }
   }
+
+  // If using fake data dials (for state generation) add them back in
+  if (useFakeDataDials) {
+    std::vector<const ISyst *> xseclist =
+        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
+    KeepSysts(xseclist, GetFakeDataGenerationSystNames());
+    systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
+  }
+
   // If we want to use the FD energy scale covariance matrix need to remove
   // all FD escale and resolution systematics
   if (removeFDNonFitDials) {
@@ -944,6 +947,22 @@ struct FitTreeBlob {
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
       throw_tree->Branch("fCentralValues", &fCentralValues);
     }
+  }
+  static FitTreeBlob *MakeReader(TTree *t) {
+    FitTreeBlob *ftb = new FitTreeBlob();
+    t->SetBranchAddress("chisq", &ftb->fChiSq);
+    t->SetBranchAddress("NFCN", &ftb->fNFCN);
+    t->SetBranchAddress("EDM", &ftb->fEDM);
+    t->SetBranchAddress("IsValid", &ftb->fIsValid);
+    t->SetBranchAddress("fParamNames", &ftb->fParamNames);
+    t->SetBranchAddress("fFakeDataVals", &ftb->fFakeDataVals);
+    t->SetBranchAddress("fPreFitValues", &ftb->fPreFitValues);
+    t->SetBranchAddress("fPreFitErrors", &ftb->fPreFitErrors);
+    t->SetBranchAddress("fPostFitValues", &ftb->fPostFitValues);
+    t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
+    t->SetBranchAddress("fMinosErrors", &ftb->fMinosErrors);
+    t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
+    return ftb;
   }
   void CopyVals(FitTreeBlob const &fb) {
     fFakeDataVals = fb.fFakeDataVals;
