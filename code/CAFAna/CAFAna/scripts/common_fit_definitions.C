@@ -460,10 +460,10 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     if (syst == "nodet") detsyst = false;
     if (syst == "noflux") fluxsyst_Nov17 = false;
     if (syst == "cdrflux") {fluxsyst_CDR = true; fluxsyst_Nov17 = false; }
-    if (syst.find("NFlux") == 0){
+    if (syst.find("nflux=") == 0){
       auto NFluxSplit = SplitString(syst,'=');
       if (NFluxSplit.size() != 2){
-        std::cout << "[ERROR]: Found NFlux option, but couldn't parse how many to include, expected to find NFlux=<0--" << NFluxParametersToAddToStatefile << "> but found: \"" << syst << "\".";
+        std::cout << "[ERROR]: Found NFlux option, but couldn't parse how many to include, expected to find nflux=<0--" << NFluxParametersToAddToStatefile << "> but found: \"" << syst << "\".";
         abort();
       }
 
@@ -484,7 +484,7 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     // ignore anything we previously dealt with
     if ((syst == "noxsec") ||
 	(syst == "nodet") ||
-	(syst == "noflux") || (syst.find("NFlux=") == 0)){
+	(syst == "noflux") || (syst.find("nflux=") == 0)){
       continue;}
     // Now remove some specific groups
     // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis, noxsec_fsi, noxsec_ratios
