@@ -9,7 +9,7 @@ char const *def_throwString = "stat:fake:start";
 char const *def_penaltyString = "nopen";
 int const def_hie = 1;
 char const *def_asimov_set = "0";
-char const *def_oscVarString = "th13:deltapi:th23:dmsq32";
+char const *def_oscVarString = "alloscvars";
 
 
 // Need to accept filename, ND/FD, systs and reload as arguments
