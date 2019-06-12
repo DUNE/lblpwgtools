@@ -3,47 +3,33 @@
 void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
                std::string outputFname = "covar_various_asimov.root",
                std::string systSet = "flux", std::string sampleString = "ndfd",
-               std::string penaltyString = "", std::string FakeDataSysts = "",
-               double FakeDataValue = 1, std::string OtherSystsToExclude = "") {
+               std::string penaltyString = "", std::string fakeDataShift="") {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
   
   int hie = 1;
   
+  bool useND = false;
+  bool useFD = false;
+
+  if (sampleString.find("nd") != std::string::npos) useND = true;
+  if (sampleString.find("fd") != std::string::npos) useFD = true;
+  
   // Get the systematics to use
-  std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
+  std::vector<const ISyst *> systlist = GetListOfSysts(systSet, useND, useFD);
 
   // Oscillation parameters to use
-  std::vector<const IFitVar *> oscVars = GetOscVars("alloscvars", hie);
+  std::vector<const IFitVar*> oscVars = {};
+  if (sampleString.find("fd") != std::string::npos) {
+    oscVars = GetOscVars("alloscvars", hie);
+  }
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
 
-  SystShifts trueSyst = kNoShift;
-
-  // Can build fake data fits easily by passing syst parameter names to fix to 1
-  // and then remove from the fit.
-  if (FakeDataSysts.size()) {
-    // Get all of the systs (notably including missing proton energy fake data)
-    std::vector<const ISyst *> all_systs = GetListOfSysts();
-    for (ISyst const *s : all_systs) {
-      if (FakeDataSysts.find(s->ShortName()) != std::string::npos) {
-        trueSyst.SetShift(s, FakeDataValue);
-        auto it = std::find(systlist.begin(), systlist.end(), s);
-        if (it != systlist.end()) {
-          systlist.erase(it);
-        }
-      }
-      if (OtherSystsToExclude.find(s->ShortName()) != std::string::npos) {
-        auto it = std::find(systlist.begin(), systlist.end(), s);
-        if (it != systlist.end()) {
-          systlist.erase(it);
-        }
-      }
-    }
-  }
+  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
 
   // Move the input parameters a little, just to avoid asimov fit issues in
   // MINUIT
@@ -52,8 +38,11 @@ void fit_covar(std::string stateFname = "common_state_mcc11v3.root",
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
 
-  // Make a map of seed points to try (replaces the old loops)
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
+  if (sampleString.find("fd") != std::string::npos) {
+    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
+    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  }
 
   // Add a penalty term (maybe)
   IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
