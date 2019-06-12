@@ -3,7 +3,7 @@
 LOG_TO_IFDH=0
 
 LOGYLOG () {
-  LOGYLOG ${1}
+  echo ${1}
   if [ ${LOG_TO_IFDH} == "1" ]; then
     ifdh log ${1}
   fi
@@ -79,6 +79,9 @@ LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 
 INPFILE=$(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)
 
+OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
+LOGYLOG "Output file name: ${OUTFILENAME}"
+
 ifdh ls ${PNFS_OUTDIR}
 
 if [ $? -ne 0 ]; then
@@ -87,8 +90,6 @@ if [ $? -ne 0 ]; then
 fi
 
 LOGYLOG "Building interps @ $(date)"
-
-OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER_ID}.${PROCESS_ID}.root
 
 LOGYLOG "MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} -o ${OUTFILENAME}"
 MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} -o ${OUTFILENAME}

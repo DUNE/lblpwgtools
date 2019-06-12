@@ -9,7 +9,7 @@ LIFETIME_EXP_ND="1h"
 DISK_EXP_ND="100MB"
 MEM_EXP_ND="1.6GB"
 
-LIFETIME_EXP_FD="1h"
+LIFETIME_EXP_FD="3h"
 DISK_EXP_FD="300MB"
 MEM_EXP_FD="1.6GB"
 
@@ -154,23 +154,27 @@ if [ "${DO_FD}" == "1" ]; then
     echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"FD_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "FD_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_FHC.list
     NFD_FHC=$(cat InputCAFs.FD_FHC.list | wc -l)
+    echo "[INFO]: Found ${NFD_FHC} FD_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_FHC ))
-    if [ ${NJOBSWITHTHIS} > ${NMAXJOBS} ]; then
+    if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
       NFD_FHC=${NMAXJOBS}
       DO_RHC="0"
       DO_ND="0"
     fi
+    NJOBS=$(( NJOBS + NFD_FHC))
     echo "Will run ${NFD_FHC} FD_FHC jobs."
   fi
   if [ "${DO_RHC}" == "1" ]; then
     echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"FD_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "FD_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_RHC.list
     NFD_RHC=$(cat InputCAFs.FD_RHC.list | wc -l)
+    echo "[INFO]: Found ${NFD_RHC} FD_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_RHC ))
-    if [ ${NJOBSWITHTHIS} > ${NMAXJOBS} ]; then
-      NFD_RHC=$(( NJOBS - NMAXJOBS ))
+    if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
+      NFD_RHC=$(( NMAXJOBS - NJOBS ))
       DO_ND="0"
     fi
+    NJOBS=$(( NJOBS + NFD_RHC))
     echo "Will run ${NFD_RHC} FD_RHC jobs."
   fi
 fi
@@ -179,11 +183,13 @@ if [ "${DO_ND}" == "1" ]; then
     echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"ND_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "ND_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
     NND_FHC=$(cat InputCAFs.ND_FHC.list | wc -l)
+    echo "[INFO]: Found ${NND_FHC} ND_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_FHC ))
-    if [ ${NJOBSWITHTHIS} > ${NMAXJOBS} ]; then
-      NND_FHC=$(( NJOBS - NMAXJOBS ))
+    if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
+      NND_FHC=$(( NMAXJOBS - NJOBS ))
       DO_RHC="0"
     fi
+    NJOBS=$(( NJOBS + NND_FHC))
     echo "Will run ${NND_FHC} ND_FHC jobs."
   fi
 
@@ -191,13 +197,17 @@ if [ "${DO_ND}" == "1" ]; then
     echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"ND_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "ND_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
+    echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))
-    if [ ${NJOBSWITHTHIS} > ${NMAXJOBS} ]; then
-      NND_RHC=$(( NJOBS - NMAXJOBS ))
+    if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
+      NND_RHC=$(( NMAXJOBS - NJOBS ))
     fi
+    NJOBS=$(( NJOBS + NND_RHC))
     echo "Will run ${NND_RHC} ND_RHC jobs."
   fi
 fi
+
+echo "[INFO]: Will run ${NJOBS} jobs in total."
 
 rm -f CAFAna.Blob.tar.gz
 ${CAFANA}/scripts/FermiGridScripts/tarball.sh
@@ -225,11 +235,15 @@ fi
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
     FD_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL6 -N ${NFD_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_FHC ${AXISBLOBNAME})
+    FD_FHC_JID=$(echo ${FD_FHC_JID} | tr -d "\n" | tr -d " " | tr -d "\t" | sed "s/\.0//g")
+
     echo "FD_FHC_JID: ${FD_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
     FD_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL6 -N ${NFD_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_RHC ${AXISBLOBNAME})
+    FD_RHC_JID=$(echo ${FD_RHC_JID} | tr -d "\n" | tr -d " " | tr -d "\t" | sed "s/\.0//g")
+
     echo "FD_RHC_JID: ${FD_RHC_JID}"
   fi
 fi
@@ -237,11 +251,15 @@ fi
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
     ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL6 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${AXISBLOBNAME})
+    ND_FHC_JID=$(echo ${ND_FHC_JID} | tr -d "\n" | tr -d " " | tr -d "\t" | sed "s/\.0//g")
+
     echo "ND_FHC_JID: ${ND_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
     ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL6 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${AXISBLOBNAME})
+    ND_RHC_JID=$(echo ${ND_RHC_JID} | tr -d "\n" | tr -d " " | tr -d "\t" | sed "s/\.0//g")
+
     echo "ND_RHC_JID: ${ND_RHC_JID}"
   fi
 fi
