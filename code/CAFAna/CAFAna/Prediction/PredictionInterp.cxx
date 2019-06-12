@@ -413,6 +413,19 @@ namespace ana
     return ShiftSpectrum(nom, type, nubar, shift);
   }
 
+  void PredictionInterp::DiscardSysts(std::vector<ISyst const *> const &systs) {
+    for (auto s : systs) {
+      fPreds.erase(s);
+    }
+  }
+  std::vector<ISyst const *> PredictionInterp::GetAllSysts() const {
+    std::vector<ISyst const *> allsysts;
+    for (auto const &p : fPreds) {
+      allsysts.push_back(p.first);
+    }
+    return allsysts;
+  }
+
   //----------------------------------------------------------------------
   Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculator* calc,
                                                   const SystShifts& shift,

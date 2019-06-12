@@ -168,6 +168,11 @@ namespace ana
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
     };
 
+    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+    void DiscardSysts(std::vector<ISyst const *>const &);
+    //Get all known about systs
+    std::vector<ISyst const *> GetAllSysts() const;
+
   protected:
     mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
 
