@@ -22,6 +22,11 @@ void fit_covar(std::string stateFname = def_stateFname,
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
+  std::cout << "[INFO]: Using " << systlist.size()
+            << " systematic dials: " << std::endl;
+  for (auto s : systlist) {
+    std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
+  }
 
   // Oscillation parameters to use
   std::vector<const IFitVar *> oscVars = GetOscVars(oscVarString, hie);

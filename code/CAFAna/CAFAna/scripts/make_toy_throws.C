@@ -25,6 +25,28 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   gROOT->SetBatch(1);
   gRandom->SetSeed(gRNGSeed);
 
+  static auto start_exe = std::chrono::system_clock::now();
+  auto wall_time_limit = start_exe;
+  std::chrono::minutes est_fit_duration(20);
+
+  char const *total_duration_m = getenv("CAFANA_TOTALDURATION");
+  char const *est_fit_duration_m = getenv("CAFANA_ESTFITDURATION");
+
+  if (total_duration_m && est_fit_duration_m) {
+    nthrows = std::numeric_limits<int>::max();
+    std::cout << "[INFO]: Watching the clock..." << std::endl;
+
+    std::chrono::minutes total_duration(atoi(total_duration_m));
+    est_fit_duration = std::chrono::minutes(atoi(est_fit_duration_m));
+
+    wall_time_limit = start_exe + total_duration;
+
+    std::cout << "[INFO]: Can finish an estimated "
+              << (double(total_duration.count()) /
+                  double(est_fit_duration.count()))
+              << " fits." << std::endl;
+  }
+
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw,
@@ -71,8 +93,10 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     std::cout << "PROFILE: Throw " << i << " start: " << std::endl;
     std::cout << "PROFILE: \tL: " << fakeThrowOsc->GetL() << std::endl;
     std::cout << "PROFILE: \tRho: " << fakeThrowOsc->GetRho() << std::endl;
-    std::cout << "PROFILE: \tDmsq21: " << fakeThrowOsc->GetDmsq21() << std::endl;
-    std::cout << "PROFILE: \tDmsq32: " << fakeThrowOsc->GetDmsq32() << std::endl;
+    std::cout << "PROFILE: \tDmsq21: " << fakeThrowOsc->GetDmsq21()
+              << std::endl;
+    std::cout << "PROFILE: \tDmsq32: " << fakeThrowOsc->GetDmsq32()
+              << std::endl;
     std::cout << "PROFILE: \tTh12: " << fakeThrowOsc->GetTh12() << std::endl;
     std::cout << "PROFILE: \tTh13: " << fakeThrowOsc->GetTh13() << std::endl;
     std::cout << "PROFILE: \tTh23: " << fakeThrowOsc->GetTh23() << std::endl;
@@ -131,6 +155,14 @@ void make_toy_throws(std::string stateFname = def_stateFname,
               << std::endl;
     // Done with this systematic throw
     delete penalty;
+
+    if ((wall_time_limit - est_fit_duration) <=
+        std::chrono::system_clock::now()) {
+      std::cout
+          << "[INFO]: Do not have time to finish another fit, exiting earyl."
+          << std::endl;
+      break;
+    }
   }
 
   // Now close the file
