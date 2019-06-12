@@ -1,5 +1,7 @@
 #include "common_fit_definitions.C"
 
+#include "CheckPointHelper.h"
+
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "throws_ndfd_nosyst.root";
 int const def_nthrows = 100;
@@ -25,26 +27,9 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   gROOT->SetBatch(1);
   gRandom->SetSeed(gRNGSeed);
 
-  static auto start_exe = std::chrono::system_clock::now();
-  auto wall_time_limit = start_exe;
-  std::chrono::minutes est_fit_duration(20);
-
-  char const *total_duration_m = getenv("CAFANA_TOTALDURATION");
-  char const *est_fit_duration_m = getenv("CAFANA_ESTFITDURATION");
-
-  if (total_duration_m && est_fit_duration_m) {
+  CheckPointHelper chk;
+  if(chk.IsCounting()){
     nthrows = std::numeric_limits<int>::max();
-    std::cout << "[INFO]: Watching the clock..." << std::endl;
-
-    std::chrono::minutes total_duration(atoi(total_duration_m));
-    est_fit_duration = std::chrono::minutes(atoi(est_fit_duration_m));
-
-    wall_time_limit = start_exe + total_duration;
-
-    std::cout << "[INFO]: Can finish an estimated "
-              << (double(total_duration.count()) /
-                  double(est_fit_duration.count()))
-              << " fits." << std::endl;
   }
 
   // Decide what is to be thrown
@@ -156,10 +141,15 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     // Done with this systematic throw
     delete penalty;
 
-    if ((wall_time_limit - est_fit_duration) <=
-        std::chrono::system_clock::now()) {
+    if (chk.ShouldCheckpoint()) {
+      std::cout << "[INFO]: Writing output file..." << std::endl;
+      fout->Write();
+      chk.NotifyCheckpoint();
+    }
+
+    if (!chk.IsSafeToStartNewUnit()) {
       std::cout
-          << "[INFO]: Do not have time to finish another fit, exiting earyl."
+          << "[INFO]: Do not have time to finish another fit, exiting early."
           << std::endl;
       break;
     }
