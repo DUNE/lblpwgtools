@@ -43,6 +43,7 @@
 #include "CAFAna/Cuts/AnaCuts.h"
 #include <tuple>
 #include "Utilities/rootlogon.C"
+#include <chrono>
 
 using namespace ana;
 
@@ -494,19 +495,19 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input){
   SystShifts thisShift = kNoShift;
 
   if (input.empty() || input == "nominal") return thisShift;
-  
+
   std::vector<std::string> fake_data_names = SplitString(input, ':');
-  
+
   // Check nobody did anything dumb...
   // This is for you LUUK
   for (auto name : fake_data_names) assert(IsFakeDataGenerationSyst(name));
-    
+
   std::vector<ISyst const *> FDSyst = GetListOfSysts();
   KeepSysts(FDSyst, fake_data_names);
-  
+
   // Also for you LUUUUUUUUK
   for (auto syst : FDSyst) {thisShift.SetShift(syst,1);}
-  
+
   return thisShift;
 }
 
@@ -909,6 +910,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // Start by getting the PredictionInterps... better that this is done here than elsewhere as they aren't smart enough to know what they are (so the order matters)
   // Note that all systs are used to load the PredictionInterps
+  #ifdef PROFILE_COUTS
+  static first = true;
+  static std::chrono::time_point start_load;
+  if(first){
+    start_load= std::chrono::system_clock::now();
+  }
+  #endif
   static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
@@ -916,6 +924,15 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp& predFDNueRHC  = *interp_list[3].release();
   static PredictionInterp& predNDNumuFHC = *interp_list[4].release();
   static PredictionInterp& predNDNumuRHC = *interp_list[5].release();
+  #ifdef PROFILE_COUTS
+    static std::chrono::time_point end_load;
+  if(first){
+    end_load = std::chrono::system_clock::now();
+
+    std::cout << "PROFILE: LOAD = " << (end-start).count() << std::endl;
+    first = false;
+  }
+  #endif
 
   // Get the ndCov
   std::string covNameFHC = "nd_frac_cov";
@@ -1065,9 +1082,16 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Add in the penalty...
   if (penaltyTerm) this_expt.Add(penaltyTerm);
 
+#ifdef PROFILE_COUTS
+  std::chrono::time_point start_fit = std::chrono::system_clock::now();
+#endif
   // Now set up the fit itself
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+#ifdef PROFILE_COUTS
+  std::chrono::time_point end_fit = std::chrono::system_clock::now();
+  std::cout << "PROFILE: FIT = " << (end_fit - start_fit).count() << std::endl;
+#endif
 
   bf = fitSyst;
 
