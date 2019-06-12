@@ -281,6 +281,26 @@ namespace ana
   /// \f$ \Delta m^2_{21} \f$
   const FitDmSq21 kFitDmSq21 = FitDmSq21();
 
+  //----------------------------------------------------------------------
+  /// \f$ \Delta m^2_{21} \f$
+  class FitDmSq21Scaled: public IConstrainedFitVar
+  {
+  public:
+    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
+    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
+    virtual std::string ShortName() const {return "dmsq21scaled";}
+    virtual std::string LatexName() const {return "#Deltam^{2}_{21}";}
+
+    // "1eV^2 splitting should be enough for anyone"
+    // OscCalculatorPMNS freaks out at large splittings
+    virtual double LowLimit() const {return -1e5;}
+    virtual double HighLimit() const {return +1e5;}
+  };
+
+  /// \f$ \Delta m^2_{21} \f$
+  const FitDmSq21Scaled kFitDmSq21Scaled = FitDmSq21Scaled();
+  //----------------------------------------------------------------------
+
   /// \f$ \rho \f$
   class FitRho: public IConstrainedFitVar
   {
