@@ -174,8 +174,8 @@ NJOBS=0
 
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"FD_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "FD_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_FHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"FD_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "FD_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_FHC.list
     NFD_FHC=$(cat InputCAFs.FD_FHC.list | wc -l)
     echo "[INFO]: Found ${NFD_FHC} FD_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_FHC ))
@@ -188,8 +188,8 @@ if [ "${DO_FD}" == "1" ]; then
     echo "Will run ${NFD_FHC} FD_FHC jobs."
   fi
   if [ "${DO_RHC}" == "1" ]; then
-    echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"FD_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "FD_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_RHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"FD_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "FD_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_RHC.list
     NFD_RHC=$(cat InputCAFs.FD_RHC.list | wc -l)
     echo "[INFO]: Found ${NFD_RHC} FD_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_RHC ))
@@ -203,8 +203,8 @@ if [ "${DO_FD}" == "1" ]; then
 fi
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"ND_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "ND_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"ND_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "ND_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
     NND_FHC=$(cat InputCAFs.ND_FHC.list | wc -l)
     echo "[INFO]: Found ${NND_FHC} ND_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_FHC ))
@@ -217,8 +217,8 @@ if [ "${DO_ND}" == "1" ]; then
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    echo "ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep \"ND_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls /pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/ | grep "ND_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"ND_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "ND_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
     echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))
