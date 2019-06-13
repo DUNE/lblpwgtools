@@ -59,7 +59,7 @@ namespace ana {
     vec.push_back(&kEnergyScaleMuSystND);
     vec.push_back(&kChargedHadCorrSyst);
     vec.push_back(&kChargedHadAnticorrSyst);
-    vec.push_back(&kChargedHadUncorrFDSyst);
+    // vec.push_back(&kChargedHadUncorrFDSyst);
     vec.push_back(&kNUncorrFDSyst);
     vec.push_back(&kNUncorrNDSyst);
     vec.push_back(&kEMUncorrNDSyst);
@@ -72,19 +72,19 @@ namespace ana {
     vec.push_back(&kChargedHadResNDSyst);
     vec.push_back(&kUncorrNDHadLinSyst);
     vec.push_back(&kUncorrNDHadSqrtSyst);
-    vec.push_back(&kUncorrNDNLinSyst);
+    // vec.push_back(&kUncorrNDNLinSyst);
     vec.push_back(&kUncorrNDNSqrtSyst);
-    vec.push_back(&kNResFDSyst);
-    vec.push_back(&kUncorrFDTotLinSyst);
-    vec.push_back(&kUncorrFDTotSqrtSyst);
-    vec.push_back(&kUncorrFDMuLinSyst);
-    vec.push_back(&kUncorrFDMuSqrtSyst);
-    vec.push_back(&kUncorrFDHadLinSyst);
-    vec.push_back(&kUncorrFDHadSqrtSyst);
-    vec.push_back(&kUncorrFDNLinSyst);
-    vec.push_back(&kUncorrFDNSqrtSyst);
-    vec.push_back(&kUncorrFDEMLinSyst);
-    vec.push_back(&kUncorrFDEMSqrtSyst);
+    // vec.push_back(&kNResFDSyst);
+    // vec.push_back(&kUncorrFDTotLinSyst);
+    // vec.push_back(&kUncorrFDTotSqrtSyst);
+    // vec.push_back(&kUncorrFDMuLinSyst);
+    // vec.push_back(&kUncorrFDMuSqrtSyst);
+    // vec.push_back(&kUncorrFDHadLinSyst);
+    // vec.push_back(&kUncorrFDHadSqrtSyst);
+    // vec.push_back(&kUncorrFDNLinSyst);
+    // vec.push_back(&kUncorrFDNSqrtSyst);
+    // vec.push_back(&kUncorrFDEMLinSyst);
+    // vec.push_back(&kUncorrFDEMSqrtSyst);
     return vec;
   }
 } // namespace
