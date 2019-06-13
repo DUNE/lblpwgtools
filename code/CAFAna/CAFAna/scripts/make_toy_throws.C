@@ -28,7 +28,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   gRandom->SetSeed(gRNGSeed);
 
   CheckPointHelper chk;
-  if(chk.IsCounting()){
+  if (chk.IsCounting()) {
     nthrows = std::numeric_limits<int>::max();
   }
 
@@ -126,12 +126,13 @@ void make_toy_throws(std::string stateFname = def_stateFname,
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                     stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
                     oscSeeds, penalty, fitStrategy, nullptr, &pftree);
+
 #ifdef PROFILE_COUTS
     size_t NRelParams = oscVars.size() + systlist.size();
     std::cout << "PROFILE: Post fit values: " << std::endl;
     for (size_t pn_it = 0; pn_it < NRelParams; ++pn_it) {
-      std::cout << "PROFILE: \t" << pftree.fParamNames[pn_it] << ": "
-                << pftree.fPostFitValues[pn_it] << std::endl;
+      std::cout << "PROFILE: \t" << pftree.fParamNames->at(pn_it) << ": "
+                << pftree.fPostFitValues->at(pn_it) << std::endl;
     }
 #endif
 

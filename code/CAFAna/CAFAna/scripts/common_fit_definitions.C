@@ -28,6 +28,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TTree.h"
+#include "TSystem.h"
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Vars/FitVars.h"
 
@@ -703,6 +704,21 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     return_list.emplace_back(LoadFrom<PredictionInterp>(
         fin->GetDirectory(sample_dir_order[s_it].c_str())));
     delete fin;
+
+#ifdef REMOVE_PREDINTERP_UNUSED_SYSTS
+    std::vector<anaISyst const *> systs_to_remove = return_list.back().GetAllSysts();
+    std::vector<std::string> used_syst_names;
+    for (auto s : systlist) {
+      used_syst_names.push_back(s->ShortName());
+    }
+    RemoveSysts(systs_to_remove, used_syst_names);
+    if (systs_to_remove.size()) {
+      std::cout << "[GC]: Removing " << systs_to_remove.size()
+                << " systs that will not be used for this fit." << std::endl;
+      return_list.back().DiscardSysts(systs_to_remove);
+    }
+#endif
+
   }
   return return_list;
 };
@@ -932,9 +948,21 @@ void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, s
 
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "") {
+
+    fFakeDataVals = new std::vector<double>();
+    fParamNames = new std::vector<std::string>();
+    fPreFitValues = new std::vector<double>();
+    fPreFitErrors = new std::vector<double>();
+    fPostFitValues = new std::vector<double>();
+    fPostFitErrors = new std::vector<double>();
+    fCentralValues = new std::vector<double>();
+    fMinosErrors = new std::vector<std::pair<double,double>>();
+
     if (tree_name.size()) {
       throw_tree = new TTree(tree_name.c_str(), tree_name.c_str());
       throw_tree->Branch("chisq", &fChiSq);
+      throw_tree->Branch("NSeconds", &fNSeconds);
+      throw_tree->Branch("MemUsage", &fMemUsage);
       throw_tree->Branch("NFCN", &fNFCN);
       throw_tree->Branch("EDM", &fEDM);
       throw_tree->Branch("IsValid", &fIsValid);
@@ -951,6 +979,8 @@ struct FitTreeBlob {
   static FitTreeBlob *MakeReader(TTree *t) {
     FitTreeBlob *ftb = new FitTreeBlob();
     t->SetBranchAddress("chisq", &ftb->fChiSq);
+    t->SetBranchAddress("NSeconds", &ftb->fNSeconds);
+    t->SetBranchAddress("MemUsage", &ftb->fMemUsage);
     t->SetBranchAddress("NFCN", &ftb->fNFCN);
     t->SetBranchAddress("EDM", &ftb->fEDM);
     t->SetBranchAddress("IsValid", &ftb->fIsValid);
@@ -964,30 +994,44 @@ struct FitTreeBlob {
     t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
     return ftb;
   }
+  ~FitTreeBlob() {
+    delete fFakeDataVals;
+    delete fParamNames;
+    delete fPreFitValues;
+    delete fPreFitErrors;
+    delete fPostFitValues;
+    delete fPostFitErrors;
+    delete fCentralValues;
+    delete fMinosErrors;
+  }
   void CopyVals(FitTreeBlob const &fb) {
-    fFakeDataVals = fb.fFakeDataVals;
-    fParamNames = fb.fParamNames;
-    fPreFitValues = fb.fPreFitValues;
-    fPreFitErrors = fb.fPreFitErrors;
-    fPostFitValues = fb.fPostFitValues;
-    fPostFitErrors = fb.fPostFitErrors;
-    fMinosErrors = fb.fMinosErrors;
-    fCentralValues = fb.fCentralValues;
+    (*fFakeDataVals) = (*fb.fFakeDataVals);
+    (*fParamNames) = (*fb.fParamNames);
+    (*fPreFitValues) = (*fb.fPreFitValues);
+    (*fPreFitErrors) = (*fb.fPreFitErrors);
+    (*fPostFitValues) = (*fb.fPostFitValues);
+    (*fPostFitErrors) = (*fb.fPostFitErrors);
+    (*fMinosErrors) = (*fb.fMinosErrors);
+    (*fCentralValues) = (*fb.fCentralValues);
     fChiSq = fb.fChiSq;
     fNFCN = fb.fNFCN;
     fEDM = fb.fEDM;
     fIsValid = fb.fIsValid;
+    fNSeconds = fb.fNSeconds;
+    fMemUsage = fb.fMemUsage;
   }
   TTree *throw_tree;
-  std::vector<double> fFakeDataVals;
-  std::vector<std::string> fParamNames;
-  std::vector<double> fPreFitValues;
-  std::vector<double> fPreFitErrors;
-  std::vector<double> fPostFitValues;
-  std::vector<double> fPostFitErrors;
-  std::vector<double> fCentralValues;
-  std::vector<std::pair<double,double>> fMinosErrors;
+  std::vector<double> *fFakeDataVals;
+  std::vector<std::string> *fParamNames;
+  std::vector<double> *fPreFitValues;
+  std::vector<double> *fPreFitErrors;
+  std::vector<double> *fPostFitValues;
+  std::vector<double> *fPostFitErrors;
+  std::vector<double> *fCentralValues;
+  std::vector<std::pair<double,double>> *fMinosErrors;
   double fChiSq;
+  unsigned fNSeconds;
+  double fMemUsage;
   double fNFCN;
   double fEDM;
   bool fIsValid;
@@ -1023,7 +1067,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   assert(systlist.size()+oscVars.size());
 
-  //std::vector<const ISyst*> systs = GetListOfSysts();
+
+  //Make sure the syst registery has been populated with all the systs we could want to use
+  static std::vector<const ISyst*> systs = GetListOfSysts();
+
   //for( std::vector<const ISyst*>::const_iterator it = systs.begin(); it != systs.end(); ++it )
   //  std::cout << (*it)->ShortName() << std::endl;
 
@@ -1033,7 +1080,18 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static bool first = true;
   static auto start_load = std::chrono::system_clock::now();
   #endif
-  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, GetListOfSysts());
+
+  static bool PI_load = true;
+  static std::vector<ana::ISyst const*> syststoload = systlist;
+  if(PI_load){
+    std::vector<ana::ISyst const *> fdlos = GetListOfSysts(
+        false, false, false, false, false, false, true /*add fake data*/, false);
+    syststoload.insert(syststoload.end(), fdlos.begin(), fdlos.end());
+    PI_load = false;
+  }
+
+  static std::vector<std::unique_ptr<PredictionInterp> > interp_list = GetPredictionInterps(stateFileName, syststoload);
+
   static PredictionInterp& predFDNumuFHC = *interp_list[0].release();
   static PredictionInterp& predFDNueFHC  = *interp_list[1].release();
   static PredictionInterp& predFDNumuRHC = *interp_list[2].release();
@@ -1208,14 +1266,12 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   // Add in the penalty...
   if (penaltyTerm){ this_expt.Add(penaltyTerm); }
 
-#ifdef PROFILE_COUTS
   auto start_fit = std::chrono::system_clock::now();
-#endif
   // Now set up the fit itself
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq = this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
-#ifdef PROFILE_COUTS
   auto end_fit = std::chrono::system_clock::now();
+#ifdef PROFILE_COUTS
   std::cout << "PROFILE: FIT = " << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count() << " s." << std::endl;
 #endif
 
@@ -1305,19 +1361,25 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     delete t;
   }
 
-  if(PostFitTreeBlob){
-    PostFitTreeBlob->fParamNames = this_fit.GetParamNames();
-    PostFitTreeBlob->fPreFitValues  = this_fit.GetPreFitValues();
-    PostFitTreeBlob->fPreFitErrors  = this_fit.GetPreFitErrors();
-    PostFitTreeBlob->fPostFitValues = this_fit.GetPostFitValues();
-    PostFitTreeBlob->fPostFitErrors = this_fit.GetPostFitErrors();
-    PostFitTreeBlob->fMinosErrors   = this_fit.GetMinosErrors();
-    PostFitTreeBlob->fCentralValues = this_fit.GetCentralValues();
-    PostFitTreeBlob->fFakeDataVals = fFakeDataVals;
+  if (PostFitTreeBlob) {
+    std::cout << "NNames = " << this_fit.GetParamNames().size() << ", NVals: " << this_fit.GetPostFitValues().size() << std::endl;
+    (*PostFitTreeBlob->fParamNames) = this_fit.GetParamNames();
+    (*PostFitTreeBlob->fPreFitValues) = this_fit.GetPreFitValues();
+    (*PostFitTreeBlob->fPreFitErrors) = this_fit.GetPreFitErrors();
+    (*PostFitTreeBlob->fPostFitValues) = this_fit.GetPostFitValues();
+    (*PostFitTreeBlob->fPostFitErrors) = this_fit.GetPostFitErrors();
+    (*PostFitTreeBlob->fMinosErrors) = this_fit.GetMinosErrors();
+    (*PostFitTreeBlob->fCentralValues) = this_fit.GetCentralValues();
+    (*PostFitTreeBlob->fFakeDataVals) = fFakeDataVals;
     PostFitTreeBlob->fNFCN = this_fit.GetNFCN();
     PostFitTreeBlob->fEDM = this_fit.GetEDM();
     PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
     PostFitTreeBlob->fChiSq = thischisq;
+    PostFitTreeBlob->fNSeconds = std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count();
+
+    ProcInfo_t procinfo;
+    gSystem->GetProcInfo(&procinfo);
+    PostFitTreeBlob->fMemUsage = procinfo.fMemResident;
   }
 
   return thischisq;
