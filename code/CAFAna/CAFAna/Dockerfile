@@ -89,7 +89,8 @@ RUN mkdir -p /opt/CAFAna-src
 WORKDIR /opt/CAFAna-src/
 RUN git clone https://github.com/DUNE/lblpwgtools.git
 WORKDIR /opt/CAFAna-src/lblpwgtools
-RUN git checkout strong_and_less_stable
+ARG CAFANA_GIT_REF
+RUN git checkout ${CAFANA_GIT_REF}
 RUN mkdir -p /opt/CAFAna-build
 WORKDIR /opt/CAFAna-build/
 RUN mkdir /opt/CAFAna-build/Ext
@@ -116,5 +117,5 @@ ADD statefiles/*.root /statefiles/
 
 WORKDIR /
 
-ENTRYPOINT ["/usr/bin/bash", "-c", "/opt/CAFAna/Linux/CAFAnaEnv.sh"]
+ENTRYPOINT ["/opt/CAFAna/CAFEnvWrapper.sh"]
 CMD []
