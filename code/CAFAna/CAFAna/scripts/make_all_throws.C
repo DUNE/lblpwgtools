@@ -281,8 +281,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
   fout->Close();
 }
 
-int main(int argc, char const *argv[]) {}
-
 #ifndef __CINT__
 
 void Usage(char const *argv[]) {
