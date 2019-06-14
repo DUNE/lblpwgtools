@@ -3,13 +3,10 @@
 void spec_joint(std::string stateFname  = "common_state_mcc11v3.root",
 		std::string outputFname = "spec_hists_mcc11v3.root"){
   
-   gROOT->SetBatch(1);
-
-  // Get the systematics to use
-   std::vector<const ISyst*> systlist = GetListOfSysts();
+  gROOT->SetBatch(1);
 
   // Get the prediction interpolators
-  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, systlist);
+  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, GetListOfSysts());
   PredictionInterp& predInterpFDNumuFHC = *return_list[0].release();
   PredictionInterp& predInterpFDNueFHC  = *return_list[1].release();
   PredictionInterp& predInterpFDNumuRHC = *return_list[2].release();
