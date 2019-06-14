@@ -232,29 +232,33 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
       fMinosErrors.clear();
       fMinosErrors = fTempMinosErrors;
 
-      // Save pre-fit info
-      // In principle, these can change with the seed, so have to save them
-      // here...
-      for (const IFitVar *v : fVars) {
-        const double val = v->GetValue(seed_orig);
-        fParamNames.push_back(v->ShortName());
-        fPreFitValues.push_back(val);
-        fPreFitErrors.push_back(val ? val / 2 : .1);
-        fCentralValues.push_back(0);
-      }
-      for (const ISyst *s : fSysts) {
-        const double val = shift.GetShift(s);
-        fParamNames.push_back(s->ShortName());
-        fPreFitValues.push_back(val);
-        fPreFitErrors.push_back(1);
-        fCentralValues.push_back(s->Central());
-      }
+      // // Save pre-fit info
+      // // In principle, these can change with the seed, so have to save them
+      // // here...
+      // for (const IFitVar *v : fVars) {
+      //   const double val = v->GetValue(seed_orig);
+      //   fParamNames.push_back(v->ShortName());
+      //   fPreFitValues.push_back(val);
+      //   fPreFitErrors.push_back(val ? val / 2 : .1);
+      //   fCentralValues.push_back(0);
+      // }
+      // for (const ISyst *s : fSysts) {
+      //   const double val = shift.GetShift(s);
+      //   fParamNames.push_back(s->ShortName());
+      //   fPreFitValues.push_back(val);
+      //   fPreFitErrors.push_back(1);
+      //   fCentralValues.push_back(s->Central());
+      // }
 
       // Now save postfit
       fPostFitValues =
           std::vector<double>(thisMin->X(), thisMin->X() + thisMin->NDim());
       fPostFitErrors = std::vector<double>(thisMin->Errors(),
                                            thisMin->Errors() + thisMin->NDim());
+
+      std::cout << "NFitVars: " << fVars.size() << ", NDim " << thisMin->NDim()
+                << ", NParamNames: " << fParamNames.size()
+                << ", NFitVals: " << fPostFitValues.size() << std::endl;
 
       fEdm = thisMin->Edm();
       fIsValid = !thisMin->Status();

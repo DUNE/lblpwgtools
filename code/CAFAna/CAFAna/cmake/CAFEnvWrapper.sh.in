@@ -1,0 +1,1 @@
+source @CMAKE_INSTALL_PREFIX@/CAFAnaEnv.sh; echo "[CAFENV]: $@"; $@

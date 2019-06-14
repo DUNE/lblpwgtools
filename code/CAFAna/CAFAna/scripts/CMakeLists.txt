@@ -17,6 +17,7 @@ set(scripts_to_build
   make_toy_throws_fixed_seed
   MakePredInterps
   fit_covar
+  make_1dconstraint_plots
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
