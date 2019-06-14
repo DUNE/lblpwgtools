@@ -133,14 +133,18 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
   mnMin->SetTolerance(tol);
   mnMin->SetPrecision(prec);
 
+  fLastParamNames.clear();
+  fLastPreFitValues.clear();
+  fLastPreFitErrors.clear();
+
   for (const IFitVar *v : fVars) {
     const double val = v->GetValue(seed);
     // name, value, error
     mnMin->SetVariable(mnMin->NFree(), v->ShortName(), val,
                        val ? fabs(val / 2) : .1);
-    fParamNames.push_back(v->ShortName());
-    fPreFitValues.push_back(val);
-    fPreFitErrors.push_back(val ? val / 2 : .1);
+    fLastParamNames.push_back(v->ShortName());
+    fLastPreFitValues.push_back(val);
+    fLastPreFitErrors.push_back(val ? val / 2 : .1);
   }
   // One way this can go wrong is if two variables have the same ShortName
   assert(mnMin->NFree() == fVars.size());
@@ -148,9 +152,9 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     const double val = systSeed.GetShift(s);
     // name, value, error
     mnMin->SetVariable(mnMin->NFree(), s->ShortName(), val, 1);
-    fParamNames.push_back(s->ShortName());
-    fPreFitValues.push_back(val);
-    fPreFitErrors.push_back(1);
+    fLastParamNames.push_back(s->ShortName());
+    fLastPreFitValues.push_back(val);
+    fLastPreFitErrors.push_back(1);
   }
   // One way this can go wrong is if two variables have the same ShortName
   assert(mnMin->NFree() == fVars.size() + fSysts.size());
@@ -222,39 +226,22 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
     if (thisMin->MinValue() < minchi) {
       minchi = thisMin->MinValue();
 
-      // Need to do Prefit here too...
-      fParamNames.clear();
-      fPreFitValues.clear();
-      fPreFitErrors.clear();
-      fPostFitValues.clear();
-      fPostFitErrors.clear();
-      fCentralValues.clear();
-      fMinosErrors.clear();
-      fMinosErrors = fTempMinosErrors;
+      // Get them as set by the last seed fit
+      fParamNames = fLastParamNames;
+      fPreFitValues = fLastPreFitValues;
+      fPreFitErrors = fLastPreFitErrors;
 
-      // Save pre-fit info
-      // In principle, these can change with the seed, so have to save them
-      // here...
-      for (const IFitVar *v : fVars) {
-        const double val = v->GetValue(seed_orig);
-        fParamNames.push_back(v->ShortName());
-        fPreFitValues.push_back(val);
-        fPreFitErrors.push_back(val ? val / 2 : .1);
-        fCentralValues.push_back(0);
-      }
-      for (const ISyst *s : fSysts) {
-        const double val = shift.GetShift(s);
-        fParamNames.push_back(s->ShortName());
-        fPreFitValues.push_back(val);
-        fPreFitErrors.push_back(1);
-        fCentralValues.push_back(s->Central());
-      }
+      fMinosErrors = fTempMinosErrors;
 
       // Now save postfit
       fPostFitValues =
           std::vector<double>(thisMin->X(), thisMin->X() + thisMin->NDim());
       fPostFitErrors = std::vector<double>(thisMin->Errors(),
                                            thisMin->Errors() + thisMin->NDim());
+
+      std::cout << "NFitVars: " << fVars.size() << ", NDim " << thisMin->NDim()
+                << ", NParamNames: " << fParamNames.size()
+                << ", NFitVals: " << fPostFitValues.size() << std::endl;
 
       fEdm = thisMin->Edm();
       fIsValid = !thisMin->Status();

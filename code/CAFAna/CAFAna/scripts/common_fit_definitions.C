@@ -959,14 +959,13 @@ struct FitTreeBlob {
     fMinosErrors = new std::vector<std::pair<double,double>>();
 
     if (tree_name.size()) {
-      throw_tree = new TTree(tree_name.c_str(), tree_name.c_str());
+      throw_tree = new TTree(tree_name.c_str(), "Fit information");
       throw_tree->Branch("chisq", &fChiSq);
       throw_tree->Branch("NSeconds", &fNSeconds);
       throw_tree->Branch("MemUsage", &fMemUsage);
       throw_tree->Branch("NFCN", &fNFCN);
       throw_tree->Branch("EDM", &fEDM);
       throw_tree->Branch("IsValid", &fIsValid);
-      throw_tree->Branch("fParamNames", &fParamNames);
       throw_tree->Branch("fFakeDataVals", &fFakeDataVals);
       throw_tree->Branch("fPreFitValues", &fPreFitValues);
       throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
@@ -974,9 +973,12 @@ struct FitTreeBlob {
       throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
       throw_tree->Branch("fCentralValues", &fCentralValues);
+
+      meta_tree = new TTree("meta","Parameter meta-data");
+      meta_tree->Branch("fParamNames", &fParamNames);
     }
   }
-  static FitTreeBlob *MakeReader(TTree *t) {
+  static FitTreeBlob *MakeReader(TTree *t, TTree *m) {
     FitTreeBlob *ftb = new FitTreeBlob();
     t->SetBranchAddress("chisq", &ftb->fChiSq);
     t->SetBranchAddress("NSeconds", &ftb->fNSeconds);
@@ -984,7 +986,6 @@ struct FitTreeBlob {
     t->SetBranchAddress("NFCN", &ftb->fNFCN);
     t->SetBranchAddress("EDM", &ftb->fEDM);
     t->SetBranchAddress("IsValid", &ftb->fIsValid);
-    t->SetBranchAddress("fParamNames", &ftb->fParamNames);
     t->SetBranchAddress("fFakeDataVals", &ftb->fFakeDataVals);
     t->SetBranchAddress("fPreFitValues", &ftb->fPreFitValues);
     t->SetBranchAddress("fPreFitErrors", &ftb->fPreFitErrors);
@@ -992,6 +993,8 @@ struct FitTreeBlob {
     t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
     t->SetBranchAddress("fMinosErrors", &ftb->fMinosErrors);
     t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
+
+    m->SetBranchAddress("fParamNames", &ftb->fParamNames);
     return ftb;
   }
   ~FitTreeBlob() {
@@ -1021,6 +1024,7 @@ struct FitTreeBlob {
     fMemUsage = fb.fMemUsage;
   }
   TTree *throw_tree;
+  TTree *meta_tree;
   std::vector<double> *fFakeDataVals;
   std::vector<std::string> *fParamNames;
   std::vector<double> *fPreFitValues;
