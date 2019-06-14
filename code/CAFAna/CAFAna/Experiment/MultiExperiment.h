@@ -15,6 +15,7 @@ namespace ana
     MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
+      fUseCovMx.resize(expts.size(), false);
     }
 
     void Add(const IExperiment* expt){
