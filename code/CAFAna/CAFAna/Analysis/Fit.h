@@ -191,6 +191,7 @@ namespace ana
     Precision fPrec = kNormal;
     mutable osc::IOscCalculatorAdjustable* fCalc;
     mutable SystShifts fShifts;
+    mutable Verbosity fVerb;
 
     bool fSupportsDerivatives;
 

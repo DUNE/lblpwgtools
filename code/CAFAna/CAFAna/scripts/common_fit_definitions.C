@@ -705,8 +705,7 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
         fin->GetDirectory(sample_dir_order[s_it].c_str())));
     delete fin;
 
-#ifdef REMOVE_PREDINTERP_UNUSED_SYSTS
-    std::vector<anaISyst const *> systs_to_remove = return_list.back().GetAllSysts();
+    std::vector<ana::ISyst const *> systs_to_remove = return_list.back()->GetAllSysts();
     std::vector<std::string> used_syst_names;
     for (auto s : systlist) {
       used_syst_names.push_back(s->ShortName());
@@ -715,9 +714,8 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     if (systs_to_remove.size()) {
       std::cout << "[GC]: Removing " << systs_to_remove.size()
                 << " systs that will not be used for this fit." << std::endl;
-      return_list.back().DiscardSysts(systs_to_remove);
+      return_list.back()->DiscardSysts(systs_to_remove);
     }
-#endif
 
   }
   return return_list;

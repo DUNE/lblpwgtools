@@ -87,9 +87,9 @@ RUN yum install -y --setopt=tsflags=nodocs svn && yum clean all
 # CAFAna
 RUN mkdir -p /opt/CAFAna-src
 WORKDIR /opt/CAFAna-src/
+ARG CAFANA_GIT_REF
 RUN git clone https://github.com/DUNE/lblpwgtools.git
 WORKDIR /opt/CAFAna-src/lblpwgtools
-ARG CAFANA_GIT_REF
 RUN git checkout ${CAFANA_GIT_REF}
 RUN mkdir -p /opt/CAFAna-build
 WORKDIR /opt/CAFAna-build/
@@ -106,10 +106,17 @@ RUN make install -j ${N_CORE}
 WORKDIR /opt/
 RUN rm -rf /opt/CAFAna-src /opt/CAFAna-build
 
+ENV PATH "/opt/CAFAna/bin:${PATH}"
+ENV LD_LIBRARY_PATH "/opt/CAFAna/lib:${LD_LIBRARY_PATH}"
+ENV CAFANA /opt/CAFAna
+
 SHELL ["/usr/bin/bash", "-c"]
 
 RUN yum remove -y centos-release-scl devtoolset-7 git wget gsl-devel boost-devel svn && yum clean all
-RUN rm -rf /opt/root /opt/rh
+RUN rm -rf /opt/root
+
+# Don't remove because cling gets upset
+# RUN rm -rf /opt/rh
 
 RUN yum install -y --setopt=tsflags=nodocs gsl && yum clean all
 
@@ -117,5 +124,5 @@ ADD statefiles/*.root /statefiles/
 
 WORKDIR /
 
-ENTRYPOINT ["/opt/CAFAna/CAFEnvWrapper.sh"]
+ENTRYPOINT ["/usr/bin/bash"]
 CMD []
