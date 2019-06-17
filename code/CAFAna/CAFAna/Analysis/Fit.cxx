@@ -239,10 +239,6 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
       fPostFitErrors = std::vector<double>(thisMin->Errors(),
                                            thisMin->Errors() + thisMin->NDim());
 
-      std::cout << "NFitVars: " << fVars.size() << ", NDim " << thisMin->NDim()
-                << ", NParamNames: " << fParamNames.size()
-                << ", NFitVals: " << fPostFitValues.size() << std::endl;
-
       fEdm = thisMin->Edm();
       fIsValid = !thisMin->Status();
 
@@ -297,6 +293,8 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
                    const SeedList &seedPts,
                    const std::vector<SystShifts> &systSeedPts,
                    Verbosity verb) const {
+
+  fVerb = verb;
   // Fits with no osc calculator shouldn't be trying to optimize any
   // oscilation parameters...
   assert(seed || fVars.empty());
@@ -321,7 +319,7 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
     }
   }
 
-  if (verb == kVerbose) {
+  if (fVerb == kVerbose) {
     std::cout << "Finding best fit for";
     for (const IFitVar *v : fVars)
       std::cout << " " << v->ShortName();
@@ -336,7 +334,7 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
   // better control of printing.
   const double chi = FitHelper(seed, bestSysts, seedPts, systSeedPts, verb);
 
-  if (verb == kVerbose) {
+  if (fVerb == kVerbose) {
     std::cout << "Best fit";
     for (const IFitVar *v : fVars) {
       std::cout << ", " << v->ShortName() << " = " << v->GetValue(seed);
@@ -386,7 +384,7 @@ double Fitter::DoEval(const double *pars) const {
     penalty += fSysts[j]->Penalty(pars[fVars.size() + j]);
   }
 
-  if (fNEval % 1000 == 0)
+  if ((fVerb == kVerbose) && !(fNEval % 1000))
     std::cout << fNEval << ": EXPT chi2 = " << fExpt->ChiSq(fCalc, fShifts)
               << "; penalty = " << penalty << std::endl;
   return fExpt->ChiSq(fCalc, fShifts) + penalty;

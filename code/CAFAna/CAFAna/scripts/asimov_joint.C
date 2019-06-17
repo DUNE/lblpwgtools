@@ -47,7 +47,7 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
     min = -1;
     max = 1;
   }
-  if (parName == "dmsq32scaled") {
+  if (parName == "dmsq32scaled" or parName == "dmsq32") {
     nBins = 200;
     min = 2.25;
     max = 2.65;
@@ -84,7 +84,7 @@ void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
     calc->SetTh13(parVal);
   else if (parName == "deltapi")
     calc->SetdCP(TMath::Pi() * parVal);
-  else if (parName == "dmsq32scaled")
+  else if (parName == "dmsq32scaled" or parName == "dmsq32")
     calc->SetDmsq32(hie < 0 ? -1 * parVal / 1000. : parVal / 1000.);
   else if (parName == "ssth23")
     calc->SetTh23(asin(sqrt(parVal)));
@@ -176,16 +176,13 @@ void asimov_joint(std::string stateFname=def_stateFname,
     yVal = stoi(plotVarVect[2]);
 
   // One man's continuing struggle with hacky fixes stemming from the oscillation probability being buggy as hell
-  if (std::find(plotVarVect.begin(), plotVarVect.end(), "dmsq32") == plotVarVect.end()){
-    std::cout << "Found dmsq32" << std::endl;
-    RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
-  } else std::cout << "No dmsq32" << std::endl;
+  if (plotVars.find("dmsq32") != std::string::npos) RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
-  FitTreeBlob asimov_tree("asimov_tree");
-  asimov_tree.throw_tree->SetDirectory(fout);
+  FitTreeBlob asimov_tree("asimov_tree", "meta_tree");
+  asimov_tree.SetDirectory(fout);
 
   // This remains the same throughout... there is one true parameter set for this Asimov set
   osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
@@ -273,7 +270,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
       asimov_tree.throw_tree->Branch("xName", &plotVarVect[0]);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yVal", &yCenter);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
-      asimov_tree.throw_tree->Fill();
+      asimov_tree.Fill();
       sens_hist->SetBinContent(xBin+1, yBin+1, chisqdiff);
       delete penalty;
     }
@@ -281,6 +278,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
 
   // Save the histogram, and do something sensible with the name
   fout->cd();
+  asimov_tree.Write();
   sens_hist->Write();
   fout->Write();
   fout->Close();

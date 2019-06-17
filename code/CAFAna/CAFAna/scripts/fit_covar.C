@@ -4,6 +4,7 @@ char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "covar_various_asimov.root";
 char const *def_systSet = "nosyst";
 char const *def_sampleString = "ndfd";
+char const *def_fakeDataShift = "";
 char const *def_penaltyString = "nopen";
 int const def_hie = 1;
 char const *def_asimov_set = "0";
@@ -13,6 +14,7 @@ void fit_covar(std::string stateFname = def_stateFname,
                std::string outputFname = def_outputFname,
                std::string systSet = def_systSet,
                std::string sampleString = def_sampleString,
+               std::string fakeDataShift = def_fakeDataShift,
                std::string penaltyString = def_penaltyString, int hie = def_hie,
                std::string asimov_set = def_asimov_set,
                std::string oscVarString = def_oscVarString) {
@@ -29,11 +31,19 @@ void fit_covar(std::string stateFname = def_stateFname,
   }
 
   // Oscillation parameters to use
-  std::vector<const IFitVar *> oscVars = GetOscVars(oscVarString, hie);
+  std::vector<const IFitVar *> oscVars = {};
+  if (sampleString.find("fd") != std::string::npos) {
+    oscVars = GetOscVars(oscVarString, hie);
+  }
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
+  FitTreeBlob ftb("fit_info","meta_tree");
+  ftb.SetDirectory(fout);
+
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+
+  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
 
   // Move the input parameters a little, just to avoid asimov fit issues in
   // MINUIT
@@ -42,8 +52,11 @@ void fit_covar(std::string stateFname = def_stateFname,
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
 
-  // Make a map of seed points to try (replaces the old loops)
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
+  if (sampleString.find("fd") != std::string::npos) {
+    oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
+    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  }
 
   // Add a penalty term (maybe)
   IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
@@ -51,9 +64,11 @@ void fit_covar(std::string stateFname = def_stateFname,
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, kNoShift, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
-                  Fitter::kNormal | Fitter::kIncludeHesse, fout);
+                  Fitter::kNormal | Fitter::kIncludeHesse, fout, &ftb);
   delete penalty;
 
+  ftb.Fill();
+  ftb.Write();
   // Now close the file
   fout->Close();
 }
@@ -67,12 +82,13 @@ int main(int argc, char const *argv[]) {
   std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
   std::string systSet = (argc > 3) ? argv[3] : def_systSet;
   std::string sampleString = (argc > 4) ? argv[4] : def_sampleString;
-  std::string penaltyString = (argc > 5) ? argv[5] : def_penaltyString;
-  int hie = (argc > 6) ? atoi(argv[6]) : def_hie;
-  std::string asimov_set = (argc > 7) ? argv[7] : def_asimov_set;
-  std::string oscVarString = (argc > 8) ? argv[8] : def_oscVarString;
+  std::string fakeDataShift = (argc > 5) ? argv[5] : def_fakeDataShift;
+  std::string penaltyString = (argc > 6) ? argv[6] : def_penaltyString;
+  int hie = (argc > 7) ? atoi(argv[7]) : def_hie;
+  std::string asimov_set = (argc > 8) ? argv[8] : def_asimov_set;
+  std::string oscVarString = (argc > 9) ? argv[9] : def_oscVarString;
 
-  fit_covar(stateFname, outputFname, systSet, sampleString, penaltyString, hie,
-            asimov_set, oscVarString);
+  fit_covar(stateFname, outputFname, systSet, sampleString, fakeDataShift,
+            penaltyString, hie, asimov_set, oscVarString);
 }
 #endif

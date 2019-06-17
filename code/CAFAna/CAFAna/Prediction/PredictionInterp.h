@@ -9,7 +9,6 @@
 
 #include <map>
 #include <memory>
-#include <unordered_map>
 
 #include "TMD5.h"
 
@@ -174,7 +173,20 @@ namespace ana
     std::vector<ISyst const *> GetAllSysts() const;
 
   protected:
-    mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
+    using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
+    mutable std::vector<PredMappedType> fPreds;
+    std::vector<PredMappedType>::iterator find_pred(const ISyst *s) const {
+      return std::find_if(
+          fPreds.begin(), fPreds.end(),
+          [=](PredMappedType const &p) { return bool(s == p.first); });
+    }
+    ShiftedPreds get_pred(const ISyst *s) const {
+      return std::find_if(fPreds.begin(), fPreds.end(),
+                       [=](PredMappedType const &p) {
+                         return bool(s == p.first);
+                       })
+          ->second;
+    }
 
     /// The oscillation values we assume when evaluating the coefficients
     osc::IOscCalculator* fOscOrigin;

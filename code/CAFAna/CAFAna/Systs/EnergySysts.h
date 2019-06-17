@@ -42,8 +42,8 @@ namespace ana
 	}
       }
     }
-  };  
-  
+  };
+
   extern const EnergyScaleFDSyst kEnergyScaleFDSyst;
 
   // Total energy scale shape systematics
@@ -98,7 +98,7 @@ namespace ana
 	sr->dune.RecoHadEnNue  += sr->dune.RecoHadEnNue*scale*pow(sr->dune.RecoHadEnNue+0.1, -0.5);
 	if ( !(sr->dune.isCC==1 && abs(sr->dune.nuPDG) == 14) ) {
 	  sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
-	  sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);	
+	  sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
 	}
       }
     }
@@ -384,7 +384,7 @@ namespace ana
 		  sr->dune.eRecoPip,
 		  sr->dune.eRecoPim);
       const double scale = .05 * sigma;
-      if(sr->dune.isFD) { 
+      if(sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoP < 0) sr->dune.eRecoP = 0.;
 	if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
@@ -400,7 +400,7 @@ namespace ana
       }
     }
   };
-  
+
   extern const ChargedHadUncorrFDSyst kChargedHadUncorrFDSyst;
 
   // Neutron energy scale
@@ -432,7 +432,7 @@ namespace ana
     }
   };
 
-  extern const NUncorrFDSyst kNUncorrFDSyst;  
+  extern const NUncorrFDSyst kNUncorrFDSyst;
 
   // FD systematic correlated for pi0s and electrons
   // 2.5% on reco energy for electrons and pi0s
@@ -457,7 +457,7 @@ namespace ana
 	sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale;
 	sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * scale;
 	sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * scale;
-	sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * scale; 
+	sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * scale;
 	sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * scale;
 	if (sr->dune.isCC && abs(sr->dune.nuPDG) == 12) {
 	  sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue * scale;
@@ -482,7 +482,7 @@ namespace ana
     {
       restore.Add(sr->dune.Ev_reco_numu,
 		  sr->dune.RecoLepEnNumu);
-      const double scale = .02*sigma;      
+      const double scale = .02*sigma;
       // FD charged current numus only
       if (sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG)==14) {
 	sr->dune.Ev_reco_numu  += (sr->dune.LepE - sr->dune.RecoLepEnNumu) * scale;
@@ -508,7 +508,7 @@ namespace ana
 		  sr->dune.RecoHadEnNue,
 		  sr->dune.RecoLepEnNue,
 		  sr->dune.eRecoPi0);
-      const double scale = .02*sigma;      
+      const double scale = .02*sigma;
       if (sr->dune.isFD){
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
@@ -543,7 +543,7 @@ namespace ana
 		  sr->dune.eRecoP,
 		  sr->dune.eRecoPip,
 		  sr->dune.eRecoPim);
-      const double scale = .02*sigma;      
+      const double scale = .02*sigma;
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
 	if (sr->dune.eRecoP < 0.) sr->dune.eRecoP = 0.;
@@ -575,7 +575,7 @@ namespace ana
 		  sr->dune.RecoHadEnNue,
 		  sr->dune.RecoHadEnNumu,
 		  sr->dune.eRecoN);
-      const double scale = .1*sigma;      
+      const double scale = .1*sigma;
       // FD charged current numus only
       if (sr->dune.isFD) {
 	if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;

@@ -3,6 +3,7 @@ set(scripts_to_install
   bin_splines.C
   cpv_joint.C
   llh_scans.C
+  make_all_throws.C
   make_cpv_throws.C
   make_octant_throws.C
   make_mh_throws.C
@@ -17,7 +18,7 @@ set(scripts_to_build
   make_toy_throws_fixed_seed
   MakePredInterps
   fit_covar
-  # make_1dconstraint_plots
+  make_1dconstraint_plots
   make_all_throws
 )
 

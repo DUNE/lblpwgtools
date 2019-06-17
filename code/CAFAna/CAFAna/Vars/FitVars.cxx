@@ -185,6 +185,18 @@ namespace ana
     osc->SetDmsq21(Clamp(val));
   }
   //----------------------------------------------------------------------
+  double FitDmSq21Scaled::GetValue(const osc::IOscCalculatorAdjustable* osc) const
+  {
+    return osc->GetDmsq21()*1e5;
+  }
+
+  //----------------------------------------------------------------------
+  void FitDmSq21Scaled::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
+  {
+    osc->SetDmsq21(Clamp(val/1e5));
+  }
+
+  //----------------------------------------------------------------------
   double FitRho::GetValue(const osc::IOscCalculatorAdjustable* osc) const
   {
     return osc->GetRho();

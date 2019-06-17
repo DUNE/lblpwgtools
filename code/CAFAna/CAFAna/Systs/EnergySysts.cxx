@@ -3,7 +3,7 @@
 namespace ana {
   const EnergyScaleFDSyst kEnergyScaleFDSyst;
   const ChargedHadUncorrFDSyst kChargedHadUncorrFDSyst;
-  const NUncorrFDSyst kNUncorrFDSyst;  
+  const NUncorrFDSyst kNUncorrFDSyst;
   const EMUncorrFDSyst kEMUncorrFDSyst;
   const eScaleMuLArFDSyst keScaleMuLArFDSyst;
   const UncorrFDTotSqrtSyst kUncorrFDTotSqrtSyst;
