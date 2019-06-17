@@ -992,6 +992,18 @@ void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, s
   return;
 }
 
+void SaveParams(TDirectory *outDir, std::vector<const ISyst*> systlist){
+  outDir->cd();
+  std::vector<std::string> *fParamNames = new std::vector<std::string>();
+  for (auto it : systlist) fParamNames->push_back(it->ShortName());
+  TTree *t = new TTree("meta","Parameter meta-data");
+  t->Branch("fParamNames", &fParamNames);
+  t->Fill();
+  t->Write();
+  delete fParamNames;
+  delete t;
+};
+
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "", std::string meta_tree_name = "")
       : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr) {
@@ -1115,6 +1127,8 @@ struct FitTreeBlob {
   double fEDM;
   bool fIsValid;
 };
+
+
 
 SeedList BuildStandardSeedList(osc::IOscCalculatorAdjustable *calc,
                                std::vector<const IFitVar *> const &oscVars) {

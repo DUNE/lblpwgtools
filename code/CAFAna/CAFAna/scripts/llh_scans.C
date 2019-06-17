@@ -19,6 +19,7 @@ void llh_scans(std::string stateFname  = "common_state_mcc11v3.root",
 
   // Open 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
+  SaveParams(fout, systlist);
 
   int hie = 1;
   const std::string hieStr = (hie > 0) ? "nh" : "ih";  
