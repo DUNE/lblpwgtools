@@ -42,7 +42,11 @@ void make_all_throws(std::string stateFname = def_stateFname,
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
   // The global tree for all throw types
-  FitTreeBlob global_tree("global_fit_info");
+  FitTreeBlob global_tree("global_fit_info", "global_params");
+  double globalmin;
+  double thisdcp;
+  double this_th23;
+  double this_ssth23;
   global_tree.throw_tree->SetDirectory(fout);
 
   // Fit in the correct hierarchy and octant for global throw
@@ -53,15 +57,34 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oscSeedsGlobal[&kFitSinSqTheta23] = {0.4, 0.6};
 
   // MH specific
-  FitTreeBlob mh_tree("mh_fit_info");
-  mh_tree.throw_tree->SetDirectory(fout);
+  FitTreeBlob mh_tree("mh_fit_info", "mh_params");
+  mh_tree.SetDirectory(fout);
+  double mh_chisqmin;
+  double mh_dchi2;
+  double mh_significance = 0;
+  mh_tree.throw_tree->Branch("chisqmin", &mh_chisqmin);
+  mh_tree.throw_tree->Branch("globalmin", &globalmin);
+  mh_tree.throw_tree->Branch("hie", &hie);
+  mh_tree.throw_tree->Branch("dcp", &thisdcp);
+  mh_tree.throw_tree->Branch("dchi2", &mh_dchi2);
+  mh_tree.throw_tree->Branch("significance", &mh_significance);
 
   // Fit in the incorrect hierarchy for the exclusion
   std::vector<const IFitVar *> oscVarsMH = GetOscVars("alloscvars", -1 * hie);
 
   // CPV specific
-  FitTreeBlob cpv_tree("cpv_fit_info");
-  cpv_tree.throw_tree->SetDirectory(fout);
+  FitTreeBlob cpv_tree("cpv_fit_info", "cpv_params");
+  cpv_tree.SetDirectory(fout);
+  double cpv_chisqmin;
+  double cpv_dchi2;
+  double cpv_significance = 0;
+  // Add the variables of interest to the tree
+  cpv_tree.throw_tree->Branch("chisqmin", &cpv_chisqmin);
+  cpv_tree.throw_tree->Branch("globalmin", &globalmin);
+  cpv_tree.throw_tree->Branch("hie", &hie);
+  cpv_tree.throw_tree->Branch("dcp", &thisdcp);
+  cpv_tree.throw_tree->Branch("dchi2", &cpv_dchi2);
+  cpv_tree.throw_tree->Branch("significance", &cpv_significance);
 
   // CP-conserving specific (no dCP)
   std::vector<const IFitVar *> oscVarsCPV =
@@ -72,7 +95,17 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   // Octant specific
   FitTreeBlob oct_tree("oct_fit_info");
-  oct_tree.throw_tree->SetDirectory(fout);
+  oct_tree.SetDirectory(fout);
+  double oct_chisqmin;
+  double oct_dchi2;
+  double oct_significance = 0;
+  oct_tree.throw_tree->Branch("chisqmin", &oct_chisqmin);
+  oct_tree.throw_tree->Branch("globalmin", &globalmin);
+  oct_tree.throw_tree->Branch("hie", &hie);
+  oct_tree.throw_tree->Branch("ssth23", &this_ssth23);
+  oct_tree.throw_tree->Branch("th23", &this_th23);
+  oct_tree.throw_tree->Branch("dchi2", &oct_dchi2);
+  oct_tree.throw_tree->Branch("significance", &oct_significance);
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
@@ -88,9 +121,9 @@ void make_all_throws(std::string stateFname = def_stateFname,
     osc::IOscCalculatorAdjustable *fakeThrowOsc =
         ThrownWideOscCalc(hie, oscVarsGlobal);
 
-    double thisdcp = fakeThrowOsc->GetdCP() / TMath::Pi();
-    double this_th23 = fakeThrowOsc->GetTh23();
-    double this_ssth23 = sin(this_th23) * sin(this_th23);
+    thisdcp = fakeThrowOsc->GetdCP() / TMath::Pi();
+    this_th23 = fakeThrowOsc->GetTh23();
+    this_ssth23 = sin(this_th23) * sin(this_th23);
     int oct = (this_ssth23 > 0.5) ? 1 : -1;
 
     // This is very very dumb, but unavoidable given how the parameters work...
@@ -133,12 +166,12 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // I think we shouldn't anyway...
     IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
-    double globalmin =
+    globalmin =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                     stats_throw, oscVarsGlobal, systlist, fitThrowOsc,
                     SystShifts(fitThrowSyst), oscSeedsGlobal, gpenalty,
                     fit_type, nullptr, &global_tree, &mad_spectra_yo);
-    global_tree.throw_tree->Fill();
+    global_tree.Fill();
     delete gpenalty;
     delete fitThrowOsc;
 
@@ -171,22 +204,14 @@ void make_all_throws(std::string stateFname = def_stateFname,
         delete testOscCPV;
       }
 
-      double cpv_dchi2 = cpv_chisqmin - globalmin;
-      double cpv_significance = 0;
+      cpv_dchi2 = cpv_chisqmin - globalmin;
       if (cpv_dchi2 > 0)
         cpv_significance = sqrt(cpv_dchi2);
       else
         std::cerr << "CPV: dchi2 of " << cpv_dchi2 << "; " << cpv_chisqmin
                   << " - " << globalmin << std::endl;
 
-      // Add the variables of interest to the tree
-      cpv_tree.throw_tree->Branch("chisqmin", &cpv_chisqmin);
-      cpv_tree.throw_tree->Branch("globalmin", &globalmin);
-      cpv_tree.throw_tree->Branch("hie", &hie);
-      cpv_tree.throw_tree->Branch("dcp", &thisdcp);
-      cpv_tree.throw_tree->Branch("dchi2", &cpv_dchi2);
-      cpv_tree.throw_tree->Branch("significance", &cpv_significance);
-      cpv_tree.throw_tree->Fill();
+      cpv_tree.Fill();
     }
 
     // -------------------------------------
@@ -204,23 +229,14 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscVarsOct, systlist, testOscOct, SystShifts(fitThrowSyst), oscSeedsOct,
         oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
 
-    double oct_dchi2 = oct_chisqmin - globalmin;
-    double oct_significance = 0;
+    oct_dchi2 = oct_chisqmin - globalmin;
     if (oct_dchi2 > 0)
       oct_significance = sqrt(oct_dchi2);
     else
       std::cerr << "Octant: dchi2 of " << oct_dchi2 << "; " << oct_chisqmin
                 << " - " << globalmin << std::endl;
 
-    // Add the variables of interest to the tree
-    oct_tree.throw_tree->Branch("chisqmin", &oct_chisqmin);
-    oct_tree.throw_tree->Branch("globalmin", &globalmin);
-    oct_tree.throw_tree->Branch("hie", &hie);
-    oct_tree.throw_tree->Branch("ssth23", &this_ssth23);
-    oct_tree.throw_tree->Branch("th23", &this_th23);
-    oct_tree.throw_tree->Branch("dchi2", &oct_dchi2);
-    oct_tree.throw_tree->Branch("significance", &oct_significance);
-    oct_tree.throw_tree->Fill();
+    oct_tree.Fill();
     delete oct_penalty;
     delete testOscOct;
 
@@ -241,22 +257,13 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscSeedsGlobal, mh_penalty, fit_type, // same seeds as a global fit
         nullptr, &mh_tree, &mad_spectra_yo);
 
-    double mh_dchi2 = mh_chisqmin - globalmin;
-    double mh_significance = 0;
+    mh_dchi2 = mh_chisqmin - globalmin;
     if (mh_dchi2 > 0)
       mh_significance = sqrt(mh_dchi2);
     else
       std::cerr << "MH: dchi2 of " << mh_dchi2 << "; " << mh_chisqmin << " - "
                 << globalmin << std::endl;
-
-    // Add the variables of interest to the tree
-    mh_tree.throw_tree->Branch("chisqmin", &mh_chisqmin);
-    mh_tree.throw_tree->Branch("globalmin", &globalmin);
-    mh_tree.throw_tree->Branch("hie", &hie);
-    mh_tree.throw_tree->Branch("dcp", &thisdcp);
-    mh_tree.throw_tree->Branch("dchi2", &mh_dchi2);
-    mh_tree.throw_tree->Branch("significance", &mh_significance);
-    mh_tree.throw_tree->Fill();
+    mh_tree.Fill();
 
     delete mh_penalty;
     delete testOscMH;

@@ -3,6 +3,7 @@ set(scripts_to_install
   bin_splines.C
   cpv_joint.C
   llh_scans.C
+  make_all_throws.C
   make_cpv_throws.C
   make_octant_throws.C
   make_mh_throws.C

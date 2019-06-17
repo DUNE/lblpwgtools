@@ -97,7 +97,7 @@ static std::vector<XSecDialDescriptor> const XSecSystDials = {
     {"BeRPA_A", kFitSyst, kContinuous, kStandardRange},
     {"BeRPA_B", kFitSyst, kContinuous, kStandardRange},
     {"BeRPA_D", kFitSyst, kContinuous, kStandardRange},
-    {"BeRPA_E", kRemovedOverconstraint, kContinuous, kStandardRange},
+    {"BeRPA_E", kUsedAsFakeData, kContinuous, kFakeDataRange},
     {"C12ToAr40_2p2hScaling_nu", kFitSyst, kExtrapolated, kStandardRange},
     {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange},
     {"nuenuebar_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},

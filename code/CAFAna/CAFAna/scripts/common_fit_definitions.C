@@ -147,7 +147,6 @@ struct AxisBlob {
 AxisBlob const default_axes{&axErecYrecND,&axRecoEnuFDnumu,&axRecoEnuFDnue};
 AxisBlob const fake_data_axes{&axErecYrecND_FromDep,&axErecFD_FromDep,&axErecFD_FromDep};
 
-
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
 AxisBlob const Ax1DND_FromDep_unibin{&axErec_FromDep_unibin,&axErec_FromDep_unibin,&axErec_FromDep_unibin};
 
@@ -264,6 +263,18 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0, i
     }
     if (v == "deltapi" || v == "alloscvars") {
       rtn_vars.push_back(&kFitDeltaInPiUnits);
+    }
+
+    // Add back in the 21 parameters
+    if (v == "dmsq21" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq21Scaled);
+    }
+    if (v == "th12" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSq2Theta12);
+    }
+    // Rho rho rho your boat...
+    if (v == "rho" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitRho);
     }
   }
   return rtn_vars;
@@ -775,7 +786,7 @@ void ParseDataSamples(std::string cmdLineInput, double& pot_nd_fhc, double& pot_
   }
 
   double exposure_ratio = exposure/nom_exposure;
-  std::cout << "Using exposure: " << exposure << "; and ratio: " << exposure_ratio << std::endl;
+  // std::cout << "Using exposure: " << exposure << "; and ratio: " << exposure_ratio << std::endl;
 
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
@@ -945,7 +956,7 @@ void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, s
 }
 
 struct FitTreeBlob {
-  FitTreeBlob(std::string tree_name = "") {
+  FitTreeBlob(std::string tree_name = "", std::string meta_tree_name = "") : fMeta_filled(false), throw_tree(nullptr),meta_tree(nullptr) {
 
     fFakeDataVals = new std::vector<double>();
     fParamNames = new std::vector<std::string>();
@@ -972,8 +983,9 @@ struct FitTreeBlob {
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
       throw_tree->Branch("fCentralValues", &fCentralValues);
 
-      meta_tree = new TTree("meta","Parameter meta-data");
-      meta_tree->Branch("fParamNames", &fParamNames);
+      if(meta_tree_name.size()){
+      meta_tree = new TTree(meta_tree_name.c_str(),"Parameter meta-data");
+      meta_tree->Branch("fParamNames", &fParamNames);}
     }
   }
   static FitTreeBlob *MakeReader(TTree *t, TTree *m) {
@@ -1021,6 +1033,22 @@ struct FitTreeBlob {
     fNSeconds = fb.fNSeconds;
     fMemUsage = fb.fMemUsage;
   }
+  void Fill(){
+    if(throw_tree){
+    throw_tree->Fill();}
+    if(meta_tree && !fMeta_filled){
+      meta_tree->Fill();
+      fMeta_filled = true;
+    }
+  }
+  void SetDirectory(TDirectory *d){
+    if(throw_tree){
+    throw_tree->SetDirectory(d);}
+    if(meta_tree ){
+      meta_tree->SetDirectory(d);
+    }
+  }
+  bool fMeta_filled;
   TTree *throw_tree;
   TTree *meta_tree;
   std::vector<double> *fFakeDataVals;
@@ -1118,7 +1146,6 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   std::string covFileName =
       FindCAFAnaDir() + "/Systs/det_sys_cov.root";
 #endif
-  //std::string covName = "nd_frac_cov";
 
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu;
@@ -1152,29 +1179,23 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats,gRNGSeed ? gRNGSeed+15 : 0))));
   }
   // If using the multi sample covariances then they must be added to the MultiExperiment
-  // const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_nue, fakeDataStats);
   SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
-  // const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_fhc_numu, fakeDataStats);
   SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
-  // const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_nue, fakeDataStats);
   SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
-  // const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_fd_rhc_numu, fakeDataStats);
   SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum nd_data_numu_fhc = predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_fhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
-  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *(*spectra)[4]);
+  nd_expt_fhc.SetMaskHist(0.5, 8, 0, -1);
 
-  const Spectrum nd_data_numu_rhc = predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst).MockData(pot_nd_rhc, fakeDataStats);
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
-  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
+  nd_expt_rhc.SetMaskHist(0.5, 8, 0, -1);
 
   // What is the chi2 between the data, and the thrown prefit distribution?
   // std::cout << "Prefit chi-square:" << std::endl;
@@ -1360,6 +1381,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     t->Write();
     hist_covar.Write();
     hist_corr.Write();
+    covar->Write("covar_mat");
     delete t;
   }
 
