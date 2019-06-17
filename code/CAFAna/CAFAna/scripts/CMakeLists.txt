@@ -50,9 +50,11 @@ foreach(SCRPT ${scripts_to_build})
     set_target_properties(${SCRPT} PROPERTIES LINK_FLAGS ${EXTERNAL_LINK_DIRS_STR})
   endif()
 
-  target_link_libraries(${SCRPT} ${ROOT_LIBS})
-
-  BuildFlagString(EXTERNAL_LIBS_CAFBUILD "-l" Minuit2 ${ROOT_LIBS} CLHEP)
+  if(DEFINED USE_OPENMP AND USE_OPENMP)
+    BuildFlagString(EXTERNAL_LIBS_CAFBUILD "-l" Minuit2 ${ROOT_LIBS} CLHEP gomp)
+  else()
+    BuildFlagString(EXTERNAL_LIBS_CAFBUILD "-l" Minuit2 ${ROOT_LIBS} CLHEP)
+  endif()
 
   target_link_libraries(${SCRPT} ${EXTERNAL_LIBS_CAFBUILD})
 

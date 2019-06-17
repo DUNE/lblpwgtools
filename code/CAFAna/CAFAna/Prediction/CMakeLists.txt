@@ -35,6 +35,10 @@ if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   target_link_libraries(CAFAnaPrediction ${GPERF_LINKER_FLAGS})
 endif()
 
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaPrediction BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
+endif()
+
 install(TARGETS CAFAnaPrediction DESTINATION lib)
 
 install(FILES ${Prediction_header_files} DESTINATION include/CAFAna/Prediction)

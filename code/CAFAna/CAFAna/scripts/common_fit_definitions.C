@@ -238,7 +238,7 @@ IExperiment* GetPenalty(int hie, int oct, std::string penalty, std::string asimo
   return ret;
 }
 
-std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie = 0, int oct = 0) {
+std::vector<const IFitVar *> GetOscVars(std::string oscVarString="alloscvars", int hie = 0, int oct = 0) {
 
   std::vector<std::string> osc_vars = SplitString(oscVarString, ':');
 
@@ -528,6 +528,32 @@ std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 
+std::vector<const ISyst*> OrderListOfSysts(std::vector<const ISyst*> const &systlist){
+  std::vector<const ISyst*> superorder;
+  for (auto &s : GetListOfSysts("flux:noxsec:nodet")) {
+    superorder.emplace_back(s);
+  }
+  for (auto &s : GetListOfSysts("cdrflux:noxsec:nodet")) {
+    superorder.emplace_back(s);
+  }
+  for (auto &s : GetListOfSysts("noflux:xsec:nodet")) {
+    superorder.emplace_back(s);
+  }
+  for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
+    superorder.emplace_back(s);
+  }
+
+  std::vector<const ISyst*> retlist;
+
+  for (auto s : superorder) {
+    if (std::find(systlist.begin(),systlist.end(),s) == systlist.end()) {
+      continue;
+    }
+    retlist.emplace_back(s);
+  }
+  return retlist;
+}
+
 SystShifts GetFakeDataGeneratorSystShift(std::string input){
 
   // Default to nominal
@@ -723,11 +749,22 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     }
     RemoveSysts(systs_to_remove, used_syst_names);
     if (systs_to_remove.size()) {
-      // std::cout << "[GC]: Removing " << systs_to_remove.size()
-      //           << " systs that will not be used for this fit." << std::endl;
+      std::cout << "[GC]: Removing " << systs_to_remove.size()
+                << " systs that will not be used for this fit." << std::endl;
+      ProcInfo_t procinfo_b;
+      gSystem->GetProcInfo(&procinfo_b);
+      std::cout << "[GC]: Before discard: "
+                << (double(procinfo_b.fMemResident) / 1.0E3) << " MB." << std::endl;
       return_list.back()->DiscardSysts(systs_to_remove);
+      ProcInfo_t procinfo_a;
+      gSystem->GetProcInfo(&procinfo_a);
+      std::cout << "[GC]: After discard: "
+                << (double(procinfo_a.fMemResident) / 1.0E3) << " MB." << std::endl;
+      std::cout << "[GC]: Saved: "
+                << (double(procinfo_b.fMemResident - procinfo_a.fMemResident) /
+                    1.0E3)
+                << " MB." << std::endl;
     }
-
   }
   return return_list;
 };
@@ -1209,16 +1246,18 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
   nd_expt_rhc.SetMaskHist(0.5, 8, 0, -1);
 
-  // What is the chi2 between the data, and the thrown prefit distribution?
-  // std::cout << "Prefit chi-square:" << std::endl;
-  // if (pot_fd_fhc_nue > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc_nue << std::endl;
-  // if (pot_fd_fhc_numu > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_fhc_numu << std::endl;
-  // if (pot_fd_rhc_nue > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc_nue << std::endl;
-  // if (pot_fd_rhc_numu > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_fd_rhc_numu << std::endl;
-  // if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_fhc << std::endl;
-  // if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << "; POT = " << pot_nd_rhc << std::endl;
+  bool use_ME_covmat = true;
 
-  // Save prefit starting distributions
+  if(getenv("CAFANA_USE_SSE_COVMAT")){
+    use_ME_covmat = !bool(atoi(getenv("CAFANA_USE_SSE_COVMAT")));
+  }
+
+  if(!use_ME_covmat){
+    nd_expt_fhc.AddCovarianceMatrix(covFileName,"nd_fhc_frac_cov",kCovMxChiSqPreInvert);
+  nd_expt_rhc.AddCovarianceMatrix(covFileName,"nd_fhc_frac_cov",kCovMxChiSqPreInvert);
+  }
+
+ // Save prefit starting distributions
   if (outDir){
     if (pot_fd_fhc_nue > 0){
       TH1* data_nue_fhc_hist = (*spectra)[0]->ToTHX(pot_fd_fhc_nue);
@@ -1282,7 +1321,10 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
       pre_nd_numu_rhc_1D   ->SetTitle(std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc_1D   ->Write();
     }
-  }
+}
+
+
+
   // Now sort out the experiment
   MultiExperiment this_expt;
   if (pot_nd_fhc > 0) this_expt.Add(&nd_expt_fhc);
@@ -1294,7 +1336,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
-  if (pot_nd_rhc > 0 && pot_nd_fhc > 0) {
+  if (use_ME_covmat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
     this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
   }
 
@@ -1311,14 +1353,6 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 #endif
 
   bf = fitSyst;
-
-  // std::cout << "Postfit chi-square:" << std::endl;
-  // if (pot_fd_fhc_nue > 0) std::cout << "\t FD nue FHC = " << app_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  // if (pot_fd_fhc_numu > 0) std::cout << "\t FD numu FHC = " << dis_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  // if (pot_fd_rhc_nue > 0) std::cout << "\t FD nue RHC = " << app_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  // if (pot_fd_rhc_numu > 0) std::cout << "\t FD numu RHC = " << dis_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  // if (pot_nd_fhc > 0) std::cout << "\t ND FHC = " << nd_expt_fhc.ChiSq(fitOsc, fitSyst) << std::endl;
-  // if (pot_nd_rhc > 0) std::cout << "\t ND RHC = " << nd_expt_rhc.ChiSq(fitOsc, fitSyst) << std::endl;
 
   // If we have a directory to save to... save some stuff...
   if (outDir){

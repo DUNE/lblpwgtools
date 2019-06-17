@@ -124,7 +124,7 @@ namespace ana
     /// Find coefficients describing the ratios from this component
     std::vector<std::vector<Coeffs>>
     FitComponent(const std::vector<double>& shifts,
-                 const std::vector<IPrediction*>& preds,
+                 const std::vector<std::unique_ptr<IPrediction>>& preds,
                  Flavors::Flavors_t flav,
                  Current::Current_t curr,
                  Sign::Sign_t sign,
@@ -152,7 +152,7 @@ namespace ana
 
       std::string systName; ///< What systematic we're interpolating
       std::vector<double> shifts; ///< Shift values sampled
-      std::vector<IPrediction*> preds;
+      std::vector<std::unique_ptr<IPrediction>> preds;
 
       int nCoeffs; // Faster than calling size()
 
@@ -165,6 +165,30 @@ namespace ana
       // [type][shift bin][histogram bin]. TODO this is ugly
       std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
+      ShiftedPreds() {}
+      ShiftedPreds(ShiftedPreds &&other)
+          : systName(std::move(other.systName)),
+            shifts(std::move(other.shifts)), preds(std::move(other.preds)),
+            nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
+            fitsNubar(std::move(other.fitsNubar)),
+            fitsRemap(std::move(other.fitsRemap)),
+            fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
+
+      ShiftedPreds &operator=(ShiftedPreds &&other) {
+        systName = std::move(other.systName);
+        shifts = std::move(other.shifts);
+        preds = std::move(other.preds);
+        nCoeffs = other.nCoeffs;
+        fits = std::move(other.fits);
+        fitsNubar = std::move(other.fitsNubar);
+        fitsRemap = std::move(other.fitsRemap);
+        fitsNubarRemap = std::move(other.fitsNubarRemap);
+        return *this;
+      }
+
+      void Dump(){
+        std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
+      }
     };
 
     //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
@@ -180,7 +204,7 @@ namespace ana
           fPreds.begin(), fPreds.end(),
           [=](PredMappedType const &p) { return bool(s == p.first); });
     }
-    ShiftedPreds get_pred(const ISyst *s) const {
+    ShiftedPreds const &get_pred(const ISyst *s) const {
       return std::find_if(fPreds.begin(), fPreds.end(),
                        [=](PredMappedType const &p) {
                          return bool(s == p.first);
