@@ -10,7 +10,8 @@ set(scripts_to_install
   mh_joint.C
   octant_joint.C
   spec_joint.C
-  spec_variations.C)
+  spec_variations.C
+  CheckPointHelper.h)
 
 set(scripts_to_build
   asimov_joint
@@ -18,7 +19,6 @@ set(scripts_to_build
   make_toy_throws_fixed_seed
   MakePredInterps
   fit_covar
-  make_1dconstraint_plots
   make_all_throws
 )
 
