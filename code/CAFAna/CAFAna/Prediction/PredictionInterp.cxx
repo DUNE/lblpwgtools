@@ -23,6 +23,10 @@
 #include <algorithm>
 #include <malloc.h>
 
+#ifdef USE_OMP_THREADS
+#include <omp.h>
+#endif
+
 // Don't apply systs to bins with fewer than this many MC stats
 const double kMinMCStats = 50;
 
@@ -55,7 +59,7 @@ namespace ana
         sp.preds.push_back(predGen.Generate(loaders, shiftHere).release());
       }
 
-      fPreds.emplace(syst, sp);
+      fPreds.emplace_back(syst, sp);
     } // end for syst
 
     fPredNom = predGen.Generate(loaders, shiftMC);
@@ -332,12 +336,30 @@ namespace ana
     TH1D* h = s.ToTH1(s.POT());
 
     const unsigned int N = h->GetNbinsX()+2;
-    double corr[N];
-    for(unsigned int i = 0; i < N; ++i) corr[i] = 1;
 
-    for(auto& it: fPreds){
-      const ISyst* syst = it.first;
-      const ShiftedPreds& sp = it.second;
+#ifdef USE_OMP_THREADS
+    assert(omp_get_num_threads() <= 4);
+    double corr[4][N];
+    for (unsigned int i = 0; i < 4; ++i) {
+      for (unsigned int j = 0; j < N; ++j) {
+        corr[i][j] = 1;
+      }
+    }
+#else
+    double corr[N];
+    for (unsigned int i = 0; i < N; ++i) {
+      corr[i] = 1;
+    }
+#endif
+
+    size_t NPreds = fPreds.size();
+
+    #ifdef USE_OMP_THREADS
+    #pragma omp parallel for
+    #endif
+    for(size_t p_it = 0; p_it < NPreds; ++p_it){
+      const ISyst* syst = fPreds[p_it].first;
+      const ShiftedPreds& sp = fPreds[p_it].second;
 
       double x = shift.GetShift(syst);
 
@@ -354,8 +376,22 @@ namespace ana
       const double x_cube = util::cube(x);
       const double x_sqr = util::sqr(x);
 
+#ifdef USE_OMP_THREADS
+      ShiftSpectrumKernel(fits, N, x, x_sqr, x_cube,
+                          corr[omp_get_thread_num()]);
+#else
       ShiftSpectrumKernel(fits, N, x, x_sqr, x_cube, corr);
+#endif
     } // end for syst
+
+#ifdef USE_OMP_THREADS
+    //Accumulate
+    for (unsigned int i = 1; i < 4; ++i) {
+      for (unsigned int j = 0; j < N; ++j) {
+        corr[0][j] *= 1;
+      }
+    }
+#endif
 
     double* arr = h->GetArray();
     for(unsigned int n = 0; n < N; ++n){
@@ -415,7 +451,10 @@ namespace ana
 
   void PredictionInterp::DiscardSysts(std::vector<ISyst const *> const &systs) {
     for (auto s : systs) {
-      fPreds.erase(s);
+      auto it = find_pred(s);
+      if(it != fPreds.end()){
+        fPreds.erase(it);
+      }
     }
   }
   std::vector<ISyst const *> PredictionInterp::GetAllSysts() const {
@@ -442,7 +481,7 @@ namespace ana
 
     // Check that we're able to handle all the systs we were passed
     for(const ISyst* syst: shift.ActiveSysts()){
-      if(fPreds.find(syst) == fPreds.end()){
+      if(find_pred(syst) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << syst->ShortName() << std::endl;
         abort();
       }
@@ -506,8 +545,8 @@ namespace ana
       std::vector<double>& diff = it.second;
       if(diff.empty()) diff.resize(N);
       assert(diff.size() == N);
-      assert(fPreds.find(syst) != fPreds.end());
-      const ShiftedPreds& sp = fPreds[syst];
+      assert(find_pred(syst) != fPreds.end());
+      const ShiftedPreds& sp = get_pred(syst);
 
       double x = shift.GetShift(syst);
 
@@ -554,7 +593,7 @@ namespace ana
 
     // Check that we're able to handle all the systs we were passed
     for(auto& it: dp){
-      if(fPreds.find(it.first) == fPreds.end()){
+      if(find_pred(it.first) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << it.first->ShortName() << std::endl;
         abort();
       }
@@ -699,7 +738,7 @@ namespace ana
           sp.preds.push_back(pred);
         } // end for shift
 
-        ret->fPreds.emplace(syst, sp);
+        ret->fPreds.emplace_back(syst, sp);
       } // end for systIdx
     } // end if hSystNames
 
@@ -738,7 +777,7 @@ namespace ana
   {
     InitFits();
 
-    auto it = fPreds.find(syst);
+    auto it = find_pred(syst);
     if(it == fPreds.end()){
       std::cout << "PredictionInterp::DebugPlots(): "
                 << syst->ShortName() << " not found" << std::endl;

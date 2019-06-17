@@ -284,6 +284,11 @@ void make_all_throws(std::string stateFname = def_stateFname,
     }
   }
 
+  global_tree.Write();
+  cpv_tree.Write();
+  oct_tree.Write();
+  mh_tree.Write();
+
   fout->Write();
   fout->Close();
 }

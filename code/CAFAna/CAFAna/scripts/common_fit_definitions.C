@@ -723,8 +723,8 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     }
     RemoveSysts(systs_to_remove, used_syst_names);
     if (systs_to_remove.size()) {
-      std::cout << "[GC]: Removing " << systs_to_remove.size()
-                << " systs that will not be used for this fit." << std::endl;
+      // std::cout << "[GC]: Removing " << systs_to_remove.size()
+      //           << " systs that will not be used for this fit." << std::endl;
       return_list.back()->DiscardSysts(systs_to_remove);
     }
 
@@ -956,7 +956,8 @@ void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc, s
 }
 
 struct FitTreeBlob {
-  FitTreeBlob(std::string tree_name = "", std::string meta_tree_name = "") : fMeta_filled(false), throw_tree(nullptr),meta_tree(nullptr) {
+  FitTreeBlob(std::string tree_name = "", std::string meta_tree_name = "")
+      : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr) {
 
     fFakeDataVals = new std::vector<double>();
     fParamNames = new std::vector<std::string>();
@@ -965,7 +966,7 @@ struct FitTreeBlob {
     fPostFitValues = new std::vector<double>();
     fPostFitErrors = new std::vector<double>();
     fCentralValues = new std::vector<double>();
-    fMinosErrors = new std::vector<std::pair<double,double>>();
+    fMinosErrors = new std::vector<std::pair<double, double>>();
 
     if (tree_name.size()) {
       throw_tree = new TTree(tree_name.c_str(), "Fit information");
@@ -983,9 +984,10 @@ struct FitTreeBlob {
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
       throw_tree->Branch("fCentralValues", &fCentralValues);
 
-      if(meta_tree_name.size()){
-      meta_tree = new TTree(meta_tree_name.c_str(),"Parameter meta-data");
-      meta_tree->Branch("fParamNames", &fParamNames);}
+      if (meta_tree_name.size()) {
+        meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
+        meta_tree->Branch("fParamNames", &fParamNames);
+      }
     }
   }
   static FitTreeBlob *MakeReader(TTree *t, TTree *m) {
@@ -1033,19 +1035,29 @@ struct FitTreeBlob {
     fNSeconds = fb.fNSeconds;
     fMemUsage = fb.fMemUsage;
   }
-  void Fill(){
-    if(throw_tree){
-    throw_tree->Fill();}
-    if(meta_tree && !fMeta_filled){
+  void Fill() {
+    if (throw_tree) {
+      throw_tree->Fill();
+    }
+    if (meta_tree && !fMeta_filled) {
       meta_tree->Fill();
       fMeta_filled = true;
     }
   }
-  void SetDirectory(TDirectory *d){
-    if(throw_tree){
-    throw_tree->SetDirectory(d);}
-    if(meta_tree ){
+  void SetDirectory(TDirectory *d) {
+    if (throw_tree) {
+      throw_tree->SetDirectory(d);
+    }
+    if (meta_tree) {
       meta_tree->SetDirectory(d);
+    }
+  }
+  void Write() {
+    if (throw_tree) {
+      throw_tree->Write();
+    }
+    if (meta_tree) {
+      meta_tree->Write();
     }
   }
   bool fMeta_filled;
@@ -1058,7 +1070,7 @@ struct FitTreeBlob {
   std::vector<double> *fPostFitValues;
   std::vector<double> *fPostFitErrors;
   std::vector<double> *fCentralValues;
-  std::vector<std::pair<double,double>> *fMinosErrors;
+  std::vector<std::pair<double, double>> *fMinosErrors;
   double fChiSq;
   unsigned fNSeconds;
   double fMemUsage;
@@ -1364,25 +1376,9 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     }
 
     // Save information
-    TTree *t = new TTree("fit_info", "fit_info");
-    t->Branch("chisq", &thischisq);
-    t->Branch("NFCN", &fNFCN);
-    t->Branch("EDM", &fEDM);
-    t->Branch("IsValid", &fIsValid);
-    t->Branch("fParamNames",&fParamNames);
-    t->Branch("fFakeDataVals",&fFakeDataVals);
-    t->Branch("fPreFitValues",&fPreFitValues);
-    t->Branch("fPreFitErrors",&fPreFitErrors);
-    t->Branch("fPostFitValues",&fPostFitValues);
-    t->Branch("fPostFitErrors",&fPostFitErrors);
-    t->Branch("fMinosErrors",&fMinosErrors);
-    t->Branch("fCentralValues",&fCentralValues);
-    t->Fill();
-    t->Write();
     hist_covar.Write();
     hist_corr.Write();
     covar->Write("covar_mat");
-    delete t;
   }
 
   if (PostFitTreeBlob) {

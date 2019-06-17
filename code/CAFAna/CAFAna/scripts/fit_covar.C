@@ -38,6 +38,9 @@ void fit_covar(std::string stateFname = def_stateFname,
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
+  FitTreeBlob ftb("fit_info","meta_tree");
+  ftb.SetDirectory(fout);
+
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
@@ -61,9 +64,11 @@ void fit_covar(std::string stateFname = def_stateFname,
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, kNoShift, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
-                  Fitter::kNormal | Fitter::kIncludeHesse, fout);
+                  Fitter::kNormal | Fitter::kIncludeHesse, fout, &ftb);
   delete penalty;
 
+  ftb.Fill();
+  ftb.Write();
   // Now close the file
   fout->Close();
 }

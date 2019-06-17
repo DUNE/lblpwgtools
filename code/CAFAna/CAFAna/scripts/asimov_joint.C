@@ -181,8 +181,8 @@ void asimov_joint(std::string stateFname=def_stateFname,
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
-  FitTreeBlob asimov_tree("asimov_tree");
-  asimov_tree.throw_tree->SetDirectory(fout);
+  FitTreeBlob asimov_tree("asimov_tree", "meta_tree");
+  asimov_tree.SetDirectory(fout);
 
   // This remains the same throughout... there is one true parameter set for this Asimov set
   osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
@@ -270,7 +270,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
       asimov_tree.throw_tree->Branch("xName", &plotVarVect[0]);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yVal", &yCenter);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
-      asimov_tree.throw_tree->Fill();
+      asimov_tree.Fill();
       sens_hist->SetBinContent(xBin+1, yBin+1, chisqdiff);
       delete penalty;
     }
@@ -278,6 +278,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
 
   // Save the histogram, and do something sensible with the name
   fout->cd();
+  asimov_tree.Write();
   sens_hist->Write();
   fout->Write();
   fout->Close();
