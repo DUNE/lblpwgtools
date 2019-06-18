@@ -15,7 +15,7 @@ void llh_scans(std::string stateFname  = "common_state_mcc11v3.root",
   PredictionInterp& predInterpNDNumuRHC = *return_list[5].release();
 
   // Get the systematics that the PredictionInterps use
-  std::vector<const ISyst*> systlist = predInterpFDNumuFHC.GetAllSysts();
+  std::vector<const ISyst*> systlist = OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
 
   // Open 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
@@ -54,6 +54,10 @@ void llh_scans(std::string stateFname  = "common_state_mcc11v3.root",
   MultiExperiment expt_nd_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
 	&dis_expt_fhc_syst, &dis_expt_rhc_syst,
    	&nd_expt_fhc_syst, &nd_expt_rhc_syst});
+
+  std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
+  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
+				 {0, 1});
   
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
 	&dis_expt_fhc_syst, &dis_expt_rhc_syst});
