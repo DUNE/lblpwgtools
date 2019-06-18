@@ -15,7 +15,7 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
   PredictionInterp& predInterpNDNumuRHC = *return_list[5].release();
 
   // Get the systematics that the PredictionInterps use
-  std::vector<const ISyst*> systlist = predInterpFDNumuFHC.GetAllSysts();
+  std::vector<const ISyst*> systlist = OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
 
   // There must be a better way
   std::vector<std::tuple<std::string, PredictionInterp*, double> > sampleList = {
