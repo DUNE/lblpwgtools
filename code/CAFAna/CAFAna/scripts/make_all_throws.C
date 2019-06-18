@@ -294,10 +294,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
 }
 
 #ifndef __CINT__
-
+#ifndef NO_MAT_MAIN
 void Usage(char const *argv[]) {
   std::cout << "[USAGE]: " << argv[0]
-            << "[/path/to/state_stub] [output_filename.root] [NThrows] "
+            << " [/path/to/state_stub] [output_filename.root] [NThrows] "
                "[SystSet: e.g. noxsec:nodet] [Sample: e.g. ndfd] [Throw: e.g. "
                "stat:fake:start] [Penalties: e.g. nopen] [Hierarchy: e.g. 1]"
             << std::endl;
@@ -307,7 +307,7 @@ int main(int argc, char const *argv[]) {
 
   gROOT->SetMustClean(false);
 
-  if ((argc > 2) &&
+  if ((argc >= 2) &&
       ((std::string("-?") == argv[1]) || (std::string("--help") == argv[1]) ||
        (std::string("-h") == argv[1]))) {
     Usage(argv);
@@ -326,4 +326,5 @@ int main(int argc, char const *argv[]) {
   make_all_throws(stateFname, outputFname, nthrows, systSet, sampleString,
                   throwString, penaltyString, hie);
 }
+#endif
 #endif

@@ -1012,7 +1012,7 @@ void SaveParams(TDirectory *outDir, std::vector<const ISyst*> systlist){
 
 struct FitTreeBlob {
   FitTreeBlob(std::string tree_name = "", std::string meta_tree_name = "")
-      : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr) {
+      : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr), fRNGSeed(gRNGSeed), fNFills(0) {
 
     fFakeDataVals = new std::vector<double>();
     fParamNames = new std::vector<std::string>();
@@ -1027,7 +1027,8 @@ struct FitTreeBlob {
       throw_tree = new TTree(tree_name.c_str(), "Fit information");
       throw_tree->Branch("chisq", &fChiSq);
       throw_tree->Branch("NSeconds", &fNSeconds);
-      throw_tree->Branch("MemUsage", &fMemUsage);
+      throw_tree->Branch("ResMemUsage", &fResMemUsage);
+      throw_tree->Branch("VirtMemUsage", &fVirtMemUsage);
       throw_tree->Branch("NFCN", &fNFCN);
       throw_tree->Branch("EDM", &fEDM);
       throw_tree->Branch("IsValid", &fIsValid);
@@ -1038,10 +1039,13 @@ struct FitTreeBlob {
       throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
       throw_tree->Branch("fMinosErrors", &fMinosErrors);
       throw_tree->Branch("fCentralValues", &fCentralValues);
+      throw_tree->Branch("RNGSeed", &fRNGSeed);
+      throw_tree->Branch("ProcFitN", &fNFills);
 
       if (meta_tree_name.size()) {
         meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
         meta_tree->Branch("fParamNames", &fParamNames);
+        meta_tree->Branch("RNGSeed", &fRNGSeed);
       }
     }
   }
@@ -1049,7 +1053,8 @@ struct FitTreeBlob {
     FitTreeBlob *ftb = new FitTreeBlob();
     t->SetBranchAddress("chisq", &ftb->fChiSq);
     t->SetBranchAddress("NSeconds", &ftb->fNSeconds);
-    t->SetBranchAddress("MemUsage", &ftb->fMemUsage);
+    t->SetBranchAddress("ResMemUsage", &ftb->fResMemUsage);
+    t->SetBranchAddress("VirtMemUsage", &ftb->fVirtMemUsage);
     t->SetBranchAddress("NFCN", &ftb->fNFCN);
     t->SetBranchAddress("EDM", &ftb->fEDM);
     t->SetBranchAddress("IsValid", &ftb->fIsValid);
@@ -1060,8 +1065,11 @@ struct FitTreeBlob {
     t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
     t->SetBranchAddress("fMinosErrors", &ftb->fMinosErrors);
     t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
+    t->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
+    t->SetBranchAddress("ProcFitN", &ftb->fNFills);
 
     m->SetBranchAddress("fParamNames", &ftb->fParamNames);
+    m->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
     return ftb;
   }
   ~FitTreeBlob() {
@@ -1088,7 +1096,10 @@ struct FitTreeBlob {
     fEDM = fb.fEDM;
     fIsValid = fb.fIsValid;
     fNSeconds = fb.fNSeconds;
-    fMemUsage = fb.fMemUsage;
+    fResMemUsage = fb.fResMemUsage;
+    fVirtMemUsage = fb.fVirtMemUsage;
+    fRNGSeed = fb.fRNGSeed;
+    fNFills = fb.fNFills;
   }
   void Fill() {
     if (throw_tree) {
@@ -1128,7 +1139,10 @@ struct FitTreeBlob {
   std::vector<std::pair<double, double>> *fMinosErrors;
   double fChiSq;
   unsigned fNSeconds;
-  double fMemUsage;
+  unsigned fRNGSeed;
+  unsigned fNFills;
+  double fResMemUsage;
+  double fVirtMemUsage;
   double fNFCN;
   double fEDM;
   bool fIsValid;
@@ -1496,10 +1510,12 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
     PostFitTreeBlob->fIsValid = this_fit.GetIsValid();
     PostFitTreeBlob->fChiSq = thischisq;
     PostFitTreeBlob->fNSeconds = std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count();
+    PostFitTreeBlob->fNFills++;
 
     ProcInfo_t procinfo;
     gSystem->GetProcInfo(&procinfo);
-    PostFitTreeBlob->fMemUsage = procinfo.fMemResident;
+    PostFitTreeBlob->fResMemUsage = procinfo.fMemResident;
+    PostFitTreeBlob->fVirtMemUsage = procinfo.fMemVirtual;
   }
 
   return thischisq;
