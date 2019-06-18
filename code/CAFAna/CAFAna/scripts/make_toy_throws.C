@@ -61,9 +61,9 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   pftree.SetDirectory(fout);
 
   std::stringstream CLI_ss("");
-  CLI_ss << stateFname << "_" << outputFname << "_" << nthrows << "_" << systSet
-         << "_" << sampleString << "_" << throwString << "_" << penaltyString
-         << "_" << hie << "_" << asimov_set << "_" << oscVarString;
+  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
+         << " " << sampleString << " " << throwString << " " << penaltyString
+         << " " << hie << " " << asimov set << " " << oscVarString;
   std::string *CLIArgs = new std::string(CLI_ss.str());
   pftree.meta_tree->Branch("CLI", &CLIArgs);
 

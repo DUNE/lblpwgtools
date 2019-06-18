@@ -50,9 +50,9 @@ void make_all_throws(std::string stateFname = def_stateFname,
   global_tree.throw_tree->SetDirectory(fout);
 
   std::stringstream CLI_ss("");
-  CLI_ss << stateFname << "_" << outputFname << "_" << nthrows << "_" << systSet
-         << "_" << sampleString << "_" << throwString << "_" << penaltyString
-         << "_" << hie;
+  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
+         << " " << sampleString << " " << throwString << " " << penaltyString
+         << " " << hie;
 
   std::string *CLIArgs = new std::string(CLI_ss.str());
   global_tree.meta_tree->Branch("CLI", &CLIArgs);
