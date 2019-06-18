@@ -60,6 +60,13 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   FitTreeBlob pftree("fit_info", "param_info");
   pftree.SetDirectory(fout);
 
+  std::stringstream CLI_ss("");
+  CLI_ss << stateFname << "_" << outputFname << "_" << nthrows << "_" << systSet
+         << "_" << sampleString << "_" << throwString << "_" << penaltyString
+         << "_" << hie << "_" << asimov_set << "_" << oscVarString;
+  std::string *CLIArgs = new std::string(CLI_ss.str());
+  pftree.meta_tree->Branch("CLI", &CLIArgs);
+
   for (int i = 0; i < nthrows; ++i) {
 
     std::cout << "Starting throw " << i << std::endl;

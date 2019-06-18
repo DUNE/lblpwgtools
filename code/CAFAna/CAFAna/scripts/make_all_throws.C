@@ -49,6 +49,14 @@ void make_all_throws(std::string stateFname = def_stateFname,
   double this_ssth23;
   global_tree.throw_tree->SetDirectory(fout);
 
+  std::stringstream CLI_ss("");
+  CLI_ss << stateFname << "_" << outputFname << "_" << nthrows << "_" << systSet
+         << "_" << sampleString << "_" << throwString << "_" << penaltyString
+         << "_" << hie;
+
+  std::string *CLIArgs = new std::string(CLI_ss.str());
+  global_tree.meta_tree->Branch("CLI", &CLIArgs);
+
   // Fit in the correct hierarchy and octant for global throw
   std::vector<const IFitVar *> oscVarsGlobal = GetOscVars("alloscvars", hie);
 
@@ -68,6 +76,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   mh_tree.throw_tree->Branch("dcp", &thisdcp);
   mh_tree.throw_tree->Branch("dchi2", &mh_dchi2);
   mh_tree.throw_tree->Branch("significance", &mh_significance);
+  mh_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   // Fit in the incorrect hierarchy for the exclusion
   std::vector<const IFitVar *> oscVarsMH = GetOscVars("alloscvars", -1 * hie);
@@ -85,6 +94,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   cpv_tree.throw_tree->Branch("dcp", &thisdcp);
   cpv_tree.throw_tree->Branch("dchi2", &cpv_dchi2);
   cpv_tree.throw_tree->Branch("significance", &cpv_significance);
+  cpv_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   // CP-conserving specific (no dCP)
   std::vector<const IFitVar *> oscVarsCPV =
@@ -106,6 +116,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oct_tree.throw_tree->Branch("th23", &this_th23);
   oct_tree.throw_tree->Branch("dchi2", &oct_dchi2);
   oct_tree.throw_tree->Branch("significance", &oct_significance);
+  oct_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
@@ -283,11 +294,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
       break;
     }
   }
-
-  global_tree.Write();
-  cpv_tree.Write();
-  oct_tree.Write();
-  mh_tree.Write();
 
   fout->Write();
   fout->Close();

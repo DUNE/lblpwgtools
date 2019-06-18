@@ -136,6 +136,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
   fLastParamNames.clear();
   fLastPreFitValues.clear();
   fLastPreFitErrors.clear();
+  fLastCentralValues.clear();
 
   for (const IFitVar *v : fVars) {
     const double val = v->GetValue(seed);
@@ -145,6 +146,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     fLastParamNames.push_back(v->ShortName());
     fLastPreFitValues.push_back(val);
     fLastPreFitErrors.push_back(val ? val / 2 : .1);
+    fLastCentralValues.push_back(0);
   }
   // One way this can go wrong is if two variables have the same ShortName
   assert(mnMin->NFree() == fVars.size());
@@ -155,6 +157,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     fLastParamNames.push_back(s->ShortName());
     fLastPreFitValues.push_back(val);
     fLastPreFitErrors.push_back(1);
+    fLastCentralValues.push_back(s->Central());
   }
   // One way this can go wrong is if two variables have the same ShortName
   assert(mnMin->NFree() == fVars.size() + fSysts.size());
@@ -230,6 +233,7 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
       fParamNames = fLastParamNames;
       fPreFitValues = fLastPreFitValues;
       fPreFitErrors = fLastPreFitErrors;
+      fCentralValues = fLastCentralValues;
 
       fMinosErrors = fTempMinosErrors;
 

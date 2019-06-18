@@ -206,6 +206,7 @@ protected:
   mutable std::vector<double> fPreFitValues;
   mutable std::vector<double> fPreFitErrors;
   mutable std::vector<std::string> fLastParamNames;
+  mutable std::vector<double> fLastCentralValues;
   mutable std::vector<double> fLastPreFitValues;
   mutable std::vector<double> fLastPreFitErrors;
   mutable std::vector<double> fPostFitValues;
