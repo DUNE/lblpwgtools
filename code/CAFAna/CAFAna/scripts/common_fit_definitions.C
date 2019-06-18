@@ -1367,7 +1367,7 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
 
         // Could use TMatrix::SetSub but I don't trust TMatrix...
         if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
-            ((row_it >= NRows_FHC) && (col_it < NRows_FHC))) {
+            ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
           (*fake_uncorr)[row_it][col_it] = 0;
         } else {
           size_t row_fhc_only_it = row_it % NRows_FHC;
