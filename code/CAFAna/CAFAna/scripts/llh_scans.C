@@ -73,7 +73,8 @@ void llh_scans(std::string stateFname = def_stateFname,
                               &nd_expt_fhc_syst, &nd_expt_rhc_syst});
 
   std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
-  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
+  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
+   				 {4, 5});
 
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                            &dis_expt_fhc_syst, &dis_expt_rhc_syst});
