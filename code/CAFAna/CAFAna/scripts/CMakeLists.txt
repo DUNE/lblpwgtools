@@ -20,6 +20,7 @@ set(scripts_to_build
   MakePredInterps
   fit_covar
   make_all_throws
+  make_1dconstraint_plots
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)

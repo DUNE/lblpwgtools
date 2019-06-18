@@ -17,22 +17,38 @@ namespace ana
 
   //----------------------------------------------------------------------
   // Add covariance matrix corresponding to one or more experiments
-  void MultiExperiment::AddCovarianceMatrix(const std::string covMatFileName, 
-                                            const std::string covMatName, 
-                                            const bool preInvert, 
-                                            const std::vector<int> expt_idxes)
+  void MultiExperiment::AddCovarianceMatrix(const std::string covMatFileName,
+                                            const std::string covMatName,
+                                            const bool preInvert,
+                                            const std::vector<int> &expt_idxes)
   {
-    TDirectory *thisDir = gDirectory->CurrentDirectory();
+        TDirectory *thisDir = gDirectory->CurrentDirectory();
 
-    std::cout << "Adding covariance matrix " << covMatName << std::endl;
-    std::cout << "From file: " << covMatFileName << std::endl;
+        std::cout << "Adding covariance matrix " << covMatName << std::endl;
+        std::cout << "From file: " << covMatFileName << std::endl;
 
-    // Get the covariance matrix from a file
-    TFile covMatFile( covMatFileName.c_str() );
-    TMatrixD* covMx = (TMatrixD*) covMatFile.Get(covMatName.c_str());
+        // Get the covariance matrix from a file
+        TFile covMatFile( covMatFileName.c_str() );
+        TMatrixD* covMx = (TMatrixD*) covMatFile.Get(covMatName.c_str());
+
+        if( !covMx ) {
+          std::cout << "Could not obtain covariance matrix named "
+                    << covMatName << " from " << covMatFileName << std::endl;
+          abort();
+        }
+
+        AddCovarianceMatrix(covMx, preInvert, expt_idxes);
+
+        thisDir->cd();
+
+  }
+    void MultiExperiment::AddCovarianceMatrix(TMatrixD *covMx,
+                                              const bool preInvert,
+                                              const std::vector<int> &expt_idxes)
+    {
+
     if( !covMx ) {
-      std::cout << "Could not obtain covariance matrix named "
-                << covMatName << " from " << covMatFileName << std::endl;
+      std::cout << "Passed invalid covariance matrix." << std::endl;
       abort();
     }
     fCovMx.push_back( covMx );
@@ -86,7 +102,6 @@ namespace ana
       fCovMxInv.push_back(0);
     }
 
-    thisDir->cd();
     fPreInvert.push_back(preInvert);
   }
 
@@ -138,7 +153,7 @@ namespace ana
         // Use pre-computed CovMxInv with stat error already added
         assert(fCovMxInv[nCov]);
         covInv = *(fCovMxInv[nCov]);
-      } else { 
+      } else {
         // Invert the matrix here, first add the statistical uncertainty
         TMatrixD cov = *(fCovMx[nCov]);
         for( int b = 0; b < n_bins; ++b ) {

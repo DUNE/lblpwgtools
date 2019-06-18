@@ -320,6 +320,8 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
   }
 
   if (fVerb == kVerbose) {
+    fBeginTP = std::chrono::system_clock::now();
+    fLastTP = fBeginTP;
     std::cout << "Finding best fit for";
     for (const IFitVar *v : fVars)
       std::cout << " " << v->ShortName();
@@ -384,9 +386,21 @@ double Fitter::DoEval(const double *pars) const {
     penalty += fSysts[j]->Penalty(pars[fVars.size() + j]);
   }
 
-  if ((fVerb == kVerbose) && !(fNEval % 1000))
-    std::cout << fNEval << ": EXPT chi2 = " << fExpt->ChiSq(fCalc, fShifts)
+  if ((fVerb == kVerbose) && !(fNEval % 1000)) {
+
+    std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
+    std::cout << fNEval << "("
+              << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
+                     .count()
+              << " s, Total: "
+              << std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                  fBeginTP)
+                     .count()
+              << " s): EXPT chi2 = " << fExpt->ChiSq(fCalc, fShifts)
               << "; penalty = " << penalty << std::endl;
+    fLastTP = now;
+  }
   return fExpt->ChiSq(fCalc, fShifts) + penalty;
 }
 

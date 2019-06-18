@@ -19,15 +19,18 @@ namespace ana
     }
 
     void Add(const IExperiment* expt){
-      fExpts.push_back(expt); 
+      fExpts.push_back(expt);
       fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
     }
 
-    void AddCovarianceMatrix(const std::string covMatFileName, 
-                             const std::string covMatName, 
-                             const bool preInvert, 
-                             const std::vector<int> expt_idxes);
+    void AddCovarianceMatrix(const std::string covMatFileName,
+                             const std::string covMatName,
+                             const bool preInvert,
+                             const std::vector<int> &expt_idxes);
+    void AddCovarianceMatrix(TMatrixD *,
+                             const bool preInvert,
+                             const std::vector<int> &expt_idxes);
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;

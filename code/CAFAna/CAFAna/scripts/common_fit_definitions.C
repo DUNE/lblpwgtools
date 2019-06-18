@@ -47,6 +47,10 @@
 #include "Utilities/rootlogon.C"
 #include <chrono>
 
+#ifdef USE_PREDINTERP_OMP
+#include <omp.h>
+#endif
+
 using namespace ana;
 
 int gRNGSeed = 0;
@@ -749,21 +753,7 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     }
     RemoveSysts(systs_to_remove, used_syst_names);
     if (systs_to_remove.size()) {
-      std::cout << "[GC]: Removing " << systs_to_remove.size()
-                << " systs that will not be used for this fit." << std::endl;
-      ProcInfo_t procinfo_b;
-      gSystem->GetProcInfo(&procinfo_b);
-      std::cout << "[GC]: Before discard: "
-                << (double(procinfo_b.fMemResident) / 1.0E3) << " MB." << std::endl;
       return_list.back()->DiscardSysts(systs_to_remove);
-      ProcInfo_t procinfo_a;
-      gSystem->GetProcInfo(&procinfo_a);
-      std::cout << "[GC]: After discard: "
-                << (double(procinfo_a.fMemResident) / 1.0E3) << " MB." << std::endl;
-      std::cout << "[GC]: Saved: "
-                << (double(procinfo_b.fMemResident - procinfo_a.fMemResident) /
-                    1.0E3)
-                << " MB." << std::endl;
     }
   }
   return return_list;
@@ -1160,6 +1150,12 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   assert(systlist.size()+oscVars.size());
 
+#ifdef USE_PREDINTERP_OMP
+  if(omp_get_max_threads()>4){
+    std::cout << "[INFO]: Cannot run with OMP_NUM_THREADS > 4" << std::endl;
+    abort();
+  }
+#endif
 
   //Make sure the syst registery has been populated with all the systs we could want to use
   static std::vector<const ISyst*> systs = GetListOfSysts();
@@ -1260,17 +1256,6 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
   nd_expt_rhc.SetMaskHist(0.5, 8, 0, -1);
 
-  bool use_ME_covmat = true;
-
-  if(getenv("CAFANA_USE_SSE_COVMAT")){
-    use_ME_covmat = !bool(atoi(getenv("CAFANA_USE_SSE_COVMAT")));
-  }
-
-  if(!use_ME_covmat){
-    nd_expt_fhc.AddCovarianceMatrix(covFileName,"nd_fhc_frac_cov",kCovMxChiSqPreInvert);
-  nd_expt_rhc.AddCovarianceMatrix(covFileName,"nd_fhc_frac_cov",kCovMxChiSqPreInvert);
-  }
-
  // Save prefit starting distributions
   if (outDir){
     if (pot_fd_fhc_nue > 0){
@@ -1350,8 +1335,59 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
-  if (use_ME_covmat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-    this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
+  if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+
+    bool use_uncorrND_covmat = false;
+    if (getenv("CAFANA_USE_UNCORR_ND_COVMAT")) {
+      use_uncorrND_covmat = bool(atoi(getenv("CAFANA_USE_UNCORR_ND_COVMAT")));
+    }
+
+    if (use_uncorrND_covmat) {
+
+      std::cout << "[INFO]: Building uncorrelated ND covmx to replicated old behavior." << std::endl;
+
+      TDirectory *thisDir = gDirectory->CurrentDirectory();
+      TFile covMatFile(covFileName.c_str());
+      TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
+      if (!fake_uncorr) {
+        std::cout << "Could not obtain covariance matrix named "
+                     "\"nd_all_frac_cov\"  from "
+                  << covFileName << std::endl;
+        abort();
+      }
+
+    TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
+
+    assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
+
+    size_t NRows = fake_uncorr->GetNrows();
+    size_t NRows_FHC = covmx_fhc_only->GetNrows();
+    for (size_t row_it = 0; row_it < NRows; ++row_it) {
+      for (size_t col_it = 0; col_it < NRows; ++col_it) {
+
+        // Could use TMatrix::SetSub but I don't trust TMatrix...
+        if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
+            ((row_it >= NRows_FHC) && (col_it < NRows_FHC))) {
+          (*fake_uncorr)[row_it][col_it] = 0;
+        } else {
+          size_t row_fhc_only_it = row_it % NRows_FHC;
+          size_t col_fhc_only_it = col_it % NRows_FHC;
+          (*fake_uncorr)[row_it][col_it] =
+              (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
+        }
+      }
+    }
+
+    this_expt.AddCovarianceMatrix(fake_uncorr, true, {0, 1});
+
+    thisDir->cd();
+
+    fake_uncorr->Write("FakeUncorrMatrix");
+
+    } else {
+      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
+                                    {0, 1});
+    }
   }
 
   // Add in the penalty...

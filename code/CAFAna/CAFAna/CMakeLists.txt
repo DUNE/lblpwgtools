@@ -27,6 +27,11 @@ elseif(NOT DEFINED KNL)
   set(KNL FALSE)
 endif()
 
+if(USE_OPENMP STREQUAL "")
+  set(USE_OPENMP FALSE)
+elseif(NOT DEFINED USE_OPENMP)
+  set(USE_OPENMP FALSE)
+endif()
 
 SET(BUILD_DEBUG_MSGS TRUE)
 include(${CMAKE_SOURCE_DIR}/cmake/cmessage.cmake)

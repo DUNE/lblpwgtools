@@ -328,7 +328,6 @@ namespace ana
 
     const unsigned int N = h->GetNbinsX() + 2;
 #ifdef USE_PREDINTERP_OMP
-    assert(omp_get_num_threads() <= 4);
     double corr[4][N];
     for (unsigned int i = 0; i < 4; ++i) {
       for (unsigned int j = 0; j < N; ++j) {
@@ -344,6 +343,7 @@ namespace ana
 
     size_t NPreds = fPreds.size();
 
+    #pragma omp parallel for
     for (size_t p_it = 0; p_it < NPreds; ++p_it) {
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
@@ -454,7 +454,7 @@ namespace ana
     }
     HistCache::ClearCache();
   }
-  
+
   std::vector<ISyst const *> PredictionInterp::GetAllSysts() const {
     std::vector<ISyst const *> allsysts;
     for (auto const &p : fPreds) {
