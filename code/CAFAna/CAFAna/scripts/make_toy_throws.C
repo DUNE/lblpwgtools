@@ -57,7 +57,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   // Setup output file
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
-  FitTreeBlob pftree("fit_info");
+  FitTreeBlob pftree("fit_info", "param_info");
   pftree.SetDirectory(fout);
 
   for (int i = 0; i < nthrows; ++i) {
@@ -156,7 +156,6 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     }
   }
 
-  pftree.Write();
   // Now close the file
   fout->Write();
   fout->Close();
