@@ -77,13 +77,20 @@ const Var kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
 // ND binning
 std::vector<double> binEEdges = {0., 0.5, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 5., 6., 10.};
 std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
+std::vector<double> binEEdges_v3 = {0., 0.75, 1., 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75,
+				 4., 4.25, 4.5, 5., 5.5, 6., 7., 8., 10.};
+std::vector<double> binYEdges_v3 = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0};
 
 // Binnings
-const Binning binsFDEreco = Binning::Custom(binEEdges);//Binning::Simple(80, 0, 10);
+const Binning binsFDEreco = Binning::Custom(binEEdges);
 const Binning binsNDEreco =
-    Binning::Custom(binEEdges); // Binning::Simple(40, 0, 10);
+    Binning::Custom(binEEdges);
+const Binning binsFDEreco_v3 = Binning::Custom(binEEdges_v3);
+const Binning binsNDEreco_v3 =
+    Binning::Custom(binEEdges_v3);
 const Binning binsNDEreco_OA = Binning::Simple(20, 0, 4);
-const Binning binsY = Binning::Custom(binYEdges); // Binning::Simple(5, 0, 1);
+const Binning binsY = Binning::Custom(binYEdges);
+const Binning binsY_v3 = Binning::Custom(binYEdges_v3);
 const Binning binsETrue = Binning::Simple(100, 0, 10);
 const Binning binsETrue_Coarse = Binning::Simple(20, 0, 10);
 const Binning binsEreco_Coarse = Binning::Simple(20, 0, 10);
@@ -95,6 +102,12 @@ const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
 const HistAxis axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco, kRecoE_nue);
 const HistAxis axErecYrecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND,
                             "y_{rec}", binsY, kRecoYND);
+const HistAxis axRecoEnuFDnumu_v3("Reco energy (GeV)", binsFDEreco,
+                                  kRecoE_numu);
+const HistAxis axRecoEnuFDnue_v3("Reco energy (GeV)", binsFDEreco_v3,
+                                 kRecoE_nue);
+const HistAxis axErecYrecND_v3("Reco energy (GeV)", binsNDEreco_v3,
+                               kRecoEnergyND, "y_{rec}", binsY_v3, kRecoYND);
 const HistAxis axErecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND);
 
 const HistAxis axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
@@ -149,6 +162,7 @@ struct AxisBlob {
 };
 
 AxisBlob const default_axes{&axErecYrecND,&axRecoEnuFDnumu,&axRecoEnuFDnue};
+AxisBlob const default_axes_v3{&axErecYrecND_v3,&axRecoEnuFDnumu_v3,&axRecoEnuFDnue_v3};
 AxisBlob const fake_data_axes{&axErecYrecND_FromDep,&axErecFD_FromDep,&axErecFD_FromDep};
 
 AxisBlob const Ax1DND_unibin{&axErecND_unibin,&axRecoEnuFDnumu_unibin,&axRecoEnuFDnue_unibin};
@@ -188,6 +202,8 @@ AxisBlob GetAxisBlob(std::string blob_name) {
     AxToUse.FDAx_nue = &axTrueE_unibin_coarse;
   } else if (blob_name == "FakeData") {
     AxToUse = fake_data_axes;
+  } else if (blob_name == "v3") {
+    AxToUse = default_axes_v3;
   }
   return AxToUse;
 }
