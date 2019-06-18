@@ -2,14 +2,12 @@ set(scripts_to_install
   common_fit_definitions.C
   bin_splines.C
   cpv_joint.C
-  llh_scans.C
   make_all_throws.C
   make_cpv_throws.C
   make_octant_throws.C
   make_mh_throws.C
   mh_joint.C
   octant_joint.C
-  spec_joint.C
   spec_variations.C
   CheckPointHelper.h)
 
@@ -22,6 +20,8 @@ set(scripts_to_build
   make_all_throws
   make_all_throws_fixed_seed
   make_1dconstraint_plots
+  llh_scans
+  spec_joint
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
