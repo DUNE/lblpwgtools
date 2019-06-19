@@ -1,8 +1,10 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 		    std::string outputFname="mh_sens_ndfd_nosyst.root",
-		    int nthrows = 100, std::string systSet = "nosyst", 
+		    int nthrows = 100, std::string systSet = "nosyst",
 		    std::string sampleString="ndfd",
 		    std::string throwString = "stat:fake:start",
 		    std::string penaltyString="nopen", int hie=1, int idcp=0){
@@ -22,7 +24,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
   // Fit in the incorrect hierarchy for the exclusion
   std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie);
-  
+
   // Setup an output file
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   FitTreeBlob global_tree("global_fit_info");
@@ -60,7 +62,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
       for (auto s : systlist)
 	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     } else fakeThrowSyst = kNoShift;
-    
+
     if (central_throw){
       for (auto s : systlist)
 	s->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -91,24 +93,24 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeeds, gpenalty, Fitter::kNormal, 
-				   nullptr, &global_tree, &mad_spectra_yo);     
+				   oscSeeds, gpenalty, Fitter::kNormal,
+				   nullptr, &global_tree, &mad_spectra_yo);
     global_tree.throw_tree->Fill();
 
-    // Now force the testOsc to be in the wrong hierarchy 
+    // Now force the testOsc to be in the wrong hierarchy
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
     testOsc->SetdCP(thisdcp);
     fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember
     IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
-    
+
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal, 
+				  oscSeeds, penalty, Fitter::kNormal,
 				  nullptr, &mh_tree, &mad_spectra_yo);
-  
+
     double dchi2 = chisqmin - globalmin;
     double significance = 0;
     if (dchi2 > 0) significance = sqrt(dchi2);
@@ -128,6 +130,6 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     delete gpenalty;
   }
 
-  fout->Write();  
+  fout->Write();
   fout->Close();
 }

@@ -1,8 +1,10 @@
 // One script to bring them all and in the darkness bind them...
 
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CheckPointHelper.h"
+#include "CAFAna/Analysis/CheckPointHelper.h"
+
+using namespace ana;
 
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "sens_ndfd_nosyst.root";
@@ -23,7 +25,19 @@ void make_all_throws(std::string stateFname = def_stateFname,
                      int hie = def_hie) {
 
   gROOT->SetBatch(1);
-  gRandom->SetSeed(0);
+
+  if (gRNGSeed == 0) { // if we have a time based seed its still useful for
+                       // things to be reproducible, so use the time to seed a
+                       // new RNG seed and spin the wheels for 100k throws;
+    gRandom->SetSeed(0);
+    for (size_t i = 0; i < 1E5; ++i) {
+      gRNGSeed = gRandom->Uniform(0, std::numeric_limits<unsigned>::max());
+    }
+  }
+
+  std::cout << "gRNGSeed: " << gRNGSeed << std::endl;
+
+  gRandom->SetSeed(gRNGSeed);
 
   CheckPointHelper chk;
   if (chk.IsCounting()) {

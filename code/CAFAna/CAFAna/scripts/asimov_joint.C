@@ -1,4 +1,6 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 // I miss python
 std::string sanitize(std::string word) {

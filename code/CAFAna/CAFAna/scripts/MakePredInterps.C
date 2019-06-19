@@ -1,4 +1,6 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 #include <dirent.h>
 
@@ -114,7 +116,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 SampleType sample;
 std::string output_file_name;
 std::string syst_descriptor = "";
-AxisBlob axes = default_axes;
+AxisBlob axes = default_axes_v4;
 std::vector<std::string> input_patterns;
 bool addfakedata = true;
 bool do_no_op = false;

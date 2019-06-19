@@ -1,4 +1,4 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 void octant_joint(std::string stateFname="common_state_mcc11v3.root",
 		  std::string outputFname="octant_joint.root",

@@ -39,7 +39,7 @@ using namespace ana;
 #include "TGraph.h"
 #include "TH2.h"
 
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 //Set up some options for testing
 bool globesscalefactor = false; // scale POT down by 0.95

@@ -1,22 +1,24 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 			std::string outputFname="octant_sens_ndfd_nosyst.root",
-			int nthrows = 50, std::string systSet = "nosyst", 
+			int nthrows = 50, std::string systSet = "nosyst",
 			std::string sampleString="ndfd",
 			std::string throwString = "start",
 			std::string penaltyString="nopen", int hie=1, int issth23=0){
-  
+
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
-  
+
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw);
-  
+
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
-  
+
   // Interpret the octant step once
   // Care about ssth23 = 0.3--0.7, have 31 steps
   double minVal = 0.3;
@@ -31,10 +33,10 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 
   // Fit in BOTH octants for the global fit
   std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie, 0);
-  
+
   // Fit in the incorrect octant for the exclusion
   std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", hie, -1*oct);
-  
+
   // Setup an output file
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   FitTreeBlob global_tree("global_fit_info");
@@ -45,11 +47,11 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
   // Deal with seeds once
   std::map<const IFitVar*, std::vector<double>> oscSeeds;
   oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-  
+
   std::map<const IFitVar*, std::vector<double>> oscSeedsG;
   oscSeedsG[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   oscSeedsG[&kFitSinSqTheta23] = {0.4, 0.6};
-  
+
   // Loop over requested throws
   for (int i = 0; i < nthrows; ++i) {
 
@@ -71,7 +73,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
       for (auto s : systlist)
 	fakeThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
     } else fakeThrowSyst = kNoShift;
-    
+
     if (central_throw){
       for (auto s : systlist)
 	s->SetCentral(GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -100,8 +102,8 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeedsG, gpenalty, Fitter::kNormal, 
-				   nullptr, &global_tree, &mad_spectra_yo);     
+				   oscSeedsG, gpenalty, Fitter::kNormal,
+				   nullptr, &global_tree, &mad_spectra_yo);
     global_tree.throw_tree->Fill();
 
     // Now force the testOsc to be in the wrong octant
@@ -109,14 +111,14 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // No penalty on the octant, so ignore it...
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
-    
+
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal, 
+				  oscSeeds, penalty, Fitter::kNormal,
 				  nullptr, &oct_tree, &mad_spectra_yo);
-  
+
     double dchi2 = chisqmin - globalmin;
     double significance = 0;
     if (dchi2 > 0) significance = sqrt(dchi2);
@@ -137,6 +139,6 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
     delete gpenalty;
   }
 
-  fout->Write();  
+  fout->Write();
   fout->Close();
 }

@@ -1,5 +1,4 @@
 set(scripts_to_install
-  common_fit_definitions.C
   bin_splines.C
   cpv_joint.C
   make_all_throws.C
@@ -8,8 +7,7 @@ set(scripts_to_install
   make_mh_throws.C
   mh_joint.C
   octant_joint.C
-  spec_variations.C
-  CheckPointHelper.h)
+  spec_variations.C)
 
 set(scripts_to_build
   asimov_joint
