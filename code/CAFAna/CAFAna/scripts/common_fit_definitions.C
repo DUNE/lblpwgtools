@@ -545,8 +545,8 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false){
-						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
-					 }
+  return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
+}
 
 std::vector<const ISyst*> OrderListOfSysts(std::vector<const ISyst*> const &systlist){
   std::vector<const ISyst*> superorder;
@@ -1269,22 +1269,22 @@ const std::string detCovPath="/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
   }
   // If using the multi sample covariances then they must be added to the MultiExperiment
   SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
-  app_expt_fhc.SetMaskHist(0.5, 8);
+  app_expt_fhc.SetMaskHist(0.5, 10);
 
   SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
-  dis_expt_fhc.SetMaskHist(0.5, 8);
+  dis_expt_fhc.SetMaskHist(0.5, 10);
 
   SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
-  app_expt_rhc.SetMaskHist(0.5, 8);
+  app_expt_rhc.SetMaskHist(0.5, 10);
 
   SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
-  dis_expt_rhc.SetMaskHist(0.5, 8);
+  dis_expt_rhc.SetMaskHist(0.5, 10);
 
   SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *(*spectra)[4]);
-  nd_expt_fhc.SetMaskHist(0.5, 8, 0, -1);
+  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
-  nd_expt_rhc.SetMaskHist(0.5, 8, 0, -1);
+  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
  // Save prefit starting distributions
   if (outDir){
