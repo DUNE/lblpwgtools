@@ -14,10 +14,10 @@ namespace ana
 {
   // FD global energy scale syst
   // Don't shift muon energies with this
-  class EnergyScaleFDSyst: public ISyst
+  class EnergyScaleFD: public ISyst
   {
   public:
-  EnergyScaleFDSyst() : ISyst("eScaleFD", "Global FD Energy Scale Syst") {}
+  EnergyScaleFD() : ISyst("EnergyScaleFD", "Global FD Energy Scale Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -44,13 +44,13 @@ namespace ana
     }
   };
 
-  extern const EnergyScaleFDSyst kEnergyScaleFDSyst;
+  extern const EnergyScaleFD kEnergyScaleFD;
 
   // Total energy scale shape systematics
-  class UncorrFDTotSqrtSyst: public ISyst
+  class UncorrFDTotSqrt: public ISyst
   {
   public:
-  UncorrFDTotSqrtSyst() : ISyst("UncorrFDTotSqrtSyst", "Uncorrelated FD Sqrt Total Syst") {}
+  UncorrFDTotSqrt() : ISyst("UncorrFDTotSqrt", "Uncorrelated FD Sqrt Total Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -74,12 +74,12 @@ namespace ana
         }
     }
   };
-  extern const UncorrFDTotSqrtSyst kUncorrFDTotSqrtSyst;
+  extern const UncorrFDTotSqrt kUncorrFDTotSqrt;
 
-  class UncorrFDTotInvSqrtSyst: public ISyst
+  class UncorrFDTotInvSqrt: public ISyst
   {
   public:
-  UncorrFDTotInvSqrtSyst() : ISyst("UncorrFDTotInvSqrtSyst", "Uncorrelated FD Inverse Sqrt Total Syst") {}
+  UncorrFDTotInvSqrt() : ISyst("UncorrFDTotInvSqrt", "Uncorrelated FD Inverse Sqrt Total Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -103,17 +103,17 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDTotInvSqrtSyst kUncorrFDTotInvSqrtSyst;
+  extern const UncorrFDTotInvSqrt kUncorrFDTotInvSqrt;
 
   //------------------------------------------------------------------------------------------------
 
   // FD three parameter systematics to match ND ones
   // Slope energy scale systematics
   // Charged hadrons
-  class UncorrFDHadSqrtSyst: public ISyst
+  class UncorrFDHadSqrt: public ISyst
   {
   public:
-  UncorrFDHadSqrtSyst() : ISyst("UncorrFDHadSqrtSyst", "Uncorrelated FD Sqrt Hadron Syst") {}
+  UncorrFDHadSqrt() : ISyst("UncorrFDHadSqrt", "Uncorrelated FD Sqrt Hadron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -142,12 +142,12 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDHadSqrtSyst kUncorrFDHadSqrtSyst;
+  extern const UncorrFDHadSqrt kUncorrFDHadSqrt;
 
-  class UncorrFDHadInvSqrtSyst: public ISyst
+  class UncorrFDHadInvSqrt: public ISyst
   {
   public:
-  UncorrFDHadInvSqrtSyst() : ISyst("UncorrFDHadInvSqrtSyst", "Uncorrelated FD Inv Sqrt Hadron Syst") {}
+  UncorrFDHadInvSqrt() : ISyst("UncorrFDHadInvSqrt", "Uncorrelated FD Inv Sqrt Hadron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -176,15 +176,15 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDHadInvSqrtSyst kUncorrFDHadInvSqrtSyst;
+  extern const UncorrFDHadInvSqrt kUncorrFDHadInvSqrt;
 
   //------------------------------------------------------------------------------------
 
   // Muons
-  class UncorrFDMuSqrtSyst: public ISyst
+  class UncorrFDMuSqrt: public ISyst
   {
   public:
-  UncorrFDMuSqrtSyst() : ISyst("UncorrFDMuSqrtSyst", "Uncorrelated FD Sqrt Muon Syst") {}
+  UncorrFDMuSqrt() : ISyst("UncorrFDMuSqrt", "Uncorrelated FD Sqrt Muon Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -199,12 +199,12 @@ namespace ana
     }
   };
 
-  extern const UncorrFDMuSqrtSyst kUncorrFDMuSqrtSyst;
+  extern const UncorrFDMuSqrt kUncorrFDMuSqrt;
 
-  class UncorrFDMuInvSqrtSyst: public ISyst
+  class UncorrFDMuInvSqrt: public ISyst
   {
   public:
-  UncorrFDMuInvSqrtSyst() : ISyst("UncorrFDMuInvSqrtSyst", "Uncorrelated FD Inv Sqrt Muon Syst") {}
+  UncorrFDMuInvSqrt() : ISyst("UncorrFDMuInvSqrt", "Uncorrelated FD Inv Sqrt Muon Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -218,16 +218,16 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDMuInvSqrtSyst kUncorrFDMuInvSqrtSyst;
+  extern const UncorrFDMuInvSqrt kUncorrFDMuInvSqrt;
 
   //------------------------------------------------------------------------------------
 
   //Neutrons
 
-  class UncorrFDNSqrtSyst: public ISyst
+  class UncorrFDNSqrt: public ISyst
   {
   public:
-  UncorrFDNSqrtSyst() : ISyst("UncorrFDNSqrtSyst", "Uncorrelated FD Sqrt Neutron Syst") {}
+  UncorrFDNSqrt() : ISyst("UncorrFDNSqrt", "Uncorrelated FD Sqrt Neutron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -247,12 +247,12 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDNSqrtSyst kUncorrFDNSqrtSyst;
+  extern const UncorrFDNSqrt kUncorrFDNSqrt;
 
-  class UncorrFDNInvSqrtSyst: public ISyst
+  class UncorrFDNInvSqrt: public ISyst
   {
   public:
-  UncorrFDNInvSqrtSyst() : ISyst("UncorrFDNInvSqrtSyst", "Uncorrelated FD Inv Sqrt Neutron Syst") {}
+  UncorrFDNInvSqrt() : ISyst("UncorrFDNInvSqrt", "Uncorrelated FD Inv Sqrt Neutron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -272,15 +272,15 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDNInvSqrtSyst kUncorrFDNInvSqrtSyst;
+  extern const UncorrFDNInvSqrt kUncorrFDNInvSqrt;
 
   //------------------------------------------------------------------------------------
 
   // Electromagnetic
-  class UncorrFDEMSqrtSyst: public ISyst
+  class UncorrFDEMSqrt: public ISyst
   {
   public:
-  UncorrFDEMSqrtSyst() : ISyst("UncorrFDEMSqrtSyst", "Uncorrelated FD Sqrt EM Syst") {}
+  UncorrFDEMSqrt() : ISyst("UncorrFDEMSqrt", "Uncorrelated FD Sqrt EM Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -308,12 +308,12 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDEMSqrtSyst kUncorrFDEMSqrtSyst;
+  extern const UncorrFDEMSqrt kUncorrFDEMSqrt;
 
-  class UncorrFDEMInvSqrtSyst: public ISyst
+  class UncorrFDEMInvSqrt: public ISyst
   {
   public:
-  UncorrFDEMInvSqrtSyst() : ISyst("UncorrFDEMInvSqrtSyst", "Uncorrelated FD Inv Sqrt EM Syst") {}
+  UncorrFDEMInvSqrt() : ISyst("UncorrFDEMInvSqrt", "Uncorrelated FD Inv Sqrt EM Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -341,14 +341,14 @@ namespace ana
       }
     }
   };
-  extern const UncorrFDEMInvSqrtSyst kUncorrFDEMInvSqrtSyst;
+  extern const UncorrFDEMInvSqrt kUncorrFDEMInvSqrt;
 
   // FD muon LAr systematic
   // 2% on CC numu events
-  class eScaleMuLArFDSyst: public ISyst
+  class EScaleMuLArFD: public ISyst
   {
   public:
-  eScaleMuLArFDSyst() : ISyst("eScaleMuLArFD", "Muon Energy Scale LAr Far Detector") {}
+  EScaleMuLArFD() : ISyst("EScaleMuLArFD", "Muon Energy Scale LAr Far Detector") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -365,13 +365,13 @@ namespace ana
     }
   };
 
-  extern const eScaleMuLArFDSyst keScaleMuLArFDSyst;
+  extern const EScaleMuLArFD kEScaleMuLArFD;
 
   // 5% uncorrelated FD syst for charged hadrons
-  class ChargedHadUncorrFDSyst: public ISyst
+  class ChargedHadUncorrFD: public ISyst
   {
   public:
-  ChargedHadUncorrFDSyst() : ISyst("ChargedHadUncorrFD", "Charged Hadron Uncorrelated FD Syst") {}
+  ChargedHadUncorrFD() : ISyst("ChargedHadUncorrFD", "Charged Hadron Uncorrelated FD Syst") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -402,14 +402,14 @@ namespace ana
     }
   };
 
-  extern const ChargedHadUncorrFDSyst kChargedHadUncorrFDSyst;
+  extern const ChargedHadUncorrFD kChargedHadUncorrFD;
 
   // Neutron energy scale
   // 20% on visible energy
-  class NUncorrFDSyst: public ISyst
+  class NUncorrFD: public ISyst
   {
   public:
-  NUncorrFDSyst() : ISyst("eScaleN_FD", "Neutron Energy Scale FD") {}
+  NUncorrFD() : ISyst("NUncorrFD", "Neutron Energy Scale FD") {}
 
     void Shift(double sigma,
                Restorer& restore,
@@ -433,14 +433,14 @@ namespace ana
     }
   };
 
-  extern const NUncorrFDSyst kNUncorrFDSyst;
+  extern const NUncorrFD kNUncorrFD;
 
   // FD systematic correlated for pi0s and electrons
   // 2.5% on reco energy for electrons and pi0s
-  class EMUncorrFDSyst: public ISyst
+  class EMUncorrFD: public ISyst
   {
   public:
-  EMUncorrFDSyst() : ISyst("EMUncorrFD", "Electromagnetic shower FD Syst") {}
+  EMUncorrFD() : ISyst("EMUncorrFD", "Electromagnetic shower FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -468,15 +468,15 @@ namespace ana
     }
   };
 
-  extern const EMUncorrFDSyst kEMUncorrFDSyst;
+  extern const EMUncorrFD kEMUncorrFD;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Resolution systematics
   // Muon energy resolution
-  class MuonResFDSyst: public ISyst
+  class MuonResFD: public ISyst
   {
   public:
-  MuonResFDSyst() : ISyst("MuonResFD", "Muon Far Detector Resolution Syst") {}
+  MuonResFD() : ISyst("MuonResFD", "Muon Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -492,13 +492,13 @@ namespace ana
     }
   };
 
-  extern const MuonResFDSyst kMuonResFDSyst;
+  extern const MuonResFD kMuonResFD;
 
   // Electron/pi0 energy resolution
-  class EMResFDSyst: public ISyst
+  class EMResFD: public ISyst
   {
   public:
-  EMResFDSyst() : ISyst("EMResFD", "EM shower Far Detector Resolution Syst") {}
+  EMResFD() : ISyst("EMResFD", "EM shower Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -526,13 +526,13 @@ namespace ana
     }
   };
 
-  extern const EMResFDSyst kEMResFDSyst;
+  extern const EMResFD kEMResFD;
 
   // Charged hadron energy resolution
-  class ChargedHadResFDSyst: public ISyst
+  class ChargedHadResFD: public ISyst
   {
   public:
-  ChargedHadResFDSyst() : ISyst("ChargedHadResFD", "Charged Hadron Far Detector Resolution Syst") {}
+  ChargedHadResFD() : ISyst("ChargedHadResFD", "Charged Hadron Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -560,13 +560,13 @@ namespace ana
     }
   };
 
-  extern const ChargedHadResFDSyst kChargedHadResFDSyst;
+  extern const ChargedHadResFD kChargedHadResFD;
 
   // Neutron energy resolution
-  class NResFDSyst: public ISyst
+  class NResFD: public ISyst
   {
   public:
-  NResFDSyst() : ISyst("NResFD", "Neutron Far Detector Resolution Syst") {}
+  NResFD() : ISyst("NResFD", "Neutron Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
@@ -590,7 +590,7 @@ namespace ana
     }
   };
 
-  extern const NResFDSyst kNResFDSyst;
+  extern const NResFD kNResFD;
 
   // Vector of energy scale systematics
   struct EnergySystVector: public std::vector<const ISyst*>

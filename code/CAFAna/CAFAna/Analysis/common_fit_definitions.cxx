@@ -1,13 +1,13 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
+#include "CAFAna/Analysis/AnalysisBinnings.h"
+#include "CAFAna/Analysis/AnalysisVars.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/Plots.h"
-#include "CAFAna/Analysis/AnalysisVars.h"
-#include "CAFAna/Analysis/AnalysisBinnings.h"
 
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -44,8 +44,8 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TTree.h"
 #include "TSystem.h"
+#include "TTree.h"
 
 #ifdef USE_PREDINTERP_OMP
 #include <omp.h>
@@ -213,12 +213,23 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     systlist.insert(systlist.end(), elist.begin(), elist.end());
-    if (useFD)
+    if (useFD) {
       systlist.insert(systlist.end(), fdlist.begin(), fdlist.end());
-    if (useND)
+    }
+    if (useND) {
       systlist.insert(systlist.end(), ndlist.begin(), ndlist.end());
-    if (useND && useNueOnE)
+    }
+    if (useND && useNueOnE) {
       systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
+    }
+
+    if (GetAnaVersion() == kV3) {
+      RemoveSysts(systlist,
+                  {"UncorrFDTotSqrt", "UncorrFDTotInvSqrt", "UncorrFDHadSqrt",
+                   "UncorrFDHadInvSqrt", "UncorrFDMuSqrt", "UncorrFDMuInvSqrt",
+                   "UncorrFDNSqrt", "UncorrFDNInvSqrt", "UncorrFDEMSqrt",
+                   "UncorrFDEMInvSqrt", "ChargedHadUncorrFD"});
+    }
   }
 
   if (xsecsyst) {
@@ -236,19 +247,6 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
         GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
     KeepSysts(xseclist, GetFakeDataGenerationSystNames());
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
-  }
-
-  // If we want to use the FD energy scale covariance matrix need to remove
-  // all FD escale and resolution systematics
-  if (removeFDNonFitDials) {
-    RemoveSysts(systlist,
-                {"eScaleFD", "UncorrFDTotSqrtSyst", "UncorrFDTotInvSqrtSyst",
-                 "ChargedHadUncorrFD", "UncorrFDHadSqrtSyst",
-                 "UncorrFDHadInvSqrtSyst", "eScaleMuLArFD",
-                 "UncorrFDMuSqrtSyst", "UncorrFDMuInvSqrtSyst", "EMUncorrFD",
-                 "UncorrFDEMSqrtSyst", "UncorrFDEMInvSqrtSyst", "eScaleN_FD",
-                 "UncorrFDNSqrtSyst", "UncorrFDNInvSqrtSyst", "EMResFD",
-                 "MuonResFD", "ChargedHadResFD", "NResFD"});
   }
 
   return systlist;
@@ -451,7 +449,6 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
 
   return thisShift;
 }
-
 
 std::string GetSampleName(SampleType sample) {
   switch (sample) {
@@ -859,8 +856,7 @@ void SaveParams(TDirectory *outDir, std::vector<const ISyst *> systlist) {
   delete t;
 };
 
-FitTreeBlob::FitTreeBlob(std::string tree_name,
-                         std::string meta_tree_name)
+FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr),
       fRNGSeed(gRNGSeed), fNFills(0) {
 
@@ -992,7 +988,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   assert(systlist.size() + oscVars.size());
 
-	auto AnaV = GetAnaVersion();
+  auto AnaV = GetAnaVersion();
 
 #ifdef USE_PREDINTERP_OMP
   if (omp_get_max_threads() > 4) {
