@@ -1304,7 +1304,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
             << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                 start_fit)
                    .count()
-            << " s @ " << ctime(&end_fit_time);
+            << " s after " << this_fit.GetNFCN() << " iterations @ "
+            << ctime(&end_fit_time);
 
   bf = fitSyst;
 

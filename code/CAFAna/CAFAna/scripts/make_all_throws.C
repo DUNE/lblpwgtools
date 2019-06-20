@@ -147,7 +147,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oscSeedsCPV[&kFitSinSqTheta23] = {.4, .6}; // try both octants
 
   // Octant specific
-  FitTreeBlob oct_tree("oct_fit_info", "cpv_params");
+  FitTreeBlob oct_tree("oct_fit_info", "oct_params");
   double oct_chisqmin;
   double oct_dchi2;
   double oct_significance = 0;
@@ -235,8 +235,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
     now = std::chrono::system_clock::now();
     now_time = std::chrono::system_clock::to_time_t(now);
-    std::cerr << "[THW]: Throw " << i
-              << " Global fit found minimum chi2 = " << globalmin << " @ "
+    std::cerr << "[THW]: Global throw " << i
+              << " fit found minimum chi2 = " << globalmin << " @ "
               << std::ctime(&now_time);
 
     // -------------------------------------
@@ -269,14 +269,14 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
       now = std::chrono::system_clock::now();
       now_time = std::chrono::system_clock::to_time_t(now);
-      std::cerr << "[THW]: CPV Throw " << i
+      std::cerr << "[THW]: CPV throw " << i
                 << " fit found minimum chi2 = " << cpv_chisqmin << " @ "
                 << std::ctime(&now_time);
 
       cpv_dchi2 = cpv_chisqmin - globalmin;
       if (cpv_dchi2 > 0) {
         cpv_significance = sqrt(cpv_dchi2);
-      } else {
+      } else if (cpv_dchi2 < -1E-4) {
         std::cerr << "[WARN]: CPV fit dchi2 of " << cpv_dchi2 << "; "
                   << cpv_chisqmin << " - " << globalmin << std::endl;
       }
@@ -306,7 +306,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     oct_dchi2 = oct_chisqmin - globalmin;
     if (oct_dchi2 > 0) {
       oct_significance = sqrt(oct_dchi2);
-    } else {
+    } else if (oct_dchi2 < -1E-4) {
       std::cerr << "[WARN]: Octant fit dchi2 of " << oct_dchi2 << "; "
                 << oct_chisqmin << " - " << globalmin << std::endl;
     }
@@ -340,8 +340,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
     mh_dchi2 = mh_chisqmin - globalmin;
     if (mh_dchi2 > 0) {
       mh_significance = sqrt(mh_dchi2);
-    } else {
-      std::cerr << "MH fit dchi2 of " << mh_dchi2 << "; " << mh_chisqmin
+    } else if (mh_dchi2 < -1E-4) {
+      std::cerr << "[WARN]: MH fit dchi2 of " << mh_dchi2 << "; " << mh_chisqmin
                 << " - " << globalmin << std::endl;
     }
 
