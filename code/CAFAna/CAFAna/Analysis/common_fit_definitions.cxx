@@ -325,7 +325,6 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       fluxsyst_Nov17 = false;
     }
     if (syst == "fakedata") {useFakeData = true;} // LOOK MA, I GOT BRACES!
-    if (syst == "onlyfakedata") {useFakeData = true; fluxsyst_Nov17 = false; fluxsyst_CDR = false; detsyst = false; xsecsyst = false;}
     if (syst.find("nflux=") == 0) {
       auto NFluxSplit = SplitString(syst, '=');
       if (NFluxSplit.size() != 2) {
@@ -418,7 +417,7 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
     superorder.emplace_back(s);
   }
-  for (auto &s : GetListOfSysts("onlyfakedata")) {
+  for (auto &s : GetListOfSysts("fakedata")) {
     superorder.emplace_back(s);
   }
   std::vector<const ISyst *> retlist;
