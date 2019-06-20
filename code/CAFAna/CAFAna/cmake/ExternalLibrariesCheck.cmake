@@ -21,14 +21,6 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/Ext/Utilities)
   cmessage(FATAL_ERROR "Expected to be able to find Utilities in: \"${CMAKE_BINARY_DIR}/Ext/Utilities\", did you build with the helper script?")
 endif()
 
-if(${BOOST_LIB} STREQUAL "")
-  cmessage(FATAL_ERROR "Expected to be able to evaluate \${BOOST_LIB}=\"${BOOST_INC}\" to an existing directory, is BOOST set up in the environment?")
-elseif(NOT DEFINED BOOST_INC)
-  cmessage(FATAL_ERROR "Expected to be able to evaluate \${BOOST_INC}=\"${BOOST_INC}\" to an existing directory, is BOOST set up in the environment?")
-endif()
-
-
-
 ###############################  GSL  ######################################
 if(NOT DEFINED GSL_LIB OR GSL_LIB STREQUAL "")
   GETLIBDIR(gsl-config --libs GSL_LIB)
@@ -83,6 +75,12 @@ LIST(APPEND EXTRA_LINK_DIRS ${CLHEP_PREFIX}/lib)
 LIST(APPEND EXTRA_LIBS CLHEP)
 
 ###############################  BOOST  ######################################
+
+if(${BOOST_INC} STREQUAL "")
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${BOOST_INC}=\"${BOOST_INC}\" to an existing directory, is BOOST set up in the environment?")
+elseif(NOT DEFINED BOOST_INC)
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${BOOST_INC}=\"${BOOST_INC}\" to an existing directory, is BOOST set up in the environment?")
+endif()
 
 if(${BOOST_LIB} STREQUAL "")
   cmessage(FATAL_ERROR "Expected to be able to evaluate \${BOOST_LIB}=\"${BOOST_LIB}\" to an existing directory, is BOOST set up in the environment?")

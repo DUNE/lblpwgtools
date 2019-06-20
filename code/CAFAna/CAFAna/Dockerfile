@@ -5,8 +5,9 @@ FROM debian:stretch-slim
 
 ARG N_CORE=8
 
-RUN apt update && apt install -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python
+RUN apt update && apt install -y build-essential gfortran-6 libgsl-dev libboost-dev libboost-filesystem-dev cmake subversion git python
 ENV BOOST_INC=/usr/include
+ENV BOOST_LIB=/usr/lib/x86_64-linux-gnu
 
 # CLHEP
 RUN mkdir -p /opt/clhep-src
@@ -63,7 +64,7 @@ RUN svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilit
 WORKDIR /opt/CAFAna-build/Ext/OscLib/func/
 RUN sed -i "s/array_wrapper.hpp/array.hpp/g" /opt/CAFAna-build/Ext/OscLib/func/OscCalculatorGeneral.cxx
 WORKDIR /opt/CAFAna-build/
-RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=DEBUG -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib
+RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=DEBUG -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib  -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB}
 RUN make -j ${N_CORE}
 RUN make install -j ${N_CORE}
 WORKDIR /opt/
