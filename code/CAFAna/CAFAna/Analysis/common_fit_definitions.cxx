@@ -988,6 +988,22 @@ void FitTreeBlob::Write() {
   }
 }
 
+std::string BuildLogInfoString() {
+  auto now = std::chrono::system_clock::now();
+  std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+  ProcInfo_t procinfo;
+  gSystem->GetProcInfo(&procinfo);
+  MemInfo_t meminfo;
+  gSystem->GetMemInfo(&meminfo);
+
+  std::stringstream ss("");
+  ss << " (ProcMU: " << (double(procinfo.fMemResident) / 1E6)
+     << " GB, SySMF: " << (double(meminfo.fMemFree) / 1E6) << " GB) @ "
+     << std::ctime(&now_time);
+
+  return ss.str();
+}
+
 double RunFitPoint(std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
@@ -1042,12 +1058,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp &predNDNumuRHC = *interp_list[5].release();
   if (first_load) {
     static auto end_load = std::chrono::system_clock::now();
-    std::time_t end_load_time = std::chrono::system_clock::to_time_t(end_load);
     std::cout << "[LOAD]: Done in "
               << std::chrono::duration_cast<std::chrono::seconds>(end_load -
                                                                   start_load)
                      .count()
-              << " s @ " << std::ctime(&end_load_time);
+              << " s " << BuildLogInfoString();
     first_load = false;
   }
 
@@ -1304,8 +1319,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
             << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                 start_fit)
                    .count()
-            << " s after " << this_fit.GetNFCN() << " iterations @ "
-            << ctime(&end_fit_time);
+            << " s after " << this_fit.GetNFCN() << " iterations "
+            << BuildLogInfoString();
 
   bf = fitSyst;
 
