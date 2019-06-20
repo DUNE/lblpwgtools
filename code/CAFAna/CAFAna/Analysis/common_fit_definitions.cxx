@@ -997,8 +997,8 @@ std::string BuildLogInfoString() {
   gSystem->GetMemInfo(&meminfo);
 
   std::stringstream ss("");
-  ss << " (ProcMU: " << (double(procinfo.fMemResident) / 1E6)
-     << " GB, SySMF: " << (double(meminfo.fMemFree) / 1E6) << " GB) @ "
+  ss << " (ProcResMem: " << (double(procinfo.fMemResident) / 1E6)
+     << " GB) @ "
      << std::ctime(&now_time);
 
   return ss.str();
