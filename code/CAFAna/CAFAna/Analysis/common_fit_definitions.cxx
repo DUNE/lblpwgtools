@@ -867,7 +867,6 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   fPostFitValues = new std::vector<double>();
   fPostFitErrors = new std::vector<double>();
   fCentralValues = new std::vector<double>();
-  fMinosErrors = new std::vector<std::pair<double, double>>();
 
   if (tree_name.size()) {
     throw_tree = new TTree(tree_name.c_str(), "Fit information");
@@ -883,7 +882,6 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     throw_tree->Branch("fPreFitErrors", &fPreFitErrors);
     throw_tree->Branch("fPostFitValues", &fPostFitValues);
     throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
-    throw_tree->Branch("fMinosErrors", &fMinosErrors);
     throw_tree->Branch("fCentralValues", &fCentralValues);
     throw_tree->Branch("RNGSeed", &fRNGSeed);
     throw_tree->Branch("ProcFitN", &fNFills);
@@ -910,7 +908,6 @@ FitTreeBlob *FitTreeBlob::MakeReader(TTree *t, TTree *m) {
   t->SetBranchAddress("fPreFitErrors", &ftb->fPreFitErrors);
   t->SetBranchAddress("fPostFitValues", &ftb->fPostFitValues);
   t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
-  t->SetBranchAddress("fMinosErrors", &ftb->fMinosErrors);
   t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
   t->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
   t->SetBranchAddress("ProcFitN", &ftb->fNFills);
@@ -927,7 +924,6 @@ FitTreeBlob::~FitTreeBlob() {
   delete fPostFitValues;
   delete fPostFitErrors;
   delete fCentralValues;
-  delete fMinosErrors;
 }
 void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fFakeDataVals) = (*fb.fFakeDataVals);
@@ -936,7 +932,6 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fPreFitErrors) = (*fb.fPreFitErrors);
   (*fPostFitValues) = (*fb.fPostFitValues);
   (*fPostFitErrors) = (*fb.fPostFitErrors);
-  (*fMinosErrors) = (*fb.fMinosErrors);
   (*fCentralValues) = (*fb.fCentralValues);
   fChiSq = fb.fChiSq;
   fNFCN = fb.fNFCN;
@@ -1317,8 +1312,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     std::vector<double> fPostFitValues = this_fit.GetPostFitValues();
     std::vector<double> fPostFitErrors = this_fit.GetPostFitErrors();
     std::vector<double> fCentralValues = this_fit.GetCentralValues();
-    std::vector<std::pair<double, double>> fMinosErrors =
-        this_fit.GetMinosErrors();
     double fNFCN = this_fit.GetNFCN();
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
@@ -1399,7 +1392,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     (*PostFitTreeBlob->fPreFitErrors) = this_fit.GetPreFitErrors();
     (*PostFitTreeBlob->fPostFitValues) = this_fit.GetPostFitValues();
     (*PostFitTreeBlob->fPostFitErrors) = this_fit.GetPostFitErrors();
-    (*PostFitTreeBlob->fMinosErrors) = this_fit.GetMinosErrors();
     (*PostFitTreeBlob->fCentralValues) = this_fit.GetCentralValues();
     (*PostFitTreeBlob->fFakeDataVals) = fFakeDataVals;
     PostFitTreeBlob->fNFCN = this_fit.GetNFCN();

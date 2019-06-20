@@ -131,7 +131,6 @@ struct FitTreeBlob {
   std::vector<double> *fPostFitValues;
   std::vector<double> *fPostFitErrors;
   std::vector<double> *fCentralValues;
-  std::vector<std::pair<double, double>> *fMinosErrors;
   double fChiSq;
   unsigned fNSeconds;
   unsigned fRNGSeed;
