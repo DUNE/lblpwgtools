@@ -56,7 +56,7 @@
 
 using namespace ana;
 
-int gRNGSeed = 0;
+unsigned gRNGSeed = 0;
 
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40 / 1.13;
@@ -1084,30 +1084,36 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   if (!spectra->size()) {
     std::cout << "Remaking spectra" << std::endl;
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_fd_fhc_nue, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 10 : 0))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_fd_fhc_numu, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 11 : 0))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_fd_rhc_nue, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 12 : 0))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_fd_rhc_numu, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 13 : 0))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_nd_fhc, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 14 : 0))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(
-        new Spectrum(predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                         .MockData(pot_nd_rhc, fakeDataStats,
-                                   gRNGSeed ? gRNGSeed + 15 : 0))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_fd_fhc_nue, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_fd_fhc_numu, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_fd_rhc_nue, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_fd_rhc_numu, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_nd_fhc, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
+        predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+            .MockData(
+                pot_nd_rhc, fakeDataStats,
+                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
   }
   // If using the multi sample covariances then they must be added to the
   // MultiExperiment

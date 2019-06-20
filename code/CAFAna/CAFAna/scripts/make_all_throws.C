@@ -31,7 +31,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
                        // new RNG seed and spin the wheels for 100k throws;
     gRandom->SetSeed(0);
     for (size_t i = 0; i < 1E5; ++i) {
-      gRNGSeed = gRandom->Uniform(0, std::numeric_limits<unsigned>::max());
+      gRNGSeed = gRandom->Integer(std::numeric_limits<unsigned>::max());
     }
   }
 

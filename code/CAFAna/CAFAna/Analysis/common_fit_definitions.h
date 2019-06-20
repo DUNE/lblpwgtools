@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-extern int gRNGSeed;
+extern unsigned gRNGSeed;
 
 // POT for 3.5 years
 extern double const pot_fd;
