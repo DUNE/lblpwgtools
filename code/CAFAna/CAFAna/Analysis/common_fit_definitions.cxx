@@ -269,6 +269,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
   bool fluxsyst_Nov17 = true;
   bool fluxsyst_CDR = false;
   bool xsecsyst = true;
+  bool useFakeData = false;
   int NFluxSysts = NFluxParametersToAddToStatefile;
 
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep
@@ -326,6 +327,8 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       fluxsyst_CDR = true;
       fluxsyst_Nov17 = false;
     }
+    if (syst == "fakedata") {useFakeData = true;} // LOOK MA, I GOT BRACES!
+    if (syst == "onlyfakedata") {useFakeData = true; fluxsyst_Nov17 = false; fluxsyst_CDR = false; detsyst = false; xsecsyst = false;}
     if (syst.find("nflux=") == 0) {
       auto NFluxSplit = SplitString(syst, '=');
       if (NFluxSplit.size() != 2) {
@@ -346,7 +349,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
   // Okay, now get the list, and start from there...
   std::vector<const ISyst *> namedList =
       GetListOfSysts(fluxsyst_Nov17, xsecsyst, detsyst, useND, useFD, useNueOnE,
-                     false /*fakedata*/, fluxsyst_CDR, NFluxSysts);
+                     useFakeData, fluxsyst_CDR, NFluxSysts);
 
   // Now do something REALLY FUNKY. Remove specific dials from the list we
   // already have Need to allow single dials, and a few specific groups...
@@ -410,7 +413,7 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
     superorder.emplace_back(s);
   }
-  for (auto &s : GetListOfSysts("fakedata")) {
+  for (auto &s : GetListOfSysts("onlyfakedata")) {
     superorder.emplace_back(s);
   }
   std::vector<const ISyst *> retlist;
