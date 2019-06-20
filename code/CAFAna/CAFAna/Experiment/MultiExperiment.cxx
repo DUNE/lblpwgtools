@@ -24,8 +24,8 @@ namespace ana
   {
         TDirectory *thisDir = gDirectory->CurrentDirectory();
 
-        std::cout << "Adding covariance matrix " << covMatName << std::endl;
-        std::cout << "From file: " << covMatFileName << std::endl;
+        // std::cout << "Adding covariance matrix " << covMatName << std::endl;
+        // std::cout << "From file: " << covMatFileName << std::endl;
 
         // Get the covariance matrix from a file
         TFile covMatFile( covMatFileName.c_str() );
@@ -64,14 +64,14 @@ namespace ana
                   << " but no such Experiment exists" << std::endl;
         abort();
       } else {
-        std::cout << "  Adding experiment " << idx << " to covariance matrix" << std::endl;
+        // std::cout << "  Adding experiment " << idx << " to covariance matrix" << std::endl;
         fUseCovMx[idx] = true;
       }
     }
 
     // Invert the fractional matrix in advance for performance
     if( preInvert ) {
-      std::cout << "Pre-inverting covariance matrix" << std::endl;
+      // std::cout << "Pre-inverting covariance matrix" << std::endl;
       // Figure out how many bins there are
       int n_bins = 0;
       TVectorD pred( covMx->GetNcols() );
@@ -227,7 +227,7 @@ namespace ana
              std::unordered_map<const ISyst*, double>& dchi) const
   {
     if(!fCovMx.empty()){
-      std::cout << "MultiExperiment::Derivative() not implemented for case with covariance matrices" << std::endl;
+      // std::cout << "MultiExperiment::Derivative() not implemented for case with covariance matrices" << std::endl;
       dchi.clear();
       return;
     }

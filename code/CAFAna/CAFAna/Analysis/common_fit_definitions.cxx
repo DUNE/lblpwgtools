@@ -171,6 +171,17 @@ void KeepSysts(std::vector<const ISyst *> &systlist,
                  systlist.end());
 }
 
+void KeepSysts(std::vector<const ISyst *> &systlist,
+               std::vector<const ISyst *> const &systsToInclude) {
+  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
+                                [&](const ISyst *s) {
+                                  return (std::find(systsToInclude.begin(),
+                                                    systsToInclude.end(),
+                                                    s) == systsToInclude.end());
+                                }),
+                 systlist.end());
+}
+
 void RemoveSysts(std::vector<const ISyst *> &systlist,
                  std::vector<std::string> const &namesToRemove) {
   systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
@@ -323,6 +334,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       fluxsyst_CDR = true;
       fluxsyst_Nov17 = false;
     }
+
     if (syst.find("nflux=") == 0) {
       auto NFluxSplit = SplitString(syst, '=');
       if (NFluxSplit.size() != 2) {
@@ -606,7 +618,7 @@ GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
     TFile *fin =
         TFile::Open(state_fname.c_str(), "READ"); // Allows xrootd streaming
     assert(fin && !fin->IsZombie());
-    std::cout << "Retrieving " << sample_dir_order[s_it] << " from "
+    std::cout << "[LOAD]: Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
     return_list.emplace_back(LoadFrom<PredictionInterp>(
         fin->GetDirectory(sample_dir_order[s_it].c_str())));
@@ -765,8 +777,6 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
     for (auto s : systs) {
       double v = GetBoundedGausThrow(s->Min(), s->Max());
       shift.SetShift(s, v);
-      std::cout << "[INFO] Throw " << t_it << " " << s->ShortName() << " = "
-                << v << std::endl;
     }
 
     // Make prediction TH1
@@ -1001,17 +1011,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // want to use
   static std::vector<const ISyst *> systs = GetListOfSysts();
 
-// for( std::vector<const ISyst*>::const_iterator it = systs.begin(); it !=
-// systs.end(); ++it )
-//  std::cout << (*it)->ShortName() << std::endl;
-
-// Start by getting the PredictionInterps... better that this is done here than
-// elsewhere as they aren't smart enough to know what they are (so the order
-// matters) Note that all systs are used to load the PredictionInterps
-#ifdef PROFILE_COUTS
-  static bool first = true;
+  // Start by getting the PredictionInterps... better that this is done here
+  // than elsewhere as they aren't smart enough to know what they are (so the
+  // order matters) Note that all systs are used to load the PredictionInterps
+  static bool first_load = true;
   static auto start_load = std::chrono::system_clock::now();
-#endif
 
   static bool PI_load = true;
   static std::vector<ana::ISyst const *> syststoload = systlist;
@@ -1032,18 +1036,16 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp &predFDNueRHC = *interp_list[3].release();
   static PredictionInterp &predNDNumuFHC = *interp_list[4].release();
   static PredictionInterp &predNDNumuRHC = *interp_list[5].release();
-#ifdef PROFILE_COUTS
-  if (first) {
+  if (first_load) {
     static auto end_load = std::chrono::system_clock::now();
-
-    std::cout << "PROFILE: LOAD = "
+    std::time_t end_load_time = std::chrono::system_clock::to_time_t(end_load);
+    std::cout << "[LOAD]: Done in "
               << std::chrono::duration_cast<std::chrono::seconds>(end_load -
                                                                   start_load)
                      .count()
-              << " s." << std::endl;
-    first = false;
+              << " s @ " << std::ctime(&end_load_time);
+    first_load = false;
   }
-#endif
 
   // Get the ndCov
   const std::string detCovPath = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
@@ -1083,7 +1085,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   if (!spectra->size()) {
-    std::cout << "Remaking spectra" << std::endl;
     spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
         predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
             .MockData(
@@ -1239,12 +1240,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-
     if (AnaV == kV3) {
-
-      std::cout << "[INFO]: Building uncorrelated ND covmx to replicated old "
-                   "behavior."
-                << std::endl;
 
       TDirectory *thisDir = gDirectory->CurrentDirectory();
       TFile covMatFile(covFileName.c_str());
@@ -1299,13 +1295,12 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   double thischisq =
       this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
   auto end_fit = std::chrono::system_clock::now();
-#ifdef PROFILE_COUTS
-  std::cout << "PROFILE: FIT = "
+  std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
+  std::cerr << "[FIT]: Finished fit in "
             << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                 start_fit)
                    .count()
-            << " s." << std::endl;
-#endif
+            << " s @ " << ctime(&end_fit_time);
 
   bf = fitSyst;
 
@@ -1390,8 +1385,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   if (PostFitTreeBlob) {
-    std::cout << "NNames = " << this_fit.GetParamNames().size()
-              << ", NVals: " << this_fit.GetPostFitValues().size() << std::endl;
     (*PostFitTreeBlob->fParamNames) = this_fit.GetParamNames();
     (*PostFitTreeBlob->fPreFitValues) = this_fit.GetPreFitValues();
     (*PostFitTreeBlob->fPreFitErrors) = this_fit.GetPreFitErrors();

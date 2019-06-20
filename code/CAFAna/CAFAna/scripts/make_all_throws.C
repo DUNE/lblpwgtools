@@ -35,7 +35,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     }
   }
 
-  std::cout << "gRNGSeed: " << gRNGSeed << std::endl;
+  std::cerr << "[RNG]: gRNGSeed = " << gRNGSeed << std::endl;
 
   gRandom->SetSeed(gRNGSeed);
 
@@ -52,16 +52,12 @@ void make_all_throws(std::string stateFname = def_stateFname,
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
 
-  // Setup an output file
-  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
-
   // The global tree for all throw types
   FitTreeBlob global_tree("global_fit_info", "global_params");
   double globalmin;
   double thisdcp;
   double this_th23;
   double this_ssth23;
-  global_tree.throw_tree->SetDirectory(fout);
 
   std::stringstream CLI_ss("");
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
@@ -70,9 +66,44 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   std::string *CLIArgs = new std::string(CLI_ss.str());
   global_tree.meta_tree->Branch("CLI", &CLIArgs);
+  std::cerr << "[CLI]: " << *CLIArgs << std::endl;
 
   // Fit in the correct hierarchy and octant for global throw
   std::vector<const IFitVar *> oscVarsGlobal = GetOscVars("alloscvars", hie);
+
+  std::cerr << "[FIT]: Global Osc Parameters: \n\t";
+  for (auto s : oscVarsGlobal) {
+    std::cerr << s->ShortName() << " ";
+  }
+  std::cerr << std::endl;
+
+  std::vector<const ISyst *> flux_systs = systlist;
+  KeepSysts(flux_systs, GetListOfSysts("nodet:noxsec"));
+  if (flux_systs.size()) {
+    std::cerr << "[FIT]: Flux Parameters: \n\t";
+    for (auto s : flux_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
+  std::vector<const ISyst *> xsec_systs = systlist;
+  KeepSysts(xsec_systs, GetListOfSysts("noflux:nodet"));
+  if (xsec_systs.size()) {
+    std::cerr << "[FIT]: XSec Parameters: \n\t";
+    for (auto s : xsec_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
+  std::vector<const ISyst *> det_systs = systlist;
+  KeepSysts(det_systs, GetListOfSysts("noflux:noxsec"));
+  if (det_systs.size()) {
+    std::cerr << "[FIT]: Det Parameters: \n\t";
+    for (auto s : det_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsGlobal;
   oscSeedsGlobal[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
@@ -80,7 +111,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   // MH specific
   FitTreeBlob mh_tree("mh_fit_info", "mh_params");
-  mh_tree.SetDirectory(fout);
   double mh_chisqmin;
   double mh_dchi2;
   double mh_significance = 0;
@@ -97,7 +127,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   // CPV specific
   FitTreeBlob cpv_tree("cpv_fit_info", "cpv_params");
-  cpv_tree.SetDirectory(fout);
   double cpv_chisqmin;
   double cpv_dchi2;
   double cpv_significance = 0;
@@ -118,8 +147,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oscSeedsCPV[&kFitSinSqTheta23] = {.4, .6}; // try both octants
 
   // Octant specific
-  FitTreeBlob oct_tree("oct_fit_info");
-  oct_tree.SetDirectory(fout);
+  FitTreeBlob oct_tree("oct_fit_info", "cpv_params");
   double oct_chisqmin;
   double oct_dchi2;
   double oct_significance = 0;
@@ -135,10 +163,16 @@ void make_all_throws(std::string stateFname = def_stateFname,
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
-  // Loop over requested throws
-  for (int i = 0; i < nthrows; ++i) {
-    std::cout << "Starting throw " << i << ":" << std::endl;
+  std::chrono::time_point<std::chrono::system_clock> now;
+  std::time_t now_time;
 
+  for (int i = 0; i < nthrows; ++i) {
+
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+
+    std::cerr << "[THW]: Starting throw " << i << " @ "
+              << std::ctime(&now_time);
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
 
@@ -185,7 +219,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Do the global fit ---------
     // -------------------------------------
-    std::cout << " -- Global fit" << std::endl;
 
     // This actually doesn't matter unless we apply a theta23 constraint, which
     // I think we shouldn't anyway...
@@ -200,10 +233,15 @@ void make_all_throws(std::string stateFname = def_stateFname,
     delete gpenalty;
     delete fitThrowOsc;
 
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+    std::cerr << "[THW]: Throw " << i
+              << " Global fit found minimum chi2 = " << globalmin << " @ "
+              << std::ctime(&now_time);
+
     // -------------------------------------
     // --------- Now do CPV fits -----------
     // -------------------------------------
-    std::cout << " -- CPV fit" << std::endl;
     {
       // Now fit several times to find the best fit when dCP = 0, pi
       double cpv_chisqmin = 99999;
@@ -229,12 +267,19 @@ void make_all_throws(std::string stateFname = def_stateFname,
         delete testOscCPV;
       }
 
+      now = std::chrono::system_clock::now();
+      now_time = std::chrono::system_clock::to_time_t(now);
+      std::cerr << "[THW]: CPV Throw " << i
+                << " fit found minimum chi2 = " << cpv_chisqmin << " @ "
+                << std::ctime(&now_time);
+
       cpv_dchi2 = cpv_chisqmin - globalmin;
-      if (cpv_dchi2 > 0)
+      if (cpv_dchi2 > 0) {
         cpv_significance = sqrt(cpv_dchi2);
-      else
-        std::cerr << "CPV: dchi2 of " << cpv_dchi2 << "; " << cpv_chisqmin
-                  << " - " << globalmin << std::endl;
+      } else {
+        std::cerr << "[WARN]: CPV fit dchi2 of " << cpv_dchi2 << "; "
+                  << cpv_chisqmin << " - " << globalmin << std::endl;
+      }
 
       cpv_tree.Fill();
     }
@@ -242,8 +287,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Now octant fits -----------
     // -------------------------------------
-    std::cout << " -- Octant fit" << std::endl;
-
     osc::IOscCalculatorAdjustable *testOscOct = NuFitOscCalc(hie, -1 * oct);
 
     // No penalty on the octant, so ignore it...
@@ -254,12 +297,19 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscVarsOct, systlist, testOscOct, SystShifts(fitThrowSyst), oscSeedsOct,
         oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
 
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+    std::cerr << "[THW]: Oct. throw " << i
+              << " fit found minimum chi2 = " << oct_chisqmin << " @ "
+              << std::ctime(&now_time);
+
     oct_dchi2 = oct_chisqmin - globalmin;
-    if (oct_dchi2 > 0)
+    if (oct_dchi2 > 0) {
       oct_significance = sqrt(oct_dchi2);
-    else
-      std::cerr << "Octant: dchi2 of " << oct_dchi2 << "; " << oct_chisqmin
-                << " - " << globalmin << std::endl;
+    } else {
+      std::cerr << "[WARN]: Octant fit dchi2 of " << oct_dchi2 << "; "
+                << oct_chisqmin << " - " << globalmin << std::endl;
+    }
 
     oct_tree.Fill();
     delete oct_penalty;
@@ -268,7 +318,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Now the MH fits -----------
     // -------------------------------------
-    std::cout << " -- MH fit" << std::endl;
 
     // Force the testOsc to be in the wrong hierarchy
     osc::IOscCalculatorAdjustable *testOscMH = NuFitOscCalc(-1 * hie, 1);
@@ -282,12 +331,20 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscSeedsGlobal, mh_penalty, fit_type, // same seeds as a global fit
         nullptr, &mh_tree, &mad_spectra_yo);
 
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+    std::cerr << "[THW]: MH. throw " << i
+              << " fit found minimum chi2 = " << mh_chisqmin << " @ "
+              << std::ctime(&now_time);
+
     mh_dchi2 = mh_chisqmin - globalmin;
-    if (mh_dchi2 > 0)
+    if (mh_dchi2 > 0) {
       mh_significance = sqrt(mh_dchi2);
-    else
-      std::cerr << "MH: dchi2 of " << mh_dchi2 << "; " << mh_chisqmin << " - "
-                << globalmin << std::endl;
+    } else {
+      std::cerr << "MH fit dchi2 of " << mh_dchi2 << "; " << mh_chisqmin
+                << " - " << globalmin << std::endl;
+    }
+
     mh_tree.Fill();
 
     delete mh_penalty;
@@ -297,21 +354,42 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
     if (chk.ShouldCheckpoint()) {
       chk.WaitForSemaphore();
-      std::cout << "[INFO]: Writing output file..." << std::endl;
-      fout->Write();
+      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+      TDirectory *odir = gDirectory;
+      TFile fout(outputFname.c_str(), "RECREATE");
+      global_tree.Write();
+      mh_tree.Write();
+      cpv_tree.Write();
+      oct_tree.Write();
+      global_tree.SetDirectory(nullptr);
+      mh_tree.SetDirectory(nullptr);
+      cpv_tree.SetDirectory(nullptr);
+      oct_tree.SetDirectory(nullptr);
+      if (odir) {
+        odir->cd();
+      }
       chk.NotifyCheckpoint();
     }
 
     if (!chk.IsSafeToStartNewUnit()) {
-      std::cout
-          << "[INFO]: Do not have time to finish another fit, exiting early."
+      std::cerr
+          << "[CHK]: Do not have time to finish another fit, exiting early."
           << std::endl;
       break;
     }
   }
 
-  fout->Write();
-  fout->Close();
+  std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+  TFile fout(outputFname.c_str(), "RECREATE");
+  global_tree.Write();
+  mh_tree.Write();
+  cpv_tree.Write();
+  oct_tree.Write();
+
+  now = std::chrono::system_clock::now();
+  now_time = std::chrono::system_clock::to_time_t(now);
+
+  std::cout << "[INFO]: Done @ " << std::ctime(&now_time);
 }
 
 #ifndef __CINT__

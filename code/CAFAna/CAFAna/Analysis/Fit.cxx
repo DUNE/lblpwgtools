@@ -168,8 +168,9 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim &)*this);
   }
 
-  if (verb == Verbosity::kQuiet)
+  if (verb == Verbosity::kQuiet) {
     mnMin->SetPrintLevel(0);
+  }
 
   if (!mnMin->Minimize()) {
     std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
@@ -183,12 +184,12 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
   }
 
   if (fPrec & kIncludeHesse) {
-    std::cout << "It's Hesse o'clock" << std::endl;
+    std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
     mnMin->Hesse();
   }
 
   if (fPrec & kIncludeMinos) {
-    std::cout << "It's minos time" << std::endl;
+    // std::cout << "It's minos time" << std::endl;
     fTempMinosErrors.clear();
     for (uint i = 0; i < mnMin->NDim(); ++i) {
       double errLow = 0, errHigh = 0;
@@ -326,14 +327,14 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
   if (fVerb == kVerbose) {
     fBeginTP = std::chrono::system_clock::now();
     fLastTP = fBeginTP;
-    std::cout << "Finding best fit for";
-    for (const IFitVar *v : fVars)
-      std::cout << " " << v->ShortName();
-    for (const ISyst *s : fSysts)
-      std::cout << " " << s->ShortName();
-    if (fSupportsDerivatives)
-      std::cout << " using analytic derivatives";
-    std::cout << "..." << std::endl;
+    // std::cout << "[FIT]: Finding best fit for";
+    // for (const IFitVar *v : fVars)
+    //   std::cout << " " << v->ShortName();
+    // for (const ISyst *s : fSysts)
+    //   std::cout << " " << s->ShortName();
+    // if (fSupportsDerivatives)
+    //   std::cout << " using analytic derivatives";
+    // std::cout << "\n" << std::endl;
   }
 
   // Do all the actual work. This wrapper function is just so we can have
@@ -341,16 +342,19 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
   const double chi = FitHelper(seed, bestSysts, seedPts, systSeedPts, verb);
 
   if (fVerb == kVerbose) {
-    std::cout << "Best fit";
+    std::cout << "[FIT]: Best fit:\n";
     for (const IFitVar *v : fVars) {
-      std::cout << ", " << v->ShortName() << " = " << v->GetValue(seed);
+      std::cout << "\t" << v->ShortName() << " = " << v->GetValue(seed)
+                << std::endl;
     }
     for (const ISyst *s : fSysts) {
-      std::cout << ", " << s->ShortName() << " = " << bestSysts.GetShift(s);
+      std::cout << "\t" << s->ShortName() << " = " << bestSysts.GetShift(s)
+                << std::endl;
     }
-    std::cout << ", LL = " << chi << std::endl;
+    std::cout << "[FIT]: What up in the LHood = " << chi << std::endl;
 
-    std::cout << "  found with " << fNEval << " evaluations of the likelihood";
+    std::cout << "\tfound with " << seedPts.size() << " osc seeds and "
+              << fNEval << " evaluations of the likelihood";
     if (fNEvalFiniteDiff > 0)
       std::cout << " (" << fNEvalFiniteDiff
                 << " to evaluate gradients numerically)";
@@ -390,19 +394,19 @@ double Fitter::DoEval(const double *pars) const {
     penalty += fSysts[j]->Penalty(pars[fVars.size() + j]);
   }
 
-  if ((fVerb == kVerbose) && !(fNEval % 1000)) {
+  if ((fVerb == kVerbose) && !(fNEval % 10000)) {
 
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
-    std::cout << fNEval << "("
+
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+
+    std::cout << "[FIT]: NEval: " << fNEval
+              << ", LH: {samp: " << fExpt->ChiSq(fCalc, fShifts)
+              << ", pen: " << penalty << "}\n\tT += "
               << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
                      .count()
-              << " s, Total: "
-              << std::chrono::duration_cast<std::chrono::seconds>(now -
-                                                                  fBeginTP)
-                     .count()
-              << " s): EXPT chi2 = " << fExpt->ChiSq(fCalc, fShifts)
-              << "; penalty = " << penalty << std::endl;
+              << " s @ " << std::ctime(&now_time);
     fLastTP = now;
   }
   return fExpt->ChiSq(fCalc, fShifts) + penalty;
