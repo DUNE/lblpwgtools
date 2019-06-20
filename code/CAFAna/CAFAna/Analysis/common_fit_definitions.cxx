@@ -1022,7 +1022,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
 #ifdef USE_PREDINTERP_OMP
   if (omp_get_max_threads() > 4) {
-    std::cout << "[INFO]: Cannot run with OMP_NUM_THREADS > 4" << std::endl;
+    std::cerr << "[INFO]: Cannot run with OMP_NUM_THREADS > 4" << std::endl;
     abort();
   }
 #endif
@@ -1058,7 +1058,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static PredictionInterp &predNDNumuRHC = *interp_list[5].release();
   if (first_load) {
     static auto end_load = std::chrono::system_clock::now();
-    std::cout << "[LOAD]: Done in "
+    std::cerr << "[LOAD]: Done in "
               << std::chrono::duration_cast<std::chrono::seconds>(end_load -
                                                                   start_load)
                      .count()
@@ -1315,7 +1315,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
-  std::cerr << "[FIT]: Finished fit in "
+  std::cout << "[FIT]: Finished fit in "
             << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                 start_fit)
                    .count()
