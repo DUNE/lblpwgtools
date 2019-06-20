@@ -1,5 +1,7 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+using namespace ana;
+
 void bin_splines(std::string stateFname="common_state_mcc11v3.root",
 		 std::string outputFname="bin_splines_mcc11v3.root"){
   
