@@ -42,7 +42,7 @@ namespace ana
 
     const std::vector<Seed>& GetSeeds() const {return fSeeds;}
 
-    size_t size() { return fSeeds.size(); }
+    size_t size() const { return fSeeds.size(); }
   protected:
     std::vector<Seed> fSeeds;
   };
