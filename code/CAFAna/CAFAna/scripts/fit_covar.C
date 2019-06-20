@@ -10,7 +10,7 @@ char const *def_fakeDataShift = "";
 char const *def_penaltyString = "nopen";
 int const def_hie = 1;
 char const *def_asimov_set = "0";
-char const *def_oscVarString = "th13:deltapi:th23:dmsq32";
+char const *def_oscVarString = "alloscvars";
 
 void fit_covar(std::string stateFname = def_stateFname,
                std::string outputFname = def_outputFname,
