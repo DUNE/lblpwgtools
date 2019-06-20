@@ -144,8 +144,16 @@ else
     fi
   fi
 
+  if [ -z "${BOOST_LIB}" ]; then
+    if [ -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so* ]; then
+      export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
+    else
+      echo "[ERROR]: Not using UPS, but couldn't find system boost libraries and BOOST_LIB wasn't defined in the environment."
+      exit 1
+    fi
+  fi
+
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL}
- # -DCMAKE_CXX_COMPILER=$(which icpc) -DCMAKE_C_COMPILER=$(which icc) -DCMAKE_CXX_FLAGS="-axMIC-AVX512,AVX"
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB}
 make install -j ${CORES}

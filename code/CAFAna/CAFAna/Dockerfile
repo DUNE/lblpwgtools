@@ -1,13 +1,12 @@
 # Container for CAFAna
 
-# Start with latest fedora
-FROM fedora:latest
+# Start with latest debian slim
+FROM debian:stretch-slim
 
 ARG N_CORE=8
 
-RUN yum install -y make automake gcc gcc-c++ kernel-devel boost-devel wget git tar subversion cmake gfortran
+RUN apt update && apt install -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python
 ENV BOOST_INC=/usr/include
-
 
 # CLHEP
 RUN mkdir -p /opt/clhep-src
@@ -48,8 +47,6 @@ ENV SHLIB_PATH /usr/local/lib
 ENV CMAKE_PREFIX_PATH /usr/local
 ENV ROOTSYS /usr/local
 
-RUN yum install -y gsl-devel
-
 # CAFAna
 RUN mkdir -p /opt/CAFAna-src
 WORKDIR /opt/CAFAna-src/
@@ -66,7 +63,7 @@ RUN svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilit
 WORKDIR /opt/CAFAna-build/Ext/OscLib/func/
 RUN sed -i "s/array_wrapper.hpp/array.hpp/g" /opt/CAFAna-build/Ext/OscLib/func/OscCalculatorGeneral.cxx
 WORKDIR /opt/CAFAna-build/
-RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=RELEASE -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib
+RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=DEBUG -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib
 RUN make -j ${N_CORE}
 RUN make install -j ${N_CORE}
 WORKDIR /opt/
@@ -77,10 +74,9 @@ ENV LD_LIBRARY_PATH "/opt/CAFAna/lib:${LD_LIBRARY_PATH}"
 ENV CAFANA /opt/CAFAna
 
 #Get rid of everything we don't need
-RUN yum remove -y make automake gcc gcc-c++ boost-devel wget git tar subversion cmake gfortran kernel-devel
-RUN yum install -y gsl libstdc++-devel
-RUN yum autoremove -y
-RUN yum clean all -y
+#RUN apt remove -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python
+#RUN apt install -y libgsl2 libstdc++-6-dev
+#RUN apt autoremove -y --purge &&  apt clean
 
 # Tidy up some stuff ROOT installs needlessly
 RUN rm -rf /usr/local/{test,tutorials,README}
@@ -89,5 +85,5 @@ ADD statefiles/*.root /statefiles/
 
 WORKDIR /
 
-ENTRYPOINT ["/usr/bin/bash"]
+ENTRYPOINT ["/bin/bash"]
 CMD []
