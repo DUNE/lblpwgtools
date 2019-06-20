@@ -1,4 +1,6 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "spec_hists_mcc11v3.root";

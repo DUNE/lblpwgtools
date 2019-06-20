@@ -1,4 +1,4 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 #include "TDecompChol.h"
 #include "TVector.h"
 #include <numeric>

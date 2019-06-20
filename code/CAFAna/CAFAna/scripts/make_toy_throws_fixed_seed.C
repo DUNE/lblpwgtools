@@ -8,7 +8,6 @@ int main(int argc, char const *argv[]) {
   gROOT->SetMustClean(false);
 
   gRNGSeed = atoi(argv[1]);
-  std::cout << "SEED: " << gRNGSeed << std::endl;
 
   argc--;
   char const **argv2 = &argv[1];

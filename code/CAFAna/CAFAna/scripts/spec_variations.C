@@ -1,4 +1,4 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 void spec_variations(std::string stateFname="common_state_mcc11v3.root",
 		      std::string outputFname="spec_validation_hists_mcc11v3.root"){

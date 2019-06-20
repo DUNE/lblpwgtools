@@ -1,4 +1,6 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
                      std::string outputFname = "cpv_sens_ndfd_nosyst.root",

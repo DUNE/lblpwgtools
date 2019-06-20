@@ -1,4 +1,4 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 std::string stateFname  = "common_state_ndfd_xsecflux.root";
 std::string outputFname = "validation_hists.root";

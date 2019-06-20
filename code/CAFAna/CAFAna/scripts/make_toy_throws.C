@@ -1,6 +1,8 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CheckPointHelper.h"
+#include "CAFAna/Analysis/CheckPointHelper.h"
+
+using namespace ana;
 
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "throws_ndfd_nosyst.root";
@@ -25,6 +27,18 @@ void make_toy_throws(std::string stateFname = def_stateFname,
                      std::string oscVarString = def_oscVarString) {
 
   gROOT->SetBatch(1);
+
+  if (gRNGSeed == 0) { // if we have a time based seed its still useful for
+                       // things to be reproducible, so use the time to seed a
+                       // new RNG seed and spin the wheels for 100k throws;
+    gRandom->SetSeed(0);
+    for (size_t i = 0; i < 1E5; ++i) {
+      gRNGSeed = gRandom->Integer(std::numeric_limits<unsigned>::max());
+    }
+  }
+
+  std::cout << "gRNGSeed: " << gRNGSeed << std::endl;
+
   gRandom->SetSeed(gRNGSeed);
 
   CheckPointHelper chk;

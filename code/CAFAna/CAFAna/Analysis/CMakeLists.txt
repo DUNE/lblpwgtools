@@ -2,19 +2,23 @@ set(Analysis_implementation_files
   Calcs.cxx
   CalcsNuFit.cxx
   Fit.cxx
- GradientDescent.cxx
+  GradientDescent.cxx
   Plots.cxx
   Resolution.cxx
   Surface.cxx
   # TDRLoaders.cxx
   SeedList.cxx
-  RefineSeeds.cxx)
+  RefineSeeds.cxx
+  AnalysisBinnings.cxx
+  AnalysisVars.cxx
+  common_fit_definitions.cxx
+  AnalysisVersion.cxx)
 
 set(Analysis_header_files
   Calcs.h
   CalcsNuFit.h
   Fit.h
- GradientDescent.h
+  GradientDescent.h
   Plots.h
   Resolution.h
   Surface.h
@@ -22,7 +26,14 @@ set(Analysis_header_files
   Exposures.h
   Style.h
   SeedList.h
-  RefineSeeds.h)
+  RefineSeeds.h
+  AnalysisBinnings.h
+  AnalysisDialGroups.h
+  AnalysisVars.h
+  common_fit_definitions.h
+  AnalysisVersion.h
+  ExtraHeaders.h
+  CheckPointHelper.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Analysis_implementation_files PRISMExtrapolator.cxx)
