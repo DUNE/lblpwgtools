@@ -37,7 +37,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     }
   }
 
-  std::cout << "gRNGSeed: " << gRNGSeed << std::endl;
+  std::cerr << "[RNG]: gRNGSeed = " << gRNGSeed << std::endl;
 
   gRandom->SetSeed(gRNGSeed);
 
@@ -59,6 +59,39 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   if (sampleString.find("fd") != std::string::npos) {
     oscVars = GetOscVars(oscVarString, hie);
+
+    std::cerr << "[FIT]: Osc Parameters: \n\t";
+    for (auto s : oscVars) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
+  std::vector<const ISyst *> flux_systs = systlist;
+  KeepSysts(flux_systs, GetListOfSysts("nodet:noxsec"));
+  if (flux_systs.size()) {
+    std::cerr << "[FIT]: Flux Parameters: \n\t";
+    for (auto s : flux_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
+  std::vector<const ISyst *> xsec_systs = systlist;
+  KeepSysts(xsec_systs, GetListOfSysts("noflux:nodet"));
+  if (xsec_systs.size()) {
+    std::cerr << "[FIT]: XSec Parameters: \n\t";
+    for (auto s : xsec_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
+  }
+  std::vector<const ISyst *> det_systs = systlist;
+  KeepSysts(det_systs, GetListOfSysts("noflux:noxsec"));
+  if (det_systs.size()) {
+    std::cerr << "[FIT]: Det Parameters: \n\t";
+    for (auto s : det_systs) {
+      std::cerr << s->ShortName() << " ";
+    }
+    std::cerr << std::endl;
   }
 
   // Deal with seeds once
@@ -77,9 +110,18 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   std::string *CLIArgs = new std::string(CLI_ss.str());
   pftree.meta_tree->Branch("CLI", &CLIArgs);
 
+  std::cerr << "[CLI]: " << *CLIArgs << std::endl;
+
+  std::chrono::time_point<std::chrono::system_clock> now;
+  std::time_t now_time;
+
   for (int i = 0; i < nthrows; ++i) {
 
-    std::cout << "Starting throw " << i << std::endl;
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+
+    std::cerr << "[THW]: Starting throw " << i << " @ "
+              << std::ctime(&now_time);
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
@@ -91,29 +133,11 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     else
       fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-#ifdef PROFILE_COUTS
-    std::cout << "PROFILE: Throw " << i << " start: " << std::endl;
-    std::cout << "PROFILE: \tL: " << fakeThrowOsc->GetL() << std::endl;
-    std::cout << "PROFILE: \tRho: " << fakeThrowOsc->GetRho() << std::endl;
-    std::cout << "PROFILE: \tDmsq21: " << fakeThrowOsc->GetDmsq21()
-              << std::endl;
-    std::cout << "PROFILE: \tDmsq32: " << fakeThrowOsc->GetDmsq32()
-              << std::endl;
-    std::cout << "PROFILE: \tTh12: " << fakeThrowOsc->GetTh12() << std::endl;
-    std::cout << "PROFILE: \tTh13: " << fakeThrowOsc->GetTh13() << std::endl;
-    std::cout << "PROFILE: \tTh23: " << fakeThrowOsc->GetTh23() << std::endl;
-    std::cout << "PROFILE: \tdCP: " << fakeThrowOsc->GetdCP() << std::endl;
-#endif
-
     // Now deal with systematics
     if (fakenuis_throw and not central_throw) {
       for (auto s : systlist) {
         fakeThrowSyst.SetShift(
             s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
-#ifdef PROFILE_COUTS
-        std::cout << "PROFILE: \t" << s->ShortName() << ": "
-                  << fakeThrowSyst.GetShift(s) << std::endl;
-#endif
       }
     } else
       fakeThrowSyst = kNoShift;
@@ -144,24 +168,19 @@ void make_toy_throws(std::string stateFname = def_stateFname,
                     stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
                     oscSeeds, penalty, fitStrategy, nullptr, &pftree);
 
-#ifdef PROFILE_COUTS
-    size_t NRelParams = oscVars.size() + systlist.size();
-    std::cout << "PROFILE: Post fit values: " << std::endl;
-    for (size_t pn_it = 0; pn_it < NRelParams; ++pn_it) {
-      std::cout << "PROFILE: \t" << pftree.fParamNames->at(pn_it) << ": "
-                << pftree.fPostFitValues->at(pn_it) << std::endl;
-    }
-#endif
-
     pftree.Fill();
-    std::cout << "Throw " << i << ": found minimum chi2 = " << thischisq
-              << std::endl;
+
+    now = std::chrono::system_clock::now();
+    now_time = std::chrono::system_clock::to_time_t(now);
+
+    std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
+              << " @ " << std::ctime(&now_time);
     // Done with this systematic throw
     delete penalty;
 
     if (chk.ShouldCheckpoint()) {
       chk.WaitForSemaphore();
-      std::cout << "[INFO]: Writing output file..." << std::endl;
+      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
       TFile fout(outputFname.c_str(), "RECREATE");
       pftree.Write();
@@ -173,15 +192,21 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     }
 
     if (!chk.IsSafeToStartNewUnit()) {
-      std::cout
-          << "[INFO]: Do not have time to finish another fit, exiting early."
+      std::cerr
+          << "[CHK]: Do not have time to finish another fit, exiting early."
           << std::endl;
       break;
     }
   }
 
+  std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
   TFile fout(outputFname.c_str(), "RECREATE");
   pftree.Write();
+
+  now = std::chrono::system_clock::now();
+  now_time = std::chrono::system_clock::to_time_t(now);
+
+  std::cout << "[INFO]: Done @ " << std::ctime(&now_time);
 }
 
 #ifndef NO_MTT_MAIN

@@ -52,6 +52,9 @@ GetOscVars(std::string oscVarString = "alloscvars", int hie = 0, int oct = 0);
 void KeepSysts(std::vector<const ana::ISyst *> &systlist,
                std::vector<std::string> const &systsToInclude);
 
+void KeepSysts(std::vector<const ana::ISyst *> &systlist,
+               std::vector<const ana::ISyst *> const &systsToInclude);
+
 void RemoveSysts(std::vector<const ana::ISyst *> &systlist,
                  std::vector<std::string> const &namesToRemove);
 
