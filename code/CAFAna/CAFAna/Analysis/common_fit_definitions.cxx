@@ -431,7 +431,7 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
     superorder.emplace_back(s);
   }
-  for (auto &s : GetListOfSysts("onlyfakedata")) {
+  for (auto &s : GetListOfSysts("fakedata")) {
     superorder.emplace_back(s);
   }
   std::vector<const ISyst *> retlist;
