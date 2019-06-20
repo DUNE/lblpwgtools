@@ -21,18 +21,8 @@ foreach(APP ${APPS})
     OscLibFunc
     UtilitiesFunc)
 
-  if(NOT "${EXTERNAL_LINK_DIRS}" STREQUAL "")
-    BuildFlagString(EXTERNAL_LINK_DIRS_STR "-L" ${EXTERNAL_LINK_DIRS} ${ROOT_LIBDIR})
-    set_target_properties(${APP} PROPERTIES LINK_FLAGS ${EXTERNAL_LINK_DIRS_STR})
-  endif()
-
-  if(DEFINED USE_OPENMP AND USE_OPENMP)
-    BuildFlagString(EXTERNAL_LIBS_CAFBUILD "-l" Minuit2 ${ROOT_LIBS} CLHEP gomp)
-  else()
-    BuildFlagString(EXTERNAL_LIBS_CAFBUILD "-l" Minuit2 ${ROOT_LIBS} CLHEP)
-  endif()
-  
-  target_link_libraries(${APP} ${EXTERNAL_LIBS_CAFBUILD})
+    target_link_libraries(${APP} ${CAFANA_LINK_DIRS})
+    target_link_libraries(${APP} ${CAFANA_DEPEND_LIBS})
 
   install(TARGETS ${APP} DESTINATION bin)
 endforeach()

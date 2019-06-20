@@ -222,14 +222,6 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     if (useND && useNueOnE) {
       systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
     }
-
-    if (GetAnaVersion() == kV3) {
-      RemoveSysts(systlist,
-                  {"UncorrFDTotSqrt", "UncorrFDTotInvSqrt", "UncorrFDHadSqrt",
-                   "UncorrFDHadInvSqrt", "UncorrFDMuSqrt", "UncorrFDMuInvSqrt",
-                   "UncorrFDNSqrt", "UncorrFDNInvSqrt", "UncorrFDEMSqrt",
-                   "UncorrFDEMInvSqrt", "ChargedHadUncorrFD"});
-    }
   }
 
   if (xsecsyst) {
@@ -266,10 +258,11 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
 
   // Now defaults to true!
   bool detsyst = true;
-  bool fluxsyst_Nov17 = true;
-  bool fluxsyst_CDR = false;
+  bool fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
+  bool fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
   bool xsecsyst = true;
-  int NFluxSysts = NFluxParametersToAddToStatefile;
+  int NFluxSysts =
+      (GetAnaVersion() == kV3) ? 10 : NFluxParametersToAddToStatefile;
 
   // If you find an argument in the form list:name1:name2:name3 etc etc, keep
   // only those systematics This is pretty much a magic option to allow single
@@ -306,22 +299,26 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
   for (auto syst : systs) {
     if (syst == "allsyst") {
       xsecsyst = true;
-      fluxsyst_Nov17 = true;
+      fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
+      fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
       detsyst = true;
     }
 
     if (syst == "nosyst") {
       xsecsyst = false;
       fluxsyst_Nov17 = false;
+      fluxsyst_CDR = false;
       detsyst = false;
     }
 
     // Now we're getting a bit funky as these options now conflict.
     // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
-    if (syst == "nodet")
+    if (syst == "nodet") {
       detsyst = false;
-    if (syst == "noflux")
+    }
+    if (syst == "noflux") {
       fluxsyst_Nov17 = false;
+    }
     if (syst == "cdrflux") {
       fluxsyst_CDR = true;
       fluxsyst_Nov17 = false;
@@ -384,6 +381,14 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     // If not, remove as if it's a single parameter instruction
     else
       RemoveSysts(namedList, {syst.erase(0, 2)});
+  }
+
+  if (GetAnaVersion() == kV3) {
+    RemoveSysts(namedList,
+                {"UncorrFDTotSqrt", "UncorrFDTotInvSqrt", "UncorrFDHadSqrt",
+                 "UncorrFDHadInvSqrt", "UncorrFDMuSqrt", "UncorrFDMuInvSqrt",
+                 "UncorrFDNSqrt", "UncorrFDNInvSqrt", "UncorrFDEMSqrt",
+                 "UncorrFDEMInvSqrt", "ChargedHadUncorrFD"});
   }
 
   // Now return the list

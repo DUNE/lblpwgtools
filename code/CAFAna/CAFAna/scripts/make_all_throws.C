@@ -296,6 +296,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     delete fakeThrowOsc;
 
     if (chk.ShouldCheckpoint()) {
+      chk.WaitForSemaphore();
       std::cout << "[INFO]: Writing output file..." << std::endl;
       fout->Write();
       chk.NotifyCheckpoint();

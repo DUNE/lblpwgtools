@@ -35,11 +35,8 @@ endif()
 
 SET(BUILD_DEBUG_MSGS TRUE)
 include(${CMAKE_SOURCE_DIR}/cmake/cmessage.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/SupportSourceCheck.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/parseConfigApp.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/StringAndListUtils.cmake)
-
-include(${CMAKE_SOURCE_DIR}/cmake/eigenSetup.cmake)
 
 if(USED_UPS STREQUAL "")
   set(USED_UPS "0")
@@ -57,10 +54,10 @@ cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 ################################################################################
 
 ##################################  ROOT  ######################################
-set(USE_MINIMIZER 1)
 include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
-
-#Want this after fhiclcpp which will add the install directory
+############################## GSL/BOOST/CLEHP #################################
+include(${CMAKE_SOURCE_DIR}/cmake/ExternalLibrariesCheck.cmake)
+################################## COMPILER ####################################
 include_directories(
   ${SRC_ROOT_PARENT}
   ${CMAKE_BINARY_DIR}/Ext
@@ -68,13 +65,7 @@ include_directories(
 
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 
-if(DEFINED USE_EIGEN AND USE_EIGEN)
-  LIST(APPEND EXTRA_CXX_FLAGS -DCAF_USE_PRISM)
-endif()
-
-################################## COMPILER ####################################
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
-
 ################################################################################
 
 include(${CMAKE_SOURCE_DIR}/cmake/NOvAExternals.cmake)

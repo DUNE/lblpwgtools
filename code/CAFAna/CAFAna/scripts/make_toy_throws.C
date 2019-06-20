@@ -68,11 +68,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   }
 
-  // Setup output file
-  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
-
   FitTreeBlob pftree("fit_info", "param_info");
-  pftree.SetDirectory(fout);
 
   std::stringstream CLI_ss("");
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
@@ -164,8 +160,15 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     delete penalty;
 
     if (chk.ShouldCheckpoint()) {
+      chk.WaitForSemaphore();
       std::cout << "[INFO]: Writing output file..." << std::endl;
-      fout->Write();
+      TDirectory *odir = gDirectory;
+      TFile fout(outputFname.c_str(), "RECREATE");
+      pftree.Write();
+      pftree.SetDirectory(nullptr);
+      if (odir) {
+        odir->cd();
+      }
       chk.NotifyCheckpoint();
     }
 
@@ -177,9 +180,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     }
   }
 
-  // Now close the file
-  fout->Write();
-  fout->Close();
+  TFile fout(outputFname.c_str(), "RECREATE");
+  pftree.Write();
 }
 
 #ifndef NO_MTT_MAIN

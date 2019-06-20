@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 AnaVersion GetAnaVersion() {
-  AnaVersion AnaV = kV4;
+  static AnaVersion AnaV = kV4;
   static bool first = true;
   if (first && getenv("CAFANA_ANALYSIS_VERSION")) {
     int v = atoi(getenv("CAFANA_ANALYSIS_VERSION"));

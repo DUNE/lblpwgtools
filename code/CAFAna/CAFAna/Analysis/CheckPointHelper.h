@@ -1,7 +1,10 @@
 #pragma once
 
+#include "boost/filesystem.hpp"
+
 #include <chrono>
 #include <cstdlib>
+#include <thread>
 
 class CheckPointHelper {
 
@@ -12,10 +15,13 @@ class CheckPointHelper {
   std::chrono::minutes fSafeUnitDuration;
   std::chrono::minutes fCheckpointDuration;
 
+  boost::filesystem::path fSemaphorePath;
+  bool fUsingSemaphore;
+
 public:
   CheckPointHelper()
       : fBegin(std::chrono::system_clock::now()), fSafeUnitDuration(0),
-        fCheckpointDuration(60) {
+        fCheckpointDuration(60), fUsingSemaphore(false) {
 
     char const *total_duration_m = getenv("CAFANA_TOTALDURATION_MIN");
     char const *safe_unit_duration_m = getenv("CAFANA_SAFEUNITDURATION_MIN");
@@ -35,6 +41,13 @@ public:
                 << fCheckpointDuration.count() << " minutes." << std::endl;
     }
 
+    char const *chk_semaphore = getenv("CAFANA_CHK_SEMAPHORE");
+    if (chk_semaphore) {
+      fSemaphorePath = boost::filesystem::path(chk_semaphore);
+      fUsingSemaphore = true;
+    }
+
+    // Start the clock
     NotifyCheckpoint();
   }
 
@@ -62,6 +75,19 @@ public:
     bool sc = ((std::chrono::system_clock::now() - fLastCheckPoint) >=
                fCheckpointDuration);
     return sc;
+  }
+
+  void WaitForSemaphore() {
+    if (!fUsingSemaphore) {
+      return;
+    }
+
+    while (boost::filesystem::exists(fSemaphorePath)) {
+      std::cout << "[CHK]: Hadding Semaphore exists, sleeping for 30s"
+                << std::endl;
+      using namespace std::chrono_literals;
+      std::this_thread::sleep_for(30s);
+    }
   }
 
   void NotifyCheckpoint() {
