@@ -15,6 +15,17 @@ enum FitSyst {
   kUsedAsFakeData
 };
 
+enum XSecCategg {
+  kQELike,
+  kRES,
+  kDIS,
+  kFSI,
+  kRatios,
+  kNC,
+  kOther,
+  kNahMate
+};
+
 enum ExtrapolatedSyst { kExtrapolated, kContinuous };
 
 static std::pair<double, double> const kStandardRange{-3, 3};
@@ -25,87 +36,88 @@ struct XSecDialDescriptor {
   FitSyst IsFitSyst;
   ExtrapolatedSyst IsExtrapolateOffToOnSyst;
   std::pair<double, double> FitLimits;
+  XSecCategg Categg;
 };
 
 static std::vector<XSecDialDescriptor> const XSecSystDials = {
-    {"MaCCQE", kFitSyst, kContinuous, kStandardRange},
-    {"VecFFCCQEshape", kFitSyst, kExtrapolated, kStandardRange},
-    {"MaNCEL", kFitSyst, kContinuous, kStandardRange},
-    {"EtaNCEL", kRemovedOverconstraint, kContinuous, kStandardRange},
-    {"MaCCRES", kFitSyst, kContinuous, kStandardRange},
-    {"MvCCRES", kFitSyst, kContinuous, kStandardRange},
-    {"MaNCRES", kFitSyst, kContinuous, kStandardRange},
-    {"MvNCRES", kFitSyst, kContinuous, kStandardRange},
-    {"RDecBR1gamma", kRemovedOverconstraint, kContinuous, {-2, 3}},
-    {"RDecBR1eta", kRemovedOverconstraint, kContinuous, {-2, 3}},
-    {"Theta_Delta2Npi", kFitSyst, kExtrapolated, kStandardRange},
-    {"AhtBY", kFitSyst, kContinuous, kStandardRange},
-    {"BhtBY", kFitSyst, kContinuous, kStandardRange},
-    {"CV1uBY", kFitSyst, kContinuous, kStandardRange},
-    {"CV2uBY", kFitSyst, kContinuous, kStandardRange},
-    {"FormZone", kRemovedOddResponse, kContinuous, {-2, 2}},
-    {"MFP_pi", kRemovedOddResponse, kContinuous, {-2, 2}},
-    {"FrCEx_pi", kFitSyst, kContinuous, {-2, 2}},
-    {"FrElas_pi", kFitSyst, kContinuous, {-2, 2}},
-    {"FrInel_pi", kFitSyst, kContinuous, {-2, 2}},
-    {"FrAbs_pi", kFitSyst, kContinuous, {-2, 2}},
-    {"FrPiProd_pi", kFitSyst, kContinuous, {-2, 2}},
-    {"MFP_N", kRemovedOddResponse, kContinuous, {-2, 2}},
-    {"FrCEx_N", kFitSyst, kContinuous, {-2, 2}},
-    {"FrElas_N", kFitSyst, kContinuous, {-2, 2}},
-    {"FrInel_N", kFitSyst, kContinuous, {-2, 2}},
-    {"FrAbs_N", kFitSyst, kContinuous, {-2, 2}},
-    {"FrPiProd_N", kFitSyst, kContinuous, {-2, 2}},
-    {"CCQEPauliSupViaKF", kFitSyst, kExtrapolated, kStandardRange},
+    {"MaCCQE", kFitSyst, kContinuous, kStandardRange, kQELike},
+    {"VecFFCCQEshape", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"MaNCEL", kFitSyst, kContinuous, kStandardRange, kNC},
+    {"EtaNCEL", kRemovedOverconstraint, kContinuous, kStandardRange, kNC},
+    {"MaCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
+    {"MvCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
+    {"MaNCRES", kFitSyst, kContinuous, kStandardRange, kNC},
+    {"MvNCRES", kFitSyst, kContinuous, kStandardRange, kNC},
+    {"RDecBR1gamma", kRemovedOverconstraint, kContinuous, {-2, 3}, kRES},
+    {"RDecBR1eta", kRemovedOverconstraint, kContinuous, {-2, 3}, kRES},
+    {"Theta_Delta2Npi", kFitSyst, kExtrapolated, kStandardRange, kDIS},
+    {"AhtBY", kFitSyst, kContinuous, kStandardRange, kDIS},
+    {"BhtBY", kFitSyst, kContinuous, kStandardRange, kDIS},
+    {"CV1uBY", kFitSyst, kContinuous, kStandardRange, kDIS},
+    {"CV2uBY", kFitSyst, kContinuous, kStandardRange, kDIS},
+    {"FormZone", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
+    {"MFP_pi", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
+    {"FrCEx_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrElas_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrInel_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrAbs_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrPiProd_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"MFP_N", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
+    {"FrCEx_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrElas_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrInel_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrAbs_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"FrPiProd_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
+    {"CCQEPauliSupViaKF", kFitSyst, kExtrapolated, kStandardRange, kQELike},
     // Must be here to fill branch in SpectrumLoader but shouldn't be used as
     // the dials below separate out the responses into multiple fake data sets.
-    {"Mnv2p2hGaussEnhancement", kRemovedOther, kContinuous, {0, 0}},
+    {"Mnv2p2hGaussEnhancement", kRemovedOther, kContinuous, {0, 0}, kQELike},
     {"Mnv2p2hGaussEnhancement_NN", kUsedAsFakeData, kContinuous,
-     kFakeDataRange},
+     kFakeDataRange, kQELike},
     {"Mnv2p2hGaussEnhancement_2p2h", kUsedAsFakeData, kContinuous,
-     kFakeDataRange},
+     kFakeDataRange, kQELike},
     {"Mnv2p2hGaussEnhancement_1p1h", kUsedAsFakeData, kContinuous,
-     kFakeDataRange},
-    {"MKSPP_ReWeight", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"E2p2h_A_nu", kFitSyst, kExtrapolated, kStandardRange},
-    {"E2p2h_B_nu", kFitSyst, kExtrapolated, kStandardRange},
-    {"E2p2h_A_nubar", kFitSyst, kExtrapolated, kStandardRange},
-    {"E2p2h_B_nubar", kFitSyst, kExtrapolated, kStandardRange},
-    {"NR_nu_n_CC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_n_CC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_p_CC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_p_CC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_np_CC_1Pi", kFitSyst, kContinuous, kStandardRange},
-    {"NR_nu_n_NC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_n_NC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_n_NC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_p_NC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_p_NC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nu_p_NC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_CC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_CC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_CC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_CC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_CC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_CC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_NC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_NC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_n_NC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_NC_1Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_NC_2Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"NR_nubar_p_NC_3Pi", kFitSyst, kContinuous, {-2, 3}},
-    {"BeRPA_A", kFitSyst, kContinuous, kStandardRange},
-    {"BeRPA_B", kFitSyst, kContinuous, kStandardRange},
-    {"BeRPA_D", kFitSyst, kContinuous, kStandardRange},
-    {"BeRPA_E", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"C12ToAr40_2p2hScaling_nu", kFitSyst, kExtrapolated, kStandardRange},
-    {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange},
-    {"nuenuebar_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
-    {"nuenumu_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange},
-    {"SPPLowQ2Suppression", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"MissingProtonFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange},
-    {"NuWroReweightFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange}};
+     kFakeDataRange, kQELike},
+    {"MKSPP_ReWeight", kUsedAsFakeData, kContinuous, kFakeDataRange, kRES},
+    {"E2p2h_A_nu", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"E2p2h_B_nu", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"E2p2h_A_nubar", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"E2p2h_B_nubar", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"NR_nu_n_CC_2Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nu_n_CC_3Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nu_p_CC_2Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nu_p_CC_3Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nu_np_CC_1Pi", kFitSyst, kContinuous, kStandardRange, kDIS},
+    {"NR_nu_n_NC_1Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nu_n_NC_2Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nu_n_NC_3Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nu_p_NC_1Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nu_p_NC_2Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nu_p_NC_3Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_n_CC_1Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_n_CC_2Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_n_CC_3Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_p_CC_1Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_p_CC_2Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_p_CC_3Pi", kFitSyst, kContinuous, {-2, 3}, kDIS},
+    {"NR_nubar_n_NC_1Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_n_NC_2Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_n_NC_3Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_p_NC_1Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_p_NC_2Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"NR_nubar_p_NC_3Pi", kFitSyst, kContinuous, {-2, 3}, kNC},
+    {"BeRPA_A", kFitSyst, kContinuous, kStandardRange, kQELike},
+    {"BeRPA_B", kFitSyst, kContinuous, kStandardRange, kQELike},
+    {"BeRPA_D", kFitSyst, kContinuous, kStandardRange, kQELike},
+    {"BeRPA_E", kUsedAsFakeData, kContinuous, kFakeDataRange, kQELike},
+    {"C12ToAr40_2p2hScaling_nu", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange, kQELike},
+    {"nuenuebar_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange, kRatios},
+    {"nuenumu_xsec_ratio", kFitSyst, kExtrapolated, kStandardRange, kRatios},
+    {"SPPLowQ2Suppression", kUsedAsFakeData, kContinuous, kFakeDataRange, kRES},
+    {"FSILikeEAvailSmearing", kUsedAsFakeData, kContinuous, kFakeDataRange, kFSI},
+    {"MissingProtonFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange, kOther},
+    {"NuWroReweightFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange, kOther}};
 
 /// All dial names that should go into a state file
 std::vector<std::string> const &GetAllXSecSystNames() {
@@ -120,6 +132,30 @@ std::vector<std::string> const &GetAllXSecSystNames() {
 
   return XSecSystNames;
 }
+
+///\\\///\\\///\\\/// Get a specific list
+  std::vector<std::string> GetXSecSystNames(std::string inputCategg) {
+  std::vector<std::string> XSecSystNames;
+  
+  XSecCategg thisCategg = kNahMate;
+  if (inputCategg == "QELike") thisCategg = kQELike;
+  if (inputCategg == "RES") thisCategg = kRES;
+  if (inputCategg == "DIS") thisCategg = kDIS;
+  if (inputCategg == "FSI") thisCategg = kFSI;
+  if (inputCategg == "Ratios") thisCategg = kRatios;
+  if (inputCategg == "NC") thisCategg = kNC;
+  if (inputCategg == "Other") thisCategg = kOther;
+
+  for (auto const &s : XSecSystDials) {
+    if (s.IsFitSyst != kFitSyst) continue;
+    if (s.Categg == thisCategg || inputCategg == "All")
+      {XSecSystNames.push_back(s.Name);} // Just for you Luke ;p
+  }
+
+  return XSecSystNames;
+}
+
+
 /// All dials used as freedoms in standard fits
 std::vector<std::string> const &GetFitSystNames() {
   static std::vector<std::string> XSecSystNames;
