@@ -120,6 +120,7 @@ AxisBlob axes = default_axes_v4;
 std::vector<std::string> input_patterns;
 bool addfakedata = true;
 bool do_no_op = false;
+unsigned nmax = 0;
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -133,6 +134,7 @@ void SayUsage(char const *argv[]) {
       << "\t-i|--input-pattern <P> : Regex pattern to search for input files.\n"
       << "\t                         Can only include pattern elements for "
          "files\n"
+      << "\t-n|--n-max <N>         : Max number of events to read.\n"
       << "\t                         and not within directory names.\n"
       << "\t                         i.e. /a/b/c/nd_[0-9]*.root\n"
       << "\t--syst-descriptor <str>: Only add dials matching the syst\n"
@@ -162,6 +164,9 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-i") ||
                (std::string(argv[opt]) == "--input-pattern")) {
       input_patterns.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-n") ||
+               (std::string(argv[opt]) == "--n-max")) {
+                 nmax = atoi(argv[++opt]);
     } else if (std::string(argv[opt]) == "--syst-descriptor") {
       syst_descriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
@@ -263,7 +268,7 @@ int main(int argc, char const *argv[]) {
 
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
-    MakePredictionInterp(&fout, sample, los, 0, axes, file_list);
+    MakePredictionInterp(&fout, sample, los, nmax, axes, file_list);
     fout.Write();
     fout.Close();
   }
