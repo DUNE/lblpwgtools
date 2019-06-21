@@ -518,6 +518,11 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     use_cv_weights = !atoi(getenv("CAFANA_IGNORE_CV_WEIGHT"));
   }
 
+  bool use_selection = true;
+  if (getenv("CAFANA_IGNORE_SELECTION")) {
+    use_selection = !atoi(getenv("CAFANA_IGNORE_SELECTION"));
+  }
+
   // Move to the save directory
   saveDir->cd();
   osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
@@ -541,10 +546,12 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                             ana::kBeam, Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
-        *axes.FDAx_numu, kPassFD_CVN_NUMU && kIsTrueFV,
+        *axes.FDAx_numu,
+        use_selection ? kPassFD_CVN_NUMU && kIsTrueFV : kIsTrueFV,
         use_cv_weights ? kCVXSecWeights : kUnweighted);
     NoExtrapPredictionGenerator genFDNue(
-        *axes.FDAx_nue, kPassFD_CVN_NUE && kIsTrueFV,
+        *axes.FDAx_nue,
+        use_selection ? kPassFD_CVN_NUE && kIsTrueFV : kIsTrueFV,
         use_cv_weights ? kCVXSecWeights : kUnweighted);
     PredictionInterp predInterpFDNumu(systlist, this_calc, genFDNumu,
                                       these_loaders);
@@ -570,7 +577,10 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
-        *axes.NDAx, (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV,
+        *axes.NDAx,
+        use_selection
+            ? (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV
+            : kIsTrueFV,
         use_cv_weights ? kCVXSecWeights : kUnweighted);
 
     PredictionInterp predInterpNDNumu(systlist, this_calc, genNDNumu,
