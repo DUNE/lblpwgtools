@@ -12,7 +12,7 @@ void spec_joint(std::string stateFname = def_stateFname,
 
   // Get the prediction interpolators
   std::vector<std::unique_ptr<PredictionInterp>> return_list =
-      GetPredictionInterps(stateFname, GetListOfSysts());
+      GetPredictionInterps(stateFname, GetListOfSysts("nosyst"));
   PredictionInterp &predInterpFDNumuFHC = *return_list[0].release();
   PredictionInterp &predInterpFDNueFHC = *return_list[1].release();
   PredictionInterp &predInterpFDNumuRHC = *return_list[2].release();

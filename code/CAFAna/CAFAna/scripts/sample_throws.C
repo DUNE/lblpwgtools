@@ -1,7 +1,14 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Systs/DUNEFluxSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
+#include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/FDRecoSysts.h"
+
 #include "TDecompChol.h"
 #include "TVector.h"
 #include <numeric>
+
+using namespace ana;
 
 int nthrows=10000;
 
@@ -206,18 +213,23 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
    	       systlist, allsystnames, trueOsc);
 
   // Try prefit subgroups
+  // This is just bad...
   std::vector<std::string> flux_list;
-  for (uint i=0; i<NFluxParametersToUse; ++i) flux_list.push_back("flux"+std::to_string(i));
+  for (uint i=0; i<NFluxParametersToAddToStatefile; ++i) flux_list.push_back("flux_Nov17_"+std::to_string(i));
   
-  // Make some combinations
-  std::vector<std::string> all_xsec_list = xsec_qe_list;
-  all_xsec_list.insert(all_xsec_list.end(), xsec_qe_list.begin(), xsec_qe_list.end());
-  all_xsec_list.insert(all_xsec_list.end(), xsec_res_list.begin(), xsec_res_list.end());
-  all_xsec_list.insert(all_xsec_list.end(), xsec_dis_list.begin(), xsec_dis_list.end());
-  all_xsec_list.insert(all_xsec_list.end(), xsec_fsi_list.begin(), xsec_fsi_list.end());
-  all_xsec_list.insert(all_xsec_list.end(), xsec_ratios_list.begin(), xsec_ratios_list.end());
-  all_xsec_list.push_back("MaNCEL"); // Woops, this one got orphaned...
+  // Make some parameter lists
+  std::vector<std::string> all_xsec_list = GetXSecSystNames();
+  std::vector<std::string> xsec_qe_list = GetXSecSystNames("QELike");
+  std::vector<std::string> xsec_res_list = GetXSecSystNames("RES");
+  std::vector<std::string> xsec_dis_list = GetXSecSystNames("DIS");
+  std::vector<std::string> xsec_fsi_list = GetXSecSystNames("FSI");
+  std::vector<std::string> xsec_nc_list = GetXSecSystNames("NC");
+  std::vector<std::string> xsec_ratios_list = GetXSecSystNames("Ratios");
 
+  std::vector<std::string> fd_det_list;
+  for (auto s : GetEnergySysts()) fd_det_list.push_back(s->ShortName());
+  for (auto s : GetFDRecoSysts()) fd_det_list.push_back(s->ShortName());
+  
   std::vector<std::string> flux_xsec_list = all_xsec_list;
   flux_xsec_list.insert(flux_xsec_list.end(), flux_list.begin(), flux_list.end());
 
@@ -242,7 +254,7 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
                systlist, xsec_res_list, trueOsc);
   
   std::cout << "Prefit FSI uncertainties..." << std::endl;
-  TDirectory* prefit_fsi_dir = fout->mkdir("prefit_fsi");
+  TDirectory* prefit_fsi_dir = fout->mkdir("prefit_xsec_fsi");
   throw_errors(stateFname, sampleString, prefit_fsi_dir, nom_vect,
                systlist, xsec_fsi_list, trueOsc);
 
@@ -250,6 +262,11 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
   TDirectory* prefit_xsec_dis_dir = fout->mkdir("prefit_xsec_dis");
   throw_errors(stateFname, sampleString, prefit_xsec_dis_dir, nom_vect,
                systlist, xsec_dis_list, trueOsc);
+  
+  std::cout << "Prefit xsec_NC uncertainties..." << std::endl;
+  TDirectory* prefit_xsec_nc_dir = fout->mkdir("prefit_xsec_nc");
+  throw_errors(stateFname, sampleString, prefit_xsec_nc_dir, nom_vect,
+               systlist, xsec_nc_list, trueOsc);
 
   std::cout << "Prefit xsec_ratios uncertainties..." << std::endl;
   TDirectory* prefit_xsec_ratios_dir = fout->mkdir("prefit_xsec_ratios");
@@ -314,7 +331,7 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
                systlist, xsec_res_list, trueOsc, dec_mat);
 
   std::cout << "Postfit FSI uncertainties..." << std::endl;
-  TDirectory* postfit_fsi_dir = fout->mkdir("postfit_fsi");
+  TDirectory* postfit_fsi_dir = fout->mkdir("postfit_xsec_fsi");
   throw_errors(stateFname, sampleString, postfit_fsi_dir, nom_vect,
                systlist, xsec_fsi_list, trueOsc, dec_mat);
 
@@ -322,6 +339,11 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
   TDirectory* postfit_xsec_dis_dir = fout->mkdir("postfit_xsec_dis");
   throw_errors(stateFname, sampleString, postfit_xsec_dis_dir, nom_vect,
                systlist, xsec_dis_list, trueOsc, dec_mat);
+  
+  std::cout << "Postfit xsec_nc uncertainties..." << std::endl;
+  TDirectory* postfit_xsec_nc_dir = fout->mkdir("postfit_xsec_nc");
+  throw_errors(stateFname, sampleString, postfit_xsec_nc_dir, nom_vect,
+               systlist, xsec_nc_list, trueOsc, dec_mat);
 
   std::cout << "Postfit xsec_ratios uncertainties..." << std::endl;
   TDirectory* postfit_xsec_ratios_dir = fout->mkdir("postfit_xsec_ratios");

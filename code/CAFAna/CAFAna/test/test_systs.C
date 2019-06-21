@@ -28,7 +28,7 @@ const Var kRecoE_ND = SIMPLEVAR(dune.Ev_reco);
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
 const HistAxis axRecoEnuNDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_ND);
 
-const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt);
+const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt);
 
 std::vector<const ISyst*> GetListOfSysts(bool nd)
 {
@@ -67,10 +67,10 @@ void test_systs(bool nd = false, bool reload = false)
 
     IPredictionGenerator* gen = 0;
     if(nd){
-      gen = new NoOscPredictionGenerator(axRecoEnuNDnumu, kPassND_FHC_NUMU, kGENIEWeights);
+      gen = new NoOscPredictionGenerator(axRecoEnuNDnumu, kPassND_FHC_NUMU, kCVXSecWeights);
     }
     else{
-      gen = new NoExtrapPredictionGenerator(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
+      gen = new NoExtrapPredictionGenerator(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kCVXSecWeights);
     }
 
     PredictionInterp pred(systs, calc, *gen, loaders);
