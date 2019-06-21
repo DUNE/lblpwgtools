@@ -19,4 +19,4 @@ extern ana::Var const kRecoY_FromDep;
 extern ana::Var const kTrueEnergy;
 
 // CV weighting
-extern ana::Var const kGENIEWeights; // kUnweighted
+extern ana::Var const kCVXSecWeights; // kUnweighted

@@ -513,6 +513,11 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                           AxisBlob const &axes,
                           std::vector<std::string> const &file_list) {
 
+  bool use_cv_weights = true;
+  if (getenv("CAFANA_IGNORE_CV_WEIGHT")) {
+    use_cv_weights = !atoi(getenv("CAFANA_IGNORE_CV_WEIGHT"));
+  }
+
   // Move to the save directory
   saveDir->cd();
   osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
@@ -536,9 +541,11 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                             ana::kBeam, Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
-        *axes.FDAx_numu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
+        *axes.FDAx_numu, kPassFD_CVN_NUMU && kIsTrueFV,
+        use_cv_weights ? kCVXSecWeights : kUnweighted);
     NoExtrapPredictionGenerator genFDNue(
-        *axes.FDAx_nue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
+        *axes.FDAx_nue, kPassFD_CVN_NUE && kIsTrueFV,
+        use_cv_weights ? kCVXSecWeights : kUnweighted);
     PredictionInterp predInterpFDNumu(systlist, this_calc, genFDNumu,
                                       these_loaders);
     PredictionInterp predInterpFDNue(systlist, this_calc, genFDNue,
@@ -564,7 +571,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     NoOscPredictionGenerator genNDNumu(
         *axes.NDAx, (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV,
-        kGENIEWeights);
+        use_cv_weights ? kCVXSecWeights : kUnweighted);
 
     PredictionInterp predInterpNDNumu(systlist, this_calc, genNDNumu,
                                       these_loaders);
@@ -587,31 +594,12 @@ std::vector<std::unique_ptr<ana::PredictionInterp>>
 GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
                      int max, bool reload, AxisBlob const &axes) {
 
+  // Make sure the syst registry has been populated with all the systs we could
+  // want to use
+  static std::vector<const ISyst *> systs = GetListOfSysts();
+
   // Hackity hackity hack hack
   bool fileNameIsStub = (fileName.find(".root") == std::string::npos);
-
-  // To allow XRootD input files.
-  TFile *testF =
-      !fileNameIsStub ? TFile::Open(fileName.c_str(), "READ") : nullptr;
-  if (!fileNameIsStub && (reload || testF->IsZombie())) {
-    if (fileName.find("root://") == 0) {
-      std::cout << "Passed xrootd path that cannot be opened, we cannot "
-                   "regenerate input histograms with this. Aborting."
-                << std::endl;
-      abort();
-    }
-
-    std::cout << "Now creating PredictionInterps in series... maybe you should "
-                 "use the other scripts to do them in parallel?"
-              << std::endl;
-
-    TFile fout(fileName.c_str(), "RECREATE");
-    MakePredictionInterp(&fout, kFDFHC, systlist, max, axes);
-    MakePredictionInterp(&fout, kFDRHC, systlist, max, axes);
-    MakePredictionInterp(&fout, kNDFHC, systlist, max, axes);
-    MakePredictionInterp(&fout, kNDRHC, systlist, max, axes);
-    fout.Close();
-  }
 
   std::vector<std::unique_ptr<PredictionInterp>> return_list;
 
@@ -997,8 +985,7 @@ std::string BuildLogInfoString() {
   gSystem->GetMemInfo(&meminfo);
 
   std::stringstream ss("");
-  ss << " (ProcResMem: " << (double(procinfo.fMemResident) / 1E6)
-     << " GB) @ "
+  ss << " (ProcResMem: " << (double(procinfo.fMemResident) / 1E6) << " GB) @ "
      << std::ctime(&now_time);
 
   return ss.str();
@@ -1026,10 +1013,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     abort();
   }
 #endif
-
-  // Make sure the syst registery has been populated with all the systs we could
-  // want to use
-  static std::vector<const ISyst *> systs = GetListOfSysts();
 
   // Start by getting the PredictionInterps... better that this is done here
   // than elsewhere as they aren't smart enough to know what they are (so the

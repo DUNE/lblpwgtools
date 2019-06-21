@@ -24,4 +24,4 @@ Var const kRecoY_FromDep =
 Var const kTrueEnergy = SIMPLEVAR(dune.Ev);
 
 // CV weighting
-Var const kGENIEWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
+Var const kCVXSecWeights = SIMPLEVAR(dune.total_xsSyst_cv_wgt); // kUnweighted
