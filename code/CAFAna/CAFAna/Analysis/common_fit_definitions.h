@@ -145,6 +145,8 @@ struct FitTreeBlob {
   bool fIsValid;
 };
 
+std::string BuildLogInfoString();
+
 double RunFitPoint(
     std::string stateFileName, std::string sampleString,
     osc::IOscCalculatorAdjustable *fakeDataOsc, ana::SystShifts fakeDataSyst,

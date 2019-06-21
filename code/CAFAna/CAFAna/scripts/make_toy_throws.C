@@ -112,16 +112,9 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[CLI]: " << *CLIArgs << std::endl;
 
-  std::chrono::time_point<std::chrono::system_clock> now;
-  std::time_t now_time;
-
   for (int i = 0; i < nthrows; ++i) {
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
-
-    std::cerr << "[THW]: Starting throw " << i << " @ "
-              << std::ctime(&now_time);
+    std::cerr << "[THW]: Starting throw " << i << " " << BuildLogInfoString();
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
@@ -170,11 +163,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
     pftree.Fill();
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
-
     std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
-              << " @ " << std::ctime(&now_time);
+              << " " << BuildLogInfoString();
     // Done with this systematic throw
     delete penalty;
 
@@ -203,10 +193,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   TFile fout(outputFname.c_str(), "RECREATE");
   pftree.Write();
 
-  now = std::chrono::system_clock::now();
-  now_time = std::chrono::system_clock::to_time_t(now);
-
-  std::cout << "[INFO]: Done @ " << std::ctime(&now_time);
+  std::cout << "[INFO]: Done " << BuildLogInfoString();
 }
 
 #ifndef NO_MTT_MAIN

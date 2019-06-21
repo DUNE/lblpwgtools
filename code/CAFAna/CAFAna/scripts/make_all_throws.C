@@ -163,16 +163,9 @@ void make_all_throws(std::string stateFname = def_stateFname,
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
-  std::chrono::time_point<std::chrono::system_clock> now;
-  std::time_t now_time;
-
   for (int i = 0; i < nthrows; ++i) {
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
-
-    std::cerr << "[THW]: Starting throw " << i << " @ "
-              << std::ctime(&now_time);
+    std::cerr << "[THW]: Starting throw " << i << " " << BuildLogInfoString();
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
 
@@ -233,11 +226,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
     delete gpenalty;
     delete fitThrowOsc;
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
     std::cerr << "[THW]: Global throw " << i
-              << " fit found minimum chi2 = " << globalmin << " @ "
-              << std::ctime(&now_time);
+              << " fit found minimum chi2 = " << globalmin << " " << BuildLogInfoString();
 
     // -------------------------------------
     // --------- Now do CPV fits -----------
@@ -267,11 +257,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
         delete testOscCPV;
       }
 
-      now = std::chrono::system_clock::now();
-      now_time = std::chrono::system_clock::to_time_t(now);
       std::cerr << "[THW]: CPV throw " << i
-                << " fit found minimum chi2 = " << cpv_chisqmin << " @ "
-                << std::ctime(&now_time);
+                << " fit found minimum chi2 = " << cpv_chisqmin << " " << BuildLogInfoString();
 
       cpv_dchi2 = cpv_chisqmin - globalmin;
       if (cpv_dchi2 > 0) {
@@ -297,11 +284,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscVarsOct, systlist, testOscOct, SystShifts(fitThrowSyst), oscSeedsOct,
         oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
     std::cerr << "[THW]: Oct. throw " << i
-              << " fit found minimum chi2 = " << oct_chisqmin << " @ "
-              << std::ctime(&now_time);
+              << " fit found minimum chi2 = " << oct_chisqmin << " " << BuildLogInfoString();
 
     oct_dchi2 = oct_chisqmin - globalmin;
     if (oct_dchi2 > 0) {
@@ -331,11 +315,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oscSeedsGlobal, mh_penalty, fit_type, // same seeds as a global fit
         nullptr, &mh_tree, &mad_spectra_yo);
 
-    now = std::chrono::system_clock::now();
-    now_time = std::chrono::system_clock::to_time_t(now);
     std::cerr << "[THW]: MH. throw " << i
-              << " fit found minimum chi2 = " << mh_chisqmin << " @ "
-              << std::ctime(&now_time);
+              << " fit found minimum chi2 = " << mh_chisqmin << " " << BuildLogInfoString();
 
     mh_dchi2 = mh_chisqmin - globalmin;
     if (mh_dchi2 > 0) {
@@ -386,10 +367,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   cpv_tree.Write();
   oct_tree.Write();
 
-  now = std::chrono::system_clock::now();
-  now_time = std::chrono::system_clock::to_time_t(now);
-
-  std::cout << "[INFO]: Done @ " << std::ctime(&now_time);
+  std::cout << "[INFO]: Done " << BuildLogInfoString();
 }
 
 #ifndef __CINT__
