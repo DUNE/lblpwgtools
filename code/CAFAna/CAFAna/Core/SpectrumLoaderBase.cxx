@@ -218,6 +218,9 @@ namespace ana
       abort();
     }
 
+    assert(var.IsValid());
+    assert(wei.IsValid());
+
     fHistDefs[shift][cut][wei][var].spects.push_back(&spect);
 
     spect.AddLoader(this); // Remember we have a Go() pending
@@ -234,6 +237,9 @@ namespace ana
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
       abort();
     }
+
+    assert(var.IsValid());
+    assert(wei.IsValid());
 
     fHistDefs[shift][cut][wei][var].spects.push_back(&spect);
 
@@ -257,6 +263,10 @@ namespace ana
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
       abort();
     }
+
+    assert(var.IsValid());
+    assert(wei.IsValid());
+
 
     fHistDefs[shift][cut][wei][var].rwSpects.push_back(&spect);
 

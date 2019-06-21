@@ -41,6 +41,10 @@ namespace ana
       return fFunc(sr);
     }
 
+    bool IsValid() const {
+      return bool(fFunc);
+    }
+    
     /// Vars with the same definition will have the same ID
     int ID() const {return fID;}
 
@@ -57,6 +61,7 @@ namespace ana
 	       int id)
       : fFunc(fun), fID(id)
     {
+      assert(bool(fFunc));
     }
 
     std::function<VarFunc_t> fFunc;

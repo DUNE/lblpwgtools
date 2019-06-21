@@ -31,78 +31,89 @@ ana::Binning const binsEreco_Coarse = ana::Binning::Simple(20, 0, 10);
 ana::Binning const binsEreco_VeryCoarse = ana::Binning::Simple(5, 0, 10);
 ana::Binning const onebin = ana::Binning::Simple(1, 0.5, 10);
 
-// Axes
-ana::HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
-ana::HistAxis const axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco, kRecoE_nue);
-ana::HistAxis const axErecYrecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND,
-                            "y_{rec}", binsY, kRecoYND);
-ana::HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)", binsFDEreco,
-                                  kRecoE_numu);
-ana::HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)", binsFDEreco_v3,
-                                 kRecoE_nue);
-ana::HistAxis const axErecYrecND_v3("Reco energy (GeV)", binsNDEreco_v3,
-                               kRecoEnergyND, "y_{rec}", binsY_v3, kRecoYND);
-ana::HistAxis const axErecND("Reco energy (GeV)", binsNDEreco, kRecoEnergyND);
-
-ana::HistAxis const axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
-                                kRecoE_FromDep);
-ana::HistAxis const axErecYrecND_FromDep("Reco energy (GeV)", binsNDEreco,
-                                    kRecoE_FromDep, "y_{rec}", binsY,
-                                    kRecoY_FromDep);
-ana::HistAxis const axErecYrecNDOA_FromDep("Reco energy (GeV)", binsNDEreco_OA,
-                                      kRecoE_FromDep, "y_{rec}", binsY,
-                                      kRecoY_FromDep);
-ana::HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)", binsNDEreco,
-                                kRecoE_FromDep);
-
-ana::HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", binsETrue, kTrueEnergy);
-
-ana::HistAxis const axTrueE_unibin_coarse("#it{E}_{#nu} (GeV)", binsETrue_Coarse,
-                                     kTrueEnergy);
-
-ana::HistAxis const axErec_FromDep_unibin("#it{E}_{#nu}^{Rec.} (GeV)", binsETrue,
-                                     kRecoE_FromDep);
-ana::HistAxis const axErecND_unibin("#it{E}_{#nu}^{Rec.} (GeV)", binsETrue,
-                               kRecoEnergyND);
-ana::HistAxis const axRecoEnuFDnumu_unibin("Reco energy (GeV)", binsETrue,
-                                      kRecoE_numu);
-ana::HistAxis const axRecoEnuFDnue_unibin("Reco energy (GeV)", binsETrue,
-                                     kRecoE_nue);
-
-ana::HistAxis const axErecND_coarsebin("Reco energy (GeV)", binsEreco_Coarse,
-                                  kRecoEnergyND);
-ana::HistAxis const axRecoEnuFDnumu_coarsebin("Reco energy (GeV)", binsEreco_Coarse,
-                                         kRecoE_numu);
-
-ana::HistAxis const axRecoEnuFDnue_coarsebin("Reco energy (GeV)", binsEreco_Coarse,
-                                        kRecoE_nue);
-
-ana::HistAxis const axErecND_verycoarsebin("Reco energy (GeV)", binsEreco_VeryCoarse,
-                                      kRecoEnergyND);
-ana::HistAxis const axRecoEnuFDnumu_verycoarsebin("Reco energy (GeV)",
-                                             binsEreco_VeryCoarse, kRecoE_numu);
-
-ana::HistAxis const axRecoEnuFDnue_verycoarsebin("Reco energy (GeV)",
-                                            binsEreco_VeryCoarse, kRecoE_nue);
-
-ana::HistAxis const axErecND_onebin("Reco energy (GeV)", onebin, kRecoEnergyND);
-ana::HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", onebin, kRecoE_numu);
-
-ana::HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", onebin, kRecoE_nue);
-
-AxisBlob const default_axes_v4{&axErecYrecND, &axRecoEnuFDnumu,
-                               &axRecoEnuFDnue};
-AxisBlob const default_axes_v3{&axErecYrecND_v3, &axRecoEnuFDnumu_v3,
-                               &axRecoEnuFDnue_v3};
-AxisBlob const fake_data_axes{&axErecYrecND_FromDep, &axErecFD_FromDep,
-                              &axErecFD_FromDep};
-
-AxisBlob const Ax1DND_unibin{&axErecND_unibin, &axRecoEnuFDnumu_unibin,
-                             &axRecoEnuFDnue_unibin};
-AxisBlob const Ax1DND_FromDep_unibin{
-    &axErec_FromDep_unibin, &axErec_FromDep_unibin, &axErec_FromDep_unibin};
-
 AxisBlob GetAxisBlob(std::string const &blob_name) {
+
+  //Should all be statically initialized on first method call to ensure that the vars have been initialized beforehand
+  // Axes
+  static ana::HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco,
+                                             kRecoE_numu);
+  static ana::HistAxis const axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco,
+                                            kRecoE_nue);
+  static ana::HistAxis const axErecYrecND("Reco energy (GeV)", binsNDEreco,
+                                          kRecoEnergyND, "y_{rec}", binsY,
+                                          kRecoYND);
+  static ana::HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)",
+                                                binsFDEreco, kRecoE_numu);
+  static ana::HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)",
+                                               binsFDEreco_v3, kRecoE_nue);
+  static ana::HistAxis const axErecYrecND_v3("Reco energy (GeV)",
+                                             binsNDEreco_v3, kRecoEnergyND,
+                                             "y_{rec}", binsY_v3, kRecoYND);
+  static ana::HistAxis const axErecND("Reco energy (GeV)", binsNDEreco,
+                                      kRecoEnergyND);
+
+  static ana::HistAxis const axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
+                                              kRecoE_FromDep);
+  static ana::HistAxis const axErecYrecND_FromDep(
+      "Reco energy (GeV)", binsNDEreco, kRecoE_FromDep, "y_{rec}", binsY,
+      kRecoY_FromDep);
+  static ana::HistAxis const axErecYrecNDOA_FromDep(
+      "Reco energy (GeV)", binsNDEreco_OA, kRecoE_FromDep, "y_{rec}", binsY,
+      kRecoY_FromDep);
+  static ana::HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)",
+                                              binsNDEreco, kRecoE_FromDep);
+
+  static ana::HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", binsETrue,
+                                            kTrueEnergy);
+
+  static ana::HistAxis const axTrueE_unibin_coarse(
+      "#it{E}_{#nu} (GeV)", binsETrue_Coarse, kTrueEnergy);
+
+  static ana::HistAxis const axErec_FromDep_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
+                                                   binsETrue, kRecoE_FromDep);
+  static ana::HistAxis const axErecND_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
+                                             binsETrue, kRecoEnergyND);
+  static ana::HistAxis const axRecoEnuFDnumu_unibin("Reco energy (GeV)",
+                                                    binsETrue, kRecoE_numu);
+  static ana::HistAxis const axRecoEnuFDnue_unibin("Reco energy (GeV)",
+                                                   binsETrue, kRecoE_nue);
+
+  static ana::HistAxis const axErecND_coarsebin(
+      "Reco energy (GeV)", binsEreco_Coarse, kRecoEnergyND);
+  static ana::HistAxis const axRecoEnuFDnumu_coarsebin(
+      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_numu);
+
+  static ana::HistAxis const axRecoEnuFDnue_coarsebin(
+      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_nue);
+
+  static ana::HistAxis const axErecND_verycoarsebin(
+      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoEnergyND);
+  static ana::HistAxis const axRecoEnuFDnumu_verycoarsebin(
+      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_numu);
+
+  static ana::HistAxis const axRecoEnuFDnue_verycoarsebin(
+      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_nue);
+
+  static ana::HistAxis const axErecND_onebin("Reco energy (GeV)", onebin,
+                                             kRecoEnergyND);
+  static ana::HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", onebin,
+                                                    kRecoE_numu);
+
+  static ana::HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", onebin,
+                                                   kRecoE_nue);
+
+  static AxisBlob const default_axes_v4{&axErecYrecND, &axRecoEnuFDnumu,
+                                        &axRecoEnuFDnue};
+  static AxisBlob const default_axes_v3{&axErecYrecND_v3, &axRecoEnuFDnumu_v3,
+                                        &axRecoEnuFDnue_v3};
+  static AxisBlob const fake_data_axes{&axErecYrecND_FromDep, &axErecFD_FromDep,
+                                       &axErecFD_FromDep};
+
+  static AxisBlob const Ax1DND_unibin{&axErecND_unibin, &axRecoEnuFDnumu_unibin,
+                                      &axRecoEnuFDnue_unibin};
+  static AxisBlob const Ax1DND_FromDep_unibin{
+      &axErec_FromDep_unibin, &axErec_FromDep_unibin, &axErec_FromDep_unibin};
+
   AxisBlob AxToUse =
       (GetAnaVersion() == kV4) ? default_axes_v4 : default_axes_v3;
   if (blob_name == "1DND") {
@@ -141,6 +152,15 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
     AxToUse = default_axes_v4;
   } else if (blob_name == "v3") {
     AxToUse = default_axes_v3;
+  }
+  for (auto &v : AxToUse.NDAx->GetVars()) {
+    assert(v.IsValid());
+  }
+  for (auto &v : AxToUse.FDAx_numu->GetVars()) {
+    assert(v.IsValid());
+  }
+  for (auto &v : AxToUse.FDAx_nue->GetVars()) {
+    assert(v.IsValid());
   }
   return AxToUse;
 }

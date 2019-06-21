@@ -113,12 +113,15 @@ void SpectrumLoader::Go() {
 //----------------------------------------------------------------------
 // Helper function that can give us a friendlier error message
 template <class T>
-void SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
-  if (tr->FindBranch(bname.c_str()))
+bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
+  if (tr->FindBranch(bname.c_str())) {
     tr->SetBranchAddress(bname.c_str(), dest);
-  else
+    return true;
+  } else {
     std::cout << "Warning: Branch '" << bname
               << "' not found, field will not be filled" << std::endl;
+  }
+  return false;
 }
 
 //----------------------------------------------------------------------
@@ -249,7 +252,14 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   sr.dune.xsSyst_wgt.resize(XSSyst_names.size());
 
   for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
-    SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it], &XSSyst_tmp[syst_it]);
+    if (!SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it],
+                          &XSSyst_tmp[syst_it])) {
+      std::fill_n(XSSyst_tmp[syst_it].begin(), 100, 1);
+      XSSyst_cv_tmp[syst_it] = 1;
+      XSSyst_size_tmp[syst_it] = 1;
+      continue;
+    }
+
     SetBranchChecked(tr, XSSyst_names[syst_it] + "_nshifts",
                      &XSSyst_size_tmp[syst_it]);
     SetBranchChecked(tr, XSSyst_names[syst_it] + "_cvwgt",
@@ -337,7 +347,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
         // Do some error checking here
         if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
-            std::isinf(XSSyst_cv_tmp[syst_it]) || XSSyst_cv_tmp[syst_it] == 0) {
+            std::isinf(XSSyst_cv_tmp[syst_it]) ||
+            (XSSyst_cv_tmp[syst_it] == 0)) {
           std::cout << "Warning: " << XSSyst_names[syst_it]
                     << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                     << std::endl;
@@ -391,7 +402,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                   std::back_inserter(sr.dune.xsSyst_wgt[syst_it]));
       }
     } // end version switch
-    
+
     HandleRecord(&sr);
 
     if (prog && n % 10000 == 0)

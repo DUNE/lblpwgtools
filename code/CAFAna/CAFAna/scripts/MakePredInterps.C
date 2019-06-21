@@ -116,7 +116,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 SampleType sample;
 std::string output_file_name;
 std::string syst_descriptor = "";
-AxisBlob axes = default_axes_v4;
+std::string axdescriptor = "v4";
 std::vector<std::string> input_patterns;
 bool addfakedata = true;
 bool do_no_op = false;
@@ -157,7 +157,7 @@ void handleOpts(int argc, char const *argv[]) {
       sample = GetSampleType(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-A") ||
                (std::string(argv[opt]) == "--axes")) {
-      axes = GetAxisBlob(argv[++opt]);
+      axdescriptor = argv[++opt];
     } else if ((std::string(argv[opt]) == "-o") ||
                (std::string(argv[opt]) == "--output")) {
       output_file_name = argv[++opt];
@@ -166,7 +166,7 @@ void handleOpts(int argc, char const *argv[]) {
       input_patterns.push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--n-max")) {
-                 nmax = atoi(argv[++opt]);
+      nmax = atoi(argv[++opt]);
     } else if (std::string(argv[opt]) == "--syst-descriptor") {
       syst_descriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
@@ -185,6 +185,8 @@ void handleOpts(int argc, char const *argv[]) {
 int main(int argc, char const *argv[]) {
 
   handleOpts(argc, argv);
+
+  AxisBlob axes = GetAxisBlob(axdescriptor);
 
   if (!do_no_op) {
     if (!input_patterns.size()) {
@@ -268,7 +270,7 @@ int main(int argc, char const *argv[]) {
 
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
-    MakePredictionInterp(&fout, sample, los, nmax, axes, file_list);
+    MakePredictionInterp(&fout, sample, los, axes, file_list, nmax);
     fout.Write();
     fout.Close();
   }

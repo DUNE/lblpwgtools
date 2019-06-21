@@ -16,7 +16,7 @@
 
 #include "TDirectory.h"
 
-//Extra headers not required
+// Extra headers not required
 #include "CAFAna/Analysis/ExtraHeaders.h"
 
 #include <memory>
@@ -87,13 +87,14 @@ enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };
 SampleType GetSampleType(std::string const &sample);
 
 void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
-                          std::vector<const ana::ISyst *> systlist, int max = 0,
-                          AxisBlob const &axes = default_axes_v4,
-                          std::vector<std::string> const &file_list = {});
+                          std::vector<const ana::ISyst *> systlist,
+                          AxisBlob const &axes,
+                          std::vector<std::string> const &file_list,
+                          int max = 0);
 
-std::vector<std::unique_ptr<ana::PredictionInterp>> GetPredictionInterps(
-    std::string fileName, std::vector<const ana::ISyst *> systlist, int max = 0,
-    bool reload = false, AxisBlob const &axes = default_axes_v4);
+std::vector<std::unique_ptr<ana::PredictionInterp>>
+GetPredictionInterps(std::string fileName,
+                     std::vector<const ana::ISyst *> systlist);
 
 TH2D *make_corr_from_covar(TH2D *covar);
 

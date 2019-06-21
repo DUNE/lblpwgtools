@@ -76,7 +76,7 @@ ENV CAFANA /opt/CAFAna
 
 #Get rid of everything we don't need
 RUN apt remove -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python
-RUN apt install -y libgsl2 libstdc++-6-dev
+RUN apt install -y libgsl2 libstdc++-6-dev procps
 RUN apt autoremove -y --purge &&  apt clean
 
 # Tidy up some stuff ROOT installs needlessly

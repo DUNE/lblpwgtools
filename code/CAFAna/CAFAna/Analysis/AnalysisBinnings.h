@@ -10,7 +10,4 @@ struct AxisBlob {
   ana::HistAxis const *FDAx_nue;
 };
 
-extern AxisBlob const default_axes_v4;
-extern AxisBlob const default_axes_v3;
-
 AxisBlob GetAxisBlob(std::string const &);

@@ -509,9 +509,19 @@ SampleType GetSampleType(std::string const &sample) {
 }
 
 void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
-                          std::vector<const ISyst *> systlist, int max,
+                          std::vector<const ISyst *> systlist,
                           AxisBlob const &axes,
-                          std::vector<std::string> const &file_list) {
+                          std::vector<std::string> const &file_list, int max) {
+
+  for (auto &v : axes.NDAx->GetVars()) {
+    assert(v.IsValid());
+  }
+  for (auto &v : axes.FDAx_numu->GetVars()) {
+    assert(v.IsValid());
+  }
+  for (auto &v : axes.FDAx_nue->GetVars()) {
+    assert(v.IsValid());
+  }
 
   bool use_cv_weights = true;
   if (getenv("CAFANA_IGNORE_CV_WEIGHT")) {
@@ -601,8 +611,7 @@ std::vector<std::string> const sample_suffix_order = {
     "FD_FHC", "FD_FHC", "FD_RHC", "FD_RHC", "ND_FHC", "ND_RHC"};
 
 std::vector<std::unique_ptr<ana::PredictionInterp>>
-GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist,
-                     int max, bool reload, AxisBlob const &axes) {
+GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist) {
 
   // Make sure the syst registry has been populated with all the systs we could
   // want to use
