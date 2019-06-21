@@ -390,13 +390,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         std::copy(XSSyst_tmp[syst_it].begin(), XSSyst_tmp[syst_it].end(),
                   std::back_inserter(sr.dune.xsSyst_wgt[syst_it]));
       }
+    } // end version switch
+    
+    HandleRecord(&sr);
 
-      HandleRecord(&sr);
-
-      if (prog && n % 10000 == 0)
-        prog->SetProgress(double(n) / Nentries);
-    } // end for n
-  }
+    if (prog && n % 10000 == 0)
+      prog->SetProgress(double(n) / Nentries);
+  } // end for n
 }
 
 //----------------------------------------------------------------------
