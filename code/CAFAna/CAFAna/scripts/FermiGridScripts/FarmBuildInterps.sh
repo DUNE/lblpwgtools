@@ -177,7 +177,8 @@ if [ "${DO_FD}" == "1" ]; then
     echo "ifdh ls ${INPUT_DIR} | grep \"FD_FHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls ${INPUT_DIR} | grep "FD_FHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_FHC.list
     NFD_FHC=1
-    echo "[INFO]: Found ${NFD_FHC} FD_FHC input files"
+    NFD_FHC_FILES=$(cat InputCAFs.FD_FHC.list | wc -l)
+    echo "[INFO]: Found ${NFD_FHC_FILES} FD_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_FHC ))
     if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
       NFD_FHC=${NMAXJOBS}
@@ -191,7 +192,8 @@ if [ "${DO_FD}" == "1" ]; then
     echo "ifdh ls ${INPUT_DIR} | grep \"FD_RHC.*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
     ifdh ls ${INPUT_DIR} | grep "FD_RHC.*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.FD_RHC.list
     NFD_RHC=1
-    echo "[INFO]: Found ${NFD_RHC} FD_RHC input files"
+    NFD_RHC_FILES=$(cat InputCAFs.FD_RHC.list | wc -l)
+    echo "[INFO]: Found ${NFD_RHC_FILES} FD_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NFD_RHC ))
     if [ ${NJOBSWITHTHIS} -gt ${NMAXJOBS} ]; then
       NFD_RHC=$(( NMAXJOBS - NJOBS ))
