@@ -26,6 +26,11 @@ if [ -z ${2} ]; then
   exit 2
 fi
 
+IS_FD="0"
+if echo ${SAMPLE_NAME} | grep "FD"; then
+  IS_FD="1"
+fi
+
 AXBLOBARG=""
 if [ ! -z ${3} ]; then
   AXBLOBARG=" -A ${3}"
@@ -85,9 +90,15 @@ export IFDH_CP_MAXRETRIES=2;
 PNFS_OUTDIR=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 
-(( LINE_N = ${PROCESS} + 1 ))
+INPFILE=""
+if [ ${IS_FD} == "1" ]; then
+  #For FD we want to read all at once
+  INPFILE=$(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | tr "\n" " " | sed "s/root:/-i root:/g")
+else
+  (( LINE_N = ${PROCESS} + 1 ))
 
-INPFILE=$(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)
+  INPFILE="-i $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)"
+fi
 
 ifdh ls ${PNFS_OUTDIR}
 
@@ -98,11 +109,17 @@ fi
 
 LOGYLOG "Building interps @ $(date)"
 
-OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
+OUTFILENAME=""
+if [ ${IS_FD} == "1" ]; then
+  OUTFILENAME=${SAMPLE_NAME}.State.root
+else
+  OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
+fi
+
 LOGYLOG "Output file name: ${OUTFILENAME}"
 
-LOGYLOG "MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}"
-MakePredInterps -i ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}
+LOGYLOG "MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}"
+MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}
 
 LOGYLOG "Copying output @ $(date)"
 
