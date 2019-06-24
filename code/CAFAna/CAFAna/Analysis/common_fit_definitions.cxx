@@ -1261,11 +1261,17 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     this_expt.Add(&app_expt_fhc);
   if (pot_fd_rhc_nue > 0)
     this_expt.Add(&app_expt_rhc);
+
+  bool UseV3NDCovMat = (AnaV == kV3);
+  if(getenv("CAFANA_USE_V3NDCOVMAT")){
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_V3NDCOVMAT")));
+  }
+
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-    if (AnaV == kV3) {
+    if (UseV3NDCovMat) {
 
       TDirectory *thisDir = gDirectory->CurrentDirectory();
       TFile covMatFile(covFileName.c_str());
