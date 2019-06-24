@@ -156,7 +156,7 @@ int main(int argc, char const *argv[]) {
     NTreesRead++;
   }
 
-  TCanvas c1("c1", "", 3200, 800);
+  TCanvas c1("c1", "", 3600, 600);
   int colorwheel[] = {kDUNEBlue, kDUNEOrange, kGreen - 3, kRed + 3};
   int ncolors = 4;
 
@@ -164,26 +164,26 @@ int main(int argc, char const *argv[]) {
   size_t NOscVars = 0;
   if (IncludeOA) {
     for (auto &s : GetOscVars()) {
-      superorder.emplace_back(s->ShortName(), s->LatexName());
+      superorder.emplace_back(s->ShortName(), s->ShortName());
       NOscVars++;
     }
   }
   size_t NFlux = 0;
   for (auto &s : GetListOfSysts("flux:noxsec:nodet")) {
-    superorder.emplace_back(s->ShortName(), s->LatexName());
+    superorder.emplace_back(s->ShortName(), s->ShortName());
     NFlux++;
   }
   for (auto &s : GetListOfSysts("cdrflux:noxsec:nodet")) {
-    superorder.emplace_back(s->ShortName(), s->LatexName());
+    superorder.emplace_back(s->ShortName(), s->ShortName());
     NFlux++;
   }
   size_t NXSec = 0;
   for (auto &s : GetListOfSysts("noflux:xsec:nodet")) {
-    superorder.emplace_back(s->ShortName(), s->LatexName());
+    superorder.emplace_back(s->ShortName(), s->ShortName());
     NXSec++;
   }
   for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
-    superorder.emplace_back(s->ShortName(), s->LatexName());
+    superorder.emplace_back(s->ShortName(), s->ShortName());
   }
 
   size_t LastOscVars = 0;
@@ -212,7 +212,8 @@ int main(int argc, char const *argv[]) {
   size_t p_it = 0;
   std::vector<TH1D> hists;
   for (auto p : Inputs) {
-    hists.emplace_back(p.legend_name.c_str(), "", NPars, 0, NPars);
+    hists.emplace_back(p.legend_name.c_str(), "", NPars * Inputs.size(), 0,
+                       NPars * Inputs.size());
     hists.back().SetDirectory(nullptr);
   }
 
@@ -222,23 +223,28 @@ int main(int argc, char const *argv[]) {
     }
     auto &fr = FitResults[frn.first];
     for (size_t i = 0; i < fr.size(); ++i) {
+      size_t bin_it = (p_it * Inputs.size()) + i + 1;
       if (!i) {
-        hists[i].GetXaxis()->SetBinLabel(p_it + 1, frn.second.c_str());
+        hists[i].GetXaxis()->SetBinLabel(bin_it + (Inputs.size() / 2),
+                                         frn.second.c_str());
         hists[i].GetYaxis()->SetRangeUser(-1.1, 1.1);
-        hists[i].GetYaxis()->SetNdivisions(505);
+        hists[i].GetYaxis()->SetNdivisions(503);
         hists[i].GetYaxis()->SetLabelSize(0.08);
+        hists[i].GetYaxis()->SetTickSize(0.01);
         hists[i].GetXaxis()->SetLabelSize(0.06);
+        hists[i].GetXaxis()->SetNdivisions(0);
+        hists[i].GetXaxis()->SetTickSize(0);
       }
       if (!p_it) {
         hists[i].SetLineStyle(1);
         hists[i].SetLineColor(colorwheel[i % ncolors]);
-        hists[i].SetLineWidth(10 - (3 * i));
+        hists[i].SetLineWidth(5);
         hists[i].SetMarkerStyle(0);
         hists[i].SetMarkerSize(0);
-        hists[i].SetMarkerColor(colorwheel[i % ncolors]);
+        hists[i].SetMarkerColor(0);
       }
-      hists[i].SetBinContent(p_it + 1, fr[i].first);
-      hists[i].SetBinError(p_it + 1, fr[i].second);
+      hists[i].SetBinContent(bin_it, fr[i].first);
+      hists[i].SetBinError(bin_it, fr[i].second);
     }
     p_it++;
   }
@@ -256,16 +262,27 @@ int main(int argc, char const *argv[]) {
 
   TLine l(0, 0, 0, 0);
   l.SetLineColor(kBlack);
+  l.SetLineStyle(1);
+  l.SetLineWidth(2);
+  for (size_t i = 0; i < NPars; ++i) {
+    l.DrawLine((i * Inputs.size()), -1.1, (i * Inputs.size()), 1.1);
+  }
+
+  l.SetLineColor(kBlack);
   l.SetLineStyle(2);
-  l.SetLineWidth(1);
+  l.SetLineWidth(5);
+
   if (LastOscVars && (LastOscVars != NPars)) {
-    l.DrawLine(LastOscVars, -1.1, LastOscVars, 1.1);
+    l.DrawLine((LastOscVars * Inputs.size()), -1.1,
+               (LastOscVars * Inputs.size()), 1.1);
   }
   if (LastFlux && (LastFlux != NPars)) {
-    l.DrawLine(LastFlux, -1.1, LastFlux, 1.1);
+    l.DrawLine((LastFlux * Inputs.size()), -1.1, (LastFlux * Inputs.size()),
+               1.1);
   }
   if (LastXSec && (LastXSec != NPars)) {
-    l.DrawLine(LastXSec, -1.1, LastXSec, 1.1);
+    l.DrawLine((LastXSec * Inputs.size()), -1.1, (LastXSec * Inputs.size()),
+               1.1);
   }
 
   leg.Draw();

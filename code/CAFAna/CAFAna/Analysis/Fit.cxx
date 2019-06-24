@@ -1,6 +1,8 @@
 #include "CAFAna/Analysis/Fit.h"
 
 #include "CAFAna/Analysis/GradientDescent.h"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
@@ -102,7 +104,7 @@ bool Fitter::SupportsDerivatives() const {
 //----------------------------------------------------------------------
 std::unique_ptr<ROOT::Math::Minimizer>
 Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                        SystShifts &systSeed, Verbosity verb) const {
+                        SystShifts &systSeed) const {
   // Why, when this is called for each seed?
   fCalc = seed;
   fShifts = systSeed;
@@ -168,7 +170,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim &)*this);
   }
 
-  if (verb == Verbosity::kQuiet) {
+  if (fVerb <= Verbosity::kQuiet) {
     mnMin->SetPrintLevel(0);
   }
 
@@ -207,8 +209,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
 //----------------------------------------------------------------------
 double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
                          SystShifts &bestSysts, const SeedList &seedPts,
-                         const std::vector<SystShifts> &systSeedPts,
-                         Verbosity verb) const {
+                         const std::vector<SystShifts> &systSeedPts) const {
   const std::vector<SeedPt> &pts = ExpandSeeds(seedPts.GetSeeds(), systSeedPts);
 
   double minchi = 1e10;
@@ -224,7 +225,7 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
     SystShifts shift = pt.shift;
 
     std::unique_ptr<ROOT::Math::Minimizer> thisMin =
-        FitHelperSeeded(seed, shift, verb);
+        FitHelperSeeded(seed, shift);
 
     // Check whether this is the best minimum we've found so far
     if (thisMin->MinValue() < minchi) {
@@ -300,6 +301,12 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
                    Verbosity verb) const {
 
   fVerb = verb;
+
+  if (getenv("CAFANA_FIT_TURBOSE") &&
+      bool(atoi(getenv("CAFANA_FIT_TURBOSE")))) {
+    fVerb = kTurbose;
+  }
+
   // Fits with no osc calculator shouldn't be trying to optimize any
   // oscilation parameters...
   assert(seed || fVars.empty());
@@ -324,7 +331,7 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
     }
   }
 
-  if (fVerb == kVerbose) {
+  if (fVerb >= kVerbose) {
     fBeginTP = std::chrono::system_clock::now();
     fLastTP = fBeginTP;
     // std::cout << "[FIT]: Finding best fit for";
@@ -339,9 +346,9 @@ double Fitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
 
   // Do all the actual work. This wrapper function is just so we can have
   // better control of printing.
-  const double chi = FitHelper(seed, bestSysts, seedPts, systSeedPts, verb);
+  const double chi = FitHelper(seed, bestSysts, seedPts, systSeedPts);
 
-  if (fVerb == kVerbose) {
+  if (fVerb >= kVerbose) {
     std::cout << "[FIT]: Best fit:\n";
     for (const IFitVar *v : fVars) {
       std::cout << "\t" << v->ShortName() << " = " << v->GetValue(seed)
@@ -394,7 +401,7 @@ double Fitter::DoEval(const double *pars) const {
     penalty += fSysts[j]->Penalty(pars[fVars.size() + j]);
   }
 
-  if ((fVerb == kVerbose) && !(fNEval % 10000)) {
+  if ((fVerb >= kVerbose) && !(fNEval % (fVerb >= kTurbose ? 1 : 10000))) {
 
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
@@ -406,7 +413,11 @@ double Fitter::DoEval(const double *pars) const {
               << ", pen: " << penalty << "}\n\tT += "
               << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
                      .count()
-              << " s @ " << std::ctime(&now_time);
+              << " s, = s "
+              << std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                  fBeginTP)
+                     .count()
+              << BuildLogInfoString();
     fLastTP = now;
   }
   return fExpt->ChiSq(fCalc, fShifts) + penalty;

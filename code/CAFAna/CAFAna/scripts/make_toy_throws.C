@@ -107,10 +107,11 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
          << " " << sampleString << " " << throwString << " " << penaltyString
          << " " << hie << " " << asimov_set << " " << oscVarString;
-  std::string *CLIArgs = new std::string(CLI_ss.str());
+  std::string *CLIArgs = nullptr;
   pftree.meta_tree->Branch("CLI", &CLIArgs);
+  (*CLIArgs) = CLI_ss.str();
 
-  std::cerr << "[CLI]: " << *CLIArgs << std::endl;
+  std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
 
   for (int i = 0; i < nthrows; ++i) {
 
@@ -175,6 +176,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       TFile fout(outputFname.c_str(), "RECREATE");
       pftree.Write();
       pftree.SetDirectory(nullptr);
+      fout.Write();
+      fout.Close();
       if (odir) {
         odir->cd();
       }
@@ -192,6 +195,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
   TFile fout(outputFname.c_str(), "RECREATE");
   pftree.Write();
+  fout.Write();
+  fout.Close();
 
   std::cout << "[INFO]: Done " << BuildLogInfoString();
 }

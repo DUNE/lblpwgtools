@@ -1030,6 +1030,12 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   auto AnaV = GetAnaVersion();
 
+  bool turbose = false;
+  if (getenv("CAFANA_FIT_TURBOSE") &&
+      bool(atoi(getenv("CAFANA_FIT_TURBOSE")))) {
+    turbose = true;
+  }
+
 #ifdef USE_PREDINTERP_OMP
   if (omp_get_max_threads() > 4) {
     std::cerr << "[INFO]: Cannot run with OMP_NUM_THREADS > 4" << std::endl;
@@ -1087,8 +1093,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
-  if (outDir)
+  if (outDir) {
     outDir->cd();
+  }
 
   // Need to make a fake throw list for later book-keeping
   std::vector<double> fFakeDataVals;
@@ -1110,6 +1117,12 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   if (!spectra->size()) {
+
+    if (turbose) {
+      std::cout << "[INFO]: Loading spectra. " << BuildLogInfoString()
+                << std::endl;
+    }
+
     spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
         predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
             .MockData(
@@ -1141,6 +1154,16 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                 pot_nd_rhc, fakeDataStats,
                 gRandom->Integer(std::numeric_limits<unsigned>::max())))));
   }
+
+  if (turbose) {
+    std::cout << "[INFO]: Have fit spectra. " << BuildLogInfoString()
+              << std::endl;
+  }
+  if (turbose) {
+    std::cout << "[INFO]: Setting up experiments. " << BuildLogInfoString()
+              << std::endl;
+  }
+
   // If using the multi sample covariances then they must be added to the
   // MultiExperiment
   SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
@@ -1161,8 +1184,19 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
+  if (turbose) {
+    std::cout << "[INFO]: Have experiments. " << BuildLogInfoString()
+              << std::endl;
+  }
+
   // Save prefit starting distributions
   if (outDir) {
+
+    if (turbose) {
+      std::cout << "[INFO]: Saving prefit info. " << BuildLogInfoString()
+                << std::endl;
+    }
+
     if (pot_fd_fhc_nue > 0) {
       TH1 *data_nue_fhc_hist = (*spectra)[0]->ToTHX(pot_fd_fhc_nue);
       data_nue_fhc_hist->SetName("data_fd_nue_fhc");
@@ -1245,6 +1279,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
           std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc_1D->Write();
     }
+
+    if (turbose) {
+      std::cout << "[INFO]: Done writing prefit " << BuildLogInfoString()
+                << std::endl;
+    }
   }
 
   // Now sort out the experiment
@@ -1262,8 +1301,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   if (pot_fd_rhc_nue > 0)
     this_expt.Add(&app_expt_rhc);
 
+  if (turbose) {
+    std::cout << "[INFO]: Built multi-experiment " << BuildLogInfoString()
+              << std::endl;
+  }
+
   bool UseV3NDCovMat = (AnaV == kV3);
-  if(getenv("CAFANA_USE_V3NDCOVMAT")){
+  if (getenv("CAFANA_USE_V3NDCOVMAT")) {
     UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_V3NDCOVMAT")));
   }
 
@@ -1271,7 +1315,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+    if (turbose) {
+      std::cout << "[INFO]: Adding ND covmat " << BuildLogInfoString()
+                << std::endl;
+    }
     if (UseV3NDCovMat) {
+
+      std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
 
       TDirectory *thisDir = gDirectory->CurrentDirectory();
       TFile covMatFile(covFileName.c_str());
@@ -1313,6 +1363,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
                                     {0, 1});
     }
+    if (turbose) {
+      std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
+                << std::endl;
+    }
   }
 
   // Add in the penalty...
@@ -1322,9 +1376,15 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   auto start_fit = std::chrono::system_clock::now();
   // Now set up the fit itself
+  if (turbose) {
+    std::cout << "[INFO]: About to fit " << BuildLogInfoString() << std::endl;
+  }
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
       this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+  if (turbose) {
+    std::cout << "[INFO]: Finished fit " << BuildLogInfoString() << std::endl;
+  }
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cout << "[FIT]: Finished fit in "
@@ -1338,6 +1398,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // If we have a directory to save to... save some stuff...
   if (outDir) {
+    if (turbose) {
+      std::cout << "[INFO]: Writing fit tree " << BuildLogInfoString()
+                << std::endl;
+    }
     std::vector<std::string> fParamNames = this_fit.GetParamNames();
     std::vector<double> fPreFitValues = this_fit.GetPreFitValues();
     std::vector<double> fPreFitErrors = this_fit.GetPreFitErrors();
@@ -1352,6 +1416,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     TH2D hist_covar = TH2D(*covar);
     hist_covar.SetName("covar");
     TH2D hist_corr = *make_corr_from_covar(&hist_covar);
+
+    if (turbose) {
+      std::cout << "[INFO]: Writing postfit spectra " << BuildLogInfoString()
+                << std::endl;
+    }
 
     if (pot_fd_fhc_nue) {
       TH1 *post_fd_nue_fhc = GetMCSystTotal(
@@ -1417,6 +1486,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   if (PostFitTreeBlob) {
+    if (turbose) {
+      std::cout << "[INFO]: Assigning fit tree blob values "
+                << BuildLogInfoString() << std::endl;
+    }
     (*PostFitTreeBlob->fParamNames) = this_fit.GetParamNames();
     (*PostFitTreeBlob->fPreFitValues) = this_fit.GetPreFitValues();
     (*PostFitTreeBlob->fPreFitErrors) = this_fit.GetPreFitErrors();
@@ -1437,6 +1510,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     gSystem->GetProcInfo(&procinfo);
     PostFitTreeBlob->fResMemUsage = procinfo.fMemResident;
     PostFitTreeBlob->fVirtMemUsage = procinfo.fMemVirtual;
+  }
+
+  if (turbose) {
+    std::cout << "[INFO]: Finished run fit point." << BuildLogInfoString()
+              << std::endl;
   }
 
   return thischisq;

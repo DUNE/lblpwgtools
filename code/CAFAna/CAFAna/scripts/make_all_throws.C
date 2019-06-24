@@ -64,8 +64,9 @@ void make_all_throws(std::string stateFname = def_stateFname,
          << " " << sampleString << " " << throwString << " " << penaltyString
          << " " << hie;
 
-  std::string *CLIArgs = new std::string(CLI_ss.str());
+  std::string *CLIArgs = nullptr;
   global_tree.meta_tree->Branch("CLI", &CLIArgs);
+  (*CLIArgs) = CLI_ss.str();
   std::cerr << "[CLI]: " << *CLIArgs << std::endl;
 
   // Fit in the correct hierarchy and octant for global throw
@@ -227,7 +228,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
     delete fitThrowOsc;
 
     std::cerr << "[THW]: Global throw " << i
-              << " fit found minimum chi2 = " << globalmin << " " << BuildLogInfoString();
+              << " fit found minimum chi2 = " << globalmin << " "
+              << BuildLogInfoString();
 
     // -------------------------------------
     // --------- Now do CPV fits -----------
@@ -258,7 +260,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
       }
 
       std::cerr << "[THW]: CPV throw " << i
-                << " fit found minimum chi2 = " << cpv_chisqmin << " " << BuildLogInfoString();
+                << " fit found minimum chi2 = " << cpv_chisqmin << " "
+                << BuildLogInfoString();
 
       cpv_dchi2 = cpv_chisqmin - globalmin;
       if (cpv_dchi2 > 0) {
@@ -285,7 +288,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
         oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
 
     std::cerr << "[THW]: Oct. throw " << i
-              << " fit found minimum chi2 = " << oct_chisqmin << " " << BuildLogInfoString();
+              << " fit found minimum chi2 = " << oct_chisqmin << " "
+              << BuildLogInfoString();
 
     oct_dchi2 = oct_chisqmin - globalmin;
     if (oct_dchi2 > 0) {
@@ -316,7 +320,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
         nullptr, &mh_tree, &mad_spectra_yo);
 
     std::cerr << "[THW]: MH. throw " << i
-              << " fit found minimum chi2 = " << mh_chisqmin << " " << BuildLogInfoString();
+              << " fit found minimum chi2 = " << mh_chisqmin << " "
+              << BuildLogInfoString();
 
     mh_dchi2 = mh_chisqmin - globalmin;
     if (mh_dchi2 > 0) {
@@ -346,6 +351,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
       mh_tree.SetDirectory(nullptr);
       cpv_tree.SetDirectory(nullptr);
       oct_tree.SetDirectory(nullptr);
+      fout.Write();
+      fout.Close();
       if (odir) {
         odir->cd();
       }
@@ -366,6 +373,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
   mh_tree.Write();
   cpv_tree.Write();
   oct_tree.Write();
+  fout.Write();
+  fout.Close();
 
   std::cout << "[INFO]: Done " << BuildLogInfoString();
 }
