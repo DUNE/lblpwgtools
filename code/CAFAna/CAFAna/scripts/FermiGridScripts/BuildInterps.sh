@@ -31,18 +31,23 @@ if echo ${SAMPLE_NAME} | grep "FD"; then
   IS_FD="1"
 fi
 
-AXBLOBARG=""
+ANAVERSION="4"
 if [ ! -z ${3} ]; then
-  AXBLOBARG=" -A ${3}"
+  ANAVERSION="${3}"
+fi
+
+AXBLOBARG=""
+if [ ! -z ${4} ]; then
+  AXBLOBARG=" -A ${4}"
 fi
 
 SYSTDESCRIPTORARG=""
-if [ ! -z ${4} ]; then
-  SYSTDESCRIPTORARG=" --syst-descriptor ${4}"
+if [ ! -z ${5} ]; then
+  SYSTDESCRIPTORARG=" --syst-descriptor ${5}"
 fi
 
 NOFAKEDATAARG=""
-if [ ! -z ${4} ]; then
+if [ ! -z ${6} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
@@ -93,7 +98,19 @@ LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 INPFILE=""
 if [ ${IS_FD} == "1" ]; then
   #For FD we want to read all at once
-  INPFILE=$(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | tr "\n" " " | sed "s/root:/-i root:/g")
+  for i in $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list); do
+    if echo ${i} | grep "nonswap"; then
+      echo "Found nonswap file: ${i}"
+      INPFILE="${INPFILE} -i ${i}"
+    elif echo ${i} | grep "nueswap"; then
+      echo "Found nueswap file: ${i}";
+      INPFILE="${INPFILE} -e ${i}"
+    elif echo ${i} | grep "tauswap"; then
+      echo "Found tauswap file: ${i}";
+      INPFILE="${INPFILE} -t ${i}"
+    fi;
+  done
+
 else
   (( LINE_N = ${PROCESS} + 1 ))
 
@@ -117,6 +134,9 @@ else
 fi
 
 LOGYLOG "Output file name: ${OUTFILENAME}"
+
+export CAFANA_ANALYSIS_VERSION=${ANAVERSION}
+echo "CAFANA_ANALYSIS_VERSION=${CAFANA_ANALYSIS_VERSION}"
 
 LOGYLOG "MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}"
 MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}
