@@ -9,7 +9,7 @@ namespace ana {
 std::vector<std::string> const &GetAllXSecSystNames();
 /// Return a specific category of XSEC systs
 std::vector<std::string>
-GetXSecSystNames(std::string inputCategg const & = "All");
+GetXSecSystNames(std::string const &inputCategg = "All");
 /// All dials used as freedoms in standard fits
 std::vector<std::string> const &GetFitSystNames();
 /// Dials which should not be used as freedoms (CV weights if they exist removed
