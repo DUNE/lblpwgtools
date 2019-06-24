@@ -413,11 +413,22 @@ double Fitter::DoEval(const double *pars) const {
               << ", pen: " << penalty << "}\n\tT += "
               << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
                      .count()
-              << " s, = s "
-              << std::chrono::duration_cast<std::chrono::seconds>(now -
-                                                                  fBeginTP)
-                     .count()
-              << BuildLogInfoString();
+              << " s, = ";
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(now - fBeginTP)
+            .count() > 60) {
+      std::cout << std::chrono::duration_cast<std::chrono::minutes>(now -
+                                                                    fBeginTP)
+                       .count()
+                << " m. ";
+    } else {
+      std::cout << std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                    fBeginTP)
+                       .count()
+                << " s. ";
+    }
+
+    std::cout << BuildLogInfoString();
     fLastTP = now;
   }
   return fExpt->ChiSq(fCalc, fShifts) + penalty;
