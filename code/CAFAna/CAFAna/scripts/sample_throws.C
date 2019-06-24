@@ -213,10 +213,12 @@ void sample_throws(std::string stateFname = "common_state_mcc11v3.root",
    	       systlist, allsystnames, trueOsc);
 
   // Try prefit subgroups
-  // This is just bad...
-  std::vector<std::string> flux_list;
-  for (uint i=0; i<NFluxParametersToAddToStatefile; ++i) flux_list.push_back("flux_Nov17_"+std::to_string(i));
-  
+  // Get the flux list by removing anything from the allsystlist that doesn't have "flux" in
+  std::vector<std::string> flux_list = allsystnames;
+  flux_list.erase(std::remove_if(flux_list.begin(), flux_list.end(), 
+				 [](const std::string &s) {return s.find("flux_") == std::string::npos;}),
+		  flux_list.end());
+
   // Make some parameter lists
   std::vector<std::string> all_xsec_list = GetXSecSystNames();
   std::vector<std::string> xsec_qe_list = GetXSecSystNames("QELike");
