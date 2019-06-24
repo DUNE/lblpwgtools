@@ -118,6 +118,8 @@ std::string output_file_name;
 std::string syst_descriptor = "";
 std::string axdescriptor = "v4";
 std::vector<std::string> input_patterns;
+std::vector<std::string> nue_input_patterns;
+std::vector<std::string> tau_input_patterns;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
@@ -134,6 +136,8 @@ void SayUsage(char const *argv[]) {
       << "\t-i|--input-pattern <P> : Regex pattern to search for input files.\n"
       << "\t                         Can only include pattern elements for "
          "files\n"
+      << "\t-e|--nue-input-pattern : As above but specifies nueswap files.\n"
+      << "\t-t|--tau-input-pattern : As above but specifies nutauswap files.\n"
       << "\t-n|--n-max <N>         : Max number of events to read.\n"
       << "\t                         and not within directory names.\n"
       << "\t                         i.e. /a/b/c/nd_[0-9]*.root\n"
@@ -164,6 +168,12 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-i") ||
                (std::string(argv[opt]) == "--input-pattern")) {
       input_patterns.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-e") ||
+               (std::string(argv[opt]) == "--nue-input-pattern")) {
+      nue_input_patterns.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-t") ||
+               (std::string(argv[opt]) == "--tau-input-pattern")) {
+      tau_input_patterns.push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--n-max")) {
       nmax = atoi(argv[++opt]);
@@ -197,56 +207,64 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  std::vector<std::string> file_list;
-  for (auto InputFilePattern : input_patterns) {
-    size_t asterisk_loc = InputFilePattern.find_first_of('*');
-    size_t class_loc = InputFilePattern.find_first_of('[');
-    size_t earliest_regex = std::min(asterisk_loc, class_loc);
-    size_t last_slash_loc = InputFilePattern.find_last_of('/');
+  std::vector<std::vector<std::string>> file_lists;
+  size_t NFiles = 0;
+  for (auto ip : {input_patterns, nue_input_patterns, tau_input_patterns}) {
+    file_lists.emplace_back();
+    for (auto InputFilePattern : ip) {
+      size_t asterisk_loc = InputFilePattern.find_first_of('*');
+      size_t class_loc = InputFilePattern.find_first_of('[');
+      size_t earliest_regex = std::min(asterisk_loc, class_loc);
+      size_t last_slash_loc = InputFilePattern.find_last_of('/');
 
-    if ((asterisk_loc != std::string::npos) &&
-        (last_slash_loc != std::string::npos) &&
-        (earliest_regex < last_slash_loc)) {
+      if ((asterisk_loc != std::string::npos) &&
+          (last_slash_loc != std::string::npos) &&
+          (earliest_regex < last_slash_loc)) {
 
-      std::cout << "[ERROR]: Can only wildcard filenames, not directories."
-                << std::endl;
-      exit(2);
-    }
+        std::cout << "[ERROR]: Can only wildcard filenames, not directories."
+                  << std::endl;
+        exit(2);
+      }
 
-    std::string dir = (last_slash_loc == std::string::npos)
-                          ? std::string("")
-                          : InputFilePattern.substr(0, last_slash_loc + 1);
-    std::string pattern =
-        (last_slash_loc == std::string::npos)
-            ? InputFilePattern
-            : InputFilePattern.substr(last_slash_loc + 1,
+      std::string dir = (last_slash_loc == std::string::npos)
+                            ? std::string("")
+                            : InputFilePattern.substr(0, last_slash_loc + 1);
+      std::string pattern = (last_slash_loc == std::string::npos)
+                                ? InputFilePattern
+                                : InputFilePattern.substr(
+                                      last_slash_loc + 1,
                                       InputFilePattern.size() - last_slash_loc);
 
-    std::vector<std::string> CAFs;
+      std::vector<std::string> CAFs;
 
-    if ((earliest_regex == std::string::npos)) {
-      CAFs.push_back(dir + pattern);
-    } else {
-      try {
-        CAFs = GetMatchingFiles(dir, pattern);
-      } catch (std::regex_error const &e) {
-        std::cout << "[ERROR]: " << e.what() << ", " << parseCode(e.code())
-                  << std::endl;
-        exit(3);
+      if ((earliest_regex == std::string::npos)) {
+        CAFs.push_back(dir + pattern);
+      } else {
+        try {
+          CAFs = GetMatchingFiles(dir, pattern);
+        } catch (std::regex_error const &e) {
+          std::cout << "[ERROR]: " << e.what() << ", " << parseCode(e.code())
+                    << std::endl;
+          exit(3);
+        }
       }
+      std::copy(CAFs.begin(), CAFs.end(),
+                std::back_inserter(file_lists.back()));
+      NFiles += CAFs.size();
     }
-    std::copy(CAFs.begin(), CAFs.end(), std::back_inserter(file_list));
   }
 
   if (!do_no_op) {
-    if (!file_list.size()) {
+    if (!NFiles) {
       std::cout << "[ERROR]: Failed to find any matching input files."
                 << std::endl;
       exit(4);
     }
   }
-  for (auto f : file_list) {
-    std::cout << "[INFO]: Reading from: " << f << std::endl;
+  for (auto fl : file_lists) {
+    for (auto f : fl) {
+      std::cout << "[INFO]: Reading from: " << f << std::endl;
+    }
   }
 
   std::vector<ana::ISyst const *> los;
@@ -270,7 +288,8 @@ int main(int argc, char const *argv[]) {
 
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
-    MakePredictionInterp(&fout, sample, los, axes, file_list, nmax);
+    MakePredictionInterp(&fout, sample, los, axes, file_lists[0], file_lists[1],
+                         file_lists[2], nmax);
     fout.Write();
     fout.Close();
   }

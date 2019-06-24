@@ -86,11 +86,12 @@ ana::SystShifts GetFakeDataGeneratorSystShift(std::string input);
 enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };
 SampleType GetSampleType(std::string const &sample);
 
-void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
-                          std::vector<const ana::ISyst *> systlist,
-                          AxisBlob const &axes,
-                          std::vector<std::string> const &file_list,
-                          int max = 0);
+void MakePredictionInterp(
+    TDirectory *saveDir, SampleType sample,
+    std::vector<const ana::ISyst *> systlist, AxisBlob const &axes,
+    std::vector<std::string> const &non_swap_file_list,
+    std::vector<std::string> const &nue_swap_file_list = {},
+    std::vector<std::string> const &tau_swap_file_list = {}, int max = 0);
 
 std::vector<std::unique_ptr<ana::PredictionInterp>>
 GetPredictionInterps(std::string fileName,

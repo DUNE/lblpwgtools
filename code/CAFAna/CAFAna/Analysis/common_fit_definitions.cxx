@@ -511,7 +511,10 @@ SampleType GetSampleType(std::string const &sample) {
 void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                           std::vector<const ISyst *> systlist,
                           AxisBlob const &axes,
-                          std::vector<std::string> const &file_list, int max) {
+                          std::vector<std::string> const &non_swap_file_list,
+                          std::vector<std::string> const &nue_swap_file_list,
+                          std::vector<std::string> const &tau_swap_file_list,
+                          int max) {
 
   for (auto &v : axes.NDAx->GetVars()) {
     assert(v.IsValid());
@@ -544,9 +547,9 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(file_list, kBeam, max);
-    SpectrumLoader loaderNue(file_list, kBeam, max);
-    SpectrumLoader loaderNutau(file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
 
     these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
                             Loaders::kNonSwap);
@@ -583,7 +586,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
@@ -611,7 +614,8 @@ std::vector<std::string> const sample_suffix_order = {
     "FD_FHC", "FD_FHC", "FD_RHC", "FD_RHC", "ND_FHC", "ND_RHC"};
 
 std::vector<std::unique_ptr<ana::PredictionInterp>>
-GetPredictionInterps(std::string fileName, std::vector<const ISyst *> systlist) {
+GetPredictionInterps(std::string fileName,
+                     std::vector<const ISyst *> systlist) {
 
   // Make sure the syst registry has been populated with all the systs we could
   // want to use
