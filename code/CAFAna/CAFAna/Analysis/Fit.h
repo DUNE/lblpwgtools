@@ -38,7 +38,7 @@ SystShifts junkShifts;
 /// Perform MINUIT fits in one or two dimensions
 class Fitter : public ROOT::Math::IGradientFunctionMultiDim {
 public:
-  enum Verbosity { kQuiet, kVerbose };
+  enum Verbosity { kQuiet = 0, kVerbose = 1, kTurbose = 2 };
 
   enum Precision {
     // You must select one of these. The first three codes match the settings
@@ -167,14 +167,13 @@ protected:
 
   /// Helper for \ref FitHelper
   std::unique_ptr<ROOT::Math::Minimizer>
-  FitHelperSeeded(osc::IOscCalculatorAdjustable *seed, SystShifts &systSeed,
-                  Verbosity verb) const;
+  FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                  SystShifts &systSeed) const;
 
   /// Helper for \ref Fit
   double FitHelper(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
                    const SeedList &seedPts,
-                   const std::vector<SystShifts> &systSeedPts,
-                   Verbosity verb) const;
+                   const std::vector<SystShifts> &systSeedPts) const;
 
   /// Updates mutable fCalc and fShifts
   void DecodePars(const double *pars) const;

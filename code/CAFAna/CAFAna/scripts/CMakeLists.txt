@@ -18,8 +18,10 @@ set(scripts_to_build
   make_all_throws
   make_all_throws_fixed_seed
   make_1dconstraint_plots
+  make_spectra_constraint_plots
   llh_scans
   spec_joint
+  sample_throws
 )
 
 install(FILES ${scripts_to_install} DESTINATION scripts)

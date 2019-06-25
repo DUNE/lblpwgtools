@@ -125,7 +125,9 @@ struct FitTreeBlob {
   void CopyVals(FitTreeBlob const &fb);
   void Fill();
   void SetDirectory(TDirectory *d);
+  void SetDirectoryClone(TDirectory *d);
   void Write();
+  void WriteClone();
   bool fMeta_filled;
   TTree *throw_tree;
   TTree *meta_tree;

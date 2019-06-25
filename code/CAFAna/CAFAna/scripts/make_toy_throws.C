@@ -41,6 +41,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   gRandom->SetSeed(gRNGSeed);
 
+  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
+
   CheckPointHelper chk;
   if (chk.IsCounting()) {
     nthrows = std::numeric_limits<int>::max();
@@ -102,15 +104,17 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   }
 
   FitTreeBlob pftree("fit_info", "param_info");
+  pftree.SetDirectory(fout);
 
   std::stringstream CLI_ss("");
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
          << " " << sampleString << " " << throwString << " " << penaltyString
          << " " << hie << " " << asimov_set << " " << oscVarString;
-  std::string *CLIArgs = new std::string(CLI_ss.str());
+  std::string *CLIArgs = nullptr;
   pftree.meta_tree->Branch("CLI", &CLIArgs);
+  (*CLIArgs) = CLI_ss.str();
 
-  std::cerr << "[CLI]: " << *CLIArgs << std::endl;
+  std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
 
   for (int i = 0; i < nthrows; ++i) {
 
@@ -172,9 +176,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       chk.WaitForSemaphore();
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
-      TFile fout(outputFname.c_str(), "RECREATE");
-      pftree.Write();
-      pftree.SetDirectory(nullptr);
+      fout->Write();
       if (odir) {
         odir->cd();
       }
@@ -190,8 +192,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   }
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-  TFile fout(outputFname.c_str(), "RECREATE");
-  pftree.Write();
+  fout->Write();
+  fout->Close();
 
   std::cout << "[INFO]: Done " << BuildLogInfoString();
 }

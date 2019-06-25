@@ -173,7 +173,7 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
       dial_name = "BeRPA_E";
       auto berpa_e =
           std::find_if(XSecSystDials.begin(), XSecSystDials.end(), sel);
-      berpa_e->IsFitSyst = kFitSyst;
+      berpa_e->IsFitSyst = kRemovedOther;
       berpa_e->FitLimits = {0, 0};
 
       dial_name = "SPPLowQ2Suppression";
