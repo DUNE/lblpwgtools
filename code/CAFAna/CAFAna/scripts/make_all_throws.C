@@ -344,16 +344,12 @@ void make_all_throws(std::string stateFname = def_stateFname,
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
       TFile fout(outputFname.c_str(), "RECREATE");
-      global_tree.Write();
-      mh_tree.Write();
-      cpv_tree.Write();
-      oct_tree.Write();
+      global_tree.WriteClone();
+      mh_tree.WriteClone();
+      cpv_tree.WriteClone();
+      oct_tree.WriteClone();
       fout.Write();
       fout.Close();
-      global_tree.SetDirectory(nullptr);
-      mh_tree.SetDirectory(nullptr);
-      cpv_tree.SetDirectory(nullptr);
-      oct_tree.SetDirectory(nullptr);
       if (odir) {
         odir->cd();
       }
@@ -370,14 +366,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
   TFile fout(outputFname.c_str(), "RECREATE");
-  global_tree.SetDirectory(&fout);
-  mh_tree.SetDirectory(&fout);
-  cpv_tree.SetDirectory(&fout);
-  oct_tree.SetDirectory(&fout);
-  global_tree.Write();
-  mh_tree.Write();
-  cpv_tree.Write();
-  oct_tree.Write();
+  global_tree.WriteClone();
+  mh_tree.WriteClone();
+  cpv_tree.WriteClone();
+  oct_tree.WriteClone();
   fout.Write();
   fout.Close();
 
