@@ -35,16 +35,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     }
   }
 
-  bool UseTransientFile = true;
-  if (getenv("CAFANA_USE_TRANSIENT_FILE")) {
-    UseTransientFile = bool(atoi(getenv("CAFANA_USE_TRANSIENT_FILE")));
-  }
-
-  TFile *fout = nullptr;
-  if (!UseTransientFile) {
-    std::cout << "[INFO]: Opening output file: " << outputFname << std::endl;
-    fout = new TFile(outputFname.c_str(), "RECREATE");
-  }
+  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
   std::cerr << "[RNG]: gRNGSeed = " << gRNGSeed << std::endl;
 
@@ -173,12 +164,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oct_tree.throw_tree->Branch("significance", &oct_significance);
   // oct_tree.meta_tree->Branch("CLI", &CLIArgs);
 
-  if (!UseTransientFile) {
-    global_tree.SetDirectory(fout);
-    mh_tree.SetDirectory(fout);
-    cpv_tree.SetDirectory(fout);
-    oct_tree.SetDirectory(fout);
-  }
+  global_tree.SetDirectory(fout);
+  mh_tree.SetDirectory(fout);
+  cpv_tree.SetDirectory(fout);
+  oct_tree.SetDirectory(fout);
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
@@ -361,21 +350,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
       chk.WaitForSemaphore();
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
-      if (UseTransientFile) {
-        fout = new TFile(outputFname.c_str(), "RECREATE");
-        global_tree.SetDirectory(fout);
-        mh_tree.SetDirectory(fout);
-        cpv_tree.SetDirectory(fout);
-        oct_tree.SetDirectory(fout);
-        fout->Write();
-        global_tree.SetDirectory(nullptr);
-        mh_tree.SetDirectory(nullptr);
-        cpv_tree.SetDirectory(nullptr);
-        oct_tree.SetDirectory(nullptr);
-        fout->Close();
-      } else {
-        fout->Write();
-      }
+      fout->Write();
       if (odir) {
         odir->cd();
       }
@@ -391,14 +366,6 @@ void make_all_throws(std::string stateFname = def_stateFname,
   }
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-  if (UseTransientFile) {
-    fout = new TFile(outputFname.c_str(), "RECREATE");
-    global_tree.SetDirectory(fout);
-    mh_tree.SetDirectory(fout);
-    cpv_tree.SetDirectory(fout);
-    oct_tree.SetDirectory(fout);
-  }
-
   fout->Write();
   fout->Close();
   std::cout << "[INFO]: Done " << BuildLogInfoString();

@@ -41,6 +41,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   gRandom->SetSeed(gRNGSeed);
 
+  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
+
   CheckPointHelper chk;
   if (chk.IsCounting()) {
     nthrows = std::numeric_limits<int>::max();
@@ -102,6 +104,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   }
 
   FitTreeBlob pftree("fit_info", "param_info");
+  pftree.SetDirectory(fout);
 
   std::stringstream CLI_ss("");
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
@@ -173,11 +176,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       chk.WaitForSemaphore();
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
-      TFile fout(outputFname.c_str(), "RECREATE");
-      pftree.Write();
-      pftree.SetDirectory(nullptr);
-      fout.Write();
-      fout.Close();
+      fout->Write();
       if (odir) {
         odir->cd();
       }
@@ -193,10 +192,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   }
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-  TFile fout(outputFname.c_str(), "RECREATE");
-  pftree.Write();
-  fout.Write();
-  fout.Close();
+  fout->Write();
+  fout->Close();
 
   std::cout << "[INFO]: Done " << BuildLogInfoString();
 }
