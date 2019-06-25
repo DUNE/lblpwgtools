@@ -59,15 +59,15 @@ void make_all_throws(std::string stateFname = def_stateFname,
   double this_th23;
   double this_ssth23;
 
-  std::stringstream CLI_ss("");
-  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
-         << " " << sampleString << " " << throwString << " " << penaltyString
-         << " " << hie;
-
-  std::string *CLIArgs = nullptr;
-  global_tree.meta_tree->Branch("CLI", &CLIArgs);
-  (*CLIArgs) = CLI_ss.str();
-  std::cerr << "[CLI]: " << *CLIArgs << std::endl;
+  // std::stringstream CLI_ss("");
+  // CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
+  //        << " " << sampleString << " " << throwString << " " << penaltyString
+  //        << " " << hie;
+  //
+  // std::string *CLIArgs = nullptr;
+  // global_tree.meta_tree->Branch("CLI", &CLIArgs);
+  // (*CLIArgs) = CLI_ss.str();
+  // std::cerr << "[CLI]: " << *CLIArgs << std::endl;
 
   // Fit in the correct hierarchy and octant for global throw
   std::vector<const IFitVar *> oscVarsGlobal = GetOscVars("alloscvars", hie);
@@ -121,7 +121,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   mh_tree.throw_tree->Branch("dcp", &thisdcp);
   mh_tree.throw_tree->Branch("dchi2", &mh_dchi2);
   mh_tree.throw_tree->Branch("significance", &mh_significance);
-  mh_tree.meta_tree->Branch("CLI", &CLIArgs);
+  // mh_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   // Fit in the incorrect hierarchy for the exclusion
   std::vector<const IFitVar *> oscVarsMH = GetOscVars("alloscvars", -1 * hie);
@@ -138,7 +138,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   cpv_tree.throw_tree->Branch("dcp", &thisdcp);
   cpv_tree.throw_tree->Branch("dchi2", &cpv_dchi2);
   cpv_tree.throw_tree->Branch("significance", &cpv_significance);
-  cpv_tree.meta_tree->Branch("CLI", &CLIArgs);
+  // cpv_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   // CP-conserving specific (no dCP)
   std::vector<const IFitVar *> oscVarsCPV =
@@ -159,7 +159,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oct_tree.throw_tree->Branch("th23", &this_th23);
   oct_tree.throw_tree->Branch("dchi2", &oct_dchi2);
   oct_tree.throw_tree->Branch("significance", &oct_significance);
-  oct_tree.meta_tree->Branch("CLI", &CLIArgs);
+  // oct_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
