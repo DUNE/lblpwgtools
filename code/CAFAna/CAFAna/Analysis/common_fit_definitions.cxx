@@ -1078,14 +1078,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     first_load = false;
   }
 
-  // Get the ndCov
-  const std::string detCovPath = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
-#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-  std::string covFileName = detCovPath + "/det_sys_cov.root";
-#else
-  std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
-#endif
-
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue,
       pot_fd_fhc_numu, pot_fd_rhc_numu;
@@ -1307,14 +1299,28 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   bool UseV3NDCovMat = (AnaV == kV3);
-  if (getenv("CAFANA_USE_V3NDCOVMAT")) {
-    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_V3NDCOVMAT")));
+  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
   }
 
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+
+    // Get the ndCov
+    const std::string detCovPath =
+        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+    std::string covFileName =
+        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                    : "/det_sys_cov.root");
+#else
+    std::string covFileName =
+        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                         : "/Systs/det_sys_cov.root");
+#endif
+
     if (turbose) {
       std::cout << "[INFO]: Adding ND covmat " << BuildLogInfoString()
                 << std::endl;
