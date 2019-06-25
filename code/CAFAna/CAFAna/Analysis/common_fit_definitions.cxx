@@ -335,6 +335,10 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       fluxsyst_CDR = true;
       fluxsyst_Nov17 = false;
     }
+    if (syst == "nov17flux") {
+      fluxsyst_CDR = false;
+      fluxsyst_Nov17 = true;
+    }
     if (syst == "fakedata") {
       useFakeData = true;
     } // LOOK MA, I GOT BRACES!
