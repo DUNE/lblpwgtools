@@ -217,6 +217,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
     std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
 
     auto fit_type = Fitter::kNormal;
+    if (getenv("CAFANA_FIT_FORCE_HESSE") &&
+        bool(atoi(getenv("CAFANA_FIT_FORCE_HESSE")))) {
+      fit_type = Fitter::kNormal | Fitter::kIncludeHesse;
+    }
 
     // -------------------------------------
     // --------- Do the global fit ---------

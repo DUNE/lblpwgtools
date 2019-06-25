@@ -156,7 +156,13 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
     }
-    Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
+    Fitter::Precision fitStrategy = Fitter::kNormal;
+
+    auto fit_type = Fitter::kNormal;
+    if (getenv("CAFANA_FIT_FORCE_HESSE") &&
+        bool(atoi(getenv("CAFANA_FIT_FORCE_HESSE")))) {
+      fit_type = Fitter::kNormal | Fitter::kIncludeHesse;
+    }
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
