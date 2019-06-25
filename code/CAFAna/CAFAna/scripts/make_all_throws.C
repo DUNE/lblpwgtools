@@ -40,7 +40,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     UseTransientFile = bool(atoi(getenv("CAFANA_USE_TRANSIENT_FILE")));
   }
 
-  TFile *fout;
+  TFile *fout = nullptr;
   if (!UseTransientFile) {
     std::cout << "[INFO]: Opening output file: " << outputFname << std::endl;
     fout = new TFile(outputFname.c_str(), "RECREATE");
