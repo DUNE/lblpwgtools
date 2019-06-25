@@ -152,7 +152,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
     }
-    Fitter::Precision fitStrategy = Fitter::kNormal; //|Fitter::kIncludeHesse;
+    Fitter::Precision fitStrategy = Fitter::kNormal|Fitter::kIncludeHesse;
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
