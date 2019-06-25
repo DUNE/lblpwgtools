@@ -344,10 +344,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
       TDirectory *odir = gDirectory;
       TFile fout(outputFname.c_str(), "RECREATE");
-      global_tree.WriteClone();
-      mh_tree.WriteClone();
-      cpv_tree.WriteClone();
-      oct_tree.WriteClone();
+      global_tree.SetDirectoryClone(&fout);
+      mh_tree.SetDirectoryClone(&fout);
+      cpv_tree.SetDirectoryClone(&fout);
+      oct_tree.SetDirectoryClone(&fout);
       fout.Write();
       fout.Close();
       if (odir) {
@@ -366,10 +366,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
   TFile fout(outputFname.c_str(), "RECREATE");
-  global_tree.WriteClone();
-  mh_tree.WriteClone();
-  cpv_tree.WriteClone();
-  oct_tree.WriteClone();
+  global_tree.SetDirectoryClone(&fout);
+  mh_tree.SetDirectoryClone(&fout);
+  cpv_tree.SetDirectoryClone(&fout);
+  oct_tree.SetDirectoryClone(&fout);
   fout.Write();
   fout.Close();
 

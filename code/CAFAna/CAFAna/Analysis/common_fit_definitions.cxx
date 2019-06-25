@@ -888,7 +888,7 @@ void SaveParams(TDirectory *outDir, std::vector<const ISyst *> systlist) {
 
 FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr),
-      fRNGSeed(gRNGSeed), fNFills(0), fIsCirc(false) {
+      fRNGSeed(gRNGSeed), fNFills(0) {
 
   fFakeDataVals = new std::vector<double>();
   fParamNames = new std::vector<std::string>();
@@ -898,21 +898,12 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   fPostFitErrors = new std::vector<double>();
   fCentralValues = new std::vector<double>();
 
-  fIsCirc = getenv("CAFANA_FIT_CIRCTTREE") &&
-            bool(atoi(getenv("CAFANA_FIT_CIRCTTREE")));
-
   TDirectory *odir = gDirectory;
 
   if (tree_name.size()) {
 
-    if (fIsCirc) {
-      gROOT->cd();
-      throw_tree = new TTree(tree_name.c_str(), "Fit information");
-      throw_tree->SetAutoSave(1100);
-      throw_tree->SetCircular(1100);
-    } else {
-      throw_tree = new TTree(tree_name.c_str(), "Fit information");
-    }
+    throw_tree = new TTree(tree_name.c_str(), "Fit information");
+    throw_tree->SetAutoSave(100);
     throw_tree->Branch("chisq", &fChiSq);
     throw_tree->Branch("NSeconds", &fNSeconds);
     throw_tree->Branch("ResMemUsage", &fResMemUsage);
@@ -931,14 +922,8 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
 
     if (meta_tree_name.size()) {
 
-      if (fIsCirc) {
-        gROOT->cd();
-        meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
-        meta_tree->SetAutoSave(5);
-        meta_tree->SetCircular(5);
-      } else {
-        meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
-      }
+      meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
+      meta_tree->SetAutoSave(100);
       meta_tree->Branch("fParamNames", &fParamNames);
       meta_tree->Branch("RNGSeed", &fRNGSeed);
     }
@@ -999,14 +984,6 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   fNFills = fb.fNFills;
 }
 void FitTreeBlob::Fill() {
-  if (fNFills >= 1000) {
-    std::cerr << "[ERROR]: Warning FitTreeBlob::Fill called more than 1000 "
-                 "times but memory resident trees with circular buffers are "
-                 "used, you will be losing events if you carry on."
-              << std::endl;
-    abort();
-  }
-
   if (throw_tree) {
     throw_tree->Fill();
   }
@@ -1026,6 +1003,23 @@ void FitTreeBlob::SetDirectory(TDirectory *d) {
     meta_tree->SetDirectory(d);
   }
 }
+void FitTreeBlob::SetDirectoryClone(TDirectory *d) {
+  if (!d) {
+    return;
+  }
+  if (throw_tree) {
+    TTree *clone = throw_tree->CloneTree();
+    clone->ResetBranchAddresses();
+    clone->SetDirectory(d);
+    throw_tree->SetDirectory(nullptr);
+  }
+  if (meta_tree) {
+    TTree *clone = meta_tree->CloneTree();
+    clone->ResetBranchAddresses();
+    clone->SetDirectory(d);
+    meta_tree->SetDirectory(nullptr);
+  }
+}
 void FitTreeBlob::Write() {
   if (throw_tree) {
     throw_tree->Write();
@@ -1036,10 +1030,16 @@ void FitTreeBlob::Write() {
 }
 void FitTreeBlob::WriteClone() {
   if (throw_tree) {
-    throw_tree->CloneTree()->Write();
+    TTree *clone = throw_tree->CloneTree();
+    clone->ResetBranchAddresses();
+    clone->Write();
+    throw_tree->SetDirectory(nullptr);
   }
   if (meta_tree) {
-    meta_tree->CloneTree()->Write();
+    TTree *clone = meta_tree->CloneTree();
+    clone->ResetBranchAddresses();
+    clone->Write();
+    meta_tree->SetDirectory(nullptr);
   }
 }
 

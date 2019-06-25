@@ -125,6 +125,7 @@ struct FitTreeBlob {
   void CopyVals(FitTreeBlob const &fb);
   void Fill();
   void SetDirectory(TDirectory *d);
+  void SetDirectoryClone(TDirectory *d);
   void Write();
   void WriteClone();
   bool fMeta_filled;
@@ -146,7 +147,6 @@ struct FitTreeBlob {
   double fNFCN;
   double fEDM;
   bool fIsValid;
-  bool fIsCirc;
 };
 
 std::string BuildLogInfoString();
