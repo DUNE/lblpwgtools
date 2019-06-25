@@ -1298,6 +1298,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
               << std::endl;
   }
 
+  bool UseNDCovMat = true;
+  if (getenv("CAFANA_USE_NDCOVMAT")) {
+    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
+  }
+
   bool UseV3NDCovMat = (AnaV == kV3);
   if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
     UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
@@ -1306,7 +1311,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Add in the covariance matrices via the MultiExperiment
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
-  if ((pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
 
     // Get the ndCov
     const std::string detCovPath =
