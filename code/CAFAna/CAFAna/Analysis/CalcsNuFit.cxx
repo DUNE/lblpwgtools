@@ -151,13 +151,15 @@ namespace ana
   {
     assert(hie == +1 || hie == -1);
 
+    std::cerr << "Using ThrownNuFitOscCalc, which is now somewhat deprecated (look at 32 and hierarchy)" << std::endl; 
     osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalculatorPMNSOpt;
 
     // Throw 12 and rho within errors
     if (HasVar(oscVars, kFitRho.ShortName()))
       ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
 
-    if (HasVar(oscVars, kFitDmSq21.ShortName()))
+    if (HasVar(oscVars, kFitDmSq21.ShortName()) or
+	HasVar(oscVars, kFitDmSq21Scaled.ShortName()))
       ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
 
     if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
@@ -301,11 +303,12 @@ namespace ana
     if (HasVar(oscVars, kFitRho.ShortName()))
       ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
 
-    if (HasVar(oscVars, kFitDmSq21.ShortName()))
-      ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+    if (HasVar(oscVars, kFitDmSq21.ShortName()) or
+	HasVar(oscVars, kFitDmSq21Scaled.ShortName()))
+      ret->SetDmsq21(kNuFitDmsq21CV+kNuFitDmsq21Err*gRandom->Gaus()));
 
     if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
-      ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+      ret->SetTh12(kNuFitTh12CV+kNuFitTh12Err*gRandom->Gaus());
 
     // Throw dmsq32 flat between 2.3 and 2.7 in the correct hierarchy
     if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()) or
