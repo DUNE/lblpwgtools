@@ -1,5 +1,7 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+using namespace ana;
+
 void octant_joint(std::string stateFname="common_state_mcc11v3.root",
 		  std::string outputFname="octant_joint.root",
 		  std::string systSet = "nosyst", std::string sampleString = "ndfd",
@@ -20,7 +22,7 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
   
   double minVal = 0.3;
   double maxVal = 0.7;
-  int nsteps = 31;
+  int nsteps = 32;
   double ssth23_step = (maxVal - minVal)/nsteps;
 
   TGraph* gOct = new TGraph();

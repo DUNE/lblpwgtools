@@ -95,7 +95,7 @@ void llh_scans(std::string stateFname = def_stateFname,
   std::vector<double> syst_vals;
   int nsteps = 401;
   for (int i = 0; i < nsteps; ++i) {
-    double range = 8;
+    double range = 0.001;
     double stride = range / (nsteps - 1);
     syst_vals.push_back(stride * i - range / 2.);
   }
