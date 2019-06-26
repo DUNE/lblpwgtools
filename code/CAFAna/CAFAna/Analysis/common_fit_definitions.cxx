@@ -907,7 +907,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   if (tree_name.size()) {
 
     throw_tree = new TTree(tree_name.c_str(), "Fit information");
-    throw_tree->SetAutoSave(100);
+    throw_tree->SetAutoSave(1);
     throw_tree->Branch("chisq", &fChiSq);
     throw_tree->Branch("NSeconds", &fNSeconds);
     throw_tree->Branch("ResMemUsage", &fResMemUsage);
@@ -927,7 +927,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     if (meta_tree_name.size()) {
 
       meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
-      meta_tree->SetAutoSave(100);
+      meta_tree->SetAutoSave(1);
       meta_tree->Branch("fParamNames", &fParamNames);
       meta_tree->Branch("RNGSeed", &fRNGSeed);
     }
