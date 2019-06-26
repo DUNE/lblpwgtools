@@ -305,7 +305,7 @@ namespace ana
 
     if (HasVar(oscVars, kFitDmSq21.ShortName()) or
 	HasVar(oscVars, kFitDmSq21Scaled.ShortName()))
-      ret->SetDmsq21(kNuFitDmsq21CV+kNuFitDmsq21Err*gRandom->Gaus()));
+      ret->SetDmsq21(kNuFitDmsq21CV+kNuFitDmsq21Err*gRandom->Gaus());
 
     if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
       ret->SetTh12(kNuFitTh12CV+kNuFitTh12Err*gRandom->Gaus());
