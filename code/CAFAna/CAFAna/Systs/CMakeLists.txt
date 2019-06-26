@@ -57,6 +57,7 @@ set(SYST_INPUT_ROOT_FILES
   modelComp.root
   ND_eff_syst.root
   det_sys_cov.root
+  det_sys_cov_v3binning.root
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
