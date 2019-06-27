@@ -329,6 +329,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       detsyst = false;
     }
     if (syst == "noflux") {
+      fluxsyst_CDR = false;
       fluxsyst_Nov17 = false;
     }
     if (syst == "cdrflux") {
@@ -376,33 +377,35 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     // Now remove some specific groups
     // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res,
     // noxsec_dis, noxsec_fsi, noxsec_ratios
-    else if (syst == "nofd_det")
+    else if (syst == "nofd_det") {
       RemoveSysts(namedList, fd_det_list);
-    else if (syst == "nofd_escale")
+    } else if (syst == "nofd_escale") {
       RemoveSysts(namedList, fd_escale_list);
-    else if (syst == "nofd_muon_escale")
+    } else if (syst == "nofd_muon_escale") {
       RemoveSysts(namedList, fd_muon_escale_list);
-    else if (syst == "nofd_eres")
+    } else if (syst == "nofd_eres") {
       RemoveSysts(namedList, fd_eres_list);
-    else if (syst == "nofd_muon_eres")
+    } else if (syst == "nofd_muon_eres") {
       RemoveSysts(namedList, fd_muon_eres_list);
-    else if (syst == "nofd_other_det")
+    } else if (syst == "nofd_other_det") {
       RemoveSysts(namedList, fd_other_det_list);
-    else if (syst == "nofd_nonlin_det")
+    } else if (syst == "nofd_nonlin_det") {
       RemoveSysts(namedList, fd_nonlin_det_list);
-    else if (syst == "noxsec_qe")
+    } else if (syst == "noxsec_qe") {
       RemoveSysts(namedList, xsec_qe_list);
-    else if (syst == "noxsec_res")
+    } else if (syst == "noxsec_res") {
       RemoveSysts(namedList, xsec_res_list);
-    else if (syst == "noxsec_dis")
+    } else if (syst == "noxsec_dis") {
       RemoveSysts(namedList, xsec_dis_list);
-    else if (syst == "noxsec_fsi")
+    } else if (syst == "noxsec_fsi") {
       RemoveSysts(namedList, xsec_fsi_list);
-    else if (syst == "noxsec_ratios")
+    } else if (syst == "noxsec_ratios") {
       RemoveSysts(namedList, xsec_ratios_list);
+    }
     // If not, remove as if it's a single parameter instruction
-    else
+    else {
       RemoveSysts(namedList, {syst.erase(0, 2)});
+    }
   }
 
   if (GetAnaVersion() == kV3) {
