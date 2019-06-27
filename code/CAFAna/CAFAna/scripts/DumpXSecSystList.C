@@ -82,11 +82,6 @@ void DumpXSecSystList() {
            {"fd_muon_eres_list", fd_muon_eres_list},
            {"fd_other_det_list", fd_other_det_list},
            {"fd_nonlin_det_list", fd_nonlin_det_list},
-           {"xsec_qe_list", xsec_qe_list},
-           {"xsec_res_list", xsec_res_list},
-           {"xsec_dis_list", xsec_dis_list},
-           {"xsec_fsi_list", xsec_fsi_list},
-           {"xsec_ratios_list", xsec_ratios_list},
 
        }) {
     std::cout << "For helper list: " << str_p.first << " expect to remove "

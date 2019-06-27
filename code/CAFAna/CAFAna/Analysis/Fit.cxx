@@ -410,7 +410,7 @@ double Fitter::DoEval(const double *pars) const {
 
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
 
-    std::cout << "[FIT]: NEval: " << fNEval
+    std::cerr << "[FIT]: NEval: " << fNEval
               << ", LH: {samp: " << fExpt->ChiSq(fCalc, fShifts)
               << ", pen: " << penalty << "}\n\tT += "
               << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)

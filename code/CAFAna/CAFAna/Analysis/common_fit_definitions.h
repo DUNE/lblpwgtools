@@ -133,6 +133,8 @@ struct FitTreeBlob {
   TTree *meta_tree;
   std::vector<double> *fFakeDataVals;
   std::vector<std::string> *fParamNames;
+  std::vector<std::string> *fEnvVarNames;
+  std::vector<std::string> *fEnvVarValues;
   std::vector<double> *fPreFitValues;
   std::vector<double> *fPreFitErrors;
   std::vector<double> *fPostFitValues;
@@ -142,6 +144,7 @@ struct FitTreeBlob {
   unsigned fNSeconds;
   unsigned fRNGSeed;
   unsigned fNFills;
+  unsigned fNOscSeeds;
   double fResMemUsage;
   double fVirtMemUsage;
   double fNFCN;

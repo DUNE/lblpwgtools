@@ -62,8 +62,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   double this_ssth23;
 
   std::stringstream CLI_ss("");
-  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " <<
-  systSet
+  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
          << " " << sampleString << " " << throwString << " " << penaltyString
          << " " << hie;
 
@@ -71,6 +70,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
   global_tree.meta_tree->Branch("CLI", &CLIArgs);
   (*CLIArgs) = CLI_ss.str();
   std::cerr << "[CLI]: " << *CLIArgs << std::endl;
+  unsigned LoopTime_s;
+  global_tree.throw_tree->Branch("LoopTime_s", &LoopTime_s);
 
   // Fit in the correct hierarchy and octant for global throw
   std::vector<const IFitVar *> oscVarsGlobal = GetOscVars("alloscvars", hie);
@@ -172,7 +173,17 @@ void make_all_throws(std::string stateFname = def_stateFname,
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
+  auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
+    auto start_loop = std::chrono::system_clock::now();
+    if (!i) {
+      LoopTime_s = 0;
+    } else {
+      LoopTime_s =
+          std::chrono::duration_cast<std::chrono::seconds>(start_loop - lap)
+              .count();
+      lap = start_loop;
+    }
 
     std::cerr << "[THW]: Starting throw " << i << " " << BuildLogInfoString();
     // Set up throws for the starting value
@@ -235,9 +246,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
                     stats_throw, oscVarsGlobal, systlist, fitThrowOsc,
                     SystShifts(fitThrowSyst), oscSeedsGlobal, gpenalty,
                     fit_type, nullptr, &global_tree, &mad_spectra_yo);
-    global_tree.Fill();
+
     delete gpenalty;
     delete fitThrowOsc;
+    global_tree.Fill();
 
     std::cerr << "[THW]: Global throw " << i
               << " fit found minimum chi2 = " << globalmin << " "

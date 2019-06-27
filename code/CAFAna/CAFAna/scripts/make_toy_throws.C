@@ -105,6 +105,8 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   FitTreeBlob pftree("fit_info", "param_info");
   pftree.SetDirectory(fout);
+  unsigned LoopTime_s;
+  pftree.throw_tree->Branch("LoopTime_s", &LoopTime_s);
 
   std::stringstream CLI_ss("");
   CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
@@ -116,7 +118,17 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
 
+  auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
+    auto start_loop = std::chrono::system_clock::now();
+    if (!i) {
+      LoopTime_s = 0;
+    } else {
+      LoopTime_s =
+          std::chrono::duration_cast<std::chrono::seconds>(start_loop - lap)
+              .count();
+      lap = start_loop;
+    }
 
     std::cerr << "[THW]: Starting throw " << i << " " << BuildLogInfoString();
 

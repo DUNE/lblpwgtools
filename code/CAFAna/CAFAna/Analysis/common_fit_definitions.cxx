@@ -906,6 +906,8 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   fPostFitValues = new std::vector<double>();
   fPostFitErrors = new std::vector<double>();
   fCentralValues = new std::vector<double>();
+  fEnvVarNames = new std::vector<std::string>();
+  fEnvVarValues = new std::vector<std::string>();
 
   TDirectory *odir = gDirectory;
 
@@ -928,12 +930,15 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     throw_tree->Branch("fCentralValues", &fCentralValues);
     throw_tree->Branch("RNGSeed", &fRNGSeed);
     throw_tree->Branch("ProcFitN", &fNFills);
+    throw_tree->Branch("NOscSeeds", &fNOscSeeds);
 
     if (meta_tree_name.size()) {
 
       meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
       meta_tree->SetAutoSave(1000);
       meta_tree->Branch("fParamNames", &fParamNames);
+      meta_tree->Branch("fEnvVarNames", &fEnvVarNames);
+      meta_tree->Branch("fEnvVarValues", &fEnvVarValues);
       meta_tree->Branch("RNGSeed", &fRNGSeed);
     }
   }
@@ -960,8 +965,11 @@ FitTreeBlob *FitTreeBlob::MakeReader(TTree *t, TTree *m) {
   t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
   t->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
   t->SetBranchAddress("ProcFitN", &ftb->fNFills);
+  t->SetBranchAddress("NOscSeeds", &ftb->fNOscSeeds);
 
   m->SetBranchAddress("fParamNames", &ftb->fParamNames);
+  m->SetBranchAddress("fEnvVarNames", &ftb->fEnvVarNames);
+  m->SetBranchAddress("fEnvVarValues", &ftb->fEnvVarValues);
   m->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
   return ftb;
 }
@@ -973,10 +981,14 @@ FitTreeBlob::~FitTreeBlob() {
   delete fPostFitValues;
   delete fPostFitErrors;
   delete fCentralValues;
+  delete fEnvVarNames;
+  delete fEnvVarValues;
 }
 void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fFakeDataVals) = (*fb.fFakeDataVals);
   (*fParamNames) = (*fb.fParamNames);
+  (*fEnvVarNames) = (*fb.fEnvVarNames);
+  (*fEnvVarValues) = (*fb.fEnvVarValues);
   (*fPreFitValues) = (*fb.fPreFitValues);
   (*fPreFitErrors) = (*fb.fPreFitErrors);
   (*fPostFitValues) = (*fb.fPostFitValues);
@@ -991,6 +1003,7 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   fVirtMemUsage = fb.fVirtMemUsage;
   fRNGSeed = fb.fRNGSeed;
   fNFills = fb.fNFills;
+  fNOscSeeds = fb.fNOscSeeds;
 }
 void FitTreeBlob::Fill() {
   if (throw_tree) {
@@ -1105,6 +1118,23 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static bool PI_load = true;
   static std::vector<ana::ISyst const *> syststoload = systlist;
   if (PI_load) {
+
+    for (auto &env_str :
+         {"CAFANA_ANALYSIS_VERSION", "CAFANA_USE_UNCORRNDCOVMAT",
+          "CAFANA_USE_NDCOVMAT", "CAFANA_IGNORE_CV_WEIGHT",
+          "CAFANA_IGNORE_SELECTION", "CAFANA_DISABLE_DERIVATIVES",
+          "CAFANA_DONT_CLAMP_SYSTS", "CAFANA_FIT_TURBOSE",
+          "CAFANA_FIT_FORCE_HESSE", "FIT_PRECISION", "FIT_TOLERANCE"}) {
+      if (getenv(env_str)) {
+        std::cout << "[ENV]: " << env_str << " = " << getenv(env_str)
+                  << std::endl;
+        if (PostFitTreeBlob) {
+          PostFitTreeBlob->fEnvVarNames->push_back(env_str);
+          PostFitTreeBlob->fEnvVarValues->push_back(getenv(env_str));
+        }
+      }
+    }
+
     std::vector<ana::ISyst const *> fdlos =
         GetListOfSysts(false, false, false, false, false, false,
                        true /*add fake data*/, false);
@@ -1440,18 +1470,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   auto start_fit = std::chrono::system_clock::now();
   // Now set up the fit itself
-  if (turbose) {
-    std::cout << "[INFO]: About to fit " << BuildLogInfoString() << std::endl;
-  }
+  std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString() << std::endl;
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
       this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
-  if (turbose) {
-    std::cout << "[INFO]: Finished fit " << BuildLogInfoString() << std::endl;
-  }
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
-  std::cout << "[FIT]: Finished fit in "
+  std::cerr << "[FIT]: Finished fit in "
             << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                 start_fit)
                    .count()
@@ -1568,6 +1593,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     PostFitTreeBlob->fNSeconds =
         std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit)
             .count();
+    PostFitTreeBlob->fNOscSeeds = oscSeeds.size();
 
     ProcInfo_t procinfo;
     gSystem->GetProcInfo(&procinfo);
