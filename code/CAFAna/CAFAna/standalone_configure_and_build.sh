@@ -7,6 +7,7 @@ USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
 INSTALL_DIR=""
 USE_KNL="0"
+USE_OMP="0"
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -49,6 +50,12 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile for KNL arch."
       ;;
 
+      -O|--omp)
+
+      USE_OMP="1"
+      echo "[OPT]: Will compile OMP components."
+      ;;
+
       -j|--n-cores)
 
       if [[ ${#} -lt 2 ]]; then
@@ -83,6 +90,7 @@ while [[ ${#} -gt 0 ]]; do
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
+      echo -e "\t-O|--omp               : Enable OMP features of CAFAna."
       echo -e "\t-I|--install-to        : Directory to install to."
       echo -e "\t-?|--help              : Print this message."
       exit 0
@@ -155,5 +163,5 @@ else
 
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
 make install -j ${CORES}
