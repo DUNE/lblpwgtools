@@ -154,8 +154,6 @@ void llh_scans(std::string stateFname = def_stateFname,
       {"FD_only", &expt_fd},
       {"ND_FD", &expt_nd_fd}};
 
-  // Make a list of dial values to scan over, common to all...
-
   // Loop over the systematics and make a LLH scan for each one
   double range = 1E-8;
   double half_range = range / 2.0;

@@ -1,5 +1,7 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+using namespace ana;
+
 void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
 	       std::string systSet = "nosyst", std::string sampleString="ndfd",
