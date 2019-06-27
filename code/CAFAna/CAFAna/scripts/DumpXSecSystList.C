@@ -1,4 +1,6 @@
+#include "CAFAna/Analysis/AnalysisDialGroups.h"
 #include "CAFAna/Analysis/XSecSystList.h"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include <iostream>
 
@@ -44,4 +46,70 @@ void DumpXSecSystList() {
     std::cout << "\t" << n << std::endl;
   }
   std::cout << std::endl << std::endl;
+
+  std::cout << "All: " << std::endl;
+  for (auto s : GetListOfSysts("allsyst")) {
+    std::cout << "\t" << s->ShortName() << std::endl;
+  }
+  std::cout << std::endl << std::endl;
+  std::cout << "Flux: " << std::endl;
+  for (auto s : GetListOfSysts("flux")) {
+    std::cout << "\t" << s->ShortName() << std::endl;
+  }
+  std::cout << std::endl << std::endl;
+
+  std::cout << "XSec: " << std::endl;
+  for (auto s : GetListOfSysts("nodet:noxsec")) {
+    std::cout << "\t" << s->ShortName() << std::endl;
+  }
+  std::cout << std::endl << std::endl;
+
+  std::cout << "Det: " << std::endl;
+  for (auto s : GetListOfSysts("noflux:noxsec")) {
+    std::cout << "\t" << s->ShortName() << std::endl;
+  }
+  std::cout << std::endl << std::endl;
+
+  auto los = GetListOfSysts("allsyst");
+
+  for (auto const &str_p :
+       std::vector<std::pair<std::string, std::vector<std::string>>>{
+
+           {"fd_det_list", fd_det_list},
+           {"fd_escale_list", fd_escale_list},
+           {"fd_muon_escale_list", fd_muon_escale_list},
+           {"fd_eres_list", fd_eres_list},
+           {"fd_muon_eres_list", fd_muon_eres_list},
+           {"fd_other_det_list", fd_other_det_list},
+           {"fd_nonlin_det_list", fd_nonlin_det_list},
+           {"xsec_qe_list", xsec_qe_list},
+           {"xsec_res_list", xsec_res_list},
+           {"xsec_dis_list", xsec_dis_list},
+           {"xsec_fsi_list", xsec_fsi_list},
+           {"xsec_ratios_list", xsec_ratios_list},
+
+       }) {
+    std::cout << "For helper list: " << str_p.first << " expect to remove "
+              << str_p.second.size() << " systs." << std::endl;
+    auto los_copy = los;
+    RemoveSysts(los_copy, str_p.second);
+    std::cout << " Removed " << (los.size() - los_copy.size()) << std::endl;
+    if ((los_copy.size() + str_p.second.size()) != los.size()) {
+      auto str_p_copy = str_p.second;
+      for (auto s : str_p_copy) {
+        bool found = false;
+        for (auto syst : los) {
+          if (syst->ShortName() == s) {
+            found = true;
+            break;
+          }
+        }
+        if (found) {
+          continue;
+        }
+        std::cout << "Failed to find " << s << std::endl;
+      }
+    }
+    assert((los_copy.size() + str_p.second.size()) == los.size());
+  }
 }

@@ -157,7 +157,7 @@ int main(int argc, char const *argv[]) {
   }
 
   TCanvas c1("c1", "", 3600, 600);
-  int colorwheel[] = {kDUNEBlue, kDUNEOrange, kGreen - 3, kRed + 3};
+  int colorwheel[] = {kDUNEBlue, kDUNEOrange, kGray-2, kRed + 1};
   int ncolors = 4;
 
   std::vector<std::pair<std::string, std::string>> superorder;

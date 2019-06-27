@@ -4,9 +4,11 @@ using namespace ana;
 
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "llh_scans_mcc11v3.root";
+char const *def_start_point = "";
 
 void llh_scans(std::string stateFname = def_stateFname,
-               std::string outputFname = def_outputFname) {
+               std::string outputFname = def_outputFname,
+               std::string start_point = def_start_point) {
 
   gROOT->SetBatch(1);
 
@@ -24,9 +26,59 @@ void llh_scans(std::string stateFname = def_stateFname,
   std::vector<const ISyst *> systlist =
       OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
 
-  // Open
-  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
-  SaveParams(fout, systlist);
+  std::map<std::string, double> relevantcvs;
+  std::map<std::string, double> relevantfakedatavals;
+  std::map<std::string, double> relevantBestFit;
+  if (start_point.size()) {
+    auto splits = SplitString(start_point, ':');
+    if (splits.size() != 2) {
+      std::cout
+          << "[ERROR]: Expected input_file.root:<entry_number> but found: \""
+          << start_point << "\"" << std::endl;
+      abort();
+    }
+    int entnum = atoi(splits.back().c_str());
+    std::cout << "[INFO]: Reading config from " << splits.front() << std::endl;
+
+    TFile fin(splits.front().c_str(), "READ");
+    TTree *tin;
+    fin.GetObject("fit_info", tin);
+    TTree *min;
+    fin.GetObject("param_info", min);
+
+    FitTreeBlob *fbr = FitTreeBlob::MakeReader(tin, min);
+
+    std::cout << "Starting from: " << std::endl;
+    tin->GetEntry(entnum);
+    min->GetEntry(0);
+
+    for (size_t i = 0; i < fbr->fParamNames->size(); ++i) {
+      std::cout << "\t" << fbr->fParamNames->at(i)
+                << " Prefit: {v: " << fbr->fPreFitValues->at(i)
+                << ", pcv: " << fbr->fCentralValues->at(i)
+                << ", e: " << fbr->fPreFitErrors->at(i)
+                << " }, Postfit: {v: " << fbr->fPostFitValues->at(i)
+                << ", e: " << fbr->fPostFitErrors->at(i) << "}" << std::endl;
+      relevantcvs[fbr->fParamNames->at(i)] = fbr->fCentralValues->at(i);
+      relevantfakedatavals[fbr->fParamNames->at(i)] = fbr->fFakeDataVals->at(i);
+      relevantBestFit[fbr->fParamNames->at(i)] = fbr->fPostFitValues->at(i);
+    }
+  }
+
+  SystShifts shifted = kNoShift;
+
+  for (auto s : systlist) {
+    if (relevantcvs.count(s->ShortName())) {
+      std::cout << "Setting parameter " << s->ShortName()
+                << " penalty CV: " << relevantcvs[s->ShortName()] << std::endl;
+      s->SetCentral(relevantcvs[s->ShortName()]);
+    }
+    if (relevantfakedatavals.count(s->ShortName())) {
+      std::cout << "Setting parameter true value " << s->ShortName()
+                << " to: " << relevantfakedatavals[s->ShortName()] << std::endl;
+      shifted.SetShift(s, relevantfakedatavals[s->ShortName()]);
+    }
+  }
 
   int hie = 1;
   const std::string hieStr = (hie > 0) ? "nh" : "ih";
@@ -34,38 +86,50 @@ void llh_scans(std::string stateFname = def_stateFname,
 
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
 
+  for (auto v : GetOscVars("alloscvars", hie)) {
+    if (relevantfakedatavals.count(v->ShortName())) {
+      std::cout << "Setting parameter true value " << v->ShortName()
+                << " to: " << relevantfakedatavals[v->ShortName()] << std::endl;
+      v->SetValue(trueOsc, relevantfakedatavals[v->ShortName()]);
+    }
+  }
+
+  // Open
+  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
+  SaveParams(fout, systlist);
+
   const Spectrum data_nue_fhc_syst =
-      predInterpFDNueFHC.Predict(trueOsc).FakeData(pot_fd);
+      predInterpFDNueFHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
   SingleSampleExperiment app_expt_fhc_syst(&predInterpFDNueFHC,
                                            data_nue_fhc_syst);
   app_expt_fhc_syst.SetMaskHist(0.5, 8);
 
   const Spectrum data_nue_rhc_syst =
-      predInterpFDNueRHC.Predict(trueOsc).FakeData(pot_fd);
+      predInterpFDNueRHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
   SingleSampleExperiment app_expt_rhc_syst(&predInterpFDNueRHC,
                                            data_nue_rhc_syst);
   app_expt_rhc_syst.SetMaskHist(0.5, 8);
 
   const Spectrum data_numu_fhc_syst =
-      predInterpFDNumuFHC.Predict(trueOsc).FakeData(pot_fd);
+      predInterpFDNumuFHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
   SingleSampleExperiment dis_expt_fhc_syst(&predInterpFDNumuFHC,
                                            data_numu_fhc_syst);
   dis_expt_fhc_syst.SetMaskHist(0.5, 8);
 
   const Spectrum data_numu_rhc_syst =
-      predInterpFDNumuRHC.Predict(trueOsc).FakeData(pot_fd);
+      predInterpFDNumuRHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
   SingleSampleExperiment dis_expt_rhc_syst(&predInterpFDNumuRHC,
                                            data_numu_rhc_syst);
   dis_expt_rhc_syst.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc_syst =
-      predInterpNDNumuFHC.PredictUnoscillated().FakeData(pot_nd);
+      predInterpNDNumuFHC.PredictSyst(trueOsc, shifted).FakeData(pot_nd);
   SingleSampleExperiment nd_expt_fhc_syst(&predInterpNDNumuFHC,
                                           nd_data_numu_fhc_syst);
   nd_expt_fhc_syst.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc_syst =
-      predInterpNDNumuRHC.PredictUnoscillated().FakeData(pot_nd);
+      predInterpNDNumuRHC.PredictSyst(trueOsc, shifted).FakeData(pot_nd);
   SingleSampleExperiment nd_expt_rhc_syst(&predInterpNDNumuRHC,
                                           nd_data_numu_rhc_syst);
   nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
@@ -82,9 +146,9 @@ void llh_scans(std::string stateFname = def_stateFname,
   MultiExperiment expt_nd_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                               &dis_expt_fhc_syst, &dis_expt_rhc_syst,
                               &nd_expt_fhc_syst, &nd_expt_rhc_syst});
-  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
-   				 {4, 5});
-  
+
+  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
+
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                            &dis_expt_fhc_syst, &dis_expt_rhc_syst});
 
@@ -100,17 +164,22 @@ void llh_scans(std::string stateFname = def_stateFname,
       {"FD_only", &expt_fd},
       {"ND_FD", &expt_nd_fd}};
 
-  // Make a list of dial values to scan over, common to all...
-  std::vector<double> syst_vals;
-  int nsteps = 401;
-  for (int i = 0; i < nsteps; ++i) {
-    double range = 8;
-    double stride = range / (nsteps - 1);
-    syst_vals.push_back(stride * i - range / 2.);
-  }
-
   // Loop over the systematics and make a LLH scan for each one
+  double range = 8;
+  double half_range = range / 2.0;
+  int nsteps = 401;
+  double stride = range / double(nsteps - 1);
   for (auto &syst : systlist) {
+
+    std::vector<double> syst_vals;
+
+    double min = (relevantBestFit.count(syst->ShortName())
+                      ? relevantBestFit[syst->ShortName()]
+                      : 0) -
+                 half_range;
+    for (int i = 0; i < nsteps; ++i) {
+      syst_vals.push_back(min + stride * i);
+    }
 
     std::cout << "Making LLH scans for " << syst->ShortName() << ":"
               << std::endl;
@@ -155,6 +224,7 @@ int main(int argc, char const *argv[]) {
   gROOT->SetMustClean(false);
   std::string stateFname = (argc > 1) ? argv[1] : def_stateFname;
   std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
-  llh_scans(stateFname, outputFname);
+  std::string start_point = (argc > 3) ? argv[3] : def_start_point;
+  llh_scans(stateFname, outputFname, start_point);
 }
 #endif
