@@ -18,6 +18,8 @@ def makeParser():
                         help = "don't unconditionally recompile, ie .C+ not .C++")
     parser.add_argument('-mc', '--must-clean', action = 'store_true',
                         help = "Run the script with gROOT->SetMustClean(true);")
+    parser.add_argument('-e', '--env', action='append',
+                        help = 'pass environment variables to set. THE HAXXMAN COMETH.')
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
@@ -85,6 +87,16 @@ if __name__ == '__main__':
     if opts['bq']:
         opts['batch'] = True
         opts['quit'] = True
+    
+    ## Do some fun environment stuff
+    if opts['env']:
+        for arg in opts['env']:
+            arg_split = arg.split('=')
+            if len(arg_split) != 2:
+                print "Argument passed to -e/--env must be of the form 'ENV_VAR_NAME=VALUE'!"
+                sys.exit(1)
+            print "Setting", arg_split[0], "to", arg_split[1]
+            os.environ[arg_split[0]] = arg_split[1]
 
     # Suppress splash screen and default rootlogon (load_libs calls the
     # official one)
