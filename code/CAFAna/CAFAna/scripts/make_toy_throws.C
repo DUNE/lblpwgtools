@@ -168,12 +168,24 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fitThrowSyst = kNoShift;
       fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
     }
-    Fitter::Precision fitStrategy = Fitter::kNormal;
 
-    auto fit_type = Fitter::kNormal;
+    Fitter::Precision fit_type = Fitter::kNormal;
+    if (getenv("CAFANA_FIT_PRECISION")){
+      switch(atoi(getenv("CAFANA_FIT_PRECISION"))){
+      case 0:
+        fit_type = Fitter::kFast;
+        break;
+      case 1:
+        fit_type = Fitter::kNormal;
+	break;
+      case 2:
+        fit_type = Fitter::kCareful;
+	break;
+      }
+    }
     if (getenv("CAFANA_FIT_FORCE_HESSE") &&
         bool(atoi(getenv("CAFANA_FIT_FORCE_HESSE")))) {
-      fit_type = Fitter::kNormal | Fitter::kIncludeHesse;
+      fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
@@ -181,7 +193,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                     stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
-                    oscSeeds, penalty, fitStrategy, nullptr, &pftree);
+                    oscSeeds, penalty, fit_type, nullptr, &pftree);
 
     pftree.Fill();
 

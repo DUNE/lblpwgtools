@@ -227,10 +227,23 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // Keep the same stats/syst/OA throw for all fits
     std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
 
-    auto fit_type = Fitter::kNormal;
+    Fitter::Precision fit_type = Fitter::kNormal;
+    if (getenv("CAFANA_FIT_PRECISION")){
+      switch(atoi(getenv("CAFANA_FIT_PRECISION"))){
+      case 0: 
+	fit_type = Fitter::kFast;
+	break;
+      case 1: 
+	fit_type = Fitter::kNormal;
+	break;
+      case 2: 
+	fit_type = Fitter::kCareful;
+	break;
+      }
+    }
     if (getenv("CAFANA_FIT_FORCE_HESSE") &&
         bool(atoi(getenv("CAFANA_FIT_FORCE_HESSE")))) {
-      fit_type = Fitter::kNormal | Fitter::kIncludeHesse;
+      fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
     // -------------------------------------
