@@ -392,15 +392,15 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     } else if (syst == "nofd_nonlin_det") {
       RemoveSysts(namedList, fd_nonlin_det_list);
     } else if (syst == "noxsec_qe") {
-      RemoveSysts(namedList, xsec_qe_list);
+      RemoveSysts(namedList, GetXSecSystNames("QELike"));
     } else if (syst == "noxsec_res") {
-      RemoveSysts(namedList, xsec_res_list);
+      RemoveSysts(namedList, GetXSecSystNames("RES"));
     } else if (syst == "noxsec_dis") {
-      RemoveSysts(namedList, xsec_dis_list);
+      RemoveSysts(namedList, GetXSecSystNames("DIS"));
     } else if (syst == "noxsec_fsi") {
-      RemoveSysts(namedList, xsec_fsi_list);
+      RemoveSysts(namedList, GetXSecSystNames("FSI"));
     } else if (syst == "noxsec_ratios") {
-      RemoveSysts(namedList, xsec_ratios_list);
+      RemoveSysts(namedList, GetXSecSystNames("Ratios"));
     }
     // If not, remove as if it's a single parameter instruction
     else {

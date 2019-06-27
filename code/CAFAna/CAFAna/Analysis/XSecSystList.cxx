@@ -41,7 +41,7 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
     XSecSystDials = {
         {"MaCCQE", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"VecFFCCQEshape", kFitSyst, kExtrapolated, kStandardRange, kQELike},
-        {"MaNCEL", kFitSyst, kContinuous, kStandardRange, kNC},
+        {"MaNCEL", kRemovedOther, kContinuous, kStandardRange, kNC},
         {"EtaNCEL", kRemovedOverconstraint, kContinuous, kStandardRange, kNC},
         {"MaCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
         {"MvCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
