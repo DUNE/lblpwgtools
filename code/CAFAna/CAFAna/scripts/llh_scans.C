@@ -70,14 +70,21 @@ void llh_scans(std::string stateFname = def_stateFname,
                                           nd_data_numu_rhc_syst);
   nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
 
+  // Add covariances to the two ND samples
+  std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
+  
+  MultiExperiment expt_ND_FHC({&nd_expt_fhc_syst});
+  expt_ND_FHC .AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", true, {0});
+  
+  MultiExperiment expt_ND_RHC({&nd_expt_rhc_syst});
+  expt_ND_RHC .AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", true, {0});
+				   
   MultiExperiment expt_nd_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                               &dis_expt_fhc_syst, &dis_expt_rhc_syst,
                               &nd_expt_fhc_syst, &nd_expt_rhc_syst});
-
-  std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
   expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
    				 {4, 5});
-
+  
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                            &dis_expt_fhc_syst, &dis_expt_rhc_syst});
 
@@ -86,8 +93,10 @@ void llh_scans(std::string stateFname = def_stateFname,
       {"FD_RHC_nue", &app_expt_rhc_syst},
       {"FD_FHC_numu", &dis_expt_fhc_syst},
       {"FD_RHC_numu", &dis_expt_rhc_syst},
-      {"ND_FHC", &nd_expt_fhc_syst},
-      {"ND_RHC", &nd_expt_rhc_syst},
+      {"ND_FHC", &expt_ND_FHC},
+      {"ND_RHC", &expt_ND_RHC},
+      {"ND_FHC_nocov", &nd_expt_fhc_syst},
+      {"ND_RHC_nocov", &nd_expt_rhc_syst},
       {"FD_only", &expt_fd},
       {"ND_FD", &expt_nd_fd}};
 
@@ -95,7 +104,7 @@ void llh_scans(std::string stateFname = def_stateFname,
   std::vector<double> syst_vals;
   int nsteps = 401;
   for (int i = 0; i < nsteps; ++i) {
-    double range = 0.001;
+    double range = 8;
     double stride = range / (nsteps - 1);
     syst_vals.push_back(stride * i - range / 2.);
   }
