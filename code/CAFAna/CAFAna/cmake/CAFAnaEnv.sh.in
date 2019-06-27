@@ -57,7 +57,9 @@ export BOOST_INC=@BOOST_INC@
 export BOOST_LIB=@BOOST_LIB@
 
 #Recent versions of ROOT may enable omp for minuit2 by default
-export OMP_NUM_THREADS=1
+if [ -z ${OMP_NUM_THREADS} ]; then
+  export OMP_NUM_THREADS=@DEF_NUM_THREADS@
+fi
 
 #Env vars used in the code
 export CAFANA_ANALYSIS_VERSION="4"

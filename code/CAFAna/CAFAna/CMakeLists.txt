@@ -33,6 +33,11 @@ elseif(NOT DEFINED USE_OPENMP)
   set(USE_OPENMP FALSE)
 endif()
 
+SET(DEF_NUM_THREADS 1)
+if(USE_OPENMP)
+  SET(DEF_NUM_THREADS 4)
+endif()
+
 SET(BUILD_DEBUG_MSGS TRUE)
 include(${CMAKE_SOURCE_DIR}/cmake/cmessage.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/parseConfigApp.cmake)
