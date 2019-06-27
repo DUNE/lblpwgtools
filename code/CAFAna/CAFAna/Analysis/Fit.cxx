@@ -84,8 +84,10 @@ Fitter::ExpandSeeds(const SeedList &seedPts,
 //----------------------------------------------------------------------
 bool Fitter::SupportsDerivatives() const {
   // Provide an Opt-out in case something goes wrong
-  if (getenv("CAFANA_DISABLE_DERIVATIVES") != 0)
+  if (getenv("CAFANA_DISABLE_DERIVATIVES") &&
+      bool(atoi(getenv("CAFANA_DISABLE_DERIVATIVES")))) {
     return false;
+  }
 
   // No point using derivatives for FitVars only, we do finite differences,
   // probably worse than MINUIT would.
@@ -431,6 +433,7 @@ double Fitter::DoEval(const double *pars) const {
     std::cout << BuildLogInfoString();
     fLastTP = now;
   }
+
   return fExpt->ChiSq(fCalc, fShifts) + penalty;
 }
 

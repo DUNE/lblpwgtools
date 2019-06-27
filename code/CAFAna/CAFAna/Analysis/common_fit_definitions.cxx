@@ -388,6 +388,8 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
       RemoveSysts(namedList, fd_muon_eres_list);
     else if (syst == "nofd_other_det")
       RemoveSysts(namedList, fd_other_det_list);
+    else if (syst == "nofd_nonlin_det")
+      RemoveSysts(namedList, fd_nonlin_det_list);
     else if (syst == "noxsec_qe")
       RemoveSysts(namedList, xsec_qe_list);
     else if (syst == "noxsec_res")

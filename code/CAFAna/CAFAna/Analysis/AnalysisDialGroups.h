@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 // Define a few groups of systematics:
 // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis,
@@ -45,6 +45,12 @@ std::vector<std::string> const fd_eres_list = {"MuonResFD", "EMResFD",
 std::vector<std::string> const fd_muon_eres_list = {"MuonResFD"};
 std::vector<std::string> const fd_other_det_list = {
     "FDRecoNumuSyst", "FDRecoNueSyst", "FVNumuFD", "FVNueFD"};
+// ~New dials for V4
+std::vector<std::string> const fd_nonlin_det_list = {
+    "UncorrFDTotSqrtSyst",    "UncorrFDTotInvSqrtSyst", "UncorrFDHadSqrtSyst",
+    "UncorrFDHadInvSqrtSyst", "UncorrFDMuSqrtSyst",     "UncorrFDMuInvSqrtSyst",
+    "UncorrFDEMSqrtSyst",     "UncorrFDEMInvSqrtSyst",  "UncorrFDNSqrtSyst",
+    "UncorrFDNInvSqrtSyst"};
 
 // All QE XSEC parameters
 std::vector<std::string> const xsec_qe_list = {"MaCCQE",
