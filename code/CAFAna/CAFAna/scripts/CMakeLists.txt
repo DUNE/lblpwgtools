@@ -23,6 +23,9 @@ set(scripts_to_build
   spec_joint
   sample_throws
 )
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  LIST(APPEND scripts_to_build pred_thread_test)
+endif()
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
 
@@ -49,6 +52,10 @@ foreach(SCRPT ${scripts_to_build})
 
     target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})
     target_link_libraries(${SCRPT} ${CAFANA_DEPEND_LIBS})
+
+  if(DEFINED USE_OPENMP AND USE_OPENMP)
+    target_compile_options(${SCRPT} BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
+  endif()
 
   install(TARGETS ${SCRPT} DESTINATION bin)
 endforeach()

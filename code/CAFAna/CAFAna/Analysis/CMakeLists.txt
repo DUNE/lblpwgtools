@@ -45,6 +45,10 @@ if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   target_link_libraries(CAFAnaAnalysis ${GPERF_LINKER_FLAGS})
 endif()
 
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaAnalysis BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
+endif()
+
 install(TARGETS CAFAnaAnalysis DESTINATION lib)
 
 install(FILES ${Analysis_header_files} DESTINATION include/CAFAna/Analysis)

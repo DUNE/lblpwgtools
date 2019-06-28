@@ -230,10 +230,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
     Fitter::Precision fit_type = Fitter::kNormal;
     if (getenv("CAFANA_FIT_PRECISION")){
       switch(atoi(getenv("CAFANA_FIT_PRECISION"))){
-      case 0: 
+      case 0:
 	fit_type = Fitter::kFast;
 	break;
-      case 1: 
+      case 1:
 	fit_type = Fitter::kNormal;
 	break;
       case 2: 

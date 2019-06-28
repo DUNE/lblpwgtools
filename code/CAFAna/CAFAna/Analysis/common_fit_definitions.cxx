@@ -940,6 +940,9 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
       meta_tree->Branch("fEnvVarNames", &fEnvVarNames);
       meta_tree->Branch("fEnvVarValues", &fEnvVarValues);
       meta_tree->Branch("RNGSeed", &fRNGSeed);
+#ifdef USE_PREDINTERP_OMP
+      meta_tree->Branch("NMaxThreads", &fNMaxThreads);
+#endif
     }
   }
 
@@ -971,6 +974,9 @@ FitTreeBlob *FitTreeBlob::MakeReader(TTree *t, TTree *m) {
   m->SetBranchAddress("fEnvVarNames", &ftb->fEnvVarNames);
   m->SetBranchAddress("fEnvVarValues", &ftb->fEnvVarValues);
   m->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
+#ifdef USE_PREDINTERP_OMP
+  m->SetBranchAddress("NMaxThreads", &ftb->fNMaxThreads);
+#endif
   return ftb;
 }
 FitTreeBlob::~FitTreeBlob() {
@@ -1004,6 +1010,9 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   fRNGSeed = fb.fRNGSeed;
   fNFills = fb.fNFills;
   fNOscSeeds = fb.fNOscSeeds;
+#ifdef USE_PREDINTERP_OMP
+  fNMaxThreads = fb.fNMaxThreads;
+#endif
 }
 void FitTreeBlob::Fill() {
   if (throw_tree) {
@@ -1103,9 +1112,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
 #ifdef USE_PREDINTERP_OMP
-  if (omp_get_max_threads() > 4) {
+  size_t maxthreads = omp_get_max_threads();
+  if (maxthreads > 4) {
     std::cerr << "[INFO]: Cannot run with OMP_NUM_THREADS > 4" << std::endl;
     abort();
+  }
+  if (PostFitTreeBlob) {
+    PostFitTreeBlob->fNMaxThreads = maxthreads;
   }
 #endif
 
@@ -1470,7 +1483,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   auto start_fit = std::chrono::system_clock::now();
   // Now set up the fit itself
-  std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString() << std::endl;
+  std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
   Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
       this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
@@ -1488,8 +1501,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // If we have a directory to save to... save some stuff...
   if (outDir) {
     if (turbose) {
-      std::cout << "[INFO]: Writing fit tree " << BuildLogInfoString()
-                << std::endl;
+      std::cout << "[INFO]: Writing fit tree " << BuildLogInfoString();
     }
     std::vector<std::string> fParamNames = this_fit.GetParamNames();
     std::vector<double> fPreFitValues = this_fit.GetPreFitValues();

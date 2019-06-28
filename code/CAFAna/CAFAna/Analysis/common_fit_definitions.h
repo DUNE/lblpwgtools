@@ -150,6 +150,9 @@ struct FitTreeBlob {
   double fNFCN;
   double fEDM;
   bool fIsValid;
+#ifdef USE_PREDINTERP_OMP
+  unsigned fNMaxThreads;
+#endif
 };
 
 std::string BuildLogInfoString();
