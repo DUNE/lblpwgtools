@@ -896,8 +896,7 @@ void SaveParams(TDirectory *outDir, std::vector<const ISyst *> systlist) {
 };
 
 FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
-    : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr),
-      fRNGSeed(gRNGSeed), fNFills(0) {
+    : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr), fNFills(0) {
 
   fFakeDataVals = new std::vector<double>();
   fParamNames = new std::vector<std::string>();
@@ -908,6 +907,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   fCentralValues = new std::vector<double>();
   fEnvVarNames = new std::vector<std::string>();
   fEnvVarValues = new std::vector<std::string>();
+  fSpectraRNGSeeds = new std::vector<unsigned>();
 
   TDirectory *odir = gDirectory;
 
@@ -928,7 +928,8 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     throw_tree->Branch("fPostFitValues", &fPostFitValues);
     throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
     throw_tree->Branch("fCentralValues", &fCentralValues);
-    throw_tree->Branch("RNGSeed", &fRNGSeed);
+    throw_tree->Branch("LoopRNGSeed", &fLoopRNGSeed);
+    throw_tree->Branch("SpectraRNGSeeds", &fSpectraRNGSeeds);
     throw_tree->Branch("ProcFitN", &fNFills);
     throw_tree->Branch("NOscSeeds", &fNOscSeeds);
 
@@ -939,7 +940,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
       meta_tree->Branch("fParamNames", &fParamNames);
       meta_tree->Branch("fEnvVarNames", &fEnvVarNames);
       meta_tree->Branch("fEnvVarValues", &fEnvVarValues);
-      meta_tree->Branch("RNGSeed", &fRNGSeed);
+      meta_tree->Branch("JobRNGSeed", &fJobRNGSeed);
 #ifdef USE_PREDINTERP_OMP
       meta_tree->Branch("NMaxThreads", &fNMaxThreads);
 #endif
@@ -966,14 +967,15 @@ FitTreeBlob *FitTreeBlob::MakeReader(TTree *t, TTree *m) {
   t->SetBranchAddress("fPostFitValues", &ftb->fPostFitValues);
   t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
   t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
-  t->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
+  t->SetBranchAddress("LoopRNGSeed", &ftb->fLoopRNGSeed);
+  t->SetBranchAddress("SpectraRNGSeeds", &ftb->fSpectraRNGSeeds);
   t->SetBranchAddress("ProcFitN", &ftb->fNFills);
   t->SetBranchAddress("NOscSeeds", &ftb->fNOscSeeds);
 
   m->SetBranchAddress("fParamNames", &ftb->fParamNames);
   m->SetBranchAddress("fEnvVarNames", &ftb->fEnvVarNames);
   m->SetBranchAddress("fEnvVarValues", &ftb->fEnvVarValues);
-  m->SetBranchAddress("RNGSeed", &ftb->fRNGSeed);
+  m->SetBranchAddress("JobRNGSeed", &ftb->fJobRNGSeed);
 #ifdef USE_PREDINTERP_OMP
   m->SetBranchAddress("NMaxThreads", &ftb->fNMaxThreads);
 #endif
@@ -989,6 +991,7 @@ FitTreeBlob::~FitTreeBlob() {
   delete fCentralValues;
   delete fEnvVarNames;
   delete fEnvVarValues;
+  delete fSpectraRNGSeeds;
 }
 void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fFakeDataVals) = (*fb.fFakeDataVals);
@@ -1000,6 +1003,7 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fPostFitValues) = (*fb.fPostFitValues);
   (*fPostFitErrors) = (*fb.fPostFitErrors);
   (*fCentralValues) = (*fb.fCentralValues);
+  (*fSpectraRNGSeeds) = (*fb.fSpectraRNGSeeds);
   fChiSq = fb.fChiSq;
   fNFCN = fb.fNFCN;
   fEDM = fb.fEDM;
@@ -1007,7 +1011,8 @@ void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   fNSeconds = fb.fNSeconds;
   fResMemUsage = fb.fResMemUsage;
   fVirtMemUsage = fb.fVirtMemUsage;
-  fRNGSeed = fb.fRNGSeed;
+  fLoopRNGSeed = fb.fLoopRNGSeed;
+  fJobRNGSeed = fb.fJobRNGSeed;
   fNFills = fb.fNFills;
   fNOscSeeds = fb.fNOscSeeds;
 #ifdef USE_PREDINTERP_OMP
@@ -1098,8 +1103,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    Fitter::Precision fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
-                   std::vector<std::unique_ptr<Spectrum>> *spectra,
-                   SystShifts &bf) {
+                   std::vector<seeded_spectra> *spectra, SystShifts &bf) {
 
   assert(systlist.size() + oscVars.size());
 
@@ -1137,7 +1141,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
           "CAFANA_USE_NDCOVMAT", "CAFANA_IGNORE_CV_WEIGHT",
           "CAFANA_IGNORE_SELECTION", "CAFANA_DISABLE_DERIVATIVES",
           "CAFANA_DONT_CLAMP_SYSTS", "CAFANA_FIT_TURBOSE",
-          "CAFANA_FIT_FORCE_HESSE", "FIT_PRECISION", "FIT_TOLERANCE"}) {
+          "CAFANA_FIT_FORCE_HESSE", "CAFANA_PRED_MINMCSTATS", "FIT_PRECISION",
+          "FIT_TOLERANCE"}) {
       if (getenv(env_str)) {
         std::cout << "[ENV]: " << env_str << " = " << getenv(env_str)
                   << std::endl;
@@ -1199,7 +1204,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // function Sadly, the locked down ownership etc means I can't think of a
   // better solution to this And the alternative CAFAna is probably just
   // copy-pasta-ing this function in all of the scripts that use it...
-  std::vector<std::unique_ptr<Spectrum>> LastShredsOfMyDignityAndSanity;
+  std::vector<seeded_spectra> LastShredsOfMyDignityAndSanity;
   if (!spectra) {
     spectra = &LastShredsOfMyDignityAndSanity;
   }
@@ -1211,36 +1216,55 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                 << std::endl;
     }
 
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_fd_fhc_nue, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_fd_fhc_numu, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_fd_rhc_nue, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_fd_rhc_numu, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_nd_fhc, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
-    spectra->emplace_back(std::unique_ptr<Spectrum>(new Spectrum(
-        predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-            .MockData(
-                pot_nd_rhc, fakeDataStats,
-                gRandom->Integer(std::numeric_limits<unsigned>::max())))));
+    unsigned predFDNueFHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predFDNueFHC_seed,
+        std::unique_ptr<Spectrum>(new Spectrum(
+            predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                .MockData(pot_fd_fhc_nue, fakeDataStats, predFDNueFHC_seed))));
+
+    unsigned predFDNumuFHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predFDNumuFHC_seed,
+        std::unique_ptr<Spectrum>(
+            new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                             .MockData(pot_fd_fhc_numu, fakeDataStats,
+                                       predFDNumuFHC_seed))));
+
+    unsigned predFDNueRHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predFDNueRHC_seed,
+        std::unique_ptr<Spectrum>(new Spectrum(
+            predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                .MockData(pot_fd_rhc_nue, fakeDataStats, predFDNueRHC_seed))));
+
+    unsigned predFDNumuRHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predFDNumuRHC_seed,
+        std::unique_ptr<Spectrum>(
+            new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                             .MockData(pot_fd_rhc_numu, fakeDataStats,
+                                       predFDNumuRHC_seed))));
+
+    unsigned predNDNumuFHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predNDNumuFHC_seed,
+        std::unique_ptr<Spectrum>(new Spectrum(
+            predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                .MockData(pot_nd_fhc, fakeDataStats, predNDNumuFHC_seed))));
+
+    unsigned predNDNumuRHC_seed =
+        gRandom->Integer(std::numeric_limits<unsigned>::max());
+    spectra->emplace_back(
+        predNDNumuRHC_seed,
+        std::unique_ptr<Spectrum>(new Spectrum(
+            predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
+                .MockData(pot_nd_rhc, fakeDataStats, predNDNumuRHC_seed))));
   }
 
   if (turbose) {
@@ -1254,23 +1278,31 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // If using the multi sample covariances then they must be added to the
   // MultiExperiment
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *(*spectra)[0]);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *spectra->at(0).spect);
   app_expt_fhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *(*spectra)[1]);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *spectra->at(1).spect);
   dis_expt_fhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *(*spectra)[2]);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *spectra->at(2).spect);
   app_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *(*spectra)[3]);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *spectra->at(3).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *(*spectra)[4]);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *spectra->at(4).spect);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *(*spectra)[5]);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *spectra->at(5).spect);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
+
+  if (PostFitTreeBlob) {
+    // Save the seeds used to do the stats throws
+    (*PostFitTreeBlob->fSpectraRNGSeeds) = std::vector<unsigned>{
+        spectra->at(0).stats_seed, spectra->at(1).stats_seed,
+        spectra->at(2).stats_seed, spectra->at(3).stats_seed,
+        spectra->at(4).stats_seed, spectra->at(5).stats_seed};
+  }
 
   if (turbose) {
     std::cout << "[INFO]: Have experiments. " << BuildLogInfoString()
@@ -1286,7 +1318,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     }
 
     if (pot_fd_fhc_nue > 0) {
-      TH1 *data_nue_fhc_hist = (*spectra)[0]->ToTHX(pot_fd_fhc_nue);
+      TH1 *data_nue_fhc_hist = spectra->at(0).spect->ToTHX(pot_fd_fhc_nue);
       data_nue_fhc_hist->SetName("data_fd_nue_fhc");
       data_nue_fhc_hist->Write();
       TH1 *pre_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst,
@@ -1296,7 +1328,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_fhc->Write();
     }
     if (pot_fd_fhc_numu > 0) {
-      TH1 *data_numu_fhc_hist = (*spectra)[1]->ToTHX(pot_fd_fhc_numu);
+      TH1 *data_numu_fhc_hist = spectra->at(1).spect->ToTHX(pot_fd_fhc_numu);
       data_numu_fhc_hist->SetName("data_fd_numu_fhc");
       data_numu_fhc_hist->Write();
       TH1 *pre_fd_numu_fhc =
@@ -1307,7 +1339,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_fhc->Write();
     }
     if (pot_fd_rhc_nue > 0) {
-      TH1 *data_nue_rhc_hist = (*spectra)[2]->ToTHX(pot_fd_rhc_nue);
+      TH1 *data_nue_rhc_hist = spectra->at(2).spect->ToTHX(pot_fd_rhc_nue);
       data_nue_rhc_hist->SetName("data_fd_nue_rhc");
       data_nue_rhc_hist->Write();
       TH1 *pre_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst,
@@ -1317,7 +1349,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_rhc->Write();
     }
     if (pot_fd_rhc_numu > 0) {
-      TH1 *data_numu_rhc_hist = (*spectra)[3]->ToTHX(pot_fd_rhc_numu);
+      TH1 *data_numu_rhc_hist = spectra->at(3).spect->ToTHX(pot_fd_rhc_numu);
       data_numu_rhc_hist->SetName("data_fd_numu_rhc");
       data_numu_rhc_hist->Write();
       TH1 *pre_fd_numu_rhc =
@@ -1328,8 +1360,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_rhc->Write();
     }
     if (pot_nd_fhc > 0) {
-      TH1 *nd_data_numu_fhc_hist = (*spectra)[4]->ToTHX(pot_nd_fhc);
-      TH1 *nd_data_numu_fhc_hist_1D = (*spectra)[4]->ToTH1(pot_nd_fhc);
+      TH1 *nd_data_numu_fhc_hist = spectra->at(4).spect->ToTHX(pot_nd_fhc);
+      TH1 *nd_data_numu_fhc_hist_1D = spectra->at(4).spect->ToTH1(pot_nd_fhc);
       nd_data_numu_fhc_hist->SetName("data_nd_numu_fhc");
       nd_data_numu_fhc_hist_1D->SetName("data_nd_numu_fhc_1D");
       nd_data_numu_fhc_hist->Write();
@@ -1348,8 +1380,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
-      TH1 *nd_data_numu_rhc_hist = (*spectra)[5]->ToTHX(pot_nd_rhc);
-      TH1 *nd_data_numu_rhc_hist_1D = (*spectra)[5]->ToTH1(pot_nd_rhc);
+      TH1 *nd_data_numu_rhc_hist = spectra->at(5).spect->ToTHX(pot_nd_rhc);
+      TH1 *nd_data_numu_rhc_hist_1D = spectra->at(5).spect->ToTH1(pot_nd_rhc);
       nd_data_numu_rhc_hist->SetName("data_nd_numu_rhc");
       nd_data_numu_rhc_hist_1D->SetName("data_nd_numu_rhc_1D");
       nd_data_numu_rhc_hist->Write();

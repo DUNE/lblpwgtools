@@ -170,11 +170,24 @@ void make_all_throws(std::string stateFname = def_stateFname,
   cpv_tree.SetDirectory(fout);
   oct_tree.SetDirectory(fout);
 
+  global_tree.fJobRNGSeed = gRNGSeed;
+  mh_tree.fJobRNGSeed = gRNGSeed;
+  cpv_tree.fJobRNGSeed = gRNGSeed;
+  oct_tree.fJobRNGSeed = gRNGSeed;
+
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
+
+    unsigned loop_seed = gRandom->Integer(std::numeric_limits<unsigned>::max());
+    global_tree.fLoopRNGSeed = loop_seed;
+    mh_tree.fLoopRNGSeed = loop_seed;
+    cpv_tree.fLoopRNGSeed = loop_seed;
+    oct_tree.fLoopRNGSeed = loop_seed;
+    gRandom->SetSeed(loop_seed);
+
     auto start_loop = std::chrono::system_clock::now();
     if (!i) {
       LoopTime_s = 0;
@@ -225,7 +238,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
     // Somebody stop him, the absolute madman!
     // Keep the same stats/syst/OA throw for all fits
-    std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
+    std::vector<seeded_spectra> mad_spectra_yo = {};
 
     Fitter::Precision fit_type = Fitter::kNormal;
     if (getenv("CAFANA_FIT_PRECISION")) {

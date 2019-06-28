@@ -109,7 +109,13 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {}
+    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {
+      if(getenv("CAFANA_PRED_MINMCSTATS")){
+        fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
+      } else {
+        fMinMCStats = 50;
+      }
+    }
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});
@@ -236,6 +242,9 @@ namespace ana
     mutable std::map<Key_t, Val_t> fNomCache;
 
     bool fSplitBySign;
+
+    // Don't apply systs to bins with fewer than this many MC stats
+    double fMinMCStats;
 
     void InitFits() const;
 

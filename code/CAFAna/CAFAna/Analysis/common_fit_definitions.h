@@ -142,7 +142,9 @@ struct FitTreeBlob {
   std::vector<double> *fCentralValues;
   double fChiSq;
   unsigned fNSeconds;
-  unsigned fRNGSeed;
+  unsigned fLoopRNGSeed;
+  unsigned fJobRNGSeed;
+  std::vector<unsigned> *fSpectraRNGSeeds;
   unsigned fNFills;
   unsigned fNOscSeeds;
   double fResMemUsage;
@@ -157,15 +159,24 @@ struct FitTreeBlob {
 
 std::string BuildLogInfoString();
 
-double RunFitPoint(
-    std::string stateFileName, std::string sampleString,
-    osc::IOscCalculatorAdjustable *fakeDataOsc, ana::SystShifts fakeDataSyst,
-    bool fakeDataStats, std::vector<const ana::IFitVar *> oscVars,
-    std::vector<const ana::ISyst *> systlist,
-    osc::IOscCalculatorAdjustable *fitOsc, ana::SystShifts fitSyst,
-    ana::SeedList oscSeeds = ana::SeedList(),
-    ana::IExperiment *penaltyTerm = nullptr,
-    ana::Fitter::Precision fitStrategy = ana::Fitter::kNormal,
-    TDirectory *outDir = nullptr, FitTreeBlob *PostFitTreeBlob = nullptr,
-    std::vector<std::unique_ptr<ana::Spectrum>> *spectra = nullptr,
-    ana::SystShifts &bf = ana::junkShifts);
+struct seeded_spectra {
+  seeded_spectra(unsigned ss, std::unique_ptr<ana::Spectrum> &&ospect)
+      : stats_seed(ss), spect(std::move(ospect)) {}
+  unsigned stats_seed;
+  std::unique_ptr<ana::Spectrum> spect;
+};
+
+double RunFitPoint(std::string stateFileName, std::string sampleString,
+                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   ana::SystShifts fakeDataSyst, bool fakeDataStats,
+                   std::vector<const ana::IFitVar *> oscVars,
+                   std::vector<const ana::ISyst *> systlist,
+                   osc::IOscCalculatorAdjustable *fitOsc,
+                   ana::SystShifts fitSyst,
+                   ana::SeedList oscSeeds = ana::SeedList(),
+                   ana::IExperiment *penaltyTerm = nullptr,
+                   ana::Fitter::Precision fitStrategy = ana::Fitter::kNormal,
+                   TDirectory *outDir = nullptr,
+                   FitTreeBlob *PostFitTreeBlob = nullptr,
+                   std::vector<seeded_spectra> *spectra = nullptr,
+                   ana::SystShifts &bf = ana::junkShifts);

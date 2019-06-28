@@ -27,9 +27,6 @@
 #include <omp.h>
 #endif
 
-// Don't apply systs to bins with fewer than this many MC stats
-const double kMinMCStats = 50;
-
 namespace ana
 {
   //----------------------------------------------------------------------
@@ -43,6 +40,14 @@ namespace ana
       fBinning(0, {}, {}, 0, 0),
       fSplitBySign(mode == kSplitBySign)
   {
+
+    if(getenv("CAFANA_PRED_MINMCSTATS")){
+      fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
+    } else {
+      fMinMCStats = 50;
+    }
+
+
     for(const ISyst* syst: systs){
       ShiftedPreds sp;
       sp.systName = syst->ShortName();
@@ -383,7 +388,7 @@ namespace ana
 
     double *arr = h->GetArray();
     for (unsigned int n = 0; n < N; ++n) {
-      if (arr[n] > kMinMCStats) {
+      if (arr[n] > fMinMCStats) {
 #ifdef USE_PREDINTERP_OMP
         arr[n] *= std::max(corr[0][n], 0.);
 #else
@@ -561,7 +566,7 @@ namespace ana
 
       for(unsigned int n = 0; n < N; ++n){
         // Wasn't corrected, so derivative is zero
-        if(arr_nom[n] <= kMinMCStats) continue;
+        if(arr_nom[n] <= fMinMCStats) continue;
 
         // Uncomment to debug crashes in this function
         // assert(type < fits.size());

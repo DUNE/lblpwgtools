@@ -118,8 +118,14 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
 
+  pftree.fJobRNGSeed = gRNGSeed;
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
+
+    unsigned loop_seed = gRandom->Integer(std::numeric_limits<unsigned>::max());
+    pftree.fLoopRNGSeed = loop_seed;
+    gRandom->SetSeed(loop_seed);
+
     auto start_loop = std::chrono::system_clock::now();
     if (!i) {
       LoopTime_s = 0;

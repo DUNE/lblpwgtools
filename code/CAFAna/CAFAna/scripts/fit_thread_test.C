@@ -161,7 +161,7 @@ int main(int argc, char const *argv[]) {
     omp_set_num_threads(1);
 
     // Make sure we run the same fit each time
-    std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
+    std::vector<seeded_spectra> mad_spectra_yo = {};
 
     double thischisq = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,

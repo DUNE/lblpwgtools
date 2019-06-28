@@ -138,10 +138,10 @@ void llh_scans(std::string stateFname = def_stateFname,
   std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
 
   MultiExperiment expt_ND_FHC({&nd_expt_fhc_syst});
-  expt_ND_FHC .AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", true, {0});
+  expt_ND_FHC.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", true, {0});
 
   MultiExperiment expt_ND_RHC({&nd_expt_rhc_syst});
-  expt_ND_RHC .AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", true, {0});
+  expt_ND_RHC.AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", true, {0});
 
   MultiExperiment expt_nd_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                               &dis_expt_fhc_syst, &dis_expt_rhc_syst,
@@ -165,13 +165,18 @@ void llh_scans(std::string stateFname = def_stateFname,
       {"ND_FD", &expt_nd_fd}};
 
   // Loop over the systematics and make a LLH scan for each one
-  double range = 1;
+  double range = 4;
   double half_range = range / 2.0;
   int nsteps = 401;
   double stride = range / double(nsteps - 1);
   for (auto &syst : systlist) {
 
     std::vector<double> syst_vals;
+
+    if (relevantBestFit.count(syst->ShortName())) {
+      std::cout << "Setting " << syst->ShortName() << " best fit to "
+                << relevantBestFit[syst->ShortName()] << std::endl;
+    }
 
     double min = (relevantBestFit.count(syst->ShortName())
                       ? relevantBestFit[syst->ShortName()]
