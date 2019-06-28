@@ -228,17 +228,17 @@ void make_all_throws(std::string stateFname = def_stateFname,
     std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
 
     Fitter::Precision fit_type = Fitter::kNormal;
-    if (getenv("CAFANA_FIT_PRECISION")){
-      switch(atoi(getenv("CAFANA_FIT_PRECISION"))){
+    if (getenv("CAFANA_FIT_PRECISION")) {
+      switch (atoi(getenv("CAFANA_FIT_PRECISION"))) {
       case 0:
-	fit_type = Fitter::kFast;
-	break;
+        fit_type = Fitter::kFast;
+        break;
       case 1:
-	fit_type = Fitter::kNormal;
-	break;
-      case 2: 
-	fit_type = Fitter::kCareful;
-	break;
+        fit_type = Fitter::kNormal;
+        break;
+      case 2:
+        fit_type = Fitter::kCareful;
+        break;
       }
     }
     if (getenv("CAFANA_FIT_FORCE_HESSE") &&
@@ -267,6 +267,24 @@ void make_all_throws(std::string stateFname = def_stateFname,
     std::cerr << "[THW]: Global throw " << i
               << " fit found minimum chi2 = " << globalmin << " "
               << BuildLogInfoString();
+
+    if (chk.ShouldCheckpoint()) {
+      chk.WaitForSemaphore();
+      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+      TDirectory *odir = gDirectory;
+      fout->Write();
+      if (odir) {
+        odir->cd();
+      }
+      chk.NotifyCheckpoint();
+    }
+
+    if (!chk.IsSafeToStartNewUnit()) {
+      std::cerr
+          << "[CHK]: Do not have time to finish another fit, exiting early."
+          << std::endl;
+      break;
+    }
 
     // -------------------------------------
     // --------- Now do CPV fits -----------
@@ -311,6 +329,24 @@ void make_all_throws(std::string stateFname = def_stateFname,
       cpv_tree.Fill();
     }
 
+    if (chk.ShouldCheckpoint()) {
+      chk.WaitForSemaphore();
+      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+      TDirectory *odir = gDirectory;
+      fout->Write();
+      if (odir) {
+        odir->cd();
+      }
+      chk.NotifyCheckpoint();
+    }
+
+    if (!chk.IsSafeToStartNewUnit()) {
+      std::cerr
+          << "[CHK]: Do not have time to finish another fit, exiting early."
+          << std::endl;
+      break;
+    }
+
     // -------------------------------------
     // --------- Now octant fits -----------
     // -------------------------------------
@@ -339,6 +375,24 @@ void make_all_throws(std::string stateFname = def_stateFname,
     oct_tree.Fill();
     delete oct_penalty;
     delete testOscOct;
+
+    if (chk.ShouldCheckpoint()) {
+      chk.WaitForSemaphore();
+      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+      TDirectory *odir = gDirectory;
+      fout->Write();
+      if (odir) {
+        odir->cd();
+      }
+      chk.NotifyCheckpoint();
+    }
+
+    if (!chk.IsSafeToStartNewUnit()) {
+      std::cerr
+          << "[CHK]: Do not have time to finish another fit, exiting early."
+          << std::endl;
+      break;
+    }
 
     // -------------------------------------
     // --------- Now the MH fits -----------
