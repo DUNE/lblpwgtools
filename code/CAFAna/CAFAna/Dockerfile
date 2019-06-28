@@ -73,6 +73,15 @@ RUN rm -rf /opt/CAFAna-src /opt/CAFAna-build
 ENV PATH "/opt/CAFAna/bin:${PATH}"
 ENV LD_LIBRARY_PATH "/opt/CAFAna/lib:${LD_LIBRARY_PATH}"
 ENV CAFANA /opt/CAFAna
+ENV CAFANA_ANALYSIS_VERSION "4"
+ENV CAFANA_USE_UNCORRNDCOVMAT "0"
+ENV CAFANA_USE_NDCOVMAT "1"
+ENV CAFANA_IGNORE_CV_WEIGHT "0"
+ENV CAFANA_IGNORE_SELECTION "0"
+ENV CAFANA_DISABLE_DERIVATIVES "1"
+ENV CAFANA_DONT_CLAMP_SYSTS "0"
+ENV CAFANA_FIT_TURBOSE "0"
+ENV CAFANA_FIT_FORCE_HESSE "1"
 
 #Get rid of everything we don't need
 RUN apt remove -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python

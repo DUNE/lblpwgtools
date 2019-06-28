@@ -1,30 +1,20 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/Analysis/CheckPointHelper.h"
+#include <omp.h>
 
 using namespace ana;
 
-char const *def_stateFname = "common_state_mcc11v3.root";
-char const *def_outputFname = "throws_ndfd_nosyst.root";
-int const def_nthrows = 100;
-char const *def_systSet = "nosyst";
-char const *def_sampleString = "ndfd";
-char const *def_throwString = "stat:fake:start";
-char const *def_penaltyString = "nopen";
-int const def_hie = 1;
-char const *def_asimov_set = "0";
-char const *def_oscVarString = "alloscvars";
+int main(int argc, char const *argv[]) {
 
-// Need to accept filename, ND/FD, systs and reload as arguments
-void make_toy_throws(std::string stateFname = def_stateFname,
-                     std::string outputFname = def_outputFname,
-                     int nthrows = def_nthrows,
-                     std::string systSet = def_systSet,
-                     std::string sampleString = def_sampleString,
-                     std::string throwString = def_throwString,
-                     std::string penaltyString = def_penaltyString,
-                     int hie = def_hie, std::string asimov_set = def_asimov_set,
-                     std::string oscVarString = def_oscVarString) {
+  std::string stateFname = argv[1];
+  int const nthrows = 2;
+  std::string systSet = "nodet";
+  std::string sampleString = "ndfd";
+  std::string throwString = "stat:fake:start";
+  std::string penaltyString = "nopen";
+  int const hie = 1;
+  std::string asimov_set = "0";
+  std::string oscVarString = "alloscvars";
 
   gROOT->SetBatch(1);
 
@@ -40,13 +30,6 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   std::cerr << "[RNG]: gRNGSeed = " << gRNGSeed << std::endl;
 
   gRandom->SetSeed(gRNGSeed);
-
-  TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
-
-  CheckPointHelper chk;
-  if (chk.IsCounting()) {
-    nthrows = std::numeric_limits<int>::max();
-  }
 
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
@@ -103,33 +86,10 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   }
 
-  FitTreeBlob pftree("fit_info", "param_info");
-  pftree.SetDirectory(fout);
-  unsigned LoopTime_s;
-  pftree.throw_tree->Branch("LoopTime_s", &LoopTime_s);
+  FitTreeBlob tree_1;
+  FitTreeBlob tree_4;
 
-  std::stringstream CLI_ss("");
-  CLI_ss << stateFname << " " << outputFname << " " << nthrows << " " << systSet
-         << " " << sampleString << " " << throwString << " " << penaltyString
-         << " " << hie << " " << asimov_set << " " << oscVarString;
-  std::string *CLIArgs = nullptr;
-  pftree.meta_tree->Branch("CLI", &CLIArgs);
-  (*CLIArgs) = CLI_ss.str();
-
-  std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
-
-  auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
-    auto start_loop = std::chrono::system_clock::now();
-    if (!i) {
-      LoopTime_s = 0;
-    } else {
-      LoopTime_s =
-          std::chrono::duration_cast<std::chrono::seconds>(start_loop - lap)
-              .count();
-      lap = start_loop;
-    }
-
     std::cerr << "[THW]: Starting throw " << i << " " << BuildLogInfoString();
 
     // Set up throws for the starting value
@@ -137,10 +97,11 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     osc::IOscCalculatorAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
-    if (fakeoa_throw || central_throw)
+    if (fakeoa_throw || central_throw) {
       fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
-    else
+    } else {
       fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
+    }
 
     // Now deal with systematics
     if (fakenuis_throw and not central_throw) {
@@ -148,8 +109,9 @@ void make_toy_throws(std::string stateFname = def_stateFname,
         fakeThrowSyst.SetShift(
             s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
       }
-    } else
+    } else {
       fakeThrowSyst = kNoShift;
+    }
 
     if (central_throw) {
       for (auto s : systlist)
@@ -190,65 +152,56 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
-    double thischisq =
-        RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
-                    stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
-                    oscSeeds, penalty, fit_type, nullptr, &pftree);
+    auto start_1 = std::chrono::system_clock::now();
+    omp_set_num_threads(1);
 
-    pftree.Fill();
+    // Make sure we run the same fit each time
+    std::vector<std::unique_ptr<Spectrum>> mad_spectra_yo = {};
+
+    double thischisq = RunFitPoint(
+        stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
+        oscVars, systlist, fitThrowOsc, fitThrowSyst, oscSeeds, penalty,
+        fit_type, nullptr, &tree_1, &mad_spectra_yo);
+    auto end_1 = std::chrono::system_clock::now();
 
     std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
-              << " " << BuildLogInfoString();
+              << " with 1 threads in"
+              << std::chrono::duration_cast<std::chrono::seconds>(start_1 -
+                                                                  end_1)
+                     .count()
+              << BuildLogInfoString();
+
+    auto start_4 = std::chrono::system_clock::now();
+    omp_set_num_threads(4);
+
+    thischisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc,
+                            fakeThrowSyst, stats_throw, oscVars, systlist,
+                            fitThrowOsc, fitThrowSyst, oscSeeds, penalty,
+                            fit_type, nullptr, &tree_4, &mad_spectra_yo);
+    auto end_4 = std::chrono::system_clock::now();
+
+    std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
+              << " with 4 threads in"
+              << std::chrono::duration_cast<std::chrono::seconds>(start_4 -
+                                                                  end_4)
+                     .count()
+              << BuildLogInfoString();
+
+    for (size_t p_it = 0; p_it < tree_4.fPostFitValues->size(); ++p_it) {
+      if ((fabs(tree_1.fPostFitValues->at(p_it) -
+                tree_4.fPostFitValues->at(p_it)) > 1E-10) ||
+          (fabs(tree_1.fPostFitErrors->at(p_it) -
+                tree_4.fPostFitErrors->at(p_it)) > 1E-10)) {
+        std::cout << "[WARN]: Fit found differing values for "
+                  << tree_4.fParamNames->at(p_it)
+                  << ", 1 thread = " << tree_1.fPostFitValues->at(p_it)
+                  << " +/- " << tree_1.fPostFitErrors->at(p_it)
+                  << ", 4 threads = " << tree_4.fPostFitValues->at(p_it)
+                  << " +/- " << tree_4.fPostFitErrors->at(p_it) << std::endl;
+      }
+    }
+
     // Done with this systematic throw
     delete penalty;
-    delete fakeThrowOsc;
-    delete fitThrowOsc;
-
-    if (chk.ShouldCheckpoint()) {
-      chk.WaitForSemaphore();
-      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-      TDirectory *odir = gDirectory;
-      fout->Write();
-      if (odir) {
-        odir->cd();
-      }
-      chk.NotifyCheckpoint();
-    }
-
-    if (!chk.IsSafeToStartNewUnit()) {
-      std::cerr
-          << "[CHK]: Do not have time to finish another fit, exiting early."
-          << std::endl;
-      break;
-    }
   }
-
-  std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-  fout->Write();
-  fout->Close();
-
-  std::cout << "[INFO]: Done " << BuildLogInfoString();
 }
-
-#ifndef NO_MTT_MAIN
-#ifndef __CINT__
-int main(int argc, char const *argv[]) {
-
-  gROOT->SetMustClean(false);
-
-  std::string stateFname = (argc > 1) ? argv[1] : def_stateFname;
-  std::string outputFname = (argc > 2) ? argv[2] : def_outputFname;
-  int nthrows = (argc > 3) ? atoi(argv[3]) : def_nthrows;
-  std::string systSet = (argc > 4) ? argv[4] : def_systSet;
-  std::string sampleString = (argc > 5) ? argv[5] : def_sampleString;
-  std::string throwString = (argc > 6) ? argv[6] : def_throwString;
-  std::string penaltyString = (argc > 7) ? argv[7] : def_penaltyString;
-  int hie = (argc > 8) ? atoi(argv[8]) : def_hie;
-  std::string asimov_set = (argc > 9) ? argv[9] : def_asimov_set;
-  std::string oscVarString = (argc > 10) ? argv[10] : def_oscVarString;
-
-  make_toy_throws(stateFname, outputFname, nthrows, systSet, sampleString,
-                  throwString, penaltyString, hie, asimov_set, oscVarString);
-}
-#endif
-#endif

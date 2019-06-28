@@ -24,7 +24,7 @@ set(scripts_to_build
   sample_throws
 )
 if(DEFINED USE_OPENMP AND USE_OPENMP)
-  LIST(APPEND scripts_to_build pred_thread_test)
+  LIST(APPEND scripts_to_build pred_thread_test fit_thread_test)
 endif()
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
