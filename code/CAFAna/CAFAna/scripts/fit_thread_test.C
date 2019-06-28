@@ -8,7 +8,7 @@ int main(int argc, char const *argv[]) {
 
   std::string stateFname = argv[1];
   int const nthrows = 2;
-  std::string systSet = "nodet";
+  std::string systSet = "nodet:noxsec:nflux=10";
   std::string sampleString = "ndfd";
   std::string throwString = "stat:fake:start";
   std::string penaltyString = "nopen";
@@ -17,6 +17,7 @@ int main(int argc, char const *argv[]) {
   std::string oscVarString = "alloscvars";
 
   gROOT->SetBatch(1);
+  gROOT->SetMustClean(false);
 
   if (gRNGSeed == 0) { // if we have a time based seed its still useful for
                        // things to be reproducible, so use the time to seed a
@@ -87,6 +88,7 @@ int main(int argc, char const *argv[]) {
   }
 
   FitTreeBlob tree_1;
+  FitTreeBlob tree_1_rp;
   FitTreeBlob tree_4;
 
   for (int i = 0; i < nthrows; ++i) {
@@ -120,16 +122,19 @@ int main(int argc, char const *argv[]) {
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalculatorAdjustable *fitThrowOsc_1, *fitThrowOsc_1_rp,
+        *fitThrowOsc_4;
     if (start_throw) {
       for (auto s : systlist)
         fitThrowSyst.SetShift(
             s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
-      fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
+      fitThrowOsc_1 = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
+      fitThrowOsc_1 = NuFitOscCalc(hie, 1, asimov_set);
     }
+    fitThrowOsc_1_rp = fitThrowOsc_1->Copy();
+    fitThrowOsc_4 = fitThrowOsc_1->Copy();
 
     Fitter::Precision fit_type = Fitter::kNormal;
     if (getenv("CAFANA_FIT_PRECISION")) {
@@ -160,38 +165,58 @@ int main(int argc, char const *argv[]) {
 
     double thischisq = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
-        oscVars, systlist, fitThrowOsc, fitThrowSyst, oscSeeds, penalty,
-        fit_type, nullptr, &tree_1, &mad_spectra_yo);
+        oscVars, systlist, fitThrowOsc_1, SystShifts(fitThrowSyst), oscSeeds,
+        penalty, fit_type, nullptr, &tree_1, &mad_spectra_yo);
     auto end_1 = std::chrono::system_clock::now();
 
     std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
               << " with 1 threads in"
-              << std::chrono::duration_cast<std::chrono::seconds>(start_1 -
-                                                                  end_1)
+              << std::chrono::duration_cast<std::chrono::seconds>(end_1 -
+                                                                  start_1)
                      .count()
-              << BuildLogInfoString();
+              << " s. " << BuildLogInfoString();
+
+    thischisq = RunFitPoint(
+        stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
+        oscVars, systlist, fitThrowOsc_1_rp, SystShifts(fitThrowSyst), oscSeeds,
+        penalty, fit_type, nullptr, &tree_1_rp, &mad_spectra_yo);
+
+    for (size_t p_it = 0; p_it < tree_4.fPostFitValues->size(); ++p_it) {
+      if ((fabs(tree_1.fPostFitValues->at(p_it) -
+                tree_1_rp.fPostFitValues->at(p_it)) > 1E-8) ||
+          (fabs(tree_1.fPostFitErrors->at(p_it) -
+                tree_1_rp.fPostFitErrors->at(p_it)) > 1E-8)) {
+        std::cout << "[WARN]: Fit found differing values for "
+                  << tree_1_rp.fParamNames->at(p_it)
+                  << ", 1 thread = " << tree_1.fPostFitValues->at(p_it)
+                  << " +/- " << tree_1.fPostFitErrors->at(p_it)
+                  << ", 1 thread (retry) = "
+                  << tree_1_rp.fPostFitValues->at(p_it) << " +/- "
+                  << tree_1_rp.fPostFitErrors->at(p_it) << std::endl;
+      }
+    }
 
     auto start_4 = std::chrono::system_clock::now();
     omp_set_num_threads(4);
 
-    thischisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc,
-                            fakeThrowSyst, stats_throw, oscVars, systlist,
-                            fitThrowOsc, fitThrowSyst, oscSeeds, penalty,
-                            fit_type, nullptr, &tree_4, &mad_spectra_yo);
+    thischisq = RunFitPoint(
+        stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
+        oscVars, systlist, fitThrowOsc_4, SystShifts(fitThrowSyst), oscSeeds,
+        penalty, fit_type, nullptr, &tree_4, &mad_spectra_yo);
     auto end_4 = std::chrono::system_clock::now();
 
     std::cerr << "[THW]: Throw " << i << " found minimum chi2 = " << thischisq
-              << " with 4 threads in"
-              << std::chrono::duration_cast<std::chrono::seconds>(start_4 -
-                                                                  end_4)
+              << " with 4 threads in "
+              << std::chrono::duration_cast<std::chrono::seconds>(end_4 -
+                                                                  start_4)
                      .count()
-              << BuildLogInfoString();
+              << " s, " << BuildLogInfoString();
 
     for (size_t p_it = 0; p_it < tree_4.fPostFitValues->size(); ++p_it) {
       if ((fabs(tree_1.fPostFitValues->at(p_it) -
-                tree_4.fPostFitValues->at(p_it)) > 1E-10) ||
+                tree_4.fPostFitValues->at(p_it)) > 1E-8) ||
           (fabs(tree_1.fPostFitErrors->at(p_it) -
-                tree_4.fPostFitErrors->at(p_it)) > 1E-10)) {
+                tree_4.fPostFitErrors->at(p_it)) > 1E-8)) {
         std::cout << "[WARN]: Fit found differing values for "
                   << tree_4.fParamNames->at(p_it)
                   << ", 1 thread = " << tree_1.fPostFitValues->at(p_it)
@@ -203,5 +228,8 @@ int main(int argc, char const *argv[]) {
 
     // Done with this systematic throw
     delete penalty;
+    delete fitThrowOsc_1;
+    delete fitThrowOsc_1_rp;
+    delete fitThrowOsc_4;
   }
 }

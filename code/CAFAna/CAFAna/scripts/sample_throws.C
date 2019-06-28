@@ -287,55 +287,55 @@ void sample_throws(std::string stateFname = def_stateFname,
   flux_xsec_list.insert(flux_xsec_list.end(), flux_list.begin(),
                         flux_list.end());
 
-  std::cout << "Prefit flux uncertainties..." << std::endl;
-  TDirectory *prefit_flux_dir = fout->mkdir("prefit_flux");
-  throw_errors(stateFname, sampleString, prefit_flux_dir, nom_vect, systlist,
-               flux_list, trueOsc);
-
-  std::cout << "Prefit fd_det uncertainties..." << std::endl;
-  TDirectory *prefit_fd_det_dir = fout->mkdir("prefit_fd_det");
-  throw_errors(stateFname, sampleString, prefit_fd_det_dir, nom_vect, systlist,
-               fd_det_list, trueOsc);
-
-  std::cout << "Prefit xsec_qe uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_qe_dir = fout->mkdir("prefit_xsec_qe");
-  throw_errors(stateFname, sampleString, prefit_xsec_qe_dir, nom_vect, systlist,
-               xsec_qe_list, trueOsc);
-
-  std::cout << "Prefit xsec_res uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_res_dir = fout->mkdir("prefit_xsec_res");
-  throw_errors(stateFname, sampleString, prefit_xsec_res_dir, nom_vect,
-               systlist, xsec_res_list, trueOsc);
-
-  std::cout << "Prefit FSI uncertainties..." << std::endl;
-  TDirectory *prefit_fsi_dir = fout->mkdir("prefit_xsec_fsi");
-  throw_errors(stateFname, sampleString, prefit_fsi_dir, nom_vect, systlist,
-               xsec_fsi_list, trueOsc);
-
-  std::cout << "Prefit xsec_dis uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_dis_dir = fout->mkdir("prefit_xsec_dis");
-  throw_errors(stateFname, sampleString, prefit_xsec_dis_dir, nom_vect,
-               systlist, xsec_dis_list, trueOsc);
-
-  std::cout << "Prefit xsec_NC uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_nc_dir = fout->mkdir("prefit_xsec_nc");
-  throw_errors(stateFname, sampleString, prefit_xsec_nc_dir, nom_vect, systlist,
-               xsec_nc_list, trueOsc);
-
-  std::cout << "Prefit xsec_ratios uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_ratios_dir = fout->mkdir("prefit_xsec_ratios");
-  throw_errors(stateFname, sampleString, prefit_xsec_ratios_dir, nom_vect,
-               systlist, xsec_ratios_list, trueOsc);
-
-  std::cout << "Prefit xsec uncertainties..." << std::endl;
-  TDirectory *prefit_xsec_dir = fout->mkdir("prefit_xsec");
-  throw_errors(stateFname, sampleString, prefit_xsec_dir, nom_vect, systlist,
-               all_xsec_list, trueOsc);
-
-  std::cout << "Prefit xsec+flux uncertainties..." << std::endl;
-  TDirectory *prefit_flux_xsec_dir = fout->mkdir("prefit_flux_xsec");
-  throw_errors(stateFname, sampleString, prefit_flux_xsec_dir, nom_vect,
-               systlist, flux_xsec_list, trueOsc);
+  // std::cout << "Prefit flux uncertainties..." << std::endl;
+  // TDirectory *prefit_flux_dir = fout->mkdir("prefit_flux");
+  // throw_errors(stateFname, sampleString, prefit_flux_dir, nom_vect, systlist,
+  //              flux_list, trueOsc);
+  //
+  // std::cout << "Prefit fd_det uncertainties..." << std::endl;
+  // TDirectory *prefit_fd_det_dir = fout->mkdir("prefit_fd_det");
+  // throw_errors(stateFname, sampleString, prefit_fd_det_dir, nom_vect, systlist,
+  //              fd_det_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec_qe uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_qe_dir = fout->mkdir("prefit_xsec_qe");
+  // throw_errors(stateFname, sampleString, prefit_xsec_qe_dir, nom_vect, systlist,
+  //              xsec_qe_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec_res uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_res_dir = fout->mkdir("prefit_xsec_res");
+  // throw_errors(stateFname, sampleString, prefit_xsec_res_dir, nom_vect,
+  //              systlist, xsec_res_list, trueOsc);
+  //
+  // std::cout << "Prefit FSI uncertainties..." << std::endl;
+  // TDirectory *prefit_fsi_dir = fout->mkdir("prefit_xsec_fsi");
+  // throw_errors(stateFname, sampleString, prefit_fsi_dir, nom_vect, systlist,
+  //              xsec_fsi_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec_dis uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_dis_dir = fout->mkdir("prefit_xsec_dis");
+  // throw_errors(stateFname, sampleString, prefit_xsec_dis_dir, nom_vect,
+  //              systlist, xsec_dis_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec_NC uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_nc_dir = fout->mkdir("prefit_xsec_nc");
+  // throw_errors(stateFname, sampleString, prefit_xsec_nc_dir, nom_vect, systlist,
+  //              xsec_nc_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec_ratios uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_ratios_dir = fout->mkdir("prefit_xsec_ratios");
+  // throw_errors(stateFname, sampleString, prefit_xsec_ratios_dir, nom_vect,
+  //              systlist, xsec_ratios_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec uncertainties..." << std::endl;
+  // TDirectory *prefit_xsec_dir = fout->mkdir("prefit_xsec");
+  // throw_errors(stateFname, sampleString, prefit_xsec_dir, nom_vect, systlist,
+  //              all_xsec_list, trueOsc);
+  //
+  // std::cout << "Prefit xsec+flux uncertainties..." << std::endl;
+  // TDirectory *prefit_flux_xsec_dir = fout->mkdir("prefit_flux_xsec");
+  // throw_errors(stateFname, sampleString, prefit_flux_xsec_dir, nom_vect,
+  //              systlist, flux_xsec_list, trueOsc);
 
   // Now move to postfit!
   std::cout << "Postfit uncertainties..." << std::endl;
@@ -375,46 +375,46 @@ void sample_throws(std::string stateFname = def_stateFname,
   TDirectory *postfit_fd_det_dir = fout->mkdir("postfit_fd_det");
   throw_errors(stateFname, sampleString, postfit_fd_det_dir, nom_vect, systlist,
                fd_det_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit xsec_qe uncertainties..." << std::endl;
-  TDirectory *postfit_xsec_qe_dir = fout->mkdir("postfit_xsec_qe");
-  throw_errors(stateFname, sampleString, postfit_xsec_qe_dir, nom_vect,
-               systlist, xsec_qe_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit xsec_res uncertainties..." << std::endl;
-  TDirectory *postfit_xsec_res_dir = fout->mkdir("postfit_xsec_res");
-  throw_errors(stateFname, sampleString, postfit_xsec_res_dir, nom_vect,
-               systlist, xsec_res_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit FSI uncertainties..." << std::endl;
-  TDirectory *postfit_fsi_dir = fout->mkdir("postfit_xsec_fsi");
-  throw_errors(stateFname, sampleString, postfit_fsi_dir, nom_vect, systlist,
-               xsec_fsi_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit xsec_dis uncertainties..." << std::endl;
-  TDirectory *postfit_xsec_dis_dir = fout->mkdir("postfit_xsec_dis");
-  throw_errors(stateFname, sampleString, postfit_xsec_dis_dir, nom_vect,
-               systlist, xsec_dis_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit xsec_nc uncertainties..." << std::endl;
-  TDirectory *postfit_xsec_nc_dir = fout->mkdir("postfit_xsec_nc");
-  throw_errors(stateFname, sampleString, postfit_xsec_nc_dir, nom_vect,
-               systlist, xsec_nc_list, trueOsc, dec_mat);
-
-  std::cout << "Postfit xsec_ratios uncertainties..." << std::endl;
-  TDirectory *postfit_xsec_ratios_dir = fout->mkdir("postfit_xsec_ratios");
-  throw_errors(stateFname, sampleString, postfit_xsec_ratios_dir, nom_vect,
-               systlist, xsec_ratios_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit xsec_qe uncertainties..." << std::endl;
+  // TDirectory *postfit_xsec_qe_dir = fout->mkdir("postfit_xsec_qe");
+  // throw_errors(stateFname, sampleString, postfit_xsec_qe_dir, nom_vect,
+  //              systlist, xsec_qe_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit xsec_res uncertainties..." << std::endl;
+  // TDirectory *postfit_xsec_res_dir = fout->mkdir("postfit_xsec_res");
+  // throw_errors(stateFname, sampleString, postfit_xsec_res_dir, nom_vect,
+  //              systlist, xsec_res_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit FSI uncertainties..." << std::endl;
+  // TDirectory *postfit_fsi_dir = fout->mkdir("postfit_xsec_fsi");
+  // throw_errors(stateFname, sampleString, postfit_fsi_dir, nom_vect, systlist,
+  //              xsec_fsi_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit xsec_dis uncertainties..." << std::endl;
+  // TDirectory *postfit_xsec_dis_dir = fout->mkdir("postfit_xsec_dis");
+  // throw_errors(stateFname, sampleString, postfit_xsec_dis_dir, nom_vect,
+  //              systlist, xsec_dis_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit xsec_nc uncertainties..." << std::endl;
+  // TDirectory *postfit_xsec_nc_dir = fout->mkdir("postfit_xsec_nc");
+  // throw_errors(stateFname, sampleString, postfit_xsec_nc_dir, nom_vect,
+  //              systlist, xsec_nc_list, trueOsc, dec_mat);
+  //
+  // std::cout << "Postfit xsec_ratios uncertainties..." << std::endl;
+  // TDirectory *postfit_xsec_ratios_dir = fout->mkdir("postfit_xsec_ratios");
+  // throw_errors(stateFname, sampleString, postfit_xsec_ratios_dir, nom_vect,
+  //              systlist, xsec_ratios_list, trueOsc, dec_mat);
 
   std::cout << "Postfit xsec uncertainties..." << std::endl;
   TDirectory *postfit_xsec_dir = fout->mkdir("postfit_xsec");
   throw_errors(stateFname, sampleString, postfit_xsec_dir, nom_vect, systlist,
                all_xsec_list, trueOsc, dec_mat);
 
-  std::cout << "Postfit xsec+flux uncertainties..." << std::endl;
-  TDirectory *postfit_flux_xsec_dir = fout->mkdir("postfit_flux_xsec");
-  throw_errors(stateFname, sampleString, postfit_flux_xsec_dir, nom_vect,
-               systlist, flux_xsec_list, trueOsc, dec_mat);
+  // std::cout << "Postfit xsec+flux uncertainties..." << std::endl;
+  // TDirectory *postfit_flux_xsec_dir = fout->mkdir("postfit_flux_xsec");
+  // throw_errors(stateFname, sampleString, postfit_flux_xsec_dir, nom_vect,
+  //              systlist, flux_xsec_list, trueOsc, dec_mat);
 
   // Now close the file
   fout->Close();
