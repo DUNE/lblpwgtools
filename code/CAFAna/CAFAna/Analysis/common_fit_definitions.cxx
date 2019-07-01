@@ -1142,7 +1142,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
           "CAFANA_IGNORE_SELECTION", "CAFANA_DISABLE_DERIVATIVES",
           "CAFANA_DONT_CLAMP_SYSTS", "CAFANA_FIT_TURBOSE",
           "CAFANA_FIT_FORCE_HESSE", "CAFANA_PRED_MINMCSTATS", "FIT_PRECISION",
-          "FIT_TOLERANCE"}) {
+          "FIT_TOLERANCE", "SLURM_JOB_ID", "SLURM_PROCID", "SLURM_NODEID",
+          "SLURM_LOCALID"}) {
       if (getenv(env_str)) {
         std::cout << "[ENV]: " << env_str << " = " << getenv(env_str)
                   << std::endl;
