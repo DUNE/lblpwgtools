@@ -82,6 +82,7 @@ ENV CAFANA_DISABLE_DERIVATIVES "1"
 ENV CAFANA_DONT_CLAMP_SYSTS "0"
 ENV CAFANA_FIT_TURBOSE "0"
 ENV CAFANA_FIT_FORCE_HESSE "1"
+ENV CAFANA_PRED_MINMCSTATS "50"
 
 #Get rid of everything we don't need
 RUN apt remove -y build-essential gfortran-6 libgsl-dev libboost-dev cmake subversion git python

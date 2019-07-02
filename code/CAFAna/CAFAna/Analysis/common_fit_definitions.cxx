@@ -929,6 +929,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     throw_tree->Branch("fPostFitErrors", &fPostFitErrors);
     throw_tree->Branch("fCentralValues", &fCentralValues);
     throw_tree->Branch("LoopRNGSeed", &fLoopRNGSeed);
+    throw_tree->Branch("JobRNGSeed", &fJobRNGSeed);
     throw_tree->Branch("SpectraRNGSeeds", &fSpectraRNGSeeds);
     throw_tree->Branch("ProcFitN", &fNFills);
     throw_tree->Branch("NOscSeeds", &fNOscSeeds);
@@ -968,6 +969,7 @@ FitTreeBlob *FitTreeBlob::MakeReader(TTree *t, TTree *m) {
   t->SetBranchAddress("fPostFitErrors", &ftb->fPostFitErrors);
   t->SetBranchAddress("fCentralValues", &ftb->fCentralValues);
   t->SetBranchAddress("LoopRNGSeed", &ftb->fLoopRNGSeed);
+  t->SetBranchAddress("JobRNGSeed", &ftb->fJobRNGSeed);
   t->SetBranchAddress("SpectraRNGSeeds", &ftb->fSpectraRNGSeeds);
   t->SetBranchAddress("ProcFitN", &ftb->fNFills);
   t->SetBranchAddress("NOscSeeds", &ftb->fNOscSeeds);
