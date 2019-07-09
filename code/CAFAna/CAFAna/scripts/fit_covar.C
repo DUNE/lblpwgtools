@@ -64,7 +64,7 @@ void fit_covar(std::string stateFname = def_stateFname,
   IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
   double thischisq =
-      RunFitPoint(stateFname, sampleString, trueOsc, kNoShift, false, oscVars,
+      RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
                   Fitter::kNormal | Fitter::kIncludeHesse, fout, &ftb);
   delete penalty;
