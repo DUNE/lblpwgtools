@@ -22,8 +22,8 @@ source srt/srt.sh || exit 1
 
 cat <<EOF > setup/packages-development
 OscLib : S19-07-03
-SoftRelTools : S19-07-03
-SRT_NOVA : S19-07-03
+SoftRelTools : HEAD
+SRT_NOVA : HEAD
 Utilities : S19-07-03
 setup : S19-07-03
 EOF
