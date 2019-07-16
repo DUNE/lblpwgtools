@@ -106,29 +106,26 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   int nBinsX = 0, nBinsY = 0;
   double minX = 0, maxX = 0, minY = 0, maxY = 0;
 
-  std::string yVal;
   // Now get the binnings etc for the histograms
   if (plotVarVect.size() > 0)
     GetParameterBinning(plotVarVect[0], nBinsX, minX, maxX);
   if (plotVarVect.size() > 1)
     GetParameterBinning(plotVarVect[1], nBinsY, minY, maxY);
-  if (plotVarVect.size() > 2){
-    yVal = plotVarVect[2];
-    plotVarVect.pop_back();
-  }
 
-  if (plotVarVect.size() == 1)
+  if (plotVarVect.size() == 1) {
     returnHist = new TH1D(plotVarVect[0].c_str(),
                           (plotVarVect[0] + ";" + plotVarVect[0]).c_str(),
                           nBinsX, minX, maxX);
-  else if (plotVarVect.size() == 2)
+  } else if (plotVarVect.size() > 1){
     returnHist = new TH2D((plotVarVect[0] + "_" + plotVarVect[1]).c_str(),
                           (plotVarVect[0] + "_" + plotVarVect[1] + ";" +
                            plotVarVect[0] + ";" + plotVarVect[1])
-                              .c_str(),
+			  .c_str(),
                           nBinsX, minX, maxX, nBinsY, minY, maxY);
-
-  // if (not yVal.empty()) returnHist->SetName((plotVarVect[0] + "_" + plotVarVect[1]+"_"+yVal).c_str());
+  } else {
+    std::cerr << "Something went wrong when setting up the histogram!" << std::endl;
+    exit(1);
+  }
 
   return returnHist;
 }
@@ -169,14 +166,26 @@ void asimov_joint(std::string stateFname=def_stateFname,
   std::vector<const IFitVar *> oscVars = oscVarsAll;
 
   // This is very hacky... third elements in the list are used to define the strip to loop at this time
-  int yVal = -1;
+  int yVal = -999;
+  int xVal = -999;
+  bool isGlobal = false;
+  
   if (plotVarVect.size() > 0)
     RemovePars(oscVars, {plotVarVect[0]});
   if (plotVarVect.size() > 1)
     RemovePars(oscVars, {plotVarVect[1]});
   if (plotVarVect.size() > 2)
-    yVal = stoi(plotVarVect[2]);
+    xVal = stoi(plotVarVect[2]);
+  if (plotVarVect.size() > 3){
+    yVal = stoi(plotVarVect[3]);
+  }
 
+  // LoOk LuKe, BrAcKeTs
+  if (yVal == -1 && xVal == -1){
+    isGlobal = true;
+    yVal = xVal = 0;
+  }
+  
   // One man's continuing struggle with hacky fixes stemming from the oscillation probability being buggy as hell
   if (plotVars.find("dmsq32") != std::string::npos) RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
 
@@ -197,9 +206,6 @@ void asimov_joint(std::string stateFname=def_stateFname,
 
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
-  // if (useProtonFakeData) {
-  //   trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(), 1);
-  // }
   SystShifts testSyst = kNoShift;
 
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
@@ -214,13 +220,17 @@ void asimov_joint(std::string stateFname=def_stateFname,
   if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") == plotVarVect.end())
     oscSeeds[&kFitSinSqTheta23] = {.4, .6};
 
+  // Only do this if you're told to?
+  double globalmin = 0;
 
-  double globalmin = RunFitPoint(stateFname, sampleString,
-				 trueOsc, trueSyst, false,
-				 oscVarsAll, systlist,
-				 testOsc, testSyst,
-				 oscSeedsAll, penalty_nom,
-				 Fitter::kNormal, nullptr);
+  if (isGlobal){
+    globalmin = RunFitPoint(stateFname, sampleString,
+			    trueOsc, trueSyst, false,
+			    oscVarsAll, systlist,
+			    testOsc, testSyst,
+			    oscSeedsAll, penalty_nom,
+			    Fitter::kNormal, nullptr);
+  }
   delete penalty_nom;
   std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
 
@@ -231,37 +241,47 @@ void asimov_joint(std::string stateFname=def_stateFname,
     abort();
   }
 
+  int xMin = 0;
+  int xMax = sens_hist->GetNbinsX();
+
+  if (xVal >= 0){
+    xMin = xVal;
+    xMax = xVal+1;
+  }
+  
   int yMin = 0;
   int yMax = sens_hist->GetNbinsY();
-
+  
   if (yVal >= 0){
     yMin = yVal;
     yMax = yVal+1;
   }
 
-  // Now loop over the bins in both x and y (if 1D, one loop does nothing)
-  for (int xBin = 0; xBin < sens_hist->GetNbinsX(); ++xBin){
-
+  // Loop over whatever bins you're supposed to
+  for (int xBin = xMin; xBin < xMax; ++xBin){      
     double xCenter = sens_hist->GetXaxis()->GetBinCenter(xBin+1);
-    // If yVal is set, only scan over that value... serialise these
+
     for (int yBin = yMin; yBin < yMax; ++yBin){
       double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin+1);
-
+      
       osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
       if (plotVarVect.size() > 0)
 	SetOscillationParameter(testOsc, plotVarVect[0], xCenter, hie);
       if (plotVarVect.size() > 1)
 	SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
-
+      
       IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
-
-      double chisqmin = RunFitPoint(stateFname, sampleString,
-				    trueOsc, trueSyst, false,
-				    oscVars, systlist,
-				    testOsc, testSyst,
-				    oscSeeds, penalty,
-				    Fitter::kNormal, nullptr,
-				    &asimov_tree);
+      
+      double chisqmin = 0;
+      if (!isGlobal){
+	chisqmin = RunFitPoint(stateFname, sampleString,
+			       trueOsc, trueSyst, false,
+			       oscVars, systlist,
+			       testOsc, testSyst,
+			       oscSeeds, penalty,
+			       Fitter::kNormal, nullptr,
+			       &asimov_tree);
+      }
 
       // Save relevant values into the tree and histogram
       double chisqdiff = chisqmin - globalmin;
@@ -270,6 +290,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
       asimov_tree.throw_tree->Branch("globalmin", &globalmin);
       asimov_tree.throw_tree->Branch("xVal", &xCenter);
       asimov_tree.throw_tree->Branch("xName", &plotVarVect[0]);
+      asimov_tree.throw_tree->Branch("isGlobal", &isGlobal);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yVal", &yCenter);
       if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
       asimov_tree.Fill();
@@ -284,7 +305,6 @@ void asimov_joint(std::string stateFname=def_stateFname,
   sens_hist->Write();
   fout->Write();
   fout->Close();
-  delete sens_hist;
 }
 
 #ifndef __CINT__
