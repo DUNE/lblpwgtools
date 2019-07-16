@@ -253,7 +253,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
   }
 
   return systlist;
-};
+}
 
 std::vector<const ISyst *> GetListOfFakeDataSysts() {
   return GetListOfSysts(false, false, false, false, false, false,
@@ -498,7 +498,7 @@ std::string GetSampleName(SampleType sample) {
   default:
     return "NONE";
   }
-};
+}
 
 SampleType GetSampleType(std::string const &sample) {
 
@@ -660,7 +660,7 @@ GetPredictionInterps(std::string fileName,
     }
   }
   return return_list;
-};
+}
 
 TH2D *make_corr_from_covar(TH2D *covar) {
 
@@ -893,7 +893,7 @@ void SaveParams(TDirectory *outDir, std::vector<const ISyst *> systlist) {
   t->Write();
   delete fParamNames;
   delete t;
-};
+}
 
 FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     : fMeta_filled(false), throw_tree(nullptr), meta_tree(nullptr), fNFills(0) {
@@ -1654,4 +1654,4 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   return thischisq;
-};
+}
