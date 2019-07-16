@@ -21,11 +21,11 @@ chmod +x nova_srt_bootstrap || exit 1
 source srt/srt.sh || exit 1
 
 cat <<EOF > setup/packages-development
-OscLib : HEAD
-SoftRelTools : HEAD
-SRT_NOVA : HEAD
-Utilities : HEAD
-setup : HEAD
+OscLib : S19-07-03
+SoftRelTools : S19-07-03
+SRT_NOVA : S19-07-03
+Utilities : S19-07-03
+setup : S19-07-03
 EOF
 
 rm -f update-release || exit 1
