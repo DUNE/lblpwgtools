@@ -168,8 +168,10 @@ void asimov_joint(std::string stateFname=def_stateFname,
   // This is very hacky... third elements in the list are used to define the strip to loop at this time
   int yVal = -999;
   int xVal = -999;
-  bool isGlobal = false;
-  
+
+  bool isGlobal = true;  
+  if (plotVarVect.size() == 4) isGlobal = false;
+
   if (plotVarVect.size() > 0)
     RemovePars(oscVars, {plotVarVect[0]});
   if (plotVarVect.size() > 1)
