@@ -13,6 +13,7 @@ using namespace ana;
 struct inp_plot {
   std::string input_file;
   std::string legend_name;
+  std::string hist_to_get;
 };
 
 std::vector<inp_plot> Inputs;
@@ -42,13 +43,14 @@ void handleOpts(int argc, char const *argv[]) {
       exit(0);
     } else if (std::string(argv[opt]) == "-i") {
       auto split = SplitString(argv[++opt], ',');
-      if (split.size() != 2) {
+      if (split.size() < 2) {
         std::cout << "[ERROR]: Argment \"" << argv[opt] << "\" malformed."
                   << std::endl;
         SayUsage(argv);
         exit(1);
       }
-      Inputs.push_back({split[0], split[1]});
+      Inputs.push_back(
+          {split[0], split[1], (split.size() > 2) ? split[2] : "all"});
     } else if (std::string(argv[opt]) == "-o") {
       output_file = argv[++opt];
     } else if (std::string(argv[opt]) == "-h") {
@@ -115,28 +117,42 @@ int main(int argc, char const *argv[]) {
     TFile fin(p.input_file.c_str(), "READ");
 
     TH2D *ND_FHC_Err;
-    fin.GetObject("postfit_all/ND_FHC_errs", ND_FHC_Err);
+    fin.GetObject(
+        (std::string("postfit_") + p.hist_to_get + "/ND_FHC_errs").c_str(),
+        ND_FHC_Err);
     if (!ND_FHC_Err) {
-      std::cout << "Failed to get: postfit_all/ND_FHC_errs" << std::endl;
+      std::cout << "Failed to get: postfit_" + p.hist_to_get + "/ND_FHC_errs"
+                << std::endl;
       abort();
     }
     TH2D *ND_RHC_Err;
-    fin.GetObject("postfit_all/ND_RHC_errs", ND_RHC_Err);
+    fin.GetObject(
+        (std::string("postfit_") + p.hist_to_get + "/ND_RHC_errs").c_str(),
+        ND_RHC_Err);
     if (!ND_RHC_Err) {
-      std::cout << "Failed to get: postfit_all/ND_RHC_errs" << std::endl;
+      std::cout << "Failed to get: postfit_" + p.hist_to_get + "/ND_RHC_errs"
+                << std::endl;
       abort();
     }
 
     TH1D *FD_FHC_Err;
-    fin.GetObject("postfit_all/FD_numu_FHC_errs", FD_FHC_Err);
+    fin.GetObject(
+        (std::string("postfit_") + p.hist_to_get + "/FD_numu_FHC_errs").c_str(),
+        FD_FHC_Err);
     if (!FD_FHC_Err) {
-      std::cout << "Failed to get: postfit_all/FD_numu_FHC_errs" << std::endl;
+      std::cout << "Failed to get: postfit_" + p.hist_to_get +
+                       "/FD_numu_FHC_errs"
+                << std::endl;
       abort();
     }
     TH1D *FD_RHC_Err;
-    fin.GetObject("postfit_all/FD_numu_RHC_errs", FD_RHC_Err);
+    fin.GetObject(
+        (std::string("postfit_") + p.hist_to_get + "/FD_numu_RHC_errs").c_str(),
+        FD_RHC_Err);
     if (!FD_RHC_Err) {
-      std::cout << "Failed to get: postfit_all/FD_numu_RHC_errs" << std::endl;
+      std::cout << "Failed to get: postfit_" + p.hist_to_get +
+                       "/FD_numu_RHC_errs"
+                << std::endl;
       abort();
     }
 

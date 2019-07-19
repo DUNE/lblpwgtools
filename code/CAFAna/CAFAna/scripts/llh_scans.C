@@ -15,20 +15,21 @@ void llh_scans(std::string stateFname = def_stateFname,
   // Get the prediction interpolators
   std::vector<std::unique_ptr<PredictionInterp>> return_list =
       GetPredictionInterps(stateFname, GetListOfSysts());
-  PredictionInterp &predInterpFDNumuFHC = *return_list[0].release();
-  PredictionInterp &predInterpFDNueFHC = *return_list[1].release();
-  PredictionInterp &predInterpFDNumuRHC = *return_list[2].release();
-  PredictionInterp &predInterpFDNueRHC = *return_list[3].release();
-  PredictionInterp &predInterpNDNumuFHC = *return_list[4].release();
-  PredictionInterp &predInterpNDNumuRHC = *return_list[5].release();
+  PredictionInterp &predFDNumuFHC = *return_list[0].release();
+  PredictionInterp &predFDNueFHC = *return_list[1].release();
+  PredictionInterp &predFDNumuRHC = *return_list[2].release();
+  PredictionInterp &predFDNueRHC = *return_list[3].release();
+  PredictionInterp &predNDNumuFHC = *return_list[4].release();
+  PredictionInterp &predNDNumuRHC = *return_list[5].release();
 
   // Get the systematics that the PredictionInterps use
   std::vector<const ISyst *> systlist =
-      OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
+      OrderListOfSysts(predFDNumuFHC.GetAllSysts());
 
   std::map<std::string, double> relevantcvs;
   std::map<std::string, double> relevantfakedatavals;
   std::map<std::string, double> relevantBestFit;
+  std::vector<unsigned> relevantSeed;
   if (start_point.size()) {
     auto splits = SplitString(start_point, ':');
     if (splits.size() != 2) {
@@ -63,6 +64,7 @@ void llh_scans(std::string stateFname = def_stateFname,
       relevantfakedatavals[fbr->fParamNames->at(i)] = fbr->fFakeDataVals->at(i);
       relevantBestFit[fbr->fParamNames->at(i)] = fbr->fPostFitValues->at(i);
     }
+    relevantSeed = (*fbr->fSpectraRNGSeeds);
   }
 
   SystShifts shifted = kNoShift;
@@ -98,40 +100,43 @@ void llh_scans(std::string stateFname = def_stateFname,
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   SaveParams(fout, systlist);
 
-  const Spectrum data_nue_fhc_syst =
-      predInterpFDNueFHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
-  SingleSampleExperiment app_expt_fhc_syst(&predInterpFDNueFHC,
-                                           data_nue_fhc_syst);
+  std::vector<seeded_spectra> spectra;
+
+  if (relevantSeed.size()) {
+    spectra = BuildSpectra(&predFDNumuFHC, &predFDNueFHC, &predFDNumuRHC,
+                           &predFDNueRHC, &predNDNumuFHC, &predNDNumuRHC,
+                           trueOsc, shifted, true, pot_fd, pot_fd, pot_fd,
+                           pot_fd, pot_nd, pot_nd, relevantSeed);
+  } else {
+    // no throw
+    spectra = BuildSpectra(&predFDNumuFHC, &predFDNueFHC, &predFDNumuRHC,
+                           &predFDNueRHC, &predNDNumuFHC, &predNDNumuRHC,
+                           trueOsc, shifted, false, pot_fd, pot_fd, pot_fd,
+                           pot_fd, pot_nd, pot_nd);
+  }
+
+  SingleSampleExperiment app_expt_fhc_syst(&predFDNueFHC,
+                                           *spectra.at(kFDNueFHC).spect);
   app_expt_fhc_syst.SetMaskHist(0.5, 8);
 
-  const Spectrum data_nue_rhc_syst =
-      predInterpFDNueRHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
-  SingleSampleExperiment app_expt_rhc_syst(&predInterpFDNueRHC,
-                                           data_nue_rhc_syst);
+  SingleSampleExperiment app_expt_rhc_syst(&predFDNueRHC,
+                                           *spectra.at(kFDNueRHC).spect);
   app_expt_rhc_syst.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_fhc_syst =
-      predInterpFDNumuFHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
-  SingleSampleExperiment dis_expt_fhc_syst(&predInterpFDNumuFHC,
-                                           data_numu_fhc_syst);
+  SingleSampleExperiment dis_expt_fhc_syst(&predFDNumuFHC,
+                                           *spectra.at(kFDNumuFHC).spect);
   dis_expt_fhc_syst.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_rhc_syst =
-      predInterpFDNumuRHC.PredictSyst(trueOsc, shifted).FakeData(pot_fd);
-  SingleSampleExperiment dis_expt_rhc_syst(&predInterpFDNumuRHC,
-                                           data_numu_rhc_syst);
+  SingleSampleExperiment dis_expt_rhc_syst(&predFDNumuRHC,
+                                           *spectra.at(kFDNumuRHC).spect);
   dis_expt_rhc_syst.SetMaskHist(0.5, 8);
 
-  const Spectrum nd_data_numu_fhc_syst =
-      predInterpNDNumuFHC.PredictSyst(trueOsc, shifted).FakeData(pot_nd);
-  SingleSampleExperiment nd_expt_fhc_syst(&predInterpNDNumuFHC,
-                                          nd_data_numu_fhc_syst);
+  SingleSampleExperiment nd_expt_fhc_syst(&predNDNumuFHC,
+                                          *spectra.at(kNDNumuFHC).spect);
   nd_expt_fhc_syst.SetMaskHist(0.5, 10, 0, -1);
 
-  const Spectrum nd_data_numu_rhc_syst =
-      predInterpNDNumuRHC.PredictSyst(trueOsc, shifted).FakeData(pot_nd);
-  SingleSampleExperiment nd_expt_rhc_syst(&predInterpNDNumuRHC,
-                                          nd_data_numu_rhc_syst);
+  SingleSampleExperiment nd_expt_rhc_syst(&predNDNumuRHC,
+                                          *spectra.at(kNDNumuRHC).spect);
   nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
 
   // Add covariances to the two ND samples
