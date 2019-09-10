@@ -3,7 +3,7 @@
 
 namespace ana {
 
-int GetGENIEModeFromSimbMode(int simbmode) {
+inline int GetGENIEModeFromSimbMode(int simbmode) {
   int gmode = 0;
 
   // simb defintion from:
@@ -100,7 +100,7 @@ int GetGENIEModeFromSimbMode(int simbmode) {
   return gmode;
 }
 
-std::string GENIEModeToString(int gmode) {
+inline std::string GENIEModeToString(int gmode) {
   switch (gmode) {
   // * QE: 1
   case 1: {
