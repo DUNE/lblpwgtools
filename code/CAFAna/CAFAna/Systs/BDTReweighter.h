@@ -23,8 +23,8 @@ class BDTReweighter {
   float GetWeight(union BDTReweighter::BDTReweighterFeature* data, int pred_margin){ return multiplier*predict(data, pred_margin); }
 
  BDTReweighter() : multiplier (1.) {};
- BDTReweighter(float mult) : multiplier (mult) {};
-  ~BDTReweighter(){};
+ explicit BDTReweighter(float mult) : multiplier (mult) {};
+  ~BDTReweighter() = default;
   
 };
 
