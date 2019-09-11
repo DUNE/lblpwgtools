@@ -1,5 +1,6 @@
 #include "CAFAna/Core/ModeConversionUtilities.h"
 
+#include "CAFAna/Systs/GENIEHad8nFakeData.h"
 #include "CAFAna/Systs/MissingProtonFakeData.h"
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "CAFAna/Systs/XSecSysts.h"
@@ -10,6 +11,8 @@ namespace ana {
 
 MissingProtonFakeDataGenerator mpfd;
 NuWroReweightFakeDataGenerator nuwrofd;
+AGKYachFixFakeDataGenerator agkyFixfd;
+KNOnchKuzminNaumovFakeDataGenerator kuzminNaumovfd;
 
 void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
                                  caf::StandardRecord *sr,
@@ -26,6 +29,8 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int FSILikeEAvailSmearing_id = 0;
   static int MissingProtonFakeData_id = 0;
   static int NuWroReweightFakeData_id = 0;
+  static int AGKYachFixFakeData_id = 0;
+  static int KNOnchKuzminNaumovFakeData_id = 0;
 
   static bool first = true;
   if (first) {
@@ -42,6 +47,8 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     FSILikeEAvailSmearing_id = GetXSecSystIndex("FSILikeEAvailSmearing");
     MissingProtonFakeData_id = GetXSecSystIndex("MissingProtonFakeData");
     NuWroReweightFakeData_id = GetXSecSystIndex("NuWroReweightFakeData");
+    AGKYachFixFakeData_id = GetXSecSystIndex("AGKYachFixFakeData");
+    KNOnchKuzminNaumovFakeData_id = GetXSecSystIndex("KNOnchKuzminNaumovFakeData");
   }
 
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
@@ -92,6 +99,10 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     mpfd.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
+  } else if (fID == AGKYachFixFakeData_id) {
+    agkyFixfd.Shift(sigma, restore, sr, weight);
+  } else if (fID == KNOnchKuzminNaumovFakeData_id) {
+    kuzminNaumovfd.Shift(sigma, restore, sr, weight);
   }
 }
 void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,

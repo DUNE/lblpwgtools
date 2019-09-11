@@ -129,7 +129,9 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
         {"MissingProtonFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange,
          kOther},
         {"NuWroReweightFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange,
-         kOther}};
+         kOther},
+        {"AGKYachFixFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange, kDIS},
+        {"KNOnchKuzminNaumovFakeData", kUsedAsFakeData, kContinuous, kFakeDataRange, kDIS}};
 
     static auto AnaV = GetAnaVersion();
     if (AnaV == kV3) {
