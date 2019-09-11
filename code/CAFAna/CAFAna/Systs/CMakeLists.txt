@@ -5,6 +5,7 @@ set(Systs_implementation_files
   DUNEXSecSystsPCA.cxx
   EnergySysts.cxx
   FDRecoSysts.cxx
+  GENIEHad8nFakeData.cxx
   XSecSysts.cxx
   NDRecoSysts.cxx
   NuOnESysts.cxx
@@ -36,7 +37,8 @@ set(Systs_header_files
   GeneratorReweight_numu_ND_RHC.h
   MissingProtonFakeData_BDTRW_FHC.h
   MissingProtonFakeData_BDTRW_RHC.h
-  NuWroReweightFakeData.h)
+  NuWroReweightFakeData.h
+  GENIEHad8nFakeData.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts)
