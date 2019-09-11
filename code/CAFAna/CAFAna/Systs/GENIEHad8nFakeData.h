@@ -9,10 +9,10 @@
 namespace ana
 {
   /// Base class for hadronization systematics
-  class Had8nSyst : public ISyst
+  class Had8nFakeDataGenerator : public ISyst
   {
     public:
-      Had8nSyst(const std::string & shortName, const std::string latexName)
+      Had8nFakeDataGenerator(const std::string & shortName, const std::string latexName)
         : ISyst(shortName, latexName)
       {};
 
@@ -29,24 +29,24 @@ namespace ana
 
   // -------------------------------------
 
-  class AGKYachFixSyst : public Had8nSyst
+  class AGKYachFixFakeDataGenerator : public Had8nFakeDataGenerator
   {
     public:
-      AGKYachFixSyst();
+      AGKYachFixFakeDataGenerator();
 
     private:
       mutable std::unique_ptr<BDTReweighter> fBDTReweighter;
       BDTReweighter * GetReweighter() const override { return fBDTReweighter.get(); }
   };
 
-  extern const AGKYachFixSyst kAGKYachFixSyst;
+  extern const AGKYachFixFakeDataGenerator kAGKYachFixSyst;
 
   // -------------------------------------
 
-  class KNOnchKuzminNaumovSyst : public Had8nSyst
+  class KNOnchKuzminNaumovFakeDataGenerator : public Had8nFakeDataGenerator
   {
     public:
-      KNOnchKuzminNaumovSyst();
+      KNOnchKuzminNaumovFakeDataGenerator();
 
     private:
       mutable std::unique_ptr<BDTReweighter> fBDTReweighter;
@@ -54,5 +54,5 @@ namespace ana
 
   };
 
-  extern const KNOnchKuzminNaumovSyst kKNOnchKuzminNaumovSyst;
+  extern const KNOnchKuzminNaumovFakeDataGenerator kKNOnchKuzminNaumovSyst;
 }

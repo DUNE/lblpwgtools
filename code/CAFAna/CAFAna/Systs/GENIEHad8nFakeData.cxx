@@ -1,5 +1,5 @@
 
-#include "CAFAna/Systs/GENIEHad8nSysts.h"
+#include "CAFAna/Systs/GENIEHad8nFakeData.h"
 #include "CAFAna/Core/ModeConversionUtilities.h"
 #include "CAFAna/Systs/BDTReweighter.h"
 
@@ -7,15 +7,13 @@
 #include "CAFAna/Systs/KNO-nch-KuzminNaumov_reweight.h"
 
 #include "StandardRecord/StandardRecord.h"
-#include "GENIEHad8nSysts.h"
-
 
 namespace ana
 {
-  const AGKYachFixSyst kAGKYachFixSyst;
-  const KNOnchKuzminNaumovSyst kKNOnchKuzminNaumovSyst;
+  const AGKYachFixFakeDataGenerator kAGKYachFixSyst;
+  const KNOnchKuzminNaumovFakeDataGenerator kKNOnchKuzminNaumovSyst;
 
-  void Had8nSyst::Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr, double &weight) const
+  void Had8nFakeDataGenerator::Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr, double &weight) const
   {
     // This proof-of-principle version was only trained for numus
     if (!sr->dune.isCC)
@@ -52,8 +50,8 @@ namespace ana
 
   // n.b. do NOT move this implementation to the header, or we'll have to read all 700K lines of AGKY-ach-fix_reweight.h
   // in every macro that #includes GENEIHad8nSysts.h
-  AGKYachFixSyst::AGKYachFixSyst()
-    : Had8nSyst("AGKY-ach-fix", "Fix to AGKY ach parameter"),
+  AGKYachFixFakeDataGenerator::AGKYachFixFakeDataGenerator()
+    : Had8nFakeDataGenerator("AGKY-ach-fix", "Fix to AGKY ach parameter"),
       fBDTReweighter(std::make_unique<AGKY_ach_fix_model>())
   {}
 
@@ -61,8 +59,8 @@ namespace ana
 
   // n.b. do NOT move this implementation to the header, or we'll have to read all 700K lines of AGKY-ach-fix_reweight.h
   // in every macro that #includes GENEIHad8nSysts.h
-  KNOnchKuzminNaumovSyst::KNOnchKuzminNaumovSyst()
-    : Had8nSyst("KNO-nch-Kuzmin-Naumov", "Use Kuzmin-Naumov fit for nch in KNO parameterization"),
+  KNOnchKuzminNaumovFakeDataGenerator::KNOnchKuzminNaumovFakeDataGenerator()
+    : Had8nFakeDataGenerator("KNO-nch-Kuzmin-Naumov", "Use Kuzmin-Naumov fit for nch in KNO parameterization"),
       fBDTReweighter(std::make_unique<KNO_nch_KuzminNaumov_model>())
   {}
 
