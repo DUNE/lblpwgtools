@@ -1,21 +1,20 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
                   std::string outputFname = "covar_various_asimov.root",
                   std::string sampleString = "ndfd",
                   std::string FakeDataSysts = "", double FakeDataValue = 1) {
 
+  int hie = 1;
+
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts("allsyst");
 
   // Oscillation parameters to use
-  std::vector<const IFitVar *> oscVars = {
-      &kFitDmSq32Scaled,  &kFitSinSqTheta23, &kFitTheta13, &kFitDeltaInPiUnits,
-      &kFitSinSq2Theta12, &kFitDmSq21,       &kFitRho};
+  std::vector<const IFitVar *> oscVars = GetOscVars("alloscvars", hie);
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
-  int hie = 1;
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
 
   SystShifts trueSyst = kNoShift;

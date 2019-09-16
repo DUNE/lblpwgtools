@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cassert>
 
 namespace caf{class StandardRecord;}
 
@@ -22,6 +23,11 @@ namespace ana
              const std::function<VarFunc_t>& fun)
       : fFunc(fun), fID(fgNextID--)
     {
+      assert(bool(fFunc));
+    }
+
+    bool IsValid() const {
+      return bool(fFunc);
     }
 
     /// Allows a variable to be called with double value = myVar(sr) syntax

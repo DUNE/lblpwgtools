@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# Welcome banner
-print '** NOvA Common Analysis Format Executor **'
-
 import os, sys
 import argparse
 import tempfile
@@ -21,6 +18,8 @@ def makeParser():
                         help = "don't unconditionally recompile, ie .C+ not .C++")
     parser.add_argument('-mc', '--must-clean', action = 'store_true',
                         help = "Run the script with gROOT->SetMustClean(true);")
+    parser.add_argument('-e', '--env', action='append',
+                        help = 'pass environment variables to set. THE HAXXMAN COMETH.')
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
@@ -60,14 +59,15 @@ def libsPath():
 
 def escapeArg(arg):
     try:
-        # If it's "true" or "false" or we can parse it as a number,
-        # pass it through.
-        arg == 'true' or arg == 'false' or float(arg)
+        ## If it can be parsed as a number, pass it through
+        float(arg)
         return arg
     except:
-        # Otherwise it must be a string, add quotes.
-        return '"'+arg+'"'
-
+        ## If it's a bool, or a string, also pass it through, otherwise pass it as a string
+        if arg == 'true' or arg == 'false' or arg.find('"') != -1:
+            return arg
+        else:
+            return '"'+arg+'"'
 
 def toFunctionParams(args):
     """Comma seperated list of parameters"""
@@ -87,6 +87,16 @@ if __name__ == '__main__':
     if opts['bq']:
         opts['batch'] = True
         opts['quit'] = True
+    
+    ## Do some fun environment stuff
+    if opts['env']:
+        for arg in opts['env']:
+            arg_split = arg.split('=')
+            if len(arg_split) != 2:
+                print "Argument passed to -e/--env must be of the form 'ENV_VAR_NAME=VALUE'!"
+                sys.exit(1)
+            print "Setting", arg_split[0], "to", arg_split[1]
+            os.environ[arg_split[0]] = arg_split[1]
 
     # Suppress splash screen and default rootlogon (load_libs calls the
     # official one)

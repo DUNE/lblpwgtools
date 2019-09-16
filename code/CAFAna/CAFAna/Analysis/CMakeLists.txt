@@ -8,7 +8,12 @@ set(Analysis_implementation_files
   Surface.cxx
   # TDRLoaders.cxx
   SeedList.cxx
-  RefineSeeds.cxx)
+  RefineSeeds.cxx
+  AnalysisBinnings.cxx
+  AnalysisVars.cxx
+  common_fit_definitions.cxx
+  AnalysisVersion.cxx
+  XSecSystList.cxx)
 
 set(Analysis_header_files
   Calcs.h
@@ -22,7 +27,15 @@ set(Analysis_header_files
   Exposures.h
   Style.h
   SeedList.h
-  RefineSeeds.h)
+  RefineSeeds.h
+  AnalysisBinnings.h
+  AnalysisDialGroups.h
+  AnalysisVars.h
+  common_fit_definitions.h
+  AnalysisVersion.h
+  ExtraHeaders.h
+  CheckPointHelper.h
+  XSecSystList.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis)
@@ -30,6 +43,10 @@ target_link_libraries(CAFAnaAnalysis)
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaAnalysis gperftools)
   target_link_libraries(CAFAnaAnalysis ${GPERF_LINKER_FLAGS})
+endif()
+
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaAnalysis BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
 install(TARGETS CAFAnaAnalysis DESTINATION lib)

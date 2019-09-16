@@ -1,129 +1,140 @@
 #include "CAFAna/Analysis/GradientDescent.h"
 
-#include "Minuit2/FCNGradientBase.h"
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnUserParameters.h"
-
 #include <iostream>
 
-// Globals set to the default settings
-ROOT::Minuit2::MnUserParameterState gState;
-ROOT::Minuit2::MnStrategy gStrat;
+/*
+#include "TGraph.h"
+#include "TH2.h"
+#include "TPad.h"
+*/
 
 namespace ana
 {
   //----------------------------------------------------------------------
   GradientDescent::
-  GradientDescent(const ROOT::Minuit2::FCNGradientBase& func,
-                  const ROOT::Minuit2::MnUserParameters& pars)
-    : ROOT::Minuit2::MnApplication(func, gState, gStrat),
-      fFunc(func), fPars(pars)
+  GradientDescent(const ROOT::Math::IGradientFunctionMultiDim& func)
+    : fFunc(&func)
   {
   }
 
   //----------------------------------------------------------------------
-  ROOT::Minuit2::FunctionMinimum GradientDescent::
-  operator()(unsigned int /*maxfcn*/, double /*tolerance*/)
+  GradientDescent::~GradientDescent()
+  {
+  }
+
+  //----------------------------------------------------------------------
+  bool GradientDescent::SetVariable(unsigned int ivar,
+                                    const std::string&,
+                                    double val,
+                                    double step)
+  {
+    if(ivar >= fVals.size()) fVals.resize(ivar+1);
+    fVals[ivar] = val;
+    if(ivar >= fErrs.size()) fErrs.resize(ivar+1);
+    fErrs[ivar] = step;
+    return true;
+  }
+
+  //----------------------------------------------------------------------
+  bool GradientDescent::Minimize()
   {
     // Initialize at the input parameters
-    std::vector<double> pt = fPars.Params();
+    std::vector<double>& pt = fVals;
     const unsigned int N = pt.size();
 
     // Use the user errors as a crude way to set the initial step size
-    double step = Magnitude(fPars.Errors());
+    double step = Magnitude(fErrs);
 
     // Usually we reuse the chisq from the last iteration, so need to
     // initialize it once out here.
-    double chi = fFunc(pt);
-    int ncalls = 1;
+    fChi = (*fFunc)(pt.data());
+    unsigned int ncalls = 1;
+
+    //    std::vector<TGraph*> gs(N);
+    //    for(auto& g: gs) g = new TGraph;
 
     while(true){
-      //      std::cout << "New direction, chisq = " << chi << std::endl;
-
       // Evaluate gradient to figure out a direction to step in
-      std::vector<double> grad = fFunc.Gradient(pt);
+      std::vector<double> grad(pt.size());
+      fFunc->Gradient(pt.data(), grad.data());
       ++ncalls;
-      // Make gradient into a unit vector but keep the magnitude around
-      const double gradmag = Magnitude(grad);
-      MakeUnit(grad);
+
+      // We'll step in the downhill direction
+      std::vector<double> stepdir = grad;
+      MakeUnit(stepdir);
+      for(unsigned int i = 0; i < N; ++i) stepdir[i] *= -1;
+
+      // And the change in the chisq per unit step in this direction is this
+      double gradmag = 0;
+      for(unsigned int i = 0; i < N; ++i) gradmag += grad[i] * stepdir[i];
 
       // Take step in that direction
       std::vector<double> trialpt = pt;
-      for(unsigned int i = 0; i < N; ++i) trialpt[i] -= grad[i]*step;
-
+      for(unsigned int i = 0; i < N; ++i) trialpt[i] += stepdir[i]*step;
       // And evaluate the chisq there
-      const double trialchi = fFunc(trialpt);
+      const double trialchi = (*fFunc)(trialpt.data());
       ++ncalls;
-
-      //      std::cout << "step = " << step << " -> chisq " << trialchi << std::endl;
 
       // Estimate the second derivative from the two points and one
       // gradient
-      const double d2 = (trialchi+gradmag*step-chi)/(step*step);
+      const double d2 = 2 * (trialchi - gradmag*step - fChi)/(step*step);
       // We expect the function to be convex
       if(d2 > 0){
-        //        std::cout << " d2 = " << d2;
         // If so, we can compute a better step size, one that would place us
         // right at the minimum if the function only had quadratic terms.
-        step = gradmag/(2*d2);
+        step = -gradmag/d2;
         //        std::cout << " new step = " << step << std::endl;
+      }
+      else{
+        // This direction is still downhill locally, so let the step-halving
+        // logic below sort it out.
+
+        // std::cout << "Non-convexity" << std::endl;
       }
 
       while(true){
         // Keep trying steps until we find one that reduces the chisq
         std::vector<double> newpt = pt;
-        for(unsigned int i = 0; i < N; ++i) newpt[i] -= grad[i]*step;
+        for(unsigned int i = 0; i < N; ++i) newpt[i] += stepdir[i]*step;
 
-        const double newchi = fFunc(newpt);
+        const double newchi = (*fFunc)(newpt.data());
         ++ncalls;
-        //        std::cout << "  step = " << step << " -> chisq = " << newchi << std::endl;
 
-        if(newchi > chi){
+        if(newchi > fChi){
           // If the chisq went up instead, try again with smaller step
           step /= 2;
-          if(step < 1e-8){
-            //            std::cout << "Step too small!" << std::endl;
-            // Maybe it's just because we're already in the minimum. If we
-            // can't improve even with very tiny steps, call it a day.
-            return Package(pt, chi, ncalls);
-          }
           continue;
         }
-        else{
-          if(chi-newchi < 1e-5){
-            //            std::cout << "Small chisq step" << std::endl;
-            // If the improvement we did get is really tiny we're also likely
-            // already at the minimum
-            return Package(newpt, newchi, ncalls);
-          }
 
-          // In all other cases (ie we took a reasonable step and found a
-          // reasonably better chisq) we want to update our state, take another
-          // look at the gradient vector to figure out which direction to go
-          // next, and preserve our step size, which is some kind of good
-          // estimate of the scale of the function.
-          pt = newpt;
-          chi = newchi;
+        // In all other cases (ie we took a reasonable step and found a
+        // reasonably better chisq) we want to update our state, take another
+        // look at the gradient vector to figure out which direction to go
+        // next, and preserve our step size, which is some kind of good
+        // estimate of the scale of the function.
+        pt = newpt;
+        fChi = newchi;
+
+        if(ncalls > MaxFunctionCalls() || step < Precision()){
+          /*
+          TH2* axes = new TH2F("", "", gs[0]->GetN(), 0, gs[0]->GetN(), 100, -1, +1);
+          axes->Draw();
+          for(unsigned int i = 0; i < N; ++i) gs[i]->Draw("l same");
+          gPad->Print("history.pdf");
+          */
+
+          return true;
+        }
+        else{
           break;
         }
       } // end line search
-    } // end while (searching for better pt)
-  }
 
-  //----------------------------------------------------------------------
-  ROOT::Minuit2::FunctionMinimum GradientDescent::
-  Package(const std::vector<double>& pt, double chi, int ncalls) const
-  {
-    // In practice we only use the chisq and the parameter values, so don't be
-    // too careful about setting this all up.
-    const unsigned int N = pt.size();
-    ROOT::Minuit2::MnAlgebraicVector vec(N);
-    for(unsigned int i = 0; i < N; ++i) vec(i) = pt[i];
-    ROOT::Minuit2::MinimumParameters params(vec, chi);    
-    ROOT::Minuit2::MinimumState state(params, 0, ncalls);
-    ROOT::Minuit2::MnUserTransformation trans(pt, std::vector<double>(N));
-    ROOT::Minuit2::MinimumSeed seed(state, trans);
-    return ROOT::Minuit2::FunctionMinimum(seed, {state}, chi);
+      //      for(unsigned int i = 0; i < N; ++i) gs[i]->SetPoint(gs[i]->GetN(), gs[i]->GetN(), pt[i]);
+
+    } // end while (searching for better pt)
+
+    // Unreached
+    return true;
   }
 
   //----------------------------------------------------------------------

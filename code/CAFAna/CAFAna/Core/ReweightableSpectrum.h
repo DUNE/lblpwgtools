@@ -155,6 +155,8 @@ namespace ana
 
     void Scale(double);
 
+    Binning Bins1DX() const;
+
     Var fRWVar; ///< What goes on the y axis?
 
     TH2D* fHist;

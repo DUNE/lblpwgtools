@@ -5,7 +5,10 @@ USE_UPS="0"
 CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
-USE_EIGEN=0
+USE_PRISM="0"
+INSTALL_DIR=""
+USE_KNL="0"
+USE_OMP="0"
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -30,10 +33,10 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile in gperftools support."
       ;;
 
-      --use-eigen)
+      --use-PRISM)
 
-      USE_EIGEN="1"
-      echo "[OPT]: Will compile in Eigen support."
+      USE_PRISM="1"
+      echo "[OPT]: Will compile in PRISM support."
       ;;
 
       -r|--release)
@@ -42,6 +45,23 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile release build type."
       ;;
 
+      --rdb)
+
+      CMAKE_BUILD_TYPE="RELWITHDEBINFO"
+      echo "[OPT]: Will compile release with debug build type."
+      ;;
+
+      --knl)
+
+      USE_KNL="1"
+      echo "[OPT]: Will compile for KNL arch."
+      ;;
+
+      -O|--omp)
+
+      USE_OMP="1"
+      echo "[OPT]: Will compile OMP components."
+      ;;
 
       -j|--n-cores)
 
@@ -55,15 +75,31 @@ while [[ ${#} -gt 0 ]]; do
       shift # past argument
       ;;
 
+      -I|--install-to)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      INSTALL_DIR="$2"
+      echo "[OPT]: Will install to \"${INSTALL_DIR}\"."
+      shift # past argument
+      ;;
+
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
+      echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
+      echo -e "\t--knl                  : Build with -march=knl"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
-      echo -e "\t--use-eigen            : Build in Eigen support, required for PRISM components."
+      echo -e "\t--use-PRISM            : Build in PRISM support."
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
+      echo -e "\t-O|--omp               : Enable OMP features of CAFAna."
+      echo -e "\t-I|--install-to        : Directory to install to."
       echo -e "\t-?|--help              : Print this message."
       exit 0
       ;;
@@ -92,8 +128,8 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout http://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout http://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
@@ -124,7 +160,16 @@ else
     fi
   fi
 
+  if [ -z "${BOOST_LIB}" ]; then
+    if [ -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so ]; then
+      export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
+    else
+      echo "[ERROR]: Not using UPS, but couldn't find system boost libraries and BOOST_LIB wasn't defined in the environment."
+      exit 1
+    fi
+  fi
+
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_EIGEN=${USE_EIGEN} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_PRISM=${USE_PRISM} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
 make install -j ${CORES}

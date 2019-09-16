@@ -21,8 +21,6 @@ namespace ana
   {
     NDRecoSystVector vec;
     vec.push_back(&kRecoNCSyst);
-    vec.push_back(&kLeptonAccSyst);
-    vec.push_back(&kHadronAccSyst);
     vec.push_back(&kFVNumuNDSyst);
     return vec;
   }

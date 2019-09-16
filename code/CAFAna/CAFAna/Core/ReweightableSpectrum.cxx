@@ -38,13 +38,7 @@ namespace ana
 
     const std::string name = UniqueName();
 
-    Binning xbins = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      xbins = Binning::Simple(n, 0, n);
-    }
-
+    const Binning xbins = Bins1DX();
     const Binning ybins = trueAxis.GetBinnings()[0];
 
 
@@ -282,11 +276,7 @@ namespace ana
     std::vector<Binning> bins = fBins;
     bins.push_back(truebin);
 
-    Spectrum ret(labels, bins);
-    ret.FillFromHistogram(h.get());
-    ret.OverridePOT(fPOT);
-    ret.OverrideLivetime(fLivetime);
-    return ret;
+    return Spectrum(h.get(), labels, bins,fPOT,fLivetime);
   }
 
   //----------------------------------------------------------------------
@@ -295,7 +285,7 @@ namespace ana
     DontAddDirectory guard;
 
     // Create a suitably-sized space for the result
-    std::unique_ptr<TH1D> h(HistCache::New("", fHist->GetXaxis()));
+    std::unique_ptr<TH1D> h(HistCache::New("", Bins1DX()));
 
     ProjectionX(fHist, h.get());
 
@@ -351,8 +341,7 @@ namespace ana
 
     assert(ws->GetNbinsX() == fHist->GetNbinsY());
 
-    TAxis* ax = fHist->GetXaxis();
-    TH1D* hRet = HistCache::New("", ax);
+    TH1D* hRet = HistCache::New("", Bins1DX());
 
     const int X = fHist->GetNbinsX();
     const int Y = fHist->GetNbinsY();
@@ -657,4 +646,17 @@ namespace ana
 
 void ReweightableSpectrum::Scale(double scale) { fHist->Scale(scale); }
 
+  //----------------------------------------------------------------------
+  Binning ReweightableSpectrum::Bins1DX() const
+  {
+    assert(!fBins.empty());
+
+    Binning xbins = fBins[0];
+    if(fBins.size() > 1){
+      int n = 1;
+      for(const Binning& b: fBins) n *= b.NBins();
+      xbins = Binning::Simple(n, 0, n);
+    }
+    return xbins;
+  }
 }

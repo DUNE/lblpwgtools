@@ -10,6 +10,17 @@ class TAxis;
 class TH1D;
 class TH2D;
 
+namespace std
+{
+  template<> struct hash<std::pair<int, int>>
+  {
+    size_t operator()(const std::pair<int, int>& p) const
+    {
+      return 65536 * p.first + p.second;
+    }
+  };
+}
+
 namespace ana
 {
   /// \brief Helper for \ref Spectrum
@@ -27,6 +38,7 @@ namespace ana
     static TH1D* New(const std::string& title, const Binning& bins);
     static TH1D* New(const std::string& title, const TAxis* bins);
     static TH1D* Copy(const TH1D* h);
+    static TH1D* Copy(const TH1D* h, const Binning& bins);
 
     /// WARNING - the first two TH2D functions are kept for backward compatibility,
     /// they take kTrueEnergyBins on the y-axis.
@@ -36,6 +48,7 @@ namespace ana
     static TH2D* NewTH2D(const std::string& title, const Binning& xbins, const Binning& ybins);
     static TH2D* NewTH2D(const std::string& title, const TAxis* xbins, const TAxis* ybins);
     static TH2D* Copy(const TH2D* h);
+    static TH2D* Copy(const TH2D* h, const Binning& xbins, const Binning& ybins);
 
     static void Delete(TH1D*& h, int binid = -1);
     static void Delete(TH2D*& h, int binidx = -1, int binidy = -1);
@@ -45,8 +58,8 @@ namespace ana
     static void CheckMemoryUse();
 
     // Key to the maps is Binning::ID()
-    static std::multimap<int, std::unique_ptr<TH1D>> fgMap;
-    static std::multimap<std::pair<int, int>, std::unique_ptr<TH2D>> fgMap2D;
+    static std::unordered_multimap<int, std::unique_ptr<TH1D>> fgMap;
+    static std::unordered_multimap<std::pair<int, int>, std::unique_ptr<TH2D>> fgMap2D;
 
     static int fgOut, fgIn;
 

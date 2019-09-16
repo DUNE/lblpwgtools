@@ -7,9 +7,11 @@ RENAME_SUBMIT_SCRIPT=""
 
 LIFETIME_EXP="4h"
 DISK_EXP="1GB"
-MEM_EXP="2GB"
+MEM_EXP="1.9GB"
 
 FORCE_REMOVE="0"
+
+OSG_STORAGE_VERSION="17908"
 
 DRY_RUN="0"
 LOG_TO_IFDH="0"
@@ -209,7 +211,10 @@ LN=0
 #
 #   LN=$(( LN + 1 ))
 # done
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/strong_and_stable
 
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
@@ -257,16 +262,16 @@ fi
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
     #--role=Analysis --subgroup=analysis
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC,DEDICATED,OFFSITE --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      echo ${JID}
   else
     #--role=Analysis --subgroup=analysis
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC,DEDICATED,OFFSITE -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      echo ${JID}
   fi
 else
-  JID="DRY RUN"
+    JID="DRY RUN"
 fi
-
-echo "JID = ${JID}"
 
 cd ../
 

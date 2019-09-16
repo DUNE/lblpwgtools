@@ -18,6 +18,7 @@ namespace ana
       fBins(1, bins),
       fVars(1, var)
   {
+    assert(var.IsValid());
   }
 
   //----------------------------------------------------------------------
@@ -27,6 +28,9 @@ namespace ana
                   const std::vector<T>& vars)
     : fLabels(labels), fBins(bins), fVars(vars)
   {
+    for (auto &v : fVars) {
+      assert(v.IsValid());
+    }
     assert(fLabels.size() == fBins.size());
     assert(fBins.size() == fVars.size());
   }
@@ -43,6 +47,9 @@ namespace ana
       fBins({binsX, binsY}),
       fVars({varX, varY})
   {
+    for (auto &v : fVars) {
+      assert(v.IsValid());
+    }
   }
 
   //----------------------------------------------------------------------

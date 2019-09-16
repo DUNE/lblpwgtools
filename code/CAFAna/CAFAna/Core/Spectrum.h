@@ -4,6 +4,7 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
+#include "CAFAna/Core/Hist.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -60,7 +61,7 @@ namespace ana
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
 
     /// Copies \a h
-    Spectrum(TH1* h,
+    Spectrum(TH1 const *h,
              const std::vector<std::string>& labels,
              const std::vector<Binning>& bins,
              double pot, double livetime);
@@ -130,7 +131,7 @@ namespace ana
 
     /// Construct an empty unfilled spectrum
     ///
-    /// Can be filled with Fill or FillFromHistogram
+    /// Can be filled with Fill
     Spectrum(const std::vector<std::string>& labels,
              const std::vector<Binning>& bins,
              ESparse sparse = kDense);
@@ -143,11 +144,6 @@ namespace ana
     Spectrum& operator=(Spectrum&& rhs);
 
     void Fill(double x, double w = 1);
-
-    /// \brief Attempts to fill this spectrum from an external histogram.
-    ///
-    /// \note The external histogram is not expected to be flattened, but is expected to have matching axes as those thatthis instance was instantiated with.
-    void FillFromHistogram(TH1 const*);
 
     /// \brief Histogram made from this Spectrum, scaled to some exposure
     ///
@@ -256,11 +252,12 @@ namespace ana
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
 
+    Binning Bins1D() const;
+
     /// Helper for operator+= and operator-=
     Spectrum& PlusEqualsHelper(const Spectrum& rhs, int sign);
 
-    TH1D* fHist;
-    THnSparseD* fHistSparse;
+    Hist fHist;
     double fPOT;
     double fLivetime;
 

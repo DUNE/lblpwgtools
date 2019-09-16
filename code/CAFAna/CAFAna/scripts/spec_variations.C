@@ -1,15 +1,14 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 void spec_variations(std::string stateFname="common_state_mcc11v3.root",
 		      std::string outputFname="spec_validation_hists_mcc11v3.root"){
   
   gROOT->SetBatch(1);
   
-  // Get the systematics to use
-  std::vector<const ISyst*> systlist = GetListOfSysts();
-  
   // Get the prediction interpolators
-  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, systlist);
+  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, GetListOfSysts());
   PredictionInterp& predInterpFDNumuFHC = *return_list[0].release();
   PredictionInterp& predInterpFDNueFHC  = *return_list[1].release();
   PredictionInterp& predInterpFDNumuRHC = *return_list[2].release();
@@ -17,8 +16,12 @@ void spec_variations(std::string stateFname="common_state_mcc11v3.root",
   PredictionInterp& predInterpNDNumuFHC = *return_list[4].release();
   PredictionInterp& predInterpNDNumuRHC = *return_list[5].release();
 
+  // Get the systematics that the PredictionInterps use
+  std::vector<const ISyst*> systlist = OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
+
   // Open 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
+  SaveParams(fout, systlist);
 
   osc::NoOscillations noOsc;
   // Use normal hierarchy for now

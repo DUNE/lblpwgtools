@@ -1,10 +1,15 @@
 #!/bin/bash
 
+DEBUG=""
 EXT=""
-
 while [[ ${#} -gt 1 ]]; do
-  EXT="${EXT} ${1}"
-  shift
+  if [ "${1}" == "-g" ]; then
+    DEBUG="-g -O0"
+    shift
+  else 
+    EXT="${EXT} ${1}"
+    shift
+  fi
 done
 
 INPFILE=$1
@@ -13,7 +18,7 @@ echo "[INFO]: Attempting to build ${INPFILE}"
 
 EXEFILE=${INPFILE/.C/.exe}
 
-BCMD="g++ ${EXT} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts @PRISMLIB@ -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -lUtilitiesFunc -lOscLibFunc $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+BCMD="g++ ${DEBUG} ${EXT} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars -lUtilitiesFunc -lOscLibFunc $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
 
 echo ${BCMD}
 if ! ${BCMD}; then

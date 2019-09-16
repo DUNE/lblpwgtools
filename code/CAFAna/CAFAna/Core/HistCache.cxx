@@ -8,8 +8,8 @@
 
 namespace ana
 {
-  std::multimap<int, std::unique_ptr<TH1D>> HistCache::fgMap;
-  std::multimap<std::pair<int, int>, std::unique_ptr<TH2D>> HistCache::fgMap2D;
+  std::unordered_multimap<int, std::unique_ptr<TH1D>> HistCache::fgMap;
+  std::unordered_multimap<std::pair<int, int>, std::unique_ptr<TH2D>> HistCache::fgMap2D;
 
   int HistCache::fgOut = 0;
   int HistCache::fgIn = 0;
@@ -93,9 +93,25 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
+  TH1D* HistCache::Copy(const TH1D* h, const Binning& bins)
+  {
+    TH1D* ret = New(h->GetTitle(), bins);
+    *ret = *h;
+    return ret;
+  }
+
+  //---------------------------------------------------------------------
   TH2D* HistCache::Copy(const TH2D* h)
   {
     TH2D* ret = NewTH2D(h->GetTitle(), h->GetXaxis(), h->GetYaxis());
+    *ret = *h;
+    return ret;
+  }
+
+  //---------------------------------------------------------------------
+  TH2D* HistCache::Copy(const TH2D* h, const Binning& xbins, const Binning& ybins)
+  {
+    TH2D* ret = NewTH2D(h->GetTitle(), xbins, ybins);
     *ret = *h;
     return ret;
   }

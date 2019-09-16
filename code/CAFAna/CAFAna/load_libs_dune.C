@@ -46,7 +46,7 @@ void load_libs(bool MustClean = true) {
       "Minuit2",          "Net",           "StandardRecord", "OscLibFunc",
       "UtilitiesFunc",    "CAFAnaCore",    "CAFAnaVars",     "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
-      "CAFAnaPrediction", "CAFAnaAnalysis"};
+      "CAFAnaPrediction", "CAFAnaAnalysis", "boost_filesystem", "boost_system"};
 
   // Actually load the libraries
   std::cout << "Loading libraries:" << std::endl;

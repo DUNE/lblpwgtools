@@ -30,7 +30,7 @@ using namespace ana;
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 
-const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
+const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
                     Binning::Simple(64, 0.0, 8.0),
@@ -82,8 +82,8 @@ void spec(bool reload = false)
     for(const ISyst* s: systlist) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
     if (systlist.size()==0) {std::cout << "None" << std::endl;}
 
-    NoExtrapPredictionGenerator genFDNumu(axis_numu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
-    NoExtrapPredictionGenerator genFDNue(axis_nue, kPassFD_CVN_NUE && kIsTrueFV, kGENIEWeights);
+    NoExtrapPredictionGenerator genFDNumu(axis_numu, kPassFD_CVN_NUMU && kIsTrueFV, kCVXSecWeights);
+    NoExtrapPredictionGenerator genFDNue(axis_nue, kPassFD_CVN_NUE && kIsTrueFV, kCVXSecWeights);
     NoExtrapPredictionGenerator genFDNumu_fid(axis_numu, kIsTrueFV);
     NoExtrapPredictionGenerator genFDNue_fid(axis_nue, kIsTrueFV);
     

@@ -141,13 +141,12 @@ namespace caf
     double sigma_Elep_reco;
     double sigma_numu_pid;
     double sigma_nue_pid;
-    double total_cv_wgt;
 
     // First index is systematic ID
-    std::vector<std::vector<double>> genie_wgt;
-    std::vector<double> genie_cv_wgt;
+    std::vector<std::vector<double>> xsSyst_wgt;
+    double total_xsSyst_cv_wgt;
 
-    double perPOTWeight;
+        double perPOTWeight;
     double perFileWeight;
   };
 }

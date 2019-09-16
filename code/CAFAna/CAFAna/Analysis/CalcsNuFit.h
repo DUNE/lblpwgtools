@@ -65,6 +65,8 @@ namespace ana
   const double kBaseline = 1284.9;     // km
   const double kEarthDensity = 2.848;  // g/cm^3
 
+  std::vector<std::pair<std::string, double> > ParseAsimovSet(std::string noApologies);
+
   // hie = +/-1
   // Asimov set values:
   // 0 NuFit 4.0 Central Values
@@ -77,7 +79,11 @@ namespace ana
   // 7 Th13 set to 3sig upper value
   // 8 Dmsq32 set to 3sig lower value
   // 9 Dmsq32 set to 3sig upper value
+  // 10 dCP = 0
+  // 11 dCP = -pi/2
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
+  
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
@@ -114,7 +120,12 @@ namespace ana
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,int asimov_set=0);
     Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false);
-
+    Penalizer_GlbLike(int hietrue, int octtrue,
+		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,
+		      std::string asimov_str="", bool modConstraint=false);
+    
+    void SetAsimovPoint(int asimov_set);
+    void SetAsimovPoint(std::string asimov_str, bool modConstraint=false);
 
     double Dmsq21CV() const {return fDmsq21;}
     double Th12CV() const {return fTh12;}
@@ -154,6 +165,8 @@ namespace ana
     double fTh23Err;
     double fTh13Err;
     double fRhoErr;
+    int fHieTrue;
+    int fOctTrue;
 
   private:
     // Changed to options which turn on or off constraints for parameter fits
