@@ -95,7 +95,7 @@ namespace ana
         inDeadRegion = true;
     }
 
-    return (abs(pos_x_cm) < 300 && abs(pos_y_cm) < 100 && pos_z_cm > 50 &&
+    return (abs(pos_x_cm) < 200 && abs(pos_y_cm) < 100 && pos_z_cm > 50 &&
             pos_z_cm < 350 && !inDeadRegion);
   }
 

@@ -1,6 +1,7 @@
 #ifdef CAF_USE_PRISM
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
+#include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
@@ -164,10 +165,10 @@ void PRISMExtrapolator::InitializeFluxMatcher(std::string const &FluxFilePath,
   // The order here will line up with the definition of
   // PRISMExtrapolator::FluxPredSpecies
   for (std::string const &det : {"ND", "FD"}) {
-    for (std::string const &beammode : {"numode", "nubarmode"}) {
+    for (std::string const &beammode : {"nu", "nubar"}) {
       for (std::string const &nu_name : {"numu", "nue", "numubar", "nuebar"}) {
         std::string hist_name =
-            det + "_" + beammode + "/LBNF_" + nu_name + "_flux";
+            det + "_" + beammode + "_ppfx/LBNF_" + nu_name + "_flux_Nom";
 
         TH1 *h = dynamic_cast<TH1 *>(f->Get(hist_name.c_str()));
         assert(h);
@@ -264,13 +265,11 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
   Spectrum NDSpect = fNDEventRateInterp->PredictComponentSyst(
       osc, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
-  NDSpect.OverridePOT(1);
 
   Spectrum FDSpect = fFDEventRateInterp->PredictComponentSyst(
       osc, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
-  FDSpect.OverridePOT(1);
 
-  std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(1));
+  std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(ana::FD_ND_FVRatio(50)));
   std::unique_ptr<TH1> FDOsc(FDSpect.ToTH1(1));
 
   assert(NDOffAxis->GetXaxis()->GetNbins() == FDOsc->GetXaxis()->GetNbins());
@@ -355,6 +354,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
         new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
     fDebugBF["last_match"]->SetDirectory(nullptr);
     FillHistFromEigenVector(fDebugBF["last_match"].get(), BestFit);
+
+    fDebugND["last_match"] = std::move(NDOffAxis);
+    fDebugND["last_match"]->SetDirectory(nullptr);
   }
 
   return fMatchCache["last_match"].get();
@@ -528,9 +530,13 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
     for (auto &fit : fDebugBF) {
       dir->WriteObject(fit.second.get(), (fit.first + "_DebugMatch").c_str());
     }
+
+    for (auto &fit : fDebugND) {
+      dir->WriteObject(fit.second.get(), (fit.first + "_DebugND").c_str());
+    }
   }
 }
 
-}
+} // namespace ana
 
 #endif

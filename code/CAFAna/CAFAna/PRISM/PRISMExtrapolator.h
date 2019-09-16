@@ -46,9 +46,8 @@ public:
                              int OffAxisBinMerge = 1, int NDEnergyBinMerge = 1,
                              int FDEnergyBinMerge = 1);
 
-  void
-  InitializeEventRateMatcher(PredictionInterp const *NDEventRateInterp,
-                             PredictionInterp const *FDEventRateInterp);
+  void InitializeEventRateMatcher(PredictionInterp const *NDEventRateInterp,
+                                  PredictionInterp const *FDEventRateInterp);
 
   /// Use to check whether the ND flux histograms are binned consistently with
   /// the proposed ND analysis off axis binning. Will not merge bins, but will
@@ -105,9 +104,10 @@ protected:
   bool fStoreDebugMatches;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
+  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND;
 };
 
-}
+} // namespace ana
 
 size_t
 FillHistFromEigenVector(TH2 *, Eigen::VectorXd const &, size_t vect_offset = 0,

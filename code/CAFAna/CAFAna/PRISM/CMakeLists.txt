@@ -1,6 +1,6 @@
 if(DEFINED USE_EIGEN AND USE_EIGEN)
 
-  LIST(APPEND PRISM_implementation_files PRISMExtrapolator.cxx PredictionPRISM.cxx)
+  LIST(APPEND PRISM_implementation_files PRISMExtrapolator.cxx PredictionPRISM.cxx PRISMUtils.cxx)
   LIST(APPEND PRISM_header_files PRISMExtrapolator.h PredictionPRISM.h PRISMUtils.h)
 
   add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})

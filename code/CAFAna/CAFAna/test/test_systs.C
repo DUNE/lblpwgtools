@@ -1,4 +1,4 @@
-#include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
 
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
@@ -49,7 +49,7 @@ std::vector<const ISyst*> GetListOfSysts(bool nd)
     systlist.insert(systlist.end(), detlist_dis.begin(), detlist_dis.end());
   }
 
-  std::vector<const ISyst*> xseclist = GetGenieSysts({}, true);
+  std::vector<const ISyst*> xseclist = GetXSecSysts({}, true);
   systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
 
   return systlist;
