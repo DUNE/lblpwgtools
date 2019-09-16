@@ -41,7 +41,11 @@ namespace ana
     features[8].fvalue = sr->dune.nipim;
     features[9].fvalue = sr->dune.nipip;
 
-    weight *= GetReweighter()->predict(features, 1);
+    // this could (should?) be done instead by asking the BDT for the 'margin'
+    // (which can be exponentiated directly to get the probability)
+    // instead of having to do the calculation below
+    double bdtVal = GetReweighter()->GetWeight(features, 0);
+    weight *= 1./(1. - bdtVal) - 1;
 
   }
 
