@@ -28,11 +28,12 @@ namespace ana
       return;
 
     union BDTReweighter::BDTReweighterFeature features[10];
-    features[0].fvalue = sr->dune.eN;
-    features[1].fvalue = sr->dune.eP;
-    features[2].fvalue = sr->dune.ePi0;
-    features[3].fvalue = sr->dune.ePim;
-    features[4].fvalue = sr->dune.ePip;
+    // note that the eX fields are KINETIC energies, but the BDT was trained using TOTAL energy
+    features[0].fvalue = sr->dune.eN + sr->dune.nN * 0.939565;
+    features[1].fvalue = sr->dune.eP + sr->dune.nP * 0.938272;
+    features[2].fvalue = sr->dune.ePi0 + sr->dune.nipi0 * 0.134977;
+    features[3].fvalue = sr->dune.ePim + sr->dune.nipim * 0.139570;
+    features[4].fvalue = sr->dune.ePip + sr->dune.nipip * 0.139570;
 
     features[5].fvalue = sr->dune.nN;
     features[6].fvalue = sr->dune.nP;
