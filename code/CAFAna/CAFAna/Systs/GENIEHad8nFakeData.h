@@ -39,8 +39,6 @@ namespace ana
       BDTReweighter * GetReweighter() const override { return fBDTReweighter.get(); }
   };
 
-  extern const AGKYachFixFakeDataGenerator kAGKYachFixSyst;
-
   // -------------------------------------
 
   class KNOnchKuzminNaumovFakeDataGenerator : public Had8nFakeDataGenerator
@@ -53,6 +51,4 @@ namespace ana
       BDTReweighter * GetReweighter() const override { return fBDTReweighter.get(); }
 
   };
-
-  extern const KNOnchKuzminNaumovFakeDataGenerator kKNOnchKuzminNaumovSyst;
 }

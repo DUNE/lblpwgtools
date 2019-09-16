@@ -10,9 +10,6 @@
 
 namespace ana
 {
-  const AGKYachFixFakeDataGenerator kAGKYachFixSyst;
-  const KNOnchKuzminNaumovFakeDataGenerator kKNOnchKuzminNaumovSyst;
-
   void Had8nFakeDataGenerator::Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr, double &weight) const
   {
     // This proof-of-principle version was only trained for numus
