@@ -14,9 +14,9 @@ if [ -z ${INPUT_TAR_FILE} ]; then
   exit 1
 fi
 
-PNFS_PATH_APPEND=${1}
+PNFS_OUTDIR=${1}
 if [ -z ${1} ]; then
-  LOGYLOG "[ERROR]: Failed to find PNFS_PATH_APPEND passed on command line."
+  LOGYLOG "[ERROR]: Failed to find PNFS_OUTDIR passed on command line."
   exit 2
 fi
 
@@ -92,7 +92,6 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
-PNFS_OUTDIR=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 
 INPFILE=""

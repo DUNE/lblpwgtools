@@ -22,7 +22,8 @@ namespace ana
       return;
 
     // the hadronization knobs only apply to DIS
-    if (GENIEModeToString(GetGENIEModeFromSimbMode(sr->dune.mode)) != "DIS")
+    std::string mode = GENIEModeToString(sr->dune.GENIE_ScatteringMode);
+    if (mode != "DIS")
       return;
 
     // this is a straight one-way reweight
