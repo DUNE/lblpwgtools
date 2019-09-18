@@ -1,152 +1,157 @@
 #pragma once
 
 #include <vector>
+#include <array>
 
-namespace caf
-{
-  class SRDune
-  {
-  public:
-    // Reco info
-    double eRec_FromDep; // Unified parameterized reco that can be used at near and far. Should only be used for missing proton energy fake data studies that cannot use the CVN FD Reco
-    double Ev_reco; // for ND?
-    double Ev_reco_nue;
-    double Ev_reco_numu;
-    double mvaresult;
-    double mvanue;
-    double mvanumu;
-    double cvnnue;
-    double cvnnumu;
-    double cvnnutau;
-    int reco_q;
-    double Elep_reco;
-    double theta_reco;
+namespace caf {
 
-    double RecoLepEnNue;
-    double RecoHadEnNue;
-    double RecoLepEnNumu;
-    double RecoHadEnNumu;
+static size_t const kMaxSystUniverses = 10;
 
-    // ND pseudo-reconstruction flags
-    int reco_numu;
-    int reco_nue;
-    int reco_nc;
+class SRDune {
+public:
+  // Reco info
+  double eRec_FromDep; // Unified parameterized reco that can be used at near
+                       // and far. Should only be used for missing proton energy
+                       // fake data studies that cannot use the CVN FD Reco
+  double Ev_reco;      // for ND?
+  double Ev_reco_nue;
+  double Ev_reco_numu;
+  double mvaresult;
+  double mvanue;
+  double mvanumu;
+  double cvnnue;
+  double cvnnumu;
+  double cvnnutau;
+  int reco_q;
+  double Elep_reco;
+  double theta_reco;
 
-    // CW: added for the ND cuts Chris (M) wants
-    // ND containment flags
-    int muon_contained;
-    int muon_tracker;
-    int muon_ecal;
-    int muon_exit;
-    double Ehad_veto;
+  double RecoLepEnNue;
+  double RecoHadEnNue;
+  double RecoLepEnNumu;
+  double RecoHadEnNumu;
 
-    // To prevent errors when compiling DUNENDSysts
-    double nue_pid;
-    double numu_pid;
+  // ND pseudo-reconstruction flags
+  int reco_numu;
+  int reco_nue;
+  int reco_nc;
 
-    // Containment flag
-    int LongestTrackContNumu;
+  // CW: added for the ND cuts Chris (M) wants
+  // ND containment flags
+  int muon_contained;
+  int muon_tracker;
+  int muon_ecal;
+  int muon_exit;
+  double Ehad_veto;
 
-    // Truth info
-    double Ev;
-    double Elep;
-    //  float enu_truth; // so what's this one?
-    int isCC;
-    //    int ccnc;
-    //    int cc;
-    //    int beamPdg;
-    //    int neu;
-    int nuPDG;
-    int nuPDGunosc;
-    int LepPDG;
+  // To prevent errors when compiling DUNENDSysts
+  double nue_pid;
+  double numu_pid;
 
-    // This mode depends on whether the file is ND/FD
-    // See converter in SpectrumLoader.cxx that fills GENIE_ScatteringMode
-    int mode;
+  // Containment flag
+  int LongestTrackContNumu;
 
-    /// Modes list:
-    /// * QE: 1
-    /// * Single Kaon: 2
-    /// * DIS: 3
-    /// * RES: 4
-    /// * COH: 5
-    /// * Diffractive: 6
-    /// * Nu-e El: 7
-    /// * IMD: 8
-    /// * AMnuGamma: 9
-    /// * MEC: 10
-    /// * COHEl: 11
-    /// * IBD: 12
-    /// * GlashowRES: 13
-    /// * IMDAnnihalation: 14
-    int GENIE_ScatteringMode;
-    int nP;
-    int nN;
-    int nipi0;
-    int nipip;
-    int nipim;
-    int niem;
-    double Q2;
-    double W;
-    double Y;
-    double X;
+  // Truth info
+  double Ev;
+  double Elep;
+  //  float enu_truth; // so what's this one?
+  int isCC;
+  //    int ccnc;
+  //    int cc;
+  //    int beamPdg;
+  //    int neu;
+  int nuPDG;
+  int nuPDGunosc;
+  int LepPDG;
 
-    double vtx_x;
-    double vtx_y;
-    double vtx_z;
+  // This mode depends on whether the file is ND/FD
+  // See converter in SpectrumLoader.cxx that fills GENIE_ScatteringMode
+  int mode;
 
-    // Near detector offset in m
-    double det_x;
+  /// Modes list:
+  /// * QE: 1
+  /// * Single Kaon: 2
+  /// * DIS: 3
+  /// * RES: 4
+  /// * COH: 5
+  /// * Diffractive: 6
+  /// * Nu-e El: 7
+  /// * IMD: 8
+  /// * AMnuGamma: 9
+  /// * MEC: 10
+  /// * COHEl: 11
+  /// * IBD: 12
+  /// * GlashowRES: 13
+  /// * IMDAnnihalation: 14
+  int GENIE_ScatteringMode;
+  int nP;
+  int nN;
+  int nipi0;
+  int nipip;
+  int nipim;
+  int niem;
+  double Q2;
+  double W;
+  double Y;
+  double X;
 
-    // True energy of particles by species
-    double eP;
-    double eN;
-    double ePip;
-    double ePim;
-    double ePi0;
-    double eOther;
+  double vtx_x;
+  double vtx_y;
+  double vtx_z;
 
-    // Reconstructed energy of particles by species
-    double eRecoP;
-    double eRecoN;
-    double eRecoPip;
-    double eRecoPim;
-    double eRecoPi0;
-    double eRecoOther;
+  // Near detector offset in m
+  double det_x;
 
-    //At FD
-    double eDepP;
-    double eDepN;
-    double eDepPip;
-    double eDepPim;
-    double eDepPi0;
-    double eDepOther;
+  // True energy of particles by species
+  double eP;
+  double eN;
+  double ePip;
+  double ePim;
+  double ePi0;
+  double eOther;
 
-    double NuMomX;
-    double NuMomY;
-    double NuMomZ;
-    double LepMomX;
-    double LepMomY;
-    double LepMomZ;
-    double LepE;
-    double LepNuAngle;
+  // Reconstructed energy of particles by species
+  double eRecoP;
+  double eRecoN;
+  double eRecoPip;
+  double eRecoPim;
+  double eRecoPi0;
+  double eRecoOther;
 
-    // config
-    int run;
-    int isFD;
-    int isFHC;
+  // At FD
+  double eDepP;
+  double eDepN;
+  double eDepPip;
+  double eDepPim;
+  double eDepPi0;
+  double eDepOther;
 
-    // sigmas
-    double sigma_Ev_reco;
-    double sigma_Elep_reco;
-    double sigma_numu_pid;
-    double sigma_nue_pid;
+  double NuMomX;
+  double NuMomY;
+  double NuMomZ;
+  double LepMomX;
+  double LepMomY;
+  double LepMomZ;
+  double LepE;
+  double LepNuAngle;
 
-    // First index is systematic ID
-    std::vector<std::vector<double>> xsSyst_wgt;
-    double total_xsSyst_cv_wgt;
+  // config
+  int run;
+  int isFD;
+  int isFHC;
 
-        double perPOTWeight;
-    double perFileWeight;
-  };
-}
+  // sigmas
+  double sigma_Ev_reco;
+  double sigma_Elep_reco;
+  double sigma_numu_pid;
+  double sigma_nue_pid;
+
+  // First index is systematic ID
+  std::vector<std::array<double, kMaxSystUniverses>> xsSyst_wgt;
+  double total_xsSyst_cv_wgt;
+
+  double perPOTWeight;
+  double perFileWeight;
+  double NDMassCorrWeight;
+};
+} // namespace caf

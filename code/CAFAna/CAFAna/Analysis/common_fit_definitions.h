@@ -84,6 +84,7 @@ OrderListOfSysts(std::vector<const ana::ISyst *> const &systlist);
 ana::SystShifts GetFakeDataGeneratorSystShift(std::string input);
 
 enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };
+std::string GetSampleName(SampleType sample);
 SampleType GetSampleType(std::string const &sample);
 
 void MakePredictionInterp(

@@ -240,11 +240,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
   // XSec uncertainties and CVs
-  std::vector<std::array<double, 100>> XSSyst_tmp;
+  std::vector<std::array<double, caf::kMaxSystUniverses>> XSSyst_tmp;
   std::vector<double> XSSyst_cv_tmp;
   std::vector<int> XSSyst_size_tmp;
 
-  std::vector<std::string> const &XSSyst_names = GetAllXSecSystNames();
+  std::vector<std::string> const XSSyst_names = GetAllXSecSystNames();
   XSSyst_tmp.resize(XSSyst_names.size());
   XSSyst_cv_tmp.resize(XSSyst_names.size());
   XSSyst_size_tmp.resize(XSSyst_names.size());
@@ -254,7 +254,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
     if (!SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it],
                           &XSSyst_tmp[syst_it])) {
-      std::fill_n(XSSyst_tmp[syst_it].begin(), 100, 1);
+      std::fill_n(XSSyst_tmp[syst_it].begin(), caf::kMaxSystUniverses, 1);
       XSSyst_cv_tmp[syst_it] = 1;
       XSSyst_size_tmp[syst_it] = 1;
       continue;
@@ -272,16 +272,19 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   }
 
   TTree *potFriend;
-  f->GetObject("POTWeightFriend", potFriend);
+  f->GetObject("OffAxisWeightFriend", potFriend);
   if (potFriend) {
     tr->AddFriend(potFriend);
     SetBranchChecked(potFriend, "perPOT", &sr.dune.perPOTWeight);
     SetBranchChecked(potFriend, "perFile", &sr.dune.perFileWeight);
-    std::cout << "[INFO]: Found POT friend tree in input file, hooking up!"
+    SetBranchChecked(potFriend, "massCorr", &sr.dune.NDMassCorrWeight);
+    std::cout << "[INFO]: Found Off axis weight friend tree "
+                 "in input file, hooking up!"
               << std::endl;
   } else {
     sr.dune.perPOTWeight = 1;
     sr.dune.perFileWeight = 1;
+    sr.dune.NDMassCorrWeight = 1;
   }
 
   for (int n = 0; n < Nentries; ++n) {
@@ -355,9 +358,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     static auto AnaV = GetAnaVersion();
     if (AnaV == kV3) {
       for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
-        const int Nuniv = XSSyst_tmp[syst_it].size();
-        assert((Nuniv >= 0) && (Nuniv <= int(XSSyst_tmp[syst_it].size())));
-        sr.dune.xsSyst_wgt[syst_it].resize(Nuniv);
+        const size_t Nuniv = XSSyst_tmp[syst_it].size();
+        assert((Nuniv > 0) && (Nuniv <= XSSyst_tmp[syst_it].size()));
 
         // Do some error checking here
         if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
@@ -370,19 +372,29 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
           sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
         }
 
-        for (int u_it = 0; u_it < Nuniv; ++u_it) {
+        for (size_t u_it = 0; u_it < Nuniv; ++u_it) {
           sr.dune.xsSyst_wgt[syst_it][u_it] = XSSyst_tmp[syst_it][u_it];
         }
       }
     } else {
 
-      for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
-        const int Nuniv = XSSyst_size_tmp[syst_it];
+      for (size_t syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
+        const size_t Nuniv = XSSyst_size_tmp[syst_it];
         if (!Nuniv) {
           continue;
         }
 
-        assert(Nuniv <= int(XSSyst_tmp[syst_it].size()));
+        if (caf::kMaxSystUniverses < Nuniv) {
+          std::cout << "[ERROR]: Syst weight array in standard record "
+                       "(kMaxSystUniverses = "
+                    << caf::kMaxSystUniverses
+                    << ") is too small to hold this syst: "
+                    << XSSyst_names[syst_it] << " which requires " << Nuniv
+                    << " universes." << std::endl;
+          abort();
+        }
+
+        assert(Nuniv <= XSSyst_tmp[syst_it].size());
 
         if (IsDoNotIncludeSyst(syst_it)) { // Multiply CV weight back into
                                            // response splines.
@@ -393,7 +405,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                       << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                       << std::endl;
           } else {
-            for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
+            for (size_t univ_it = 0; univ_it < Nuniv; ++univ_it) {
               XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
             }
           }
@@ -411,9 +423,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         }
 
         // Copy the spline in
-        sr.dune.xsSyst_wgt[syst_it].clear();
-        std::copy(XSSyst_tmp[syst_it].begin(), XSSyst_tmp[syst_it].end(),
-                  std::back_inserter(sr.dune.xsSyst_wgt[syst_it]));
+        std::copy_n(XSSyst_tmp[syst_it].begin(), caf::kMaxSystUniverses,
+                    sr.dune.xsSyst_wgt[syst_it].begin());
       }
     } // end version switch
 

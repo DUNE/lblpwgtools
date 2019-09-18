@@ -1,1 +1,0 @@
-../scripts/PRISMEfficiency.C

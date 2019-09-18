@@ -1,5 +1,3 @@
-#ifdef CAF_USE_PRISM
-
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 
@@ -424,5 +422,3 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
   return pred;
 }
 } // namespace ana
-
-#endif

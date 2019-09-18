@@ -4,6 +4,9 @@
 
 #include <string>
 
+extern ana::Binning const binsNDEreco;
+extern ana::Binning const binsFDEreco;
+
 struct AxisBlob {
   ana::HistAxis const *NDAx;
   ana::HistAxis const *FDAx_numu;

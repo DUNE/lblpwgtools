@@ -56,8 +56,7 @@ LIST(APPEND ROOT_LIBS
   Postscript
   Matrix
   Physics
-  MathCore
-  -Wl,--as-needed)
+  MathCore)
 
 if("${ROOT_FEATURES}" MATCHES "minuit2")
   cmessage(STATUS "ROOT built with MINUIT2 support")

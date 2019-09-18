@@ -1,3 +1,5 @@
+#pragma once 
+
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
 #include "CAFAna/Prediction/PredictionGenerator.h"
@@ -17,18 +19,16 @@ public:
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
-  virtual ~PredictionModifiedNoExtrap();
-
   static std::unique_ptr<PredictionModifiedNoExtrap> LoadFrom(TDirectory *dir);
-    virtual void SaveTo(TDirectory* dir) const override;
+  virtual void SaveTo(TDirectory *dir) const override;
 
-  void SetExtraWeighting(TH1 *h) { fExtraWeight = h; }
+  void SetExtraWeighting(TH1 const *h) { fExtraWeight = h; }
   void UnsetExtraWeighting() { fExtraWeight = nullptr; }
 
 protected:
   PredictionModifiedNoExtrap(PredictionExtrap *pred);
 
-  TH1 *fExtraWeight;
+  TH1 const *fExtraWeight;
 };
 
 class ModifiedNoExtrapPredictionGenerator : public IPredictionGenerator {

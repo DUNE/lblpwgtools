@@ -1,7 +1,9 @@
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "common_fit_definitions.C"
+#include "CAFAna/PRISM/PRISMUtils.h"
+
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "TChain.h"
 #include "TFile.h"
@@ -215,22 +217,29 @@ void OffAxisNDCAFCombiner(
 
   TChain *caf = new TChain(cafTreeName.c_str());
   TChain *meta = new TChain("meta");
-  TTree *POTWeightFriend;
-  double perPOT, perFile;
+  TTree *OffAxisWeightFriend;
+  double perPOT, perFile, massCorr;
+  ana::FVMassCorrection SliceMassCorrector;
   TTree *FileSummaryTree;
   fileSummary fs;
 
   std::map<double, int> det_x_files;
-  std::vector<std::pair<double, double>> EventPOTEventFiles;
+
+  size_t const kDetX = 0;
+  size_t const kPerPOT = 1;
+  size_t const kMassCorr = 2;
+
+  std::vector<std::tuple<double, double, double>> EventPOTEventFiles;
 
   if (CombiningCombinedCAFs) {
-    POTWeightFriend = new TChain("POTWeightFriend");
+    OffAxisWeightFriend = new TChain("OffAxisWeightFriend");
     FileSummaryTree = new TChain("FileSummaryTree");
   } else {
-    POTWeightFriend = new TTree("POTWeightFriend", "");
-    POTWeightFriend->Branch("perPOT", &perPOT, "perPOT/D");
-    POTWeightFriend->Branch("perFile", &perFile, "perFile/D");
-    POTWeightFriend->SetDirectory(nullptr);
+    OffAxisWeightFriend = new TTree("OffAxisWeightFriend", "");
+    OffAxisWeightFriend->Branch("perPOT", &perPOT, "perPOT/D");
+    OffAxisWeightFriend->Branch("perFile", &perFile, "perFile/D");
+    OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
+    OffAxisWeightFriend->SetDirectory(nullptr);
 
     FileSummaryTree = new TTree("FileSummaryTree", "");
     FileSummaryTree->Branch("NEvents", &fs.NEvents, "NEvents/I");
@@ -239,7 +248,7 @@ void OffAxisNDCAFCombiner(
     FileSummaryTree->Branch("fileName", &fs.fileName);
     FileSummaryTree->SetDirectory(nullptr);
   }
-  size_t NPrevPOTWeightFriendEntries = 0;
+  size_t NPrevOffAxisWeightFriendEntries = 0;
   size_t fctr = 0;
   for (auto dir_files : CAFs) {
     std::string dir = dir_files.first;
@@ -354,7 +363,7 @@ void OffAxisNDCAFCombiner(
         }
 
         if (!CombiningCombinedCAFs) {
-          NPrevPOTWeightFriendEntries = EventPOTEventFiles.size();
+          NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
           size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
           perPOT = 1.0 / file_pot;
           for (size_t e_it = 0; e_it < nevs; ++e_it) {
@@ -371,12 +380,14 @@ void OffAxisNDCAFCombiner(
                 continue;
               }
             }
-            EventPOTEventFiles.emplace_back(det_x, perPOT);
+            EventPOTEventFiles.emplace_back(
+                det_x, perPOT,
+                SliceMassCorrector.GetWeight(det_x * 1E2 + vtx_x));
           }
           if (preSelect) {
             std::cout << "\t-FV selection efficiency: "
                       << (double(EventPOTEventFiles.size() -
-                                 NPrevPOTWeightFriendEntries) /
+                                 NPrevOffAxisWeightFriendEntries) /
                           double(nevs))
                       << std::endl;
           }
@@ -388,7 +399,8 @@ void OffAxisNDCAFCombiner(
       caf->Add((dir + file_name).c_str());
       meta->Add((dir + file_name).c_str());
       if (CombiningCombinedCAFs) {
-        static_cast<TChain *>(POTWeightFriend)->Add((dir + file_name).c_str());
+        static_cast<TChain *>(OffAxisWeightFriend)
+            ->Add((dir + file_name).c_str());
         static_cast<TChain *>(FileSummaryTree)->Add((dir + file_name).c_str());
       }
     }
@@ -404,7 +416,7 @@ void OffAxisNDCAFCombiner(
     double det_x;
     FileSummaryTree->SetBranchAddress("det_x", &det_x);
     Long64_t NFSEnts = FileSummaryTree->GetEntries();
-    for (size_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
+    for (Long64_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
       FileSummaryTree->GetEntry(ent_it);
 
       if (!det_x_files.count(det_x)) {
@@ -451,32 +463,38 @@ void OffAxisNDCAFCombiner(
     std::cout << "[INFO]: Copying meta tree..." << std::endl;
     TTree *metacopy = meta->CloneTree(-1, "fast");
     delete meta;
+
     if (!CombiningCombinedCAFs) {
-      std::cout << "[INFO]: Writing POTWeightFriend tree..." << std::endl;
-      size_t NPOTWeightFriends = EventPOTEventFiles.size();
-      ana::Progress potfillprog("Writing POTWeightFriend tree.");
-      for (size_t ev_it = 0; ev_it < NPOTWeightFriends; ++ev_it) {
-        perFile = 1.0 / double(det_x_files[EventPOTEventFiles[ev_it].first]);
-        perPOT = EventPOTEventFiles[ev_it].second;
-        POTWeightFriend->Fill();
+      std::cout << "[INFO]: Writing OffAxisWeightFriend tree..." << std::endl;
+      size_t NOffAxisWeightFriends = EventPOTEventFiles.size();
+      ana::Progress potfillprog("Writing OffAxisWeightFriend tree.");
+      for (size_t ev_it = 0; ev_it < NOffAxisWeightFriends; ++ev_it) {
+        perFile =
+            1.0 /
+            double(det_x_files[std::get<kDetX>(EventPOTEventFiles[ev_it])]);
+        perPOT = std::get<kPerPOT>(EventPOTEventFiles[ev_it]);
+        massCorr = std::get<kMassCorr>(EventPOTEventFiles[ev_it]);
+        OffAxisWeightFriend->Fill();
         if (ev_it && !(ev_it % 10000)) {
-          potfillprog.SetProgress(double(ev_it) / double(NPOTWeightFriends));
+          potfillprog.SetProgress(double(ev_it) /
+                                  double(NOffAxisWeightFriends));
         }
       }
       potfillprog.Done();
-      POTWeightFriend->SetDirectory(fout);
-      POTWeightFriend->Write();
+      OffAxisWeightFriend->SetDirectory(fout);
+      OffAxisWeightFriend->Write();
     } else {
-      std::cout << "[INFO]: Updating POTWeightFriend tree with combined NFiles "
-                   "per det_x info..."
-                << std::endl;
+      std::cout
+          << "[INFO]: Updating OffAxisWeightFriend tree with combined NFiles "
+             "per det_x info..."
+          << std::endl;
       double perFile;
       double det_x;
       treecopy->SetBranchAddress("det_x", &det_x);
-      POTWeightFriend->SetBranchAddress("perFile", &perFile);
-      TTree *POTWeightFriendcopy = POTWeightFriend->CloneTree(0, "");
+      OffAxisWeightFriend->SetBranchAddress("perFile", &perFile);
+      TTree *OffAxisWeightFriendcopy = OffAxisWeightFriend->CloneTree(0, "");
 
-      size_t NPOTWeightEntries = POTWeightFriend->GetEntries();
+      Long64_t NPOTWeightEntries = OffAxisWeightFriend->GetEntries();
 
       if (NPOTWeightEntries != treecopy->GetEntries()) {
         std::cout << "[ERROR]: The number of entries in the POT friend tree "
@@ -485,18 +503,18 @@ void OffAxisNDCAFCombiner(
       }
       assert(NPOTWeightEntries == treecopy->GetEntries());
 
-      ana::Progress filerecalcprog("Updating POTWeightFriend tree");
-      for (size_t ent_it = 0; ent_it < NPOTWeightEntries; ++ent_it) {
-        POTWeightFriend->GetEntry(ent_it);
+      ana::Progress filerecalcprog("Updating OffAxisWeightFriend tree");
+      for (Long64_t ent_it = 0; ent_it < NPOTWeightEntries; ++ent_it) {
+        OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
         perFile = 1.0 / double(det_x_files[det_x]);
-        POTWeightFriendcopy->Fill();
+        OffAxisWeightFriendcopy->Fill();
         if (ent_it && !(ent_it % 10000)) {
           filerecalcprog.SetProgress(double(ent_it) /
                                      double(NPOTWeightEntries));
         }
       }
-      delete POTWeightFriend;
+      delete OffAxisWeightFriend;
       filerecalcprog.Done();
     }
 
@@ -534,7 +552,7 @@ bool strToBool(std::string const &str) {
   throw std::runtime_error(str);
 }
 
-void HelpText(char const *argv[] {
+void HelpText(char const *argv[]) {
   std::cout << "[USAGE]: " << argv[0]
             << " \"<InputFilePattern1>[,<InputFilePattern2>,...]\" "
                "OutputFile.root <Running on the output of this script? false> "
@@ -542,11 +560,12 @@ void HelpText(char const *argv[] {
                "<Just write out a summary tree detailing POT and event rate at "
                "each stop? false> <Maximum number of events>"
             << std::endl;
-})
+}
 
-    int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) {
 
-  if ((argc == 2) && ((argv[1] == "-?") || (argv[1] == "--help"))) {
+  if ((argc == 2) &&
+      ((std::string(argv[1]) == "-?") || (std::string(argv[1]) == "--help"))) {
     HelpText(argv);
     return 0;
   }

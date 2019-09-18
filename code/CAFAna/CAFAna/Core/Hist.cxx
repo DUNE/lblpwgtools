@@ -171,12 +171,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Hist::GetBinError(int i) const
-  {
-    return fHistD ? fHistD->GetBinError(i) : fHistSparse->GetBinError(i);
-  }
-
-  //----------------------------------------------------------------------
   double Hist::Integral(int lo, int hi) const
   {
     assert(fHistD); // TODO how to use fHistSparse?
@@ -230,6 +224,18 @@ namespace ana
   void Hist::SetBinContent(int i, double x)
   {
     if(fHistD) fHistD->SetBinContent(i, x); else fHistSparse->SetBinContent(i, x);
+  }
+
+  //----------------------------------------------------------------------
+  double Hist::GetBinError(int i) const
+  {
+    if(fHistD) return fHistD->GetBinError(i); else return fHistSparse->GetBinError(i);
+  }
+
+  //----------------------------------------------------------------------
+  void Hist::SetBinError(int i, double x)
+  {
+    if(fHistD) fHistD->SetBinError(i, x); else fHistSparse->SetBinError(i, x);
   }
 
   //----------------------------------------------------------------------

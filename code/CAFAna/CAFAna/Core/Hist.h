@@ -32,7 +32,6 @@ namespace ana
     TH1D* ToTH1() const;
 
     int GetNbinsX() const;
-    double GetBinError(int i) const;
     double Integral(int lo, int hi) const;
     double GetMean() const;
 
@@ -42,6 +41,8 @@ namespace ana
 
     double GetBinContent(int i) const;
     void SetBinContent(int i, double x);
+    double GetBinError(int i) const;
+    void SetBinError(int i, double x);
     void Reset();
 
     void Add(const Hist& rhs, double scale = 1);

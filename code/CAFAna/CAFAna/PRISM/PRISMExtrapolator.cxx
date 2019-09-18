@@ -1,5 +1,3 @@
-#ifdef CAF_USE_PRISM
-
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 
@@ -538,5 +536,3 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
 }
 
 } // namespace ana
-
-#endif

@@ -1,15 +1,18 @@
 #pragma once
 
-#include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/Var.h"
 
-#include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Prediction/PredictionInterp.h"
+#include "CAFAna/Prediction/PredictionNoExtrap.h"
+
+#include "CAFAna/PRISM/PredictionPRISM.h"
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "TGraph.h"
+#include "TFile.h"
 #include "TH1D.h"
 
+#include <memory>
 #include <vector>
 
 namespace ana {
@@ -31,12 +34,16 @@ inline double FD_ND_FVRatio(double x_slice_cm) {
   return FDFV / NDSliceFV;
 }
 
-extern const ana::Cut kIsOutOfTheDesert;
-
-// Use to weight by Exposure
-extern const ana::Var kRunPlanWeight;
-
-extern ana::FVMassCorrection fvmc;
 extern const ana::Var kMassCorrection;
+
+struct PRISMStateBlob {
+  std::unique_ptr<PredictionPRISM> PRISM;
+  std::unique_ptr<PredictionInterp> NDMatchInterp;
+  std::unique_ptr<PredictionInterp> FDMatchInterp;
+  std::unique_ptr<PredictionNoExtrap> FarDet;
+};
+
+PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
+                              bool IsRHC = false);
 
 } // namespace ana

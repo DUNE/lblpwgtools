@@ -187,10 +187,4 @@ PredictionModifiedNoExtrap::LoadFrom(TDirectory *dir) {
   return std::unique_ptr<PredictionModifiedNoExtrap>(
       new PredictionModifiedNoExtrap(pred));
 }
-
-//----------------------------------------------------------------------
-PredictionModifiedNoExtrap::~PredictionModifiedNoExtrap() {
-  // We created this in the constructor so it's our responsibility
-  delete fExtrap;
-}
 } // namespace ana

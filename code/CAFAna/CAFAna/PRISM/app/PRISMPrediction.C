@@ -1,65 +1,12 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Analysis/AnalysisVars.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
-const Var kTrueOffAxisPos =
-    (SIMPLEVAR(dune.det_x) + (SIMPLEVAR(dune.vtx_x) * ana::Constant(1.0E-2)));
-const Var kTrueEv = SIMPLEVAR(dune.Ev);
-const Var kTrueELep = SIMPLEVAR(dune.LepE);
+using namespace ana;
 
-const Var kProxyE({}, [&](const caf::StandardRecord *sr) -> double {
-  double eother = 0;
-  if (std::isnormal(sr->dune.eOther)) {
-    eother = sr->dune.eOther;
-  }
-  double eprox = sr->dune.LepE + sr->dune.eP + sr->dune.ePip + sr->dune.ePim +
-                 sr->dune.ePi0 + 0.135 * sr->dune.nipi0 + eother;
-  return eprox;
-});
-
-const Var kProxyE_20pclpe({}, [&](const caf::StandardRecord *sr) -> double {
-  double eother = 0;
-  if (std::isnormal(sr->dune.eOther)) {
-    eother = sr->dune.eOther;
-  }
-  double eprox = sr->dune.LepE + 0.8 * sr->dune.eP + sr->dune.ePip +
-                 sr->dune.ePim + sr->dune.ePi0 + 0.135 * sr->dune.nipi0 +
-                 eother;
-  return eprox;
-});
-
-const Cut kETrueLT10GeV({"kETrueLT10GeV"}, [](const caf::StandardRecord *sr) {
-  return (sr->dune.Ev < 10);
-});
-
-const double OA_bin_width_m = 0.5;
-const double OA_min_m = -0.25;
-const double OA_max_m = 32.75;
-const size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
-const size_t MergeFluxOABins = 0.5 / OA_bin_width_m;
-const Binning binsOffAxisPos = Binning::Simple(NOABins, OA_min_m, OA_max_m);
-const Binning binsETrue_PRISM = Binning::Simple(100, 0, 10);
-
-const HistAxis trueOffAxisPos("Off axis position (m)", binsOffAxisPos,
-                              kTrueOffAxisPos);
-
-const HistAxis trueEvAxes("True E_{#nu} (GeV)", binsETrue_PRISM, kTrueEv);
-const HistAxis EventRateMatchAxis("True E_{#nu} (GeV)", binsETrue_PRISM,
-                                  kTrueEv);
-
-const HistAxis proxyEvAxes("Truth proxy E_{#nu} (GeV)", binsETrue_PRISM,
-                           kProxyE);
-
-const HistAxis ERecFromDepAxes("E_{Dep.} (GeV)", binsETrue_PRISM,
-                               kRecoE_FromDep);
-
-const HistAxis
-    proxy_20pclpeEvAxes("Truth proxy (20%% less proton energy) E_{#nu} (GeV)",
-                        binsETrue_PRISM, kProxyE_20pclpe);
-
-const HistAxis ElepAxes("True E_{lep.} (GeV)", binsETrue_PRISM, kTrueELep);
 
 struct PRISMComp {
   std::unique_ptr<PredictionPRISM> PRISM;
@@ -129,9 +76,7 @@ void PRISMPrediction(std::string const &off_axis_file,
     for (auto const &proj : Projections) {
       PRISMComp projComp;
 
-      ana::Cut kSelectSignalND =
-          kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert;
-      ana::Var kNDWeight = kRunPlanWeight * kMassCorrection * proj.ExtraWeight;
+      
 
       projComp.PRISM = std::make_unique<PredictionPRISM>(
           PRISMNDLoader, proj.Ax, trueOffAxisPos, kSelectSignalND, kNDWeight);
@@ -164,7 +109,7 @@ void PRISMPrediction(std::string const &off_axis_file,
       NDPredGens.emplace_back(new NoOscPredictionGenerator(
           NDSpectaAxis, kSelectSignalND, kNDWeight));
 
-      ana::Cut kSelectSignalFD = kIsNumuCC && !kIsAntiNu && kIsTrueFV;
+      
 
       FDPredGens.emplace_back(new NoExtrapPredictionGenerator(
           EventRateMatchAxis, kSelectSignalFD, proj.ExtraWeight));

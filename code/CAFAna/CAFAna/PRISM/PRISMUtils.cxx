@@ -1,5 +1,7 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 
+#include "CAFAna/Cuts/TruthCuts.h"
+
 namespace ana {
 
 FVMassCorrection::FVMassCorrection() {
@@ -38,48 +40,34 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
   return fvmasscor->GetBinContent(bi_it);
 }
 
-const ana::Cut kIsOutOfTheDesert({"kIsOutOfTheDesert"},
-                                 [](const caf::StandardRecord *sr) {
-                                   return (fabs(sr->dune.vtx_x) < 200);
-                                 });
-
-std::vector<double> const FDnumuFHCSelEff_enu = {
-    0.546, 0.683, 0.821, 0.945, 1.07, 1.19, 1.44, 1.67,
-    1.94,  2.25,  2.86,  4.17,  4.58, 5.44, 6.57, 7.65};
-
-std::vector<double> const FDnumuFHCSelEff_eff = {
-    0.624, 0.708, 0.761, 0.808, 0.839, 0.869, 0.902, 0.914,
-    0.930, 0.944, 0.956, 0.958, 0.960, 0.943, 0.929, 0.912};
-
-std::vector<double> const ND_UnGeoCorrectible_enu = {
-    0.183, 0.502, 0.870, 1.25, 1.68, 2.45, 3.27, 4.19, 5.28, 6.48, 9.05};
-
-std::vector<double> const ND_UnGeoCorrectible_eff = {0.996, 0.996, 0.985, 0.966,
-                                                     0.958, 0.932, 0.898, 0.867,
-                                                     0.845, 0.807, 0.742};
-
-TGraph FDnumuFHCSelEff(FDnumuFHCSelEff_enu.size(), FDnumuFHCSelEff_enu.data(),
-                       FDnumuFHCSelEff_eff.data());
-const ana::Var kFDEff({}, [&](const caf::StandardRecord *sr) -> double {
-  return FDnumuFHCSelEff.Eval(sr->dune.Ev);
-});
-
-TGraph ND_UnGeoCorrectibleEff(ND_UnGeoCorrectible_enu.size(),
-                              ND_UnGeoCorrectible_enu.data(),
-                              ND_UnGeoCorrectible_eff.data());
-const ana::Var kNDEff({}, [&](const caf::StandardRecord *sr) -> double {
-  return ND_UnGeoCorrectibleEff.Eval(sr->dune.Ev);
-});
-
-// Use to weight by Exposure
-const ana::Var kRunPlanWeight({}, [&](const caf::StandardRecord *sr) -> double {
-  return sr->dune.perPOTWeight * sr->dune.perFileWeight;
-});
-
-ana::FVMassCorrection fvmc;
 const ana::Var kMassCorrection({},
                                [&](const caf::StandardRecord *sr) -> double {
-                                 return fvmc.GetWeight(sr->dune.vtx_x);
+                                 return sr->dune.NDMassCorrWeight;
                                });
+
+PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
+                              bool IsRHC) {
+  PRISMStateBlob blob;
+  blob.PRISM = PredictionPRISM::LoadFrom(
+      f.GetDirectory((std::string("PRISM_") + varname +
+                      std::string(IsRHC ? "_rhc" : "_fhc"))
+                         .c_str()));
+
+  blob.NDMatchInterp = PredictionInterp::LoadFrom(
+      f.GetDirectory((std::string("NDMatchInterp_ETrue") +
+                      std::string(IsRHC ? "_rhc" : "_fhc"))
+                         .c_str()));
+  blob.FDMatchInterp = PredictionInterp::LoadFrom(
+      f.GetDirectory((std::string("FDMatchInterp_ETrue") +
+                      std::string(IsRHC ? "_rhc" : "_fhc"))
+                         .c_str()));
+
+  blob.FarDet = PredictionNoExtrap::LoadFrom(
+      f.GetDirectory((std::string("FarDet_") + varname +
+                      std::string(IsRHC ? "_rhc" : "_fhc"))
+                         .c_str()));
+
+  return blob;
+}
 
 } // namespace ana
