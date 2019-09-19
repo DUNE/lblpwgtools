@@ -381,8 +381,7 @@ void OffAxisNDCAFCombiner(
               }
             }
             EventPOTEventFiles.emplace_back(
-                det_x, perPOT,
-                SliceMassCorrector.GetWeight(det_x * 1E2 + vtx_x));
+                det_x, perPOT, SliceMassCorrector.GetWeight(vtx_x));
           }
           if (preSelect) {
             std::cout << "\t-FV selection efficiency: "
