@@ -260,11 +260,18 @@ void OffAxisNDCAFCombiner(
 
       TFile f((dir + file_name).c_str());
 
-      assert(!f.IsZombie());
+      if (f.IsZombie()) {
+        std::cout << "[WARN]: Failed." << std::endl;
+        continue;
+      }
 
       TTree *f_caf;
       f.GetObject(cafTreeName.c_str(), f_caf);
-      assert(f_caf);
+      if (!f_caf) {
+        std::cout << "[WARN]: Failed to read " << cafTreeName << " TTree. "
+                  << std::endl;
+        continue;
+      }
 
       // Assume input file was generated with a single stop.
       double det_x;
@@ -295,7 +302,11 @@ void OffAxisNDCAFCombiner(
         TTree *f_meta;
         f.GetObject("meta", f_meta);
 
-        assert(f_meta);
+        if (!f_meta) {
+          std::cout << "[ERROR]: Failed to read " << cafTreeName << " TTree. "
+                    << std::endl;
+          abort();
+        }
 
         double file_pot = 0;
         double pot;
