@@ -171,10 +171,8 @@ void asimov_joint(std::string stateFname = def_stateFname,
   int yVal = -999;
   int xVal = -999;
 
-
   bool isGlobal = true;
   bool isSinglePoint = false;
-
 
   if (plotVarVect.size() > 0)
     RemovePars(oscVars, {plotVarVect[0]});
@@ -188,7 +186,6 @@ void asimov_joint(std::string stateFname = def_stateFname,
     yVal = stoi(plotVarVect[3]);
   }
 
-  bool isGlobal = false;
   // LoOk LuKe, BrAcKeTs
   if (yVal == -1 && xVal == -1) {
     isGlobal = true;
