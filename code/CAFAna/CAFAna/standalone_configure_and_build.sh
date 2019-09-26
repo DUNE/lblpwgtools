@@ -120,8 +120,8 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
