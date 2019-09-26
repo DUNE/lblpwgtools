@@ -166,6 +166,30 @@ struct seeded_spectra {
   std::unique_ptr<ana::Spectrum> spect;
 };
 
+enum sample_idxs {
+  kFDNueFHC = 0,
+  kFDNumuFHC = 1,
+  kFDNueRHC = 2,
+  kFDNumuRHC = 3,
+  kNDNumuFHC = 4,
+  kNDNumuRHC = 5
+};
+
+// This is so so awful.
+std::vector<seeded_spectra>
+BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
+             ana::PredictionInterp *predFDNueFHC = nullptr,
+             ana::PredictionInterp *predFDNumuRHC = nullptr,
+             ana::PredictionInterp *predFDNueRHC = nullptr,
+             ana::PredictionInterp *predNDNumuFHC = nullptr,
+             ana::PredictionInterp *predNDNumuRHC = nullptr,
+             osc::IOscCalculatorAdjustable *fakeDataOsc = nullptr,
+             ana::SystShifts fakeDataSyst = ana::kNoShift,
+             bool fakeDataStats = false, double pot_fd_fhc_nue = 0,
+             double pot_fd_fhc_numu = 0, double pot_fd_rhc_nue = 0,
+             double pot_fd_rhc_numu = 0, double pot_nd_fhc = 0,
+             double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
+
 double RunFitPoint(std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    ana::SystShifts fakeDataSyst, bool fakeDataStats,

@@ -116,14 +116,15 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
     returnHist = new TH1D(plotVarVect[0].c_str(),
                           (plotVarVect[0] + ";" + plotVarVect[0]).c_str(),
                           nBinsX, minX, maxX);
-  } else if (plotVarVect.size() > 1){
+  } else if (plotVarVect.size() > 1) {
     returnHist = new TH2D((plotVarVect[0] + "_" + plotVarVect[1]).c_str(),
                           (plotVarVect[0] + "_" + plotVarVect[1] + ";" +
                            plotVarVect[0] + ";" + plotVarVect[1])
-			  .c_str(),
+                              .c_str(),
                           nBinsX, minX, maxX, nBinsY, minY, maxY);
   } else {
-    std::cerr << "Something went wrong when setting up the histogram!" << std::endl;
+    std::cerr << "Something went wrong when setting up the histogram!"
+              << std::endl;
     exit(1);
   }
 
@@ -140,16 +141,16 @@ int const def_hie = 1;
 char const *def_asimov_set = "0";
 char const *def_fakeDataShift = "";
 
-// Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23, dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
-void asimov_joint(std::string stateFname=def_stateFname,
-		  std::string outputFname=def_outputFname,
-		  std::string plotVars=def_plotVars,
-		  std::string systSet = def_systSet,
-		  std::string sampleString=def_sampleString,
-		  std::string penaltyString=def_penaltyString,
-		  int hie = def_hie,
-		  std::string asimov_set=def_asimov_set,
-		  std::string fakeDataShift=def_fakeDataShift){
+// Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23,
+// dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
+void asimov_joint(std::string stateFname = def_stateFname,
+                  std::string outputFname = def_outputFname,
+                  std::string plotVars = def_plotVars,
+                  std::string systSet = def_systSet,
+                  std::string sampleString = def_sampleString,
+                  std::string penaltyString = def_penaltyString,
+                  int hie = def_hie, std::string asimov_set = def_asimov_set,
+                  std::string fakeDataShift = def_fakeDataShift) {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -157,7 +158,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
   // Get the systematics to use
-  std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
+  std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
 
   // Oscillation parameters to start with
   std::vector<const IFitVar *> oscVarsAll = GetOscVars("alloscvars", hie);
@@ -165,12 +166,15 @@ void asimov_joint(std::string stateFname=def_stateFname,
   // Remove the parameters to be scanned
   std::vector<const IFitVar *> oscVars = oscVarsAll;
 
-  // This is very hacky... third elements in the list are used to define the strip to loop at this time
+  // This is very hacky... third elements in the list are used to define the
+  // strip to loop at this time
   int yVal = -999;
   int xVal = -999;
 
-  bool isSingle = false;
-  if (plotVarVect.size() == 4) isSingle = true;
+
+  bool isGlobal = true;
+  bool isSinglePoint = false;
+
 
   if (plotVarVect.size() > 0)
     RemovePars(oscVars, {plotVarVect[0]});
@@ -178,19 +182,23 @@ void asimov_joint(std::string stateFname=def_stateFname,
     RemovePars(oscVars, {plotVarVect[1]});
   if (plotVarVect.size() > 2)
     xVal = stoi(plotVarVect[2]);
-  if (plotVarVect.size() > 3){
+  if (plotVarVect.size() > 3) {
+    isSinglePoint = true;
+    isGlobal = false;
     yVal = stoi(plotVarVect[3]);
   }
 
   bool isGlobal = false;
   // LoOk LuKe, BrAcKeTs
-  if (isSingle && yVal == -1 && xVal == -1){
+  if (yVal == -1 && xVal == -1) {
     isGlobal = true;
     yVal = xVal = 0;
   }
-  
-  // One man's continuing struggle with hacky fixes stemming from the oscillation probability being buggy as hell
-  if (plotVars.find("dmsq32") != std::string::npos) RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
+
+  // One man's continuing struggle with hacky fixes stemming from the
+  // oscillation probability being buggy as hell
+  if (plotVars.find("dmsq32") != std::string::npos)
+    RemovePars(oscVars, {"dmsq32NHscaled", "dmsq32IHscaled"});
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
@@ -198,41 +206,42 @@ void asimov_joint(std::string stateFname=def_stateFname,
   FitTreeBlob asimov_tree("asimov_tree", "meta_tree");
   asimov_tree.SetDirectory(fout);
 
-  // This remains the same throughout... there is one true parameter set for this Asimov set
-  osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+  // This remains the same throughout... there is one true parameter set for
+  // this Asimov set
+  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   // Save the true information
   SaveTrueOAParams(fout, trueOsc);
 
-  // Start by performing a minimization across the whole space, this defines the minimum chi2!
-  osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
+  // Start by performing a minimization across the whole space, this defines the
+  // minimum chi2!
+  osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   SystShifts testSyst = kNoShift;
 
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
-  std::map<const IFitVar*, std::vector<double>> oscSeedsAll = {};
+  std::map<const IFitVar *, std::vector<double>> oscSeedsAll = {};
   oscSeedsAll[&kFitSinSqTheta23] = {.4, .6};
   oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
   // For the asimov, seed whatever isn't fixed
-  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-  if (std::find(plotVarVect.begin(), plotVarVect.end(), "deltapi") == plotVarVect.end())
+  std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
+  if (std::find(plotVarVect.begin(), plotVarVect.end(), "deltapi") ==
+      plotVarVect.end())
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
-  if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") == plotVarVect.end())
+  if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") ==
+      plotVarVect.end())
     oscSeeds[&kFitSinSqTheta23] = {.4, .6};
 
   // Only do this if you're told to?
   double globalmin = 0;
 
-  if (!isSingle || isGlobal){
-    globalmin = RunFitPoint(stateFname, sampleString,
-			    trueOsc, trueSyst, false,
-			    oscVarsAll, systlist,
-			    testOsc, testSyst,
-			    oscSeedsAll, penalty_nom,
-			    Fitter::kNormal, nullptr);
+  if (isGlobal) {
+    globalmin = RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
+                            oscVarsAll, systlist, testOsc, testSyst,
+                            oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
   }
   delete penalty_nom;
   std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
@@ -247,44 +256,38 @@ void asimov_joint(std::string stateFname=def_stateFname,
   int xMin = 0;
   int xMax = sens_hist->GetNbinsX();
 
-  if (xVal >= 0){
+  if (xVal >= 0) {
     xMin = xVal;
-    xMax = xVal+1;
+    xMax = xVal + 1;
   }
-  
+
   int yMin = 0;
   int yMax = sens_hist->GetNbinsY();
-  
-  if (yVal >= 0){
+
+  if (yVal >= 0) {
     yMin = yVal;
-    yMax = yVal+1;
+    yMax = yVal + 1;
   }
 
   // Loop over whatever bins you're supposed to
-  for (int xBin = xMin; xBin < xMax; ++xBin){      
-    double xCenter = sens_hist->GetXaxis()->GetBinCenter(xBin+1);
+  for (int xBin = xMin; xBin < xMax; ++xBin) {
+    double xCenter = sens_hist->GetXaxis()->GetBinCenter(xBin + 1);
 
-    for (int yBin = yMin; yBin < yMax; ++yBin){
-      double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin+1);
-      
-      osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_set);
+    for (int yBin = yMin; yBin < yMax; ++yBin) {
+      double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin + 1);
+
+      osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
       if (plotVarVect.size() > 0)
-	SetOscillationParameter(testOsc, plotVarVect[0], xCenter, hie);
+        SetOscillationParameter(testOsc, plotVarVect[0], xCenter, hie);
       if (plotVarVect.size() > 1)
-	SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
-      
+        SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
+
       IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
-      
-      double chisqmin = 0;
-      if (!isSingle || !isGlobal){
-	chisqmin = RunFitPoint(stateFname, sampleString,
-			       trueOsc, trueSyst, false,
-			       oscVars, systlist,
-			       testOsc, testSyst,
-			       oscSeeds, penalty,
-			       Fitter::kNormal, nullptr,
-			       &asimov_tree);
-      }
+
+      double chisqmin =
+          RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
+                      oscVars, systlist, testOsc, testSyst, oscSeeds, penalty,
+                      Fitter::kNormal, nullptr, &asimov_tree);
 
       // Save relevant values into the tree and histogram
       double chisqdiff = chisqmin - globalmin;
@@ -294,11 +297,21 @@ void asimov_joint(std::string stateFname=def_stateFname,
       asimov_tree.throw_tree->Branch("xVal", &xCenter);
       asimov_tree.throw_tree->Branch("xName", &plotVarVect[0]);
       asimov_tree.throw_tree->Branch("isGlobal", &isGlobal);
-      if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yVal", &yCenter);
-      if (plotVarVect.size() > 1) asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
+      if (plotVarVect.size() > 1)
+        asimov_tree.throw_tree->Branch("yVal", &yCenter);
+      if (plotVarVect.size() > 1)
+        asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
       asimov_tree.Fill();
-      sens_hist->SetBinContent(xBin+1, yBin+1, chisqdiff);
+      sens_hist->SetBinContent(xBin + 1, yBin + 1, chisqdiff);
       delete penalty;
+
+      if (isSinglePoint) { // exit early if we are only running 1 point
+        break;
+      }
+    }
+    if (isGlobal &&
+        isSinglePoint) { // exit early if we are only running 1 point
+      break;
     }
   }
 

@@ -1096,6 +1096,77 @@ std::string BuildLogInfoString() {
   return ss.str();
 }
 
+std::vector<seeded_spectra>
+BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
+             PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
+             PredictionInterp *predNDNumuFHC, PredictionInterp *predNDNumuRHC,
+             osc::IOscCalculatorAdjustable *fakeDataOsc,
+             SystShifts fakeDataSyst, bool fakeDataStats, double pot_fd_fhc_nue,
+             double pot_fd_fhc_numu, double pot_fd_rhc_nue,
+             double pot_fd_rhc_numu, double pot_nd_fhc, double pot_nd_rhc,
+             std::vector<unsigned> const &Seeds) {
+  std::vector<seeded_spectra> spectra;
+  size_t iseed = 0;
+
+  // Ordering of these is important
+  // kFDNueFHC
+  if (predFDNueFHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_fd_fhc_nue, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+  // kFDNumuFHC
+  if (predFDNumuFHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_fd_fhc_numu, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+  // kFDNueRHC
+  if (predFDNueRHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_fd_rhc_nue, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+  // kFDNumuRHC
+  if (predFDNumuRHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_fd_rhc_numu, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+  // kNDNumuFHC
+  if (predNDNumuFHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_nd_fhc, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+  // kNDNumuRHC
+  if (predNDNumuRHC) {
+    spectra.emplace_back(
+        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
+                          predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
+                              .MockData(pot_nd_rhc, fakeDataStats,
+                                        fakeDataStats ? Seeds[iseed] : 0))));
+    iseed++;
+  }
+
+  return spectra;
+}
+
 double RunFitPoint(std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
@@ -1219,55 +1290,16 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                 << std::endl;
     }
 
-    unsigned predFDNueFHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predFDNueFHC_seed,
-        std::unique_ptr<Spectrum>(new Spectrum(
-            predFDNueFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                .MockData(pot_fd_fhc_nue, fakeDataStats, predFDNueFHC_seed))));
+    std::vector<unsigned> seeds;
+    for (size_t i = 0; i < 6; ++i) {
+      seeds.push_back(gRandom->Integer(std::numeric_limits<unsigned>::max()));
+    }
 
-    unsigned predFDNumuFHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predFDNumuFHC_seed,
-        std::unique_ptr<Spectrum>(
-            new Spectrum(predFDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                             .MockData(pot_fd_fhc_numu, fakeDataStats,
-                                       predFDNumuFHC_seed))));
-
-    unsigned predFDNueRHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predFDNueRHC_seed,
-        std::unique_ptr<Spectrum>(new Spectrum(
-            predFDNueRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                .MockData(pot_fd_rhc_nue, fakeDataStats, predFDNueRHC_seed))));
-
-    unsigned predFDNumuRHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predFDNumuRHC_seed,
-        std::unique_ptr<Spectrum>(
-            new Spectrum(predFDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                             .MockData(pot_fd_rhc_numu, fakeDataStats,
-                                       predFDNumuRHC_seed))));
-
-    unsigned predNDNumuFHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predNDNumuFHC_seed,
-        std::unique_ptr<Spectrum>(new Spectrum(
-            predNDNumuFHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                .MockData(pot_nd_fhc, fakeDataStats, predNDNumuFHC_seed))));
-
-    unsigned predNDNumuRHC_seed =
-        gRandom->Integer(std::numeric_limits<unsigned>::max());
-    spectra->emplace_back(
-        predNDNumuRHC_seed,
-        std::unique_ptr<Spectrum>(new Spectrum(
-            predNDNumuRHC.PredictSyst(fakeDataOsc, fakeDataSyst)
-                .MockData(pot_nd_rhc, fakeDataStats, predNDNumuRHC_seed))));
+    (*spectra) = BuildSpectra(&predFDNumuFHC, &predFDNueFHC, &predFDNumuRHC,
+                              &predFDNueRHC, &predNDNumuFHC, &predNDNumuRHC,
+                              fakeDataOsc, fakeDataSyst, fakeDataStats,
+                              pot_fd_fhc_nue, pot_fd_fhc_numu, pot_fd_rhc_nue,
+                              pot_fd_rhc_numu, pot_nd_fhc, pot_nd_rhc, seeds);
   }
 
   if (turbose) {
@@ -1281,30 +1313,36 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // If using the multi sample covariances then they must be added to the
   // MultiExperiment
-  SingleSampleExperiment app_expt_fhc(&predFDNueFHC, *spectra->at(0).spect);
+  SingleSampleExperiment app_expt_fhc(&predFDNueFHC,
+                                      *spectra->at(kFDNueFHC).spect);
   app_expt_fhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, *spectra->at(1).spect);
+  SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC,
+                                      *spectra->at(kFDNumuFHC).spect);
   dis_expt_fhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment app_expt_rhc(&predFDNueRHC, *spectra->at(2).spect);
+  SingleSampleExperiment app_expt_rhc(&predFDNueRHC,
+                                      *spectra->at(kFDNueRHC).spect);
   app_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, *spectra->at(3).spect);
+  SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC,
+                                      *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, *spectra->at(4).spect);
+  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC,
+                                     *spectra->at(kNDNumuFHC).spect);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, *spectra->at(5).spect);
+  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC,
+                                     *spectra->at(kNDNumuRHC).spect);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 
   if (PostFitTreeBlob) {
     // Save the seeds used to do the stats throws
     (*PostFitTreeBlob->fSpectraRNGSeeds) = std::vector<unsigned>{
-        spectra->at(0).stats_seed, spectra->at(1).stats_seed,
-        spectra->at(2).stats_seed, spectra->at(3).stats_seed,
-        spectra->at(4).stats_seed, spectra->at(5).stats_seed};
+        spectra->at(kFDNueFHC).stats_seed,  spectra->at(kFDNumuFHC).stats_seed,
+        spectra->at(kFDNueRHC).stats_seed,  spectra->at(kFDNumuRHC).stats_seed,
+        spectra->at(kNDNumuFHC).stats_seed, spectra->at(kNDNumuRHC).stats_seed};
   }
 
   if (turbose) {
@@ -1321,7 +1359,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     }
 
     if (pot_fd_fhc_nue > 0) {
-      TH1 *data_nue_fhc_hist = spectra->at(0).spect->ToTHX(pot_fd_fhc_nue);
+      TH1 *data_nue_fhc_hist =
+          spectra->at(kFDNueFHC).spect->ToTHX(pot_fd_fhc_nue);
       data_nue_fhc_hist->SetName("data_fd_nue_fhc");
       data_nue_fhc_hist->Write();
       TH1 *pre_fd_nue_fhc = GetMCSystTotal(&predFDNueFHC, fitOsc, fitSyst,
@@ -1331,7 +1370,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_fhc->Write();
     }
     if (pot_fd_fhc_numu > 0) {
-      TH1 *data_numu_fhc_hist = spectra->at(1).spect->ToTHX(pot_fd_fhc_numu);
+      TH1 *data_numu_fhc_hist =
+          spectra->at(kFDNumuFHC).spect->ToTHX(pot_fd_fhc_numu);
       data_numu_fhc_hist->SetName("data_fd_numu_fhc");
       data_numu_fhc_hist->Write();
       TH1 *pre_fd_numu_fhc =
@@ -1342,7 +1382,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_fhc->Write();
     }
     if (pot_fd_rhc_nue > 0) {
-      TH1 *data_nue_rhc_hist = spectra->at(2).spect->ToTHX(pot_fd_rhc_nue);
+      TH1 *data_nue_rhc_hist =
+          spectra->at(kFDNueRHC).spect->ToTHX(pot_fd_rhc_nue);
       data_nue_rhc_hist->SetName("data_fd_nue_rhc");
       data_nue_rhc_hist->Write();
       TH1 *pre_fd_nue_rhc = GetMCSystTotal(&predFDNueRHC, fitOsc, fitSyst,
@@ -1352,7 +1393,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_nue_rhc->Write();
     }
     if (pot_fd_rhc_numu > 0) {
-      TH1 *data_numu_rhc_hist = spectra->at(3).spect->ToTHX(pot_fd_rhc_numu);
+      TH1 *data_numu_rhc_hist =
+          spectra->at(kFDNumuRHC).spect->ToTHX(pot_fd_rhc_numu);
       data_numu_rhc_hist->SetName("data_fd_numu_rhc");
       data_numu_rhc_hist->Write();
       TH1 *pre_fd_numu_rhc =
@@ -1363,8 +1405,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_fd_numu_rhc->Write();
     }
     if (pot_nd_fhc > 0) {
-      TH1 *nd_data_numu_fhc_hist = spectra->at(4).spect->ToTHX(pot_nd_fhc);
-      TH1 *nd_data_numu_fhc_hist_1D = spectra->at(4).spect->ToTH1(pot_nd_fhc);
+      TH1 *nd_data_numu_fhc_hist =
+          spectra->at(kNDNumuFHC).spect->ToTHX(pot_nd_fhc);
+      TH1 *nd_data_numu_fhc_hist_1D =
+          spectra->at(kNDNumuFHC).spect->ToTH1(pot_nd_fhc);
       nd_data_numu_fhc_hist->SetName("data_nd_numu_fhc");
       nd_data_numu_fhc_hist_1D->SetName("data_nd_numu_fhc_1D");
       nd_data_numu_fhc_hist->Write();
@@ -1383,8 +1427,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       pre_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
-      TH1 *nd_data_numu_rhc_hist = spectra->at(5).spect->ToTHX(pot_nd_rhc);
-      TH1 *nd_data_numu_rhc_hist_1D = spectra->at(5).spect->ToTH1(pot_nd_rhc);
+      TH1 *nd_data_numu_rhc_hist =
+          spectra->at(kNDNumuRHC).spect->ToTHX(pot_nd_rhc);
+      TH1 *nd_data_numu_rhc_hist_1D =
+          spectra->at(kNDNumuRHC).spect->ToTH1(pot_nd_rhc);
       nd_data_numu_rhc_hist->SetName("data_nd_numu_rhc");
       nd_data_numu_rhc_hist_1D->SetName("data_nd_numu_rhc_1D");
       nd_data_numu_rhc_hist->Write();

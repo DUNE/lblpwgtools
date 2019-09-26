@@ -59,8 +59,8 @@ RUN mkdir -p /opt/CAFAna-build
 WORKDIR /opt/CAFAna-build/
 RUN mkdir /opt/CAFAna-build/Ext
 WORKDIR /opt/CAFAna-build/Ext
-RUN svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-RUN svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+RUN svn -r 37166 checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+RUN svn -r 37166 checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 WORKDIR /opt/CAFAna-build/Ext/OscLib/func/
 RUN sed -i "s/array_wrapper.hpp/array.hpp/g" /opt/CAFAna-build/Ext/OscLib/func/OscCalculatorGeneral.cxx
 WORKDIR /opt/CAFAna-build/
