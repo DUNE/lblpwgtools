@@ -169,8 +169,8 @@ void asimov_joint(std::string stateFname=def_stateFname,
   int yVal = -999;
   int xVal = -999;
 
-  bool isGlobal = true;  
-  if (plotVarVect.size() == 4) isGlobal = false;
+  bool isSingle = false;
+  if (plotVarVect.size() == 4) isSingle = true;
 
   if (plotVarVect.size() > 0)
     RemovePars(oscVars, {plotVarVect[0]});
@@ -182,8 +182,9 @@ void asimov_joint(std::string stateFname=def_stateFname,
     yVal = stoi(plotVarVect[3]);
   }
 
+  bool isGlobal = false;
   // LoOk LuKe, BrAcKeTs
-  if (yVal == -1 && xVal == -1){
+  if (isSingle && yVal == -1 && xVal == -1){
     isGlobal = true;
     yVal = xVal = 0;
   }
@@ -225,7 +226,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
   // Only do this if you're told to?
   double globalmin = 0;
 
-  if (isGlobal){
+  if (!isSingle || isGlobal){
     globalmin = RunFitPoint(stateFname, sampleString,
 			    trueOsc, trueSyst, false,
 			    oscVarsAll, systlist,
@@ -275,7 +276,7 @@ void asimov_joint(std::string stateFname=def_stateFname,
       IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
       
       double chisqmin = 0;
-      if (!isGlobal){
+      if (!isSingle || !isGlobal){
 	chisqmin = RunFitPoint(stateFname, sampleString,
 			       trueOsc, trueSyst, false,
 			       oscVars, systlist,
