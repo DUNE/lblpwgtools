@@ -17,6 +17,7 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
 
   // First time hook up known fake data dial IDs, logic then in switch
   // statement.
+  // Why is it like this?!
   static int Mnv2p2hGaussEnhancement_id = 0;
   static int Mnv2p2hGaussEnhancement_NN_id = 0;
   static int Mnv2p2hGaussEnhancement_2p2h_id = 0;
@@ -26,6 +27,10 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int FSILikeEAvailSmearing_id = 0;
   static int MissingProtonFakeData_id = 0;
   static int NuWroReweightFakeData_id = 0;
+  static int BeRPA_E_id = 0;
+  static int FormZone_id = 0;
+  static int MFP_pi_id = 0;
+  static int MFP_N_id = 0;
 
   static bool first = true;
   if (first) {
@@ -42,6 +47,11 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     FSILikeEAvailSmearing_id = GetXSecSystIndex("FSILikeEAvailSmearing");
     MissingProtonFakeData_id = GetXSecSystIndex("MissingProtonFakeData");
     NuWroReweightFakeData_id = GetXSecSystIndex("NuWroReweightFakeData");
+    BeRPA_E_id = GetXSecSystIndex("BeRPA_E");
+    FormZone_id = GetXSecSystIndex("FormZone");
+    MFP_pi_id = GetXSecSystIndex("MFP_pi");
+    MFP_N_id = GetXSecSystIndex("MFP_N");
+
   }
 
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
@@ -92,6 +102,14 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     mpfd.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
+  } else if (fID == BeRPA_E_id) {
+    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][2];
+  } else if (fID == FormZone_id) {
+    weight *= sr->dune.xsSyst_wgt[FormZone_id][2];
+  } else if (fID == MFP_pi_id) {
+    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][2];
+  } else if (fID == MFP_N_id) {
+    weight *= sr->dune.xsSyst_wgt[MFP_N_id][2];
   }
 }
 void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
