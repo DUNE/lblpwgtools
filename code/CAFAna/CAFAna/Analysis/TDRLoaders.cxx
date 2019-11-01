@@ -8,7 +8,7 @@ namespace ana
   TDRLoaders::TDRLoaders(FluxType flux)
   {
     // FNAL location
-    std::string base = "/dune/data/users/marshalc/CAFs/";
+    std::string base = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/";
 
     // UCL location
     char host[1024];
@@ -16,7 +16,7 @@ namespace ana
     if(std::string(host).find(".ucl.") != std::string::npos)
       base = "/unix/dune/CAFs/";
 
-    base += "/mcc11_v3/";
+    base += "/v4/";
 
     const std::string hc = (flux == kFHC) ? "FHC" : "RHC";
 
