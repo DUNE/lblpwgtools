@@ -120,4 +120,27 @@ namespace ana
                           return ( sr->dune.mvanumu > -1 );
                         });
 
+  const Cut kIsCC0Pi({}, 
+		     [](const caf::StandardRecord* sr)
+		     {
+		       return ( sr->dune.isCC && (sr->dune.nipip + sr->dune.nipim + sr->dune.nipi0 == 0) );
+		     });
+
+  const Cut kIsCC1Pi({}, 
+		     [](const caf::StandardRecord* sr)
+		     {
+		       return ( sr->dune.isCC && (sr->dune.nipip + sr->dune.nipim + sr->dune.nipi0 == 1) );
+		     });
+
+  const Cut kIsCC2Pi({}, 
+		     [](const caf::StandardRecord* sr)
+		     {
+		       return ( sr->dune.isCC && (sr->dune.nipip + sr->dune.nipim + sr->dune.nipi0 == 2) );
+		     });
+
+  const Cut kIsCC3Pi({}, 
+		     [](const caf::StandardRecord* sr)
+		     {
+		       return ( sr->dune.isCC && (sr->dune.nipip + sr->dune.nipim + sr->dune.nipi0 == 3) );
+		     });
 }
