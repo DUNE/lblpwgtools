@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
+#include "TMath.h"
 #include "CAFAna/Core/Cut.h"
 #include "StandardRecord/StandardRecord.h"
 
@@ -111,6 +113,15 @@ namespace ana
                                  sr->dune.isFD,
                                  sr->dune.vtx_x,sr->dune.vtx_y,sr->dune.vtx_z);
                       });
+
+  // Temporary gas TPC fiducial cut
+  const Cut kIsTrueGasFV({},
+			 [](const caf::StandardRecord* sr)
+			 {
+			   // Approximate TPC centre
+			   double r = TMath::Sqrt(pow(sr->dune.vtx_y + 75, 2) + pow(sr->dune.vtx_z - 955, 2));
+			   return ( r < 200. && abs(sr->dune.vtx_x) < 200 );
+			 });
 
   //ETW 11/5/2018 Fiducial cut using MVA variable
   //Should use the previous one (kIsTrueFV) for nominal analysis
