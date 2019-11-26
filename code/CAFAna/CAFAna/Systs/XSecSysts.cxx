@@ -31,6 +31,7 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int FormZone_id = 0;
   static int MFP_pi_id = 0;
   static int MFP_N_id = 0;
+  static int MaNCEL_id = 0;
 
   static bool first = true;
   if (first) {
@@ -51,7 +52,7 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     FormZone_id = GetXSecSystIndex("FormZone");
     MFP_pi_id = GetXSecSystIndex("MFP_pi");
     MFP_N_id = GetXSecSystIndex("MFP_N");
-
+    MaNCEL_id = GetXSecSystIndex("MaNCEL");
   }
 
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
@@ -103,13 +104,15 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
   } else if (fID == BeRPA_E_id) {
-    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][2];
+    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][0];
   } else if (fID == FormZone_id) {
-    weight *= sr->dune.xsSyst_wgt[FormZone_id][2];
+    weight *= sr->dune.xsSyst_wgt[FormZone_id][0];
   } else if (fID == MFP_pi_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][2];
+    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][0];
   } else if (fID == MFP_N_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_N_id][2];
+    weight *= sr->dune.xsSyst_wgt[MFP_N_id][0];
+  } else if (fID == MaNCEL_id) {
+    weight *= sr->dune.xsSyst_wgt[MaNCEL_id][0];
   }
 }
 void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
