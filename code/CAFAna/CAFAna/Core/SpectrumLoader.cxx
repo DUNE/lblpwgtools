@@ -170,6 +170,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "muon_ecal", &sr.dune.muon_ecal);
   SetBranchChecked(tr, "muon_tracker", &sr.dune.muon_tracker);
   SetBranchChecked(tr, "Ehad_veto", &sr.dune.Ehad_veto);
+  // Gas TPC pion reconstructed multiplicities
+  SetBranchChecked(tr, "gastpc_pi_pl_mult", &sr.dune.gastpc_pi_pl_mult);
+  SetBranchChecked(tr, "gastpc_pi_min_mult", &sr.dune.gastpc_pi_min_mult);
+  SetBranchChecked(tr, "gastpc_pi_0_mult", &sr.dune.gastpc_pi_0_mult);
 
   SetBranchChecked(tr, "Ev", &sr.dune.Ev);
   SetBranchChecked(tr, "Elep", &sr.dune.Elep);
@@ -349,9 +353,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
             std::isinf(XSSyst_cv_tmp[syst_it]) ||
             (XSSyst_cv_tmp[syst_it] == 0)) {
+	  /*
           std::cout << "Warning: " << XSSyst_names[syst_it]
                     << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                     << std::endl;
+	  */
         } else {
           sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
         }
@@ -375,9 +381,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
+	    /*
             std::cout << "Warning: " << XSSyst_names[syst_it]
                       << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                       << std::endl;
+	    */
           } else {
             for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
               XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
@@ -388,9 +396,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
+	    /*
             std::cout << "Warning: " << XSSyst_names[syst_it]
                       << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                       << std::endl;
+	    */
           } else {
             sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
           }

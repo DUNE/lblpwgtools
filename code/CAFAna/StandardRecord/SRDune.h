@@ -31,6 +31,10 @@ namespace caf
     int reco_numu;
     int reco_nue;
     int reco_nc;
+    // Reconstructed pion multiplicities in gas
+    int gastpc_pi_pl_mult;
+    int gastpc_pi_min_mult;
+    int gastpc_pi_0_mult;
 
     // CW: added for the ND cuts Chris (M) wants
     // ND containment flags
