@@ -139,8 +139,28 @@ namespace ana
     //    else{
     //      tr = (TTree*)f->Get("mvaselect/MVASelection");
     //    }
-    tr = (TTree*)f->Get("caf");
-    assert(tr);
+
+    f->GetListOfKeys()->Print();
+
+    if(f->GetListOfKeys()->Contains("cafCrazyFlux")){
+      tr = (TTree*)f->Get("cafCrazyFlux");
+      std::cout<<"--------------------------> having cafCrazyFlux"<<std::endl;
+    }
+    else{
+      tr = (TTree*)f->Get("caf");
+      std::cout<<"--------------------------> having no cafCrazyFlux"<<std::endl;
+    }
+
+    //TTree* tr2;
+    //tr2 = (TTree*)f->Get("nuWroWeights");
+    //assert(tr2);
+
+    //TTree* tr3;
+    //if( f->GetListOfKeys()->Contains("cafCrazyFlux")  ) {
+      //std::cout<<"having cafCrazyFlux"<<std::endl;
+      //tr3 = (TTree*)f->Get("cafCrazyFlux");
+      //assert(tr3);
+    //}
 
     // Surely no-one will generate 1000 universes?
     std::vector<std::array<double, 1000>> genie_tmp;
@@ -195,7 +215,7 @@ namespace ana
     SetBranchChecked(tr, "nipip", &sr.dune.nipip);
     SetBranchChecked(tr, "nipim", &sr.dune.nipim);
     SetBranchChecked(tr, "Q2", &sr.dune.Q2);
-    SetBranchChecked(tr, "W", &sr.dune.W);
+    //SetBranchChecked(tr, "W", &sr.dune.W);
     SetBranchChecked(tr, "Y", &sr.dune.Y);
     SetBranchChecked(tr, "X", &sr.dune.X);
     //    SetBranchChecked(tr, "cc", &sr.dune.cc);
@@ -245,6 +265,9 @@ namespace ana
     SetBranchChecked(tr, "sigma_Elep_reco", &sr.dune.sigma_Elep_reco);
     SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
     SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
+
+    //SetBranchChecked(tr2, "NuWroWeight", &sr.dune.W);
+    SetBranchChecked(tr, "wgt_CrazyFlux", &sr.dune.wgt_CrazyFlux);
 
     // GENIE uncertainties and CVs
     sr.dune.genie_wgt    .resize(genie_names.size());
@@ -389,6 +412,7 @@ namespace ana
       // Can special-case nominal to not pay cost of Shift() or Restorer
       if(!shift.IsNominal()){
         restore = new Restorer;
+        //std::cout<<"systWeight "<<systWeight<<std::endl;
         shift.Shift(*restore, sr, systWeight);
         // Did the Shift actually modify the event at all?
         shifted = !restore->Empty();

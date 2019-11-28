@@ -28,6 +28,7 @@
 #include "TTree.h"
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Vars/FitVars.h"
+#include "CAFAna/Systs/CrazyFluxFakeData.h"
 
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
@@ -228,7 +229,7 @@ void RemoveSysts(std::vector<const ISyst *> &systlist,
 std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true, bool detsyst=true,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 bool useMissingProtonFakeData=true){
+				 bool useMissingProtonFakeData=true, bool useCrazyFlux=true){
   // This doesn't need to be an argument because I basically never change it:
   bool fluxXsecPenalties = true;
 
@@ -261,6 +262,11 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
     systlist.push_back(GetMissingProtonEnergyFakeDataSyst().front());
   }
 
+  if(useCrazyFlux){
+     std::cout<<"********* included CrazyFlux in systlist"<<std::endl;
+     systlist.push_back(GetCrazyFluxFakeDataSyst().front());
+  }
+
   // For now, hard code this part... too many damned scripts to change...
   RemoveSysts(systlist, {"eScaleND","eScaleMuLArND", "eScaleMuND", "ChargedHadCorr", "ChargedHadAnticorrSyst",
 	"eScaleN_ND", "EMUncorrND", "MuonResND","EMResND", "ChargedHadResND", "UncorrNDHadLinSyst", "UncorrNDPi0LinSyst",
@@ -274,7 +280,7 @@ std::vector<const ISyst*> GetListOfSysts(bool fluxsyst=true, bool xsecsyst=true,
 std::vector<const ISyst*> GetListOfSysts(std::string systString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false, bool useCrazyFlux=false){
   bool detsyst  = false;
   bool fluxsyst = false;
   bool xsecsyst = false;
@@ -312,6 +318,8 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
     detsyst = true;
   }
   if (systString.find("prot_fakedata") != std::string::npos) {useMissingProtonFakeData = true;}
+
+  if (systString.find("crazyFlux") != std::string::npos) {useCrazyFlux = true;}
   // This might need more thought because of the above... but...
   if (systString.find("nodet") != std::string::npos){
     xsecsyst = true;
@@ -331,13 +339,13 @@ std::vector<const ISyst*> GetListOfSysts(std::string systString,
 
   // Just convert this to the usual function
   return GetListOfSysts(fluxsyst, xsecsyst, detsyst,
-			useND, useFD, useNueOnE, useMissingProtonFakeData);
+			useND, useFD, useNueOnE, useMissingProtonFakeData, useCrazyFlux);
 }
 
 std::vector<const ISyst*> GetListOfSysts(char const *systCString,
 					 bool useND=true, bool useFD=true,
 					 bool useNueOnE=false,
-				 	 bool useMissingProtonFakeData=false){
+				 	 bool useMissingProtonFakeData=false, bool useCrazyFlux=false){
 						 return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
 					 }
 

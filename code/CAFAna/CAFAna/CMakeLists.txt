@@ -55,6 +55,8 @@ LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ
 ################################## COMPILER ####################################
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 
+set (CMAKE_CXX_STANDARD 14)
+
 ################################################################################
 
 include(${CMAKE_SOURCE_DIR}/cmake/NOvAExternals.cmake)

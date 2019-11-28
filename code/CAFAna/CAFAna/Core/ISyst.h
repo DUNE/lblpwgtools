@@ -19,6 +19,7 @@ namespace ana
   class ISyst
   {
   public:
+    ISyst();
     ISyst(const std::string& shortName,
           const std::string& latexName,
 	  bool applyPenalty = true,

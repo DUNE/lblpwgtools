@@ -93,7 +93,7 @@ else
     export BOOST_INC=/usr/include
   else
     echo "[ERROR]: Not using UPS, but couldn't find system boost (/usr/include/boost) and BOOST_INC wasn't defined in the environment."
-    exit 1
+    #exit 1
   fi
 
 fi

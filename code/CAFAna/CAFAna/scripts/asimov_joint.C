@@ -115,9 +115,9 @@ TH1* GetAsimovHist(std::vector<std::string> plotVarVect){
 void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
 		  std::string outputFname="asimov_test.root",
 		  std::string plotVars="th13:deltapi",
-		  std::string systSet = "nosyst",
-		  std::string sampleString="ndfd", std::string penaltyString="",int asimov_set=0
-		  bool useProtonFakeData=false){
+		  std::string systSet = "nosystCrazyFlux",
+		  std::string sampleString="ndfd", std::string penaltyString="",int asimov_set=0,
+		  bool useProtonFakeData=false, bool useCrazyFlux=true){
 
   gROOT->SetBatch(1);
 
@@ -154,6 +154,10 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
     if(useProtonFakeData){
       trueSyst.SetShift(GetMissingProtonEnergyFakeDataSyst().front(),1);
     }
+    if(useCrazyFlux){
+      trueSyst.SetShift(GetCrazyFluxFakeDataSyst().front(),1);
+    }
+
     SystShifts testSyst = kNoShift;
 
     std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
@@ -256,3 +260,8 @@ void asimov_joint(std::string stateFname="common_state_mcc11v3_broken.root",
   }
   fout->Close();
 }
+
+#ifndef __CINT__
+int main(int argc, char const *argv[]) {
+}
+#endif

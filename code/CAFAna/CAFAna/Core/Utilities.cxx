@@ -133,7 +133,7 @@ namespace ana
     // event gives a chisq from this one bin of 182.
     const double minexp = 1e-40; // Don't let expectation go lower than this
 
-    assert(o >= 0);
+    //assert(o >= 0);
     if(e < minexp){
       if(!o) return 0;
       e = minexp;

@@ -9,7 +9,8 @@ set(Systs_implementation_files
   NDRecoSysts.cxx
   NuOnESysts.cxx
   SystComponentScale.cxx
-  Systs.cxx)
+  Systs.cxx
+)
 
 set(Systs_header_files
   DUNEFluxSysts.h
@@ -23,7 +24,8 @@ set(Systs_header_files
   NuOnESysts.h
   SystComponentScale.h
   Systs.h
-  MissingProtonFakeData.h)
+  MissingProtonFakeData.h
+  CrazyFluxFakeData.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts)
@@ -40,7 +42,7 @@ set(SYST_INPUT_ROOT_FILES
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root
-  ND_syst_cov_withEscale.root
+  #ND_syst_cov_withEscale.root
   ND_syst_cov_withRes.root)
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)

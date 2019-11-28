@@ -141,6 +141,14 @@ namespace caf
     double sigma_nue_pid;
     double total_cv_wgt;
 
+    double nuwro_wgt;
+    double wgt_CrazyFlux;
+    double wgt_CrazyFlux2[100];
+    std::vector<double>* wgt_CrazyFlux3;
+    float wgt_CrazyFlux4[100];
+    float* wgt_CrazyFlux5;
+
+
     // First index is systematic ID
     std::vector<std::vector<double>> genie_wgt;
     std::vector<double> genie_cv_wgt;
