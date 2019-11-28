@@ -131,6 +131,8 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   return returnHist;
 }
 
+//TGraph *GetFitPoint()
+
 char const *def_stateFname = "common_state_mcc11v3_broken.root";
 char const *def_outputFname = "asimov_test.root";
 char const *def_plotVars = "th13:deltapi";
@@ -241,6 +243,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
                             oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
   }
   delete penalty_nom;
+  delete testOsc;
   std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
 
   // Need to set up the histogram to fill
@@ -300,7 +303,9 @@ void asimov_joint(std::string stateFname = def_stateFname,
         asimov_tree.throw_tree->Branch("yName", &plotVarVect[1]);
       asimov_tree.Fill();
       sens_hist->SetBinContent(xBin + 1, yBin + 1, chisqdiff);
+
       delete penalty;
+      delete testOsc;
 
       if (isSinglePoint) { // exit early if we are only running 1 point
         break;
