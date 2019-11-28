@@ -31,6 +31,7 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int FormZone_id = 0;
   static int MFP_pi_id = 0;
   static int MFP_N_id = 0;
+  static int MaNCEL_id = 0;
 
   static bool first = true;
   if (first) {
@@ -51,65 +52,40 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     FormZone_id = GetXSecSystIndex("FormZone");
     MFP_pi_id = GetXSecSystIndex("MFP_pi");
     MFP_N_id = GetXSecSystIndex("MFP_N");
-
+    MaNCEL_id = GetXSecSystIndex("MaNCEL");
   }
 
+  // This is a bit hacky, but for fake data dials which have discrete +/- values, try the +/-3 sigma values
+  int posneg_spline_point = 6;
+  if (sigma < 0) posneg_spline_point = 0;
+
+  // Do something special with the Mnv stuff
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
     weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4];
-    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4] != 1) {
-    //   std::cout << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_NN = "
-    //             << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4]
-    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == Mnv2p2hGaussEnhancement_2p2h_id) {
     weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3];
-    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3] != 1) {
-    //   std::cout
-    //       << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_2p2h = "
-    //       << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3]
-    //       << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == Mnv2p2hGaussEnhancement_1p1h_id) {
     weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2];
-    // if (sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2] != 1) {
-    //   std::cout
-    //       << "[INFO]: Fake data Weight for Mnv2p2hGaussEnhancement_1p1h = "
-    //       << sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2]
-    //       << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == MKSPP_ReWeight_id) {
     weight *= sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2];
-    // if (sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2] != 1) {
-    //   std::cout << "[INFO]: Fake data Weight for MKSPP_ReWeight = "
-    //             << sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2]
-    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == SPPLowQ2Suppression_id) {
     weight *= sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2];
-    // if (sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2] != 1) {
-    //   std::cout << "[INFO]: Fake data Weight for SPPLowQ2Suppression = "
-    //             << sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2]
-    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == FSILikeEAvailSmearing_id) {
     weight *= sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2];
-    // if (sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2] != 1) {
-    //   std::cout << "[INFO]: Fake data Weight for FSILikeEAvailSmearing = "
-    //             << sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2]
-    //             << ", mode = " << sr->dune.GENIE_ScatteringMode << std::endl;
-    // }
   } else if (fID == MissingProtonFakeData_id) {
     mpfd.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
   } else if (fID == BeRPA_E_id) {
-    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][2];
+    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][posneg_spline_point];
   } else if (fID == FormZone_id) {
-    weight *= sr->dune.xsSyst_wgt[FormZone_id][2];
+    weight *= sr->dune.xsSyst_wgt[FormZone_id][posneg_spline_point];
   } else if (fID == MFP_pi_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][2];
+    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][posneg_spline_point];
   } else if (fID == MFP_N_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_N_id][2];
+    weight *= sr->dune.xsSyst_wgt[MFP_N_id][posneg_spline_point];
+  } else if (fID == MaNCEL_id) {
+    weight *= sr->dune.xsSyst_wgt[MaNCEL_id][posneg_spline_point];
   }
 }
 void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
@@ -127,7 +103,6 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
 
   if (IsFakeDataGenerationSyst(
           fID)) { // Separate out hard coded logic for fake data dials.
-    assert(fabs(sigma - 1) < 1E-5);
     FakeDataDialShift(sigma, restore, sr, weight);
     return;
   }
