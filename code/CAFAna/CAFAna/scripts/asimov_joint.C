@@ -131,7 +131,39 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   return returnHist;
 }
 
-//TGraph *GetFitPoint()
+// This function finds OA parameters by name, and returns the value from a calculator
+double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
+
+  if (name == "th13")
+    return calc->GetTh13();
+  else if (name == "deltapi")
+    return calc->GetdCP()/TMath::Pi();
+  else if (name == "dmsq32scaled" or name == "dmsq32")
+    return calc->GetDmsq32();
+  else if (name == "ssth23")
+    return sin(calc->GetTh23())*sin(calc->GetTh23());
+  else if (name == "ss2th12")
+    return sin(2*calc->GetTh12())*sin(2*calc->GetTh12());
+  else if (name == "dmsq21")
+    return calc->GetDmsq21();
+  else if (name == "rho")
+    return calc->GetRho(); 
+  return 0;
+}
+
+TGraph* GetFitPoint(std::vector<std::string> plotVarVect, osc::IOscCalculatorAdjustable *oscCalc){
+  
+  // Get the values of the x and y co-ordinate. If this is 1-D, y=0
+  double xVal = 0;
+  double yVal = 0;
+  
+  if (plotVarVect.size() > 0) xVal = FindOscVal(oscCalc, plotVarVect[0]);
+  if (plotVarVect.size() > 1) yVal = FindOscVal(oscCalc, plotVarVect[1]);
+
+  // Now make a TGraph to return
+  TGraph *ret = new TGraph(1, &xVal, &yVal);
+  return ret;
+}
 
 char const *def_stateFname = "common_state_mcc11v3_broken.root";
 char const *def_outputFname = "asimov_test.root";
@@ -184,15 +216,13 @@ void asimov_joint(std::string stateFname = def_stateFname,
     xVal = stoi(plotVarVect[2]);
   if (plotVarVect.size() > 3) {
     isSinglePoint = true;
-    isGlobal = false;
     yVal = stoi(plotVarVect[3]);
   }
 
-  // LoOk LuKe, BrAcKeTs
-  if (yVal == -1 && xVal == -1) {
-    isGlobal = true;
-    yVal = xVal = 0;
-  }
+  // Should we save the best fit information as a TGraph?
+  bool saveBestFit = true;
+  if (xVal > 0) saveBestFit = false;
+  if (isSinglePoint) saveBestFit = true;
 
   // One man's continuing struggle with hacky fixes stemming from the
   // oscillation probability being buggy as hell
@@ -208,6 +238,13 @@ void asimov_joint(std::string stateFname = def_stateFname,
   // This remains the same throughout... there is one true parameter set for
   // this Asimov set
   osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+
+  // Save the true value
+  if (saveBestFit){
+    TGraph *true_point = GetFitPoint(plotVarVect, trueOsc);
+    true_point->Write("true_point");
+    delete true_point;
+  }
 
   // Save the true information
   SaveTrueOAParams(fout, trueOsc);
@@ -241,6 +278,14 @@ void asimov_joint(std::string stateFname = def_stateFname,
     globalmin = RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                             oscVarsAll, systlist, testOsc, testSyst,
                             oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
+    
+    // Save this info
+    if (saveBestFit){
+      fout->cd();
+      TGraph *best_fit = GetFitPoint(plotVarVect, testOsc);
+      best_fit->Write("best_fit");
+      delete best_fit;
+    }
   }
   delete penalty_nom;
   delete testOsc;
