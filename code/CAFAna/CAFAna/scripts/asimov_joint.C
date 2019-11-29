@@ -137,7 +137,8 @@ double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
   if (name == "th13")
     return calc->GetTh13();
   else if (name == "deltapi")
-    return calc->GetdCP()/TMath::Pi();
+    // return a value in [-1,1]
+    return fmod(calc->GetdCP()/TMath::Pi()+1, 2)-1;
   else if (name == "dmsq32scaled" or name == "dmsq32")
     return calc->GetDmsq32();
   else if (name == "ssth23")
