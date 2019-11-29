@@ -454,6 +454,16 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   return retlist;
 }
 
+/*
+  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
+  points used for normal dials, they have fixed values for non-zero values of the 
+  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same 
+  value. Some are set so all negative (positive) values give a -3 (+3) sigma 
+  variation, which is why there's some messing around in the function below.
+  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift, 
+  which is called only when creating the input CAFs. This is almost certainly not 
+  optimal, but is easy to extend for other dials.
+ */
 SystShifts GetFakeDataGeneratorSystShift(std::string input) {
 
   // Default to nominal
