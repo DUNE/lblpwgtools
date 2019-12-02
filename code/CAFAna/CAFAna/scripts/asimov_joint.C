@@ -50,12 +50,12 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
     max = 1;
   }
   if (parName == "dmsq32scaled" or parName == "dmsq32") {
-    nBins = 200;
+    nBins = 20;
     min = 2.25;
     max = 2.65;
   }
   if (parName == "ssth23") {
-    nBins = 200;
+    nBins = 24;
     min = 0.38;
     max = 0.62;
   }
