@@ -1,1 +1,13 @@
 *_C_ACLiC_dict_rdict.pcm
+OscLib/
+Systs/Makefile
+Systs/cmake_install.cmake
+Systs/newKnob/
+Utilities/
+build/
+scripts/Qsub/
+scripts/output_contour2.root
+scripts/output_test.root
+scripts/output_test2.root
+scripts/output_test_contour.root
+scripts/output_test_contour2.root

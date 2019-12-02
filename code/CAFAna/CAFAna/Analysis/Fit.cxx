@@ -119,6 +119,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
 
   if ((fPrec & kAlgoMask) == kGradDesc) {
     mnMin = std::make_unique<GradientDescent>(*this);
+    //exit(1); std::cout<<"you are not supposed to be here.. In /gpfs/projects/McGrewGroup/gyang/lblpwgtools/code/CAFAna/CAFAna/Analysis/Fit.cxx"<<std::endl;
   } else {
     mnMin = std::unique_ptr<ROOT::Math::Minimizer>(
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));

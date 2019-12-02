@@ -239,6 +239,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
   SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
+  SetBranchChecked(tr, "wgt_CrazyFlux", &sr.dune.wgt_CrazyFlux);
+
   // XSec uncertainties and CVs
   std::vector<std::array<double, 100>> XSSyst_tmp;
   std::vector<double> XSSyst_cv_tmp;

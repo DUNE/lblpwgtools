@@ -16,6 +16,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Systs/CrazyFluxFakeData.h"
 
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"
@@ -251,6 +252,9 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     KeepSysts(xseclist, GetFakeDataGenerationSystNames());
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
   }
+
+  std::cout<<"********* included CrazyFlux in systlist"<<std::endl;
+  systlist.push_back(GetCrazyFluxFakeDataSyst().front());
 
   return systlist;
 }

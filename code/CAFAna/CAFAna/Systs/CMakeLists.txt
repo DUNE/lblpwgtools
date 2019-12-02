@@ -9,6 +9,7 @@ set(Systs_implementation_files
   NDRecoSysts.cxx
   NuOnESysts.cxx
   SystComponentScale.cxx
+  CrazyFluxFakeData.cxx
   Systs.cxx)
 
 set(Systs_header_files
@@ -36,6 +37,7 @@ set(Systs_header_files
   GeneratorReweight_numu_ND_RHC.h
   MissingProtonFakeData_BDTRW_FHC.h
   MissingProtonFakeData_BDTRW_RHC.h
+  CrazyFluxFakeData.h
   NuWroReweightFakeData.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})

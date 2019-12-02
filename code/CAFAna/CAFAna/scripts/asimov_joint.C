@@ -1,4 +1,5 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Systs/CrazyFluxFakeData.h"
 
 using namespace ana;
 
@@ -215,7 +216,8 @@ void asimov_joint(std::string stateFname = def_stateFname,
   osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
-  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
+  //SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
+  SystShifts trueSyst;  trueSyst.SetShift(GetCrazyFluxFakeDataSyst().front(),1);
   SystShifts testSyst = kNoShift;
 
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
