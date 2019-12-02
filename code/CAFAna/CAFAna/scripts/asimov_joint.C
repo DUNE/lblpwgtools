@@ -266,11 +266,16 @@ void asimov_joint(std::string stateFname = def_stateFname,
     yMax = yVal + 1;
   }
 
+  std::cout << "****Looping over " << ((xMax - xMin) * (yMax - yMin)) << " bins" << std::endl;
+
   // Loop over whatever bins you're supposed to
+  int bestIdx = -1;
+  double bestChisq = std::numeric_limits<double>::infinity();
   for (int xBin = xMin; xBin < xMax; ++xBin) {
     double xCenter = sens_hist->GetXaxis()->GetBinCenter(xBin + 1);
 
     for (int yBin = yMin; yBin < yMax; ++yBin) {
+      int binIdx = (xBin - xMin) * (yMax - yMin) + (yBin - yMin);
       double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin + 1);
 
       osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
@@ -284,7 +289,13 @@ void asimov_joint(std::string stateFname = def_stateFname,
       double chisqmin =
           RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                       oscVars, systlist, testOsc, testSyst, oscSeeds, penalty,
-                      Fitter::kNormal, nullptr, &asimov_tree);
+                      Fitter::kNormal, fout->mkdir(Form("fake_data_%i", binIdx)), &asimov_tree);
+
+      if (chisqmin < bestChisq)
+      {
+        bestChisq = chisqmin;
+        bestIdx = binIdx;
+      }
 
       // Save relevant values into the tree and histogram
       double chisqdiff = chisqmin - globalmin;
@@ -309,6 +320,18 @@ void asimov_joint(std::string stateFname = def_stateFname,
     if (isGlobal &&
         isSinglePoint) { // exit early if we are only running 1 point
       break;
+    }
+  }
+
+  if (bestIdx >= 0)
+  {
+    TString bestIdxName(Form("fake_data_%i", bestIdx));
+    for (auto key : *fout->GetListOfKeys())
+    {
+      TString name(key->GetName());
+      if (name.BeginsWith("fake_data") && name != bestIdxName)
+        fout->rmdir(name);
+
     }
   }
 
