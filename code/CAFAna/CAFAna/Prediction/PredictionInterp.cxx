@@ -692,6 +692,9 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir)
   {
+    if (!dir)
+      return std::unique_ptr<PredictionInterp>(nullptr);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "PredictionInterp" ||
