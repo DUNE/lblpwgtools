@@ -644,9 +644,18 @@ GetPredictionInterps(std::string fileName,
     assert(fin && !fin->IsZombie());
     std::cout << "[LOAD]: Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
-    return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+
+    if (auto *ptr = fin->GetDirectory(sample_dir_order[s_it].c_str()))
+      return_list.emplace_back(LoadFrom<PredictionInterp>(ptr));
+    else {
+      std::cout << "[LOAD]: Sample " << sample_dir_order[s_it] << " couldn't be loaded." << std::endl;
+      std::cout << "        Will try to proceed without it..." << std::endl;
+      return_list.emplace_back(std::unique_ptr<PredictionInterp>(nullptr));
+    }
     delete fin;
+
+    if (!return_list.back())
+      continue;
 
     std::vector<ana::ISyst const *> systs_to_remove =
         return_list.back()->GetAllSysts();
