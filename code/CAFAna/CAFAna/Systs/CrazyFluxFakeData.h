@@ -12,18 +12,19 @@
 #include <string>
 #include <vector>
 
-#include "StandardRecord/StandardRecord.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
 
 class CrazyFluxFakeDataGenerator : public ana::ISyst {
 public:
+
   virtual ~CrazyFluxFakeDataGenerator(){};
 
   std::vector<std::unique_ptr<TH2>> nu_Histos;
   std::vector<std::unique_ptr<TH2>> nubar_Histos;
 
+  double EpFrac;
   bool fDoWeight;
 
   TH2 const *GetWeightingHisto(int gmode, bool is_nu) const {
@@ -51,7 +52,7 @@ public:
       //return;
     }
 
-    if(sr->dune.wgt_CrazyFlux < 0.01 || sr->dune.wgt_CrazyFlux > 100 || !sr->dune.nuPDG>0) weight *= 1;
+    if(sr->dune.wgt_CrazyFlux < 0.01 || sr->dune.wgt_CrazyFlux > 100 || sr->dune.nuPDG>0) weight *= 1;
     else weight *= sr->dune.wgt_CrazyFlux;
   }
 
@@ -65,11 +66,12 @@ public:
         EpFrac(epfrac), fDoWeight(DoWeight) {
   }
 
-  double EpFrac;
-};
-//std::vector<const ana::ISyst *> GetCrazyFluxFakeDataSyst();
+  //std::vector<const ana::ISyst *> GetCrazyFluxFakeDataSyst() ;
 
-std::vector<const ana::ISyst *> GetCrazyFluxFakeDataSyst() {
+};
+
+std::vector<const ana::ISyst *> GetCrazyFluxFakeDataSyst() 
+{
   static CrazyFluxFakeDataGenerator mpfd;
   return {&mpfd};
 }
