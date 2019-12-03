@@ -41,7 +41,7 @@ namespace ana
     /// \param ymax Maximum value of y axis
     /// \param profVars Oscillation parameters to profile over
     /// \param profSysts Systematic parameters to profile over
-    /// \param seedPts Try all combinations of these params as seeds
+    /// \param seedPts List of oscillation seeds
     /// \param systSeedPts Try all of these systematic combinations as seeds
     /// \param parallel Use all the cores on this machine? Be careful...
     Surface(const IExperiment* expt,
@@ -50,7 +50,7 @@ namespace ana
             const IFitVar* yvar, int nbinsy, double ymin, double ymax,
             const std::vector<const IFitVar*>& profVars = {},
             const std::vector<const ISyst*>& profSysts = {},
-            const std::map<const IFitVar*, std::vector<double>>& seedPts = {},
+            const SeedList& seedPts = SeedList(),
             const std::vector<SystShifts>& systSeedPts = {},
             bool parallel = false,
             Fitter::Precision prec = Fitter::kNormal);
@@ -95,7 +95,7 @@ namespace ana
                      const IFitVar* xvar, const IFitVar* yvar,
                      const std::vector<const IFitVar*>& profVars,
                      const std::vector<const ISyst*>& profSysts,
-                     const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                     const SeedList& seedPts,
                      const std::vector<SystShifts>& systSeedPts);
 
     void FillSurfacePoint(const IExperiment* expt,
@@ -104,7 +104,7 @@ namespace ana
                           const IFitVar* yvar, double y,
                           const std::vector<const IFitVar*>& profVars,
                           const std::vector<const ISyst*>& profSysts,
-                          const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                          const SeedList& seedPts,
                           const std::vector<SystShifts>& systSeedPts);
 
     bool fParallel;
