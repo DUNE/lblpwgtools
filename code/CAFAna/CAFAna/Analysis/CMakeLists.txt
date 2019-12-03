@@ -6,7 +6,7 @@ set(Analysis_implementation_files
   Plots.cxx
   Resolution.cxx
   Surface.cxx
-  # TDRLoaders.cxx
+  TDRLoaders.cxx
   SeedList.cxx
   RefineSeeds.cxx
   AnalysisBinnings.cxx
@@ -23,7 +23,7 @@ set(Analysis_header_files
   Plots.h
   Resolution.h
   Surface.h
-  # TDRLoaders.h
+  TDRLoaders.h
   Exposures.h
   Style.h
   SeedList.h
