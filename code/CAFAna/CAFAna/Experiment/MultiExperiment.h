@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Experiment/IExperiment.h"
+#include "TMatrixD.h"
 
 #include <memory>
 #include <vector>
@@ -14,12 +15,22 @@ namespace ana
     MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
+      fUseCovMx.resize(expts.size(), false);
     }
 
     void Add(const IExperiment* expt){
-      fExpts.push_back(expt); 
+      fExpts.push_back(expt);
+      fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
     }
+
+    void AddCovarianceMatrix(const std::string covMatFileName,
+                             const std::string covMatName,
+                             const bool preInvert,
+                             const std::vector<int> &expt_idxes);
+    void AddCovarianceMatrix(TMatrixD *,
+                             const bool preInvert,
+                             const std::vector<int> &expt_idxes);
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
@@ -47,7 +58,16 @@ namespace ana
 
   protected:
     std::vector<const IExperiment*> fExpts;
+    std::vector<bool> fUseCovMx; // is there a covariance matrix for this Experiment?
 
     std::vector<std::vector<std::pair<const ISyst*, const ISyst*>>> fSystCorrelations;
+
+    // vectors with one entry per covariance matrix
+    // there can be fewer matrices than there are experiments
+    // one covariance matrix can cover several experiments
+    std::vector<TMatrixD*> fCovMx;
+    std::vector<TMatrixD*> fCovMxInv;
+    std::vector<bool> fPreInvert;
+    std::vector<std::vector<int>> fCovMxExpIdx;
   };
 }

@@ -1,21 +1,23 @@
-#include "common_fit_definitions.C"
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
+using namespace ana;
 
 void bin_splines(std::string stateFname="common_state_mcc11v3.root",
 		 std::string outputFname="bin_splines_mcc11v3.root"){
   
   gROOT->SetBatch(1);
   
-  // Get the systematics to use
-  std::vector<const ISyst*> systlist = GetListOfSysts();
-  
   // Get the prediction interpolators
-  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, systlist);
+  std::vector<unique_ptr<PredictionInterp> > return_list = GetPredictionInterps(stateFname, GetListOfSysts());
   PredictionInterp& predInterpFDNumuFHC = *return_list[0].release();
   PredictionInterp& predInterpFDNueFHC  = *return_list[1].release();
   PredictionInterp& predInterpFDNumuRHC = *return_list[2].release();
   PredictionInterp& predInterpFDNueRHC  = *return_list[3].release();
   PredictionInterp& predInterpNDNumuFHC = *return_list[4].release();
   PredictionInterp& predInterpNDNumuRHC = *return_list[5].release();
+
+  // Get the systematics that the PredictionInterps use
+  std::vector<const ISyst*> systlist = OrderListOfSysts(predInterpFDNumuFHC.GetAllSysts());
 
   // There must be a better way
   std::vector<std::tuple<std::string, PredictionInterp*, double> > sampleList = {
@@ -29,6 +31,8 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
 
   // Open 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
+  SaveParams(fout, systlist);
+
   osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
 
   // Loopy loopy loopy loop

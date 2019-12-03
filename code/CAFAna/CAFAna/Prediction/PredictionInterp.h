@@ -2,13 +2,13 @@
 
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
+#include "CAFAna/Prediction/PredictionInterpKernel.h"
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
 
 #include <map>
 #include <memory>
-#include <unordered_map>
 
 #include "TMD5.h"
 
@@ -109,16 +109,18 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {}
+    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {
+      if(getenv("CAFANA_PRED_MINMCSTATS")){
+        fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
+      } else {
+        fMinMCStats = 50;
+      }
+    }
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 			     std::vector<const ISyst*> veto = {});
 
-    struct Coeffs{
-      Coeffs(double _a, double _b, double _c, double _d)
-        : a(_a), b(_b), c(_c), d(_d) {}
-      double a, b, c, d;
-    };
+    typedef ana::PredIntKern::Coeffs Coeffs;
 
     /// Find coefficients describing this set of shifts
     std::vector<std::vector<Coeffs>>
@@ -128,7 +130,7 @@ namespace ana
     /// Find coefficients describing the ratios from this component
     std::vector<std::vector<Coeffs>>
     FitComponent(const std::vector<double>& shifts,
-                 const std::vector<IPrediction*>& preds,
+                 const std::vector<std::unique_ptr<IPrediction>>& preds,
                  Flavors::Flavors_t flav,
                  Current::Current_t curr,
                  Sign::Sign_t sign,
@@ -156,7 +158,7 @@ namespace ana
 
       std::string systName; ///< What systematic we're interpolating
       std::vector<double> shifts; ///< Shift values sampled
-      std::vector<IPrediction*> preds;
+      std::vector<std::unique_ptr<IPrediction>> preds;
 
       int nCoeffs; // Faster than calling size()
 
@@ -169,10 +171,52 @@ namespace ana
       // [type][shift bin][histogram bin]. TODO this is ugly
       std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
+      ShiftedPreds() {}
+      ShiftedPreds(ShiftedPreds &&other)
+          : systName(std::move(other.systName)),
+            shifts(std::move(other.shifts)), preds(std::move(other.preds)),
+            nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
+            fitsNubar(std::move(other.fitsNubar)),
+            fitsRemap(std::move(other.fitsRemap)),
+            fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
+
+      ShiftedPreds &operator=(ShiftedPreds &&other) {
+        systName = std::move(other.systName);
+        shifts = std::move(other.shifts);
+        preds = std::move(other.preds);
+        nCoeffs = other.nCoeffs;
+        fits = std::move(other.fits);
+        fitsNubar = std::move(other.fitsNubar);
+        fitsRemap = std::move(other.fitsRemap);
+        fitsNubarRemap = std::move(other.fitsNubarRemap);
+        return *this;
+      }
+
+      void Dump(){
+        std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
+      }
     };
 
+    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+    void DiscardSysts(std::vector<ISyst const *>const &);
+    //Get all known about systs
+    std::vector<ISyst const *> GetAllSysts() const;
+
   protected:
-    mutable std::unordered_map<const ISyst*, ShiftedPreds> fPreds;
+    using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
+    mutable std::vector<PredMappedType> fPreds;
+    std::vector<PredMappedType>::iterator find_pred(const ISyst *s) const {
+      return std::find_if(
+          fPreds.begin(), fPreds.end(),
+          [=](PredMappedType const &p) { return bool(s == p.first); });
+    }
+    ShiftedPreds const &get_pred(const ISyst *s) const {
+      return std::find_if(fPreds.begin(), fPreds.end(),
+                       [=](PredMappedType const &p) {
+                         return bool(s == p.first);
+                       })
+          ->second;
+    }
 
     /// The oscillation values we assume when evaluating the coefficients
     osc::IOscCalculator* fOscOrigin;
@@ -198,6 +242,9 @@ namespace ana
     mutable std::map<Key_t, Val_t> fNomCache;
 
     bool fSplitBySign;
+
+    // Don't apply systs to bins with fewer than this many MC stats
+    double fMinMCStats;
 
     void InitFits() const;
 

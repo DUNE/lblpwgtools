@@ -1,4 +1,4 @@
-#include "CAFAna/Systs/GenieSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
 
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
@@ -28,7 +28,7 @@ const Var kRecoE_ND = SIMPLEVAR(dune.Ev_reco);
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
 const HistAxis axRecoEnuNDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_ND);
 
-const Var kGENIEWeights = SIMPLEVAR(dune.total_cv_wgt);
+const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt);
 
 std::vector<const ISyst*> GetListOfSysts(bool nd)
 {
@@ -49,7 +49,7 @@ std::vector<const ISyst*> GetListOfSysts(bool nd)
     systlist.insert(systlist.end(), detlist_dis.begin(), detlist_dis.end());
   }
 
-  std::vector<const ISyst*> xseclist = GetGenieSysts({}, true);
+  std::vector<const ISyst*> xseclist = GetXSecSysts({}, true);
   systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
 
   return systlist;
@@ -67,10 +67,10 @@ void test_systs(bool nd = false, bool reload = false)
 
     IPredictionGenerator* gen = 0;
     if(nd){
-      gen = new NoOscPredictionGenerator(axRecoEnuNDnumu, kPassND_FHC_NUMU, kGENIEWeights);
+      gen = new NoOscPredictionGenerator(axRecoEnuNDnumu, kPassND_FHC_NUMU, kCVXSecWeights);
     }
     else{
-      gen = new NoExtrapPredictionGenerator(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kGENIEWeights);
+      gen = new NoExtrapPredictionGenerator(axRecoEnuFDnumu, kPassFD_CVN_NUMU && kIsTrueFV, kCVXSecWeights);
     }
 
     PredictionInterp pred(systs, calc, *gen, loaders);

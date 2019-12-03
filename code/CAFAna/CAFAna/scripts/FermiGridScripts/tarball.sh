@@ -17,6 +17,8 @@ fi
 
 mkdir tar_state; cd tar_state
 cp -r ${CAFANA} ./CAFAna
+cp -r /dune/data/users/picker24/CAFAnaStateFiles/v4_all CAFAna/scripts/.
+
 if [ ! -z "${EXTRA_SCRIPT_NAME}" ]; then
   cp ${EXTRA_SCRIPT_NAME} CAFAna/scripts/
   echo "[INFO]: ls CAFAna/scripts/"
@@ -25,6 +27,9 @@ fi
 if [ -e ../CAFECommands.cmd ]; then
   cp ../CAFECommands.cmd CAFAna/
 fi
+
+cp ../InputCAFs.*.list CAFAna/
+
 tar -zcvf CAFAna.Blob.tar.gz CAFAna/*
 cd ..
 mv tar_state/CAFAna.Blob.tar.gz .

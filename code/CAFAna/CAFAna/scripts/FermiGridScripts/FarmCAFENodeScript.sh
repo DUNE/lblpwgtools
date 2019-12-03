@@ -3,12 +3,15 @@
 PNFS_PATH_APPEND=CAFAnaOutputs/MyOutput
 CAFE_COMMAND_FILE="CAFECommands.cmd"
 SCRIPT_TO_INCLUDE=""
+RENAME_SUBMIT_SCRIPT=""
 
 LIFETIME_EXP="4h"
-DISK_EXP="1GB"
-MEM_EXP="2GB"
+DISK_EXP="2GB"
+MEM_EXP="1.9GB"
 
 FORCE_REMOVE="0"
+
+OSG_STORAGE_VERSION="17908"
 
 DRY_RUN="0"
 LOG_TO_IFDH="0"
@@ -19,7 +22,7 @@ if [ -z "${CAFANA}" ]; then
 fi
 
 while [[ ${#} -gt 0 ]]; do
-
+    
   key="$1"
   case $key in
 
@@ -44,6 +47,18 @@ while [[ ${#} -gt 0 ]]; do
 
       CAFE_COMMAND_FILE="$(readlink -f $2)"
       echo "[OPT]: Running jobs for each line in \"${CAFE_COMMAND_FILE}\"."
+      shift # past argument
+      ;;
+
+      -n|--rename-submit-script)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      RENAME_SUBMIT_SCRIPT="$2"
+      echo "[OPT]: Renaming submission script to ${RENAME_SUBMIT_SCRIPT}"
       shift # past argument
       ;;
 
@@ -125,6 +140,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
       echo -e "\t-c|--cafe-command-file     : File containing '<script name>  [arg1 [arg2 [...]]]'. One job is submitted per line in the input file."
       echo -e "\t--cafe-commands            : All arguments passed after this will be passed to cafe on the node."
+      echo -e "\t-n|--rename-submit-script  : Rename the submission script for easier diagnostics."
       echo -e "\t-S|--cafe-script           : Path to non-standard (i.e. not in \${CAFANA}/scripts) cafe script that should be included in the tarball."
       echo -e "\t-f|--force-remove          : Removes output directory before starting."
       echo -e "\t-d|--dry-run               : Will not submit anything to the grid."
@@ -185,17 +201,16 @@ fi
 NJOBSTORUN=$(cat CAFECommands.cmd | wc -l)
 
 LN=0
-for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
-
-  if ! tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts/${i}; then
-    echo -e "[ERROR]: In CAFECommands.cmd on line ${LN}:\n  $(cat CAFECommands.cmd | head -$(( LN + 1 )) | tail -1)\n[ERROR]: Trying to run job for script ${i}. But it doesn't exist in the tarball at CAFAna/scripts/ and wasn't passed with -S. The script needs to be installed with CAFAna or passed to this submission script to run."
-    echo -e "[INFO]: tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts:\n$(tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts | grep -v FermiGridScripts)"
-    exit
-  fi
-
-  LN=$(( LN + 1 ))
-done
-
+# for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
+# 
+#   if ! tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts/${i}; then
+#     echo -e "[ERROR]: In CAFECommands.cmd on line ${LN}:\n  $(cat CAFECommands.cmd | head -$(( LN + 1 )) | tail -1)\n[ERROR]: Trying to run job for script ${i}. But it doesn't exist in the tarball at CAFAna/scripts/ and wasn't passed with -S. The script needs to be installed with CAFAna or passed to this submission script to run."
+#     echo -e "[INFO]: tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts:\n$(tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts | grep -v FermiGridScripts)"
+#     exit
+#   fi
+# 
+#   LN=$(( LN + 1 ))
+# done
 
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
@@ -234,19 +249,25 @@ elif [ ${FORCE_REMOVE} == "1" ]; then
   fi
 fi
 
+SUBMIT_SCRIPT=${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh
+if [ ! -z "${RENAME_SUBMIT_SCRIPT}" ]; then
+    cp ${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PWD}/${RENAME_SUBMIT_SCRIPT}
+    SUBMIT_SCRIPT=${PWD}/${RENAME_SUBMIT_SCRIPT}
+fi
+
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
     #--role=Analysis --subgroup=analysis
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC,DEDICATED,OFFSITE --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      echo ${JID}
   else
     #--role=Analysis --subgroup=analysis
-    JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/CAFENodeScript.sh ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC,DEDICATED,OFFSITE -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      echo ${JID}
   fi
 else
-  JID="DRY RUN"
+    JID="DRY RUN"
 fi
-
-echo "JID = ${JID}"
 
 cd ../
 

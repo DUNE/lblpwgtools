@@ -6,8 +6,31 @@
 
 #include "CAFAna/Vars/FitVars.h"
 
+#include "TFormula.h"
+
 namespace ana
 {
+  std::vector<std::pair<std::string, double> > ParseAsimovSet(std::string noApologies){
+    // Bad things happen now
+    std::vector<std::pair<std::string, double> > ret;
+    std::vector<std::string> output;
+    std::stringstream ss(noApologies);
+    std::string token;
+
+    while (std::getline(ss, token, ',')) output.push_back(token);
+
+    for (auto & pair : output){
+      std::stringstream sss(pair);
+      std::getline(sss, token, ':');
+      std::string name = token;
+      std::getline(sss, token, ':');
+      TFormula thisForm("", token.c_str());
+      double value = thisForm.Eval(0);
+      ret.push_back(std::make_pair(name, value));
+    }
+    return ret;
+  }
+
   //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, int asimov_set)
   {
@@ -51,9 +74,65 @@ namespace ana
     if (asimov_set == 8 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MinIH);
     if (asimov_set == 9 && hie == +1) ret->SetDmsq32(kNuFitDmsq32MaxNH);
     if (asimov_set == 9 && hie == -1) ret->SetDmsq32(kNuFitDmsq32MaxIH);
+    if (asimov_set == 10) ret->SetdCP(0);
+    if (asimov_set == 11) ret->SetdCP(-TMath::Pi()/2);
 
 
+    if (oct < 0) {
+      double dum = TMath::Pi()/2 - ret->GetTh23();
+      ret->SetTh23(dum);
+    }
+    
+    return ret;
+  }
+  
+  //----------------------------------------------------------------------
+  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str)
+  {
+    // Pretty funky stuff
+    if (asimov_str.find("asimov") != std::string::npos)
+      return NuFitOscCalc(hie, oct, std::stoi(asimov_str.erase(0, 6)));
+    if (asimov_str.find(':') == std::string::npos)
+      return NuFitOscCalc(hie, oct, std::stoi(asimov_str));
 
+    assert(hie == +1 || hie == -1);
+    assert(oct == +1 || oct == -1);
+
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    ret->SetL(kBaseline);
+    ret->SetRho(kEarthDensity);
+
+    ret->SetDmsq21(kNuFitDmsq21CV);
+    ret->SetTh12(kNuFitTh12CV);
+
+    if(hie > 0){
+      ret->SetDmsq32(kNuFitDmsq32CVNH);
+      ret->SetTh23(kNuFitTh23CVNH);
+      ret->SetTh13(kNuFitTh13CVNH);
+      ret->SetdCP(kNuFitdCPCVNH);
+    }
+    else{
+      ret->SetDmsq32(kNuFitDmsq32CVIH);
+      ret->SetTh23(kNuFitTh23CVIH);
+      ret->SetTh13(kNuFitTh13CVIH);
+      ret->SetdCP(kNuFitdCPCVIH);
+    }
+
+    auto asimov_set = ParseAsimovSet(asimov_str);
+
+    for (auto & pair : asimov_set){
+      if (pair.first == "th13")
+      	ret->SetTh13(pair.second);
+      if (pair.first == "deltapi")
+      	ret->SetdCP(pair.second);
+      if (pair.first == "th23")
+      	ret->SetTh23(pair.second);
+      if (pair.first == "dmsq32")
+      	ret->SetDmsq32(pair.second);
+      if (pair.first == "ssth23")
+	ret->SetTh23(asin(sqrt(pair.second)));
+    }
+    
     if (oct < 0) {
       double dum = TMath::Pi()/2 - ret->GetTh23();
       ret->SetTh23(dum);
@@ -72,13 +151,15 @@ namespace ana
   {
     assert(hie == +1 || hie == -1);
 
+    std::cerr << "Using ThrownNuFitOscCalc, which is now somewhat deprecated (look at 32 and hierarchy)" << std::endl; 
     osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalculatorPMNSOpt;
 
     // Throw 12 and rho within errors
     if (HasVar(oscVars, kFitRho.ShortName()))
       ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
 
-    if (HasVar(oscVars, kFitDmSq21.ShortName()))
+    if (HasVar(oscVars, kFitDmSq21.ShortName()) or
+	HasVar(oscVars, kFitDmSq21Scaled.ShortName()))
       ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
 
     if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
@@ -212,6 +293,60 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13)
+  {
+    assert(hie == +1 || hie == -1);
+
+    osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);
+
+    // Throw 12 and rho within errors if here
+    if (HasVar(oscVars, kFitRho.ShortName()))
+      ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
+
+    if (HasVar(oscVars, kFitDmSq21.ShortName()) or
+	HasVar(oscVars, kFitDmSq21Scaled.ShortName()))
+      ret->SetDmsq21(kNuFitDmsq21CV+kNuFitDmsq21Err*gRandom->Gaus());
+
+    if (HasVar(oscVars, kFitSinSq2Theta12.ShortName()))
+      ret->SetTh12(kNuFitTh12CV+kNuFitTh12Err*gRandom->Gaus());
+
+    // Throw dmsq32 flat between 2.3 and 2.7 in the correct hierarchy
+    if (HasVar(oscVars, kFitDmSq32Scaled.ShortName()) or
+	HasVar(oscVars, kFitDmSq32NHScaled.ShortName()) or
+	HasVar(oscVars, kFitDmSq32IHScaled.ShortName()))
+      ret->SetDmsq32(float(hie)*gRandom->Uniform(2.3e-3, 2.7e-3));
+
+    // Throw sin2th23 flat between 0.4 and 0.6
+    static double th23_low  = asin(sqrt(0.4));
+    static double th23_high = asin(sqrt(0.6));
+    static double th23_med = asin(sqrt(0.5));
+
+    if (HasVar(oscVars, kFitSinSqTheta23.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_low, th23_high));
+    
+    if (HasVar(oscVars, kFitSinSqTheta23UpperOctant.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_med, th23_high));
+
+    if (HasVar(oscVars, kFitSinSqTheta23LowerOctant.ShortName()))
+      ret->SetTh23(gRandom->Uniform(th23_low, th23_med));
+
+    // Throw th13
+    if (HasVar(oscVars, kFitTheta13.ShortName())){
+      if (flatth13)
+	ret->SetTh13(gRandom->Uniform(0.13, 0.2));
+      else
+	ret->SetTh13((hie > 0 ? kNuFitTh13CVNH : kNuFitTh13CVIH) *
+		     (1 + (hie > 0 ? kNuFitTh13ErrNH : kNuFitTh13ErrIH)*gRandom->Gaus()));
+    }
+
+    // dCP is just flat
+    if (HasVar(oscVars, kFitDeltaInPiUnits.ShortName()))
+      ret->SetdCP(gRandom->Uniform(-1*TMath::Pi(), TMath::Pi()));
+
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
@@ -266,64 +401,101 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  // asimov_set here is a legacy option for Elizabeth's code.
+  // The preferred method is to call SetAsimovPoint after the constructor
   Penalizer_GlbLike::Penalizer_GlbLike(int hietrue, int octtrue, bool useTh13, 
 				       bool useTh23, bool useDmsq, int asimov_set) 
-    : fTh13Pen(useTh13),fTh23Pen(useTh23), fDmsqPen(useDmsq){
+    : fHieTrue(hietrue), fOctTrue(octtrue), fTh13Pen(useTh13),fTh23Pen(useTh23), fDmsqPen(useDmsq){
 
     fDmsq21 = kNuFitDmsq21CV;
     fTh12 = kNuFitTh12CV;
     fRho = kEarthDensity;
 
+    fDmsq32 = (fHieTrue > 0) ? kNuFitDmsq32CVNH : kNuFitDmsq32CVIH;
+    fTh13 = (fHieTrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
+    fTh23 = (fHieTrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
 
-    fDmsq32 = (hietrue > 0) ? kNuFitDmsq32CVNH : kNuFitDmsq32CVIH;
-    fTh13 = (hietrue > 0) ? kNuFitTh13CVNH : kNuFitTh13CVIH;
-    fTh23 = (hietrue > 0) ? kNuFitTh23CVNH : kNuFitTh23CVIH;
+    // This is sort of an assumption...
+    if (fOctTrue < 0) fTh23 = TMath::Pi()/2 - fTh23;
 
+    fDmsq21Err = kNuFitDmsq21Err;
+    fTh12Err = kNuFitTh12Err;
+    fDmsq32Err = (fHieTrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
+    fTh13Err = (fHieTrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
+    fTh23Err = (fHieTrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
+
+    fRhoErr = 0.02*kEarthDensity;
+
+    if (asimov_set != 0) SetAsimovPoint(asimov_set);
+  }
+
+  void Penalizer_GlbLike::SetAsimovPoint(int asimov_set){
+    
     if (asimov_set == 1) {
-      fTh23 = (hietrue > 0) ? kNuFitTh23LoNH : kNuFitTh23LoIH;
+      fTh23 = (fHieTrue > 0) ? kNuFitTh23LoNH : kNuFitTh23LoIH;
     }
     else if (asimov_set == 2) {
-      fTh23 = (hietrue > 0) ? kNuFitTh23HiNH : kNuFitTh23HiIH;
+      fTh23 = (fHieTrue > 0) ? kNuFitTh23HiNH : kNuFitTh23HiIH;
     }
     else if (asimov_set == 3) {
       fTh23 = kNuFitTh23MM;
     }
     else if (asimov_set == 4) {
-      fTh23 = (hietrue > 0) ? kNuFitTh23MinNH : kNuFitTh23MinIH;
+      fTh23 = (fHieTrue > 0) ? kNuFitTh23MinNH : kNuFitTh23MinIH;
     }
     else if (asimov_set == 5) {
-      fTh23 = (hietrue > 0) ? kNuFitTh23MaxNH : kNuFitTh23MaxIH;
+      fTh23 = (fHieTrue > 0) ? kNuFitTh23MaxNH : kNuFitTh23MaxIH;
     }
     else if (asimov_set == 6) {
-      fTh13 = (hietrue > 0) ? kNuFitTh13MinNH : kNuFitTh13MinIH;
+      fTh13 = (fHieTrue > 0) ? kNuFitTh13MinNH : kNuFitTh13MinIH;
     }
     else if (asimov_set == 7) {
-      fTh13 = (hietrue > 0) ? kNuFitTh13MaxNH : kNuFitTh13MaxIH;
+      fTh13 = (fHieTrue > 0) ? kNuFitTh13MaxNH : kNuFitTh13MaxIH;
     }
     else if (asimov_set == 8) {
-      fDmsq32 = (hietrue > 0) ? kNuFitDmsq32MinNH : kNuFitDmsq32MinIH;
+      fDmsq32 = (fHieTrue > 0) ? kNuFitDmsq32MinNH : kNuFitDmsq32MinIH;
     }
     else if (asimov_set == 9) {
-      fDmsq32 = (hietrue > 0) ? kNuFitDmsq32MaxNH : kNuFitDmsq32MaxIH;
+      fDmsq32 = (fHieTrue > 0) ? kNuFitDmsq32MaxNH : kNuFitDmsq32MaxIH;
     }
-
-    // This is sort of an assumption...
-    if (octtrue < 0) fTh23 = TMath::Pi()/2 - fTh23;
-
-    fDmsq21Err = kNuFitDmsq21Err;
-    fTh12Err = kNuFitTh12Err;
-    fDmsq32Err = (hietrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
-    fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
-    fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
-
-    fRhoErr = 0.02*kEarthDensity;
-
   }
 
+  void Penalizer_GlbLike::SetAsimovPoint(std::string asimov_str, bool modConstraint){
+
+    // Now for some funky times
+    if (modConstraint){
+
+      // Argh, so bad
+      if (asimov_str.find("asimov") != std::string::npos){
+        SetAsimovPoint(std::stoi(asimov_str.erase(0, 6)));
+	return;
+      }
+
+      if (asimov_str.find(':') == std::string::npos){
+	SetAsimovPoint(std::stoi(asimov_str));
+	return;
+      }
+      
+      auto asimov_set = ParseAsimovSet(asimov_str);
+
+      for (auto & pair : asimov_set){
+        if (pair.first == "th13")
+          fTh13 = pair.second;
+        if (pair.first == "th23")
+          fTh23 = pair.second;
+	if (pair.first == "dmsq32")
+          fDmsq32 = pair.second;
+	if (pair.first == "ssth23")
+          fTh23 = asin(sqrt(pair.second));
+      }
+    }
+  }
+
+  // This should be removed as it's 99% the same as other functions
   Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, 
-				       int hietrue, bool useTh13,
+  				       int hietrue, bool useTh13,
                                        bool useTh23, bool useDmsq) 
-    : fTh13Pen(useTh13), fTh23Pen(useTh23), fDmsqPen(useDmsq){
+    : fHieTrue(hietrue), fTh13Pen(useTh13), fTh23Pen(useTh23), fDmsqPen(useDmsq){
 
     fDmsq21 = cvcalc->GetDmsq21();
     fTh12 = cvcalc->GetTh12();
@@ -334,11 +506,12 @@ namespace ana
 
     fDmsq21Err = kNuFitDmsq21Err;
     fTh12Err = kNuFitTh12Err;
-    fDmsq32Err = (hietrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
-    fTh13Err = (hietrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
-    fTh23Err = (hietrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
+    fDmsq32Err = (fHieTrue > 0) ? kNuFitDmsq32ErrNH : kNuFitDmsq32ErrIH;
+    fTh13Err = (fHieTrue > 0) ? kNuFitTh13ErrNH : kNuFitTh13ErrIH;
+    fTh23Err = (fHieTrue > 0) ? kNuFitTh23ErrNH : kNuFitTh23ErrIH;
 
     fRhoErr = 0.02*kEarthDensity;
+
   }
 
 

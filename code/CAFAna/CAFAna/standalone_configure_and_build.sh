@@ -7,6 +7,7 @@ USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
 INSTALL_DIR=""
 USE_KNL="0"
+USE_OMP="0"
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -49,6 +50,12 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will compile for KNL arch."
       ;;
 
+      -O|--omp)
+
+      USE_OMP="1"
+      echo "[OPT]: Will compile OMP components."
+      ;;
+
       -j|--n-cores)
 
       if [[ ${#} -lt 2 ]]; then
@@ -77,10 +84,13 @@ while [[ ${#} -gt 0 ]]; do
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
+      echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
+      echo -e "\t--knl                  : Build with -march=knl"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
 
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
+      echo -e "\t-O|--omp               : Enable OMP features of CAFAna."
       echo -e "\t-I|--install-to        : Directory to install to."
       echo -e "\t-?|--help              : Print this message."
       exit 0
@@ -110,8 +120,8 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
@@ -142,7 +152,16 @@ else
     fi
   fi
 
+  if [ -z "${BOOST_LIB}" ]; then
+    if [ -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so* ]; then
+      export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
+    else
+      echo "[ERROR]: Not using UPS, but couldn't find system boost libraries and BOOST_LIB wasn't defined in the environment."
+      exit 1
+    fi
+  fi
+
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
 make install -j ${CORES}
