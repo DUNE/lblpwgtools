@@ -18,9 +18,17 @@ int main(int argc, char *argv[])
   /* parsing the comand line */
   argp_parse (&_argp, argc, argv, 0, 0, &arguments);  
 
-  //set default oscillation parameters 
-  double osc[]={0.593,0.154,0.705,0,7.58e-5,2.35e-3};
-  double osce[]={0.03,0.03,0.11,0,0.03,0.05};
+  // Set default oscillation parameters and their relative errors to NuFit 4.0 values
+  // theta12 = 33.82 +- 0.77 deg = 0.590 +- 0.013 rad (2.3%)
+  // theta13 = 8.61 +- 0.13 deg = 0.150 +- 0.002 rad (1.3%)
+  // theta23 = 49.7 +- 1.0 deg = 0.867 +- 0.017 rad (2.0%)
+  // m12Sq = (7.39 +- 0.21)e-5 (2.8%)
+  // m13Sq = (2.53 +- 0.03)e-3 (1.2%)
+  // Keep delta = 0
+
+  double osc[]  = {0.590, 0.150, 0.867, 0, 7.39e-5, 2.53e-3};
+  double osce[] = {0.023, 0.013, 0.020, 0, 0.028, 0.012};
+
   vector_read_double(arguments.params,osc,6,parse_error);
   vector_read_double(arguments.paramse,osce,6,parse_error);
   printf("Running with osc parameters, osc(%f,%f,%f,%f,%f,%f)\n",osc[0],osc[1],osc[2],osc[3],osc[4],osc[5]);
@@ -591,8 +599,10 @@ int main(int argc, char *argv[])
 
   /*compute exposure using mass of each experiment and time*/
   float exposure=0;
-  for(int i=0;i<glb_num_of_exps;i++){
-    exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
+  for (int ie = 0; ie < glb_num_of_exps; ie++) {
+    for (int je = 0; je < glbGetNumberOfFluxes(ie); je++) {
+      exposure = exposure + glbGetTargetMass(ie)*glbGetRunningTime(ie, je);
+    }
   }
   printf("Exposure is set to:%f\n",exposure);
   

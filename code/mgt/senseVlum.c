@@ -241,10 +241,7 @@ void ComputeCPResolutionCurveSVL(double osc[])
     
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,0.5*(xup-180*osc[3]/M_PI - (xdown-180*osc[3]/M_PI)), xup, xdown};
     AddArrayToOutput(a,4);
 
@@ -288,10 +285,7 @@ void ComputeNonZeroT13(double osc[])
 			
 	/* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,chi2[0],chi2[1]};
     AddArrayToOutput(a,3);
   }
@@ -370,10 +364,7 @@ void ComputeCPVSigFracCurve(double osc[])
 
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,sig25,sig50,sig75,frac2sig,frac3sig,frac5sig};
     AddArrayToOutput(a,7);
   }
@@ -430,10 +421,7 @@ void ComputeCPVSVLCurve(double osc[])
 
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,chis, chi2[0], chi2[1], chi2[2], chi2[3]};
     AddArrayToOutput(a,6);
   }
@@ -489,10 +477,7 @@ void ComputeCPBubblesCurve(double osc[])
 		
 			/* Save results */
 			/*compute exposure using mass of each experiment and time*/
-			float exposure=0;
-			for(int k=0;k<glb_num_of_exps;k++){
-				exposure=exposure+glbGetTargetMass(k)*glbGetRunningTime(k, 0);
-			}
+			double exposure = GetExposure();
 			double a[]={exposure,this_dcp, chi2min};
 			AddArrayToOutput(a,3);
 		}
@@ -572,10 +557,7 @@ void ComputeOctCurve(double osc[])
 
 			/* Save results */
 			/*compute exposure using mass of each experiment and time*/
-			float exposure=0;
-			for(int k=0;k<glb_num_of_exps;k++){
-				exposure=exposure+glbGetTargetMass(k)*glbGetRunningTime(k, 0);
-			}
+			double exposure = GetExposure();
 			double a[]={exposure,this_t23, chi2min};
 			AddArrayToOutput(a,3);
 		}
@@ -655,10 +637,7 @@ void ComputeNMQCurve(double osc[])
 
 			/* Save results */
 			/*compute exposure using mass of each experiment and time*/
-			float exposure=0;
-			for(int k=0;k<glb_num_of_exps;k++){
-				exposure=exposure+glbGetTargetMass(k)*glbGetRunningTime(k, 0);
-			}
+			double exposure = GetExposure();
 			double a[]={exposure,this_t23, chi2min};
 			AddArrayToOutput(a,3);
 		}
@@ -731,10 +710,7 @@ void ComputeCPResolutionCurve2SVL(double osc[])
 
 		/* Save results */
 		/*compute exposure using mass of each experiment and time*/
-		float exposure=0;
-		for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+		double exposure = GetExposure();
 		double a[]={exposure,frac1sig,frac2sig,frac3sig,frac5sig};
 		AddArrayToOutput(a,5);
   }
@@ -779,10 +755,7 @@ void ComputeMHSigCurve_glbchiAll(double osc[])
 		
    /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,chi2};
     AddArrayToOutput(a,2);
   }
@@ -845,10 +818,7 @@ void ComputeMHSigCurveSVL(double osc[])
 		
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
     double a[]={exposure,sqrt(chi2s[0]),sqrt(chi2s[1]),sqrt(chi2s[2]),t13s[0],t13s[1],t13s[2],dcps[0],dcps[1],dcps[2]};
     AddArrayToOutput(a,10);
   }
@@ -925,11 +895,8 @@ void ComputeMHSigCurve_bruteForce(double osc[])
 		
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
-		
+    double exposure = GetExposure();
+
 		//find min,max in chi2s array
 		double chi2min  = 1.0e10;
 		double chi2max  = 0;
@@ -1016,10 +983,7 @@ void ComputeMHSigCurveFrac_glbchiAll(double osc[])
 		
     /* Save results */
     /*compute exposure using mass of each experiment and time*/
-    float exposure=0;
-    for(i=0;i<glb_num_of_exps;i++){
-			exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-		}
+    double exposure = GetExposure();
 		
 		//find min,max in chi2s array
 		double chi2min  = 1.0e10;
@@ -1259,10 +1223,7 @@ void ComputeNPResCurve(double osc[], double in_xup_hi, double deviation, double 
 	  xdown_lo=in_xdown_lo;
 	}
 	
-	float exposure=0;
-	for(int i=0;i<glb_num_of_exps;i++){
-		exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-	}
+	double exposure = GetExposure();
 	double a[]={exposure,xup,osc[arguments.scanVar],xdown};
     AddArrayToOutput(a,4);
   }
@@ -1388,12 +1349,22 @@ void ComputeT13SensitivityCurve(double osc[])
 	  xdown_lo=0.0;
 	}
 	
-	float exposure=0;
-	for(int i=0;i<glb_num_of_exps;i++){
-		exposure=exposure+glbGetTargetMass(i)*glbGetRunningTime(i, 0);
-	}
+	double exposure = GetExposure();
 	double a[]={exposure,xup,osc[1],xdown};
     AddArrayToOutput(a,4);
   }
 }
 
+double GetExposure() {
+
+    double exposure = 0.0;
+
+    for (int i = 0; i < glb_num_of_exps; i++) {
+	for (int j = 0; j < glbGetNumberOfFluxes(i); j++) {
+	    exposure = exposure + glbGetTargetMass(i)*glbGetRunningTime(i, j);
+	}
+    }
+
+    return exposure;
+
+}
