@@ -454,6 +454,16 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   return retlist;
 }
 
+/*
+  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
+  points used for normal dials, they have fixed values for non-zero values of the 
+  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same 
+  value. Some are set so all negative (positive) values give a -3 (+3) sigma 
+  variation, which is why there's some messing around in the function below.
+  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift, 
+  which is called only when creating the input CAFs. This is almost certainly not 
+  optimal, but is easy to extend for other dials.
+ */
 SystShifts GetFakeDataGeneratorSystShift(std::string input) {
 
   // Default to nominal
@@ -462,19 +472,34 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   if (input.empty() || input == "nominal")
     return thisShift;
 
-  std::vector<std::string> fake_data_names = SplitString(input, ':');
+  // Allow _pos and _neg endings 
+  std::vector<std::string> split_input = SplitString(input, ':');
+  std::vector<std::string> fake_data_names;
+  std::vector<int> dial_vals;
 
-  // Check nobody did anything dumb...
-  // This is for you LUUK
-  for (auto name : fake_data_names)
+  for (auto in_name : split_input){
+    std::string name = in_name;
+    int val = 1;
+
+    if (in_name.compare(in_name.length()-4, 4, "_pos") == 0){
+      name = in_name.substr(0, in_name.length()-4);
+      val  = 1;
+    } else if (in_name.compare(in_name.length()-4, 4, "_neg") == 0){
+      name = in_name.substr(0, in_name.length()-4);
+      val  = -1;
+    } 
+
+    // Check nobody did anything dumb...
     assert(IsFakeDataGenerationSyst(name));
+    fake_data_names.push_back(name);
+    dial_vals.push_back(val);
+  }
 
   std::vector<ISyst const *> FDSyst = GetListOfSysts();
   KeepSysts(FDSyst, fake_data_names);
 
-  // Also for you LUUUUUUUUK
-  for (auto syst : FDSyst) {
-    thisShift.SetShift(syst, 1);
+  for (uint i=0; i<FDSyst.size(); i++){
+    thisShift.SetShift(FDSyst[i], dial_vals[i]);
   }
 
   return thisShift;
