@@ -90,3 +90,24 @@ endif()
 
 LIST(APPEND EXTRA_LINK_DIRS ${BOOST_LIB})
 LIST(APPEND EXTRA_LIBS boost_filesystem boost_system)
+
+###############################  EIGEN  ######################################
+
+if(${EIGEN_INC} STREQUAL "")
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${EIGEN_INC}=\"${EIGEN_INC}\" to an existing directory, is Eigen set up in the environment?")
+elseif(NOT DEFINED STAN_INC)
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${EIGEN_INC}=\"${EIGEN_INC}\" to an existing directory, is Eigen set up in the environment?")
+endif()
+
+PrefixList(EIGEN_INC_STR "-I" ${EIGEN_INC})
+
+###############################  STAN  ######################################
+
+if(${STAN_INC} STREQUAL "")
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${STAN_INC}=\"${STAN_INC}\" to an existing directory, is Stan set up in the environment?")
+elseif(NOT DEFINED STAN_INC)
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${STAN_INC}=\"${STAN_INC}\" to an existing directory, is Stan set up in the environment?")
+endif()
+
+PrefixList(STAN_MATH_INC_STR "-I" ${STAN_MATH_INC})
+PrefixList(STAN_INC_STR "-I" ${STAN_INC})
