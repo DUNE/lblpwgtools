@@ -10,3 +10,6 @@ fi
 setup root v6_12_06a -q e15:prof
 setup boost v1_66_0a -q e15:prof
 setup cmake v3_12_2
+
+# Stan insists on its dependencies being loaded, so we only need to load it
+setup stan v2.18.0 -q e17:prof

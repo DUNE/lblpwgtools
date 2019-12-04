@@ -55,7 +55,7 @@ set(OscLib_header_files
 )
 
 add_library(OscLibFunc SHARED ${OscLib_implementation_files})
-target_compile_options(OscLibFunc PUBLIC ${GSL_INC_STR})
+target_compile_options(OscLibFunc PUBLIC ${GSL_INC_STR} ${EIGEN_INC_STR} ${STAN_INC_STR} ${STAN_MATH_INC_STR})
 
 CatStringsIfNotEmpty(GSL_LINKER_FLAGS ${GSL_LIB_DIR_STR} ${GSL_LIBS_STR})
 target_link_libraries(OscLibFunc ${GSL_LINKER_FLAGS})
@@ -82,7 +82,7 @@ set(Utilities_header_files
 )
 
 add_library(UtilitiesFunc SHARED ${Utilities_implementation_files})
-target_compile_options(UtilitiesFunc PUBLIC -I${CLHEP_PREFIX}/include)
+target_compile_options(UtilitiesFunc PUBLIC -I${CLHEP_PREFIX}/include ${EIGEN_INC_STR} ${STAN_INC_STR} ${STAN_MATH_INC_STR})
 
 target_link_libraries(UtilitiesFunc -L${CLHEP_PREFIX}/lib -lCLHEP)
 
