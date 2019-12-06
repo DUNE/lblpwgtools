@@ -47,7 +47,7 @@ void octant_joint(std::string stateFname="common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, 1, asimov_joint);	
     testOsc->SetTh23(TMath::Pi()/2 - this_th23);
 
-    IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_joint);
+    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_joint);
     SystShifts trueSyst = kNoShift;
     SystShifts testSyst = kNoShift;
 

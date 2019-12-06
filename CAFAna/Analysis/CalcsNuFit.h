@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 #include "CAFAna/Core/IFitVar.h"
 
 #include "TMath.h"
@@ -96,7 +96,7 @@ namespace ana
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
 
-  class NuFitPenalizer: public IExperiment
+  class NuFitPenalizer: public IChiSqExperiment
   {
   public:
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
@@ -113,7 +113,7 @@ namespace ana
     }
   };
 
-  class Penalizer_GlbLike: public IExperiment
+  class Penalizer_GlbLike: public IChiSqExperiment
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 

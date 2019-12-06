@@ -254,7 +254,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   // minimum chi2!
   osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-  IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IChiSqExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   SystShifts testSyst = kNoShift;
 
@@ -328,7 +328,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
       if (plotVarVect.size() > 1)
         SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
 
-      IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+      IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
       double chisqmin =
           RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,

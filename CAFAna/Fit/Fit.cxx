@@ -6,7 +6,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
@@ -52,7 +52,7 @@ double SimpleFOM(const Spectrum &obs, const Spectrum &unosc, double pot) {
 }
 
 //----------------------------------------------------------------------
-Fitter::Fitter(const IExperiment *expt, std::vector<const IFitVar *> vars,
+Fitter::Fitter(const IChiSqExperiment *expt, std::vector<const IFitVar *> vars,
                std::vector<const ISyst *> systs, Precision prec)
     : fExpt(expt), fVars(vars), fSysts(systs), fPrec(prec), fCalc(0),
       fSupportsDerivatives(SupportsDerivatives()), fCovar(0), fCovarStatus(-1) {
@@ -473,7 +473,7 @@ void Fitter::Gradient(const double *pars, double *ret) const {
 }
 
 //----------------------------------------------------------------------
-TH1 *Profile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *Profile(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
              const IFitVar *v, int nbinsx, double minx, double maxx,
              double input_minchi, const std::vector<const IFitVar *> &profVars,
              const std::vector<const ISyst *> &profSysts,
@@ -565,7 +565,7 @@ TH1 *Profile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
 }
 
 //----------------------------------------------------------------------
-TH1 *SqrtProfile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *SqrtProfile(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
                  const IFitVar *v, int nbinsx, double minx, double maxx,
                  double minchi, std::vector<const IFitVar *> profVars,
                  std::vector<const ISyst *> profSysts, const SeedList &seedPts,
@@ -583,14 +583,14 @@ TH1 *SqrtProfile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
 }
 
 //----------------------------------------------------------------------
-TH1 *Slice(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *Slice(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
            const IFitVar *v, int nbinsx, double minx, double maxx,
            double minchi) {
   return Profile(expt, calc, v, nbinsx, minx, maxx, minchi);
 }
 
 //----------------------------------------------------------------------
-TH1 *SqrtSlice(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *SqrtSlice(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
                const IFitVar *v, int nbinsx, double minx, double maxx,
                double minchi) {
   TH1 *ret = Slice(expt, calc, v, nbinsx, minx, maxx, minchi);
@@ -603,7 +603,7 @@ TH1 *SqrtSlice(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
 }
 
 //----------------------------------------------------------------------
-TGraph *FindValley(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TGraph *FindValley(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
                    const IFitVar &scanVar, const IFitVar &fitVar, int nbinsx,
                    double xmin, double xmax,
                    const std::vector<const IFitVar *> &profVars,

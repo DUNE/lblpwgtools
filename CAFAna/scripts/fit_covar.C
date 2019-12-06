@@ -61,7 +61,7 @@ void fit_covar(std::string stateFname = def_stateFname,
   }
 
   // Add a penalty term (maybe)
-  IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+  IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,

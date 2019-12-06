@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/Surface.h"
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 #include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/IFitVar.h"
@@ -30,7 +30,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  Surface::Surface(const IExperiment* expt,
+  Surface::Surface(const IChiSqExperiment* expt,
                    osc::IOscCalculatorAdjustable* calc,
                    const IFitVar* xvar, int nbinsx, double xmin, double xmax,
                    const IFitVar* yvar, int nbinsy, double ymin, double ymax,
@@ -115,7 +115,7 @@ namespace ana
   }
   //---------------------------------------------------------------------
   void Surface::FillSurface(const std::string& progTitle,
-                            const IExperiment* expt,
+                            const IChiSqExperiment* expt,
                             osc::IOscCalculatorAdjustable* calc,
                             const IFitVar* xvar, const IFitVar* yvar,
                             const std::vector<const IFitVar*>& profVars,
@@ -244,7 +244,7 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-  void Surface::FillSurfacePoint(const IExperiment* expt,
+  void Surface::FillSurfacePoint(const IChiSqExperiment* expt,
                                  osc::IOscCalculatorAdjustable* calc,
                                  const IFitVar* xvar, double x,
                                  const IFitVar* yvar, double y,

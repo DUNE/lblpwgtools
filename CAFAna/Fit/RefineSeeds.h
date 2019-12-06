@@ -4,7 +4,7 @@
 
 namespace ana
 {
-  class IExperiment;
+  class IChiSqExperiment;
 
   /// \brief Refine an initial list of seeds by exploring stats-only fits
   ///
@@ -13,7 +13,7 @@ namespace ana
   /// are likely to be very promising starting points for the full systematics
   /// fit.
   SeedList RefineSeeds(const SeedList& seeds,
-                       const IExperiment* expt,
+                       const IChiSqExperiment* expt,
                        const std::vector<const IFitVar*>& vars,
                        const osc::IOscCalculatorAdjustable* calc);
 }

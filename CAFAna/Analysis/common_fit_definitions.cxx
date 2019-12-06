@@ -86,7 +86,7 @@ std::vector<std::string> SplitString(std::string input, char delim) {
 }
 
 // For ease of penalty terms...
-IExperiment *GetPenalty(int hie, int oct, std::string penalty,
+IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
                         std::string asimov_set, bool modConstraint) {
 
   // First, decide which to use
@@ -1203,7 +1203,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
                    osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
-                   ana::SeedList oscSeeds, IExperiment *penaltyTerm,
+                   ana::SeedList oscSeeds, IChiSqExperiment *penaltyTerm,
                    Fitter::Precision fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {

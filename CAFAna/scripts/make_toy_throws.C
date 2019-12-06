@@ -194,7 +194,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
-    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,

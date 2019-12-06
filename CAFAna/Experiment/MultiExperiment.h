@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 #include "TMatrixD.h"
 
 #include <memory>
@@ -9,16 +9,16 @@
 namespace ana
 {
   /// Combine multiple component experiments
-  class MultiExperiment: public IExperiment
+  class MultiExperiment: public IChiSqExperiment
   {
   public:
-    MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
+    MultiExperiment(std::vector<const IChiSqExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
       fUseCovMx.resize(expts.size(), false);
     }
 
-    void Add(const IExperiment* expt){
+    void Add(const IChiSqExperiment* expt){
       fExpts.push_back(expt);
       fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
@@ -57,7 +57,7 @@ namespace ana
     static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir);
 
   protected:
-    std::vector<const IExperiment*> fExpts;
+    std::vector<const IChiSqExperiment*> fExpts;
     std::vector<bool> fUseCovMx; // is there a covariance matrix for this Experiment?
 
     std::vector<std::vector<std::pair<const ISyst*, const ISyst*>>> fSystCorrelations;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 
 #include "TMath.h"
 
@@ -46,14 +46,14 @@ namespace ana
   // Add in a throw for toys
   osc::IOscCalculatorAdjustable* ThrownNuFitOscCalcCDR(int hie);
 
-  class NuFitPenalizerCDR: public IExperiment
+  class NuFitPenalizerCDR: public IChiSqExperiment
   {
   public:
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
 
-  class Penalizer_GlbLikeCDR: public IExperiment
+  class Penalizer_GlbLikeCDR: public IChiSqExperiment
   {
   public:
     Penalizer_GlbLikeCDR(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, bool weakOnly=false);

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 
 #include <memory>
 
 namespace ana
 {
   /// Very simple model allowing inclusion of reactor constraints
-  class ReactorExperiment : public IExperiment
+  class ReactorExperiment : public IChiSqExperiment
   {
   public:
     ReactorExperiment(double bestFit, double sigma)

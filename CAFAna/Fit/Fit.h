@@ -18,7 +18,7 @@ class IOscCalculatorAdjustable;
 }
 
 namespace ana {
-class IExperiment;
+class IChiSqExperiment;
 class IFitVar;
 
 /// \brief Figure-of-merit with no systematics, for binned data
@@ -58,7 +58,7 @@ public:
   };
   void SetPrecision(Precision prec);
 
-  Fitter(const IExperiment *expt, std::vector<const IFitVar *> vars,
+  Fitter(const IChiSqExperiment *expt, std::vector<const IFitVar *> vars,
          std::vector<const ISyst *> systs = {}, Precision prec = kNormal);
 
   /// \param[out] seed Seed parameter and output best-fit point
@@ -182,7 +182,7 @@ protected:
   /// fSupportsDerivatives
   bool SupportsDerivatives() const;
 
-  const IExperiment *fExpt;
+  const IChiSqExperiment *fExpt;
   std::vector<const IFitVar *> fVars;
   std::vector<const ISyst *> fSysts;
   Precision fPrec = kNormal;
@@ -250,7 +250,7 @@ static std::map<const ISyst *, TGraph *> empty_syst_map;
 /// \param[out] systsMap    Pass empty map. Returns best values of each syst.
 ///
 /// \return The best fit delta chisq as a function of \a a
-TH1 *Profile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *Profile(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
              const IFitVar *v, int nbinsx, double minx, double maxx,
              double minchi = -1,
              const std::vector<const IFitVar *> &profVars = {},
@@ -262,7 +262,7 @@ TH1 *Profile(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
 
 /// Forward to \ref Profile but sqrt the result for a crude significance
 TH1 *SqrtProfile(
-    const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+    const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
     const IFitVar *v, int nbinsx, double minx, double maxx, double minchi = -1,
     std::vector<const IFitVar *> profVars = {},
     std::vector<const ISyst *> profSysts = {},
@@ -272,19 +272,19 @@ TH1 *SqrtProfile(
     std::map<const ISyst *, TGraph *> &systsMap = empty_syst_map);
 
 /// \f$\chi^2\f$ scan in one variable, holding all others constant
-TH1 *Slice(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *Slice(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
            const IFitVar *v, int nbinsx, double minx, double maxx,
            double minchi = -1);
 
 /// Forward to \ref Slice but sqrt the result for a crude significance
-TH1 *SqrtSlice(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TH1 *SqrtSlice(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
                const IFitVar *v, int nbinsx, double minx, double maxx,
                double minchi = -1);
 
 /// \brief Find the minimum in one variable as a function of another
 ///
 /// \param transpose plot \a scanVar on the y axis
-TGraph *FindValley(const IExperiment *expt, osc::IOscCalculatorAdjustable *calc,
+TGraph *FindValley(const IChiSqExperiment *expt, osc::IOscCalculatorAdjustable *calc,
                    const IFitVar &scanVar, const IFitVar &fitVar, int nbinsx,
                    double xmin, double xmax,
                    const std::vector<const IFitVar *> &profVars = {},
