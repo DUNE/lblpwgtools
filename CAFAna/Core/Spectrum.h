@@ -26,10 +26,12 @@ namespace ana
 {
   class Ratio;
 
+  class SpectrumStan;
   /// Representation of a spectrum in any variable, with associated POT
   class Spectrum
   {
   public:
+    friend class SpectrumStan;
     friend class SpectrumLoaderBase;
     friend class SpectrumLoader;
     friend class NullLoader;
@@ -137,6 +139,9 @@ namespace ana
     Spectrum& operator=(const Spectrum& rhs);
     Spectrum& operator=(Spectrum&& rhs);
 
+    /// Copy conversion from SpectrumStan
+    Spectrum(const SpectrumStan& rhs);
+    Spectrum& operator=(const SpectrumStan& rhs);
     void Fill(double x, double w = 1);
 
     /// \brief Histogram made from this Spectrum, scaled to some exposure

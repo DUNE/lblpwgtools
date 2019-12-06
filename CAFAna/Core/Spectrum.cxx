@@ -1,5 +1,6 @@
 #include "CAFAna/Core/Spectrum.h"
 
+#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
@@ -247,6 +248,28 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum::Spectrum(const SpectrumStan& rhs)
+    : fHistD(nullptr), fHistF(nullptr), fHistSparse(nullptr),
+      fPOT(rhs.POT()), fLivetime(rhs.Livetime()),
+      fLabels(rhs.GetLabels()), fBins(rhs.GetBinnings())
+  {
+    // for now we don't have any other use cases besides 1D...
+    assert(rhs.GetBinnings().size() == 1);
+
+    ConstructHistogram();
+
+    // now fill in the bin content...
+    auto binC = rhs.ToBins(rhs.POT());
+    for (int binIdx = 0; binIdx < rhs.GetBinnings()[0].NBins()+2; binIdx++) // be sure to get under- and overflow
+    {
+      if (gFloatMode)
+        fHistF->SetBinContent(binIdx, binC[binIdx].val());
+      else
+        fHistD->SetBinContent(binIdx, binC[binIdx].val());
+    }
+  }
+
+  //----------------------------------------------------------------------
   Spectrum& Spectrum::operator=(const Spectrum& rhs)
   {
     if(this == &rhs) return *this;
@@ -275,6 +298,15 @@ namespace ana
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
+    return *this;
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum& Spectrum::operator=(const SpectrumStan& rhs)
+  {
+    // use placement new to just overwrite this object using the relevant constructor
+    this->~Spectrum();
+    new (this) Spectrum(rhs);
     return *this;
   }
 
