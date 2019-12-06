@@ -23,6 +23,7 @@ set(Core_implementation_files
   SpectrumStan.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
+  StanUtils.cxx
   SystShifts.cxx
   ThreadPool.cxx
   Utilities.cxx
@@ -56,6 +57,7 @@ set(Core_header_files
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h
+  StanUtils.h
   SystShifts.h
   ThreadPool.h
   Utilities.h
