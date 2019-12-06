@@ -52,6 +52,7 @@ set(Core_header_files
   Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
+  StanTypedefs.h
   SystShifts.h
   ThreadPool.h
   Utilities.h
