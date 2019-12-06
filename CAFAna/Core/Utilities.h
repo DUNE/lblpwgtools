@@ -120,10 +120,48 @@ namespace ana
       \f[ \chi^2=2\left(e-o+o\ln\left({o\over e}\right)\right) \f]
 
       Handles zero observed or expected events correctly.
+      Templated so that it can handle usage with Stan vars and other numeric types.
+      (The horible third template parameter ensures this function can only be used
+       with types that accept conversion from double -- which means you can't pass
+       it a TH1* or a std::vector<stan::math::var>&, removing the ambiguity with
+       those other versions of LogLikelihood.)
   **/
-  double LogLikelihood(double exp, double obs);
+  template <typename T, typename U,
+            typename std::enable_if<std::is_convertible<double, T>::value && std::is_convertible<double, U>::value, int>::type = 0>
+  auto LogLikelihood(T exp, U obs)
+  {
+    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
+    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
+    const double S = LLPerBinFracSystErr::GetError();
+    if(S > 0){
+      const double S2 = util::sqr(S);
+      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
+      e *= 1+s;
+    }
 
-  double LogLikelihoodDerivative(double e, double o);
+    // With this value, negative expected events and one observed
+    // event gives a chisq from this one bin of 182.
+    const double minexp = 1e-40; // Don't let expectation go lower than this
+
+    // this turns into a stan::math::var if any of its types are, otherwise it gives back the primitive type
+    decltype(exp - obs) chi = 0;
+
+    assert(obs >= 0);
+    if(exp < minexp){
+      if(!obs) return chi;
+      exp = minexp;
+    }
+
+    if(obs)
+      // This strange form is for numerical stability when e~o
+      chi += 2*obs*((exp-obs)/obs + log1p((obs-exp)/exp));
+    else
+      chi += 2*(exp-obs);
+
+    return chi;
+  }
+
+  double LogLikelihoodDerivative(double e, double o, double dedx);
 
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
                                  const std::vector<double>& dedx,

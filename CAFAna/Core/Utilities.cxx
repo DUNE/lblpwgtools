@@ -118,53 +118,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihood(double e, double o)
-  {
-    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
-    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
-    const double S = LLPerBinFracSystErr::GetError();
-    if(S > 0){
-      const double S2 = util::sqr(S);
-      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
-      e *= 1+s;
-    }
-
-    // With this value, negative expected events and one observed
-    // event gives a chisq from this one bin of 182.
-    const double minexp = 1e-40; // Don't let expectation go lower than this
-
-    assert(o >= 0);
-    if(e < minexp){
-      if(!o) return 0;
-      e = minexp;
-    }
-
-    if(o){
-      /*
-      const double x = (o-e)/e;
-      if(fabs(x) < 1e-3){
-        // For o/e very close to 1, the power expansion is much more stable
-        // than the logarithm. With this many orders we're good to 1 part in
-        // 10^21
-        const double x2 = x*x;
-        const double x3 = x2*x;
-        const double x4 = x3*x;
-        const double x5 = x4*x;
-        const double x6 = x5*x;
-        const double x7 = x6*x;
-        return 2*(e-o) + 2*o*(x - x2/2 + x3/3 - x4/4 + x5/5 - x6/6 + x7/7);
-      }
-      */
-
-      // This strange form is for numerical stability when e~o
-      return 2*o*((e-o)/o + log1p((o-e)/e));
-    }
-    else{
-      return 2*e;
-    }
-  }
-
-  //----------------------------------------------------------------------
   double LogLikelihood(const TH1* eh, const TH1* oh, bool useOverflow)
   {
     assert(eh->GetNbinsX() == oh->GetNbinsX());
