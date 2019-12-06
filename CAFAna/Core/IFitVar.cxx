@@ -31,5 +31,9 @@ namespace ana
   double IConstrainedFitVar::Clamp(double val) const
   {
     return std::max(LowLimit(), std::min(val, HighLimit()));
+
+  //----------------------------------------------------------------------
+  stan::math::var StanExp(const stan::math::var& x){return exp(x);}
+  stan::math::var StanLog(const stan::math::var& x){return log(x);}
   }
 } // namespace
