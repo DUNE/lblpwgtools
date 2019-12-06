@@ -4,16 +4,18 @@
 
 #include <limits>
 
+#include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Core/StanTypedefs.h"
 namespace ana
 {
   /// \f$ \theta_{13} \f$
-  class FitTheta13: public IFitVar
+  class FitTheta13: virtual public IFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "th13";}
-    virtual std::string LatexName() const {return "#theta_{13}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "th13";}
+    std::string LatexName() const override {return "#theta_{13}";}
   };
 
   /// \f$ \theta_{13} \f$
@@ -22,16 +24,16 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{13} \f$
-  class FitSinSq2Theta13: public IConstrainedFitVar
+  class FitSinSq2Theta13: virtual public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "ss2th13";}
-    virtual std::string LatexName() const {return "sin^{2}2#theta_{13}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "ss2th13";}
+    std::string LatexName() const override {return "sin^{2}2#theta_{13}";}
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 1;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^22\theta_{13} \f$
@@ -40,13 +42,13 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \delta_{CP}/\pi \f$
-  class FitDeltaInPiUnits: public IFitVar
+  class FitDeltaInPiUnits: virtual public IFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "delta(pi)";}
-    virtual std::string LatexName() const {return "#delta / #pi";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "delta(pi)";}
+    std::string LatexName() const override {return "#delta / #pi";}
   };
 
   /// \f$ \delta_{CP}/\pi \f$
@@ -57,10 +59,10 @@ namespace ana
   class FitTheta23: public IFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "th23";}
-    virtual std::string LatexName() const {return "#theta_{23}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "th23";}
+    std::string LatexName() const override {return "#theta_{23}";}
   };
 
   /// \f$ \theta_{13} \f$
@@ -68,16 +70,18 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^2\theta_{23} \f$
-  class FitSinSqTheta23: public IConstrainedFitVar
+  class FitSinSqTheta23: virtual public StanFitSupport<IConstrainedFitVar>
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "ssth23";}
-    virtual std::string LatexName() const {return "sin^{2}#theta_{23}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
+    std::string ShortName() const override {return "ssth23";}
+    std::string LatexName() const override {return "sin^{2}#theta_{23}";}
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 1;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^2\theta_{23} \f$
@@ -88,10 +92,10 @@ namespace ana
   class FitSinSqTheta23LowerOctant: public FitSinSqTheta23
   {
   public:
-    virtual std::string ShortName() const {return "ssth23_lower";}
+    std::string ShortName() const override {return "ssth23_lower";}
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 0.5;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 0.5;}
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
@@ -102,31 +106,31 @@ namespace ana
   class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
   {
   public:
-    virtual std::string ShortName() const {return "ssth23_upper";}
+    std::string ShortName() const override {return "ssth23_upper";}
 
-    virtual double LowLimit() const {return 0.5;}
-    virtual double HighLimit() const {return 1;}
+    double LowLimit() const override {return 0.5;}
+    double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
   const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant = FitSinSqTheta23UpperOctant();
 
   //----------------------------------------------------------------------
-  class FitSinSqTheta23Symmetry: public IFitVar
+  class FitSinSqTheta23Symmetry: virtual public IFitVar
   {
   public:
     FitSinSqTheta23Symmetry(int sign) : fSign(sign) {}
 
-    virtual std::string ShortName() const override {return "ssth23";}
-    virtual std::string LatexName() const override {return "sin^{2}#theta_{23}";}
+    std::string ShortName() const override override {return "ssth23";}
+    std::string LatexName() const override override {return "sin^{2}#theta_{23}";}
 
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override override;
 
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc,
-                          double val) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc,
+                  double val) const override;
 
-    virtual double Penalty(double val,
-                           osc::IOscCalculatorAdjustable* calc) const override;
+    double Penalty(double val,
+                   osc::IOscCalculatorAdjustable* calc) const override;
   protected:
     double SymmPt(double dmsq) const;
 
@@ -140,17 +144,17 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{23} \f$
-  class FitSinSq2Theta23: public IConstrainedFitVar
+  class FitSinSq2Theta23: virtual public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "ss2th23";}
-    virtual std::string LatexName() const {return "sin^{2}2#theta_{23}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "ss2th23";}
+    std::string LatexName() const override {return "sin^{2}2#theta_{23}";}
 
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 1;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^22\theta_{23} \f$
@@ -159,18 +163,18 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32} \f$
-  class FitDmSq32: public IConstrainedFitVar
+  class FitDmSq32: virtual public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "dmsq32";}
-    virtual std::string LatexName() const {return "#Deltam^{2}_{32}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "dmsq32";}
+    std::string LatexName() const override {return "#Deltam^{2}_{32}";}
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    virtual double LowLimit() const {return -1;}
-    virtual double HighLimit() const {return +1;}
+    double LowLimit() const override {return -1;}
+    double HighLimit() const override {return +1;}
   };
 
   /// \f$ \Delta m^2_{32} \f$
@@ -179,18 +183,18 @@ namespace ana
   //-------------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
-  class FitDmSq32Scaled: public IConstrainedFitVar
+  class FitDmSq32Scaled: virtual public StanFitSupport<IConstrainedFitVar>
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "dmsq32scaled";}
-    virtual std::string LatexName() const {return "#Deltam^{2}_{32} (10^{-3} eV^{2})";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "dmsq32scaled";}
+    std::string LatexName() const override {return "#Deltam^{2}_{32} (10^{-3} eV^{2})";}
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    virtual double LowLimit() const {return -1000;}
-    virtual double HighLimit() const {return +1000;}
+    double LowLimit() const override {return -1000;}
+    double HighLimit() const override {return +1000;}
   };
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
@@ -202,10 +206,10 @@ namespace ana
   class FitDmSq32NHScaled: public FitDmSq32Scaled
   {
   public:
-    virtual std::string ShortName() const {return "dmsq32NHscaled";}
+    std::string ShortName() const override {return "dmsq32NHscaled";}
 
     // "1eV^2 splitting should be enough for anyone"
-    virtual double LowLimit() const {return 0;}
+    double LowLimit() const override {return 0;}
   };
 
   /// \f$ \Delta m^2_{32} constrained to normal hierarchy \f$
@@ -217,9 +221,9 @@ namespace ana
   class FitDmSq32IHScaled: public FitDmSq32Scaled
   {
   public:
-    virtual std::string ShortName() const {return "dmsq32IHscaled";}
+    std::string ShortName() const override {return "dmsq32IHscaled";}
 
-    virtual double HighLimit() const {return 0;}
+    double HighLimit() const override {return 0;}
   };
 
   /// \f$ \Delta m^2_{32} constrained to inverted hierarchy \f$
@@ -231,13 +235,13 @@ namespace ana
   class FitTanSqTheta12: public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "tsth12";}
-    virtual std::string LatexName() const {return "tan^{2}#theta_{12}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "tsth12";}
+    std::string LatexName() const override {return "tan^{2}#theta_{12}";}
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return std::numeric_limits<double>::max();}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return std::numeric_limits<double>::max();}
   };
 
   /// \f$ \tan^2\theta_{12} \f$
@@ -249,13 +253,13 @@ namespace ana
   class FitSinSq2Theta12: public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "ss2th12";}
-    virtual std::string LatexName() const {return "sin^{2}2#theta_{12}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "ss2th12";}
+    std::string LatexName() const override {return "sin^{2}2#theta_{12}";}
 
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 1;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^22\theta_{12} \f$
@@ -267,15 +271,15 @@ namespace ana
   class FitDmSq21: public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "dmsq21";}
-    virtual std::string LatexName() const {return "#Deltam^{2}_{21}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "dmsq21";}
+    std::string LatexName() const override {return "#Deltam^{2}_{21}";}
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    virtual double LowLimit() const {return -1;}
-    virtual double HighLimit() const {return +1;}
+    double LowLimit() const override {return -1;}
+    double HighLimit() const override {return +1;}
   };
 
   /// \f$ \Delta m^2_{21} \f$
@@ -286,15 +290,15 @@ namespace ana
   class FitDmSq21Scaled: public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "dmsq21scaled";}
-    virtual std::string LatexName() const {return "#Deltam^{2}_{21}";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "dmsq21scaled";}
+    std::string LatexName() const override {return "#Deltam^{2}_{21}";}
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    virtual double LowLimit() const {return -1e5;}
-    virtual double HighLimit() const {return +1e5;}
+    double LowLimit() const override {return -1e5;}
+    double HighLimit() const override {return +1e5;}
   };
 
   /// \f$ \Delta m^2_{21} \f$
@@ -305,14 +309,14 @@ namespace ana
   class FitRho: public IConstrainedFitVar
   {
   public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const;
-    virtual std::string ShortName() const {return "rho";}
-    virtual std::string LatexName() const {return "#rho";}
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    std::string ShortName() const override {return "rho";}
+    std::string LatexName() const override {return "#rho";}
 
     //Density should be greater than zero (set a ridiculously high high limit)
-    virtual double LowLimit() const {return 0;}
-    virtual double HighLimit() const {return 10.0;}
+    double LowLimit() const override {return 0;}
+    double HighLimit() const override {return 10.0;}
 
   };
 
