@@ -1,6 +1,6 @@
 set(Experiment_implementation_files
   CountingExperiment.cxx
-  IExperiment.cxx
+  IChiSqExperiment.cxx
   MultiExperiment.cxx
   ReactorExperiment.cxx
   SingleSampleExperiment.cxx
@@ -8,7 +8,7 @@ set(Experiment_implementation_files
 
 set(Experiment_header_files
   CountingExperiment.h
-  IExperiment.h
+  IChiSqExperiment.h
   MultiExperiment.h
   ReactorExperiment.h
   SingleSampleExperiment.h

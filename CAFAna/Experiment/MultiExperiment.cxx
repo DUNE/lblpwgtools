@@ -340,13 +340,13 @@ namespace ana
     assert(ptag);
     assert(ptag->GetString() == "MultiExperiment");
 
-    std::vector<const IExperiment*> expts;
+    std::vector<const IChiSqExperiment*> expts;
 
     for(int i = 0; ; ++i){
       TDirectory* subdir = dir->GetDirectory(TString::Format("expt%d", i));
       if(!subdir) break;
 
-      expts.push_back(ana::LoadFrom<IExperiment>(subdir).release());
+      expts.push_back(ana::LoadFrom<IChiSqExperiment>(subdir).release());
     }
 
     assert(!expts.empty());

@@ -8,7 +8,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SystShifts.h"
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Experiment/IChiSqExperiment.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
@@ -41,7 +41,7 @@ double GetBoundedGausThrow(double min, double max);
 std::vector<std::string> SplitString(std::string input, char delim = ' ');
 
 // For ease of penalty terms...
-ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
+ana::IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
                              std::string asimov_set = "0",
                              bool modConstraint = false);
 
@@ -198,7 +198,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fitOsc,
                    ana::SystShifts fitSyst,
                    ana::SeedList oscSeeds = ana::SeedList(),
-                   ana::IExperiment *penaltyTerm = nullptr,
+                   ana::IChiSqExperiment *penaltyTerm = nullptr,
                    ana::Fitter::Precision fitStrategy = ana::Fitter::kNormal,
                    TDirectory *outDir = nullptr,
                    FitTreeBlob *PostFitTreeBlob = nullptr,

@@ -20,7 +20,7 @@ namespace osc{class IOscCalculatorAdjustable;}
 
 namespace ana
 {
-  class IExperiment;
+  class IChiSqExperiment;
   class IFitVar;
 
   /// Log-likelihood scan across two parameters
@@ -44,7 +44,7 @@ namespace ana
     /// \param seedPts List of oscillation seeds
     /// \param systSeedPts Try all of these systematic combinations as seeds
     /// \param parallel Use all the cores on this machine? Be careful...
-    Surface(const IExperiment* expt,
+    Surface(const IChiSqExperiment* expt,
             osc::IOscCalculatorAdjustable* calc,
             const IFitVar* xvar, int nbinsx, double xmin, double xmax,
             const IFitVar* yvar, int nbinsy, double ymin, double ymax,
@@ -90,7 +90,7 @@ namespace ana
     void EnsureAxes() const;
 
     void FillSurface(const std::string& progTitle,
-                     const IExperiment* expt,
+                     const IChiSqExperiment* expt,
                      osc::IOscCalculatorAdjustable* calc,
                      const IFitVar* xvar, const IFitVar* yvar,
                      const std::vector<const IFitVar*>& profVars,
@@ -98,7 +98,7 @@ namespace ana
                      const SeedList& seedPts,
                      const std::vector<SystShifts>& systSeedPts);
 
-    void FillSurfacePoint(const IExperiment* expt,
+    void FillSurfacePoint(const IChiSqExperiment* expt,
                           osc::IOscCalculatorAdjustable* calc,
                           const IFitVar* xvar, double x,
                           const IFitVar* yvar, double y,
