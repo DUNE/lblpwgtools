@@ -3,21 +3,37 @@
 #include "CAFAna/Core/ReweightableSpectrum.h"
 
 #include "CAFAna/Core/Binning.h"
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/Spectrum.h"
+#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
+#include "CAFAna/Core/StanTypedefs.h"
 
 #include <string>
 
+#include "TMD5.h"
+
 class TH2;
 class TH2D;
-class TMD5;
 
 #include "CAFAna/Core/FwdDeclare.h"
 
 namespace ana
 {
+  class Binning;
+
+  template <typename T>
+  struct OscCache
+  {
+    mutable std::unique_ptr<TMD5> hash;
+    mutable T spect;
+
+    OscCache()
+      : spect(0, {}, {}, 0, 0)
+    {}
+  };
   /// %Spectrum with true energy information, allowing it to be oscillated
-  class OscillatableSpectrum: public ReweightableSpectrum
+  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache<Spectrum>, protected OscCache<SpectrumStan>
   {
   public:
     friend class SpectrumLoaderBase;
@@ -75,6 +91,7 @@ namespace ana
     Spectrum TrueEnergy() const {return WeightingVariable();}
 
     Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
+    SpectrumStan Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
 
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;
@@ -90,22 +107,16 @@ namespace ana
     OscillatableSpectrum(const std::vector<std::string>& labels,
                          const std::vector<Binning>& bins,
                          const Var& rwVar)
-      : ReweightableSpectrum(labels, bins, rwVar),
-        fCachedOsc(0, {}, {}, 0, 0),
-        fCachedHash(0)
+      : ReweightableSpectrum(labels, bins, rwVar)
     {
     }
 
     OscillatableSpectrum(const std::string& label,
                          const Binning& bins,
                          const Var& rwVar)
-      : ReweightableSpectrum(label, bins, rwVar),
-        fCachedOsc(0, {}, {}, 0, 0),
-        fCachedHash(0)
+      : ReweightableSpectrum(label, bins, rwVar)
     {
     }
 
-    mutable Spectrum fCachedOsc;
-    mutable TMD5* fCachedHash;
   };
 }
