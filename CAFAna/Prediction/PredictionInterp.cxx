@@ -17,6 +17,8 @@
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
+#include "Utilities/func/Stan.h"
+#include "Utilities/func/StanUtils.h"
 
 #include "CAFAna/Core/Loaders.h"
 
@@ -302,10 +304,25 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::Predict(osc::IOscCalculatorStan* calc) const
+  {
+    return fPredNom->Predict(calc);
+  }
+
+  //----------------------------------------------------------------------
   Spectrum PredictionInterp::PredictComponent(osc::IOscCalculator* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
+  {
+    return fPredNom->PredictComponent(calc, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::PredictComponent(osc::IOscCalculatorStan* calc,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
   {
     return fPredNom->PredictComponent(calc, flav, curr, sign);
   }
@@ -323,28 +340,68 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::PredictSyst(osc::IOscCalculatorStan* calc,
+                                             const SystShifts& shift) const
+  {
+    InitFits();
+
+    return PredictComponentSyst(calc,
+                                shift,
+                                Flavors::kAll,
+                                Current::kBoth,
+                                Sign::kBoth);
+  }
+
+  //----------------------------------------------------------------------
   Spectrum PredictionInterp::ShiftSpectrum(const Spectrum &s, CoeffsType type,
                                            bool nubar,
-                                           const SystShifts &shift) const {
-    if (nubar)
-      assert(fSplitBySign);
-
-    // TODO histogram operations could be too slow
+                                           const SystShifts &shift) const 
+  {
+     // TODO histogram operations could be too slow
     TH1D *h = s.ToTH1(s.POT());
+
+    ShiftBins(h->GetNbinsX()+2, h->GetArray(), type, nubar, shift);
+
+    return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+  }
+
+  //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::ShiftSpectrum(const SpectrumStan& s,
+                                               CoeffsType type,
+                                               bool nubar,
+                                               const SystShifts & shift) const
+  {
+
+    auto binContents = s.ToBins(s.POT());
+
+    ShiftBins(binContents.size(), &binContents.front(), type, nubar, shift);
+
+    return SpectrumStan(std::move(binContents), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  void PredictionInterp::ShiftBins(unsigned int N,
+                                   T* arr,
+                                   CoeffsType type,
+                                   bool nubar,
+                                   const SystShifts& shift) const
+  {
+    static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
+                  "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
+    if(nubar) assert(fSplitBySign);
 
     const unsigned int N = h->GetNbinsX() + 2;
 #ifdef USE_PREDINTERP_OMP
-    double corr[4][N];
+    T corr[4][N];
     for (unsigned int i = 0; i < 4; ++i) {
       for (unsigned int j = 0; j < N; ++j) {
         corr[i][j] = 1;
       };
     }
 #else
-    double corr[N];
-    for (unsigned int i = 0; i < N; ++i) {
-      corr[i] = 1;
-    }
+    T corr[N];
+    for(unsigned int i = 0; i < N; ++i) corr[i] = 1;
 #endif
 
     size_t NPreds = fPreds.size();
@@ -354,12 +411,13 @@ namespace ana
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
 
-      double x = shift.GetShift(syst);
+      T x = shift.GetShift<T>(syst);
 
-      if (x == 0)
-        continue;
+      // need to actually do the calculation for the autodiff version
+      // to make sure the gradient is computed correctly
+      if(x == 0 && !std::is_same<T, stan::math::var>::value) continue;
 
-      int shiftBin = (x - sp.shifts[0]) / sp.Stride();
+      int shiftBin = (util::GetValAs<double>(x) - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
       shiftBin = std::min(shiftBin, sp.nCoeffs - 1);
 
@@ -368,8 +426,8 @@ namespace ana
 
       x -= sp.shifts[shiftBin];
 
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
+      const T x_cube = util::cube(x);
+      const T x_sqr = util::sqr(x);
 
 #ifdef USE_PREDINTERP_OMP
       ShiftSpectrumKernel(fits, N, x, x_sqr, x_cube,
@@ -391,20 +449,43 @@ namespace ana
     for (unsigned int n = 0; n < N; ++n) {
       if (arr[n] > fMinMCStats) {
 #ifdef USE_PREDINTERP_OMP
-        arr[n] *= std::max(corr[0][n], 0.);
+        // std::max() doesn't work with stan::math::var
+        arr[n] *= (corr[0][n] > 0.) ? corr[0][n] : 0.;
 #else
-        arr[n] *= std::max(corr[n], 0.);
+        arr[n] *= (corr[n] > 0.) ? corr[n] : 0.;
 #endif
       }
     }
-
-    return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(),
-                    s.POT(), s.Livetime());
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::
-  ShiftedComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::ShiftedComponent(osc::IOscCalculator* calc,
+                                              const TMD5* hash,
+                                              const SystShifts& shift,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign,
+                                              CoeffsType type) const
+  {
+    return _ShiftedComponent<Spectrum>(calc, hash, shift, flav, curr, sign, type);
+  }
+
+  //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
+                                                  const TMD5* hash,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign,
+                                                  CoeffsType type) const
+  {
+    return _ShiftedComponent<SpectrumStan>(calc, hash, shift, flav, curr, sign, type);
+  }
+
+
+  //----------------------------------------------------------------------
+  template <typename U, typename T>
+  U PredictionInterp::_ShiftedComponent(osc::_IOscCalculator<T>* calc,
                    const TMD5* hash,
                    const SystShifts& shift,
                    Flavors::Flavors_t flav,
@@ -412,6 +493,8 @@ namespace ana
                    Sign::Sign_t sign,
                    CoeffsType type) const
   {
+    static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
+                  "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
     if(fSplitBySign && sign == Sign::kBoth){
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+
               ShiftedComponent(calc, hash, shift, flav, curr, Sign::kNu,     type));
@@ -420,7 +503,9 @@ namespace ana
     // Must be the base case of the recursion to use the cache. Otherwise we
     // can cache systematically shifted versions of our children, which is
     // wrong. Also, some calculators won't hash themselves.
-    const bool canCache = (hash != 0);
+    // Moreover, caching is not going to work with stan::math::vars
+    // since they get reset every time Stan's log_prob() is called.
+    const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
 
     const Key_t key = {flav, curr, sign};
     auto it = fNomCache.find(key);
@@ -435,7 +520,7 @@ namespace ana
     }
 
     // We need to compute the nominal again for whatever reason
-    const Spectrum nom = fPredNom->PredictComponent(calc, flav, curr, sign);
+    const auto nom = fPredNom->PredictComponent(calc, flav, curr, sign);
 
     if(canCache){
       // Insert into the cache if not already there, or update if there but
@@ -470,7 +555,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculator* calc,
+  template <typename U, typename T>
+  U PredictionInterp::_PredictComponentSyst(osc::_IOscCalculator<T>* calc,
                                                   const SystShifts& shift,
                                                   Flavors::Flavors_t flav,
                                                   Current::Current_t curr,
@@ -478,7 +564,7 @@ namespace ana
   {
     InitFits();
 
-    Spectrum& ret = fBinning;
+    U ret = fBinning;
     ret.Clear();
 
     if(ret.POT()==0) ret.OverridePOT(1e24);
@@ -515,8 +601,28 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::
-  ComponentDerivative(osc::IOscCalculator* calc,
+  // can't template these directly since the interface isn't templated
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculator* calc,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
+  {
+    return _PredictComponentSyst<Spectrum>(calc, shift, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                                      const SystShifts& shift,
+                                                      Flavors::Flavors_t flav,
+                                                      Current::Current_t curr,
+                                                      Sign::Sign_t sign) const
+  {
+    return _PredictComponentSyst<SpectrumStan>(calc, shift, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  void PredictionInterp::ComponentDerivative(osc::IOscCalculator* calc,
                       Flavors::Flavors_t flav,
                       Current::Current_t curr,
                       Sign::Sign_t sign,
@@ -535,6 +641,8 @@ namespace ana
     TH1D* hnom = snom.ToTH1(snom.POT());
     const double* arr_nom = hnom->GetArray();
 
+    // this method is only ever going to be used by the "Frequentist" version of the class.
+    // don't bother templating.
     const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
     TH1D* h = base.ToTH1(pot);
     double* arr = h->GetArray();
@@ -552,7 +660,9 @@ namespace ana
       assert(find_pred(syst) != fPreds.end());
       const ShiftedPreds& sp = get_pred(syst);
 
-      double x = shift.GetShift(syst);
+      // not instrumenting this method for stan::math::vars
+      // since we're using autodiff anyway
+      double x = util::GetValAs<double>(shift.GetShift(syst));
 
       int shiftBin = (x - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
@@ -786,7 +896,10 @@ namespace ana
       return;
     }
 
-    std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
+    // force-convert to _Spectrum<double> for ease here since in DebugPlots()
+    // we're not concerned with preserving autodiff or speed.
+    // (more instances further below.)
+    std::unique_ptr<TH1> nom(Spectrum(fPredNom->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20));
     const int nbins = nom->GetNbinsX();
 
     TGraph* curves[nbins];
@@ -795,7 +908,7 @@ namespace ana
     for(int i = 0; i <= 80; ++i){
       const double x = .1*i-4;
       const SystShifts ss(it->first, x);
-      std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
+      std::unique_ptr<TH1> h(Spectrum(PredictComponentSyst(calc, ss, flav, curr, sign)).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
         if(i == 0){
@@ -817,12 +930,12 @@ namespace ana
       if(it->second.shifts[shiftIdx] == 0) {pNom = it->second.preds[shiftIdx].get();}
     }
     assert(pNom);
-    std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
+    std::unique_ptr<TH1> hnom(Spectrum(pNom->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20));
 
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
       std::unique_ptr<TH1> h;
-      h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+        h = std::move(std::unique_ptr<TH1>(Spectrum(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20)));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);
