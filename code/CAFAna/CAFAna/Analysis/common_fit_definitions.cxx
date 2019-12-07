@@ -38,6 +38,7 @@
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/func/OscCalculatorGeneral.h"
 
 #include "StandardRecord/StandardRecord.h"
 
