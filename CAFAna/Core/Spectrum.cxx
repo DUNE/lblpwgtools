@@ -378,9 +378,9 @@ namespace ana
   {
     // Could have a file temporarily open
     DontAddDirectory guard;
-    
+
     TH1D* ret = ToTH1(exposure, expotype, bintype);
-    
+
     std::string label;
     for(const std::string& l: fLabels) label += l + " and ";
     label.resize(label.size()-5); // drop the last "and"

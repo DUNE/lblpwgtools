@@ -36,7 +36,7 @@ namespace ana
                    const IFitVar* yvar, int nbinsy, double ymin, double ymax,
                    const std::vector<const IFitVar*>& profVars,
                    const std::vector<const ISyst*>& profSysts,
-                   const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                   const SeedList& seedPts,
                    const std::vector<SystShifts>& systSeedPts,
                    bool parallel,
                    Fitter::Precision prec)
@@ -120,7 +120,7 @@ namespace ana
                             const IFitVar* xvar, const IFitVar* yvar,
                             const std::vector<const IFitVar*>& profVars,
                             const std::vector<const ISyst*>& profSysts,
-                            const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                            const SeedList& seedPts,
                             const std::vector<SystShifts>& systSeedPts)
   {
     if(fParallel && !(profVars.empty() && profSysts.empty())){
@@ -250,7 +250,7 @@ namespace ana
                                  const IFitVar* yvar, double y,
                                  const std::vector<const IFitVar*>& profVars,
                                  const std::vector<const ISyst*>& profSysts,
-                                 const std::map<const IFitVar*, std::vector<double>>& seedPts,
+                                 const SeedList& seedPts,
                                  const std::vector<SystShifts>& systSeedPts)
   {
     osc::IOscCalculatorAdjustable* calcNoHash = 0; // specific to parallel mode
