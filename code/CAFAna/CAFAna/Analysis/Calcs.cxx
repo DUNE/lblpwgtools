@@ -2,6 +2,7 @@
 
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorSterile.h"
+#include "OscLib/func/OscCalculatorGeneral.h"
 
 #include <cmath>
 #include <iostream>
@@ -38,7 +39,7 @@ namespace ana
   //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* DefaultOscCalc()
   {
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
     ResetOscCalcToDefault(ret);
     return ret;
   }
@@ -57,7 +58,7 @@ namespace ana
   //----------------------------------------------------------------------
   osc::IOscCalculatorAdjustable* DefaultOscCalcIH()
   {
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
     ResetOscCalcToDefaultIH(ret);
     return ret;
   }
