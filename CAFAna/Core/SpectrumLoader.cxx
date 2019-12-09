@@ -239,6 +239,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
   SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
 
+  // Get the crazy fluxes
+  std::array<double, 7> crazy_tmp;
+  SetBranchChecked(tr, "wgt_CrazyFlux", &crazy_tmp);
+
   // XSec uncertainties and CVs
   std::vector<std::array<double, 100>> XSSyst_tmp;
   std::vector<double> XSSyst_cv_tmp;
@@ -333,6 +337,12 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                   << std::endl;
         abort();
       }
+    }
+
+    // Get the crazy flux info properly
+    sr.dune.wgt_CrazyFlux.resize(7);
+    for (int i = 0; i < 7; ++i) {
+      sr.dune.wgt_CrazyFlux[i] = crazy_tmp[i];
     }
 
     // Reformat the genie systs
