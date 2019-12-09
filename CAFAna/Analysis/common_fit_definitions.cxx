@@ -35,6 +35,7 @@
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/XSecSysts.h"
+#include "CAFAna/Systs/CrazyFluxFakeData.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -251,6 +252,10 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
         GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
     KeepSysts(xseclist, GetFakeDataGenerationSystNames());
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
+
+    std::vector<const ISyst *> crazyfluxlist = 
+      GetCrazyFluxSysts();
+    systlist.insert(systlist.end(), crazyfluxlist.begin(), crazyfluxlist.end());
   }
 
   return systlist;
@@ -491,7 +496,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } 
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name));
+    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name));
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
   }
@@ -940,7 +945,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
   if (tree_name.size()) {
 
     throw_tree = new TTree(tree_name.c_str(), "Fit information");
-    throw_tree->SetAutoSave(1000);
+    throw_tree->SetAutoSave(10);
     throw_tree->Branch("chisq", &fChiSq);
     throw_tree->Branch("NSeconds", &fNSeconds);
     throw_tree->Branch("ResMemUsage", &fResMemUsage);
@@ -963,7 +968,7 @@ FitTreeBlob::FitTreeBlob(std::string tree_name, std::string meta_tree_name)
     if (meta_tree_name.size()) {
 
       meta_tree = new TTree(meta_tree_name.c_str(), "Parameter meta-data");
-      meta_tree->SetAutoSave(1000);
+      meta_tree->SetAutoSave(10);
       meta_tree->Branch("fParamNames", &fParamNames);
       meta_tree->Branch("fEnvVarNames", &fEnvVarNames);
       meta_tree->Branch("fEnvVarValues", &fEnvVarValues);
