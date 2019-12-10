@@ -6,38 +6,42 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IChiSqExperiment.h"
 
-#include "Minuit2/FCNGradientBase.h"
+#include "Math/Minimizer.h"
+
+#include <chrono>
+#include <memory>
+
+class TMatrixDSym;
 
 namespace ana
 {
 
 /// Perform MINUIT fits in one or two dimensions
   class MinuitFitter
-    : public IFitter, public ROOT::Math::IGradientFunctionMultiDim
+      : public IFitter, public ROOT::Math::IGradientFunctionMultiDim
   {
     public:
-      enum Verbosity { kQuiet = 0, kVerbose = 1, kTurbose = 2 };
-
-      enum FitOpts {
+      enum FitOpts
+      {
         // You must select one of these. The first three codes match the settings
         // used by migrad. The fourth is a custom minimizer.
         kFast = 0,
         kNormal = 1,
         kCareful = 2,
         kGradDesc = 3,
-      
+
         // Allow bitmask operations to extract these first four options
         kPrecisionMask = 3,
 
         // The remaining options are independent, you may xor them in with one of the above
-       
+
         // improve the chances of escaping from invalid minima
         kIncludeSimplex = 4,
-      
+
         // You may optionally specify these to improve the final error estimates
         kIncludeHesse = 8,
         kIncludeMinos = 16,
-      
+
         // try fitting the systs before the oscillation parameters.  might speed up your fit
         kPrefitSysts = 32
       };
@@ -103,18 +107,18 @@ namespace ana
         abort();
       }
 
-      Fitter *Clone() const override
+      MinuitFitter *Clone() const override
       {
-        std::cout << "Fitter::Clone() not implemented" << std::endl;
+        std::cout << "MinuitFitter::Clone() not implemented" << std::endl;
         abort();
       }
 
       // TODO unused
-      bool CheckGradient() const override { return (fFitOpts & kPrecisionMask) != kFast; }
+      bool CheckGradient() const { return (fFitOpts & kPrecisionMask) != kFast; }
 
     protected:
       /// Stuff the parameters into the calculator and/or syst shifts object
-      void DecodePars(const std::vector<double>& pars, osc::IOscCalculatorAdjustable * calc) const;
+      void DecodePars(const std::vector<double> &pars) const;
 
       /// Helper for \ref FitHelper
       double FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
@@ -125,8 +129,8 @@ namespace ana
       /// fSupportsDerivatives
       bool SupportsDerivatives() const;
 
-      mutable osc::IOscCalculatorAdjustable * fCalc;
-      const IChiSqExperiment* fExpt;
+      mutable osc::IOscCalculatorAdjustable *fCalc;
+      const IChiSqExperiment *fExpt;
 
       FitOpts fFitOpts;
 
@@ -153,15 +157,17 @@ namespace ana
       mutable std::vector<double> fCentralValues;
       mutable std::vector<std::pair<double, double>> fMinosErrors;
       mutable std::vector<std::pair<double, double>>
-      fTempMinosErrors; // Bit of a hack
+          fTempMinosErrors; // Bit of a hack
 
       mutable std::chrono::time_point<std::chrono::system_clock> fLastTP;
       mutable std::chrono::time_point<std::chrono::system_clock> fBeginTP;
   };
 
-// Modern C++ thinks that enum | enum == int. Make things work like we expect
-// for this bitmask.
-inline Fitter::Precision operator|(Fitter::Precision a, Fitter::Precision b) {
-  return Fitter::Precision(int(a) | int(b));
-}
+  // Modern C++ thinks that enum | enum == int. Make things work like we expect
+  // for this bitmask.
+  inline MinuitFitter::FitOpts operator|(MinuitFitter::FitOpts a, MinuitFitter::FitOpts b)
+  {
+    return MinuitFitter::FitOpts(int(a) | int(b));
+  }
 
+}
