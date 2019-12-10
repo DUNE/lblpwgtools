@@ -121,10 +121,10 @@ namespace ana
   public:
     FitSinSqTheta23Symmetry(int sign) : fSign(sign) {}
 
-    std::string ShortName() const override override {return "ssth23";}
-    std::string LatexName() const override override {return "sin^{2}#theta_{23}";}
+    std::string ShortName() const override {return "ssth23";}
+    std::string LatexName() const override {return "sin^{2}#theta_{23}";}
 
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override override;
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
 
     void SetValue(osc::IOscCalculatorAdjustable* osc,
                   double val) const override;
@@ -187,7 +187,11 @@ namespace ana
   {
   public:
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
+
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
+
     std::string ShortName() const override {return "dmsq32scaled";}
     std::string LatexName() const override {return "#Deltam^{2}_{32} (10^{-3} eV^{2})";}
 
