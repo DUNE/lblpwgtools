@@ -5,6 +5,8 @@
 #include "CAFAna/Core/LoadFromFile.h"
 
 class TDirectory;
+class TH1;
+class TH1D;
 
 namespace ana
 {
