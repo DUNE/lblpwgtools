@@ -24,6 +24,8 @@ namespace ana
       IFitter(const std::vector<const IFitVar *>& vars,
               const std::vector<const ISyst *>& systs = {});
 
+      IFitter(const IFitter & f);
+
       virtual ~IFitter();
 
       /// \brief  Master fitting method.  Depends on FitHelper and FitHelperSeeded.

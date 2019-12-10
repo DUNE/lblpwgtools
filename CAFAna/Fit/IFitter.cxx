@@ -25,6 +25,13 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  IFitter::IFitter(const IFitter &other)
+      : fVars(other.fVars),
+        fSysts(other.fSysts),
+        fShifts(std::make_unique<SystShifts>(*other.fShifts))
+  {}
+
+  //----------------------------------------------------------------------
   IFitter::~IFitter()
   {
   }
@@ -181,5 +188,6 @@ namespace ana
       }
     }
   }
+
 
 } // namespace ana
