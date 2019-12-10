@@ -1,14 +1,9 @@
 set(Analysis_implementation_files
   Calcs.cxx
   CalcsNuFit.cxx
-  Fit.cxx
-  GradientDescent.cxx
   Plots.cxx
   Resolution.cxx
-  Surface.cxx
   # TDRLoaders.cxx
-  SeedList.cxx
-  RefineSeeds.cxx
   AnalysisBinnings.cxx
   AnalysisVars.cxx
   common_fit_definitions.cxx
@@ -18,16 +13,11 @@ set(Analysis_implementation_files
 set(Analysis_header_files
   Calcs.h
   CalcsNuFit.h
-  Fit.h
-  GradientDescent.h
   Plots.h
   Resolution.h
-  Surface.h
   # TDRLoaders.h
   Exposures.h
   Style.h
-  SeedList.h
-  RefineSeeds.h
   AnalysisBinnings.h
   AnalysisDialGroups.h
   AnalysisVars.h
