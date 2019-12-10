@@ -66,7 +66,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/ExternalLibrariesCheck.cmake)
 include_directories(
   ${SRC_ROOT_PARENT}
   ${CMAKE_BINARY_DIR}/Ext
-  ${BOOST_INC})
+  ${BOOST_INC}
+  ${EIGEN_INC}
+  ${CVODES_INC}
+  ${STAN_MATH_INC}
+  ${STAN_INC})
 
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 
@@ -81,6 +85,7 @@ add_subdirectory(Cuts)
 add_subdirectory(Decomp)
 add_subdirectory(Experiment)
 add_subdirectory(Extrap)
+add_subdirectory(Fit)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
