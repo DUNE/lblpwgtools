@@ -11,9 +11,10 @@
 
 #include <string>
 
+#include "TMD5.h"
+
 class TH2;
 class TH2D;
-class TMD5;
 
 #include "CAFAna/Core/FwdDeclare.h"
 

@@ -3,6 +3,7 @@
 
 #include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SystShifts.h"
