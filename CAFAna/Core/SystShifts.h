@@ -10,9 +10,15 @@
 
 class TDirectory;
 
+namespace caf
+{
+  class StandardRecord;
+}
+
 namespace ana
 {
   class ISyst;
+  class Restorer;
 
   /// Simple record of shifts applied to systematic parameters
   class SystShifts
