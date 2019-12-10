@@ -1,8 +1,8 @@
 #pragma once
+
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Analysis/Fit.h"
 #include "OscLib/func/IOscCalculator.h"
-
-namespace osc{class IOscCalculatorAdjustable;}
 
 namespace ana
 {

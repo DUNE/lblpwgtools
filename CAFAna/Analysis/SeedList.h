@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-namespace osc{class IOscCalculatorAdjustable;}
+#include "CAFAna/Core/FwdDeclare.h"
 
 namespace ana
 {

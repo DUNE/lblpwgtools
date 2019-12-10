@@ -7,8 +7,6 @@
 
 #include "Utilities/func/StanUtils.h"
 
-namespace osc{class IOscCalculatorAdjustable;}
-
 namespace ana
 {
   //----------------------------------------------------------------------

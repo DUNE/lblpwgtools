@@ -15,10 +15,6 @@
 
 class TGraph;
 
-namespace osc {
-class IOscCalculatorAdjustable;
-}
-
 namespace ana
 {
   class IChiSqExperiment;

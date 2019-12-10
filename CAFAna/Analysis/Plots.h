@@ -5,14 +5,14 @@
 
 #include "Rtypes.h"
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 class TLegend;
 class TGraph;
 class TGraphAsymmErrors;
 class TH1;
 class TH2;
 class THStack;
-
-namespace osc{class IOscCalculator;}
 
 namespace ana
 {
