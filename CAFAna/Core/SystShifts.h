@@ -86,7 +86,7 @@ namespace ana
 
   protected:
     template <typename T>
-    T Clamp(const double & T, const ISyst* s);
+    T Clamp(const T & t, const ISyst* s);
 
     std::unordered_map<const ISyst*, double> fSystsDbl;
     mutable std::unordered_map<const ISyst*, stan::math::var> fSystsStan;
