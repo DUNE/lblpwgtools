@@ -1,7 +1,5 @@
 #include "CAFAna/Analysis/AnalysisBinnings.h"
 #include "CAFAna/Analysis/AnalysisDialGroups.h"
-#include "CAFAna/Analysis/Fit.h"
-#include "CAFAna/Analysis/SeedList.h"
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
@@ -9,6 +7,9 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Experiment/IChiSqExperiment.h"
+
+#include "CAFAna/Fit/Fit.h"
+#include "CAFAna/Fit/SeedList.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 

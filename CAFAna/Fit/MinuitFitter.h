@@ -6,12 +6,11 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IChiSqExperiment.h"
 
+#include "TMatrixDSymfwd.h"
 #include "Math/Minimizer.h"
 
 #include <chrono>
 #include <memory>
-
-class TMatrixDSym;
 
 namespace ana
 {

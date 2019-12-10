@@ -4,9 +4,8 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Fit/MinuitFitter.h"
+#include "CAFAna/Fit/SeedList.h"
 #include "CAFAna/Prediction/IPrediction.h"
-
-#include "CAFAna/Analysis/SeedList.h"
 
 #include "Math/Minimizer.h"
 
