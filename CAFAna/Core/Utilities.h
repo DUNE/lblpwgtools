@@ -27,6 +27,8 @@ class TH2D;
 class TH3D;
 class TVector3;
 
+#include "Utilities/func/MathUtil.h"
+
 namespace ana
 {
   class Binning;
@@ -135,8 +137,8 @@ namespace ana
     const double S = LLPerBinFracSystErr::GetError();
     if(S > 0){
       const double S2 = util::sqr(S);
-      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
-      e *= 1+s;
+      const double s = .25*(sqrt(8*obs*S2+util::sqr(exp*S2-2))-exp*S2-2);
+      exp *= 1+s;
     }
 
     // With this value, negative expected events and one observed
