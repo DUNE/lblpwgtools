@@ -7,9 +7,9 @@
 
 #include "TFile.h"
 
-class TDirectory;
+#include "CAFAna/Core/FwdDeclare.h"
 
-namespace osc{class IOscCalculator;}
+class TDirectory;
 
 namespace ana
 {

@@ -4,8 +4,6 @@
 
 #include "CAFAna/Core/Registry.h"
 
-namespace osc{class IOscCalculatorAdjustable;}
-
 namespace ana
 {
   //----------------------------------------------------------------------

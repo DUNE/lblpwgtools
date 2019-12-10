@@ -1,10 +1,10 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Core/OscillatableSpectrum.h"
-
-namespace osc{class IOscCalculator;}
 
 class TDirectory;
 

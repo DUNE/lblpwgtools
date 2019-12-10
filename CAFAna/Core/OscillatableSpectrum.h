@@ -12,7 +12,7 @@ class TH2;
 class TH2D;
 class TMD5;
 
-namespace osc{class IOscCalculator;}
+#include "CAFAna/Core/FwdDeclare.h"
 
 namespace ana
 {
