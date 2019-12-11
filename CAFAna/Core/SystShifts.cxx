@@ -216,7 +216,7 @@ T SystShifts::Clamp(const T& x, const ISyst *s) {
   }
 
   if (shouldClamp)
-    return std::min(std::max(x, GetValAs<T>(s->Min())), GetValAs<T>(s->Max()));
+    return std::min(std::max(x, util::GetValAs<T>(s->Min())), util::GetValAs<T>(s->Max()));
   else
     return x;
 }
@@ -260,7 +260,7 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
   TH1* h = (TH1*)dir->Get("vals");
   if(h){ // no histogram means nominal
     for(int i = 1; i <= h->GetNbinsX(); ++i){
-      ret->SetShift(Registry<ISyst>::ShortNameToPtr(h->GetXaxis()->GetBinLabel(i)),
+      ret->SetShift(SystRegistry::ShortNameToSyst(h->GetXaxis()->GetBinLabel(i)),
                     h->GetBinContent(i));
     }
   }
