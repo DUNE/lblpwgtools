@@ -2,6 +2,7 @@
 
 #include "CAFAna/Experiment/IChiSqExperiment.h"
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Spectrum.h"
 
 namespace ana
