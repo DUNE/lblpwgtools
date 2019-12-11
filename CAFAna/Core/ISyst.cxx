@@ -1,6 +1,6 @@
 #include "CAFAna/Core/ISyst.h"
 
-#include "CAFAna/Core/SystRegistry.h"
+#include "CAFAna/Core/Registry.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -15,15 +15,15 @@ namespace ana
 	       double cv)
     : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
   {
-    SystRegistry::Register(this);
+    Registry<ISyst>::Register(this);
   }
 
   //----------------------------------------------------------------------
   ISyst::~ISyst()
   {
     // Normally ISysts should last for the life of the process, but in case one
-    // is deleted it's best not to leave a dangling pointer in SystRegistry.
-    SystRegistry::UnRegister(this);
+    // is deleted it's best not to leave a dangling pointer in Registry.
+    Registry<ISyst>::UnRegister(this);
   }
 
   //----------------------------------------------------------------------

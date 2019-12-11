@@ -1,6 +1,6 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/ISyst.h"
-#include "CAFAna/Core/SystRegistry.h"
+#include "CAFAna/Core/Registry.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -260,7 +260,7 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
   TH1* h = (TH1*)dir->Get("vals");
   if(h){ // no histogram means nominal
     for(int i = 1; i <= h->GetNbinsX(); ++i){
-      ret->SetShift(SystRegistry::ShortNameToSyst(h->GetXaxis()->GetBinLabel(i)),
+      ret->SetShift(Registry<ISyst>::ShortNameToPtr(h->GetXaxis()->GetBinLabel(i)),
                     h->GetBinContent(i));
     }
   }

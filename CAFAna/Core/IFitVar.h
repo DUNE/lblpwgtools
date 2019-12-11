@@ -3,9 +3,11 @@
 #include <string>
 
 #include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/StanTypedefs.h"
 
 #include "Utilities/func/StanUtils.h"
+#include "Utilities/func/StanVar.h"
 
 namespace ana
 {
@@ -13,13 +15,28 @@ namespace ana
   /// Interface definition for fittable variables
   class IFitVar
   {
-  public:
-    virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const = 0;
-    virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const = 0;
-    virtual std::string ShortName() const = 0;
-    virtual std::string LatexName() const = 0;
-    virtual double Penalty(double /*val*/,
-                           osc::IOscCalculatorAdjustable*) const {return 0;}
+    public:
+      IFitVar(std::string shortName, std::string latexName)
+        : fShortName(std::move(shortName)),
+          fLatexName(std::move(latexName))
+      {
+        Registry<IFitVar>::Register(this);
+      }
+
+      virtual ~IFitVar()
+      {
+        Registry<IFitVar>::UnRegister(this);
+      }
+      virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const = 0;
+      virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const = 0;
+      virtual double Penalty(double, osc::IOscCalculatorAdjustable*) const {return 0;}
+
+      const std::string & ShortName() const { return fShortName; };
+      const std::string & LatexName() const { return fLatexName; };
+
+    private:
+      std::string fShortName;
+      std::string fLatexName;
   };
 
   //----------------------------------------------------------------------
@@ -28,7 +45,7 @@ namespace ana
   class IConstrainedFitVar: public IFitVar
   {
   public:
-    virtual double Penalty(double val, osc::IOscCalculatorAdjustable*) const override;
+      using IFitVar::IFitVar;
     virtual double LowLimit() const = 0;
     virtual double HighLimit() const = 0;
 
