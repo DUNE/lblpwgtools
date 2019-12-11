@@ -177,60 +177,59 @@ namespace ana
                                     Sign::Sign_t sign,
                                     CoeffsType type) const;
 
+      //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+      void DiscardSysts(std::vector<ISyst const *>const &);
+      //Get all known about systs
+      std::vector<ISyst const *> GetAllSysts() const;
+
     protected:
-    std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
+      std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
-    struct ShiftedPreds
-    {
-      double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
+      struct ShiftedPreds
+      {
+        double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
 
-      std::string systName; ///< What systematic we're interpolating
-      std::vector<double> shifts; ///< Shift values sampled
-      std::vector<std::unique_ptr<IPrediction>> preds;
+        std::string systName; ///< What systematic we're interpolating
+        std::vector<double> shifts; ///< Shift values sampled
+        std::vector<std::unique_ptr<IPrediction>> preds;
 
-      int nCoeffs; // Faster than calling size()
+        int nCoeffs; // Faster than calling size()
 
-      /// Indices: [type][histogram bin][shift bin]
-      std::vector<std::vector<std::vector<Coeffs>>> fits;
-      /// Will be filled if signs are separated, otherwise not
-      std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
+        /// Indices: [type][histogram bin][shift bin]
+        std::vector<std::vector<std::vector<Coeffs>>> fits;
+        /// Will be filled if signs are separated, otherwise not
+        std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
 
-      // Same info as above but with more-easily-iterable index order
-      // [type][shift bin][histogram bin]. TODO this is ugly
-      std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
-      std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
-      ShiftedPreds() {}
-      ShiftedPreds(ShiftedPreds &&other)
-          : systName(std::move(other.systName)),
-            shifts(std::move(other.shifts)), preds(std::move(other.preds)),
-            nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
-            fitsNubar(std::move(other.fitsNubar)),
-            fitsRemap(std::move(other.fitsRemap)),
-            fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
+        // Same info as above but with more-easily-iterable index order
+        // [type][shift bin][histogram bin]. TODO this is ugly
+        std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
+        std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
+        ShiftedPreds() {}
+        ShiftedPreds(ShiftedPreds &&other)
+            : systName(std::move(other.systName)),
+              shifts(std::move(other.shifts)), preds(std::move(other.preds)),
+              nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
+              fitsNubar(std::move(other.fitsNubar)),
+              fitsRemap(std::move(other.fitsRemap)),
+              fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
 
-      ShiftedPreds &operator=(ShiftedPreds &&other) {
-        systName = std::move(other.systName);
-        shifts = std::move(other.shifts);
-        preds = std::move(other.preds);
-        nCoeffs = other.nCoeffs;
-        fits = std::move(other.fits);
-        fitsNubar = std::move(other.fitsNubar);
-        fitsRemap = std::move(other.fitsRemap);
-        fitsNubarRemap = std::move(other.fitsNubarRemap);
-        return *this;
-      }
+        ShiftedPreds &operator=(ShiftedPreds &&other) {
+          systName = std::move(other.systName);
+          shifts = std::move(other.shifts);
+          preds = std::move(other.preds);
+          nCoeffs = other.nCoeffs;
+          fits = std::move(other.fits);
+          fitsNubar = std::move(other.fitsNubar);
+          fitsRemap = std::move(other.fitsRemap);
+          fitsNubarRemap = std::move(other.fitsNubarRemap);
+          return *this;
+        }
 
-      void Dump(){
-        std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
-      }
-    };
+        void Dump(){
+          std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
+        }
+      };
 
-    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
-    void DiscardSysts(std::vector<ISyst const *>const &);
-    //Get all known about systs
-    std::vector<ISyst const *> GetAllSysts() const;
-
-  protected:
     using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
     mutable std::vector<PredMappedType> fPreds;
     std::vector<PredMappedType>::iterator find_pred(const ISyst *s) const {
