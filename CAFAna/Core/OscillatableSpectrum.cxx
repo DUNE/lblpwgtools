@@ -144,8 +144,6 @@ namespace ana
 
     for (SpectrumLoaderBase* loader : fLoaderCount)
     { loader->RemoveReweightableSpectrum(this); }
-
-    delete fCachedHash;
   }
 
   //----------------------------------------------------------------------
@@ -297,11 +295,7 @@ namespace ana
 
     DontAddDirectory guard;
 
-    TH1 * h;
-    if (fHistD)
-      h = fHistD;
-    else
-      h = fHistF;
+    TH1 * h = fHist;
     const int X = h->GetNbinsX();
     const int Y = h->GetNbinsY();
 
