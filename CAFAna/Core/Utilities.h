@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cxxabi.h>
 #include <fenv.h>
 #include <map>
 #include <set>
@@ -311,6 +312,13 @@ namespace ana
   bool RunningOnGrid();
 
   bool AlmostEqual(double a, double b, double eps = .0001); // allow 0.01% error by default
+
+  /// utility method to figure out exactly what kind of object I am
+  template <typename T>
+  std::string DemangledTypeName(T* obj) { return abi::__cxa_demangle(typeid(*obj).name(), 0, 0, 0); }
+
+  template <typename T>
+  constexpr char* DemangledTypeName(){ return abi::__cxa_demangle(typeid(T).name(), 0, 0, 0); }
 
   std::string pnfs2xrootd(std::string loc, bool unauth = false);
 
