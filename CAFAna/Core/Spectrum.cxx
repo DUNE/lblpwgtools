@@ -249,7 +249,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   Spectrum::Spectrum(const SpectrumStan& rhs)
-    : fHistD(nullptr), fHistF(nullptr), fHistSparse(nullptr),
+    : fHist(Hist::Uninitialized()),
       fPOT(rhs.POT()), fLivetime(rhs.Livetime()),
       fLabels(rhs.GetLabels()), fBins(rhs.GetBinnings())
   {
@@ -262,10 +262,7 @@ namespace ana
     auto binC = rhs.ToBins(rhs.POT());
     for (int binIdx = 0; binIdx < rhs.GetBinnings()[0].NBins()+2; binIdx++) // be sure to get under- and overflow
     {
-      if (gFloatMode)
-        fHistF->SetBinContent(binIdx, binC[binIdx].val());
-      else
-        fHistD->SetBinContent(binIdx, binC[binIdx].val());
+      fHist.SetBinContent(binIdx, binC[binIdx].val());
     }
   }
 
