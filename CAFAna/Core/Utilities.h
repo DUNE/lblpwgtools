@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <fenv.h>
 #include <map>
 #include <set>

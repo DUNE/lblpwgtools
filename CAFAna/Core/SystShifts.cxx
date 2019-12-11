@@ -1,5 +1,6 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/ISyst.h"
+#include "CAFAna/Core/SystRegistry.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -8,6 +9,9 @@
 #include <memory>
 #include <iostream>
 
+#include "TDirectory.h"
+#include "TH1D.h"
+#include "TObjString.h"
 #include "TString.h"
 
 namespace ana {

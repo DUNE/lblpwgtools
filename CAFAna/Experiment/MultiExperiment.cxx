@@ -1,5 +1,6 @@
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Core/HistCache.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
@@ -7,6 +8,7 @@
 #include "OscLib/func/IOscCalculator.h"
 
 #include "TDirectory.h"
+#include "TH1D.h"
 #include "TObjString.h"
 #include "TVectorD.h"
 
