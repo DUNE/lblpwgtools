@@ -15,7 +15,7 @@
 namespace ana
 {
 
-  SystShifts IFitter::junkShifts = SystShifts();
+  SystShifts junkShifts = SystShifts();
 
   //----------------------------------------------------------------------
   IFitter::IFitter(const std::vector<const IFitVar*>& vars,

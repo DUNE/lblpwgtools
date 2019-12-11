@@ -12,12 +12,11 @@ namespace ana
   class IChiSqExperiment;
   class ISyst;
 
+  extern SystShifts junkShifts;
+
   /// Base class for fitters.
   class IFitter
   {
-    protected:
-      static SystShifts junkShifts;
-
     public:
       enum Verbosity{kQuiet, kVerbose, kTurbose};
 
