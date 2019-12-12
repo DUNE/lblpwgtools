@@ -282,7 +282,7 @@ namespace ana
     // and dividing it by the simple histogram of the events
     assert(fMCMCSamples);
     assert(bins.size() == fOrderedBrNames.size());
-    assert(bins.size() > 0 && bins.size() < 4);
+    assert(bins.size() > 0 && bins.size() < 3);  // could port NOvA CAFAna 3D hist stuff if needed
 
     auto axisNameStr = std::accumulate(fOrderedBrNames.begin(), fOrderedBrNames.end(),
                                        std::string(""),
@@ -301,8 +301,9 @@ namespace ana
       ret.reset(MakeTH1D(UniqueName().c_str(), axisNameStr.c_str(), bins[0]));
     else if (bins.size() == 2)
       ret.reset(MakeTH2D(UniqueName().c_str(), axisNameStr.c_str(), bins[0], bins[1]));
-    else if (bins.size() == 3)
-      ret.reset(MakeTH3D(UniqueName().c_str(), axisNameStr.c_str(), bins[0], bins[1], bins[2]));
+    // we haven't implemented MakeTH3D here.  but won't worry about it for now
+    //else if (bins.size() == 3)
+    //  ret.reset(MakeTH3D(UniqueName().c_str(), axisNameStr.c_str(), bins[0], bins[1], bins[2]));
 
     //auto drawStr = std::accumulate(fOrderedBrNames.rbegin(), fOrderedBrNames.rend(),
     //                               std::string(""),
@@ -319,8 +320,8 @@ namespace ana
       denom = std::make_unique<TH1D>(*dynamic_cast<TH1D*>(ret.get()));
     else if (bins.size() == 2)
       denom = std::make_unique<TH2D>(*dynamic_cast<TH2D*>(ret.get()));
-    else if (bins.size() == 3)
-      denom = std::make_unique<TH3D>(*dynamic_cast<TH3D*>(ret.get()));
+    //else if (bins.size() == 3)
+    //  denom = std::make_unique<TH3D>(*dynamic_cast<TH3D*>(ret.get()));
     denom->SetName(UniqueName().c_str());
 
     // this could certainly be done less sloppily
