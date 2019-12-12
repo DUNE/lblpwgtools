@@ -12,6 +12,8 @@
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Core/StanTypedefs.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
 #include "Utilities/func/StanUtils.h"
 
 
@@ -89,11 +91,11 @@ namespace ana
 
       /// Override (and call) the base class version, doing some caching of the oscillation parameters
       /// to avoid the problem discussed in the doc for fParamCache
-      virtual double Fit(osc::IOscCalculatorAdjustable *seed,
-                         SystShifts &bestSysts = junkShifts,
-                         const SeedList& seedPts = SeedList(),
-                         const std::vector<SystShifts> &systSeedPts = {},
-                         Verbosity verb = kVerbose) const override;
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable *seed,
+                                               SystShifts &bestSysts = junkShifts,
+                                               const SeedList& seedPts = SeedList(),
+                                               const std::vector<SystShifts> &systSeedPts = {},
+                                               Verbosity verb = kVerbose) const override;
 
       // un-hide the other versions of Fit() inherited from IFitter
       using IFitter::Fit;
@@ -257,16 +259,52 @@ namespace ana
           fShifts->SetShift(fSysts[j], val);
         }
       }
+
+      class StanFitSummary : public IFitSummary
+      {
+        public:
+          StanFitSummary(double bestLL)
+            : fBestLL(bestLL)
+          {}
+
+          bool IsBetterFit(const IFitSummary* other) const override
+          {
+            if (!other)
+              return false;
+
+            if (auto otherSummary = dynamic_cast<const StanFitSummary*>(other))
+              return otherSummary->EvalMetricVal() > EvalMetricVal();
+            else
+            {
+              assert (false && "Can't compare a StanFitSummary to another kind of IFitSummary!");
+              return false;  // prevent compiler warnings
+            }
+          }
+
+          /// What's the value of the thing being minimized or maximized?  (LL, chi2, etc.)
+          /// Interpretation depends on the derived class...
+          double  EvalMetricVal() const override
+          {
+            return fBestLL;
+          }
+
+        private:
+          double fBestLL;
+      };
+
       /// Implement workhorse method from IFitter interface
-      double FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                             SystShifts &systSeed,
-                             Verbosity verb) const override;
+      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                                                   SystShifts &systSeed,
+                                                   Verbosity verb) const override;
 
       /// Helper function that actually does the unconstraining Stan needs
       template <typename T>
       void transform_helper(const stan::io::var_context& context,
                             stan::io::writer<double>& writer,
                             const T& var) const;
+
+      /// Req'd by IFitter interface, but we don't need it here
+      void UpdatePostFit(const IFitSummary *) const override {};
 
       //  members below
       mutable std::unique_ptr<osc::IOscCalculatorAdjustableStan> fCalc;

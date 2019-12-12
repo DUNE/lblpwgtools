@@ -189,7 +189,7 @@ void mh()
 	MinuitFitter fit_syst(&full_expt_syst, oscVars, systlist);
 
 	//std::cout << "before: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << std::endl;
-	thischisq = fit_syst.Fit(testOsc, IFitter::kQuiet);
+	thischisq = fit_syst.Fit(testOsc, IFitter::kQuiet)->EvalMetricVal();
 	//std::cout << "after: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << " " << thischisq << std::endl;
 
 	chisqmin = TMath::Min(thischisq,chisqmin);

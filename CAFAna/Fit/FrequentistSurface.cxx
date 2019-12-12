@@ -274,7 +274,7 @@ namespace ana
       MinuitFitter fitter(expt, profVars, profSysts);
       fitter.SetFitOpts(fFitOpts);
       SystShifts bestSysts;
-      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       for(unsigned int i = 0; i < profVars.size(); ++i){
         fProfHists[i]->Fill(x, y, profVars[i]->GetValue(calc));
@@ -327,7 +327,7 @@ namespace ana
     yvar->SetValue(calc, fHist->GetYaxis()->GetBinCenter(miny));
     for(int i = 0; i < (int)fSeedValues.size(); ++i) profVars[i]->SetValue( calc, fSeedValues[i] );
     SystShifts systSeed = SystShifts::Nominal();
-    fBestLikelihood = fit.Fit(calc, systSeed, seedPts);
+    fBestLikelihood = fit.Fit(calc, systSeed, seedPts)->EvalMetricVal();
     fBestFitX = xvar->GetValue(calc);
     fBestFitY = yvar->GetValue(calc);
 

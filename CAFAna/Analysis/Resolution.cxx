@@ -27,6 +27,6 @@ namespace ana
     }
 
     
-    return fmyfit.Fit(ftestOsc, IFitter::kQuiet) - 1.0;
+    return fmyfit.Fit(ftestOsc, IFitter::kQuiet)->EvalMetricVal() - 1.0;
   }
 }

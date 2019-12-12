@@ -68,11 +68,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                                       SystShifts &systSeed,
-                                       Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                                SystShifts &systSeed,
+                                Verbosity verb) const
   {
-    if (fPrec & kIncludeSimplex)
+    if (fFitOpts & kIncludeSimplex)
       std::cout << "Simplex option specified but not implemented. Ignored."
                 << std::endl;
 
@@ -88,16 +89,16 @@ namespace ana
     fCalc = seed;
     *fShifts = systSeed;
 
-  std::unique_ptr<ROOT::Math::Minimizer> mnMin;
+    std::unique_ptr<ROOT::Math::Minimizer> mnMin;
 
-    if ((fPrec & kAlgoMask) == kGradDesc)
+    if ((fFitOpts & kPrecisionMask) == kGradDesc)
       mnMin = std::make_unique<GradientDescent>(*this);
     else
     {
       mnMin = std::unique_ptr<ROOT::Math::Minimizer>(
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
       // ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
-      mnMin->SetStrategy(int(fPrec & kAlgoMask));
+      mnMin->SetStrategy(int(fFitOpts & kPrecisionMask));
     }
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
@@ -142,46 +143,46 @@ namespace ana
     // One way this can go wrong is if two variables have the same ShortName
     assert(mnMin->NFree() == fVars.size() + fSysts.size());
 
-  if (fSupportsDerivatives) {
-    mnMin->SetFunction(*this);
-  } else {
-    mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim &)*this);
-  }
+    if (fSupportsDerivatives) {
+      mnMin->SetFunction(*this);
+    } else {
+      mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim &)*this);
+    }
 
-  if (fVerb <= Verbosity::kQuiet) {
-    mnMin->SetPrintLevel(0);
-  }
+    if (verb <= Verbosity::kQuiet) {
+      mnMin->SetPrintLevel(0);
+    }
 
-  if (!mnMin->Minimize()) {
-    std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
-    std::cout << "*** Precision: " << mnMin->Precision() << std::endl;
+    if (!mnMin->Minimize()) {
+      std::cout << "*** ERROR: minimum is not valid ***" << std::endl;
+      std::cout << "*** Precision: " << mnMin->Precision() << std::endl;
 
-    std::cout << "-- Stopped at: \n";
-    for (uint i = 0; i < mnMin->NFree(); ++i) {
-      std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i]
-                << "\n";
+      std::cout << "-- Stopped at: \n";
+      for (uint i = 0; i < mnMin->NFree(); ++i) {
+        std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i]
+                  << "\n";
+        }
+      }
+
+    if (fFitOpts & kIncludeHesse) {
+      std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
+      mnMin->Hesse();
+    }
+
+    if (fFitOpts & kIncludeMinos) {
+      // std::cout << "It's minos time" << std::endl;
+      fTempMinosErrors.clear();
+      for (uint i = 0; i < mnMin->NDim(); ++i) {
+        double errLow = 0, errHigh = 0;
+        mnMin->GetMinosError(i, errLow, errHigh);
+        std::cout << i << "/" << mnMin->NDim() << " " << fParamNames[i] << ": "
+                  << errLow << ", +" << errHigh << " (" << mnMin->Errors()[i]
+                  << ")" << std::endl;
+        fTempMinosErrors.push_back(std::make_pair(errLow, errHigh));
       }
     }
 
-  if (fPrec & kIncludeHesse) {
-    std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
-    mnMin->Hesse();
-  }
-
-  if (fPrec & kIncludeMinos) {
-    // std::cout << "It's minos time" << std::endl;
-    fTempMinosErrors.clear();
-    for (uint i = 0; i < mnMin->NDim(); ++i) {
-      double errLow = 0, errHigh = 0;
-      mnMin->GetMinosError(i, errLow, errHigh);
-      std::cout << i << "/" << mnMin->NDim() << " " << fParamNames[i] << ": "
-                << errLow << ", +" << errHigh << " (" << mnMin->Errors()[i]
-                << ")" << std::endl;
-      fTempMinosErrors.push_back(std::make_pair(errLow, errHigh));
-    }
-  }
-
-  return mnMin;
+    return std::make_unique<MinuitFitSummary>(std::move(mnMin));
   }
 
   //----------------------------------------------------------------------
@@ -201,11 +202,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Fitter::DoEval(const double *pars) const {
+  double MinuitFitter::DoEval(const double *pars) const
   {
     ++fNEval;
-
-    assert(pars.size() == fVars.size() + fSysts.size());
 
     DecodePars(pars); // Updates fCalc and fShifts
 
@@ -228,7 +227,7 @@ namespace ana
       std::time_t now_time = std::chrono::system_clock::to_time_t(now);
 
       std::cerr << "[FIT]: NEval: " << fNEval
-                << ", LH: {samp: " << fExpt->ChiSq(fCalc, fShifts)
+                << ", LH: {samp: " << fExpt->ChiSq(fCalc, *fShifts)
                 << ", pen: " << penalty << "}\n\tT += "
                 << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
                        .count()
@@ -251,15 +250,13 @@ namespace ana
       fLastTP = now;
     }
 
-    return fExpt->ChiSq(fCalc, fShifts) + penalty;
+    return fExpt->ChiSq(fCalc, *fShifts) + penalty;
   }
 
   //----------------------------------------------------------------------
-  std::vector<double> MinuitFitter::Gradient(const double *pars, double *ret) const
+  void MinuitFitter::Gradient(const double *pars, double *ret) const
   {
     ++fNEvalGrad;
-
-    std::vector<double> ret(pars.size());
 
     // TODO handling of FitVars including penalty terms
 
@@ -285,7 +282,7 @@ namespace ana
     std::unordered_map<const ISyst *, double> dchi;
     for (const ISyst *s : fSysts)
       dchi[s] = 0;
-    fExpt->Derivative(fCalc, fShifts, dchi);
+    fExpt->Derivative(fCalc, *fShifts, dchi);
 
   for (unsigned int j = 0; j < fSysts.size(); ++j) {
     // Get the un-truncated systematic shift
@@ -293,15 +290,11 @@ namespace ana
 
     ret[fVars.size() + j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
     }
-
-    return ret;
   }
 
   //----------------------------------------------------------------------
-  void MinuitFitter::DecodePars(const std::vector<double> &pars) const
+  void MinuitFitter::DecodePars(const double *pars) const
   {
-    assert(pars.size() == fVars.size()+fSysts.size());
-
     if (fVars.size() > 0)
     {
       assert(fCalc);
@@ -315,5 +308,38 @@ namespace ana
       auto val = pars[fVars.size()+j];
       fShifts->SetShift(fSysts[j], val);
     }
+  }
+
+   //----------------------------------------------------------------------
+  void MinuitFitter::UpdatePostFit(const IFitter::IFitSummary *fitSummary) const
+  {
+    // Get them as set by the last seed fit
+    fParamNames = fLastParamNames;
+    fPreFitValues = fLastPreFitValues;
+    fPreFitErrors = fLastPreFitErrors;
+    fCentralValues = fLastCentralValues;
+
+    fMinosErrors = fTempMinosErrors;
+
+    const auto thisMin = dynamic_cast<const MinuitFitSummary*>(fitSummary)->GetMinimizer();
+
+    // Now save postfit
+    fPostFitValues =
+        std::vector<double>(thisMin->X(), thisMin->X() + thisMin->NDim());
+    fPostFitErrors = std::vector<double>(thisMin->Errors(),
+                                         thisMin->Errors() + thisMin->NDim());
+
+    fEdm = thisMin->Edm();
+    fIsValid = !thisMin->Status();
+
+    delete fCovar;
+    fCovar = new TMatrixDSym(thisMin->NDim());
+
+    for (unsigned int row = 0; row < thisMin->NDim(); ++row) {
+      for (unsigned int col = 0; col < thisMin->NDim(); ++col) {
+        (*fCovar)(row, col) = thisMin->CovMatrix(row, col);
+      }
+    }
+
   }
 }

@@ -1,5 +1,6 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Core/HistCache.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
@@ -391,7 +392,6 @@ namespace ana
                   "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
     if(nubar) assert(fSplitBySign);
 
-    const unsigned int N = h->GetNbinsX() + 2;
 #ifdef USE_PREDINTERP_OMP
     T corr[4][N];
     for (unsigned int i = 0; i < 4; ++i) {
@@ -445,7 +445,6 @@ namespace ana
     }
 #endif
 
-    double *arr = h->GetArray();
     for (unsigned int n = 0; n < N; ++n) {
       if (arr[n] > fMinMCStats) {
 #ifdef USE_PREDINTERP_OMP
@@ -567,7 +566,7 @@ namespace ana
     U ret = fBinning;
     ret.Clear();
 
-    if(ret.POT()==0) ret.OverridePOT(1e24);
+    assert (ret.POT() > 0 && "Can't PredictComponentSyst() for 0 POT");
 
     // Check that we're able to handle all the systs we were passed
     for(const ISyst* syst: shift.ActiveSysts()){

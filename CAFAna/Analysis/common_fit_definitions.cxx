@@ -1597,7 +1597,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
   MinuitFitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
-      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose);
+      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cerr << "[FIT]: Finished fit in "
