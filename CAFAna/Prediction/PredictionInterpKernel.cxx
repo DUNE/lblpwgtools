@@ -7,6 +7,8 @@
 //
 // and look at PredictionInterpKernel.s for xmm, ymm or zmm registers
 
+#include "Utilities/func/Stan.h"
+
 namespace ana
 {
   namespace PredIntKern

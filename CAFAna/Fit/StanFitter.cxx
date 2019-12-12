@@ -115,9 +115,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double StanFitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
-                         const SeedList& seedPts,
-                         const std::vector<SystShifts> &systSeedPts, Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
+                  const SeedList& seedPts,
+                  const std::vector<SystShifts> &systSeedPts, Verbosity verb) const
   {
     if (seed)
     {
@@ -131,9 +132,10 @@ namespace ana
 
 
   //----------------------------------------------------------------------
-  double StanFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                                     SystShifts &systSeed,
-                                     Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  StanFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                              SystShifts &systSeed,
+                              Verbosity verb) const
   {
     CreateCalculator(seed);
 
@@ -236,7 +238,7 @@ namespace ana
 
     fMCMCSamples.RunDiagnostics(fStanConfig);
 
-    return fMCMCSamples.SampleLL(bestSampleIdx);
+    return std::make_unique<StanFitSummary>(fMCMCSamples.SampleLL(bestSampleIdx));
   } // StanFitter::Fit()
 
   //----------------------------------------------------------------------
