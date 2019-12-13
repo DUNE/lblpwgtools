@@ -79,6 +79,9 @@ set(Utilities_header_files
   ${CMAKE_BINARY_DIR}/Ext/Utilities/func/RandHisto.h
   ${CMAKE_BINARY_DIR}/Ext/Utilities/func/ROOTHelpers.h
   ${CMAKE_BINARY_DIR}/Ext/Utilities/func/EnvExpand.h
+  ${CMAKE_BINARY_DIR}/Ext/Utilities/func/Stan.h
+  ${CMAKE_BINARY_DIR}/Ext/Utilities/func/StanUtils.h
+  ${CMAKE_BINARY_DIR}/Ext/Utilities/func/StanVar.h
 )
 
 add_library(UtilitiesFunc SHARED ${Utilities_implementation_files})
