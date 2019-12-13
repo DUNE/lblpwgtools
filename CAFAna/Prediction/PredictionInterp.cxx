@@ -457,6 +457,31 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum PredictionInterp::ShiftedComponent(osc::IOscCalculator* calc,
+                                              const TMD5* hash,
+                                              const SystShifts& shift,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign,
+                                              CoeffsType type) const
+  {
+    return _ShiftedComponent<Spectrum>(calc, hash, shift, flav, curr, sign, type);
+  }
+
+  //----------------------------------------------------------------------
+  SpectrumStan PredictionInterp::ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
+                                                  const TMD5* hash,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign,
+                                                  CoeffsType type) const
+  {
+    return _ShiftedComponent<SpectrumStan>(calc, hash, shift, flav, curr, sign, type);
+  }
+
+
+  //----------------------------------------------------------------------
   template <typename U, typename T>
   U PredictionInterp::_ShiftedComponent(osc::_IOscCalculator<T>* calc,
                    const TMD5* hash,

@@ -75,9 +75,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  stan::math::var FitSinSqTheta23::GetValue(const osc::IOscCalculatorAdjustableStan *osc) const
+  {
+    return util::sqr(sin(osc->GetTh23()));
+  }
+
+  //----------------------------------------------------------------------
   void FitSinSqTheta23::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
   {
     osc->SetTh23(asin(sqrt(Clamp(val))));
+  }
+
+
+  //----------------------------------------------------------------------
+  void FitSinSqTheta23::SetValue(osc::IOscCalculatorAdjustableStan *osc, stan::math::var val) const
+  {
+    osc->SetTh23(asin(sqrt(this->Clamp(val))));
   }
 
   //----------------------------------------------------------------------
