@@ -66,7 +66,7 @@ void fit_covar(std::string stateFname = def_stateFname,
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
-                  Fitter::kNormal | Fitter::kIncludeHesse, fout, &ftb);
+                  MinuitFitter::kNormal | MinuitFitter::kIncludeHesse, fout, &ftb);
   delete penalty;
 
   ftb.Fill();

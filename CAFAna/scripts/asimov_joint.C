@@ -278,7 +278,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   if (isGlobal) {
     globalmin = RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                             oscVarsAll, systlist, testOsc, testSyst,
-                            oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
+                            oscSeedsAll, penalty_nom, MinuitFitter::kNormal, nullptr);
     
     // Save this info
     if (saveBestFit){
@@ -333,7 +333,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
       double chisqmin =
           RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                       oscVars, systlist, testOsc, testSyst, oscSeeds, penalty,
-                      Fitter::kNormal, nullptr, &asimov_tree);
+                      MinuitFitter::kNormal, nullptr, &asimov_tree);
 
       // Save relevant values into the tree and histogram
       double chisqdiff = chisqmin - globalmin;

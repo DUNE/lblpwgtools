@@ -240,23 +240,23 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // Keep the same stats/syst/OA throw for all fits
     std::vector<seeded_spectra> mad_spectra_yo = {};
 
-    Fitter::Precision fit_type = Fitter::kNormal;
+    MinuitFitter::FitOpts fit_type = MinuitFitter::kNormal;
     if (getenv("CAFANA_FIT_PRECISION")) {
       switch (atoi(getenv("CAFANA_FIT_PRECISION"))) {
       case 0:
-        fit_type = Fitter::kFast;
+        fit_type = MinuitFitter::kFast;
         break;
       case 1:
-        fit_type = Fitter::kNormal;
+        fit_type = MinuitFitter::kNormal;
         break;
       case 2:
-        fit_type = Fitter::kCareful;
+        fit_type = MinuitFitter::kCareful;
         break;
       }
     }
     if (getenv("CAFANA_FIT_FORCE_HESSE") &&
         bool(atoi(getenv("CAFANA_FIT_FORCE_HESSE")))) {
-      fit_type = fit_type | Fitter::kIncludeHesse;
+      fit_type = fit_type | MinuitFitter::kIncludeHesse;
     }
 
     // -------------------------------------
