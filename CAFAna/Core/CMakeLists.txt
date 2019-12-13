@@ -20,6 +20,7 @@ set(Core_implementation_files
   # SAMProjectSource.cxx
   # SAMQuerySource.cxx
   Spectrum.cxx
+  SpectrumStan.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   SystShifts.cxx
@@ -50,6 +51,7 @@ set(Core_header_files
   # SAMProjectSource.h
   # SAMQuerySource.h
   Spectrum.h
+  SpectrumStan.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   SystShifts.h
