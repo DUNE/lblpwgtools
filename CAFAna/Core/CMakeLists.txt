@@ -34,6 +34,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FwdDeclare.h
   HistAxis.h
   HistCache.h
   IFitVar.h
@@ -54,6 +55,8 @@ set(Core_header_files
   SpectrumStan.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
+  StanTypedefs.h
+  StanUtils.h
   SystShifts.h
   ThreadPool.h
   Utilities.h
