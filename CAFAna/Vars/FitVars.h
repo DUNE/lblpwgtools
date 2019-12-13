@@ -18,7 +18,7 @@ namespace ana
   };
 
   /// \f$ \theta_{13} \f$
-  const FitTheta13 kFitTheta13 = FitTheta13();
+  extern const FitTheta13 kFitTheta13;
 
   //----------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ namespace ana
   };
 
   /// \f$ \sin^22\theta_{13} \f$
-  const FitSinSq2Theta13 kFitSinSq2Theta13 = FitSinSq2Theta13();
+  extern const FitSinSq2Theta13 kFitSinSq2Theta13;
 
   //----------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ namespace ana
   };
 
   /// \f$ \delta_{CP}/\pi \f$
-  const FitDeltaInPiUnits kFitDeltaInPiUnits = FitDeltaInPiUnits();
+  extern const FitDeltaInPiUnits kFitDeltaInPiUnits;
 
   //----------------------------------------------------------------------
   /// \f$ \theta_{13} \f$
@@ -63,7 +63,7 @@ namespace ana
   };
 
   /// \f$ \theta_{13} \f$
-  const FitTheta23 kFitTheta23 = FitTheta23();
+  extern const FitTheta23 kFitTheta23;
   //----------------------------------------------------------------------
 
   /// \f$ \sin^2\theta_{23} \f$
@@ -84,7 +84,7 @@ namespace ana
   };
 
   /// \f$ \sin^2\theta_{23} \f$
-  const FitSinSqTheta23 kFitSinSqTheta23 = FitSinSqTheta23();
+  extern const FitSinSqTheta23 kFitSinSqTheta23;
 
   //----------------------------------------------------------------------
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
@@ -100,7 +100,7 @@ namespace ana
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
-  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant = FitSinSqTheta23LowerOctant();
+  extern const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant;
 
   //----------------------------------------------------------------------
   /// \f$ \sin^2\theta_{23} \f$ constrained to upper octant
@@ -116,13 +116,17 @@ namespace ana
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
-  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant = FitSinSqTheta23UpperOctant();
+  extern const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
 
   //----------------------------------------------------------------------
   class FitSinSqTheta23Symmetry: virtual public IFitVar
   {
   public:
-    FitSinSqTheta23Symmetry(int sign) : IFitVar("ssth23", "sin^{2}#theta_{23}"), fSign(sign) {}
+    FitSinSqTheta23Symmetry(int sign)
+      : IFitVar(std::string("ssth23_symm_") + (sign > 0 ? "pos" : "neg"),
+                "sin^{2}#theta_{23}"),
+        fSign(sign)
+    {}
 
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
 
@@ -138,8 +142,8 @@ namespace ana
   };
 
   // These are for use in ensuring we explore all regions of th23 space
-  const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry = FitSinSqTheta23Symmetry(-1);
-  const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry = FitSinSqTheta23Symmetry(+1);
+  extern const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry;
+  extern const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry;
 
   //----------------------------------------------------------------------
 
@@ -157,7 +161,7 @@ namespace ana
   };
 
   /// \f$ \sin^22\theta_{23} \f$
-  const FitSinSq2Theta23 kFitSinSq2Theta23 = FitSinSq2Theta23();
+  extern const FitSinSq2Theta23 kFitSinSq2Theta23;
 
   //----------------------------------------------------------------------
 
@@ -176,7 +180,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{32} \f$
-  const FitDmSq32 kFitDmSq32 = FitDmSq32();
+  extern const FitDmSq32 kFitDmSq32;
 
   //-------------------------------------------------------------------------
 
@@ -202,7 +206,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
-  const FitDmSq32Scaled kFitDmSq32Scaled = FitDmSq32Scaled();
+  extern const FitDmSq32Scaled kFitDmSq32Scaled;
 
   //----------------------------------------------------------------------
 
@@ -220,7 +224,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{32} constrained to normal hierarchy \f$
-  const FitDmSq32NHScaled kFitDmSq32NHScaled = FitDmSq32NHScaled();
+  extern const FitDmSq32NHScaled kFitDmSq32NHScaled;
 
   //----------------------------------------------------------------------
 
@@ -237,7 +241,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{32} constrained to inverted hierarchy \f$
-  const FitDmSq32IHScaled kFitDmSq32IHScaled = FitDmSq32IHScaled();
+  extern const FitDmSq32IHScaled kFitDmSq32IHScaled;
 
   //----------------------------------------------------------------------
 
@@ -253,7 +257,7 @@ namespace ana
   };
 
   /// \f$ \tan^2\theta_{12} \f$
-  const FitTanSqTheta12 kFitTanSqTheta12 = FitTanSqTheta12();
+  extern const FitTanSqTheta12 kFitTanSqTheta12;
 
   //----------------------------------------------------------------------
 
@@ -270,7 +274,7 @@ namespace ana
   };
 
   /// \f$ \sin^22\theta_{12} \f$
-  const FitSinSq2Theta12 kFitSinSq2Theta12 = FitSinSq2Theta12();
+  extern const FitSinSq2Theta12 kFitSinSq2Theta12;
 
   //----------------------------------------------------------------------
 
@@ -290,7 +294,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{21} \f$
-  const FitDmSq21 kFitDmSq21 = FitDmSq21();
+  extern const FitDmSq21 kFitDmSq21;
 
   //----------------------------------------------------------------------
   /// \f$ \Delta m^2_{21} \f$
@@ -308,7 +312,7 @@ namespace ana
   };
 
   /// \f$ \Delta m^2_{21} \f$
-  const FitDmSq21Scaled kFitDmSq21Scaled = FitDmSq21Scaled();
+  extern const FitDmSq21Scaled kFitDmSq21Scaled;
   //----------------------------------------------------------------------
 
   /// \f$ \rho \f$
@@ -326,7 +330,7 @@ namespace ana
   };
 
   /// \f$ \rho \f$
-  const FitRho kFitRho = FitRho();
+  extern const FitRho kFitRho;
 
   //----------------------------------------------------------------------
 

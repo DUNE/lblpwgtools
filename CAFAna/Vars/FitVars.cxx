@@ -10,6 +10,27 @@
 
 namespace ana
 {
+  // declared as 'extern' in FitVars.h
+  const FitTheta13 kFitTheta13;
+  const FitSinSq2Theta13 kFitSinSq2Theta13;
+  const FitDeltaInPiUnits kFitDeltaInPiUnits;
+  const FitTheta23 kFitTheta23;
+  const FitSinSqTheta23 kFitSinSqTheta23;
+  const FitSinSqTheta23LowerOctant kFitSinSqTheta23LowerOctant;
+  const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23BelowSymmetry(-1);
+  const FitSinSqTheta23Symmetry kFitSinSqTheta23AboveSymmetry(+1);
+  const FitSinSq2Theta23 kFitSinSq2Theta23;
+  const FitDmSq32 kFitDmSq32;
+  const FitDmSq32Scaled kFitDmSq32Scaled;
+  const FitDmSq32NHScaled kFitDmSq32NHScaled;
+  const FitDmSq32IHScaled kFitDmSq32IHScaled;
+  const FitTanSqTheta12 kFitTanSqTheta12;
+  const FitSinSq2Theta12 kFitSinSq2Theta12;
+  const FitDmSq21 kFitDmSq21;
+  const FitDmSq21Scaled kFitDmSq21Scaled;
+  const FitRho kFitRho;
+
   //----------------------------------------------------------------------
   double FitTheta13::GetValue(const osc::IOscCalculatorAdjustable* osc) const
   {
