@@ -249,6 +249,9 @@ namespace ana
 
           bool IsBetterFit(const IFitSummary* other) const override
           {
+            if (!other)
+              return false;
+
             if (auto otherSummary = dynamic_cast<const StanFitSummary*>(other))
               return otherSummary->EvalMetricVal() > EvalMetricVal();
             else
@@ -276,6 +279,9 @@ namespace ana
       void transform_helper(const stan::io::var_context& context,
                             stan::io::writer<double>& writer,
                             const T& var) const;
+
+      /// Req'd by IFitter interface, but we don't need it here
+      void UpdatePostFit(const IFitSummary *) const override {};
 
       //  members below
       mutable std::unique_ptr<osc::IOscCalculatorAdjustableStan> fCalc;
