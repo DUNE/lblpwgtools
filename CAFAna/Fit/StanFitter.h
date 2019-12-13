@@ -12,6 +12,8 @@
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Core/StanTypedefs.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
 #include "Utilities/func/StanUtils.h"
 
 

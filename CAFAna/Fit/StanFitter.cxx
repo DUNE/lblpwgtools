@@ -29,8 +29,6 @@
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
 
-#include "CAFAna/Fit/StanFitter.h"
-
 namespace ana
 {
 
