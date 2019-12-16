@@ -9,29 +9,45 @@ namespace ana
   /// Take the output of an extrapolation and oscillate it as required
   class PredictionExtrap: public IPrediction
   {
-  public:
-    /// Takes ownership of \a extrap
-    PredictionExtrap(IExtrap* extrap);
-    virtual ~PredictionExtrap();
+    public:
+      /// Takes ownership of \a extrap
+      PredictionExtrap(IExtrap* extrap);
+      virtual ~PredictionExtrap();
 
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const override;
+      // un-hide inherited method stubs so we don't get warnings from the compiler
+      using IPrediction::Predict;
+      using IPrediction::PredictComponent;
+      using IPrediction::PredictSyst;
 
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
-                                      Flavors::Flavors_t flav,
-                                      Current::Current_t curr,
-                                      Sign::Sign_t sign) const override;
+      Spectrum     Predict(osc::IOscCalculator* calc) const override;
+      SpectrumStan Predict(osc::IOscCalculatorStan* calc) const override;
 
-    OscillatableSpectrum ComponentCC(int from, int to) const override;
-    Spectrum ComponentNC() const override;
+      Spectrum PredictComponent(osc::IOscCalculator* calc,
+                                Flavors::Flavors_t flav,
+                                Current::Current_t curr,
+                                Sign::Sign_t sign) const override;
+      SpectrumStan PredictComponent(osc::IOscCalculatorStan* calc,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override;
 
-    virtual void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<PredictionExtrap> LoadFrom(TDirectory* dir);
+      OscillatableSpectrum ComponentCC(int from, int to) const override;
+      Spectrum ComponentNC() const override;
 
-    PredictionExtrap() = delete;
+      virtual void SaveTo(TDirectory* dir) const override;
+      static std::unique_ptr<PredictionExtrap> LoadFrom(TDirectory* dir);
 
-    IExtrap* GetExtrap() const {return fExtrap;}
-  protected:
+      PredictionExtrap() = delete;
 
-    IExtrap* fExtrap;
+      IExtrap* GetExtrap() const {return fExtrap;}
+    protected:
+      /// Templated helper function called by the non-templated versions
+      template <typename U, typename T>
+      U _PredictComponent(osc::_IOscCalculator<T>* calc,
+                          Flavors::Flavors_t flav,
+                          Current::Current_t curr,
+                          Sign::Sign_t sign) const;
+
+      IExtrap* fExtrap;
   };
 }

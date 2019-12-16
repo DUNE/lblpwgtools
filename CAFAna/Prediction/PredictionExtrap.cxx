@@ -31,18 +31,27 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculator* calc,
-                                              Flavors::Flavors_t flav,
-                                              Current::Current_t curr,
-                                              Sign::Sign_t sign) const
+  SpectrumStan PredictionExtrap::Predict(osc::IOscCalculatorStan* calc) const
   {
-    Spectrum ret = fExtrap->NCComponent(); // Get binning
+    return PredictComponent(calc,
+                            Flavors::kAll,
+                            Current::kBoth,
+                            Sign::kBoth);
+  }
+
+  //----------------------------------------------------------------------
+  // the actual implementation
+  template <typename U, typename T>
+  U PredictionExtrap::_PredictComponent(osc::_IOscCalculator<T>* calc,
+                                        Flavors::Flavors_t flav,
+                                        Current::Current_t curr,
+                                        Sign::Sign_t sign) const
+  {
+    U ret = fExtrap->NCComponent(); // Get binning
     ret.Clear();
 
     if(curr & Current::kCC){
-      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     {
-	ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
-      }
+      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
       if(flav & Flavors::kNuEToNuE    && sign & Sign::kAntiNu) ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
 
       if(flav & Flavors::kNuEToNuMu   && sign & Sign::kNu)     ret += fExtrap->NumuAppComponent().    Oscillated(calc, +12, +14);
@@ -62,12 +71,31 @@ namespace ana
     }
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
-      assert(sign == Sign::kBoth);   // Why would you want to split NCs out by sign?
 
       ret += fExtrap->NCComponent();
     }
 
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  // just call the templated guy
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculator* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
+  {
+    return _PredictComponent<Spectrum>(calc, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  // just call the templated guy
+  SpectrumStan PredictionExtrap::PredictComponent(osc::IOscCalculatorStan* calc,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
+  {
+    return _PredictComponent<SpectrumStan>(calc, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
