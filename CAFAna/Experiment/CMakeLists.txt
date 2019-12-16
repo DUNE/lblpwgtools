@@ -1,4 +1,5 @@
 set(Experiment_implementation_files
+  BinnedLkhdExperiment.cxx
   CountingExperiment.cxx
   IChiSqExperiment.cxx
   ILkhdExperiment.cxx
@@ -8,6 +9,7 @@ set(Experiment_implementation_files
   SolarConstraints.cxx)
 
 set(Experiment_header_files
+  BinnedLkhdExperiment.h
   CountingExperiment.h
   IChiSqExperiment.h
   ILkhdExperiment.h

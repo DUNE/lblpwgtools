@@ -23,6 +23,7 @@ set(Core_implementation_files
   SpectrumStan.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
+  StanUtils.cxx
   SystShifts.cxx
   ThreadPool.cxx
   Utilities.cxx
@@ -34,6 +35,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FitVarWithPrior.h
   FwdDeclare.h
   HistAxis.h
   HistCache.h
