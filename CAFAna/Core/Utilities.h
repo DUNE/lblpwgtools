@@ -136,10 +136,10 @@ namespace ana
   {
     // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
     // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
-    const double S = LLPerBinFracSystErr::GetError();
+    const auto S = LLPerBinFracSystErr::GetError();
     if(S > 0){
-      const double S2 = util::sqr(S);
-      const double s = .25*(sqrt(8*obs*S2+util::sqr(exp*S2-2))-exp*S2-2);
+      const auto S2 = util::sqr(S);
+      const auto s = .25*(sqrt(8*obs*S2+util::sqr(exp*S2-2))-exp*S2-2);
       exp *= 1+s;
     }
 
