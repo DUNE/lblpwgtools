@@ -57,6 +57,7 @@ namespace ana
   SpectrumStan IPrediction::Predict(osc::IOscCalculatorStan *calc) const
   {
     assert(0 && "This Prediction hasn't implemented a Stan-aware Predict()!");
+    return Predict(calc);  // prevent compiler warning
   }
   //----------------------------------------------------------------------
   Spectrum IPrediction::PredictSyst(osc::IOscCalculator* calc,
@@ -86,6 +87,7 @@ namespace ana
                                              Sign::Sign_t sign) const
   {
     assert(0 && "This Prediction hasn't implemented a Stan-aware PredictComponent()!");
+    return PredictComponent(calc, flav, curr, sign);  // prevent compiler warning
   }
 
   //----------------------------------------------------------------------
