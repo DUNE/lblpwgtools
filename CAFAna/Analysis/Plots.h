@@ -25,7 +25,7 @@ namespace ana
   /// Overlay MC spectrum with data spectrum
   ///
   /// \return The first histogram drawn so you can alter axis labels etc
-  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc, EBinType bintype);
+  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc, EBinType bintype=kBinContent);
 
   /// Overlay MC spectrum with data spectrum, area normalized
   ///
