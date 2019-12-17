@@ -255,7 +255,10 @@ namespace ana
             if (auto otherSummary = dynamic_cast<const StanFitSummary*>(other))
               return otherSummary->EvalMetricVal() > EvalMetricVal();
             else
+            {
               assert (false && "Can't compare a StanFitSummary to another kind of IFitSummary!");
+              return false;  // prevent compiler warnings
+            }
           }
 
           /// What's the value of the thing being minimized or maximized?  (LL, chi2, etc.)
