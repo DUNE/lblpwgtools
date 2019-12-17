@@ -40,7 +40,7 @@ namespace test
 {
   double POT = 10e20;
 
-  double MOCKDATA_TH23 = TMath::Pi()/4; // 0.72;     // 0.72 radians --> 41 degrees
+  double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
   double MOCKDATA_DM32 = 0.0025;
 
   // some fairly prosaic values used as fit start point
