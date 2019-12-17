@@ -44,4 +44,7 @@ struct DUNEFluxSystVector : public std::vector<const DUNEFluxSyst *> {
 
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty = true,
                                     bool useCDR = true);
+
+// instantiate them all at global scope so that they can be found in the Registry
+extern const DUNEFluxSystVector kFluxSysts;
 } // namespace ana
