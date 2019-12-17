@@ -635,11 +635,16 @@ namespace ana
     fEntryVals.clear();
     fEntryVals.resize(fVars.size() + fSysts.size(), std::numeric_limits<double>::signaling_NaN());
     std::size_t valIdx = 0;
-    for (const auto & var : fVars)
+    for (const auto &var : fVars)
       CreateOrSetAddress(fSamples.get(), var->ShortName(), &fEntryVals[valIdx++]);
     for (const auto &syst : fSysts)
       CreateOrSetAddress(fSamples.get(), syst->ShortName(), &fEntryVals[valIdx++]);
 
+    // disable the 'autosave' and 'autoflush' mechanisms
+    // since there's nowhere to write to anyway
+    // (this tree is memory-only unless SaveTo()'d).
+    fSamples->SetAutoFlush(0);
+    fSamples->SetAutoSave(0);
   }
 
   //----------------------------------------------------------------------
