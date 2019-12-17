@@ -11,9 +11,8 @@ set(Analysis_implementation_files
   RefineSeeds.cxx
   AnalysisBinnings.cxx
   AnalysisVars.cxx
-  common_fit_definitions.cxx
   AnalysisVersion.cxx
-  XSecSystList.cxx)
+  common_fit_definitions.cxx)
 
 set(Analysis_header_files
   Calcs.h
@@ -34,8 +33,7 @@ set(Analysis_header_files
   common_fit_definitions.h
   AnalysisVersion.h
   ExtraHeaders.h
-  CheckPointHelper.h
-  XSecSystList.h)
+  CheckPointHelper.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis)

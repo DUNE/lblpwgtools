@@ -1,5 +1,5 @@
 #include "CAFAna/Analysis/AnalysisDialGroups.h"
-#include "CAFAna/Analysis/XSecSystList.h"
+#include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include <iostream>
