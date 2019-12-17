@@ -137,7 +137,10 @@ namespace ana
             if (const auto mnFitSummary = dynamic_cast<const MinuitFitSummary*>(other))
               return mnFitSummary->EvalMetricVal() < EvalMetricVal();
             else
+            {
               assert(false && "Can't compare a MinuitFitSummary to another kind of IFitSummary");
+              return false;  // prevent compiler warnings
+            }
           }
 
           double EvalMetricVal() const override
