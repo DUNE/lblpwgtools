@@ -150,7 +150,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
     shifts.SetShift(syst, bestSyst);
     DataMCComparison(fakeData, pred->PredictSyst(calc, shifts));
     nominal.ToTH1(nominal.POT(), kGray)->Draw("hist same");
-    c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_bestfitpred->png").c_str(), syst->ShortName().c_str()));
+    c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_bestfitpred.png").c_str(), syst->ShortName().c_str()));
 
   } // for (systName)
 
