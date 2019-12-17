@@ -9,8 +9,6 @@
  */
 
 #include "TCanvas.h"
-#include "TGraph.h"
-#include "TH1D.h"
 #include "TMarker.h"
 
 #include "CAFAna/Analysis/AnalysisBinnings.h"
