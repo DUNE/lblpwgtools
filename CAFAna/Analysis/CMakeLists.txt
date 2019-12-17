@@ -7,7 +7,6 @@ set(Analysis_implementation_files
   AnalysisBinnings.cxx
   AnalysisVars.cxx
   common_fit_definitions.cxx
-  AnalysisVersion.cxx
   XSecSystList.cxx)
 
 set(Analysis_header_files
