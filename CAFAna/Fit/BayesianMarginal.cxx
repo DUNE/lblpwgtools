@@ -123,7 +123,7 @@ namespace ana
                    [](const std::pair<Quantile, double>& p){return p.second;});
     auto vals = samples.QuantileLL(qVals);
     for (std::size_t i = 0; i < quantileUpVals.size(); ++i)
-      fQuantileLLMap[quantileUpVals[i].first] = vals[i].second;
+      fQuantileLLMap[quantileUpVals[i].first] = vals[quantileUpVals[i].second].second;
 
   }
 
