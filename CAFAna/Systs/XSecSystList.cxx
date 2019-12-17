@@ -1,4 +1,4 @@
-#include "CAFAna/Analysis/XSecSystList.h"
+#include "XSecSystList.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
 #include <algorithm>

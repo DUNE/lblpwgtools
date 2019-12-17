@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "CAFAna/Analysis/XSecSystList.h"
+#include "XSecSystList.h"
 
 #include "StandardRecord/StandardRecord.h"
 
