@@ -18,6 +18,7 @@
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Core/FitVarWithPrior.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/SystShifts.h"
@@ -38,8 +39,6 @@
 
 namespace test
 {
-  double POT = 10e20;
-
   double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
   double MOCKDATA_DM32 = 0.0025;
 
@@ -107,7 +106,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   calc->SetTh23(test::MOCKDATA_TH23);
   calc->SetDmsq32(test::MOCKDATA_DM32);
   ana::Spectrum spec_pred = pred->Predict(calc);
-  ana::Spectrum fakeData = spec_pred.FakeData(test::POT);   // high-statistics fake data, i.e., Asimov
+  ana::Spectrum fakeData = spec_pred.FakeData(pot_fd);   // high-statistics fake data, i.e., Asimov
   ana::BinnedLkhdExperiment expt(pred.get(), fakeData);
 
   // now put the calc back to normal
