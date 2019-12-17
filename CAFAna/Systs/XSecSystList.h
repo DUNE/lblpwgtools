@@ -5,6 +5,8 @@
 #include <vector>
 
 namespace ana {
+class ISyst;
+
 /// All dial names that should go into a state file
 std::vector<std::string> const &GetAllXSecSystNames();
 /// Return a specific category of XSEC systs
@@ -35,5 +37,8 @@ bool IsFakeDataGenerationSyst(int);
 std::pair<double, double> GetXSecSystLimits(const std::string &name);
 double GetXSecSystMax(int index);
 double GetXSecSystMin(int index);
+
+// actually instantiate them so that the Registry knows about them
+extern const std::vector<const ISyst*> kAllXsecSysts;
 
 } // namespace ana
