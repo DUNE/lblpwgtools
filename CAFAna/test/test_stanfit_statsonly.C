@@ -41,20 +41,6 @@ namespace test
 {
   double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
   double MOCKDATA_DM32 = 0.0025;
-
-  // some fairly prosaic values used as fit start point
-  void ResetCalculator(osc::IOscCalculatorAdjustable & calc)
-  {
-    calc.SetL(810);
-    calc.SetRho(2.75);
-    calc.SetDmsq21(7.6e-5);
-    calc.SetDmsq32(2.35e-3);
-    calc.SetTh12(asin(sqrt(.87))/2);
-    calc.SetTh13(asin(sqrt(.10))/2);
-//    calc.SetTh23(TMath::Pi()/4);
-    calc.SetTh23(TMath::DegToRad() * 43);  // nonmaximal mixing
-    calc.SetdCP(0);
-  }
 }
 
 void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=false, bool loadSamplesFromFile=true, bool saveSamplesToFile=false,
