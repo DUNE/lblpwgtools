@@ -181,21 +181,40 @@ namespace ana
       class samplecounter_callback : public stan::callbacks::interrupt
       {
         public:
-          samplecounter_callback(std::size_t totalCounts)
-            : fProgress("Sampling using MCMC"), fTotalCounts(totalCounts), fCurrCount(0)
+          samplecounter_callback(std::size_t warmupSampleCount, std::size_t regularSampleCount)
+              : fProgressWarmup("Warming up MCMC sampler"),
+                fWarmupCounts(warmupSampleCount),
+                fRegularCounts(regularSampleCount),
+                fCurrCount(0)
           {
           }
 
           void operator()()
           {
-            if (fCurrCount >= fTotalCounts)
-              fProgress.Done();
-            else if (fTotalCounts > 0)
-              fProgress.SetProgress(double(++fCurrCount)/fTotalCounts);
+            if (fWarmupCounts + fRegularCounts == 0)
+              return;
+
+            if (fCurrCount >= fWarmupCounts)
+            {
+              fProgressWarmup.Done();
+
+              if (!fProgressNormal)
+                fProgressNormal = std::make_unique<ana::Progress>("Sampling using MCMC");
+
+              if (fCurrCount - fWarmupCounts >= fRegularCounts)
+                fProgressNormal->Done();
+              else
+                fProgressNormal->SetProgress(double(++fCurrCount - fWarmupCounts) / fRegularCounts);
+            } else
+              fProgressWarmup.SetProgress(double(++fCurrCount) / fWarmupCounts);
           }
+
         private:
-          ana::Progress fProgress;
-          std::size_t fTotalCounts;
+          ana::Progress fProgressWarmup;
+          // this one's a unique_ptr so that we can initialize it later
+          std::unique_ptr<ana::Progress> fProgressNormal;
+          std::size_t fWarmupCounts;
+          std::size_t fRegularCounts;
           std::size_t fCurrCount;
       };
 

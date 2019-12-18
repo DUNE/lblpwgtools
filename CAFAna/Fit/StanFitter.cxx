@@ -141,11 +141,12 @@ namespace ana
 
     // status and other stuff that get passed back & forth between us and Stan
     stan::callbacks::writer init_writer;
-    samplecounter_callback interrupt(std::size_t(fStanConfig.num_warmup + fStanConfig.num_samples));  // creates a nice CAFAna-style Progress bar
+    samplecounter_callback interrupt(std::size_t(fStanConfig.num_warmup),
+                                     std::size_t(fStanConfig.num_samples));  // creates a nice CAFAna-style Progress bar
 
     std::ostream nullStream(nullptr);
     std::unique_ptr<stan::callbacks::stream_logger> logger;
-    switch(fStanConfig.verbosity)
+    switch (fStanConfig.verbosity)
     {
       // if ultraverbose mode, run all the printouts to the screen...
       case StanConfig::Verbosity::kEverything:
