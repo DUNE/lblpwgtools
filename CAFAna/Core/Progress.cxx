@@ -21,7 +21,7 @@ namespace ana
     // If no else is drawing, we can
     if(!fAnyLive){
       fLive = true;
-      fAnyLive = false;
+      fAnyLive = true;
     }
 
     if(!fLive) return;
@@ -35,9 +35,6 @@ namespace ana
   {
     // Finish up in case the user forgot to call Done()
     Done();
-
-    // If we were the ones drawing, we're not anymore
-    if(fLive) fAnyLive = false;
   }
 
   //----------------------------------------------------------------------
@@ -81,9 +78,13 @@ namespace ana
 
     std::cout << "\r" << str << std::flush;
 
-    if(frac == 1){
+    if(frac == 1)
+    {
       fDone = true;
       std::cout << std::endl;
+
+      // If we were the ones drawing, we're not anymore
+      if (fLive) fAnyLive = false;
     }
   }
 
