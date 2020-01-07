@@ -39,6 +39,7 @@ foreach(SCRPT ${scripts_to_build})
   target_link_libraries(${SCRPT}
     CAFAnaAnalysis
     CAFAnaDecomp
+    CAFAnaFit
     CAFAnaPrediction
     CAFAnaCore
     CAFAnaExperiment

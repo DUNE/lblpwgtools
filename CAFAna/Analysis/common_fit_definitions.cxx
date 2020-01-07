@@ -6,7 +6,6 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/Exposures.h"
-#include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/Plots.h"
 
 #include "CAFAna/Core/Binning.h"
