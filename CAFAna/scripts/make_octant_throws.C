@@ -102,7 +102,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeedsG, gpenalty, Fitter::kNormal,
+				   oscSeedsG, gpenalty, MinuitFitter::kNormal,
 				   nullptr, &global_tree, &mad_spectra_yo);
     global_tree.throw_tree->Fill();
 
@@ -116,7 +116,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal,
+				  oscSeeds, penalty, MinuitFitter::kNormal,
 				  nullptr, &oct_tree, &mad_spectra_yo);
 
     double dchi2 = chisqmin - globalmin;

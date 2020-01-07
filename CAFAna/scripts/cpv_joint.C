@@ -55,7 +55,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 				trueOsc, trueSyst, false,
 				oscVars, systlist,
 				testOsc, testSyst,
-				oscSeeds, penalty, Fitter::kNormal, nullptr);
+				oscSeeds, penalty, MinuitFitter::kNormal, nullptr);
 	
 	chisqmin = TMath::Min(thischisq,chisqmin);
 	delete penalty;

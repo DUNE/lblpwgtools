@@ -6,7 +6,7 @@
 
 namespace ana
 {
-  Resolution::Resolution(Fitter myfit, osc::IOscCalculatorAdjustable* testOsc, int which)
+  Resolution::Resolution(MinuitFitter myfit, osc::IOscCalculatorAdjustable* testOsc, int which)
     : fmyfit(myfit), ftestOsc(testOsc), fwhich(which) {}
   double Resolution::FitResult(double *thisparam, double*dummy) {
     if (fwhich == 0) {
@@ -27,6 +27,6 @@ namespace ana
     }
 
     
-    return fmyfit.Fit(ftestOsc, Fitter::kQuiet) - 1.0;
+    return fmyfit.Fit(ftestOsc, IFitter::kQuiet) - 1.0;
   }
 }

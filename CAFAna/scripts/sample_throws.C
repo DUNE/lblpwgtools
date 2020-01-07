@@ -246,7 +246,7 @@ void sample_throws(std::string stateFname = def_stateFname,
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
-                  Fitter::kNormal | Fitter::kIncludeHesse, fout);
+                  MinuitFitter::kNormal | MinuitFitter::kIncludeHesse, fout);
   delete penalty;
 
   std::vector<TH1 *> nom_vect =

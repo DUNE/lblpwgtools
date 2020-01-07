@@ -1204,7 +1204,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    std::vector<const ISyst *> systlist,
                    osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
                    ana::SeedList oscSeeds, IChiSqExperiment *penaltyTerm,
-                   Fitter::Precision fitStrategy, TDirectory *outDir,
+                   MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
 
@@ -1595,9 +1595,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   auto start_fit = std::chrono::system_clock::now();
   // Now set up the fit itself
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
-  Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
+  MinuitFitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
-      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose);
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cerr << "[FIT]: Finished fit in "

@@ -116,7 +116,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
     globalmin = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
         oscVarsAll, systlist, fakeThrowOsc, fakeThrowSyst, oscSeedsAll,
-        gpenalty, Fitter::kNormal, nullptr, &global_tree, &mad_spectra_yo);
+        gpenalty, MinuitFitter::kNormal, nullptr, &global_tree, &mad_spectra_yo);
     global_tree.Fill();
     delete gpenalty;
 
@@ -136,7 +136,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
       thischisq = RunFitPoint(
           stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
           oscVars, systlist, testOsc, fitThrowSyst, oscSeeds, penalty,
-          Fitter::kNormal, nullptr, &cpv_tree, &mad_spectra_yo);
+          MinuitFitter::kNormal, nullptr, &cpv_tree, &mad_spectra_yo);
 
       chisqmin = TMath::Min(thischisq, chisqmin);
       delete penalty;
