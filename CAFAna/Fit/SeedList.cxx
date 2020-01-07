@@ -1,4 +1,4 @@
-#include "CAFAna/Analysis/SeedList.h"
+#include "CAFAna/Fit/SeedList.h"
 
 #include "CAFAna/Core/IFitVar.h"
 
@@ -8,6 +8,14 @@ namespace ana
   void Seed::ResetCalc(osc::IOscCalculatorAdjustable* calc) const
   {
     for(auto it: fVals) it.first->SetValue(calc, it.second);
+  }
+
+  //----------------------------------------------------------------------
+  std::set<const IFitVar*> Seed::ActiveFitVars() const
+  {
+    std::set<const IFitVar*> ret;
+    for(auto it: fVals) ret.insert(it.first);
+    return ret;
   }
 
   //----------------------------------------------------------------------
@@ -39,6 +47,17 @@ namespace ana
       } // end for val
       fSeeds = newseeds;
     } // end for it
+  }
+
+  //----------------------------------------------------------------------
+  std::set<const IFitVar*> SeedList::ActiveFitVars() const
+  {
+    std::set<const IFitVar*> ret;
+    for(const Seed& s: fSeeds){
+      const std::set<const IFitVar*> sv = s.ActiveFitVars();
+      ret.insert(sv.begin(), sv.end());
+    }
+    return ret;
   }
 
   //----------------------------------------------------------------------

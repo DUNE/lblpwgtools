@@ -1,16 +1,16 @@
 set(Fit_implementation_files
   Fit.cxx
-  Surface.cxx
+  FrequentistSurface.cxx
   GradientDescent.cxx
-  Surface.cxx
+  ISurface.cxx
   RefineSeeds.cxx
   SeedList.cxx)
 
 set(Fit_header_files
   Fit.h
-  Surface.h
+  FrequentistSurface.h
   GradientDescent.h
-  Surface.h
+  ISurface.h
   RefineSeeds.h
   SeedList.h)
 
