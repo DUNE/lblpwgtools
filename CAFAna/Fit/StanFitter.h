@@ -182,7 +182,7 @@ namespace ana
       {
         public:
           samplecounter_callback(std::size_t warmupSampleCount, std::size_t regularSampleCount)
-              : fProgressWarmup("Warming up MCMC sampler"),
+              : fProgressWarmup("Warming up MCMC sampler (" + std::to_string(warmupSampleCount) + " samples)"),
                 fWarmupCounts(warmupSampleCount),
                 fRegularCounts(regularSampleCount),
                 fCurrCount(0)
@@ -199,7 +199,8 @@ namespace ana
               fProgressWarmup.Done();
 
               if (!fProgressNormal)
-                fProgressNormal = std::make_unique<ana::Progress>("Sampling using MCMC");
+                fProgressNormal = std::make_unique<ana::Progress>(
+                    "Sampling using MCMC (" + std::to_string(fRegularCounts) + " samples)");
 
               if (fCurrCount - fWarmupCounts >= fRegularCounts)
                 fProgressNormal->Done();
