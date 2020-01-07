@@ -3,16 +3,23 @@ set(Fit_implementation_files
   FrequentistSurface.cxx
   GradientDescent.cxx
   ISurface.cxx
+  MCMCSamples.cxx
+  Priors.cxx
   RefineSeeds.cxx
-  SeedList.cxx)
+  SeedList.cxx
+  StanFitter.cxx)
 
 set(Fit_header_files
   Fit.h
   FrequentistSurface.h
   GradientDescent.h
   ISurface.h
+  MCMCSamples.h
+  Priors.h
   RefineSeeds.h
-  SeedList.h)
+  SeedList.h
+  StanConfig.h
+  StanFitter.h)
 
 add_library(CAFAnaFit SHARED ${Fit_implementation_files})
 target_link_libraries(CAFAnaFit)
