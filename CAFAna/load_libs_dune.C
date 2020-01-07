@@ -43,7 +43,7 @@ void load_libs(bool MustClean = true) {
   TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$CVODES_INC";
 
   const std::vector<std::string> libs = {
-      "Minuit2",          "Net",           "StandardRecord", "OscLibFunc",
+      "Minuit2",          "Net",           "Tree", "StandardRecord", "OscLibFunc",
       "UtilitiesFunc",    "CAFAnaCore",    "CAFAnaVars",     "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
       "CAFAnaPrediction", "CAFAnaFit", "CAFAnaAnalysis", "boost_filesystem",
