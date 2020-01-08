@@ -14,6 +14,7 @@ set(Core_implementation_files
   # ProfilerSupport.cxx
   Progress.cxx
   Ratio.cxx
+  Registry.cxx
   ReweightableSpectrum.cxx
   #Not using SAM
   # SAMProjectSource.cxx
@@ -21,7 +22,6 @@ set(Core_implementation_files
   Spectrum.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
-  SystRegistry.cxx
   SystShifts.cxx
   ThreadPool.cxx
   Utilities.cxx
@@ -44,6 +44,7 @@ set(Core_header_files
   OscillatableSpectrum.h
   Progress.h
   Ratio.h
+  Registry.h
   ReweightableSpectrum.h
   #Not using SAM
   # SAMProjectSource.h
@@ -51,7 +52,6 @@ set(Core_header_files
   Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
-  SystRegistry.h
   SystShifts.h
   ThreadPool.h
   Utilities.h
