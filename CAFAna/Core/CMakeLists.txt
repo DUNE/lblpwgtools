@@ -35,6 +35,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FitVarWithPrior.h
   FwdDeclare.h
   HistAxis.h
   HistCache.h

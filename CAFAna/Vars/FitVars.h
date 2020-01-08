@@ -3,14 +3,16 @@
 #include <limits>
 
 #include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Core/StanTypedefs.h"
+#include "Utilities/func/StanVar.h"
 
 namespace ana
 {
   /// \f$ \theta_{13} \f$
-  class FitTheta13: public IFitVar
+  class FitTheta13: virtual public IFitVar
   {
   public:
-    FitTheta13() : IFitVar("th13", "#theta_{13}") {};
+      FitTheta13() : IFitVar("th13", "#theta_{13}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
   };
@@ -21,10 +23,10 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{13} \f$
-  class FitSinSq2Theta13: public IConstrainedFitVar
+  class FitSinSq2Theta13: virtual public IConstrainedFitVar
   {
   public:
-    FitSinSq2Theta13() : IConstrainedFitVar("ss2th13", "sin^{2}2#theta_{13}") {};
+      FitSinSq2Theta13() : IConstrainedFitVar("ss2th13", "sin^{2}2#theta_{13}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
@@ -38,10 +40,10 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \delta_{CP}/\pi \f$
-  class FitDeltaInPiUnits: public IFitVar
+  class FitDeltaInPiUnits: virtual public IFitVar
   {
   public:
-    FitDeltaInPiUnits() : IFitVar("delta(pi)", "#delta / #pi") {};
+      FitDeltaInPiUnits() : IFitVar("delta(pi)", "#delta / #pi") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
   };
@@ -65,15 +67,17 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^2\theta_{23} \f$
-  class FitSinSqTheta23: public IConstrainedFitVar
+  class FitSinSqTheta23: virtual public StanFitSupport<IConstrainedFitVar>
   {
   public:
-    FitSinSqTheta23(const std::string & shortName="ssth23", const std::string & latexName="sin^{2}#theta_{23}")
-      : IConstrainedFitVar(shortName, latexName)
+    FitSinSqTheta23()
+      : StanFitSupport<IConstrainedFitVar>("ssth23", "sin^{2}#theta_{23}")
     {}
 
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
 
     double LowLimit() const override {return 0;}
     double HighLimit() const override {return 1;}
@@ -88,7 +92,7 @@ namespace ana
   {
     public:
       FitSinSqTheta23LowerOctant()
-          : FitSinSqTheta23("ssth23_lower", "sin^{2}#theta_{23}")
+          : StanFitSupport<IConstrainedFitVar>("ssth23_lower", "sin^{2}#theta_{23}")
       {}
 
       double LowLimit() const override {return 0;}
@@ -102,18 +106,20 @@ namespace ana
   /// \f$ \sin^2\theta_{23} \f$ constrained to upper octant
   class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
   {
-  public:
-    virtual std::string ShortName() const {return "ssth23_upper";}
+    public:
+      FitSinSqTheta23UpperOctant()
+            : StanFitSupport<IConstrainedFitVar>("ssth23_upper", "sin^{2}#theta_{23}")
+        {}
 
-    virtual double LowLimit() const {return 0.5;}
-    virtual double HighLimit() const {return 1;}
+      double LowLimit() const override {return 0.5;}
+      double HighLimit() const override {return 1;}
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
   extern const FitSinSqTheta23UpperOctant kFitSinSqTheta23UpperOctant;
 
   //----------------------------------------------------------------------
-  class FitSinSqTheta23Symmetry: public IFitVar
+  class FitSinSqTheta23Symmetry: virtual public IFitVar
   {
   public:
     FitSinSqTheta23Symmetry(int sign)
@@ -121,7 +127,6 @@ namespace ana
                 "sin^{2}#theta_{23}"),
         fSign(sign)
     {}
-
 
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
 
@@ -143,10 +148,10 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \sin^22\theta_{23} \f$
-  class FitSinSq2Theta23: public IConstrainedFitVar
+  class FitSinSq2Theta23: virtual public IConstrainedFitVar
   {
   public:
-    FitSinSq2Theta23() : IConstrainedFitVar("ss2th23", "sin^{2}2#theta_{23}") {};
+      FitSinSq2Theta23() : IConstrainedFitVar("ss2th23", "sin^{2}2#theta_{23}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
@@ -161,10 +166,10 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32} \f$
-  class FitDmSq32: public IConstrainedFitVar
+  class FitDmSq32: virtual public IConstrainedFitVar
   {
   public:
-    FitDmSq32(const std::string & shortName="dmsq32", const std::string & latexName="#Deltam^{2}_{32}") : IConstrainedFitVar(shortName, latexName) {};
+    FitDmSq32() : IConstrainedFitVar("dmsq32", "#Deltam^{2}_{32}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
@@ -180,15 +185,18 @@ namespace ana
   //-------------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
-  class FitDmSq32Scaled: public IConstrainedFitVar
+  class FitDmSq32Scaled: virtual public StanFitSupport<IConstrainedFitVar>
   {
   public:
-      FitDmSq32Scaled(const std::string & shortName="dmsq32scaled",
-                      const std::string & latexName="#Deltam^{2}_{32} (10^{-3} eV^{2})")
-        : IConstrainedFitVar(shortName, latexName)
+      FitDmSq32Scaled()
+        : StanFitSupport<IConstrainedFitVar>("dmsq32scaled",
+                                             "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
-     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
+
+    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
 
 
     // "1eV^2 splitting should be enough for anyone"
@@ -207,7 +215,8 @@ namespace ana
   {
     public:
       FitDmSq32NHScaled()
-          : FitDmSq32Scaled("dmsq32NHscaled", "#Deltam^{2}_{32} (10^{-3} eV^{2})")
+          : StanFitSupport<IConstrainedFitVar>("dmsq32NHscaled",
+                                               "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
 
       // "1eV^2 splitting should be enough for anyone"
@@ -224,7 +233,8 @@ namespace ana
   {
     public:
       FitDmSq32IHScaled()
-          : FitDmSq32Scaled("dmsq32IHscaled", "#Deltam^{2}_{32} (10^{-3} eV^{2})")
+          : StanFitSupport<IConstrainedFitVar>("dmsq32IHscaled",
+                                               "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
 
       double HighLimit() const override {return 0;}
