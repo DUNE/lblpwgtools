@@ -11,7 +11,6 @@ set(Analysis_implementation_files
   RefineSeeds.cxx
   AnalysisBinnings.cxx
   AnalysisVars.cxx
-  AnalysisVersion.cxx
   common_fit_definitions.cxx)
 
 set(Analysis_header_files
