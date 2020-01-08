@@ -5,6 +5,9 @@
 
 #include "Rtypes.h"
 
+#include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Core/SystShifts.h"
+
 class TLegend;
 class TGraph;
 class TGraphAsymmErrors;
@@ -24,12 +27,21 @@ namespace ana
   /// Overlay MC spectrum with data spectrum
   ///
   /// \return The first histogram drawn so you can alter axis labels etc
-  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc);
+  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc, EBinType bintype=kBinContent);
 
   /// Overlay MC spectrum with data spectrum, area normalized
   ///
   /// \return The first histogram drawn so you can alter axis labels etc
   TH1* DataMCComparisonAreaNormalized(const Spectrum& data, const Spectrum& mc);
+
+  /// Overlay MC spectrum with data spectrum
+  ///
+  /// \return The first histogram drawn so you can alter axis labels etc
+  TH1* DataMCComparison(const Spectrum& data,
+                        const IPrediction* mc,
+                        osc::IOscCalculator* calc,
+                        const SystShifts & shifts = kNoShift,
+                        EBinType bintype = kBinContent);
 
   /// \brief Plot MC broken down into flavour components, overlayed with data
   ///
