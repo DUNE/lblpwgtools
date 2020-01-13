@@ -35,10 +35,9 @@ namespace ana
   {
     TH1* ret = 0;
 
-    TH1* hMC = mc.ToTH1(data.POT());
-    hMC->SetLineColor(kTotalMCColor);
+    TH1* hMC = mc.ToTH1(data.POT(), kTotalMCColor, kSolid, kPOT, bintype);
 
-    TH1* hData = data.ToTH1(data.POT());
+    TH1* hData = data.ToTH1(data.POT(), kBlack, kSolid, kPOT, bintype);
     hData->Sumw2();
     hData->SetMarkerStyle(kFullCircle);
 
