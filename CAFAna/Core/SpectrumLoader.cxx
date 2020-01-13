@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/SpectrumLoader.h"
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
 #ifndef DONT_USE_SAM

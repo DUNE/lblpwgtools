@@ -240,13 +240,13 @@ void sample_throws(std::string stateFname = def_stateFname,
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
-  IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
   // Now the good stuff
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,
                   systlist, testOsc, testSyst, oscSeeds, penalty,
-                  Fitter::kNormal | Fitter::kIncludeHesse, fout);
+                  MinuitFitter::kNormal | MinuitFitter::kIncludeHesse, fout);
   delete penalty;
 
   std::vector<TH1 *> nom_vect =

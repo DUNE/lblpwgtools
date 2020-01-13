@@ -9,6 +9,7 @@ foreach(APP ${APPS})
 
   target_link_libraries(${APP}
     CAFAnaAnalysis
+    CAFAnaFit
     CAFAnaDecomp
     CAFAnaPrediction
     CAFAnaCore

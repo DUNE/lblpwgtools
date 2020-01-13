@@ -96,13 +96,13 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
     std::vector<std::unique_ptr<Spectrum> > mad_spectra_yo = {};
 
     // Need to find the best fit in the correct octant
-    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeedsG, gpenalty, Fitter::kNormal,
+				   oscSeedsG, gpenalty, MinuitFitter::kNormal,
 				   nullptr, &global_tree, &mad_spectra_yo);
     global_tree.throw_tree->Fill();
 
@@ -110,13 +110,13 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
     osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, -1*oct);
 
     // No penalty on the octant, so ignore it...
-    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal,
+				  oscSeeds, penalty, MinuitFitter::kNormal,
 				  nullptr, &oct_tree, &mad_spectra_yo);
 
     double dchi2 = chisqmin - globalmin;

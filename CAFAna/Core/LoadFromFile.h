@@ -31,8 +31,8 @@ namespace ana
   template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir);
   class IPrediction;
   template<> std::unique_ptr<IPrediction> LoadFrom<IPrediction>(TDirectory* dir);
-  class IExperiment;
-  template<> std::unique_ptr<IExperiment> LoadFrom<IExperiment>(TDirectory* dir);
+  class IChiSqExperiment;
+  template<> std::unique_ptr<IChiSqExperiment> LoadFrom<IChiSqExperiment>(TDirectory* dir);
   class ModularExtrapComponent;
   template<> std::unique_ptr<ModularExtrapComponent>
     LoadFrom<ModularExtrapComponent>(TDirectory* dir);

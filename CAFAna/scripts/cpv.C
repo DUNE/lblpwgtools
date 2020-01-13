@@ -142,7 +142,7 @@ void cpv()
 
 	    Fitter fit_syst(&full_expt_syst, oscVars, systlist);
 
-	    thischisq = fit_syst.Fit(testOsc); //, Fitter::kVerbose);
+	    thischisq = fit_syst.Fit(testOsc); //, IFitter::kVerbose);
 	    chisqmin = TMath::Min(thischisq,chisqmin);
 	  }
 	}

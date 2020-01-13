@@ -1,23 +1,20 @@
 #pragma once
 
-namespace osc{class IOscCalculatorAdjustable;}
-
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/LoadFromFile.h"
 
-#include "TH1.h"
-
-#include <unordered_map>
-
 class TDirectory;
+class TH1;
+class TH1D;
 
 namespace ana
 {
   /// Base class defining interface for experiments
-  class IExperiment
+  class IChiSqExperiment
   {
   public:
-    virtual ~IExperiment() {}
+    virtual ~IChiSqExperiment() {}
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const = 0;
 
@@ -40,7 +37,7 @@ namespace ana
     virtual TH1D* PredHist( osc::IOscCalculator* calc,
                             const SystShifts& syst) const
     {
-      // Only required if you want to use MultiExperiment covariance, so include 
+      // Only required if you want to use MultiExperiment covariance, so include
       // default implementation that returns null
       return nullptr;
     }

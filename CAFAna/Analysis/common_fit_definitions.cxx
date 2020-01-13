@@ -6,7 +6,6 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/Exposures.h"
-#include "CAFAna/Analysis/Fit.h"
 #include "CAFAna/Analysis/Plots.h"
 
 #include "CAFAna/Core/Binning.h"
@@ -87,7 +86,7 @@ std::vector<std::string> SplitString(std::string input, char delim) {
 }
 
 // For ease of penalty terms...
-IExperiment *GetPenalty(int hie, int oct, std::string penalty,
+IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
                         std::string asimov_set, bool modConstraint) {
 
   // First, decide which to use
@@ -1204,8 +1203,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
                    osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
-                   ana::SeedList oscSeeds, IExperiment *penaltyTerm,
-                   Fitter::Precision fitStrategy, TDirectory *outDir,
+                   ana::SeedList oscSeeds, IChiSqExperiment *penaltyTerm,
+                   MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
 
@@ -1596,9 +1595,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   auto start_fit = std::chrono::system_clock::now();
   // Now set up the fit itself
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
-  Fitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
+  MinuitFitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
-      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, Fitter::kVerbose);
+      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose);
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cerr << "[FIT]: Finished fit in "
