@@ -87,13 +87,13 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     // Need to find the best fit in the correct hierachy
     // Note that I'm ignoring the octant here
     // This actually doesn't matter unless we apply a theta23 constraint, which I think we shouldn't anyway...
-    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
 				   oscVars, systlist,
 				   fitThrowOsc, fitThrowSyst,
-				   oscSeeds, gpenalty, Fitter::kNormal,
+				   oscSeeds, gpenalty, MinuitFitter::kNormal,
 				   nullptr, &global_tree, &mad_spectra_yo);
     global_tree.throw_tree->Fill();
 
@@ -102,13 +102,13 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     testOsc->SetdCP(thisdcp);
     fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember
-    IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
+    IChiSqExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
 
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...
 				  oscVarsWrong, systlist,
 				  testOsc, fitThrowSyst,
-				  oscSeeds, penalty, Fitter::kNormal,
+				  oscSeeds, penalty, MinuitFitter::kNormal,
 				  nullptr, &mh_tree, &mad_spectra_yo);
 
     double dchi2 = chisqmin - globalmin;

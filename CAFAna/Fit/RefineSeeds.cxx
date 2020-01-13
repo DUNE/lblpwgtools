@@ -1,7 +1,7 @@
-#include "CAFAna/Analysis/RefineSeeds.h"
+#include "CAFAna/Fit/RefineSeeds.h"
 
 #include "CAFAna/Core/IFitVar.h"
-#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Fit/MinuitFitter.h"
 
 #include "OscLib/func/IOscCalculator.h"
 
@@ -11,9 +11,10 @@ namespace ana
 {
   // --------------------------------------------------------------------------
   SeedList RefineSeeds(const SeedList& seeds,
-                       const IExperiment* expt,
+                       const IChiSqExperiment* expt,
                        const std::vector<const IFitVar*>& vars,
-                       const osc::IOscCalculatorAdjustable* calc0)
+                       const osc::IOscCalculatorAdjustable* calc0,
+                       double dchisq_max)
   {
     struct Result
     {
@@ -45,8 +46,8 @@ namespace ana
       osc::IOscCalculatorAdjustable* calc = calc0->Copy();
       seed.ResetCalc(calc);
 
-      Fitter fit(expt, vars);
-      const double chi = fit.Fit(calc, Fitter::kQuiet);
+      MinuitFitter fit(expt, vars);
+      const double chi = fit.Fit(calc, IFitter::kQuiet);
 
       std::map<const IFitVar*, double> valmap;
       for(const IFitVar* v: vars) valmap[v] = v->GetValue(calc);
@@ -56,14 +57,14 @@ namespace ana
     // Lowest chisq first
     std::sort(results.begin(), results.end());
 
-    // const double bestChisq = results[0].chisq;
+    const double bestChisq = results[0].chisq;
 
     // Cull the list to a list of unique results not too far above the best
     // result
     std::vector<Seed> ret;
     for(const Result& result: results){
-      // Stop once seed results become too bad (arbitrary)
-      // if(result.chisq > bestChisq+3) break;
+      // Stop once seed results become too bad
+      if(dchisq_max > 0 && result.chisq > bestChisq + dchisq_max) break;
 
       bool ok = true;
       for(const Seed& already: ret){

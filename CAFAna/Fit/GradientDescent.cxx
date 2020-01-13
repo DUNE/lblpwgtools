@@ -1,4 +1,4 @@
-#include "CAFAna/Analysis/GradientDescent.h"
+#include "CAFAna/Fit/GradientDescent.h"
 
 #include <iostream>
 

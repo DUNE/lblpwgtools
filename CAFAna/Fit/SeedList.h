@@ -1,10 +1,11 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include <iostream>
 #include <map>
+#include <set>
 #include <vector>
-
-namespace osc{class IOscCalculatorAdjustable;}
 
 namespace ana
 {
@@ -15,13 +16,15 @@ namespace ana
   public:
     friend std::ostream& operator<<(std::ostream&, const Seed&);
 
-    Seed(const std::map<const IFitVar*, double>& vals) : fVals(vals.begin(), vals.end()) {}
+    Seed(const std::map<const IFitVar*, double>& vals) : fVals(vals) {}
 
-    void Set(const IFitVar* v, double x) {fVals[v] = x;}
+    void Set(const IFitVar* v, double x){fVals[v] = x;}
 
     void ResetCalc(osc::IOscCalculatorAdjustable* calc) const;
 
     const std::map<const IFitVar*, double> GetVals() const {return fVals;}
+
+    std::set<const IFitVar*> ActiveFitVars() const;
   protected:
     std::map<const IFitVar*, double> fVals;
   };
@@ -36,13 +39,16 @@ namespace ana
 
     /// Explicit list of seeds
     SeedList(const std::vector<Seed>& seeds) : fSeeds(seeds) {}
+
     /// \param seedBasis Set each var to each of the values. Try all
     ///                  combinations. Beware of combinatorical explosion...
     SeedList(const std::map<const IFitVar*, std::vector<double>>& seedBasis);
 
     const std::vector<Seed>& GetSeeds() const {return fSeeds;}
 
-    size_t size() const { return fSeeds.size(); }
+    size_t size() {return fSeeds.size();}
+
+    std::set<const IFitVar*> ActiveFitVars() const;
   protected:
     std::vector<Seed> fSeeds;
   };

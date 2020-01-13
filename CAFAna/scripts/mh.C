@@ -166,7 +166,7 @@ void mh()
 	      osc::IOscCalculatorAdjustable* cvcalc = scanOsc->Copy();	  
 	      MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst});
 	      Fitter fit_scan(&full_expt_syst, oscVars_scan, {});
-	      double scanchisq = fit_scan.Fit(scanOsc, Fitter::kQuiet);
+	      double scanchisq = fit_scan.Fit(scanOsc, MinuitFitter::kQuiet);
 	      if (scanchisq < scanmin) {
 		scanmin = scanchisq;
 		testOsc->SetdCP(dcp_scan);
@@ -186,10 +186,10 @@ void mh()
 
 	MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
-	Fitter fit_syst(&full_expt_syst, oscVars, systlist);
+	MinuitFitter fit_syst(&full_expt_syst, oscVars, systlist);
 
 	//std::cout << "before: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << std::endl;
-	thischisq = fit_syst.Fit(testOsc, Fitter::kQuiet);
+	thischisq = fit_syst.Fit(testOsc, IFitter::kQuiet);
 	//std::cout << "after: " << thisdcp << " " << testOsc->GetdCP() << " " << testOsc->GetTh13()*180/TMath::Pi() << " " << thischisq << std::endl;
 
 	chisqmin = TMath::Min(thischisq,chisqmin);

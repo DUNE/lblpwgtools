@@ -254,7 +254,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   // minimum chi2!
   osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-  IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IChiSqExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   SystShifts testSyst = kNoShift;
 
@@ -278,7 +278,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   if (isGlobal) {
     globalmin = RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                             oscVarsAll, systlist, testOsc, testSyst,
-                            oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
+                            oscSeedsAll, penalty_nom, MinuitFitter::kNormal, nullptr);
     
     // Save this info
     if (saveBestFit){
@@ -328,12 +328,12 @@ void asimov_joint(std::string stateFname = def_stateFname,
       if (plotVarVect.size() > 1)
         SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
 
-      IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+      IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
       double chisqmin =
           RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                       oscVars, systlist, testOsc, testSyst, oscSeeds, penalty,
-                      Fitter::kNormal, nullptr, &asimov_tree);
+                      MinuitFitter::kNormal, nullptr, &asimov_tree);
 
       // Save relevant values into the tree and histogram
       double chisqdiff = chisqmin - globalmin;
