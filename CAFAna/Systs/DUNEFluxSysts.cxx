@@ -11,6 +11,8 @@
 #include <cassert>
 
 namespace ana {
+  const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);
+
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
   for (int i : {0, 1})

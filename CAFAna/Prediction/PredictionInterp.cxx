@@ -2,7 +2,7 @@
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Ratio.h"
-#include "CAFAna/Core/SystRegistry.h"
+#include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TDirectory.h"
@@ -197,14 +197,15 @@ namespace ana
       // Check none of the ratio values is crazy
       std::unique_ptr<TH1>& r = ratios.back();
       for(int i = 0; i < r->GetNbinsX()+2; ++i){
-	const double y = r->GetBinContent(i);
-	if(y > 2){
-	  // std::cout << "PredictionInterp: WARNING, ratio in bin "
-	  // 	    << i << " for " << shifts[&p-&preds.front()]
+        const double y = r->GetBinContent(i);
+        if (y > 2)
+        {
+          // std::cout << "PredictionInterp: WARNING, ratio in bin "
+          // 	    << i << " for " << shifts[&p-&preds.front()]
           //           << " sigma shift of " << systName << " is " << y
           //           << " which exceeds limit of 2. Capping." << std::endl;
-	  r->SetBinContent(i, 2);
-	}
+          r->SetBinContent(i, 2);
+        }
       }
     }
 
@@ -716,22 +717,39 @@ namespace ana
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
-      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx){
+      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx)
+      {
         ShiftedPreds sp;
-        sp.systName = hSystNames->GetXaxis()->GetBinLabel(systIdx+1);
+        sp.systName = hSystNames->GetXaxis()->GetBinLabel(systIdx + 1);
 
-        const ISyst* syst = SystRegistry::ShortNameToSyst(sp.systName);
+        const ISyst *syst = Registry<ISyst>::ShortNameToPtr(sp.systName, true);
+        if (!syst)
+        {
+          std::cout << "PredictionInterp:  Couldn't match stored syst '" << sp.systName << "' to an ISyst*.  Ignoring!"
+                    << std::endl;
+          continue;
+        }
 
-        if(std::find(veto.begin(), veto.end(), syst) != veto.end()) continue;
+        if (std::find(veto.begin(), veto.end(), syst) != veto.end()) continue;
 
         // Use whichever of these gives the most restrictive range
         const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
         const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
 
-        for(int shift = x0; shift <= x1; ++shift){
-          TDirectory* preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
-          if(!preddir){
-            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in " << dir->GetName() << std::endl;
+        if (std::abs(x0 - x1) < 1)
+        {
+          std::cout << "Warning: Syst '" << sp.systName
+                    << "' has less than 1sigma of allowed range.  Won't interpolate it!" << std::endl;
+          continue;
+        }
+
+        for (int shift = x0; shift <= x1; ++shift)
+        {
+          TDirectory *preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
+          if (!preddir)
+          {
+            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
+                      << dir->GetName() << std::endl;
             continue;
           }
 

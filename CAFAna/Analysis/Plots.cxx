@@ -3,6 +3,7 @@
 
 #include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SystShifts.h"
@@ -30,14 +31,13 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc)
+  TH1* DataMCComparison(const Spectrum& data, const Spectrum& mc, EBinType bintype)
   {
     TH1* ret = 0;
 
-    TH1* hMC = mc.ToTH1(data.POT());
-    hMC->SetLineColor(kTotalMCColor);
+    TH1* hMC = mc.ToTH1(data.POT(), kTotalMCColor, kSolid, kPOT, bintype);
 
-    TH1* hData = data.ToTH1(data.POT());
+    TH1* hData = data.ToTH1(data.POT(), kBlack, kSolid, kPOT, bintype);
     hData->Sumw2();
     hData->SetMarkerStyle(kFullCircle);
 
@@ -57,6 +57,16 @@ namespace ana
     gPad->Update();
 
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  TH1* DataMCComparison(const Spectrum& data,
+                        const IPrediction* mc,
+                        osc::IOscCalculator* calc,
+                        const SystShifts & shifts,
+                        EBinType bintype)
+  {
+    return DataMCComparison(data, shifts.IsNominal() ? mc->Predict(calc) : mc->PredictSyst(calc, shifts), bintype);
   }
 
   //----------------------------------------------------------------------

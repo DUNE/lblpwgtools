@@ -10,7 +10,8 @@ set(Systs_implementation_files
   NuOnESysts.cxx
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
-  Systs.cxx)
+  Systs.cxx
+  XSecSystList.cxx)
 
 set(Systs_header_files
   DUNEFluxSysts.h
@@ -38,7 +39,9 @@ set(Systs_header_files
   MissingProtonFakeData_BDTRW_FHC.h
   MissingProtonFakeData_BDTRW_RHC.h
   NuWroReweightFakeData.h
-  CrazyFluxFakeData.h)
+  CrazyFluxFakeData.h
+  XSecSystList.h)
+
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts)

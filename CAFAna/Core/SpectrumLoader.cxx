@@ -10,7 +10,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "CAFAna/Analysis/XSecSystList.h"
+#include "CAFAna/Systs/XSecSystList.h"
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 

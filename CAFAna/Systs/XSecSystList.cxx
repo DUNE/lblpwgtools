@@ -1,5 +1,6 @@
-#include "CAFAna/Analysis/XSecSystList.h"
+#include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
+#include "CAFAna/Systs/XSecSysts.h"
 
 #include <algorithm>
 #include <cassert>
@@ -7,6 +8,7 @@
 #include <utility>
 
 namespace ana {
+const std::vector<const ISyst*> kAllXsecSysts = GetXSecSysts();
 
 enum FitSyst {
   kFitSyst,
