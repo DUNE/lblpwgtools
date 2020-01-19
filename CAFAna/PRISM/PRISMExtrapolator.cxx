@@ -1,6 +1,6 @@
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/EigenUtils.h"
+#include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
@@ -123,7 +123,8 @@ bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
 }
 
 TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
-    osc::IOscCalculator *osc, double max_OffAxis_m, SystShifts shift) const {
+    osc::IOscCalculator *osc, double max_OffAxis_m,
+    std::vector<double> CoeffRegVector, SystShifts shift) const {
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
@@ -147,6 +148,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   int NEBins = FDOsc->GetXaxis()->GetNbins();
 
   int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
+  if (CoeffRegVector.size() < size_t(NCoeffs)) {
+    std::fill_n(std::back_inserter(CoeffRegVector),
+                NCoeffs - CoeffRegVector.size(), 1);
+  }
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
   NDFluxMatrix.transposeInPlace();
@@ -154,8 +159,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
   if (fRegFactor) {
     for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
+      // Always penalize coefficient height;
       RegMatrix(row_it, row_it) = fRegFactor;
-      RegMatrix(row_it, row_it + 1) = -fRegFactor;
+      // Penalize neighbouring coefficient difference by CoeffRegVector[it]
+      RegMatrix(row_it, row_it + 1) = -fRegFactor * CoeffRegVector[row_it];
     }
     RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
   }
@@ -375,9 +382,11 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
 TH1 const *PRISMExtrapolator::GetMatchCoefficients(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMExtrapolator::FluxPredSpecies NDMode,
-    PRISMExtrapolator::FluxPredSpecies FDMode, SystShifts const &shift) const {
+    PRISMExtrapolator::FluxPredSpecies FDMode,
+    std::vector<double> CoeffRegVector, SystShifts const &shift) const {
   return fMatchEventRates
-             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m, shift)
+             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m, CoeffRegVector,
+                                             shift)
              : GetMatchCoefficientsFlux(osc, max_OffAxis_m, NDMode, FDMode);
 }
 

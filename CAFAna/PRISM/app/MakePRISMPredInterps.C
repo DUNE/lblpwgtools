@@ -9,6 +9,7 @@ using namespace PRISM;
 
 #include <dirent.h>
 
+#include <algorithm>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -126,6 +127,7 @@ std::string binningdescriptor = "default";
 std::string truthbinningdescriptor = "uniform";
 std::vector<std::string> ND_input_patterns;
 std::vector<std::string> FD_input_patterns;
+std::pair<std::string, std::string> SpecialRunWeightHist;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
@@ -135,7 +137,8 @@ void SayUsage(char const *argv[]) {
       << "[USAGE]: " << argv[0] << "\n"
       << "\t-A|--axes <A>             : Fit axis specifier. (default: A = "
          "\"EProxy\")\n"
-      << "\t-o|--output <F>           : Output file name. Should not already "
+      << "\t-o|--output <F>           : Output file name. Should not "
+         "already "
          "exist.\n"
       << "\t-N|--ND-input-pattern <P> : Regex pattern to search for input\n"
       << "\t                            Files. Can only include pattern \n"
@@ -146,13 +149,20 @@ void SayUsage(char const *argv[]) {
       << "\t-R|--is-RHC               : Inputs are RHC."
       << "\t-n|--n-max <N>            : Max number of events to read.\n"
       << "\t--syst-descriptor <str>   : Only add dials matching the syst\n"
-         "\t                            descriptor <str> to the state file.\n"
+         "\t                            descriptor <str> to the state "
+         "file.\n"
       << "\t--bin-descriptor <str>    : Bin descriptor.\n"
       << "\t--truth-bin-descriptor <str> : Bin descriptor.\n"
-      << "\t--no-fakedata-dials       : Do not add the fake data dials to the\n"
+      << "\t--no-fakedata-dials       : Do not add the fake data dials to "
+         "the\n"
          "\t                            state file\n"
-      << "\t--no-op                   : Do nothing but dump dials that would\n"
+      << "\t--no-op                   : Do nothing but dump dials that "
+         "would\n"
          "\t                            be included.\n"
+      << "\t--FakeSR <file:whist>     : Fake a single special beam run by\n"
+         "\t                            weighting on axis events with x < 0 \n"
+         "\t                            in true energy with associated \n"
+         "\t                            histogram."
       << std::endl;
 }
 
@@ -190,6 +200,23 @@ void handleOpts(int argc, char const *argv[]) {
       addfakedata = false;
     } else if (std::string(argv[opt]) == "--no-op") {
       do_no_op = true;
+    } else if (std::string(argv[opt]) == "--FakeSR") {
+
+      std::string arg = argv[++opt];
+
+      if (std::count(arg.begin(), arg.end(), ';') != 1) {
+        std::cout << "[ERROR]: --FakeSR option expected to be passed "
+                     "\"file.root;histname\""
+                  << std::endl;
+      }
+
+      size_t scl = arg.find_first_of(';');
+      SpecialRunWeightHist.first = arg.substr(0, scl);
+      SpecialRunWeightHist.second = arg.substr(scl + 1);
+
+      std::cout << "[INFO]: Will build fake special HC run with "
+                << SpecialRunWeightHist.first << ";"
+                << SpecialRunWeightHist.second << std::endl;
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -292,6 +319,22 @@ int main(int argc, char const *argv[]) {
     std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
   }
 
+  TH1 *whist = nullptr;
+  if (SpecialRunWeightHist.first.size()) {
+    TDirectory *gdc = gDirectory;
+    TFile wf(SpecialRunWeightHist.first.c_str());
+    wf.GetObject(SpecialRunWeightHist.second.c_str(), whist);
+    if (!whist) {
+      std::cout << "[ERROR]: Failed to read " << SpecialRunWeightHist.second
+                << " from " << SpecialRunWeightHist.first << std::endl;
+      throw;
+    }
+    whist->SetDirectory(nullptr);
+    if (gdc) {
+      gdc->cd();
+    }
+  }
+
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
 
@@ -303,6 +346,20 @@ int main(int argc, char const *argv[]) {
     Var FDWeight = GetFDWeight();
     Cut NDSignalCut = GetNDSignalCut();
     Cut FDSignalCut = GetFDSignalCut();
+
+    if (whist) { // If we are faking a special run
+      NDWeight =
+          NDWeight * ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
+            if (sr->dune.det_x) {
+              return 1;
+            }
+            if (sr->dune.vtx_x > 0) {
+              return 1;
+            }
+            return whist->GetBinContent(
+                whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+          });
+    }
 
     Loaders TheLoaders;
 

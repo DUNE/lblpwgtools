@@ -248,7 +248,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   if (fFluxMatcher) {
     TH1 const *LinearCombination = fFluxMatcher->GetMatchCoefficients(
-        calc, fMaxOffAxis, fNDFluxSpecies, fFDFluxSpecies, shift);
+        calc, fMaxOffAxis, fNDFluxSpecies, fFDFluxSpecies, {}, shift);
 
     if (NDComps.count(kNDSig)) {
       Comps.emplace(kNDSig,
