@@ -1,17 +1,19 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-LIST(APPEND PRISM_implementation_files 
-  PRISMExtrapolator.cxx 
-  PredictionPRISM.cxx 
-  PRISMUtils.cxx 
-  PRISMAnalysisDefinitions.cxx 
-  EffectiveFluxUncertaintyHelper.cxx)
-LIST(APPEND PRISM_header_files 
-  PRISMExtrapolator.h 
-  PredictionPRISM.h 
-  PRISMUtils.h 
-  PRISMAnalysisDefinitions.h 
-  EffectiveFluxUncertaintyHelper.h)
+LIST(APPEND PRISM_implementation_files
+  PRISMExtrapolator.cxx
+  PredictionPRISM.cxx
+  PRISMUtils.cxx
+  PRISMAnalysisDefinitions.cxx
+  EffectiveFluxUncertaintyHelper.cxx
+  EigenUtils.cxx)
+LIST(APPEND PRISM_header_files
+  PRISMExtrapolator.h
+  PredictionPRISM.h
+  PRISMUtils.h
+  PRISMAnalysisDefinitions.h
+  EffectiveFluxUncertaintyHelper.h
+  EigenUtils.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 target_link_libraries(CAFAnaPRISM)
