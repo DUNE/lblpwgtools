@@ -42,6 +42,7 @@ namespace ana
   class IConstrainedFitVar: public IFitVar
   {
   public:
+    using IFitVar::IFitVar;
     virtual double Penalty(double val, osc::IOscCalculatorAdjustable*) const;
     virtual double LowLimit() const = 0;
     virtual double HighLimit() const = 0;

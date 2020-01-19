@@ -7,6 +7,8 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Fit/SeedList.h"
 
+#include <memory>
+
 namespace ana
 {
   class IChiSqExperiment;

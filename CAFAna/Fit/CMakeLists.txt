@@ -4,7 +4,9 @@ set(Fit_implementation_files
   GradientDescent.cxx
   ISurface.cxx
   RefineSeeds.cxx
-  SeedList.cxx)
+  SeedList.cxx
+  MinuitFitter.cxx
+  IFitter.cxx)
 
 set(Fit_header_files
   Fit.h
@@ -12,7 +14,9 @@ set(Fit_header_files
   GradientDescent.h
   ISurface.h
   RefineSeeds.h
-  SeedList.h)
+  SeedList.h
+  MinuitFitter.h
+  IFitter.h)
 
 add_library(CAFAnaFit SHARED ${Fit_implementation_files})
 target_link_libraries(CAFAnaFit)
