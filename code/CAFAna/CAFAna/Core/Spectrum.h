@@ -171,6 +171,8 @@ public:
   /// Seconds. For informational purposes only. No calculations use this.
   double Livetime() const { return fLivetime; }
 
+  bool IsAlive() const { return ((fPOT > 0) || (fLivetime > 0)); }
+
   /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
   void OverridePOT(double newpot) { fPOT = newpot; }
 

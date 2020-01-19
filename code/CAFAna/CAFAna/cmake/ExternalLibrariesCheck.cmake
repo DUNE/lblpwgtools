@@ -94,3 +94,11 @@ LIST(APPEND EXTRA_LIBS boost_filesystem boost_system)
 ###############################  Eigen  ######################################
 
 include(cmake/eigenSetup.cmake)
+
+############################  TH2Jagged  #####################################
+
+include(cmake/TH2JaggedSetup.cmake)
+
+############################  FHiCL  #####################################
+
+include(cmake/FHiCLSetup.cmake)

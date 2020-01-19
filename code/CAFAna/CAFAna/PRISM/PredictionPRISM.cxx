@@ -162,7 +162,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Sign::Sign_t SigSign = SignalIsNumode ? Sign::kNu : Sign::kAntiNu;
   Sign::Sign_t WrongSign = (!SignalIsNumode) ? Sign::kNu : Sign::kAntiNu;
 
-  if (fHaveData && !fIgnoreData) {
+  if (fOffAxisFakeData) {
+    NDComps.emplace(kNDData, *fOffAxisFakeData);
+  } else if (fHaveData && !fIgnoreData) {
     NDComps.emplace(kNDData, *fOffAxisData);
   }
 
@@ -177,9 +179,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
     double NDPOT = NDSig_spec.POT();
 
-    std::unique_ptr<TH2> NDSig_h(
+    std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
 
-        NDSig_spec.ToTH2(NDPOT));
     ReweightableSpectrum NDSig(fOffAxis.GetVars()[0], NDSig_h.get(),
                                fPredictionAxis.GetLabels(),
                                fPredictionAxis.GetBinnings(), 1, 1);
@@ -241,7 +242,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
   }
 
-  std::cout << "fDefaultOffAxisPOT: " << fDefaultOffAxisPOT << std::endl;
   for (auto &NDC : NDComps) {
     NDC.second.OverridePOT(fDefaultOffAxisPOT);
   }
@@ -421,4 +421,36 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
 
   return pred;
 }
+
+void PredictionPRISM::SetFakeDataShift(SystShifts s) {
+  fHaveFakeData = true;
+
+  if (!fHaveNDPred) {
+    std::cout << "[ERROR]: Attempting to build fake data without an available "
+                 "ND MC PredictionInterp."
+              << std::endl;
+    throw;
+  }
+
+  DontAddDirectory guard;
+  bool SignalIsNumode = (static_cast<int>(fFDFluxSpecies) < 4);
+
+  Sign::Sign_t SigSign = SignalIsNumode ? Sign::kNu : Sign::kAntiNu;
+
+  osc::NoOscillations noosc;
+
+  Spectrum NDSig_spec = fOffAxisPrediction->PredictComponentSyst(
+      &noosc, s, Flavors::kAllNuMu, Current::kCC, SigSign);
+
+  double NDPOT = NDSig_spec.POT();
+
+  std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
+
+  fOffAxisFakeData = std::make_unique<ReweightableSpectrum>(
+      fOffAxis.GetVars()[0], NDSig_h.get(), fPredictionAxis.GetLabels(),
+      fPredictionAxis.GetBinnings(), 1, 1);
+}
+
+void PredictionPRISM::UnsetFakeDataShift() { fHaveFakeData = false; }
+
 } // namespace ana

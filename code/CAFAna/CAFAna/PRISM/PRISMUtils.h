@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -9,8 +10,12 @@
 
 #include "StandardRecord/StandardRecord.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
 #include "TFile.h"
 #include "TH1D.h"
+
+#include "fhiclcpp/ParameterSet.h"
 
 #include <memory>
 #include <vector>
@@ -40,10 +45,14 @@ struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::unique_ptr<PredictionInterp> NDMatchInterp;
   std::unique_ptr<PredictionInterp> FDMatchInterp;
-  std::unique_ptr<PredictionNoExtrap> FarDet;
+  std::unique_ptr<PredictionInterp> FarDet;
 };
 
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
                               bool IsRHC = false);
+
+osc::IOscCalculatorAdjustable *ConfigureCalc(fhicl::ParameterSet const &ps, osc::IOscCalculatorAdjustable *icalc=nullptr);
+
+SystShifts GetSystShifts(fhicl::ParameterSet const &ps);
 
 } // namespace ana

@@ -18,7 +18,7 @@ void OffAxisEventRates(std::string const &off_axis_file,
   SpectrumLoader NDLoader(off_axis_file, kBeam);
   TheLoaders.AddLoader(&NDLoader, caf::kNEARDET, Loaders::kMC);
 
-  PRISMAxisBlob axes = GetPRISMAxes("ETrue");
+  PRISMAxisBlob axes = GetPRISMAxes("ETrue", "testopt");
 
   Cut NDSignalCut = GetNDSignalCut();
   Var NDWeight = GetNDWeight();
@@ -45,27 +45,28 @@ void OffAxisEventRates(std::string const &off_axis_file,
   TFile f(output_file.c_str(), "RECREATE");
 
   TH1 *NearDet_all = NDSpect_all.ToTHX(POT120);
-  NearDet_all->SetTitle("OffAxis;ND EvRate");
+  NearDet_all->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_all, "NearDet_all");
 
   TH1 *NearDet_Selected = NDSpect_Selected.ToTHX(POT120);
-  NearDet_Selected->SetTitle("OffAxis;ND EvRate");
+  NearDet_Selected->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_Selected, "NearDet_Selected");
 
   TH1 *NearDet_AnaWeighted = NDSpect_AnaWeighted.ToTHX(POT120);
-  NearDet_AnaWeighted->SetTitle("OffAxis;ND EvRate");
+  NearDet_AnaWeighted->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_AnaWeighted, "NearDet_AnaWeighted");
 
   TH1 *NearDet_CVXSecWeighted = NDSpect_CVXSecWeighted.ToTHX(POT120);
-  NearDet_CVXSecWeighted->SetTitle("OffAxis;ND EvRate");
+  NearDet_CVXSecWeighted->SetTitle(
+      ";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_CVXSecWeighted, "NearDet_CVXSecWeighted");
 
   TH1 *NearDet_EffWeighted = NDSpect_EffWeighted.ToTHX(POT120);
-  NearDet_EffWeighted->SetTitle("OffAxis;ND EvRate");
+  NearDet_EffWeighted->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_EffWeighted, "NearDet_EffWeighted");
 
   TH1 *NearDet_AllWeighted = NDSpect_AllWeighted.ToTHX(POT120);
-  NearDet_AllWeighted->SetTitle("OffAxis;ND EvRate");
+  NearDet_AllWeighted->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_AllWeighted, "NearDet_AllWeighted");
 
   f.Write();

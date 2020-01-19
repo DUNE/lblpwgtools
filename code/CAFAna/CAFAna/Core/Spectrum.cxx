@@ -246,6 +246,7 @@ void Spectrum::ConstructHistogram(ESparse sparse) {
     TH1D *h = HistCache::New("", bins1D);
 
     // Ensure errors get accumulated properly
+    h->Sumw2(false);
     h->Sumw2();
 
     fHist = Hist::Adopt(std::unique_ptr<TH1D>(h), bins1D);
@@ -644,8 +645,7 @@ Spectrum &Spectrum::PlusEqualsHelper(const Spectrum &rhs, int sign) {
   if ((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)) {
     std::cout << "Error: can't sum Spectrum with no POT or livetime." << fPOT
               << " " << rhs.fPOT << std::endl;
-    //      abort();
-    return *this;
+    abort();
   }
 
   if (!fLivetime && !rhs.fPOT) {

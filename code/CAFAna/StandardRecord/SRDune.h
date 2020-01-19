@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <array>
+#include <vector>
 
 namespace caf {
 
@@ -153,5 +153,10 @@ public:
   double perPOTWeight;
   double perFileWeight;
   double NDMassCorrWeight;
+
+#ifdef USE_TH2JAGGED
+  int OffAxisFluxBin;
+  int OffAxisFluxConfig;
+#endif
 };
 } // namespace caf

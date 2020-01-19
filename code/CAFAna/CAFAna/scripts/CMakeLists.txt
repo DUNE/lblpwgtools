@@ -36,19 +36,7 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-  target_link_libraries(${SCRPT}
-    CAFAnaAnalysis
-    CAFAnaDecomp
-    CAFAnaPrediction
-    CAFAnaCore
-    CAFAnaExperiment
-    CAFAnaSysts
-    CAFAnaCuts
-    CAFAnaExtrap
-    CAFAnaVars
-    StandardRecord
-    OscLibFunc
-    UtilitiesFunc)
+  target_link_libraries(${SCRPT} ${CAFANALIBS})
 
     target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})
     target_link_libraries(${SCRPT} ${CAFANA_DEPEND_LIBS})

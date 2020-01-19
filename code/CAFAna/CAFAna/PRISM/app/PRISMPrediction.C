@@ -1,389 +1,119 @@
-#include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/AnalysisVars.h"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/make_ParameterSet.h"
+
 using namespace ana;
 
+std::map<std::string, PRISMStateBlob> States;
 
-struct PRISMComp {
-  std::unique_ptr<PredictionPRISM> PRISM;
-  std::unique_ptr<PredictionInterp> NDInterp;
-  std::unique_ptr<PredictionInterp> FDInterp;
-  std::unique_ptr<PredictionNoExtrap> FarDet;
-};
+void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
-struct ProjectionDef {
-  ProjectionDef(std::string n, HistAxis const &a, Var const &e)
-      : Name(n), Ax(a), ExtraWeight(e), PRISMEventRateMatcher() {}
-  std::string Name;
-  HistAxis const Ax;
-  Var const ExtraWeight;
-  PRISMExtrapolator PRISMEventRateMatcher;
-};
+  std::string const &state_file = pred.get<std::string>("state_file");
+  std::vector<std::string> const &output_file =
+      pred.get<std::vector<std::string>>("output_file");
+  std::string const &output_dir = pred.get<std::string>("output_dir", "");
+  std::string const &varname =
+      pred.get<std::string>("projection_name", "EProxy");
+  bool isfhc = pred.get<bool>("isFHC", true);
 
-void PRISMPrediction(std::string const &off_axis_file,
-                     std::string const &output_file, bool isfhc = true,
-                     std::string const &state_file = "", bool reload = false) {
+  double reg = pred.get<double>("reg_factor", 1E-16);
+  std::array<double, 2> fit_range =
+      pred.get<std::array<double, 2>>("fit_range", {0, 4});
 
-  PRISMExtrapolator pfm;
-  pfm.InitializeFluxMatcher(
-      "DUNE_Flux_OffAxis_Nov2017Review_syst_shifts_fine.root", MergeFluxOABins);
-  pfm.SetStoreDebugMatches();
-  pfm.SetTargetConditioning(1E-8, 0.5, 3.5);
+  (void)GetListOfSysts();
 
-  osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
-  std::vector<ana::ISyst const *> systlist = {};
-  // {
-  //     GetMissingProtonEnergyFakeDataSyst().front(),
-  //     GetNuWroReweightFakeDataSyst().front()};
+  osc::IOscCalculatorAdjustable *calc =
+      ConfigureCalc(pred.get<fhicl::ParameterSet>("Osc", {}));
 
-  std::map<std::string, PRISMComp> Predictions;
-
-  // SystShifts kMissProtEFD(GetMissingProtonEnergyFakeDataSyst().front(), 1);
-  // SystShifts kNuWroFD(GetNuWroReweightFakeDataSyst().front(), 1);
-
-  std::vector<ProjectionDef> Projections;
-  Projections.emplace_back("ETrue", trueEvAxes, ana::Constant(1));
-  // Projections.emplace_back("ETrueNDEff", trueEvAxes, kNDEff);
-  // Projections.emplace_back("ETrueNDFDEff", trueEvAxes, kNDEff * kFDEff);
-  // Projections.emplace_back("ERecProxy", proxyEvAxes, ana::Constant(1));
-  // Projections.emplace_back("ERecProxyEff", proxyEvAxes, kNDEff * kFDEff);
-  // Projections.emplace_back("ERecProxyEff_20pclpe", proxy_20pclpeEvAxes,
-  //                          kNDEff * kFDEff);
-  Projections.emplace_back("ERecProxy", proxyEvAxes, ana::Constant(1));
-  Projections.emplace_back("ERecProxy_20pclpe", proxy_20pclpeEvAxes,
-                           ana::Constant(1));
-  // Projections.emplace_back("ERecDep", ERecFromDepAxes, ana::Constant(1));
-  // Projections.emplace_back("ELepTrue", ElepAxes, ana::Constant(1));
-
-  if (reload || !state_file.length() || TFile(state_file.c_str()).IsZombie()) {
-    Loaders TheLoaders;
-    SpectrumLoader PRISMNDLoader(off_axis_file, kBeam);
-    TheLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
-    SpectrumLoader loaderFDNumu(
-        "/home/picker24/software/CAFAna/inputs/MCC11/mcc11_v3/" +
-            GetSampleName(kFDFHC) + "_nonswap.root",
-        kBeam);
-    TheLoaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
-                         Loaders::kNonSwap);
-
-    std::vector<std::unique_ptr<NoOscPredictionGenerator>> NDPredGens;
-    std::vector<std::unique_ptr<NoExtrapPredictionGenerator>> FDPredGens;
-
-    for (auto const &proj : Projections) {
-      PRISMComp projComp;
-
-      
-
-      projComp.PRISM = std::make_unique<PredictionPRISM>(
-          PRISMNDLoader, proj.Ax, trueOffAxisPos, kSelectSignalND, kNDWeight);
-
-      // Don't need to specify full truth signal here as it will not apply any
-      // corrections by default, allows us to debug what the corrections would
-      // be.
-      // If you aren't doing systematic studies then this is just a waste of
-      // time, but if you are you should pass a loader here and call
-      // SetIgnoreData to use the 'MC' near detector signal prediction in the
-      // linear combination.
-      projComp.PRISM->AddNDMCLoader(TheLoaders, kIsTrueFV && kIsOutOfTheDesert,
-                                    kNDWeight, systlist);
-
-      projComp.PRISM->AddFDMCLoader(TheLoaders, kIsTrueFV, proj.ExtraWeight,
-                                    systlist);
-
-      // Make the ND prediction interp include the same off-axis axis used for
-      // PRISM weighting.
-      std::vector<std::string> Labels = EventRateMatchAxis.GetLabels();
-      std::vector<Binning> Bins = EventRateMatchAxis.GetBinnings();
-      std::vector<Var> Vars = EventRateMatchAxis.GetVars();
-      Labels.push_back(trueOffAxisPos.GetLabels().front());
-      Bins.push_back(trueOffAxisPos.GetBinnings().front());
-      Vars.push_back(trueOffAxisPos.GetVars().front());
-      HistAxis const NDSpectaAxis(Labels, Bins, Vars);
-
-      // Gotta make sure these hang around until  after Loaders::Go has been
-      // called.
-      NDPredGens.emplace_back(new NoOscPredictionGenerator(
-          NDSpectaAxis, kSelectSignalND, kNDWeight));
-
-      
-
-      FDPredGens.emplace_back(new NoExtrapPredictionGenerator(
-          EventRateMatchAxis, kSelectSignalFD, proj.ExtraWeight));
-
-      projComp.NDInterp = std::make_unique<PredictionInterp>(
-          systlist, calc, *NDPredGens.back(), TheLoaders);
-      projComp.FDInterp = std::make_unique<PredictionInterp>(
-          systlist, calc, *FDPredGens.back(), TheLoaders);
-
-      projComp.FarDet = std::make_unique<PredictionNoExtrap>(
-          TheLoaders, proj.Ax, kSelectSignalFD, kNoShift, proj.ExtraWeight);
-
-      Predictions[proj.Name] = std::move(projComp);
-    }
-
-    TheLoaders.Go();
-
-    if (state_file.length()) {
-      TFile fs(state_file.c_str(), "RECREATE");
-
-      for (auto &projComp : Predictions) {
-        projComp.second.PRISM->SaveTo(
-            fs.mkdir((std::string("PRISM_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-
-        projComp.second.NDInterp->GetPredNomAs<PredictionNoOsc>()->OverridePOT(
-            1);
-        projComp.second.NDInterp->SaveTo(
-            fs.mkdir((std::string("NDInterp_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-        projComp.second.FDInterp->SaveTo(
-            fs.mkdir((std::string("FDInterp_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-
-        projComp.second.FarDet->SaveTo(
-            fs.mkdir((std::string("FarDet_") + projComp.first +
-                      std::string(isfhc ? "_fhc" : "_rhc"))
-                         .c_str()));
-      }
-
-      fs.Write();
-      fs.Close();
-    }
-  }
-
-  if (state_file.length()) { // reload them if we know we've just saved them.
+  if (!States.count(state_file)) {
     TFile fs(state_file.c_str());
-
-    for (auto &proj : Projections) {
-      Predictions[proj.Name].PRISM = PredictionPRISM::LoadFrom(
-          fs.GetDirectory((std::string("PRISM_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-
-      Predictions[proj.Name].NDInterp = PredictionInterp::LoadFrom(
-          fs.GetDirectory((std::string("NDInterp_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-
-      Predictions[proj.Name].FDInterp = PredictionInterp::LoadFrom(
-          fs.GetDirectory((std::string("FDInterp_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-
-      Predictions[proj.Name].FarDet = PredictionNoExtrap::LoadFrom(
-          fs.GetDirectory((std::string("FarDet_") + proj.Name +
-                           std::string(isfhc ? "_fhc" : "_rhc"))
-                              .c_str()));
-    }
+    std::cout << "Loading " << varname << " state from " << state_file
+              << std::endl;
+    States[state_file] = LoadPRISMState(fs, varname, !isfhc);
+    std::cout << "Done!" << std::endl;
     fs.Close();
-
-    std::cout << "[INFO]: Reading input state from " << state_file << std::endl;
   }
 
-  TFile f(output_file.c_str(), "RECREATE");
+  SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
 
-  std::unique_ptr<osc::IOscCalculatorAdjustable> calc_extr(NuFitOscCalc(1));
-  calc_extr->SetdCP(0.5 * M_PI);
-  calc_extr->SetDmsq32(2.3E-3);
+  PRISMStateBlob &state = States[state_file];
 
-  std::unique_ptr<osc::IOscCalculatorAdjustable> calc_extr2(NuFitOscCalc(1));
-  calc_extr2->SetdCP(-0.5 * M_PI);
-  calc_extr2->SetDmsq32(2.6E-3);
+  TFile f(output_file[0].c_str(),
+          output_file.size() > 1 ? output_file[1].c_str() : "RECREATE");
 
-  std::unique_ptr<osc::IOscCalculatorAdjustable> seta(NuFitOscCalc(1));
-  seta->SetdCP(M_PI);
-  seta->SetDmsq32(2.5E-3);
-  seta->SetTh23(asin(sqrt(0.6)));
+  TDirectory *dir = &f;
+  if (output_dir.size()) {
+    dir = f.mkdir(output_dir.c_str());
+  }
+  dir->cd();
 
-  std::unique_ptr<osc::IOscCalculatorAdjustable> setb(NuFitOscCalc(1));
-  setb->SetdCP(-0.5 * M_PI);
-  setb->SetDmsq32(2.6E-3);
-  setb->SetTh23(asin(sqrt(0.56)));
+  int id = 0;
+  PRISMExtrapolator fluxmatcher;
 
-  std::unique_ptr<osc::IOscCalculatorAdjustable> setc(NuFitOscCalc(1));
-  setc->SetdCP(M_PI);
-  setc->SetDmsq32(2.3E-3);
-  setc->SetTh23(asin(sqrt(0.52)));
+  fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
+                                         state.FDMatchInterp.get());
+  fluxmatcher.SetStoreDebugMatches();
+  fluxmatcher.SetTargetConditioning(reg, fit_range[0], fit_range[1]);
 
-  std::vector<std::pair<std::string, osc::IOscCalculator *>> oscpars = {
-      {"nufit", calc},
-      {"nufit_lowdm23_halfpi", calc_extr.get()},
-      {"nufit_highdm23_mhalfpi", calc_extr2.get()},
-      {"seta", seta.get()},
-      {"setb", setb.get()},
-      {"setc", calc_extr2.get()},
-  };
+  state.PRISM->SetFluxMatcher(&fluxmatcher);
 
-  for (auto clc : oscpars) {
-    auto dir = f.mkdir(clc.first.c_str());
-    dir->cd();
+  Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-    for (auto &proj : Projections) {
-      PRISMComp &projComp = Predictions[proj.Name];
+  TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot_fd);
 
-      auto pdir = dir->mkdir(proj.Name.c_str());
-      pdir->cd();
+  PRISMPredEvRateMatch_h->Scale(1, "width");
+  PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1 GeV");
+  PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
 
-      projComp.PRISM->SetIgnoreData();
-
-      projComp.PRISM->SetFluxMatcher(&pfm);
-
-      Spectrum PRISMPredFluxMatchSpec = projComp.PRISM->Predict(clc.second);
-
-      TH1 *PRISMPredFluxMatch_h = PRISMPredFluxMatchSpec.ToTHX(pot_fd);
-      PRISMPredFluxMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-      PRISMPredFluxMatch_h->Write("PRISMPredFluxMatch");
-
-      for (auto &compspec :
-           projComp.PRISM->PredictPRISMComponents(clc.second)) {
-        TH1 *comp = compspec.second.ToTHX(pot_fd);
-        comp->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-        comp->Write((std::string("PRISMPredFluxMatch_") +
-                     PredictionPRISM::GetComponentString(compspec.first))
-                        .c_str());
-      }
-
-      // TH1 *PRISMPredFluxMatch_prote_h =
-      //     projComp.PRISM->PredictSyst(clc.second,
-      //     kMissProtEFD).ToTHX(pot_fd);
-      // PRISMPredFluxMatch_prote_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-      // PRISMPredFluxMatch_prote_h->Write("PRISMPredFluxMatch_prote");
-      //
-      // TH1 *PRISMPredFluxMatch_nuwro_h =
-      //     projComp.PRISM->PredictSyst(clc.second, kNuWroFD).ToTHX(pot_fd);
-      // PRISMPredFluxMatch_nuwro_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-      // PRISMPredFluxMatch_nuwro_h->Write("PRISMPredFluxMatch_nuwro");
-
-      int id = 0;
-      for (double r : {3E-15, 4E-15, 5E-15, 6E-15, 7E-16}) {
-
-        proj.PRISMEventRateMatcher.InitializeEventRateMatcher(
-            Predictions["ETrue"].NDInterp.get(),
-            Predictions["ETrue"].FDInterp.get());
-        proj.PRISMEventRateMatcher.SetStoreDebugMatches();
-        proj.PRISMEventRateMatcher.SetTargetConditioning(r, 0.5, 3.5);
-        projComp.PRISM->SetFluxMatcher(&proj.PRISMEventRateMatcher);
-
-        Spectrum PRISMPredEvRateMatchSpec = projComp.PRISM->Predict(clc.second);
-
-        TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot_fd);
-        PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-        std::stringstream ss("");
-        ss << "PRISMPredEvRateMatch_reg_" << id++;
-        PRISMPredEvRateMatch_h->Write(ss.str().c_str());
-
-        for (auto &compspec :
-             projComp.PRISM->PredictPRISMComponents(clc.second)) {
-          TH1 *comp = compspec.second.ToTHX(pot_fd);
-          comp->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
-          comp->Write(
-              (ss.str() + PredictionPRISM::GetComponentString(compspec.first))
-                  .c_str());
-        }
-      }
-
-      TH1 *FarDet_h = projComp.FarDet->Predict(clc.second).ToTHX(pot_fd);
-
-      // TH1 *FarDet_prote_h =
-      //     projComp.FDInterp->PredictSyst(clc.second, kMissProtEFD)
-      //         .ToTHX(pot_fd);
-      //
-      // TH1 *FarDet_nuwro_h =
-      //     projComp.FDInterp->PredictSyst(clc.second, kNuWroFD).ToTHX(pot_fd);
-
-      for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins();
-           ++bin_it) {
-        FarDet_h->SetBinError(bin_it + 1,
-                              sqrt(FarDet_h->GetBinContent(bin_it + 1)));
-        // FarDet_prote_h->SetBinError(
-        //     bin_it + 1, sqrt(FarDet_prote_h->GetBinContent(bin_it + 1)));
-        // FarDet_nuwro_h->SetBinError(
-        //     bin_it + 1, sqrt(FarDet_nuwro_h->GetBinContent(bin_it + 1)));
-      }
-
-      FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-      FarDet_h->Write("FarDet");
-      // FarDet_prote_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-      // FarDet_prote_h->Write("FarDet_prote");
-      // FarDet_nuwro_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-      // FarDet_nuwro_h->Write("FarDet_nuwro");
-
-      TH1 *NearDet_h = projComp.NDInterp->Predict(clc.second).ToTHX(pot_fd);
-      NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
-      NearDet_h->Write("NearDet");
-
-      // TH1 *NearDet_prote_h =
-      //     projComp.NDInterp->PredictSyst(clc.second, kMissProtEFD)
-      //         .ToTHX(pot_fd);
-      // NearDet_prote_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
-      // NearDet_prote_h->Write("NearDet_prote");
-      //
-      // TH1 *NearDet_nuwro_h =
-      //     projComp.NDInterp->PredictSyst(clc.second, kNuWroFD).ToTHX(pot_fd);
-      // NearDet_nuwro_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
-      // NearDet_nuwro_h->Write("NearDet_nuwro");
-
-      proj.PRISMEventRateMatcher.Write(pdir->mkdir("PRISMEventRateMatches"));
-    }
+  for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
+    TH1 *comp = compspec.second.ToTHX(pot_fd);
+    comp->Scale(1, "width");
+    comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
+    comp->Write((std::string("PRISMPredEvRateMatch_") +
+                 PredictionPRISM::GetComponentString(compspec.first))
+                    .c_str());
   }
 
-  pfm.Write(f.mkdir("PRISMFluxMatches"));
+  fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
+
+  TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot_fd);
+
+  for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
+    FarDet_h->SetBinError(bin_it + 1,
+                          sqrt(FarDet_h->GetBinContent(bin_it + 1)));
+  }
+  FarDet_h->Scale(1, "width");
+
+  FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  FarDet_h->Write("FarDet");
+
+  TH1 *NearDet_h = state.NDMatchInterp->Predict(calc).ToTHX(pot_fd);
+  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
+  NearDet_h->Write("NearDet");
 
   f.Write();
-}
-
-#ifndef __CINT__
-
-bool strToBool(std::string const &str) {
-  if (str == "true") {
-    return true;
-  }
-  if (str == "True") {
-    return true;
-  }
-  if (str == "1") {
-    return true;
-  }
-  if (str == "false") {
-    return false;
-  }
-  if (str == "False") {
-    return false;
-  }
-  if (str == "0") {
-    return false;
-  }
-
-  std::cout << "[ERROR]: Failed to parse \"" << str << "\" as bool."
-            << std::endl;
-  throw std::runtime_error(str);
 }
 
 int main(int argc, char const *argv[]) {
   gROOT->SetMustClean(false);
 
-  if (argc < 3) {
-    std::cout << "[ERROR]: Expect at least 2 arguments." << std::endl;
+  if (argc != 2) {
+    std::cout << "[ERROR]: Expected to be passed the location of a single "
+                 "configuration FHiCL file."
+              << std::endl;
     return 1;
   }
-  std::stringstream cli;
 
-  for (size_t i = 0; i < argc; ++i) {
-    cli << "\"" << argv[i] << "\"" << ((i + 1) != argc ? " " : "");
+  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(argv[1]);
+
+  for (fhicl::ParameterSet const &pred :
+       ps.get<std::vector<fhicl::ParameterSet>>("predictions")) {
+    PRISMPrediction(pred);
   }
-  std::cout << cli.str() << std::endl;
-  std::string off_axis_file = argv[1];
-  std::string output_file = argv[2];
-  bool isfhc = (argc >= 4) ? strToBool(argv[3]) : true;
-  std::string state_file = (argc >= 5) ? argv[4] : "";
-  bool reload = (argc >= 6) ? strToBool(argv[5]) : false;
-  PRISMPrediction(off_axis_file, output_file, isfhc, state_file, reload);
 }
-#endif

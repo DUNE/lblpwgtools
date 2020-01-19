@@ -51,6 +51,12 @@ endif()
 
 if(USE_PRISM)
   set(USE_EIGEN true)
+  set(USE_TH2JAGGED true)
+  set(USE_FHICL true)
+else()
+  set(USE_EIGEN false)
+  set(USE_TH2JAGGED false)
+  set(USE_FHICL false)
 endif()
 
 set(VERBOSE true)
@@ -88,9 +94,29 @@ add_subdirectory(Extrap)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
+
+LIST(APPEND CAFANALIBS
+    CAFAnaAnalysis
+    CAFAnaDecomp
+    CAFAnaPrediction
+    CAFAnaCore
+    CAFAnaExperiment
+    CAFAnaSysts
+    #Flux systs depends on PRISM if using off axis 
+    CAFAnaPRISM
+    CAFAnaCuts
+    CAFAnaExtrap
+    CAFAnaVars
+    StandardRecord
+    OscLibFunc
+    UtilitiesFunc)
+
 if(USE_PRISM)
   add_subdirectory(PRISM)
+else ()
+  LIST(REMOVE_ITEM CAFANALIBS CAFAnaPRISM)
 endif()
+
 add_subdirectory(bin)
 
 add_subdirectory(scripts)

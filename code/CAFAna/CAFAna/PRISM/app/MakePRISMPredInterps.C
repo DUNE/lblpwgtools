@@ -122,6 +122,8 @@ bool IsRHC = false;
 std::string output_file_name;
 std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
+std::string binningdescriptor = "default";
+std::string truthbinningdescriptor = "uniform";
 std::vector<std::string> ND_input_patterns;
 std::vector<std::string> FD_input_patterns;
 bool addfakedata = true;
@@ -132,7 +134,7 @@ void SayUsage(char const *argv[]) {
   std::cout
       << "[USAGE]: " << argv[0] << "\n"
       << "\t-A|--axes <A>             : Fit axis specifier. (default: A = "
-         "\"default_axes\")\n"
+         "\"EProxy\")\n"
       << "\t-o|--output <F>           : Output file name. Should not already "
          "exist.\n"
       << "\t-N|--ND-input-pattern <P> : Regex pattern to search for input\n"
@@ -145,6 +147,8 @@ void SayUsage(char const *argv[]) {
       << "\t-n|--n-max <N>            : Max number of events to read.\n"
       << "\t--syst-descriptor <str>   : Only add dials matching the syst\n"
          "\t                            descriptor <str> to the state file.\n"
+      << "\t--bin-descriptor <str>    : Bin descriptor.\n"
+      << "\t--truth-bin-descriptor <str> : Bin descriptor.\n"
       << "\t--no-fakedata-dials       : Do not add the fake data dials to the\n"
          "\t                            state file\n"
       << "\t--no-op                   : Do nothing but dump dials that would\n"
@@ -178,6 +182,10 @@ void handleOpts(int argc, char const *argv[]) {
       nmax = atoi(argv[++opt]);
     } else if (std::string(argv[opt]) == "--syst-descriptor") {
       syst_descriptor = argv[++opt];
+    } else if (std::string(argv[opt]) == "--bin-descriptor") {
+      binningdescriptor = argv[++opt];
+    } else if (std::string(argv[opt]) == "--truth-bin-descriptor") {
+      truthbinningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
       addfakedata = false;
     } else if (std::string(argv[opt]) == "--no-op") {
@@ -263,7 +271,7 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  std::vector<ana::ISyst const *> los;
+  std::vector<ana::ISyst const *> los, los_flux;
   if (syst_descriptor.size()) {
     los = GetListOfSysts(syst_descriptor);
 
@@ -272,6 +280,8 @@ int main(int argc, char const *argv[]) {
         false, false, false, false, false, false, addfakedata, false);
     los.insert(los.end(), fdlos.begin(), fdlos.end());
 
+    los_flux = los;
+    KeepSysts(los_flux, GetListOfSysts("nov17flux:nodet:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
     los = GetListOfSysts(true, true, true, true, true, false, addfakedata);
@@ -285,9 +295,9 @@ int main(int argc, char const *argv[]) {
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
 
-    PRISMAxisBlob axes = GetPRISMAxes(axdescriptor);
+    PRISMAxisBlob axes = GetPRISMAxes(axdescriptor, binningdescriptor);
 
-    HistAxis EventRateMatchAxis = GetEventRateMatchAxes();
+    HistAxis EventRateMatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
     Var NDWeight = GetNDWeight();
     Var FDWeight = GetFDWeight();
@@ -300,7 +310,6 @@ int main(int argc, char const *argv[]) {
     TheLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
 
     SpectrumLoader loaderFDNumu(file_lists[1], kBeam, nmax);
-
     TheLoaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
                          Loaders::kNonSwap);
 
@@ -330,24 +339,30 @@ int main(int argc, char const *argv[]) {
     Bins.push_back(axes.OffAxisPosition.GetBinnings().front());
     Vars.push_back(axes.OffAxisPosition.GetVars().front());
 
-    HistAxis const NDSpectraAxis(Labels, Bins, Vars);
+    HistAxis const NDEventRateSpectraAxis(Labels, Bins, Vars);
 
-    std::unique_ptr<NoOscPredictionGenerator> NDPredGen(
-        new NoOscPredictionGenerator(NDSpectraAxis, NDSignalCut, NDWeight));
+    std::unique_ptr<NoOscPredictionGenerator> NDMatchPredGen(
+        new NoOscPredictionGenerator(NDEventRateSpectraAxis, NDSignalCut,
+                                     NDWeight));
 
-    std::unique_ptr<NoExtrapPredictionGenerator> FDPredGen(
+    std::unique_ptr<NoExtrapPredictionGenerator> FDMatchPredGen(
         new NoExtrapPredictionGenerator(EventRateMatchAxis, FDSignalCut,
                                         FDWeight));
 
     osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
 
-    auto NDMatchInterp =
-        std::make_unique<PredictionInterp>(los, calc, *NDPredGen, TheLoaders);
-    auto FDMatchInterp =
-        std::make_unique<PredictionInterp>(los, calc, *FDPredGen, TheLoaders);
+    // These only require access to the flux systs.
+    auto NDMatchInterp = std::make_unique<PredictionInterp>(
+        los_flux, calc, *NDMatchPredGen, TheLoaders);
+    auto FDMatchInterp = std::make_unique<PredictionInterp>(
+        los_flux, calc, *FDMatchPredGen, TheLoaders);
 
-    auto FarDet = std::make_unique<PredictionNoExtrap>(
-        TheLoaders, axes.XProjection, FDSignalCut, kNoShift, FDWeight);
+    std::unique_ptr<NoExtrapPredictionGenerator> FDPredGen(
+        new NoExtrapPredictionGenerator(axes.XProjection, FDSignalCut,
+                                        FDWeight));
+
+    auto FarDet =
+        std::make_unique<PredictionInterp>(los, calc, *FDPredGen, TheLoaders);
 
     TheLoaders.Go();
 

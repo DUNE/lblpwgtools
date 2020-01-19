@@ -148,6 +148,7 @@ namespace ana
     ret.fHistSparse = (THnSparseD*)dir->Get("hist_sparse");
     assert(ret.fHistD || ret.fHistSparse);
     ret.fBins = bins;
+    HistCache::Adopt(ret.fHistD);
     return ret;
   }
 

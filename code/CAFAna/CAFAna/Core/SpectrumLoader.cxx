@@ -10,6 +10,10 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
+#ifdef USE_TH2JAGGED
+#include "CAFAna/PRISM/EffectiveFluxUncertaintyHelper.h"
+#endif
+
 #include "CAFAna/Analysis/XSecSystList.h"
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
@@ -351,6 +355,21 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         abort();
       }
     }
+
+#ifdef USE_TH2JAGGED
+    // Pre-calculate flux error bins to speed up spline generation
+    sr.dune.OffAxisFluxConfig =
+        PRISM::EffectiveFluxUncertaintyHelper::Get().GetNuConfig_checked(
+            sr.dune.nuPDGunosc, sr.dune.Ev,
+            sr.dune.det_x + (sr.dune.vtx_x * 1E-2), 0, !sr.dune.isFD,
+            sr.dune.isFHC);
+
+    sr.dune.OffAxisFluxBin =
+        PRISM::EffectiveFluxUncertaintyHelper::Get().GetBin(
+            sr.dune.nuPDGunosc, sr.dune.Ev,
+            sr.dune.det_x + (sr.dune.vtx_x * 1E-2), 0, !sr.dune.isFD,
+            sr.dune.isFHC);
+#endif
 
     // Reformat the genie systs
     sr.dune.total_xsSyst_cv_wgt = 1;

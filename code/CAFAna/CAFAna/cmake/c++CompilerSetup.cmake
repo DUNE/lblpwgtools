@@ -1,3 +1,5 @@
+LIST(APPEND EXTRA_LIBS ${ROOT_LIBS})
+
 include(${CMAKE_SOURCE_DIR}/cmake/gperftools.cmake)
 
 set(CXX_WARNINGS -Wall -Wextra -Wno-unused-result -Wno-unknown-pragmas)

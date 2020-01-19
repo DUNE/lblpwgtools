@@ -69,5 +69,3 @@ cmessage ( STATUS "[ROOT]: root-config --version: ${ROOT_VERSION} ")
 cmessage ( STATUS "[ROOT]: root-config --cflags : ${ROOT_CXX_FLAGS} ")
 cmessage ( STATUS "[ROOT]: root-config --libdir : ${ROOT_LIBDIR} ")
 cmessage ( STATUS "[ROOT]: Libs                 : ${ROOT_LIBS} ")
-
-LIST(APPEND EXTRA_LIBS ${ROOT_LIBS})

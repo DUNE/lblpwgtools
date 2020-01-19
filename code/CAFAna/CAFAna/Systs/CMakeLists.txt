@@ -53,6 +53,7 @@ install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
 set(SYST_INPUT_ROOT_FILES
   flux_shifts_CDR.root
   flux_shifts_Nov17.root
+  flux_shifts_OffAxis.root
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root

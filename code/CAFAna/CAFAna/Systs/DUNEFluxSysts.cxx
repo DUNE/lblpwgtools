@@ -1,5 +1,11 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
+#ifdef USE_TH2JAGGED
+#include "CAFAna/PRISM/EffectiveFluxUncertaintyHelper.h"
+static PRISM::EffectiveFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
+    nullptr;
+#endif
+
 #include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/StandardRecord.h"
@@ -23,6 +29,22 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 //----------------------------------------------------------------------
 void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
                          caf::StandardRecord *sr, double &weight) const {
+
+  if (abs(sr->dune.nuPDGunosc) == 16) {
+    return;
+  }
+
+#ifdef USE_TH2JAGGED
+  if (fUseCDR) {
+    std::cout
+        << "[ERROR]: Off axis flux uncertainties did not exist for the CDR."
+        << std::endl;
+    abort();
+  }
+
+  weight = fOffAxisFluxParamHelper->GetFluxWeight(
+      fIdx, sigma, sr->dune.OffAxisFluxBin, sr->dune.OffAxisFluxConfig);
+#else
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
     if (fUseCDR) {
@@ -62,25 +84,24 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     }
   } // end if
 
-  if (abs(sr->dune.nuPDGunosc) == 16)
-    return;
-
-  const int det = sr->dune.isFD ? 0 : 1;
-  const int pdg = (abs(sr->dune.nuPDGunosc) == 12) ? 0 : 1;
-  const int anti = (sr->dune.nuPDGunosc > 0) ? 0 : 1;
-  const int hc = sr->dune.isFHC ? 0 : 1;
-
   double rel_weight = 1;
+
+  int det = sr->dune.isFD ? 0 : 1;
+  int pdg = (abs(sr->dune.nuPDGunosc) == 12) ? 0 : 1;
+  int anti = (sr->dune.nuPDGunosc > 0) ? 0 : 1;
+  int hc = sr->dune.isFHC ? 0 : 1;
+  double enu = sr->dune.Ev;
 
   TH1 *h = fScale[det][pdg][anti][hc];
   assert(h);
-  const int bin = h->FindBin(sr->dune.Ev);
+  const int bin = h->FindBin(enu);
   if (bin == 0 || bin == h->GetNbinsX() + 1) {
     return;
   }
   rel_weight = h->GetBinContent(bin);
 
   weight *= 1 + rel_weight * sigma;
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -103,9 +124,17 @@ const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
 //----------------------------------------------------------------------
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
                                     bool useCDR) {
+
+#ifdef USE_TH2JAGGED
+  if (!fOffAxisFluxParamHelper) {
+    fOffAxisFluxParamHelper = &PRISM::EffectiveFluxUncertaintyHelper::Get();
+  }
+#endif
+
   DUNEFluxSystVector ret;
-  for (unsigned int i = 0; i < N; ++i)
+  for (unsigned int i = 0; i < N; ++i) {
     ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR));
+  }
   return ret;
 }
 

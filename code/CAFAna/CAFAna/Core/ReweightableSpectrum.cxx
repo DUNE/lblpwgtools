@@ -76,7 +76,9 @@ ReweightableSpectrum::ReweightableSpectrum(const Var &rwVar,
   fTrueLabel = ylabel;
 
   // Ensure errors get accumulated properly
+  std::cout << "ReweightableSpectrum::ReweightableSpectrum--b" << std::endl;
   fHist->Sumw2();
+  std::cout << "ReweightableSpectrum::ReweightableSpectrum--a" << std::endl;
 }
 
 //----------------------------------------------------------------------
@@ -368,7 +370,7 @@ Spectrum ReweightableSpectrum::WeightedByErrors(const TH1 *ws) const {
   const int Y = fHist->GetNbinsY();
 
   int bin = 0;
-  for (int y = 0; y < Y + 2; ++y) {
+  for (int y = 1; y < Y + 1; ++y) {
     const double w = ws->GetBinContent(y);
     std::unique_ptr<TH1D> px(fHist->ProjectionX("px", y, y));
     hRet->Add(px.get(), w);

@@ -16,7 +16,7 @@ struct PRISMAxisBlob {
   ana::HistAxis OffAxisPosition;
 };
 
-ana::HistAxis GetEventRateMatchAxes();
+ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "uniform");
 PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &xbinning = "default",
                            std::array<double, 3> OABinning = {0.5, -3, 33});

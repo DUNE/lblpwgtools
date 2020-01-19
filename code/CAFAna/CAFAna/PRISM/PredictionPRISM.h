@@ -117,6 +117,8 @@ public:
   void SetNueCorrection(bool v = true) { fNueCorrection = v; }
 
   void SetIgnoreData(bool v = true) {fIgnoreData = v;}
+  void SetFakeDataShift(SystShifts s);
+  void UnsetFakeDataShift();
 
 protected:
   void InterpolateFluxMissMatcher() const;
@@ -124,6 +126,8 @@ protected:
   /// The 'data'
   std::unique_ptr<ReweightableSpectrum> fOffAxisData;
   bool fHaveData;
+  std::unique_ptr<ReweightableSpectrum> fOffAxisFakeData;
+  bool fHaveFakeData;
 
   // The 'MC Numu CC' -- Used for cheating when we don't fHaveNDBkgPred to
   // subtract

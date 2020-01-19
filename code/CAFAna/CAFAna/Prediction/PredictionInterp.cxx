@@ -487,6 +487,10 @@ namespace ana
     for(const ISyst* syst: shift.ActiveSysts()){
       if(find_pred(syst) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << syst->ShortName() << std::endl;
+        std::cout << "Handles: " << std::endl;
+        for(auto & p : fPreds){
+          std::cout << p.first->ShortName() << std::endl;
+        }
         abort();
       }
     } // end for syst
@@ -599,6 +603,10 @@ namespace ana
     for(auto& it: dp){
       if(find_pred(it.first) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << it.first->ShortName() << std::endl;
+        std::cout << "Handles: " << std::endl;
+        for(auto & p : fPreds){
+          std::cout << p.first->ShortName() << std::endl;
+        }
         abort();
       }
       it.second.clear();

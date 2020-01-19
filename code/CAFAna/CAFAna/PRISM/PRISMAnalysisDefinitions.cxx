@@ -5,8 +5,8 @@
 #include "CAFAna/Analysis/AnalysisBinnings.h"
 #include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Cuts/AnaCuts.h"
+#include "CAFAna/Cuts/TruthCuts.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -50,6 +50,23 @@ const Cut kETrueLT10GeV({"kETrueLT10GeV"}, [](const caf::StandardRecord *sr) {
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform") {
     return Binning::Simple(100, 0, 10);
+  }
+  if (xbinning == "testopt") {
+    std::vector<double> BE = {0, 0.25, 0.5};
+
+    while (BE.back() < 3) {
+      BE.push_back(BE.back() + 0.1);
+    }
+
+    while (BE.back() < 5) {
+      BE.push_back(BE.back() + 0.25);
+    }
+
+    while (BE.back() < 10) {
+      BE.push_back(BE.back() + 0.5);
+    }
+
+    return Binning::Custom(BE);
   } else if (xbinning == "default") {
     return binsNDEreco;
   } else {
@@ -79,9 +96,9 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
   }
 }
 
-HistAxis GetEventRateMatchAxes() {
+HistAxis GetEventRateMatchAxes(std::string const &binning) {
   auto vardef = GetVar("ETrue");
-  return HistAxis(vardef.first, GetBinning("uniform"), vardef.second);
+  return HistAxis(vardef.first, GetBinning(binning), vardef.second);
 }
 
 PRISMAxisBlob GetPRISMAxes(std::string const &varname,
@@ -103,9 +120,9 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 }
 
 const Cut kIsOutOfTheDesert({"kIsOutOfTheDesert"},
-                                 [](const caf::StandardRecord *sr) {
-                                   return (fabs(sr->dune.vtx_x) < 200);
-                                 });
+                            [](const caf::StandardRecord *sr) {
+                              return (fabs(sr->dune.vtx_x) < 200);
+                            });
 
 std::vector<double> const FDnumuFHCSelEff_enu = {
     0.546, 0.683, 0.821, 0.945, 1.07, 1.19, 1.44, 1.67,

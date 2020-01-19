@@ -52,7 +52,7 @@ if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
     -fno-builtin-free)
 
   ##Want to prepend them
-  LIST(APPEND GPERF_LINKER_FLAGS -L${CMAKE_INSTALL_PREFIX}/lib -Wl,--no-as-needed tcmalloc_and_profiler)
+  LIST(APPEND GPERF_LINKER_FLAGS -L${CMAKE_INSTALL_PREFIX}/lib -Wl,--no-as-needed tcmalloc_and_profiler -Wl,--as-needed)
 
   cmessage(STATUS "Using google performance libraries")
 endif()

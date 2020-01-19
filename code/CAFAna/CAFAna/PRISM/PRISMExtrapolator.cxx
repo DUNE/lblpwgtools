@@ -251,12 +251,8 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
-  static std::vector<ISyst const *> flux_systs = GetDUNEFluxSysts(10);
-
-  // Only want to fiddle with flux systs
   for (auto s : shift.ActiveSysts()) {
-    if (std::find(flux_systs.begin(), flux_systs.end(), s) ==
-        flux_systs.end()) {
+    if (s->ShortName().find("flux") == std::string::npos) {
       shift.SetShift(s, 0);
     }
   }
@@ -275,8 +271,6 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   int NEBins = FDOsc->GetXaxis()->GetNbins();
 
   int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
-  std::cout << "[INFO]: Fitting with " << NCoeffs << "coefficients."
-            << std::endl;
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
   NDFluxMatrix.transposeInPlace();
@@ -421,8 +415,6 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
     int NEBins = FDUnosc->GetXaxis()->GetNbins();
 
     int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
-    std::cout << "[INFO]: Fitting with " << NCoeffs << "coefficients."
-              << std::endl;
 
     Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis, NCoeffs);
     NDFluxMatrix.transposeInPlace();
@@ -516,21 +508,21 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficients(
 void PRISMExtrapolator::Write(TDirectory *dir) {
   for (auto &fit : fMatchCache) {
     std::cout << "Writing Match: " << fit.first << std::endl;
-    dir->WriteObject(fit.second.get(), fit.first.c_str());
+    dir->WriteTObject(fit.second.get(), fit.first.c_str());
   }
 
   if (fStoreDebugMatches) {
 
     for (auto &fit : fDebugTarget) {
-      dir->WriteObject(fit.second.get(), (fit.first + "_DebugTarget").c_str());
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugTarget").c_str());
     }
 
     for (auto &fit : fDebugBF) {
-      dir->WriteObject(fit.second.get(), (fit.first + "_DebugMatch").c_str());
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugMatch").c_str());
     }
 
     for (auto &fit : fDebugND) {
-      dir->WriteObject(fit.second.get(), (fit.first + "_DebugND").c_str());
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugND").c_str());
     }
   }
 }
