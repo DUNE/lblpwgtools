@@ -1,9 +1,9 @@
-#pragma once 
+#pragma once
 
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Prediction/PredictionModifiedNoExtrap.h"
+#include "CAFAna/Prediction/PredictionEnuWeightedNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 

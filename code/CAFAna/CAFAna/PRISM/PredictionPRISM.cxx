@@ -285,8 +285,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
       InterpolateFluxMissMatcher();
 
-      fFarDetPrediction->GetPredNomAs<PredictionModifiedNoExtrap>()
-          ->SetExtraWeighting(fFluxMissWeighter.get());
+      fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
+          ->SetEnuWeighting(fFluxMissWeighter.get());
 
       Comps.emplace(kFDFluxCorr,
                     fFarDetPrediction->PredictComponentSyst(
@@ -294,8 +294,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
       Comps.at(kNDDataCorr) += Comps.at(kFDFluxCorr);
 
-      fFarDetPrediction->GetPredNomAs<PredictionModifiedNoExtrap>()
-          ->UnsetExtraWeighting();
+      fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
+          ->UnSetEnuWeighting();
 
       for (auto &cmp : Comps) { // Set these to /POT for combination
         cmp.second.ScaleToPOT(1);
