@@ -41,7 +41,7 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
     XSecSystDials = {
         {"MaCCQE", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"VecFFCCQEshape", kFitSyst, kExtrapolated, kStandardRange, kQELike},
-        {"MaNCEL", kRemovedOther, kContinuous, kStandardRange, kNC},
+        {"MaNCEL", kUsedAsFakeData, kContinuous, kStandardRange, kNC},
         {"EtaNCEL", kRemovedOverconstraint, kContinuous, kStandardRange, kNC},
         {"MaCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
         {"MvCCRES", kFitSyst, kContinuous, kStandardRange, kRES},
@@ -54,14 +54,14 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
         {"BhtBY", kFitSyst, kContinuous, kStandardRange, kDIS},
         {"CV1uBY", kFitSyst, kContinuous, kStandardRange, kDIS},
         {"CV2uBY", kFitSyst, kContinuous, kStandardRange, kDIS},
-        {"FormZone", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
-        {"MFP_pi", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
+        {"FormZone", kUsedAsFakeData, kContinuous, {-2, 2}, kFSI},
+        {"MFP_pi", kUsedAsFakeData, kContinuous, {-2, 2}, kFSI},
         {"FrCEx_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrElas_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrInel_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrAbs_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrPiProd_pi", kFitSyst, kContinuous, {-2, 2}, kFSI},
-        {"MFP_N", kRemovedOddResponse, kContinuous, {-2, 2}, kFSI},
+        {"MFP_N", kUsedAsFakeData, kContinuous, {-2, 2}, kFSI},
         {"FrCEx_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrElas_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
         {"FrInel_N", kFitSyst, kContinuous, {-2, 2}, kFSI},
@@ -113,7 +113,7 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
         {"BeRPA_A", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"BeRPA_B", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"BeRPA_D", kFitSyst, kContinuous, kStandardRange, kQELike},
-        {"BeRPA_E", kUsedAsFakeData, kContinuous, kFakeDataRange, kQELike},
+        {"BeRPA_E", kUsedAsFakeData, kContinuous, kStandardRange, kQELike},
         {"C12ToAr40_2p2hScaling_nu", kFitSyst, kExtrapolated, kStandardRange,
          kQELike},
         {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange,
@@ -169,12 +169,6 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
       mk_dial->IsFitSyst = kFitSyst;
       mk_dial->IsExtrapolateOffToOnSyst = kExtrapolated;
       mk_dial->FitLimits = kStandardRange;
-
-      dial_name = "BeRPA_E";
-      auto berpa_e =
-          std::find_if(XSecSystDials.begin(), XSecSystDials.end(), sel);
-      berpa_e->IsFitSyst = kRemovedOther;
-      berpa_e->FitLimits = {0, 0};
 
       dial_name = "SPPLowQ2Suppression";
       auto spplowq2 =
