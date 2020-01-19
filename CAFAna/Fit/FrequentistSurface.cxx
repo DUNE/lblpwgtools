@@ -230,7 +230,7 @@ namespace ana
     F(L); F(Rho);
 #undef F
 #define F(v)\
-    void Set##v(const double& x) override {fCalc->Set##v(x);}\
+    void Set##v(double x) override {fCalc->Set##v(x);}\
     double Get##v() const override {return fCalc->Get##v();}
       F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
 #undef F
@@ -255,7 +255,7 @@ namespace ana
       // else's changes.
       calc = calc->Copy();
     }
-    
+
     xvar->SetValue(calc, x);
     yvar->SetValue(calc, y);
 

@@ -36,7 +36,7 @@ namespace ana
       fFitOpts(opts),
       fSupportsDerivatives(SupportsDerivatives()),
       fCovar(0),
-      fCovarStatus(-1) 
+      fCovarStatus(-1)
   {
   }
 
@@ -72,7 +72,8 @@ namespace ana
                                        SystShifts &systSeed,
                                        Verbosity verb) const
   {
-    if (fPrec & kIncludeSimplex)
+    fVerb = verb;
+    if (fFitOpts & kIncludeSimplex)
       std::cout << "Simplex option specified but not implemented. Ignored."
                 << std::endl;
 
@@ -90,14 +91,14 @@ namespace ana
 
   std::unique_ptr<ROOT::Math::Minimizer> mnMin;
 
-    if ((fPrec & kAlgoMask) == kGradDesc)
+    if ((fFitOpts & kPrecisionMask) == kGradDesc)
       mnMin = std::make_unique<GradientDescent>(*this);
     else
     {
       mnMin = std::unique_ptr<ROOT::Math::Minimizer>(
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
       // ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
-      mnMin->SetStrategy(int(fPrec & kAlgoMask));
+      mnMin->SetStrategy(int(fFitOpts & kPrecisionMask));
     }
     mnMin->SetMaxFunctionCalls(1E8);
     mnMin->SetMaxIterations(1E8);
@@ -163,12 +164,12 @@ namespace ana
       }
     }
 
-  if (fPrec & kIncludeHesse) {
+  if (fFitOpts & kIncludeHesse) {
     std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
     mnMin->Hesse();
   }
 
-  if (fPrec & kIncludeMinos) {
+  if (fFitOpts & kIncludeMinos) {
     // std::cout << "It's minos time" << std::endl;
     fTempMinosErrors.clear();
     for (uint i = 0; i < mnMin->NDim(); ++i) {
@@ -181,7 +182,7 @@ namespace ana
     }
   }
 
-  return mnMin;
+  return mnMin->MinValue();
   }
 
   //----------------------------------------------------------------------
@@ -201,11 +202,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Fitter::DoEval(const double *pars) const {
-  {
+  double MinuitFitter::DoEval(const double *pars) const {
     ++fNEval;
-
-    assert(pars.size() == fVars.size() + fSysts.size());
 
     DecodePars(pars); // Updates fCalc and fShifts
 
@@ -228,7 +226,7 @@ namespace ana
       std::time_t now_time = std::chrono::system_clock::to_time_t(now);
 
       std::cerr << "[FIT]: NEval: " << fNEval
-                << ", LH: {samp: " << fExpt->ChiSq(fCalc, fShifts)
+                << ", LH: {samp: " << fExpt->ChiSq(fCalc, *fShifts)
                 << ", pen: " << penalty << "}\n\tT += "
                 << std::chrono::duration_cast<std::chrono::seconds>(now - fLastTP)
                        .count()
@@ -251,15 +249,13 @@ namespace ana
       fLastTP = now;
     }
 
-    return fExpt->ChiSq(fCalc, fShifts) + penalty;
+    return fExpt->ChiSq(fCalc, *fShifts) + penalty;
   }
 
   //----------------------------------------------------------------------
-  std::vector<double> MinuitFitter::Gradient(const double *pars, double *ret) const
+  void MinuitFitter::Gradient(const double *pars, double *ret) const
   {
     ++fNEvalGrad;
-
-    std::vector<double> ret(pars.size());
 
     // TODO handling of FitVars including penalty terms
 
@@ -285,7 +281,7 @@ namespace ana
     std::unordered_map<const ISyst *, double> dchi;
     for (const ISyst *s : fSysts)
       dchi[s] = 0;
-    fExpt->Derivative(fCalc, fShifts, dchi);
+    fExpt->Derivative(fCalc, *fShifts, dchi);
 
   for (unsigned int j = 0; j < fSysts.size(); ++j) {
     // Get the un-truncated systematic shift
@@ -293,15 +289,11 @@ namespace ana
 
     ret[fVars.size() + j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
     }
-
-    return ret;
   }
 
   //----------------------------------------------------------------------
-  void MinuitFitter::DecodePars(const std::vector<double> &pars) const
+  void MinuitFitter::DecodePars(double const *pars) const
   {
-    assert(pars.size() == fVars.size()+fSysts.size());
-
     if (fVars.size() > 0)
     {
       assert(fCalc);

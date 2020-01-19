@@ -43,6 +43,12 @@ void SystShifts::SetShift(const ISyst *syst, double shift) {
 }
 
 //----------------------------------------------------------------------
+std::unique_ptr<SystShifts> SystShifts::Copy() const
+{
+  return std::make_unique<SystShifts>(*this);
+}
+
+//----------------------------------------------------------------------
 double SystShifts::GetShift(const ISyst *syst) const {
   assert(syst);
 

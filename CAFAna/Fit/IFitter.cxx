@@ -8,7 +8,6 @@
 #include "OscLib/func/IOscCalculator.h"
 
 #include "Utilities/func/MathUtil.h"
-#include "Utilities/func/StanUtils.h"
 
 #include <cassert>
 
@@ -143,7 +142,7 @@ namespace ana
         for (const auto *v: fVars)
           bestFitPars.push_back(v->GetValue(seed));
         for (const auto *s: fSysts)
-          bestSystPars.push_back(shift->GetShift<double>(s));
+          bestSystPars.push_back(shift->GetShift(s));
       }
 
       delete seed;

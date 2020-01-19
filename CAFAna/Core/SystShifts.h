@@ -2,10 +2,13 @@
 
 #include "CAFAna/Core/ISyst.h"
 
+class TDirectory;
+
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace ana
 {
@@ -20,6 +23,11 @@ namespace ana
     static SystShifts Nominal(){return SystShifts();}
 
     bool IsNominal() const {return fSysts.empty();}
+
+    /// Allow derived classes to overload so they can copy themselves
+    /// in case they overload Penalty().  Used in IFitter.
+    /// Note that you own the copy...
+    virtual std::unique_ptr<SystShifts> Copy() const;
 
     /// Shifts are 0=nominal, -1,+1 = 1 sigma shifts
     void SetShift(const ISyst* syst, double shift);
@@ -39,6 +47,10 @@ namespace ana
     int ID() const {return fID;}
 
     std::vector<const ISyst*> ActiveSysts() const;
+
+    void SaveTo(TDirectory* dir) const;
+    std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir);
+
   protected:
     std::unordered_map<const ISyst*, double> fSysts;
 
