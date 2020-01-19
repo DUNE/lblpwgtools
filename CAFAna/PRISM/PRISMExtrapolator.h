@@ -56,9 +56,10 @@ public:
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
-  TH1 const *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
-                                           double max_OffAxis_m,
-                                           SystShifts shift = kNoShift) const;
+  TH1 const *
+  GetMatchCoefficientsEventRate(osc::IOscCalculator *osc, double max_OffAxis_m,
+                                std::vector<double> CoeffRegVector = {},
+                                SystShifts shift = kNoShift) const;
   TH1 const *GetMatchCoefficientsFlux(
       osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
@@ -67,6 +68,7 @@ public:
   GetMatchCoefficients(osc::IOscCalculator *osc, double max_OffAxis_m,
                        FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
                        FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode,
+                       std::vector<double> CoeffRegVector = {},
                        SystShifts const &shift = kNoShift) const;
 
   TH1 const *GetLastResidual() const { return fLastResidual.get(); }
