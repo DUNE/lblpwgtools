@@ -130,6 +130,7 @@ set(PRISMLIB)
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   set(PRISMLIB "-lCAFAnaPRISM")
 endif()
+
 configure_file(cmake/CAFBuild.in
 ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild @ONLY)
 configure_file(cmake/CAFEnvWrapper.sh.in
@@ -143,7 +144,6 @@ install(
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
   )
-
 
 install(
   PROGRAMS
