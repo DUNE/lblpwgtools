@@ -98,12 +98,13 @@ add_subdirectory(Vars)
 
 LIST(APPEND CAFANALIBS
     CAFAnaAnalysis
+    CAFAnaFit
     CAFAnaDecomp
     CAFAnaPrediction
     CAFAnaCore
     CAFAnaExperiment
     CAFAnaSysts
-    #Flux systs depends on PRISM if using off axis 
+    #Flux systs depends on PRISM if using off axis
     CAFAnaPRISM
     CAFAnaCuts
     CAFAnaExtrap

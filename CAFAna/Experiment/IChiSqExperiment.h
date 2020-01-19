@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/LoadFromFile.h"
 

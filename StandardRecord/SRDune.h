@@ -4,6 +4,9 @@
 #include <vector>
 
 namespace caf {
+
+  static size_t const kMaxSystUniverses = 10;
+
 class SRDune {
 public:
   // Reco info
@@ -154,6 +157,7 @@ public:
   double NDMassCorrWeight;
 
 #ifdef USE_TH2JAGGED
+  // Cache the ND flux bin when using off-axis flux matrices.
   int OffAxisFluxBin;
   int OffAxisFluxConfig;
 #endif
