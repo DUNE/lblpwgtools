@@ -43,10 +43,9 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
   return fvmasscor->GetBinContent(bi_it);
 }
 
-const ana::Var kMassCorrection({},
-                               [&](const caf::StandardRecord *sr) -> double {
-                                 return sr->dune.NDMassCorrWeight;
-                               });
+const ana::Var kMassCorrection({}, [](const caf::StandardRecord *sr) -> double {
+  return sr->dune.NDMassCorrWeight;
+});
 
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
                               bool IsRHC) {
@@ -90,7 +89,7 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
   if (!calc) {
     calc = NuFitOscCalc(1);
   }
-  
+
   if (ps.has_key("L")) {
     calc->SetL(ps.get<double>("L"));
   }

@@ -2,8 +2,6 @@
 
 #include "CAFAna/Core/SystShifts.h"
 
-#include "Eigen/Dense"
-
 #include <map>
 #include <memory>
 #include <string>
