@@ -22,7 +22,7 @@ namespace PRISM {
 const Var kTrueOffAxisPos =
     (SIMPLEVAR(dune.det_x) + (SIMPLEVAR(dune.vtx_x) * Constant(1.0E-2)));
 
-const Var kProxyE({}, [&](const caf::StandardRecord *sr) -> double {
+const Var kProxyE({}, [](const caf::StandardRecord *sr) -> double {
   double eother = 0;
   if (std::isnormal(sr->dune.eOther)) {
     eother = sr->dune.eOther;
@@ -32,7 +32,7 @@ const Var kProxyE({}, [&](const caf::StandardRecord *sr) -> double {
   return eprox;
 });
 
-const Var kProxyE_20pclpe({}, [&](const caf::StandardRecord *sr) -> double {
+const Var kProxyE_20pclpe({}, [](const caf::StandardRecord *sr) -> double {
   double eother = 0;
   if (std::isnormal(sr->dune.eOther)) {
     eother = sr->dune.eOther;
@@ -141,19 +141,19 @@ std::vector<double> const ND_UnGeoCorrectible_eff = {0.996, 0.996, 0.985, 0.966,
 
 TGraph FDnumuFHCSelEff(FDnumuFHCSelEff_enu.size(), FDnumuFHCSelEff_enu.data(),
                        FDnumuFHCSelEff_eff.data());
-const Var kFDEff({}, [&](const caf::StandardRecord *sr) -> double {
+const Var kFDEff({}, [](const caf::StandardRecord *sr) -> double {
   return FDnumuFHCSelEff.Eval(sr->dune.Ev);
 });
 
 TGraph ND_UnGeoCorrectibleEff(ND_UnGeoCorrectible_enu.size(),
                               ND_UnGeoCorrectible_enu.data(),
                               ND_UnGeoCorrectible_eff.data());
-const Var kNDEff({}, [&](const caf::StandardRecord *sr) -> double {
+const Var kNDEff({}, [](const caf::StandardRecord *sr) -> double {
   return ND_UnGeoCorrectibleEff.Eval(sr->dune.Ev);
 });
 
 // Use to weight by Exposure
-const Var kRunPlanWeight({}, [&](const caf::StandardRecord *sr) -> double {
+const Var kRunPlanWeight({}, [](const caf::StandardRecord *sr) -> double {
   return sr->dune.perPOTWeight * sr->dune.perFileWeight;
 });
 
