@@ -355,19 +355,22 @@ int main(int argc, char const *argv[]) {
     if (whist) { // If we are faking a special run
       NDWeight =
           NDWeight * ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
-            if (sr->dune.det_x) {
+            if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
               return 1;
             }
-            if (sr->dune.vtx_x > 0) {
+            return whist->GetBinContent(
+                whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+          });
+    }
+
+    if (oabinningdescriptor == "OneNegXBin") {
+      NDWeight =
+          NDWeight * ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
+            if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
               return 1;
             }
-            std::cout << "bla: " << sr->dune.Ev << " gw = "
-                      << whist->GetBinContent(
-                             whist->GetXaxis()->FindFixBin(sr->dune.Ev))
-                      << std::endl;
             // Correct for the bin width
-            return (0.5 / 3) * whist->GetBinContent(
-                                   whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+            return (0.5 / 2);
           });
     }
 

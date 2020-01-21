@@ -59,7 +59,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
                                          state.FDMatchInterp.get());
   fluxmatcher.SetStoreDebugMatches();
-  fluxmatcher.SetTargetConditioning(reg, fit_range[0], fit_range[1]);
+  if (pred.get<bool>("is_fake_spec_run", false)) {
+    fluxmatcher.SetTargetConditioning(reg, {{0},}, fit_range[0], fit_range[1]);
+  } else {
+    fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
+  }
 
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 

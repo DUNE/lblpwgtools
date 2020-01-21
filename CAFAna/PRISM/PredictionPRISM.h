@@ -1,9 +1,9 @@
 #pragma once
 
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Prediction/PredictionEnuWeightedNoExtrap.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Prediction/PredictionEnuWeightedNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
@@ -116,9 +116,11 @@ public:
   void SetWSBCorrection(bool v = true) { fWSBCorrection = v; }
   void SetNueCorrection(bool v = true) { fNueCorrection = v; }
 
-  void SetIgnoreData(bool v = true) {fIgnoreData = v;}
+  void SetIgnoreData(bool v = true) { fIgnoreData = v; }
   void SetFakeDataShift(SystShifts s);
   void UnsetFakeDataShift();
+
+  double GetMaxOffAxis() const { return fMaxOffAxis; }
 
 protected:
   void InterpolateFluxMissMatcher() const;

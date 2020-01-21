@@ -55,15 +55,15 @@ Binning GetBinning(std::string const &xbinning) {
     std::vector<double> BE = {0, 0.25, 0.5};
 
     while (BE.back() < 3) {
-      BE.push_back(BE.back() + 0.1);
+      BE.push_back(BE.back() + 0.2);
     }
 
     while (BE.back() < 5) {
-      BE.push_back(BE.back() + 0.25);
+      BE.push_back(BE.back() + 0.5);
     }
 
     while (BE.back() < 10) {
-      BE.push_back(BE.back() + 0.5);
+      BE.push_back(BE.back() + 1);
     }
 
     return Binning::Custom(BE);
@@ -85,7 +85,7 @@ Binning GetOABinning(std::string const &oabinning) {
     size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
     return Binning::Simple(NOABins, OA_min_m, OA_max_m);
   } else if (oabinning == "OneNegXBin") {
-    std::vector<double> BE = {-3, 0};
+    std::vector<double> BE = {-2, 0};
     while (BE.back() < 32.75) {
       BE.push_back(BE.back() + 0.5);
     }
