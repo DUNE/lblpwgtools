@@ -20,8 +20,9 @@
 namespace ana {
 
 PRISMExtrapolator::PRISMExtrapolator()
-    : fRegFactor(0), fENuMin(0xdeadbeef), fENuMax(0xdeadbeef),
-      fLowEGaussFallOff(false), fStoreDebugMatches(false) {}
+    : fRegFactor(0), fENuMin(0xdeadbeef),
+      fENuMax(0xdeadbeef), fCoeffRegVector{}, fLowEGaussFallOff(false),
+      fStoreDebugMatches(false) {}
 
 void PRISMExtrapolator::InitializeFluxMatcher(std::string const &FluxFilePath,
                                               int OffAxisBinMerge,
@@ -123,8 +124,7 @@ bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
 }
 
 TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
-    osc::IOscCalculator *osc, double max_OffAxis_m,
-    std::vector<double> CoeffRegVector, SystShifts shift) const {
+    osc::IOscCalculator *osc, double max_OffAxis_m, SystShifts shift) const {
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
@@ -148,9 +148,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   int NEBins = FDOsc->GetXaxis()->GetNbins();
 
   int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
-  if (CoeffRegVector.size() < size_t(NCoeffs)) {
-    std::fill_n(std::back_inserter(CoeffRegVector),
-                NCoeffs - CoeffRegVector.size(), 1);
+  if (fCoeffRegVector.size() < size_t(NCoeffs)) {
+    std::fill_n(std::back_inserter(fCoeffRegVector),
+                NCoeffs - fCoeffRegVector.size(), 1);
   }
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
@@ -161,8 +161,8 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
     for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
       // Always penalize coefficient height;
       RegMatrix(row_it, row_it) = fRegFactor;
-      // Penalize neighbouring coefficient difference by CoeffRegVector[it]
-      RegMatrix(row_it, row_it + 1) = -fRegFactor * CoeffRegVector[row_it];
+      // Penalize neighbouring coefficient difference by fCoeffRegVector[it]
+      RegMatrix(row_it, row_it + 1) = -fRegFactor * fCoeffRegVector[row_it];
     }
     RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
   }
@@ -286,7 +286,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
       flavAfter = -12;
       break;
     }
-    default: { abort(); }
+    default: {
+      abort();
+    }
     }
 
     TH2 *NDOffAxis = NDOffAxisPrediction[static_cast<size_t>(NDMode)].get();
@@ -382,11 +384,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
 TH1 const *PRISMExtrapolator::GetMatchCoefficients(
     osc::IOscCalculator *osc, double max_OffAxis_m,
     PRISMExtrapolator::FluxPredSpecies NDMode,
-    PRISMExtrapolator::FluxPredSpecies FDMode,
-    std::vector<double> CoeffRegVector, SystShifts const &shift) const {
+    PRISMExtrapolator::FluxPredSpecies FDMode, SystShifts const &shift) const {
   return fMatchEventRates
-             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m, CoeffRegVector,
-                                             shift)
+             ? GetMatchCoefficientsEventRate(osc, max_OffAxis_m, shift)
              : GetMatchCoefficientsFlux(osc, max_OffAxis_m, NDMode, FDMode);
 }
 

@@ -54,10 +54,9 @@ public:
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
-  TH1 const *
-  GetMatchCoefficientsEventRate(osc::IOscCalculator *osc, double max_OffAxis_m,
-                                std::vector<double> CoeffRegVector = {},
-                                SystShifts shift = kNoShift) const;
+  TH1 const *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
+                                           double max_OffAxis_m,
+                                           SystShifts shift = kNoShift) const;
   TH1 const *GetMatchCoefficientsFlux(
       osc::IOscCalculator *osc, double max_OffAxis_m,
       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
@@ -66,7 +65,6 @@ public:
   GetMatchCoefficients(osc::IOscCalculator *osc, double max_OffAxis_m,
                        FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
                        FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode,
-                       std::vector<double> CoeffRegVector = {},
                        SystShifts const &shift = kNoShift) const;
 
   TH1 const *GetLastResidual() const { return fLastResidual.get(); }
@@ -74,12 +72,15 @@ public:
   void Write(TDirectory *);
 
   void
-  SetTargetConditioning(double RegFactor = 1E-8, double LowECutoff = 0,
+  SetTargetConditioning(double RegFactor = 1E-8,
+                        std::vector<double> CoeffRegVector = {},
+                        double LowECutoff = 0,
                         double HighECutoff = std::numeric_limits<double>::max(),
                         bool LowEGaussTail = false) {
     fRegFactor = RegFactor;
     fENuMin = LowECutoff;
     fENuMax = HighECutoff;
+    fCoeffRegVector = CoeffRegVector;
     fLowEGaussFallOff = LowEGaussTail;
   }
 
@@ -97,6 +98,7 @@ protected:
   double fRegFactor;
   double fENuMin;
   double fENuMax;
+  mutable std::vector<double> fCoeffRegVector;
   bool fLowEGaussFallOff;
 
   mutable std::map<std::string, std::unique_ptr<TH1>> fMatchCache;
