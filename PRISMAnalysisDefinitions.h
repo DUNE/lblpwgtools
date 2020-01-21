@@ -19,7 +19,7 @@ struct PRISMAxisBlob {
 ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "uniform");
 PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &xbinning = "default",
-                           std::array<double, 3> OABinning = {0.5, -3, 33});
+                           std::string const &oabinning = "default");
 
 extern const ana::Cut kETrueLT10GeV;
 

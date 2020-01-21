@@ -76,6 +76,27 @@ Binning GetBinning(std::string const &xbinning) {
   }
 }
 
+Binning GetOABinning(std::string const &oabinning) {
+  if (oabinning == "default") {
+    std::array<double, 3> OABinning = {0.5, -3, 33};
+    double OA_bin_width_m = OABinning[0];
+    double OA_min_m = OABinning[1];
+    double OA_max_m = OABinning[2];
+    size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
+    return Binning::Simple(NOABins, OA_min_m, OA_max_m);
+  } else if (oabinning == "OneNegXBin") {
+    std::vector<double> BE = {-3, 0};
+    while (BE.back() < 32.75) {
+      BE.push_back(BE.back() + 0.5);
+    }
+    return Binning::Custom(BE);
+  } else {
+    std::cout << "[ERROR]: Unknown PRISM OA binning definition: " << oabinning
+              << std::endl;
+    abort();
+  }
+}
+
 std::pair<std::string, Var> GetVar(std::string const &varname) {
 
   if (varname == "ETrue") {
@@ -103,14 +124,9 @@ HistAxis GetEventRateMatchAxes(std::string const &binning) {
 
 PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &xbinning,
-                           std::array<double, 3> OABinning) {
+                           std::string const &oabinning) {
 
-  double OA_bin_width_m = OABinning[0];
-  double OA_min_m = OABinning[1];
-  double OA_max_m = OABinning[2];
-  size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
-  HistAxis axOffAxisPos("Off axis position (m)",
-                        Binning::Simple(NOABins, OA_min_m, OA_max_m),
+  HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
                         kTrueOffAxisPos);
 
   auto vardef = GetVar(varname);
