@@ -1,13 +1,17 @@
 #pragma once
 
+// gcc 9.1 will fail to build Eigen as a result of this warning if it isn't
+// disabled
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #include "Eigen/Dense"
+#pragma GCC diagnostic pop
 
 #include "TH1.h"
 #include "TH2.h"
 
-#include <vector>
 #include <limits>
-
+#include <vector>
 
 Eigen::MatrixXd
 GetEigenMatrix(TH2 const *,
@@ -25,7 +29,6 @@ size_t
 FillHistFromEigenVector(TH1 *, Eigen::VectorXd const &, size_t vect_offset = 0,
                         size_t histx_offset = 0, size_t histy_offset = 0,
                         Eigen::VectorXd const &error = Eigen::VectorXd());
-
 
 template <typename THN>
 inline size_t
