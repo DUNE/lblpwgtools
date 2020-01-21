@@ -60,7 +60,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
                                          state.FDMatchInterp.get());
-  fluxmatcher.SetTargetConditioning(reg, fit_range[0], fit_range[1]);
+  fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 
   std::vector<double> points;

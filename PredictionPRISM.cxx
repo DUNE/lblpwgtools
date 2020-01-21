@@ -40,7 +40,10 @@ PredictionPRISM::PredictionPRISM(const HistAxis &recoAxis,
       (offAxisBinEdges.back() + offAxisBinEdges[offAxisBinEdges.size() - 2]) /
       2.0;
 
-  double xslice_width_cm = (offAxisBinEdges[1] - offAxisBinEdges[0]) * 1E2;
+  // TODO we should make this correct every bin by its width, this currently
+  // uses the second bin width only because a hack that uses the first bin to
+  // mock up a special beam run
+  double xslice_width_cm = (offAxisBinEdges[2] - offAxisBinEdges[1]) * 1E2;
   fDefaultOffAxisPOT = 1.0 / FD_ND_FVRatio(xslice_width_cm);
 
   DontAddDirectory guard;
@@ -248,7 +251,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   if (fFluxMatcher) {
     TH1 const *LinearCombination = fFluxMatcher->GetMatchCoefficients(
-        calc, fMaxOffAxis, fNDFluxSpecies, fFDFluxSpecies, {}, shift);
+        calc, fMaxOffAxis, fNDFluxSpecies, fFDFluxSpecies, shift);
 
     if (NDComps.count(kNDSig)) {
       Comps.emplace(kNDSig,
