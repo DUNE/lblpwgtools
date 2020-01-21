@@ -261,6 +261,9 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   sr.dune.xsSyst_wgt.resize(XSSyst_names.size());
 
   for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
+
+    sr.dune.xsSyst_wgt[syst_it].resize(caf::kMaxSystUniverses);
+
     if (!SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it],
                           &XSSyst_tmp[syst_it])) {
       std::fill_n(XSSyst_tmp[syst_it].begin(), caf::kMaxSystUniverses, 1);

@@ -252,7 +252,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     KeepSysts(xseclist, GetFakeDataGenerationSystNames());
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
 
-    std::vector<const ISyst *> crazyfluxlist = 
+    std::vector<const ISyst *> crazyfluxlist =
       GetCrazyFluxSysts();
     systlist.insert(systlist.end(), crazyfluxlist.begin(), crazyfluxlist.end());
   }
@@ -460,13 +460,13 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
 }
 
 /*
-  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
-  points used for normal dials, they have fixed values for non-zero values of the 
-  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same 
-  value. Some are set so all negative (positive) values give a -3 (+3) sigma 
+  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline
+  points used for normal dials, they have fixed values for non-zero values of the
+  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same
+  value. Some are set so all negative (positive) values give a -3 (+3) sigma
   variation, which is why there's some messing around in the function below.
-  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift, 
-  which is called only when creating the input CAFs. This is almost certainly not 
+  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift,
+  which is called only when creating the input CAFs. This is almost certainly not
   optimal, but is easy to extend for other dials.
  */
 SystShifts GetFakeDataGeneratorSystShift(std::string input) {
@@ -477,7 +477,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   if (input.empty() || input == "nominal")
     return thisShift;
 
-  // Allow _pos and _neg endings 
+  // Allow _pos and _neg endings
   std::vector<std::string> split_input = SplitString(input, ':');
   std::vector<std::string> fake_data_names;
   std::vector<int> dial_vals;
@@ -492,7 +492,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } else if (in_name.compare(in_name.length()-4, 4, "_neg") == 0){
       name = in_name.substr(0, in_name.length()-4);
       val  = -1;
-    } 
+    }
 
     // Check nobody did anything dumb...
     assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name));

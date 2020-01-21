@@ -124,6 +124,7 @@ std::string output_file_name;
 std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
 std::string binningdescriptor = "default";
+std::string oabinningdescriptor = "default";
 std::string truthbinningdescriptor = "uniform";
 std::vector<std::string> ND_input_patterns;
 std::vector<std::string> FD_input_patterns;
@@ -152,6 +153,7 @@ void SayUsage(char const *argv[]) {
          "\t                            descriptor <str> to the state "
          "file.\n"
       << "\t--bin-descriptor <str>    : Bin descriptor.\n"
+      << "\t--OA-bin-descriptor <str>    : Bin descriptor.\n"
       << "\t--truth-bin-descriptor <str> : Bin descriptor.\n"
       << "\t--no-fakedata-dials       : Do not add the fake data dials to "
          "the\n"
@@ -194,6 +196,8 @@ void handleOpts(int argc, char const *argv[]) {
       syst_descriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--bin-descriptor") {
       binningdescriptor = argv[++opt];
+    } else if (std::string(argv[opt]) == "--OA-bin-descriptor") {
+      oabinningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--truth-bin-descriptor") {
       truthbinningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
@@ -338,7 +342,8 @@ int main(int argc, char const *argv[]) {
   if (!do_no_op) {
     TFile fout(output_file_name.c_str(), "RECREATE");
 
-    PRISMAxisBlob axes = GetPRISMAxes(axdescriptor, binningdescriptor);
+    PRISMAxisBlob axes =
+        GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor);
 
     HistAxis EventRateMatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
@@ -356,8 +361,13 @@ int main(int argc, char const *argv[]) {
             if (sr->dune.vtx_x > 0) {
               return 1;
             }
-            return whist->GetBinContent(
-                whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+            std::cout << "bla: " << sr->dune.Ev << " gw = "
+                      << whist->GetBinContent(
+                             whist->GetXaxis()->FindFixBin(sr->dune.Ev))
+                      << std::endl;
+            // Correct for the bin width
+            return (0.5 / 3) * whist->GetBinContent(
+                                   whist->GetXaxis()->FindFixBin(sr->dune.Ev));
           });
     }
 
