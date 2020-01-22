@@ -15,26 +15,27 @@
 #include "TH1.h"
 #include "TH2.h"
 
+#include <csignal>
+
 namespace ana {
 
 //----------------------------------------------------------------------
-PredictionEnuWeightedNoExtrap::PredictionEnuWeightedNoExtrap(PredictionExtrap *pred)
+PredictionEnuWeightedNoExtrap::PredictionEnuWeightedNoExtrap(
+    PredictionExtrap *pred)
     : PredictionNoExtrap(pred->GetExtrap()), fEnuWeight(nullptr) {}
 
 //----------------------------------------------------------------------
-PredictionEnuWeightedNoExtrap::PredictionEnuWeightedNoExtrap(Loaders &loaders,
-                                                       const HistAxis &axis,
-                                                       const Cut &cut,
-                                                       const SystShifts &shift,
-                                                       const Var &wei)
+PredictionEnuWeightedNoExtrap::PredictionEnuWeightedNoExtrap(
+    Loaders &loaders, const HistAxis &axis, const Cut &cut,
+    const SystShifts &shift, const Var &wei)
     : PredictionNoExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)),
       fEnuWeight(nullptr) {}
 
 //----------------------------------------------------------------------
-Spectrum PredictionEnuWeightedNoExtrap::PredictComponent(osc::IOscCalculator *calc,
-                                                      Flavors::Flavors_t flav,
-                                                      Current::Current_t curr,
-                                                      Sign::Sign_t sign) const {
+Spectrum PredictionEnuWeightedNoExtrap::PredictComponent(
+    osc::IOscCalculator *calc, Flavors::Flavors_t flav, Current::Current_t curr,
+    Sign::Sign_t sign) const {
+
   Spectrum ret = fExtrap->NCComponent(); // Get binning
   ret.Clear();
 
@@ -128,9 +129,11 @@ Spectrum PredictionEnuWeightedNoExtrap::PredictComponent(osc::IOscCalculator *ca
         (fExtrap->NumuSurvComponent().IsAlive())) {
       const OscCurve curve(calc, +14, +14);
       TH1D *osc = curve.ToTH1();
+
       if (fEnuWeight) {
         osc->Multiply(fEnuWeight);
       }
+
       ret += fExtrap->NumuSurvComponent().WeightedByErrors(osc);
       HistCache::Delete(osc);
     }
