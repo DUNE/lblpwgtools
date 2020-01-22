@@ -209,7 +209,11 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
        ++bin_it) {
     double bc = FDOsc->GetBinContent(bin_it + 1);
-    fLastResidual->SetBinContent(bin_it + 1, (bc - BestFit[bin_it]) / bc);
+    double e = (bc - BestFit[bin_it]) / bc;
+    if (!std::isnormal(e)) {
+      e = 0;
+    }
+    fLastResidual->SetBinContent(bin_it + 1, e);
   }
 
   if (fStoreDebugMatches) {
@@ -232,6 +236,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
     fDebugND["last_match"] = std::move(NDOffAxis);
     fDebugND["last_match"]->SetDirectory(nullptr);
+
+    fDebugResid["last_match"] =
+        std::unique_ptr<TH1>(dynamic_cast<TH1 *>(fLastResidual->Clone()));
+    fDebugResid["last_match"]->SetDirectory(nullptr);
   }
 
   return fMatchCache["last_match"].get();
@@ -408,6 +416,10 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
 
     for (auto &fit : fDebugND) {
       dir->WriteTObject(fit.second.get(), (fit.first + "_DebugND").c_str());
+    }
+
+    for (auto &fit : fDebugResid) {
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugResid").c_str());
     }
   }
 }

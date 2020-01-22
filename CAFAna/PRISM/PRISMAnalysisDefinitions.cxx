@@ -52,18 +52,14 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(100, 0, 10);
   }
   if (xbinning == "testopt") {
-    std::vector<double> BE = {0, 0.25, 0.5};
+    std::vector<double> BE = {0,};
 
-    while (BE.back() < 3) {
+    while (BE.back() < 4) {
       BE.push_back(BE.back() + 0.2);
     }
 
-    while (BE.back() < 5) {
-      BE.push_back(BE.back() + 0.5);
-    }
-
     while (BE.back() < 10) {
-      BE.push_back(BE.back() + 1);
+      BE.push_back(BE.back() + 0.5);
     }
 
     return Binning::Custom(BE);

@@ -291,9 +291,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
           ->SetEnuWeighting(fFluxMissWeighter.get());
 
+      // Don't use the cache for this as we are modifying the osc weights.
+      fFarDetPrediction->SetDontUseCache();
       Comps.emplace(kFDFluxCorr,
                     fFarDetPrediction->PredictComponentSyst(
                         calc, shift, Flavors::kAllNuMu, Current::kCC, SigSign));
+      fFarDetPrediction->SetDontUseCache(false);
 
       Comps.at(kNDDataCorr) += Comps.at(kFDFluxCorr);
 
