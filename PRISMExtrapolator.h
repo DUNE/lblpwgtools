@@ -107,6 +107,7 @@ protected:
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
   mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND;
+  mutable std::map<std::string, std::unique_ptr<TH1>> fDebugResid;
 };
 
 } // namespace ana
