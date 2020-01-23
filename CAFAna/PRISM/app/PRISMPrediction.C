@@ -69,14 +69,16 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-  TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot_fd);
+  double pot = pot_fd*(1.0/3.5);
+
+  TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
 
   PRISMPredEvRateMatch_h->Scale(1, "width");
   PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1 GeV");
   PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
 
   for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
-    TH1 *comp = compspec.second.ToTHX(pot_fd);
+    TH1 *comp = compspec.second.ToTHX(pot);
     comp->Scale(1, "width");
     comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
     comp->Write((std::string("PRISMPredEvRateMatch_") +
@@ -86,7 +88,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
 
-  TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot_fd);
+  TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot);
 
   for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
     FarDet_h->SetBinError(bin_it + 1,
@@ -97,7 +99,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   FarDet_h->Write("FarDet");
 
-  TH1 *NearDet_h = state.NDMatchInterp->Predict(calc).ToTHX(pot_fd);
+  TH1 *FarDet_unosc_h = state.FarDet->PredictUnoscillated().ToTHX(pot);
+  FarDet_unosc_h->Scale(1, "width");
+
+  FarDet_unosc_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  FarDet_unosc_h->Write("FarDet_unosc");
+
+  TH1 *NearDet_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
   NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
   NearDet_h->Write("NearDet");
 

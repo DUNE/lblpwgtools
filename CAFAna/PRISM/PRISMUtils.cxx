@@ -76,7 +76,7 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
 
   static std::set<std::string> keys{
       "L",    "Rho",      "Dmsq21",   "Dmsq32",   "Th12", "Th13",
-      "Th23", "Sin2Th12", "Sin2Th13", "Sin2Th23", "dCP",  "dCP_pi"};
+      "Th23", "SinsqTh12", "SinsqTh13", "SinsqTh23", "dCP",  "dCP_pi"};
 
   for (std::string const &k : ps.get_names()) {
     if (!keys.count(k)) {
@@ -111,14 +111,14 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
   if (ps.has_key("Th23")) {
     calc->SetTh23(ps.get<double>("Th23"));
   }
-  if (ps.has_key("SinTh12")) {
-    calc->SetTh12(asin(sqrt(ps.get<double>("SinTh12"))));
+  if (ps.has_key("SinsqTh12")) {
+    calc->SetTh12(asin(sqrt(ps.get<double>("SinsqTh12"))));
   }
-  if (ps.has_key("SinTh13")) {
-    calc->SetTh13(asin(sqrt(ps.get<double>("SinTh13"))));
+  if (ps.has_key("SinsqTh13")) {
+    calc->SetTh13(asin(sqrt(ps.get<double>("SinsqTh13"))));
   }
-  if (ps.has_key("SinTh23")) {
-    calc->SetTh23(asin(sqrt(ps.get<double>("SinTh23"))));
+  if (ps.has_key("SinsqTh23")) {
+    calc->SetTh23(asin(sqrt(ps.get<double>("SinsqTh23"))));
   }
   if (ps.has_key("dCP_pi")) {
     calc->SetdCP(ps.get<double>("dCP_pi") * M_PI);
