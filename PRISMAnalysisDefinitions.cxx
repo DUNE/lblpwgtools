@@ -55,10 +55,10 @@ Binning GetBinning(std::string const &xbinning) {
     std::vector<double> BE = {0,};
 
     while (BE.back() < 4) {
-      BE.push_back(BE.back() + 0.2);
+      BE.push_back(BE.back() + 0.25);
     }
 
-    while (BE.back() < 10) {
+    while (BE.back() < 8) {
       BE.push_back(BE.back() + 0.5);
     }
 
