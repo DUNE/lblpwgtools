@@ -124,10 +124,6 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
       shifts->SetShift(systs.back(), int(rnd.Uniform(1, 4)) * (rnd.Uniform() < 0.5 ? -1 : 1));
     }
 
-    TFile f(predFile.c_str());
-    assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
-    pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
-
     systTruePulls = shifts->Copy();
     Spectrum spec_pred = pred->PredictSyst(calc, *shifts);
     fakeData = std::make_unique<Spectrum>(spec_pred.FakeData(test::POT));
@@ -169,7 +165,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     fakeData = LoadFrom<Spectrum>(dynamic_cast<TDirectory*>(inf.Get("fakedata")));
     samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
     systTruePulls = SystShifts::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("systTruth")));
-    assert (fakeData && samples && systTruePulls);
+    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(inf.Get("calcTruth"))).release());  // yeah, just leak it
+    assert (fakeData && samples && systTruePulls && calcTruth);
 
     auto bestFitIdx = samples->BestFitSampleIdx();
     calc = NuFitOscCalc(1, 1, 3);  // NH, max mixing

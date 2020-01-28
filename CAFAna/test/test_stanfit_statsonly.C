@@ -11,6 +11,7 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TH1D.h"
+#include "TLegend.h"
 #include "TMarker.h"
 
 #include "CAFAna/Analysis/AnalysisBinnings.h"
@@ -57,7 +58,9 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   std::cout << std::endl;
 
   // let's try a nice "easy" problem: numu disappearance.
-  auto calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  auto stock_calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorPMNSOpt>();
+  osc::CopyParams(stock_calc, calc.get());
 
   std::unique_ptr<ana::PredictionExtrap> pred;
   if (!loadPredFromFile)
@@ -91,7 +94,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   // pick a few test values for some mock data...
   calc->SetTh23(test::MOCKDATA_TH23);
   calc->SetDmsq32(test::MOCKDATA_DM32);
-  ana::Spectrum spec_pred = pred->Predict(calc);
+  ana::Spectrum spec_pred = pred->Predict(calc.get());
   ana::Spectrum fakeData = spec_pred.FakeData(pot_fd);   // high-statistics fake data, i.e., Asimov
   ana::BinnedLkhdExperiment expt(pred.get(), fakeData);
 
@@ -115,7 +118,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
 
     fitter.SetStanConfig(config);
     ana::SystShifts systs;
-    fitter.Fit(calc, systs);
+    fitter.Fit(calc.get(), systs);
     samples = fitter.ExtractSamples();
 
     if (saveSamplesToFile)
@@ -130,7 +133,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
     samples = ana::MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
   }
 
-  TCanvas c;
+  c.Clear();
   ana::BayesianSurface surf = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23, 30, .3, .7,
                                                      &fitDmSq32Scaled_UniformPrior, 30, 2.2, 2.8);
   surf.Draw();
@@ -142,10 +145,11 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   marker.Draw();
   c.SaveAs( (workDir + "/test_stanfit_statsonly_surface_contour.png").c_str() );
 
+  c.Clear();
   auto marg_dm2 = samples->MarginalizeTo(&fitDmSq32Scaled_UniformPrior);
   auto bin_marg_dm2 = ana::Binning::Simple(100, 2, 3);
   auto h_marg_dm2 = marg_dm2.ToTH1(bin_marg_dm2);
-  h_marg_dm2.Draw();
+  h_marg_dm2.Draw("hist");
   c.SaveAs( (workDir + "/test_stanfit_statsonly_dm2_marg.png").c_str() );
   std::cout << "1sigma credible interval(s) for dm2:" << std::endl;
   for (const auto & range : marg_dm2.QuantileRanges(ana::Quantile::kGaussian1Sigma, bin_marg_dm2))

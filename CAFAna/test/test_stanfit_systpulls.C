@@ -59,7 +59,9 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
                             const std::string &predFile = "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4/mcc11v4_FD_FHC.root",
                             const std::string &predName = "fd_interp_numu_fhc")
 {
-  auto calc = NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  auto stock_calc = NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorPMNSOpt>();
+  osc::CopyParams(stock_calc, calc.get());
 
   std::vector<const ISyst *> systs;
   for (const auto &syst : test::SYSTS_TO_CHECK)
@@ -69,7 +71,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
   assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
   auto pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
 
-  Spectrum nominal = pred->Predict(calc);
+  Spectrum nominal = pred->Predict(calc.get());
 
   // loop over the systs.
   // make a fake data spectrum and fit to it for each one.
@@ -83,22 +85,22 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
     // do a +2-sigma test.
     SystShifts shifts(syst, +2);
-    Spectrum spec_pred = pred->PredictSyst(calc, shifts);
+    Spectrum spec_pred = pred->PredictSyst(calc.get(), shifts);
     Spectrum fakeData = spec_pred.FakeData(pot_fd);
     BinnedLkhdExperiment expt(pred.get(), fakeData);
 
     shifts.SetShift(syst, 0);  // seed the fit at 0
 
     TCanvas c;
-    Spectrum CV = pred->Predict(calc);
-    SpectrumStan shiftedStan = pred->PredictSyst(calc, shifts);
+    Spectrum CV = pred->Predict(calc.get());
+    SpectrumStan shiftedStan = pred->PredictSyst(calc.get(), shifts);
     DataMCComparison(fakeData, CV);
     spec_pred.ToTH1(fakeData.POT(), kBlue)->Draw("hist same");
     std::cout << " Before fitting, LL between spectra is "
               << LogLikelihood(shiftedStan.ToBins(fakeData.POT()), fakeData.ToTH1(fakeData.POT())) / -2.
               << std::endl;
     osc::OscCalculatorPMNSOptStan stanCalc;
-    osc::CopyParams(calc, &stanCalc);
+    osc::CopyParams(calc.get(), &stanCalc);
     std::cout << "  Experiment object says it's " << expt.LogLikelihood(&stanCalc, shifts) << std::endl;
     c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_prefit.png").c_str(), syst->ShortName().c_str()));
 
@@ -127,7 +129,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
     shifts.ResetToNominal();
     shifts.SetShift(syst, 0);
-    fitter.Fit(calc, shifts);
+    fitter.Fit(calc.get(), shifts);
 //    fitter.TestGradients(calc, shifts);
 //    continue;
 
@@ -140,7 +142,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
     auto bin_marg_ll = Binning::Simple(600, -6, 6);
     auto h_marg_syst = marg_syst.ToTH1(bin_marg_ll);
     h_marg_syst.SetTitle(Form(";%s pull (#sigma);LL", syst->ShortName().c_str()));
-    h_marg_syst.Draw();
+    h_marg_syst.Draw("hist");
     c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_marg.png").c_str(), syst->ShortName().c_str()));
 
     c.Clear();
@@ -148,7 +150,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
     std::cout << "Best fit for syst " << syst->ShortName() << " is at pull = " << bestSyst << std::endl;
     bestFits[syst] = bestSyst;
     shifts.SetShift(syst, bestSyst);
-    DataMCComparison(fakeData, pred->PredictSyst(calc, shifts));
+    DataMCComparison(fakeData, pred->PredictSyst(calc.get(), shifts));
     nominal.ToTH1(nominal.POT(), kGray)->Draw("hist same");
     c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_bestfitpred.png").c_str(), syst->ShortName().c_str()));
 
