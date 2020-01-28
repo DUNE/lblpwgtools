@@ -98,6 +98,24 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   ana::Spectrum fakeData = spec_pred.FakeData(pot_fd);   // high-statistics fake data, i.e., Asimov
   ana::BinnedLkhdExperiment expt(pred.get(), fakeData);
 
+  // make a 'no-oscillations' spectrum to set the scale
+  calc->SetTh23(0);  // not _exactly_ no-oscillations (th13 is still nonzero) but whatever
+  ana::Spectrum spec_noosc = pred->Predict(calc.get());
+  TCanvas c;
+  auto h_noosc = spec_noosc.ToTH1(pot_fd, kRed, kSolid, ana::kPOT, ana::kBinDensity);
+  auto h_fakeData = fakeData.ToTH1(pot_fd, kBlack, kSolid, ana::kPOT, ana::kBinDensity);
+  h_noosc->Draw("hist");
+  h_noosc->GetYaxis()->SetTitle("Events / GeV");
+  h_fakeData->Draw("pe same");
+  TLegend leg(0.6, 0.6, 0.9, 0.9);
+  leg.SetFillStyle(0);
+  leg.SetBorderSize(0);
+  leg.AddEntry(h_noosc, "No oscillations", "l");
+  leg.AddEntry(h_fakeData, "Fake data", "lpe");
+  leg.Draw();
+  c.SaveAs( (workDir + "/test_stanfit_statsonly_fakeData.pdf").c_str() );
+
+
   // now put the calc back to normal
   calc->SetTh23(oldTh23);
   calc->SetDmsq32(oldDmsq32);
@@ -156,9 +174,19 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
     std::cout << "  (" << range.first << ", " << range.second << ")" << std::endl;
 
   c.Clear();
-  fitSsqTh23_UniformPriorSsqTh23.SetValue(calc, surf.GetBestFitX());
-  fitDmSq32Scaled_UniformPrior.SetValue(calc, surf.GetBestFitY());
-  ana::DataMCComparison(fakeData, pred.get(), calc, ana::kNoShift, ana::kBinDensity);
+  auto marg_ssth23 = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23);
+  auto bin_marg_ssth23 = ana::Binning::Simple(100, 0, 1);
+  auto h_marg_ssth23 = marg_ssth23.ToTH1(bin_marg_ssth23);
+  h_marg_ssth23.Draw("hist");
+  c.SaveAs( (workDir + "/test_stanfit_statsonly_ssth23_marg.png").c_str() );
+  std::cout << "1sigma credible interval(s) for ssth23:" << std::endl;
+  for (const auto & range : marg_ssth23.QuantileRanges(ana::Quantile::kGaussian1Sigma, bin_marg_ssth23))
+    std::cout << "  (" << range.first << ", " << range.second << ")" << std::endl;
+
+  c.Clear();
+  fitSsqTh23_UniformPriorSsqTh23.SetValue(calc.get(), surf.GetBestFitX());
+  fitDmSq32Scaled_UniformPrior.SetValue(calc.get(), surf.GetBestFitY());
+  ana::DataMCComparison(fakeData, pred.get(), calc.get(), ana::kNoShift, ana::kBinDensity);
   c.SaveAs( (workDir + "test_stanfit_statsonly_bestfitpred.png").c_str() );
 
 //  tree->Scan("*");
