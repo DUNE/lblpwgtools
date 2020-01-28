@@ -11,7 +11,9 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TLegend.h"
+#include "TLine.h"
 #include "TMarker.h"
+#include "TSystem.h"
 
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
@@ -96,6 +98,10 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled, PriorUniformInFitVar, "FlatDmSq32");
   std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior};
 
+  TFile f(predFile.c_str());
+  assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
+  pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
+
   std::unique_ptr<MCMCSamples> samples;
   if (!loadSamplesFromFile)
   {
@@ -158,7 +164,14 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   }
   else
   {
-    TFile inf(test::FullFilename(dirPrefix, samplesFilename).c_str());
+    std::string filepath;
+    for (const auto & path : {samplesFilename, test::FullFilename(dirPrefix, samplesFilename)})
+    {
+      // note: AccessPathName() returns *false* if the path is accessible <facepalm>
+      if (!gSystem->AccessPathName(gSystem->ExpandPathName(path.c_str())))
+        filepath = path;
+    }
+    TFile inf(filepath.c_str());
     if (inf.IsZombie())
       return;
 
@@ -187,12 +200,12 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
 
   // draw the contour in oscillation parameter space overlaid on the LL surface
   TCanvas c;
-  BayesianSurface surf = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23, 30, .3, .7,
-                                                &fitDmSq32Scaled_UniformPrior, 30, 2.2, 2.8);
+  BayesianSurface surf = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23, 100, .3, .7,
+                                                &fitDmSq32Scaled_UniformPrior, 100, 2.2, 2.8);
   surf.Draw();
   surf.DrawContour(surf.QuantileSurface(Quantile::kGaussian1Sigma), 7, kGreen+2); // dashed
   surf.DrawBestFit(kGray);
-  TMarker marker(util::sqr(sin(test::MOCKDATA_TH23)), test::MOCKDATA_DM32*1e3, kFullStar);
+  TMarker marker(fitSsqTh23_UniformPriorSsqTh23.GetValue(calcTruth), fitDmSq32Scaled_UniformPrior.GetValue(calcTruth)*1e3, kFullStar);
   marker.SetMarkerColor(kMagenta);
   marker.SetMarkerSize(3);
   marker.Draw();
@@ -205,6 +218,14 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     Bayesian1DMarginal marg = samples->MarginalizeTo(fitVarPtr);
     auto h = marg.ToTH1(Binning::Simple(50, samples->MinValue(fitVarPtr), samples->MaxValue(fitVarPtr)));
     h.Draw("hist");
+
+    double truthVal = fitVarPtr->GetValue(calcTruth);
+    TLine l(truthVal, h.GetMinimum(), truthVal, h.GetMaximum());
+    l.SetLineColor(kRed);
+    l.SetLineWidth(2);
+    l.SetLineStyle(kDashed);
+    l.Draw();
+
     c.SaveAs(Form(test::FullFilename(dirPrefix, "test_stanfit_systs_marg_%s.png").c_str(), fitVarPtr->ShortName().c_str()));
   }
   for (const auto & systPtr : shifts->ActiveSysts())
@@ -213,6 +234,14 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     Bayesian1DMarginal marg = samples->MarginalizeTo(systPtr);
     auto h = marg.ToTH1(Binning::Simple(50, samples->MinValue(systPtr), samples->MaxValue(systPtr)));
     h.Draw("hist");
+
+    double truthVal = systTruePulls->GetShift(systPtr);
+    TLine l(truthVal, h.GetMinimum(), truthVal, h.GetMaximum());
+    l.SetLineColor(kRed);
+    l.SetLineWidth(2);
+    l.SetLineStyle(kDashed);
+    l.Draw();
+
     c.SaveAs(Form(test::FullFilename(dirPrefix, "test_stanfit_systs_marg_%s.png").c_str(), systPtr->ShortName().c_str()));
   }
   // 2D syst space
@@ -226,10 +255,17 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
         break;
 
       c.Clear();
-      BayesianSurface marg = samples->MarginalizeTo(systPtr1, 50, samples->MinValue(systPtr1), samples->MaxValue(systPtr1),
-                                                    systPtr2, 50, samples->MinValue(systPtr2), samples->MaxValue(systPtr2));
+      BayesianSurface marg = samples->MarginalizeTo(systPtr1, 30, samples->MinValue(systPtr1), samples->MaxValue(systPtr1),
+                                                    systPtr2, 30, samples->MinValue(systPtr2), samples->MaxValue(systPtr2));
       auto h2 = marg.ToTH2();
       h2->Draw("colz");
+      marg.DrawContour(marg.QuantileSurface(Quantile::kGaussian1Sigma), 7, kGreen+2); // dashed
+
+      TMarker marker(systTruePulls->GetShift(systPtr1), systTruePulls->GetShift(systPtr2), kFullStar);
+      marker.SetMarkerColor(kBlack);
+      marker.SetMarkerSize(3);
+      marker.Draw();
+
       std::string outf = Form(test::FullFilename(dirPrefix, "test_stanfit_systs_marg_%s-%s.png").c_str(),
                               systPtr1->ShortName().c_str(),
                               systPtr2->ShortName().c_str());
@@ -270,6 +306,6 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   leg.AddEntry(&h_truePulls, "True", "l");
   leg.AddEntry(&h_fittedPulls, "Fitted", "p");
   leg.Draw();
-  c.SaveAs(test::FullFilename(dirPrefix, "test_stanfit_syst_pulls.png").c_str());
+  c.SaveAs(test::FullFilename(dirPrefix, "test_stanfit_systs_pulls.png").c_str());
 
 }
