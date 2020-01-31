@@ -9,6 +9,8 @@
 
 #include "Utilities/func/MathUtil.h"
 
+#include <algorithm>
+
 #include <cassert>
 
 namespace ana

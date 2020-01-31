@@ -7,6 +7,8 @@
 
 #include "Utilities/func/MathUtil.h"
 
+#include <algorithm>
+
 namespace ana
 {
   // --------------------------------------------------------------------------
