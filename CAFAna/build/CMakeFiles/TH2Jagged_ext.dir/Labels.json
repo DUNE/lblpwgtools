@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/CMakeFiles/TH2Jagged_ext"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/CMakeFiles/TH2Jagged_ext.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/CMakeFiles/TH2Jagged_ext-complete.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-install.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-mkdir.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-download.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-patch.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-configure.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-build.rule"
+		},
+		{
+			"file" : "/dune/app/users/chasnip/CH_DUNE_PRISM/lblpwgtools/CAFAna/build/Ext/src/TH2Jagged_ext-stamp/TH2Jagged_ext-skip-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"TH2Jagged_ext"
+		],
+		"name" : "TH2Jagged_ext"
+	}
+}

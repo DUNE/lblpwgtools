@@ -1,0 +1,52 @@
+
+
+#include "services.fcl"
+
+#include "FillNueSandbox.fcl"
+#include "FillSandbox.fcl"
+#include "CAFMaker.fcl"
+
+#include "BackTracker.fcl"
+#include "Metadata.fcl"
+
+process_name: MreCAFMaker
+
+services:
+{
+    scheduler:    { wantTracer : false wantSummary : false }
+    TimeTracker:       {}
+    RandomNumberGenerator: {} #ART native random number generator
+    @table::standard_services
+}
+services.BackTracker: @local::standard_backtracker
+
+source:
+{
+    module_type: RootInput
+    maxEvents:   -1
+}
+
+physics:
+{
+  producers:
+    {
+        nuesandmre:  @local::standard_nuesand 
+        numusandmre: @local::standard_numusand
+        cafmakermre: @local::mre_cafmaker
+    }
+  analyzers:
+    {
+        metadata: @local::standard_metadata            #prod
+    }
+
+    makecaf:  [ nuesandmre, numusandmre, cafmakermre ]
+
+    stream1:       [ metadata ]
+    trigger_paths: [ makecaf ]
+    end_paths:     [ stream1 ]
+    
+}
+
+physics.analyzers.metadata.params.mrecaf.base_release: "" #automatically picked up at run time
+physics.analyzers.metadata.params.NOVA.Standard: "true"
+

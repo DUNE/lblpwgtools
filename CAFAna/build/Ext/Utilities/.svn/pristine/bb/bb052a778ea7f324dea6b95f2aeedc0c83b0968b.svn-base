@@ -1,0 +1,43 @@
+#include "RunEventFilter.fcl"
+
+process_name: RunEvtFiltJob
+
+services: {}
+
+source:
+{
+  module_type: RootInput # Read root source
+  maxEvents:   -1        # Process all events
+}
+
+outputs:
+{
+  runevtfiltout:
+  {
+    module_type:  RootOutput
+    fileName:     "runevtfilt-evt.root"
+    SelectEvents: [runevtfilt]
+  }
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    runeventfilter: @local::include_runeventfilter
+  }
+  analyzers: {}
+  #
+  # Build paths
+  #
+  runevtfilt:         [ runeventfilter ]
+  runevtfilt_ostream: [ runevtfiltout ]
+  #
+  # Wire paths together
+  #
+  trigger_paths:      [ runevtfilt ]
+  end_paths:          [ runevtfilt_ostream ]
+}
+
+########################################################################

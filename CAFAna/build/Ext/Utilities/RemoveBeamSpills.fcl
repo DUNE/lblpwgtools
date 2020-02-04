@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+
+standard_removebeamspills:
+{
+  module_type: RemoveBeamSpills
+
+  RawDataLabel: "daq"
+  Bundle:	"A9_Monitoring"
+  URL:		""  # empty string will cause a search for correct server
+  DBTimeWindow: 600 # seconds. How much data to fetch at once
+
+  VetoWindow: 0.005 # seconds. Closest start of event and time of beam spill can be.
+}
+
+END_PROLOG

@@ -1,0 +1,21 @@
+{ decls }
+template <typename THT> class TH2TypeTraits;
+template <typename ST> class TH2Jagged;
+
+[  ]
+# List of selected classes
+class JBinId
+class TH2Jagged<char>
+class TH2Jagged<double>
+class TH2Jagged<float>
+class TH2Jagged<int>
+class TH2TypeTraits<char>
+class TH2TypeTraits<double>
+class TH2TypeTraits<float>
+class TH2TypeTraits<int>
+header TH2Jagged.h
+# List of selected typedefs and outer classes
+typedef TH2JaggedD
+typedef TH2JaggedF
+typedef TH2JaggedI
+typedef TH2JaggedC

@@ -1,0 +1,141 @@
+#include "services.fcl"
+#include "BackTracker.fcl"
+
+#include "MRE.fcl"                          
+#include "ReadoutSim.fcl"                         
+#include "ImprovedTransport.fcl"      
+#include "FindParent.fcl"
+
+#include "CalHit.fcl"
+#include "Slicer4D.fcl"
+
+#include "CosmicTrack.fcl"
+
+#include "KalmanTrack.fcl"
+#include "KalmanTrackMerge.fcl"
+
+#include "MultiHoughT.fcl"
+#include "ElasticArmsHS.fcl"
+#include "FuzzyKVertex.fcl"
+
+#include "MichelEFilter.fcl"
+#include "SliceMEF.fcl"
+
+#include "Metadata.fcl"
+
+
+
+process_name: BatchMREReco
+
+services:
+{
+  TFileService: { fileName: "mre_hist.root" closeFileFast: false }
+  scheduler:    { wantTracer: true wantSummary: true }
+  message:      { debugModules: ["*"] destinations: { debugmsg:{type: "cout" threshold: "WARNING"} } }
+  RandomNumberGenerator: {} #ART native random number generator
+  @table::standard_services
+}
+services.BackTracker: @local::standard_backtracker    
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "mre_reco.root"
+    fastCloning: false
+  }
+}
+
+# The muon removed digits have module label "mrcc". 
+physics:
+{
+  producers:
+  {
+    mregen:                 @local::standard_mre
+    elecphotrans:           @local::standard_photrans
+    elec:                   @local::noiseless_rsim
+    rns:                    { module_type: "RandomNumberSaver" }
+    mre:                    @local::standard_mergedigits
+    
+    calhitmre:              @local::mre_calhit
+    slicermre:              @local::mre_slicer
+    mreparent:              @local::mre_findparent
+
+    kalmantrackmre:         @local::mre_kalmantrack
+    kalmantrackmergemre:    @local::mre_kalmantrackmerge
+        
+    cosmictrackmre:         @local::mre_cosmictrack 
+
+    multihoughmre:          @local::mre_multihough
+    elasticarmshsmre:       @local::mre_elasticarmshs
+    fuzzykvertexmre:        @local::mre_fuzzykvertex
+    
+    slicemefmre:            @local::mre_slicemef
+  }
+
+  analyzers:
+  {
+    metadata:               @local::standard_metadata
+  }
+
+  filters:
+  {
+    michelecosmictrackmre: @local::mrcc_passall_michelecosmic
+    michelekalmantrackmre: @local::mre_passall_michelekalman
+  }
+
+  reco:[ mregen, 
+         elecphotrans, 
+         elec, 
+         rns, 
+         mre,
+         calhitmre, 
+         slicermre,
+         mreparent,
+         cosmictrackmre,
+         kalmantrackmre, 
+         kalmantrackmergemre, 
+         multihoughmre, 
+         elasticarmshsmre, 
+         fuzzykvertexmre,
+         michelecosmictrackmre,
+         michelekalmantrackmre,
+         slicemefmre
+       ]
+    
+  stream1: [ out1, metadata ]
+
+  trigger_paths: [ reco ]
+
+  end_paths: [ stream1 ]
+    
+}
+
+physics.analyzers.metadata.params.mrereco.base_release:  "" #automatically picked up at run time
+physics.analyzers.metadata.params.NOVA.Standard:         "true"
+
+physics.producers.kalmantrackmre.ObeyPreselection:       true
+physics.producers.kalmantrackmergemre.ObeyPreselection:  true
+
+physics.producers.multihoughmre.ObeyPreselection:        true
+physics.producers.elasticarmshsmre.ObeyPreselection:     true
+physics.producers.fuzzykvertexmre.ObeyPreselection:      true
+
+physics.filters.michelecosmictrackmre:                 @local::passall_michelecosmic
+physics.filters.michelecosmictrackmre.TrackLabel:      "cosmictrackmre"
+physics.filters.michelecosmictrackmre.SlicerLabel:     "slicermre"
+physics.filters.michelecosmictrackmre.CellHit:         "calhitmre"
+
+# pick up photons from elecphotrans instead of the usual photrans.
+physics.producers.elec.PhotonModuleLabel:              "elecphotrans"
+
+# pick up flshits etc from mregen instead of the usual generator.
+physics.producers.elecphotrans.FilterModuleLabel:      "mregen"
+services.Calibrator.ChunkedLoadingMaxDiblock:       14 

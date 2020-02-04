@@ -1,0 +1,29 @@
+# Usage: nova -c trimfile.fcl <infile> -o <outfile>
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+outputs:
+{
+  # Don't specify a fileName. Require user to specify output file explicitly
+  out:
+  {
+    module_type: RootOutput
+    outputCommands: [ "keep *",
+                      # Other potential candidates to drop
+#                      "drop sim::PhotonSignals_*_*_*",
+#                      "drop sim::FLSHitLists_*_*_*",
+#                      "drop rawdata::RawDigits_*_*_*",
+                      "drop sim::ParticleLists_*_*_*"]
+    fastCloning: true
+  }
+}
+
+physics:
+{
+  stream:    [ out ]
+  end_paths: [ stream ]
+}

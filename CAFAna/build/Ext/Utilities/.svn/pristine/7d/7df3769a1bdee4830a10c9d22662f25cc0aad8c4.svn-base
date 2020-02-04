@@ -1,0 +1,256 @@
+[
+  {
+    "category": "Extrapolation / NuINT 2017",
+    "docs": [21080, 20924, 20549, 20639],
+    "caption": "Plots showing the effects of the extrapolation for NuINT 2017.",
+    "thumb": "21080/thumbs/FullExtrap_fakeND_AllSysts_overlay_spectrum_sa_thumb.png"
+  },
+
+  {
+    "category": "DPF 2017",
+    "docs": [21809, 21854, 21947, 22085, 21950, 21794, 21878, 21806, 21860, 21788, 24062],
+    "caption": "Material from presentations at DPF 2017",
+    "thumb": "21809/thumbs/Nutau_blessing_DPF2017/nutau_sensitivity_bless_dpf_thumb.png"
+  },
+
+  {
+    "category": "APS 2016",
+    "docs": [15181],
+    "caption": "Material from presentations at APS 2016",
+    "thumb": "15181/thumbs/EoverH/eh2_nue_ContEFF90_c_thumb.png"
+  },
+
+  {
+    "category": "Nue SA contours",
+    "docs": [18543, 15640],
+    "caption": "Results (contours etc) for the summer 2016 nue analysis.",
+    "thumb": "18543/thumbs/contour_joint_combo_systs_fccorr_IH_thumb.png"
+  },
+
+  {
+    "category": "Nue SA distributions",
+    "docs": [15638, 15606, 15646],
+    "caption": "Energy spectra etc for the 2016 nue analysis.",
+    "thumb": "15606/thumbs/ndDataMC/cvneloose_cvne_zoom_bless_thumb.png"
+  },
+
+  {
+    "category": "Nue SA details",
+    "docs": [15644, 15639, 15610, 15648, 15650, 15651, 15698, 15389],
+    "caption": "Supporting details for the 2016 nue analysis.",
+    "thumb": "15610/thumbs/fdMC/cvneloose_recoE_bless_thumb.png"
+  },
+
+  {
+    "category": "Numu SA",
+    "docs": [19874, 15722],
+    "caption": "The summer 2016 numu analysis, first presented at Neutrino 2016.",
+    "thumb": "15722/thumbs/contour_nh_sa_123sigma_thumb.png"
+  },
+
+  {
+    "category": "RHC - Antineutrinos",
+    "docs": [16503, 16763, 16805],
+    "caption": "First set of RHC/FHC comparisons.",
+    "thumb": "16503/thumbs/RHC-cvneloose-recoE-Bless_thumb.png"
+  },
+
+  {
+    "category": "Sterile (nus) 2016",
+    "docs": [20798, 16855, 15931, 15932, 15927, 15933, 15720, 21947],
+    "caption": "The summer 2016 NC disappearance (sterile) analysis, first presented at Neutrino 2016. Later at APS 2017",
+    "thumb":"20798/thumbs/ana01_nc_paper_me_ic_thumb.png"  
+  },
+
+  {
+    "category": "Sterile (nus) 2017",
+    "docs": [24038, 24065],
+    "caption": "The summer 2017 NC disappearance (sterile) analysis, first presented at NuFACT 2017.",
+    "thumb":"24038/thumbs/EDS_FD_bless_thumb.png"  
+  },  
+    
+  {
+    "category": "Short-baseline Oscillations 2016",
+    "docs": [15738, 15588, 15594],
+    "caption": "The summer 2016 short-baseline oscillation (sterile) analyses, first presented at Neutrino 2016.",
+    "thumb":"15738/thumbs/sinsqthmue_1yr3yr_thumb.png"
+  },
+
+  {
+    "category": "ND / Cross sections",
+    "docs": [15481, 15614, 19706],
+    "caption": "Results and plots related to cross-section analyses.",
+    "thumb": "15481/thumbs/EhadVis_Tufts_thumb.png"
+  },
+
+  {
+    "category": "CCPi02017 Analysis",
+    "docs": [19778],
+    "caption": "Plots and soon-to-be results relating to the 2017 CCPi0 cross section analysis.",
+    "thumb": "19778/thumbs/CCPi02017_NuInt_CCPi0ID_thumb.png"
+  },
+
+  {
+    "category": "Sensitivities",
+    "docs": [16431, 17935, 21917],
+    "caption": "Sensitivity projections based on the latest analyses.",
+    "thumb": "16431/thumbs/sign_reach_CVN_joint_0p625_NH3pi2_Efit_comboA_syst_12_thumb.png"
+  },
+
+  {
+    "category": "Exotics",
+    "docs": [21566, 21824, 21098, 20822, 15854, 15721, 11314, 8747],
+    "caption": "Exotic Group",
+    "thumb": "20822/thumbs/seasonal_singlemu_thumb.png"
+  },
+
+  {
+    "category": "FA-era Sensitivities",
+    "docs": [9103, 9104, 9736, 9705, 13170, 9737],
+    "caption": "Sensitivity plots dating back to the period of the First Analysis results.",
+    "thumb": "9103/thumbs/hie_sens_thumb.png"
+  },
+
+  {
+    "category": "Calibration",
+    "docs": [15472, 11037, 13607, 13470, 13500, 11355, 13478],
+    "caption": "Supporting plots for describing the calibration.",
+    "thumb": "13607/thumbs/cDataND_thumb.png"
+  },
+
+  {
+    "category": "Reconstruction",
+    "docs": [21152],
+    "caption": "Supporting plots for describing the reconstruction.",
+    "thumb": "21152/thumbs/evd.xzyx-proj.22357.16934_elasticarms_fuzzyk_thumb.png"
+  },
+
+  {
+    "category": "Beam / flux",
+    "docs": [15658, 13901, 13524, 20843],
+    "caption": "Histograms of beam fluxes and error bands/matrices.",
+    "thumb": "15658/thumbs/fluka2011_fhc_new_loc_beam_content_nd_cc_thumb.png"
+  },
+
+  {
+    "category": "POT / exposure",
+    "docs": [24059, 11281],
+    "caption": "Evolution of analysis exposure",
+    "thumb": "24059/thumbs/POT_exposure_2017_thumb.png"
+  },
+
+  {
+    "category": "DDT",
+    "docs": [11471, 23643],
+    "caption": "Details of the data-driven trigger system.",
+    "thumb": "11471/thumbs/DAQ_schematic_thumb.png"
+  },
+
+  {
+    "category": "Timing peak",
+    "docs": [10771, 13122, 11395, 11535, 11390, 11290],
+    "caption": "Various views of ND events vs time after spill trigger.",
+    "thumb": "11535/thumbs/multipoint_zoom_thumb.png"
+  },
+
+  {
+    "category": "Simulation",
+    "docs": [10419, 23591],
+    "caption": "Plots about simulation tuning and performance.",
+    "thumb": "10419/thumbs/cAttenuation_thumb.png"
+  },
+
+  {
+    "category": "Data quality",
+    "docs": [11359],
+    "caption": "Techniques used to select good data.",
+    "thumb": "11359/thumbs/totalhitratechnl_thumb.png"
+  },
+
+  {
+    "category": "Cosmic rays",
+    "docs": [8686, 11356],
+    "caption": "Properties of the cosmic ray spectrum.",
+    "thumb": "11356/thumbs/neutrondepth_thumb.png"
+  },
+
+  {
+    "category": "Event displays",
+    "docs": [9718, 11396, 10774, 9908, 11981, 11404, 15647, 7153],
+    "caption": "Beautiful pictures of NOvA events.",
+    "thumb": "9718/thumbs/nova-cosmic-2_thumb.png"
+  },
+
+  {
+    "category": "Collaboration photos",
+    "docs": [13676],
+    "caption": "Smiling faces.",
+    "thumb": "13676/thumbs/2017-NOvA-collaboration-photo_thumb.png"
+  },
+
+  {
+    "category": "Diagrams",
+    "docs": [20855, 11410, 15892, 20792],
+    "caption": "Various diagrams useful for illustrating the experiment.",
+    "thumb": "20792/thumbs/fd_cvn_kernel_thumb.png"
+  },
+
+  {
+    "category": "Logos",
+    "docs": [15583, 13875],
+    "caption": "The NOvA logo and other useful marks.",
+    "thumb": "15583/thumbs/nova-blue_thumb.png"
+  },
+
+
+
+  {
+    "category": "Nue FA contours",
+    "docs": [14605],
+    "caption": "Primary results from the summer 2015 analysis.",
+    "thumb": "14605/thumbs/slices_lhood_both_thumb.png"
+  },
+
+  {
+    "category": "Nue FA distributions",
+    "docs": [13732, 13809],
+    "caption": "Data/MC comparisons.",
+    "thumb": "13809/thumbs/nd_plot_newpos_LID_calE_thumb.png"
+  },
+
+  {
+    "category": "Nue FA details",
+    "docs": [11336, 14028, 11789, 11014, 10166],
+    "caption": "Some more depth on the summer 2015 analysis.",
+    "thumb": "11336/thumbs/plot_nue_selection_selvars_lem_lg_thumb.png"
+  },
+
+  {
+    "category": "Numu FA contours",
+    "docs": [14714],
+    "caption": "Main results from the summer 2015 analysis.",
+    "thumb": "14714/thumbs/contour_fc_thumb.png"
+  },
+
+  {
+    "category": "Numu FA distributions",
+    "docs": [13881, 14714],
+    "caption": "Datar/MC comparisons.",
+    "thumb": "13881/thumbs/angkal_unblind_thumb.png"
+  },
+
+  {
+    "category": "Numu FA details",
+    "docs": [11980, 11979, 11383],
+    "caption": "Some more depth from the summer 2015 analysis.",
+    "thumb": "11980/thumbs/dEdxLogLikelihood_thumb.png"
+  },
+
+  {
+    "category": "Obsolete",
+      "docs": [13871, 9696, 11380, 15928, 15649],
+    "caption": "These have the BlessedPlots tag but probably aren't useful for anything.",
+    "thumb": "9696/thumbs/lemid_pred_thumb.png"
+  }
+
+]

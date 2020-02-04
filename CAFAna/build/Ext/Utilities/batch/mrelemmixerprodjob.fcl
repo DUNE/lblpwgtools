@@ -1,0 +1,50 @@
+#include "LEMMixer.fcl"
+#include "LEMAssociator.fcl"
+#include "Metadata.fcl"
+
+#include "services.fcl"
+
+process_name: BatchMreLEMMixer
+
+services:
+{
+    @table::standard_services
+}
+
+source:
+{
+    module_type: RootInput
+    maxEvents:  -1
+}
+
+outputs:
+{
+  out1:
+    {
+        module_type: RootOutput
+        fileName:    "lemmixed.root"
+        fastCloning: false
+    }
+}
+
+physics:
+{
+  producers:{}
+
+    p1: [ lemmixmre, lemmre ]
+    stream1:  [ metadata, out1 ]
+
+    trigger_paths: [ p1 ]
+    end_paths:     [stream1]
+}
+
+physics.filters.lemmixmre: @local::mre_lemmixer
+physics.producers.lemmre:  @local::standard_lemassociator
+physics.producers.lemmre.PIDLabel: "lemmixmre"
+physics.producers.lemmre.SlicerLabel: "slicermre"
+
+physics.analyzers.metadata: @local::standard_metadata
+physics.analyzers.metadata.params.mrepid.base_release: ""       #automatically picked up at run time
+physics.analyzers.metadata.params.NOVA.Standard: "true"
+
+

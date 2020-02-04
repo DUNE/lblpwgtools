@@ -1,0 +1,21 @@
+BEGIN_PROLOG
+
+no_mag_nova_v1_24_05:
+{
+ FieldDescriptions: [ { UseField:         0  # 0--off 1--Constant field
+                                             # 2--Field map (not implemented)
+                        ConstantField:    [ 0.0, 0.0, 0.0 ]
+                        MagnetizedVolume: "vWorld" } ]
+}
+
+no_mag_nova:
+{
+ UseField:         0  # 0--off 1--Constant field
+                      # 2--Field map (not implemented)
+ ConstantField:    [ 0.0, 0.0, 0.0 ]
+ MagnetizedVolume: "vWorld"
+}
+
+no_mag: @local::no_mag_nova_v1_24_05
+
+END_PROLOG

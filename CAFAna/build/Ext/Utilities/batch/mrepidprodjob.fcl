@@ -1,0 +1,107 @@
+#include "services.fcl"
+#include "BackTracker.fcl"
+#include "Metadata.fcl"
+
+#include "QeFinder.fcl"
+#include "NumuEnergy.fcl"
+
+#include "CosRej.fcl"
+
+#include "NuePresel.fcl"
+
+#include "NueSelLID.fcl"
+
+#include "RecVarPID.fcl"
+
+#include "Recluster.fcl"
+#include "LIDBuilder.fcl"
+
+#include "MakeNueCosRej.fcl"
+
+#include "LEMSummarizer.fcl"
+#include "LEMPresel.fcl"
+
+process_name: BatchMREPID
+
+services:
+{
+  TFileService: { fileName: "mre_pid_hist.root" closeFileFast: false }
+  scheduler:    { wantTracer: true wantSummary: true }
+  message:      { debugModules: ["*"] destinations: { debugmsg:{type: "cout" threshold: "WARNING"} } }
+  @table::standard_services
+}
+services.BackTracker:  @local::standard_backtracker    
+
+source:
+{
+  module_type: RootInput
+  maxEvents:  -1
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "mre_pid.root"
+    fastCloning: false
+  }
+
+  out2:
+  {
+    module_type: RootOutput
+    fileName:          "summarized.root"
+    outputCommands: [  "drop *",
+                       "keep lem::LEMInputs_*_*_*",
+                       "keep sumdata::*_*_*_*"
+                    ]
+  }
+}
+
+physics:
+{
+  producers:
+  {
+    ######################### NUMU PID ##############################
+
+    remidmre:         @local::mre_recomuon
+    cosrejmre:        @local::mre_cosrej
+    numuemre:         @local::mre_numue
+    qepidmre:         @local::mre_qefinder
+
+    ######################### NUE PID ###############################
+
+    nuepreselmre:     @local::mre_nue_prodpresel
+    reclustermre:     @local::mre_recluster
+    slidmre:          @local::mre_lidbuilder
+    nuecosrejmre:     @local::mre_nuecosrej
+    rvpmre:           @local::mre_rvp
+    lempreselmre:     @local::mre_lempresel    
+    summarizemre:     @local::mre_lemsummarizer
+  }
+
+  analyzers:
+  {
+    metadata:           @local::standard_metadata
+  }
+
+  jobs: [ remidmre, 
+          cosrejmre,
+          numuemre,
+          qepidmre,
+          nuepreselmre, 
+          reclustermre,
+          slidmre,
+          nuecosrejmre, 
+          rvpmre,
+          lempreselmre,
+          summarizemre
+        ] 
+    
+  stream1:       [ out1, out2, metadata ]
+  trigger_paths: [ jobs ]
+  end_paths:     [ stream1 ]
+}
+ 
+physics.analyzers.metadata.params.mrepidpart.base_release:  ""
+physics.analyzers.metadata.params.NOVA.Standard:            "true"

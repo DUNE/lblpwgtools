@@ -1,0 +1,47 @@
+BEGIN_PROLOG
+#
+# Include/exclude events listed in a file
+# Format is [run] [subrun] [event] [slice] for Data.
+# Format is [run] [subrun] [cycle] [event] [slice] for MC based on
+# Another option for MC is the format:
+#           [run[ [subrun] [cycle] [batch] [event] [slice]
+# output given by CAFAna/Core/EventList.cxx (MakeEventListFile()).
+#
+include_runeventfilter:
+{
+  module_type: RunEventFilter
+  EventFile:   "event-list.txt"   # Name of event list file
+  FilterSlice: true
+  SlicerLabel: "slicer"
+  Mode:        0  # Mode = 0: pass events, Mode = 1: remove events
+  IsMC:        false
+  UseBatchNum: false
+}
+
+#
+# Exclude events listed in a file
+#
+exclude_runeventfilter:
+{
+  module_type: RunEventFilter
+  EventFile:   "event-list.txt"
+  FilterSlice: true
+  SlicerLabel: "slicer"
+  Mode:        1
+  IsMC:        false
+  UseBatchNum: false
+}
+
+include_runeventfilter_mc: @local::include_runeventfilter
+include_runeventfilter_mc.IsMC: true
+
+exclude_runeventfilter_mc: @local::exclude_runeventfilter
+exclude_runeventfilter_mc.IsMC: true
+
+include_runeventfilter_mc_batch: @local::include_runeventfilter_mc
+include_runeventfilter_mc_batch.UseBatchNum: true
+
+exclude_runeventfilter_mc_batch: @local::exclude_runeventfilter_mc
+exclude_runeventfilter_mc_batch.UseBatchNum: true
+
+END_PROLOG

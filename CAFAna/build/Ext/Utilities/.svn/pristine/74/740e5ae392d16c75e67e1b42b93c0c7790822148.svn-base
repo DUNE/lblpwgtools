@@ -1,0 +1,60 @@
+#!/bin/bash
+
+if [ x$SRT_PUBLIC_CONTEXT == x ]
+    then echo Please setup novasoft first
+    exit 1
+fi
+
+if [ $# == 0 ] || [ $# -ge 7 ]
+    then echo Usage: `basename $0` 'release run subrun [trigger (default 2)] [event] [slice]'
+    exit 2
+fi
+
+RELEASE=$1
+RUN=$2
+SUBRUN=$3
+TRIGGER=2 # cosmics
+if [ $# -ge 4 ]; then TRIGGER=$4; fi
+if [ $# -ge 5 ]; then EVENT=$5; fi
+if [ $# -ge 6 ]; then SLICE=$6; fi
+
+EVD=evd.fcl
+
+if [ x$EVENT != x ]
+    then EVD=`mktemp`.fcl
+    cp $SRT_PUBLIC_CONTEXT/job/evd.fcl $EVD
+
+    if [ x$EVENT != x ]
+	then
+	# ART needs the run and subrun set before it will listen to the event
+	# https://cdcvs.fnal.gov/redmine/issues/1632
+	echo source.firstRun: $RUN >> $EVD
+	echo source.firstSubRun: $SUBRUN >> $EVD
+	echo source.firstEvent: $EVENT >> $EVD
+    fi
+
+    if [ x$SLICE != x ]
+	then
+	echo services.SliceNavigator.InitiallyEnabled: true >> $EVD
+	echo services.SliceNavigator.SliceOpt.val: 4 >> $EVD # dim others
+	echo services.SliceNavigator.InitialSlice: $SLICE >> $EVD
+    fi
+
+#    cat $EVD
+fi
+
+echo Getting tickets etc...
+kx509 || exit 3
+voms-proxy-init --rfc --voms=fermilab:/fermilab/nova/Role=Analysis --noregen || exit 5
+
+echo Finding file...
+FILE=`samweb -e nova list-files online.runnumber $RUN and online.subrun $SUBRUN and online.stream $TRIGGER and data_tier reco and reconstructed.base_release $RELEASE | head -n1`
+
+if [ x$FILE == x ]
+    then echo Couldn\'t find any matching file, aborting
+    exit 6
+fi
+
+echo Opening ${FILE}...
+
+nova -c $EVD `samweb2xrootd $FILE`

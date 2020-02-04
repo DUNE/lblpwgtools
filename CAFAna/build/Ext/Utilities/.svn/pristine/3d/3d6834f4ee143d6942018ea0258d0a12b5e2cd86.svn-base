@@ -1,0 +1,8 @@
+BEGIN_PROLOG
+
+standard_ifdh:
+{
+ IFDH:          {IFDH_BASE_URI:  "http://samweb.fnal.gov:8480/sam/nova/api"}
+}
+
+END_PROLOG

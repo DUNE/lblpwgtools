@@ -1,0 +1,3 @@
+repository='https://github.com/luketpickering/fhiclcpp-simple.git'
+module=''
+tag=''

@@ -1,0 +1,55 @@
+#include "RunEventFilter.fcl"
+#include "Metadata.fcl"
+#include "ifdh.fcl"
+#include "Geometry.fcl"
+#include "DetectorService.fcl"
+
+process_name: RunEvtFiltMC
+
+services:
+{
+  Detector: @local::standard_detector
+  IFDH:     @local::standard_ifdh
+  Geometry: @local::standard_geo
+}
+
+source:
+{
+  module_type: RootInput # Read root source
+  maxEvents:   -1        # Process all events
+}
+
+outputs:
+{
+  runevtfiltout:
+  {
+    module_type:  RootOutput
+    fileName:     "runevtfilt-evt.root"
+    SelectEvents: [ runevtfilt ]
+  }
+}
+
+physics:
+{
+  producers: {}
+  filters:
+  {
+    runeventfilter: @local::include_runeventfilter_mc
+  }
+  analyzers:
+  {
+    metadata:       @local::standard_metadata
+  }
+  #
+  # Build paths
+  #
+  runevtfilt:         [ runeventfilter ]
+  runevtfilt_ostream: [ runevtfiltout, metadata ]
+  #
+  # Wire paths together
+  #
+  trigger_paths:      [ runevtfilt ]
+  end_paths:          [ runevtfilt_ostream ]
+}
+
+########################################################################
