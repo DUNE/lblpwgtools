@@ -1,1 +1,0 @@
-/cvmfs/larsoft.opensciencegrid.org/products/gcc/v6_4_0/Linux64bit+3.10-2.17/bin/g++ -fPIC -g  -shared -Wl,-soname,libCAFAnaCuts.so -o libCAFAnaCuts.so CMakeFiles/CAFAnaCuts.dir/AnaCuts.cxx.o CMakeFiles/CAFAnaCuts.dir/TruthCuts.cxx.o 

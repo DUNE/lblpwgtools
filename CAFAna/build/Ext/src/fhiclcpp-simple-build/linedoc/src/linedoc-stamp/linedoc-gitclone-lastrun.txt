@@ -1,3 +1,0 @@
-repository='https://github.com/luketpickering/linedoc.git'
-module=''
-tag=''

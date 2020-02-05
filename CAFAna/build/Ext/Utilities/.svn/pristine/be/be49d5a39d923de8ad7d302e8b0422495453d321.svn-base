@@ -1,8 +1,0 @@
-BEGIN_PROLOG
-
-standard_storegdml:
-{
-module_type: StoreGDML
-}
-
-END_PROLOG
