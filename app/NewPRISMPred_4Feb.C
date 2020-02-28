@@ -7,22 +7,30 @@
 #include "fhiclcpp/ParameterSet.h"                                          
 #include "fhiclcpp/make_ParameterSet.h"
 
+#include <array>
+
 using namespace ana;
 
 std::map<std::string, PRISMStateBlob> States;
+
+const double OA_bin_width_m = 0.5;
+const size_t MergeFluxOABins = 0.5 / OA_bin_width_m;
 
 void PRISMPrediction(fhicl::ParameterSet const &pred) {
   // Read all inputs from fhicl file
   std::string const &state_file = pred.get<std::string>("state_file");
   std::vector<std::string> const &output_file = 
     pred.get<std::vector<std::string>>("output_file");
-  std::string const &output_dir = pred.get<std::string>("output_dir", "");
+  std::string const &output_dir = pred.get<std::string>("output_dir");
   std::string const &varname = pred.get<std::string>("projection_name");
   bool isfhc = pred.get<bool>("isFHC", true);
 
   double reg = pred.get<double>("reg_factor");
   std::array<double, 2> fit_range = 
     pred.get<std::array<double, 2>>("fit_range");
+
+  std::cout << "input working?: " << reg << "; [" << fit_range[0] <<
+    ", " << fit_range[1] << "] ;" << output_dir << std::endl;
 
   (void)GetListOfSysts();
   // Get oscillation parameters
@@ -38,6 +46,15 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     fs.Close();
   }
 
+  // Check Osc Parameters
+  std::cout << std::endl << "Osc Parameters: " << std::endl;                                 
+  std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;                                 
+  std::cout << "dMsq21 = " << calc->GetDmsq21() << std::endl;
+  std::cout << "Theta12 = " << calc->GetTh12() << std::endl;
+  std::cout << "Theta13 = " << calc->GetTh13() << std::endl;
+  std::cout << "Theta23 = " << calc->GetTh23() << std::endl;                                    
+  std::cout << "dCP = " << calc->GetdCP() << "(pi)" << std::endl << std::endl;
+
   // Get systematic shifts
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
 
@@ -52,19 +69,45 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   if (output_dir.size()) {
     dir = f.mkdir(output_dir.c_str());
   }
-  dir->cd();
+  //dir->cd();
 
   int id = 0;
+  double pot = pot_fd*(1.0/3.5);
 
+  //********************
+  //* Do Flux Matching *
+  //********************
+  
+  
+  /*PRISMExtrapolator pfm;
+  pfm.InitializeFluxMatcher("/dune/data/users/picker24/FluxesForUncertainties/DUNE_Flux_OffAxis_Nov2017Review_syst_shifts_fine.root", MergeFluxOABins);
+  pfm.SetStoreDebugMatches();
+  pfm.SetTargetConditioning(1e-8, {}, fit_range[0], fit_range[1]);
+  state.PRISM->SetFluxMatcher(&pfm); 
+  Spectrum PRISMPredFluxMatchSpec = state.PRISM->PredictSyst(calc, shift);
+
+  TH1 *PRISMPredFluxMatch_h = PRISMPredFluxMatchSpec.ToTHX(pot);
+  PRISMPredFluxMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate");
+  PRISMPredFluxMatch_h->Write("PRISMPredFluxMatch");
+  */
+ 
   //******************************
   //* Now do event rate matching *
   //******************************
- 
+  
+  dir->cd();
+
+  state.PRISM->SetIgnoreData(); 
+
   PRISMExtrapolator fluxmatcher;
 
   fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
                                          state.FDMatchInterp.get());
   fluxmatcher.SetStoreDebugMatches();
+
+  //state.PRISM->SetNCCorrection();
+  //state.PRISM->SetWSBCorrection();
+  //state.PRISM->SetNueCorrection();
 
   if (pred.get<bool>("is_fake_spec_run", false)) {
     fluxmatcher.SetTargetConditioning(reg, {{0},}, 
@@ -79,16 +122,24 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-  double pot = pot_fd*(1.0/3.5);
+  
 
   TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
 
+  //std::array<double, 41> xbins;
+  //double xbins[41];
+  //for (int i = 0; i < 41; i++) xbins[i] = i * 0.25;
+  //PRISMPredEvRateMatch_h->Rebin(40, "", xbins); 
+  //PRISMPredEvRateMatch_h->Rebin(0.5);
+  PRISMPredEvRateMatch_h->GetXaxis()->Set(40, 0, 10);
+
   PRISMPredEvRateMatch_h->Scale(1, "width");
-  PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1GeV");
+  PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1 GeV");
   PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
 
   for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
     TH1 *comp = compspec.second.ToTHX(pot);
+    if (compspec.second.NDimensions() == 1) comp->GetXaxis()->Set(40, 0, 10);
     comp->Scale(1, "width");
     comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
     comp->Write((std::string("PRISMPredEvRateMatch_") +
@@ -98,7 +149,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
   
   TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot);
-
+  FarDet_h->GetXaxis()->Set(40, 0, 10);
   for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
     FarDet_h->SetBinError(bin_it + 1,
                           sqrt(FarDet_h->GetBinContent(bin_it + 1)));
