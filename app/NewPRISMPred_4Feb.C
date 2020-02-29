@@ -7,16 +7,12 @@
 #include "fhiclcpp/ParameterSet.h"                                          
 #include "fhiclcpp/make_ParameterSet.h"
 
-#include <array>
-
-// change check!
-
 using namespace ana;
 
 std::map<std::string, PRISMStateBlob> States;
 
-const double OA_bin_width_m = 0.5;
-const size_t MergeFluxOABins = 0.5 / OA_bin_width_m;
+//const double OA_bin_width_m = 0.5;
+//const size_t MergeFluxOABins = 0.5 / OA_bin_width_m;
 
 void PRISMPrediction(fhicl::ParameterSet const &pred) {
   // Read all inputs from fhicl file
@@ -71,7 +67,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   if (output_dir.size()) {
     dir = f.mkdir(output_dir.c_str());
   }
-  //dir->cd();
 
   int id = 0;
   double pot = pot_fd*(1.0/3.5);
@@ -124,16 +119,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-  
-
   TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
-
-  //std::array<double, 41> xbins;
-  //double xbins[41];
-  //for (int i = 0; i < 41; i++) xbins[i] = i * 0.25;
-  //PRISMPredEvRateMatch_h->Rebin(40, "", xbins); 
-  //PRISMPredEvRateMatch_h->Rebin(0.5);
-  PRISMPredEvRateMatch_h->GetXaxis()->Set(40, 0, 10);
 
   PRISMPredEvRateMatch_h->Scale(1, "width");
   PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1 GeV");
@@ -141,7 +127,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
     TH1 *comp = compspec.second.ToTHX(pot);
-    if (compspec.second.NDimensions() == 1) comp->GetXaxis()->Set(40, 0, 10);
     comp->Scale(1, "width");
     comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
     comp->Write((std::string("PRISMPredEvRateMatch_") +
