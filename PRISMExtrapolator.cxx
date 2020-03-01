@@ -184,12 +184,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
   for (int row = 0; row < NEBins; row++) {
     if (row <= col_min) {
-      P(row, row) *= 0.5;
-      std::cout << "P = " << P(row_it, row_it) << std::endl;
-    }
-    if (row >= col_max)
       P(row, row) *= 0.8;
-      std::cout << "P = " << P(row_it, row_it) << std::endl;
+    }
+    if (row >= col_max) {
+      P(row, row) *= 0.1;
     }
   }                   
 
@@ -198,7 +196,7 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
       NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
   Target = Target.topRows(col_max).bottomRows(col_max - col_min);
 */
-  assert(NDFluxMatrix_cut.rows() == Target.size());
+  assert(NDFluxMatrix.rows() == Target.size());
 
   Eigen::VectorXd OffAxisWeights =
       ((NDFluxMatrix.transpose() * P * NDFluxMatrix) +
