@@ -17,14 +17,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   std::string const &state_file = pred.get<std::string>("state_file");
   std::vector<std::string> const &output_file =
       pred.get<std::vector<std::string>>("output_file");
-  std::string const &output_dir = pred.get<std::string>("output_dir", "");
+  std::string const &output_dir = pred.get<std::string>("output_dir");
   std::string const &varname =
-      pred.get<std::string>("projection_name", "EProxy");
+      pred.get<std::string>("projection_name");
   bool isfhc = pred.get<bool>("isFHC", true);
 
-  double reg = pred.get<double>("reg_factor", 1E-16);
+  double reg = pred.get<double>("reg_factor");
   std::array<double, 2> fit_range =
-      pred.get<std::array<double, 2>>("fit_range", {0, 4});
+      pred.get<std::array<double, 2>>("fit_range");
 
   (void)GetListOfSysts();
 
