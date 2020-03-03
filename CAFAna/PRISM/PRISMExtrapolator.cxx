@@ -184,10 +184,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
   for (int row = 0; row < NEBins; row++) {
     if (row <= col_min) {
-      P(row, row) *= 0.8;
+      P(row, row) *= 0.05;
     }
     if (row >= col_max) {
-      P(row, row) *= 0.1;
+      P(row, row) *= 0.4;
     }
   }                   
 
