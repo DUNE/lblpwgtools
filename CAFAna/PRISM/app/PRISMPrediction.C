@@ -67,6 +67,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 
+  //state.PRISM->SetNCCorrection();
+  //state.PRISM->SetWSBCorrection();
+  //state.PRISM->SetNueCorrection();
+
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
   double pot = pot_fd*(1.0/3.5);
