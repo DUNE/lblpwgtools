@@ -102,13 +102,15 @@ public:
   // Near detector offset in m
   double det_x;
 
-  // True energy of particles by species
+  // True kinetic energy of particles by species
   double eP;
   double eN;
   double ePip;
   double ePim;
   double ePi0;
   double eOther;
+  // A true-defined calorimetric erec (Elep + TProt + Epi0 + TPiChg + Tother)
+  double eRecProxy;
 
   // Reconstructed energy of particles by species
   double eRecoP;
