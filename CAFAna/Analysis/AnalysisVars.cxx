@@ -13,6 +13,8 @@ Var const kFDNumuPid = SIMPLEVAR(dune.cvnnumu);
 Var const kFDNuePid = SIMPLEVAR(dune.cvnnue);
 Var const kMVANUMU = SIMPLEVAR(dune.mvanumu);
 
+Var const kProxyERec = SIMPLEVAR(dune.eRecProxy);
+
 // -->ND
 Var const kRecoEnergyND = SIMPLEVAR(dune.Ev_reco);
 Var const kRecoYND = (SIMPLEVAR(dune.Ev_reco) - SIMPLEVAR(dune.Elep_reco)) /
