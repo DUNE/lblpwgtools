@@ -132,6 +132,9 @@ std::pair<std::string, std::string> SpecialRunWeightHist;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
+bool UseSel = false;
+std::string anaweighters = "FDEff";
+std::string FakeDataShiftDescript = "";
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -152,19 +155,26 @@ void SayUsage(char const *argv[]) {
       << "\t--syst-descriptor <str>   : Only add dials matching the syst\n"
          "\t                            descriptor <str> to the state "
          "file.\n"
-      << "\t--bin-descriptor <str>    : Bin descriptor.\n"
-      << "\t--OA-bin-descriptor <str>    : Bin descriptor.\n"
-      << "\t--truth-bin-descriptor <str> : Bin descriptor.\n"
+      << "\t--bin-descriptor <str>  : Analysis bin descriptor.\n"
+      << "\t--OA-bin-descriptor <str>    : Bin descriptor for off axis "
+         "samples.\n"
+      << "\t--truth-bin-descriptor <str> : Bin descriptor for matching "
+         "distributions.\n"
       << "\t--no-fakedata-dials       : Do not add the fake data dials to "
          "the\n"
          "\t                            state file\n"
       << "\t--no-op                   : Do nothing but dump dials that "
          "would\n"
+      << "\t--PRISM-fake-data <fake_data_dial> : A fake data dial to set on "
+         "the PRISM ND data.\n"
          "\t                            be included.\n"
       << "\t--FakeSR <file:whist>     : Fake a single special beam run by\n"
          "\t                            weighting on axis events with x < 0 \n"
          "\t                            in true energy with associated \n"
          "\t                            histogram."
+      << "\t--UseSelection            : Use the on-axis analysis selection. \n"
+         "\t                            This will produce a bad PRISM "
+         "prediction."
       << std::endl;
 }
 
@@ -202,8 +212,12 @@ void handleOpts(int argc, char const *argv[]) {
       truthbinningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-fakedata-dials") {
       addfakedata = false;
+    } else if (std::string(argv[opt]) == "--PRISM-fake-data") {
+      FakeDataShiftDescript = argv[++opt];
     } else if (std::string(argv[opt]) == "--no-op") {
       do_no_op = true;
+    } else if (std::string(argv[opt]) == "--UseSelection") {
+      UseSel = true;
     } else if (std::string(argv[opt]) == "--FakeSR") {
 
       std::string arg = argv[++opt];
@@ -349,29 +363,38 @@ int main(int argc, char const *argv[]) {
 
     Var NDWeight = GetNDWeight();
     Var FDWeight = GetFDWeight();
-    Cut NDSignalCut = GetNDSignalCut();
-    Cut FDSignalCut = GetFDSignalCut();
+
+    Var NDAnaWeight = GetNDWeight(anaweighters);
+    Var FDAnaWeight = GetFDWeight(anaweighters);
+
+    Cut NDSignalCut = GetNDSignalCut(UseSel);
+    Cut FDSignalCut = GetFDSignalCut(UseSel);
 
     if (whist) { // If we are faking a special run
-      NDWeight =
-          NDWeight * ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
+      auto specrunweight =
+          ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
             if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
               return 1;
             }
             return whist->GetBinContent(
                 whist->GetXaxis()->FindFixBin(sr->dune.Ev));
           });
+
+      NDWeight = NDWeight * specrunweight;
+      NDAnaWeight = NDAnaWeight * specrunweight;
     }
 
     if (oabinningdescriptor == "OneNegXBin") {
-      NDWeight =
-          NDWeight * ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
+      auto specrunweight =
+          ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
             if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
               return 1;
             }
             // Correct for the bin width
             return (0.5 / 2);
           });
+      NDWeight = NDWeight * specrunweight;
+      NDAnaWeight = NDAnaWeight * specrunweight;
     }
 
     Loaders TheLoaders;
@@ -383,9 +406,12 @@ int main(int argc, char const *argv[]) {
     TheLoaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
                          Loaders::kNonSwap);
 
+    ana::SystShifts DataShift =
+        GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
+
     auto PRISM = std::make_unique<PredictionPRISM>(
         PRISMNDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut,
-        NDWeight);
+        NDAnaWeight, DataShift);
 
     // Don't need to specify full truth signal here as it will not apply any
     // corrections by default, allows us to debug what the corrections would
@@ -394,10 +420,10 @@ int main(int argc, char const *argv[]) {
     // time, but if you are you should pass a loader here and call
     // SetIgnoreData to use the 'MC' near detector signal prediction in the
     // linear combination.
-    PRISM->AddNDMCLoader(TheLoaders, kIsTrueFV && kIsOutOfTheDesert, NDWeight,
-                         los);
+    PRISM->AddNDMCLoader(TheLoaders, kIsTrueFV && kIsOutOfTheDesert,
+                         NDAnaWeight, los);
 
-    PRISM->AddFDMCLoader(TheLoaders, kIsTrueFV, FDWeight, los);
+    PRISM->AddFDMCLoader(TheLoaders, kIsTrueFV, FDAnaWeight, los);
 
     // Make the ND prediction interp include the same off-axis axis used for
     // PRISM weighting.
@@ -411,12 +437,17 @@ int main(int argc, char const *argv[]) {
 
     HistAxis const NDEventRateSpectraAxis(Labels, Bins, Vars);
 
+    // Prediction generator for in FV, unselected, right sign numu ND
     std::unique_ptr<NoOscPredictionGenerator> NDMatchPredGen(
-        new NoOscPredictionGenerator(NDEventRateSpectraAxis, NDSignalCut,
+        new NoOscPredictionGenerator(NDEventRateSpectraAxis,
+                                     kIsNumuCC && !kIsAntiNu && kIsTrueFV &&
+                                         kIsOutOfTheDesert,
                                      NDWeight));
 
+    // Prediction generator for in FV, unselected, right sign numu FD
     std::unique_ptr<NoExtrapPredictionGenerator> FDMatchPredGen(
-        new NoExtrapPredictionGenerator(EventRateMatchAxis, FDSignalCut,
+        new NoExtrapPredictionGenerator(EventRateMatchAxis,
+                                        kIsNumuCC && !kIsAntiNu && kIsTrueFV,
                                         FDWeight));
 
     osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
@@ -427,12 +458,21 @@ int main(int argc, char const *argv[]) {
     auto FDMatchInterp = std::make_unique<PredictionInterp>(
         los_flux, calc, *FDMatchPredGen, TheLoaders);
 
+    auto FarDetData = std::make_unique<OscillatableSpectrum>(
+        loaderFDNumu, axes.XProjection, FDSignalCut, DataShift, FDAnaWeight);
+
     std::unique_ptr<NoExtrapPredictionGenerator> FDPredGen(
         new NoExtrapPredictionGenerator(axes.XProjection, FDSignalCut,
-                                        FDWeight));
+                                        FDAnaWeight));
 
     auto FarDet =
         std::make_unique<PredictionInterp>(los, calc, *FDPredGen, TheLoaders);
+
+    std::unique_ptr<NoExtrapPredictionGenerator> FDPredGenSel(
+        new NoExtrapPredictionGenerator(axes.XProjection, GetFDSignalCut(true),
+                                        FDAnaWeight));
+    auto FarDetSel = std::make_unique<PredictionInterp>(
+        los, calc, *FDPredGenSel, TheLoaders);
 
     TheLoaders.Go();
 
@@ -448,9 +488,17 @@ int main(int argc, char const *argv[]) {
                                       std::string(IsRHC ? "_rhc" : "_fhc"))
                                          .c_str()));
 
+    FarDetData->SaveTo(fout.mkdir((std::string("FarDetData_") + axdescriptor +
+                               std::string(IsRHC ? "_rhc" : "_fhc"))
+                                  .c_str()));
+
     FarDet->SaveTo(fout.mkdir((std::string("FarDet_") + axdescriptor +
                                std::string(IsRHC ? "_rhc" : "_fhc"))
                                   .c_str()));
+
+    FarDetSel->SaveTo(fout.mkdir((std::string("FarDetSel_") + axdescriptor +
+                                  std::string(IsRHC ? "_rhc" : "_fhc"))
+                                     .c_str()));
 
     fout.Write();
     fout.Close();

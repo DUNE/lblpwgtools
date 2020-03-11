@@ -14,10 +14,13 @@ std::map<std::string, PRISMStateBlob> States;
 
 void PRISMScan(fhicl::ParameterSet const &scan) {
 
-  std::string const &state_file = scan.get<std::string>("state_file");
+  std::string const &data_state_file = scan.get<std::string>("data_state_file");
+  std::string const &mc_state_file = scan.get<std::string>("mc_state_file");
+
   std::vector<std::string> const &output_file =
       scan.get<std::vector<std::string>>("output_file");
   std::string const &output_dir = scan.get<std::string>("output_dir", "");
+
   std::string const &varname =
       scan.get<std::string>("projection_name", "EProxy");
   bool isfhc = scan.get<bool>("isFHC", true);
@@ -35,16 +38,26 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   osc::IOscCalculatorAdjustable *calc =
       ConfigureCalc(scan.get<fhicl::ParameterSet>("Osc", {}));
 
-  if (!States.count(state_file)) {
-    TFile fs(state_file.c_str());
-    std::cout << "Loading " << varname << " state from " << state_file
+  if (!States.count(data_state_file)) {
+    TFile fs(data_state_file.c_str());
+    std::cout << "Loading " << varname << " state from " << data_state_file
               << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname, !isfhc);
+    States[data_state_file] = LoadPRISMState(fs, varname, !isfhc);
     std::cout << "Done!" << std::endl;
     fs.Close();
   }
 
-  PRISMStateBlob &state = States[state_file];
+  if (!States.count(mc_state_file)) {
+    TFile fs(mc_state_file.c_str());
+    std::cout << "Loading " << varname << " state from " << mc_state_file
+              << std::endl;
+    States[mc_state_file] = LoadPRISMState(fs, varname, !isfhc);
+    std::cout << "Done!" << std::endl;
+    fs.Close();
+  }
+
+  PRISMStateBlob &data_state = States[data_state_file];
+  PRISMStateBlob &mc_state = States[mc_state_file];
 
   TFile f(output_file[0].c_str(),
           output_file.size() > 1 ? output_file[1].c_str() : "RECREATE");
