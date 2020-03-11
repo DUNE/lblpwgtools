@@ -2,10 +2,14 @@
 
 // gcc 9.1 will fail to build Eigen as a result of this warning if it isn't
 // disabled
+#if __GNUC__ >= 9
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #include "Eigen/Dense"
 #pragma GCC diagnostic pop
+#else
+#include "Eigen/Dense"
+#endif
 
 #include "TH1.h"
 #include "TH2.h"
