@@ -1,4 +1,5 @@
 #include "CAFAna/Analysis/Calcs.h"
+#include "CAFAna/Analysis/CalcsVars.h"
 
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorSterile.h"
@@ -12,28 +13,17 @@ namespace ana
   //----------------------------------------------------------------------
   void ResetOscCalcToDefault(osc::IOscCalculatorAdjustable* calc)
   {
-    // No controversy here...
-    calc->SetL(1300);
+    calc->SetL(kBaseline);
+    calc->SetRho(kEarthDensity);
 
-    // TODO: get good reference from Alex and Joao
-    calc->SetRho(2.84); // g/cm^3
+    calc->SetDmsq21(kPDGDmsq21);
+    calc->SetTh12(kPDGTh12);
+    calc->SetTh13(kPDGTh13);
 
-    // PDG: http://pdg.lbl.gov/2014/tables/rpp2014-sum-leptons.pdf
-    calc->SetDmsq21(7.53e-5);
-    calc->SetTh12(asin(sqrt(.846))/2);
+    calc->SetTh23(kPDGTh23NH); // Picking anything away from maximal mixing doesn't behave
+    calc->SetDmsq32(kPDGDmsq32NH);
 
-    // Picking anything other than maximal mixing opens a can of worms
-    calc->SetTh23(M_PI/4);
-
-    // NH from PDG2014 + 2015 update
-    //http://pdg.lbl.gov/2015/tables/rpp2015-sum-leptons.pdf 
-    calc->SetDmsq32(2.44e-3); // NB: this is normal hierarchy
-
-    // Reactor average from PDG2014 + 2015 update
-    calc->SetTh13(asin(sqrt(.085))/2);
-
-    // Going to have to plot for nue analysis anyway
-    calc->SetdCP(0);
+    calc->SetdCP(0); // Going to have to plot for nue analysis anyway 
   }
 
   //----------------------------------------------------------------------
@@ -49,9 +39,8 @@ namespace ana
   {
     //Share most defaults 
     ResetOscCalcToDefault(calc);
-    // IH from PDG2014 + 2015 update 
-    // http://pdg.lbl.gov/2015/tables/rpp2015-sum-leptons.pdf
-    calc->SetDmsq32(-2.49e-3); 
+    calc->SetTh23(kPDGTh23IH);
+    calc->SetDmsq32(kPDGDmsq32IH); 
 
   }
 
