@@ -184,10 +184,10 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
   for (int row = 0; row < NEBins; row++) {
     if (row <= col_min) { // low energy bin(s) weight
-      P(row, row) *= 0.05;
+      P(row, row) *= 0.8;
     }
     if (row >= col_max) { // high energy bin(s) weight
-      P(row, row) *= 0.4;
+      P(row, row) *= 0.0;
     }
   }                   
 
