@@ -183,20 +183,24 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   // inverse covariance matrix for down weighting
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
   for (int row = 0; row < NEBins; row++) {
-    if (row <= col_min) {
+    if (row <= col_min) { // low energy bin(s) weight
       P(row, row) *= 0.05;
     }
-    if (row >= col_max) {
+    if (row >= col_max) { // high energy bin(s) weight
       P(row, row) *= 0.4;
     }
   }                   
 
+  // No longer want a hard cut on fit region
+  // Use P matrix to downweight regions outside fit region
   /* // Apply energy cut
   Eigen::MatrixXd NDFluxMatrix_cut =
       NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
   Target = Target.topRows(col_max).bottomRows(col_max - col_min);
 */
+
   assert(NDFluxMatrix.rows() == Target.size());
+  assert(NDFluxMatrix.rows() == P.rows()); 
 
   Eigen::VectorXd OffAxisWeights =
       ((NDFluxMatrix.transpose() * P * NDFluxMatrix) +
