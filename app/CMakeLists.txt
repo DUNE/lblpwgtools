@@ -3,11 +3,7 @@ set(scripts_to_build
     OffAxisEventRates
     OffAxisNDCAFCombiner
     PRISMPrediction
-<<<<<<< HEAD
     PRISMDChi2Scan
-=======
-#    PRISMDChi2Scan
->>>>>>> bc9de0b09a9c083c5bc5110408f1a7a9e86bd419
 )
 
 foreach(SCRPT ${scripts_to_build})
