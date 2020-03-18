@@ -26,13 +26,16 @@ public:
     kNDDataCorr = (1 << 1),
     kNDDataCorr2D = (1 << 2),
     kNDSig = (1 << 3),
-    kNDWSBkg = (1 << 4),
-    kNDNCBkg = (1 << 5),
-    kNDNueBkg = (1 << 6),
-    kFDFluxCorr = (1 << 7),
-    kFDNCBkg = (1 << 8),
-    kFDWSBkg = (1 << 9),
-    kFDNueBkg = (1 << 10)
+    kNDSig2D = (1 << 4),
+    kNDWSBkg = (1 << 5),
+    kNDNCBkg = (1 << 6),
+    kNDNueBkg = (1 << 7),
+    kFDFluxCorr = (1 << 8),
+    kFDNCBkg = (1 << 9),
+    kFDWSBkg = (1 << 10),
+    kFDNueBkg = (1 << 11),
+    kPRISMPred = (1 << 12),
+    kPRISMMC = (1 << 13)
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -47,7 +50,10 @@ public:
       return "kNDDataCorr2D";
     }
     case kNDSig: {
-      return "kNDSig";
+      return "kNDSigPred";
+    }
+    case kNDSig2D: {
+      return "kNDSigPred2D";
     }
     case kNDWSBkg: {
       return "kNDWSBkg";
@@ -70,6 +76,12 @@ public:
     case kFDNueBkg: {
       return "kFDNueBkg";
     }
+    case kPRISMPred: {
+      return "kPRISMPred";
+    }
+    case kPRISMMC: {
+      return "kPRISMMC";
+    }
     }
     return "";
   }
@@ -78,10 +90,13 @@ public:
   PredictionPRISM(const HistAxis &recoAxis, const HistAxis &offAxis);
 
   // Use to instantiate a data-like Prediction, where the ND 'data' is not
-  // varied systematic shifts (but any corrections are)
+  // varied systematic shifts (but any corrections are), use shift if you want
+  // to instantiate the 'data' histogram with a static systematic shift (but it
+  // will not be varied in response to shifts passed to PredictSyst).
   PredictionPRISM(SpectrumLoaderBase &, const HistAxis &recoAxis,
                   const HistAxis &offAxis, const Cut &cut,
-                  const Var &wei = kUnweighted);
+                  const Var &wei = kUnweighted,
+                  ana::SystShifts shift = kNoShift);
 
   void AddNDMCLoader(Loaders &, const Cut &cut = kNoCut,
                      const Var &wei = kUnweighted,
