@@ -103,6 +103,9 @@ namespace ana
   class FitSinSqTheta23UpperOctant: public FitSinSqTheta23
   {
   public:
+  FitSinSqTheta23UpperOctant()
+          : FitSinSqTheta23("ssth23_upper", "sin^{2}#theta_{23}")
+      {}
     virtual std::string ShortName() const {return "ssth23_upper";}
 
     virtual double LowLimit() const {return 0.5;}
