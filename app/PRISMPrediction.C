@@ -11,6 +11,7 @@
 using namespace ana;
 
 std::map<std::string, PRISMStateBlob> States;
+std::map<std::string, std::unique_ptr<PredictionInterp>> FarDetSelStates;
 
 void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
@@ -36,6 +37,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
     States[state_file] = LoadPRISMState(fs, varname, !isfhc);
+    FarDetSelStates[state_file] = PredictionInterp::LoadFrom(
+        fs.GetDirectory((std::string("FarDetSel_") + varname +
+                         std::string(!isfhc ? "_rhc" : "_fhc"))
+                            .c_str()));
     std::cout << "Done!" << std::endl;
     fs.Close();
   }
@@ -60,7 +65,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                          state.FDMatchInterp.get());
   fluxmatcher.SetStoreDebugMatches();
   if (pred.get<bool>("is_fake_spec_run", false)) {
-    fluxmatcher.SetTargetConditioning(reg, {{0},}, fit_range[0], fit_range[1]);
+    fluxmatcher.SetTargetConditioning(reg,
+                                      {
+                                          {0},
+                                      },
+                                      fit_range[0], fit_range[1]);
   } else {
     fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
   }
@@ -73,7 +82,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-  double pot = pot_fd*(1.0/3.5);
+  double pot = pot_fd * (1.0 / 3.5);
 
   TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
 
@@ -102,6 +111,37 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   FarDet_h->Write("FarDet");
+
+  int disp_pid = isfhc ? 14 : -14;
+  TH1 *FarDetData_h =
+      state.FarDetData->Oscillated(calc, disp_pid, disp_pid).ToTHX(pot);
+
+  for (int bin_it = 0; bin_it < FarDetData_h->GetXaxis()->GetNbins();
+       ++bin_it) {
+    FarDetData_h->SetBinError(bin_it + 1,
+                              sqrt(FarDetData_h->GetBinContent(bin_it + 1)));
+  }
+  FarDetData_h->Scale(1, "width");
+
+  FarDetData_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  FarDetData_h->Write("FarDetData");
+
+  if (FarDetSelStates[state_file]) {
+    TH1 *FarDetSelNC_h =
+        FarDetSelStates[state_file]
+            ->PredictComponent(calc, ana::Flavors::kAll, ana::Current::kNC,
+                               ana::Sign::kBoth)
+            .ToTHX(pot);
+    TH1 *FarDetSelWSB_h =
+        FarDetSelStates[state_file]
+            ->PredictComponent(calc, ana::Flavors::kAllNuMu, ana::Current::kCC,
+                               ana::Sign::kAntiNu)
+            .ToTHX(pot);
+    FarDetSelNC_h->Scale(1, "width");
+    FarDetSelNC_h->Write("FarDetSel_NC");
+    FarDetSelWSB_h->Scale(1, "width");
+    FarDetSelWSB_h->Write("FarDetSel_WSB");
+  }
 
   TH1 *FarDet_unosc_h = state.FarDet->PredictUnoscillated().ToTHX(pot);
   FarDet_unosc_h->Scale(1, "width");

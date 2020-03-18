@@ -22,27 +22,6 @@ namespace PRISM {
 const Var kTrueOffAxisPos =
     (SIMPLEVAR(dune.det_x) + (SIMPLEVAR(dune.vtx_x) * Constant(1.0E-2)));
 
-const Var kProxyE({}, [](const caf::StandardRecord *sr) -> double {
-  double eother = 0;
-  if (std::isnormal(sr->dune.eOther)) {
-    eother = sr->dune.eOther;
-  }
-  double eprox = sr->dune.LepE + sr->dune.eP + sr->dune.ePip + sr->dune.ePim +
-                 sr->dune.ePi0 + 0.135 * sr->dune.nipi0 + eother;
-  return eprox;
-});
-
-const Var kProxyE_20pclpe({}, [](const caf::StandardRecord *sr) -> double {
-  double eother = 0;
-  if (std::isnormal(sr->dune.eOther)) {
-    eother = sr->dune.eOther;
-  }
-  double eprox = sr->dune.LepE + 0.8 * sr->dune.eP + sr->dune.ePip +
-                 sr->dune.ePim + sr->dune.ePi0 + 0.135 * sr->dune.nipi0 +
-                 eother;
-  return eprox;
-});
-
 const Cut kETrueLT10GeV({"kETrueLT10GeV"}, [](const caf::StandardRecord *sr) {
   return (sr->dune.Ev < 10);
 });
@@ -52,7 +31,9 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(100, 0, 10);
   }
   if (xbinning == "testopt") {
-    std::vector<double> BE = {0,};
+    std::vector<double> BE = {
+        0,
+    };
 
     while (BE.back() < 4) {
       BE.push_back(BE.back() + 0.25);
@@ -100,10 +81,7 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
   } else if (varname == "ELep") {
     return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(dune.LepE));
   } else if (varname == "EProxy") {
-    return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyE);
-  } else if (varname == "EProxy_protonFD") {
-    return std::make_pair("Truth proxy (20%% less proton energy) E_{#nu} (GeV)",
-                          kProxyE_20pclpe);
+    return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
     return std::make_pair("E_{Dep.} (GeV)", kRecoE_FromDep);
   } else {
@@ -185,10 +163,12 @@ Var GetAnalysisWeighters(std::string const &eweight) {
   if (eweight.find("CVXSec") != std::string::npos) {
     weight = weight * kCVXSecWeights;
   }
-  if (eweight.find("Eff") != std::string::npos) {
-    weight = weight * kNDEff * kFDEff;
+  if (eweight.find("NDEff") != std::string::npos) {
+    weight = weight * kNDEff;
   }
-
+  if (eweight.find("FDEff") != std::string::npos) {
+    weight = weight * kFDEff;
+  }
   return weight;
 }
 

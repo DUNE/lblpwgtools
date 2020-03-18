@@ -47,25 +47,42 @@ const ana::Var kMassCorrection({}, [](const caf::StandardRecord *sr) -> double {
   return sr->dune.NDMassCorrWeight;
 });
 
+template <class T>
+void LoadFrom(TFile &f, std::string const &dirname, std::unique_ptr<T> &out) {
+  TDirectory *dir = f.GetDirectory(dirname.c_str());
+  if (!dir) {
+    std::cout << "[ERROR]: Failed to read directory: " << dirname << std::endl;
+    abort();
+  }
+  out = T::LoadFrom(dir);
+}
+
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
                               bool IsRHC) {
   PRISMStateBlob blob;
-  blob.PRISM = PredictionPRISM::LoadFrom(f.GetDirectory(
-      (std::string("PRISM_") + varname + std::string(IsRHC ? "_rhc" : "_fhc"))
-          .c_str()));
+  LoadFrom<PredictionPRISM>(
+      f, std::string("PRISM_") + varname + std::string(IsRHC ? "_rhc" : "_fhc"),
+      blob.PRISM);
 
-  blob.NDMatchInterp = PredictionInterp::LoadFrom(
-      f.GetDirectory((std::string("NDMatchInterp_ETrue") +
-                      std::string(IsRHC ? "_rhc" : "_fhc"))
-                         .c_str()));
-  blob.FDMatchInterp = PredictionInterp::LoadFrom(
-      f.GetDirectory((std::string("FDMatchInterp_ETrue") +
-                      std::string(IsRHC ? "_rhc" : "_fhc"))
-                         .c_str()));
+  LoadFrom<PredictionInterp>(f,
+                             std::string("NDMatchInterp_ETrue") +
+                                 std::string(IsRHC ? "_rhc" : "_fhc"),
+                             blob.NDMatchInterp);
 
-  blob.FarDet = PredictionInterp::LoadFrom(f.GetDirectory(
-      (std::string("FarDet_") + varname + std::string(IsRHC ? "_rhc" : "_fhc"))
-          .c_str()));
+  LoadFrom<PredictionInterp>(f,
+                             std::string("FDMatchInterp_ETrue") +
+                                 std::string(IsRHC ? "_rhc" : "_fhc"),
+                             blob.FDMatchInterp);
+
+  LoadFrom<PredictionInterp>(f,
+                             std::string("FarDet_") + varname +
+                                 std::string(IsRHC ? "_rhc" : "_fhc"),
+                             blob.FarDet);
+
+  LoadFrom<OscillatableSpectrum>(f,
+                                 std::string("FarDetData_") + varname +
+                                     std::string(IsRHC ? "_rhc" : "_fhc"),
+                                 blob.FarDetData);
 
   return blob;
 }
@@ -75,7 +92,7 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
               osc::IOscCalculatorAdjustable *calc) {
 
   static std::set<std::string> keys{
-      "L",    "Rho",      "Dmsq21",   "Dmsq32",   "Th12", "Th13",
+      "L",    "Rho",       "Dmsq21",    "Dmsq32",    "Th12", "Th13",
       "Th23", "SinsqTh12", "SinsqTh13", "SinsqTh23", "dCP",  "dCP_pi"};
 
   for (std::string const &k : ps.get_names()) {
