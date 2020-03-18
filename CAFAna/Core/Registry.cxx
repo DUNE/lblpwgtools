@@ -25,7 +25,7 @@ namespace ana
     // std::cout << "Registering " << DemangledTypeName<T>() << " named " << s->ShortName() << std::endl;
 
     if (Map().count(name)){
-      std::cout << "Registry: Warning: " << DemangledTypeName(s)
+      std::cout << "Registry: Error: " << DemangledTypeName(s)
                 << " '" << name << "' registered multiple times." << std::endl
                 << "Check you declared it with 'extern' in the .h and "
                 << "instantiated it in the .cxx and check for other  "
@@ -33,8 +33,7 @@ namespace ana
                 << "s that happen to have the same name." << std::endl;
       // Store an entry there, so we can detect further duplicates, but make it
       // invalid.
-      Map()[name] = 0;
-      return;
+      throw name;
     }
 
     Map()[name] = s;

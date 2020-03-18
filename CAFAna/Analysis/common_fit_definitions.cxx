@@ -348,6 +348,9 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     if (syst == "fakedata") {
       useFakeData = true;
     } // LOOK MA, I GOT BRACES!
+    if (syst == "nofakedata") {
+      useFakeData = false;
+    }
 
     if (syst.find("nflux=") == 0) {
       auto NFluxSplit = SplitString(syst, '=');
@@ -460,7 +463,7 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
 }
 
 /*
-  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline
+  The behaviour of fake data dials is a bit clunky. Instead of the multiple spline
   points used for normal dials, they have fixed values for non-zero values of the
   dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same
   value. Some are set so all negative (positive) values give a -3 (+3) sigma

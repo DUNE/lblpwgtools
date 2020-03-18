@@ -18,5 +18,8 @@ extern ana::Var const kRecoY_FromDep;
 
 extern ana::Var const kTrueEnergy;
 
+// FD + ND (affected by missing proton fake data)
+extern ana::Var const kProxyERec;
+
 // CV weighting
 extern ana::Var const kCVXSecWeights; // kUnweighted

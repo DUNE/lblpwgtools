@@ -57,12 +57,12 @@ PredictionPRISM::PredictionPRISM(const HistAxis &recoAxis,
 PredictionPRISM::PredictionPRISM(SpectrumLoaderBase &ND_loader,
                                  const HistAxis &recoAxis,
                                  const HistAxis &offAxis, const Cut &cut,
-                                 const Var &wei)
+                                 const Var &wei, ana::SystShifts shift)
     : PredictionPRISM(recoAxis, offAxis)
 
 {
   fOffAxisData = std::make_unique<ReweightableSpectrum>(
-      ND_loader, fPredictionAxis, fOffAxis, cut, kNoShift, wei);
+      ND_loader, fPredictionAxis, fOffAxis, cut, shift, wei);
   fHaveData = true;
 }
 
@@ -109,7 +109,7 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalculator *calc,
 
   assert(Comps.size());
 
-  return Comps.at(kNDDataCorr);
+  return Comps.at(kPRISMPred);
 }
 
 void PredictionPRISM::InterpolateFluxMissMatcher() const {
@@ -189,6 +189,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                fPredictionAxis.GetBinnings(), 1, 1);
 
     NDComps.emplace(kNDSig, NDSig);
+    NDComps.emplace(kNDSig2D, NDSig);
 
     if (fNCCorrection) {
       std::unique_ptr<TH2> NC_h(
@@ -256,11 +257,15 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     if (NDComps.count(kNDSig)) {
       Comps.emplace(kNDSig,
                     NDComps.at(kNDSig).WeightedByErrors(LinearCombination));
+      Comps.emplace(kPRISMMC, Comps.at(kNDSig));
     }
 
     Comps.emplace(
         kNDDataCorr,
         NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
+
+    Comps.emplace(
+        kPRISMPred, Comps.at(kNDDataCorr));
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
@@ -269,21 +274,31 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
         Comps.emplace(kFDNCBkg, fFarDetPrediction->PredictComponentSyst(
                                     calc, shift, Flavors::kAll, Current::kNC,
                                     Sign::kBoth));
-        Comps.at(kNDDataCorr) += Comps.at(kFDNCBkg);
+        Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
+
+        if (NDComps.count(kPRISMMC)) {
+          Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
+        }
       }
 
       if (fNueCorrection) {
         Comps.emplace(kFDNueBkg, fFarDetPrediction->PredictComponentSyst(
                                      calc, shift, Flavors::kAllNuE,
                                      Current::kCC, Sign::kBoth));
-        Comps.at(kNDDataCorr) += Comps.at(kFDNueBkg);
+        Comps.at(kPRISMPred) += Comps.at(kFDNueBkg);
+        if (NDComps.count(kPRISMMC)) {
+          Comps.at(kPRISMMC) += Comps.at(kFDNueBkg);
+        }
       }
 
       if (fWSBCorrection) {
         Comps.emplace(kFDWSBkg, fFarDetPrediction->PredictComponentSyst(
                                     calc, shift, Flavors::kAllNuMu,
                                     Current::kCC, WrongSign));
-        Comps.at(kNDDataCorr) += Comps.at(kFDWSBkg);
+        Comps.at(kPRISMPred) += Comps.at(kFDWSBkg);
+        if (NDComps.count(kPRISMMC)) {
+          Comps.at(kPRISMMC) += Comps.at(kFDWSBkg);
+        }
       }
 
       InterpolateFluxMissMatcher();
@@ -298,7 +313,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                         calc, shift, Flavors::kAllNuMu, Current::kCC, SigSign));
       fFarDetPrediction->SetDontUseCache(false);
 
-      Comps.at(kNDDataCorr) += Comps.at(kFDFluxCorr);
+      Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
+      if (NDComps.count(kPRISMMC)) {
+        Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
+      }
 
       fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
           ->UnSetEnuWeighting();

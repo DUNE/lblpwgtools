@@ -318,6 +318,14 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       sr.dune.GENIE_ScatteringMode = sr.dune.mode;
     }
 
+    double eother = 0;
+    if (std::isnormal(sr.dune.eOther)) {
+      eother = sr.dune.eOther;
+    }
+    sr.dune.eRecProxy = sr.dune.LepE + sr.dune.eP + sr.dune.ePip +
+                        sr.dune.ePim + sr.dune.ePi0 + 0.135 * sr.dune.nipi0 +
+                        eother;
+
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.dune.isFD) {
       if (sr.dune.isFHC != 0 && sr.dune.isFHC != 1) {

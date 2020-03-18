@@ -16,10 +16,9 @@
 
 class MissingProtonFakeDataGenerator : public ana::ISyst {
 public:
-
   virtual ~MissingProtonFakeDataGenerator(){};
 
-  std::vector<BDTReweighter*> bdt_reweighter;
+  std::vector<BDTReweighter *> bdt_reweighter;
 
   bool fDoWeight;
 
@@ -34,13 +33,21 @@ public:
       return;
     }
 
-    restore.Add(sr->dune.eRec_FromDep);
+    restore.Add(sr->dune.eRec_FromDep, sr->dune.eRecProxy);
 
     if (sr->dune.isFD) {
       sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
     } else {
       sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
     }
+
+    double eother = 0;
+    if (std::isnormal(sr->dune.eOther)) {
+      eother = sr->dune.eOther;
+    }
+    sr->dune.eRecProxy = sr->dune.LepE + (1.0 - EpFrac) * sr->dune.eP +
+                         sr->dune.ePip + sr->dune.ePim + sr->dune.ePi0 +
+                         0.135 * sr->dune.nipi0 + eother;
 
     if (!fDoWeight) {
       return;
@@ -50,28 +57,35 @@ public:
 
     features[5].fvalue = sr->dune.Ev; // Etrue
     features[6].fvalue = sr->dune.eP; // True proton kinetic energy
-    features[7].fvalue = 1-sr->dune.LepE/sr->dune.Ev; // ytrue
+    features[7].fvalue = 1 - sr->dune.LepE / sr->dune.Ev; // ytrue
 
-    for (int i = 0; i < 5; i++) features[i].fvalue = 0;
+    for (int i = 0; i < 5; i++)
+      features[i].fvalue = 0;
 
     bool foundMode = true;
-    switch(sr->dune.GENIE_ScatteringMode) {
-    case 1 : features[0].fvalue = 1.;
+    switch (sr->dune.GENIE_ScatteringMode) {
+    case 1:
+      features[0].fvalue = 1.;
       break;
-    case 3:  features[1].fvalue = 1.;
+    case 3:
+      features[1].fvalue = 1.;
       break;
-    case 4:  features[2].fvalue = 1.;
+    case 4:
+      features[2].fvalue = 1.;
       break;
-    case 5:  features[3].fvalue = 1.;
+    case 5:
+      features[3].fvalue = 1.;
       break;
-    case 10:  features[4].fvalue = 1.;
+    case 10:
+      features[4].fvalue = 1.;
       break;
-    default :
+    default:
       foundMode = false;
     }
 
     if (foundMode) {
-      double wght_val = bdt_reweighter[sr->dune.nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
+      double wght_val =
+          bdt_reweighter[sr->dune.nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
       weight *= wght_val;
     }
   }
@@ -81,12 +95,12 @@ public:
       : ana::ISyst(DoWeight ? "MissingProtonFakeDataGenerator"
                             : "MissingProtonEnergyGenerator",
                    DoWeight ? "MissingProtonFakeDataGenerator"
-                            : "MissingProtonEnergyGenerator", false, 0, 1),
+                            : "MissingProtonEnergyGenerator",
+                   false, 0, 1),
         fDoWeight(DoWeight), EpFrac(epfrac) {
 
     bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_FHC());
     bdt_reweighter.push_back(new MissingProtonFakeData_BDTRW_RHC());
-
   }
   double EpFrac;
 };
