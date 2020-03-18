@@ -46,6 +46,7 @@ struct PRISMStateBlob {
   std::unique_ptr<PredictionInterp> NDMatchInterp;
   std::unique_ptr<PredictionInterp> FDMatchInterp;
   std::unique_ptr<PredictionInterp> FarDet;
+  std::unique_ptr<OscillatableSpectrum> FarDetData;
 };
 
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
