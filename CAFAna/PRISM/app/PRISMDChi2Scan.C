@@ -71,10 +71,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   int id = 0;
   PRISMExtrapolator fluxmatcher;
 
-  fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
-                                         state.FDMatchInterp.get());
+  fluxmatcher.InitializeEventRateMatcher(data_state.NDMatchInterp.get(),
+                                         data_state.FDMatchInterp.get());
   fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
-  state.PRISM->SetFluxMatcher(&fluxmatcher);
+  data_state.PRISM->SetFluxMatcher(&fluxmatcher);
 
   std::vector<double> points;
 
@@ -92,9 +92,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     (void)ConfigureCalc(step_ps, calc);
 
-    Spectrum PRISMPredEvRateMatchSpec = state.PRISM->Predict(calc);
+    Spectrum PRISMPredEvRateMatchSpec = data_state.PRISM->Predict(calc);
     TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot_fd);
-    TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot_fd);
+    TH1 *FarDet_h = mc_state.FarDet->Predict(calc).ToTHX(pot_fd);
 
     double chi2 = 0;
     for (int bi = 0; bi < FarDet_h->GetXaxis()->GetNbins(); ++bi) {
@@ -162,7 +162,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       (void)ConfigureCalc(step_ps, calc);
 
       TH1 *FarDet_on_axis_h = on_axis_state.FarDet->Predict(calc).ToTHX(pot_fd);
-      TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot_fd);
+      TH1 *FarDet_h = mc_state.FarDet->Predict(calc).ToTHX(pot_fd);
 
       double chi2 = 0;
       for (int bi = 0; bi < FarDet_h->GetXaxis()->GetNbins(); ++bi) {
