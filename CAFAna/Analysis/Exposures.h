@@ -16,6 +16,6 @@ namespace ana
   //*======================================================================================================*/
 
   const double POT120 = 1.1e21;
-  const double POT80 = 1.47e21;
-  const double POT60 = 1.89e21;
+  const double POT80  = 1.47e21;
+  const double POT60  = 1.89e21;
 }
