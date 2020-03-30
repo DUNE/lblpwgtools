@@ -59,7 +59,7 @@ using namespace ana;
 
 unsigned gRNGSeed = 0;
 
-// Avoid fixing number of years                                                                                                                        
+// Avoid fixing number of years
 const double pot_fd = POT120 * 40 / 1.13;
 const double pot_nd = POT120;
 // The above is for 7 years staged which is 336 kT MW yr
