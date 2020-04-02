@@ -59,10 +59,11 @@ using namespace ana;
 
 unsigned gRNGSeed = 0;
 
-// Avoid fixing number of years
-const double pot_fd = POT120 * 40 / 1.13;
-const double pot_nd = POT120;
-// The above is for 7 years staged which is 336 kT MW yr
+// POT for 3.5 years
+const double pot_fd = 3.5 * POT120 * 40 / 1.13;
+const double pot_nd = 3.5 * POT120;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT
+// MW yr
 const double nom_exposure = 336.;
 
 size_t NFluxParametersToAddToStatefile = 30;
@@ -749,12 +750,12 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
   // Hacky McHackerson is here to stay!                                                                                                                
   if (input.find("nd") != std::string::npos) {
-    pot_nd_fhc = pot_nd * exposure_ratio * years_fhc;
-    pot_nd_rhc = pot_nd * exposure_ratio * years_rhc;
+    pot_nd_fhc = pot_nd * exposure_ratio;
+    pot_nd_rhc = pot_nd * exposure_ratio;
   }
   if (input.find("fd") != std::string::npos) {
-    pot_fd_fhc_nue = pot_fd_fhc_numu = pot_fd * exposure_ratio * years_fhc;
-    pot_fd_rhc_nue = pot_fd_rhc_numu = pot_fd * exposure_ratio * years_rhc;
+    pot_fd_fhc_nue = pot_fd_fhc_numu = pot_fd * exposure_ratio;
+    pot_fd_rhc_nue = pot_fd_rhc_numu = pot_fd * exposure_ratio;
   }
 
   // Now allow specific subsets
