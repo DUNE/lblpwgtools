@@ -33,6 +33,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FwdDeclare.h
   HistAxis.h
   HistCache.h
   IFitVar.h
