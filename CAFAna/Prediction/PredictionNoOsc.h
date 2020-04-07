@@ -79,4 +79,28 @@ protected:
   Var fWei;
 };
 
+class FDNoOscPredictionGenerator : public IPredictionGenerator {
+public:
+  FDNoOscPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
+      : fAxis(axis), fCut(cut), fWei(wei) {
+    for (auto &v : fAxis.GetVars()) {
+      assert(v.IsValid());
+    }
+    assert(fWei.IsValid());
+  }
+
+  virtual std::unique_ptr<IPrediction>
+  Generate(Loaders &loaders,
+           const SystShifts &shiftMC = kNoShift) const override {
+    SpectrumLoaderBase &loader = loaders.GetLoader(caf::kFARDET, Loaders::kMC);
+    return std::unique_ptr<IPrediction>(
+        new PredictionNoOsc(loader, fAxis, fCut, shiftMC, fWei));
+  }
+
+protected:
+  HistAxis fAxis;
+  Cut fCut;
+  Var fWei;
+};
+
 } // namespace ana

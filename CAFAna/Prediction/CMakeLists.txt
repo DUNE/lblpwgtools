@@ -4,7 +4,6 @@ set(Prediction_implementation_files
   PredictionGenerator.cxx
   PredictionInterp.cxx
   PredictionNoExtrap.cxx
-  PredictionEnuWeightedNoExtrap.cxx
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
@@ -17,7 +16,6 @@ set(Prediction_header_files
   PredictionGenerator.h
   PredictionInterp.h
   PredictionNoExtrap.h
-  PredictionEnuWeightedNoExtrap.h
   PredictionNoOsc.h
   PredictionScaleComp.h
   PredictionXSecDiag.h
