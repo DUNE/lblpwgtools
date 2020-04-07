@@ -1,7 +1,8 @@
 #pragma once
 
-#include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/Var.h"
+#include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -52,8 +53,14 @@ struct PRISMStateBlob {
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
                               bool IsRHC = false);
 
-osc::IOscCalculatorAdjustable *ConfigureCalc(fhicl::ParameterSet const &ps, osc::IOscCalculatorAdjustable *icalc=nullptr);
+osc::IOscCalculatorAdjustable *
+ConfigureCalc(fhicl::ParameterSet const &ps,
+              osc::IOscCalculatorAdjustable *icalc = nullptr);
 
+std::vector<const ana::IFitVar *>
+GetOscVars(std::vector<std::string> const &osc_vars, int hie = 1, int oct = 1);
 SystShifts GetSystShifts(fhicl::ParameterSet const &ps);
+
+SystShifts GetFluxSystShifts(SystShifts);
 
 } // namespace ana

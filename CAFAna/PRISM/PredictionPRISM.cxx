@@ -47,11 +47,6 @@ PredictionPRISM::PredictionPRISM(const HistAxis &recoAxis,
   fDefaultOffAxisPOT = 1.0 / FD_ND_FVRatio(xslice_width_cm);
 
   DontAddDirectory guard;
-
-  // Just using this to match binning
-  osc::NoOscillations kNoOsc;
-  const OscCurve curve(&kNoOsc, 14, 14);
-  fFluxMissWeighter = std::unique_ptr<TH1>(curve.ToTH1());
 }
 
 PredictionPRISM::PredictionPRISM(SpectrumLoaderBase &ND_loader,
@@ -80,18 +75,33 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
   fHaveNDPred = true;
 }
 
-void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
-                                    const Var &wei,
+void PredictionPRISM::AddFDMCLoader(Loaders &loaders,
+                                    const HistAxis &FluxMatchingEnergyAxis,
+                                    const Cut &cut, const Var &wei,
                                     std::vector<ISyst const *> systlist) {
 
   osc::NoOscillations kNoOsc;
 
-  fFDPredGen = std::make_unique<ModifiedNoExtrapPredictionGenerator>(
-      fPredictionAxis, cut, wei);
+  fFDPredGen =
+      std::make_unique<NoExtrapPredictionGenerator>(fPredictionAxis, cut, wei);
   fFarDetPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
                                                          *fFDPredGen, loaders);
 
   fFarDetPrediction->SetDontUseCache();
+
+  // Build a EnuERec prediction for
+  std::vector<std::string> Labels = fPredictionAxis.GetLabels();
+  std::vector<Binning> Bins = fPredictionAxis.GetBinnings();
+  std::vector<Var> Vars = fPredictionAxis.GetVars();
+  Labels.push_back(FluxMatchingEnergyAxis.GetLabels().front());
+  Bins.push_back(FluxMatchingEnergyAxis.GetBinnings().front());
+  Vars.push_back(FluxMatchingEnergyAxis.GetVars().front());
+  fFluxMatcherCorrectionAxes = std::make_unique<HistAxis>(Labels, Bins, Vars);
+
+  fFDNoOscPredGen = std::make_unique<FDNoOscPredictionGenerator>(
+      *fFluxMatcherCorrectionAxes, cut, wei);
+  fFarDetNoOscPrediction = std::make_unique<PredictionInterp>(
+      systlist, &kNoOsc, *fFDNoOscPredGen, loaders);
 
   fHaveFDPred = true;
 }
@@ -110,42 +120,6 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalculator *calc,
   assert(Comps.size());
 
   return Comps.at(kPRISMPred);
-}
-
-void PredictionPRISM::InterpolateFluxMissMatcher() const {
-  std::unique_ptr<TH1> match_residual = std::unique_ptr<TH1>(
-      dynamic_cast<TH1 *>(fFluxMatcher->GetLastResidual()->Clone()));
-
-  fFluxMissWeighter->Clear();
-
-  double miss_Emax = match_residual->GetXaxis()->GetBinUpEdge(
-      match_residual->GetXaxis()->GetNbins());
-
-  bool done = false;
-  for (int bin_it = 0; bin_it < fFluxMissWeighter->GetXaxis()->GetNbins();
-       ++bin_it) {
-
-    size_t nint_steps = 100;
-    double bin_low_edge =
-        fFluxMissWeighter->GetXaxis()->GetBinLowEdge(bin_it + 1);
-    double bin_up_edge =
-        fFluxMissWeighter->GetXaxis()->GetBinUpEdge(bin_it + 1);
-    double step = (bin_up_edge - bin_low_edge) / double(nint_steps);
-    double sum = 0;
-    size_t s_it = 0;
-    for (; s_it < nint_steps; ++s_it) {
-      double E = bin_low_edge + double(s_it) * step;
-      if (E > miss_Emax) {
-        done = true;
-        break;
-      }
-      sum += match_residual->Interpolate(E);
-    }
-    fFluxMissWeighter->SetBinContent(bin_it, sum / double(s_it));
-    if (done) {
-      break;
-    }
-  }
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
@@ -175,16 +149,18 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     NDComps.emplace(kNDDataCorr2D, NDComps.at(kNDData));
   }
 
+  double NDPOT = 0;
+
   if (fHaveNDPred) {
 
     Spectrum NDSig_spec = fOffAxisPrediction->PredictComponentSyst(
         calc, shift, Flavors::kAllNuMu, Current::kCC, SigSign);
 
-    double NDPOT = NDSig_spec.POT();
+    NDPOT = NDSig_spec.POT();
 
     std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
 
-    ReweightableSpectrum NDSig(fOffAxis.GetVars()[0], NDSig_h.get(),
+    ReweightableSpectrum NDSig(ana::Constant(1), NDSig_h.get(),
                                fPredictionAxis.GetLabels(),
                                fPredictionAxis.GetBinnings(), 1, 1);
 
@@ -197,7 +173,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
               ->PredictComponentSyst(calc, shift, Flavors::kAll, Current::kNC,
                                      Sign::kBoth)
               .ToTH2(NDPOT));
-      ReweightableSpectrum NC(fOffAxis.GetVars()[0], NC_h.get(),
+      ReweightableSpectrum NC(ana::Constant(1), NC_h.get(),
                               fPredictionAxis.GetLabels(),
                               fPredictionAxis.GetBinnings(), 1, 1);
 
@@ -213,7 +189,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
               ->PredictComponentSyst(calc, shift, Flavors::kAllNuE,
                                      Current::kCC, Sign::kBoth)
               .ToTH2(NDPOT));
-      ReweightableSpectrum Nue(fOffAxis.GetVars()[0], Nue_h.get(),
+      ReweightableSpectrum Nue(ana::Constant(1), Nue_h.get(),
                                fPredictionAxis.GetLabels(),
                                fPredictionAxis.GetBinnings(), 1, 1);
 
@@ -229,7 +205,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
               ->PredictComponentSyst(calc, shift, Flavors::kAllNuMu,
                                      Current::kCC, WrongSign)
               .ToTH2(NDPOT));
-      ReweightableSpectrum WSB(fOffAxis.GetVars()[0], WSB_h.get(),
+      ReweightableSpectrum WSB(ana::Constant(1), WSB_h.get(),
                                fPredictionAxis.GetLabels(),
                                fPredictionAxis.GetBinnings(), 1, 1);
 
@@ -246,13 +222,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
   }
 
-  for (auto &NDC : NDComps) {
-    NDC.second.OverridePOT(fDefaultOffAxisPOT);
-  }
-
   if (fFluxMatcher) {
     TH1 const *LinearCombination = fFluxMatcher->GetMatchCoefficients(
         calc, fMaxOffAxis, fNDFluxSpecies, fFDFluxSpecies, shift);
+
+    for (auto &NDC : NDComps) {
+      NDC.second.OverridePOT(fDefaultOffAxisPOT);
+    }
 
     if (NDComps.count(kNDSig)) {
       Comps.emplace(kNDSig,
@@ -264,8 +240,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
         kNDDataCorr,
         NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
 
-    Comps.emplace(
-        kPRISMPred, Comps.at(kNDDataCorr));
+    Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr));
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
@@ -301,25 +276,36 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
         }
       }
 
-      InterpolateFluxMissMatcher();
-
-      fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
-          ->SetEnuWeighting(fFluxMissWeighter.get());
-
-      // Don't use the cache for this as we are modifying the osc weights.
-      fFarDetPrediction->SetDontUseCache();
-      Comps.emplace(kFDFluxCorr,
+      Comps.emplace(kFDOscPred,
                     fFarDetPrediction->PredictComponentSyst(
                         calc, shift, Flavors::kAllNuMu, Current::kCC, SigSign));
-      fFarDetPrediction->SetDontUseCache(false);
+
+      // this is given as a ratio to no oscillation to stop explosions at
+      // maximal mixing
+      static osc::NoOscillations no;
+
+      Spectrum FDSig_Spec = fFarDetNoOscPrediction->PredictComponentSyst(
+          &no, shift, Flavors::kAllNuMu, Current::kCC, SigSign);
+      double FDPOT = FDSig_Spec.POT();
+      // TODO This needs to be able to predict nue too if thats the signal
+      std::unique_ptr<TH2> FDSig_h(FDSig_Spec.ToTH2(FDPOT));
+
+      fbla = (TH2 *)FDSig_h->Clone();
+      fbla->SetDirectory(nullptr);
+
+      ReweightableSpectrum FDSig(ana::Constant(1), FDSig_h.get(),
+                                 fPredictionAxis.GetLabels(),
+                                 fPredictionAxis.GetBinnings(), FDPOT, 1);
+
+      Comps.emplace(kFDUnOscPred, FDSig.UnWeighted());
+
+      Comps.emplace(kFDFluxCorr,
+                    FDSig.WeightedByErrors(fFluxMatcher->GetLastResidual()));
 
       Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
       if (NDComps.count(kPRISMMC)) {
         Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
       }
-
-      fFarDetPrediction->GetPredNomAs<PredictionEnuWeightedNoExtrap>()
-          ->UnSetEnuWeighting();
 
       for (auto &cmp : Comps) { // Set these to /POT for combination
         cmp.second.ScaleToPOT(1);
@@ -362,6 +348,7 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
   }
   if (fHaveFDPred) {
     fFarDetPrediction->SaveTo(dir->mkdir("FarDetPrediction"));
+    fFarDetNoOscPrediction->SaveTo(dir->mkdir("FarDetNoOscPrediction"));
   }
 
   for (unsigned int i = 0; i < fOffAxis.GetBinnings().size(); ++i) {
@@ -438,7 +425,15 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
   if (dir->GetDirectory("FarDetPrediction")) {
     pred->fFarDetPrediction =
         PredictionInterp::LoadFrom(dir->GetDirectory("FarDetPrediction"));
+
     pred->fHaveFDPred = true;
+  }
+
+  if (pred->fHaveFDPred) {
+    if (dir->GetDirectory("FarDetNoOscPrediction")) {
+      pred->fFarDetNoOscPrediction = PredictionInterp::LoadFrom(
+          dir->GetDirectory("FarDetNoOscPrediction"));
+    }
   }
 
   assert(pred->fHaveData || pred->fHaveNDPred);
@@ -471,7 +466,7 @@ void PredictionPRISM::SetFakeDataShift(SystShifts s) {
   std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
 
   fOffAxisFakeData = std::make_unique<ReweightableSpectrum>(
-      fOffAxis.GetVars()[0], NDSig_h.get(), fPredictionAxis.GetLabels(),
+      ana::Constant(1), NDSig_h.get(), fPredictionAxis.GetLabels(),
       fPredictionAxis.GetBinnings(), 1, 1);
 }
 

@@ -135,6 +135,7 @@ unsigned nmax = 0;
 bool UseSel = false;
 std::string anaweighters = "FDEff";
 std::string FakeDataShiftDescript = "";
+double ThinFactor = 0;
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -175,6 +176,8 @@ void SayUsage(char const *argv[]) {
       << "\t--UseSelection            : Use the on-axis analysis selection. \n"
          "\t                            This will produce a bad PRISM "
          "prediction."
+      << "\t--thin-factor [0-1]       : Factor to thin input by, will also "
+         "reduce input POT."
       << std::endl;
 }
 
@@ -218,6 +221,8 @@ void handleOpts(int argc, char const *argv[]) {
       do_no_op = true;
     } else if (std::string(argv[opt]) == "--UseSelection") {
       UseSel = true;
+    } else if (std::string(argv[opt]) == "--thin-factor") {
+      ThinFactor = std::stod(argv[++opt]);
     } else if (std::string(argv[opt]) == "--FakeSR") {
 
       std::string arg = argv[++opt];
@@ -397,14 +402,39 @@ int main(int argc, char const *argv[]) {
       NDAnaWeight = NDAnaWeight * specrunweight;
     }
 
-    Loaders TheLoaders;
+    if (ThinFactor > 0) { // Have to correct for the Thinned POT as the total
+                          // Input POT is included in the PerPOTWeight.
+      auto thinfactweight =
+          ana::Var({}, [](const caf::StandardRecord *) -> double {
+            return 1.0 / (1.0 - ThinFactor);
+          });
+      NDAnaWeight = NDAnaWeight * thinfactweight;
+    }
+
+    Loaders TheLoaders, ThePRISMLoaders;
 
     SpectrumLoader PRISMNDLoader(file_lists[0], kBeam, nmax);
-    TheLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
+    PRISMNDLoader.SetThinFactor(ThinFactor);
+    ThePRISMLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
 
-    SpectrumLoader loaderFDNumu(file_lists[1], kBeam, nmax);
-    TheLoaders.AddLoader(&loaderFDNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
-                         Loaders::kNonSwap);
+    SpectrumLoader PRISMFDLoader(file_lists[1], kBeam, nmax);
+    ThePRISMLoaders.AddLoader(&PRISMFDLoader, caf::kFARDET, Loaders::kMC,
+                              ana::kBeam, Loaders::kNonSwap);
+
+    std::unique_ptr<SpectrumLoader> NDLoader(nullptr);
+    std::unique_ptr<SpectrumLoader> FDLoader(nullptr);
+    if (ThinFactor > 0) { // Dont want to thin the inputs for the matcher
+      NDLoader = std::make_unique<SpectrumLoader>(file_lists[0], kBeam, nmax);
+      TheLoaders.AddLoader(NDLoader.get(), caf::kNEARDET, Loaders::kMC);
+
+      FDLoader = std::make_unique<SpectrumLoader>(file_lists[1], kBeam, nmax);
+      TheLoaders.AddLoader(FDLoader.get(), caf::kFARDET, Loaders::kMC,
+                           ana::kBeam, Loaders::kNonSwap);
+    } else {
+      TheLoaders.AddLoader(&PRISMNDLoader, caf::kNEARDET, Loaders::kMC);
+      TheLoaders.AddLoader(&PRISMFDLoader, caf::kFARDET, Loaders::kMC,
+                           ana::kBeam, Loaders::kNonSwap);
+    }
 
     ana::SystShifts DataShift =
         GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
@@ -420,10 +450,11 @@ int main(int argc, char const *argv[]) {
     // time, but if you are you should pass a loader here and call
     // SetIgnoreData to use the 'MC' near detector signal prediction in the
     // linear combination.
-    PRISM->AddNDMCLoader(TheLoaders, kIsTrueFV && kIsOutOfTheDesert,
+    PRISM->AddNDMCLoader(ThePRISMLoaders, kIsTrueFV && kIsOutOfTheDesert,
                          NDAnaWeight, los);
 
-    PRISM->AddFDMCLoader(TheLoaders, kIsTrueFV, FDAnaWeight, los);
+    PRISM->AddFDMCLoader(ThePRISMLoaders, EventRateMatchAxis, kIsTrueFV,
+                         FDAnaWeight, los);
 
     // Make the ND prediction interp include the same off-axis axis used for
     // PRISM weighting.
@@ -459,22 +490,26 @@ int main(int argc, char const *argv[]) {
         los_flux, calc, *FDMatchPredGen, TheLoaders);
 
     auto FarDetData = std::make_unique<OscillatableSpectrum>(
-        loaderFDNumu, axes.XProjection, FDSignalCut, DataShift, FDAnaWeight);
+        PRISMFDLoader, axes.XProjection, FDSignalCut, DataShift, FDAnaWeight);
 
     std::unique_ptr<NoExtrapPredictionGenerator> FDPredGen(
         new NoExtrapPredictionGenerator(axes.XProjection, FDSignalCut,
                                         FDAnaWeight));
 
-    auto FarDet =
-        std::make_unique<PredictionInterp>(los, calc, *FDPredGen, TheLoaders);
+    auto FarDet = std::make_unique<PredictionInterp>(los, calc, *FDPredGen,
+                                                     ThePRISMLoaders);
 
     std::unique_ptr<NoExtrapPredictionGenerator> FDPredGenSel(
         new NoExtrapPredictionGenerator(axes.XProjection, GetFDSignalCut(true),
                                         FDAnaWeight));
     auto FarDetSel = std::make_unique<PredictionInterp>(
-        los, calc, *FDPredGenSel, TheLoaders);
+        los, calc, *FDPredGenSel, ThePRISMLoaders);
 
-    TheLoaders.Go();
+    ThePRISMLoaders.Go();
+    if (ThinFactor >
+        0) { // Need to run these separately if we have thinning enabled.
+      TheLoaders.Go();
+    }
 
     PRISM->SaveTo(fout.mkdir((std::string("PRISM_") + axdescriptor +
                               std::string(IsRHC ? "_rhc" : "_fhc"))
@@ -489,8 +524,8 @@ int main(int argc, char const *argv[]) {
                                          .c_str()));
 
     FarDetData->SaveTo(fout.mkdir((std::string("FarDetData_") + axdescriptor +
-                               std::string(IsRHC ? "_rhc" : "_fhc"))
-                                  .c_str()));
+                                   std::string(IsRHC ? "_rhc" : "_fhc"))
+                                      .c_str()));
 
     FarDet->SaveTo(fout.mkdir((std::string("FarDet_") + axdescriptor +
                                std::string(IsRHC ? "_rhc" : "_fhc"))

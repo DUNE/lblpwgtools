@@ -2,11 +2,13 @@
 
 #include "CAFAna/Core/SystShifts.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include<limits>
 
 namespace osc {
 class IOscCalculator;
@@ -47,6 +49,8 @@ public:
 
   void InitializeEventRateMatcher(PredictionInterp const *NDEventRateInterp,
                                   PredictionInterp const *FDEventRateInterp);
+
+  double GetNDPOT() const;
 
   /// Use to check whether the ND flux histograms are binned consistently with
   /// the proposed ND analysis off axis binning. Will not merge bins, but will
@@ -108,6 +112,7 @@ protected:
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
   mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND;
+  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND_shift;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugResid;
 };
 
