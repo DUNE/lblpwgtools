@@ -1,3 +1,5 @@
+#include "TCanvas.h"
+
 #include "CAFAna/Analysis/AnalysisVars.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
@@ -7,11 +9,12 @@
 
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
+#include "CAFAna/Fit/FrequentistSurface.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 
 using namespace ana;
 
 std::map<std::string, PRISMStateBlob> States;
-std::map<std::string, std::unique_ptr<PredictionInterp>> FarDetSelStates;
 
 void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
@@ -37,17 +40,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
     States[state_file] = LoadPRISMState(fs, varname, !isfhc);
-    FarDetSelStates[state_file] = PredictionInterp::LoadFrom(
-        fs.GetDirectory((std::string("FarDetSel_") + varname +
-                         std::string(!isfhc ? "_rhc" : "_fhc"))
-                            .c_str()));
     std::cout << "Done!" << std::endl;
     fs.Close();
   }
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
-
-  SystShifts fluxshift = GetFluxSystShifts(shift);
 
   PRISMStateBlob &state = States[state_file];
 
@@ -62,29 +59,56 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   int id = 0;
   PRISMExtrapolator fluxmatcher;
-
+  
   fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
                                          state.FDMatchInterp.get());
   fluxmatcher.SetStoreDebugMatches();
   if (pred.get<bool>("is_fake_spec_run", false)) {
-    fluxmatcher.SetTargetConditioning(reg,
-                                      {
-                                          {0},
-                                      },
-                                      fit_range[0], fit_range[1]);
+    fluxmatcher.SetTargetConditioning(reg, {{0},}, fit_range[0], fit_range[1]);
   } else {
     fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
   }
 
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 
-  //state.PRISM->SetNCCorrection();
-  //state.PRISM->SetWSBCorrection();
-  //state.PRISM->SetNueCorrection();
-
   Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
 
-  double pot = pot_fd * (1.0 / 3.5);
+  double pot = pot_fd*(1.0/3.5);
+
+  //******************************************
+  // Attempt a ChiSq fit using CAFAna method *
+  //******************************************
+
+  std::cout << std::endl << "Osc Parameters BEFORE: " << std::endl;
+  std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;
+  std::cout << "Theta23 = " << calc->GetTh23() << std::endl;
+ 
+  SingleSampleExperiment expt = SingleSampleExperiment(state.FarDet.get(), 
+                                                       PRISMPredEvRateMatchSpec.FakeData(pot));
+
+  FrequentistSurface surf = FrequentistSurface(&expt, calc,
+                     &kFitSinSqTheta23, 30, 0.4, 0.6, 
+                     &kFitDmSq32Scaled, 30, 2.2, 2.6);
+
+  TH2* crit1sig = Gaussian68Percent2D(surf);
+  TH2* crit3sig = Gaussian3Sigma2D(surf);
+  TCanvas *c = new TCanvas("c", "Contours", 800, 600);
+  surf.DrawContour(crit1sig, kSolid, kBlue);
+  surf.DrawContour(crit3sig, kSolid, kRed);
+  surf.DrawBestFit(kBlack);
+  c->Update();
+  c->Write(); 
+  
+  //******************************************
+
+  // check parameters
+  std::cout << std::endl << "Osc Parameters: " << std::endl;
+  std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;
+  std::cout << "dMsq21 = " << calc->GetDmsq21() << std::endl;
+  std::cout << "Theta12 = " << calc->GetTh12() << std::endl;
+  std::cout << "Theta13 = " << calc->GetTh13() << std::endl;
+  std::cout << "Theta23 = " << calc->GetTh23() << std::endl;
+  std::cout << "dCP = " << calc->GetdCP() << "(pi)" << std::endl << std::endl;
 
   TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
 
@@ -93,6 +117,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
 
   for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
+    std::cout << "!! dMsq32 = " << calc->GetDmsq32() << std::endl;
     TH1 *comp = compspec.second.ToTHX(pot);
     comp->Scale(1, "width");
     comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
@@ -101,11 +126,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                     .c_str());
   }
 
-  state.PRISM->fbla->Write("FDUnOsc2DSpec");
-
   fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
 
-  TH1 *FarDet_h = state.FarDet->PredictSyst(calc, shift).ToTHX(pot);
+  TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot);
 
   for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
     FarDet_h->SetBinError(bin_it + 1,
@@ -116,59 +139,20 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   FarDet_h->Write("FarDet");
 
-  int disp_pid = isfhc ? 14 : -14;
-  TH1 *FarDetData_h =
-      state.FarDetData->Oscillated(calc, disp_pid, disp_pid).ToTHX(pot);
-
-  for (int bin_it = 0; bin_it < FarDetData_h->GetXaxis()->GetNbins();
-       ++bin_it) {
-    FarDetData_h->SetBinError(bin_it + 1,
-                              sqrt(FarDetData_h->GetBinContent(bin_it + 1)));
-  }
-  FarDetData_h->Scale(1, "width");
-
-  FarDetData_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-  FarDetData_h->Write("FarDetData");
-
-  if (FarDetSelStates[state_file]) {
-    TH1 *FarDetSelNC_h =
-        FarDetSelStates[state_file]
-            ->PredictComponentSyst(calc, shift, ana::Flavors::kAll,
-                                   ana::Current::kNC, ana::Sign::kBoth)
-            .ToTHX(pot);
-    TH1 *FarDetSelWSB_h =
-        FarDetSelStates[state_file]
-            ->PredictComponentSyst(calc, shift, ana::Flavors::kAllNuMu,
-                                   ana::Current::kCC, ana::Sign::kAntiNu)
-            .ToTHX(pot);
-    FarDetSelNC_h->Scale(1, "width");
-    FarDetSelNC_h->Write("FarDetSel_NC");
-    FarDetSelWSB_h->Scale(1, "width");
-    FarDetSelWSB_h->Write("FarDetSel_WSB");
-  }
-
-  static osc::NoOscillations noosc;
-
-  TH1 *FarDet_unosc_h = state.FarDet->PredictSyst(&noosc, shift).ToTHX(pot);
+  TH1 *FarDet_unosc_h = state.FarDet->PredictUnoscillated().ToTHX(pot);
   FarDet_unosc_h->Scale(1, "width");
 
   FarDet_unosc_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   FarDet_unosc_h->Write("FarDet_unosc");
 
-  TH1 *NearDet_noshift_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
-  NearDet_noshift_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
-  NearDet_noshift_h->Write("NearDet_noshift");
-
-  TH1 *NearDet_h = state.NDMatchInterp->PredictSyst(calc, fluxshift).ToTHX(pot);
-  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
+  TH1 *NearDet_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
+  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
   NearDet_h->Write("NearDet");
 
   f.Write();
 }
 
 int main(int argc, char const *argv[]) {
-  // Make sure systs are applied to ND distributions which are per 1 POT.
-  setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
   gROOT->SetMustClean(false);
 
   if (argc != 2) {
