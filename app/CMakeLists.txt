@@ -3,7 +3,9 @@ set(scripts_to_build
     OffAxisEventRates
     OffAxisNDCAFCombiner
     PRISMPrediction
-#    PRISMDChi2Scan
+    PRISMDChi2Scan
+    StatErrorEstimator
+    DumpEventRateTable
 )
 
 foreach(SCRPT ${scripts_to_build})

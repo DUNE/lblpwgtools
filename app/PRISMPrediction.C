@@ -47,6 +47,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
 
+  SystShifts fluxshift = GetFluxSystShifts(shift);
+
   PRISMStateBlob &state = States[state_file];
 
   TFile f(output_file[0].c_str(),
@@ -95,9 +97,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                     .c_str());
   }
 
+  state.PRISM->fbla->Write("FDUnOsc2DSpec");
+
   fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
 
-  TH1 *FarDet_h = state.FarDet->Predict(calc).ToTHX(pot);
+  TH1 *FarDet_h = state.FarDet->PredictSyst(calc, shift).ToTHX(pot);
 
   for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
     FarDet_h->SetBinError(bin_it + 1,
@@ -125,13 +129,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   if (FarDetSelStates[state_file]) {
     TH1 *FarDetSelNC_h =
         FarDetSelStates[state_file]
-            ->PredictComponent(calc, ana::Flavors::kAll, ana::Current::kNC,
-                               ana::Sign::kBoth)
+            ->PredictComponentSyst(calc, shift, ana::Flavors::kAll,
+                                   ana::Current::kNC, ana::Sign::kBoth)
             .ToTHX(pot);
     TH1 *FarDetSelWSB_h =
         FarDetSelStates[state_file]
-            ->PredictComponent(calc, ana::Flavors::kAllNuMu, ana::Current::kCC,
-                               ana::Sign::kAntiNu)
+            ->PredictComponentSyst(calc, shift, ana::Flavors::kAllNuMu,
+                                   ana::Current::kCC, ana::Sign::kAntiNu)
             .ToTHX(pot);
     FarDetSelNC_h->Scale(1, "width");
     FarDetSelNC_h->Write("FarDetSel_NC");
@@ -139,20 +143,28 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     FarDetSelWSB_h->Write("FarDetSel_WSB");
   }
 
-  TH1 *FarDet_unosc_h = state.FarDet->PredictUnoscillated().ToTHX(pot);
+  static osc::NoOscillations noosc;
+
+  TH1 *FarDet_unosc_h = state.FarDet->PredictSyst(&noosc, shift).ToTHX(pot);
   FarDet_unosc_h->Scale(1, "width");
 
   FarDet_unosc_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
   FarDet_unosc_h->Write("FarDet_unosc");
 
-  TH1 *NearDet_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
-  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;FD EvRate");
+  TH1 *NearDet_noshift_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
+  NearDet_noshift_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
+  NearDet_noshift_h->Write("NearDet_noshift");
+
+  TH1 *NearDet_h = state.NDMatchInterp->PredictSyst(calc, fluxshift).ToTHX(pot);
+  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
   NearDet_h->Write("NearDet");
 
   f.Write();
 }
 
 int main(int argc, char const *argv[]) {
+  // Make sure systs are applied to ND distributions which are per 1 POT.
+  setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
   gROOT->SetMustClean(false);
 
   if (argc != 2) {

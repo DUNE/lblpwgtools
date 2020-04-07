@@ -90,6 +90,18 @@ void PRISMExtrapolator::InitializeEventRateMatcher(
   fMatchEventRates = true;
 }
 
+double PRISMExtrapolator::GetNDPOT() const {
+  if (!fNDEventRateInterp) {
+    return 0;
+  } else {
+    static osc::NoOscillations noosc;
+    Spectrum NDSpect = fNDEventRateInterp->PredictComponentSyst(
+        &noosc, kNoShift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
+    std::cout << "NDExtraPOT: " << NDSpect.POT() << std::endl;
+    return NDSpect.POT();
+  }
+}
+
 bool PRISMExtrapolator::CheckOffAxisBinningConsistency(
     Binning const &off_axis_binning) const {
 
@@ -128,11 +140,7 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   assert(fNDEventRateInterp);
   assert(fFDEventRateInterp);
 
-  for (auto s : shift.ActiveSysts()) {
-    if (s->ShortName().find("flux") == std::string::npos) {
-      shift.SetShift(s, 0);
-    }
-  }
+  shift = GetFluxSystShifts(shift);
 
   Spectrum NDSpect = fNDEventRateInterp->PredictComponentSyst(
       osc, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
@@ -142,6 +150,12 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
   std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(ana::FD_ND_FVRatio(50)));
   std::unique_ptr<TH1> FDOsc(FDSpect.ToTH1(1));
+
+  static osc::NoOscillations no;
+
+  Spectrum FDUnoscSpect = fFDEventRateInterp->PredictComponentSyst(
+      &no, shift, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
+  std::unique_ptr<TH1> FDUnOsc(FDUnoscSpect.ToTH1(1));
 
   assert(NDOffAxis->GetXaxis()->GetNbins() == FDOsc->GetXaxis()->GetNbins());
 
@@ -159,9 +173,8 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
   if (fRegFactor) {
     for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
-      // Always penalize coefficient height;
-      RegMatrix(row_it, row_it) = fRegFactor;
       // Penalize neighbouring coefficient difference by fCoeffRegVector[it]
+      RegMatrix(row_it, row_it) = fRegFactor;
       RegMatrix(row_it, row_it + 1) = -fRegFactor * fCoeffRegVector[row_it];
     }
     RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
@@ -204,12 +217,17 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
   fLastResidual->SetDirectory(nullptr);
   fLastResidual->Clear();
 
+  // Eigen::MatrixXd NDFluxMatrix_shift =
+  //     GetEigenMatrix(NDOffAxis_shift.get(), NCoeffs);
+  // NDFluxMatrix_shift.transposeInPlace();
+
   Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights;
 
   for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
        ++bin_it) {
-    double bc = FDOsc->GetBinContent(bin_it + 1);
-    double e = (bc - BestFit[bin_it]) / bc;
+    double bc_uo = FDUnOsc->GetBinContent(bin_it + 1);
+    double bc_o = FDOsc->GetBinContent(bin_it + 1);
+    double e = (bc_o - BestFit[bin_it]) / bc_uo;
     if (!std::isnormal(e)) {
       e = 0;
     }
@@ -236,6 +254,8 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
 
     fDebugND["last_match"] = std::move(NDOffAxis);
     fDebugND["last_match"]->SetDirectory(nullptr);
+    // fDebugND_shift["last_match"] = std::move(NDOffAxis_shift);
+    // fDebugND_shift["last_match"]->SetDirectory(nullptr);
 
     fDebugResid["last_match"] =
         std::unique_ptr<TH1>(dynamic_cast<TH1 *>(fLastResidual->Clone()));
@@ -371,8 +391,9 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsFlux(
 
     for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
          ++bin_it) {
-      double bc = FDOsc->GetBinContent(bin_it + 1);
-      fLastResidual->SetBinContent(bin_it + 1, (bc - BestFit[bin_it]) / bc);
+      double bc_uo = FDUnosc->GetBinContent(bin_it + 1);
+      double bc_u = FDUnosc->GetBinContent(bin_it + 1);
+      fLastResidual->SetBinContent(bin_it + 1, (bc_u - BestFit[bin_it]) / bc_uo);
     }
 
     if (fStoreDebugMatches) {
@@ -416,6 +437,11 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
 
     for (auto &fit : fDebugND) {
       dir->WriteTObject(fit.second.get(), (fit.first + "_DebugND").c_str());
+    }
+
+    for (auto &fit : fDebugND_shift) {
+      dir->WriteTObject(fit.second.get(),
+                        (fit.first + "_DebugND_shift").c_str());
     }
 
     for (auto &fit : fDebugResid) {
