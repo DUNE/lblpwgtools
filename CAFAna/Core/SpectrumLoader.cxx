@@ -28,6 +28,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TTree.h"
+#include "TRandom3.h"
 
 namespace ana {
 //----------------------------------------------------------------------
@@ -502,6 +503,12 @@ protected:
 
 //----------------------------------------------------------------------
 void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
+
+  //Can thin input...
+  if(gRandom->Uniform() <= fThinFactor){
+    return;
+  }
+
   // Some shifts only adjust the weight, so they're effectively nominal, but
   // aren't grouped with the other nominal histograms. Keep track of the
   // results for nominals in these caches to speed those systs up.

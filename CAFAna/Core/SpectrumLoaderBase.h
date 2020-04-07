@@ -71,6 +71,8 @@ namespace ana
     /// Indicate whether or not \ref Go has been called
     virtual bool Gone() const {return fGone;}
 
+    void SetThinFactor(double tf = 0) {fThinFactor = tf;}
+
   protected:
     /// Component of other constructors
     SpectrumLoaderBase(DataSource src = kBeam);
@@ -106,6 +108,8 @@ namespace ana
     std::unique_ptr<IFileSource> fFileSource;
 
     DataSource fSource;
+
+    double fThinFactor;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 

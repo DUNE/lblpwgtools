@@ -128,7 +128,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectrumLoaderBase(DataSource src)
-    : fSource(src), fGone(false), fPOT(0)
+    : fSource(src), fThinFactor(0), fGone(false), fPOT(0)
   {
   }
 
@@ -310,7 +310,7 @@ namespace ana
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
 
-      fPOT += pot;
+      fPOT += pot * (1.0 - fThinFactor);
     }
 
     return f;
