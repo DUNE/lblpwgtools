@@ -193,18 +193,33 @@ TH1 const *PRISMExtrapolator::GetMatchCoefficientsEventRate(
     col_max = EBinUp - 1;
   }
 
-  // // Apply energy cut
+  // inverse covariance matrix for down weighting
+  Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
+  for (int row = 0; row < NEBins; row++) {
+    if (row <= col_min) { // low energy bin(s) weight
+      P(row, row) *= 0.8;
+    }
+    if (row >= col_max) { // high energy bin(s) weight
+      P(row, row) *= 0.0;
+    }
+  }                   
+
+  // No longer want a hard cut on fit region
+  // Use P matrix to downweight regions outside fit region
+  /* // Apply energy cut
   Eigen::MatrixXd NDFluxMatrix_cut =
       NDFluxMatrix.topRows(col_max).bottomRows(col_max - col_min);
   Target = Target.topRows(col_max).bottomRows(col_max - col_min);
+*/
 
-  assert(NDFluxMatrix_cut.rows() == Target.size());
+  assert(NDFluxMatrix.rows() == Target.size());
+  assert(NDFluxMatrix.rows() == P.rows()); 
 
   Eigen::VectorXd OffAxisWeights =
-      ((NDFluxMatrix_cut.transpose() * NDFluxMatrix_cut) +
+      ((NDFluxMatrix.transpose() * P * NDFluxMatrix) +
        RegMatrix.transpose() * RegMatrix)
           .inverse() *
-      NDFluxMatrix_cut.transpose() * Target;
+      NDFluxMatrix.transpose() * P * Target;
 
   fMatchCache["last_match"] = std::unique_ptr<TH1>(
       new TH1D("soln", ";OffAxisSlice;Weight", OffAxisWeights.size(), 0,

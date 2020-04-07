@@ -212,7 +212,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   int id = 0;
   PRISMExtrapolator fluxmatcher;
-
   fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
                                          state.FDMatchInterp.get());
   if (scan.get<bool>("is_fake_spec_run", false)) {
@@ -243,6 +242,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   // std::cout << "data POT: " << state.FarDetData->POT() << ", Spectrum POT: "
   //           << state.FarDetData->Oscillated(calc, disp_pid, disp_pid).POT()
   //           << std::endl;
+
 
   TH1D *FarDetData_h =
       state.FarDetData->Oscillated(calc, disp_pid, disp_pid).ToTH1(POT);
