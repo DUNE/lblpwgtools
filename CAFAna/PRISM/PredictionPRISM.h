@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CAFAna/Prediction/IPrediction.h"
-#include "CAFAna/Prediction/PredictionEnuWeightedNoExtrap.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -34,8 +33,10 @@ public:
     kFDNCBkg = (1 << 9),
     kFDWSBkg = (1 << 10),
     kFDNueBkg = (1 << 11),
-    kPRISMPred = (1 << 12),
-    kPRISMMC = (1 << 13)
+    kFDUnOscPred = (1 << 12),
+    kFDOscPred = (1 << 13),
+    kPRISMPred = (1 << 14),
+    kPRISMMC = (1 << 15)
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -76,6 +77,12 @@ public:
     case kFDNueBkg: {
       return "kFDNueBkg";
     }
+    case kFDUnOscPred: {
+      return "kFDUnOscPred";
+    }
+    case kFDOscPred: {
+      return "kFDOscPred";
+    }
     case kPRISMPred: {
       return "kPRISMPred";
     }
@@ -102,8 +109,8 @@ public:
                      const Var &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {});
 
-  void AddFDMCLoader(Loaders &, const Cut &cut = kNoCut,
-                     const Var &wei = kUnweighted,
+  void AddFDMCLoader(Loaders &, const HistAxis &FluxMatchingEnergyAxis,
+                     const Cut &cut = kNoCut, const Var &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {});
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
@@ -138,8 +145,6 @@ public:
   double GetMaxOffAxis() const { return fMaxOffAxis; }
 
 protected:
-  void InterpolateFluxMissMatcher() const;
-
   /// The 'data'
   std::unique_ptr<ReweightableSpectrum> fOffAxisData;
   bool fHaveData;
@@ -157,8 +162,10 @@ protected:
   bool fNueCorrection;
 
   // Use for background re-addition
-  std::unique_ptr<ModifiedNoExtrapPredictionGenerator> fFDPredGen;
+  std::unique_ptr<NoExtrapPredictionGenerator> fFDPredGen;
   mutable std::unique_ptr<PredictionInterp> fFarDetPrediction;
+  std::unique_ptr<FDNoOscPredictionGenerator> fFDNoOscPredGen;
+  mutable std::unique_ptr<PredictionInterp> fFarDetNoOscPrediction;
   bool fHaveFDPred;
 
   PRISMExtrapolator const *fFluxMatcher;
@@ -169,9 +176,12 @@ protected:
   HistAxis fPredictionAxis;
   HistAxis fOffAxis;
   std::unique_ptr<HistAxis> fOffPredictionAxis;
+  std::unique_ptr<HistAxis> fFluxMatcherCorrectionAxes;
   double fMaxOffAxis;
   double fDefaultOffAxisPOT;
-  mutable std::unique_ptr<TH1> fFluxMissWeighter;
+
+public:
+  mutable TH2 *fbla;
 
   bool fIgnoreData;
 };

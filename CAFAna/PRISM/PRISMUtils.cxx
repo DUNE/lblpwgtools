@@ -147,6 +147,53 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
   return calc;
 }
 
+std::vector<const IFitVar *>
+GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
+
+  std::vector<const IFitVar *> rtn_vars;
+
+  for (auto &v : osc_vars) {
+    if (v == "th13" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitTheta13);
+    }
+    // Deal with bounded dmsq32
+    if (v == "dmsq32" || v == "alloscvars") {
+      if (hie == -1)
+        rtn_vars.push_back(&kFitDmSq32IHScaled);
+      else if (hie == 1)
+        rtn_vars.push_back(&kFitDmSq32NHScaled);
+      else
+        rtn_vars.push_back(&kFitDmSq32Scaled);
+    }
+
+    // Deal with octant boundaries
+    if (v == "th23" || v == "alloscvars") {
+      if (oct == -1)
+        rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
+      else if (oct == 1)
+        rtn_vars.push_back(&kFitSinSqTheta23UpperOctant);
+      else
+        rtn_vars.push_back(&kFitSinSqTheta23);
+    }
+    if (v == "deltapi" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDeltaInPiUnits);
+    }
+
+    // Add back in the 21 parameters
+    if (v == "dmsq21" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitDmSq21Scaled);
+    }
+    if (v == "th12" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSq2Theta12);
+    }
+    // Rho rho rho your boat...
+    if (v == "rho" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitRho);
+    }
+  }
+  return rtn_vars;
+}
+
 SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 
   std::vector<ISyst const *> los = GetListOfSysts();
@@ -167,6 +214,18 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
     std::cout << "Set " << s.first << " to " << s.second << std::endl;
   }
   return shift;
+}
+
+SystShifts GetFluxSystShifts(SystShifts shift) {
+
+  SystShifts outs;
+  auto fsysts = GetListOfSysts("nov17flux:nodet:noxsec");
+  for (auto syst : shift.ActiveSysts()) {
+    if (std::find(fsysts.begin(), fsysts.end(), syst) != fsysts.end()) {
+      outs.SetShift(syst, shift.GetShift(syst));
+    }
+  }
+  return outs;
 }
 
 } // namespace ana
