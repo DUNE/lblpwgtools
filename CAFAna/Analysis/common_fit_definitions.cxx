@@ -20,7 +20,9 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/Experiment/MultiExperiment.h"
+#include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Experiment/SolarConstraints.h"
 
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
@@ -60,8 +62,9 @@ using namespace ana;
 unsigned gRNGSeed = 0;
 
 // POT for 3.5 years
-const double pot_fd = 3.5 * POT120 * 40 / 1.13;
-const double pot_nd = 3.5 * POT120;
+const double nom_years = 3.5;
+const double pot_fd = nom_years * POT120 * 40 / 1.13;
+const double pot_nd = nom_years * POT120;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT
 // MW yr
 const double nom_exposure = 336.;
@@ -709,10 +712,10 @@ TH2D *make_corr_from_covar(TH2D *covar) {
 }
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
-                      double &pot_nd_rhc, double &pot_fd_fhc_nue,
-                      double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
-                      double &pot_fd_rhc_numu) {
+void ParseDataSamples(std::string cmdLineInput, 
+                      double &pot_nd_fhc, double &pot_nd_rhc,
+                      double &pot_fd_fhc_nue, double &pot_fd_rhc_nue,
+                      double &pot_fd_fhc_numu, double &pot_fd_rhc_numu) {
 
   // Did somebody say overextend the command line arguments even further?
   // Well okay!
