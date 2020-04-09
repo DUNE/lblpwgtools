@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CAFAna/Prediction/IPrediction.h"
-
+#include "CAFAna/Extrap/IExtrap.h"
+#include <Eigen/Dense>
 namespace ana
 {
-  class IExtrap;
+  //  class IExtrap;
 
   /// Take the output of an extrapolation and oscillate it as required
   class PredictionExtrap: public IPrediction
@@ -49,5 +50,46 @@ namespace ana
                           Sign::Sign_t sign) const;
 
       IExtrap* fExtrap;
+
+    private:
+      template <typename T>
+      Eigen::Matrix<T,Eigen::Dynamic,1> OscillatedEigen(osc::_IOscCalculator<T> * calc,
+                                                        const Eigen::MatrixXd & m,
+                                                        int from,
+                                                        int to,
+                                                        double POT,
+                                                        double fPOT) const;
+      Eigen::MatrixXd mNueSurv      ;
+      Eigen::MatrixXd mAntiNueSurv  ;
+      Eigen::MatrixXd mNumuApp      ;
+      Eigen::MatrixXd mAntiNumuApp  ;
+      Eigen::MatrixXd mTauFromE     ;
+      Eigen::MatrixXd mAntiTauFromE ;
+
+      Eigen::MatrixXd mNueApp       ;
+      Eigen::MatrixXd mAntiNueApp   ;
+      Eigen::MatrixXd mNumuSurv     ;
+      Eigen::MatrixXd mAntiNumuSurv ;
+      Eigen::MatrixXd mTauFromMu    ;
+      Eigen::MatrixXd mAntiTauFromMu;
+
+      Eigen::VectorXd vNC;
+
+      int nbinsx;
+
+      double potNueSurv      ;
+      double potAntiNueSurv  ;
+      double potNumuApp      ;
+      double potAntiNumuApp  ;
+      double potTauFromE     ;
+      double potAntiTauFromE ;
+
+      double potNueApp       ;
+      double potAntiNueApp   ;
+      double potNumuSurv     ;
+      double potAntiNumuSurv ;
+      double potTauFromMu    ;
+      double potAntiTauFromMu;
+
   };
 }
