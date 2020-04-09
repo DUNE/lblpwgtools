@@ -6,6 +6,8 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/StanTypedefs.h"
 
+#include <Eigen/Dense>
+
 namespace ana
 {
   class Spectrum;
@@ -26,6 +28,13 @@ namespace ana
                  const std::vector<std::string>& labels,
                  const std::vector<Binning>& bins,
                  double pot, double livetime);
+
+    /// Makes a spectrum from an eigen3 vector
+    SpectrumStan(const Eigen::Matrix<stan::math::var,Eigen::Dynamic,1>& h,  // like VectorXd but with stan::math::var type instead of double
+                 const std::string& labels,
+                 const Binning& bins,
+                 double pot,
+                 double livetime);
 
     SpectrumStan(const SpectrumStan &rhs);
 

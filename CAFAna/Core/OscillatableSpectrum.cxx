@@ -448,4 +448,16 @@ namespace ana
     delete hLivetime;
     return ret;
   }
+
+  //----------------------------------------------------------------------
+  Eigen::MatrixXd OscillatableSpectrum::getCoreMatrix() const
+  {
+    // this is slower than intended since ToTH1() makes a copy.
+    // can optimize if it becomes a hot spot
+    const int nbinsx = fHist->GetNbinsX();
+    const int nbinsy = fHist->GetNbinsY();
+    return Eigen::Map<const Eigen::MatrixXd >(fHist->GetArray(),
+					      nbinsx+2, //over and underflow
+					      nbinsy+2);
+  }
 }

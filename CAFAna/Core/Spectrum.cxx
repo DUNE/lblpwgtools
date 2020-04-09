@@ -86,6 +86,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum::Spectrum(Eigen::VectorXd h,
+                     const std::string & labels,
+                     const Binning& bins,
+                     double pot, double livetime)
+    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+  {
+    std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
+    hist->Set(h.size(), h.data());
+    fHist = Hist::Adopt(std::move(hist), bins);
+  }
+
+  //----------------------------------------------------------------------
   Spectrum::Spectrum(TH1* h,
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
@@ -497,6 +509,25 @@ namespace ana
     // explicit Fill() calls made.
     if(ret->GetEntries() == 0) ret->SetEntries(1);
 
+    return ret;
+  }
+
+ //----------------------------------------------------------------------
+  Eigen::VectorXd Spectrum::ToEigenVectorXd(double exposure, EExposureType expotype,
+					    EBinType bintype) const
+  {
+    // this is slower than intended since ToTH1() makes a copy.
+    // can optimize if it becomes a hot spot
+    TH1D * h = fHist.ToTH1();
+    Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
+                                                        h->GetNbinsX()+2);
+    if(exposure > 0)
+    {
+      if(expotype == kPOT)
+        return ret * exposure / fPOT;
+      else
+        return ret * exposure / fLivetime;
+    }
     return ret;
   }
 
