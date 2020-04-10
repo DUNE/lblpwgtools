@@ -7,6 +7,8 @@
 
 #include "OscLib/func/IOscCalculator.h"
 
+#include "Utilities/func/Stan.h"
+
 #include "TDirectory.h"
 #include "TH1D.h"
 #include "TObjString.h"
@@ -79,7 +81,7 @@ namespace ana
       TVectorD pred( covMx->GetNcols() );
       for( unsigned int i = 0; i < expt_idxes.size(); ++i ) {
         int idx = expt_idxes[i];
-        TH1D * hist = fExpts[idx]->PredHist(0, kNoShift);
+        TH1D * hist = fExpts[idx].PredHist(static_cast<osc::IOscCalculator*>(nullptr), kNoShift);
         for( int b = 0; b < hist->GetNbinsX(); ++b ) {
           pred[n_bins++] = hist->GetBinContent(b+1);
         }
@@ -106,6 +108,59 @@ namespace ana
 
     fPreInvert.push_back(preInvert);
   }
+
+  double ChiSqOrLkhd(const IExperiment & e, osc::IOscCalculatorAdjustable* osc, const SystShifts& syst)
+  {
+    return e.ChiSq(osc, syst);
+  }
+  stan::math::var ChiSqOrLkhd(const IExperiment & e, osc::IOscCalculatorAdjustableStan* osc, const SystShifts& syst)
+  {
+    return e.LogLikelihood(osc, syst);
+  }
+
+  // helper function used both by ChiSq() and LogLikelihood()
+  template <typename T>
+  T MultiExperiment::_SumSimpleStatistic(osc::_IOscCalculatorAdjustable<T>* osc, const SystShifts& syst) const
+  {
+    // Add chi2 from experiments that don't use covariance matrix
+    // penalty term, for example
+    T ret = 0.;
+    for(unsigned int n = 0; n < fExpts.size(); ++n){
+
+      // check if we already counted this experiment with a covariance matrix
+      //if( fUseCovMx[n] ) continue;
+
+      // Don't waste time fiddling with the systematics if for sure there's
+      // nothing to do.
+      if(fSystCorrelations[n].empty()){
+        if( !fUseCovMx[n] )
+          ret += ChiSqOrLkhd(fExpts[n], osc, syst);
+      }
+      else{
+        // Make a local copy we're going to rewrite into the terms this
+        // sub-experiment will accept.
+        SystShifts localShifts = syst;
+        for(auto it: fSystCorrelations[n]){
+          // We're mapping prim -> sec
+          const ISyst* prim = it.first;
+          const ISyst* sec = it.second;
+          if(syst.GetShift(prim) != 0){
+            // sec can be unset, which means there's no representation needed
+            // of prim in the sub-experiment.
+            if(sec) localShifts.SetShift(sec, syst.GetShift(prim));
+            // We've either translated or discarded prim, so drop it here.
+            localShifts.SetShift(prim, 0);
+          }
+        }
+        if( !fUseCovMx[n] )
+          ret += ChiSqOrLkhd(fExpts[n], osc, localShifts);
+      }
+    }
+    return ret;
+  }
+
+  template double MultiExperiment::_SumSimpleStatistic(osc::_IOscCalculatorAdjustable<double>* osc, const SystShifts& syst) const;
+  template stan::math::var MultiExperiment::_SumSimpleStatistic(osc::_IOscCalculatorAdjustable<stan::math::var>* osc, const SystShifts& syst) const;
 
 
   //----------------------------------------------------------------------
@@ -137,10 +192,10 @@ namespace ana
           }
         }
 
-        TH1D * histMC = fExpts[idx]->PredHist(osc, localShifts);
-        TH1D * histData = fExpts[idx]->DataHist();
+        TH1D * histMC = fExpts[idx].PredHist(osc, localShifts);
+        TH1D * histData = fExpts[idx].DataHist();
         // Mask bins with too low statistics
-        fExpts[idx]->ApplyMask( histMC, histData );
+        fExpts[idx].ApplyMask( histMC, histData );
         for( int b = 0; b < histMC->GetNbinsX(); ++b ) {
           pred[n_bins] = histMC->GetBinContent(b+1);
           data[n_bins++] = histData->GetBinContent(b+1);
@@ -182,44 +237,7 @@ namespace ana
       ret += chi2;
     }
 
-    // Add chi2 from experiments that don't use covariance matrix
-    // penalty term, for example
-    double ret2 = 0.;
-    for(unsigned int n = 0; n < fExpts.size(); ++n){
-
-      // check if we already counted this experiment with a covariance matrix
-      //if( fUseCovMx[n] ) continue;
-
-      // Don't waste time fiddling with the systematics if for sure there's
-      // nothing to do.
-      if(fSystCorrelations[n].empty()){
-        double thischi2 = fExpts[n]->ChiSq(osc, syst);
-        ret2 += thischi2;
-        if( !fUseCovMx[n] ) ret += thischi2;
-      }
-      else{
-        // Make a local copy we're going to rewrite into the terms this
-        // sub-experiment will accept.
-        SystShifts localShifts = syst;
-        for(auto it: fSystCorrelations[n]){
-          // We're mapping prim -> sec
-          const ISyst* prim = it.first;
-          const ISyst* sec = it.second;
-          if(syst.GetShift(prim) != 0){
-            // sec can be unset, which means there's no representation needed
-            // of prim in the sub-experiment.
-            if(sec) localShifts.SetShift(sec, syst.GetShift(prim));
-            // We've either translated or discarded prim, so drop it here.
-            localShifts.SetShift(prim, 0);
-          }
-        }
-        double thischi2 = fExpts[n]->ChiSq(osc, localShifts);
-        ret2 += thischi2;
-        if( !fUseCovMx[n] ) ret += thischi2;
-      }
-    }
-
-    return ret;
+    return ret + _SumSimpleStatistic(osc, syst);
   }
 
   //----------------------------------------------------------------------
@@ -269,7 +287,7 @@ namespace ana
     TObjString("MultiExperiment").Write("type");
 
     for(unsigned int i = 0; i < fExpts.size(); ++i){
-      fExpts[i]->SaveTo(dir, TString::Format("expt%d", i).Data());
+      fExpts[i].SaveTo(dir, TString::Format("expt%d", i).Data());
     }
 
     dir->Write();
@@ -305,5 +323,18 @@ namespace ana
     delete dir;
 
     return std::unique_ptr<MultiExperiment>(new MultiExperiment(expts));
+  }
+
+  //----------------------------------------------------------------------
+  stan::math::var MultiExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                                 const SystShifts &syst) const
+  {
+    if (!fCovMx.empty())
+    {
+      std::cerr << "Calculation of LogLikelihood using Stan autodiff from covariance matrices is currently unimplemented." << std::endl;
+      abort();
+    }
+
+    return _SumSimpleStatistic(osc, syst);
   }
 }
