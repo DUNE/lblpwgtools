@@ -283,4 +283,10 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
     for(auto it: fSystsStan) ret += it.second * it.second;
     return ret;
   }
+
+  //----------------------------------------------------------------------
+  stan::math::var GaussianPriorSystShifts::Prior() const
+  {
+    return exp(LogPrior());
+  }
 } // namespace ana
