@@ -51,6 +51,7 @@ set(OscLib_header_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS_NSI.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterile.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterileBeam.h
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscParameters.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNSOpt.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_NSI.h
