@@ -38,6 +38,7 @@
 
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/func/OscCalculatorPMNSOptDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -53,10 +54,10 @@ namespace test
 
   const std::vector<std::string> SYSTS_TO_THROW
   {
-      //"ChargedHadResFD",
-      //"EMResFD",
-      //"MissingProtonFakeDataGenerator",
-      //"MaCCRES"
+      "ChargedHadResFD",
+      "EMResFD",
+      "MissingProtonFakeDataGenerator",
+      "MaCCRES"
   };
 
   // ---------------------------------------------
@@ -106,7 +107,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   if (!loadSamplesFromFile)
   {
 //    calc = new osc::OscCalculatorPMNSOpt;
-    calc = new osc::OscCalculatorPMNS;
+//    calc = new osc::OscCalculatorPMNS;
+    calc = new osc::OscCalculatorPMNSOptDMP;
     *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
     std::vector<const ISyst *> systs;
 
@@ -143,10 +145,10 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     StanConfig cfg;
     cfg.num_warmup = 500;
     cfg.num_samples = 1000;
-//    cfg.max_depth = 15;
+    cfg.max_depth = 15;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
-    cfg.save_warmup = true;
+    cfg.save_warmup = false;
     StanFitter fitter(&expt, fitVars, systs);
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
@@ -182,7 +184,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     assert (fakeData && samples && systTruePulls && calcTruth);
 
     auto bestFitIdx = samples->BestFitSampleIdx();
-    calc = NuFitOscCalc(1, 1, 3);  // NH, max mixing
+    *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
     for (const auto & var : samples->Vars())
       var->SetValue(calc, samples->SampleValue(var, bestFitIdx));
     shifts = std::make_unique<SystShifts>();
