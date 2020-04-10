@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+export PRODUCTS=/dune/app/users/jwolcott/ups:$PRODUCTS
 
 if [ -z "${UPS_SHELL}" ]; then
   echo "[ERROR]: Is UPS set up?"

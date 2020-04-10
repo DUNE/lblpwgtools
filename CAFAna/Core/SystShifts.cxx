@@ -269,4 +269,18 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
 }
 
 
+  //----------------------------------------------------------------------
+  std::unique_ptr<SystShifts> GaussianPriorSystShifts::Copy() const
+  {
+    return std::make_unique<GaussianPriorSystShifts>(*this);
+  }
+
+  //----------------------------------------------------------------------
+  stan::math::var GaussianPriorSystShifts::LogPrior() const
+  {
+    stan::math::var ret = 0;
+    // Systematics are all expressed in terms of sigmas
+    for(auto it: fSystsStan) ret += it.second * it.second;
+    return ret;
+  }
 } // namespace ana
