@@ -3,8 +3,11 @@
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include "OscLib/func/IOscCalculator.h"
+
+#include "Utilities/func/Stan.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -186,7 +189,7 @@ namespace ana
 
       if(fMask) ApplyMask(hpred, hdata);
 
-      ll = LogLikelihood(hpred, hdata);
+      ll = ana::LogLikelihood(hpred, hdata);
     }
 
     HistCache::Delete(hpred);
@@ -307,6 +310,23 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                                        const SystShifts &syst) const
+  {
+    auto  pred = syst.IsNominal()
+                 ? fMC->Predict(osc).ToBins(fData.POT())
+                 : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
+    TH1D* hdata = fData.ToTH1(fData.POT());
+
+    using ana::LogLikelihood;    // note: this LogLikelihood() is in StanUtils.h
+    auto ll = LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+
+    HistCache::Delete(hdata);
+
+    return ll;
+  }
+
+  //----------------------------------------------------------------------
   void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
@@ -356,4 +376,5 @@ namespace ana
   {
     fMask = GetMaskHist(fData, xmin, xmax, ymin, ymax);
   }
+
 }
