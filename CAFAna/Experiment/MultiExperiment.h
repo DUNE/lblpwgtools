@@ -23,14 +23,22 @@ namespace ana
   class MultiExperiment: public IChiSqExperiment, public ILkhdExperiment
   {
   public:
-    MultiExperiment(std::vector<IExperiment> expts) : fExpts(expts)
+    MultiExperiment() = default;
+
+    explicit MultiExperiment(std::vector<IExperiment> expts) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
       fUseCovMx.resize(expts.size(), false);
     }
 
-    MultiExperiment(std::vector<const IChiSqExperiment*> expts = {})
+    explicit MultiExperiment(std::vector<const IChiSqExperiment*> expts)
       : MultiExperiment(_ChiSqExpPtrsToExps(expts))
+    {}
+
+    /// this constructor helps disambiguate between the vector<IChiSqExperiment> and vector<IExperiment> versions
+    /// if passed a brace-initializer
+    MultiExperiment(std::initializer_list<const IChiSqExperiment*> expts)
+      : MultiExperiment(std::vector<const IChiSqExperiment*>(expts))
     {}
 
     void Add(const IChiSqExperiment* expt){
