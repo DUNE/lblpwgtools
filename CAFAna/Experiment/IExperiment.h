@@ -25,11 +25,14 @@ namespace ana
   class IExperiment
   {
     private:
-      enum Tag {CHISQ, LKHD};
+      enum Type {CHISQ, LKHD};
 
     public:
-      IExperiment(const IChiSqExperiment * expt);
-      IExperiment(const ILkhdExperiment * expt);
+      template <typename T, typename std::enable_if<std::is_base_of<IChiSqExperiment, T>::value || std::is_base_of<ILkhdExperiment, T>::value, int>::type = 0>
+      IExperiment(const T * expt)
+        : fChisqExpt(dynamic_cast<const IChiSqExperiment*>(expt)),
+          fLkhdExpt(dynamic_cast<const ILkhdExperiment*>(expt))
+      {}
 
       ///@{ accessor methods for IChiSqExperiment
       VALIDATE_CHISQ(ChiSq);
@@ -49,18 +52,14 @@ namespace ana
       /// used for pointer testing, mostly
       explicit operator bool() const
       {
-        return (fTag == CHISQ) ? bool(fChisqExpt) : bool(fLkhdExpt);
+        return bool(fChisqExpt) || bool(fLkhdExpt);
       }
 
     private:
-      void Validate(Tag tag, const std::string & methName) const;
+      void Validate(Type tag, const std::string & methName) const;
 
-      Tag fTag;
-      union
-      {
-        const IChiSqExperiment * fChisqExpt;
-        const ILkhdExperiment  * fLkhdExpt;
-      };
+      const IChiSqExperiment * fChisqExpt;
+      const ILkhdExperiment  * fLkhdExpt;
   };
 
 }

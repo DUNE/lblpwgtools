@@ -3,21 +3,13 @@
 
 namespace ana
 {
-  IExperiment::IExperiment(const ana::IChiSqExperiment *expt)
-    : fTag(CHISQ), fChisqExpt(expt)
-  {}
-
-  IExperiment::IExperiment(const ana::ILkhdExperiment *expt)
-    : fTag(LKHD), fLkhdExpt(expt)
-  {}
-
-  void IExperiment::Validate(ana::IExperiment::Tag tag, const std::string &methName) const
+  void IExperiment::Validate(ana::IExperiment::Type typ, const std::string &methName) const
   {
-    if (tag == fTag)
+    if ((typ == CHISQ && fChisqExpt) || (typ == LKHD && fLkhdExpt))
       return;
 
     std::cerr << "You tried to invoke method '" << methName << "()' on a "
-              << (fTag == CHISQ ? "IChiSqExperiment" : "ILkhdExperiment") << " object!" << std::endl;
+              << (typ == CHISQ ? "IChiSqExperiment" : "ILkhdExperiment") << " object!" << std::endl;
     abort();
   }
 
