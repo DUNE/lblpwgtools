@@ -129,6 +129,12 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
     AxToUse = default_axes_v4;
   } else if (blob_name == "v3") {
     AxToUse = default_axes_v3;
+  } else if (blob_name == "CoarseNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_coarsebin;
+  } else if (blob_name == "VeryCoarseNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_verycoarsebin;
+  } else if (blob_name == "OneBinNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_onebin;
   }
   for (auto &v : AxToUse.NDAx->GetVars()) {
     assert(v.IsValid());
