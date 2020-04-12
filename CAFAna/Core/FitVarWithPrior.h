@@ -32,16 +32,22 @@ namespace ana
             fVar(var), fPriorFn(priorFn)
       {}
 
-      // ensure that the variants inherited here aren't shadowed by the overrides below
-      using IFitVar::GetValue;
-      using IFitVar::SetValue;
-
+      /// Forward to wrapped Var's GetValue()
+      double GetValue(const osc::IOscCalculatorAdjustable *osc) const override
+      {
+        return fVar->GetValue(osc);
+      }
       /// Forward to wrapped Var's GetValue()
       stan::math::var GetValue(const osc::_IOscCalculatorAdjustable<stan::math::var> *osc) const override
       {
         return fVar->GetValue(osc);
       };
 
+      /// Forward to wrapped Var's SetValue()
+      void SetValue(osc::IOscCalculatorAdjustable *osc, double val) const override
+      {
+        fVar->SetValue(osc, val);
+      };
       /// Forward to wrapped Var's SetValue()
       void SetValue(osc::_IOscCalculatorAdjustable<stan::math::var> *osc, stan::math::var val) const override
       {
