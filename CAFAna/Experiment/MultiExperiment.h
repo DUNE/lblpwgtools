@@ -41,7 +41,7 @@ namespace ana
       : MultiExperiment(std::vector<const IChiSqExperiment*>(expts))
     {}
 
-    void Add(const IChiSqExperiment* expt){
+    void Add(IExperiment expt){
       fExpts.push_back(expt);
       fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
