@@ -56,18 +56,31 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  // helper function so the code doesn't need to be written twice
+  namespace
+  {
+    template<typename T>
+    T dcP_GetVal_Helper(const osc::_IOscCalculatorAdjustable<T>* osc)
+    {
+      T ret = osc->GetdCP()/M_PI;
+
+      // convert to the range 0-2
+      auto a = floor(ret/2+1);
+      ret -= 2*a;
+      // Instead of figuring out all the rounding just nudge the last little bit
+      while(ret < 0) ret += 2;
+      while(ret > 2) ret -= 2;
+
+      return ret;
+    }
+  }
   double FitDeltaInPiUnits::GetValue(const osc::IOscCalculatorAdjustable* osc) const
   {
-    double ret = osc->GetdCP()/M_PI;
-
-    // convert to the range 0-2
-    long long int a = ret/2+1;
-    ret -= 2*a;
-    // Instead of figuring out all the rounding just nudge the last little bit
-    while(ret < 0) ret += 2;
-    while(ret > 2) ret -= 2;
-
-    return ret;
+    return dcP_GetVal_Helper(osc);
+  }
+  stan::math::var FitDeltaInPiUnits::GetValue(const osc::IOscCalculatorAdjustableStan* osc) const
+  {
+    return dcP_GetVal_Helper(osc);
   }
 
   //----------------------------------------------------------------------
@@ -75,6 +88,11 @@ namespace ana
   {
     osc->SetdCP(M_PI*val);
   }
+  void FitDeltaInPiUnits::SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const
+  {
+    osc->SetdCP(M_PI*val);
+  }
+
   //----------------------------------------------------------------------
   double FitTheta23::GetValue(const osc::IOscCalculatorAdjustable* osc) const
   {
