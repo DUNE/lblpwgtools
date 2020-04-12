@@ -1,6 +1,7 @@
 set(scripts_to_install
   bin_splines.C
   cpv_joint.C
+  fit_3flavor_MCMC.C
   make_all_throws.C
   make_cpv_throws.C
   make_octant_throws.C
