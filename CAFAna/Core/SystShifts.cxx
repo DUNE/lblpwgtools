@@ -296,7 +296,7 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir, const std::str
   {
     stan::math::var ret = 0;
     // Systematics are all expressed in terms of sigmas
-    for(auto it: fSystsStan) ret += it.second * it.second;
+    for(auto it: fSystsStan) ret -= 0.5 * it.second * it.second;
     return ret;
   }
 
