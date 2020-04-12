@@ -40,13 +40,16 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \delta_{CP}/\pi \f$
-  class FitDeltaInPiUnits: virtual public IFitVar
+  class FitDeltaInPiUnits: virtual public StanFitSupport<IFitVar>
   {
-  public:
-      FitDeltaInPiUnits() : IFitVar("delta(pi)", "#delta / #pi") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
-  };
+    public:
+      FitDeltaInPiUnits() : StanFitSupport<IFitVar>("delta(pi)", "#delta / #pi") {};
+
+      stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
+      double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+      void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+      void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
+ };
 
   /// \f$ \delta_{CP}/\pi \f$
   extern const FitDeltaInPiUnits kFitDeltaInPiUnits;
