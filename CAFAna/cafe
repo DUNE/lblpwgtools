@@ -1,26 +1,8 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import os, sys
 import argparse
 import tempfile
-
-
-def findPkg(pkg):
-    """Locate 'pkg' as SRT would, return a full path to it"""
-    try:
-        pub = os.environ['SRT_PUBLIC_CONTEXT']
-        priv = os.environ['SRT_PRIVATE_CONTEXT']
-    except:
-        print "Can't find $SRT_[PUBLIC|PRIVATE]_CONTEXT. Did you setupnova?"
-        sys.exit(1)
-
-    # Default to private context if available
-    if os.path.isdir(priv+'/'+pkg+'/'):
-        return priv+'/'+pkg+'/'
-
-    # Else fall back to public context
-    assert os.path.isdir(pub+'/'+pkg+'/')
-    return pub+'/'+pkg+'/'
 
 
 def makeParser():
@@ -34,6 +16,10 @@ def makeParser():
                           help = 'shorthand for -b -q')
     parser.add_argument('-nr', '--no-recompile', action = 'store_true',
                         help = "don't unconditionally recompile, ie .C+ not .C++")
+    parser.add_argument('-mc', '--must-clean', action = 'store_true',
+                        help = "Run the script with gROOT->SetMustClean(true);")
+    parser.add_argument('-e', '--env', action='append',
+                        help = 'pass environment variables to set. THE HAXXMAN COMETH.')
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
@@ -64,7 +50,11 @@ def makeParser():
 
 
 def libsPath():
-    return findPkg('CAFAna')+'load_libs.C'
+    try:
+        return os.environ['CAFANA'] +'/load_libs.C'
+    except:
+        print "Environment variable CAFANA is empty. Did you set up CAFANA?"
+        sys.exit(1)
 
 
 def escapeArg(arg):
@@ -97,6 +87,16 @@ if __name__ == '__main__':
     if opts['bq']:
         opts['batch'] = True
         opts['quit'] = True
+    
+    ## Do some fun environment stuff
+    if opts['env']:
+        for arg in opts['env']:
+            arg_split = arg.split('=')
+            if len(arg_split) != 2:
+                print "Argument passed to -e/--env must be of the form 'ENV_VAR_NAME=VALUE'!"
+                sys.exit(1)
+            print "Setting", arg_split[0], "to", arg_split[1]
+            os.environ[arg_split[0]] = arg_split[1]
 
     # Suppress splash screen and default rootlogon (load_libs calls the
     # official one)
@@ -154,7 +154,10 @@ if __name__ == '__main__':
         suffix = '+' if opts['no_recompile'] else '++'
 
         # root, then library loading, then script, then the function parameters
-        rootargs.append(libsPath())
+
+        must_clean = "true" if opts['must_clean'] else "false"
+
+        rootargs.append(libsPath()+"(%s)" % must_clean)
         rootargs.append(script+suffix+toFunctionParams(args))
     else:
         # Not a .C script. Maybe the user's trying to open a root file. In any

@@ -108,11 +108,9 @@ install(
 
 install(
   PROGRAMS
-    ${CMAKE_SOURCE_DIR}/cafe_dune
+    ${CMAKE_SOURCE_DIR}/cafe
   DESTINATION
     bin
-  RENAME
-    cafe
   )
 
 install(
