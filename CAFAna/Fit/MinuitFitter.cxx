@@ -182,6 +182,17 @@ namespace ana
     }
   }
 
+  const double* minvec = mnMin->X();
+
+  // Store results back to the "seed" variable
+  for (unsigned int i = 0; i < fVars.size(); ++i){
+    fVars[i]->SetValue(seed, minvec[i]);
+  }
+  // Store systematic results back into "systSeed"
+  for (unsigned int j = 0; j < fSysts.size(); ++j){
+    systSeed.SetShift(fSysts[j], minvec[fVars.size() + j]);
+  }
+
   return mnMin->MinValue();
   }
 
