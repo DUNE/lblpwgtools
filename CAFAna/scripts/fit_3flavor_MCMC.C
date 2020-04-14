@@ -45,7 +45,7 @@ using namespace ana;
 
 namespace mcmc_ana
 {
-  double POT = pot_fd;  // use a ridiculous exposure so that the systs really control the fitting
+  double POT = pot_fd;
   const std::string SAVED_SAMPLES_FILE = "samples_systs.root";
 
   double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
@@ -93,8 +93,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   std::map<std::string, std::unique_ptr<IPrediction>> preds;
   ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23, PriorUniformInFitVar, "FlatSSTh23");
   ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled, PriorUniformInFitVar, "FlatDmSq32");
-  FitVarWithPrior fitDeltaInPiUnits_UniformPrior(&kFitDeltaInPiUnits, PriorUniformInFitVar, "FlatdcP");
-  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior, &fitDeltaInPiUnits_UniformPrior};
+  FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits, PriorUniformInFitVar, "FlatdcP");
+  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior, &fitDeltaInPiUnits_UniformPriordCP};
+  const std::map<const IFitVar*, std::pair<double, double>> fitVarDrawRanges
+  {
+    {&fitSsqTh23_UniformPriorSsqTh23,    {.3, .7}},
+    {&fitDmSq32Scaled_UniformPrior,      {2.2, 2.8}},
+    {&fitDeltaInPiUnits_UniformPriordCP, {0,   2}},
+  };
 
   for (const auto & predFileName : mcmc_ana::PRED_FILES)
   {
@@ -110,15 +116,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   }
   assert(preds.size() == 4);
 
+//    calc = new osc::OscCalculatorPMNSOpt;
+//    calc = new osc::OscCalculatorPMNS;
+  calc = new osc::OscCalculatorPMNSOptDMP;
+  *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
   std::unique_ptr<MCMCSamples> samples;
   if (!loadSamplesFromFile)
   {
-//    calc = new osc::OscCalculatorPMNSOpt;
-//    calc = new osc::OscCalculatorPMNS;
-    calc = new osc::OscCalculatorPMNSOptDMP;
-    *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
-
     // store the default vals...
     double oldTh23 = calc->GetTh23();
     double oldDmsq32 = calc->GetDmsq32();
@@ -132,7 +137,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
     // choose pulls at random
     TRandom3 rnd;
-    rnd.SetSeed(20200410);
+    rnd.SetSeed(20200413);
     shifts = std::make_unique<GaussianPriorSystShifts>();
     std::vector<const ISyst *> systs;
     for (const auto &syst : GetListOfSysts(systList)) {
@@ -156,8 +161,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     shifts->ResetToNominal();
 
     StanConfig cfg;
-    cfg.num_warmup = 500;
-    cfg.num_samples = 1000;
+    cfg.num_warmup = 1000;
+    cfg.num_samples = 10000;
     cfg.max_depth = 15;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
@@ -180,7 +185,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   }
   else
   {
-    std::string filepath;
+    std::string filepath("");
     for (const auto & path : {samplesFilename, mcmc_ana::FullFilename(dirPrefix, samplesFilename)})
     {
       // note: AccessPathName() returns *false* if the path is accessible <facepalm>
@@ -190,22 +195,29 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     TFile inf(filepath.c_str());
     if (inf.IsZombie())
       return;
+    std::cout << "Opened file: " << filepath << std::endl;
 
     for (const auto & k : *inf.GetListOfKeys())
     {
       auto key = dynamic_cast<TKey*>(k);
+      if (!key || !key->GetName()) continue;
       std::string name(key->GetName());
       if (name.size() < 9 || name.substr(0, 9) != "fakedata_")
         continue;
       fakeData.emplace(name.substr(9), LoadFrom<Spectrum>(dynamic_cast<TDirectory*>(key->ReadObj())));
     }
+    std::cout << "   --->  loaded " << fakeData.size() << " fake data spectra." << std::endl;
+
     samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
+    std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
+
     systTruePulls = SystShifts::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("systTruth")));
     calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(inf.Get("calcTruth"))).release());  // yeah, just leak it
+    std::cout << "   --->  loaded osc parameters & syst pulls used for fake data. " << std::endl;
+
     assert (!fakeData.empty() && samples && systTruePulls && calcTruth);
 
     auto bestFitIdx = samples->BestFitSampleIdx();
-    *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
     for (const auto & var : samples->Vars())
       var->SetValue(calc, samples->SampleValue(var, bestFitIdx));
     shifts = std::make_unique<SystShifts>();
@@ -216,6 +228,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     //calc.reset(dynamic_cast<osc::OscCalculatorPMNSOpt*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(bfDir->Get("osc"))).release()));
     //shifts = LoadFrom<SystShifts>(dynamic_cast<TDirectory*>(bfDir->Get("systs")));
     //assert(shifts);
+
+    std::cout << "Finished loading from file." << std::endl;
   }
 
   if (!drawPlots)
@@ -223,16 +237,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
   // draw the contour in oscillation parameter space overlaid on the LL surface
   TCanvas c;
-  BayesianSurface surf = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23, 100, .3, .7,
-                                                &fitDmSq32Scaled_UniformPrior, 100, 2.2, 2.8);
-  surf.Draw();
-  surf.DrawContour(surf.QuantileSurface(Quantile::kGaussian1Sigma), 7, kGreen+2); // dashed
-  surf.DrawBestFit(kGray);
-  TMarker marker(fitSsqTh23_UniformPriorSsqTh23.GetValue(calcTruth), fitDmSq32Scaled_UniformPrior.GetValue(calcTruth)*1e3, kFullStar);
-  marker.SetMarkerColor(kMagenta);
-  marker.SetMarkerSize(3);
-  marker.Draw();
-  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "surface_contour." + systList + ".png").c_str());
 
   // draw the marginals and the pulls
   for (const auto & fitVarPtr : fitVars)
@@ -267,6 +271,33 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
     c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s." + systList + ".png").c_str(), systPtr->ShortName().c_str()));
   }
+  // pairs of fit vars
+  for (const auto fitVar1 : fitVars)
+  {
+    for (auto itVar2 = fitVars.rbegin(); itVar2 != fitVars.rend(); itVar2++)
+    {
+      const IFitVar* fitVar2 = *itVar2;
+      if (fitVar2 == fitVar1)
+        break;
+
+      c.Clear();
+      std::pair<double, double> drawRange1 = fitVarDrawRanges.at(fitVar1);
+      std::pair<double, double> drawRange2 = fitVarDrawRanges.at(fitVar2);
+      BayesianSurface surf = samples->MarginalizeTo(fitVar1, 100, drawRange1.first, drawRange1.second,
+	                                                  fitVar2, 100, drawRange2.first, drawRange2.second);
+      surf.Draw();
+      surf.DrawContour(surf.QuantileSurface(Quantile::kGaussian1Sigma), 7, kGreen+2); // dashed
+      surf.DrawBestFit(kGray);
+      TMarker marker(fitVar1->GetValue(calcTruth), fitVar2->GetValue(calcTruth), kFullStar);
+      marker.SetMarkerColor(kMagenta);
+      marker.SetMarkerSize(3);
+      marker.Draw();
+      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s." + systList + ".png").c_str(),
+                    fitVar1->ShortName().c_str(),
+                    fitVar2->ShortName().c_str()));
+    }
+  }
+
   // 2D syst space
   auto systs =  shifts->ActiveSysts();
   for (const auto & systPtr1 : systs)
