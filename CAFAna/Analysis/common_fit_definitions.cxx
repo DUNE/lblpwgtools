@@ -413,7 +413,8 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     }
   }
 
-  if (GetAnaVersion() == kV3) {
+//  if (GetAnaVersion() == kV3) {
+  {
     RemoveSysts(namedList,
                 {"UncorrFDTotSqrt", "UncorrFDTotInvSqrt", "UncorrFDHadSqrt",
                  "UncorrFDHadInvSqrt", "UncorrFDMuSqrt", "UncorrFDMuInvSqrt",
