@@ -11,6 +11,7 @@
 
 #include "TDirectory.h"
 #include "TH1D.h"
+#include "TMath.h"
 #include "TObjString.h"
 #include "TString.h"
 
@@ -296,7 +297,8 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir, const std::str
   {
     stan::math::var ret = 0;
     // Systematics are all expressed in terms of sigmas
-    for(auto it: fSystsStan) ret -= 0.5 * it.second * it.second;
+    const double norm = log(2 * TMath::Pi());  // assumes sigma = 1, which is ok b/c we're working in units of sigma
+    for(auto it: fSystsStan) ret -= 0.5 * (norm + it.second * it.second);
     return ret;
   }
 
