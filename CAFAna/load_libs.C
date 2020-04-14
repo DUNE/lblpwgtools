@@ -1,118 +1,70 @@
 // -*- mode: c++; c-basic-offset: 2; -*-
-void load(std::string lib)
-{
-  std::cout << "." << std::flush;
-  int ret = gSystem->Load(("lib"+lib).c_str());
+void load(std::string lib) {
+  int ret = gSystem->Load(("lib" + lib).c_str());
+  std::cout << "\tLoading lib: " << ("lib" + lib) << std::endl;
   // In case of error, exit immediately with the error clearly showing, instead
   // of with a confusing secondary error about a page of output later.
-  if(ret != 0){
-    std::cout << std::endl << "gSystem->Load(lib"+lib+") failed with code " << ret << std::endl;
+  if (ret != 0) {
+    std::cout << std::endl
+              << "gSystem->Load(lib" + lib + ") failed with code " << ret
+              << std::endl;
     exit(ret);
   }
 }
 
-void load_libs()
-{
+void load_libs(bool MustClean = true) {
   // All the CINT exception handler does is obfuscate the stack. With this,
   // uncaught exceptions immediately show a useful backtrace under gdb.
   //  G__SetCatchException(0);
 
-  TString qsrt = gSystem->Getenv("SRT_QUAL");
-  TString qmrb = gSystem->Getenv("MRB_QUALS");
-  // Mirror the optimization settings in use elsewhere
-  if( qsrt.Contains("debug") || qmrb.Contains("debug") ) {
-    gSystem->SetAclicMode(TSystem::kDebug);
-  }
-  else{
-    gSystem->SetAclicMode(TSystem::kOpt);
-  }
+  gSystem->SetAclicMode(TSystem::kOpt);
 
   // This magic incantation prevents ROOT doing slow cleanup work in
   // TList::RecursiveRemove() under ~TH1(). It also tends to lead to shutdown
-  // crashes. This seems like a good compromise: go fast in batch mode
-  // (probably fitting) and slow but not crashy in interactive move (probably
-  // want to see the plots).
-  if(gROOT->IsBatch()) gROOT->SetMustClean(false);
+  // crashes. HistCache now avoids almost all of that histogram destruction, so
+  // now we can leave this at the default setting and get both speed and
+  // stability.
+  std::cout << "gROOT->SetMustClean(" << (MustClean ? "true" : "false") << ");"
+            << std::endl;
+  gROOT->SetMustClean(MustClean);
 
   // Colorize error messages. Would be better if we could just pick up the
   // flags novasoft uses, but they don't seem to be in any env var.
-  gSystem->SetFlagsDebug(TString(gSystem->GetFlagsDebug())+" -fdiagnostics-color=auto");
-  gSystem->SetFlagsOpt(TString(gSystem->GetFlagsOpt())+" -fdiagnostics-color=auto -UNDEBUG"); // match gcc's maxopt behaviour of retaining assert()
-
+  gSystem->SetFlagsDebug(
+      TString(gSystem->GetFlagsDebug()) +
+      " -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1");
+  gSystem->SetFlagsOpt(
+      TString(gSystem->GetFlagsOpt()) +
+      " -fdiagnostics-color=auto -UNDEBUG "
+      "-DDONT_USE_FQ_HARDCODED_SYST_PATHS=1"); // match gcc's maxopt behaviour
+                                               // of retaining assert()
 
   // Include path
-  TString includes = "-I$SRT_PRIVATE_CONTEXT/include/ -I$SRT_PUBLIC_CONTEXT/include/ -I$ROOTSYS/include -I$NUTOOLS_INC -I$GENIE_INC/GENIE/";
+  TString includes = "-I$ROOTSYS/include -I$CAFANA/include";
 
-  if (qmrb == "") {    // This is the SRT build
-    // List of libraries to load. Dependency order.
-    const std::vector<std::string> libs =
-      {
-        "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
-        // "Cintex",
-        "StandardRecord",
-        // "StandardRecord_dict",
-        "CAFAnaCore",
-        "CAFAnaVars",
-        "CAFAnaCuts",
-        "CAFAnaSysts",
-        // "CAFAnaUnfold",
-        "CAFAnaDecomp",
-        "CAFAnaExtrap",
-        "CAFAnaPrediction",
-        //        "CAFAnaExperiment",
-        // "CAFAnaFC",
-        "CAFAnaAnalysis",
-        // "CAFAnaXSec",
-        // "CAFAna",
-        //        "OscLibFunc",
-        // "MCReweightFunc",
-        //        "ifdh"
-      };
+  const std::vector<std::string> libs = {
+      "Minuit2",          "Net",           "StandardRecord", "OscLibFunc",
+      "UtilitiesFunc",    "CAFAnaCore",    "CAFAnaVars",     "CAFAnaCuts",
+      "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
+      "CAFAnaPrediction", "CAFAnaFit", "CAFAnaAnalysis", "boost_filesystem",
+      "boost_system"};
 
-    // Actually load the libraries
-    std::cout << "Loading libraries";
-    for(const std::string& lib: libs) load(lib);
-    std::cout << std::endl;
-  }
-  else {   // This is the MRB build
-    // List of libraries to load. Dependency order.
-    const std::vector<std::string> libs =
-      {
-        "Geom", "Tree", "Minuit2", // CAFReweight pulls in Genie which pulls in ROOT geometry
-        "Cintex",
-        "StandardRecord", "StandardRecord_dict",
-        "CAFAna",
-        "OscLibFunc",
-	"MCReweightFunc",
-        "ifdh"
-      };
-
-    // Actually load the libraries
-    std::cout << "Loading libraries (mrb)";
-    for(const std::string& lib: libs) load(lib);
-    std::cout << std::endl;
-
-    // MRB requires an extra include path
-    includes += " -I$NOVASOFT_INC";
-  }
-
-  // Magic incantation to get Reflex-based dictionaries converted into the
-  // CINT-based information that ROOT needs
-  //  Cintex::Enable();
-
+  // Actually load the libraries
+  std::cout << "Loading libraries:" << std::endl;
+  for (const std::string &lib : libs)
+    load(lib);
+  std::cout << std::endl;
 
   gSystem->SetIncludePath(includes);
 
-  // Doesn't seem to work
-  //  gSystem->Setenv("IFDH_DEBUG", "0"); // shut ifdh up
-
   // Pick up standard NOvA style
-  gROOT->Macro("$SRT_PUBLIC_CONTEXT/Utilities/rootlogon.C");
+  gROOT->Macro("$CAFANA/include/Utilities/rootlogon.C");
   gROOT->ForceStyle();
 
-  TRint* rint = dynamic_cast<TRint*>(gApplication);
-  if(rint) rint->SetPrompt("cafe [%d] ");
-
+  TRint *rint = dynamic_cast<TRint *>(gApplication);
+  if (rint) {
+    rint->SetPrompt("cafe [%d] ");
+  }
 
   // Do this last so that the profiler library is unloaded before our main
   // libraries, meaning that the code in ProfilerSupport runs at the right time
@@ -125,9 +77,9 @@ void load_libs()
 
     std::cout << "Profiling enabled." << std::endl;
 
-    if(!qsrt.Contains("debug") && !qmrb.Contains("debug")){
-      std::cout << "Note: profiling works much better in debug mode." << std::endl;
-    }
+    // if(!qsrt.Contains("debug") && !qmrb.Contains("debug")){
+    //   std::cout << "Note: profiling works much better in debug mode." << std::endl;
+    // }
 
     const char* pd = getenv("GPERFTOOLS_DIR");
     if(pd){

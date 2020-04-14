@@ -122,9 +122,7 @@ install(
 
 install(
   FILES
-    ${CMAKE_SOURCE_DIR}/load_libs_dune.C
+    ${CMAKE_SOURCE_DIR}/load_libs.C
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
-  RENAME
-    load_libs.C
   )
