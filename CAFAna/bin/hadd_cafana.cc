@@ -10,6 +10,7 @@
 #include "TObject.h"
 #include "TObjString.h"
 #include "TParameter.h"
+#include "TTree.h"
 #include "TVectorD.h"
 #include "TVector3.h"
 
@@ -31,10 +32,133 @@ std::string basename(const std::string& x)
   return x.substr(x.rfind("/")+1);
 }
 
-std::map<std::string, TObject*> GetObjectMap(TDirectory* x,
-					     std::string path = "")
+const std::vector<std::string> kSpecialTypes
+{
+  "SystShifts",
+};
+// don't sum a folder that corresponds to a special class we shouldn't add
+bool ShouldSumFolder(TDirectory* dir)
+{
+  auto type = dynamic_cast<const TObjString*>(dir->Get("type"));
+  if (!type)
+    return true;
+
+  for (const auto & spType : kSpecialTypes)
+  {
+    if (type->GetString().BeginsWith(spType.c_str()))
+      return false;
+  }
+  return true;
+}
+
+// for objects that weren't supposed to be summed,
+// we just compare them to make sure they're the same
+// (and that we retain all of them across all the files)
+void CheckAndMergeNoSumObjects(std::map<std::string, TObject*>& a,
+                               const std::map<std::string, TObject*>& b)
+{
+  // the 'no sum' objects were once TDirectorys;
+  // to make the comparisons here we'll partially rebuild them.
+  // todo: rebuilding 'a' every time inside a loop may be too slow,
+  //       should be revisited if it is problematic
+  auto RebuildDirs = [](const std::map<std::string, TObject*>& map)
+  {
+    std::map<std::string, std::map<std::string, TObject*>> ret;
+    for (const auto & objPair : map)
+    {
+      auto dirIdx = objPair.first.find_last_of("/");
+      ret[objPair.first.substr(0, dirIdx)][objPair.first.substr(dirIdx+1)] = objPair.second;
+    }
+    return ret;
+  };
+  auto aObjs = RebuildDirs(a);
+  auto bObjs = RebuildDirs(b);
+
+  std::set<std::string> keys;
+  for (const auto & collection : {aObjs, bObjs})
+    std::transform(collection.begin(), collection.end(), std::inserter(keys, keys.end()),
+                   [](const decltype(aObjs)::value_type & nameMapPair){ return nameMapPair.first; });
+
+  for (const auto & key : keys)
+  {
+    // first two cases are easy -- obj is only in one of the two
+    if (aObjs.find(key) == aObjs.end())
+    {
+      for (auto & objPair : bObjs.find(key)->second)
+        a[ConcatPath(key, objPair.first)] = objPair.second;
+      continue;
+    }
+    else if (bObjs.find(key) == bObjs.end())
+      continue;
+
+    // now if shared...
+    auto aObj = aObjs.at(key);
+    auto bObj = bObjs.at(key);
+    auto typeA = dynamic_cast<TObjString *>(aObj.at("type"));
+    auto typeB = dynamic_cast<TObjString *>(bObj.at("type"));
+    if (typeA && typeB)
+    {
+      if (typeA->GetString() != typeB->GetString() || strlen(typeA->GetString()) == 0)
+      {
+        std::cout << "Unable to add incompatible CAFAna custom types "
+                  << typeA->GetString() << " and " << typeB->GetString()
+                  << std::endl;
+        exit(1);
+      }
+
+      if (typeA->GetString().BeginsWith("SystShifts"))
+      {
+        auto valsA = dynamic_cast<TH1D*>(aObj.at("vals"));
+        auto valsB = dynamic_cast<TH1D*>(bObj.at("vals"));
+
+        // if one of them doesn't have stored values, neither of them should
+        bool match = (!valsA) == (!valsB);
+        if (match && valsA)
+        {
+          match = (valsA->GetNbinsX() == valsB->GetNbinsX());
+          if (match)
+          {
+            for (int binIdx = 1; binIdx <= valsA->GetNbinsX(); binIdx++)
+            {
+              // don't keep looping if any of the bins' labels or values differ
+              if ( !( match =    (strcmp(valsA->GetXaxis()->GetBinLabel(binIdx), valsB->GetXaxis()->GetBinLabel(binIdx)) == 0)
+                                 && (std::abs(valsA->GetBinContent(binIdx) - valsB->GetBinContent(binIdx)) < 1e-6) ) )
+                break;
+            }
+          } // if (... GetNbinsX() matches)
+        } // if (... valsA is non-null)
+
+        if (!match)
+        {
+          std::cout << "Unable to add differing SystShifts objects at path: "
+                    << key
+                    << std::endl;
+          for (const auto & obj : {aObj, bObj})
+            for (const auto & stuffPair : obj)
+              stuffPair.second->Print("all");
+          exit(1);
+        }
+      } // if (typeA ... is SystShifts)
+      else
+      {
+        std::cout << "Don't know what to do with custom CAFAna type: " << typeA << std::endl;
+        std::cout << "How did we get here??" << std::endl;
+        exit(1);
+      }
+    } // if (typeA && typeB)
+
+  } // for (key)
+
+}
+
+// first element contains usual objects, second one contains CAFAna types that shouldn't be summed
+std::pair<std::map<std::string, TObject*>, std::map<std::string, TObject*>>
+GetObjectMap(TDirectory* x,
+             std::string path = "",
+             bool forceExtractObjs = false)
 {
   std::map<std::string, TObject*> ret;
+  std::map<std::string, TObject*> retNoSum;
 
   TList* keys = x->GetListOfKeys();
 
@@ -45,21 +169,44 @@ std::map<std::string, TObject*> GetObjectMap(TDirectory* x,
   TIter next(keys);
   while(TObject* key = next()){
     TObject* kid = x->Get(key->GetName());
-    if(kid->InheritsFrom(TDirectoryFile::Class())){
-      std::map<std::string, TObject*> kids = GetObjectMap((TDirectoryFile*)kid,
-							  ConcatPath(path, kid->GetName()));
-      delete kid;
-      ret.insert(kids.begin(), kids.end());
+    if(auto dir = dynamic_cast<TDirectoryFile*>(kid)){
+      if(ShouldSumFolder(dir) || forceExtractObjs)
+      {
+        auto kids = GetObjectMap(dir, ConcatPath(path, dir->GetName()));
+        delete kid;
+        ret.insert(kids.first.begin(), kids.first.end());
+      }
+      else
+      {
+        // since we know this folder isn't meant to be summed, recurse one more time
+        // using the 'forceExtractObjs' mode to pull all the objects out
+        // so we can stuff them into 'retNoSum' rather than 'ret'
+        auto kids = GetObjectMap(dir, ConcatPath(path, dir->GetName()), true);
+        delete kid;
+        retNoSum.insert(kids.first.begin(), kids.first.end());
+      }
     }
     else{
-      if(kid->InheritsFrom(TH1::Class())){
-	((TH1*)kid)->SetDirectory(0);
+      if(auto th1 = dynamic_cast<TH1*>(kid)){
+        th1->SetDirectory(0);
+      }
+      else if (auto ttree = dynamic_cast<TTree*>(kid))
+      {
+        // load the entire tree into memory so it can be relocated to a new file
+        auto newtree = ttree->CloneTree();
+        // disconnect the copy from the original that came out of the file.
+        // the arguments are right, despite how they appear to be backwards...
+        ttree->CopyAddresses(newtree, true);
+        newtree->SetBranchStatus("*", true);
+        newtree->SetDirectory(nullptr);
+        delete kid;
+        kid = newtree;
       }
       ret[ConcatPath(path, key->GetName())] = kid;
     }
   } // end while
 
-  return ret;
+  return std::make_pair(ret, retNoSum);
 }
 
 // Consumes its arguments
@@ -67,8 +214,8 @@ TObject* Sum(TObject* a, TObject* b)
 {
   if(a->ClassName() != std::string(b->ClassName())){
     std::cout << "Unable to add unlike types "
-	      << a->ClassName() << " and "
-	      << b->ClassName() << std::endl;
+              << a->ClassName() << " and "
+              << b->ClassName() << std::endl;
     exit(1);
   }
 
@@ -78,10 +225,64 @@ TObject* Sum(TObject* a, TObject* b)
 
     if(as->GetString() != bs->GetString()){
       std::cout << "Unable to add differing strings "
-		<< as->GetString() << " and "
-		<< bs->GetString() << std::endl;
+                << as->GetString() << " and "
+                << bs->GetString() << std::endl;
       exit(1);
     }
+    delete b;
+    return a;
+  }
+
+  if(auto listA = dynamic_cast<TList*>(a))
+  {
+    bool match = true;
+    auto listB = dynamic_cast<TList*>(b);
+    TIter itA(listA), itB(listB);
+    TObject * objA = itA.Next();
+    TObject * objB = itB.Next();
+    while ( objA && objB )
+    {
+      if (strcmp(objA->ClassName(), objB->ClassName()) != 0)
+      {
+        std::cout << "Unable to add differing elements inside TList: " << std::endl;
+        objA->Print();
+        objB->Print();
+        match = false;
+        break;
+      }
+
+      if (auto valA = dynamic_cast<TObjString*>(objA))
+        match = match && strcmp(valA->GetString(), dynamic_cast<TObjString*>(objB)->GetString()) == 0;
+      else
+      {
+        std::cout << "Unable to compare differing " << objA->ClassName() << "s inside TLists!" << std::endl;
+        match = false;
+      }
+      objA = itA.Next();
+      objB = itB.Next();
+    }
+    // if we didn't get to the end of both lists at the same time, they don't match
+    match = match && (!objA == !objB);
+    if (!match)
+    {
+      std::cout << "Unable to add differing TLists:" << std::endl;
+      listA->Print();
+      listB->Print();
+      exit(1);
+    }
+    delete b;
+    return a;
+  }
+
+  if (auto at = dynamic_cast<TTree*>(a))
+  {
+    auto bt = dynamic_cast<TTree*>(b);
+    bt->SetBranchStatus("*", true);
+    TList otherTreeList;
+    otherTreeList.SetOwner(false);
+    otherTreeList.Add(bt);
+    at->Merge(&otherTreeList);
+    otherTreeList.Clear();
     delete b;
     return a;
   }
@@ -162,8 +363,8 @@ TObject* Sum(TObject* a, TObject* b)
 
   if(!a->InheritsFrom(TH1::Class()) || !b->InheritsFrom(TH1::Class())){
     std::cout << "Don't know how to add types "
-	      << a->ClassName() << " and "
-	      << b->ClassName() << std::endl;
+              << a->ClassName() << " and "
+              << b->ClassName() << std::endl;
     exit(1);
   }
 
@@ -178,7 +379,7 @@ TObject* Sum(TObject* a, TObject* b)
 
 std::map<std::string, TObject*>
 SumObjects(const std::map<std::string, TObject*>& a,
-	   const std::map<std::string, TObject*>& b)
+           const std::map<std::string, TObject*>& b)
 {
   std::map<std::string, TObject*> ret;
 
@@ -204,7 +405,7 @@ SumObjects(const std::map<std::string, TObject*>& a,
 }
 
 template<class A, class B> bool SameKeys(const std::map<A, B>& a,
-					 const std::map<A, B>& b)
+                    const std::map<A, B>& b)
 {
   if(a.size() != b.size()) return false;
 
@@ -227,9 +428,9 @@ void CheckInputNames(const std::vector<std::string>& innames)
 
   if(int(innames.size()) != M){
     std::cout << "WARNING!!! Input files are all of the form *_of_"
-	      << M << ".root, but there are " << innames.size()
-	      << " files. Are you sure you have all the files you intended?"
-	      << std::endl;
+              << M << ".root, but there are " << innames.size()
+              << " files. Are you sure you have all the files you intended?"
+              << std::endl;
   }
 }
 
@@ -279,29 +480,33 @@ int main(int argc, char** argv)
   CheckInputNames(innames);
 
   std::map<std::string, TObject*> sumObjs;
+  std::map<std::string, TObject*> noSumObjs;
 
   for(const std::string& fname: innames){
     TFile* fin = TFile::Open(fname.c_str());
     if(!fin || fin->IsZombie()){
       if(skip)
-	continue;
+        continue;
       else
-	exit(1);
+        exit(1);
     }
 
     std::cout << "Finding objects in " << fname << std::endl;
 
-    std::map<std::string, TObject*> objs = GetObjectMap(fin);
-    std::cout << "Found " << objs.size() << " objects." << std::endl;
+    // first element contains usual objects, second one contains CAFAna types that shouldn't be summed
+    std::pair<std::map<std::string, TObject*>, std::map<std::string, TObject*>> objs = GetObjectMap(fin);
+    std::cout << "Found " << objs.first.size() + objs.second.size() << " objects." << std::endl;
     fin->Close();
     delete fin;
 
-    if(!sumObjs.empty() && !SameKeys(objs, sumObjs)){
+    if(   (!sumObjs.empty() && !SameKeys(objs.first, sumObjs))
+       || (!noSumObjs.empty() && !SameKeys(objs.second, noSumObjs)) ){
       std::cout << "Warning: input files have different keys." << std::endl;
     }
 
     std::cout << "Summing objects into total." << std::endl;
-    sumObjs = SumObjects(sumObjs, objs);
+    sumObjs = SumObjects(sumObjs, objs.first);
+    CheckAndMergeNoSumObjects(noSumObjs, objs.second);
   }
 
   std::cout << "Writing " << sumObjs.size() << " objects to " << outname << std::endl;
@@ -310,13 +515,20 @@ int main(int argc, char** argv)
   if(!fout || fout->IsZombie()) exit(1);
 
   // Duplicate the directory structure in the output
-  for(auto it: sumObjs){
-    const std::string& key = it.first;
-    const std::string d = dirname(key);
-    if(!fout->Get(d.c_str())) fout->mkdir(d.c_str());
+  for (auto & collection : {sumObjs, noSumObjs})
+  {
+    for (auto &it: collection)
+    {
+      const std::string &key = it.first;
+      const std::string d = dirname(key);
+      if (!fout->Get(d.c_str())) fout->mkdir(d.c_str());
 
-    fout->cd(d.c_str());
-    it.second->Write(basename(key).c_str());
+      fout->cd(d.c_str());
+      Int_t op = 0;
+      if (dynamic_cast<TList*>(it.second))
+        op = TObject::kSingleKey;  // otherwise the key elements get stored individually rather than as a TList
+      it.second->Write(basename(key).c_str(), op);
+    }
   }
 
   fout->Close();
