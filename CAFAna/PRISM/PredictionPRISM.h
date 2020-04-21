@@ -21,22 +21,23 @@ namespace ana {
 class PredictionPRISM : public IPrediction {
 public:
   enum PRISMComponent {
-    kNDData = (1 << 0),
-    kNDDataCorr = (1 << 1),
-    kNDDataCorr2D = (1 << 2),
-    kNDSig = (1 << 3),
-    kNDSig2D = (1 << 4),
-    kNDWSBkg = (1 << 5),
-    kNDNCBkg = (1 << 6),
-    kNDNueBkg = (1 << 7),
-    kFDFluxCorr = (1 << 8),
-    kFDNCBkg = (1 << 9),
-    kFDWSBkg = (1 << 10),
-    kFDNueBkg = (1 << 11),
-    kFDUnOscPred = (1 << 12),
-    kFDOscPred = (1 << 13),
-    kPRISMPred = (1 << 14),
-    kPRISMMC = (1 << 15)
+    kNDData = 0,
+    kNDDataCorr = 1,
+    kNDDataCorr2D = 2,
+    kNDSig = 3,
+    kNDSig2D = 4,
+    kNDWSBkg = 5,
+    kNDNCBkg = 6,
+    kNDWrongLepBkg = 7,
+    kFDFluxCorr = 8,
+    kFDNCBkg = 9,
+    kFDWSBkg = 10,
+    kFDWrongLepBkg = 11,
+    kFDIntrinsicBkg = 12,
+    kFDUnOscPred = 13,
+    kFDOscPred = 14,
+    kPRISMPred = 15,
+    kPRISMMC = 16
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -62,8 +63,8 @@ public:
     case kNDNCBkg: {
       return "kNDNCBkg";
     }
-    case kNDNueBkg: {
-      return "kNDNueBkg";
+    case kNDWrongLepBkg: {
+      return "kNDWrongLepBkg";
     }
     case kFDFluxCorr: {
       return "kFDFluxCorr";
@@ -74,8 +75,11 @@ public:
     case kFDWSBkg: {
       return "kFDWSBkg";
     }
-    case kFDNueBkg: {
-      return "kFDNueBkg";
+    case kFDWrongLepBkg: {
+      return "kFDWrongLepBkg";
+    }
+    case kFDIntrinsicBkg: {
+      return "kFDIntrinsicBkg";
     }
     case kFDUnOscPred: {
       return "kFDUnOscPred";
@@ -93,25 +97,12 @@ public:
     return "";
   }
 
-  // Use to instantiate an empty prediction.
-  PredictionPRISM(const HistAxis &recoAxis, const HistAxis &offAxis);
+  HistAxis fAnalysisAxis;
+  HistAxis fNDOffAxis;
+  HistAxis fNDFDEnergyMatchAxis;
 
-  // Use to instantiate a data-like Prediction, where the ND 'data' is not
-  // varied systematic shifts (but any corrections are), use shift if you want
-  // to instantiate the 'data' histogram with a static systematic shift (but it
-  // will not be varied in response to shifts passed to PredictSyst).
-  PredictionPRISM(SpectrumLoaderBase &, const HistAxis &recoAxis,
-                  const HistAxis &offAxis, const Cut &cut,
-                  const Var &wei = kUnweighted,
-                  ana::SystShifts shift = kNoShift);
-
-  void AddNDMCLoader(Loaders &, const Cut &cut = kNoCut,
-                     const Var &wei = kUnweighted,
-                     std::vector<ana::ISyst const *> systlist = {});
-
-  void AddFDMCLoader(Loaders &, const HistAxis &FluxMatchingEnergyAxis,
-                     const Cut &cut = kNoCut, const Var &wei = kUnweighted,
-                     std::vector<ana::ISyst const *> systlist = {});
+  PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
+                  const HistAxis &NDFDEnergyMatchAxis);
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
   virtual void SaveTo(TDirectory *dir) const override;
@@ -119,71 +110,198 @@ public:
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
   virtual Spectrum PredictSyst(osc::IOscCalculator *calc,
                                ana::SystShifts shift = kNoShift) const;
-  virtual std::map<PRISMComponent, Spectrum>
+  std::map<PRISMComponent, Spectrum>
   PredictPRISMComponents(osc::IOscCalculator *calc,
-                         ana::SystShifts shift = kNoShift) const;
+                         ana::SystShifts shift = kNoShift,
+                         PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+                         PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  std::map<PRISMComponent, Spectrum>
+  PredictGaussianFlux(double mean, double width,
+                      ana::SystShifts shift = kNoShift,
+                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
+  PRISMExtrapolator const *fFluxMatcher;
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
-    assert(flux_matcher->CheckOffAxisBinningConsistency(
-        fOffAxis.GetBinnings().front()));
     fFluxMatcher = flux_matcher;
   }
 
-  void SetNCCorrection(bool v = true) { fNCCorrection = v; }
-  void SetWSBCorrection(bool v = true) { fWSBCorrection = v; }
-  void SetNueCorrection(bool v = true) { fNueCorrection = v; }
-
-  void SetIgnoreData(bool v = true) { fIgnoreData = v; }
-  void SetFakeDataShift(SystShifts s);
-  void UnsetFakeDataShift();
-
-  double GetMaxOffAxis() const { return fMaxOffAxis; }
-
-protected:
-  /// The 'data'
-  std::unique_ptr<ReweightableSpectrum> fOffAxisData;
-  bool fHaveData;
-  std::unique_ptr<ReweightableSpectrum> fOffAxisFakeData;
-  bool fHaveFakeData;
-
-  // The 'MC Numu CC' -- Used for cheating when we don't fHaveNDBkgPred to
-  // subtract
-  std::unique_ptr<NoOscPredictionGenerator> fOffAxisPredGen;
-  std::unique_ptr<PredictionInterp> fOffAxisPrediction;
-  bool fHaveNDPred;
-
-  bool fNCCorrection;
-  bool fWSBCorrection;
-  bool fNueCorrection;
-
-  // Use for background re-addition
-  std::unique_ptr<NoExtrapPredictionGenerator> fFDPredGen;
-  mutable std::unique_ptr<PredictionInterp> fFarDetPrediction;
-  std::unique_ptr<FDNoOscPredictionGenerator> fFDNoOscPredGen;
-  mutable std::unique_ptr<PredictionInterp> fFarDetNoOscPrediction;
-  bool fHaveFDPred;
-
-  PRISMExtrapolator const *fFluxMatcher;
-
-  PRISMExtrapolator::FluxPredSpecies fNDFluxSpecies;
-  PRISMExtrapolator::FluxPredSpecies fFDFluxSpecies;
-
-  HistAxis fPredictionAxis;
-  HistAxis fOffAxis;
-  std::unique_ptr<HistAxis> fOffPredictionAxis;
-  std::unique_ptr<HistAxis> fFluxMatcherCorrectionAxes;
+  HistAxis fOffPredictionAxis;
+  HistAxis fFluxMatcherCorrectionAxes;
   double fMaxOffAxis;
   double fDefaultOffAxisPOT;
 
-public:
-  mutable TH2 *fbla;
+  bool fNCCorrection;
+  bool fWSBCorrection;
+  bool fWLBCorrection;
+  bool fIntrinsicCorrection;
+  void SetNCCorrection(bool v = true) { fNCCorrection = v; }
+  void SetWrongSignBackgroundCorrection(bool v = true) { fWSBCorrection = v; }
+  void SetWrongLeptonBackgroundCorrection(bool v = true) { fWLBCorrection = v; }
+  void SetIntrinsicBackgroundCorrection(bool v = true) {
+    fIntrinsicCorrection = v;
+  }
 
-  bool fIgnoreData;
-};
+  ///\brief Call to add a ND Data component
+  ///
+  ///\details This can be called a number of times to add various ND 'data'
+  /// components that might be used in the PRISM analysis. Components are
+  /// defined by the combination of PRISM::NuChan and PRISM::BeamMode.
+  /// The list of valid components is given below:
+  /// * NumuIntrinsic, NuMode (i.e. right sign mu-like FHC)
+  /// * NumuBarIntrinsic, NuBarMode (i.e. right sign mu-like RHC)
+  /// * NumuBarIntrinsic, NuMode (i.e. wrong sign mu-like FHC)
+  /// * NumuIntrinsic, NuBarMode (i.e. wrong sign mu-like FHC)
+  /// * NueNueBar, NuMode (i.e. all e-like FHC)
+  /// * NueNueBar, NuBarMode (i.e. all e-like RHC)
+  ///
+  /// The SystShifts instance allows the 'data' to be shifted relative to the
+  /// nominal
+  void AddNDDataLoader(SpectrumLoaderBase &, const Cut &cut,
+                       const Var &wei = kUnweighted,
+                       ana::SystShifts shift = kNoShift,
+                       PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
+
+  ///\brief Call to add a ND MC component
+  ///
+  ///\details This can be called a number of times to add various ND MC
+  /// components that might be used in the PRISM analysis. Components are
+  /// defined by the combination of PRISM::NuChan and PRISM::BeamMode.
+  /// The list of valid components is given below:
+  /// * NumuIntrinsic, NuMode (i.e. right sign mu-like FHC)
+  /// * NumuBarIntrinsic, NuBarMode (i.e. right sign mu-like RHC)
+  /// * NumuBarIntrinsic, NuMode (i.e. wrong sign mu-like FHC)
+  /// * NumuIntrinsic, NuBarMode (i.e. wrong sign mu-like FHC)
+  /// * NueNueBar, NuMode (i.e. all e-like FHC)
+  /// * NueNueBar, NuBarMode (i.e. all e-like RHC)
+  ///
+  /// The systlist add allowable systematic shifts to the constructed PredInterp
+  /// for use in fits and systematic studies.
+  void AddNDMCLoader(Loaders &, const Cut &cut, const Var &wei = kUnweighted,
+                     std::vector<ana::ISyst const *> systlist = {},
+                     PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
+
+  ///\brief Call to add a FD MC component
+  ///
+  ///\details This can be called a number of times to add various FD MC
+  /// components that might be used in the PRISM analysis. Components are
+  /// defined by the combination of PRISM::NuChan and PRISM::BeamMode.
+  /// The list of valid components is given below:
+  /// * NumuNumuBar, NuMode (i.e. mu-like FHC)
+  /// * NumuNumuBar, NuBarMode (i.e. mu-like FHC)
+  /// * NueNueBar, NuMode (i.e. all e-like FHC)
+  /// * NueNueBar, NuBarMode (i.e. all e-like RHC)
+  ///
+  /// The systlist add allowable systematic shifts to the constructed PredInterp
+  /// for use in fits and systematic studies.
+  void AddFDMCLoader(Loaders &, const Cut &cut, const Var &wei = kUnweighted,
+                     std::vector<ana::ISyst const *> systlist = {},
+                     PRISM::BeamChan FDChannel = PRISM::kNumu_Numode);
+
+protected:
+  // Contains 'measurements' that go into the PRISM extrapolation, should be
+  // Spectra or ReweightableSpectra. Should not react to systematics.
+  struct _Measurements {
+
+    struct _ND {
+      std::unique_ptr<ReweightableSpectrum> numu_ccinc_sel_numode;
+      std::unique_ptr<ReweightableSpectrum> numubar_ccinc_sel_numode;
+
+      std::unique_ptr<ReweightableSpectrum> numu_ccinc_sel_nubmode;
+      std::unique_ptr<ReweightableSpectrum> numubar_ccinc_sel_nubmode;
+
+      std::unique_ptr<ReweightableSpectrum> nue_ccinc_sel_numode;
+      std::unique_ptr<ReweightableSpectrum> nuebar_ccinc_sel_nubmode;
+    };
+    _ND ND;
+  };
+
+  mutable _Measurements Measurements;
+
+  // Contains 'predictions' used for testing the PRISM procedure or for applying
+  // corrections to data
+  struct _Predictions {
+
+    struct _ND {
+      // Used to make PRISM Prediction Prediction, and to calculate backgrounds
+      // to subtract
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_numode;
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_numode;
+
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_nubmode;
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_nubmode;
+
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_numode;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_nubmode;
+    };
+    _ND ND;
+
+    struct _FD {
+      // Used for FD background re-addition, they keep track of WSB, NC, nue
+      // contamination themselves
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_numode;
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_numode;
+
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_nubmode;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_nubmode;
+
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_numode;
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_numode;
+
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_nubmode;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_nubmode;
+    };
+    _FD FD;
+  };
+  mutable _Predictions Predictions;
+
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_right_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_right_sign_nue(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_right_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_right_sign_nue(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  bool HaveNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetFDPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetFDPrediction_right_sign_nue(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+
+  bool HaveFDPrediction(PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetFDUnOscWeightedSigPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetFDUnOscWeightedSigPrediction_right_sign_nue(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &GetFDUnOscWeightedSigPrediction(
+      PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  bool HaveFDUnOscWeightedSigPrediction(
+      PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  // Need to keep a hold of these until the loader has gone.
+  std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;
+
+}; // namespace ana
 
 } // namespace ana

@@ -1,9 +1,13 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 
+#include "CAFAna/PRISM/PredictionPRISM.h"
+
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
+
+using namespace PRISM;
 
 namespace ana {
 
@@ -47,53 +51,151 @@ const ana::Var kMassCorrection({}, [](const caf::StandardRecord *sr) -> double {
   return sr->dune.NDMassCorrWeight;
 });
 
-template <class T>
-void LoadFrom(TFile &f, std::string const &dirname, std::unique_ptr<T> &out) {
-  TDirectory *dir = f.GetDirectory(dirname.c_str());
+namespace {
+template <class T> std::unique_ptr<T> LoadFrom_(TDirectory *dir) {
   if (!dir) {
-    std::cout << "[ERROR]: Failed to read directory: " << dirname << std::endl;
+    std::cout << "[ERROR]: Failed to LoadFrom invalid directory. " << std::endl;
     abort();
   }
-  out = T::LoadFrom(dir);
+  return T::LoadFrom(dir);
+}
+} // namespace
+
+template <class T>
+std::unique_ptr<T> LoadFrom(TFile &f, std::string const &dirname) {
+  PRISMOUT("Reading from " << dirname);
+  TDirectory *dir = f.GetDirectory(dirname.c_str());
+  if (!dir) {
+    std::cout << "[ERROR]: Failed to LoadFrom directory: " << dirname
+              << std::endl;
+    abort();
+  }
+  return LoadFrom_<T>(dir);
 }
 
-PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname,
-                              bool IsRHC) {
+PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
+
+  TestConfigDefinitions();
+
   PRISMStateBlob blob;
-  LoadFrom<PredictionPRISM>(
-      f, std::string("PRISM_") + varname + std::string(IsRHC ? "_rhc" : "_fhc"),
-      blob.PRISM);
+  blob.Init();
 
-  LoadFrom<PredictionInterp>(f,
-                             std::string("NDMatchInterp_ETrue") +
-                                 std::string(IsRHC ? "_rhc" : "_fhc"),
-                             blob.NDMatchInterp);
+  TDirectory *dir = f.GetDirectory((std::string("PRISM_") + varname).c_str());
 
-  LoadFrom<PredictionInterp>(f,
-                             std::string("FDMatchInterp_ETrue") +
-                                 std::string(IsRHC ? "_rhc" : "_fhc"),
-                             blob.FDMatchInterp);
+  if (!dir) {
+    std::cout << "[ERROR]: No such directory: "
+              << (std::string("PRISM_") + varname)
+              << " to load PRISMPrediction from." << std::endl;
+    abort();
+  }
 
-  LoadFrom<PredictionInterp>(f,
-                             std::string("FarDet_") + varname +
-                                 std::string(IsRHC ? "_rhc" : "_fhc"),
-                             blob.FarDet);
+  blob.PRISM = LoadFrom_<PredictionPRISM>(dir);
 
-  LoadFrom<OscillatableSpectrum>(f,
-                                 std::string("FarDetData_") + varname +
-                                     std::string(IsRHC ? "_rhc" : "_fhc"),
-                                 blob.FarDetData);
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
+    bool IsNu = IsNuConfig(it);
+    bool IsND = IsNDConfig(it);
+    size_t fd_it = 0;
+    size_t IsNue = IsNueConfig(it);
+    if (!IsND) {
+      fd_it = GetFDConfig(it);
+    }
+
+    if (IsND) { // Is ND
+      dir = f.GetDirectory(
+          (std::string("NDMatchInterp_ETrue") + (IsNu ? "_nu" : "_nub"))
+              .c_str());
+      if (dir) {
+        blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+
+      dir = f.GetDirectory(
+          (std::string("NDSelectedInterp_") + varname + (IsNu ? "_nu" : "_nub"))
+              .c_str());
+      if (dir) {
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+    } else {
+      if (!IsNue) {
+        dir = f.GetDirectory(
+            (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"))
+                .c_str());
+        if (dir) {
+          blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+        }
+      }
+
+      dir =
+          f.GetDirectory((std::string("FDInterp_") + varname +
+                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                             .c_str());
+      if (dir) {
+        blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
+      }
+
+      dir =
+          f.GetDirectory((std::string("FDDataNonSwap_") + varname +
+                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                             .c_str());
+      if (dir) {
+        blob.FarDetData_nonswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
+      }
+
+      dir =
+          f.GetDirectory((std::string("FDDataNueSwap_") + varname +
+                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                             .c_str());
+      if (dir) {
+        blob.FarDetData_nueswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
+      }
+
+      dir =
+          f.GetDirectory((std::string("FDSelectedInterp_") + varname +
+                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                             .c_str());
+      if (dir) {
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+    }
+  }
+
+#ifdef PRISMDEBUG
+  std::cout << "PRISMSTATE: " << std::endl;
+  std::cout << "\tMatchPredInterps: {\n";
+  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
+    std::cout << "\t\t" << DescribeConfig(i) << ": "
+              << bool(blob.MatchPredInterps[i].get()) << std::endl;
+  }
+  std::cout << "\n\t}\n\tSelPredInterps: {\n";
+  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
+    std::cout << "\t\t" << DescribeConfig(i) << ": "
+              << bool(blob.SelPredInterps[i].get()) << std::endl;
+  }
+  std::cout << "\n\t}\n\tFarDetPredInterps: {\n";
+  for (size_t i = 0; i < kNPRISMFDConfigs; ++i) {
+    std::cout << "\t\t" << DescribeFDConfig(i) << ": "
+              << bool(blob.FarDetPredInterps[i].get()) << std::endl;
+  }
+  std::cout << "\n\t}\n\tFarDetData_nonswap: {\n";
+  for (size_t i = 0; i < kNPRISMFDConfigs; ++i) {
+    std::cout << "\t\t" << DescribeFDConfig(i) << ": "
+              << bool(blob.FarDetData_nonswap[i].get()) << std::endl;
+  }
+  std::cout << "\n\t}\n\tFarDetData_nueswap: {\n";
+  for (size_t i = 0; i < kNPRISMFDConfigs; ++i) {
+    std::cout << "\t\t" << DescribeFDConfig(i) << ": "
+              << bool(blob.FarDetData_nueswap[i].get()) << std::endl;
+  }
+  std::cout << "\n\t}" << std::endl;
+#endif
 
   return blob;
-}
+} // namespace ana
 
 osc::IOscCalculatorAdjustable *
 ConfigureCalc(fhicl::ParameterSet const &ps,
               osc::IOscCalculatorAdjustable *calc) {
-
-  static std::set<std::string> keys{
-      "L",    "Rho",       "Dmsq21",    "Dmsq32",    "Th12", "Th13",
-      "Th23", "SinsqTh12", "SinsqTh13", "SinsqTh23", "dCP",  "dCP_pi"};
+  static std::set<std::string> keys{"th13",   "dmsq32", "ssth23", "deltapi",
+                                    "dmsq21", "ssth12", "rho"};
 
   for (std::string const &k : ps.get_names()) {
     if (!keys.count(k)) {
@@ -107,49 +209,63 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
     calc = NuFitOscCalc(1);
   }
 
-  if (ps.has_key("L")) {
-    calc->SetL(ps.get<double>("L"));
+  if (ps.has_key("rho")) {
+    calc->SetRho(ps.get<double>("rho"));
   }
-  if (ps.has_key("Rho")) {
-    calc->SetRho(ps.get<double>("Rho"));
+  if (ps.has_key("dmsq21")) {
+    calc->SetDmsq21(ps.get<double>("dmsq21"));
   }
-  if (ps.has_key("Dmsq21")) {
-    calc->SetDmsq21(ps.get<double>("Dmsq21"));
+  if (ps.has_key("dmsq32")) {
+    calc->SetDmsq32(ps.get<double>("dmsq32"));
   }
-  if (ps.has_key("Dmsq32")) {
-    calc->SetDmsq32(ps.get<double>("Dmsq32"));
+  if (ps.has_key("th13")) {
+    calc->SetTh13(ps.get<double>("th13"));
   }
-  if (ps.has_key("Th12")) {
-    calc->SetTh12(ps.get<double>("Th12"));
+  if (ps.has_key("ssth12")) {
+    calc->SetTh12(asin(sqrt(ps.get<double>("ssth12"))));
   }
-  if (ps.has_key("Th13")) {
-    calc->SetTh13(ps.get<double>("Th13"));
+  if (ps.has_key("ssth23")) {
+    calc->SetTh23(asin(sqrt(ps.get<double>("ssth23"))));
   }
-  if (ps.has_key("Th23")) {
-    calc->SetTh23(ps.get<double>("Th23"));
-  }
-  if (ps.has_key("SinsqTh12")) {
-    calc->SetTh12(asin(sqrt(ps.get<double>("SinsqTh12"))));
-  }
-  if (ps.has_key("SinsqTh13")) {
-    calc->SetTh13(asin(sqrt(ps.get<double>("SinsqTh13"))));
-  }
-  if (ps.has_key("SinsqTh23")) {
-    calc->SetTh23(asin(sqrt(ps.get<double>("SinsqTh23"))));
-  }
-  if (ps.has_key("dCP_pi")) {
-    calc->SetdCP(ps.get<double>("dCP_pi") * M_PI);
-  }
-  if (ps.has_key("dCP")) {
-    calc->SetdCP(ps.get<double>("dCP"));
+  if (ps.has_key("deltapi")) {
+    calc->SetdCP(ps.get<double>("deltapi") * M_PI);
   }
 
   return calc;
 }
+double GetCalcValue(osc::IOscCalculatorAdjustable *calc,
+                    std::string paramname) {
+  if (!calc) {
+    return 0;
+  }
+
+  if (paramname == "rho") {
+    return calc->GetRho();
+  }
+  if (paramname == "dmsq21") {
+    return calc->GetDmsq21();
+  }
+  if (paramname == "dmsq32") {
+    return calc->GetDmsq32();
+  }
+  if (paramname == "th13") {
+    return calc->GetTh13();
+  }
+  if (paramname == "ssth12") {
+    return pow(sin(calc->GetTh12()), 2);
+  }
+  if (paramname == "ssth23") {
+    return pow(sin(calc->GetTh23()), 2);
+  }
+  if (paramname == "deltapi") {
+    return calc->GetdCP() / M_PI;
+  }
+  std::cout << "[ERROR]: Invalid param name: " << paramname << std::endl;
+  abort();
+}
 
 std::vector<const IFitVar *>
 GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
-
   std::vector<const IFitVar *> rtn_vars;
 
   for (auto &v : osc_vars) {
@@ -167,7 +283,7 @@ GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
     }
 
     // Deal with octant boundaries
-    if (v == "th23" || v == "alloscvars") {
+    if (v == "ssth23" || v == "alloscvars") {
       if (oct == -1)
         rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
       else if (oct == 1)
@@ -183,7 +299,7 @@ GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
     if (v == "dmsq21" || v == "alloscvars") {
       rtn_vars.push_back(&kFitDmSq21Scaled);
     }
-    if (v == "th12" || v == "alloscvars") {
+    if (v == "ssth12" || v == "alloscvars") {
       rtn_vars.push_back(&kFitSinSq2Theta12);
     }
     // Rho rho rho your boat...
@@ -194,9 +310,82 @@ GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
   return rtn_vars;
 }
 
-SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
+void ScrubOscVars(std::vector<const IFitVar *> &oscvars,
+                  std::vector<std::string> const &names_to_scrub) {
+  for (auto &v : names_to_scrub) {
+    if (v == "th13") {
+      oscvars.erase(std::remove(oscvars.begin(), oscvars.end(), &kFitTheta13),
+                    oscvars.end());
+    }
+    // Deal with bounded dmsq32
+    if (v == "dmsq32") {
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitDmSq32IHScaled),
+          oscvars.end());
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitDmSq32NHScaled),
+          oscvars.end());
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitDmSq32Scaled),
+          oscvars.end());
+    }
 
-  std::vector<ISyst const *> los = GetListOfSysts();
+    // Deal with octant boundaries
+    if (v == "ssth23") {
+      oscvars.erase(std::remove(oscvars.begin(), oscvars.end(),
+                                &kFitSinSqTheta23LowerOctant),
+                    oscvars.end());
+      oscvars.erase(std::remove(oscvars.begin(), oscvars.end(),
+                                &kFitSinSqTheta23UpperOctant),
+                    oscvars.end());
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitSinSqTheta23),
+          oscvars.end());
+    }
+    if (v == "deltapi") {
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitDeltaInPiUnits),
+          oscvars.end());
+    }
+
+    // Add back in the 21 parameters
+    if (v == "dmsq21") {
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitDmSq21Scaled),
+          oscvars.end());
+    }
+    if (v == "ssth12") {
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitSinSq2Theta12),
+          oscvars.end());
+    }
+    // Rho rho rho your boat...
+    if (v == "rho") {
+      oscvars.erase(std::remove(oscvars.begin(), oscvars.end(), &kFitRho),
+                    oscvars.end());
+    }
+  }
+}
+
+std::vector<ana::ISyst const *>
+GetListOfSysts(std::vector<std::string> const &systnames) {
+  std::vector<ISyst const *> los;
+
+  for(auto & s : systnames){
+    std::cout << "ewoijfwoifj: " <<s << std::endl;
+  }
+
+  for (auto &s : ::GetListOfSysts()) {
+    if (std::find(systnames.begin(), systnames.end(), s->ShortName()) !=
+        systnames.end()) {
+      los.push_back(s);
+    }
+  }
+  return los;
+}
+
+SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
+  std::vector<ISyst const *> los = ::GetListOfSysts();
 
   SystShifts shift;
 
@@ -217,9 +406,8 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 }
 
 SystShifts GetFluxSystShifts(SystShifts shift) {
-
   SystShifts outs;
-  auto fsysts = GetListOfSysts("nov17flux:nodet:noxsec");
+  auto fsysts = ::GetListOfSysts("nov17flux:nodet:noxsec");
   for (auto syst : shift.ActiveSysts()) {
     if (std::find(fsysts.begin(), fsysts.end(), syst) != fsysts.end()) {
       outs.SetShift(syst, shift.GetShift(syst));

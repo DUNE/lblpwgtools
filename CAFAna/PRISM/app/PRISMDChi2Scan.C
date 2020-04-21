@@ -6,60 +6,20 @@
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
+#include "CAFAna/PRISM/SimpleChi2Experiment.h"
 
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
 
+#include "TArrow.h"
 #include "TCanvas.h"
 #include "TGraph2D.h"
+#include "TMarker.h"
 
 using namespace ana;
+using namespace PRISM;
 
 std::map<std::string, PRISMStateBlob> States;
-
-namespace ana {
-class SimpleChi2Experiment : public IChiSqExperiment {
-public:
-  SimpleChi2Experiment(IPrediction const *Pred, Spectrum const &Data,
-                       bool UseHistError = false, double POT = 0)
-      : fPred(Pred), fUseHistError(UseHistError) {
-    fPOT = POT;
-    if (fPOT == 0) {
-      fPOT = Data.POT();
-    }
-    fData = Data.ToTH1(fPOT);
-  }
-
-  IPrediction const *fPred;
-  TH1 const *fData;
-  double fPOT;
-  bool fUseHistError;
-
-  double ChiSq(osc::IOscCalculatorAdjustable *osc,
-               const SystShifts &syst = SystShifts::Nominal()) const {
-
-    TH1D *PredHist = fPred->Predict(osc).ToTH1(fPOT);
-    double chi2 = 0;
-    for (int bi = 0; bi < fData->GetXaxis()->GetNbins(); ++bi) {
-      double pbc = PredHist->GetBinContent(bi + 1);
-      double pbe =
-          (fUseHistError ? pow(PredHist->GetBinError(bi + 1), 2) : 0) + pbc;
-
-      // if (bi == 5) {
-      //   std::cout << (fUseHistError ? "PRISM" : "Standard") << " bin " << bi
-      //             << " content = " << pbc << " +/- " << sqrt(pbc) << " ("
-      //             << sqrt(pbc) / pbc << ", POT = " << fPOT << ")" << std::endl;
-      // }
-      double dbc = fData->GetBinContent(bi + 1);
-
-      chi2 += pow((pbc - dbc), 2) / pbe;
-    }
-    HistCache::Delete(PredHist);
-
-    return chi2;
-  }
-};
-} // namespace ana
 
 TGraph GetContour(TH2 *h, double redchi2l) {
   TGraph outg;
@@ -115,6 +75,59 @@ TGraph GetContour(TH2 *h, double redchi2l) {
   return outg;
 }
 
+TH1 *BuildDChi2Map(std::vector<fhicl::ParameterSet> const &params) {
+
+  size_t nxsteps = 1, nysteps = 1;
+  double step_widthx = 0, step_widthy = 0;
+  double startx = 0, starty = 0;
+  std::string xparam_name = "", yparam_name = "";
+  size_t nparams = params.size();
+
+  TH1 *dchi2map;
+  if (params.size() == 1) {
+    std::array<double, 3> xscan_steps =
+        params.front().get<std::array<double, 3>>("scan_steps");
+    nxsteps = xscan_steps[0];
+    step_widthx = (xscan_steps[2] - xscan_steps[1]) / xscan_steps[0];
+
+    xparam_name = params.front().get<std::string>("name");
+
+    startx = xscan_steps[1];
+
+    std::stringstream ttl("");
+    ttl << ";" << xparam_name << ";#Delta#Chi^{2}";
+
+    return new TH1D("dchi2", ttl.str().c_str(), xscan_steps[0], xscan_steps[1],
+                    xscan_steps[2]);
+  } else if (params.size() == 2) {
+    std::array<double, 3> xscan_steps =
+        params.front().get<std::array<double, 3>>("scan_steps");
+    nxsteps = xscan_steps[0];
+    step_widthx = (xscan_steps[2] - xscan_steps[1]) / xscan_steps[0];
+
+    xparam_name = params.front().get<std::string>("name");
+    startx = xscan_steps[1];
+    std::array<double, 3> yscan_steps =
+        params.back().get<std::array<double, 3>>("scan_steps");
+    nysteps = yscan_steps[0];
+    step_widthy = (yscan_steps[2] - yscan_steps[1]) / yscan_steps[0];
+
+    yparam_name = params.back().get<std::string>("name");
+
+    starty = yscan_steps[1];
+    std::stringstream ttl("");
+    ttl << ";" << xparam_name << ";" << yparam_name << ";#Delta#Chi^{2}";
+
+    return new TH2D("dchi2", ttl.str().c_str(), xscan_steps[0], xscan_steps[1],
+                    xscan_steps[2], yscan_steps[0], yscan_steps[1],
+                    yscan_steps[2]);
+  } else {
+    std::cout << "Can only do 1 or 2 dimensional chi2 scans, but recieved: "
+              << params.size() << " parameters." << std::endl;
+    abort();
+  }
+}
+
 void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::string const &state_file = scan.get<std::string>("state_file");
@@ -125,76 +138,67 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::string const &varname =
       scan.get<std::string>("projection_name", "EProxy");
-  bool isfhc = scan.get<bool>("isFHC", true);
 
-  double reg = scan.get<double>("reg_factor", 1E-16);
-  std::array<double, 2> fit_range =
-      scan.get<std::array<double, 2>>("fit_range", {0, 4});
+  auto GOFps = scan.get<fhicl::ParameterSet>("GOF", {});
+  bool use_PRISM = GOFps.get<bool>("use_PRISM", true);
+  bool use_PRISM_ND_stats = GOFps.get<bool>("use_PRISM_ND_stats", true);
 
-  bool FitNuisance = scan.get<bool>("fit_nuisance", false);
+  bool fit_nuisance = GOFps.get<bool>("fit_nuisance", false);
+  bool poisson_throw = GOFps.get<bool>("poisson_throw", false);
 
-  auto oscpars = GetOscVars(scan.get<std::vector<std::string>>("osc_pars", {}));
+  auto free_oscpars =
+      GetOscVars(GOFps.get<std::vector<std::string>>("free_osc_params", {}));
+  auto freesysts = ana::GetListOfSysts(
+      GOFps.get<std::vector<std::string>>("free_syst_params", {}));
 
-  auto params = scan.get<std::vector<fhicl::ParameterSet>>("params");
-  size_t nxsteps = 1, nysteps = 1;
-  double step_widthx = 0, step_widthy = 0;
-  double startx = 0, starty = 0;
-  std::string xname = "", yname = "";
-  size_t nparams = params.size();
-
-  TH1 *dchi2map;
-  if (params.size() == 1) {
-    std::array<double, 3> xscan_steps =
-        params.front().get<std::array<double, 3>>("scan_steps");
-    nxsteps = xscan_steps[0];
-    step_widthx = (xscan_steps[2] - xscan_steps[1]) / xscan_steps[0];
-
-    xname = params.front().get<std::string>("name");
-    startx = xscan_steps[1];
-
-    std::stringstream ttl("");
-    ttl << ";" << xname << ";#Delta#Chi^{2}";
-
-    dchi2map = new TH1D("dchi2", ttl.str().c_str(), xscan_steps[0],
-                        xscan_steps[1], xscan_steps[2]);
-  } else if (params.size() == 2) {
-    std::array<double, 3> xscan_steps =
-        params.front().get<std::array<double, 3>>("scan_steps");
-    nxsteps = xscan_steps[0];
-    step_widthx = (xscan_steps[2] - xscan_steps[1]) / xscan_steps[0];
-
-    xname = params.front().get<std::string>("name");
-    startx = xscan_steps[1];
-    std::array<double, 3> yscan_steps =
-        params.back().get<std::array<double, 3>>("scan_steps");
-    nysteps = yscan_steps[0];
-    step_widthy = (yscan_steps[2] - yscan_steps[1]) / yscan_steps[0];
-
-    yname = params.back().get<std::string>("name");
-    starty = yscan_steps[1];
-    std::stringstream ttl("");
-    ttl << ";" << xname << ";" << yname << ";#Delta#Chi^{2}";
-
-    dchi2map = new TH2D("dchi2", ttl.str().c_str(), xscan_steps[0],
-                        xscan_steps[1], xscan_steps[2], yscan_steps[0],
-                        yscan_steps[1], yscan_steps[2]);
-  } else {
-    std::cout << "Can only do 1 or 2 dimensional chi2 scans, but recieved: "
-              << params.size() << " parameters." << std::endl;
-    abort();
+  for(auto & s: freesysts){
+    std::cout << "\t" << s->ShortName() << " free." << std::endl;
   }
+
+  auto PRISMps = scan.get<fhicl::ParameterSet>("PRISM", {});
+
+  double PRISM_reg = PRISMps.get<double>("reg_factor", 1E-16);
+  std::array<double, 2> PRISM_energy_range =
+      PRISMps.get<std::array<double, 2>>("energy_range", {0, 4});
+
+  // default to 1 year
+  double POT = scan.get<double>("POT_years", 1) * (pot_fd / 3.5);
+
+  auto params = scan.get<std::vector<fhicl::ParameterSet>>("scan_params");
+  TH1 *dchi2map = BuildDChi2Map(params);
   dchi2map->SetDirectory(0);
 
-  (void)GetListOfSysts();
+  size_t nparams = dchi2map->GetDimension();
 
-  osc::IOscCalculatorAdjustable *calc =
-      ConfigureCalc(scan.get<fhicl::ParameterSet>("Osc", {}));
+  std::string xparam_name =
+      dchi2map->GetXaxis() ? dchi2map->GetXaxis()->GetTitle() : "";
+  std::string yparam_name =
+      dchi2map->GetYaxis() ? dchi2map->GetYaxis()->GetTitle() : "";
 
+  // Fix osc pars that are in the scan
+  ScrubOscVars(free_oscpars, {xparam_name, yparam_name});
+
+  // set up seed points for multiple fits.
+  std::map<const IFitVar *, std::vector<double>> oscSeeds;
+  if (std::find(free_oscpars.begin(), free_oscpars.end(),
+                &kFitDeltaInPiUnits) != free_oscpars.end()) {
+    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  }
+  if (std::find(free_oscpars.begin(), free_oscpars.end(), &kFitSinSqTheta23) !=
+      free_oscpars.end()) {
+    oscSeeds[&kFitSinSqTheta23] = {0.4, 0.6};
+  }
+
+  osc::IOscCalculatorAdjustable *true_calc =
+      ConfigureCalc(scan.get<fhicl::ParameterSet>("true_osc", {}));
+  osc::IOscCalculatorAdjustable *calc = true_calc->Copy();
+
+  // Lazy load the state file
   if (!States.count(state_file)) {
     TFile fs(state_file.c_str());
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname, !isfhc);
+    States[state_file] = LoadPRISMState(fs, varname);
     std::cout << "Done!" << std::endl;
     fs.Close();
   }
@@ -210,181 +214,302 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
   dir->cd();
 
-  int id = 0;
   PRISMExtrapolator fluxmatcher;
-  fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
-                                         state.FDMatchInterp.get());
-  if (scan.get<bool>("is_fake_spec_run", false)) {
-    fluxmatcher.SetTargetConditioning(reg,
-                                      {
-                                          {0},
-                                      },
-                                      fit_range[0], fit_range[1]);
-  } else {
-    fluxmatcher.SetTargetConditioning(reg, {}, fit_range[0], fit_range[1]);
+  if (use_PRISM) {
+    fluxmatcher.Initialize({
+        {"ND_nu", state.MatchPredInterps[kND_nu].get()},
+        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+        {"ND_nub", state.MatchPredInterps[kND_nub].get()},
+        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+    });
+
+    if (PRISMps.get<bool>("is_fake_spec_run", false)) {
+      fluxmatcher.SetTargetConditioning(PRISM_reg,
+                                        {
+                                            {0},
+                                        },
+                                        PRISM_energy_range[0],
+                                        PRISM_energy_range[1]);
+    } else {
+      fluxmatcher.SetTargetConditioning(PRISM_reg, {}, PRISM_energy_range[0],
+                                        PRISM_energy_range[1]);
+    }
+    state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
-  state.PRISM->SetFluxMatcher(&fluxmatcher);
 
-  std::vector<double> points_PRISM, points_FarDet;
+  std::map<std::string, MatchChan> Channels;
+  if (scan.is_key_to_sequence("samples")) {
+    for (auto const &fs :
+         scan.get<std::vector<fhicl::ParameterSet>>("samples")) {
+      auto ch = GetMatchChan(fs);
+      Channels[GetMatchChanShortName(ch)] = ch;
+    }
+  } else {
+    auto ch = GetMatchChan(scan.get<fhicl::ParameterSet>("samples"));
+    Channels[GetMatchChanShortName(ch)] = ch;
+  }
 
-  TH1D *PRISMPredEvRateMatch_h_min = nullptr;
-  TH1D *FarDet_h_min = nullptr;
-  int disp_pid = isfhc ? 14 : -14;
+  std::map<std::string, std::pair<double, double>> EnergyRanges;
+  for (auto const &ch : Channels) {
+    EnergyRanges[ch.first] = GOFps.get<std::pair<double, double>>(
+        "energy_limits." + ch.first, {-std::numeric_limits<double>::max(),
+                                      std::numeric_limits<double>::max()});
+  }
 
-  // default to 1 year
-  double POT = scan.get<double>("POT_years", 1) * (pot_fd / 3.5);
+  std::vector<TH1D *> MinHist(6, nullptr);
+  std::vector<TH1D *> NomHist;
 
-  // std::cout << "POT = " << POT
-  //           << ", (read: " << scan.get<double>("POT_years", 1) << ")"
-  //           << std::endl;
+  std::vector<TH1D *> InputDataHist;
+  std::vector<TH1D *> DataHist;
+  size_t NBins = 0;
 
-  // state.FarDetData->ScaleToPOT(POT);
-  // std::cout << "data POT: " << state.FarDetData->POT() << ", Spectrum POT: "
-  //           << state.FarDetData->Oscillated(calc, disp_pid, disp_pid).POT()
-  //           << std::endl;
+  std::vector<Spectrum> DataSpectra;
+  DataSpectra.reserve(Channels.size());
 
+  std::vector<std::unique_ptr<IChiSqExperiment>> Expts;
+  Expts.reserve(Channels.size());
 
-  TH1D *FarDetData_h =
-      state.FarDetData->Oscillated(calc, disp_pid, disp_pid).ToTH1(POT);
+  MultiExperiment MExpt;
 
-  SimpleChi2Experiment PRISMExpt(
-      state.PRISM.get(), state.FarDetData->Oscillated(calc, disp_pid, disp_pid),
-      true, POT);
-  SimpleChi2Experiment FarDetExpt(
-      state.FarDet.get(),
-      state.FarDetData->Oscillated(calc, disp_pid, disp_pid), false, POT);
-  TH1D *PRISMPredEvRateMatchNom_h = state.PRISM->Predict(calc).ToTH1(POT);
-  TH1D *FarDetNom_h = state.FarDet->Predict(calc).ToTH1(POT);
+  for (auto const ch : Channels) {
+    int osc_from = FluxSpeciesPDG(ch.second.from.chan);
+    int osc_to = FluxSpeciesPDG(ch.second.to.chan);
+    size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
+    size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
+    size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
-  double min_PRISM = std::numeric_limits<double>::max();
-  double min_FarDet = std::numeric_limits<double>::max();
-  double min_all = std::numeric_limits<double>::max();
-  for (size_t stepx = 0; stepx < nxsteps; ++stepx) {
-    double xval = startx + stepx * step_widthx;
-    std::cout << "\r(" << stepx << "/" << nxsteps << ") " << xname << ": "
-              << xval << std::flush;
+    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
+        calc, osc_from, osc_to));
 
-    for (size_t stepy = 0; stepy < nysteps; ++stepy) {
+    if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
+      DataSpectra.back() +=
+          state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from,
+                                                                osc_to);
+    }
+
+    InputDataHist.emplace_back(DataSpectra.back().ToTH1(POT));
+    DataHist.emplace_back(DataSpectra.back().ToTH1(POT));
+
+    if (poisson_throw) {
+      for (int bi_it = 0; bi_it < DataHist.back()->GetXaxis()->GetNbins();
+           ++bi_it) {
+        double bc = DataHist.back()->GetBinContent(bi_it + 1);
+        double thrown = gRandom->Poisson(bc);
+        DataHist.back()->SetBinContent(bi_it + 1, thrown);
+      }
+    }
+
+    NBins += DataHist.back()->GetXaxis()->GetNbins();
+
+    if (use_PRISM) {
+      Expts.emplace_back(new PRISMChi2Experiment(
+          state.PRISM.get(), DataSpectra.back(), use_PRISM_ND_stats, POT,
+          ch.second.from, ch.second.to, EnergyRanges[ch.first]));
+    } else {
+
+      Expts.emplace_back(new SimpleChi2Experiment(
+          state.FarDetPredInterps[FDfdConfig_enum].get(), DataSpectra.back(),
+          false, POT, EnergyRanges[ch.first]));
+    }
+
+    MExpt.Add(Expts.back().get());
+
+    if (use_PRISM) {
+      NomHist.emplace_back(state.PRISM
+                               ->PredictPRISMComponents(
+                                   calc, kNoShift, ch.second.from, ch.second.to)
+                               .at(PredictionPRISM::kPRISMPred)
+                               .ToTH1(POT));
+    } else {
+      NomHist.emplace_back(
+          state.FarDetPredInterps[FDfdConfig_enum]->Predict(calc).ToTH1(POT));
+    }
+  }
+
+  double min_gof = std::numeric_limits<double>::max();
+  std::vector<double> gof_scan, gof_fit;
+
+  std::pair<double, double> min_paramvals;
+  for (int stepx = 0; stepx < dchi2map->GetXaxis()->GetNbins(); ++stepx) {
+    double xval = dchi2map->GetXaxis()->GetBinCenter(stepx + 1);
+
+    std::cout << (fit_nuisance ? "" : "\r") << "(" << stepx << "/"
+              << dchi2map->GetXaxis()->GetNbins() << ") " << xparam_name << ": "
+              << xval << (fit_nuisance ? "\n" : "") << std::flush;
+
+    for (int stepy = 0;
+         stepy < ((nparams == 2) ? dchi2map->GetYaxis()->GetNbins() : 1);
+         ++stepy) {
 
       fhicl::ParameterSet step_ps;
-      step_ps.put(xname, xval);
+      step_ps.put(xparam_name, xval);
 
+      double yval = 0;
       if (nparams == 2) {
-        double yval = starty + stepy * step_widthy;
-        step_ps.put(yname, yval);
+        yval = dchi2map->GetYaxis()->GetBinCenter(stepy + 1);
+        step_ps.put(yparam_name, yval);
       }
+
+      double gof = 0;
 
       (void)ConfigureCalc(step_ps, calc);
 
-      double chi2_PRISM = PRISMExpt.ChiSq(calc);
-      double chi2_FarDet = FarDetExpt.ChiSq(calc);
+      gof = MExpt.ChiSq(calc);
+      gof_scan.push_back(gof);
 
-      if (chi2_PRISM < min_PRISM) {
-        HistCache::Delete(PRISMPredEvRateMatch_h_min);
-        PRISMPredEvRateMatch_h_min = state.PRISM->Predict(calc).ToTH1(POT);
-        min_PRISM = chi2_PRISM;
+      if (fit_nuisance) {
+        auto calc_fit = calc->Copy();
+
+        auto start_fit = std::chrono::system_clock::now();
+        // Now set up the fit itself
+        std::cerr << "[INFO]: Beginning fit. ";
+        MinuitFitter Fitter(&MExpt, free_oscpars, freesysts);
+        gof = Fitter.Fit(calc_fit, junkShifts, oscSeeds);
+        gof_fit.push_back(gof);
+        auto end_fit = std::chrono::system_clock::now();
+        std::cerr << "[FIT]: Finished fit in "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
+                                                                      start_fit)
+                         .count()
+                  << " s after " << Fitter.GetNFCN() << " iterations."
+                  << std::endl;
       }
-      if (chi2_FarDet < min_FarDet) {
-        HistCache::Delete(FarDet_h_min);
-        FarDet_h_min = state.FarDet->Predict(calc).ToTH1(POT);
-        min_FarDet = chi2_FarDet;
+
+      if (gof < min_gof) {
+        size_t ch_it = 0;
+        for (auto const ch : Channels) {
+          HistCache::Delete(MinHist[ch_it]);
+          if (use_PRISM) {
+            MinHist[ch_it] =
+                static_cast<PRISMChi2Experiment *>(Expts[ch_it].get())
+                    ->GetPred(calc);
+          } else {
+            MinHist[ch_it] =
+                static_cast<SimpleChi2Experiment *>(Expts[ch_it].get())
+                    ->GetPred(calc);
+          }
+          ch_it++;
+        }
+        min_gof = gof;
+        min_paramvals.first = xval;
+        min_paramvals.second = yval;
       }
-      min_all = std::min(min_all, std::min(min_PRISM, min_FarDet));
-      points_PRISM.push_back(chi2_PRISM);
-      points_FarDet.push_back(chi2_FarDet);
     }
   }
   std::cout << "\r" << std::endl;
-  TH1 *Scan_PRISM = static_cast<TH1 *>(dchi2map->Clone("PRISM_Chi2_Scan")),
-      *Scan_d_PRISM =
-          static_cast<TH1 *>(dchi2map->Clone("PRISM_Delta_Chi2_Scan"));
-  TH1 *Scan_FarDet = static_cast<TH1 *>(dchi2map->Clone("FarDet_Chi2_Scan")),
-      *Scan_d_FarDet =
-          static_cast<TH1 *>(dchi2map->Clone("FarDet_Delta_Chi2_Scan"));
 
-  for (size_t stepx = 0; stepx < nxsteps; ++stepx) {
-    double xval = startx + stepx * step_widthx;
+  TH1 *Scan = static_cast<TH1 *>(dchi2map->Clone("Chi2_Scan")),
+      *Scan_d = static_cast<TH1 *>(dchi2map->Clone("Delta_Chi2_Scan")),
+      *Scan_nofit = static_cast<TH1 *>(dchi2map->Clone("Chi2_Scan_nofit"));
 
-    for (size_t stepy = 0; stepy < nysteps; ++stepy) {
+  std::vector<double> const &scan_points = (!fit_nuisance) ? gof_scan : gof_fit;
+
+  size_t step = 0;
+  for (int stepx = 0; stepx < dchi2map->GetXaxis()->GetNbins(); ++stepx) {
+    double xval = dchi2map->GetXaxis()->GetBinCenter(stepx + 1);
+
+    for (int stepy = 0;
+         stepy < ((nparams == 2) ? dchi2map->GetYaxis()->GetNbins() : 1);
+         ++stepy) {
       if (nparams == 2) {
-        double yval = starty + stepy * step_widthy;
+        double yval = dchi2map->GetYaxis()->GetBinCenter(stepy + 1);
         // ----------- Bottom UF Left UF        rows
-        size_t hstep = (nxsteps + 2) + 1 + (stepy * (nxsteps + 2)) + stepx;
-        size_t step = stepx * nysteps + stepy;
+        int gbin = dchi2map->GetBin(stepx + 1, stepy + 1);
 
-        static_cast<TH2 *>(Scan_PRISM)
-            ->SetBinContent(hstep, points_PRISM[step]);
-        static_cast<TH2 *>(Scan_d_PRISM)
-            ->SetBinContent(hstep, points_PRISM[step] - min_all);
-
-        static_cast<TH2 *>(Scan_FarDet)
-            ->SetBinContent(hstep, points_FarDet[step]);
-        static_cast<TH2 *>(Scan_d_FarDet)
-            ->SetBinContent(hstep, points_FarDet[step] - min_all);
-
+        static_cast<TH2 *>(Scan)->SetBinContent(gbin, scan_points[step]);
+        static_cast<TH2 *>(Scan_d)->SetBinContent(gbin,
+                                                  scan_points[step] - min_gof);
+        if (fit_nuisance) {
+          static_cast<TH2 *>(Scan_nofit)->SetBinContent(gbin, gof_scan[step]);
+        }
       } else {
-        Scan_PRISM->SetBinContent(stepx + 1, points_PRISM[stepx]);
-        Scan_d_PRISM->SetBinContent(stepx + 1, points_PRISM[stepx] - min_all);
-
-        Scan_FarDet->SetBinContent(stepx + 1, points_FarDet[stepx]);
-        Scan_d_FarDet->SetBinContent(stepx + 1, points_FarDet[stepx] - min_all);
+        Scan->SetBinContent(stepx + 1, scan_points[step]);
+        Scan_d->SetBinContent(stepx + 1, scan_points[step] - min_gof);
+        if (fit_nuisance) {
+          Scan_nofit->SetBinContent(stepx + 1, gof_scan[step]);
+        }
+        step++;
       }
     }
   }
 
-  dir->WriteTObject(PRISMPredEvRateMatch_h_min, "PRISMPredEvRateMatch_minchi2");
-  dir->WriteTObject(FarDet_h_min, "FarDet_minchi2");
+  size_t ch_it = 0;
+  for (auto const ch : Channels) {
 
-  dir->WriteTObject(Scan_PRISM, "PRISM_Chi2_Scan");
-  dir->WriteTObject(Scan_d_PRISM, "PRISM_Delta_Chi2_Scan");
+    dir->WriteTObject(DataHist[ch_it], (ch.first + "_data").c_str());
 
-  Scan_PRISM->Scale(1.0 / double(FarDetData_h->GetXaxis()->GetNbins()));
-  Scan_d_PRISM->Scale(1.0 / double(FarDetData_h->GetXaxis()->GetNbins()));
+    if (poisson_throw) {
+      dir->WriteTObject(InputDataHist[ch_it],
+                        (ch.first + "_data_nothrow").c_str());
+    }
 
-  Scan_PRISM->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
-  Scan_d_PRISM->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
+    dir->WriteTObject(MinHist[ch_it], (ch.first + "_minchi2").c_str());
+    dir->WriteTObject(NomHist[ch_it], (ch.first + "_true").c_str());
 
-  dir->WriteTObject(Scan_PRISM, "PRISM_redChi2_Scan");
-  dir->WriteTObject(Scan_d_PRISM, "PRISM_Delta_redChi2_Scan");
-
-  if (nparams == 2) {
-    TGraph Scan_PRISM_68 = GetContour(static_cast<TH2 *>(Scan_d_PRISM), 2.3);
-    dir->WriteTObject(&Scan_PRISM_68, "Scan_d_PRISM_68");
-    TGraph Scan_PRISM_90 = GetContour(static_cast<TH2 *>(Scan_d_PRISM), 4.61);
-    dir->WriteTObject(&Scan_PRISM_90, "Scan_d_PRISM_90");
+    ch_it++;
   }
 
-  dir->WriteTObject(Scan_FarDet, "FarDet_Chi2_Scan");
-  dir->WriteTObject(Scan_d_FarDet, "FarDet_Delta_Chi2_Scan");
-
-  Scan_FarDet->Scale(1.0 / double(FarDetData_h->GetXaxis()->GetNbins()));
-  Scan_d_FarDet->Scale(1.0 / double(FarDetData_h->GetXaxis()->GetNbins()));
-
-  Scan_FarDet->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
-  Scan_d_FarDet->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
-  dir->WriteTObject(Scan_FarDet, "FarDet_redChi2_Scan");
-  dir->WriteTObject(Scan_d_FarDet, "FarDet_Delta_redChi2_Scan");
-
-  if (nparams == 2) {
-    TGraph Scan_FarDet_68 = GetContour(static_cast<TH2 *>(Scan_d_FarDet), 2.3);
-    dir->WriteTObject(&Scan_FarDet_68, "Scan_d_FarDet_68");
-    TGraph Scan_FarDet_90 = GetContour(static_cast<TH2 *>(Scan_d_FarDet), 4.61);
-    dir->WriteTObject(&Scan_FarDet_90, "Scan_d_FarDet_90");
+  if (fit_nuisance) {
+    dir->WriteTObject(Scan_nofit, "Chi2_Scan_nofit");
   }
 
-  dir->WriteTObject(PRISMPredEvRateMatchNom_h, "PRISMPredEvRateMatchTrueOsc");
-  dir->WriteTObject(FarDetNom_h, "FarDetTrueOsc");
-  dir->WriteTObject(FarDetData_h, "FarDetData");
+  dir->WriteTObject(Scan, "Chi2_Scan");
+  dir->WriteTObject(Scan_d, "Delta_Chi2_Scan");
 
-  PRISMPredEvRateMatch_h_min->SetDirectory(0);
-  FarDet_h_min->SetDirectory(0);
-  Scan_PRISM->SetDirectory(0);
-  Scan_d_PRISM->SetDirectory(0);
-  Scan_FarDet->SetDirectory(0);
-  Scan_d_FarDet->SetDirectory(0);
-  PRISMPredEvRateMatchNom_h->SetDirectory(0);
-  FarDetNom_h->SetDirectory(0);
-  FarDetData_h->SetDirectory(0);
+  Scan->Scale(1.0 / double(NBins));
+  Scan_d->Scale(1.0 / double(NBins));
+
+  Scan->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
+  Scan_d->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
+
+  dir->WriteTObject(Scan, "redChi2_Scan");
+  dir->WriteTObject(Scan_d, "Delta_redChi2_Scan");
+
+  if (nparams == 2) {
+    TGraph Scan_68 = GetContour(static_cast<TH2 *>(Scan_d), 2.3);
+    dir->WriteTObject(&Scan_68, "Scan_d_68");
+    TGraph Scan_90 = GetContour(static_cast<TH2 *>(Scan_d), 4.61);
+    dir->WriteTObject(&Scan_90, "Scan_d_90");
+
+    std::cout << xparam_name << ": " << GetCalcValue(true_calc, xparam_name)
+              << ", " << yparam_name << ": "
+              << GetCalcValue(true_calc, yparam_name) << std::endl;
+    TMarker true_marker(GetCalcValue(true_calc, xparam_name),
+                        GetCalcValue(true_calc, yparam_name), 20);
+    true_marker.SetMarkerColor(kBlack);
+    true_marker.SetMarkerSize(1);
+
+    dir->WriteTObject(&true_marker, "TruePosition");
+
+    TMarker bf_marker(min_paramvals.first, min_paramvals.second, 20);
+    bf_marker.SetMarkerColor(kBlack);
+    bf_marker.SetMarkerSize(1);
+
+    dir->WriteTObject(&bf_marker, "best_fit_marker");
+  } else {
+    double scan_min = Scan->GetMinimum() * double(NBins);
+    double scan_max = Scan->GetMaximum() * double(NBins);
+    TArrow true_arrow(GetCalcValue(true_calc, xparam_name), scan_max * 0.2,
+                      GetCalcValue(true_calc, xparam_name), scan_min, 0.025,
+                      "|>");
+    dir->WriteTObject(&true_arrow, "true_arrow");
+
+    TArrow best_fit_arrow(min_paramvals.first, scan_max * 0.2,
+                          min_paramvals.first, scan_min, 0.025, "|>");
+    dir->WriteTObject(&best_fit_arrow, "best_fit_arrow");
+  }
+
+  ch_it = 0;
+  for (auto const ch : Channels) {
+    DataHist[ch_it]->SetDirectory(nullptr);
+    InputDataHist[ch_it]->SetDirectory(nullptr);
+    MinHist[ch_it]->SetDirectory(nullptr);
+    NomHist[ch_it]->SetDirectory(nullptr);
+    ch_it++;
+  }
+  Scan->SetDirectory(nullptr);
+  Scan_d->SetDirectory(nullptr);
+  Scan_nofit->SetDirectory(nullptr);
 
   f.Write();
 }
@@ -394,9 +519,127 @@ int main(int argc, char const *argv[]) {
 
   if (argc != 2) {
     std::cout << "[ERROR]: Expected to be passed the location of a single "
-                 "configuration FHiCL file."
-              << std::endl;
+                 "configuration FHiCL file. Run "
+              << argv[0] << " --help for an example." << std::endl;
     return 1;
+  }
+
+  if ((std::string(argv[1]) == "--help") || (std::string(argv[1]) == "-?")) {
+
+    std::cout << "[USAGE]: Runlike " << argv[0] << " <fhicl_config_file> "
+              << std::endl;
+    std::cout << "Example fhicl that can be customized: <MUST BE FILLED IN>"
+              << std::endl;
+
+    std::cout
+        << "OscPoints: [ \n"
+           "{\n"
+           "    ssth23: 0.45\n"
+           "    dmsq32: 2.525e-3\n"
+           "},\n"
+           "# ... Other true oscillation hypotheses/asimov sets\n"
+           "]\n"
+           "\n"
+           "PRISMFitChannels: {\n"
+           "    Numu_disp: {\n"
+           "        ND: numu_numode\n"
+           "        FD: numu_numode\n"
+           "    }\n"
+           "    Numubar_disp: {\n"
+           "        ND: numubar_nubarmode\n"
+           "        FD: numubar_nubarmode\n"
+           "    }\n"
+           "    Nue_app: {\n"
+           "        ND: numu_numode\n"
+           "        FD: nue_numode\n"
+           "    }\n"
+           "    Nuebar_app: {\n"
+           "        ND: numubar_nubarmode\n"
+           "        FD: nuebar_nubarmode\n"
+           "    }\n"
+           "    DispJoint:[\n"
+           "        @local::PRISMFitChannels.Numu_disp,\n"
+           "        @local::PRISMFitChannels.Numubar_disp,\n"
+           "    ]\n"
+           "    AppJoint:[\n"
+           "        @local::PRISMFitChannels.Nue_app,\n"
+           "        @local::PRISMFitChannels.Nuebar_app,\n"
+           "    ]\n"
+           "    NuModeJoint:[\n"
+           "        @local::PRISMFitChannels.Numu_disp,\n"
+           "        @local::PRISMFitChannels.Nue_app,\n"
+           "    ]\n"
+           "    NuBarModeJoint:[\n"
+           "        @local::PRISMFitChannels.Numubar_disp,\n"
+           "        @local::PRISMFitChannels.Nuebar_app,\n"
+           "    ]\n"
+           "    FourFlavor: [\n"
+           "        @sequence::PRISMFitChannels.NuModeJoint,\n"
+           "        @sequence::PRISMFitChannels.NuBarModeJoint,\n"
+           "    ]\n"
+           "}\n"
+           "scans:[ \n"
+           "  {\n"
+           "    state_file: <path to state file>\n"
+           "    output_file: [PRISMScans.root, UPDATE]\n"
+           "    output_dir: ssth23_protonFD_EProxy\n"
+           "    projection_name: EProxy\n"
+           "\n"
+           "    true_osc: @local::OscPoints[0]\n"
+           "    POT_years: 3.5\n"
+           "\n"
+           "    GOF: {\n"
+           "      use_PRISM: true # Whether to use PRISM or standard FD-only "
+           "fit\n"
+           "      use_ND_stats: true # Whether to include ND stats errors in "
+           "the GOF\n"
+           "      fit_nuisance: false # Whether to fit NUISANCE parameters\n"
+           "      poisson_throw: true # Whether to poisson fluctuate the "
+           "data.\n"
+           "\n"
+           "      # Parameters used in the scan get fixed automatically\n"
+           "      # Other possible: th13 dmsq21 ssth12 rho\n"
+           "      free_osc_params: [dmsq32, ssth23, deltapi] \n"
+           "      free_syst_params: [MACCQE, MACCRES]"
+           "\n"
+           "      energy_limits: {\n"
+           "        NumuDisp: [0.5, 8]\n"
+           "        NueApp: [0.5, 8]\n"
+           "        NumuBarDisp: [0.5, 8]\n"
+           "        NueBarApp: [0.5, 8]\n"
+           "      }\n"
+           "    }\n"
+           "\n"
+           "    PRISM: {\n"
+           "      is_fake_spec_run: true # If the PRISM state includes a "
+           "special horn run\n"
+           "      reg_factor: 2E-15 # Regularization factor\n"
+           "      energy_range: [0.5, 6] # Energy range to include in inear "
+           "combination determination\n"
+           "    }\n"
+           "\n"
+           "    scan_params: [\n"
+           "      {\n"
+           "          name: ssth23\n"
+           "          # [nsteps, min, max ]\n"
+           "          scan_steps:  [75, 0.4, 0.7]\n"
+           "      },\n"
+           "      # Can have one or two parameters in this list.\n"
+           "      #{\n"
+           "      #    name: dmsq32\n"
+           "      #    scan_steps:  [20, 2E-3, 3E-3]\n"
+           "      #}\n"
+           "    ]\n"
+           "\n"
+           "    samples: @local::PRISMFitChannels.Numu_disp\n"
+           "  },\n"
+           "]\n"
+           "# This makes the first defined scan overwrite the previous output "
+           "file.\n"
+           "scans[0].output_file[1]: RECREATE\n"
+        << std::endl;
+
+    return 0;
   }
 
   fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(argv[1]);

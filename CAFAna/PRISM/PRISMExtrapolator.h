@@ -4,6 +4,8 @@
 
 #include "OscLib/func/IOscCalculator.h"
 
+#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
+
 #include <limits>
 #include <map>
 #include <memory>
@@ -16,6 +18,7 @@ class IOscCalculator;
 namespace ana {
 class Binning;
 class PredictionInterp;
+class Spectrum;
 } // namespace ana
 
 class TH1;
@@ -27,66 +30,58 @@ namespace ana {
 // Caching flux matcher.
 class PRISMExtrapolator {
 public:
-  enum class FluxPredSpecies {
-    kNumu_numode = 0,
-    kNue_numode = 1,
-    kNumubar_numode = 2,
-    kNuebar_numode = 3,
-
-    kNumu_nubarmode = 4,
-    kNue_nubarmode = 5,
-    kNumubar_nubarmode = 6,
-    kNuebar_nubarmode = 7,
-
-    kUnhandled = 8
-  };
-
   PRISMExtrapolator();
 
-  void InitializeFluxMatcher(std::string const &FluxFilePath,
-                             int OffAxisBinMerge = 1, int NDEnergyBinMerge = 1,
-                             int FDEnergyBinMerge = 1);
+  ///\brief Initialize the matcher with PredInterps that can
+  /// predict relevant event rates.
+  ///
+  /// Expect a std::map initializer list/literal like:
+  /// ```
+  ///   extrap->Initialize({
+  ///       {"ND_nu", ND_interp_FHC.get()},
+  ///       {"FD_nub", FD_interp_RHC.get()},
+  ///       //...
+  ///   });
+  /// ```
+  ///
+  /// Any can be left out, which will limit the
+  /// allowed combinations of PRISM::NuChan that can be passed to
+  /// GetMatchCoefficients
+  void Initialize(std::map<std::string, PredictionInterp const *> const &);
 
-  void InitializeEventRateMatcher(PredictionInterp const *NDEventRateInterp,
-                                  PredictionInterp const *FDEventRateInterp);
+  PredictionInterp const *
+  GetNDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
+  PredictionInterp const *
+  GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
-  double GetNDPOT() const;
-
-  /// Use to check whether the ND flux histograms are binned consistently with
-  /// the proposed ND analysis off axis binning. Will not merge bins, but will
-  /// ignore extra bins in the flux prediction
-  bool CheckOffAxisBinningConsistency(Binning const &) const;
+  double GetNDPOT(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
-  TH1 const *GetMatchCoefficientsEventRate(osc::IOscCalculator *osc,
-                                           double max_OffAxis_m,
-                                           SystShifts shift = kNoShift) const;
-  TH1 const *GetMatchCoefficientsFlux(
-      osc::IOscCalculator *osc, double max_OffAxis_m,
-      FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
-      FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode) const;
-  TH1 const *
-  GetMatchCoefficients(osc::IOscCalculator *osc, double max_OffAxis_m,
-                       FluxPredSpecies NDMode = FluxPredSpecies::kNumu_numode,
-                       FluxPredSpecies FDMode = FluxPredSpecies::kNumu_numode,
-                       SystShifts const &shift = kNoShift) const;
+  TH1 const *GetFarMatchCoefficients(osc::IOscCalculator *osc,
+                                     TH1 const *FDUnOscWeighted,
+                                     double max_OffAxis_m,
+                                     PRISM::BeamChan NDbc = PRISM::kNumu_Numode,
+                                     PRISM::BeamChan FDbc = PRISM::kNumu_Numode,
+                                     SystShifts shift = kNoShift) const;
+
+  TH1 const *GetGaussianCoefficients(double mean, double width,
+                                     double max_OffAxis_m,
+                                     PRISM::BeamChan NDbc = PRISM::kNumu_Numode,
+                                     SystShifts shift = kNoShift) const;
 
   TH1 const *GetLastResidual() const { return fLastResidual.get(); }
 
   void Write(TDirectory *);
 
-  void
-  SetTargetConditioning(double RegFactor = 1E-8,
-                        std::vector<double> CoeffRegVector = {},
-                        double LowECutoff = 0,
-                        double HighECutoff = std::numeric_limits<double>::max(),
-                        bool LowEGaussTail = false) {
+  void SetTargetConditioning(
+      double RegFactor = 1E-8, std::vector<double> CoeffRegVector = {},
+      double LowECutoff = 0,
+      double HighECutoff = std::numeric_limits<double>::max()) {
     fRegFactor = RegFactor;
     fENuMin = LowECutoff;
     fENuMax = HighECutoff;
     fCoeffRegVector = CoeffRegVector;
-    fLowEGaussFallOff = LowEGaussTail;
   }
 
 protected:
@@ -94,19 +89,21 @@ protected:
   std::vector<std::unique_ptr<TH1>> FDUnOscPrediction;
 
   mutable std::unique_ptr<TH1> fLastResidual;
+  mutable std::unique_ptr<TH1> fLastGaussResidual;
 
-  PredictionInterp const *fFDEventRateInterp;
-  PredictionInterp const *fNDEventRateInterp;
+  PredictionInterp const *fNDEventRateInterp_nu;
+  PredictionInterp const *fNDEventRateInterp_nub;
 
-  bool fMatchEventRates;
+  PredictionInterp const *fFDEventRateInterp_nu;
+  PredictionInterp const *fFDEventRateInterp_nub;
 
   double fRegFactor;
   double fENuMin;
   double fENuMax;
   mutable std::vector<double> fCoeffRegVector;
-  bool fLowEGaussFallOff;
 
-  mutable std::map<std::string, std::unique_ptr<TH1>> fMatchCache;
+  mutable std::unique_ptr<TH1> fLastMatch;
+  mutable std::unique_ptr<TH1> fLastGaussMatch;
 
   bool fStoreDebugMatches;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;

@@ -9,9 +9,9 @@
 #include "fhiclcpp/make_ParameterSet.h"
 
 using namespace ana;
+using namespace PRISM;
 
 std::map<std::string, PRISMStateBlob> States;
-std::map<std::string, std::unique_ptr<PredictionInterp>> FarDetSelStates;
 
 void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
@@ -19,13 +19,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   std::vector<std::string> const &output_file =
       pred.get<std::vector<std::string>>("output_file");
   std::string const &output_dir = pred.get<std::string>("output_dir");
-  std::string const &varname =
-      pred.get<std::string>("projection_name");
-  bool isfhc = pred.get<bool>("isFHC", true);
+  std::string const &varname = pred.get<std::string>("projection_name");
 
   double reg = pred.get<double>("reg_factor");
   std::array<double, 2> fit_range =
       pred.get<std::array<double, 2>>("fit_range");
+
+  std::pair<double, double> gauss_flux =
+      pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
+
+  auto NDFlavorSelection = GetBeamChan(
+      pred.get<std::string>("flavor_selection.ND", "numu_numode"), true);
+  auto FDFlavorSelection = GetBeamChan(
+      pred.get<std::string>("flavor_selection.FD", "numu_numode"), false);
 
   (void)GetListOfSysts();
 
@@ -36,11 +42,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     TFile fs(state_file.c_str());
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname, !isfhc);
-    FarDetSelStates[state_file] = PredictionInterp::LoadFrom(
-        fs.GetDirectory((std::string("FarDetSel_") + varname +
-                         std::string(!isfhc ? "_rhc" : "_fhc"))
-                            .c_str()));
+    if (!fs.IsOpen()) {
+      std::cout << "[ERROR]: Cannot open " << state_file << " for reading. "
+                << std::endl;
+      abort();
+    }
+    States[state_file] = LoadPRISMState(fs, varname);
     std::cout << "Done!" << std::endl;
     fs.Close();
   }
@@ -63,8 +70,20 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   int id = 0;
   PRISMExtrapolator fluxmatcher;
 
-  fluxmatcher.InitializeEventRateMatcher(state.NDMatchInterp.get(),
-                                         state.FDMatchInterp.get());
+  // PRISM
+  // MatchPredInterps
+  // SelPredInterps
+  // FarDetPredInterps
+  // FarDetData_nonswap
+  // FarDetData_nueswap
+
+  fluxmatcher.Initialize({
+      {"ND_nu", state.MatchPredInterps[kND_nu].get()},
+      {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+      {"ND_nub", state.MatchPredInterps[kND_nub].get()},
+      {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+  });
+
   fluxmatcher.SetStoreDebugMatches();
   if (pred.get<bool>("is_fake_spec_run", false)) {
     fluxmatcher.SetTargetConditioning(reg,
@@ -78,90 +97,204 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 
-  //state.PRISM->SetNCCorrection();
-  //state.PRISM->SetWSBCorrection();
-  //state.PRISM->SetNueCorrection();
-
-  Spectrum PRISMPredEvRateMatchSpec = state.PRISM->PredictSyst(calc, shift);
+  bool do_gauss = gauss_flux.first != 0;
 
   double pot = pot_fd * (1.0 / 3.5);
 
-  TH1 *PRISMPredEvRateMatch_h = PRISMPredEvRateMatchSpec.ToTHX(pot);
+  auto const &comps =
+      do_gauss
+          ? state.PRISM->PredictGaussianFlux(
+                gauss_flux.first, gauss_flux.second, shift, NDFlavorSelection)
+
+          : state.PRISM->PredictPRISMComponents(calc, shift, NDFlavorSelection,
+                                                FDFlavorSelection);
+
+  TH1 *PRISMPredEvRateMatch_h =
+      comps.at(PredictionPRISM::kPRISMPred).ToTHX(pot);
 
   PRISMPredEvRateMatch_h->Scale(1, "width");
+  double gauss_sf = 1;
+  if (do_gauss) {
+    gauss_sf = (1.0 / (gauss_flux.second * sqrt(2 * M_PI) *
+                       PRISMPredEvRateMatch_h->GetMaximum()));
+    PRISMPredEvRateMatch_h->Scale(gauss_sf);
+  }
   PRISMPredEvRateMatch_h->SetTitle(";E_{#nu} (GeV);Pred. FD EvRate per 1 GeV");
   PRISMPredEvRateMatch_h->Write("PRISMPredEvRateMatch");
 
-  for (auto &compspec : state.PRISM->PredictPRISMComponents(calc, shift)) {
+  for (auto const &compspec : comps) {
     TH1 *comp = compspec.second.ToTHX(pot);
     comp->Scale(1, "width");
+    if (do_gauss) {
+      comp->Scale(gauss_sf);
+    }
     comp->SetTitle(";E_{#nu} (GeV);Pred. FD Contribution per 1 GeV");
     comp->Write((std::string("PRISMPredEvRateMatch_") +
                  PredictionPRISM::GetComponentString(compspec.first))
                     .c_str());
   }
 
-  state.PRISM->fbla->Write("FDUnOsc2DSpec");
-
   fluxmatcher.Write(dir->mkdir("PRISMEventRateMatches"));
 
-  TH1 *FarDet_h = state.FarDet->PredictSyst(calc, shift).ToTHX(pot);
+  size_t NDConfig_enum = GetConfigFromNuChan(NDFlavorSelection, true);
+  size_t FDConfig_enum = GetConfigFromNuChan(FDFlavorSelection, false);
+  size_t FDfdConfig_enum = GetFDConfigFromNuChan(FDFlavorSelection);
 
-  for (int bin_it = 0; bin_it < FarDet_h->GetXaxis()->GetNbins(); ++bin_it) {
-    FarDet_h->SetBinError(bin_it + 1,
-                          sqrt(FarDet_h->GetBinContent(bin_it + 1)));
+  // Sort out the flavors and signs
+  auto NDSigFlavor = (NDFlavorSelection.chan & NuChan::kNumuNumuBar)
+                         ? Flavors::kAllNuMu
+                         : Flavors::kAllNuE;
+  auto NDSigSign = ((NDFlavorSelection.chan & NuChan::kNumu) ||
+                    (NDFlavorSelection.chan & NuChan::kNue))
+                       ? Sign::kNu
+                       : Sign::kAntiNu;
+  auto NDWrongSign = (NDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
+  auto NDWrongFlavor =
+      (NDSigFlavor == Flavors::kAllNuMu) ? Flavors::kAllNuE : Flavors::kAllNuMu;
+
+  auto FDSigFlavor = (FDFlavorSelection.chan & NuChan::kNumuNumuBar)
+                         ? Flavors::kNuMuToNuMu
+                         : Flavors::kNuMuToNuE;
+  auto FDSigSign = ((FDFlavorSelection.chan & NuChan::kNumu) ||
+                    (FDFlavorSelection.chan & NuChan::kNue))
+                       ? Sign::kNu
+                       : Sign::kAntiNu;
+
+  auto FDWrongSign = (FDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
+  auto FDWrongFlavor = (FDSigFlavor == Flavors::kNuMuToNuMu)
+                           ? Flavors::kAllNuE
+                           : Flavors::kAllNuMu;
+  auto FDIntrinsicFlavor = (FDSigFlavor == Flavors::kNuMuToNuMu)
+                               ? Flavors::kNuEToNuMu
+                               : Flavors::kNuEToNuE;
+  TH1 *NearDet_predict_h =
+      state.SelPredInterps[NDConfig_enum]->PredictSyst(calc, shift).ToTHX(pot);
+
+  NearDet_predict_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  NearDet_predict_h->Write("NearDet_Sel_predict");
+
+  std::unique_ptr<TH2> ND_NC_h(
+      state.SelPredInterps[NDConfig_enum]
+          ->PredictComponentSyst(calc, shift, Flavors::kAll, Current::kNC,
+                                 Sign::kBoth)
+          .ToTH2(pot));
+  ND_NC_h->Scale(1, "Width");
+  ND_NC_h->Write("NearDet_Sel_NCBkg");
+  ND_NC_h->SetDirectory(nullptr);
+
+  std::unique_ptr<TH2> ND_WLB_h(
+      state.SelPredInterps[NDConfig_enum]
+          ->PredictComponentSyst(calc, shift, NDWrongFlavor, Current::kCC,
+                                 Sign::kBoth)
+          .ToTH2(pot));
+  ND_WLB_h->Scale(1, "Width");
+  ND_WLB_h->Write("NearDet_Sel_WLBkg");
+  ND_WLB_h->SetDirectory(nullptr);
+
+  std::unique_ptr<TH2> ND_WSB_h(
+      state.SelPredInterps[NDConfig_enum]
+          ->PredictComponentSyst(calc, shift, NDSigFlavor, Current::kCC,
+                                 NDWrongSign)
+          .ToTH2(pot));
+  ND_WSB_h->Scale(1, "Width");
+  ND_WSB_h->Write("NearDet_Sel_WSBkg");
+  ND_WSB_h->SetDirectory(nullptr);
+
+  if (do_gauss) {
+    return;
   }
-  FarDet_h->Scale(1, "width");
 
-  FarDet_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-  FarDet_h->Write("FarDet");
+  std::unique_ptr<TH1> FD_NC_h(
+      state.SelPredInterps[FDConfig_enum]
+          ->PredictComponentSyst(calc, shift, Flavors::kAll, Current::kNC,
+                                 Sign::kBoth)
+          .ToTH1(pot));
+  FD_NC_h->Scale(1, "Width");
+  FD_NC_h->Write("FarDet_Sel_NCBkg");
+  FD_NC_h->SetDirectory(nullptr);
 
-  int disp_pid = isfhc ? 14 : -14;
-  TH1 *FarDetData_h =
-      state.FarDetData->Oscillated(calc, disp_pid, disp_pid).ToTHX(pot);
+  std::unique_ptr<TH1> FD_WLB_h(
+      state.SelPredInterps[FDConfig_enum]
+          ->PredictComponentSyst(calc, shift, FDWrongFlavor, Current::kCC,
+                                 Sign::kBoth)
+          .ToTH1(pot));
+  FD_WLB_h->Scale(1, "Width");
+  FD_WLB_h->Write("FarDet_Sel_WLBkg");
+  FD_WLB_h->SetDirectory(nullptr);
 
-  for (int bin_it = 0; bin_it < FarDetData_h->GetXaxis()->GetNbins();
+  std::unique_ptr<TH1> FD_WSB_h(
+      state.SelPredInterps[FDConfig_enum]
+          ->PredictComponentSyst(calc, shift, FDSigFlavor, Current::kCC,
+                                 FDWrongSign)
+          .ToTH1(pot));
+  FD_WSB_h->Scale(1, "Width");
+  FD_WSB_h->Write("FarDet_Sel_WSBkg");
+  FD_WSB_h->SetDirectory(nullptr);
+
+  std::unique_ptr<TH1> FD_IntrinsicB_h(
+      state.SelPredInterps[FDConfig_enum]
+          ->PredictComponentSyst(calc, shift, FDIntrinsicFlavor, Current::kCC,
+                                 FDSigSign)
+          .ToTH1(pot));
+  FD_IntrinsicB_h->Scale(1, "Width");
+  FD_IntrinsicB_h->Write("FarDet_Sel_IntrinsicBkg");
+  FD_IntrinsicB_h->SetDirectory(nullptr);
+
+  std::cout << "Config: " << FDConfig_enum
+            << " FDfdConfig_enum: " << FDfdConfig_enum << std::endl;
+
+  TH1 *FarDet_predict_h = state.FarDetPredInterps[FDfdConfig_enum]
+                              ->PredictSyst(calc, shift)
+                              .ToTHX(pot);
+
+  for (int bin_it = 0; bin_it < FarDet_predict_h->GetXaxis()->GetNbins();
        ++bin_it) {
-    FarDetData_h->SetBinError(bin_it + 1,
-                              sqrt(FarDetData_h->GetBinContent(bin_it + 1)));
+    FarDet_predict_h->SetBinError(
+        bin_it + 1, sqrt(FarDet_predict_h->GetBinContent(bin_it + 1)));
   }
-  FarDetData_h->Scale(1, "width");
+  FarDet_predict_h->Scale(1, "width");
 
-  FarDetData_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-  FarDetData_h->Write("FarDetData");
+  FarDet_predict_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  FarDet_predict_h->Write("FarDet_predict");
 
-  if (FarDetSelStates[state_file]) {
-    TH1 *FarDetSelNC_h =
-        FarDetSelStates[state_file]
-            ->PredictComponentSyst(calc, shift, ana::Flavors::kAll,
-                                   ana::Current::kNC, ana::Sign::kBoth)
-            .ToTHX(pot);
-    TH1 *FarDetSelWSB_h =
-        FarDetSelStates[state_file]
-            ->PredictComponentSyst(calc, shift, ana::Flavors::kAllNuMu,
-                                   ana::Current::kCC, ana::Sign::kAntiNu)
-            .ToTHX(pot);
-    FarDetSelNC_h->Scale(1, "width");
-    FarDetSelNC_h->Write("FarDetSel_NC");
-    FarDetSelWSB_h->Scale(1, "width");
-    FarDetSelWSB_h->Write("FarDetSel_WSB");
+  int osc_from = FluxSpeciesPDG(NDFlavorSelection.chan);
+  int osc_to = FluxSpeciesPDG(FDFlavorSelection.chan);
+
+  TH1 *FarDetData_nonswap_h = state.FarDetData_nonswap[FDfdConfig_enum]
+                                  ->Oscillated(calc, osc_from, osc_to)
+                                  .ToTHX(pot);
+
+  for (int bin_it = 0; bin_it < FarDetData_nonswap_h->GetXaxis()->GetNbins();
+       ++bin_it) {
+    FarDetData_nonswap_h->SetBinError(
+        bin_it + 1, sqrt(FarDetData_nonswap_h->GetBinContent(bin_it + 1)));
   }
+  FarDetData_nonswap_h->Scale(1, "width");
 
-  static osc::NoOscillations noosc;
+  FarDetData_nonswap_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+  FarDetData_nonswap_h->Write("FarDetData_nonswap");
 
-  TH1 *FarDet_unosc_h = state.FarDet->PredictSyst(&noosc, shift).ToTHX(pot);
-  FarDet_unosc_h->Scale(1, "width");
+  std::cout << "FDConfig_enum: " << FDConfig_enum
+            << ", nueswap: " << GetConfigNueSwap(FDConfig_enum) << ", Have? "
+            << state.Have(GetConfigNueSwap(FDConfig_enum)) << std::endl;
 
-  FarDet_unosc_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
-  FarDet_unosc_h->Write("FarDet_unosc");
+  if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
+    TH1 *FarDetData_nueswap_h = state.FarDetData_nueswap[FDfdConfig_enum]
+                                    ->Oscillated(calc, osc_from, osc_to)
+                                    .ToTHX(pot);
 
-  TH1 *NearDet_noshift_h = state.NDMatchInterp->Predict(calc).ToTHX(pot);
-  NearDet_noshift_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
-  NearDet_noshift_h->Write("NearDet_noshift");
+    for (int bin_it = 0; bin_it < FarDetData_nueswap_h->GetXaxis()->GetNbins();
+         ++bin_it) {
+      FarDetData_nueswap_h->SetBinError(
+          bin_it + 1, sqrt(FarDetData_nueswap_h->GetBinContent(bin_it + 1)));
+    }
+    FarDetData_nueswap_h->Scale(1, "width");
 
-  TH1 *NearDet_h = state.NDMatchInterp->PredictSyst(calc, fluxshift).ToTHX(pot);
-  NearDet_h->SetTitle(";E_{#nu} (GeV);OffAxis;ND EvRate");
-  NearDet_h->Write("NearDet");
+    FarDetData_nueswap_h->SetTitle(";E_{#nu} (GeV);FD EvRate");
+    FarDetData_nueswap_h->Write("FarDetData_nueswap");
+    FarDetData_nueswap_h->Add(FarDetData_nonswap_h);
+    FarDetData_nueswap_h->Write("FarDetData_total");
+  }
 
   f.Write();
 }
