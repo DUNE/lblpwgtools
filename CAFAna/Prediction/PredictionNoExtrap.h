@@ -64,4 +64,5 @@ protected:
   Cut fCut;
   Var fWei;
 };
+
 } // namespace ana

@@ -64,6 +64,7 @@ set(SYST_INPUT_ROOT_FILES
   ND_eff_syst.root
   det_sys_cov.root
   det_sys_cov_v3binning.root
+  OnAxis4m280kAWeights.root
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)

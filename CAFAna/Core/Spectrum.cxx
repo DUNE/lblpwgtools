@@ -469,8 +469,9 @@ void Spectrum::FillFromHistogram(TH1 const *h) {
   case 3: {
     if (h->GetZaxis()->GetNbins() != fBins[2].NBins()) {
       std::cout << "Error: In Spectrum::FillFromHistogram Z axis of external "
-                   "histogram does not match NBins of the third binning."
-                << std::endl;
+                   "histogram(dim: "
+                << h->GetDimension()
+                << ") does not match NBins of the third binning." << std::endl;
       abort();
     }
 #if defined(__GNUC__) and (__GNUC__ >= 7)
@@ -480,8 +481,9 @@ void Spectrum::FillFromHistogram(TH1 const *h) {
   case 2: {
     if (h->GetYaxis()->GetNbins() != fBins[1].NBins()) {
       std::cout << "Error: In Spectrum::FillFromHistogram X axis of external "
-                   "histogram does not match NBins of the first binning."
-                << std::endl;
+                   "histogram(dim: "
+                << h->GetDimension()
+                << ") does not match NBins of the first binning." << std::endl;
       abort();
     }
 #if defined(__GNUC__) and (__GNUC__ >= 7)
@@ -491,7 +493,14 @@ void Spectrum::FillFromHistogram(TH1 const *h) {
   case 1: {
     if (h->GetXaxis()->GetNbins() != fBins[0].NBins()) {
       std::cout << "Error: In Spectrum::FillFromHistogram X axis of external "
-                   "histogram does not match NBins of the first binning."
+                   "histogram(dim: "
+                << h->GetDimension()
+                << ") does not match NBins of the first binning (" << fLabels[0]
+                << ", with " << fBins[0].NBins() << " bins)." << std::endl;
+      std::cout << "\t" << h->GetXaxis()->GetTitle() << ", with "
+                << h->GetXaxis()->GetNbins() << " bins from "
+                << h->GetXaxis()->GetBinLowEdge(1) << " to "
+                << h->GetXaxis()->GetBinUpEdge(h->GetXaxis()->GetNbins())
                 << std::endl;
       abort();
     }

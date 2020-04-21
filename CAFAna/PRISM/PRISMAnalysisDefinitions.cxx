@@ -147,36 +147,116 @@ const Var kRunPlanWeight({}, [](const caf::StandardRecord *sr) -> double {
   return sr->dune.perPOTWeight * sr->dune.perFileWeight;
 });
 
-Cut GetNDSignalCut(bool UseOnAxisSelection) {
+Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
+
   return UseOnAxisSelection
-             ? (kPassND_FHC_NUMU && kIsTrueFV && kIsOutOfTheDesert)
-             : (kIsNumuCC && !kIsAntiNu && kIsTrueFV && kIsOutOfTheDesert);
+             ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
+                kIsOutOfTheDesert)
+             : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+                kIsOutOfTheDesert);
 }
-Cut GetFDSignalCut(bool UseOnAxisSelection) {
-  return UseOnAxisSelection ? (kPassFD_CVN_NUMU && kIsTrueFV)
-                            : (kIsNumuCC && !kIsAntiNu && kIsTrueFV);
+Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
+  return UseOnAxisSelection
+             ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
+             : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
+                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV);
 }
 
-Var GetAnalysisWeighters(std::string const &eweight) {
+Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
   Var weight = Constant(1);
 
   if (eweight.find("CVXSec") != std::string::npos) {
     weight = weight * kCVXSecWeights;
   }
   if (eweight.find("NDEff") != std::string::npos) {
+    if (!isNuMode) {
+      std::cout << "ERROR: Do not have efficiency curves for RHC, please add "
+                   "them to PRISMAnalysisDefinitions.cxx or remove this weight"
+                << std::endl;
+      abort();
+    }
     weight = weight * kNDEff;
   }
   if (eweight.find("FDEff") != std::string::npos) {
+    if (!isNuMode) {
+      std::cout << "ERROR: Do not have efficiency curves for RHC, please add "
+                   "them to PRISMAnalysisDefinitions.cxx or remove this weight"
+                << std::endl;
+      abort();
+    }
     weight = weight * kFDEff;
   }
   return weight;
 }
 
-Var GetNDWeight(std::string const &eweight) {
-  return kRunPlanWeight * kMassCorrection * GetAnalysisWeighters(eweight);
+Var GetNDWeight(std::string const &eweight, bool isNuMode) {
+  return kRunPlanWeight * kMassCorrection *
+         GetAnalysisWeighters(eweight, isNuMode);
 }
-Var GetFDWeight(std::string const &eweight) {
-  return GetAnalysisWeighters(eweight);
+Var GetFDWeight(std::string const &eweight, bool isNuMode) {
+  return GetAnalysisWeighters(eweight, isNuMode);
+}
+
+static TH1 *numode_280kA, *nubarmode_280kA;
+
+const Var k280kAWeighter({}, [](const caf::StandardRecord *sr) -> double {
+      if (sr->dune.isFD || sr->dune.det_x || (sr->dune.vtx_x > 0)) {
+        return 1;
+      }
+      // Only want to weight 'signal' numu species.
+      if ((sr->dune.isFHC && (sr->dune.nuPDG != 14)) ||
+          (!sr->dune.isFHC && (sr->dune.nuPDG != -14))) {
+        return 1;
+      }
+
+      TH1 *whist = (sr->dune.isFHC ? numode_280kA : nubarmode_280kA);
+      return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+    });
+
+ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
+
+  if (!SRDescriptor.length()) {
+    return ana::Constant(1);
+  }
+
+  if (SRDescriptor == "OnAxis280kA") {
+    static bool first = true;
+    if (first) {
+
+      TDirectory *gdc = gDirectory;
+      TFile wf((ana::FindCAFAnaDir() + "/Systs/OnAxis4m280kAWeights.root").c_str());
+      wf.GetObject("ND_nu_HC280-HC293_ratio/LBNF_numu_flux", numode_280kA);
+      if (!numode_280kA) {
+        std::cout << "[ERROR]: Failed to read: "
+                     "\"ND_nu_HC280-HC293_ratio/LBNF_numu_flux\" from "
+                  << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
+                  << std::endl;
+        throw;
+      }
+      numode_280kA->SetDirectory(nullptr);
+
+      wf.GetObject("ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux",
+                   nubarmode_280kA);
+      if (!nubarmode_280kA) {
+        std::cout << "[ERROR]: Failed to read: "
+                     "\"ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux\" from "
+                  << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
+                  << std::endl;
+        throw;
+      }
+      nubarmode_280kA->SetDirectory(nullptr);
+      if (gdc) {
+        gdc->cd();
+      }
+      first = false;
+    }
+
+    return k280kAWeighter;
+  } else {
+    std::cout << "[ERROR]: Unknown special run type " << SRDescriptor
+              << std::endl;
+    abort();
+  }
 }
 
 } // namespace PRISM
