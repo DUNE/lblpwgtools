@@ -151,7 +151,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   auto freesysts = ana::GetListOfSysts(
       GOFps.get<std::vector<std::string>>("free_syst_params", {}));
 
-  for(auto & s: freesysts){
+  for (auto &s : freesysts) {
     std::cout << "\t" << s->ShortName() << " free." << std::endl;
   }
 
@@ -428,8 +428,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         if (fit_nuisance) {
           Scan_nofit->SetBinContent(stepx + 1, gof_scan[step]);
         }
-        step++;
       }
+      step++;
     }
   }
 
@@ -456,15 +456,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   dir->WriteTObject(Scan, "Chi2_Scan");
   dir->WriteTObject(Scan_d, "Delta_Chi2_Scan");
 
-  Scan->Scale(1.0 / double(NBins));
-  Scan_d->Scale(1.0 / double(NBins));
-
-  Scan->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
-  Scan_d->GetZaxis()->SetTitle("#Delta#Chi^{2}/NBins");
-
-  dir->WriteTObject(Scan, "redChi2_Scan");
-  dir->WriteTObject(Scan_d, "Delta_redChi2_Scan");
-
   if (nparams == 2) {
     TGraph Scan_68 = GetContour(static_cast<TH2 *>(Scan_d), 2.3);
     dir->WriteTObject(&Scan_68, "Scan_d_68");
@@ -487,8 +478,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     dir->WriteTObject(&bf_marker, "best_fit_marker");
   } else {
-    double scan_min = Scan->GetMinimum() * double(NBins);
-    double scan_max = Scan->GetMaximum() * double(NBins);
+    double scan_min = Scan->GetMinimum();
+    double scan_max = Scan->GetMaximum();
     TArrow true_arrow(GetCalcValue(true_calc, xparam_name), scan_max * 0.2,
                       GetCalcValue(true_calc, xparam_name), scan_min, 0.025,
                       "|>");
