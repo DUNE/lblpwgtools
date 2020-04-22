@@ -46,12 +46,12 @@ if [ -z "${CAFANA}" ]; then
   export CAFANA=@CMAKE_INSTALL_PREFIX@
 fi
 
-add_to_PATH "${CAFANA}/bin"
-add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
-
 if [ "@USED_UPS@" == "1" ]; then
   source ${CAFANA}/ups_env_setup.sh
 fi
+
+add_to_PATH "${CAFANA}/bin"
+add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
 
 export BOOST_INC=@BOOST_INC@
 export BOOST_LIB=@BOOST_LIB@
