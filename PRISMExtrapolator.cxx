@@ -46,9 +46,8 @@ Sign::Sign_t GetSign(NuChan fps) {
 PRISMExtrapolator::PRISMExtrapolator()
     : fNDEventRateInterp_nu(nullptr), fNDEventRateInterp_nub(nullptr),
       fFDEventRateInterp_nu(nullptr), fFDEventRateInterp_nub(nullptr),
-      fRegFactor(0), fENuMin(0xdeadbeef),
-      fENuMax(0xdeadbeef), fCoeffRegVector{}, fLastMatch(nullptr),
-      fLastGaussMatch(nullptr), fStoreDebugMatches(false) {}
+      fLastMatch(nullptr), fLastGaussMatch(nullptr), fStoreDebugMatches(false) {
+}
 
 void PRISMExtrapolator::Initialize(
     std::map<std::string, PredictionInterp const *> const &preds) {
@@ -124,20 +123,32 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 
 TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalculator *osc, TH1 const *FDUnOscWeighted, double max_OffAxis_m,
-    BeamChan NDbc, BeamChan FDbc, SystShifts shift) const {
+    PRISM::MatchChan match_chan, SystShifts shift, double &soln_norm,
+    double &resid_norm) const {
 
   static osc::NoOscillations no;
 
   shift = GetFluxSystShifts(shift);
 
-  Sign::Sign_t sgn_nd = GetSign(NDbc.chan), sgn_fd = GetSign(FDbc.chan);
-  Flavors::Flavors_t flav_nd = GetFlavor(NDbc.chan);
-  Flavors::Flavors_t flav_fd = GetFlavor(FDbc.chan);
+  if (!fConditioning.count(match_chan)) {
+    std::cout
+        << "[ERROR]: No ND->FD matching conditioning set for this channel: "
+        << match_chan << std::endl;
+    abort();
+  }
 
-  PRISMOUT("GetFarMatchCoefficients: " << NDbc.mode << ", " << NDbc.chan << ", "
-                                       << FDbc.mode << ", " << FDbc.chan);
+  Conditioning const &cond = fConditioning.at(match_chan);
 
-  PredictionInterp const *NDEventRateInterp = GetNDPred(NDbc.mode);
+  Sign::Sign_t sgn_nd = GetSign(match_chan.from.chan),
+               sgn_fd = GetSign(match_chan.to.chan);
+  Flavors::Flavors_t flav_nd = GetFlavor(match_chan.from.chan);
+  Flavors::Flavors_t flav_fd = GetFlavor(match_chan.to.chan);
+
+  PRISMOUT("GetFarMatchCoefficients: "
+           << match_chan.from.mode << ", " << match_chan.from.chan << ", "
+           << match_chan.to.mode << ", " << match_chan.to.chan);
+
+  PredictionInterp const *NDEventRateInterp = GetNDPred(match_chan.from.mode);
 
   Spectrum NDOffAxis_spec = NDEventRateInterp->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
@@ -147,7 +158,7 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
 
   // Get the oscillated numu rate (either with app/disp probabiliy applied, but
   // always the nonswap so that any xsec ratios don't affect the coefficients.)
-  PredictionInterp const *FDEventRateInterp = GetFDPred(FDbc.mode);
+  PredictionInterp const *FDEventRateInterp = GetFDPred(match_chan.to.mode);
   std::unique_ptr<TH1> FDOsc(
       FDEventRateInterp
           ->PredictComponentSyst(osc, shift, flav_fd, Current::kCC, sgn_fd)
@@ -159,9 +170,9 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
   int NEBins = FDOsc->GetXaxis()->GetNbins();
 
   int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
-  if (fCoeffRegVector.size() < size_t(NCoeffs)) {
-    std::fill_n(std::back_inserter(fCoeffRegVector),
-                NCoeffs - fCoeffRegVector.size(), 1);
+  if (cond.CoeffRegVector.size() < size_t(NCoeffs)) {
+    std::fill_n(std::back_inserter(cond.CoeffRegVector),
+                NCoeffs - cond.CoeffRegVector.size(), 1);
   }
 
   std::vector<double> off_axis_bin_edges;
@@ -174,23 +185,24 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
   NDFluxMatrix.transposeInPlace();
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
 
-  if (fRegFactor) {
+  if (cond.RegFactor) {
     for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
-      // Penalize neighbouring coefficient difference by fCoeffRegVector[it]
-      RegMatrix(row_it, row_it) = fRegFactor;
-      RegMatrix(row_it, row_it + 1) = -fRegFactor * fCoeffRegVector[row_it];
+      // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
+      RegMatrix(row_it, row_it) = cond.RegFactor;
+      RegMatrix(row_it, row_it + 1) =
+          -cond.RegFactor * cond.CoeffRegVector[row_it];
     }
-    RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
+    RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor;
   }
 
   Eigen::VectorXd Target = GetEigenFlatVector(FDOsc.get());
 
-  int EBinLow = FDOsc->GetXaxis()->FindFixBin(fENuMin);
+  int EBinLow = FDOsc->GetXaxis()->FindFixBin(cond.ENuMin);
   int col_min = 0;
   if (EBinLow != 0) {
     col_min = EBinLow - 1;
   }
-  int EBinUp = FDOsc->GetXaxis()->FindFixBin(fENuMax);
+  int EBinUp = FDOsc->GetXaxis()->FindFixBin(cond.ENuMax);
   int col_max = NEBins - 1;
   if (EBinUp != NEBins) {
     col_max = EBinUp - 1;
@@ -223,6 +235,11 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
   fLastMatch->SetDirectory(nullptr);
   FillHistFromEigenVector(fLastMatch.get(), OffAxisWeights);
 
+  Eigen::MatrixXd reg_shape_matrix = RegMatrix / cond.RegFactor;
+
+  soln_norm = (reg_shape_matrix * OffAxisWeights).norm();
+  resid_norm = (P * (NDFluxMatrix * OffAxisWeights - Target)).norm();
+
   fLastResidual =
       std::unique_ptr<TH1>(static_cast<TH1 *>(FDOsc->Clone("LastResidual")));
   fLastResidual->SetDirectory(nullptr);
@@ -230,15 +247,17 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
 
   Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights;
 
-  for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
-       ++bin_it) {
-    double bc_uo = FDUnOscWeighted->GetBinContent(bin_it + 1);
-    double bc_o = FDOsc->GetBinContent(bin_it + 1);
-    double e = (bc_o - BestFit[bin_it]) / bc_uo;
-    if (!std::isnormal(e)) {
-      e = 0;
+  if (FDUnOscWeighted) {
+    for (int bin_it = 0; bin_it < fLastResidual->GetXaxis()->GetNbins();
+         ++bin_it) {
+      double bc_uo = FDUnOscWeighted->GetBinContent(bin_it + 1);
+      double bc_o = FDOsc->GetBinContent(bin_it + 1);
+      double e = (bc_o - BestFit[bin_it]) / bc_uo;
+      if (!std::isnormal(e)) {
+        e = 0;
+      }
+      fLastResidual->SetBinContent(bin_it + 1, e);
     }
-    fLastResidual->SetBinContent(bin_it + 1, e);
   }
 
   if (fStoreDebugMatches) {
@@ -284,6 +303,22 @@ TH1 const *PRISMExtrapolator::GetGaussianCoefficients(double mean, double width,
 
   assert(NDEventRateInterp);
 
+  MatchChan fake_match_chan{
+      NDbc,
+      (NDbc.mode == BeamMode::kNuMode ? kNumu_Numode : kNumuBar_NuBarmode)};
+
+  if (!fConditioning.count(fake_match_chan)) {
+    std::cout << "[ERROR]: No matching conditioning set for gaussian flux fits "
+                 "for channel: "
+              << NDbc
+              << " (N.B. The gaussian flux fits use the disappearance channel "
+                 "for the relevant beam mode)"
+              << std::endl;
+    abort();
+  }
+
+  Conditioning const &cond = fConditioning.at(fake_match_chan);
+
   static osc::NoOscillations no;
 
   Spectrum NDOffAxis_spec = NDEventRateInterp->PredictComponentSyst(
@@ -303,30 +338,31 @@ TH1 const *PRISMExtrapolator::GetGaussianCoefficients(double mean, double width,
   }
 
   int NCoeffs = NDOffAxis->GetYaxis()->FindFixBin(max_OffAxis_m);
-  if (fCoeffRegVector.size() < size_t(NCoeffs)) {
-    std::fill_n(std::back_inserter(fCoeffRegVector),
-                NCoeffs - fCoeffRegVector.size(), 1);
+  if (cond.CoeffRegVector.size() < size_t(NCoeffs)) {
+    std::fill_n(std::back_inserter(cond.CoeffRegVector),
+                NCoeffs - cond.CoeffRegVector.size(), 1);
   }
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
   NDFluxMatrix.transposeInPlace();
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
 
-  if (fRegFactor) {
+  if (cond.RegFactor) {
     for (int row_it = 0; row_it < (NCoeffs - 1); ++row_it) {
-      // Penalize neighbouring coefficient difference by fCoeffRegVector[it]
-      RegMatrix(row_it, row_it) = fRegFactor;
-      RegMatrix(row_it, row_it + 1) = -fRegFactor * fCoeffRegVector[row_it];
+      // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
+      RegMatrix(row_it, row_it) = cond.RegFactor;
+      RegMatrix(row_it, row_it + 1) =
+          -cond.RegFactor * cond.CoeffRegVector[row_it];
     }
-    RegMatrix(NCoeffs - 1, NCoeffs - 1) = fRegFactor;
+    RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor;
   }
 
-  int EBinLow = NDOffAxis->GetXaxis()->FindFixBin(fENuMin);
+  int EBinLow = NDOffAxis->GetXaxis()->FindFixBin(cond.ENuMin);
   int col_min = 0;
   if (EBinLow != 0) {
     col_min = EBinLow - 1;
   }
-  int EBinUp = NDOffAxis->GetXaxis()->FindFixBin(fENuMax);
+  int EBinUp = NDOffAxis->GetXaxis()->FindFixBin(cond.ENuMax);
   int col_max = NEBins - 1;
   if (EBinUp != NEBins) {
     col_max = EBinUp - 1;

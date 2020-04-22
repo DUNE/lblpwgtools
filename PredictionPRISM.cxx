@@ -408,14 +408,14 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalculator *calc,
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
 PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
-                                        SystShifts shift, BeamChan NDChannel,
-                                        BeamChan FDChannel) const {
+                                        SystShifts shift,
+                                        MatchChan match_chan) const {
 
-  bool WeHaveNDData = HaveNDData(NDChannel);
-  bool WeHaveNDPrediction = HaveNDPrediction(NDChannel);
-  bool WeHaveFDPrediction = HaveFDPrediction(FDChannel);
+  bool WeHaveNDData = HaveNDData(match_chan.from);
+  bool WeHaveNDPrediction = HaveNDPrediction(match_chan.from);
+  bool WeHaveFDPrediction = HaveFDPrediction(match_chan.to);
   bool WeHaveFDUnOscWeightedSigPrediction =
-      HaveFDUnOscWeightedSigPrediction(FDChannel);
+      HaveFDUnOscWeightedSigPrediction(match_chan.to);
 
   if (!WeHaveNDData || !WeHaveNDPrediction || !WeHaveFDPrediction ||
       !WeHaveFDUnOscWeightedSigPrediction || !fFluxMatcher) {
@@ -434,34 +434,35 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   DontAddDirectory guard;
 
-  auto &NDData = GetNDData(NDChannel);
-  auto &NDPrediction = GetNDPrediction(NDChannel);
-  auto &FDPrediction = GetFDPrediction(FDChannel);
+  auto &NDData = GetNDData(match_chan.from);
+  auto &NDPrediction = GetNDPrediction(match_chan.from);
+  auto &FDPrediction = GetFDPrediction(match_chan.to);
   auto &FDUnOscWeightedSigPrediction =
-      GetFDUnOscWeightedSigPrediction(FDChannel);
+      GetFDUnOscWeightedSigPrediction(match_chan.to);
 
   PRISMOUT("Making PRISM prediction for: \n\t("
-           << NDChannel.mode << ":" << NDChannel.chan << ") -> ("
-           << FDChannel.mode << ":" << FDChannel.chan << ")");
+           << match_chan.from.mode << ":" << match_chan.from.chan << ") -> ("
+           << match_chan.to.mode << ":" << match_chan.to.chan << ")");
 
   // Sort out the flavors and signs
-  auto NDSigFlavor = (NDChannel.chan & NuChan::kNumuNumuBar) ? Flavors::kAllNuMu
-                                                             : Flavors::kAllNuE;
-  auto NDSigSign =
-      ((NDChannel.chan & NuChan::kNumu) || (NDChannel.chan & NuChan::kNue))
-          ? Sign::kNu
-          : Sign::kAntiNu;
+  auto NDSigFlavor = (match_chan.from.chan & NuChan::kNumuNumuBar)
+                         ? Flavors::kAllNuMu
+                         : Flavors::kAllNuE;
+  auto NDSigSign = ((match_chan.from.chan & NuChan::kNumu) ||
+                    (match_chan.from.chan & NuChan::kNue))
+                       ? Sign::kNu
+                       : Sign::kAntiNu;
   auto NDWrongSign = (NDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
   auto NDWrongFlavor =
       (NDSigFlavor == Flavors::kAllNuMu) ? Flavors::kAllNuE : Flavors::kAllNuMu;
 
-  auto FDSigFlavor = (FDChannel.chan & NuChan::kNumuNumuBar)
+  auto FDSigFlavor = (match_chan.to.chan & NuChan::kNumuNumuBar)
                          ? Flavors::kNuMuToNuMu
                          : Flavors::kNuMuToNuE;
-  auto FDSigSign =
-      ((FDChannel.chan & NuChan::kNumu) || (FDChannel.chan & NuChan::kNue))
-          ? Sign::kNu
-          : Sign::kAntiNu;
+  auto FDSigSign = ((match_chan.to.chan & NuChan::kNumu) ||
+                    (match_chan.to.chan & NuChan::kNue))
+                       ? Sign::kNu
+                       : Sign::kAntiNu;
 
   auto FDWrongSign = (FDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
   auto FDWrongFlavor = (FDSigFlavor == Flavors::kNuMuToNuMu)
@@ -483,8 +484,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
 
-  RunPlan const &NDRunPlan =
-      (NDChannel.mode == PRISM::BeamMode::kNuMode) ? RunPlan_nu : RunPlan_nub;
+  RunPlan const &NDRunPlan = (match_chan.from.mode == PRISM::BeamMode::kNuMode)
+                                 ? RunPlan_nu
+                                 : RunPlan_nub;
 
   double NDPOT = NDRunPlan.GetPlanPOT();
   assert(NDPOT > 0);
@@ -496,13 +498,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Spectrum NDSig_spec = NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
       calc, shift, NDSigFlavor, Current::kCC, NDSigSign));
 
-
   std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
   NDSig_h->SetDirectory(nullptr);
   ReweightableSpectrum NDSig(ana::Constant(1), NDSig_h.get(),
                              fAnalysisAxis.GetLabels(),
                              fAnalysisAxis.GetBinnings(), NDPOT, 0);
-
 
   NDComps.emplace(kNDSig, NDSig);
   NDComps.emplace(kNDSig2D, NDSig);
@@ -570,8 +570,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   // Linear Combination
   TH1 const *LinearCombination = fFluxMatcher->GetFarMatchCoefficients(
-      calc, FDUnOscWeightedSig_TrueEnergy_h.get(), fMaxOffAxis, NDChannel,
-      FDChannel, shift);
+      calc, FDUnOscWeightedSig_TrueEnergy_h.get(), fMaxOffAxis, match_chan,
+      shift);
 
   std::unique_ptr<TH1> UnRunPlannedLinearCombination =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination));
