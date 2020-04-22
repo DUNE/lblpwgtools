@@ -1,5 +1,6 @@
 #include "CAFAna/Analysis/AnalysisVars.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Analysis/Exposures.h"
 
 #include "CAFAna/Core/HistCache.h"
 
@@ -139,8 +140,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::string const &varname =
       scan.get<std::string>("projection_name", "EProxy");
 
+  // default to 1 year
+  double POT = scan.get<double>("POT_years", 1) * POT120;
+
+  bool use_PRISM = scan.get<bool>("use_PRISM", true);
+
   auto GOFps = scan.get<fhicl::ParameterSet>("GOF", {});
-  bool use_PRISM = GOFps.get<bool>("use_PRISM", true);
   bool use_PRISM_ND_stats = GOFps.get<bool>("use_PRISM_ND_stats", true);
 
   bool fit_nuisance = GOFps.get<bool>("fit_nuisance", false);
@@ -161,8 +166,18 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::array<double, 2> PRISM_energy_range =
       PRISMps.get<std::array<double, 2>>("energy_range", {0, 4});
 
-  // default to 1 year
-  double POT = scan.get<double>("POT_years", 1) * (pot_fd / 3.5);
+  auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
+
+  RunPlan run_plan_nu, run_plan_nub;
+
+  if (RunPlans.has_key("numode")) {
+    run_plan_nu =
+        make_RunPlan(RunPlans.get<fhicl::ParameterSet>("numode"), POT);
+  }
+  if (RunPlans.has_key("nubmode")) {
+    run_plan_nub =
+        make_RunPlan(RunPlans.get<fhicl::ParameterSet>("nubmode"), POT);
+  }
 
   auto params = scan.get<std::vector<fhicl::ParameterSet>>("scan_params");
   TH1 *dchi2map = BuildDChi2Map(params);
@@ -237,6 +252,14 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
+  if (run_plan_nu.GetPlanPOT() > 0) {
+    state.PRISM->SetNDRunPlan(run_plan_nu, BeamMode::kNuMode);
+  }
+
+  if (run_plan_nub.GetPlanPOT() > 0) {
+    state.PRISM->SetNDRunPlan(run_plan_nub, BeamMode::kNuBarMode);
+  }
+
   std::map<std::string, MatchChan> Channels;
   if (scan.is_key_to_sequence("samples")) {
     for (auto const &fs :
@@ -277,6 +300,17 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
+
+    if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
+      std::cout << "[ERROR]: Have ND nu channel, but no numode run plan."
+                << std::endl;
+      abort();
+    }
+    if ((NDConfig_enum == kND_nub) && !run_plan_nub.GetPlanPOT()) {
+      std::cout << "[ERROR]: Have ND nubar channel, but no numode run plan."
+                << std::endl;
+      abort();
+    }
 
     DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
         calc, osc_from, osc_to));
@@ -501,6 +535,18 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   Scan->SetDirectory(nullptr);
   Scan_d->SetDirectory(nullptr);
   Scan_nofit->SetDirectory(nullptr);
+
+  if (run_plan_nu.GetPlanPOT() > 0) {
+    TH1D *run_plan_nu_h = run_plan_nu.AsTH1();
+    dir->WriteTObject(run_plan_nu_h, "run_plan_nu");
+    run_plan_nu_h->SetDirectory(nullptr);
+  }
+
+  if (run_plan_nub.GetPlanPOT() > 0) {
+    TH1D *run_plan_nub_h = run_plan_nub.AsTH1();
+    dir->WriteTObject(run_plan_nub_h, "run_plan_nub");
+    run_plan_nub_h->SetDirectory(nullptr);
+  }
 
   f.Write();
 }

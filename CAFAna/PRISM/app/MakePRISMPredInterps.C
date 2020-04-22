@@ -417,15 +417,15 @@ int main(int argc, char const *argv[]) {
   AnaWeightVars[kND_nub] =
       AnaWeightVars[kND_nub] * GetNDSpecialRun(SpecialRunDescriptor);
 
-  // Need to correct for the bin width
-  if (oabinningdescriptor == "OneNegXBin") {
+  // Need to correct for taking half the on-axis stop events.
+  if (SpecialRunDescriptor.size()) {
     auto specrunweight =
         ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
-          if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
+          if (sr->dune.det_x > 0) {
             return 1;
           }
-          // Correct for the bin width
-          return (0.5 / 2);
+          // All on axis events should be doubled about the x=0 symmetry axis.
+          return 2;
         });
     WeightVars[kND_nu] = WeightVars[kND_nu] * specrunweight;
     WeightVars[kND_nub] = WeightVars[kND_nub] * specrunweight;

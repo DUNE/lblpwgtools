@@ -54,8 +54,6 @@ public:
   PredictionInterp const *
   GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
-  double GetNDPOT(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
-
   void SetStoreDebugMatches() { fStoreDebugMatches = true; }
 
   TH1 const *GetFarMatchCoefficients(osc::IOscCalculator *osc,
