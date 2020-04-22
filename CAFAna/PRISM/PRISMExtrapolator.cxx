@@ -122,13 +122,6 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
   return rtn;
 }
 
-double PRISMExtrapolator::GetNDPOT(BeamMode bm) const {
-  static osc::NoOscillations noosc;
-  Spectrum NDSpect = GetNDPred(bm)->PredictComponentSyst(
-      &noosc, kNoShift, Flavors::kAllNuMu, Current::kCC, Sign::kBoth);
-  return NDSpect.POT();
-}
-
 TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalculator *osc, TH1 const *FDUnOscWeighted, double max_OffAxis_m,
     BeamChan NDbc, BeamChan FDbc, SystShifts shift) const {
@@ -145,10 +138,11 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
                                        << FDbc.mode << ", " << FDbc.chan);
 
   PredictionInterp const *NDEventRateInterp = GetNDPred(NDbc.mode);
-  std::unique_ptr<TH2> NDOffAxis(
-      NDEventRateInterp
-          ->PredictComponentSyst(&no, shift, flav_nd, Current::kCC, sgn_nd)
-          .ToTH2(FD_ND_FVRatio(50)));
+
+  Spectrum NDOffAxis_spec = NDEventRateInterp->PredictComponentSyst(
+      &no, shift, flav_nd, Current::kCC, sgn_nd);
+
+  std::unique_ptr<TH2> NDOffAxis(NDOffAxis_spec.ToTH2(1));
   NDOffAxis->SetDirectory(nullptr);
 
   // Get the oscillated numu rate (either with app/disp probabiliy applied, but
@@ -168,6 +162,12 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
   if (fCoeffRegVector.size() < size_t(NCoeffs)) {
     std::fill_n(std::back_inserter(fCoeffRegVector),
                 NCoeffs - fCoeffRegVector.size(), 1);
+  }
+
+  std::vector<double> off_axis_bin_edges;
+  off_axis_bin_edges.push_back(NDOffAxis->GetYaxis()->GetBinLowEdge(1));
+  for (int i = 0; i < NDOffAxis->GetYaxis()->GetNbins(); ++i) {
+    off_axis_bin_edges.push_back(NDOffAxis->GetYaxis()->GetBinUpEdge(i + 1));
   }
 
   Eigen::MatrixXd NDFluxMatrix = GetEigenMatrix(NDOffAxis.get(), NCoeffs);
@@ -218,8 +218,8 @@ TH1 const *PRISMExtrapolator::GetFarMatchCoefficients(
       NDFluxMatrix.transpose() * P * Target;
 
   fLastMatch = std::unique_ptr<TH1>(new TH1D("soln", ";OffAxisSlice;Weight",
-                                             OffAxisWeights.size(), 0,
-                                             OffAxisWeights.size()));
+                                             off_axis_bin_edges.size() - 1,
+                                             off_axis_bin_edges.data()));
   fLastMatch->SetDirectory(nullptr);
   FillHistFromEigenVector(fLastMatch.get(), OffAxisWeights);
 
@@ -286,10 +286,11 @@ TH1 const *PRISMExtrapolator::GetGaussianCoefficients(double mean, double width,
 
   static osc::NoOscillations no;
 
-  Spectrum NDSpect = NDEventRateInterp->PredictComponentSyst(
+  Spectrum NDOffAxis_spec = NDEventRateInterp->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
 
-  std::unique_ptr<TH2> NDOffAxis(NDSpect.ToTH2(FD_ND_FVRatio(50)));
+  std::unique_ptr<TH2> NDOffAxis(NDOffAxis_spec.ToTH2(1));
+  NDOffAxis->SetDirectory(nullptr);
 
   int NEBins = NDOffAxis->GetXaxis()->GetNbins();
 

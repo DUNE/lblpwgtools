@@ -60,7 +60,8 @@ using namespace ana;
 unsigned gRNGSeed = 0;
 
 // POT for 3.5 years
-const double pot_fd = 3.5 * POT120 * 40 / 1.13;
+const double pot_fd_FVMassFactor = (40 / 1.13);
+const double pot_fd = 3.5 * POT120 * pot_fd_FVMassFactor;
 const double pot_nd = 3.5 * POT120;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT
 // MW yr

@@ -26,6 +26,9 @@
 
 extern unsigned gRNGSeed;
 
+// Factor to account for simulated LAr mass/expected FV, pot_fd = pot_nd *
+// pot_fd_FVMassFactor
+extern double const pot_fd_FVMassFactor;
 // POT for 3.5 years
 extern double const pot_fd;
 extern double const pot_nd;
@@ -43,8 +46,8 @@ std::vector<std::string> SplitString(std::string input, char delim = ' ');
 
 // For ease of penalty terms...
 ana::IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
-                             std::string asimov_set = "0",
-                             bool modConstraint = false);
+                                  std::string asimov_set = "0",
+                                  bool modConstraint = false);
 
 std::vector<const ana::IFitVar *>
 GetOscVars(std::string oscVarString = "alloscvars", int hie = 0, int oct = 0);
@@ -192,17 +195,15 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              double pot_fd_rhc_numu = 0, double pot_nd_fhc = 0,
              double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
 
-double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
-                   ana::SystShifts fakeDataSyst, bool fakeDataStats,
-                   std::vector<const ana::IFitVar *> oscVars,
-                   std::vector<const ana::ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc,
-                   ana::SystShifts fitSyst,
-                   ana::SeedList oscSeeds = ana::SeedList(),
-                   ana::IChiSqExperiment *penaltyTerm = nullptr,
-                   ana::MinuitFitter::FitOpts fitStrategy = ana::MinuitFitter::kNormal,
-                   TDirectory *outDir = nullptr,
-                   FitTreeBlob *PostFitTreeBlob = nullptr,
-                   std::vector<seeded_spectra> *spectra = nullptr,
-                   ana::SystShifts &bf = ana::junkShifts);
+double RunFitPoint(
+    std::string stateFileName, std::string sampleString,
+    osc::IOscCalculatorAdjustable *fakeDataOsc, ana::SystShifts fakeDataSyst,
+    bool fakeDataStats, std::vector<const ana::IFitVar *> oscVars,
+    std::vector<const ana::ISyst *> systlist,
+    osc::IOscCalculatorAdjustable *fitOsc, ana::SystShifts fitSyst,
+    ana::SeedList oscSeeds = ana::SeedList(),
+    ana::IChiSqExperiment *penaltyTerm = nullptr,
+    ana::MinuitFitter::FitOpts fitStrategy = ana::MinuitFitter::kNormal,
+    TDirectory *outDir = nullptr, FitTreeBlob *PostFitTreeBlob = nullptr,
+    std::vector<seeded_spectra> *spectra = nullptr,
+    ana::SystShifts &bf = ana::junkShifts);
