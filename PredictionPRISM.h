@@ -12,6 +12,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
+#include "CAFAna/PRISM/RunPlan.h"
 
 #include "TH3.h"
 
@@ -37,61 +38,65 @@ public:
     kFDUnOscPred = 13,
     kFDOscPred = 14,
     kPRISMPred = 15,
-    kPRISMMC = 16
+    kPRISMMC = 16,
+    kNDFDWeightings = 17
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
     switch (pc) {
     case kNDData: {
-      return "kNDData";
+      return "NDData";
     }
     case kNDDataCorr: {
-      return "kNDDataCorr";
+      return "NDDataCorr";
     }
     case kNDDataCorr2D: {
-      return "kNDDataCorr2D";
+      return "NDDataCorr2D";
     }
     case kNDSig: {
-      return "kNDSigPred";
+      return "NDSigPred";
     }
     case kNDSig2D: {
-      return "kNDSigPred2D";
+      return "NDSigPred2D";
     }
     case kNDWSBkg: {
-      return "kNDWSBkg";
+      return "NDWSBkg";
     }
     case kNDNCBkg: {
-      return "kNDNCBkg";
+      return "NDNCBkg";
     }
     case kNDWrongLepBkg: {
-      return "kNDWrongLepBkg";
+      return "NDWrongLepBkg";
     }
     case kFDFluxCorr: {
-      return "kFDFluxCorr";
+      return "FDFluxCorr";
     }
     case kFDNCBkg: {
-      return "kFDNCBkg";
+      return "FDNCBkg";
     }
     case kFDWSBkg: {
-      return "kFDWSBkg";
+      return "FDWSBkg";
     }
     case kFDWrongLepBkg: {
-      return "kFDWrongLepBkg";
+      return "FDWrongLepBkg";
     }
     case kFDIntrinsicBkg: {
-      return "kFDIntrinsicBkg";
+      return "FDIntrinsicBkg";
     }
     case kFDUnOscPred: {
-      return "kFDUnOscPred";
+      return "FDUnOscPred";
     }
     case kFDOscPred: {
-      return "kFDOscPred";
+      return "FDOscPred";
     }
     case kPRISMPred: {
-      return "kPRISMPred";
+      return "PRISMPred";
     }
     case kPRISMMC: {
-      return "kPRISMMC";
+      return "PRISMMC";
+    }
+    case kNDFDWeightings: {
+      return "NDFDWeightings";
     }
     }
     return "";
@@ -130,6 +135,8 @@ public:
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
     fFluxMatcher = flux_matcher;
   }
+
+  void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
 
   HistAxis fOffPredictionAxis;
   HistAxis fFluxMatcherCorrectionAxes;
@@ -203,7 +210,14 @@ public:
                      std::vector<ana::ISyst const *> systlist = {},
                      PRISM::BeamChan FDChannel = PRISM::kNumu_Numode);
 
+  void SetNDRunPlan(ana::RunPlan const &rp,
+                    PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) {
+    ((bm == PRISM::BeamMode::kNuMode) ? RunPlan_nu : RunPlan_nub) = rp;
+  }
+
 protected:
+  ana::RunPlan RunPlan_nu, RunPlan_nub;
+
   // Contains 'measurements' that go into the PRISM extrapolation, should be
   // Spectra or ReweightableSpectra. Should not react to systematics.
   struct _Measurements {
@@ -302,6 +316,9 @@ protected:
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;
 
+  // Whether to use the MC stats errors or the standard error on the ND data
+  // sample to set the statistical errors.
+  bool fSetNDErrorsFromRate;
 }; // namespace ana
 
 } // namespace ana
