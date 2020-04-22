@@ -200,18 +200,18 @@ Var GetFDWeight(std::string const &eweight, bool isNuMode) {
 static TH1 *numode_280kA, *nubarmode_280kA;
 
 const Var k280kAWeighter({}, [](const caf::StandardRecord *sr) -> double {
-      if (sr->dune.isFD || sr->dune.det_x || (sr->dune.vtx_x > 0)) {
-        return 1;
-      }
-      // Only want to weight 'signal' numu species.
-      if ((sr->dune.isFHC && (sr->dune.nuPDG != 14)) ||
-          (!sr->dune.isFHC && (sr->dune.nuPDG != -14))) {
-        return 1;
-      }
+  if (sr->dune.isFD || sr->dune.det_x || (sr->dune.vtx_x > 0)) {
+    return 1;
+  }
+  // Only want to weight 'signal' numu species.
+  if ((sr->dune.isFHC && (sr->dune.nuPDG != 14)) ||
+      (!sr->dune.isFHC && (sr->dune.nuPDG != -14))) {
+    return 1;
+  }
 
-      TH1 *whist = (sr->dune.isFHC ? numode_280kA : nubarmode_280kA);
-      return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->dune.Ev));
-    });
+  TH1 *whist = (sr->dune.isFHC ? numode_280kA : nubarmode_280kA);
+  return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+});
 
 ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
 
@@ -224,7 +224,8 @@ ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
     if (first) {
 
       TDirectory *gdc = gDirectory;
-      TFile wf((ana::FindCAFAnaDir() + "/Systs/OnAxis4m280kAWeights.root").c_str());
+      TFile wf(
+          (ana::FindCAFAnaDir() + "/Systs/OnAxis4m280kAWeights.root").c_str());
       wf.GetObject("ND_nu_HC280-HC293_ratio/LBNF_numu_flux", numode_280kA);
       if (!numode_280kA) {
         std::cout << "[ERROR]: Failed to read: "
@@ -257,6 +258,93 @@ ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
               << std::endl;
     abort();
   }
+}
+
+bool operator&(NuChan const &l, NuChan const &r) {
+  return bool(static_cast<int>(l) & static_cast<int>(r));
+}
+
+std::ostream &operator<<(std::ostream &os, NuChan const &nc) {
+  switch (nc) {
+  case NuChan::kNumuApp: {
+    return os << "kNumuApp";
+  }
+  case NuChan::kNumuBarApp: {
+    return os << "kNumuBarApp";
+  }
+  case NuChan::kNueApp: {
+    return os << "kNueApp";
+  }
+  case NuChan::kNueBarApp: {
+    return os << "kNueBarApp";
+  }
+  case NuChan::kNumuIntrinsic: {
+    return os << "kNumuIntrinsic";
+  }
+  case NuChan::kNumuBarIntrinsic: {
+    return os << "kNumuBarIntrinsic";
+  }
+  case NuChan::kNueIntrinsic: {
+    return os << "kNueIntrinsic";
+  }
+  case NuChan::kNueBarIntrinsic: {
+    return os << "kNueBarIntrinsic";
+  }
+  case NuChan::kNumu: {
+    return os << "kNumu";
+  }
+  case NuChan::kNumuBar: {
+    return os << "kNumuBar";
+  }
+  case NuChan::kNue: {
+    return os << "kNue";
+  }
+  case NuChan::kNueBar: {
+    return os << "kNueBar";
+  }
+  case NuChan::kNumuNumuBar: {
+    return os << "kNumuNumuBar";
+  }
+  case NuChan::kNueNueBar: {
+    return os << "kNueNueBar";
+  }
+  }
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, BeamMode const &bm) {
+  switch (bm) {
+  case BeamMode::kNuMode: {
+    return os << "kNuMode";
+  }
+  case BeamMode::kNuBarMode: {
+    return os << "kNuBarMode";
+  }
+  }
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, BeamChan const &bm) {
+  return os << "{ " << bm.mode << ", " << bm.chan << " }"; 
+}
+bool operator==(BeamChan const &l, BeamChan const &r) {
+  return (l.mode == r.mode) && (l.chan == r.chan);
+}
+
+bool operator<(BeamChan const &l, BeamChan const &r) {
+  if (l.mode == r.mode) {
+    return l.chan < r.chan;
+  }
+  return l.mode < r.mode;
+}
+
+bool operator<(MatchChan const &l, MatchChan const &r) {
+  if (l.from == r.from) {
+    return l.to < r.to;
+  }
+  return l.from < r.from;
+}
+std::ostream &operator<<(std::ostream &os, MatchChan const &mc) {
+  return os << mc.from << " -> " << mc.to;
 }
 
 } // namespace PRISM

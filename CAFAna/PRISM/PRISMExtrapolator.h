@@ -27,6 +27,8 @@ class TDirectory;
 
 namespace ana {
 
+static double kdummydouble = 0;
+
 // Caching flux matcher.
 class PRISMExtrapolator {
 public:
@@ -54,14 +56,14 @@ public:
   PredictionInterp const *
   GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
-  void SetStoreDebugMatches() { fStoreDebugMatches = true; }
+  void SetStoreDebugMatches(bool v = true) { fStoreDebugMatches = v; }
 
-  TH1 const *GetFarMatchCoefficients(osc::IOscCalculator *osc,
-                                     TH1 const *FDUnOscWeighted,
-                                     double max_OffAxis_m,
-                                     PRISM::BeamChan NDbc = PRISM::kNumu_Numode,
-                                     PRISM::BeamChan FDbc = PRISM::kNumu_Numode,
-                                     SystShifts shift = kNoShift) const;
+  TH1 const *GetFarMatchCoefficients(
+      osc::IOscCalculator *osc, TH1 const *FDUnOscWeighted,
+      double max_OffAxis_m,
+      PRISM::MatchChan chan = PRISM::kNumuDisappearance_Numode,
+      SystShifts shift = kNoShift, double &soln_norm = kdummydouble,
+      double &resid_norm = kdummydouble) const;
 
   TH1 const *GetGaussianCoefficients(double mean, double width,
                                      double max_OffAxis_m,
@@ -72,14 +74,25 @@ public:
 
   void Write(TDirectory *);
 
-  void SetTargetConditioning(
-      double RegFactor = 1E-8, std::vector<double> CoeffRegVector = {},
-      double LowECutoff = 0,
-      double HighECutoff = std::numeric_limits<double>::max()) {
-    fRegFactor = RegFactor;
-    fENuMin = LowECutoff;
-    fENuMax = HighECutoff;
-    fCoeffRegVector = CoeffRegVector;
+  struct Conditioning {
+    double RegFactor;
+    double ENuMin;
+    double ENuMax;
+    mutable std::vector<double> CoeffRegVector;
+  };
+
+  std::map<PRISM::MatchChan, Conditioning> fConditioning;
+
+  void SetTargetConditioning(PRISM::MatchChan chan, double RegFactor,
+                             std::vector<double> CoeffRegVector = {},
+                             std::array<double, 2> erange = {
+                                 0, std::numeric_limits<double>::max()}) {
+    fConditioning[chan] =
+        Conditioning{RegFactor, erange[0], erange[1], CoeffRegVector};
+  }
+
+  void SetChannelRegFactor(PRISM::MatchChan chan, double RegFactor) {
+    fConditioning[chan].RegFactor = RegFactor;
   }
 
 protected:
@@ -94,11 +107,6 @@ protected:
 
   PredictionInterp const *fFDEventRateInterp_nu;
   PredictionInterp const *fFDEventRateInterp_nub;
-
-  double fRegFactor;
-  double fENuMin;
-  double fENuMax;
-  mutable std::vector<double> fCoeffRegVector;
 
   mutable std::unique_ptr<TH1> fLastMatch;
   mutable std::unique_ptr<TH1> fLastGaussMatch;

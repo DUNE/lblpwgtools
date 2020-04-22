@@ -13,6 +13,19 @@
 #include <utility>
 
 namespace PRISM {
+enum class NuChan;
+enum class BeamMode;
+struct BeamChan;
+struct MatchChan;
+
+bool operator&(NuChan const &l, NuChan const &r);
+std::ostream &operator<<(std::ostream &os, NuChan const &nc);
+std::ostream &operator<<(std::ostream &os, BeamMode const &bm);
+std::ostream &operator<<(std::ostream &os, BeamChan const &bm);
+bool operator==(BeamChan const &l, BeamChan const &r);
+bool operator<(BeamChan const &l, BeamChan const &r);
+bool operator<(MatchChan const &l, MatchChan const &r);
+std::ostream &operator<<(std::ostream &os, MatchChan const &mc);
 
 enum class NuChan {
   kNumuApp = (1 << 0),
@@ -34,71 +47,7 @@ enum class NuChan {
   kNueNueBar = kNue | kNueBar
 };
 
-inline bool operator&(NuChan l, NuChan r) {
-  return bool(static_cast<int>(l) & static_cast<int>(r));
-}
-
-inline std::ostream &operator<<(std::ostream &os, NuChan nc) {
-  switch (nc) {
-  case NuChan::kNumuApp: {
-    return os << "kNumuApp";
-  }
-  case NuChan::kNumuBarApp: {
-    return os << "kNumuBarApp";
-  }
-  case NuChan::kNueApp: {
-    return os << "kNueApp";
-  }
-  case NuChan::kNueBarApp: {
-    return os << "kNueBarApp";
-  }
-  case NuChan::kNumuIntrinsic: {
-    return os << "kNumuIntrinsic";
-  }
-  case NuChan::kNumuBarIntrinsic: {
-    return os << "kNumuBarIntrinsic";
-  }
-  case NuChan::kNueIntrinsic: {
-    return os << "kNueIntrinsic";
-  }
-  case NuChan::kNueBarIntrinsic: {
-    return os << "kNueBarIntrinsic";
-  }
-  case NuChan::kNumu: {
-    return os << "kNumu";
-  }
-  case NuChan::kNumuBar: {
-    return os << "kNumuBar";
-  }
-  case NuChan::kNue: {
-    return os << "kNue";
-  }
-  case NuChan::kNueBar: {
-    return os << "kNueBar";
-  }
-  case NuChan::kNumuNumuBar: {
-    return os << "kNumuNumuBar";
-  }
-  case NuChan::kNueNueBar: {
-    return os << "kNueNueBar";
-  }
-  }
-  return os;
-}
-
 enum class BeamMode { kNuMode, kNuBarMode };
-
-inline std::ostream &operator<<(std::ostream &os, BeamMode bm) {
-  switch (bm) {
-  case BeamMode::kNuMode: {
-    return os << "kNuMode";
-  }
-  case BeamMode::kNuBarMode: {
-    return os << "kNuBarMode";
-  }
-  }
-  return os;
-}
 
 struct BeamChan {
   BeamMode mode;
@@ -149,6 +98,13 @@ struct MatchChan {
   BeamChan from;
   BeamChan to;
 };
+
+static MatchChan const kNumuDisappearance_Numode = {kNumu_Numode, kNumu_Numode};
+static MatchChan const kNumuBarDisappearance_NuBarmode = {kNumuBar_NuBarmode,
+                                                          kNumuBar_NuBarmode};
+static MatchChan const kNueAppearance_Numode = {kNumu_Numode, kNue_Numode};
+static MatchChan const kNueBarAppearance_NuBarmode = {kNumuBar_NuBarmode,
+                                                      kNueBar_NuBarmode};
 
 inline std::string GetMatchChanShortName(MatchChan ch) {
   if (ch.to.mode == BeamMode::kNuMode) {

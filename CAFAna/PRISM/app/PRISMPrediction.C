@@ -43,10 +43,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   auto PRISMps = pred.get<fhicl::ParameterSet>("PRISM", {});
 
-  double PRISM_reg = PRISMps.get<double>("reg_factor", 1E-16);
-  std::array<double, 2> PRISM_energy_range =
-      PRISMps.get<std::array<double, 2>>("energy_range", {0, 4});
-
   bool PRISM_SetNDDataErrs =
       PRISMps.get<bool>("set_ND_errors_from_rate", false);
 
@@ -100,17 +96,25 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
     });
 
-    if (PRISMps.get<bool>("is_fake_spec_run", false)) {
-      fluxmatcher.SetTargetConditioning(PRISM_reg,
-                                        {
-                                            {0},
-                                        },
-                                        PRISM_energy_range[0],
-                                        PRISM_energy_range[1]);
-    } else {
-      fluxmatcher.SetTargetConditioning(PRISM_reg, {}, PRISM_energy_range[0],
-                                        PRISM_energy_range[1]);
+    for (auto const &channel_conditioning :
+         PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
+
+      auto ch =
+          GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+
+      double chan_reg = channel_conditioning.get<double>("reg_factor", 1E-16);
+      std::array<double, 2> chan_energy_range =
+          channel_conditioning.get<std::array<double, 2>>("energy_range",
+                                                          {0, 4});
+      bool chan_is_fake_spec_run =
+          channel_conditioning.get<bool>("is_fake_spec_run", false);
+
+      fluxmatcher.SetTargetConditioning(ch, chan_reg, (chan_is_fake_spec_run ? 
+            std::vector<double>{{0},} 
+          : std::vector<double>{}),
+          chan_energy_range);
     }
+
     if (PRISM_write_debug) {
       fluxmatcher.SetStoreDebugMatches();
     }
@@ -186,8 +190,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Data->SetDirectory(nullptr);
 
     if (use_PRISM) {
-      auto PRISMComponents = state.PRISM->PredictPRISMComponents(
-          calc, shift, ch.second.from, ch.second.to);
+      auto PRISMComponents =
+          state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
       TH1 *PRISMPred =
           PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
       chan_dir->WriteTObject(PRISMPred, "PRISMPred");

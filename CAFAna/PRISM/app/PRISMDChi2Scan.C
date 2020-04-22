@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/AnalysisVars.h"
-#include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/Exposures.h"
+#include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/Core/HistCache.h"
 
@@ -162,10 +162,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   auto PRISMps = scan.get<fhicl::ParameterSet>("PRISM", {});
 
-  double PRISM_reg = PRISMps.get<double>("reg_factor", 1E-16);
-  std::array<double, 2> PRISM_energy_range =
-      PRISMps.get<std::array<double, 2>>("energy_range", {0, 4});
-
   auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
 
   RunPlan run_plan_nu, run_plan_nub;
@@ -238,16 +234,23 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
     });
 
-    if (PRISMps.get<bool>("is_fake_spec_run", false)) {
-      fluxmatcher.SetTargetConditioning(PRISM_reg,
-                                        {
-                                            {0},
-                                        },
-                                        PRISM_energy_range[0],
-                                        PRISM_energy_range[1]);
-    } else {
-      fluxmatcher.SetTargetConditioning(PRISM_reg, {}, PRISM_energy_range[0],
-                                        PRISM_energy_range[1]);
+    for (auto const &channel_conditioning :
+         PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
+
+      auto ch =
+          GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+
+      double chan_reg = channel_conditioning.get<double>("reg_factor", 1E-16);
+      std::array<double, 2> chan_energy_range =
+          channel_conditioning.get<std::array<double, 2>>("energy_range",
+                                                          {0, 4});
+      bool chan_is_fake_spec_run =
+          channel_conditioning.get<bool>("is_fake_spec_run", false);
+
+      fluxmatcher.SetTargetConditioning(ch, chan_reg, (chan_is_fake_spec_run ? 
+            std::vector<double>{{0},} 
+          : std::vector<double>{}),
+          chan_energy_range);
     }
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
@@ -338,7 +341,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     if (use_PRISM) {
       Expts.emplace_back(new PRISMChi2Experiment(
           state.PRISM.get(), DataSpectra.back(), use_PRISM_ND_stats, POT,
-          ch.second.from, ch.second.to, EnergyRanges[ch.first]));
+          ch.second, EnergyRanges[ch.first]));
     } else {
 
       Expts.emplace_back(new SimpleChi2Experiment(
@@ -351,7 +354,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     if (use_PRISM) {
       NomHist.emplace_back(state.PRISM
                                ->PredictPRISMComponents(
-                                   calc, kNoShift, ch.second.from, ch.second.to)
+                                   calc, kNoShift, ch.second)
                                .at(PredictionPRISM::kPRISMPred)
                                .ToTH1(POT));
     } else {
