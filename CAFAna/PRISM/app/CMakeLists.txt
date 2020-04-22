@@ -6,6 +6,7 @@ set(scripts_to_build
   PRISMDChi2Scan
   #  DumpEventRateTable
   #  ChiSqSurfacePRISMPred
+  PRISMRegOptimizer
 )
 
 foreach(SCRPT ${scripts_to_build})

@@ -83,8 +83,7 @@ public:
   PRISMChi2Experiment(
       PredictionPRISM const *Pred, Spectrum const &Data,
       bool UseHistError = false, double POT = 0,
-      PRISM::BeamChan NDFlavorSelection = PRISM::kNumu_Numode,
-      PRISM::BeamChan FDFlavorSelection = PRISM::kNumu_Numode,
+      PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode,
       std::pair<double, double> erange = {-std::numeric_limits<double>::max(),
                                           std::numeric_limits<double>::max()})
       : fPred(Pred), fUseHistError(UseHistError) {
@@ -94,8 +93,7 @@ public:
     }
     fData = Data.ToTH1(fPOT);
 
-    fNDFlavorSelection = NDFlavorSelection;
-    fFDFlavorSelection = FDFlavorSelection;
+    fMatchChannel = match_chan;
 
     if (erange.first != -std::numeric_limits<double>::max()) {
       fBinRange.first = fData->GetXaxis()->FindFixBin(erange.first);
@@ -121,15 +119,12 @@ public:
   double fPOT;
   bool fUseHistError;
 
-  PRISM::BeamChan fNDFlavorSelection;
-  PRISM::BeamChan fFDFlavorSelection;
+  PRISM::MatchChan fMatchChannel;
   std::pair<int, int> fBinRange;
 
   TH1D *GetPred(osc::IOscCalculatorAdjustable *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
-    return fPred
-        ->PredictPRISMComponents(osc, syst, fNDFlavorSelection,
-                                 fFDFlavorSelection)
+    return fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
         .at(PredictionPRISM::kPRISMPred)
         .ToTH1(fPOT);
   }

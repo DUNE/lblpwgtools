@@ -115,11 +115,9 @@ public:
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
   virtual Spectrum PredictSyst(osc::IOscCalculator *calc,
                                ana::SystShifts shift = kNoShift) const;
-  std::map<PRISMComponent, Spectrum>
-  PredictPRISMComponents(osc::IOscCalculator *calc,
-                         ana::SystShifts shift = kNoShift,
-                         PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
-                         PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+  std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
+      osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
+      PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;
 
   std::map<PRISMComponent, Spectrum>
   PredictGaussianFlux(double mean, double width,
