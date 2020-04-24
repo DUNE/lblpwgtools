@@ -10,3 +10,4 @@ fi
 setup root v6_12_06a -q e15:prof
 setup boost v1_66_0a -q e15:prof
 setup cmake v3_12_2
+setup jobsub_client
