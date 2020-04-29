@@ -1,10 +1,10 @@
 set(scripts_to_build
     MakePRISMPredInterps
-  #  OffAxisEventRates
-  #  OffAxisNDCAFCombiner
+  OffAxisEventRates
+  OffAxisNDCAFCombiner
   PRISMPrediction
   PRISMDChi2Scan
-  #  DumpEventRateTable
+  DumpEventRateTable
   #  ChiSqSurfacePRISMPred
   PRISMRegOptimizer
 )
