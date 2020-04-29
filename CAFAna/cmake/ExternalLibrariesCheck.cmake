@@ -23,9 +23,13 @@ endif()
 
 ###############################  GSL  ######################################
 if(NOT DEFINED GSL_LIB OR GSL_LIB STREQUAL "")
-  GETLIBDIR(gsl-config --libs GSL_LIB)
-  if(GSL_LIB STREQUAL "")
-    message(FATAL_ERROR "Variable GSL_LIB is not defined and could not be found with gsl-config. The location of a pre-built gsl install must be defined either as $ cmake -DGSL_LIB=/path/to/GSL_libraries")
+  if(DEFINED ENV{GSL_LIB} AND NOT ENV{GSL_LIB} STREQUAL "")
+    SET(GSL_LIB,$ENV{GSL_LIB}})
+  else()
+    GETLIBDIR(gsl-config --libs GSL_LIB)
+    if(GSL_LIB STREQUAL "")
+      message(FATAL_ERROR "Variable GSL_LIB is not defined and could not be found with gsl-config. The location of a pre-built gsl install must be defined either as $ cmake -DGSL_LIB=/path/to/GSL_libraries")
+    endif()
   endif()
 endif()
 
