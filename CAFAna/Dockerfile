@@ -64,7 +64,7 @@ RUN svn -r 37166 checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/tru
 WORKDIR /opt/CAFAna-build/Ext/OscLib/func/
 RUN sed -i "s/array_wrapper.hpp/array.hpp/g" /opt/CAFAna-build/Ext/OscLib/func/OscCalculatorGeneral.cxx
 WORKDIR /opt/CAFAna-build/
-RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=RELEASE -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib  -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=1
+RUN cmake /opt/CAFAna-src/lblpwgtools/code/CAFAna/CAFAna -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=/opt/CAFAna -DCMAKE_BUILD_TYPE=RELEASE -DUSED_UPS=0 -DSRC_ROOT_PARENT=/opt/CAFAna-src/lblpwgtools/code/CAFAna -DGSL_LIB=/usr/lib  -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=1 -DUSE_PRISM=${USE_PRISM}
 RUN make -j ${N_CORE}
 RUN make install -j ${N_CORE}
 WORKDIR /opt/

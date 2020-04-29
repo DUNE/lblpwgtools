@@ -8,6 +8,7 @@ BASE_IMAGE="centos:latest"
 TAGNAME="latest"
 DO_KNL="0"
 REMOVE_SOURCE="1"
+USE_PRISM="0"
 
 NCORES=8
 
@@ -39,6 +40,14 @@ while [[ ${#} -gt 0 ]]; do
 
       USE_GPERF="1"
       echo "[OPT]: Will compile in gperftools support."
+      ;;
+
+      --use-PRISM)
+
+      USE_PRISM="1"
+      IMAGE_NAME="${USER}/dune_cafana_PRISM"
+      BRANCH_NAME="feature/PRISM"
+      echo "[OPT]: Will compile in PRISM support."
       ;;
 
       --keep-source)
@@ -141,6 +150,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-d|--debug             : Compile with CMAKE_BUILD_TYPE=DEBUG"
       echo -e "\t-p|--push              : Attempt to push up to docker hub. Note you should have issued a docker login before running this script."
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
+      echo -e "\t--use-PRISM            : Compile in PRISM support (sets branch and image name)"
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
       echo -e "\t--base-image           : Base image to use (default: centos:latest)."
       echo -e "\t--knl                  : Build CAFAna copy with -march=knl"
@@ -178,8 +188,12 @@ if [ "${LATEST_EXISTS}" == "" ] || [ "${DO_BUILD}" == "1" ]; then
     GOPT="--use-gperftools "
     ROPT="--rdb "
   fi
+  POPT=""
+  if [ "${USE_PRISM}" == "1" ]; then
+    POPT="--use-PRISM"
+  fi
 
-  echo -e "#!/bin/bash\nyum install -y --setopt=tsflags=nodocs svn which make redhat-lsb-core glibc-devel automake libtool && yum clean all;cd /opt;source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh;if ! git clone ${REPO_URL} lblpwgtools; then exit 1; fi;cd lblpwgtools;git checkout ${BRANCH_NAME};cd code/CAFAna/CAFAna;./standalone_configure_and_build.sh -j ${NCORES} -u ${ROPT}${GOPT}-I /opt/CAFAna/; cat /build_scripts/CAFEnvWrapper.sh > /opt/CAFAna/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna; if [ \"${DO_KNL}\" == \"1\" ]; then ./standalone_configure_and_build.sh -f -j ${NCORES} --knl -u ${ROPT}${GOPT}-I /opt/CAFAna_knl/; cat /build_scripts/CAFEnvWrapper_knl.sh > /opt/CAFAna_knl/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna_knl; fi; if [ \"${REMOVE_SOURCE}\" == \"1\" ]; then rm -rf /opt/lblpwgtools; fi; if [ -e /statefiles_in ]; then cp -r /statefiles_in /statefiles; chmod -R 744 /statefiles; fi" > CAFBuildScript.sh
+  echo -e "#!/bin/bash\nyum install -y --setopt=tsflags=nodocs svn which make redhat-lsb-core glibc-devel automake libtool && yum clean all;cd /opt;source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh;if ! git clone ${REPO_URL} lblpwgtools; then exit 1; fi;cd lblpwgtools;git checkout ${BRANCH_NAME};cd code/CAFAna/CAFAna;./standalone_configure_and_build.sh -j ${NCORES} -u ${ROPT}${GOPT}${POPT}-I /opt/CAFAna/; cat /build_scripts/CAFEnvWrapper.sh > /opt/CAFAna/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna; if [ \"${DO_KNL}\" == \"1\" ]; then ./standalone_configure_and_build.sh -f -j ${NCORES} --knl -u ${ROPT}${GOPT}-I /opt/CAFAna_knl/; cat /build_scripts/CAFEnvWrapper_knl.sh > /opt/CAFAna_knl/CAFEnvWrapper.sh; chmod -R 775 /opt/CAFAna_knl; fi; if [ \"${REMOVE_SOURCE}\" == \"1\" ]; then rm -rf /opt/lblpwgtools; fi; if [ -e /statefiles_in ]; then cp -r /statefiles_in /statefiles; chmod -R 744 /statefiles; fi" > CAFBuildScript.sh
   echo -e '#!/bin/bash\nsource /opt/CAFAna/CAFAnaEnv.sh; echo "[CAFENV]: $@"; $@' > CAFEnvWrapper.sh
   echo -e '#!/bin/bash\nsource /opt/CAFAna_knl/CAFAnaEnv.sh; echo "[CAFENV]: $@"; $@' > CAFEnvWrapper_knl.sh
 

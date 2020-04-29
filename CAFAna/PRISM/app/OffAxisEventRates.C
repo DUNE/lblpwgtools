@@ -1,6 +1,8 @@
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "CAFAna/Cuts/TruthCuts.h"
+
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"

@@ -11,7 +11,7 @@ USE_PRISM="0"
 
 NCORES=8
 
-IMAGE_NAME="${USER}/dune_cafana"
+IMAGE_NAME="${USER}/cafana"
 BRANCH_NAME="master"
 REPO_URL="https://github.com/DUNE/lblpwgtools.git"
 STATE_FILE_LOC=""
@@ -47,7 +47,7 @@ while [[ ${#} -gt 0 ]]; do
       --use-PRISM)
 
       USE_PRISM="1"
-      IMAGE_NAME="${USER}/dune_cafana_prism"
+      IMAGE_NAME="${USER}/cafana_prism"
       BRANCH_NAME="feature/PRISM"
       echo "[OPT]: Will compile in PRISM support."
       ;;
@@ -249,7 +249,6 @@ EOF
   chmod +x /tmp/$$.copy
   buildah unshare /tmp/$$.copy
   rm /tmp/$$.copy
-
 }
 
 function bb_cont_mv {
@@ -417,30 +416,95 @@ if ! podman image exists ${IMAGE_NAME}_compilebox:${TAGNAME}; then
     RELOPT=""
   fi
 
+  PRISMOPT=""
+  if [ ${USE_PRISM} == "1" ]; then
+    PRISMOPT="--use-PRISM"
+  fi
+
   bb_cont_set_env ${CAF_BUILD_CONT} BOOST_LIB /usr/lib64
   bb_cont_set_env ${CAF_BUILD_CONT} GSL_LIB /usr/lib64
 
-  buildah run ${CAF_BUILD_CONT} ./standalone_configure_and_build.sh ${RELOPT} -j ${NCORES} -I /opt/cafana
+  buildah run ${CAF_BUILD_CONT} ./standalone_configure_and_build.sh ${RELOPT} -j ${NCORES} -I /opt/cafana ${PRISMOPT}
 
   bb_commit ${CAF_BUILD_CONT} ${IMAGE_NAME}_compilebox:${TAGNAME}
 
 fi
 
-exit 0
-
 if ! podman image exists ${IMAGE_NAME}:${TAGNAME}; then
 
-  BUILD_CONT=$(buildah from ${BASE_IMAGE})
+  CAF_RUN_CONT=$(buildah from ${BASE_IMAGE})
 
   BUILD_LIBS="gsl bzip2 boost pcre xz zlib freetype openssl fftw"
   RETREVAL_SW="git wget krb5-libs openssh"
-  MISC_SW="python36 which nano sed vim"
+  MISC_SW="python36 python2 which nano sed vim"
 
-  buildah run ${BUILD_CONT} dnf -y install \
+  buildah run ${CAF_RUN_CONT} dnf -y install \
                                   ${BUILD_LIBS} \
                                   ${RETREVAL_SW} \
                                   ${MISC_SW}
 
-  bb_commit ${BUILD_CONT} ${IMAGE_NAME}:${TAGNAME}
+  CLHEP_TEMP_CONT=$(buildah from ${USER}/cafana_clhepbox:latest)
+  #copy in clhep
+  bb_cont_to_cont_copy ${CLHEP_TEMP_CONT} ${CAF_RUN_CONT} /opt/clhep /opt/clhep
+  buildah rm  ${CLHEP_TEMP_CONT}
+
+  ROOT_TEMP_CONT=$(buildah from ${USER}/cafana_rootbox:${ROOT_TAG})
+  #copy in root
+  bb_cont_to_cont_copy ${ROOT_TEMP_CONT} ${CAF_RUN_CONT} /opt/root /opt/root
+  buildah rm  ${ROOT_TEMP_CONT}
+
+  CAFANA_TEMP_CONT=$(buildah from ${IMAGE_NAME}_compilebox:${TAGNAME})
+  #copy in root
+  bb_cont_to_cont_copy ${CAFANA_TEMP_CONT} ${CAF_RUN_CONT} /opt/cafana /opt/cafana
+  buildah rm ${CAFANA_TEMP_CONT}
+
+  # root env
+  ROOTSYS="/opt/root/${ROOT_VERS}"
+  bb_cont_set_env ${CAF_RUN_CONT} ROOTSYS ${ROOTSYS}
+  bb_add_to_path_env ${CAF_RUN_CONT} PATH ${ROOTSYS}/bin
+  bb_add_to_path_env ${CAF_RUN_CONT} LD_LIBRARY_PATH ${ROOTSYS}/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} LIBPATH ${ROOTSYS}/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} JUPYTER_PATH ${ROOTSYS}/etc/notebook
+  bb_add_to_path_env ${CAF_RUN_CONT} DYLD_LIBRARY_PATH ${ROOTSYS}/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} PYTHONPATH ${ROOTSYS}/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} SHLIB_PATH ${ROOTSYS}/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} CMAKE_PREFIX_PATH ${ROOTSYS}
+
+  # clhep env
+  CLHEP="/opt/clhep/${CLHEP_VERS}"
+  bb_cont_set_env ${CAF_RUN_CONT} CLHEP ${CLHEP}
+  bb_add_to_path_env ${CAF_RUN_CONT} PATH ${CLHEP}/bin
+
+  bb_cont_mkdir_cd ${CAF_RUN_CONT} /opt/cafana-src
+  buildah run ${CAF_RUN_CONT} git clone ${REPO_URL}
+  bb_cont_cd ${CAF_RUN_CONT} /opt/cafana-src/lblpwgtools
+  buildah run ${CAF_RUN_CONT} git checkout ${BRANCH_NAME}
+  bb_cont_cd ${CAF_RUN_CONT} /opt/cafana-src/lblpwgtools/CAFAna
+
+  # cafana env
+  bb_add_to_path_env ${CAF_RUN_CONT} PATH /opt/cafana/bin
+  bb_add_to_path_env ${CAF_RUN_CONT} LD_LIBRARY_PATH /opt/cafana/lib
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_NDCOVMAT 1
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_UNCORRNDCOVMAT 0
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_DONT_CLAMP_SYSTS 0
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA /opt/cafana
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_ANALYSIS_VERSION 4
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_IGNORE_SELECTION 0
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_FIT_FORCE_HESSE 1
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_FIT_TURBOSE 0
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_DISABLE_DERIVATIVES 1
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_PRED_MINMCSTATS 50
+  bb_cont_set_env ${CAF_RUN_CONT} CAFANA_IGNORE_CV_WEIGHT 0
+
+
+  #add a python symlink, because...
+  buildah run ${CAF_RUN_CONT} ln -s /usr/bin/python3 /usr/bin/python
+
+  if [ ! -z ${STATE_FILE_LOC} ]; then
+      bb_cont_mkdir ${CAF_RUN_CONT} /statefiles
+      buildah add ${CAF_RUN_CONT} ${STATE_FILE_LOC}/*.root /statefiles/
+  fi
+
+  bb_commit ${CAF_RUN_CONT} ${IMAGE_NAME}:${TAGNAME}
 
 fi
