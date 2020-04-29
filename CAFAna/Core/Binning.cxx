@@ -5,6 +5,8 @@
 #include "TObjString.h"
 #include "TVectorD.h"
 
+#include <memory>
+
 namespace ana
 {
   int Binning::fgNextID = 0;
