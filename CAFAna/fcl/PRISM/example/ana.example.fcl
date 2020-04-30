@@ -1,168 +1,49 @@
 #include "AnalysisDefaults.fcl"
 
-Systs: {
-    Flux: [
-        {
-            shifts: [
-                [flux_Nov17_0, 1],
-            ]
-        },
-        {
-            shifts: [
-                [flux_Nov17_1, 1],
-            ]
-        },
-        {
-            shifts: [
-                [flux_Nov17_2, 1],
-            ]
-        }
-    ]
-    MaCCQE: {
-            shifts: [
-                [MaCCQE, 1],
-            ]
-        }
-    MaCCRES: {
-            shifts: [
-                [MaCCRES, 1],
-            ]
-        }
-}
-
-States: {
-    wsysts: PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
-    wosysts: PRISMState.EProxy_protonFD.FakeHCRun_allchans.root 
-    noHC: PRISMState.EProxy_protonFD.allchans.NoHC.root
-    thin: PRISMState.EProxy_protonFD.FakeHCRun_allchans.thinned.root
-    fine: PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.finebin.root
-    fine_nosyst: PRISMState.EProxy_protonFD.FakeHCRun_allchans.finebin.root
-    numode_fine: PRISMState.EProxy_protonFD.FakeHCRun_numodechans.finebin.root
-}
-
-predictions: [
-    {
-        @table::DefaultPred
-        Osc: @local::OscPoints[0]
-        output_dir: protonFD_osc1_Numu_disp
-        samples: @local::PRISMFitChannels.Numu_disp
-
-        PRISM.write_debug: true
-    },
-    {
-        @table::DefaultPred
-        Osc: @local::OscPoints[0]
-        output_dir: protonFD_osc1_Numu_disp_errrate
-        samples: @local::PRISMFitChannels.Numu_disp
-
-        PRISM.write_debug: true
-        PRISM.set_ND_errors_from_rate: true
-
-    },
-    {
-        @table::DefaultPred
-        Osc: @local::OscPoints[0]
-        output_dir: protonFD_osc1_FourFlavor_guessrp_errrate
-        samples: @local::PRISMFitChannels.FourFlavor
-
-        PRISM.RunPlans.numode: @local::RunPlans.guess
-
-        PRISM.write_debug: true
-        PRISM.set_ND_errors_from_rate: true
-    },
-    {
-        @table::DefaultPred
-        Osc: @local::OscPoints[0]
-        output_dir: protonFD_osc1_Numu_disp_prodlikerp_errrate
-        samples: @local::PRISMFitChannels.Numu_disp
-
-        POT_years: 0.82
-
-        PRISM.RunPlans.numode: @local::RunPlans.prodlike
-
-        PRISM.write_debug: true
-        PRISM.set_ND_errors_from_rate: true
-    },
-]
-
-predictions[0].output_file[1]: "RECREATE"
-
-
-
-
-
-
-
-
 scans: [
     {
         @table::DefaultPRISMScan
 
-        samples: @local::PRISMFitChannels.DispJoint
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        samples: @local::FitChannels.DispJoint
         scan_params: @local::ScanDefinitions.dmsq23_fine
         output_dir: "dmsq23_protonFD_PRISM_dispjoint"
     },
-    # {
-    #     @table::DefaultPRISMScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     scan_params: @local::ScanDefinitions.ssth23_dmsq23
-
-    #     output_dir: "ssth23_dmsq23_protonFD_PRISM_dispjoint"
-    # },
-
-    # {
-    #     @table::DefaultPRISMScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     output_dir: "dmsq23_protonFD_PRISM_dispjoint"
-        
-    # },
-    # {
-    #     @table::DefaultPRISMFitScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     output_dir: "dmsq23_protonFD_PRISM_dispjoint_min_nuis"
-
-    #     GOF.free_syst_params: @local::LOS
-        
-    # },
-    # {
-    #     @table::DefaultPRISMFitScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     output_dir: "dmsq23_protonFD_PRISM_dispjoint_min"
-    
-    # },
-    # {
-    #     @table::DefaultFarDetScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     output_dir: "dmsq23_protonFD_FarDet_dispjoint"
-    # },
-    # {
-    #     @table::DefaultFarDetFitScan
-
-    #     samples: @local::PRISMFitChannels.DispJoint
-    #     output_dir: "dmsq23_protonFD_FarDet_dispjoint_min"
-    # },
-]
-
-scans[0].output_file[1]: "RECREATE"
-
-reg_scans: [
-    
-]
-
-reg_scans[0].output_file[1]: "RECREATE"
-
-
-PRISMEventRates: [
     {
-        
-        input_file: "/home/picker24/work/DUNE/DUNE-PRISM/ND-CDR/CAF_FHC_PRISM_PROD4-14.root"
-        projection_name: EProxy
-        output_file: ["NDOffAxisEventRates.root","RECREATE"]
-        special_run_weight: ["HCRat.root","bla"]
-    }
-]
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_min"
+    },
+    {
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        GOF.free_syst_params: @local::nuisance_parameters.flux5
+
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_minflux5"
+    },
+     {
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        GOF.free_syst_params: @local::nuisance_parameters.flux10
+
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_minflux10"
+    },
+  ]
+
+# This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
+scans[0].output_file[1]: "RECREATE"
