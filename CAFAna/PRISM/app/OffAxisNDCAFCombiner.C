@@ -132,8 +132,8 @@ struct fileSummary {
 void OffAxisNDCAFCombiner(
     std::string InputFilePatterns, std::string OutputFileName,
     bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
-    bool preSelect = false, bool justDoSummaryTree = false, double min_m=-4,
-    double max_m=40, double step_m=0.25,
+    bool preSelect = false, bool justDoSummaryTree = false, double min_m = -4,
+    double max_m = 40, double step_m = 0.25,
     size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
 
   if (CombiningCombinedCAFs && preSelect) {
@@ -246,6 +246,14 @@ void OffAxisNDCAFCombiner(
     FileSummaryTree->Branch("fileName", &fs.fileName);
     FileSummaryTree->SetDirectory(nullptr);
   }
+
+  bool Flipdetx = false;
+
+  if (getenv("CAFANA_FLIP_DET_X") &&
+      (std::atoi(getenv("CAFANA_FLIP_DET_X")) == 1)) {
+    Flipdetx = true;
+  }
+
   size_t NPrevOffAxisWeightFriendEntries = 0;
   size_t fctr = 0;
   for (auto dir_files : CAFs) {
@@ -279,6 +287,11 @@ void OffAxisNDCAFCombiner(
       f_caf->SetBranchAddress("vtx_y", &vtx_y);
       f_caf->SetBranchAddress("vtx_z", &vtx_z);
       f_caf->GetEntry(0);
+
+      if (Flipdetx) {
+        det_x = -det_x;
+      }
+
       double file_det_x = det_x;
 
       if (CombiningCombinedCAFs) {
@@ -378,6 +391,9 @@ void OffAxisNDCAFCombiner(
           for (size_t e_it = 0; e_it < nevs; ++e_it) {
             if (preSelect) {
               f_caf->GetEntry(e_it);
+              if (Flipdetx) {
+                det_x = -det_x;
+              }
               if (file_det_x != det_x) {
                 std::cout << "[ERROR]: In file " << file_name
                           << " found an event with det_x = " << det_x
@@ -443,15 +459,17 @@ void OffAxisNDCAFCombiner(
 
   if (!justDoSummaryTree) {
     std::cout << "[INFO]: Copying caf tree..." << std::endl;
+    bool canfast = !preSelect && !Flipdetx;
     TTree *treecopy =
-        caf->CloneTree(preSelect ? 0 : NMaxEvents, preSelect ? "" : "fast");
+        caf->CloneTree(canfast ? 0 : NMaxEvents, canfast ? "" : "fast");
     treecopy->SetName("cafTree");
 
-    if (preSelect) {
-      double vtx_x, vtx_y, vtx_z;
+    if (canfast) {
+      double vtx_x, vtx_y, vtx_z, det_x;
       caf->SetBranchAddress("vtx_x", &vtx_x);
       caf->SetBranchAddress("vtx_y", &vtx_y);
       caf->SetBranchAddress("vtx_z", &vtx_z);
+      caf->SetBranchAddress("det_x", &det_x);
       size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
       ana::Progress preselprog("Copy with selection progress.");
       for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
@@ -459,7 +477,10 @@ void OffAxisNDCAFCombiner(
           preselprog.SetProgress(double(ent_it) / double(nents));
         }
         caf->GetEntry(ent_it);
-        if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+        if (Flipdetx) {
+          det_x = -det_x;
+        }
+        if (preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
           continue;
         }
         treecopy->Fill();
