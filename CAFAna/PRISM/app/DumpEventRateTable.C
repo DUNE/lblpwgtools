@@ -12,6 +12,10 @@
 
 #include <cassert>
 
+double TPOT = 1.1e21;
+double NTotalWeeks = 29;
+double NWeeksOnAxis = 14;
+
 enum EComponent {
   kAll = 0,
   kWSB,
@@ -94,11 +98,11 @@ TH1D *GetNDOnAxisSpecRun(TH1 *h) {
   return rtn;
 }
 
-TH1D *GetNDStop(TH1 *h, size_t i) {
+TH1D *GetNDStop(TH1 *h, double i) {
   TH2D *h2 = dynamic_cast<TH2D *>(h);
   assert(h2);
 
-  if ((i < 4) || (i % 4) || (i > 32)) {
+  if ((i <= 0)) {
     std::cout << "Only use GetNDStop to get an off axis prediction."
               << std::endl;
     abort();
@@ -108,7 +112,7 @@ TH1D *GetNDStop(TH1 *h, size_t i) {
 
   int stop = i / 4;
 
-  int lowbin = (stop - 1) * 8 + (hsr ? 6 : 9);
+  int lowbin = h2->GetYaxis()->FindFixBin(i - 2);
   int upbin = lowbin + 7;
 
   std::cout << "Stop " << stop << "(" << i << "m) from [" << lowbin << "("
@@ -206,9 +210,12 @@ void WriteTable(std::ofstream &tbl, std::vector<EvRateLine> &ert) {
   for (auto e : ert) {
     tbl.precision(4);
 
-    double nweeks = (43.0 * e.RunFraction);
+    double nweeks = (double(NTotalWeeks) * e.RunFraction);
+
+    std::cout << e.OffAxisPosition << ", " << NTotalWeeks << " * "
+              << e.RunFraction << " = " << nweeks << std::endl;
     if (round(nweeks) != nweeks) {
-      tbl << e.OffAxisPosition << "\\,m & " << int(nweeks*7) << " dys. ";
+      tbl << e.OffAxisPosition << "\\,m & " << int(nweeks * 7) << " dys. ";
     } else {
       tbl << e.OffAxisPosition << "\\,m & " << int(nweeks) << " wk"
           << (nweeks > 1 ? "s" : "") << ". ";
@@ -229,8 +236,6 @@ void DumpEventRateTable(char const *OffAxisRateFile) {
   std::map<EComponent, TH1 *> Hists;
 
   TFile *f = new TFile(OffAxisRateFile);
-
-  double TPOT = 1.1e21;
 
   for (EComponent c : EComponentVect) {
     Hists[c] = dynamic_cast<TH1 *>(f->Get(EComponentStr[c].c_str()));
@@ -261,11 +266,12 @@ void DumpEventRateTable(char const *OffAxisRateFile) {
   std::cout << "[INFO]: NCB_GENIETov3Scale = " << NCB_GENIETov3Scale
             << std::endl;
 
-  double NTotalWeeks = 43;
   double NWeeksSpecRun = HasSpecRun(Hists[kNumuCC_cv]) ? 1 : 0;
-  double NWeeksOnAxis = 21;
   double NWeeksOffAxis = (NTotalWeeks - (NWeeksSpecRun + NWeeksOnAxis));
-  double NWeeksEachOffAxis = NWeeksOffAxis / 8.0;
+
+  std::vector<double> OffAxisStops = {4, 8, 12, 16, 20, 24, 28, 30.5};
+
+  double NWeeksEachOffAxis = NWeeksOffAxis / double(OffAxisStops.size());
   std::cout << NWeeksEachOffAxis << std::endl;
 
   EvRateLine erl_onaxis;
@@ -300,19 +306,19 @@ void DumpEventRateTable(char const *OffAxisRateFile) {
 
     EventRateTable.push_back(erl_sr);
   }
-  for (int i = 4; i <= 32; i += 4) {
+  for (auto pos : OffAxisStops) {
     EvRateLine erl;
 
-    erl.OffAxisPosition = std::to_string(i) + " m off axis";
+    erl.OffAxisPosition = std::to_string(pos) + " m off axis";
     erl.RunFraction = NWeeksEachOffAxis / NTotalWeeks;
     erl.NNumuCC =
-        GetNDStop(Hists[kNumuCC], i)->Integral() * TPOT * erl.RunFraction;
+        GetNDStop(Hists[kNumuCC], pos)->Integral() * TPOT * erl.RunFraction;
     erl.NSel_tot =
-        GetNDStop(Hists[kAll], i)->Integral() * TPOT * erl.RunFraction;
+        GetNDStop(Hists[kAll], pos)->Integral() * TPOT * erl.RunFraction;
     erl.NSel_WSB =
-        GetNDStop(Hists[kWSB], i)->Integral() * TPOT * erl.RunFraction;
+        GetNDStop(Hists[kWSB], pos)->Integral() * TPOT * erl.RunFraction;
     erl.NSel_NC =
-        GetNDStop(Hists[kNCB], i)->Integral() * TPOT * erl.RunFraction;
+        GetNDStop(Hists[kNCB], pos)->Integral() * TPOT * erl.RunFraction;
     erl.NGas = erl.NNumuCC * StopToGasMassRatio;
 
     EventRateTable.push_back(erl);
