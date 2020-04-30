@@ -70,6 +70,7 @@ if [ -e ${CAFANA}/fcl ]; then
   add_to_FHICL_FILE_PATH "${CAFANA}/fcl"
   if [ -e ${CAFANA}/fcl/PRISM ]; then
     add_to_FHICL_FILE_PATH "${CAFANA}/fcl/PRISM"
+    add_to_FHICL_FILE_PATH "${CAFANA}/fcl/example"
   fi
 fi
 

@@ -489,6 +489,7 @@ if ! podman image exists ${IMAGE_NAME}:${TAGNAME}; then
   bb_add_to_path_env ${CAF_RUN_CONT} FHICL_FILE_PATH /opt/cafana/fcl
   if [ "${USE_PRISM}" == "1" ]; then
     bb_add_to_path_env ${CAF_RUN_CONT} FHICL_FILE_PATH /opt/cafana/fcl/PRISM
+    bb_add_to_path_env ${CAF_RUN_CONT} FHICL_FILE_PATH /opt/cafana/fcl/PRISM/example
   fi
   bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_NDCOVMAT 1
   bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_UNCORRNDCOVMAT 0

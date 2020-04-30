@@ -325,8 +325,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                                 osc_to);
     }
 
-    InputDataHist.emplace_back(DataSpectra.back().ToTH1(POT));
-    DataHist.emplace_back(DataSpectra.back().ToTH1(POT));
+    InputDataHist.emplace_back(DataSpectra.back().ToTH1(POT_FD));
+    DataHist.emplace_back(DataSpectra.back().ToTH1(POT_FD));
 
     if (poisson_throw) {
       for (int bi_it = 0; bi_it < DataHist.back()->GetXaxis()->GetNbins();
@@ -341,13 +341,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     if (use_PRISM) {
       Expts.emplace_back(new PRISMChi2Experiment(
-          state.PRISM.get(), DataSpectra.back(), use_PRISM_ND_stats, POT,
+          state.PRISM.get(), DataSpectra.back(), use_PRISM_ND_stats, POT_FD,
           ch.second, EnergyRanges[ch.first]));
     } else {
 
       Expts.emplace_back(new SimpleChi2Experiment(
           state.FarDetPredInterps[FDfdConfig_enum].get(), DataSpectra.back(),
-          false, POT, EnergyRanges[ch.first]));
+          false, POT_FD, EnergyRanges[ch.first]));
     }
 
     MExpt.Add(Expts.back().get());
@@ -357,10 +357,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                ->PredictPRISMComponents(
                                    calc, kNoShift, ch.second)
                                .at(PredictionPRISM::kPRISMPred)
-                               .ToTH1(POT));
+                               .ToTH1(POT_FD));
     } else {
       NomHist.emplace_back(
-          state.FarDetPredInterps[FDfdConfig_enum]->Predict(calc).ToTH1(POT));
+          state.FarDetPredInterps[FDfdConfig_enum]->Predict(calc).ToTH1(POT_FD));
     }
   }
 
