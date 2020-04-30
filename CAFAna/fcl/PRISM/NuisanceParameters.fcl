@@ -1,0 +1,37 @@
+nuisance_parameters: {
+     flux5: [  
+          flux_Nov17_0, 
+          flux_Nov17_1, 
+          flux_Nov17_2, 
+          flux_Nov17_3, 
+          flux_Nov17_4,
+            ]
+
+     flux10: [
+          @sequence::nuisance_parameters.flux5,
+          flux_Nov17_5, 
+          flux_Nov17_6, 
+          flux_Nov17_7, 
+          flux_Nov17_8, 
+          flux_Nov17_9, 
+     ]
+
+     xsec: [
+          MaCCQE, 
+          MaCCRES, 
+          MvCCRES, 
+          AhtBY, 
+          BhtBY, 
+          CV1uBY, 
+          CV2uBY, 
+          BeRPA_A, 
+          BeRPA_B, 
+          BeRPA_D 
+     ]
+
+     all: [
+          @sequence::nuisance_parameters.flux10,
+          @sequence::nuisance_parameters.xsec
+
+     ]
+}

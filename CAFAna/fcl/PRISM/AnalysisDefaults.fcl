@@ -2,6 +2,7 @@
 #include "FitChannels.fcl"
 #include "RunPlans.fcl"
 #include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
 
 
 DefaultPred: {
@@ -122,28 +123,6 @@ DefaultScan: {
     samples: @local::FitChannels.Numu_disp
     scan_params: @local::ScanDefinitions.dmsq23_coarse
 }
-
-nuisance_systs: [   flux_Nov17_0, 
-                    flux_Nov17_1, 
-                    flux_Nov17_2, 
-                    flux_Nov17_3, 
-                    flux_Nov17_4, 
-                    flux_Nov17_5, 
-                    flux_Nov17_6, 
-                    flux_Nov17_7, 
-                    flux_Nov17_8, 
-                    flux_Nov17_9, 
-                    MaCCQE, 
-                    MaCCRES, 
-                    MvCCRES, 
-                    AhtBY, 
-                    BhtBY, 
-                    CV1uBY, 
-                    CV2uBY, 
-                    BeRPA_A, 
-                    BeRPA_B, 
-                    BeRPA_D 
-                ]
 
 DefaultPRISMScan: @local::DefaultScan
 DefaultPRISMFitScan: @local::DefaultPRISMScan
