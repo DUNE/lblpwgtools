@@ -1,5 +1,5 @@
 set(scripts_to_build
-    MakePRISMPredInterps
+  MakePRISMPredInterps
   OffAxisEventRates
   OffAxisNDCAFCombiner
   PRISMPrediction

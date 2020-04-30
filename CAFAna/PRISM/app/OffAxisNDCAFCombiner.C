@@ -132,7 +132,8 @@ struct fileSummary {
 void OffAxisNDCAFCombiner(
     std::string InputFilePatterns, std::string OutputFileName,
     bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
-    bool preSelect = false, bool justDoSummaryTree = false,
+    bool preSelect = false, bool justDoSummaryTree = false, double min_m=-4,
+    double max_m=40, double step_m=0.25,
     size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
 
   if (CombiningCombinedCAFs && preSelect) {
@@ -196,10 +197,7 @@ void OffAxisNDCAFCombiner(
     return;
   }
 
-  double min_m = -4;
-  double max_m = 40;
-  double step_m = 0.25; // 25 cm
-  double offset_m = 0;  // (step_m / 2.0)
+  double offset_m = 0; // (step_m / 2.0)
   size_t NStep = (max_m - min_m) / step_m;
 
   TH1D *POTExposure =
@@ -592,9 +590,13 @@ int main(int argc, char const *argv[]) {
   std::string cafTreeName = (argc >= 5) ? argv[4] : "cafTree";
   bool preSelect = (argc >= 6) ? strToBool(argv[5]) : false;
   bool justDoSummaryTree = (argc >= 7) ? strToBool(argv[6]) : false;
-  size_t NMaxEvents = (argc >= 8) ? size_t(std::strtol(argv[7], nullptr, 10))
-                                  : std::numeric_limits<size_t>::max();
+  double min_m = (argc >= 8) ? std::atof(argv[7]) : -4;
+  double max_m = (argc >= 9) ? std::atof(argv[8]) : 40;
+  double step_m = (argc >= 10) ? std::atof(argv[9]) : 0.25;
+  size_t NMaxEvents = (argc >= 11) ? size_t(std::strtol(argv[10], nullptr, 10))
+                                   : std::numeric_limits<size_t>::max();
   OffAxisNDCAFCombiner(InputFilePattern, OutputFileName, CombiningCombinedCAFs,
-                       cafTreeName, preSelect, justDoSummaryTree, NMaxEvents);
+                       cafTreeName, preSelect, justDoSummaryTree, min_m, max_m,
+                       step_m, NMaxEvents);
 }
 #endif
