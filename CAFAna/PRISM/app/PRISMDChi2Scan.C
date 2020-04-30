@@ -142,6 +142,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   // default to 1 year
   double POT = scan.get<double>("POT_years", 1) * POT120;
+  double POT_FD = POT * pot_fd_FVMassFactor;
 
   bool use_PRISM = scan.get<bool>("use_PRISM", true);
 
