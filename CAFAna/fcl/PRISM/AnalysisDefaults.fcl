@@ -1,0 +1,155 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+
+
+DefaultPred: {
+    output_file: [PRISMPreds.root, UPDATE]
+    projection_name: EProxy
+
+    use_PRISM: true
+    POT_years: 3.5
+
+    PRISM: {
+
+        match_conditioning: [
+            {
+                chan: @local::FitChannels.Numu_disp
+                energy_range: [0, 6]
+                reg_factor: 1.2E-17
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Numubar_disp
+                energy_range: [0, 6]
+                reg_factor: 2.1E-17
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Nue_app
+                energy_range: [0, 6]
+                reg_factor: 1.21E-17
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Nuebar_app
+                energy_range: [0, 6]
+                reg_factor: 1.91E-17
+                is_fake_spec_run: true
+            }
+        ]
+
+
+        set_ND_errors_from_rate: false
+
+        RunPlans: {
+            numode: @local::RunPlans.flat
+            nubmode: @local::RunPlans.flat
+        }
+
+        write_debug: false
+    }
+
+    samples: @local::FitChannels.Numu_disp
+}
+
+
+DefaultRegScan: {
+        output_file: [PRISMRegOpt.root, UPDATE]
+        projection_name: EProxy
+
+        scan: [100, 1E-10,1E-20]
+        use_log_steps: true
+
+        PRISM: {
+            match_conditioning: [
+            {
+                chan: @local::FitChannels.Numu_disp
+                energy_range: [0, 6]
+                scan: [1000,1E-18,1E-16]
+                use_log_steps: true
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Numubar_disp
+                energy_range: [0, 6]
+                scan: [1000,1E-18,1E-16]
+                use_log_steps: true
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Nue_app
+                energy_range: [0, 6]
+                scan: [1000,1E-18,1E-16]
+                use_log_steps: true
+                is_fake_spec_run: true
+            },
+            {
+                chan: @local::FitChannels.Nuebar_app
+                energy_range: [0, 6]
+                scan: [1000,1E-18,1E-16]
+                use_log_steps: true
+                is_fake_spec_run: true
+            }
+        ]
+    }
+    samples: @local::FitChannels.FourFlavor
+}
+
+
+DefaultScan: {
+    @table::DefaultPred
+
+    output_file: [PRISMScans.root, UPDATE]
+
+    GOF: {
+        use_ND_stats: true
+        fit_nuisance: false
+        poisson_throw: true
+
+        free_osc_params: [dmsq32, ssth23, th13, deltapi]
+        free_syst_params: []
+
+        energy_limits: {
+            NumuDisp: [0.5, 8]
+            NueApp: [0.5, 8]
+            NumuBarDisp: [0.5, 8]
+            NueBarApp: [0.5, 8]
+        }
+    }
+
+    samples: @local::FitChannels.Numu_disp
+    scan_params: @local::ScanDefinitions.dmsq23_coarse
+}
+
+nuisance_systs: [   flux_Nov17_0, 
+                    flux_Nov17_1, 
+                    flux_Nov17_2, 
+                    flux_Nov17_3, 
+                    flux_Nov17_4, 
+                    flux_Nov17_5, 
+                    flux_Nov17_6, 
+                    flux_Nov17_7, 
+                    flux_Nov17_8, 
+                    flux_Nov17_9, 
+                    MaCCQE, 
+                    MaCCRES, 
+                    MvCCRES, 
+                    AhtBY, 
+                    BhtBY, 
+                    CV1uBY, 
+                    CV2uBY, 
+                    BeRPA_A, 
+                    BeRPA_B, 
+                    BeRPA_D 
+                ]
+
+DefaultPRISMScan: @local::DefaultScan
+DefaultPRISMFitScan: @local::DefaultPRISMScan
+DefaultPRISMFitScan.GOF.fit_nuisance: true
+
+DefaultFarDetScan: @local::DefaultScan
+DefaultFarDetScan.use_PRISM: false
+DefaultFarDetFitScan: @local::DefaultFarDetScan
+DefaultFarDetFitScan.GOF.fit_nuisance: true
