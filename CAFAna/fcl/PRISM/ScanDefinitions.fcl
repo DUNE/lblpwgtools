@@ -1,0 +1,50 @@
+ScanDefinitions: {
+    ssth23_coarse: [
+      {
+          name: ssth23
+          scan_steps:  [30, 0.4, 0.7]
+      },
+    ]
+    dmsq23_coarse: [
+      {
+          name: dmsq32
+          scan_steps:  [30, 2E-3, 3E-3]
+      }
+    ]
+    ssth23_dmsq23_coarse: [
+        @local::ScanDefinitions.ssth23_coarse[0],
+        @local::ScanDefinitions.dmsq23_coarse[0]
+    ]
+    ssth23: [
+      {
+          name: ssth23
+          scan_steps:  [75, 0.4, 0.7]
+      },
+    ]
+    dmsq23: [
+      {
+          name: dmsq32
+          scan_steps:  [75, 2E-3, 3E-3]
+      }
+    ]
+    ssth23_dmsq23: [
+        @local::ScanDefinitions.ssth23[0],
+        @local::ScanDefinitions.dmsq23[0]
+    ]
+    ssth23_fine: [
+      {
+          name: ssth23
+          scan_steps:  [150, 0.4, 0.7]
+      },
+    ]
+    dmsq23_fine: [
+      {
+          name: dmsq32
+          scan_steps:  [150, 2E-3, 3E-3]
+      }
+    ]
+    ssth23_dmsq23_fine: [
+        @local::ScanDefinitions.ssth23_fine[0],
+        @local::ScanDefinitions.dmsq23_fine[0]
+    ]
+}

@@ -1,29 +1,4 @@
-OscPoints: [ 
-    {
-        ssth23: 0.45
-        dmsq32: 2.525e-3
-    }, 
-    {
-        ssth23: 0.525
-        dmsq32: 2.525e-3
-    }, 
-    {
-        ssth23: 0.6
-        dmsq32: 2.525e-3
-    }, 
-    {
-        ssth23: 0.4875
-        dmsq32: 2.375e-3
-    }, 
-    {
-        ssth23: 0.5625
-        dmsq32: 2.375e-3
-    }, 
-    {
-        ssth23: 0.5
-        dmsq32: 2.3e-3
-    }
-]
+#include "AnalysisDefaults.fcl"
 
 Systs: {
     Flux: [
@@ -55,46 +30,6 @@ Systs: {
         }
 }
 
-RunPlans: {
-    flat: {
-           plan: [ { xrange: [-2,0] time: 1 },
-                   { xrange: [0,2] time: 1 },
-                   { xrange: [2,6] time: 1 },
-                   { xrange: [6,10] time: 1 },
-                   { xrange: [10,14] time: 1 },
-                   { xrange: [14,18] time: 1 },
-                   { xrange: [18,22] time: 1 },
-                   { xrange: [22,26] time: 1 },
-                   { xrange: [26,30] time: 1 },
-                   { xrange: [30,34] time: 1 } ]
-       }
-
-    guess: {
-           plan: [ { xrange: [-2,0] time: 7 },
-                   { xrange: [0,2] time: 147 },
-                   { xrange: [2,6] time: 18 },
-                   { xrange: [6,10] time: 18 },
-                   { xrange: [10,14] time: 18 },
-                   { xrange: [14,18] time: 18 },
-                   { xrange: [18,22] time: 18 },
-                   { xrange: [22,26] time: 18 },
-                   { xrange: [26,30] time: 18 },
-                   { xrange: [30,34] time: 18 } ]
-       }
-    prodlike: {
-           plan: [ { xrange: [-2,0] time: 0.02 },
-                   { xrange: [0,2] time: 0.02 },
-                   { xrange: [2,6] time: 0.03 },
-                   { xrange: [6,10] time: 0.035 },
-                   { xrange: [10,14] time: 0.0775 },
-                   { xrange: [14,18] time: 0.08 },
-                   { xrange: [18,22] time: 0.08 },
-                   { xrange: [22,26] time: 0.155 },
-                   { xrange: [26,30] time: 0.1625 },
-                   { xrange: [30,34] time: 0.17 } ]
-       }
-}
-
 States: {
     wsysts: PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
     wosysts: PRISMState.EProxy_protonFD.FakeHCRun_allchans.root 
@@ -103,96 +38,6 @@ States: {
     fine: PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.finebin.root
     fine_nosyst: PRISMState.EProxy_protonFD.FakeHCRun_allchans.finebin.root
     numode_fine: PRISMState.EProxy_protonFD.FakeHCRun_numodechans.finebin.root
-}
-
-PRISMFitChannels: {
-    Numu_disp: {
-        ND: numu_numode
-        FD: numu_numode
-    }
-    Numubar_disp: {
-        ND: numubar_nubarmode
-        FD: numubar_nubarmode
-    }
-    Nue_app: {
-        ND: numu_numode
-        FD: nue_numode
-    }
-    Nuebar_app: {
-        ND: numubar_nubarmode
-        FD: nuebar_nubarmode
-    }
-    DispJoint:[
-        @local::PRISMFitChannels.Numu_disp,
-        @local::PRISMFitChannels.Numubar_disp,
-    ]
-    AppJoint:[
-        @local::PRISMFitChannels.Nue_app,
-        @local::PRISMFitChannels.Nuebar_app,
-    ]
-    NuModeJoint:[
-        @local::PRISMFitChannels.Numu_disp,
-        @local::PRISMFitChannels.Nue_app,
-    ]
-    NuBarModeJoint:[
-        @local::PRISMFitChannels.Numubar_disp,
-        @local::PRISMFitChannels.Nuebar_app,
-    ]
-    FourFlavor: [
-        @sequence::PRISMFitChannels.NuModeJoint,
-        @sequence::PRISMFitChannels.NuBarModeJoint,
-    ]
-}
-
-DefaultPred: {
-    state_file: @local::States.fine_nosyst
-    output_file: [PRISMPreds.root, UPDATE]
-    projection_name: EProxy
-
-    use_PRISM: true
-    POT_years: 3.5
-
-    PRISM: {
-
-        match_conditioning: [
-            {
-                chan: @local::PRISMFitChannels.Numu_disp
-                energy_range: [0, 6]
-                reg_factor: 1.2E-17
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Numubar_disp
-                energy_range: [0, 6]
-                reg_factor: 2.1E-17
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Nue_app
-                energy_range: [0, 6]
-                reg_factor: 1.21E-17
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Nuebar_app
-                energy_range: [0, 6]
-                reg_factor: 1.91E-17
-                is_fake_spec_run: true
-            }
-        ]
-
-
-        set_ND_errors_from_rate: false
-
-        RunPlans: {
-            numode: @local::RunPlans.flat
-            nubmode: @local::RunPlans.flat
-        }
-
-        write_debug: false
-    }
-
-    samples: @local::PRISMFitChannels.Numu_disp
 }
 
 predictions: [
@@ -242,112 +87,12 @@ predictions: [
 
 predictions[0].output_file[1]: "RECREATE"
 
-ScanDefinitions: {
-    ssth23_coarse: [
-      {
-          name: ssth23
-          scan_steps:  [30, 0.4, 0.7]
-      },
-    ]
-    dmsq23_coarse: [
-      {
-          name: dmsq32
-          scan_steps:  [30, 2E-3, 3E-3]
-      }
-    ]
-    ssth23_dmsq23_coarse: [
-        @local::ScanDefinitions.ssth23_coarse[0],
-        @local::ScanDefinitions.dmsq23_coarse[0]
-    ]
-    ssth23: [
-      {
-          name: ssth23
-          scan_steps:  [75, 0.4, 0.7]
-      },
-    ]
-    dmsq23: [
-      {
-          name: dmsq32
-          scan_steps:  [75, 2E-3, 3E-3]
-      }
-    ]
-    ssth23_dmsq23: [
-        @local::ScanDefinitions.ssth23[0],
-        @local::ScanDefinitions.dmsq23[0]
-    ]
-    ssth23_fine: [
-      {
-          name: ssth23
-          scan_steps:  [150, 0.4, 0.7]
-      },
-    ]
-    dmsq23_fine: [
-      {
-          name: dmsq32
-          scan_steps:  [150, 2E-3, 3E-3]
-      }
-    ]
-    ssth23_dmsq23_fine: [
-        @local::ScanDefinitions.ssth23_fine[0],
-        @local::ScanDefinitions.dmsq23_fine[0]
-    ]
-}
 
-DefaultScan: {
-    @table::DefaultPred
 
-    output_file: [PRISMScans.root, UPDATE]
 
-    GOF: {
-        use_ND_stats: true
-        fit_nuisance: false
-        poisson_throw: true
 
-        free_osc_params: [dmsq32, ssth23, th13, deltapi]
-        free_syst_params: []
 
-        energy_limits: {
-            NumuDisp: [0.5, 8]
-            NueApp: [0.5, 8]
-            NumuBarDisp: [0.5, 8]
-            NueBarApp: [0.5, 8]
-        }
-    }
 
-    samples: @local::PRISMFitChannels.Numu_disp
-    scan_params: @local::ScanDefinitions.dmsq23_coarse
-}
-
-LOS: [  flux_Nov17_0, 
-        flux_Nov17_1, 
-        flux_Nov17_2, 
-        flux_Nov17_3, 
-        flux_Nov17_4, 
-        flux_Nov17_5, 
-        flux_Nov17_6, 
-        flux_Nov17_7, 
-        flux_Nov17_8, 
-        flux_Nov17_9, 
-        MaCCQE, 
-        MaCCRES, 
-        MvCCRES, 
-        AhtBY, 
-        BhtBY, 
-        CV1uBY, 
-        CV2uBY, 
-        BeRPA_A, 
-        BeRPA_B, 
-        BeRPA_D 
-    ]
-
-DefaultPRISMScan: @local::DefaultScan
-DefaultPRISMFitScan: @local::DefaultPRISMScan
-DefaultPRISMFitScan.GOF.fit_nuisance: true
-
-DefaultFarDetScan: @local::DefaultScan
-DefaultFarDetScan.use_PRISM: false
-DefaultFarDetFitScan: @local::DefaultFarDetScan
-DefaultFarDetFitScan.GOF.fit_nuisance: true
 
 scans: [
     {
@@ -406,48 +151,7 @@ scans: [
 scans[0].output_file[1]: "RECREATE"
 
 reg_scans: [
-    {
-        state_file: @local::States.fine_nosyst
-        output_file: [PRISMRegOpt.root, UPDATE]
-        projection_name: EProxy
-
-        scan: [100, 1E-10,1E-20]
-        use_log_steps: true
-
-        PRISM: {
-            match_conditioning: [
-            {
-                chan: @local::PRISMFitChannels.Numu_disp
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Numubar_disp
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Nue_app
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::PRISMFitChannels.Nuebar_app
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            }
-        ]
-        }
-        samples: @local::PRISMFitChannels.FourFlavor
-    }
+    
 ]
 
 reg_scans[0].output_file[1]: "RECREATE"

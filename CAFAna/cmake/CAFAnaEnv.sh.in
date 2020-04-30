@@ -53,6 +53,26 @@ fi
 add_to_PATH "${CAFANA}/bin"
 add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
 
+if [ -e ${CAFANA}/fcl ]; then
+
+  function add_to_FHICL_FILE_PATH () {
+    for d; do
+
+      d=$(cd -- "$d" && { pwd -P || pwd; }) 2>/dev/null  # canonicalize symbolic links
+      if [ -z "$d" ]; then continue; fi  # skip nonexistent directory
+      case ":$FHICL_FILE_PATH:" in
+        *":$d:"*) :;;
+        *) export FHICL_FILE_PATH=$d:$FHICL_FILE_PATH;;
+      esac
+    done
+  }
+
+  add_to_FHICL_FILE_PATH "${CAFANA}/fcl"
+  if [ -e ${CAFANA}/fcl/PRISM ]; then
+    add_to_FHICL_FILE_PATH "${CAFANA}/fcl/PRISM"
+  fi
+fi
+
 export BOOST_INC=@BOOST_INC@
 export BOOST_LIB=@BOOST_LIB@
 

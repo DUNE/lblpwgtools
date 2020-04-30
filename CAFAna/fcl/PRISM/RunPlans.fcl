@@ -1,0 +1,39 @@
+RunPlans: {
+    flat: {
+           plan: [ { xrange: [-2,0] time: 1 },
+                   { xrange: [0,2] time: 1 },
+                   { xrange: [2,6] time: 1 },
+                   { xrange: [6,10] time: 1 },
+                   { xrange: [10,14] time: 1 },
+                   { xrange: [14,18] time: 1 },
+                   { xrange: [18,22] time: 1 },
+                   { xrange: [22,26] time: 1 },
+                   { xrange: [26,30] time: 1 },
+                   { xrange: [30,34] time: 1 } ]
+       }
+
+    guess: {
+           plan: [ { xrange: [-2,0] time: 7 },
+                   { xrange: [0,2] time: 147 },
+                   { xrange: [2,6] time: 18 },
+                   { xrange: [6,10] time: 18 },
+                   { xrange: [10,14] time: 18 },
+                   { xrange: [14,18] time: 18 },
+                   { xrange: [18,22] time: 18 },
+                   { xrange: [22,26] time: 18 },
+                   { xrange: [26,30] time: 18 },
+                   { xrange: [30,34] time: 18 } ]
+       }
+    prodlike: {
+           plan: [ { xrange: [-2,0] time: 0.02 },
+                   { xrange: [0,2] time: 0.02 },
+                   { xrange: [2,6] time: 0.03 },
+                   { xrange: [6,10] time: 0.035 },
+                   { xrange: [10,14] time: 0.0775 },
+                   { xrange: [14,18] time: 0.08 },
+                   { xrange: [18,22] time: 0.08 },
+                   { xrange: [22,26] time: 0.155 },
+                   { xrange: [26,30] time: 0.1625 },
+                   { xrange: [30,34] time: 0.17 } ]
+       }
+}
