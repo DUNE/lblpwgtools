@@ -434,7 +434,8 @@ if ! podman image exists ${IMAGE_NAME}:${TAGNAME}; then
 
   CAF_RUN_CONT=$(buildah from ${BASE_IMAGE})
 
-  BUILD_LIBS="gsl bzip2 boost pcre xz zlib freetype openssl fftw"
+  #root needs c++ header files
+  BUILD_LIBS="libstdc++-devel gsl bzip2 boost pcre xz zlib freetype openssl fftw"
   RETREVAL_SW="git wget krb5-libs openssh"
   MISC_SW="python36 python2 which nano sed vim"
 
@@ -474,6 +475,7 @@ if ! podman image exists ${IMAGE_NAME}:${TAGNAME}; then
   CLHEP="/opt/clhep/${CLHEP_VERS}"
   bb_cont_set_env ${CAF_RUN_CONT} CLHEP ${CLHEP}
   bb_add_to_path_env ${CAF_RUN_CONT} PATH ${CLHEP}/bin
+  bb_add_to_path_env ${CAF_RUN_CONT} LD_LIBRARY_PATH ${CLHEP}/lib
 
   bb_cont_mkdir_cd ${CAF_RUN_CONT} /opt/cafana-src
   buildah run ${CAF_RUN_CONT} git clone ${REPO_URL}
@@ -484,6 +486,10 @@ if ! podman image exists ${IMAGE_NAME}:${TAGNAME}; then
   # cafana env
   bb_add_to_path_env ${CAF_RUN_CONT} PATH /opt/cafana/bin
   bb_add_to_path_env ${CAF_RUN_CONT} LD_LIBRARY_PATH /opt/cafana/lib
+  bb_add_to_path_env ${CAF_RUN_CONT} FHICL_FILE_PATH /opt/cafana/fcl
+  if [ "${USE_PRISM}" == "1" ]; then
+    bb_add_to_path_env ${CAF_RUN_CONT} FHICL_FILE_PATH /opt/cafana/fcl/PRISM
+  fi
   bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_NDCOVMAT 1
   bb_cont_set_env ${CAF_RUN_CONT} CAFANA_USE_UNCORRNDCOVMAT 0
   bb_cont_set_env ${CAF_RUN_CONT} CAFANA_DONT_CLAMP_SYSTS 0
