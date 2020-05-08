@@ -22,9 +22,9 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/Ext/Utilities)
 endif()
 
 ###############################  GSL  ######################################
-if(NOT DEFINED GSL_LIB OR GSL_LIB STREQUAL "")
-  if(DEFINED ENV{GSL_LIB} AND NOT ENV{GSL_LIB} STREQUAL "")
-    SET(GSL_LIB,$ENV{GSL_LIB}})
+if(NOT DEFINED GSL_LIB OR "x${GSL_LIB}" STREQUAL "x")
+  if(DEFINED ENV{GSL_LIB} AND NOT "x$ENV{GSL_LIB}" STREQUAL "x")
+    SET(GSL_LIB $ENV{GSL_LIB})
   else()
     GETLIBDIR(gsl-config --libs GSL_LIB)
     if(GSL_LIB STREQUAL "")
