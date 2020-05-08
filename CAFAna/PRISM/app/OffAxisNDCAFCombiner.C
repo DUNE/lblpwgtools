@@ -190,9 +190,11 @@ void OffAxisNDCAFCombiner(
     }
     std::copy(files.begin(), files.end(), std::back_inserter(CAFs[dir]));
     NFiles += files.size();
+    std::cout << "[INFO]: Added " << files.size() << " files, for a total of " << NFiles << std::endl;
   }
 
-  if (!CAFs.size()) {
+
+  if (!NFiles) {
     std::cout << "[WARN]: Found no matching files." << std::endl;
     return;
   }
@@ -409,6 +411,8 @@ void OffAxisNDCAFCombiner(
                 det_x, perPOT, SliceMassCorrector.GetWeight(vtx_x));
           }
           if (preSelect) {
+            std::cout << "\t-FV selection : NInFile: " << double(EventPOTEventFiles.size() -
+                                 NPrevOffAxisWeightFriendEntries)  << ", NInFile: " << nevs << std::endl;
             std::cout << "\t-FV selection efficiency: "
                       << (double(EventPOTEventFiles.size() -
                                  NPrevOffAxisWeightFriendEntries) /
@@ -461,10 +465,10 @@ void OffAxisNDCAFCombiner(
     std::cout << "[INFO]: Copying caf tree..." << std::endl;
     bool canfast = !preSelect && !Flipdetx;
     TTree *treecopy =
-        caf->CloneTree(canfast ? 0 : NMaxEvents, canfast ? "" : "fast");
+        caf->CloneTree(canfast ? NMaxEvents : 0, canfast ? "fast" : "");
     treecopy->SetName("cafTree");
 
-    if (canfast) {
+    if (!canfast) {
       double vtx_x, vtx_y, vtx_z, det_x;
       caf->SetBranchAddress("vtx_x", &vtx_x);
       caf->SetBranchAddress("vtx_y", &vtx_y);
