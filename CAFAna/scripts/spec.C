@@ -1,7 +1,8 @@
 // ETW May 2018
 // Standard script for DUNE spectra
+// Updated 5/18/2020 to pick up latest CAFAna implemenation including weight CVs
 
-#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Fit/Fit.h"
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -13,6 +14,7 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Systs/Systs.h"
+#include "CAFAna/Analysis/AnalysisVars.h"
 
 using namespace ana;
 
@@ -30,22 +32,21 @@ using namespace ana;
 const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 
-const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt); // kUnweighted
 // 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
-                    Binning::Simple(64, 0.0, 8.0),
+                    Binning::Simple(80, 0.0, 10.0),
                     kRecoE_nue);
 
 const HistAxis axis_numu("Reconstructed energy (GeV)",
-                    Binning::Simple(64, 0.0, 8.0),
+                    Binning::Simple(80, 0.0, 10.0),
                     kRecoE_numu);
 
 
 // POT/yr * 3.5yrs * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;
 
-const char* stateFname = "spec_state_v3_wt.root";
-const char* outputFname = "spec_hist_v3_wt.root";
+const char* stateFname = "spec_state_v4_wt.root";
+const char* outputFname = "spec_hist_v4_wt.root";
 
 //Set systematics style by hand for now
 bool nosyst = false;
@@ -62,13 +63,13 @@ void spec(bool reload = false)
   
   if(reload || TFile(stateFname).IsZombie()){
 
-    SpectrumLoader loaderFDFHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root");
-    SpectrumLoader loaderFDFHCNue("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root");
-    SpectrumLoader loaderFDFHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root");
+    SpectrumLoader loaderFDFHCNonswap("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root");
+    SpectrumLoader loaderFDFHCNue("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nueswap.root");
+    SpectrumLoader loaderFDFHCNuTau("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_tauswap.root");
 
-    SpectrumLoader loaderFDRHCNonswap("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_nonswap.root");
-    SpectrumLoader loaderFDRHCNue("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_nueswap.root");
-    SpectrumLoader loaderFDRHCNuTau("/dune/data/users/marshalc/CAFs/mcc11_v3/FD_RHC_tauswap.root");
+    SpectrumLoader loaderFDRHCNonswap("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_nonswap.root");
+    SpectrumLoader loaderFDRHCNue("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_nueswap.root");
+    SpectrumLoader loaderFDRHCNuTau("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
     osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
