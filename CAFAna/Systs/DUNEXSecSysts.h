@@ -53,7 +53,7 @@ namespace ana
 
   EVALORCategory GetVALORCategory(const caf::StandardRecord* sr);
 
-  const Var kVALORCategory({}, GetVALORCategory);
+  const Var kVALORCategory(GetVALORCategory);
 
   /// Warning, these aren't orthogonal. Need to include DUNEXSecCorrelation in
   /// the fit (which gives MINUIT a seizure) for correctness. You may well want

@@ -33,8 +33,7 @@ void demo1()
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // A cut is structured like a Var, but returning bool
-  const Cut kPassesCVN({},
-                       [](const caf::StandardRecord* sr)
+  const Cut kPassesCVN([](const caf::StandardRecord* sr)
                        {
                          return sr->dune.cvnnumu > 0.5;
                        });

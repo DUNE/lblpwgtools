@@ -29,7 +29,7 @@ PredictionPRISM::PredictionPRISM(
   bool HaveEff = (SelectedNumuCC && AllNumuCC);
 
   // Use to weight by cheating Efficiency
-  Var kEffWeight({}, [&](const caf::StandardRecord *sr) -> double {
+  Var kEffWeight([&](const caf::StandardRecord *sr) -> double {
     int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->Ev);
     int by = AllNumuCC->GetYaxis()->FindFixBin(sr->vtx_x);
     int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->det_x);
