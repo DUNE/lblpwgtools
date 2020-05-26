@@ -12,10 +12,10 @@ namespace ana
   /// We use uniform-initializer syntax to concisely pass the list of necessary
   /// branches. In this case the selection function is simple enough that we
   /// can include it inline as a lambda function.
-  const Cut kIsNC({"dune.ccnc"},
+  const Cut kIsNC({"ccnc"},
                   [](const caf::StandardRecord* sr)
                   {
-                    return !sr->dune.isCC;
+                    return !sr->isCC;
                   });
 
   //----------------------------------------------------------------------
@@ -29,7 +29,7 @@ namespace ana
 
     bool operator()(const caf::StandardRecord* sr) const
     {
-      return sr->dune.isCC && abs(sr->dune.nuPDGunosc) == fPdgOrig && abs(sr->dune.nuPDG) == fPdg;
+      return sr->isCC && abs(sr->nuPDGunosc) == fPdgOrig && abs(sr->nuPDG) == fPdg;
     }
   protected:
     int fPdg, fPdgOrig;
@@ -56,7 +56,7 @@ namespace ana
   const Cut kIsAntiNu({},
                       [](const caf::StandardRecord* sr)
                       {
-                        return sr->dune.nuPDG < 0;
+                        return sr->nuPDG < 0;
                       });
 
   inline bool IsInFDFV(double pos_x_cm, double pos_y_cm, double pos_z_cm) {
@@ -108,8 +108,8 @@ namespace ana
                       [](const caf::StandardRecord* sr)
                       {
                         return IsInFV(
-                                 sr->dune.isFD,
-                                 sr->dune.vtx_x,sr->dune.vtx_y,sr->dune.vtx_z);
+                                 sr->isFD,
+                                 sr->vtx_x,sr->vtx_y,sr->vtx_z);
                       });
 
   //ETW 11/5/2018 Fiducial cut using MVA variable
@@ -117,7 +117,7 @@ namespace ana
   const Cut kPassFid_MVA({},
                         [](const caf::StandardRecord* sr)
                         {
-                          return ( sr->dune.mvanumu > -1 );
+                          return ( sr->mvanumu > -1 );
                         });
 
 }

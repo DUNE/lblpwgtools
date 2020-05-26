@@ -30,9 +30,9 @@ PredictionPRISM::PredictionPRISM(
 
   // Use to weight by cheating Efficiency
   Var kEffWeight({}, [&](const caf::StandardRecord *sr) -> double {
-    int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->dune.Ev);
-    int by = AllNumuCC->GetYaxis()->FindFixBin(sr->dune.vtx_x);
-    int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->dune.det_x);
+    int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->Ev);
+    int by = AllNumuCC->GetYaxis()->FindFixBin(sr->vtx_x);
+    int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->det_x);
     int ev_bin = AllNumuCC->GetBin(bx, by, bz);
     return AllNumuCC->GetBinContent(ev_bin) /
            SelectedNumuCC->GetBinContent(ev_bin);

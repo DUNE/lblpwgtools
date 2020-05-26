@@ -22,23 +22,23 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNue);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNue);
 
       double scale = .02 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.Ev_reco_nue < 0.) sr->dune.Ev_reco_nue = 0.;
-        sr->dune.Ev_reco_numu  += scale * sr->dune.RecoHadEnNumu;
-        sr->dune.Ev_reco_nue   += scale * sr->dune.RecoHadEnNue;
-        sr->dune.RecoHadEnNumu *= 1. + scale;
-        sr->dune.RecoHadEnNue  *= 1. + scale;
-        if ( !(sr->dune.isCC==1 && abs(sr->dune.nuPDG) == 14) ) {
-          sr->dune.Ev_reco_nue  += scale * sr->dune.RecoLepEnNue;
-          sr->dune.RecoLepEnNue *= 1. + scale;
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->Ev_reco_nue < 0.) sr->Ev_reco_nue = 0.;
+        sr->Ev_reco_numu  += scale * sr->RecoHadEnNumu;
+        sr->Ev_reco_nue   += scale * sr->RecoHadEnNue;
+        sr->RecoHadEnNumu *= 1. + scale;
+        sr->RecoHadEnNue  *= 1. + scale;
+        if ( !(sr->isCC==1 && abs(sr->nuPDG) == 14) ) {
+          sr->Ev_reco_nue  += scale * sr->RecoLepEnNue;
+          sr->RecoLepEnNue *= 1. + scale;
         }
       }
     }
@@ -55,21 +55,21 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNue);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNue);
         const double scale = .01 * sigma;
-        if (sr->dune.isFD) {
-          if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-          sr->dune.Ev_reco_numu  += scale*pow(sr->dune.RecoHadEnNumu, 0.5)*sr->dune.RecoHadEnNumu;
-          sr->dune.Ev_reco_nue   += scale*pow(sr->dune.RecoHadEnNue, 0.5)*sr->dune.RecoHadEnNue;
-          sr->dune.RecoHadEnNumu += scale*pow(sr->dune.RecoHadEnNumu, 0.5)*sr->dune.RecoHadEnNumu;
-          sr->dune.RecoHadEnNue  += scale*pow(sr->dune.RecoHadEnNue, 0.5)*sr->dune.RecoHadEnNue;
-          if ( !(sr->dune.isCC==1 && abs(sr->dune.nuPDG) == 14) ) {
-            sr->dune.Ev_reco_nue  += scale*pow(sr->dune.RecoLepEnNue, 0.5)*sr->dune.RecoLepEnNue;
-            sr->dune.RecoLepEnNue += scale*pow(sr->dune.RecoLepEnNue, 0.5)*sr->dune.RecoLepEnNue;
+        if (sr->isFD) {
+          if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+          sr->Ev_reco_numu  += scale*pow(sr->RecoHadEnNumu, 0.5)*sr->RecoHadEnNumu;
+          sr->Ev_reco_nue   += scale*pow(sr->RecoHadEnNue, 0.5)*sr->RecoHadEnNue;
+          sr->RecoHadEnNumu += scale*pow(sr->RecoHadEnNumu, 0.5)*sr->RecoHadEnNumu;
+          sr->RecoHadEnNue  += scale*pow(sr->RecoHadEnNue, 0.5)*sr->RecoHadEnNue;
+          if ( !(sr->isCC==1 && abs(sr->nuPDG) == 14) ) {
+            sr->Ev_reco_nue  += scale*pow(sr->RecoLepEnNue, 0.5)*sr->RecoLepEnNue;
+            sr->RecoLepEnNue += scale*pow(sr->RecoLepEnNue, 0.5)*sr->RecoLepEnNue;
           }
         }
     }
@@ -84,21 +84,21 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNue);
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNue);
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
         const double scale = .02 * sigma;
-        sr->dune.Ev_reco_numu += sr->dune.RecoHadEnNumu*scale*pow(sr->dune.RecoHadEnNumu+0.1, -0.5);
-        sr->dune.Ev_reco_nue  += sr->dune.RecoHadEnNue*scale*pow(sr->dune.RecoHadEnNue+0.1, -0.5);
-        sr->dune.RecoHadEnNumu += sr->dune.RecoHadEnNumu*scale*pow(sr->dune.RecoHadEnNumu+0.1, -0.5);
-        sr->dune.RecoHadEnNue  += sr->dune.RecoHadEnNue*scale*pow(sr->dune.RecoHadEnNue+0.1, -0.5);
-        if ( !(sr->dune.isCC==1 && abs(sr->dune.nuPDG) == 14) ) {
-          sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
-          sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
+        sr->Ev_reco_numu += sr->RecoHadEnNumu*scale*pow(sr->RecoHadEnNumu+0.1, -0.5);
+        sr->Ev_reco_nue  += sr->RecoHadEnNue*scale*pow(sr->RecoHadEnNue+0.1, -0.5);
+        sr->RecoHadEnNumu += sr->RecoHadEnNumu*scale*pow(sr->RecoHadEnNumu+0.1, -0.5);
+        sr->RecoHadEnNue  += sr->RecoHadEnNue*scale*pow(sr->RecoHadEnNue+0.1, -0.5);
+        if ( !(sr->isCC==1 && abs(sr->nuPDG) == 14) ) {
+          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
+          sr->RecoLepEnNue += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
         }
       }
     }
@@ -118,27 +118,27 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoP,
-                  sr->dune.eRecoPim,
-                  sr->dune.eRecoPip);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoP,
+                  sr->eRecoPim,
+                  sr->eRecoPip);
       const double scale = .05 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoP < 0) sr->dune.eRecoP = 0.;
-        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
-        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
-        double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
-        sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE, 0.5);
-        sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE, 0.5);
-        sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE, 0.5);
-        sr->dune.Ev_reco_numu += sumE * scale * pow(sumE, 0.5);
-        sr->dune.Ev_reco_nue  += sumE * scale * pow(sumE, 0.5);
-        sr->dune.RecoHadEnNumu += sumE * scale * pow(sumE, 0.5);
-        sr->dune.RecoHadEnNue  += sumE * scale * pow(sumE, 0.5);
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
+        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
+        double sumE = sr->eRecoP + sr->eRecoPip + sr->eRecoPim;
+        sr->eRecoP   += sr->eRecoP * scale * pow(sumE, 0.5);
+        sr->eRecoPim += sr->eRecoPim * scale * pow(sumE, 0.5);
+        sr->eRecoPip += sr->eRecoPip * scale * pow(sumE, 0.5);
+        sr->Ev_reco_numu += sumE * scale * pow(sumE, 0.5);
+        sr->Ev_reco_nue  += sumE * scale * pow(sumE, 0.5);
+        sr->RecoHadEnNumu += sumE * scale * pow(sumE, 0.5);
+        sr->RecoHadEnNue  += sumE * scale * pow(sumE, 0.5);
       }
     }
   };
@@ -152,27 +152,27 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoP,
-                  sr->dune.eRecoPim,
-                  sr->dune.eRecoPip);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoP,
+                  sr->eRecoPim,
+                  sr->eRecoPip);
       const double scale = .05 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoP < 0) sr->dune.eRecoP = 0.;
-        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
-        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
-        double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
-        sr->dune.Ev_reco_numu += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->dune.Ev_reco_nue  += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE+0.1, -0.5);
-        sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE+0.1, -0.5);
-        sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE+0.1, -0.5);
-        sr->dune.RecoHadEnNumu += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->dune.RecoHadEnNue  += sumE * scale * pow(sumE+0.1, -0.5);
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
+        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
+        double sumE = sr->eRecoP + sr->eRecoPip + sr->eRecoPim;
+        sr->Ev_reco_numu += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->Ev_reco_nue  += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->eRecoP   += sr->eRecoP * scale * pow(sumE+0.1, -0.5);
+        sr->eRecoPim += sr->eRecoPim * scale * pow(sumE+0.1, -0.5);
+        sr->eRecoPip += sr->eRecoPip * scale * pow(sumE+0.1, -0.5);
+        sr->RecoHadEnNumu += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->RecoHadEnNue  += sumE * scale * pow(sumE+0.1, -0.5);
       }
     }
   };
@@ -189,12 +189,12 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.RecoLepEnNumu);
-      if (sr->dune.isFD && sr->dune.isCC==1 && abs(sr->dune.nuPDG)==14) {
+      restore.Add(sr->Ev_reco_numu,
+                  sr->RecoLepEnNumu);
+      if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .005 * sigma;
-        sr->dune.Ev_reco_numu  += sr->dune.RecoLepEnNumu * pow(sr->dune.RecoLepEnNumu, 0.5) * scale;
-        sr->dune.RecoLepEnNumu += sr->dune.RecoLepEnNumu * pow(sr->dune.RecoLepEnNumu, 0.5) * scale;
+        sr->Ev_reco_numu  += sr->RecoLepEnNumu * pow(sr->RecoLepEnNumu, 0.5) * scale;
+        sr->RecoLepEnNumu += sr->RecoLepEnNumu * pow(sr->RecoLepEnNumu, 0.5) * scale;
       }
     }
   };
@@ -209,12 +209,12 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.RecoLepEnNumu);
-      if (sr->dune.isFD && sr->dune.isCC==1 && abs(sr->dune.nuPDG)==14) {
+      restore.Add(sr->Ev_reco_numu,
+                  sr->RecoLepEnNumu);
+      if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .02 * sigma;
-        sr->dune.Ev_reco_numu  += sr->dune.RecoLepEnNumu * scale * pow(sr->dune.RecoLepEnNumu+0.1, -0.5);
-        sr->dune.RecoLepEnNumu += sr->dune.RecoLepEnNumu * scale * pow(sr->dune.RecoLepEnNumu+0.1, -0.5);
+        sr->Ev_reco_numu  += sr->RecoLepEnNumu * scale * pow(sr->RecoLepEnNumu+0.1, -0.5);
+        sr->RecoLepEnNumu += sr->RecoLepEnNumu * scale * pow(sr->RecoLepEnNumu+0.1, -0.5);
       }
     }
   };
@@ -232,18 +232,18 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoN);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoN);
       const double scale = .3 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.eRecoN < 0.) { sr->dune.eRecoN = 0.; }
-        sr->dune.Ev_reco_numu += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
-        sr->dune.Ev_reco_nue  += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
+      if (sr->isFD) {
+        if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
+        sr->Ev_reco_numu += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
+        sr->Ev_reco_nue  += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
+        sr->RecoHadEnNumu += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
+        sr->RecoHadEnNue  += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
       }
     }
   };
@@ -257,18 +257,18 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoN);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoN);
       const double scale = .3 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.eRecoN < 0.) { sr->dune.eRecoN = 0.; }
-        sr->dune.Ev_reco_numu += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
-        sr->dune.Ev_reco_nue  += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
+      if (sr->isFD) {
+        if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
+        sr->Ev_reco_numu += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
+        sr->Ev_reco_nue  += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
+        sr->RecoHadEnNumu += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
+        sr->RecoHadEnNue  += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
       }
     }
   };
@@ -285,25 +285,25 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNue,
-                  sr->dune.eRecoPi0);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNue,
+                  sr->eRecoPi0);
       const double scale = .025 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
-        sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
-        sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
-        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
-        if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
-        if (sr->dune.isCC==1 && abs(sr->dune.nuPDG)==12) {
-          sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue*pow(sr->dune.RecoLepEnNue, 0.5)*scale;
-          sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue*pow(sr->dune.RecoLepEnNue, 0.5)*scale;
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
+        sr->Ev_reco_numu += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        sr->Ev_reco_nue  += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        sr->RecoHadEnNumu += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        sr->RecoHadEnNue  += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        sr->eRecoPi0 += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
+        if (sr->isCC==1 && abs(sr->nuPDG)==12) {
+          sr->Ev_reco_nue  += sr->RecoLepEnNue*pow(sr->RecoLepEnNue, 0.5)*scale;
+          sr->RecoLepEnNue += sr->RecoLepEnNue*pow(sr->RecoLepEnNue, 0.5)*scale;
         }
       }
     }
@@ -318,25 +318,25 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNumu,
-                  sr->dune.RecoLepEnNue,
-                  sr->dune.eRecoPi0);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNumu,
+                  sr->RecoLepEnNue,
+                  sr->eRecoPi0);
       const double scale = .025 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
-        sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
-        sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
-        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
-        if (sr->dune.isCC==1 && abs(sr->dune.nuPDG)==12) {
-          sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
-          sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue * scale * pow(sr->dune.RecoLepEnNue+0.1, -0.5);
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
+        sr->Ev_reco_numu += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->Ev_reco_nue  += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->RecoHadEnNumu += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->RecoHadEnNue  += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        if (sr->isCC==1 && abs(sr->nuPDG)==12) {
+          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
+          sr->RecoLepEnNue += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
         }
       }
     }
@@ -354,13 +354,13 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.RecoLepEnNumu);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->RecoLepEnNumu);
       const double scale = .02 * sigma;
       // Checks if FD  and select only CC muon neutrino events
-      if(sr->dune.isFD && abs(sr->dune.nuPDG) == 14 && sr->dune.isCC == 1){
-        sr->dune.Ev_reco_numu   += sr->dune.RecoLepEnNumu * scale;
-        sr->dune.RecoLepEnNumu  *= 1. + scale;
+      if(sr->isFD && abs(sr->nuPDG) == 14 && sr->isCC == 1){
+        sr->Ev_reco_numu   += sr->RecoLepEnNumu * scale;
+        sr->RecoLepEnNumu  *= 1. + scale;
       }
     }
   };
@@ -377,27 +377,27 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_nue,
-                  sr->dune.Ev_reco_numu,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoP,
-                  sr->dune.eRecoPip,
-                  sr->dune.eRecoPim);
+      restore.Add(sr->Ev_reco_nue,
+                  sr->Ev_reco_numu,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoP,
+                  sr->eRecoPip,
+                  sr->eRecoPim);
       const double scale = .05 * sigma;
-      if(sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoP < 0) sr->dune.eRecoP = 0.;
-        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
-        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
-        const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
-        sr->dune.eRecoP   += sr->dune.eRecoP * scale;
-        sr->dune.eRecoPim += sr->dune.eRecoPim * scale;
-        sr->dune.eRecoPip += sr->dune.eRecoPip * scale;
-        sr->dune.Ev_reco_numu += sumE * scale;
-        sr->dune.Ev_reco_nue  += sumE * scale;
-        sr->dune.RecoHadEnNumu += sumE * scale;
-        sr->dune.RecoHadEnNue  += sumE * scale;
+      if(sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
+        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
+        const double sumE = sr->eRecoP + sr->eRecoPim + sr->eRecoPip;
+        sr->eRecoP   += sr->eRecoP * scale;
+        sr->eRecoPim += sr->eRecoPim * scale;
+        sr->eRecoPip += sr->eRecoPip * scale;
+        sr->Ev_reco_numu += sumE * scale;
+        sr->Ev_reco_nue  += sumE * scale;
+        sr->RecoHadEnNumu += sumE * scale;
+        sr->RecoHadEnNue  += sumE * scale;
       }
     }
   };
@@ -415,20 +415,20 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.eRecoN);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->Ev_reco_nue,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->eRecoN);
       const double scale = .20 * sigma;
-      if(sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
-        sr->dune.Ev_reco_numu  += sr->dune.eRecoN * scale;
-        sr->dune.Ev_reco_nue   += sr->dune.eRecoN * scale;
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoN * scale;
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoN * scale;
-        sr->dune.eRecoN += sr->dune.eRecoN * scale;
+      if(sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoN < 0.) sr->eRecoN = 0.;
+        sr->Ev_reco_numu  += sr->eRecoN * scale;
+        sr->Ev_reco_nue   += sr->eRecoN * scale;
+        sr->RecoHadEnNumu += sr->eRecoN * scale;
+        sr->RecoHadEnNue  += sr->eRecoN * scale;
+        sr->eRecoN += sr->eRecoN * scale;
       }
     }
   };
@@ -445,24 +445,24 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.RecoLepEnNue,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.Ev_reco_nue,
-                  sr->dune.Ev_reco_numu,
-                  sr->dune.eRecoPi0);
+      restore.Add(sr->RecoLepEnNue,
+                  sr->RecoHadEnNue,
+                  sr->RecoHadEnNumu,
+                  sr->Ev_reco_nue,
+                  sr->Ev_reco_numu,
+                  sr->eRecoPi0);
       const double scale = 0.025 * sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
-        sr->dune.Ev_reco_nue  += sr->dune.eRecoPi0 * scale;
-        sr->dune.Ev_reco_numu += sr->dune.eRecoPi0 * scale;
-        sr->dune.RecoHadEnNue  += sr->dune.eRecoPi0 * scale;
-        sr->dune.RecoHadEnNumu += sr->dune.eRecoPi0 * scale;
-        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale;
-        if (sr->dune.isCC && abs(sr->dune.nuPDG) == 12) {
-          sr->dune.Ev_reco_nue  += sr->dune.RecoLepEnNue * scale;
-          sr->dune.RecoLepEnNue += sr->dune.RecoLepEnNue * scale;
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoPi0 < 0.) sr->eRecoPi0 = 0.;
+        sr->Ev_reco_nue  += sr->eRecoPi0 * scale;
+        sr->Ev_reco_numu += sr->eRecoPi0 * scale;
+        sr->RecoHadEnNue  += sr->eRecoPi0 * scale;
+        sr->RecoHadEnNumu += sr->eRecoPi0 * scale;
+        sr->eRecoPi0 += sr->eRecoPi0 * scale;
+        if (sr->isCC && abs(sr->nuPDG) == 12) {
+          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale;
+          sr->RecoLepEnNue += sr->RecoLepEnNue * scale;
         }
       }
     }
@@ -481,13 +481,13 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_numu,
-                  sr->dune.RecoLepEnNumu);
+      restore.Add(sr->Ev_reco_numu,
+                  sr->RecoLepEnNumu);
       const double scale = .02*sigma;
       // FD charged current numus only
-      if (sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG)==14) {
-        sr->dune.Ev_reco_numu  += (sr->dune.LepE - sr->dune.RecoLepEnNumu) * scale;
-        sr->dune.RecoLepEnNumu += (sr->dune.LepE - sr->dune.RecoLepEnNumu) * scale;
+      if (sr->isFD && sr->isCC && abs(sr->nuPDG)==14) {
+        sr->Ev_reco_numu  += (sr->LepE - sr->RecoLepEnNumu) * scale;
+        sr->RecoLepEnNumu += (sr->LepE - sr->RecoLepEnNumu) * scale;
       }
     }
   };
@@ -503,24 +503,24 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_nue,
-                  sr->dune.Ev_reco_numu,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoLepEnNue,
-                  sr->dune.eRecoPi0);
+      restore.Add(sr->Ev_reco_nue,
+                  sr->Ev_reco_numu,
+                  sr->RecoHadEnNumu,
+                  sr->RecoHadEnNue,
+                  sr->RecoLepEnNue,
+                  sr->eRecoPi0);
       const double scale = .02*sigma;
-      if (sr->dune.isFD){
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
-        sr->dune.Ev_reco_nue  += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
-        sr->dune.Ev_reco_numu += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
-        sr->dune.RecoHadEnNumu += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
-        sr->dune.RecoHadEnNue  += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
-        sr->dune.eRecoPi0     += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
-        if (sr->dune.isCC && abs(sr->dune.nuPDG)==12) {
-          sr->dune.Ev_reco_nue  += (sr->dune.LepE - sr->dune.RecoLepEnNue) * scale;
-          sr->dune.RecoLepEnNue += (sr->dune.LepE - sr->dune.RecoLepEnNue) * scale;
+      if (sr->isFD){
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoPi0 < 0.) sr->eRecoPi0 = 0.;
+        sr->Ev_reco_nue  += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->Ev_reco_numu += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->RecoHadEnNumu += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->RecoHadEnNue  += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->eRecoPi0     += (sr->ePi0 - sr->eRecoPi0) * scale;
+        if (sr->isCC && abs(sr->nuPDG)==12) {
+          sr->Ev_reco_nue  += (sr->LepE - sr->RecoLepEnNue) * scale;
+          sr->RecoLepEnNue += (sr->LepE - sr->RecoLepEnNue) * scale;
         }
       }
     }
@@ -537,25 +537,25 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_nue,
-                  sr->dune.Ev_reco_numu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.eRecoP,
-                  sr->dune.eRecoPip,
-                  sr->dune.eRecoPim);
+      restore.Add(sr->Ev_reco_nue,
+                  sr->Ev_reco_numu,
+                  sr->RecoHadEnNue,
+                  sr->RecoHadEnNumu,
+                  sr->eRecoP,
+                  sr->eRecoPip,
+                  sr->eRecoPim);
       const double scale = .02*sigma;
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoP < 0.) sr->dune.eRecoP = 0.;
-        if (sr->dune.eRecoPip < 0.) sr->dune.eRecoPip = 0.;
-        if (sr->dune.eRecoPim < 0.) sr->dune.eRecoPim = 0.;
-        const double trueSum = sr->dune.ePip + sr->dune.ePim + sr->dune.eP;
-        const double recoSum = sr->dune.eRecoPip + sr->dune.eRecoPim + sr->dune.eRecoP;
-        sr->dune.Ev_reco_nue   += (trueSum - recoSum) * scale;
-        sr->dune.Ev_reco_numu  += (trueSum - recoSum) * scale;
-        sr->dune.RecoHadEnNue  += (trueSum - recoSum) * scale;
-        sr->dune.RecoHadEnNumu += (trueSum - recoSum) * scale;
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoP < 0.) sr->eRecoP = 0.;
+        if (sr->eRecoPip < 0.) sr->eRecoPip = 0.;
+        if (sr->eRecoPim < 0.) sr->eRecoPim = 0.;
+        const double trueSum = sr->ePip + sr->ePim + sr->eP;
+        const double recoSum = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        sr->Ev_reco_nue   += (trueSum - recoSum) * scale;
+        sr->Ev_reco_numu  += (trueSum - recoSum) * scale;
+        sr->RecoHadEnNue  += (trueSum - recoSum) * scale;
+        sr->RecoHadEnNumu += (trueSum - recoSum) * scale;
       }
     }
   };
@@ -571,21 +571,21 @@ namespace ana
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
     {
-      restore.Add(sr->dune.Ev_reco_nue,
-                  sr->dune.Ev_reco_numu,
-                  sr->dune.RecoHadEnNue,
-                  sr->dune.RecoHadEnNumu,
-                  sr->dune.eRecoN);
+      restore.Add(sr->Ev_reco_nue,
+                  sr->Ev_reco_numu,
+                  sr->RecoHadEnNue,
+                  sr->RecoHadEnNumu,
+                  sr->eRecoN);
       const double scale = .1*sigma;
       // FD charged current numus only
-      if (sr->dune.isFD) {
-        if (sr->dune.RecoHadEnNue < 0.) sr->dune.RecoHadEnNue = 0.;
-        if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
-        sr->dune.Ev_reco_nue   += (sr->dune.eN - sr->dune.eRecoN) * scale;
-        sr->dune.Ev_reco_numu  += (sr->dune.eN - sr->dune.eRecoN) * scale;
-        sr->dune.RecoHadEnNue  += (sr->dune.eN - sr->dune.eRecoN) * scale;
-        sr->dune.RecoHadEnNumu += (sr->dune.eN - sr->dune.eRecoN) * scale;
-        sr->dune.eRecoN += (sr->dune.eN - sr->dune.eRecoN) * scale;
+      if (sr->isFD) {
+        if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
+        if (sr->eRecoN < 0.) sr->eRecoN = 0.;
+        sr->Ev_reco_nue   += (sr->eN - sr->eRecoN) * scale;
+        sr->Ev_reco_numu  += (sr->eN - sr->eRecoN) * scale;
+        sr->RecoHadEnNue  += (sr->eN - sr->eRecoN) * scale;
+        sr->RecoHadEnNumu += (sr->eN - sr->eRecoN) * scale;
+        sr->eRecoN += (sr->eN - sr->eRecoN) * scale;
       }
     }
   };

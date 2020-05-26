@@ -26,7 +26,7 @@ public:
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
 
-    if (!sr->dune.isCC) {
+    if (!sr->isCC) {
       return;
     }
 
@@ -34,12 +34,12 @@ public:
       return;
     }
 
-    restore.Add(sr->dune.eRec_FromDep);
+    restore.Add(sr->eRec_FromDep);
 
-    if (sr->dune.isFD) {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
+    if (sr->isFD) {
+      sr->eRec_FromDep -= EpFrac * sr->eDepP;
     } else {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
+      sr->eRec_FromDep -= EpFrac * sr->eRecoP;
     }
 
     if (!fDoWeight) {
@@ -48,14 +48,14 @@ public:
 
     union BDTReweighter::BDTReweighterFeature features[8];
 
-    features[5].fvalue = sr->dune.Ev; // Etrue
-    features[6].fvalue = sr->dune.eP; // True proton kinetic energy
-    features[7].fvalue = 1-sr->dune.LepE/sr->dune.Ev; // ytrue
+    features[5].fvalue = sr->Ev; // Etrue
+    features[6].fvalue = sr->eP; // True proton kinetic energy
+    features[7].fvalue = 1-sr->LepE/sr->Ev; // ytrue
 
     for (int i = 0; i < 5; i++) features[i].fvalue = 0;
 
     bool foundMode = true;
-    switch(sr->dune.GENIE_ScatteringMode) {
+    switch(sr->GENIE_ScatteringMode) {
     case 1 : features[0].fvalue = 1.;
       break;
     case 3:  features[1].fvalue = 1.;
@@ -71,7 +71,7 @@ public:
     }
 
     if (foundMode) {
-      double wght_val = bdt_reweighter[sr->dune.nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
+      double wght_val = bdt_reweighter[sr->nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
       weight *= wght_val;
     }
   }

@@ -34,8 +34,8 @@ using namespace ana;
 #include "TGraph.h"
 #include "TH2.h"
 
-const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
-const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
+const Var kRecoE_nue = SIMPLEVAR(Ev_reco_nue);
+const Var kRecoE_numu = SIMPLEVAR(Ev_reco_numu);
 
 // 3.5yrs * POT/yr * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;

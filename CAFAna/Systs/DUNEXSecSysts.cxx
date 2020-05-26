@@ -96,12 +96,12 @@ namespace ana
   //----------------------------------------------------------------------
   EVALORCategory GetVALORCategory(const caf::StandardRecord* sr)
   {
-    int lep = sr->dune.LepPDG;
-    int scat = sr->dune.mode;
-    const int npiz = sr->dune.nipi0;
-    const int npic = sr->dune.nipip + sr->dune.nipim;
-    const float Enu = sr->dune.Ev;
-    const float Q2 = sr->dune.Q2;
+    int lep = sr->LepPDG;
+    int scat = sr->mode;
+    const int npiz = sr->nipi0;
+    const int npic = sr->nipip + sr->nipim;
+    const float Enu = sr->Ev;
+    const float Q2 = sr->Q2;
 
     // These are the FD codes
     // kUnknownMode               = -1
@@ -138,7 +138,7 @@ namespace ana
     // 14 IMD annihilation
 
     // Different conventions ND (weird (new?)) and FD (like NOvA)
-    if(sr->dune.isFD){
+    if(sr->isFD){
       switch(scat){
       case 0: scat = 1; break; // QE -> QE
       case 1: scat = 4; break; // RES -> RES
@@ -268,7 +268,7 @@ namespace ana
     else {
 
       // TODO - official location
-      TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
+      TFile f("/data/users/marshalc/total_covariance_XS.root");
 
       TH2* h = (TH2*)f.Get("xs_covariance");
 
@@ -329,7 +329,7 @@ namespace ana
     fSysts = GetDUNEXSecSysts();
     assert(fSysts.size() == N);
 
-    TFile f("/dune/data/users/marshalc/total_covariance_XS.root");
+    TFile f("/data/users/marshalc/total_covariance_XS.root");
 
     TH2* h = (TH2*)f.Get("xs_covariance");
     EnsurePositiveDefinite(h);

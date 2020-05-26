@@ -25,9 +25,9 @@ namespace ana
   //                   [](const caf::StandardRecord* sr)
   //                   {return (sr->mc.nnu == 0) ? 0 : sr->mc.nu[0].E;});
 
-  const Var kTrueE({"dune.Ev"},
+  const Var kTrueE({"Ev"},
                    [](const caf::StandardRecord* sr)
-                   {return sr->dune.Ev;});
+                   {return sr->Ev;});
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::
