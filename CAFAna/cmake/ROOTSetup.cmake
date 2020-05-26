@@ -51,6 +51,7 @@ LIST(APPEND ROOT_LIBS
   Graf3d
   Gpad
   Tree
+  TreePlayer
   Rint
   Postscript
   Matrix

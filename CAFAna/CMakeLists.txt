@@ -68,6 +68,11 @@ include_directories(
   ${CMAKE_BINARY_DIR}/Ext
   ${BOOST_INC})
 
+# This is a hack so that the generated files in StandardRecord/ are locateable
+include_directories(${CMAKE_BINARY_DIR})
+
+include_directories($ENV{SRPROXY_INC})
+
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
@@ -88,6 +93,22 @@ add_subdirectory(Vars)
 add_subdirectory(bin)
 
 add_subdirectory(scripts)
+
+# This is a "sub"directory by virtue of a symlink
+add_subdirectory(StandardRecord)
+
+# Need to generate the SRProxy files before anything else. I don't know a neater way to accomplish this
+add_dependencies(StandardRecordProxy SRProxyGen)
+add_dependencies(CAFAnaAnalysis SRProxyGen)
+add_dependencies(CAFAnaCore SRProxyGen)
+add_dependencies(CAFAnaCuts SRProxyGen)
+add_dependencies(CAFAnaDecomp SRProxyGen)
+add_dependencies(CAFAnaExperiment SRProxyGen)
+add_dependencies(CAFAnaExtrap SRProxyGen)
+add_dependencies(CAFAnaFit SRProxyGen)
+add_dependencies(CAFAnaPrediction SRProxyGen)
+add_dependencies(CAFAnaSysts SRProxyGen)
+add_dependencies(CAFAnaVars SRProxyGen)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
