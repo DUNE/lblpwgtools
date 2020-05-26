@@ -81,9 +81,9 @@ set(Utilities_header_files
 )
 
 add_library(UtilitiesFunc SHARED ${Utilities_implementation_files})
-target_compile_options(UtilitiesFunc PUBLIC -I${CLHEP_PREFIX}/include)
+target_compile_options(UtilitiesFunc PUBLIC -I${CLHEP_BASE}/include)
 
-target_link_libraries(UtilitiesFunc -L${CLHEP_PREFIX}/lib -lCLHEP)
+target_link_libraries(UtilitiesFunc -L${CLHEP_BASE}/lib -lCLHEP)
 
 install(TARGETS UtilitiesFunc DESTINATION lib)
 

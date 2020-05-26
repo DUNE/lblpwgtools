@@ -7,7 +7,8 @@ if [ -z "${UPS_SHELL}" ]; then
   exit 1
 fi
 
-setup root v6_12_06a -q e15:prof
-setup boost v1_66_0a -q e15:prof
+setup root v6_16_00 -q e17:prof
+setup boost v1_66_0a -q e17:prof
+setup clhep v2_3_4_6 -q e17:prof
 setup cmake v3_12_2
 setup jobsub_client
