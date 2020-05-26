@@ -26,8 +26,7 @@ void demo0()
 
   // A Var is a little snippet of code that takes a record representing the
   // event record and returns a single number to plot.
-  const Var kRecoEnergy({},
-                        [](const caf::StandardRecord* sr)
+  const Var kRecoEnergy([](const caf::StandardRecord* sr)
                         {
                           return sr->dune.Ev_reco_numu;
                         });
