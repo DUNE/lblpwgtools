@@ -1,6 +1,6 @@
 #include "CAFAna/Systs/NDRecoSysts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
@@ -28,7 +28,7 @@ namespace ana
   //----------------------------------------------------------------------
   void RecoNCSyst::Shift(double sigma,
                          Restorer& restore,
-                         caf::StandardRecord* sr,
+                         caf::SRProxy* sr,
                          double& weight) const
   {
     // Is ND
@@ -43,7 +43,7 @@ namespace ana
   //----------------------------------------------------------------------
   void LeptonAccSyst::Shift(double sigma,
                             Restorer& restore,
-                            caf::StandardRecord* sr,
+                            caf::SRProxy* sr,
                             double& weight) const
   {
     // Load hist if it hasn't been loaded already
@@ -71,7 +71,7 @@ namespace ana
   //----------------------------------------------------------------------
   void HadronAccSyst::Shift(double sigma,
                             Restorer& restore,
-                            caf::StandardRecord* sr,
+                            caf::SRProxy* sr,
                             double& weight) const
   {
     // Load hist if it hasn't been loaded already

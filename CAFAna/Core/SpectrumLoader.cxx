@@ -24,7 +24,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TTree.h"
-
+#include "StandardRecord/Proxy/SRProxy.h"
 namespace ana {
 //----------------------------------------------------------------------
 SpectrumLoader::SpectrumLoader(const std::string &wildcard, DataSource src,
@@ -427,7 +427,7 @@ template <class T, class U> class CutVarCache {
 public:
   CutVarCache() : fVals(U::MaxID() + 1), fValsSet(U::MaxID() + 1, false) {}
 
-  inline T Get(const U &var, const caf::StandardRecord *sr) {
+  inline T Get(const U& var, const caf::SRProxy* sr) {
     const unsigned int id = var.ID();
 
     if (fValsSet[id]) {
@@ -469,9 +469,12 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
     // Prime means we should get good coverage over all combinations
     const int kTestIterations = 9973;
 
-    const TestVals *save = 0;
-    if (++iterationNo % kTestIterations == 0)
-      save = GetVals(sr, shiftdef.second);
+    //    const TestVals *save = 0;
+    //    if (++iterationNo % kTestIterations == 0)
+    //      save = GetVals(sr, shiftdef.second);
+
+    caf::SRProxy* srp = new caf::SRProxy(0, 0, "", 0, 0);
+    *srp = *sr;
 
     Restorer *restore = 0;
     double systWeight = 1;
@@ -479,7 +482,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
     // Can special-case nominal to not pay cost of Shift() or Restorer
     if (!shift.IsNominal()) {
       restore = new Restorer;
-      shift.Shift(*restore, sr, systWeight);
+      shift.Shift(*restore, srp, systWeight);
       // Did the Shift actually modify the event at all?
       shifted = !restore->Empty();
     }
@@ -487,7 +490,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
     for (auto &cutdef : shiftdef.second) {
       const Cut &cut = cutdef.first;
 
-      const bool pass = shifted ? cut(sr) : nomCutCache.Get(cut, sr);
+      const bool pass = shifted ? cut(srp) : nomCutCache.Get(cut, srp);
       // Cut failed, skip all the histograms that depended on it
       if (!pass)
         continue;
@@ -495,7 +498,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
       for (auto &weidef : cutdef.second) {
         const Var &weivar = weidef.first;
 
-        double wei = shifted ? weivar(sr) : nomWeiCache.Get(weivar, sr);
+        double wei = shifted ? weivar(srp) : nomWeiCache.Get(weivar, srp);
 
         wei *= systWeight;
         if (wei == 0)
@@ -503,7 +506,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
 
         for (auto &vardef : weidef.second) {
           if (vardef.first.IsMulti()) {
-            for (double val : vardef.first.GetMultiVar()(sr)) {
+            for (double val : vardef.first.GetMultiVar()(srp)) {
               for (Spectrum *s : vardef.second.spects)
                 s->Fill(val, wei);
             }
@@ -512,7 +515,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
 
           const Var &var = vardef.first.GetVar();
 
-          const double val = shifted ? var(sr) : nomVarCache.Get(var, sr);
+          const double val = shifted ? var(srp) : nomVarCache.Get(var, srp);
 
           if (std::isnan(val) || std::isinf(val)) {
             std::cerr << "Warning: Bad value: " << val
@@ -528,7 +531,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
             s->Fill(val, wei);
 
           for (ReweightableSpectrum *rw : vardef.second.rwSpects) {
-            const double yval = rw->ReweightVar()(sr);
+            const double yval = rw->ReweightVar()(srp);
 
             if (std::isnan(yval) || std::isinf(yval)) {
               std::cerr << "Warning: Bad value: " << yval
@@ -550,10 +553,10 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
     delete restore;
 
     // Make sure the record went back the way we found it
-    if (save) {
-      CheckVals(save, sr, shift.ShortName(), shiftdef.second);
-      delete save;
-    }
+    //    if (save) {
+    //      CheckVals(save, sr, shift.ShortName(), shiftdef.second);
+    //      delete save;
+    //    }
   } // end for shiftdef
 }
 
@@ -629,7 +632,7 @@ const SpectrumLoader::TestVals *SpectrumLoader::GetVals(
     const caf::StandardRecord *sr,
     IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   TestVals *ret = new TestVals;
-
+  /*
   // Store values for all Vars and Cuts of interest
   for (auto &cutdef : hists) {
     const bool cutval = cutdef.first(sr);
@@ -647,7 +650,7 @@ const SpectrumLoader::TestVals *SpectrumLoader::GetVals(
       }
     }
   }
-
+  */
   return ret;
 }
 
@@ -678,6 +681,7 @@ void SpectrumLoader::CheckVals(
     const TestVals *v, const caf::StandardRecord *sr,
     const std::string &shiftName,
     IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
+  /*
   unsigned int cutIdx = 0;
   unsigned int weiIdx = 0;
   unsigned int varIdx = 0;
@@ -714,5 +718,6 @@ void SpectrumLoader::CheckVals(
       } // end for vardef
     }   // end for weidef
   }     // end for cutdef
+  */
 }
 } // namespace ana

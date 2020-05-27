@@ -1,5 +1,7 @@
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
  
+#include "StandardRecord/Proxy/SRProxy.h"
+
 namespace ana {
 
   std::vector<std::string> GetCrazyFluxDialNames(){
@@ -16,7 +18,7 @@ namespace ana {
 
 
   void CrazyFluxDial::Shift(double sigma, Restorer &restore,
-			    caf::StandardRecord *sr,
+			    caf::SRProxy *sr,
 			    double &weight) const {
     // Play it safe
     if (fabs(sigma) < 1E-5) return;

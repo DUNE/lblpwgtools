@@ -4,7 +4,7 @@
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 namespace ana {
 
@@ -12,7 +12,7 @@ MissingProtonFakeDataGenerator mpfd;
 NuWroReweightFakeDataGenerator nuwrofd;
 
 void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
-                                 caf::StandardRecord *sr,
+                                 caf::SRProxy *sr,
                                  double &weight) const {
 
   // First time hook up known fake data dial IDs, logic then in switch
@@ -88,7 +88,7 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     weight *= sr->xsSyst_wgt[MaNCEL_id][posneg_spline_point];
   }
 }
-void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
+void XSecSyst::Shift(double sigma, Restorer &restore, caf::SRProxy *sr,
                      double &weight) const {
   // No xs weights in this event, skip reweighting it
   if (sr->xsSyst_wgt.empty()) {

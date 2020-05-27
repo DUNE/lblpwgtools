@@ -35,7 +35,7 @@ namespace ana
     void ResetToNominal();
 
     void Shift(Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const;
 
     /// Brief description of component shifts, for printing to screen

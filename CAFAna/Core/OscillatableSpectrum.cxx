@@ -6,7 +6,7 @@
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include "OscLib/func/IOscCalculator.h"
 
@@ -21,7 +21,7 @@
 namespace ana
 {
   // Duplicate here because we can't include Vars.h
-  const Var kTrueE([](const caf::StandardRecord* sr)
+  const Var kTrueE([](const caf::SRProxy* sr)
                    {return sr->Ev;});
 
   //----------------------------------------------------------------------

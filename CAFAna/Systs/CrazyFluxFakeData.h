@@ -3,8 +3,6 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
-
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -16,7 +14,7 @@ class CrazyFluxDial : public ISyst {
 
     virtual ~CrazyFluxDial(){};
     
-    void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
+    void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
 	       double &weight) const override;
     
   protected:

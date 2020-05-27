@@ -64,7 +64,7 @@ void SystShifts::ResetToNominal() {
 }
 
 //----------------------------------------------------------------------
-void SystShifts::Shift(Restorer &restore, caf::StandardRecord *sr,
+void SystShifts::Shift(Restorer &restore, caf::SRProxy* sr,
                        double &weight) const {
   for (auto it : fSysts)
     it.first->Shift(it.second, restore, sr, weight);

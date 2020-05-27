@@ -63,7 +63,7 @@ set(Core_header_files
   Hist.h)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore)
+target_link_libraries(CAFAnaCore StandardRecordProxy)
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaCore gperftools)

@@ -3,7 +3,7 @@
 #include <list>
 #include <string>
 
-namespace caf{class StandardRecord;}
+#include "StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {
@@ -62,7 +62,7 @@ namespace ana
     /// \param weight  Scale this weight for reweighting systematics
     virtual void Shift(double sigma,
                        Restorer& restore,
-                       caf::StandardRecord* sr,
+                       caf::SRProxy* sr,
                        double& weight) const = 0;
 
     /// PredictionInterp normally interpolates between spectra made at
@@ -115,10 +115,13 @@ namespace ana
     /// Can specify many fields of different types in one call
     template<class T, class... U> void Add(T& x, U&... xs)
     {
+      abort();
+      // TODO HACK
+
       // Add the first one based on one of the specializations above
-      Add(x);
+      //      Add(x);
       // Recurse to handle the rest
-      Add(xs...);
+      //      Add(xs...);
     }
 
     bool Empty() const

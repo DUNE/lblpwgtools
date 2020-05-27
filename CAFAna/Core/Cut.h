@@ -9,7 +9,9 @@
 
 #include "CAFAna/Core/Var.h"
 
-namespace caf{class StandardRecord; class SRSpill; class SRSpillTruthBranch;}
+#include "StandardRecord/Proxy/FwdDeclare.h"
+
+namespace caf{class SRSpill; class SRSpillTruthBranch;}
 
 namespace ana
 {
@@ -90,7 +92,7 @@ namespace ana
   ///
   /// Cut objects may be combined with the standard boolean operations && ||
   /// and !
-  typedef GenericCut<caf::StandardRecord> Cut;
+  typedef GenericCut<caf::SRProxy> Cut;
 
   /// \brief Equivalent of \ref Cut acting on \ref caf::SRSpill. For use in
   /// spill-by-spill data quality cuts
@@ -121,7 +123,7 @@ namespace ana
   template<class T> GenericCut<T> operator!=(double c, const GenericVar<T>& v);
 
   /// The simplest possible cut: pass everything, used as a default
-  const Cut kNoCut([](const caf::StandardRecord*){return true;});
+  const Cut kNoCut([](const caf::SRProxy*){return true;});
 
   /// The simplest possible cut: pass everything, used as a default
   const SpillCut kNoSpillCut([](const caf::SRSpill*){return true;});

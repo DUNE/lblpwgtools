@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cassert>
 #include "CAFAna/Core/Cut.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 namespace ana
 {
@@ -12,7 +11,7 @@ namespace ana
   /// We use uniform-initializer syntax to concisely pass the list of necessary
   /// branches. In this case the selection function is simple enough that we
   /// can include it inline as a lambda function.
-  const Cut kIsNC([](const caf::StandardRecord* sr)
+  const Cut kIsNC([](const caf::SRProxy* sr)
                   {
                     return !sr->isCC;
                   });
@@ -26,7 +25,7 @@ namespace ana
     {
     }
 
-    bool operator()(const caf::StandardRecord* sr) const
+    bool operator()(const caf::SRProxy* sr) const
     {
       return sr->isCC && abs(sr->nuPDGunosc) == fPdgOrig && abs(sr->nuPDG) == fPdg;
     }
@@ -52,7 +51,7 @@ namespace ana
   const Cut kIsTauFromE(CCFlavSel(16, 12));
 
   /// Is this truly an antineutrino?
-  const Cut kIsAntiNu([](const caf::StandardRecord* sr)
+  const Cut kIsAntiNu([](const caf::SRProxy* sr)
                       {
                         return sr->nuPDG < 0;
                       });
@@ -102,7 +101,7 @@ namespace ana
                 : IsInNDFV(pos_x_cm, pos_y_cm, pos_z_cm);
   }
 
-  const Cut kIsTrueFV([](const caf::StandardRecord* sr)
+  const Cut kIsTrueFV([](const caf::SRProxy* sr)
                       {
                         return IsInFV(
                                  sr->isFD,
@@ -111,7 +110,7 @@ namespace ana
 
   //ETW 11/5/2018 Fiducial cut using MVA variable
   //Should use the previous one (kIsTrueFV) for nominal analysis
-  const Cut kPassFid_MVA([](const caf::StandardRecord* sr)
+  const Cut kPassFid_MVA([](const caf::SRProxy* sr)
                          {
                            return ( sr->mvanumu > -1 );
                          });

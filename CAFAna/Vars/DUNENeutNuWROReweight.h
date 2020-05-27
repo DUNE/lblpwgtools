@@ -32,7 +32,7 @@ namespace ana
 
     ~DUNENeutNuWROReweight();
 
-    double operator()(const caf::StandardRecord* sr);
+    double operator()(const caf::SRProxy* sr);
 
   protected:
     void LoadHists();

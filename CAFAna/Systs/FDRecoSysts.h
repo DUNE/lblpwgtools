@@ -7,7 +7,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Cuts/AnaCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH2.h"
@@ -23,7 +23,7 @@ namespace ana {
 
     void Shift(double sigma,
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override 
     {
       // Load histograms if they have not been loaded already
@@ -57,7 +57,7 @@ namespace ana {
 
     void Shift(double sigma,
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override 
     {
       // Load histograms if they have not been loaded already
@@ -90,7 +90,7 @@ namespace ana {
   FVNueFDSyst() : ISyst("FVNueFD", "Far Detector Nue Fiducial Volume") {}
     void Shift(double sigma, 
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
@@ -109,7 +109,7 @@ namespace ana {
   FVNumuFDSyst() : ISyst("FVNumuFD", "Far Detector Numu Fiducial Volume") {}
     void Shift(double sigma, 
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
@@ -129,7 +129,7 @@ namespace ana {
   FVCorrFDSyst() : ISyst("FVCorrFD", "Far Detector Correlated Fiducial Volume") {}
     void Shift(double sigma, 
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;

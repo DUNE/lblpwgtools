@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include "BDTReweighter.h"
 #include "GeneratorReweight_nuebar_FD_RHC.h"
@@ -29,7 +29,7 @@ public:
 
   //  std::map<std::string, BDTReweighter*> bdt_reweighters;
   std::vector<BDTReweighter*> bdt_reweighters;
-  void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
+  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
              double &weight) const override {
 
     if (!sr->isCC) {
