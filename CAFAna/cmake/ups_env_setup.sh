@@ -12,3 +12,5 @@ setup boost v1_66_0a -q e17:prof
 setup clhep v2_3_4_6 -q e17:prof
 setup cmake v3_12_2
 setup jobsub_client
+
+setup srproxy v00.04 -z /cvmfs/nova.opensciencegrid.org/externals/ -q py2
