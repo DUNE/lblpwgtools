@@ -193,6 +193,8 @@ namespace ana
 
   void CornerLabel(std::string &s, float xCoord, float yCoord);
 
+  void FillWithDimColor(TH1* h, bool usealpha=false);
+
   /// Pimp histogram once and for all
   void PimpHist(TH1* hist, Style_t linestyle, Color_t linecolor, int linewidth, Style_t markerstyle, Color_t markercolor, double markersize);
 
