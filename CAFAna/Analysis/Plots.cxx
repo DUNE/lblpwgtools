@@ -10,6 +10,7 @@
 #include "Utilities/func/MathUtil.h"
 
 #include "TCanvas.h"
+#include "TColor.h"
 #include "TFeldmanCousins.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
@@ -21,6 +22,7 @@
 #include "TLine.h"
 #include "TList.h"
 #include "TMarker.h"
+#include "TROOT.h"
 
 #include <algorithm>
 #include <iostream>
@@ -860,6 +862,23 @@ namespace ana
 
   }
 
+  //----------------------------------------------------------------------
+  void FillWithDimColor(TH1* h, bool usealpha)
+  {
+    float dim=0.65;
+
+    if ( usealpha ){
+      h->SetFillColorAlpha(h->GetLineColor(),dim);
+      return;
+    }
+
+    TColor *color = gROOT->GetColor(h->GetLineColor());
+    float R,G,B,hR,hG,hB,hHue,hSat,hVal;
+    color->GetRGB(hR,hG,hB);
+    color->RGB2HSV(hR,hG,hB,hHue,hSat,hVal);
+    color->HSV2RGB(hHue,dim*hSat,hVal,R,G,B);
+    h->SetFillColor(color->GetColor(R,G,B));
+  }
 
   //----------------------------------------------------------------------
   void PimpHist(TH1* hist, Style_t linestyle, Color_t linecolor, int linewidth, Style_t markerstyle, Color_t markercolor, double markersize){
