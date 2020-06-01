@@ -41,15 +41,10 @@ void demo4()
 
     // Function that will be called to actually do the shift
     void Shift(double sigma,
-               Restorer& restore,
                caf::StandardRecord* sr,
                double& weight) const override
     {
-      // First - register all the variables that will need to be restored to
-      // return the record to nominal
-      restore.Add(sr->dune.Ev_reco_numu);
-
-      // Then edit the event record
+      // Edit the event record
       const double scale = 1 + .1*sigma;
       sr->dune.Ev_reco_numu *= scale;
     }
@@ -68,7 +63,6 @@ void demo4()
     }
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::StandardRecord* sr,
                double& weight) const override
     {

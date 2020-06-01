@@ -19,15 +19,8 @@ namespace ana
   public:
   EnergyScaleFD() : ISyst("EnergyScaleFD", "Global FD Energy Scale Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNue);
-
       double scale = .02 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -52,14 +45,8 @@ namespace ana
   public:
   UncorrFDTotSqrt() : ISyst("UncorrFDTotSqrt", "Uncorrelated FD Sqrt Total Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNue);
         const double scale = .01 * sigma;
         if (sr->isFD) {
           if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -81,14 +68,8 @@ namespace ana
   public:
   UncorrFDTotInvSqrt() : ISyst("UncorrFDTotInvSqrt", "Uncorrelated FD Inverse Sqrt Total Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNue);
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
         const double scale = .02 * sigma;
@@ -115,16 +96,8 @@ namespace ana
   public:
   UncorrFDHadSqrt() : ISyst("UncorrFDHadSqrt", "Uncorrelated FD Sqrt Hadron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoP,
-                  sr->eRecoPim,
-                  sr->eRecoPip);
       const double scale = .05 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -149,16 +122,8 @@ namespace ana
   public:
   UncorrFDHadInvSqrt() : ISyst("UncorrFDHadInvSqrt", "Uncorrelated FD Inv Sqrt Hadron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoP,
-                  sr->eRecoPim,
-                  sr->eRecoPip);
       const double scale = .05 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -186,11 +151,8 @@ namespace ana
   public:
   UncorrFDMuSqrt() : ISyst("UncorrFDMuSqrt", "Uncorrelated FD Sqrt Muon Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->RecoLepEnNumu);
       if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .005 * sigma;
         sr->Ev_reco_numu  += sr->RecoLepEnNumu * pow(sr->RecoLepEnNumu, 0.5) * scale;
@@ -206,11 +168,8 @@ namespace ana
   public:
   UncorrFDMuInvSqrt() : ISyst("UncorrFDMuInvSqrt", "Uncorrelated FD Inv Sqrt Muon Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->RecoLepEnNumu);
       if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .02 * sigma;
         sr->Ev_reco_numu  += sr->RecoLepEnNumu * scale * pow(sr->RecoLepEnNumu+0.1, -0.5);
@@ -229,14 +188,8 @@ namespace ana
   public:
   UncorrFDNSqrt() : ISyst("UncorrFDNSqrt", "Uncorrelated FD Sqrt Neutron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoN);
       const double scale = .3 * sigma;
       if (sr->isFD) {
         if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
@@ -254,14 +207,8 @@ namespace ana
   public:
   UncorrFDNInvSqrt() : ISyst("UncorrFDNInvSqrt", "Uncorrelated FD Inv Sqrt Neutron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoN);
       const double scale = .3 * sigma;
       if (sr->isFD) {
         if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
@@ -282,15 +229,8 @@ namespace ana
   public:
   UncorrFDEMSqrt() : ISyst("UncorrFDEMSqrt", "Uncorrelated FD Sqrt EM Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNue,
-                  sr->eRecoPi0);
       const double scale = .025 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -315,16 +255,8 @@ namespace ana
   public:
   UncorrFDEMInvSqrt() : ISyst("UncorrFDEMInvSqrt", "Uncorrelated FD Inv Sqrt EM Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNumu,
-                  sr->RecoLepEnNue,
-                  sr->eRecoPi0);
       const double scale = .025 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -351,11 +283,8 @@ namespace ana
   EScaleMuLArFD() : ISyst("EScaleMuLArFD", "Muon Energy Scale LAr Far Detector") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->RecoLepEnNumu);
       const double scale = .02 * sigma;
       // Checks if FD  and select only CC muon neutrino events
       if(sr->isFD && abs(sr->nuPDG) == 14 && sr->isCC == 1){
@@ -374,16 +303,8 @@ namespace ana
   ChargedHadUncorrFD() : ISyst("ChargedHadUncorrFD", "Charged Hadron Uncorrelated FD Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_nue,
-                  sr->Ev_reco_numu,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoP,
-                  sr->eRecoPip,
-                  sr->eRecoPim);
       const double scale = .05 * sigma;
       if(sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -412,14 +333,8 @@ namespace ana
   NUncorrFD() : ISyst("NUncorrFD", "Neutron Energy Scale FD") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->Ev_reco_nue,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->eRecoN);
       const double scale = .20 * sigma;
       if(sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -442,15 +357,8 @@ namespace ana
   public:
   EMUncorrFD() : ISyst("EMUncorrFD", "Electromagnetic shower FD Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->RecoLepEnNue,
-                  sr->RecoHadEnNue,
-                  sr->RecoHadEnNumu,
-                  sr->Ev_reco_nue,
-                  sr->Ev_reco_numu,
-                  sr->eRecoPi0);
       const double scale = 0.025 * sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -478,11 +386,8 @@ namespace ana
   public:
   MuonResFD() : ISyst("MuonResFD", "Muon Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_numu,
-                  sr->RecoLepEnNumu);
       const double scale = .02*sigma;
       // FD charged current numus only
       if (sr->isFD && sr->isCC && abs(sr->nuPDG)==14) {
@@ -500,15 +405,8 @@ namespace ana
   public:
   EMResFD() : ISyst("EMResFD", "EM shower Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_nue,
-                  sr->Ev_reco_numu,
-                  sr->RecoHadEnNumu,
-                  sr->RecoHadEnNue,
-                  sr->RecoLepEnNue,
-                  sr->eRecoPi0);
       const double scale = .02*sigma;
       if (sr->isFD){
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -534,16 +432,8 @@ namespace ana
   public:
   ChargedHadResFD() : ISyst("ChargedHadResFD", "Charged Hadron Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_nue,
-                  sr->Ev_reco_numu,
-                  sr->RecoHadEnNue,
-                  sr->RecoHadEnNumu,
-                  sr->eRecoP,
-                  sr->eRecoPip,
-                  sr->eRecoPim);
       const double scale = .02*sigma;
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -568,14 +458,8 @@ namespace ana
   public:
   NResFD() : ISyst("NResFD", "Neutron Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->Ev_reco_nue,
-                  sr->Ev_reco_numu,
-                  sr->RecoHadEnNue,
-                  sr->RecoHadEnNumu,
-                  sr->eRecoN);
       const double scale = .1*sigma;
       // FD charged current numus only
       if (sr->isFD) {

@@ -16,7 +16,6 @@ namespace ana {
   public:
   NuOnECCBkgSyst() : ISyst("NuOnECCBkgSyst", "nu_e CC background to nu+e") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only
@@ -39,7 +38,6 @@ namespace ana {
   public:
   NuOnENCBkgSyst() : ISyst("NuOnENCBkgSyst", "NC pi0 background to nu+e") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only
@@ -62,7 +60,6 @@ namespace ana {
   public:
   NuOnERecoEffSyst() : ISyst("NuOnERecoEffSyst", "nu+e signal reconstruction") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only

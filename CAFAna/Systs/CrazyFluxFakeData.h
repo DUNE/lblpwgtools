@@ -14,7 +14,7 @@ class CrazyFluxDial : public ISyst {
 
     virtual ~CrazyFluxDial(){};
     
-    void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
+    void Shift(double sigma, caf::SRProxy *sr,
 	       double &weight) const override;
     
   protected:

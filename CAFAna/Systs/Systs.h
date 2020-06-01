@@ -21,7 +21,6 @@ namespace ana
     NumuFHCSyst() : ISyst("numufhcnorm", "Numu FHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000001) weight *= 1 + .05*sigma;
@@ -37,7 +36,6 @@ namespace ana
     NumuRHCSyst() : ISyst("numurhcnorm", "Numu RHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000004) weight *= 1 + .05*sigma;
@@ -53,7 +51,6 @@ namespace ana
     NueFHCSyst() : ISyst("nuefhcnorm", "Nue FHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000002) weight *= 1 + .02*sigma;
@@ -69,7 +66,6 @@ namespace ana
     NueRHCSyst() : ISyst("nuerhcnorm", "Nue RHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000005) weight *= 1 + .02*sigma;
@@ -87,7 +83,6 @@ namespace ana
     NCDisSyst() : ISyst("NCDis", "NC Dis Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isCC && sr->cvnnumu > 0.5 && sr->cvnnue < 0.5) weight *= 1 + .1*sigma;
@@ -103,7 +98,6 @@ namespace ana
     NCAppSyst() : ISyst("NCApp", "NC App Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if((!sr->isCC && sr->cvnnue > 0.5 && sr->cvnnumu < 0.5) || (sr->isCC && abs(sr->nuPDG)==14)) weight *= 1 + .05*sigma;
@@ -119,7 +113,6 @@ namespace ana
     NutauSyst() : ISyst("nutau", "nutau Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==16) weight *= 1 + .2*sigma;
@@ -135,7 +128,6 @@ namespace ana
     NueBeamFHCSyst() : ISyst("nuebeamfhc", "Nue Beam FHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && sr->run<20000004) weight *= 1 + .05*sigma;
@@ -151,7 +143,6 @@ namespace ana
     NueBeamRHCSyst() : ISyst("nuebeamrhc", "Nue Beam RHC Norm Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && !(sr->run<20000004)) weight *= 1 + .05*sigma;

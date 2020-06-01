@@ -13,11 +13,9 @@ namespace ana
     DUNENDEvSyst() : ISyst("NDEv", "Near Detector reco Ev") {}
 
     void Shift(double sigma,
-                       Restorer& restore,
-                       caf::SRProxy* sr,
-                       double& weight) const override
+	       caf::SRProxy* sr,
+	       double& weight) const override
     {
-      restore.Add( sr->Ev_reco, sr->Ev_reco_numu, sr->Ev_reco_nue );
       double scale = pow( 1. + sr->sigma_Ev_reco, sigma );
       sr->Ev_reco *= scale;
       sr->Ev_reco_numu *= scale;
@@ -33,12 +31,9 @@ namespace ana
     DUNENDPIDSyst() : ISyst("NDPID", "Near Detector lepton PID") {}
 
     void Shift(double sigma,
-                       Restorer& restore,
-                       caf::SRProxy* sr,
-                       double& weight) const override
+	       caf::SRProxy* sr,
+	       double& weight) const override
     {
-      restore.Add( sr->numu_pid, sr->nue_pid );
-
       bool numu = ( sigma > sr->sigma_numu_pid );
       bool nue = ( sigma > sr->sigma_nue_pid );
 

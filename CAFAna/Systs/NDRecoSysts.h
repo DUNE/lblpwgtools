@@ -21,7 +21,6 @@ namespace ana
   public:
     RecoNCSyst() : ISyst("RecoNCSyst", "ND Neutral Current Reconstruction Syst") {}
     void Shift(double sigma,
-	       Restorer& restore,
 	       caf::SRProxy* sr, double& weight) const override;
   };
   extern const RecoNCSyst kRecoNCSyst;
@@ -33,7 +32,6 @@ namespace ana
     LeptonAccSyst() : ISyst("LeptonAccSyst", "ND Lepton Acceptance Syst"), fHist(0) {}
 
     void Shift(double sigma,
-	       Restorer& restore,
 	       caf::SRProxy* sr, double& weight) const override;
   protected:
     mutable TH2* fHist;
@@ -47,7 +45,6 @@ namespace ana
     HadronAccSyst() : ISyst("HadronAccSyst", "ND Hadron Acceptance Syst"), fHist(0) {}
 
     void Shift(double sigma,
-	       Restorer& restore,
 	       caf::SRProxy* sr, double& weight) const override;
   protected:
     mutable TH1* fHist;
@@ -60,7 +57,6 @@ namespace ana
   public:
   FVNumuNDSyst() : ISyst("FVNumuND", "Near Detector Numu Fiducial Volume") {}
     void Shift(double sigma, 
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override
     {

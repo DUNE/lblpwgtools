@@ -27,7 +27,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   void RecoNCSyst::Shift(double sigma,
-                         Restorer& restore,
                          caf::SRProxy* sr,
                          double& weight) const
   {
@@ -42,7 +41,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   void LeptonAccSyst::Shift(double sigma,
-                            Restorer& restore,
                             caf::SRProxy* sr,
                             double& weight) const
   {
@@ -70,7 +68,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   void HadronAccSyst::Shift(double sigma,
-                            Restorer& restore,
                             caf::SRProxy* sr,
                             double& weight) const
   {

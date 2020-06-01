@@ -22,7 +22,6 @@ namespace ana {
   FDRecoNumuSyst() : ISyst("FDRecoNumuSyst", "Far Detector Numu Reconstruction Syst") {}
 
     void Shift(double sigma,
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override 
     {
@@ -56,7 +55,6 @@ namespace ana {
   FDRecoNueSyst() : ISyst("FDRecoNueSyst", "Far Detector Nue Reconstruction Syst") {}
 
     void Shift(double sigma,
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override 
     {
@@ -89,7 +87,6 @@ namespace ana {
   public:
   FVNueFDSyst() : ISyst("FVNueFD", "Far Detector Nue Fiducial Volume") {}
     void Shift(double sigma, 
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override
     {
@@ -108,7 +105,6 @@ namespace ana {
   public:
   FVNumuFDSyst() : ISyst("FVNumuFD", "Far Detector Numu Fiducial Volume") {}
     void Shift(double sigma, 
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override
     {
@@ -128,7 +124,6 @@ namespace ana {
   public:
   FVCorrFDSyst() : ISyst("FVCorrFD", "Far Detector Correlated Fiducial Volume") {}
     void Shift(double sigma, 
-	       Restorer& restore,
 	       caf::SRProxy* sr,
 	       double& weight) const override
     {

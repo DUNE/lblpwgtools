@@ -34,9 +34,7 @@ namespace ana
     double GetShift(const ISyst* syst) const;
     void ResetToNominal();
 
-    void Shift(Restorer& restore,
-               caf::SRProxy* sr,
-               double& weight) const;
+    void Shift(caf::SRProxy* sr, double& weight) const;
 
     /// Brief description of component shifts, for printing to screen
     std::string ShortName() const;

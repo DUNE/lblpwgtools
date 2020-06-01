@@ -23,7 +23,7 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 }
 
 //----------------------------------------------------------------------
-void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
+void DUNEFluxSyst::Shift(double sigma,
                          caf::SRProxy *sr, double &weight) const {
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;

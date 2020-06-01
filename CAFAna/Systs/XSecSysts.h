@@ -15,10 +15,10 @@ class XSecSyst : public ISyst {
 public:
   virtual ~XSecSyst(){};
 
-  void FakeDataDialShift(double sigma, Restorer &restore,
+  void FakeDataDialShift(double sigma,
                          caf::SRProxy *sr, double &weight) const;
 
-  void Shift(double sigma, Restorer &restore, caf::SRProxy *sr,
+  void Shift(double sigma, caf::SRProxy *sr,
              double &weight) const override;
 
 protected:

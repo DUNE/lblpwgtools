@@ -23,7 +23,7 @@ public:
 
   bool fDoWeight;
 
-  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
+  void Shift(double sigma,  caf::SRProxy *sr,
              double &weight) const override {
 
     if (!sr->isCC) {
@@ -33,8 +33,6 @@ public:
     if (sigma != 1) {
       return;
     }
-
-    restore.Add(sr->eRec_FromDep);
 
     if (sr->isFD) {
       sr->eRec_FromDep += -EpFrac * sr->eDepP;

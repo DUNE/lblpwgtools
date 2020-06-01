@@ -24,11 +24,9 @@ public:
   }
 
   void Shift(double sigma,
-             Restorer& restore,
              caf::StandardRecord* sr,
              double& weight) const override
   {
-    restore.Add(sr->dune.Ev_reco_numu);
     sr->dune.Ev_reco_numu *= (1+.1*sigma);
   }
 };
@@ -42,7 +40,6 @@ public:
   }
 
   void Shift(double sigma,
-             Restorer& restore,
              caf::StandardRecord* sr,
              double& weight) const override
   {

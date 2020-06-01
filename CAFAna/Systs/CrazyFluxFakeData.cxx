@@ -17,7 +17,7 @@ namespace ana {
   }
 
 
-  void CrazyFluxDial::Shift(double sigma, Restorer &restore,
+  void CrazyFluxDial::Shift(double sigma,
 			    caf::SRProxy *sr,
 			    double &weight) const {
     // Play it safe

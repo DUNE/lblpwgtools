@@ -29,7 +29,7 @@ public:
 
   //  std::map<std::string, BDTReweighter*> bdt_reweighters;
   std::vector<BDTReweighter*> bdt_reweighters;
-  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
+  void Shift(double sigma, caf::SRProxy *sr,
              double &weight) const override {
 
     if (!sr->isCC) {
