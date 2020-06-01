@@ -4,6 +4,10 @@
 
 class TFile;
 
+#include "StandardRecord/Proxy/FwdDeclare.h"
+
+namespace caf{class StandardRecord;}
+
 namespace ana
 {
   class Progress;
@@ -44,8 +48,6 @@ namespace ana
     SpectrumLoader(const SpectrumLoader&) = delete;
     SpectrumLoader& operator=(const SpectrumLoader&) = delete;
 
-    void AccumulateExposures(const caf::SRSpill* spill) override;
-
     virtual void HandleFile(TFile* f, Progress* prog = 0);
 
     virtual void HandleRecord(caf::StandardRecord* sr);
@@ -55,26 +57,6 @@ namespace ana
 
     /// Prints POT/livetime info for all spectra
     virtual void ReportExposures();
-
-    // This is all infrasture to test that the user didn't screw up their
-    // systematic shifts.
-    struct TestVals
-    {
-      std::vector<bool> cuts;
-      std::vector<double> vars, weis;
-    };
-
-    const TestVals* GetVals(const caf::StandardRecord* sr,
-			    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
-    void CheckVals(const TestVals* v,
-                   const caf::StandardRecord* sr,
-                   const std::string& shiftName,
-		   IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
-    void ValError(const std::string& type,
-                  const std::string& shift,
-                  const std::set<std::string>& req,
-                  double orig, double now) const;
-
 
     /// All unique cuts contained in fHistDefs
     std::vector<Cut> fAllCuts;

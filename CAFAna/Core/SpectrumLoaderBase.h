@@ -13,8 +13,6 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
 
-namespace caf{class StandardRecord;}
-
 class TFile;
 class TH1;
 class TTree;
@@ -93,8 +91,6 @@ namespace ana
     friend class SpectrumLoaderMockData;
     virtual void RemoveSpectrum(Spectrum*);
     virtual void RemoveReweightableSpectrum(ReweightableSpectrum*);
-
-    virtual void AccumulateExposures(const caf::SRSpill* spill) = 0;
 
     /// Forwards to \ref fFileSource
     int NFiles() const;
@@ -217,8 +213,6 @@ namespace ana
                                  const Cut& cut,
                                  const SystShifts& shift,
                                  const Var& wei) override {}
-
-    void AccumulateExposures(const caf::SRSpill* spill) override {};
   };
   /// \brief Dummy loader that doesn't load any files
   ///
