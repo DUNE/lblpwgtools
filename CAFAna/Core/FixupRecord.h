@@ -1,8 +1,8 @@
 #pragma once
 
-namespace caf{class StandardRecord;}
+#include "StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {
-  void FixupRecord(caf::StandardRecord* sr);
+  void FixupRecord(caf::SRProxy* sr);
 }

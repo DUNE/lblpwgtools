@@ -4,14 +4,14 @@
 #include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include <cmath>
 #include <iostream>
 
 namespace ana
 {
-  void FixupRecord(caf::StandardRecord* sr)
+  void FixupRecord(caf::SRProxy* sr)
   {
     // Set GENIE_ScatteringMode and eRec_FromDep
     if(sr->isFD){
@@ -27,7 +27,7 @@ namespace ana
                           sr->eRecoPip + sr->eRecoPim +
                           sr->eRecoPi0 + sr->eRecoOther +
                           sr->LepE;
-      sr->GENIE_ScatteringMode = sr->mode;
+      sr->GENIE_ScatteringMode = int(sr->mode); // TODO make this work without cast?
     }
 
     // Patch up isFHC which isn't set properly in FD CAFs

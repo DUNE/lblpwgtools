@@ -6,8 +6,6 @@ class TFile;
 
 #include "StandardRecord/Proxy/FwdDeclare.h"
 
-namespace caf{class StandardRecord;}
-
 namespace ana
 {
   class Progress;
@@ -50,10 +48,10 @@ namespace ana
 
     virtual void HandleFile(TFile* f, Progress* prog = 0);
 
-    virtual void HandleRecord(caf::StandardRecord* sr);
+    virtual void HandleRecord(caf::SRProxy* sr);
 
     /// Save results of AccumulateExposures into the individual spectra
-    virtual void StoreExposures();
+    void StoreExposures();
 
     /// Prints POT/livetime info for all spectra
     virtual void ReportExposures();
