@@ -2,6 +2,7 @@ set(Core_implementation_files
   Binning.cxx
   Cut.cxx
   FileListSource.cxx
+  FixupRecord.cxx
   HistAxis.cxx
   HistCache.cxx
   IFitVar.cxx
@@ -33,6 +34,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FixupRecord.h
   FwdDeclare.h
   HistAxis.h
   HistCache.h
