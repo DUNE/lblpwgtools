@@ -1,7 +1,7 @@
 add_custom_command(
-    DEPENDS ../StandardRecord.h
+    DEPENDS ../StandardRecord.h Prolog.h Epilog.h EpilogFwd.h
     OUTPUT SRProxy.cxx SRProxy.h FwdDeclare.h
-    COMMAND gen_srproxy -i StandardRecord/StandardRecord.h -o SRProxy -t caf::StandardRecord --include-path ${CMAKE_CURRENT_SOURCE_DIR}/../.. --output-path StandardRecord/Proxy --epilog-fwd ${CMAKE_CURRENT_SOURCE_DIR}/EpilogFwd.h
+    COMMAND gen_srproxy -i StandardRecord/StandardRecord.h -o SRProxy -t caf::StandardRecord --include-path ${CMAKE_CURRENT_SOURCE_DIR}/../.. --output-path StandardRecord/Proxy --prolog ${CMAKE_CURRENT_SOURCE_DIR}/Prolog.h --epilog ${CMAKE_CURRENT_SOURCE_DIR}/Epilog.h --epilog-fwd ${CMAKE_CURRENT_SOURCE_DIR}/EpilogFwd.h
 )
 
 set(Proxy_implementation_files
