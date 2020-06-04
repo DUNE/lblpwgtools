@@ -14,7 +14,6 @@ namespace caf
   public:
     SRWgtMap(TDirectory* d, TTree* tr, const std::string& /*name*/, const long& base, int offset) : fDir(d), fTree(tr), fBase(base), fOffset(offset)
     {
-      std::cout << "SRWM " << d << " " << tr << std::endl;
     }
 
     ~SRWgtMap(){for(auto it: fElems) delete it;}
@@ -25,7 +24,6 @@ namespace caf
       if(fElems[systIdx]) return *fElems[systIdx];
 
       const std::string name = ana::GetXSecSystName(systIdx);
-      std::cout << "SRWM[] " << fDir << " " << fTree << " wgt_"+name << std::endl;
       fElems[systIdx] = new Proxy<float[100]>(fDir, fTree, "wgt_"+name, fBase, fOffset);
       return *fElems[systIdx];
     }
