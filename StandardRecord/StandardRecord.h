@@ -20,7 +20,11 @@ namespace caf
     // Will be populated with a new operator[] by srproxy
   };
 
-  struct WgtMap : public std::vector<double[100]>
+  struct WgtMapElem: public std::vector<double>
+  {
+  };
+
+  struct WgtMap : public std::vector<WgtMapElem>
   {
     // Will be populated with a new operator[] by srproxy
   };
