@@ -20,6 +20,11 @@ namespace caf
     // Will be populated with a new operator[] by srproxy
   };
 
+  struct WgtMap : public std::vector<double[100]>
+  {
+    // Will be populated with a new operator[] by srproxy
+  };
+
   /// \brief   The StandardRecord is the primary top-level object in the 
   ///          Common Analysis File trees.   
   
@@ -167,7 +172,7 @@ namespace caf
     std::vector<double> wgt_CrazyFlux;
 
     // First index is systematic ID
-    std::vector<std::vector<double>> xsSyst_wgt;
+    WgtMap xsSyst_wgt;
 
     CVMap cvwgt;
     double total_xsSyst_cv_wgt;
