@@ -13,4 +13,4 @@ setup clhep v2_3_4_6 -q e17:prof
 setup cmake v3_12_2
 setup jobsub_client
 
-setup srproxy v00.06 -z /cvmfs/nova.opensciencegrid.org/externals/ -q py2
+setup srproxy v00.07 -z /cvmfs/nova.opensciencegrid.org/externals/ -q py2

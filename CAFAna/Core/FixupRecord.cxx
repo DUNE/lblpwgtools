@@ -24,9 +24,9 @@ namespace ana
     }
     else {
       sr->eRec_FromDep = sr->eRecoP + sr->eRecoN +
-                          sr->eRecoPip + sr->eRecoPim +
-                          sr->eRecoPi0 + sr->eRecoOther +
-                          sr->LepE;
+                         sr->eRecoPip + sr->eRecoPim +
+                         sr->eRecoPi0 + sr->eRecoOther +
+                         sr->LepE;
       sr->GENIE_ScatteringMode = int(sr->mode); // TODO make this work without cast?
     }
 
@@ -95,47 +95,55 @@ namespace ana
     if(AnaV == kV3){
       for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
         // Do some error checking here
-        if(std::isnan(XSSyst_cv_tmp[syst_it]) ||
-           std::isinf(XSSyst_cv_tmp[syst_it]) ||
-           XSSyst_cv_tmp[syst_it] == 0){
+        if(std::isnan(sr->cvwgt[syst_it]) ||
+           std::isinf(sr->cvwgt[syst_it]) ||
+           sr->cvwgt[syst_it] == 0){
           std::cout << "Warning: " << XSSyst_names[syst_it]
-                    << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                    << " has a bad CV of " << sr->cvwgt[syst_it]
                     << std::endl;
         }
         else {
-          sr->total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
+          sr->total_xsSyst_cv_wgt *= sr->cvwgt[syst_it];
         }
       }
     }
     else{
       for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
+        // HACK HACK HACK
+        if(ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_NN" ||
+           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_2p2h" ||
+           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_1p1h" ||
+           ana::GetXSecSystName(syst_it) == "MissingProtonFakeData" ||
+           ana::GetXSecSystName(syst_it) == "NuWroReweightFakeData"
+           ) continue;
+
         if(IsDoNotIncludeSyst(syst_it)){ // Multiply CV weight back into
                                          // response splines.
-          if(std::isnan(XSSyst_cv_tmp[syst_it]) ||
-             std::isinf(XSSyst_cv_tmp[syst_it]) ||
+          if(std::isnan(sr->cvwgt[syst_it]) ||
+             std::isinf(sr->cvwgt[syst_it]) ||
              XSSyst_cv_tmp[syst_it] == 0) {
             std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                      << " has a bad CV of " << sr->cvwgt[syst_it]
                       << std::endl;
           }
           else{
-            const int Nuniv = sr->xsSyst_wgt.size();
+            const int Nuniv = 7; // HACK HACK HACK sr->xsSyst_wgt[syst_it].size();
             for(int univ_it = 0; univ_it < Nuniv; ++univ_it){
-              sr->xsSyst_wgt[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
+              sr->xsSyst_wgt[syst_it][univ_it] *= sr->cvwgt[syst_it];
             }
           }
         }
         else{ // Include CV weight in the total
           // Do some error checking here
-          if(std::isnan(XSSyst_cv_tmp[syst_it]) ||
-             std::isinf(XSSyst_cv_tmp[syst_it]) ||
-             XSSyst_cv_tmp[syst_it] == 0) {
+          if(std::isnan(sr->cvwgt[syst_it]) ||
+             std::isinf(sr->cvwgt[syst_it]) ||
+             sr->cvwgt[syst_it] == 0) {
             std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                      << " has a bad CV of " << sr->cvwgt[syst_it]
                       << std::endl;
           }
           else{
-            sr->total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
+            sr->total_xsSyst_cv_wgt *= sr->cvwgt[syst_it];
           }
         }
       }

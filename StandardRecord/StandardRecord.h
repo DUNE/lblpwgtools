@@ -14,7 +14,12 @@
 /// Common Analysis Files
 namespace caf
 {
-  
+
+  struct CVMap : public std::vector<double>
+  {
+    // Will be populated with a new operator[] by srproxy
+  };
+
   /// \brief   The StandardRecord is the primary top-level object in the 
   ///          Common Analysis File trees.   
   
@@ -163,6 +168,8 @@ namespace caf
 
     // First index is systematic ID
     std::vector<std::vector<double>> xsSyst_wgt;
+
+    CVMap cvwgt;
     double total_xsSyst_cv_wgt;
   };
   

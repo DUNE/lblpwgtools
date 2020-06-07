@@ -18,7 +18,7 @@ namespace caf
 
     ~SRWgtMap(){for(auto it: fElems) delete it;}
 
-    const Proxy<float[100]>& operator[](unsigned int systIdx)
+    Proxy<float[100]>& operator[](unsigned int systIdx)
     {
       if(fElems.size() <= systIdx) fElems.resize(systIdx+1);
       if(fElems[systIdx]) return *fElems[systIdx];
