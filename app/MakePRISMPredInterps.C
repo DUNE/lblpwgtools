@@ -389,7 +389,7 @@ int main(int argc, char const *argv[]) {
   // Generally these will be just selecting signal and are the ones used in the
   // PRISM interp
   std::vector<Cut> AnalysisCuts(
-      6, Cut({}, [](const caf::StandardRecord *) { return false; }));
+      6, Cut([](const caf::StandardRecord *) { return false; }));
   AnalysisCuts[kND_nu] = GetNDSignalCut(UseSel, true);
   AnalysisCuts[kND_nub] = GetNDSignalCut(UseSel, false);
   AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
@@ -400,7 +400,7 @@ int main(int argc, char const *argv[]) {
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
   std::vector<Cut> OnAxisSelectionCuts(
-      6, Cut({}, [](const caf::StandardRecord *) { return false; }));
+      6, Cut([](const caf::StandardRecord *) { return false; }));
   OnAxisSelectionCuts[kND_nu] = GetNDSignalCut(true, true);
   OnAxisSelectionCuts[kND_nub] = GetNDSignalCut(true, false);
   OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
@@ -419,14 +419,13 @@ int main(int argc, char const *argv[]) {
 
   // Need to correct for taking half the on-axis stop events.
   if (SpecialRunDescriptor.size()) {
-    auto specrunweight =
-        ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
-          if (sr->dune.det_x > 0) {
-            return 1;
-          }
-          // All on axis events should be doubled about the x=0 symmetry axis.
-          return 2;
-        });
+    auto specrunweight = ana::Var([&](const caf::StandardRecord *sr) -> double {
+      if (sr->det_x > 0) {
+        return 1;
+      }
+      // All on axis events should be doubled about the x=0 symmetry axis.
+      return 2;
+    });
     WeightVars[kND_nu] = WeightVars[kND_nu] * specrunweight;
     WeightVars[kND_nub] = WeightVars[kND_nub] * specrunweight;
     AnaWeightVars[kND_nu] = AnaWeightVars[kND_nu] * specrunweight;
@@ -435,10 +434,9 @@ int main(int argc, char const *argv[]) {
 
   if (ThinFactor > 0) { // Have to correct for the Thinned POT as the total
                         // Input POT is included in the PerPOTWeight.
-    auto thinfactweight =
-        ana::Var({}, [](const caf::StandardRecord *) -> double {
-          return 1.0 / (1.0 - ThinFactor);
-        });
+    auto thinfactweight = ana::Var([](const caf::StandardRecord *) -> double {
+      return 1.0 / (1.0 - ThinFactor);
+    });
     AnaWeightVars[kND_nu] = AnaWeightVars[kND_nu] * thinfactweight;
     AnaWeightVars[kND_nub] = AnaWeightVars[kND_nub] * thinfactweight;
   }

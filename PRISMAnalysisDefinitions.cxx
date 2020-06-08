@@ -20,10 +20,10 @@ using namespace ana;
 namespace PRISM {
 
 const Var kTrueOffAxisPos =
-    (SIMPLEVAR(dune.det_x) + (SIMPLEVAR(dune.vtx_x) * Constant(1.0E-2)));
+    (SIMPLEVAR(det_x) + (SIMPLEVAR(vtx_x) * Constant(1.0E-2)));
 
-const Cut kETrueLT10GeV({"kETrueLT10GeV"}, [](const caf::StandardRecord *sr) {
-  return (sr->dune.Ev < 10);
+const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
+  return (sr->Ev < 10);
 });
 
 Binning GetBinning(std::string const &xbinning) {
@@ -79,7 +79,7 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
   if (varname == "ETrue") {
     return std::make_pair("True E_{#nu} (GeV)", kTrueEnergy);
   } else if (varname == "ELep") {
-    return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(dune.LepE));
+    return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(LepE));
   } else if (varname == "EProxy") {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
@@ -109,9 +109,8 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   return {xax, axOffAxisPos};
 }
 
-const Cut kIsOutOfTheDesert({"kIsOutOfTheDesert"},
-                            [](const caf::StandardRecord *sr) {
-                              return (fabs(sr->dune.vtx_x) < 200);
+const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
+                              return (fabs(sr->vtx_x) < 200);
                             });
 
 std::vector<double> const FDnumuFHCSelEff_enu = {
@@ -131,20 +130,20 @@ std::vector<double> const ND_UnGeoCorrectible_eff = {0.996, 0.996, 0.985, 0.966,
 
 TGraph FDnumuFHCSelEff(FDnumuFHCSelEff_enu.size(), FDnumuFHCSelEff_enu.data(),
                        FDnumuFHCSelEff_eff.data());
-const Var kFDEff({}, [](const caf::StandardRecord *sr) -> double {
-  return FDnumuFHCSelEff.Eval(sr->dune.Ev);
+const Var kFDEff([](const caf::StandardRecord *sr) -> double {
+  return FDnumuFHCSelEff.Eval(sr->Ev);
 });
 
 TGraph ND_UnGeoCorrectibleEff(ND_UnGeoCorrectible_enu.size(),
                               ND_UnGeoCorrectible_enu.data(),
                               ND_UnGeoCorrectible_eff.data());
-const Var kNDEff({}, [](const caf::StandardRecord *sr) -> double {
-  return ND_UnGeoCorrectibleEff.Eval(sr->dune.Ev);
+const Var kNDEff([](const caf::StandardRecord *sr) -> double {
+  return ND_UnGeoCorrectibleEff.Eval(sr->Ev);
 });
 
 // Use to weight by Exposure
-const Var kRunPlanWeight({}, [](const caf::StandardRecord *sr) -> double {
-  return sr->dune.perPOTWeight * sr->dune.perFileWeight;
+const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
+  return sr->perPOTWeight * sr->perFileWeight;
 });
 
 Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
@@ -199,18 +198,18 @@ Var GetFDWeight(std::string const &eweight, bool isNuMode) {
 
 static TH1 *numode_280kA, *nubarmode_280kA;
 
-const Var k280kAWeighter({}, [](const caf::StandardRecord *sr) -> double {
-  if (sr->dune.isFD || sr->dune.det_x || (sr->dune.vtx_x > 0)) {
+const Var k280kAWeighter([](const caf::StandardRecord *sr) -> double {
+  if (sr->isFD || sr->det_x || (sr->vtx_x > 0)) {
     return 1;
   }
   // Only want to weight 'signal' numu species.
-  if ((sr->dune.isFHC && (sr->dune.nuPDG != 14)) ||
-      (!sr->dune.isFHC && (sr->dune.nuPDG != -14))) {
+  if ((sr->isFHC && (sr->nuPDG != 14)) ||
+      (!sr->isFHC && (sr->nuPDG != -14))) {
     return 1;
   }
 
-  TH1 *whist = (sr->dune.isFHC ? numode_280kA : nubarmode_280kA);
-  return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->dune.Ev));
+  TH1 *whist = (sr->isFHC ? numode_280kA : nubarmode_280kA);
+  return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->Ev));
 });
 
 ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
