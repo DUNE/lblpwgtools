@@ -11,8 +11,7 @@ namespace ana {
 /// We use uniform-initializer syntax to concisely pass the list of necessary
 /// branches. In this case the selection function is simple enough that we
 /// can include it inline as a lambda function.
-const Cut kIsNC({"dune.ccnc"},
-                [](const caf::StandardRecord *sr) { return !sr->dune.isCC; });
+const Cut kIsNC([](const caf::StandardRecord *sr) { return !sr->isCC; });
 
 //----------------------------------------------------------------------
 /// Helper for defining true CC event cuts
@@ -21,8 +20,8 @@ public:
   CCFlavSel(int pdg, int pdgorig) : fPdg(pdg), fPdgOrig(pdgorig) {}
 
   bool operator()(const caf::StandardRecord *sr) const {
-    return sr->dune.isCC && abs(sr->dune.nuPDGunosc) == fPdgOrig &&
-           abs(sr->dune.nuPDG) == fPdg;
+    return sr->isCC && abs(sr->nuPDGunosc) == fPdgOrig &&
+           abs(sr->nuPDG) == fPdg;
   }
 
 protected:
@@ -34,38 +33,38 @@ protected:
 // constants to be easily duplicated.
 
 /// Select CC \f$ \nu_\mu\to\nu_e \f$
-const Cut kIsSig({}, CCFlavSel(12, 14));
-const Cut kIsNueApp({}, CCFlavSel(12, 14));
+const Cut kIsSig(CCFlavSel(12, 14));
+const Cut kIsNueApp(CCFlavSel(12, 14));
 /// Select CC \f$ \nu_\mu\to\nu_\mu \f$
-const Cut kIsNumuCC({}, CCFlavSel(14, 14));
+const Cut kIsNumuCC(CCFlavSel(14, 14));
 /// Select CC \f$ \nu_e\to\nu_e \f$
-const Cut kIsBeamNue({}, CCFlavSel(12, 12));
+const Cut kIsBeamNue(CCFlavSel(12, 12));
 /// Select CC \f$ \nu_e\to\nu_\mu \f$
-const Cut kIsNumuApp({}, CCFlavSel(14, 12));
+const Cut kIsNumuApp(CCFlavSel(14, 12));
 /// Select CC \f$ \nu_\mu\to\nu_\tau \f$
-const Cut kIsTauFromMu({}, CCFlavSel(16, 14));
+const Cut kIsTauFromMu(CCFlavSel(16, 14));
 /// Select CC \f$ \nu_e\to\nu_\tau \f$
-const Cut kIsTauFromE({}, CCFlavSel(16, 12));
+const Cut kIsTauFromE(CCFlavSel(16, 12));
 
 /// Is this truly an antineutrino?
-const Cut kIsAntiNu({}, [](const caf::StandardRecord *sr) {
-  return sr->dune.nuPDG < 0;
+const Cut kIsAntiNu([](const caf::StandardRecord *sr) {
+  return sr->nuPDG < 0;
 });
 
 // Based just on PDG code and not on oscillation channel
-const Cut kActuallyIsNumuCC({}, [](const caf::StandardRecord *sr) {
-  return sr->dune.isCC && (sr->dune.nuPDG == 14);
+const Cut kActuallyIsNumuCC([](const caf::StandardRecord *sr) {
+  return sr->isCC && (sr->nuPDG == 14);
 });
 
-const Cut kActuallyIsNumubarCC({}, [](const caf::StandardRecord *sr) {
-  return sr->dune.isCC && (sr->dune.nuPDG == -14);
+const Cut kActuallyIsNumubarCC([](const caf::StandardRecord *sr) {
+  return sr->isCC && (sr->nuPDG == -14);
 });
-const Cut kActuallyIsNueCC({}, [](const caf::StandardRecord *sr) {
-  return sr->dune.isCC && (sr->dune.nuPDG == 12);
+const Cut kActuallyIsNueCC([](const caf::StandardRecord *sr) {
+  return sr->isCC && (sr->nuPDG == 12);
 });
 
-const Cut kActuallyIsNuebarCC({}, [](const caf::StandardRecord *sr) {
-  return sr->dune.isCC && (sr->dune.nuPDG == -12);
+const Cut kActuallyIsNuebarCC([](const caf::StandardRecord *sr) {
+  return sr->isCC && (sr->nuPDG == -12);
 });
 
 inline bool IsInFDFV(double pos_x_cm, double pos_y_cm, double pos_z_cm) {
@@ -114,14 +113,14 @@ inline bool IsInFV(bool IsFD, double pos_x_cm, double pos_y_cm,
               : IsInNDFV(pos_x_cm, pos_y_cm, pos_z_cm);
 }
 
-const Cut kIsTrueFV({}, [](const caf::StandardRecord *sr) {
-  return IsInFV(sr->dune.isFD, sr->dune.vtx_x, sr->dune.vtx_y, sr->dune.vtx_z);
+const Cut kIsTrueFV([](const caf::StandardRecord *sr) {
+  return IsInFV(sr->isFD, sr->vtx_x, sr->vtx_y, sr->vtx_z);
 });
 
 // ETW 11/5/2018 Fiducial cut using MVA variable
 // Should use the previous one (kIsTrueFV) for nominal analysis
-const Cut kPassFid_MVA({}, [](const caf::StandardRecord *sr) {
-  return (sr->dune.mvanumu > -1);
+const Cut kPassFid_MVA([](const caf::StandardRecord *sr) {
+  return (sr->mvanumu > -1);
 });
 
 } // namespace ana

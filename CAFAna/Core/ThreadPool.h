@@ -3,6 +3,7 @@
 #include <deque>
 #include <functional>
 #include <vector>
+#include <string>
 
 #include "pthread.h"
 

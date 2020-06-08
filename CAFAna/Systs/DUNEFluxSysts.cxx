@@ -32,7 +32,7 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
                          caf::StandardRecord *sr, double &weight) const {
 
-  if (abs(sr->dune.nuPDGunosc) == 16) {
+  if (abs(sr->nuPDGunosc) == 16) {
     return;
   }
 
@@ -45,7 +45,7 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   }
 
   weight = fOffAxisFluxParamHelper->GetFluxWeight(
-      fIdx, sigma, sr->dune.OffAxisFluxBin, sr->dune.OffAxisFluxConfig);
+      fIdx, sigma, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
 #else
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
@@ -86,17 +86,23 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     }
   } // end if
 
-  double rel_weight = 1;
+  if (abs(sr->nuPDGunosc) == 16)
+    return;
 
-  int det = sr->dune.isFD ? 0 : 1;
-  int pdg = (abs(sr->dune.nuPDGunosc) == 12) ? 0 : 1;
-  int anti = (sr->dune.nuPDGunosc > 0) ? 0 : 1;
-  int hc = sr->dune.isFHC ? 0 : 1;
-  double enu = sr->dune.Ev;
+  double const rel_weight = 1;
+  double const enu = sr->Ev;
+
+  const int det = sr->isFD ? 0 : 1;
+  const int pdg = (abs(sr->nuPDGunosc) == 12) ? 0 : 1;
+  const int anti = (sr->nuPDGunosc > 0) ? 0 : 1;
+  const int hc = sr->isFHC ? 0 : 1;
+
 
   TH1 *h = fScale[det][pdg][anti][hc];
   assert(h);
+
   const int bin = h->FindBin(enu);
+
   if (bin == 0 || bin == h->GetNbinsX() + 1) {
     return;
   }

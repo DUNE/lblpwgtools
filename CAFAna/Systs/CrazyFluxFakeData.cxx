@@ -22,19 +22,19 @@ namespace ana {
     if (fabs(sigma) < 1E-5) return;
 
     // This is a bit hacky... simply because ND files with this fix haven't been made yet
-    if (!sr->dune.isFD) return;
+    if (!sr->isFD) return;
 
     // Make sure weights are only applied when appropriate
-    if (fName == GetCrazyFluxDialNames()[0] && !sr->dune.isFHC){
+    if (fName == GetCrazyFluxDialNames()[0] && !sr->isFHC){
       return;
     }
-    if (fName == GetCrazyFluxDialNames()[1] && sr->dune.isFHC){
+    if (fName == GetCrazyFluxDialNames()[1] && sr->isFHC){
       return;
     }
     
     // If you get this far, apply a weight
     // All values in the array except [3], the nominal, should be the same
-    weight *= sr->dune.wgt_CrazyFlux[0];
+    weight *= sr->wgt_CrazyFlux[0];
   }
 
   

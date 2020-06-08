@@ -47,8 +47,8 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
   return fvmasscor->GetBinContent(bi_it);
 }
 
-const ana::Var kMassCorrection({}, [](const caf::StandardRecord *sr) -> double {
-  return sr->dune.NDMassCorrWeight;
+const ana::Var kMassCorrection([](const caf::StandardRecord *sr) -> double {
+  return sr->NDMassCorrWeight;
 });
 
 namespace {

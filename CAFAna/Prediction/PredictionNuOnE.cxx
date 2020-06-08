@@ -12,11 +12,11 @@ namespace ana
   // Simple counting experiment
   const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), kUnweighted);
 
-  const Var kThetaReco = SIMPLEVAR(dune.theta_reco);
-  const Var kElepReco = SIMPLEVAR(dune.Elep_reco);
+  const Var kThetaReco = SIMPLEVAR(theta_reco);
+  const Var kElepReco = SIMPLEVAR(Elep_reco);
   const Var kEsqTheta = kElepReco * kThetaReco * kThetaReco;
 
-  const Var kEhadVeto = SIMPLEVAR(dune.Ehad_veto);
+  const Var kEhadVeto = SIMPLEVAR(Ehad_veto);
 
   // Private communication from Chris M
   const Cut kNuOnECut = kEsqTheta < .002 && kElepReco > .5 && kIsTrueFV && kEhadVeto < 20;

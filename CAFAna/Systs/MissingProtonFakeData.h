@@ -25,7 +25,7 @@ public:
   void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
              double &weight) const override {
 
-    if (!sr->dune.isCC) {
+    if (!sr->isCC) {
       return;
     }
 
@@ -33,21 +33,21 @@ public:
       return;
     }
 
-    restore.Add(sr->dune.eRec_FromDep, sr->dune.eRecProxy);
+    restore.Add(sr->eRec_FromDep, sr->eRecProxy);
 
-    if (sr->dune.isFD) {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
+    if (sr->isFD) {
+      sr->eRec_FromDep -= EpFrac * sr->eDepP;
     } else {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
+      sr->eRec_FromDep -= EpFrac * sr->eRecoP;
     }
 
     double eother = 0;
-    if (std::isnormal(sr->dune.eOther)) {
-      eother = sr->dune.eOther;
+    if (std::isnormal(sr->eOther)) {
+      eother = sr->eOther;
     }
-    sr->dune.eRecProxy = sr->dune.LepE + (1.0 - EpFrac) * sr->dune.eP +
-                         sr->dune.ePip + sr->dune.ePim + sr->dune.ePi0 +
-                         0.135 * sr->dune.nipi0 + eother;
+    sr->eRecProxy = sr->LepE + (1.0 - EpFrac) * sr->eP +
+                         sr->ePip + sr->ePim + sr->ePi0 +
+                         0.135 * sr->nipi0 + eother;
 
     if (!fDoWeight) {
       return;
@@ -55,15 +55,15 @@ public:
 
     union BDTReweighter::BDTReweighterFeature features[8];
 
-    features[5].fvalue = sr->dune.Ev; // Etrue
-    features[6].fvalue = sr->dune.eP; // True proton kinetic energy
-    features[7].fvalue = 1 - sr->dune.LepE / sr->dune.Ev; // ytrue
+    features[5].fvalue = sr->Ev;                // Etrue
+    features[6].fvalue = sr->eP;                // True proton kinetic energy
+    features[7].fvalue = 1 - sr->LepE / sr->Ev; // ytrue
 
     for (int i = 0; i < 5; i++)
       features[i].fvalue = 0;
 
     bool foundMode = true;
-    switch (sr->dune.GENIE_ScatteringMode) {
+    switch (sr->GENIE_ScatteringMode) {
     case 1:
       features[0].fvalue = 1.;
       break;
@@ -85,7 +85,7 @@ public:
 
     if (foundMode) {
       double wght_val =
-          bdt_reweighter[sr->dune.nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
+          bdt_reweighter[sr->nuPDG > 0 ? 0 : 1]->GetWeight(features, 1);
       weight *= wght_val;
     }
   }

@@ -61,14 +61,12 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
   Var NDWeight_XSecEff = GetNDWeight("CVXSec NDEff");
 
   if (whist) { // If we are faking a special run
-    auto specrunweight =
-        ana::Var({}, [&](const caf::StandardRecord *sr) -> double {
-          if (sr->dune.det_x || (sr->dune.vtx_x > 0)) {
-            return 1;
-          }
-          return whist->GetBinContent(
-              whist->GetXaxis()->FindFixBin(sr->dune.Ev));
-        });
+    auto specrunweight = ana::Var([&](const caf::StandardRecord *sr) -> double {
+      if (sr->det_x || (sr->vtx_x > 0)) {
+        return 1;
+      }
+      return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->Ev));
+    });
     NDWeight = NDWeight * specrunweight;
     NDWeight_XSec = NDWeight_XSec * specrunweight;
     NDWeight_Eff = NDWeight_Eff * specrunweight;
