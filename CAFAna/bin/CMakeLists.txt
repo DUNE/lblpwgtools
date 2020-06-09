@@ -1,5 +1,8 @@
+include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
+
 set(APPS
   hadd_cafana
+  diff_spectra
 )
 
 foreach(APP ${APPS})
@@ -7,23 +10,7 @@ foreach(APP ${APPS})
 
   add_executable(${APP} ${APP}.cc)
 
-  target_link_libraries(${APP}
-    CAFAnaAnalysis
-    CAFAnaFit
-    CAFAnaDecomp
-    CAFAnaPrediction
-    CAFAnaCore
-    CAFAnaExperiment
-    CAFAnaSysts
-    CAFAnaCuts
-    CAFAnaExtrap
-    CAFAnaVars
-    StandardRecord
-    OscLibFunc
-    UtilitiesFunc)
-
-    target_link_libraries(${APP} ${CAFANA_LINK_DIRS})
-    target_link_libraries(${APP} ${CAFANA_DEPEND_LIBS})
+  target_link_libraries(${APP} "-L ${ROOT_LIBDIR}" ${ROOT_LIBS})
 
   install(TARGETS ${APP} DESTINATION bin)
 endforeach()
