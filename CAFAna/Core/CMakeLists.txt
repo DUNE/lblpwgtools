@@ -12,7 +12,7 @@ set(Core_implementation_files
   MultiVar.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
-  # ProfilerSupport.cxx
+  ProfilerSupport.cxx
   Progress.cxx
   Ratio.cxx
   Registry.cxx
