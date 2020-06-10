@@ -5,6 +5,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "StandardRecord/StandardRecord.h"
 #include "TCanvas.h"
@@ -20,22 +21,22 @@ using namespace ana;
 void demo1()
 {
   // See demo0.C for explanation of these repeated parts
-  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
-  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root";
-  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root";
+  const std::string fnameNonSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_tauswap.root";
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
+  const Var kCVNNumu = SIMPLEVAR(cvnnumu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const double pot = 3.5 * POT120 * 40/1.13;
 
   // A cut is structured like a Var, but returning bool
-  const Cut kPassesCVN([](const caf::StandardRecord* sr)
+  const Cut kPassesCVN([](const caf::SRProxy* sr)
                        {
-                         return sr->dune.cvnnumu > 0.5;
+                         return sr->cvnnumu > 0.5;
                        });
 
   // In many cases it's easier to form them from existing Vars like this

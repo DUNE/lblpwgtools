@@ -6,6 +6,7 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -15,7 +16,7 @@
 
 // New includes required
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Fit/Fit.h"
 #include "CAFAna/Vars/FitVars.h"
 
 using namespace ana;
@@ -23,17 +24,17 @@ using namespace ana;
 void demo2()
 {
   // Repeat all of demo1.C to get us our Prediction object
-  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
-  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root";
-  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root";
+  const std::string fnameNonSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_tauswap.root";
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  const double pot = 3.5 * POT120 * 40/1.13;
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
   PredictionNoExtrap pred(loaderNonSwap, loaderNueSwap, loaderTauSwap, axEnergy, kPassesCVN);
   loaderNonSwap.Go();
   loaderNueSwap.Go();
@@ -59,7 +60,7 @@ void demo2()
   // parameters given. These are FitVars from Vars/FitVars.h. They can contain
   // snippets of code to convert from the underlying angles etc to whatever
   // function you want to fit.
-  Fitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
+  MinuitFitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
   const double best_chisq = fit.Fit(calc);
 
   // The osc calculator is updated in-place with the best oscillation

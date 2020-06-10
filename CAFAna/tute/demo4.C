@@ -5,7 +5,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
-
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "StandardRecord/StandardRecord.h"
@@ -19,12 +19,12 @@ using namespace ana;
 void demo4()
 {
   // Copying basic setup from demo0.C
-  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fname = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
   SpectrumLoader loader(fname);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const double pot = 3.5 * POT120 * 40/1.13;
 
   // This is the nominal energy spectrum
   Spectrum sEnergy(loader, axEnergy, kIsNumuCC);
@@ -41,12 +41,12 @@ void demo4()
 
     // Function that will be called to actually do the shift
     void Shift(double sigma,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // Edit the event record
       const double scale = 1 + .1*sigma;
-      sr->dune.Ev_reco_numu *= scale;
+      sr->Ev_reco_numu *= scale;
     }
   };
   const ToyEnergyScaleSyst eSyst;
@@ -63,12 +63,12 @@ void demo4()
     }
 
     void Shift(double sigma,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // A systematic can also reweight events, based on whatever criteria you
       // want.
-      if(sr->dune.Ev_reco_numu < 2) weight *= 1+0.2*sigma;
+      if(sr->Ev_reco_numu < 2) weight *= 1+0.2*sigma;
     }
   };
   const ToyNormSyst nSyst;

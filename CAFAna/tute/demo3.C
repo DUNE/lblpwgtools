@@ -6,6 +6,7 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
@@ -17,7 +18,7 @@
 #include "CAFAna/Vars/FitVars.h"
 
 // New includes
-#include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
 
 using namespace ana;
@@ -29,11 +30,11 @@ void demo3()
   // Except we're introducing "Loaders", which knows the latest CAF locations
   // and packages the three types of loader together into one handy class.
   TDRLoaders loaders(Loaders::kFHC);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  const double pot = 3.5 * POT120 * 40/1.13;
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
   PredictionNoExtrap pred(loaders, axEnergy, kPassesCVN);
   loaders.Go();
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
@@ -41,7 +42,7 @@ void demo3()
   SingleSampleExperiment expt(&pred, data);
 
   // A Surface evaluates the experiment's chisq across a grid
-  Surface surf(&expt, calc,
+  FrequentistSurface surf(&expt, calc,
                &kFitSinSqTheta23, 30, 0.425, 0.575,
                &kFitDmSq32Scaled, 30, 2.35, 2.55);
 
@@ -69,7 +70,7 @@ void demo3()
   // parts. Use to implement joint fits
   MultiExperiment exptMulti({&expt, &exptRHC});
 
-  Surface surfMulti(&exptMulti, calc,
+  FrequentistSurface surfMulti(&exptMulti, calc,
                     &kFitSinSqTheta23, 30, 0.425, 0.575,
                     &kFitDmSq32Scaled, 30, 2.35, 2.55);
 

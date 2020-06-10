@@ -5,6 +5,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Analysis/Exposures.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -19,7 +20,7 @@ using namespace ana;
 void demo0()
 {
   // Environment variables and wildcards work. As do SAM datasets.
-  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fname = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
 
   // Source of events
   SpectrumLoader loader(fname);
@@ -53,7 +54,7 @@ void demo0()
   loader.Go();
 
   // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
+  const double pot = 3.5 * POT120 * 40/1.13;
 
   // For plotting purposes we can convert to TH1s
   sEnergy.ToTH1(pot)->Draw("hist");
