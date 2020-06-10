@@ -166,6 +166,8 @@ if __name__ == '__main__':
         if script != ' ': rootargs.append(script)
         rootargs += args
 
+    os.environ['ROOT_INCLUDE_PATH'] += ':'+os.environ['SRPROXY_INC']
+    os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
     # Show the user what we're doing in case we got it wrong
     print exe, ' '.join(rootargs)
