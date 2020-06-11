@@ -30,7 +30,7 @@ bool SystNameIsInList(std::string const &, std::vector<std::string> const &);
 bool IsExtrapolateOffToOnSyst(std::string const &);
 bool IsExtrapolateOffToOnSyst(int);
 bool IsDoNotIncludeSyst(std::string const &);
-bool IsDoNotIncludeSyst(int);
+bool IsDoNotIncludeSyst(unsigned int);
 bool IsFakeDataGenerationSyst(std::string const &);
 bool IsFakeDataGenerationSyst(int);
 

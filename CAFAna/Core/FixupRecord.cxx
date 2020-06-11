@@ -80,12 +80,27 @@ namespace ana
       }
     }
 
-    const std::vector<std::string>& XSSyst_names = GetAllXSecSystNames();
+    // These aren't going to change during the job, so do it once up-front.
+    static const std::vector<std::string>& XSSyst_names = GetAllXSecSystNames();
+
+    // HACK HACK HACK for knobs that aren't in file
+    static bool hackOnce = true;
+    static std::vector<bool> veto(XSSyst_names.size());
+    if(hackOnce){
+      hackOnce = false;
+      for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
+        if(ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_NN" ||
+           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_2p2h" ||
+           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_1p1h" ||
+           ana::GetXSecSystName(syst_it) == "MissingProtonFakeData" ||
+           ana::GetXSecSystName(syst_it) == "NuWroReweightFakeData"
+           ) veto[syst_it] = true;
+      }
+    }
 
     // Reformat the genie systs
     sr->total_xsSyst_cv_wgt = 1;
 
-    // TODO TODO TODO TODO - HACK HACK HACK
     std::vector<float> XSSyst_cv_tmp(XSSyst_names.size());
     for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
       XSSyst_cv_tmp[syst_it] = 1;
@@ -109,13 +124,8 @@ namespace ana
     }
     else{
       for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
-        // HACK HACK HACK
-        if(ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_NN" ||
-           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_2p2h" ||
-           ana::GetXSecSystName(syst_it) == "Mnv2p2hGaussEnhancement_1p1h" ||
-           ana::GetXSecSystName(syst_it) == "MissingProtonFakeData" ||
-           ana::GetXSecSystName(syst_it) == "NuWroReweightFakeData"
-           ) continue;
+        // Continuation of the hack from further up
+        if(veto[syst_it]) continue;
 
         if(IsDoNotIncludeSyst(syst_it)){ // Multiply CV weight back into
                                          // response splines.

@@ -159,27 +159,26 @@ namespace ana
   template<class T, class U> class CutVarCache
   {
   public:
-    CutVarCache() : fVals(U::MaxID()+1), fValsSet(U::MaxID()+1, false) {}
+    CutVarCache() : fCache(U::MaxID()+1) {}
 
     inline T Get(const U& var, const caf::SRProxy* sr)
     {
       const unsigned int id = var.ID();
 
-      if(fValsSet[id]){
-        return fVals[id];
-      }
-      else{
-        const T val = var(sr);
-        fVals[id] = val;
-        fValsSet[id] = true;
-        return val;
-      }
+      if(fCache[id].set) return fCache[id].val;
+
+      const T val = var(sr);
+      fCache[id].val = val;
+      fCache[id].set = true;
+      return val;
     }
 
   protected:
     // Seems to be faster to do this than [unordered_]map
-    std::vector<T> fVals;
-    std::vector<bool> fValsSet;
+    struct CacheElem{
+      T val; bool set;
+    };
+    std::vector<CacheElem> fCache;
   };
 
   //----------------------------------------------------------------------
