@@ -35,9 +35,9 @@ namespace ana {
 	assert(hist);
       }
       // Passes FD selection cut
-      if (sr->dune.isFD && kPassFD_CVN_NUMU(sr)) {
-	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
-	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
+      if (sr->isFD && kPassFD_CVN_NUMU(sr)) {
+	int EBin   = hist->GetXaxis()->FindBin(sr->Ev);
+	int VarBin = hist->GetYaxis()->FindBin(sr->Y);
 	double w   = hist->GetBinContent(EBin, VarBin);
 	weight    *= 1. + sigma * (1. - w) ;
       }
@@ -69,9 +69,9 @@ namespace ana {
 	assert(hist);
       }
       // Passes FD nue selection
-      if (sr->dune.isFD && kPassFD_CVN_NUE(sr)) {
-	int EBin   = hist->GetXaxis()->FindBin(sr->dune.Ev);
-	int VarBin = hist->GetYaxis()->FindBin(sr->dune.Y);
+      if (sr->isFD && kPassFD_CVN_NUE(sr)) {
+	int EBin   = hist->GetXaxis()->FindBin(sr->Ev);
+	int VarBin = hist->GetYaxis()->FindBin(sr->Y);
 	double w   = hist->GetBinContent(EBin, VarBin);
 	weight    *= 1. + sigma * (1. - w) ;
       }
@@ -94,7 +94,7 @@ namespace ana {
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
-      if (sr->dune.isFD && kPassFD_CVN_NUE(sr)) {
+      if (sr->isFD && kPassFD_CVN_NUE(sr)) {
 	weight *= scale;
       }
     }
@@ -113,7 +113,7 @@ namespace ana {
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
-      if (sr->dune.isFD && kPassFD_CVN_NUMU(sr)) {
+      if (sr->isFD && kPassFD_CVN_NUMU(sr)) {
 	weight *= scale;
       }
     }
@@ -133,7 +133,7 @@ namespace ana {
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
-      if (sr->dune.isFD && (kPassFD_CVN_NUMU(sr) || kPassFD_CVN_NUMU(sr))) {
+      if (sr->isFD && (kPassFD_CVN_NUMU(sr) || kPassFD_CVN_NUMU(sr))) {
 	weight *= scale;
       }
     }

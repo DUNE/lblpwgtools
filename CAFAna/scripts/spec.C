@@ -29,8 +29,8 @@ using namespace ana;
 #include "TGraph.h"
 #include "TH2.h"
 
-const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
-const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
+const Var kRecoE_nue = SIMPLEVAR(Ev_reco_nue);
+const Var kRecoE_numu = SIMPLEVAR(Ev_reco_numu);
 
 // 125 MeV bins from 0.0 to 8GeV
 const HistAxis axis_nue("Reconstructed energy (GeV)",
