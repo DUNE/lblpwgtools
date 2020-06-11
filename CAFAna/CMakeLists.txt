@@ -80,35 +80,24 @@ include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/NOvAExternals.cmake)
 
-add_subdirectory(Analysis)
-add_subdirectory(Core)
-add_subdirectory(Cuts)
-add_subdirectory(Decomp)
-add_subdirectory(Experiment)
-add_subdirectory(Extrap)
-add_subdirectory(Fit)
-add_subdirectory(Prediction)
-add_subdirectory(Systs)
-add_subdirectory(Vars)
-add_subdirectory(bin)
+set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars)
 
+foreach(SUBDIR ${CAFANA_SUBDIRS})
+  add_subdirectory(${SUBDIR})
+endforeach()
+
+add_subdirectory(bin)
 add_subdirectory(scripts)
 
 # This is a "sub"directory by virtue of a symlink
 add_subdirectory(StandardRecord)
 
-# Need to generate the SRProxy files before anything else. I don't know a neater way to accomplish this
-add_dependencies(StandardRecordProxy StandardRecordProxy)
-add_dependencies(CAFAnaAnalysis StandardRecordProxy)
-add_dependencies(CAFAnaCore StandardRecordProxy)
-add_dependencies(CAFAnaCuts StandardRecordProxy)
-add_dependencies(CAFAnaDecomp StandardRecordProxy)
-add_dependencies(CAFAnaExperiment StandardRecordProxy)
-add_dependencies(CAFAnaExtrap StandardRecordProxy)
-add_dependencies(CAFAnaFit StandardRecordProxy)
-add_dependencies(CAFAnaPrediction StandardRecordProxy)
-add_dependencies(CAFAnaSysts StandardRecordProxy)
-add_dependencies(CAFAnaVars StandardRecordProxy)
+# Need to generate the SRProxy files before anything else
+foreach(SUBDIR ${CAFANA_SUBDIRS})
+  add_dependencies(CAFAna${SUBDIR} StandardRecordProxy)
+endforeach()
+
+# add_dependencies(scripts StandardRecordProxy)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
