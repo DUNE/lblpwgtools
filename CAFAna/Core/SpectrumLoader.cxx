@@ -198,6 +198,8 @@ namespace ana
       // work from. Copying the whole StandardRecord is pretty expensive, so
       // modify it in place and revert it afterwards.
 
+      // Please do not continue/break out of the shiftdef loop. If this is
+      // required, let's use a RAII type here.
       caf::SRProxySystController::BeginTransaction();
 
       bool shifted = false;
@@ -280,6 +282,8 @@ namespace ana
       // histogram.
       caf::SRProxySystController::Rollback();
     } // end for shiftdef
+
+    assert(!caf::SRProxySystController::AnyShifted());
   }
 
   //----------------------------------------------------------------------

@@ -11,3 +11,6 @@
     new (&fElems[systIdx]->fSize) Proxy<int>(fDir, fTree, name+"_nshifts", fBase, fOffset);
     return *fElems[systIdx];
   }
+
+  // Hmm, no way to know size up-front
+  bool empty() const {return false;}

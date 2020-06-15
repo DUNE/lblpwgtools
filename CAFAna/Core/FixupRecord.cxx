@@ -98,6 +98,9 @@ namespace ana
       }
     }
 
+    // HACK to survive the absence of crazyFlux values in the file
+    sr->wgt_CrazyFlux = std::vector<double>(7, 1);
+
     // Reformat the genie systs
     sr->total_xsSyst_cv_wgt = 1;
 
