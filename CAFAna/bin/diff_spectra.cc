@@ -31,9 +31,9 @@ bool operator==(const TVectorD& a, const TVectorD& b)
 
 bool operator==(const TH1& a, const TH1& b)
 {
-  if(a.GetNbinsX() != b.GetNbinsX()) return false;
+  if(a.GetNcells() != b.GetNcells()) return false;
   // TODO - test bin edges
-  for(int i = 0; i < a.GetNbinsX(); ++i)
+  for(int i = 0; i <= a.GetNcells(); ++i)
     if(a.GetBinContent(i) != b.GetBinContent(i))
       return false;
 
