@@ -82,7 +82,7 @@ namespace ana
     OscillatableSpectrum& operator-=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator-(const OscillatableSpectrum& rhs) const;
 
-    void SaveTo(TDirectory* dir) const;
+    void SaveTo(TDirectory* dir, const std::string& name) const;
     static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir);
 
   protected:

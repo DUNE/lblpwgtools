@@ -62,7 +62,7 @@ namespace ana
   {
   public:
     static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const override;
+    virtual void SaveTo(TDirectory* dir, const std::string& anem) const override;
   protected:
     friend const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory);
     DUNEXSecSyst(EVALORCategory cat);

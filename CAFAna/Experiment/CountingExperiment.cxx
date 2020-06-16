@@ -40,17 +40,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void CountingExperiment::SaveTo(TDirectory* dir) const
+  void CountingExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("CountingExperiment").Write("type");
 
-    fMC->SaveTo(dir->mkdir("mc"));
-    fData.SaveTo(dir->mkdir("data"));
+    fMC->SaveTo(dir, "mc");
+    fData.SaveTo(dir, "data");
     
     if(fCosmic) fCosmic->Write("cosmic");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

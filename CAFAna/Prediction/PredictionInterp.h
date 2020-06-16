@@ -67,7 +67,7 @@ namespace ana
                             double pot,
                             std::unordered_map<const ISyst*, std::vector<double>>& dp) const override;
 
-    virtual void SaveTo(TDirectory* dir) const override;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir);
 
     /// After calling this DebugPlots won't work fully and SaveTo won't work at

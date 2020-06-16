@@ -37,7 +37,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IChiSqExperiment::SaveTo(TDirectory* dir) const
+  void IChiSqExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     assert(0 && "Not implemented");
   }

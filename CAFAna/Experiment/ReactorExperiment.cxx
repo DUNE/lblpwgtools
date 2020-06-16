@@ -20,17 +20,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void ReactorExperiment::SaveTo(TDirectory* dir) const
+  void ReactorExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("ReactorExperiment").Write("type");
 
     TH1D params("", "", 2, 0, 2);
     params.SetBinContent(1, fBestFit);
     params.SetBinContent(2, fSigma);
     params.Write("params");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

@@ -59,7 +59,7 @@ namespace ana
         /// Maps of the values taken on by the profiled parameters
         std::vector<TH2*> GetProfiledHists() {return fProfHists;}
 
-        void SaveTo(TDirectory * dir)const;
+        void SaveTo(TDirectory* dir, const std::string& name ) const;
         static std::unique_ptr<FrequentistSurface> LoadFrom(TDirectory * dir);
 
     protected:

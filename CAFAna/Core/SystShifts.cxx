@@ -134,11 +134,13 @@ double SystShifts::Clamp(double x, const ISyst *s) {
 }
 
 //----------------------------------------------------------------------
-void SystShifts::SaveTo(TDirectory* dir) const
+void SystShifts::SaveTo(TDirectory* dir, const std::string& name) const
 {
   TDirectory* tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
+
   TObjString("SystShifts").Write("type");
 
   // Don't write any histogram for the nominal case
@@ -152,6 +154,9 @@ void SystShifts::SaveTo(TDirectory* dir) const
     }
     h.Write("vals");
   }
+
+  dir->Write();
+  delete dir;
 
   tmp->cd();
 }

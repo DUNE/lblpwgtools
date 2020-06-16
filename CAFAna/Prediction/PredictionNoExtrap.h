@@ -38,7 +38,7 @@ public:
   virtual ~PredictionNoExtrap();
 
   static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 };
 
 class NoExtrapPredictionGenerator : public IPredictionGenerator {

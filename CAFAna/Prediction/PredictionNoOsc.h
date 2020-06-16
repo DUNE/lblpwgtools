@@ -19,7 +19,7 @@ public:
                   const Var &wei = kUnweighted);
 
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
     return fSpectrum;

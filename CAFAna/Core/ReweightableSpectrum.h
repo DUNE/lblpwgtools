@@ -88,7 +88,7 @@ namespace ana
     /// the fRWVar member is not written to file, so when
     /// the spectrum is loaded back from file, ReweightVar
     /// should not be accessed, but reweighting still works
-    void SaveTo(TDirectory* dir) const;
+    void SaveTo(TDirectory* dir, const std::string& name) const;
 
     static std::unique_ptr<ReweightableSpectrum> LoadFrom(TDirectory* dir);
 

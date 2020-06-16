@@ -31,7 +31,7 @@ namespace ana
       dchi.clear();
     }
 
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
 
     // For MultiExperiment covariance matrix, need to be able to access prediction and data histograms
     virtual TH1D* PredHist( osc::IOscCalculator* calc,

@@ -54,7 +54,7 @@ namespace ana
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override;
 
-    virtual void SaveTo(TDirectory* dir) const override;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionNuOnE> LoadFrom(TDirectory* dir);
 
     Spectrum Signal() const {return fSig;}

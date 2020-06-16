@@ -314,7 +314,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void MultiExperiment::SaveTo(TDirectory* dir) const
+  void MultiExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     bool hasCorr = false;
     for(auto it: fSystCorrelations) if(!it.empty()) hasCorr = true;
@@ -325,12 +325,17 @@ namespace ana
 
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("MultiExperiment").Write("type");
 
     for(unsigned int i = 0; i < fExpts.size(); ++i){
-      fExpts[i]->SaveTo(dir->mkdir(TString::Format("expt%d", i)));
+      fExpts[i]->SaveTo(dir, TString::Format("expt%d", i).Data());
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

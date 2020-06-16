@@ -102,15 +102,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionExtrap::SaveTo(TDirectory* dir) const
+  void PredictionExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionExtrap").Write("type");
 
-    fExtrap->SaveTo(dir->mkdir("extrap"));
+    fExtrap->SaveTo(dir, "extrap");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

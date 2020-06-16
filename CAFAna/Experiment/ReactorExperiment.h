@@ -26,7 +26,7 @@ namespace ana
       // zero derivative wrt systematics.
     }
 
-    void SaveTo(TDirectory* dir) const override;
+    void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<ReactorExperiment> LoadFrom(TDirectory* dir);
   protected:
     double fBestFit, fSigma;

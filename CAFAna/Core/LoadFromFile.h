@@ -45,13 +45,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   // For symmetry
-  template<class T> void SaveTo(const T& x, TDirectory* dir)
+  template<class T> void SaveTo(const T& x, TDirectory* dir, const std::string& name)
   {
-    x.SaveTo(dir);
+    x.SaveTo(dir, name);
   }
 
   // Also in the cxx, to avoid having to put this logic into OscLib
-  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir);
+  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir, const std::string& name);
 
   //----------------------------------------------------------------------
   template<class T> std::unique_ptr<T> LoadFromFile(const std::string& fname,
@@ -73,6 +73,6 @@ namespace ana
                                     const std::string& label)
   {
     TFile fout(fname.c_str(), "RECREATE");
-    x.SaveTo(fout.mkdir(label.c_str()));
+    x.SaveTo(&fout, label);
   }
 }

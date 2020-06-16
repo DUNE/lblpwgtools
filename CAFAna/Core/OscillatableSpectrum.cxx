@@ -326,9 +326,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void OscillatableSpectrum::SaveTo(TDirectory* dir) const
+  void OscillatableSpectrum::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("OscillatableSpectrum").Write("type");
@@ -343,8 +345,11 @@ namespace ana
 
     for(unsigned int i = 0; i < fBins.size(); ++i){
       TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir->mkdir(TString::Format("bins%d", i)));
+      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
