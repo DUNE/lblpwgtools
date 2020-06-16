@@ -120,18 +120,18 @@ void spec_for_globes(bool reload = false)
 
     std::cout << stateFname << std::endl;
     TFile fout(stateFname, "RECREATE");
-    predInt_FDNumuFHC.SaveTo(fout.mkdir("pred_fd_numu_fhc"));
-    predInt_FDNumuRHC.SaveTo(fout.mkdir("pred_fd_numu_rhc"));
-    predInt_FDNueFHC.SaveTo(fout.mkdir("pred_fd_nue_fhc"));
-    predInt_FDNueRHC.SaveTo(fout.mkdir("pred_fd_nue_rhc"));
-    predInt_FDNumuFHC_fid.SaveTo(fout.mkdir("pred_fd_numu_fhc_fid"));
-    predInt_FDNumuRHC_fid.SaveTo(fout.mkdir("pred_fd_numu_rhc_fid"));
-    predInt_FDNueFHC_fid.SaveTo(fout.mkdir("pred_fd_nue_fhc_fid"));
-    predInt_FDNueRHC_fid.SaveTo(fout.mkdir("pred_fd_nue_rhc_fid"));
-    predInt_FDNumuFHC_smr.SaveTo(fout.mkdir("pred_fd_numu_fhc_smr"));
-    predInt_FDNumuRHC_smr.SaveTo(fout.mkdir("pred_fd_numu_rhc_smr"));
-    predInt_FDNueFHC_smr.SaveTo(fout.mkdir("pred_fd_nue_fhc_smr"));
-    predInt_FDNueRHC_smr.SaveTo(fout.mkdir("pred_fd_nue_rhc_smr"));
+    predInt_FDNumuFHC.SaveTo(&fout, "pred_fd_numu_fhc");
+    predInt_FDNumuRHC.SaveTo(&fout, "pred_fd_numu_rhc");
+    predInt_FDNueFHC.SaveTo(&fout, "pred_fd_nue_fhc");
+    predInt_FDNueRHC.SaveTo(&fout, "pred_fd_nue_rhc");
+    predInt_FDNumuFHC_fid.SaveTo(&fout, "pred_fd_numu_fhc_fid");
+    predInt_FDNumuRHC_fid.SaveTo(&fout, "pred_fd_numu_rhc_fid");
+    predInt_FDNueFHC_fid.SaveTo(&fout, "pred_fd_nue_fhc_fid");
+    predInt_FDNueRHC_fid.SaveTo(&fout, "pred_fd_nue_rhc_fid");
+    predInt_FDNumuFHC_smr.SaveTo(&fout, "pred_fd_numu_fhc_smr");
+    predInt_FDNumuRHC_smr.SaveTo(&fout, "pred_fd_numu_rhc_smr");
+    predInt_FDNueFHC_smr.SaveTo(&fout, "pred_fd_nue_fhc_smr");
+    predInt_FDNueRHC_smr.SaveTo(&fout, "pred_fd_nue_rhc_smr");
 
 
     std::cout << "All done making state..." << std::endl;

@@ -192,12 +192,12 @@ void joint_fit_ND(bool reload = false)
     loaderFDNueRHC.Go();
 
     TFile fout(stateFname, "RECREATE");
-    predNDFHC.SaveTo(fout.mkdir("nd_fhc"));
-    predNDRHC.SaveTo(fout.mkdir("nd_rhc"));
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
+    predNDFHC.SaveTo(&fout, "nd_fhc");
+    predNDRHC.SaveTo(&fout, "nd_rhc");
+    predFDNumuFHC.SaveTo(&fout, "fd_numu_fhc");
+    predFDNueFHC.SaveTo(&fout, "fd_nue_fhc");
+    predFDNumuRHC.SaveTo(&fout, "fd_numu_rhc");
+    predFDNueRHC.SaveTo(&fout, "fd_nue_rhc");
     std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
