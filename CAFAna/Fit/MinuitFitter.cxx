@@ -48,23 +48,9 @@ namespace ana
   //----------------------------------------------------------------------
   bool MinuitFitter::SupportsDerivatives() const
   {
-    // Provide an Opt-out in case something goes wrong
-    if (getenv("CAFANA_DISABLE_DERIVATIVES") &&
-        bool(atoi(getenv("CAFANA_DISABLE_DERIVATIVES")))) {
-      return false;
-    }
-
-    // No point using derivatives for FitVars only, we do finite differences,
-    // probably worse than MINUIT would.
-    if (fSysts.empty())
-      return false;
-
-    // Otherwise, do the minimal trial to see if the experiment will return a
-    // gradient.
-    std::unordered_map<const ISyst *, double> dchi = {{fSysts[0], 0}};
-    osc::NoOscillations calc;
-    fExpt->Derivative(&calc, SystShifts::Nominal(), dchi);
-    return !dchi.empty();
+    // Most of this framework was torn out. But keep the hooks here in case we
+    // want to replace the derivatives with stan.
+    return false;
   }
 
   //----------------------------------------------------------------------
@@ -267,38 +253,9 @@ namespace ana
   {
     ++fNEvalGrad;
 
-    // TODO handling of FitVars including penalty terms
-
-    if (!fVars.empty())
-    {
-      // Have to use finite differences to calculate these derivatives
-      const double dx = 1e-9;
-      const double nom = DoEval(pars);
-      ++fNEvalFiniteDiff;
-      std::vector<double> parsCopy(pars, pars + NDim());
-      for (unsigned int i = 0; i < fVars.size(); ++i) {
-        parsCopy[i] += dx;
-        ret[i] = (DoEval(parsCopy.data()) - nom) / dx;
-        ++fNEvalFiniteDiff;
-        parsCopy[i] = pars[i];
-      }
-    }
-
-    // Get systematic parts analytically
-
-    DecodePars(pars); // Updates fCalc and fShifts
-
-    std::unordered_map<const ISyst *, double> dchi;
-    for (const ISyst *s : fSysts)
-      dchi[s] = 0;
-    fExpt->Derivative(fCalc, *fShifts, dchi);
-
-  for (unsigned int j = 0; j < fSysts.size(); ++j) {
-    // Get the un-truncated systematic shift
-    const double x = pars[fVars.size() + j];
-
-    ret[fVars.size() + j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
-    }
+    // All this logic was torn out, but this is where you would reimplement it
+    // in terms of stan.
+    abort();
   }
 
   //----------------------------------------------------------------------

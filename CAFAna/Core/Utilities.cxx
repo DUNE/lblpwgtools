@@ -176,66 +176,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  // dLL/de
-  double LogLikelihoodDerivative(double e, double o)
-  {
-    assert(LLPerBinFracSystErr::GetError() == 0); // Didn't implement this case
-
-    const double minexp = 1e-40; // Don't let expectation go lower than this
-
-    assert(o >= 0);
-    if(e < minexp) return 0; // e will effectively be held fixed in main calc
-
-    return 2*(e-o)/e;
-  }
-
-  //----------------------------------------------------------------------
-  // dLL/dx
-  double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
-                                 const std::vector<double>& dedx,
-                                 bool useOverflow)
-  {
-    assert(int(dedx.size()) == eh->GetNbinsX()+2);
-
-    const double* ea = eh->GetArray();
-    const double* oa = oh->GetArray();
-
-    int bufferBins = useOverflow? 2 : 1;
-
-    double ret = 0;
-    for(int i = 0; i < eh->GetNbinsX()+bufferBins; ++i){
-      ret += LogLikelihoodDerivative(ea[i], oa[i]) * dedx[i];
-    }
-    return ret;
-  }
-
-  //----------------------------------------------------------------------
   double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
   {
     assert (e.GetNrows() == o.GetNrows());
 
     const TVectorD diff = o - e;
     return diff * (covmxinv * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
-  }
-
-  //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv, TVectorD dedx, bool matScales)
-  {
-    assert(e.GetNrows() == o.GetNrows());
-    assert(e.GetNrows() == dedx.GetNrows());
-
-    if(matScales){
-      // If the matrix also depends on the expectations (like M_ij/(e_i*e_j))
-      // then there's an additional term in the derivative. We attach it to the
-      // de/dx for convenience.
-      for(int i = 0; i < e.GetNrows(); ++i){
-        if(e[i] != 0){
-          dedx[i] *= o[i]/e[i];
-        }
-      }
-    }
-
-    return 2*(dedx * (covmxinv * (e-o)));
   }
 
   //----------------------------------------------------------------------
@@ -250,25 +196,6 @@ namespace ana
       oVec[bin-1] = o->GetBinContent(bin);
 
     return Chi2CovMx(eVec, oVec, covmxinv);
-  }
-
-  //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TH1* e, const TH1* o, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales)
-  {
-    assert(e->GetNbinsX() == o->GetNbinsX());
-    assert(e->GetNbinsX()+2 == int(dedx.size()));
-
-    TVectorD eVec(e->GetNbinsX());
-    TVectorD oVec(e->GetNbinsX());
-    TVectorD dedxVec(e->GetNbinsX());
-
-    for (int bin = 1; bin <= e->GetNbinsX(); bin++){
-      eVec[bin-1] = e->GetBinContent(bin);
-      oVec[bin-1] = o->GetBinContent(bin);
-      dedxVec[bin-1] = eVec[bin-1] ? dedx[bin] : 0;
-    }
-
-    return Chi2CovMxDerivative(eVec, oVec, covmxinv, dedxVec, matScales);
   }
 
   /// TMatrixD::operator() does various sanity checks and shows up in profiles
