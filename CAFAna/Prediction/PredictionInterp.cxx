@@ -644,18 +644,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::SaveTo(TDirectory* dir) const
+  void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();
 
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionInterp").Write("type");
 
-
-    fPredNom->SaveTo(dir->mkdir("pred_nom"));
-
+    fPredNom->SaveTo(dir, "pred_nom");
 
     for(auto &it: fPreds){
       const ShiftedPreds& sp = it.second;
@@ -665,13 +665,14 @@ namespace ana
           std::cout << "Can't save a PredictionInterp after MinimizeMemory()" << std::endl;
           abort();
         }
-        sp.preds[i]->SaveTo(dir->mkdir(TString::Format("pred_%s_%+d",
-                                                       sp.systName.c_str(),
-                                                       int(sp.shifts[i])).Data()));
+
+        sp.preds[i]->SaveTo(dir, TString::Format("pred_%s_%+d",
+                                                 sp.systName.c_str(),
+                                                 int(sp.shifts[i])).Data());
       } // end for i
     } // end for it
 
-    ana::SaveTo(*fOscOrigin, dir->mkdir("osc_origin"));
+    ana::SaveTo(*fOscOrigin, dir, "osc_origin");
 
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
@@ -686,6 +687,9 @@ namespace ana
     TObjString split_sign = fSplitBySign ? "yes" : "no";
     dir->cd();
     split_sign.Write("split_sign");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

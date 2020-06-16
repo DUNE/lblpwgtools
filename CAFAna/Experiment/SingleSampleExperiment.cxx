@@ -369,17 +369,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SingleSampleExperiment::SaveTo(TDirectory* dir) const
+  void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("SingleSampleExperiment").Write("type");
 
-    fMC->SaveTo(dir->mkdir("mc"));
-    fData.SaveTo(dir->mkdir("data"));
+    fMC->SaveTo(dir, "mc");
+    fData.SaveTo(dir, "data");
 
     if(fCosmic) fCosmic->Write("cosmic");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

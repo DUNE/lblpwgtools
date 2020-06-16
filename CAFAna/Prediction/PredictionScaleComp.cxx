@@ -148,22 +148,27 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionScaleComp::SaveTo(TDirectory* dir) const
+  void PredictionScaleComp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionScaleComp").Write("type");
 
-    fTotal->SaveTo(dir->mkdir("total"));
+    fTotal->SaveTo(dir, "total");
 
     for(unsigned int i = 0; i < fPreds.size(); ++i){
-      fPreds[i]->SaveTo(dir->mkdir(("pred"+std::to_string(i)).c_str()));
+      fPreds[i]->SaveTo(dir, "pred"+std::to_string(i));
     }
 
     for(unsigned int i = 0; i < fSysts.size(); ++i){
-      fSysts[i]->SaveTo(dir->mkdir(("syst"+std::to_string(i)).c_str()));
+      fSysts[i]->SaveTo(dir, "syst"+std::to_string(i));
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

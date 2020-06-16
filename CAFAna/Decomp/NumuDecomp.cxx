@@ -71,21 +71,25 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void NumuDecomp::SaveTo(TDirectory* dir) const
+  void NumuDecomp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("NumuDecomp").Write("type");
 
-    fNC.SaveTo(dir->mkdir("nc_comp"));
-    fData.SaveTo(dir->mkdir("data_comp"));
-    fNue.SaveTo(dir->mkdir("nue_comp"));
-    fAntiNue.SaveTo(dir->mkdir("antinue_comp"));
-    fNumu.SaveTo(dir->mkdir("numu_comp"));
-    fAntiNumu.SaveTo(dir->mkdir("antinumu_comp"));
-    fNotNumu.SaveTo(dir->mkdir("notnumu_comp"));
+    fNC.SaveTo(dir, "nc_comp");
+    fData.SaveTo(dir, "data_comp");
+    fNue.SaveTo(dir, "nue_comp");
+    fAntiNue.SaveTo(dir, "antinue_comp");
+    fNumu.SaveTo(dir, "numu_comp");
+    fAntiNumu.SaveTo(dir, "antinumu_comp");
+    fNotNumu.SaveTo(dir, "notnumu_comp");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

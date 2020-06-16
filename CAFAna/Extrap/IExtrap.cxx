@@ -28,7 +28,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IExtrap::SaveTo(TDirectory* dir) const
+  void IExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     assert(0 && "Not implemented");
   }

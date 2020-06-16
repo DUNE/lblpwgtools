@@ -277,13 +277,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void DUNEXSecSyst::SaveTo(TDirectory* dir) const
+  void DUNEXSecSyst::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("DUNEXSecSyst").Write("type");
     TObjString(ShortName().c_str()).Write("name");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

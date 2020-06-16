@@ -27,7 +27,7 @@ namespace ana
       // zero derivative wrt systematics.
     }
 
-    virtual void SaveTo(TDirectory* dir) const override;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<SolarConstraints> LoadFrom(TDirectory* dir);
   protected:
     double fCentralDmsq, fErrorDmsq;

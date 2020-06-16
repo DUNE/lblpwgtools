@@ -89,27 +89,31 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void TrivialExtrap::SaveTo(TDirectory* dir) const
+  void TrivialExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("TrivialExtrap").Write("type");
 
-    fNueApp.SaveTo(dir->mkdir("nue_app"));
-    fNueAppAnti.SaveTo(dir->mkdir("nue_app_anti"));
-    fNC.SaveTo(dir->mkdir("nc"));
-    fNumuSurv.SaveTo(dir->mkdir("numu_surv"));
-    fNumuSurvAnti.SaveTo(dir->mkdir("numu_surv_anti"));
-    fNumuApp.SaveTo(dir->mkdir("numu_app"));
-    fNumuAppAnti.SaveTo(dir->mkdir("numu_app_anti"));
-    fNueSurv.SaveTo(dir->mkdir("nue_surv"));
-    fNueSurvAnti.SaveTo(dir->mkdir("nue_surv_anti"));
-    fTauFromE.SaveTo(dir->mkdir("nutau_from_nue"));
-    fTauFromEAnti.SaveTo(dir->mkdir("nutau_from_nue_anti"));
-    fTauFromMu.SaveTo(dir->mkdir("nutau_from_numu"));
-    fTauFromMuAnti.SaveTo(dir->mkdir("nutau_from_numu_anti"));
+    fNueApp.SaveTo(dir, "nue_app");
+    fNueAppAnti.SaveTo(dir, "nue_app_anti");
+    fNC.SaveTo(dir, "nc");
+    fNumuSurv.SaveTo(dir, "numu_surv");
+    fNumuSurvAnti.SaveTo(dir, "numu_surv_anti");
+    fNumuApp.SaveTo(dir, "numu_app");
+    fNumuAppAnti.SaveTo(dir, "numu_app_anti");
+    fNueSurv.SaveTo(dir, "nue_surv");
+    fNueSurvAnti.SaveTo(dir, "nue_surv_anti");
+    fTauFromE.SaveTo(dir, "nutau_from_nue");
+    fTauFromEAnti.SaveTo(dir, "nutau_from_nue_anti");
+    fTauFromMu.SaveTo(dir, "nutau_from_numu");
+    fTauFromMuAnti.SaveTo(dir, "nutau_from_numu_anti");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

@@ -75,7 +75,7 @@ namespace ana
     /// For translating results of a fit
     SystShifts Undiagonalize(const SystShifts& s) const;
 
-    void SaveTo(TDirectory* dir) const override {fPred->SaveTo(dir);}
+    void SaveTo(TDirectory* dir, const std::string& name) const override {fPred->SaveTo(dir, name);}
     static std::unique_ptr<PredictionXSecDiag> LoadFrom(TDirectory* dir);
 
   protected:

@@ -92,6 +92,6 @@ namespace ana
     virtual Spectrum ComponentNC() const
     {std::cout << "OscillatableSpectrum::ComponentNC() unimplemented" << std::endl; abort();}
 
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
   };
 }

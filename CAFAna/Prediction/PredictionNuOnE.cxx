@@ -67,16 +67,21 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  void PredictionNuOnE::SaveTo(TDirectory* dir) const
+  void PredictionNuOnE::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionNuOnE").Write("type");
 
-    fSig.SaveTo(dir->mkdir("sig"));
-    fCCBkg.SaveTo(dir->mkdir("ccbkg"));
-    fNCBkg.SaveTo(dir->mkdir("ncbkg"));
+    fSig.SaveTo(dir, "sig");
+    fCCBkg.SaveTo(dir, "ccbkg");
+    fNCBkg.SaveTo(dir, "ncbkg");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
