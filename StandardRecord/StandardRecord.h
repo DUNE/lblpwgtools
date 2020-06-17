@@ -174,6 +174,11 @@ namespace caf
     double perFileWeight;
     double NDMassCorrWeight;
 
+    // For fakeing/consuming non-standard HC runs.
+    double SpecialRunWeight;
+    // Allows for multiple special runs to be included, but we will likely only use one @ 280kA.
+    int SpecialHCRunId;
+
 #ifdef USE_TH2JAGGED
     // Cache the ND flux bin when using off-axis flux matrices.
     int OffAxisFluxBin;
