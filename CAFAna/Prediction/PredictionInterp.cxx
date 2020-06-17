@@ -566,12 +566,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
-    assert(tag->GetString() == "PredictionInterp" ||
-           tag->GetString() == "PredictionInterp2"); // backwards compatibility
+    assert(tag->GetString() == "PredictionInterp");
 
     std::unique_ptr<PredictionInterp> ret(new PredictionInterp);
 
@@ -581,6 +583,8 @@ namespace ana
     // Can be missing from old files
     ret->fSplitBySign = (split_sign && split_sign->String() == "yes");
 
+    delete dir;
+
     return ret;
   }
 
@@ -588,7 +592,7 @@ namespace ana
   void PredictionInterp::LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 				      std::vector<const ISyst*> veto)
   {
-    ret->fPredNom = ana::LoadFrom<IPrediction>(dir->GetDirectory("pred_nom"));
+    ret->fPredNom = ana::LoadFrom<IPrediction>(dir, "pred_nom");
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
@@ -620,23 +624,25 @@ namespace ana
 
         for (int shift = x0; shift <= x1; ++shift)
         {
-          TDirectory *preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
+          const std::string subname = TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data();
+          TDirectory *preddir = dir->GetDirectory(subname.c_str());
           if (!preddir)
           {
             std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
                       << dir->GetName() << std::endl;
             continue;
           }
+          delete preddir;
 
           sp.shifts.push_back(shift);
-          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(preddir));
+          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(dir, subname));
         } // end for shift
 
         ret->fPreds.emplace_back(syst, std::move(sp));
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir->GetDirectory("osc_origin")).release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir, "osc_origin").release();
   }
 
   //----------------------------------------------------------------------

@@ -50,7 +50,7 @@ namespace ana
                                                          const ISyst*>>& corrs);
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
-    static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     std::vector<const IChiSqExperiment*> fExpts;

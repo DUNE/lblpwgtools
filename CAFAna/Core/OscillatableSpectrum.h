@@ -83,7 +83,7 @@ namespace ana
     OscillatableSpectrum operator-(const OscillatableSpectrum& rhs) const;
 
     void SaveTo(TDirectory* dir, const std::string& name) const;
-    static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     // Derived classes can be trusted take care of their own construction

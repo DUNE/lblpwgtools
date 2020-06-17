@@ -46,7 +46,7 @@ namespace ana
     virtual Spectrum Data_Component () const {return fData;}
 
     void SaveTo(TDirectory* dir, const std::string& name) const override;
-    static std::unique_ptr<NumuDecomp> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<NumuDecomp> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     NumuDecomp()

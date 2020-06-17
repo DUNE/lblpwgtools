@@ -87,11 +87,16 @@ namespace ana
 
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionNoExtrap> PredictionNoExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionNoExtrap> PredictionNoExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    assert(dir->GetDirectory("extrap"));
-    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir->GetDirectory("extrap")).release();
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
     PredictionExtrap* pred = new PredictionExtrap(extrap);
+
+    delete dir;
+
     return std::unique_ptr<PredictionNoExtrap>(new PredictionNoExtrap(pred));
   }
 

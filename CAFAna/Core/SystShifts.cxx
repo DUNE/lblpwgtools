@@ -162,8 +162,11 @@ void SystShifts::SaveTo(TDirectory* dir, const std::string& name) const
 }
 
 //----------------------------------------------------------------------
-std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
+std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir, const std::string& name)
 {
+  dir = dir->GetDirectory(name.c_str()); // switch to subdir
+  assert(dir);
+
   TObjString* tag = (TObjString*)dir->Get("type");
   assert(tag);
   assert(tag->GetString() == "SystShifts");
@@ -177,6 +180,8 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
                     h->GetBinContent(i));
     }
   }
+
+  delete dir;
 
   return ret;
 }

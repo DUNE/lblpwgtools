@@ -328,21 +328,23 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<SingleSampleExperiment> SingleSampleExperiment::LoadFrom(TDirectory* dir)
+  std::unique_ptr<SingleSampleExperiment> SingleSampleExperiment::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "SingleSampleExperiment");
+    delete ptag;
 
-    assert(dir->GetDirectory("mc"));
-    assert(dir->GetDirectory("data"));
-
-
-    const IPrediction* mc = ana::LoadFrom<IPrediction>(dir->GetDirectory("mc")).release();
-    const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir->GetDirectory("data"));
+    const IPrediction* mc = ana::LoadFrom<IPrediction>(dir, "mc").release();
+    const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir, "data");
 
     TH1D* cosmic = 0;
     if(dir->Get("cosmic")) cosmic = (TH1D*)dir->Get("cosmic");
+
+    delete dir;
 
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
     if(cosmic) ret->fCosmic = cosmic;

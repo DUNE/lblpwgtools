@@ -95,20 +95,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<NumuDecomp> NumuDecomp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<NumuDecomp> NumuDecomp::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     std::unique_ptr<NumuDecomp> ret(new NumuDecomp);
 
-    // This is a lot of repetitive typing. Define a macro
-#define LOAD_SPECT(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *Spectrum::LoadFrom(dir->GetDirectory(LABEL));
+    ret->fNC       = *Spectrum::LoadFrom(dir, "nc_comp");
+    ret->fData     = *Spectrum::LoadFrom(dir, "data_comp");
+    ret->fNue      = *Spectrum::LoadFrom(dir, "nue_comp");
+    ret->fAntiNue  = *Spectrum::LoadFrom(dir, "antinue_comp");
+    ret->fNumu     = *Spectrum::LoadFrom(dir, "numu_comp");
+    ret->fAntiNumu = *Spectrum::LoadFrom(dir, "antinumu_comp");
+    ret->fNotNumu  = *Spectrum::LoadFrom(dir, "notnumu_comp");
 
-    LOAD_SPECT(fNC,       "nc_comp");
-    LOAD_SPECT(fData,     "data_comp");
-    LOAD_SPECT(fNue,      "nue_comp");
-    LOAD_SPECT(fAntiNue,  "antinue_comp");
-    LOAD_SPECT(fNumu,     "numu_comp");
-    LOAD_SPECT(fAntiNumu, "antinumu_comp");
-    LOAD_SPECT(fNotNumu,  "notnumu_comp");
+    delete dir;
 
     return ret;
   }

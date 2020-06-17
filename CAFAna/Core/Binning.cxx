@@ -229,8 +229,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<Binning> Binning::LoadFrom(TDirectory* dir)
+  std::unique_ptr<Binning> Binning::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "Binning");
@@ -259,6 +262,8 @@ namespace ana
       if(!s) break;
       ret.fLabels.push_back(s->GetString().Data());
     }
+
+    delete dir;
 
     return std::make_unique<Binning>(ret);
   }

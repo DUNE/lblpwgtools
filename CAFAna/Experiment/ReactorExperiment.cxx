@@ -41,17 +41,23 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<ReactorExperiment> ReactorExperiment::LoadFrom(TDirectory* dir)
+  std::unique_ptr<ReactorExperiment> ReactorExperiment::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "ReactorExperiment");
+    delete tag;
 
     TH1* params = (TH1*)dir->Get("params");
     assert(params);
 
     const double bestFit = params->GetBinContent(1);
     const double sigma   = params->GetBinContent(2);
+
+    delete dir;
 
     return std::unique_ptr<ReactorExperiment>(new ReactorExperiment(bestFit,
                                                                     sigma));

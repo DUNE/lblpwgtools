@@ -90,7 +90,7 @@ namespace ana
     /// should not be accessed, but reweighting still works
     void SaveTo(TDirectory* dir, const std::string& name) const;
 
-    static std::unique_ptr<ReweightableSpectrum> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<ReweightableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
     unsigned int NDimensions() const{return fLabels.size();}
     std::vector<std::string> GetLabels() const {return fLabels;}

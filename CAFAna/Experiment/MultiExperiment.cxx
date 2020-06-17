@@ -279,22 +279,30 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<MultiExperiment> MultiExperiment::LoadFrom(TDirectory* dir)
+  std::unique_ptr<MultiExperiment> MultiExperiment::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "MultiExperiment");
+    delete ptag;
 
     std::vector<const IChiSqExperiment*> expts;
 
     for(int i = 0; ; ++i){
-      TDirectory* subdir = dir->GetDirectory(TString::Format("expt%d", i));
+      const std::string subname = TString::Format("expt%d", i).Data();
+      TDirectory* subdir = dir->GetDirectory(subname.c_str());
       if(!subdir) break;
+      delete subdir;
 
-      expts.push_back(ana::LoadFrom<IChiSqExperiment>(subdir).release());
+      expts.push_back(ana::LoadFrom<IChiSqExperiment>(dir, name).release());
     }
 
     assert(!expts.empty());
+
+    delete dir;
 
     return std::unique_ptr<MultiExperiment>(new MultiExperiment(expts));
   }

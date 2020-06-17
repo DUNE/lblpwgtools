@@ -25,7 +25,7 @@ namespace ana
     Spectrum ComponentNC() const override;
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
-    static std::unique_ptr<PredictionExtrap> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<PredictionExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
     PredictionExtrap() = delete;
 

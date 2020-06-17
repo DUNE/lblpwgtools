@@ -14,14 +14,14 @@ namespace ana
 {
   //----------------------------------------------------------------------
   // Definition to satisfy declaration in Core/LoadFromFile.h
-  template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir)
+  template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir, const std::string& name)
   {
-    TObjString* ptag = (TObjString*)dir->Get("type");
+    TObjString* ptag = (TObjString*)dir->Get((name+"/type").c_str());
     assert(ptag);
 
     const TString tag = ptag->GetString();
 
-    if(tag == "TrivialExtrap") return TrivialExtrap::LoadFrom(dir);
+    if(tag == "TrivialExtrap") return TrivialExtrap::LoadFrom(dir, name);
 
     std::cerr << "Unknown Extrap type '" << tag << "'" << std::endl;
     abort();

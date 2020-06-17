@@ -571,8 +571,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<ReweightableSpectrum> ReweightableSpectrum::LoadFrom(TDirectory* dir)
+  std::unique_ptr<ReweightableSpectrum> ReweightableSpectrum::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "ReweightableSpectrum");
@@ -588,9 +591,11 @@ namespace ana
     std::vector<Binning> bins;
 
     for(int i = 0; ; ++i){
-      TDirectory* subdir = dir->GetDirectory(TString::Format("bins%d", i));
+      const std::string subname = TString::Format("bins%d", i).Data();
+      TDirectory* subdir = dir->GetDirectory(subname.c_str());
       if(!subdir) break;
-      bins.push_back(*Binning::LoadFrom(subdir));
+      delete subdir;
+      bins.push_back(*Binning::LoadFrom(dir, subname.c_str()));
       TObjString* label = (TObjString*)dir->Get(TString::Format("label%d", i));
       labels.push_back(label ? label->GetString().Data() : "");
     }
@@ -600,6 +605,8 @@ namespace ana
       bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
       labels.push_back(spect->GetXaxis()->GetTitle());
     }
+
+    delete dir;
 
     return std::make_unique<ReweightableSpectrum>(kUnweighted,
                                                   spect,

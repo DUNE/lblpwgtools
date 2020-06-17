@@ -73,11 +73,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<SolarConstraints> SolarConstraints::LoadFrom(TDirectory* dir)
+  std::unique_ptr<SolarConstraints> SolarConstraints::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "SolarConstraints");
+    delete tag;
 
     std::unique_ptr<SolarConstraints> ret(new SolarConstraints);
 
@@ -88,6 +92,8 @@ namespace ana
     ret->fErrorDmsq    = params->GetBinContent(2);
     ret->fCentralAngle = params->GetBinContent(3);
     ret->fErrorAngle   = params->GetBinContent(4);
+
+    delete dir;
 
     return ret;
   }

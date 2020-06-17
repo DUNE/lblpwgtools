@@ -126,9 +126,9 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionXSecDiag> PredictionXSecDiag::
-  LoadFrom(TDirectory* dir)
+  LoadFrom(TDirectory* dir, const std::string& name)
   {
-    return std::make_unique<PredictionXSecDiag>(ana::LoadFrom<IPrediction>(dir).release());
+    return std::make_unique<PredictionXSecDiag>(ana::LoadFrom<IPrediction>(dir, name).release());
   }
 
   //----------------------------------------------------------------------
