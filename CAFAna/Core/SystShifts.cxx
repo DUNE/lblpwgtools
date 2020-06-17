@@ -237,10 +237,16 @@ void SystShifts::SaveTo(TDirectory* dir) const
   if(!fSystsDbl.empty()){
     TH1D h("", "", fSystsDbl.size(), 0, fSystsDbl.size());
     int ibin = 0;
-    for(auto it: fSystsDbl){
+    // do this deterministically.  the ordering in the map may otherwise differ because pointers are allocated dynamically
+    std::vector<std::pair<std::string, const ISyst*>> systs;
+    std::transform(fSystsDbl.begin(), fSystsDbl.end(), std::back_inserter(systs),
+                   [](const auto & pair){ return std::make_pair(pair.first->ShortName(), pair.first); });
+    std::sort(systs.begin(), systs.end(),
+              [](const auto & pairA, const auto & pairB) { return pairA.first < pairB.first; } );
+    for(const auto& systPair: systs){
       ++ibin;
-      h.GetXaxis()->SetBinLabel(ibin, it.first->ShortName().c_str());
-      h.SetBinContent(ibin, it.second);
+      h.GetXaxis()->SetBinLabel(ibin, systPair.first.c_str());
+      h.SetBinContent(ibin, fSystsDbl.at(systPair.second));
     }
     h.Write("vals");
   }
