@@ -25,7 +25,7 @@
 #include "OscLib/func/OscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorPMNSOptDMP.h"
+#include "OscLib/func/OscCalculatorDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -100,8 +100,8 @@ namespace ana
       fCalc = std::make_unique<osc::OscCalculatorPMNSOptStan>();
     else if (dynamic_cast<osc::OscCalculatorPMNS*>(seed))
       fCalc = std::make_unique<osc::OscCalculatorPMNSStan>();
-    else if (dynamic_cast<osc::OscCalculatorPMNSOptDMP*>(seed))
-      fCalc = std::make_unique<osc::OscCalculatorPMNSOptDMPStan>();
+    else if (dynamic_cast<osc::OscCalculatorDMP*>(seed))
+      fCalc = std::make_unique<osc::OscCalculatorDMPStan>();
     else
     {
       std::cerr << "Unexpected oscillation calculator type: " << DemangledTypeName(seed) << std::endl;

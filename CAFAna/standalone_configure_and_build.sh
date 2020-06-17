@@ -120,7 +120,7 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/branches/feature_diy_fc2020_standmp/OscLib
+svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
 svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../

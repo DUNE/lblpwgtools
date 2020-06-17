@@ -38,7 +38,7 @@
 
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorPMNSOptDMP.h"
+#include "OscLib/func/OscCalculatorDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -108,7 +108,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   {
 //    calc = new osc::OscCalculatorPMNSOpt;
 //    calc = new osc::OscCalculatorPMNS;
-    calc = new osc::OscCalculatorPMNSOptDMP;
+    calc = new osc::OscCalculatorDMP;
     *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
     std::vector<const ISyst *> systs;
 

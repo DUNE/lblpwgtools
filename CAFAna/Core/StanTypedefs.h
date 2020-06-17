@@ -28,8 +28,8 @@ namespace osc
   template <typename T> class _OscCalculatorPMNSOpt;
   typedef _OscCalculatorPMNSOpt<stan::math::var> OscCalculatorPMNSOptStan;
 
-  template <typename T> class _OscCalculatorPMNSOptDMP;
-  typedef _OscCalculatorPMNSOptDMP<stan::math::var> OscCalculatorPMNSOptDMPStan;
+  template <typename T> class _OscCalculatorDMP;
+  typedef _OscCalculatorDMP<stan::math::var> OscCalculatorDMPStan;
 
 }
 
