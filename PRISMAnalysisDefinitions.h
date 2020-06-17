@@ -369,6 +369,7 @@ ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
 ana::Var GetNDWeight(std::string const &eweight = "", bool isNuMode = true);
 ana::Var GetFDWeight(std::string const &eweight = "", bool isNuMode = true);
 
+double Get280kAWeight_numu(double enu, bool isNu);
 ana::Var GetNDSpecialRun(std::string const &SRDescriptor = "");
 
 } // namespace PRISM

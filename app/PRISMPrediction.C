@@ -190,33 +190,64 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Data->SetDirectory(nullptr);
 
     if (use_PRISM) {
-      auto PRISMComponents =
-          state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-      TH1 *PRISMPred =
-          PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-      chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-      PRISMPred->SetDirectory(nullptr);
+      if (do_gauss) {
+        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
+            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
+        TH1 *PRISMPred =
+            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
+        PRISMPred->SetDirectory(nullptr);
 
-      if (PRISM_write_debug) {
+        if (PRISM_write_debug) {
 
-        for (auto const &comp : PRISMComponents) {
-          // we always write this
-          if (comp.first == PredictionPRISM::kPRISMPred) {
-            continue;
+          for (auto const &comp : PRISMComponents) {
+            // we always write this
+            if (comp.first == PredictionPRISM::kPRISMPred) {
+              continue;
+            }
+
+            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+
+            if (PRISMComp_h->Integral() > 0) {
+              chan_dir->WriteTObject(
+                  PRISMComp_h,
+                  PredictionPRISM::GetComponentString(comp.first).c_str());
+            }
           }
 
-          TH1 *PRISMComp_h = comp.second.ToTHX(POT);
+          fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
 
-          if (PRISMComp_h->Integral() > 0) {
-            chan_dir->WriteTObject(
-                PRISMComp_h,
-                PredictionPRISM::GetComponentString(comp.first).c_str());
-          }
+          dir->cd();
         }
+      } else {
+        auto PRISMComponents =
+            state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+        TH1 *PRISMPred =
+            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
+        PRISMPred->SetDirectory(nullptr);
 
-        fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
+        if (PRISM_write_debug) {
 
-        dir->cd();
+          for (auto const &comp : PRISMComponents) {
+            // we always write this
+            if (comp.first == PredictionPRISM::kPRISMPred) {
+              continue;
+            }
+
+            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+
+            if (PRISMComp_h->Integral() > 0) {
+              chan_dir->WriteTObject(
+                  PRISMComp_h,
+                  PredictionPRISM::GetComponentString(comp.first).c_str());
+            }
+          }
+
+          fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
+
+          dir->cd();
+        }
       }
 
     } else {

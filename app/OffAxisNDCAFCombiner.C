@@ -5,6 +5,8 @@
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "string_parsers/from_string.hxx"
+
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -127,16 +129,29 @@ struct fileSummary {
   std::string *fileName;
 };
 
-// If CombiningCombinedCAFs = true, then take the POT for the input file from
-// histograms produced by a previous invocation of this script.
-void OffAxisNDCAFCombiner(
-    std::string InputFilePatterns, std::string OutputFileName,
-    bool CombiningCombinedCAFs = false, std::string cafTreeName = "cafTree",
-    bool preSelect = false, bool justDoSummaryTree = false, double min_m = -4,
-    double max_m = 40, double step_m = 0.25,
-    size_t NMaxEvents = std::numeric_limits<size_t>::max()) {
+namespace args {
+std::vector<std::string> InputFilePatterns;
+std::string OutputFileName;
 
-  if (CombiningCombinedCAFs && preSelect) {
+// If args::CombiningCombinedCAFs = true, then take the POT for the input file
+// from histograms produced by a previous invocation of this script.
+
+bool CombiningCombinedCAFs = false;
+std::string cafTreeName = "cafTree";
+bool preSelect = false;
+bool justDoSummaryTree = false;
+double min_m = -4;
+double max_m = 40;
+double step_m = 0.25;
+bool isFHC = false;
+bool IsSpecRun = false;
+size_t NMaxEvents = std::numeric_limits<size_t>::max();
+size_t NSkip = 0;
+} // namespace args
+
+void OffAxisNDCAFCombiner() {
+
+  if (args::CombiningCombinedCAFs && args::preSelect) {
     std::cout << "[ERROR]: Cannot run event preselection when combining CAFs."
               << std::endl;
   }
@@ -144,8 +159,7 @@ void OffAxisNDCAFCombiner(
   std::map<std::string, std::vector<std::string>> CAFs;
   size_t NFiles = 0;
 
-  for (std::string const &InputFilePattern :
-       SplitString(InputFilePatterns, ',')) {
+  for (std::string const &InputFilePattern : args::InputFilePatterns) {
     size_t asterisk_loc = InputFilePattern.find_first_of('*');
     size_t class_loc = InputFilePattern.find_first_of('[');
     size_t last_slash_loc = InputFilePattern.find_last_of('/');
@@ -173,11 +187,12 @@ void OffAxisNDCAFCombiner(
         (class_loc == std::string::npos)) {
       files.push_back(pattern);
     } else {
-      if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-        std::cout << "Set NMaxEvents but found a regex pattern, this will not "
-                     "do what "
-                     "you want, aborting."
-                  << std::endl;
+      if (args::NMaxEvents != std::numeric_limits<size_t>::max()) {
+        std::cout
+            << "Set args::NMaxEvents but found a regex pattern, this will not "
+               "do what "
+               "you want, aborting."
+            << std::endl;
         abort();
       }
       try {
@@ -199,27 +214,27 @@ void OffAxisNDCAFCombiner(
     return;
   }
 
-  double offset_m = 0; // (step_m / 2.0)
-  size_t NStep = (max_m - min_m) / step_m;
+  double offset_m = 0; // (args::step_m / 2.0)
+  size_t NStep = (args::max_m - args::min_m) / args::step_m;
 
   TH1D *POTExposure =
       new TH1D("POTExposure", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               min_m - offset_m, max_m - offset_m);
+               args::min_m - offset_m, args::max_m - offset_m);
   POTExposure->SetDirectory(nullptr);
   TH2D *POTExposure_stop =
       new TH2D("POTExposure_stop", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               min_m - offset_m, max_m - offset_m, NStep, min_m - offset_m,
-               max_m - offset_m);
+               args::min_m - offset_m, args::max_m - offset_m, NStep,
+               args::min_m - offset_m, args::max_m - offset_m);
   POTExposure_stop->SetDirectory(nullptr);
   TH1D *FileExposure =
       new TH1D("FileExposure", ";OffAxisPosition (m);Exposure (NFiles)", NStep,
-               min_m - offset_m, max_m - offset_m);
+               args::min_m - offset_m, args::max_m - offset_m);
   FileExposure->SetDirectory(nullptr);
 
-  TChain *caf = new TChain(cafTreeName.c_str());
+  TChain *caf = new TChain(args::cafTreeName.c_str());
   TChain *meta = new TChain("meta");
   TTree *OffAxisWeightFriend;
-  double perPOT, perFile, massCorr;
+  double perPOT, perFile, massCorr, specRunWght = 1;
   ana::FVMassCorrection SliceMassCorrector;
   TTree *FileSummaryTree;
   fileSummary fs;
@@ -229,10 +244,11 @@ void OffAxisNDCAFCombiner(
   size_t const kDetX = 0;
   size_t const kPerPOT = 1;
   size_t const kMassCorr = 2;
+  size_t const kSpecialRunWeight = 3;
 
-  std::vector<std::tuple<double, double, double>> EventPOTEventFiles;
+  std::vector<std::tuple<double, double, double, double>> EventPOTEventFiles;
 
-  if (CombiningCombinedCAFs) {
+  if (args::CombiningCombinedCAFs) {
     OffAxisWeightFriend = new TChain("OffAxisWeightFriend");
     FileSummaryTree = new TChain("FileSummaryTree");
   } else {
@@ -240,6 +256,7 @@ void OffAxisNDCAFCombiner(
     OffAxisWeightFriend->Branch("perPOT", &perPOT, "perPOT/D");
     OffAxisWeightFriend->Branch("perFile", &perFile, "perFile/D");
     OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
+    OffAxisWeightFriend->Branch("specRunWght", &specRunWght, "specRunWght/D");
     OffAxisWeightFriend->SetDirectory(nullptr);
 
     FileSummaryTree = new TTree("FileSummaryTree", "");
@@ -275,10 +292,10 @@ void OffAxisNDCAFCombiner(
       }
 
       TTree *f_caf;
-      f.GetObject(cafTreeName.c_str(), f_caf);
+      f.GetObject(args::cafTreeName.c_str(), f_caf);
       if (!f_caf) {
-        std::cout << "[WARN]: Failed to read " << cafTreeName << " TTree. "
-                  << std::endl;
+        std::cout << "[WARN]: Failed to read " << args::cafTreeName
+                  << " TTree. " << std::endl;
         continue;
       }
 
@@ -289,6 +306,10 @@ void OffAxisNDCAFCombiner(
       f_caf->SetBranchAddress("vtx_x", &vtx_x);
       f_caf->SetBranchAddress("vtx_y", &vtx_y);
       f_caf->SetBranchAddress("vtx_z", &vtx_z);
+      int nuPDG;
+      double Ev;
+      f_caf->SetBranchAddress("nuPDG", &nuPDG);
+      f_caf->SetBranchAddress("Ev", &Ev);
       f_caf->GetEntry(0);
 
       if (Flipdetx) {
@@ -297,7 +318,7 @@ void OffAxisNDCAFCombiner(
 
       double file_det_x = det_x;
 
-      if (CombiningCombinedCAFs) {
+      if (args::CombiningCombinedCAFs) {
         TH1D *f_POTExposure;
         f.GetObject("POTExposure", f_POTExposure);
         assert(f_POTExposure);
@@ -317,8 +338,8 @@ void OffAxisNDCAFCombiner(
         f.GetObject("meta", f_meta);
 
         if (!f_meta) {
-          std::cout << "[ERROR]: Failed to read " << cafTreeName << " TTree. "
-                    << std::endl;
+          std::cout << "[ERROR]: Failed to read " << args::cafTreeName
+                    << " TTree. " << std::endl;
           abort();
         }
 
@@ -338,8 +359,8 @@ void OffAxisNDCAFCombiner(
         (*fs.fileName) = file_name;
         FileSummaryTree->Fill();
 
-        if (justDoSummaryTree) {
-          if (CombiningCombinedCAFs) {
+        if (args::justDoSummaryTree) {
+          if (args::CombiningCombinedCAFs) {
             static_cast<TChain *>(FileSummaryTree)
                 ->Add((dir + file_name).c_str());
           }
@@ -347,8 +368,16 @@ void OffAxisNDCAFCombiner(
           continue;
         }
 
-        if (NMaxEvents != std::numeric_limits<size_t>::max()) {
-          double nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
+        if (args::NSkip >= size_t(f_caf->GetEntries())) {
+          std::cout << "[ERROR]: Requested a skip of " << args::NSkip
+                    << " but input file only has" << f_caf->GetEntries()
+                    << " entries." << std::endl;
+          abort();
+        }
+
+        size_t nents_after_skip = f_caf->GetEntries() - args::NSkip;
+        if (args::NMaxEvents != std::numeric_limits<size_t>::max()) {
+          double nevs = std::min(args::NMaxEvents, nents_after_skip);
           file_pot *= nevs / double(f_caf->GetEntries());
           std::cout << "Rescaling POT by: "
                     << nevs / double(f_caf->GetEntries()) << " as only taking "
@@ -369,10 +398,12 @@ void OffAxisNDCAFCombiner(
         double vtx_min_m = -3;
         double vtx_max_m = 3;
         double average_step = 1E-6;
-        size_t vtx_steps = (vtx_max_m - vtx_min_m) / (step_m * average_step);
+        size_t vtx_steps =
+            (vtx_max_m - vtx_min_m) / (args::step_m * average_step);
 
         for (size_t pos_it = 0; pos_it < vtx_steps; ++pos_it) {
-          double vtx_x_pos_m = vtx_min_m + pos_it * (step_m * average_step);
+          double vtx_x_pos_m =
+              vtx_min_m + pos_it * (args::step_m * average_step);
 
           FileExposure->Fill(vtx_x_pos_m + det_x, average_step * nmeta_ents);
 
@@ -387,13 +418,13 @@ void OffAxisNDCAFCombiner(
                                  average_step * file_pot);
         }
 
-        if (!CombiningCombinedCAFs) {
+        if (!args::CombiningCombinedCAFs) {
           NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
-          size_t nevs = std::min(NMaxEvents, size_t(f_caf->GetEntries()));
+          size_t nevs = std::min(args::NMaxEvents, nents_after_skip);
           perPOT = 1.0 / file_pot;
           for (size_t e_it = 0; e_it < nevs; ++e_it) {
-            if (preSelect) {
-              f_caf->GetEntry(e_it);
+            if (args::preSelect) {
+              f_caf->GetEntry(e_it + args::NSkip);
               if (Flipdetx) {
                 det_x = -det_x;
               }
@@ -408,10 +439,20 @@ void OffAxisNDCAFCombiner(
                 continue;
               }
             }
-            EventPOTEventFiles.emplace_back(
-                det_x, perPOT, SliceMassCorrector.GetWeight(vtx_x));
+
+            bool isRightSignNumu = (args::isFHC && (nuPDG == 14)) ||
+                                   (!args::isFHC && (nuPDG == -14));
+            if (args::IsSpecRun && (!det_x) && isRightSignNumu) {
+              specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
+            } else {
+              specRunWght = 1;
+            }
+
+            EventPOTEventFiles.emplace_back(det_x, perPOT,
+                                            SliceMassCorrector.GetWeight(vtx_x),
+                                            specRunWght);
           }
-          if (preSelect) {
+          if (args::preSelect) {
             std::cout << "\t-FV selection : NInFile: "
                       << double(EventPOTEventFiles.size() -
                                 NPrevOffAxisWeightFriendEntries)
@@ -429,7 +470,7 @@ void OffAxisNDCAFCombiner(
 
       caf->Add((dir + file_name).c_str());
       meta->Add((dir + file_name).c_str());
-      if (CombiningCombinedCAFs) {
+      if (args::CombiningCombinedCAFs) {
         static_cast<TChain *>(OffAxisWeightFriend)
             ->Add((dir + file_name).c_str());
         static_cast<TChain *>(FileSummaryTree)->Add((dir + file_name).c_str());
@@ -437,11 +478,12 @@ void OffAxisNDCAFCombiner(
     }
   }
 
-  TFile *fout = TFile::Open(justDoSummaryTree ? "CAFFileSummaryTree.root"
-                                              : OutputFileName.c_str(),
-                            "RECREATE");
+  TFile *fout =
+      TFile::Open(args::justDoSummaryTree ? "CAFFileSummaryTree.root"
+                                          : args::OutputFileName.c_str(),
+                  "RECREATE");
 
-  if (CombiningCombinedCAFs) {
+  if (args::CombiningCombinedCAFs) {
     std::cout << "[INFO]: Rebuilding File count at each stop..." << std::endl;
 
     double det_x;
@@ -464,9 +506,9 @@ void OffAxisNDCAFCombiner(
     FileSummaryTree->Write();
   }
 
-  if (!justDoSummaryTree) {
+  if (!args::justDoSummaryTree) {
     std::cout << "[INFO]: Copying caf tree..." << std::endl;
-    bool canfast = !preSelect && !Flipdetx;
+    bool canfast = !args::preSelect && !Flipdetx;
     TTree *treecopy = nullptr;
 
     if (!canfast) {
@@ -478,7 +520,7 @@ void OffAxisNDCAFCombiner(
       treecopy = caf->CloneTree(0, "");
       treecopy->SetName("cafTree");
 
-      size_t nents = std::min(NMaxEvents, size_t(caf->GetEntries()));
+      size_t nents = std::min(args::NMaxEvents, size_t(caf->GetEntries()));
       ana::Progress preselprog("Copy with selection progress.");
       for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
         if (ent_it && !(ent_it % 10000)) {
@@ -488,14 +530,14 @@ void OffAxisNDCAFCombiner(
         if (Flipdetx) {
           det_x = -det_x;
         }
-        if (preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+        if (args::preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
           continue;
         }
         treecopy->Fill();
       }
       preselprog.Done();
     } else {
-      treecopy = caf->CloneTree(NMaxEvents, "fast");
+      treecopy = caf->CloneTree(args::NMaxEvents, "fast");
       treecopy->SetName("cafTree");
     }
     delete caf;
@@ -504,7 +546,7 @@ void OffAxisNDCAFCombiner(
     TTree *metacopy = meta->CloneTree(-1, "fast");
     delete meta;
 
-    if (!CombiningCombinedCAFs) {
+    if (!args::CombiningCombinedCAFs) {
       std::cout << "[INFO]: Writing OffAxisWeightFriend tree..." << std::endl;
       size_t NOffAxisWeightFriends = EventPOTEventFiles.size();
       ana::Progress potfillprog("Writing OffAxisWeightFriend tree.");
@@ -514,6 +556,7 @@ void OffAxisNDCAFCombiner(
             double(det_x_files[std::get<kDetX>(EventPOTEventFiles[ev_it])]);
         perPOT = std::get<kPerPOT>(EventPOTEventFiles[ev_it]);
         massCorr = std::get<kMassCorr>(EventPOTEventFiles[ev_it]);
+        specRunWght = std::get<kSpecialRunWeight>(EventPOTEventFiles[ev_it]);
         OffAxisWeightFriend->Fill();
         if (ev_it && !(ev_it % 10000)) {
           potfillprog.SetProgress(double(ev_it) /
@@ -592,43 +635,92 @@ bool strToBool(std::string const &str) {
   throw std::runtime_error(str);
 }
 
-void HelpText(char const *argv[]) {
+void SayUsage(char const *argv[]) {
   std::cout << "[USAGE]: " << argv[0]
-            << " \"<InputFilePattern1>[,<InputFilePattern2>,...]\" "
-               "OutputFile.root <Running on the output of this script? false> "
-               "<Input CAF Tree Name: cafTree> <Filter events in ND FV? false> "
-               "<Just write out a summary tree detailing POT and event rate at "
-               "each stop? false> <Maximum number of events>"
-            << std::endl;
+            << "\t-i|--input-pattern \"</path/to/*file*.root>\" : Add input "
+               "pattern, can contain wildcards at the file-level \n"
+               "\t                                                (i.e. no "
+               "wild-carded directories). Wildcard expressions must\n"
+               "\t                                                be quoted to "
+               "stop shell expansion. Can add multiple patterns,\n"
+               "\t                                                must add at "
+               "least one.\n"
+            << "\t-o|--output </path/to/write.root>             : Set output "
+               "file name.\n"
+            << "\t-t|--treename <treename[=cafTree]>            : Set input "
+               "tree name [default=cafTree].\n"
+            << "\t-p|--apply-preselection                       : Apply true "
+               "ND FV selection.\n"
+            << "\t-M|--summary-only                             : Only produce "
+               "summary tree and not output CAF.\n"
+            << "\t-x|--off-axis-range <min,max,step>            : Set the off "
+               "axis detector range and minimum step in meters \n"
+            << "\t                                                "
+               "[default=-4,40,0.25]\n"
+            << "\t-f|--nu-mode                                  : Is a "
+               "neutrino-mode file\n"
+            << "\t-r|--nubar-mode                               : Is a "
+               "antineutrino-mode file\n"
+            << "\t-s|--skip <n>                                 : Skip the "
+               "first <n> events from the input chain.\n"
+            << "\t-n|--nmax <n>                                 : Process at "
+               "most <n> events from the input chain.\n";
+}
+
+void handleOpts(int argc, char const *argv[]) {
+  int opt = 1;
+  while (opt < argc) {
+    if (std::string(argv[opt]) == "-?" || std::string(argv[opt]) == "--help") {
+      SayUsage(argv);
+      exit(0);
+    } else if ((std::string(argv[opt]) == "-i") ||
+               (std::string(argv[opt]) == "--input-pattern")) {
+      args::InputFilePatterns.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-o") ||
+               (std::string(argv[opt]) == "--output")) {
+      args::OutputFileName = argv[++opt];
+    } else if ((std::string(argv[opt]) == "-t") ||
+               (std::string(argv[opt]) == "--treename")) {
+      args::cafTreeName = argv[++opt];
+    } else if ((std::string(argv[opt]) == "-p") ||
+               (std::string(argv[opt]) == "--apply-preselection")) {
+      args::preSelect = true;
+    } else if ((std::string(argv[opt]) == "-M") ||
+               (std::string(argv[opt]) == "--summary-only")) {
+      args::justDoSummaryTree = true;
+    } else if ((std::string(argv[opt]) == "-x") ||
+               (std::string(argv[opt]) == "--off-axis-range")) {
+
+      std::vector<double> range = fhicl::string_parsers::ParseToVect<double>(
+          argv[++opt], ",", false, true);
+      args::min_m = range[0];
+      args::max_m = range[1];
+      args::step_m = range[2];
+
+    } else if ((std::string(argv[opt]) == "-f") ||
+               (std::string(argv[opt]) == "--nu-mode")) {
+      args::isFHC = true;
+    } else if ((std::string(argv[opt]) == "-r") ||
+               (std::string(argv[opt]) == "--nubar-mode")) {
+      args::isFHC = false;
+    } else if ((std::string(argv[opt]) == "-s") ||
+               (std::string(argv[opt]) == "--skip")) {
+      args::NSkip = fhicl::string_parsers::str2T<size_t>(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-n") ||
+               (std::string(argv[opt]) == "--nmax")) {
+      args::NMaxEvents = fhicl::string_parsers::str2T<size_t>(argv[++opt]);
+    } else {
+      std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
+      SayUsage(argv);
+      exit(1);
+    }
+    opt++;
+  }
 }
 
 int main(int argc, char const *argv[]) {
+  handleOpts(argc, argv);
 
-  if ((argc == 2) &&
-      ((std::string(argv[1]) == "-?") || (std::string(argv[1]) == "--help"))) {
-    HelpText(argv);
-    return 0;
-  }
-
-  if (argc < 3) {
-    std::cout << "[ERROR]: Expect at least 2 arguments." << std::endl;
-    HelpText(argv);
-
-    return 1;
-  }
-  std::string InputFilePattern = argv[1];
-  std::string OutputFileName = argv[2];
-  bool CombiningCombinedCAFs = (argc >= 4) ? strToBool(argv[3]) : false;
-  std::string cafTreeName = (argc >= 5) ? argv[4] : "cafTree";
-  bool preSelect = (argc >= 6) ? strToBool(argv[5]) : false;
-  bool justDoSummaryTree = (argc >= 7) ? strToBool(argv[6]) : false;
-  double min_m = (argc >= 8) ? std::atof(argv[7]) : -4;
-  double max_m = (argc >= 9) ? std::atof(argv[8]) : 40;
-  double step_m = (argc >= 10) ? std::atof(argv[9]) : 0.25;
-  size_t NMaxEvents = (argc >= 11) ? size_t(std::strtol(argv[10], nullptr, 10))
-                                   : std::numeric_limits<size_t>::max();
-  OffAxisNDCAFCombiner(InputFilePattern, OutputFileName, CombiningCombinedCAFs,
-                       cafTreeName, preSelect, justDoSummaryTree, min_m, max_m,
-                       step_m, NMaxEvents);
+  OffAxisNDCAFCombiner();
 }
 #endif
