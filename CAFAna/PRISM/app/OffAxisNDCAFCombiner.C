@@ -268,10 +268,16 @@ void OffAxisNDCAFCombiner() {
   }
 
   bool Flipdetx = false;
+  double detx_to_m = 1E-2; //by default det_in cm
 
   if (getenv("CAFANA_FLIP_DET_X") &&
       (std::atoi(getenv("CAFANA_FLIP_DET_X")) == 1)) {
     Flipdetx = true;
+  }
+
+  if (getenv("CAFANA_DET_X_M") &&
+      (std::atoi(getenv("CAFANA_DET_X_M")) == 1)) {
+    detx_to_m = 1;
   }
 
   size_t NPrevOffAxisWeightFriendEntries = 0;
@@ -310,6 +316,7 @@ void OffAxisNDCAFCombiner() {
       double Ev;
       f_caf->SetBranchAddress("nuPDG", &nuPDG);
       f_caf->SetBranchAddress("Ev", &Ev);
+
       f_caf->GetEntry(0);
 
       if (Flipdetx) {
@@ -405,7 +412,7 @@ void OffAxisNDCAFCombiner() {
           double vtx_x_pos_m =
               vtx_min_m + pos_it * (args::step_m * average_step);
 
-          FileExposure->Fill(vtx_x_pos_m + det_x, average_step * nmeta_ents);
+          FileExposure->Fill(vtx_x_pos_m + (det_x*detx_to_m), average_step * nmeta_ents);
 
           if (!ana::IsInNDFV(vtx_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
                              /*Dummy z_pos_m*/ 150)) {
