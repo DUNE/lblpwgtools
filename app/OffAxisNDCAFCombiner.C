@@ -664,7 +664,11 @@ void SayUsage(char const *argv[]) {
             << "\t-s|--skip <n>                                 : Skip the "
                "first <n> events from the input chain.\n"
             << "\t-n|--nmax <n>                                 : Process at "
-               "most <n> events from the input chain.\n";
+               "most <n> events from the input chain.\n"
+            << "\t-C|--recombining                              : Set this "
+               "flag if this run includes files that have \n"
+            << "\t                                                already been "
+               "process by this script.\n";
 }
 
 void handleOpts(int argc, char const *argv[]) {
@@ -709,6 +713,9 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--nmax")) {
       args::NMaxEvents = fhicl::string_parsers::str2T<size_t>(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-C") ||
+               (std::string(argv[opt]) == "--recombining")) {
+      args::CombiningCombinedCAFs = true;
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -720,6 +727,14 @@ void handleOpts(int argc, char const *argv[]) {
 
 int main(int argc, char const *argv[]) {
   handleOpts(argc, argv);
+
+  if (!args::InputFilePatterns.size() || !args::OutputFileName.length()) {
+    std::cout
+        << "[ERROR]: Must specify at least one -i option, and a -o option."
+        << std::endl;
+    SayUsage(argv);
+    return 1;
+  }
 
   OffAxisNDCAFCombiner();
 }
