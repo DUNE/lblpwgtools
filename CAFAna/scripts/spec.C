@@ -128,14 +128,14 @@ void spec(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
-  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
-  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
-  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
-  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc_fid")).release();
-  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc_fid")).release();
-  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc_fid")).release();
-  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc_fid")).release();
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc").release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc").release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc").release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc").release();
+  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc_fid").release();
+  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc_fid").release();
+  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc_fid").release();
+  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc_fid").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;

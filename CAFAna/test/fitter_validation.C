@@ -377,33 +377,33 @@ void fitter_validation(bool fit = false, bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionNoExtrap& predFDNumuFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionNoExtrap& predFDNueFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionNoExtrap& predFDNumuRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionNoExtrap& predFDNueRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionNoExtrap& predFDNumuFHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_numu_fhc").release();
+  PredictionNoExtrap& predFDNueFHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_nue_fhc").release();
+  PredictionNoExtrap& predFDNumuRHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_numu_rhc").release();
+  PredictionNoExtrap& predFDNueRHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_nue_rhc").release();
 
-  IPrediction* predFDNumuFHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_2a")).release();
-  IPrediction* predFDNueFHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_2a")).release();
-  IPrediction* predFDNumuRHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_2a")).release();
-  IPrediction* predFDNueRHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_2a")).release();
+  IPrediction* predFDNumuFHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_2a").release();
+  IPrediction* predFDNueFHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_2a").release();
+  IPrediction* predFDNumuRHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_2a").release();
+  IPrediction* predFDNueRHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_2a").release();
 
-  IPrediction* predFDNumuFHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_2b")).release();
-  IPrediction* predFDNueFHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_2b")).release();
-  IPrediction* predFDNumuRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_2b")).release();
-  IPrediction* predFDNueRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_2b")).release();
+  IPrediction* predFDNumuFHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_2b").release();
+  IPrediction* predFDNueFHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_2b").release();
+  IPrediction* predFDNumuRHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_2b").release();
+  IPrediction* predFDNueRHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_2b").release();
 
-  IPrediction* predFDNumuFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_flux")).release();
-  IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_flux")).release();
-  IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_flux")).release();
-  IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_flux")).release();
+  IPrediction* predFDNumuFHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_flux").release();
+  IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_flux").release();
+  IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_flux").release();
+  IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_flux").release();
 
   // Has to be explicitly PredictionXSecDiag, otherwise you get back a bare
   // PredictionScaleComp that doesn't do the translation from the diagonalized
   // to underlying space.
-  PredictionXSecDiag* predFDNumuFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_fhc_xsec")).release();
-  PredictionXSecDiag* predFDNueFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_fhc_xsec")).release();
-  PredictionXSecDiag* predFDNumuRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_rhc_xsec")).release();
-  PredictionXSecDiag* predFDNueRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_rhc_xsec")).release();
+  PredictionXSecDiag* predFDNumuFHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_fhc_xsec").release();
+  PredictionXSecDiag* predFDNueFHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_fhc_xsec").release();
+  PredictionXSecDiag* predFDNumuRHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_rhc_xsec").release();
+  PredictionXSecDiag* predFDNueRHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_rhc_xsec").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;

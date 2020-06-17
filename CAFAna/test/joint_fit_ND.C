@@ -205,12 +205,12 @@ void joint_fit_ND(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predNDFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("nd_fhc")).release();
-  PredictionInterp& predNDRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("nd_rhc")).release();
-  PredictionInterp& predFDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionInterp& predFDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionInterp& predFDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionInterp& predFDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionInterp& predNDFHC = *ana::LoadFrom<PredictionInterp>(&fin, "nd_fhc").release();
+  PredictionInterp& predNDRHC = *ana::LoadFrom<PredictionInterp>(&fin, "nd_rhc").release();
+  PredictionInterp& predFDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_numu_fhc").release();
+  PredictionInterp& predFDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_nue_fhc").release();
+  PredictionInterp& predFDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_numu_rhc").release();
+  PredictionInterp& predFDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_nue_rhc").release();
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 
