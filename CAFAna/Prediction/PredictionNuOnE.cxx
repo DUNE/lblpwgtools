@@ -67,35 +67,41 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  void PredictionNuOnE::SaveTo(TDirectory* dir) const
+  void PredictionNuOnE::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionNuOnE").Write("type");
 
-    fSig.SaveTo(dir->mkdir("sig"));
-    fCCBkg.SaveTo(dir->mkdir("ccbkg"));
-    fNCBkg.SaveTo(dir->mkdir("ncbkg"));
+    fSig.SaveTo(dir, "sig");
+    fCCBkg.SaveTo(dir, "ccbkg");
+    fNCBkg.SaveTo(dir, "ncbkg");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "PredictionNuOnE");
 
-    assert(dir->GetDirectory("sig"));
-    assert(dir->GetDirectory("ccbkg"));
-    assert(dir->GetDirectory("ncbkg"));
-
     PredictionNuOnE* ret = new PredictionNuOnE
-      (*Spectrum::LoadFrom(dir->GetDirectory("sig")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ccbkg")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ncbkg")));
+      (*Spectrum::LoadFrom(dir, "sig"),
+       *Spectrum::LoadFrom(dir, "ccbkg"),
+       *Spectrum::LoadFrom(dir, "ncbkg"));
+
+    delete dir;
 
     return std::unique_ptr<PredictionNuOnE>(ret);
   }

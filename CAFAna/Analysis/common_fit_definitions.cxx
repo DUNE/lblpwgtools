@@ -615,13 +615,11 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNumu.SaveTo(saveDir->mkdir(
-        (std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpFDNumu.SaveTo(saveDir,
+                            std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"));
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNue.SaveTo(saveDir->mkdir(
-        (std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpFDNue.SaveTo(saveDir,
+                           std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc"));
 
   } else if ((sample == kNDFHC) || (sample == kNDRHC) ||
              (sample == kNDFHC_OA)) {
@@ -643,9 +641,8 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpNDNumu.SaveTo(saveDir->mkdir(
-        (std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpNDNumu.SaveTo(saveDir,
+                            std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"));
   }
 }
 
@@ -677,8 +674,7 @@ GetPredictionInterps(std::string fileName,
     assert(fin && !fin->IsZombie());
     std::cout << "[LOAD]: Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
-    return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+    return_list.emplace_back(LoadFrom<PredictionInterp>(fin, sample_dir_order[s_it]));
     delete fin;
 
     std::vector<ana::ISyst const *> systs_to_remove =

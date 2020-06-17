@@ -341,13 +341,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void FrequentistSurface::SaveTo(TDirectory *dir) const
+  void FrequentistSurface::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory *tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("FrequentistSurface").Write("type");
 
-    ISurface::SaveTo(dir);
+    ISurface::SaveToHelper(dir);
 
     TDirectory *profDir = dir->mkdir("profHists");
     int idx = 0;
@@ -356,6 +359,9 @@ namespace ana
       profDir->cd();
       it->Write(TString::Format("hist%d", idx++));
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }

@@ -17,8 +17,19 @@ namespace ana
 {
   //----------------------------------------------------------------------
   template<> std::unique_ptr<osc::IOscCalculator>
-  LoadFrom<osc::IOscCalculator>(TDirectory* dir)
+  LoadFrom<osc::IOscCalculator>(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    // There are a lot of ways to exit this function. Make sure they all write
+    // and delete the directory.
+    struct DirCleaner
+    {
+      ~DirCleaner(){fDir->Write(); delete fDir;}
+      TDirectory* fDir;
+    } cleaner{dir};
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     const TString tag = ptag->GetString();
@@ -76,11 +87,21 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir)
+  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir, const std::string& name)
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
+    // There are a lot of ways to exit this function. Make sure they all write
+    // and delete the directory.
+    struct DirCleaner
+    {
+      ~DirCleaner(){fDir->Write(); delete fDir;}
+      TDirectory* fDir;
+    } cleaner{dir};
+
 
     if(dynamic_cast<const osc::NoOscillations*>(&x)){
       TObjString("NoOscillations").Write("type");

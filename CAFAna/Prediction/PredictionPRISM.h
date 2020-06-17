@@ -41,7 +41,7 @@ public:
                PRISMExtrapolator::FluxPredSpecies::kNumu_numode,
            PRISMExtrapolator::FluxPredSpecies FDFluxSpecies =
                PRISMExtrapolator::FluxPredSpecies::kNumu_numode);
-  virtual void SaveTo(TDirectory *dir) const override;
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
 

@@ -722,9 +722,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Spectrum::SaveTo(TDirectory* dir) const
+  void Spectrum::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("Spectrum").Write("type");
@@ -739,15 +741,21 @@ namespace ana
 
     for(unsigned int i = 0; i < fBins.size(); ++i){
       TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir->mkdir(TString::Format("bins%d", i)));
+      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<Spectrum> Spectrum::LoadFrom(TDirectory* dir)
+  std::unique_ptr<Spectrum> Spectrum::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     DontAddDirectory guard;
 
     TObjString* tag = (TObjString*)dir->Get("type");
@@ -763,12 +771,13 @@ namespace ana
     std::vector<std::string> labels;
     std::vector<Binning> bins;
     for(int i = 0; ; ++i){
-      TDirectory* subdir = dir->GetDirectory(TString::Format("bins%d", i));
+      const std::string subname = TString::Format("bins%d", i).Data();
+      TDirectory* subdir = dir->GetDirectory(subname.c_str());
       if(!subdir) break;
-      bins.push_back(*Binning::LoadFrom(subdir));
+      delete subdir;
+      bins.push_back(*Binning::LoadFrom(dir, subname));
       TObjString* label = (TObjString*)dir->Get(TString::Format("label%d", i));
       labels.push_back(label ? label->GetString().Data() : "");
-      delete subdir;
       delete label;
     }
 
@@ -792,6 +801,8 @@ namespace ana
 
     delete hPot;
     delete hLivetime;
+
+    delete dir;
 
     return ret;
   }

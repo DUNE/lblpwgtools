@@ -307,99 +307,44 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SingleSampleExperiment::
-  Derivative(osc::IOscCalculator* calc,
-             const SystShifts& shift,
-             std::unordered_map<const ISyst*, double>& dchi) const
-  {
-    if(fTestStatistic == kCovMxLogLikelihood){
-      std::cout << "Analytic derivatives will be disabled because LogLikelihoodCovMx() does not yet support them" << std::endl;
-      dchi.clear();
-      return;
-    }
-
-    const double pot = fData.POT();
-
-    std::unordered_map<const ISyst*, std::vector<double>> dp;
-    for(auto it: dchi) dp[it.first] = {};
-    fMC->Derivative(calc, shift, pot, dp);
-
-    if(dp.empty()){ // prediction doesn't implement derivatives
-      dchi.clear(); // pass on that info to our caller
-      return;
-    }
-
-    TH1D* hpred = PredHist(calc, shift);
-    TH1D* hdata = fData.ToTH1(pot);
-
-    if(fCovMxInfo){
-      const TMatrixD covInv = GetAbsInvCovMat(hpred);
-      if(fMask) ApplyMask(hpred, hdata);
-
-      for(auto& it: dchi){
-        assert(it.first != &kCosmicBkgScaleSyst); // not implemented
-
-        if(shift.GetShift(it.first) > it.first->Min() &&
-           shift.GetShift(it.first) < it.first->Max()){
-          // TODO there is matrix work done inside this function that shouldn't
-          // need to be repeated when just de/dx changes
-          it.second += Chi2CovMxDerivative(hpred, hdata, covInv, dp[it.first], true);
-        }
-      } // end for it
-    }
-    else{ // otherwise it's a LL calculation
-      if(fMask) ApplyMask(hpred, hdata);
-
-      for(auto& it: dchi){
-        if(it.first != &kCosmicBkgScaleSyst){
-          it.second += LogLikelihoodDerivative(hpred, hdata, dp[it.first]);
-        }
-        else{
-          const unsigned int N = fCosmic->GetNbinsX()+2;
-          const double* ca = fCosmic->GetArray();
-          std::vector<double> cosErr(N);
-          for(unsigned int i = 0; i < N; ++i) cosErr[i] = ca[i]*fCosmicScaleError;
-          it.second += LogLikelihoodDerivative(hpred, hdata, cosErr);
-        }
-      } // end for it
-    }
-
-    HistCache::Delete(hpred);
-    HistCache::Delete(hdata);
-  }
-
-  //----------------------------------------------------------------------
-  void SingleSampleExperiment::SaveTo(TDirectory* dir) const
+  void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("SingleSampleExperiment").Write("type");
 
-    fMC->SaveTo(dir->mkdir("mc"));
-    fData.SaveTo(dir->mkdir("data"));
+    fMC->SaveTo(dir, "mc");
+    fData.SaveTo(dir, "data");
 
     if(fCosmic) fCosmic->Write("cosmic");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<SingleSampleExperiment> SingleSampleExperiment::LoadFrom(TDirectory* dir)
+  std::unique_ptr<SingleSampleExperiment> SingleSampleExperiment::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "SingleSampleExperiment");
+    delete ptag;
 
-    assert(dir->GetDirectory("mc"));
-    assert(dir->GetDirectory("data"));
-
-
-    const IPrediction* mc = ana::LoadFrom<IPrediction>(dir->GetDirectory("mc")).release();
-    const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir->GetDirectory("data"));
+    const IPrediction* mc = ana::LoadFrom<IPrediction>(dir, "mc").release();
+    const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir, "data");
 
     TH1D* cosmic = 0;
     if(dir->Get("cosmic")) cosmic = (TH1D*)dir->Get("cosmic");
+
+    delete dir;
 
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
     if(cosmic) ret->fCosmic = cosmic;

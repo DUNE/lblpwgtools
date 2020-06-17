@@ -89,54 +89,59 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void TrivialExtrap::SaveTo(TDirectory* dir) const
+  void TrivialExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("TrivialExtrap").Write("type");
 
-    fNueApp.SaveTo(dir->mkdir("nue_app"));
-    fNueAppAnti.SaveTo(dir->mkdir("nue_app_anti"));
-    fNC.SaveTo(dir->mkdir("nc"));
-    fNumuSurv.SaveTo(dir->mkdir("numu_surv"));
-    fNumuSurvAnti.SaveTo(dir->mkdir("numu_surv_anti"));
-    fNumuApp.SaveTo(dir->mkdir("numu_app"));
-    fNumuAppAnti.SaveTo(dir->mkdir("numu_app_anti"));
-    fNueSurv.SaveTo(dir->mkdir("nue_surv"));
-    fNueSurvAnti.SaveTo(dir->mkdir("nue_surv_anti"));
-    fTauFromE.SaveTo(dir->mkdir("nutau_from_nue"));
-    fTauFromEAnti.SaveTo(dir->mkdir("nutau_from_nue_anti"));
-    fTauFromMu.SaveTo(dir->mkdir("nutau_from_numu"));
-    fTauFromMuAnti.SaveTo(dir->mkdir("nutau_from_numu_anti"));
+    fNueApp.SaveTo(dir, "nue_app");
+    fNueAppAnti.SaveTo(dir, "nue_app_anti");
+    fNC.SaveTo(dir, "nc");
+    fNumuSurv.SaveTo(dir, "numu_surv");
+    fNumuSurvAnti.SaveTo(dir, "numu_surv_anti");
+    fNumuApp.SaveTo(dir, "numu_app");
+    fNumuAppAnti.SaveTo(dir, "numu_app_anti");
+    fNueSurv.SaveTo(dir, "nue_surv");
+    fNueSurvAnti.SaveTo(dir, "nue_surv_anti");
+    fTauFromE.SaveTo(dir, "nutau_from_nue");
+    fTauFromEAnti.SaveTo(dir, "nutau_from_nue_anti");
+    fTauFromMu.SaveTo(dir, "nutau_from_numu");
+    fTauFromMuAnti.SaveTo(dir, "nutau_from_numu_anti");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<TrivialExtrap> TrivialExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<TrivialExtrap> TrivialExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     std::unique_ptr<TrivialExtrap> ret(new TrivialExtrap);
 
-    // This is a lot of repetitive typing. Define some macros
-#define LOAD_OSC(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *OscillatableSpectrum::LoadFrom(dir->GetDirectory(LABEL));
-#define LOAD_SPECT(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *Spectrum::LoadFrom(dir->GetDirectory(LABEL));
+    ret->fNueApp        = *OscillatableSpectrum::LoadFrom(dir, "nue_app");
+    ret->fNueAppAnti    = *OscillatableSpectrum::LoadFrom(dir, "nue_app_anti");
+    ret->fNumuSurv      = *OscillatableSpectrum::LoadFrom(dir, "numu_surv");
+    ret->fNumuSurvAnti  = *OscillatableSpectrum::LoadFrom(dir, "numu_surv_anti");
+    ret->fNumuApp       = *OscillatableSpectrum::LoadFrom(dir, "numu_app");
+    ret->fNumuAppAnti   = *OscillatableSpectrum::LoadFrom(dir, "numu_app_anti");
+    ret->fNueSurv       = *OscillatableSpectrum::LoadFrom(dir, "nue_surv");
+    ret->fNueSurvAnti   = *OscillatableSpectrum::LoadFrom(dir, "nue_surv_anti");
+    ret->fTauFromE      = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_nue");
+    ret->fTauFromEAnti  = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_nue_anti");
+    ret->fTauFromMu     = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu");
+    ret->fTauFromMuAnti = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu_anti");
 
-    LOAD_OSC(fNueApp,        "nue_app");
-    LOAD_OSC(fNueAppAnti,    "nue_app_anti");
-    LOAD_OSC(fNumuSurv,      "numu_surv");
-    LOAD_OSC(fNumuSurvAnti,  "numu_surv_anti");
-    LOAD_OSC(fNumuApp,       "numu_app");
-    LOAD_OSC(fNumuAppAnti,   "numu_app_anti");
-    LOAD_OSC(fNueSurv,       "nue_surv");
-    LOAD_OSC(fNueSurvAnti,   "nue_surv_anti");
-    LOAD_OSC(fTauFromE,      "nutau_from_nue");
-    LOAD_OSC(fTauFromEAnti,  "nutau_from_nue_anti");
-    LOAD_OSC(fTauFromMu,     "nutau_from_numu");
-    LOAD_OSC(fTauFromMuAnti, "nutau_from_numu_anti");
+    ret->fNC = *Spectrum::LoadFrom(dir, "nc");
 
-    LOAD_SPECT(fNC, "nc");
+    delete dir;
 
     return ret;
   }

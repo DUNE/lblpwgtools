@@ -20,6 +20,6 @@ namespace ana
     virtual Spectrum NueComponent()      const = 0;
     virtual Spectrum AntiNueComponent()  const = 0;
 
-    virtual void SaveTo(TDirectory* dir) const = 0;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const = 0;
   };
 }

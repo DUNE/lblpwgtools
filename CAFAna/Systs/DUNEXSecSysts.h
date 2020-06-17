@@ -61,8 +61,8 @@ namespace ana
   class DUNEXSecSyst: public SystComponentScale
   {
   public:
-    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const override;
+    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir, const std::string& name);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
   protected:
     friend const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory);
     DUNEXSecSyst(EVALORCategory cat);

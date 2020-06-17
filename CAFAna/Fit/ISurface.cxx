@@ -195,9 +195,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void ISurface::SaveTo(TDirectory *dir) const
+  void ISurface::SaveToHelper(TDirectory *dir) const
   {
     TDirectory *oldDir = gDirectory;
+
     dir->cd();
 
     TVectorD v(3);

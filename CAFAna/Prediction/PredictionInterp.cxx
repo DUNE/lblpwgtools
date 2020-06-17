@@ -515,147 +515,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::
-  ComponentDerivative(osc::IOscCalculator* calc,
-                      Flavors::Flavors_t flav,
-                      Current::Current_t curr,
-                      Sign::Sign_t sign,
-                      CoeffsType type,
-                      const SystShifts& shift,
-                      double pot,
-                      std::unordered_map<const ISyst*, std::vector<double>>& dp) const
-  {
-    if(fSplitBySign && sign == Sign::kBoth){
-      ComponentDerivative(calc, flav, curr, Sign::kNu,     type, shift, pot, dp);
-      ComponentDerivative(calc, flav, curr, Sign::kAntiNu, type, shift, pot, dp);
-      return;
-    }
-
-    const Spectrum snom = fPredNom->PredictComponent(calc, flav, curr, sign);
-    TH1D* hnom = snom.ToTH1(snom.POT());
-    const double* arr_nom = hnom->GetArray();
-
-    const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
-    TH1D* h = base.ToTH1(pot);
-    double* arr = h->GetArray();
-    const unsigned int N = h->GetNbinsX()+2;
-
-
-    // Should the interpolation use the nubar fits?
-    const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
-
-    for(auto& it: dp){
-      const ISyst* syst = it.first;
-      std::vector<double>& diff = it.second;
-      if(diff.empty()) diff.resize(N);
-      assert(diff.size() == N);
-      assert(find_pred(syst) != fPreds.end());
-      const ShiftedPreds& sp = get_pred(syst);
-
-      double x = shift.GetShift(syst);
-
-      int shiftBin = (x - sp.shifts[0])/sp.Stride();
-      shiftBin = std::max(0, shiftBin);
-      shiftBin = std::min(shiftBin, sp.nCoeffs-1);
-
-      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
-
-      x -= sp.shifts[shiftBin];
-
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
-
-      for(unsigned int n = 0; n < N; ++n){
-        // Wasn't corrected, so derivative is zero
-        if(arr_nom[n] <= fMinMCStats) continue;
-
-        // Uncomment to debug crashes in this function
-        // assert(type < fits.size());
-        // assert(n < sp.fits[type].size());
-        // assert(shiftBin < int(sp.fits[type][n].size()));
-        const Coeffs& f = fits[n];
-
-        const double corr = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-        if(corr > 0){
-          diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
-        }
-      } // end for n
-    } // end for syst
-
-    HistCache::Delete(h);
-    HistCache::Delete(hnom);
-  }
-
-  //----------------------------------------------------------------------
-  void PredictionInterp::
-  Derivative(osc::IOscCalculator* calc,
-             const SystShifts& shift,
-             double pot,
-             std::unordered_map<const ISyst*, std::vector<double>>& dp) const
-  {
-    InitFits();
-
-    // Check that we're able to handle all the systs we were passed
-    for(auto& it: dp){
-      if(find_pred(it.first) == fPreds.end()){
-        std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << it.first->ShortName() << std::endl;
-        abort();
-      }
-      it.second.clear();
-    } // end for syst
-
-    ComponentDerivative(calc, Flavors::kNuEToNuE,    Current::kCC, Sign::kBoth, kNueSurv,  shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuEToNuMu,   Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuEToNuTau,  Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-
-    ComponentDerivative(calc, Flavors::kNuMuToNuE,   Current::kCC, Sign::kBoth, kNueApp,   shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuMuToNuMu,  Current::kCC, Sign::kBoth, kNumuSurv, shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuMuToNuTau, Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-
-    ComponentDerivative(calc, Flavors::kAll, Current::kNC, Sign::kBoth, kNC, shift, pot, dp);
-
-    // Simpler (much slower) implementation in terms of finite differences for
-    // test purposes
-    /*
-    const Spectrum p0 = PredictSyst(calc, shift);
-    TH1D* h0 = p0.ToTH1(pot);
-
-    const double dx = 1e-9;
-    for(auto& it: dp){
-      const ISyst* s =  it.first;
-      std::vector<double>& v = it.second;
-      SystShifts s2 = shift;
-      s2.SetShift(s, s2.GetShift(s)+dx);
-
-      const Spectrum p1 = PredictSyst(calc, s2);
-
-      TH1D* h1 = p1.ToTH1(pot);
-
-      v.resize(h1->GetNbinsX()+2);
-      for(int i = 0; i < h1->GetNbinsX()+2; ++i){
-        v[i] = (h1->GetBinContent(i) - h0->GetBinContent(i))/dx;
-      }
-
-      HistCache::Delete(h1);
-    }
-
-    HistCache::Delete(h0);
-    */
-  }
-
-  //----------------------------------------------------------------------
-  void PredictionInterp::SaveTo(TDirectory* dir) const
+  void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();
 
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionInterp").Write("type");
 
-
-    fPredNom->SaveTo(dir->mkdir("pred_nom"));
-
+    fPredNom->SaveTo(dir, "pred_nom");
 
     for(auto &it: fPreds){
       const ShiftedPreds& sp = it.second;
@@ -665,13 +536,14 @@ namespace ana
           std::cout << "Can't save a PredictionInterp after MinimizeMemory()" << std::endl;
           abort();
         }
-        sp.preds[i]->SaveTo(dir->mkdir(TString::Format("pred_%s_%+d",
-                                                       sp.systName.c_str(),
-                                                       int(sp.shifts[i])).Data()));
+
+        sp.preds[i]->SaveTo(dir, TString::Format("pred_%s_%+d",
+                                                 sp.systName.c_str(),
+                                                 int(sp.shifts[i])).Data());
       } // end for i
     } // end for it
 
-    ana::SaveTo(*fOscOrigin, dir->mkdir("osc_origin"));
+    ana::SaveTo(*fOscOrigin, dir, "osc_origin");
 
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
@@ -687,16 +559,21 @@ namespace ana
     dir->cd();
     split_sign.Write("split_sign");
 
+    dir->Write();
+    delete dir;
+
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
-    assert(tag->GetString() == "PredictionInterp" ||
-           tag->GetString() == "PredictionInterp2"); // backwards compatibility
+    assert(tag->GetString() == "PredictionInterp");
 
     std::unique_ptr<PredictionInterp> ret(new PredictionInterp);
 
@@ -706,6 +583,8 @@ namespace ana
     // Can be missing from old files
     ret->fSplitBySign = (split_sign && split_sign->String() == "yes");
 
+    delete dir;
+
     return ret;
   }
 
@@ -713,7 +592,7 @@ namespace ana
   void PredictionInterp::LoadFromBody(TDirectory* dir, PredictionInterp* ret,
 				      std::vector<const ISyst*> veto)
   {
-    ret->fPredNom = ana::LoadFrom<IPrediction>(dir->GetDirectory("pred_nom"));
+    ret->fPredNom = ana::LoadFrom<IPrediction>(dir, "pred_nom");
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
@@ -745,23 +624,25 @@ namespace ana
 
         for (int shift = x0; shift <= x1; ++shift)
         {
-          TDirectory *preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
+          const std::string subname = TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data();
+          TDirectory *preddir = dir->GetDirectory(subname.c_str());
           if (!preddir)
           {
             std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
                       << dir->GetName() << std::endl;
             continue;
           }
+          delete preddir;
 
           sp.shifts.push_back(shift);
-          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(preddir));
+          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(dir, subname));
         } // end for shift
 
         ret->fPreds.emplace_back(syst, std::move(sp));
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir->GetDirectory("osc_origin")).release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir, "osc_origin").release();
   }
 
   //----------------------------------------------------------------------

@@ -63,8 +63,8 @@ namespace ana
 
     virtual Spectrum NCComponent() {return fNC;}
 
-    virtual void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
+    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     TrivialExtrap()

@@ -87,15 +87,15 @@ void mh()
 
   TFile fin(stateFname);
   //GetListOfSysts();
-  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
-  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
-  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
-  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc").release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc").release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc").release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc").release();
 
-  //PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_fhc")).release();
-  //PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_fhc")).release();
-  //PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_numu_rhc")).release();
-  //PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_interp_nue_rhc")).release();
+  //PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_interp_numu_fhc").release();
+  //PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_interp_nue_fhc").release();
+  //PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_interp_numu_rhc").release();
+  //PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_interp_nue_rhc").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;

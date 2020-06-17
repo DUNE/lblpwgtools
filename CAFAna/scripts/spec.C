@@ -111,14 +111,14 @@ void spec(bool reload = false)
 
     std::cout << stateFname << std::endl;
     TFile fout(stateFname, "RECREATE");
-    predInt_FDNumuFHC.SaveTo(fout.mkdir("pred_fd_numu_fhc"));
-    predInt_FDNumuRHC.SaveTo(fout.mkdir("pred_fd_numu_rhc"));
-    predInt_FDNueFHC.SaveTo(fout.mkdir("pred_fd_nue_fhc"));
-    predInt_FDNueRHC.SaveTo(fout.mkdir("pred_fd_nue_rhc"));
-    predInt_FDNumuFHC_fid.SaveTo(fout.mkdir("pred_fd_numu_fhc_fid"));
-    predInt_FDNumuRHC_fid.SaveTo(fout.mkdir("pred_fd_numu_rhc_fid"));
-    predInt_FDNueFHC_fid.SaveTo(fout.mkdir("pred_fd_nue_fhc_fid"));
-    predInt_FDNueRHC_fid.SaveTo(fout.mkdir("pred_fd_nue_rhc_fid"));
+    predInt_FDNumuFHC.SaveTo(&fout, "pred_fd_numu_fhc");
+    predInt_FDNumuRHC.SaveTo(&fout, "pred_fd_numu_rhc");
+    predInt_FDNueFHC.SaveTo(&fout, "pred_fd_nue_fhc");
+    predInt_FDNueRHC.SaveTo(&fout, "pred_fd_nue_rhc");
+    predInt_FDNumuFHC_fid.SaveTo(&fout, "pred_fd_numu_fhc_fid");
+    predInt_FDNumuRHC_fid.SaveTo(&fout, "pred_fd_numu_rhc_fid");
+    predInt_FDNueFHC_fid.SaveTo(&fout, "pred_fd_nue_fhc_fid");
+    predInt_FDNueRHC_fid.SaveTo(&fout, "pred_fd_nue_rhc_fid");
 
     std::cout << "All done making state..." << std::endl;
 
@@ -128,14 +128,14 @@ void spec(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
-  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
-  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
-  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
-  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc_fid")).release();
-  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc_fid")).release();
-  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc_fid")).release();
-  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc_fid")).release();
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc").release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc").release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc").release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc").release();
+  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc_fid").release();
+  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc_fid").release();
+  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc_fid").release();
+  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc_fid").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
