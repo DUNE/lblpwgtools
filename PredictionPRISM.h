@@ -104,9 +104,11 @@ public:
 
   HistAxis fAnalysisAxis;
   HistAxis fNDOffAxis;
+  HistAxis fND280kAAxis;
   HistAxis fNDFDEnergyMatchAxis;
 
   PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
+                  const HistAxis &ND280kAAxis,
                   const HistAxis &NDFDEnergyMatchAxis);
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
@@ -137,6 +139,7 @@ public:
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
 
   HistAxis fOffPredictionAxis;
+  HistAxis f280kAPredictionAxis;
   HistAxis fFluxMatcherCorrectionAxes;
   double fMaxOffAxis;
   double fDefaultOffAxisPOT;
@@ -231,6 +234,7 @@ protected:
       std::unique_ptr<ReweightableSpectrum> nuebar_ccinc_sel_nubmode;
     };
     _ND ND;
+    _ND ND_280kA;
   };
 
   mutable _Measurements Measurements;
@@ -252,6 +256,7 @@ protected:
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_nubmode;
     };
     _ND ND;
+    _ND ND_280kA;
 
     struct _FD {
       // Used for FD background re-addition, they keep track of WSB, NC, nue
@@ -282,6 +287,16 @@ protected:
   GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
   bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_280kA_right_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_280kA_right_sign_nue(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_280kA_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<ReweightableSpectrum> &
+  GetNDData_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  bool HaveNDData_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+
   std::unique_ptr<PredictionInterp> &
   GetNDPrediction_right_sign_numu(PRISM::BeamMode NDBM) const;
   std::unique_ptr<PredictionInterp> &
@@ -291,6 +306,17 @@ protected:
   std::unique_ptr<PredictionInterp> &
   GetNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
   bool HaveNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_280kA_right_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_280kA_right_sign_nue(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_280kA_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetNDPrediction_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  bool
+  HaveNDPrediction_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
   std::unique_ptr<PredictionInterp> &
   GetFDPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;
