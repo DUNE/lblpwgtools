@@ -68,7 +68,7 @@ include_directories(
   ${CMAKE_BINARY_DIR}/Ext
   ${BOOST_INC}
   ${EIGEN_INC}
-  ${CVODES_INC}
+  ${SUNDIALS_INC}
   ${STAN_MATH_INC}
   ${STAN_INC})
 

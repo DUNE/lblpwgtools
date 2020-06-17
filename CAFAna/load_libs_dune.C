@@ -40,7 +40,7 @@ void load_libs(bool MustClean = true) {
                                                // of retaining assert()
 
   // Include path
-  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$CVODES_INC";
+  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$SUNDIALS_INC";
 
   const std::vector<std::string> libs = {
       "Minuit2",          "Net",           "Tree", "StandardRecord", "OscLibFunc",
