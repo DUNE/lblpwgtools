@@ -381,8 +381,14 @@ void OffAxisNDCAFCombiner() {
           abort();
         }
 
+        if (args::NSkip) {
+          std::cout << "\tSkipping the first " << args::NSkip << " / "
+                    << f_caf->GetEntries() << " entries." << std::endl;
+        }
+
         size_t nents_after_skip = f_caf->GetEntries() - args::NSkip;
-        if (args::NMaxEvents != std::numeric_limits<size_t>::max()) {
+        if (args::NMaxEvents != std::numeric_limits<size_t>::max() ||
+            bool(args::NSkip)) {
           double nevs = std::min(args::NMaxEvents, nents_after_skip);
           file_pot *= nevs / double(f_caf->GetEntries());
           std::cout << "Rescaling POT by: "
