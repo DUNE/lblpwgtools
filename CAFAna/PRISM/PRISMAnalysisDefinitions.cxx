@@ -103,14 +103,27 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
                         kTrueOffAxisPos);
 
+  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 2),
+                             kTrueOffAxisPos);
+
   auto vardef = GetVar(varname);
   HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
 
-  return {xax, axOffAxisPos};
+  return {xax, axOffAxisPos, axOffAxis280kAPos};
 }
 
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
   return (fabs(sr->vtx_x) < 200);
+});
+
+const Cut kCut280kARun([](const caf::StandardRecord *sr) {
+  return (sr->SpecialHCRunId == 0);
+});
+const Cut kSel280kARun([](const caf::StandardRecord *sr) {
+  return (sr->SpecialHCRunId == 280);
+});
+const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
+  return sr->SpecialRunWeight;
 });
 
 std::vector<double> const FDnumuFHCSelEff_enu = {

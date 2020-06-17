@@ -291,6 +291,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
     SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
     SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
+    SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
     std::cout << "[INFO]: Found Off axis weight friend tree "
                  "in input file, hooking up!"
               << std::endl;
@@ -319,9 +320,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     if (std::isnormal(sr.eOther)) {
       eother = sr.eOther;
     }
-    sr.eRecProxy = sr.LepE + sr.eP + sr.ePip +
-                        sr.ePim + sr.ePi0 + 0.135 * sr.nipi0 +
-                        eother;
+    sr.eRecProxy = sr.LepE + sr.eP + sr.ePip + sr.ePim + sr.ePi0 +
+                   0.135 * sr.nipi0 + eother;
 
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {
@@ -369,18 +369,19 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
 #ifdef USE_TH2JAGGED
+
+    //If we have a weight, then assume we are the special run
+    sr.SpecialHCRunId = (sr.SpecialRunWeight != 1) ? 280 : 0;
+
     // Pre-calculate flux error bins to speed up spline generation
     sr.OffAxisFluxConfig =
         PRISM::EffectiveFluxUncertaintyHelper::Get().GetNuConfig_checked(
-            sr.nuPDGunosc, sr.Ev,
-            sr.det_x + (sr.vtx_x * 1E-2), 0, !sr.isFD,
-            sr.isFHC);
+            sr.nuPDGunosc, sr.Ev, std::fabs(sr.det_x + sr.vtx_x * 1E-2), 0,
+            !sr.isFD, sr.isFHC);
 
-    sr.OffAxisFluxBin =
-        PRISM::EffectiveFluxUncertaintyHelper::Get().GetBin(
-            sr.nuPDGunosc, sr.Ev,
-            sr.det_x + (sr.vtx_x * 1E-2), 0, !sr.isFD,
-            sr.isFHC);
+    sr.OffAxisFluxBin = PRISM::EffectiveFluxUncertaintyHelper::Get().GetBin(
+        sr.nuPDGunosc, sr.Ev, std::fabs(sr.det_x + sr.vtx_x * 1E-2), 0,
+        !sr.isFD, sr.isFHC);
 #endif
     // Get the crazy flux info properly
     sr.wgt_CrazyFlux.resize(7);
