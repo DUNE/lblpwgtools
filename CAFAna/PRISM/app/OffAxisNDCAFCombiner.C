@@ -187,14 +187,6 @@ void OffAxisNDCAFCombiner() {
         (class_loc == std::string::npos)) {
       files.push_back(pattern);
     } else {
-      if (args::NMaxEvents != std::numeric_limits<size_t>::max()) {
-        std::cout
-            << "Set args::NMaxEvents but found a regex pattern, this will not "
-               "do what "
-               "you want, aborting."
-            << std::endl;
-        abort();
-      }
       try {
         files = GetMatchingFiles(dir, pattern);
       } catch (std::regex_error const &e) {
@@ -235,6 +227,7 @@ void OffAxisNDCAFCombiner() {
   TChain *meta = new TChain("meta");
   TTree *OffAxisWeightFriend;
   double perPOT, perFile, massCorr, specRunWght = 1;
+  int specRunId = 0;
   ana::FVMassCorrection SliceMassCorrector;
   TTree *FileSummaryTree;
   fileSummary fs;
@@ -245,8 +238,13 @@ void OffAxisNDCAFCombiner() {
   size_t const kPerPOT = 1;
   size_t const kMassCorr = 2;
   size_t const kSpecialRunWeight = 3;
+  size_t const kSpecialRunId = 4;
 
-  std::vector<std::tuple<double, double, double, double>> EventPOTEventFiles;
+  std::vector<std::tuple<double, double, double, double, int>>
+      EventPOTEventFiles;
+  std::vector<size_t> FileBoundaries = {
+      0,
+  };
 
   if (args::CombiningCombinedCAFs) {
     OffAxisWeightFriend = new TChain("OffAxisWeightFriend");
@@ -257,6 +255,7 @@ void OffAxisNDCAFCombiner() {
     OffAxisWeightFriend->Branch("perFile", &perFile, "perFile/D");
     OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
     OffAxisWeightFriend->Branch("specRunWght", &specRunWght, "specRunWght/D");
+    OffAxisWeightFriend->Branch("specRunId", &specRunId, "specRunId/D");
     OffAxisWeightFriend->SetDirectory(nullptr);
 
     FileSummaryTree = new TTree("FileSummaryTree", "");
@@ -386,6 +385,8 @@ void OffAxisNDCAFCombiner() {
                     << f_caf->GetEntries() << " entries." << std::endl;
         }
 
+        FileBoundaries.push_back(FileBoundaries.back() + f_caf->GetEntries());
+
         size_t nents_after_skip = f_caf->GetEntries() - args::NSkip;
         if (args::NMaxEvents != std::numeric_limits<size_t>::max() ||
             bool(args::NSkip)) {
@@ -457,13 +458,15 @@ void OffAxisNDCAFCombiner() {
                                    (!args::isFHC && (nuPDG == -14));
             if (args::IsSpecRun && (det_x == 0) && isRightSignNumu) {
               specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
+              specRunId = 280;
             } else {
               specRunWght = 1;
+              specRunId = 0;
             }
 
             EventPOTEventFiles.emplace_back(det_x, perPOT,
                                             SliceMassCorrector.GetWeight(vtx_x),
-                                            specRunWght);
+                                            specRunWght, specRunId);
           }
           if (args::preSelect) {
             std::cout << "\t-FV selection : NInFile: "
@@ -521,38 +524,54 @@ void OffAxisNDCAFCombiner() {
 
   if (!args::justDoSummaryTree) {
     std::cout << "[INFO]: Copying caf tree..." << std::endl;
-    bool canfast = !args::preSelect && !Flipdetx;
-    TTree *treecopy = nullptr;
 
-    if (!canfast) {
-      double vtx_x, vtx_y, vtx_z, det_x;
-      caf->SetBranchAddress("vtx_x", &vtx_x);
-      caf->SetBranchAddress("vtx_y", &vtx_y);
-      caf->SetBranchAddress("vtx_z", &vtx_z);
-      caf->SetBranchAddress("det_x", &det_x);
-      treecopy = caf->CloneTree(0, "");
-      treecopy->SetName("cafTree");
+    double vtx_x, vtx_y, vtx_z, det_x;
+    caf->SetBranchAddress("vtx_x", &vtx_x);
+    caf->SetBranchAddress("vtx_y", &vtx_y);
+    caf->SetBranchAddress("vtx_z", &vtx_z);
+    caf->SetBranchAddress("det_x", &det_x);
+    TTree *treecopy = caf->CloneTree(0, "");
+    treecopy->SetName("cafTree");
 
-      size_t nents = std::min(args::NMaxEvents, size_t(caf->GetEntries()));
-      ana::Progress preselprog("Copy with selection progress.");
-      for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
-        if (ent_it && !(ent_it % 10000)) {
-          preselprog.SetProgress(double(ent_it) / double(nents));
-        }
-        caf->GetEntry(ent_it);
-        if (Flipdetx) {
-          det_x = -det_x;
-        }
-        if (args::preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-          continue;
-        }
-        treecopy->Fill();
+    size_t nents = caf->GetEntries();
+    ana::Progress preselprog("Copy with selection progress.");
+
+    size_t file_it = 0;
+
+    for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
+      if (ent_it && !(ent_it % 10000)) {
+        preselprog.SetProgress(double(ent_it) / double(nents));
       }
-      preselprog.Done();
-    } else {
-      treecopy = caf->CloneTree(args::NMaxEvents, "fast");
-      treecopy->SetName("cafTree");
+
+      // Into the next file, start skipping if needs be
+      if (ent_it == FileBoundaries[file_it + 1]) {
+        file_it++;
+      }
+
+      if ((ent_it - FileBoundaries[file_it]) <
+          args::NSkip) { // Skip the same ones that we skipped when building
+                         // the friend tree
+        continue;
+      }
+
+      if ((ent_it - FileBoundaries[file_it]) >
+          args::NMaxEvents) { // Skip the same ones that we skipped when
+                              // building
+                              // the friend tree
+        continue;
+      }
+
+      caf->GetEntry(ent_it);
+      if (Flipdetx) {
+        det_x = -det_x;
+      }
+      if (args::preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+        continue;
+      }
+      treecopy->Fill();
     }
+    preselprog.Done();
+
     delete caf;
 
     std::cout << "[INFO]: Copying meta tree..." << std::endl;
@@ -570,6 +589,7 @@ void OffAxisNDCAFCombiner() {
         perPOT = std::get<kPerPOT>(EventPOTEventFiles[ev_it]);
         massCorr = std::get<kMassCorr>(EventPOTEventFiles[ev_it]);
         specRunWght = std::get<kSpecialRunWeight>(EventPOTEventFiles[ev_it]);
+        specRunId = std::get<kSpecialRunId>(EventPOTEventFiles[ev_it]);
         OffAxisWeightFriend->Fill();
         if (ev_it && !(ev_it % 10000)) {
           potfillprog.SetProgress(double(ev_it) /

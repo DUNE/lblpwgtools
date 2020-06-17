@@ -348,6 +348,7 @@ inline void TestConfigDefinitions() {
 struct PRISMAxisBlob {
   ana::HistAxis XProjection;
   ana::HistAxis OffAxisPosition;
+  ana::HistAxis OffAxis280kAPosition;
 };
 
 ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "uniform");
@@ -361,6 +362,10 @@ extern const ana::Cut kIsOutOfTheDesert;
 
 // Use to weight by Exposure
 extern const ana::Var kRunPlanWeight;
+
+extern const ana::Cut kCut280kARun;
+extern const ana::Cut kSel280kARun;
+extern const ana::Var kSpecHCRunWeight;
 
 ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true);
 ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,

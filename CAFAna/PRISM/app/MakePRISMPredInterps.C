@@ -133,7 +133,6 @@ std::vector<std::string> FD_nueswap_input_numode;
 std::vector<std::string> ND_input_nubmode;
 std::vector<std::string> FD_nonswap_input_nubmode;
 std::vector<std::string> FD_nueswap_input_nubmode;
-std::string SpecialRunDescriptor = "";
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
@@ -185,9 +184,6 @@ void SayUsage(char const *argv[]) {
       << "\t--PRISM-fake-data <fake_data_dial> : A fake data dial to set on "
          "the PRISM ND data.\n"
          "\t                            be included.\n"
-      << "\t--FakeSR <special run name>: Fake a single special beam run by\n"
-         "\t                            weighting on axis events with x < 0 \n"
-         "\t                            in true energy."
       << "\t--UseSelection            : Use the on-axis analysis selection. \n"
          "\t                            This will produce a bad PRISM "
          "prediction."
@@ -247,8 +243,6 @@ void handleOpts(int argc, char const *argv[]) {
       UseSel = true;
     } else if (std::string(argv[opt]) == "--thin-factor") {
       ThinFactor = std::stod(argv[++opt]);
-    } else if (std::string(argv[opt]) == "--FakeSR") {
-      SpecialRunDescriptor = argv[++opt];
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -408,30 +402,6 @@ int main(int argc, char const *argv[]) {
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
-  WeightVars[kND_nu] =
-      WeightVars[kND_nu] * GetNDSpecialRun(SpecialRunDescriptor);
-  WeightVars[kND_nub] =
-      WeightVars[kND_nub] * GetNDSpecialRun(SpecialRunDescriptor);
-  AnaWeightVars[kND_nu] =
-      AnaWeightVars[kND_nu] * GetNDSpecialRun(SpecialRunDescriptor);
-  AnaWeightVars[kND_nub] =
-      AnaWeightVars[kND_nub] * GetNDSpecialRun(SpecialRunDescriptor);
-
-  // Need to correct for taking half the on-axis stop events.
-  if (SpecialRunDescriptor.size()) {
-    auto specrunweight = ana::Var([&](const caf::StandardRecord *sr) -> double {
-      if (sr->det_x > 0) {
-        return 1;
-      }
-      // All on axis events should be doubled about the x=0 symmetry axis.
-      return 2;
-    });
-    WeightVars[kND_nu] = WeightVars[kND_nu] * specrunweight;
-    WeightVars[kND_nub] = WeightVars[kND_nub] * specrunweight;
-    AnaWeightVars[kND_nu] = AnaWeightVars[kND_nu] * specrunweight;
-    AnaWeightVars[kND_nub] = AnaWeightVars[kND_nub] * specrunweight;
-  }
-
   if (ThinFactor > 0) { // Have to correct for the Thinned POT as the total
                         // Input POT is included in the PerPOTWeight.
     auto thinfactweight = ana::Var([](const caf::StandardRecord *) -> double {
@@ -445,7 +415,8 @@ int main(int argc, char const *argv[]) {
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
   auto PRISM = std::make_unique<PredictionPRISM>(
-      axes.XProjection, axes.OffAxisPosition, EventRateMatchAxis);
+      axes.XProjection, axes.OffAxisPosition, axes.OffAxis280kAPosition,
+      EventRateMatchAxis);
 
   Loaders Loaders_nu, Loaders_nub, Loaders_thinned;
 
