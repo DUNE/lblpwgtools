@@ -110,8 +110,8 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 }
 
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
-                              return (fabs(sr->vtx_x) < 200);
-                            });
+  return (fabs(sr->vtx_x) < 200);
+});
 
 std::vector<double> const FDnumuFHCSelEff_enu = {
     0.546, 0.683, 0.821, 0.945, 1.07, 1.19, 1.44, 1.67,
@@ -198,18 +198,54 @@ Var GetFDWeight(std::string const &eweight, bool isNuMode) {
 
 static TH1 *numode_280kA, *nubarmode_280kA;
 
+double Get280kAWeight_numu(double enu, bool isNu) {
+
+  // lazy load the inputs
+  static bool first = true;
+  if (first) {
+
+    TDirectory *gdc = gDirectory;
+    TFile wf(
+        (ana::FindCAFAnaDir() + "/Systs/OnAxis4m280kAWeights.root").c_str());
+    wf.GetObject("ND_nu_HC280-HC293_ratio/LBNF_numu_flux", numode_280kA);
+    if (!numode_280kA) {
+      std::cout << "[ERROR]: Failed to read: "
+                   "\"ND_nu_HC280-HC293_ratio/LBNF_numu_flux\" from "
+                << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
+                << std::endl;
+      throw;
+    }
+    numode_280kA->SetDirectory(nullptr);
+
+    wf.GetObject("ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux",
+                 nubarmode_280kA);
+    if (!nubarmode_280kA) {
+      std::cout << "[ERROR]: Failed to read: "
+                   "\"ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux\" from "
+                << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
+                << std::endl;
+      throw;
+    }
+    nubarmode_280kA->SetDirectory(nullptr);
+    if (gdc) {
+      gdc->cd();
+    }
+    first = false;
+  }
+
+  TH1 *whist = (isNu ? numode_280kA : nubarmode_280kA);
+  return whist->GetBinContent(whist->GetXaxis()->FindFixBin(enu));
+}
+
 const Var k280kAWeighter([](const caf::StandardRecord *sr) -> double {
   if (sr->isFD || sr->det_x || (sr->vtx_x > 0)) {
     return 1;
   }
   // Only want to weight 'signal' numu species.
-  if ((sr->isFHC && (sr->nuPDG != 14)) ||
-      (!sr->isFHC && (sr->nuPDG != -14))) {
+  if ((sr->isFHC && (sr->nuPDG != 14)) || (!sr->isFHC && (sr->nuPDG != -14))) {
     return 1;
   }
-
-  TH1 *whist = (sr->isFHC ? numode_280kA : nubarmode_280kA);
-  return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->Ev));
+  return Get280kAWeight_numu(sr->Ev, sr->isFHC);
 });
 
 ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
@@ -219,38 +255,6 @@ ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
   }
 
   if (SRDescriptor == "OnAxis280kA") {
-    static bool first = true;
-    if (first) {
-
-      TDirectory *gdc = gDirectory;
-      TFile wf(
-          (ana::FindCAFAnaDir() + "/Systs/OnAxis4m280kAWeights.root").c_str());
-      wf.GetObject("ND_nu_HC280-HC293_ratio/LBNF_numu_flux", numode_280kA);
-      if (!numode_280kA) {
-        std::cout << "[ERROR]: Failed to read: "
-                     "\"ND_nu_HC280-HC293_ratio/LBNF_numu_flux\" from "
-                  << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
-                  << std::endl;
-        throw;
-      }
-      numode_280kA->SetDirectory(nullptr);
-
-      wf.GetObject("ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux",
-                   nubarmode_280kA);
-      if (!nubarmode_280kA) {
-        std::cout << "[ERROR]: Failed to read: "
-                     "\"ND_nubar_HC280-HC293_ratio/LBNF_numubar_flux\" from "
-                  << (ana::FindCAFAnaDir() + "/OnAxis4m280kAWeights.root")
-                  << std::endl;
-        throw;
-      }
-      nubarmode_280kA->SetDirectory(nullptr);
-      if (gdc) {
-        gdc->cd();
-      }
-      first = false;
-    }
-
     return k280kAWeighter;
   } else {
     std::cout << "[ERROR]: Unknown special run type " << SRDescriptor
@@ -323,7 +327,7 @@ std::ostream &operator<<(std::ostream &os, BeamMode const &bm) {
   return os;
 }
 std::ostream &operator<<(std::ostream &os, BeamChan const &bm) {
-  return os << "{ " << bm.mode << ", " << bm.chan << " }"; 
+  return os << "{ " << bm.mode << ", " << bm.chan << " }";
 }
 bool operator==(BeamChan const &l, BeamChan const &r) {
   return (l.mode == r.mode) && (l.chan == r.chan);

@@ -656,6 +656,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid.get()));
 
+  std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
+            << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
+
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
   if (NDComps.count(kPRISMMC)) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
