@@ -12,6 +12,7 @@
 #include "TLegend.h"
 #include "TLine.h"
 #include "TMarker.h"
+#include "TProfile.h"
 #include "TSystem.h"
 
 #include "CAFAna/Analysis/Plots.h"
@@ -162,7 +163,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
     StanConfig cfg;
     cfg.num_warmup = 1000;
-    cfg.num_samples = 10000;
+    cfg.num_samples = 2000;
     cfg.max_depth = 15;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
@@ -337,31 +338,46 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   }
 
   // show that the pulls were what we expect
-  TH1D h_fittedPulls("fitted_pulls", ";Systematic;Pull (#sigma)", shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size());
+  const Binning margBins = Binning::Simple(100, -3, 3);
+  TH2D h_fittedPulls("fitted_pulls", ";Systematic;Pull (#sigma)",
+                     shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size(),
+                     margBins.NBins(), margBins.Min(), margBins.Max());
   TH1D h_truePulls("true_pulls", ";Systematic;Pull (#sigma)", shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size());
   std::size_t systIdx = 0;
   double maxShift = 0;
   for (const auto & syst : shifts->ActiveSysts())
   {
-    h_fittedPulls.SetBinContent(++systIdx, shifts->GetShift(syst));
+    ++systIdx;
+    auto systMarginal = samples->MarginalizeTo(syst);
+    TH1D h_systMarginal = systMarginal.ToTH1(margBins);
+    for (int binIdx=0; binIdx <= h_systMarginal.GetNbinsX(); binIdx++)
+      h_fittedPulls.SetBinContent(systIdx, binIdx, h_systMarginal.GetBinContent(binIdx));
     maxShift = std::max(maxShift, std::abs(shifts->GetShift(syst)));
     h_truePulls.SetBinContent(systIdx, systTruePulls->GetShift(syst));
     maxShift = std::max(maxShift, std::abs(systTruePulls->GetShift(syst)));
-    for (auto & h : {&h_fittedPulls, &h_truePulls})
+    for (auto & h : {dynamic_cast<TH1*>(&h_fittedPulls), dynamic_cast<TH1*>(&h_truePulls)})
       h->GetXaxis()->SetBinLabel(systIdx, syst->ShortName().c_str());
   }
-  maxShift = std::max(2., 1.2*maxShift);
+  maxShift = std::max(3., 1.2*maxShift);
   h_truePulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
+  h_fittedPulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
   c.Clear();
-  h_truePulls.Draw("hist x");
-  h_fittedPulls.SetMarkerStyle(kFullCircle);
-  h_fittedPulls.Draw("p same");
+  gStyle->SetPalette(kCherry);
+  h_fittedPulls.Draw("colz");
+  h_truePulls.Draw("hist x same");
+  std::unique_ptr<TProfile> h_fittedPulls_prof(h_fittedPulls.ProfileX(ana::UniqueName().c_str(), 1, -1, "s"));
+  h_fittedPulls_prof->SetLineColor(kBlue);
+  h_fittedPulls_prof->Draw("pe same");
+  std::cout << h_fittedPulls_prof->GetBinContent(5) << std::endl;
+
   TLegend leg(0.7, 0.7, 0.9, 0.9);
-  leg.SetFillStyle(0);
+//  leg.SetFillStyle(0);
   leg.SetBorderSize(0);
   leg.AddEntry(&h_truePulls, "True", "l");
-  leg.AddEntry(&h_fittedPulls, "Fitted", "p");
+  leg.AddEntry(h_fittedPulls_prof.get(), "Fitted", "lpe");
   leg.Draw();
+
+  c.SetBottomMargin(0.3);
   c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls." + systList + ".png").c_str());
 
 }
