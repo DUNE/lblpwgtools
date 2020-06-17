@@ -268,15 +268,14 @@ void OffAxisNDCAFCombiner() {
   }
 
   bool Flipdetx = false;
-  double detx_to_m = 1E-2; //by default det_in cm
+  double detx_to_m = 1E-2; // by default det_in cm
 
   if (getenv("CAFANA_FLIP_DET_X") &&
       (std::atoi(getenv("CAFANA_FLIP_DET_X")) == 1)) {
     Flipdetx = true;
   }
 
-  if (getenv("CAFANA_DET_X_M") &&
-      (std::atoi(getenv("CAFANA_DET_X_M")) == 1)) {
+  if (getenv("CAFANA_DET_X_M") && (std::atoi(getenv("CAFANA_DET_X_M")) == 1)) {
     detx_to_m = 1;
   }
 
@@ -412,7 +411,8 @@ void OffAxisNDCAFCombiner() {
           double vtx_x_pos_m =
               vtx_min_m + pos_it * (args::step_m * average_step);
 
-          FileExposure->Fill(vtx_x_pos_m + (det_x*detx_to_m), average_step * nmeta_ents);
+          FileExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+                             average_step * nmeta_ents);
 
           if (!ana::IsInNDFV(vtx_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
                              /*Dummy z_pos_m*/ 150)) {
@@ -449,7 +449,7 @@ void OffAxisNDCAFCombiner() {
 
             bool isRightSignNumu = (args::isFHC && (nuPDG == 14)) ||
                                    (!args::isFHC && (nuPDG == -14));
-            if (args::IsSpecRun && (!det_x) && isRightSignNumu) {
+            if (args::IsSpecRun && (det_x == 0) && isRightSignNumu) {
               specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
             } else {
               specRunWght = 1;
@@ -675,7 +675,10 @@ void SayUsage(char const *argv[]) {
             << "\t-C|--recombining                              : Set this "
                "flag if this run includes files that have \n"
             << "\t                                                already been "
-               "process by this script.\n";
+               "process by this script.\n"
+            << "\t--280kA                                       : Weight on "
+               "axis events to look like a special horn current \n"
+            << "\t                                                run.\n";
 }
 
 void handleOpts(int argc, char const *argv[]) {
@@ -723,6 +726,8 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-C") ||
                (std::string(argv[opt]) == "--recombining")) {
       args::CombiningCombinedCAFs = true;
+    } else if (std::string(argv[opt]) == "--280kA") {
+      args::IsSpecRun = true;
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
