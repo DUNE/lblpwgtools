@@ -118,13 +118,13 @@ void CheckAndMergeNoSumObjects(std::map<std::string, TObject*>& a,
           match = (valsA->GetNbinsX() == valsB->GetNbinsX());
           if (match)
           {
+            std::map<std::string, double> pairsA, pairsB;
             for (int binIdx = 1; binIdx <= valsA->GetNbinsX(); binIdx++)
             {
-              // don't keep looping if any of the bins' labels or values differ
-              if ( !( match =    (strcmp(valsA->GetXaxis()->GetBinLabel(binIdx), valsB->GetXaxis()->GetBinLabel(binIdx)) == 0)
-                                 && (std::abs(valsA->GetBinContent(binIdx) - valsB->GetBinContent(binIdx)) < 1e-6) ) )
-                break;
+              pairsA[valsA->GetXaxis()->GetBinLabel(binIdx)] = valsA->GetBinContent(binIdx);
+              pairsB[valsB->GetXaxis()->GetBinLabel(binIdx)] = valsB->GetBinContent(binIdx);
             }
+            match = match && pairsA == pairsB;
           } // if (... GetNbinsX() matches)
         } // if (... valsA is non-null)
 
