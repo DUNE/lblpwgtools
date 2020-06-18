@@ -55,7 +55,7 @@ SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
 SpectrumLoader::~SpectrumLoader() {}
 
 struct CompareByID {
-  bool operator()(const Cut &a, const Cut &b) { return a.ID() < b.ID(); }
+  bool operator()(const Cut &a, const Cut &b) const { return a.ID() < b.ID(); }
 };
 
 //----------------------------------------------------------------------
@@ -144,101 +144,101 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   FloatingExceptionOnNaN fpnan(false);
 
   caf::StandardRecord sr;
-  SetBranchChecked(tr, "Ev_reco", &sr.dune.Ev_reco);
-  SetBranchChecked(tr, "Ev_reco_nue", &sr.dune.Ev_reco_nue);
-  SetBranchChecked(tr, "Ev_reco_numu", &sr.dune.Ev_reco_numu);
-  SetBranchChecked(tr, "Elep_reco", &sr.dune.Elep_reco);
-  SetBranchChecked(tr, "theta_reco", &sr.dune.theta_reco);
-  SetBranchChecked(tr, "mvaresult", &sr.dune.mvaresult);
-  SetBranchChecked(tr, "mvanue", &sr.dune.mvanue);
-  SetBranchChecked(tr, "mvanumu", &sr.dune.mvanumu);
-  SetBranchChecked(tr, "cvnnue", &sr.dune.cvnnue);
-  SetBranchChecked(tr, "cvnnumu", &sr.dune.cvnnumu);
-  SetBranchChecked(tr, "numu_pid", &sr.dune.numu_pid);
-  SetBranchChecked(tr, "nue_pid", &sr.dune.nue_pid);
-  SetBranchChecked(tr, "reco_q", &sr.dune.reco_q);
-  SetBranchChecked(tr, "RecoLepEnNue", &sr.dune.RecoLepEnNue);
-  SetBranchChecked(tr, "RecoHadEnNue", &sr.dune.RecoHadEnNue);
-  SetBranchChecked(tr, "RecoLepEnNumu", &sr.dune.RecoLepEnNumu);
-  SetBranchChecked(tr, "RecoHadEnNumu", &sr.dune.RecoHadEnNumu);
+  SetBranchChecked(tr, "Ev_reco", &sr.Ev_reco);
+  SetBranchChecked(tr, "Ev_reco_nue", &sr.Ev_reco_nue);
+  SetBranchChecked(tr, "Ev_reco_numu", &sr.Ev_reco_numu);
+  SetBranchChecked(tr, "Elep_reco", &sr.Elep_reco);
+  SetBranchChecked(tr, "theta_reco", &sr.theta_reco);
+  SetBranchChecked(tr, "mvaresult", &sr.mvaresult);
+  SetBranchChecked(tr, "mvanue", &sr.mvanue);
+  SetBranchChecked(tr, "mvanumu", &sr.mvanumu);
+  SetBranchChecked(tr, "cvnnue", &sr.cvnnue);
+  SetBranchChecked(tr, "cvnnumu", &sr.cvnnumu);
+  SetBranchChecked(tr, "numu_pid", &sr.numu_pid);
+  SetBranchChecked(tr, "nue_pid", &sr.nue_pid);
+  SetBranchChecked(tr, "reco_q", &sr.reco_q);
+  SetBranchChecked(tr, "RecoLepEnNue", &sr.RecoLepEnNue);
+  SetBranchChecked(tr, "RecoHadEnNue", &sr.RecoHadEnNue);
+  SetBranchChecked(tr, "RecoLepEnNumu", &sr.RecoLepEnNumu);
+  SetBranchChecked(tr, "RecoHadEnNumu", &sr.RecoHadEnNumu);
   // ND pseudo-reconstruction flags
-  SetBranchChecked(tr, "reco_numu", &sr.dune.reco_numu);
-  SetBranchChecked(tr, "reco_nue", &sr.dune.reco_nue);
-  SetBranchChecked(tr, "reco_nc", &sr.dune.reco_nc);
+  SetBranchChecked(tr, "reco_numu", &sr.reco_numu);
+  SetBranchChecked(tr, "reco_nue", &sr.reco_nue);
+  SetBranchChecked(tr, "reco_nc", &sr.reco_nc);
   // CW: add variables that Chris (M) wants for ND selections
-  SetBranchChecked(tr, "muon_exit", &sr.dune.muon_exit);
-  SetBranchChecked(tr, "muon_contained", &sr.dune.muon_contained);
-  SetBranchChecked(tr, "muon_ecal", &sr.dune.muon_ecal);
-  SetBranchChecked(tr, "muon_tracker", &sr.dune.muon_tracker);
-  SetBranchChecked(tr, "Ehad_veto", &sr.dune.Ehad_veto);
+  SetBranchChecked(tr, "muon_exit", &sr.muon_exit);
+  SetBranchChecked(tr, "muon_contained", &sr.muon_contained);
+  SetBranchChecked(tr, "muon_ecal", &sr.muon_ecal);
+  SetBranchChecked(tr, "muon_tracker", &sr.muon_tracker);
+  SetBranchChecked(tr, "Ehad_veto", &sr.Ehad_veto);
 
-  SetBranchChecked(tr, "Ev", &sr.dune.Ev);
-  SetBranchChecked(tr, "Elep", &sr.dune.Elep);
-  //    SetBranchChecked(tr, "ccnc", &sr.dune.ccnc);
-  SetBranchChecked(tr, "isCC", &sr.dune.isCC);
-  //    SetBranchChecked(tr, "beamPdg", &sr.dune.beamPdg);
-  //    SetBranchChecked(tr, "neu", &sr.dune.neu);
-  SetBranchChecked(tr, "nuPDG", &sr.dune.nuPDG);
-  SetBranchChecked(tr, "nuPDGunosc", &sr.dune.nuPDGunosc);
-  SetBranchChecked(tr, "LepPDG", &sr.dune.LepPDG);
-  SetBranchChecked(tr, "mode", &sr.dune.mode);
-  SetBranchChecked(tr, "nP", &sr.dune.nP);
-  SetBranchChecked(tr, "nN", &sr.dune.nN);
-  SetBranchChecked(tr, "nipi0", &sr.dune.nipi0);
-  SetBranchChecked(tr, "nipip", &sr.dune.nipip);
-  SetBranchChecked(tr, "nipim", &sr.dune.nipim);
-  SetBranchChecked(tr, "niem", &sr.dune.niem);
-  SetBranchChecked(tr, "Q2", &sr.dune.Q2);
-  SetBranchChecked(tr, "W", &sr.dune.W);
-  SetBranchChecked(tr, "Y", &sr.dune.Y);
-  SetBranchChecked(tr, "X", &sr.dune.X);
-  //    SetBranchChecked(tr, "cc", &sr.dune.cc);
-  SetBranchChecked(tr, "NuMomX", &sr.dune.NuMomX);
-  SetBranchChecked(tr, "NuMomY", &sr.dune.NuMomY);
-  SetBranchChecked(tr, "NuMomZ", &sr.dune.NuMomZ);
-  SetBranchChecked(tr, "LepMomX", &sr.dune.LepMomX);
-  SetBranchChecked(tr, "LepMomY", &sr.dune.LepMomY);
-  SetBranchChecked(tr, "LepMomZ", &sr.dune.LepMomZ);
-  SetBranchChecked(tr, "LepE", &sr.dune.LepE);
-  SetBranchChecked(tr, "LepNuAngle", &sr.dune.LepNuAngle);
+  SetBranchChecked(tr, "Ev", &sr.Ev);
+  SetBranchChecked(tr, "Elep", &sr.Elep);
+  //    SetBranchChecked(tr, "ccnc", &sr.ccnc);
+  SetBranchChecked(tr, "isCC", &sr.isCC);
+  //    SetBranchChecked(tr, "beamPdg", &sr.beamPdg);
+  //    SetBranchChecked(tr, "neu", &sr.neu);
+  SetBranchChecked(tr, "nuPDG", &sr.nuPDG);
+  SetBranchChecked(tr, "nuPDGunosc", &sr.nuPDGunosc);
+  SetBranchChecked(tr, "LepPDG", &sr.LepPDG);
+  SetBranchChecked(tr, "mode", &sr.mode);
+  SetBranchChecked(tr, "nP", &sr.nP);
+  SetBranchChecked(tr, "nN", &sr.nN);
+  SetBranchChecked(tr, "nipi0", &sr.nipi0);
+  SetBranchChecked(tr, "nipip", &sr.nipip);
+  SetBranchChecked(tr, "nipim", &sr.nipim);
+  SetBranchChecked(tr, "niem", &sr.niem);
+  SetBranchChecked(tr, "Q2", &sr.Q2);
+  SetBranchChecked(tr, "W", &sr.W);
+  SetBranchChecked(tr, "Y", &sr.Y);
+  SetBranchChecked(tr, "X", &sr.X);
+  //    SetBranchChecked(tr, "cc", &sr.cc);
+  SetBranchChecked(tr, "NuMomX", &sr.NuMomX);
+  SetBranchChecked(tr, "NuMomY", &sr.NuMomY);
+  SetBranchChecked(tr, "NuMomZ", &sr.NuMomZ);
+  SetBranchChecked(tr, "LepMomX", &sr.LepMomX);
+  SetBranchChecked(tr, "LepMomY", &sr.LepMomY);
+  SetBranchChecked(tr, "LepMomZ", &sr.LepMomZ);
+  SetBranchChecked(tr, "LepE", &sr.LepE);
+  SetBranchChecked(tr, "LepNuAngle", &sr.LepNuAngle);
 
   // Numu track containment flag
-  SetBranchChecked(tr, "LongestTrackContNumu", &sr.dune.LongestTrackContNumu);
+  SetBranchChecked(tr, "LongestTrackContNumu", &sr.LongestTrackContNumu);
 
-  SetBranchChecked(tr, "vtx_x", &sr.dune.vtx_x);
-  SetBranchChecked(tr, "vtx_y", &sr.dune.vtx_y);
-  SetBranchChecked(tr, "vtx_z", &sr.dune.vtx_z);
+  SetBranchChecked(tr, "vtx_x", &sr.vtx_x);
+  SetBranchChecked(tr, "vtx_y", &sr.vtx_y);
+  SetBranchChecked(tr, "vtx_z", &sr.vtx_z);
 
-  SetBranchChecked(tr, "det_x", &sr.dune.det_x);
+  SetBranchChecked(tr, "det_x", &sr.det_x);
 
-  SetBranchChecked(tr, "eP", &sr.dune.eP);
-  SetBranchChecked(tr, "eN", &sr.dune.eN);
-  SetBranchChecked(tr, "ePip", &sr.dune.ePip);
-  SetBranchChecked(tr, "ePim", &sr.dune.ePim);
-  SetBranchChecked(tr, "ePi0", &sr.dune.ePi0);
-  SetBranchChecked(tr, "eOther", &sr.dune.eOther);
-  SetBranchChecked(tr, "eRecoP", &sr.dune.eRecoP);
-  SetBranchChecked(tr, "eRecoN", &sr.dune.eRecoN);
-  SetBranchChecked(tr, "eRecoPip", &sr.dune.eRecoPip);
-  SetBranchChecked(tr, "eRecoPim", &sr.dune.eRecoPim);
-  SetBranchChecked(tr, "eRecoPi0", &sr.dune.eRecoPi0);
-  SetBranchChecked(tr, "eRecoOther", &sr.dune.eRecoOther);
+  SetBranchChecked(tr, "eP", &sr.eP);
+  SetBranchChecked(tr, "eN", &sr.eN);
+  SetBranchChecked(tr, "ePip", &sr.ePip);
+  SetBranchChecked(tr, "ePim", &sr.ePim);
+  SetBranchChecked(tr, "ePi0", &sr.ePi0);
+  SetBranchChecked(tr, "eOther", &sr.eOther);
+  SetBranchChecked(tr, "eRecoP", &sr.eRecoP);
+  SetBranchChecked(tr, "eRecoN", &sr.eRecoN);
+  SetBranchChecked(tr, "eRecoPip", &sr.eRecoPip);
+  SetBranchChecked(tr, "eRecoPim", &sr.eRecoPim);
+  SetBranchChecked(tr, "eRecoPi0", &sr.eRecoPi0);
+  SetBranchChecked(tr, "eRecoOther", &sr.eRecoOther);
 
-  SetBranchChecked(tr, "eDepP", &sr.dune.eDepP);
-  SetBranchChecked(tr, "eDepN", &sr.dune.eDepN);
-  SetBranchChecked(tr, "eDepPip", &sr.dune.eDepPip);
-  SetBranchChecked(tr, "eDepPim", &sr.dune.eDepPim);
-  SetBranchChecked(tr, "eDepPi0", &sr.dune.eDepPi0);
-  SetBranchChecked(tr, "eDepOther", &sr.dune.eDepOther);
+  SetBranchChecked(tr, "eDepP", &sr.eDepP);
+  SetBranchChecked(tr, "eDepN", &sr.eDepN);
+  SetBranchChecked(tr, "eDepPip", &sr.eDepPip);
+  SetBranchChecked(tr, "eDepPim", &sr.eDepPim);
+  SetBranchChecked(tr, "eDepPi0", &sr.eDepPi0);
+  SetBranchChecked(tr, "eDepOther", &sr.eDepOther);
 
-  SetBranchChecked(tr, "run", &sr.dune.run);
-  SetBranchChecked(tr, "isFD", &sr.dune.isFD);
-  SetBranchChecked(tr, "isFHC", &sr.dune.isFHC);
+  SetBranchChecked(tr, "run", &sr.run);
+  SetBranchChecked(tr, "isFD", &sr.isFD);
+  SetBranchChecked(tr, "isFHC", &sr.isFHC);
 
-  SetBranchChecked(tr, "sigma_Ev_reco", &sr.dune.sigma_Ev_reco);
-  SetBranchChecked(tr, "sigma_Elep_reco", &sr.dune.sigma_Elep_reco);
-  SetBranchChecked(tr, "sigma_numu_pid", &sr.dune.sigma_numu_pid);
-  SetBranchChecked(tr, "sigma_nue_pid", &sr.dune.sigma_nue_pid);
+  SetBranchChecked(tr, "sigma_Ev_reco", &sr.sigma_Ev_reco);
+  SetBranchChecked(tr, "sigma_Elep_reco", &sr.sigma_Elep_reco);
+  SetBranchChecked(tr, "sigma_numu_pid", &sr.sigma_numu_pid);
+  SetBranchChecked(tr, "sigma_nue_pid", &sr.sigma_nue_pid);
 
   // Get the crazy fluxes
   std::array<double, 7> crazy_tmp;
@@ -254,7 +254,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   XSSyst_cv_tmp.resize(XSSyst_names.size());
   XSSyst_size_tmp.resize(XSSyst_names.size());
 
-  sr.dune.xsSyst_wgt.resize(XSSyst_names.size());
+  sr.xsSyst_wgt.resize(XSSyst_names.size());
 
   for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
     if (!SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it],
@@ -279,36 +279,36 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     tr->GetEntry(n);
 
     // Set GENIE_ScatteringMode and eRec_FromDep
-    if (sr.dune.isFD) {
-      sr.dune.eRec_FromDep = sr.dune.eDepP + sr.dune.eDepN + sr.dune.eDepPip +
-                             sr.dune.eDepPim + sr.dune.eDepPi0 +
-                             sr.dune.eDepOther + sr.dune.LepE;
+    if (sr.isFD) {
+      sr.eRec_FromDep = sr.eDepP + sr.eDepN + sr.eDepPip +
+                        sr.eDepPim + sr.eDepPi0 +
+                        sr.eDepOther + sr.LepE;
 
-      sr.dune.GENIE_ScatteringMode =
-          ana::GetGENIEModeFromSimbMode(sr.dune.mode);
+      sr.GENIE_ScatteringMode =
+          ana::GetGENIEModeFromSimbMode(sr.mode);
     } else {
-      sr.dune.eRec_FromDep = sr.dune.eRecoP + sr.dune.eRecoN +
-                             sr.dune.eRecoPip + sr.dune.eRecoPim +
-                             sr.dune.eRecoPi0 + sr.dune.eRecoOther +
-                             sr.dune.LepE;
-      sr.dune.GENIE_ScatteringMode = sr.dune.mode;
+      sr.eRec_FromDep = sr.eRecoP + sr.eRecoN +
+                        sr.eRecoPip + sr.eRecoPim +
+                        sr.eRecoPi0 + sr.eRecoOther +
+                        sr.LepE;
+      sr.GENIE_ScatteringMode = sr.mode;
     }
 
     // Patch up isFD which isn't set properly in FD CAFs
-    if (sr.dune.isFD) {
-      if (sr.dune.isFHC != 0 && sr.dune.isFHC != 1) {
-        if (sr.dune.run == 20000001 || sr.dune.run == 20000002 ||
-            sr.dune.run == 20000003) {
-          sr.dune.isFHC = true;
+    if (sr.isFD) {
+      if (sr.isFHC != 0 && sr.isFHC != 1) {
+        if (sr.run == 20000001 || sr.run == 20000002 ||
+            sr.run == 20000003) {
+          sr.isFHC = true;
           static bool once = true;
           if (once) {
             std::cout << "\nPatching up FD file to be considered FHC"
                       << std::endl;
             once = false;
           }
-        } else if (sr.dune.run == 20000004 || sr.dune.run == 20000005 ||
-                   sr.dune.run == 20000006) {
-          sr.dune.isFHC = false;
+        } else if (sr.run == 20000004 || sr.run == 20000005 ||
+                   sr.run == 20000006) {
+          sr.isFHC = false;
           static bool once = true;
           if (once) {
             std::cout << "\nPatching up FD file to be considered RHC"
@@ -318,43 +318,43 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         } else {
           std::cout
               << "When patching FD CAF with unknown isFHC, saw unknown run "
-              << sr.dune.run << std::endl;
+              << sr.run << std::endl;
           abort();
         }
       }
     } else {
       // ND
-      if (sr.dune.isFHC == -1) {
+      if (sr.isFHC == -1) {
         // nu-on-e files
-        sr.dune.isFHC = 0;
+        sr.isFHC = 0;
         static bool once = true;
         if (once) {
           std::cout << "\nPatching up nu-on-e file to be considered FHC"
                     << std::endl;
           once = false;
         }
-      } else if (sr.dune.isFHC != 0 && sr.dune.isFHC != 1) {
-        std::cout << "isFHC not set properly in ND file: " << sr.dune.isFHC
+      } else if (sr.isFHC != 0 && sr.isFHC != 1) {
+        std::cout << "isFHC not set properly in ND file: " << sr.isFHC
                   << std::endl;
         abort();
       }
     }
 
     // Get the crazy flux info properly
-    sr.dune.wgt_CrazyFlux.resize(7);
+    sr.wgt_CrazyFlux.resize(7);
     for (int i = 0; i < 7; ++i) {
-      sr.dune.wgt_CrazyFlux[i] = crazy_tmp[i];
+      sr.wgt_CrazyFlux[i] = crazy_tmp[i];
     }
 
     // Reformat the genie systs
-    sr.dune.total_xsSyst_cv_wgt = 1;
+    sr.total_xsSyst_cv_wgt = 1;
 
     static auto AnaV = GetAnaVersion();
     if (AnaV == kV3) {
       for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
         const int Nuniv = XSSyst_tmp[syst_it].size();
         assert((Nuniv >= 0) && (Nuniv <= int(XSSyst_tmp[syst_it].size())));
-        sr.dune.xsSyst_wgt[syst_it].resize(Nuniv);
+        sr.xsSyst_wgt[syst_it].resize(Nuniv);
 
         // Do some error checking here
         if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
@@ -364,11 +364,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                     << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                     << std::endl;
         } else {
-          sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
+          sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
         }
 
         for (int u_it = 0; u_it < Nuniv; ++u_it) {
-          sr.dune.xsSyst_wgt[syst_it][u_it] = XSSyst_tmp[syst_it][u_it];
+          sr.xsSyst_wgt[syst_it][u_it] = XSSyst_tmp[syst_it][u_it];
         }
       }
     } else {
@@ -403,14 +403,14 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                       << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
                       << std::endl;
           } else {
-            sr.dune.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
+            sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
           }
         }
 
         // Copy the spline in
-        sr.dune.xsSyst_wgt[syst_it].clear();
+        sr.xsSyst_wgt[syst_it].clear();
         std::copy(XSSyst_tmp[syst_it].begin(), XSSyst_tmp[syst_it].end(),
-                  std::back_inserter(sr.dune.xsSyst_wgt[syst_it]));
+                  std::back_inserter(sr.xsSyst_wgt[syst_it]));
       }
     } // end version switch
 

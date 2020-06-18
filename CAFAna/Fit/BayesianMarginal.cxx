@@ -277,8 +277,8 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<TH1> BayesianMarginal::ToHistogram(const std::vector<Binning> & bins) const
   {
-    // idea: find the bin-averaged log-prob distribution
-    // by making the histogram weighted by LL
+    // idea: find the bin-averaged probability distribution
+    // by making the histogram weighted by exp(LL)
     // and dividing it by the simple histogram of the events
     assert(fMCMCSamples);
     assert(bins.size() == fOrderedBrNames.size());
@@ -375,7 +375,14 @@ namespace ana
       }
     }
 
+    // now exponentiate the log-probs to get probabilities
     ret->Divide(denom.get());
+    for (int binIdx = 0; binIdx < ret->GetNcells(); binIdx++)
+    {
+      // if it's *exactly* 0, this is a region where there were no samples altogether.  just leave empty
+      if (ret->GetBinContent(binIdx) != 0.0)
+        ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
+    }
 
     return ret;
   }

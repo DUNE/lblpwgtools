@@ -31,14 +31,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<SystComponentScale> SystComponentScale::LoadFrom(TDirectory* dir)
+  std::unique_ptr<SystComponentScale> SystComponentScale::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    TObjString* ptag = (TObjString*)dir->Get("type");
+    TObjString* ptag = (TObjString*)dir->Get((name+"/type").c_str());
     assert(ptag);
 
     const TString tag = ptag->GetString();
+    delete ptag;
 
-    if(tag == "DUNEXSecSyst") return DUNEXSecSyst::LoadFrom(dir);
+    if(tag == "DUNEXSecSyst") return DUNEXSecSyst::LoadFrom(dir, name);
 
     std::cerr << "Unknown SystComponentScale type '" << tag << "'" << std::endl;
     abort();

@@ -25,6 +25,7 @@
 #include "OscLib/func/OscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/func/OscCalculatorDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -99,6 +100,8 @@ namespace ana
       fCalc = std::make_unique<osc::OscCalculatorPMNSOptStan>();
     else if (dynamic_cast<osc::OscCalculatorPMNS*>(seed))
       fCalc = std::make_unique<osc::OscCalculatorPMNSStan>();
+    else if (dynamic_cast<osc::OscCalculatorDMP*>(seed))
+      fCalc = std::make_unique<osc::OscCalculatorDMPStan>();
     else
     {
       std::cerr << "Unexpected oscillation calculator type: " << DemangledTypeName(seed) << std::endl;
@@ -362,6 +365,12 @@ namespace ana
 
     if (fStanConfig.verbosity == StanConfig::Verbosity::kEverything)
       std::cout << "accumulated prob = " << logprob << std::endl;
+
+    // Stan will "recover memory" (i.e., clear the var cache)
+    // after we're done here.
+    // Invalidate the cache so that it can't be re-used.
+    fCalc->InvalidateCache();
+
     return logprob;
 
   } // StanFitter::log_prob()

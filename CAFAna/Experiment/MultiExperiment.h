@@ -35,10 +35,6 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
-    virtual void Derivative(osc::IOscCalculator* calc,
-                            const SystShifts& shift,
-                            std::unordered_map<const ISyst*, double>& dchi) const override;
-
     /// For the subexperiment \a idx, set up a mapping between systematics
     ///
     /// Each element in the vector is a pair from a "primary" systematic to a
@@ -53,8 +49,8 @@ namespace ana
                              const std::vector<std::pair<const ISyst*,
                                                          const ISyst*>>& corrs);
 
-    virtual void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     std::vector<const IChiSqExperiment*> fExpts;

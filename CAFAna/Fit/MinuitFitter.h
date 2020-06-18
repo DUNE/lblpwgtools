@@ -90,7 +90,7 @@ namespace ana
 
       /// Say whether the fit was good
       bool GetIsValid() { return this->fIsValid; }
-    
+
       /// Evaluate the log-likelihood, as required by MINUT interface
       virtual double DoEval(const double *pars) const override;
 
@@ -117,7 +117,7 @@ namespace ana
 
     protected:
       /// Stuff the parameters into the calculator and/or syst shifts object
-      void DecodePars(const double *pars) const;
+      void DecodePars(double const *pars) const;
 
       /// Concrete instance of IFitSummary for use in MinuitFitter
       class MinuitFitSummary : public IFitSummary
@@ -197,6 +197,8 @@ namespace ana
 
       mutable std::chrono::time_point<std::chrono::system_clock> fLastTP;
       mutable std::chrono::time_point<std::chrono::system_clock> fBeginTP;
+
+      mutable Verbosity fVerb;
   };
 
   // Modern C++ thinks that enum | enum == int. Make things work like we expect

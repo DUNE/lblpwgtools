@@ -93,14 +93,16 @@ namespace ana
     Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
     SpectrumStan Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
 
+    Eigen::MatrixXd getCoreMatrix() const;
+
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;
 
     OscillatableSpectrum& operator-=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator-(const OscillatableSpectrum& rhs) const;
 
-    void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir);
+    void SaveTo(TDirectory* dir, const std::string& name) const;
+    static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     // Derived classes can be trusted take care of their own construction

@@ -11,6 +11,7 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TH1D.h"
+#include "TLegend.h"
 #include "TMarker.h"
 
 #include "CAFAna/Analysis/AnalysisBinnings.h"
@@ -34,6 +35,7 @@
 #include "CAFAna/Vars/FitVars.h"
 
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/func/OscCalculatorDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -57,7 +59,9 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   std::cout << std::endl;
 
   // let's try a nice "easy" problem: numu disappearance.
-  auto calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  auto stock_calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
+  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorDMP>();
+  osc::CopyParams(stock_calc, calc.get());
 
   std::unique_ptr<ana::PredictionExtrap> pred;
   if (!loadPredFromFile)
@@ -75,13 +79,13 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   {
     // change this to suit whatever input you like
     TFile inf(predFile.c_str());
-    pred = ana::PredictionExtrap::LoadFrom(dynamic_cast<TDirectory*>(inf.Get(predName.c_str())));
+    pred = ana::PredictionExtrap::LoadFrom(&inf, predName);
   }
 
   if (savePredToFile && !loadPredFromFile)
   {
     TFile outf( predFile.c_str(), "recreate");
-    pred->SaveTo(outf.mkdir("pred"));
+    pred->SaveTo(&outf, "pred");
   }
 
   // store the default vals...
@@ -91,9 +95,27 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   // pick a few test values for some mock data...
   calc->SetTh23(test::MOCKDATA_TH23);
   calc->SetDmsq32(test::MOCKDATA_DM32);
-  ana::Spectrum spec_pred = pred->Predict(calc);
+  ana::Spectrum spec_pred = pred->Predict(calc.get());
   ana::Spectrum fakeData = spec_pred.FakeData(pot_fd);   // high-statistics fake data, i.e., Asimov
   ana::BinnedLkhdExperiment expt(pred.get(), fakeData);
+
+  // make a 'no-oscillations' spectrum to set the scale
+  calc->SetTh23(0);  // not _exactly_ no-oscillations (th13 is still nonzero) but whatever
+  ana::Spectrum spec_noosc = pred->Predict(calc.get());
+  TCanvas c;
+  auto h_noosc = spec_noosc.ToTH1(pot_fd, kRed, kSolid, ana::kPOT, ana::kBinDensity);
+  auto h_fakeData = fakeData.ToTH1(pot_fd, kBlack, kSolid, ana::kPOT, ana::kBinDensity);
+  h_noosc->Draw("hist");
+  h_noosc->GetYaxis()->SetTitle("Events / GeV");
+  h_fakeData->Draw("pe same");
+  TLegend leg(0.6, 0.6, 0.9, 0.9);
+  leg.SetFillStyle(0);
+  leg.SetBorderSize(0);
+  leg.AddEntry(h_noosc, "No oscillations", "l");
+  leg.AddEntry(h_fakeData, "Fake data", "lpe");
+  leg.Draw();
+  c.SaveAs( (workDir + "/test_stanfit_statsonly_fakeData.pdf").c_str() );
+
 
   // now put the calc back to normal
   calc->SetTh23(oldTh23);
@@ -115,7 +137,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
 
     fitter.SetStanConfig(config);
     ana::SystShifts systs;
-    fitter.Fit(calc, systs);
+    fitter.Fit(calc.get(), systs);
     samples = fitter.ExtractSamples();
 
     if (saveSamplesToFile)
@@ -130,7 +152,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
     samples = ana::MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
   }
 
-  TCanvas c;
+  c.Clear();
   ana::BayesianSurface surf = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23, 30, .3, .7,
                                                      &fitDmSq32Scaled_UniformPrior, 30, 2.2, 2.8);
   surf.Draw();
@@ -142,19 +164,30 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   marker.Draw();
   c.SaveAs( (workDir + "/test_stanfit_statsonly_surface_contour.png").c_str() );
 
+  c.Clear();
   auto marg_dm2 = samples->MarginalizeTo(&fitDmSq32Scaled_UniformPrior);
   auto bin_marg_dm2 = ana::Binning::Simple(100, 2, 3);
   auto h_marg_dm2 = marg_dm2.ToTH1(bin_marg_dm2);
-  h_marg_dm2.Draw();
+  h_marg_dm2.Draw("hist");
   c.SaveAs( (workDir + "/test_stanfit_statsonly_dm2_marg.png").c_str() );
   std::cout << "1sigma credible interval(s) for dm2:" << std::endl;
   for (const auto & range : marg_dm2.QuantileRanges(ana::Quantile::kGaussian1Sigma, bin_marg_dm2))
     std::cout << "  (" << range.first << ", " << range.second << ")" << std::endl;
 
   c.Clear();
-  fitSsqTh23_UniformPriorSsqTh23.SetValue(calc, surf.GetBestFitX());
-  fitDmSq32Scaled_UniformPrior.SetValue(calc, surf.GetBestFitY());
-  ana::DataMCComparison(fakeData, pred.get(), calc, ana::kNoShift, ana::kBinDensity);
+  auto marg_ssth23 = samples->MarginalizeTo(&fitSsqTh23_UniformPriorSsqTh23);
+  auto bin_marg_ssth23 = ana::Binning::Simple(100, 0, 1);
+  auto h_marg_ssth23 = marg_ssth23.ToTH1(bin_marg_ssth23);
+  h_marg_ssth23.Draw("hist");
+  c.SaveAs( (workDir + "/test_stanfit_statsonly_ssth23_marg.png").c_str() );
+  std::cout << "1sigma credible interval(s) for ssth23:" << std::endl;
+  for (const auto & range : marg_ssth23.QuantileRanges(ana::Quantile::kGaussian1Sigma, bin_marg_ssth23))
+    std::cout << "  (" << range.first << ", " << range.second << ")" << std::endl;
+
+  c.Clear();
+  fitSsqTh23_UniformPriorSsqTh23.SetValue(calc.get(), surf.GetBestFitX());
+  fitDmSq32Scaled_UniformPrior.SetValue(calc.get(), surf.GetBestFitY());
+  ana::DataMCComparison(fakeData, pred.get(), calc.get(), ana::kNoShift, ana::kBinDensity);
   c.SaveAs( (workDir + "test_stanfit_statsonly_bestfitpred.png").c_str() );
 
 //  tree->Scan("*");

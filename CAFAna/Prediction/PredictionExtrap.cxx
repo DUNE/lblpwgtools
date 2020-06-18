@@ -1,7 +1,10 @@
 #include "CAFAna/Prediction/PredictionExtrap.h"
 
+#include "OscLib/func/IOscCalculator.h"
+
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "Utilities/func/Stan.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -13,6 +16,36 @@ namespace ana
   PredictionExtrap::PredictionExtrap(IExtrap* extrap)
     : fExtrap(extrap)
   {
+      mNueSurv       = fExtrap->     NueSurvComponent().getCoreMatrix();
+      mAntiNueSurv   = fExtrap-> AntiNueSurvComponent().getCoreMatrix();
+      mNumuApp       = fExtrap->     NumuAppComponent().getCoreMatrix();
+      mAntiNumuApp   = fExtrap-> AntiNumuAppComponent().getCoreMatrix();
+      mTauFromE      = fExtrap->    TauFromEComponent().getCoreMatrix();
+      mAntiTauFromE  = fExtrap->AntiTauFromEComponent().getCoreMatrix();
+
+      mNueApp        = fExtrap->       NueAppComponent().getCoreMatrix();
+      mAntiNueApp    = fExtrap->   AntiNueAppComponent().getCoreMatrix();
+      mNumuSurv      = fExtrap->     NumuSurvComponent().getCoreMatrix();
+      mAntiNumuSurv  = fExtrap-> AntiNumuSurvComponent().getCoreMatrix();
+      mTauFromMu     = fExtrap->    TauFromMuComponent().getCoreMatrix();
+      mAntiTauFromMu = fExtrap->AntiTauFromMuComponent().getCoreMatrix();
+
+      nbinsx = fExtrap->NCComponent().GetBinnings()[0].NBins();
+
+      vNC     = fExtrap->    NCComponent().ToEigenVectorXd();
+      potNueSurv       = fExtrap->     NueSurvComponent().POT();
+      potAntiNueSurv   = fExtrap-> AntiNueSurvComponent().POT();
+      potNumuApp       = fExtrap->     NumuAppComponent().POT();
+      potAntiNumuApp   = fExtrap-> AntiNumuAppComponent().POT();
+      potTauFromE      = fExtrap->    TauFromEComponent().POT();
+      potAntiTauFromE  = fExtrap->AntiTauFromEComponent().POT();
+
+      potNueApp        = fExtrap->       NueAppComponent().POT();
+      potAntiNueApp    = fExtrap->   AntiNueAppComponent().POT();
+      potNumuSurv      = fExtrap->     NumuSurvComponent().POT();
+      potAntiNumuSurv  = fExtrap-> AntiNumuSurvComponent().POT();
+      potTauFromMu     = fExtrap->    TauFromMuComponent().POT();
+      potAntiTauFromMu = fExtrap->AntiTauFromMuComponent().POT();
   }
 
   //----------------------------------------------------------------------
@@ -47,35 +80,40 @@ namespace ana
                                         Current::Current_t curr,
                                         Sign::Sign_t sign) const
   {
-    U ret = fExtrap->NCComponent(); // Get binning
-    ret.Clear();
+    using VectorXT = Eigen::Matrix<T,Eigen::Dynamic,1>;
+    VectorXT ret = VectorXT::Zero(nbinsx+2);
+    double POT = fExtrap->NCComponent().POT();
 
     if(curr & Current::kCC){
-      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
-      if(flav & Flavors::kNuEToNuE    && sign & Sign::kAntiNu) ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
+      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     ret += OscillatedEigen(calc, mNueSurv,        +12, +12, POT, potNueSurv      );
+      if(flav & Flavors::kNuEToNuE    && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiNueSurv,    -12, -12, POT, potAntiNueSurv  );
 
-      if(flav & Flavors::kNuEToNuMu   && sign & Sign::kNu)     ret += fExtrap->NumuAppComponent().    Oscillated(calc, +12, +14);
-      if(flav & Flavors::kNuEToNuMu   && sign & Sign::kAntiNu) ret += fExtrap->AntiNumuAppComponent().Oscillated(calc, -12, -14);
+      if(flav & Flavors::kNuEToNuMu   && sign & Sign::kNu)     ret += OscillatedEigen(calc, mNumuApp,        +12, +14, POT, potNumuApp      );
+      if(flav & Flavors::kNuEToNuMu   && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiNumuApp,    -12, -14, POT, potAntiNumuApp  );
 
-      if(flav & Flavors::kNuEToNuTau  && sign & Sign::kNu)     ret += fExtrap->TauFromEComponent().    Oscillated(calc, +12, +16);
-      if(flav & Flavors::kNuEToNuTau  && sign & Sign::kAntiNu) ret += fExtrap->AntiTauFromEComponent().Oscillated(calc, -12, -16);
+      if(flav & Flavors::kNuEToNuTau  && sign & Sign::kNu)     ret += OscillatedEigen(calc, mTauFromE,       +12, +16, POT, potTauFromE     );
+      if(flav & Flavors::kNuEToNuTau  && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiTauFromE,   -12, -16, POT, potAntiTauFromE );
 
-      if(flav & Flavors::kNuMuToNuE   && sign & Sign::kNu)     ret += fExtrap->NueAppComponent().    Oscillated(calc, +14, +12);
-      if(flav & Flavors::kNuMuToNuE   && sign & Sign::kAntiNu) ret += fExtrap->AntiNueAppComponent().Oscillated(calc, -14, -12);
+      if(flav & Flavors::kNuMuToNuE   && sign & Sign::kNu)     ret += OscillatedEigen(calc, mNueApp,         +14, +12, POT, potNueApp       );
+      if(flav & Flavors::kNuMuToNuE   && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiNueApp,     -14, -12, POT, potAntiNueApp   );
 
-      if(flav & Flavors::kNuMuToNuMu  && sign & Sign::kNu)     ret += fExtrap->NumuSurvComponent().    Oscillated(calc, +14, +14);
-      if(flav & Flavors::kNuMuToNuMu  && sign & Sign::kAntiNu) ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -14);
+      if(flav & Flavors::kNuMuToNuMu  && sign & Sign::kNu)     ret += OscillatedEigen(calc, mNumuSurv,       +14, +14, POT, potNumuSurv     );
+      if(flav & Flavors::kNuMuToNuMu  && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiNumuSurv,   -14, -14, POT, potAntiNumuSurv );
 
-      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kNu)     ret += fExtrap->TauFromMuComponent().    Oscillated(calc, +14, +16);
-      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kAntiNu) ret += fExtrap->AntiTauFromMuComponent().Oscillated(calc, -14, -16);
+      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kNu)     ret += OscillatedEigen(calc, mTauFromMu,      +14, +16, POT, potTauFromMu    );
+      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kAntiNu) ret += OscillatedEigen(calc, mAntiTauFromMu,  -14, -16, POT, potAntiTauFromMu);
     }
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
 
-      ret += fExtrap->NCComponent();
+      ret += this->vNC;
     }
 
-    return ret;
+    return U(ret,
+             fExtrap->NCComponent().GetLabels()[0],
+             fExtrap->NCComponent().GetBinnings()[0],
+             fExtrap->NCComponent().POT(),
+             fExtrap->NCComponent().Livetime());
   }
 
   //----------------------------------------------------------------------
@@ -130,25 +168,43 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionExtrap::SaveTo(TDirectory* dir) const
+  void PredictionExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionExtrap").Write("type");
 
-    fExtrap->SaveTo(dir->mkdir("extrap"));
+    fExtrap->SaveTo(dir, "extrap");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionExtrap> PredictionExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionExtrap> PredictionExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    assert(dir->GetDirectory("extrap"));
-    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir->GetDirectory("extrap")).release();
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
+    delete dir;
 
     return std::unique_ptr<PredictionExtrap>(new PredictionExtrap(extrap));
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  Eigen::Matrix<T,Eigen::Dynamic,1> PredictionExtrap::OscillatedEigen(osc::_IOscCalculator<T> * calc,
+						const Eigen::MatrixXd & m,
+						int from, 
+						int to, 
+						double POT,
+						double fPOT) const {
+    return m * calc->P(from, to, kTrueEnergyBinCenters)* POT / fPOT;
   }
 }

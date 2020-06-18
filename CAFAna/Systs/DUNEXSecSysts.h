@@ -53,7 +53,7 @@ namespace ana
 
   EVALORCategory GetVALORCategory(const caf::StandardRecord* sr);
 
-  const Var kVALORCategory({}, GetVALORCategory);
+  const Var kVALORCategory(GetVALORCategory);
 
   /// Warning, these aren't orthogonal. Need to include DUNEXSecCorrelation in
   /// the fit (which gives MINUIT a seizure) for correctness. You may well want
@@ -61,8 +61,8 @@ namespace ana
   class DUNEXSecSyst: public SystComponentScale
   {
   public:
-    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const override;
+    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir, const std::string& name);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
   protected:
     friend const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory);
     DUNEXSecSyst(EVALORCategory cat);

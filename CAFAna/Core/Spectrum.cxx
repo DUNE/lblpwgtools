@@ -86,6 +86,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum::Spectrum(Eigen::VectorXd h,
+                     const std::string & labels,
+                     const Binning& bins,
+                     double pot, double livetime)
+    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+  {
+    std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
+    hist->Set(h.size(), h.data());
+    fHist = Hist::Adopt(std::move(hist), bins);
+  }
+
+  //----------------------------------------------------------------------
   Spectrum::Spectrum(TH1* h,
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
@@ -500,6 +512,25 @@ namespace ana
     return ret;
   }
 
+ //----------------------------------------------------------------------
+  Eigen::VectorXd Spectrum::ToEigenVectorXd(double exposure, EExposureType expotype,
+					    EBinType bintype) const
+  {
+    // this is slower than intended since ToTH1() makes a copy.
+    // can optimize if it becomes a hot spot
+    TH1D * h = fHist.ToTH1();
+    Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
+                                                        h->GetNbinsX()+2);
+    if(exposure > 0)
+    {
+      if(expotype == kPOT)
+        return ret * exposure / fPOT;
+      else
+        return ret * exposure / fLivetime;
+    }
+    return ret;
+  }
+
   //----------------------------------------------------------------------
   TH1* Spectrum::ToTHX(double exposure, bool force1D, EExposureType expotype) const
   {
@@ -751,9 +782,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Spectrum::SaveTo(TDirectory* dir) const
+  void Spectrum::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("Spectrum").Write("type");
@@ -768,15 +801,21 @@ namespace ana
 
     for(unsigned int i = 0; i < fBins.size(); ++i){
       TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir->mkdir(TString::Format("bins%d", i)));
+      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<Spectrum> Spectrum::LoadFrom(TDirectory* dir)
+  std::unique_ptr<Spectrum> Spectrum::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     DontAddDirectory guard;
 
     TObjString* tag = (TObjString*)dir->Get("type");
@@ -792,12 +831,13 @@ namespace ana
     std::vector<std::string> labels;
     std::vector<Binning> bins;
     for(int i = 0; ; ++i){
-      TDirectory* subdir = dir->GetDirectory(TString::Format("bins%d", i));
+      const std::string subname = TString::Format("bins%d", i).Data();
+      TDirectory* subdir = dir->GetDirectory(subname.c_str());
       if(!subdir) break;
-      bins.push_back(*Binning::LoadFrom(subdir));
+      delete subdir;
+      bins.push_back(*Binning::LoadFrom(dir, subname));
       TObjString* label = (TObjString*)dir->Get(TString::Format("label%d", i));
       labels.push_back(label ? label->GetString().Data() : "");
-      delete subdir;
       delete label;
     }
 
@@ -821,6 +861,8 @@ namespace ana
 
     delete hPot;
     delete hLivetime;
+
+    delete dir;
 
     return ret;
   }

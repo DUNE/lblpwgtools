@@ -32,9 +32,9 @@ namespace ana
                          double& weight) const
   {
     // Is ND
-    if(!sr->dune.isFD) {
+    if(!sr->isFD) {
       // CC event selection but is NC
-      if((sr->dune.reco_numu || sr->dune.reco_nue) && (sr->dune.muon_contained || sr->dune.muon_tracker) && (sr->dune.reco_q == -1 || sr->dune.reco_q == 1) && sr->dune.Ehad_veto<30 && !sr->dune.isCC) {
+      if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && (sr->reco_q == -1 || sr->reco_q == 1) && sr->Ehad_veto<30 && !sr->isCC) {
         weight *= 1 + .2*sigma;
       }
     }
@@ -50,7 +50,7 @@ namespace ana
     const double m_mu = 0.105658;
     if (!fHist) {
       #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-      TFile f("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+      TFile f("/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
       #else
       TFile f((FindCAFAnaDir()+"/Systs/ND_eff_syst.root").c_str());
       #endif
@@ -60,9 +60,9 @@ namespace ana
     }
 
     // Is ND and is a true numu CC event
-    if (!sr->dune.isFD && sr->dune.isCC && abs(sr->dune.nuPDG) == 14) {
-      double LepE = sr->dune.LepE;
-      int bin = fHist->FindBin(sqrt(LepE*LepE - m_mu*m_mu) * cos(sr->dune.LepNuAngle), sqrt(LepE*LepE - m_mu*m_mu) * sin(sr->dune.LepNuAngle));
+    if (!sr->isFD && sr->isCC && abs(sr->nuPDG) == 14) {
+      double LepE = sr->LepE;
+      int bin = fHist->FindBin(sqrt(LepE*LepE - m_mu*m_mu) * cos(sr->LepNuAngle), sqrt(LepE*LepE - m_mu*m_mu) * sin(sr->LepNuAngle));
       double w = fHist->GetBinContent(bin);
       weight *= 1. + w*sigma;
     }
@@ -77,7 +77,7 @@ namespace ana
     // Load hist if it hasn't been loaded already
     if (!fHist) {
       #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-      TFile f("/dune/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
+      TFile f("/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
       #else
       TFile f((FindCAFAnaDir()+"/Systs/ND_eff_syst.root").c_str());
       #endif
@@ -87,8 +87,8 @@ namespace ana
     }
 
     // Is ND
-    if (!sr->dune.isFD) {
-      double HadE = sr->dune.Ev - sr->dune.LepE;
+    if (!sr->isFD) {
+      double HadE = sr->Ev - sr->LepE;
       if (HadE > 5.) {
         HadE = 5.;
       }

@@ -75,8 +75,8 @@ namespace ana
     Spectrum PredictCategory(osc::IOscCalculator* osc,
                              const SystComponentScale* syst) const;
 
-    static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir) const override;
+    static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir, const std::string& name);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
 
   protected:
     PredictionScaleComp(const IPrediction* total,

@@ -68,26 +68,35 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionNoExtrap::SaveTo(TDirectory* dir) const
+  void PredictionNoExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionNoExtrap").Write("type");
 
-    fExtrap->SaveTo(dir->mkdir("extrap"));
+    fExtrap->SaveTo(dir, "extrap");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionNoExtrap> PredictionNoExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionNoExtrap> PredictionNoExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    assert(dir->GetDirectory("extrap"));
-    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir->GetDirectory("extrap")).release();
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
     PredictionExtrap* pred = new PredictionExtrap(extrap);
+
+    delete dir;
+
     return std::unique_ptr<PredictionNoExtrap>(new PredictionNoExtrap(pred));
   }
 

@@ -5,7 +5,6 @@ set(StandardRecord_implementation_files
 )
 
 set(StandardRecord_header_files
-    ${SRC_ROOT_PARENT}/StandardRecord/SRDune.h
     ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
 )
 
@@ -26,12 +25,14 @@ set(OscLib_implementation_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorGeneral.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNSOpt.cxx
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorDMP.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS_CPT.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS_NSI.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterile.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterileBeam.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNSOpt.cxx
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_DMP.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_NSI.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_Sterile.cxx
 )
@@ -44,13 +45,16 @@ set(OscLib_header_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorGeneral.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNSOpt.h
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorDMP.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS_CPT.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS_NSI.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterile.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorSterileBeam.h
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscParameters.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNSOpt.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_NSI.h
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_DMP.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/PMNS_Sterile.h
 )
 

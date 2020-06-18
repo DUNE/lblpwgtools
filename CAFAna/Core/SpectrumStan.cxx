@@ -36,6 +36,7 @@ namespace ana
     binContents.clear();
   }
 
+
   //----------------------------------------------------------------------
   SpectrumStan::SpectrumStan(double * binContents,
                              const std::vector<std::string>& labels,
@@ -53,6 +54,20 @@ namespace ana
     for (int binIdx = 0; binIdx < bins[0].NBins()+2; binIdx++)
       fBinContents.emplace_back(binContents[binIdx]);
   }
+
+  //----------------------------------------------------------------------
+  SpectrumStan::SpectrumStan(const Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>& h,
+                             const std::string& labels,
+                             const Binning& bins,
+                             double pot, double livetime)
+    : fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+  {
+    assert(h.rows() == bins.NBins()+2);
+    fBinContents.reserve(bins.NBins()+2);
+    for (int binIdx = 0; binIdx < bins.NBins()+2; binIdx++)
+      fBinContents.emplace_back(h[binIdx]);
+  }
+
 
   //----------------------------------------------------------------------
   SpectrumStan::SpectrumStan(const SpectrumStan &rhs)
@@ -232,5 +247,6 @@ namespace ana
               << rhs.fPOT << " " << rhs.fLivetime << std::endl;
     abort();
   }
+
 
 }

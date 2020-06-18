@@ -226,31 +226,45 @@ template double SystShifts::Clamp<double>(const double&, const ISyst*);
 template stan::math::var SystShifts::Clamp<stan::math::var>(const stan::math::var&, const ISyst*);
 
 //----------------------------------------------------------------------
-void SystShifts::SaveTo(TDirectory* dir) const
+void SystShifts::SaveTo(TDirectory* dir, const std::string& name) const
 {
   TDirectory* tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
+
   TObjString("SystShifts").Write("type");
 
   // Don't write any histogram for the nominal case
   if(!fSystsDbl.empty()){
     TH1D h("", "", fSystsDbl.size(), 0, fSystsDbl.size());
     int ibin = 0;
-    for(auto it: fSystsDbl){
+    // do this deterministically.  the ordering in the map may otherwise differ because pointers are allocated dynamically
+    std::vector<std::pair<std::string, const ISyst*>> systs;
+    std::transform(fSystsDbl.begin(), fSystsDbl.end(), std::back_inserter(systs),
+                   [](const auto & pair){ return std::make_pair(pair.first->ShortName(), pair.first); });
+    std::sort(systs.begin(), systs.end(),
+              [](const auto & pairA, const auto & pairB) { return pairA.first < pairB.first; } );
+    for(const auto& systPair: systs){
       ++ibin;
-      h.GetXaxis()->SetBinLabel(ibin, it.first->ShortName().c_str());
-      h.SetBinContent(ibin, it.second);
+      h.GetXaxis()->SetBinLabel(ibin, systPair.first.c_str());
+      h.SetBinContent(ibin, fSystsDbl.at(systPair.second));
     }
     h.Write("vals");
   }
+
+  dir->Write();
+  delete dir;
 
   tmp->cd();
 }
 
 //----------------------------------------------------------------------
-std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
+std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir, const std::string& name)
 {
+  dir = dir->GetDirectory(name.c_str()); // switch to subdir
+  assert(dir);
+
   TObjString* tag = (TObjString*)dir->Get("type");
   assert(tag);
   assert(tag->GetString() == "SystShifts");
@@ -265,8 +279,30 @@ std::unique_ptr<SystShifts> SystShifts::LoadFrom(TDirectory* dir)
     }
   }
 
+  delete dir;
+
   return ret;
 }
 
 
+  //----------------------------------------------------------------------
+  std::unique_ptr<SystShifts> GaussianPriorSystShifts::Copy() const
+  {
+    return std::make_unique<GaussianPriorSystShifts>(*this);
+  }
+
+  //----------------------------------------------------------------------
+  stan::math::var GaussianPriorSystShifts::LogPrior() const
+  {
+    stan::math::var ret = 0;
+    // Systematics are all expressed in terms of sigmas
+    for(auto it: fSystsStan) ret += it.second * it.second;
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  stan::math::var GaussianPriorSystShifts::Prior() const
+  {
+    return exp(LogPrior());
+  }
 } // namespace ana

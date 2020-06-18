@@ -12,7 +12,7 @@ namespace ana
   class FitTheta13: virtual public IFitVar
   {
   public:
-      FitTheta13() : IFitVar("th13", "#theta_{13}") {};
+    FitTheta13() : IFitVar("th13", "#theta_{13}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
   };
@@ -26,13 +26,13 @@ namespace ana
   class FitSinSq2Theta13: virtual public IConstrainedFitVar
   {
   public:
-      FitSinSq2Theta13() : IConstrainedFitVar("ss2th13", "sin^{2}2#theta_{13}") {};
+    FitSinSq2Theta13() : IConstrainedFitVar("ss2th13", "sin^{2}2#theta_{13}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
-    double LowLimit() const override {return 0;}
-    double HighLimit() const override {return 1;}
-  };
+  double LowLimit() const override { return 0; }
+  double HighLimit() const override { return 1; }
+};
 
   /// \f$ \sin^22\theta_{13} \f$
   extern const FitSinSq2Theta13 kFitSinSq2Theta13;
@@ -79,9 +79,9 @@ namespace ana
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
     void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
 
-    double LowLimit() const override {return 0;}
-    double HighLimit() const override {return 1;}
-  };
+    double LowLimit() const override { return 0; }
+    double HighLimit() const override { return 1; }
+};
 
   /// \f$ \sin^2\theta_{23} \f$
   extern const FitSinSqTheta23 kFitSinSqTheta23;
@@ -95,8 +95,8 @@ namespace ana
           : StanFitSupport<IConstrainedFitVar>("ssth23_lower", "sin^{2}#theta_{23}")
       {}
 
-      double LowLimit() const override {return 0;}
-      double HighLimit() const override {return 0.5;}
+      double LowLimit() const override { return 0; }
+      double HighLimit() const override { return 0.5; }
   };
 
   /// \f$ \sin^2\theta_{23} \f$ constrained to lower octant
@@ -156,8 +156,8 @@ namespace ana
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
 
-    double LowLimit() const override {return 0;}
-    double HighLimit() const override {return 1;}
+    double LowLimit() const override { return 0; }
+    double HighLimit() const override { return 1; }
   };
 
   /// \f$ \sin^22\theta_{23} \f$
@@ -175,8 +175,8 @@ namespace ana
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    double LowLimit() const override {return -1;}
-    double HighLimit() const override {return +1;}
+    double LowLimit() const override { return -1; }
+    double HighLimit() const override { return +1; }
   };
 
   /// \f$ \Delta m^2_{32} \f$
@@ -201,8 +201,8 @@ namespace ana
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    double LowLimit() const override {return -1000;}
-    double HighLimit() const override {return +1000;}
+    double LowLimit() const override { return -1000; }
+    double HighLimit() const override { return +1000; }
   };
 
   /// \f$ \Delta m^2_{32}\times10^3{\rm eV}^2 \f$
@@ -220,7 +220,7 @@ namespace ana
       {}
 
       // "1eV^2 splitting should be enough for anyone"
-      double LowLimit() const override {return 0;}
+      double LowLimit() const override { return 0; }
   };
 
   /// \f$ \Delta m^2_{32} constrained to normal hierarchy \f$
@@ -237,7 +237,7 @@ namespace ana
                                                "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
 
-      double HighLimit() const override {return 0;}
+      double HighLimit() const override { return 0; }
   };
 
   /// \f$ \Delta m^2_{32} constrained to inverted hierarchy \f$
@@ -252,8 +252,8 @@ namespace ana
     FitTanSqTheta12() : IConstrainedFitVar("tsth12", "tan^{2}#theta_{12}") {};
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
-    double LowLimit() const override {return 0;}
-    double HighLimit() const override {return std::numeric_limits<double>::max();}
+    double LowLimit() const override { return 0; }
+    double HighLimit() const override { return std::numeric_limits<double>::max(); }
   };
 
   /// \f$ \tan^2\theta_{12} \f$
@@ -269,8 +269,8 @@ namespace ana
     double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
     void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
 
-    double LowLimit() const override {return 0;}
-    double HighLimit() const override {return 1;}
+    double LowLimit() const override { return 0; }
+    double HighLimit() const override { return 1; }
   };
 
   /// \f$ \sin^22\theta_{12} \f$
@@ -289,8 +289,8 @@ namespace ana
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    double LowLimit() const override {return -1;}
-    double HighLimit() const override {return +1;}
+    double LowLimit() const override { return -1; }
+    double HighLimit() const override { return +1; }
   };
 
   /// \f$ \Delta m^2_{21} \f$
@@ -307,8 +307,8 @@ namespace ana
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalculatorPMNS freaks out at large splittings
-    double LowLimit() const override {return -1e5;}
-    double HighLimit() const override {return +1e5;}
+    double LowLimit() const override { return -1e5; }
+    double HighLimit() const override { return +1e5; }
   };
 
   /// \f$ \Delta m^2_{21} \f$
@@ -334,6 +334,4 @@ namespace ana
 
   //----------------------------------------------------------------------
 
-
-
-} // namespace
+} // namespace ana
