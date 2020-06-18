@@ -146,6 +146,7 @@ double step_m = 0.25;
 bool isFHC = false;
 bool IsSpecRun = false;
 size_t NMaxEvents = std::numeric_limits<size_t>::max();
+size_t NMaxFiles = std::numeric_limits<size_t>::max();
 size_t NSkip = 0;
 } // namespace args
 
@@ -255,7 +256,7 @@ void OffAxisNDCAFCombiner() {
     OffAxisWeightFriend->Branch("perFile", &perFile, "perFile/D");
     OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
     OffAxisWeightFriend->Branch("specRunWght", &specRunWght, "specRunWght/D");
-    OffAxisWeightFriend->Branch("specRunId", &specRunId, "specRunId/D");
+    OffAxisWeightFriend->Branch("specRunId", &specRunId, "specRunId/I");
     OffAxisWeightFriend->SetDirectory(nullptr);
 
     FileSummaryTree = new TTree("FileSummaryTree", "");
@@ -502,6 +503,15 @@ void OffAxisNDCAFCombiner() {
             ->Add((dir + file_name).c_str());
         static_cast<TChain *>(FileSummaryTree)->Add((dir + file_name).c_str());
       }
+
+      if (fctr >= NMaxFiles) {
+        std::cout << "[INFO]: Only processing " << NMaxFiles << " files."
+                  << std::endl;
+        break;
+      }
+    }
+    if (fctr >= NMaxFiles) {
+      break;
     }
   }
 
@@ -596,7 +606,6 @@ void OffAxisNDCAFCombiner() {
       }
       preselprog.Done();
     } else {
-      std::cout << "[INFO]: Copying caf tree..." << std::endl;
       treecopy = caf->CloneTree(-1, "fast");
     }
 
@@ -726,6 +735,8 @@ void SayUsage(char const *argv[]) {
                "first <n> events from the input chain.\n"
             << "\t-n|--nmax <n>                                 : Process at "
                "most <n> events from the input chain.\n"
+            << "\t-N|--nmaxfiles <n>                            : Process at "
+               "most <n> files from the input descriptor.\n"
             << "\t-C|--recombining                              : Set this "
                "flag if this run includes files that have \n"
             << "\t                                                already been "
@@ -777,6 +788,9 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--nmax")) {
       args::NMaxEvents = fhicl::string_parsers::str2T<size_t>(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-N") ||
+               (std::string(argv[opt]) == "--nmaxfiles")) {
+      args::NMaxFiles = fhicl::string_parsers::str2T<size_t>(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-C") ||
                (std::string(argv[opt]) == "--recombining")) {
       args::CombiningCombinedCAFs = true;
