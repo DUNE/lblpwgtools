@@ -140,9 +140,9 @@ bool CombiningCombinedCAFs = false;
 std::string cafTreeName = "cafTree";
 bool preSelect = false;
 bool justDoSummaryTree = false;
-double min_m = -4;
-double max_m = 40;
-double step_m = 0.25;
+double min_cm = -4;
+double max_cm = 40;
+double step_cm = 0.25;
 bool isFHC = false;
 bool IsSpecRun = false;
 size_t NMaxEvents = std::numeric_limits<size_t>::max();
@@ -207,21 +207,21 @@ void OffAxisNDCAFCombiner() {
     return;
   }
 
-  double offset_m = 0; // (args::step_m / 2.0)
-  size_t NStep = (args::max_m - args::min_m) / args::step_m;
+  double offset_cm = 0; // (args::step_cm / 2.0)
+  size_t NStep = (args::max_cm - args::min_cm) / args::step_cm;
 
   TH1D *POTExposure =
-      new TH1D("POTExposure", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               args::min_m - offset_m, args::max_m - offset_m);
+      new TH1D("POTExposure", ";OffAxisPosition (cm);Exposure (POT)", NStep,
+               args::min_cm - offset_cm, args::max_cm - offset_cm);
   POTExposure->SetDirectory(nullptr);
   TH2D *POTExposure_stop =
-      new TH2D("POTExposure_stop", ";OffAxisPosition (m);Exposure (POT)", NStep,
-               args::min_m - offset_m, args::max_m - offset_m, NStep,
-               args::min_m - offset_m, args::max_m - offset_m);
+      new TH2D("POTExposure_stop", ";OffAxisPosition (cm);Exposure (POT)",
+               NStep, args::min_cm - offset_cm, args::max_cm - offset_cm, NStep,
+               args::min_cm - offset_cm, args::max_cm - offset_cm);
   POTExposure_stop->SetDirectory(nullptr);
   TH1D *FileExposure =
-      new TH1D("FileExposure", ";OffAxisPosition (m);Exposure (NFiles)", NStep,
-               args::min_m - offset_m, args::max_m - offset_m);
+      new TH1D("FileExposure", ";OffAxisPosition (cm);Exposure (NFiles)", NStep,
+               args::min_cm - offset_cm, args::max_cm - offset_cm);
   FileExposure->SetDirectory(nullptr);
 
   TChain *caf = new TChain(args::cafTreeName.c_str());
@@ -420,30 +420,30 @@ void OffAxisNDCAFCombiner() {
         }
         det_x_files[file_det_x]++;
 
-        double vtx_min_m = -3;
-        double vtx_max_m = 3;
-        double average_step = 1E-6;
+        double vtx_min_cm = -300;
+        double vtx_max_cm = 300;
+        double average_step = 1E-4;
         size_t vtx_steps =
-            (vtx_max_m - vtx_min_m) / (args::step_m * average_step);
+            (vtx_max_cm - vtx_min_cm) / (args::step_cm * average_step);
 
         for (size_t pos_it = 0; pos_it < vtx_steps; ++pos_it) {
-          double vtx_x_pos_m =
-              vtx_min_m + pos_it * (args::step_m * average_step);
+          double vtx_x_pos_cm =
+              vtx_min_cm + pos_it * (args::step_cm * average_step);
 
-          if (!ana::IsInNDFV(vtx_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
+          if (!ana::IsInNDFV(vtx_x_pos_cm, /*Dummy y_pos_m*/ 0,
                              /*Dummy z_pos_m*/ 150)) {
             // std::cout << "out of FV: " << (det_x_pos_m + (det_x * detx_to_m))
             // << std::endl;
             continue;
           }
 
-          FileExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+          FileExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
                              average_step * nmeta_ents);
 
-          POTExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+          POTExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
                             average_step * file_pot);
-          POTExposure_stop->Fill(vtx_x_pos_m + (det_x * detx_to_m),
-                                 (det_x * detx_to_m), average_step * file_pot);
+          POTExposure_stop->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
+                                 (det_x * detx_to_m * 1E2), average_step * file_pot);
         }
 
         if (!args::CombiningCombinedCAFs) {
@@ -665,7 +665,7 @@ void OffAxisNDCAFCombiner() {
         treecopy->GetEntry(ent_it);
 
         double nfiles = FileExposure->GetBinContent(
-            FileExposure->FindFixBin((det_x * detx_to_m) + vtx_x));
+            FileExposure->FindFixBin((det_x * detx_to_m * 1E2) + vtx_x));
 
         perFile = 1.0 / nfiles;
         OffAxisWeightFriendcopy->Fill();
@@ -779,9 +779,9 @@ void handleOpts(int argc, char const *argv[]) {
 
       std::vector<double> range = fhicl::string_parsers::ParseToVect<double>(
           argv[++opt], ",", false, true);
-      args::min_m = range[0];
-      args::max_m = range[1];
-      args::step_m = range[2];
+      args::min_cm = range[0];
+      args::max_cm = range[1];
+      args::step_cm = range[2];
 
     } else if ((std::string(argv[opt]) == "-f") ||
                (std::string(argv[opt]) == "--nu-mode")) {
