@@ -469,11 +469,11 @@ void OffAxisNDCAFCombiner() {
                                    (!args::isFHC && (nuPDG == -14));
             if (args::IsSpecRun && (det_x == 0) && isRightSignNumu) {
               specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
-              specRunId = 280;
             } else {
               specRunWght = 1;
-              specRunId = 0;
             }
+
+            specRunId = args::IsSpecRun ? 280 : 0;
 
             EventPOTEventFiles.emplace_back(det_x, perPOT,
                                             SliceMassCorrector.GetWeight(vtx_x),
@@ -541,53 +541,64 @@ void OffAxisNDCAFCombiner() {
     caf->SetBranchAddress("vtx_y", &vtx_y);
     caf->SetBranchAddress("vtx_z", &vtx_z);
     caf->SetBranchAddress("det_x", &det_x);
-    TTree *treecopy = caf->CloneTree(0, "");
-    treecopy->SetName("cafTree");
+    TTree *treecopy = nullptr;
 
-    size_t nents = caf->GetEntries();
-    ana::Progress preselprog("Copy with selection progress.");
+    bool cannotfast =
+        (args::NSkip) || (Flipdetx) ||
+        (args::NMaxEvents != std::numeric_limits<size_t>::max()) ||
+        args::preSelect;
 
-    size_t file_it = 0;
+    if (cannotfast) {
+      treecopy = caf->CloneTree(0, "");
+      treecopy->SetName("cafTree");
 
-    for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
-      if (ent_it && !(ent_it % 10000)) {
-        preselprog.SetProgress(double(ent_it) / double(nents));
-      }
+      size_t nents = caf->GetEntries();
+      ana::Progress preselprog("Copy with selection progress.");
 
-      // Into the next file, start skipping if needs be
-      if (ent_it == FileBoundaries[file_it + 1]) {
-        file_it++;
-
-        if (loud) {
-          std::cout << "--At entry: " << ent_it
-                    << " which corresponds to the start of file: " << file_it
-                    << "." << std::endl;
+      size_t file_it = 0;
+      for (size_t ent_it = 0; ent_it < nents; ++ent_it) {
+        if (ent_it && !(ent_it % 10000)) {
+          preselprog.SetProgress(double(ent_it) / double(nents));
         }
-      }
 
-      if ((ent_it - FileBoundaries[file_it]) <
-          args::NSkip) { // Skip the same ones that we skipped when building
-                         // the friend tree
-        continue;
-      }
+        // Into the next file, start skipping if needs be
+        if (ent_it == FileBoundaries[file_it + 1]) {
+          file_it++;
 
-      if ((ent_it - FileBoundaries[file_it]) >=
-          args::NMaxEvents) { // Skip the same ones that we skipped when
-                              // building
-                              // the friend tree
-        continue;
-      }
+          if (loud) {
+            std::cout << "--At entry: " << ent_it
+                      << " which corresponds to the start of file: " << file_it
+                      << "." << std::endl;
+          }
+        }
 
-      caf->GetEntry(ent_it);
-      if (Flipdetx) {
-        det_x = -det_x;
+        if ((ent_it - FileBoundaries[file_it]) <
+            args::NSkip) { // Skip the same ones that we skipped when building
+                           // the friend tree
+          continue;
+        }
+
+        if ((ent_it - FileBoundaries[file_it]) >=
+            args::NMaxEvents) { // Skip the same ones that we skipped when
+                                // building
+                                // the friend tree
+          continue;
+        }
+
+        caf->GetEntry(ent_it);
+        if (Flipdetx) {
+          det_x = -det_x;
+        }
+        if (args::preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+          continue;
+        }
+        treecopy->Fill();
       }
-      if (args::preSelect && !ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-        continue;
-      }
-      treecopy->Fill();
+      preselprog.Done();
+    } else {
+      std::cout << "[INFO]: Copying caf tree..." << std::endl;
+      treecopy = caf->CloneTree(-1, "fast");
     }
-    preselprog.Done();
 
     delete caf;
 
