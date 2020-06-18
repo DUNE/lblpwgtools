@@ -430,18 +430,20 @@ void OffAxisNDCAFCombiner() {
           double vtx_x_pos_m =
               vtx_min_m + pos_it * (args::step_m * average_step);
 
-          FileExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
-                             average_step * nmeta_ents);
-
           if (!ana::IsInNDFV(vtx_x_pos_m * 1E2, /*Dummy y_pos_m*/ 0,
                              /*Dummy z_pos_m*/ 150)) {
-            // std::cout << "out of FV: " << (det_x_pos_m + det_x) << std::endl;
+            // std::cout << "out of FV: " << (det_x_pos_m + (det_x * detx_to_m))
+            // << std::endl;
             continue;
           }
 
-          POTExposure->Fill(vtx_x_pos_m + det_x, average_step * file_pot);
-          POTExposure_stop->Fill(vtx_x_pos_m + det_x, det_x,
-                                 average_step * file_pot);
+          FileExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+                             average_step * nmeta_ents);
+
+          POTExposure->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+                            average_step * file_pot);
+          POTExposure_stop->Fill(vtx_x_pos_m + (det_x * detx_to_m),
+                                 (det_x * detx_to_m), average_step * file_pot);
         }
 
         if (!args::CombiningCombinedCAFs) {
@@ -642,8 +644,9 @@ void OffAxisNDCAFCombiner() {
              "per det_x info..."
           << std::endl;
       double perFile;
-      double det_x;
+      double det_x, vtx_x;
       treecopy->SetBranchAddress("det_x", &det_x);
+      treecopy->SetBranchAddress("vtx_x", &vtx_x);
       OffAxisWeightFriend->SetBranchAddress("perFile", &perFile);
       TTree *OffAxisWeightFriendcopy = OffAxisWeightFriend->CloneTree(0, "");
 
@@ -660,7 +663,11 @@ void OffAxisNDCAFCombiner() {
       for (Long64_t ent_it = 0; ent_it < NPOTWeightEntries; ++ent_it) {
         OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
-        perFile = 1.0 / double(det_x_files[det_x]);
+
+        double nfiles = FileExposure->GetBinContent(
+            FileExposure->FindFixBin((det_x * detx_to_m) + vtx_x));
+
+        perFile = 1.0 / nfiles;
         OffAxisWeightFriendcopy->Fill();
         if (ent_it && !(ent_it % 10000)) {
           filerecalcprog.SetProgress(double(ent_it) /
