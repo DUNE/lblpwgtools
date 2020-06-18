@@ -106,6 +106,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
 
   size_t NParams = 50;
   std::string ND_detector_tag = "ND";
+  std::string ND_SpecHCRun_detector_tag = "280kA";
   std::string FD_detector_tag = "FD";
   std::string nu_mode_beam_tag = "nu";
   std::string nubar_mode_beam_tag = "nubar";
@@ -119,6 +120,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
 
   for (size_t p_it = 0; p_it < NParams; ++p_it) {
     NDTweaks.push_back(std::vector<TH1 *>());
+    NDSpecHCRunTweaks.push_back(std::vector<TH1 *>());
     FDTweaks.push_back(std::vector<TH1 *>());
 
     std::stringstream input_dir_i("");
@@ -128,8 +130,8 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
     size_t NHistsLoaded = 0;
     int nucf = kND_numu_numode;
 
-    static std::string const location_tags[] = {ND_detector_tag,
-                                                FD_detector_tag};
+    static std::string const location_tags[] = {
+        ND_detector_tag, ND_SpecHCRun_detector_tag, FD_detector_tag};
     static std::string const beam_mode_tags[] = {nu_mode_beam_tag,
                                                  nubar_mode_beam_tag};
 
@@ -137,7 +139,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
         numu_species_tag, nue_species_tag, numubar_species_tag,
         nuebar_species_tag};
 
-    for (size_t lt_it = 0; lt_it < 2; ++lt_it) {
+    for (size_t lt_it = 0; lt_it < 3; ++lt_it) {
       std::string const &location_tag = location_tags[lt_it];
       for (size_t bm_it = 0; bm_it < 2; ++bm_it) {
         std::string const &beam_mode_tag = beam_mode_tags[bm_it];
@@ -145,6 +147,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
           std::string const &species_tag = species_tags[sp_it];
 
           NDTweaks.back().push_back(nullptr);
+          NDSpecHCRunTweaks.back().push_back(nullptr);
           FDTweaks.back().push_back(nullptr);
 
           std::string hname =
@@ -153,7 +156,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
                               : input_dir_i.str() + location_tag + "_" +
                                     beam_mode_tag + "_" + species_tag);
 
-          if (nucf < kFD_numu_numode) { // Is ND
+          if (nucf < kND_SpecHCRun_numu_numode) { // Is ND
             NDTweaks.back().back() = GetHistogram<TH1>(input_file, hname, true);
 
             if ((fNDIs2D == -1) && NDTweaks.back().back()) {
@@ -167,7 +170,32 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
             }
 
             NHistsLoaded += bool(NDTweaks.back().back());
-          } else {
+          } else if (nucf < kFD_numu_numode) { // ND Spec Run
+            // hack becasue I have been inconsistent in whether SpecRuns are
+            // considered a different 'detector' or a different 'beam mode'
+            std::string hname =
+                (IsCAFAnaFormat
+                     ? input_dir_i.str() + ND_detector_tag + "_" + species_tag +
+                           "_" + ND_SpecHCRun_detector_tag + "_" + beam_mode_tag
+                     : input_dir_i.str() + ND_detector_tag + "_" +
+                           beam_mode_tag + "_" + ND_SpecHCRun_detector_tag +
+                           "_" + species_tag);
+
+            NDSpecHCRunTweaks.back().back() =
+                GetHistogram<TH1>(input_file, hname, true);
+
+            if ((fNDSpecHCRunIs2D == -1) && NDSpecHCRunTweaks.back().back()) {
+              if (NDSpecHCRunTweaks.back().back()->GetDimension() == 1) {
+                fNDSpecHCRunIs2D = kOneD;
+              } else if (NDSpecHCRunTweaks.back().back()->GetDimension() == 2) {
+                TH2JaggedF *jag =
+                    dynamic_cast<TH2JaggedF *>(NDSpecHCRunTweaks.back().back());
+                fNDSpecHCRunIs2D = bool(jag) ? kTwoDJagged : kTwoD;
+              }
+            }
+
+            NHistsLoaded += bool(NDSpecHCRunTweaks.back().back());
+          } else { // FD
             FDTweaks.back().back() = GetHistogram<TH1>(input_file, hname, true);
 
             NHistsLoaded += bool(FDTweaks.back().back());
@@ -181,6 +209,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
     //           << " inputs." << std::endl;
     if (!NHistsLoaded) {
       NDTweaks.pop_back();
+      NDSpecHCRunTweaks.pop_back();
       FDTweaks.pop_back();
     }
   }
@@ -188,15 +217,16 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
 
 size_t EffectiveFluxUncertaintyHelper::GetNEnuBins(int nu_pdg,
                                                    double off_axis_pos_m,
-                                                   bool IsND, bool IsNuMode) {
+                                                   bool IsND, bool IsNuMode,
+                                                   bool isSpecHCRun) {
 
-  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode);
+  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode, isSpecHCRun);
 
   if (nucf == kUnhandled) {
     return 0;
   }
 
-  if (nucf < kFD_numu_numode) {
+  if (nucf < kND_SpecHCRun_numu_numode) {
 
     if (fNDIs2D == kTwoDJagged) {
       throw "This cannot be used for TH2Jagged inputs";
@@ -204,60 +234,76 @@ size_t EffectiveFluxUncertaintyHelper::GetNEnuBins(int nu_pdg,
     } else {
       return NDTweaks[0][nucf]->GetNbinsX();
     }
+  } else if (nucf < kFD_numu_numode) {
+
+    if (fNDSpecHCRunIs2D == kTwoDJagged) {
+      throw "This cannot be used for TH2Jagged inputs";
+
+    } else {
+      return NDSpecHCRunTweaks[0][nucf]->GetNbinsX();
+    }
   } else {
     return FDTweaks[0][nucf]->GetNbinsX();
   }
 }
 
 int EffectiveFluxUncertaintyHelper::GetNuConfig(int nu_pdg, bool IsND,
-                                                bool IsNuMode) const {
+                                                bool IsNuMode,
+                                                bool isSpecHCRun) const {
 
-  int nucf;
+  int nucf = kUnhandled;
 
   switch (nu_pdg) {
   case 14: {
-    nucf = IsNuMode ? kND_numu_numode : kND_numu_nubarmode;
+    nucf =
+        IsNuMode
+            ? (isSpecHCRun ? kND_SpecHCRun_numu_numode : kND_numu_numode)
+            : (isSpecHCRun ? kND_SpecHCRun_numu_nubarmode : kND_numu_nubarmode);
     break;
   }
   case -14: {
-    nucf = IsNuMode ? kND_numubar_numode : kND_numubar_nubarmode;
+    nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_numubar_numode
+                                   : kND_numubar_numode)
+                    : (isSpecHCRun ? kND_SpecHCRun_numubar_nubarmode
+                                   : kND_numubar_nubarmode);
     break;
   }
   case 12: {
-    nucf = IsNuMode ? kND_nue_numode : kND_nue_nubarmode;
+    nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_nue_numode : kND_nue_numode)
+                    : (isSpecHCRun ? kND_SpecHCRun_nue_nubarmode
+                                   : kND_nue_nubarmode);
     break;
   }
   case -12: {
-    nucf = IsNuMode ? kND_nuebar_numode : kND_nuebar_nubarmode;
+    nucf = IsNuMode
+               ? (isSpecHCRun ? kND_SpecHCRun_nuebar_numode : kND_nuebar_numode)
+               : (isSpecHCRun ? kND_SpecHCRun_nuebar_nubarmode
+                              : kND_nuebar_nubarmode);
     break;
-  }
-  default: {
-    std::stringstream ss("");
-    ss << "GetNuConfig passed invalid neutrino PDG: " << nu_pdg;
-    throw std::invalid_argument(ss.str());
   }
   }
 
-  return nucf + (IsND ? 0 : 8);
+  return nucf + (IsND ? 0 : 16);
 }
 
 int EffectiveFluxUncertaintyHelper::GetNuConfig_checked(
     int nu_pdg, double enu_GeV, double off_axis_pos_m, size_t param_id,
-    bool IsND, bool IsNuMode) const {
-  if (GetBin(nu_pdg, enu_GeV, off_axis_pos_m, param_id, IsND, IsNuMode) ==
-      kInvalidBin) {
+    bool IsND, bool IsNuMode, bool isSpecHCRun) const {
+  if (GetBin(nu_pdg, enu_GeV, off_axis_pos_m, param_id, IsND, IsNuMode,
+             isSpecHCRun) == kInvalidBin) {
     return kUnhandled;
   }
-  return GetNuConfig(nu_pdg, IsND, IsNuMode);
+  return GetNuConfig(nu_pdg, IsND, IsNuMode, isSpecHCRun);
 }
 
 int EffectiveFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
                                            double off_axis_pos_m,
                                            size_t param_id, bool IsND,
-                                           bool IsNuMode) const {
-  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode);
+                                           bool IsNuMode,
+                                           bool isSpecHCRun) const {
+  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode, isSpecHCRun);
 
-  if (nucf < kFD_numu_numode) { // Is ND
+  if (nucf < kND_SpecHCRun_numu_numode) { // Is ND
     if (!NDTweaks[param_id][nucf]) {
       return kInvalidBin;
     } else {
@@ -286,6 +332,36 @@ int EffectiveFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
       }
       }
     }
+  } else if (nucf < kFD_numu_numode) { // Is ND Spec run
+    if (!NDSpecHCRunTweaks[param_id][nucf]) {
+      return kInvalidBin;
+    } else {
+      switch (fNDSpecHCRunIs2D) {
+      case kOneD: {
+        if (IsFlowBin(NDSpecHCRunTweaks[param_id][nucf], enu_GeV)) {
+          return kInvalidBin;
+        }
+        return NDSpecHCRunTweaks[param_id][nucf]->FindFixBin(enu_GeV);
+      }
+      case kTwoD: {
+        TH2 *h2 = static_cast<TH2 *>(NDSpecHCRunTweaks[param_id][nucf]);
+        if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
+          return kInvalidBin;
+        }
+        int xbin = (h2->GetXaxis()->FindFixBin(enu_GeV) - 1);
+        int ybin = (h2->GetYaxis()->FindFixBin(off_axis_pos_m) - 1);
+        return h2->GetBin(xbin, ybin);
+      }
+      case kTwoDJagged: {
+        TH2JaggedF *h2 =
+            static_cast<TH2JaggedF *>(NDSpecHCRunTweaks[param_id][nucf]);
+        if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
+          return kInvalidBin;
+        }
+        return h2->FindFixBin(enu_GeV, off_axis_pos_m);
+      }
+      }
+    }
   } else {
     if (!FDTweaks[param_id][nucf]) {
       return kInvalidBin;
@@ -300,14 +376,15 @@ int EffectiveFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
 }
 
 int EffectiveFluxUncertaintyHelper::GetFirstEnuBin(int nu_pdg, bool IsND,
-                                                   bool IsNuMode) {
-  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode);
+                                                   bool IsNuMode,
+                                                   bool isSpecHCRun) {
+  int nucf = GetNuConfig(nu_pdg, IsND, IsNuMode, isSpecHCRun);
 
   if (nucf == kUnhandled) {
     return 0;
   }
 
-  if (nucf < kFD_numu_numode) {
+  if (nucf < kND_SpecHCRun_numu_numode) {
 
     if (fNDIs2D != kOneD) {
       if (fNDIs2D == kTwoDJagged) {
@@ -317,6 +394,17 @@ int EffectiveFluxUncertaintyHelper::GetFirstEnuBin(int nu_pdg, bool IsND,
       }
     } else {
       return NDTweaks[0][nucf]->GetBin(1);
+    }
+  } else if (nucf < kFD_numu_numode) {
+
+    if (fNDSpecHCRunIs2D != kOneD) {
+      if (fNDSpecHCRunIs2D == kTwoDJagged) {
+        throw "This cannot be used for TH2Jagged inputs";
+      } else {
+        return NDSpecHCRunTweaks[0][nucf]->GetBin(1, 1);
+      }
+    } else {
+      return NDSpecHCRunTweaks[0][nucf]->GetBin(1);
     }
   } else {
     return FDTweaks[0][nucf]->GetBin(1);
@@ -332,7 +420,7 @@ int EffectiveFluxUncertaintyHelper::GetMatrixBin(int nu_config, double enu_GeV,
   if (!fBinOffsets.size()) {
     fBinOffsets.push_back(0);
     for (int i = 0; i < kFD_nuebar_nubarmode; ++i) {
-      if (i < kFD_numu_numode) {
+      if (i < kND_SpecHCRun_numu_numode) {
         switch (fNDIs2D) {
         case kOneD: {
           fBinOffsets.push_back(fBinOffsets.back() +
@@ -363,6 +451,38 @@ int EffectiveFluxUncertaintyHelper::GetMatrixBin(int nu_config, double enu_GeV,
           break;
         }
         }
+      } else if (i < kFD_numu_numode) {
+        switch (fNDSpecHCRunIs2D) {
+        case kOneD: {
+          fBinOffsets.push_back(fBinOffsets.back() +
+                                NDSpecHCRunTweaks[0][i]->GetNbinsX());
+          // std::cout << "[INFO]: Added " << NDSpecHCRunTweaks[0][i]->GetName()
+          // << " with "
+          //           << NDSpecHCRunTweaks[0][i]->GetNbinsX() << " for a total
+          //           of "
+          //           << fBinOffsets.back() << " bins" << std::endl;
+
+          break;
+        }
+        case kTwoD: {
+          TH2 *h2 = static_cast<TH2 *>(NDSpecHCRunTweaks[0][i]);
+          fBinOffsets.push_back(fBinOffsets.back() +
+                                (h2->GetNbinsX() * h2->GetNbinsY()));
+          // std::cout << "[INFO]: Added " << h2->GetName() << " with "
+          //           << h2->GetNbinsX() << " for a total of "
+          //           << (h2->GetNbinsX() * h2->GetNbinsY()) << " bins"
+          //           << std::endl;
+          break;
+        }
+        case kTwoDJagged: {
+          TH2JaggedF *h2 = static_cast<TH2JaggedF *>(NDSpecHCRunTweaks[0][i]);
+          fBinOffsets.push_back(fBinOffsets.back() + h2->GetNbinsNonFlow());
+          // std::cout << "[INFO]: Added " << h2->GetName() << " with "
+          //           << h2->GetNbinsNonFlow() << " for a total of "
+          //           << fBinOffsets.back() << " bins" << std::endl;
+          break;
+        }
+        }
       } else {
         fBinOffsets.push_back(fBinOffsets.back() + FDTweaks[0][i]->GetNbinsX());
         // std::cout << "[INFO]: Added " << FDTweaks[0][i]->GetName() << " with
@@ -373,7 +493,7 @@ int EffectiveFluxUncertaintyHelper::GetMatrixBin(int nu_config, double enu_GeV,
     }
   }
 
-  if (nu_config < kFD_numu_numode) {
+  if (nu_config < kND_SpecHCRun_numu_numode) {
     switch (fNDIs2D) {
     case kOneD: {
       if (IsFlowBin(NDTweaks[0][nu_config], enu_GeV)) {
@@ -393,6 +513,35 @@ int EffectiveFluxUncertaintyHelper::GetMatrixBin(int nu_config, double enu_GeV,
     }
     case kTwoDJagged: {
       TH2JaggedF *h2 = static_cast<TH2JaggedF *>(NDTweaks[0][nu_config]);
+      if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
+        return -1;
+      }
+      return fBinOffsets[nu_config] +
+             h2->FindFixBinNoFlow(enu_GeV, off_axis_pos_m);
+    }
+    }
+  } else if (nu_config < kFD_numu_numode) {
+    switch (fNDSpecHCRunIs2D) {
+    case kOneD: {
+      if (IsFlowBin(NDSpecHCRunTweaks[0][nu_config], enu_GeV)) {
+        return -1;
+      }
+      return fBinOffsets[nu_config] +
+             (NDSpecHCRunTweaks[0][nu_config]->GetXaxis()->FindFixBin(enu_GeV) -
+              1);
+    }
+    case kTwoD: {
+      TH2 *h2 = static_cast<TH2 *>(NDSpecHCRunTweaks[0][nu_config]);
+      if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
+        return -1;
+      }
+      int xbin = (h2->GetXaxis()->FindFixBin(enu_GeV) - 1);
+      int ybin = (h2->GetYaxis()->FindFixBin(off_axis_pos_m) - 1);
+      return fBinOffsets[nu_config] + (ybin * h2->GetNbinsY()) + xbin;
+    }
+    case kTwoDJagged: {
+      TH2JaggedF *h2 =
+          static_cast<TH2JaggedF *>(NDSpecHCRunTweaks[0][nu_config]);
       if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
         return -1;
       }
@@ -421,8 +570,11 @@ double EffectiveFluxUncertaintyHelper::GetFluxWeight(size_t param_id,
     return 1;
   }
 
-  if (nucf < kFD_numu_numode) {
+  if (nucf < kND_SpecHCRun_numu_numode) {
     return 1 + param_val * (NDTweaks[param_id][nucf]->GetBinContent(bin));
+  } else if (nucf < kFD_numu_numode) {
+    return 1 +
+           param_val * (NDSpecHCRunTweaks[param_id][nucf]->GetBinContent(bin));
   } else {
     return 1 + param_val * (FDTweaks[param_id][nucf]->GetBinContent(bin));
   }
@@ -430,11 +582,11 @@ double EffectiveFluxUncertaintyHelper::GetFluxWeight(size_t param_id,
 
 double EffectiveFluxUncertaintyHelper::GetFluxWeight(
     size_t param_id, double param_val, double enu_GeV, double off_axis_pos_m,
-    int nu_pdg, bool IsND, bool IsNuMode) {
-  return GetFluxWeight(
-      param_id, param_val,
-      GetBin(nu_pdg, enu_GeV, off_axis_pos_m, param_id, IsND, IsNuMode),
-      GetNuConfig(nu_pdg, IsND, IsNuMode));
+    int nu_pdg, bool IsND, bool IsNuMode, bool isSpecHCRun) {
+  return GetFluxWeight(param_id, param_val,
+                       GetBin(nu_pdg, enu_GeV, off_axis_pos_m, param_id, IsND,
+                              IsNuMode, isSpecHCRun),
+                       GetNuConfig(nu_pdg, IsND, IsNuMode, isSpecHCRun));
 }
 
 EffectiveFluxUncertaintyHelper::~EffectiveFluxUncertaintyHelper() {

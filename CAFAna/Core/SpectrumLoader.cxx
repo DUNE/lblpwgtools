@@ -292,6 +292,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
     SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
     SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
+    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
     std::cout << "[INFO]: Found Off axis weight friend tree "
                  "in input file, hooking up!"
               << std::endl;
@@ -369,10 +370,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
 #ifdef USE_TH2JAGGED
-
-    //If we have a weight, then assume we are the special run
-    sr.SpecialHCRunId = (sr.SpecialRunWeight != 1) ? 280 : 0;
-
     // Pre-calculate flux error bins to speed up spline generation
     sr.OffAxisFluxConfig =
         PRISM::EffectiveFluxUncertaintyHelper::Get().GetNuConfig_checked(
@@ -381,7 +378,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     sr.OffAxisFluxBin = PRISM::EffectiveFluxUncertaintyHelper::Get().GetBin(
         sr.nuPDGunosc, sr.Ev, std::fabs(sr.det_x + sr.vtx_x * 1E-2), 0,
-        !sr.isFD, sr.isFHC);
+        !sr.isFD, sr.isFHC, sr.SpecialHCRunId != 0);
 #endif
     // Get the crazy flux info properly
     sr.wgt_CrazyFlux.resize(7);
