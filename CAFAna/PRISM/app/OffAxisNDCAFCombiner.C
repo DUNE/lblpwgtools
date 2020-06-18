@@ -268,6 +268,11 @@ void OffAxisNDCAFCombiner() {
 
   bool Flipdetx = false;
   double detx_to_m = 1E-2; // by default det_in cm
+  bool loud = false;
+
+  if (getenv("CAFANA_TURBOSE") && (std::atoi(getenv("CAFANA_TURBOSE")) == 1)) {
+    loud = true;
+  }
 
   if (getenv("CAFANA_FLIP_DET_X") &&
       (std::atoi(getenv("CAFANA_FLIP_DET_X")) == 1)) {
@@ -386,6 +391,12 @@ void OffAxisNDCAFCombiner() {
         }
 
         FileBoundaries.push_back(FileBoundaries.back() + f_caf->GetEntries());
+
+        if (loud) {
+          std::cout << "File: " << (FileBoundaries.size() - 1) << " up to "
+                    << FileBoundaries.back() << " with " << f_caf->GetEntries()
+                    << " events." << std::endl;
+        }
 
         size_t nents_after_skip = f_caf->GetEntries() - args::NSkip;
         if (args::NMaxEvents != std::numeric_limits<size_t>::max() ||
@@ -546,6 +557,12 @@ void OffAxisNDCAFCombiner() {
       // Into the next file, start skipping if needs be
       if (ent_it == FileBoundaries[file_it + 1]) {
         file_it++;
+
+        if (loud) {
+          std::cout << "--At entry: " << ent_it
+                    << " which corresponds to the start of file: " << file_it
+                    << "." << std::endl;
+        }
       }
 
       if ((ent_it - FileBoundaries[file_it]) <
@@ -554,7 +571,7 @@ void OffAxisNDCAFCombiner() {
         continue;
       }
 
-      if ((ent_it - FileBoundaries[file_it]) >
+      if ((ent_it - FileBoundaries[file_it]) >=
           args::NMaxEvents) { // Skip the same ones that we skipped when
                               // building
                               // the friend tree
