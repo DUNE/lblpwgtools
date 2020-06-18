@@ -15,5 +15,4 @@ setup cmake v3_12_2
 setup clhep v2_4_1_2 -q e19:prof
 
 # Stan insists on its dependencies being loaded, so we only need to load it
-setup stan v2_18_0 -q e19:prof
-export STAN_INC=$STAN_DIR/include   # only necessary until v2_18_0a is ready
+setup stan v2_18_0a -q e19:prof
