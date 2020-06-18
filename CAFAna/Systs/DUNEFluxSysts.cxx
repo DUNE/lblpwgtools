@@ -64,19 +64,19 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     }
   } // end if
 
-  if (abs(sr->dune.nuPDGunosc) == 16)
+  if (abs(sr->nuPDGunosc) == 16)
     return;
 
-  const int det = sr->dune.isFD ? 0 : 1;
-  const int pdg = (abs(sr->dune.nuPDGunosc) == 12) ? 0 : 1;
-  const int anti = (sr->dune.nuPDGunosc > 0) ? 0 : 1;
-  const int hc = sr->dune.isFHC ? 0 : 1;
+  const int det = sr->isFD ? 0 : 1;
+  const int pdg = (abs(sr->nuPDGunosc) == 12) ? 0 : 1;
+  const int anti = (sr->nuPDGunosc > 0) ? 0 : 1;
+  const int hc = sr->isFHC ? 0 : 1;
 
   double rel_weight = 1;
 
   TH1 *h = fScale[det][pdg][anti][hc];
   assert(h);
-  const int bin = h->FindBin(sr->dune.Ev);
+  const int bin = h->FindBin(sr->Ev);
   if (bin == 0 || bin == h->GetNbinsX() + 1) {
     return;
   }

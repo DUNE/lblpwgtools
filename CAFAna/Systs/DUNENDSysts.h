@@ -17,11 +17,11 @@ namespace ana
                        caf::StandardRecord* sr,
                        double& weight) const override
     {
-      restore.Add( sr->dune.Ev_reco, sr->dune.Ev_reco_numu, sr->dune.Ev_reco_nue );
-      double scale = pow( 1. + sr->dune.sigma_Ev_reco, sigma );
-      sr->dune.Ev_reco *= scale;
-      sr->dune.Ev_reco_numu *= scale;
-      sr->dune.Ev_reco_nue *= scale;
+      restore.Add( sr->Ev_reco, sr->Ev_reco_numu, sr->Ev_reco_nue );
+      double scale = pow( 1. + sr->sigma_Ev_reco, sigma );
+      sr->Ev_reco *= scale;
+      sr->Ev_reco_numu *= scale;
+      sr->Ev_reco_nue *= scale;
     }
   };
 
@@ -37,27 +37,27 @@ namespace ana
                        caf::StandardRecord* sr,
                        double& weight) const override
     {
-      restore.Add( sr->dune.numu_pid, sr->dune.nue_pid );
+      restore.Add( sr->numu_pid, sr->nue_pid );
 
-      bool numu = ( sigma > sr->dune.sigma_numu_pid );
-      bool nue = ( sigma > sr->dune.sigma_nue_pid );
+      bool numu = ( sigma > sr->sigma_numu_pid );
+      bool nue = ( sigma > sr->sigma_nue_pid );
 
       // theoretically it is possible for both to be true in the same event, though this is highly unlikely.
       // in these rare cases, use the one with the smaller sigma
       if( numu && nue ) { // very rare
-        if( sr->dune.sigma_numu_pid < sr->dune.sigma_nue_pid ) nue = false;
+        if( sr->sigma_numu_pid < sr->sigma_nue_pid ) nue = false;
         else numu = false;
       }
 
       if( numu ) {
-        sr->dune.numu_pid = 1.;
-        sr->dune.nue_pid = -1.;
+        sr->numu_pid = 1.;
+        sr->nue_pid = -1.;
       } else if( nue ) {
-        sr->dune.numu_pid = -1.;
-        sr->dune.nue_pid = 1.;
+        sr->numu_pid = -1.;
+        sr->nue_pid = 1.;
       } else { // NC event
-        sr->dune.numu_pid = -1.;
-        sr->dune.nue_pid = -1.;
+        sr->numu_pid = -1.;
+        sr->nue_pid = -1.;
       }
 
     }

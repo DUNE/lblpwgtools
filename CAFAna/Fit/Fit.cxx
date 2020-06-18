@@ -1,5 +1,4 @@
 #include "CAFAna/Fit/Fit.h"
-#include "CAFAna/Fit/GradientDescent.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 
 #include "CAFAna/Analysis/common_fit_definitions.h"

@@ -36,7 +36,7 @@ namespace ana
       fFitOpts(opts),
       fSupportsDerivatives(SupportsDerivatives()),
       fCovar(0),
-      fCovarStatus(-1) 
+      fCovarStatus(-1)
   {
   }
 
@@ -48,23 +48,9 @@ namespace ana
   //----------------------------------------------------------------------
   bool MinuitFitter::SupportsDerivatives() const
   {
-    // Provide an Opt-out in case something goes wrong
-    if (getenv("CAFANA_DISABLE_DERIVATIVES") &&
-        bool(atoi(getenv("CAFANA_DISABLE_DERIVATIVES")))) {
-      return false;
-    }
-
-    // No point using derivatives for FitVars only, we do finite differences,
-    // probably worse than MINUIT would.
-    if (fSysts.empty())
-      return false;
-
-    // Otherwise, do the minimal trial to see if the experiment will return a
-    // gradient.
-    std::unordered_map<const ISyst *, double> dchi = {{fSysts[0], 0}};
-    osc::NoOscillations calc;
-    fExpt->Derivative(&calc, SystShifts::Nominal(), dchi);
-    return !dchi.empty();
+    // Most of this framework was torn out. But keep the hooks here in case we
+    // want to replace the derivatives with stan.
+    return false;
   }
 
   //----------------------------------------------------------------------
@@ -73,6 +59,7 @@ namespace ana
                                 SystShifts &systSeed,
                                 Verbosity verb) const
   {
+    fVerb = verb;
     if (fFitOpts & kIncludeSimplex)
       std::cout << "Simplex option specified but not implemented. Ignored."
                 << std::endl;
@@ -93,8 +80,7 @@ namespace ana
 
     if ((fFitOpts & kPrecisionMask) == kGradDesc)
       mnMin = std::make_unique<GradientDescent>(*this);
-    else
-    {
+    else{
       mnMin = std::unique_ptr<ROOT::Math::Minimizer>(
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Combined"));
       // ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
@@ -104,9 +90,9 @@ namespace ana
     mnMin->SetMaxIterations(1E8);
 
     static double tol =
-        getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
+      getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
     static double prec =
-        getenv("FIT_PRECISION") != 0 ? atof(getenv("FIT_PRECISION")) : 1e-15;
+      getenv("FIT_PRECISION") != 0 ? atof(getenv("FIT_PRECISION")) : 1e-15;
 
     // Please give us all the decimal places
     mnMin->SetTolerance(tol);
@@ -149,7 +135,7 @@ namespace ana
       mnMin->SetFunction((ROOT::Math::IBaseFunctionMultiDim &)*this);
     }
 
-    if (verb <= Verbosity::kQuiet) {
+    if (fVerb <= Verbosity::kQuiet) {
       mnMin->SetPrintLevel(0);
     }
 
@@ -161,8 +147,8 @@ namespace ana
       for (uint i = 0; i < mnMin->NFree(); ++i) {
         std::cout << "\t" << mnMin->VariableName(i) << " = " << mnMin->X()[i]
                   << "\n";
-        }
       }
+    }
 
     if (fFitOpts & kIncludeHesse) {
       std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
@@ -180,6 +166,17 @@ namespace ana
                   << ")" << std::endl;
         fTempMinosErrors.push_back(std::make_pair(errLow, errHigh));
       }
+    }
+
+    const double* minvec = mnMin->X();
+
+    // Store results back to the "seed" variable
+    for (unsigned int i = 0; i < fVars.size(); ++i){
+      fVars[i]->SetValue(seed, minvec[i]);
+    }
+    // Store systematic results back into "systSeed"
+    for (unsigned int j = 0; j < fSysts.size(); ++j){
+      systSeed.SetShift(fSysts[j], minvec[fVars.size() + j]);
     }
 
     return std::make_unique<MinuitFitSummary>(std::move(mnMin));
@@ -258,42 +255,13 @@ namespace ana
   {
     ++fNEvalGrad;
 
-    // TODO handling of FitVars including penalty terms
-
-    if (!fVars.empty())
-    {
-      // Have to use finite differences to calculate these derivatives
-      const double dx = 1e-9;
-      const double nom = DoEval(pars);
-      ++fNEvalFiniteDiff;
-      std::vector<double> parsCopy(pars, pars + NDim());
-      for (unsigned int i = 0; i < fVars.size(); ++i) {
-        parsCopy[i] += dx;
-        ret[i] = (DoEval(parsCopy.data()) - nom) / dx;
-        ++fNEvalFiniteDiff;
-        parsCopy[i] = pars[i];
-      }
-    }
-
-    // Get systematic parts analytically
-
-    DecodePars(pars); // Updates fCalc and fShifts
-
-    std::unordered_map<const ISyst *, double> dchi;
-    for (const ISyst *s : fSysts)
-      dchi[s] = 0;
-    fExpt->Derivative(fCalc, *fShifts, dchi);
-
-  for (unsigned int j = 0; j < fSysts.size(); ++j) {
-    // Get the un-truncated systematic shift
-    const double x = pars[fVars.size() + j];
-
-    ret[fVars.size() + j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
-    }
+    // All this logic was torn out, but this is where you would reimplement it
+    // in terms of stan.
+    abort();
   }
 
   //----------------------------------------------------------------------
-  void MinuitFitter::DecodePars(const double *pars) const
+  void MinuitFitter::DecodePars(double const *pars) const
   {
     if (fVars.size() > 0)
     {

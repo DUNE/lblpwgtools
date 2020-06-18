@@ -144,7 +144,7 @@ namespace ana
     dir->cd();
     TObjString("BayesianSurface").Write("type");
 
-    ISurface::SaveTo(dir);
+    ISurface::SaveToHelper(dir);
 
     BayesianMarginal::SaveTo(dir);
 

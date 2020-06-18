@@ -274,24 +274,24 @@ fi
 
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    FD_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    FD_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "FD_FHC_JID: ${FD_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    FD_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL6 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    FD_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} FD_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "FD_RHC_JID: ${FD_RHC_JID}"
   fi
 fi
 
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL6 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_FHC_JID: ${ND_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL6 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL7 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_RHC_JID: ${ND_RHC_JID}"
   fi
 fi

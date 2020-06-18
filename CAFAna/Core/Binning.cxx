@@ -205,9 +205,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Binning::SaveTo(TDirectory* dir) const
+  void Binning::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("Binning").Write("type");
@@ -233,12 +235,18 @@ namespace ana
     for(unsigned int i = 0; i < fLabels.size(); ++i)
       TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
 
+    dir->Write();
+    delete dir;
+
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<Binning> Binning::LoadFrom(TDirectory* dir)
+  std::unique_ptr<Binning> Binning::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "Binning");
@@ -267,6 +275,8 @@ namespace ana
       if(!s) break;
       ret.fLabels.push_back(s->GetString().Data());
     }
+
+    delete dir;
 
     return std::make_unique<Binning>(ret);
   }

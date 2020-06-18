@@ -61,40 +61,40 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
 
   // Do something special with the Mnv stuff
   if (fID == Mnv2p2hGaussEnhancement_NN_id) {
-    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4];
+    weight *= sr->xsSyst_wgt[Mnv2p2hGaussEnhancement_id][4];
   } else if (fID == Mnv2p2hGaussEnhancement_2p2h_id) {
-    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3];
+    weight *= sr->xsSyst_wgt[Mnv2p2hGaussEnhancement_id][3];
   } else if (fID == Mnv2p2hGaussEnhancement_1p1h_id) {
-    weight *= sr->dune.xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2];
+    weight *= sr->xsSyst_wgt[Mnv2p2hGaussEnhancement_id][2];
   } else if (fID == MKSPP_ReWeight_id) {
-    weight *= sr->dune.xsSyst_wgt[MKSPP_ReWeight_id][2];
+    weight *= sr->xsSyst_wgt[MKSPP_ReWeight_id][2];
   } else if (fID == SPPLowQ2Suppression_id) {
-    weight *= sr->dune.xsSyst_wgt[SPPLowQ2Suppression_id][2];
+    weight *= sr->xsSyst_wgt[SPPLowQ2Suppression_id][2];
   } else if (fID == FSILikeEAvailSmearing_id) {
-    weight *= sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2];
+    weight *= sr->xsSyst_wgt[FSILikeEAvailSmearing_id][2];
   } else if (fID == MissingProtonFakeData_id) {
     mpfd.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
   } else if (fID == BeRPA_E_id) {
-    weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][posneg_spline_point];
+    weight *= sr->xsSyst_wgt[BeRPA_E_id][posneg_spline_point];
   } else if (fID == FormZone_id) {
-    weight *= sr->dune.xsSyst_wgt[FormZone_id][posneg_spline_point];
+    weight *= sr->xsSyst_wgt[FormZone_id][posneg_spline_point];
   } else if (fID == MFP_pi_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_pi_id][posneg_spline_point];
+    weight *= sr->xsSyst_wgt[MFP_pi_id][posneg_spline_point];
   } else if (fID == MFP_N_id) {
-    weight *= sr->dune.xsSyst_wgt[MFP_N_id][posneg_spline_point];
+    weight *= sr->xsSyst_wgt[MFP_N_id][posneg_spline_point];
   } else if (fID == MaNCEL_id) {
-    weight *= sr->dune.xsSyst_wgt[MaNCEL_id][posneg_spline_point];
+    weight *= sr->xsSyst_wgt[MaNCEL_id][posneg_spline_point];
   }
 }
 void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
                      double &weight) const {
   // No xs weights in this event, skip reweighting it
-  if (sr->dune.xsSyst_wgt.empty()) {
+  if (sr->xsSyst_wgt.empty()) {
     return;
   }
-  if (sr->dune.xsSyst_wgt[0].empty()) {
+  if (sr->xsSyst_wgt[0].empty()) {
     return;
   }
   if (fabs(sigma) < 1E-5) {
@@ -125,7 +125,7 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
     //    double diff = sigma / spacing;
 
     double weight_at_cv = 1;
-    double weight_at_one_sig = sr->dune.xsSyst_wgt[fID][4];
+    double weight_at_one_sig = sr->xsSyst_wgt[fID][4];
 
     double dx = 1;
     double dy = weight_at_one_sig - weight_at_cv;
@@ -136,8 +136,8 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
   } else {
     double diff = (sigma - double(low_index)) / spacing;
 
-    double low_weight = sr->dune.xsSyst_wgt[fID][low_index];
-    double high_weight = sr->dune.xsSyst_wgt[fID][high_index];
+    double low_weight = sr->xsSyst_wgt[fID][low_index];
+    double high_weight = sr->xsSyst_wgt[fID][high_index];
 
     fact = low_weight + (high_weight - low_weight) * diff;
   }

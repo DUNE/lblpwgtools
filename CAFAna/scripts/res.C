@@ -34,8 +34,8 @@ using namespace ana;
 #include "TGraph.h"
 #include "TH2.h"
 
-const Var kRecoE_nue = SIMPLEVAR(dune.Ev_reco_nue);
-const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
+const Var kRecoE_nue = SIMPLEVAR(Ev_reco_nue);
+const Var kRecoE_numu = SIMPLEVAR(Ev_reco_numu);
 
 // 3.5yrs * POT/yr * mass correction
 const double potFD = 3.5 * POT120 * 40/1.13;
@@ -112,10 +112,10 @@ void res(string paramname)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
-  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
-  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
-  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc").release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc").release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc").release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc").release();
 
   fin.Close();
 

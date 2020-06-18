@@ -2,11 +2,14 @@
 
 #include "Utilities/func/StanVar.h"
 
+class TDirectory;
+
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 class TDirectory;
 
@@ -36,8 +39,6 @@ namespace ana
     int ID() const {return fID;}
 
     static SystShifts Nominal(){return SystShifts();}
-
-      std::vector<const ISyst*> ActiveSysts() const;
 
       /// Allow derived classes to overload so they can copy themselves
       /// in case they overload Penalty().  Used in IFitter.
@@ -81,8 +82,10 @@ namespace ana
     /// Long description of component shifts, for plot labels
     std::string LatexName() const;
 
-    void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir);
+    std::vector<const ISyst*> ActiveSysts() const;
+
+    void SaveTo(TDirectory* dir, const std::string& name) const;
+    std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir, const std::string& naem);
 
   protected:
     template <typename T>

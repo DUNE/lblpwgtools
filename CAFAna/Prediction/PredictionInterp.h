@@ -77,13 +77,8 @@ namespace ana
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override;
 
-    void Derivative(osc::IOscCalculator* calc,
-                    const SystShifts& shift,
-                    double pot,
-                    std::unordered_map<const ISyst*, std::vector<double>>& dp) const override;
-
-    virtual void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
 
     /// After calling this DebugPlots won't work fully and SaveTo won't work at
     /// all.
@@ -278,16 +273,6 @@ namespace ana
     void InitFitsHelper(ShiftedPreds& sp,
                         std::vector<std::vector<std::vector<Coeffs>>>& fits,
                         Sign::Sign_t sign) const;
-
-     /// Helper for \ref Derivative
-    void ComponentDerivative(osc::IOscCalculator* calc,
-                             Flavors::Flavors_t flav,
-                             Current::Current_t curr,
-                             Sign::Sign_t sign,
-                             CoeffsType type,
-                             const SystShifts& shift,
-                             double pot,
-                             std::unordered_map<const ISyst*, std::vector<double>>& dp) const;
 
     /// Templated helper for \ref ShiftedComponent
     template <typename U, typename T>

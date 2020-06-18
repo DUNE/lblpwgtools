@@ -36,8 +36,8 @@ namespace ana
 
     const std::vector<std::string>& Labels() const {return fLabels;}
 
-    void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<Binning> LoadFrom(TDirectory* dir);
+    void SaveTo(TDirectory* dir, const std::string& name) const;
+    static std::unique_ptr<Binning> LoadFrom(TDirectory* dir, const std::string& name);
 
     int ID() const {return fID;}
     static int MaxID() {return fgNextID-1;}

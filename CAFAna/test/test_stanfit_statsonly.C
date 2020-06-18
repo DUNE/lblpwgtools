@@ -79,13 +79,13 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   {
     // change this to suit whatever input you like
     TFile inf(predFile.c_str());
-    pred = ana::PredictionExtrap::LoadFrom(dynamic_cast<TDirectory*>(inf.Get(predName.c_str())));
+    pred = ana::PredictionExtrap::LoadFrom(&inf, predName);
   }
 
   if (savePredToFile && !loadPredFromFile)
   {
     TFile outf( predFile.c_str(), "recreate");
-    pred->SaveTo(outf.mkdir("pred"));
+    pred->SaveTo(&outf, "pred");
   }
 
   // store the default vals...

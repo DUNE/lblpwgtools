@@ -63,7 +63,7 @@ namespace ana
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;
-      if (!sr->dune.isFD && (kPassND_FHC_NUMU(sr) || kPassND_RHC_NUMU(sr))) {
+      if (!sr->isFD && (kPassND_FHC_NUMU(sr) || kPassND_RHC_NUMU(sr))) {
 	weight *= scale;
       }
     }

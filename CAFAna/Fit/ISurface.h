@@ -53,7 +53,8 @@ namespace ana
       void SetTitle(const char* str);
 
     protected:
-      void SaveTo(TDirectory * dir) const;
+      /// \a dir should already be the appropriate sub-directory
+      void SaveToHelper(TDirectory* dir) const;
       static void FillSurfObj(ISurface & surf, TDirectory * dir);
 
       double fBestLikelihood;

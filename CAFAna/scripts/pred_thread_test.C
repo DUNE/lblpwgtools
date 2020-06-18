@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]) {
   std::cout << "[LOAD]: Retrieving fd_interp_numu_fhc from " << argv[1]
             << std::endl;
   std::unique_ptr<PredictionInterp> FD_FHCNumu =
-      LoadFrom<PredictionInterp>(fin->GetDirectory("fd_interp_numu_fhc"));
+    LoadFrom<PredictionInterp>(fin, "fd_interp_numu_fhc");
   delete fin;
 
   std::vector<const ISyst *> systlist = FD_FHCNumu->GetAllSysts();

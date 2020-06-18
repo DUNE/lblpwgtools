@@ -5,7 +5,6 @@ set(StandardRecord_implementation_files
 )
 
 set(StandardRecord_header_files
-    ${SRC_ROOT_PARENT}/StandardRecord/SRDune.h
     ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
 )
 

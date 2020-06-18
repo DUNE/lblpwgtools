@@ -18,20 +18,7 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const = 0;
 
-    virtual void Derivative(osc::IOscCalculator* calc,
-                            const SystShifts& shift,
-                            std::unordered_map<const ISyst*, double>& dchi) const
-    {
-      // Optional to implement
-      //
-      // NB the convention is to *add* your contribution to the dchi values.
-      //
-      // If unimplemented, this default will be called, signaling no result to
-      // the caller
-      dchi.clear();
-    }
-
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
 
     // For MultiExperiment covariance matrix, need to be able to access prediction and data histograms
     virtual TH1D* PredHist( osc::IOscCalculator* calc,

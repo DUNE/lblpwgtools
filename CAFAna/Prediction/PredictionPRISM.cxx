@@ -29,10 +29,10 @@ PredictionPRISM::PredictionPRISM(
   bool HaveEff = (SelectedNumuCC && AllNumuCC);
 
   // Use to weight by cheating Efficiency
-  Var kEffWeight({}, [&](const caf::StandardRecord *sr) -> double {
-    int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->dune.Ev);
-    int by = AllNumuCC->GetYaxis()->FindFixBin(sr->dune.vtx_x);
-    int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->dune.det_x);
+  Var kEffWeight([&](const caf::StandardRecord *sr) -> double {
+    int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->Ev);
+    int by = AllNumuCC->GetYaxis()->FindFixBin(sr->vtx_x);
+    int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->det_x);
     int ev_bin = AllNumuCC->GetBin(bx, by, bz);
     return AllNumuCC->GetBinContent(ev_bin) /
            SelectedNumuCC->GetBinContent(ev_bin);
@@ -162,28 +162,32 @@ Spectrum PredictionPRISM::PredictComponent(osc::IOscCalculator *calc,
 }
 
 //----------------------------------------------------------------------
-void PredictionPRISM::SaveTo(TDirectory *dir) const {
+void PredictionPRISM::SaveTo(TDirectory *dir, cosnt std::string& name) const {
   TDirectory *tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
 
   TObjString("PredictionPRISM").Write("type");
 
-  fOffAxisSpectrum->SaveTo(dir->mkdir("spect"));
-  fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numu"));
-  fOffAxisSpectrumNumu->SaveTo(dir->mkdir("spect_numubar"));
+  fOffAxisSpectrum->SaveTo(dir, "spect");
+  fOffAxisSpectrumNumu->SaveTo(dir, "spect_numu");
+  fOffAxisSpectrumNumu->SaveTo(dir, "spect_numubar");
 
   if (fHaveNDBkgPred) {
-    fNDBkg.fOffAxisSpectrumNC->SaveTo(dir->mkdir("spect_nd_NC"));
-    fNDBkg.fOffAxisSpectrumNue->SaveTo(dir->mkdir("spect_nd_nue"));
-    fNDBkg.fOffAxisSpectrumNuebar->SaveTo(dir->mkdir("spect_nd_nuebar"));
+    fNDBkg.fOffAxisSpectrumNC->SaveTo(dir, "spect_nd_NC");
+    fNDBkg.fOffAxisSpectrumNue->SaveTo(dir, "spect_nd_nue");
+    fNDBkg.fOffAxisSpectrumNuebar->SaveTo(dir, "spect_nd_nuebar");
   }
 
   if (fHaveFDPred) {
-    fFarDetSpectrumNC->SaveTo(dir->mkdir("spect_fd_NC"));
-    fFarDetSpectrumNumu->SaveTo(dir->mkdir("spect_fd_numu"));
-    fFarDetSpectrumNumubar->SaveTo(dir->mkdir("spect_fd_numubar"));
+    fFarDetSpectrumNC->SaveTo(dir, "spect_fd_NC");
+    fFarDetSpectrumNumu->SaveTo(dir, "spect_fd_numu");
+    fFarDetSpectrumNumubar->SaveTo(dir, "spect_fd_numubar");
   }
+
+  dir->Write();
+  delete dir;
 
   tmp->cd();
 }

@@ -112,11 +112,9 @@ install(
 
 install(
   PROGRAMS
-    ${CMAKE_SOURCE_DIR}/cafe_dune
+    ${CMAKE_SOURCE_DIR}/cafe
   DESTINATION
     bin
-  RENAME
-    cafe
   )
 
 install(
@@ -128,9 +126,7 @@ install(
 
 install(
   FILES
-    ${CMAKE_SOURCE_DIR}/load_libs_dune.C
+    ${CMAKE_SOURCE_DIR}/load_libs.C
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
-  RENAME
-    load_libs.C
   )

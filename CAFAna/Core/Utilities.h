@@ -156,12 +156,19 @@ namespace ana
       exp = minexp;
     }
 
-    if(obs)
+    if(obs*1000 > exp)
       // This strange form is for numerical stability when e~o
       chi += 2*obs*((exp-obs)/obs + log1p((obs-exp)/exp));
     else
-      chi += 2*(exp-obs);
-
+    {
+      // But log1p doesn't like arguments near -1 (observation much smaller
+      // than expectation), and it's better to use the usual formula in that
+      // case.
+      if(obs)
+        chi += 2*(exp-obs + obs*log(obs/exp));
+      else
+        chi += 2*exp;
+    }
     return chi;
   }
 

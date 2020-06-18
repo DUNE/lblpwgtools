@@ -133,12 +133,12 @@ void test_xsec_diag(bool reload = false)
     loaderFDNueRHC.Go();
 
     TFile fout(stateFname, "RECREATE");
-    predNDFHC.SaveTo(fout.mkdir("nd_fhc"));
-    predNDRHC.SaveTo(fout.mkdir("nd_rhc"));
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
+    predNDFHC.SaveTo(&fout, "nd_fhc");
+    predNDRHC.SaveTo(&fout, "nd_rhc");
+    predFDNumuFHC.SaveTo(&fout, "fd_numu_fhc");
+    predFDNueFHC.SaveTo(&fout, "fd_nue_fhc");
+    predFDNumuRHC.SaveTo(&fout, "fd_numu_rhc");
+    predFDNueRHC.SaveTo(&fout, "fd_nue_rhc");
     std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
@@ -146,14 +146,14 @@ void test_xsec_diag(bool reload = false)
   }
 
   TFile fin(stateFname);
-  //  PredictionXSecDiag& predNDFHC = *PredictionXSecDiag::LoadFrom2(fin.GetDirectory("nd_fhc")).release();
+  //  PredictionXSecDiag& predNDFHC = *PredictionXSecDiag::LoadFrom2(&fin, "nd_fhc").release();
 
-  PredictionXSecDiag& predNDFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("nd_fhc")).release();
-  PredictionXSecDiag& predNDRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("nd_rhc")).release();
-  PredictionXSecDiag& predFDNumuFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionXSecDiag& predFDNueFHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionXSecDiag& predFDNumuRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionXSecDiag& predFDNueRHC = *ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionXSecDiag& predNDFHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "nd_fhc").release();
+  PredictionXSecDiag& predNDRHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "nd_rhc").release();
+  PredictionXSecDiag& predFDNumuFHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_fhc").release();
+  PredictionXSecDiag& predFDNueFHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_fhc").release();
+  PredictionXSecDiag& predFDNumuRHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_rhc").release();
+  PredictionXSecDiag& predFDNueRHC = *ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_rhc").release();
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 

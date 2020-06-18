@@ -248,8 +248,8 @@ namespace ana
     Spectrum& operator/=(const Ratio& rhs);
     Spectrum operator/(const Ratio& rhs) const;
 
-    void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<Spectrum> LoadFrom(TDirectory* dir);
+    void SaveTo(TDirectory* dir, const std::string& name) const;
+    static std::unique_ptr<Spectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
     unsigned int NDimensions() const{return fLabels.size();}
     std::vector<std::string> GetLabels() const {return fLabels;}

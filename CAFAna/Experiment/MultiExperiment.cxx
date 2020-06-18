@@ -224,68 +224,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   void MultiExperiment::
-  Derivative(osc::IOscCalculator* calc,
-             const SystShifts& shift,
-             std::unordered_map<const ISyst*, double>& dchi) const
-  {
-    if(!fCovMx.empty()){
-      // std::cout << "MultiExperiment::Derivative() not implemented for case with covariance matrices" << std::endl;
-      dchi.clear();
-      return;
-    }
-
-    // Each one should sum into the total so far
-    for(unsigned int n = 0; n < fExpts.size(); ++n){
-      if(fSystCorrelations[n].empty()){
-        // If there are no adjustments needed it's easy
-        fExpts[n]->Derivative(calc, shift, dchi);
-        if(dchi.empty()) return;
-        continue;
-      }
-
-      auto dchiLocal = dchi;
-      for(auto& it: dchiLocal) it.second = 0;
-      SystShifts localShifts = shift;
-      std::unordered_map<const ISyst*, const ISyst*> reverseMap;
-      for(auto it: fSystCorrelations[n]){
-        // We're mapping prim -> sec
-        const ISyst* prim = it.first;
-        const ISyst* sec = it.second;
-        if(dchi.count(prim)){
-          dchiLocal.erase(dchiLocal.find(prim));
-          if(sec){
-            dchiLocal.emplace(sec, 0);
-            reverseMap[sec] = prim;
-          }
-        }
-        if(sec) localShifts.SetShift(sec, shift.GetShift(prim));
-        // We've either translated or discarded prim, so drop it here.
-        localShifts.SetShift(prim, 0);
-      }
-
-      fExpts[n]->Derivative(calc, localShifts, dchiLocal);
-
-      // One of the components doesn't support derivatives, don't bother asking
-      // the rest.
-      if(dchiLocal.empty()){
-        dchi.clear();
-        return;
-      }
-
-      // And translate back
-      for(auto it: dchiLocal){
-        if(reverseMap.count(it.first) > 0){
-          dchi[reverseMap[it.first]] += it.second;
-        }
-        else{
-          dchi[it.first] += it.second;
-        }
-      }
-    }
-  }
-
-  //----------------------------------------------------------------------
-  void MultiExperiment::
   SetSystCorrelations(int idx,
                       const std::vector<std::pair<const ISyst*, const ISyst*>>& corrs)
   {
@@ -314,7 +252,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void MultiExperiment::SaveTo(TDirectory* dir) const
+  void MultiExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     bool hasCorr = false;
     for(auto it: fSystCorrelations) if(!it.empty()) hasCorr = true;
@@ -325,33 +263,46 @@ namespace ana
 
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("MultiExperiment").Write("type");
 
     for(unsigned int i = 0; i < fExpts.size(); ++i){
-      fExpts[i]->SaveTo(dir->mkdir(TString::Format("expt%d", i)));
+      fExpts[i]->SaveTo(dir, TString::Format("expt%d", i).Data());
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<MultiExperiment> MultiExperiment::LoadFrom(TDirectory* dir)
+  std::unique_ptr<MultiExperiment> MultiExperiment::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "MultiExperiment");
+    delete ptag;
 
     std::vector<const IChiSqExperiment*> expts;
 
     for(int i = 0; ; ++i){
-      TDirectory* subdir = dir->GetDirectory(TString::Format("expt%d", i));
+      const std::string subname = TString::Format("expt%d", i).Data();
+      TDirectory* subdir = dir->GetDirectory(subname.c_str());
       if(!subdir) break;
+      delete subdir;
 
-      expts.push_back(ana::LoadFrom<IChiSqExperiment>(subdir).release());
+      expts.push_back(ana::LoadFrom<IChiSqExperiment>(dir, name).release());
     }
 
     assert(!expts.empty());
+
+    delete dir;
 
     return std::unique_ptr<MultiExperiment>(new MultiExperiment(expts));
   }
