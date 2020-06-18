@@ -504,13 +504,13 @@ void OffAxisNDCAFCombiner() {
         static_cast<TChain *>(FileSummaryTree)->Add((dir + file_name).c_str());
       }
 
-      if (fctr >= NMaxFiles) {
-        std::cout << "[INFO]: Only processing " << NMaxFiles << " files."
+      if (fctr >= args::NMaxFiles) {
+        std::cout << "[INFO]: Only processing " << args::NMaxFiles << " files."
                   << std::endl;
         break;
       }
     }
-    if (fctr >= NMaxFiles) {
+    if (fctr >= args::NMaxFiles) {
       break;
     }
   }
