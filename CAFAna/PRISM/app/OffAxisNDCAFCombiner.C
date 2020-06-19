@@ -420,30 +420,28 @@ void OffAxisNDCAFCombiner() {
         }
         det_x_files[file_det_x]++;
 
-        double vtx_min_cm = -300;
-        double vtx_max_cm = 300;
-        double average_step = 1E-4;
-        size_t vtx_steps =
-            (vtx_max_cm - vtx_min_cm) / (args::step_cm * average_step);
+        double vtx_min_cm = -200;
+        double vtx_max_cm = 200;
+        size_t vtx_steps = (vtx_max_cm - vtx_min_cm) / (args::step_cm);
 
         for (size_t pos_it = 0; pos_it < vtx_steps; ++pos_it) {
-          double vtx_x_pos_cm =
-              vtx_min_cm + pos_it * (args::step_cm * average_step);
+          double vtx_x_pos_cm = vtx_min_cm + pos_it * (args::step_cm);
 
-          if (!ana::IsInNDFV(vtx_x_pos_cm, /*Dummy y_pos_m*/ 0,
-                             /*Dummy z_pos_m*/ 150)) {
-            // std::cout << "out of FV: " << (det_x_pos_m + (det_x * detx_to_m))
-            // << std::endl;
-            continue;
-          }
+          // checking the FV results in double-correcting for the mass
+          // differences in different slices.
+          // if (!ana::IsInNDFV(vtx_x_pos_cm, /*Dummy y_pos_m*/ 0,
+          //                    /*Dummy z_pos_m*/ 150)) {
+          //   // std::cout << "out of FV: " << (det_x_pos_m + (det_x * detx_to_m))
+          //   // << std::endl;
+          //   continue;
+          // }
 
           FileExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-                             average_step * nmeta_ents);
+                             nmeta_ents);
 
-          POTExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-                            average_step * file_pot);
+          POTExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
           POTExposure_stop->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-                                 (det_x * detx_to_m * 1E2), average_step * file_pot);
+                                 (det_x * detx_to_m * 1E2), file_pot);
         }
 
         if (!args::CombiningCombinedCAFs) {
