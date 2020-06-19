@@ -20,6 +20,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  double ReactorExperiment::SSTh13(osc::IOscCalculatorAdjustable* osc) const
+  {
+    return kFitSinSq2Theta13.GetValue(osc);
+  }
+
+  //----------------------------------------------------------------------
   void ReactorExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
@@ -107,7 +113,7 @@ namespace ana
     return new ReactorExperiment(this_val, this_err);
   }
 
-    //----------------------------------------------------------------------
+  //----------------------------------------------------------------------
   const ReactorExperiment* ReactorConstraintPDG2019()
   {
     // http://pdg.lbl.gov/2019/tables/rpp2019-sum-leptons.pdf
