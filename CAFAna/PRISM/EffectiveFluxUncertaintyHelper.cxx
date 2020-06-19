@@ -117,7 +117,7 @@ void EffectiveFluxUncertaintyHelper::Initialize(std::string const &filename) {
   std::string nuebar_species_tag = "nuebar";
 
   std::string input_file = filename;
-  std::string input_dir = IsCAFAnaFormat ? "" : "EffectiveFluxParameters";
+  std::string input_dir = IsCAFAnaFormat ? "" : "FluxParameters";
 
   TDirectory *ogDir = gDirectory;
 
