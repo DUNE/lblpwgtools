@@ -18,7 +18,7 @@
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Fit/StanFitter.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Experiment/ILkhdExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/Stan.h"
@@ -60,7 +60,7 @@ namespace test
   // a very simple experiment that uses a log-Gaussian likelihood
   // to fit a single parameter in a quadratic function:
   // y = a * x^2
-  class GaussQuadExperiment : public ILkhdExperiment
+  class GaussQuadExperiment : public IExperiment
   {
     public:
       stan::math::var LogLikelihood(osc::IOscCalculatorAdjustableStan*,
