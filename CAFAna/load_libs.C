@@ -40,14 +40,15 @@ void load_libs(bool MustClean = true) {
                                                // of retaining assert()
 
   // Include path
-  TString includes = "-I$ROOTSYS/include -I$CAFANA/include";
+  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$SUNDIALS_INC";
 
   const std::vector<std::string> libs = {
-      "Minuit2",          "Net",           "StandardRecord", "OscLibFunc",
-      "UtilitiesFunc",    "CAFAnaCore",    "CAFAnaVars",     "CAFAnaCuts",
+      "Minuit2",          "Net",           "Tree",
+      "StandardRecord",   "OscLibFunc",    "UtilitiesFunc",
+      "CAFAnaCore",       "CAFAnaVars",    "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
-      "CAFAnaPrediction", "CAFAnaFit", "CAFAnaAnalysis", "boost_filesystem",
-      "boost_system"};
+      "CAFAnaPrediction", "CAFAnaFit",     "CAFAnaAnalysis",
+      "boost_filesystem", "boost_system"};
 
   // Actually load the libraries
   std::cout << "Loading libraries:" << std::endl;

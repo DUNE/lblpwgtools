@@ -49,7 +49,7 @@ namespace ana
       seed.ResetCalc(calc);
 
       MinuitFitter fit(expt, vars);
-      const double chi = fit.Fit(calc, IFitter::kQuiet);
+      const double chi = fit.Fit(calc, IFitter::kQuiet)->EvalMetricVal();
 
       std::map<const IFitVar*, double> valmap;
       for(const IFitVar* v: vars) valmap[v] = v->GetValue(calc);

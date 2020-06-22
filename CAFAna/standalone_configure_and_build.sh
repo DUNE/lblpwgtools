@@ -120,8 +120,8 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
@@ -161,7 +161,18 @@ else
     fi
   fi
 
+  if [ -z "${EIGEN_INC}" ]; then
+    echo "[ERROR]: Not using UPS, but couldn't find Eigen (EIGEN_INC) wasn't defined in the environment."
+    exit 1
+  fi
+
+  if [ -z "${STAN_INC}" -o -z "${STAN_MATH_INC}" ]; then
+    echo "[ERROR]: Not using UPS, but couldn't find Stan or Stan-math (STAN_INC or STAN_MATH_INC) wasn't defined in the environment."
+    exit 1
+  fi
+
+
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC}
 make install -j ${CORES}

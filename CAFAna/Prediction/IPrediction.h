@@ -1,10 +1,10 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Core/OscillatableSpectrum.h"
-
-namespace osc{class IOscCalculator;}
 
 class TDirectory;
 
@@ -63,14 +63,25 @@ namespace ana
     virtual ~IPrediction(){}
     virtual Spectrum PredictUnoscillated() const;
     virtual Spectrum Predict(osc::IOscCalculator* calc) const = 0;
-    virtual Spectrum PredictSyst(osc::IOscCalculator* calc,
-                                 const SystShifts& syst) const;
+      virtual SpectrumStan Predict(osc::IOscCalculatorStan * calc) const;
+
+      virtual Spectrum     PredictSyst(osc::IOscCalculator* calc, const SystShifts& syst) const;
+      virtual SpectrumStan PredictSyst(osc::IOscCalculatorStan* calc, const SystShifts& syst) const;
 
     virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const = 0;
+      virtual SpectrumStan PredictComponent(osc::IOscCalculatorStan* calc,
+                                            Flavors::Flavors_t flav,
+                                            Current::Current_t curr,
+                                            Sign::Sign_t sign) const;
     virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+                                                const SystShifts& syst,
+                                                Flavors::Flavors_t flav,
+                                                Current::Current_t curr,
+                                                Sign::Sign_t sign) const;
+      virtual SpectrumStan PredictComponentSyst(osc::IOscCalculatorStan* calc,
                                           const SystShifts& syst,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t curr,

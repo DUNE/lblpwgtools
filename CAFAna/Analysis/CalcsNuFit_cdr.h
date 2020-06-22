@@ -1,12 +1,11 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Experiment/IChiSqExperiment.h"
 
 #include "TMath.h"
 
 #include "TRandom3.h"
-
-namespace ana{class IOscCalculatorAdjustable;}
 
 namespace ana
 {

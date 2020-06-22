@@ -230,7 +230,7 @@ namespace ana
     F(L); F(Rho);
 #undef F
 #define F(v)\
-    void Set##v(double x) override {fCalc->Set##v(x);}\
+    void Set##v(const double& x) override {fCalc->Set##v(x);}\
     double Get##v() const override {return fCalc->Get##v();}
       F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
 #undef F
@@ -274,7 +274,7 @@ namespace ana
       MinuitFitter fitter(expt, profVars, profSysts);
       fitter.SetFitOpts(fFitOpts);
       SystShifts bestSysts;
-      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       for(unsigned int i = 0; i < profVars.size(); ++i){
         fProfHists[i]->Fill(x, y, profVars[i]->GetValue(calc));
@@ -327,7 +327,7 @@ namespace ana
     yvar->SetValue(calc, fHist->GetYaxis()->GetBinCenter(miny));
     for(int i = 0; i < (int)fSeedValues.size(); ++i) profVars[i]->SetValue( calc, fSeedValues[i] );
     SystShifts systSeed = SystShifts::Nominal();
-    fBestLikelihood = fit.Fit(calc, systSeed, seedPts);
+    fBestLikelihood = fit.Fit(calc, systSeed, seedPts)->EvalMetricVal();
     fBestFitX = xvar->GetValue(calc);
     fBestFitY = yvar->GetValue(calc);
 

@@ -60,7 +60,7 @@ namespace ana
       {
         TMatrixD toInvert(*cov);
 
-        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
         for( int b = 0; b < hist->GetNbinsX(); ++b ) {
           // We add the squared fractional statistical errors to the
           // diagonal. In principle this should vary with the predicted number
@@ -273,7 +273,7 @@ namespace ana
       {
         TMatrixD toInvert(*cov);
 
-        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
         for( int b = 0; b < hist->GetNbinsX(); ++b ) {
           // We add the squared fractional statistical errors to the
           // diagonal. In principle this should vary with the predicted number

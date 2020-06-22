@@ -54,9 +54,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                                       SystShifts &systSeed,
-                                       Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                                SystShifts &systSeed,
+                                Verbosity verb) const
   {
     fVerb = verb;
     if (fFitOpts & kIncludeSimplex)
@@ -178,7 +179,7 @@ namespace ana
       systSeed.SetShift(fSysts[j], minvec[fVars.size() + j]);
     }
 
-    return mnMin->MinValue();
+    return std::make_unique<MinuitFitSummary>(std::move(mnMin));
   }
 
   //----------------------------------------------------------------------
@@ -198,7 +199,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double MinuitFitter::DoEval(const double *pars) const {
+  double MinuitFitter::DoEval(const double *pars) const
+  {
     ++fNEval;
 
     DecodePars(pars); // Updates fCalc and fShifts
@@ -274,5 +276,38 @@ namespace ana
       auto val = pars[fVars.size()+j];
       fShifts->SetShift(fSysts[j], val);
     }
+  }
+
+   //----------------------------------------------------------------------
+  void MinuitFitter::UpdatePostFit(const IFitter::IFitSummary *fitSummary) const
+  {
+    // Get them as set by the last seed fit
+    fParamNames = fLastParamNames;
+    fPreFitValues = fLastPreFitValues;
+    fPreFitErrors = fLastPreFitErrors;
+    fCentralValues = fLastCentralValues;
+
+    fMinosErrors = fTempMinosErrors;
+
+    const auto thisMin = dynamic_cast<const MinuitFitSummary*>(fitSummary)->GetMinimizer();
+
+    // Now save postfit
+    fPostFitValues =
+        std::vector<double>(thisMin->X(), thisMin->X() + thisMin->NDim());
+    fPostFitErrors = std::vector<double>(thisMin->Errors(),
+                                         thisMin->Errors() + thisMin->NDim());
+
+    fEdm = thisMin->Edm();
+    fIsValid = !thisMin->Status();
+
+    delete fCovar;
+    fCovar = new TMatrixDSym(thisMin->NDim());
+
+    for (unsigned int row = 0; row < thisMin->NDim(); ++row) {
+      for (unsigned int col = 0; col < thisMin->NDim(); ++col) {
+        (*fCovar)(row, col) = thisMin->CovMatrix(row, col);
+      }
+    }
+
   }
 }

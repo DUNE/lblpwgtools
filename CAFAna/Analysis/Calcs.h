@@ -1,7 +1,8 @@
 #pragma once
 
-namespace osc{class IOscCalculatorAdjustable;
-              class OscCalculatorSterile;}
+#include "CAFAna/Core/FwdDeclare.h"
+
+namespace osc{class OscCalculatorSterile;}
 
 namespace ana
 {

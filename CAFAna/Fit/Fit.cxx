@@ -44,8 +44,8 @@ namespace ana
       const double b = bh->GetBinContent(i);
       const double s = o-b;
 
-    if (s <= 0){
-      continue;}
+      if (s <= 0)
+        continue;
 
       fomSq += util::sqr(s)/(s+b);
     }
@@ -110,7 +110,7 @@ namespace ana
         profVars[i]->SetValue( calc, seedValues[i] );
 
       SystShifts systshift = SystShifts::Nominal();
-      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       ret->Fill(x, chi);
 
@@ -137,7 +137,7 @@ namespace ana
       MinuitFitter fit(expt, allVars, profSysts, opts);
       // Seed from best grid point
       v->SetValue(calc, minpos);
-      minchi = fit.Fit(calc); // get a better value
+      minchi = fit.Fit(calc)->EvalMetricVal(); // get a better value
 
     }
     else

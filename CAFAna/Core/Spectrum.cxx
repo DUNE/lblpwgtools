@@ -1,5 +1,6 @@
 #include "CAFAna/Core/Spectrum.h"
 
+#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
@@ -82,6 +83,18 @@ namespace ana
   {
     fPOT = pot;
     fLivetime = livetime;
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum::Spectrum(Eigen::VectorXd h,
+                     const std::string & labels,
+                     const Binning& bins,
+                     double pot, double livetime)
+    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+  {
+    std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
+    hist->Set(h.size(), h.data());
+    fHist = Hist::Adopt(std::move(hist), bins);
   }
 
   //----------------------------------------------------------------------
@@ -247,6 +260,25 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum::Spectrum(const SpectrumStan& rhs)
+    : fHist(Hist::Uninitialized()),
+      fPOT(rhs.POT()), fLivetime(rhs.Livetime()),
+      fLabels(rhs.GetLabels()), fBins(rhs.GetBinnings())
+  {
+    // for now we don't have any other use cases besides 1D...
+    assert(rhs.GetBinnings().size() == 1);
+
+    ConstructHistogram();
+
+    // now fill in the bin content...
+    auto binC = rhs.ToBins(rhs.POT());
+    for (int binIdx = 0; binIdx < rhs.GetBinnings()[0].NBins()+2; binIdx++) // be sure to get under- and overflow
+    {
+      fHist.SetBinContent(binIdx, binC[binIdx].val());
+    }
+  }
+
+  //----------------------------------------------------------------------
   Spectrum& Spectrum::operator=(const Spectrum& rhs)
   {
     if(this == &rhs) return *this;
@@ -275,6 +307,15 @@ namespace ana
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
+    return *this;
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum& Spectrum::operator=(const SpectrumStan& rhs)
+  {
+    // use placement new to just overwrite this object using the relevant constructor
+    this->~Spectrum();
+    new (this) Spectrum(rhs);
     return *this;
   }
 
@@ -468,6 +509,25 @@ namespace ana
     // explicit Fill() calls made.
     if(ret->GetEntries() == 0) ret->SetEntries(1);
 
+    return ret;
+  }
+
+ //----------------------------------------------------------------------
+  Eigen::VectorXd Spectrum::ToEigenVectorXd(double exposure, EExposureType expotype,
+					    EBinType bintype) const
+  {
+    // this is slower than intended since ToTH1() makes a copy.
+    // can optimize if it becomes a hot spot
+    TH1D * h = fHist.ToTH1();
+    Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
+                                                        h->GetNbinsX()+2);
+    if(exposure > 0)
+    {
+      if(expotype == kPOT)
+        return ret * exposure / fPOT;
+      else
+        return ret * exposure / fLivetime;
+    }
     return ret;
   }
 

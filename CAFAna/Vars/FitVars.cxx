@@ -1,7 +1,9 @@
 #include "CAFAna/Vars/FitVars.h"
 
+
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
+#include "Utilities/func/StanVar.h"
 
 #include <cassert>
 #include <cmath>
@@ -94,9 +96,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  stan::math::var FitSinSqTheta23::GetValue(const osc::IOscCalculatorAdjustableStan *osc) const
+  {
+    return util::sqr(sin(osc->GetTh23()));
+  }
+
+  //----------------------------------------------------------------------
   void FitSinSqTheta23::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const
   {
     osc->SetTh23(asin(sqrt(Clamp(val))));
+  }
+
+
+  //----------------------------------------------------------------------
+  void FitSinSqTheta23::SetValue(osc::IOscCalculatorAdjustableStan *osc, stan::math::var val) const
+  {
+    osc->SetTh23(asin(sqrt(this->Clamp(val))));
   }
 
   //----------------------------------------------------------------------
@@ -163,6 +178,19 @@ namespace ana
   {
     return osc->GetDmsq32()*1000.0;
   }
+
+  //----------------------------------------------------------------------
+  stan::math::var FitDmSq32Scaled::GetValue(const osc::IOscCalculatorAdjustableStan *osc) const
+  {
+    return osc->GetDmsq32()*1000.0;;
+  }
+
+  //----------------------------------------------------------------------
+  void FitDmSq32Scaled::SetValue(osc::IOscCalculatorAdjustableStan *osc, stan::math::var val) const
+  {
+    osc->SetDmsq32(this->Clamp(val)/1000.0);
+  }
+
 
   //----------------------------------------------------------------------
   void FitDmSq32Scaled::SetValue(osc::IOscCalculatorAdjustable* osc, double val) const

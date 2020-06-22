@@ -124,10 +124,51 @@ namespace ana
       \f[ \chi^2=2\left(e-o+o\ln\left({o\over e}\right)\right) \f]
 
       Handles zero observed or expected events correctly.
+      Templated so that it can handle usage with Stan vars and other numeric types.
+      (The horible third template parameter ensures this function can only be used
+       with types that accept conversion from double -- which means you can't pass
+       it a TH1* or a std::vector<stan::math::var>&, removing the ambiguity with
+       those other versions of LogLikelihood). The return type promotes to
+       stan::math::var if either T or U are.
   **/
-  double LogLikelihood(double exp, double obs);
+  template <typename T, typename U,
+            typename std::enable_if<std::is_convertible<double, T>::value && std::is_convertible<double, U>::value, int>::type = 0>
+  auto LogLikelihood(T exp, U obs)
+  template <typename T, typename U,
+            typename std::enable_if_t<std::is_convertible_v<double, T> && std::is_convertible_v<double, U>, int> = 0>
+  decltype(T(0) - U(0)) LogLikelihood(T exp, U obs)
+  {
+    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
+    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
+    const auto S = LLPerBinFracSystErr::GetError();
+    if(S > 0){
+      const auto S2 = util::sqr(S);
+      const auto s = .25*(sqrt(8*obs*S2+util::sqr(exp*S2-2))-exp*S2-2);
+      exp *= 1+s;
+    }
 
-  double LogLikelihoodDerivative(double e, double o);
+    // With this value, negative expected events and one observed
+    // event gives a chisq from this one bin of 182.
+    const double minexp = 1e-40; // Don't let expectation go lower than this
+
+    if(obs*1000 > exp){
+      // This strange form is for numerical stability when exp ~ obs
+      return 2*obs*((exp-obs)/obs + log1p((obs-exp)/exp));
+    }
+    else{
+      // But log1p doesn't like arguments near -1 (observation much smaller
+      // than expectation), and it's better to use the usual formula in that
+      // case.
+      if(obs){
+        return 2*(exp-obs + obs*log(obs/exp));
+      }
+      else{
+        return 2*exp;
+      }
+    }
+  }
+
+  double LogLikelihoodDerivative(double e, double o, double dedx);
 
   double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
                                  const std::vector<double>& dedx,
