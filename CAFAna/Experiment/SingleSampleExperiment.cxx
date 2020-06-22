@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "OscLib/func/IOscCalculator.h"
@@ -186,7 +187,8 @@ namespace ana
 
       if(fMask) ApplyMask(hpred, hdata);
 
-      ll = LogLikelihood(hpred, hdata);
+      // full namespace qualification to avoid degeneracy with method inherited from IExperiment
+      ll = ana::LogLikelihood(hpred, hdata);
     }
 
     HistCache::Delete(hpred);
@@ -315,8 +317,8 @@ namespace ana
                  : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
     TH1D* hdata = fData.ToTH1(fData.POT());
 
-    using ana::LogLikelihood;    // note: this LogLikelihood() is in StanUtils.h
-    auto ll = LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+    // fully-qualified so that we get the one in StanUtils.h
+    auto ll = ana::LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
 
     HistCache::Delete(hdata);
 
