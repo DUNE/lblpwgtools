@@ -251,6 +251,19 @@ namespace ana
     fSystCorrelations[idx] = corrs;
   }
 
+
+  //----------------------------------------------------------------------
+  stan::math::var
+  MultiExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc, const SystShifts &syst) const
+  {
+    stan::math::var ret = 0;
+    for (const auto & expt : fExpts)
+      ret += expt->LogLikelihood(osc, syst);
+
+    return ret;
+  }
+
+
   //----------------------------------------------------------------------
   void MultiExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {

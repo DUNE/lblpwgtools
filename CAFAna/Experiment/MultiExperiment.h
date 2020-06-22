@@ -35,7 +35,11 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
-    /// For the subexperiment \a idx, set up a mapping between systematics
+    /// Sum up log-likelihoods of sub-expts.  N.b.: covariance matrix business not currently supported for Stan.
+    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                  const SystShifts &syst) const override;
+
+      /// For the subexperiment \a idx, set up a mapping between systematics
     ///
     /// Each element in the vector is a pair from a "primary" systematic to a
     /// "secondary". When this MultiExperiment is called with a primary
