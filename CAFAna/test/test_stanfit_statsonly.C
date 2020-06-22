@@ -24,7 +24,7 @@
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Cuts/AnaCuts.h"
-#include "CAFAna/Experiment/BinnedLkhdExperiment.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Fit/Bayesian1DMarginal.h"
 #include "CAFAna/Fit/BayesianSurface.h"
 #include "CAFAna/Fit/Priors.h"
@@ -97,7 +97,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   calc->SetDmsq32(test::MOCKDATA_DM32);
   ana::Spectrum spec_pred = pred->Predict(calc.get());
   ana::Spectrum fakeData = spec_pred.FakeData(pot_fd);   // high-statistics fake data, i.e., Asimov
-  ana::BinnedLkhdExperiment expt(pred.get(), fakeData);
+  ana::SingleSampleExperiment expt(pred.get(), fakeData);
 
   // make a 'no-oscillations' spectrum to set the scale
   calc->SetTh23(0);  // not _exactly_ no-oscillations (th13 is still nonzero) but whatever

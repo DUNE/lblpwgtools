@@ -307,6 +307,24 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                                        const SystShifts &syst) const
+  {
+    auto  pred = syst.IsNominal()
+                 ? fMC->Predict(osc).ToBins(fData.POT())
+                 : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
+    TH1D* hdata = fData.ToTH1(fData.POT());
+
+    using ana::LogLikelihood;    // note: this LogLikelihood() is in StanUtils.h
+    auto ll = LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+
+    HistCache::Delete(hdata);
+
+    return ll;
+  }
+
+
+  //----------------------------------------------------------------------
   void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;

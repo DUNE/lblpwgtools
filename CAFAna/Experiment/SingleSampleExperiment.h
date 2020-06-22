@@ -73,7 +73,10 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
-    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                  const SystShifts &syst) const override;
+
+      virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<SingleSampleExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
     // Didn't make provisions for copying fCosmic or fMC

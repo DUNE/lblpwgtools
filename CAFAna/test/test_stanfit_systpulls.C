@@ -25,7 +25,7 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Experiment/BinnedLkhdExperiment.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Fit/Bayesian1DMarginal.h"
 #include "CAFAna/Fit/BayesianSurface.h"
 #include "CAFAna/Fit/StanConfig.h"
@@ -87,7 +87,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
     SystShifts shifts(syst, +2);
     Spectrum spec_pred = pred->PredictSyst(calc.get(), shifts);
     Spectrum fakeData = spec_pred.FakeData(pot_fd);
-    BinnedLkhdExperiment expt(pred.get(), fakeData);
+    SingleSampleExperiment expt(pred.get(), fakeData);
 
     shifts.SetShift(syst, 0);  // seed the fit at 0
 

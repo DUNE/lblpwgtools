@@ -1,6 +1,5 @@
 set(Experiment_implementation_files
-  BinnedLkhdExperiment.cxx
-  CountingExperiment.cxx
+        CountingExperiment.cxx
         IExperiment.cxx
         MultiExperiment.cxx
   ReactorExperiment.cxx
@@ -8,8 +7,7 @@ set(Experiment_implementation_files
   SolarConstraints.cxx)
 
 set(Experiment_header_files
-  BinnedLkhdExperiment.h
-  CountingExperiment.h
+        CountingExperiment.h
         IExperiment.h
         MultiExperiment.h
   ReactorExperiment.h
