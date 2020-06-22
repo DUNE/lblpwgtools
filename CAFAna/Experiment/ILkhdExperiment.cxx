@@ -1,4 +1,4 @@
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Experiment/ILkhdExperiment.h"
 
 namespace ana

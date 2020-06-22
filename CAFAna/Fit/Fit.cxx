@@ -6,7 +6,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
@@ -54,7 +54,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Profile(const IChiSqExperiment* expt,
+  TH1* Profile(const IExperiment* expt,
                osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                int nbinsx, double minx, double maxx,
                double input_minchi,
@@ -151,7 +151,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtProfile(const IChiSqExperiment* expt,
+  TH1* SqrtProfile(const IExperiment* expt,
                    osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                    int nbinsx, double minx, double maxx, double minchi,
                    std::vector<const IFitVar*> profVars,
@@ -177,7 +177,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Slice(const IChiSqExperiment* expt,
+  TH1* Slice(const IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
              int nbinsx, double minx, double maxx,
              double minchi,
@@ -188,7 +188,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtSlice(const IChiSqExperiment* expt,
+  TH1* SqrtSlice(const IExperiment* expt,
                     osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                     int nbinsx, double minx, double maxx, double minchi,
                     MinuitFitter::FitOpts opts)
@@ -205,7 +205,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TGraph* FindValley(const IChiSqExperiment* expt,
+  TGraph* FindValley(const IExperiment* expt,
                      osc::IOscCalculatorAdjustable* calc,
                      const IFitVar& scanVar,
                      const IFitVar& fitVar,

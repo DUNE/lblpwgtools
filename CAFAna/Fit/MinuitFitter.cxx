@@ -6,7 +6,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
@@ -27,7 +27,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  MinuitFitter::MinuitFitter(const IChiSqExperiment *expt,
+  MinuitFitter::MinuitFitter(const IExperiment *expt,
                              std::vector<const IFitVar *> vars,
                              std::vector<const ISyst *> systs,
                              FitOpts opts)

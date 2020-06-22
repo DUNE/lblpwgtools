@@ -3,7 +3,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 

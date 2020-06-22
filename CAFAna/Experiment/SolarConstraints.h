@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include <memory>
 
@@ -8,7 +8,7 @@ namespace ana
 {
   /// \brief Constraints on the parameters \f$ \Delta m^2_{21} \f$ and
   /// \f$ \sin^22\theta_{12} \f$ from solar experiments
-  class SolarConstraints: public IChiSqExperiment
+  class SolarConstraints: public IExperiment
   {
   public:
     SolarConstraints();

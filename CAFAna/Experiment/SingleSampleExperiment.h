@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Spectrum.h"
@@ -25,7 +25,7 @@ namespace ana
   };
 
   /// Compare a single data spectrum to the MC + cosmics expectation
-  class SingleSampleExperiment: public IChiSqExperiment
+  class SingleSampleExperiment: public IExperiment
   {
   public:
     /// \param pred   Source of oscillated MC beam predictions

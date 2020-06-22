@@ -8,7 +8,7 @@ class TDirectory;
 
 namespace ana
 {
-  class IChiSqExperiment;
+  class IExperiment;
 
   template <typename T>
   class _ILkhdExperiment
@@ -31,7 +31,7 @@ namespace ana
   class ChiSqToLklhdExptWrapper : public _ILkhdExperiment<double>
   {
     public:
-      ChiSqToLklhdExptWrapper(const IChiSqExperiment& chisqExpt)
+      ChiSqToLklhdExptWrapper(const IExperiment& chisqExpt)
         : fChiSqExpt(chisqExpt)
       {}
 
@@ -39,7 +39,7 @@ namespace ana
                            const SystShifts& syst = SystShifts::Nominal()) const override;
 
     protected:
-      const IChiSqExperiment & fChiSqExpt;
+      const IExperiment & fChiSqExpt;
   };
 }
 

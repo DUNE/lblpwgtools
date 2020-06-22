@@ -111,7 +111,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
 
     // Need to do the initial fit for this throw... find the minimum chi2 for
     // this throw Ignoring the possibility of a theta23 penalty here
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     globalmin = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -131,7 +131,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
       osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1);
       testOsc->SetdCP(dcptest);
 
-      IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+      IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
       thischisq = RunFitPoint(
           stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,

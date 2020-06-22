@@ -4,7 +4,7 @@
 
 namespace ana
 {
-  class IChiSqExperiment;
+  class IExperiment;
 
   /// \brief Refine an initial list of seeds by exploring stats-only fits
   ///
@@ -16,7 +16,7 @@ namespace ana
   /// \param dchisq_max If set, don't return any solutions more than this far
   ///                   in chisq from the best minimum found
   SeedList RefineSeeds(const SeedList& seeds,
-                       const IChiSqExperiment* expt,
+                       const IExperiment* expt,
                        const std::vector<const IFitVar*>& vars,
                        const osc::IOscCalculatorAdjustable* calc,
                        double dchisq_max = -1);

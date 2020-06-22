@@ -11,7 +11,7 @@
 
 namespace ana
 {
-  class IChiSqExperiment;
+  class IExperiment;
   class ISyst;
 
   extern SystShifts junkShifts;

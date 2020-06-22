@@ -289,7 +289,7 @@ namespace ana
     assert(ptag->GetString() == "MultiExperiment");
     delete ptag;
 
-    std::vector<const IChiSqExperiment*> expts;
+    std::vector<const IExperiment*> expts;
 
     for(int i = 0; ; ++i){
       const std::string subname = TString::Format("expt%d", i).Data();
@@ -297,7 +297,7 @@ namespace ana
       if(!subdir) break;
       delete subdir;
 
-      expts.push_back(ana::LoadFrom<IChiSqExperiment>(dir, name).release());
+      expts.push_back(ana::LoadFrom<IExperiment>(dir, name).release());
     }
 
     assert(!expts.empty());

@@ -1,7 +1,7 @@
 set(Experiment_implementation_files
   BinnedLkhdExperiment.cxx
   CountingExperiment.cxx
-  IChiSqExperiment.cxx
+        IExperiment.cxx
   ILkhdExperiment.cxx
   MultiExperiment.cxx
   ReactorExperiment.cxx
@@ -11,7 +11,7 @@ set(Experiment_implementation_files
 set(Experiment_header_files
   BinnedLkhdExperiment.h
   CountingExperiment.h
-  IChiSqExperiment.h
+        IExperiment.h
   ILkhdExperiment.h
   MultiExperiment.h
   ReactorExperiment.h
