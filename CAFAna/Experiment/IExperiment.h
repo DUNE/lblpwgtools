@@ -26,18 +26,21 @@ namespace ana
                            const SystShifts &syst = SystShifts::Nominal()) const
       {
         assert(false && "unimplemented");
+        return 0;
       };
 
       virtual double LogLikelihood(osc::IOscCalculatorAdjustable *osc,
                                    const SystShifts &syst = kNoShift) const
       {
         assert(false && "unimplemented");
+        return 0;
       };
 
       virtual stan::math::var LogLikelihood(osc::IOscCalculatorAdjustableStan *osc,
                                             const SystShifts &syst = kNoShift) const
       {
         assert(false && "unimplemented");
+        return 0;
       };
 
       virtual void SaveTo(TDirectory *dir, const std::string &name) const;
