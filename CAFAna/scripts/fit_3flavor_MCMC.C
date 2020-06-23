@@ -27,7 +27,6 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Experiment/BinnedLkhdExperiment.h"
 #include "CAFAna/Fit/Bayesian1DMarginal.h"
 #include "CAFAna/Fit/BayesianSurface.h"
 #include "CAFAna/Fit/Priors.h"
@@ -38,7 +37,7 @@
 
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorPMNSOptDMP.h"
+#include "OscLib/func/OscCalculatorDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -112,14 +111,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       auto dir = f.GetDirectory(predName);
       if (!dir)
         continue;
-      preds.emplace(predName, ana::LoadFrom<PredictionInterp>(dir));
+      preds.emplace(predName, ana::LoadFrom<PredictionInterp>(&f, predName));
     }
   }
   assert(preds.size() == 4);
 
 //    calc = new osc::OscCalculatorPMNSOpt;
 //    calc = new osc::OscCalculatorPMNS;
-  calc = new osc::OscCalculatorPMNSOptDMP;
+  calc = new osc::OscCalculatorDMP;
   *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
   std::unique_ptr<MCMCSamples> samples;
@@ -178,10 +177,10 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     {
       TFile outF(mcmc_ana::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
       for (const auto & fdPair : fakeData)
-        fdPair.second->SaveTo(outF.mkdir(("fakedata_" + fdPair.first).c_str()));
+        fdPair.second->SaveTo(&outF, "fakedata_" + fdPair.first);
       samples->SaveTo(outF.mkdir("samples"));
-      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), outF.mkdir("calcTruth"));
-      systTruePulls->SaveTo(outF.mkdir("systTruth"));
+      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
+      systTruePulls->SaveTo(&outF, "systTruth");
     }
   }
   else
@@ -205,15 +204,15 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       std::string name(key->GetName());
       if (name.size() < 9 || name.substr(0, 9) != "fakedata_")
         continue;
-      fakeData.emplace(name.substr(9), LoadFrom<Spectrum>(dynamic_cast<TDirectory*>(key->ReadObj())));
+      fakeData.emplace(name.substr(9), LoadFrom<Spectrum>(&inf, key->GetName()));
     }
     std::cout << "   --->  loaded " << fakeData.size() << " fake data spectra." << std::endl;
 
     samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
     std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
 
-    systTruePulls = SystShifts::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("systTruth")));
-    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(inf.Get("calcTruth"))).release());  // yeah, just leak it
+    systTruePulls = LoadFrom<SystShifts>(&inf, "systTruth");
+    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(&inf, "calcTruth").release());  // yeah, just leak it
     std::cout << "   --->  loaded osc parameters & syst pulls used for fake data. " << std::endl;
 
     assert (!fakeData.empty() && samples && systTruePulls && calcTruth);
