@@ -48,19 +48,34 @@ namespace ana
 
 
 
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const override;
-    virtual Spectrum PredictSyst(osc::IOscCalculator* calc,
-                                 const SystShifts& shift) const override;
+    Spectrum Predict(osc::IOscCalculator* calc) const override;
+    SpectrumStan Predict(osc::IOscCalculatorStan* calc) const override;
 
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+
+    Spectrum PredictSyst(osc::IOscCalculator* calc,
+                         const SystShifts& shift) const override;
+    SpectrumStan PredictSyst(osc::IOscCalculatorStan* calc,
+                             const SystShifts& shift) const override;
+
+    Spectrum PredictComponent(osc::IOscCalculator* calc,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign) const override;
+    SpectrumStan PredictComponent(osc::IOscCalculatorStan* calc,
+                                  Flavors::Flavors_t flav,
+                                  Current::Current_t curr,
+                                  Sign::Sign_t sign) const override;
+
+    Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+                                  const SystShifts& shift,
+                                  Flavors::Flavors_t flav,
+                                  Current::Current_t curr,
+                                  Sign::Sign_t sign) const override;
+    SpectrumStan PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                      const SystShifts& shift,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override;
-    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
-                                          const SystShifts& shift,
-                                          Flavors::Flavors_t flav,
-                                          Current::Current_t curr,
-                                          Sign::Sign_t sign) const override;
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
@@ -104,7 +119,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {
+    PredictionInterp() : fOscOrigin(nullptr), fBinning(0, {}, {}, 0, 0), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
@@ -135,6 +150,10 @@ namespace ana
                            CoeffsType type,
                            bool nubar, // try to use fitsNubar if it exists
                            const SystShifts& shift) const;
+      SpectrumStan ShiftSpectrum(const SpectrumStan& s,
+                                 CoeffsType type,
+                                 bool nubar, // try to use fitsNubar if it exists
+                                 const SystShifts& shift) const;
 
     /// Helper for PredictComponentSyst
     Spectrum ShiftedComponent(osc::IOscCalculator* calc,
@@ -145,59 +164,67 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
-    std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
+      SpectrumStan ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
+                                    const TMD5* hash,
+                                    const SystShifts& shift,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign,
+                                    CoeffsType type) const;
 
-    struct ShiftedPreds
-    {
-      double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
+      //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+      void DiscardSysts(std::vector<ISyst const *>const &);
+      //Get all known about systs
+      std::vector<ISyst const *> GetAllSysts() const;
 
-      std::string systName; ///< What systematic we're interpolating
-      std::vector<double> shifts; ///< Shift values sampled
-      std::vector<std::unique_ptr<IPrediction>> preds;
+    protected:
+      std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
-      int nCoeffs; // Faster than calling size()
+      struct ShiftedPreds
+      {
+        double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
 
-      /// Indices: [type][histogram bin][shift bin]
-      std::vector<std::vector<std::vector<Coeffs>>> fits;
-      /// Will be filled if signs are separated, otherwise not
-      std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
+        std::string systName; ///< What systematic we're interpolating
+        std::vector<double> shifts; ///< Shift values sampled
+        std::vector<std::unique_ptr<IPrediction>> preds;
 
-      // Same info as above but with more-easily-iterable index order
-      // [type][shift bin][histogram bin]. TODO this is ugly
-      std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
-      std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
-      ShiftedPreds() {}
-      ShiftedPreds(ShiftedPreds &&other)
-          : systName(std::move(other.systName)),
-            shifts(std::move(other.shifts)), preds(std::move(other.preds)),
-            nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
-            fitsNubar(std::move(other.fitsNubar)),
-            fitsRemap(std::move(other.fitsRemap)),
-            fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
+        int nCoeffs; // Faster than calling size()
 
-      ShiftedPreds &operator=(ShiftedPreds &&other) {
-        systName = std::move(other.systName);
-        shifts = std::move(other.shifts);
-        preds = std::move(other.preds);
-        nCoeffs = other.nCoeffs;
-        fits = std::move(other.fits);
-        fitsNubar = std::move(other.fitsNubar);
-        fitsRemap = std::move(other.fitsRemap);
-        fitsNubarRemap = std::move(other.fitsNubarRemap);
-        return *this;
-      }
+        /// Indices: [type][histogram bin][shift bin]
+        std::vector<std::vector<std::vector<Coeffs>>> fits;
+        /// Will be filled if signs are separated, otherwise not
+        std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
 
-      void Dump(){
-        std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
-      }
-    };
+        // Same info as above but with more-easily-iterable index order
+        // [type][shift bin][histogram bin]. TODO this is ugly
+        std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
+        std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
+        ShiftedPreds() {}
+        ShiftedPreds(ShiftedPreds &&other)
+            : systName(std::move(other.systName)),
+              shifts(std::move(other.shifts)), preds(std::move(other.preds)),
+              nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
+              fitsNubar(std::move(other.fitsNubar)),
+              fitsRemap(std::move(other.fitsRemap)),
+              fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
 
-    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
-    void DiscardSysts(std::vector<ISyst const *>const &);
-    //Get all known about systs
-    std::vector<ISyst const *> GetAllSysts() const;
+        ShiftedPreds &operator=(ShiftedPreds &&other) {
+          systName = std::move(other.systName);
+          shifts = std::move(other.shifts);
+          preds = std::move(other.preds);
+          nCoeffs = other.nCoeffs;
+          fits = std::move(other.fits);
+          fitsNubar = std::move(other.fitsNubar);
+          fitsRemap = std::move(other.fitsRemap);
+          fitsNubarRemap = std::move(other.fitsNubarRemap);
+          return *this;
+        }
 
-  protected:
+        void Dump(){
+          std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
+        }
+      };
+
     using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
     mutable std::vector<PredMappedType> fPreds;
     std::vector<PredMappedType>::iterator find_pred(const ISyst *s) const {
@@ -232,7 +259,7 @@ namespace ana
     struct Val_t
     {
       TMD5 hash;
-      Spectrum nom;
+        Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
     };
     mutable std::map<Key_t, Val_t> fNomCache;
 
@@ -246,6 +273,32 @@ namespace ana
     void InitFitsHelper(ShiftedPreds& sp,
                         std::vector<std::vector<std::vector<Coeffs>>>& fits,
                         Sign::Sign_t sign) const;
+
+    /// Templated helper for \ref ShiftedComponent
+    template <typename U, typename T>
+    U _ShiftedComponent(osc::_IOscCalculator<T>* calc,
+                        const TMD5* hash,
+                        const SystShifts& shift,
+                        Flavors::Flavors_t flav,
+                        Current::Current_t curr,
+                        Sign::Sign_t sign,
+                        CoeffsType type) const;
+
+    /// Templated helper for \ref PredictComponentSyst
+    template <typename U, typename T>
+    U _PredictComponentSyst(osc::_IOscCalculator<T>* calc,
+                            const SystShifts& shift,
+                            Flavors::Flavors_t flav,
+                            Current::Current_t curr,
+                            Sign::Sign_t sign) const;
+
+      /// Helper for \ref ShiftSpectrum
+      template <typename T>
+      void ShiftBins(unsigned int N,
+                     T* arr,
+                     CoeffsType type,
+                     bool nubar,
+                     const SystShifts& shift) const;
   };
 
 }

@@ -157,7 +157,7 @@ void llh_scans(std::string stateFname = def_stateFname,
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                            &dis_expt_fhc_syst, &dis_expt_rhc_syst});
 
-  std::vector<std::pair<std::string, IChiSqExperiment *>> myExpts = {
+  std::vector<std::pair<std::string, IExperiment *>> myExpts = {
       {"FD_FHC_nue", &app_expt_fhc_syst},
       {"FD_RHC_nue", &app_expt_rhc_syst},
       {"FD_FHC_numu", &dis_expt_fhc_syst},

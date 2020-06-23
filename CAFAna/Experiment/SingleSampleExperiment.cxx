@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "OscLib/func/IOscCalculator.h"
@@ -60,7 +61,7 @@ namespace ana
       {
         TMatrixD toInvert(*cov);
 
-        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
         for( int b = 0; b < hist->GetNbinsX(); ++b ) {
           // We add the squared fractional statistical errors to the
           // diagonal. In principle this should vary with the predicted number
@@ -186,7 +187,8 @@ namespace ana
 
       if(fMask) ApplyMask(hpred, hdata);
 
-      ll = LogLikelihood(hpred, hdata);
+      // full namespace qualification to avoid degeneracy with method inherited from IExperiment
+      ll = ana::LogLikelihood(hpred, hdata);
     }
 
     HistCache::Delete(hpred);
@@ -273,7 +275,7 @@ namespace ana
       {
         TMatrixD toInvert(*cov);
 
-        TH1D* hist = fMC->Predict(0).ToTH1(fData.POT());
+        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
         for( int b = 0; b < hist->GetNbinsX(); ++b ) {
           // We add the squared fractional statistical errors to the
           // diagonal. In principle this should vary with the predicted number
@@ -305,6 +307,24 @@ namespace ana
   {
     AddCovarianceMatrix(GetCov(covMatFilename, covMatName), stat);
   }
+
+  //----------------------------------------------------------------------
+  stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                                        const SystShifts &syst) const
+  {
+    auto  pred = syst.IsNominal()
+                 ? fMC->Predict(osc).ToBins(fData.POT())
+                 : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
+    TH1D* hdata = fData.ToTH1(fData.POT());
+
+    // fully-qualified so that we get the one in StanUtils.h
+    auto ll = ana::LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+
+    HistCache::Delete(hdata);
+
+    return ll;
+  }
+
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const

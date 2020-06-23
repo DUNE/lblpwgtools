@@ -6,7 +6,7 @@
 class TH1;
 class TH1D;
 
-namespace osc{class IOscCalculator;}
+#include "CAFAna/Core/FwdDeclare.h"
 
 namespace ana
 {

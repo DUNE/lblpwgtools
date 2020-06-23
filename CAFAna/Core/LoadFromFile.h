@@ -7,9 +7,9 @@
 
 #include "TFile.h"
 
-class TDirectory;
+#include "CAFAna/Core/FwdDeclare.h"
 
-namespace osc{class IOscCalculator;}
+class TDirectory;
 
 namespace ana
 {
@@ -31,8 +31,8 @@ namespace ana
   template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir, const std::string& label);
   class IPrediction;
   template<> std::unique_ptr<IPrediction> LoadFrom<IPrediction>(TDirectory* dir, const std::string& label);
-  class IChiSqExperiment;
-  template<> std::unique_ptr<IChiSqExperiment> LoadFrom<IChiSqExperiment>(TDirectory* dir, const std::string& label);
+  class IExperiment;
+  template<> std::unique_ptr<IExperiment> LoadFrom<IExperiment>(TDirectory* dir, const std::string& label);
   class ModularExtrapComponent;
   template<> std::unique_ptr<ModularExtrapComponent>
     LoadFrom<ModularExtrapComponent>(TDirectory* dir, const std::string& label);

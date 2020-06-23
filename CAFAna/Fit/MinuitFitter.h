@@ -4,7 +4,7 @@
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "TMatrixDSymfwd.h"
 #include "Math/Minimizer.h"
@@ -47,7 +47,7 @@ namespace ana
 
       void SetFitOpts(FitOpts opts);
 
-      MinuitFitter(const IChiSqExperiment *expt,
+      MinuitFitter(const IExperiment *expt,
                    std::vector<const IFitVar *> vars,
                    std::vector<const ISyst *> systs = {},
                    FitOpts opts = kNormal);
@@ -119,17 +119,54 @@ namespace ana
       /// Stuff the parameters into the calculator and/or syst shifts object
       void DecodePars(double const *pars) const;
 
+      /// Concrete instance of IFitSummary for use in MinuitFitter
+      class MinuitFitSummary : public IFitSummary
+      {
+        public:
+          MinuitFitSummary(std::unique_ptr<ROOT::Math::Minimizer> && minimizer)
+            : fMinimizer(std::move(minimizer))
+          {
+            assert (fMinimizer.get() && "Can't make a MinuitFitSummary from a null ROOT::Math::Minimizer");
+          }
+
+          bool IsBetterFit(const IFitSummary* other) const override
+          {
+            if (!other)
+              return true;
+
+            if (const auto mnFitSummary = dynamic_cast<const MinuitFitSummary*>(other))
+              return mnFitSummary->EvalMetricVal() < EvalMetricVal();
+            else
+            {
+              assert(false && "Can't compare a MinuitFitSummary to another kind of IFitSummary");
+              return false;  // prevent compiler warnings
+            }
+          }
+
+          double EvalMetricVal() const override
+          {
+            return fMinimizer->MinValue();
+          }
+
+          const ROOT::Math::Minimizer * GetMinimizer() const { return fMinimizer.get(); }
+
+        private:
+          /// the minimizer instance
+          std::unique_ptr<ROOT::Math::Minimizer> fMinimizer;
+      };
       /// Helper for \ref FitHelper
-      double FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                             SystShifts &systSeed,
-                             Verbosity verb) const override;
+      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+                                                   SystShifts &systSeed,
+                                                   Verbosity verb) const override;
+
+      void UpdatePostFit(const IFitSummary * fitSummary) const override;
 
       /// Intended to be called only once (from constructor) to initialize
       /// fSupportsDerivatives
       bool SupportsDerivatives() const;
 
       mutable osc::IOscCalculatorAdjustable *fCalc;
-      const IChiSqExperiment *fExpt;
+      const IExperiment *fExpt;
 
       FitOpts fFitOpts;
 

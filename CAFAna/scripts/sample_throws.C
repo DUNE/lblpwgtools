@@ -240,7 +240,7 @@ void sample_throws(std::string stateFname = def_stateFname,
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
-  IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
   // Now the good stuff
   double thischisq =

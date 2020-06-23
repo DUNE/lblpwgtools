@@ -6,7 +6,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "Utilities/func/MathUtil.h"
@@ -44,8 +44,8 @@ namespace ana
       const double b = bh->GetBinContent(i);
       const double s = o-b;
 
-    if (s <= 0){
-      continue;}
+      if (s <= 0)
+        continue;
 
       fomSq += util::sqr(s)/(s+b);
     }
@@ -54,7 +54,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Profile(const IChiSqExperiment* expt,
+  TH1* Profile(const IExperiment* expt,
                osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                int nbinsx, double minx, double maxx,
                double input_minchi,
@@ -110,7 +110,7 @@ namespace ana
         profVars[i]->SetValue( calc, seedValues[i] );
 
       SystShifts systshift = SystShifts::Nominal();
-      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       ret->Fill(x, chi);
 
@@ -137,7 +137,7 @@ namespace ana
       MinuitFitter fit(expt, allVars, profSysts, opts);
       // Seed from best grid point
       v->SetValue(calc, minpos);
-      minchi = fit.Fit(calc); // get a better value
+      minchi = fit.Fit(calc)->EvalMetricVal(); // get a better value
 
     }
     else
@@ -151,7 +151,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtProfile(const IChiSqExperiment* expt,
+  TH1* SqrtProfile(const IExperiment* expt,
                    osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                    int nbinsx, double minx, double maxx, double minchi,
                    std::vector<const IFitVar*> profVars,
@@ -177,7 +177,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Slice(const IChiSqExperiment* expt,
+  TH1* Slice(const IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
              int nbinsx, double minx, double maxx,
              double minchi,
@@ -188,7 +188,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtSlice(const IChiSqExperiment* expt,
+  TH1* SqrtSlice(const IExperiment* expt,
                     osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
                     int nbinsx, double minx, double maxx, double minchi,
                     MinuitFitter::FitOpts opts)
@@ -205,7 +205,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TGraph* FindValley(const IChiSqExperiment* expt,
+  TGraph* FindValley(const IExperiment* expt,
                      osc::IOscCalculatorAdjustable* calc,
                      const IFitVar& scanVar,
                      const IFitVar& fitVar,

@@ -1,15 +1,15 @@
 set(Experiment_implementation_files
-  CountingExperiment.cxx
-  IChiSqExperiment.cxx
-  MultiExperiment.cxx
+        CountingExperiment.cxx
+        IExperiment.cxx
+        MultiExperiment.cxx
   ReactorExperiment.cxx
   SingleSampleExperiment.cxx
   SolarConstraints.cxx)
 
 set(Experiment_header_files
-  CountingExperiment.h
-  IChiSqExperiment.h
-  MultiExperiment.h
+        CountingExperiment.h
+        IExperiment.h
+        MultiExperiment.h
   ReactorExperiment.h
   SingleSampleExperiment.h
   SolarConstraints.h)

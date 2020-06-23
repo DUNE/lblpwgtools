@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Core/Spectrum.h"
 
 
@@ -9,7 +9,7 @@ namespace ana
   class IPrediction;
 
   /// Compare a data spectrum to MC expectation using only the event count
-  class CountingExperiment: public IChiSqExperiment
+  class CountingExperiment: public IExperiment
   {
   public:
     CountingExperiment(const IPrediction* p, const Spectrum& d, const Spectrum& cosmic);

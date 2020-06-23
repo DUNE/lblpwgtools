@@ -75,7 +75,7 @@ void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
 }
 
 
-double Chisq(IChiSqExperiment* expt,
+double Chisq(IExperiment* expt,
              osc::IOscCalculatorAdjustable* calc,
              bool oscErr, int nfluxErr, int nxsecErr)
 {
@@ -105,7 +105,7 @@ double Chisq(IChiSqExperiment* expt,
   return ret;
 }
 
-double ChisqAllCombos(IChiSqExperiment* expt, bool oscErr, int nfluxErr, int nxsecErr)
+double ChisqAllCombos(IExperiment* expt, bool oscErr, int nfluxErr, int nxsecErr)
 {
   osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
   oscTest->SetdCP(0);

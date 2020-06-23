@@ -55,7 +55,7 @@ SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
 SpectrumLoader::~SpectrumLoader() {}
 
 struct CompareByID {
-  bool operator()(const Cut &a, const Cut &b) { return a.ID() < b.ID(); }
+  bool operator()(const Cut &a, const Cut &b) const { return a.ID() < b.ID(); }
 };
 
 //----------------------------------------------------------------------

@@ -20,8 +20,10 @@ set(Core_implementation_files
   # SAMProjectSource.cxx
   # SAMQuerySource.cxx
   Spectrum.cxx
+  SpectrumStan.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
+  StanUtils.cxx
   SystShifts.cxx
   ThreadPool.cxx
   Utilities.cxx
@@ -33,6 +35,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FileListSource.h
+  FitVarWithPrior.h
   FwdDeclare.h
   HistAxis.h
   HistCache.h
@@ -51,8 +54,11 @@ set(Core_header_files
   # SAMProjectSource.h
   # SAMQuerySource.h
   Spectrum.h
+  SpectrumStan.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
+  StanTypedefs.h
+  StanUtils.h
   SystShifts.h
   ThreadPool.h
   Utilities.h

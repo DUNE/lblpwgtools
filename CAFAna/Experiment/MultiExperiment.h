@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "TMatrixD.h"
 
 #include <memory>
@@ -9,16 +9,16 @@
 namespace ana
 {
   /// Combine multiple component experiments
-  class MultiExperiment: public IChiSqExperiment
+  class MultiExperiment: public IExperiment
   {
   public:
-    MultiExperiment(std::vector<const IChiSqExperiment*> expts = {}) : fExpts(expts)
+    MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
       fUseCovMx.resize(expts.size(), false);
     }
 
-    void Add(const IChiSqExperiment* expt){
+    void Add(const IExperiment* expt){
       fExpts.push_back(expt);
       fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
@@ -35,7 +35,11 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
-    /// For the subexperiment \a idx, set up a mapping between systematics
+    /// Sum up log-likelihoods of sub-expts.  N.b.: covariance matrix business not currently supported for Stan.
+    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                  const SystShifts &syst) const override;
+
+      /// For the subexperiment \a idx, set up a mapping between systematics
     ///
     /// Each element in the vector is a pair from a "primary" systematic to a
     /// "secondary". When this MultiExperiment is called with a primary
@@ -53,7 +57,7 @@ namespace ana
     static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
-    std::vector<const IChiSqExperiment*> fExpts;
+    std::vector<const IExperiment*> fExpts;
     std::vector<bool> fUseCovMx; // is there a covariance matrix for this Experiment?
 
     std::vector<std::vector<std::pair<const ISyst*, const ISyst*>>> fSystCorrelations;

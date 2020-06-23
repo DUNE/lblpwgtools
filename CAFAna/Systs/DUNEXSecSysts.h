@@ -3,7 +3,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/ISyst.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 
 class TH2;
@@ -85,7 +85,7 @@ namespace ana
   SystVector<DUNEXSecSyst> GetDUNEXSecSysts();
 
 
-  class DUNEXSecCorrelation: public IChiSqExperiment
+  class DUNEXSecCorrelation: public IExperiment
   {
   public:
     DUNEXSecCorrelation();

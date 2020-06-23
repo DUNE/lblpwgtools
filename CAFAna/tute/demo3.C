@@ -29,11 +29,11 @@ void demo3()
   // Except we're introducing "Loaders", which knows the latest CAF locations
   // and packages the three types of loader together into one handy class.
   TDRLoaders loaders(Loaders::kFHC);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
   PredictionNoExtrap pred(loaders, axEnergy, kPassesCVN);
   loaders.Go();
   osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();

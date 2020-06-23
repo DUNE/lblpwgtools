@@ -5,6 +5,7 @@
 
 #include "Rtypes.h"
 
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/SystShifts.h"
 
@@ -15,14 +16,11 @@ class TH1;
 class TH2;
 class THStack;
 
-namespace osc{class IOscCalculator;}
-
 namespace ana
 {
   class IPrediction;
   class ISyst;
   class Spectrum;
-  class SystShifts;
 
   /// Overlay MC spectrum with data spectrum
   ///

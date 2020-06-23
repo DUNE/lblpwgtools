@@ -1,7 +1,8 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Prediction/IPrediction.h"
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Spectrum.h"
 
 namespace ana
@@ -24,7 +25,7 @@ namespace ana
   };
 
   /// Compare a single data spectrum to the MC + cosmics expectation
-  class SingleSampleExperiment: public IChiSqExperiment
+  class SingleSampleExperiment: public IExperiment
   {
   public:
     /// \param pred   Source of oscillated MC beam predictions
@@ -72,7 +73,10 @@ namespace ana
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
-    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+                                  const SystShifts &syst) const override;
+
+      virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<SingleSampleExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
     // Didn't make provisions for copying fCosmic or fMC

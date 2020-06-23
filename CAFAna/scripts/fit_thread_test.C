@@ -155,7 +155,7 @@ int main(int argc, char const *argv[]) {
       fit_type = fit_type | MinuitFitter::kIncludeHesse;
     }
 
-    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     auto start_1 = std::chrono::system_clock::now();
     omp_set_num_threads(1);

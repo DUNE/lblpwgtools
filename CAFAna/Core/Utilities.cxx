@@ -118,45 +118,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihood(double e, double o)
-  {
-    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
-    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
-    const double S = LLPerBinFracSystErr::GetError();
-    if(S > 0){
-      const double S2 = util::sqr(S);
-      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
-      e *= 1+s;
-    }
-
-    // With this value, negative expected events and one observed
-    // event gives a chisq from this one bin of 182.
-    const double minexp = 1e-40; // Don't let expectation go lower than this
-
-    assert(o >= 0);
-    if(e < minexp){
-      if(!o) return 0;
-      e = minexp;
-    }
-
-    if(o*1000 > e){
-      // This strange form is for numerical stability when e~o
-      return 2*o*((e-o)/o + log1p((o-e)/e));
-    }
-    else{
-      // But log1p doesn't like arguments near -1 (observation much smaller
-      // than expectation), and it's better to use the usual formula in that
-      // case.
-      if(o){
-        return 2*(e-o + o*log(o/e));
-      }
-      else{
-        return 2*e;
-      }
-    }
-  }
-
-  //----------------------------------------------------------------------
   double LogLikelihood(const TH1* eh, const TH1* oh, bool useOverflow)
   {
     assert(eh->GetNbinsX() == oh->GetNbinsX());

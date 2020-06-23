@@ -14,7 +14,7 @@
 #include "TObjString.h"
 #include "TCollection.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -28,7 +28,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  FrequentistSurface::FrequentistSurface(const IChiSqExperiment* expt,
+  FrequentistSurface::FrequentistSurface(const IExperiment* expt,
                                          osc::IOscCalculatorAdjustable* calc,
                                          const IFitVar* xvar, int nbinsx, double xmin, double xmax,
                                          const IFitVar* yvar, int nbinsy, double ymin, double ymax,
@@ -104,7 +104,7 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FillSurface(const IChiSqExperiment *expt,
+  void FrequentistSurface::FillSurface(const IExperiment *expt,
                                        osc::IOscCalculatorAdjustable *calc,
                                        const IFitVar *xvar, const IFitVar *yvar,
                                        const std::vector<const IFitVar *> &profVars,
@@ -230,7 +230,7 @@ namespace ana
     F(L); F(Rho);
 #undef F
 #define F(v)\
-    void Set##v(double x) override {fCalc->Set##v(x);}\
+    void Set##v(const double& x) override {fCalc->Set##v(x);}\
     double Get##v() const override {return fCalc->Get##v();}
       F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
 #undef F
@@ -239,7 +239,7 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-  double FrequentistSurface::FillSurfacePoint(const IChiSqExperiment* expt,
+  double FrequentistSurface::FillSurfacePoint(const IExperiment* expt,
                                               osc::IOscCalculatorAdjustable* calc,
                                               const IFitVar* xvar, double x,
                                               const IFitVar* yvar, double y,
@@ -274,7 +274,7 @@ namespace ana
       MinuitFitter fitter(expt, profVars, profSysts);
       fitter.SetFitOpts(fFitOpts);
       SystShifts bestSysts;
-      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       for(unsigned int i = 0; i < profVars.size(); ++i){
         fProfHists[i]->Fill(x, y, profVars[i]->GetValue(calc));
@@ -295,7 +295,7 @@ namespace ana
 
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FindMinimum(const IChiSqExperiment* expt,
+  void FrequentistSurface::FindMinimum(const IExperiment* expt,
                                        osc::IOscCalculatorAdjustable* calc,
                                        const IFitVar* xvar, const IFitVar* yvar,
                                        const std::vector<const IFitVar*>& profVars,
@@ -327,7 +327,7 @@ namespace ana
     yvar->SetValue(calc, fHist->GetYaxis()->GetBinCenter(miny));
     for(int i = 0; i < (int)fSeedValues.size(); ++i) profVars[i]->SetValue( calc, fSeedValues[i] );
     SystShifts systSeed = SystShifts::Nominal();
-    fBestLikelihood = fit.Fit(calc, systSeed, seedPts);
+    fBestLikelihood = fit.Fit(calc, systSeed, seedPts)->EvalMetricVal();
     fBestFitX = xvar->GetValue(calc);
     fBestFitY = yvar->GetValue(calc);
 

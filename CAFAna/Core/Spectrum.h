@@ -8,6 +8,8 @@
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
+#include <Eigen/Dense>
+
 #include "TAttLine.h"
 #include "THnSparse.h"
 
@@ -26,10 +28,12 @@ namespace ana
 {
   class Ratio;
 
+  class SpectrumStan;
   /// Representation of a spectrum in any variable, with associated POT
   class Spectrum
   {
   public:
+    friend class SpectrumStan;
     friend class SpectrumLoaderBase;
     friend class SpectrumLoader;
     friend class NullLoader;
@@ -59,6 +63,12 @@ namespace ana
 
     Spectrum(const std::string& label, const Binning& bins, ESparse sparse = kDense);
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
+
+    /// Makes a spectrum from an eigen3 vector
+    Spectrum(Eigen::VectorXd h,
+             const std::string& labels,
+             const Binning& bins,
+             double pot, double livetime);
 
     /// Copies \a h
     Spectrum(TH1* h,
@@ -137,6 +147,9 @@ namespace ana
     Spectrum& operator=(const Spectrum& rhs);
     Spectrum& operator=(Spectrum&& rhs);
 
+    /// Copy conversion from SpectrumStan
+    Spectrum(const SpectrumStan& rhs);
+    Spectrum& operator=(const SpectrumStan& rhs);
     void Fill(double x, double w = 1);
 
     /// \brief Histogram made from this Spectrum, scaled to some exposure
@@ -158,6 +171,15 @@ namespace ana
     TH1D* ToTH1(double exposure,
                 EExposureType expotype,
                 EBinType bintype = kBinContent) const;
+
+    /// \brief Eigen::VectorXd made from this Spectrum, scaled to some exposure
+    /// WARNING: Drops errors
+    ///
+    /// \param exposure POT or livetime (seconds)
+    /// \param expotype How to interpret exposure (kPOT (default) or kLivetime)
+    Eigen::VectorXd ToEigenVectorXd(double exposure=-1,
+                                    EExposureType = kPOT,
+                                    EBinType bintype = kBinContent) const;
 
     /// Spectrum must be 2D to obtain TH2
     TH2*  ToTH2     (double exposure, EExposureType expotype = kPOT,

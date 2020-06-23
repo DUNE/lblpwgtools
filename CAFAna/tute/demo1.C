@@ -26,8 +26,8 @@ void demo1()
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
+  const Var kCVNNumu = SIMPLEVAR(cvnnumu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
@@ -35,7 +35,7 @@ void demo1()
   // A cut is structured like a Var, but returning bool
   const Cut kPassesCVN([](const caf::StandardRecord* sr)
                        {
-                         return sr->dune.cvnnumu > 0.5;
+                         return sr->cvnnumu > 0.5;
                        });
 
   // In many cases it's easier to form them from existing Vars like this
