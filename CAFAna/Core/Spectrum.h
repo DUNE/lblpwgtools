@@ -82,6 +82,11 @@ namespace ana
              const std::vector<Binning>& bins,
              double pot, double livetime);
 
+    Spectrum(std::vector<stan::math::var>&& binContents,
+             const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
+             double pot, double livetime);
+
     /// 2D Spectrum of two Vars
     Spectrum(const std::string& label, SpectrumLoaderBase& loader,
              const Binning& binsx, const Var& varx,

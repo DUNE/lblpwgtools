@@ -131,6 +131,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum::Spectrum(std::vector<stan::math::var>&& binContents,
+                     const std::vector<std::string>& labels,
+                     const std::vector<Binning>& bins,
+                     double pot, double livetime)
+    : fHist(Hist::Adopt(std::move(binContents))), fPOT(pot), fLivetime(livetime), fBins(bins)
+  {
+  }
+
+  //----------------------------------------------------------------------
   Spectrum::Spectrum(const std::string& label, SpectrumLoaderBase& loader,
                      const Binning& binsx, const Var& varx,
                      const Binning& binsy, const Var& vary,

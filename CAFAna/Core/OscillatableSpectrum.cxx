@@ -152,15 +152,9 @@ namespace ana
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
-    if (rhs.OscCache<Spectrum>::hash)
-    {
-      OscCache<Spectrum>::spect = rhs.OscCache<Spectrum>::spect;
-      OscCache<Spectrum>::hash = std::make_unique<TMD5>(*rhs.OscCache<Spectrum>::hash);
-    }
-    if (rhs.OscCache<SpectrumStan>::hash)
-    {
-      OscCache<SpectrumStan>::spect = rhs.OscCache<SpectrumStan>::spect;
-      OscCache<SpectrumStan>::hash = std::make_unique<TMD5>(*rhs.OscCache<SpectrumStan>::hash);
+    if(rhs.fOscCacheHash){
+      fOscCacheSpect = rhs.fOscCacheSpect;
+      fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -178,15 +172,9 @@ namespace ana
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
-    if (rhs.OscCache<Spectrum>::hash)
-    {
-      OscCache<Spectrum>::spect = std::move(rhs.OscCache<Spectrum>::spect);
-      OscCache<Spectrum>::hash = std::move(rhs.OscCache<Spectrum>::hash);
-    }
-    if (rhs.OscCache<SpectrumStan>::hash)
-    {
-      OscCache<SpectrumStan>::spect = std::move(rhs.OscCache<SpectrumStan>::spect);
-      OscCache<SpectrumStan>::hash = std::move(rhs.OscCache<SpectrumStan>::hash);
+    if(rhs.fOscCacheHash){
+      fOscCacheSpect = std::move(rhs.fOscCacheSpect);
+      fOscCacheHash = std::move(rhs.fOscCacheHash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -206,15 +194,9 @@ namespace ana
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
 
-    if (rhs.OscCache<Spectrum>::hash)
-    {
-      OscCache<Spectrum>::spect = rhs.OscCache<Spectrum>::spect;
-      OscCache<Spectrum>::hash = std::make_unique<TMD5>(*rhs.OscCache<Spectrum>::hash);
-    }
-    if (rhs.OscCache<SpectrumStan>::hash)
-    {
-      OscCache<SpectrumStan>::spect = rhs.OscCache<SpectrumStan>::spect;
-      OscCache<SpectrumStan>::hash = std::make_unique<TMD5>(*rhs.OscCache<SpectrumStan>::hash);
+    if(rhs.fOscCacheHash){
+      fOscCacheSpect = rhs.fOscCacheSpect;
+      fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -238,15 +220,9 @@ namespace ana
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
 
-    if (rhs.OscCache<Spectrum>::hash)
-    {
-      OscCache<Spectrum>::spect = std::move(rhs.OscCache<Spectrum>::spect);
-      OscCache<Spectrum>::hash = std::move(rhs.OscCache<Spectrum>::hash);
-    }
-    if (rhs.OscCache<SpectrumStan>::hash)
-    {
-      OscCache<SpectrumStan>::spect = std::move(rhs.OscCache<SpectrumStan>::spect);
-      OscCache<SpectrumStan>::hash = std::move(rhs.OscCache<SpectrumStan>::hash);
+    if(rhs.fOscCacheHash){
+      fOscCacheSpect = std::move(rhs.fOscCacheSpect);
+      fOscCacheHash = std::move(rhs.fOscCacheHash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -260,32 +236,31 @@ namespace ana
                                             int from, int to) const
   {
     TMD5* hash = calc->GetParamsHash();
-    if(hash && OscCache<Spectrum>::hash && *hash == *OscCache<Spectrum>::hash){
+    if(hash && fOscCacheHash && *hash == *fOscCacheHash){
       delete hash;
-      return OscCache<Spectrum>::spect;
+      return fOscCacheSpect;
     }
 
     const OscCurve curve(calc, from, to);
     TH1D* Ps = curve.ToTH1();
 
     const Spectrum ret = WeightedBy(Ps);
-    if (hash)
-    {
-      OscCache<Spectrum>::spect = ret;
-      OscCache<Spectrum>::hash.reset(hash);
+    if(hash){
+      fOscCacheSpect = ret;
+      fOscCacheHash.reset(hash);
     }
     HistCache::Delete(Ps, kTrueEnergyBins.ID());
     return ret;
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan OscillatableSpectrum::Oscillated(osc::_IOscCalculator<stan::math::var>* calc,
-                                                int from, int to) const
+  Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalculatorStan* calc,
+                                            int from, int to) const
   {
     TMD5* hash = calc->GetParamsHash();
-    if(hash && OscCache<SpectrumStan>::hash && *hash == *OscCache<SpectrumStan>::hash){
+    if(hash && fOscCacheHash && *hash == *fOscCacheHash){
       delete hash;
-      return OscCache<SpectrumStan>::spect;
+      return fOscCacheSpect;
     }
 
     DontAddDirectory guard;
@@ -312,12 +287,11 @@ namespace ana
       }
     }
 
-    SpectrumStan ret(std::move(binC), fLabels, fBins, fPOT, fLivetime);
+    Spectrum ret(std::move(binC), fLabels, fBins, fPOT, fLivetime);
 
-    if (hash)
-    {
-      OscCache<SpectrumStan>::spect = ret;
-      OscCache<SpectrumStan>::hash.reset(hash);
+    if(hash){
+      fOscCacheSpect = ret;
+      fOscCacheHash.reset(hash);
     }
     return std::move(ret);
   }
@@ -334,8 +308,7 @@ namespace ana
     }
 
     // invalidate
-    OscCache<Spectrum>::hash.reset(nullptr);
-    OscCache<SpectrumStan>::hash.reset(nullptr);
+    fOscCacheHash.reset(nullptr);
 
     return *this;
   }
@@ -360,8 +333,7 @@ namespace ana
     }
 
     // invalidate
-    OscCache<Spectrum>::hash.reset(nullptr);
-    OscCache<SpectrumStan>::hash.reset(nullptr);
+    fOscCacheHash.reset(nullptr);
 
     return *this;
   }

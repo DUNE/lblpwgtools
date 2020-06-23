@@ -22,18 +22,18 @@ namespace ana
 {
   class Binning;
 
-  template <typename T>
   struct OscCache
   {
-    mutable std::unique_ptr<TMD5> hash;
-    mutable T spect;
+    mutable std::unique_ptr<TMD5> fOscCacheHash;
+    mutable Spectrum fOscCacheSpect;
 
     OscCache()
-      : spect(0, {}, {}, 0, 0)
+      : fOscCacheSpect(0, {}, {}, 0, 0)
     {}
   };
+
   /// %Spectrum with true energy information, allowing it to be oscillated
-  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache<Spectrum>, protected OscCache<SpectrumStan>
+  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache
   {
   public:
     friend class SpectrumLoaderBase;
@@ -91,7 +91,7 @@ namespace ana
     Spectrum TrueEnergy() const {return WeightingVariable();}
 
     Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
-    SpectrumStan Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
+    Spectrum Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
 
     Eigen::MatrixXd getCoreMatrix() const;
 
