@@ -1,17 +1,15 @@
 #pragma once
 
-#include "CAFAna/Experiment/IExperiment.h"
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "TMath.h"
 
 #include "TRandom3.h"
 
-namespace ana{class IOscCalculatorAdjustable;}
-
 namespace ana
 {
-
   /*
   // http://www.nu-fit.org/?q=node/177
   // NuFit November 2018
@@ -98,14 +96,14 @@ namespace ana
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
 
-  class NuFitPenalizer: public IChiSqExperiment
+  class NuFitPenalizer: public IExperiment
   {
   public:
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
 
-  class Penalizer_GlbLike: public IChiSqExperiment
+  class Penalizer_GlbLike: public IExperiment
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
