@@ -67,8 +67,11 @@ namespace ana
 
   /// Default true-energy bin edges
   Binning TrueEnergyBins();
+  std::vector<double> TrueEnergyBinCenters();
+
   /// Default true-energy bin edges
   const Binning kTrueEnergyBins = TrueEnergyBins();
+  const std::vector<double> kTrueEnergyBinCenters = TrueEnergyBinCenters();
 
   /// LBL and ND analyses binning
   /// Eventually define as k{ND,FD}{Nue,Numu}Binning
