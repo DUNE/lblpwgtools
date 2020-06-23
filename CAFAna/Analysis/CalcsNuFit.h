@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Core/IFitVar.h"
 
 #include "TMath.h"
