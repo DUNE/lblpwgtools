@@ -13,7 +13,7 @@ namespace ana
 {
   // --------------------------------------------------------------------------
   SeedList RefineSeeds(const SeedList& seeds,
-                       const IChiSqExperiment* expt,
+                       const IExperiment* expt,
                        const std::vector<const IFitVar*>& vars,
                        const osc::IOscCalculatorAdjustable* calc0,
                        double dchisq_max)

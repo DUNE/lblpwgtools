@@ -36,7 +36,7 @@ namespace ana
     if (fCosmic) exp += fCosmic->Integral(0,-1);
     double obs = fData.Integral(fData.POT());
 
-    return LogLikelihood(exp, obs);
+    return ana::LogLikelihood(exp, obs);  // use namespace to disabiguate from method inherited from IExperiment
   }
 
   //----------------------------------------------------------------------

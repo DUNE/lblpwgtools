@@ -4,7 +4,7 @@
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "TMatrixDSymfwd.h"
 #include "Math/Minimizer.h"
@@ -47,7 +47,7 @@ namespace ana
 
       void SetFitOpts(FitOpts opts);
 
-      MinuitFitter(const IChiSqExperiment *expt,
+      MinuitFitter(const IExperiment *expt,
                    std::vector<const IFitVar *> vars,
                    std::vector<const ISyst *> systs = {},
                    FitOpts opts = kNormal);
@@ -166,7 +166,7 @@ namespace ana
       bool SupportsDerivatives() const;
 
       mutable osc::IOscCalculatorAdjustable *fCalc;
-      const IChiSqExperiment *fExpt;
+      const IExperiment *fExpt;
 
       FitOpts fFitOpts;
 

@@ -19,7 +19,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 
-#include "CAFAna/Experiment/ILkhdExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculator.h"
@@ -34,7 +34,7 @@ namespace ana
 {
 
   //----------------------------------------------------------------------
-  StanFitter::StanFitter(const ILkhdExperiment *expt,
+  StanFitter::StanFitter(const IExperiment *expt,
                          std::vector<const IFitVar *> vars,
                          std::vector<const ISyst *> systs)
     : IFitter(vars, systs),

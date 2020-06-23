@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/IFitVar.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "TMath.h"
 
@@ -95,14 +95,14 @@ namespace ana
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
 
-  class NuFitPenalizer: public IChiSqExperiment
+  class NuFitPenalizer: public IExperiment
   {
   public:
     double ChiSq(osc::IOscCalculatorAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
 
-  class Penalizer_GlbLike: public IChiSqExperiment
+  class Penalizer_GlbLike: public IExperiment
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 

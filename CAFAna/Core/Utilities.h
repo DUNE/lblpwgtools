@@ -132,9 +132,6 @@ namespace ana
        stan::math::var if either T or U are.
   **/
   template <typename T, typename U,
-            typename std::enable_if<std::is_convertible<double, T>::value && std::is_convertible<double, U>::value, int>::type = 0>
-  auto LogLikelihood(T exp, U obs)
-  template <typename T, typename U,
             typename std::enable_if_t<std::is_convertible_v<double, T> && std::is_convertible_v<double, U>, int> = 0>
   decltype(T(0) - U(0)) LogLikelihood(T exp, U obs)
   {

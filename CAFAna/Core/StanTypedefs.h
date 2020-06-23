@@ -47,9 +47,5 @@ namespace ana
   template <typename T> class _IConstrainedFitVar;
   typedef _IConstrainedFitVar<stan::math::var> IConstrainedFitVarStan;
 
-  // ---------------------
-  // experiments
-  template <typename T> class _ILkhdExperiment;
-  typedef _ILkhdExperiment<stan::math::var> ILkhdExperiment;
 
 }

@@ -76,7 +76,7 @@ namespace ana
   class StanFitter: public IFitter, public stan::model::prob_grad
   {
     public:
-      StanFitter(const ILkhdExperiment *expt,
+      StanFitter(const IExperiment *expt,
                  std::vector<const IFitVar *> vars,
                  std::vector<const ISyst *> systs = {});
 
@@ -308,7 +308,7 @@ namespace ana
 
       //  members below
       mutable std::unique_ptr<osc::IOscCalculatorAdjustableStan> fCalc;
-      const ILkhdExperiment * fExpt;
+      const IExperiment * fExpt;
       StanConfig  fStanConfig;                           ///< Configuration passed to Stan for fitting.   See the StanConfig struct documentation for ideas
       MCMCSamples fMCMCSamples;
       mutable MemoryTupleWriter fValueWriter;            ///< See MemoryTupleWriter class documentation for more info

@@ -1,4 +1,4 @@
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "CAFAna/Core/Utilities.h"
 
@@ -19,7 +19,7 @@ namespace ana
 {
   //----------------------------------------------------------------------
   // Definition to satisfy declaration in Core/LoadFromFile.h
-  template<> std::unique_ptr<IChiSqExperiment> LoadFrom<IChiSqExperiment>(TDirectory* dir, const std::string& name)
+  template<> std::unique_ptr<IExperiment> LoadFrom<IExperiment>(TDirectory* dir, const std::string& name)
   {
     TObjString* ptag = (TObjString*)dir->Get((name+"/type").c_str());
     assert(ptag);
@@ -38,7 +38,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IChiSqExperiment::SaveTo(TDirectory* dir, const std::string& name) const
+  void IExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {
     assert(0 && "Not implemented");
   }

@@ -87,7 +87,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     // Need to find the best fit in the correct hierachy
     // Note that I'm ignoring the octant here
     // This actually doesn't matter unless we apply a theta23 constraint, which I think we shouldn't anyway...
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -102,7 +102,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     testOsc->SetdCP(thisdcp);
     fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember
-    IChiSqExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
 
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...

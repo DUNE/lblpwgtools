@@ -14,7 +14,7 @@
 #include "TObjString.h"
 #include "TCollection.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -28,7 +28,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  FrequentistSurface::FrequentistSurface(const IChiSqExperiment* expt,
+  FrequentistSurface::FrequentistSurface(const IExperiment* expt,
                                          osc::IOscCalculatorAdjustable* calc,
                                          const IFitVar* xvar, int nbinsx, double xmin, double xmax,
                                          const IFitVar* yvar, int nbinsy, double ymin, double ymax,
@@ -104,7 +104,7 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FillSurface(const IChiSqExperiment *expt,
+  void FrequentistSurface::FillSurface(const IExperiment *expt,
                                        osc::IOscCalculatorAdjustable *calc,
                                        const IFitVar *xvar, const IFitVar *yvar,
                                        const std::vector<const IFitVar *> &profVars,
@@ -239,7 +239,7 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-  double FrequentistSurface::FillSurfacePoint(const IChiSqExperiment* expt,
+  double FrequentistSurface::FillSurfacePoint(const IExperiment* expt,
                                               osc::IOscCalculatorAdjustable* calc,
                                               const IFitVar* xvar, double x,
                                               const IFitVar* yvar, double y,
@@ -295,7 +295,7 @@ namespace ana
 
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FindMinimum(const IChiSqExperiment* expt,
+  void FrequentistSurface::FindMinimum(const IExperiment* expt,
                                        osc::IOscCalculatorAdjustable* calc,
                                        const IFitVar* xvar, const IFitVar* yvar,
                                        const std::vector<const IFitVar*>& profVars,
