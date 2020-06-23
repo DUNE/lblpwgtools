@@ -96,5 +96,4 @@ namespace ana
   const Binning binsEreco_Coarse = Binning::Simple(20, 0, 10);
   const Binning binsEreco_VeryCoarse = Binning::Simple(5, 0, 10);
   const Binning onebin = Binning::Simple(1, 0, 10);
-
 }
