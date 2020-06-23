@@ -94,7 +94,7 @@ namespace ana
   {
     std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
     hist->Set(h.size(), h.data());
-    fHist = Hist::Adopt(std::move(hist), bins);
+    fHist = Hist::Adopt(std::move(hist));
   }
 
   //----------------------------------------------------------------------
@@ -114,10 +114,10 @@ namespace ana
 
     if(className == "TH1D"){
       // Shortcut if types match
-      fHist = Hist::Copy((TH1D*)h, Binning::FromTAxis(h->GetXaxis()));
+      fHist = Hist::Copy((TH1D*)h);
     }
     else{
-      fHist = Hist::Copy(h, Binning::FromTAxis(h->GetXaxis()));
+      fHist = Hist::Copy(h);
     }
   }
 
@@ -126,7 +126,7 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h), Binning::FromTAxis(h->GetXaxis()))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins) // TODO is ordering here safe with the move?
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins) // TODO is ordering here safe with the move?
   {
   }
 
@@ -339,7 +339,7 @@ namespace ana
       // Ensure errors get accumulated properly
       h->Sumw2();
 
-      fHist = Hist::Adopt(std::unique_ptr<THnSparseD>(h), bins1D);
+      fHist = Hist::Adopt(std::unique_ptr<THnSparseD>(h));
     }
     else{
       TH1D* h = HistCache::New("", bins1D);
@@ -347,7 +347,7 @@ namespace ana
       // Ensure errors get accumulated properly
       h->Sumw2();
 
-      fHist = Hist::Adopt(std::unique_ptr<TH1D>(h), bins1D);
+      fHist = Hist::Adopt(std::unique_ptr<TH1D>(h));
     }
   }
 
@@ -360,7 +360,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = fHist.ToTH1();
+    TH1D* ret = fHist.ToTH1(Bins1D());
 
     if(expotype == kPOT){
       const double pot = exposure;
@@ -518,7 +518,7 @@ namespace ana
   {
     // this is slower than intended since ToTH1() makes a copy.
     // can optimize if it becomes a hot spot
-    TH1D * h = fHist.ToTH1();
+    TH1D * h = fHist.ToTH1(Bins1D());
     Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
                                                         h->GetNbinsX()+2);
     if(exposure > 0)
@@ -857,7 +857,7 @@ namespace ana
     }
 
     std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
-    ret->fHist = Hist::FromDirectory(dir, ret->Bins1D());
+    ret->fHist = Hist::FromDirectory(dir);
 
     delete hPot;
     delete hLivetime;

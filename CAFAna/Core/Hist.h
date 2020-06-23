@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/Binning.h"
+#include "CAFAna/Core/StanTypedefs.h"
 
 class TDirectory;
 class TH1F;
@@ -10,6 +10,8 @@ class TH1D;
 
 namespace ana
 {
+  class Binning;
+
   class Hist
   {
   public:
@@ -20,16 +22,17 @@ namespace ana
     ~Hist();
 
     static Hist Uninitialized(){return Hist();}
-    bool Initialized() const {return fHistD || fHistSparse;}
+    bool Initialized() const {return fHistD || fHistSparse || fStanVars;}
 
-    static Hist Copy(TH1D* h, const Binning& bins);
-    static Hist Copy(TH1* h, const Binning& bins);
-    static Hist Adopt(std::unique_ptr<TH1D> h, const Binning& bins);
-    static Hist Adopt(std::unique_ptr<THnSparseD> h, const Binning& bins);
+    static Hist Copy(TH1D* h);
+    static Hist Copy(TH1* h);
+    static Hist Adopt(std::unique_ptr<TH1D> h);
+    static Hist Adopt(std::unique_ptr<THnSparseD> h);
+    static Hist Adopt(std::vector<stan::math::var>&& v);
 
-    static Hist FromDirectory(TDirectory* dir, const Binning& bins);
+    static Hist FromDirectory(TDirectory* dir);
 
-    TH1D* ToTH1() const;
+    TH1D* ToTH1(const Binning& bins) const;
 
     int GetNbinsX() const;
     double GetBinError(int i) const;
@@ -54,9 +57,14 @@ namespace ana
   protected:
     Hist();
 
+    // Helpers for the public Add() function
+    void Add(const TH1D* rhs, double scale);
+    void Add(const THnSparseD* rhs, double scale);
+    void Add(const std::vector<stan::math::var>* rhs, double scale);
+
     //    TH1F* fHistF;
     TH1D* fHistD;
     THnSparseD* fHistSparse;
-    Binning fBins;
+    std::vector<stan::math::var>* fStanVars;
   };
 }
