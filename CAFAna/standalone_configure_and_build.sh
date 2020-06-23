@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#script to build...
 FORCE_REMOVE="0"
 USE_UPS="0"
 CORES=1
