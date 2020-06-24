@@ -15,7 +15,7 @@ namespace ana
 {
   //----------------------------------------------------------------------
   Hist::Hist()
-    : /*fHistF(0),*/ fHistD(0), fHistSparse(0), fStanVars(0), fEigen(0)
+    : /*fHistF(0),*/ fHistD(0), fHistSparse(0), fEigenStan(0), fEigen(0)
   {
   }
 
@@ -36,7 +36,7 @@ namespace ana
       fHistSparse = (THnSparseD*)rhs.fHistSparse->Clone();
     }
 
-    if(rhs.fStanVars) fStanVars = new std::vector<stan::math::var>(*rhs.fStanVars);
+    if(rhs.fEigenStan) fEigenStan = new Eigen::VectorXstan(*rhs.fEigenStan);
 
     if(rhs.fEigen) fEigen = new Eigen::VectorXd(*rhs.fEigen);
   }
@@ -49,7 +49,7 @@ namespace ana
 
     std::swap(fHistD, rhs.fHistD);
     std::swap(fHistSparse, rhs.fHistSparse);
-    std::swap(fStanVars, rhs.fStanVars);
+    std::swap(fEigenStan, rhs.fEigenStan);
     std::swap(fEigen, rhs.fEigen);
   }
 
@@ -62,10 +62,10 @@ namespace ana
 
     if(fHistD) HistCache::Delete(fHistD);
     delete fHistSparse;
-    delete fStanVars;
+    delete fEigenStan;
     fHistD = 0;
     fHistSparse = 0;
-    fStanVars = 0;
+    fEigenStan = 0;
 
     assert(rhs.Initialized());
 
@@ -77,8 +77,8 @@ namespace ana
       fHistSparse = (THnSparseD*)rhs.fHistSparse->Clone();
     }
 
-    if(rhs.fStanVars){
-      fStanVars = new std::vector<stan::math::var>(*rhs.fStanVars);
+    if(rhs.fEigenStan){
+      fEigenStan = new Eigen::VectorXstan(*rhs.fEigenStan);
     }
 
     if(rhs.fEigen){
@@ -97,7 +97,7 @@ namespace ana
 
     std::swap(fHistD, rhs.fHistD);
     std::swap(fHistSparse, rhs.fHistSparse);
-    std::swap(fStanVars, rhs.fStanVars);
+    std::swap(fEigenStan, rhs.fEigenStan);
     std::swap(fEigen, rhs.fEigen);
 
     return *this;
@@ -118,13 +118,13 @@ namespace ana
 
     delete fHistSparse;
 
-    delete fStanVars;
+    delete fEigenStan;
 
     delete fEigen;
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Copy(TH1D* h)
+  Hist Hist::Copy(const TH1D* h)
   {
     Hist ret;
     ret.fHistD = HistCache::Copy(h);
@@ -132,11 +132,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Copy(TH1* h)
+  Hist Hist::Copy(const TH1* h)
   {
     Hist ret;
     ret.fHistD = HistCache::New("", h->GetXaxis());
     ret.fHistD->Add(h);
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  Hist Hist::Copy(const std::vector<stan::math::var>& v)
+  {
+    Hist ret;
+    ret.fEigenStan = new Eigen::VectorXstan(v.size());
+    for(unsigned int i = 0; i < v.size(); ++i) (*ret.fEigenStan)[i] = v[i];
     return ret;
   }
 
@@ -157,10 +166,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Adopt(std::vector<stan::math::var>&& v)
+  Hist Hist::Adopt(Eigen::VectorXstan&& v)
   {
     Hist ret;
-    ret.fStanVars = new std::vector<stan::math::var>(std::move(v));
+    ret.fEigenStan = new Eigen::VectorXstan(std::move(v));
     return ret;
   }
 
@@ -191,9 +200,9 @@ namespace ana
 
     if(fHistSparse) return fHistSparse->Projection(0);
 
-    if(fStanVars){
+    if(fEigenStan){
       TH1D* ret = HistCache::New("", bins);
-      for(int i = 0; i < bins.NBins()+2; ++i) ret->SetBinContent(i, (*fStanVars)[i].val());
+      for(int i = 0; i < bins.NBins()+2; ++i) ret->SetBinContent(i, (*fEigenStan)[i].val());
       return ret;
     }
 
@@ -213,7 +222,7 @@ namespace ana
 
     if(fHistD) return fHistD->GetNbinsX();
     if(fHistSparse) return fHistSparse->GetAxis(0)->GetNbins();
-    if(fStanVars) return fStanVars->size()-2;
+    if(fEigenStan) return fEigenStan->size()-2;
     if(fEigen) return fEigen->size()-2;
 
     abort(); // unreachable
@@ -259,7 +268,7 @@ namespace ana
     else if(fHistSparse){
       fHistSparse->Fill(&x, w);
     }
-    else if(fStanVars){
+    else if(fEigenStan){
       std::cout << "Hist::Fill() not supported for stan vars" << std::endl;
       abort();
     }
@@ -278,7 +287,7 @@ namespace ana
     assert(Initialized());
     if(fHistD) fHistD->Scale(s);
     if(fHistSparse) fHistSparse->Scale(s);
-    if(fStanVars) for(stan::math::var& v: *fStanVars) v *= s;
+    if(fEigenStan) *fEigenStan *= s;
     if(fEigen) *fEigen *= s;
   }
 
@@ -298,7 +307,7 @@ namespace ana
 
     if(fHistD) return fHistD->GetBinContent(i);
     if(fHistSparse) return fHistSparse->GetBinContent(i);
-    if(fStanVars) return (*fStanVars)[i].val();
+    if(fEigenStan) return (*fEigenStan)[i].val();
     if(fEigen) return (*fEigen)[i];
 
     abort(); // unreachable
@@ -311,7 +320,7 @@ namespace ana
 
     if(fHistD) fHistD->SetBinContent(i, x);
     if(fHistSparse) fHistSparse->SetBinContent(i, x);
-    if(fStanVars){
+    if(fEigenStan){
       std::cout << "Hist::SetBinContent() not implemented for stan vars" << std::endl;
       abort();
     }
@@ -325,7 +334,7 @@ namespace ana
   {
     if(fHistD) fHistD->Reset();
     if(fHistSparse) fHistSparse->Reset();
-    if(fStanVars) for(stan::math::var& v: *fStanVars) v = 0;
+    if(fEigenStan) fEigenStan->setZero();
     if(fEigen) fEigen->setZero();
   }
 
@@ -334,14 +343,16 @@ namespace ana
   {
     if(fHistD) fHistD->Add(rhs, scale);
     if(fHistSparse) fHistSparse->Add(rhs, scale);
-    if(fStanVars){
-      for(unsigned int i = 0; i < fStanVars->size(); ++i){
-        (*fStanVars)[i] += rhs->GetBinContent(i);
+    if(fEigenStan){
+      const double* arr = rhs->GetArray();
+      for(unsigned int i = 0; i < fEigenStan->size(); ++i){
+        (*fEigenStan)[i] += arr[i];
       }
     }
     if(fEigen){
+      const double* arr = rhs->GetArray();
       for(unsigned int i = 0; i < fEigen->size(); ++i){
-        (*fEigen)[i] += rhs->GetBinContent(i);
+        (*fEigen)[i] += arr[i];
       }
     }
   }
@@ -350,14 +361,15 @@ namespace ana
   void Hist::Add(const THnSparseD* rhs, double scale)
   {
     if(fHistD){
+      double* arr = fHistD->GetArray();
       for(int i = 0; i < fHistD->GetNbinsX()+2; ++i){
-        fHistD->AddBinContent(i, rhs->GetBinContent(i) * scale);
+        arr[i] += rhs->GetBinContent(i) * scale;
       }
     }
     if(fHistSparse) fHistSparse->Add(rhs, scale);
-    if(fStanVars){
-      for(unsigned int i = 0; i < fStanVars->size(); ++i){
-        (*fStanVars)[i] += rhs->GetBinContent(i);
+    if(fEigenStan){
+      for(unsigned int i = 0; i < fEigenStan->size(); ++i){
+        (*fEigenStan)[i] += rhs->GetBinContent(i);
       }
     }
     if(fEigen){
@@ -368,36 +380,32 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Hist::Add(const std::vector<stan::math::var>* rhs, double scale)
+  void Hist::Add(const Eigen::VectorXstan* rhs, double scale)
   {
     if(fHistD){
-      fStanVars = new std::vector<stan::math::var>(rhs->size(), 0);
-      for(unsigned int i = 0; i < fStanVars->size(); ++i){
-        (*fStanVars)[i] = fHistD->GetBinContent(i) + (*rhs)[i] * scale;
+      fEigenStan = new Eigen::VectorXstan(*rhs * scale);
+      const double* arr = fHistD->GetArray();
+      for(unsigned int i = 0; i < fEigenStan->size(); ++i){
+        (*fEigenStan)[i] += arr[i];
       }
       HistCache::Delete(fHistD);
     }
 
     if(fHistSparse){
-      fStanVars = new std::vector<stan::math::var>(rhs->size(), 0);
-      for(unsigned int i = 0; i < fStanVars->size(); ++i){
-        (*fStanVars)[i] = fHistSparse->GetBinContent(i) + (*rhs)[i] * scale;
+      fEigenStan = new Eigen::VectorXstan(*rhs * scale);
+      for(unsigned int i = 0; i < fEigenStan->size(); ++i){
+        (*fEigenStan)[i] += fHistSparse->GetBinContent(i);
       }
       delete fHistSparse;
       fHistSparse = 0;
     }
 
-    if(fStanVars){
-      for(unsigned int i = 0; i < fStanVars->size(); ++i){
-        (*fStanVars)[i] += (*rhs)[i];
-      }
+    if(fEigenStan){
+      *fEigenStan += *rhs * scale;
     }
 
     if(fEigen){
-      fStanVars = new std::vector<stan::math::var>(rhs->size(), 0);
-      for(unsigned int i = 0; i < rhs->size(); ++i){
-        (*fStanVars)[i] = (*fEigen)[i] + (*rhs)[i] * scale;
-      }
+      fEigenStan = new Eigen::VectorXstan(*fEigen + *rhs * scale);
       delete fEigen;
       fEigen = 0;
     }
@@ -407,16 +415,15 @@ namespace ana
   void Hist::Add(const Eigen::VectorXd* rhs, double scale)
   {
     if(fHistD){
-      for(unsigned int i = 0; i < rhs->size(); ++i) fHistD->AddBinContent(i, (*rhs)[i] * scale);
+      double* arr = fHistD->GetArray();
+      for(unsigned int i = 0; i < rhs->size(); ++i) arr[i] += (*rhs)[i] * scale;
     }
 
     if(fHistSparse){
       for(unsigned int i = 0; i < rhs->size(); ++i) fHistSparse->AddBinContent(i, (*rhs)[i] * scale);
     }
 
-    if(fStanVars){
-      for(unsigned int i = 0; i < rhs->size(); ++i) (*fStanVars)[i] += (*rhs)[i] * scale;
-    }
+    if(fEigenStan) *fEigenStan += *rhs * scale;
 
     if(fEigen) *fEigen += *rhs * scale;
   }
@@ -429,7 +436,7 @@ namespace ana
 
     if(rhs.fHistD)      Add(rhs.fHistD,      scale);
     if(rhs.fHistSparse) Add(rhs.fHistSparse, scale);
-    if(rhs.fStanVars)   Add(rhs.fStanVars,   scale);
+    if(rhs.fEigenStan)  Add(rhs.fEigenStan,  scale);
     if(rhs.fEigen)      Add(rhs.fEigen,      scale);
   }
 
@@ -452,7 +459,7 @@ namespace ana
 
     if(fHistD) fHistD->Write("hist");
     if(fHistSparse) fHistSparse->Write("hist_sparse");
-    if(fStanVars){
+    if(fEigenStan){
       std::cout << "Hist::Write() not implemented (impossible?) for stan vars" << std::endl;
       abort();
     }

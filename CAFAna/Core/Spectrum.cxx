@@ -133,7 +133,7 @@ namespace ana
                      const std::vector<std::string>& labels,
                      const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(binContents))), fPOT(pot), fLivetime(livetime), fBins(bins)
+    : fHist(Hist::Copy(binContents)), fPOT(pot), fLivetime(livetime), fBins(bins)
   {
   }
 

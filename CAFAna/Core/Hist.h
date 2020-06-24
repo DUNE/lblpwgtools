@@ -9,6 +9,7 @@ class TH1D;
 #include "THnSparse.h"
 
 #include <Eigen/Dense> // TODO can we forward declare VectorXd?
+namespace Eigen{using VectorXstan = Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>;}
 
 namespace ana
 {
@@ -24,13 +25,16 @@ namespace ana
     ~Hist();
 
     static Hist Uninitialized(){return Hist();}
-    bool Initialized() const {return fHistD || fHistSparse || fStanVars || fEigen;}
+    bool Initialized() const {return fHistD || fHistSparse || fEigenStan || fEigen;}
 
-    static Hist Copy(TH1D* h);
-    static Hist Copy(TH1* h);
+    // TODO try to convert all callers to Adopt()
+    static Hist Copy(const TH1D* h);
+    static Hist Copy(const TH1* h);
+    static Hist Copy(const std::vector<stan::math::var>& v);
+
     static Hist Adopt(std::unique_ptr<TH1D> h);
     static Hist Adopt(std::unique_ptr<THnSparseD> h);
-    static Hist Adopt(std::vector<stan::math::var>&& v);
+    static Hist Adopt(Eigen::VectorXstan&& v);
     static Hist Adopt(Eigen::VectorXd&& v);
 
     static Hist FromDirectory(TDirectory* dir);
@@ -63,13 +67,13 @@ namespace ana
     // Helpers for the public Add() function
     void Add(const TH1D* rhs, double scale);
     void Add(const THnSparseD* rhs, double scale);
-    void Add(const std::vector<stan::math::var>* rhs, double scale);
+    void Add(const Eigen::VectorXstan* rhs, double scale);
     void Add(const Eigen::VectorXd* rhs, double scale);
 
     //    TH1F* fHistF;
     TH1D* fHistD;
     THnSparseD* fHistSparse;
-    std::vector<stan::math::var>* fStanVars;
+    Eigen::VectorXstan* fEigenStan;
     Eigen::VectorXd* fEigen;
   };
 }
