@@ -90,11 +90,9 @@ namespace ana
                      const std::string & labels,
                      const Binning& bins,
                      double pot, double livetime)
-    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
   {
-    std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
-    hist->Set(h.size(), h.data());
-    fHist = Hist::Adopt(std::move(hist));
+    // TODO variant of this moving the VectorXd
   }
 
   //----------------------------------------------------------------------
