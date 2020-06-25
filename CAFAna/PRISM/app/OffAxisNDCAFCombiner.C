@@ -701,9 +701,12 @@ void OffAxisNDCAFCombiner() {
       filerecalcprog.Done();
     }
     for (int SpecRunID_local : SpecRunIds_all) {
-      POTExposures[SpecRunID_local]->Write("POTExposures");
-      POTExposures_stop[SpecRunID_local]->Write("POTExposures_stop");
-      FileExposures[SpecRunID_local]->Write("FileExposures");
+      POTExposures[SpecRunID_local]->Write(
+          POTExposures[SpecRunID_local]->GetName());
+      POTExposures_stop[SpecRunID_local]->Write(
+          POTExposures_stop[SpecRunID_local]->GetName());
+      FileExposures[SpecRunID_local]->Write(
+          FileExposures[SpecRunID_local]->GetName());
     }
   }
 

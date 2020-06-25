@@ -97,6 +97,8 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
   // TODO we should make this correct every bin by its width, this currently
   // uses the second bin width only because a hack that uses the first bin to
   // mock up a special beam run
+
+  // This should explicitly be a mass correction and not a POT correction.
   double xslice_width_cm = (offAxisBinEdges[2] - offAxisBinEdges[1]) * 1E2;
   fDefaultOffAxisPOT = 1.0 / FD_ND_FVRatio(xslice_width_cm);
 
