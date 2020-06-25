@@ -21,24 +21,6 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
   std::string const &output_dir = pred.get<std::string>("output_dir", "");
   std::string const &varname =
       pred.get<std::string>("projection_name", "EProxy");
-  auto SpecialRunWeightHist = pred.get<std::pair<std::string, std::string>>(
-      "special_run_weight", {"", ""});
-
-  TH1 *whist = nullptr;
-  if (SpecialRunWeightHist.first.size()) {
-    TDirectory *gdc = gDirectory;
-    TFile wf(SpecialRunWeightHist.first.c_str());
-    wf.GetObject(SpecialRunWeightHist.second.c_str(), whist);
-    if (!whist) {
-      std::cout << "[ERROR]: Failed to read " << SpecialRunWeightHist.second
-                << " from " << SpecialRunWeightHist.first << std::endl;
-      throw;
-    }
-    whist->SetDirectory(nullptr);
-    if (gdc) {
-      gdc->cd();
-    }
-  }
 
   osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
 
@@ -47,34 +29,33 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
   SpectrumLoader NDLoader(off_axis_file, kBeam);
   TheLoaders.AddLoader(&NDLoader, caf::kNEARDET, Loaders::kMC);
 
-  PRISMAxisBlob axes =
-      GetPRISMAxes(varname, "testopt", bool(whist) ? "OneNegXBin" : "default");
+  PRISMAxisBlob axes = GetPRISMAxes(varname, "testopt", "default");
 
   Cut NDSignalCut = GetNDSignalCut(false);
   Cut NDSignalCut_sel = GetNDSignalCut(true);
   Cut NDSignalCut_sel_signal = GetNDSignalCut(true) && kIsNumuCC;
   Cut NDSignalCut_sel_WSB = GetNDSignalCut(true) && kIsAntiNu && !kIsNC;
   Cut NDSignalCut_sel_NC = GetNDSignalCut(true) && kIsNC;
+
+  Cut NDSignalCut_SpecRun = NDSignalCut && kSel280kARun;
+  Cut NDSignalCut_SpecRun_sel = NDSignalCut_sel && kSel280kARun;
+  Cut NDSignalCut_SpecRun_sel_signal = NDSignalCut_sel_signal && kSel280kARun;
+  Cut NDSignalCut_SpecRun_sel_WSB = NDSignalCut_sel_WSB && kSel280kARun;
+  Cut NDSignalCut_SpecRun_sel_NC = NDSignalCut_sel_NC && kSel280kARun;
+
+  NDSignalCut = NDSignalCut && kCut280kARun;
+  NDSignalCut_sel = NDSignalCut_sel && kCut280kARun;
+  NDSignalCut_sel_signal = NDSignalCut_sel_signal && kCut280kARun;
+  NDSignalCut_sel_WSB = NDSignalCut_sel_WSB && kCut280kARun;
+  NDSignalCut_sel_NC = NDSignalCut_sel_NC && kCut280kARun;
+
   Var NDWeight = GetNDWeight();
   Var NDWeight_XSec = GetNDWeight("CVXSec");
   Var NDWeight_Eff = GetNDWeight("NDEff");
   Var NDWeight_XSecEff = GetNDWeight("CVXSec NDEff");
 
-  if (whist) { // If we are faking a special run
-    auto specrunweight = ana::Var([&](const caf::StandardRecord *sr) -> double {
-      if (sr->det_x || (sr->vtx_x > 0)) {
-        return 1;
-      }
-      return whist->GetBinContent(whist->GetXaxis()->FindFixBin(sr->Ev));
-    });
-    NDWeight = NDWeight * specrunweight;
-    NDWeight_XSec = NDWeight_XSec * specrunweight;
-    NDWeight_Eff = NDWeight_Eff * specrunweight;
-    NDWeight_XSecEff = NDWeight_XSecEff * specrunweight;
-  }
-
   Spectrum NDSpect_all(NDLoader, axes.XProjection, axes.OffAxisPosition,
-                       kNoCut);
+                       kCut280kARun);
   Spectrum NDSpect_signal(NDLoader, axes.XProjection, axes.OffAxisPosition,
                           NDSignalCut, kNoShift);
   Spectrum NDSpect_signal_AnaWeighted(NDLoader, axes.XProjection,
@@ -116,6 +97,15 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
   Spectrum NDSpect_select_CVXSecWeighted_NC(
       NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_NC,
       kNoShift, NDWeight_XSec);
+
+  Spectrum NDSpect_SpecRun_all(NDLoader, axes.XProjection, axes.OffAxisPosition,
+                               kSel280kARun);
+  Spectrum NDSpect_SpecRun_signal(NDLoader, axes.XProjection,
+                                  axes.OffAxisPosition, NDSignalCut_SpecRun,
+                                  kNoShift);
+  Spectrum NDSpect_SpecRun_signal_AnaWeighted(
+      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_SpecRun,
+      kNoShift, NDWeight);
 
   TheLoaders.Go();
 
@@ -209,6 +199,22 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
       ";EProxy (GeV);OffAxis Position (m);ND EvRate");
   f.WriteTObject(NearDet_select_CVXSecWeighted_NC,
                  "NearDet_select_CVXSecWeighted_NC");
+
+  TH1 *NearDet_SpecRun_all = NDSpect_SpecRun_all.ToTHX(POT120);
+  NearDet_SpecRun_all->SetTitle(";EProxy (GeV);OffAxis Position (m);ND EvRate");
+  f.WriteTObject(NearDet_SpecRun_all, "NearDet_SpecRun_all");
+
+  TH1 *NearDet_SpecRun_signal = NDSpect_SpecRun_signal.ToTHX(POT120);
+  NearDet_SpecRun_signal->SetTitle(
+      ";EProxy (GeV);OffAxis Position (m);ND EvRate");
+  f.WriteTObject(NearDet_SpecRun_signal, "NearDet_SpecRun_signal");
+
+  TH1 *NearDet_SpecRun_signal_AnaWeighted =
+      NDSpect_SpecRun_signal_AnaWeighted.ToTHX(POT120);
+  NearDet_SpecRun_signal_AnaWeighted->SetTitle(
+      ";EProxy (GeV);OffAxis Position (m);ND EvRate");
+  f.WriteTObject(NearDet_SpecRun_signal_AnaWeighted,
+                 "NearDet_SpecRun_signal_AnaWeighted");
 
   f.Write();
 }
