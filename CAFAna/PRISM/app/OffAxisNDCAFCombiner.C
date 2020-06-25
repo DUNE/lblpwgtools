@@ -545,7 +545,7 @@ void OffAxisNDCAFCombiner() {
     double det_x;
     int SpecRunId_read;
     FileSummaryTree->SetBranchAddress("det_x", &det_x);
-    FileSummaryTree->SetBranchAddress("SpecRunId", &SpecRunId_read);
+    FileSummaryTree->SetBranchAddress("specRunId", &SpecRunId_read);
     Long64_t NFSEnts = FileSummaryTree->GetEntries();
     for (Long64_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
       FileSummaryTree->GetEntry(ent_it);
