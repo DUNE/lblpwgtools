@@ -228,12 +228,12 @@ void OffAxisNDCAFCombiner() {
   TChain *meta = new TChain("meta");
   TTree *OffAxisWeightFriend;
   double perPOT, perFile, massCorr, specRunWght = 1;
-  int specRunId = 0;
+  int specRunId = (args::isFHC ? +1 : -1) * (args::IsSpecRun ? 280 : 293);
   ana::FVMassCorrection SliceMassCorrector;
   TTree *FileSummaryTree;
   fileSummary fs;
 
-  std::map<double, int> det_x_files;
+  std::map<int, std::map<double, int>> det_x_files;
 
   size_t const kDetX = 0;
   size_t const kPerPOT = 1;
@@ -257,6 +257,7 @@ void OffAxisNDCAFCombiner() {
     OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
     OffAxisWeightFriend->Branch("specRunWght", &specRunWght, "specRunWght/D");
     OffAxisWeightFriend->Branch("specRunId", &specRunId, "specRunId/I");
+
     OffAxisWeightFriend->SetDirectory(nullptr);
 
     FileSummaryTree = new TTree("FileSummaryTree", "");
@@ -264,6 +265,8 @@ void OffAxisNDCAFCombiner() {
     FileSummaryTree->Branch("POT", &fs.POT, "POT/D");
     FileSummaryTree->Branch("det_x", &fs.det_x, "det_x/D");
     FileSummaryTree->Branch("fileName", &fs.fileName);
+    FileSummaryTree->Branch("specRunId", &specRunId, "specRunId/I");
+
     FileSummaryTree->SetDirectory(nullptr);
   }
 
@@ -415,10 +418,10 @@ void OffAxisNDCAFCombiner() {
                   << f_caf->GetEntries() << " events from " << nmeta_ents
                   << " files." << std::endl;
 
-        if (!det_x_files.count(file_det_x)) {
-          det_x_files[file_det_x] = 0;
+        if (!det_x_files[specRunId].count(file_det_x)) {
+          det_x_files[specRunId][file_det_x] = 0;
         }
-        det_x_files[file_det_x]++;
+        det_x_files[specRunId][file_det_x]++;
 
         double vtx_min_cm = -200;
         double vtx_max_cm = 200;
@@ -431,7 +434,8 @@ void OffAxisNDCAFCombiner() {
           // differences in different slices.
           // if (!ana::IsInNDFV(vtx_x_pos_cm, /*Dummy y_pos_m*/ 0,
           //                    /*Dummy z_pos_m*/ 150)) {
-          //   // std::cout << "out of FV: " << (det_x_pos_m + (det_x * detx_to_m))
+          //   // std::cout << "out of FV: " << (det_x_pos_m + (det_x *
+          //   detx_to_m))
           //   // << std::endl;
           //   continue;
           // }
@@ -473,8 +477,6 @@ void OffAxisNDCAFCombiner() {
             } else {
               specRunWght = 1;
             }
-
-            specRunId = args::IsSpecRun ? 280 : 0;
 
             EventPOTEventFiles.emplace_back(det_x, perPOT,
                                             SliceMassCorrector.GetWeight(vtx_x),
@@ -524,15 +526,17 @@ void OffAxisNDCAFCombiner() {
     std::cout << "[INFO]: Rebuilding File count at each stop..." << std::endl;
 
     double det_x;
+    int SpecRunId;
     FileSummaryTree->SetBranchAddress("det_x", &det_x);
+    FileSummaryTree->SetBranchAddress("SpecRunId", &SpecRunId);
     Long64_t NFSEnts = FileSummaryTree->GetEntries();
     for (Long64_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
       FileSummaryTree->GetEntry(ent_it);
 
-      if (!det_x_files.count(det_x)) {
-        det_x_files[det_x] = 0;
+      if (!det_x_files[SpecRunId].count(det_x)) {
+        det_x_files[SpecRunId][det_x] = 0;
       }
-      det_x_files[det_x]++;
+      det_x_files[SpecRunId][det_x]++;
     }
     std::cout << "[INFO]: Copying FileSummaryTree tree..." << std::endl;
     TTree *FileSummaryTreecopy = FileSummaryTree->CloneTree(-1, "fast");
@@ -620,13 +624,13 @@ void OffAxisNDCAFCombiner() {
       size_t NOffAxisWeightFriends = EventPOTEventFiles.size();
       ana::Progress potfillprog("Writing OffAxisWeightFriend tree.");
       for (size_t ev_it = 0; ev_it < NOffAxisWeightFriends; ++ev_it) {
-        perFile =
-            1.0 /
-            double(det_x_files[std::get<kDetX>(EventPOTEventFiles[ev_it])]);
         perPOT = std::get<kPerPOT>(EventPOTEventFiles[ev_it]);
         massCorr = std::get<kMassCorr>(EventPOTEventFiles[ev_it]);
         specRunWght = std::get<kSpecialRunWeight>(EventPOTEventFiles[ev_it]);
         specRunId = std::get<kSpecialRunId>(EventPOTEventFiles[ev_it]);
+        perFile = 1.0 / double(det_x_files[specRunId][std::get<kDetX>(
+                            EventPOTEventFiles[ev_it])]);
+
         OffAxisWeightFriend->Fill();
         if (ev_it && !(ev_it % 10000)) {
           potfillprog.SetProgress(double(ev_it) /

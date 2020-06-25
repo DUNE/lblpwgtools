@@ -19,8 +19,8 @@ using namespace ana;
 
 namespace PRISM {
 
-const Var kTrueOffAxisPos =
-    (SIMPLEVAR(det_x) + (SIMPLEVAR(vtx_x) * Constant(1.0E-2)));
+const Var kTrueOffAxisPos_m =
+    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
 
 const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
   return (sr->Ev < 10);
@@ -55,18 +55,12 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -3, 33};
+    std::array<double, 3> OABinning = {0.5, -33, 3};
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];
     size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
     return Binning::Simple(NOABins, OA_min_m, OA_max_m);
-  } else if (oabinning == "OneNegXBin") {
-    std::vector<double> BE = {-2, 0};
-    while (BE.back() < 32.75) {
-      BE.push_back(BE.back() + 0.5);
-    }
-    return Binning::Custom(BE);
   } else {
     std::cout << "[ERROR]: Unknown PRISM OA binning definition: " << oabinning
               << std::endl;
@@ -101,10 +95,10 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &oabinning) {
 
   HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
-                        kTrueOffAxisPos);
+                        kTrueOffAxisPos_m);
 
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 2),
-                             kTrueOffAxisPos);
+                             kTrueOffAxisPos_m);
 
   auto vardef = GetVar(varname);
   HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
@@ -202,7 +196,7 @@ Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
 }
 
 Var GetNDWeight(std::string const &eweight, bool isNuMode) {
-  return kRunPlanWeight * kMassCorrection *
+  return kRunPlanWeight * kMassCorrection * kSpecHCRunWeight *
          GetAnalysisWeighters(eweight, isNuMode);
 }
 Var GetFDWeight(std::string const &eweight, bool isNuMode) {
