@@ -150,6 +150,8 @@ size_t NMaxFiles = std::numeric_limits<size_t>::max();
 size_t NSkip = 0;
 } // namespace args
 
+std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
+
 void OffAxisNDCAFCombiner() {
 
   if (args::CombiningCombinedCAFs && args::preSelect) {
@@ -210,25 +212,37 @@ void OffAxisNDCAFCombiner() {
   double offset_cm = 0; // (args::step_cm / 2.0)
   size_t NStep = (args::max_cm - args::min_cm) / args::step_cm;
 
-  TH1D *POTExposure =
-      new TH1D("POTExposure", ";OffAxisPosition (cm);Exposure (POT)", NStep,
-               args::min_cm - offset_cm, args::max_cm - offset_cm);
-  POTExposure->SetDirectory(nullptr);
-  TH2D *POTExposure_stop =
-      new TH2D("POTExposure_stop", ";OffAxisPosition (cm);Exposure (POT)",
-               NStep, args::min_cm - offset_cm, args::max_cm - offset_cm, NStep,
-               args::min_cm - offset_cm, args::max_cm - offset_cm);
-  POTExposure_stop->SetDirectory(nullptr);
-  TH1D *FileExposure =
-      new TH1D("FileExposure", ";OffAxisPosition (cm);Exposure (NFiles)", NStep,
-               args::min_cm - offset_cm, args::max_cm - offset_cm);
-  FileExposure->SetDirectory(nullptr);
+  std::map<int, TH1D *> POTExposures;
+  std::map<int, TH2D *> POTExposures_stop;
+  std::map<int, TH1D *> FileExposures;
+
+  for (int SpecRunID_local : SpecRunIds_all) {
+    std::stringstream ss("");
+    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+
+    POTExposures[SpecRunID_local] =
+        new TH1D(("POTExposure_" + ss.str()).c_str(),
+                 ";OffAxisPosition (cm);Exposure (POT)", NStep,
+                 args::min_cm - offset_cm, args::max_cm - offset_cm);
+    POTExposures[SpecRunID_local]->SetDirectory(nullptr);
+    POTExposures_stop[SpecRunID_local] =
+        new TH2D(("POTExposure_stop_" + ss.str()).c_str(),
+                 ";OffAxisPosition (cm);Exposure (POT)", NStep,
+                 args::min_cm - offset_cm, args::max_cm - offset_cm, NStep,
+                 args::min_cm - offset_cm, args::max_cm - offset_cm);
+    POTExposures_stop[SpecRunID_local]->SetDirectory(nullptr);
+    FileExposures[SpecRunID_local] =
+        new TH1D(("FileExposure_" + ss.str()).c_str(),
+                 ";OffAxisPosition (cm);Exposure (NFiles)", NStep,
+                 args::min_cm - offset_cm, args::max_cm - offset_cm);
+    FileExposures[SpecRunID_local]->SetDirectory(nullptr);
+  }
 
   TChain *caf = new TChain(args::cafTreeName.c_str());
   TChain *meta = new TChain("meta");
   TTree *OffAxisWeightFriend;
   double perPOT, perFile, massCorr, specRunWght = 1;
-  int specRunId = (args::isFHC ? +1 : -1) * (args::IsSpecRun ? 280 : 293);
+  int specRunId_file = (args::isFHC ? +1 : -1) * (args::IsSpecRun ? 280 : 293);
   ana::FVMassCorrection SliceMassCorrector;
   TTree *FileSummaryTree;
   fileSummary fs;
@@ -256,7 +270,7 @@ void OffAxisNDCAFCombiner() {
     OffAxisWeightFriend->Branch("perFile", &perFile, "perFile/D");
     OffAxisWeightFriend->Branch("massCorr", &massCorr, "massCorr/D");
     OffAxisWeightFriend->Branch("specRunWght", &specRunWght, "specRunWght/D");
-    OffAxisWeightFriend->Branch("specRunId", &specRunId, "specRunId/I");
+    OffAxisWeightFriend->Branch("specRunId", &specRunId_file, "specRunId/I");
 
     OffAxisWeightFriend->SetDirectory(nullptr);
 
@@ -265,7 +279,7 @@ void OffAxisNDCAFCombiner() {
     FileSummaryTree->Branch("POT", &fs.POT, "POT/D");
     FileSummaryTree->Branch("det_x", &fs.det_x, "det_x/D");
     FileSummaryTree->Branch("fileName", &fs.fileName);
-    FileSummaryTree->Branch("specRunId", &specRunId, "specRunId/I");
+    FileSummaryTree->Branch("specRunId", &specRunId_file, "specRunId/I");
 
     FileSummaryTree->SetDirectory(nullptr);
   }
@@ -333,20 +347,27 @@ void OffAxisNDCAFCombiner() {
       double file_det_x = det_x;
 
       if (args::CombiningCombinedCAFs) {
-        TH1D *f_POTExposure;
-        f.GetObject("POTExposure", f_POTExposure);
-        assert(f_POTExposure);
-        POTExposure->Add(f_POTExposure);
+        for (int SpecRunID_local : SpecRunIds_all) {
 
-        TH2D *f_POTExposure_stop;
-        f.GetObject("POTExposure_stop", f_POTExposure_stop);
-        assert(f_POTExposure_stop);
-        POTExposure_stop->Add(f_POTExposure_stop);
+          std::stringstream ss("");
+          ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
 
-        TH1D *f_FileExposure;
-        f.GetObject("FileExposure", f_FileExposure);
-        assert(f_FileExposure);
-        FileExposure->Add(f_FileExposure);
+          TH1D *f_POTExposure;
+          f.GetObject(("POTExposure_" + ss.str()).c_str(), f_POTExposure);
+          assert(f_POTExposure);
+          POTExposures[SpecRunID_local]->Add(f_POTExposure);
+
+          TH2D *f_POTExposure_stop;
+          f.GetObject(("POTExposure_stop_" + ss.str()).c_str(),
+                      f_POTExposure_stop);
+          assert(f_POTExposure_stop);
+          POTExposures_stop[SpecRunID_local]->Add(f_POTExposure_stop);
+
+          TH1D *f_FileExposure;
+          f.GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
+          assert(f_FileExposure);
+          FileExposures[SpecRunID_local]->Add(f_FileExposure);
+        }
       } else {
         TTree *f_meta;
         f.GetObject("meta", f_meta);
@@ -374,10 +395,6 @@ void OffAxisNDCAFCombiner() {
         FileSummaryTree->Fill();
 
         if (args::justDoSummaryTree) {
-          if (args::CombiningCombinedCAFs) {
-            static_cast<TChain *>(FileSummaryTree)
-                ->Add((dir + file_name).c_str());
-          }
           f.Close();
           continue;
         }
@@ -418,17 +435,17 @@ void OffAxisNDCAFCombiner() {
                   << f_caf->GetEntries() << " events from " << nmeta_ents
                   << " files." << std::endl;
 
-        if (!det_x_files[specRunId].count(file_det_x)) {
-          det_x_files[specRunId][file_det_x] = 0;
+        if (!det_x_files[specRunId_file].count(file_det_x)) {
+          det_x_files[specRunId_file][file_det_x] = 0;
         }
-        det_x_files[specRunId][file_det_x]++;
+        det_x_files[specRunId_file][file_det_x]++;
 
         double vtx_min_cm = -200;
         double vtx_max_cm = 200;
         size_t vtx_steps = (vtx_max_cm - vtx_min_cm) / (args::step_cm);
 
         for (size_t pos_it = 0; pos_it < vtx_steps; ++pos_it) {
-          double vtx_x_pos_cm = vtx_min_cm + pos_it * (args::step_cm);
+          double vtx_x_pos_cm = vtx_min_cm + (pos_it + 0.5) * (args::step_cm);
 
           // checking the FV results in double-correcting for the mass
           // differences in different slices.
@@ -440,59 +457,59 @@ void OffAxisNDCAFCombiner() {
           //   continue;
           // }
 
-          FileExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-                             nmeta_ents);
+          FileExposures[specRunId_file]->Fill(
+              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
 
-          POTExposure->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
-          POTExposure_stop->Fill(vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-                                 (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures[specRunId_file]->Fill(
+              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures_stop[specRunId_file]->Fill(
+              vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
+              (det_x * detx_to_m * 1E2), file_pot);
         }
 
-        if (!args::CombiningCombinedCAFs) {
-          NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
-          size_t nevs = std::min(args::NMaxEvents, nents_after_skip);
-          perPOT = 1.0 / file_pot;
-          for (size_t e_it = 0; e_it < nevs; ++e_it) {
-            if (args::preSelect) {
-              f_caf->GetEntry(e_it + args::NSkip);
-              if (Flipdetx) {
-                det_x = -det_x;
-              }
-              if (file_det_x != det_x) {
-                std::cout << "[ERROR]: In file " << file_name
-                          << " found an event with det_x = " << det_x
-                          << ", but the first event had det_x = " << file_det_x
-                          << std::endl;
-                throw;
-              }
-              if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
-                continue;
-              }
-            }
-
-            bool isRightSignNumu = (args::isFHC && (nuPDG == 14)) ||
-                                   (!args::isFHC && (nuPDG == -14));
-            if (args::IsSpecRun && (det_x == 0) && isRightSignNumu) {
-              specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
-            } else {
-              specRunWght = 1;
-            }
-
-            EventPOTEventFiles.emplace_back(det_x, perPOT,
-                                            SliceMassCorrector.GetWeight(vtx_x),
-                                            specRunWght, specRunId);
-          }
+        NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
+        size_t nevs = std::min(args::NMaxEvents, nents_after_skip);
+        perPOT = 1.0 / file_pot;
+        for (size_t e_it = 0; e_it < nevs; ++e_it) {
           if (args::preSelect) {
-            std::cout << "\t-FV selection : NInFile: "
-                      << double(EventPOTEventFiles.size() -
-                                NPrevOffAxisWeightFriendEntries)
-                      << ", NInFile: " << nevs << std::endl;
-            std::cout << "\t-FV selection efficiency: "
-                      << (double(EventPOTEventFiles.size() -
-                                 NPrevOffAxisWeightFriendEntries) /
-                          double(nevs))
-                      << std::endl;
+            f_caf->GetEntry(e_it + args::NSkip);
+            if (Flipdetx) {
+              det_x = -det_x;
+            }
+            if (file_det_x != det_x) {
+              std::cout << "[ERROR]: In file " << file_name
+                        << " found an event with det_x = " << det_x
+                        << ", but the first event had det_x = " << file_det_x
+                        << std::endl;
+              throw;
+            }
+            if (!ana::IsInNDFV(vtx_x, vtx_y, vtx_z)) {
+              continue;
+            }
           }
+
+          bool isRightSignNumu = (args::isFHC && (nuPDG == 14)) ||
+                                 (!args::isFHC && (nuPDG == -14));
+          if (args::IsSpecRun && (det_x == 0) && isRightSignNumu) {
+            specRunWght = PRISM::Get280kAWeight_numu(Ev, args::isFHC);
+          } else {
+            specRunWght = 1;
+          }
+
+          EventPOTEventFiles.emplace_back(det_x, perPOT,
+                                          SliceMassCorrector.GetWeight(vtx_x),
+                                          specRunWght, specRunId_file);
+        }
+        if (args::preSelect) {
+          std::cout << "\t-FV selection : NInFile: "
+                    << double(EventPOTEventFiles.size() -
+                              NPrevOffAxisWeightFriendEntries)
+                    << ", NInFile: " << nevs << std::endl;
+          std::cout << "\t-FV selection efficiency: "
+                    << (double(EventPOTEventFiles.size() -
+                               NPrevOffAxisWeightFriendEntries) /
+                        double(nevs))
+                    << std::endl;
         }
       }
 
@@ -526,17 +543,17 @@ void OffAxisNDCAFCombiner() {
     std::cout << "[INFO]: Rebuilding File count at each stop..." << std::endl;
 
     double det_x;
-    int SpecRunId;
+    int SpecRunId_read;
     FileSummaryTree->SetBranchAddress("det_x", &det_x);
-    FileSummaryTree->SetBranchAddress("SpecRunId", &SpecRunId);
+    FileSummaryTree->SetBranchAddress("SpecRunId", &SpecRunId_read);
     Long64_t NFSEnts = FileSummaryTree->GetEntries();
     for (Long64_t ent_it = 0; ent_it < NFSEnts; ++ent_it) {
       FileSummaryTree->GetEntry(ent_it);
 
-      if (!det_x_files[SpecRunId].count(det_x)) {
-        det_x_files[SpecRunId][det_x] = 0;
+      if (!det_x_files[SpecRunId_read].count(det_x)) {
+        det_x_files[SpecRunId_read][det_x] = 0;
       }
-      det_x_files[SpecRunId][det_x]++;
+      det_x_files[SpecRunId_read][det_x]++;
     }
     std::cout << "[INFO]: Copying FileSummaryTree tree..." << std::endl;
     TTree *FileSummaryTreecopy = FileSummaryTree->CloneTree(-1, "fast");
@@ -627,8 +644,8 @@ void OffAxisNDCAFCombiner() {
         perPOT = std::get<kPerPOT>(EventPOTEventFiles[ev_it]);
         massCorr = std::get<kMassCorr>(EventPOTEventFiles[ev_it]);
         specRunWght = std::get<kSpecialRunWeight>(EventPOTEventFiles[ev_it]);
-        specRunId = std::get<kSpecialRunId>(EventPOTEventFiles[ev_it]);
-        perFile = 1.0 / double(det_x_files[specRunId][std::get<kDetX>(
+        specRunId_file = std::get<kSpecialRunId>(EventPOTEventFiles[ev_it]);
+        perFile = 1.0 / double(det_x_files[specRunId_file][std::get<kDetX>(
                             EventPOTEventFiles[ev_it])]);
 
         OffAxisWeightFriend->Fill();
@@ -647,9 +664,12 @@ void OffAxisNDCAFCombiner() {
           << std::endl;
       double perFile;
       double det_x, vtx_x;
+      int specRunId_read;
       treecopy->SetBranchAddress("det_x", &det_x);
       treecopy->SetBranchAddress("vtx_x", &vtx_x);
       OffAxisWeightFriend->SetBranchAddress("perFile", &perFile);
+      OffAxisWeightFriend->SetBranchAddress("specRunId", &specRunId_read);
+
       TTree *OffAxisWeightFriendcopy = OffAxisWeightFriend->CloneTree(0, "");
 
       Long64_t NPOTWeightEntries = OffAxisWeightFriend->GetEntries();
@@ -666,8 +686,9 @@ void OffAxisNDCAFCombiner() {
         OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
 
-        double nfiles = FileExposure->GetBinContent(
-            FileExposure->FindFixBin((det_x * detx_to_m * 1E2) + vtx_x));
+        double nfiles = FileExposures[specRunId_read]->GetBinContent(
+            FileExposures[specRunId_read]->FindFixBin(
+                (det_x * detx_to_m * 1E2) + vtx_x));
 
         perFile = 1.0 / nfiles;
         OffAxisWeightFriendcopy->Fill();
@@ -679,10 +700,11 @@ void OffAxisNDCAFCombiner() {
       delete OffAxisWeightFriend;
       filerecalcprog.Done();
     }
-
-    POTExposure->Write("POTExposure");
-    POTExposure_stop->Write("POTExposure_stop");
-    FileExposure->Write("FileExposure");
+    for (int SpecRunID_local : SpecRunIds_all) {
+      POTExposures[SpecRunID_local]->Write("POTExposures");
+      POTExposures_stop[SpecRunID_local]->Write("POTExposures_stop");
+      FileExposures[SpecRunID_local]->Write("FileExposures");
+    }
   }
 
   fout->Write();
