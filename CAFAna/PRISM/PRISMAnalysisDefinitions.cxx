@@ -111,10 +111,10 @@ const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
 });
 
 const Cut kCut280kARun([](const caf::StandardRecord *sr) {
-  return (sr->SpecialHCRunId == 0);
+  return (std::abs(sr->SpecialHCRunId) == 293);
 });
 const Cut kSel280kARun([](const caf::StandardRecord *sr) {
-  return (sr->SpecialHCRunId == 280);
+  return (std::abs(sr->SpecialHCRunId) == 280);
 });
 const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
   return sr->SpecialRunWeight;
