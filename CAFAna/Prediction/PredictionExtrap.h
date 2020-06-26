@@ -20,17 +20,17 @@ namespace ana
       using IPrediction::PredictComponent;
       using IPrediction::PredictSyst;
 
-      Spectrum     Predict(osc::IOscCalculator* calc) const override;
-      SpectrumStan Predict(osc::IOscCalculatorStan* calc) const override;
+      Spectrum Predict(osc::IOscCalculator* calc) const override;
+      Spectrum Predict(osc::IOscCalculatorStan* calc) const override;
 
       Spectrum PredictComponent(osc::IOscCalculator* calc,
                                 Flavors::Flavors_t flav,
                                 Current::Current_t curr,
                                 Sign::Sign_t sign) const override;
-      SpectrumStan PredictComponent(osc::IOscCalculatorStan* calc,
-                                    Flavors::Flavors_t flav,
-                                    Current::Current_t curr,
-                                    Sign::Sign_t sign) const override;
+      Spectrum PredictComponent(osc::IOscCalculatorStan* calc,
+                                Flavors::Flavors_t flav,
+                                Current::Current_t curr,
+                                Sign::Sign_t sign) const override;
 
       OscillatableSpectrum ComponentCC(int from, int to) const override;
       Spectrum ComponentNC() const override;
@@ -44,11 +44,11 @@ namespace ana
 
     protected:
       /// Templated helper function called by the non-templated versions
-      template <typename U, typename T>
-      U _PredictComponent(osc::_IOscCalculator<T>* calc,
-                          Flavors::Flavors_t flav,
-                          Current::Current_t curr,
-                          Sign::Sign_t sign) const;
+      template<typename T>
+      Spectrum _PredictComponent(osc::_IOscCalculator<T>* calc,
+                                 Flavors::Flavors_t flav,
+                                 Current::Current_t curr,
+                                 Sign::Sign_t sign) const;
 
       IExtrap* fExtrap;
   };

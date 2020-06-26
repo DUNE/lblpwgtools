@@ -1,11 +1,11 @@
 #include "CAFAna/Core/Spectrum.h"
 
-#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "Utilities/func/MathUtil.h"
+#include "Utilities/func/Stan.h"
 
 #include "TDirectory.h"
 #include "TH2.h"
@@ -86,13 +86,21 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(Eigen::ArrayXd h,
-                     const std::string & labels,
-                     const Binning& bins,
+  Spectrum::Spectrum(Eigen::ArrayXd&& h,
+                     const std::vector<std::string>& labels,
+                     const std::vector<Binning>& bins,
                      double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
   {
-    // TODO variant of this moving the VectorXd
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum::Spectrum(Eigen::ArrayXstan&& h,
+                     const std::vector<std::string>& labels,
+                     const std::vector<Binning>& bins,
+                     double pot, double livetime)
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+  {
   }
 
   //----------------------------------------------------------------------
@@ -267,25 +275,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(const SpectrumStan& rhs)
-    : fHist(Hist::Uninitialized()),
-      fPOT(rhs.POT()), fLivetime(rhs.Livetime()),
-      fLabels(rhs.GetLabels()), fBins(rhs.GetBinnings())
-  {
-    // for now we don't have any other use cases besides 1D...
-    assert(rhs.GetBinnings().size() == 1);
-
-    ConstructHistogram();
-
-    // now fill in the bin content...
-    auto binC = rhs.ToBins(rhs.POT());
-    for (int binIdx = 0; binIdx < rhs.GetBinnings()[0].NBins()+2; binIdx++) // be sure to get under- and overflow
-    {
-      fHist.SetBinContent(binIdx, binC[binIdx].val());
-    }
-  }
-
-  //----------------------------------------------------------------------
   Spectrum& Spectrum::operator=(const Spectrum& rhs)
   {
     if(this == &rhs) return *this;
@@ -314,15 +303,6 @@ namespace ana
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
-    return *this;
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum& Spectrum::operator=(const SpectrumStan& rhs)
-  {
-    // use placement new to just overwrite this object using the relevant constructor
-    this->~Spectrum();
-    new (this) Spectrum(rhs);
     return *this;
   }
 
@@ -556,6 +536,17 @@ namespace ana
     return NULL;
   }
 
+  //----------------------------------------------------------------------
+  Eigen::ArrayXd Spectrum::GetEigen(double pot) const
+  {
+    return (pot/fPOT) * fHist.GetEigen();
+  }
+
+  //----------------------------------------------------------------------
+  Eigen::ArrayXstan Spectrum::GetEigenStan(double pot) const
+  {
+    return (pot/fPOT) * fHist.GetEigenStan();
+  }
 
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)

@@ -34,7 +34,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionExtrap::Predict(osc::IOscCalculatorStan* calc) const
+  Spectrum PredictionExtrap::Predict(osc::IOscCalculatorStan* calc) const
   {
     return PredictComponent(calc,
                             Flavors::kAll,
@@ -44,13 +44,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   // the actual implementation
-  template <typename U, typename T>
-  U PredictionExtrap::_PredictComponent(osc::_IOscCalculator<T>* calc,
-                                        Flavors::Flavors_t flav,
-                                        Current::Current_t curr,
-                                        Sign::Sign_t sign) const
+  template<typename T>
+  Spectrum PredictionExtrap::_PredictComponent(osc::_IOscCalculator<T>* calc,
+                                               Flavors::Flavors_t flav,
+                                               Current::Current_t curr,
+                                               Sign::Sign_t sign) const
   {
-    U ret = fExtrap->NCComponent(); // Get binning
+    Spectrum ret = fExtrap->NCComponent(); // Get binning
     ret.Clear();
 
     if(curr & Current::kCC){
@@ -88,17 +88,17 @@ namespace ana
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
   {
-    return _PredictComponent<Spectrum>(calc, flav, curr, sign);
+    return _PredictComponent(calc, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
   // just call the templated guy
-  SpectrumStan PredictionExtrap::PredictComponent(osc::IOscCalculatorStan* calc,
-                                                  Flavors::Flavors_t flav,
-                                                  Current::Current_t curr,
-                                                  Sign::Sign_t sign) const
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculatorStan* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
   {
-    return _PredictComponent<SpectrumStan>(calc, flav, curr, sign);
+    return _PredictComponent(calc, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------

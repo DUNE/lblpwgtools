@@ -305,7 +305,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::Predict(osc::IOscCalculatorStan* calc) const
+  Spectrum PredictionInterp::Predict(osc::IOscCalculatorStan* calc) const
   {
     return fPredNom->Predict(calc);
   }
@@ -320,10 +320,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::PredictComponent(osc::IOscCalculatorStan* calc,
-                                                  Flavors::Flavors_t flav,
-                                                  Current::Current_t curr,
-                                                  Sign::Sign_t sign) const
+  Spectrum PredictionInterp::PredictComponent(osc::IOscCalculatorStan* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
   {
     return fPredNom->PredictComponent(calc, flav, curr, sign);
   }
@@ -341,8 +341,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::PredictSyst(osc::IOscCalculatorStan* calc,
-                                             const SystShifts& shift) const
+  Spectrum PredictionInterp::PredictSyst(osc::IOscCalculatorStan* calc,
+                                         const SystShifts& shift) const
   {
     InitFits();
 
@@ -358,26 +358,16 @@ namespace ana
                                            bool nubar,
                                            const SystShifts &shift) const
   {
-     // TODO histogram operations could be too slow
-    TH1D *h = s.ToTH1(s.POT());
-
-    ShiftBins(h->GetNbinsX()+2, h->GetArray(), type, nubar, shift);
-
-    return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
-  }
-
-  //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::ShiftSpectrum(const SpectrumStan& s,
-                                               CoeffsType type,
-                                               bool nubar,
-                                               const SystShifts & shift) const
-  {
-
-    auto binContents = s.ToBins(s.POT());
-
-    ShiftBins(binContents.size(), &binContents.front(), type, nubar, shift);
-
-    return SpectrumStan(std::move(binContents), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+    if(s.HasStan()){
+      Eigen::ArrayXstan vec = s.GetEigenStan(s.POT());
+      ShiftBins(vec.size(), vec.data(), type, nubar, shift);
+      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+    }
+    else{
+      Eigen::ArrayXd vec = s.GetEigen(s.POT());
+      ShiftBins(vec.size(), vec.data(), type, nubar, shift);
+      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+    }
   }
 
   //----------------------------------------------------------------------
@@ -466,31 +456,31 @@ namespace ana
                                               Sign::Sign_t sign,
                                               CoeffsType type) const
   {
-    return _ShiftedComponent<Spectrum>(calc, hash, shift, flav, curr, sign, type);
+    return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
-                                                  const TMD5* hash,
-                                                  const SystShifts& shift,
-                                                  Flavors::Flavors_t flav,
-                                                  Current::Current_t curr,
-                                                  Sign::Sign_t sign,
-                                                  CoeffsType type) const
+  Spectrum PredictionInterp::ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
+                                              const TMD5* hash,
+                                              const SystShifts& shift,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign,
+                                              CoeffsType type) const
   {
-    return _ShiftedComponent<SpectrumStan>(calc, hash, shift, flav, curr, sign, type);
+    return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
 
 
   //----------------------------------------------------------------------
-  template <typename U, typename T>
-  U PredictionInterp::_ShiftedComponent(osc::_IOscCalculator<T>* calc,
-                   const TMD5* hash,
-                   const SystShifts& shift,
-                   Flavors::Flavors_t flav,
-                   Current::Current_t curr,
-                   Sign::Sign_t sign,
-                   CoeffsType type) const
+  template<typename T>
+  Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalculator<T>* calc,
+                                               const TMD5* hash,
+                                               const SystShifts& shift,
+                                               Flavors::Flavors_t flav,
+                                               Current::Current_t curr,
+                                               Sign::Sign_t sign,
+                                               CoeffsType type) const
   {
     static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
                   "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
@@ -554,16 +544,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  template <typename U, typename T>
-  U PredictionInterp::_PredictComponentSyst(osc::_IOscCalculator<T>* calc,
-                                                  const SystShifts& shift,
-                                                  Flavors::Flavors_t flav,
-                                                  Current::Current_t curr,
-                                                  Sign::Sign_t sign) const
+  template<typename T>
+  Spectrum PredictionInterp::_PredictComponentSyst(osc::_IOscCalculator<T>* calc,
+                                                   const SystShifts& shift,
+                                                   Flavors::Flavors_t flav,
+                                                   Current::Current_t curr,
+                                                   Sign::Sign_t sign) const
   {
     InitFits();
 
-    U ret = fBinning;
+    Spectrum ret = fBinning;
     ret.Clear();
 
     assert (ret.POT() > 0 && "Can't PredictComponentSyst() for 0 POT");
@@ -607,17 +597,17 @@ namespace ana
                                                   Current::Current_t curr,
                                                   Sign::Sign_t sign) const
   {
-    return _PredictComponentSyst<Spectrum>(calc, shift, flav, curr, sign);
+    return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan PredictionInterp::PredictComponentSyst(osc::IOscCalculatorStan* calc,
-                                                      const SystShifts& shift,
-                                                      Flavors::Flavors_t flav,
-                                                      Current::Current_t curr,
-                                                      Sign::Sign_t sign) const
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
   {
-    return _PredictComponentSyst<SpectrumStan>(calc, shift, flav, curr, sign);
+    return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
 
   void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
@@ -772,10 +762,7 @@ namespace ana
       return;
     }
 
-    // force-convert to _Spectrum<double> for ease here since in DebugPlots()
-    // we're not concerned with preserving autodiff or speed.
-    // (more instances further below.)
-    std::unique_ptr<TH1> nom(Spectrum(fPredNom->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20));
+    std::unique_ptr<TH1> nom(fPredNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
     const int nbins = nom->GetNbinsX();
 
     TGraph* curves[nbins];
@@ -784,7 +771,7 @@ namespace ana
     for(int i = 0; i <= 80; ++i){
       const double x = .1*i-4;
       const SystShifts ss(it->first, x);
-      std::unique_ptr<TH1> h(Spectrum(PredictComponentSyst(calc, ss, flav, curr, sign)).ToTH1(18e20));
+      std::unique_ptr<TH1> h(PredictComponentSyst(calc, ss, flav, curr, sign).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
         if(i == 0){
@@ -806,12 +793,12 @@ namespace ana
       if(it->second.shifts[shiftIdx] == 0) {pNom = it->second.preds[shiftIdx].get();}
     }
     assert(pNom);
-    std::unique_ptr<TH1> hnom(Spectrum(pNom->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20));
+    std::unique_ptr<TH1> hnom(pNom->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
       std::unique_ptr<TH1> h;
-        h = std::move(std::unique_ptr<TH1>(Spectrum(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign)).ToTH1(18e20)));
+        h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);

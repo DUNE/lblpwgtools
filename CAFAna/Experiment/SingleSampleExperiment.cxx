@@ -312,15 +312,13 @@ namespace ana
   stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
                                                         const SystShifts &syst) const
   {
-    auto  pred = syst.IsNominal()
-                 ? fMC->Predict(osc).ToBins(fData.POT())
-                 : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
-    TH1D* hdata = fData.ToTH1(fData.POT());
+    Eigen::VectorXstan pred = syst.IsNominal()
+                 ? fMC->Predict(osc).GetEigenStan(fData.POT())
+                 : fMC->PredictSyst(osc, syst).GetEigenStan(fData.POT());
+    Eigen::VectorXd data = fData.GetEigen(fData.POT());
 
     // fully-qualified so that we get the one in StanUtils.h
-    auto ll = ana::LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
-
-    HistCache::Delete(hdata);
+    auto ll = ana::LogLikelihood(pred, data) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
 
     return ll;
   }

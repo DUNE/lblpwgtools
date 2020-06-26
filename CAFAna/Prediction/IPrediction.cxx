@@ -54,7 +54,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  SpectrumStan IPrediction::Predict(osc::IOscCalculatorStan *calc) const
+  Spectrum IPrediction::Predict(osc::IOscCalculatorStan *calc) const
   {
     assert(0 && "This Prediction hasn't implemented a Stan-aware Predict()!");
     return Predict(calc);  // prevent compiler warning
@@ -70,8 +70,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
-                                        const SystShifts& syst) const
+  Spectrum IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
+                                    const SystShifts& syst) const
   {
     assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
 
@@ -81,10 +81,10 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  SpectrumStan IPrediction::PredictComponent(osc::IOscCalculatorStan *calc,
-                                             Flavors::Flavors_t flav,
-                                             Current::Current_t curr,
-                                             Sign::Sign_t sign) const
+  Spectrum IPrediction::PredictComponent(osc::IOscCalculatorStan *calc,
+                                         Flavors::Flavors_t flav,
+                                         Current::Current_t curr,
+                                         Sign::Sign_t sign) const
   {
     assert(0 && "This Prediction hasn't implemented a Stan-aware PredictComponent()!");
     return PredictComponent(calc, flav, curr, sign);  // prevent compiler warning
@@ -104,11 +104,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan IPrediction::PredictComponentSyst(osc::IOscCalculatorStan* calc,
-                                                 const SystShifts& syst,
-                                                 Flavors::Flavors_t flav,
-                                                 Current::Current_t curr,
-                                                 Sign::Sign_t sign) const
+  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                             const SystShifts& syst,
+                                             Flavors::Flavors_t flav,
+                                             Current::Current_t curr,
+                                             Sign::Sign_t sign) const
   {
     assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
 

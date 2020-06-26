@@ -28,12 +28,10 @@ namespace ana
 {
   class Ratio;
 
-  class SpectrumStan;
   /// Representation of a spectrum in any variable, with associated POT
   class Spectrum
   {
   public:
-    friend class SpectrumStan;
     friend class SpectrumLoaderBase;
     friend class SpectrumLoader;
     friend class NullLoader;
@@ -66,9 +64,15 @@ namespace ana
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
 
     /// Makes a spectrum from an eigen array
-    Spectrum(Eigen::ArrayXd h,
-             const std::string& labels,
-             const Binning& bins,
+    Spectrum(Eigen::ArrayXd&& h,
+             const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
+             double pot, double livetime);
+
+    /// Makes a spectrum from an eigen array of stan vars
+    Spectrum(Eigen::ArrayXstan&& h,
+             const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
              double pot, double livetime);
 
     /// Copies \a h
@@ -167,9 +171,6 @@ namespace ana
     Spectrum& operator=(const Spectrum& rhs);
     Spectrum& operator=(Spectrum&& rhs);
 
-    /// Copy conversion from SpectrumStan
-    Spectrum(const SpectrumStan& rhs);
-    Spectrum& operator=(const SpectrumStan& rhs);
     void Fill(double x, double w = 1);
 
     /// \brief Histogram made from this Spectrum, scaled to some exposure
@@ -206,6 +207,14 @@ namespace ana
     TH1*  ToTHX     (double exposure, bool force1D = false, EExposureType expotype = kPOT) const;
 
     TH1* ToTH1ProjectX(double exposure, EExposureType expotype = kPOT) const;
+
+    bool HasStan() const {return fHist.HasStan();}
+    /// NB these don't have POT scaling. For expert high performance ops only!
+    const Eigen::ArrayXd& GetEigen() const {return fHist.GetEigen();}
+    const Eigen::ArrayXstan& GetEigenStan() const {return fHist.GetEigenStan();}
+
+    Eigen::ArrayXd GetEigen(double pot) const;
+    Eigen::ArrayXstan GetEigenStan(double pot) const;
 
     /// \brief Return total number of events scaled to \a pot
     ///
