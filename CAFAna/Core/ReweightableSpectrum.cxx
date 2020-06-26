@@ -45,7 +45,8 @@ namespace ana
     const Binning xbins = Bins1DX();
     const Binning ybins = trueAxis.GetBinnings()[0];
 
-    fMat = new Eigen::MatrixXd(xbins.NBins()+2, ybins.NBins()+2);
+    fMat = new Eigen::MatrixXd(ybins.NBins()+2, xbins.NBins()+2);
+    fMat->setZero();
 
     loader.AddReweightableSpectrum(*this, recoAxis.GetMultiDVar(), cut, shift, wei);
   }
@@ -66,7 +67,7 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    fMat = new Eigen::MatrixXd(*rhs.fMat);
+    fMat = rhs.fMat ? new Eigen::MatrixXd(*rhs.fMat) : 0;
 
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
@@ -87,7 +88,7 @@ namespace ana
     fBinsY = rhs.fBinsY;
 
     delete fMat;
-    fMat = new Eigen::MatrixXd(*rhs.fMat);
+    fMat = rhs.fMat ? new Eigen::MatrixXd(*rhs.fMat) : 0;
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
@@ -125,7 +126,7 @@ namespace ana
   void ReweightableSpectrum::Fill(double x, double y, double w)
   {
     // TODO repeated calling of Bins1DX() here is going to be very inefficient
-    (*fMat)(Bins1DX().FindBin(x), fBinsY.FindBin(y)) += w;
+    (*fMat)(fBinsY.FindBin(y), Bins1DX().FindBin(x)) += w;
   }
 
   /// Helper for \ref Unweighted

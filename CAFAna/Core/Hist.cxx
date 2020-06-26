@@ -200,17 +200,14 @@ namespace ana
 
     if(fHistSparse) return fHistSparse->Projection(0);
 
-    if(fEigenStan){
-      TH1D* ret = HistCache::New("", bins);
-      for(int i = 0; i < bins.NBins()+2; ++i) ret->SetBinContent(i, (*fEigenStan)[i].val());
-      return ret;
+    TH1D* ret = HistCache::New("", bins);
+    for(int i = 0; i < bins.NBins()+2; ++i){
+      if(fEigenStan)
+        ret->SetBinContent(i, (*fEigenStan)[i].val());
+      else
+        ret->SetBinContent(i, (*fEigen)[i]);
     }
-
-    if(fEigen){
-      TH1D* ret = HistCache::New("", bins);
-      for(int i = 0; i < bins.NBins()+2; ++i) ret->SetBinContent(i, (*fEigen)[i]);
-      return ret;
-    }
+    return ret;
 
     abort(); // unreachable
   }
@@ -242,8 +239,23 @@ namespace ana
   //----------------------------------------------------------------------
   double Hist::Integral(int lo, int hi) const
   {
-    assert(fHistD); // TODO how to use fHistSparse or stan or eigen?
-    return fHistD->Integral(lo, hi);
+    assert(Initialized());
+
+    if(fEigen){
+      assert(lo == 0 && hi == -1);
+      return fEigen->sum();
+    }
+
+    if(fEigenStan){
+      assert(lo == 0 && hi == -1);
+      return fEigenStan->sum().val();
+    }
+
+    if(fHistD) return fHistD->Integral(lo, hi);
+
+    if(fHistSparse) abort();//return fHistSparse->Integral(lo, hi);
+
+    abort(); // unreached
   }
 
   //----------------------------------------------------------------------
@@ -318,13 +330,13 @@ namespace ana
   {
     assert(Initialized());
 
-    if(fHistD) fHistD->SetBinContent(i, x);
-    if(fHistSparse) fHistSparse->SetBinContent(i, x);
+    if(fHistD){fHistD->SetBinContent(i, x); return;}
+    if(fHistSparse){fHistSparse->SetBinContent(i, x); return;}
     if(fEigenStan){
       std::cout << "Hist::SetBinContent() not implemented for stan vars" << std::endl;
       abort();
     }
-    if(fEigen) (*fEigen)[i] = x;
+    if(fEigen){(*fEigen)[i] = x; return;}
 
     abort(); // unreachable
   }
