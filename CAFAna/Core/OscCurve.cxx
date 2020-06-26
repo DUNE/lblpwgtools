@@ -16,6 +16,8 @@ namespace ana
   template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
   ToEigen(osc::_IOscCalculator<T>* calc, int from, int to)
   {
+    return calc->P(from, to, kTrueEnergyBinCenters);
+    /*
     const int N = kTrueEnergyBins.NBins();
     Eigen::Array<T, Eigen::Dynamic, 1> hist(N+2);
 
@@ -27,6 +29,7 @@ namespace ana
     hist[N+1] = (from == to || to == 0) ? 1 : 0;
 
     return hist;
+    */
   }
 
   //----------------------------------------------------------------------
