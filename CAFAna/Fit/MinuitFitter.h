@@ -132,7 +132,7 @@ namespace ana
           bool IsBetterFit(const IFitSummary* other) const override
           {
             if (!other)
-              return true;
+              return false;
 
             if (const auto mnFitSummary = dynamic_cast<const MinuitFitSummary*>(other))
               return mnFitSummary->EvalMetricVal() < EvalMetricVal();
