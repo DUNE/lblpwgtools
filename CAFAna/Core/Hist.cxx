@@ -45,7 +45,7 @@ namespace ana
   Hist::Hist(Hist&& rhs)
     : Hist()
   {
-    assert(rhs.Initialized);
+    assert(rhs.Initialized());
 
     std::swap(fHistD, rhs.fHistD);
     std::swap(fHistSparse, rhs.fHistSparse);

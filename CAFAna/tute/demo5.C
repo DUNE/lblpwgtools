@@ -1,6 +1,7 @@
 // Make oscillated predictions with systematics
 // cafe demo5.C
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"

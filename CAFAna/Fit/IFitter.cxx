@@ -156,6 +156,8 @@ namespace ana
       delete seed;
     } // end for pt
 
+    assert(bestFitSummary);
+
     // Stuff the results of the actual best fit back into the seeds
     for (unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(initseed, bestFitPars[i]);
