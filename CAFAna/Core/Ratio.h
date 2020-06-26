@@ -30,6 +30,11 @@ namespace ana
 
     TH1D* ToTH1(Color_t col = kBlack,
                 Style_t style = kSolid) const;
+
+    bool HasStan() const {return fHist.HasStan();}
+    const Eigen::ArrayXd& GetEigen() const {return fHist.GetEigen();}
+    const Eigen::ArrayXstan& GetEigenStan() const {return fHist.GetEigenStan();}
+
   protected:
     // For derived classes
     Ratio(Hist&& h,

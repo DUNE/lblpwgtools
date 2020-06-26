@@ -13,11 +13,11 @@ namespace ana
 {
   //----------------------------------------------------------------------
   /// Helper for constructors
-  template<class T> Eigen::Matrix<T, Eigen::Dynamic, 1>
+  template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
   ToEigen(osc::_IOscCalculator<T>* calc, int from, int to)
   {
     const int N = kTrueEnergyBins.NBins();
-    Eigen::Matrix<T, Eigen::Dynamic, 1> hist(N+2);
+    Eigen::Array<T, Eigen::Dynamic, 1> hist(N+2);
 
     hist[0] = 0; // underflow
     for(int i = 1; i <= N; ++i){

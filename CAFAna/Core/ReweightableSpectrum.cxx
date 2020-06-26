@@ -7,6 +7,8 @@
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
+#include "Utilities/func/Stan.h"
+
 #include "TDirectory.h"
 #include "TH2.h"
 #include "TObjString.h"
@@ -24,7 +26,9 @@ namespace ana
                                              const Cut& cut,
                                              const SystShifts& shift,
                                              const Var& wei)
-    : ReweightableSpectrum(recoAxis.GetLabels(), recoAxis.GetBinnings(),
+    : ReweightableSpectrum(recoAxis.GetLabels(),
+                           recoAxis.GetBinnings(),
+                           trueAxis.GetBinnings()[0],
                            trueAxis.GetVars()[0])
   {
     assert(trueAxis.NDimensions() == 1);
@@ -41,31 +45,12 @@ namespace ana
     const Binning xbins = Bins1DX();
     const Binning ybins = trueAxis.GetBinnings()[0];
 
-
-    // Ugh combinatorics
-    if(xbins.IsSimple() && ybins.IsSimple())
-      fHist =  new TH2D(name.c_str(), "",
-                        xbins.NBins(), xbins.Min(), xbins.Max(),
-                        ybins.NBins(), ybins.Min(), ybins.Max());
-
-    if(xbins.IsSimple() && !ybins.IsSimple())
-      fHist =  new TH2D(name.c_str(), "",
-                        xbins.NBins(), xbins.Min(), xbins.Max(),
-                        ybins.NBins(), &ybins.Edges()[0]);
-
-    if(!xbins.IsSimple() && ybins.IsSimple())
-      fHist =  new TH2D(name.c_str(), "",
-                        xbins.NBins(), &xbins.Edges()[0],
-                        ybins.NBins(), ybins.Min(), ybins.Max());
-
-    if(!xbins.IsSimple() && !ybins.IsSimple())
-      fHist =  new TH2D(name.c_str(), "",
-                        xbins.NBins(), &xbins.Edges()[0],
-                        ybins.NBins(), &ybins.Edges()[0]);
+    fMat = new Eigen::MatrixXd(xbins.NBins()+2, ybins.NBins()+2);
 
     loader.AddReweightableSpectrum(*this, recoAxis.GetMultiDVar(), cut, shift, wei);
   }
 
+  /*
   //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar,
                                              const std::string& xlabel, const std::string& ylabel,
@@ -74,19 +59,18 @@ namespace ana
                                              int nbinsy, double ymin, double ymax)
     : ReweightableSpectrum(xlabel,
                            Binning::Simple(nbinsx, xmin, xmax),
+                           Binning::Simple(nbinsy, ymin, ymax),
                            rwVar)
   {
     DontAddDirectory guard;
 
-    fHist = new TH2D(UniqueName().c_str(), "",
-                     nbinsx, xmin, xmax, nbinsy, ymin, ymax);
+    fMat = new Eigen::MatrixXd(nbinsx+2, nbinsy+2);
 
     fTrueLabel = ylabel;
-
-    // Ensure errors get accumulated properly
-    fHist->Sumw2();
   }
+  */
 
+  /*
   //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar, TH2* h,
                                              const std::vector<std::string>& labels,
@@ -98,7 +82,7 @@ namespace ana
     fLivetime = livetime;
 
     if(!h){
-      fHist = 0;
+      fMat = 0;
       return;
     }
 
@@ -108,7 +92,7 @@ namespace ana
 
     if(className == "TH2D"){
       // Shortcut if types match
-      fHist = new TH2D(*((TH2D*)h));
+      fMat = new TH2D(*((TH2D*)h));
     }
     else{
       const TAxis* ax = h->GetXaxis();
@@ -117,23 +101,24 @@ namespace ana
       assert(bool(ax->GetXbins()->GetArray()) == bool(ay->GetXbins()->GetArray()));
 
       if(ax->GetXbins()->GetArray()){
-        fHist = new TH2D(UniqueName().c_str(), "",
+        fMat = new TH2D(UniqueName().c_str(), "",
                          ax->GetNbins(), ax->GetXbins()->GetArray(),
                          ay->GetNbins(), ay->GetXbins()->GetArray());
       }
       else{
-        fHist = new TH2D(UniqueName().c_str(), "",
+        fMat = new TH2D(UniqueName().c_str(), "",
                          ax->GetNbins(), ax->GetXmin(), ax->GetXmax(),
                          ay->GetNbins(), ay->GetXmin(), ay->GetXmax());
       }
 
-      fHist->Add(h);
+      fMat->Add(h);
     }
 
     fTrueLabel = h->GetYaxis()->GetTitle();
   }
-
-    //----------------------------------------------------------------------
+  */
+  /*
+  //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const Var& rwVar,
                                              std::unique_ptr<TH2D> h,
                                              const std::vector<std::string>& labels,
@@ -141,38 +126,30 @@ namespace ana
                                              double pot, double livetime)
     : ReweightableSpectrum(labels, bins, rwVar)
   {
-    fHist = h.release();
+    fMat = h.release();
     fPOT = pot;
     fLivetime = livetime;
 
-    fTrueLabel = fHist->GetYaxis()->GetTitle();
+    fTrueLabel = fMat->GetYaxis()->GetTitle();
   }
-
+  */
   //----------------------------------------------------------------------
   ReweightableSpectrum::~ReweightableSpectrum()
   {
-    if(fHist && fHist->GetDirectory()){
-      static bool once = true;
-      if(once){
-        once = false;
-        std::cerr << "ReweightableSpectrum's fHist is associated with a directory. How did that happen?" << std::endl;
-      }
+    for(SpectrumLoaderBase* loader: fLoaderCount){
+      loader->RemoveReweightableSpectrum(this);
     }
 
-    // Can't use HistCache here because that expects all 2D spectra have the
-    // usual true energy binning on their y-axis. In the case that we're
-    // actually an OscillatableSpectrum that destructor will indeed take care
-    // of invoking HistCache.
-    delete fHist;
+    delete fMat;
   }
 
   //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const ReweightableSpectrum& rhs)
-    : fRWVar(rhs.fRWVar), fLabels(rhs.fLabels), fBins(rhs.fBins)
+    : fRWVar(rhs.fRWVar), fLabels(rhs.fLabels), fBins(rhs.fBins), fBinsY(rhs.fBinsY)
   {
     DontAddDirectory guard;
 
-    fHist = new TH2D(*rhs.fHist);
+    fMat = new Eigen::MatrixXd(*rhs.fMat);
 
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
@@ -190,9 +167,10 @@ namespace ana
     fRWVar = rhs.fRWVar;
     fLabels = rhs.fLabels;
     fBins = rhs.fBins;
+    fBinsY = rhs.fBinsY;
 
-    delete fHist;
-    fHist = new TH2D(*rhs.fHist);
+    delete fMat;
+    fMat = new Eigen::MatrixXd(*rhs.fMat);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
@@ -207,7 +185,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH2D* ret = new TH2D(*fHist);
+    TH2D* ret = HistCache::NewTH2D(UniqueName(), Bins1DX(), fBinsY);
     if(fPOT){
       ret->Scale(pot/fPOT);
     }
@@ -227,211 +205,77 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TAxis const *ReweightableSpectrum::GetReweightTAxis() const {
-    return fHist->GetYaxis();
-  }
-
-
-  //----------------------------------------------------------------------
   void ReweightableSpectrum::Fill(double x, double y, double w)
   {
-    fHist->Fill(x, y, w);
+    // TODO repeated calling of Bins1DX() here is going to be very inefficient
+    (*fMat)(Bins1DX().FindBin(x), fBinsY.FindBin(y)) += w;
   }
 
   /// Helper for \ref Unweighted
-  void ProjectionX(TH2D* from, TH1D* to)
+  inline Eigen::ArrayXd ProjectionX(const Eigen::MatrixXd& mat)
   {
-    const int Nx = from->GetNbinsX();
-    const int Ny = from->GetNbinsY();
+    return Eigen::RowVectorXd::Ones(mat.cols()) * mat;
+  }
 
-    // Direct access to the bins is faster
-    double* fromArr = from->GetArray();
-    double* toArr = to->GetArray();
-
-    int fromBin = 0;
-    for(int y = 0; y < Ny+2; ++y){
-      for(int x = 0; x < Nx+2; ++x){
-        // Our loops go over the bins in the order they are internally in
-        // 'from', and we do overflows, so we keep up exactly. If you get
-        // paranoid, reenable this briefly.
-        //        assert(fromBin == from->GetBin(x, y));
-
-        const double z = fromArr[fromBin];
-        ++fromBin;
-
-        toArr[x] += z;
-      }
-    }
+  /// Helper for \ref WeightingVariable
+  inline Eigen::ArrayXd ProjectionY(const Eigen::MatrixXd& mat)
+  {
+    return mat * Eigen::VectorXd::Ones(mat.rows());
   }
 
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::UnWeighted() const
   {
-    DontAddDirectory guard;
-
-    // Create a suitably-sized space for the result
-    std::unique_ptr<TH1D> h(HistCache::New("", Bins1DX()));
-
-    ProjectionX(fHist, h.get());
-
-    return Spectrum(std::move(h), fLabels, fBins, fPOT, fLivetime);
-  }
-
-  /// Helper for \ref WeightingVariable
-  void ProjectionY(TH2D* from, TH1D* to)
-  {
-    const int Nx = from->GetNbinsX();
-    const int Ny = from->GetNbinsY();
-
-    // Direct access to the bins is faster
-    double* fromArr = from->GetArray();
-    double* toArr = to->GetArray();
-
-    int fromBin = 0;
-    for(int y = 0; y < Ny+2; ++y){
-      for(int x = 0; x < Nx+2; ++x){
-        // Our loops go over the bins in the order they are internally in
-        // 'from', and we do overflows, so we keep up exactly. If you get
-        // paranoid, reenable this briefly.
-        //        assert(fromBin == from->GetBin(x, y));
-
-        const double z = fromArr[fromBin];
-        ++fromBin;
-
-        toArr[y] += z;
-      }
-    }
+    return Spectrum(Hist::Adopt(ProjectionX(*fMat)), fLabels, fBins, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::WeightingVariable() const
   {
-    DontAddDirectory guard;
-
-    // Create a suitably-sized space for the result
-    std::unique_ptr<TH1D> h(HistCache::New("", fHist->GetYaxis()));
-
-    ProjectionY(fHist, h.get());
-
-    return Spectrum(std::move(h), fLabels, fBins, fPOT, fLivetime);
+    return Spectrum(Hist::Adopt(ProjectionY(*fMat)), fLabels, fBins, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
-  Spectrum ReweightableSpectrum::WeightedBy(const TH1* ws) const
+  Spectrum ReweightableSpectrum::WeightedBy(const Ratio& ws) const
   {
-    // This function is in the inner loop of oscillation fits, so some
-    // optimization has been done.
+    if(!ws.HasStan()){
+      const Eigen::VectorXd& vec = ws.GetEigen();
 
-    DontAddDirectory guard;
-
-    assert(ws->GetNbinsX() == fHist->GetNbinsY());
-
-    TH1D* hRet = HistCache::New("", Bins1DX());
-
-    const int X = fHist->GetNbinsX();
-    const int Y = fHist->GetNbinsY();
-
-    // Direct access to the bins is faster
-    double* retArr = hRet->GetArray();
-    double* histArr = fHist->GetArray();
-
-    int bin = 0;
-    for(int y = 0; y < Y+2; ++y){
-      const double w = ws->GetBinContent(y);
-      for(int x = 0; x < X+2; ++x){
-        // Our loops go over the bins in the order they are internally in
-        // fHist, and we do overflows, so we keep up exactly. If you get
-        // paranoid, reenable this briefly.
-
-        // assert(bin == fHist->GetBin(x, y));
-
-        retArr[x] += histArr[bin]*w;
-        ++bin;
-      }
+      return Spectrum(Hist::Adopt(Eigen::ArrayXd(vec.transpose() * *fMat)),
+                      fLabels, fBins, fPOT, fLivetime);
     }
+    else{
+      const Eigen::VectorXstan& vec = ws.GetEigenStan();
 
-    // TODO: can this all be more efficient?
-    return Spectrum(std::unique_ptr<TH1D>(hRet), fLabels, fBins, fPOT, fLivetime);
+      return Spectrum(Hist::Adopt(Eigen::ArrayXstan(vec.transpose() * *fMat)),
+                      fLabels, fBins, fPOT, fLivetime);
+    }
   }
 
-
+  /*
   //----------------------------------------------------------------------
   void ReweightableSpectrum::ReweightToTrueSpectrum(const Spectrum& target)
   {
-    // This is a big component of what extrapolations do, so it has been
-    // optimized for speed
+    // This is a big component of what extrapolations do, so it should be fast
 
-    Ratio corr(target, WeightingVariable());
-    std::unique_ptr<TH1D> hcorr(corr.ToTH1());
-
-    assert(hcorr->GetNbinsX() == fHist->GetNbinsY());
-
-    const int X = fHist->GetNbinsX();
-    const int Y = fHist->GetNbinsY();
-
-    // Direct access to the bins is faster
-    double* histArr = fHist->GetArray();
-    double* corrArr = hcorr->GetArray();
-
-    int bin = 0;
-    for(int y = 0; y < Y+2; ++y){
-      const double w = corrArr[y];
-      for(int x = 0; x < X+2; ++x){
-        // Our loops go over the bins in the order they are internally in
-        // fHist, and we do overflows, so we keep up exactly. If you get
-        // paranoid, reenable this briefly.
-
-        // assert(bin == fHist->GetBin(x, y));
-
-        histArr[bin] *= w;
-        ++bin;
-      }
-    }
-
-    TH1D* todel = hcorr.release();
-    HistCache::Delete(todel);
+    // But I don't believe DUNE in particular uses this...
+    abort();
   }
 
   //----------------------------------------------------------------------
   void ReweightableSpectrum::ReweightToRecoSpectrum(const Spectrum& target)
   {
-    // This is a big component of what extrapolations do, so it has been
-    // optimized for speed
+    // This is a big component of what extrapolations do, so it should be fast
 
-    Ratio corr(target, UnWeighted());
-    std::unique_ptr<TH1D> hcorr(corr.ToTH1());
-
-    assert(hcorr->GetNbinsX() == fHist->GetNbinsX());
-
-    const int X = fHist->GetNbinsX();
-    const int Y = fHist->GetNbinsY();
-
-    // Direct access to the bins is faster
-    double* histArr = fHist->GetArray();
-    double* corrArr = hcorr->GetArray();
-
-    int bin = 0;
-    for(int y = 0; y < Y+2; ++y){
-      for(int x = 0; x < X+2; ++x){
-        // Our loops go over the bins in the order they are internally in
-        // fHist, and we do overflows, so we keep up exactly. If you get
-        // paranoid, reenable this briefly.
-
-        // assert(bin == fHist->GetBin(x, y));
-
-        histArr[bin] *= corrArr[x];
-        ++bin;
-      }
-    }
-
-    TH1D* todel = hcorr.release();
-    HistCache::Delete(todel);
+    // But I don't believe DUNE in particular uses this...
+    abort();
   }
+*/
 
   ReweightableSpectrum& ReweightableSpectrum::PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fHist && rhs.fHist->Integral(0, -1) == 0) return *this;
+    if(rhs.fMat && rhs.fMat->sum() == 0) return *this;
 
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
@@ -460,7 +304,7 @@ namespace ana
 
     if(fPOT && rhs.fPOT){
       // Scale by POT when possible
-      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fPOT/rhs.fPOT);
+      if(rhs.fMat) *fMat += *rhs.fMat * sign*fPOT/rhs.fPOT;
 
       if(fLivetime && rhs.fLivetime){
         // If POT/livetime ratios match, keep regular lifetime, otherwise zero
@@ -479,7 +323,7 @@ namespace ana
 
     if(fLivetime && rhs.fLivetime){
       // Scale by livetime, the only thing in common
-      if(rhs.fHist) fHist->Add(rhs.fHist, sign*fLivetime/rhs.fLivetime);
+      if(rhs.fMat) *fMat += *rhs.fMat * sign*fLivetime/rhs.fLivetime;
 
       if(!fPOT && rhs.fPOT){
         // If the RHS has a POT and we don't, copy it in (suitably scaled)
@@ -529,7 +373,7 @@ namespace ana
   //----------------------------------------------------------------------
   void ReweightableSpectrum::Clear()
   {
-    fHist->Reset();
+    fMat->setZero();
   }
 
   //----------------------------------------------------------------------
@@ -550,8 +394,7 @@ namespace ana
 
     TObjString("ReweightableSpectrum").Write("type");
 
-    fHist->GetYaxis()->SetTitle(fTrueLabel.c_str());
-    fHist->Write("hist");
+    ToTH2(fPOT)->Write("hist");
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
@@ -563,6 +406,8 @@ namespace ana
       TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
       fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
+
+    TObjString(fTrueLabel.c_str()).Write("true_label");
 
     dir->Write();
     delete dir;
@@ -608,14 +453,21 @@ namespace ana
 
     delete dir;
 
-    return std::make_unique<ReweightableSpectrum>(kUnweighted,
-                                                  spect,
-                                                  labels, bins,
-                                                  hPot->GetBinContent(1),
-                                                  hLivetime->GetBinContent(1));
-  }
+    // Can't restore the Vars, go with a dummy value
+    const std::vector<Var> vars(labels.size(), kUnweighted);
+    auto ret = std::make_unique<ReweightableSpectrum>(kNullLoader,
+                                                      HistAxis(labels, bins, vars),
+                                                      HistAxis(spect->GetYaxis()->GetTitle(), Binning::FromTAxis(spect->GetYaxis()), kUnweighted),
+                                                      kNoCut);
 
-void ReweightableSpectrum::Scale(double scale) { fHist->Scale(scale); }
+    *ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
+                                                   ret->fMat->rows(),
+                                                   ret->fMat->cols());
+
+    delete spect;
+
+    return ret;
+  }
 
   //----------------------------------------------------------------------
   Binning ReweightableSpectrum::Bins1DX() const

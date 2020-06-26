@@ -37,6 +37,7 @@ namespace ana
     friend class SpectrumLoaderBase;
     friend class SpectrumLoader;
     friend class NullLoader;
+    friend class Ratio;
 
     enum ESparse{kDense, kSparse};
 
@@ -144,6 +145,20 @@ namespace ana
              const Var& wei = kUnweighted,
 	     ESparse sparse = kDense);
 
+    /// Expert constructor for ReweightableSpectrum et al
+    Spectrum(Hist&& hist,
+             const std::vector<std::string>& labels,
+             const std::vector<Binning>& bins,
+             double pot,
+             double livetime)
+      : fHist(std::move(hist)), fPOT(pot), fLivetime(livetime),
+        fLabels(labels), fBins(bins)
+    {
+    }
+
+    /// The only valid thing to do with such a spectrum is to assign something
+    /// else into it.
+    static Spectrum Uninitialized(){return Spectrum();}
 
     virtual ~Spectrum();
 
@@ -264,6 +279,12 @@ namespace ana
     Spectrum(const std::vector<std::string>& labels,
              const std::vector<Binning>& bins,
              ESparse sparse = kDense);
+
+    // Constructor for Uninitialized()
+    Spectrum()
+      : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0)
+    {
+    }
 
     void ConstructHistogram(ESparse sparse = kDense);
 

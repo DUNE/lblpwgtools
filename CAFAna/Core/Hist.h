@@ -9,7 +9,10 @@ class TH1D;
 #include "THnSparse.h"
 
 #include <Eigen/Dense> // TODO can we forward declare VectorXd?
-namespace Eigen{using VectorXstan = Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>;}
+namespace Eigen{
+  using ArrayXstan = Eigen::Array<stan::math::var, Eigen::Dynamic, 1>;
+  using VectorXstan = Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>;
+}
 
 namespace ana
 {
@@ -34,12 +37,16 @@ namespace ana
 
     static Hist Adopt(std::unique_ptr<TH1D> h);
     static Hist Adopt(std::unique_ptr<THnSparseD> h);
-    static Hist Adopt(Eigen::VectorXstan&& v);
-    static Hist Adopt(Eigen::VectorXd&& v);
+    static Hist Adopt(Eigen::ArrayXstan&& v);
+    static Hist Adopt(Eigen::ArrayXd&& v);
 
     static Hist FromDirectory(TDirectory* dir);
 
     TH1D* ToTH1(const Binning& bins) const;
+
+    bool HasStan() const {return fEigenStan != 0;}
+    const Eigen::ArrayXd& GetEigen() const {assert(fEigen); return *fEigen;}
+    const Eigen::ArrayXstan& GetEigenStan() const {assert(fEigenStan); return *fEigenStan;}
 
     int GetNbinsX() const;
     double GetBinError(int i) const;
@@ -68,13 +75,13 @@ namespace ana
     // Helpers for the public Add() function
     void Add(const TH1D* rhs, double scale);
     void Add(const THnSparseD* rhs, double scale);
-    void Add(const Eigen::VectorXstan* rhs, double scale);
-    void Add(const Eigen::VectorXd* rhs, double scale);
+    void Add(const Eigen::ArrayXstan* rhs, double scale);
+    void Add(const Eigen::ArrayXd* rhs, double scale);
 
     //    TH1F* fHistF;
     TH1D* fHistD;
     THnSparseD* fHistSparse;
-    Eigen::VectorXstan* fEigenStan;
-    Eigen::VectorXd* fEigen;
+    Eigen::ArrayXstan* fEigenStan;
+    Eigen::ArrayXd* fEigen;
   };
 }

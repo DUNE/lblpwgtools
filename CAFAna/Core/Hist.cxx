@@ -36,9 +36,9 @@ namespace ana
       fHistSparse = (THnSparseD*)rhs.fHistSparse->Clone();
     }
 
-    if(rhs.fEigenStan) fEigenStan = new Eigen::VectorXstan(*rhs.fEigenStan);
+    if(rhs.fEigenStan) fEigenStan = new Eigen::ArrayXstan(*rhs.fEigenStan);
 
-    if(rhs.fEigen) fEigen = new Eigen::VectorXd(*rhs.fEigen);
+    if(rhs.fEigen) fEigen = new Eigen::ArrayXd(*rhs.fEigen);
   }
 
   //----------------------------------------------------------------------
@@ -78,11 +78,11 @@ namespace ana
     }
 
     if(rhs.fEigenStan){
-      fEigenStan = new Eigen::VectorXstan(*rhs.fEigenStan);
+      fEigenStan = new Eigen::ArrayXstan(*rhs.fEigenStan);
     }
 
     if(rhs.fEigen){
-      fEigen = new Eigen::VectorXd(*rhs.fEigen);
+      fEigen = new Eigen::ArrayXd(*rhs.fEigen);
     }
 
     return *this;
@@ -144,7 +144,7 @@ namespace ana
   Hist Hist::Copy(const std::vector<stan::math::var>& v)
   {
     Hist ret;
-    ret.fEigenStan = new Eigen::VectorXstan(v.size());
+    ret.fEigenStan = new Eigen::ArrayXstan(v.size());
     for(unsigned int i = 0; i < v.size(); ++i) (*ret.fEigenStan)[i] = v[i];
     return ret;
   }
@@ -166,18 +166,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Adopt(Eigen::VectorXstan&& v)
+  Hist Hist::Adopt(Eigen::ArrayXstan&& v)
   {
     Hist ret;
-    ret.fEigenStan = new Eigen::VectorXstan(std::move(v));
+    ret.fEigenStan = new Eigen::ArrayXstan(std::move(v));
     return ret;
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Adopt(Eigen::VectorXd&& v)
+  Hist Hist::Adopt(Eigen::ArrayXd&& v)
   {
     Hist ret;
-    ret.fEigen = new Eigen::VectorXd(std::move(v));
+    ret.fEigen = new Eigen::ArrayXd(std::move(v));
     return ret;
   }
 
@@ -380,10 +380,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Hist::Add(const Eigen::VectorXstan* rhs, double scale)
+  void Hist::Add(const Eigen::ArrayXstan* rhs, double scale)
   {
     if(fHistD){
-      fEigenStan = new Eigen::VectorXstan(*rhs * scale);
+      fEigenStan = new Eigen::ArrayXstan(*rhs * scale);
       const double* arr = fHistD->GetArray();
       for(unsigned int i = 0; i < fEigenStan->size(); ++i){
         (*fEigenStan)[i] += arr[i];
@@ -392,7 +392,7 @@ namespace ana
     }
 
     if(fHistSparse){
-      fEigenStan = new Eigen::VectorXstan(*rhs * scale);
+      fEigenStan = new Eigen::ArrayXstan(*rhs * scale);
       for(unsigned int i = 0; i < fEigenStan->size(); ++i){
         (*fEigenStan)[i] += fHistSparse->GetBinContent(i);
       }
@@ -405,14 +405,14 @@ namespace ana
     }
 
     if(fEigen){
-      fEigenStan = new Eigen::VectorXstan(*fEigen + *rhs * scale);
+      fEigenStan = new Eigen::ArrayXstan(*fEigen + *rhs * scale);
       delete fEigen;
       fEigen = 0;
     }
   }
 
   //----------------------------------------------------------------------
-  void Hist::Add(const Eigen::VectorXd* rhs, double scale)
+  void Hist::Add(const Eigen::ArrayXd* rhs, double scale)
   {
     if(fHistD){
       double* arr = fHistD->GetArray();
@@ -464,8 +464,8 @@ namespace ana
   void Hist::Divide(const Hist& rhs)
   {
     if(fEigen && rhs.fEigen) *fEigen /= *rhs.fEigen;
-    else if(fEigenStan && rhs.fEigenStan) *fEigenStan /= *rhs.fEigenStan;
-    else abort();
+    else if(fEigenStan && rhs.fEigenStan) *fEigenStan /= *fEigenStan;
+    else abort(); // TODO mixed modes
   }
 
   //----------------------------------------------------------------------
