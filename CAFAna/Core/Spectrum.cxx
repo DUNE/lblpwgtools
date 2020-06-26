@@ -519,25 +519,6 @@ namespace ana
     return ret;
   }
 
- //----------------------------------------------------------------------
-  Eigen::VectorXd Spectrum::ToEigenVectorXd(double exposure, EExposureType expotype,
-					    EBinType bintype) const
-  {
-    // this is slower than intended since ToTH1() makes a copy.
-    // can optimize if it becomes a hot spot
-    TH1D * h = fHist.ToTH1(Bins1D());
-    Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
-                                                        h->GetNbinsX()+2);
-    if(exposure > 0)
-    {
-      if(expotype == kPOT)
-        return ret * exposure / fPOT;
-      else
-        return ret * exposure / fLivetime;
-    }
-    return ret;
-  }
-
   //----------------------------------------------------------------------
   TH1* Spectrum::ToTHX(double exposure, bool force1D, EExposureType expotype) const
   {

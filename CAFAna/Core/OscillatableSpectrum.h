@@ -99,8 +99,6 @@ namespace ana
     Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
     Spectrum Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
 
-    Eigen::MatrixXd getCoreMatrix() const;
-
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;
 

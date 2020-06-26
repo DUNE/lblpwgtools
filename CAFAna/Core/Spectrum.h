@@ -192,15 +192,6 @@ namespace ana
                 EExposureType expotype,
                 EBinType bintype = kBinContent) const;
 
-    /// \brief Eigen::VectorXd made from this Spectrum, scaled to some exposure
-    /// WARNING: Drops errors
-    ///
-    /// \param exposure POT or livetime (seconds)
-    /// \param expotype How to interpret exposure (kPOT (default) or kLivetime)
-    Eigen::VectorXd ToEigenVectorXd(double exposure=-1,
-                                    EExposureType = kPOT,
-                                    EBinType bintype = kBinContent) const;
-
     /// Spectrum must be 2D to obtain TH2
     TH2*  ToTH2     (double exposure, EExposureType expotype = kPOT,
 		     EBinType bintype = kBinContent) const;
