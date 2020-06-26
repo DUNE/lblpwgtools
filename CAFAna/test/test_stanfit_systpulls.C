@@ -93,7 +93,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
     TCanvas c;
     Spectrum CV = pred->Predict(calc.get());
-    SpectrumStan shiftedStan = pred->PredictSyst(calc.get(), shifts);
+    Spectrum shiftedStan = pred->PredictSyst(calc.get(), shifts);
     DataMCComparison(fakeData, CV);
     spec_pred.ToTH1(fakeData.POT(), kBlue)->Draw("hist same");
     std::cout << " Before fitting, LL between spectra is "
