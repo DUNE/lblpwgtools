@@ -149,7 +149,8 @@ namespace ana
     fWildcard = "file list";
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));
 
-    assert(!fnames.empty());
+    // Apparently MakePredInterps runs over empty file lists?
+    //    assert(!fnames.empty());
     std::cout << "Loading from " << fnames.size() << " files" << std::endl;
   }
 

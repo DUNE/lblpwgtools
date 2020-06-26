@@ -461,8 +461,8 @@ namespace ana
   //----------------------------------------------------------------------
   void Hist::Multiply(const Hist& rhs)
   {
-    if(fEigen && rhs.fEigen) *fEigen *= *rhs.fEigen;
-    else if(fEigenStan && rhs.fEigenStan) *fEigenStan *= *rhs.fEigenStan;
+    if(fEigen && rhs.fEigen){*fEigen *= *rhs.fEigen; return;}
+    else if(fEigenStan && rhs.fEigenStan){*fEigenStan *= *rhs.fEigenStan; return;}
     else abort();
   }
 
@@ -475,8 +475,9 @@ namespace ana
   //----------------------------------------------------------------------
   void Hist::Divide(const Hist& rhs)
   {
-    if(fEigen && rhs.fEigen) *fEigen /= *rhs.fEigen;
-    else if(fEigenStan && rhs.fEigenStan) *fEigenStan /= *fEigenStan;
+    if(fHistD && rhs.fHistD){fHistD->Divide(rhs.fHistD); return;}
+    else if(fEigen && rhs.fEigen){*fEigen /= *rhs.fEigen; return;}
+    else if(fEigenStan && rhs.fEigenStan){*fEigenStan /= *fEigenStan; return;}
     else abort(); // TODO mixed modes
   }
 
