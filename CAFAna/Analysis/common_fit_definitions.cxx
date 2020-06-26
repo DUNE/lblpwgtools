@@ -29,6 +29,7 @@
 
 #include "CAFAna/Vars/FitVars.h"
 
+#include "CAFAna/Systs/AnaSysts.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
@@ -222,6 +223,8 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
   }
 
   if (detsyst) {
+    getDetectorSysts(useFD,useND,useNueOnE);
+    /*
     std::vector<const ISyst *> elist = GetEnergySysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     std::vector<const ISyst *> ndlist = GetNDRecoSysts();
@@ -237,6 +240,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     if (useND && useNueOnE) {
       systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
     }
+    */
   }
 
   if (xsecsyst) {
