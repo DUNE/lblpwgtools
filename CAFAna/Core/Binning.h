@@ -27,7 +27,7 @@ namespace ana
     int NBins() const {return fNBins;}
     double Min() const {return fMin;}
     double Max() const {return fMax;}
-    int FindBin(float x) const;
+    int FindBin(double x) const;
     bool IsSimple() const {return fIsSimple;}
     const std::vector<double>& Edges() const
     {

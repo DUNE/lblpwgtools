@@ -97,7 +97,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  int Binning::FindBin(float x) const
+  int Binning::FindBin(double x) const
   {
     // Treat anything outside [fMin, fMax) at Underflow / Overflow
     if (x <  fMin) return 0;               // Underflow
@@ -187,7 +187,7 @@ namespace ana
     for(std::size_t i = 0; i < edges.size()-1; i++) {
       energies.push_back((edges[i+1] + edges[i])/2);
     }
-    energies.push_back(1e-15); // overflow is unphysical anyway. but 0 causes infs that upset Stan
+    energies.push_back(1e+15); // overflow is unphysical anyway. but 0 causes infs that upset Stan
     return energies;
   }
 

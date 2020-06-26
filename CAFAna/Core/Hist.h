@@ -56,9 +56,10 @@ namespace ana
 
     void Add(const Hist& rhs, double scale = 1);
 
-    // TODO better to do this in terms of Hist - need to update Ratio
     void Multiply(TH1D* rhs);
+    void Multiply(const Hist& rhs);
     void Divide(TH1D* rhs);
+    void Divide(const Hist& rhs);
 
     void Write() const;
   protected:

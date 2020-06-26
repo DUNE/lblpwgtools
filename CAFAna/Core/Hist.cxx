@@ -447,9 +447,25 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  void Hist::Multiply(const Hist& rhs)
+  {
+    if(fEigen && rhs.fEigen) *fEigen *= *rhs.fEigen;
+    else if(fEigenStan && rhs.fEigenStan) *fEigenStan *= *rhs.fEigenStan;
+    else abort();
+  }
+
+  //----------------------------------------------------------------------
   void Hist::Divide(TH1D* rhs)
   {
     if(fHistD) fHistD->Divide(rhs); else abort();//fHistSparse->Divide(rhs);
+  }
+
+  //----------------------------------------------------------------------
+  void Hist::Divide(const Hist& rhs)
+  {
+    if(fEigen && rhs.fEigen) *fEigen /= *rhs.fEigen;
+    else if(fEigenStan && rhs.fEigenStan) *fEigenStan /= *rhs.fEigenStan;
+    else abort();
   }
 
   //----------------------------------------------------------------------
