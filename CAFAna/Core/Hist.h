@@ -9,6 +9,7 @@ class TH1D;
 #include "THnSparse.h"
 
 #include <Eigen/Dense> // TODO can we forward declare VectorXd?
+
 namespace Eigen{
   using ArrayXstan = Eigen::Array<stan::math::var, Eigen::Dynamic, 1>;
   using VectorXstan = Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>;

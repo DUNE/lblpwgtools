@@ -103,7 +103,14 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH2D* ret = HistCache::NewTH2D(UniqueName(), Bins1DX(), fBinsY);
+    TH2D* ret = HistCache::NewTH2D("", Bins1DX(), fBinsY);
+
+    for(int i = 0; i < fMat->rows(); ++i){
+      for(int j = 0; j < fMat->cols(); ++j){
+        ret->SetBinContent(j, i, (*fMat)(i, j));
+      }
+    }
+
     if(fPOT){
       ret->Scale(pot/fPOT);
     }
@@ -111,7 +118,6 @@ namespace ana
       // How did it get events with no POT?
       assert(ret->Integral() == 0);
     }
-
 
     std::string label;
     for(const std::string& l: fLabels) label += l + " and ";
