@@ -57,21 +57,6 @@ namespace ana
     /// else into it.
     static OscillatableSpectrum Uninitialized(){return OscillatableSpectrum();}
 
-    /*
-    OscillatableSpectrum(const std::string& label, const Binning& bins);
-    OscillatableSpectrum(const std::string& label, double pot, double livetime,
-                         const Binning& bins);
-    OscillatableSpectrum(TH2* h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         double pot, double livetime);
-
-    OscillatableSpectrum(std::unique_ptr<TH2D> h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         double pot, double livetime);
-    */
-
     ~OscillatableSpectrum();
 
     /// Copy constructor

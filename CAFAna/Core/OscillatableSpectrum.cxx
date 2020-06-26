@@ -52,58 +52,6 @@ namespace ana
   {
   }
 
-  /*
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(const std::string& label,
-                                             const Binning& bins)
-    : ReweightableSpectrum(label, bins, kTrueE)
-  {
-    fTrueLabel = "True Energy (GeV)";
-
-    DontAddDirectory guard;
-
-    fPOT = 0;
-    fLivetime = 0;
-
-    fHist = HistCache::NewTH2D("", bins);
-  }
-
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(const std::string& label, double pot, double livetime,
-                                             const Binning& bins)
-    : ReweightableSpectrum(label, bins, kTrueE)
-  {
-    fTrueLabel = "True Energy (GeV)";
-
-    DontAddDirectory guard;
-
-    fPOT = pot;
-    fLivetime = livetime;
-
-    fHist = HistCache::NewTH2D("", bins);
-  }
-
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(TH2* h,
-                                             const std::vector<std::string>& labels,
-                                             const std::vector<Binning>& bins,
-                                             double pot, double livetime)
-    : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime)
-  {
-    fTrueLabel = "True Energy (GeV)";
-  }
-
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(std::unique_ptr<TH2D> h,
-                                             const std::vector<std::string>& labels,
-                                             const std::vector<Binning>& bins,
-                                             double pot, double livetime)
-    : ReweightableSpectrum(kTrueE, std::move(h), labels, bins, pot, livetime)
-  {
-    fTrueLabel = "True Energy (GeV)";
-  }
-  */
-
   //----------------------------------------------------------------------
   OscillatableSpectrum::~OscillatableSpectrum()
   {
@@ -123,17 +71,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(OscillatableSpectrum&& rhs)
-    : ReweightableSpectrum(rhs)//rhs.fLabels, rhs.fBins, kTrueE)
+    : ReweightableSpectrum(rhs)
   {
-    /*
-    DontAddDirectory guard;
-
-    fHist = rhs.fHist;
-    rhs.fHist = 0;
-
-    fPOT = rhs.fPOT;
-    fLivetime = rhs.fLivetime;
-    */
     if(rhs.fOscCacheHash){
       fOscCacheSpect = std::move(rhs.fOscCacheSpect);
       fOscCacheHash = std::move(rhs.fOscCacheHash);
@@ -148,16 +87,7 @@ namespace ana
     if(this == &rhs) return *this;
 
     ReweightableSpectrum::operator=(rhs);
-    /*
-    DontAddDirectory guard;
 
-    if(fHist) HistCache::Delete(fHist, Bins1DX().ID());
-    fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
-    fPOT = rhs.fPOT;
-    fLivetime = rhs.fLivetime;
-    fLabels = rhs.fLabels;
-    fBins = rhs.fBins;
-    */
     if(rhs.fOscCacheHash){
       fOscCacheSpect = rhs.fOscCacheSpect;
       fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
@@ -176,17 +106,6 @@ namespace ana
 
     ReweightableSpectrum::operator=(rhs);
 
-    /*
-    DontAddDirectory guard;
-
-    if(fHist) HistCache::Delete(fHist, Bins1DX().ID());
-    fHist = rhs.fHist;
-    rhs.fHist = 0;
-    fPOT = rhs.fPOT;
-    fLivetime = rhs.fLivetime;
-    fLabels = rhs.fLabels;
-    fBins = rhs.fBins;
-    */
     if(rhs.fOscCacheHash){
       fOscCacheSpect = std::move(rhs.fOscCacheSpect);
       fOscCacheHash = std::move(rhs.fOscCacheHash);
