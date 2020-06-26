@@ -40,7 +40,7 @@ namespace ana
                                      const SystShifts& shiftMC,
                                      EMode_t mode)
     : fOscOrigin(osc ? osc->Copy() : 0),
-      fBinning(0, {}, {}, 0, 0),
+      fBinning(Spectrum::Uninitialized()),
       fSplitBySign(mode == kSplitBySign)
   {
 

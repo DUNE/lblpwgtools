@@ -50,13 +50,13 @@ namespace ana
 
   protected:
     NumuDecomp()
-      : fData(0, {}, {}, 0, 0),
-        fNC  (0, {}, {}, 0, 0),
-        fNue (0, {}, {}, 0, 0),
-        fAntiNue(0, {}, {}, 0, 0),
-        fNumu(0, {}, {}, 0, 0),
-        fAntiNumu(0, {}, {}, 0, 0),
-        fNotNumu(0, {}, {}, 0, 0)
+      : fData(Spectrum::Uninitialized()),
+        fNC  (Spectrum::Uninitialized()),
+        fNue (Spectrum::Uninitialized()),
+        fAntiNue(Spectrum::Uninitialized()),
+        fNumu(Spectrum::Uninitialized()),
+        fAntiNumu(Spectrum::Uninitialized()),
+        fNotNumu(Spectrum::Uninitialized())
     {};
 
     Spectrum fData;

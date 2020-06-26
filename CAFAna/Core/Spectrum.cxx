@@ -86,7 +86,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(Eigen::VectorXd h,
+  Spectrum::Spectrum(Eigen::ArrayXd h,
                      const std::string & labels,
                      const Binning& bins,
                      double pot, double livetime)

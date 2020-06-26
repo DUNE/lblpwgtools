@@ -65,8 +65,8 @@ namespace ana
     Spectrum(const std::string& label, const Binning& bins, ESparse sparse = kDense);
     Spectrum(const std::string& label, double pot, double livetime, const Binning& bins);
 
-    /// Makes a spectrum from an eigen3 vector
-    Spectrum(Eigen::VectorXd h,
+    /// Makes a spectrum from an eigen array
+    Spectrum(Eigen::ArrayXd h,
              const std::string& labels,
              const Binning& bins,
              double pot, double livetime);

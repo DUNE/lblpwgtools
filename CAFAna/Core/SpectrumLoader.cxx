@@ -539,7 +539,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
 
             // TODO: ignoring events with no true neutrino etc
             if (yval != 0)
-              rw->fHist->Fill(val, yval, wei);
+              rw->Fill(val, yval, wei);
           } // end for rw
         }   // end for vardef
       }     // end for weidef

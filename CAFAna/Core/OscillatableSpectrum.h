@@ -28,7 +28,7 @@ namespace ana
     mutable Spectrum fOscCacheSpect;
 
     OscCache()
-      : fOscCacheSpect(0, {}, {}, 0, 0)
+      : fOscCacheSpect(Spectrum::Uninitialized())
     {}
   };
 
@@ -54,6 +54,11 @@ namespace ana
                          const SystShifts& shift = kNoShift,
                          const Var& wei = kUnweighted);
 
+    /// The only valid thing to do with such a spectrum is to assign something
+    /// else into it.
+    static OscillatableSpectrum Uninitialized(){return OscillatableSpectrum();}
+
+    /*
     OscillatableSpectrum(const std::string& label, const Binning& bins);
     OscillatableSpectrum(const std::string& label, double pot, double livetime,
                          const Binning& bins);
@@ -66,6 +71,7 @@ namespace ana
                          const std::vector<std::string>& labels,
                          const std::vector<Binning>& bins,
                          double pot, double livetime);
+    */
 
     ~OscillatableSpectrum();
 
@@ -82,9 +88,9 @@ namespace ana
     using ReweightableSpectrum::Clear;
 
     /// Rescale bins so that \ref TrueEnergy will return \a target
-    using ReweightableSpectrum::ReweightToTrueSpectrum;
+    //    using ReweightableSpectrum::ReweightToTrueSpectrum;
     /// Rescale bins so that \ref Unoscillated will return \a target
-    using ReweightableSpectrum::ReweightToRecoSpectrum;
+    //    using ReweightableSpectrum::ReweightToRecoSpectrum;
 
     // These under a different name
     Spectrum Unoscillated() const {return UnWeighted();}
@@ -108,17 +114,25 @@ namespace ana
     // Derived classes can be trusted take care of their own construction
     OscillatableSpectrum(const std::vector<std::string>& labels,
                          const std::vector<Binning>& bins,
+                         const Binning& binsY,
                          const Var& rwVar)
-      : ReweightableSpectrum(labels, bins, rwVar)
+      : ReweightableSpectrum(labels, bins, binsY, rwVar)
     {
     }
 
     OscillatableSpectrum(const std::string& label,
                          const Binning& bins,
+                         const Binning& binsY,
                          const Var& rwVar)
-      : ReweightableSpectrum(label, bins, rwVar)
+      : ReweightableSpectrum(label, bins, binsY, rwVar)
     {
     }
 
+    /// Constructor for Uninitialized()
+    OscillatableSpectrum()
+    {
+    }
+
+    template<class T> Spectrum _Oscillated(osc::_IOscCalculator<T>* calc, int from, int to) const;
   };
 }

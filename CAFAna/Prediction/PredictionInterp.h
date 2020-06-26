@@ -119,7 +119,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fOscOrigin(nullptr), fBinning(0, {}, {}, 0, 0), fSplitBySign(false) {
+    PredictionInterp() : fOscOrigin(nullptr), fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
