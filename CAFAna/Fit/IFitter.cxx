@@ -137,7 +137,7 @@ namespace ana
       auto shift = fShifts->Copy();
       *shift = pt.shift;
       auto fitSummary = FitHelperSeeded(seed, *shift, verb);
-      if (!fitSummary->IsBetterFit(bestFitSummary.get()))
+      if (fitSummary->IsBetterThan(bestFitSummary.get()))
       {
         bestFitSummary = std::move(fitSummary);
 

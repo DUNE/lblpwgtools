@@ -267,13 +267,13 @@ namespace ana
             : fBestLL(bestLL)
           {}
 
-          bool IsBetterFit(const IFitSummary* other) const override
+          bool IsBetterThan(const IFitSummary* other) const override
           {
             if (!other)
-              return false;
+              return true;
 
             if (auto otherSummary = dynamic_cast<const StanFitSummary*>(other))
-              return otherSummary->EvalMetricVal() > EvalMetricVal();
+              return EvalMetricVal() > otherSummary->EvalMetricVal();
             else
             {
               assert (false && "Can't compare a StanFitSummary to another kind of IFitSummary!");
