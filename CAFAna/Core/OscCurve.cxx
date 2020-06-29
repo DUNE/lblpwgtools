@@ -16,20 +16,20 @@ namespace ana
   template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
   ToEigen(osc::_IOscCalculator<T>* calc, int from, int to)
   {
-    return calc->P(from, to, kTrueEnergyBinCenters);
-    /*
-    const int N = kTrueEnergyBins.NBins();
-    Eigen::Array<T, Eigen::Dynamic, 1> hist(N+2);
+    const unsigned int N = kTrueEnergyBinCenters.size();
 
-    hist[0] = 0; // underflow
-    for(int i = 1; i <= N; ++i){
-      const double E = kTrueEnergyBinCenters[i];
-      hist[i] = calc->P(from, to, E);
-    }
-    hist[N+1] = (from == to || to == 0) ? 1 : 0;
+    // Have to allow for underflow and overflow
+    Eigen::Array<T, Eigen::Dynamic, 1> ret(N+2);
+    ret[0] = 0; // underflow
+    ret[N+1] = (from == to || to == 0) ? 1 : 0; // overflow
 
-    return hist;
-    */
+    const Eigen::Array<T, Eigen::Dynamic, 1> Ps = calc->P(from, to, kTrueEnergyBinCenters);
+
+    // This is clumsy, but hopefully faster than calculating oscillation probs
+    // for two dummy values.
+    for(unsigned int i = 0; i < N; ++i) ret[i+1] = Ps[i];
+
+    return ret;
   }
 
   //----------------------------------------------------------------------

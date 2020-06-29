@@ -179,11 +179,11 @@ namespace ana
   {
     std::vector<double> energies;
     std::vector<double> edges = TrueEnergyBins().Edges();
-    energies.push_back(1e-15); // underflow is unphysical anyway. but 0 causes infs that upset Stan
+
     for(std::size_t i = 0; i < edges.size()-1; i++) {
       energies.push_back((edges[i+1] + edges[i])/2);
     }
-    energies.push_back(1e+15); // overflow is unphysical anyway. but 0 causes infs that upset Stan
+
     return energies;
   }
 
