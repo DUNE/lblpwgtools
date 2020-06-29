@@ -88,7 +88,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   std::cout << std::endl;
 
   std::unique_ptr<IPrediction> pred;
-  osc::IOscCalculatorAdjustable * calc;
+  osc::IOscCalculatorAdjustable * calc = 0;
   osc::IOscCalculatorAdjustable * calcTruth;
   std::unique_ptr<Spectrum> fakeData;
   std::unique_ptr<SystShifts> systTruePulls;
