@@ -11,7 +11,7 @@ namespace ana
   stan::math::var LogLikelihood(const Eigen::ArrayXstan& exp,
                                 const Eigen::ArrayXd& obs)
   {
-    assert(exp.size() >= 2 && int(exp.size() - 2) == obs.size());  // exp includes under- and overflow
+    assert(exp.size() >= 2 && exp.size() == obs.size());
 
     stan::math::var chi = 0;
 

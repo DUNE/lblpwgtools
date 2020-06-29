@@ -99,17 +99,13 @@ namespace ana
   //----------------------------------------------------------------------
   int Binning::FindBin(double x) const
   {
-    // Treat anything outside [fMin, fMax) at Underflow / Overflow
+    // Treat anything outside [fMin, fMax) as Underflow / Overflow
     if (x <  fMin) return 0;               // Underflow
     if (x >= fMax) return fEdges.size();   // Overflow
 
     // Follow ROOT convention, first bin of histogram is bin 1
 
-    if (this->IsSimple()){
-      double binwidth = (fMax - fMin) / fNBins;
-      int bin = (x - fMin) / binwidth + 1;
-      return bin;
-    }
+    if(IsSimple()) return fNBins * (x - fMin) / (fMax - fMin) +1;
 
     int bin =
       std::lower_bound(fEdges.begin(), fEdges.end(), x) - fEdges.begin();

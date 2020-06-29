@@ -3,12 +3,11 @@
 #include "CAFAna/Core/StanTypedefs.h"
 
 class TDirectory;
-class TH1F;
-class TH1D;
-//class THnSparseD;
-#include "THnSparse.h"
 
-#include <Eigen/Dense> // TODO can we forward declare VectorXd?
+class TH1D;
+
+#include <Eigen/Dense>
+#include <Eigen/SparseCore>
 
 namespace Eigen{
   using ArrayXstan = Eigen::Array<stan::math::var, Eigen::Dynamic, 1>;
@@ -29,15 +28,9 @@ namespace ana
     ~Hist();
 
     static Hist Uninitialized(){return Hist();}
-    bool Initialized() const {return fHistD || fHistSparse || fEigenStan || fEigen;}
+    bool Initialized() const {return fEigenSparse || fEigenStan || fEigen;}
 
-    // TODO try to convert all callers to Adopt()
-    static Hist Copy(const TH1D* h);
-    static Hist Copy(const TH1* h);
-    static Hist Copy(const std::vector<stan::math::var>& v);
-
-    static Hist Adopt(std::unique_ptr<TH1D> h);
-    static Hist Adopt(std::unique_ptr<THnSparseD> h);
+    static Hist Adopt(Eigen::SparseVector<double>&& v);
     static Hist Adopt(Eigen::ArrayXstan&& v);
     static Hist Adopt(Eigen::ArrayXd&& v);
 
@@ -51,10 +44,10 @@ namespace ana
 
     int GetNbinsX() const;
     double GetBinError(int i) const;
-    double Integral(int lo, int hi) const;
+    double Integral() const;
     double GetMean() const;
 
-    void Fill(double x, double w);
+    void Fill(const Binning& bins, double x, double w);
     void Scale(double s);
     void ResetErrors();
 
@@ -64,24 +57,19 @@ namespace ana
 
     void Add(const Hist& rhs, double scale = 1);
 
-    void Multiply(TH1D* rhs);
     void Multiply(const Hist& rhs);
-    void Divide(TH1D* rhs);
     void Divide(const Hist& rhs);
 
-    void Write() const;
+    void Write(const Binning& bins) const;
   protected:
     Hist();
 
     // Helpers for the public Add() function
-    void Add(const TH1D* rhs, double scale);
-    void Add(const THnSparseD* rhs, double scale);
+    void Add(const Eigen::SparseVector<double>* rhs, double scale);
     void Add(const Eigen::ArrayXstan* rhs, double scale);
     void Add(const Eigen::ArrayXd* rhs, double scale);
 
-    //    TH1F* fHistF;
-    TH1D* fHistD;
-    THnSparseD* fHistSparse;
+    Eigen::SparseVector<double>* fEigenSparse;
     Eigen::ArrayXstan* fEigenStan;
     Eigen::ArrayXd* fEigen;
   };

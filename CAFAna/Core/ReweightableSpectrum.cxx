@@ -390,6 +390,12 @@ namespace ana
 
     delete spect;
 
+    ret->fPOT = hPot->Integral(0, -1);
+    ret->fLivetime = hLivetime->Integral(0, -1);
+
+    delete hPot;
+    delete hLivetime;
+
     return ret;
   }
 

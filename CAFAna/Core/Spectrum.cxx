@@ -104,48 +104,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(TH1* h,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     double pot, double livetime)
-    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
-  {
-    if(!h){
-      return;
-    }
-
-    DontAddDirectory guard;
-
-    const TString className = h->ClassName();
-
-    if(className == "TH1D"){
-      // Shortcut if types match
-      fHist = Hist::Copy((TH1D*)h);
-    }
-    else{
-      fHist = Hist::Copy(h);
-    }
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(std::unique_ptr<TH1D> h,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins) // TODO is ordering here safe with the move?
-  {
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(std::vector<stan::math::var>&& binContents,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     double pot, double livetime)
-    : fHist(Hist::Copy(binContents)), fPOT(pot), fLivetime(livetime), fBins(bins)
-  {
-  }
-
-  //----------------------------------------------------------------------
   Spectrum::Spectrum(const std::string& label, SpectrumLoaderBase& loader,
                      const Binning& binsx, const Var& varx,
                      const Binning& binsy, const Var& vary,
@@ -311,30 +269,15 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    //    assert(!fHist && !fHistSparse);
+    assert(!fHist.Initialized());
 
     const Binning bins1D = Bins1D();
 
     if(sparse){
-      assert(bins1D.IsSimple());
-      const int nbins = bins1D.NBins();
-      const double xmin = bins1D.Min();
-      const double xmax = bins1D.Max();
-      THnSparseD* h = new THnSparseD(UniqueName().c_str(), UniqueName().c_str(),
-                                     1, &nbins, &xmin, &xmax);
-
-      // Ensure errors get accumulated properly
-      h->Sumw2();
-
-      fHist = Hist::Adopt(std::unique_ptr<THnSparseD>(h));
+      fHist = Hist::Adopt(Eigen::SparseVector<double>(bins1D.NBins()+2));
     }
     else{
-      TH1D* h = HistCache::New("", bins1D);
-
-      // Ensure errors get accumulated properly
-      h->Sumw2();
-
-      fHist = Hist::Adopt(std::unique_ptr<TH1D>(h));
+      fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(bins1D.NBins()+2)));
     }
   }
 
@@ -343,7 +286,6 @@ namespace ana
 			EExposureType expotype,
 			EBinType bintype) const
   {
-
     // Could have a file temporarily open
     DontAddDirectory guard;
 
@@ -569,7 +511,7 @@ namespace ana
       *err = sqrt(*err) * ratio;
     }
 
-    return fHist.Integral(0, -1) * ratio;
+    return fHist.Integral() * ratio;
   }
 
   //----------------------------------------------------------------------
@@ -581,7 +523,8 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Fill(double x, double w)
   {
-    fHist.Fill(x, w);
+    fHist.Fill(Bins1D(), x, w); // TODO repeated calling of Bins1D() too slow?
+    // Pull binning out of Hist entirely and just update an index?
   }
 
   //----------------------------------------------------------------------
@@ -636,13 +579,13 @@ namespace ana
   Spectrum& Spectrum::PlusEqualsHelper(const Spectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fHist.Initialized() && rhs.fHist.Integral(0, -1) == 0) return *this;
+    if(rhs.fHist.Initialized() && rhs.fHist.Integral() == 0) return *this;
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
-      std::cout << "Error: can't sum Spectrum with no POT or livetime."
+      std::cout << "Error: can't sum Spectrum with no POT or livetime: "
                 << fPOT << " " << rhs.fPOT
                 << std::endl;
-      //      abort();
+      abort();
       return *this;
     }
 
@@ -770,7 +713,7 @@ namespace ana
 
     TObjString("Spectrum").Write("type");
 
-    fHist.Write();
+    fHist.Write(Bins1D());
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
@@ -820,22 +763,7 @@ namespace ana
       delete label;
     }
 
-    if(bins.empty() && labels.empty()){
-      abort();
-      /*
-      // Must be an old file. Make an attempt at backwards compatibility.
-      if(spect){
-        bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
-        labels.push_back(spect->GetXaxis()->GetTitle());
-      }
-      else{
-        bins.push_back(Binning::FromTAxis(spectSparse->GetAxis(0)));
-        labels.push_back(spectSparse->GetAxis(0)->GetTitle());
-      }
-      */
-    }
-
-    std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
+    std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>(Eigen::ArrayXd(), labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
     ret->fHist = Hist::FromDirectory(dir);
 
     delete hPot;
