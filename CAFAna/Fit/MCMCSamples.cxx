@@ -205,8 +205,12 @@ namespace ana
 
 
   //----------------------------------------------------------------------
-  std::unique_ptr<MCMCSamples> MCMCSamples::LoadFrom(TDirectory *dir)
+  std::unique_ptr<MCMCSamples> MCMCSamples::LoadFrom(TDirectory *dir,
+                                                     const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     DontAddDirectory guard;
 
     TObjString *tag = (TObjString *) dir->Get("type");
@@ -250,6 +254,8 @@ namespace ana
       samples->LoadBaskets();   // read the entire TTree into memory
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
     }
+
+    delete dir;
 
     return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(), diagBranches, fitVars, systs, samples));
   }
@@ -559,9 +565,11 @@ namespace ana
 
 
   //----------------------------------------------------------------------
-  void MCMCSamples::SaveTo(TDirectory *dir) const
+  void MCMCSamples::SaveTo(TDirectory *dir, const std::string& name) const
   {
     TDirectory * oldDir = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("MCMCSamples").Write("type");
@@ -593,6 +601,9 @@ namespace ana
     // don't let it get attached to the file that's about to be closed
     fSamples->LoadBaskets();
     fSamples->SetDirectory(nullptr);
+
+    dir->Write();
+    delete dir;
 
     if (oldDir)
       oldDir->cd();

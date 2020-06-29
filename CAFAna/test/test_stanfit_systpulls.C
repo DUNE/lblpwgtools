@@ -69,7 +69,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
   TFile f(predFile.c_str());
   assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
-  auto pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
+  auto pred = LoadFrom<PredictionInterp>(&f, predName);
 
   Spectrum nominal = pred->Predict(calc.get());
 
@@ -97,7 +97,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
     DataMCComparison(fakeData, CV);
     spec_pred.ToTH1(fakeData.POT(), kBlue)->Draw("hist same");
     std::cout << " Before fitting, LL between spectra is "
-              << LogLikelihood(shiftedStan.ToBins(fakeData.POT()), fakeData.ToTH1(fakeData.POT())) / -2.
+              << LogLikelihood(shiftedStan.GetEigen(fakeData.POT()), fakeData.GetEigen(fakeData.POT())) / -2.
               << std::endl;
     osc::OscCalculatorPMNSOptStan stanCalc;
     osc::CopyParams(calc.get(), &stanCalc);
@@ -134,7 +134,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 //    continue;
 
     TFile outF(Form((workDir + "/samples_%s.root").c_str(), syst->ShortName().c_str()), "recreate");
-    fitter.GetSamples().SaveTo(outF.mkdir("samples"));
+    fitter.GetSamples().SaveTo(&outF, "samples");
     outF.Close();
 
     c.Clear();

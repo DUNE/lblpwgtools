@@ -151,10 +151,10 @@ namespace ana
       const std::vector<const IFitVar *> & Vars() const { return fVars; }
 
       /// Save this guy to a file so we don't have to rerun the MCMC
-      void SaveTo(TDirectory * dir) const;
+      void SaveTo(TDirectory * dir, const std::string& name) const;
 
       /// Load from file
-      static std::unique_ptr<MCMCSamples> LoadFrom(TDirectory * dir);
+      static std::unique_ptr<MCMCSamples> LoadFrom(TDirectory * dir, const std::string& name);
 
     private:
       /// Internal-use constructor needed for LoadFrom()

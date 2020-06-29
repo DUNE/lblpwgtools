@@ -85,7 +85,7 @@ namespace ana
     std::vector<const ISyst*> ActiveSysts() const;
 
     void SaveTo(TDirectory* dir, const std::string& name) const;
-    std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir, const std::string& naem);
+    static std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     template <typename T>
