@@ -60,6 +60,9 @@ namespace ana
       T GetShift(const ISyst* syst) const;
       void ResetToNominal();
 
+    bool HasStan(const ISyst* s) const {return fSystsStan.count(s);}
+    bool HasAnyStan() const {return !fSystsStan.empty();}
+
       /// Penalty term for (frequentist) chi-squared fits
       double Penalty() const;
 

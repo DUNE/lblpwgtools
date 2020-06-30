@@ -358,8 +358,14 @@ namespace ana
                                            bool nubar,
                                            const SystShifts &shift) const
   {
-    if(s.HasStan()){
-      Eigen::ArrayXstan vec = s.GetEigenStan(s.POT());
+    if(s.HasStan() && !shift.HasAnyStan()){
+      std::cout << "PredictionInterp used with stan oscillations but non-stan syst shifts. Is that what you expected?" << std::endl;
+    }
+
+    if(s.HasStan() || shift.HasAnyStan()){
+      // Need the second case for the NC component
+      Eigen::ArrayXstan vec = s.HasStan() ? s.GetEigenStan(s.POT()) : Eigen::ArrayXstan(s.GetEigen(s.POT()));
+
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
       return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
     }
@@ -378,9 +384,16 @@ namespace ana
                                    bool nubar,
                                    const SystShifts& shift) const
   {
-    static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
+    static_assert(std::is_same_v<T, double> ||
+                  std::is_same_v<T, stan::math::var>,
                   "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
     if(nubar) assert(fSplitBySign);
+
+
+    if(!std::is_same_v<T, stan::math::var> && shift.HasAnyStan()){
+      std::cout << "PredictionInterp: stan shifts on non-stan spectrum, something is wrong" << std::endl;
+      abort();
+    }
 
 #ifdef USE_PREDINTERP_OMP
     T corr[4][N];
@@ -405,7 +418,7 @@ namespace ana
 
       // need to actually do the calculation for the autodiff version
       // to make sure the gradient is computed correctly
-      if(x == 0 && !std::is_same<T, stan::math::var>::value) continue;
+      if(x == 0 && (!std::is_same_v<T, stan::math::var> || !shift.HasStan(syst))) continue;
 
       int shiftBin = (util::GetValAs<double>(x) - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
@@ -509,7 +522,7 @@ namespace ana
     }
 
     // We need to compute the nominal again for whatever reason
-    const auto nom = fPredNom->PredictComponent(calc, flav, curr, sign);
+    const Spectrum nom = fPredNom->PredictComponent(calc, flav, curr, sign);
 
     if(canCache){
       // Insert into the cache if not already there, or update if there but
