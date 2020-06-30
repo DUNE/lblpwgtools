@@ -178,7 +178,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       TFile outF(mcmc_ana::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
       for (const auto & fdPair : fakeData)
         fdPair.second->SaveTo(&outF, "fakedata_" + fdPair.first);
-      samples->SaveTo(outF.mkdir("samples"));
+      samples->SaveTo(&outF, "samples");
       SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
       systTruePulls->SaveTo(&outF, "systTruth");
     }
@@ -208,7 +208,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     }
     std::cout << "   --->  loaded " << fakeData.size() << " fake data spectra." << std::endl;
 
-    samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
+    samples = MCMCSamples::LoadFrom(&inf, "samples");
     std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
 
     systTruePulls = LoadFrom<SystShifts>(&inf, "systTruth");
