@@ -69,7 +69,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
   TFile f(predFile.c_str());
   assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
-  auto pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
+  auto pred = LoadFrom<PredictionInterp>(&f, predName);
 
   Spectrum nominal = pred->Predict(calc.get());
 
@@ -134,7 +134,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 //    continue;
 
     TFile outF(Form((workDir + "/samples_%s.root").c_str(), syst->ShortName().c_str()), "recreate");
-    fitter.GetSamples().SaveTo(outF.mkdir("samples"));
+    fitter.GetSamples().SaveTo(&outF, "samples");
     outF.Close();
 
     c.Clear();

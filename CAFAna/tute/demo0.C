@@ -28,11 +28,11 @@ void demo0()
   // event record and returns a single number to plot.
   const Var kRecoEnergy([](const caf::StandardRecord* sr)
                         {
-                          return sr->dune.Ev_reco_numu;
+                          return sr->Ev_reco_numu;
                         });
 
   // For such a simple variable you can use a shortcut like this
-  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
+  const Var kCVNNumu = SIMPLEVAR(cvnnumu);
 
   // Define a spectrum, ie a histogram with associated POT information
   const Binning binsEnergy = Binning::Simple(40, 0, 10);

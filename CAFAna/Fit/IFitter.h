@@ -35,8 +35,8 @@ namespace ana
       class IFitSummary
       {
         public:
-          /// Is \a other a better fit than this one?
-          virtual bool    IsBetterFit(const IFitSummary* other) const = 0;
+          /// Is this fit better than \a other ?
+          virtual bool    IsBetterThan(const IFitSummary* other) const = 0;
 
           /// What's the value of the thing being minimized or maximized?  (LL, chi2, etc.)
           /// Interpretation depends on the derived class...

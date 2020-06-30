@@ -143,13 +143,13 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
     if (saveSamplesToFile)
     {
       TFile outf( (workDir + "/mcmcsamples.root").c_str(), "recreate");
-      samples->SaveTo(outf.mkdir("samples"));
+      samples->SaveTo(&outf, "samples");
     }
   }
   else
   {
     TFile inf((workDir + "/mcmcsamples.root").c_str());
-    samples = ana::MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
+    samples = ana::MCMCSamples::LoadFrom(&inf, "samples");
   }
 
   c.Clear();
