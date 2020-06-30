@@ -17,6 +17,16 @@ namespace ana
     fHist.Divide(denom.fHist);
     fHist.Scale(denom.POT()/num.POT());
 
+    // This is clumsy, but the old histogram operation considered 0/0 = 1,
+    // which is actually pretty useful (at least PredictionInterp relies on
+    // this).
+    for(int i = 0; i < fHist.GetNbinsX()+2; ++i){
+      if(num.fHist.GetBinContent(i) == 0 &&
+         denom.fHist.GetBinContent(i) == 0){
+        fHist.SetBinContent(i, 0);
+      }
+    }
+
     // TODO do something with purOrEffErrs
   }
 
