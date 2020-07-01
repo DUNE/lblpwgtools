@@ -23,7 +23,7 @@ namespace ana
       {}
 
       virtual double ChiSq(osc::IOscCalculatorAdjustable *osc,
-                           const SystShifts &syst = SystShifts::Nominal()) const
+                           const SystShifts &syst = kNoShift) const
       {
         assert(false && "unimplemented");
         return 0;

@@ -71,10 +71,10 @@ namespace ana
     virtual ~SingleSampleExperiment();
 
     virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
-                         const SystShifts& syst = SystShifts::Nominal()) const override;
+                         const SystShifts& syst = kNoShift) const override;
 
     stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
-                                  const SystShifts &syst) const override;
+                                  const SystShifts &syst = kNoShift) const override;
 
       virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<SingleSampleExperiment> LoadFrom(TDirectory* dir, const std::string& name);

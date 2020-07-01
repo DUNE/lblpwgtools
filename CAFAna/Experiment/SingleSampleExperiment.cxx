@@ -312,15 +312,21 @@ namespace ana
   stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
                                                         const SystShifts &syst) const
   {
-    Eigen::VectorXstan pred = syst.IsNominal()
-                 ? fMC->Predict(osc).GetEigenStan(fData.POT())
-                 : fMC->PredictSyst(osc, syst).GetEigenStan(fData.POT());
-    Eigen::VectorXd data = fData.GetEigen(fData.POT());
+    const Spectrum pred = fMC->PredictSyst(osc, syst);
 
-    // fully-qualified so that we get the one in StanUtils.h
-    auto ll = ana::LogLikelihood(pred, data) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+    const Eigen::ArrayXd data = fData.GetEigen(fData.POT());
 
-    return ll;
+    // It's possible to have a non-stan prediction. e.g. from a NoOsc
+    // prediction with no systs.
+    if(pred.HasStan()){
+      // fully-qualified so that we get the one in StanUtils.h
+      //
+      // LogLikelihood(), confusingly, returns chi2=-2*LL
+      return ana::LogLikelihood(pred.GetEigenStan(fData.POT()), data) / -2.;
+    }
+    else{
+      return ana::LogLikelihood(pred.GetEigen(fData.POT()), data) / -2.;
+    }
   }
 
 
