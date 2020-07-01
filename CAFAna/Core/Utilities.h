@@ -177,12 +177,6 @@ namespace ana
     }
   }
 
-  double LogLikelihoodDerivative(double e, double o, double dedx);
-
-  double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
-                                 const std::vector<double>& dedx,
-                                 bool useOverflow = false);
-
   /**  \brief Chi-squared calculation using a covariance matrix.
 
        \param exp   Expected bin counts
@@ -196,14 +190,8 @@ namespace ana
   **/
   double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
 
-  double Chi2CovMxDerivative(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv, TVectorD dedx, bool matScales);
-
   /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
   double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
-
-  /// \param matScales Was the covariance matrix produced by scaling a
-  ///                  fractional matrix?
-  double Chi2CovMxDerivative(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales);
 
   /// \brief For use with low-statistics data in combination with a MC
   /// prediction whose bins have a correlated uncertainty.
