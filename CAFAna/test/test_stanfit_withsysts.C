@@ -101,7 +101,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
 
   TFile f(predFile.c_str());
   assert (!f.IsZombie() && ("Couldn't load prediction file:" + predFile).c_str());
-  pred = LoadFrom<PredictionInterp>(dynamic_cast<TDirectory *>(f.Get(predName.c_str())));
+  pred = LoadFrom<PredictionInterp>(&f, predName);
 
   std::unique_ptr<MCMCSamples> samples;
   if (!loadSamplesFromFile)
@@ -158,10 +158,10 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     if (saveSamplesToFile)
     {
       TFile outF(test::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
-      fakeData->SaveTo(outF.mkdir("fakedata"));
-      samples->SaveTo(outF.mkdir("samples"));
-      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), outF.mkdir("calcTruth"));
-      systTruePulls->SaveTo(outF.mkdir("systTruth"));
+      fakeData->SaveTo(&outF, "fakedata");
+      samples->SaveTo(&outF, "samples");
+      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
+      systTruePulls->SaveTo(&outF, "systTruth");
     }
   }
   else
@@ -177,10 +177,10 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     if (inf.IsZombie())
       return;
 
-    fakeData = LoadFrom<Spectrum>(dynamic_cast<TDirectory*>(inf.Get("fakedata")));
-    samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
-    systTruePulls = SystShifts::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("systTruth")));
-    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(inf.Get("calcTruth"))).release());  // yeah, just leak it
+    fakeData = LoadFrom<Spectrum>(&inf, "fakedata");
+    samples = MCMCSamples::LoadFrom(&inf, "samples");
+    systTruePulls = SystShifts::LoadFrom(&inf, "systTruth");
+    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(&inf, "calcTruth").release());  // yeah, just leak it
     assert (fakeData && samples && systTruePulls && calcTruth);
 
     auto bestFitIdx = samples->BestFitSampleIdx();
