@@ -50,7 +50,7 @@ namespace ana
     if(flav == Flavors::kAll &&
        curr == Current::kBoth &&
        sign == Sign::kBoth)
-      return Predict(0); // Faster
+      return fSpectrum; // Faster
 
     if(curr & Current::kNC){
       // We don't have NC broken down by sign or flavour
