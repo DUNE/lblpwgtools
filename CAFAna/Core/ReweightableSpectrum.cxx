@@ -171,7 +171,7 @@ namespace ana
     else{
       const Eigen::VectorXstan& vec = ws.GetEigenStan();
 
-      return Spectrum(Hist::Adopt(Eigen::ArrayXstan(vec.transpose() * *fMat)),
+      return Spectrum(Hist::Adopt(vec.transpose() * *fMat),
                       fLabels, fBins, fPOT, fLivetime);
     }
   }

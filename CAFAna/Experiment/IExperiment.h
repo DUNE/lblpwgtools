@@ -56,5 +56,9 @@ namespace ana
       virtual void ApplyMask(TH1 *a, TH1 *b) const
       {
       }
+
+      virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const
+      {
+      }
   };
 }

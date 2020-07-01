@@ -170,7 +170,7 @@ namespace ana
         ret->SetBinContent(i, fEigenSparse->coeff(i));
       }
       else{
-        abort();
+        abort(); // unreachable
       }
     }
     return ret;
@@ -209,7 +209,7 @@ namespace ana
 
     if(fEigenSparse) return fEigenSparse->sum();
 
-    abort(); // unreached
+    abort(); // unreachable
   }
 
   //----------------------------------------------------------------------

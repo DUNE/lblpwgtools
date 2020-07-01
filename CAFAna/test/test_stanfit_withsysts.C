@@ -54,9 +54,9 @@ namespace test
 
   const std::vector<std::string> SYSTS_TO_THROW
   {
-      "ChargedHadResFD",
+    "ChargedHadResFD",
       "EMResFD",
-      "MissingProtonFakeDataGenerator",
+    //      "MissingProtonFakeDataGenerator",
       "MaCCRES"
   };
 
@@ -142,6 +142,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     calc->SetDmsq32(oldDmsq32);
     shifts->ResetToNominal();
 
+    std::cout << "HERE!" << std::endl;
+
     StanConfig cfg;
     cfg.num_warmup = 500;
     cfg.num_samples = 1000;
@@ -149,8 +151,12 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
     cfg.save_warmup = false;
+    //    fitVars.clear();
+    //    systs.resize(2);
     StanFitter fitter(&expt, fitVars, systs);
     fitter.SetStanConfig(cfg);
+    fitter.TestGradients(calc, *shifts);
+    //    abort();
     fitter.Fit(calc, *shifts);
     
     samples = fitter.ExtractSamples();
