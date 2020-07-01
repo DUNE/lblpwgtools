@@ -76,7 +76,7 @@ namespace ana
   Spectrum IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
                                     const SystShifts& syst) const
   {
-    if(!syst.IsNominal()){
+    if(!syst.IsNominal() || syst.HasAnyStan()){
       std::cout << "This Prediction hasn't implemented a Stan-aware PredictComponentSyst()!" << std::endl;
       abort();
     }
@@ -119,7 +119,7 @@ namespace ana
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
   {
-    if(!syst.IsNominal()){
+    if(!syst.IsNominal() || syst.HasAnyStan()){
       std::cout << "This Prediction hasn't implemented a Stan-aware PredictComponentSyst()" << std::endl;
     }
 
