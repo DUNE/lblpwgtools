@@ -57,6 +57,7 @@ namespace ana
     {
       s.fMC = nullptr;
     };
+
     // Add in a covariance matrix to an existing SingleSampleExperiment 
     // Only works with the uncorrelated matrices
     void AddCovarianceMatrix(const TMatrixD* cov,
@@ -69,22 +70,18 @@ namespace ana
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
 
-    virtual void ApplyMask(TH1* a, TH1* b) const override;
-
-    virtual TH1D* PredHist(osc::IOscCalculator* calc,
-                           const SystShifts& syst) const override;
-    virtual TH1D* DataHist() const override;
+    virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const override;
 
   protected:
-    TMatrixD GetAbsInvCovMat(TH1D* hpred) const;
+    Eigen::MatrixXd GetAbsInvCovMat(const Eigen::ArrayXd& apred) const;
 
     ETestStatistic fTestStatistic;
 
     const IPrediction* fMC;
     Spectrum fData;
-    TH1* fMask;
+    Eigen::ArrayXd fMaskA;
 
-    TMatrixD* fCovMxInfo; ///< Represents different things depending on fTestStatistic
+    Eigen::MatrixXd fCovMxInfoM; ///< Represents different things depending on fTestStatistic
 
     mutable std::vector<double> fCovLLState;
   };

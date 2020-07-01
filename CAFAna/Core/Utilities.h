@@ -177,6 +177,8 @@ namespace ana
     }
   }
 
+  Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat);
+
   /**  \brief Chi-squared calculation using a covariance matrix.
 
        \param exp   Expected bin counts
@@ -190,8 +192,7 @@ namespace ana
   **/
   double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
 
-  /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
-  double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
+  double Chi2CovMx(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, const Eigen::MatrixXd& covmxinv);
 
   /// \brief For use with low-statistics data in combination with a MC
   /// prediction whose bins have a correlated uncertainty.
@@ -207,7 +208,7 @@ namespace ana
   ///
   /// The matrix must be symmetric and have dimension equal to the number of
   /// non-overflow bins in the histograms.
-  double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv, std::vector<double>* hint = 0);
+  double LogLikelihoodCovMx(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, const Eigen::MatrixXd& covmxinv, std::vector<double>* hint = 0);
 
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
@@ -342,8 +343,10 @@ namespace ana
 
   void EnsurePositiveDefinite(TH2* mat);
 
-  /// Returns a masking histogram based on axis limits
-  TH1* GetMaskHist(const Spectrum& s,
-		   double xmin=0, double xmax=-1,
-		   double ymin=0, double ymax=-1);
+  /// \brief Returns a masking histogram based on axis limits
+  ///
+  /// This mask *does* include entries for underflow and overflow bins
+  Eigen::ArrayXd GetMaskArray(const Spectrum& s,
+                              double xmin=0, double xmax=-1,
+                              double ymin=0, double ymax=-1);
 }
