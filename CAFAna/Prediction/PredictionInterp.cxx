@@ -79,15 +79,15 @@ namespace ana
   //----------------------------------------------------------------------
   std::vector<std::vector<PredictionInterp::Coeffs>> PredictionInterp::
   FitRatios(const std::vector<double>& shifts,
-            const std::vector<std::unique_ptr<TH1>>& ratios) const
+            const std::vector<Eigen::ArrayXd>& ratios) const
   {
     assert(shifts.size() == ratios.size());
 
     std::vector<std::vector<Coeffs>> ret;
 
-    const int binMax = ratios[0]->GetNbinsX();
+    const int binMax = ratios[0].size();
 
-    for(int binIdx = 0; binIdx < binMax+2; ++binIdx){
+    for(int binIdx = 0; binIdx < binMax; ++binIdx){
       ret.push_back({});
 
       // This is cubic interpolation. For each adjacent set of four points we
@@ -103,17 +103,17 @@ namespace ana
 
       // Special-case for linear interpolation
       if(ratios.size() == 2){
-        const double y0 = ratios[0]->GetBinContent(binIdx);
-        const double y1 = ratios[1]->GetBinContent(binIdx);
+        const double y0 = ratios[0][binIdx];
+        const double y1 = ratios[1][binIdx];
 
         ret.back().emplace_back(0, 0, y1-y0, y0);
         continue;
       }
 
       {
-        const double y1 = ratios[0]->GetBinContent(binIdx);
-        const double y2 = ratios[1]->GetBinContent(binIdx);
-        const double y3 = ratios[2]->GetBinContent(binIdx);
+        const double y1 = ratios[0][binIdx];
+        const double y2 = ratios[1][binIdx];
+        const double y3 = ratios[2][binIdx];
         const double v[3] = {y1, y2, (y3-y1)/2};
         const double m[9] = { 1, -1,  1,
                              -2,  2, -1,
@@ -124,10 +124,10 @@ namespace ana
 
       // We're assuming here that the shifts are separated by exactly 1 sigma.
       for(unsigned int shiftIdx = 1; shiftIdx < ratios.size()-2; ++shiftIdx){
-        const double y0 = ratios[shiftIdx-1]->GetBinContent(binIdx);
-        const double y1 = ratios[shiftIdx  ]->GetBinContent(binIdx);
-        const double y2 = ratios[shiftIdx+1]->GetBinContent(binIdx);
-        const double y3 = ratios[shiftIdx+2]->GetBinContent(binIdx);
+        const double y0 = ratios[shiftIdx-1][binIdx];
+        const double y1 = ratios[shiftIdx  ][binIdx];
+        const double y2 = ratios[shiftIdx+1][binIdx];
+        const double y3 = ratios[shiftIdx+2][binIdx];
 
         const double v[4] = {y1, y2, (y2-y0)/2, (y3-y1)/2};
         const double m[16] = { 2, -2,  1,  1,
@@ -140,9 +140,9 @@ namespace ana
 
       {
         const int N = ratios.size()-3;
-        const double y0 = ratios[N  ]->GetBinContent(binIdx);
-        const double y1 = ratios[N+1]->GetBinContent(binIdx);
-        const double y2 = ratios[N+2]->GetBinContent(binIdx);
+        const double y0 = ratios[N  ][binIdx];
+        const double y1 = ratios[N+1][binIdx];
+        const double y2 = ratios[N+2][binIdx];
         const double v[3] = {y1, y2, (y2-y0)/2};
         const double m[9] = {-1,  1, -1,
                               0,  0,  1,
@@ -191,23 +191,22 @@ namespace ana
     const Spectrum nom = pNom->PredictComponent(fOscOrigin,
 						flav, curr, sign);
 
-    std::vector<std::unique_ptr<TH1>> ratios;
+    std::vector<Eigen::ArrayXd> ratios;
+    ratios.reserve(preds.size());
     for(auto& p: preds){
       ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin,
                                                     flav, curr, sign),
-                                nom).ToTH1());
+                                nom).GetEigen());
 
       // Check none of the ratio values is crazy
-      std::unique_ptr<TH1>& r = ratios.back();
-      for(int i = 0; i < r->GetNbinsX()+2; ++i){
-        const double y = r->GetBinContent(i);
-        if (y > 2)
-        {
+      Eigen::ArrayXd& r = ratios.back();
+      for(int i = 0; i < r.size(); ++i){
+        if (r[i] > 2){
           // std::cout << "PredictionInterp: WARNING, ratio in bin "
           // 	    << i << " for " << shifts[&p-&preds.front()]
           //           << " sigma shift of " << systName << " is " << y
           //           << " which exceeds limit of 2. Capping." << std::endl;
-          r->SetBinContent(i, 2);
+          r[i] = 2;
         }
       }
     }

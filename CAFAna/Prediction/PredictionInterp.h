@@ -136,7 +136,7 @@ namespace ana
     /// Find coefficients describing this set of shifts
     std::vector<std::vector<Coeffs>>
     FitRatios(const std::vector<double>& shifts,
-              const std::vector<std::unique_ptr<TH1>>& ratios) const;
+              const std::vector<Eigen::ArrayXd>& ratios) const;
 
     /// Find coefficients describing the ratios from this component
     std::vector<std::vector<Coeffs>>
