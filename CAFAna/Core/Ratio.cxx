@@ -17,7 +17,7 @@ namespace ana
     fHist.Divide(denom.fHist);
     fHist.Scale(denom.POT()/num.POT());
 
-    // This is clumsy, but the old histogram operation considered 0/0 = 1,
+    // This is clumsy, but the old histogram operation considered 0/0 = 0,
     // which is actually pretty useful (at least PredictionInterp relies on
     // this).
     for(int i = 0; i < fHist.GetNbinsX()+2; ++i){
