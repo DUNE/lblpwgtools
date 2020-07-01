@@ -586,16 +586,16 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, max);
 
-    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC,
                             Loaders::kNonSwap);
-    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNuTauSwap);
+                            Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
@@ -623,7 +623,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(

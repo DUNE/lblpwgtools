@@ -13,29 +13,12 @@
 
 namespace ana
 {
-  const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
-
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const Spectrum& cosmic,
-                                                 double cosmicScaleError)
+                                                 const Spectrum& data)
     : fTestStatistic(kLogLikelihood),
       fMC(pred), fData(data),
-      fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
-      fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMxInfo(0)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const TH1D* cosmic,
-                                                 double cosmicScaleError)
-    : fTestStatistic(kLogLikelihood),
-      fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
-      fMask(0), fCosmicScaleError(cosmicScaleError),
+      fMask(0),
       fCovMxInfo(0)
   {
   }
@@ -46,7 +29,7 @@ namespace ana
                                                  const TMatrixD* cov,
                                                  ETestStatistic stat)
     : fTestStatistic(stat),
-      fMC(pred), fData(data), fCosmic(0), fMask(0),
+      fMC(pred), fData(data), fMask(0),
       fCovMxInfo(0)
   {
     switch(stat){
@@ -122,7 +105,6 @@ namespace ana
   //----------------------------------------------------------------------
   SingleSampleExperiment::~SingleSampleExperiment()
   {
-    delete fCosmic;
     delete fMask;
     delete fCovMxInfo;
   }
@@ -131,22 +113,9 @@ namespace ana
   TH1D* SingleSampleExperiment::PredHist(osc::IOscCalculator* calc,
                                          const SystShifts& syst) const
   {
-    SystShifts systNoCosmic = syst;
-    systNoCosmic.SetShift(&kCosmicBkgScaleSyst, 0);
-
-    const Spectrum pred = fMC->PredictSyst(calc, systNoCosmic);
+    const Spectrum pred = fMC->PredictSyst(calc, syst);
 
     TH1D* hpred = pred.ToTH1(fData.POT());
-
-    if(fCosmic){
-      if(fCosmicScaleError != 0){
-        const double scale = 1 + syst.GetShift(&kCosmicBkgScaleSyst) * fCosmicScaleError;
-        hpred->Add(fCosmic, scale);
-      }
-      else{
-        hpred->Add(fCosmic);
-      }
-    }
 
     return hpred;
   }
@@ -314,6 +283,8 @@ namespace ana
   {
     const Spectrum pred = fMC->PredictSyst(osc, syst);
 
+    std::cout << "SSE: " << pred.Integral(fData.POT()) << " " << fData.Integral(fData.POT()) << std::endl;
+
     const Eigen::ArrayXd data = fData.GetEigen(fData.POT());
 
     // It's possible to have a non-stan prediction. e.g. from a NoOsc
@@ -322,9 +293,11 @@ namespace ana
       // fully-qualified so that we get the one in StanUtils.h
       //
       // LogLikelihood(), confusingly, returns chi2=-2*LL
+      std::cout << "STAN" << std::endl;
       return ana::LogLikelihood(pred.GetEigenStan(fData.POT()), data) / -2.;
     }
     else{
+      std::cout << "NON-STAN" << std::endl;
       return ana::LogLikelihood(pred.GetEigen(fData.POT()), data) / -2.;
     }
   }
@@ -342,8 +315,6 @@ namespace ana
 
     fMC->SaveTo(dir, "mc");
     fData.SaveTo(dir, "data");
-
-    if(fCosmic) fCosmic->Write("cosmic");
 
     dir->Write();
     delete dir;
@@ -365,13 +336,9 @@ namespace ana
     const IPrediction* mc = ana::LoadFrom<IPrediction>(dir, "mc").release();
     const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir, "data");
 
-    TH1D* cosmic = 0;
-    if(dir->Get("cosmic")) cosmic = (TH1D*)dir->Get("cosmic");
-
     delete dir;
 
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
-    if(cosmic) ret->fCosmic = cosmic;
     return ret;
   }
 

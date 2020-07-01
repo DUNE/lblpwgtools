@@ -123,28 +123,28 @@ void kirk_dune()
   auto* loaderNueNCRHC    = loaderNueRHC.LoaderForRunPOT(0);
 
   Loaders loadersdunenue;
-  loadersdunenue.AddLoader(loaderNueBeam,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-  loadersdunenue.AddLoader(loaderNueNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNue);
-  loadersdunenue.AddLoader(loaderNueNuTau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTau);
-  loadersdunenue.AddLoader(loaderNueNC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNC);
+  loadersdunenue.AddLoader(loaderNueBeam,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+  loadersdunenue.AddLoader(loaderNueNue,   caf::kFARDET, Loaders::kMC, Loaders::kNue);
+  loadersdunenue.AddLoader(loaderNueNuTau, caf::kFARDET, Loaders::kMC, Loaders::kTau);
+  loadersdunenue.AddLoader(loaderNueNC,   caf::kFARDET, Loaders::kMC, Loaders::kNC);
 
   Loaders loadersdunenuerhc;
-  loadersdunenuerhc.AddLoader(loaderNueBeamRHC,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-  loadersdunenuerhc.AddLoader(loaderNueNueRHC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNue);
-  loadersdunenuerhc.AddLoader(loaderNueNuTauRHC, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTau);
-  loadersdunenuerhc.AddLoader(loaderNueNCRHC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNC);
+  loadersdunenuerhc.AddLoader(loaderNueBeamRHC,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+  loadersdunenuerhc.AddLoader(loaderNueNueRHC,   caf::kFARDET, Loaders::kMC, Loaders::kNue);
+  loadersdunenuerhc.AddLoader(loaderNueNuTauRHC, caf::kFARDET, Loaders::kMC, Loaders::kTau);
+  loadersdunenuerhc.AddLoader(loaderNueNCRHC,   caf::kFARDET, Loaders::kMC, Loaders::kNC);
 
   Loaders loadersdunenumu;
-  loadersdunenumu.AddLoader(loaderNumuBeam,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-  loadersdunenumu.AddLoader(loaderNumuNue,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNue);
-  loadersdunenumu.AddLoader(loaderNumuNuTau, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTau);
-  loadersdunenumu.AddLoader(loaderNumuNC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNC);
+  loadersdunenumu.AddLoader(loaderNumuBeam,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+  loadersdunenumu.AddLoader(loaderNumuNue,   caf::kFARDET, Loaders::kMC, Loaders::kNue);
+  loadersdunenumu.AddLoader(loaderNumuNuTau, caf::kFARDET, Loaders::kMC, Loaders::kTau);
+  loadersdunenumu.AddLoader(loaderNumuNC,   caf::kFARDET, Loaders::kMC, Loaders::kNC);
 
   Loaders loadersdunenumurhc;
-  loadersdunenumurhc.AddLoader(loaderNumuBeamRHC,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-  loadersdunenumurhc.AddLoader(loaderNumuNueRHC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNue);
-  loadersdunenumurhc.AddLoader(loaderNumuNuTauRHC, caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kTau);
-  loadersdunenumurhc.AddLoader(loaderNumuNCRHC,   caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNC);
+  loadersdunenumurhc.AddLoader(loaderNumuBeamRHC,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+  loadersdunenumurhc.AddLoader(loaderNumuNueRHC,   caf::kFARDET, Loaders::kMC, Loaders::kNue);
+  loadersdunenumurhc.AddLoader(loaderNumuNuTauRHC, caf::kFARDET, Loaders::kMC, Loaders::kTau);
+  loadersdunenumurhc.AddLoader(loaderNumuNCRHC,   caf::kFARDET, Loaders::kMC, Loaders::kNC);
 
   const Var Enu_reco = SIMPLEVAR(dune.Ev_reco);
   const Var pid_reco = SIMPLEVAR(dune.mvaresult);
