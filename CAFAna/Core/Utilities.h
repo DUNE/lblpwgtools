@@ -1,14 +1,10 @@
 #pragma once
 
-#include <cassert>
 #include <cxxabi.h>
-#include <fenv.h>
+#include <cfenv>
 #include <map>
 #include <set>
 #include <string>
-#include <vector>
-#include <iostream>
-#include <memory>
 
 // these are templated types.
 // can't forward-declare them here
@@ -16,6 +12,8 @@
 // when the templates are introduced
 #include "TMatrixD.h"
 #include "TVectorD.h"
+
+#include <Eigen/Dense>
 
 class TArrayD;
 class TDirectory;
@@ -114,6 +112,20 @@ namespace ana
       zero observed or expected events correctly.
   **/
   double LogLikelihood(const TH1* exp, const TH1* obs, bool useOverflow = false);
+
+  /** \brief The log-likelihood formula from the PDG.
+
+      \param exp The expected spectrum
+      \param obs The corresponding observed spectrum
+
+      \returns The log-likelihood formula from the PDG
+      \f[ \chi^2=2\sum_i^{\rm bins}\left(e_i-o_i+o_i\ln\left({o_i\over e_i}\right)\right) \f]
+
+      Includes underflow bin and an option for
+      overflow bin (off by default) and handles
+      zero observed or expected events correctly.
+  **/
+  double LogLikelihood(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, bool useOverflow = false);
 
   /** \brief The log-likelihood formula for a single bin
 

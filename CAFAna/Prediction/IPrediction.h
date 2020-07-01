@@ -6,6 +6,8 @@
 
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
+#include <iostream>
+
 class TDirectory;
 
 namespace ana

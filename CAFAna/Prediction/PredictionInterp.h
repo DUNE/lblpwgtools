@@ -7,6 +7,7 @@
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
 
+#include <iostream>
 #include <map>
 #include <memory>
 

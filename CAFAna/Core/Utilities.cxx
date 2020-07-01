@@ -137,6 +137,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  double LogLikelihood(const Eigen::ArrayXd& ea, const Eigen::ArrayXd& oa, bool useOverflow)
+  {
+    assert(ea.size() == oa.size());
+
+    double chi = 0;
+
+    const int bufferBins = useOverflow ? 0 : -1;
+
+    for(int i = 0; i < ea.size()+bufferBins; ++i){
+      chi += LogLikelihood(ea[i], oa[i]);
+    }
+
+    return chi;
+  }
+
+  //----------------------------------------------------------------------
   double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
   {
     assert (e.GetNrows() == o.GetNrows());
