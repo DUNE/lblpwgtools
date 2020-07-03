@@ -45,6 +45,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 #include "TSystem.h"
 #include "TTree.h"
 

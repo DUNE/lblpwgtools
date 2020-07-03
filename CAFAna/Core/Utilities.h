@@ -11,7 +11,6 @@
 // because compiler errors result
 // when the templates are introduced
 #include "TMatrixD.h"
-#include "TVectorD.h"
 
 #include <Eigen/Dense>
 
@@ -25,7 +24,6 @@ class TH1D;
 class TH2F;
 class TH2D;
 class TH3D;
-class TVector3;
 
 #include "Utilities/func/MathUtil.h"
 
@@ -190,8 +188,6 @@ namespace ana
 
        Note that this implicitly assumes Gaussian statistics for the bin counts!
   **/
-  double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
-
   double Chi2CovMx(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, const Eigen::MatrixXd& covmxinv);
 
   /// \brief For use with low-statistics data in combination with a MC

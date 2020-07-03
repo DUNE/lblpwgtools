@@ -166,15 +166,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
-  {
-    assert (e.GetNrows() == o.GetNrows());
-
-    const TVectorD diff = o - e;
-    return diff * (covmxinv * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
-  }
-
-  //----------------------------------------------------------------------
   double Chi2CovMx(const Eigen::ArrayXd& e, const Eigen::ArrayXd& o, const Eigen::MatrixXd& covmxinv)
   {
     assert(e.size() == covmxinv.rows()+2);
