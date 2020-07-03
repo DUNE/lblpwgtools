@@ -1569,13 +1569,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
         }
       }
 
-      this_expt.AddCovarianceMatrix(fake_uncorr, true, {0, 1});
-
-      thisDir->cd();
-
+      nd_expt_fhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
+      nd_expt_rhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
     } else {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
-                                    {0, 1});
+      nd_expt_fhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
+      nd_expt_rhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
     }
     if (turbose) {
       std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
