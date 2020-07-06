@@ -52,9 +52,12 @@ namespace mcmc_ana
   double MOCKDATA_DM32 = 0.0025;   // normal hierarchy
   double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
 
+  const std::string STASH_DIR = "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4";
   const std::vector<std::string> PRED_FILES {
-      "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4/mcc11v4_FD_FHC.root",
-      "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4/mcc11v4_FD_RHC.root",
+      STASH_DIR + "/mcc11v4_FD_FHC.root",
+      STASH_DIR + "/mcc11v4_FD_RHC.root",
+      STASH_DIR + "/mcc11v4_ND_FHC.root",
+      STASH_DIR + "/mcc11v4_ND_RHC.root",
   };
 
   // ---------------------------------------------
@@ -72,7 +75,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
                       bool drawPlots=true,
                       std::string dirPrefix=".",
                       std::string samplesFilename=mcmc_ana::SAVED_SAMPLES_FILE,
-                      std::string systList="allsysts")
+                      bool fitND=false)
 {
   assert (loadSamplesFromFile != saveSamplesToFile);
 
@@ -106,7 +109,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   {
     TFile f(predFileName.c_str());
     assert (!f.IsZombie() && ("Couldn't open prediction file:" + predFileName).c_str());
-    for (const auto &predName : {"fd_interp_numu_fhc", "fd_interp_nue_fhc", "fd_interp_numu_rhc", "fd_interp_nue_rhc"})
+    for (const auto &predName : {"fd_interp_numu_fhc",
+                                 "fd_interp_nue_fhc",
+                                 "fd_interp_numu_rhc",
+                                 "fd_interp_nue_rhc",
+                                 "nd_interp_numu_fhc",
+                                 "nd_interp_nue_fhc",
+                                 "nd_interp_numu_rhc",
+                                 "nd_interp_nue_rhc"})
     {
       auto dir = f.GetDirectory(predName);
       if (!dir)
@@ -114,7 +124,10 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       preds.emplace(predName, ana::LoadFrom<PredictionInterp>(&f, predName));
     }
   }
-  assert(preds.size() == 4);
+  std::cout << preds.size() << " predictions:" << std::endl;
+  for (const auto & predPair : preds)
+    std::cout << " " << predPair.first  << " (" << DemangledTypeName(predPair.second.get()) << ")" << std::endl;
+  assert(preds.size() == (fitND ? 6 : 4));
 
 //    calc = new osc::OscCalculatorPMNSOpt;
 //    calc = new osc::OscCalculatorPMNS;
@@ -135,24 +148,55 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     calcTruth = new osc::OscCalculatorPMNS;  // type of this one doesn't matter; just for storage
     *calcTruth = *calc;
 
-    // choose pulls at random
-    TRandom3 rnd;
-    rnd.SetSeed(20200413);
-    shifts = std::make_unique<GaussianPriorSystShifts>();
-    std::vector<const ISyst *> systs;
-    for (const auto &syst : GetListOfSysts(systList)) {
-      systs.emplace_back(syst);
-      shifts->SetShift(systs.back(), rnd.Gaus());
-    }
-
-    std::vector<std::unique_ptr<SingleSampleExperiment>> expts;
-    systTruePulls = shifts->Copy();
+    // make sure we fit all the systs, but those that aren't shared by every expt
+    // are ignored by the ones that don't support them
+    std::unordered_map<std::string, std::unique_ptr<SingleSampleExperiment>> expts;
+    std::vector<std::string> exptNames;
+    std::unordered_set<const ISyst*> allSysts;
     MultiExperiment expt;
     for (const auto & predPair : preds)
     {
       fakeData.emplace(predPair.first, std::make_unique<Spectrum>(predPair.second->Predict(calc).FakeData(mcmc_ana::POT)));
-      expts.emplace_back(std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first)));
-      expt.Add(expts.back().get());
+      expts.emplace(std::make_pair(predPair.first,
+                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first))));
+      expt.Add(expts.at(predPair.first).get());
+      exptNames.emplace_back(predPair.first);
+      if (auto predInterp = dynamic_cast<const PredictionInterp*>(predPair.second.get()))
+      {
+        for (const auto & syst : predInterp->GetAllSysts())
+          allSysts.insert(syst);
+      }
+    }
+    for (const auto & exPair : expts)
+    {
+      std::unordered_set<const ISyst*> unsupportedSysts(allSysts);
+      const auto  pred = dynamic_cast<PredictionInterp*>(preds.at(exPair.first).get());
+      for (const auto & syst : pred->GetAllSysts())
+      {
+        std::cout << "        PredInterp '" << exPair.first << "' DOES support syst: " << syst->ShortName() << std::endl;
+        unsupportedSysts.erase(syst);
+      }
+      std::vector<std::pair<const ISyst*, const ISyst*>> corrs;
+      for (const auto & syst : unsupportedSysts)
+      {
+        std::cout << "  PredInterp '" << exPair.first << "' does not support syst: " << syst->ShortName() << std::endl;
+        corrs.push_back(std::make_pair(syst, static_cast<const ISyst *>(nullptr)));
+      }
+      expt.SetSystCorrelations(std::distance(exptNames.begin(),
+                                               std::find(exptNames.begin(), exptNames.end(), exPair.first)),
+                               corrs);
+
+      // choose pulls at random
+      TRandom3 rnd;
+      rnd.SetSeed(20200413);
+      shifts = std::make_unique<GaussianPriorSystShifts>();
+      std::vector<const ISyst *> systs;
+      for (const auto &syst : allSysts) {
+        systs.emplace_back(syst);
+        shifts->SetShift(systs.back(), rnd.Gaus());
+      }
+      systTruePulls = shifts->Copy();
+
     }
 
     // now put the calc back to normal and reset the systs to nominal
@@ -167,7 +211,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
     cfg.save_warmup = false;
-    StanFitter fitter(&expt, fitVars, systs);
+    StanFitter fitter(&expt, std::unordered_set<const IFitVar*>(fitVars.begin(), fitVars.end()), allSysts);
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
     
@@ -253,7 +297,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s." + systList + ".png").c_str(), fitVarPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.allSysts.png").c_str(), fitVarPtr->ShortName().c_str()));
   }
   for (const auto & systPtr : shifts->ActiveSysts())
   {
@@ -269,7 +313,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s." + systList + ".png").c_str(), systPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.allSysts.png").c_str(), systPtr->ShortName().c_str()));
   }
   // pairs of fit vars
   for (const auto fitVar1 : fitVars)
@@ -292,7 +336,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       marker.SetMarkerColor(kMagenta);
       marker.SetMarkerSize(3);
       marker.Draw();
-      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s." + systList + ".png").c_str(),
+      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s.allSysts.png").c_str(),
                     fitVar1->ShortName().c_str(),
                     fitVar2->ShortName().c_str()));
     }
@@ -320,7 +364,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       marker.SetMarkerSize(3);
       marker.Draw();
 
-      std::string outf = Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s-%s." + systList + ".png").c_str(),
+      std::string outf = Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s-%s.allSysts.png").c_str(),
                               systPtr1->ShortName().c_str(),
                               systPtr2->ShortName().c_str());
       c.SaveAs(outf.c_str());
@@ -333,7 +377,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     c.Clear();
     // calc we passed to the surface now contains best fit params
     DataMCComparison(*fakeData.at(predPair.first), predPair.second.get(), calc, *shifts, kBinDensity);
-    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + "." + systList + ".png").c_str());
+    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + ".allSysts.png").c_str());
   }
 
   // show that the pulls were what we expect
@@ -377,6 +421,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   leg.Draw();
 
   c.SetBottomMargin(0.3);
-  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls." + systList + ".png").c_str());
+  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls.allSysts.png").c_str());
 
 }
