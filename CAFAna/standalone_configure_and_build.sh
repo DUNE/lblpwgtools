@@ -5,6 +5,7 @@ USE_UPS="0"
 CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
+BUILD_DIR="build"
 INSTALL_DIR=""
 USE_KNL="0"
 USE_OMP="0"
@@ -13,6 +14,16 @@ while [[ ${#} -gt 0 ]]; do
 
   key="$1"
   case $key in
+
+      -b|--build-dir)
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+      BUILD_DIR="$2"
+      echo "[OPT]: Will build in directory $BUILD_DIR."
+      shift
+      ;;
 
       -f|--force-remove)
 
@@ -82,6 +93,7 @@ while [[ ${#} -gt 0 ]]; do
 
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
+      echo -e "\t-b|--build-dir         : Build directory"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
       echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
@@ -105,17 +117,17 @@ while [[ ${#} -gt 0 ]]; do
   shift # past argument or value
 done
 
-if [ -e build ]; then
+if [ -e "$BUILD_DIR" ]; then
   if [ "${FORCE_REMOVE}" == "1" ]; then
-    rm -rf build
+    rm -rf "$BUILD_DIR"
   else
-    echo "[ERROR]: Extant build directory, will not overwrite, remove it or rebuild within it."
+    echo "[ERROR]: Extant build directory in "$BUILD_DIR", will not overwrite, remove it or rebuild within it."
     exit 1
   fi
 fi
 
-mkdir build
-cd build
+mkdir "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 mkdir Ext
 cd Ext
