@@ -177,6 +177,8 @@ namespace ana
 
   Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat);
 
+  TMatrixD TMatrixDFromEigenMatrixXd(const Eigen::MatrixXd& mat);
+
   /**  \brief Chi-squared calculation using a covariance matrix.
 
        \param exp   Expected bin counts
