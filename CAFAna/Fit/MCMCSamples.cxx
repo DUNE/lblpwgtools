@@ -262,8 +262,8 @@ namespace ana
 
     auto hyperParamsDir = dynamic_cast<TDirectory*>(dir->Get("hyperparams"));
     auto stepSize = hyperParamsDir->Get<TParameter<double>>("stepsize");
-    auto invMetric = hyperParamsDir->Get<TMatrixD>("inv_metric");
-    Hyperparameters hyperparams{stepSize->GetVal(), *invMetric};
+    auto invMetric = std::unique_ptr<TMatrixD>(hyperParamsDir->Get<TMatrixD>("inv_metric"));
+    Hyperparameters hyperparams{stepSize->GetVal(), std::move(invMetric)};
 
     delete dir;
 
@@ -617,13 +617,13 @@ namespace ana
     fSamples->LoadBaskets();
     fSamples->SetDirectory(nullptr);
 
-    TDirectory hyperdir("hyperparams", "Hyperparameters");
-    hyperdir.cd();
+    auto hyperdir = dir->mkdir("hyperparams");
+    hyperdir->cd();
     TParameter<double> stepSize("stepsize", fHyperparams.stepSize);
     stepSize.Write();
-    fHyperparams.invMetric.Write("inv_metric");
+    fHyperparams.invMetric->Write("inv_metric");
     dir->cd();
-    hyperdir.Write();
+    hyperdir->Write();
 
     dir->Write();
     delete dir;

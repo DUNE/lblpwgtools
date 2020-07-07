@@ -33,12 +33,24 @@ namespace ana
       struct Hyperparameters
       {
         double stepSize;
-        TMatrixD invMetric;   // use TMatrix rather than Eigen for peristability
+        std::unique_ptr<TMatrixD> invMetric;   // use TMatrix rather than Eigen for peristability.  unique_ptr so it can be sized later
 
-        Hyperparameters(double stepsize = std::numeric_limits<double>::signaling_NaN(),
-                        TMatrixD invmetric = TMatrixD())
-          : stepSize(stepsize), invMetric(invmetric)
+        explicit Hyperparameters(double stepsize = std::numeric_limits<double>::signaling_NaN(),
+                                 std::unique_ptr<TMatrixD> && invmetric = nullptr)
+          : stepSize(stepsize), invMetric(std::move(invmetric))
         {}
+
+        Hyperparameters(const Hyperparameters & h)
+          : stepSize(h.stepSize), invMetric(std::make_unique<TMatrixD>(*h.invMetric))
+        {}
+
+        Hyperparameters& operator=(Hyperparameters&& other)
+        {
+          stepSize = std::move(other.stepSize);
+          invMetric = std::move(other.invMetric);
+          return *this;
+        }
+
       };
 
       /// Build the MCMCSamples object.
@@ -153,14 +165,14 @@ namespace ana
                         std::map<const ana::IFitVar *, double> &varVals,
                         const std::vector<const ana::ISyst *> &systs, std::map<const ana::ISyst *, double> &systVals) const;
 
-      void SetHyperparams(double stepSize, TMatrixD invMassMatrix)
+      void SetHyperparams(double stepSize, const TMatrixD& invMassMatrix)
       {
-        fHyperparams = {stepSize, invMassMatrix};
+        fHyperparams = Hyperparameters(stepSize, std::make_unique<TMatrixD>(invMassMatrix));
       }
 
       void SetHyperparams(Hyperparameters h)
       {
-        fHyperparams = h;
+        fHyperparams = std::move(h);
       };
 
       void SetNames(const std::vector<std::string>& names);
