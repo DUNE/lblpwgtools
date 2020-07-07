@@ -297,6 +297,42 @@ namespace ana
                                                    SystShifts &systSeed,
                                                    Verbosity verb) const override;
 
+      /// Run Stan with HMC.
+      /// Lots of copy-paste from stan::services::sample::hmc_nuts_diag_e_adapt()
+      /// (in stan/services/sample/hmc_nuts_diag_e_adapt.hpp)
+      /// so that we can customize in order to save the sampler state after warmup is finished.
+      ///
+      /// \param init_writer    Stream to write initialization info to
+      /// \param interrupt      Object whose operator()() will be called after every sample
+      /// \param diagStream     Stream to write diagnostic info to
+      /// \param logger         General object to write log to
+      /// \param init_context   MCMC initialization info
+      /// \param procId         Process ID
+      /// \return               Stan return code
+      int RunHMC(stan::callbacks::writer &init_writer,
+                 StanFitter::samplecounter_callback &interrupt,
+                 std::ostream &diagStream,
+                 const std::unique_ptr<stan::callbacks::stream_logger> &logger,
+                 stan::io::array_var_context &init_context,
+                 unsigned int procId) const;
+
+      /// Run the HMC sampler explicitly.
+      /// Cribbed from stan::services::run_adaptive_sampler() (in stan/services/util/run_adaptive_sampler.hpp)
+      /// in order to insert save/restore state code after warmup is done.
+      ///
+      /// \param sampler             The MCMC sampler object to use.  (In Stan this is a templated type, but we'll only ever use this version)
+      /// \param cont_vector         Starting parameter values (transformed into Stan's internal working space)
+      /// \param rng                 The random number generator being used
+      /// \param interrupt           Object whose operator()() will be called after every sample
+      /// \param logger              General object to write log to
+      /// \param diagnostic_writer   Object to write diagnostics to
+      void RunSampler(stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988>& sampler,
+                      std::vector<double>& cont_vector,
+                      boost::ecuyer1988& rng,
+                      stan::callbacks::interrupt& interrupt,
+                      stan::callbacks::logger& logger,
+                      stan::callbacks::writer& diagnostic_writer) const;
+
       /// Helper function that actually does the unconstraining Stan needs
       template <typename T>
       void transform_helper(const stan::io::var_context& context,
