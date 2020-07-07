@@ -377,12 +377,12 @@ namespace ana
       Eigen::ArrayXstan vec = s.HasStan() ? s.GetEigenStan(s.POT()) : Eigen::ArrayXstan(s.GetEigen(s.POT()));
 
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
-      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
     }
     else{
       Eigen::ArrayXd vec = s.GetEigen(s.POT());
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
-      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
     }
   }
 

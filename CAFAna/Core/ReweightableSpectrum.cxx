@@ -26,8 +26,7 @@ namespace ana
                                              const Cut& cut,
                                              const SystShifts& shift,
                                              const Var& wei)
-    : ReweightableSpectrum(recoAxis.GetLabels(),
-                           recoAxis.GetBinnings(),
+    : ReweightableSpectrum(recoAxis,
                            trueAxis.GetBinnings()[0],
                            trueAxis.GetVars()[0])
   {
@@ -39,13 +38,12 @@ namespace ana
 
     const std::string name = UniqueName();
 
-    const Binning xbins = Bins1DX();
     const Binning ybins = trueAxis.GetBinnings()[0];
 
-    fMat.resize(ybins.NBins()+2, xbins.NBins()+2);
+    fMat.resize(ybins.NBins()+2, recoAxis.GetBins1D().NBins()+2);
     fMat.setZero();
 
-    loader.AddReweightableSpectrum(*this, recoAxis.GetMultiDVar(), cut, shift, wei);
+    loader.AddReweightableSpectrum(*this, recoAxis.GetVar1D(), cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
@@ -58,7 +56,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   ReweightableSpectrum::ReweightableSpectrum(const ReweightableSpectrum& rhs)
-    : fRWVar(rhs.fRWVar), fLabels(rhs.fLabels), fBins(rhs.fBins), fBinsY(rhs.fBinsY)
+    : fRWVar(rhs.fRWVar), fAxisX(rhs.fAxisX), fBinsY(rhs.fBinsY)
   {
     DontAddDirectory guard;
 
@@ -77,8 +75,7 @@ namespace ana
     DontAddDirectory guard;
 
     fRWVar = rhs.fRWVar;
-    fLabels = rhs.fLabels;
-    fBins = rhs.fBins;
+    fAxisX = rhs.fAxisX;
     fBinsY = rhs.fBinsY;
 
     fMat = rhs.fMat;
@@ -96,7 +93,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH2D* ret = HistCache::NewTH2D("", Bins1DX(), fBinsY);
+    TH2D* ret = HistCache::NewTH2D("", fAxisX.GetBins1D(), fBinsY);
 
     for(int i = 0; i < fMat.rows(); ++i){
       for(int j = 0; j < fMat.cols(); ++j){
@@ -112,10 +109,7 @@ namespace ana
       assert(ret->Integral() == 0);
     }
 
-    std::string label;
-    for(const std::string& l: fLabels) label += l + " and ";
-    label.resize(label.size()-5); // drop the last "and"
-    ret->GetXaxis()->SetTitle(label.c_str());
+    ret->GetXaxis()->SetTitle(fAxisX.GetLabel1D().c_str());
     ret->GetYaxis()->SetTitle(fTrueLabel.c_str());
 
     return ret;
@@ -124,8 +118,7 @@ namespace ana
   //----------------------------------------------------------------------
   void ReweightableSpectrum::Fill(double x, double y, double w)
   {
-    // TODO repeated calling of Bins1DX() here is going to be very inefficient
-    fMat(fBinsY.FindBin(y), Bins1DX().FindBin(x)) += w;
+    fMat(fBinsY.FindBin(y), fAxisX.GetBins1D().FindBin(x)) += w;
   }
 
   /// Helper for \ref Unweighted
@@ -143,13 +136,13 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::UnWeighted() const
   {
-    return Spectrum(Hist::Adopt(ProjectionX(fMat)), fLabels, fBins, fPOT, fLivetime);
+    return Spectrum(Hist::Adopt(ProjectionX(fMat)), fAxisX, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::WeightingVariable() const
   {
-    return Spectrum(Hist::Adopt(ProjectionY(fMat)), fLabels, fBins, fPOT, fLivetime);
+    return Spectrum(Hist::Adopt(ProjectionY(fMat)), fAxisX, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
@@ -159,13 +152,13 @@ namespace ana
       const Eigen::VectorXd& vec = ws.GetEigen();
 
       return Spectrum(Hist::Adopt(Eigen::ArrayXd(vec.transpose() * fMat)),
-                      fLabels, fBins, fPOT, fLivetime);
+                      fAxisX, fPOT, fLivetime);
     }
     else{
       const Eigen::VectorXstan& vec = ws.GetEigenStan();
 
       return Spectrum(Hist::Adopt(vec.transpose() * fMat),
-                      fLabels, fBins, fPOT, fLivetime);
+                      fAxisX, fPOT, fLivetime);
     }
   }
 
@@ -332,9 +325,9 @@ namespace ana
     hLivetime.Fill(.5, fLivetime);
     hLivetime.Write("livetime");
 
-    for(unsigned int i = 0; i < fBins.size(); ++i){
-      TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
+    for(unsigned int i = 0; i < fAxisX.NDimensions(); ++i){
+      TObjString(fAxisX.GetLabels()[i].c_str()).Write(TString::Format("label%d", i).Data());
+      fAxisX.GetBinnings()[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
 
     TObjString(fTrueLabel.c_str()).Write("true_label");
@@ -399,19 +392,5 @@ namespace ana
     delete hLivetime;
 
     return ret;
-  }
-
-  //----------------------------------------------------------------------
-  Binning ReweightableSpectrum::Bins1DX() const
-  {
-    assert(!fBins.empty());
-
-    Binning xbins = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      xbins = Binning::Simple(n, 0, n);
-    }
-    return xbins;
   }
 }

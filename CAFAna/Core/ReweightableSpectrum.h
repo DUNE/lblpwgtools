@@ -78,9 +78,9 @@ namespace ana
 
     static std::unique_ptr<ReweightableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
-    unsigned int NDimensions() const{return fLabels.size();}
-    std::vector<std::string> GetLabels() const {return fLabels;}
-    std::vector<Binning> GetBinnings() const {return fBins;}
+    unsigned int NDimensions() const{return fAxisX.NDimensions();}
+    const std::vector<std::string>& GetLabels() const {return fAxisX.GetLabels();}
+    const std::vector<Binning>& GetBinnings() const {return fAxisX.GetBinnings();}
     Binning GetTrueBinning() const {return fBinsY;}
 
     /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
@@ -95,29 +95,18 @@ namespace ana
 
   protected:
     // Derived classes can be trusted take care of their own construction
-    ReweightableSpectrum(const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
+    ReweightableSpectrum(const HistAxis& axisX,
                          const Binning& ybins,
                          const Var& rwVar)
       : fRWVar(rwVar),
         fPOT(0), fLivetime(0),
-        fLabels(labels), fBins(bins), fBinsY(ybins)
-    {
-    }
-
-    ReweightableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         const Binning& ybins,
-                         const Var& rwVar)
-      : fRWVar(rwVar),
-        fPOT(0), fLivetime(0),
-        fLabels(1, label), fBins(1, bins), fBinsY(ybins)
+        fAxisX(axisX), fBinsY(ybins)
     {
     }
 
     // Constructor for user by Uninitialized()
     ReweightableSpectrum()
-      : fRWVar(kUnweighted), fPOT(0), fLivetime(0), fBinsY(Binning::Simple(1, 0, 1))
+      : fRWVar(kUnweighted), fPOT(0), fLivetime(0), fAxisX({}, {}, {}), fBinsY(Binning::Simple(1, 0, 1))
     {
     }
 
@@ -125,8 +114,6 @@ namespace ana
 
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
-
-    Binning Bins1DX() const;
 
     void _SaveTo(TDirectory* dir,
                  const std::string& name,
@@ -138,8 +125,8 @@ namespace ana
     double fPOT;
     double fLivetime;
 
-    std::vector<std::string> fLabels;
-    std::vector<Binning> fBins;
+    HistAxis fAxisX;
+
     Binning fBinsY;
 
     std::string fTrueLabel;
