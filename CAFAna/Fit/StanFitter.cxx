@@ -529,7 +529,11 @@ namespace ana
 
     sampler.disengage_adaptation();
     writer.write_adapt_finish(sampler);
-    sampler.write_sampler_state(fValueWriter);
+
+    // -------------------------------
+    // this is the new bit we added in between the bits copied from Stan
+    fValueWriter.SaveSamplerState(sampler);
+    // -------------------------------
 
     start = clock();
     stan::services::util::generate_transitions(sampler,
@@ -547,8 +551,7 @@ namespace ana
                                                interrupt,
                                                logger);
     end = clock();
-    double sample_delta_t
-    = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+    double sample_delta_t = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
     writer.write_timing(warm_delta_t, sample_delta_t);
 

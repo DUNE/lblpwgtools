@@ -11,6 +11,7 @@
 #include "CAFAna/Fit/MCMCSamples.h"
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Core/StanTypedefs.h"
+#include "CAFAna/Core/Utilities.h"
 
 #include "OscLib/func/IOscCalculator.h"
 
@@ -63,6 +64,16 @@ namespace ana
 
       virtual void operator()(const std::vector<double>& state) { fSamples.AddSample(state); }
       virtual void operator()(const std::vector<std::string>& names) { fSamples.SetNames(names); }
+
+      template <typename Model, typename RNG>
+      void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler)
+      {
+        // this is from Stan
+        sampler.write_sampler_state(*this);
+
+        fSamples.SetHyperparams(sampler.get_nominal_stepsize(),  // the 'nominal' stepsize is updated at the end of warmup
+                                TMatrixDFromEigenMatrixXd(sampler.z().inv_e_metric_));
+      }
 
 
     private:
