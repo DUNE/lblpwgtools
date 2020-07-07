@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/StanTypedefs.h"
+#include "Utilities/func/Stan.h" // need stan proper for fDataStan
 
 class TDirectory;
 
@@ -28,7 +28,7 @@ namespace ana
     ~Hist();
 
     static Hist Uninitialized(){return Hist();}
-    bool Initialized() const {return fEigenSparse || fEigenStan || fEigen;}
+    bool Initialized() const {return fType != kUninitialized;}
 
     static Hist Adopt(Eigen::SparseVector<double>&& v);
     static Hist Adopt(Eigen::ArrayXstan&& v);
@@ -38,9 +38,9 @@ namespace ana
 
     TH1D* ToTH1(const Binning& bins) const;
 
-    bool HasStan() const {return fEigenStan != 0;}
-    const Eigen::ArrayXd& GetEigen() const {assert(fEigen); return *fEigen;}
-    const Eigen::ArrayXstan& GetEigenStan() const {assert(fEigenStan); return *fEigenStan;}
+    bool HasStan() const {return fType == kDenseStan;}
+    const Eigen::ArrayXd& GetEigen() const {assert(fType == kDense); return fData;}
+    const Eigen::ArrayXstan& GetEigenStan() const {assert(fType == kDenseStan); return fDataStan;}
 
     int GetNbinsX() const;
     double GetBinError(int i) const;
@@ -65,12 +65,15 @@ namespace ana
     Hist();
 
     // Helpers for the public Add() function
-    void Add(const Eigen::SparseVector<double>* rhs, double scale);
-    void Add(const Eigen::ArrayXstan* rhs, double scale);
-    void Add(const Eigen::ArrayXd* rhs, double scale);
+    void Add(const Eigen::SparseVector<double>& rhs, double scale);
+    void Add(const Eigen::ArrayXstan& rhs, double scale);
+    void Add(const Eigen::ArrayXd& rhs, double scale);
 
-    Eigen::SparseVector<double>* fEigenSparse;
-    Eigen::ArrayXstan* fEigenStan;
-    Eigen::ArrayXd* fEigen;
+    enum EType{kUninitialized, kDense, kDenseStan, kSparse};
+    EType fType;
+
+    Eigen::SparseVector<double> fDataSparse;
+    Eigen::ArrayXstan fDataStan;
+    Eigen::ArrayXd fData;
   };
 }

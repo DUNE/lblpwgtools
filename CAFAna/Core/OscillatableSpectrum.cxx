@@ -237,9 +237,9 @@ namespace ana
                                                       HistAxis(labels, bins, vars),
                                                       kNoCut);
 
-    *ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                   ret->fMat->rows(),
-                                                   ret->fMat->cols());
+    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
+                                                  ret->fMat.rows(),
+                                                  ret->fMat.cols());
 
     delete spect;
 

@@ -100,7 +100,7 @@ namespace ana
                          const Binning& ybins,
                          const Var& rwVar)
       : fRWVar(rwVar),
-        fMat(0), fPOT(0), fLivetime(0),
+        fPOT(0), fLivetime(0),
         fLabels(labels), fBins(bins), fBinsY(ybins)
     {
     }
@@ -110,14 +110,14 @@ namespace ana
                          const Binning& ybins,
                          const Var& rwVar)
       : fRWVar(rwVar),
-        fMat(0), fPOT(0), fLivetime(0),
+        fPOT(0), fLivetime(0),
         fLabels(1, label), fBins(1, bins), fBinsY(ybins)
     {
     }
 
     // Constructor for user by Uninitialized()
     ReweightableSpectrum()
-      : fRWVar(kUnweighted), fMat(0), fPOT(0), fLivetime(0), fBinsY(Binning::Simple(1, 0, 1))
+      : fRWVar(kUnweighted), fPOT(0), fLivetime(0), fBinsY(Binning::Simple(1, 0, 1))
     {
     }
 
@@ -134,7 +134,7 @@ namespace ana
 
     Var fRWVar; ///< What goes on the y axis?
 
-    Eigen::MatrixXd* fMat; // TODO no need for this to be a pointer
+    Eigen::MatrixXd fMat;
     double fPOT;
     double fLivetime;
 

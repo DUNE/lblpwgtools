@@ -42,8 +42,8 @@ namespace ana
     const Binning xbins = Bins1DX();
     const Binning ybins = trueAxis.GetBinnings()[0];
 
-    fMat = new Eigen::MatrixXd(ybins.NBins()+2, xbins.NBins()+2);
-    fMat->setZero();
+    fMat.resize(ybins.NBins()+2, xbins.NBins()+2);
+    fMat.setZero();
 
     loader.AddReweightableSpectrum(*this, recoAxis.GetMultiDVar(), cut, shift, wei);
   }
@@ -54,8 +54,6 @@ namespace ana
     for(SpectrumLoaderBase* loader: fLoaderCount){
       loader->RemoveReweightableSpectrum(this);
     }
-
-    delete fMat;
   }
 
   //----------------------------------------------------------------------
@@ -64,8 +62,7 @@ namespace ana
   {
     DontAddDirectory guard;
 
-    fMat = rhs.fMat ? new Eigen::MatrixXd(*rhs.fMat) : 0;
-
+    fMat = rhs.fMat;
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
@@ -84,8 +81,7 @@ namespace ana
     fBins = rhs.fBins;
     fBinsY = rhs.fBinsY;
 
-    delete fMat;
-    fMat = rhs.fMat ? new Eigen::MatrixXd(*rhs.fMat) : 0;
+    fMat = rhs.fMat;
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
 
@@ -102,9 +98,9 @@ namespace ana
 
     TH2D* ret = HistCache::NewTH2D("", Bins1DX(), fBinsY);
 
-    for(int i = 0; i < fMat->rows(); ++i){
-      for(int j = 0; j < fMat->cols(); ++j){
-        ret->SetBinContent(j, i, (*fMat)(i, j));
+    for(int i = 0; i < fMat.rows(); ++i){
+      for(int j = 0; j < fMat.cols(); ++j){
+        ret->SetBinContent(j, i, fMat(i, j));
       }
     }
 
@@ -129,7 +125,7 @@ namespace ana
   void ReweightableSpectrum::Fill(double x, double y, double w)
   {
     // TODO repeated calling of Bins1DX() here is going to be very inefficient
-    (*fMat)(fBinsY.FindBin(y), Bins1DX().FindBin(x)) += w;
+    fMat(fBinsY.FindBin(y), Bins1DX().FindBin(x)) += w;
   }
 
   /// Helper for \ref Unweighted
@@ -147,13 +143,13 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::UnWeighted() const
   {
-    return Spectrum(Hist::Adopt(ProjectionX(*fMat)), fLabels, fBins, fPOT, fLivetime);
+    return Spectrum(Hist::Adopt(ProjectionX(fMat)), fLabels, fBins, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
   Spectrum ReweightableSpectrum::WeightingVariable() const
   {
-    return Spectrum(Hist::Adopt(ProjectionY(*fMat)), fLabels, fBins, fPOT, fLivetime);
+    return Spectrum(Hist::Adopt(ProjectionY(fMat)), fLabels, fBins, fPOT, fLivetime);
   }
 
   //----------------------------------------------------------------------
@@ -162,13 +158,13 @@ namespace ana
     if(!ws.HasStan()){
       const Eigen::VectorXd& vec = ws.GetEigen();
 
-      return Spectrum(Hist::Adopt(Eigen::ArrayXd(vec.transpose() * *fMat)),
+      return Spectrum(Hist::Adopt(Eigen::ArrayXd(vec.transpose() * fMat)),
                       fLabels, fBins, fPOT, fLivetime);
     }
     else{
       const Eigen::VectorXstan& vec = ws.GetEigenStan();
 
-      return Spectrum(Hist::Adopt(vec.transpose() * *fMat),
+      return Spectrum(Hist::Adopt(vec.transpose() * fMat),
                       fLabels, fBins, fPOT, fLivetime);
     }
   }
@@ -181,7 +177,7 @@ namespace ana
     const Ratio ratio(target, WeightingVariable());
     // We want to multiply all the rows by this ratio, so left-multiply
 
-    *fMat = ratio.GetEigen().matrix().asDiagonal() * *fMat;
+    fMat = ratio.GetEigen().matrix().asDiagonal() * fMat;
   }
 
   //----------------------------------------------------------------------
@@ -192,14 +188,14 @@ namespace ana
     const Ratio ratio(target, UnWeighted());
     // We want to multiply all the columns by this ratio
 
-    *fMat *= ratio.GetEigen().matrix().asDiagonal();
+    fMat *= ratio.GetEigen().matrix().asDiagonal();
   }
 
   //----------------------------------------------------------------------
   ReweightableSpectrum& ReweightableSpectrum::PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fMat && rhs.fMat->sum() == 0) return *this;
+    if(rhs.fMat.sum() == 0) return *this;
 
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
@@ -228,7 +224,7 @@ namespace ana
 
     if(fPOT && rhs.fPOT){
       // Scale by POT when possible
-      if(rhs.fMat) *fMat += *rhs.fMat * sign*fPOT/rhs.fPOT;
+      fMat += rhs.fMat * sign*fPOT/rhs.fPOT;
 
       if(fLivetime && rhs.fLivetime){
         // If POT/livetime ratios match, keep regular lifetime, otherwise zero
@@ -247,7 +243,7 @@ namespace ana
 
     if(fLivetime && rhs.fLivetime){
       // Scale by livetime, the only thing in common
-      if(rhs.fMat) *fMat += *rhs.fMat * sign*fLivetime/rhs.fLivetime;
+      fMat += rhs.fMat * sign*fLivetime/rhs.fLivetime;
 
       if(!fPOT && rhs.fPOT){
         // If the RHS has a POT and we don't, copy it in (suitably scaled)
@@ -297,7 +293,7 @@ namespace ana
   //----------------------------------------------------------------------
   void ReweightableSpectrum::Clear()
   {
-    fMat->setZero();
+    fMat.setZero();
   }
 
   //----------------------------------------------------------------------
@@ -390,9 +386,9 @@ namespace ana
                                                       HistAxis(spect->GetYaxis()->GetTitle(), Binning::FromTAxis(spect->GetYaxis()), kUnweighted),
                                                       kNoCut);
 
-    *ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                   ret->fMat->rows(),
-                                                   ret->fMat->cols());
+    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
+                                                  ret->fMat.rows(),
+                                                  ret->fMat.cols());
 
     delete spect;
 
