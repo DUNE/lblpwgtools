@@ -123,20 +123,6 @@ namespace ana
     {
     }
 
-    /// Constructor needed by LoadFrom. Since there's no good
-    /// way to store a Var, ReweightVar will return nonsense
-    /// for ReweightableSpectrum that are loaded from a file
-    /*
-    ReweightableSpectrum(TH2D* h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         const Binning& binsY,
-                         double pot, double livetime)
-      : ReweightableSpectrum(kUnweighted, h, labels, bins, binsY, pot, livetime)
-    {
-    }
-    */
-
     ReweightableSpectrum& PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign);
 
     void RemoveLoader(SpectrumLoaderBase*);

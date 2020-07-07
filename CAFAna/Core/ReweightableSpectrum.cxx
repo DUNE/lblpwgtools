@@ -37,9 +37,6 @@ namespace ana
 
     DontAddDirectory guard;
 
-    // Can't use HistCache here because y-axis is not necessarily
-    // TrueEnergyBinning. TODO - that should maybe be generalized.
-
     const std::string name = UniqueName();
 
     const Binning xbins = Bins1DX();
