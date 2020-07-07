@@ -32,16 +32,18 @@ namespace ana
 
   //----------------------------------------------------------------------
   MCMCSamples::MCMCSamples(std::size_t offset,
-                           const std::vector<std::string>& diagBranchNames,
+                           const std::vector<std::string> &diagBranchNames,
                            const std::vector<const IFitVar *> &vars,
                            const std::vector<const ana::ISyst *> &systs,
-                           std::unique_ptr<TTree> &tree)
+                           std::unique_ptr<TTree> &tree,
+                           const Hyperparameters &hyperParams)
     : fOffset(offset),
       fDiagBranches(diagBranchNames),
       fVars(vars),
       fSysts(systs),
       fBestFitFound(false),
-      fSamples(std::move(tree))
+      fSamples(std::move(tree)),
+      fHyperparams(hyperParams)
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -58,7 +60,8 @@ namespace ana
         fSamples(std::move(other.fSamples)),
         fEntryLL(std::move(other.fEntryLL)),
         fEntryVals(std::move(other.fEntryVals)),
-        fDiagnosticVals(std::move(other.fDiagnosticVals))
+        fDiagnosticVals(std::move(other.fDiagnosticVals)),
+        fHyperparams(std::move(other.fHyperparams))
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -85,6 +88,8 @@ namespace ana
 
     fDiagnosticVals = std::move(other.fDiagnosticVals);
     fEntryVals = std::move(other.fEntryVals);
+
+    fHyperparams = std::move(other.fHyperparams);
 
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -255,9 +260,19 @@ namespace ana
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
     }
 
+    auto hyperParamsDir = dynamic_cast<TDirectory*>(dir->Get("hyperparams"));
+    auto stepSize = hyperParamsDir->Get<TParameter<double>>("stepsize");
+    auto invMetric = hyperParamsDir->Get<TMatrixD>("inv_metric");
+    Hyperparameters hyperparams{stepSize->GetVal(), *invMetric};
+
     delete dir;
 
-    return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(), diagBranches, fitVars, systs, samples));
+    return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(),
+                                                        diagBranches,
+                                                        fitVars,
+                                                        systs,
+                                                        samples,
+                                                        hyperparams));
   }
 
   //----------------------------------------------------------------------
@@ -601,6 +616,14 @@ namespace ana
     // don't let it get attached to the file that's about to be closed
     fSamples->LoadBaskets();
     fSamples->SetDirectory(nullptr);
+
+    TDirectory hyperdir("hyperparams", "Hyperparameters");
+    hyperdir.cd();
+    TParameter<double> stepSize("stepsize", fHyperparams.stepSize);
+    stepSize.Write();
+    fHyperparams.invMetric.Write("inv_metric");
+    dir->cd();
+    hyperdir.Write();
 
     dir->Write();
     delete dir;

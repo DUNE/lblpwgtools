@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "TMatrixD.h"
 #include "TTree.h"
 
 #include "CAFAna/Core/IFitVar.h"
@@ -28,6 +29,17 @@ namespace ana
       /// Name of branch in internal TTree corresponding to the log-likelihood.
       /// Used in several places, so centralized here.
       static const std::string LOGLIKELIHOOD_BRANCH_NAME;
+
+      struct Hyperparameters
+      {
+        double stepSize;
+        TMatrixD invMetric;   // use TMatrix rather than Eigen for peristability
+
+        Hyperparameters(double stepsize = std::numeric_limits<double>::signaling_NaN(),
+                        TMatrixD invmetric = TMatrixD())
+          : stepSize(stepsize), invMetric(invmetric)
+        {}
+      };
 
       /// Build the MCMCSamples object.
       ///
@@ -58,6 +70,8 @@ namespace ana
 
       /// Discard any samples
       void Clear() { fSamples->Clear(); }
+
+      const Hyperparameters & Hyperparams() const   { return fHyperparams; }
 
 
       /// Marginalize over all other variables to obtain a 1D profile in \a var
@@ -139,6 +153,16 @@ namespace ana
                         std::map<const ana::IFitVar *, double> &varVals,
                         const std::vector<const ana::ISyst *> &systs, std::map<const ana::ISyst *, double> &systVals) const;
 
+      void SetHyperparams(double stepSize, TMatrixD invMassMatrix)
+      {
+        fHyperparams = {stepSize, invMassMatrix};
+      }
+
+      void SetHyperparams(Hyperparameters h)
+      {
+        fHyperparams = h;
+      };
+
       void SetNames(const std::vector<std::string>& names);
 
       /// Get a TTree with the MCMC samples in it
@@ -158,11 +182,9 @@ namespace ana
 
     private:
       /// Internal-use constructor needed for LoadFrom()
-      MCMCSamples(std::size_t offset,
-                  const std::vector<std::string>& diagBranchNames,
-                  const std::vector<const IFitVar *> &vars,
-                  const std::vector<const ana::ISyst *> &systs,
-                  std::unique_ptr<TTree> &tree);
+      MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
+                  const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
+                  std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams);
 
       /// Where in fDiagnosticVals is the given diagnostic?
       std::size_t DiagOffset(const std::string& diagName) const;
@@ -199,6 +221,8 @@ namespace ana
       double fEntryLL;  // for use reading the TTree
       std::vector<double> fEntryVals;  // ditto
       std::vector<double> fDiagnosticVals;
+
+      mutable Hyperparameters fHyperparams;
   };
 
 }
