@@ -215,7 +215,7 @@ namespace ana
   //----------------------------------------------------------------------
   double Hist::GetMean() const
   {
-    // TODO
+    // TODO implement mean
     abort();
   }
 
@@ -319,7 +319,11 @@ namespace ana
   //----------------------------------------------------------------------
   void Hist::Add(const Eigen::ArrayXd* rhs, double scale)
   {
-    if(fEigenSparse) abort(); // TODO *fEigenSparse += *rhs * scale;
+    if(fEigenSparse){
+      fEigen = new Eigen::ArrayXd(Eigen::VectorXd(*fEigenSparse));
+      *fEigen += *rhs * scale;
+      delete fEigenSparse;
+    }
 
     if(fEigenStan) *fEigenStan += *rhs * scale;
 
@@ -340,17 +344,63 @@ namespace ana
   //----------------------------------------------------------------------
   void Hist::Multiply(const Hist& rhs)
   {
-    if(fEigen && rhs.fEigen){*fEigen *= *rhs.fEigen; return;}
-    else if(fEigenStan && rhs.fEigenStan){*fEigenStan *= *rhs.fEigenStan; return;}
-    else abort();
+    assert(Initialized());
+    assert(rhs.Initialized());
+
+    if(fEigenSparse || rhs.fEigenSparse){
+      std::cout << "Hist::Multiply() not implemented for sparse vectors" << std::endl;
+      abort();
+    }
+
+    if(fEigenStan){
+      if(rhs.fEigenStan){
+        *fEigenStan *= *rhs.fEigenStan;
+      }
+      else{
+        *fEigenStan *= *rhs.fEigen;
+      }
+    }
+    else{
+      if(rhs.fEigenStan){
+        fEigenStan = new Eigen::ArrayXstan(*rhs.fEigenStan);
+        *fEigenStan *= *fEigen;
+        delete fEigen;
+      }
+      else{
+        *fEigen *= *rhs.fEigen;
+      }
+    }
   }
 
   //----------------------------------------------------------------------
   void Hist::Divide(const Hist& rhs)
   {
-    if(fEigen && rhs.fEigen){*fEigen /= *rhs.fEigen; return;}
-    else if(fEigenStan && rhs.fEigenStan){*fEigenStan /= *fEigenStan; return;}
-    else abort(); // TODO mixed modes
+    assert(Initialized());
+    assert(rhs.Initialized());
+
+    if(fEigenSparse || rhs.fEigenSparse){
+      std::cout << "Hist::Divide() not implemented for sparse vectors" << std::endl;
+      abort();
+    }
+
+    if(fEigenStan){
+      if(rhs.fEigenStan){
+        *fEigenStan /= *rhs.fEigenStan;
+      }
+      else{
+        *fEigenStan /= *rhs.fEigen;
+      }
+    }
+    else{
+      if(rhs.fEigenStan){
+        fEigenStan = new Eigen::ArrayXstan(*rhs.fEigenStan);
+        *fEigenStan /= *fEigen;
+        delete fEigen;
+      }
+      else{
+        *fEigen /= *rhs.fEigen;
+      }
+    }
   }
 
   //----------------------------------------------------------------------
@@ -368,7 +418,17 @@ namespace ana
       delete h;
     }
     if(fEigenSparse){
-      // TODO TODO TODO
+      const int n = bins.NBins();
+      const double x0 = bins.IsSimple() ? bins.Min() : 0;
+      const double x1 = bins.IsSimple() ? bins.Max() : bins.NBins();
+      THnSparseD* h = new THnSparseD("", "", 1, &n, &x0, &x1);
+
+      for(Eigen::SparseVector<double>::InnerIterator it(*fEigenSparse); it; ++it){
+        h->SetBinContent(it.index(), it.value());
+      }
+
+      h->Write("hist_sparse");
+      delete h;
     }
   }
 }
