@@ -138,12 +138,14 @@ bool CompareObjects(const TObject& a, const TObject& b, const std::string& key)
 }
 
 // ----------------------------------------------------------------------------
-void ReportUnique(const std::vector<std::string>& only, TDirectory* dir)
+void ReportUnique(const std::vector<std::string>& only,
+                  TDirectory* dir,
+                  const std::string& path)
 {
   if(only.empty()) return;
 
-  std::cout << "The following keys exist only in " << dir->GetFile()->GetName() << std::endl;
-  for(const std::string& k: only) std::cout << "  " << k << std::endl;
+  std::cout << "\nThe following keys exist only in " << dir->GetFile()->GetName() << std::endl;
+  for(const std::string& k: only) std::cout << "  " << path << "/" << k << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -159,8 +161,8 @@ bool CheckDirectory(TDirectory* a, TDirectory* b, std::string path = "")
   std::set_difference  (keysB.begin(), keysB.end(), keysA.begin(), keysA.end(), std::back_inserter(onlyB));
   std::set_intersection(keysA.begin(), keysA.end(), keysB.begin(), keysB.end(), std::back_inserter(bothAB));
 
-  ReportUnique(onlyA, a);
-  ReportUnique(onlyB, b);
+  ReportUnique(onlyA, a, path);
+  ReportUnique(onlyB, b, path);
 
   bool ok = onlyA.empty() && onlyB.empty();
 
