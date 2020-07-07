@@ -311,14 +311,24 @@ namespace ana
   //----------------------------------------------------------------------
   void ReweightableSpectrum::SaveTo(TDirectory* dir, const std::string& name) const
   {
+    _SaveTo(dir, name, "ReweightableSpectrum");
+  }
+
+  //----------------------------------------------------------------------
+  void ReweightableSpectrum::_SaveTo(TDirectory* dir,
+                                     const std::string& name,
+                                     const std::string& type) const
+  {
     TDirectory* tmp = gDirectory;
 
     dir = dir->mkdir(name.c_str()); // switch to sbudir
     dir->cd();
 
-    TObjString("ReweightableSpectrum").Write("type");
+    TObjString(type.c_str()).Write("type");
 
-    ToTH2(fPOT)->Write("hist");
+    TH2* h = ToTH2(fPOT);
+    h->Write("hist");
+
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
@@ -335,6 +345,8 @@ namespace ana
 
     dir->Write();
     delete dir;
+
+    delete h;
 
     tmp->cd();
   }
@@ -367,12 +379,6 @@ namespace ana
       bins.push_back(*Binning::LoadFrom(dir, subname.c_str()));
       TObjString* label = (TObjString*)dir->Get(TString::Format("label%d", i));
       labels.push_back(label ? label->GetString().Data() : "");
-    }
-
-    if(bins.empty() && labels.empty()){
-      // Must be an old file. Make an attempt at backwards compatibility.
-      bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
-      labels.push_back(spect->GetXaxis()->GetTitle());
     }
 
     delete dir;

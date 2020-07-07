@@ -144,6 +144,10 @@ namespace ana
 
     Binning Bins1DX() const;
 
+    void _SaveTo(TDirectory* dir,
+                 const std::string& name,
+                 const std::string& type) const;
+
     Var fRWVar; ///< What goes on the y axis?
 
     Eigen::MatrixXd* fMat; // TODO no need for this to be a pointer
