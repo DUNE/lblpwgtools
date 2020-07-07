@@ -77,8 +77,8 @@ namespace ana
       // and only overloading the one we care about
       using stan::callbacks::writer::operator();
 
-      virtual void operator()(const std::vector<double>& state) { fSamples.AddSample(state); }
-      virtual void operator()(const std::vector<std::string>& names) { fSamples.SetNames(names); }
+      void operator()(const std::vector<double>& state) override { fSamples.AddSample(state); }
+      void operator()(const std::vector<std::string>& names) override { fSamples.SetNames(names); }
 
       template <typename Model, typename RNG>
       void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler)
