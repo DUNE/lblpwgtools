@@ -54,12 +54,10 @@ namespace ana
     /// Reco spectrum with truth weights applied
     Spectrum WeightedBy(const Ratio& weights) const;
 
-    /*
     /// Rescale bins so that \ref WeightingVariable will return \a target
     void ReweightToTrueSpectrum(const Spectrum& target);
     /// Recale bins so that \ref Unweighted will return \a target
     void ReweightToRecoSpectrum(const Spectrum& target);
-    */
 
     // Arithmetic operators are as if these are unlike samples, each a
     // contribution to one total, not seperate sources of stats for the same

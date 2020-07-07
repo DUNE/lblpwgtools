@@ -173,14 +173,15 @@ namespace ana
     }
   }
 
-  /*
   //----------------------------------------------------------------------
   void ReweightableSpectrum::ReweightToTrueSpectrum(const Spectrum& target)
   {
     // This is a big component of what extrapolations do, so it should be fast
 
-    // But I don't believe DUNE in particular uses this...
-    abort();
+    const Ratio ratio(target, WeightingVariable());
+    // We want to multiply all the rows by this ratio, so left-multiply
+
+    *fMat = ratio.GetEigen().matrix().asDiagonal() * *fMat;
   }
 
   //----------------------------------------------------------------------
@@ -188,11 +189,13 @@ namespace ana
   {
     // This is a big component of what extrapolations do, so it should be fast
 
-    // But I don't believe DUNE in particular uses this...
-    abort();
-  }
-*/
+    const Ratio ratio(target, UnWeighted());
+    // We want to multiply all the columns by this ratio
 
+    *fMat *= ratio.GetEigen().matrix().asDiagonal();
+  }
+
+  //----------------------------------------------------------------------
   ReweightableSpectrum& ReweightableSpectrum::PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
