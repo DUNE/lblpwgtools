@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 
+#include "boost/random.hpp"
+
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
@@ -35,6 +37,12 @@
 
 namespace stan
 {
+  namespace callbacks
+  {
+    class logger;
+    class stream_logger;
+  }
+
   namespace io
   {
     class var_context;
@@ -42,6 +50,13 @@ namespace stan
     template<typename T>
     class writer;
   }
+
+  namespace mcmc
+  {
+    template <typename Model, typename RNG>
+    class adapt_diag_e_nuts;
+  }
+
 }
 
 namespace ana
