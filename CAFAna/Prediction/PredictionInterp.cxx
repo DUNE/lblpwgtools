@@ -61,6 +61,11 @@ namespace ana
 
       for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
 
+      if(sp.shifts.size() < 2){
+        std::cout << "PredictionInterp: " << syst->ShortName() << " with min = " << x0 << ", max = " << x1 << " only has " << sp.shifts.size() << " shifted values. Abort." << std::endl;
+        abort();
+      }
+
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
         shiftHere.SetShift(syst, sigma);
@@ -81,6 +86,12 @@ namespace ana
   FitRatios(const std::vector<double>& shifts,
             const std::vector<Eigen::ArrayXd>& ratios) const
   {
+    if(ratios.size() < 2){
+      std::cout << "PredictionInterp::FitRatios(): ratios.size() = " << ratios.size() << " - how did that happen?" << std::endl;
+
+      abort();
+    }
+
     assert(shifts.size() == ratios.size());
 
     std::vector<std::vector<Coeffs>> ret;
