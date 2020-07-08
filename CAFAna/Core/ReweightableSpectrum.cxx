@@ -43,7 +43,7 @@ namespace ana
     fMat.resize(ybins.NBins()+2, recoAxis.GetBins1D().NBins()+2);
     fMat.setZero();
 
-    loader.AddReweightableSpectrum(*this, recoAxis.GetVar1D(), cut, shift, wei);
+    if(recoAxis.HasVars()) loader.AddReweightableSpectrum(*this, recoAxis.GetVar1D(), cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
@@ -372,11 +372,9 @@ namespace ana
 
     delete dir;
 
-    // Can't restore the Vars, go with a dummy value
-    const std::vector<Var> vars(labels.size(), kUnweighted);
     auto ret = std::make_unique<ReweightableSpectrum>(kNullLoader,
-                                                      HistAxis(labels, bins, vars),
-                                                      HistAxis(spect->GetYaxis()->GetTitle(), Binning::FromTAxis(spect->GetYaxis()), kUnweighted),
+                                                      HistAxis(labels, bins),
+                                                      HistAxis(spect->GetYaxis()->GetTitle(), Binning::FromTAxis(spect->GetYaxis())),
                                                       kNoCut);
 
     ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),

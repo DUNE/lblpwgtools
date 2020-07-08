@@ -84,6 +84,7 @@ namespace ana
     }
 
     unsigned int NDimensions() const{return fLabels.size();}
+    bool HasVars() const {return !fVars.empty();}
 
     const std::vector<std::string>& GetLabels() const {return fLabels;}
     const std::vector<Binning>& GetBinnings() const {return fBins;}

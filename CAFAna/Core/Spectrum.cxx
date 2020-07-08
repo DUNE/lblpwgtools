@@ -37,7 +37,7 @@ namespace ana
       fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(bins1D.NBins()+2)));
     }
 
-    loader.AddSpectrum(*this, axis.GetVar1D(), cut, shift, wei);
+    if(axis.HasVars()) loader.AddSpectrum(*this, axis.GetVar1D(), cut, shift, wei);
   }
 
   //----------------------------------------------------------------------

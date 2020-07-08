@@ -231,10 +231,8 @@ namespace ana
 
     delete dir;
 
-    // Can't restore the Vars, go with a dummy value
-    const std::vector<Var> vars(labels.size(), kUnweighted);
     auto ret = std::make_unique<OscillatableSpectrum>(kNullLoader,
-                                                      HistAxis(labels, bins, vars),
+                                                      HistAxis(labels, bins),
                                                       kNoCut);
 
     ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
