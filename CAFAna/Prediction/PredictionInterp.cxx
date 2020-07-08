@@ -59,12 +59,13 @@ namespace ana
       const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
       const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
 
-      for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
-
-      if(sp.shifts.size() < 2){
-        std::cout << "PredictionInterp: " << syst->ShortName() << " with min = " << x0 << ", max = " << x1 << " only has " << sp.shifts.size() << " shifted values. Abort." << std::endl;
-        abort();
+      if(std::abs(x0 - x1) < 1){
+        std::cout << "Warning: Syst '" << syst->ShortName()
+                  << "' has less than 1sigma of allowed range.  Won't interpolate it!" << std::endl;
+        continue;
       }
+
+      for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
 
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
