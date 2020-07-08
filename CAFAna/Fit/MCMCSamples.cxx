@@ -621,7 +621,8 @@ namespace ana
     hyperdir->cd();
     TParameter<double> stepSize("stepsize", fHyperparams.stepSize);
     stepSize.Write();
-    fHyperparams.invMetric->Write("inv_metric");
+    if (fHyperparams.invMetric)
+      fHyperparams.invMetric->Write("inv_metric");
     dir->cd();
     hyperdir->Write();
 
