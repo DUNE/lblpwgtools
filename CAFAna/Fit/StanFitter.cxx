@@ -43,7 +43,7 @@ namespace ana
       fCalc(nullptr),
       fExpt(expt),
       fMCMCSamples(vars, systs),
-      fValueWriter(fMCMCSamples)
+      fMCMCWarmup(vars, systs)
   {}
 
   //----------------------------------------------------------------------
@@ -128,6 +128,11 @@ namespace ana
         fOscCalcCache = std::make_unique<osc::OscCalculator>();
       *fOscCalcCache = *seed;
     }
+
+    // const-casts here because we need to initialize the writer interface, which requires a non-const pointer,
+    // but this method is const.  prefer not to make the members mutable for this one instance
+    fValueWriter = std::make_unique<MemoryTupleWriter>(fStanConfig.num_samples > 0 ? const_cast<MCMCSamples*>(&fMCMCSamples) : nullptr,
+                                                       fStanConfig.num_warmup > 0 ? const_cast<MCMCSamples*>(&fMCMCWarmup) : nullptr);
 
     return IFitter::Fit(seed, bestSysts, seedPts, systSeedPts, verb);
   }
@@ -220,7 +225,7 @@ namespace ana
 //                                                                     interrupt,
 //                                                                     *logger,
 //                                                                     init_writer,
-//                                                                     fValueWriter,
+//                                                                     *fValueWriter,
 //                                                                     diagnostic_writer);
 
 
@@ -465,7 +470,7 @@ namespace ana
 //                                                 rng,
 //                                                 interrupt,
 //                                                 *logger,
-//                                                 fValueWriter,
+//                                                 *fValueWriter,
 //                                                 diagnostic_writer);
 
     }
@@ -502,7 +507,12 @@ namespace ana
       return;
     }
 
-    stan::services::util::mcmc_writer writer(fValueWriter, diagnostic_writer, logger);
+    // -------------------------------
+    // this is a new bit we added in between the bits copied from Stan
+    fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kWarmup);
+    // -------------------------------
+
+    stan::services::util::mcmc_writer writer(*fValueWriter, diagnostic_writer, logger);
     stan::mcmc::sample s(cont_params, 0, 0);
 
     // Headers
@@ -531,8 +541,11 @@ namespace ana
     writer.write_adapt_finish(sampler);
 
     // -------------------------------
-    // this is the new bit we added in between the bits copied from Stan
-    fValueWriter.SaveSamplerState(sampler);
+    // this is a new bit we added in between the bits copied from Stan
+    fValueWriter->SaveSamplerState(sampler);
+    fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
+    writer.write_sample_names(s, sampler, model);
+    writer.write_diagnostic_names(s, sampler, model);
     // -------------------------------
 
     start = clock();
@@ -556,6 +569,9 @@ namespace ana
     writer.write_timing(warm_delta_t, sample_delta_t);
 
     // *********************************************
+
+    fValueWriter->SaveSamplerState(sampler);
+
   }
 
   //----------------------------------------------------------------------
@@ -597,7 +613,7 @@ namespace ana
                                                           interrupt,
                                                           logger,
                                                           init_writer,
-                                                          fValueWriter);
+                                                          *fValueWriter);
     if (return_code != 0)
       std::cerr << "warning: Stan diagnostic gradient test reports " << return_code
                 << " parameters were not within " << error << " of finite diff expectation..." << std::endl;

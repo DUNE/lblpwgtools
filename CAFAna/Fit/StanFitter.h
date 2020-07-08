@@ -68,17 +68,35 @@ namespace ana
   class MemoryTupleWriter : public stan::callbacks::writer
   {
     public:
-      MemoryTupleWriter(MCMCSamples & samples)
-        : fSamples(samples)
-      {}
+      enum class WhichSamples
+      {
+          kWarmup,
+          kPostWarmup,
+      };
+
+      MemoryTupleWriter(MCMCSamples * samples, MCMCSamples * warmup = nullptr)
+        : fSamples(samples), fWarmup(warmup), fWhichSamples(warmup ? WhichSamples::kWarmup : WhichSamples::kPostWarmup)
+      {
+        if (!samples && !warmup)
+        {
+          std::cerr << "MemoryTupleWriter passed null MCMCSamples for both warmup and post-warmup.  Abort" << std::endl;
+          abort();
+        }
+      }
 
       // note: there are other overloads from the base class for writing other things like strings.
       // we're retaining those do-nothing versions here (since anything written that way is not useful here)
       // and only overloading the one we care about
       using stan::callbacks::writer::operator();
 
-      void operator()(const std::vector<double>& state) override { fSamples.AddSample(state); }
-      void operator()(const std::vector<std::string>& names) override { fSamples.SetNames(names); }
+      void operator()(const std::vector<double>& state) override
+      {
+        (fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples)->AddSample(state);
+      }
+      void operator()(const std::vector<std::string>& names) override
+      {
+        (fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples)->SetNames(names);
+      }
 
       template <typename Model, typename RNG>
       void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler)
@@ -86,13 +104,21 @@ namespace ana
         // this is from Stan
         sampler.write_sampler_state(*this);
 
-        fSamples.SetHyperparams(sampler.get_nominal_stepsize(),  // the 'nominal' stepsize is updated at the end of warmup
-                                TMatrixDFromEigenMatrixXd(sampler.z().inv_e_metric_));
+        auto mcmcsamples = fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples;
+        mcmcsamples->SetHyperparams(sampler.get_nominal_stepsize(),  // the 'nominal' stepsize is updated at the end of warmup
+                                    TMatrixDFromEigenMatrixXd(sampler.z().inv_e_metric_));
       }
+
+      void         SetActiveSamples(WhichSamples s) { fWhichSamples = s; }
+      WhichSamples ActiveSamples() const            { return fWhichSamples; }
 
 
     private:
-      MCMCSamples & fSamples;
+      MCMCSamples * fSamples;
+      MCMCSamples * fWarmup;
+
+      enum WhichSamples fWhichSamples;
+
   };
 
   /// \brief Fitter type that bolts the Stan fitting tools onto CAFAna.
@@ -173,13 +199,23 @@ namespace ana
                        std::ostream* pstream__ = 0) const;
 
       /// Peruse the samples the MCMC generated.  If you want to take ownership of them instead, see ExtractSamples()
-      const MCMCSamples& GetSamples() const { return fMCMCSamples; }
+      const MCMCSamples& GetSamples(MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup) const
+      {
+        return ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples;
+      }
 
       /// Extract the MCMC samples from the fitter (you own them now).
-      void ExtractSamples(MCMCSamples &samples) { samples = std::move(fMCMCSamples); };
+      void ExtractSamples(MCMCSamples &samples,
+                          MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup)
+      {
+        samples = std::move(ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples);
+      };
 
       /// Another way of extracting the MCMC samples (so you own them now) if you prefer unique_ptrs.
-      std::unique_ptr<MCMCSamples> ExtractSamples() { return std::make_unique<MCMCSamples>(std::move(fMCMCSamples)); }
+      std::unique_ptr<MCMCSamples> ExtractSamples(MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup)
+      {
+        return std::make_unique<MCMCSamples>(std::move(ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples));
+      }
 
       /// Change the config used for Stan.  See the StanConfig struct documentation for ideas
       void SetStanConfig(const StanConfig& cfg) { fStanConfig = cfg; }
@@ -373,7 +409,11 @@ namespace ana
       const IExperiment * fExpt;
       StanConfig  fStanConfig;                           ///< Configuration passed to Stan for fitting.   See the StanConfig struct documentation for ideas
       MCMCSamples fMCMCSamples;
-      mutable MemoryTupleWriter fValueWriter;            ///< See MemoryTupleWriter class documentation for more info
+      MCMCSamples fMCMCWarmup;
+
+      /// See MemoryTupleWriter class documentation for more info.
+      /// Pointer so it can be initialized lazily
+      mutable std::unique_ptr<MemoryTupleWriter> fValueWriter;
 
       /// stan::math::var objects have one 'gotcha' associated with them:
       /// after the gradient of the log-prob is calculated, Stan internally
