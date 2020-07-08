@@ -20,7 +20,7 @@ namespace ana
       assert(v.IsValid());
     }
     assert(fLabels.size() == fBins.size());
-    assert(fBins.size() == fVars.size());
+    assert(fBins.size() == fVars.size() || fVars.empty());
   }
 
   //----------------------------------------------------------------------
@@ -34,7 +34,7 @@ namespace ana
     }
 
     assert(fLabels.size() == fBins.size());
-    assert(fBins.size() == fVars.size());
+    assert(fBins.size() == fVars.size() || fVars.empty());
   }
 
   //----------------------------------------------------------------------
