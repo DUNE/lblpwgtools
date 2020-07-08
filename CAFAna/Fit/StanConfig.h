@@ -21,7 +21,7 @@ namespace ana
                int _num_warmup = 1000,
                int _num_samples = 1000,
                int _num_thin = 1,
-               bool _save_warmup = false,
+               bool _save_warmup = true,  // not Stan default, but we save warmup separately from regular samples, so no chance of getting confused
                int _refresh = 100,
                double _stepsize = 1,
                double _stepsize_jitter = 0,
