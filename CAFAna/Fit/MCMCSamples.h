@@ -220,7 +220,7 @@ namespace ana
       /// Where in fEntryVals is the given syst?
       std::size_t VarOffset(const ana::ISyst * syst) const;
 
-      std::size_t fOffset;
+      std::size_t fOffset;   //< number of branches read out before the fitted parameters start
       std::vector<std::string> fDiagBranches;
       std::vector<const ana::IFitVar *> fVars;
       std::vector<const ana::ISyst *> fSysts;
