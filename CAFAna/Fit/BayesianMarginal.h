@@ -44,6 +44,7 @@ namespace ana
       enum class MarginalMode
       {
         kHistogram,
+        kLLWgtdHistogram,
         kKNN,
       };
 

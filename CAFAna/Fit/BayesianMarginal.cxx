@@ -277,9 +277,13 @@ namespace ana
   //----------------------------------------------------------------------
   std::unique_ptr<TH1> BayesianMarginal::ToHistogram(const std::vector<Binning> & bins) const
   {
-    // idea: find the bin-averaged probability distribution
-    // by making the histogram weighted by exp(LL)
-    // and dividing it by the simple histogram of the events
+    // idea:
+    //  * for mode==kHistogram:
+    //    simply histogram the MCMC samples.
+    //  * for mode==kLLWgtdHistogram:
+    //    find the bin-averaged probability distribution
+    //    by making the histogram weighted by exp(LL)
+    //    and dividing it by the simple histogram of the events
     assert(fMCMCSamples);
     assert(bins.size() == fOrderedBrNames.size());
     assert(bins.size() > 0 && bins.size() < 3);  // could port NOvA CAFAna 3D hist stuff if needed
@@ -304,16 +308,6 @@ namespace ana
     // we haven't implemented MakeTH3D here.  but won't worry about it for now
     //else if (bins.size() == 3)
     //  ret.reset(MakeTH3D(UniqueName().c_str(), axisNameStr.c_str(), bins[0], bins[1], bins[2]));
-
-    //auto drawStr = std::accumulate(fOrderedBrNames.rbegin(), fOrderedBrNames.rend(),
-    //                               std::string(""),
-    //                               [](std::string s1, const std::string & s2){ return s1 + ":" + s2; });
-    //drawStr = drawStr.substr(1);  // trim off the leading ':'
-    //std::cout << "Calling TTree::Draw('" << drawStr << ">>" << ret->GetName() << "')" << std::endl;
-    //// grr.  Draw() isn't const
-    //const_cast<TTree*>(fMCMCSamples->ToTTree())->Draw(Form("%s>>%s", drawStr.c_str(), ret->GetName()),
-    //                                                  MCMCSamples::LOGLIKELIHOOD_BRANCH_NAME.c_str());
-    //ret->Print();
 
     std::unique_ptr<TH1> denom;
     if (bins.size() == 1)
@@ -358,30 +352,31 @@ namespace ana
                          : fMCMCSamples->SampleValue(varsOrSysts[brIdx].syst, sample));
 
       // could template this, but probably not worth the effort?
+      double numWgt = (fMode == MarginalMode::kHistogram) ? 1.0 : logprob;
       if (bins.size() == 1)
-      {
-        ret->Fill(vals[0], logprob);
-        denom->Fill(vals[0]);
-      }
+        ret->Fill(vals[0], numWgt);
       else if (bins.size() == 2)
       {
-        dynamic_cast<TH2*>(ret.get())->Fill(vals[0], vals[1], logprob);
+        dynamic_cast<TH2*>(ret.get())->Fill(vals[0], vals[1], numWgt);
         dynamic_cast<TH2*>(denom.get())->Fill(vals[0], vals[1]);
       }
       else if (bins.size() == 3)
       {
-        dynamic_cast<TH3*>(ret.get())->Fill(vals[0], vals[1], vals[2], logprob);
+        dynamic_cast<TH3*>(ret.get())->Fill(vals[0], vals[1], vals[2], numWgt);
         dynamic_cast<TH3*>(denom.get())->Fill(vals[0], vals[1], vals[2]);
       }
     }
 
     // now exponentiate the log-probs to get probabilities
-    ret->Divide(denom.get());
-    for (int binIdx = 0; binIdx < ret->GetNcells(); binIdx++)
+    if (fMode == MarginalMode::kLLWgtdHistogram)
     {
-      // if it's *exactly* 0, this is a region where there were no samples altogether.  just leave empty
-      if (ret->GetBinContent(binIdx) != 0.0)
-        ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
+      ret->Divide(denom.get());
+      for (int binIdx = 0; binIdx < ret->GetNcells(); binIdx++)
+      {
+        // if it's *exactly* 0, this is a region where there were no samples altogether.  just leave empty
+        if (ret->GetBinContent(binIdx) != 0.0)
+          ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
+      }
     }
 
     return ret;
