@@ -249,8 +249,7 @@ namespace ana
       {
         public:
           samplecounter_callback(std::size_t warmupSampleCount, std::size_t regularSampleCount)
-              : fProgressWarmup("Warming up MCMC sampler (" + std::to_string(warmupSampleCount) + " samples)"),
-                fWarmupCounts(warmupSampleCount),
+              : fWarmupCounts(warmupSampleCount),
                 fRegularCounts(regularSampleCount),
                 fCurrCount(0)
           {
@@ -261,9 +260,14 @@ namespace ana
             if (fWarmupCounts + fRegularCounts == 0)
               return;
 
+            if (fCurrCount < fWarmupCounts && !fProgressWarmup)
+              fProgressWarmup = std::make_unique<ana::Progress>(
+                    "Warming up MCMC sampler (" + std::to_string(fWarmupCounts) + " samples)");
+
             if (fCurrCount >= fWarmupCounts)
             {
-              fProgressWarmup.Done();
+              if (fProgressWarmup)
+                fProgressWarmup->Done();
 
               if (!fProgressNormal)
                 fProgressNormal = std::make_unique<ana::Progress>(
@@ -273,13 +277,14 @@ namespace ana
                 fProgressNormal->Done();
               else
                 fProgressNormal->SetProgress(double(++fCurrCount - fWarmupCounts) / fRegularCounts);
-            } else
-              fProgressWarmup.SetProgress(double(++fCurrCount) / fWarmupCounts);
+            }
+            else if (fWarmupCounts > 0)
+              fProgressWarmup->SetProgress(double(++fCurrCount) / fWarmupCounts);
           }
 
         private:
-          ana::Progress fProgressWarmup;
-          // this one's a unique_ptr so that we can initialize it later
+          // unique_ptrs so that we can initialize as needed later
+          std::unique_ptr<ana::Progress> fProgressWarmup;
           std::unique_ptr<ana::Progress> fProgressNormal;
           std::size_t fWarmupCounts;
           std::size_t fRegularCounts;
