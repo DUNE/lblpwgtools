@@ -131,6 +131,15 @@ namespace ana
       *fOscCalcCache = *seed;
     }
 
+
+    // check that state of warmup is what we expected
+    if (fStanConfig.num_warmup > 0 && fMCMCWarmup.NumSamples() > 0)
+    {
+      std::cerr << "You supplied a previous collection of MCMC samples for warmup and also requested num_warmup > 0 in your StanConfig." << std::endl;
+      std::cerr << "Which do you want?" << std::endl;
+      abort();
+    }
+
     // const-casts here because we need to initialize the writer interface, which requires a non-const pointer,
     // but this method is const.  prefer not to make the members mutable for this one instance
     fValueWriter = std::make_unique<MemoryTupleWriter>(fStanConfig.num_samples > 0 ? const_cast<MCMCSamples*>(&fMCMCSamples) : nullptr,
