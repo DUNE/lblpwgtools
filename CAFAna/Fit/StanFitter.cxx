@@ -185,8 +185,23 @@ namespace ana
     }
 
     // Actually run Stan!
-    // this is the init vals of all the parameters
-    auto init_context = BuildInitContext(seed, systSeed);
+    // this is the init vals of all the parameters.
+    // (the pointer is because array_var_context does not have a copy constructor,
+    //  so it needs to only be initialized once.)
+    std::unique_ptr<stan::io::array_var_context> init_context;
+    if (fMCMCWarmup.NumSamples() < 1)
+      init_context = std::make_unique<stan::io::array_var_context>(BuildInitContext(seed, systSeed));
+    // however if we're reusing MCMC samples from a previous run we take the last point from them
+    if (fMCMCWarmup.NumSamples() > 0)
+    {
+      std::unique_ptr<osc::IOscCalculatorAdjustable> calc(seed->Copy());
+      for (const auto & v : fMCMCWarmup.Vars())
+        v->SetValue(calc.get(), fMCMCWarmup.SampleValue(v, fMCMCWarmup.NumSamples()-1));
+      auto shifts = systSeed.Copy();
+      for (const auto & s : fMCMCWarmup.Systs())
+        shifts->SetShift(s, fMCMCWarmup.SampleValue(s, fMCMCWarmup.NumSamples()-1));
+      init_context = std::make_unique<stan::io::array_var_context>(BuildInitContext(calc.get(), *shifts));
+    }
 
     // id: only needed when running multiple chains to combine.
     // if the grid var $PROCESS is defined, use that
@@ -201,7 +216,7 @@ namespace ana
     //      in unbounded parameter space.
     // this call can be replaced by a call to the stock Stan function if needed (see following),
     // but we've customized it in order to be able to save the state after warmup and restore it.
-    auto return_code = RunHMC(init_writer, interrupt, diagStream, logger, init_context, procId);
+    auto return_code = RunHMC(init_writer, interrupt, diagStream, logger, *init_context, procId);
 
     // Use Stan's wrapper function instead of the above.  Can be used for diagnostics as needed.
 //    auto return_code = stan::services::sample::hmc_nuts_diag_e_adapt(*this,
@@ -398,6 +413,43 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  void StanFitter::ReuseWarmup(MCMCSamples &&warmup)
+  {
+    // before going ahead, check that the supplied samples are compatible
+    // with how this Fitter was initialized.
+    if (fMCMCWarmup.Vars() != warmup.Vars())
+    {
+      std::cerr << "Warmup to be reused is incompatible with this StanFitter." << std::endl;
+      std::cerr << "  StanFitter fit vars: ";
+      for (const auto & v : fMCMCWarmup.Vars())
+        std::cerr << v << " ";
+      std::cerr << std::endl;
+      std::cerr << "  Supplied warmup fit vars: ";
+      for (const auto & v : warmup.Vars())
+        std::cerr << v << " ";
+      std::cerr << std::endl;
+
+      abort();
+    }
+    if (fMCMCWarmup.Systs() != warmup.Systs())
+    {
+      std::cerr << "Warmup to be reused is incompatible with this StanFitter." << std::endl;
+      std::cerr << "  StanFitter systs: ";
+      for (const auto & s : fMCMCWarmup.Systs())
+        std::cerr << s << " ";
+      std::cerr << std::endl;
+      std::cerr << "  Supplied systs: ";
+      for (const auto & s : warmup.Systs())
+        std::cerr << s << " ";
+      std::cerr << std::endl;
+
+      abort();
+    }
+
+    fMCMCWarmup = std::move(warmup);
+  }
+
+  //----------------------------------------------------------------------
   int StanFitter::RunHMC(stan::callbacks::writer &init_writer,
                          StanFitter::samplecounter_callback &interrupt,
                          std::ostream &diagStream,
@@ -410,15 +462,17 @@ namespace ana
     stan::callbacks::stream_writer diagnostic_writer(diagStream, "# ");
 
     // *********************************************
-    //   cribbed from stan::services::sample::hmc_nuts_diag_e_adapt() (in stan/services/sample/hmc_nuts_diag_e_adapt.hpp)
+    //   originally cribbed from stan::services::sample::hmc_nuts_diag_e_adapt()
+    //    (in stan/services/sample/hmc_nuts_diag_e_adapt.hpp)
+    //   but 'metric' and 'step size' code rewritten to support reloading from previous warmup
     auto return_code = stan::services::error_codes::OK;
 
-    stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(num_params_r());
-    stan::io::var_context& unit_e_metric = dmp;
+
+
 
     boost::ecuyer1988 rng = stan::services::util::create_rng(fStanConfig.random_seed, procId);
 
-    std::vector<int> disc_vector;
+    // continuous parameters
     std::vector<double> cont_vector = stan::services::util::initialize(*this,
                                                                        init_context,
                                                                        rng,
@@ -428,14 +482,23 @@ namespace ana
                                                                        init_writer);
 
     Eigen::VectorXd inv_metric;
-    try
+    if (!fMCMCWarmup.Hyperparams().invMetric)
     {
-      inv_metric = stan::services::util::read_diag_inv_metric(unit_e_metric, num_params_r(), *logger);
-      stan::services::util::validate_diag_inv_metric(inv_metric, *logger);
+      try
+      {
+        stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(num_params_r());
+        stan::io::var_context &unit_e_metric = dmp;
+        inv_metric = stan::services::util::read_diag_inv_metric(unit_e_metric, num_params_r(), *logger);
+        stan::services::util::validate_diag_inv_metric(inv_metric, *logger);
+      }
+      catch (const std::domain_error &e)
+      {
+        return_code = stan::services::error_codes::CONFIG;
+      }
     }
-    catch (const std::domain_error& e)
+    else
     {
-      return_code = stan::services::error_codes::CONFIG;
+      inv_metric = EigenMatrixXdFromTMatrixD(fMCMCWarmup.Hyperparams().invMetric.get());
     }
 
     if (return_code == stan::services::error_codes::OK)
@@ -443,7 +506,10 @@ namespace ana
       stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988> sampler(*this, rng);
 
       sampler.set_metric(inv_metric);
-      sampler.set_nominal_stepsize(fStanConfig.stepsize);
+      if (std::isnan(fMCMCWarmup.Hyperparams().stepSize))
+        sampler.set_nominal_stepsize(fStanConfig.stepsize);
+      else
+        sampler.set_nominal_stepsize(fMCMCWarmup.Hyperparams().stepSize);
       sampler.set_stepsize_jitter(fStanConfig.stepsize_jitter);
       sampler.set_max_depth(fStanConfig.max_depth);
 
@@ -499,52 +565,62 @@ namespace ana
     Eigen::Map<Eigen::VectorXd> cont_params(cont_vector.data(),
                                             cont_vector.size());
 
-    sampler.engage_adaptation();
-    try {
-      sampler.z().q = cont_params;
-      sampler.init_stepsize(logger);
-    } catch (const std::exception& e) {
-      logger.info("Exception initializing step size.");
-      logger.info(e.what());
-      return;
-    }
-
-    // -------------------------------
-    // this is a new bit we added in between the bits copied from Stan
-    fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kWarmup);
-    // -------------------------------
-
     stan::services::util::mcmc_writer writer(*fValueWriter, diagnostic_writer, logger);
     stan::mcmc::sample s(cont_params, 0, 0);
 
-    // Headers
-    writer.write_sample_names(s, sampler, model);
-    writer.write_diagnostic_names(s, sampler, model);
+    clock_t start, end;
+    double warm_delta_t = 0;
 
-    clock_t start = clock();
-    stan::services::util::generate_transitions(sampler,
-                                               fStanConfig.num_warmup,
-                                               0,
-                                               fStanConfig.num_warmup + fStanConfig.num_samples,
-                                               fStanConfig.num_thin,
-                                               fStanConfig.refresh,
-                                               fStanConfig.save_warmup,
-                                               true,
-                                               writer,
-                                               s,
-                                               model,
-                                               rng,
-                                               interrupt,
-                                               logger);
-    clock_t end = clock();
-    double warm_delta_t = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+    if (fMCMCWarmup.NumSamples() < 1)
+    {
+      sampler.engage_adaptation();
+      try
+      {
+        sampler.z().q = cont_params;
+        sampler.init_stepsize(logger);
+      } catch (const std::exception &e)
+      {
+        logger.info("Exception initializing step size.");
+        logger.info(e.what());
+        return;
+      }
 
-    sampler.disengage_adaptation();
-    writer.write_adapt_finish(sampler);
+      // -------------------------------
+      // this is a new bit we added in between the bits copied from Stan
+      fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kWarmup);
+      // -------------------------------
 
-    // -------------------------------
-    // this is a new bit we added in between the bits copied from Stan
-    fValueWriter->SaveSamplerState(sampler);
+
+      // Headers
+      writer.write_sample_names(s, sampler, model);
+      writer.write_diagnostic_names(s, sampler, model);
+
+      start = clock();
+      stan::services::util::generate_transitions(sampler,
+                                                 fStanConfig.num_warmup,
+                                                 0,
+                                                 fStanConfig.num_warmup + fStanConfig.num_samples,
+                                                 fStanConfig.num_thin,
+                                                 fStanConfig.refresh,
+                                                 fStanConfig.save_warmup,
+                                                 true,
+                                                 writer,
+                                                 s,
+                                                 model,
+                                                 rng,
+                                                 interrupt,
+                                                 logger);
+      end = clock();
+      warm_delta_t = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+      sampler.disengage_adaptation();
+      writer.write_adapt_finish(sampler);
+
+
+      // -------------------------------
+      // this is a new bit we added in between the bits copied from Stan
+      fValueWriter->SaveSamplerState(sampler);
+    }
     fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
     writer.write_sample_names(s, sampler, model);
     writer.write_diagnostic_names(s, sampler, model);

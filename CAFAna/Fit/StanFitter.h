@@ -217,6 +217,11 @@ namespace ana
         return std::make_unique<MCMCSamples>(std::move(ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples));
       }
 
+      /// Supply samples and hyperparameters from a previously run warmup of MCMC.
+      /// Burden is on the user to ensure they are compatible with the sampling required.
+      /// (Call this prior to calling Fit() in order to use it.)
+      void ReuseWarmup(MCMCSamples && warmup);
+
       /// Change the config used for Stan.  See the StanConfig struct documentation for ideas
       void SetStanConfig(const StanConfig& cfg) { fStanConfig = cfg; }
 
