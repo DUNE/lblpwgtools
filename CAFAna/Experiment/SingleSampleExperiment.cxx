@@ -216,6 +216,11 @@ namespace ana
   stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalculatorAdjustableStan *osc,
                                                         const SystShifts &syst) const
   {
+    if(fCovMxInfoM.size() != 0){
+      std::cout << "SingleSampleExperiment doesn't yet support the combination of covariance matrix and OscCalcStan" << std::endl;
+      abort();
+    }
+
     const Spectrum pred = fMC->PredictSyst(osc, syst);
 
     const Eigen::ArrayXd data = fData.GetEigen(fData.POT());

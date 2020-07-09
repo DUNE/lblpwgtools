@@ -141,7 +141,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames)
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames) : SpectrumLoaderBase()
   {
     fWildcard = "file list";
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));

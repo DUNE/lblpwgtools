@@ -41,8 +41,8 @@ namespace ana
     // All swapped files are equally valid as a source of NCs. This
     // approximately doubles/triples our statistics. SpectrumLoader just adds
     // events and POT for both cases, which is the right thing to do.
-    loaderNue  .AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
-    loaderNuTau.AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
+    loaderNue  .AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
+    loaderNuTau.AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
   }
 
 

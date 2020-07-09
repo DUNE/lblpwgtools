@@ -2,7 +2,6 @@
 
 #include "Utilities/func/StanVar.h"
 
-// TODO can we forward declare these?
 #include <Eigen/Dense>
 namespace Eigen{
   using ArrayXstan = Eigen::Array<stan::math::var, Eigen::Dynamic, 1>;

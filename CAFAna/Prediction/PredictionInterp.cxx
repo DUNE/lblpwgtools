@@ -59,6 +59,12 @@ namespace ana
       const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
       const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
 
+      if(std::abs(x0 - x1) < 1){
+        std::cout << "Warning: Syst '" << syst->ShortName()
+                  << "' has less than 1sigma of allowed range.  Won't interpolate it!" << std::endl;
+        continue;
+      }
+
       for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
 
       for(int sigma: sp.shifts){
@@ -81,6 +87,12 @@ namespace ana
   FitRatios(const std::vector<double>& shifts,
             const std::vector<Eigen::ArrayXd>& ratios) const
   {
+    if(ratios.size() < 2){
+      std::cout << "PredictionInterp::FitRatios(): ratios.size() = " << ratios.size() << " - how did that happen?" << std::endl;
+
+      abort();
+    }
+
     assert(shifts.size() == ratios.size());
 
     std::vector<std::vector<Coeffs>> ret;
@@ -366,12 +378,12 @@ namespace ana
       Eigen::ArrayXstan vec = s.HasStan() ? s.GetEigenStan(s.POT()) : Eigen::ArrayXstan(s.GetEigen(s.POT()));
 
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
-      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
     }
     else{
       Eigen::ArrayXd vec = s.GetEigen(s.POT());
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
-      return Spectrum(std::move(vec), s.GetLabels(), s.GetBinnings(), s.POT(), s.Livetime());
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
     }
   }
 

@@ -72,9 +72,9 @@ namespace ana
     using ReweightableSpectrum::Clear;
 
     /// Rescale bins so that \ref TrueEnergy will return \a target
-    //    using ReweightableSpectrum::ReweightToTrueSpectrum;
+    using ReweightableSpectrum::ReweightToTrueSpectrum;
     /// Rescale bins so that \ref Unoscillated will return \a target
-    //    using ReweightableSpectrum::ReweightToRecoSpectrum;
+    using ReweightableSpectrum::ReweightToRecoSpectrum;
 
     // These under a different name
     Spectrum Unoscillated() const {return UnWeighted();}
@@ -94,19 +94,10 @@ namespace ana
 
   protected:
     // Derived classes can be trusted take care of their own construction
-    OscillatableSpectrum(const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
+    OscillatableSpectrum(const HistAxis& recoAxis,
                          const Binning& binsY,
                          const Var& rwVar)
-      : ReweightableSpectrum(labels, bins, binsY, rwVar)
-    {
-    }
-
-    OscillatableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         const Binning& binsY,
-                         const Var& rwVar)
-      : ReweightableSpectrum(label, bins, binsY, rwVar)
+      : ReweightableSpectrum(recoAxis, binsY, rwVar)
     {
     }
 

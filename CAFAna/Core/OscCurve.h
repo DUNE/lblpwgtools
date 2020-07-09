@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/StanTypedefs.h"
 
 #include "CAFAna/Core/Ratio.h"
 

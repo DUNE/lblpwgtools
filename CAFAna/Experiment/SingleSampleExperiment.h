@@ -69,10 +69,9 @@ namespace ana
 
     void SetMaskHist(double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
-
-    virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const override;
-
   protected:
+    virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const;
+
     Eigen::MatrixXd GetAbsInvCovMat(const Eigen::ArrayXd& apred) const;
 
     ETestStatistic fTestStatistic;

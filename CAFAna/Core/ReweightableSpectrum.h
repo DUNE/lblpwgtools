@@ -54,12 +54,10 @@ namespace ana
     /// Reco spectrum with truth weights applied
     Spectrum WeightedBy(const Ratio& weights) const;
 
-    /*
     /// Rescale bins so that \ref WeightingVariable will return \a target
     void ReweightToTrueSpectrum(const Spectrum& target);
     /// Recale bins so that \ref Unweighted will return \a target
     void ReweightToRecoSpectrum(const Spectrum& target);
-    */
 
     // Arithmetic operators are as if these are unlike samples, each a
     // contribution to one total, not seperate sources of stats for the same
@@ -80,9 +78,9 @@ namespace ana
 
     static std::unique_ptr<ReweightableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
-    unsigned int NDimensions() const{return fLabels.size();}
-    std::vector<std::string> GetLabels() const {return fLabels;}
-    std::vector<Binning> GetBinnings() const {return fBins;}
+    unsigned int NDimensions() const{return fAxisX.NDimensions();}
+    const std::vector<std::string>& GetLabels() const {return fAxisX.GetLabels();}
+    const std::vector<Binning>& GetBinnings() const {return fAxisX.GetBinnings();}
     Binning GetTrueBinning() const {return fBinsY;}
 
     /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
@@ -97,61 +95,38 @@ namespace ana
 
   protected:
     // Derived classes can be trusted take care of their own construction
-    ReweightableSpectrum(const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
+    ReweightableSpectrum(const HistAxis& axisX,
                          const Binning& ybins,
                          const Var& rwVar)
       : fRWVar(rwVar),
-        fMat(0), fPOT(0), fLivetime(0),
-        fLabels(labels), fBins(bins), fBinsY(ybins)
-    {
-    }
-
-    ReweightableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         const Binning& ybins,
-                         const Var& rwVar)
-      : fRWVar(rwVar),
-        fMat(0), fPOT(0), fLivetime(0),
-        fLabels(1, label), fBins(1, bins), fBinsY(ybins)
+        fPOT(0), fLivetime(0),
+        fAxisX(axisX), fBinsY(ybins)
     {
     }
 
     // Constructor for user by Uninitialized()
     ReweightableSpectrum()
-      : fRWVar(kUnweighted), fMat(0), fPOT(0), fLivetime(0), fBinsY(Binning::Simple(1, 0, 1))
+      : fRWVar(kUnweighted), fPOT(0), fLivetime(0), fAxisX({}, {}, {}), fBinsY(Binning::Simple(1, 0, 1))
     {
     }
-
-    /// Constructor needed by LoadFrom. Since there's no good
-    /// way to store a Var, ReweightVar will return nonsense
-    /// for ReweightableSpectrum that are loaded from a file
-    /*
-    ReweightableSpectrum(TH2D* h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         const Binning& binsY,
-                         double pot, double livetime)
-      : ReweightableSpectrum(kUnweighted, h, labels, bins, binsY, pot, livetime)
-    {
-    }
-    */
 
     ReweightableSpectrum& PlusEqualsHelper(const ReweightableSpectrum& rhs, int sign);
 
     void RemoveLoader(SpectrumLoaderBase*);
     void AddLoader(SpectrumLoaderBase*);
 
-    Binning Bins1DX() const;
+    void _SaveTo(TDirectory* dir,
+                 const std::string& name,
+                 const std::string& type) const;
 
     Var fRWVar; ///< What goes on the y axis?
 
-    Eigen::MatrixXd* fMat; // TODO no need for this to be a pointer
+    Eigen::MatrixXd fMat;
     double fPOT;
     double fLivetime;
 
-    std::vector<std::string> fLabels;
-    std::vector<Binning> fBins;
+    HistAxis fAxisX;
+
     Binning fBinsY;
 
     std::string fTrueLabel;

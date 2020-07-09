@@ -192,36 +192,7 @@ namespace ana
   //----------------------------------------------------------------------
   void OscillatableSpectrum::SaveTo(TDirectory* dir, const std::string& name) const
   {
-    // TODO should mostly (entirely?) forward to RWSpect
-
-    TDirectory* tmp = gDirectory;
-
-    dir = dir->mkdir(name.c_str()); // switch to subdir
-    dir->cd();
-
-    TObjString("OscillatableSpectrum").Write("type");
-
-    TH2D* h = ToTH2(fPOT);
-    h->Write("hist");
-
-    TH1D hPot("", "", 1, 0, 1);
-    hPot.Fill(.5, fPOT);
-    hPot.Write("pot");
-    TH1D hLivetime("", "", 1, 0, 1);
-    hLivetime.Fill(.5, fLivetime);
-    hLivetime.Write("livetime");
-
-    for(unsigned int i = 0; i < fBins.size(); ++i){
-      TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
-    }
-
-    dir->Write();
-    delete dir;
-
-    HistCache::Delete(h);
-
-    tmp->cd();
+    _SaveTo(dir, name, "OscillatableSpectrum");
   }
 
   //----------------------------------------------------------------------
@@ -258,23 +229,15 @@ namespace ana
       delete label;
     }
 
-    if(bins.empty() && labels.empty()){
-      // Must be an old file. Make an attempt at backwards compatibility.
-      bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
-      labels.push_back(spect->GetXaxis()->GetTitle());
-    }
-
     delete dir;
 
-    // Can't restore the Vars, go with a dummy value
-    const std::vector<Var> vars(labels.size(), kUnweighted);
     auto ret = std::make_unique<OscillatableSpectrum>(kNullLoader,
-                                                      HistAxis(labels, bins, vars),
+                                                      HistAxis(labels, bins),
                                                       kNoCut);
 
-    *ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                   ret->fMat->rows(),
-                                                   ret->fMat->cols());
+    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
+                                                  ret->fMat.rows(),
+                                                  ret->fMat.cols());
 
     delete spect;
 
