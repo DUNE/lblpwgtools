@@ -118,9 +118,11 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
+  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed,
+                  SystShifts &bestSysts,
                   const SeedList& seedPts,
-                  const std::vector<SystShifts> &systSeedPts, Verbosity verb) const
+                  const std::vector<SystShifts> &systSeedPts,
+                  Verbosity verb) const
   {
     if (seed)
     {
