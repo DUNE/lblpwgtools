@@ -19,13 +19,25 @@
 #include "CAFAna/Fit/BayesianMarginal.h"
 #include "CAFAna/Fit/MCMCSamples.h"
 
+
 namespace ana
 {
 
-  // initialize the static member
+  // initialize the static members
   const std::string BayesianMarginal::sKNNName = "bayes_marginal_knn";
+  const std::vector<std::pair<Quantile, double>> BayesianMarginal::QuantileUpVals
+  {
+      {Quantile::kGaussian1Sigma,  0.6827},
+      {Quantile::kGaussian2Sigma, 0.9545},
+      {Quantile::kGaussian3Sigma, 0.9973},
+      {Quantile::k0pc, 0},
+      {Quantile::k90pc, 0.9},
+      {Quantile::k95pc, 0.95},
+      {Quantile::k100pc, 1},
+  };
 
-  //----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
   BayesianMarginal::BayesianMarginal(const MCMCSamples &samples,
                                      const std::vector<IFitVarOrISyst> & toFit,
                                      MarginalMode mode)
@@ -104,27 +116,17 @@ namespace ana
       std::cout << "  ... done." << std::endl;
     }
 
-    // See eg the statistics section of the PDG for the values.  Note these are two-tailed versions...
-    const std::vector<std::pair<Quantile, double>> quantileUpVals
-    {
-      {Quantile::kGaussian1Sigma,  0.6827},
-      {Quantile::kGaussian2Sigma, 0.9545},
-      {Quantile::kGaussian3Sigma, 0.9973},
-      {Quantile::k0pc, 0},
-      {Quantile::k90pc, 0.9},
-      {Quantile::k95pc, 0.95},
-      {Quantile::k100pc, 1},
-    };
-
     // this is bit painful, but we want to only sort the LLs once in case there are many
     std::vector<double> qVals;
-    std::transform(quantileUpVals.begin(), quantileUpVals.end(),
+    std::transform(QuantileUpVals.begin(), QuantileUpVals.end(),
                    std::back_inserter(qVals),
                    [](const std::pair<Quantile, double>& p){return p.second;});
-    auto vals = samples.QuantileLL(qVals);
-    for (std::size_t i = 0; i < quantileUpVals.size(); ++i)
-      fQuantileLLMap[quantileUpVals[i].first] = vals[quantileUpVals[i].second].second;
 
+    // this is a map from quantile -> {idx, LL}
+    std::map<double, std::pair<std::size_t, double>> vals = samples.QuantileLL(qVals);
+
+    for (std::size_t i = 0; i < QuantileUpVals.size(); ++i)
+      fQuantileSampleMap.emplace(QuantileUpVals[i].first, samples.Sample(vals[QuantileUpVals[i].second].first));
   }
 
   //----------------------------------------------------------------------
@@ -171,31 +173,52 @@ namespace ana
       gSystem->Unlink("tmp_surface.root");
     }
 
-    auto quantMap = dynamic_cast<TMap*>(dir->Get("quantileLLs"));
+    auto quantMap = dynamic_cast<TMap*>(dir->Get("quantileSamples"));
     for (const auto & quantPair : *quantMap)
     {
       auto pair = dynamic_cast<TPair*>(quantPair);
-      Quantile quant = Quantile(dynamic_cast<TParameter<int>*>(pair->Key())->GetVal());
-      auto val = dynamic_cast<TParameter<double>*>(pair->Value())->GetVal();
-      marg->fQuantileLLMap[quant] = val;
+      auto quant = Quantile(dynamic_cast<TParameter<int>*>(pair->Key())->GetVal());
+      marg->fQuantileSampleMap.emplace(std::piecewise_construct,
+                                       std::forward_as_tuple(quant),
+                                       std::forward_as_tuple(*dynamic_cast<TMap*>(pair->Value()),
+                                                             marg->Vars(), marg->Systs()));
     }
 
   }
 
   //----------------------------------------------------------------------
-  double BayesianMarginal::QuantileLL(ana::Quantile quantile) const
+  double BayesianMarginal::QuantileThreshold(ana::Quantile quantile, const TH1 * pdf) const
   {
-    return fQuantileLLMap.at(quantile);
+    // in "histogram" mode, the output isn't weighted by LL;
+    // what's returned is simply the best-guess pdf
+    // approximated by the histogram itself.
+    // so instead of simply yielding the LL itself,
+    // we need to find the
+    if (fMode == MarginalMode::kHistogram)
+    {
+      assert(pdf && "In 'histogram' marginal mode, must supply the histogram for which the quantile threshold is to be calculated");
+      auto threshSample = fQuantileSampleMap.at(quantile);
+      return ThresholdFromTH1(threshSample, pdf);
+    }
+
+    return fQuantileSampleMap.at(quantile).LL();
   }
 
   //----------------------------------------------------------------------
-  double BayesianMarginal::QuantileLL(double quantile, const MCMCSamples &samples) const
+  double BayesianMarginal::QuantileThreshold(double quantile, const MCMCSamples &samples, const TH1 * pdf) const
   {
     if (quantile == -1)
       quantile = 0;
     assert(quantile >= 0 && quantile <= 1 && "QuantileSurface(): quantile must be between 0 and 1");
 
+
     auto quantilePair = samples.QuantileLL(quantile);
+
+    if (fMode == MarginalMode::kHistogram)
+    {
+      auto sample = samples.Sample(quantilePair.first);
+      return ThresholdFromTH1(sample, pdf);
+    }
 
     return quantilePair.second;
   }
@@ -225,9 +248,9 @@ namespace ana
     }
 
     TMap quantMap;
-    for (const auto quantPair : fQuantileLLMap)
-      quantMap.Add(new TParameter<int>("", int(quantPair.first)), new TParameter<double>("", quantPair.second));
-    quantMap.Write("quantileLLs", TObject::kSingleKey);
+    for (const auto & quantPair : fQuantileSampleMap)
+      quantMap.Add(new TParameter<int>("", int(quantPair.first)), quantPair.second.ToTMap().release());
+    quantMap.Write("quantileSamples", TObject::kSingleKey);
 
     TList varNames;
     for (const auto & var: fVars)
@@ -272,6 +295,37 @@ namespace ana
     fkNN->SetupMethod();
     fkNN->ParseOptions();
     fkNN->ProcessSetup();
+  }
+
+  double BayesianMarginal::ThresholdFromTH1(const MCMCSample & threshSample, const TH1* pdf) const
+  {
+    std::vector<double> vals;
+    for (const auto & v : fVars)
+      vals.push_back(threshSample.Val(v));
+    for (const auto & s : fSysts)
+      vals.push_back(threshSample.Val(s));
+
+    int bin = -1;
+    if (vals.size() == 1)
+    {
+      assert (dynamic_cast<const TH1D*>(pdf) && "pdf supplied for 1D marginalization isn't 1D?");
+      bin = pdf->FindFixBin(vals[0]);
+    }
+    else if (vals.size() == 2)
+    {
+      assert (dynamic_cast<const TH2D*>(pdf) && "pdf supplied for 2D marginalization isn't 2D?");
+      bin = pdf->FindFixBin(vals[0], vals[1]);
+    }
+    else if (vals.size() == 3)
+    {
+      assert (dynamic_cast<const TH3D*>(pdf) && "pdf supplied for 3D marginalization isn't 3D?");
+      bin = pdf->FindFixBin(vals[0], vals[1], vals[2]);
+    }
+    else
+      assert(false && "Can't handle > 3 plottable quantities in marginalization...");
+
+    return pdf->GetBinContent(bin);
+
   }
 
   //----------------------------------------------------------------------
@@ -378,6 +432,8 @@ namespace ana
           ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
       }
     }
+    else if (fMode == MarginalMode::kHistogram)
+      ret->Scale(1. / ret->Integral());
 
     return ret;
   }

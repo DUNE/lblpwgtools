@@ -125,14 +125,14 @@ namespace ana
   //----------------------------------------------------------------------
   TH2 * BayesianSurface::QuantileSurface(Quantile quantile) const
   {
-    return Flat(QuantileLL(quantile), *this);
+    return Flat(QuantileThreshold(quantile, fHist), *this);
   }
 
 
   //----------------------------------------------------------------------
   TH2 * BayesianSurface::QuantileSurface(double quantile, const MCMCSamples& mcmcsamples) const
   {
-    return Flat(QuantileLL(quantile, mcmcsamples), *this);
+    return Flat(QuantileThreshold(quantile, mcmcsamples, fHist), *this);
   }
 
   //----------------------------------------------------------------------

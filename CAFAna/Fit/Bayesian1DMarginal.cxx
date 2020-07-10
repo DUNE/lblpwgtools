@@ -51,13 +51,13 @@ namespace ana
   //----------------------------------------------------------------------
   std::vector<std::pair<double, double>> Bayesian1DMarginal::QuantileRanges(Quantile quantile, const Binning & bins) const
   {
-    double threshold = QuantileLL(quantile);
-
     assert(bins.NBins() >= 2);
 
     std::unique_ptr<TH1> hist;
     if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
       hist = ToHistogram({bins});
+
+    double threshold = QuantileThreshold(quantile, hist.get());
 
     // walk through the bins.
     // if we cross from above to below the threshold (or vice versa),
