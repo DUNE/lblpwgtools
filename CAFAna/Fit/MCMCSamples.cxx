@@ -15,6 +15,25 @@
 
 #include "Utilities/func/MathUtil.h"
 
+// an internal tool only
+namespace
+{
+  class BranchStatusResetter
+  {
+    public:
+      BranchStatusResetter(TTree * tree)
+        : fTree(tree)
+      {}
+
+      ~BranchStatusResetter()
+      {
+        if (fTree)
+          fTree->SetBranchStatus("*", false);
+      }
+    private:
+      TTree * fTree;
+  };
+}
 
 namespace ana
 {
@@ -153,6 +172,7 @@ namespace ana
 
     // then, take the entries from its TTree and and them to ours using TTree::Merge().
     // clear the other tree once done.
+    BranchStatusResetter bsr(fSamples.get());  // turn all branches off when done
     fSamples->SetBranchStatus("*", true);
     other.fSamples->SetBranchStatus("*", true);
     TList otherTreeList;
@@ -255,6 +275,7 @@ namespace ana
     std::unique_ptr<TTree> samples(samplesPtr);
     if (samples->GetCurrentFile())
     {
+      BranchStatusResetter bsr(samples.get());  // turn branches off when done
       samples->SetBranchStatus("*", true);
       samples->LoadBaskets();   // read the entire TTree into memory
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
@@ -401,6 +422,8 @@ namespace ana
   //----------------------------------------------------------------------
   void MCMCSamples::RunDiagnostics(const StanConfig & cfg) const
   {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
     // these diagnostics adapted from CmdStan's diagnose.cpp
     auto treeDepthBr = fSamples->GetBranch("treedepth__");
     if (treeDepthBr)
@@ -551,6 +574,8 @@ namespace ana
   //----------------------------------------------------------------------
   double MCMCSamples::SampleValue(std::size_t rowIdx, const std::string & branchName, std::size_t varIdx) const
   {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
     auto branch = fSamples->GetBranch(branchName.c_str());
     branch->SetStatus(true);
     branch->GetEntry(rowIdx);
