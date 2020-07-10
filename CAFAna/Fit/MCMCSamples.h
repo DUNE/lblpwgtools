@@ -9,6 +9,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Fit/BayesianMarginal.h"   // for MarginalMode enum
+#include "CAFAna/Fit/MCMCSample.h"
 #include "CAFAna/Fit/StanConfig.h"
 
 namespace ana
@@ -18,7 +19,11 @@ namespace ana
   class BayesianSurface;
 
   /// Storage for a list of MCMC samples.
-  /// (Wraps up the details of which columns refer to which variables.)
+  ///
+  /// The internal storage is as a TTree (which simplifies persistence);
+  /// for efficiency and simplicity reasons the tree branches are simply doubles
+  /// (rather than MCMCSample objects), but MCMCSample objects can be obtained
+  /// using the Sample() method.
   ///
   /// \param varOffset  The offset to the first Var value.  (Previous values are the LL and internal fitter vars.)
   /// \param vars       The ana::Vars passed to the fitter
@@ -134,6 +139,10 @@ namespace ana
 
       /// Do some checks on the post-fit samples
       void RunDiagnostics(const StanConfig & cfg) const;
+
+      /// The entire sample at index \idx.
+      /// If you just want one value prefer SampleLL() or SampleValue() (less overhead).
+      MCMCSample Sample(std::size_t idx) const;
 
       /// Get the LL for sample number \idx
       double SampleLL(std::size_t idx) const

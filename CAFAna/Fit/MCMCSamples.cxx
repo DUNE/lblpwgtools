@@ -572,6 +572,17 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  MCMCSample MCMCSamples::Sample(std::size_t idx) const
+  {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
+    fSamples->SetBranchStatus("*", true);
+    fSamples->GetEntry(idx);
+    return MCMCSample(SampleLL(idx), fDiagnosticVals, fEntryVals, fDiagBranches, fVars, fSysts);
+  }
+
+
+  //----------------------------------------------------------------------
   double MCMCSamples::SampleValue(std::size_t rowIdx, const std::string & branchName, std::size_t varIdx) const
   {
     BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
