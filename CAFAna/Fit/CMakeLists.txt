@@ -7,6 +7,7 @@ set(Fit_implementation_files
   GradientDescent.cxx
   IFitter.cxx
   ISurface.cxx
+  MCMCSample.cxx
   MCMCSamples.cxx
   MinuitFitter.cxx
   Priors.cxx
@@ -23,6 +24,7 @@ set(Fit_header_files
   GradientDescent.h
   IFitter.h
   ISurface.h
+  MCMCSample.h
   MCMCSamples.h
   MinuitFitter.h
   Priors.h
