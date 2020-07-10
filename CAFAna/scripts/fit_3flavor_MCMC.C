@@ -211,7 +211,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
     cfg.save_warmup = false;
-    StanFitter fitter(&expt, std::unordered_set<const IFitVar*>(fitVars.begin(), fitVars.end()), allSysts);
+    StanFitter fitter(&expt, fitVars, std::vector<const ISyst*>(allSysts.begin(), allSysts.end()));
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
     
@@ -388,7 +388,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   TH1D h_truePulls("true_pulls", ";Systematic;Pull (#sigma)", shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size());
   std::size_t systIdx = 0;
   double maxShift = 0;
-  for (const auto & syst : shifts->ActiveSysts())
+  auto systsSorted = shifts->ActiveSysts();
+  std::sort(systsSorted.begin(),
+            systsSorted.end(),
+            [](const auto syst1, const auto syst2)
+            {
+              return syst1->ShortName() < syst2->ShortName();
+            });
+  for (const auto & syst : systsSorted)
   {
     ++systIdx;
     auto systMarginal = samples->MarginalizeTo(syst);
