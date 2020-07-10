@@ -26,20 +26,25 @@ namespace ana
   //----------------------------------------------------------------------
   TH1D Bayesian1DMarginal::ToTH1(const Binning & bins) const
   {
+    if (bins == *fCachedBinning)
+      return *fCachedHist;
+
+    *fCachedBinning = bins;
+
     std::string name;
     if (Vars().size() > 0)
       name = Vars()[0]->LatexName();
     else if (Systs().size() > 0)
       name = Systs()[0]->LatexName();
-    TH1D ret(UniqueName().c_str(), (";"+name).c_str(), bins.NBins(), &bins.Edges()[0]);
-    if (fMode == MarginalMode::kHistogram)
-      ret = *dynamic_cast<TH1D*>(ToHistogram({bins}).get());
+    if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
+      fCachedHist.reset(dynamic_cast<TH1D*>(ToHistogram({bins}).get()));
     else if (fMode == MarginalMode::kKNN)
     {
+      fCachedHist = std::make_unique<TH1D>(UniqueName().c_str(), (";"+name).c_str(), bins.NBins(), &bins.Edges()[0]);
       for (int bin = 1; bin <= bins.NBins(); bin++)
-        ret.SetBinContent(bin, EstimateLLFromKNN({float(ret.GetBinCenter(bin))}));
+        fCachedHist->SetBinContent(bin, EstimateLLFromKNN({float(fCachedHist->GetBinCenter(bin))}));
     }
-    return ret;
+    return *fCachedHist;
   }
 
 
@@ -51,7 +56,7 @@ namespace ana
     assert(bins.NBins() >= 2);
 
     std::unique_ptr<TH1> hist;
-    if (fMode == MarginalMode::kHistogram)
+    if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
       hist = ToHistogram({bins});
 
     // walk through the bins.
@@ -64,7 +69,7 @@ namespace ana
     {
 
       double bnd, y;
-      if (fMode == MarginalMode::kHistogram && hist)
+      if ((fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram) && hist)
       {
         // the uppermost bin edge isn't the right thing to use when we use bin centers, like for the hist
         if (bin >= bins.Edges().size())
