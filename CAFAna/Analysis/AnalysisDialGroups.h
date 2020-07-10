@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+// Could move this to Systs/AnaSysts.h but it might end up in a loop of dependencies
+// Leave this here for now. For now.
+
 // Define a few groups of systematics:
 // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res, noxsec_dis,
 // noxsec_fsi, noxsec_ratios
