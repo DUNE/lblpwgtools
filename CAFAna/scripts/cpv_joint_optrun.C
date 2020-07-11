@@ -17,10 +17,17 @@
 
 using namespace ana;
 
+struct expSpectrum
+{
+  Spectrum spectrum;
+  std::string name;  
+  double pot;
+};
+
 void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
 	std::string outputFname="output_file.root",
 	std::string systSet="nosyst",
-  TString detectors="fd", TString horns="fhcrhc", TString neutrinos="nue",
+  TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
 	TString penalty="nopen", std::string asimov_set="0", int hie=1,
 	double years_fhc = 3.5, double years_rhc = 3.5, int nom_exp = 7){
 
@@ -64,6 +71,7 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
 
   ///// Predictions my way
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
+  std::vector<std::string> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
   std::vector<PredictionInterp*> predictions;
   std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
   
@@ -71,10 +79,11 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
     for(int detId=0; detId<ndetector; detId++){
       for(int nuId=0; nuId<nneutrino; nuId++){
 
+        if(detector[detId]=="nd" && neutrino[nuId]=="nue") continue; // no nd nue prediction
+
         std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string din = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
-        std::cout << "fname: " << fname << ", din: " << din << std::endl;
-
+        tags.push_back(din);
         TFile *fin = TFile::Open(fname.c_str(), "READ");
         predictions.push_back(LoadFrom<PredictionInterp>(fin, din).release());
         fin->Close();
@@ -122,7 +131,6 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
     if(penalty.Contains("reactor")) experiments.push_back(ReactorConstraintPDG2019());
     if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);                                                                                                                                
     MultiExperiment multiexpt(experiments);
-
 
     // Still need to loop over dcp choices
     // why only have two options?
