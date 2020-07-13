@@ -15,7 +15,7 @@
 
 // New includes required
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Fit/MinuitFitter.h"
 #include "CAFAna/Vars/FitVars.h"
 
 using namespace ana;
@@ -59,8 +59,8 @@ void demo2()
   // parameters given. These are FitVars from Vars/FitVars.h. They can contain
   // snippets of code to convert from the underlying angles etc to whatever
   // function you want to fit.
-  Fitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
-  const double best_chisq = fit.Fit(calc);
+  MinuitFitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
+  const double best_chisq = fit.Fit(calc)->EvalMetricVal();
 
   // The osc calculator is updated in-place with the best oscillation
   // parameters

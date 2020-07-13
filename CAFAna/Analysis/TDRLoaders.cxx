@@ -20,11 +20,11 @@ namespace ana
 
     const std::string hc = (flux == kFHC) ? "FHC" : "RHC";
 
-    SetLoaderPath(base+"ND_"+hc+"_CAF.root",    caf::kNEARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
+    SetLoaderPath(base+"ND_"+hc+"_CAF.root",    caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap);
 
-    SetLoaderPath(base+"FD_"+hc+"_nonswap.root", caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    SetLoaderPath(base+"FD_"+hc+"_nueswap.root", caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
+    SetLoaderPath(base+"FD_"+hc+"_nonswap.root", caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+    SetLoaderPath(base+"FD_"+hc+"_nueswap.root", caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
 
-    SetLoaderPath(base+"FD_"+hc+"_tauswap.root", caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    SetLoaderPath(base+"FD_"+hc+"_tauswap.root", caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
   }
 }

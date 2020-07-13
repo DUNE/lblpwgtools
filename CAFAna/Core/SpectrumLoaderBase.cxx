@@ -127,29 +127,27 @@ namespace ana
   // Start of SpectrumLoaderBase proper
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(DataSource src)
-    : fSource(src), fGone(false), fPOT(0)
+  SpectrumLoaderBase::SpectrumLoaderBase()
+    : fGone(false), fPOT(0)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard,
-                                         DataSource src)
-    : SpectrumLoaderBase(src)
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard)
+    : SpectrumLoaderBase()
   {
     fWildcard = wildcard;
     fFileSource = std::unique_ptr<IFileSource>(WildcardOrSAMQuery(wildcard));
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames,
-                                         DataSource src)
-    : SpectrumLoaderBase(src)
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames) : SpectrumLoaderBase()
   {
     fWildcard = "file list";
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));
 
-    assert(!fnames.empty());
+    // Apparently MakePredInterps runs over empty file lists?
+    //    assert(!fnames.empty());
     std::cout << "Loading from " << fnames.size() << " files" << std::endl;
   }
 

@@ -27,7 +27,7 @@ namespace ana
     int NBins() const {return fNBins;}
     double Min() const {return fMin;}
     double Max() const {return fMax;}
-    int FindBin(float x) const;
+    int FindBin(double x) const;
     bool IsSimple() const {return fIsSimple;}
     const std::vector<double>& Edges() const
     {
@@ -67,9 +67,11 @@ namespace ana
 
   /// Default true-energy bin edges
   Binning TrueEnergyBins();
+  /// No entries for underflow or overflow
   std::vector<double> TrueEnergyBinCenters();
 
   /// Default true-energy bin edges
   const Binning kTrueEnergyBins = TrueEnergyBins();
+  /// No entries for underflow or overflow
   const std::vector<double> kTrueEnergyBinCenters = TrueEnergyBinCenters();
 }

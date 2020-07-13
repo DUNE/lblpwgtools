@@ -54,26 +54,32 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  SpectrumStan IPrediction::Predict(osc::IOscCalculatorStan *calc) const
+  Spectrum IPrediction::Predict(osc::IOscCalculatorStan *calc) const
   {
-    assert(0 && "This Prediction hasn't implemented a Stan-aware Predict()!");
-    return Predict(calc);  // prevent compiler warning
+    std::cout << "This Prediction hasn't implemented a Stan-aware Predict()!" << std::endl;
+    abort();
   }
   //----------------------------------------------------------------------
   Spectrum IPrediction::PredictSyst(osc::IOscCalculator* calc,
                                     const SystShifts& syst) const
   {
-    assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
+    if(!syst.IsNominal()){
+      std::cout << "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?" << std::endl;
+      abort();
+    }
 
     // Default implementation: no treatment of systematics
     return Predict(calc);
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
-                                        const SystShifts& syst) const
+  Spectrum IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
+                                    const SystShifts& syst) const
   {
-    assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
+    if(!syst.IsNominal() || syst.HasAnyStan()){
+      std::cout << "This Prediction hasn't implemented a Stan-aware PredictComponentSyst()!" << std::endl;
+      abort();
+    }
 
     // Default implementation: no treatment of systematics
     return Predict(calc);
@@ -81,13 +87,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  SpectrumStan IPrediction::PredictComponent(osc::IOscCalculatorStan *calc,
-                                             Flavors::Flavors_t flav,
-                                             Current::Current_t curr,
-                                             Sign::Sign_t sign) const
+  Spectrum IPrediction::PredictComponent(osc::IOscCalculatorStan *calc,
+                                         Flavors::Flavors_t flav,
+                                         Current::Current_t curr,
+                                         Sign::Sign_t sign) const
   {
-    assert(0 && "This Prediction hasn't implemented a Stan-aware PredictComponent()!");
-    return PredictComponent(calc, flav, curr, sign);  // prevent compiler warning
+    std::cout << "This Prediction hasn't implemented a Stan-aware PredictComponent()!" << std::endl;
+    abort();
   }
 
   //----------------------------------------------------------------------
@@ -97,20 +103,25 @@ namespace ana
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
   {
-    assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
+    if(!syst.IsNominal()){
+      std::cout << "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?" << std::endl;
+      abort();
+    }
 
     // Default implementation: no treatment of systematics
     return PredictComponent(calc, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
-  SpectrumStan IPrediction::PredictComponentSyst(osc::IOscCalculatorStan* calc,
-                                                 const SystShifts& syst,
-                                                 Flavors::Flavors_t flav,
-                                                 Current::Current_t curr,
-                                                 Sign::Sign_t sign) const
+  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                             const SystShifts& syst,
+                                             Flavors::Flavors_t flav,
+                                             Current::Current_t curr,
+                                             Sign::Sign_t sign) const
   {
-    assert(syst.IsNominal() && "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?");
+    if(!syst.IsNominal() || syst.HasAnyStan()){
+      std::cout << "This Prediction hasn't implemented a Stan-aware PredictComponentSyst()" << std::endl;
+    }
 
     // Default implementation: no treatment of systematics
     return PredictComponent(calc, flav, curr, sign);

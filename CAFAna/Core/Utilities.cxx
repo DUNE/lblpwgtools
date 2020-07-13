@@ -137,58 +137,58 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
+  double LogLikelihood(const Eigen::ArrayXd& ea, const Eigen::ArrayXd& oa, bool useOverflow)
   {
-    assert (e.GetNrows() == o.GetNrows());
+    assert(ea.size() == oa.size());
 
-    const TVectorD diff = o - e;
-    return diff * (covmxinv * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
+    double chi = 0;
+
+    const int bufferBins = useOverflow ? 0 : -1;
+
+    for(int i = 0; i < ea.size()+bufferBins; ++i){
+      chi += LogLikelihood(ea[i], oa[i]);
+    }
+
+    return chi;
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TH1* e, const TH1* o, const TMatrixD& covmxinv)
+  Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat)
   {
-    const unsigned int N = e->GetNbinsX();
-    TVectorD eVec(N);
-    TVectorD oVec(N);
-    for(unsigned int bin = 1; bin <= N; bin++)
-      eVec[bin-1] = e->GetBinContent(bin);
-    for(unsigned int bin = 1; bin <= N; bin++)
-      oVec[bin-1] = o->GetBinContent(bin);
-
-    return Chi2CovMx(eVec, oVec, covmxinv);
+    Eigen::MatrixXd ret(mat->GetNrows(), mat->GetNcols());
+    // TMatrixD doesn't appear to have a GetArray()
+    for(int i = 0; i < mat->GetNrows(); ++i){
+      for(int j = 0; j < mat->GetNcols(); ++j){
+        ret.coeffRef(i, j) = (*mat)(i, j);
+      }
+    }
+    return ret;
   }
 
-  /// TMatrixD::operator() does various sanity checks and shows up in profiles
-  class TMatrixAccessor
+  //----------------------------------------------------------------------
+  double Chi2CovMx(const Eigen::ArrayXd& e, const Eigen::ArrayXd& o, const Eigen::MatrixXd& covmxinv)
   {
-  public:
-    TMatrixAccessor(const TMatrixD& m)
-      : fN(m.GetNrows()),
-        fArray(m.GetMatrixArray())
-    {
-    }
-    inline double operator()(unsigned int i, unsigned int j) const
-    {
-      return fArray[fN*i+j];
-    }
-  protected:
-    unsigned int fN;
-    const double* fArray;
-  };
+    assert(e.size() == covmxinv.rows()+2);
+
+    Eigen::ArrayXd diff = e-o;
+    // Drop underflow and overflow bins
+    const Eigen::ArrayXd diffSub(Eigen::Map<Eigen::ArrayXd>(diff.data()+1, diff.size()-2));
+    // dot collapses things down to a single number
+    return diffSub.matrix().dot(covmxinv*diffSub.matrix());
+  }
 
   //----------------------------------------------------------------------
-  double LogLikelihoodCovMx(const TH1D* e, const TH1D* o, const TMatrixD& M2,
+  double LogLikelihoodCovMx(const Eigen::ArrayXd& e,
+                            const Eigen::ArrayXd& o,
+                            const Eigen::MatrixXd& M,
                             std::vector<double>* hint)
   {
     // Don't use under/overflow bins (the covariance matrix doesn't have them)
-    const double* m0 = e->GetArray()+1;
-    const double* d = o->GetArray()+1;
-    const unsigned int N = e->GetNbinsX();
+    const double* m0 = e.data()+1;
+    const double* d = o.data()+1;
+    const unsigned int N = e.size()-2;
 
-    assert(M2.GetNrows() == int(N));
-
-    const TMatrixAccessor M(M2); // faster access to matrix elements
+    assert(M.rows() == int(N));
 
     // We're trying to solve for the best expectation in each bin 'm'
 
@@ -855,7 +855,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // Note that this does not work for 3D!
-  TH1* GetMaskHist(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
+  Eigen::ArrayXd GetMaskArray(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
   {
     if (s.GetBinnings().size() > 2){
       std::cout << "Error: unable to apply a mask in " << s.GetBinnings().size() << " dimensions" << std::endl;
@@ -866,6 +866,8 @@ namespace ana
     TH1* fMaskND  = s.ToTHX(s.POT());
     TH1D* fMask1D = s.ToTH1(s.POT());
     fMask1D->Reset();
+
+    Eigen::ArrayXd ret(fMask1D->GetNbinsX()+2);
 
     int ybins = fMaskND->GetNbinsY();
 
@@ -886,8 +888,9 @@ namespace ana
 	if (fMaskND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
       }
 
-      if(!isMask) fMask1D->SetBinContent(i+1, 1);
+      ret[i] = isMask ? 0 : 1;
     }
-    return fMask1D;
+
+    return ret;
   }
 }

@@ -25,10 +25,22 @@ public:
     return fSpectrum;
   }
 
+  virtual Spectrum Predict(osc::IOscCalculatorStan* /*calc*/) const override {
+    return fSpectrum;
+  }
+
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
+
+  virtual Spectrum PredictComponent(osc::IOscCalculatorStan* /*calc*/,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override
+  {
+    return PredictComponent((osc::IOscCalculator*)0, flav, curr, sign);
+  }
 
 protected:
   PredictionNoOsc(const Spectrum &s, const Spectrum &sNC, const Spectrum &sNumu,

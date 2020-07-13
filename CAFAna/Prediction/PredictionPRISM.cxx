@@ -126,14 +126,11 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
   }
 
   if (fFluxMatcher) {
-    double max_off_axis_pos = ret.GetReweightTAxis()->GetBinCenter(
-        ret.GetReweightTAxis()->GetNbins());
+    Binning trueBins = ret.GetTrueBinning();
+    double max_off_axis_pos = (trueBins.Edges()[trueBins.NBins()-1] + trueBins.Edges()[trueBins.NBins()])/2; // center of the top bin
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
-      // Scale this up to match the FD POT before adding it back in
-      ret.ScaleToPOT(fFarDetSpectrumNC->POT());
-
       Spectrum rets = ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
           calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
 

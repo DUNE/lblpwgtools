@@ -90,12 +90,12 @@ void spec(bool reload = false)
     
     Loaders FD_FHC_loaders;
     Loaders FD_RHC_loaders;
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNonswap,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNue,      caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNuTau,    caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNonswap,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNue,      caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNuTau,    caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
       
     PredictionInterp predInt_FDNumuFHC(systlist, calc, genFDNumu, FD_FHC_loaders);
     PredictionInterp predInt_FDNumuRHC(systlist, calc, genFDNumu, FD_RHC_loaders);

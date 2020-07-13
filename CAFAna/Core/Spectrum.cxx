@@ -1,11 +1,11 @@
 #include "CAFAna/Core/Spectrum.h"
 
-#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "Utilities/func/MathUtil.h"
+#include "Utilities/func/Stan.h"
 
 #include "TDirectory.h"
 #include "TH2.h"
@@ -20,37 +20,24 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  // The one constructor to rule them all. (Almost) everyone forwards here
-  Spectrum::Spectrum(const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     ESparse sparse)
-    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0),
-      fLabels(labels), fBins(bins)
-  {
-    ConstructHistogram(sparse);
-  }
-
-  //----------------------------------------------------------------------
-  // Or here...
-  Spectrum::Spectrum(const std::string& label,
-                     const Binning& bins,
-                     ESparse sparse)
-    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0),
-      fLabels(1, label), fBins(1, bins)
-  {
-    ConstructHistogram(sparse);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& label, const Binning& bins,
-                     SpectrumLoaderBase& loader,
-                     const Var& var,
+  Spectrum::Spectrum(SpectrumLoaderBase& loader,
+                     const HistAxis& axis,
                      const Cut& cut,
                      const SystShifts& shift,
-                     const Var& wei)
-    : Spectrum(label, bins)
+                     const Var& wei,
+                     ESparse sparse)
+    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0), fAxis(axis)
   {
-    loader.AddSpectrum(*this, var, cut, shift, wei);
+    const Binning bins1D = fAxis.GetBins1D();
+
+    if(sparse){
+      fHist = Hist::Adopt(Eigen::SparseVector<double>(bins1D.NBins()+2));
+    }
+    else{
+      fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(bins1D.NBins()+2)));
+    }
+
+    if(axis.HasVars()) loader.AddSpectrum(*this, axis.GetVar1D(), cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
@@ -60,174 +47,27 @@ namespace ana
                      const Cut& cut,
                      const SystShifts& shift,
                      const Var& wei)
-    : Spectrum(label, bins)
+    : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0), fAxis(label, bins)
   {
+    fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(fAxis.GetBins1D().NBins()+2)));
+
     loader.AddSpectrum(*this, var, cut, shift, wei);
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(SpectrumLoaderBase& loader,
+  Spectrum::Spectrum(Eigen::ArrayXd&& h,
                      const HistAxis& axis,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei)
-    : Spectrum(axis.GetLabels(), axis.GetBinnings())
-  {
-    loader.AddSpectrum(*this, axis.GetMultiDVar(), cut, shift, wei);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& label, double pot, double livetime,
-                     const Binning& bins)
-    : Spectrum(label, bins)
-  {
-    fPOT = pot;
-    fLivetime = livetime;
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(Eigen::VectorXd h,
-                     const std::string & labels,
-                     const Binning& bins,
                      double pot, double livetime)
-    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels({labels}), fBins({bins})
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
   {
-    std::unique_ptr<TH1D> hist(HistCache::New("", fBins[0]));
-    hist->Set(h.size(), h.data());
-    fHist = Hist::Adopt(std::move(hist), bins);
   }
 
   //----------------------------------------------------------------------
-  Spectrum::Spectrum(TH1* h,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
+  Spectrum::Spectrum(Eigen::ArrayXstan&& h,
+                     const HistAxis& axis,
                      double pot, double livetime)
-    : fHist(Hist::Uninitialized()), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins)
+    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
   {
-    if(!h){
-      return;
-    }
-
-    DontAddDirectory guard;
-
-    const TString className = h->ClassName();
-
-    if(className == "TH1D"){
-      // Shortcut if types match
-      fHist = Hist::Copy((TH1D*)h, Binning::FromTAxis(h->GetXaxis()));
-    }
-    else{
-      fHist = Hist::Copy(h, Binning::FromTAxis(h->GetXaxis()));
-    }
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(std::unique_ptr<TH1D> h,
-                     const std::vector<std::string>& labels,
-                     const std::vector<Binning>& bins,
-                     double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h), Binning::FromTAxis(h->GetXaxis()))), fPOT(pot), fLivetime(livetime), fLabels(labels), fBins(bins) // TODO is ordering here safe with the move?
-  {
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& label, SpectrumLoaderBase& loader,
-                     const Binning& binsx, const Var& varx,
-                     const Binning& binsy, const Var& vary,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei)
-    : Spectrum(label, "", loader, binsx, varx, binsy, vary, cut, shift, wei)
-  {
-    // TODO do we want this variant when there's one with a labelY just below?
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(SpectrumLoaderBase& loader,
-                     const HistAxis& xAxis,
-                     const HistAxis& yAxis,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei)
-    : Spectrum(xAxis.GetLabels()[0], loader,
-               xAxis.GetBinnings()[0], xAxis.GetVars()[0],
-               yAxis.GetBinnings()[0], yAxis.GetVars()[0],
-               cut, shift, wei)
-  {
-    // TODO - do we want to keep this variant around?
-    assert(xAxis.NDimensions() == 1);
-    assert(yAxis.NDimensions() == 1);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& xLabel,
-		     const std::string& yLabel,
-		     SpectrumLoaderBase& loader,
-                     const Binning& binsx, const Var& varx,
-                     const Binning& binsy, const Var& vary,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei)
-    : Spectrum({xLabel, yLabel}, {binsx, binsy})
-  {
-    Var multiDVar = Var2D(varx, binsx, vary, binsy);
-
-    loader.AddSpectrum(*this, multiDVar, cut, shift, wei);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& label, SpectrumLoaderBase& loader,
-                     const Binning& binsx, const Var& varx,
-                     const Binning& binsy, const Var& vary,
-                     const Binning& binsz, const Var& varz,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei,
-		     ESparse sparse)
-    : Spectrum(label, "", "", loader, binsx, varx, binsy, vary, binsz, varz, cut, shift, wei, sparse)
-  {
-    // TODO do we want this variant when there's one with a labelY and labelZ
-    // just below?
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const std::string& xLabel,
-		     const std::string& yLabel,
-		     const std::string& zLabel,
-		     SpectrumLoaderBase& loader,
-                     const Binning& binsx, const Var& varx,
-                     const Binning& binsy, const Var& vary,
-                     const Binning& binsz, const Var& varz,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei,
-		     ESparse sparse)
-    : Spectrum({xLabel, yLabel, zLabel}, {binsx, binsy, binsz}, sparse)
-  {
-    Var multiDVar = Var3D(varx, binsx, vary, binsy, varz, binsz);
-
-    loader.AddSpectrum(*this, multiDVar, cut, shift, wei);
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(SpectrumLoaderBase& loader,
-                     const HistAxis& xAxis,
-                     const HistAxis& yAxis,
-                     const HistAxis& zAxis,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Var& wei,
-		     ESparse sparse)
-    : Spectrum(xAxis.GetLabels()[0], loader,
-               xAxis.GetBinnings()[0], xAxis.GetVars()[0],
-               yAxis.GetBinnings()[0], yAxis.GetVars()[0],
-               zAxis.GetBinnings()[0], zAxis.GetVars()[0],
-               cut, shift, wei, sparse)
-  {
-    // TODO - do we want to keep this variant around?
-    assert(xAxis.NDimensions() == 1);
-    assert(yAxis.NDimensions() == 1);
-    assert(zAxis.NDimensions() == 1);
   }
 
   //----------------------------------------------------------------------
@@ -242,8 +82,7 @@ namespace ana
     fHist(rhs.fHist),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
-    fLabels(rhs.fLabels),
-    fBins(rhs.fBins)
+    fAxis(rhs.fAxis)
   {
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
   }
@@ -253,29 +92,9 @@ namespace ana
     fHist(std::move(rhs.fHist)),
     fPOT(rhs.fPOT),
     fLivetime(rhs.fLivetime),
-    fLabels(rhs.fLabels),
-    fBins(rhs.fBins)
+    fAxis(rhs.fAxis)
   {
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
-  }
-
-  //----------------------------------------------------------------------
-  Spectrum::Spectrum(const SpectrumStan& rhs)
-    : fHist(Hist::Uninitialized()),
-      fPOT(rhs.POT()), fLivetime(rhs.Livetime()),
-      fLabels(rhs.GetLabels()), fBins(rhs.GetBinnings())
-  {
-    // for now we don't have any other use cases besides 1D...
-    assert(rhs.GetBinnings().size() == 1);
-
-    ConstructHistogram();
-
-    // now fill in the bin content...
-    auto binC = rhs.ToBins(rhs.POT());
-    for (int binIdx = 0; binIdx < rhs.GetBinnings()[0].NBins()+2; binIdx++) // be sure to get under- and overflow
-    {
-      fHist.SetBinContent(binIdx, binC[binIdx].val());
-    }
   }
 
   //----------------------------------------------------------------------
@@ -286,8 +105,7 @@ namespace ana
     fHist = rhs.fHist;
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
-    fLabels = rhs.fLabels;
-    fBins = rhs.fBins;
+    fAxis = rhs.fAxis;
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
@@ -302,8 +120,7 @@ namespace ana
     fHist = std::move(rhs.fHist);
     fPOT = rhs.fPOT;
     fLivetime = rhs.fLivetime;
-    fLabels = rhs.fLabels;
-    fBins = rhs.fBins;
+    fAxis = rhs.fAxis;
 
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
 
@@ -311,56 +128,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum& Spectrum::operator=(const SpectrumStan& rhs)
-  {
-    // use placement new to just overwrite this object using the relevant constructor
-    this->~Spectrum();
-    new (this) Spectrum(rhs);
-    return *this;
-  }
-
-  //----------------------------------------------------------------------
-  void Spectrum::ConstructHistogram(ESparse sparse)
-  {
-    DontAddDirectory guard;
-
-    //    assert(!fHist && !fHistSparse);
-
-    const Binning bins1D = Bins1D();
-
-    if(sparse){
-      assert(bins1D.IsSimple());
-      const int nbins = bins1D.NBins();
-      const double xmin = bins1D.Min();
-      const double xmax = bins1D.Max();
-      THnSparseD* h = new THnSparseD(UniqueName().c_str(), UniqueName().c_str(),
-                                     1, &nbins, &xmin, &xmax);
-
-      // Ensure errors get accumulated properly
-      h->Sumw2();
-
-      fHist = Hist::Adopt(std::unique_ptr<THnSparseD>(h), bins1D);
-    }
-    else{
-      TH1D* h = HistCache::New("", bins1D);
-
-      // Ensure errors get accumulated properly
-      h->Sumw2();
-
-      fHist = Hist::Adopt(std::unique_ptr<TH1D>(h), bins1D);
-    }
-  }
-
-  //----------------------------------------------------------------------
   TH1D* Spectrum::ToTH1(double exposure,
 			EExposureType expotype,
 			EBinType bintype) const
   {
-
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = fHist.ToTH1();
+    TH1D* ret = fHist.ToTH1(fAxis.GetBins1D());
 
     if(expotype == kPOT){
       const double pot = exposure;
@@ -413,6 +188,7 @@ namespace ana
 
   }
 
+  //----------------------------------------------------------------------
   TH1D* Spectrum::ToTH1(double exposure, Color_t col, Style_t style,
 			EExposureType expotype,
 			EBinType bintype) const
@@ -422,10 +198,7 @@ namespace ana
 
     TH1D* ret = ToTH1(exposure, expotype, bintype);
 
-    std::string label;
-    for(const std::string& l: fLabels) label += l + " and ";
-    label.resize(label.size()-5); // drop the last "and"
-    ret->GetXaxis()->SetTitle(label.c_str());
+    ret->GetXaxis()->SetTitle(fAxis.GetLabel1D().c_str());
     ret->GetYaxis()->SetTitle("Events");
 
     ret->SetLineColor(col);
@@ -438,15 +211,15 @@ namespace ana
   //----------------------------------------------------------------------
   TH2* Spectrum::ToTH2(double exposure, EExposureType expotype, EBinType bintype) const
   {
-    if(fBins.size() != 2){
+    if(NDimensions() != 2){
       std::cout << "Error: This Spectrum does not appear to be 2D." << std::endl;
       abort();
     }
 
-    TH2* ret = ana::ToTH2(*this, exposure, expotype, fBins[0], fBins[1]);
+    TH2* ret = ana::ToTH2(*this, exposure, expotype, GetBinnings()[0], GetBinnings()[1]);
 
-    ret->GetXaxis()->SetTitle(fLabels[0].c_str());
-    ret->GetYaxis()->SetTitle(fLabels[1].c_str());
+    ret->GetXaxis()->SetTitle(GetLabels()[0].c_str());
+    ret->GetYaxis()->SetTitle(GetLabels()[1].c_str());
 
     if(bintype == kBinDensity) ret->Scale(1, "width");
 
@@ -463,8 +236,8 @@ namespace ana
     TH2* xyhist = ToTH2(exposure, expotype);
     if(!xyhist) return nullptr;
 
-    const int nbinsx = fBins[0].NBins();
-    const int nbinsy = fBins[1].NBins();
+    const int nbinsx = GetBinnings()[0].NBins();
+    const int nbinsy = GetBinnings()[1].NBins();
 
     // Normalize 2D histogram to X-axis spectrum
     for(int i=1; i<=nbinsx; ++i){
@@ -491,17 +264,17 @@ namespace ana
   //----------------------------------------------------------------------
   TH3* Spectrum::ToTH3(double exposure, EExposureType expotype, EBinType bintype) const
   {
-    if(fBins.size() != 3){
+    if(NDimensions() != 3){
       std::cout << "Error: This Spectrum does not appear to be 3D." << std::endl;
       abort();
     }
 
     TH3* ret = ana::ToTH3(*this, exposure, expotype,
-                          fBins[0], fBins[1], fBins[2]);
+                          GetBinnings()[0], GetBinnings()[1], GetBinnings()[2]);
 
-    ret->GetXaxis()->SetTitle(fLabels[0].c_str());
-    ret->GetYaxis()->SetTitle(fLabels[1].c_str());
-    ret->GetZaxis()->SetTitle(fLabels[2].c_str());
+    ret->GetXaxis()->SetTitle(GetLabels()[0].c_str());
+    ret->GetYaxis()->SetTitle(GetLabels()[1].c_str());
+    ret->GetZaxis()->SetTitle(GetLabels()[2].c_str());
 
     if(bintype == kBinDensity) ret->Scale(1, "width");
 
@@ -512,30 +285,11 @@ namespace ana
     return ret;
   }
 
- //----------------------------------------------------------------------
-  Eigen::VectorXd Spectrum::ToEigenVectorXd(double exposure, EExposureType expotype,
-					    EBinType bintype) const
-  {
-    // this is slower than intended since ToTH1() makes a copy.
-    // can optimize if it becomes a hot spot
-    TH1D * h = fHist.ToTH1();
-    Eigen::VectorXd ret =  Eigen::Map<Eigen::VectorXd> (h->GetArray(),
-                                                        h->GetNbinsX()+2);
-    if(exposure > 0)
-    {
-      if(expotype == kPOT)
-        return ret * exposure / fPOT;
-      else
-        return ret * exposure / fLivetime;
-    }
-    return ret;
-  }
-
   //----------------------------------------------------------------------
   TH1* Spectrum::ToTHX(double exposure, bool force1D, EExposureType expotype) const
   {
     if (force1D) return this->ToTH1(exposure, expotype);
-    switch(fBins.size()){
+    switch(NDimensions()){
     case 1:
       return this->ToTH1(exposure, expotype);
     case 2:
@@ -543,7 +297,7 @@ namespace ana
     case 3:
       return this->ToTH3(exposure, expotype);
     default:
-      std::cout << "Error: unable to hande number of dimensions (" << fBins.size() << ")" << std::endl;
+      std::cout << "Error: unable to hande number of dimensions (" << NDimensions() << ")" << std::endl;
       abort();
     }
 
@@ -553,7 +307,7 @@ namespace ana
   //----------------------------------------------------------------------
   TH1* Spectrum::ToTH1ProjectX(double exposure, EExposureType expotype) const
   {
-    switch(fBins.size()){
+    switch(NDimensions()){
     case 1:
       return this->ToTH1(exposure, expotype);
     case 2:
@@ -561,13 +315,24 @@ namespace ana
     case 3:
       return this->ToTH3(exposure, expotype)->ProjectionX();
     default:
-      std::cout << "Error: unable to hande number of dimensions (" << fBins.size() << ")" << std::endl;
+      std::cout << "Error: unable to hande number of dimensions (" << NDimensions() << ")" << std::endl;
       abort();
     }
 
     return NULL;
   }
 
+  //----------------------------------------------------------------------
+  Eigen::ArrayXd Spectrum::GetEigen(double pot) const
+  {
+    return (pot/fPOT) * fHist.GetEigen();
+  }
+
+  //----------------------------------------------------------------------
+  Eigen::ArrayXstan Spectrum::GetEigenStan(double pot) const
+  {
+    return (pot/fPOT) * fHist.GetEigenStan();
+  }
 
   //----------------------------------------------------------------------
   void Spectrum::Scale(double c)
@@ -590,7 +355,7 @@ namespace ana
       *err = sqrt(*err) * ratio;
     }
 
-    return fHist.Integral(0, -1) * ratio;
+    return fHist.Integral() * ratio;
   }
 
   //----------------------------------------------------------------------
@@ -602,7 +367,8 @@ namespace ana
   //----------------------------------------------------------------------
   void Spectrum::Fill(double x, double w)
   {
-    fHist.Fill(x, w);
+    fHist.Fill(fAxis.GetBins1D(), x, w);
+    // TODO Pull binning out of Hist entirely and just update an index?
   }
 
   //----------------------------------------------------------------------
@@ -657,13 +423,13 @@ namespace ana
   Spectrum& Spectrum::PlusEqualsHelper(const Spectrum& rhs, int sign)
   {
     // In this case it would be OK to have no POT/livetime
-    if(rhs.fHist.Initialized() && rhs.fHist.Integral(0, -1) == 0) return *this;
+    if(rhs.fHist.Initialized() && rhs.fHist.Integral() == 0) return *this;
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
-      std::cout << "Error: can't sum Spectrum with no POT or livetime."
+      std::cout << "Error: can't sum Spectrum with no POT or livetime: "
                 << fPOT << " " << rhs.fPOT
                 << std::endl;
-      //      abort();
+      abort();
       return *this;
     }
 
@@ -791,7 +557,7 @@ namespace ana
 
     TObjString("Spectrum").Write("type");
 
-    fHist.Write();
+    fHist.Write(fAxis.GetBins1D());
     TH1D hPot("", "", 1, 0, 1);
     hPot.Fill(.5, fPOT);
     hPot.Write("pot");
@@ -799,9 +565,9 @@ namespace ana
     hLivetime.Fill(.5, fLivetime);
     hLivetime.Write("livetime");
 
-    for(unsigned int i = 0; i < fBins.size(); ++i){
-      TObjString(fLabels[i].c_str()).Write(TString::Format("label%d", i).Data());
-      fBins[i].SaveTo(dir, TString::Format("bins%d", i).Data());
+    for(unsigned int i = 0; i < NDimensions(); ++i){
+      TObjString(GetLabels()[i].c_str()).Write(TString::Format("label%d", i).Data());
+      GetBinnings()[i].SaveTo(dir, TString::Format("bins%d", i).Data());
     }
 
     dir->Write();
@@ -841,23 +607,8 @@ namespace ana
       delete label;
     }
 
-    if(bins.empty() && labels.empty()){
-      abort();
-      /*
-      // Must be an old file. Make an attempt at backwards compatibility.
-      if(spect){
-        bins.push_back(Binning::FromTAxis(spect->GetXaxis()));
-        labels.push_back(spect->GetXaxis()->GetTitle());
-      }
-      else{
-        bins.push_back(Binning::FromTAxis(spectSparse->GetAxis(0)));
-        labels.push_back(spectSparse->GetAxis(0)->GetTitle());
-      }
-      */
-    }
-
-    std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>((TH1*)0, labels, bins, hPot->GetBinContent(1), hLivetime->GetBinContent(1));
-    ret->fHist = Hist::FromDirectory(dir, ret->Bins1D());
+    std::unique_ptr<Spectrum> ret = std::make_unique<Spectrum>(Eigen::ArrayXd(), HistAxis(labels, bins), hPot->GetBinContent(1), hLivetime->GetBinContent(1));
+    ret->fHist = Hist::FromDirectory(dir);
 
     delete hPot;
     delete hLivetime;
@@ -865,19 +616,5 @@ namespace ana
     delete dir;
 
     return ret;
-  }
-
-  //----------------------------------------------------------------------
-  Binning Spectrum::Bins1D() const
-  {
-    assert(!fBins.empty());
-
-    Binning bins1D = fBins[0];
-    if(fBins.size() > 1){
-      int n = 1;
-      for(const Binning& b: fBins) n *= b.NBins();
-      bins1D = Binning::Simple(n, 0, n);
-    }
-    return bins1D;
   }
 }

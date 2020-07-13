@@ -1,15 +1,23 @@
 #pragma once
 
-#include "CAFAna/Core/Binning.h"
+#include "Utilities/func/Stan.h" // need stan proper for fDataStan
 
 class TDirectory;
-class TH1F;
+
 class TH1D;
-//class THnSparseD;
-#include "THnSparse.h"
+
+#include <Eigen/Dense>
+#include <Eigen/SparseCore>
+
+namespace Eigen{
+  using ArrayXstan = Eigen::Array<stan::math::var, Eigen::Dynamic, 1>;
+  using VectorXstan = Eigen::Matrix<stan::math::var, Eigen::Dynamic, 1>;
+}
 
 namespace ana
 {
+  class Binning;
+
   class Hist
   {
   public:
@@ -20,23 +28,26 @@ namespace ana
     ~Hist();
 
     static Hist Uninitialized(){return Hist();}
-    bool Initialized() const {return fHistD || fHistSparse;}
+    bool Initialized() const {return fType != kUninitialized;}
 
-    static Hist Copy(TH1D* h, const Binning& bins);
-    static Hist Copy(TH1* h, const Binning& bins);
-    static Hist Adopt(std::unique_ptr<TH1D> h, const Binning& bins);
-    static Hist Adopt(std::unique_ptr<THnSparseD> h, const Binning& bins);
+    static Hist Adopt(Eigen::SparseVector<double>&& v);
+    static Hist Adopt(Eigen::ArrayXstan&& v);
+    static Hist Adopt(Eigen::ArrayXd&& v);
 
-    static Hist FromDirectory(TDirectory* dir, const Binning& bins);
+    static Hist FromDirectory(TDirectory* dir);
 
-    TH1D* ToTH1() const;
+    TH1D* ToTH1(const Binning& bins) const;
+
+    bool HasStan() const {return fType == kDenseStan;}
+    const Eigen::ArrayXd& GetEigen() const {assert(fType == kDense); return fData;}
+    const Eigen::ArrayXstan& GetEigenStan() const {assert(fType == kDenseStan); return fDataStan;}
 
     int GetNbinsX() const;
     double GetBinError(int i) const;
-    double Integral(int lo, int hi) const;
+    double Integral() const;
     double GetMean() const;
 
-    void Fill(double x, double w);
+    void Fill(const Binning& bins, double x, double w);
     void Scale(double s);
     void ResetErrors();
 
@@ -46,17 +57,23 @@ namespace ana
 
     void Add(const Hist& rhs, double scale = 1);
 
-    // TODO better to do this in terms of Hist - need to update Ratio
-    void Multiply(TH1D* rhs);
-    void Divide(TH1D* rhs);
+    void Multiply(const Hist& rhs);
+    void Divide(const Hist& rhs);
 
-    void Write() const;
+    void Write(const Binning& bins) const;
   protected:
     Hist();
 
-    //    TH1F* fHistF;
-    TH1D* fHistD;
-    THnSparseD* fHistSparse;
-    Binning fBins;
+    // Helpers for the public Add() function
+    void Add(const Eigen::SparseVector<double>& rhs, double scale);
+    void Add(const Eigen::ArrayXstan& rhs, double scale);
+    void Add(const Eigen::ArrayXd& rhs, double scale);
+
+    enum EType{kUninitialized, kDense, kDenseStan, kSparse};
+    EType fType;
+
+    Eigen::SparseVector<double> fDataSparse;
+    Eigen::ArrayXstan fDataStan;
+    Eigen::ArrayXd fData;
   };
 }

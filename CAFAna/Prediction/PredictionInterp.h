@@ -7,6 +7,7 @@
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
 
+#include <iostream>
 #include <map>
 #include <memory>
 
@@ -49,33 +50,33 @@ namespace ana
 
 
     Spectrum Predict(osc::IOscCalculator* calc) const override;
-    SpectrumStan Predict(osc::IOscCalculatorStan* calc) const override;
+    Spectrum Predict(osc::IOscCalculatorStan* calc) const override;
 
 
     Spectrum PredictSyst(osc::IOscCalculator* calc,
                          const SystShifts& shift) const override;
-    SpectrumStan PredictSyst(osc::IOscCalculatorStan* calc,
-                             const SystShifts& shift) const override;
+    Spectrum PredictSyst(osc::IOscCalculatorStan* calc,
+                         const SystShifts& shift) const override;
 
     Spectrum PredictComponent(osc::IOscCalculator* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
-    SpectrumStan PredictComponent(osc::IOscCalculatorStan* calc,
-                                  Flavors::Flavors_t flav,
-                                  Current::Current_t curr,
-                                  Sign::Sign_t sign) const override;
+    Spectrum PredictComponent(osc::IOscCalculatorStan* calc,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign) const override;
 
     Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
                                   const SystShifts& shift,
                                   Flavors::Flavors_t flav,
                                   Current::Current_t curr,
                                   Sign::Sign_t sign) const override;
-    SpectrumStan PredictComponentSyst(osc::IOscCalculatorStan* calc,
-                                      const SystShifts& shift,
-                                      Flavors::Flavors_t flav,
-                                      Current::Current_t curr,
-                                      Sign::Sign_t sign) const override;
+    Spectrum PredictComponentSyst(osc::IOscCalculatorStan* calc,
+                                  const SystShifts& shift,
+                                  Flavors::Flavors_t flav,
+                                  Current::Current_t curr,
+                                  Sign::Sign_t sign) const override;
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
@@ -119,7 +120,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fOscOrigin(nullptr), fBinning(0, {}, {}, 0, 0), fSplitBySign(false) {
+    PredictionInterp() : fOscOrigin(nullptr), fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
@@ -135,7 +136,7 @@ namespace ana
     /// Find coefficients describing this set of shifts
     std::vector<std::vector<Coeffs>>
     FitRatios(const std::vector<double>& shifts,
-              const std::vector<std::unique_ptr<TH1>>& ratios) const;
+              const std::vector<Eigen::ArrayXd>& ratios) const;
 
     /// Find coefficients describing the ratios from this component
     std::vector<std::vector<Coeffs>>
@@ -150,10 +151,6 @@ namespace ana
                            CoeffsType type,
                            bool nubar, // try to use fitsNubar if it exists
                            const SystShifts& shift) const;
-      SpectrumStan ShiftSpectrum(const SpectrumStan& s,
-                                 CoeffsType type,
-                                 bool nubar, // try to use fitsNubar if it exists
-                                 const SystShifts& shift) const;
 
     /// Helper for PredictComponentSyst
     Spectrum ShiftedComponent(osc::IOscCalculator* calc,
@@ -164,18 +161,18 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
-      SpectrumStan ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
-                                    const TMD5* hash,
-                                    const SystShifts& shift,
-                                    Flavors::Flavors_t flav,
-                                    Current::Current_t curr,
-                                    Sign::Sign_t sign,
-                                    CoeffsType type) const;
+    Spectrum ShiftedComponent(osc::IOscCalculatorStan* calc,
+                              const TMD5* hash,
+                              const SystShifts& shift,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign,
+                              CoeffsType type) const;
 
-      //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
-      void DiscardSysts(std::vector<ISyst const *>const &);
-      //Get all known about systs
-      std::vector<ISyst const *> GetAllSysts() const;
+    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+    void DiscardSysts(std::vector<ISyst const *>const &);
+    //Get all known about systs
+    std::vector<ISyst const *> GetAllSysts() const;
 
     protected:
       std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
@@ -259,7 +256,7 @@ namespace ana
     struct Val_t
     {
       TMD5 hash;
-        Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
+      Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
     };
     mutable std::map<Key_t, Val_t> fNomCache;
 
@@ -275,30 +272,30 @@ namespace ana
                         Sign::Sign_t sign) const;
 
     /// Templated helper for \ref ShiftedComponent
-    template <typename U, typename T>
-    U _ShiftedComponent(osc::_IOscCalculator<T>* calc,
-                        const TMD5* hash,
-                        const SystShifts& shift,
-                        Flavors::Flavors_t flav,
-                        Current::Current_t curr,
-                        Sign::Sign_t sign,
-                        CoeffsType type) const;
+    template <typename T>
+    Spectrum _ShiftedComponent(osc::_IOscCalculator<T>* calc,
+                               const TMD5* hash,
+                               const SystShifts& shift,
+                               Flavors::Flavors_t flav,
+                               Current::Current_t curr,
+                               Sign::Sign_t sign,
+                               CoeffsType type) const;
 
     /// Templated helper for \ref PredictComponentSyst
-    template <typename U, typename T>
-    U _PredictComponentSyst(osc::_IOscCalculator<T>* calc,
-                            const SystShifts& shift,
-                            Flavors::Flavors_t flav,
-                            Current::Current_t curr,
-                            Sign::Sign_t sign) const;
+    template <typename T>
+    Spectrum _PredictComponentSyst(osc::_IOscCalculator<T>* calc,
+                                   const SystShifts& shift,
+                                   Flavors::Flavors_t flav,
+                                   Current::Current_t curr,
+                                   Sign::Sign_t sign) const;
 
-      /// Helper for \ref ShiftSpectrum
-      template <typename T>
-      void ShiftBins(unsigned int N,
-                     T* arr,
-                     CoeffsType type,
-                     bool nubar,
-                     const SystShifts& shift) const;
+    /// Helper for \ref ShiftSpectrum
+    template <typename T>
+    void ShiftBins(unsigned int N,
+                   T* arr,
+                   CoeffsType type,
+                   bool nubar,
+                   const SystShifts& shift) const;
   };
 
 }

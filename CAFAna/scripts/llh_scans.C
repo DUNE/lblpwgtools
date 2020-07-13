@@ -142,17 +142,14 @@ void llh_scans(std::string stateFname = def_stateFname,
   // Add covariances to the two ND samples
   std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
 
+  nd_expt_fhc_syst.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+  nd_expt_rhc_syst.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+
   MultiExperiment expt_ND_FHC({&nd_expt_fhc_syst});
-  expt_ND_FHC.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", true, {0});
-
   MultiExperiment expt_ND_RHC({&nd_expt_rhc_syst});
-  expt_ND_RHC.AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", true, {0});
-
   MultiExperiment expt_nd_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                               &dis_expt_fhc_syst, &dis_expt_rhc_syst,
                               &nd_expt_fhc_syst, &nd_expt_rhc_syst});
-
-  expt_nd_fd.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {4, 5});
 
   MultiExperiment expt_fd({&app_expt_fhc_syst, &app_expt_rhc_syst,
                            &dis_expt_fhc_syst, &dis_expt_rhc_syst});

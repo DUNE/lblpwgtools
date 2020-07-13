@@ -1,21 +1,18 @@
 #pragma once
 
-#include <cassert>
 #include <cxxabi.h>
-#include <fenv.h>
+#include <cfenv>
 #include <map>
 #include <set>
 #include <string>
-#include <vector>
-#include <iostream>
-#include <memory>
 
 // these are templated types.
 // can't forward-declare them here
 // because compiler errors result
 // when the templates are introduced
 #include "TMatrixD.h"
-#include "TVectorD.h"
+
+#include <Eigen/Dense>
 
 class TArrayD;
 class TDirectory;
@@ -27,7 +24,6 @@ class TH1D;
 class TH2F;
 class TH2D;
 class TH3D;
-class TVector3;
 
 #include "Utilities/func/MathUtil.h"
 
@@ -115,6 +111,20 @@ namespace ana
   **/
   double LogLikelihood(const TH1* exp, const TH1* obs, bool useOverflow = false);
 
+  /** \brief The log-likelihood formula from the PDG.
+
+      \param exp The expected spectrum
+      \param obs The corresponding observed spectrum
+
+      \returns The log-likelihood formula from the PDG
+      \f[ \chi^2=2\sum_i^{\rm bins}\left(e_i-o_i+o_i\ln\left({o_i\over e_i}\right)\right) \f]
+
+      Includes underflow bin and an option for
+      overflow bin (off by default) and handles
+      zero observed or expected events correctly.
+  **/
+  double LogLikelihood(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, bool useOverflow = false);
+
   /** \brief The log-likelihood formula for a single bin
 
       \param exp Expected count
@@ -165,11 +175,7 @@ namespace ana
     }
   }
 
-  double LogLikelihoodDerivative(double e, double o, double dedx);
-
-  double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
-                                 const std::vector<double>& dedx,
-                                 bool useOverflow = false);
+  Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat);
 
   /**  \brief Chi-squared calculation using a covariance matrix.
 
@@ -182,16 +188,7 @@ namespace ana
 
        Note that this implicitly assumes Gaussian statistics for the bin counts!
   **/
-  double Chi2CovMx(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv);
-
-  double Chi2CovMxDerivative(const TVectorD& exp, const TVectorD& obs, const TMatrixD& covmxinv, TVectorD dedx, bool matScales);
-
-  /// Chi-squared calculation using covariance matrix (calls the TVectorD version internally).
-  double Chi2CovMx(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv);
-
-  /// \param matScales Was the covariance matrix produced by scaling a
-  ///                  fractional matrix?
-  double Chi2CovMxDerivative(const TH1* exp, const TH1* obs, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales);
+  double Chi2CovMx(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, const Eigen::MatrixXd& covmxinv);
 
   /// \brief For use with low-statistics data in combination with a MC
   /// prediction whose bins have a correlated uncertainty.
@@ -207,7 +204,7 @@ namespace ana
   ///
   /// The matrix must be symmetric and have dimension equal to the number of
   /// non-overflow bins in the histograms.
-  double LogLikelihoodCovMx(const TH1D* exp, const TH1D* obs, const TMatrixD& covmxinv, std::vector<double>* hint = 0);
+  double LogLikelihoodCovMx(const Eigen::ArrayXd& exp, const Eigen::ArrayXd& obs, const Eigen::MatrixXd& covmxinv, std::vector<double>* hint = 0);
 
 
   /// \brief Internal helper for \ref Surface and \ref FCSurface
@@ -342,8 +339,10 @@ namespace ana
 
   void EnsurePositiveDefinite(TH2* mat);
 
-  /// Returns a masking histogram based on axis limits
-  TH1* GetMaskHist(const Spectrum& s,
-		   double xmin=0, double xmax=-1,
-		   double ymin=0, double ymax=-1);
+  /// \brief Returns a masking histogram based on axis limits
+  ///
+  /// This mask *does* include entries for underflow and overflow bins
+  Eigen::ArrayXd GetMaskArray(const Spectrum& s,
+                              double xmin=0, double xmax=-1,
+                              double ymin=0, double ymax=-1);
 }

@@ -10,7 +10,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Analysis/Calcs.h"
-#include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -76,9 +76,9 @@ void demo7()
   SingleSampleExperiment expt(&predInterp, data);
 
   // The regular stats-only contour
-  Surface surf(&expt, calc,
-               &kFitSinSqTheta23, 30, 0.425, 0.575,
-               &kFitDmSq32Scaled, 30, 2.35, 2.55);
+  FrequentistSurface surf(&expt, calc,
+                          &kFitSinSqTheta23, 30, 0.425, 0.575,
+                          &kFitDmSq32Scaled, 30, 2.35, 2.55);
 
   surf.DrawBestFit(kBlue);
 
@@ -89,11 +89,11 @@ void demo7()
 
   // This takes substantially longer, we reduced the bin count a lot to keep it
   // reasonable.
-  Surface surfSyst(&expt, calc,
-                   &kFitSinSqTheta23, 10, 0.45, 0.6,
-                   &kFitDmSq32Scaled, 10, 2.35, 2.5,
-                   {}, // list of oscillation parameters to profile over
-                   allSysts); // list of systs to profile over
+  FrequentistSurface surfSyst(&expt, calc,
+                              &kFitSinSqTheta23, 10, 0.45, 0.6,
+                              &kFitDmSq32Scaled, 10, 2.35, 2.5,
+                              {}, // list of oscillation parameters to profile over
+                              allSysts); // list of systs to profile over
 
   surfSyst.DrawContour(Gaussian68Percent2D(surfSyst), 7, kRed);
   surfSyst.DrawContour(Gaussian2Sigma2D(surfSyst), kSolid, kRed);
