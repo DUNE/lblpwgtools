@@ -129,13 +129,13 @@ namespace ana
             assert (fMinimizer.get() && "Can't make a MinuitFitSummary from a null ROOT::Math::Minimizer");
           }
 
-          bool IsBetterFit(const IFitSummary* other) const override
+          bool IsBetterThan(const IFitSummary* other) const override
           {
             if (!other)
               return false;
 
             if (const auto mnFitSummary = dynamic_cast<const MinuitFitSummary*>(other))
-              return mnFitSummary->EvalMetricVal() < EvalMetricVal();
+              return EvalMetricVal() < mnFitSummary->EvalMetricVal(); 
             else
             {
               assert(false && "Can't compare a MinuitFitSummary to another kind of IFitSummary");
