@@ -14,9 +14,9 @@ namespace ana
   class MCMCSample
   {
     public:
-      MCMCSample(double LL, std::vector<double> diagVals, std::vector<double> entryVals,
-                 std::vector <std::string> diagBranchNames,
-                 std::vector<const ana::IFitVar *> vars, std::vector<const ana::ISyst *> systs);
+      MCMCSample(double LL, const std::vector<double> &diagVals, const std::vector<double> &entryVals,
+                 const std::vector<std::string> &diagBranchNames,
+                 const std::vector<const IFitVar *> &vars, const std::vector<const ISyst *> &systs);
 
       MCMCSample(const TMap & map,
                  const std::vector<const ana::IFitVar *> & vars,

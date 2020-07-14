@@ -6,16 +6,20 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  MCMCSample::MCMCSample(double LL, std::vector<double> diagVals, std::vector<double> entryVals,
-                         std::vector <std::string> diagBranchNames,
-                         std::vector<const ana::IFitVar *> vars, std::vector<const ana::ISyst *> systs)
+  MCMCSample::MCMCSample(double LL, const std::vector<double> &diagVals, const std::vector<double> &entryVals,
+                         const std::vector<std::string> &diagBranchNames,
+                         const std::vector<const IFitVar *> &vars, const std::vector<const ISyst *> &systs)
       : fDiagBranches(std::move(diagBranchNames)), fVars(std::move(vars)), fSysts(std::move(systs))
   {
-    assert(diagVals.size() == fDiagBranches.size() && entryVals.size() == fVars.size() + fSysts.size());
-    fVals.resize(1 + diagVals.size() + entryVals.size());
+    if(diagVals.size() != fDiagBranches.size() || entryVals.size() != fVars.size() + fSysts.size())
+    {
+      std::cerr << "MCMCSample::MCMCSample(): branch sizes don't match." << std::endl;
+      abort();
+    }
+    fVals.reserve(1 + diagVals.size() + entryVals.size());
     fVals.push_back(LL);
-    fVals.insert(fVals.end(), std::move_iterator(diagVals.begin()), std::move_iterator(diagVals.end()));
-    fVals.insert(fVals.end(), std::move_iterator(entryVals.begin()), std::move_iterator(entryVals.end()));
+    fVals.insert(fVals.end(), diagVals.begin(), diagVals.end());
+    fVals.insert(fVals.end(), entryVals.begin(), entryVals.end());
   }
 
   //----------------------------------------------------------------------
