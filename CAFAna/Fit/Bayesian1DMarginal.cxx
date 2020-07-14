@@ -26,10 +26,10 @@ namespace ana
   //----------------------------------------------------------------------
   TH1D Bayesian1DMarginal::ToTH1(const Binning & bins) const
   {
-    if (bins == *fCachedBinning)
+    if (fCachedBinning && bins == *fCachedBinning)
       return *fCachedHist;
 
-    *fCachedBinning = bins;
+    fCachedBinning = std::make_unique<Binning>(bins);
 
     std::string name;
     if (Vars().size() > 0)
@@ -37,7 +37,7 @@ namespace ana
     else if (Systs().size() > 0)
       name = Systs()[0]->LatexName();
     if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
-      fCachedHist.reset(dynamic_cast<TH1D*>(ToHistogram({bins}).get()));
+      fCachedHist.reset(dynamic_cast<TH1D*>(ToHistogram({bins}).release()));
     else if (fMode == MarginalMode::kKNN)
     {
       fCachedHist = std::make_unique<TH1D>(UniqueName().c_str(), (";"+name).c_str(), bins.NBins(), &bins.Edges()[0]);
