@@ -22,6 +22,9 @@ namespace ana
                  const std::vector<const ana::IFitVar *> & vars,
                  const std::vector<const ana::ISyst *>& systs);
 
+      MCMCSample(const MCMCSample& other) = default;
+      MCMCSample(MCMCSample&& other) = default;
+
       [[nodiscard]]
       double DiagnosticVal(const std::string &brName) const;
 
