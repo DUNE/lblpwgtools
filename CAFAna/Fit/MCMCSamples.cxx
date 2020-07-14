@@ -405,7 +405,8 @@ namespace ana
   {
     if (LLs.empty())
       LLs = SortedLLs();  // I think this should be efficient since std::vector has a move assignment operator
-    return LLs[std::size_t((1 - quantile) * LLs.size())];
+
+    return LLs[std::size_t((1 - quantile) * (LLs.size()-1))];  // -1 so that we don't fall off the edge at Q=1.0
   }
 
   //----------------------------------------------------------------------
