@@ -588,6 +588,7 @@ namespace ana
   {
     BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
 
+    fSamples->SetBranchStatus(branchName.c_str(), true);
     auto branch = fSamples->GetBranch(branchName.c_str());
     branch->SetStatus(true);
     branch->GetEntry(rowIdx);
