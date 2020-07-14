@@ -373,8 +373,6 @@ namespace ana
       oldIt = it;
     }
 
-    std::cout << "Deduced threshold for quantile " << quantile << " is " << (*it + *oldIt) / 2 << std::endl;
-
     // the average is not unbiased (it depends on the steepness of the distribution near the breakpoint)
     // but it's probably closer than the values on either side?
     return (*it + *oldIt) / 2;
