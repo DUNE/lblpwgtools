@@ -275,7 +275,6 @@ namespace ana
     std::unique_ptr<TTree> samples(samplesPtr);
     if (samples->GetCurrentFile())
     {
-      BranchStatusResetter bsr(samples.get());  // turn branches off when done
       samples->SetBranchStatus("*", true);
       samples->LoadBaskets();   // read the entire TTree into memory
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
