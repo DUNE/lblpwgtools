@@ -82,8 +82,8 @@ namespace ana
 
       double EstimateLLFromKNN(const std::vector<float> &vals) const;
 
-      /// Determine the threshold for the 'histogram' mode from the appropriate MCMC sample and given histogram
-      double ThresholdFromTH1(const MCMCSample & threshSample, const TH1* pdf) const;
+      /// Determine the threshold for the 'histogram' mode from the given histogram with a brute force method
+      static double ThresholdFromTH1(const TH1* pdf, double quantile);
 
       /// Note that the signature here is different from usual.
       /// This version expects to be passed a derived class instance

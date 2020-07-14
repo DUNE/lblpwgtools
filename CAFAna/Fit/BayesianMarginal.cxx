@@ -1,3 +1,5 @@
+#include "CAFAna/Fit/BayesianMarginal.h"
+
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
@@ -16,7 +18,6 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Fit/BayesianMarginal.h"
 #include "CAFAna/Fit/MCMCSamples.h"
 
 
@@ -193,12 +194,13 @@ namespace ana
     // what's returned is simply the best-guess pdf
     // approximated by the histogram itself.
     // so instead of simply yielding the LL itself,
-    // we need to find the
+    // we need to find the pdf value corresponding to the right breakpoint.
     if (fMode == MarginalMode::kHistogram)
     {
       assert(pdf && "In 'histogram' marginal mode, must supply the histogram for which the quantile threshold is to be calculated");
-      auto threshSample = fQuantileSampleMap.at(quantile);
-      return ThresholdFromTH1(threshSample, pdf);
+      return ThresholdFromTH1(pdf, std::find_if(QuantileUpVals.begin(),
+                                                QuantileUpVals.begin(),
+                                                [quantile](const auto & pair) { return pair.first == quantile;})->second);
     }
 
     return fQuantileSampleMap.at(quantile).LL();
@@ -215,10 +217,7 @@ namespace ana
     auto quantilePair = samples.QuantileLL(quantile);
 
     if (fMode == MarginalMode::kHistogram)
-    {
-      auto sample = samples.Sample(quantilePair.first);
-      return ThresholdFromTH1(sample, pdf);
-    }
+      return ThresholdFromTH1(pdf, quantile);
 
     return quantilePair.second;
   }
@@ -297,35 +296,88 @@ namespace ana
     fkNN->ProcessSetup();
   }
 
-  double BayesianMarginal::ThresholdFromTH1(const MCMCSample & threshSample, const TH1* pdf) const
+  double BayesianMarginal::ThresholdFromTH1(const TH1* pdf, double quantile)
   {
-    std::vector<double> vals;
-    for (const auto & v : fVars)
-      vals.push_back(threshSample.Val(v));
-    for (const auto & s : fSysts)
-      vals.push_back(threshSample.Val(s));
+    if (pdf->Integral() <= 0)
+      return std::numeric_limits<double>::signaling_NaN();
 
-    int bin = -1;
-    if (vals.size() == 1)
+    // easy cases
+    if (quantile == 0)
+      return 1.0;
+    else if (quantile == 1)
+      return 0.0;
+    else if (quantile < 0 || quantile > 1)
     {
-      assert (dynamic_cast<const TH1D*>(pdf) && "pdf supplied for 1D marginalization isn't 1D?");
-      bin = pdf->FindFixBin(vals[0]);
+      std::cerr << "BayesianMarginal::ThresholdFromTH1(): requested quantile = " << quantile << " is not between 0 and 1.  Abort" << std::endl;
+      abort();
     }
-    else if (vals.size() == 2)
-    {
-      assert (dynamic_cast<const TH2D*>(pdf) && "pdf supplied for 2D marginalization isn't 2D?");
-      bin = pdf->FindFixBin(vals[0], vals[1]);
-    }
-    else if (vals.size() == 3)
-    {
-      assert (dynamic_cast<const TH3D*>(pdf) && "pdf supplied for 3D marginalization isn't 3D?");
-      bin = pdf->FindFixBin(vals[0], vals[1], vals[2]);
-    }
-    else
-      assert(false && "Can't handle > 3 plottable quantities in marginalization...");
 
-    return pdf->GetBinContent(bin);
+    // check if the histogram I was passed was already unit normalized.
+    // if not, make a copy that is
+     bool copied = false;
+    if (std::abs(pdf->Integral() - 1) > 0.00001)
+    {
+      pdf = dynamic_cast<TH1*>(pdf->Clone());
+      const_cast<TH1*>(pdf)->Scale(1./pdf->Integral());
+      copied = true;
+    }
 
+    // first make a list of the fractional bin contents.
+    std::vector<double> contents(pdf->GetNcells());
+    double overflowC = 0;
+    double underflowC = 0;
+    for (int binIdx = 0; binIdx <= pdf->GetNcells(); binIdx++)
+    {
+      double binC = pdf->GetBinContent(binIdx);
+      if (binC == 0)
+        continue;   // don't go inserting useless 0s into the vector to make it much longer and slower to sort
+
+      if (pdf->IsBinOverflow(binIdx))
+        overflowC += binC;
+      else if (pdf->IsBinUnderflow(binIdx))
+        underflowC += binC;
+
+      contents.push_back(binC);
+    }
+    if ((1 - quantile) < underflowC || (1 - quantile) < overflowC)
+    {
+      std::cerr << "Warning: Histogram underflow or overflow contains more than requested quantile (" << quantile << ") of events." << std::endl;
+      std::cerr << "         Bayesian credible region will be incorrect." << std::endl;
+    }
+
+    // then do a search to find the value above which the integral corresponds to the desired quantile.
+    // begin at the specified quantile index as a first guess
+
+    std::sort(contents.begin(), contents.end());
+    std::size_t idx = (1 - quantile) * (contents.size() - 1);
+    auto it = contents.begin();
+    decltype(it) oldIt = it;
+    std::advance(it, idx);
+    double oldSum = std::accumulate(it, contents.end(), 0.0);
+    // i.e., are we including too much, so we need to shrink the interval by moving towards the end?
+    bool forward = oldSum > quantile;
+    while (it != contents.begin() && it != contents.end())
+    {
+      // if we're exactly right, then we're good
+      if (oldSum == quantile)
+        return *it;
+
+      std::advance(it, forward ? +1 : -1);
+      double newSum = std::accumulate(it, contents.end(), 0.0);
+
+      // if we just crossed over the quantile boundary, we're also done.
+      if ((newSum - quantile) / (oldSum - quantile) < 0)
+        break;
+
+      oldSum = newSum;
+      oldIt = it;
+    }
+
+    std::cout << "Deduced threshold for quantile " << quantile << " is " << (*it + *oldIt) / 2 << std::endl;
+
+    // the average is not unbiased (it depends on the steepness of the distribution near the breakpoint)
+    // but it's probably closer than the values on either side?
+    return (*it + *oldIt) / 2;
   }
 
   //----------------------------------------------------------------------
