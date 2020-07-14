@@ -166,6 +166,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  TMatrixD TMatrixDFromEigenMatrixXd(const Eigen::MatrixXd& mat)
+  {
+    TMatrixD ret(mat.rows(), mat.cols());
+    // TMatrixD doesn't appear to have a GetArray()
+    for(int i = 0; i < mat.rows(); ++i){
+      for(int j = 0; j < mat.cols(); ++j){
+        ret(i, j) = mat.coeffRef(i, j);
+      }
+    }
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
   double Chi2CovMx(const Eigen::ArrayXd& e, const Eigen::ArrayXd& o, const Eigen::MatrixXd& covmxinv)
   {
     assert(e.size() == covmxinv.rows()+2);

@@ -12,6 +12,7 @@
 #include "stan/io/reader.hpp"
 #include "stan/io/writer.hpp"
 #include "stan/services/sample/hmc_nuts_diag_e_adapt.hpp"
+#include "stan/services/util/create_unit_e_diag_inv_metric.hpp"
 #include "stan/services/diagnose/diagnose.hpp"
 #pragma GCC diagnostic pop
 
@@ -42,7 +43,7 @@ namespace ana
       fCalc(nullptr),
       fExpt(expt),
       fMCMCSamples(vars, systs),
-      fValueWriter(fMCMCSamples)
+      fMCMCWarmup(vars, systs)
   {}
 
   //----------------------------------------------------------------------
@@ -117,9 +118,11 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed, SystShifts &bestSysts,
+  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed,
+                  SystShifts &bestSysts,
                   const SeedList& seedPts,
-                  const std::vector<SystShifts> &systSeedPts, Verbosity verb) const
+                  const std::vector<SystShifts> &systSeedPts,
+                  Verbosity verb) const
   {
     if (seed)
     {
@@ -127,6 +130,20 @@ namespace ana
         fOscCalcCache = std::make_unique<osc::OscCalculator>();
       *fOscCalcCache = *seed;
     }
+
+
+    // check that state of warmup is what we expected
+    if (fStanConfig.num_warmup > 0 && fMCMCWarmup.NumSamples() > 0)
+    {
+      std::cerr << "You supplied a previous collection of MCMC samples for warmup and also requested num_warmup > 0 in your StanConfig." << std::endl;
+      std::cerr << "Which do you want?" << std::endl;
+      abort();
+    }
+
+    // const-casts here because we need to initialize the writer interface, which requires a non-const pointer,
+    // but this method is const.  prefer not to make the members mutable for this one instance
+    fValueWriter = std::make_unique<MemoryTupleWriter>(fStanConfig.num_samples > 0 ? const_cast<MCMCSamples*>(&fMCMCSamples) : nullptr,
+                                                       fStanConfig.num_warmup > 0 ? const_cast<MCMCSamples*>(&fMCMCWarmup) : nullptr);
 
     return IFitter::Fit(seed, bestSysts, seedPts, systSeedPts, verb);
   }
@@ -148,6 +165,7 @@ namespace ana
                                      std::size_t(fStanConfig.num_samples));  // creates a nice CAFAna-style Progress bar
 
     std::ostream nullStream(nullptr);
+    std::ostream & diagStream = (fStanConfig.verbosity < StanConfig::Verbosity::kQuiet) ? std::cout : nullStream;
     std::unique_ptr<stan::callbacks::stream_logger> logger;
     switch (fStanConfig.verbosity)
     {
@@ -175,14 +193,24 @@ namespace ana
         break;
     }
 
-    // for now, just write the diagnostics to stdout.
-    // we can do something fancier later...
-    std::ostream & diagStream = (fStanConfig.verbosity < StanConfig::Verbosity::kQuiet) ? std::cout : nullStream;
-    stan::callbacks::stream_writer diagnostic_writer(diagStream, "# ");
-
     // Actually run Stan!
-    // this is the init vals of all the parameters
-    auto init_context = BuildInitContext(seed, systSeed);
+    // this is the init vals of all the parameters.
+    // (the pointer is because array_var_context does not have a copy constructor,
+    //  so it needs to only be initialized once.)
+    std::unique_ptr<stan::io::array_var_context> init_context;
+    if (fMCMCWarmup.NumSamples() < 1)
+      init_context = std::make_unique<stan::io::array_var_context>(BuildInitContext(seed, systSeed));
+    // however if we're reusing MCMC samples from a previous run we take the last point from them
+    if (fMCMCWarmup.NumSamples() > 0)
+    {
+      std::unique_ptr<osc::IOscCalculatorAdjustable> calc(seed->Copy());
+      for (const auto & v : fMCMCWarmup.Vars())
+        v->SetValue(calc.get(), fMCMCWarmup.SampleValue(v, fMCMCWarmup.NumSamples()-1));
+      auto shifts = systSeed.Copy();
+      for (const auto & s : fMCMCWarmup.Systs())
+        shifts->SetShift(s, fMCMCWarmup.SampleValue(s, fMCMCWarmup.NumSamples()-1));
+      init_context = std::make_unique<stan::io::array_var_context>(BuildInitContext(calc.get(), *shifts));
+    }
 
     // id: only needed when running multiple chains to combine.
     // if the grid var $PROCESS is defined, use that
@@ -195,36 +223,41 @@ namespace ana
     //      this is an exploration using the "no-u-turn sampler" (NUTS)
     //      within the Hamiltonian MC algorithm with a simple Euclidian metric
     //      in unbounded parameter space.
-    auto return_code = stan::services::sample::hmc_nuts_diag_e_adapt(
-        *this,
-        init_context,
-        fStanConfig.random_seed,
-        procId,
-        fStanConfig.init_radius,
-        fStanConfig.num_warmup,
-        fStanConfig.num_samples,
-        fStanConfig.num_thin,
-        fStanConfig.save_warmup,
-        fStanConfig.refresh,
-        fStanConfig.stepsize,
-        fStanConfig.stepsize_jitter,
-        fStanConfig.max_depth,
-        fStanConfig.delta,
-        fStanConfig.gamma,
-        fStanConfig.kappa,
-        fStanConfig.t0,
-        fStanConfig.init_buffer,
-        fStanConfig.term_buffer,
-        fStanConfig.window,
-        interrupt,
-        *logger,
-        init_writer,
-        fValueWriter,
-        diagnostic_writer);
+    // this call can be replaced by a call to the stock Stan function if needed (see following),
+    // but we've customized it in order to be able to save the state after warmup and restore it.
+    auto return_code = RunHMC(init_writer, interrupt, diagStream, logger, *init_context, procId);
+
+    // Use Stan's wrapper function instead of the above.  Can be used for diagnostics as needed.
+//    auto return_code = stan::services::sample::hmc_nuts_diag_e_adapt(*this,
+//                                                                     init_context,
+//                                                                     fStanConfig.random_seed,
+//                                                                     procId,
+//                                                                     fStanConfig.init_radius,
+//                                                                     fStanConfig.num_warmup,
+//                                                                     fStanConfig.num_samples,
+//                                                                     fStanConfig.num_thin,
+//                                                                     fStanConfig.save_warmup,
+//                                                                     fStanConfig.refresh,
+//                                                                     fStanConfig.stepsize,
+//                                                                     fStanConfig.stepsize_jitter,
+//                                                                     fStanConfig.max_depth,
+//                                                                     fStanConfig.delta,
+//                                                                     fStanConfig.gamma,
+//                                                                     fStanConfig.kappa,
+//                                                                     fStanConfig.t0,
+//                                                                     fStanConfig.init_buffer,
+//                                                                     fStanConfig.term_buffer,
+//                                                                     fStanConfig.window,
+//                                                                     interrupt,
+//                                                                     *logger,
+//                                                                     init_writer,
+//                                                                     *fValueWriter,
+//                                                                     diagnostic_writer);
+
 
     // todo: something smarter here?  or just more output?
     // also todo: need to check the Stan diagnostics for divergences, autocorrelation, etc.
-    if (return_code != 0)
+    if (return_code != stan::services::error_codes::OK)
       std::cerr << "warning: Stan fit did not converge..." << std::endl;
 
     auto bestSampleIdx = fMCMCSamples.BestFitSampleIdx();
@@ -241,7 +274,7 @@ namespace ana
     fMCMCSamples.RunDiagnostics(fStanConfig);
 
     return std::make_unique<StanFitSummary>(fMCMCSamples.SampleLL(bestSampleIdx));
-  } // StanFitter::Fit()
+  } // StanFitter::FitHelperSeeded()
 
   //----------------------------------------------------------------------
   void StanFitter::get_param_names(std::vector<std::string>& names) const
@@ -388,6 +421,245 @@ namespace ana
     return log_prob<propto,jacobian,T_>(vec_params_r, vec_params_i, pstream);
   }
 
+  //----------------------------------------------------------------------
+  void StanFitter::ReuseWarmup(MCMCSamples &&warmup)
+  {
+    // before going ahead, check that the supplied samples are compatible
+    // with how this Fitter was initialized.
+    if (fMCMCWarmup.Vars() != warmup.Vars())
+    {
+      std::cerr << "Warmup to be reused is incompatible with this StanFitter." << std::endl;
+      std::cerr << "  StanFitter fit vars: ";
+      for (const auto & v : fMCMCWarmup.Vars())
+        std::cerr << v << " ";
+      std::cerr << std::endl;
+      std::cerr << "  Supplied warmup fit vars: ";
+      for (const auto & v : warmup.Vars())
+        std::cerr << v << " ";
+      std::cerr << std::endl;
+
+      abort();
+    }
+    if (fMCMCWarmup.Systs() != warmup.Systs())
+    {
+      std::cerr << "Warmup to be reused is incompatible with this StanFitter." << std::endl;
+      std::cerr << "  StanFitter systs: ";
+      for (const auto & s : fMCMCWarmup.Systs())
+        std::cerr << s << " ";
+      std::cerr << std::endl;
+      std::cerr << "  Supplied systs: ";
+      for (const auto & s : warmup.Systs())
+        std::cerr << s << " ";
+      std::cerr << std::endl;
+
+      abort();
+    }
+
+    fMCMCWarmup = std::move(warmup);
+  }
+
+  //----------------------------------------------------------------------
+  int StanFitter::RunHMC(stan::callbacks::writer &init_writer,
+                         StanFitter::samplecounter_callback &interrupt,
+                         std::ostream &diagStream,
+                         const std::unique_ptr<stan::callbacks::stream_logger> &logger,
+                         stan::io::array_var_context &init_context,
+                         unsigned int procId) const
+  {
+    // for now, just write the diagnostics to stdout.
+    // we can do something fancier later...
+    stan::callbacks::stream_writer diagnostic_writer(diagStream, "# ");
+
+    // *********************************************
+    //   originally cribbed from stan::services::sample::hmc_nuts_diag_e_adapt()
+    //    (in stan/services/sample/hmc_nuts_diag_e_adapt.hpp)
+    //   but 'metric' and 'step size' code rewritten to support reloading from previous warmup
+    auto return_code = stan::services::error_codes::OK;
+
+
+
+
+    boost::ecuyer1988 rng = stan::services::util::create_rng(fStanConfig.random_seed, procId);
+
+    // continuous parameters
+    std::vector<double> cont_vector = stan::services::util::initialize(*this,
+                                                                       init_context,
+                                                                       rng,
+                                                                       fStanConfig.init_radius,
+                                                                       true,
+                                                                       *logger,
+                                                                       init_writer);
+
+    Eigen::VectorXd inv_metric;
+    if (!fMCMCWarmup.Hyperparams().invMetric)
+    {
+      try
+      {
+        stan::io::dump dmp = stan::services::util::create_unit_e_diag_inv_metric(num_params_r());
+        stan::io::var_context &unit_e_metric = dmp;
+        inv_metric = stan::services::util::read_diag_inv_metric(unit_e_metric, num_params_r(), *logger);
+        stan::services::util::validate_diag_inv_metric(inv_metric, *logger);
+      }
+      catch (const std::domain_error &e)
+      {
+        return_code = stan::services::error_codes::CONFIG;
+      }
+    }
+    else
+    {
+      inv_metric = EigenMatrixXdFromTMatrixD(fMCMCWarmup.Hyperparams().invMetric.get());
+    }
+
+    if (return_code == stan::services::error_codes::OK)
+    {
+      stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988> sampler(*this, rng);
+
+      sampler.set_metric(inv_metric);
+      if (std::isnan(fMCMCWarmup.Hyperparams().stepSize))
+        sampler.set_nominal_stepsize(fStanConfig.stepsize);
+      else
+        sampler.set_nominal_stepsize(fMCMCWarmup.Hyperparams().stepSize);
+      sampler.set_stepsize_jitter(fStanConfig.stepsize_jitter);
+      sampler.set_max_depth(fStanConfig.max_depth);
+
+      sampler.get_stepsize_adaptation().set_mu(log(10 * fStanConfig.stepsize));
+      sampler.get_stepsize_adaptation().set_delta(fStanConfig.delta);
+      sampler.get_stepsize_adaptation().set_gamma(fStanConfig.gamma);
+      sampler.get_stepsize_adaptation().set_kappa(fStanConfig.kappa);
+      sampler.get_stepsize_adaptation().set_t0(fStanConfig.t0);
+
+      sampler.set_window_params(fStanConfig.num_warmup,
+                                fStanConfig.init_buffer,
+                                fStanConfig.term_buffer,
+                                fStanConfig.window,
+                                *logger);
+
+      RunSampler(sampler, cont_vector, rng, interrupt, *logger, diagnostic_writer);
+
+//      stan::services::util::run_adaptive_sampler(sampler,
+//                                                 *this,
+//                                                 cont_vector,
+//                                                 fStanConfig.num_warmup,
+//                                                 fStanConfig.num_samples,
+//                                                 fStanConfig.num_thin,
+//                                                 fStanConfig.refresh,
+//                                                 fStanConfig.save_warmup,
+//                                                 rng,
+//                                                 interrupt,
+//                                                 *logger,
+//                                                 *fValueWriter,
+//                                                 diagnostic_writer);
+
+    }
+
+    // *********************************************
+
+    return return_code;
+  }
+  // StanFitter::RunHMC()
+
+  //----------------------------------------------------------------------
+  void StanFitter::RunSampler(stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988>& sampler,
+                              std::vector<double>& cont_vector,
+                              boost::ecuyer1988& rng,
+                              stan::callbacks::interrupt& interrupt,
+                              stan::callbacks::logger& logger,
+                              stan::callbacks::writer& diagnostic_writer) const
+  {
+    // Stan passes around a templated Model type, but this class is the Model.
+    auto & model = *this;
+
+    // *********************************************
+    // Cribbed from stan::services::run_adaptive_sampler() (in stan/services/util/run_adaptive_sampler.hpp)
+    Eigen::Map<Eigen::VectorXd> cont_params(cont_vector.data(),
+                                            cont_vector.size());
+
+    stan::services::util::mcmc_writer writer(*fValueWriter, diagnostic_writer, logger);
+    stan::mcmc::sample s(cont_params, 0, 0);
+
+    clock_t start, end;
+    double warm_delta_t = 0;
+
+    if (fMCMCWarmup.NumSamples() < 1)
+    {
+      sampler.engage_adaptation();
+      try
+      {
+        sampler.z().q = cont_params;
+        sampler.init_stepsize(logger);
+      } catch (const std::exception &e)
+      {
+        logger.info("Exception initializing step size.");
+        logger.info(e.what());
+        return;
+      }
+
+      // -------------------------------
+      // this is a new bit we added in between the bits copied from Stan
+      fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kWarmup);
+      // -------------------------------
+
+
+      // Headers
+      writer.write_sample_names(s, sampler, model);
+      writer.write_diagnostic_names(s, sampler, model);
+
+      start = clock();
+      stan::services::util::generate_transitions(sampler,
+                                                 fStanConfig.num_warmup,
+                                                 0,
+                                                 fStanConfig.num_warmup + fStanConfig.num_samples,
+                                                 fStanConfig.num_thin,
+                                                 fStanConfig.refresh,
+                                                 fStanConfig.save_warmup,
+                                                 true,
+                                                 writer,
+                                                 s,
+                                                 model,
+                                                 rng,
+                                                 interrupt,
+                                                 logger);
+      end = clock();
+      warm_delta_t = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+      sampler.disengage_adaptation();
+      writer.write_adapt_finish(sampler);
+
+
+      // -------------------------------
+      // this is a new bit we added in between the bits copied from Stan
+      fValueWriter->SaveSamplerState(sampler);
+    }
+    fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
+    writer.write_sample_names(s, sampler, model);
+    writer.write_diagnostic_names(s, sampler, model);
+    // -------------------------------
+
+    start = clock();
+    stan::services::util::generate_transitions(sampler,
+                                               fStanConfig.num_samples,
+                                               fStanConfig.num_warmup,
+                                               fStanConfig.num_warmup + fStanConfig.num_samples,
+                                               fStanConfig.num_thin,
+                                               fStanConfig.refresh,
+                                               true,
+                                               false,
+                                               writer,
+                                               s,
+                                               model,
+                                               rng,
+                                               interrupt,
+                                               logger);
+    end = clock();
+    double sample_delta_t = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+    writer.write_timing(warm_delta_t, sample_delta_t);
+
+    // *********************************************
+
+    fValueWriter->SaveSamplerState(sampler);
+
+  }
 
   //----------------------------------------------------------------------
   void StanFitter::TestGradients(osc::IOscCalculatorAdjustable *seed,
@@ -428,7 +700,7 @@ namespace ana
                                                           interrupt,
                                                           logger,
                                                           init_writer,
-                                                          fValueWriter);
+                                                          *fValueWriter);
     if (return_code != 0)
       std::cerr << "warning: Stan diagnostic gradient test reports " << return_code
                 << " parameters were not within " << error << " of finite diff expectation..." << std::endl;

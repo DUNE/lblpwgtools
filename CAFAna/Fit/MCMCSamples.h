@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "TMatrixD.h"
 #include "TTree.h"
 
 #include "CAFAna/Core/IFitVar.h"
@@ -28,6 +29,29 @@ namespace ana
       /// Name of branch in internal TTree corresponding to the log-likelihood.
       /// Used in several places, so centralized here.
       static const std::string LOGLIKELIHOOD_BRANCH_NAME;
+
+      struct Hyperparameters
+      {
+        double stepSize;
+        std::unique_ptr<TMatrixD> invMetric;   // use TMatrix rather than Eigen for peristability.  unique_ptr so it can be sized later
+
+        explicit Hyperparameters(double stepsize = std::numeric_limits<double>::signaling_NaN(),
+                                 std::unique_ptr<TMatrixD> && invmetric = nullptr)
+          : stepSize(stepsize), invMetric(std::move(invmetric))
+        {}
+
+        Hyperparameters(const Hyperparameters & h)
+          : stepSize(h.stepSize), invMetric(std::make_unique<TMatrixD>(*h.invMetric))
+        {}
+
+        Hyperparameters& operator=(Hyperparameters&& other)
+        {
+          stepSize = std::move(other.stepSize);
+          invMetric = std::move(other.invMetric);
+          return *this;
+        }
+
+      };
 
       /// Build the MCMCSamples object.
       ///
@@ -58,6 +82,8 @@ namespace ana
 
       /// Discard any samples
       void Clear() { fSamples->Clear(); }
+
+      const Hyperparameters & Hyperparams() const   { return fHyperparams; }
 
 
       /// Marginalize over all other variables to obtain a 1D profile in \a var
@@ -139,6 +165,16 @@ namespace ana
                         std::map<const ana::IFitVar *, double> &varVals,
                         const std::vector<const ana::ISyst *> &systs, std::map<const ana::ISyst *, double> &systVals) const;
 
+      void SetHyperparams(double stepSize, const TMatrixD& invMassMatrix)
+      {
+        fHyperparams = Hyperparameters(stepSize, std::make_unique<TMatrixD>(invMassMatrix));
+      }
+
+      void SetHyperparams(Hyperparameters h)
+      {
+        fHyperparams = std::move(h);
+      };
+
       void SetNames(const std::vector<std::string>& names);
 
       /// Get a TTree with the MCMC samples in it
@@ -158,11 +194,9 @@ namespace ana
 
     private:
       /// Internal-use constructor needed for LoadFrom()
-      MCMCSamples(std::size_t offset,
-                  const std::vector<std::string>& diagBranchNames,
-                  const std::vector<const IFitVar *> &vars,
-                  const std::vector<const ana::ISyst *> &systs,
-                  std::unique_ptr<TTree> &tree);
+      MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
+                  const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
+                  std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams);
 
       /// Where in fDiagnosticVals is the given diagnostic?
       std::size_t DiagOffset(const std::string& diagName) const;
@@ -186,7 +220,7 @@ namespace ana
       /// Where in fEntryVals is the given syst?
       std::size_t VarOffset(const ana::ISyst * syst) const;
 
-      std::size_t fOffset;
+      std::size_t fOffset;   //< number of branches read out before the fitted parameters start
       std::vector<std::string> fDiagBranches;
       std::vector<const ana::IFitVar *> fVars;
       std::vector<const ana::ISyst *> fSysts;
@@ -199,6 +233,8 @@ namespace ana
       double fEntryLL;  // for use reading the TTree
       std::vector<double> fEntryVals;  // ditto
       std::vector<double> fDiagnosticVals;
+
+      mutable Hyperparameters fHyperparams;
   };
 
 }
