@@ -199,7 +199,7 @@ namespace ana
     {
       assert(pdf && "In 'histogram' marginal mode, must supply the histogram for which the quantile threshold is to be calculated");
       return ThresholdFromTH1(pdf, std::find_if(QuantileUpVals.begin(),
-                                                QuantileUpVals.begin(),
+                                                QuantileUpVals.end(),
                                                 [quantile](const auto & pair) { return pair.first == quantile;})->second);
     }
 
@@ -448,6 +448,9 @@ namespace ana
     for (std::size_t sample = 0; sample < fMCMCSamples->NumSamples(); ++sample)
     {
       double logprob = fMCMCSamples->SampleLL(sample);
+      if (std::isnan(logprob))
+        std::cerr << "Warning: Encountered NaN log-probability in an MCMC sample.  Other things will probably go wrong..." << std::endl;
+
       std::map<const IFitVar*, double> varVals;
       std::map<const ISyst*, double> systVals;
       fMCMCSamples->SampleValues(sample, fVars, varVals, fSysts, systVals);
@@ -485,7 +488,10 @@ namespace ana
       }
     }
     else if (fMode == MarginalMode::kHistogram)
-      ret->Scale(1. / ret->Integral());
+    {
+      if (ret->Integral() > 0)
+        ret->Scale(1. / ret->Integral());
+    }
 
     return ret;
   }
