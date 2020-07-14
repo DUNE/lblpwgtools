@@ -68,7 +68,7 @@ namespace ana
                               nbinsy, ymin, ymax);
 
     std::unique_ptr<TH1> tmpHist;
-    if (fMode == MarginalMode::kHistogram)
+    if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
       tmpHist = ToHistogram({Binning::Simple(nbinsx, xmin, xmax),
                              Binning::Simple(nbinsy, ymin, ymax)});
     for (int xBin = 0; xBin < fHist->GetNbinsX() + 2; xBin++)
@@ -76,7 +76,7 @@ namespace ana
       for (int yBin = 0; yBin < fHist->GetNbinsY() + 2; yBin++)
       {
         double val = std::numeric_limits<double>::signaling_NaN();
-        if (fMode == MarginalMode::kHistogram && tmpHist)
+        if ((fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram) && tmpHist)
           val = tmpHist->GetBinContent(xBin, yBin);
         else if (fMode == MarginalMode::kKNN)
         {
