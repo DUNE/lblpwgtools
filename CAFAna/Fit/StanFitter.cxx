@@ -27,6 +27,7 @@
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorDMP.h"
+#include "OscLib/func/OscCalculatorAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -103,6 +104,8 @@ namespace ana
       fCalc = std::make_unique<osc::OscCalculatorPMNSStan>();
     else if (dynamic_cast<osc::OscCalculatorDMP*>(seed))
       fCalc = std::make_unique<osc::OscCalculatorDMPStan>();
+    else if (dynamic_cast<osc::OscCalculatorAnalytic*>(seed))
+      fCalc = std::make_unique<osc::OscCalculatorAnalyticStan>();
     else
     {
       std::cerr << "Unexpected oscillation calculator type: " << DemangledTypeName(seed) << std::endl;
@@ -687,9 +690,15 @@ namespace ana
     // this is the init vals of all the parameters
     auto init_context = BuildInitContext(seed, systSeed);
 
+    // this would normally get initialized in Fit(), but we're not fitting
+    fValueWriter = std::make_unique<MemoryTupleWriter>(fStanConfig.num_samples > 0 ? const_cast<MCMCSamples*>(&fMCMCSamples) : nullptr,
+                                                       fStanConfig.num_warmup > 0 ? const_cast<MCMCSamples*>(&fMCMCWarmup) : nullptr);
+
+
     // diagnostic mode, where the model's gradients calculated via Stan's autodiff
     // are compared to those from finite difference calculations
     const double error = 1e-6;
+    std::cout << "fValueWriter is at: " << fValueWriter.get() << std::endl;
     auto return_code = stan::services::diagnose::diagnose(*this,
                                                           init_context,
                                                           fStanConfig.random_seed,
