@@ -146,7 +146,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   calc = new osc::OscCalculatorDMP;
   *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
-  std::unique_ptr<MCMCSamples> samples;
+  std::unique_ptr<MCMCSamples> samples, warmup;
   if (!loadSamplesFromFile)
   {
     // store the default vals...
@@ -216,18 +216,19 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     cfg.max_depth = 15;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
-    cfg.save_warmup = false;
     StanFitter fitter(&expt, fitVars, std::vector<const ISyst*>(allSysts.begin(), allSysts.end()));
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
-    
-    samples = fitter.ExtractSamples();
+
+    warmup = fitter.ExtractSamples(MemoryTupleWriter::WhichSamples::kWarmup);
+    samples = fitter.ExtractSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
 
     if (saveSamplesToFile)
     {
       TFile outF(mcmc_ana::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
       for (const auto & fdPair : fakeData)
         fdPair.second->SaveTo(&outF, "fakedata_" + fdPair.first);
+      warmup->SaveTo(&outF, "warmup");
       samples->SaveTo(&outF, "samples");
       SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
       systTruePulls->SaveTo(&outF, "systTruth");
@@ -257,6 +258,10 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       fakeData.emplace(name.substr(9), LoadFrom<Spectrum>(&inf, key->GetName()));
     }
     std::cout << "   --->  loaded " << fakeData.size() << " fake data spectra." << std::endl;
+
+    warmup = MCMCSamples::LoadFrom(&inf, "warmup");
+    if (warmup)
+      std::cout << "   --->  loaded " << warmup->NumSamples() << " MCMC samples from warmup." << std::endl;
 
     samples = MCMCSamples::LoadFrom(&inf, "samples");
     std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
