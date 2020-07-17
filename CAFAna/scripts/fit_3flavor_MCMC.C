@@ -105,6 +105,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     {&fitDeltaInPiUnits_UniformPriordCP, {0,   2}},
   };
 
+  // load the predictions and work out which systs they support
   for (const auto & predFileName : mcmc_ana::PRED_FILES)
   {
     TFile f(predFileName.c_str());
@@ -124,6 +125,17 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       preds.emplace(predName, ana::LoadFrom<PredictionInterp>(&f, predName));
     }
   }
+  std::unordered_set<const ISyst*> allSysts;
+  for (const auto & predPair : preds)
+  {
+    if (auto predInterp = dynamic_cast<const PredictionInterp*>(predPair.second.get()))
+    {
+      for (const auto & syst : predInterp->GetAllSysts())
+        allSysts.insert(syst);
+    }
+  }
+
+
   std::cout << preds.size() << " predictions:" << std::endl;
   for (const auto & predPair : preds)
     std::cout << " " << predPair.first  << " (" << DemangledTypeName(predPair.second.get()) << ")" << std::endl;
@@ -148,55 +160,49 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     calcTruth = new osc::OscCalculatorPMNS;  // type of this one doesn't matter; just for storage
     *calcTruth = *calc;
 
+    // choose syst pulls at random
+    TRandom3 rnd;
+    rnd.SetSeed(20200714);
+    shifts = std::make_unique<GaussianPriorSystShifts>();
+    std::vector<const ISyst *> systs;
+    for (const auto &syst : allSysts)
+    {
+      systs.emplace_back(syst);
+      shifts->SetShift(systs.back(), rnd.Gaus());
+    }
+    systTruePulls = shifts->Copy();
+
+
     // make sure we fit all the systs, but those that aren't shared by every expt
     // are ignored by the ones that don't support them
     std::unordered_map<std::string, std::unique_ptr<SingleSampleExperiment>> expts;
     std::vector<std::string> exptNames;
-    std::unordered_set<const ISyst*> allSysts;
     MultiExperiment expt;
     for (const auto & predPair : preds)
     {
-      fakeData.emplace(predPair.first, std::make_unique<Spectrum>(predPair.second->Predict(calc).FakeData(mcmc_ana::POT)));
-      expts.emplace(std::make_pair(predPair.first,
-                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first))));
-      expt.Add(expts.at(predPair.first).get());
-      exptNames.emplace_back(predPair.first);
-      if (auto predInterp = dynamic_cast<const PredictionInterp*>(predPair.second.get()))
-      {
-        for (const auto & syst : predInterp->GetAllSysts())
-          allSysts.insert(syst);
-      }
-    }
-    for (const auto & exPair : expts)
-    {
       std::unordered_set<const ISyst*> unsupportedSysts(allSysts);
-      const auto  pred = dynamic_cast<PredictionInterp*>(preds.at(exPair.first).get());
+      const auto  pred = dynamic_cast<PredictionInterp*>(predPair.second.get());
+      SystShifts thisPredShifts;
       for (const auto & syst : pred->GetAllSysts())
       {
-        std::cout << "        PredInterp '" << exPair.first << "' DOES support syst: " << syst->ShortName() << std::endl;
         unsupportedSysts.erase(syst);
+        thisPredShifts.SetShift(syst, systTruePulls->GetShift(syst));
       }
       std::vector<std::pair<const ISyst*, const ISyst*>> corrs;
       for (const auto & syst : unsupportedSysts)
       {
-        std::cout << "  PredInterp '" << exPair.first << "' does not support syst: " << syst->ShortName() << std::endl;
+        std::cout << "  PredInterp '" << predPair.first << "' does not support syst: " << syst->ShortName() << std::endl;
         corrs.push_back(std::make_pair(syst, static_cast<const ISyst *>(nullptr)));
       }
+
+      fakeData.emplace(predPair.first, std::make_unique<Spectrum>(predPair.second->PredictSyst(calc, thisPredShifts).FakeData(mcmc_ana::POT)));
+      expts.emplace(std::make_pair(predPair.first,
+                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first))));
+      expt.Add(expts.at(predPair.first).get());
       expt.SetSystCorrelations(std::distance(exptNames.begin(),
-                                               std::find(exptNames.begin(), exptNames.end(), exPair.first)),
+                                             std::find(exptNames.begin(), exptNames.end(), predPair.first)),
                                corrs);
-
-      // choose pulls at random
-      TRandom3 rnd;
-      rnd.SetSeed(20200413);
-      shifts = std::make_unique<GaussianPriorSystShifts>();
-      std::vector<const ISyst *> systs;
-      for (const auto &syst : allSysts) {
-        systs.emplace_back(syst);
-        shifts->SetShift(systs.back(), rnd.Gaus());
-      }
-      systTruePulls = shifts->Copy();
-
+      exptNames.emplace_back(predPair.first);
     }
 
     // now put the calc back to normal and reset the systs to nominal
@@ -205,8 +211,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     shifts->ResetToNominal();
 
     StanConfig cfg;
-    cfg.num_warmup = 1000;
-    cfg.num_samples = 2000;
+    cfg.num_warmup = 500;
+    cfg.num_samples = 1000;
     cfg.max_depth = 15;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
