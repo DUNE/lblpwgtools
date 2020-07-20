@@ -80,6 +80,7 @@ namespace ana
 
     if(fLabel1D) return *fLabel1D;
 
+    fLabel1D = "";
     for(const std::string& l: fLabels) *fLabel1D += l + " and ";
     fLabel1D->resize(fLabel1D->size()-5); // drop extra "and"
 
