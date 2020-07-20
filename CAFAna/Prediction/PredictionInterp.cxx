@@ -369,8 +369,11 @@ namespace ana
                                            bool nubar,
                                            const SystShifts &shift) const
   {
-    if(s.HasStan() && !shift.HasAnyStan()){
-      std::cout << "PredictionInterp used with stan oscillations but non-stan syst shifts. Is that what you expected?" << std::endl;
+    if(s.HasStan() && (!shift.IsNominal() && !shift.HasAnyStan())){
+      std::cout << "PredictionInterp used with Stan oscillations but non-Stan syst shifts. Is that what you expected?" << std::endl;
+      std::cout << "  Systs set: " << std::endl;
+      for (const auto & syst : shift.ActiveSysts())
+        std::cout << "      " << syst->ShortName() << " = " << shift.GetShift(syst) << std::endl;
     }
 
     if(s.HasStan() || shift.HasAnyStan()){
