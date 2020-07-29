@@ -1,12 +1,18 @@
 #include "CAFAna/Fit/Priors.h"
 
 #include "Utilities/func/Stan.h"
+#include "stan/math/prim/scal/prob/normal_lpdf.hpp"
 
 namespace ana
 {
   stan::math::var PriorUniformInFitVar(const stan::math::var&, const osc::IOscCalculatorAdjustableStan*)
   {
     return 0.;
+  }
+
+  stan::math::var GaussianPriorDm32Scaled(const stan::math::var &dm32, const osc::IOscCalculatorAdjustableStan *)
+  {
+    return stan::math::normal_lpdf(dm32, 2.45, 0.5);
   }
 
   stan::math::var UniformTh23Prior_FitSS2Th23(const stan::math::var& ss2th23, const osc::IOscCalculatorAdjustableStan*)
@@ -24,4 +30,4 @@ namespace ana
     return log(2) + 0.5*log(ssth23);
   }
 
- }
+}
