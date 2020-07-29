@@ -631,7 +631,7 @@ namespace ana
 
       // -------------------------------
       // this is a new bit we added in between the bits copied from Stan
-      fValueWriter->SaveSamplerState(sampler);
+      fValueWriter->SaveSamplerState(sampler, warm_delta_t);
     }
     fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
     writer.write_sample_names(s, sampler, model);
@@ -660,7 +660,7 @@ namespace ana
 
     // *********************************************
 
-    fValueWriter->SaveSamplerState(sampler);
+    fValueWriter->SaveSamplerState(sampler, sample_delta_t);
 
   }
 

@@ -99,7 +99,7 @@ namespace ana
       }
 
       template <typename Model, typename RNG>
-      void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler)
+      void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler, double samplingTime)
       {
         // this is from Stan
         sampler.write_sampler_state(*this);
@@ -107,6 +107,7 @@ namespace ana
         auto mcmcsamples = fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples;
         mcmcsamples->SetHyperparams(sampler.get_nominal_stepsize(),  // the 'nominal' stepsize is updated at the end of warmup
                                     TMatrixDFromEigenMatrixXd(sampler.z().inv_e_metric_));
+        mcmcsamples->SetSamplingTime(samplingTime);
       }
 
       void         SetActiveSamples(WhichSamples s) { fWhichSamples = s; }

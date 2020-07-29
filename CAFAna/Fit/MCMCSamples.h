@@ -174,6 +174,8 @@ namespace ana
                         std::map<const ana::IFitVar *, double> &varVals,
                         const std::vector<const ana::ISyst *> &systs, std::map<const ana::ISyst *, double> &systVals) const;
 
+      double SamplingTime() const { return fSamplingTime; }
+
       void SetHyperparams(double stepSize, const TMatrixD& invMassMatrix)
       {
         fHyperparams = Hyperparameters(stepSize, std::make_unique<TMatrixD>(invMassMatrix));
@@ -185,6 +187,8 @@ namespace ana
       };
 
       void SetNames(const std::vector<std::string>& names);
+
+      void SetSamplingTime(double s)  { fSamplingTime = s; }
 
       /// Get a TTree with the MCMC samples in it
       const TTree *ToTTree() const;
@@ -205,7 +209,7 @@ namespace ana
       /// Internal-use constructor needed for LoadFrom()
       MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
                   const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
-                  std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams);
+                  std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams, double samplingTime);
 
       /// Where in fDiagnosticVals is the given diagnostic?
       std::size_t DiagOffset(const std::string& diagName) const;
@@ -243,7 +247,8 @@ namespace ana
       std::vector<double> fEntryVals;  // ditto
       std::vector<double> fDiagnosticVals;
 
-      mutable Hyperparameters fHyperparams;
+      mutable Hyperparameters fHyperparams; ///< Hyperparameters deduced after adaptation, or manually set
+      double fSamplingTime;                 ///< how long did we spend sampling?
   };
 
 }

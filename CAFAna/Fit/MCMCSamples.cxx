@@ -50,19 +50,17 @@ namespace ana
   {}
 
   //----------------------------------------------------------------------
-  MCMCSamples::MCMCSamples(std::size_t offset,
-                           const std::vector<std::string> &diagBranchNames,
-                           const std::vector<const IFitVar *> &vars,
-                           const std::vector<const ana::ISyst *> &systs,
-                           std::unique_ptr<TTree> &tree,
-                           const Hyperparameters &hyperParams)
+  MCMCSamples::MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
+                           const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
+                           std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams, double samplingTime)
     : fOffset(offset),
       fDiagBranches(diagBranchNames),
       fVars(vars),
       fSysts(systs),
       fBestFitFound(false),
       fSamples(std::move(tree)),
-      fHyperparams(hyperParams)
+      fHyperparams(hyperParams),
+      fSamplingTime(samplingTime)
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -80,7 +78,8 @@ namespace ana
         fEntryLL(std::move(other.fEntryLL)),
         fEntryVals(std::move(other.fEntryVals)),
         fDiagnosticVals(std::move(other.fDiagnosticVals)),
-        fHyperparams(std::move(other.fHyperparams))
+        fHyperparams(std::move(other.fHyperparams)),
+        fSamplingTime(std::move(other.fSamplingTime))
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -109,6 +108,7 @@ namespace ana
     fEntryVals = std::move(other.fEntryVals);
 
     fHyperparams = std::move(other.fHyperparams);
+    fSamplingTime = std::move(other.fSamplingTime);
 
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -285,6 +285,8 @@ namespace ana
     auto invMetric = std::unique_ptr<TMatrixD>(hyperParamsDir->Get<TMatrixD>("inv_metric"));
     Hyperparameters hyperparams{stepSize->GetVal(), std::move(invMetric)};
 
+    auto samplingTime = dir->Get<TParameter<double>>("samplingTime");
+
     delete dir;
 
     return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(),
@@ -292,7 +294,8 @@ namespace ana
                                                         fitVars,
                                                         systs,
                                                         samples,
-                                                        hyperparams));
+                                                        hyperparams,
+                                                        samplingTime->GetVal()));
   }
 
   //----------------------------------------------------------------------
@@ -339,7 +342,7 @@ namespace ana
   template <typename T>
   double MCMCSamples::MaxValue(const T *var) const
   {
-    static_assert(std::is_same<IFitVar, T>::value || std::is_same<ISyst, T>::value,
+    static_assert(std::is_same<IFitVar, T>::value || std::is_same<IConstrainedFitVar, T>::value || std::is_same<ISyst, T>::value,
                   "MCMCSamples::MaxValue() can only be used with IFitVars and ISysts");
     double max = -std::numeric_limits<double>::infinity();
     std::size_t offset = VarOffset(var);
@@ -352,6 +355,7 @@ namespace ana
     return max;
   }
   // explicit instantiation of the correct types
+  template double MCMCSamples::MaxValue(const IConstrainedFitVar *) const;
   template double MCMCSamples::MaxValue(const IFitVar *) const;
   template double MCMCSamples::MaxValue(const ISyst *) const;
 
@@ -359,7 +363,7 @@ namespace ana
   template <typename T>
   double MCMCSamples::MinValue(const T *var) const
   {
-    static_assert(std::is_same<IFitVar, T>::value || std::is_same<ISyst, T>::value,
+    static_assert(std::is_same<IFitVar, T>::value || std::is_same<IConstrainedFitVar, T>::value || std::is_same<ISyst, T>::value,
                   "MCMCSamples::MinValue() can only be used with IFitVars and ISysts");
     double min = std::numeric_limits<double>::infinity();
     std::size_t offset = VarOffset(var);
@@ -372,6 +376,7 @@ namespace ana
     return min;
   }
   // explicit instantiation of the correct types
+  template double MCMCSamples::MinValue(const IConstrainedFitVar *) const;
   template double MCMCSamples::MinValue(const IFitVar *) const;
   template double MCMCSamples::MinValue(const ISyst *) const;
 
@@ -662,6 +667,10 @@ namespace ana
       fHyperparams.invMetric->Write("inv_metric");
     dir->cd();
     hyperdir->Write();
+
+    dir->cd();
+    TParameter<double> samplingTime("samplingTime", fSamplingTime);
+    samplingTime.Write();
 
     dir->Write();
     delete dir;
