@@ -123,7 +123,9 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
                       bool drawPlots=true,
                       std::string dirPrefix=".",
                       std::string samplesFilename=mcmc_ana::SAVED_SAMPLES_FILE,
-                      bool fitND=false)
+                      bool fitND=false,
+                      int fastAdaptSamples=-1,
+                      double adaptDelta=-1)
 {
   assert (loadSamplesFromFile != saveSamplesToFile);
 
@@ -275,6 +277,11 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     cfg.num_warmup = 500;
     cfg.num_samples = 1000;
     cfg.max_depth = 15;
+    cfg.stepsize = 0.001;
+    if (adaptDelta > 0 && adaptDelta <= 1)
+      cfg.delta = adaptDelta;
+    if (fastAdaptSamples > 0)
+      cfg.init_buffer = fastAdaptSamples;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
     StanFitter fitter(&expt, fitVars, std::vector<const ISyst*>(allSysts.begin(), allSysts.end()));
