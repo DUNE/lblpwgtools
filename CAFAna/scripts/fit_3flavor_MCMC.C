@@ -429,13 +429,19 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
   // 2D syst space
   auto systs =  shifts->ActiveSysts();
-  for (const auto & systPtr1 : systs)
+  std::set<std::string> systNames;
+  std::transform(systs.begin(), systs.end(), std::inserter(systNames, systNames.end()), [](const ISyst* s){ return s->ShortName();});
+  assert(systNames.size() == systs.size());
+  for (const auto & systName1 : systNames)
   {
+    auto systPtr1 = *std::find_if(systs.begin(), systs.end(), [&systName1](const std::string & s){ return s == systName1; });
+    for (auto itSystName2 = systNames.rbegin(); itSystName2 != systNames.rend(); itSystName2++)
     for (auto itSyst2 = systs.rbegin(); itSyst2 != systs.rend(); itSyst2++)
     {
-      const ISyst* systPtr2 = *itSyst2;
-      if (systPtr2 == systPtr1)
+      if (*itSystName2 == systName1)
         break;
+
+      const ISyst* systPtr2 = *std::find_if(systs.begin(), systs.end(), [&itSystName2](const std::string & s){ return s == *itSystName2; });
 
       c.Clear();
       BayesianSurface marg = samples->MarginalizeTo(systPtr1, 30, samples->MinValue(systPtr1), samples->MaxValue(systPtr1),
