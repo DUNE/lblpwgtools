@@ -146,8 +146,12 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   std::map<std::string, std::unique_ptr<IPrediction>> preds;
   ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23, PriorUniformInFitVar, "FlatSSTh23");
   ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled, PriorUniformInFitVar, "FlatDmSq32");
+  ConstrainedFitVarWithPrior fitDmSq32Scaled_GaussianPrior(&kFitDmSq32Scaled, GaussianPriorDm32Scaled, "GaussianDmSq32");
   FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits, PriorUniformInFitVar, "FlatdcP");
-  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior, &fitDeltaInPiUnits_UniformPriordCP};
+  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23,
+                                      &fitDmSq32Scaled_UniformPrior,
+//                                      &fitDmSq32Scaled_GaussianPrior,
+                                      &fitDeltaInPiUnits_UniformPriordCP};
   const std::map<const IFitVar*, std::pair<double, double>> fitVarDrawRanges
   {
     {&fitSsqTh23_UniformPriorSsqTh23,    {.3, .7}},
