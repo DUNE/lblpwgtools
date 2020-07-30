@@ -38,6 +38,7 @@
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorDMP.h"
+#include "OscLib/func/OscCalculatorAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -143,7 +144,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
 //    calc = new osc::OscCalculatorPMNSOpt;
 //    calc = new osc::OscCalculatorPMNS;
-  calc = new osc::OscCalculatorDMP;
+//   calc = new osc::OscCalculatorDMP;
+  calc = new osc::OscCalculatorAnalytic;
   *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
   std::unique_ptr<MCMCSamples> samples, warmup;
