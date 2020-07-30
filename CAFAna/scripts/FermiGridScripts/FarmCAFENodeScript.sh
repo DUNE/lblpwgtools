@@ -34,7 +34,7 @@ while [[ ${#} -gt 0 ]]; do
       fi
 
       PNFS_PATH_APPEND="$2"
-      echo "[OPT]: Writing output to /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}/<CLUSTERID>.<JOBID>"
+      echo "[OPT]: Writing output to /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}/<CLUSTERID>.<JOBID>"
       shift # past argument
       ;;
 
@@ -137,7 +137,7 @@ while [[ ${#} -gt 0 ]]; do
 
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME} [opts] --cafe-comands <args>"
-      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
+      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/scratch/users/${USER}/"
       echo -e "\t-c|--cafe-command-file     : File containing '<script name>  [arg1 [arg2 [...]]]'. One job is submitted per line in the input file."
       echo -e "\t--cafe-commands            : All arguments passed after this will be passed to cafe on the node."
       echo -e "\t-n|--rename-submit-script  : Rename the submission script for easier diagnostics."
@@ -226,26 +226,26 @@ if ! voms-proxy-info -exists; then
   voms-proxy-info --all
 fi
 
-ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 
 if [ $? -ne 0 ]; then
   if [ ${DRY_RUN} -eq 0 ]; then
-    mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-    ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+    mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+    ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
     if [ $? -ne 0 ]; then
-      echo "Unable to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}."
+      echo "Unable to make /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}."
       exit 2
     fi
   else
-    echo "Would try to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
+    echo "Would try to make /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
 elif [ ${FORCE_REMOVE} == "1" ]; then
   if [ ${DRY_RUN} -eq 0 ]; then
-    echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
-    rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-    mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+    echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}\" "
+    rm -rf /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+    mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
   else
-    echo "Would force remove and remake /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}..."
+    echo "Would force remove and remake /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}..."
   fi
 fi
 
