@@ -53,7 +53,11 @@ namespace mcmc_ana
   double MOCKDATA_DM32 = 0.0025;   // normal hierarchy
   double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
 
+//  const int MAX_SYSTS = -1;
+  const int MAX_SYSTS = 5;
+
   const std::string STASH_DIR = "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4";
+//  const std::string STASH_DIR = "/dune/data/users/jwolcott";
   const std::vector<std::string> PRED_FILES {
       STASH_DIR + "/mcc11v4_FD_FHC.root",
       STASH_DIR + "/mcc11v4_FD_RHC.root",
@@ -179,6 +183,16 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     }
   }
 
+  if (mcmc_ana::MAX_SYSTS >= 0 && !allSysts.empty())
+  {
+    TRandom3 r;
+    while (allSysts.size() > mcmc_ana::MAX_SYSTS)
+    {
+      auto s = allSysts.begin();
+      std::advance(s, r.Integer(allSysts.size()));
+      allSysts.erase(s);
+    }
+  }
 
   std::cout << preds.size() << " predictions:" << std::endl;
   for (const auto & predPair : preds)
