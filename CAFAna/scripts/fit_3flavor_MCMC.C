@@ -176,6 +176,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       auto dir = f.GetDirectory(predName);
       if (!dir)
         continue;
+      if (std::string(predName).substr(0, 2) == "nd" && !fitND)
+        continue;
       preds.emplace(predName, ana::LoadFrom<PredictionInterp>(&f, predName));
     }
   }
