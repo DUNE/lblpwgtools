@@ -151,7 +151,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
                       std::string samplesFilename=mcmc_ana::SAVED_SAMPLES_FILE,
                       bool fitND=false,
                       int fastAdaptSamples=-1,
-                      double adaptDelta=-1)
+                      double adaptDelta=-1,
+                      double nd_scale=1.0)
 {
   assert (loadSamplesFromFile != saveSamplesToFile);
 
@@ -254,13 +255,19 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   if (mcmc_ana::MAX_SYSTS >= 0 && !allSysts.empty())
   {
     TRandom3 r;
-    while (allSysts.size() > mcmc_ana::MAX_SYSTS)
+    while (int(allSysts.size()) > mcmc_ana::MAX_SYSTS)
     {
       auto s = allSysts.begin();
       std::advance(s, r.Integer(allSysts.size()));
       allSysts.erase(s);
     }
   }
+
+  // so that multiple chains with same syst seeds can be easily merged
+  std::vector<const ISyst*> allSystsSorted(allSysts.begin(), allSysts.end());
+  std::sort(allSystsSorted.begin(), allSystsSorted.end(),
+            [](const ISyst* a, const ISyst* b){ return a->ShortName() < b->ShortName(); });
+
 
   std::cout << preds.size() << " predictions:" << std::endl;
   for (const auto & predPair : preds)
@@ -279,6 +286,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     // store the default vals...
     double oldTh23 = calc->GetTh23();
     double oldDmsq32 = calc->GetDmsq32();
+    double oldDelta = calc->GetdCP();
 
     // pick a few test values for some mock data...
     calc->SetTh23(mcmc_ana::MOCKDATA_TH23);
@@ -289,16 +297,11 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
     // choose syst pulls at random
     TRandom3 rnd;
-    rnd.SetSeed(20200714);
+    rnd.SetSeed(20200806);
     shifts = std::make_unique<GaussianPriorSystShifts>();
-    std::vector<const ISyst *> systs;
-    for (const auto &syst : allSysts)
-    {
-      systs.emplace_back(syst);
-      shifts->SetShift(systs.back(), rnd.Gaus());
-    }
+    for (const auto &syst : allSystsSorted)
+      shifts->SetShift(syst, rnd.Gaus());
     systTruePulls = shifts->Copy();
-
 
     // make sure we fit all the systs, but those that aren't shared by every expt
     // are ignored by the ones that don't support them
@@ -322,9 +325,12 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
         corrs.push_back(std::make_pair(syst, static_cast<const ISyst *>(nullptr)));
       }
 
-      fakeData.emplace(predPair.first, std::make_unique<Spectrum>(predPair.second->PredictSyst(calc, thisPredShifts).FakeData(mcmc_ana::POT)));
+      double scale = predPair.first.substr(0, 2) == "nd" ? nd_scale : 1.0;
+      fakeData.emplace(predPair.first,
+                       std::make_unique<Spectrum>(predPair.second->PredictSyst(calcTruth, thisPredShifts).FakeData(mcmc_ana::POT)));
+      fakeData[predPair.first]->Scale(scale);
       expts.emplace(std::make_pair(predPair.first,
-                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first))));
+                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first), scale)));
       expt.Add(expts.at(predPair.first).get());
       expt.SetSystCorrelations(std::distance(exptNames.begin(),
                                              std::find(exptNames.begin(), exptNames.end(), predPair.first)),
@@ -348,20 +354,21 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
     shifts->ResetToNominal();
 
-//    mcmc_ana::ScanLL(calcTruth, systTruePulls.get(), &expt, dirPrefix);
+//    mcmc_ana::ScanLL(allSystsSorted.front(), -5, 5, 0.1, calcTruth, systTruePulls.get(), &expt, dirPrefix);
 
     StanConfig cfg;
-    cfg.num_warmup = 500;
+    cfg.num_warmup = 1000;
     cfg.num_samples = 1000;
     cfg.max_depth = 15;
-    cfg.stepsize = 0.001;
+    //cfg.stepsize = 0.001;
+    //cfg.denseMassMx = true;
     if (adaptDelta > 0 && adaptDelta <= 1)
       cfg.delta = adaptDelta;
     if (fastAdaptSamples > 0)
       cfg.init_buffer = fastAdaptSamples;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
-    StanFitter fitter(&expt, fitVars, std::vector<const ISyst*>(allSysts.begin(), allSysts.end()));
+    StanFitter fitter(&expt, fitVars, allSystsSorted);
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
 
@@ -453,7 +460,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.allSysts.png").c_str(), fitVarPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.systs.png").c_str(), fitVarPtr->ShortName().c_str()));
   }
   for (const auto & systPtr : shifts->ActiveSysts())
   {
@@ -469,7 +476,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.allSysts.png").c_str(), systPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.systs.png").c_str(), systPtr->ShortName().c_str()));
   }
   // pairs of fit vars
   for (const auto fitVar1 : fitVars)
@@ -492,27 +499,30 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       marker.SetMarkerColor(kMagenta);
       marker.SetMarkerSize(3);
       marker.Draw();
-      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s.allSysts.png").c_str(),
+      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s.systs.png").c_str(),
                     fitVar1->ShortName().c_str(),
                     fitVar2->ShortName().c_str()));
     }
   }
 
   // 2D syst space
+
   auto systs =  shifts->ActiveSysts();
   std::set<std::string> systNames;
-  std::transform(systs.begin(), systs.end(), std::inserter(systNames, systNames.end()), [](const ISyst* s){ return s->ShortName();});
+  std::transform(systs.begin(), systs.end(),
+                 std::inserter(systNames, systNames.end()), [](const ISyst* s){ return s->ShortName();});
   assert(systNames.size() == systs.size());
   for (const auto & systName1 : systNames)
   {
-    auto systPtr1 = *std::find_if(systs.begin(), systs.end(), [&systName1](const std::string & s){ return s == systName1; });
+    auto systPtr1 = *std::find_if(systs.begin(), systs.end(),
+                                  [&systName1](const ISyst * s){ return s->ShortName() == systName1; });
     for (auto itSystName2 = systNames.rbegin(); itSystName2 != systNames.rend(); itSystName2++)
-    for (auto itSyst2 = systs.rbegin(); itSyst2 != systs.rend(); itSyst2++)
     {
       if (*itSystName2 == systName1)
         break;
 
-      const ISyst* systPtr2 = *std::find_if(systs.begin(), systs.end(), [&itSystName2](const std::string & s){ return s == *itSystName2; });
+      const ISyst* systPtr2 = *std::find_if(systs.begin(), systs.end(),
+                                            [&itSystName2](const ISyst * s){ return s->ShortName() == *itSystName2; });
 
       c.Clear();
       BayesianSurface marg = samples->MarginalizeTo(systPtr1, 30, samples->MinValue(systPtr1), samples->MaxValue(systPtr1),
@@ -539,7 +549,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     c.Clear();
     // calc we passed to the surface now contains best fit params
     DataMCComparison(*fakeData.at(predPair.first), predPair.second.get(), calc, *shifts, kBinDensity);
-    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + ".allSysts.png").c_str());
+    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + ".systs.png").c_str());
   }
 
   // show that the pulls were what we expect
@@ -590,6 +600,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   leg.Draw();
 
   c.SetBottomMargin(0.3);
-  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls.allSysts.png").c_str());
+  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls.systs.png").c_str());
 
 }
