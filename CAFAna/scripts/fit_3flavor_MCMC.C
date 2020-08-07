@@ -170,19 +170,53 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
   // build my fit variables...
   std::map<std::string, std::unique_ptr<IPrediction>> preds;
-  ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23, PriorUniformInFitVar, "FlatSSTh23");
-  ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled, PriorUniformInFitVar, "FlatDmSq32");
-  ConstrainedFitVarWithPrior fitDmSq32Scaled_GaussianPrior(&kFitDmSq32Scaled, GaussianPriorDm32Scaled, "GaussianDmSq32");
-  FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits, PriorUniformInFitVar, "FlatdcP");
+  ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23,
+                                                            PriorUniformInFitVar,
+                                                            "FlatSSTh23");
+  ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled,
+                                                          PriorUniformInFitVar,
+                                                          "FlatDmSq32");
+  ConstrainedFitVarWithPrior fitDmSq32Scaled_GaussianPrior(&kFitDmSq32Scaled,
+                                                           GaussianPriorDm32Scaled,
+                                                           "GaussianDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_SmallSquareWellPrior(&kFitDmSq32Scaled,
+                                       SquareWellPriorInFitVar(2.5, 0.5),
+                                       "SmallSquareWellDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_BigSquareWellPrior(&kFitDmSq32Scaled,
+                                     SquareWellPriorInFitVar(2.5, 2.5),
+                                     "BigSquareWellDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_SmallTopHatPrior(&kFitDmSq32Scaled,
+                                   TopHatPriorInFitVar(2.5, 0.5),
+                                   "SmallTopHatDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_BigTopHatPrior(&kFitDmSq32Scaled,
+                                   TopHatPriorInFitVar(2.5, 2.5),
+                                   "BigTopHatDmSq32");
+  FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits,
+                                                    PriorUniformInFitVar,
+                                                    "FlatdcP");
   std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23,
-                                      &fitDmSq32Scaled_UniformPrior,
+//                                      &fitDmSq32Scaled_UniformPrior,
 //                                      &fitDmSq32Scaled_GaussianPrior,
-                                      &fitDeltaInPiUnits_UniformPriordCP};
+//                                      &fitDmSq32Scaled_SmallSquareWellPrior,
+//                                      &fitDmSq32Scaled_BigSquareWellPrior,
+                                      &fitDmSq32Scaled_SmallTopHatPrior,
+//                                      &fitDmSq32Scaled_BigTopHatPrior,
+                                      &fitDeltaInPiUnits_UniformPriordCP
+  };
   const std::map<const IFitVar*, std::pair<double, double>> fitVarDrawRanges
   {
-    {&fitSsqTh23_UniformPriorSsqTh23,    {.3, .7}},
-    {&fitDmSq32Scaled_UniformPrior,      {2.2, 2.8}},
-    {&fitDeltaInPiUnits_UniformPriordCP, {0,   2}},
+    {&fitSsqTh23_UniformPriorSsqTh23,       {.3, .7}},
+    {&fitDmSq32Scaled_UniformPrior,         {2.2, 2.8}},
+    {&fitDmSq32Scaled_GaussianPrior,        {2.2, 2.8}},
+    {&fitDmSq32Scaled_SmallTopHatPrior, {2.2, 2.8}},
+    {&fitDmSq32Scaled_BigTopHatPrior,   {2.2, 2.8}},
+    {&fitDmSq32Scaled_SmallSquareWellPrior, {2.2, 2.8}},
+    {&fitDmSq32Scaled_BigSquareWellPrior,   {2.2, 2.8}},
+    {&fitDeltaInPiUnits_UniformPriordCP,    {0,   2}},
   };
 
   // load the predictions and work out which systs they support
@@ -299,8 +333,19 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     }
 
     // now put the calc back to normal and reset the systs to nominal
-    calc->SetTh23(oldTh23);
-    calc->SetDmsq32(oldDmsq32);
+    // (unless we're not fitting those vars, in which case we need to leave them alone)
+    if (std::find(fitVars.begin(), fitVars.end(), &fitSsqTh23_UniformPriorSsqTh23) != fitVars.end())
+      calc->SetTh23(oldTh23);
+    if (std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_UniformPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_GaussianPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_SmallTopHatPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigTopHatPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_SmallSquareWellPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigSquareWellPrior) != fitVars.end())
+      calc->SetDmsq32(oldDmsq32);
+    if (std::find(fitVars.begin(), fitVars.end(), &fitDeltaInPiUnits_UniformPriordCP) != fitVars.end())
+      calc->SetdCP(oldDelta);
+
     shifts->ResetToNominal();
 
 //    mcmc_ana::ScanLL(calcTruth, systTruePulls.get(), &expt, dirPrefix);
