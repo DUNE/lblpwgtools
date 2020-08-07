@@ -98,8 +98,8 @@ namespace ana
         (fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples)->SetNames(names);
       }
 
-      template <typename Model, typename RNG>
-      void SaveSamplerState(stan::mcmc::adapt_diag_e_nuts<Model, RNG> &sampler, double samplingTime)
+      template <typename Sampler>
+      void SaveSamplerState(Sampler &sampler, double samplingTime)
       {
         // this is from Stan
         sampler.write_sampler_state(*this);
@@ -382,6 +382,7 @@ namespace ana
       /// \param init_context   MCMC initialization info
       /// \param procId         Process ID
       /// \return               Stan return code
+      template <typename Sampler>
       int RunHMC(stan::callbacks::writer &init_writer,
                  StanFitter::samplecounter_callback &interrupt,
                  std::ostream &diagStream,
@@ -399,7 +400,8 @@ namespace ana
       /// \param interrupt           Object whose operator()() will be called after every sample
       /// \param logger              General object to write log to
       /// \param diagnostic_writer   Object to write diagnostics to
-      void RunSampler(stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988>& sampler,
+      template <typename Sampler>
+      void RunSampler(Sampler& sampler,
                       std::vector<double>& cont_vector,
                       boost::ecuyer1988& rng,
                       stan::callbacks::interrupt& interrupt,

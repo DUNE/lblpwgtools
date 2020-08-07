@@ -11,6 +11,7 @@
 #include "stan/callbacks/stream_writer.hpp"
 #include "stan/io/reader.hpp"
 #include "stan/io/writer.hpp"
+#include "stan/services/sample/hmc_nuts_dense_e_adapt.hpp"
 #include "stan/services/sample/hmc_nuts_diag_e_adapt.hpp"
 #include "stan/services/util/create_unit_e_diag_inv_metric.hpp"
 #include "stan/services/diagnose/diagnose.hpp"
@@ -31,6 +32,11 @@
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
+
+// these will come in handy below
+using stan_diag_t = stan::mcmc::adapt_diag_e_nuts<ana::StanFitter, boost::ecuyer1988>;
+using stan_dense_t = stan::mcmc::adapt_dense_e_nuts<ana::StanFitter, boost::ecuyer1988>;
+
 
 namespace ana
 {
@@ -228,7 +234,11 @@ namespace ana
     //      in unbounded parameter space.
     // this call can be replaced by a call to the stock Stan function if needed (see following),
     // but we've customized it in order to be able to save the state after warmup and restore it.
-    auto return_code = RunHMC(init_writer, interrupt, diagStream, logger, *init_context, procId);
+    int return_code;
+    if (fStanConfig.denseMassMx)
+      return_code = RunHMC<stan_dense_t>(init_writer, interrupt, diagStream, logger, *init_context, procId);
+    else
+      return_code = RunHMC<stan_diag_t>(init_writer, interrupt, diagStream, logger, *init_context, procId);
 
     // Use Stan's wrapper function instead of the above.  Can be used for diagnostics as needed.
 //    auto return_code = stan::services::sample::hmc_nuts_diag_e_adapt(*this,
@@ -462,6 +472,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  template <typename Sampler>
   int StanFitter::RunHMC(stan::callbacks::writer &init_writer,
                          StanFitter::samplecounter_callback &interrupt,
                          std::ostream &diagStream,
@@ -515,7 +526,7 @@ namespace ana
 
     if (return_code == stan::services::error_codes::OK)
     {
-      stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988> sampler(*this, rng);
+      Sampler sampler(*this, rng);
 
       sampler.set_metric(inv_metric);
       if (std::isnan(fMCMCWarmup.Hyperparams().stepSize))
@@ -559,10 +570,27 @@ namespace ana
 
     return return_code;
   }
+
+  // see at the top of this file for the type aliases
+  template int StanFitter::RunHMC<stan_diag_t>(stan::callbacks::writer &init_writer,
+                                               StanFitter::samplecounter_callback &interrupt,
+                                               std::ostream &diagStream,
+                                               const std::unique_ptr<stan::callbacks::stream_logger> &logger,
+                                               stan::io::array_var_context &init_context,
+                                               unsigned int procId) const;
+  template int StanFitter::RunHMC<stan_dense_t>(stan::callbacks::writer &init_writer,
+                                                StanFitter::samplecounter_callback &interrupt,
+                                                std::ostream &diagStream,
+                                                const std::unique_ptr<stan::callbacks::stream_logger> &logger,
+                                                stan::io::array_var_context &init_context,
+                                                unsigned int procId) const;
+
+
   // StanFitter::RunHMC()
 
   //----------------------------------------------------------------------
-  void StanFitter::RunSampler(stan::mcmc::adapt_diag_e_nuts<StanFitter, boost::ecuyer1988>& sampler,
+  template <typename Sampler>
+  void StanFitter::RunSampler(Sampler& sampler,
                               std::vector<double>& cont_vector,
                               boost::ecuyer1988& rng,
                               stan::callbacks::interrupt& interrupt,
@@ -633,6 +661,9 @@ namespace ana
       // this is a new bit we added in between the bits copied from Stan
       fValueWriter->SaveSamplerState(sampler, warm_delta_t);
     }
+    if (fStanConfig.num_samples < 1)
+      return;
+
     fValueWriter->SetActiveSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
     writer.write_sample_names(s, sampler, model);
     writer.write_diagnostic_names(s, sampler, model);
@@ -663,6 +694,21 @@ namespace ana
     fValueWriter->SaveSamplerState(sampler, sample_delta_t);
 
   }
+
+  // see above near the top of the file for the type aliases
+  template void StanFitter::RunSampler<stan_diag_t>(stan_diag_t& sampler,
+                                                    std::vector<double>& cont_vector,
+                                                    boost::ecuyer1988& rng,
+                                                    stan::callbacks::interrupt& interrupt,
+                                                    stan::callbacks::logger& logger,
+                                                    stan::callbacks::writer& diagnostic_writer) const;
+  template void StanFitter::RunSampler<stan_dense_t>(stan_dense_t& sampler,
+                                                    std::vector<double>& cont_vector,
+                                                    boost::ecuyer1988& rng,
+                                                    stan::callbacks::interrupt& interrupt,
+                                                    stan::callbacks::logger& logger,
+                                                    stan::callbacks::writer& diagnostic_writer) const;
+
 
   //----------------------------------------------------------------------
   void StanFitter::TestGradients(osc::IOscCalculatorAdjustable *seed,
