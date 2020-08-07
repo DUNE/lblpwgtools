@@ -46,15 +46,16 @@ using namespace ana;
 
 namespace mcmc_ana
 {
-  double POT = pot_fd;
+  const double POT = pot_fd;
   const std::string SAVED_SAMPLES_FILE = "samples_systs.root";
 
-  double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
-  double MOCKDATA_DM32 = 0.0025;   // normal hierarchy
-  double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
+  const double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
+  const double MOCKDATA_DM32 = 0.0024;   // normal hierarchy
+  const double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
 
-//  const int MAX_SYSTS = -1;
-  const int MAX_SYSTS = 5;
+//  const int MAX_SYSTS = 0;
+  const int MAX_SYSTS = -1;
+//  const int MAX_SYSTS = 5;
 
   const std::string STASH_DIR = "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4";
 //  const std::string STASH_DIR = "/dune/data/users/jwolcott";
