@@ -76,40 +76,65 @@ namespace mcmc_ana
   }
 
   // ---------------------------------------------
-  void ScanLL(const osc::IOscCalculatorAdjustable * calcTruth,
+  template <typename VarOrSyst>
+  void ScanLL(const VarOrSyst * varOrSyst,
+              double begin,
+              double end,
+              double step,
+              const osc::IOscCalculatorAdjustable * calcTruth,
               const SystShifts * systTruePulls,
               const IExperiment * expt,
               const std::string & outDir)
   {
+
     TGraph g;
-    for (int dm32Step = -100; dm32Step <= 100; dm32Step++)
+    int nStep = 0;
+    for (double val = begin; val <= end; val += step)
     {
-      double dm32 = dm32Step * 0.001;
-       const double stepSize = 2*TMath::Pi()/100.;
-      double ll = -std::numeric_limits<double>::infinity();
-      for (double th23 = 0; th23 < 100*stepSize; th23 += stepSize)
-      {
-        osc::OscCalculatorPMNSOptStan stanCalc;
-        osc::CopyParams(calcTruth, &stanCalc);
-        stanCalc.SetDmsq32(dm32);
-        stanCalc.SetTh23(th23);
-        SystShifts shifts_;
-        for (const auto & s : systTruePulls->ActiveSysts())
-          shifts_.SetShift(s, util::GetValAs<stan::math::var>(systTruePulls->GetShift(s)));
-        for (double delta = 0; delta < 100*stepSize; delta += stepSize)
-        {
-          stanCalc.SetdCP(delta);
-          ll = std::max(ll, util::GetValAs<double>(expt->LogLikelihood(&stanCalc, shifts_)));
-        }
+      osc::OscCalculatorPMNSOptStan stanCalc;
+      osc::CopyParams(calcTruth, &stanCalc);
+
+      if constexpr (std::is_base_of_v<IFitVar,VarOrSyst>)
+        varOrSyst->SetValue(&stanCalc, val);
+      SystShifts shifts_ = *systTruePulls;
+      if constexpr (std::is_base_of_v<ISyst,VarOrSyst>)
+        shifts_.SetShift(varOrSyst, util::GetValAs<stan::math::var>(val));
+
+      double ll = util::GetValAs<double>(expt->LogLikelihood(&stanCalc, shifts_));
+      g.SetPoint(g.GetN(), val, ll);
+
+      nStep++;
+      if (nStep % 100 == 0)
         stan::math::recover_memory();
-      }
-      g.SetPoint(g.GetN(), dm32*1000, ll);
     }
+
+    //for (int dm32Step = -100; dm32Step <= 100; dm32Step++)
+    //{
+    //  double dm32 = dm32Step * 0.001;
+    //   const double stepSize = 2*TMath::Pi()/100.;
+    //  double ll = -std::numeric_limits<double>::infinity();
+    //  for (double th23 = 0; th23 < 100*stepSize; th23 += stepSize)
+    //  {
+    //    osc::OscCalculatorPMNSOptStan stanCalc;
+    //    osc::CopyParams(calcTruth, &stanCalc);
+    //    stanCalc.SetDmsq32(dm32);
+    //    stanCalc.SetTh23(th23);
+    //    SystShifts shifts_;
+    //    for (const auto & s : systTruePulls->ActiveSysts())
+    //      shifts_.SetShift(s, util::GetValAs<stan::math::var>(systTruePulls->GetShift(s)));
+    //    for (double delta = 0; delta < 100*stepSize; delta += stepSize)
+    //    {
+    //      stanCalc.SetdCP(delta);
+    //      ll = std::max(ll, util::GetValAs<double>(expt->LogLikelihood(&stanCalc, shifts_)));
+    //    }
+    //    stan::math::recover_memory();
+    //  }
+    //  g.SetPoint(g.GetN(), dm32*1000, ll);
+    //}
     TCanvas c;
     g.Draw("apl");
-    g.SetTitle(";#Delta m^{2}_{32} (#times 10^{-3} eV^{2}); LL");
-    c.SaveAs((outDir + "/scan_dm32_LLcurve.png").c_str());
-    c.SaveAs((outDir + "/scan_dm32_LLcurve.root").c_str());
+    g.SetTitle(Form(";%s;LL", varOrSyst->LatexName().c_str()));
+    c.SaveAs(Form("%s/scan_%s_LLcurve.png", outDir.c_str(), varOrSyst->ShortName().c_str()));
     abort();
 
   }
