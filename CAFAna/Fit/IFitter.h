@@ -51,14 +51,14 @@ namespace ana
       /// \param      systSeedPts If non-empty, try fit starting at each of these
       /// \param      verb If quiet, no printout
       /// \return     -2x the log-likelihood of the best-fit point
-      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable *seed,
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalcAdjustable *seed,
                                                SystShifts &bestSysts = junkShifts,
                                                const SeedList& seedPts = SeedList(),
                                                const std::vector<SystShifts>& systSeedPts = {},
                                                Verbosity verb = kVerbose) const;
 
       /// Variant with no seedPts
-      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable* seed,
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalcAdjustable* seed,
                                                SystShifts& systSeed,
                                                Verbosity verb) const
       {
@@ -66,7 +66,7 @@ namespace ana
       }
 
       /// Variant with no seedPts and no systematics result returned
-      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable* seed,
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalcAdjustable* seed,
                                                Verbosity verb) const
       {
         return Fit(seed, junkShifts, {}, {}, verb);
@@ -92,13 +92,13 @@ namespace ana
 
       /// Helper for \ref FitHelper -- actually does fitting.  Reimplement in derived classes
       virtual std::unique_ptr<IFitSummary>
-      FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+      FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                       SystShifts &systSeed,
                       Verbosity verb) const = 0;
 
       /// Helper for \ref Fit
       virtual std::unique_ptr<IFitSummary>
-      FitHelper(osc::IOscCalculatorAdjustable* seed,
+      FitHelper(osc::IOscCalcAdjustable* seed,
                 SystShifts& bestSysts,
                 const SeedList& seedPts,
                 const std::vector<SystShifts>& systSeedPts,
@@ -109,7 +109,7 @@ namespace ana
 
 
       /// Check that the seeds that were specified are compatible with the vars being fitted
-      void ValidateSeeds(osc::IOscCalculatorAdjustable* seed,
+      void ValidateSeeds(osc::IOscCalcAdjustable* seed,
                          const SeedList& seedPts,
                          const std::vector<SystShifts>& systSeedPts) const;
 

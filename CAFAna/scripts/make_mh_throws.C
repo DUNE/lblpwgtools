@@ -48,7 +48,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
@@ -70,7 +70,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
 	fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -98,7 +98,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     global_tree.throw_tree->Fill();
 
     // Now force the testOsc to be in the wrong hierarchy
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
+    osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
     testOsc->SetdCP(thisdcp);
     fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember

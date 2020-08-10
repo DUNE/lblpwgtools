@@ -15,7 +15,7 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "Utilities/func/StanUtils.h"
 
@@ -143,7 +143,7 @@ namespace ana
 
       /// Override (and call) the base class version, doing some caching of the oscillation parameters
       /// to avoid the problem discussed in the doc for fParamCache
-      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable *seed,
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalcAdjustable *seed,
                                                SystShifts &bestSysts = junkShifts,
                                                const SeedList& seedPts = SeedList(),
                                                const std::vector<SystShifts> &systSeedPts = {},
@@ -226,7 +226,7 @@ namespace ana
       void SetStanConfig(const StanConfig& cfg) { fStanConfig = cfg; }
 
       /// Run Stan's test of its auto-differentiation (comparing to a finite-differences calculation)
-      void TestGradients(osc::IOscCalculatorAdjustable *seed,
+      void TestGradients(osc::IOscCalcAdjustable *seed,
                          SystShifts &systSeed) const;
 
       /// \brief Return names of parameters in Stan's unconstrained space.  (Required by Stan interface.)
@@ -293,17 +293,17 @@ namespace ana
 
       /// Helper function to build the initial seed point context for Stan
       stan::io::array_var_context
-      BuildInitContext(osc::IOscCalculatorAdjustable *seed,
+      BuildInitContext(osc::IOscCalcAdjustable *seed,
                        const SystShifts &systSeed) const;
 
       /// Convert a 'normal' calculator into the Stan-aware variant used internally
-      void CreateCalculator(osc::IOscCalculatorAdjustable * seed) const;
+      void CreateCalculator(osc::IOscCalcAdjustable * seed) const;
 
       /// Unroll the parameters and stuff them into the calculator and/or syst shifts obj.
       /// Needs to be templated because Stan wants to instantiate it with <double>,
       /// even though that'll never actually be used (sigh)...
       template <typename T>
-      void DecodePars(const std::vector<T>& pars, osc::IOscCalculatorAdjustableStan * calc) const
+      void DecodePars(const std::vector<T>& pars, osc::IOscCalcAdjustableStan * calc) const
       {
         static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
                       "DecodePars() can only be used with double or stan::math::var");
@@ -365,7 +365,7 @@ namespace ana
       };
 
       /// Implement workhorse method from IFitter interface
-      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                                                    SystShifts &systSeed,
                                                    Verbosity verb) const override;
 
@@ -415,7 +415,7 @@ namespace ana
       void UpdatePostFit(const IFitSummary *) const override {};
 
       //  members below
-      mutable std::unique_ptr<osc::IOscCalculatorAdjustableStan> fCalc;
+      mutable std::unique_ptr<osc::IOscCalcAdjustableStan> fCalc;
       const IExperiment * fExpt;
       StanConfig  fStanConfig;                           ///< Configuration passed to Stan for fitting.   See the StanConfig struct documentation for ideas
       MCMCSamples fMCMCSamples;
@@ -436,7 +436,7 @@ namespace ana
       /// This cache is made at the beginning from all those values and any that aren't
       /// part of the values passed by the fitter are rewritten at the beginning of
       /// each iteration.
-      mutable std::unique_ptr<osc::IOscCalculatorAdjustable> fOscCalcCache;
+      mutable std::unique_ptr<osc::IOscCalcAdjustable> fOscCalcCache;
   };
 
 }

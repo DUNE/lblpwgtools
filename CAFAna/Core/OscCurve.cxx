@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/Binning.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include <cassert>
 #include <map>
@@ -14,7 +14,7 @@ namespace ana
   //----------------------------------------------------------------------
   /// Helper for constructors
   template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
-  ToEigen(osc::_IOscCalculator<T>* calc, int from, int to)
+  ToEigen(osc::_IOscCalc<T>* calc, int from, int to)
   {
     const unsigned int N = kTrueEnergyBinCenters.size();
 
@@ -33,7 +33,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  OscCurve::OscCurve(osc::IOscCalculator* calc, int from, int to)
+  OscCurve::OscCurve(osc::IOscCalc* calc, int from, int to)
     : Ratio(Hist::Adopt(ToEigen(calc, from, to)),
             std::vector<Binning>(1, kTrueEnergyBins),
             std::vector<std::string>(1, "True Energy (GeV)")),
@@ -42,7 +42,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  OscCurve::OscCurve(osc::IOscCalculatorStan* calc, int from, int to)
+  OscCurve::OscCurve(osc::IOscCalcStan* calc, int from, int to)
     : Ratio(Hist::Adopt(ToEigen(calc, from, to)),
             std::vector<Binning>(1, kTrueEnergyBins),
             std::vector<std::string>(1, "True Energy (GeV)")),

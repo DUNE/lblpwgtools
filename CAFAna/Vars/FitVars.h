@@ -13,8 +13,8 @@ namespace ana
   {
   public:
     FitTheta13() : IFitVar("th13", "#theta_{13}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
   };
 
   /// \f$ \theta_{13} \f$
@@ -27,8 +27,8 @@ namespace ana
   {
   public:
     FitSinSq2Theta13() : IConstrainedFitVar("ss2th13", "sin^{2}2#theta_{13}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
   double LowLimit() const override { return 0; }
   double HighLimit() const override { return 1; }
@@ -44,8 +44,8 @@ namespace ana
   {
   public:
       FitDeltaInPiUnits() : IFitVar("delta(pi)", "#delta / #pi") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
   };
 
   /// \f$ \delta_{CP}/\pi \f$
@@ -58,8 +58,8 @@ namespace ana
   public:
     FitTheta23() : IFitVar("th23", "#theta_{23}") {}
 
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
   };
 
   /// \f$ \theta_{13} \f$
@@ -74,10 +74,10 @@ namespace ana
       : StanFitSupport<IConstrainedFitVar>("ssth23", "sin^{2}#theta_{23}")
     {}
 
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
-    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
 
     double LowLimit() const override { return 0; }
     double HighLimit() const override { return 1; }
@@ -128,13 +128,13 @@ namespace ana
         fSign(sign)
     {}
 
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
 
-    void SetValue(osc::IOscCalculatorAdjustable* osc,
+    void SetValue(osc::IOscCalcAdjustable* osc,
                   double val) const override;
 
     double Penalty(double val,
-                   osc::IOscCalculatorAdjustable* calc) const override;
+                   osc::IOscCalcAdjustable* calc) const override;
   protected:
     double SymmPt(double dmsq) const;
 
@@ -152,8 +152,8 @@ namespace ana
   {
   public:
       FitSinSq2Theta23() : IConstrainedFitVar("ss2th23", "sin^{2}2#theta_{23}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
 
     double LowLimit() const override { return 0; }
@@ -170,11 +170,11 @@ namespace ana
   {
   public:
     FitDmSq32() : IConstrainedFitVar("dmsq32", "#Deltam^{2}_{32}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
     // "1eV^2 splitting should be enough for anyone"
-    // OscCalculatorPMNS freaks out at large splittings
+    // OscCalcPMNS freaks out at large splittings
     double LowLimit() const override { return -1; }
     double HighLimit() const override { return +1; }
   };
@@ -192,15 +192,15 @@ namespace ana
         : StanFitSupport<IConstrainedFitVar>("dmsq32scaled",
                                              "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan* osc) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
 
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
-    void SetValue(osc::IOscCalculatorAdjustableStan* osc, stan::math::var val) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
 
 
     // "1eV^2 splitting should be enough for anyone"
-    // OscCalculatorPMNS freaks out at large splittings
+    // OscCalcPMNS freaks out at large splittings
     double LowLimit() const override { return -1000; }
     double HighLimit() const override { return +1000; }
   };
@@ -250,8 +250,8 @@ namespace ana
   {
   public:
     FitTanSqTheta12() : IConstrainedFitVar("tsth12", "tan^{2}#theta_{12}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
     double LowLimit() const override { return 0; }
     double HighLimit() const override { return std::numeric_limits<double>::max(); }
   };
@@ -266,8 +266,8 @@ namespace ana
   {
   public:
     FitSinSq2Theta12() : IConstrainedFitVar("ss2th12", "sin^{2}2#theta_{12}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
     double LowLimit() const override { return 0; }
     double HighLimit() const override { return 1; }
@@ -284,11 +284,11 @@ namespace ana
   public:
     FitDmSq21() : IConstrainedFitVar("dmsq21", "#Deltam^{2}_{21}") {};
 
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
     // "1eV^2 splitting should be enough for anyone"
-    // OscCalculatorPMNS freaks out at large splittings
+    // OscCalcPMNS freaks out at large splittings
     double LowLimit() const override { return -1; }
     double HighLimit() const override { return +1; }
   };
@@ -302,11 +302,11 @@ namespace ana
   {
   public:
    FitDmSq21Scaled() : IConstrainedFitVar("dmsq21scaled", "#Deltam^{2}_{21}") {};
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
     // "1eV^2 splitting should be enough for anyone"
-    // OscCalculatorPMNS freaks out at large splittings
+    // OscCalcPMNS freaks out at large splittings
     double LowLimit() const override { return -1e5; }
     double HighLimit() const override { return +1e5; }
   };
@@ -320,8 +320,8 @@ namespace ana
   {
   public:
     FitRho() : IConstrainedFitVar("rho", "#rho") {}
-    double GetValue(const osc::IOscCalculatorAdjustable* osc) const override;
-    void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const override;
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
     //Density should be greater than zero (set a ridiculously high high limit)
     double LowLimit() const override {return 0;}

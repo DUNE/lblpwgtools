@@ -70,7 +70,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionXSecDiag::PredictComponentSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionXSecDiag::PredictComponentSyst(osc::IOscCalc* calc,
                                                     const SystShifts& shift,
                                                     Flavors::Flavors_t flav,
                                                     Current::Current_t curr,

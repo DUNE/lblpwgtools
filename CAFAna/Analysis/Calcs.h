@@ -2,21 +2,21 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 
-namespace osc{class OscCalculatorSterile;}
+namespace osc{class OscCalcSterile;}
 
 namespace ana
 {
   /// Reset calculator to default assumptions for all parameters
-  void ResetOscCalcToDefault(osc::IOscCalculatorAdjustable* calc);
-  void ResetOscCalcToDefaultIH(osc::IOscCalculatorAdjustable* calc);
+  void ResetOscCalcToDefault(osc::IOscCalcAdjustable* calc);
+  void ResetOscCalcToDefaultIH(osc::IOscCalcAdjustable* calc);
 
   /// Create a new calculator with default assumptions for all parameters
-  osc::IOscCalculatorAdjustable* DefaultOscCalc();
-  osc::IOscCalculatorAdjustable* DefaultOscCalcIH();
+  osc::IOscCalcAdjustable* DefaultOscCalc();
+  osc::IOscCalcAdjustable* DefaultOscCalcIH();
 
   /// Reset calculator to default assumptions for all parameters
-  void ResetSterileCalcToDefault(osc::OscCalculatorSterile* calc);
+  void ResetSterileCalcToDefault(osc::OscCalcSterile* calc);
 
   /// Create a sterile calculator with default assumptions for all parameters
-  osc::OscCalculatorSterile* DefaultSterileCalc(int nflavors);
+  osc::OscCalcSterile* DefaultSterileCalc(int nflavors);
 }

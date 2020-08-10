@@ -63,7 +63,7 @@ namespace test
   class GaussQuadExperiment : public IExperiment
   {
     public:
-      stan::math::var LogLikelihood(osc::IOscCalculatorAdjustableStan*,
+      stan::math::var LogLikelihood(osc::IOscCalcAdjustableStan*,
                                     const SystShifts& syst = SystShifts::Nominal()) const override
       {
         stan::math::var ll = 0;

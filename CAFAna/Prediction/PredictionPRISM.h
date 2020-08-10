@@ -43,9 +43,9 @@ public:
                PRISMExtrapolator::FluxPredSpecies::kNumu_numode);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
-  virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
+  virtual Spectrum Predict(osc::IOscCalc *calc) const override;
 
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;

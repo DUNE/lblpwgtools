@@ -86,7 +86,7 @@ void llh_scans(std::string stateFname = def_stateFname,
   const std::string hieStr = (hie > 0) ? "nh" : "ih";
   bool oscvar = true;
 
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie);
 
   for (auto v : GetOscVars("alloscvars", hie)) {
     if (relevantfakedatavals.count(v->ShortName())) {

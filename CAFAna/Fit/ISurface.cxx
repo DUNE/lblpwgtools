@@ -8,7 +8,7 @@
 #include "TStyle.h"
 #include "TVectorD.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Fit/ISurface.h"

@@ -16,7 +16,7 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/Stan.h"
 #include "Utilities/func/StanUtils.h"
@@ -34,7 +34,7 @@ namespace ana
 {
   //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
-                                     osc::IOscCalculator* osc,
+                                     osc::IOscCalc* osc,
                                      const IPredictionGenerator& predGen,
                                      Loaders& loaders,
                                      const SystShifts& shiftMC,
@@ -303,26 +303,26 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::SetOscSeed(osc::IOscCalculator* oscSeed){
+  void PredictionInterp::SetOscSeed(osc::IOscCalc* oscSeed){
     fOscOrigin = oscSeed->Copy();
     for(auto& it: fPreds) it.second.fits.clear();
     InitFits();
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::Predict(osc::IOscCalculator* calc) const
+  Spectrum PredictionInterp::Predict(osc::IOscCalc* calc) const
   {
     return fPredNom->Predict(calc);
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::Predict(osc::IOscCalculatorStan* calc) const
+  Spectrum PredictionInterp::Predict(osc::IOscCalcStan* calc) const
   {
     return fPredNom->Predict(calc);
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::PredictComponent(osc::IOscCalc* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
@@ -331,7 +331,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponent(osc::IOscCalculatorStan* calc,
+  Spectrum PredictionInterp::PredictComponent(osc::IOscCalcStan* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
@@ -340,7 +340,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::PredictSyst(osc::IOscCalc* calc,
                                          const SystShifts& shift) const
   {
     InitFits();
@@ -352,7 +352,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictSyst(osc::IOscCalculatorStan* calc,
+  Spectrum PredictionInterp::PredictSyst(osc::IOscCalcStan* calc,
                                          const SystShifts& shift) const
   {
     InitFits();
@@ -475,7 +475,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::ShiftedComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::ShiftedComponent(osc::IOscCalc* calc,
                                               const TMD5* hash,
                                               const SystShifts& shift,
                                               Flavors::Flavors_t flav,
@@ -487,7 +487,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::ShiftedComponent(osc::_IOscCalculator<stan::math::var>* calc,
+  Spectrum PredictionInterp::ShiftedComponent(osc::_IOscCalc<stan::math::var>* calc,
                                               const TMD5* hash,
                                               const SystShifts& shift,
                                               Flavors::Flavors_t flav,
@@ -501,7 +501,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<typename T>
-  Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalculator<T>* calc,
+  Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalc<T>* calc,
                                                const TMD5* hash,
                                                const SystShifts& shift,
                                                Flavors::Flavors_t flav,
@@ -572,7 +572,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<typename T>
-  Spectrum PredictionInterp::_PredictComponentSyst(osc::_IOscCalculator<T>* calc,
+  Spectrum PredictionInterp::_PredictComponentSyst(osc::_IOscCalc<T>* calc,
                                                    const SystShifts& shift,
                                                    Flavors::Flavors_t flav,
                                                    Current::Current_t curr,
@@ -618,7 +618,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // can't template these directly since the interface isn't templated
-  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalc* calc,
                                                   const SystShifts& shift,
                                                   Flavors::Flavors_t flav,
                                                   Current::Current_t curr,
@@ -628,7 +628,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalcStan* calc,
                                                   const SystShifts& shift,
                                                   Flavors::Flavors_t flav,
                                                   Current::Current_t curr,
@@ -764,7 +764,7 @@ namespace ana
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir, "osc_origin").release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin").release();
   }
 
   //----------------------------------------------------------------------
@@ -775,7 +775,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::DebugPlot(const ISyst* syst,
-                                   osc::IOscCalculator* calc,
+                                   osc::IOscCalc* calc,
                                    Flavors::Flavors_t flav,
                                    Current::Current_t curr,
                                    Sign::Sign_t sign) const
@@ -861,7 +861,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::DebugPlots(osc::IOscCalculator* calc,
+  void PredictionInterp::DebugPlots(osc::IOscCalc* calc,
 				    const std::string& savePattern,
 				    Flavors::Flavors_t flav,
 				    Current::Current_t curr,
@@ -879,7 +879,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::DebugPlotColz(const ISyst* syst,
-                                       osc::IOscCalculator* calc,
+                                       osc::IOscCalc* calc,
                                        Flavors::Flavors_t flav,
                                        Current::Current_t curr,
                                        Sign::Sign_t sign) const
@@ -913,7 +913,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::DebugPlotsColz(osc::IOscCalculator* calc,
+  void PredictionInterp::DebugPlotsColz(osc::IOscCalc* calc,
                                         const std::string& savePattern,
                                         Flavors::Flavors_t flav,
                                         Current::Current_t curr,

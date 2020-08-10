@@ -48,7 +48,7 @@ foreach(SCRPT ${scripts_to_build})
     CAFAnaExtrap
     CAFAnaVars
     StandardRecord
-    OscLibFunc
+    OscLib
     UtilitiesFunc)
 
     target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})

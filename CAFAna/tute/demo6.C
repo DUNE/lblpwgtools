@@ -11,7 +11,7 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -56,7 +56,7 @@ void demo6()
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
   const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
-  osc::IOscCalculator* calc = DefaultOscCalc();
+  osc::IOscCalc* calc = DefaultOscCalc();
 
   // We're going to use a PredictionInterp that will allow us to interpolate to
   // any values of the systematic parameters. Internally that works by creating

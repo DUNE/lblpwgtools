@@ -13,7 +13,7 @@
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 
@@ -111,10 +111,10 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 
 TMatrixD *MakeCovmat(ana::PredictionInterp const &prediction,
                      std::vector<ana::ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys = 1000,
+                     osc::IOscCalcAdjustable *calc, size_t NToys = 1000,
                      TDirectory *outdir = nullptr);
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name = "true_OA");
 
 void SaveParams(TDirectory *outDir, std::vector<const ana::ISyst *> systlist);
@@ -184,7 +184,7 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              ana::PredictionInterp *predFDNueRHC = nullptr,
              ana::PredictionInterp *predNDNumuFHC = nullptr,
              ana::PredictionInterp *predNDNumuRHC = nullptr,
-             osc::IOscCalculatorAdjustable *fakeDataOsc = nullptr,
+             osc::IOscCalcAdjustable *fakeDataOsc = nullptr,
              ana::SystShifts fakeDataSyst = ana::kNoShift,
              bool fakeDataStats = false, double pot_fd_fhc_nue = 0,
              double pot_fd_fhc_numu = 0, double pot_fd_rhc_nue = 0,
@@ -192,11 +192,11 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    ana::SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const ana::IFitVar *> oscVars,
                    std::vector<const ana::ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc,
+                   osc::IOscCalcAdjustable *fitOsc,
                    ana::SystShifts fitSyst,
                    ana::SeedList oscSeeds = ana::SeedList(),
                    ana::IExperiment *penaltyTerm = nullptr,

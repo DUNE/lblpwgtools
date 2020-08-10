@@ -13,7 +13,7 @@
 // New includes for this macro
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 
 using namespace ana;
 
@@ -55,7 +55,7 @@ void demo1()
   const Spectrum sUnosc = pred.PredictUnoscillated();
   // Or oscillated, in this case using reasonable parameters from
   // Analysis/Calcs.h
-  osc::IOscCalculator* calc = DefaultOscCalc();
+  osc::IOscCalc* calc = DefaultOscCalc();
   const Spectrum sOsc = pred.Predict(calc);
 
   // And we can break things down by flavour

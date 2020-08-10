@@ -6,7 +6,7 @@
 namespace osc
 {
   template <typename T>
-  class _IOscCalculatorAdjustable;
+  class _IOscCalcAdjustable;
 }
 
 namespace ana
@@ -21,7 +21,7 @@ namespace ana
   {
     public:
       /// Function that will return the *log* of the value of the prior density for a given parameter
-      typedef std::function<typename stan::math::var(stan::math::var, const osc::_IOscCalculatorAdjustable <stan::math::var>*)> PriorFnType;
+      typedef std::function<typename stan::math::var(stan::math::var, const osc::_IOscCalcAdjustable <stan::math::var>*)> PriorFnType;
 
       /// Constructor.  Ensure that \a var doesn't go out of scope before this object does!
       FitVarWithPrior(const StanFitSupport<IFitVar> *var,
@@ -37,20 +37,20 @@ namespace ana
       using IFitVar::SetValue;
 
       /// Forward to wrapped Var's GetValue()
-      stan::math::var GetValue(const osc::_IOscCalculatorAdjustable<stan::math::var> *osc) const override
+      stan::math::var GetValue(const osc::_IOscCalcAdjustable<stan::math::var> *osc) const override
       {
         return fVar->GetValue(osc);
       };
 
       /// Forward to wrapped Var's SetValue()
-      void SetValue(osc::_IOscCalculatorAdjustable<stan::math::var> *osc, stan::math::var val) const override
+      void SetValue(osc::_IOscCalcAdjustable<stan::math::var> *osc, stan::math::var val) const override
       {
         fVar->SetValue(osc, val);
       };
 
       /// Implement calculation of log-prior by forwarding to stored function
       stan::math::var
-      LogPrior(const stan::math::var &val, const osc::_IOscCalculatorAdjustable<stan::math::var> *calc) const override
+      LogPrior(const stan::math::var &val, const osc::_IOscCalcAdjustable<stan::math::var> *calc) const override
       {
         return fPriorFn(val, calc);
       }
@@ -66,7 +66,7 @@ namespace ana
   {
     public:
       typedef std::function<typename stan::math::var(const stan::math::var &,
-                                                     const osc::_IOscCalculatorAdjustable<stan::math::var> *)> PriorFnType;
+                                                     const osc::_IOscCalcAdjustable<stan::math::var> *)> PriorFnType;
 
       ConstrainedFitVarWithPrior(const StanFitSupport<IConstrainedFitVar> * var,
                                  FitVarWithPrior::PriorFnType priorFn,
@@ -78,26 +78,26 @@ namespace ana
             fPriorFnName(priorName)
       {}
 
-      double GetValue(const osc::IOscCalculatorAdjustable *osc) const override
+      double GetValue(const osc::IOscCalcAdjustable *osc) const override
       {
         return fVar->GetValue(osc);
       }
-      stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan *osc) const override
+      stan::math::var GetValue(const osc::IOscCalcAdjustableStan *osc) const override
       {
         return fVar->GetValue(osc);
       };
 
-      void SetValue(osc::IOscCalculatorAdjustable *osc, double val) const override
+      void SetValue(osc::IOscCalcAdjustable *osc, double val) const override
       {
         fVar->SetValue(osc, val);
       };
-      void SetValue(osc::IOscCalculatorAdjustableStan *osc, stan::math::var val) const override
+      void SetValue(osc::IOscCalcAdjustableStan *osc, stan::math::var val) const override
       {
         fVar->SetValue(osc, val);
       };
 
       stan::math::var
-      LogPrior(const stan::math::var &val, const osc::_IOscCalculatorAdjustable<stan::math::var> *calc) const override
+      LogPrior(const stan::math::var &val, const osc::_IOscCalcAdjustable<stan::math::var> *calc) const override
       {
         return fPriorFn(val, calc);
       }

@@ -20,7 +20,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -103,7 +103,7 @@ void cpv()
 	
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 	
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie,1,asimov_set);
+      osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie,1,asimov_set);
       trueOsc->SetdCP(thisdcp);
 
       const Spectrum data_nue_fhc_syst = predInt_FDNueFHC.Predict(trueOsc).FakeData(potFD);
@@ -133,7 +133,7 @@ void cpv()
       for(int ihie = -1; ihie <= +1; ihie += 2) {
 	for (int jdcp = 0; jdcp < 2; ++jdcp) {
 	  for (int ioct = -1; ioct <= 1; ioct +=2) {
-	    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie,ioct,asimov_set);	
+	    osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(ihie,ioct,asimov_set);	
 	    double dcptest = jdcp*TMath::Pi();
 	    testOsc->SetdCP(dcptest);
 	    Penalizer_GlbLike penalty(ihie,ioct,th13penalty,false,false,asimov_set);

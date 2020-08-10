@@ -16,20 +16,20 @@ namespace stan
 
 namespace osc
 {
-  template <typename T> class _IOscCalculatorAdjustable;
-  typedef _IOscCalculatorAdjustable<stan::math::var> IOscCalculatorAdjustableStan;
+  template <typename T> class _IOscCalcAdjustable;
+  typedef _IOscCalcAdjustable<stan::math::var> IOscCalcAdjustableStan;
 
-  template <typename T> class _IOscCalculator;
-  typedef _IOscCalculator<stan::math::var> IOscCalculatorStan;
+  template <typename T> class _IOscCalc;
+  typedef _IOscCalc<stan::math::var> IOscCalcStan;
 
-  template <typename T> class _OscCalculatorPMNS;
-  typedef _OscCalculatorPMNS<stan::math::var> OscCalculatorPMNSStan;
+  template <typename T> class _OscCalcPMNS;
+  typedef _OscCalcPMNS<stan::math::var> OscCalcPMNSStan;
 
-  template <typename T> class _OscCalculatorPMNSOpt;
-  typedef _OscCalculatorPMNSOpt<stan::math::var> OscCalculatorPMNSOptStan;
+  template <typename T> class _OscCalcPMNSOpt;
+  typedef _OscCalcPMNSOpt<stan::math::var> OscCalcPMNSOptStan;
 
-  template <typename T> class _OscCalculatorDMP;
-  typedef _OscCalculatorDMP<stan::math::var> OscCalculatorDMPStan;
+  template <typename T> class _OscCalcDMP;
+  typedef _OscCalcDMP<stan::math::var> OscCalcDMPStan;
 
 }
 

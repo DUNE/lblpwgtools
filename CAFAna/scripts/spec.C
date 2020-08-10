@@ -20,7 +20,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -72,7 +72,7 @@ void spec(bool reload = false)
     SpectrumLoader loaderFDRHCNuTau("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
-    osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+    osc::IOscCalcAdjustable* calc = NuFitOscCalc(1);
     //Note that systlist must be filled both here and after the state load
     if (normsyst) {
       systlist.insert(systlist.end(), normlist_sig.begin(), normlist_sig.end()); 
@@ -150,7 +150,7 @@ void spec(bool reload = false)
 
   for(int hie = -1; hie <= +1; hie += 2){
 
-    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(hie);
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
 

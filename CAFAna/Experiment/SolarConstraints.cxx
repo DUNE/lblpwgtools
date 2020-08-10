@@ -1,6 +1,6 @@
 #include "CAFAna/Experiment/SolarConstraints.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 #include "Utilities/func/MathUtil.h"
 
 #include "TDirectory.h"
@@ -35,7 +35,7 @@ namespace ana
   { }
 
   //----------------------------------------------------------------------
-  double SolarConstraints::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double SolarConstraints::ChiSq(osc::IOscCalcAdjustable* osc,
                                  const SystShifts& /*syst*/) const
   {
     double ret = 0;

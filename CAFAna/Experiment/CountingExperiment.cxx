@@ -5,7 +5,7 @@
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -26,7 +26,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double CountingExperiment::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double CountingExperiment::ChiSq(osc::IOscCalcAdjustable* osc,
                                    const SystShifts& syst) const
   {
     double exp = fMC->PredictSyst(osc, syst).Integral(fData.POT());

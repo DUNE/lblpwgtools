@@ -38,10 +38,10 @@ namespace ana
 
     virtual ~SingleSampleExperiment();
 
-    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = kNoShift) const override;
 
-    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+    stan::math::var LogLikelihood(osc::_IOscCalcAdjustable<stan::math::var> *osc,
                                   const SystShifts &syst = kNoShift) const override;
 
       virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
