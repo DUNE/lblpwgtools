@@ -46,7 +46,7 @@ namespace ana
         {}
 
         Hyperparameters(const Hyperparameters & h)
-          : stepSize(h.stepSize), invMetric(std::make_unique<TMatrixD>(*h.invMetric))
+          : stepSize(h.stepSize), invMetric(h.invMetric ? std::make_unique<TMatrixD>(*h.invMetric) : nullptr)
         {}
 
         Hyperparameters& operator=(Hyperparameters&& other)
@@ -99,14 +99,10 @@ namespace ana
       Bayesian1DMarginal MarginalizeTo(const ISyst * syst,
                                        BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
 
-      /// Marginalize over all other variables to obtain a 2D surface in \a xvar and \a yvar
-      BayesianSurface MarginalizeTo(const IFitVar * xvar, int nbinsx, double xmin, double xmax,
-                                    const IFitVar * yvar, int nbinsy, double ymin, double ymax,
-                                    BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
-
-      /// Marginalize over all other variables to obtain a 2D surface in \a xsyst and \a ysyst
-      BayesianSurface MarginalizeTo(const ISyst * xsyst, int nbinsx, double xmin, double xmax,
-                                    const ISyst * ysyst, int nbinsy, double ymin, double ymax,
+      /// Marginalize over all other variables to obtain a 2D surface in \a x and \a y
+      template <typename SystOrVar1, typename SystOrVar2>
+      BayesianSurface MarginalizeTo(const SystOrVar1 * x, int nbinsx, double xmin, double xmax,
+                                    const SystOrVar2 * y, int nbinsy, double ymin, double ymax,
                                     BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
 
       /// Max value of this var/syst in the set

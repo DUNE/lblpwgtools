@@ -280,12 +280,26 @@ namespace ana
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
     }
 
-    auto hyperParamsDir = dynamic_cast<TDirectory*>(dir->Get("hyperparams"));
-    auto stepSize = hyperParamsDir->Get<TParameter<double>>("stepsize");
-    auto invMetric = std::unique_ptr<TMatrixD>(hyperParamsDir->Get<TMatrixD>("inv_metric"));
-    Hyperparameters hyperparams{stepSize->GetVal(), std::move(invMetric)};
+    // these may not exist (hyperparameters are not merged when hadd'ing samples)
+    double stepSize = std::numeric_limits<double>::signaling_NaN();
+    std::unique_ptr<TMatrixD> invMetric;
+    auto hyperParamsDir = dynamic_cast<TDirectory *>(dir->Get("hyperparams"));
+    if (hyperParamsDir)
+    {
+      if (auto key = hyperParamsDir->FindKey("stepsize"))
+        stepSize = key->ReadObject<TParameter<double>>()->GetVal();
+      if (auto key = hyperParamsDir->FindKey("inv_metric"))
+        invMetric = std::unique_ptr<TMatrixD>(key->ReadObject<TMatrixD>());
+    }
+    Hyperparameters hyperparams{stepSize, std::move(invMetric)};
 
-    auto samplingTime = dir->Get<TParameter<double>>("samplingTime");
+    // ditto
+    double samplingTime = std::numeric_limits<double>::signaling_NaN();
+    auto samplingTimeDir = dynamic_cast<TDirectory*>(dir->Get("samplingTime"));
+    if (!samplingTimeDir)  // for backwards compatibility.  might be stored at top level
+      samplingTimeDir = dir;
+    if (auto key = samplingTimeDir->FindKey("samplingTime"))
+      samplingTime = key->ReadObject<TParameter<double>>()->GetVal();
 
     delete dir;
 
@@ -295,7 +309,7 @@ namespace ana
                                                         systs,
                                                         samples,
                                                         hyperparams,
-                                                        samplingTime->GetVal()));
+                                                        samplingTime));
   }
 
   //----------------------------------------------------------------------
@@ -313,30 +327,41 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *xvar, int nbinsx, double xmin, double xmax,
-                                             const IFitVar *yvar, int nbinsy, double ymin, double ymax,
+  template <typename SystOrVar1, typename SystOrVar2>
+  BayesianSurface MCMCSamples::MarginalizeTo(const SystOrVar1 *x, int nbinsx, double xmin, double xmax,
+                                             const SystOrVar2 *y, int nbinsy, double ymin, double ymax,
                                              BayesianMarginal::MarginalMode marginalMode) const
   {
-    assert(std::find(fVars.begin(), fVars.end(), xvar) != fVars.end());
-    assert(std::find(fVars.begin(), fVars.end(), yvar) != fVars.end());
-    return BayesianSurface(*this,
-                           xvar, nbinsx, xmin, xmax,
-                           yvar, nbinsy, ymin, ymax,
-                           marginalMode);
-  }
+    static_assert((std::is_same_v<SystOrVar1, IFitVar> || std::is_same_v<SystOrVar1, ISyst>)
+                   && (std::is_same_v<SystOrVar2, IFitVar> || std::is_same_v<SystOrVar2, ISyst>),
+                   "MCMCSamples::MarginalizeTo() can only be used with Systs or Vars");
+    if constexpr(std::is_same_v<SystOrVar1, IFitVar>)
+      assert(std::find(fVars.begin(), fVars.end(), x) != fVars.end());
+    else
+      assert(std::find(fSysts.begin(), fSysts.end(), x) != fSysts.end());
 
-  //----------------------------------------------------------------------
-  BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *xsyst, int nbinsx, double xmin, double xmax,
-                                             const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                                             BayesianMarginal::MarginalMode marginalMode) const
-  {
-    assert(std::find(fSysts.begin(), fSysts.end(), xsyst) != fSysts.end());
-    assert(std::find(fSysts.begin(), fSysts.end(), ysyst) != fSysts.end());
+    if constexpr(std::is_same_v<SystOrVar2, IFitVar>)
+      assert(std::find(fVars.begin(), fVars.end(), y) != fVars.end());
+    else
+      assert(std::find(fSysts.begin(), fSysts.end(), y) != fSysts.end());
+
     return BayesianSurface(*this,
-                           xsyst, nbinsx, xmin, xmax,
-                           ysyst, nbinsy, ymin, ymax,
+                           x, nbinsx, xmin, xmax,
+                           y, nbinsy, ymin, ymax,
                            marginalMode);
   }
+  template BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *x, int nbinsx, double xmin, double xmax,
+                                                      const IFitVar *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *x, int nbinsx, double xmin, double xmax,
+                                                      const ISyst *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *x, int nbinsx, double xmin, double xmax,
+                                                      const IFitVar *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *x, int nbinsx, double xmin, double xmax,
+                                                      const ISyst *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
 
   //----------------------------------------------------------------------
   template <typename T>
@@ -665,12 +690,17 @@ namespace ana
     stepSize.Write();
     if (fHyperparams.invMetric)
       fHyperparams.invMetric->Write("inv_metric");
+    TObjString("Hyperparameters").Write("type");  // so that hadd_cafana can be taught to skip over them
     dir->cd();
     hyperdir->Write();
 
     dir->cd();
-    TParameter<double> samplingTime("samplingTime", fSamplingTime);
-    samplingTime.Write();
+    auto timedir = dir->mkdir("samplingTime");
+    timedir->cd();
+    TObjString("SamplingTime").Write("type");  // so that hadd_cafana can be taught to skip over them
+    TParameter<double>("samplingTime", fSamplingTime).Write();
+    dir->cd();
+    timedir->Write();
 
     dir->Write();
     delete dir;
