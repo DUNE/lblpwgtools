@@ -17,4 +17,4 @@ setup clhep v2_4_1_2 -q e19:prof || exit 1
 # Stan insists on its dependencies being loaded, so we only need to load it
 setup stan v2_18_0a -q e19:prof || exit 1
 
-setup osclib v00.02 -q e17:prof:stan -z /cvmfs/nova.opensciencegrid.org/externals/ || exit 1
+PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup osclib v00.03 -q e19:prof:stan || exit 1

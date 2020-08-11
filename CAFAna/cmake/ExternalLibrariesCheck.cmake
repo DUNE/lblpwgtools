@@ -105,6 +105,9 @@ elseif(NOT DEFINED STAN_INC)
   cmessage(FATAL_ERROR "Expected to be able to evaluate \${STAN_INC}=\"${STAN_INC}\" to an existing directory, is Stan set up in the environment?")
 endif()
 
+PrefixList(STAN_MATH_INC_STR "-I" ${STAN_MATH_INC})
+PrefixList(STAN_INC_STR "-I" ${STAN_INC})
+
 ###############################  OSCLIB  ######################################
 
 # if(NOT DEFINED OSCLIB_INC)
@@ -113,5 +116,5 @@ endif()
 #   cmessage(FATAL_ERROR "Expected to be able to evaluate \${OSCLIB_INC}=\"${OSCLIB_INC}\" to an existing directory, is OscLib set up in the environment?")
 # endif()
 
-PrefixList(STAN_MATH_INC_STR "-I" ${STAN_MATH_INC})
-PrefixList(STAN_INC_STR "-I" ${STAN_INC})
+# LIST(APPEND EXTRA_LINK_DIRS ${OSCLIB_LIB})
+# LIST(APPEND EXTRA_LIBS OscLib)
