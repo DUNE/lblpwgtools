@@ -45,6 +45,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 #include "TSystem.h"
 #include "TTree.h"
 
@@ -587,16 +588,16 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, max);
 
-    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC,
                             Loaders::kNonSwap);
-    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNuTauSwap);
+                            Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
@@ -624,7 +625,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
@@ -1570,13 +1571,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
         }
       }
 
-      this_expt.AddCovarianceMatrix(fake_uncorr, true, {0, 1});
-
-      thisDir->cd();
-
+      nd_expt_fhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
+      nd_expt_rhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
     } else {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
-                                    {0, 1});
+      nd_expt_fhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
+      nd_expt_rhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
     }
     if (turbose) {
       std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()

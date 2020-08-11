@@ -21,7 +21,7 @@ namespace ana
                int _num_warmup = 1000,
                int _num_samples = 1000,
                int _num_thin = 1,
-               bool _save_warmup = false,
+               bool _save_warmup = true,  // not Stan default, but we save warmup separately from regular samples, so no chance of getting confused
                int _refresh = 100,
                double _stepsize = 1,
                double _stepsize_jitter = 0,
@@ -33,7 +33,8 @@ namespace ana
                unsigned int _init_buffer = 75,
                unsigned int _term_buffer = 50,
                unsigned int _window = 25,
-               StanConfig::Verbosity _verbosity = StanConfig::Verbosity::kQuiet)
+               StanConfig::Verbosity _verbosity = StanConfig::Verbosity::kQuiet,
+               bool _denseMassMx = false)
       : random_seed(_random_seed),
         chain(_chain),
         init_radius(_init_radius),
@@ -52,7 +53,8 @@ namespace ana
         init_buffer(_init_buffer),
         term_buffer(_term_buffer),
         window(_window),
-        verbosity(_verbosity)
+        verbosity(_verbosity),
+        denseMassMx(_denseMassMx)
       {}
 
     unsigned int random_seed;  ///< Random seed used by Stan internally
@@ -85,6 +87,8 @@ namespace ana
     ///@}
 
     Verbosity verbosity;     ///< How verbose do you want me to be?
+
+    bool denseMassMx;        ///< Should the mass matrix used in HMC be diagonal (default) or dense?
 
   };
 

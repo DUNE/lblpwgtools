@@ -5,7 +5,6 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/Spectrum.h"
-#include "CAFAna/Core/SpectrumStan.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/StanTypedefs.h"
 
@@ -22,18 +21,18 @@ namespace ana
 {
   class Binning;
 
-  template <typename T>
   struct OscCache
   {
-    mutable std::unique_ptr<TMD5> hash;
-    mutable T spect;
+    mutable std::unique_ptr<TMD5> fOscCacheHash;
+    mutable Spectrum fOscCacheSpect;
 
     OscCache()
-      : spect(0, {}, {}, 0, 0)
+      : fOscCacheSpect(Spectrum::Uninitialized())
     {}
   };
+
   /// %Spectrum with true energy information, allowing it to be oscillated
-  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache<Spectrum>, protected OscCache<SpectrumStan>
+  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache
   {
   public:
     friend class SpectrumLoaderBase;
@@ -54,18 +53,9 @@ namespace ana
                          const SystShifts& shift = kNoShift,
                          const Var& wei = kUnweighted);
 
-    OscillatableSpectrum(const std::string& label, const Binning& bins);
-    OscillatableSpectrum(const std::string& label, double pot, double livetime,
-                         const Binning& bins);
-    OscillatableSpectrum(TH2* h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         double pot, double livetime);
-
-    OscillatableSpectrum(std::unique_ptr<TH2D> h,
-                         const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
-                         double pot, double livetime);
+    /// The only valid thing to do with such a spectrum is to assign something
+    /// else into it.
+    static OscillatableSpectrum Uninitialized(){return OscillatableSpectrum();}
 
     ~OscillatableSpectrum();
 
@@ -91,9 +81,7 @@ namespace ana
     Spectrum TrueEnergy() const {return WeightingVariable();}
 
     Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
-    SpectrumStan Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
-
-    Eigen::MatrixXd getCoreMatrix() const;
+    Spectrum Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
 
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;
@@ -106,19 +94,18 @@ namespace ana
 
   protected:
     // Derived classes can be trusted take care of their own construction
-    OscillatableSpectrum(const std::vector<std::string>& labels,
-                         const std::vector<Binning>& bins,
+    OscillatableSpectrum(const HistAxis& recoAxis,
+                         const Binning& binsY,
                          const Var& rwVar)
-      : ReweightableSpectrum(labels, bins, rwVar)
+      : ReweightableSpectrum(recoAxis, binsY, rwVar)
     {
     }
 
-    OscillatableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         const Var& rwVar)
-      : ReweightableSpectrum(label, bins, rwVar)
+    /// Constructor for Uninitialized()
+    OscillatableSpectrum()
     {
     }
 
+    template<class T> Spectrum _Oscillated(osc::_IOscCalculator<T>* calc, int from, int to) const;
   };
 }

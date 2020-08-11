@@ -123,6 +123,10 @@ void test_stanfit_dummy()
   c.Clear();
   const_cast<TTree*>(fitter.GetSamples().ToTTree())->Draw("QuadraticParameter");
   c.SaveAs("test_stanfit_samples.png");
+
+  TFile outF("test_stanfit_samples.root", "recreate");
+  fitter.GetSamples(MemoryTupleWriter::WhichSamples::kWarmup).SaveTo(&outF, "warmup");
+  fitter.GetSamples(MemoryTupleWriter::WhichSamples::kPostWarmup).SaveTo(&outF, "samples");
 }
 
 #ifndef __CINT__

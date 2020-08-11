@@ -38,6 +38,7 @@
 #include "OscLib/func/OscCalculatorPMNS.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorDMP.h"
+#include "OscLib/func/OscCalculatorAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -45,19 +46,52 @@ using namespace ana;
 
 namespace mcmc_ana
 {
-  double POT = pot_fd;
+  const double POT = pot_fd;
   const std::string SAVED_SAMPLES_FILE = "samples_systs.root";
 
-  double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
-  double MOCKDATA_DM32 = 0.0025;   // normal hierarchy
-  double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
+  const double MOCKDATA_TH23 = 0.72;     // 0.72 radians --> 41 degrees
+  const double MOCKDATA_DM32 = 0.0024;   // normal hierarchy
+  const double MOCKDATA_DCP = (5./4.) * TMath::Pi();  // halfway between no CPV and max CPV
 
+//  const int MAX_SYSTS = 0;
+  const int MAX_SYSTS = -1;
+//  const int MAX_SYSTS = 5;
+
+  const std::string STASH_DIR = "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4";
+//  const std::string STASH_DIR = "/dune/data/users/jwolcott";
   const std::vector<std::string> PRED_FILES {
-      "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4/mcc11v4_FD_FHC.root",
-      "/cvmfs/dune.osgstorage.org/pnfs/fnal.gov/usr/dune/persistent/stash/LongBaseline/state_files/standard_v4/mcc11v4_FD_RHC.root",
+      STASH_DIR + "/mcc11v4_FD_FHC.root",
+      STASH_DIR + "/mcc11v4_FD_RHC.root",
+      STASH_DIR + "/mcc11v4_ND_FHC.root",
+      STASH_DIR + "/mcc11v4_ND_RHC.root",
   };
 
   // ---------------------------------------------
+
+  // ---------------------------------------------
+  int GetRedHeatPalette()
+  {
+    const int NRGBs = 9;
+    const int n_color_contours = 999;
+    static bool initialized=false;
+    static int* colors=new int[n_color_contours];
+    static int colmin = 0;
+
+    if(!initialized){
+      // White -> red
+      Double_t stops[NRGBs] = { 0.00, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000};
+      Double_t red[NRGBs]   = { 1.00, 1.00, 0.99, 0.99, 0.98, 0.94, 0.80, 0.65, 0.40 };
+      Double_t green[NRGBs] = { 0.96, 0.88, 0.73, 0.57, 0.42, 0.23, 0.09, 0.06, 0.00 };
+      Double_t blue[NRGBs]  = { 0.94, 0.82, 0.63, 0.45, 0.29, 0.17, 0.11, 0.08, 0.05 };
+      colmin=TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, n_color_contours);
+      for(uint i=0; i<n_color_contours; ++i) colors[i]=colmin+i;
+
+      initialized=true;
+    }
+
+    return colmin;
+  }
+
   std::string FullFilename(const std::string & dir, std::string file)
   {
     if (!dir.empty())
@@ -65,14 +99,85 @@ namespace mcmc_ana
     
     return file;
   }
+
+  // ---------------------------------------------
+  template <typename VarOrSyst>
+  void ScanLL(const VarOrSyst * varOrSyst,
+              double begin,
+              double end,
+              double step,
+              const osc::IOscCalculatorAdjustable * calcTruth,
+              const SystShifts * systTruePulls,
+              const IExperiment * expt,
+              const std::string & outDir)
+  {
+
+    TGraph g;
+    int nStep = 0;
+    for (double val = begin; val <= end; val += step)
+    {
+      osc::OscCalculatorPMNSOptStan stanCalc;
+      osc::CopyParams(calcTruth, &stanCalc);
+
+      if constexpr (std::is_base_of_v<IFitVar,VarOrSyst>)
+        varOrSyst->SetValue(&stanCalc, val);
+      SystShifts shifts_ = *systTruePulls;
+      if constexpr (std::is_base_of_v<ISyst,VarOrSyst>)
+        shifts_.SetShift(varOrSyst, util::GetValAs<stan::math::var>(val));
+
+      double ll = util::GetValAs<double>(expt->LogLikelihood(&stanCalc, shifts_));
+      g.SetPoint(g.GetN(), val, ll);
+
+      nStep++;
+      if (nStep % 100 == 0)
+        stan::math::recover_memory();
+    }
+
+    //for (int dm32Step = -100; dm32Step <= 100; dm32Step++)
+    //{
+    //  double dm32 = dm32Step * 0.001;
+    //   const double stepSize = 2*TMath::Pi()/100.;
+    //  double ll = -std::numeric_limits<double>::infinity();
+    //  for (double th23 = 0; th23 < 100*stepSize; th23 += stepSize)
+    //  {
+    //    osc::OscCalculatorPMNSOptStan stanCalc;
+    //    osc::CopyParams(calcTruth, &stanCalc);
+    //    stanCalc.SetDmsq32(dm32);
+    //    stanCalc.SetTh23(th23);
+    //    SystShifts shifts_;
+    //    for (const auto & s : systTruePulls->ActiveSysts())
+    //      shifts_.SetShift(s, util::GetValAs<stan::math::var>(systTruePulls->GetShift(s)));
+    //    for (double delta = 0; delta < 100*stepSize; delta += stepSize)
+    //    {
+    //      stanCalc.SetdCP(delta);
+    //      ll = std::max(ll, util::GetValAs<double>(expt->LogLikelihood(&stanCalc, shifts_)));
+    //    }
+    //    stan::math::recover_memory();
+    //  }
+    //  g.SetPoint(g.GetN(), dm32*1000, ll);
+    //}
+    TCanvas c;
+    g.Draw("apl");
+    g.SetTitle(Form(";%s;LL", varOrSyst->LatexName().c_str()));
+    c.SaveAs(Form("%s/scan_%s_LLcurve.png", outDir.c_str(), varOrSyst->ShortName().c_str()));
+    abort();
+
+  }
 }
+
+// ---------------------------------------------
+// ---------------------------------------------
+// ---------------------------------------------
 
 void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
                       bool saveSamplesToFile=false,
                       bool drawPlots=true,
                       std::string dirPrefix=".",
                       std::string samplesFilename=mcmc_ana::SAVED_SAMPLES_FILE,
-                      std::string systList="allsysts")
+                      bool fitND=false,
+                      int fastAdaptSamples=-1,
+                      double adaptDelta=-1,
+                      double nd_scale=1.0)
 {
   assert (loadSamplesFromFile != saveSamplesToFile);
 
@@ -91,42 +196,110 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
   // build my fit variables...
   std::map<std::string, std::unique_ptr<IPrediction>> preds;
-  ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23, PriorUniformInFitVar, "FlatSSTh23");
-  ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled, PriorUniformInFitVar, "FlatDmSq32");
-  FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits, PriorUniformInFitVar, "FlatdcP");
-  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior, &fitDeltaInPiUnits_UniformPriordCP};
+  ConstrainedFitVarWithPrior fitSsqTh23_UniformPriorSsqTh23(&kFitSinSqTheta23,
+                                                            PriorUniformInFitVar,
+                                                            "FlatSSTh23");
+  ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&kFitDmSq32Scaled,
+                                                          PriorUniformInFitVar,
+                                                          "FlatDmSq32");
+  ConstrainedFitVarWithPrior fitDmSq32Scaled_GaussianPrior(&kFitDmSq32Scaled,
+                                                           GaussianPriorDm32Scaled,
+                                                           "GaussianDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_SmallTopHatPrior(&kFitDmSq32Scaled,
+                                   TopHatPriorInFitVar(2.5, 0.5),
+                                   "SmallTopHatDmSq32");
+  ConstrainedFitVarWithPrior
+  fitDmSq32Scaled_BigTopHatPrior(&kFitDmSq32Scaled,
+                                   TopHatPriorInFitVar(2.5, 2.5),
+                                   "BigTopHatDmSq32");
+  FitVarWithPrior fitDeltaInPiUnits_UniformPriordCP(&kFitDeltaInPiUnits,
+                                                    PriorUniformInFitVar,
+                                                    "FlatdcP");
+  std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23,
+//                                      &fitDmSq32Scaled_UniformPrior,
+//                                      &fitDmSq32Scaled_GaussianPrior,
+                                      &fitDmSq32Scaled_SmallTopHatPrior,
+//                                      &fitDmSq32Scaled_BigTopHatPrior,
+                                      &fitDeltaInPiUnits_UniformPriordCP
+  };
   const std::map<const IFitVar*, std::pair<double, double>> fitVarDrawRanges
   {
-    {&fitSsqTh23_UniformPriorSsqTh23,    {.3, .7}},
-    {&fitDmSq32Scaled_UniformPrior,      {2.2, 2.8}},
-    {&fitDeltaInPiUnits_UniformPriordCP, {0,   2}},
+    {&fitSsqTh23_UniformPriorSsqTh23,       {.3, .7}},
+    {&fitDmSq32Scaled_UniformPrior,         {2.2, 2.8}},
+    {&fitDmSq32Scaled_GaussianPrior,        {2.2, 2.8}},
+    {&fitDmSq32Scaled_SmallTopHatPrior, {2.2, 2.8}},
+    {&fitDmSq32Scaled_BigTopHatPrior,   {2.2, 2.8}},
+    {&fitDeltaInPiUnits_UniformPriordCP,    {0,   2}},
   };
 
+  // load the predictions and work out which systs they support
   for (const auto & predFileName : mcmc_ana::PRED_FILES)
   {
     TFile f(predFileName.c_str());
     assert (!f.IsZombie() && ("Couldn't open prediction file:" + predFileName).c_str());
-    for (const auto &predName : {"fd_interp_numu_fhc", "fd_interp_nue_fhc", "fd_interp_numu_rhc", "fd_interp_nue_rhc"})
+    for (const auto &predName : {"fd_interp_numu_fhc",
+                                 "fd_interp_nue_fhc",
+                                 "fd_interp_numu_rhc",
+                                 "fd_interp_nue_rhc",
+                                 "nd_interp_numu_fhc",
+                                 "nd_interp_nue_fhc",
+                                 "nd_interp_numu_rhc",
+                                 "nd_interp_nue_rhc"})
     {
       auto dir = f.GetDirectory(predName);
       if (!dir)
         continue;
+      if (std::string(predName).substr(0, 2) == "nd" && !fitND)
+        continue;
       preds.emplace(predName, ana::LoadFrom<PredictionInterp>(&f, predName));
     }
   }
-  assert(preds.size() == 4);
+  std::unordered_set<const ISyst*> allSysts;
+  for (const auto & predPair : preds)
+  {
+    if (auto predInterp = dynamic_cast<const PredictionInterp*>(predPair.second.get()))
+    {
+      for (const auto & syst : predInterp->GetAllSysts())
+        allSysts.insert(syst);
+    }
+  }
+
+  if (mcmc_ana::MAX_SYSTS >= 0 && !allSysts.empty())
+  {
+    TRandom3 r;
+    while (int(allSysts.size()) > mcmc_ana::MAX_SYSTS)
+    {
+      auto s = allSysts.begin();
+      std::advance(s, r.Integer(allSysts.size()));
+      allSysts.erase(s);
+    }
+  }
+
+  // so that multiple chains with same syst seeds can be easily merged
+  std::vector<const ISyst*> allSystsSorted(allSysts.begin(), allSysts.end());
+  std::sort(allSystsSorted.begin(), allSystsSorted.end(),
+            [](const ISyst* a, const ISyst* b){ return a->ShortName() < b->ShortName(); });
+
+
+  std::cout << preds.size() << " predictions:" << std::endl;
+  for (const auto & predPair : preds)
+    std::cout << " " << predPair.first  << " (" << DemangledTypeName(predPair.second.get()) << ")" << std::endl;
+  assert(preds.size() == (fitND ? 6 : 4));
 
 //    calc = new osc::OscCalculatorPMNSOpt;
 //    calc = new osc::OscCalculatorPMNS;
-  calc = new osc::OscCalculatorDMP;
+//   calc = new osc::OscCalculatorDMP;
+  calc = new osc::OscCalculatorAnalytic;
   *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
-  std::unique_ptr<MCMCSamples> samples;
+  std::unique_ptr<MCMCSamples> samples, warmup;
   if (!loadSamplesFromFile)
   {
     // store the default vals...
     double oldTh23 = calc->GetTh23();
     double oldDmsq32 = calc->GetDmsq32();
+    double oldDelta = calc->GetdCP();
 
     // pick a few test values for some mock data...
     calc->SetTh23(mcmc_ana::MOCKDATA_TH23);
@@ -135,50 +308,91 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     calcTruth = new osc::OscCalculatorPMNS;  // type of this one doesn't matter; just for storage
     *calcTruth = *calc;
 
-    // choose pulls at random
+    // choose syst pulls at random
     TRandom3 rnd;
-    rnd.SetSeed(20200413);
+    rnd.SetSeed(20200806);
     shifts = std::make_unique<GaussianPriorSystShifts>();
-    std::vector<const ISyst *> systs;
-    for (const auto &syst : GetListOfSysts(systList)) {
-      systs.emplace_back(syst);
-      shifts->SetShift(systs.back(), rnd.Gaus());
-    }
-
-    std::vector<std::unique_ptr<SingleSampleExperiment>> expts;
+    for (const auto &syst : allSystsSorted)
+      shifts->SetShift(syst, rnd.Gaus());
     systTruePulls = shifts->Copy();
+
+    // make sure we fit all the systs, but those that aren't shared by every expt
+    // are ignored by the ones that don't support them
+    std::unordered_map<std::string, std::unique_ptr<SingleSampleExperiment>> expts;
+    std::vector<std::string> exptNames;
     MultiExperiment expt;
     for (const auto & predPair : preds)
     {
-      fakeData.emplace(predPair.first, std::make_unique<Spectrum>(predPair.second->Predict(calc).FakeData(mcmc_ana::POT)));
-      expts.emplace_back(std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first)));
-      expt.Add(expts.back().get());
+      std::unordered_set<const ISyst*> unsupportedSysts(allSysts);
+      const auto  pred = dynamic_cast<PredictionInterp*>(predPair.second.get());
+      SystShifts thisPredShifts;
+      for (const auto & syst : pred->GetAllSysts())
+      {
+        unsupportedSysts.erase(syst);
+        thisPredShifts.SetShift(syst, systTruePulls->GetShift(syst));
+      }
+      std::vector<std::pair<const ISyst*, const ISyst*>> corrs;
+      for (const auto & syst : unsupportedSysts)
+      {
+        std::cout << "  PredInterp '" << predPair.first << "' does not support syst: " << syst->ShortName() << std::endl;
+        corrs.push_back(std::make_pair(syst, static_cast<const ISyst *>(nullptr)));
+      }
+
+      double scale = predPair.first.substr(0, 2) == "nd" ? nd_scale : 1.0;
+      fakeData.emplace(predPair.first,
+                       std::make_unique<Spectrum>(predPair.second->PredictSyst(calcTruth, thisPredShifts).FakeData(mcmc_ana::POT)));
+      fakeData[predPair.first]->Scale(scale);
+      expts.emplace(std::make_pair(predPair.first,
+                                   std::make_unique<SingleSampleExperiment>(predPair.second.get(), *fakeData.at(predPair.first), scale)));
+      expt.Add(expts.at(predPair.first).get());
+      expt.SetSystCorrelations(std::distance(exptNames.begin(),
+                                             std::find(exptNames.begin(), exptNames.end(), predPair.first)),
+                               corrs);
+      exptNames.emplace_back(predPair.first);
     }
 
     // now put the calc back to normal and reset the systs to nominal
-    calc->SetTh23(oldTh23);
-    calc->SetDmsq32(oldDmsq32);
+    // (unless we're not fitting those vars, in which case we need to leave them alone)
+    if (std::find(fitVars.begin(), fitVars.end(), &fitSsqTh23_UniformPriorSsqTh23) != fitVars.end())
+      calc->SetTh23(oldTh23);
+    if (std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_UniformPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_GaussianPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_SmallTopHatPrior) != fitVars.end()
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigTopHatPrior) != fitVars.end())
+      calc->SetDmsq32(oldDmsq32);
+    if (std::find(fitVars.begin(), fitVars.end(), &fitDeltaInPiUnits_UniformPriordCP) != fitVars.end())
+      calc->SetdCP(oldDelta);
+
     shifts->ResetToNominal();
+
+//    mcmc_ana::ScanLL(allSystsSorted.front(), -5, 5, 0.1, calcTruth, systTruePulls.get(), &expt, dirPrefix);
 
     StanConfig cfg;
     cfg.num_warmup = 1000;
-    cfg.num_samples = 2000;
+    cfg.num_samples = 1000;
     cfg.max_depth = 15;
+    //cfg.stepsize = 0.001;
+    //cfg.denseMassMx = true;
+    if (adaptDelta > 0 && adaptDelta <= 1)
+      cfg.delta = adaptDelta;
+    if (fastAdaptSamples > 0)
+      cfg.init_buffer = fastAdaptSamples;
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
-    cfg.save_warmup = false;
-    StanFitter fitter(&expt, fitVars, systs);
+    StanFitter fitter(&expt, fitVars, allSystsSorted);
     fitter.SetStanConfig(cfg);
     fitter.Fit(calc, *shifts);
-    
-    samples = fitter.ExtractSamples();
+
+    warmup = fitter.ExtractSamples(MemoryTupleWriter::WhichSamples::kWarmup);
+    samples = fitter.ExtractSamples(MemoryTupleWriter::WhichSamples::kPostWarmup);
 
     if (saveSamplesToFile)
     {
       TFile outF(mcmc_ana::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
       for (const auto & fdPair : fakeData)
         fdPair.second->SaveTo(&outF, "fakedata_" + fdPair.first);
-      samples->SaveTo(outF.mkdir("samples"));
+      warmup->SaveTo(&outF, "warmup");
+      samples->SaveTo(&outF, "samples");
       SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
       systTruePulls->SaveTo(&outF, "systTruth");
     }
@@ -208,7 +422,11 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     }
     std::cout << "   --->  loaded " << fakeData.size() << " fake data spectra." << std::endl;
 
-    samples = MCMCSamples::LoadFrom(dynamic_cast<TDirectory*>(inf.Get("samples")));
+    warmup = MCMCSamples::LoadFrom(&inf, "warmup");
+    if (warmup)
+      std::cout << "   --->  loaded " << warmup->NumSamples() << " MCMC samples from warmup." << std::endl;
+
+    samples = MCMCSamples::LoadFrom(&inf, "samples");
     std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
 
     systTruePulls = LoadFrom<SystShifts>(&inf, "systTruth");
@@ -253,7 +471,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s." + systList + ".png").c_str(), fitVarPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.systs.png").c_str(), fitVarPtr->ShortName().c_str()));
   }
   for (const auto & systPtr : shifts->ActiveSysts())
   {
@@ -269,7 +487,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     l.SetLineStyle(kDashed);
     l.Draw();
 
-    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s." + systList + ".png").c_str(), systPtr->ShortName().c_str()));
+    c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s.systs.png").c_str(), systPtr->ShortName().c_str()));
   }
   // pairs of fit vars
   for (const auto fitVar1 : fitVars)
@@ -292,21 +510,30 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       marker.SetMarkerColor(kMagenta);
       marker.SetMarkerSize(3);
       marker.Draw();
-      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s." + systList + ".png").c_str(),
+      c.SaveAs(Form(mcmc_ana::FullFilename(dirPrefix, "surface_contour_%s-%s.systs.png").c_str(),
                     fitVar1->ShortName().c_str(),
                     fitVar2->ShortName().c_str()));
     }
   }
 
   // 2D syst space
+
   auto systs =  shifts->ActiveSysts();
-  for (const auto & systPtr1 : systs)
+  std::set<std::string> systNames;
+  std::transform(systs.begin(), systs.end(),
+                 std::inserter(systNames, systNames.end()), [](const ISyst* s){ return s->ShortName();});
+  assert(systNames.size() == systs.size());
+  for (const auto & systName1 : systNames)
   {
-    for (auto itSyst2 = systs.rbegin(); itSyst2 != systs.rend(); itSyst2++)
+    auto systPtr1 = *std::find_if(systs.begin(), systs.end(),
+                                  [&systName1](const ISyst * s){ return s->ShortName() == systName1; });
+    for (auto itSystName2 = systNames.rbegin(); itSystName2 != systNames.rend(); itSystName2++)
     {
-      const ISyst* systPtr2 = *itSyst2;
-      if (systPtr2 == systPtr1)
+      if (*itSystName2 == systName1)
         break;
+
+      const ISyst* systPtr2 = *std::find_if(systs.begin(), systs.end(),
+                                            [&itSystName2](const ISyst * s){ return s->ShortName() == *itSystName2; });
 
       c.Clear();
       BayesianSurface marg = samples->MarginalizeTo(systPtr1, 30, samples->MinValue(systPtr1), samples->MaxValue(systPtr1),
@@ -320,7 +547,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       marker.SetMarkerSize(3);
       marker.Draw();
 
-      std::string outf = Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s-%s." + systList + ".png").c_str(),
+      std::string outf = Form(mcmc_ana::FullFilename(dirPrefix, "marg_%s-%s.allSysts.png").c_str(),
                               systPtr1->ShortName().c_str(),
                               systPtr2->ShortName().c_str());
       c.SaveAs(outf.c_str());
@@ -333,18 +560,25 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     c.Clear();
     // calc we passed to the surface now contains best fit params
     DataMCComparison(*fakeData.at(predPair.first), predPair.second.get(), calc, *shifts, kBinDensity);
-    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + "." + systList + ".png").c_str());
+    c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "bestfitpred." + predPair.first + ".systs.png").c_str());
   }
 
   // show that the pulls were what we expect
-  const Binning margBins = Binning::Simple(100, -3, 3);
+  const Binning margBins = Binning::Simple(100, -2.95, 2.95);  // then labels don't collide in the ratio plot
   TH2D h_fittedPulls("fitted_pulls", ";Systematic;Pull (#sigma)",
                      shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size(),
                      margBins.NBins(), margBins.Min(), margBins.Max());
   TH1D h_truePulls("true_pulls", ";Systematic;Pull (#sigma)", shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size());
   std::size_t systIdx = 0;
   double maxShift = 0;
-  for (const auto & syst : shifts->ActiveSysts())
+  auto systsSorted = shifts->ActiveSysts();
+  std::sort(systsSorted.begin(),
+            systsSorted.end(),
+            [](const auto syst1, const auto syst2)
+            {
+              return syst1->ShortName() < syst2->ShortName();
+            });
+  for (const auto & syst : systsSorted)
   {
     ++systIdx;
     auto systMarginal = samples->MarginalizeTo(syst);
@@ -360,23 +594,59 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   maxShift = std::max(3., 1.2*maxShift);
   h_truePulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
   h_fittedPulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
-  c.Clear();
-  gStyle->SetPalette(kCherry);
-  h_fittedPulls.Draw("colz");
-  h_truePulls.Draw("hist x same");
+
   std::unique_ptr<TProfile> h_fittedPulls_prof(h_fittedPulls.ProfileX(ana::UniqueName().c_str(), 1, -1, "s"));
   h_fittedPulls_prof->SetLineColor(kBlue);
-  h_fittedPulls_prof->Draw("pe same");
-  std::cout << h_fittedPulls_prof->GetBinContent(5) << std::endl;
 
-  TLegend leg(0.7, 0.7, 0.9, 0.9);
-//  leg.SetFillStyle(0);
+  c.Clear();
+  c.SetCanvasSize(900,600);
+  TAxis ax(*h_fittedPulls.GetXaxis());
+  h_fittedPulls.GetXaxis()->GetLabels()->Clear();
+
+  TPad upper("", "", 0, 0, 1.0, 1);
+  upper.cd();
+  h_fittedPulls.SetMaximum(0.25);  // so that more of the color winds up red
+  mcmc_ana::GetRedHeatPalette();
+  h_fittedPulls.Draw("colz");
+  h_truePulls.Draw("hist x same");
+  h_fittedPulls_prof->Draw("pe same");
+  upper.SetLeftMargin(0.15);
+  upper.SetBottomMargin(0.4);
+
+  TPad lower("", "", 0, 0, 1.0, 1);
+  lower.SetFillStyle(0);
+  lower.cd();
+
+  // a "pull" plot
+  TGraph fitPulls;
+  for (int bin = 1; bin <= h_fittedPulls_prof->GetNbinsX(); bin++)
+  {
+    double pull = 0;
+    if (h_fittedPulls_prof->GetBinError(bin) != 0)
+      pull = (h_fittedPulls_prof->GetBinContent(bin) - h_truePulls.GetBinContent(bin))
+             / h_fittedPulls_prof->GetBinError(bin);
+    fitPulls.SetPoint(fitPulls.GetN(), double(bin) - 0.5, pull);
+  }
+  fitPulls.Draw("al");
+  *fitPulls.GetXaxis() = ax;
+  fitPulls.SetTitle(";;#frac{True - Fit mean}{Fit RMS}");
+  fitPulls.GetYaxis()->SetRangeUser(-0.95, 0.95);
+  lower.SetLeftMargin(0.15);
+  lower.SetTopMargin(0.6);
+  lower.SetBottomMargin(0.25);
+
+  c.cd();
+  upper.Draw();
+  lower.Draw();
+  TLegend leg(0.5, 0.9, 0.9, 1.0);
+  leg.SetFillStyle(0);
   leg.SetBorderSize(0);
+  leg.SetNColumns(2);
   leg.AddEntry(&h_truePulls, "True", "l");
   leg.AddEntry(h_fittedPulls_prof.get(), "Fitted", "lpe");
   leg.Draw();
 
-  c.SetBottomMargin(0.3);
-  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls." + systList + ".png").c_str());
+//  c.SetBottomMargin(0.5);
+  c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls.systs.png").c_str());
 
 }

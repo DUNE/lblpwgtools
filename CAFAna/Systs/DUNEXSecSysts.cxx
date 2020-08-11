@@ -7,6 +7,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TObjString.h"
+#include "TVectorD.h"
 
 namespace ana
 {

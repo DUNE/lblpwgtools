@@ -23,7 +23,7 @@ namespace ana
       {}
 
       virtual double ChiSq(osc::IOscCalculatorAdjustable *osc,
-                           const SystShifts &syst = SystShifts::Nominal()) const
+                           const SystShifts &syst = kNoShift) const
       {
         assert(false && "unimplemented");
         return 0;
@@ -37,24 +37,5 @@ namespace ana
       };
 
       virtual void SaveTo(TDirectory *dir, const std::string &name) const;
-
-      // For MultiExperiment covariance matrix, need to be able to access prediction and data histograms
-      virtual TH1D *PredHist(osc::IOscCalculator *calc,
-                             const SystShifts &syst) const
-      {
-        // Only required if you want to use MultiExperiment covariance, so include
-        // default implementation that returns null
-        return nullptr;
-      }
-
-      virtual TH1D *DataHist() const
-      {
-        return nullptr;
-      }
-
-      // Bin masking of low stats bins
-      virtual void ApplyMask(TH1 *a, TH1 *b) const
-      {
-      }
   };
 }

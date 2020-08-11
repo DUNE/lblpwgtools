@@ -1,3 +1,5 @@
+#include "CAFAna/Fit/BayesianMarginal.h"
+
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
@@ -16,16 +18,27 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Fit/BayesianMarginal.h"
 #include "CAFAna/Fit/MCMCSamples.h"
+
 
 namespace ana
 {
 
-  // initialize the static member
+  // initialize the static members
   const std::string BayesianMarginal::sKNNName = "bayes_marginal_knn";
+  const std::vector<std::pair<Quantile, double>> BayesianMarginal::QuantileUpVals
+  {
+      {Quantile::kGaussian1Sigma,  0.6827},
+      {Quantile::kGaussian2Sigma, 0.9545},
+      {Quantile::kGaussian3Sigma, 0.9973},
+      {Quantile::k0pc, 0},
+      {Quantile::k90pc, 0.9},
+      {Quantile::k95pc, 0.95},
+      {Quantile::k100pc, 1},
+  };
 
-  //----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
   BayesianMarginal::BayesianMarginal(const MCMCSamples &samples,
                                      const std::vector<IFitVarOrISyst> & toFit,
                                      MarginalMode mode)
@@ -104,27 +117,17 @@ namespace ana
       std::cout << "  ... done." << std::endl;
     }
 
-    // See eg the statistics section of the PDG for the values.  Note these are two-tailed versions...
-    const std::vector<std::pair<Quantile, double>> quantileUpVals
-    {
-      {Quantile::kGaussian1Sigma,  0.6827},
-      {Quantile::kGaussian2Sigma, 0.9545},
-      {Quantile::kGaussian3Sigma, 0.9973},
-      {Quantile::k0pc, 0},
-      {Quantile::k90pc, 0.9},
-      {Quantile::k95pc, 0.95},
-      {Quantile::k100pc, 1},
-    };
-
     // this is bit painful, but we want to only sort the LLs once in case there are many
     std::vector<double> qVals;
-    std::transform(quantileUpVals.begin(), quantileUpVals.end(),
+    std::transform(QuantileUpVals.begin(), QuantileUpVals.end(),
                    std::back_inserter(qVals),
                    [](const std::pair<Quantile, double>& p){return p.second;});
-    auto vals = samples.QuantileLL(qVals);
-    for (std::size_t i = 0; i < quantileUpVals.size(); ++i)
-      fQuantileLLMap[quantileUpVals[i].first] = vals[quantileUpVals[i].second].second;
 
+    // this is a map from quantile -> {idx, LL}
+    std::map<double, std::pair<std::size_t, double>> vals = samples.QuantileLL(qVals);
+
+    for (std::size_t i = 0; i < QuantileUpVals.size(); ++i)
+      fQuantileSampleMap.emplace(QuantileUpVals[i].first, samples.Sample(vals[QuantileUpVals[i].second].first));
   }
 
   //----------------------------------------------------------------------
@@ -171,31 +174,50 @@ namespace ana
       gSystem->Unlink("tmp_surface.root");
     }
 
-    auto quantMap = dynamic_cast<TMap*>(dir->Get("quantileLLs"));
+    auto quantMap = dynamic_cast<TMap*>(dir->Get("quantileSamples"));
     for (const auto & quantPair : *quantMap)
     {
       auto pair = dynamic_cast<TPair*>(quantPair);
-      Quantile quant = Quantile(dynamic_cast<TParameter<int>*>(pair->Key())->GetVal());
-      auto val = dynamic_cast<TParameter<double>*>(pair->Value())->GetVal();
-      marg->fQuantileLLMap[quant] = val;
+      auto quant = Quantile(dynamic_cast<TParameter<int>*>(pair->Key())->GetVal());
+      marg->fQuantileSampleMap.emplace(std::piecewise_construct,
+                                       std::forward_as_tuple(quant),
+                                       std::forward_as_tuple(*dynamic_cast<TMap*>(pair->Value()),
+                                                             marg->Vars(), marg->Systs()));
     }
 
   }
 
   //----------------------------------------------------------------------
-  double BayesianMarginal::QuantileLL(ana::Quantile quantile) const
+  double BayesianMarginal::QuantileThreshold(ana::Quantile quantile, const TH1 * pdf) const
   {
-    return fQuantileLLMap.at(quantile);
+    // in "histogram" mode, the output isn't weighted by LL;
+    // what's returned is simply the best-guess pdf
+    // approximated by the histogram itself.
+    // so instead of simply yielding the LL itself,
+    // we need to find the pdf value corresponding to the right breakpoint.
+    if (fMode == MarginalMode::kHistogram)
+    {
+      assert(pdf && "In 'histogram' marginal mode, must supply the histogram for which the quantile threshold is to be calculated");
+      return ThresholdFromTH1(pdf, std::find_if(QuantileUpVals.begin(),
+                                                QuantileUpVals.end(),
+                                                [quantile](const auto & pair) { return pair.first == quantile;})->second);
+    }
+
+    return fQuantileSampleMap.at(quantile).LL();
   }
 
   //----------------------------------------------------------------------
-  double BayesianMarginal::QuantileLL(double quantile, const MCMCSamples &samples) const
+  double BayesianMarginal::QuantileThreshold(double quantile, const MCMCSamples &samples, const TH1 * pdf) const
   {
     if (quantile == -1)
       quantile = 0;
     assert(quantile >= 0 && quantile <= 1 && "QuantileSurface(): quantile must be between 0 and 1");
 
+
     auto quantilePair = samples.QuantileLL(quantile);
+
+    if (fMode == MarginalMode::kHistogram)
+      return ThresholdFromTH1(pdf, quantile);
 
     return quantilePair.second;
   }
@@ -225,9 +247,9 @@ namespace ana
     }
 
     TMap quantMap;
-    for (const auto quantPair : fQuantileLLMap)
-      quantMap.Add(new TParameter<int>("", int(quantPair.first)), new TParameter<double>("", quantPair.second));
-    quantMap.Write("quantileLLs", TObject::kSingleKey);
+    for (const auto & quantPair : fQuantileSampleMap)
+      quantMap.Add(new TParameter<int>("", int(quantPair.first)), quantPair.second.ToTMap().release());
+    quantMap.Write("quantileSamples", TObject::kSingleKey);
 
     TList varNames;
     for (const auto & var: fVars)
@@ -274,12 +296,98 @@ namespace ana
     fkNN->ProcessSetup();
   }
 
+  double BayesianMarginal::ThresholdFromTH1(const TH1* pdf, double quantile)
+  {
+    if (pdf->Integral() <= 0)
+      return std::numeric_limits<double>::signaling_NaN();
+
+    // easy cases
+    if (quantile == 0)
+      return 1.0;
+    else if (quantile == 1)
+      return 0.0;
+    else if (quantile < 0 || quantile > 1)
+    {
+      std::cerr << "BayesianMarginal::ThresholdFromTH1(): requested quantile = " << quantile << " is not between 0 and 1.  Abort" << std::endl;
+      abort();
+    }
+
+    // check if the histogram I was passed was already unit normalized.
+    // if not, make a copy that is
+     bool copied = false;
+    if (std::abs(pdf->Integral() - 1) > 0.00001)
+    {
+      pdf = dynamic_cast<TH1*>(pdf->Clone());
+      const_cast<TH1*>(pdf)->Scale(1./pdf->Integral());
+      copied = true;
+    }
+
+    // first make a list of the fractional bin contents.
+    std::vector<double> contents(pdf->GetNcells());
+    double overflowC = 0;
+    double underflowC = 0;
+    for (int binIdx = 0; binIdx <= pdf->GetNcells(); binIdx++)
+    {
+      double binC = pdf->GetBinContent(binIdx);
+      if (binC == 0)
+        continue;   // don't go inserting useless 0s into the vector to make it much longer and slower to sort
+
+      if (pdf->IsBinOverflow(binIdx))
+        overflowC += binC;
+      else if (pdf->IsBinUnderflow(binIdx))
+        underflowC += binC;
+
+      contents.push_back(binC);
+    }
+    if ((1 - quantile) < underflowC || (1 - quantile) < overflowC)
+    {
+      std::cerr << "Warning: Histogram underflow or overflow contains more than requested quantile (" << quantile << ") of events." << std::endl;
+      std::cerr << "         Bayesian credible region will be incorrect." << std::endl;
+    }
+
+    // then do a search to find the value above which the integral corresponds to the desired quantile.
+    // begin at the specified quantile index as a first guess
+
+    std::sort(contents.begin(), contents.end());
+    std::size_t idx = (1 - quantile) * (contents.size() - 1);
+    auto it = contents.begin();
+    decltype(it) oldIt = it;
+    std::advance(it, idx);
+    double oldSum = std::accumulate(it, contents.end(), 0.0);
+    // i.e., are we including too much, so we need to shrink the interval by moving towards the end?
+    bool forward = oldSum > quantile;
+    while (it != contents.begin() && it != contents.end())
+    {
+      // if we're exactly right, then we're good
+      if (oldSum == quantile)
+        return *it;
+
+      std::advance(it, forward ? +1 : -1);
+      double newSum = std::accumulate(it, contents.end(), 0.0);
+
+      // if we just crossed over the quantile boundary, we're also done.
+      if ((newSum - quantile) / (oldSum - quantile) < 0)
+        break;
+
+      oldSum = newSum;
+      oldIt = it;
+    }
+
+    // the average is not unbiased (it depends on the steepness of the distribution near the breakpoint)
+    // but it's probably closer than the values on either side?
+    return (*it + *oldIt) / 2;
+  }
+
   //----------------------------------------------------------------------
   std::unique_ptr<TH1> BayesianMarginal::ToHistogram(const std::vector<Binning> & bins) const
   {
-    // idea: find the bin-averaged probability distribution
-    // by making the histogram weighted by exp(LL)
-    // and dividing it by the simple histogram of the events
+    // idea:
+    //  * for mode==kHistogram:
+    //    simply histogram the MCMC samples.
+    //  * for mode==kLLWgtdHistogram:
+    //    find the bin-averaged probability distribution
+    //    by making the histogram weighted by exp(LL)
+    //    and dividing it by the simple histogram of the events
     assert(fMCMCSamples);
     assert(bins.size() == fOrderedBrNames.size());
     assert(bins.size() > 0 && bins.size() < 3);  // could port NOvA CAFAna 3D hist stuff if needed
@@ -304,16 +412,6 @@ namespace ana
     // we haven't implemented MakeTH3D here.  but won't worry about it for now
     //else if (bins.size() == 3)
     //  ret.reset(MakeTH3D(UniqueName().c_str(), axisNameStr.c_str(), bins[0], bins[1], bins[2]));
-
-    //auto drawStr = std::accumulate(fOrderedBrNames.rbegin(), fOrderedBrNames.rend(),
-    //                               std::string(""),
-    //                               [](std::string s1, const std::string & s2){ return s1 + ":" + s2; });
-    //drawStr = drawStr.substr(1);  // trim off the leading ':'
-    //std::cout << "Calling TTree::Draw('" << drawStr << ">>" << ret->GetName() << "')" << std::endl;
-    //// grr.  Draw() isn't const
-    //const_cast<TTree*>(fMCMCSamples->ToTTree())->Draw(Form("%s>>%s", drawStr.c_str(), ret->GetName()),
-    //                                                  MCMCSamples::LOGLIKELIHOOD_BRANCH_NAME.c_str());
-    //ret->Print();
 
     std::unique_ptr<TH1> denom;
     if (bins.size() == 1)
@@ -348,6 +446,9 @@ namespace ana
     for (std::size_t sample = 0; sample < fMCMCSamples->NumSamples(); ++sample)
     {
       double logprob = fMCMCSamples->SampleLL(sample);
+      if (std::isnan(logprob))
+        std::cerr << "Warning: Encountered NaN log-probability in an MCMC sample.  Other things will probably go wrong..." << std::endl;
+
       std::map<const IFitVar*, double> varVals;
       std::map<const ISyst*, double> systVals;
       fMCMCSamples->SampleValues(sample, fVars, varVals, fSysts, systVals);
@@ -358,30 +459,36 @@ namespace ana
                          : fMCMCSamples->SampleValue(varsOrSysts[brIdx].syst, sample));
 
       // could template this, but probably not worth the effort?
+      double numWgt = (fMode == MarginalMode::kHistogram) ? 1.0 : logprob;
       if (bins.size() == 1)
-      {
-        ret->Fill(vals[0], logprob);
-        denom->Fill(vals[0]);
-      }
+        ret->Fill(vals[0], numWgt);
       else if (bins.size() == 2)
       {
-        dynamic_cast<TH2*>(ret.get())->Fill(vals[0], vals[1], logprob);
+        dynamic_cast<TH2*>(ret.get())->Fill(vals[0], vals[1], numWgt);
         dynamic_cast<TH2*>(denom.get())->Fill(vals[0], vals[1]);
       }
       else if (bins.size() == 3)
       {
-        dynamic_cast<TH3*>(ret.get())->Fill(vals[0], vals[1], vals[2], logprob);
+        dynamic_cast<TH3*>(ret.get())->Fill(vals[0], vals[1], vals[2], numWgt);
         dynamic_cast<TH3*>(denom.get())->Fill(vals[0], vals[1], vals[2]);
       }
     }
 
     // now exponentiate the log-probs to get probabilities
-    ret->Divide(denom.get());
-    for (int binIdx = 0; binIdx < ret->GetNcells(); binIdx++)
+    if (fMode == MarginalMode::kLLWgtdHistogram)
     {
-      // if it's *exactly* 0, this is a region where there were no samples altogether.  just leave empty
-      if (ret->GetBinContent(binIdx) != 0.0)
-        ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
+      ret->Divide(denom.get());
+      for (int binIdx = 0; binIdx < ret->GetNcells(); binIdx++)
+      {
+        // if it's *exactly* 0, this is a region where there were no samples altogether.  just leave empty
+        if (ret->GetBinContent(binIdx) != 0.0)
+          ret->SetBinContent(binIdx, exp(ret->GetBinContent(binIdx)));
+      }
+    }
+    else if (fMode == MarginalMode::kHistogram)
+    {
+      if (ret->Integral() > 0)
+        ret->Scale(1. / ret->Integral());
     }
 
     return ret;

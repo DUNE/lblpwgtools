@@ -17,7 +17,8 @@ void load_libs(bool MustClean = true) {
   // uncaught exceptions immediately show a useful backtrace under gdb.
   //  G__SetCatchException(0);
 
-  gSystem->SetAclicMode(TSystem::kOpt);
+  auto mode = (gSystem->Getenv("CAFANA_DEBUG")) ? TSystem::kDebug : TSystem::kOpt;
+  gSystem->SetAclicMode(mode);
 
   // This magic incantation prevents ROOT doing slow cleanup work in
   // TList::RecursiveRemove() under ~TH1(). It also tends to lead to shutdown

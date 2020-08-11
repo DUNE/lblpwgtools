@@ -72,7 +72,7 @@ void SystShifts::SetShift(const ISyst* syst, double shift, bool force)
     // if this slot already exists in the Stan systs, and we're not setting the same value,
     // some shenanigans are going on that we need to figure out.  abort.
     auto itStan = fSystsStan.find(syst);
-    if(itStan != fSystsStan.end() && itStan->second != shift)
+    if(itStan != fSystsStan.end() && (itStan->second != shift && std::isnan(shift) != std::isnan(itStan->second)))
     {
       std::cerr << "Error Syst '" << syst->ShortName() << " already has a Stan pull set (" << itStan->second << ") "
                 << "and you're trying to set a different double one (" << shift << ")." << std::endl;

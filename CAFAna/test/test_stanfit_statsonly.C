@@ -36,6 +36,7 @@
 
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "OscLib/func/OscCalculatorDMP.h"
+#include "OscLib/func/OscCalculatorAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -60,7 +61,8 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
 
   // let's try a nice "easy" problem: numu disappearance.
   auto stock_calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
-  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorDMP>();
+//  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorDMP>();
+  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorAnalytic>();
   osc::CopyParams(stock_calc, calc.get());
 
   std::unique_ptr<ana::PredictionExtrap> pred;
@@ -126,6 +128,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   ana::ConstrainedFitVarWithPrior fitDmSq32Scaled_UniformPrior(&ana::kFitDmSq32Scaled, ana::PriorUniformInFitVar, "FlatDmSq32");
 
   std::unique_ptr<ana::MCMCSamples> samples;
+  std::unique_ptr<ana::MCMCSamples> warmup;
   if (!loadSamplesFromFile)
   {
     ana::StanFitter fitter(&expt, {&fitSsqTh23_UniformPriorSsqTh23, &fitDmSq32Scaled_UniformPrior}, {});
@@ -138,11 +141,13 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
     fitter.SetStanConfig(config);
     ana::SystShifts systs;
     fitter.Fit(calc.get(), systs);
-    samples = fitter.ExtractSamples();
+    warmup =  fitter.ExtractSamples(ana::MemoryTupleWriter::WhichSamples::kWarmup);
+    samples = fitter.ExtractSamples(ana::MemoryTupleWriter::WhichSamples::kPostWarmup);
 
     if (saveSamplesToFile)
     {
       TFile outf( (workDir + "/mcmcsamples.root").c_str(), "recreate");
+      warmup->SaveTo(&outf, "warmup");
       samples->SaveTo(&outf, "samples");
     }
   }

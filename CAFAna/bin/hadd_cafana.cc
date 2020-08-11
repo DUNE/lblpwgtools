@@ -35,6 +35,8 @@ std::string basename(const std::string& x)
 const std::vector<std::string> kSpecialTypes
 {
   "SystShifts",
+  "Hyperparameters",
+  "SamplingTime",
 };
 // don't sum a folder that corresponds to a special class we shouldn't add
 bool ShouldSumFolder(TDirectory* dir)

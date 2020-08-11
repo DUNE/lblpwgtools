@@ -17,7 +17,7 @@
 #include "CAFAna/Vars/FitVars.h"
 
 // New includes
-#include "CAFAna/Analysis/Surface.h"
+#include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Experiment/MultiExperiment.h"
 
 using namespace ana;
@@ -41,9 +41,9 @@ void demo3()
   SingleSampleExperiment expt(&pred, data);
 
   // A Surface evaluates the experiment's chisq across a grid
-  Surface surf(&expt, calc,
-               &kFitSinSqTheta23, 30, 0.425, 0.575,
-               &kFitDmSq32Scaled, 30, 2.35, 2.55);
+  FrequentistSurface surf(&expt, calc,
+                          &kFitSinSqTheta23, 30, 0.425, 0.575,
+                          &kFitDmSq32Scaled, 30, 2.35, 2.55);
 
   //surf.Draw();
   surf.DrawBestFit(kBlue);
@@ -69,9 +69,9 @@ void demo3()
   // parts. Use to implement joint fits
   MultiExperiment exptMulti({&expt, &exptRHC});
 
-  Surface surfMulti(&exptMulti, calc,
-                    &kFitSinSqTheta23, 30, 0.425, 0.575,
-                    &kFitDmSq32Scaled, 30, 2.35, 2.55);
+  FrequentistSurface surfMulti(&exptMulti, calc,
+                               &kFitSinSqTheta23, 30, 0.425, 0.575,
+                               &kFitDmSq32Scaled, 30, 2.35, 2.55);
 
   surfMulti.DrawBestFit(kRed);
   surfMulti.DrawContour(crit1sig, 7, kRed);

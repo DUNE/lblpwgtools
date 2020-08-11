@@ -31,6 +31,9 @@ namespace osc
   template <typename T> class _OscCalculatorDMP;
   typedef _OscCalculatorDMP<stan::math::var> OscCalculatorDMPStan;
 
+  template <typename T> class _OscCalculatorAnalytic;
+  typedef _OscCalculatorDMP<stan::math::var> OscCalculatorAnalyticStan;
+
 }
 
 namespace ana

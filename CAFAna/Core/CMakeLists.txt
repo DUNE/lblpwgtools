@@ -11,7 +11,7 @@ set(Core_implementation_files
   MultiVar.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
-  # ProfilerSupport.cxx
+  ProfilerSupport.cxx
   Progress.cxx
   Ratio.cxx
   Registry.cxx
@@ -20,7 +20,6 @@ set(Core_implementation_files
   # SAMProjectSource.cxx
   # SAMQuerySource.cxx
   Spectrum.cxx
-  SpectrumStan.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
@@ -54,7 +53,6 @@ set(Core_header_files
   # SAMProjectSource.h
   # SAMQuerySource.h
   Spectrum.h
-  SpectrumStan.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

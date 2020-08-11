@@ -68,13 +68,13 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
-PNFS_OUTDIR_STUB=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+PNFS_OUTDIR_STUB=/pnfs/dune/scratch/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output stub dir is ${PNFS_OUTDIR_STUB}"
 
 ifdh ls ${PNFS_OUTDIR_STUB}
 
 if [ $? -ne 0 ]; then
-  LOGYLOG "Unable to read ${PNFS_OUTDIR}. Make sure that you have created this directory and given it group write permission (chmod g+w ${PNFS_OUTDIR})."
+  LOGYLOG "Unable to read ${PNFS_OUTDIR_STUB}. Make sure that you have created this directory and given it group write permission (chmod g+w ${PNFS_OUTDIR})."
   exit 5
 fi
 

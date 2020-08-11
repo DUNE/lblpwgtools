@@ -21,6 +21,7 @@ set(OscLib_implementation_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/EarthModel.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/IOscCalculator.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculator.cxx
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorAnalytic.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorCPT.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorGeneral.cxx
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS.cxx
@@ -41,6 +42,7 @@ set(OscLib_header_files
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/EarthModel.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/IOscCalculator.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculator.h
+  ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorAnalytic.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorCPT.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorGeneral.h
   ${CMAKE_BINARY_DIR}/Ext/OscLib/func/OscCalculatorPMNS.h

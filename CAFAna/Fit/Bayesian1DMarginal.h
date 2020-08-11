@@ -32,6 +32,10 @@ namespace ana
       std::vector<std::pair<double, double>> QuantileRanges(Quantile quantile, const Binning& bins) const;
 
       TH1D ToTH1(const Binning & bins) const;
+
+    private:
+      mutable std::unique_ptr<Binning> fCachedBinning;
+      mutable std::unique_ptr<TH1D>    fCachedHist;
   };
 
 }

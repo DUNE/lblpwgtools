@@ -26,7 +26,9 @@ namespace ana
 
     void ShiftSpectrumKernel(const Coeffs* fits,
                              unsigned int N,
-                             const stan::math::var& x, const stan::math::var& x2, const stan::math::var& x3,
+                             const stan::math::var& x,
+                             const stan::math::var& x2,
+                             const stan::math::var& x3,
                              stan::math::var* corr)
     {
       for(unsigned int n = 0; n < N; ++n)

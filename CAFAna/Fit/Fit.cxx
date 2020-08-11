@@ -32,16 +32,16 @@ namespace ana
     if(pot == 0)
       pot = obs.POT();
 
-    std::unique_ptr<TH1> oh(obs.ToTH1(pot));
-    std::unique_ptr<TH1> bh(unosc.ToTH1(pot));
-    assert(oh->GetNbinsX() == bh->GetNbinsX());
+    Eigen::ArrayXd oh(obs.GetEigen(pot));
+    Eigen::ArrayXd bh(unosc.GetEigen(pot));
+    assert(oh.size() == bh.size());
 
     double fomSq = 0;
 
     // Combine s/sqrt(s+b) in quadrature between bins
-    for(int i = 0; i < oh->GetNbinsX(); ++i){
-      const double o = oh->GetBinContent(i);
-      const double b = bh->GetBinContent(i);
+    for(int i = 0; i < oh.size(); ++i){
+      const double o = oh[i];
+      const double b = bh[i];
       const double s = o-b;
 
       if (s <= 0)
