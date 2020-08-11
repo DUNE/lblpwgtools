@@ -67,6 +67,31 @@ namespace mcmc_ana
   };
 
   // ---------------------------------------------
+
+  // ---------------------------------------------
+  int GetRedHeatPalette()
+  {
+    const int NRGBs = 9;
+    const int n_color_contours = 999;
+    static bool initialized=false;
+    static int* colors=new int[n_color_contours];
+    static int colmin = 0;
+
+    if(!initialized){
+      // White -> red
+      Double_t stops[NRGBs] = { 0.00, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000};
+      Double_t red[NRGBs]   = { 1.00, 1.00, 0.99, 0.99, 0.98, 0.94, 0.80, 0.65, 0.40 };
+      Double_t green[NRGBs] = { 0.96, 0.88, 0.73, 0.57, 0.42, 0.23, 0.09, 0.06, 0.00 };
+      Double_t blue[NRGBs]  = { 0.94, 0.82, 0.63, 0.45, 0.29, 0.17, 0.11, 0.08, 0.05 };
+      colmin=TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, n_color_contours);
+      for(uint i=0; i<n_color_contours; ++i) colors[i]=colmin+i;
+
+      initialized=true;
+    }
+
+    return colmin;
+  }
+
   std::string FullFilename(const std::string & dir, std::string file)
   {
     if (!dir.empty())
@@ -181,14 +206,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
                                                            GaussianPriorDm32Scaled,
                                                            "GaussianDmSq32");
   ConstrainedFitVarWithPrior
-  fitDmSq32Scaled_SmallSquareWellPrior(&kFitDmSq32Scaled,
-                                       SquareWellPriorInFitVar(2.5, 0.5),
-                                       "SmallSquareWellDmSq32");
-  ConstrainedFitVarWithPrior
-  fitDmSq32Scaled_BigSquareWellPrior(&kFitDmSq32Scaled,
-                                     SquareWellPriorInFitVar(2.5, 2.5),
-                                     "BigSquareWellDmSq32");
-  ConstrainedFitVarWithPrior
   fitDmSq32Scaled_SmallTopHatPrior(&kFitDmSq32Scaled,
                                    TopHatPriorInFitVar(2.5, 0.5),
                                    "SmallTopHatDmSq32");
@@ -202,8 +219,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   std::vector<const IFitVar*> fitVars{&fitSsqTh23_UniformPriorSsqTh23,
 //                                      &fitDmSq32Scaled_UniformPrior,
 //                                      &fitDmSq32Scaled_GaussianPrior,
-//                                      &fitDmSq32Scaled_SmallSquareWellPrior,
-//                                      &fitDmSq32Scaled_BigSquareWellPrior,
                                       &fitDmSq32Scaled_SmallTopHatPrior,
 //                                      &fitDmSq32Scaled_BigTopHatPrior,
                                       &fitDeltaInPiUnits_UniformPriordCP
@@ -215,8 +230,6 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     {&fitDmSq32Scaled_GaussianPrior,        {2.2, 2.8}},
     {&fitDmSq32Scaled_SmallTopHatPrior, {2.2, 2.8}},
     {&fitDmSq32Scaled_BigTopHatPrior,   {2.2, 2.8}},
-    {&fitDmSq32Scaled_SmallSquareWellPrior, {2.2, 2.8}},
-    {&fitDmSq32Scaled_BigSquareWellPrior,   {2.2, 2.8}},
     {&fitDeltaInPiUnits_UniformPriordCP,    {0,   2}},
   };
 
@@ -345,9 +358,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     if (std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_UniformPrior) != fitVars.end()
         || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_GaussianPrior) != fitVars.end()
         || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_SmallTopHatPrior) != fitVars.end()
-        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigTopHatPrior) != fitVars.end()
-        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_SmallSquareWellPrior) != fitVars.end()
-        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigSquareWellPrior) != fitVars.end())
+        || std::find(fitVars.begin(), fitVars.end(), &fitDmSq32Scaled_BigTopHatPrior) != fitVars.end())
       calc->SetDmsq32(oldDmsq32);
     if (std::find(fitVars.begin(), fitVars.end(), &fitDeltaInPiUnits_UniformPriordCP) != fitVars.end())
       calc->SetdCP(oldDelta);
@@ -553,7 +564,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   }
 
   // show that the pulls were what we expect
-  const Binning margBins = Binning::Simple(100, -3, 3);
+  const Binning margBins = Binning::Simple(100, -2.95, 2.95);  // then labels don't collide in the ratio plot
   TH2D h_fittedPulls("fitted_pulls", ";Systematic;Pull (#sigma)",
                      shifts->ActiveSysts().size(), 0, shifts->ActiveSysts().size(),
                      margBins.NBins(), margBins.Min(), margBins.Max());
@@ -583,23 +594,59 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   maxShift = std::max(3., 1.2*maxShift);
   h_truePulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
   h_fittedPulls.GetYaxis()->SetRangeUser(-maxShift, maxShift);
-  c.Clear();
-  gStyle->SetPalette(kCherry);
-  h_fittedPulls.Draw("colz");
-  h_truePulls.Draw("hist x same");
+
   std::unique_ptr<TProfile> h_fittedPulls_prof(h_fittedPulls.ProfileX(ana::UniqueName().c_str(), 1, -1, "s"));
   h_fittedPulls_prof->SetLineColor(kBlue);
-  h_fittedPulls_prof->Draw("pe same");
-  std::cout << h_fittedPulls_prof->GetBinContent(5) << std::endl;
 
-  TLegend leg(0.7, 0.7, 0.9, 0.9);
-//  leg.SetFillStyle(0);
+  c.Clear();
+  c.SetCanvasSize(900,600);
+  TAxis ax(*h_fittedPulls.GetXaxis());
+  h_fittedPulls.GetXaxis()->GetLabels()->Clear();
+
+  TPad upper("", "", 0, 0, 1.0, 1);
+  upper.cd();
+  h_fittedPulls.SetMaximum(0.25);  // so that more of the color winds up red
+  mcmc_ana::GetRedHeatPalette();
+  h_fittedPulls.Draw("colz");
+  h_truePulls.Draw("hist x same");
+  h_fittedPulls_prof->Draw("pe same");
+  upper.SetLeftMargin(0.15);
+  upper.SetBottomMargin(0.4);
+
+  TPad lower("", "", 0, 0, 1.0, 1);
+  lower.SetFillStyle(0);
+  lower.cd();
+
+  // a "pull" plot
+  TGraph fitPulls;
+  for (int bin = 1; bin <= h_fittedPulls_prof->GetNbinsX(); bin++)
+  {
+    double pull = 0;
+    if (h_fittedPulls_prof->GetBinError(bin) != 0)
+      pull = (h_fittedPulls_prof->GetBinContent(bin) - h_truePulls.GetBinContent(bin))
+             / h_fittedPulls_prof->GetBinError(bin);
+    fitPulls.SetPoint(fitPulls.GetN(), double(bin) - 0.5, pull);
+  }
+  fitPulls.Draw("al");
+  *fitPulls.GetXaxis() = ax;
+  fitPulls.SetTitle(";;#frac{True - Fit mean}{Fit RMS}");
+  fitPulls.GetYaxis()->SetRangeUser(-0.95, 0.95);
+  lower.SetLeftMargin(0.15);
+  lower.SetTopMargin(0.6);
+  lower.SetBottomMargin(0.25);
+
+  c.cd();
+  upper.Draw();
+  lower.Draw();
+  TLegend leg(0.5, 0.9, 0.9, 1.0);
+  leg.SetFillStyle(0);
   leg.SetBorderSize(0);
+  leg.SetNColumns(2);
   leg.AddEntry(&h_truePulls, "True", "l");
   leg.AddEntry(h_fittedPulls_prof.get(), "Fitted", "lpe");
   leg.Draw();
 
-  c.SetBottomMargin(0.3);
+//  c.SetBottomMargin(0.5);
   c.SaveAs(mcmc_ana::FullFilename(dirPrefix, "pulls.systs.png").c_str());
 
 }
