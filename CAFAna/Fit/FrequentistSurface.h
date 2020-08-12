@@ -44,7 +44,7 @@ namespace ana
       /// \param systSeedPts Try all of these systematic combinations as seeds
       /// \param parallel Use all the cores on this machine? Be careful...
       FrequentistSurface(const IExperiment* expt,
-              osc::IOscCalculatorAdjustable* calc,
+              osc::IOscCalcAdjustable* calc,
               const IFitVar* xvar, int nbinsx, double xmin, double xmax,
               const IFitVar* yvar, int nbinsy, double ymin, double ymax,
               const std::vector<const IFitVar*>& profVars = {},
@@ -75,7 +75,7 @@ namespace ana
                                    const std::vector<const ISyst*>& profSysts) const;
 
       virtual void FillSurface(const IExperiment* expt,
-                               osc::IOscCalculatorAdjustable* calc,
+                               osc::IOscCalcAdjustable* calc,
                                const IFitVar* xvar, const IFitVar* yvar,
                                const std::vector<const IFitVar*>& profVars,
                                const std::vector<const ISyst*>& profSysts,
@@ -83,7 +83,7 @@ namespace ana
                                const std::vector<SystShifts>& systSeedPts);
 
       double FillSurfacePoint(const IExperiment* expt,
-                              osc::IOscCalculatorAdjustable* calc,
+                              osc::IOscCalcAdjustable* calc,
                               const IFitVar* xvar, double x,
                               const IFitVar* yvar, double y,
                               const std::vector<const IFitVar*>& profVars,
@@ -92,7 +92,7 @@ namespace ana
                               const std::vector<SystShifts>& systSeedPts);
 
       void FindMinimum(const IExperiment* expt,
-                       osc::IOscCalculatorAdjustable* calc,
+                       osc::IOscCalcAdjustable* calc,
                        const IFitVar* xvar, const IFitVar* yvar,
                        const std::vector<const IFitVar*>& profVars,
                        const std::vector<const ISyst*>& profSysts,

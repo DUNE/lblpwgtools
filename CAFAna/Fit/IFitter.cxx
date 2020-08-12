@@ -5,7 +5,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -62,7 +62,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  IFitter::Fit(osc::IOscCalculatorAdjustable* seed,
+  IFitter::Fit(osc::IOscCalcAdjustable* seed,
                SystShifts& bestSysts,
                const SeedList& seedPts,
                const std::vector<SystShifts> &systSeedPts,
@@ -111,7 +111,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  IFitter::FitHelper(osc::IOscCalculatorAdjustable* initseed,
+  IFitter::FitHelper(osc::IOscCalcAdjustable* initseed,
                      SystShifts& bestSysts,
                      const SeedList& seedPts,
                      const std::vector<SystShifts>& systSeedPts,
@@ -128,7 +128,7 @@ namespace ana
 
     for (const SeedPt &pt: pts)
     {
-      osc::IOscCalculatorAdjustable* seed = nullptr;
+      osc::IOscCalcAdjustable* seed = nullptr;
       if(initseed) seed = initseed->Copy();
 
       pt.fitvars.ResetCalc(seed);
@@ -168,7 +168,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IFitter::ValidateSeeds(osc::IOscCalculatorAdjustable* seed,
+  void IFitter::ValidateSeeds(osc::IOscCalcAdjustable* seed,
                               const SeedList& seedPts,
                               const std::vector<SystShifts>& systSeedPts) const
   {

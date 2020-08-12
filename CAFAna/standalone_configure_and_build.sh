@@ -132,7 +132,6 @@ cd "$BUILD_DIR"
 mkdir Ext
 cd Ext
 
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
 svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../

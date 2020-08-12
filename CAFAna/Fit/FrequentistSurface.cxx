@@ -23,13 +23,13 @@
 #include "CAFAna/Core/ThreadPool.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 namespace ana
 {
   //----------------------------------------------------------------------
   FrequentistSurface::FrequentistSurface(const IExperiment* expt,
-                                         osc::IOscCalculatorAdjustable* calc,
+                                         osc::IOscCalcAdjustable* calc,
                                          const IFitVar* xvar, int nbinsx, double xmin, double xmax,
                                          const IFitVar* yvar, int nbinsy, double ymin, double ymax,
                                          const std::vector<const IFitVar*>& profVars,
@@ -105,7 +105,7 @@ namespace ana
 
   //---------------------------------------------------------------------
   void FrequentistSurface::FillSurface(const IExperiment *expt,
-                                       osc::IOscCalculatorAdjustable *calc,
+                                       osc::IOscCalcAdjustable *calc,
                                        const IFitVar *xvar, const IFitVar *yvar,
                                        const std::vector<const IFitVar *> &profVars,
                                        const std::vector<const ISyst *> &profSysts,
@@ -208,12 +208,12 @@ namespace ana
   ///
   /// The cacheing of the nominal done in PredictionInterp is not
   /// threadsafe. This is an inelegant but pragmatic way of suppressing it.
-  class OscCalcNoHash: public osc::IOscCalculatorAdjustable
+  class OscCalcNoHash: public osc::IOscCalcAdjustable
   {
   public:
-    OscCalcNoHash(osc::IOscCalculatorAdjustable* c) : fCalc(c) {}
+    OscCalcNoHash(osc::IOscCalcAdjustable* c) : fCalc(c) {}
 
-    osc::IOscCalculatorAdjustable* Copy() const override
+    osc::IOscCalcAdjustable* Copy() const override
     {
       std::cout << "FrequentistSurface::OscCalcNoHash not copyable." << std::endl;
       abort();
@@ -235,12 +235,12 @@ namespace ana
       F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
 #undef F
   protected:
-    osc::IOscCalculatorAdjustable* fCalc;
+    osc::IOscCalcAdjustable* fCalc;
   };
 
   //----------------------------------------------------------------------
   double FrequentistSurface::FillSurfacePoint(const IExperiment* expt,
-                                              osc::IOscCalculatorAdjustable* calc,
+                                              osc::IOscCalcAdjustable* calc,
                                               const IFitVar* xvar, double x,
                                               const IFitVar* yvar, double y,
                                               const std::vector<const IFitVar*>& profVars,
@@ -248,7 +248,7 @@ namespace ana
                                               const SeedList& seedPts,
                                               const std::vector<SystShifts>& systSeedPts)
   {
-    osc::IOscCalculatorAdjustable* calcNoHash = 0; // specific to parallel mode
+    osc::IOscCalcAdjustable* calcNoHash = 0; // specific to parallel mode
 
     if(fParallel){
       // Need to take our own copy so that we don't get overwritten by someone
@@ -296,7 +296,7 @@ namespace ana
 
   //---------------------------------------------------------------------
   void FrequentistSurface::FindMinimum(const IExperiment* expt,
-                                       osc::IOscCalculatorAdjustable* calc,
+                                       osc::IOscCalcAdjustable* calc,
                                        const IFitVar* xvar, const IFitVar* yvar,
                                        const std::vector<const IFitVar*>& profVars,
                                        const std::vector<const ISyst*>& profSysts,

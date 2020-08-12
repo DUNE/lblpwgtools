@@ -23,12 +23,12 @@
 
 #include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "OscLib/func/OscCalculator.h"
-#include "OscLib/func/OscCalculatorPMNS.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorDMP.h"
-#include "OscLib/func/OscCalculatorAnalytic.h"
+#include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalc.h"
+#include "OscLib/OscCalcPMNS.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcDMP.h"
+#include "OscLib/OscCalcAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
@@ -55,7 +55,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   stan::io::array_var_context
-  StanFitter::BuildInitContext(osc::IOscCalculatorAdjustable *seed,
+  StanFitter::BuildInitContext(osc::IOscCalcAdjustable *seed,
                                const SystShifts &systSeed) const
   {
     std::vector<double> vals;
@@ -101,17 +101,17 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void StanFitter::CreateCalculator(osc::IOscCalculatorAdjustable *seed) const
+  void StanFitter::CreateCalculator(osc::IOscCalcAdjustable *seed) const
   {
     // default to PMNSOpt
-    if (!seed || dynamic_cast<osc::OscCalculatorPMNSOpt*>(seed))
-      fCalc = std::make_unique<osc::OscCalculatorPMNSOptStan>();
-    else if (dynamic_cast<osc::OscCalculatorPMNS*>(seed))
-      fCalc = std::make_unique<osc::OscCalculatorPMNSStan>();
-    else if (dynamic_cast<osc::OscCalculatorDMP*>(seed))
-      fCalc = std::make_unique<osc::OscCalculatorDMPStan>();
-    else if (dynamic_cast<osc::OscCalculatorAnalytic*>(seed))
-      fCalc = std::make_unique<osc::OscCalculatorAnalyticStan>();
+    if (!seed || dynamic_cast<osc::OscCalcPMNSOpt*>(seed))
+      fCalc = std::make_unique<osc::OscCalcPMNSOptStan>();
+    else if (dynamic_cast<osc::OscCalcPMNS*>(seed))
+      fCalc = std::make_unique<osc::OscCalcPMNSStan>();
+    else if (dynamic_cast<osc::OscCalcDMP*>(seed))
+      fCalc = std::make_unique<osc::OscCalcDMPStan>();
+    else if (dynamic_cast<osc::OscCalcAnalytic*>(seed))
+      fCalc = std::make_unique<osc::OscCalcAnalyticStan>();
     else
     {
       std::cerr << "Unexpected oscillation calculator type: " << DemangledTypeName(seed) << std::endl;
@@ -127,7 +127,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  StanFitter::Fit(osc::IOscCalculatorAdjustable *seed,
+  StanFitter::Fit(osc::IOscCalcAdjustable *seed,
                   SystShifts &bestSysts,
                   const SeedList& seedPts,
                   const std::vector<SystShifts> &systSeedPts,
@@ -136,7 +136,7 @@ namespace ana
     if (seed)
     {
       if (!fOscCalcCache)
-        fOscCalcCache = std::make_unique<osc::OscCalculator>();
+        fOscCalcCache = std::make_unique<osc::OscCalc>();
       *fOscCalcCache = *seed;
     }
 
@@ -160,7 +160,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  StanFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+  StanFitter::FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                               SystShifts &systSeed,
                               Verbosity verb) const
   {
@@ -212,7 +212,7 @@ namespace ana
     // however if we're reusing MCMC samples from a previous run we take the last point from them
     if (fMCMCWarmup.NumSamples() > 0)
     {
-      std::unique_ptr<osc::IOscCalculatorAdjustable> calc(seed->Copy());
+      std::unique_ptr<osc::IOscCalcAdjustable> calc(seed->Copy());
       for (const auto & v : fMCMCWarmup.Vars())
         v->SetValue(calc.get(), fMCMCWarmup.SampleValue(v, fMCMCWarmup.NumSamples()-1));
       auto shifts = systSeed.Copy();
@@ -711,13 +711,13 @@ namespace ana
 
 
   //----------------------------------------------------------------------
-  void StanFitter::TestGradients(osc::IOscCalculatorAdjustable *seed,
+  void StanFitter::TestGradients(osc::IOscCalcAdjustable *seed,
                                  SystShifts &systSeed) const
   {
     if (seed)
     {
       if (!fOscCalcCache)
-        fOscCalcCache = std::make_unique<osc::OscCalculator>();
+        fOscCalcCache = std::make_unique<osc::OscCalc>();
       *fOscCalcCache = *seed;
     }
 

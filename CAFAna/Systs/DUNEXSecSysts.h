@@ -90,7 +90,7 @@ namespace ana
   public:
     DUNEXSecCorrelation();
 
-    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
   protected:

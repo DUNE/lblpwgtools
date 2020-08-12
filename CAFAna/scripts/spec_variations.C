@@ -25,7 +25,7 @@ void spec_variations(std::string stateFname="common_state_mcc11v3.root",
 
   osc::NoOscillations noOsc;
   // Use normal hierarchy for now
-  osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+  osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(+1);
 
   // Loop over the systematics and make dial validations for each one
   for (auto & syst : systlist){

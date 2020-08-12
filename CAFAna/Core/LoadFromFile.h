@@ -41,7 +41,7 @@ namespace ana
 
   // This one is actually implemented in LoadFromFile.cxx to avoid polluting
   // OscLib with CAFAna conventions.
-  template<> std::unique_ptr<osc::IOscCalculator> LoadFrom<osc::IOscCalculator>(TDirectory* dir, const std::string& label);
+  template<> std::unique_ptr<osc::IOscCalc> LoadFrom<osc::IOscCalc>(TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   // For symmetry
@@ -51,7 +51,7 @@ namespace ana
   }
 
   // Also in the cxx, to avoid having to put this logic into OscLib
-  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir, const std::string& label);
+  template<> void SaveTo(const osc::IOscCalc& x, TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   template<class T> std::unique_ptr<T> LoadFromFile(const std::string& fname,

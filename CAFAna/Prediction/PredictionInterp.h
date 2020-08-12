@@ -39,7 +39,7 @@ namespace ana
     ///                fits can't be split out reasonably. For RHC it's
     ///                important not to conflate them.
     PredictionInterp(std::vector<const ISyst*> systs,
-                     osc::IOscCalculator* osc,
+                     osc::IOscCalc* osc,
                      const IPredictionGenerator& predGen,
                      Loaders& loaders,
                      const SystShifts& shiftMC = kNoShift,
@@ -49,30 +49,30 @@ namespace ana
 
 
 
-    Spectrum Predict(osc::IOscCalculator* calc) const override;
-    Spectrum Predict(osc::IOscCalculatorStan* calc) const override;
+    Spectrum Predict(osc::IOscCalc* calc) const override;
+    Spectrum Predict(osc::IOscCalcStan* calc) const override;
 
 
-    Spectrum PredictSyst(osc::IOscCalculator* calc,
+    Spectrum PredictSyst(osc::IOscCalc* calc,
                          const SystShifts& shift) const override;
-    Spectrum PredictSyst(osc::IOscCalculatorStan* calc,
+    Spectrum PredictSyst(osc::IOscCalcStan* calc,
                          const SystShifts& shift) const override;
 
-    Spectrum PredictComponent(osc::IOscCalculator* calc,
+    Spectrum PredictComponent(osc::IOscCalc* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
-    Spectrum PredictComponent(osc::IOscCalculatorStan* calc,
+    Spectrum PredictComponent(osc::IOscCalcStan* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
 
-    Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+    Spectrum PredictComponentSyst(osc::IOscCalc* calc,
                                   const SystShifts& shift,
                                   Flavors::Flavors_t flav,
                                   Current::Current_t curr,
                                   Sign::Sign_t sign) const override;
-    Spectrum PredictComponentSyst(osc::IOscCalculatorStan* calc,
+    Spectrum PredictComponentSyst(osc::IOscCalcStan* calc,
                                   const SystShifts& shift,
                                   Flavors::Flavors_t flav,
                                   Current::Current_t curr,
@@ -86,28 +86,28 @@ namespace ana
     void MinimizeMemory();
 
     void DebugPlot(const ISyst* syst,
-                   osc::IOscCalculator* calc,
+                   osc::IOscCalc* calc,
                    Flavors::Flavors_t flav = Flavors::kAll,
                    Current::Current_t curr = Current::kBoth,
                    Sign::Sign_t sign = Sign::kBoth) const;
 
     // If \a savePattern is not empty, print each pad. Must contain a "%s" to
     // contain the name of the systematic.
-    void DebugPlots(osc::IOscCalculator* calc,
+    void DebugPlots(osc::IOscCalc* calc,
 		    const std::string& savePattern = "",
 		    Flavors::Flavors_t flav = Flavors::kAll,
 		    Current::Current_t curr = Current::kBoth,
 		    Sign::Sign_t sign = Sign::kBoth) const;
 
-    void SetOscSeed(osc::IOscCalculator* oscSeed);
+    void SetOscSeed(osc::IOscCalc* oscSeed);
 
     void DebugPlotColz(const ISyst* syst,
-                       osc::IOscCalculator* calc,
+                       osc::IOscCalc* calc,
                        Flavors::Flavors_t flav = Flavors::kAll,
                        Current::Current_t curr = Current::kBoth,
                        Sign::Sign_t sign = Sign::kBoth) const;
 
-    void DebugPlotsColz(osc::IOscCalculator* calc,
+    void DebugPlotsColz(osc::IOscCalc* calc,
                         const std::string& savePattern = "",
                         Flavors::Flavors_t flav = Flavors::kAll,
                         Current::Current_t curr = Current::kBoth,
@@ -153,7 +153,7 @@ namespace ana
                            const SystShifts& shift) const;
 
     /// Helper for PredictComponentSyst
-    Spectrum ShiftedComponent(osc::IOscCalculator* calc,
+    Spectrum ShiftedComponent(osc::IOscCalc* calc,
                               const TMD5* hash,
                               const SystShifts& shift,
                               Flavors::Flavors_t flav,
@@ -161,7 +161,7 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
-    Spectrum ShiftedComponent(osc::IOscCalculatorStan* calc,
+    Spectrum ShiftedComponent(osc::IOscCalcStan* calc,
                               const TMD5* hash,
                               const SystShifts& shift,
                               Flavors::Flavors_t flav,
@@ -238,7 +238,7 @@ namespace ana
     }
 
     /// The oscillation values we assume when evaluating the coefficients
-    osc::IOscCalculator* fOscOrigin;
+    osc::IOscCalc* fOscOrigin;
 
     mutable Spectrum fBinning; ///< Dummy spectrum to provide binning
 
@@ -273,7 +273,7 @@ namespace ana
 
     /// Templated helper for \ref ShiftedComponent
     template <typename T>
-    Spectrum _ShiftedComponent(osc::_IOscCalculator<T>* calc,
+    Spectrum _ShiftedComponent(osc::_IOscCalc<T>* calc,
                                const TMD5* hash,
                                const SystShifts& shift,
                                Flavors::Flavors_t flav,
@@ -283,7 +283,7 @@ namespace ana
 
     /// Templated helper for \ref PredictComponentSyst
     template <typename T>
-    Spectrum _PredictComponentSyst(osc::_IOscCalculator<T>* calc,
+    Spectrum _PredictComponentSyst(osc::_IOscCalc<T>* calc,
                                    const SystShifts& shift,
                                    Flavors::Flavors_t flav,
                                    Current::Current_t curr,

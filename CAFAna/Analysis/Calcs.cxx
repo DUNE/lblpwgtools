@@ -1,8 +1,8 @@
 #include "CAFAna/Analysis/Calcs.h"
 
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorSterile.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcSterile.h"
+#include "OscLib/OscCalcGeneral.h"
 
 #include <cmath>
 #include <iostream>
@@ -10,7 +10,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  void ResetOscCalcToDefault(osc::IOscCalculatorAdjustable* calc)
+  void ResetOscCalcToDefault(osc::IOscCalcAdjustable* calc)
   {
     // No controversy here...
     calc->SetL(1300);
@@ -37,15 +37,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* DefaultOscCalc()
+  osc::IOscCalcAdjustable* DefaultOscCalc()
   {
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcGeneral;
     ResetOscCalcToDefault(ret);
     return ret;
   }
 
   //----------------------------------------------------------------------
-  void ResetOscCalcToDefaultIH(osc::IOscCalculatorAdjustable* calc)
+  void ResetOscCalcToDefaultIH(osc::IOscCalcAdjustable* calc)
   {
     //Share most defaults 
     ResetOscCalcToDefault(calc);
@@ -56,17 +56,17 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* DefaultOscCalcIH()
+  osc::IOscCalcAdjustable* DefaultOscCalcIH()
   {
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcGeneral;
     ResetOscCalcToDefaultIH(ret);
     return ret;
   }
 
   //----------------------------------------------------------------------
-  void ResetSterileCalcToDefault(osc::OscCalculatorSterile* calc)
+  void ResetSterileCalcToDefault(osc::OscCalcSterile* calc)
   {
-    osc::OscCalculatorPMNSOpt* tmp = new osc::OscCalculatorPMNSOpt();
+    osc::OscCalcPMNSOpt* tmp = new osc::OscCalcPMNSOpt();
     ResetOscCalcToDefault(tmp);
 
     calc->SetL(tmp->GetL());
@@ -85,9 +85,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::OscCalculatorSterile* DefaultSterileCalc(int nflavors)
+  osc::OscCalcSterile* DefaultSterileCalc(int nflavors)
   {
-    osc::OscCalculatorSterile* ret = new osc::OscCalculatorSterile;
+    osc::OscCalcSterile* ret = new osc::OscCalcSterile;
 
     if(nflavors < 3) {
       std::cout << "The default calculator requires at least 3 flavors." << std::endl;

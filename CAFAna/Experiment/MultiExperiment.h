@@ -22,11 +22,11 @@ namespace ana
       fSystCorrelations.resize(fExpts.size());
     }
 
-    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
     /// Sum up log-likelihoods of sub-expts.  N.b.: covariance matrix business not currently supported for Stan.
-    stan::math::var LogLikelihood(osc::IOscCalculatorAdjustableStan* osc,
+    stan::math::var LogLikelihood(osc::IOscCalcAdjustableStan* osc,
                                   const SystShifts& syst) const override;
 
     /// \brief For the subexperiment \a idx, set up a mapping between

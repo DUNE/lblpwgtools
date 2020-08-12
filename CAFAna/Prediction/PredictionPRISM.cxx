@@ -99,7 +99,7 @@ void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
+Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
 
   ReweightableSpectrum ret = *fOffAxisSpectrum;
   ret.OverridePOT(1);
@@ -149,7 +149,7 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::PredictComponent(osc::IOscCalculator *calc,
+Spectrum PredictionPRISM::PredictComponent(osc::IOscCalc *calc,
                                            Flavors::Flavors_t flav,
                                            Current::Current_t curr,
                                            Sign::Sign_t sign) const {

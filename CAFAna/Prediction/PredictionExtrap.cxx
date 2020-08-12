@@ -1,6 +1,6 @@
 #include "CAFAna/Prediction/PredictionExtrap.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -25,7 +25,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionExtrap::Predict(osc::IOscCalculator* calc) const
+  Spectrum PredictionExtrap::Predict(osc::IOscCalc* calc) const
   {
     return PredictComponent(calc,
                             Flavors::kAll,
@@ -34,7 +34,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionExtrap::Predict(osc::IOscCalculatorStan* calc) const
+  Spectrum PredictionExtrap::Predict(osc::IOscCalcStan* calc) const
   {
     return PredictComponent(calc,
                             Flavors::kAll,
@@ -45,7 +45,7 @@ namespace ana
   //----------------------------------------------------------------------
   // the actual implementation
   template<typename T>
-  Spectrum PredictionExtrap::_PredictComponent(osc::_IOscCalculator<T>* calc,
+  Spectrum PredictionExtrap::_PredictComponent(osc::_IOscCalc<T>* calc,
                                                Flavors::Flavors_t flav,
                                                Current::Current_t curr,
                                                Sign::Sign_t sign) const
@@ -83,7 +83,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // just call the templated guy
-  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalc* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
@@ -93,7 +93,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // just call the templated guy
-  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculatorStan* calc,
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalcStan* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const

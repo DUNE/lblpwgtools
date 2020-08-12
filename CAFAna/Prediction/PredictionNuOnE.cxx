@@ -38,13 +38,13 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  Spectrum PredictionNuOnE::Predict(osc::IOscCalculator*) const
+  Spectrum PredictionNuOnE::Predict(osc::IOscCalc*) const
   {
     return fSig+fCCBkg+fNCBkg;
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalc* calc,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const

@@ -25,7 +25,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -133,7 +133,7 @@ void res(string paramname)
     double thisdcp;
     for(int idcp = 0; idcp < nstep; ++idcp) {
 	
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+      osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie);
 
       thisdcp = dcplo + idcp*dcpstep;
       trueOsc->SetdCP(thisdcp);
@@ -196,8 +196,8 @@ void res(string paramname)
 	prec2 = 1e-9;
       }
 
-      osc::IOscCalculatorAdjustable* testOsc = trueOsc->Copy();
-      osc::IOscCalculatorAdjustable* cvcalc = trueOsc->Copy();
+      osc::IOscCalcAdjustable* testOsc = trueOsc->Copy();
+      osc::IOscCalcAdjustable* cvcalc = trueOsc->Copy();
       Penalizer_GlbLike penalty(cvcalc,hie,arg1,arg2,arg3);
       MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst, &penalty});
 
