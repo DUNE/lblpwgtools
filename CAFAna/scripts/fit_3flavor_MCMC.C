@@ -20,7 +20,6 @@
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Core/FitVarWithPrior.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Spectrum.h"

@@ -1,7 +1,6 @@
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Ratio.h"
 #include "Utilities/func/Stan.h"

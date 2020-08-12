@@ -1,5 +1,4 @@
 #include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 

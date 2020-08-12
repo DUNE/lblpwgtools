@@ -1,7 +1,6 @@
 #include "CAFAna/Core/ReweightableSpectrum.h"
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
@@ -93,7 +92,7 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH2D* ret = HistCache::NewTH2D("", fAxisX.GetBins1D(), fBinsY);
+    TH2D* ret = MakeTH2D(UniqueName().c_str(), "", fAxisX.GetBins1D(), fBinsY);
 
     for(int i = 0; i < fMat.rows(); ++i){
       for(int j = 0; j < fMat.cols(); ++j){

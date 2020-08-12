@@ -1,6 +1,5 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"

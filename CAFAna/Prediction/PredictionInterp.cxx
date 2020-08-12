@@ -1,5 +1,4 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Ratio.h"
@@ -559,7 +558,6 @@ namespace ana
         fPreds.erase(it);
       }
     }
-    HistCache::ClearCache();
   }
 
   std::vector<ISyst const *> PredictionInterp::GetAllSysts() const {
