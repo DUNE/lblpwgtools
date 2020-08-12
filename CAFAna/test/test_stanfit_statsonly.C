@@ -34,9 +34,9 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Vars/FitVars.h"
 
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorDMP.h"
-#include "OscLib/func/OscCalculatorAnalytic.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcDMP.h"
+#include "OscLib/OscCalcAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -62,7 +62,7 @@ void test_stanfit_statsonly(bool loadPredFromFile=true, bool savePredToFile=fals
   // let's try a nice "easy" problem: numu disappearance.
   auto stock_calc = ana::NuFitOscCalc(1, 1, 3);  // NH, max mixing
 //  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorDMP>();
-  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorAnalytic>();
+  std::unique_ptr<osc::IOscCalcAdjustable> calc = std::make_unique<osc::OscCalcAnalytic>();
   osc::CopyParams(stock_calc, calc.get());
 
   std::unique_ptr<ana::PredictionExtrap> pred;

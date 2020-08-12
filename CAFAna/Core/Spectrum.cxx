@@ -1,6 +1,5 @@
 #include "CAFAna/Core/Spectrum.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -137,6 +136,9 @@ namespace ana
 
     TH1D* ret = fHist.ToTH1(fAxis.GetBins1D());
 
+    ret->GetXaxis()->SetTitle(fAxis.GetLabel1D().c_str());
+    ret->GetYaxis()->SetTitle("Events");
+
     if(expotype == kPOT){
       const double pot = exposure;
       if(fPOT){
@@ -197,9 +199,6 @@ namespace ana
     DontAddDirectory guard;
 
     TH1D* ret = ToTH1(exposure, expotype, bintype);
-
-    ret->GetXaxis()->SetTitle(fAxis.GetLabel1D().c_str());
-    ret->GetYaxis()->SetTitle("Events");
 
     ret->SetLineColor(col);
     ret->SetMarkerColor(col);

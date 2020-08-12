@@ -20,14 +20,14 @@ namespace ana
       using IPrediction::PredictComponent;
       using IPrediction::PredictSyst;
 
-      Spectrum Predict(osc::IOscCalculator* calc) const override;
-      Spectrum Predict(osc::IOscCalculatorStan* calc) const override;
+      Spectrum Predict(osc::IOscCalc* calc) const override;
+      Spectrum Predict(osc::IOscCalcStan* calc) const override;
 
-      Spectrum PredictComponent(osc::IOscCalculator* calc,
+      Spectrum PredictComponent(osc::IOscCalc* calc,
                                 Flavors::Flavors_t flav,
                                 Current::Current_t curr,
                                 Sign::Sign_t sign) const override;
-      Spectrum PredictComponent(osc::IOscCalculatorStan* calc,
+      Spectrum PredictComponent(osc::IOscCalcStan* calc,
                                 Flavors::Flavors_t flav,
                                 Current::Current_t curr,
                                 Sign::Sign_t sign) const override;
@@ -45,7 +45,7 @@ namespace ana
     protected:
       /// Templated helper function called by the non-templated versions
       template<typename T>
-      Spectrum _PredictComponent(osc::_IOscCalculator<T>* calc,
+      Spectrum _PredictComponent(osc::_IOscCalc<T>* calc,
                                  Flavors::Flavors_t flav,
                                  Current::Current_t curr,
                                  Sign::Sign_t sign) const;

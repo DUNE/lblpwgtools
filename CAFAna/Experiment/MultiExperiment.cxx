@@ -1,11 +1,10 @@
 #include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TH1D.h"
@@ -46,7 +45,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double MultiExperiment::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double MultiExperiment::ChiSq(osc::IOscCalcAdjustable* osc,
                                 const SystShifts& syst) const
   {
     double ret = 0.;
@@ -88,7 +87,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   stan::math::var
-  MultiExperiment::LogLikelihood(osc::IOscCalculatorAdjustableStan* osc, const SystShifts &syst) const
+  MultiExperiment::LogLikelihood(osc::IOscCalcAdjustableStan* osc, const SystShifts &syst) const
   {
     stan::math::var ret = 0.;
     for(unsigned int idx = 0; idx < fExpts.size(); ++idx){

@@ -1,11 +1,10 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -71,7 +70,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double SingleSampleExperiment::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double SingleSampleExperiment::ChiSq(osc::IOscCalcAdjustable* calc,
                                        const SystShifts& syst) const
   {
     Eigen::ArrayXd apred = fMC->PredictSyst(calc, syst).GetEigen(fData.POT());
@@ -180,7 +179,7 @@ namespace ana
       {
       fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov);
 
-      const Eigen::ArrayXd pred = fMC->Predict((osc::IOscCalculator*)0).GetEigen(fData.POT());
+      const Eigen::ArrayXd pred = fMC->Predict((osc::IOscCalc*)0).GetEigen(fData.POT());
 
       // We add the squared fractional statistical errors to the diagonal. In
       // principle this should vary with the predicted number of events, but in
@@ -213,7 +212,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalculatorAdjustableStan *osc,
+  stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalcAdjustableStan *osc,
                                                         const SystShifts &syst) const
   {
     if(fCovMxInfoM.size() != 0){

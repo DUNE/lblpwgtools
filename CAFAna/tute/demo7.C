@@ -13,7 +13,7 @@
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "StandardRecord/StandardRecord.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -37,7 +37,7 @@ void demo7()
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
   const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
-  osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* calc = DefaultOscCalc();
   NoExtrapPredictionGenerator gen(axEnergy, kPassesCVN);
 
   // First 10 principal components of diagonalized flux covariance matrix

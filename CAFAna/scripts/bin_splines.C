@@ -33,7 +33,7 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   SaveParams(fout, systlist);
 
-  osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+  osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(+1);
 
   // Loopy loopy loopy loop
   // Loop over the samples

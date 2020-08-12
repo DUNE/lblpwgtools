@@ -96,7 +96,7 @@ int main(int argc, char const *argv[]) {
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) {
@@ -122,7 +122,7 @@ int main(int argc, char const *argv[]) {
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc_1, *fitThrowOsc_1_rp,
+    osc::IOscCalcAdjustable *fitThrowOsc_1, *fitThrowOsc_1_rp,
         *fitThrowOsc_4;
     if (start_throw) {
       for (auto s : systlist)

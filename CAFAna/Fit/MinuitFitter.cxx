@@ -8,7 +8,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 #include "Utilities/func/MathUtil.h"
 
 #include "TError.h"
@@ -55,7 +55,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<IFitter::IFitSummary>
-  MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+  MinuitFitter::FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                                 SystShifts &systSeed,
                                 Verbosity verb) const
   {

@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]) {
   delete fin;
 
   std::vector<const ISyst *> systlist = FD_FHCNumu->GetAllSysts();
-  osc::IOscCalculatorAdjustable *osc = NuFitOscCalc(1, 1, 0);
+  osc::IOscCalcAdjustable *osc = NuFitOscCalc(1, 1, 0);
 
   for (size_t try_it = 0; try_it < 10000; ++try_it) {
 

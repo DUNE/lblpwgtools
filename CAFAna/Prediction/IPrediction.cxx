@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/LoadFromFile.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include <cassert>
 #include <iostream>
@@ -54,13 +54,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  Spectrum IPrediction::Predict(osc::IOscCalculatorStan *calc) const
+  Spectrum IPrediction::Predict(osc::IOscCalcStan *calc) const
   {
     std::cout << "This Prediction hasn't implemented a Stan-aware Predict()!" << std::endl;
     abort();
   }
   //----------------------------------------------------------------------
-  Spectrum IPrediction::PredictSyst(osc::IOscCalculator* calc,
+  Spectrum IPrediction::PredictSyst(osc::IOscCalc* calc,
                                     const SystShifts& syst) const
   {
     if(!syst.IsNominal()){
@@ -73,7 +73,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum IPrediction::PredictSyst(osc::IOscCalculatorStan* calc,
+  Spectrum IPrediction::PredictSyst(osc::IOscCalcStan* calc,
                                     const SystShifts& syst) const
   {
     if(!syst.IsNominal() || syst.HasAnyStan()){
@@ -87,7 +87,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
-  Spectrum IPrediction::PredictComponent(osc::IOscCalculatorStan *calc,
+  Spectrum IPrediction::PredictComponent(osc::IOscCalcStan *calc,
                                          Flavors::Flavors_t flav,
                                          Current::Current_t curr,
                                          Sign::Sign_t sign) const
@@ -97,7 +97,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalculator* calc,
+  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalc* calc,
                                              const SystShifts& syst,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
@@ -113,7 +113,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalculatorStan* calc,
+  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalcStan* calc,
                                              const SystShifts& syst,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,

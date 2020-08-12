@@ -27,9 +27,9 @@ namespace ana
       {
         Registry<IFitVar>::UnRegister(this);
       }
-      virtual double GetValue(const osc::IOscCalculatorAdjustable* osc) const = 0;
-      virtual void SetValue(osc::IOscCalculatorAdjustable* osc, double val) const = 0;
-      virtual double Penalty(double, osc::IOscCalculatorAdjustable*) const {return 0;}
+      virtual double GetValue(const osc::IOscCalcAdjustable* osc) const = 0;
+      virtual void SetValue(osc::IOscCalcAdjustable* osc, double val) const = 0;
+      virtual double Penalty(double, osc::IOscCalcAdjustable*) const {return 0;}
 
       const std::string & ShortName() const { return fShortName; };
       const std::string & LatexName() const { return fLatexName; };
@@ -47,7 +47,7 @@ namespace ana
   public:
     using IFitVar::IFitVar;
 
-    virtual double Penalty(double val, osc::IOscCalculatorAdjustable*) const;
+    virtual double Penalty(double val, osc::IOscCalcAdjustable*) const;
     virtual double LowLimit() const = 0;
     virtual double HighLimit() const = 0;
 
@@ -84,16 +84,16 @@ namespace ana
 
       // suggest implementing these by making a templated private method
       // which both the <double> and <stan::math::var> versions forward to
-      virtual stan::math::var GetValue(const osc::IOscCalculatorAdjustableStan * osc) const = 0;
-      virtual void SetValue(osc::IOscCalculatorAdjustableStan * osc, stan::math::var val) const = 0;
+      virtual stan::math::var GetValue(const osc::IOscCalcAdjustableStan * osc) const = 0;
+      virtual void SetValue(osc::IOscCalcAdjustableStan * osc, stan::math::var val) const = 0;
 
       /// The prior probability density distribution on this variable (which can depend on others if needed).
       /// If there are optimizations that can make log(Prior()) more expensive than a direct implementation,
       /// consider implementing LogPrior() directly instead.
-      virtual stan::math::var Prior(const stan::math::var& var, const osc::IOscCalculatorAdjustableStan* calc) const {return StanExp(LogPrior(var, calc));}
+      virtual stan::math::var Prior(const stan::math::var& var, const osc::IOscCalcAdjustableStan* calc) const {return StanExp(LogPrior(var, calc));}
 
       /// Log of the prior probability density.  Default implementation just does log(Prior()),
       /// but this can be overridden if there optimizations that speed up the calculation.
-      virtual stan::math::var LogPrior(const stan::math::var& var, const osc::IOscCalculatorAdjustableStan* calc) const {return StanLog(Prior(var, calc));}
+      virtual stan::math::var LogPrior(const stan::math::var& var, const osc::IOscCalcAdjustableStan* calc) const {return StanLog(Prior(var, calc));}
   };
 } // namespace

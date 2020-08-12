@@ -16,7 +16,7 @@
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 using namespace ana;
 
@@ -57,7 +57,7 @@ std::vector<const ISyst*> GetListOfSysts(bool nd)
 
 void test_systs(bool nd = false, bool reload = false)
 {
-  osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable* calc = NuFitOscCalc(1);
 
   const std::vector<const ISyst*> systs = GetListOfSysts(nd);
   for(const ISyst* s: systs) std::cout << s->ShortName() << " " << s->LatexName() << std::endl;

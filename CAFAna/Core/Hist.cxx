@@ -1,8 +1,7 @@
 #include "CAFAna/Core/Hist.h"
 
+#include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Utilities.h"
-
-#include "CAFAna/Core/HistCache.h"
 
 #include "Utilities/func/Stan.h"
 
@@ -145,7 +144,8 @@ namespace ana
   {
     assert(Initialized());
 
-    TH1D* ret = HistCache::New("", bins);
+    TH1D* ret = MakeTH1D(UniqueName().c_str(), "", bins);
+
     for(int i = 0; i < bins.NBins()+2; ++i){
       switch(fType){
       case kDense:     ret->SetBinContent(i, fData[i]); break;

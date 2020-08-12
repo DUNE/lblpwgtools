@@ -9,7 +9,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 #include "StandardRecord/StandardRecord.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -36,7 +36,7 @@ void demo3()
   const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
   PredictionNoExtrap pred(loaders, axEnergy, kPassesCVN);
   loaders.Go();
-  osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* calc = DefaultOscCalc();
   const Spectrum data = pred.Predict(calc).MockData(pot);
   SingleSampleExperiment expt(&pred, data);
 

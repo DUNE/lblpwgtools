@@ -21,7 +21,6 @@
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Core/FitVarWithPrior.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Spectrum.h"
@@ -36,10 +35,10 @@
 #include "CAFAna/Fit/MCMCSamples.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "OscLib/func/OscCalculatorPMNS.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorDMP.h"
-#include "OscLib/func/OscCalculatorAnalytic.h"
+#include "OscLib/OscCalcPMNS.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcDMP.h"
+#include "OscLib/OscCalcAnalytic.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -107,7 +106,7 @@ namespace mcmc_ana
               double begin,
               double end,
               double step,
-              const osc::IOscCalculatorAdjustable * calcTruth,
+              const osc::IOscCalcAdjustable * calcTruth,
               const SystShifts * systTruePulls,
               const IExperiment * expt,
               const std::string & outDir)
@@ -117,7 +116,7 @@ namespace mcmc_ana
     int nStep = 0;
     for (double val = begin; val <= end; val += step)
     {
-      osc::OscCalculatorPMNSOptStan stanCalc;
+      osc::OscCalcPMNSOptStan stanCalc;
       osc::CopyParams(calcTruth, &stanCalc);
 
       if constexpr (std::is_base_of_v<IFitVar,VarOrSyst>)
@@ -141,7 +140,7 @@ namespace mcmc_ana
     //  double ll = -std::numeric_limits<double>::infinity();
     //  for (double th23 = 0; th23 < 100*stepSize; th23 += stepSize)
     //  {
-    //    osc::OscCalculatorPMNSOptStan stanCalc;
+    //    osc::OscCalcPMNSOptStan stanCalc;
     //    osc::CopyParams(calcTruth, &stanCalc);
     //    stanCalc.SetDmsq32(dm32);
     //    stanCalc.SetTh23(th23);
@@ -189,8 +188,8 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
 
   std::cout << std::endl;
 
-  osc::IOscCalculatorAdjustable * calc;
-  osc::IOscCalculatorAdjustable * calcTruth;
+  osc::IOscCalcAdjustable * calc;
+  osc::IOscCalcAdjustable * calcTruth;
   std::map<std::string, std::unique_ptr<Spectrum>> fakeData;
   std::unique_ptr<SystShifts> systTruePulls;
   std::unique_ptr<SystShifts> shifts;
@@ -288,10 +287,10 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     std::cout << " " << predPair.first  << " (" << DemangledTypeName(predPair.second.get()) << ")" << std::endl;
   assert(preds.size() == (fitND ? 6 : 4));
 
-//    calc = new osc::OscCalculatorPMNSOpt;
-//    calc = new osc::OscCalculatorPMNS;
-//   calc = new osc::OscCalculatorDMP;
-  calc = new osc::OscCalculatorAnalytic;
+//    calc = new osc::OscCalcPMNSOpt;
+//    calc = new osc::OscCalcPMNS;
+//   calc = new osc::OscCalcDMP;
+  calc = new osc::OscCalcAnalytic;
   *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
 
   std::unique_ptr<MCMCSamples> samples, warmup;
@@ -306,7 +305,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     calc->SetTh23(mcmc_ana::MOCKDATA_TH23);
     calc->SetDmsq32(mcmc_ana::MOCKDATA_DM32);
     calc->SetdCP(mcmc_ana::MOCKDATA_DCP);
-    calcTruth = new osc::OscCalculatorPMNS;  // type of this one doesn't matter; just for storage
+    calcTruth = new osc::OscCalcPMNS;  // type of this one doesn't matter; just for storage
     *calcTruth = *calc;
 
     // choose syst pulls at random
@@ -394,7 +393,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
         fdPair.second->SaveTo(&outF, "fakedata_" + fdPair.first);
       warmup->SaveTo(&outF, "warmup");
       samples->SaveTo(&outF, "samples");
-      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
+      SaveTo(static_cast<osc::IOscCalc&>(*calcTruth), &outF, "calcTruth");
       systTruePulls->SaveTo(&outF, "systTruth");
     }
   }
@@ -431,7 +430,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
     std::cout << "   --->  loaded " << samples->NumSamples() << " MCMC samples." << std::endl;
 
     systTruePulls = LoadFrom<SystShifts>(&inf, "systTruth");
-    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(&inf, "calcTruth").release());  // yeah, just leak it
+    calcTruth = dynamic_cast<osc::IOscCalcAdjustable*>(LoadFrom<osc::IOscCalc>(&inf, "calcTruth").release());  // yeah, just leak it
     std::cout << "   --->  loaded osc parameters & syst pulls used for fake data. " << std::endl;
 
     assert (!fakeData.empty() && samples && systTruePulls && calcTruth);
@@ -444,7 +443,7 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
       shifts->SetShift(syst, samples->SampleValue(syst, bestFitIdx));
 
     //auto bfDir = dynamic_cast<TDirectory*>(inf.Get("bestfit"));
-    //calc.reset(dynamic_cast<osc::OscCalculatorPMNSOpt*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(bfDir->Get("osc"))).release()));
+    //calc.reset(dynamic_cast<osc::OscCalcPMNSOpt*>(LoadFrom<osc::IOscCalc>(dynamic_cast<TDirectory*>(bfDir->Get("osc"))).release()));
     //shifts = LoadFrom<SystShifts>(dynamic_cast<TDirectory*>(bfDir->Get("systs")));
     //assert(shifts);
 

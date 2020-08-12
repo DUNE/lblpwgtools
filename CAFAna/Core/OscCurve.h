@@ -11,8 +11,8 @@ namespace ana
   class OscCurve : public Ratio
   {
   public:
-    OscCurve(osc::IOscCalculator* calc, int from, int to);
-    OscCurve(osc::IOscCalculatorStan* calc, int from, int to);
+    OscCurve(osc::IOscCalc* calc, int from, int to);
+    OscCurve(osc::IOscCalcStan* calc, int from, int to);
     virtual ~OscCurve();
 
     OscCurve(const OscCurve& rhs) = default;

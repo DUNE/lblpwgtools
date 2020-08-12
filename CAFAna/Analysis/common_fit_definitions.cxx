@@ -36,9 +36,9 @@
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
+#include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcGeneral.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -579,7 +579,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
   // Move to the save directory
   saveDir->cd();
-  osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable *this_calc = NuFitOscCalc(1);
 
   bool isfhc =
       ((sample == kNDFHC) || (sample == kNDFHC_OA) || (sample == kFDFHC));
@@ -806,7 +806,7 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 
 TMatrixD *MakeCovmat(PredictionInterp const &prediction,
                      std::vector<ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys,
+                     osc::IOscCalcAdjustable *calc, size_t NToys,
                      TDirectory *outdir) {
   std::vector<std::vector<double>> ThrownSpectra;
   std::vector<double> MeanSpectra;
@@ -881,7 +881,7 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
   return mat;
 }
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name) {
 
   outDir->cd();
@@ -1128,7 +1128,7 @@ std::vector<seeded_spectra>
 BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
              PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
              PredictionInterp *predNDNumuFHC, PredictionInterp *predNDNumuRHC,
-             osc::IOscCalculatorAdjustable *fakeDataOsc,
+             osc::IOscCalcAdjustable *fakeDataOsc,
              SystShifts fakeDataSyst, bool fakeDataStats, double pot_fd_fhc_nue,
              double pot_fd_fhc_numu, double pot_fd_rhc_nue,
              double pot_fd_rhc_numu, double pot_nd_fhc, double pot_nd_rhc,
@@ -1196,11 +1196,11 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
 }
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
+                   osc::IOscCalcAdjustable *fitOsc, SystShifts fitSyst,
                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,

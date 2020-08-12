@@ -1,7 +1,6 @@
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Ratio.h"
 #include "Utilities/func/Stan.h"
@@ -9,7 +8,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TH2.h"
@@ -119,7 +118,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<class T> Spectrum OscillatableSpectrum::
-  _Oscillated(osc::_IOscCalculator<T>* calc, int from, int to) const
+  _Oscillated(osc::_IOscCalc<T>* calc, int from, int to) const
   {
     TMD5* hash = calc->GetParamsHash();
     if(hash && fOscCacheHash && *hash == *fOscCacheHash){
@@ -138,14 +137,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalculator* calc,
+  Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalc* calc,
                                             int from, int to) const
   {
     return _Oscillated(calc, from, to);
   }
 
   //----------------------------------------------------------------------
-  Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalculatorStan* calc,
+  Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalcStan* calc,
                                             int from, int to) const
   {
     return _Oscillated(calc, from, to);

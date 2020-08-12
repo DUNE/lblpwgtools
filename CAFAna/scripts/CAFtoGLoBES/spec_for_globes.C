@@ -20,7 +20,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -81,7 +81,7 @@ void spec_for_globes(bool reload = false)
     SpectrumLoader loaderFDRHCNuTau("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
-    osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+    osc::IOscCalcAdjustable* calc = NuFitOscCalc(1);
 
     NoExtrapPredictionGenerator genFDNumu(axis_numu_post, kPassFD_CVN_NUMU && kIsTrueFV, kCVXSecWeights);
     NoExtrapPredictionGenerator genFDNue(axis_nue_post, kPassFD_CVN_NUE && kIsTrueFV, kCVXSecWeights);
@@ -160,7 +160,7 @@ void spec_for_globes(bool reload = false)
 
   TFile* fout = new TFile(outputFname, "RECREATE");
 
-  osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(1);
   inputOsc->SetdCP(0);
 
   //FHC Dis

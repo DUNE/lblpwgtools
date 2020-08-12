@@ -6,9 +6,9 @@
 
 namespace osc
 {
-  template<class T> class _IOscCalculator;
-  template<class T> class _IOscCalculatorAdjustable;
+  template<class T> class _IOscCalc;
+  template<class T> class _IOscCalcAdjustable;
 
-  typedef _IOscCalculator<double> IOscCalculator;
-  typedef _IOscCalculatorAdjustable<double> IOscCalculatorAdjustable;
+  typedef _IOscCalc<double> IOscCalc;
+  typedef _IOscCalcAdjustable<double> IOscCalcAdjustable;
 }

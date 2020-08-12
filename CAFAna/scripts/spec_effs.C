@@ -15,7 +15,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -1032,7 +1032,7 @@ void spec_effs(bool reload = false)
 
   for(int hie = -1; hie <= +1; hie += 2){
 
-    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(hie);
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
 

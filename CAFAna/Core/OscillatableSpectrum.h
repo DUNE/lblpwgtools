@@ -80,8 +80,8 @@ namespace ana
     Spectrum Unoscillated() const {return UnWeighted();}
     Spectrum TrueEnergy() const {return WeightingVariable();}
 
-    Spectrum Oscillated(osc::IOscCalculator* calc, int from, int to) const;
-    Spectrum Oscillated(osc::IOscCalculatorStan* calc, int from, int to) const;
+    Spectrum Oscillated(osc::IOscCalc* calc, int from, int to) const;
+    Spectrum Oscillated(osc::IOscCalcStan* calc, int from, int to) const;
 
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;
@@ -106,6 +106,6 @@ namespace ana
     {
     }
 
-    template<class T> Spectrum _Oscillated(osc::_IOscCalculator<T>* calc, int from, int to) const;
+    template<class T> Spectrum _Oscillated(osc::_IOscCalc<T>* calc, int from, int to) const;
   };
 }

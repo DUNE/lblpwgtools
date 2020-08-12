@@ -3,7 +3,6 @@ set(Core_implementation_files
   Cut.cxx
   FileListSource.cxx
   HistAxis.cxx
-  HistCache.cxx
   IFitVar.cxx
   ISyst.cxx
   Loaders.cxx
@@ -37,7 +36,6 @@ set(Core_header_files
   FitVarWithPrior.h
   FwdDeclare.h
   HistAxis.h
-  HistCache.h
   IFitVar.h
   ISyst.h
   Loaders.h
