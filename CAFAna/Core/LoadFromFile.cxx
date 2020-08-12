@@ -39,12 +39,12 @@ namespace ana
 
     osc::IOscCalcAdjustable* ret = 0;
 
-    if(tag == "OscCalc") ret = new osc::OscCalc;
-    if(tag == "OscCalcGeneral") ret = new osc::OscCalcGeneral;
-    if(tag == "OscCalcPMNS") ret = new osc::OscCalcPMNS;
-    if(tag == "OscCalcPMNSOpt") ret = new osc::OscCalcPMNSOpt;
-    if(tag == "OscCalcSterile") ret = new osc::OscCalcSterile;
-    if(tag == "OscCalcPMNS_NSI") ret = new osc::OscCalcPMNS_NSI;
+    if(tag == "OscCalculator") ret = new osc::OscCalc;
+    if(tag == "OscCalculatorGeneral") ret = new osc::OscCalcGeneral;
+    if(tag == "OscCalculatorPMNS") ret = new osc::OscCalcPMNS;
+    if(tag == "OscCalculatorPMNSOpt") ret = new osc::OscCalcPMNSOpt;
+    if(tag == "OscCalculatorSterile") ret = new osc::OscCalcSterile;
+    if(tag == "OscCalculatorPMNS_NSI") ret = new osc::OscCalcPMNS_NSI;
 
     if(!ret){
       std::cout << "LoadFrom not implemented for " << tag << std::endl;
@@ -54,7 +54,7 @@ namespace ana
     TVectorD* params = (TVectorD*)dir->Get("params");
     assert(params);
     //special case how OscCalcSterile is initialized
-    if(tag == "OscCalcSterile") {
+    if(tag == "OscCalculatorSterile") {
       std::vector<double> state;
       for (int i = 0; i < params->GetNrows(); ++i) {
 	state.push_back( (*params)[i] );
@@ -63,7 +63,7 @@ namespace ana
       return std::unique_ptr<osc::IOscCalcAdjustable>(ret);
     }
     //special case how OscCalcPMNS_NSI is initialized
-    if(tag == "OscCalcPMNS_NSI") {
+    if(tag == "OscCalculatorPMNS_NSI") {
       std::vector<double> state;
       for (int i = 0; i < params->GetNrows(); ++i) {
 	state.push_back( (*params)[i] );
@@ -110,7 +110,7 @@ namespace ana
     }
 
     if(dynamic_cast<const osc::OscCalcDumb*>(&x)){
-      TObjString("OscCalcDumb").Write("type");
+      TObjString("OscCalculatorDumb").Write("type");
       tmp->cd();
       return;
     }
@@ -123,7 +123,7 @@ namespace ana
     
     const osc::OscCalcSterile* tmpSterile = dynamic_cast<const osc::OscCalcSterile*>(&x);
     if(tmpSterile) {
-      TObjString("OscCalcSterile").Write("type");      
+      TObjString("OscCalculatorSterile").Write("type");      
       std::vector<double> state = tmpSterile->GetState();
       TVectorD params(state.size());
       for (unsigned int i = 0; i < state.size(); ++i) params[i] = state[i];
@@ -135,7 +135,7 @@ namespace ana
     //for the implementation of OscCalcPMNS_NSI
     const osc::OscCalcPMNS_NSI* tmpNSI = dynamic_cast<const osc::OscCalcPMNS_NSI*>(&x);
     if(tmpNSI) {
-      TObjString("OscCalcPMNS_NSI").Write("type");      
+      TObjString("OscCalculatorPMNS_NSI").Write("type");      
       std::vector<double> state = tmpNSI->GetState();
       TVectorD params(state.size());
       for (unsigned int i = 0; i < state.size(); ++i) params[i] = state[i];
@@ -144,10 +144,10 @@ namespace ana
       return;
     }
 
-    /* */if(dynamic_cast<const osc::OscCalc*>(&x)) TObjString("OscCalcPMNS").Write("type");
-    else if(dynamic_cast<const osc::OscCalcGeneral*>(&x)) TObjString("OscCalcGeneral").Write("type");
-    else if(dynamic_cast<const osc::OscCalcPMNS*>(&x)) TObjString("OscCalcPMNS").Write("type");
-    else if(dynamic_cast<const osc::OscCalcPMNSOpt*>(&x)) TObjString("OscCalcPMNSOpt").Write("type");
+    /* */if(dynamic_cast<const osc::OscCalc*>(&x)) TObjString("OscCalculatorPMNS").Write("type");
+    else if(dynamic_cast<const osc::OscCalcGeneral*>(&x)) TObjString("OscCalculatorGeneral").Write("type");
+    else if(dynamic_cast<const osc::OscCalcPMNS*>(&x)) TObjString("OscCalculatorPMNS").Write("type");
+    else if(dynamic_cast<const osc::OscCalcPMNSOpt*>(&x)) TObjString("OscCalculatorPMNSOpt").Write("type");
     else{
       std::cout << "Unimplemented calculator in SaveTo " << typeid(x).name() << std::endl;
       abort();
