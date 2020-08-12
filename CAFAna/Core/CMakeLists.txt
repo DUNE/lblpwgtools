@@ -11,7 +11,6 @@ set(Core_implementation_files
   OscCurve.cxx
   OscillatableSpectrum.cxx
   ProfilerSupport.cxx
-  Progress.cxx
   Ratio.cxx
   Registry.cxx
   ReweightableSpectrum.cxx
@@ -43,7 +42,6 @@ set(Core_header_files
   MultiVar.h
   OscCurve.h
   OscillatableSpectrum.h
-  Progress.h
   Ratio.h
   Registry.h
   ReweightableSpectrum.h
@@ -65,7 +63,7 @@ set(Core_header_files
   Hist.h)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore)
+target_link_libraries(CAFAnaCore ${CAFANACOREEXT})
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaCore gperftools)

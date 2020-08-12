@@ -45,3 +45,5 @@ install(TARGETS UtilitiesFunc DESTINATION lib)
 install(FILES ${Utilities_header_files} DESTINATION include/Utilities/func)
 
 install(FILES ${CMAKE_BINARY_DIR}/Ext/Utilities/rootlogon.C DESTINATION include/Utilities)
+
+find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})

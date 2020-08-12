@@ -18,3 +18,5 @@ setup clhep v2_4_1_2 -q e19:prof || exit 1
 setup stan v2_18_0a -q e19:prof || exit 1
 
 PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup osclib v00.03 -q e19:prof:stan || exit 1
+
+PRODUCTS=/dune/app/users/bckhouse/products/:$PRODUCTS setup cafanacore v00.00_pre_alpha-22-g9bbef05 -q:e19:prof || exit 1
