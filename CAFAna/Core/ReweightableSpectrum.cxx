@@ -348,6 +348,7 @@ namespace ana
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "ReweightableSpectrum");
+    delete tag;
 
     TH2D* spect = (TH2D*)dir->Get("hist");
     assert(spect);
