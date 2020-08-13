@@ -288,5 +288,4 @@ namespace ana
 
   // Commutative
   inline Spectrum operator*(const Ratio& lhs, const Spectrum& rhs){return rhs*lhs;}
-  inline Spectrum operator/(const Ratio& lhs, const Spectrum& rhs){return rhs/lhs;}
 }
