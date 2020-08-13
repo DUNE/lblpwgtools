@@ -35,7 +35,7 @@ namespace ana
     const TString tag = ptag->GetString();
 
     if(tag == "NoOscillations") return std::unique_ptr<osc::IOscCalc>(new osc::NoOscillations);
-    if(tag == "OscCalcDumb") return std::unique_ptr<osc::IOscCalc>(new osc::OscCalcDumb);
+    if(tag == "OscCalculatorDumb") return std::unique_ptr<osc::IOscCalc>(new osc::OscCalcDumb);
 
     osc::IOscCalcAdjustable* ret = 0;
 
