@@ -9,6 +9,7 @@
 
 #include "TCanvas.h"
 #include "TGraph.h"
+#include "THashList.h"
 #include "TLegend.h"
 #include "TLine.h"
 #include "TMarker.h"
@@ -606,10 +607,14 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   upper.cd();
   h_fittedPulls.SetMaximum(0.25);  // so that more of the color winds up red
   mcmc_ana::GetRedHeatPalette();
+  h_fittedPulls.SetFillColor(kRed+1);  // for the legend
+  h_fittedPulls.GetZaxis()->SetTitle("Fraction of MCMC samples");
+  h_fittedPulls.GetZaxis()->RotateTitle();
   h_fittedPulls.Draw("colz");
   h_truePulls.Draw("hist x same");
   h_fittedPulls_prof->Draw("pe same");
   upper.SetLeftMargin(0.15);
+  upper.SetRightMargin(0.15);
   upper.SetBottomMargin(0.4);
 
   TPad lower("", "", 0, 0, 1.0, 1);
@@ -631,18 +636,21 @@ void fit_3flavor_MCMC(bool loadSamplesFromFile=true,
   fitPulls.SetTitle(";;#frac{True - Fit mean}{Fit RMS}");
   fitPulls.GetYaxis()->SetRangeUser(-0.95, 0.95);
   lower.SetLeftMargin(0.15);
+  lower.SetRightMargin(0.15);
   lower.SetTopMargin(0.6);
-  lower.SetBottomMargin(0.25);
+  lower.SetBottomMargin(0.3);
 
   c.cd();
   upper.Draw();
   lower.Draw();
-  TLegend leg(0.5, 0.9, 0.9, 1.0);
+  TLegend leg(0.2, 0.9, 0.8, 1.0);
   leg.SetFillStyle(0);
   leg.SetBorderSize(0);
-  leg.SetNColumns(2);
+  leg.SetNColumns(3);
   leg.AddEntry(&h_truePulls, "True", "l");
-  leg.AddEntry(h_fittedPulls_prof.get(), "Fitted", "lpe");
+  leg.AddEntry(&h_fittedPulls, "MCMC samples", "f");
+  leg.AddEntry(h_fittedPulls_prof.get(), "MCMC (mean+RMS)", "lpe");
+  leg.SetColumnSeparation(0.15);
   leg.Draw();
 
 //  c.SetBottomMargin(0.5);
