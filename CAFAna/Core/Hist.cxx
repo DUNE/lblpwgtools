@@ -10,6 +10,21 @@
 
 #include "TDirectory.h"
 
+class StatErrorsEnabled
+{
+public:
+  StatErrorsEnabled()
+  {
+    fEnabled = (getenv("CAFANA_STAT_ERRS") != 0);
+    if(fEnabled) std::cout << "Propagation of statistical uncertainties enabled" << std::endl;
+  }
+
+  operator bool() const {return fEnabled;}
+
+protected:
+  bool fEnabled;
+} gStatErrs;
+
 namespace ana
 {
   //----------------------------------------------------------------------
@@ -28,6 +43,7 @@ namespace ana
     fDataSparse = rhs.fDataSparse;
     fDataStan   = rhs.fDataStan;
     fData       = rhs.fData;
+    fSumSq      = rhs.fSumSq;
   }
 
   //----------------------------------------------------------------------
@@ -40,6 +56,7 @@ namespace ana
     std::swap(fDataSparse, rhs.fDataSparse);
     std::swap(fDataStan,   rhs.fDataStan);
     std::swap(fData,       rhs.fData);
+    std::swap(fSumSq,      rhs.fSumSq);
   }
 
   //----------------------------------------------------------------------
@@ -55,6 +72,7 @@ namespace ana
     fDataSparse = rhs.fDataSparse;
     fDataStan   = rhs.fDataStan;
     fData       = rhs.fData;
+    fSumSq      = rhs.fSumSq;
 
     return *this;
   }
@@ -70,6 +88,7 @@ namespace ana
     std::swap(fDataSparse, rhs.fDataSparse);
     std::swap(fDataStan,   rhs.fDataStan);
     std::swap(fData,       rhs.fData);
+    std::swap(fSumSq,      rhs.fSumSq);
 
     return *this;
   }
@@ -117,14 +136,20 @@ namespace ana
 
     if(h){
       ret.fType = kDense;
-      ret.fData.resize(h->GetNbinsX()+2);
+      const int N = h->GetNbinsX()+2;
+      ret.fData.resize(N);
       ret.fData.setZero();
-      for(int i = 0; i < h->GetNbinsX()+2; ++i)
-        ret.fData[i] = h->GetBinContent(i);
+      for(int i = 0; i < N; ++i) ret.fData[i] = h->GetBinContent(i);
+
+      if(gStatErrs){
+        ret.fSumSq.resize(N);
+        ret.fSumSq.setZero();
+        for(int i = 0; i < N; ++i) ret.fSumSq[i] = util::sqr(h->GetBinError(i));
+      }
     }
     if(hSparse){
       ret.fType = kSparse;
-      ret.fDataSparse.resize(h->GetNbinsX()+2);
+      ret.fDataSparse.resize(hSparse->GetNbins()+2);
       ret.fDataSparse.setZero();
       for(int i = 0; i < hSparse->GetNbins()+2; ++i){
         int idx;
@@ -155,6 +180,7 @@ namespace ana
       default:
         abort(); // unreachable
       }
+      if(fSumSq.size() > 0) ret->SetBinError(i, sqrt(fSumSq[i]));
     }
     return ret;
   }
@@ -177,7 +203,7 @@ namespace ana
   {
     assert(Initialized());
 
-    // TODO implement optional bin error accumulation
+    if(fSumSq.size() > 0) return sqrt(fSumSq[i]);
 
     return 0;
   }
@@ -207,6 +233,8 @@ namespace ana
   {
     assert(Initialized());
 
+    if(fType == kDense && gStatErrs && fSumSq.size() == 0) fSumSq.resize(fData.size());
+
     switch(fType){
     case kSparse:
       fDataSparse.coeffRef(bins.FindBin(x)) += w;
@@ -215,7 +243,14 @@ namespace ana
       std::cout << "Hist::Fill() not supported for stan vars" << std::endl;
       abort();
     case kDense:
-      fData[bins.FindBin(x)] += w;
+      {
+        const int bin = bins.FindBin(x);
+        fData[bin] += w;
+        if(gStatErrs){
+          if(fSumSq.size() == 0) fSumSq.resize(fData.size());
+          fSumSq[bin] += w*w;
+        }
+      }
       break;
     default:
       abort(); // unreachable
@@ -234,12 +269,15 @@ namespace ana
     default:
       abort(); // unreachable
     }
+
+    fSumSq *= s;
   }
 
   //----------------------------------------------------------------------
   void Hist::ResetErrors()
   {
-    // TODO errors
+    // TODO does anyone call this? if so, what do they expect it to do?
+    abort();
   }
 
   //----------------------------------------------------------------------
@@ -270,6 +308,8 @@ namespace ana
     default:
       abort(); // unreachable
     }
+
+    if(fSumSq.size() > 0) fSumSq[i] = 0;
   }
 
   //----------------------------------------------------------------------
@@ -281,6 +321,8 @@ namespace ana
     case kDense:     fData      .setZero(); break;
     default: ; // OK?
     }
+
+    fSumSq.resize(0);
   }
 
   //----------------------------------------------------------------------
@@ -354,6 +396,14 @@ namespace ana
     case kDense:     Add(rhs.fData,       scale); break;
     default: abort(); // unreachable
     }
+
+    if(fSumSq.size() > 0){
+      if(rhs.fSumSq.size() > 0) fSumSq += scale * rhs.fSumSq;
+      // otherwise nothing to add in
+    }
+    else{
+      fSumSq = scale * rhs.fSumSq;
+    }
   }
 
   //----------------------------------------------------------------------
@@ -385,6 +435,25 @@ namespace ana
         fData *= rhs.fData;
       }
     }
+
+    if(fType == kDense && rhs.fType == kDense){
+      if(fSumSq.size() > 0){
+        if(rhs.fSumSq.size() > 0){
+          fSumSq = fSumSq * util::sqr(rhs.fData) + rhs.fSumSq * util::sqr(fData);
+        }
+        else{
+          fSumSq *= util::sqr(rhs.fData);
+        }
+      }
+      else{
+        fSumSq = rhs.fSumSq * util::sqr(fData);
+      }
+    }
+    else{
+      // Didn't bother to implement error prop for multiplying stan/sparse
+      // hists
+      fSumSq.resize(0);
+    }
   }
 
   //----------------------------------------------------------------------
@@ -415,6 +484,25 @@ namespace ana
       else{
         fData /= rhs.fData;
       }
+    }
+
+    if(fType == kDense && rhs.fType == kDense){
+      if(fSumSq.size() > 0){
+        if(rhs.fSumSq.size() > 0){
+          fSumSq = fSumSq / util::sqr(rhs.fData) + rhs.fSumSq * util::sqr(fData) / util::sqr(util::sqr(rhs.fData));
+        }
+        else{
+          fSumSq /= util::sqr(rhs.fData);
+        }
+      }
+      else{
+        fSumSq = rhs.fSumSq * util::sqr(fData) / util::sqr(util::sqr(rhs.fData));
+      }
+    }
+    else{
+      // Didn't bother to implement error prop for dividing stan/sparse
+      // hists
+      fSumSq.resize(0);
     }
   }
 

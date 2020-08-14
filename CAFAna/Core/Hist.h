@@ -75,5 +75,6 @@ namespace ana
     Eigen::SparseVector<double> fDataSparse;
     Eigen::ArrayXstan fDataStan;
     Eigen::ArrayXd fData;
+    Eigen::ArrayXd fSumSq; ///< Accumulate errors, if enabled
   };
 }
