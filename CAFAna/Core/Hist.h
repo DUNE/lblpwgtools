@@ -30,6 +30,9 @@ namespace ana
     static Hist Uninitialized(){return Hist();}
     bool Initialized() const {return fType != kUninitialized;}
 
+    static Hist Zero(int nbins);
+    static Hist ZeroSparse(int nbins);
+
     static Hist Adopt(Eigen::SparseVector<double>&& v);
     static Hist Adopt(Eigen::ArrayXstan&& v);
     static Hist Adopt(Eigen::ArrayXd&& v);
@@ -76,5 +79,6 @@ namespace ana
     Eigen::ArrayXstan fDataStan;
     Eigen::ArrayXd fData;
     Eigen::ArrayXd fSumSq; ///< Accumulate errors, if enabled
+    bool fSqrtErrs; ///< Special case when filled with unweighted data
   };
 }

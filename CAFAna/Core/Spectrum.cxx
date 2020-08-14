@@ -29,11 +29,11 @@ namespace ana
   {
     const Binning bins1D = fAxis.GetBins1D();
 
-    if(sparse){
-      fHist = Hist::Adopt(Eigen::SparseVector<double>(bins1D.NBins()+2));
+    if(sparse == kSparse){
+      fHist = Hist::ZeroSparse(bins1D.NBins());
     }
     else{
-      fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(bins1D.NBins()+2)));
+      fHist = Hist::Zero(bins1D.NBins());
     }
 
     if(axis.HasVars()) loader.AddSpectrum(*this, axis.GetVar1D(), cut, shift, wei);
@@ -48,7 +48,7 @@ namespace ana
                      const Var& wei)
     : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0), fAxis(label, bins)
   {
-    fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(fAxis.GetBins1D().NBins()+2)));
+    fHist = Hist::Zero(fAxis.GetBins1D().NBins());
 
     loader.AddSpectrum(*this, var, cut, shift, wei);
   }

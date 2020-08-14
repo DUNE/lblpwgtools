@@ -28,8 +28,28 @@ protected:
 namespace ana
 {
   //----------------------------------------------------------------------
-  Hist::Hist() : fType(kUninitialized)
+  Hist::Hist() : fType(kUninitialized), fSqrtErrs(false)
   {
+  }
+
+  //----------------------------------------------------------------------
+  Hist Hist::Zero(int nbins)
+  {
+    Hist ret;
+    ret.fType = kDense;
+    ret.fData = Eigen::ArrayXd::Zero(nbins+2);
+    ret.fSqrtErrs = true;
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  Hist Hist::ZeroSparse(int nbins)
+  {
+    Hist ret;
+    ret.fType = kSparse;
+    ret.fDataSparse = Eigen::SparseVector<double>(nbins+2);
+    ret.fSqrtErrs = true;
+    return ret;
   }
 
   //----------------------------------------------------------------------
@@ -44,6 +64,7 @@ namespace ana
     fDataStan   = rhs.fDataStan;
     fData       = rhs.fData;
     fSumSq      = rhs.fSumSq;
+    fSqrtErrs   = rhs.fSqrtErrs;
   }
 
   //----------------------------------------------------------------------
@@ -57,6 +78,7 @@ namespace ana
     std::swap(fDataStan,   rhs.fDataStan);
     std::swap(fData,       rhs.fData);
     std::swap(fSumSq,      rhs.fSumSq);
+    fSqrtErrs = rhs.fSqrtErrs;
   }
 
   //----------------------------------------------------------------------
@@ -73,6 +95,7 @@ namespace ana
     fDataStan   = rhs.fDataStan;
     fData       = rhs.fData;
     fSumSq      = rhs.fSumSq;
+    fSqrtErrs   = rhs.fSqrtErrs;
 
     return *this;
   }
@@ -89,6 +112,7 @@ namespace ana
     std::swap(fDataStan,   rhs.fDataStan);
     std::swap(fData,       rhs.fData);
     std::swap(fSumSq,      rhs.fSumSq);
+    fSqrtErrs = rhs.fSqrtErrs;
 
     return *this;
   }
@@ -180,7 +204,7 @@ namespace ana
       default:
         abort(); // unreachable
       }
-      if(fSumSq.size() > 0) ret->SetBinError(i, sqrt(fSumSq[i]));
+      if(fSumSq.size() > 0  || fSqrtErrs) ret->SetBinError(i, GetBinError(i));
     }
     return ret;
   }
@@ -203,6 +227,7 @@ namespace ana
   {
     assert(Initialized());
 
+    if(fSqrtErrs) return sqrt(GetBinContent(i));
     if(fSumSq.size() > 0) return sqrt(fSumSq[i]);
 
     return 0;
@@ -232,6 +257,8 @@ namespace ana
   void Hist::Fill(const Binning& bins, double x, double w)
   {
     assert(Initialized());
+
+    if(w != 1) fSqrtErrs = false;
 
     if(fType == kDense && gStatErrs && fSumSq.size() == 0) fSumSq.resize(fData.size());
 
@@ -270,6 +297,7 @@ namespace ana
       abort(); // unreachable
     }
 
+    if(s != 1) fSqrtErrs = false;
     fSumSq *= s;
   }
 
@@ -309,6 +337,7 @@ namespace ana
       abort(); // unreachable
     }
 
+    fSqrtErrs = false;
     if(fSumSq.size() > 0) fSumSq[i] = 0;
   }
 
@@ -322,6 +351,7 @@ namespace ana
     default: ; // OK?
     }
 
+    fSqrtErrs = true;
     fSumSq.resize(0);
   }
 
@@ -397,6 +427,8 @@ namespace ana
     default: abort(); // unreachable
     }
 
+    if(scale != 1 || !rhs.fSqrtErrs) fSqrtErrs = false;
+
     if(fSumSq.size() > 0){
       if(rhs.fSumSq.size() > 0) fSumSq += scale * rhs.fSumSq;
       // otherwise nothing to add in
@@ -454,6 +486,8 @@ namespace ana
       // hists
       fSumSq.resize(0);
     }
+
+    fSqrtErrs = false;
   }
 
   //----------------------------------------------------------------------
@@ -504,6 +538,8 @@ namespace ana
       // hists
       fSumSq.resize(0);
     }
+
+    fSqrtErrs = false;
   }
 
   //----------------------------------------------------------------------
@@ -528,6 +564,7 @@ namespace ana
 
       for(Eigen::SparseVector<double>::InnerIterator it(fDataSparse); it; ++it){
         h->SetBinContent(it.index(), it.value());
+        if(fSqrtErrs) h->SetBinError(it.index(), sqrt(it.value()));
       }
 
       h->Write("hist_sparse");
