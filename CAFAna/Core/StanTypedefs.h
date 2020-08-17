@@ -22,18 +22,17 @@ namespace osc
   template <typename T> class _IOscCalc;
   typedef _IOscCalc<stan::math::var> IOscCalcStan;
 
+  template <typename T> class _OscCalcDMP;
+  typedef _OscCalcDMP<stan::math::var> OscCalcDMPStan;
+
   template <typename T> class _OscCalcPMNS;
   typedef _OscCalcPMNS<stan::math::var> OscCalcPMNSStan;
 
   template <typename T> class _OscCalcPMNSOpt;
   typedef _OscCalcPMNSOpt<stan::math::var> OscCalcPMNSOptStan;
 
-  template <typename T> class _OscCalcDMP;
-  typedef _OscCalcDMP<stan::math::var> OscCalcDMPStan;
-
   template <typename T> class _OscCalcAnalytic;
   typedef _OscCalcAnalytic<stan::math::var> OscCalcAnalyticStan;
-
 }
 
 namespace ana

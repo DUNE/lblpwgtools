@@ -45,8 +45,6 @@ namespace ana
 
     TH2D* ToTH2(double pot) const;
 
-    TAxis const *GetReweightTAxis() const;
-
     Spectrum UnWeighted() const;
 
     Spectrum WeightingVariable() const;

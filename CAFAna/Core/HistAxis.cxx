@@ -51,7 +51,7 @@ namespace ana
                    fVars[1], fBins[1],
                    fVars[2], fBins[2]);
     default:
-      std::cout << "Error: HistAxis::GetMultiDVar() doesn't support "
+      std::cout << "Error: HistAxis::GetVar1D() doesn't support "
                 << fVars.size() << "-dimensional axes" << std::endl;
       abort();
     }

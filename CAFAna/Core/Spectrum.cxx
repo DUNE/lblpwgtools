@@ -1,6 +1,7 @@
 #include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Core/Ratio.h"
+#include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "Utilities/func/MathUtil.h"
@@ -128,8 +129,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   TH1D* Spectrum::ToTH1(double exposure,
-			EExposureType expotype,
-			EBinType bintype) const
+                        EExposureType expotype,
+                        EBinType bintype) const
   {
     // Could have a file temporarily open
     DontAddDirectory guard;
@@ -187,7 +188,6 @@ namespace ana
     if(ret->GetEntries() == 0) ret->SetEntries(1);
 
     return ret;
-
   }
 
   //----------------------------------------------------------------------
@@ -446,10 +446,9 @@ namespace ana
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum Spectrum with no POT or livetime: "
-                << fPOT << " " << rhs.fPOT
+                << fPOT << " " << rhs.fPOT << " " << fLivetime << " " << rhs.fLivetime
                 << std::endl;
       abort();
-      return *this;
     }
 
     if(!fLivetime && !rhs.fPOT){

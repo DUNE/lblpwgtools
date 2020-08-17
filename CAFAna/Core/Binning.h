@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cassert>
 #include <map>
 #include <memory>
 #include <vector>
 #include <string>
-#include <unordered_map>
 
 class TAxis;
 class TDirectory;

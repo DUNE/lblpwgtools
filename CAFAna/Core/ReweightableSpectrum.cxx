@@ -33,10 +33,6 @@ namespace ana
 
     fTrueLabel = trueAxis.GetLabels()[0];
 
-    DontAddDirectory guard;
-
-    const std::string name = UniqueName();
-
     const Binning ybins = trueAxis.GetBinnings()[0];
 
     fMat.resize(ybins.NBins()+2, recoAxis.GetBins1D().NBins()+2);
