@@ -24,6 +24,7 @@ struct expSpectrum
   double pot;
 };
 
+
 void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
 	std::string outputFname="output_file.root",
 	std::string systSet="nosyst",
@@ -68,6 +69,20 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
   const int ndetector = detector.size();
   const int nneutrino = neutrino.size();
 
+
+  bool UseNDCovMat = true;
+  if (getenv("CAFANA_USE_NDCOVMAT")) {
+    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
+  }
+  bool UseV3NDCovMat = (AnaV == kV3);
+  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
+  }
+  // Get ND covariance matrix
+  bool use_nd = detectors.Contains("nd") && (years_rhc>0. && years_fhc>0.);
+  if(use_nd && UseNDCovMat){
+      TMatrixD *this_ndmatrix = GetNDMatrix(UseV3NDCovMat);
+  }
 
   ///// Predictions my way
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
@@ -129,7 +144,9 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
       experiments.push_back(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
     }
     if(penalty.Contains("reactor")) experiments.push_back(ReactorConstraintPDG2019());
-    if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);                                                                                                                                
+    if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);
+    if(use_nd && UseNDCovMat) experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
+                                                                                                                              
     MultiExperiment multiexpt(experiments);
 
     // Still need to loop over dcp choices
