@@ -48,7 +48,6 @@ namespace ana
     int GetNbinsX() const;
     double GetBinError(int i) const;
     double Integral() const;
-    double GetMean() const;
 
     void Fill(const Binning& bins, double x, double w);
     void Scale(double s);

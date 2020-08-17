@@ -360,7 +360,27 @@ namespace ana
   //----------------------------------------------------------------------
   double Spectrum::Mean() const
   {
-    return fHist.GetMean();
+    const Binning bins = fAxis.GetBins1D();
+
+    if(fHist.GetBinContent(0) != 0){
+      std::cout << "Spectrum::Mean(): Warning ignoring underflow bin content " << fHist.GetBinContent(0) << std::endl;
+    }
+
+    if(fHist.GetBinContent(bins.NBins()+1) != 0){
+      std::cout << "Spectrum::Mean(): Warning ignoring overflow bin content " << fHist.GetBinContent(bins.NBins()+1) << std::endl;
+    }
+
+    double mean = 0;
+    double W = 0;
+    for(int i = 1; i <= bins.NBins(); ++i){
+      const double w = fHist.GetBinContent(i);
+      W += w;
+      const double x0 = bins.Edges()[i-1];
+      const double x1 = bins.Edges()[i];
+      mean += w * (x0+x1)/2;
+    }
+
+    return mean/W;
   }
 
   //----------------------------------------------------------------------

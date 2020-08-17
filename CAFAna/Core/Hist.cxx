@@ -247,13 +247,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double Hist::GetMean() const
-  {
-    // TODO implement mean
-    abort();
-  }
-
-  //----------------------------------------------------------------------
   void Hist::Fill(const Binning& bins, double x, double w)
   {
     assert(Initialized());
@@ -304,8 +297,8 @@ namespace ana
   //----------------------------------------------------------------------
   void Hist::ResetErrors()
   {
-    // TODO does anyone call this? if so, what do they expect it to do?
-    abort();
+    fSumSq.resize(0);
+    fSqrtErrs = true;
   }
 
   //----------------------------------------------------------------------
