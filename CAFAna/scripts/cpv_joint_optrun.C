@@ -25,8 +25,8 @@ struct expSpectrum
 };
 
 
-void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
-	std::string outputFname="output_file.root",
+void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
+	std::string outputFname="cpv_opt_test.root",
 	std::string systSet="nosyst",
   TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
 	TString penalty="nopen", std::string asimov_set="0", int hie=1,
@@ -79,9 +79,10 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
     UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
   }
   // Get ND covariance matrix
+  TMatrixD *this_ndmatrix = new TMatrixD();
   bool use_nd = detectors.Contains("nd") && (years_rhc>0. && years_fhc>0.);
   if(use_nd && UseNDCovMat){
-      TMatrixD *this_ndmatrix = GetNDMatrix(UseV3NDCovMat);
+      this_ndmatrix = GetNDCovMat(UseV3NDCovMat);
   }
 
   ///// Predictions my way
@@ -89,9 +90,10 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
   std::vector<std::string> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
   std::vector<PredictionInterp*> predictions;
   std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
-  
-  for(int hornId=0; hornId<nhorn; hornId++){
-    for(int detId=0; detId<ndetector; detId++){
+  int this_idx=0;
+
+  for(int detId=0; detId<ndetector; detId++){
+    for(int hornId=0; hornId<nhorn; hornId++){
       for(int nuId=0; nuId<nneutrino; nuId++){
 
         if(detector[detId]=="nd" && neutrino[nuId]=="nue") continue; // no nd nue prediction
@@ -99,10 +101,11 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
         std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string din = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
         tags.push_back(din);
+        std::cout << "din: " << din << " with index " << this_idx << std::endl;
         TFile *fin = TFile::Open(fname.c_str(), "READ");
         predictions.push_back(LoadFrom<PredictionInterp>(fin, din).release());
         fin->Close();
-
+        this_idx++;
         // Get nominal exposure per year from Analysis/Exposures.h
         if(horn[hornId]=="fhc"){
           if(detector[detId]=="nd") pot.push_back(kNDPOT[nom_exp] * years_fhc);
@@ -114,8 +117,8 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
         } // rhc pot
 
       } // nuId
-    } // detId
-  } // hornId
+    } // hornId
+  } // detId
 
 
 
@@ -137,17 +140,30 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
     std::vector<Spectrum> s_fakedata;
 
     // define the experiments for the multiexperiment
-    std::vector<const IExperiment*> experiments;
-    for(int predId=0; predId<predictions.size(); predId++){
+    // std::vector<const IExperiment*> experiments;
+    MultiExperiment experiments;
+    for(unsigned int predId=0; predId<predictions.size(); predId++){
       s_predictions.push_back(predictions[predId]->Predict(trueOsc));
       s_fakedata.push_back(s_predictions[predId].MockData(pot[predId],0)); // second argument = 0 defaults to random throw number
-      experiments.push_back(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
+      // experiments.push_back(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
+      experiments.Add(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
     }
-    if(penalty.Contains("reactor")) experiments.push_back(ReactorConstraintPDG2019());
-    if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);
-    if(use_nd && UseNDCovMat) experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
-                                                                                                                              
-    MultiExperiment multiexpt(experiments);
+
+    // if(penalty.Contains("reactor")) experiments.push_back(ReactorConstraintPDG2019());
+    // if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);
+    if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
+    if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
+
+    // Add the ND covariance matrix
+    // The multiexperiment ordering is important so we know what idx to the matrix loader
+    // The matrix is linked to the nd samples thus the {0,1} experiment indexes if using the nd
+    // TO DO: what happens in the FHC or RHC only case? Check and edit the GetNDCovMat function
+    if(use_nd && UseNDCovMat){
+      std::cout << "Adding covariance mat" << std::endl;
+      experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
+    }
+
+    // MultiExperiment multiexpt(experiments);
 
     // Still need to loop over dcp choices
     // why only have two options?
@@ -167,7 +183,8 @@ void cpv_joint_optrun(std::string input_predictions="input_predictions.root",
         SystShifts trueSyst = kNoShift;
       	SystShifts testSyst = kNoShift;
       	
-        MinuitFitter this_fit(&multiexpt, oscVars, systlist, MinuitFitter::kNormal);
+        // MinuitFitter this_fit(&multiexpt, oscVars, systlist, MinuitFitter::kNormal);
+        MinuitFitter this_fit(&experiments, oscVars, systlist, MinuitFitter::kNormal);
         double thischisq = this_fit.Fit(testOsc, testSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();;
 
 //       	// thischisq = RunFitPoint(stateFname, sampleString,
