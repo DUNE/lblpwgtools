@@ -27,7 +27,7 @@ struct expSpectrum
 
 
 void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
-	std::string outputFname="cpv_opt_test3_mask.root",
+	std::string outputFname="cpv_opt_testathousand.root",
 	std::string systSet="nosyst",
   TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
 	TString penalty="nopen", std::string asimov_set="0", int hie=1,
@@ -71,6 +71,9 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   const int ndetector = detector.size();
   const int nneutrino = neutrino.size();
 
+  bool TwoBeams = (nhorn == 2);
+  bool isFHC = (horns.Contains("fhc"));
+
 
   bool UseNDCovMat = true;
   if (getenv("CAFANA_USE_NDCOVMAT")) {
@@ -84,8 +87,6 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   TMatrixD *this_ndmatrix = new TMatrixD();
   bool use_nd = detectors.Contains("nd") && (years_rhc>0. && years_fhc>0.);
   if(use_nd && UseNDCovMat){
-      bool TwoBeams = (nhorn == 2);
-      bool isFHC = (horns.Contains("fhc"));
       this_ndmatrix = GetNDCovMat(UseV3NDCovMat, TwoBeams, isFHC);
   }
 
@@ -161,7 +162,8 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
     // TO DO: what happens in the FHC or RHC only case? Check and edit the GetNDCovMat function
     if(use_nd && UseNDCovMat){
       std::cout << "Adding covariance mat" << std::endl;
-      experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
+      if(TwoBeams) experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
+      else experiments.AddCovarianceMatrix(this_ndmatrix, true, {0});
     }
 
     // Still need to loop over dcp choices for the seeded calculator
