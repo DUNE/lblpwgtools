@@ -79,7 +79,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionInterp::~PredictionInterp(){}
+  PredictionInterp::~PredictionInterp()
+  {
+  }
 
   //----------------------------------------------------------------------
   std::vector<std::vector<PredictionInterp::Coeffs>> PredictionInterp::
@@ -200,7 +202,7 @@ namespace ana
     // relative to some alternate nominal (eg Birks C where the appropriate
     // nominal is no-rock) can work.
     const Spectrum nom = pNom->PredictComponent(fOscOrigin,
-						flav, curr, sign);
+                                                flav, curr, sign);
 
     std::vector<Eigen::ArrayXd> ratios;
     ratios.reserve(preds.size());
@@ -497,7 +499,6 @@ namespace ana
     return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
 
-
   //----------------------------------------------------------------------
   template<typename T>
   Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalc<T>* calc,
@@ -510,6 +511,7 @@ namespace ana
   {
     static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
                   "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
+
     if(fSplitBySign && sign == Sign::kBoth){
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+
               ShiftedComponent(calc, hash, shift, flav, curr, Sign::kNu,     type));
@@ -710,7 +712,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-				      std::vector<const ISyst*> veto)
+                                      std::vector<const ISyst*> veto)
   {
     ret->fPredNom = ana::LoadFrom<IPrediction>(dir, "pred_nom");
 

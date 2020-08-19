@@ -129,7 +129,7 @@ namespace ana
     }
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-			     std::vector<const ISyst*> veto = {});
+                             std::vector<const ISyst*> veto = {});
 
     typedef ana::PredIntKern::Coeffs Coeffs;
 
@@ -192,7 +192,7 @@ namespace ana
       /// Will be filled if signs are separated, otherwise not
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
 
-        // Same info as above but with more-easily-iterable index order
+      // Same info as above but with more-easily-iterable index order
       // [type][shift bin][histogram bin]. TODO this is ugly
       std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
       std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
