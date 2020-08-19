@@ -8,7 +8,6 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Exposures.h"
-//#include "CAFAna/Analysis/FitFunctionsHelper.h"
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/SolarConstraints.h"
@@ -16,6 +15,8 @@
 #include "CAFAna/Systs/AnaSysts.h"
 
 using namespace ana;
+
+bool mask = true;
 
 struct expSpectrum
 {
@@ -26,7 +27,7 @@ struct expSpectrum
 
 
 void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
-	std::string outputFname="cpv_opt_test.root",
+	std::string outputFname="cpv_opt_test3_mask.root",
 	std::string systSet="nosyst",
   TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
 	TString penalty="nopen", std::string asimov_set="0", int hie=1,
@@ -56,6 +57,7 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   std::vector<std::string> horn;
   std::vector<float> pot = {};
 
+  // Contains or use python inspired SplitString currently in AnaSysts.h
   if(neutrinos.Contains("nue")) neutrino.push_back("nue");
   if(neutrinos.Contains("numu")) neutrino.push_back("numu");
 
@@ -82,7 +84,9 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   TMatrixD *this_ndmatrix = new TMatrixD();
   bool use_nd = detectors.Contains("nd") && (years_rhc>0. && years_fhc>0.);
   if(use_nd && UseNDCovMat){
-      this_ndmatrix = GetNDCovMat(UseV3NDCovMat);
+      bool TwoBeams = (nhorn == 2);
+      bool isFHC = (horns.Contains("fhc"));
+      this_ndmatrix = GetNDCovMat(UseV3NDCovMat, TwoBeams, isFHC);
   }
 
   ///// Predictions my way
@@ -101,7 +105,6 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
         std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string din = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
         tags.push_back(din);
-        std::cout << "din: " << din << " with index " << this_idx << std::endl;
         TFile *fin = TFile::Open(fname.c_str(), "READ");
         predictions.push_back(LoadFrom<PredictionInterp>(fin, din).release());
         fin->Close();
@@ -129,45 +132,40 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
 
     // fake data will be generated assuming these parameter values
     // osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
-    double thisdcp = -TMath::Pi() + step*binwidth;
+    double thisdcp = -TMath::Pi() + step*binwidth; // why start in -pi instead of zero... (t2k vs nova)
     osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set); 
     trueOsc->SetdCP(thisdcp);
 
     // defining the predictions and fake data here might seem repetitive
-    // but at least it's not reopening the prediction files at each ste
+    // but at least it's not reopening the prediction files at each steep
     std::cout << "\nfilling prediction" << std::endl;
     std::vector<Spectrum> s_predictions;
     std::vector<Spectrum> s_fakedata;
 
     // define the experiments for the multiexperiment
-    // std::vector<const IExperiment*> experiments;
     MultiExperiment experiments;
     for(unsigned int predId=0; predId<predictions.size(); predId++){
       s_predictions.push_back(predictions[predId]->Predict(trueOsc));
       s_fakedata.push_back(s_predictions[predId].MockData(pot[predId],0)); // second argument = 0 defaults to random throw number
-      // experiments.push_back(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
-      experiments.Add(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
+      // Mask or you'll get different results to the official
+      SingleSampleExperiment *temp_singleexpt = new SingleSampleExperiment(predictions[predId], s_fakedata[predId]);
+      if(mask) temp_singleexpt->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
+      experiments.Add(temp_singleexpt);
+      // experiments.Add(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
     }
-
-    // if(penalty.Contains("reactor")) experiments.push_back(ReactorConstraintPDG2019());
-    // if(penalty.Contains("solar")) experiments.push_back(&kSolarConstraintsPDG2019);
     if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
     if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
 
     // Add the ND covariance matrix
-    // The multiexperiment ordering is important so we know what idx to the matrix loader
-    // The matrix is linked to the nd samples thus the {0,1} experiment indexes if using the nd
+    // To properly add the nd matrix, the idx should match the nd experiments
     // TO DO: what happens in the FHC or RHC only case? Check and edit the GetNDCovMat function
     if(use_nd && UseNDCovMat){
       std::cout << "Adding covariance mat" << std::endl;
       experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
     }
 
-    // MultiExperiment multiexpt(experiments);
-
-    // Still need to loop over dcp choices
+    // Still need to loop over dcp choices for the seeded calculator
     // why only have two options?
-    // TO DO: add 1/2 and 3/2 pi
     // double idcplist = {0, 1/2, 1, 3/2}
     // for (double idcp : idcplist) {
     for (int idcp = 0; idcp < 2; ++idcp) {
@@ -183,33 +181,35 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
         SystShifts trueSyst = kNoShift;
       	SystShifts testSyst = kNoShift;
       	
-        // MinuitFitter this_fit(&multiexpt, oscVars, systlist, MinuitFitter::kNormal);
+        std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
+        auto start_fit = std::chrono::system_clock::now();
         MinuitFitter this_fit(&experiments, oscVars, systlist, MinuitFitter::kNormal);
-        double thischisq = this_fit.Fit(testOsc, testSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();;
-
-//       	// thischisq = RunFitPoint(stateFname, sampleString,
-//       	// 			trueOsc, trueSyst, false,
-//       	// 			oscVars, systlist,
-//       	// 			testOsc, testSyst,
-//       	// 			oscSeeds, penalty, MinuitFitter::kNormal, nullptr);
+        double thischisq = this_fit.Fit(testOsc, testSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();
       	
       	chisqmin = TMath::Min(thischisq,chisqmin);
         std::cout << "chisqmin=" << chisqmin << std::endl;
+        auto end_fit = std::chrono::system_clock::now();
+        std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
+        std::cerr << "[FIT]: Finished fit in "
+        << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count()
+        << " s after " << this_fit.GetNFCN() << " iterations "
+        << BuildLogInfoString();
+
       }
     }
     
-    // chisqmin = TMath::Max(chisqmin,1e-6);
-    // gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));
+    chisqmin = TMath::Max(chisqmin,1e-6);
+    gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));
 
     s_predictions.clear();
     s_fakedata.clear();
 
   } // step loop
 
-  // fout->cd();
-  // gCPV->Draw("ALP");
-  // gCPV->Write(hie > 0 ? "sens_cpv_nh" : "sens_cpv_ih");
-  // fout->Close();
+  fout->cd();
+  gCPV->Draw("ALP");
+  gCPV->Write(hie > 0 ? "sens_cpv_nh" : "sens_cpv_ih");
+  fout->Close();
 
   predictions.clear();
 

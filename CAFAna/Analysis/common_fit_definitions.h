@@ -42,7 +42,9 @@ extern double const nom_exposure;
 
 double GetBoundedGausThrow(double min, double max);
 
-TMatrixD *GetNDCovMat(bool UseV3NDCovMat);
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
+                      bool TwoBeams = true,
+                      bool isFHC = true);
 
 // For ease of penalty terms...
 ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,

@@ -79,7 +79,7 @@ double GetBoundedGausThrow(double min, double max) {
 }
 
 
-TMatrixD *GetNDCovMat(bool UseV3NDCovMat){
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
 
 	auto AnaV = GetAnaVersion();
 
@@ -95,12 +95,19 @@ TMatrixD *GetNDCovMat(bool UseV3NDCovMat){
                                          : "/Systs/det_sys_cov.root");
 #endif
 
+	std::string this_beam = "all";
+	if(!TwoBeams){
+		if(isFHC) this_beam = "fhc";
+		else this_beam = "rhc";
+	}
     // TDirectory *thisDir = gDirectory->CurrentDirectory();
     TFile covMatFile(covFileName.c_str());
-    TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
+    TString covObjectName = "nd_" + this_beam + "_frac_cov";
+    TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get(covObjectName);
+    // TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
     if (!fake_uncorr) {
     	std::cout << "Could not obtain covariance matrix named "
-    	"\"nd_all_frac_cov\"  from " << covFileName << std::endl;
+    	<< covObjectName <<  " from " << covFileName << std::endl;
     	abort();
       }
 
