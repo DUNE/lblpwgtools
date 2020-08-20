@@ -367,13 +367,17 @@ namespace ana
   }
 
 //----------------------------------------------------------------------
-  std::unique_ptr<FrequentistSurface> FrequentistSurface::LoadFrom(TDirectory *dir)
+  std::unique_ptr<FrequentistSurface> FrequentistSurface::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     DontAddDirectory guard;
 
     TObjString *tag = (TObjString *) dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "FrequentistSurface");
+    delete tag;
 
     std::unique_ptr<FrequentistSurface> surf(new FrequentistSurface);
     ISurface::FillSurfObj(*surf, dir);
@@ -387,6 +391,8 @@ namespace ana
       else
         surf->fProfHists.push_back((TH2 *) dir->Get(TString::Format("margHists/hist%lu", idx)));
     }
+
+    delete dir;
 
     return surf;
   }
