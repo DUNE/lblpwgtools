@@ -122,31 +122,31 @@ namespace ana
 
     std::vector<const ISyst *> systlist;
     if (fluxsyst_Nov17) {
-      std::vector<const ISyst *> fluxlist_Nov17 =
-          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
-      systlist.insert(systlist.end(), fluxlist_Nov17.begin(),
-                      fluxlist_Nov17.end());
+      std::vector<const ISyst *> fluxsyst_Nov17 = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
+      systlist.insert(systlist.end(), fluxsyst_Nov17.begin(), fluxsyst_Nov17.end());
     }
 
-    if (fluxsyst_CDR) {
-      std::vector<const ISyst *> fluxlist_CDR =
-          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
-      systlist.insert(systlist.end(), fluxlist_CDR.begin(), fluxlist_CDR.end());
+    if (fluxsyst_CDR) { // CHECK: GetDUNEFluxSysts loading nothing when set to true
+      std::vector<const ISyst *> fluxsyst_CDR = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
+      systlist.insert(systlist.end(), fluxsyst_CDR.begin(), fluxsyst_CDR.end());
     }
 
     if (detsyst) {
-      getDetectorSysts(useFD,useND,useNueOnE);
+      std::vector<const ISyst *> detsyst = getDetectorSysts(useFD,useND,useNueOnE);
+      systlist.insert(systlist.end(), detsyst.begin(), detsyst.end());
     }
 
     if (xsecsyst) {
       // This function removes some dials. Don't know why it has to be so
       // Those will need to be added again if using fake data. So always add fake data last
-      getReducedXSecSysts(fluxXsecPenalties); 
+      std::vector<const ISyst *> xsecsyst = getReducedXSecSysts(fluxXsecPenalties); 
+      systlist.insert(systlist.end(), xsecsyst.begin(), xsecsyst.end());
     }
 
     // If using fake data dials (for state generation) add the previously removed systs back in
     if (useFakeDataDials) {
-      getFakeDataSysts(fluxXsecPenalties);
+      std::vector<const ISyst *> fakedatasyst = getFakeDataSysts(fluxXsecPenalties);
+      // systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
     }
 
     return systlist;

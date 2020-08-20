@@ -27,10 +27,10 @@ struct expSpectrum
 
 
 void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
-	std::string outputFname="cpv_opt_testathousand.root",
-	std::string systSet="nosyst",
+	std::string specialTag="notag",
+	std::string systSet="allsyst",
   TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
-	TString penalty="nopen", std::string asimov_set="0", int hie=1,
+	TString penalty="reactor", std::string asimov_set="0", int hie=1,
 	double years_fhc = 3.5, double years_rhc = 3.5, int nom_exp = 7){
 
   gROOT->SetBatch(1);
@@ -44,13 +44,6 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
 
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
-
-  TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
-  fout->cd();
-
-  double binwidth = 2*TMath::Pi()/36;
-  TGraph* gCPV = new TGraph();
-
 
   std::vector<std::string> neutrino = {};
   std::vector<std::string> detector = {};
@@ -75,6 +68,7 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   bool isFHC = (horns.Contains("fhc"));
 
 
+  // Get ND covariance matrix or not
   bool UseNDCovMat = true;
   if (getenv("CAFANA_USE_NDCOVMAT")) {
     UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
@@ -83,9 +77,8 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
     UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
   }
-  // Get ND covariance matrix
   TMatrixD *this_ndmatrix = new TMatrixD();
-  bool use_nd = detectors.Contains("nd") && (years_rhc>0. && years_fhc>0.);
+  bool use_nd = detectors.Contains("nd");
   if(use_nd && UseNDCovMat){
       this_ndmatrix = GetNDCovMat(UseV3NDCovMat, TwoBeams, isFHC);
   }
@@ -124,7 +117,12 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
     } // hornId
   } // detId
 
-
+  // The output file
+  TString outputFname = "cpv_"+detectors+"_"+horns+"_"+neutrinos+"__"+penalty+"_"+systSet+(hie == 1 ? "__nh" : "__ih") + specialTag + ".root";
+  TFile* fout = new TFile(outputFname, "RECREATE");
+  fout->cd();
+  double binwidth = 2*TMath::Pi()/36;
+  TGraph* gCPV = new TGraph();
 
   for(double step = 0; step < 37; ++step) {
     
