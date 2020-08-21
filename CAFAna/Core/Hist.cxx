@@ -123,7 +123,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Adopt(Eigen::SparseVector<double>&& v)
+  Hist Hist::AdoptSparse(Eigen::SparseVector<double>&& v)
   {
     Hist ret;
     ret.fType = kSparse;
@@ -132,7 +132,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Hist Hist::Adopt(Eigen::ArrayXstan&& v)
+  Hist Hist::AdoptStan(Eigen::ArrayXstan&& v)
   {
     Hist ret;
     ret.fType = kDenseStan;
@@ -173,12 +173,18 @@ namespace ana
     }
     if(hSparse){
       ret.fType = kSparse;
-      ret.fDataSparse.resize(hSparse->GetNbins()+2);
+
+      // Number of bins there would be in a dense version
+      int nbins = 1;
+      for(int d = 0; d < hSparse->GetNdimensions(); ++d)
+        nbins *= hSparse->GetAxis(d)->GetNbins()+2;
+
+      ret.fDataSparse.resize(nbins);
       ret.fDataSparse.setZero();
-      for(int i = 0; i < hSparse->GetNbins()+2; ++i){
+      for(int i = 0; i < hSparse->GetNbins(); ++i){
         int idx;
-        const double y = hSparse->GetBinContent(&idx);
-        ret.fData.coeffRef(idx) = y;
+        const double y = hSparse->GetBinContent(i, &idx);
+        ret.fDataSparse.coeffRef(idx) = y;
       }
     }
 
@@ -470,7 +476,7 @@ namespace ana
           fSumSq *= util::sqr(rhs.fData);
         }
       }
-      else{
+      else if(rhs.fSumSq.size() > 0){
         fSumSq = rhs.fSumSq * util::sqr(fData);
       }
     }
@@ -522,7 +528,7 @@ namespace ana
           fSumSq /= util::sqr(rhs.fData);
         }
       }
-      else{
+      else if(rhs.fSumSq.size() > 0){
         fSumSq = rhs.fSumSq * util::sqr(fData) / util::sqr(util::sqr(rhs.fData));
       }
     }

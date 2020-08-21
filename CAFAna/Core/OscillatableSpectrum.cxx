@@ -52,6 +52,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  OscillatableSpectrum::OscillatableSpectrum(const Eigen::MatrixXd&& mat,
+                                             const HistAxis& recoAxis,
+                                             double pot, double livetime)
+    : ReweightableSpectrum(std::move(mat), recoAxis,
+                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
+                           pot, livetime)
+  {
+  }
+
+  //----------------------------------------------------------------------
   OscillatableSpectrum::~OscillatableSpectrum()
   {
   }
@@ -234,9 +244,12 @@ namespace ana
                                                       HistAxis(labels, bins),
                                                       kNoCut);
 
-    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                  ret->fMat.rows(),
-                                                  ret->fMat.cols());
+    // ROOT histogram storage is row-major, but Eigen is column-major by
+    // default
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
+    ret->fMat = Eigen::Map<MatRowMajor>(spect->GetArray(),
+                                        ret->fMat.rows(),
+                                        ret->fMat.cols());
 
     delete spect;
 

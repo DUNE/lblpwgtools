@@ -66,7 +66,7 @@ namespace ana
   Spectrum::Spectrum(Eigen::ArrayXstan&& h,
                      const HistAxis& axis,
                      double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
+    : fHist(Hist::AdoptStan(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
   {
   }
 

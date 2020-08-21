@@ -53,6 +53,10 @@ namespace ana
                          const SystShifts& shift = kNoShift,
                          const Var& wei = kUnweighted);
 
+    OscillatableSpectrum(const Eigen::MatrixXd&& mat,
+                         const HistAxis& recoAxis,
+                         double pot, double livetime);
+
     /// The only valid thing to do with such a spectrum is to assign something
     /// else into it.
     static OscillatableSpectrum Uninitialized(){return OscillatableSpectrum();}

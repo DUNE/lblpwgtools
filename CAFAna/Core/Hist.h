@@ -1,6 +1,13 @@
 #pragma once
 
-#include "Utilities/func/Stan.h" // need stan proper for fDataStan
+#include "Utilities/func/StanVar.h"
+// These numeric limits need to be included before we actually instantiate any
+// eigen+stan objects.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#include "stan/math/rev/core/std_numeric_limits.hpp"
+#include "stan/math/rev/mat/fun/Eigen_NumTraits.hpp"
+#pragma GCC diagnostic pop
 
 class TDirectory;
 
@@ -33,8 +40,8 @@ namespace ana
     static Hist Zero(int nbins);
     static Hist ZeroSparse(int nbins);
 
-    static Hist Adopt(Eigen::SparseVector<double>&& v);
-    static Hist Adopt(Eigen::ArrayXstan&& v);
+    static Hist AdoptSparse(Eigen::SparseVector<double>&& v);
+    static Hist AdoptStan(Eigen::ArrayXstan&& v);
     static Hist Adopt(Eigen::ArrayXd&& v);
 
     static Hist FromDirectory(TDirectory* dir);
