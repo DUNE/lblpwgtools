@@ -101,6 +101,9 @@ namespace ana
       fOscCacheSpect = rhs.fOscCacheSpect;
       fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
     }
+    else{
+      fOscCacheHash.reset();
+    }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
     assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -118,6 +121,9 @@ namespace ana
     if(rhs.fOscCacheHash){
       fOscCacheSpect = std::move(rhs.fOscCacheSpect);
       fOscCacheHash = std::move(rhs.fOscCacheHash);
+    }
+    else{
+      fOscCacheHash.reset();
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
