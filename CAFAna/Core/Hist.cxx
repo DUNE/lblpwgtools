@@ -160,14 +160,11 @@ namespace ana
 
     if(h){
       ret.fType = kDense;
-      const int N = h->GetNbinsX()+2;
-      ret.fData.resize(N);
-      ret.fData.setZero();
-      for(int i = 0; i < N; ++i) ret.fData[i] = h->GetBinContent(i);
+      ret.fData = Eigen::Map<Eigen::ArrayXd>(h->GetArray(), h->GetNbinsX()+2);
 
       if(gStatErrs){
+        const int N = h->GetNbinsX()+2;
         ret.fSumSq.resize(N);
-        ret.fSumSq.setZero();
         for(int i = 0; i < N; ++i) ret.fSumSq[i] = util::sqr(h->GetBinError(i));
       }
     }
