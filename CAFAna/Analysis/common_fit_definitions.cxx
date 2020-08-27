@@ -20,9 +20,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Experiment/SolarConstraints.h"
 
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"

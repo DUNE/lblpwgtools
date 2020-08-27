@@ -26,12 +26,15 @@ struct expSpectrum
 };
 
 
-void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
-	std::string specialTag="notag",
-	std::string systSet="allsyst",
-  TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu",
-	TString penalty="reactor", std::string asimov_set="0", int hie=1,
-	double years_fhc = 3.5, double years_rhc = 3.5, int nom_exp = 7){
+  // std::string fdir = "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/dmendez/CAFAnaInputs/";
+  // std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
+
+void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
+  std::string specialTag="test",
+	std::string systSet="nosyst",
+  double years_fhc = 3.5, double years_rhc = 3.5, int nom_exp = 7, int hie=1,
+  TString penalty="nopen", std::string asimov_set="0", 
+  TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="nuenumu"){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -87,7 +90,7 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
   std::vector<std::string> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
   std::vector<PredictionInterp*> predictions;
-  std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
+  std::string fdir = inPredDir;
   int this_idx=0;
 
   for(int detId=0; detId<ndetector; detId++){
@@ -116,6 +119,7 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
       } // nuId
     } // hornId
   } // detId
+
 
   // The output file
   TString outputFname = "cpv_"+detectors+"_"+horns+"_"+neutrinos+"__"+penalty+"_"+systSet+(hie == 1 ? "__nh" : "__ih") + specialTag + ".root";
@@ -185,15 +189,15 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
         auto start_fit = std::chrono::system_clock::now();
         MinuitFitter this_fit(&experiments, oscVars, systlist, MinuitFitter::kNormal);
         double thischisq = this_fit.Fit(testOsc, testSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();
-      	
-      	chisqmin = TMath::Min(thischisq,chisqmin);
-        std::cout << "chisqmin=" << chisqmin << std::endl;
         auto end_fit = std::chrono::system_clock::now();
         std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
         std::cerr << "[FIT]: Finished fit in "
         << std::chrono::duration_cast<std::chrono::seconds>(end_fit - start_fit).count()
         << " s after " << this_fit.GetNFCN() << " iterations "
         << BuildLogInfoString();
+
+        chisqmin = TMath::Min(thischisq,chisqmin);
+        std::cout << "chisqmin=" << chisqmin << std::endl;
 
       }
     }
@@ -210,7 +214,4 @@ void cpv_joint_optrun(std::string input_predictions="/pnfs/dune/persistent/users
   gCPV->Draw("ALP");
   gCPV->Write(hie > 0 ? "sens_cpv_nh" : "sens_cpv_ih");
   fout->Close();
-
-  predictions.clear();
-
 }
