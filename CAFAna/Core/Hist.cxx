@@ -173,15 +173,22 @@ namespace ana
 
       // Number of bins there would be in a dense version
       int nbins = 1;
-      for(int d = 0; d < hSparse->GetNdimensions(); ++d)
+      const int N = hSparse->GetNdimensions();
+      for(int d = 0; d < N; ++d)
         nbins *= hSparse->GetAxis(d)->GetNbins()+2;
 
       ret.fDataSparse.resize(nbins);
       ret.fDataSparse.setZero();
       for(int i = 0; i < hSparse->GetNbins(); ++i){
-        int idx;
-        const double y = hSparse->GetBinContent(i, &idx);
-        ret.fDataSparse.coeffRef(idx) = y;
+        int idx[N];
+        const double y = hSparse->GetBinContent(i, idx);
+        int idx1d = idx[0];
+        int mult = 1;
+        for(int d = 1; d < N; ++d){
+          mult *= hSparse->GetAxis(d-1)->GetNbins()+2;
+          idx1d += mult*idx[d];
+        }
+        ret.fDataSparse.coeffRef(idx1d) = y;
       }
     }
 
@@ -559,8 +566,9 @@ namespace ana
       THnSparseD* h = new THnSparseD("", "", 1, &n, &x0, &x1);
 
       for(Eigen::SparseVector<double>::InnerIterator it(fDataSparse); it; ++it){
-        h->SetBinContent(it.index(), it.value());
-        if(fSqrtErrs) h->SetBinError(it.index(), sqrt(it.value()));
+        const int idx = it.index();
+        h->SetBinContent(&idx, it.value());
+        if(fSqrtErrs) h->SetBinError(&idx, sqrt(it.value()));
       }
 
       h->Write("hist_sparse");
