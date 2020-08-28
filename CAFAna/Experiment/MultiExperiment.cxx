@@ -1,11 +1,10 @@
 #include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TH1D.h"
@@ -16,209 +15,43 @@
 
 namespace ana
 {
-
   //----------------------------------------------------------------------
-  // Add covariance matrix corresponding to one or more experiments
-  void MultiExperiment::AddCovarianceMatrix(const std::string covMatFileName,
-                                            const std::string covMatName,
-                                            const bool preInvert,
-                                            const std::vector<int> &expt_idxes)
+  SystShifts MultiExperiment::TranslateShifts(const SystShifts& syst, int idx) const
   {
-        TDirectory *thisDir = gDirectory->CurrentDirectory();
-
-        // std::cout << "Adding covariance matrix " << covMatName << std::endl;
-        // std::cout << "From file: " << covMatFileName << std::endl;
-
-        // Get the covariance matrix from a file
-        TFile covMatFile( covMatFileName.c_str() );
-        TMatrixD* covMx = (TMatrixD*) covMatFile.Get(covMatName.c_str());
-
-        if( !covMx ) {
-          std::cout << "Could not obtain covariance matrix named "
-                    << covMatName << " from " << covMatFileName << std::endl;
-          abort();
+    // Make a local copy we're going to rewrite into the terms this
+    // sub-experiment will accept.
+    SystShifts localShifts = syst;
+    for(auto it: fSystCorrelations[idx]){
+      // We're mapping prim -> sec
+      const ISyst* prim = it.first;
+      const ISyst* sec = it.second;
+      if(syst.GetShift(prim) != 0 || syst.HasStan(prim)){
+        // sec can be unset, which means there's no representation needed
+        // of prim in the sub-experiment.
+        if(sec){
+          if(syst.HasStan(prim)){
+            localShifts.SetShift(sec, syst.GetShift<stan::math::var>(prim));
+          }
+          else{
+            localShifts.SetShift(sec, syst.GetShift(prim));
+          }
         }
+        // We've either translated or discarded prim, so drop it here.
+        localShifts.SetShift(prim, 0);
+      }
+    }
 
-        AddCovarianceMatrix(covMx, preInvert, expt_idxes);
-
-        thisDir->cd();
-
+    return localShifts;
   }
-    void MultiExperiment::AddCovarianceMatrix(TMatrixD *covMx,
-                                              const bool preInvert,
-                                              const std::vector<int> &expt_idxes)
-    {
-
-    if( !covMx ) {
-      std::cout << "Passed invalid covariance matrix." << std::endl;
-      abort();
-    }
-    fCovMx.push_back( covMx );
-
-    // Which experiments does this cov matrix corresponds to?
-    fCovMxExpIdx.push_back( expt_idxes );
-
-    // Ensure that associated Experiment exists; must call Add() before AddCovarianceMatrix()
-    for( unsigned int i = 0; i < expt_idxes.size(); ++i ) {
-      unsigned int idx = expt_idxes[i];
-      if( fExpts.size() <= idx || !fExpts[idx] ) {
-        std::cout << "Added covariance for Experiment with index " << idx
-                  << " but no such Experiment exists" << std::endl;
-        abort();
-      } else {
-        // std::cout << "  Adding experiment " << idx << " to covariance matrix" << std::endl;
-        fUseCovMx[idx] = true;
-      }
-    }
-
-    // Invert the fractional matrix in advance for performance
-    if( preInvert ) {
-      // std::cout << "Pre-inverting covariance matrix" << std::endl;
-      // Figure out how many bins there are
-      int n_bins = 0;
-      TVectorD pred( covMx->GetNcols() );
-      for( unsigned int i = 0; i < expt_idxes.size(); ++i ) {
-        int idx = expt_idxes[i];
-        TH1D * hist = fExpts[idx]->PredHist(0, kNoShift);
-        for( int b = 0; b < hist->GetNbinsX(); ++b ) {
-          pred[n_bins++] = hist->GetBinContent(b+1);
-        }
-        HistCache::Delete(hist);
-      }
-
-      // make a matrix to invert
-      TMatrixD toInvert(*covMx);
-      assert( toInvert.GetNcols() == n_bins );
-
-      // We add the squared fractional statistical errors to the diagonal. In
-      // principle this should vary with the predicted number of events, but in
-      // the ND using the no-syst-shifts number should be a pretty good
-      // approximation, and it's much faster than needing to re-invert the
-      // matrix every time.
-      for( int b = 0; b < n_bins; ++b ) {
-        if( pred[b] > 0. ) toInvert(b, b) += 1./pred[b];
-      }
-
-      fCovMxInv.push_back( new TMatrixD(TMatrixD::kInverted, toInvert) );
-    } else {
-      fCovMxInv.push_back(0);
-    }
-
-    fPreInvert.push_back(preInvert);
-  }
-
 
   //----------------------------------------------------------------------
-  double MultiExperiment::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double MultiExperiment::ChiSq(osc::IOscCalcAdjustable* osc,
                                 const SystShifts& syst) const
   {
     double ret = 0.;
-    for( unsigned int nCov = 0; nCov < fCovMx.size(); ++nCov ) {
-      // Build single array with all experiments associated with this covariance matrix
-      TVectorD pred( fCovMx[nCov]->GetNcols() );
-      TVectorD data( fCovMx[nCov]->GetNcols() );
-      int n_bins = 0;
-      for( unsigned int i = 0; i < fCovMxExpIdx[nCov].size(); ++i ) {
-        int idx = fCovMxExpIdx[nCov][i];
-
-        // Make a local copy we're going to rewrite into the terms this
-        // sub-experiment will accept.
-        SystShifts localShifts = syst;
-        for(auto it: fSystCorrelations[idx]){
-          // We're mapping prim -> sec
-          const ISyst* prim = it.first;
-          const ISyst* sec = it.second;
-          if(syst.GetShift(prim) != 0){
-            // sec can be unset, which means there's no representation needed
-            // of prim in the sub-experiment.
-            if(sec) localShifts.SetShift(sec, syst.GetShift(prim));
-            // We've either translated or discarded prim, so drop it here.
-            localShifts.SetShift(prim, 0);
-          }
-        }
-
-        TH1D * histMC = fExpts[idx]->PredHist(osc, localShifts);
-        TH1D * histData = fExpts[idx]->DataHist();
-        // Mask bins with too low statistics
-        fExpts[idx]->ApplyMask( histMC, histData );
-        for( int b = 0; b < histMC->GetNbinsX(); ++b ) {
-          pred[n_bins] = histMC->GetBinContent(b+1);
-          data[n_bins++] = histData->GetBinContent(b+1);
-        }
-        HistCache::Delete(histMC);
-        HistCache::Delete(histData);
-      }
-
-      TMatrixD covInv(fCovMx[nCov]->GetNrows(), fCovMx[nCov]->GetNcols());
-
-      if( fPreInvert[nCov] ) {
-        // Use pre-computed CovMxInv with stat error already added
-        assert(fCovMxInv[nCov]);
-        covInv = *(fCovMxInv[nCov]);
-      } else {
-        // Invert the matrix here, first add the statistical uncertainty
-        TMatrixD cov = *(fCovMx[nCov]);
-        for( int b = 0; b < n_bins; ++b ) {
-          const double Nevt = pred[b];
-          if(Nevt > 0.) cov(b, b) += 1./Nevt;
-        }
-
-        // And then invert
-        covInv = TMatrixD(TMatrixD::kInverted, cov);
-      }
-
-      // In either case - covariance matrix is fractional; convert it to
-      // absolute by multiplying out the prediction
-      for( int b0 = 0; b0 < n_bins; ++b0 ) {
-        for( int b1 = 0; b1 < n_bins; ++b1 ) {
-          const double f = pred[b0] * pred[b1];
-          if(f != 0) covInv(b0, b1) /= f;
-          else covInv(b0, b1) = 0.;
-        }
-      }
-
-      // Now it's absolute it's suitable for use in the chisq calculation
-      double chi2 = Chi2CovMx( pred, data, covInv );
-      ret += chi2;
+    for(unsigned int idx = 0; idx < fExpts.size(); ++idx){
+      ret += fExpts[idx]->ChiSq(osc, TranslateShifts(syst, idx));
     }
-
-    // Add chi2 from experiments that don't use covariance matrix
-    // penalty term, for example
-    double ret2 = 0.;
-    for(unsigned int n = 0; n < fExpts.size(); ++n){
-
-      // check if we already counted this experiment with a covariance matrix
-      //if( fUseCovMx[n] ) continue;
-
-      // Don't waste time fiddling with the systematics if for sure there's
-      // nothing to do.
-      if(fSystCorrelations[n].empty()){
-        double thischi2 = fExpts[n]->ChiSq(osc, syst);
-        ret2 += thischi2;
-        if( !fUseCovMx[n] ) ret += thischi2;
-      }
-      else{
-        // Make a local copy we're going to rewrite into the terms this
-        // sub-experiment will accept.
-        SystShifts localShifts = syst;
-        for(auto it: fSystCorrelations[n]){
-          // We're mapping prim -> sec
-          const ISyst* prim = it.first;
-          const ISyst* sec = it.second;
-          if(syst.GetShift(prim) != 0){
-            // sec can be unset, which means there's no representation needed
-            // of prim in the sub-experiment.
-            if(sec) localShifts.SetShift(sec, syst.GetShift(prim));
-            // We've either translated or discarded prim, so drop it here.
-            localShifts.SetShift(prim, 0);
-          }
-        }
-        double thischi2 = fExpts[n]->ChiSq(osc, localShifts);
-        ret2 += thischi2;
-        if( !fUseCovMx[n] ) ret += thischi2;
-      }
-    }
-
     return ret;
   }
 
@@ -254,15 +87,14 @@ namespace ana
 
   //----------------------------------------------------------------------
   stan::math::var
-  MultiExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc, const SystShifts &syst) const
+  MultiExperiment::LogLikelihood(osc::IOscCalcAdjustableStan* osc, const SystShifts &syst) const
   {
-    stan::math::var ret = 0;
-    for (const auto & expt : fExpts)
-      ret += expt->LogLikelihood(osc, syst);
-
+    stan::math::var ret = 0.;
+    for(unsigned int idx = 0; idx < fExpts.size(); ++idx){
+      ret += fExpts[idx]->LogLikelihood(osc, TranslateShifts(syst, idx));
+    }
     return ret;
   }
-
 
   //----------------------------------------------------------------------
   void MultiExperiment::SaveTo(TDirectory* dir, const std::string& name) const

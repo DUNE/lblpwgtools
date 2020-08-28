@@ -41,8 +41,8 @@ namespace ana
     // All swapped files are equally valid as a source of NCs. This
     // approximately doubles/triples our statistics. SpectrumLoader just adds
     // events and POT for both cases, which is the right thing to do.
-    loaderNue  .AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
-    loaderNuTau.AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
+    loaderNue  .AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
+    loaderNuTau.AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
   }
 
 
@@ -81,9 +81,9 @@ namespace ana
                                const Cut& cut,
                                const SystShifts& shift,
                                const Var& wei)
-    : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap),
+    : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap),
                     axis, cut, shift, wei)
   {
   }

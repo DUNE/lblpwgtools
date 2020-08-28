@@ -24,14 +24,6 @@ namespace ana
   class Spectrum;
   class ReweightableSpectrum;
 
-  /// Is this data-file representing beam spills or cosmic spills?
-  enum DataSource{
-    // TODO there are no longer any actions taken as a result of this
-    // distinction. Remove after SA.
-    kBeam,
-    kCosmic
-  };
-
   /// Base class for the various types of spectrum loader
   class SpectrumLoaderBase
   {
@@ -73,11 +65,11 @@ namespace ana
 
   protected:
     /// Component of other constructors
-    SpectrumLoaderBase(DataSource src = kBeam);
+    SpectrumLoaderBase();
     /// Construct from a filename, wildcard, SAM definition, or SAM query
-    SpectrumLoaderBase(const std::string& wildcard, DataSource src = kBeam);
+    SpectrumLoaderBase(const std::string& wildcard);
     /// Construct from an explicit list of files
-    SpectrumLoaderBase(const std::vector<std::string>& fnames, DataSource src = kBeam);
+    SpectrumLoaderBase(const std::vector<std::string>& fnames);
 
     // Move operations
     SpectrumLoaderBase(SpectrumLoaderBase&&) = default;
@@ -104,8 +96,6 @@ namespace ana
 
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
-
-    DataSource fSource;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 

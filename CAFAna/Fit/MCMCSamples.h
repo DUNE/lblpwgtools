@@ -2,12 +2,14 @@
 
 #include <vector>
 
+#include "TMatrixD.h"
 #include "TTree.h"
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Fit/BayesianMarginal.h"   // for MarginalMode enum
+#include "CAFAna/Fit/MCMCSample.h"
 #include "CAFAna/Fit/StanConfig.h"
 
 namespace ana
@@ -17,7 +19,11 @@ namespace ana
   class BayesianSurface;
 
   /// Storage for a list of MCMC samples.
-  /// (Wraps up the details of which columns refer to which variables.)
+  ///
+  /// The internal storage is as a TTree (which simplifies persistence);
+  /// for efficiency and simplicity reasons the tree branches are simply doubles
+  /// (rather than MCMCSample objects), but MCMCSample objects can be obtained
+  /// using the Sample() method.
   ///
   /// \param varOffset  The offset to the first Var value.  (Previous values are the LL and internal fitter vars.)
   /// \param vars       The ana::Vars passed to the fitter
@@ -28,6 +34,29 @@ namespace ana
       /// Name of branch in internal TTree corresponding to the log-likelihood.
       /// Used in several places, so centralized here.
       static const std::string LOGLIKELIHOOD_BRANCH_NAME;
+
+      struct Hyperparameters
+      {
+        double stepSize;
+        std::unique_ptr<TMatrixD> invMetric;   // use TMatrix rather than Eigen for peristability.  unique_ptr so it can be sized later
+
+        explicit Hyperparameters(double stepsize = std::numeric_limits<double>::signaling_NaN(),
+                                 std::unique_ptr<TMatrixD> && invmetric = nullptr)
+          : stepSize(stepsize), invMetric(std::move(invmetric))
+        {}
+
+        Hyperparameters(const Hyperparameters & h)
+          : stepSize(h.stepSize), invMetric(h.invMetric ? std::make_unique<TMatrixD>(*h.invMetric) : nullptr)
+        {}
+
+        Hyperparameters& operator=(Hyperparameters&& other)
+        {
+          stepSize = std::move(other.stepSize);
+          invMetric = std::move(other.invMetric);
+          return *this;
+        }
+
+      };
 
       /// Build the MCMCSamples object.
       ///
@@ -59,6 +88,8 @@ namespace ana
       /// Discard any samples
       void Clear() { fSamples->Clear(); }
 
+      const Hyperparameters & Hyperparams() const   { return fHyperparams; }
+
 
       /// Marginalize over all other variables to obtain a 1D profile in \a var
       Bayesian1DMarginal MarginalizeTo(const IFitVar * var,
@@ -68,14 +99,10 @@ namespace ana
       Bayesian1DMarginal MarginalizeTo(const ISyst * syst,
                                        BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
 
-      /// Marginalize over all other variables to obtain a 2D surface in \a xvar and \a yvar
-      BayesianSurface MarginalizeTo(const IFitVar * xvar, int nbinsx, double xmin, double xmax,
-                                    const IFitVar * yvar, int nbinsy, double ymin, double ymax,
-                                    BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
-
-      /// Marginalize over all other variables to obtain a 2D surface in \a xsyst and \a ysyst
-      BayesianSurface MarginalizeTo(const ISyst * xsyst, int nbinsx, double xmin, double xmax,
-                                    const ISyst * ysyst, int nbinsy, double ymin, double ymax,
+      /// Marginalize over all other variables to obtain a 2D surface in \a x and \a y
+      template <typename SystOrVar1, typename SystOrVar2>
+      BayesianSurface MarginalizeTo(const SystOrVar1 * x, int nbinsx, double xmin, double xmax,
+                                    const SystOrVar2 * y, int nbinsy, double ymin, double ymax,
                                     BayesianMarginal::MarginalMode marginalMode=BayesianMarginal::MarginalMode::kHistogram) const;
 
       /// Max value of this var/syst in the set
@@ -109,6 +136,10 @@ namespace ana
       /// Do some checks on the post-fit samples
       void RunDiagnostics(const StanConfig & cfg) const;
 
+      /// The entire sample at index \idx.
+      /// If you just want one value prefer SampleLL() or SampleValue() (less overhead).
+      MCMCSample Sample(std::size_t idx) const;
+
       /// Get the LL for sample number \idx
       double SampleLL(std::size_t idx) const
       {
@@ -139,7 +170,21 @@ namespace ana
                         std::map<const ana::IFitVar *, double> &varVals,
                         const std::vector<const ana::ISyst *> &systs, std::map<const ana::ISyst *, double> &systVals) const;
 
+      double SamplingTime() const { return fSamplingTime; }
+
+      void SetHyperparams(double stepSize, const TMatrixD& invMassMatrix)
+      {
+        fHyperparams = Hyperparameters(stepSize, std::make_unique<TMatrixD>(invMassMatrix));
+      }
+
+      void SetHyperparams(Hyperparameters h)
+      {
+        fHyperparams = std::move(h);
+      };
+
       void SetNames(const std::vector<std::string>& names);
+
+      void SetSamplingTime(double s)  { fSamplingTime = s; }
 
       /// Get a TTree with the MCMC samples in it
       const TTree *ToTTree() const;
@@ -158,11 +203,9 @@ namespace ana
 
     private:
       /// Internal-use constructor needed for LoadFrom()
-      MCMCSamples(std::size_t offset,
-                  const std::vector<std::string>& diagBranchNames,
-                  const std::vector<const IFitVar *> &vars,
-                  const std::vector<const ana::ISyst *> &systs,
-                  std::unique_ptr<TTree> &tree);
+      MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
+                  const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
+                  std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams, double samplingTime);
 
       /// Where in fDiagnosticVals is the given diagnostic?
       std::size_t DiagOffset(const std::string& diagName) const;
@@ -186,7 +229,7 @@ namespace ana
       /// Where in fEntryVals is the given syst?
       std::size_t VarOffset(const ana::ISyst * syst) const;
 
-      std::size_t fOffset;
+      std::size_t fOffset;   //< number of branches read out before the fitted parameters start
       std::vector<std::string> fDiagBranches;
       std::vector<const ana::IFitVar *> fVars;
       std::vector<const ana::ISyst *> fSysts;
@@ -199,6 +242,9 @@ namespace ana
       double fEntryLL;  // for use reading the TTree
       std::vector<double> fEntryVals;  // ditto
       std::vector<double> fDiagnosticVals;
+
+      mutable Hyperparameters fHyperparams; ///< Hyperparameters deduced after adaptation, or manually set
+      double fSamplingTime;                 ///< how long did we spend sampling?
   };
 
 }

@@ -132,7 +132,7 @@ namespace ana
           bool IsBetterThan(const IFitSummary* other) const override
           {
             if (!other)
-              return true;
+              return false;
 
             if (const auto mnFitSummary = dynamic_cast<const MinuitFitSummary*>(other))
               return EvalMetricVal() < mnFitSummary->EvalMetricVal(); 
@@ -155,7 +155,7 @@ namespace ana
           std::unique_ptr<ROOT::Math::Minimizer> fMinimizer;
       };
       /// Helper for \ref FitHelper
-      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                                                    SystShifts &systSeed,
                                                    Verbosity verb) const override;
 
@@ -165,7 +165,7 @@ namespace ana
       /// fSupportsDerivatives
       bool SupportsDerivatives() const;
 
-      mutable osc::IOscCalculatorAdjustable *fCalc;
+      mutable osc::IOscCalcAdjustable *fCalc;
       const IExperiment *fExpt;
 
       FitOpts fFitOpts;

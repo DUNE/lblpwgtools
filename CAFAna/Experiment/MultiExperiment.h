@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CAFAna/Experiment/IExperiment.h"
-#include "TMatrixD.h"
 
 #include <memory>
 #include <vector>
@@ -15,31 +14,23 @@ namespace ana
     MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
-      fUseCovMx.resize(expts.size(), false);
     }
 
-    void Add(const IExperiment* expt){
+    void Add(const IExperiment* expt)
+    {
       fExpts.push_back(expt);
-      fUseCovMx.push_back(false); // default to no covariance matrix
       fSystCorrelations.resize(fExpts.size());
     }
 
-    void AddCovarianceMatrix(const std::string covMatFileName,
-                             const std::string covMatName,
-                             const bool preInvert,
-                             const std::vector<int> &expt_idxes);
-    void AddCovarianceMatrix(TMatrixD *,
-                             const bool preInvert,
-                             const std::vector<int> &expt_idxes);
-
-    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
     /// Sum up log-likelihoods of sub-expts.  N.b.: covariance matrix business not currently supported for Stan.
-    stan::math::var LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
-                                  const SystShifts &syst) const override;
+    stan::math::var LogLikelihood(osc::IOscCalcAdjustableStan* osc,
+                                  const SystShifts& syst) const override;
 
-      /// For the subexperiment \a idx, set up a mapping between systematics
+    /// \brief For the subexperiment \a idx, set up a mapping between
+    /// systematics
     ///
     /// Each element in the vector is a pair from a "primary" systematic to a
     /// "secondary". When this MultiExperiment is called with a primary
@@ -57,17 +48,10 @@ namespace ana
     static std::unique_ptr<MultiExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
-    std::vector<const IExperiment*> fExpts;
-    std::vector<bool> fUseCovMx; // is there a covariance matrix for this Experiment?
+    SystShifts TranslateShifts(const SystShifts& syst, int idx) const;
 
     std::vector<std::vector<std::pair<const ISyst*, const ISyst*>>> fSystCorrelations;
 
-    // vectors with one entry per covariance matrix
-    // there can be fewer matrices than there are experiments
-    // one covariance matrix can cover several experiments
-    std::vector<TMatrixD*> fCovMx;
-    std::vector<TMatrixD*> fCovMxInv;
-    std::vector<bool> fPreInvert;
-    std::vector<std::vector<int>> fCovMxExpIdx;
+    std::vector<const IExperiment*> fExpts;
   };
 }

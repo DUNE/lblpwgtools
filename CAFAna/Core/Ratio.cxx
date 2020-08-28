@@ -1,6 +1,5 @@
 #include "CAFAna/Core/Ratio.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TH1.h"
@@ -12,80 +11,33 @@ namespace ana
   //----------------------------------------------------------------------
   Ratio::Ratio(const Spectrum& num, const Spectrum& denom,
 	       bool purOrEffErrs)
+    : fHist(num.fHist), fBins(num.GetBinnings()), fLabels(num.GetLabels())
   {
-    // Scale to same arbitrary POT
-    fHist = num.ToTH1(1e20);
-    TH1D* temp = denom.ToTH1(1e20);
-    if(purOrEffErrs){
-      fHist->Divide(fHist, temp, 1, 1, "B");
-    }
-    else{
-      fHist->Divide(temp);
-    }
-    HistCache::Delete(temp);
+    fHist.Divide(denom.fHist);
+    fHist.Scale(denom.POT()/num.POT());
 
-    fHist->GetYaxis()->SetTitle("Ratio");
-
-    // TODO: set error bars smartly
-  }
-
-  //----------------------------------------------------------------------
-  Ratio::Ratio(TH1* h, std::string varName)
-  {
-    if(!h){
-      fHist = 0;
-      return;
+    // This is clumsy, but the old histogram operation considered 0/0 = 0,
+    // which is actually pretty useful (at least PredictionInterp relies on
+    // this).
+    for(int i = 0; i < fHist.GetNbinsX()+2; ++i){
+      if(num.fHist.GetBinContent(i) == 0 &&
+         denom.fHist.GetBinContent(i) == 0){
+        fHist.SetBinContent(i, 0);
+      }
     }
 
-    DontAddDirectory guard;
-
-    const TString className = h->ClassName();
-
-    if(className == "TH1D"){
-      // Shortcut if types match
-      fHist = HistCache::Copy((TH1D*)h);
-    }
-    else{
-      fHist = HistCache::New(UniqueName(), h->GetXaxis());
-      fHist->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
-      fHist->Add(h);
-    }
-
-    if(!varName.empty()) fHist->GetXaxis()->SetTitle(varName.c_str());
+    // TODO do something with purOrEffErrs
   }
 
   //----------------------------------------------------------------------
   Ratio::~Ratio()
   {
-    HistCache::Delete(fHist);
-  }
-
-  //----------------------------------------------------------------------
-  Ratio::Ratio(const Ratio& rhs)
-  {
-    DontAddDirectory guard;
-
-    assert(rhs.fHist);
-    fHist = HistCache::Copy(rhs.fHist);
-  }
-
-  //----------------------------------------------------------------------
-  Ratio& Ratio::operator=(const Ratio& rhs)
-  {
-    if(this == &rhs) return *this;
-
-    DontAddDirectory guard;
-
-    HistCache::Delete(fHist);
-    assert(rhs.fHist);
-    fHist = HistCache::Copy(rhs.fHist);
-    return *this;
   }
 
   //----------------------------------------------------------------------
   Ratio& Ratio::operator*=(const Ratio& rhs)
   {
-    fHist->Multiply(rhs.fHist);
+    fHist.Multiply(rhs.fHist);
     return *this;
   }
 
@@ -100,7 +52,7 @@ namespace ana
   //----------------------------------------------------------------------
   Ratio& Ratio::operator/=(const Ratio& rhs)
   {
-    fHist->Divide(rhs.fHist);
+    fHist.Divide(rhs.fHist);
     return *this;
   }
 
@@ -115,12 +67,11 @@ namespace ana
   //----------------------------------------------------------------------
   TH1D* Ratio::ToTH1(Color_t col, Style_t style) const
   {
-    // Could have a file temporarily open
-    DontAddDirectory guard;
-
-    TH1D* ret = HistCache::Copy(fHist);
+    TH1D* ret = fHist.ToTH1(fBins[0]); // TODO
     ret->SetLineColor(col);
     ret->SetLineStyle(style);
+    ret->GetXaxis()->SetTitle(fLabels[0].c_str()); // TODO
+    ret->GetYaxis()->SetTitle("Ratio");
     return ret;
   }
 } // namespace

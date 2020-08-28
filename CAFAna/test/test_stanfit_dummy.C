@@ -63,7 +63,7 @@ namespace test
   class GaussQuadExperiment : public IExperiment
   {
     public:
-      stan::math::var LogLikelihood(osc::IOscCalculatorAdjustableStan*,
+      stan::math::var LogLikelihood(osc::IOscCalcAdjustableStan*,
                                     const SystShifts& syst = SystShifts::Nominal()) const override
       {
         stan::math::var ll = 0;
@@ -123,6 +123,10 @@ void test_stanfit_dummy()
   c.Clear();
   const_cast<TTree*>(fitter.GetSamples().ToTTree())->Draw("QuadraticParameter");
   c.SaveAs("test_stanfit_samples.png");
+
+  TFile outF("test_stanfit_samples.root", "recreate");
+  fitter.GetSamples(MemoryTupleWriter::WhichSamples::kWarmup).SaveTo(&outF, "warmup");
+  fitter.GetSamples(MemoryTupleWriter::WhichSamples::kPostWarmup).SaveTo(&outF, "samples");
 }
 
 #ifndef __CINT__

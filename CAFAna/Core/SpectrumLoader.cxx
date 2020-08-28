@@ -27,24 +27,21 @@
 
 namespace ana {
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(const std::string &wildcard, DataSource src,
-                               int max)
-    : SpectrumLoaderBase(wildcard, src), max_entries(max) {}
+SpectrumLoader::SpectrumLoader(const std::string &wildcard, int max)
+    : SpectrumLoaderBase(wildcard), max_entries(max) {}
 
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames,
-                               DataSource src, int max)
-    : SpectrumLoaderBase(fnames, src), max_entries(max) {}
+SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames, int max)
+    : SpectrumLoaderBase(fnames), max_entries(max) {}
 
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(DataSource src) : SpectrumLoaderBase(src) {}
+SpectrumLoader::SpectrumLoader() : SpectrumLoaderBase() {}
 
 #ifndef DONT_USE_SAM
 //----------------------------------------------------------------------
 SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
-                                              DataSource src, int fileLimit) {
+                                              int fileLimit) {
   SpectrumLoader ret;
-  ret.fSource = src;
   ret.fWildcard = "project " + proj;
   ret.fFileSource =
       std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
@@ -539,7 +536,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
 
             // TODO: ignoring events with no true neutrino etc
             if (yval != 0)
-              rw->fHist->Fill(val, yval, wei);
+              rw->Fill(val, yval, wei);
           } // end for rw
         }   // end for vardef
       }     // end for weidef

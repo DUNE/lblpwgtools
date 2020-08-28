@@ -1,6 +1,7 @@
 set(scripts_to_install
   bin_splines.C
   cpv_joint.C
+  fit_3flavor_MCMC.C
   make_all_throws.C
   make_cpv_throws.C
   make_octant_throws.C
@@ -31,6 +32,8 @@ install(FILES ${scripts_to_install} DESTINATION scripts)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+find_library(OSCLIB OscLib $ENV{OSCLIB_LIB})
+
 foreach(SCRPT ${scripts_to_build})
   install(FILES ${SCRPT}.C DESTINATION scripts)
 
@@ -48,7 +51,7 @@ foreach(SCRPT ${scripts_to_build})
     CAFAnaExtrap
     CAFAnaVars
     StandardRecord
-    OscLibFunc
+    ${OSCLIB}
     UtilitiesFunc)
 
     target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})

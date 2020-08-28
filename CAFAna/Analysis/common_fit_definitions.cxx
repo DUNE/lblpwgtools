@@ -36,15 +36,16 @@
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
+#include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcGeneral.h"
 
 #include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 #include "TSystem.h"
 #include "TTree.h"
 
@@ -220,6 +221,7 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
   return rtn_vars;
 }
 
+
 /*
   The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
   points used for normal dials, they have fixed values for non-zero values of the 
@@ -338,7 +340,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
   // Move to the save directory
   saveDir->cd();
-  osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable *this_calc = NuFitOscCalc(1);
 
   bool isfhc =
       ((sample == kNDFHC) || (sample == kNDFHC_OA) || (sample == kFDFHC));
@@ -347,16 +349,16 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, max);
 
-    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC,
                             Loaders::kNonSwap);
-    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNuTauSwap);
+                            Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
@@ -384,7 +386,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
@@ -567,7 +569,7 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
 
 TMatrixD *MakeCovmat(PredictionInterp const &prediction,
                      std::vector<ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys,
+                     osc::IOscCalcAdjustable *calc, size_t NToys,
                      TDirectory *outdir) {
   std::vector<std::vector<double>> ThrownSpectra;
   std::vector<double> MeanSpectra;
@@ -642,7 +644,7 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
   return mat;
 }
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name) {
 
   outDir->cd();
@@ -889,7 +891,7 @@ std::vector<seeded_spectra>
 BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
              PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
              PredictionInterp *predNDNumuFHC, PredictionInterp *predNDNumuRHC,
-             osc::IOscCalculatorAdjustable *fakeDataOsc,
+             osc::IOscCalcAdjustable *fakeDataOsc,
              SystShifts fakeDataSyst, bool fakeDataStats, double pot_fd_fhc_nue,
              double pot_fd_fhc_numu, double pot_fd_rhc_nue,
              double pot_fd_rhc_numu, double pot_nd_fhc, double pot_nd_rhc,
@@ -957,11 +959,11 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
 }
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
+                   osc::IOscCalcAdjustable *fitOsc, SystShifts fitSyst,
                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,

@@ -15,6 +15,25 @@
 
 #include "Utilities/func/MathUtil.h"
 
+// an internal tool only
+namespace
+{
+  class BranchStatusResetter
+  {
+    public:
+      BranchStatusResetter(TTree * tree)
+        : fTree(tree)
+      {}
+
+      ~BranchStatusResetter()
+      {
+        if (fTree)
+          fTree->SetBranchStatus("*", false);
+      }
+    private:
+      TTree * fTree;
+  };
+}
 
 namespace ana
 {
@@ -31,17 +50,17 @@ namespace ana
   {}
 
   //----------------------------------------------------------------------
-  MCMCSamples::MCMCSamples(std::size_t offset,
-                           const std::vector<std::string>& diagBranchNames,
-                           const std::vector<const IFitVar *> &vars,
-                           const std::vector<const ana::ISyst *> &systs,
-                           std::unique_ptr<TTree> &tree)
+  MCMCSamples::MCMCSamples(std::size_t offset, const std::vector<std::string> &diagBranchNames,
+                           const std::vector<const IFitVar *> &vars, const std::vector<const ana::ISyst *> &systs,
+                           std::unique_ptr<TTree> &tree, const Hyperparameters &hyperParams, double samplingTime)
     : fOffset(offset),
       fDiagBranches(diagBranchNames),
       fVars(vars),
       fSysts(systs),
       fBestFitFound(false),
-      fSamples(std::move(tree))
+      fSamples(std::move(tree)),
+      fHyperparams(hyperParams),
+      fSamplingTime(samplingTime)
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -58,7 +77,9 @@ namespace ana
         fSamples(std::move(other.fSamples)),
         fEntryLL(std::move(other.fEntryLL)),
         fEntryVals(std::move(other.fEntryVals)),
-        fDiagnosticVals(std::move(other.fDiagnosticVals))
+        fDiagnosticVals(std::move(other.fDiagnosticVals)),
+        fHyperparams(std::move(other.fHyperparams)),
+        fSamplingTime(std::move(other.fSamplingTime))
   {
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -85,6 +106,9 @@ namespace ana
 
     fDiagnosticVals = std::move(other.fDiagnosticVals);
     fEntryVals = std::move(other.fEntryVals);
+
+    fHyperparams = std::move(other.fHyperparams);
+    fSamplingTime = std::move(other.fSamplingTime);
 
     // note: SetupTree() takes care of fDiagnosticVals and fEntryVals
     SetupTree();
@@ -148,6 +172,7 @@ namespace ana
 
     // then, take the entries from its TTree and and them to ours using TTree::Merge().
     // clear the other tree once done.
+    BranchStatusResetter bsr(fSamples.get());  // turn all branches off when done
     fSamples->SetBranchStatus("*", true);
     other.fSamples->SetBranchStatus("*", true);
     TList otherTreeList;
@@ -255,9 +280,36 @@ namespace ana
       samples->SetDirectory(nullptr);  // disassociate it from the file it came from so that when the file is closed it persists
     }
 
+    // these may not exist (hyperparameters are not merged when hadd'ing samples)
+    double stepSize = std::numeric_limits<double>::signaling_NaN();
+    std::unique_ptr<TMatrixD> invMetric;
+    auto hyperParamsDir = dynamic_cast<TDirectory *>(dir->Get("hyperparams"));
+    if (hyperParamsDir)
+    {
+      if (auto key = hyperParamsDir->FindKey("stepsize"))
+        stepSize = key->ReadObject<TParameter<double>>()->GetVal();
+      if (auto key = hyperParamsDir->FindKey("inv_metric"))
+        invMetric = std::unique_ptr<TMatrixD>(key->ReadObject<TMatrixD>());
+    }
+    Hyperparameters hyperparams{stepSize, std::move(invMetric)};
+
+    // ditto
+    double samplingTime = std::numeric_limits<double>::signaling_NaN();
+    auto samplingTimeDir = dynamic_cast<TDirectory*>(dir->Get("samplingTime"));
+    if (!samplingTimeDir)  // for backwards compatibility.  might be stored at top level
+      samplingTimeDir = dir;
+    if (auto key = samplingTimeDir->FindKey("samplingTime"))
+      samplingTime = key->ReadObject<TParameter<double>>()->GetVal();
+
     delete dir;
 
-    return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(), diagBranches, fitVars, systs, samples));
+    return std::unique_ptr<MCMCSamples>(new MCMCSamples(offset->GetVal(),
+                                                        diagBranches,
+                                                        fitVars,
+                                                        systs,
+                                                        samples,
+                                                        hyperparams,
+                                                        samplingTime));
   }
 
   //----------------------------------------------------------------------
@@ -275,36 +327,47 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *xvar, int nbinsx, double xmin, double xmax,
-                                             const IFitVar *yvar, int nbinsy, double ymin, double ymax,
+  template <typename SystOrVar1, typename SystOrVar2>
+  BayesianSurface MCMCSamples::MarginalizeTo(const SystOrVar1 *x, int nbinsx, double xmin, double xmax,
+                                             const SystOrVar2 *y, int nbinsy, double ymin, double ymax,
                                              BayesianMarginal::MarginalMode marginalMode) const
   {
-    assert(std::find(fVars.begin(), fVars.end(), xvar) != fVars.end());
-    assert(std::find(fVars.begin(), fVars.end(), yvar) != fVars.end());
-    return BayesianSurface(*this,
-                           xvar, nbinsx, xmin, xmax,
-                           yvar, nbinsy, ymin, ymax,
-                           marginalMode);
-  }
+    static_assert((std::is_same_v<SystOrVar1, IFitVar> || std::is_same_v<SystOrVar1, ISyst>)
+                   && (std::is_same_v<SystOrVar2, IFitVar> || std::is_same_v<SystOrVar2, ISyst>),
+                   "MCMCSamples::MarginalizeTo() can only be used with Systs or Vars");
+    if constexpr(std::is_same_v<SystOrVar1, IFitVar>)
+      assert(std::find(fVars.begin(), fVars.end(), x) != fVars.end());
+    else
+      assert(std::find(fSysts.begin(), fSysts.end(), x) != fSysts.end());
 
-  //----------------------------------------------------------------------
-  BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *xsyst, int nbinsx, double xmin, double xmax,
-                                             const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                                             BayesianMarginal::MarginalMode marginalMode) const
-  {
-    assert(std::find(fSysts.begin(), fSysts.end(), xsyst) != fSysts.end());
-    assert(std::find(fSysts.begin(), fSysts.end(), ysyst) != fSysts.end());
+    if constexpr(std::is_same_v<SystOrVar2, IFitVar>)
+      assert(std::find(fVars.begin(), fVars.end(), y) != fVars.end());
+    else
+      assert(std::find(fSysts.begin(), fSysts.end(), y) != fSysts.end());
+
     return BayesianSurface(*this,
-                           xsyst, nbinsx, xmin, xmax,
-                           ysyst, nbinsy, ymin, ymax,
+                           x, nbinsx, xmin, xmax,
+                           y, nbinsy, ymin, ymax,
                            marginalMode);
   }
+  template BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *x, int nbinsx, double xmin, double xmax,
+                                                      const IFitVar *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const IFitVar *x, int nbinsx, double xmin, double xmax,
+                                                      const ISyst *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *x, int nbinsx, double xmin, double xmax,
+                                                      const IFitVar *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
+  template BayesianSurface MCMCSamples::MarginalizeTo(const ISyst *x, int nbinsx, double xmin, double xmax,
+                                                      const ISyst *y, int nbinsy, double ymin, double ymax,
+                                                      BayesianMarginal::MarginalMode marginalMode) const;
 
   //----------------------------------------------------------------------
   template <typename T>
   double MCMCSamples::MaxValue(const T *var) const
   {
-    static_assert(std::is_same<IFitVar, T>::value || std::is_same<ISyst, T>::value,
+    static_assert(std::is_same<IFitVar, T>::value || std::is_same<IConstrainedFitVar, T>::value || std::is_same<ISyst, T>::value,
                   "MCMCSamples::MaxValue() can only be used with IFitVars and ISysts");
     double max = -std::numeric_limits<double>::infinity();
     std::size_t offset = VarOffset(var);
@@ -317,6 +380,7 @@ namespace ana
     return max;
   }
   // explicit instantiation of the correct types
+  template double MCMCSamples::MaxValue(const IConstrainedFitVar *) const;
   template double MCMCSamples::MaxValue(const IFitVar *) const;
   template double MCMCSamples::MaxValue(const ISyst *) const;
 
@@ -324,7 +388,7 @@ namespace ana
   template <typename T>
   double MCMCSamples::MinValue(const T *var) const
   {
-    static_assert(std::is_same<IFitVar, T>::value || std::is_same<ISyst, T>::value,
+    static_assert(std::is_same<IFitVar, T>::value || std::is_same<IConstrainedFitVar, T>::value || std::is_same<ISyst, T>::value,
                   "MCMCSamples::MinValue() can only be used with IFitVars and ISysts");
     double min = std::numeric_limits<double>::infinity();
     std::size_t offset = VarOffset(var);
@@ -337,6 +401,7 @@ namespace ana
     return min;
   }
   // explicit instantiation of the correct types
+  template double MCMCSamples::MinValue(const IConstrainedFitVar *) const;
   template double MCMCSamples::MinValue(const IFitVar *) const;
   template double MCMCSamples::MinValue(const ISyst *) const;
 
@@ -369,7 +434,8 @@ namespace ana
   {
     if (LLs.empty())
       LLs = SortedLLs();  // I think this should be efficient since std::vector has a move assignment operator
-    return LLs[std::size_t((1 - quantile) * LLs.size())];
+
+    return LLs[std::size_t((1 - quantile) * (LLs.size()-1))];  // -1 so that we don't fall off the edge at Q=1.0
   }
 
   //----------------------------------------------------------------------
@@ -386,6 +452,8 @@ namespace ana
   //----------------------------------------------------------------------
   void MCMCSamples::RunDiagnostics(const StanConfig & cfg) const
   {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
     // these diagnostics adapted from CmdStan's diagnose.cpp
     auto treeDepthBr = fSamples->GetBranch("treedepth__");
     if (treeDepthBr)
@@ -534,8 +602,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  MCMCSample MCMCSamples::Sample(std::size_t idx) const
+  {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
+    fSamples->SetBranchStatus("*", true);
+    fSamples->GetEntry(idx);
+    return MCMCSample(SampleLL(idx), fDiagnosticVals, fEntryVals, fDiagBranches, fVars, fSysts);
+  }
+
+
+  //----------------------------------------------------------------------
   double MCMCSamples::SampleValue(std::size_t rowIdx, const std::string & branchName, std::size_t varIdx) const
   {
+    BranchStatusResetter bsr(fSamples.get());  // turn branches off when done
+
+    fSamples->SetBranchStatus(branchName.c_str(), true);
     auto branch = fSamples->GetBranch(branchName.c_str());
     branch->SetStatus(true);
     branch->GetEntry(rowIdx);
@@ -601,6 +683,24 @@ namespace ana
     // don't let it get attached to the file that's about to be closed
     fSamples->LoadBaskets();
     fSamples->SetDirectory(nullptr);
+
+    auto hyperdir = dir->mkdir("hyperparams");
+    hyperdir->cd();
+    TParameter<double> stepSize("stepsize", fHyperparams.stepSize);
+    stepSize.Write();
+    if (fHyperparams.invMetric)
+      fHyperparams.invMetric->Write("inv_metric");
+    TObjString("Hyperparameters").Write("type");  // so that hadd_cafana can be taught to skip over them
+    dir->cd();
+    hyperdir->Write();
+
+    dir->cd();
+    auto timedir = dir->mkdir("samplingTime");
+    timedir->cd();
+    TObjString("SamplingTime").Write("type");  // so that hadd_cafana can be taught to skip over them
+    TParameter<double>("samplingTime", fSamplingTime).Write();
+    dir->cd();
+    timedir->Write();
 
     dir->Write();
     delete dir;

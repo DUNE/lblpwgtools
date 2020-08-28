@@ -46,10 +46,10 @@ namespace ana
     {
     }
 
-    virtual Spectrum Predict(osc::IOscCalculator*) const override;
+    virtual Spectrum Predict(osc::IOscCalc*) const override;
 
     /// We call signal numu CC and CC bkg nue CC for this function's purposes
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponent(osc::IOscCalc* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override;

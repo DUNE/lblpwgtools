@@ -68,7 +68,7 @@ namespace ana
                               nbinsy, ymin, ymax);
 
     std::unique_ptr<TH1> tmpHist;
-    if (fMode == MarginalMode::kHistogram)
+    if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
       tmpHist = ToHistogram({Binning::Simple(nbinsx, xmin, xmax),
                              Binning::Simple(nbinsy, ymin, ymax)});
     for (int xBin = 0; xBin < fHist->GetNbinsX() + 2; xBin++)
@@ -76,7 +76,7 @@ namespace ana
       for (int yBin = 0; yBin < fHist->GetNbinsY() + 2; yBin++)
       {
         double val = std::numeric_limits<double>::signaling_NaN();
-        if (fMode == MarginalMode::kHistogram && tmpHist)
+        if ((fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram) && tmpHist)
           val = tmpHist->GetBinContent(xBin, yBin);
         else if (fMode == MarginalMode::kKNN)
         {
@@ -103,8 +103,10 @@ namespace ana
                                            const ISyst * y, int nbinsy, double ymin, double ymax);
 
   //----------------------------------------------------------------------
-  std::unique_ptr<BayesianSurface> BayesianSurface::LoadFrom(TDirectory *dir)
+  std::unique_ptr<BayesianSurface> BayesianSurface::LoadFrom(TDirectory *dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
 
     DontAddDirectory guard;
 
@@ -119,20 +121,22 @@ namespace ana
 
     BayesianMarginal::LoadInto(surf.get(), dir);
 
+    delete dir;
+
     return std::move(surf);
   }
 
   //----------------------------------------------------------------------
   TH2 * BayesianSurface::QuantileSurface(Quantile quantile) const
   {
-    return Flat(QuantileLL(quantile), *this);
+    return Flat(QuantileThreshold(quantile, fHist), *this);
   }
 
 
   //----------------------------------------------------------------------
   TH2 * BayesianSurface::QuantileSurface(double quantile, const MCMCSamples& mcmcsamples) const
   {
-    return Flat(QuantileLL(quantile, mcmcsamples), *this);
+    return Flat(QuantileThreshold(quantile, mcmcsamples, fHist), *this);
   }
 
   //----------------------------------------------------------------------

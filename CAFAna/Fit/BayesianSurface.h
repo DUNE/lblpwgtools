@@ -74,7 +74,7 @@ namespace ana
       TH2 *QuantileSurface(double quantile, const MCMCSamples & mcmsamples) const;
 
       void SaveTo(TDirectory * dir) const;
-      static std::unique_ptr<BayesianSurface> LoadFrom(TDirectory * dir);
+      static std::unique_ptr<BayesianSurface> LoadFrom(TDirectory * dir, const std::string& name);
 
     private:
       BayesianSurface() = default;

@@ -15,7 +15,7 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie);
 
   SystShifts trueSyst = kNoShift;
   SystShifts mcSyst = kNoShift;

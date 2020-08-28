@@ -1,6 +1,7 @@
 // Make a simple spectrum plot with systematic shifts
 // cafe demo4.C
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"

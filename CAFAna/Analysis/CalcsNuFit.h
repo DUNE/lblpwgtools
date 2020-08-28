@@ -81,17 +81,17 @@ namespace ana
   // 9 Dmsq32 set to 3sig upper value
   // 10 dCP = 0
   // 11 dCP = -pi/2
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
   
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
 
-  osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
+  osc::IOscCalcAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
   // Add in a throw for toys
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
+  osc::IOscCalcAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
 
   // Add a different type of throw which depends less on NuFit
-  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
+  osc::IOscCalcAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
 
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
@@ -99,7 +99,7 @@ namespace ana
   class NuFitPenalizer: public IExperiment
   {
   public:
-    double ChiSq(osc::IOscCalculatorAdjustable* calc,
+    double ChiSq(osc::IOscCalcAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
   };
 
@@ -108,7 +108,7 @@ namespace ana
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,int asimov_set=0);
-    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
+    Penalizer_GlbLike(osc::IOscCalcAdjustable* cvcalc, int hietrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false);
     Penalizer_GlbLike(int hietrue, int octtrue,
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,
@@ -131,7 +131,7 @@ namespace ana
     double Th13Err() const {return fTh13Err;}
     double RhoErr() const {return fRhoErr;}
 
-    double ChiSq(osc::IOscCalculatorAdjustable* calc,
+    double ChiSq(osc::IOscCalcAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
 
   protected:

@@ -3,7 +3,7 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -15,7 +15,7 @@ namespace ana
   SeedList RefineSeeds(const SeedList& seeds,
                        const IExperiment* expt,
                        const std::vector<const IFitVar*>& vars,
-                       const osc::IOscCalculatorAdjustable* calc0,
+                       const osc::IOscCalcAdjustable* calc0,
                        double dchisq_max)
   {
     struct Result
@@ -45,7 +45,7 @@ namespace ana
     // Explore all the seeds to find out where a no-systs minimization of them
     // ends up
     for(const Seed& seed: seeds.GetSeeds()){
-      osc::IOscCalculatorAdjustable* calc = calc0->Copy();
+      osc::IOscCalcAdjustable* calc = calc0->Copy();
       seed.ResetCalc(calc);
 
       MinuitFitter fit(expt, vars);

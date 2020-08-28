@@ -20,7 +20,6 @@
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Core/FitVarWithPrior.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Spectrum.h"
@@ -36,9 +35,9 @@
 #include "CAFAna/Fit/MCMCSamples.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "OscLib/func/OscCalculatorPMNS.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorDMP.h"
+#include "OscLib/OscCalcPMNS.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcDMP.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -54,9 +53,9 @@ namespace test
 
   const std::vector<std::string> SYSTS_TO_THROW
   {
-      "ChargedHadResFD",
+    "ChargedHadResFD",
       "EMResFD",
-      "MissingProtonFakeDataGenerator",
+    //      "MissingProtonFakeDataGenerator",
       "MaCCRES"
   };
 
@@ -88,8 +87,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   std::cout << std::endl;
 
   std::unique_ptr<IPrediction> pred;
-  osc::IOscCalculatorAdjustable * calc;
-  osc::IOscCalculatorAdjustable * calcTruth;
+  osc::IOscCalcAdjustable * calc = 0;
+  osc::IOscCalcAdjustable * calcTruth;
   std::unique_ptr<Spectrum> fakeData;
   std::unique_ptr<SystShifts> systTruePulls;
   std::unique_ptr<SystShifts> shifts;
@@ -106,9 +105,9 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
   std::unique_ptr<MCMCSamples> samples;
   if (!loadSamplesFromFile)
   {
-//    calc = new osc::OscCalculatorPMNSOpt;
-//    calc = new osc::OscCalculatorPMNS;
-    calc = new osc::OscCalculatorDMP;
+//    calc = new osc::OscCalcPMNSOpt;
+//    calc = new osc::OscCalcPMNS;
+    calc = new osc::OscCalcDMP;
     *calc = *(NuFitOscCalc(1, 1, 3));  // NH, max mixing
     std::vector<const ISyst *> systs;
 
@@ -119,8 +118,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     // pick a few test values for some mock data...
     calc->SetTh23(test::MOCKDATA_TH23);
     calc->SetDmsq32(test::MOCKDATA_DM32);
-//    calcTruth = new osc::OscCalculatorPMNSOpt;
-    calcTruth = new osc::OscCalculatorPMNS;
+//    calcTruth = new osc::OscCalcPMNSOpt;
+    calcTruth = new osc::OscCalcPMNS;
     *calcTruth = *calc;
 
     // choose +/- 1, 2, 3 sigma pulls at random
@@ -142,6 +141,8 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     calc->SetDmsq32(oldDmsq32);
     shifts->ResetToNominal();
 
+    std::cout << "HERE!" << std::endl;
+
     StanConfig cfg;
     cfg.num_warmup = 500;
     cfg.num_samples = 1000;
@@ -149,8 +150,12 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     cfg.verbosity = StanConfig::Verbosity::kQuiet;
 //    cfg.verbosity = StanConfig::Verbosity::kEverything;
     cfg.save_warmup = false;
+    //    fitVars.clear();
+    //    systs.resize(2);
     StanFitter fitter(&expt, fitVars, systs);
     fitter.SetStanConfig(cfg);
+    fitter.TestGradients(calc, *shifts);
+    //    abort();
     fitter.Fit(calc, *shifts);
     
     samples = fitter.ExtractSamples();
@@ -160,7 +165,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
       TFile outF(test::FullFilename(dirPrefix, samplesFilename).c_str(), "recreate");
       fakeData->SaveTo(&outF, "fakedata");
       samples->SaveTo(&outF, "samples");
-      SaveTo(static_cast<osc::IOscCalculator&>(*calcTruth), &outF, "calcTruth");
+      SaveTo(static_cast<osc::IOscCalc&>(*calcTruth), &outF, "calcTruth");
       systTruePulls->SaveTo(&outF, "systTruth");
     }
   }
@@ -180,7 +185,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
     fakeData = LoadFrom<Spectrum>(&inf, "fakedata");
     samples = MCMCSamples::LoadFrom(&inf, "samples");
     systTruePulls = SystShifts::LoadFrom(&inf, "systTruth");
-    calcTruth = dynamic_cast<osc::IOscCalculatorAdjustable*>(LoadFrom<osc::IOscCalculator>(&inf, "calcTruth").release());  // yeah, just leak it
+    calcTruth = dynamic_cast<osc::IOscCalcAdjustable*>(LoadFrom<osc::IOscCalc>(&inf, "calcTruth").release());  // yeah, just leak it
     assert (fakeData && samples && systTruePulls && calcTruth);
 
     auto bestFitIdx = samples->BestFitSampleIdx();
@@ -192,7 +197,7 @@ void test_stanfit_withsysts(bool loadSamplesFromFile=true,
       shifts->SetShift(syst, samples->SampleValue(syst, bestFitIdx));
 
     //auto bfDir = dynamic_cast<TDirectory*>(inf.Get("bestfit"));
-    //calc.reset(dynamic_cast<osc::OscCalculatorPMNSOpt*>(LoadFrom<osc::IOscCalculator>(dynamic_cast<TDirectory*>(bfDir->Get("osc"))).release()));
+    //calc.reset(dynamic_cast<osc::OscCalcPMNSOpt*>(LoadFrom<osc::IOscCalc>(dynamic_cast<TDirectory*>(bfDir->Get("osc"))).release()));
     //shifts = LoadFrom<SystShifts>(dynamic_cast<TDirectory*>(bfDir->Get("systs")));
     //assert(shifts);
   }

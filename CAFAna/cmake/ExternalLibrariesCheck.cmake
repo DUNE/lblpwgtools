@@ -13,10 +13,6 @@ if(NOT EXISTS ${SRC_ROOT_PARENT}/StandardRecord)
   cmessage(FATAL_ERROR "Cannot resolve: SRC_ROOT_PARENT=\"${SRC_ROOT_PARENT}/StandardRecord\" to a valid directory, please reconfigure with a valid path to the parent directory of StandardRecord.")
 endif()
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/Ext/OscLib)
-  cmessage(FATAL_ERROR "Expected to be able to find OscLib in: \"${CMAKE_BINARY_DIR}/Ext/OscLib\", did you build with the helper script?")
-endif()
-
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/Ext/Utilities)
   cmessage(FATAL_ERROR "Expected to be able to find Utilities in: \"${CMAKE_BINARY_DIR}/Ext/Utilities\", did you build with the helper script?")
 endif()
@@ -95,7 +91,7 @@ LIST(APPEND EXTRA_LIBS boost_filesystem boost_system)
 
 if(${EIGEN_INC} STREQUAL "")
   cmessage(FATAL_ERROR "Expected to be able to evaluate \${EIGEN_INC}=\"${EIGEN_INC}\" to an existing directory, is Eigen set up in the environment?")
-elseif(NOT DEFINED STAN_INC)
+elseif(NOT DEFINED EIGEN_INC)
   cmessage(FATAL_ERROR "Expected to be able to evaluate \${EIGEN_INC}=\"${EIGEN_INC}\" to an existing directory, is Eigen set up in the environment?")
 endif()
 
@@ -111,3 +107,14 @@ endif()
 
 PrefixList(STAN_MATH_INC_STR "-I" ${STAN_MATH_INC})
 PrefixList(STAN_INC_STR "-I" ${STAN_INC})
+
+###############################  OSCLIB  ######################################
+
+# if(NOT DEFINED OSCLIB_INC)
+#   cmessage(FATAL_ERROR "Expected to be able to evaluate \${OSCLIB_INC}=\"${OSCLIB_INC}\" to an existing directory, is OscLib set up in the environment?")
+# elseif(${OSCLIB_INC} STREQUAL "")
+#   cmessage(FATAL_ERROR "Expected to be able to evaluate \${OSCLIB_INC}=\"${OSCLIB_INC}\" to an existing directory, is OscLib set up in the environment?")
+# endif()
+
+# LIST(APPEND EXTRA_LINK_DIRS ${OSCLIB_LIB})
+# LIST(APPEND EXTRA_LIBS OscLib)

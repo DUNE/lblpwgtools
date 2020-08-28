@@ -18,7 +18,6 @@
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Core/FitVarWithPrior.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Spectrum.h"
@@ -33,7 +32,7 @@
 #include "CAFAna/Fit/MCMCSamples.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -60,7 +59,7 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
                             const std::string &predName = "fd_interp_numu_fhc")
 {
   auto stock_calc = NuFitOscCalc(1, 1, 3);  // NH, max mixing
-  std::unique_ptr<osc::IOscCalculatorAdjustable> calc = std::make_unique<osc::OscCalculatorPMNSOpt>();
+  std::unique_ptr<osc::IOscCalcAdjustable> calc = std::make_unique<osc::OscCalcPMNSOpt>();
   osc::CopyParams(stock_calc, calc.get());
 
   std::vector<const ISyst *> systs;
@@ -93,13 +92,13 @@ void test_stanfit_systpulls(const std::string &workDir = ".",
 
     TCanvas c;
     Spectrum CV = pred->Predict(calc.get());
-    SpectrumStan shiftedStan = pred->PredictSyst(calc.get(), shifts);
+    Spectrum shiftedStan = pred->PredictSyst(calc.get(), shifts);
     DataMCComparison(fakeData, CV);
     spec_pred.ToTH1(fakeData.POT(), kBlue)->Draw("hist same");
     std::cout << " Before fitting, LL between spectra is "
-              << LogLikelihood(shiftedStan.ToBins(fakeData.POT()), fakeData.ToTH1(fakeData.POT())) / -2.
+              << LogLikelihood(shiftedStan.GetEigen(fakeData.POT()), fakeData.GetEigen(fakeData.POT())) / -2.
               << std::endl;
-    osc::OscCalculatorPMNSOptStan stanCalc;
+    osc::OscCalcPMNSOptStan stanCalc;
     osc::CopyParams(calc.get(), &stanCalc);
     std::cout << "  Experiment object says it's " << expt.LogLikelihood(&stanCalc, shifts) << std::endl;
     c.SaveAs(Form((workDir + "/test_stanfit_syst_%s_prefit.png").c_str(), syst->ShortName().c_str()));

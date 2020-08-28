@@ -1,11 +1,10 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -13,30 +12,11 @@
 
 namespace ana
 {
-  const CosmicBkgScaleSyst kCosmicBkgScaleSyst;
-
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const Spectrum& cosmic,
-                                                 double cosmicScaleError)
+                                                 const Spectrum& data)
     : fTestStatistic(kLogLikelihood),
-      fMC(pred), fData(data),
-      fCosmic(cosmic.ToTH1(data.Livetime(), kLivetime)),
-      fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMxInfo(0)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const TH1D* cosmic,
-                                                 double cosmicScaleError)
-    : fTestStatistic(kLogLikelihood),
-      fMC(pred), fData(data), fCosmic(new TH1D(*cosmic)),
-      fMask(0), fCosmicScaleError(cosmicScaleError),
-      fCovMxInfo(0)
+      fMC(pred), fData(data)
   {
   }
 
@@ -46,44 +26,9 @@ namespace ana
                                                  const TMatrixD* cov,
                                                  ETestStatistic stat)
     : fTestStatistic(stat),
-      fMC(pred), fData(data), fCosmic(0), fMask(0),
-      fCovMxInfo(0)
+      fMC(pred), fData(data)
   {
-    switch(stat){
-    case kLogLikelihood:
-      // No need for any matrix
-      break;
-    case kCovMxChiSq:
-      // Store the covariance matrix as-is
-      fCovMxInfo = new TMatrixD(*cov);
-      break;
-    case kCovMxChiSqPreInvert:
-      {
-        TMatrixD toInvert(*cov);
-
-        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
-        for( int b = 0; b < hist->GetNbinsX(); ++b ) {
-          // We add the squared fractional statistical errors to the
-          // diagonal. In principle this should vary with the predicted number
-          // of events, but in the ND using the no-syst-shifts number should be
-          // a pretty good approximation, and it's much faster than needing to
-          // re-invert the matrix every time.
-          const double N = hist->GetBinContent(b+1);
-          if(N > 0) toInvert(b, b) += 1/N;
-        }
-        HistCache::Delete(hist);
-
-        fCovMxInfo = new TMatrixD(TMatrixD::kInverted, toInvert);
-      }
-      break;
-    case kCovMxLogLikelihood:
-      // Also pre-invert the matrix but with no stats
-      fCovMxInfo = new TMatrixD(TMatrixD::kInverted, *cov);
-      break;
-    default:
-      std::cout << "Unknown test statistic " << stat << std::endl;
-      abort();
-    }
+    AddCovarianceMatrix(cov, stat);
   }
 
   // Helper for constructor
@@ -122,116 +67,77 @@ namespace ana
   //----------------------------------------------------------------------
   SingleSampleExperiment::~SingleSampleExperiment()
   {
-    delete fCosmic;
-    delete fMask;
-    delete fCovMxInfo;
   }
 
   //----------------------------------------------------------------------
-  TH1D* SingleSampleExperiment::PredHist(osc::IOscCalculator* calc,
-                                         const SystShifts& syst) const
-  {
-    SystShifts systNoCosmic = syst;
-    systNoCosmic.SetShift(&kCosmicBkgScaleSyst, 0);
-
-    const Spectrum pred = fMC->PredictSyst(calc, systNoCosmic);
-
-    TH1D* hpred = pred.ToTH1(fData.POT());
-
-    if(fCosmic){
-      if(fCosmicScaleError != 0){
-        const double scale = 1 + syst.GetShift(&kCosmicBkgScaleSyst) * fCosmicScaleError;
-        hpred->Add(fCosmic, scale);
-      }
-      else{
-        hpred->Add(fCosmic);
-      }
-    }
-
-    return hpred;
-  }
-
-  //----------------------------------------------------------------------
-  TH1D* SingleSampleExperiment::DataHist() const
-  {
-    return fData.ToTH1(fData.POT());
-  }
-
-  //----------------------------------------------------------------------
-  double SingleSampleExperiment::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double SingleSampleExperiment::ChiSq(osc::IOscCalcAdjustable* calc,
                                        const SystShifts& syst) const
   {
-    TH1D* hpred = PredHist(calc, syst);
-    TH1D* hdata = fData.ToTH1(fData.POT());
+    Eigen::ArrayXd apred = fMC->PredictSyst(calc, syst).GetEigen(fData.POT());
+    Eigen::ArrayXd adata = fData.GetEigen(fData.POT());
 
-    double ll;
+    double ll = 0;
 
     // if there is a covariance matrix, use it
-    if(fCovMxInfo){
-      const TMatrixD covInv = GetAbsInvCovMat(hpred);
+    if(fCovMxInfoM.size() != 0){
+      const Eigen::MatrixXd covInvM = GetAbsInvCovMat(apred);
 
       // Now the matrix is in order apply the mask to the two histograms
-      if(fMask) ApplyMask(hpred, hdata);
+      ApplyMask(apred, adata);
 
       // Now it's absolute it's suitable for use in the chisq calculation
       if(fTestStatistic == kCovMxChiSq ||
          fTestStatistic == kCovMxChiSqPreInvert){
-        ll = Chi2CovMx( hpred, hdata, covInv );
+        ll = Chi2CovMx(apred, adata, covInvM);
       }
       else{
-        ll = LogLikelihoodCovMx(hpred, hdata, covInv, &fCovLLState);
+        ll = LogLikelihoodCovMx(apred, adata, covInvM, &fCovLLState);
       }
     }
     else{
       // No covariance matrix - use standard LL
-
-      if(fMask) ApplyMask(hpred, hdata);
+      ApplyMask(apred, adata);
 
       // full namespace qualification to avoid degeneracy with method inherited from IExperiment
-      ll = ana::LogLikelihood(hpred, hdata);
+      ll = ana::LogLikelihood(apred, adata);
     }
-
-    HistCache::Delete(hpred);
-    HistCache::Delete(hdata);
 
     return ll;
   }
 
   //----------------------------------------------------------------------
-  TMatrixD SingleSampleExperiment::GetAbsInvCovMat(TH1D* hpred) const
+  Eigen::MatrixXd SingleSampleExperiment::GetAbsInvCovMat(const Eigen::ArrayXd& apred) const
   {
+    Eigen::MatrixXd covInv(fCovMxInfoM.rows(), fCovMxInfoM.cols());
+
+    const int N = apred.size()-2; // no under/overflow
+
     // The inverse relative covariance matrix comes from one of two sources
-    // If you don't set the size the assignment operator won't do what you expect.
-    TMatrixD covInv(fCovMxInfo->GetNrows(), fCovMxInfo->GetNcols());
-    assert(fCovMxInfo->GetNrows() == fCovMxInfo->GetNcols());
-
-    // Array contains the underflow too!
-    double* array = hpred->GetArray();
-    const int N = hpred->GetNbinsX();
-
     if(fTestStatistic == kCovMxChiSqPreInvert){
       // Either we precomputed it
-      covInv = *fCovMxInfo;
+      covInv = fCovMxInfoM;
     }
     else{
       // Or we have to manually add statistical uncertainty in quadrature
-      TMatrixD cov = *fCovMxInfo;
+      Eigen::MatrixXd cov = fCovMxInfoM;
       for( int b = 0; b < N; ++b ) {
-        const double Nevt = array[b+1];
+        const double Nevt = apred[b+1];
         if(Nevt > 0) cov(b, b) += 1/Nevt;
       }
 
       // And then invert
-      covInv = TMatrixD(TMatrixD::kInverted, cov);
+      covInv = cov.inverse();
     }
 
     // In either case - covariance matrix is fractional; convert it to
     // absolute by multiplying out the prediction
+    //
+    // TODO there is probably a nice Eigen expression that will do this
     for( int b0 = 0; b0 < N; ++b0 ) {
       for( int b1 = 0; b1 < N; ++b1 ) {
-        const double f = array[b0+1] * array[b1+1];
-        if(f != 0) covInv(b0, b1) /= f;
-        else covInv(b0, b1) = 0.;
+        const double f = apred[b0+1] * apred[b1+1];
+        if(f != 0) covInv.coeffRef(b0, b1) /= f;
+        else covInv.coeffRef(b0, b1) = 0.;
       }
     }
 
@@ -239,60 +145,57 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SingleSampleExperiment::ApplyMask(TH1* a, TH1* b) const
+  void SingleSampleExperiment::ApplyMask(Eigen::ArrayXd& a,
+                                         Eigen::ArrayXd& b) const
   {
-    if(!fMask) return;
+    if(fMaskA.size() == 0) return;
 
-    assert(a->GetNbinsX() == fMask->GetNbinsX());
-    assert(b->GetNbinsX() == fMask->GetNbinsX());
+    assert(a.size() == fMaskA.size());
+    assert(b.size() == fMaskA.size());
 
-    for(int i = 0; i < fMask->GetNbinsX()+2; ++i){
-      if(fMask->GetBinContent(i) == 0){
-        a->SetBinContent(i, 0);
-        b->SetBinContent(i, 0);
-      }
-    }
+    // Arrays mean we get bin-by-bin operations
+    a *= fMaskA;
+    b *= fMaskA;
   }
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::AddCovarianceMatrix(const TMatrixD* cov,
 						   ETestStatistic stat) 
   {
-    // Check there is not a covariance matrix already associated with this experiment
-    if (fCovMxInfo) {
+    if(fCovMxInfoM.size() > 0) {
       std::cout << "Error: trying to add a covariance matrix to a SingleSampleExperiment where one already exists" << std::endl;
       abort();
     }
+
     switch(stat){
     case kLogLikelihood:
-      std::cout << "Trying to add a covariance matrix while specifying a Test Statistic method that does not allow it. Matrix not added." << std::endl;
+      // No need for any matrix
       break;
     case kCovMxChiSq:
       // Store the covariance matrix as-is
-      fCovMxInfo = new TMatrixD(*cov);
+      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov);
       break;
     case kCovMxChiSqPreInvert:
       {
-        TMatrixD toInvert(*cov);
+      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov);
 
-        TH1D* hist = fMC->Predict(static_cast<osc::IOscCalculator*>(nullptr)).ToTH1(fData.POT());
-        for( int b = 0; b < hist->GetNbinsX(); ++b ) {
-          // We add the squared fractional statistical errors to the
-          // diagonal. In principle this should vary with the predicted number
-          // of events, but in the ND using the no-syst-shifts number should be
-          // a pretty good approximation, and it's much faster than needing to
-          // re-invert the matrix every time.
-          const double N = hist->GetBinContent(b+1);
-          if(N > 0) toInvert(b, b) += 1/N;
-        }
-        HistCache::Delete(hist);
+      const Eigen::ArrayXd pred = fMC->Predict((osc::IOscCalc*)0).GetEigen(fData.POT());
 
-        fCovMxInfo = new TMatrixD(TMatrixD::kInverted, toInvert);
+      // We add the squared fractional statistical errors to the diagonal. In
+      // principle this should vary with the predicted number of events, but in
+      // the ND using the no-syst-shifts number should be a pretty good
+      // approximation, and it's much faster than needing to re-invert the
+      // matrix every time.
+      for(int b = 0; b < pred.size(); ++b){
+        if(pred[b] > 0) fCovMxInfoM.coeffRef(b, b) += 1/pred[b];
+      }
+
+      fCovMxInfoM = fCovMxInfoM.inverse();
       }
       break;
     case kCovMxLogLikelihood:
       // Also pre-invert the matrix but with no stats
-      fCovMxInfo = new TMatrixD(TMatrixD::kInverted, *cov);
+      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov).inverse();
       break;
     default:
       std::cout << "Unknown test statistic " << stat << std::endl;
@@ -309,20 +212,29 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  stan::math::var SingleSampleExperiment::LogLikelihood(osc::_IOscCalculatorAdjustable<stan::math::var> *osc,
+  stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalcAdjustableStan *osc,
                                                         const SystShifts &syst) const
   {
-    auto  pred = syst.IsNominal()
-                 ? fMC->Predict(osc).ToBins(fData.POT())
-                 : fMC->PredictSyst(osc, syst).ToBins(fData.POT());
-    TH1D* hdata = fData.ToTH1(fData.POT());
+    if(fCovMxInfoM.size() != 0){
+      std::cout << "SingleSampleExperiment doesn't yet support the combination of covariance matrix and OscCalcStan" << std::endl;
+      abort();
+    }
 
-    // fully-qualified so that we get the one in StanUtils.h
-    auto ll = ana::LogLikelihood(pred, hdata) / -2.;  // LogLikelihood(), confusingly, returns chi2=-2*LL
+    const Spectrum pred = fMC->PredictSyst(osc, syst);
 
-    HistCache::Delete(hdata);
+    const Eigen::ArrayXd data = fData.GetEigen(fData.POT());
 
-    return ll;
+    // It's possible to have a non-stan prediction. e.g. from a NoOsc
+    // prediction with no systs.
+    if(pred.HasStan()){
+      // fully-qualified so that we get the one in StanUtils.h
+      //
+      // LogLikelihood(), confusingly, returns chi2=-2*LL
+      return ana::LogLikelihood(pred.GetEigenStan(fData.POT()), data) / -2.;
+    }
+    else{
+      return ana::LogLikelihood(pred.GetEigen(fData.POT()), data) / -2.;
+    }
   }
 
 
@@ -338,8 +250,6 @@ namespace ana
 
     fMC->SaveTo(dir, "mc");
     fData.SaveTo(dir, "data");
-
-    if(fCosmic) fCosmic->Write("cosmic");
 
     dir->Write();
     delete dir;
@@ -361,19 +271,15 @@ namespace ana
     const IPrediction* mc = ana::LoadFrom<IPrediction>(dir, "mc").release();
     const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir, "data");
 
-    TH1D* cosmic = 0;
-    if(dir->Get("cosmic")) cosmic = (TH1D*)dir->Get("cosmic");
-
     delete dir;
 
     auto ret = std::make_unique<SingleSampleExperiment>(mc, *data);
-    if(cosmic) ret->fCosmic = cosmic;
     return ret;
   }
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::SetMaskHist(double xmin, double xmax, double ymin, double ymax)
   {
-    fMask = GetMaskHist(fData, xmin, xmax, ymin, ymax);
+    fMaskA = GetMaskArray(fData, xmin, xmax, ymin, ymax);
   }
 }

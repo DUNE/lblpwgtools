@@ -27,13 +27,13 @@ namespace ana
   ){
     return ModularExtrap::Nue(
       loaders.GetLoader(
-        caf::kNEARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kFluxSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kFluxSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kTauSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kTauSwap),
       nueDecomp,
       numuDecomp,
       axis,
@@ -59,15 +59,15 @@ namespace ana
   ){
     return ModularExtrap::Numu(
       loaders.GetLoader(
-        caf::kNEARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNue),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNue),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kTau),
+        caf::kFARDET,  Loaders::kMC, Loaders::kTau),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNC),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNC),
       numuDecomp,
       axis,
       fdcut,

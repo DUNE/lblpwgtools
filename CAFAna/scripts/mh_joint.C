@@ -30,7 +30,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
     std::cout << "Trying idcp = " << idcp << std::endl;
 
     double thisdcp = -TMath::Pi() + idcp*dcpstep;
-    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_joint);
+    osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_joint);
     trueOsc->SetdCP(thisdcp);
 
     double chisqmin = 99999;
@@ -38,7 +38,7 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 
     for(int ioct = -1; ioct <= 1; ioct += 2) {
 
-      osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_joint);
+      osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_joint);
       testOsc->SetdCP(thisdcp);
       // Force it into the wrong hierarchy
       testOsc->SetDmsq32(-1*testOsc->GetDmsq32());

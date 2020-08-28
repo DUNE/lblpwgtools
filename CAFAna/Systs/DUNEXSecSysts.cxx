@@ -7,6 +7,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TObjString.h"
+#include "TVectorD.h"
 
 namespace ana
 {
@@ -357,7 +358,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double DUNEXSecCorrelation::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double DUNEXSecCorrelation::ChiSq(osc::IOscCalcAdjustable* osc,
                                     const SystShifts& syst) const
   {
     double ret = 0;

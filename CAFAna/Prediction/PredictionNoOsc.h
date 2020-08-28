@@ -21,14 +21,26 @@ public:
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
-  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
+  virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;
   }
 
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum Predict(osc::IOscCalcStan* /*calc*/) const override {
+    return fSpectrum;
+  }
+
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
+
+  virtual Spectrum PredictComponent(osc::IOscCalcStan* /*calc*/,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override
+  {
+    return PredictComponent((osc::IOscCalc*)0, flav, curr, sign);
+  }
 
 protected:
   PredictionNoOsc(const Spectrum &s, const Spectrum &sNC, const Spectrum &sNumu,

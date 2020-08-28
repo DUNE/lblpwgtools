@@ -5,7 +5,7 @@
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -15,25 +15,21 @@ namespace ana
 {
   //----------------------------------------------------------------------
   CountingExperiment::CountingExperiment(const IPrediction* p,
-                                         const Spectrum& d,
-                                         const Spectrum& cosmic)
-    : fMC(p), fData(d),
-      fCosmic(cosmic.ToTH1(d.Livetime(), kLivetime))
+                                         const Spectrum& d)
+    : fMC(p), fData(d)
   {
   }
 
   //----------------------------------------------------------------------
   CountingExperiment::~CountingExperiment()
   {
-    delete fCosmic;
   }
 
   //----------------------------------------------------------------------
-  double CountingExperiment::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double CountingExperiment::ChiSq(osc::IOscCalcAdjustable* osc,
                                    const SystShifts& syst) const
   {
     double exp = fMC->PredictSyst(osc, syst).Integral(fData.POT());
-    if (fCosmic) exp += fCosmic->Integral(0,-1);
     double obs = fData.Integral(fData.POT());
 
     return ana::LogLikelihood(exp, obs);  // use namespace to disabiguate from method inherited from IExperiment
@@ -51,8 +47,6 @@ namespace ana
 
     fMC->SaveTo(dir, "mc");
     fData.SaveTo(dir, "data");
-    
-    if(fCosmic) fCosmic->Write("cosmic");
 
     dir->Write();
     delete dir;
@@ -78,13 +72,9 @@ namespace ana
     const IPrediction* mc = ana::LoadFrom<IPrediction>(dir, "mc").release();
     const std::unique_ptr<Spectrum> data = Spectrum::LoadFrom(dir, "data");
 
-    TH1* cosmic = 0;
-    if(dir->Get("cosmic")) cosmic = (TH1*)dir->Get("cosmic");
-
     delete dir;
 
     auto ret = std::make_unique<CountingExperiment>(mc, *data);
-    if(cosmic) ret->fCosmic = cosmic;
     return ret;
   }
 }

@@ -3,6 +3,7 @@
 // This file defines the basic Var object. For specific variables, and examples
 // of how to implement your own, see Vars.h
 
+#include <cassert>
 #include <functional>
 #include <set>
 #include <string>

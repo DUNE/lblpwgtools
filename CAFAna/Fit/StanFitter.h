@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 
+#include "boost/random.hpp"
+
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
@@ -11,8 +13,9 @@
 #include "CAFAna/Fit/MCMCSamples.h"
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Core/StanTypedefs.h"
+#include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "Utilities/func/StanUtils.h"
 
@@ -34,6 +37,12 @@
 
 namespace stan
 {
+  namespace callbacks
+  {
+    class logger;
+    class stream_logger;
+  }
+
   namespace io
   {
     class var_context;
@@ -41,6 +50,13 @@ namespace stan
     template<typename T>
     class writer;
   }
+
+  namespace mcmc
+  {
+    template <typename Model, typename RNG>
+    class adapt_diag_e_nuts;
+  }
+
 }
 
 namespace ana
@@ -52,21 +68,58 @@ namespace ana
   class MemoryTupleWriter : public stan::callbacks::writer
   {
     public:
-      MemoryTupleWriter(MCMCSamples & samples)
-        : fSamples(samples)
-      {}
+      enum class WhichSamples
+      {
+          kWarmup,
+          kPostWarmup,
+      };
+
+      MemoryTupleWriter(MCMCSamples * samples, MCMCSamples * warmup = nullptr)
+        : fSamples(samples), fWarmup(warmup), fWhichSamples(warmup ? WhichSamples::kWarmup : WhichSamples::kPostWarmup)
+      {
+        if (!samples && !warmup)
+        {
+          std::cerr << "MemoryTupleWriter passed null MCMCSamples for both warmup and post-warmup.  Abort" << std::endl;
+          abort();
+        }
+      }
 
       // note: there are other overloads from the base class for writing other things like strings.
       // we're retaining those do-nothing versions here (since anything written that way is not useful here)
       // and only overloading the one we care about
       using stan::callbacks::writer::operator();
 
-      virtual void operator()(const std::vector<double>& state) { fSamples.AddSample(state); }
-      virtual void operator()(const std::vector<std::string>& names) { fSamples.SetNames(names); }
+      void operator()(const std::vector<double>& state) override
+      {
+        (fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples)->AddSample(state);
+      }
+      void operator()(const std::vector<std::string>& names) override
+      {
+        (fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples)->SetNames(names);
+      }
+
+      template <typename Sampler>
+      void SaveSamplerState(Sampler &sampler, double samplingTime)
+      {
+        // this is from Stan
+        sampler.write_sampler_state(*this);
+
+        auto mcmcsamples = fWhichSamples == WhichSamples::kWarmup ? fWarmup : fSamples;
+        mcmcsamples->SetHyperparams(sampler.get_nominal_stepsize(),  // the 'nominal' stepsize is updated at the end of warmup
+                                    TMatrixDFromEigenMatrixXd(sampler.z().inv_e_metric_));
+        mcmcsamples->SetSamplingTime(samplingTime);
+      }
+
+      void         SetActiveSamples(WhichSamples s) { fWhichSamples = s; }
+      WhichSamples ActiveSamples() const            { return fWhichSamples; }
 
 
     private:
-      MCMCSamples & fSamples;
+      MCMCSamples * fSamples;
+      MCMCSamples * fWarmup;
+
+      enum WhichSamples fWhichSamples;
+
   };
 
   /// \brief Fitter type that bolts the Stan fitting tools onto CAFAna.
@@ -91,7 +144,7 @@ namespace ana
 
       /// Override (and call) the base class version, doing some caching of the oscillation parameters
       /// to avoid the problem discussed in the doc for fParamCache
-      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalculatorAdjustable *seed,
+      virtual std::unique_ptr<IFitSummary> Fit(osc::IOscCalcAdjustable *seed,
                                                SystShifts &bestSysts = junkShifts,
                                                const SeedList& seedPts = SeedList(),
                                                const std::vector<SystShifts> &systSeedPts = {},
@@ -147,19 +200,34 @@ namespace ana
                        std::ostream* pstream__ = 0) const;
 
       /// Peruse the samples the MCMC generated.  If you want to take ownership of them instead, see ExtractSamples()
-      const MCMCSamples& GetSamples() const { return fMCMCSamples; }
+      const MCMCSamples& GetSamples(MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup) const
+      {
+        return ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples;
+      }
 
       /// Extract the MCMC samples from the fitter (you own them now).
-      void ExtractSamples(MCMCSamples &samples) { samples = std::move(fMCMCSamples); };
+      void ExtractSamples(MCMCSamples &samples,
+                          MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup)
+      {
+        samples = std::move(ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples);
+      };
 
       /// Another way of extracting the MCMC samples (so you own them now) if you prefer unique_ptrs.
-      std::unique_ptr<MCMCSamples> ExtractSamples() { return std::make_unique<MCMCSamples>(std::move(fMCMCSamples)); }
+      std::unique_ptr<MCMCSamples> ExtractSamples(MemoryTupleWriter::WhichSamples ws = MemoryTupleWriter::WhichSamples::kPostWarmup)
+      {
+        return std::make_unique<MCMCSamples>(std::move(ws == MemoryTupleWriter::WhichSamples::kWarmup ? fMCMCWarmup : fMCMCSamples));
+      }
+
+      /// Supply samples and hyperparameters from a previously run warmup of MCMC.
+      /// Burden is on the user to ensure they are compatible with the sampling required.
+      /// (Call this prior to calling Fit() in order to use it.)
+      void ReuseWarmup(MCMCSamples && warmup);
 
       /// Change the config used for Stan.  See the StanConfig struct documentation for ideas
       void SetStanConfig(const StanConfig& cfg) { fStanConfig = cfg; }
 
       /// Run Stan's test of its auto-differentiation (comparing to a finite-differences calculation)
-      void TestGradients(osc::IOscCalculatorAdjustable *seed,
+      void TestGradients(osc::IOscCalcAdjustable *seed,
                          SystShifts &systSeed) const;
 
       /// \brief Return names of parameters in Stan's unconstrained space.  (Required by Stan interface.)
@@ -182,8 +250,7 @@ namespace ana
       {
         public:
           samplecounter_callback(std::size_t warmupSampleCount, std::size_t regularSampleCount)
-              : fProgressWarmup("Warming up MCMC sampler (" + std::to_string(warmupSampleCount) + " samples)"),
-                fWarmupCounts(warmupSampleCount),
+              : fWarmupCounts(warmupSampleCount),
                 fRegularCounts(regularSampleCount),
                 fCurrCount(0)
           {
@@ -194,9 +261,14 @@ namespace ana
             if (fWarmupCounts + fRegularCounts == 0)
               return;
 
+            if (fCurrCount < fWarmupCounts && !fProgressWarmup)
+              fProgressWarmup = std::make_unique<ana::Progress>(
+                    "Warming up MCMC sampler (" + std::to_string(fWarmupCounts) + " samples)");
+
             if (fCurrCount >= fWarmupCounts)
             {
-              fProgressWarmup.Done();
+              if (fProgressWarmup)
+                fProgressWarmup->Done();
 
               if (!fProgressNormal)
                 fProgressNormal = std::make_unique<ana::Progress>(
@@ -206,13 +278,14 @@ namespace ana
                 fProgressNormal->Done();
               else
                 fProgressNormal->SetProgress(double(++fCurrCount - fWarmupCounts) / fRegularCounts);
-            } else
-              fProgressWarmup.SetProgress(double(++fCurrCount) / fWarmupCounts);
+            }
+            else if (fWarmupCounts > 0)
+              fProgressWarmup->SetProgress(double(++fCurrCount) / fWarmupCounts);
           }
 
         private:
-          ana::Progress fProgressWarmup;
-          // this one's a unique_ptr so that we can initialize it later
+          // unique_ptrs so that we can initialize as needed later
+          std::unique_ptr<ana::Progress> fProgressWarmup;
           std::unique_ptr<ana::Progress> fProgressNormal;
           std::size_t fWarmupCounts;
           std::size_t fRegularCounts;
@@ -221,17 +294,17 @@ namespace ana
 
       /// Helper function to build the initial seed point context for Stan
       stan::io::array_var_context
-      BuildInitContext(osc::IOscCalculatorAdjustable *seed,
+      BuildInitContext(osc::IOscCalcAdjustable *seed,
                        const SystShifts &systSeed) const;
 
       /// Convert a 'normal' calculator into the Stan-aware variant used internally
-      void CreateCalculator(osc::IOscCalculatorAdjustable * seed) const;
+      void CreateCalculator(osc::IOscCalcAdjustable * seed) const;
 
       /// Unroll the parameters and stuff them into the calculator and/or syst shifts obj.
       /// Needs to be templated because Stan wants to instantiate it with <double>,
       /// even though that'll never actually be used (sigh)...
       template <typename T>
-      void DecodePars(const std::vector<T>& pars, osc::IOscCalculatorAdjustableStan * calc) const
+      void DecodePars(const std::vector<T>& pars, osc::IOscCalcAdjustableStan * calc) const
       {
         static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
                       "DecodePars() can only be used with double or stan::math::var");
@@ -293,9 +366,47 @@ namespace ana
       };
 
       /// Implement workhorse method from IFitter interface
-      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
+      std::unique_ptr<IFitSummary> FitHelperSeeded(osc::IOscCalcAdjustable *seed,
                                                    SystShifts &systSeed,
                                                    Verbosity verb) const override;
+
+      /// Run Stan with HMC.
+      /// Lots of copy-paste from stan::services::sample::hmc_nuts_diag_e_adapt()
+      /// (in stan/services/sample/hmc_nuts_diag_e_adapt.hpp)
+      /// so that we can customize in order to save the sampler state after warmup is finished.
+      ///
+      /// \param init_writer    Stream to write initialization info to
+      /// \param interrupt      Object whose operator()() will be called after every sample
+      /// \param diagStream     Stream to write diagnostic info to
+      /// \param logger         General object to write log to
+      /// \param init_context   MCMC initialization info
+      /// \param procId         Process ID
+      /// \return               Stan return code
+      template <typename Sampler>
+      int RunHMC(stan::callbacks::writer &init_writer,
+                 StanFitter::samplecounter_callback &interrupt,
+                 std::ostream &diagStream,
+                 const std::unique_ptr<stan::callbacks::stream_logger> &logger,
+                 stan::io::array_var_context &init_context,
+                 unsigned int procId) const;
+
+      /// Run the HMC sampler explicitly.
+      /// Cribbed from stan::services::run_adaptive_sampler() (in stan/services/util/run_adaptive_sampler.hpp)
+      /// in order to insert save/restore state code after warmup is done.
+      ///
+      /// \param sampler             The MCMC sampler object to use.  (In Stan this is a templated type, but we'll only ever use this version)
+      /// \param cont_vector         Starting parameter values (transformed into Stan's internal working space)
+      /// \param rng                 The random number generator being used
+      /// \param interrupt           Object whose operator()() will be called after every sample
+      /// \param logger              General object to write log to
+      /// \param diagnostic_writer   Object to write diagnostics to
+      template <typename Sampler>
+      void RunSampler(Sampler& sampler,
+                      std::vector<double>& cont_vector,
+                      boost::ecuyer1988& rng,
+                      stan::callbacks::interrupt& interrupt,
+                      stan::callbacks::logger& logger,
+                      stan::callbacks::writer& diagnostic_writer) const;
 
       /// Helper function that actually does the unconstraining Stan needs
       template <typename T>
@@ -307,11 +418,15 @@ namespace ana
       void UpdatePostFit(const IFitSummary *) const override {};
 
       //  members below
-      mutable std::unique_ptr<osc::IOscCalculatorAdjustableStan> fCalc;
+      mutable std::unique_ptr<osc::IOscCalcAdjustableStan> fCalc;
       const IExperiment * fExpt;
       StanConfig  fStanConfig;                           ///< Configuration passed to Stan for fitting.   See the StanConfig struct documentation for ideas
       MCMCSamples fMCMCSamples;
-      mutable MemoryTupleWriter fValueWriter;            ///< See MemoryTupleWriter class documentation for more info
+      MCMCSamples fMCMCWarmup;
+
+      /// See MemoryTupleWriter class documentation for more info.
+      /// Pointer so it can be initialized lazily
+      mutable std::unique_ptr<MemoryTupleWriter> fValueWriter;
 
       /// stan::math::var objects have one 'gotcha' associated with them:
       /// after the gradient of the log-prob is calculated, Stan internally
@@ -324,7 +439,7 @@ namespace ana
       /// This cache is made at the beginning from all those values and any that aren't
       /// part of the values passed by the fitter are rewritten at the beginning of
       /// each iteration.
-      mutable std::unique_ptr<osc::IOscCalculatorAdjustable> fOscCalcCache;
+      mutable std::unique_ptr<osc::IOscCalcAdjustable> fOscCalcCache;
   };
 
 }

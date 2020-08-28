@@ -17,7 +17,8 @@ void load_libs(bool MustClean = true) {
   // uncaught exceptions immediately show a useful backtrace under gdb.
   //  G__SetCatchException(0);
 
-  gSystem->SetAclicMode(TSystem::kOpt);
+  auto mode = (gSystem->Getenv("CAFANA_DEBUG")) ? TSystem::kDebug : TSystem::kOpt;
+  gSystem->SetAclicMode(mode);
 
   // This magic incantation prevents ROOT doing slow cleanup work in
   // TList::RecursiveRemove() under ~TH1(). It also tends to lead to shutdown
@@ -40,11 +41,11 @@ void load_libs(bool MustClean = true) {
                                                // of retaining assert()
 
   // Include path
-  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$SUNDIALS_INC";
+  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$SUNDIALS_INC -I$OSCLIB_INC";
 
   const std::vector<std::string> libs = {
       "Minuit2",          "Net",           "Tree",
-      "StandardRecord",   "OscLibFunc",    "UtilitiesFunc",
+      "StandardRecord",   "OscLib",        "UtilitiesFunc",
       "CAFAnaCore",       "CAFAnaVars",    "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
       "CAFAnaPrediction", "CAFAnaFit",     "CAFAnaAnalysis",

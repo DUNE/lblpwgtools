@@ -1,5 +1,7 @@
 #include "CAFAna/Core/Binning.h"
 
+#include <cassert>
+
 #include "TDirectory.h"
 #include "TH1.h"
 #include "TObjString.h"
@@ -97,19 +99,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  int Binning::FindBin(float x) const
+  int Binning::FindBin(double x) const
   {
-    // Treat anything outside [fMin, fMax) at Underflow / Overflow
+    // Treat anything outside [fMin, fMax) as Underflow / Overflow
     if (x <  fMin) return 0;               // Underflow
     if (x >= fMax) return fEdges.size();   // Overflow
 
     // Follow ROOT convention, first bin of histogram is bin 1
 
-    if (this->IsSimple()){
-      double binwidth = (fMax - fMin) / fNBins;
-      int bin = (x - fMin) / binwidth + 1;
-      return bin;
-    }
+    if(IsSimple()) return fNBins * (x - fMin) / (fMax - fMin) +1;
 
     int bin =
       std::lower_bound(fEdges.begin(), fEdges.end(), x) - fEdges.begin();
@@ -183,11 +181,11 @@ namespace ana
   {
     std::vector<double> energies;
     std::vector<double> edges = TrueEnergyBins().Edges();
-    energies.push_back(1e-15); // underflow is unphysical anyway. but 0 causes infs that upset Stan
+
     for(std::size_t i = 0; i < edges.size()-1; i++) {
       energies.push_back((edges[i+1] + edges[i])/2);
     }
-    energies.push_back(1e-15); // overflow is unphysical anyway. but 0 causes infs that upset Stan
+
     return energies;
   }
 

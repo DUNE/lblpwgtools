@@ -2,14 +2,11 @@
 
 #include "Utilities/func/StanVar.h"
 
-class TDirectory;
-
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 class TDirectory;
 
@@ -38,39 +35,45 @@ namespace ana
     /// SystShifts with the same set of systs should have the same ID
     int ID() const {return fID;}
 
-    static SystShifts Nominal(){return SystShifts();}
+    static SystShifts Nominal() {return SystShifts();}
 
-      /// Allow derived classes to overload so they can copy themselves
-      /// in case they overload Penalty().  Used in IFitter.
-      /// Note that you own the copy...
-      virtual std::unique_ptr<SystShifts> Copy() const;
+    std::vector<const ISyst*> ActiveSysts() const;
 
-      bool IsNominal() const {return fSystsDbl.empty(); }  // since there's always a 'double' copy of any stan ones too
+    /// Allow derived classes to overload so they can copy themselves
+    /// in case they overload Penalty().  Used in IFitter.
+    /// Note that you own the copy...
+    virtual std::unique_ptr<SystShifts> Copy() const;
 
-      /// shift: 0 = nominal; +-1 = 1sigma shifts etc. Arbitrary shifts allowed
-      /// set force=true to insert a syst even if the shift is 0
-      void SetShift(const ISyst* syst, double shift, bool force=false);
-      void SetShift(const ISyst* syst, stan::math::var shift);
+    bool IsNominal() const {return fSystsDbl.empty(); }  // since there's always a 'double' copy of any stan ones too
 
-      /// Templated so that Stan- and not-stan versions have the same interface.
-      /// If you don't specify anything it'll just give you back the double,
-      /// which is probably what you want anyway.
-      /// If you know you want the Stan version write `GetShift<stan::math::var>(syst)`
-      template <typename T=double>
-      T GetShift(const ISyst* syst) const;
-      void ResetToNominal();
+    /// shift: 0 = nominal; +-1 = 1sigma shifts etc. Arbitrary shifts allowed
+    /// set force=true to insert a syst even if the shift is 0
+    void SetShift(const ISyst* syst, double shift, bool force=false);
+    void SetShift(const ISyst* syst, stan::math::var shift);
 
-      /// Penalty term for (frequentist) chi-squared fits
-      double Penalty() const;
+    /// Templated so that Stan- and not-stan versions have the same interface.
+    /// If you don't specify anything it'll just give you back the double,
+    /// which is probably what you want anyway.
+    /// If you know you want the Stan version write `GetShift<stan::math::var>(syst)`
+    template <typename T=double>
+    T GetShift(const ISyst* syst) const;
 
-      /// Prior used in Bayesian fitting.  Override as needed.
-      /// If it's more efficient to calculate log(prior)
-      /// explicitly, override LogPrior() as well
-      virtual stan::math::var Prior() const { return 1.; }
+    void ResetToNominal();
 
-      /// If it's more efficient to implement log(prior) directly,
-      /// override this
-      virtual stan::math::var LogPrior() const;
+    bool HasStan(const ISyst* s) const {return fSystsStan.count(s);}
+    bool HasAnyStan() const {return !fSystsStan.empty();}
+
+    /// Penalty term for (frequentist) chi-squared fits
+    double Penalty() const;
+
+    /// Prior used in Bayesian fitting.  Override as needed.
+    /// If it's more efficient to calculate log(prior)
+    /// explicitly, override LogPrior() as well
+    virtual stan::math::var Prior() const { return 1.; }
+
+    /// If it's more efficient to implement log(prior) directly,
+    /// override this
+    virtual stan::math::var LogPrior() const;
 
 
     void Shift(Restorer& restore,
@@ -81,8 +84,6 @@ namespace ana
     std::string ShortName() const;
     /// Long description of component shifts, for plot labels
     std::string LatexName() const;
-
-    std::vector<const ISyst*> ActiveSysts() const;
 
     void SaveTo(TDirectory* dir, const std::string& name) const;
     static std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir, const std::string& name);

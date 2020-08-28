@@ -55,7 +55,7 @@ namespace ana
   ///
   /// \return The best fit delta chisq as a function of \a a
   TH1* Profile(const IExperiment* expt,
-                  osc::IOscCalculatorAdjustable* calc,
+                  osc::IOscCalcAdjustable* calc,
                   const IFitVar* v,
                   int nbinsx, double minx, double maxx,
                   double minchi = -1,
@@ -69,7 +69,7 @@ namespace ana
 
   /// Forward to \ref Profile but sqrt the result for a crude significance
   TH1* SqrtProfile(const IExperiment* expt,
-                   osc::IOscCalculatorAdjustable* calc,
+                   osc::IOscCalcAdjustable* calc,
                   const IFitVar* v,
                    int nbinsx, double minx, double maxx,
                    double minchi = -1,
@@ -83,14 +83,14 @@ namespace ana
 
   /// \f$\chi^2\f$ scan in one variable, holding all others constant
   TH1* Slice(const IExperiment* expt,
-             osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+             osc::IOscCalcAdjustable* calc, const IFitVar* v,
              int nbinsx, double minx, double maxx,
              double minchi = -1,
              MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
   /// Forward to \ref Slice but sqrt the result for a crude significance
   TH1* SqrtSlice(const IExperiment* expt,
-                 osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+                 osc::IOscCalcAdjustable* calc, const IFitVar* v,
                  int nbinsx, double minx, double maxx, double minchi = -1,
                  MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
@@ -98,7 +98,7 @@ namespace ana
   ///
   /// \param transpose plot \a scanVar on the y axis
   TGraph* FindValley(const IExperiment* expt,
-		           osc::IOscCalculatorAdjustable* calc,
+		           osc::IOscCalcAdjustable* calc,
 		           const IFitVar& scanVar,
 		           const IFitVar& fitVar,
 		           int nbinsx, double xmin, double xmax,

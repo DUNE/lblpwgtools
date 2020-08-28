@@ -42,7 +42,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionNoOsc::PredictComponent(osc::IOscCalculator* /*calc*/,
+  Spectrum PredictionNoOsc::PredictComponent(osc::IOscCalc* /*calc*/,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
@@ -50,7 +50,7 @@ namespace ana
     if(flav == Flavors::kAll &&
        curr == Current::kBoth &&
        sign == Sign::kBoth)
-      return Predict(0); // Faster
+      return fSpectrum; // Faster
 
     if(curr & Current::kNC){
       // We don't have NC broken down by sign or flavour

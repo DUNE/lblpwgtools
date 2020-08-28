@@ -11,18 +11,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   template<class T> GenericHistAxis<T>::
-  GenericHistAxis(const std::string& label,
-                  const Binning& bins,
-                  const T& var)
-    : fLabels(1, label),
-      fBins(1, bins),
-      fVars(1, var)
-  {
-    assert(var.IsValid());
-  }
-
-  //----------------------------------------------------------------------
-  template<class T> GenericHistAxis<T>::
   GenericHistAxis(const std::vector<std::string>& labels,
                   const std::vector<Binning>& bins,
                   const std::vector<T>& vars)
@@ -32,50 +20,25 @@ namespace ana
       assert(v.IsValid());
     }
     assert(fLabels.size() == fBins.size());
-    assert(fBins.size() == fVars.size());
+    assert(fBins.size() == fVars.size() || fVars.empty());
   }
 
   //----------------------------------------------------------------------
-  template<class T> GenericHistAxis<T>::
-  GenericHistAxis(const std::string& labelX,
-                  const Binning& binsX,
-                  const T& varX,
-                  const std::string& labelY,
-                  const Binning& binsY,
-                  const T& varY)
-    : fLabels({labelX, labelY}),
-      fBins({binsX, binsY}),
-      fVars({varX, varY})
+  template<class T>GenericHistAxis<T>::
+  GenericHistAxis(const std::vector<GenericHistAxis<T>>& axes)
   {
-    for (auto &v : fVars) {
-      assert(v.IsValid());
+    for(const auto& a: axes){
+      fLabels.insert(fLabels.end(), a.fLabels.begin(), a.fLabels.end());
+      fBins.insert(fBins.end(), a.fBins.begin(), a.fBins.end());
+      fVars.insert(fVars.end(), a.fVars.begin(), a.fVars.end());
     }
+
+    assert(fLabels.size() == fBins.size());
+    assert(fBins.size() == fVars.size() || fVars.empty());
   }
 
   //----------------------------------------------------------------------
-  template<class T> GenericHistAxis<T>::
-  GenericHistAxis(const std::string& label,
-                  int nx, double x0, double x1,
-                  const T& var)
-    : GenericHistAxis(label, Binning::Simple(nx, x0, x1), var)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  template<class T> GenericHistAxis<T>::
-  GenericHistAxis(const std::string& labelX,
-                  int nx, double x0, double x1,
-                  const T& varX,
-                  const std::string& labelY,
-                  int ny, double y0, double y1,
-                  const T& varY)
-    : GenericHistAxis(labelX, Binning::Simple(nx, x0, x1), varX,
-                      labelY, Binning::Simple(ny, y0, y1), varY)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  template<class T> T GenericHistAxis<T>::GetMultiDVar() const
+  template<class T> T GenericHistAxis<T>::GetVar1D() const
   {
     switch(fVars.size()){
     case 1:
@@ -88,9 +51,39 @@ namespace ana
                    fVars[1], fBins[1],
                    fVars[2], fBins[2]);
     default:
-      std::cout << "Error: HistAxis::GetMultiDVar() doesn't support "
+      std::cout << "Error: HistAxis::GetVar1D() doesn't support "
                 << fVars.size() << "-dimensional axes" << std::endl;
       abort();
     }
+  }
+
+  //----------------------------------------------------------------------
+  template<class T> const Binning& GenericHistAxis<T>::GetBins1D() const
+  {
+    if(fBins.size() == 1) return fBins[0];
+
+    if(fBins1D) return *fBins1D;
+
+    assert(!fBins.empty());
+
+    int n = 1;
+    for(const Binning& b: fBins) n *= b.NBins();
+    fBins1D = Binning::Simple(n, 0, n);
+
+    return *fBins1D;
+  }
+
+  //----------------------------------------------------------------------
+  template<class T> const std::string& GenericHistAxis<T>::GetLabel1D() const
+  {
+    if(fLabels.size() == 1) return fLabels[0];
+
+    if(fLabel1D) return *fLabel1D;
+
+    fLabel1D = "";
+    for(const std::string& l: fLabels) *fLabel1D += l + " and ";
+    fLabel1D->resize(fLabel1D->size()-5); // drop extra "and"
+
+    return *fLabel1D;
   }
 }

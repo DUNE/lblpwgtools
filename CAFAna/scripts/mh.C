@@ -31,7 +31,7 @@ using namespace ana;
 
 #include "Utilities/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 
 #include "TCanvas.h"
@@ -115,7 +115,7 @@ void mh()
 	
       thisdcp = -TMath::Pi() + idcp*dcpstep;
 
-      osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie);
+      osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie);
 
       trueOsc->SetdCP(thisdcp);
 
@@ -146,8 +146,8 @@ void mh()
       double thischisq;
 
       for(int ioct = -1; ioct <= 1; ioct += 2) {
-	//osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalcCDR(hie);	
-	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie,ioct);	
+	//osc::IOscCalcAdjustable* testOsc = NuFitOscCalcCDR(hie);	
+	osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(hie,ioct);	
 	testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
 
 	//if (ioct < 0) {
@@ -160,10 +160,10 @@ void mh()
 	    double dcp_scan = -TMath::Pi() + idcp_scan*2*TMath::Pi()/40;
 	    for (int ith_scan = 0; ith_scan < 41; ++ith_scan) {
 	      double th13_scan = (2.5 + ith_scan*9.0/40)*TMath::Pi()/180;
-	      osc::IOscCalculatorAdjustable* scanOsc = testOsc->Copy();
+	      osc::IOscCalcAdjustable* scanOsc = testOsc->Copy();
 	      scanOsc->SetdCP(dcp_scan);
 	      scanOsc->SetTh13(th13_scan);
-	      osc::IOscCalculatorAdjustable* cvcalc = scanOsc->Copy();	  
+	      osc::IOscCalcAdjustable* cvcalc = scanOsc->Copy();	  
 	      MultiExperiment full_expt_syst({&app_expt_fhc_syst, &app_expt_rhc_syst, &dis_expt_fhc_syst, &dis_expt_rhc_syst});
 	      Fitter fit_scan(&full_expt_syst, oscVars_scan, {});
 	      double scanchisq = fit_scan.Fit(scanOsc, MinuitFitter::kQuiet);
@@ -180,7 +180,7 @@ void mh()
 	  testOsc->SetdCP(thisdcp);
 	}
 
-	//osc::IOscCalculatorAdjustable* cvcalc = testOsc->Copy();	  
+	//osc::IOscCalcAdjustable* cvcalc = testOsc->Copy();	  
 	//Penalizer_GlbLikeCDR penalty(cvcalc,hie); 
 	Penalizer_GlbLike penalty(hie,ioct,th13penalty,false,false);
 
