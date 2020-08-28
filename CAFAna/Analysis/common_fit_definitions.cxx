@@ -1283,10 +1283,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   	if (turbose) {
       std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
                 << std::endl;
-    }
-	TMatrixD *this_ndmatrix = GetNDCovMat(UseV3NDCovMat);
-	this_expt.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
-	// this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true, {0, 1});
+              }
+  	TMatrixD *this_ndmatrix = GetNDCovMat(UseV3NDCovMat);
+    nd_expt_fhc.AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
+    nd_expt_rhc.AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
 	}
 
   // Add in the penalty...
