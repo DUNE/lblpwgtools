@@ -80,7 +80,7 @@ double GetBoundedGausThrow(double min, double max) {
 
 TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
 
-	auto AnaV = GetAnaVersion();
+  auto AnaV = GetAnaVersion();
 
     const std::string detCovPath =
         "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
@@ -94,26 +94,26 @@ TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
                                          : "/Systs/det_sys_cov.root");
 #endif
 
-	std::string this_beam = "all";
-	if(!TwoBeams){
-		if(isFHC) this_beam = "fhc";
-		else this_beam = "rhc";
-	}
+  std::string this_beam = "all";
+  if(!TwoBeams){
+    if(isFHC) this_beam = "fhc";
+    else this_beam = "rhc";
+  }
     // TDirectory *thisDir = gDirectory->CurrentDirectory();
     TFile covMatFile(covFileName.c_str());
     TString covObjectName = "nd_" + this_beam + "_frac_cov";
     TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get(covObjectName);
     // TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
     if (!fake_uncorr) {
-    	std::cout << "Could not obtain covariance matrix named "
-    	<< covObjectName <<  " from " << covFileName << std::endl;
-    	abort();
+      std::cout << "Could not obtain covariance matrix named "
+      << covObjectName <<  " from " << covFileName << std::endl;
+      abort();
       }
 
 
-	if(!UseV3NDCovMat){
-    	return fake_uncorr;
-	}
+  if(!UseV3NDCovMat){
+      return fake_uncorr;
+  }
     else{
 
       std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
@@ -146,6 +146,16 @@ TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
 
   }
 
+// I miss python...
+std::vector<std::string> SplitString(std::string input, char delim) {
+  std::vector<std::string> output;
+  std::stringstream ss(input);
+  std::string token;
+  while (std::getline(ss, token, delim))
+    output.push_back(token);
+  return output;
+}
+>>>>>>> 8bafd29efd3971bcdb7cd13f6daedff64567652f
 
 // For ease of penalty terms...
 IExperiment *GetPenalty(int hie, int oct, std::string penalty,
@@ -1280,7 +1290,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+<<<<<<< HEAD
   	if (turbose) {
+=======
+    if (turbose) {
+>>>>>>> 8bafd29efd3971bcdb7cd13f6daedff64567652f
       std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
                 << std::endl;
               }
@@ -1288,7 +1302,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     TMatrixD *rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
     nd_expt_fhc.AddCovarianceMatrix(fhc_ndmatrix, kCovMxChiSqPreInvert);
     nd_expt_rhc.AddCovarianceMatrix(rhc_ndmatrix, kCovMxChiSqPreInvert);
+<<<<<<< HEAD
 	}
+=======
+  }
+>>>>>>> 8bafd29efd3971bcdb7cd13f6daedff64567652f
 
   // Add in the penalty...
   if (penaltyTerm) {
