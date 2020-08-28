@@ -1284,9 +1284,10 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
                 << std::endl;
               }
-  	TMatrixD *this_ndmatrix = GetNDCovMat(UseV3NDCovMat);
-    nd_expt_fhc.AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
-    nd_expt_rhc.AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
+    TMatrixD *fhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
+    TMatrixD *rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
+    nd_expt_fhc.AddCovarianceMatrix(fhc_ndmatrix, kCovMxChiSqPreInvert);
+    nd_expt_rhc.AddCovarianceMatrix(rhc_ndmatrix, kCovMxChiSqPreInvert);
 	}
 
   // Add in the penalty...

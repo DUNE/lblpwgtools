@@ -81,9 +81,13 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
     UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
   }
   TMatrixD *this_ndmatrix = new TMatrixD();
+  TMatrixD *this_fhcmatrix = new TMatrixD();
+  TMatrixD *this_rhcmatrix = new TMatrixD();
   bool use_nd = detectors.Contains("nd");
   if(use_nd && UseNDCovMat){
       this_ndmatrix = GetNDCovMat(UseV3NDCovMat, TwoBeams, isFHC);
+      this_fhcmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
+      this_rhcmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
   }
 
   ///// Predictions my way
@@ -157,9 +161,14 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
 
       // TO DO: Make this desition cleaner and shorter
       if(use_nd && UseNDCovMat){
-        if((predId==0) || (predId==1 && TwoBeams)){
-          temp_singleexpt->AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
+        if(TwoBeams){
+          if(predId==0) temp_singleexpt->AddCovarianceMatrix(this_fhcmatrix, kCovMxChiSqPreInvert);
+          if(predId==1) temp_singleexpt->AddCovarianceMatrix(this_rhcmatrix, kCovMxChiSqPreInvert);
         }
+        else{
+          if(isFHC && predId==0) temp_singleexpt->AddCovarianceMatrix(this_fhcmatrix, kCovMxChiSqPreInvert);
+          if(!isFHC && predId==0) temp_singleexpt->AddCovarianceMatrix(this_rhcmatrix, kCovMxChiSqPreInvert);          
+        } 
       }
 
       experiments.Add(temp_singleexpt);
@@ -168,14 +177,6 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
     if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
     if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
 
-    // Add the ND covariance matrix
-    // To properly add the nd matrix, the idx should match the nd experiments
-    // TO DO: what happens in the FHC or RHC only case? Check and edit the GetNDCovMat function
-    if(use_nd && UseNDCovMat){
-      std::cout << "Adding covariance mat" << std::endl;
-      if(TwoBeams) experiments.AddCovarianceMatrix(this_ndmatrix, true, {0, 1});
-      else experiments.AddCovarianceMatrix(this_ndmatrix, true, {0});
-    }
 
     // Still need to loop over dcp choices for the seeded Calc
     // why only have two options?
