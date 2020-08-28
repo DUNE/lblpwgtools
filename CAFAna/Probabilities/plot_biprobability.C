@@ -15,8 +15,8 @@
 #include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Core/Utilities.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/OscCalculatorPMNSOpt.h"
+#include "OscLib/IOscCalc.h"
 #include "Utilities/func/MathUtil.h"
 
 using namespace ana;
@@ -116,7 +116,7 @@ TMarker * GetMarker_dCP (int delta, Int_t color)
   return mark;
 }
 
-TGraph * TheoryLine_E (osc::IOscCalculatorAdjustable * calc, 
+TGraph * TheoryLine_E (osc::IOscCalcAdjustable * calc, 
 		       const bool isFHC,
 		       Int_t color=1, Int_t style = kSolid)
 {
@@ -137,7 +137,7 @@ TGraph * TheoryLine_E (osc::IOscCalculatorAdjustable * calc,
 }
 
 
-TGraph*  TheoryEllipse_dCP (osc::IOscCalculatorAdjustable * calc, double E=2.5,
+TGraph*  TheoryEllipse_dCP (osc::IOscCalcAdjustable * calc, double E=2.5,
 			    int maxDegree = 360,
 			    TString label="", Int_t color=1, Int_t style = kSolid, 
 			    bool markers=true)

@@ -8,7 +8,7 @@
 
 #include "CAFAna/Analysis/Calcs.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TGraph.h"
 #include "TLegend.h"
@@ -65,7 +65,7 @@ void plot_probability_difftheta()
 
 
   
-  std::vector< std::vector < std::vector<osc::IOscCalculatorAdjustable*> > > calc;
+  std::vector< std::vector < std::vector<osc::IOscCalcAdjustable*> > > calc;
   std::vector< std::vector < std::vector<TGraph*> > > gmumu;
   std::vector< std::vector < std::vector<TGraph*> > > gmumubar;
   std::vector< std::vector < std::vector<TGraph*> > > gmudif;
@@ -75,7 +75,7 @@ void plot_probability_difftheta()
 
   for(int rhoId = 0; rhoId<rhoTot; rhoId++){
     
-    std::vector< std::vector<osc::IOscCalculatorAdjustable*> > calcDouble;
+    std::vector< std::vector<osc::IOscCalcAdjustable*> > calcDouble;
     std::vector< std::vector<TGraph*> > gmumuDouble;
     std::vector< std::vector<TGraph*> > gmumubarDouble;
     std::vector< std::vector<TGraph*> > gmudifDouble;
@@ -84,7 +84,7 @@ void plot_probability_difftheta()
     std::vector< std::vector<double> > min_mudifDouble;
 
     for(int deltaId = 0; deltaId<deltaTot; deltaId++){
-      std::vector<osc::IOscCalculatorAdjustable*> calcSingle;
+      std::vector<osc::IOscCalcAdjustable*> calcSingle;
       std::vector<TGraph*> gmumuSingle;
       std::vector<TGraph*> gmumubarSingle;
       std::vector<TGraph*> gmudifSingle;
@@ -94,7 +94,7 @@ void plot_probability_difftheta()
 
       for(int deltaCPId = 0; deltaCPId<deltaCPTot; deltaCPId++){
 	
-      	osc::IOscCalculatorAdjustable* tempCalc = DefaultOscCalc();
+      	osc::IOscCalcAdjustable* tempCalc = DefaultOscCalc();
         ResetOscCalcToDefault(tempCalc);
         tempCalc->SetRho(rhoVal[rhoId]);
         tempCalc->SetDmsq32(deltaVal[deltaId]);

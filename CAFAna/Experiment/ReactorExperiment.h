@@ -21,7 +21,7 @@ namespace ana
     void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<ReactorExperiment> LoadFrom(TDirectory* dir, const std::string& name);
   protected:
-    virtual double SSTh13(osc::IOscCalculatorAdjustable* osc) const;
+    virtual double SSTh13(osc::IOscCalcAdjustable* osc) const;
 
     double fBestFit, fSigma;
   };

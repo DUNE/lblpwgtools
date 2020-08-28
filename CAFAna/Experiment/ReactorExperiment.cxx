@@ -20,7 +20,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double ReactorExperiment::SSTh13(osc::IOscCalculatorAdjustable* osc) const
+  double ReactorExperiment::SSTh13(osc::IOscCalcAdjustable* osc) const
   {
     return kFitSinSq2Theta13.GetValue(osc);
   }

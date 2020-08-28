@@ -134,9 +134,9 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
     double thischisq;
 
     // fake data will be generated assuming these parameter values
-    // osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+    // osc::IOscCalcAdjustable* calc = DefaultOscCalc();
     double thisdcp = -TMath::Pi() + step*binwidth; // why start in -pi instead of zero... (t2k vs nova)
-    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set); 
+    osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set); 
     trueOsc->SetdCP(thisdcp);
 
     // defining the predictions and fake data here might seem repetitive
@@ -168,7 +168,7 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
       else experiments.AddCovarianceMatrix(this_ndmatrix, true, {0});
     }
 
-    // Still need to loop over dcp choices for the seeded calculator
+    // Still need to loop over dcp choices for the seeded Calc
     // why only have two options?
     // double idcplist = {0, 1/2, 1, 3/2}
     // for (double idcp : idcplist) {
@@ -176,7 +176,7 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
       double dcptest = idcp*TMath::Pi();
       	
       for (int ioct = -1; ioct <= 1; ioct +=2) {
-        osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
+        osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
       	testOsc->SetdCP(dcptest);
 	
       	// Make a map of seed points to try (replaces the old loops)
