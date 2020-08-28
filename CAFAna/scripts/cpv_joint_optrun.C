@@ -152,7 +152,16 @@ void cpv_joint_optrun(std::string inPredDir = "/pnfs/dune/persistent/users/dmend
       s_fakedata.push_back(s_predictions[predId].MockData(pot[predId],0)); // second argument = 0 defaults to random throw number
       // Mask or you'll get different results to the official
       SingleSampleExperiment *temp_singleexpt = new SingleSampleExperiment(predictions[predId], s_fakedata[predId]);
+      
       if(mask) temp_singleexpt->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
+
+      // TO DO: Make this desition cleaner and shorter
+      if(use_nd && UseNDCovMat){
+        if((predId==0) || (predId==1 && TwoBeams)){
+          temp_singleexpt->AddCovarianceMatrix(this_ndmatrix, kCovMxChiSqPreInvert);
+        }
+      }
+
       experiments.Add(temp_singleexpt);
       // experiments.Add(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
     }
