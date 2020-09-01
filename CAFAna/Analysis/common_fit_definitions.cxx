@@ -76,6 +76,74 @@ double GetBoundedGausThrow(double min, double max) {
   return val;
 }
 
+
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
+
+  auto AnaV = GetAnaVersion();
+
+    const std::string detCovPath =
+        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+    std::string covFileName =
+        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                    : "/det_sys_cov.root");
+#else
+    std::string covFileName =
+        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                         : "/Systs/det_sys_cov.root");
+#endif
+
+  std::string this_beam = "all";
+  if(!TwoBeams){
+    if(isFHC) this_beam = "fhc";
+    else this_beam = "rhc";
+  }
+    // TDirectory *thisDir = gDirectory->CurrentDirectory();
+    TFile covMatFile(covFileName.c_str());
+    TString covObjectName = "nd_" + this_beam + "_frac_cov";
+    TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get(covObjectName);
+    // TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
+    if (!fake_uncorr) {
+      std::cout << "Could not obtain covariance matrix named "
+      << covObjectName <<  " from " << covFileName << std::endl;
+      abort();
+      }
+
+
+  if(!UseV3NDCovMat){
+      return fake_uncorr;
+  }
+    else{
+
+      std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
+
+      TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
+
+      assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
+
+      size_t NRows = fake_uncorr->GetNrows();
+      size_t NRows_FHC = covmx_fhc_only->GetNrows();
+      for (size_t row_it = 0; row_it < NRows; ++row_it) {
+        for (size_t col_it = 0; col_it < NRows; ++col_it) {
+
+          // Could use TMatrix::SetSub but I don't trust TMatrix...
+          if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
+              ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
+            (*fake_uncorr)[row_it][col_it] = 0;
+          } else {
+            size_t row_fhc_only_it = row_it % NRows_FHC;
+            size_t col_fhc_only_it = col_it % NRows_FHC;
+            (*fake_uncorr)[row_it][col_it] =
+                (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
+          }
+        }
+      }
+
+      return fake_uncorr;
+      // thisDir->cd();
+    }
+
+  }
 // I miss python...
 std::vector<std::string> SplitString(std::string input, char delim) {
   std::vector<std::string> output;
@@ -1517,70 +1585,14 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // idx must be in correct order to access correct part of matrix
   // Don't use FD covmx fits
   if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-
-    // Get the ndCov
-    const std::string detCovPath =
-        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
-#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-    std::string covFileName =
-        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                    : "/det_sys_cov.root");
-#else
-    std::string covFileName =
-        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                         : "/Systs/det_sys_cov.root");
-#endif
-
     if (turbose) {
-      std::cout << "[INFO]: Adding ND covmat " << BuildLogInfoString()
+      std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
                 << std::endl;
-    }
-    if (UseV3NDCovMat) {
-
-      std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
-
-      TDirectory *thisDir = gDirectory->CurrentDirectory();
-      TFile covMatFile(covFileName.c_str());
-      TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
-      if (!fake_uncorr) {
-        std::cout << "Could not obtain covariance matrix named "
-                     "\"nd_all_frac_cov\"  from "
-                  << covFileName << std::endl;
-        abort();
-      }
-
-      TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
-
-      assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
-
-      size_t NRows = fake_uncorr->GetNrows();
-      size_t NRows_FHC = covmx_fhc_only->GetNrows();
-      for (size_t row_it = 0; row_it < NRows; ++row_it) {
-        for (size_t col_it = 0; col_it < NRows; ++col_it) {
-
-          // Could use TMatrix::SetSub but I don't trust TMatrix...
-          if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
-              ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
-            (*fake_uncorr)[row_it][col_it] = 0;
-          } else {
-            size_t row_fhc_only_it = row_it % NRows_FHC;
-            size_t col_fhc_only_it = col_it % NRows_FHC;
-            (*fake_uncorr)[row_it][col_it] =
-                (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
-          }
-        }
-      }
-
-      nd_expt_fhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
-      nd_expt_rhc.AddCovarianceMatrix(fake_uncorr, kCovMxChiSqPreInvert);
-    } else {
-      nd_expt_fhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
-      nd_expt_rhc.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", kCovMxChiSqPreInvert);
-    }
-    if (turbose) {
-      std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
+              }
+    TMatrixD *fhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
+    TMatrixD *rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
+    nd_expt_fhc.AddCovarianceMatrix(fhc_ndmatrix, kCovMxChiSqPreInvert);
+    nd_expt_rhc.AddCovarianceMatrix(rhc_ndmatrix, kCovMxChiSqPreInvert);
   }
 
   // Add in the penalty...
