@@ -525,14 +525,14 @@ namespace ana
     const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
 
     const Key_t key = {flav, curr, sign};
-    auto it = fNomCache.find(key);
+    auto it = fNomCache->find(key);
 
     // Should the interpolation use the nubar fits?
     const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
 
     // We have the nominal for this exact combination of flav, curr, sign, calc
     // stored.  Shift it and return.
-    if(canCache && it != fNomCache.end() && it->second.hash == *hash){
+    if(canCache && it != fNomCache->end() && it->second.hash == *hash){
       return ShiftSpectrum(it->second.nom, type, nubar, shift);
     }
 
@@ -542,8 +542,8 @@ namespace ana
     if(canCache){
       // Insert into the cache if not already there, or update if there but
       // with old oscillation parameters.
-      if(it == fNomCache.end())
-        fNomCache.emplace(key, Val_t({*hash, nom}));
+      if(it == fNomCache->end())
+        fNomCache->emplace(key, Val_t({*hash, nom}));
       else
         it->second = {*hash, nom};
     }
@@ -650,7 +650,7 @@ namespace ana
 
     fPredNom->SaveTo(dir, "pred_nom");
 
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       const ShiftedPreds& sp = it.second;
 
       for(unsigned int i = 0; i < sp.shifts.size(); ++i){
@@ -670,7 +670,7 @@ namespace ana
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
       int binIdx = 1;
-      for(auto &it: fPreds){
+      for(auto& it: fPreds){
         hSystNames.GetXaxis()->SetBinLabel(binIdx++, it.second.systName.c_str());
       }
       dir->cd();
@@ -718,8 +718,7 @@ namespace ana
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
-      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx)
-      {
+      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx){
         ShiftedPreds sp;
         sp.systName = hSystNames->GetXaxis()->GetBinLabel(systIdx + 1);
 
@@ -921,7 +920,7 @@ namespace ana
   {
     InitFits();
 
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       new TCanvas;
       DebugPlotColz(it.first, calc, flav, curr, sign);
 
