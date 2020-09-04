@@ -26,6 +26,11 @@ Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &v);
 Eigen::VectorXd GetEigenFlatVector(TH1 const *th);
 
 size_t
+FillHistFromEigenMatrix(TH2 *, Eigen::MatrixXd const &, size_t histx_offset = 0,
+                        size_t histy_offset = 0,
+                        Eigen::MatrixXd const &error = Eigen::MatrixXd());
+
+size_t
 FillHistFromEigenVector(TH2 *, Eigen::VectorXd const &, size_t vect_offset = 0,
                         size_t histx_offset = 0, size_t histy_offset = 0,
                         Eigen::VectorXd const &error = Eigen::VectorXd());

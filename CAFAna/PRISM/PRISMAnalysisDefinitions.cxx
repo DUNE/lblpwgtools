@@ -27,8 +27,14 @@ const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
 });
 
 Binning GetBinning(std::string const &xbinning) {
-  if (xbinning == "uniform") {
+  if (xbinning == "uniform_fine") {
     return Binning::Simple(100, 0, 10);
+  }
+  if (xbinning == "uniform") {
+    return Binning::Simple(50, 0, 10);
+  }
+  if (xbinning == "uniform_coarse") {
+    return Binning::Simple(25, 0, 10);
   }
   if (xbinning == "testopt") {
     std::vector<double> BE = {
@@ -55,7 +61,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -33, 3};
+    std::array<double, 3> OABinning = {0.5, -32, 0};
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];
@@ -97,7 +103,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
                         kTrueOffAxisPos_m);
 
-  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 2),
+  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
 
   auto vardef = GetVar(varname);
@@ -329,6 +335,18 @@ std::ostream &operator<<(std::ostream &os, BeamMode const &bm) {
   }
   case BeamMode::kNuBarMode: {
     return os << "kNuBarMode";
+  }
+  case BeamMode::kNuMode_293kA: {
+    return os << "kNuMode_293kA";
+  }
+  case BeamMode::kNuMode_280kA: {
+    return os << "kNuMode_280kA";
+  }
+  case BeamMode::kNuBarMode_293kA: {
+    return os << "kNuBarMode_293kA";
+  }
+  case BeamMode::kNuBarMode_280kA: {
+    return os << "kNuBarMode_280kA";
   }
   }
   return os;

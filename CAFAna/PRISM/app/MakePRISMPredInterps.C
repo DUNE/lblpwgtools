@@ -139,7 +139,6 @@ unsigned nmax = 0;
 bool UseSel = false;
 std::string anaweighters = "";
 std::string FakeDataShiftDescript = "";
-double ThinFactor = 0;
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -187,8 +186,6 @@ void SayUsage(char const *argv[]) {
       << "\t--UseSelection            : Use the on-axis analysis selection. \n"
          "\t                            This will produce a bad PRISM "
          "prediction."
-      << "\t--thin-factor [0-1]       : Factor to thin input by, will also "
-         "reduce input POT."
       << std::endl;
 }
 
@@ -241,8 +238,6 @@ void handleOpts(int argc, char const *argv[]) {
       do_no_op = true;
     } else if (std::string(argv[opt]) == "--UseSelection") {
       UseSel = true;
-    } else if (std::string(argv[opt]) == "--thin-factor") {
-      ThinFactor = std::stod(argv[++opt]);
     } else {
       std::cout << "[ERROR]: Unknown option: " << argv[opt] << std::endl;
       SayUsage(argv);
@@ -315,6 +310,8 @@ int main(int argc, char const *argv[]) {
 
   for (size_t fl_it = 0; fl_it < file_lists.size(); ++fl_it) {
     std::vector<std::string> const &fl = file_lists[fl_it].second;
+    std::cout << "[INFO]: file_it = " << fl_it << ", with "
+              << file_lists[fl_it].second.size() << " files." << std::endl;
     if (!fl.size()) {
       std::cout << "[WARN]: Failed to find any " << file_lists[fl_it].first
                 << " files." << std::endl;
@@ -362,19 +359,23 @@ int main(int argc, char const *argv[]) {
   PRISMAxisBlob axes =
       GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor);
 
-  HistAxis EventRateMatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
+  HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
-  std::vector<Var> WeightVars(6, ana::Constant(1));
-  WeightVars[kND_nu] = GetNDWeight("", true);
-  WeightVars[kND_nub] = GetNDWeight("", false);
+  std::vector<Var> WeightVars(kNPRISMConfigs, ana::Constant(1));
+  WeightVars[kND_293kA_nu] = GetNDWeight("", true);
+  WeightVars[kND_280kA_nu] = GetNDWeight("", true);
+  WeightVars[kND_293kA_nub] = GetNDWeight("", false);
+  WeightVars[kND_280kA_nub] = GetNDWeight("", false);
   WeightVars[kFD_nu_nonswap] = GetFDWeight("", true);
   WeightVars[kFD_nu_nueswap] = GetFDWeight("", true);
   WeightVars[kFD_nub_nonswap] = GetFDWeight("", false);
   WeightVars[kFD_nub_nueswap] = GetFDWeight("", false);
 
-  std::vector<Var> AnaWeightVars(6, ana::Constant(1));
-  AnaWeightVars[kND_nu] = GetNDWeight(anaweighters, true);
-  AnaWeightVars[kND_nub] = GetNDWeight(anaweighters, false);
+  std::vector<Var> AnaWeightVars(kNPRISMConfigs, ana::Constant(1));
+  AnaWeightVars[kND_293kA_nu] = GetNDWeight(anaweighters, true);
+  AnaWeightVars[kND_280kA_nu] = GetNDWeight(anaweighters, true);
+  AnaWeightVars[kND_293kA_nub] = GetNDWeight(anaweighters, false);
+  AnaWeightVars[kND_280kA_nub] = GetNDWeight(anaweighters, false);
   AnaWeightVars[kFD_nu_nonswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nu_nueswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nub_nonswap] = GetFDWeight(anaweighters, false);
@@ -383,9 +384,11 @@ int main(int argc, char const *argv[]) {
   // Generally these will be just selecting signal and are the ones used in the
   // PRISM interp
   std::vector<Cut> AnalysisCuts(
-      6, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts[kND_nu] = GetNDSignalCut(UseSel, true);
-  AnalysisCuts[kND_nub] = GetNDSignalCut(UseSel, false);
+      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
+  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut(UseSel, true);
+  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut(UseSel, true);
+  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut(UseSel, false);
+  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut(UseSel, false);
   AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
   AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
   AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
@@ -394,68 +397,67 @@ int main(int argc, char const *argv[]) {
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
   std::vector<Cut> OnAxisSelectionCuts(
-      6, Cut([](const caf::StandardRecord *) { return false; }));
-  OnAxisSelectionCuts[kND_nu] = GetNDSignalCut(true, true);
-  OnAxisSelectionCuts[kND_nub] = GetNDSignalCut(true, false);
+      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
+  OnAxisSelectionCuts[kND_293kA_nu] = GetNDSignalCut(true, true);
+  OnAxisSelectionCuts[kND_280kA_nu] = GetNDSignalCut(true, true);
+  OnAxisSelectionCuts[kND_293kA_nub] = GetNDSignalCut(true, false);
+  OnAxisSelectionCuts[kND_280kA_nub] = GetNDSignalCut(true, false);
   OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
   OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
-  if (ThinFactor > 0) { // Have to correct for the Thinned POT as the total
-                        // Input POT is included in the PerPOTWeight.
-    auto thinfactweight = ana::Var([](const caf::StandardRecord *) -> double {
-      return 1.0 / (1.0 - ThinFactor);
-    });
-    AnaWeightVars[kND_nu] = AnaWeightVars[kND_nu] * thinfactweight;
-    AnaWeightVars[kND_nub] = AnaWeightVars[kND_nub] * thinfactweight;
-  }
-
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
-  auto PRISM = std::make_unique<PredictionPRISM>(
-      axes.XProjection, axes.OffAxisPosition, axes.OffAxis280kAPosition,
-      EventRateMatchAxis);
+  auto PRISM =
+      std::make_unique<PredictionPRISM>(axes.XProjection, axes.OffAxisPosition,
+                                        axes.OffAxis280kAPosition, MatchAxis);
 
-  Loaders Loaders_nu, Loaders_nub, Loaders_thinned;
+  Loaders Loaders_nu, Loaders_nub;
 
-  std::vector<std::unique_ptr<SpectrumLoader>> FileLoaders, ThinnedLoaders;
-  FillWithNulls(FileLoaders, 6);
-  FillWithNulls(ThinnedLoaders, 2);
-  for (size_t it = 0; it < file_lists.size(); ++it) {
+  size_t NFileTypes_nu = 3;
+  size_t NNDFiles_nu = 1;
+
+  std::vector<std::shared_ptr<SpectrumLoader>> FileLoaders;
+  FillWithNulls(FileLoaders, 8);
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
+    bool IsND280kA = IsND280kAConfig(it);
     size_t IsNueSwap = IsNueConfig(it);
 
-    if (!file_lists[it].second.size()) {
+    size_t file_it = 0;
+    if (IsND) {
+      file_it = IsNu ? 0 : 3;
+    } else if (IsNu) {
+      file_it = IsNueSwap ? 2 : 1;
+    } else {
+      file_it = IsNueSwap ? 5 : 4;
+    }
+
+    std::cout << "it: " << it << ", IsNu: " << IsNu << ", IsND: " << IsND
+              << ", IsND280kA: " << IsND280kA << ", IsNueSwap: " << IsNueSwap
+              << ", file_it: " << file_it
+              << ", nfiles: " << file_lists[file_it].second.size() << std::endl;
+
+    if (!file_lists[file_it].second.size()) {
       continue;
     }
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
-    FileLoaders[it] =
-        std::make_unique<SpectrumLoader>(file_lists[it].second, kBeam, nmax);
-    if (IsND) { // Is ND
+    FileLoaders[it] = IsND280kA ? FileLoaders[it - 1]
+                                : std::make_shared<SpectrumLoader>(
+                                      file_lists[file_it].second, kBeam, nmax);
+    if (IsND && !IsND280kA) { // Is ND, but do not need to repeat for 280 kA run
 
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
 
-      if (ThinFactor > 0) { // If we are thinning then we only want to thin the
-                            // 'data' and so have to have a separate loader.
-        ThinnedLoaders[it / 3] = std::make_unique<SpectrumLoader>(
-            file_lists[it].second, kBeam, nmax);
-        ThinnedLoaders[it / 3]->SetThinFactor(ThinFactor);
-        PRISM->AddNDDataLoader(*ThinnedLoaders[it / 3], AnalysisCuts[it],
-                               AnaWeightVars[it], DataShift, chanmode);
-        Loaders_thinned.AddLoader(ThinnedLoaders[it / 3].get(), caf::kNEARDET,
-                                  Loaders::kMC);
-      } else {
-
-        PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
-                               AnaWeightVars[it], DataShift, chanmode);
-      }
+      PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
+                             AnaWeightVars[it], DataShift, chanmode);
 
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
 
-    } else { // Is FD
+    } else if (!IsND) { // Is FD
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, Loaders::kMC,
                            kBeam,
                            IsNueSwap ? Loaders::kNueSwap : Loaders::kNonSwap);
@@ -464,16 +466,26 @@ int main(int argc, char const *argv[]) {
 
   // Make the ND prediction interp include the same off-axis axis used for
   // PRISM weighting.
-  std::vector<std::string> Labels_evrmatch = EventRateMatchAxis.GetLabels();
-  std::vector<Binning> Bins_evrmatch = EventRateMatchAxis.GetBinnings();
-  std::vector<Var> Vars_evrmatch = EventRateMatchAxis.GetVars();
+  std::vector<std::string> Labels_match = MatchAxis.GetLabels();
+  std::vector<Binning> Bins_match = MatchAxis.GetBinnings();
+  std::vector<Var> Vars_match = MatchAxis.GetVars();
 
-  Labels_evrmatch.push_back(axes.OffAxisPosition.GetLabels().front());
-  Bins_evrmatch.push_back(axes.OffAxisPosition.GetBinnings().front());
-  Vars_evrmatch.push_back(axes.OffAxisPosition.GetVars().front());
+  Labels_match.push_back(axes.OffAxisPosition.GetLabels().front());
+  Bins_match.push_back(axes.OffAxisPosition.GetBinnings().front());
+  Vars_match.push_back(axes.OffAxisPosition.GetVars().front());
 
-  HistAxis const NDEventRateSpectraAxis(Labels_evrmatch, Bins_evrmatch,
-                                        Vars_evrmatch);
+  HistAxis const NDEventRateSpectraAxis(Labels_match, Bins_match, Vars_match);
+
+  std::vector<std::string> Labels_match_280kA = MatchAxis.GetLabels();
+  std::vector<Binning> Bins_match_280kA = MatchAxis.GetBinnings();
+  std::vector<Var> Vars_match_280kA = MatchAxis.GetVars();
+
+  Labels_match_280kA.push_back(axes.OffAxis280kAPosition.GetLabels().front());
+  Bins_match_280kA.push_back(axes.OffAxis280kAPosition.GetBinnings().front());
+  Vars_match_280kA.push_back(axes.OffAxis280kAPosition.GetVars().front());
+
+  HistAxis const NDEventRateSpectraAxis_280kA(
+      Labels_match_280kA, Bins_match_280kA, Vars_match_280kA);
 
   std::vector<std::string> Labels_obs = axes.XProjection.GetLabels();
   std::vector<Binning> Bins_obs = axes.XProjection.GetBinnings();
@@ -487,29 +499,30 @@ int main(int argc, char const *argv[]) {
 
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
-  FillWithNulls(MatchPredGens, 6);
-  FillWithNulls(MatchPredInterps, 6);
+  FillWithNulls(MatchPredGens, kNPRISMConfigs);
+  FillWithNulls(MatchPredInterps, kNPRISMConfigs);
 
   std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
-  FillWithNulls(SelPredGens, 6);
-  FillWithNulls(SelPredInterps, 6);
+  FillWithNulls(SelPredGens, kNPRISMConfigs);
+  FillWithNulls(SelPredInterps, kNPRISMConfigs);
 
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
-  FillWithNulls(FarDetData_nonswap, 4);
-  FillWithNulls(FarDetData_nueswap, 4);
+  FillWithNulls(FarDetData_nonswap, kNPRISMFDConfigs);
+  FillWithNulls(FarDetData_nueswap, kNPRISMFDConfigs);
 
   std::vector<std::unique_ptr<IPredictionGenerator>> FarDetPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
-  FillWithNulls(FarDetPredGens, 4);
-  FillWithNulls(FarDetPredInterps, 4);
+  FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
+  FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
   static osc::NoOscillations no_osc;
 
-  for (size_t it = 0; it < file_lists.size(); ++it) {
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
+    bool IsND280kA = IsND280kAConfig(it);
     size_t fd_it = 0;
     size_t IsNueSwap = IsNueConfig(it);
     if (!IsND) {
@@ -525,22 +538,37 @@ int main(int argc, char const *argv[]) {
 
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
 
-      PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los,
-                           chanmode);
+      // Only need to do this once as the PRISM prediction handles the 293, 280
+      // kA runs separately
+      if (!IsND280kA) {
+        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it],
+                             los, chanmode);
+      }
+
+      // Corrects for non-uniform off-axis binning
+      auto slice_width_weight = NDSliceCorrection(
+          50, (IsND280kA ? axes.OffAxis280kAPosition : axes.OffAxisPosition)
+                  .GetBinnings()
+                  .front()
+                  .Edges());
 
       MatchPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-          NDEventRateSpectraAxis,
+          (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert,
-          WeightVars[it]);
+              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+          WeightVars[it] * slice_width_weight);
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm);
+          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-          NDObservedSpectraAxis, OnAxisSelectionCuts[it], AnaWeightVars[it]);
+          NDObservedSpectraAxis,
+          OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
+          AnaWeightVars[it] * kSpecHCRunWeight);
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm);
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
     } else { // Is FD
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
@@ -554,12 +582,13 @@ int main(int argc, char const *argv[]) {
       if (!IsNueSwap) {
         MatchPredGens[it] =
             std::make_unique<NonSwapNoExtrapPredictionGenerator>(
-                EventRateMatchAxis,
+                MatchAxis,
                 kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
                 WeightVars[it]);
 
         MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-            los_flux, &no_osc, *MatchPredGens[it], Loaders_bm);
+            los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
+            PredictionInterp::kSplitBySign);
       }
 
       size_t non_swap_it = GetConfigNonSwap(it);
@@ -580,22 +609,89 @@ int main(int argc, char const *argv[]) {
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjection, AnalysisCuts[it], AnaWeightVars[it]);
       FarDetPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm);
+          los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
 
       SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjection, OnAxisSelectionCuts[it], AnaWeightVars[it]);
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm);
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
     }
   }
 
+  std::vector<std::unique_ptr<IPredictionGenerator>> FluxPredGens;
+  std::vector<std::unique_ptr<PredictionInterp>> FluxPredInterps;
+
+  std::vector<std::string> Labels_flux_293kA = MatchAxis.GetLabels();
+  std::vector<Binning> Bins_flux_293kA = MatchAxis.GetBinnings();
+  std::vector<Var> Vars_flux_293kA = MatchAxis.GetVars();
+
+  Labels_flux_293kA.push_back(axes.OffAxisPosition.GetLabels().front());
+  Bins_flux_293kA.push_back(axes.OffAxisPosition.GetBinnings().front());
+  Vars_flux_293kA.push_back(axes.OffAxisPosition.GetVars().front());
+
+  HistAxis const OffAxisFluxPredictionAxes_293kA(
+      Labels_flux_293kA, Bins_flux_293kA, Vars_flux_293kA);
+
+  std::vector<std::string> Labels_flux_280kA = MatchAxis.GetLabels();
+  std::vector<Binning> Bins_flux_280kA = MatchAxis.GetBinnings();
+  std::vector<Var> Vars_flux_280kA = MatchAxis.GetVars();
+
+  Labels_flux_280kA.push_back(axes.OffAxis280kAPosition.GetLabels().front());
+  Bins_flux_280kA.push_back(axes.OffAxis280kAPosition.GetBinnings().front());
+  Vars_flux_280kA.push_back(axes.OffAxis280kAPosition.GetVars().front());
+
+  HistAxis const OffAxisFluxPredictionAxes_280kA(
+      Labels_flux_280kA, Bins_flux_280kA, Vars_flux_280kA);
+
+  // ND Flux predictions
+  FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
+      OffAxisFluxPredictionAxes_293kA, true /*Is nu mode*/,
+      false /*Is 280kA*/));
+  FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
+      OffAxisFluxPredictionAxes_293kA, false /*Is nu mode*/,
+      false /*Is 280kA*/));
+  FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
+      OffAxisFluxPredictionAxes_280kA, true /*Is nu mode*/, true /*Is 280kA*/));
+  FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
+      OffAxisFluxPredictionAxes_280kA, false /*Is nu mode*/,
+      true /*Is 280kA*/));
+
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[0], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[1], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[2], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[3], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+
+  // FD Flux predictions
+  FluxPredGens.emplace_back(std::make_unique<FluxPredictionGenerator>(
+      MatchAxis, true /*Is nu mode*/));
+  FluxPredGens.emplace_back(std::make_unique<FluxPredictionGenerator>(
+      MatchAxis, false /*Is nu mode*/));
+
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[4], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+  FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
+      los_flux, &no_osc, *FluxPredGens[5], Loaders_nu, kNoShift,
+      PredictionInterp::kSplitBySign));
+
   Loaders_nu.Go();
   Loaders_nub.Go();
-  Loaders_thinned.Go();
 
-  for (size_t it = 0; it < file_lists.size(); ++it) {
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
+    bool IsND280kA = IsND280kAConfig(it);
+
     size_t fd_it = 0;
     size_t IsNue = IsNueConfig(it);
     if (!IsND) {
@@ -608,11 +704,13 @@ int main(int argc, char const *argv[]) {
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SaveTo(fout, std::string("NDMatchInterp_ETrue") + (IsNu ? "_nu" : "_nub"),
+      SaveTo(fout,
+             std::string("NDMatchInterp_ETrue") +
+                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              MatchPredInterps[it]);
       SaveTo(fout,
              std::string("NDSelectedInterp_") + axdescriptor +
-                 (IsNu ? "_nu" : "_nub"),
+                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              SelPredInterps[it]);
 
     } else { // Is FD
@@ -654,6 +752,14 @@ int main(int argc, char const *argv[]) {
   }
 
   PRISM->SaveTo(fout.mkdir((std::string("PRISM_") + axdescriptor).c_str()));
+
+  FluxPredInterps[0]->SaveTo(fout.mkdir("NDFluxPred_293kA_nu"));
+  FluxPredInterps[1]->SaveTo(fout.mkdir("NDFluxPred_293kA_nub"));
+  FluxPredInterps[2]->SaveTo(fout.mkdir("NDFluxPred_280kA_nu"));
+  FluxPredInterps[3]->SaveTo(fout.mkdir("NDFluxPred_280kA_nub"));
+
+  FluxPredInterps[4]->SaveTo(fout.mkdir("FDFluxPred_293kA_nu"));
+  FluxPredInterps[5]->SaveTo(fout.mkdir("FDFluxPred_293kA_nub"));
 
   fout.Write();
   fout.Close();
