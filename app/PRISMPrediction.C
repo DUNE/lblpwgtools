@@ -6,6 +6,8 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
+#include "CAFAna/Systs/DUNEFluxSysts.h"
+
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
 
@@ -37,7 +39,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
 
-  SystShifts fluxshift = GetFluxSystShifts(shift);
+  SystShifts fluxshift = FilterFluxSystShifts(shift);
 
   bool do_gauss = gauss_flux.first != 0;
 
@@ -47,6 +49,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       PRISMps.get<bool>("set_ND_errors_from_rate", false);
 
   auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
+
+  bool Use_EventRateMatching =
+      PRISMps.get<bool>("Use_EventRateMatching", false);
 
   RunPlan run_plan_nu, run_plan_nub;
 
@@ -89,12 +94,26 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   PRISMExtrapolator fluxmatcher;
   if (use_PRISM) {
-    fluxmatcher.Initialize({
-        {"ND_nu", state.MatchPredInterps[kND_nu].get()},
-        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-        {"ND_nub", state.MatchPredInterps[kND_nub].get()},
-        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
-    });
+
+    if (Use_EventRateMatching) {
+      fluxmatcher.Initialize({
+          {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
+          {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+          {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+          {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
+          {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+          {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+      });
+    } else {
+      fluxmatcher.Initialize({
+          {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
+          {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
+          {"FD_nu", state.FDFluxPred_293kA_nu.get()},
+          {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
+          {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
+          {"FD_nub", state.FDFluxPred_293kA_nub.get()},
+      });
+    }
 
     for (auto const &channel_conditioning :
          PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
@@ -102,17 +121,16 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       auto ch =
           GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
 
-      double chan_reg = channel_conditioning.get<double>("reg_factor", 1E-16);
+      double chan_reg_293 =
+          channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
+      double chan_reg_280 =
+          channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
       std::array<double, 2> chan_energy_range =
           channel_conditioning.get<std::array<double, 2>>("energy_range",
                                                           {0, 4});
-      bool chan_is_fake_spec_run =
-          channel_conditioning.get<bool>("is_fake_spec_run", false);
 
-      fluxmatcher.SetTargetConditioning(ch, chan_reg, (chan_is_fake_spec_run ? 
-            std::vector<double>{{0},} 
-          : std::vector<double>{}),
-          chan_energy_range);
+      fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
+                                        chan_energy_range);
     }
 
     if (PRISM_write_debug) {
@@ -237,7 +255,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
             TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
 
-            if (PRISMComp_h->Integral() > 0) {
+            if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
                   PRISMComp_h,
                   PredictionPRISM::GetComponentString(comp.first).c_str());
@@ -259,15 +277,21 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     }
 
     if (NDConfig_enum == kND_nu) {
-      TH1D *run_plan_nu_h = run_plan_nu.AsTH1();
-      chan_dir->WriteTObject(run_plan_nu_h, "run_plan_nu");
+      TH1D *run_plan_nu_h = run_plan_nu.AsTH1(293);
+      chan_dir->WriteTObject(run_plan_nu_h, "run_plan_nu_293kA");
       run_plan_nu_h->SetDirectory(nullptr);
+
+      TH1D *run_plan_nu_280kA_h = run_plan_nu.AsTH1(280);
+      chan_dir->WriteTObject(run_plan_nu_280kA_h, "run_plan_nu_280kA");
+      run_plan_nu_280kA_h->SetDirectory(nullptr);
     } else {
-      {
-        TH1D *run_plan_nub_h = run_plan_nub.AsTH1();
-        chan_dir->WriteTObject(run_plan_nub_h, "run_plan_nub");
-        run_plan_nub_h->SetDirectory(nullptr);
-      }
+      TH1D *run_plan_nub_h = run_plan_nub.AsTH1(293);
+      chan_dir->WriteTObject(run_plan_nub_h, "run_plan_nub_293kA");
+      run_plan_nub_h->SetDirectory(nullptr);
+
+      TH1D *run_plan_nub_280kA_h = run_plan_nub.AsTH1(280);
+      chan_dir->WriteTObject(run_plan_nub_280kA_h, "run_plan_nub_280kA");
+      run_plan_nub_280kA_h->SetDirectory(nullptr);
     }
   }
 

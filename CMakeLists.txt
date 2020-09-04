@@ -5,14 +5,12 @@ LIST(APPEND PRISM_implementation_files
   PredictionPRISM.cxx
   PRISMUtils.cxx
   PRISMAnalysisDefinitions.cxx
-  EffectiveFluxUncertaintyHelper.cxx
   EigenUtils.cxx)
 LIST(APPEND PRISM_header_files
   PRISMExtrapolator.h
   PredictionPRISM.h
   PRISMUtils.h
   PRISMAnalysisDefinitions.h
-  EffectiveFluxUncertaintyHelper.h
   EigenUtils.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
@@ -28,3 +26,4 @@ install(TARGETS CAFAnaPRISM DESTINATION lib)
 install(FILES ${PRISM_header_files} DESTINATION include/CAFAna/PRISM)
 
 add_subdirectory(app)
+add_subdirectory(flux)

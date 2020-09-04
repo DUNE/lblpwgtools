@@ -40,6 +40,8 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
       reg_scan.get<std::string>("projection_name", "EProxy");
 
   auto PRISMps = reg_scan.get<fhicl::ParameterSet>("PRISM", {});
+  bool Use_EventRateMatching =
+      PRISMps.get<bool>("Use_EventRateMatching", false);
 
   osc::IOscCalculatorAdjustable *calc =
       ConfigureCalc(reg_scan.get<fhicl::ParameterSet>("true_osc", {}));
@@ -68,45 +70,48 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
   dir->cd();
 
   PRISMExtrapolator fluxmatcher;
-  fluxmatcher.Initialize({
-      {"ND_nu", state.MatchPredInterps[kND_nu].get()},
-      {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-      {"ND_nub", state.MatchPredInterps[kND_nub].get()},
-      {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
-  });
+
+  if (Use_EventRateMatching) {
+    fluxmatcher.Initialize({
+        {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
+        {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+        {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
+        {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+    });
+  } else {
+    fluxmatcher.Initialize({
+        {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
+        {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
+        {"FD_nu", state.FDFluxPred_293kA_nu.get()},
+        {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
+        {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
+        {"FD_nub", state.FDFluxPred_293kA_nub.get()},
+    });
+  }
 
   std::map<MatchChan, fhicl::ParameterSet> channel_conditioning_configs;
+  std::map<std::string, MatchChan> Channels;
+
   for (auto const &channel_conditioning :
        PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
 
     auto ch =
         GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
 
+    Channels[GetMatchChanShortName(ch)] = ch;
+
     channel_conditioning_configs[ch] = channel_conditioning;
-    double chan_reg = channel_conditioning.get<double>("reg_factor", 1E-16);
+    double chan_reg_293kA =
+        channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
+    double chan_reg_280kA =
+        channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
     std::array<double, 2> chan_energy_range =
         channel_conditioning.get<std::array<double, 2>>("energy_range", {0, 4});
-    bool chan_is_fake_spec_run =
-        channel_conditioning.get<bool>("is_fake_spec_run", false);
 
-    fluxmatcher.SetTargetConditioning(ch, chan_reg, (chan_is_fake_spec_run ? 
-            std::vector<double>{{0},} 
-          : std::vector<double>{}),
-          chan_energy_range);
-  }
-
-  state.PRISM->SetFluxMatcher(&fluxmatcher);
-
-  std::map<std::string, MatchChan> Channels;
-  if (reg_scan.is_key_to_sequence("samples")) {
-    for (auto const &fs :
-         reg_scan.get<std::vector<fhicl::ParameterSet>>("samples")) {
-      auto ch = GetMatchChan(fs);
-      Channels[GetMatchChanShortName(ch)] = ch;
-    }
-  } else {
-    auto ch = GetMatchChan(reg_scan.get<fhicl::ParameterSet>("samples"));
-    Channels[GetMatchChanShortName(ch)] = ch;
+    fluxmatcher.SetTargetConditioning(ch, chan_reg_293kA, chan_reg_280kA,
+                                      chan_energy_range);
   }
 
   std::vector<TGraph> LCurves;
@@ -161,11 +166,12 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
     std::vector<double> eta_hat, rho_hat;
     for (size_t sit = 0; sit < steps.size(); ++sit) {
 
-      fluxmatcher.SetChannelRegFactor(ch.second, steps[sit]);
+      fluxmatcher.SetChannelRegFactor(ch.second, 293, steps[sit]);
+      fluxmatcher.SetChannelRegFactor(ch.second, 280, steps[sit]);
 
       double soln_norm, resid_norm;
-      (void)fluxmatcher.GetFarMatchCoefficients(
-          calc, nullptr, 34, ch.second, kNoShift, soln_norm, resid_norm);
+      (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift,
+                                                soln_norm, resid_norm);
 
       rho_hat.push_back(std::log(resid_norm));
       eta_hat.push_back(std::log(soln_norm));
@@ -219,10 +225,10 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
 
     fluxmatcher.SetStoreDebugMatches();
 
-    fluxmatcher.SetChannelRegFactor(ch.second, best_reg);
+    fluxmatcher.SetChannelRegFactor(ch.second, 293, best_reg);
+    fluxmatcher.SetChannelRegFactor(ch.second, 280, best_reg);
 
-    (void)fluxmatcher.GetFarMatchCoefficients(calc, nullptr, 34, ch.second,
-                                              kNoShift);
+    (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift);
     fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
     fluxmatcher.SetStoreDebugMatches(false);
   }

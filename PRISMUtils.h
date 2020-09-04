@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Vars/FitVars.h"
@@ -8,6 +9,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
+#include "CAFAna/PRISM/PredictionPRISM.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -15,13 +17,14 @@
 
 #include "TFile.h"
 #include "TH1D.h"
+#include "TH2D.h"
 
 #include "fhiclcpp/ParameterSet.h"
 
 #include <memory>
 #include <vector>
 
-// #define PRISMDEBUG
+#define PRISMDEBUG
 
 #ifdef PRISMDEBUG
 #define PRISMOUT(a) std::cout << a << std::endl;
@@ -30,8 +33,6 @@
 #endif
 
 namespace ana {
-
-class PredictionPRISM;
 
 class FVMassCorrection {
   size_t fOverflow;
@@ -50,10 +51,19 @@ inline double FD_ND_FVRatio(double x_slice_cm) {
   return FDFV / NDSliceFV;
 }
 
+ana::Var NDSliceCorrection(double reference_width_cm, std::vector<double> const &Edges);
+
 extern const ana::Var kMassCorrection;
 
 template <typename T>
 inline void FillWithNulls(std::vector<std::unique_ptr<T>> &v, size_t n) {
+  for (size_t i = 0; i < n; ++i) {
+    v.emplace_back(nullptr);
+  }
+}
+
+template <typename T>
+inline void FillWithNulls(std::vector<std::shared_ptr<T>> &v, size_t n) {
   for (size_t i = 0; i < n; ++i) {
     v.emplace_back(nullptr);
   }
@@ -66,6 +76,13 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
+
+  std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nu;
+  std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nub;
+  std::unique_ptr<PredictionInterp> NDFluxPred_280kA_nu;
+  std::unique_ptr<PredictionInterp> NDFluxPred_280kA_nub;
+  std::unique_ptr<PredictionInterp> FDFluxPred_293kA_nu;
+  std::unique_ptr<PredictionInterp> FDFluxPred_293kA_nub;
 
   bool Have(size_t pc) {
     bool IsNu = PRISM::IsNuConfig(pc);
@@ -90,6 +107,13 @@ struct PRISMStateBlob {
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
+
+    NDFluxPred_293kA_nu = nullptr;
+    NDFluxPred_293kA_nub = nullptr;
+    NDFluxPred_280kA_nu = nullptr;
+    NDFluxPred_280kA_nub = nullptr;
+    FDFluxPred_293kA_nu = nullptr;
+    FDFluxPred_293kA_nub = nullptr;
   }
 };
 
@@ -127,8 +151,19 @@ void ScrubOscVars(std::vector<const IFitVar *> &oscvars,
                   std::vector<std::string> const &names_to_scrub);
 
 SystShifts GetSystShifts(fhicl::ParameterSet const &ps);
-std::vector<ana::ISyst const *> GetListOfSysts(std::vector<std::string> const &);
+std::vector<ana::ISyst const *>
+GetListOfSysts(std::vector<std::string> const &);
 
-SystShifts GetFluxSystShifts(SystShifts);
+inline ReweightableSpectrum
+ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
+  TH2D *spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+
+  ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
+                              axis.GetBinnings(), POT, 0);
+
+  HistCache::Delete(spec_h);
+
+  return rwspec;
+}
 
 } // namespace ana
