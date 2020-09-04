@@ -47,6 +47,28 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
   return fvmasscor->GetBinContent(bi_it);
 }
 
+ana::Var NDSliceCorrection(double reference_width_cm,
+                           std::vector<double> const &Edges) {
+  std::vector<double> Weights;
+
+  for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
+    double width = Edges[e_it + 1] - Edges[e_it];
+    Weights.push_back(FD_ND_FVRatio(reference_width_cm) * reference_width_cm /
+                      (width * 1E2));
+  }
+
+  return ana::Var([=](const caf::StandardRecord *sr) -> double {
+    double pos_x = (sr->det_x + sr->vtx_x) * 1E-2;
+
+    for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
+      if ((pos_x > Edges[e_it]) && (pos_x < Edges[e_it + 1])) {
+        return Weights[e_it];
+      }
+    }
+    return 1;
+  });
+}
+
 const ana::Var kMassCorrection([](const caf::StandardRecord *sr) -> double {
   return sr->NDMassCorrWeight;
 });
@@ -94,6 +116,8 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
+    bool IsND280kA = IsND280kAConfig(it);
+
     size_t fd_it = 0;
     size_t IsNue = IsNueConfig(it);
     if (!IsND) {
@@ -101,16 +125,18 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     }
 
     if (IsND) { // Is ND
-      dir = f.GetDirectory(
-          (std::string("NDMatchInterp_ETrue") + (IsNu ? "_nu" : "_nub"))
-              .c_str());
+      dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
+                            (IsND280kA ? "_280kA" : "_293kA") +
+                            (IsNu ? "_nu" : "_nub"))
+                               .c_str());
       if (dir) {
         blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
       }
 
-      dir = f.GetDirectory(
-          (std::string("NDSelectedInterp_") + varname + (IsNu ? "_nu" : "_nub"))
-              .c_str());
+      dir = f.GetDirectory((std::string("NDSelectedInterp_") +
+                            (IsND280kA ? "_280kA" : "_293kA") + varname +
+                            (IsNu ? "_nu" : "_nub"))
+                               .c_str());
       if (dir) {
         blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
       }
@@ -157,6 +183,19 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       }
     }
   }
+
+  blob.NDFluxPred_293kA_nu =
+      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_293kA_nu"));
+  blob.NDFluxPred_293kA_nub =
+      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_293kA_nub"));
+  blob.NDFluxPred_280kA_nu =
+      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_280kA_nu"));
+  blob.NDFluxPred_280kA_nub =
+      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_280kA_nub"));
+  blob.FDFluxPred_293kA_nu =
+      LoadFrom<PredictionInterp>(f.GetDirectory("FDFluxPred_293kA_nu"));
+  blob.FDFluxPred_293kA_nub =
+      LoadFrom<PredictionInterp>(f.GetDirectory("FDFluxPred_293kA_nub"));
 
 #ifdef PRISMDEBUG
   std::cout << "PRISMSTATE: " << std::endl;
@@ -371,10 +410,6 @@ std::vector<ana::ISyst const *>
 GetListOfSysts(std::vector<std::string> const &systnames) {
   std::vector<ISyst const *> los;
 
-  for(auto & s : systnames){
-    std::cout << "ewoijfwoifj: " <<s << std::endl;
-  }
-
   for (auto &s : ::GetListOfSysts()) {
     if (std::find(systnames.begin(), systnames.end(), s->ShortName()) !=
         systnames.end()) {
@@ -400,20 +435,8 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
       abort();
     }
     shift.SetShift(reduced_los[0], s.second);
-    std::cout << "Set " << s.first << " to " << s.second << std::endl;
   }
   return shift;
-}
-
-SystShifts GetFluxSystShifts(SystShifts shift) {
-  SystShifts outs;
-  auto fsysts = ::GetListOfSysts("nov17flux:nodet:noxsec");
-  for (auto syst : shift.ActiveSysts()) {
-    if (std::find(fsysts.begin(), fsysts.end(), syst) != fsysts.end()) {
-      outs.SetShift(syst, shift.GetShift(syst));
-    }
-  }
-  return outs;
 }
 
 } // namespace ana

@@ -22,51 +22,108 @@ namespace ana {
 class PredictionPRISM : public IPrediction {
 public:
   enum PRISMComponent {
-    kNDData = 0,
-    kNDDataCorr = 1,
-    kNDDataCorr2D = 2,
-    kNDSig = 3,
-    kNDSig2D = 4,
-    kNDWSBkg = 5,
-    kNDNCBkg = 6,
-    kNDWrongLepBkg = 7,
-    kFDFluxCorr = 8,
-    kFDNCBkg = 9,
-    kFDWSBkg = 10,
-    kFDWrongLepBkg = 11,
-    kFDIntrinsicBkg = 12,
-    kFDUnOscPred = 13,
-    kFDOscPred = 14,
-    kPRISMPred = 15,
-    kPRISMMC = 16,
-    kNDFDWeightings = 17
+    kNDData_293kA = 0,
+    kNDDataCorr_293kA = 1,
+    kNDDataCorr2D_293kA = 2,
+    kNDSig_293kA = 3,
+    kNDSig2D_293kA = 4,
+    kNDWSBkg_293kA = 5,
+    kNDNCBkg_293kA = 6,
+    kNDWrongLepBkg_293kA = 7,
+    kNDFDWeightings_293kA = 8,
+
+    kNDData_280kA = 9,
+    kNDDataCorr_280kA = 10,
+    kNDDataCorr2D_280kA = 11,
+    kNDSig_280kA = 12,
+    kNDSig2D_280kA = 13,
+    kNDWSBkg_280kA = 14,
+    kNDNCBkg_280kA = 15,
+    kNDWrongLepBkg_280kA = 16,
+    kNDFDWeightings_280kA = 17,
+
+    kNDLinearComb = 18,
+    kFD_NumuNueCorr_Numu = 19,
+    kFD_NumuNueCorr_Nue = 20,
+    kFD_NumuNueCorr = 21,
+    kFDFluxCorr = 22,
+    kFDNCBkg = 23,
+    kFDWSBkg = 24,
+    kFDWrongLepBkg = 25,
+    kFDIntrinsicBkg = 26,
+    kFDUnOscPred = 27,
+    kFDOscPred = 28,
+    kPRISMPred = 29,
+    kPRISMMC = 30,
+
+    kNDData_unweighted_293kA = 31,
+    kNDData_unweighted_280kA = 32,
+
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
     switch (pc) {
-    case kNDData: {
-      return "NDData";
+    case kNDData_293kA: {
+      return "NDData_293kA";
     }
-    case kNDDataCorr: {
-      return "NDDataCorr";
+    case kNDDataCorr_293kA: {
+      return "NDDataCorr_293kA";
     }
-    case kNDDataCorr2D: {
-      return "NDDataCorr2D";
+    case kNDDataCorr2D_293kA: {
+      return "NDDataCorr2D_293kA";
     }
-    case kNDSig: {
-      return "NDSigPred";
+    case kNDSig_293kA: {
+      return "NDSigPred_293kA";
     }
-    case kNDSig2D: {
-      return "NDSigPred2D";
+    case kNDSig2D_293kA: {
+      return "NDSigPred2D_293kA";
     }
-    case kNDWSBkg: {
-      return "NDWSBkg";
+    case kNDWSBkg_293kA: {
+      return "NDWSBkg_293kA";
     }
-    case kNDNCBkg: {
-      return "NDNCBkg";
+    case kNDNCBkg_293kA: {
+      return "NDNCBkg_293kA";
     }
-    case kNDWrongLepBkg: {
-      return "NDWrongLepBkg";
+    case kNDWrongLepBkg_293kA: {
+      return "NDWrongLepBkg_293kA";
+    }
+
+    case kNDData_280kA: {
+      return "NDData_280kA";
+    }
+    case kNDDataCorr_280kA: {
+      return "NDDataCorr_280kA";
+    }
+    case kNDDataCorr2D_280kA: {
+      return "NDDataCorr2D_280kA";
+    }
+    case kNDSig_280kA: {
+      return "NDSigPred_280kA";
+    }
+    case kNDSig2D_280kA: {
+      return "NDSigPred2D_280kA";
+    }
+    case kNDWSBkg_280kA: {
+      return "NDWSBkg_280kA";
+    }
+    case kNDNCBkg_280kA: {
+      return "NDNCBkg_280kA";
+    }
+    case kNDWrongLepBkg_280kA: {
+      return "NDWrongLepBkg_280kA";
+    }
+
+    case kNDLinearComb: {
+      return "NDLinearComb";
+    }
+    case kFD_NumuNueCorr_Numu: {
+      return "FD_NumuNueCorr_Numu";
+    }
+    case kFD_NumuNueCorr_Nue: {
+      return "FD_NumuNueCorr_Nue";
+    }
+    case kFD_NumuNueCorr: {
+      return "FD_NumuNueCorr";
     }
     case kFDFluxCorr: {
       return "FDFluxCorr";
@@ -95,8 +152,17 @@ public:
     case kPRISMMC: {
       return "PRISMMC";
     }
-    case kNDFDWeightings: {
-      return "NDFDWeightings";
+    case kNDFDWeightings_293kA: {
+      return "NDFDWeightings_293kA";
+    }
+    case kNDFDWeightings_280kA: {
+      return "NDFDWeightings_280kA";
+    }
+    case kNDData_unweighted_293kA: {
+      return "NDData_unweighted_293kA";
+    }
+    case kNDData_unweighted_280kA: {
+      return "NDData_unweighted_280kA";
     }
     }
     return "";
@@ -141,7 +207,6 @@ public:
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
   HistAxis fFluxMatcherCorrectionAxes;
-  double fMaxOffAxis;
   double fDefaultOffAxisPOT;
 
   bool fNCCorrection;
@@ -233,7 +298,7 @@ protected:
       std::unique_ptr<ReweightableSpectrum> nue_ccinc_sel_numode;
       std::unique_ptr<ReweightableSpectrum> nuebar_ccinc_sel_nubmode;
     };
-    _ND ND;
+    _ND ND_293kA;
     _ND ND_280kA;
   };
 
@@ -255,7 +320,7 @@ protected:
       std::unique_ptr<PredictionInterp> nue_ccinc_sel_numode;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_nubmode;
     };
-    _ND ND;
+    _ND ND_293kA;
     _ND ND_280kA;
 
     struct _FD {
@@ -272,51 +337,37 @@ protected:
 
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_nubmode;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_nubmode;
+
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_apposc_numode;
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_apposc_nubmode;
     };
     _FD FD;
   };
   mutable _Predictions Predictions;
 
   std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_right_sign_numu(PRISM::BeamMode NDBM) const;
+  GetNDData_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_right_sign_nue(PRISM::BeamMode NDBM) const;
+  GetNDData_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<ReweightableSpectrum> &
-  GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-  bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-
-  std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_280kA_right_sign_numu(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_280kA_right_sign_nue(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_280kA_wrong_sign_numu(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<ReweightableSpectrum> &
-  GetNDData_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-  bool HaveNDData_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+            int kA = 293) const;
+  bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+                  int kA = 293) const;
 
   std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_right_sign_numu(PRISM::BeamMode NDBM) const;
+  GetNDPrediction_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_right_sign_nue(PRISM::BeamMode NDBM) const;
+  GetNDPrediction_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_wrong_sign_numu(PRISM::BeamMode NDBM) const;
+  GetNDPrediction_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
   std::unique_ptr<PredictionInterp> &
-  GetNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-  bool HaveNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-
-  std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_280kA_right_sign_numu(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_280kA_right_sign_nue(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_280kA_wrong_sign_numu(PRISM::BeamMode NDBM) const;
-  std::unique_ptr<PredictionInterp> &
-  GetNDPrediction_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
-  bool
-  HaveNDPrediction_280kA(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+  GetNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+                  int kA = 293) const;
+  bool HaveNDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+                        int kA = 293) const;
 
   std::unique_ptr<PredictionInterp> &
   GetFDPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;
@@ -336,6 +387,9 @@ protected:
 
   bool HaveFDUnOscWeightedSigPrediction(
       PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetFDNonSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
 
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;

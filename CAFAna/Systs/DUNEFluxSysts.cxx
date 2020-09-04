@@ -1,11 +1,12 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
 #ifdef USE_TH2JAGGED
-#include "CAFAna/PRISM/EffectiveFluxUncertaintyHelper.h"
-static PRISM::EffectiveFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
+#include "CAFAna/Systs/OffAxisFluxUncertaintyHelper.h"
+static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
     nullptr;
 #endif
 
+#include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/StandardRecord.h"
@@ -17,7 +18,7 @@ static PRISM::EffectiveFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
 #include <cassert>
 
 namespace ana {
-  const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);
+const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);
 
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
@@ -42,6 +43,19 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
         << "[ERROR]: Off axis flux uncertainties did not exist for the CDR."
         << std::endl;
     abort();
+  }
+
+  if (sr->OffAxisFluxBin == -1) {
+    sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
+        sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
+        !sr->isFD, sr->isFHC, sr->SpecialHCRunId != 0);
+  }
+
+  if (sr->OffAxisFluxConfig == -1) {
+    sr->OffAxisFluxConfig =
+        ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
+            sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
+            !sr->isFD, sr->isFHC, std::abs(sr->SpecialHCRunId) != 293);
   }
 
   weight = fOffAxisFluxParamHelper->GetFluxWeight(
@@ -97,7 +111,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   const int anti = (sr->nuPDGunosc > 0) ? 0 : 1;
   const int hc = sr->isFHC ? 0 : 1;
 
-
   TH1 *h = fScale[det][pdg][anti][hc];
   assert(h);
 
@@ -135,7 +148,7 @@ DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
 
 #ifdef USE_TH2JAGGED
   if (!fOffAxisFluxParamHelper) {
-    fOffAxisFluxParamHelper = &PRISM::EffectiveFluxUncertaintyHelper::Get();
+    fOffAxisFluxParamHelper = &ana::OffAxisFluxUncertaintyHelper::Get();
   }
 #endif
 
@@ -144,6 +157,32 @@ DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
     ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR));
   }
   return ret;
+}
+
+SystShifts FilterFluxSystShifts(SystShifts shift) {
+  SystShifts outs;
+  std::vector<ana::ISyst const *> fsysts =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false);
+
+  for (auto syst : shift.ActiveSysts()) {
+    if (std::find(fsysts.begin(), fsysts.end(), syst) != fsysts.end()) {
+      outs.SetShift(syst, shift.GetShift(syst));
+    }
+  }
+  return outs;
+}
+
+size_t GetFluxSystIndex(const ana::ISyst *syst) {
+  std::vector<ana::ISyst const *> fsysts =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false);
+
+  for (size_t i = 0; i < fsysts.size(); ++i) {
+    if (fsysts[i] == syst) {
+      return i;
+    }
+  }
+
+  return kNotValidFluxSyst;
 }
 
 } // namespace ana

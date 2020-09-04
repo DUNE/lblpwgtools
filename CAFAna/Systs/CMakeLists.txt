@@ -11,7 +11,8 @@ set(Systs_implementation_files
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
   Systs.cxx
-  XSecSystList.cxx)
+  XSecSystList.cxx
+  OffAxisFluxUncertaintyHelper.cxx)
 
 set(Systs_header_files
   DUNEFluxSysts.h
@@ -40,7 +41,8 @@ set(Systs_header_files
   MissingProtonFakeData_BDTRW_RHC.h
   NuWroReweightFakeData.h
   CrazyFluxFakeData.h
-  XSecSystList.h)
+  XSecSystList.h
+  OffAxisFluxUncertaintyHelper.h)
 
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})

@@ -43,6 +43,9 @@ namespace ana
 
     if(tag == "PredictionNuOnE") return PredictionNuOnE::LoadFrom(dir);
 
+    if(tag == "FluxPrediction") return FluxPrediction::LoadFrom(dir);
+    if(tag == "OffAxisFluxPrediction") return OffAxisFluxPrediction::LoadFrom(dir);
+
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();
   }

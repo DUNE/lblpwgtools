@@ -494,7 +494,7 @@ void Spectrum::FillFromHistogram(TH1 const *h) {
     if (h->GetXaxis()->GetNbins() != fBins[0].NBins()) {
       std::cout << "Error: In Spectrum::FillFromHistogram X axis of external "
                    "histogram(dim: "
-                << h->GetDimension()
+                << h->GetDimension() << ", NBins: " << h->GetXaxis()->GetNbins()
                 << ") does not match NBins of the first binning (" << fLabels[0]
                 << ", with " << fBins[0].NBins() << " bins)." << std::endl;
       std::cout << "\t" << h->GetXaxis()->GetTitle() << ", with "

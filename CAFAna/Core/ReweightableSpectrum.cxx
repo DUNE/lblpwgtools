@@ -362,7 +362,19 @@ Spectrum ReweightableSpectrum::WeightedByErrors(const TH1 *ws) const {
 
   DontAddDirectory guard;
 
-  assert(ws->GetNbinsX() == fHist->GetNbinsY());
+  if (ws->GetNbinsX() != fHist->GetNbinsY()) {
+    std::cout << "[ERROR]: Weighting histogram has "
+              << ws->GetXaxis()->GetNbins() << ", from "
+              << ws->GetXaxis()->GetBinLowEdge(1) << " to "
+              << ws->GetXaxis()->GetBinUpEdge(ws->GetXaxis()->GetNbins())
+              << std::endl;
+    std::cout << "[ERROR]: Reweightable histogram has "
+              << fHist->GetYaxis()->GetNbins() << ", from "
+              << fHist->GetYaxis()->GetBinLowEdge(1) << " to "
+              << fHist->GetYaxis()->GetBinUpEdge(fHist->GetYaxis()->GetNbins())
+              << std::endl;
+    abort();
+  }
 
   TAxis *ax = fHist->GetXaxis();
   TH1D *hRet = HistCache::New("", ax);
@@ -372,6 +384,8 @@ Spectrum ReweightableSpectrum::WeightedByErrors(const TH1 *ws) const {
   int bin = 0;
   for (int y = 1; y < Y + 1; ++y) {
     const double w = ws->GetBinContent(y);
+    std::cout << "Weightedbyerrors: " << w <<
+        " @ " << fHist->GetYaxis()->GetBinCenter(y + 1) << std::endl;
     std::unique_ptr<TH1D> px(fHist->ProjectionX("px", y, y));
     hRet->Add(px.get(), w);
   }

@@ -8,14 +8,14 @@
 
 // Here are two specialized versions of the more commonly used Predictions with
 // similar names. It was decided that making single use extensions was more
-// sensible that adding generality that is unlikely to be used elsewhere, thus
+// sensible than adding generality that is unlikely to be used elsewhere, thus
 // these 'hacks' have been contained in their own source file.
 namespace ana {
 
 /// Prediction that just uses FD MC, with no extrapolation
 /// This version is used in the PRISM analysis to allow the NuMuSurv component
 /// to be oscillated according to the appearance probability. This is done by
-/// overriding the PredictionExtrap::Predict method to use a configurate
+/// overriding the PredictionExtrap::Predict method to use a configurable
 /// oscillation channel. This is used for the event rate matcher to avoid
 /// trusting the generator on the numu->nue xsec ratio.
 class PredictionNonSwapNoExtrap : public PredictionExtrap {
@@ -125,7 +125,8 @@ public:
 protected:
   PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
                     const Spectrum &_fSpectrumNueSwap)
-      : fSpectrumNonSwap(_fSpectrumNonSwap), fSpectrumNueSwap(_fSpectrumNueSwap) {}
+      : fSpectrumNonSwap(_fSpectrumNonSwap),
+        fSpectrumNueSwap(_fSpectrumNueSwap) {}
 
   Spectrum fSpectrumNonSwap;
   Spectrum fSpectrumNueSwap;
@@ -144,10 +145,10 @@ public:
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
            const SystShifts &shiftMC = kNoShift) const override {
-    SpectrumLoaderBase &loader_non = loaders.GetLoader(
-        caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNonSwap);
-    SpectrumLoaderBase &loader_nue = loaders.GetLoader(
-        caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNueSwap);
+    SpectrumLoaderBase &loader_non =
+        loaders.GetLoader(caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNonSwap);
+    SpectrumLoaderBase &loader_nue =
+        loaders.GetLoader(caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNueSwap);
     return std::unique_ptr<IPrediction>(new PredictionFDNoOsc(
         loader_non, loader_nue, fAxis, fCut, shiftMC, fWei));
   }
@@ -156,6 +157,107 @@ protected:
   HistAxis fAxis;
   Cut fCut;
   Var fWei;
+};
+
+// A flux prediction that acts like an IPrediction
+class FluxPrediction : public IPrediction {
+
+public:
+  static std::unique_ptr<FluxPrediction> LoadFrom(TDirectory *dir);
+  virtual void SaveTo(TDirectory *dir) const override;
+  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
+    // no way to know which is the 'right' spectrum, so, don't use this.
+
+    // std::cout << "[ERROR]: Cannot call Predict on FluxPrediction. Use "
+    //              "PredictComponent instead."
+    //           << std::endl;
+    // abort();
+
+    // required to get the binning in initfits
+    return fSpectrumNumu;
+  }
+
+  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override;
+
+  FluxPrediction(const Spectrum &sNumu, const Spectrum &sNumubar,
+                 const Spectrum &sNue, const Spectrum &sNuebar)
+      : fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
+        fSpectrumNuebar(sNuebar) {}
+
+protected:
+  Spectrum fSpectrumNumu;
+  Spectrum fSpectrumNumubar;
+  Spectrum fSpectrumNue;
+  Spectrum fSpectrumNuebar;
+};
+
+class FluxPredictionGenerator : public IPredictionGenerator {
+public:
+  FluxPredictionGenerator(HistAxis const &axis, bool isNuMode = true)
+      : fAxis(axis), fIsNuMode(isNuMode) {}
+
+  virtual std::unique_ptr<IPrediction>
+  Generate(Loaders &loaders,
+           const SystShifts &shiftMC = kNoShift) const override;
+
+protected:
+  HistAxis fAxis;
+  bool fIsNuMode;
+};
+
+// A flux prediction that acts like an IPrediction
+class OffAxisFluxPrediction : public IPrediction {
+
+public:
+  static std::unique_ptr<OffAxisFluxPrediction> LoadFrom(TDirectory *dir);
+  virtual void SaveTo(TDirectory *dir) const override;
+  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
+    // no way to know which is the 'right' spectrum, so, don't use this.
+
+    // std::cout << "[ERROR]: Cannot call Predict on OffAxisFluxPrediction. Use
+    // "
+    //              "PredictComponent instead."
+    //           << std::endl;
+    // abort();
+
+    // required to get the binning in initfits
+    return fSpectrumNumu;
+  }
+
+  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override;
+
+  OffAxisFluxPrediction(const Spectrum &sNumu, const Spectrum &sNumubar,
+                        const Spectrum &sNue, const Spectrum &sNuebar)
+      : fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
+        fSpectrumNuebar(sNuebar) {}
+
+protected:
+  Spectrum fSpectrumNumu;
+  Spectrum fSpectrumNumubar;
+  Spectrum fSpectrumNue;
+  Spectrum fSpectrumNuebar;
+};
+
+class OffAxisFluxPredictionGenerator : public IPredictionGenerator {
+public:
+  OffAxisFluxPredictionGenerator(HistAxis const &axis, bool isNuMode = true,
+                                 bool isSpecRun = false)
+      : fAxis(axis), fIsNuMode(isNuMode), fIsSpecRun(isSpecRun) {}
+
+  virtual std::unique_ptr<IPrediction>
+  Generate(Loaders &loaders,
+           const SystShifts &shiftMC = kNoShift) const override;
+
+protected:
+  HistAxis fAxis;
+  bool fIsNuMode;
+  bool fIsSpecRun;
 };
 
 } // namespace ana

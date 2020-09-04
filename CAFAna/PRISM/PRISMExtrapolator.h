@@ -27,8 +27,6 @@ class TDirectory;
 
 namespace ana {
 
-static double kdummydouble = 0;
-
 // Caching flux matcher.
 class PRISMExtrapolator {
 public:
@@ -40,7 +38,8 @@ public:
   /// Expect a std::map initializer list/literal like:
   /// ```
   ///   extrap->Initialize({
-  ///       {"ND_nu", ND_interp_FHC.get()},
+  ///       {"ND_293kA_nu", ND_interp_FHC.get()},
+  ///       {"ND_280kA_nu", ND_interp_FHC_280kA.get()},
   ///       {"FD_nub", FD_interp_RHC.get()},
   ///       //...
   ///   });
@@ -52,47 +51,66 @@ public:
   void Initialize(std::map<std::string, PredictionInterp const *> const &);
 
   PredictionInterp const *
-  GetNDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
+  GetNDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode, int kA = 293) const;
   PredictionInterp const *
   GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
   void SetStoreDebugMatches(bool v = true) { fStoreDebugMatches = v; }
 
-  TH1 const *GetFarMatchCoefficients(
-      osc::IOscCalculator *osc, TH1 const *FDUnOscWeighted,
-      double max_OffAxis_m,
-      PRISM::MatchChan chan = PRISM::kNumuDisappearance_Numode,
-      SystShifts shift = kNoShift, double &soln_norm = kdummydouble,
-      double &resid_norm = kdummydouble) const;
+  std::pair<TH1 const *, TH1 const *>
+  GetFarMatchCoefficients(osc::IOscCalculator *osc, PRISM::MatchChan chan,
+                          SystShifts shift, double &soln_norm,
+                          double &resid_norm) const;
 
-  TH1 const *GetGaussianCoefficients(double mean, double width,
-                                     double max_OffAxis_m,
-                                     PRISM::BeamChan NDbc = PRISM::kNumu_Numode,
-                                     SystShifts shift = kNoShift) const;
+  std::pair<TH1 const *, TH1 const *>
+  GetFarMatchCoefficients(osc::IOscCalculator *osc, PRISM::MatchChan chan,
+                          SystShifts shift) const {
+    double dummy1, dummy2;
+    return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2);
+  }
+
+  std::pair<TH1 const *, TH1 const *>
+  GetGaussianCoefficients(double mean, double width, PRISM::BeamChan NDbc,
+                          SystShifts shift) const;
 
   TH1 const *GetLastResidual() const { return fLastResidual.get(); }
 
   void Write(TDirectory *);
 
   struct Conditioning {
-    double RegFactor;
+    double RegFactor_293kA;
+    double RegFactor_280kA;
     double ENuMin;
     double ENuMax;
-    mutable std::vector<double> CoeffRegVector;
   };
 
   std::map<PRISM::MatchChan, Conditioning> fConditioning;
 
-  void SetTargetConditioning(PRISM::MatchChan chan, double RegFactor,
-                             std::vector<double> CoeffRegVector = {},
+  void SetTargetConditioning(PRISM::MatchChan chan, double RegFactor_293kA,
+                             double RegFactor_280kA,
                              std::array<double, 2> erange = {
                                  0, std::numeric_limits<double>::max()}) {
     fConditioning[chan] =
-        Conditioning{RegFactor, erange[0], erange[1], CoeffRegVector};
+        Conditioning{RegFactor_293kA, RegFactor_280kA, erange[0], erange[1]};
   }
 
-  void SetChannelRegFactor(PRISM::MatchChan chan, double RegFactor) {
-    fConditioning[chan].RegFactor = RegFactor;
+  void SetChannelRegFactor(PRISM::MatchChan chan, int kA, double RegFactor) {
+
+    switch (kA) {
+    case 280: {
+      fConditioning[chan].RegFactor_280kA = RegFactor;
+      break;
+    }
+    case 293: {
+      fConditioning[chan].RegFactor_293kA = RegFactor;
+      break;
+    }
+    default: {
+      std::cout << "[ERROR]: Invalid Horn Current for reg factor: " << kA
+                << std::endl;
+      abort();
+    }
+    }
   }
 
 protected:
@@ -102,20 +120,26 @@ protected:
   mutable std::unique_ptr<TH1> fLastResidual;
   mutable std::unique_ptr<TH1> fLastGaussResidual;
 
-  PredictionInterp const *fNDEventRateInterp_nu;
-  PredictionInterp const *fNDEventRateInterp_nub;
+  PredictionInterp const *fNDPredInterp_293kA_nu;
+  PredictionInterp const *fNDPredInterp_293kA_nub;
 
-  PredictionInterp const *fFDEventRateInterp_nu;
-  PredictionInterp const *fFDEventRateInterp_nub;
+  PredictionInterp const *fNDPredInterp_280kA_nu;
+  PredictionInterp const *fNDPredInterp_280kA_nub;
 
-  mutable std::unique_ptr<TH1> fLastMatch;
-  mutable std::unique_ptr<TH1> fLastGaussMatch;
+  PredictionInterp const *fFDPredInterp_nu;
+  PredictionInterp const *fFDPredInterp_nub;
+
+  mutable std::unique_ptr<TH1> fLastMatch_293kA;
+  mutable std::unique_ptr<TH1> fLastMatch_280kA;
+  mutable std::unique_ptr<TH1> fLastGaussMatch_293kA;
+  mutable std::unique_ptr<TH1> fLastGaussMatch_280kA;
 
   bool fStoreDebugMatches;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
-  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND;
-  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND_shift;
+  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugFitMatrix;
+  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND_293kA;
+  mutable std::map<std::string, std::unique_ptr<TH2>> fDebugND_280kA;
   mutable std::map<std::string, std::unique_ptr<TH1>> fDebugResid;
 };
 

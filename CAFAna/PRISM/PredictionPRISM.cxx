@@ -89,19 +89,6 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
   std::vector<double> offAxisBinEdges =
       fNDOffAxis.GetBinnings().front().Edges();
 
-  // the center of the last bin
-  fMaxOffAxis =
-      (offAxisBinEdges.back() + offAxisBinEdges[offAxisBinEdges.size() - 2]) /
-      2.0;
-
-  // TODO we should make this correct every bin by its width, this currently
-  // uses the second bin width only because a hack that uses the first bin to
-  // mock up a special beam run
-
-  // This should explicitly be a mass correction and not a POT correction.
-  double xslice_width_cm = (offAxisBinEdges[2] - offAxisBinEdges[1]) * 1E2;
-  fDefaultOffAxisPOT = 1.0 / FD_ND_FVRatio(xslice_width_cm);
-
   std::vector<std::string> FluxMatcherCorrection_Labels =
       fAnalysisAxis.GetLabels();
   std::vector<Binning> FluxMatcherCorrection_Bins = fAnalysisAxis.GetBinnings();
@@ -141,11 +128,19 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
               << NDChannel.mode << std::endl;
     abort();
   }
+
+  // Corrects for non-uniform off-axis binning
+  auto slice_width_weight =
+      NDSliceCorrection(50, fNDOffAxis.GetBinnings().front().Edges());
+  auto slice_width_weight_280kA =
+      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
+
   NDData = std::make_unique<ReweightableSpectrum>(
-      ND_loader, fAnalysisAxis, fNDOffAxis, cut && kCut280kARun, shift, wei);
+      ND_loader, fAnalysisAxis, fNDOffAxis, cut && kCut280kARun, shift,
+      wei * slice_width_weight);
 
   std::unique_ptr<ReweightableSpectrum> &NDData_280kA =
-      GetNDData_280kA(NDChannel);
+      GetNDData(NDChannel, 280);
   if (&NDData_280kA == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
@@ -153,7 +148,7 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   }
   NDData_280kA = std::make_unique<ReweightableSpectrum>(
       ND_loader, fAnalysisAxis, fND280kAAxis, cut && kSel280kARun, shift,
-      wei * kSpecHCRunWeight);
+      wei * kSpecHCRunWeight * slice_width_weight_280kA);
 }
 
 ///\brief Call to add a ND MC component
@@ -176,6 +171,12 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
                                     std::vector<ana::ISyst const *> systlist,
                                     PRISM::BeamChan NDChannel) {
 
+  // Corrects for non-uniform off-axis binning
+  auto slice_width_weight =
+      NDSliceCorrection(50, fNDOffAxis.GetBinnings().front().Edges());
+  auto slice_width_weight_280kA =
+      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
+
   std::unique_ptr<PredictionInterp> &NDPrediction = GetNDPrediction(NDChannel);
   if (&NDPrediction == &kNoSuchNDPredictionSpectrum) {
     std::cout << "ERROR: Invalid ND MC type passed: " << NDChannel.chan << ":"
@@ -186,13 +187,13 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
   osc::NoOscillations kNoOsc;
 
   fPredGens.push_back(std::make_unique<NoOscPredictionGenerator>(
-      fOffPredictionAxis, cut && kCut280kARun, wei));
+      fOffPredictionAxis, cut && kCut280kARun, wei * slice_width_weight));
 
   NDPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
                                                     *fPredGens.back(), loaders);
 
   std::unique_ptr<PredictionInterp> &NDPrediction_280kA =
-      GetNDPrediction_280kA(NDChannel);
+      GetNDPrediction(NDChannel, 280);
   if (&NDPrediction_280kA == &kNoSuchNDPredictionSpectrum) {
     std::cout << "ERROR: Invalid ND MC type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
@@ -200,7 +201,8 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
   }
 
   fPredGens.push_back(std::make_unique<NoOscPredictionGenerator>(
-      f280kAPredictionAxis, cut && kSel280kARun, wei * kSpecHCRunWeight));
+      f280kAPredictionAxis, cut && kSel280kARun,
+      wei * kSpecHCRunWeight * slice_width_weight_280kA));
 
   NDPrediction_280kA = std::make_unique<PredictionInterp>(
       systlist, &kNoOsc, *fPredGens.back(), loaders);
@@ -250,210 +252,129 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
       fFluxMatcherCorrectionAxes, cut, wei));
   FDUnOscWeightedSigPrediction = std::make_unique<PredictionInterp>(
       systlist, &kNoOsc, *fPredGens.back(), loaders);
+
+  std::unique_ptr<PredictionInterp> &FDNonSwapAppOscPrediction =
+      GetFDNonSwapAppOscPrediction(FDChannel.mode);
+
+  fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>(
+      fFluxMatcherCorrectionAxes, cut, wei));
+  FDNonSwapAppOscPrediction = std::make_unique<PredictionInterp>(
+      systlist, &kNoOsc, *fPredGens.back(), loaders);
 }
 
 std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM) const {
+PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.numu_ccinc_sel_numode;
+    return (kA == 293) ? Measurements.ND_293kA.numu_ccinc_sel_numode
+                       : Measurements.ND_280kA.numu_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.numubar_ccinc_sel_nubmode;
+    return (kA == 293) ? Measurements.ND_293kA.numubar_ccinc_sel_nubmode
+                       : Measurements.ND_280kA.numubar_ccinc_sel_nubmode;
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM) const {
+PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.nue_ccinc_sel_numode;
+    return (kA == 293) ? Measurements.ND_293kA.nue_ccinc_sel_numode
+                       : Measurements.ND_280kA.nue_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.nuebar_ccinc_sel_nubmode;
+    return (kA == 293) ? Measurements.ND_293kA.nuebar_ccinc_sel_nubmode
+                       : Measurements.ND_280kA.nuebar_ccinc_sel_nubmode;
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM) const {
+PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.numubar_ccinc_sel_numode;
+    return (kA == 293) ? Measurements.ND_293kA.numubar_ccinc_sel_numode
+                       : Measurements.ND_280kA.numubar_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.numu_ccinc_sel_nubmode;
+    return (kA == 293) ? Measurements.ND_293kA.numu_ccinc_sel_nubmode
+                       : Measurements.ND_280kA.numu_ccinc_sel_nubmode;
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel) const {
+PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA) const {
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
                                              : NuChan::kNumuBarIntrinsic)) {
-    return GetNDData_right_sign_numu(NDChannel.mode);
+    return GetNDData_right_sign_numu(NDChannel.mode, kA);
   } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
                                    ? NuChan::kNueIntrinsic
                                    : NuChan::kNueBarIntrinsic)) {
-    return GetNDData_right_sign_nue(NDChannel.mode);
+    return GetNDData_right_sign_nue(NDChannel.mode, kA);
   } else if (NDChannel.chan &
              ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuBarIntrinsic
                                                     : NuChan::kNumuIntrinsic)) {
-    return GetNDData_wrong_sign_numu(NDChannel.mode);
+    return GetNDData_wrong_sign_numu(NDChannel.mode, kA);
   }
   PRISMOUT("Invalid ND Data request: " << NDChannel.mode << ", "
                                        << NDChannel.chan);
   return kNoSuchNDDataSpectrum;
 }
 
-bool PredictionPRISM::HaveNDData(PRISM::BeamChan NDChannel) const {
-  return bool(GetNDData(NDChannel));
+bool PredictionPRISM::HaveNDData(PRISM::BeamChan NDChannel, int kA) const {
+  return bool(GetNDData(NDChannel, kA));
 }
 
-std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_280kA_right_sign_numu(BeamMode NDBM) const {
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetNDPrediction_right_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.numu_ccinc_sel_numode;
+    return (kA == 293) ? Predictions.ND_293kA.numu_ccinc_sel_numode
+                       : Predictions.ND_280kA.numu_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.numubar_ccinc_sel_nubmode;
+    return (kA == 293) ? Predictions.ND_293kA.numubar_ccinc_sel_nubmode
+                       : Predictions.ND_280kA.numubar_ccinc_sel_nubmode;
   }
-  return kNoSuchNDDataSpectrum;
+  return kNoSuchNDPredictionSpectrum;
 }
-std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_280kA_right_sign_nue(BeamMode NDBM) const {
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetNDPrediction_right_sign_nue(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.nue_ccinc_sel_numode;
+    return (kA == 293) ? Predictions.ND_293kA.nue_ccinc_sel_numode
+                       : Predictions.ND_280kA.nue_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.nuebar_ccinc_sel_nubmode;
+    return (kA == 293) ? Predictions.ND_293kA.nuebar_ccinc_sel_nubmode
+                       : Predictions.ND_280kA.nuebar_ccinc_sel_nubmode;
   }
-  return kNoSuchNDDataSpectrum;
+  return kNoSuchNDPredictionSpectrum;
 }
-std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_280kA_wrong_sign_numu(BeamMode NDBM) const {
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetNDPrediction_wrong_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
-    return Measurements.ND.numubar_ccinc_sel_numode;
+    return (kA == 293) ? Predictions.ND_293kA.numubar_ccinc_sel_numode
+                       : Predictions.ND_280kA.numubar_ccinc_sel_numode;
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return Measurements.ND.numu_ccinc_sel_nubmode;
+    return (kA == 293) ? Predictions.ND_293kA.numu_ccinc_sel_nubmode
+                       : Predictions.ND_280kA.numu_ccinc_sel_nubmode;
   }
-  return kNoSuchNDDataSpectrum;
+  return kNoSuchNDPredictionSpectrum;
 }
-std::unique_ptr<ReweightableSpectrum> &
-PredictionPRISM::GetNDData_280kA(PRISM::BeamChan NDChannel) const {
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetNDPrediction(PRISM::BeamChan NDChannel, int kA) const {
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
                                              : NuChan::kNumuBarIntrinsic)) {
-    return GetNDData_280kA_right_sign_numu(NDChannel.mode);
+    return GetNDPrediction_right_sign_numu(NDChannel.mode, kA);
   } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
                                    ? NuChan::kNueIntrinsic
                                    : NuChan::kNueBarIntrinsic)) {
-    return GetNDData_280kA_right_sign_nue(NDChannel.mode);
+    return GetNDPrediction_right_sign_nue(NDChannel.mode, kA);
   } else if (NDChannel.chan &
              ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuBarIntrinsic
                                                     : NuChan::kNumuIntrinsic)) {
-    return GetNDData_280kA_wrong_sign_numu(NDChannel.mode);
-  }
-  PRISMOUT("Invalid ND Data request: " << NDChannel.mode << ", "
-                                       << NDChannel.chan);
-  return kNoSuchNDDataSpectrum;
-}
-
-bool PredictionPRISM::HaveNDData_280kA(PRISM::BeamChan NDChannel) const {
-  return bool(GetNDData_280kA(NDChannel));
-}
-
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_right_sign_numu(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.numu_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.numubar_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_right_sign_nue(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.nue_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.nuebar_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_wrong_sign_numu(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.numubar_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.numu_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction(PRISM::BeamChan NDChannel) const {
-  if (NDChannel.chan &
-      ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
-                                             : NuChan::kNumuBarIntrinsic)) {
-    return GetNDPrediction_right_sign_numu(NDChannel.mode);
-  } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
-                                   ? NuChan::kNueIntrinsic
-                                   : NuChan::kNueBarIntrinsic)) {
-    return GetNDPrediction_right_sign_nue(NDChannel.mode);
-  } else if (NDChannel.chan &
-             ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuBarIntrinsic
-                                                    : NuChan::kNumuIntrinsic)) {
-    return GetNDPrediction_wrong_sign_numu(NDChannel.mode);
+    return GetNDPrediction_wrong_sign_numu(NDChannel.mode, kA);
   }
   PRISMOUT("Invalid ND Prediction request: " << NDChannel.mode << ", "
                                              << NDChannel.chan);
   return kNoSuchNDPredictionSpectrum;
 }
 
-bool PredictionPRISM::HaveNDPrediction(PRISM::BeamChan NDChannel) const {
-  return bool(GetNDPrediction(NDChannel));
-}
-
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_280kA_right_sign_numu(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.numu_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.numubar_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_280kA_right_sign_nue(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.nue_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.nuebar_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_280kA_wrong_sign_numu(BeamMode NDBM) const {
-  if (NDBM == BeamMode::kNuMode) {
-    return Predictions.ND.numubar_ccinc_sel_numode;
-  } else if (NDBM == BeamMode::kNuBarMode) {
-    return Predictions.ND.numu_ccinc_sel_nubmode;
-  }
-  return kNoSuchNDPredictionSpectrum;
-}
-std::unique_ptr<PredictionInterp> &
-PredictionPRISM::GetNDPrediction_280kA(PRISM::BeamChan NDChannel) const {
-  if (NDChannel.chan &
-      ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
-                                             : NuChan::kNumuBarIntrinsic)) {
-    return GetNDPrediction_280kA_right_sign_numu(NDChannel.mode);
-  } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
-                                   ? NuChan::kNueIntrinsic
-                                   : NuChan::kNueBarIntrinsic)) {
-    return GetNDPrediction_280kA_right_sign_nue(NDChannel.mode);
-  } else if (NDChannel.chan &
-             ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuBarIntrinsic
-                                                    : NuChan::kNumuIntrinsic)) {
-    return GetNDPrediction_280kA_wrong_sign_numu(NDChannel.mode);
-  }
-  PRISMOUT("Invalid ND Prediction request: " << NDChannel.mode << ", "
-                                             << NDChannel.chan);
-  return kNoSuchNDPredictionSpectrum;
-}
-
-bool PredictionPRISM::HaveNDPrediction_280kA(PRISM::BeamChan NDChannel) const {
-  return bool(GetNDPrediction_280kA(NDChannel));
+bool PredictionPRISM::HaveNDPrediction(PRISM::BeamChan NDChannel,
+                                       int kA) const {
+  return bool(GetNDPrediction(NDChannel, kA));
 }
 
 std::unique_ptr<PredictionInterp> &
@@ -537,6 +458,13 @@ bool PredictionPRISM::HaveFDUnOscWeightedSigPrediction(
   return bool(GetFDUnOscWeightedSigPrediction(FDChannel));
 }
 
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetFDNonSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
+  return (FDBM == BeamMode::kNuMode)
+             ? Predictions.FD.numu_ccinc_sel_sig_apposc_numode
+             : Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode;
+}
+
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
   return PredictSyst(calc, kNoShift);
@@ -583,6 +511,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   auto &NDData = GetNDData(match_chan.from);
   auto &NDPrediction = GetNDPrediction(match_chan.from);
+
+  auto &NDData_280kA = GetNDData(match_chan.from, 280);
+  auto &NDPrediction_280kA = GetNDPrediction(match_chan.from, 280);
+
   auto &FDPrediction = GetFDPrediction(match_chan.to);
   auto &FDUnOscWeightedSigPrediction =
       GetFDUnOscWeightedSigPrediction(match_chan.to);
@@ -638,68 +570,102 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   double NDPOT = NDRunPlan.GetPlanPOT();
   assert(NDPOT > 0);
 
-  NDComps.emplace(kNDData, NDRunPlan.Weight(*NDData, fSetNDErrorsFromRate));
-  NDComps.emplace(kNDDataCorr2D, NDComps.at(kNDData));
+  NDComps.emplace(kNDData_unweighted_293kA, *NDData);
+  std::cout << "!!!!!! Weighting: 293kA." << std::endl;
+  NDComps.emplace(kNDData_293kA,
+                  NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
+  NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA));
+
+  NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
+  std::cout << "!!!!!! Weighting: 280kA" << std::endl;
+  NDComps.emplace(kNDData_280kA,
+                  NDRunPlan.Weight(*NDData_280kA, 280, fSetNDErrorsFromRate));
+  NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA));
 
   // Start building MC components
-  Spectrum NDSig_spec = NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
-      calc, shift, NDSigFlavor, Current::kCC, NDSigSign));
+  ReweightableSpectrum NDSig = ToReweightableSpectrum(
+      NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
+                           calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
+                       293),
+      NDPOT, fAnalysisAxis);
 
-  std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
-  NDSig_h->SetDirectory(nullptr);
-  ReweightableSpectrum NDSig(ana::Constant(1), NDSig_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+  NDComps.emplace(kNDSig_293kA, NDSig);
+  NDComps.emplace(kNDSig2D_293kA, NDSig);
 
-  NDComps.emplace(kNDSig, NDSig);
-  NDComps.emplace(kNDSig2D, NDSig);
+  ReweightableSpectrum NDSig_280kA = ToReweightableSpectrum(
+      NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
+                           calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
+                       280),
+      NDPOT, fAnalysisAxis);
+
+  NDComps.emplace(kNDSig_280kA, NDSig_280kA);
+  NDComps.emplace(kNDSig2D_280kA, NDSig_280kA);
 
   // ND Background subtraction
   if (fNCCorrection) {
-    std::unique_ptr<TH2> NC_h(
-        NDRunPlan
-            .Weight(NDPrediction->PredictComponentSyst(
-                calc, shift, Flavors::kAll, Current::kNC, Sign::kBoth))
-            .ToTH2(NDPOT));
-    NC_h->SetDirectory(nullptr);
+    ReweightableSpectrum NC = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction->PredictComponentSyst(calc, shift, Flavors::kAll,
+                                               Current::kNC, Sign::kBoth),
+            293),
+        NDPOT, fAnalysisAxis);
 
-    ReweightableSpectrum NC(ana::Constant(1), NC_h.get(),
-                            fAnalysisAxis.GetLabels(),
-                            fAnalysisAxis.GetBinnings(), NDPOT, 0);
+    NDComps.emplace(kNDNCBkg_293kA, NC);
+    NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDNCBkg_293kA);
 
-    NDComps.emplace(kNDNCBkg, NC);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDNCBkg);
+    ReweightableSpectrum NC_280kA = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction_280kA->PredictComponentSyst(calc, shift, Flavors::kAll,
+                                                     Current::kNC, Sign::kBoth),
+            280),
+        NDPOT, fAnalysisAxis);
+
+    NDComps.emplace(kNDNCBkg_280kA, NC_280kA);
+    NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDNCBkg_280kA);
   }
 
   if (fWLBCorrection) {
-    std::unique_ptr<TH2> WLB_h(
-        NDRunPlan
-            .Weight(NDPrediction->PredictComponentSyst(
-                calc, shift, NDWrongFlavor, Current::kCC, Sign::kBoth))
-            .ToTH2(NDPOT));
-    WLB_h->SetDirectory(nullptr);
-    ReweightableSpectrum Nue(ana::Constant(1), WLB_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+    ReweightableSpectrum WLB = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction->PredictComponentSyst(calc, shift, NDWrongFlavor,
+                                               Current::kCC, Sign::kBoth),
+            293),
+        NDPOT, fAnalysisAxis);
 
-    NDComps.emplace(kNDWrongLepBkg, Nue);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWrongLepBkg);
+    NDComps.emplace(kNDWrongLepBkg_293kA, WLB);
+    NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWrongLepBkg_293kA);
+
+    ReweightableSpectrum WLB_280kA = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction_280kA->PredictComponentSyst(calc, shift, NDWrongFlavor,
+                                                     Current::kCC, Sign::kBoth),
+            280),
+        NDPOT, fAnalysisAxis);
+
+    NDComps.emplace(kNDWrongLepBkg_280kA, WLB_280kA);
+    NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWrongLepBkg_280kA);
   }
 
   if (fWSBCorrection) {
-    std::unique_ptr<TH2> WSB_h(
-        NDRunPlan
-            .Weight(NDPrediction->PredictComponentSyst(
-                calc, shift, NDSigFlavor, Current::kCC, NDWrongSign))
-            .ToTH2(NDPOT));
-    WSB_h->SetDirectory(nullptr);
+    ReweightableSpectrum WSB = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction->PredictComponentSyst(calc, shift, NDSigFlavor,
+                                               Current::kCC, NDWrongSign),
+            293),
+        NDPOT, fAnalysisAxis);
 
-    ReweightableSpectrum WSB(ana::Constant(1), WSB_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+    NDComps.emplace(kNDWSBkg_293kA, WSB);
+    NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWSBkg_293kA);
 
-    NDComps.emplace(kNDWSBkg, WSB);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWSBkg);
+    ReweightableSpectrum WSB_280kA = ToReweightableSpectrum(
+        NDRunPlan.Weight(
+            NDPrediction_280kA->PredictComponentSyst(calc, shift, NDSigFlavor,
+                                                     Current::kCC, NDWrongSign),
+            280),
+        NDPOT, fAnalysisAxis);
+
+    NDComps.emplace(kNDWSBkg_280kA, WSB_280kA);
+    NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWSBkg_280kA);
   }
 
   static osc::NoOscillations no;
@@ -716,39 +682,139 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   FDUnOscWeightedSig_TrueEnergy_h->SetDirectory(nullptr);
 
   // Linear Combination
-  TH1 const *LinearCombination = fFluxMatcher->GetFarMatchCoefficients(
-      calc, FDUnOscWeightedSig_TrueEnergy_h.get(), fMaxOffAxis, match_chan,
-      shift);
+  std::pair<TH1 const *, TH1 const *> LinearCombination =
+      fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
 
-  std::unique_ptr<TH1> UnRunPlannedLinearCombination =
-      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination));
+  std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
+      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
+
+  std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
+      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
+
   // We don't want the total POT of the runplan to affect the scale of the
   // coefficients, just the shape.
-  UnRunPlannedLinearCombination->Scale(NDPOT);
+  UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
+  UnRunPlannedLinearCombination_280kA->Scale(NDPOT);
 
-  Spectrum UnRunPlannedLinearCombination_s(fNDOffAxis.GetLabels(),
-                                           fNDOffAxis.GetBinnings());
-  UnRunPlannedLinearCombination_s.FillFromHistogram(
-      UnRunPlannedLinearCombination.get());
-  UnRunPlannedLinearCombination_s.OverridePOT(NDPOT);
-  UnRunPlannedLinearCombination_s.OverrideLivetime(0);
-  Comps.emplace(kNDFDWeightings, UnRunPlannedLinearCombination_s);
+  PRISMOUT("PRISM analysis axis: "
+           << fNDOffAxis.GetLabels().front() << " with "
+           << fNDOffAxis.GetBinnings().front().Edges().size() << " bins from "
+           << fNDOffAxis.GetBinnings().front().Edges().front() << " to "
+           << fNDOffAxis.GetBinnings().front().Edges().back() << ".");
 
-  // for (auto &NDC : NDComps) {
-  //   NDC.second.OverridePOT(fDefaultOffAxisPOT);
-  // }
+  PRISMOUT("PRISM analysis axis: "
+           << fND280kAAxis.GetLabels().front() << " with "
+           << fND280kAAxis.GetBinnings().front().Edges().size() << " bins from "
+           << fND280kAAxis.GetBinnings().front().Edges().front() << " to "
+           << fND280kAAxis.GetBinnings().front().Edges().back() << ".");
 
-  if (NDComps.count(kNDSig)) {
-    Comps.emplace(kNDSig, NDComps.at(kNDSig).WeightedByErrors(
-                              UnRunPlannedLinearCombination.get()));
-    Comps.emplace(kPRISMMC, Comps.at(kNDSig));
+  Spectrum UnRunPlannedLinearCombination_293kA_s(fNDOffAxis.GetLabels(),
+                                                 fNDOffAxis.GetBinnings());
+  UnRunPlannedLinearCombination_293kA_s.Clear();
+  UnRunPlannedLinearCombination_293kA_s.FillFromHistogram(
+      UnRunPlannedLinearCombination_293kA.get());
+  UnRunPlannedLinearCombination_293kA_s.OverridePOT(NDPOT);
+  UnRunPlannedLinearCombination_293kA_s.OverrideLivetime(0);
+  Comps.emplace(kNDFDWeightings_293kA, UnRunPlannedLinearCombination_293kA_s);
+
+  Spectrum UnRunPlannedLinearCombination_280kA_s(fND280kAAxis.GetLabels(),
+                                                 fND280kAAxis.GetBinnings());
+  UnRunPlannedLinearCombination_280kA_s.Clear();
+  UnRunPlannedLinearCombination_280kA_s.FillFromHistogram(
+      UnRunPlannedLinearCombination_280kA.get());
+  UnRunPlannedLinearCombination_280kA_s.OverridePOT(NDPOT);
+  UnRunPlannedLinearCombination_280kA_s.OverrideLivetime(0);
+  Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
+
+  if (NDComps.count(kNDSig_293kA)) {
+    Comps.emplace(
+        kNDSig_293kA,
+        NDComps.at(kNDSig_293kA)
+            .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
+    Comps.emplace(
+        kNDSig_280kA,
+        NDComps.at(kNDSig_280kA)
+            .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+
+    Comps.emplace(kPRISMMC, Comps.at(kNDSig_293kA));
+    Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
   }
 
-  Comps.emplace(kNDDataCorr,
-                NDComps.at(kNDDataCorr2D)
-                    .WeightedByErrors(UnRunPlannedLinearCombination.get()));
+  std::cout << "WEIGHTING: kNDDataCorr_293kA" << std::endl;
+  Comps.emplace(
+      kNDDataCorr_293kA,
+      NDComps.at(kNDDataCorr2D_293kA)
+          .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
 
-  Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr));
+  TH2 *bla = NDComps.at(kNDDataCorr2D_293kA).ToTH2(NDPOT);
+
+  for (int i = 0; i < bla->GetXaxis()->GetNbins(); ++i) {
+    for (int j = 0; j < bla->GetYaxis()->GetNbins(); ++j) {
+      bla->SetBinContent(
+          i + 1, j + 1,
+          bla->GetBinContent(i + 1, j + 1) *
+              UnRunPlannedLinearCombination_293kA->GetBinContent(j + 1));
+      bla->SetBinError(
+          i + 1, j + 1,
+          bla->GetBinError(i + 1, j + 1) *
+              UnRunPlannedLinearCombination_293kA->GetBinContent(j + 1));
+    }
+  }
+
+  gFile->WriteObject(bla, "weightednotsummed_293kA");
+
+  std::cout << "WEIGHTING: kNDDataCorr_280kA" << std::endl;
+  Comps.emplace(
+      kNDDataCorr_280kA,
+      NDComps.at(kNDDataCorr2D_280kA)
+          .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+  std::cout << "Done" << std::endl;
+
+  Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
+  Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
+
+  Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
+
+  // If we are doing numu -> nue propagation, need to correct for xsec
+  if (FDSigFlavor == Flavors::kNuMuToNuE) {
+
+    // These both contain the selection cuts currently... May or may not be what
+    // we want, depends on the efficiency correction.
+    Spectrum FD_nueapp_spectrum = FDPrediction->PredictComponentSyst(
+        calc, shift, Flavors::kNuMuToNuE, Current::kCC, NDSigSign);
+
+    TH1D *FD_nueapp_h = FD_nueapp_spectrum.ToTH1(NDPOT);
+
+    Spectrum FD_numusurv_apposc_spectrum =
+        GetFDNonSwapAppOscPrediction(match_chan.to.mode)
+            ->PredictComponentSyst(calc, shift, Flavors::kNuMuToNuE,
+                                   Current::kCC, NDSigSign);
+
+    Comps.emplace(kFD_NumuNueCorr_Nue, FD_nueapp_spectrum);
+    Comps.emplace(kFD_NumuNueCorr_Numu, FD_numusurv_apposc_spectrum);
+
+    TH1D *FD_numusurv_apposc_h = FD_numusurv_apposc_spectrum.ToTH1(NDPOT);
+    FD_nueapp_h->Divide(FD_numusurv_apposc_h);
+
+    Spectrum FD_NumuNueCorr = Comps.at(kPRISMPred);
+    FD_NumuNueCorr.Clear();
+    FD_NumuNueCorr.FillFromHistogram(FD_nueapp_h);
+    FD_NumuNueCorr.OverridePOT(NDPOT);
+    FD_NumuNueCorr.OverrideLivetime(0);
+    Comps.emplace(kFD_NumuNueCorr, FD_NumuNueCorr);
+
+    TH1D *PRISMPred_h = Comps.at(kPRISMPred).ToTH1(NDPOT);
+    PRISMPred_h->Multiply(FD_nueapp_h);
+
+    Comps.at(kPRISMPred).Clear();
+    Comps.at(kPRISMPred).FillFromHistogram(PRISMPred_h);
+    Comps.at(kPRISMPred).OverridePOT(NDPOT);
+    Comps.at(kPRISMPred).OverrideLivetime(0);
+
+    HistCache::Delete(FD_nueapp_h);
+    HistCache::Delete(FD_nueapp_h);
+    HistCache::Delete(PRISMPred_h);
+  }
 
   // If we have the FD background predictions add them back in
 
@@ -757,7 +823,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                   FDPrediction->PredictComponentSyst(
                       calc, shift, Flavors::kAll, Current::kNC, Sign::kBoth));
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
-    Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
+    Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
   }
 
   if (fWLBCorrection) {
@@ -788,8 +854,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                 FDPrediction->PredictComponentSyst(calc, shift, Flavors::kAll,
                                                    Current::kCC, Sign::kBoth));
 
-  // this is given as a ratio to no weighting (no osc for numu disp, and usese
-  // numu no-disp spectrum for nue) to stop explosions at maximal mixing
   ReweightableSpectrum FDUnOscWeightedSig(
       ana::Constant(1), FDUnOscWeightedSig_h.get(), fAnalysisAxis.GetLabels(),
       fAnalysisAxis.GetBinnings(), NDPOT, 0);
@@ -799,7 +863,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   std::unique_ptr<TH1> resid(static_cast<TH1 *>(
       fFluxMatcher->GetLastResidual()->Clone("weighted_residual")));
   resid->SetDirectory(nullptr);
-  resid->Scale(NDPOT);
 
   Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid.get()));
 
@@ -825,119 +888,120 @@ PredictionPRISM::PredictGaussianFlux(double mean, double width,
                                      ana::SystShifts shift,
                                      BeamChan NDChannel) const {
 
-  bool WeHaveNDData = HaveNDData(NDChannel);
-  bool WeHaveNDPrediction = HaveNDPrediction(NDChannel);
+  // bool WeHaveNDData = HaveNDData(NDChannel);
+  // bool WeHaveNDPrediction = HaveNDPrediction(NDChannel);
 
-  if (!WeHaveNDData || !WeHaveNDPrediction) {
-    std::cout
-        << "[ERROR]: Cannot make a PRISM prediction has we have: HaveNDData: "
-        << (WeHaveNDData ? "have" : "do not have") << ", WeHaveNDPrediction: "
-        << (WeHaveNDPrediction ? "have" : "do not have") << std::endl;
-    abort();
-  }
+  // if (!WeHaveNDData || !WeHaveNDPrediction) {
+  //   std::cout
+  //       << "[ERROR]: Cannot make a PRISM prediction has we have: HaveNDData:
+  //       "
+  //       << (WeHaveNDData ? "have" : "do not have") << ", WeHaveNDPrediction:
+  //       "
+  //       << (WeHaveNDPrediction ? "have" : "do not have") << std::endl;
+  //   abort();
+  // }
 
-  DontAddDirectory guard;
+  // DontAddDirectory guard;
 
-  auto &NDData = GetNDData(NDChannel);
-  auto &NDPrediction = GetNDPrediction(NDChannel);
+  // auto &NDData = GetNDData(NDChannel);
+  // auto &NDPrediction = GetNDPrediction(NDChannel);
 
-  // Sort out the flavors and signs
-  auto NDSigFlavor = (NDChannel.chan & NuChan::kNumuNumuBar) ? Flavors::kAllNuMu
-                                                             : Flavors::kAllNuE;
-  auto NDSigSign =
-      ((NDChannel.chan & NuChan::kNumu) || (NDChannel.chan & NuChan::kNue))
-          ? Sign::kNu
-          : Sign::kAntiNu;
-  auto NDWrongSign = (NDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
-  auto NDWrongFlavor =
-      (NDSigFlavor == Flavors::kAllNuMu) ? Flavors::kAllNuE : Flavors::kAllNuMu;
+  // // Sort out the flavors and signs
+  // auto NDSigFlavor = (NDChannel.chan & NuChan::kNumuNumuBar) ?
+  // Flavors::kAllNuMu
+  //                                                            :
+  //                                                            Flavors::kAllNuE;
+  // auto NDSigSign =
+  //     ((NDChannel.chan & NuChan::kNumu) || (NDChannel.chan & NuChan::kNue))
+  //         ? Sign::kNu
+  //         : Sign::kAntiNu;
+  // auto NDWrongSign = (NDSigSign == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
+  // auto NDWrongFlavor =
+  //     (NDSigFlavor == Flavors::kAllNuMu) ? Flavors::kAllNuE :
+  //     Flavors::kAllNuMu;
 
-  // Using maps for non-default constructible classes is awful...
-  std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
+  // // Using maps for non-default constructible classes is awful...
+  // std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
-  NDComps.emplace(kNDData, *NDData);
-  NDComps.emplace(kNDDataCorr2D, NDComps.at(kNDData));
+  // NDComps.emplace(kNDData, *NDData);
+  // NDComps.emplace(kNDDataCorr2D, NDComps.at(kNDData));
 
-  double NDPOT = NDData->POT();
+  // double NDPOT = NDData->POT();
 
-  static osc::NoOscillations no;
+  // static osc::NoOscillations no;
 
-  // Start building MC components
-  Spectrum NDSig_spec = NDPrediction->PredictComponentSyst(
-      &no, shift, NDSigFlavor, Current::kCC, NDSigSign);
+  // // Start building MC components
+  // Spectrum NDSig_spec = NDPrediction->PredictComponentSyst(
+  //     &no, shift, NDSigFlavor, Current::kCC, NDSigSign);
 
-  std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
+  // std::unique_ptr<TH2> NDSig_h(NDSig_spec.ToTH2(NDPOT));
 
-  ReweightableSpectrum NDSig(ana::Constant(1), NDSig_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+  // ReweightableSpectrum NDSig(ana::Constant(1), NDSig_h.get(),
+  //                            fAnalysisAxis.GetLabels(),
+  //                            fAnalysisAxis.GetBinnings(), NDPOT, 0);
 
-  NDComps.emplace(kNDSig2D, NDSig);
+  // NDComps.emplace(kNDSig2D, NDSig);
 
-  // ND Background subtraction
-  if (fNCCorrection) {
-    std::unique_ptr<TH2> NC_h(
-        NDPrediction
-            ->PredictComponentSyst(&no, shift, Flavors::kAll, Current::kNC,
-                                   Sign::kBoth)
-            .ToTH2(NDPOT));
-    ReweightableSpectrum NC(ana::Constant(1), NC_h.get(),
-                            fAnalysisAxis.GetLabels(),
-                            fAnalysisAxis.GetBinnings(), NDPOT, 0);
+  // // ND Background subtraction
+  // if (fNCCorrection) {
+  //   std::unique_ptr<TH2> NC_h(
+  //       NDPrediction
+  //           ->PredictComponentSyst(&no, shift, Flavors::kAll, Current::kNC,
+  //                                  Sign::kBoth)
+  //           .ToTH2(NDPOT));
+  //   ReweightableSpectrum NC(ana::Constant(1), NC_h.get(),
+  //                           fAnalysisAxis.GetLabels(),
+  //                           fAnalysisAxis.GetBinnings(), NDPOT, 0);
 
-    NDComps.emplace(kNDNCBkg, NC);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDNCBkg);
-  }
+  //   NDComps.emplace(kNDNCBkg, NC);
+  //   NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDNCBkg);
+  // }
 
-  if (fWLBCorrection) {
-    std::unique_ptr<TH2> WLB_h(
-        NDPrediction
-            ->PredictComponentSyst(&no, shift, NDWrongFlavor, Current::kCC,
-                                   Sign::kBoth)
-            .ToTH2(NDPOT));
-    ReweightableSpectrum Nue(ana::Constant(1), WLB_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+  // if (fWLBCorrection) {
+  //   std::unique_ptr<TH2> WLB_h(
+  //       NDPrediction
+  //           ->PredictComponentSyst(&no, shift, NDWrongFlavor, Current::kCC,
+  //                                  Sign::kBoth)
+  //           .ToTH2(NDPOT));
+  //   ReweightableSpectrum Nue(ana::Constant(1), WLB_h.get(),
+  //                            fAnalysisAxis.GetLabels(),
+  //                            fAnalysisAxis.GetBinnings(), NDPOT, 0);
 
-    NDComps.emplace(kNDWrongLepBkg, Nue);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWrongLepBkg);
-  }
+  //   NDComps.emplace(kNDWrongLepBkg, Nue);
+  //   NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWrongLepBkg);
+  // }
 
-  if (fWSBCorrection) {
-    std::unique_ptr<TH2> WSB_h(
-        NDPrediction
-            ->PredictComponentSyst(&no, shift, NDSigFlavor, Current::kCC,
-                                   NDWrongSign)
-            .ToTH2(NDPOT));
-    ReweightableSpectrum WSB(ana::Constant(1), WSB_h.get(),
-                             fAnalysisAxis.GetLabels(),
-                             fAnalysisAxis.GetBinnings(), NDPOT, 0);
+  // if (fWSBCorrection) {
+  //   std::unique_ptr<TH2> WSB_h(
+  //       NDPrediction
+  //           ->PredictComponentSyst(&no, shift, NDSigFlavor, Current::kCC,
+  //                                  NDWrongSign)
+  //           .ToTH2(NDPOT));
+  //   ReweightableSpectrum WSB(ana::Constant(1), WSB_h.get(),
+  //                            fAnalysisAxis.GetLabels(),
+  //                            fAnalysisAxis.GetBinnings(), NDPOT, 0);
 
-    NDComps.emplace(kNDWSBkg, WSB);
-    NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWSBkg);
-  }
+  //   NDComps.emplace(kNDWSBkg, WSB);
+  //   NDComps.at(kNDDataCorr2D) -= NDComps.at(kNDWSBkg);
+  // }
 
-  // Linear Combination
-  TH1 const *LinearCombination = fFluxMatcher->GetGaussianCoefficients(
-      mean, width, fMaxOffAxis, NDChannel, shift);
+  // // Linear Combination
+  // TH1 const *LinearCombination = fFluxMatcher->GetGaussianCoefficients(
+  //     mean, width, NDChannel, shift);
 
-  for (auto &NDC : NDComps) {
-    NDC.second.OverridePOT(fDefaultOffAxisPOT);
-  }
+  // Comps.emplace(kNDDataCorr,
+  //               NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
+  // Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr));
 
-  Comps.emplace(kNDDataCorr,
-                NDComps.at(kNDDataCorr2D).WeightedByErrors(LinearCombination));
-  Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr));
+  // Comps.emplace(kNDSig,
+  //               NDComps.at(kNDSig2D).WeightedByErrors(LinearCombination));
 
-  Comps.emplace(kNDSig,
-                NDComps.at(kNDSig2D).WeightedByErrors(LinearCombination));
-
-  for (auto const &NDC :
-       NDComps) { // If you haven't been added, project to a 2D spectrum
-    if (!Comps.count(NDC.first)) {
-      Comps.emplace(NDC.first, NDC.second.ToSpectrum());
-    }
-  }
+  // for (auto const &NDC :
+  //      NDComps) { // If you haven't been added, project to a 2D spectrum
+  //   if (!Comps.count(NDC.first)) {
+  //     Comps.emplace(NDC.first, NDC.second.ToSpectrum());
+  //   }
+  // }
   return Comps;
 }
 
@@ -973,16 +1037,17 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
 
   for (auto &meas : NamedReweightableSpectrumCRefVect{
            {"M_ND_numu_ccinc_sel_numode",
-            Measurements.ND.numu_ccinc_sel_numode},
+            Measurements.ND_293kA.numu_ccinc_sel_numode},
            {"M_ND_numubar_ccinc_sel_numode",
-            Measurements.ND.numubar_ccinc_sel_numode},
+            Measurements.ND_293kA.numubar_ccinc_sel_numode},
            {"M_ND_numu_ccinc_sel_nubmode",
-            Measurements.ND.numu_ccinc_sel_nubmode},
+            Measurements.ND_293kA.numu_ccinc_sel_nubmode},
            {"M_ND_numubar_ccinc_sel_nubmode",
-            Measurements.ND.numubar_ccinc_sel_nubmode},
-           {"M_ND_nue_ccinc_sel_numode", Measurements.ND.nue_ccinc_sel_numode},
+            Measurements.ND_293kA.numubar_ccinc_sel_nubmode},
+           {"M_ND_nue_ccinc_sel_numode",
+            Measurements.ND_293kA.nue_ccinc_sel_numode},
            {"M_ND_nuebar_ccinc_sel_nubmode",
-            Measurements.ND.nuebar_ccinc_sel_nubmode},
+            Measurements.ND_293kA.nuebar_ccinc_sel_nubmode},
            {"M_ND_280kA_numu_ccinc_sel_numode",
             Measurements.ND_280kA.numu_ccinc_sel_numode},
            {"M_ND_280kA_numubar_ccinc_sel_numode",
@@ -1002,16 +1067,18 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
   }
 
   for (auto &meas : NamedPredInterpCRefVect{
-           {"P_ND_numu_ccinc_sel_numode", Predictions.ND.numu_ccinc_sel_numode},
+           {"P_ND_numu_ccinc_sel_numode",
+            Predictions.ND_293kA.numu_ccinc_sel_numode},
            {"P_ND_numubar_ccinc_sel_numode",
-            Predictions.ND.numubar_ccinc_sel_numode},
+            Predictions.ND_293kA.numubar_ccinc_sel_numode},
            {"P_ND_numu_ccinc_sel_nubmode",
-            Predictions.ND.numu_ccinc_sel_nubmode},
+            Predictions.ND_293kA.numu_ccinc_sel_nubmode},
            {"P_ND_numubar_ccinc_sel_nubmode",
-            Predictions.ND.numubar_ccinc_sel_nubmode},
-           {"P_ND_nue_ccinc_sel_numode", Predictions.ND.nue_ccinc_sel_numode},
+            Predictions.ND_293kA.numubar_ccinc_sel_nubmode},
+           {"P_ND_nue_ccinc_sel_numode",
+            Predictions.ND_293kA.nue_ccinc_sel_numode},
            {"P_ND_nuebar_ccinc_sel_nubmode",
-            Predictions.ND.nuebar_ccinc_sel_nubmode},
+            Predictions.ND_293kA.nuebar_ccinc_sel_nubmode},
            {"P_ND_280kA_numu_ccinc_sel_numode",
             Predictions.ND_280kA.numu_ccinc_sel_numode},
            {"P_ND_280kA_numubar_ccinc_sel_numode",
@@ -1042,15 +1109,20 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
     }
   }
 
-  for (auto &meas :
-       NamedPredInterpCRefVect{{"P_FD_numu_ccinc_sel_sig_numode",
-                                Predictions.FD.numu_ccinc_sel_sig_numode},
-                               {"P_FD_nue_ccinc_sel_sig_numode",
-                                Predictions.FD.nue_ccinc_sel_sig_numode},
-                               {"P_FD_numubar_ccinc_sel_sig_nubmode",
-                                Predictions.FD.numubar_ccinc_sel_sig_nubmode},
-                               {"P_FD_nuebar_ccinc_sel_sig_nubmode",
-                                Predictions.FD.nuebar_ccinc_sel_sig_nubmode}}) {
+  for (auto &meas : NamedPredInterpCRefVect{
+           {"P_FD_numu_ccinc_sel_sig_numode",
+            Predictions.FD.numu_ccinc_sel_sig_numode},
+           {"P_FD_nue_ccinc_sel_sig_numode",
+            Predictions.FD.nue_ccinc_sel_sig_numode},
+           {"P_FD_numubar_ccinc_sel_sig_nubmode",
+            Predictions.FD.numubar_ccinc_sel_sig_nubmode},
+           {"P_FD_nuebar_ccinc_sel_sig_nubmode",
+            Predictions.FD.nuebar_ccinc_sel_sig_nubmode},
+           {"P_FD_numu_ccinc_sel_sig_apposc_numode",
+            Predictions.FD.numu_ccinc_sel_sig_apposc_numode},
+           {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode",
+            Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode},
+       }) {
     if (meas.second.get()) {
       meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
     }
@@ -1158,7 +1230,8 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
 
   HistAxis const predictionAxis(pred_labels, pred_bins, pred_dummy_vars);
   HistAxis const offAxis(offaxis_labels, offaxis_bins, offaxis_dummy_vars);
-  HistAxis const _280kAAxis(offaxis_labels, offaxis_bins, offaxis_dummy_vars);
+  HistAxis const _280kAAxis(_280kAaxis_labels, _280kAaxis_bins,
+                            _280kAaxis_dummy_vars);
   HistAxis const energyMatchAxis(ematch_labels, ematch_bins, ematch_dummy_vars);
 
   std::unique_ptr<PredictionPRISM> pred = std::make_unique<PredictionPRISM>(
@@ -1166,17 +1239,17 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
 
   for (auto &meas : NamedReweightableSpectrumRefVect{
            {"M_ND_numu_ccinc_sel_numode",
-            pred->Measurements.ND.numu_ccinc_sel_numode},
+            pred->Measurements.ND_293kA.numu_ccinc_sel_numode},
            {"M_ND_numubar_ccinc_sel_numode",
-            pred->Measurements.ND.numubar_ccinc_sel_numode},
+            pred->Measurements.ND_293kA.numubar_ccinc_sel_numode},
            {"M_ND_numu_ccinc_sel_nubmode",
-            pred->Measurements.ND.numu_ccinc_sel_nubmode},
+            pred->Measurements.ND_293kA.numu_ccinc_sel_nubmode},
            {"M_ND_numubar_ccinc_sel_nubmode",
-            pred->Measurements.ND.numubar_ccinc_sel_nubmode},
+            pred->Measurements.ND_293kA.numubar_ccinc_sel_nubmode},
            {"M_ND_nue_ccinc_sel_numode",
-            pred->Measurements.ND.nue_ccinc_sel_numode},
+            pred->Measurements.ND_293kA.nue_ccinc_sel_numode},
            {"M_ND_nuebar_ccinc_sel_nubmode",
-            pred->Measurements.ND.nuebar_ccinc_sel_nubmode},
+            pred->Measurements.ND_293kA.nuebar_ccinc_sel_nubmode},
            {"M_ND_280kA_numu_ccinc_sel_numode",
             pred->Measurements.ND_280kA.numu_ccinc_sel_numode},
            {"M_ND_280kA_numubar_ccinc_sel_numode",
@@ -1198,17 +1271,17 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
 
   for (auto &meas : NamedPredInterpRefVect{
            {"P_ND_numu_ccinc_sel_numode",
-            pred->Predictions.ND.numu_ccinc_sel_numode},
+            pred->Predictions.ND_293kA.numu_ccinc_sel_numode},
            {"P_ND_numubar_ccinc_sel_numode",
-            pred->Predictions.ND.numubar_ccinc_sel_numode},
+            pred->Predictions.ND_293kA.numubar_ccinc_sel_numode},
            {"P_ND_numu_ccinc_sel_nubmode",
-            pred->Predictions.ND.numu_ccinc_sel_nubmode},
+            pred->Predictions.ND_293kA.numu_ccinc_sel_nubmode},
            {"P_ND_numubar_ccinc_sel_nubmode",
-            pred->Predictions.ND.numubar_ccinc_sel_nubmode},
+            pred->Predictions.ND_293kA.numubar_ccinc_sel_nubmode},
            {"P_ND_nue_ccinc_sel_numode",
-            pred->Predictions.ND.nue_ccinc_sel_numode},
+            pred->Predictions.ND_293kA.nue_ccinc_sel_numode},
            {"P_ND_nuebar_ccinc_sel_nubmode",
-            pred->Predictions.ND.nuebar_ccinc_sel_nubmode},
+            pred->Predictions.ND_293kA.nuebar_ccinc_sel_nubmode},
            {"P_ND_280kA_numu_ccinc_sel_numode",
             pred->Predictions.ND_280kA.numu_ccinc_sel_numode},
            {"P_ND_280kA_numubar_ccinc_sel_numode",
@@ -1251,7 +1324,12 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
            {"P_FD_numubar_ccinc_sel_sig_nubmode",
             pred->Predictions.FD.numubar_ccinc_sel_sig_nubmode},
            {"P_FD_nuebar_ccinc_sel_sig_nubmode",
-            pred->Predictions.FD.nuebar_ccinc_sel_sig_nubmode}}) {
+            pred->Predictions.FD.nuebar_ccinc_sel_sig_nubmode},
+           {"P_FD_numu_ccinc_sel_sig_apposc_numode",
+            pred->Predictions.FD.numu_ccinc_sel_sig_apposc_numode},
+           {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode",
+            pred->Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode},
+       }) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() =
           PredictionInterp::LoadFrom(dir->GetDirectory(meas.first.c_str()));

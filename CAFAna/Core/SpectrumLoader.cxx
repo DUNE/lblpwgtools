@@ -11,10 +11,6 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
-#ifdef USE_TH2JAGGED
-#include "CAFAna/PRISM/EffectiveFluxUncertaintyHelper.h"
-#endif
-
 #include "CAFAna/Systs/XSecSystList.h"
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
@@ -370,15 +366,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
 #ifdef USE_TH2JAGGED
-    // Pre-calculate flux error bins to speed up spline generation
-    sr.OffAxisFluxConfig =
-        PRISM::EffectiveFluxUncertaintyHelper::Get().GetNuConfig_checked(
-            sr.nuPDGunosc, sr.Ev, std::fabs(sr.det_x + sr.vtx_x * 1E-2), 0,
-            !sr.isFD, sr.isFHC);
-
-    sr.OffAxisFluxBin = PRISM::EffectiveFluxUncertaintyHelper::Get().GetBin(
-        sr.nuPDGunosc, sr.Ev, std::fabs(sr.det_x + sr.vtx_x * 1E-2), 0,
-        !sr.isFD, sr.isFHC, sr.SpecialHCRunId != 0);
+    sr.OffAxisFluxConfig = -1;
+    sr.OffAxisFluxBin = -1;
 #endif
     // Get the crazy flux info properly
     sr.wgt_CrazyFlux.resize(7);

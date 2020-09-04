@@ -25,7 +25,7 @@ set(Prediction_header_files
   PredictionsForPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
-target_link_libraries(CAFAnaPrediction)
+target_link_libraries(CAFAnaPrediction CAFAnaSysts)
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaPrediction gperftools)
