@@ -34,43 +34,36 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
                          double &max) {
 
   // Defaults
-  nBins = 200;
+  nBins = 50;
   min = 0;
   max = 1;
 
   if (parName == "th13") {
-    nBins = 200;
     min = 0.12;
     max = 0.21;
     return;
   }
   if (parName == "deltapi") {
-    nBins = 200;
     min = -1;
     max = 1;
   }
   if (parName == "dmsq32scaled" or parName == "dmsq32") {
-    nBins = 200;
     min = 2.25;
     max = 2.65;
   }
   if (parName == "ssth23") {
-    nBins = 200;
     min = 0.38;
     max = 0.62;
   }
   if (parName == "ss2th12") {
-    nBins = 200;
     min = 0.8;
     max = 0.9;
   }
   if (parName == "dmsq21") {
-    nBins = 200;
     min = 6e-5;
     max = 9e-5;
   }
   if (parName == "rho") {
-    nBins = 200;
     min = 2.5;
     max = 3.2;
   }
@@ -175,6 +168,7 @@ char const *def_penaltyString = "";
 int const def_hie = 1;
 char const *def_asimov_set = "0";
 char const *def_fakeDataShift = "";
+int const def_fitBias = 1;
 
 // Acceptable parameter names: th13, ss2th13, delta(pi), th23, ssth23, ss2th23,
 // dmsq32, dmsq32scaled, tsth12, ss2th12, dmsq21, rho
@@ -185,15 +179,31 @@ void asimov_joint(std::string stateFname = def_stateFname,
                   std::string sampleString = def_sampleString,
                   std::string penaltyString = def_penaltyString,
                   int hie = def_hie, std::string asimov_set = def_asimov_set,
-                  std::string fakeDataShift = def_fakeDataShift) {
+                  std::string fakeDataShift = def_fakeDataShift,
+		  int fitBias = def_fitBias) {
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
 
   std::vector<std::string> plotVarVect = SplitString(plotVars, ':');
 
+  // This function allows any dial to be set to non-nominal
+  SystShifts trueSyst = GetFakeDataSystShift(fakeDataShift);
+
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
+
+  // Should the fake data dials be removed from the systlist?
+  if (!fitBias){
+    
+    std::vector<std::string> bias_syst_names;
+    // Loop over all systs set to a non-nominal value and remove
+    for (auto syst : trueSyst.ActiveSysts()){
+      std::cout << "Removing " << syst->ShortName() <<std::endl; 
+      bias_syst_names.push_back(syst->ShortName());
+      RemoveSysts(systlist, bias_syst_names);
+    }
+  }
 
   // Oscillation parameters to start with
   std::vector<const IFitVar *> oscVarsAll = GetOscVars("alloscvars", hie);
@@ -255,7 +265,6 @@ void asimov_joint(std::string stateFname = def_stateFname,
   osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
-  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   SystShifts testSyst = kNoShift;
 
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
@@ -385,8 +394,9 @@ int main(int argc, char const *argv[]) {
   int hie = (argc > 7) ? atoi(argv[7]) : def_hie;
   std::string asimov_set = (argc > 8) ? argv[8] : def_asimov_set;
   std::string fakeDataShift = (argc > 9) ? argv[9] : def_fakeDataShift;
+  int fitBias = (argc > 10) ? atoi(argv[10]) : def_fitBias;
 
   asimov_joint(stateFname, outputFname, plotVars, systSet, sampleString,
-               penaltyString, hie, asimov_set, fakeDataShift);
+               penaltyString, hie, asimov_set, fakeDataShift, fitBias);
 }
 #endif
