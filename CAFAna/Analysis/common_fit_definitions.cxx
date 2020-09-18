@@ -505,6 +505,73 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   return thisShift;
 }
 
+// This is really a generalization of the GetFakeDataGeneratorSystShift function
+// Now any dial can be used as fake data, and set to some arbitrary value away from nominal
+// It's a bit clunky (as ever) to maintain the functionality of the old method
+SystShifts GetFakeDataSystShift(std::string input) {
+
+  // Default to nominal
+  SystShifts thisShift = kNoShift;
+
+  std::cout << "GetFakeDataSystShift got: " << input << std::endl;
+
+  if (input.empty() || input == "nominal")
+    return thisShift;
+
+  // Multiple dials can be set using DIAL_NAME1:value1,DIAL_NAME2:value2
+  std::vector<std::string> split_input = SplitString(input, ',');
+  std::vector<std::string> dial_names;
+  std::vector<float> dial_vals;
+
+  for (auto this_pair : split_input){
+
+    std::cout << "Testing: " << this_pair << std::endl;
+    std::vector<std::string> name_value = SplitString(this_pair, ':');
+    
+    // Sanity check
+    if (name_value.size() > 2){
+      std::cout << "GetFakeDataSystShift cannot parse " << this_pair << std::endl;
+      exit(1);
+    }
+
+    std::string this_name;
+    float this_val;
+
+    // This is stupid and just maintains compatibility with the old function
+    // If you're using this functionality in a new script, reconsider!
+    if (name_value.size() == 1){
+
+      if (this_pair.compare(this_pair.length()-4, 4, "_pos") == 0){
+	this_name = this_pair.substr(0, this_pair.length()-4);
+	this_val  = 1;
+      } else if (this_pair.compare(this_pair.length()-4, 4, "_neg") == 0){
+	this_name = this_pair.substr(0, this_pair.length()-4);
+	this_val  = -1;
+      }
+
+      // Only allow this madness for the XSEC fake data dials
+      assert(IsFakeDataGenerationSyst(this_name));
+    }
+
+    // Otherwise, interpret the first as the dial name, second as the value
+    this_name = name_value[0];
+    this_val = std::stof(name_value[1]);
+
+    dial_names.push_back(this_name);
+    dial_vals .push_back(this_val);
+  }
+
+  // Now push all this back into the SystShift object
+  std::vector<ISyst const *> BiasSyst = GetListOfSysts();
+  KeepSysts(BiasSyst, dial_names);
+
+  for (uint i=0; i<BiasSyst.size(); i++){
+    thisShift.SetShift(BiasSyst[i], dial_vals[i]);
+  }
+
+  return thisShift;
+}
+
 std::string GetSampleName(SampleType sample) {
   switch (sample) {
   case kFDFHC:
@@ -1231,7 +1298,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   static auto start_load = std::chrono::system_clock::now();
 
   static bool PI_load = true;
-  static std::vector<ana::ISyst const *> syststoload = systlist;
+  static std::vector<ana::ISyst const *> syststoload = GetListOfSysts();
   if (PI_load) {
 
     for (auto &env_str :
