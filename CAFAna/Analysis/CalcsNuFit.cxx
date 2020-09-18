@@ -128,7 +128,7 @@ namespace ana
       if (pair.first == "th23")
       	ret->SetTh23(pair.second);
       if (pair.first == "dmsq32")
-      	ret->SetDmsq32(pair.second);
+      	ret->SetDmsq32(pair.second/1e3);
       if (pair.first == "ssth23")
 	ret->SetTh23(asin(sqrt(pair.second)));
     }
@@ -481,10 +481,12 @@ namespace ana
       for (auto & pair : asimov_set){
         if (pair.first == "th13")
           fTh13 = pair.second;
+	if (pair.first == "ss2th13")
+	  fTh13 = asin(sqrt(pair.second)/2.);
         if (pair.first == "th23")
           fTh23 = pair.second;
 	if (pair.first == "dmsq32")
-          fDmsq32 = pair.second;
+          fDmsq32 = pair.second/1e3;
 	if (pair.first == "ssth23")
           fTh23 = asin(sqrt(pair.second));
       }
