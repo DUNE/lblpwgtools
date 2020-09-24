@@ -167,6 +167,8 @@ namespace ana
       abort();
     }
 
+    fTestStatistic = stat;
+
     switch(stat){
     case kLogLikelihood:
       // No need for any matrix
