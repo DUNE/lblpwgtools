@@ -183,6 +183,16 @@ namespace ana
   {
     assert(e.size() == covmxinv.rows()+2);
 
+    if(e.size() != o.size()){
+      std::cout << "Chi2CovMx() mismatched expectation and observed sizes: " << e.size() << " vs " << o.size() << std::endl;
+      abort();
+    }
+
+    if(e.size() != covmxinv.rows()+2){
+      std::cout << "Chi2CovMx() expected " << e.size()-2 << "x" << e.size()-2 << " covariance matrix. Got " << covmxinv.rows() << "x" << covmxinv.cols() << std::endl;
+      abort();
+    }
+
     Eigen::ArrayXd diff = e-o;
     // Drop underflow and overflow bins
     const Eigen::ArrayXd diffSub(Eigen::Map<Eigen::ArrayXd>(diff.data()+1, diff.size()-2));
