@@ -749,7 +749,7 @@ namespace ana
           TDirectory *preddir = dir->GetDirectory(subname.c_str());
           if (!preddir)
           {
-            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
+            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma not found in "
                       << dir->GetName() << std::endl;
             continue;
           }
