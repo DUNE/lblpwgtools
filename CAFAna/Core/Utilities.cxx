@@ -880,47 +880,47 @@ namespace ana
   // Note that this does not work for 3D!
   Eigen::ArrayXd GetMaskArray(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
   {
-    if (s.GetBinnings().size() > 2){
+    if (s.NDimensions() > 2){
       std::cout << "Error: unable to apply a mask in " << s.GetBinnings().size() << " dimensions" << std::endl;
       abort();
     }
 
-    // The exposure isn't important here
-    TH1* binsND  = s.ToTHX(s.POT());
-    TH1D* bins1D = s.ToTH1(s.POT());
+    if(s.NDimensions() == 1 && ymax > ymin){
+      std::cout << "Error: GetMaskArray(): can't specify y range for 1D spectrum" << std::endl;
+      abort();
+    }
 
-    const int N = bins1D->GetNbinsX();
+    const Binning* xbins = &s.GetBinnings()[0];
+    const Binning* ybins = (s.NDimensions() == 2) ? &s.GetBinnings()[1] : 0;
 
-    Eigen::ArrayXd ret(N+2);
-
-    const int Nx = binsND->GetNbinsX();
-    const int Ny = binsND->GetNbinsY();
-
-    // Include underflow and overflow if mask disabled, otherwise exclude
-    ret[0] = ret[N+1] = ((xmin < xmax || ymin < ymax) ? 0 : 1);
+    const int Nx = xbins->NBins();
+    const int Ny = ybins ? ybins->NBins() : 1;
 
     // The 1D flattening of 2D binning is pretty confusing. The bins are packed
     // densely, without under/overflow, *except* there is a single underflow at
-    // 0 and single overflow at nrows*ncols+1. So we do our calculations as if
-    // there were no under/overflow and then add 1 to every access to account.
+    // 0 and single overflow at Nx*Ny+1. So we do our calculations as if there
+    // were no under/overflow and then add 1 to the output index to account.
 
-    assert(N == Nx*Ny);
+    Eigen::ArrayXd ret(Nx*Ny+2);
 
-    for(int i = 0; i < N; ++i){
+    // Include underflow and overflow if mask disabled, otherwise exclude
+    ret[0] = ret[Nx*Ny+1] = ((xmin < xmax || ymin < ymax) ? 0 : 1);
 
-      int ix = i / Ny;
-      int iy = i % Ny;
+    for(int i = 0; i < Nx*Ny; ++i){
+
+      const int ix = i / Ny;
+      const int iy = i % Ny;
 
       bool isMask = false;
 
       if (xmin < xmax){
-	if (binsND->GetXaxis()->GetBinLowEdge(ix+1) < xmin) isMask=true;
-	if (binsND->GetXaxis()->GetBinUpEdge(ix+1) > xmax) isMask=true;
+	if (xbins->Edges()[ix  ] < xmin) isMask = true;
+	if (xbins->Edges()[ix+1] > xmax) isMask = true;
       }
 
       if (ymin < ymax){
-	if (binsND->GetYaxis()->GetBinLowEdge(iy+1) < ymin) isMask=true;
-	if (binsND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
+	if (ybins->Edges()[iy  ] < ymin) isMask = true;
+	if (ybins->Edges()[iy+1] > ymax) isMask = true;
       }
 
       ret[i+1] = isMask ? 0 : 1;
