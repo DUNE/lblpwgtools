@@ -886,32 +886,44 @@ namespace ana
     }
 
     // The exposure isn't important here
-    TH1* fMaskND  = s.ToTHX(s.POT());
-    TH1D* fMask1D = s.ToTH1(s.POT());
-    fMask1D->Reset();
+    TH1* binsND  = s.ToTHX(s.POT());
+    TH1D* bins1D = s.ToTH1(s.POT());
 
-    Eigen::ArrayXd ret(fMask1D->GetNbinsX()+2);
+    const int N = bins1D->GetNbinsX();
 
-    int ybins = fMaskND->GetNbinsY();
+    Eigen::ArrayXd ret(N+2);
 
-    for(int i = 0; i < fMask1D->GetNbinsX()+2; ++i){
+    const int Nx = binsND->GetNbinsX();
+    const int Ny = binsND->GetNbinsY();
 
-      int ix = i / ybins;
-      int iy = i % ybins;
+    // Include underflow and overflow if mask disabled, otherwise exclude
+    ret[0] = ret[N+1] = ((xmin < xmax || ymin < ymax) ? 0 : 1);
+
+    // The 1D flattening of 2D binning is pretty confusing. The bins are packed
+    // densely, without under/overflow, *except* there is a single underflow at
+    // 0 and single overflow at nrows*ncols+1. So we do our calculations as if
+    // there were no under/overflow and then add 1 to every access to account.
+
+    assert(N == Nx*Ny);
+
+    for(int i = 0; i < N; ++i){
+
+      int ix = i / Ny;
+      int iy = i % Ny;
 
       bool isMask = false;
 
       if (xmin < xmax){
-	if (fMaskND->GetXaxis()->GetBinLowEdge(ix+1) < xmin) isMask=true;
-	if (fMaskND->GetXaxis()->GetBinUpEdge(ix+1) > xmax) isMask=true;
+	if (binsND->GetXaxis()->GetBinLowEdge(ix+1) < xmin) isMask=true;
+	if (binsND->GetXaxis()->GetBinUpEdge(ix+1) > xmax) isMask=true;
       }
 
       if (ymin < ymax){
-	if (fMaskND->GetYaxis()->GetBinLowEdge(iy+1) < ymin) isMask=true;
-	if (fMaskND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
+	if (binsND->GetYaxis()->GetBinLowEdge(iy+1) < ymin) isMask=true;
+	if (binsND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
       }
 
-      ret[i] = isMask ? 0 : 1;
+      ret[i+1] = isMask ? 0 : 1;
     }
 
     return ret;
