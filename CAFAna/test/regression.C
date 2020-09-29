@@ -54,7 +54,7 @@ using namespace ana;
 
 namespace ana{
 
-TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
+TMatrixD *GetNDCovMat2(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
 
   auto AnaV = GetAnaVersion();
 
@@ -183,7 +183,7 @@ double RunFitPoint2(std::string stateFileName, std::string sampleString,
   }
 
   //  TMatrixD *fhc_ndmatrix = GetNDCovMat(false, false, true);
-  TMatrixD *rhc_ndmatrix = GetNDCovMat(false, true/*false*/, false);
+  TMatrixD *rhc_ndmatrix = GetNDCovMat2(false, true/*false*/, false);
   //  nd_expt_fhc.AddCovarianceMatrix(fhc_ndmatrix, kCovMxChiSqPreInvert);
   nd_expt_rhc.AddCovarianceMatrix(rhc_ndmatrix, kCovMxChiSqPreInvert);
 

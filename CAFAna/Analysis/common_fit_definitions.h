@@ -41,6 +41,10 @@ double GetBoundedGausThrow(double min, double max);
 // I miss python...
 std::vector<std::string> SplitString(std::string input, char delim = ' ');
 
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
+                      bool TwoBeams = true,
+                      bool isFHC = true);
+
 // For ease of penalty terms...
 ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                              std::string asimov_set = "0",
