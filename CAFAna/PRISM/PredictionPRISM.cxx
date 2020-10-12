@@ -133,11 +133,11 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   auto slice_width_weight =
       NDSliceCorrection(50, fNDOffAxis.GetBinnings().front().Edges());
   auto slice_width_weight_280kA =
-      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
+      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges()); // CHANGE from 50 to 200
 
   NDData = std::make_unique<ReweightableSpectrum>(
       ND_loader, fAnalysisAxis, fNDOffAxis, cut && kCut280kARun, shift,
-      wei * slice_width_weight);
+      wei * slice_width_weight); // ADDED kSpecHCRunWeight TEST!
 
   std::unique_ptr<ReweightableSpectrum> &NDData_280kA =
       GetNDData(NDChannel, 280);
@@ -175,7 +175,7 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
   auto slice_width_weight =
       NDSliceCorrection(50, fNDOffAxis.GetBinnings().front().Edges());
   auto slice_width_weight_280kA =
-      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
+      NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges()); // CHANGE 50 to 200
 
   std::unique_ptr<PredictionInterp> &NDPrediction = GetNDPrediction(NDChannel);
   if (&NDPrediction == &kNoSuchNDPredictionSpectrum) {
@@ -568,6 +568,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                  : RunPlan_nub;
 
   double NDPOT = NDRunPlan.GetPlanPOT();
+  double NDPOT280kA = NDPOT * 4; // CORRECTION for 2 m wide bin
   assert(NDPOT > 0);
 
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
@@ -685,8 +686,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   std::pair<TH1 const *, TH1 const *> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
 
+  const TH1 *raw293LC = LinearCombination.first;
+  gFile->WriteObject(raw293LC, "rawLC_293kA");
+
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
+
+  gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
 
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
@@ -694,7 +700,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // We don't want the total POT of the runplan to affect the scale of the
   // coefficients, just the shape.
   UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
-  UnRunPlannedLinearCombination_280kA->Scale(NDPOT);
+  UnRunPlannedLinearCombination_280kA->Scale(NDPOT280kA); // CHANGE
 
   PRISMOUT("PRISM analysis axis: "
            << fNDOffAxis.GetLabels().front() << " with "
@@ -722,7 +728,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   UnRunPlannedLinearCombination_280kA_s.Clear();
   UnRunPlannedLinearCombination_280kA_s.FillFromHistogram(
       UnRunPlannedLinearCombination_280kA.get());
-  UnRunPlannedLinearCombination_280kA_s.OverridePOT(NDPOT);
+  UnRunPlannedLinearCombination_280kA_s.OverridePOT(NDPOT280kA); // CHANGE
   UnRunPlannedLinearCombination_280kA_s.OverrideLivetime(0);
   Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
 
@@ -746,6 +752,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       NDComps.at(kNDDataCorr2D_293kA)
           .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
 
+
   TH2 *bla = NDComps.at(kNDDataCorr2D_293kA).ToTH2(NDPOT);
 
   for (int i = 0; i < bla->GetXaxis()->GetNbins(); ++i) {
@@ -768,7 +775,20 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       kNDDataCorr_280kA,
       NDComps.at(kNDDataCorr2D_280kA)
           .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
-  std::cout << "Done" << std::endl;
+
+  TH2 *bla280 = NDComps.at(kNDDataCorr2D_280kA).ToTH2(NDPOT280kA);
+  for (int i = 0; i < bla280->GetXaxis()->GetNbins(); ++i) {
+    for (int j = 0; j < bla280->GetYaxis()->GetNbins(); ++j) {
+      bla280->SetBinContent(
+        i + 1, j + 1,
+        bla280->GetBinContent(i + 1, j + 1) *
+          UnRunPlannedLinearCombination_280kA->GetBinContent(j + 1));
+        bla280->SetBinError(
+          i + 1, j + 1,
+          bla280->GetBinError(i + 1, j + 1) *
+            UnRunPlannedLinearCombination_280kA->GetBinContent(j + 1));
+    }
+  } 
 
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
@@ -869,7 +889,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
             << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
 
-  Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
+  //Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
   if (NDComps.count(kPRISMMC)) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
   }

@@ -55,9 +55,9 @@ struct RunPlan {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
-      std::cout << "[weight]: Stop " << stop.min << " -- " << stop.max << "("
+      /*std::cout << "[weight]: Stop " << stop.min << " -- " << stop.max << "("
                 << ypos << " m) weighting by " << stop.POT << " @ "
-                << stop.horn_current << " kA" << std::endl;
+                << stop.horn_current << " kA" << std::endl;*/
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
         double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
         double be = SetErrorsFromPredictedRate
@@ -125,9 +125,9 @@ struct RunPlan {
       double be = unweighted->GetBinError(xit + 1);
 
       unweighted->SetBinContent(xit + 1, bc / stop.POT);
-      std::cout << "[unweight]: Stop " << stop.min << " -- " << stop.max << "("
+      /*std::cout << "[unweight]: Stop " << stop.min << " -- " << stop.max << "("
                 << xpos << " m) unweighting " << bc << " by " << stop.POT
-                << " @ " << kA << " kA" << std::endl;
+                << " @ " << kA << " kA" << std::endl;*/
       unweighted->SetBinError(xit + 1, be / stop.POT);
     }
 
