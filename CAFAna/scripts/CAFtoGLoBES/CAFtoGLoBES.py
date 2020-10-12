@@ -1,4 +1,7 @@
 #!/bin/env python
+
+from __future__ import print_function
+
 import os,sys,string
 import ROOT
 from ROOT import TCanvas, TPad, TFormula, TF1, TPaveLabel, TH1F, TH2F, TFile, TChain, TGraph, TBox, TLegend
@@ -86,8 +89,8 @@ def HistToFile2D(hist,txtfile,name, tfilenew=None):
  
 
 def main():
-  print "Functions to write out GLoBES files from CAFAna input"
-  print "Called from make_effs.py"
+  print("Functions to write out GLoBES files from CAFAna input")
+  print("Called from make_effs.py")
   
 
 if __name__ == "__main__":

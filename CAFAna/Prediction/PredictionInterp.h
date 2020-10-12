@@ -6,6 +6,7 @@
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/ThreadLocal.h"
 
 #include <iostream>
 #include <map>
@@ -258,7 +259,7 @@ namespace ana
       TMD5 hash;
       Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
     };
-    mutable std::map<Key_t, Val_t> fNomCache;
+    mutable ThreadLocal<std::map<Key_t, Val_t>> fNomCache;
 
     bool fSplitBySign;
 

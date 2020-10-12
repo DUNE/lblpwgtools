@@ -7,6 +7,7 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/StanTypedefs.h"
+#include "CAFAna/Core/ThreadLocal.h"
 
 #include <string>
 
@@ -23,16 +24,16 @@ namespace ana
 
   struct OscCache
   {
-    mutable std::unique_ptr<TMD5> fOscCacheHash;
-    mutable Spectrum fOscCacheSpect;
+    std::unique_ptr<TMD5> hash;
+    Spectrum spect;
 
     OscCache()
-      : fOscCacheSpect(Spectrum::Uninitialized())
+      : spect(Spectrum::Uninitialized())
     {}
   };
 
   /// %Spectrum with true energy information, allowing it to be oscillated
-  class OscillatableSpectrum: public ReweightableSpectrum, protected OscCache
+  class OscillatableSpectrum: public ReweightableSpectrum
   {
   public:
     friend class SpectrumLoaderBase;
@@ -111,5 +112,7 @@ namespace ana
     }
 
     template<class T> Spectrum _Oscillated(osc::_IOscCalc<T>* calc, int from, int to) const;
+
+    mutable ThreadLocal<OscCache> fCache;
   };
 }

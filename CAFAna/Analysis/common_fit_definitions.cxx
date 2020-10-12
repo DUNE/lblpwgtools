@@ -218,7 +218,6 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
   return rtn_vars;
 }
 
-
 /*
   The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
   points used for normal dials, they have fixed values for non-zero values of the 

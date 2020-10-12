@@ -56,6 +56,7 @@ set(Core_header_files
   StanTypedefs.h
   StanUtils.h
   SystShifts.h
+  ThreadLocal.h
   ThreadPool.h
   Utilities.h
   Var.h

@@ -167,6 +167,17 @@ namespace ana
       abort();
     }
 
+    const int datasize = fData.GetEigen(fData.POT()).size();
+    if(cov->GetNrows()+2 != datasize){
+      std::cout << "SingleSampleExperiment::AddCovarianceMatrix(): "
+                << "Expected " << datasize-2 << "x" << datasize-2
+                << ", got " << cov->GetNrows() << "x" << cov->GetNcols()
+                << std::endl;
+      abort();
+    }
+
+    fTestStatistic = stat;
+
     switch(stat){
     case kLogLikelihood:
       // No need for any matrix
