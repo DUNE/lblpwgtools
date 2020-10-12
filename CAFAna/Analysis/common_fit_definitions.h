@@ -46,10 +46,6 @@ TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
                       bool TwoBeams = true,
                       bool isFHC = true);
 
-TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
-                      bool TwoBeams = true,
-                      bool isFHC = true);
-
 // For ease of penalty terms...
 ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                              std::string asimov_set = "0",
