@@ -96,6 +96,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   if (use_PRISM) {
 
     if (Use_EventRateMatching) {
+      std::cout << "Using event rate matching" << std::endl;
       fluxmatcher.Initialize({
           {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
           {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
@@ -105,6 +106,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
       });
     } else {
+      std::cout << "Using flux matching" << std::endl;
       fluxmatcher.Initialize({
           {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
           {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
@@ -204,6 +206,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     }
 
     TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
+    //Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
@@ -242,6 +245,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        //PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
 

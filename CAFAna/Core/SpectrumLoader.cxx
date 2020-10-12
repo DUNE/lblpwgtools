@@ -296,6 +296,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.perPOTWeight = 1;
     sr.perFileWeight = 1;
     sr.NDMassCorrWeight = 1;
+    sr.SpecialRunWeight = 1;
+    sr.SpecialHCRunId = 293;
   }
 
   for (int n = 0; n < Nentries; ++n) {

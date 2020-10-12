@@ -1,30 +1,60 @@
 #!/bin/bash
 
-if ! CAFBuild OffAxisNDCAFCombiner.C; then
-  exit 1
-fi
 
 for i in FHC; do # RHC; do
 
-  # for j in PROD2 PROD3 PROD4 PROD5 PROD6 PROD7 PROD8 PROD9 PROD10 PROD11; do
-  # for j in PROD11; do
-  #   ./OffAxisNDCAFCombiner.exe \
-  #        "/pnfs/dune/persistent/users/gyang/CAF/CAF/${j}/CAF_${i}_[0-9]{5}.root" \
-  #        /dune/data/users/picker24/OffAxisCAFs/CAF_${i}_OffAxis_${j}.root \
-  #        false \
-  #        caf true
-  # done
+  #On axis is treated differently
 
-  # ./OffAxisNDCAFCombiner.exe \
-  #      /dune/data/users/marshalc/CAFs/mcc11_v3/ND_${i}_CAF.root \
-  #      /dune/data/users/picker24/OffAxisCAFs/CAF_${i}_OnAxis.root \
-  #      false \
-  #      caf true false 5000000
+  ## Standard on axis run
+  for j in 00 01 02 03 04; do
+    
+    OffAxisNDCAFCombiner \
+      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/0m/${j}/${i}*.root" \
+      -o CAF_0m_${j}_${i}.root \
+      -t caf \
+      -p \
+      -x -4000,400,25 \
+      -f \
+      -s 200
 
-  ./OffAxisNDCAFCombiner.exe \
-       "/dune/data/users/picker24/OffAxisCAFs/CAF_${i}_OffAxis_PROD[4-9].root,/dune/data/users/picker24/OffAxisCAFs/CAF_${i}_OffAxis_PROD10.root,/dune/data/users/picker24/OffAxisCAFs/CAF_${i}_OnAxis.root" \
-       /dune/data/users/picker24/OffAxisCAFs/CAF_${i}_PRISM_PROD4-10.root \
-       true
+    ## Special 280 kA run
+  
+    OffAxisNDCAFCombiner \
+      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/0m/${j}/${i}*.root" \
+      -o CAF_280kA_0m_${j}_${i}.root \
+      -t caf \
+      -p \
+      -x -4000,400,25 \
+      -f \
+      -n 200 \
+      --280kA
+  
+  done
 
+  for p in 2m 4m 8m 12m 16m 20m 24m 28m; do
+
+    for k in 00 01 02 03 04; do
+ 
+      OffAxisNDCAFCombiner \
+        -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/${p}/${k}/${i}*.root" \
+        -o CAF_${p}_${k}_${i}.root \
+        -t caf \
+        -p \
+        -x -4000,400,25\
+        -f \
+    
+    done
+
+  done
+
+  wait
+
+  # Combine them all
+  OffAxisNDCAFCombiner \
+    -i "./CAF_*_${i}.root" \
+    -o CAF_PRISM_Sep2020_${i}.root \
+    -x -4000,400,25\
+    -f \
+    -C
 
 done

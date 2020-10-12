@@ -16,6 +16,7 @@ static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
 #include "TH2.h"
 
 #include <cassert>
+#include <algorithm>
 
 namespace ana {
 const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);

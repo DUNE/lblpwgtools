@@ -15,7 +15,7 @@
 namespace caf
 {
   
-  static size_t const kMaxSystUniverses = 10;
+  static std::size_t const kMaxSystUniverses = 10;
 
   /// \brief   The StandardRecord is the primary top-level object in the 
   ///          Common Analysis File trees.   

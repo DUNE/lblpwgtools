@@ -384,8 +384,8 @@ Spectrum ReweightableSpectrum::WeightedByErrors(const TH1 *ws) const {
   int bin = 0;
   for (int y = 1; y < Y + 1; ++y) {
     const double w = ws->GetBinContent(y);
-    std::cout << "Weightedbyerrors: " << w <<
-        " @ " << fHist->GetYaxis()->GetBinCenter(y + 1) << std::endl;
+    /*std::cout << "Weightedbyerrors: " << w <<
+        " @ " << fHist->GetYaxis()->GetBinCenter(y + 1) << std::endl;*/
     std::unique_ptr<TH1D> px(fHist->ProjectionX("px", y, y));
     hRet->Add(px.get(), w);
   }

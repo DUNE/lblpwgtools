@@ -157,6 +157,8 @@ public:
   double perPOTWeight;
   double perFileWeight;
   double NDMassCorrWeight;
+  double SpecialRunWeight;
+  int SpecialHCRunId;
 
 #ifdef USE_TH2JAGGED
   // Cache the ND flux bin when using off-axis flux matrices.
