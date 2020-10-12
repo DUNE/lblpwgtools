@@ -7,7 +7,7 @@ set(scripts_to_build
   #DumpEventRateTable
   #  ChiSqSurfacePRISMPred
  PRISMRegOptimizer
- FluxPredictionTester
+ #FluxPredictionTester
 )
 
 foreach(SCRPT ${scripts_to_build})

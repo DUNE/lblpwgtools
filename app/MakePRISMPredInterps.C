@@ -547,16 +547,16 @@ int main(int argc, char const *argv[]) {
 
       // Corrects for non-uniform off-axis binning
       auto slice_width_weight = NDSliceCorrection(
-          50, (IsND280kA ? axes.OffAxis280kAPosition : axes.OffAxisPosition)
+                  50, (IsND280kA ? axes.OffAxis280kAPosition : axes.OffAxisPosition)
                   .GetBinnings()
                   .front()
-                  .Edges());
+                  .Edges()); // (IsND280kA ? 200 : 50)
 
       MatchPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-          WeightVars[it] * slice_width_weight);
+          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+          WeightVars[it] * slice_width_weight * kSpecHCRunWeight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
           los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,

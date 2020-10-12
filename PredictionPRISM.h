@@ -209,10 +209,10 @@ public:
   HistAxis fFluxMatcherCorrectionAxes;
   double fDefaultOffAxisPOT;
 
-  bool fNCCorrection;
-  bool fWSBCorrection;
-  bool fWLBCorrection;
-  bool fIntrinsicCorrection;
+  bool fNCCorrection = false;
+  bool fWSBCorrection = false;
+  bool fWLBCorrection = false;
+  bool fIntrinsicCorrection = false;
   void SetNCCorrection(bool v = true) { fNCCorrection = v; }
   void SetWrongSignBackgroundCorrection(bool v = true) { fWSBCorrection = v; }
   void SetWrongLeptonBackgroundCorrection(bool v = true) { fWLBCorrection = v; }
