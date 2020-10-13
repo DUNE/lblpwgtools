@@ -4,6 +4,8 @@ set(Systs_implementation_files
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
   EnergySysts.cxx
+  TruthEnergyFDSysts.cxx
+  TruthEnergyNDSysts.cxx
   FDRecoSysts.cxx
   XSecSysts.cxx
   NDRecoSysts.cxx
@@ -20,6 +22,8 @@ set(Systs_header_files
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
   EnergySysts.h
+  TruthEnergyFDSysts.h
+  TruthEnergyNDSysts.h
   FDRecoSysts.h
   XSecSysts.h
   NDRecoSysts.h
