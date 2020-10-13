@@ -359,38 +359,6 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
 
   Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights; 
 
-  //************ 
-  NDFluxMatrix.transposeInPlace();
-  std::unique_ptr<TH2> LCND = std::unique_ptr<TH2>(new TH2D("LCND", "LCND",
-                                                   NDFluxMatrix.cols(), 0, NDFluxMatrix.cols(),
-                                                   NDFluxMatrix.rows(), 0, NDFluxMatrix.rows()));
-  LCND->SetDirectory(nullptr);
-  FillHistFromEigenMatrix(LCND.get(), NDFluxMatrix);
-  gFile->WriteObject(LCND.get(), "LCND");
-
-  for (int i = 0;
-         i < LCND->GetXaxis()->GetNbins();
-         ++i) {
-    for (int j = 0;
-           j < LCND->GetYaxis()->GetNbins();
-           ++j) {
-      LCND->SetBinContent(i + 1, j + 1,
-          LCND->GetBinContent(i + 1, j + 1) *
-          RawLCW->GetBinContent(j + 1));
-      LCND->SetBinError(i + 1, j + 1,
-          LCND->GetBinError(i + 1, j + 1) *
-          RawLCW->GetBinContent(j + 1));
-    }
-    // Test for 293kA
-    LCND->SetBinContent(i + 1, LCND->GetYaxis()->GetNbins(), 0);
-    LCND->SetBinError(i + 1, LCND->GetYaxis()->GetNbins(), 0); 
-  }
-  gFile->WriteObject(LCND.get(), "LCND_weighted");
-  std::unique_ptr<TH1> ProjWND = std::unique_ptr<TH1D>(static_cast<TH1D*>(
-    LCND->ProjectionX("ProjWeightND", 0, LCND->GetYaxis()->GetNbins())));
-  gFile->WriteObject(ProjWND.get(), "ProjweightedND");	
-  //***********
-
   for (int bin_it = 0; bin_it < FDOsc->GetXaxis()->GetNbins(); ++bin_it) {
     double bc_o = FDOsc->GetBinContent(bin_it + 1);
     double bc_u = FDUnOsc->GetBinContent(bin_it + 1);
