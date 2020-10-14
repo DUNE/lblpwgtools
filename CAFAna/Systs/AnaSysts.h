@@ -27,21 +27,21 @@ namespace ana
 
 	std::vector<const ana::ISyst *>
 	GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
-	               bool detsyst = true, bool useND = true, bool useFD = true,
-	               bool useNueOnE = false, bool useFakeDataDials = true,
-	               bool fluxsyst_CDR = true,
-	               int NFluxSysts = NFluxParametersToAddToStatefile,
-	               bool removeFDNonFitDials = false);
+		bool detsyst = true, bool useND = true, bool useFD = true,
+		bool useNueOnE = false, bool useFakeDataDials = true,
+		bool fluxsyst_CDR = true,
+		int NFluxSysts = NFluxParametersToAddToStatefile,
+		bool removeFDNonFitDials = false);
 
 	std::vector<const ana::ISyst *> GetListOfSysts(std::string systString,
-	                                               bool useND = true,
-	                                               bool useFD = true,
-	                                               bool useNueOnE = false);
+		bool useND = true,
+		bool useFD = true,
+		bool useNueOnE = false);
 
 	std::vector<const ana::ISyst *> GetListOfSysts(char const *systCString,
-	                                               bool useND = true,
-	                                               bool useFD = true,
-	                                               bool useNueOnE = false);
+		bool useND = true,
+		bool useFD = true,
+		bool useNueOnE = false);
 
 	/// Put a list of systematics in the 'standard' order
 	std::vector<const ana::ISyst *>

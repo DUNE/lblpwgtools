@@ -38,8 +38,6 @@ extern double const pot_nd;
 // MW yr
 extern double const nom_exposure;
 
-// extern size_t NFluxParametersToAddToStatefile;
-
 double GetBoundedGausThrow(double min, double max);
 
 TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,

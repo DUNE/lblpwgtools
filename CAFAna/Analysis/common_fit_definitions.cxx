@@ -70,8 +70,6 @@ const double pot_nd = POT120 * nom_years;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 const double nom_exposure = 336.;
 
-//size_t NFluxParametersToAddToStatefile = 30;
-
 double GetBoundedGausThrow(double min, double max) {
   double val = -999;
   while (val > max || val < min)
