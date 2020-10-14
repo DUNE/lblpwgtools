@@ -73,19 +73,28 @@ namespace ana
   const ReactorExperiment* ReactorConstraintNuFit2018(bool normal_ordering, bool sk_data)
   {
     // NuFit November 2018
-    double this_val = 0., this_err = 0.;
+    double this_val = 0.;
+    double this_err = 0.;
 
     if(sk_data){
-      if(normal_ordering)
-        this_val = 0.088, this_err = 0.003;
-      else
-        this_val = 0.088, this_err = 0.003;        
+      if(normal_ordering){
+        this_val = 0.088;
+        this_err = 0.003;
+      }
+      else{
+        this_val = 0.088;
+        this_err = 0.003;        
+      }
     } // use sk atm data
     else{
-      if(normal_ordering)
-        this_val = 0.088, this_err = 0.003;
-      else
-        this_val = 0.089, this_err = 0.003;        
+      if(normal_ordering){
+        this_val = 0.088;
+        this_err = 0.003;
+      }
+      else{
+        this_val = 0.089;
+        this_err = 0.003;        
+      }
     } // no sk atm data
 
     return new ReactorExperiment(this_val, this_err);
@@ -95,19 +104,28 @@ namespace ana
   const ReactorExperiment* ReactorConstraintNuFit2019(bool normal_ordering, bool sk_data)
   {
     // NuFit July 2019
-    double this_val = 0., this_err = 0.;
+    double this_val = 0.;
+    double this_err = 0.;
 
     if(sk_data){
-      if(normal_ordering)
-        this_val = 0.087, this_err = 0.003;
-      else
-        this_val = 0.088, this_err = 0.003;        
+      if(normal_ordering){
+        this_val = 0.087;
+        this_err = 0.003;
+      }
+      else{
+        this_val = 0.088;
+        this_err = 0.003;        
+      }
     } // use sk atm data
     else{
-      if(normal_ordering)
-        this_val = 0.088, this_err = 0.003;
-      else
-        this_val = 0.088, this_err = 0.003;        
+      if(normal_ordering){
+        this_val = 0.088
+        this_err = 0.003;
+      }
+      else{
+        this_val = 0.088;
+        this_err = 0.003;        
+      }
     } // no sk atm data
 
     return new ReactorExperiment(this_val, this_err);
