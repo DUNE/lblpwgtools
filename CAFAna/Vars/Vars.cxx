@@ -9,9 +9,10 @@
 
 #include "TVector3.h"
 
-namespace ana{
+namespace ana
+{
 
-	// -->FD
+    // -->FD
 	const Var kRecoE_nue = SIMPLEVAR(Ev_reco_nue);
 	const Var kRecoE_numu = SIMPLEVAR(Ev_reco_numu);
 	const Var kRecoE_FromDep = SIMPLEVAR(eRec_FromDep);
@@ -21,12 +22,8 @@ namespace ana{
 
 	// -->ND
 	const Var kRecoEnergyND = SIMPLEVAR(Ev_reco);
-	const Var kRecoYND = (SIMPLEVAR(Ev_reco) - SIMPLEVAR(Elep_reco)) /
-	                     SIMPLEVAR(Ev_reco);
-	const Var kRecoY_FromDep =
-	    (SIMPLEVAR(eRec_FromDep) - SIMPLEVAR(LepE)) /
-	    SIMPLEVAR(eRec_FromDep);
-
+	const Var kRecoYND = (SIMPLEVAR(Ev_reco) - SIMPLEVAR(Elep_reco)) / SIMPLEVAR(Ev_reco);
+	const Var kRecoY_FromDep = (SIMPLEVAR(eRec_FromDep) - SIMPLEVAR(LepE)) / SIMPLEVAR(eRec_FromDep);
 	const Var kTrueEnergy = SIMPLEVAR(Ev);
 
 	// CV weighting
