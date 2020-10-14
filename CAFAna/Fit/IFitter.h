@@ -35,6 +35,9 @@ namespace ana
       class IFitSummary
       {
         public:
+          // Need a virtual destructor to avoid leaking members of derived classes
+          virtual ~IFitSummary();
+
           /// Is this fit better than \a other ?
           virtual bool    IsBetterThan(const IFitSummary* other) const = 0;
 
