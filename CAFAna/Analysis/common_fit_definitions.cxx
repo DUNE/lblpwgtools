@@ -60,12 +60,14 @@ using namespace ana;
 
 unsigned gRNGSeed = 0;
 
+// A smaller APA geometry was used to simmulate the FD due to computational requirements.
+// Scale the simulated sample to match the actuall 40 kt detector.
+const double scale_fdmc = 40 / 1.13;
 // POT for 3.5 years
 const double nom_years = 3.5;
-const double pot_fd = nom_years * POT120 * 40 / 1.13;
-const double pot_nd = nom_years * POT120;
-// This is pretty annoying, but the above is for 7 years staged, which is 336 kT
-// MW yr
+const double pot_fd = POT120 * nom_years * scale_fdmc;
+const double pot_nd = POT120 * nom_years;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 const double nom_exposure = 336.;
 
 //size_t NFluxParametersToAddToStatefile = 30;
