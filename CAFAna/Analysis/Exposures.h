@@ -16,7 +16,8 @@ namespace ana
   //*     7.50E+13           60            0.7           1.03E+00              0.56           1.89E+21     */
   //*                                                                                                      */
   //*======================================================================================================*/
-
+  
+  // POT per year for the MI accelerating them to the given energy (120, 80 or 60 GeV)
   const double POT120 = 1.1e21;
   const double POT80  = 1.47e21;
   const double POT60  = 1.89e21;
