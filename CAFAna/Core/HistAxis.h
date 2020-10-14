@@ -40,9 +40,9 @@ namespace ana
                     const Binning& binsX,
                     const T& varX,
                     const std::string& labelY,
-                    const Binning& binsY,
+                    const Binning& kYBinning,
                     const T& varY)
-      : GenericHistAxis({labelX, labelY}, {binsX, binsY}, {varX, varY})
+      : GenericHistAxis({labelX, labelY}, {binsX, kYBinning}, {varX, varY})
     {
     }
 

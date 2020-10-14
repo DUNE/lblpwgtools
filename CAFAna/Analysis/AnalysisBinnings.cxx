@@ -12,71 +12,71 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
 
   //Should all be statically initialized on first method call to ensure that the vars have been initialized beforehand
   // Axes
-  static HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", kFDRecoBinning,
                                              kRecoE_numu);
-  static HistAxis const axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axRecoEnuFDnue("Reco energy (GeV)", kFDRecoBinning,
                                             kRecoE_nue);
-  static HistAxis const axErecYrecND("Reco energy (GeV)", binsNDEreco,
-                                          kRecoEnergyND, "y_{rec}", binsY,
+  static HistAxis const axErecYrecND("Reco energy (GeV)", kNDRecoBinning,
+                                          kRecoEnergyND, "y_{rec}", kYBinning,
                                           kRecoYND);
   static HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)",
-                                                binsFDEreco, kRecoE_numu);
+                                                kFDRecoBinning, kRecoE_numu);
   static HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)",
-                                               binsFDEreco_v3, kRecoE_nue);
+                                               kFDRecoBinning_v3, kRecoE_nue);
   static HistAxis const axErecYrecND_v3("Reco energy (GeV)",
-                                             binsNDEreco_v3, kRecoEnergyND,
-                                             "y_{rec}", binsY_v3, kRecoYND);
-  static HistAxis const axErecND("Reco energy (GeV)", binsNDEreco,
+                                             kNDRecoBinning_v3, kRecoEnergyND,
+                                             "y_{rec}", kYBinning_v3, kRecoYND);
+  static HistAxis const axErecND("Reco energy (GeV)", kNDRecoBinning,
                                       kRecoEnergyND);
 
-  static HistAxis const axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axErecFD_FromDep("Reco energy (GeV)", kFDRecoBinning,
                                               kRecoE_FromDep);
   static HistAxis const axErecYrecND_FromDep(
-      "Reco energy (GeV)", binsNDEreco, kRecoE_FromDep, "y_{rec}", binsY,
+      "Reco energy (GeV)", kNDRecoBinning, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
   static HistAxis const axErecYrecNDOA_FromDep(
-      "Reco energy (GeV)", binsNDEreco_OA, kRecoE_FromDep, "y_{rec}", binsY,
+      "Reco energy (GeV)", kNDRecoBinning_OA, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
   static HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)",
-                                              binsNDEreco, kRecoE_FromDep);
+                                              kNDRecoBinning, kRecoE_FromDep);
 
-  static HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", binsETrue,
+  static HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", kTrueBinning,
                                             kTrueEnergy);
 
   static HistAxis const axTrueE_unibin_coarse(
-      "#it{E}_{#nu} (GeV)", binsETrue_Coarse, kTrueEnergy);
+      "#it{E}_{#nu} (GeV)", kTrueCoarseBinning, kTrueEnergy);
 
   static HistAxis const axErec_FromDep_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
-                                                   binsETrue, kRecoE_FromDep);
+                                                   kTrueBinning, kRecoE_FromDep);
   static HistAxis const axErecND_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
-                                             binsETrue, kRecoEnergyND);
+                                             kTrueBinning, kRecoEnergyND);
   static HistAxis const axRecoEnuFDnumu_unibin("Reco energy (GeV)",
-                                                    binsETrue, kRecoE_numu);
+                                                    kTrueBinning, kRecoE_numu);
   static HistAxis const axRecoEnuFDnue_unibin("Reco energy (GeV)",
-                                                   binsETrue, kRecoE_nue);
+                                                   kTrueBinning, kRecoE_nue);
 
   static HistAxis const axErecND_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoEnergyND);
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoEnergyND);
   static HistAxis const axRecoEnuFDnumu_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_numu);
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoE_numu);
 
   static HistAxis const axRecoEnuFDnue_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_nue);
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoE_nue);
 
   static HistAxis const axErecND_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoEnergyND);
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoEnergyND);
   static HistAxis const axRecoEnuFDnumu_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_numu);
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoE_numu);
 
   static HistAxis const axRecoEnuFDnue_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_nue);
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoE_nue);
 
-  static HistAxis const axErecND_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axErecND_onebin("Reco energy (GeV)", kOneBinBinning,
                                              kRecoEnergyND);
-  static HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", kOneBinBinning,
                                                     kRecoE_numu);
 
-  static HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", kOneBinBinning,
                                                    kRecoE_nue);
 
   static AxisBlob const default_axes_v4{&axErecYrecND, &axRecoEnuFDnumu,
