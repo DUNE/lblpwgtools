@@ -5,9 +5,9 @@ namespace ana {
   const NuOnENCBkgSyst kNuOnENCBkgSyst;
   const NuOnERecoEffSyst kNuOnERecoEffSyst;
 
-  NuOnESystVector GetNuOnESysts()
+  std::vector<const ISyst*> GetNuOnESysts()
   {
-    NuOnESystVector vec;
+    std::vector<const ISyst*> vec;
     vec.push_back(&kNuOnECCBkgSyst);
     vec.push_back(&kNuOnENCBkgSyst);
     vec.push_back(&kNuOnERecoEffSyst);

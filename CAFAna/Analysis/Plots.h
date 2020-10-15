@@ -182,4 +182,22 @@ namespace ana
 
   /// Calculate profile with error bars corresponding to specified quantiles of a 2D distribution (by default, 68% coverage)
   TGraphAsymmErrors * ProfileQuantile(const TH2 * hist, const std::string & axis_name, const std::string & graph_name="", const std::pair<double, double> & quantile_divisions={0.159, 0.841});
+
+  /// Draw a single BF point in a two dimensional space
+  void drawBFSingle(double bfX, double bfY, Color_t color, Style_t marker, double size);
+
+  /// Center histogram titles
+  void CenterTitles(TH1* histo);
+
+  void CornerLabel(std::string &s, float xCoord, float yCoord);
+
+  void FillWithDimColor(TH1* h, bool usealpha=false);
+
+  /// Pimp histogram once and for all
+  void PimpHist(TH1* hist, Style_t linestyle, Color_t linecolor, int linewidth, Style_t markerstyle, Color_t markercolor, double markersize);
+
+  void Simulation();
+
+  void SimulationSide();
+
 }
