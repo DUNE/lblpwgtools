@@ -22,10 +22,10 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
   static HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)",
                                                 kFDRecoBinning, kRecoE_numu);
   static HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)",
-                                               kFDRecoBinning_v3, kRecoE_nue);
+                                               kFDRecoV3Binning, kRecoE_nue);
   static HistAxis const axErecYrecND_v3("Reco energy (GeV)",
-                                             kNDRecoBinning_v3, kRecoEnergyND,
-                                             "y_{rec}", kYBinning_v3, kRecoYND);
+                                             kNDRecoV3Binning, kRecoEnergyND,
+                                             "y_{rec}", kYV3Binning, kRecoYND);
   static HistAxis const axErecND("Reco energy (GeV)", kNDRecoBinning,
                                       kRecoEnergyND);
 
@@ -35,7 +35,7 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
       "Reco energy (GeV)", kNDRecoBinning, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
   static HistAxis const axErecYrecNDOA_FromDep(
-      "Reco energy (GeV)", kNDRecoBinning_OA, kRecoE_FromDep, "y_{rec}", kYBinning,
+      "Reco energy (GeV)", kNDRecoOABinning, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
   static HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)",
                                               kNDRecoBinning, kRecoE_FromDep);

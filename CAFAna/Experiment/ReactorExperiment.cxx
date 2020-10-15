@@ -119,7 +119,7 @@ namespace ana
     } // use sk atm data
     else{
       if(normal_ordering){
-        this_val = 0.088
+        this_val = 0.088;
         this_err = 0.003;
       }
       else{

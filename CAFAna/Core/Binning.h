@@ -87,8 +87,8 @@ namespace ana
   /// Eventually define as k{ND,FD}{Nue,Numu}Binning
   const Binning kFDRecoBinning = Binning::Custom(kBinEdges);
   const Binning kNDRecoBinning = Binning::Custom(kBinEdges);
-  const Binning kFDRecoV3Binning = Binning::Custom(kBinEdgesV3);
-  const Binning kNDRecoV3Binning = Binning::Custom(kBinEdgesV3);
+  const Binning kFDRecoV3Binning = Binning::Custom(kV3BinEdges);
+  const Binning kNDRecoV3Binning = Binning::Custom(kV3BinEdges);
   const Binning kNDRecoOABinning = Binning::Simple(20, 0, 4);
   const Binning kYBinning = Binning::Custom(kYBinEdges);
   const Binning kYV3Binning = Binning::Custom(kYV3BinEdges);
