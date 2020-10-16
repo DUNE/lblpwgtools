@@ -4,15 +4,7 @@
 #include "CAFAna/Experiment/CovMxChiSqPreInvert.h"
 #include "CAFAna/Experiment/CovMxLL.h"
 
-#include "CAFAna/Core/LoadFromFile.h"
-#include "CAFAna/Core/StanUtils.h"
-#include "CAFAna/Core/Utilities.h"
-
 #include "OscLib/IOscCalc.h"
-
-#include "TDirectory.h"
-#include "TObjString.h"
-#include "TH2.h"
 
 namespace ana
 {
@@ -37,20 +29,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  CovarianceExperiment::CovarianceExperiment(const IPrediction* pred,
-                                             const Spectrum& data,
-                                             const TMatrixD* cov,
-                                             ETestStatistic stat)
-    : fMC(pred), fData(data)
+  CovarianceExperiment::
+  CovarianceExperiment(const std::vector<const IPrediction*>& preds,
+                       const std::vector<Spectrum>& datas,
+                       const TMatrixD* cov,
+                       ETestStatistic stat)
+    : fMCs(preds), fDatas(datas)
   {
+    assert(preds.size() == datas.size());
+
     switch(stat){
     case kCovMxChiSq:
       fCov = new CovMxChiSq(EigenMatrixXdFromTMatrixD(cov));
       break;
 
     case kCovMxChiSqPreInvert:
-      fCov = new CovMxChiSqPreInvert(EigenMatrixXdFromTMatrixD(cov),
-                                     pred->Predict((osc::IOscCalc*)0).GetEigen(data.POT()));
+      fCov = new CovMxChiSqPreInvert(EigenMatrixXdFromTMatrixD(cov), Predict(0));
       break;
 
     case kCovMxLogLikelihood:
@@ -61,17 +55,16 @@ namespace ana
       std::cout << "Unknown test statistic: " << stat << std::endl;
       abort();
     }
-  }
 
-  //----------------------------------------------------------------------
-  CovarianceExperiment::CovarianceExperiment(const IPrediction* pred,
-                                             const Spectrum& data,
-                                             const std::string& covMatFilename,
-                                             const std::string& covMatName,
-                                             ETestStatistic stat)
+    std::vector<Eigen::ArrayXd> adatas;
+    adatas.reserve(fDatas.size());
+    for(const Spectrum& s: fDatas) adatas.push_back(s.GetEigen(s.POT()));
+    fDataA = Concatenate(adatas);
 
-    : CovarianceExperiment(pred, data, GetCov(covMatFilename, covMatName), stat)
-  {
+    // To begin with all bins are included
+    fMasks.resize(datas.size());
+    // Default arguments evaluate to all unmasked
+    for(unsigned int i = 0; i < datas.size(); ++i) SetMaskHist(i);
   }
 
   //----------------------------------------------------------------------
@@ -81,27 +74,43 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double CovarianceExperiment::ChiSq(osc::IOscCalcAdjustable* calc,
-                                     const SystShifts& syst) const
+  Eigen::ArrayXd CovarianceExperiment::Concatenate(const std::vector<Eigen::ArrayXd>& arrs)
   {
-    Eigen::ArrayXd apred = fMC->PredictSyst(calc, syst).GetEigen(fData.POT());
-    Eigen::ArrayXd adata = fData.GetEigen(fData.POT());
+    // Drop under/overflow from each argument, but include dummy
+    // under/overflows as expected by fCov
+    int N = 2;
+    for(const Eigen::ArrayXd& arr: arrs) N += arr.size()-2;
+    Eigen::ArrayXd ret(N);
+    ret[0] = 0;
+    ret[N-1] = 0;
 
-    return fCov->ChiSq(apred, adata);
+    double* p = &ret.data()[1]; // start writing at first non-underflow bin
+
+    for(const Eigen::ArrayXd& arr: arrs){
+      for(int i = 1; i < arr.size()-1; ++i) *p++ = arr[i];
+    }
+
+    return ret;
   }
 
   //----------------------------------------------------------------------
-  void CovarianceExperiment::ApplyMask(Eigen::ArrayXd& a,
-                                       Eigen::ArrayXd& b) const
+  Eigen::ArrayXd CovarianceExperiment::Predict(osc::IOscCalc* calc,
+                                               const SystShifts& syst) const
   {
-    if(fMaskA.size() == 0) return;
+    std::vector<Eigen::ArrayXd> apreds(fMCs.size());
 
-    assert(a.size() == fMaskA.size());
-    assert(b.size() == fMaskA.size());
+    for(unsigned int i = 0; i < fMCs.size(); ++i){
+      apreds[i] = fMCs[i]->PredictSyst(calc, syst).GetEigen(fDatas[i].POT());
+    }
 
-    // Arrays mean we get bin-by-bin operations
-    a *= fMaskA;
-    b *= fMaskA;
+    return Concatenate(apreds);
+  }
+
+  //----------------------------------------------------------------------
+  double CovarianceExperiment::ChiSq(osc::IOscCalcAdjustable* calc,
+                                     const SystShifts& syst) const
+  {
+    return fCov->ChiSq(Predict(calc, syst), fDataA);
   }
 
   //----------------------------------------------------------------------
@@ -113,9 +122,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void CovarianceExperiment::SetMaskHist(double xmin, double xmax, double ymin, double ymax)
+  void CovarianceExperiment::SetMaskHist(int idx, double xmin, double xmax, double ymin, double ymax)
   {
-    fMaskA = GetMaskArray(fData, xmin, xmax, ymin, ymax);
-    fCov->SetMask(fMaskA);
+    fMasks[idx] = GetMaskArray(fDatas[idx], xmin, xmax, ymin, ymax);
+
+    fCov->SetMask(Concatenate(fMasks));
   }
 }

@@ -21,17 +21,40 @@ namespace ana
   class CovarianceExperiment: public IExperiment
   {
   public:
+    CovarianceExperiment(const std::vector<const IPrediction*>& preds,
+                         const std::vector<Spectrum>& datas,
+                         const TMatrixD* cov,
+                         ETestStatistic stat);
+
     CovarianceExperiment(const IPrediction* pred,
                          const Spectrum& data,
                          const TMatrixD* cov,
-                         ETestStatistic stat);
+                         ETestStatistic stat)
+      : CovarianceExperiment(std::vector<const IPrediction*>(1, pred),
+                             std::vector<Spectrum>(1, data),
+                             cov, stat)
+    {
+    }
+
+    /// Covariance matrix from file path
+    CovarianceExperiment(const std::vector<const IPrediction*>& preds,
+                         const std::vector<Spectrum>& datas,
+                         const std::string& covMatFilename,
+                         const std::string& covMatName,
+                         ETestStatistic stat)
+      : CovarianceExperiment(preds, datas, GetCov(covMatFilename, covMatName), stat)
+    {
+    }
 
     /// Covariance matrix from file path
     CovarianceExperiment(const IPrediction* pred,
                          const Spectrum& data,
                          const std::string& covMatFilename,
                          const std::string& covMatName,
-                         ETestStatistic stat);
+                         ETestStatistic stat)
+      : CovarianceExperiment(pred, data, GetCov(covMatFilename, covMatName), stat)
+    {
+    }
 
     virtual ~CovarianceExperiment();
 
@@ -47,12 +70,13 @@ namespace ana
 
     // need to explicitly declare move constructor since copy constructor is deleted
     CovarianceExperiment(CovarianceExperiment&& s)
-      : fMC(s.fMC), fData(std::move(s.fData))
     {
-      s.fMC = nullptr;
+      std::swap(fMCs, s.fMCs);
+      std::swap(fDatas, s.fDatas);
     }
 
-    void SetMaskHist(double xmin=0, double xmax=-1, 
+    void SetMaskHist(int idx,
+                     double xmin=0, double xmax=-1, 
 		     double ymin=0, double ymax=-1);
 
   protected:
@@ -60,11 +84,18 @@ namespace ana
     static TMatrixD* GetCov(const std::string& fname,
                             const std::string& matname);
 
-    virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const;
+    /// NB handling of under/overflow here. Result of concatenating N M-bin
+    /// arrays will have 2+N*(M-2) bins
+    static Eigen::ArrayXd Concatenate(const std::vector<Eigen::ArrayXd>& arrs);
 
-    const IPrediction* fMC;
-    Spectrum fData;
-    Eigen::ArrayXd fMaskA;
+    Eigen::ArrayXd Predict(osc::IOscCalc* osc,
+                           const SystShifts& syst = kNoShift) const;
+
+    std::vector<const IPrediction*> fMCs;
+    std::vector<Spectrum> fDatas;
+    Eigen::ArrayXd fDataA;
+
+    std::vector<Eigen::ArrayXd> fMasks;
 
     ICovarianceMatrix* fCov;
   };
