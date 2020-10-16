@@ -1118,6 +1118,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
   IExperiment *nd_expt_fhc, *nd_expt_rhc;
+  CovarianceExperiment* nd_expt_joint = 0;
 
   bool UseNDCovMat = true;
   if (getenv("CAFANA_USE_NDCOVMAT")) {
@@ -1151,6 +1152,22 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
     e->SetMaskHist(0.5, 10, 0, -1);
     nd_expt_rhc = e;
+
+    // JOINT COVARIANCE CASE HERE. What switch is supposed to control this?
+    // Continue to create the non-joint experiments because various things want
+    // to print their chisqs, even though it's not clear that makes sense in
+    // this case.
+    /*
+    TMatrixD* joint_matrix = GetNDCovMat(UseV3NDCovMat, true, true);
+
+    nd_expt_joint = new CovarianceExperiment({&predNDNumuFHC, &predNDNumuRHC},
+                                             {*spectra->at(kNDNumuFHC).spect,
+                                              *spectra->at(kNDNumuRHC).spect},
+                                             joint_matrix,
+                                             kCovMxChiSqPreInvert);
+    nd_expt_joint->SetMaskHist(0, 0.5, 10, 0, -1);
+    nd_expt_joint->SetMaskHist(1, 0.5, 10, 0, -1);
+    */
   }
   else{
     auto e = new SingleSampleExperiment(&predNDNumuFHC,
@@ -1286,10 +1303,15 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // Now sort out the experiment
   MultiExperiment this_expt;
-  if (pot_nd_fhc > 0)
-    this_expt.Add(nd_expt_fhc);
-  if (pot_nd_rhc > 0)
-    this_expt.Add(nd_expt_rhc);
+  if(nd_expt_joint){
+    this_expt.Add(nd_expt_joint);
+  }
+  else{
+    if (pot_nd_fhc > 0)
+      this_expt.Add(nd_expt_fhc);
+    if (pot_nd_rhc > 0)
+      this_expt.Add(nd_expt_rhc);
+  }
   if (pot_fd_fhc_numu > 0)
     this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0)
