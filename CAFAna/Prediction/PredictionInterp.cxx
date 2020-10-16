@@ -79,7 +79,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionInterp::~PredictionInterp(){}
+  PredictionInterp::~PredictionInterp()
+  {
+  }
 
   //----------------------------------------------------------------------
   std::vector<std::vector<PredictionInterp::Coeffs>> PredictionInterp::
@@ -200,7 +202,7 @@ namespace ana
     // relative to some alternate nominal (eg Birks C where the appropriate
     // nominal is no-rock) can work.
     const Spectrum nom = pNom->PredictComponent(fOscOrigin,
-						flav, curr, sign);
+                                                flav, curr, sign);
 
     std::vector<Eigen::ArrayXd> ratios;
     ratios.reserve(preds.size());
@@ -497,7 +499,6 @@ namespace ana
     return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
 
-
   //----------------------------------------------------------------------
   template<typename T>
   Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalc<T>* calc,
@@ -510,6 +511,7 @@ namespace ana
   {
     static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
                   "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
+
     if(fSplitBySign && sign == Sign::kBoth){
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+
               ShiftedComponent(calc, hash, shift, flav, curr, Sign::kNu,     type));
@@ -523,14 +525,14 @@ namespace ana
     const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
 
     const Key_t key = {flav, curr, sign};
-    auto it = fNomCache.find(key);
+    auto it = fNomCache->find(key);
 
     // Should the interpolation use the nubar fits?
     const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
 
     // We have the nominal for this exact combination of flav, curr, sign, calc
     // stored.  Shift it and return.
-    if(canCache && it != fNomCache.end() && it->second.hash == *hash){
+    if(canCache && it != fNomCache->end() && it->second.hash == *hash){
       return ShiftSpectrum(it->second.nom, type, nubar, shift);
     }
 
@@ -540,8 +542,8 @@ namespace ana
     if(canCache){
       // Insert into the cache if not already there, or update if there but
       // with old oscillation parameters.
-      if(it == fNomCache.end())
-        fNomCache.emplace(key, Val_t({*hash, nom}));
+      if(it == fNomCache->end())
+        fNomCache->emplace(key, Val_t({*hash, nom}));
       else
         it->second = {*hash, nom};
     }
@@ -648,7 +650,7 @@ namespace ana
 
     fPredNom->SaveTo(dir, "pred_nom");
 
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       const ShiftedPreds& sp = it.second;
 
       for(unsigned int i = 0; i < sp.shifts.size(); ++i){
@@ -668,7 +670,7 @@ namespace ana
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
       int binIdx = 1;
-      for(auto &it: fPreds){
+      for(auto& it: fPreds){
         hSystNames.GetXaxis()->SetBinLabel(binIdx++, it.second.systName.c_str());
       }
       dir->cd();
@@ -710,14 +712,13 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-				      std::vector<const ISyst*> veto)
+                                      std::vector<const ISyst*> veto)
   {
     ret->fPredNom = ana::LoadFrom<IPrediction>(dir, "pred_nom");
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
-      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx)
-      {
+      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx){
         ShiftedPreds sp;
         sp.systName = hSystNames->GetXaxis()->GetBinLabel(systIdx + 1);
 
@@ -748,7 +749,7 @@ namespace ana
           TDirectory *preddir = dir->GetDirectory(subname.c_str());
           if (!preddir)
           {
-            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
+            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma not found in "
                       << dir->GetName() << std::endl;
             continue;
           }
@@ -919,7 +920,7 @@ namespace ana
   {
     InitFits();
 
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       new TCanvas;
       DebugPlotColz(it.first, calc, flav, curr, sign);
 

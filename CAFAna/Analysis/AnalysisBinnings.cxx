@@ -1,105 +1,82 @@
 #include "CAFAna/Analysis/AnalysisBinnings.h"
-
-#include "CAFAna/Analysis/AnalysisVars.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
 #include "CAFAna/Core/Binning.h"
+#include "CAFAna/Vars/Vars.h"
 
 #include <vector>
 
-// ND binning
-std::vector<double> binEEdges = {0.,  0.5,  1.,  1.25, 1.5, 1.75,
-                                 2.,  2.25, 2.5, 2.75, 3.,  3.25,
-                                 3.5, 3.75, 4.,  5.,   6.,  10.};
-std::vector<double> binYEdges = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 1.0};
-std::vector<double> binEEdges_v3 = {0.,  0.75, 1.,  1.25, 1.5, 1.75, 2., 2.25,
-                                    2.5, 2.75, 3.,  3.25, 3.5, 3.75, 4., 4.25,
-                                    4.5, 5.,   5.5, 6.,   7.,  8.,   10.};
-std::vector<double> binYEdges_v3 = {0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0};
-
-// Binnings
-ana::Binning const binsFDEreco = ana::Binning::Custom(binEEdges);
-ana::Binning const binsNDEreco = ana::Binning::Custom(binEEdges);
-ana::Binning const binsFDEreco_v3 = ana::Binning::Custom(binEEdges_v3);
-ana::Binning const binsNDEreco_v3 = ana::Binning::Custom(binEEdges_v3);
-ana::Binning const binsNDEreco_OA = ana::Binning::Simple(20, 0, 4);
-ana::Binning const binsY = ana::Binning::Custom(binYEdges);
-ana::Binning const binsY_v3 = ana::Binning::Custom(binYEdges_v3);
-ana::Binning const binsETrue = ana::Binning::Simple(100, 0, 10);
-ana::Binning const binsETrue_Coarse = ana::Binning::Simple(20, 0, 10);
-ana::Binning const binsEreco_Coarse = ana::Binning::Simple(20, 0, 10);
-ana::Binning const binsEreco_VeryCoarse = ana::Binning::Simple(5, 0, 10);
-ana::Binning const onebin = ana::Binning::Simple(1, 0.5, 10);
+using namespace ana;
 
 AxisBlob GetAxisBlob(std::string const &blob_name) {
 
   //Should all be statically initialized on first method call to ensure that the vars have been initialized beforehand
   // Axes
-  static ana::HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axRecoEnuFDnumu("Reco energy (GeV)", kFDRecoBinning,
                                              kRecoE_numu);
-  static ana::HistAxis const axRecoEnuFDnue("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axRecoEnuFDnue("Reco energy (GeV)", kFDRecoBinning,
                                             kRecoE_nue);
-  static ana::HistAxis const axErecYrecND("Reco energy (GeV)", binsNDEreco,
-                                          kRecoEnergyND, "y_{rec}", binsY,
+  static HistAxis const axErecYrecND("Reco energy (GeV)", kNDRecoBinning,
+                                          kRecoEnergyND, "y_{rec}", kYBinning,
                                           kRecoYND);
-  static ana::HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)",
-                                                binsFDEreco, kRecoE_numu);
-  static ana::HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)",
-                                               binsFDEreco_v3, kRecoE_nue);
-  static ana::HistAxis const axErecYrecND_v3("Reco energy (GeV)",
-                                             binsNDEreco_v3, kRecoEnergyND,
-                                             "y_{rec}", binsY_v3, kRecoYND);
-  static ana::HistAxis const axErecND("Reco energy (GeV)", binsNDEreco,
+  static HistAxis const axRecoEnuFDnumu_v3("Reco energy (GeV)",
+                                                kFDRecoBinning, kRecoE_numu);
+  static HistAxis const axRecoEnuFDnue_v3("Reco energy (GeV)",
+                                               kFDRecoV3Binning, kRecoE_nue);
+  static HistAxis const axErecYrecND_v3("Reco energy (GeV)",
+                                             kNDRecoV3Binning, kRecoEnergyND,
+                                             "y_{rec}", kYV3Binning, kRecoYND);
+  static HistAxis const axErecND("Reco energy (GeV)", kNDRecoBinning,
                                       kRecoEnergyND);
 
-  static ana::HistAxis const axErecFD_FromDep("Reco energy (GeV)", binsFDEreco,
+  static HistAxis const axErecFD_FromDep("Reco energy (GeV)", kFDRecoBinning,
                                               kRecoE_FromDep);
-  static ana::HistAxis const axErecYrecND_FromDep(
-      "Reco energy (GeV)", binsNDEreco, kRecoE_FromDep, "y_{rec}", binsY,
+  static HistAxis const axErecYrecND_FromDep(
+      "Reco energy (GeV)", kNDRecoBinning, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
-  static ana::HistAxis const axErecYrecNDOA_FromDep(
-      "Reco energy (GeV)", binsNDEreco_OA, kRecoE_FromDep, "y_{rec}", binsY,
+  static HistAxis const axErecYrecNDOA_FromDep(
+      "Reco energy (GeV)", kNDRecoOABinning, kRecoE_FromDep, "y_{rec}", kYBinning,
       kRecoY_FromDep);
-  static ana::HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)",
-                                              binsNDEreco, kRecoE_FromDep);
+  static HistAxis const axErecND_FromDep("#it{E}_{#nu}^{Rec.} (GeV)",
+                                              kNDRecoBinning, kRecoE_FromDep);
 
-  static ana::HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", binsETrue,
+  static HistAxis const axTrueE_unibin("#it{E}_{#nu} (GeV)", kTrueBinning,
                                             kTrueEnergy);
 
-  static ana::HistAxis const axTrueE_unibin_coarse(
-      "#it{E}_{#nu} (GeV)", binsETrue_Coarse, kTrueEnergy);
+  static HistAxis const axTrueE_unibin_coarse(
+      "#it{E}_{#nu} (GeV)", kTrueCoarseBinning, kTrueEnergy);
 
-  static ana::HistAxis const axErec_FromDep_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
-                                                   binsETrue, kRecoE_FromDep);
-  static ana::HistAxis const axErecND_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
-                                             binsETrue, kRecoEnergyND);
-  static ana::HistAxis const axRecoEnuFDnumu_unibin("Reco energy (GeV)",
-                                                    binsETrue, kRecoE_numu);
-  static ana::HistAxis const axRecoEnuFDnue_unibin("Reco energy (GeV)",
-                                                   binsETrue, kRecoE_nue);
+  static HistAxis const axErec_FromDep_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
+                                                   kTrueBinning, kRecoE_FromDep);
+  static HistAxis const axErecND_unibin("#it{E}_{#nu}^{Rec.} (GeV)",
+                                             kTrueBinning, kRecoEnergyND);
+  static HistAxis const axRecoEnuFDnumu_unibin("Reco energy (GeV)",
+                                                    kTrueBinning, kRecoE_numu);
+  static HistAxis const axRecoEnuFDnue_unibin("Reco energy (GeV)",
+                                                   kTrueBinning, kRecoE_nue);
 
-  static ana::HistAxis const axErecND_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoEnergyND);
-  static ana::HistAxis const axRecoEnuFDnumu_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_numu);
+  static HistAxis const axErecND_coarsebin(
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoEnergyND);
+  static HistAxis const axRecoEnuFDnumu_coarsebin(
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoE_numu);
 
-  static ana::HistAxis const axRecoEnuFDnue_coarsebin(
-      "Reco energy (GeV)", binsEreco_Coarse, kRecoE_nue);
+  static HistAxis const axRecoEnuFDnue_coarsebin(
+      "Reco energy (GeV)", kRecoCoarseBinning, kRecoE_nue);
 
-  static ana::HistAxis const axErecND_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoEnergyND);
-  static ana::HistAxis const axRecoEnuFDnumu_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_numu);
+  static HistAxis const axErecND_verycoarsebin(
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoEnergyND);
+  static HistAxis const axRecoEnuFDnumu_verycoarsebin(
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoE_numu);
 
-  static ana::HistAxis const axRecoEnuFDnue_verycoarsebin(
-      "Reco energy (GeV)", binsEreco_VeryCoarse, kRecoE_nue);
+  static HistAxis const axRecoEnuFDnue_verycoarsebin(
+      "Reco energy (GeV)", kRecoVeryCoarseBinning, kRecoE_nue);
 
-  static ana::HistAxis const axErecND_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axErecND_onebin("Reco energy (GeV)", kOneBinBinning,
                                              kRecoEnergyND);
-  static ana::HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axRecoEnuFDnumu_onebin("Reco energy (GeV)", kOneBinBinning,
                                                     kRecoE_numu);
 
-  static ana::HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", onebin,
+  static HistAxis const axRecoEnuFDnue_onebin("Reco energy (GeV)", kOneBinBinning,
                                                    kRecoE_nue);
 
   static AxisBlob const default_axes_v4{&axErecYrecND, &axRecoEnuFDnumu,
@@ -152,6 +129,12 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
     AxToUse = default_axes_v4;
   } else if (blob_name == "v3") {
     AxToUse = default_axes_v3;
+  } else if (blob_name == "CoarseNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_coarsebin;
+  } else if (blob_name == "VeryCoarseNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_verycoarsebin;
+  } else if (blob_name == "OneBinNue") {
+    AxToUse.FDAx_nue = &axRecoEnuFDnue_onebin;
   }
   for (auto &v : AxToUse.NDAx->GetVars()) {
     assert(v.IsValid());

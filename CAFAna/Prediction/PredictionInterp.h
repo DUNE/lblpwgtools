@@ -6,6 +6,7 @@
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/ThreadLocal.h"
 
 #include <iostream>
 #include <map>
@@ -94,10 +95,10 @@ namespace ana
     // If \a savePattern is not empty, print each pad. Must contain a "%s" to
     // contain the name of the systematic.
     void DebugPlots(osc::IOscCalc* calc,
-		    const std::string& savePattern = "",
-		    Flavors::Flavors_t flav = Flavors::kAll,
-		    Current::Current_t curr = Current::kBoth,
-		    Sign::Sign_t sign = Sign::kBoth) const;
+                    const std::string& savePattern = "",
+                    Flavors::Flavors_t flav = Flavors::kAll,
+                    Current::Current_t curr = Current::kBoth,
+                    Sign::Sign_t sign = Sign::kBoth) const;
 
     void SetOscSeed(osc::IOscCalc* oscSeed);
 
@@ -129,7 +130,7 @@ namespace ana
     }
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-			     std::vector<const ISyst*> veto = {});
+                             std::vector<const ISyst*> veto = {});
 
     typedef ana::PredIntKern::Coeffs Coeffs;
 
@@ -174,53 +175,53 @@ namespace ana
     //Get all known about systs
     std::vector<ISyst const *> GetAllSysts() const;
 
-    protected:
-      std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
+  protected:
+    std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
-      struct ShiftedPreds
-      {
-        double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
+    struct ShiftedPreds
+    {
+      double Stride() const {return shifts.size() > 1 ? shifts[1]-shifts[0] : 1;}
 
-        std::string systName; ///< What systematic we're interpolating
-        std::vector<double> shifts; ///< Shift values sampled
-        std::vector<std::unique_ptr<IPrediction>> preds;
+      std::string systName; ///< What systematic we're interpolating
+      std::vector<double> shifts; ///< Shift values sampled
+      std::vector<std::unique_ptr<IPrediction>> preds;
 
-        int nCoeffs; // Faster than calling size()
+      int nCoeffs; // Faster than calling size()
 
-        /// Indices: [type][histogram bin][shift bin]
-        std::vector<std::vector<std::vector<Coeffs>>> fits;
-        /// Will be filled if signs are separated, otherwise not
-        std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
+      /// Indices: [type][histogram bin][shift bin]
+      std::vector<std::vector<std::vector<Coeffs>>> fits;
+      /// Will be filled if signs are separated, otherwise not
+      std::vector<std::vector<std::vector<Coeffs>>> fitsNubar;
 
-        // Same info as above but with more-easily-iterable index order
-        // [type][shift bin][histogram bin]. TODO this is ugly
-        std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
-        std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
-        ShiftedPreds() {}
-        ShiftedPreds(ShiftedPreds &&other)
-            : systName(std::move(other.systName)),
-              shifts(std::move(other.shifts)), preds(std::move(other.preds)),
-              nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
-              fitsNubar(std::move(other.fitsNubar)),
-              fitsRemap(std::move(other.fitsRemap)),
-              fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
+      // Same info as above but with more-easily-iterable index order
+      // [type][shift bin][histogram bin]. TODO this is ugly
+      std::vector<std::vector<std::vector<Coeffs>>> fitsRemap;
+      std::vector<std::vector<std::vector<Coeffs>>> fitsNubarRemap;
+      ShiftedPreds() {}
+      ShiftedPreds(ShiftedPreds &&other)
+          : systName(std::move(other.systName)),
+            shifts(std::move(other.shifts)), preds(std::move(other.preds)),
+            nCoeffs(other.nCoeffs), fits(std::move(other.fits)),
+            fitsNubar(std::move(other.fitsNubar)),
+            fitsRemap(std::move(other.fitsRemap)),
+            fitsNubarRemap(std::move(other.fitsNubarRemap)) {}
 
-        ShiftedPreds &operator=(ShiftedPreds &&other) {
-          systName = std::move(other.systName);
-          shifts = std::move(other.shifts);
-          preds = std::move(other.preds);
-          nCoeffs = other.nCoeffs;
-          fits = std::move(other.fits);
-          fitsNubar = std::move(other.fitsNubar);
-          fitsRemap = std::move(other.fitsRemap);
-          fitsNubarRemap = std::move(other.fitsNubarRemap);
-          return *this;
-        }
+      ShiftedPreds &operator=(ShiftedPreds &&other) {
+        systName = std::move(other.systName);
+        shifts = std::move(other.shifts);
+        preds = std::move(other.preds);
+        nCoeffs = other.nCoeffs;
+        fits = std::move(other.fits);
+        fitsNubar = std::move(other.fitsNubar);
+        fitsRemap = std::move(other.fitsRemap);
+        fitsNubarRemap = std::move(other.fitsNubarRemap);
+        return *this;
+      }
 
-        void Dump(){
-          std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
-        }
-      };
+      void Dump(){
+        std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
+      }
+    };
 
     using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
     mutable std::vector<PredMappedType> fPreds;
@@ -258,7 +259,7 @@ namespace ana
       TMD5 hash;
       Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
     };
-    mutable std::map<Key_t, Val_t> fNomCache;
+    mutable ThreadLocal<std::map<Key_t, Val_t>> fNomCache;
 
     bool fSplitBySign;
 

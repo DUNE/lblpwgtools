@@ -26,7 +26,11 @@ namespace ana
     double fCentralAngle, fErrorAngle;
   };
 
-  // http://pdg.lbl.gov/2017/tables/rpp2017-sum-leptons.pdf
-  // ssth12 0.307 +/- 0.013 -> ss2th12 0.851 +/- 0.020
-  const SolarConstraints kSolarConstraintsPDG2017(7.53e-5, 0.18e-5, 0.851, 0.020); 
+  // http://www.nu-fit.org
+  // ssth12 0.310 +/- 0.013 -> ss2th12 0.856 +/- 0.020 // same as in 2018
+  const SolarConstraints kSolarConstraintsNuFit2019(7.39e-5, 0.21e-5, 0.856, 0.020); 
+
+  // http://pdg.lbl.gov/2019/tables/rpp2019-sum-leptons.pdf
+  // ssth12 0.307 +/- 0.013 -> ss2th12 0.851 +/- 0.020 // same as in 2017 2018
+  const SolarConstraints kSolarConstraintsPDG2019(7.53e-5, 0.18e-5, 0.851, 0.020); 
 }

@@ -103,8 +103,10 @@ namespace ana
                                            const ISyst * y, int nbinsy, double ymin, double ymax);
 
   //----------------------------------------------------------------------
-  std::unique_ptr<BayesianSurface> BayesianSurface::LoadFrom(TDirectory *dir)
+  std::unique_ptr<BayesianSurface> BayesianSurface::LoadFrom(TDirectory *dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
 
     DontAddDirectory guard;
 
@@ -118,6 +120,8 @@ namespace ana
     ISurface::FillSurfObj(*surf, dir);
 
     BayesianMarginal::LoadInto(surf.get(), dir);
+
+    delete dir;
 
     return std::move(surf);
   }

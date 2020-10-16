@@ -1,11 +1,11 @@
 #include "CAFAna/Analysis/CalcsNuFit.h"
+#include "CAFAna/Analysis/CalcsVars.h"
+#include "CAFAna/Vars/FitVars.h"
 
 #include "Utilities/func/MathUtil.h"
 
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcGeneral.h"
-
-#include "CAFAna/Vars/FitVars.h"
 
 #include "TFormula.h"
 

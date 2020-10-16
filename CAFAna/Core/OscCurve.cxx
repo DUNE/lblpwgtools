@@ -43,7 +43,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   OscCurve::OscCurve(osc::IOscCalcStan* calc, int from, int to)
-    : Ratio(Hist::Adopt(ToEigen(calc, from, to)),
+    : Ratio(Hist::AdoptStan(ToEigen(calc, from, to)),
             std::vector<Binning>(1, kTrueEnergyBins),
             std::vector<std::string>(1, "True Energy (GeV)")),
       fFrom(from), fTo(to)

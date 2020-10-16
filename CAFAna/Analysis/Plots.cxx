@@ -1,5 +1,4 @@
 #include "CAFAna/Analysis/Plots.h"
-//#include "CAFAna/Systs/NueSystsSecondAna.h"
 
 #include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Prediction/IPrediction.h"
@@ -11,15 +10,19 @@
 #include "Utilities/func/MathUtil.h"
 
 #include "TCanvas.h"
+#include "TColor.h"
 #include "TFeldmanCousins.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "THStack.h"
+#include "TLatex.h"
 #include "TLegend.h"
 #include "TLine.h"
 #include "TList.h"
+#include "TMarker.h"
+#include "TROOT.h"
 
 #include <algorithm>
 #include <iostream>
@@ -821,4 +824,98 @@ namespace ana
     return outGraph;
 
   }
+
+
+  //----------------------------------------------------------------------
+  void drawBFSingle(double bfX, double bfY, Color_t color, Style_t marker, double size = 1.5){
+
+    TMarker* manMarker = new TMarker(bfX, bfY, marker);
+    manMarker->SetMarkerSize(size);
+    manMarker->SetMarkerColor(color);
+    manMarker->Draw();
+
+  }
+
+
+  //----------------------------------------------------------------------
+  void CenterTitles ( TH1 *  histo){
+
+    histo->GetXaxis()->CenterTitle();
+    histo->GetYaxis()->CenterTitle();
+    histo->GetZaxis()->CenterTitle();
+
+  }
+
+
+  //--------------------------------------------------
+  void CornerLabel( std::string& s,
+        float xCoord,
+        float yCoord )
+  {
+
+    TLatex* corner = new TLatex(xCoord, yCoord, s.c_str());
+    corner->SetTextColor(kGray+1);
+    corner->SetNDC();
+    corner->SetTextSize(2/40.);
+    corner->SetTextAlign(12);
+    corner->Draw();
+
+  }
+
+  //----------------------------------------------------------------------
+  void FillWithDimColor(TH1* h, bool usealpha)
+  {
+    float dim=0.65;
+
+    if ( usealpha ){
+      h->SetFillColorAlpha(h->GetLineColor(),dim);
+      return;
+    }
+
+    TColor *color = gROOT->GetColor(h->GetLineColor());
+    float R,G,B,hR,hG,hB,hHue,hSat,hVal;
+    color->GetRGB(hR,hG,hB);
+    color->RGB2HSV(hR,hG,hB,hHue,hSat,hVal);
+    color->HSV2RGB(hHue,dim*hSat,hVal,R,G,B);
+    h->SetFillColor(color->GetColor(R,G,B));
+  }
+
+  //----------------------------------------------------------------------
+  void PimpHist(TH1* hist, Style_t linestyle, Color_t linecolor, int linewidth, Style_t markerstyle, Color_t markercolor, double markersize){
+
+    hist->SetLineColor(linecolor);
+    hist->SetLineStyle(linestyle);
+    hist->SetLineWidth(linewidth);
+    hist->SetMarkerColor(markercolor);
+    hist->SetMarkerStyle(markerstyle);
+    hist->SetMarkerSize(markersize);
+
+  }
+
+
+  //----------------------------------------------------------------------
+  // Put a "DUNE Simulation" tag in the corner
+  void Simulation()
+  {
+    TLatex* prelim = new TLatex(.9, .95, "DUNE Simulation");
+    prelim->SetTextColor(kGray+2);
+    prelim->SetNDC();
+    prelim->SetTextSize(2/30.);
+    prelim->SetTextAlign(32);
+    prelim->Draw();
+  }
+
+  //----------------------------------------------------------------------
+  // Put a "DUNE Simulation" tag on the right
+  void SimulationSide()
+  {
+    TLatex* prelim = new TLatex(.93, .9, "DUNE Simulation");
+    prelim->SetTextColor(kGray+2);
+    prelim->SetNDC();
+    prelim->SetTextSize(2/30.);
+    prelim->SetTextAngle(270);
+    prelim->SetTextAlign(12);
+    prelim->Draw();
+  }
+
 } // namespace

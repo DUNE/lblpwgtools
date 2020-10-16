@@ -38,6 +38,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  IFitter::IFitSummary::~IFitSummary()
+  {
+  }
+
+  //----------------------------------------------------------------------
   std::vector<IFitter::SeedPt>
   IFitter::ExpandSeeds(const SeedList& seedPts,
                        const std::vector<SystShifts>& systSeedPts) const

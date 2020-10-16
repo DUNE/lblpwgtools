@@ -21,18 +21,18 @@ namespace ana
     void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<ReactorExperiment> LoadFrom(TDirectory* dir, const std::string& name);
   protected:
+    virtual double SSTh13(osc::IOscCalcAdjustable* osc) const;
+
     double fBestFit, fSigma;
   };
 
-  /// A \ref ReactorExperiment initialized with the Nu2014 Daya Bay constraints
-  const ReactorExperiment* DayaBayConstraint2014();
 
-  /// Weighted average of all experiments as of first nue paper writing
-  const ReactorExperiment* WorldReactorConstraint2015();
+  /// Reactor constraint from NuFit 2018 
+  const ReactorExperiment* ReactorConstraintNuFit2018(bool normal_ordering, bool sk_data);
 
-  /// Updated value for SecondAna based on the latest PDG
-  const ReactorExperiment* WorldReactorConstraint2016();
+  /// Reactor constraint from NuFit 2019 
+  const ReactorExperiment* ReactorConstraintNuFit2019(bool normal_ordering, bool sk_data);
 
-  /// Reactor constraint from PDG 2017 update 
-  const ReactorExperiment* WorldReactorConstraint2017();
+  /// Reactor constraint from the PDG 2019
+  const ReactorExperiment* ReactorConstraintPDG2019();
 }

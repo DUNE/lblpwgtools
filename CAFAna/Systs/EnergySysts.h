@@ -592,13 +592,16 @@ namespace ana
 
   extern const NResFD kNResFD;
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   // Vector of energy scale systematics
   struct EnergySystVector: public std::vector<const ISyst*>
   {
-
   };
-
-
   EnergySystVector GetEnergySysts();
+*/
+
+  std::vector<const ISyst*> GetEnergySysts();
 
 }

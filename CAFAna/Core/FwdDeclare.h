@@ -12,3 +12,23 @@ namespace osc
   typedef _IOscCalc<double> IOscCalc;
   typedef _IOscCalcAdjustable<double> IOscCalcAdjustable;
 }
+
+namespace caf
+{
+  class StandardRecord;
+}
+
+namespace ana
+{
+  template <class T> class GenericVar;
+  typedef GenericVar<caf::StandardRecord> Var;
+
+  template <class T> class GenericCut;
+  typedef GenericCut<caf::StandardRecord> Cut;
+
+  class SystShifts;
+}
+
+class TArrayD;
+template <class T> class THnSparseT;
+typedef THnSparseT<TArrayD> THnSparseD;

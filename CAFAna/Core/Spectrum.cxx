@@ -1,6 +1,7 @@
 #include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Core/Ratio.h"
+#include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "Utilities/func/MathUtil.h"
@@ -29,11 +30,11 @@ namespace ana
   {
     const Binning bins1D = fAxis.GetBins1D();
 
-    if(sparse){
-      fHist = Hist::Adopt(Eigen::SparseVector<double>(bins1D.NBins()+2));
+    if(sparse == kSparse){
+      fHist = Hist::ZeroSparse(bins1D.NBins());
     }
     else{
-      fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(bins1D.NBins()+2)));
+      fHist = Hist::Zero(bins1D.NBins());
     }
 
     if(axis.HasVars()) loader.AddSpectrum(*this, axis.GetVar1D(), cut, shift, wei);
@@ -48,7 +49,7 @@ namespace ana
                      const Var& wei)
     : fHist(Hist::Uninitialized()), fPOT(0), fLivetime(0), fAxis(label, bins)
   {
-    fHist = Hist::Adopt(Eigen::ArrayXd(Eigen::ArrayXd::Zero(fAxis.GetBins1D().NBins()+2)));
+    fHist = Hist::Zero(fAxis.GetBins1D().NBins());
 
     loader.AddSpectrum(*this, var, cut, shift, wei);
   }
@@ -65,7 +66,7 @@ namespace ana
   Spectrum::Spectrum(Eigen::ArrayXstan&& h,
                      const HistAxis& axis,
                      double pot, double livetime)
-    : fHist(Hist::Adopt(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
+    : fHist(Hist::AdoptStan(std::move(h))), fPOT(pot), fLivetime(livetime), fAxis(axis)
   {
   }
 
@@ -128,8 +129,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   TH1D* Spectrum::ToTH1(double exposure,
-			EExposureType expotype,
-			EBinType bintype) const
+                        EExposureType expotype,
+                        EBinType bintype) const
   {
     // Could have a file temporarily open
     DontAddDirectory guard;
@@ -187,7 +188,6 @@ namespace ana
     if(ret->GetEntries() == 0) ret->SetEntries(1);
 
     return ret;
-
   }
 
   //----------------------------------------------------------------------
@@ -360,7 +360,27 @@ namespace ana
   //----------------------------------------------------------------------
   double Spectrum::Mean() const
   {
-    return fHist.GetMean();
+    const Binning bins = fAxis.GetBins1D();
+
+    if(fHist.GetBinContent(0) != 0){
+      std::cout << "Spectrum::Mean(): Warning ignoring underflow bin content " << fHist.GetBinContent(0) << std::endl;
+    }
+
+    if(fHist.GetBinContent(bins.NBins()+1) != 0){
+      std::cout << "Spectrum::Mean(): Warning ignoring overflow bin content " << fHist.GetBinContent(bins.NBins()+1) << std::endl;
+    }
+
+    double mean = 0;
+    double W = 0;
+    for(int i = 1; i <= bins.NBins(); ++i){
+      const double w = fHist.GetBinContent(i);
+      W += w;
+      const double x0 = bins.Edges()[i-1];
+      const double x1 = bins.Edges()[i];
+      mean += w * (x0+x1)/2;
+    }
+
+    return mean/W;
   }
 
   //----------------------------------------------------------------------
@@ -426,10 +446,9 @@ namespace ana
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum Spectrum with no POT or livetime: "
-                << fPOT << " " << rhs.fPOT
+                << fPOT << " " << rhs.fPOT << " " << fLivetime << " " << rhs.fLivetime
                 << std::endl;
       abort();
-      return *this;
     }
 
     if(!fLivetime && !rhs.fPOT){

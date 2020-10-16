@@ -52,6 +52,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  OscillatableSpectrum::OscillatableSpectrum(const Eigen::MatrixXd&& mat,
+                                             const HistAxis& recoAxis,
+                                             double pot, double livetime)
+    : ReweightableSpectrum(std::move(mat), recoAxis,
+                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
+                           pot, livetime)
+  {
+  }
+
+  //----------------------------------------------------------------------
   OscillatableSpectrum::~OscillatableSpectrum()
   {
   }
@@ -60,9 +70,9 @@ namespace ana
   OscillatableSpectrum::OscillatableSpectrum(const OscillatableSpectrum& rhs)
     : ReweightableSpectrum(rhs)
   {
-    if(rhs.fOscCacheHash){
-      fOscCacheSpect = rhs.fOscCacheSpect;
-      fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
+    if(rhs.fCache->hash){
+      fCache->spect = rhs.fCache->spect;
+      fCache->hash = std::make_unique<TMD5>(*rhs.fCache->hash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -72,9 +82,9 @@ namespace ana
   OscillatableSpectrum::OscillatableSpectrum(OscillatableSpectrum&& rhs)
     : ReweightableSpectrum(rhs)
   {
-    if(rhs.fOscCacheHash){
-      fOscCacheSpect = std::move(rhs.fOscCacheSpect);
-      fOscCacheHash = std::move(rhs.fOscCacheHash);
+    if(rhs.fCache->hash){
+      fCache->spect = std::move(rhs.fCache->spect);
+      fCache->hash = std::move(rhs.fCache->hash);
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -87,9 +97,12 @@ namespace ana
 
     ReweightableSpectrum::operator=(rhs);
 
-    if(rhs.fOscCacheHash){
-      fOscCacheSpect = rhs.fOscCacheSpect;
-      fOscCacheHash = std::make_unique<TMD5>(*rhs.fOscCacheHash);
+    if(rhs.fCache->hash){
+      fCache->spect = rhs.fCache->spect;
+      fCache->hash = std::make_unique<TMD5>(*rhs.fCache->hash);
+    }
+    else{
+      fCache->hash.reset();
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -105,9 +118,12 @@ namespace ana
 
     ReweightableSpectrum::operator=(rhs);
 
-    if(rhs.fOscCacheHash){
-      fOscCacheSpect = std::move(rhs.fOscCacheSpect);
-      fOscCacheHash = std::move(rhs.fOscCacheHash);
+    if(rhs.fCache->hash){
+      fCache->spect = std::move(rhs.fCache->spect);
+      fCache->hash = std::move(rhs.fCache->hash);
+    }
+    else{
+      fCache->hash.reset();
     }
 
     assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
@@ -121,16 +137,16 @@ namespace ana
   _Oscillated(osc::_IOscCalc<T>* calc, int from, int to) const
   {
     TMD5* hash = calc->GetParamsHash();
-    if(hash && fOscCacheHash && *hash == *fOscCacheHash){
+    if(hash && fCache->hash && *hash == *fCache->hash){
       delete hash;
-      return fOscCacheSpect;
+      return fCache->spect;
     }
 
     const OscCurve curve(calc, from, to);
     const Spectrum ret = WeightedBy(curve);
     if(hash){
-      fOscCacheSpect = ret;
-      fOscCacheHash.reset(hash);
+      fCache->spect = ret;
+      fCache->hash.reset(hash);
     }
 
     return ret;
@@ -156,7 +172,7 @@ namespace ana
     ReweightableSpectrum::operator+=(rhs);
 
     // invalidate
-    fOscCacheHash.reset(nullptr);
+    fCache->hash.reset(nullptr);
 
     return *this;
   }
@@ -175,7 +191,7 @@ namespace ana
     ReweightableSpectrum::operator-=(rhs);
 
     // invalidate
-    fOscCacheHash.reset(nullptr);
+    fCache->hash.reset(nullptr);
 
     return *this;
   }
@@ -234,9 +250,12 @@ namespace ana
                                                       HistAxis(labels, bins),
                                                       kNoCut);
 
-    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                  ret->fMat.rows(),
-                                                  ret->fMat.cols());
+    // ROOT histogram storage is row-major, but Eigen is column-major by
+    // default
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
+    ret->fMat = Eigen::Map<MatRowMajor>(spect->GetArray(),
+                                        ret->fMat.rows(),
+                                        ret->fMat.cols());
 
     delete spect;
 

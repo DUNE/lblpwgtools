@@ -27,15 +27,11 @@ namespace ana
                                              const Var& wei)
     : ReweightableSpectrum(recoAxis,
                            trueAxis.GetBinnings()[0],
-                           trueAxis.GetVars()[0])
+                           trueAxis.HasVars() ? trueAxis.GetVars()[0] : kUnweighted)
   {
     assert(trueAxis.NDimensions() == 1);
 
     fTrueLabel = trueAxis.GetLabels()[0];
-
-    DontAddDirectory guard;
-
-    const std::string name = UniqueName();
 
     const Binning ybins = trueAxis.GetBinnings()[0];
 
@@ -43,6 +39,16 @@ namespace ana
     fMat.setZero();
 
     if(recoAxis.HasVars()) loader.AddReweightableSpectrum(*this, recoAxis.GetVar1D(), cut, shift, wei);
+  }
+
+  //----------------------------------------------------------------------
+  ReweightableSpectrum::ReweightableSpectrum(const Eigen::MatrixXd&& mat,
+                                             const HistAxis& recoAxis,
+                                             const HistAxis& trueAxis,
+                                             double pot, double livetime)
+    : fRWVar(kUnweighted), fMat(mat), fPOT(pot), fLivetime(livetime),
+      fAxisX(recoAxis), fBinsY(trueAxis.GetBinnings()[0]), fTrueLabel(trueAxis.GetLabels()[0])
+  {
   }
 
   //----------------------------------------------------------------------
@@ -123,13 +129,13 @@ namespace ana
   /// Helper for \ref Unweighted
   inline Eigen::ArrayXd ProjectionX(const Eigen::MatrixXd& mat)
   {
-    return Eigen::RowVectorXd::Ones(mat.cols()) * mat;
+    return Eigen::RowVectorXd::Ones(mat.rows()) * mat;
   }
 
   /// Helper for \ref WeightingVariable
   inline Eigen::ArrayXd ProjectionY(const Eigen::MatrixXd& mat)
   {
-    return mat * Eigen::VectorXd::Ones(mat.rows());
+    return mat * Eigen::VectorXd::Ones(mat.cols());
   }
 
   //----------------------------------------------------------------------
@@ -156,7 +162,7 @@ namespace ana
     else{
       const Eigen::VectorXstan& vec = ws.GetEigenStan();
 
-      return Spectrum(Hist::Adopt(vec.transpose() * fMat),
+      return Spectrum(Hist::AdoptStan(vec.transpose() * fMat),
                       fAxisX, fPOT, fLivetime);
     }
   }
@@ -370,16 +376,17 @@ namespace ana
       labels.push_back(label ? label->GetString().Data() : "");
     }
 
-    delete dir;
-
     auto ret = std::make_unique<ReweightableSpectrum>(kNullLoader,
                                                       HistAxis(labels, bins),
                                                       HistAxis(spect->GetYaxis()->GetTitle(), Binning::FromTAxis(spect->GetYaxis())),
                                                       kNoCut);
 
-    ret->fMat = Eigen::Map<const Eigen::MatrixXd>(spect->GetArray(),
-                                                  ret->fMat.rows(),
-                                                  ret->fMat.cols());
+    // ROOT histogram storage is row-major, but Eigen is column-major by
+    // default
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
+    ret->fMat = Eigen::Map<MatRowMajor>(spect->GetArray(),
+                                        ret->fMat.rows(),
+                                        ret->fMat.cols());
 
     delete spect;
 
@@ -388,6 +395,8 @@ namespace ana
 
     delete hPot;
     delete hLivetime;
+
+    delete dir;
 
     return ret;
   }

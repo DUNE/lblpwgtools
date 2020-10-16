@@ -1,5 +1,7 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "CAFAna/Experiment/CovarianceExperiment.h"
+
 using namespace ana;
 
 char const *def_stateFname = "common_state_mcc11v3.root";
@@ -131,19 +133,20 @@ void llh_scans(std::string stateFname = def_stateFname,
                                            *spectra.at(kFDNumuRHC).spect);
   dis_expt_rhc_syst.SetMaskHist(0.5, 8);
 
-  SingleSampleExperiment nd_expt_fhc_syst(&predNDNumuFHC,
-                                          *spectra.at(kNDNumuFHC).spect);
-  nd_expt_fhc_syst.SetMaskHist(0.5, 10, 0, -1);
-
-  SingleSampleExperiment nd_expt_rhc_syst(&predNDNumuRHC,
-                                          *spectra.at(kNDNumuRHC).spect);
-  nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
-
-  // Add covariances to the two ND samples
+  // Covariances for the two ND samples
   std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
 
-  nd_expt_fhc_syst.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
-  nd_expt_rhc_syst.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", kCovMxChiSqPreInvert);
+  CovarianceExperiment nd_expt_fhc_syst(&predNDNumuFHC,
+                                        *spectra.at(kNDNumuFHC).spect,
+                                        covFileName, "nd_fhc_frac_cov",
+                                        kCovMxChiSqPreInvert);
+  nd_expt_fhc_syst.SetMaskHist(0.5, 10, 0, -1);
+
+  CovarianceExperiment nd_expt_rhc_syst(&predNDNumuRHC,
+                                        *spectra.at(kNDNumuRHC).spect,
+                                        covFileName, "nd_fhc_frac_cov",
+                                        kCovMxChiSqPreInvert);
+  nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
 
   MultiExperiment expt_ND_FHC({&nd_expt_fhc_syst});
   MultiExperiment expt_ND_RHC({&nd_expt_rhc_syst});

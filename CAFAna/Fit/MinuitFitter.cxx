@@ -21,11 +21,21 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
+#include "Minuit2/StackAllocator.h"
+
 #include <cassert>
 #include <iostream>
 
 namespace ana
 {
+  // Minuit calls this at some point, and it creates a static. Which doesn't
+  // like happening on multiple threads at once. So do it upfront while we're
+  // still single-threaded.
+  struct MinuitStaticInit
+  {
+    MinuitStaticInit(){ROOT::Minuit2::StackAllocatorHolder::Get();}
+  } gMinuitStaticInit;
+
   //----------------------------------------------------------------------
   MinuitFitter::MinuitFitter(const IExperiment *expt,
                              std::vector<const IFitVar *> vars,

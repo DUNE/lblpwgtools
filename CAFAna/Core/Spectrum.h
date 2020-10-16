@@ -1,19 +1,16 @@
 #pragma once
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/Var.h"
-#include "CAFAna/Core/Cut.h"
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Hist.h"
-#include "CAFAna/Core/SpectrumLoaderBase.h"
+#include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include <Eigen/Dense>
 
 #include "TAttLine.h"
-#include "THnSparse.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,7 +23,9 @@ class TH1D;
 /// Oscillation analysis framework, runs over CAF files outside of ART
 namespace ana
 {
+  class MultiVar;
   class Ratio;
+  class SpectrumLoaderBase;
 
   /// Representation of a spectrum in any variable, with associated POT
   class Spectrum
@@ -288,5 +287,4 @@ namespace ana
 
   // Commutative
   inline Spectrum operator*(const Ratio& lhs, const Spectrum& rhs){return rhs*lhs;}
-  inline Spectrum operator/(const Ratio& lhs, const Spectrum& rhs){return rhs/lhs;}
 }

@@ -1,5 +1,9 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
+#include "CAFAna/Experiment/CovMxChiSq.h"
+#include "CAFAna/Experiment/CovMxChiSqPreInvert.h"
+#include "CAFAna/Experiment/CovMxLL.h"
+
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
@@ -15,52 +19,7 @@ namespace ana
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data)
-    : fTestStatistic(kLogLikelihood),
-      fMC(pred), fData(data)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const TMatrixD* cov,
-                                                 ETestStatistic stat)
-    : fTestStatistic(stat),
-      fMC(pred), fData(data)
-  {
-    AddCovarianceMatrix(cov, stat);
-  }
-
-  // Helper for constructor
-  TMatrixD* GetCov(const std::string& fname, const std::string& matname)
-  {
-   
-    TDirectory *thisDir = gDirectory->CurrentDirectory();
-
-    TFile f(fname.c_str());
-    TMatrixD* ret = (TMatrixD*)f.Get(matname.c_str());
-
-    if(!ret){
-      std::cout << "Could not obtain covariance matrix named "
-                << matname << " from " << fname << std::endl;
-      abort();
-    }
-
-    thisDir->cd();
-
-    return ret;
-  }
-
-  //----------------------------------------------------------------------
-  SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
-                                                 const Spectrum& data,
-                                                 const std::string covMatFilename,
-                                                 const std::string covMatName,
-                                                 ETestStatistic stat)
-
-    : SingleSampleExperiment(pred, data,
-                             GetCov(covMatFilename, covMatName),
-                             stat)
+    : fMC(pred), fData(data)
   {
   }
 
@@ -76,72 +35,11 @@ namespace ana
     Eigen::ArrayXd apred = fMC->PredictSyst(calc, syst).GetEigen(fData.POT());
     Eigen::ArrayXd adata = fData.GetEigen(fData.POT());
 
-    double ll = 0;
+    ApplyMask(apred, adata);
 
-    // if there is a covariance matrix, use it
-    if(fCovMxInfoM.size() != 0){
-      const Eigen::MatrixXd covInvM = GetAbsInvCovMat(apred);
-
-      // Now the matrix is in order apply the mask to the two histograms
-      ApplyMask(apred, adata);
-
-      // Now it's absolute it's suitable for use in the chisq calculation
-      if(fTestStatistic == kCovMxChiSq ||
-         fTestStatistic == kCovMxChiSqPreInvert){
-        ll = Chi2CovMx(apred, adata, covInvM);
-      }
-      else{
-        ll = LogLikelihoodCovMx(apred, adata, covInvM, &fCovLLState);
-      }
-    }
-    else{
-      // No covariance matrix - use standard LL
-      ApplyMask(apred, adata);
-
-      // full namespace qualification to avoid degeneracy with method inherited from IExperiment
-      ll = ana::LogLikelihood(apred, adata);
-    }
-
-    return ll;
-  }
-
-  //----------------------------------------------------------------------
-  Eigen::MatrixXd SingleSampleExperiment::GetAbsInvCovMat(const Eigen::ArrayXd& apred) const
-  {
-    Eigen::MatrixXd covInv(fCovMxInfoM.rows(), fCovMxInfoM.cols());
-
-    const int N = apred.size()-2; // no under/overflow
-
-    // The inverse relative covariance matrix comes from one of two sources
-    if(fTestStatistic == kCovMxChiSqPreInvert){
-      // Either we precomputed it
-      covInv = fCovMxInfoM;
-    }
-    else{
-      // Or we have to manually add statistical uncertainty in quadrature
-      Eigen::MatrixXd cov = fCovMxInfoM;
-      for( int b = 0; b < N; ++b ) {
-        const double Nevt = apred[b+1];
-        if(Nevt > 0) cov(b, b) += 1/Nevt;
-      }
-
-      // And then invert
-      covInv = cov.inverse();
-    }
-
-    // In either case - covariance matrix is fractional; convert it to
-    // absolute by multiplying out the prediction
-    //
-    // TODO there is probably a nice Eigen expression that will do this
-    for( int b0 = 0; b0 < N; ++b0 ) {
-      for( int b1 = 0; b1 < N; ++b1 ) {
-        const double f = apred[b0+1] * apred[b1+1];
-        if(f != 0) covInv.coeffRef(b0, b1) /= f;
-        else covInv.coeffRef(b0, b1) = 0.;
-      }
-    }
-
-    return covInv;
+    // full namespace qualification to avoid degeneracy with method inherited
+    // from IExperiment
+    return ana::LogLikelihood(apred, adata);
   }
 
   //----------------------------------------------------------------------
@@ -159,67 +57,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SingleSampleExperiment::AddCovarianceMatrix(const TMatrixD* cov,
-						   ETestStatistic stat) 
-  {
-    if(fCovMxInfoM.size() > 0) {
-      std::cout << "Error: trying to add a covariance matrix to a SingleSampleExperiment where one already exists" << std::endl;
-      abort();
-    }
-
-    switch(stat){
-    case kLogLikelihood:
-      // No need for any matrix
-      break;
-    case kCovMxChiSq:
-      // Store the covariance matrix as-is
-      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov);
-      break;
-    case kCovMxChiSqPreInvert:
-      {
-      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov);
-
-      const Eigen::ArrayXd pred = fMC->Predict((osc::IOscCalc*)0).GetEigen(fData.POT());
-
-      // We add the squared fractional statistical errors to the diagonal. In
-      // principle this should vary with the predicted number of events, but in
-      // the ND using the no-syst-shifts number should be a pretty good
-      // approximation, and it's much faster than needing to re-invert the
-      // matrix every time.
-      for(int b = 0; b < pred.size(); ++b){
-        if(pred[b] > 0) fCovMxInfoM.coeffRef(b, b) += 1/pred[b];
-      }
-
-      fCovMxInfoM = fCovMxInfoM.inverse();
-      }
-      break;
-    case kCovMxLogLikelihood:
-      // Also pre-invert the matrix but with no stats
-      fCovMxInfoM = EigenMatrixXdFromTMatrixD(cov).inverse();
-      break;
-    default:
-      std::cout << "Unknown test statistic " << stat << std::endl;
-      abort();
-    }
-  }
-
-  //----------------------------------------------------------------------
-  void SingleSampleExperiment::AddCovarianceMatrix(const std::string covMatFilename,
-						   const std::string covMatName,
-						   ETestStatistic stat) 
-  {
-    AddCovarianceMatrix(GetCov(covMatFilename, covMatName), stat);
-  }
-
-  //----------------------------------------------------------------------
   stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalcAdjustableStan *osc,
                                                         const SystShifts &syst) const
   {
-    if(fCovMxInfoM.size() != 0){
-      std::cout << "SingleSampleExperiment doesn't yet support the combination of covariance matrix and OscCalcStan" << std::endl;
-      abort();
-    }
-
     const Spectrum pred = fMC->PredictSyst(osc, syst);
 
     const Eigen::ArrayXd data = fData.GetEigen(fData.POT());

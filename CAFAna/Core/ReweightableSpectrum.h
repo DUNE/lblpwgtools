@@ -26,6 +26,11 @@ namespace ana
                          const SystShifts& shift = kNoShift,
                          const Var& wei = kUnweighted);
 
+    ReweightableSpectrum(const Eigen::MatrixXd&& mat,
+                         const HistAxis& recoAxis,
+                         const HistAxis& trueAxis,
+                         double pot, double livetime);
+
     /// The only valid thing to do with such a spectrum is to assign something
     /// else into it.
     static ReweightableSpectrum Uninitialized(){return ReweightableSpectrum();}
@@ -45,7 +50,8 @@ namespace ana
 
     TH2D* ToTH2(double pot) const;
 
-    TAxis const *GetReweightTAxis() const;
+    double POT() const{return fPOT;}
+    double Livetime() const{return fLivetime;}
 
     Spectrum UnWeighted() const;
 
@@ -93,6 +99,7 @@ namespace ana
 
     double Livetime() {return fLivetime;}
 
+    Eigen::MatrixXd GetEigen(double pot) const {return fMat * pot/fPOT;}
   protected:
     // Derived classes can be trusted take care of their own construction
     ReweightableSpectrum(const HistAxis& axisX,

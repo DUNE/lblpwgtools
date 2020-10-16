@@ -17,6 +17,13 @@ namespace ana
     Ratio(const Spectrum& num, const Spectrum& denom,
 	  bool purOrEffErrs = false);
 
+    Ratio(Eigen::ArrayXd&& arr,
+          const std::vector<std::string>& labels,
+          const std::vector<Binning>& bins)
+      : fHist(Hist::Adopt(std::move(arr))), fBins(bins), fLabels(labels)
+    {
+    }
+
     virtual ~Ratio();
 
     Ratio(const Ratio& rhs) = default;

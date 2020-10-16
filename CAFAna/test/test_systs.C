@@ -22,11 +22,11 @@ using namespace ana;
 
 #include "TCanvas.h"
 
-const Binning binsFDEreco = Binning::Simple(80, 0, 10);
+const Binning kFDRecoBinning = Binning::Simple(80, 0, 10);
 const Var kRecoE_numu = SIMPLEVAR(dune.Ev_reco_numu);
 const Var kRecoE_ND = SIMPLEVAR(dune.Ev_reco);
-const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_numu);
-const HistAxis axRecoEnuNDnumu("Reco energy (GeV)", binsFDEreco, kRecoE_ND);
+const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", kFDRecoBinning, kRecoE_numu);
+const HistAxis axRecoEnuNDnumu("Reco energy (GeV)", kFDRecoBinning, kRecoE_ND);
 
 const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt);
 

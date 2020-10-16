@@ -1,6 +1,13 @@
 #pragma once
 
-#include "Utilities/func/Stan.h" // need stan proper for fDataStan
+#include "Utilities/func/StanVar.h"
+// These numeric limits need to be included before we actually instantiate any
+// eigen+stan objects.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#include "stan/math/rev/core/std_numeric_limits.hpp"
+#include "stan/math/rev/mat/fun/Eigen_NumTraits.hpp"
+#pragma GCC diagnostic pop
 
 class TDirectory;
 
@@ -30,8 +37,11 @@ namespace ana
     static Hist Uninitialized(){return Hist();}
     bool Initialized() const {return fType != kUninitialized;}
 
-    static Hist Adopt(Eigen::SparseVector<double>&& v);
-    static Hist Adopt(Eigen::ArrayXstan&& v);
+    static Hist Zero(int nbins);
+    static Hist ZeroSparse(int nbins);
+
+    static Hist AdoptSparse(Eigen::SparseVector<double>&& v);
+    static Hist AdoptStan(Eigen::ArrayXstan&& v);
     static Hist Adopt(Eigen::ArrayXd&& v);
 
     static Hist FromDirectory(TDirectory* dir);
@@ -45,7 +55,6 @@ namespace ana
     int GetNbinsX() const;
     double GetBinError(int i) const;
     double Integral() const;
-    double GetMean() const;
 
     void Fill(const Binning& bins, double x, double w);
     void Scale(double s);
@@ -75,5 +84,7 @@ namespace ana
     Eigen::SparseVector<double> fDataSparse;
     Eigen::ArrayXstan fDataStan;
     Eigen::ArrayXd fData;
+    Eigen::ArrayXd fSumSq; ///< Accumulate errors, if enabled
+    bool fSqrtErrs; ///< Special case when filled with unweighted data
   };
 }

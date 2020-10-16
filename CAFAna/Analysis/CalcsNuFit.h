@@ -10,6 +10,7 @@
 
 namespace ana
 {
+  /*
   // http://www.nu-fit.org/?q=node/177
   // NuFit November 2018
   const double kNuFitDmsq21CV = 7.39e-5;
@@ -63,7 +64,7 @@ namespace ana
   //https://arxiv.org/pdf/1707.02322.pdf
   const double kBaseline = 1284.9;     // km
   const double kEarthDensity = 2.848;  // g/cm^3
-
+  */
   std::vector<std::pair<std::string, double> > ParseAsimovSet(std::string noApologies);
 
   // hie = +/-1
