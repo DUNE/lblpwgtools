@@ -1,5 +1,6 @@
 set(Experiment_implementation_files
         CountingExperiment.cxx
+        CovarianceExperiment.cxx
         ICovarianceMatrix.cxx
         CovMxChiSq.cxx
         CovMxChiSqPreInvert.cxx
@@ -12,6 +13,7 @@ set(Experiment_implementation_files
 
 set(Experiment_header_files
         CountingExperiment.h
+        CovarianceExperiment.h
         ICovarianceMatrix.h
         CovMxChiSq.h
         CovMxChiSqPreInvert.h

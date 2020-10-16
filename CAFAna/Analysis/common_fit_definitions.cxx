@@ -21,6 +21,7 @@
 
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Experiment/CovarianceExperiment.h"
 
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
@@ -1116,7 +1117,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment *nd_expt_fhc, *nd_expt_rhc;
+  IExperiment *nd_expt_fhc, *nd_expt_rhc;
 
   bool UseNDCovMat = true;
   if (getenv("CAFANA_USE_NDCOVMAT")) {
@@ -1136,27 +1137,34 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     TMatrixD* fhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
     TMatrixD* rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
 
-    nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC,
-                                             *spectra->at(kNDNumuFHC).spect,
-                                             fhc_ndmatrix,
-                                             kCovMxChiSqPreInvert);
+    auto e = new CovarianceExperiment(&predNDNumuFHC,
+                                       *spectra->at(kNDNumuFHC).spect,
+                                       fhc_ndmatrix,
+                                       kCovMxChiSqPreInvert);
+    e->SetMaskHist(0.5, 10, 0, -1);
+    nd_expt_fhc = e;
 
-    nd_expt_rhc = new SingleSampleExperiment(&predNDNumuRHC,
-                                             *spectra->at(kNDNumuRHC).spect,
-                                             rhc_ndmatrix,
-                                             kCovMxChiSqPreInvert);
+    e = new CovarianceExperiment(&predNDNumuRHC,
+                                 *spectra->at(kNDNumuRHC).spect,
+                                 rhc_ndmatrix,
+                                 kCovMxChiSqPreInvert);
+
+    e->SetMaskHist(0.5, 10, 0, -1);
+    nd_expt_rhc = e;
   }
   else{
-    nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC,
-                                             *spectra->at(kNDNumuFHC).spect);
+    auto e = new SingleSampleExperiment(&predNDNumuFHC,
+                                        *spectra->at(kNDNumuFHC).spect);
 
-    nd_expt_rhc = new SingleSampleExperiment(&predNDNumuRHC,
-                                             *spectra->at(kNDNumuRHC).spect);
+    e->SetMaskHist(0.5, 10, 0, -1);
+    nd_expt_fhc = e;
+
+    e = new SingleSampleExperiment(&predNDNumuRHC,
+                                   *spectra->at(kNDNumuRHC).spect);
+
+    e->SetMaskHist(0.5, 10, 0, -1);
+    nd_expt_rhc = e;
   }
-
-
-  nd_expt_fhc->SetMaskHist(0.5, 10, 0, -1);
-  nd_expt_rhc->SetMaskHist(0.5, 10, 0, -1);
 
   if (PostFitTreeBlob) {
     // Save the seeds used to do the stats throws

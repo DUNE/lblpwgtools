@@ -4,19 +4,8 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Experiment/IExperiment.h"
 
-template<class T> class TMatrixT;
-typedef TMatrixT<double> TMatrixD;
-
 namespace ana
 {
-  class ICovarianceMatrix;
-
-  enum ETestStatistic{
-    kCovMxChiSq,
-    kCovMxChiSqPreInvert, ///< good approximation for ND
-    kCovMxLogLikelihood ///< for FD
-  };
-
   /// Compare a single data spectrum to the MC expectation
   class SingleSampleExperiment: public IExperiment
   {
@@ -25,19 +14,6 @@ namespace ana
     /// \param data   Data spectrum to compare to
     SingleSampleExperiment(const IPrediction* pred,
                            const Spectrum& data);
-
-    /// Include a covariance matrix
-    SingleSampleExperiment(const IPrediction* pred,
-                           const Spectrum& data,
-                           const TMatrixD* cov,
-                           ETestStatistic stat);
-
-    /// Include a covariance matrix file path
-    SingleSampleExperiment(const IPrediction* pred,
-                           const Spectrum& data,
-                           const std::string& covMatFilename,
-                           const std::string& covMatName,
-                           ETestStatistic stat);
 
     virtual ~SingleSampleExperiment();
 
@@ -65,16 +41,10 @@ namespace ana
 		     double ymin=0, double ymax=-1);
 
   protected:
-    /// Helper for constructor
-    static TMatrixD* GetCov(const std::string& fname,
-                            const std::string& matname);
-
     virtual void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b) const;
 
     const IPrediction* fMC;
     Spectrum fData;
     Eigen::ArrayXd fMaskA;
-
-    ICovarianceMatrix* fCov;
   };
 }
