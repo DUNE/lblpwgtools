@@ -1116,13 +1116,47 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC,
-                                     *spectra->at(kNDNumuFHC).spect);
-  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
+  SingleSampleExperiment *nd_expt_fhc, *nd_expt_rhc;
 
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC,
-                                     *spectra->at(kNDNumuRHC).spect);
-  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
+  bool UseNDCovMat = true;
+  if (getenv("CAFANA_USE_NDCOVMAT")) {
+    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
+  }
+
+  bool UseV3NDCovMat = (AnaV == kV3);
+  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
+  }
+
+  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+    if (turbose) {
+      std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
+                << std::endl;
+    }
+    TMatrixD* fhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
+    TMatrixD* rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
+
+    nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC,
+                                             *spectra->at(kNDNumuFHC).spect,
+                                             fhc_ndmatrix,
+                                             kCovMxChiSqPreInvert);
+
+    nd_expt_rhc = new SingleSampleExperiment(&predNDNumuRHC,
+                                             *spectra->at(kNDNumuRHC).spect,
+                                             rhc_ndmatrix,
+                                             kCovMxChiSqPreInvert);
+  }
+  else{
+    nd_expt_fhc = new SingleSampleExperiment(&predNDNumuFHC,
+                                             *spectra->at(kNDNumuFHC).spect);
+
+    nd_expt_rhc = new SingleSampleExperiment(&predNDNumuRHC,
+                                             *spectra->at(kNDNumuRHC).spect);
+  }
+
+
+  nd_expt_fhc->SetMaskHist(0.5, 10, 0, -1);
+  nd_expt_rhc->SetMaskHist(0.5, 10, 0, -1);
 
   if (PostFitTreeBlob) {
     // Save the seeds used to do the stats throws
@@ -1204,13 +1238,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_fhc", pot_nd_fhc);
       pre_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc->Write();
       TH1 *pre_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "prefit_nd_numu_fhc_1D", pot_nd_fhc, true);
       pre_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
@@ -1226,13 +1260,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_rhc", pot_nd_rhc);
       pre_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc->Write();
       TH1 *pre_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "prefit_nd_numu_rhc_1D", pot_nd_rhc, true);
       pre_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc_1D->Write();
     }
 
@@ -1245,9 +1279,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // Now sort out the experiment
   MultiExperiment this_expt;
   if (pot_nd_fhc > 0)
-    this_expt.Add(&nd_expt_fhc);
+    this_expt.Add(nd_expt_fhc);
   if (pot_nd_rhc > 0)
-    this_expt.Add(&nd_expt_rhc);
+    this_expt.Add(nd_expt_rhc);
   if (pot_fd_fhc_numu > 0)
     this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0)
@@ -1260,30 +1294,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   if (turbose) {
     std::cout << "[INFO]: Built multi-experiment " << BuildLogInfoString()
               << std::endl;
-  }
-
-  bool UseNDCovMat = true;
-  if (getenv("CAFANA_USE_NDCOVMAT")) {
-    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
-  }
-
-  bool UseV3NDCovMat = (AnaV == kV3);
-  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
-    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
-  }
-
-  // Add in the covariance matrices via the MultiExperiment
-  // idx must be in correct order to access correct part of matrix
-  // Don't use FD covmx fits
-  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-    if (turbose) {
-      std::cout << "[INFO]: Opening ND covmat file " << BuildLogInfoString()
-                << std::endl;
-              }
-    TMatrixD *fhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
-    TMatrixD *rhc_ndmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
-    nd_expt_fhc.AddCovarianceMatrix(fhc_ndmatrix, kCovMxChiSqPreInvert);
-    nd_expt_rhc.AddCovarianceMatrix(rhc_ndmatrix, kCovMxChiSqPreInvert);
   }
 
   // Add in the penalty...
@@ -1367,26 +1377,26 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *post_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_fhc", pot_nd_fhc);
       post_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc->Write();
       TH1 *post_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "postfit_nd_numu_fhc_1D", pot_nd_fhc, true);
       post_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
       TH1 *post_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_rhc", pot_nd_rhc);
       post_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc->Write();
       TH1 *post_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "postfit_nd_numu_rhc_1D", pot_nd_rhc, true);
       post_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc_1D->Write();
     }
 
