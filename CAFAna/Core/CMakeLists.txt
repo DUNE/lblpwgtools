@@ -11,7 +11,6 @@ set(Core_implementation_files
   OscCurve.cxx
   OscillatableSpectrum.cxx
   ProfilerSupport.cxx
-  Ratio.cxx
   Registry.cxx
   ReweightableSpectrum.cxx
   #Not using SAM
@@ -22,11 +21,10 @@ set(Core_implementation_files
   SpectrumLoaderBase.cxx
   StanUtils.cxx
   SystShifts.cxx
-  ThreadPool.cxx
   Utilities.cxx
   Var.cxx
   WildcardSource.cxx
-  Hist.cxx)
+  )
 
 set(Core_header_files
   Binning.h
@@ -42,7 +40,6 @@ set(Core_header_files
   MultiVar.h
   OscCurve.h
   OscillatableSpectrum.h
-  Ratio.h
   Registry.h
   ReweightableSpectrum.h
   #Not using SAM
@@ -54,14 +51,11 @@ set(Core_header_files
   StanTypedefs.h
   StanUtils.h
   SystShifts.h
-  ThreadLocal.h
-  ThreadPool.h
   Utilities.h
   Var.h
   WildcardSource.h
-  IFileSource.h
   ModeConversionUtilities.h
-  Hist.h)
+  )
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore ${CAFANACOREEXT})
