@@ -304,24 +304,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Spectrum::ToTH1ProjectX(double exposure, EExposureType expotype) const
-  {
-    switch(NDimensions()){
-    case 1:
-      return this->ToTH1(exposure, expotype);
-    case 2:
-      return this->ToTH2(exposure, expotype)->ProjectionX();
-    case 3:
-      return this->ToTH3(exposure, expotype)->ProjectionX();
-    default:
-      std::cout << "Error: unable to hande number of dimensions (" << NDimensions() << ")" << std::endl;
-      abort();
-    }
-
-    return NULL;
-  }
-
-  //----------------------------------------------------------------------
   Eigen::ArrayXd Spectrum::GetEigen(double pot) const
   {
     return (pot/fPOT) * fHist.GetEigen();
@@ -391,11 +373,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum Spectrum::MockData(double pot, bool makethrow, int seed) const
+  Spectrum Spectrum::MockData(double pot, int seed) const
   {
     Spectrum ret = FakeData(pot);
-
-    if (!makethrow) return ret;
 
     TRandom3 rnd(seed); // zero seeds randomly
 
@@ -412,6 +392,20 @@ namespace ana
 
   //----------------------------------------------------------------------
   Spectrum Spectrum::FakeData(double pot) const
+  {
+    Spectrum ret = *this;
+    if(fPOT > 0) ret.fHist.Scale(pot/fPOT);
+    ret.fPOT = pot;
+
+    // Drop old errors, which are based on the MC statistics, and create new
+    // ones that are based on the prediction for the data
+    ret.fHist.ResetErrors();
+
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum Spectrum::AsimovData(double pot) const
   {
     Spectrum ret = *this;
     if(fPOT > 0) ret.fHist.Scale(pot/fPOT);

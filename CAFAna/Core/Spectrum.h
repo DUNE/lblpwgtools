@@ -191,8 +191,6 @@ namespace ana
     /// Function decides what is the appropriate projection based on fBins, and does that
     TH1*  ToTHX     (double exposure, bool force1D = false, EExposureType expotype = kPOT) const;
 
-    TH1* ToTH1ProjectX(double exposure, EExposureType expotype = kPOT) const;
-
     bool HasStan() const {return fHist.HasStan();}
     /// NB these don't have POT scaling. For expert high performance ops only!
     const Eigen::ArrayXd& GetEigen() const {return fHist.GetEigen();}
@@ -216,11 +214,12 @@ namespace ana
     ///
     /// Use for low-budget MDCs, or just getting a sense of the expected scale
     /// of statistical variation
-    Spectrum MockData(double pot, bool makethrow=true, int seed=0) const;
+    Spectrum MockData(double pot, int seed=0) const;
     /// \brief Fake data is a MC spectrum scaled to the POT expected in the data
     ///
     /// Use for sensitivity plots and testing fit convergence
     Spectrum FakeData(double pot) const;
+    Spectrum AsimovData(double pot) const;
 
     double POT() const {return fPOT;}
 
