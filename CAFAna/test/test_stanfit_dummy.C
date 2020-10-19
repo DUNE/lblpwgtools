@@ -45,7 +45,7 @@ namespace test
       // req'd by the ISyst interface, but we aren't doing anything with it
       void Shift(double sigma,
                  Restorer& restore,
-                 caf::StandardRecord* sr,
+                 caf::SRProxy* sr,
                  double& weight) const
       {}
   };

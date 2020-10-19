@@ -6,6 +6,7 @@ set(StandardRecord_implementation_files
 
 set(StandardRecord_header_files
     ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
+    ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
 )
 
 add_library(StandardRecord SHARED ${StandardRecord_implementation_files})

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include "Utilities/func/StanVar.h"
 
 #include <map>
@@ -9,11 +11,6 @@
 #include <vector>
 
 class TDirectory;
-
-namespace caf
-{
-  class StandardRecord;
-}
 
 namespace ana
 {
@@ -77,7 +74,7 @@ namespace ana
 
 
     void Shift(Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const;
 
     /// Brief description of component shifts, for printing to screen

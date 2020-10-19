@@ -10,7 +10,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -26,7 +26,7 @@ public:
 
   void Shift(double sigma,
              Restorer& restore,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
     restore.Add(sr->Ev_reco_numu);
@@ -44,7 +44,7 @@ public:
 
   void Shift(double sigma,
              Restorer& restore,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
     // Note I've switched this around to apply to high energy events, to more

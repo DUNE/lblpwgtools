@@ -8,9 +8,10 @@
 #include <set>
 #include <string>
 
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/Binning.h"
 
-namespace caf{class StandardRecord; class SRSpill; class SRSpillTruthBranch;}
+namespace caf{class SRSpill; class SRSpillTruthBranch;}
 
 namespace ana
 {
@@ -74,7 +75,7 @@ namespace ana
   ///
   /// A Var consists of a function, taking a StandardRecord and returning the
   /// value of the variable (which may be some complicated function).
-  typedef GenericVar<caf::StandardRecord> Var;
+  typedef GenericVar<caf::SRProxy> Var;
 
   /// \brief Equivalent of \ref Var acting on \ref caf::SRSpill. For use in
   /// making plots of POT per run etc
@@ -88,10 +89,10 @@ namespace ana
   ///
   /// eg Var myVar = SIMPLEVAR(my.var.str);
   /// NB lack of quotes quotes around my.var.str
-#define SIMPLEVAR(CAFNAME) Var([](const caf::StandardRecord* sr){return sr->CAFNAME;})
+#define SIMPLEVAR(CAFNAME) Var([](const caf::SRProxy* sr){return sr->CAFNAME;})
 
   /// The simplest possible Var, always 1. Used as a default weight.
-  const Var kUnweighted([](const caf::StandardRecord*){return 1;});
+  const Var kUnweighted([](const caf::SRProxy*){return 1;});
 
   const SpillVar kSpillUnweighted([](const caf::SRSpill*){return 1;});
 

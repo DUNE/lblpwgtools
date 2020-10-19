@@ -15,7 +15,7 @@
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 #include <cmath>
@@ -424,7 +424,7 @@ template <class T, class U> class CutVarCache {
 public:
   CutVarCache() : fVals(U::MaxID() + 1), fValsSet(U::MaxID() + 1, false) {}
 
-  inline T Get(const U &var, const caf::StandardRecord *sr) {
+  inline T Get(const U &var, const caf::SRProxy *sr) {
     const unsigned int id = var.ID();
 
     if (fValsSet[id]) {
@@ -444,13 +444,16 @@ protected:
 };
 
 //----------------------------------------------------------------------
-void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
+void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
   // Some shifts only adjust the weight, so they're effectively nominal, but
   // aren't grouped with the other nominal histograms. Keep track of the
   // results for nominals in these caches to speed those systs up.
   CutVarCache<bool, Cut> nomCutCache;
   CutVarCache<double, Var> nomWeiCache;
   CutVarCache<double, Var> nomVarCache;
+
+  // HACK to satisfy cafanacore which wants everything to be proxied
+  caf::SRProxy* sr = (caf::SRProxy*)sr2;
 
   for (auto &shiftdef : fHistDefs) {
     const SystShifts &shift = shiftdef.first;
@@ -623,7 +626,7 @@ void SpectrumLoader::StoreExposures() {
 
 //----------------------------------------------------------------------
 const SpectrumLoader::TestVals *SpectrumLoader::GetVals(
-    const caf::StandardRecord *sr,
+    const caf::SRProxy *sr,
     IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   TestVals *ret = new TestVals;
 
@@ -672,7 +675,7 @@ void SpectrumLoader::ValError(const std::string &type, const std::string &shift,
 
 //----------------------------------------------------------------------
 void SpectrumLoader::CheckVals(
-    const TestVals *v, const caf::StandardRecord *sr,
+    const TestVals *v, const caf::SRProxy* sr,
     const std::string &shiftName,
     IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   unsigned int cutIdx = 0;

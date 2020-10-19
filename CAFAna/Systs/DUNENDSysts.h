@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 #include "math.h"
 
@@ -14,7 +14,7 @@ namespace ana
 
     void Shift(double sigma,
                        Restorer& restore,
-                       caf::StandardRecord* sr,
+                       caf::SRProxy* sr,
                        double& weight) const override
     {
       restore.Add( sr->Ev_reco, sr->Ev_reco_numu, sr->Ev_reco_nue );
@@ -34,7 +34,7 @@ namespace ana
 
     void Shift(double sigma,
                        Restorer& restore,
-                       caf::StandardRecord* sr,
+                       caf::SRProxy* sr,
                        double& weight) const override
     {
       restore.Add( sr->numu_pid, sr->nue_pid );

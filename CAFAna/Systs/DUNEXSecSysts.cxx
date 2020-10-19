@@ -1,6 +1,6 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "Utilities/func/MathUtil.h"
 
@@ -95,7 +95,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  EVALORCategory GetVALORCategory(const caf::StandardRecord* sr)
+  EVALORCategory GetVALORCategory(const caf::SRProxy* sr)
   {
     int lep = sr->LepPDG;
     int scat = sr->mode;

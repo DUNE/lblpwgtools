@@ -150,7 +150,7 @@ namespace ana
   stan::math::var SystShifts::LogPrior() const { return log(Prior()); }
 
   //----------------------------------------------------------------------
-  void SystShifts::Shift(Restorer &restore, caf::StandardRecord *sr,
+  void SystShifts::Shift(Restorer &restore, caf::SRProxy *sr,
                          double &weight) const
   {
     // always fSystsDbl here because this is only used in the event loop, not in fitting

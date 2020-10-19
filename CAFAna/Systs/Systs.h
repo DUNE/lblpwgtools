@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
@@ -22,7 +22,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000001) weight *= 1 + .05*sigma;
     }
@@ -38,7 +38,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000004) weight *= 1 + .05*sigma;
     }
@@ -54,7 +54,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000002) weight *= 1 + .02*sigma;
     }
@@ -70,7 +70,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000005) weight *= 1 + .02*sigma;
     }
@@ -88,7 +88,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isCC && sr->cvnnumu > 0.5 && sr->cvnnue < 0.5) weight *= 1 + .1*sigma;
     }
@@ -104,7 +104,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if((!sr->isCC && sr->cvnnue > 0.5 && sr->cvnnumu < 0.5) || (sr->isCC && abs(sr->nuPDG)==14)) weight *= 1 + .05*sigma;
     }
@@ -120,7 +120,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG)==16) weight *= 1 + .2*sigma;
     }
@@ -136,7 +136,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && sr->run<20000004) weight *= 1 + .05*sigma;
     }
@@ -152,7 +152,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && !(sr->run<20000004)) weight *= 1 + .05*sigma;
     }

@@ -16,15 +16,17 @@ namespace osc
 namespace caf
 {
   class StandardRecord;
+  template<class T> class Proxy;
+  typedef Proxy<StandardRecord> SRProxy;
 }
 
 namespace ana
 {
   template <class T> class GenericVar;
-  typedef GenericVar<caf::StandardRecord> Var;
+  typedef GenericVar<caf::SRProxy> Var;
 
   template <class T> class GenericCut;
-  typedef GenericCut<caf::StandardRecord> Cut;
+  typedef GenericCut<caf::SRProxy> Cut;
 
   class SystShifts;
 }

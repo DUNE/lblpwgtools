@@ -62,10 +62,10 @@ namespace ana
       std::vector<double> vars, weis;
     };
 
-    const TestVals* GetVals(const caf::StandardRecord* sr,
+    const TestVals* GetVals(const caf::SRProxy* sr,
 			    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void CheckVals(const TestVals* v,
-                   const caf::StandardRecord* sr,
+                   const caf::SRProxy* sr,
                    const std::string& shiftName,
 		   IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void ValError(const std::string& type,

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include <functional>
 #include <set>
 #include <string>
 #include <vector>
 #include <cassert>
-
-namespace caf{class StandardRecord;}
 
 namespace ana
 {
@@ -16,7 +16,7 @@ namespace ana
   {
   public:
     /// The type of the function part of a var
-    typedef std::vector<double> (VarFunc_t)(const caf::StandardRecord* sr);
+    typedef std::vector<double> (VarFunc_t)(const caf::SRProxy* sr);
 
     /// std::function can wrap a real function, function object, or lambda
     MultiVar(const std::set<std::string>& reqs,
@@ -31,7 +31,7 @@ namespace ana
     }
 
     /// Allows a variable to be called with double value = myVar(sr) syntax
-    std::vector<double> operator()(const caf::StandardRecord* sr) const
+    std::vector<double> operator()(const caf::SRProxy* sr) const
     {
       return fFunc(sr);
     }

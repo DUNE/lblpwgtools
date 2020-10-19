@@ -3,7 +3,7 @@
 
 #include "Utilities/func/MathUtil.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 

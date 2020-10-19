@@ -9,7 +9,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -43,7 +43,7 @@ void demo4()
     // Function that will be called to actually do the shift
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // First - register all the variables that will need to be restored to
@@ -70,7 +70,7 @@ void demo4()
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // A systematic can also reweight events, based on whatever criteria you
