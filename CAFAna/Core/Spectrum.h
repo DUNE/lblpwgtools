@@ -4,6 +4,7 @@
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Hist.h"
+#include "CAFAna/Core/MultiVar.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -23,7 +24,6 @@ class TH1D;
 /// Oscillation analysis framework, runs over CAF files outside of ART
 namespace ana
 {
-  class MultiVar;
   class Ratio;
   class SpectrumLoaderBase;
 
