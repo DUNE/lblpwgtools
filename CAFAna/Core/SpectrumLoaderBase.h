@@ -2,9 +2,7 @@
 
 #include <cassert>
 #include <functional>
-#include <list>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -53,7 +51,8 @@ namespace ana
 
     /// For use by the constructors of \ref ReweightableSpectrum subclasses
     virtual void AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                         const Var& var,
+                                         const Var& xvar,
+                                         const Var& yvar,
                                          const Cut& cut,
                                          const SystShifts& shift,
                                          const Var& wei);
@@ -83,10 +82,6 @@ namespace ana
     /// Figure out if \a str is a wildcard or SAM query and return a source
     IFileSource* WildcardOrSAMQuery(const std::string& str) const;
 
-    friend class SpectrumLoaderMockData;
-    virtual void RemoveSpectrum(Spectrum*);
-    virtual void RemoveReweightableSpectrum(ReweightableSpectrum*);
-
     virtual void AccumulateExposures(const caf::SRSpill* spill) = 0;
 
     /// Forwards to \ref fFileSource
@@ -107,15 +102,14 @@ namespace ana
     /// List of Spectrum and OscillatableSpectrum, some utility functions
     struct SpectList
     {
-      void Erase(Spectrum* s);
-      void Erase(ReweightableSpectrum* os);
+      ~SpectList();
       void RemoveLoader(SpectrumLoaderBase* l);
       size_t TotalSize() const;
-      void GetSpectra(std::vector<Spectrum*>& ss);
-      void GetReweightableSpectra(std::vector<ReweightableSpectrum*>& ss);
 
-      std::vector<Spectrum*> spects;
-      std::vector<ReweightableSpectrum*> rwSpects;
+      // Doubled pointers are sadly necessary as we need the locations of the
+      // nodes to be constant so Spectrum can re-register itself if moved.
+      std::vector<Spectrum**> spects;
+      std::vector<std::pair<ReweightableSpectrum**, Var>> rwSpects;
     };
 
     /// \brief Helper class for \ref SpectrumLoaderBase
@@ -133,12 +127,9 @@ namespace ana
       inline it_t begin(){return fElems.begin();}
       inline it_t end(){return fElems.end();}
 
-      template<class V> void Erase(const V& v);
       void RemoveLoader(SpectrumLoaderBase* l);
       void Clear();
       size_t TotalSize();
-      void GetSpectra(std::vector<Spectrum*>& ss);
-      void GetReweightableSpectra(std::vector<ReweightableSpectrum*>& ss);
     protected:
       std::vector<std::pair<T, U>> fElems;
     };
@@ -204,7 +195,8 @@ namespace ana
                      const Var& wei = kUnweighted) override {}
 
     void AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                 const Var& var,
+                                 const Var& xvar,
+                                 const Var& yvar,
                                  const Cut& cut,
                                  const SystShifts& shift,
                                  const Var& wei) override {}

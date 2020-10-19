@@ -2,6 +2,8 @@
 
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 
+#include <set>
+
 class TFile;
 
 namespace ana

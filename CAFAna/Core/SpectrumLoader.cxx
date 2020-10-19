@@ -504,8 +504,8 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
         for (auto &vardef : weidef.second) {
           if (vardef.first.IsMulti()) {
             for (double val : vardef.first.GetMultiVar()(sr)) {
-              for (Spectrum *s : vardef.second.spects)
-                s->Fill(val, wei);
+              for (Spectrum **s : vardef.second.spects)
+                if(*s) (*s)->Fill(val, wei);
             }
             continue;
           }
@@ -524,11 +524,13 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
             continue;
           }
 
-          for (Spectrum *s : vardef.second.spects)
-            s->Fill(val, wei);
+          for (Spectrum **s : vardef.second.spects)
+            if(*s) (*s)->Fill(val, wei);
 
-          for (ReweightableSpectrum *rw : vardef.second.rwSpects) {
-            const double yval = rw->ReweightVar()(sr);
+          for (auto rv : vardef.second.rwSpects) {
+            ReweightableSpectrum** rw = rv.first;
+            if(!*rw) continue;
+            const double yval = rv.second(sr);
 
             if (std::isnan(yval) || std::isinf(yval)) {
               std::cerr << "Warning: Bad value: " << yval
@@ -539,7 +541,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
 
             // TODO: ignoring events with no true neutrino etc
             if (yval != 0)
-              rw->Fill(val, yval, wei);
+              (*rw)->Fill(val, yval, wei);
           } // end for rw
         }   // end for vardef
       }     // end for weidef
@@ -571,16 +573,27 @@ void SpectrumLoader::ReportExposures() {
 //----------------------------------------------------------------------
 void SpectrumLoader::AccumulateExposures(const caf::SRSpill *spill) {}
 
+// cafanacore's spectra are expecting a different structure of
+// spectrumloader. But we can easily trick it with these.
+struct SpectrumSink
+{
+  static void FillPOT(Spectrum* s, double pot){s->fPOT += pot;}
+};
+struct ReweightableSpectrumSink
+{
+  static void FillPOT(ReweightableSpectrum* rw, double pot){rw->fPOT += pot;}
+};
+
 //----------------------------------------------------------------------
 void SpectrumLoader::StoreExposures() {
   for (auto &shiftdef : fHistDefs) {
     for (auto &cutdef : shiftdef.second) {
       for (auto &weidef : cutdef.second) {
         for (auto &vardef : weidef.second) {
-          for (Spectrum *s : vardef.second.spects)
-            s->fPOT += fPOT;
-          for (ReweightableSpectrum *rw : vardef.second.rwSpects)
-            rw->fPOT += fPOT;
+          for (Spectrum **s : vardef.second.spects)
+            if(*s) SpectrumSink::FillPOT(*s, fPOT);
+          for (auto rv : vardef.second.rwSpects)
+            if(*rv.first) ReweightableSpectrumSink::FillPOT(*rv.first, fPOT);
         }
       }
     }

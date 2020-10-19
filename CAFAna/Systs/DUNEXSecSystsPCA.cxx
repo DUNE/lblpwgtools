@@ -1,5 +1,7 @@
 #include "CAFAna/Systs/DUNEXSecSystsPCA.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "TFile.h"
 #include "TH1.h"
 #include "TObjString.h"

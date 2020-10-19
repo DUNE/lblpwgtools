@@ -114,5 +114,5 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-  const SystShifts kNoShift = SystShifts::Nominal();
+  extern const SystShifts kNoShift;
 }

@@ -1,5 +1,7 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "StandardRecord/SRProxy.h"
 
 #include "Utilities/func/MathUtil.h"

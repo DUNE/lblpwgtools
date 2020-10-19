@@ -1,6 +1,7 @@
 set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
+  Instantiations.cxx
   ISyst.cxx
   Loaders.cxx
   LoadFromFile.cxx
@@ -8,8 +9,6 @@ set(Core_implementation_files
   OscillatableSpectrum.cxx
   ProfilerSupport.cxx
   Registry.cxx
-  ReweightableSpectrum.cxx
-  Spectrum.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
@@ -27,8 +26,6 @@ set(Core_header_files
   OscCurve.h
   OscillatableSpectrum.h
   Registry.h
-  ReweightableSpectrum.h
-  Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

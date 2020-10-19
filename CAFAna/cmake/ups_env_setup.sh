@@ -19,4 +19,4 @@ setup stan v2_18_0a -q e19:prof || exit 1
 
 PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup osclib v00.04 -q e19:prof:stan || exit 1
 
-PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup cafanacore v01.06 -q:e19:prof || exit 1
+PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup cafanacore v01.07 -q:e19:prof || exit 1
