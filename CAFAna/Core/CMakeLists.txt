@@ -1,7 +1,6 @@
 set(Core_implementation_files
   Binning.cxx
   Cut.cxx
-  FileListSource.cxx
   HistAxis.cxx
   IFitVar.cxx
   ISyst.cxx
@@ -13,9 +12,6 @@ set(Core_implementation_files
   ProfilerSupport.cxx
   Registry.cxx
   ReweightableSpectrum.cxx
-  #Not using SAM
-  # SAMProjectSource.cxx
-  # SAMQuerySource.cxx
   Spectrum.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
@@ -23,13 +19,11 @@ set(Core_implementation_files
   SystShifts.cxx
   Utilities.cxx
   Var.cxx
-  WildcardSource.cxx
   )
 
 set(Core_header_files
   Binning.h
   Cut.h
-  FileListSource.h
   FitVarWithPrior.h
   FwdDeclare.h
   HistAxis.h
@@ -42,9 +36,6 @@ set(Core_header_files
   OscillatableSpectrum.h
   Registry.h
   ReweightableSpectrum.h
-  #Not using SAM
-  # SAMProjectSource.h
-  # SAMQuerySource.h
   Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
@@ -53,7 +44,6 @@ set(Core_header_files
   SystShifts.h
   Utilities.h
   Var.h
-  WildcardSource.h
   ModeConversionUtilities.h
   )
 
