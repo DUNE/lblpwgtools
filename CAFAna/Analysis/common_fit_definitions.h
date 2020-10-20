@@ -40,10 +40,6 @@ extern double const nom_exposure;
 
 double GetBoundedGausThrow(double min, double max);
 
-TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
-                      bool TwoBeams = true,
-                      bool isFHC = true);
-
 // For ease of penalty terms...
 ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                              std::string asimov_set = "0",
@@ -78,6 +74,10 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
                             bool &fakeNuis, bool &start, bool &central);
+
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
+                      bool TwoBeams = true,
+                      bool isFHC = true);
 
 TMatrixD *MakeCovmat(ana::PredictionInterp const &prediction,
                      std::vector<ana::ISyst const *> const &systs,
