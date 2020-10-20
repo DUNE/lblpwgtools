@@ -210,6 +210,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
+    // TEST of smearing matrix
+    TH2 *MatrixND = state.NDMatrixPredInterps[NDConfig_enum]->PredictSyst(calc, shift).ToTH2(POT_FD);
+    chan_dir->WriteObject(MatrixND, 
+                          "ND_Mat_ERecETrue");
+    MatrixND->SetDirectory(nullptr);
+
+    TH2 *MatrixFD = state.FDMatrixPredInterps[FDConfig_enum]->PredictSyst(calc, shift).ToTH2(POT_FD);
+    chan_dir->WriteObject(MatrixFD,
+                          "FD_Mat_ERecETrue"); 
+    MatrixFD->SetDirectory(nullptr);
+
     if (use_PRISM) {
       if (do_gauss) {
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
