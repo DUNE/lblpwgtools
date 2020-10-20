@@ -140,7 +140,16 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       if (dir) {
         blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
       }
-    } else {
+
+      if (!IsND280kA) {
+        dir = f.GetDirectory((std::string("NDMatrixInterp_ERecETrue") + 
+                              (IsNu ? "_nu" : "_nub"))
+                                 .c_str());
+        if (dir) {
+          blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+        }
+      }
+    } else { // Is FD
       if (!IsNue) {
         dir = f.GetDirectory(
             (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"))
@@ -157,6 +166,14 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       if (dir) {
         blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
       }
+
+      dir =
+          f.GetDirectory((std::string("FDMatrixInterp_ERecETrue") +
+                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                             .c_str());
+      if (dir) {
+        blob.FDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      } 
 
       dir =
           f.GetDirectory((std::string("FDDataNonSwap_") + varname +

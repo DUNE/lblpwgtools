@@ -73,6 +73,8 @@ struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
@@ -104,6 +106,8 @@ struct PRISMStateBlob {
   void Init() {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);

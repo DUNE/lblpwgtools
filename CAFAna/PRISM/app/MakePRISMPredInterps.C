@@ -327,7 +327,7 @@ int main(int argc, char const *argv[]) {
   }
 
   // Sort out systematics if they've been requested
-  std::vector<ana::ISyst const *> los, los_flux;
+  std::vector<ana::ISyst const *> los, los_flux, los_det;
   if (syst_descriptor.size()) {
     los = GetListOfSysts(syst_descriptor);
 
@@ -338,6 +338,8 @@ int main(int argc, char const *argv[]) {
 
     los_flux = los;
     KeepSysts(los_flux, GetListOfSysts("nov17flux:nodet:noxsec"));
+    los_det = los;
+    KeepSysts(los_det, GetListOfSysts("noflux:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
     los = GetListOfSysts(true, true, true, true, true, false, addfakedata);
@@ -466,6 +468,9 @@ int main(int argc, char const *argv[]) {
 
   // Make the ND prediction interp include the same off-axis axis used for
   // PRISM weighting.
+  // Match axis is in true neutrino energy
+  // Add off-axis axies for 293kA and 280kA run 
+  // 2D hists of energy and off-axis position
   std::vector<std::string> Labels_match = MatchAxis.GetLabels();
   std::vector<Binning> Bins_match = MatchAxis.GetBinnings();
   std::vector<Var> Vars_match = MatchAxis.GetVars();
@@ -497,6 +502,19 @@ int main(int argc, char const *argv[]) {
 
   HistAxis const NDObservedSpectraAxis(Labels_obs, Bins_obs, Vars_obs);
 
+  // HistAxis for Erec vs ETrue smearing matrix predictions
+  // True axis
+  std::vector<std::string> Labels_matrix = MatchAxis.GetLabels();
+  std::vector<Binning> Bins_matrix = MatchAxis.GetBinnings();
+  std::vector<Var> Vars_matrix = MatchAxis.GetVars();
+  // EProxyRec axis
+  //auto ErecVar = GetVar(axdescriptor);
+  Labels_matrix.push_back(axes.XProjection.GetLabels().front());
+  Bins_matrix.push_back(axes.XProjection.GetBinnings().front());
+  Vars_matrix.push_back(axes.XProjection.GetVars().front());
+  // Hist axis for matrix
+  HistAxis const ErecETrueAxis(Labels_matrix, Bins_matrix, Vars_matrix);  
+
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   FillWithNulls(MatchPredGens, kNPRISMConfigs);
@@ -506,6 +524,15 @@ int main(int argc, char const *argv[]) {
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   FillWithNulls(SelPredGens, kNPRISMConfigs);
   FillWithNulls(SelPredInterps, kNPRISMConfigs);
+  // For Smearing Matrix
+  std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
+  std::vector<std::unique_ptr<IPredictionGenerator>> FDMatrixPredGens;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
+  FillWithNulls(NDMatrixPredGens, kNPRISMConfigs);
+  FillWithNulls(NDMatrixPredInterps, kNPRISMConfigs);
+  FillWithNulls(FDMatrixPredGens, kNPRISMFDConfigs);
+  FillWithNulls(FDMatrixPredInterps, kNPRISMFDConfigs);
 
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
@@ -559,16 +586,30 @@ int main(int argc, char const *argv[]) {
           WeightVars[it] * slice_width_weight * kSpecHCRunWeight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign);
+          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
+          ); //PredictionInterp::kSplitBySign
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           NDObservedSpectraAxis,
           OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * kSpecHCRunWeight);
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign);
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
+          ); //PredictionInterp::kSplitBySign
+    
+      //PredInterps for ND smearing matrix
+      // Only need to do this for 293 kA
+      // Relationship between ERec and ETrue should be the same for both, right?
+      if (!IsND280kA) {
+        NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+            ErecETrueAxis, 
+            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+            WeightVars[it] * kSpecHCRunWeight);
+        NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
+            los_det, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
+            ); //PredictionInterp::kSplitBySign
+      }
     } else { // Is FD
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
@@ -587,8 +628,8 @@ int main(int argc, char const *argv[]) {
                 WeightVars[it]);
 
         MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-            los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
-            PredictionInterp::kSplitBySign);
+            los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
+            ); // PredictionInterp::kSplitBySign
       }
 
       size_t non_swap_it = GetConfigNonSwap(it);
@@ -609,14 +650,21 @@ int main(int argc, char const *argv[]) {
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjection, AnalysisCuts[it], AnaWeightVars[it]);
       FarDetPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign);
+          los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift
+          ); // PredictionInterp::kSplitBySign
 
       SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjection, OnAxisSelectionCuts[it], AnaWeightVars[it]);
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign);
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
+          ); // PredictionInterp::kSplitBySign
+
+      // Matrix of ERec v ETrue for FD
+      FDMatrixPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
+          ErecETrueAxis, AnalysisCuts[it], AnaWeightVars[it]);
+      FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
+          los_det, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
+          ); //PredictionInterp::kSplitBySign
     }
   }
 
@@ -704,6 +752,7 @@ int main(int argc, char const *argv[]) {
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      if (!IsND280kA) NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
@@ -712,7 +761,12 @@ int main(int argc, char const *argv[]) {
              std::string("NDSelectedInterp_") + axdescriptor +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              SelPredInterps[it]);
-
+      if (!IsND280kA) {
+        SaveTo(fout,
+               std::string("NDMatrixInterp_ERecETrue") +
+                  (IsNu ? "_nu" : "_nub"),
+               NDMatrixPredInterps[it]);
+      }
     } else { // Is FD
       if (!IsNue) {
         SaveTo(fout,
@@ -730,6 +784,11 @@ int main(int argc, char const *argv[]) {
                 << std::string("FDInterp_") + axdescriptor +
                        (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")
                 << " to " << it << ", " << fd_it << std::endl;
+      
+      SaveTo(fout,
+             std::string("FDMatrixInterp_ERecETrue") +
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+             FDMatrixPredInterps[fd_it]);
 
       if (FarDetData_nonswap[fd_it]) {
         SaveTo(fout,

@@ -29,6 +29,8 @@
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/TruthEnergyFDSysts.h"
+#include "CAFAna/Systs/TruthEnergyNDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
@@ -220,13 +222,17 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
   }
 
   if (detsyst) {
-    std::vector<const ISyst *> elist = GetEnergySysts();
-    std::vector<const ISyst *> fdlist = GetFDRecoSysts();
-    std::vector<const ISyst *> ndlist = GetNDRecoSysts();
-    std::vector<const ISyst *> nuelist = GetNuOnESysts();
+    //std::vector<const ISyst *> elist = GetEnergySysts();
+    //std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    //std::vector<const ISyst *> ndlist = GetNDRecoSysts();
+    //std::vector<const ISyst *> nuelist = GetNuOnESysts();
+    std::vector<const ISyst *> elistFD = GetTrueEFDSysts();
+    std::vector<const ISyst *> elistND = GetTrueENDSysts();
 
-    systlist.insert(systlist.end(), elist.begin(), elist.end());
-    if (useFD) {
+    systlist.insert(systlist.end(), elistFD.begin(), elistFD.end());
+    systlist.insert(systlist.end(), elistND.begin(), elistND.end());
+    //systlist.insert(systlist.end(), elist.begin(), elist.end());
+    /*if (useFD) {
       systlist.insert(systlist.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
@@ -234,7 +240,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     }
     if (useND && useNueOnE) {
       systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
-    }
+    }*/
   }
 
   if (xsecsyst) {
