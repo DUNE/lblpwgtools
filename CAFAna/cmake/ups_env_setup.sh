@@ -14,9 +14,6 @@ setup jobsub_client || exit 1
 
 setup clhep v2_4_1_2 -q e19:prof || exit 1
 
-# Stan insists on its dependencies being loaded, so we only need to load it
 setup stan v2_18_0a -q e19:prof || exit 1
-
 setup osclib v00.04 -q e19:prof:stan || exit 1
-
-PRODUCTS=/cvmfs/nova.opensciencegrid.org/externals/:$PRODUCTS setup cafanacore v01.07 -q:e19:prof || exit 1
+setup cafanacore v01.07 -q:e19:prof || exit 1
