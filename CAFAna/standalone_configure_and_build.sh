@@ -129,13 +129,6 @@ fi
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-mkdir Ext
-cd Ext
-
-svn checkout https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
-
-cd ../
-
 if [ "${USE_UPS}" == "1" ]; then
   source ../cmake/ups_env_setup.sh
 else
