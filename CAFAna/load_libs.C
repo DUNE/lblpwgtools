@@ -54,7 +54,7 @@ void load_libs(bool MustClean = true) {
     load(lib);
 
   // Pick up standard NOvA style
-  gROOT->Macro("$CAFANA/include/Utilities/rootlogon.C");
+  gROOT->Macro("$CAFANA/include/CAFAna/Core/rootlogon.C");
   gROOT->ForceStyle();
 
   TRint *rint = dynamic_cast<TRint *>(gApplication);

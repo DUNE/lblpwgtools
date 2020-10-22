@@ -23,6 +23,7 @@ set(Core_header_files
   ISyst.h
   Loaders.h
   LoadFromFile.h
+  MathUtil.h
   OscCurve.h
   OscillatableSpectrum.h
   Registry.h
@@ -33,7 +34,7 @@ set(Core_header_files
   SystShifts.h
   Utilities.h
   ModeConversionUtilities.h
-  )
+  rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore ${CAFANACOREEXT})

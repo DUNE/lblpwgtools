@@ -21,7 +21,7 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 using namespace ana;
 

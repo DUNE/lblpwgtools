@@ -1,8 +1,9 @@
 #include "CAFAna/Vars/FitVars.h"
 
+#include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/StanVar.h"
+
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
 
 #include <cassert>
 #include <cmath>

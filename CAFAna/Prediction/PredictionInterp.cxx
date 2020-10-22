@@ -1,6 +1,8 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
+
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/Stan.h"
@@ -17,7 +19,6 @@
 #include "TCanvas.h"
 
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
 
 #include "CAFAna/Core/Loaders.h"
