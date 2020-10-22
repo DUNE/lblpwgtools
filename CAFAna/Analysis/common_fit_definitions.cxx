@@ -1117,7 +1117,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  IExperiment *nd_expt_fhc, *nd_expt_rhc;
+  IExperiment *nd_expt_fhc = 0, *nd_expt_rhc = 0;
   CovarianceExperiment* nd_expt_joint = 0;
 
   bool UseNDCovMat = true;
