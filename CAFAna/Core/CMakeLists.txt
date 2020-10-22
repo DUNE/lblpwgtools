@@ -64,7 +64,8 @@ set(Core_header_files
   WildcardSource.h
   IFileSource.h
   ModeConversionUtilities.h
-  Hist.h)
+  Hist.h
+  rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore)
