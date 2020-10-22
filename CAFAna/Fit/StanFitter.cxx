@@ -30,7 +30,7 @@
 #include "OscLib/OscCalcDMP.h"
 #include "OscLib/OscCalcAnalytic.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
 
 // these will come in handy below

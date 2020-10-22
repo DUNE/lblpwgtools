@@ -40,6 +40,7 @@ set(Core_header_files
   ISyst.h
   Loaders.h
   LoadFromFile.h
+  MathUtil.h
   MultiVar.h
   OscCurve.h
   OscillatableSpectrum.h

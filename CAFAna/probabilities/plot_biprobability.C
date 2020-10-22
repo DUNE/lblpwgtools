@@ -17,7 +17,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "OscLib/OscCalculatorPMNSOpt.h"
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 using namespace ana;
 

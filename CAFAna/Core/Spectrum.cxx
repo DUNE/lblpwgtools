@@ -4,7 +4,7 @@
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "Utilities/func/Stan.h"
 
 #include "TDirectory.h"

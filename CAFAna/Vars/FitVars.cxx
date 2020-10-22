@@ -2,7 +2,7 @@
 
 
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "Utilities/func/StanVar.h"
 
 #include <cassert>

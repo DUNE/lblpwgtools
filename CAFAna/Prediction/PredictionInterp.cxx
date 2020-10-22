@@ -16,7 +16,7 @@
 #include "TCanvas.h"
 
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "Utilities/func/Stan.h"
 #include "Utilities/func/StanUtils.h"
 

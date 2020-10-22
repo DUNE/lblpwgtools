@@ -2,7 +2,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Registry.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "Utilities/func/StanUtils.h"
 
 #include <cassert>
