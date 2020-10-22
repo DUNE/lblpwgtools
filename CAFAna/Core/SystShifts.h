@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 
-#include "Utilities/func/StanVar.h"
+#include "CAFAna/Core/StanVar.h"
 
 #include <map>
 #include <memory>

@@ -17,11 +17,11 @@
 
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Fit/StanFitter.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "Utilities/func/MathUtil.h"
-#include "Utilities/func/Stan.h"
 
 using namespace ana;
 

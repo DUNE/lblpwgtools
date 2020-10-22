@@ -3,6 +3,7 @@
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TDirectory.h"
@@ -17,7 +18,6 @@
 
 #include "OscLib/IOscCalc.h"
 #include "Utilities/func/MathUtil.h"
-#include "Utilities/func/Stan.h"
 #include "Utilities/func/StanUtils.h"
 
 #include "CAFAna/Core/Loaders.h"

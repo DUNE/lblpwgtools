@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Utilities/func/StanVar.h"
+#include "CAFAna/Core/StanVar.h"
 
 #include <Eigen/Dense>
 namespace Eigen{

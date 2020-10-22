@@ -4,8 +4,7 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/LoadFromFile.h"
-
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/Stan.h"
 
 class TDirectory;
 

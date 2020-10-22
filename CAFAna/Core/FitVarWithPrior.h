@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/IFitVar.h"
-#include "Utilities/func/StanVar.h"
+#include "CAFAna/Core/StanVar.h"
 
 namespace osc
 {

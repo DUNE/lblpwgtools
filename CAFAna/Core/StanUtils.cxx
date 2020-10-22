@@ -1,9 +1,7 @@
-#include "TH1.h"
-
 #include "CAFAna/Core/StanUtils.h"
-#include "CAFAna/Core/Utilities.h"
 
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/Stan.h"
+#include "CAFAna/Core/Utilities.h"
 
 namespace ana
 {

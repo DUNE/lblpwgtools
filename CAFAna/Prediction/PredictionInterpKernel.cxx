@@ -7,7 +7,7 @@
 //
 // and look at PredictionInterpKernel.s for xmm, ymm or zmm registers
 
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/Stan.h"
 
 namespace ana
 {

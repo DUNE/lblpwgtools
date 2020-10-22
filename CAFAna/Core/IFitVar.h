@@ -5,9 +5,9 @@
 #include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/StanTypedefs.h"
+#include "CAFAna/Core/StanVar.h"
 
 #include "Utilities/func/StanUtils.h"
-#include "Utilities/func/StanVar.h"
 
 namespace ana
 {

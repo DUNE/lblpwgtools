@@ -1,7 +1,7 @@
 #include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Core/Stan.h"
 
 #include "Utilities/func/MathUtil.h"
-#include "Utilities/func/Stan.h"
 
 #include <cmath>
 

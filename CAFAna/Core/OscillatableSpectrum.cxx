@@ -3,7 +3,7 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Ratio.h"
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/SRProxy.h"

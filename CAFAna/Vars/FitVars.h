@@ -4,7 +4,7 @@
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/StanTypedefs.h"
-#include "Utilities/func/StanVar.h"
+#include "CAFAna/Core/StanVar.h"
 
 namespace ana
 {
