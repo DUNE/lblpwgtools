@@ -19,7 +19,7 @@
 #include "TCanvas.h"
 
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include "CAFAna/Core/Loaders.h"
 

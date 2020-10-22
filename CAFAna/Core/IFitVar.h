@@ -7,7 +7,7 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/StanVar.h"
 
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/StanUtils.h"
 
 namespace ana
 {

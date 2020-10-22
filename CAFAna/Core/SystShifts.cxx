@@ -3,7 +3,8 @@
 #include "CAFAna/Core/Registry.h"
 
 #include "CAFAna/Core/MathUtil.h"
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/Stan.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include <cassert>
 #include <memory>
