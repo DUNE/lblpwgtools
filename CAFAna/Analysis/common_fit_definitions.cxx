@@ -1147,6 +1147,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                               *spectra->at(kNDNumuRHC).spect},
                                              joint_matrix,
                                              kCovMxChiSqPreInvert);
+    
+  //   //// Invert the assignation. Let's see if the old AddCovMatrix to MultiExperiment was messing thing up (?)
+  //   nd_expt_joint = new CovarianceExperiment({&predNDNumuRHC, &predNDNumuFHC},
+  //                                            {*spectra->at(kNDNumuRHC).spect,
+  //                                             *spectra->at(kNDNumuFHC).spect},
+  //                                            joint_matrix,
+  //                                            kCovMxChiSqPreInvert);
     nd_expt_joint->SetMaskHist(0, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
     nd_expt_joint->SetMaskHist(1, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
   }
