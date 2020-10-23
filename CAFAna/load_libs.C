@@ -40,12 +40,9 @@ void load_libs(bool MustClean = true) {
       "-DDONT_USE_FQ_HARDCODED_SYST_PATHS=1"); // match gcc's maxopt behaviour
                                                // of retaining assert()
 
-  // Include path
-  TString includes = "-I$ROOTSYS/include -I$CAFANA/include -I$STAN_INC -I$STAN_MATH_INC -I$EIGEN_INC -I$SUNDIALS_INC -I$OSCLIB_INC";
-
   const std::vector<std::string> libs = {
       "Minuit2",          "Net",           "Tree",
-      "StandardRecord",   "OscLib",        "UtilitiesFunc",
+      "StandardRecord",   "OscLib",        "CAFAnaCoreExt",
       "CAFAnaCore",       "CAFAnaVars",    "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
       "CAFAnaPrediction", "CAFAnaFit",     "CAFAnaAnalysis",
@@ -55,12 +52,9 @@ void load_libs(bool MustClean = true) {
   std::cout << "Loading libraries:" << std::endl;
   for (const std::string &lib : libs)
     load(lib);
-  std::cout << std::endl;
-
-  gSystem->SetIncludePath(includes);
 
   // Pick up standard NOvA style
-  gROOT->Macro("$CAFANA/include/Utilities/rootlogon.C");
+  gROOT->Macro("$CAFANA/include/CAFAna/Core/rootlogon.C");
   gROOT->ForceStyle();
 
   TRint *rint = dynamic_cast<TRint *>(gApplication);

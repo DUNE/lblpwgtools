@@ -2,7 +2,7 @@
 #include "CAFAna/Analysis/CalcsVars.h"
 #include "CAFAna/Vars/FitVars.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcGeneral.h"

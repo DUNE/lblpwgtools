@@ -8,7 +8,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -26,7 +26,7 @@ void demo0()
 
   // A Var is a little snippet of code that takes a record representing the
   // event record and returns a single number to plot.
-  const Var kRecoEnergy([](const caf::StandardRecord* sr)
+  const Var kRecoEnergy([](const caf::SRProxy* sr)
                         {
                           return sr->Ev_reco_numu;
                         });

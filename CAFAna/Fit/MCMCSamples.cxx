@@ -13,7 +13,7 @@
 #include "CAFAna/Fit/BayesianSurface.h"
 #include "CAFAna/Fit/MCMCSamples.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 // an internal tool only
 namespace

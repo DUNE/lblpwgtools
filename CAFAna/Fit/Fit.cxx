@@ -9,7 +9,7 @@
 #include "CAFAna/Experiment/IExperiment.h"
 
 #include "OscLib/IOscCalc.h"
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "TError.h"
 #include "TGraph.h"

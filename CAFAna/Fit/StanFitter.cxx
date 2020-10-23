@@ -30,8 +30,8 @@
 #include "OscLib/OscCalcDMP.h"
 #include "OscLib/OscCalcAnalytic.h"
 
-#include "Utilities/func/MathUtil.h"
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/MathUtil.h"
+#include "CAFAna/Core/StanUtils.h"
 
 // these will come in handy below
 using stan_diag_t = stan::mcmc::adapt_diag_e_nuts<ana::StanFitter, boost::ecuyer1988>;

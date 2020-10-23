@@ -55,12 +55,6 @@ namespace ana
                       double pot,
                       bool force1D=false);
 
-  TH1* GetMCSystTotalProjectX(const IPrediction* mc,
-                              osc::IOscCalc* calc,
-                              const SystShifts& shift,
-                              std::string hist_name,
-                              double pot);
-
   TH1* GetMCTotal(const IPrediction* mc,
                   osc::IOscCalc* calc,
                   std::string hist_name,

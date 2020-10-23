@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CAFAnaCore/CAFAna/Core/UtilsExt.h"
+
 #include <cxxabi.h>
 #include <cfenv>
 #include <map>
@@ -25,42 +27,13 @@ class TH2F;
 class TH2D;
 class TH3D;
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 namespace ana
 {
   class Binning;
   class Spectrum;
   class Ratio;
-
-  enum EBinType
-  {
-    kBinContent, ///< Regular histogram
-    kBinDensity  ///< Divide bin contents by bin widths
-  };
-
-
-  /// For use as an argument to \ref Spectrum::ToTH1
-  enum EExposureType{
-    kPOT,
-    kLivetime
-  };
-
-
-  /// Return a different string each time, for creating histograms
-  std::string UniqueName();
-
-  /// \brief Prevent histograms being added to the current directory
-  ///
-  /// Upon going out of scope, restores the previous setting
-  class DontAddDirectory
-  {
-  public:
-    DontAddDirectory();
-    ~DontAddDirectory();
-  protected:
-    bool fBackup;
-  };
 
   /// \brief Alter floating-point exception flag
   ///
@@ -230,54 +203,6 @@ namespace ana
   /// the null rows/columns.
   std::unique_ptr<TMatrixD> SymmMxInverse(const TMatrixD& mx);
 
-  /// Utility function to avoid need to switch on bins.IsSimple()
-  TH1D* MakeTH1D(const char* name, const char* title, const Binning& bins);
-  /// Utility function to avoid 4-way combinatorial explosion on the bin types
-  TH2D* MakeTH2D(const char* name, const char* title,
-                 const Binning& binsx,
-                 const Binning& binsy);
-
-  /// \brief For use with \ref Var2D
-  ///
-  /// Re-expand a histogram flattened by \ref Var2D into a 2D histogram for
-  /// plotting purposes. The binning scheme must match that used in the
-  /// original Var.
-  TH2* ToTH2(const Spectrum& s, double exposure, ana::EExposureType expotype,
-             const Binning& binsx, const Binning& binsy,
-	     ana::EBinType bintype = ana::EBinType::kBinContent);
-
-  /// Same as ToTH2, but with 3 dimensions
-  TH3* ToTH3(const Spectrum& s, double exposure, ana::EExposureType expotype,
-             const Binning& binsx, const Binning& binsy, const Binning& binsz,
-	     ana::EBinType bintype = ana::EBinType::kBinContent);
-
-  /// \brief For use with \ref Var2D
-  ///
-  /// Re-expand a flatenned histogram into a 2D histogram for
-  /// plotting purposes. The binning scheme must match that used in the
-  /// original Var.
-  TH2* ToTH2(const Ratio& r, const Binning& binsx, const Binning& binsy);
-
-  /// Same as ToTH2, but with 3 dimensions
-  TH3* ToTH3(const Ratio& r, const Binning& binsx,
-	     const Binning& binsy, const Binning& binsz);
-
-  /// Helper for ana::ToTH2
-  TH2* ToTH2Helper(std::unique_ptr<TH1> h1,
-		   const Binning& binsx,
-		   const Binning& binsy,
-		   ana::EBinType bintype = ana::EBinType::kBinContent);
-
-  /// Helper for ana::ToTH3
-  TH3* ToTH3Helper(std::unique_ptr<TH1> h1,
-		   const Binning& binsx,
-		   const Binning& binsy,
-		   const Binning& binsz,
-		   ana::EBinType bintype = ana::EBinType::kBinContent);
-
-  /// Find files matching a UNIX glob, plus expand environment variables
-  std::vector<std::string> Wildcard(const std::string& wildcardString);
-
   /// This is $SRT_PRIVATE_CONTEXT if a CAFAna directory exists there,
   /// otherwise $SRT_PUBLIC_CONTEXT
   std::string FindCAFAnaDir();
@@ -309,17 +234,6 @@ namespace ana
 
   /// Is this a grid (condor) job?
   bool RunningOnGrid();
-
-  bool AlmostEqual(double a, double b, double eps = .0001); // allow 0.01% error by default
-
-  /// utility method to figure out exactly what kind of object I am
-  template <typename T>
-  std::string DemangledTypeName(T* obj) { return abi::__cxa_demangle(typeid(*obj).name(), 0, 0, 0); }
-
-  template <typename T>
-  constexpr char* DemangledTypeName(){ return abi::__cxa_demangle(typeid(T).name(), 0, 0, 0); }
-
-  std::string pnfs2xrootd(std::string loc, bool unauth = false);
 
   // Calling this function will return a Fourier series, fit to the input
   // histogram.  Assumes x-axis covers one period

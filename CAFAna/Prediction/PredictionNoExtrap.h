@@ -45,10 +45,6 @@ class NoExtrapPredictionGenerator : public IPredictionGenerator {
 public:
   NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
       : fAxis(axis), fCut(cut), fWei(wei) {
-    for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());
   }
 
   virtual std::unique_ptr<IPrediction>

@@ -170,17 +170,17 @@ namespace ana
                   << "This should never happen." << std::endl;
       }
 
-      if (fParallel)
-      {
-        pool->AddMemberTask(this, &FrequentistSurface::FillSurfacePoint,
-                            expt, calc,
-                            xvar, xv, yvar, yv,
-                            profVars, profSysts, seedPts, systSeedPts);
-      } else
-      {
+      ThreadPool::func_t task = [=](){
         FillSurfacePoint(expt, calc,
-                          xvar, xv, yvar, yv,
-                          profVars, profSysts, seedPts, systSeedPts);
+                         xvar, xv, yvar, yv,
+                         profVars, profSysts, seedPts, systSeedPts);
+      };
+
+      if(fParallel){
+        pool->AddTask(task);
+      }
+      else{
+        task(); // Just do it straight away
         ++neval;
         prog->SetProgress(neval / double(Nx * Ny));
       }

@@ -1,5 +1,7 @@
 #include "CAFAna/Experiment/CovarianceExperiment.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "CAFAna/Experiment/CovMxChiSq.h"
 #include "CAFAna/Experiment/CovMxChiSqPreInvert.h"
 #include "CAFAna/Experiment/CovMxLL.h"

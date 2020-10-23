@@ -1,9 +1,9 @@
 #include "CAFAna/Vars/Vars.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 

@@ -34,7 +34,7 @@ set(Fit_header_files
   StanFitter.h)
 
 add_library(CAFAnaFit SHARED ${Fit_implementation_files})
-target_link_libraries(CAFAnaFit)
+target_link_libraries(CAFAnaFit ${CAFANACOREEXT})
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaFit gperftools)

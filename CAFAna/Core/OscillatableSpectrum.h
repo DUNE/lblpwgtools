@@ -100,9 +100,8 @@ namespace ana
   protected:
     // Derived classes can be trusted take care of their own construction
     OscillatableSpectrum(const HistAxis& recoAxis,
-                         const Binning& kYBinning,
-                         const Var& rwVar)
-      : ReweightableSpectrum(recoAxis, kYBinning, rwVar)
+                         const Binning& kYBinning)
+      : ReweightableSpectrum(recoAxis, kYBinning)
     {
     }
 

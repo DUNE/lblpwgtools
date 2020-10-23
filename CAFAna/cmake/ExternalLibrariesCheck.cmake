@@ -13,10 +13,6 @@ if(NOT EXISTS ${SRC_ROOT_PARENT}/StandardRecord)
   cmessage(FATAL_ERROR "Cannot resolve: SRC_ROOT_PARENT=\"${SRC_ROOT_PARENT}/StandardRecord\" to a valid directory, please reconfigure with a valid path to the parent directory of StandardRecord.")
 endif()
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/Ext/Utilities)
-  cmessage(FATAL_ERROR "Expected to be able to find Utilities in: \"${CMAKE_BINARY_DIR}/Ext/Utilities\", did you build with the helper script?")
-endif()
-
 ###############################  GSL  ######################################
 if(NOT DEFINED GSL_LIB OR GSL_LIB STREQUAL "")
   GETLIBDIR(gsl-config --libs GSL_LIB)

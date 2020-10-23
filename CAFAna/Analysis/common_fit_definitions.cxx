@@ -884,6 +884,11 @@ std::string BuildLogInfoString() {
   return ss.str();
 }
 
+Spectrum MockOrAsimov(const Spectrum& s, bool mock, double pot, int seed)
+{
+  if(mock > 0) return s.MockData(pot, seed); else return s.AsimovData(pot);
+}
+
 std::vector<seeded_spectra>
 BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
              PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
@@ -899,56 +904,38 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
   // Ordering of these is important
   // kFDNueFHC
   if (predFDNueFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuFHC
   if (predFDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kFDNueRHC
   if (predFDNueRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuRHC
   if (predFDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuFHC
   if (predNDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_fhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_fhc, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuRHC
   if (predNDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_rhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_rhc, Seeds[iseed])));
     iseed++;
   }
 
@@ -1117,7 +1104,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  IExperiment *nd_expt_fhc, *nd_expt_rhc;
+  IExperiment *nd_expt_fhc = 0, *nd_expt_rhc = 0;
   CovarianceExperiment* nd_expt_joint = 0;
 
   bool UseNDCovMat = true;

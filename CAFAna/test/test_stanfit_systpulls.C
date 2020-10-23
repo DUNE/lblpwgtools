@@ -34,7 +34,7 @@
 
 #include "OscLib/OscCalcPMNSOpt.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 using namespace ana;
 

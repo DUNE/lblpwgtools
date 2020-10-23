@@ -17,11 +17,11 @@
 
 #include "CAFAna/Fit/StanConfig.h"
 #include "CAFAna/Fit/StanFitter.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "Utilities/func/MathUtil.h"
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/MathUtil.h"
 
 using namespace ana;
 
@@ -45,7 +45,7 @@ namespace test
       // req'd by the ISyst interface, but we aren't doing anything with it
       void Shift(double sigma,
                  Restorer& restore,
-                 caf::StandardRecord* sr,
+                 caf::SRProxy* sr,
                  double& weight) const
       {}
   };

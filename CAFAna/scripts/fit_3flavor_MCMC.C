@@ -40,7 +40,7 @@
 #include "OscLib/OscCalcDMP.h"
 #include "OscLib/OscCalcAnalytic.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 using namespace ana;
 

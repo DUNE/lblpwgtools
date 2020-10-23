@@ -52,7 +52,7 @@ foreach(SCRPT ${scripts_to_build})
     CAFAnaVars
     StandardRecord
     ${OSCLIB}
-    UtilitiesFunc)
+    )
 
     target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})
     target_link_libraries(${SCRPT} ${CAFANA_DEPEND_LIBS})

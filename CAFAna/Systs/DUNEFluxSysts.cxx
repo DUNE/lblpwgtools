@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -24,7 +24,7 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 
 //----------------------------------------------------------------------
 void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
-                         caf::StandardRecord *sr, double &weight) const {
+                         caf::SRProxy *sr, double &weight) const {
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
     if (fUseCDR) {

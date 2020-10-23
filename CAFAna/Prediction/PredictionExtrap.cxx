@@ -4,7 +4,7 @@
 
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
-#include "Utilities/func/Stan.h"
+#include "CAFAna/Core/Stan.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"

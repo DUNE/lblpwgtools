@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Utilities/func/StanVar.h"
+#include "CAFAna/Core/FwdDeclare.h"
+
+#include "CAFAna/Core/StanVar.h"
 
 #include <map>
 #include <memory>
@@ -9,11 +11,6 @@
 #include <vector>
 
 class TDirectory;
-
-namespace caf
-{
-  class StandardRecord;
-}
 
 namespace ana
 {
@@ -77,7 +74,7 @@ namespace ana
 
 
     void Shift(Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const;
 
     /// Brief description of component shifts, for printing to screen
@@ -117,5 +114,5 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-  const SystShifts kNoShift = SystShifts::Nominal();
+  extern const SystShifts kNoShift;
 }
