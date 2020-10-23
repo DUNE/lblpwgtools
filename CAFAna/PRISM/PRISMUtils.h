@@ -170,4 +170,33 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
   return rwspec;
 }
 
+//-----------------------------------------------------
+// Class for ND and FD detector extrapolation matrices:
+// ----------------------------------------------------
+class NDFD_Matrix {
+public:
+  NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
+
+  // Normalise the ETrue column to 1 in ND and FD matrices
+  void NormaliseETrue() const;
+
+  TH2 * GetNDMatrix() const;
+  TH2 * GetFDMatrix() const;
+
+  TH1 * GetPRISMExtrap() const;
+
+  // Extrapolate ND PRISM pred to FD using Eigen
+  void ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent, 
+                                  Spectrum>) const;  
+
+protected:
+
+  mutable std::unique_ptr<TH2> fMatrixND;
+  mutable std::unique_ptr<TH2> fMatrixFD;
+  const double fPOT;
+  mutable std::unique_ptr<TH1> fPRISMExtrap;
+
+};
+ 
+
 } // namespace ana

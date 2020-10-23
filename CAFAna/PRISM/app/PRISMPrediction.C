@@ -5,6 +5,7 @@
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
+#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
@@ -206,23 +207,35 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     }
 
     TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
-    //Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
     // TEST of smearing matrix
-    TH2 *MatrixND = state.NDMatrixPredInterps[NDConfig_enum]->PredictSyst(calc, shift).ToTH2(POT_FD);
-    chan_dir->WriteObject(MatrixND, 
-                          "ND_Mat_ERecETrue");
+    auto NDMatSpec = state.NDMatrixPredInterps[NDConfig_enum]->PredictSyst(calc, shift);
+    auto FDMatSpec = state.FDMatrixPredInterps[FDConfig_enum]->PredictSyst(calc, shift);
+    NDFD_Matrix SmearMatrices(NDMatSpec, FDMatSpec, POT_FD);
+
+    // ND and FD matrices not normalised    
+    auto MatrixND = SmearMatrices.GetNDMatrix();
+    auto MatrixFD = SmearMatrices.GetFDMatrix();
+
+    chan_dir->WriteTObject(MatrixND, "ND_Mat_ERecETrue");
     MatrixND->SetDirectory(nullptr);
-
-    TH2 *MatrixFD = state.FDMatrixPredInterps[FDConfig_enum]->PredictSyst(calc, shift).ToTH2(POT_FD);
-    chan_dir->WriteObject(MatrixFD,
-                          "FD_Mat_ERecETrue"); 
+    chan_dir->WriteTObject(MatrixFD, "FD_Mat_ERecETrue");
     MatrixFD->SetDirectory(nullptr);
+ 
+    // Normalise the ND and FD matrices
+    SmearMatrices.NormaliseETrue();
+    auto MatrixND2 = SmearMatrices.GetNDMatrix();
+    auto MatrixFD2 = SmearMatrices.GetFDMatrix();
 
+    chan_dir->WriteTObject(MatrixND2, "ND_norm");
+    MatrixND2->SetDirectory(nullptr);
+    chan_dir->WriteTObject(MatrixFD2, "FD_norm");
+    MatrixFD2->SetDirectory(nullptr);
+ 
     if (use_PRISM) {
-      if (do_gauss) {
+      if (do_gauss) { // Gaussian spectra prediction
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
             gauss_flux.first, gauss_flux.second, shift, ch.second.from);
         TH1 *PRISMPred =
@@ -251,14 +264,22 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
           dir->cd();
         }
-      } else {
+      } else { // FD spectra prediction
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-        //PRISMPred->Scale(1, "width");
+        
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
+
+        // Perform extrapolation to FD for comparison
+        SmearMatrices.ExtrapolateNDtoFD(PRISMComponents);
+        auto PRISMPred_FDExtrap = SmearMatrices.GetPRISMExtrap();
+        
+        chan_dir->WriteTObject(PRISMPred_FDExtrap, "PRISMPred_FDExtrap");
+        PRISMPred_FDExtrap->SetDirectory(nullptr); 
 
         if (PRISM_write_debug) {
 
