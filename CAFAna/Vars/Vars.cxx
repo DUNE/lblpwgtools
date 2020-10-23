@@ -3,7 +3,7 @@
 
 #include "CAFAna/Core/MathUtil.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 

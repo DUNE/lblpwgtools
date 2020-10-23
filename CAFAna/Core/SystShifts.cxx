@@ -3,7 +3,8 @@
 #include "CAFAna/Core/Registry.h"
 
 #include "CAFAna/Core/MathUtil.h"
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/Stan.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include <cassert>
 #include <memory>
@@ -19,6 +20,8 @@ namespace ana
 {
   // Reserve 0 for unshifted
   int SystShifts::fgNextID = 1;
+
+  const SystShifts kNoShift = SystShifts::Nominal();
 
   //----------------------------------------------------------------------
   SystShifts::SystShifts() : fID(0) {}
@@ -150,7 +153,7 @@ namespace ana
   stan::math::var SystShifts::LogPrior() const { return log(Prior()); }
 
   //----------------------------------------------------------------------
-  void SystShifts::Shift(Restorer &restore, caf::StandardRecord *sr,
+  void SystShifts::Shift(Restorer &restore, caf::SRProxy *sr,
                          double &weight) const
   {
     // always fSystsDbl here because this is only used in the event loop, not in fitting

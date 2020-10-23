@@ -20,7 +20,7 @@ namespace ana
     RecoNCSyst() : ISyst("RecoNCSyst", "ND Neutral Current Reconstruction Syst") {}
     void Shift(double sigma,
 	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override;
+	       caf::SRProxy* sr, double& weight) const override;
   };
   extern const RecoNCSyst kRecoNCSyst;
 
@@ -32,7 +32,7 @@ namespace ana
 
     void Shift(double sigma,
 	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override;
+	       caf::SRProxy* sr, double& weight) const override;
   protected:
     mutable TH2* fHist;
   };
@@ -46,7 +46,7 @@ namespace ana
 
     void Shift(double sigma,
 	       Restorer& restore,
-	       caf::StandardRecord* sr, double& weight) const override;
+	       caf::SRProxy* sr, double& weight) const override;
   protected:
     mutable TH1* fHist;
   };
@@ -59,7 +59,7 @@ namespace ana
   FVNumuNDSyst() : ISyst("FVNumuND", "Near Detector Numu Fiducial Volume") {}
     void Shift(double sigma, 
 	       Restorer& restore,
-	       caf::StandardRecord* sr,
+	       caf::SRProxy* sr,
 	       double& weight) const override
     {
       const double scale = 1. + 0.01 * sigma;

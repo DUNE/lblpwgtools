@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 using namespace ana;
 

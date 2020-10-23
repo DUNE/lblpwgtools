@@ -1,6 +1,6 @@
 #include "CAFAna/Fit/Priors.h"
+#include "CAFAna/Core//Stan.h"
 
-#include "Utilities/func/Stan.h"
 #include "stan/math/prim/scal/prob/normal_lpdf.hpp"
 #include "stan/math/prim/scal/fun/erf.hpp"
 

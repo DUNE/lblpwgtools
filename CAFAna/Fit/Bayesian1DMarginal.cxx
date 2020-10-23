@@ -2,10 +2,9 @@
 
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Fit/MCMCSamples.h"
-
-#include "Utilities/func/Stan.h"
 
 #include "TH1D.h"
 

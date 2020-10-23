@@ -1,6 +1,6 @@
 #include "CAFAna/Vars/DUNENeutNuWROReweight.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TFile.h"
 #include "TH2.h"
@@ -17,7 +17,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double DUNENeutNuWROReweight::operator()(const caf::StandardRecord* sr)
+  double DUNENeutNuWROReweight::operator()(const caf::SRProxy* sr)
   {
     if(!fHistNu && !fHist2DNu) LoadHists();
 

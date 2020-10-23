@@ -17,7 +17,7 @@
 
 #include "OscLib/IOscCalc.h"
 
-#include "Utilities/func/StanUtils.h"
+#include "CAFAna/Core/StanUtils.h"
 
 
 // note, Stan depends on Eigen and one method inherited from the interface

@@ -6,7 +6,7 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Cuts/TruthCuts.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -33,7 +33,7 @@ void demo1()
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // A cut is structured like a Var, but returning bool
-  const Cut kPassesCVN([](const caf::StandardRecord* sr)
+  const Cut kPassesCVN([](const caf::SRProxy* sr)
                        {
                          return sr->cvnnumu > 0.5;
                        });
