@@ -1,6 +1,7 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "CAFAna/PRISM/PredictionPRISM.h"
+#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
@@ -454,6 +455,83 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
     shift.SetShift(reduced_los[0], s.second);
   }
   return shift;
+}
+
+//-----------------------------------------------------
+// Class for ND and FD detector extrapolation matrices:
+// ----------------------------------------------------
+NDFD_Matrix::NDFD_Matrix(Spectrum ND, Spectrum FD, double pot) : fPOT(pot), 
+                                                                 fPRISMExtrap(nullptr) {
+  fMatrixND = std::unique_ptr<TH2>(static_cast<TH2*>(ND.ToTH2(fPOT)));
+  fMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(FD.ToTH2(fPOT))); 
+}
+
+//-----------------------------------------------------
+
+TH2 * NDFD_Matrix::GetNDMatrix() const {
+  return fMatrixND.get();
+}
+
+//-----------------------------------------------------
+
+TH2 * NDFD_Matrix::GetFDMatrix() const {
+  return fMatrixFD.get();
+}
+
+//-----------------------------------------------------
+
+TH1 * NDFD_Matrix::GetPRISMExtrap() const {
+  return fPRISMExtrap.get();
+}
+
+//-----------------------------------------------------
+
+void NDFD_Matrix::NormaliseETrue() const {
+  auto matrix_pair = {&fMatrixND, &fMatrixFD};
+  for (auto &mat : matrix_pair) {
+    for (int i = 1; i <= mat->get()->GetXaxis()->GetNbins(); i++) {
+      std::unique_ptr<TH1D> proj = std::unique_ptr<TH1D>(
+                                     mat->get()->ProjectionY("_proj", i, i, "e"));
+      //proj->Sumw2();
+      proj->Scale(1 / proj->Integral());
+      for (int k = 1; k <= mat->get()->GetYaxis()->GetNbins(); k++) {
+        mat->get()->SetBinContent(i, k, proj->GetBinContent(k));
+        mat->get()->SetBinError(i, k, proj->GetBinError(k));
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------
+
+void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent, 
+                                             Spectrum> NDPRISMComp) const {
+  // Will not need fMatrixND or fMatrixND after this function
+  // call, so std::move() them here for use in Eigen 
+  std::unique_ptr<TH2> NDhist = std::move(fMatrixND);
+  std::unique_ptr<TH2> FDhist = std::move(fMatrixFD);
+
+  auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(
+                   NDPRISMComp.at(PredictionPRISM::kPRISMPred).ToTH1(fPOT)));
+
+  Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist.get(), 
+                                         NDhist->GetYaxis()->GetNbins(),
+                                         NDhist->GetXaxis()->GetNbins());
+  Eigen::MatrixXd FDmat = GetEigenMatrix(FDhist.get(),
+                                         FDhist->GetYaxis()->GetNbins(),
+                                         FDhist->GetXaxis()->GetNbins());
+ 
+  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND.get());
+
+  Eigen::VectorXd NDETrue = NDmat.colPivHouseholderQr().solve(NDERec);
+
+  Eigen::VectorXd FDERec = FDmat * NDETrue;
+  
+  // Keep same binning for extrapolated prediction
+  PRISMND->Clear();
+  fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  
+  FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
 }
 
 } // namespace ana
