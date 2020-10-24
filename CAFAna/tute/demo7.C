@@ -24,6 +24,7 @@
 #include "TRandom3.h"
 
 
+#include "CAFAna/Systs/AnaSysts.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
@@ -43,10 +44,12 @@ void demo7()
   // First 10 principal components of diagonalized flux covariance matrix
   std::vector<const ISyst*> fluxsysts = GetDUNEFluxSysts(10);
   // Curated GENIE cross section uncertainties list
+  // Use the following two lines or replace both with getReducedXSecSysts()
   std::vector<const ISyst*> xsecsysts = GetXSecSysts();
+  RemoveSysts(xsecsysts, GetDoNotIncludeSystNames()); 
   std::vector<const ISyst*> allSysts;
-  allSysts.insert(allSysts.end(), xsecsysts.begin(), xsecsysts.end());
   allSysts.insert(allSysts.end(), fluxsysts.begin(), fluxsysts.end());
+  allSysts.insert(allSysts.end(), xsecsysts.begin(), xsecsysts.end());
 
   // List all of the systematics we'll be using
   for(const ISyst* s: allSysts) std::cout << s->ShortName() << "\t\t" << s->LatexName() << std::endl;
