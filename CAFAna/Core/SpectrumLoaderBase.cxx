@@ -188,9 +188,6 @@ namespace ana
       abort();
     }
 
-    assert(var.IsValid());
-    assert(wei.IsValid());
-
     Spectrum** ps = new Spectrum*;
     *ps = &spect;
     fHistDefs[shift][cut][wei][var].spects.push_back(ps);
@@ -210,9 +207,6 @@ namespace ana
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
       abort();
     }
-
-    assert(var.IsValid());
-    assert(wei.IsValid());
 
     Spectrum** ps = new Spectrum*;
     *ps = &spect;
@@ -234,9 +228,6 @@ namespace ana
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
       abort();
     }
-
-    assert(var.IsValid());
-    assert(wei.IsValid());
 
     ReweightableSpectrum** prw = new ReweightableSpectrum*;
     *prw = &spect;

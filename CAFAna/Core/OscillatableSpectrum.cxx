@@ -75,7 +75,7 @@ namespace ana
       fCache->hash = std::make_unique<TMD5>(*rhs.fCache->hash);
     }
 
-    assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
+    assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
   }
 
   //----------------------------------------------------------------------
@@ -87,7 +87,7 @@ namespace ana
       fCache->hash = std::move(rhs.fCache->hash);
     }
 
-    assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
+    assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
   }
 
   //----------------------------------------------------------------------
@@ -105,8 +105,8 @@ namespace ana
       fCache->hash.reset();
     }
 
-    assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
-    assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
+    assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
+    assert( fReferences.empty() ); // Copying with pending loads is unexpected
 
     return *this;
   }
@@ -126,8 +126,8 @@ namespace ana
       fCache->hash.reset();
     }
 
-    assert( rhs.fLoaderCount.empty() ); // Copying with pending loads is unexpected
-    assert( fLoaderCount.empty() ); // Copying with pending loads is unexpected
+    assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
+    assert( fReferences.empty() ); // Copying with pending loads is unexpected
 
     return *this;
   }

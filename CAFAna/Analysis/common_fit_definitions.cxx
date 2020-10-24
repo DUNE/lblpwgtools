@@ -248,16 +248,6 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                           std::vector<std::string> const &tau_swap_file_list,
                           int max) {
 
-  for (auto &v : axes.NDAx->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_numu->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_nue->GetVars()) {
-    assert(v.IsValid());
-  }
-
   bool use_cv_weights = true;
   if (getenv("CAFANA_IGNORE_CV_WEIGHT")) {
     use_cv_weights = !atoi(getenv("CAFANA_IGNORE_CV_WEIGHT"));
