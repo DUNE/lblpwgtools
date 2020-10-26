@@ -503,12 +503,12 @@ int main(int argc, char const *argv[]) {
   HistAxis const NDObservedSpectraAxis(Labels_obs, Bins_obs, Vars_obs);
 
   // HistAxis for Erec vs ETrue smearing matrix predictions
-  // True axis
+  // True axis: make the binning the same as the Rec axis so we can 
+  // we don't have an underdetermined linear system
   std::vector<std::string> Labels_matrix = MatchAxis.GetLabels();
-  std::vector<Binning> Bins_matrix = MatchAxis.GetBinnings();
+  std::vector<Binning> Bins_matrix = axes.XProjection.GetBinnings();
   std::vector<Var> Vars_matrix = MatchAxis.GetVars();
   // EProxyRec axis
-  //auto ErecVar = GetVar(axdescriptor);
   Labels_matrix.push_back(axes.XProjection.GetLabels().front());
   Bins_matrix.push_back(axes.XProjection.GetBinnings().front());
   Vars_matrix.push_back(axes.XProjection.GetVars().front());
@@ -577,35 +577,36 @@ int main(int argc, char const *argv[]) {
                   50, (IsND280kA ? axes.OffAxis280kAPosition : axes.OffAxisPosition)
                   .GetBinnings()
                   .front()
-                  .Edges()); // (IsND280kA ? 200 : 50)
+                  .Edges()); 
 
       MatchPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
           kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-          WeightVars[it] * slice_width_weight * kSpecHCRunWeight); 
+          WeightVars[it] * slice_width_weight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
           los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign
+          ); //PredictionInterp::kSplitBySign seems to fail when I include this?
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           NDObservedSpectraAxis,
           OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
-          AnaWeightVars[it] * kSpecHCRunWeight);
+          AnaWeightVars[it] * slice_width_weight); 
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign
     
-      //PredInterps for ND smearing matrix
+      // PredInterps for ND smearing matrix
       // Only need to do this for 293 kA
-      // Relationship between ERec and ETrue should be the same for both, right?
+      // Relationship between ERec and ETrue should be the same 
+      // for 280kA and 293kA, right?
       if (!IsND280kA) {
         NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
             ErecETrueAxis, 
             kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
             kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-            WeightVars[it] * kSpecHCRunWeight);
+            WeightVars[it]); 
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
             los_det, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
             ); //PredictionInterp::kSplitBySign

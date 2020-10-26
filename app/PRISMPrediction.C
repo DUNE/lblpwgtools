@@ -207,6 +207,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     }
 
     TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
+    Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
@@ -270,14 +271,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-        
+        PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
 
         // Perform extrapolation to FD for comparison
         SmearMatrices.ExtrapolateNDtoFD(PRISMComponents);
         auto PRISMPred_FDExtrap = SmearMatrices.GetPRISMExtrap();
-        
+        PRISMPred_FDExtrap->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred_FDExtrap, "PRISMPred_FDExtrap");
         PRISMPred_FDExtrap->SetDirectory(nullptr); 
 
@@ -290,7 +291,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
-
+            PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
                   PRISMComp_h,
