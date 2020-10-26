@@ -695,7 +695,6 @@ namespace ana
     TObjString split_sign = fSplitBySign ? "yes" : "no";
     dir->cd();
     split_sign.Write("split_sign");
-    std::cout << "Saving PredInterps" << std::endl;
     tmp->cd();
   }
 

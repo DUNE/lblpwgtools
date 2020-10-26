@@ -172,8 +172,8 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
   // 280kA at ND as TH2
-  std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(4)); // 4 since bin is 4
-                                                                       // times wider (FUDGE) 
+  std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(1)); 
+                                                                        
   NDOffAxis_280kA->SetDirectory(nullptr);
 
   // Get the oscillated numu rate (either with app/disp probabiliy applied, but
@@ -363,7 +363,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     double bc_o = FDOsc->GetBinContent(bin_it + 1);
     double bc_u = FDUnOsc->GetBinContent(bin_it + 1);
 
-    double e = (bc_o - BestFit[bin_it]) / bc_u;
+    double e = (bc_o - BestFit[bin_it]) / bc_u; 
     if (!std::isnormal(e)) {
       e = 0;
     }
