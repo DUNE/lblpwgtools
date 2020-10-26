@@ -1,7 +1,7 @@
 RunPlans: {
     flat: {
-           plan: [ { xrange: [0,-2] time: 1 horn_current: 280 },
-                   { xrange: [0,-2] time: 1 },
+           plan: [ { xrange: [2,-2] time: 1 horn_current: 280 },
+                   { xrange: [2,-2] time: 1 },
                    { xrange: [-2,-6] time: 1 },
                    { xrange: [-6,-10] time: 1 },
                    { xrange: [-10,-14] time: 1 },

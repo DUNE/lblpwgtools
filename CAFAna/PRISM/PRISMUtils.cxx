@@ -54,8 +54,8 @@ ana::Var NDSliceCorrection(double reference_width_cm,
 
   for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
     double width = Edges[e_it + 1] - Edges[e_it];
-    Weights.push_back(FD_ND_FVRatio(reference_width_cm) * reference_width_cm /
-                      (width * 1E2));
+    Weights.push_back(FD_ND_FVRatio(width*1E2) * 
+                      ((width*1E2)/reference_width_cm));
   }
 
   return ana::Var([=](const caf::StandardRecord *sr) -> double {
@@ -513,6 +513,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent,
 
   auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(
                    NDPRISMComp.at(PredictionPRISM::kPRISMPred).ToTH1(fPOT)));
+  gFile->WriteTObject(PRISMND.get(), "PRISMPred_beforeExtrap");
 
   Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist.get(), 
                                          NDhist->GetYaxis()->GetNbins(),
@@ -528,7 +529,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent,
   Eigen::VectorXd FDERec = FDmat * NDETrue;
   
   // Keep same binning for extrapolated prediction
-  PRISMND->Clear();
+  //PRISMND->Clear();
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
   
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
