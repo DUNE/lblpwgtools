@@ -113,7 +113,7 @@ std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
         {"BeRPA_A", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"BeRPA_B", kFitSyst, kContinuous, kStandardRange, kQELike},
         {"BeRPA_D", kFitSyst, kContinuous, kStandardRange, kQELike},
-        {"BeRPA_E", kUsedAsFakeData, kContinuous, kStandardRange, kQELike},
+        {"BeRPA_E", kUsedAsFakeData, kContinuous, kFakeDataRange, kQELike},
         {"C12ToAr40_2p2hScaling_nu", kFitSyst, kExtrapolated, kStandardRange,
          kQELike},
         {"C12ToAr40_2p2hScaling_nubar", kFitSyst, kExtrapolated, kStandardRange,
