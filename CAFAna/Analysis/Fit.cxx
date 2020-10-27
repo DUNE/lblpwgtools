@@ -187,7 +187,7 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
     }
   }
 
-  if (fPrec & kIncludeHesse) {
+  if ((fPrec & kIncludeHesse) && mnMin->NFree() > 0) {
     std::cout << "[FIT]: It's Hesse o'clock" << std::endl;
     mnMin->Hesse();
   }
