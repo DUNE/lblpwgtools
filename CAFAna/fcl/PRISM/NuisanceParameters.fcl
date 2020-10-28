@@ -29,6 +29,12 @@ nuisance_parameters: {
           BeRPA_D 
      ]
 
+     det: [
+          ChargedHadTruthUncorrND,
+          ChargedHadTruthUncorrSqrtND,
+          ChargedHadTruthUncorrInvSqrtND
+     ]
+
      all: [
           @sequence::nuisance_parameters.flux10,
           @sequence::nuisance_parameters.xsec

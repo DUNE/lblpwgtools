@@ -9,6 +9,9 @@
 #include "TRandom3.h"
 
 #include <cassert>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 // Implement FD energy scale uncertainties on truth information
 // for use in eRecProxy
@@ -369,5 +372,5 @@ namespace ana
 
   TruthEnergyFDSystVector GetTrueEFDSysts();
 
-
+  bool IsFDdetSyst(std::string);
 }

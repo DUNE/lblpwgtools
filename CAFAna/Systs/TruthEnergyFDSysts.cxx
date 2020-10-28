@@ -34,4 +34,16 @@ namespace ana {
     return vec;
   }
 
+  bool IsFDdetSyst(std::string name) {
+  
+    std::vector<std::string> syst_names;
+    for (const auto &syst : GetTrueEFDSysts()) {
+      syst_names.emplace_back(syst->ShortName());
+    }
+
+    return (std::find(syst_names.begin(),
+                      syst_names.end(), name) !=
+                      syst_names.end());
+  }
+
 }

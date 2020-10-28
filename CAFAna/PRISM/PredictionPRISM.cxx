@@ -519,9 +519,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   auto &FDUnOscWeightedSigPrediction =
       GetFDUnOscWeightedSigPrediction(match_chan.to);
 
-  PRISMOUT("Making PRISM prediction for: \n\t("
+  /*PRISMOUT("Making PRISM prediction for: \n\t("
            << match_chan.from.mode << ":" << match_chan.from.chan << ") -> ("
-           << match_chan.to.mode << ":" << match_chan.to.chan << ")");
+           << match_chan.to.mode << ":" << match_chan.to.chan << ")");*/
 
   // Sort out the flavors and signs
   auto NDSigFlavor = (match_chan.from.chan & NuChan::kNumuNumuBar)
@@ -551,13 +551,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                ? Flavors::kNuEToNuMu
                                : Flavors::kNuEToNuE;
 
-  PRISMOUT("\n\tNDSigFlavor: "
+  /*PRISMOUT("\n\tNDSigFlavor: "
            << NDSigFlavor << "\n\tNDSigSign: " << NDSigSign
            << "\n\tNDWrongSign: " << NDWrongSign << "\n\tNDWrongFlavor: "
            << NDWrongFlavor << "\n\tFDSigFlavor: " << FDSigFlavor
            << "\n\tFDSigSign: " << FDSigSign << "\n\tFDWrongSign: "
            << FDWrongSign << "\n\tFDWrongFlavor: " << FDWrongFlavor
-           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);
+           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);*/
 
   // Using maps for non-default constructible classes is awful...
   std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
@@ -571,13 +571,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   assert(NDPOT > 0);
 
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
-  std::cout << "!!!!!! Weighting: 293kA." << std::endl;
+  //std::cout << "!!!!!! Weighting: 293kA." << std::endl;
   NDComps.emplace(kNDData_293kA,
                   NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA));
 
   NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
-  std::cout << "!!!!!! Weighting: 280kA" << std::endl;
+  //std::cout << "!!!!!! Weighting: 280kA" << std::endl;
   NDComps.emplace(kNDData_280kA,
                   NDRunPlan.Weight(*NDData_280kA, 280, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA));
@@ -701,7 +701,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
   UnRunPlannedLinearCombination_280kA->Scale(NDPOT); 
 
-  PRISMOUT("PRISM analysis axis: "
+  /*PRISMOUT("PRISM analysis axis: "
            << fNDOffAxis.GetLabels().front() << " with "
            << fNDOffAxis.GetBinnings().front().Edges().size() << " bins from "
            << fNDOffAxis.GetBinnings().front().Edges().front() << " to "
@@ -711,7 +711,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
            << fND280kAAxis.GetLabels().front() << " with "
            << fND280kAAxis.GetBinnings().front().Edges().size() << " bins from "
            << fND280kAAxis.GetBinnings().front().Edges().front() << " to "
-           << fND280kAAxis.GetBinnings().front().Edges().back() << ".");
+           << fND280kAAxis.GetBinnings().front().Edges().back() << ".");*/
 
   Spectrum UnRunPlannedLinearCombination_293kA_s(fNDOffAxis.GetLabels(),
                                                  fNDOffAxis.GetBinnings());
@@ -745,14 +745,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
   }
 
-  std::cout << "WEIGHTING: kNDDataCorr_293kA" << std::endl;
+  //std::cout << "WEIGHTING: kNDDataCorr_293kA" << std::endl;
   Comps.emplace(
       kNDDataCorr_293kA,
       NDComps.at(kNDDataCorr2D_293kA)
           .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
 
 
-  TH2 *bla = NDComps.at(kNDDataCorr2D_293kA).ToTH2(NDPOT);
+  /*TH2 *bla = NDComps.at(kNDDataCorr2D_293kA).ToTH2(NDPOT);
 
   for (int i = 0; i < bla->GetXaxis()->GetNbins(); ++i) {
     for (int j = 0; j < bla->GetYaxis()->GetNbins(); ++j) {
@@ -768,13 +768,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   }
 
   gFile->WriteObject(bla, "weightednotsummed_293kA");
-
-  std::cout << "WEIGHTING: kNDDataCorr_280kA" << std::endl;
+*/
+  //std::cout << "WEIGHTING: kNDDataCorr_280kA" << std::endl;
   Comps.emplace(
       kNDDataCorr_280kA,
       NDComps.at(kNDDataCorr2D_280kA)
           .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
-
+/*
   TH2 *bla280 = NDComps.at(kNDDataCorr2D_280kA).ToTH2(NDPOT);
   for (int i = 0; i < bla280->GetXaxis()->GetNbins(); ++i) {
     for (int j = 0; j < bla280->GetYaxis()->GetNbins(); ++j) {
@@ -787,7 +787,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
           bla280->GetBinError(i + 1, j + 1) *
             UnRunPlannedLinearCombination_280kA->GetBinContent(j + 1));
     }
-  } 
+  } */
 
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);

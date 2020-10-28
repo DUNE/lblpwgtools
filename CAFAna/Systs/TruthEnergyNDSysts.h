@@ -9,6 +9,9 @@
 #include "TRandom3.h"
 
 #include <cassert>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 // Implement ND energy scale uncertainties on truth information
 // for use in eRecProxy
@@ -370,5 +373,5 @@ namespace ana
 
   TruthEnergyNDSystVector GetTrueENDSysts();
 
-
+  bool IsNDdetSyst(std::string);
 }
