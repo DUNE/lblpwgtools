@@ -153,9 +153,9 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
   Flavors::Flavors_t flav_nd = GetFlavor(match_chan.from.chan);
   Flavors::Flavors_t flav_fd = GetFlavor(match_chan.to.chan);
 
-  PRISMOUT("GetFarMatchCoefficients: "
+  /*PRISMOUT("GetFarMatchCoefficients: "
            << match_chan.from.mode << ", " << match_chan.from.chan << ", "
-           << match_chan.to.mode << ", " << match_chan.to.chan);
+           << match_chan.to.mode << ", " << match_chan.to.chan);*/
 
   PredictionInterp const *NDPredInterp_293kA =
       GetNDPred(match_chan.from.mode, 293); // Can be flux OR ev rate
@@ -259,12 +259,12 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
       GetEigenMatrix(NDOffAxis_280kA.get(), NCoeffs_280kA);
   // Total ND flux matrix: combines 293kA and 280kA
   Eigen::MatrixXd NDFluxMatrix = Eigen::MatrixXd::Zero(NCoeffs, NEBins);
-  std::cout << "NDFluxMatrix(" << NDFluxMatrix.rows() << ", "
+  /*std::cout << "NDFluxMatrix(" << NDFluxMatrix.rows() << ", "
             << NDFluxMatrix.cols() << ")" << std::endl;
   std::cout << "NDFluxMatrix_293kA(" << NDFluxMatrix_293kA.rows() << ", "
             << NDFluxMatrix_293kA.cols() << ")" << std::endl;
   std::cout << "NDFluxMatrix_280kA(" << NDFluxMatrix_280kA.rows() << ", "
-            << NDFluxMatrix_280kA.cols() << ")" << std::endl;
+            << NDFluxMatrix_280kA.cols() << ")" << std::endl;*/
   // Top rows of the total ND matrix is the 293kA matrix
   NDFluxMatrix.topRows(NCoeffs_293kA) = NDFluxMatrix_293kA;
   // Bottom rows of the total ND matrix is the 280kA matrix
@@ -326,12 +326,12 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
       NDFluxMatrix.transpose() * P * Target;
 
   //***TEST***
-  std::unique_ptr<TH1> RawLCW = std::unique_ptr<TH1>(new TH1D("LC", "LC", 
+  /*std::unique_ptr<TH1> RawLCW = std::unique_ptr<TH1>(new TH1D("LC", "LC", 
                                                      OffAxisWeights.size(), 
                                                      0, OffAxisWeights.size()));
   RawLCW->SetDirectory(nullptr);
   FillHistFromEigenVector(RawLCW.get(), OffAxisWeights);
-  gFile->WriteObject(RawLCW.get(), "RawLCtest");                                  
+  gFile->WriteObject(RawLCW.get(), "RawLCtest");*/                                  
   //**********
 
   fLastMatch_293kA = std::unique_ptr<TH1>(new TH1D(
