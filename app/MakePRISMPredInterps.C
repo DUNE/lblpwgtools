@@ -126,7 +126,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "uniform";
+std::string truthbinningdescriptor = "uniform_fine";
 std::vector<std::string> ND_input_numode;
 std::vector<std::string> FD_nonswap_input_numode;
 std::vector<std::string> FD_nueswap_input_numode;
@@ -408,6 +408,19 @@ int main(int argc, char const *argv[]) {
   OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
+
+  auto specrunweight =
+        ana::Var([&](const caf::StandardRecord *sr) -> double {
+          if (sr->det_x > 0) {
+            return 1;
+          }
+          // All on axis events should be doubled about the x=0 symmetry axis.
+          return 2;
+        });
+  WeightVars[kND_293kA_nu] = WeightVars[kND_293kA_nu] * specrunweight;
+  WeightVars[kND_280kA_nu] = WeightVars[kND_280kA_nu] * specrunweight;
+  AnaWeightVars[kND_293kA_nu] = AnaWeightVars[kND_293kA_nu] * specrunweight;
+  AnaWeightVars[kND_280kA_nu] = AnaWeightVars[kND_280kA_nu] * specrunweight;
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);

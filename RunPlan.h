@@ -45,9 +45,9 @@ struct RunPlan {
   Spectrum Weight(Spectrum NDSpec, int kA,
                   bool SetErrorsFromPredictedRate = false) const {
 
-    std::cout << "kA: " << kA
+    /*std::cout << "kA: " << kA
               << ", SetErrorsFromPredictedRate = " << SetErrorsFromPredictedRate
-              << std::endl;
+              << std::endl;*/
     // Assume this spectrum is in per/POT
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     NDSpec_h->SetDirectory(nullptr);

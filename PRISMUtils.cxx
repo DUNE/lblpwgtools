@@ -513,7 +513,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent,
 
   auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(
                    NDPRISMComp.at(PredictionPRISM::kPRISMPred).ToTH1(fPOT)));
-  gFile->WriteTObject(PRISMND.get(), "PRISMPred_beforeExtrap");
 
   Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist.get(), 
                                          NDhist->GetYaxis()->GetNbins(),
@@ -529,7 +528,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent,
   Eigen::VectorXd FDERec = FDmat * NDETrue;
   
   // Keep same binning for extrapolated prediction
-  //PRISMND->Clear();
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
   
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
