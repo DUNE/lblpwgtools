@@ -71,10 +71,15 @@ namespace ana {
   };
   extern const NuOnERecoEffSyst kNuOnERecoEffSyst;
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   struct NuOnESystVector: public std::vector<const ISyst*>
   {
-
   };
   NuOnESystVector GetNuOnESysts();
+*/
 
+  std::vector<const ISyst*> GetNuOnESysts();
+  
 }

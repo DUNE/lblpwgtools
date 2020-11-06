@@ -2,7 +2,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -38,13 +38,13 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  Spectrum PredictionNuOnE::Predict(osc::IOscCalculator*) const
+  Spectrum PredictionNuOnE::Predict(osc::IOscCalc*) const
   {
     return fSig+fCCBkg+fNCBkg;
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalc* calc,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
@@ -87,20 +87,21 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "PredictionNuOnE");
 
-    assert(dir->GetDirectory("sig"));
-    assert(dir->GetDirectory("ccbkg"));
-    assert(dir->GetDirectory("ncbkg"));
-
     PredictionNuOnE* ret = new PredictionNuOnE
-      (*Spectrum::LoadFrom(dir->GetDirectory("sig")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ccbkg")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ncbkg")));
+      (*Spectrum::LoadFrom(dir, "sig"),
+       *Spectrum::LoadFrom(dir, "ccbkg"),
+       *Spectrum::LoadFrom(dir, "ncbkg"));
+
+    delete dir;
 
     return std::unique_ptr<PredictionNuOnE>(ret);
   }

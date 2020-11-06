@@ -56,6 +56,7 @@ LIST(APPEND ROOT_LIBS
   Postscript
   Matrix
   Physics
+  TMVA
   MathCore)
 
 if("${ROOT_FEATURES}" MATCHES "minuit2")

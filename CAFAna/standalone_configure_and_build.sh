@@ -5,6 +5,7 @@ USE_UPS="0"
 CORES=1
 USE_GPERF=0
 CMAKE_BUILD_TYPE=DEBUG
+BUILD_DIR="build"
 INSTALL_DIR=""
 USE_KNL="0"
 USE_OMP="0"
@@ -13,6 +14,16 @@ while [[ ${#} -gt 0 ]]; do
 
   key="$1"
   case $key in
+
+      -b|--build-dir)
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+      BUILD_DIR="$2"
+      echo "[OPT]: Will build in directory $BUILD_DIR."
+      shift
+      ;;
 
       -f|--force-remove)
 
@@ -82,6 +93,7 @@ while [[ ${#} -gt 0 ]]; do
 
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
+      echo -e "\t-b|--build-dir         : Build directory"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
       echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
@@ -105,25 +117,17 @@ while [[ ${#} -gt 0 ]]; do
   shift # past argument or value
 done
 
-if [ -e build ]; then
+if [ -e "$BUILD_DIR" ]; then
   if [ "${FORCE_REMOVE}" == "1" ]; then
-    rm -rf build
+    rm -rf "$BUILD_DIR"
   else
-    echo "[ERROR]: Extant build directory, will not overwrite, remove it or rebuild within it."
+    echo "[ERROR]: Extant build directory in "$BUILD_DIR", will not overwrite, remove it or rebuild within it."
     exit 1
   fi
 fi
 
-mkdir build
-cd build
-
-mkdir Ext
-cd Ext
-
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
-
-cd ../
+mkdir "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 if [ "${USE_UPS}" == "1" ]; then
   source ../cmake/ups_env_setup.sh
@@ -161,7 +165,18 @@ else
     fi
   fi
 
+  if [ -z "${EIGEN_INC}" ]; then
+    echo "[ERROR]: Not using UPS, but couldn't find Eigen (EIGEN_INC) wasn't defined in the environment."
+    exit 1
+  fi
+
+  if [ -z "${STAN_INC}" -o -z "${STAN_MATH_INC}" ]; then
+    echo "[ERROR]: Not using UPS, but couldn't find Stan or Stan-math (STAN_INC or STAN_MATH_INC) wasn't defined in the environment."
+    exit 1
+  fi
+
+
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC}
 make install -j ${CORES}

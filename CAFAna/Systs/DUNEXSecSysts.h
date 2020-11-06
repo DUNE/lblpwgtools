@@ -3,7 +3,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/ISyst.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 
 class TH2;
@@ -61,8 +61,8 @@ namespace ana
   class DUNEXSecSyst: public SystComponentScale
   {
   public:
-    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir);
-    virtual void SaveTo(TDirectory* dir, const std::string& anem) const override;
+    static std::unique_ptr<DUNEXSecSyst> LoadFrom(TDirectory* dir, const std::string& name);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
   protected:
     friend const DUNEXSecSyst* GetDUNEXSecSyst(EVALORCategory);
     DUNEXSecSyst(EVALORCategory cat);
@@ -85,12 +85,12 @@ namespace ana
   SystVector<DUNEXSecSyst> GetDUNEXSecSysts();
 
 
-  class DUNEXSecCorrelation: public IChiSqExperiment
+  class DUNEXSecCorrelation: public IExperiment
   {
   public:
     DUNEXSecCorrelation();
 
-    virtual double ChiSq(osc::IOscCalculatorAdjustable* osc,
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
   protected:

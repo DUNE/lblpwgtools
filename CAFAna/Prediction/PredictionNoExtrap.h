@@ -37,7 +37,7 @@ public:
 
   virtual ~PredictionNoExtrap();
 
-  static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir);
+  static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 };
 
@@ -45,10 +45,6 @@ class NoExtrapPredictionGenerator : public IPredictionGenerator {
 public:
   NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
       : fAxis(axis), fCut(cut), fWei(wei) {
-    for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());
   }
 
   virtual std::unique_ptr<IPrediction>

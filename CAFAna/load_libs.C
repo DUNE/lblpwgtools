@@ -17,7 +17,8 @@ void load_libs(bool MustClean = true) {
   // uncaught exceptions immediately show a useful backtrace under gdb.
   //  G__SetCatchException(0);
 
-  gSystem->SetAclicMode(TSystem::kOpt);
+  auto mode = (gSystem->Getenv("CAFANA_DEBUG")) ? TSystem::kDebug : TSystem::kOpt;
+  gSystem->SetAclicMode(mode);
 
   // This magic incantation prevents ROOT doing slow cleanup work in
   // TList::RecursiveRemove() under ~TH1(). It also tends to lead to shutdown
@@ -39,26 +40,21 @@ void load_libs(bool MustClean = true) {
       "-DDONT_USE_FQ_HARDCODED_SYST_PATHS=1"); // match gcc's maxopt behaviour
                                                // of retaining assert()
 
-  // Include path
-  TString includes = "-I$ROOTSYS/include -I$CAFANA/include";
-
   const std::vector<std::string> libs = {
-      "Minuit2",          "Net",           "StandardRecordProxy", "OscLibFunc",
-      "UtilitiesFunc",    "CAFAnaCore",    "CAFAnaVars",     "CAFAnaCuts",
-      "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
-      "CAFAnaPrediction", "CAFAnaFit", "CAFAnaAnalysis", "boost_filesystem",
-      "boost_system"};
+      "Minuit2",             "Net",           "Tree",
+      "StandardRecordProxy", "OscLib",        "CAFAnaCoreExt",
+      "CAFAnaCore",          "CAFAnaVars",    "CAFAnaCuts",
+      "CAFAnaExperiment",    "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
+      "CAFAnaPrediction",    "CAFAnaFit",     "CAFAnaAnalysis",
+      "boost_filesystem",    "boost_system"};
 
   // Actually load the libraries
   std::cout << "Loading libraries:" << std::endl;
   for (const std::string &lib : libs)
     load(lib);
-  std::cout << std::endl;
-
-  gSystem->SetIncludePath(includes);
 
   // Pick up standard NOvA style
-  gROOT->Macro("$CAFANA/include/Utilities/rootlogon.C");
+  gROOT->Macro("$CAFANA/include/CAFAna/Core/rootlogon.C");
   gROOT->ForceStyle();
 
   TRint *rint = dynamic_cast<TRint *>(gApplication);

@@ -2,6 +2,8 @@
 
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 
+#include <set>
+
 class TFile;
 
 #include "StandardRecord/Proxy/FwdDeclare.h"
@@ -21,14 +23,12 @@ namespace ana
   class SpectrumLoader: public SpectrumLoaderBase
   {
   public:
-    SpectrumLoader(const std::string& wildcard, DataSource src = kBeam, int max = 0);
-    SpectrumLoader(const std::vector<std::string>& fnames,
-                   DataSource src = kBeam, int max = 0);
+    SpectrumLoader(const std::string& wildcard, int max = 0);
+    SpectrumLoader(const std::vector<std::string>& fnames, int max = 0);
 
 #ifndef DONT_USE_SAM
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
-					 DataSource src = kBeam,
 					 int fileLimit = -1);
 #endif
     virtual ~SpectrumLoader();
@@ -36,7 +36,7 @@ namespace ana
     virtual void Go() override;
 
   protected:
-    SpectrumLoader(DataSource src = kBeam);
+    SpectrumLoader();
 
     // Move operations
     SpectrumLoader(SpectrumLoader&&) = default;

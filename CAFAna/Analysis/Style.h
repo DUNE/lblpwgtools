@@ -16,7 +16,6 @@ namespace ana
   const Color_t kTotalBackgroundColor = kAzure+2;
   const Color_t kNCBackgroundColor = kAzure;
   const Color_t kBeamNueBackgroundColor = kPink+9;
-  const Color_t kCosmicBackgroundColor = kAzure+1;
   /// This is the color for the numu CC background to the nue analysis. I doubt
   /// numu plots will ever use this, preferring to just show the total MC.
   const Color_t kNumuBackgroundColor = kGreen+2;

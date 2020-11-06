@@ -1,6 +1,7 @@
 // Make a simple spectrum plot with systematic shifts
 // cafe demo4.C
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
@@ -8,7 +9,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -21,7 +22,7 @@ void demo4()
   // Copying basic setup from demo0.C
   const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
   SpectrumLoader loader(fname);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
@@ -46,7 +47,7 @@ void demo4()
     {
       // Edit the event record
       const double scale = 1 + .1*sigma;
-      sr->dune.Ev_reco_numu *= scale;
+      sr->Ev_reco_numu *= scale;
     }
   };
   const ToyEnergyScaleSyst eSyst;
@@ -68,7 +69,7 @@ void demo4()
     {
       // A systematic can also reweight events, based on whatever criteria you
       // want.
-      if(sr->dune.Ev_reco_numu < 2) weight *= 1+0.2*sigma;
+      if(sr->Ev_reco_numu < 2) weight *= 1+0.2*sigma;
     }
   };
   const ToyNormSyst nSyst;

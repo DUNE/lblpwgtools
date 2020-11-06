@@ -64,17 +64,24 @@ namespace ana
     virtual Spectrum NCComponent() {return fNC;}
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const;
-    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir);
+
+    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     TrivialExtrap()
-      : fNueApp(0, {}, {}, 0, 0),    fNueAppAnti(0, {}, {}, 0, 0),
-        fNumuSurv(0, {}, {}, 0, 0),  fNumuSurvAnti(0, {}, {}, 0, 0),
-        fNumuApp(0, {}, {}, 0, 0),   fNumuAppAnti(0, {}, {}, 0, 0),
-        fNueSurv(0, {}, {}, 0, 0),   fNueSurvAnti(0, {}, {}, 0, 0),
-        fTauFromE(0, {}, {}, 0, 0),  fTauFromEAnti(0, {}, {}, 0, 0),
-        fTauFromMu(0, {}, {}, 0, 0), fTauFromMuAnti(0, {}, {}, 0, 0),
-        fNC(0, {}, {}, 0, 0)
+      : fNueApp    (OscillatableSpectrum::Uninitialized()),
+        fNueAppAnti(OscillatableSpectrum::Uninitialized()),
+        fNumuSurv    (OscillatableSpectrum::Uninitialized()),
+        fNumuSurvAnti(OscillatableSpectrum::Uninitialized()),
+        fNumuApp    (OscillatableSpectrum::Uninitialized()),
+        fNumuAppAnti(OscillatableSpectrum::Uninitialized()),
+        fNueSurv    (OscillatableSpectrum::Uninitialized()),
+        fNueSurvAnti(OscillatableSpectrum::Uninitialized()),
+        fTauFromE    (OscillatableSpectrum::Uninitialized()),
+        fTauFromEAnti(OscillatableSpectrum::Uninitialized()),
+        fTauFromMu    (OscillatableSpectrum::Uninitialized()),
+        fTauFromMuAnti(OscillatableSpectrum::Uninitialized()),
+        fNC(Spectrum::Uninitialized())
     {}
 
     OscillatableSpectrum fNueApp,    fNueAppAnti;

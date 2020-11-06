@@ -19,7 +19,7 @@ class TH2F;
 
 namespace ana
 {
-  class IChiSqExperiment;
+  class IExperiment;
   class IFitVar;
 
   /// Log-likelihood scan across two parameters
@@ -43,8 +43,8 @@ namespace ana
       /// \param seedPts Try all combinations of these params as seeds
       /// \param systSeedPts Try all of these systematic combinations as seeds
       /// \param parallel Use all the cores on this machine? Be careful...
-      FrequentistSurface(const IChiSqExperiment* expt,
-              osc::IOscCalculatorAdjustable* calc,
+      FrequentistSurface(const IExperiment* expt,
+              osc::IOscCalcAdjustable* calc,
               const IFitVar* xvar, int nbinsx, double xmin, double xmax,
               const IFitVar* yvar, int nbinsy, double ymin, double ymax,
               const std::vector<const IFitVar*>& profVars = {},
@@ -59,8 +59,8 @@ namespace ana
         /// Maps of the values taken on by the profiled parameters
         std::vector<TH2*> GetProfiledHists() {return fProfHists;}
 
-        void SaveTo(TDirectory* dir, const std::string& name ) const;
-        static std::unique_ptr<FrequentistSurface> LoadFrom(TDirectory * dir);
+        void SaveTo(TDirectory* dir, const std::string& name) const;
+        static std::unique_ptr<FrequentistSurface> LoadFrom(TDirectory* dir, const std::string& name);
 
     protected:
       FrequentistSurface(){};
@@ -74,16 +74,16 @@ namespace ana
                                    const std::vector<const IFitVar*>& profVars,
                                    const std::vector<const ISyst*>& profSysts) const;
 
-      virtual void FillSurface(const IChiSqExperiment* expt,
-                               osc::IOscCalculatorAdjustable* calc,
+      virtual void FillSurface(const IExperiment* expt,
+                               osc::IOscCalcAdjustable* calc,
                                const IFitVar* xvar, const IFitVar* yvar,
                                const std::vector<const IFitVar*>& profVars,
                                const std::vector<const ISyst*>& profSysts,
                                const SeedList& seedPts,
                                const std::vector<SystShifts>& systSeedPts);
 
-      double FillSurfacePoint(const IChiSqExperiment* expt,
-                              osc::IOscCalculatorAdjustable* calc,
+      double FillSurfacePoint(const IExperiment* expt,
+                              osc::IOscCalcAdjustable* calc,
                               const IFitVar* xvar, double x,
                               const IFitVar* yvar, double y,
                               const std::vector<const IFitVar*>& profVars,
@@ -91,8 +91,8 @@ namespace ana
                               const SeedList& seedPts,
                               const std::vector<SystShifts>& systSeedPts);
 
-      void FindMinimum(const IChiSqExperiment* expt,
-                       osc::IOscCalculatorAdjustable* calc,
+      void FindMinimum(const IExperiment* expt,
+                       osc::IOscCalcAdjustable* calc,
                        const IFitVar* xvar, const IFitVar* yvar,
                        const std::vector<const IFitVar*>& profVars,
                        const std::vector<const ISyst*>& profSysts,

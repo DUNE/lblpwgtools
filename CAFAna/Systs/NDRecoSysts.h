@@ -69,8 +69,15 @@ namespace ana
 
   extern const FVNumuNDSyst kFVNumuNDSyst;
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   struct NDRecoSystVector: public std::vector<const ISyst*>
   {
   };
   NDRecoSystVector GetNDRecoSysts();
+*/
+
+  std::vector<const ISyst*> GetNDRecoSysts();
+  
 }

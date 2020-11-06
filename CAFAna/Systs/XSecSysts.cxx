@@ -88,6 +88,7 @@ void XSecSyst::FakeDataDialShift(double sigma,
     weight *= sr->xsSyst_wgt[MaNCEL_id][posneg_spline_point];
   }
 }
+
 void XSecSyst::Shift(double sigma,caf::SRProxy *sr,
                      double &weight) const {
   // No xs weights in this event, skip reweighting it

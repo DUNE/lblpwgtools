@@ -17,15 +17,6 @@ namespace ana
   const FVNumuNDSyst kFVNumuNDSyst;
 
   //----------------------------------------------------------------------
-  NDRecoSystVector GetNDRecoSysts()
-  {
-    NDRecoSystVector vec;
-    vec.push_back(&kRecoNCSyst);
-    vec.push_back(&kFVNumuNDSyst);
-    return vec;
-  }
-
-  //----------------------------------------------------------------------
   void RecoNCSyst::Shift(double sigma,
                          caf::SRProxy* sr,
                          double& weight) const
@@ -94,4 +85,14 @@ namespace ana
       weight *= 1. + w*sigma;
     }
   }
+
+  //----------------------------------------------------------------------
+  std::vector<const ISyst*> GetNDRecoSysts()
+  {
+    std::vector<const ISyst*> vec;
+    vec.push_back(&kRecoNCSyst);
+    vec.push_back(&kFVNumuNDSyst);
+    return vec;
+  }
+
 }

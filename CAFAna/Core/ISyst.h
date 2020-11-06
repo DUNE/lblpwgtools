@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include <list>
 #include <string>
 
@@ -35,7 +37,6 @@ namespace ana
     virtual std::string LatexName() const final {return fLatexName;}
 
     virtual double Penalty(double x) const;
-    virtual double PenaltyDerivative(double x) const;
 
     /// Should a penalty be applied for this shift?
     virtual bool ApplyPenalty() const {return fApplyPenalty;}

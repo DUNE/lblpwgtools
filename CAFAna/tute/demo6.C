@@ -1,6 +1,7 @@
 // Introduces PredictionInterp
 // cafe demo6.C
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
@@ -9,8 +10,8 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/StandardRecord.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "StandardRecord/SRProxy.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -41,7 +42,7 @@ public:
   void Shift(double sigma,
              caf::StandardRecord* sr, double& weight) const override
   {
-    if(sr->dune.Ev_reco_numu > 7) weight *= 1+0.2*sigma;
+    if(sr->Ev_reco_numu > 7) weight *= 1+0.2*sigma;
   }
 };
 const ToyNormSyst nSyst;
@@ -49,12 +50,12 @@ const ToyNormSyst nSyst;
 void demo6()
 {
   TDRLoaders loaders(Loaders::kFHC);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
-  osc::IOscCalculator* calc = DefaultOscCalc();
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
+  osc::IOscCalc* calc = DefaultOscCalc();
 
   // We're going to use a PredictionInterp that will allow us to interpolate to
   // any values of the systematic parameters. Internally that works by creating

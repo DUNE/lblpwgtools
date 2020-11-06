@@ -48,7 +48,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
@@ -70,7 +70,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
 	fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -87,7 +87,7 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     // Need to find the best fit in the correct hierachy
     // Note that I'm ignoring the octant here
     // This actually doesn't matter unless we apply a theta23 constraint, which I think we shouldn't anyway...
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -98,11 +98,11 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
     global_tree.throw_tree->Fill();
 
     // Now force the testOsc to be in the wrong hierarchy
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
+    osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(-1*hie, 1);
     testOsc->SetdCP(thisdcp);
     fitThrowOsc->SetDmsq32(-1*fitThrowOsc->GetDmsq32());
     // Wrong hierarchy remember
-    IChiSqExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(-1*hie, 1, penaltyString);
 
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...

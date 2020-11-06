@@ -46,19 +46,19 @@ namespace ana
                        const SystShifts& shift = kNoShift,
                        const Var&        wei = kUnweighted);
 
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const override
+    virtual Spectrum Predict(osc::IOscCalc* calc) const override
     {
       return PredictSyst(calc, SystShifts::Nominal());
     }
 
-    virtual Spectrum PredictSyst(osc::IOscCalculator* calc,
+    virtual Spectrum PredictSyst(osc::IOscCalc* calc,
                                  const SystShifts&    shift) const override
     {
       return PredictComponentSyst(calc, shift,
                                   Flavors::kAll, Current::kBoth, Sign::kBoth);
     }
 
-    Spectrum PredictComponent(osc::IOscCalculator* calc,
+    Spectrum PredictComponent(osc::IOscCalc* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override
@@ -66,7 +66,7 @@ namespace ana
       return PredictComponentSyst(calc, SystShifts::Nominal(), flav, curr, sign);
     }
 
-    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponentSyst(osc::IOscCalc* calc,
                                           const SystShifts& syst,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t curr,
@@ -76,7 +76,7 @@ namespace ana
     SystShifts Undiagonalize(const SystShifts& s) const;
 
     void SaveTo(TDirectory* dir, const std::string& name) const override {fPred->SaveTo(dir, name);}
-    static std::unique_ptr<PredictionXSecDiag> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<PredictionXSecDiag> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     void InitCoeffs();

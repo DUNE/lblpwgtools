@@ -1,71 +1,45 @@
 set(Core_implementation_files
   Binning.cxx
-  Cut.cxx
-  FileListSource.cxx
-  FixupRecord.cxx
-  HistAxis.cxx
-  HistCache.cxx
   IFitVar.cxx
+  Instantiations.cxx
+  FixupRecord.cxx
   ISyst.cxx
   Loaders.cxx
   LoadFromFile.cxx
-  MultiVar.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
   ProfilerSupport.cxx
-  Progress.cxx
-  Ratio.cxx
   Registry.cxx
-  ReweightableSpectrum.cxx
-  #Not using SAM
-  # SAMProjectSource.cxx
-  # SAMQuerySource.cxx
-  Spectrum.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
+  StanUtils.cxx
   SystShifts.cxx
-  ThreadPool.cxx
   Utilities.cxx
-  Var.cxx
-  WildcardSource.cxx
-  Hist.cxx)
+  )
 
 set(Core_header_files
   Binning.h
-  Cut.h
-  FileListSource.h
+  FitVarWithPrior.h
   FixupRecord.h
-  FwdDeclare.h
-  HistAxis.h
-  HistCache.h
   IFitVar.h
   ISyst.h
   Loaders.h
   LoadFromFile.h
-  MultiVar.h
+  MathUtil.h
   OscCurve.h
   OscillatableSpectrum.h
-  Progress.h
-  Ratio.h
   Registry.h
-  ReweightableSpectrum.h
-  #Not using SAM
-  # SAMProjectSource.h
-  # SAMQuerySource.h
-  Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
+  StanTypedefs.h
+  StanUtils.h
   SystShifts.h
-  ThreadPool.h
   Utilities.h
-  Var.h
-  WildcardSource.h
-  IFileSource.h
   ModeConversionUtilities.h
-  Hist.h)
+  rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore StandardRecordProxy)
+target_link_libraries(CAFAnaCore ${CAFANACOREEXT} StandardRecordProxy)
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaCore gperftools)

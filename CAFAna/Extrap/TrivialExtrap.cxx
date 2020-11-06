@@ -41,8 +41,8 @@ namespace ana
     // All swapped files are equally valid as a source of NCs. This
     // approximately doubles/triples our statistics. SpectrumLoader just adds
     // events and POT for both cases, which is the right thing to do.
-    loaderNue  .AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
-    loaderNuTau.AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
+    loaderNue  .AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
+    loaderNuTau.AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
   }
 
 
@@ -81,9 +81,9 @@ namespace ana
                                const Cut& cut,
                                const SystShifts& shift,
                                const Var& wei)
-    : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap),
+    : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap),
+                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap),
                     axis, cut, shift, wei)
   {
   }
@@ -119,28 +119,29 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<TrivialExtrap> TrivialExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<TrivialExtrap> TrivialExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     std::unique_ptr<TrivialExtrap> ret(new TrivialExtrap);
 
-    // This is a lot of repetitive typing. Define some macros
-#define LOAD_OSC(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *OscillatableSpectrum::LoadFrom(dir->GetDirectory(LABEL));
-#define LOAD_SPECT(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *Spectrum::LoadFrom(dir->GetDirectory(LABEL));
+    ret->fNueApp        = *OscillatableSpectrum::LoadFrom(dir, "nue_app");
+    ret->fNueAppAnti    = *OscillatableSpectrum::LoadFrom(dir, "nue_app_anti");
+    ret->fNumuSurv      = *OscillatableSpectrum::LoadFrom(dir, "numu_surv");
+    ret->fNumuSurvAnti  = *OscillatableSpectrum::LoadFrom(dir, "numu_surv_anti");
+    ret->fNumuApp       = *OscillatableSpectrum::LoadFrom(dir, "numu_app");
+    ret->fNumuAppAnti   = *OscillatableSpectrum::LoadFrom(dir, "numu_app_anti");
+    ret->fNueSurv       = *OscillatableSpectrum::LoadFrom(dir, "nue_surv");
+    ret->fNueSurvAnti   = *OscillatableSpectrum::LoadFrom(dir, "nue_surv_anti");
+    ret->fTauFromE      = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_nue");
+    ret->fTauFromEAnti  = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_nue_anti");
+    ret->fTauFromMu     = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu");
+    ret->fTauFromMuAnti = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu_anti");
 
-    LOAD_OSC(fNueApp,        "nue_app");
-    LOAD_OSC(fNueAppAnti,    "nue_app_anti");
-    LOAD_OSC(fNumuSurv,      "numu_surv");
-    LOAD_OSC(fNumuSurvAnti,  "numu_surv_anti");
-    LOAD_OSC(fNumuApp,       "numu_app");
-    LOAD_OSC(fNumuAppAnti,   "numu_app_anti");
-    LOAD_OSC(fNueSurv,       "nue_surv");
-    LOAD_OSC(fNueSurvAnti,   "nue_surv_anti");
-    LOAD_OSC(fTauFromE,      "nutau_from_nue");
-    LOAD_OSC(fTauFromEAnti,  "nutau_from_nue_anti");
-    LOAD_OSC(fTauFromMu,     "nutau_from_numu");
-    LOAD_OSC(fTauFromMuAnti, "nutau_from_numu_anti");
+    ret->fNC = *Spectrum::LoadFrom(dir, "nc");
 
-    LOAD_SPECT(fNC, "nc");
+    delete dir;
 
     return ret;
   }

@@ -1,3 +1,6 @@
 *_C_ACLiC_dict_rdict.pcm
+build/
+cmake/
 *.d
 *.so
+*.root

@@ -25,7 +25,7 @@ set(Analysis_header_files
   CheckPointHelper.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
-target_link_libraries(CAFAnaAnalysis)
+target_link_libraries(CAFAnaAnalysis ${CAFANACOREEXT})
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaAnalysis gperftools)

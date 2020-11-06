@@ -18,9 +18,9 @@
 
 using namespace ana;
 
-#include "Utilities/rootlogon.C"
+#include "CAFAna/Core/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -72,7 +72,7 @@ void spec(bool reload = false)
     SpectrumLoader loaderFDRHCNuTau("/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_RHC_tauswap.root");
 
     Loaders dummyLoaders; // PredictionGenerator insists on this
-    osc::IOscCalculatorAdjustable* calc = NuFitOscCalc(1);
+    osc::IOscCalcAdjustable* calc = NuFitOscCalc(1);
     //Note that systlist must be filled both here and after the state load
     if (normsyst) {
       systlist.insert(systlist.end(), normlist_sig.begin(), normlist_sig.end()); 
@@ -90,12 +90,12 @@ void spec(bool reload = false)
     
     Loaders FD_FHC_loaders;
     Loaders FD_RHC_loaders;
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_FHC_loaders .AddLoader(&loaderFDFHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNonswap,  caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNue,      caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNueSwap);
-    FD_RHC_loaders .AddLoader(&loaderFDRHCNuTau,    caf::kFARDET, Loaders::kMC, ana::kBeam, Loaders::kNuTauSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNonswap,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNue,      caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
+    FD_FHC_loaders .AddLoader(&loaderFDFHCNuTau,    caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNonswap,  caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNue,      caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
+    FD_RHC_loaders .AddLoader(&loaderFDRHCNuTau,    caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
       
     PredictionInterp predInt_FDNumuFHC(systlist, calc, genFDNumu, FD_FHC_loaders);
     PredictionInterp predInt_FDNumuRHC(systlist, calc, genFDNumu, FD_RHC_loaders);
@@ -111,14 +111,14 @@ void spec(bool reload = false)
 
     std::cout << stateFname << std::endl;
     TFile fout(stateFname, "RECREATE");
-    predInt_FDNumuFHC.SaveTo(fout.mkdir("pred_fd_numu_fhc"));
-    predInt_FDNumuRHC.SaveTo(fout.mkdir("pred_fd_numu_rhc"));
-    predInt_FDNueFHC.SaveTo(fout.mkdir("pred_fd_nue_fhc"));
-    predInt_FDNueRHC.SaveTo(fout.mkdir("pred_fd_nue_rhc"));
-    predInt_FDNumuFHC_fid.SaveTo(fout.mkdir("pred_fd_numu_fhc_fid"));
-    predInt_FDNumuRHC_fid.SaveTo(fout.mkdir("pred_fd_numu_rhc_fid"));
-    predInt_FDNueFHC_fid.SaveTo(fout.mkdir("pred_fd_nue_fhc_fid"));
-    predInt_FDNueRHC_fid.SaveTo(fout.mkdir("pred_fd_nue_rhc_fid"));
+    predInt_FDNumuFHC.SaveTo(&fout, "pred_fd_numu_fhc");
+    predInt_FDNumuRHC.SaveTo(&fout, "pred_fd_numu_rhc");
+    predInt_FDNueFHC.SaveTo(&fout, "pred_fd_nue_fhc");
+    predInt_FDNueRHC.SaveTo(&fout, "pred_fd_nue_rhc");
+    predInt_FDNumuFHC_fid.SaveTo(&fout, "pred_fd_numu_fhc_fid");
+    predInt_FDNumuRHC_fid.SaveTo(&fout, "pred_fd_numu_rhc_fid");
+    predInt_FDNueFHC_fid.SaveTo(&fout, "pred_fd_nue_fhc_fid");
+    predInt_FDNueRHC_fid.SaveTo(&fout, "pred_fd_nue_rhc_fid");
 
     std::cout << "All done making state..." << std::endl;
 
@@ -128,14 +128,14 @@ void spec(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc")).release();
-  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc")).release();
-  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc")).release();
-  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc")).release();
-  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_fhc_fid")).release();
-  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_fhc_fid")).release();
-  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_numu_rhc_fid")).release();
-  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("pred_fd_nue_rhc_fid")).release();
+  PredictionInterp& predInt_FDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc").release();
+  PredictionInterp& predInt_FDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc").release();
+  PredictionInterp& predInt_FDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc").release();
+  PredictionInterp& predInt_FDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc").release();
+  PredictionInterp& predInt_FDNumuFHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_fhc_fid").release();
+  PredictionInterp& predInt_FDNueFHC_fid  = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_fhc_fid").release();
+  PredictionInterp& predInt_FDNumuRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_numu_rhc_fid").release();
+  PredictionInterp& predInt_FDNueRHC_fid = *ana::LoadFrom<PredictionInterp>(&fin, "pred_fd_nue_rhc_fid").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
@@ -150,7 +150,7 @@ void spec(bool reload = false)
 
   for(int hie = -1; hie <= +1; hie += 2){
 
-    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(hie);
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
 

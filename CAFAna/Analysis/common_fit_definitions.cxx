@@ -21,6 +21,7 @@
 
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Experiment/CovarianceExperiment.h"
 
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
@@ -36,15 +37,16 @@
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
+#include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcGeneral.h"
 
 #include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 #include "TSystem.h"
 #include "TTree.h"
 
@@ -59,14 +61,15 @@ using namespace ana;
 
 unsigned gRNGSeed = 0;
 
+// A smaller APA geometry was used to simmulate the FD due to computational requirements.
+// Scale the simulated sample to match the actuall 40 kt detector.
+const double scale_fdmc = 40 / 1.13;
 // POT for 3.5 years
-const double pot_fd = 3.5 * POT120 * 40 / 1.13;
-const double pot_nd = 3.5 * POT120;
-// This is pretty annoying, but the above is for 7 years staged, which is 336 kT
-// MW yr
+const double nom_years = 3.5;
+const double pot_fd = POT120 * nom_years * scale_fdmc;
+const double pot_nd = POT120 * nom_years;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 const double nom_exposure = 336.;
-
-size_t NFluxParametersToAddToStatefile = 30;
 
 double GetBoundedGausThrow(double min, double max) {
   double val = -999;
@@ -75,18 +78,8 @@ double GetBoundedGausThrow(double min, double max) {
   return val;
 }
 
-// I miss python...
-std::vector<std::string> SplitString(std::string input, char delim) {
-  std::vector<std::string> output;
-  std::stringstream ss(input);
-  std::string token;
-  while (std::getline(ss, token, delim))
-    output.push_back(token);
-  return output;
-}
-
 // For ease of penalty terms...
-IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
+IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                         std::string asimov_set, bool modConstraint) {
 
   // First, decide which to use
@@ -157,306 +150,6 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
     }
   }
   return rtn_vars;
-}
-
-// Take a list of all the systs known about, and retain the named systs...
-void KeepSysts(std::vector<const ISyst *> &systlist,
-               std::vector<std::string> const &systsToInclude) {
-  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
-                                [&](const ISyst *s) {
-                                  return (std::find(systsToInclude.begin(),
-                                                    systsToInclude.end(),
-                                                    s->ShortName()) ==
-                                          systsToInclude.end());
-                                }),
-                 systlist.end());
-}
-
-void KeepSysts(std::vector<const ISyst *> &systlist,
-               std::vector<const ISyst *> const &systsToInclude) {
-  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
-                                [&](const ISyst *s) {
-                                  return (std::find(systsToInclude.begin(),
-                                                    systsToInclude.end(),
-                                                    s) == systsToInclude.end());
-                                }),
-                 systlist.end());
-}
-
-void RemoveSysts(std::vector<const ISyst *> &systlist,
-                 std::vector<std::string> const &namesToRemove) {
-  systlist.erase(std::remove_if(systlist.begin(), systlist.end(),
-                                [&](const ISyst *s) {
-                                  return (std::find(namesToRemove.begin(),
-                                                    namesToRemove.end(),
-                                                    s->ShortName()) !=
-                                          namesToRemove.end());
-                                }),
-                 systlist.end());
-}
-
-std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
-                                          bool detsyst, bool useND, bool useFD,
-                                          bool useNueOnE, bool useFakeDataDials,
-                                          bool fluxsyst_CDR, int NFluxSysts,
-                                          bool removeFDNonFitDials) {
-
-  // This doesn't need to be an argument because I basically never change it:
-  bool fluxXsecPenalties = true;
-
-  std::vector<const ISyst *> systlist;
-  if (fluxsyst_Nov17) {
-    std::vector<const ISyst *> fluxlist_Nov17 =
-        GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
-    systlist.insert(systlist.end(), fluxlist_Nov17.begin(),
-                    fluxlist_Nov17.end());
-  }
-
-  if (fluxsyst_CDR) {
-    std::vector<const ISyst *> fluxlist_CDR =
-        GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
-    systlist.insert(systlist.end(), fluxlist_CDR.begin(), fluxlist_CDR.end());
-  }
-
-  if (detsyst) {
-    std::vector<const ISyst *> elist = GetEnergySysts();
-    std::vector<const ISyst *> fdlist = GetFDRecoSysts();
-    std::vector<const ISyst *> ndlist = GetNDRecoSysts();
-    std::vector<const ISyst *> nuelist = GetNuOnESysts();
-
-    systlist.insert(systlist.end(), elist.begin(), elist.end());
-    if (useFD) {
-      systlist.insert(systlist.end(), fdlist.begin(), fdlist.end());
-    }
-    if (useND) {
-      systlist.insert(systlist.end(), ndlist.begin(), ndlist.end());
-    }
-    if (useND && useNueOnE) {
-      systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
-    }
-  }
-
-  if (xsecsyst) {
-    std::vector<const ISyst *> xseclist =
-        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
-    systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
-
-    // Always remove these dials
-    RemoveSysts(systlist, GetDoNotIncludeSystNames());
-  }
-
-  // If using fake data dials (for state generation) add them back in
-  if (useFakeDataDials) {
-    std::vector<const ISyst *> xseclist =
-        GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
-    KeepSysts(xseclist, GetFakeDataGenerationSystNames());
-    systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
-
-    std::vector<const ISyst *> crazyfluxlist = 
-      GetCrazyFluxSysts();
-    systlist.insert(systlist.end(), crazyfluxlist.begin(), crazyfluxlist.end());
-  }
-
-  return systlist;
-}
-
-std::vector<const ISyst *> GetListOfFakeDataSysts() {
-  return GetListOfSysts(false, false, false, false, false, false,
-                        true /*add fake data*/, false);
-}
-
-std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
-                                          bool useFD, bool useNueOnE) {
-
-  if (systString == "fakedata") {
-    return GetListOfFakeDataSysts();
-  }
-
-  // Now defaults to true!
-  bool detsyst = true;
-  bool fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
-  bool fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
-  bool xsecsyst = true;
-  bool useFakeData = false;
-  int NFluxSysts =
-      (GetAnaVersion() == kV3) ? 10 : NFluxParametersToAddToStatefile;
-
-  // If you find an argument in the form list:name1:name2:name3 etc etc, keep
-  // only those systematics This is pretty much a magic option to allow single
-  // parameters... there must be a better way, but for now I'm just going to
-  // continue to support it
-  if (systString.find("list") != std::string::npos) {
-
-    // 1) Get a default list with everything
-    std::vector<const ISyst *> namedList =
-        GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
-                       false /*no fake data*/, true /*Get CDR flux systs*/);
-    // for (auto & syst : namedList) std::cout << syst->ShortName() <<
-    // std::endl; 2) Interpret the list of short names
-    std::vector<std::string> systs = SplitString(systString, ':');
-
-    // 3) Don't include "list"
-    systs.erase(systs.begin());
-
-    // 4) Regret nothing
-    KeepSysts(namedList, systs);
-
-    // 5) $$$ Profit
-    return namedList;
-  }
-
-  // Can't transform anymore, so... BEHAVE YOURSELF
-  // std::transform(systString.begin(), systString.end(), systString.begin(),
-  // ::tolower);
-
-  // Do even more horrific things...
-  std::vector<std::string> systs = SplitString(systString, ':');
-
-  // Start off by checking for certain keywords
-  for (auto syst : systs) {
-    if (syst == "allsyst") {
-      xsecsyst = true;
-      fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
-      fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
-      detsyst = true;
-    }
-
-    if (syst == "nosyst") {
-      xsecsyst = false;
-      fluxsyst_Nov17 = false;
-      fluxsyst_CDR = false;
-      detsyst = false;
-    }
-
-    // Now we're getting a bit funky as these options now conflict.
-    // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
-    if (syst == "nodet") {
-      detsyst = false;
-    }
-    if (syst == "noflux") {
-      fluxsyst_CDR = false;
-      fluxsyst_Nov17 = false;
-    }
-    if (syst == "cdrflux") {
-      fluxsyst_CDR = true;
-      fluxsyst_Nov17 = false;
-    }
-    if (syst == "nov17flux") {
-      fluxsyst_CDR = false;
-      fluxsyst_Nov17 = true;
-    }
-    if (syst == "fakedata") {
-      useFakeData = true;
-    } // LOOK MA, I GOT BRACES!
-
-    if (syst.find("nflux=") == 0) {
-      auto NFluxSplit = SplitString(syst, '=');
-      if (NFluxSplit.size() != 2) {
-        std::cout << "[ERROR]: Found NFlux option, but couldn't parse how many "
-                     "to include, expected to find nflux=<0--"
-                  << NFluxParametersToAddToStatefile << "> but found: \""
-                  << syst << "\".";
-        abort();
-      }
-
-      NFluxSysts = atoi(NFluxSplit[1].c_str());
-    }
-    if (syst == "noxsec") {
-      xsecsyst = false;
-    }
-  }
-
-  // Okay, now get the list, and start from there...
-  std::vector<const ISyst *> namedList =
-      GetListOfSysts(fluxsyst_Nov17, xsecsyst, detsyst, useND, useFD, useNueOnE,
-                     useFakeData, fluxsyst_CDR, NFluxSysts);
-
-  // Now do something REALLY FUNKY. Remove specific dials from the list we
-  // already have Need to allow single dials, and a few specific groups...
-  for (auto syst : systs) {
-    // ignore anything we previously dealt with
-    if ((syst == "noxsec") || (syst == "nodet") || (syst == "noflux") ||
-        (syst.find("nflux=") == 0)) {
-      continue;
-    }
-    // Now remove some specific groups
-    // nofd_det, nofd_escale, nofd_muon_escale, noxsec_qe, noxsec_res,
-    // noxsec_dis, noxsec_fsi, noxsec_ratios
-    else if (syst == "nofd_det") {
-      RemoveSysts(namedList, fd_det_list);
-    } else if (syst == "nofd_escale") {
-      RemoveSysts(namedList, fd_escale_list);
-    } else if (syst == "nofd_muon_escale") {
-      RemoveSysts(namedList, fd_muon_escale_list);
-    } else if (syst == "nofd_eres") {
-      RemoveSysts(namedList, fd_eres_list);
-    } else if (syst == "nofd_muon_eres") {
-      RemoveSysts(namedList, fd_muon_eres_list);
-    } else if (syst == "nofd_other_det") {
-      RemoveSysts(namedList, fd_other_det_list);
-    } else if (syst == "nofd_nonlin_det") {
-      RemoveSysts(namedList, fd_nonlin_det_list);
-    } else if (syst == "noxsec_qe") {
-      RemoveSysts(namedList, GetXSecSystNames("QELike"));
-    } else if (syst == "noxsec_res") {
-      RemoveSysts(namedList, GetXSecSystNames("RES"));
-    } else if (syst == "noxsec_dis") {
-      RemoveSysts(namedList, GetXSecSystNames("DIS"));
-    } else if (syst == "noxsec_fsi") {
-      RemoveSysts(namedList, GetXSecSystNames("FSI"));
-    } else if (syst == "noxsec_ratios") {
-      RemoveSysts(namedList, GetXSecSystNames("Ratios"));
-    }
-    // If not, remove as if it's a single parameter instruction
-    else {
-      RemoveSysts(namedList, {syst.erase(0, 2)});
-    }
-  }
-
-  if (GetAnaVersion() == kV3) {
-    RemoveSysts(namedList,
-                {"UncorrFDTotSqrt", "UncorrFDTotInvSqrt", "UncorrFDHadSqrt",
-                 "UncorrFDHadInvSqrt", "UncorrFDMuSqrt", "UncorrFDMuInvSqrt",
-                 "UncorrFDNSqrt", "UncorrFDNInvSqrt", "UncorrFDEMSqrt",
-                 "UncorrFDEMInvSqrt", "ChargedHadUncorrFD"});
-  }
-
-  // Now return the list
-  return namedList;
-}
-
-std::vector<const ISyst *> GetListOfSysts(char const *systCString, bool useND,
-                                          bool useFD, bool useNueOnE) {
-  return GetListOfSysts(std::string(systCString), useND, useFD, useNueOnE);
-}
-
-std::vector<const ISyst *>
-OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
-  std::vector<const ISyst *> superorder;
-  for (auto &s : GetListOfSysts("flux:noxsec:nodet")) {
-    superorder.emplace_back(s);
-  }
-  for (auto &s : GetListOfSysts("cdrflux:noxsec:nodet")) {
-    superorder.emplace_back(s);
-  }
-  for (auto &s : GetListOfSysts("noflux:xsec:nodet")) {
-    superorder.emplace_back(s);
-  }
-  for (auto &s : GetListOfSysts("noflux:noxsec:det")) {
-    superorder.emplace_back(s);
-  }
-  for (auto &s : GetListOfSysts("fakedata")) {
-    superorder.emplace_back(s);
-  }
-  std::vector<const ISyst *> retlist;
-
-  for (auto s : superorder) {
-    if (std::find(systlist.begin(), systlist.end(), s) == systlist.end()) {
-      continue;
-    }
-    retlist.emplace_back(s);
-  }
-  return retlist;
 }
 
 /*
@@ -555,16 +248,6 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                           std::vector<std::string> const &tau_swap_file_list,
                           int max) {
 
-  for (auto &v : axes.NDAx->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_numu->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_nue->GetVars()) {
-    assert(v.IsValid());
-  }
-
   bool use_cv_weights = true;
   if (getenv("CAFANA_IGNORE_CV_WEIGHT")) {
     use_cv_weights = !atoi(getenv("CAFANA_IGNORE_CV_WEIGHT"));
@@ -577,7 +260,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
   // Move to the save directory
   saveDir->cd();
-  osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable *this_calc = NuFitOscCalc(1);
 
   bool isfhc =
       ((sample == kNDFHC) || (sample == kNDFHC_OA) || (sample == kFDFHC));
@@ -586,16 +269,16 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, max);
 
-    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC,
                             Loaders::kNonSwap);
-    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNuTauSwap);
+                            Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
@@ -623,7 +306,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
@@ -671,8 +354,7 @@ GetPredictionInterps(std::string fileName,
     assert(fin && !fin->IsZombie());
     std::cout << "[LOAD]: Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
-    return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+    return_list.emplace_back(LoadFrom<PredictionInterp>(fin, sample_dir_order[s_it]));
     delete fin;
 
     std::vector<ana::ISyst const *> systs_to_remove =
@@ -706,10 +388,10 @@ TH2D *make_corr_from_covar(TH2D *covar) {
 }
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
-                      double &pot_nd_rhc, double &pot_fd_fhc_nue,
-                      double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
-                      double &pot_fd_rhc_numu) {
+void ParseDataSamples(std::string cmdLineInput, 
+                      double &pot_nd_fhc, double &pot_nd_rhc,
+                      double &pot_fd_fhc_nue, double &pot_fd_rhc_nue,
+                      double &pot_fd_fhc_numu, double &pot_fd_rhc_numu) {
 
   // Did somebody say overextend the command line arguments even further?
   // Well okay!
@@ -740,17 +422,19 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
   double exposure_ratio = exposure / nom_exposure;
 
-  // Now sort out which samples to include
-  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
-      pot_fd_rhc_numu = 0;
+  // Now sort out which samples to include                                                                                                             
+  pot_nd_fhc = pot_nd_rhc = 0;
+  pot_fd_fhc_nue = pot_fd_fhc_numu = 0;
+  pot_fd_rhc_nue = pot_fd_rhc_numu = 0;
 
-  // Hacky McHackerson is here to stay!
+  // Hacky McHackerson is here to stay!                                                                                                                
   if (input.find("nd") != std::string::npos) {
-    pot_nd_fhc = pot_nd_rhc = pot_nd * exposure_ratio;
+    pot_nd_fhc = pot_nd * exposure_ratio;
+    pot_nd_rhc = pot_nd * exposure_ratio;
   }
   if (input.find("fd") != std::string::npos) {
-    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu =
-        pot_fd * exposure_ratio;
+    pot_fd_fhc_nue = pot_fd_fhc_numu = pot_fd * exposure_ratio;
+    pot_fd_rhc_nue = pot_fd_rhc_numu = pot_fd * exposure_ratio;
   }
 
   // Now allow specific subsets
@@ -803,9 +487,76 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
   return;
 }
 
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
+
+  auto AnaV = GetAnaVersion();
+
+  const std::string detCovPath =
+        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
+
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+    std::string covFileName =
+        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                    : "/det_sys_cov.root");
+#else
+    std::string covFileName =
+        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                         : "/Systs/det_sys_cov.root");
+#endif
+
+  std::string this_beam = "all";
+  if(!TwoBeams){
+    if(isFHC) this_beam = "fhc";
+    else this_beam = "rhc";
+  }
+
+  // TDirectory *thisDir = gDirectory->CurrentDirectory();
+  TFile covMatFile(covFileName.c_str());
+  TString covObjectName = "nd_" + this_beam + "_frac_cov";
+  TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get(covObjectName);
+  // TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
+  if (!fake_uncorr) {
+    std::cout << "Could not obtain covariance matrix named "
+    << covObjectName <<  " from " << covFileName << std::endl;
+    abort();
+  }
+
+  if(!UseV3NDCovMat){
+    return fake_uncorr;
+  }
+  else{
+    std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
+
+    TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
+
+    assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
+
+    size_t NRows = fake_uncorr->GetNrows();
+    size_t NRows_FHC = covmx_fhc_only->GetNrows();
+
+    for (size_t row_it = 0; row_it < NRows; ++row_it) {
+      for (size_t col_it = 0; col_it < NRows; ++col_it) {
+
+      // Could use TMatrix::SetSub but I don't trust TMatrix...
+        if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
+          ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
+          (*fake_uncorr)[row_it][col_it] = 0;}
+        else {
+          size_t row_fhc_only_it = row_it % NRows_FHC;
+          size_t col_fhc_only_it = col_it % NRows_FHC;
+          (*fake_uncorr)[row_it][col_it] =
+          (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
+        }
+      }
+    }
+
+    return fake_uncorr;
+  }
+}
+
 TMatrixD *MakeCovmat(PredictionInterp const &prediction,
                      std::vector<ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys,
+                     osc::IOscCalcAdjustable *calc, size_t NToys,
                      TDirectory *outdir) {
   std::vector<std::vector<double>> ThrownSpectra;
   std::vector<double> MeanSpectra;
@@ -880,7 +631,7 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
   return mat;
 }
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name) {
 
   outDir->cd();
@@ -1123,11 +874,16 @@ std::string BuildLogInfoString() {
   return ss.str();
 }
 
+Spectrum MockOrAsimov(const Spectrum& s, bool mock, double pot, int seed)
+{
+  if(mock > 0) return s.MockData(pot, seed); else return s.AsimovData(pot);
+}
+
 std::vector<seeded_spectra>
 BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
              PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
              PredictionInterp *predNDNumuFHC, PredictionInterp *predNDNumuRHC,
-             osc::IOscCalculatorAdjustable *fakeDataOsc,
+             osc::IOscCalcAdjustable *fakeDataOsc,
              SystShifts fakeDataSyst, bool fakeDataStats, double pot_fd_fhc_nue,
              double pot_fd_fhc_numu, double pot_fd_rhc_nue,
              double pot_fd_rhc_numu, double pot_nd_fhc, double pot_nd_rhc,
@@ -1138,56 +894,38 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
   // Ordering of these is important
   // kFDNueFHC
   if (predFDNueFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuFHC
   if (predFDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kFDNueRHC
   if (predFDNueRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuRHC
   if (predFDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuFHC
   if (predNDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_fhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_fhc, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuRHC
   if (predNDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_rhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_rhc, Seeds[iseed])));
     iseed++;
   }
 
@@ -1195,12 +933,12 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
 }
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
-                   ana::SeedList oscSeeds, IChiSqExperiment *penaltyTerm,
+                   osc::IOscCalcAdjustable *fitOsc, SystShifts fitSyst,
+                   ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
@@ -1356,13 +1094,59 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC,
-                                     *spectra->at(kNDNumuFHC).spect);
-  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
+  IExperiment *nd_expt_fhc = 0, *nd_expt_rhc = 0;
+  CovarianceExperiment* nd_expt_joint = 0;
 
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC,
-                                     *spectra->at(kNDNumuRHC).spect);
-  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
+  bool UseNDCovMat = true;
+  if (getenv("CAFANA_USE_NDCOVMAT")) {
+    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
+  }
+
+  bool UseV3NDCovMat = (AnaV == kV3);
+  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
+  }
+
+  // JOINT COVARIANCE CASE HERE.
+  // The analyses were only performed with both beams when using the covariance matrix.
+  // So there was no option for joint or no joint matrix case. 
+
+  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+    if (turbose) {
+      std::cout << "[INFO]: Opening ND covmat file for CovarianceExperiment" << BuildLogInfoString()
+                << std::endl;
+    }
+
+    TMatrixD* joint_matrix = GetNDCovMat(UseV3NDCovMat, true, true);
+
+    nd_expt_joint = new CovarianceExperiment({&predNDNumuFHC, &predNDNumuRHC},
+                                             {*spectra->at(kNDNumuFHC).spect,
+                                              *spectra->at(kNDNumuRHC).spect},
+                                             joint_matrix,
+                                             kCovMxChiSqPreInvert);
+    
+  //   //// Invert the assignation. Let's see if the old AddCovMatrix to MultiExperiment was messing thing up (?)
+  //   nd_expt_joint = new CovarianceExperiment({&predNDNumuRHC, &predNDNumuFHC},
+  //                                            {*spectra->at(kNDNumuRHC).spect,
+  //                                             *spectra->at(kNDNumuFHC).spect},
+  //                                            joint_matrix,
+  //                                            kCovMxChiSqPreInvert);
+    nd_expt_joint->SetMaskHist(0, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_joint->SetMaskHist(1, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+  }
+  else{
+    auto e = new SingleSampleExperiment(&predNDNumuFHC,
+                                        *spectra->at(kNDNumuFHC).spect);
+
+    e->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_fhc = e;
+
+    e = new SingleSampleExperiment(&predNDNumuRHC,
+                                   *spectra->at(kNDNumuRHC).spect);
+
+    e->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_rhc = e;
+  }
 
   if (PostFitTreeBlob) {
     // Save the seeds used to do the stats throws
@@ -1444,13 +1228,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_fhc", pot_nd_fhc);
       pre_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc->Write();
       TH1 *pre_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "prefit_nd_numu_fhc_1D", pot_nd_fhc, true);
       pre_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
@@ -1466,13 +1250,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_rhc", pot_nd_rhc);
       pre_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc->Write();
       TH1 *pre_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "prefit_nd_numu_rhc_1D", pot_nd_rhc, true);
       pre_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc_1D->Write();
     }
 
@@ -1484,10 +1268,15 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // Now sort out the experiment
   MultiExperiment this_expt;
-  if (pot_nd_fhc > 0)
-    this_expt.Add(&nd_expt_fhc);
-  if (pot_nd_rhc > 0)
-    this_expt.Add(&nd_expt_rhc);
+  if(nd_expt_joint){
+    this_expt.Add(nd_expt_joint);
+  }
+  else{
+    if (pot_nd_fhc > 0)
+      this_expt.Add(nd_expt_fhc);
+    if (pot_nd_rhc > 0)
+      this_expt.Add(nd_expt_rhc);
+  }
   if (pot_fd_fhc_numu > 0)
     this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0)
@@ -1502,88 +1291,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
               << std::endl;
   }
 
-  bool UseNDCovMat = true;
-  if (getenv("CAFANA_USE_NDCOVMAT")) {
-    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
-  }
-
-  bool UseV3NDCovMat = (AnaV == kV3);
-  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
-    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
-  }
-
-  // Add in the covariance matrices via the MultiExperiment
-  // idx must be in correct order to access correct part of matrix
-  // Don't use FD covmx fits
-  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-
-    // Get the ndCov
-    const std::string detCovPath =
-        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
-#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-    std::string covFileName =
-        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                    : "/det_sys_cov.root");
-#else
-    std::string covFileName =
-        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                         : "/Systs/det_sys_cov.root");
-#endif
-
-    if (turbose) {
-      std::cout << "[INFO]: Adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
-    if (UseV3NDCovMat) {
-
-      std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
-
-      TDirectory *thisDir = gDirectory->CurrentDirectory();
-      TFile covMatFile(covFileName.c_str());
-      TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
-      if (!fake_uncorr) {
-        std::cout << "Could not obtain covariance matrix named "
-                     "\"nd_all_frac_cov\"  from "
-                  << covFileName << std::endl;
-        abort();
-      }
-
-      TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
-
-      assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
-
-      size_t NRows = fake_uncorr->GetNrows();
-      size_t NRows_FHC = covmx_fhc_only->GetNrows();
-      for (size_t row_it = 0; row_it < NRows; ++row_it) {
-        for (size_t col_it = 0; col_it < NRows; ++col_it) {
-
-          // Could use TMatrix::SetSub but I don't trust TMatrix...
-          if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
-              ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
-            (*fake_uncorr)[row_it][col_it] = 0;
-          } else {
-            size_t row_fhc_only_it = row_it % NRows_FHC;
-            size_t col_fhc_only_it = col_it % NRows_FHC;
-            (*fake_uncorr)[row_it][col_it] =
-                (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
-          }
-        }
-      }
-
-      this_expt.AddCovarianceMatrix(fake_uncorr, true, {0, 1});
-
-      thisDir->cd();
-
-    } else {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
-                                    {0, 1});
-    }
-    if (turbose) {
-      std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
-  }
-
   // Add in the penalty...
   if (penaltyTerm) {
     this_expt.Add(penaltyTerm);
@@ -1594,7 +1301,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
   MinuitFitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
-      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose);
+      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cerr << "[FIT]: Finished fit in "
@@ -1665,26 +1372,26 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *post_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_fhc", pot_nd_fhc);
       post_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc->Write();
       TH1 *post_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "postfit_nd_numu_fhc_1D", pot_nd_fhc, true);
       post_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
       TH1 *post_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_rhc", pot_nd_rhc);
       post_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc->Write();
       TH1 *post_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "postfit_nd_numu_rhc_1D", pot_nd_rhc, true);
       post_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc_1D->Write();
     }
 

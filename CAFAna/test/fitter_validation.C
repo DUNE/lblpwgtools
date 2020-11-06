@@ -16,9 +16,9 @@
 
 using namespace ana;
 
-#include "Utilities/rootlogon.C"
+#include "CAFAna/Core/rootlogon.C"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -42,7 +42,7 @@ const char* stateFname = "fitter_validation_state.root";
 const char* outputFname = "fitter_validation_cafana.root";
 
 
-void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
+void table(FILE* f, IPrediction* p, osc::IOscCalc* calc)
 {
   TH1* hnue = p->PredictComponent(calc, Flavors::kNuMuToNuE, Current::kCC, Sign::kNu).ToTH1(potFD);
   TH1* hnuebar = p->PredictComponent(calc, Flavors::kNuMuToNuE, Current::kCC, Sign::kAntiNu).ToTH1(potFD);
@@ -75,8 +75,8 @@ void table(FILE* f, IPrediction* p, osc::IOscCalculator* calc)
 }
 
 
-double Chisq(IChiSqExperiment* expt,
-             osc::IOscCalculatorAdjustable* calc,
+double Chisq(IExperiment* expt,
+             osc::IOscCalcAdjustable* calc,
              bool oscErr, int nfluxErr, int nxsecErr)
 {
   if(!oscErr && nfluxErr == 0 && nxsecErr == 0) return expt->ChiSq(calc);
@@ -98,16 +98,16 @@ double Chisq(IChiSqExperiment* expt,
   Fitter fit(&exptOscErr, oscVars, systVars);
 
   // Caller doesn't expect all the parameters to get messed up by the fit
-  osc::IOscCalculatorAdjustable* calcCopy = calc->Copy();
+  osc::IOscCalcAdjustable* calcCopy = calc->Copy();
   SystShifts systSeed;
   const double ret = fit.Fit(calcCopy, systSeed, Fitter::kQuiet);
   delete calcCopy;
   return ret;
 }
 
-double ChisqAllCombos(IChiSqExperiment* expt, bool oscErr, int nfluxErr, int nxsecErr)
+double ChisqAllCombos(IExperiment* expt, bool oscErr, int nfluxErr, int nxsecErr)
 {
-  osc::IOscCalculatorAdjustable* oscTest = NuFitOscCalc(+1);
+  osc::IOscCalcAdjustable* oscTest = NuFitOscCalc(+1);
   oscTest->SetdCP(0);
   const double chisq0NH = Chisq(expt, oscTest, oscErr, nfluxErr, nxsecErr);
   oscTest->SetdCP(TMath::Pi());
@@ -261,7 +261,7 @@ void fitter_validation(bool fit = false, bool reload = false)
                                       shifts2b);
 
     // Flux systematics
-    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+    osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(+1);
     DUNENoExtrapPredictionGenerator genFDNumuFHC(*loaderFDNumuFHCBeam, 
                                                  *loaderFDNumuFHCNue,
                                                  *loaderFDNumuFHCNuTau,
@@ -345,30 +345,30 @@ void fitter_validation(bool fit = false, bool reload = false)
     loaderFDNueRHC.Go();
 
     TFile fout(stateFname, "RECREATE");
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
+    predFDNumuFHC.SaveTo(&fout, "fd_numu_fhc");
+    predFDNueFHC.SaveTo(&fout, "fd_nue_fhc");
+    predFDNumuRHC.SaveTo(&fout, "fd_numu_rhc");
+    predFDNueRHC.SaveTo(&fout, "fd_nue_rhc");
 
-    predFDNumuFHC2a.SaveTo(fout.mkdir("fd_numu_fhc_2a"));
-    predFDNueFHC2a.SaveTo(fout.mkdir("fd_nue_fhc_2a"));
-    predFDNumuRHC2a.SaveTo(fout.mkdir("fd_numu_rhc_2a"));
-    predFDNueRHC2a.SaveTo(fout.mkdir("fd_nue_rhc_2a"));
+    predFDNumuFHC2a.SaveTo(&fout, "fd_numu_fhc_2a");
+    predFDNueFHC2a.SaveTo(&fout, "fd_nue_fhc_2a");
+    predFDNumuRHC2a.SaveTo(&fout, "fd_numu_rhc_2a");
+    predFDNueRHC2a.SaveTo(&fout, "fd_nue_rhc_2a");
 
-    predFDNumuFHC2b.SaveTo(fout.mkdir("fd_numu_fhc_2b"));
-    predFDNueFHC2b.SaveTo(fout.mkdir("fd_nue_fhc_2b"));
-    predFDNumuRHC2b.SaveTo(fout.mkdir("fd_numu_rhc_2b"));
-    predFDNueRHC2b.SaveTo(fout.mkdir("fd_nue_rhc_2b"));
+    predFDNumuFHC2b.SaveTo(&fout, "fd_numu_fhc_2b");
+    predFDNueFHC2b.SaveTo(&fout, "fd_nue_fhc_2b");
+    predFDNumuRHC2b.SaveTo(&fout, "fd_numu_rhc_2b");
+    predFDNueRHC2b.SaveTo(&fout, "fd_nue_rhc_2b");
 
-    predFDNumuFHCFlux.SaveTo(fout.mkdir("fd_numu_fhc_flux"));
-    predFDNueFHCFlux.SaveTo(fout.mkdir("fd_nue_fhc_flux"));
-    predFDNumuRHCFlux.SaveTo(fout.mkdir("fd_numu_rhc_flux"));
-    predFDNueRHCFlux.SaveTo(fout.mkdir("fd_nue_rhc_flux"));
+    predFDNumuFHCFlux.SaveTo(&fout, "fd_numu_fhc_flux");
+    predFDNueFHCFlux.SaveTo(&fout, "fd_nue_fhc_flux");
+    predFDNumuRHCFlux.SaveTo(&fout, "fd_numu_rhc_flux");
+    predFDNueRHCFlux.SaveTo(&fout, "fd_nue_rhc_flux");
 
-    predFDNumuFHCXSec.SaveTo(fout.mkdir("fd_numu_fhc_xsec"));
-    predFDNueFHCXSec.SaveTo(fout.mkdir("fd_nue_fhc_xsec"));
-    predFDNumuRHCXSec.SaveTo(fout.mkdir("fd_numu_rhc_xsec"));
-    predFDNueRHCXSec.SaveTo(fout.mkdir("fd_nue_rhc_xsec"));
+    predFDNumuFHCXSec.SaveTo(&fout, "fd_numu_fhc_xsec");
+    predFDNueFHCXSec.SaveTo(&fout, "fd_nue_fhc_xsec");
+    predFDNumuRHCXSec.SaveTo(&fout, "fd_numu_rhc_xsec");
+    predFDNueRHCXSec.SaveTo(&fout, "fd_nue_rhc_xsec");
 
     std::cout << "Saved state to " << stateFname << std::endl;
   }
@@ -377,33 +377,33 @@ void fitter_validation(bool fit = false, bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionNoExtrap& predFDNumuFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionNoExtrap& predFDNueFHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionNoExtrap& predFDNumuRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionNoExtrap& predFDNueRHC = *ana::LoadFrom<PredictionNoExtrap>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionNoExtrap& predFDNumuFHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_numu_fhc").release();
+  PredictionNoExtrap& predFDNueFHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_nue_fhc").release();
+  PredictionNoExtrap& predFDNumuRHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_numu_rhc").release();
+  PredictionNoExtrap& predFDNueRHC = *ana::LoadFrom<PredictionNoExtrap>(&fin, "fd_nue_rhc").release();
 
-  IPrediction* predFDNumuFHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_2a")).release();
-  IPrediction* predFDNueFHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_2a")).release();
-  IPrediction* predFDNumuRHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_2a")).release();
-  IPrediction* predFDNueRHC2a = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_2a")).release();
+  IPrediction* predFDNumuFHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_2a").release();
+  IPrediction* predFDNueFHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_2a").release();
+  IPrediction* predFDNumuRHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_2a").release();
+  IPrediction* predFDNueRHC2a = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_2a").release();
 
-  IPrediction* predFDNumuFHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_2b")).release();
-  IPrediction* predFDNueFHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_2b")).release();
-  IPrediction* predFDNumuRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_2b")).release();
-  IPrediction* predFDNueRHC2b = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_2b")).release();
+  IPrediction* predFDNumuFHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_2b").release();
+  IPrediction* predFDNueFHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_2b").release();
+  IPrediction* predFDNumuRHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_2b").release();
+  IPrediction* predFDNueRHC2b = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_2b").release();
 
-  IPrediction* predFDNumuFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_fhc_flux")).release();
-  IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_fhc_flux")).release();
-  IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_numu_rhc_flux")).release();
-  IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(fin.GetDirectory("fd_nue_rhc_flux")).release();
+  IPrediction* predFDNumuFHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_numu_fhc_flux").release();
+  IPrediction* predFDNueFHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_nue_fhc_flux").release();
+  IPrediction* predFDNumuRHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_numu_rhc_flux").release();
+  IPrediction* predFDNueRHCFlux = ana::LoadFrom<IPrediction>(&fin, "fd_nue_rhc_flux").release();
 
   // Has to be explicitly PredictionXSecDiag, otherwise you get back a bare
   // PredictionScaleComp that doesn't do the translation from the diagonalized
   // to underlying space.
-  PredictionXSecDiag* predFDNumuFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_fhc_xsec")).release();
-  PredictionXSecDiag* predFDNueFHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_fhc_xsec")).release();
-  PredictionXSecDiag* predFDNumuRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_numu_rhc_xsec")).release();
-  PredictionXSecDiag* predFDNueRHCXSec = ana::LoadFrom<PredictionXSecDiag>(fin.GetDirectory("fd_nue_rhc_xsec")).release();
+  PredictionXSecDiag* predFDNumuFHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_fhc_xsec").release();
+  PredictionXSecDiag* predFDNueFHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_fhc_xsec").release();
+  PredictionXSecDiag* predFDNumuRHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_numu_rhc_xsec").release();
+  PredictionXSecDiag* predFDNueRHCXSec = ana::LoadFrom<PredictionXSecDiag>(&fin, "fd_nue_rhc_xsec").release();
 
   fin.Close();
   std::cout << "Done loading state" << std::endl;
@@ -411,7 +411,7 @@ void fitter_validation(bool fit = false, bool reload = false)
   TFile* fout = new TFile(outputFname, "RECREATE");
 
   for(int hie = -1; hie <= +1; hie += 2){
-    osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(hie);
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
     for(int deltaIdx = 0; deltaIdx < 4; ++deltaIdx){
       inputOsc->SetdCP(deltaIdx/2.*TMath::Pi());
@@ -445,7 +445,7 @@ void fitter_validation(bool fit = false, bool reload = false)
     } // end for delta
   } // end for hie
 
-  osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+  osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(+1);
   inputOsc->SetdCP(0);
 
   TH1* hnumufhc2a = predFDNumuFHC2a->Predict(inputOsc).ToTH1(potFD);
@@ -468,7 +468,7 @@ void fitter_validation(bool fit = false, bool reload = false)
   hnumurhc2b->Write("numu_rhc_2b");
   hnuerhc2b->Write("nue_rhc_2b");
 
-  osc::IOscCalculatorAdjustable* osc2e = NuFitOscCalcPlusOneSigma(+1);
+  osc::IOscCalcAdjustable* osc2e = NuFitOscCalcPlusOneSigma(+1);
 
   TH1* hnumufhc2e = predFDNumuFHC.Predict(osc2e).ToTH1(potFD);
   TH1* hnuefhc2e = predFDNueFHC.Predict(osc2e).ToTH1(potFD);
@@ -510,7 +510,7 @@ void fitter_validation(bool fit = false, bool reload = false)
     Progress prog(hie > 0 ? "NH" : "IH");
     // Chisq explodes at precise CP conservation for some reason
     for(double delta = .001; delta < 2.01; delta += .1){
-      osc::IOscCalculatorAdjustable* oscFakeData = NuFitOscCalc(hie);
+      osc::IOscCalcAdjustable* oscFakeData = NuFitOscCalc(hie);
       oscFakeData->SetdCP(delta*TMath::Pi());
 
       SingleSampleExperiment exptNueFHC(&predFDNueFHC, predFDNueFHC.Predict(oscFakeData).FakeData(potFD));

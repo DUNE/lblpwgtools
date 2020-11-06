@@ -19,7 +19,7 @@
 
 using namespace ana;
 
-#include "Utilities/rootlogon.C"
+#include "CAFAna/Core/rootlogon.C"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -65,7 +65,7 @@ void Legend(const std::string& title)
   leg->Draw();
 }
 
-void PlotFluxShiftEffects(osc::IOscCalculator* osc,
+void PlotFluxShiftEffects(osc::IOscCalc* osc,
                           IPrediction& predNDFHC, IPrediction& predNDRHC,
                           IPrediction& predFDNumuFHC, IPrediction& predFDNueFHC,
                           IPrediction& predFDNumuRHC, IPrediction& predFDNueRHC)
@@ -130,7 +130,7 @@ void joint_fit_flux(bool reload = false)
 
   Loaders dummyLoaders; // PredictionGenerator insists on this
 
-  osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* inputOsc = DefaultOscCalc();
   inputOsc->SetdCP(1.5*TMath::Pi());
 
   if(reload || TFile(stateFname).IsZombie()){
@@ -233,12 +233,12 @@ void joint_fit_flux(bool reload = false)
     loaderFDNueRHC.Go();
 
     TFile fout(stateFname, "RECREATE");
-    predNDFHC.SaveTo(fout.mkdir("nd_fhc"));
-    predNDRHC.SaveTo(fout.mkdir("nd_rhc"));
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
+    predNDFHC.SaveTo(&fout, "nd_fhc");
+    predNDRHC.SaveTo(&fout, "nd_rhc");
+    predFDNumuFHC.SaveTo(&fout, "fd_numu_fhc");
+    predFDNueFHC.SaveTo(&fout, "fd_nue_fhc");
+    predFDNumuRHC.SaveTo(&fout, "fd_numu_rhc");
+    predFDNueRHC.SaveTo(&fout, "fd_nue_rhc");
     std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
@@ -246,13 +246,13 @@ void joint_fit_flux(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionInterp& predNDFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("nd_fhc")).release();
-  PredictionInterp& predNDRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("nd_rhc")).release();
+  PredictionInterp& predNDFHC = *ana::LoadFrom<PredictionInterp>(&fin, "nd_fhc").release();
+  PredictionInterp& predNDRHC = *ana::LoadFrom<PredictionInterp>(&fin, "nd_rhc").release();
 
-  PredictionInterp& predFDNumuFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionInterp& predFDNueFHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionInterp& predFDNumuRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionInterp& predFDNueRHC = *ana::LoadFrom<PredictionInterp>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionInterp& predFDNumuFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_numu_fhc").release();
+  PredictionInterp& predFDNueFHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_nue_fhc").release();
+  PredictionInterp& predFDNumuRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_numu_rhc").release();
+  PredictionInterp& predFDNueRHC = *ana::LoadFrom<PredictionInterp>(&fin, "fd_nue_rhc").release();
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 
@@ -323,7 +323,7 @@ void joint_fit_flux(bool reload = false)
   // Set up the fit
   Fitter fit(&expt, oscFitVars, systFitVars);
   // Where will we start our search?
-  osc::IOscCalculatorAdjustable* oscSeed = DefaultOscCalc();
+  osc::IOscCalcAdjustable* oscSeed = DefaultOscCalc();
   SystShifts systSeed = SystShifts::Nominal();
   // Do the fit - updates the "seed" variables with the best fit point
   fit.Fit(oscSeed, systSeed);

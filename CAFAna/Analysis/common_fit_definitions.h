@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Analysis/AnalysisBinnings.h"
 #include "CAFAna/Analysis/AnalysisDialGroups.h"
 
@@ -6,14 +8,16 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SystShifts.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "CAFAna/Fit/Fit.h"
 #include "CAFAna/Fit/SeedList.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "CAFAna/Systs/AnaSysts.h"
+
+#include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
 
@@ -34,54 +38,16 @@ extern double const pot_nd;
 // MW yr
 extern double const nom_exposure;
 
-extern size_t NFluxParametersToAddToStatefile;
-
 double GetBoundedGausThrow(double min, double max);
 
-// I miss python...
-std::vector<std::string> SplitString(std::string input, char delim = ' ');
-
 // For ease of penalty terms...
-ana::IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
+ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                              std::string asimov_set = "0",
                              bool modConstraint = false);
 
 std::vector<const ana::IFitVar *>
 GetOscVars(std::string oscVarString = "alloscvars", int hie = 0, int oct = 0);
 
-// Take a list of all the systs known about, and retain the named systs...
-void KeepSysts(std::vector<const ana::ISyst *> &systlist,
-               std::vector<std::string> const &systsToInclude);
-
-void KeepSysts(std::vector<const ana::ISyst *> &systlist,
-               std::vector<const ana::ISyst *> const &systsToInclude);
-
-void RemoveSysts(std::vector<const ana::ISyst *> &systlist,
-                 std::vector<std::string> const &namesToRemove);
-
-std::vector<const ana::ISyst *>
-GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
-               bool detsyst = true, bool useND = true, bool useFD = true,
-               bool useNueOnE = false, bool useFakeDataDials = true,
-               bool fluxsyst_CDR = true,
-               int NFluxSysts = NFluxParametersToAddToStatefile,
-               bool removeFDNonFitDials = false);
-
-std::vector<const ana::ISyst *> GetListOfSysts(std::string systString,
-                                               bool useND = true,
-                                               bool useFD = true,
-                                               bool useNueOnE = false);
-
-std::vector<const ana::ISyst *> GetListOfSysts(char const *systCString,
-                                               bool useND = true,
-                                               bool useFD = true,
-                                               bool useNueOnE = false);
-
-/// Put a list of systematics in the 'standard' order
-std::vector<const ana::ISyst *>
-OrderListOfSysts(std::vector<const ana::ISyst *> const &systlist);
-
-///
 ana::SystShifts GetFakeDataGeneratorSystShift(std::string input);
 
 enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };
@@ -109,12 +75,16 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
                             bool &fakeNuis, bool &start, bool &central);
 
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat = false,
+                      bool TwoBeams = true,
+                      bool isFHC = true);
+
 TMatrixD *MakeCovmat(ana::PredictionInterp const &prediction,
                      std::vector<ana::ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys = 1000,
+                     osc::IOscCalcAdjustable *calc, size_t NToys = 1000,
                      TDirectory *outdir = nullptr);
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name = "true_OA");
 
 void SaveParams(TDirectory *outDir, std::vector<const ana::ISyst *> systlist);
@@ -184,7 +154,7 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              ana::PredictionInterp *predFDNueRHC = nullptr,
              ana::PredictionInterp *predNDNumuFHC = nullptr,
              ana::PredictionInterp *predNDNumuRHC = nullptr,
-             osc::IOscCalculatorAdjustable *fakeDataOsc = nullptr,
+             osc::IOscCalcAdjustable *fakeDataOsc = nullptr,
              ana::SystShifts fakeDataSyst = ana::kNoShift,
              bool fakeDataStats = false, double pot_fd_fhc_nue = 0,
              double pot_fd_fhc_numu = 0, double pot_fd_rhc_nue = 0,
@@ -192,14 +162,14 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    ana::SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const ana::IFitVar *> oscVars,
                    std::vector<const ana::ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc,
+                   osc::IOscCalcAdjustable *fitOsc,
                    ana::SystShifts fitSyst,
                    ana::SeedList oscSeeds = ana::SeedList(),
-                   ana::IChiSqExperiment *penaltyTerm = nullptr,
+                   ana::IExperiment *penaltyTerm = nullptr,
                    ana::MinuitFitter::FitOpts fitStrategy = ana::MinuitFitter::kNormal,
                    TDirectory *outDir = nullptr,
                    FitTreeBlob *PostFitTreeBlob = nullptr,

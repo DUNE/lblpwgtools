@@ -15,6 +15,10 @@
 #include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Core/FixupRecord.h"
 
+#include "CAFAna/Core/ModeConversionUtilities.h"
+
+#include "StandardRecord/SRProxy.h"
+
 #include <cassert>
 #include <iostream>
 #include <cmath>

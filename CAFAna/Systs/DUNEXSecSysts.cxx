@@ -1,12 +1,16 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
 #include "StandardRecord/Proxy/SRProxy.h"
+#include "CAFAna/Core/Utilities.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "StandardRecord/SRProxy.h"
+
+#include "CAFAna/Core/MathUtil.h"
 
 #include "TFile.h"
 #include "TH2.h"
 #include "TObjString.h"
+#include "TVectorD.h"
 
 namespace ana
 {
@@ -294,16 +298,23 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<DUNEXSecSyst> DUNEXSecSyst::LoadFrom(TDirectory* dir)
+  std::unique_ptr<DUNEXSecSyst> DUNEXSecSyst::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* pname = (TObjString*)dir->Get("name");
     assert(pname);
 
     for(int i = 0; i < 32; ++i){
       const DUNEXSecSyst* s = GetDUNEXSecSyst(EVALORCategory(i));
-      if(s->ShortName() == pname->GetString())
+      if(s->ShortName() == pname->GetString()){
+        delete pname;
+        delete dir;
         return std::unique_ptr<DUNEXSecSyst>((DUNEXSecSyst*)s);
+      }
     }
+
     std::cout << "DUNEXSecSyst::LoadFrom(): unknown name " << pname->GetString() << std::endl;
     abort();
   }
@@ -350,7 +361,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double DUNEXSecCorrelation::ChiSq(osc::IOscCalculatorAdjustable* osc,
+  double DUNEXSecCorrelation::ChiSq(osc::IOscCalcAdjustable* osc,
                                     const SystShifts& syst) const
   {
     double ret = 0;

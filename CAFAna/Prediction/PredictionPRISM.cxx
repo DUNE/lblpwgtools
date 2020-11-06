@@ -29,7 +29,7 @@ PredictionPRISM::PredictionPRISM(
   bool HaveEff = (SelectedNumuCC && AllNumuCC);
 
   // Use to weight by cheating Efficiency
-  Var kEffWeight([&](const caf::StandardRecord *sr) -> double {
+  Var kEffWeight([&](const caf::SRProxy *sr) -> double {
     int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->Ev);
     int by = AllNumuCC->GetYaxis()->FindFixBin(sr->vtx_x);
     int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->det_x);
@@ -99,7 +99,7 @@ void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
+Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
 
   ReweightableSpectrum ret = *fOffAxisSpectrum;
   ret.OverridePOT(1);
@@ -126,14 +126,11 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
   }
 
   if (fFluxMatcher) {
-    double max_off_axis_pos = ret.GetReweightTAxis()->GetBinCenter(
-        ret.GetReweightTAxis()->GetNbins());
+    Binning trueBins = ret.GetTrueBinning();
+    double max_off_axis_pos = (trueBins.Edges()[trueBins.NBins()-1] + trueBins.Edges()[trueBins.NBins()])/2; // center of the top bin
 
     // If we have the FD background predictions add them back in
     if (fHaveFDPred) {
-      // Scale this up to match the FD POT before adding it back in
-      ret.ScaleToPOT(fFarDetSpectrumNC->POT());
-
       Spectrum rets = ret.WeightedBy(fFluxMatcher->GetMatchCoefficients(
           calc, max_off_axis_pos, fNDFluxSpecies, fFDFluxSpecies));
 
@@ -152,7 +149,7 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::PredictComponent(osc::IOscCalculator *calc,
+Spectrum PredictionPRISM::PredictComponent(osc::IOscCalc *calc,
                                            Flavors::Flavors_t flav,
                                            Current::Current_t curr,
                                            Sign::Sign_t sign) const {

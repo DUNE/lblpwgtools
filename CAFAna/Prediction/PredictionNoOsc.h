@@ -18,17 +18,29 @@ public:
                   const SystShifts &shift = kNoShift,
                   const Var &wei = kUnweighted);
 
-  static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir);
+  static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
-  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
+  virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;
   }
 
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum Predict(osc::IOscCalcStan* /*calc*/) const override {
+    return fSpectrum;
+  }
+
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
+
+  virtual Spectrum PredictComponent(osc::IOscCalcStan* /*calc*/,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override
+  {
+    return PredictComponent((osc::IOscCalc*)0, flav, curr, sign);
+  }
 
 protected:
   PredictionNoOsc(const Spectrum &s, const Spectrum &sNC, const Spectrum &sNumu,
@@ -51,10 +63,6 @@ class NoOscPredictionGenerator : public IPredictionGenerator {
 public:
   NoOscPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
       : fAxis(axis), fCut(cut), fWei(wei) {
-    for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());
   }
 
   virtual std::unique_ptr<IPrediction>

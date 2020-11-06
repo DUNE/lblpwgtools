@@ -1,16 +1,16 @@
 #pragma once
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/IFitVar.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
 #include "TMath.h"
 
 #include "TRandom3.h"
 
-namespace ana{class IOscCalculatorAdjustable;}
-
 namespace ana
 {
+  /*
   // http://www.nu-fit.org/?q=node/177
   // NuFit November 2018
   const double kNuFitDmsq21CV = 7.39e-5;
@@ -64,7 +64,7 @@ namespace ana
   //https://arxiv.org/pdf/1707.02322.pdf
   const double kBaseline = 1284.9;     // km
   const double kEarthDensity = 2.848;  // g/cm^3
-
+  */
   std::vector<std::pair<std::string, double> > ParseAsimovSet(std::string noApologies);
 
   // hie = +/-1
@@ -81,44 +81,34 @@ namespace ana
   // 9 Dmsq32 set to 3sig upper value
   // 10 dCP = 0
   // 11 dCP = -pi/2
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct=1, int asimov_set=0);
   
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str);
 
-  osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
+  osc::IOscCalcAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
   // Add in a throw for toys
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
+  osc::IOscCalcAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
 
   // Add a different type of throw which depends less on NuFit
-  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
+  osc::IOscCalcAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13=false);
 
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name);
 
 
-  class NuFitPenalizer: public IChiSqExperiment
+  class NuFitPenalizer: public IExperiment
   {
   public:
-    double ChiSq(osc::IOscCalculatorAdjustable* calc,
+    double ChiSq(osc::IOscCalcAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
-
-    void Derivative(osc::IOscCalculator*,
-                    const SystShifts&,
-                    std::unordered_map<const ISyst*, double>&) const override
-    {
-      // Nothing to do, since we only depend on osc params and the derivatives
-      // with the systs are all zero. But need to implement, because the
-      // default implementation indicates that we are unable to calculate the
-      // necessary derivatives.
-    }
   };
 
-  class Penalizer_GlbLike: public IChiSqExperiment
+  class Penalizer_GlbLike: public IExperiment
   {
   public:
     Penalizer_GlbLike(int hietrue, int octtrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,int asimov_set=0);
-    Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, int hietrue, 
+    Penalizer_GlbLike(osc::IOscCalcAdjustable* cvcalc, int hietrue, 
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false);
     Penalizer_GlbLike(int hietrue, int octtrue,
 		      bool useTh13=true, bool useTh23=false, bool useDmsq=false,
@@ -141,15 +131,8 @@ namespace ana
     double Th13Err() const {return fTh13Err;}
     double RhoErr() const {return fRhoErr;}
 
-    double ChiSq(osc::IOscCalculatorAdjustable* calc,
+    double ChiSq(osc::IOscCalcAdjustable* calc,
                  const SystShifts& syst = SystShifts::Nominal()) const override;
-
-    void Derivative(osc::IOscCalculator*,
-                    const SystShifts&,
-                    std::unordered_map<const ISyst*, double>&) const override
-    {
-      // See justification in NuFitPenalizer::Derivative()
-    }
 
   protected:
     double fDmsq21;

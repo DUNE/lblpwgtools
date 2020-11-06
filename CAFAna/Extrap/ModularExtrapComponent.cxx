@@ -127,6 +127,7 @@ namespace ana
 
     DontAddDirectory guard;
 
+    // TODO do this with Eigen or possibly the Ratio class?
     std::unique_ptr<TH1D> numh(num.ToTH1(1e20));
     std::unique_ptr<TH1D> denomh(denom.ToTH1(1e20));
     std::unique_ptr<TH1D> multh(mult.ToTH1(1e20));

@@ -203,7 +203,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     SystShifts fakeThrowSyst;
 
     // Always throw OA parameters now!
-    osc::IOscCalculatorAdjustable *fakeThrowOsc =
+    osc::IOscCalcAdjustable *fakeThrowOsc =
         ThrownWideOscCalc(hie, oscVarsGlobal);
 
     thisdcp = fakeThrowOsc->GetdCP() / TMath::Pi();
@@ -225,7 +225,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
     // Prefit throws etc
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
         fitThrowSyst.SetShift(
@@ -265,7 +265,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
 
     // This actually doesn't matter unless we apply a theta23 constraint, which
     // I think we shouldn't anyway...
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     globalmin =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
@@ -311,10 +311,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
         double dcptest = tdcp * TMath::Pi();
 
         // Now testOsc is restricted to CP conservation
-        osc::IOscCalculatorAdjustable *testOscCPV = NuFitOscCalc(hie, 1);
+        osc::IOscCalcAdjustable *testOscCPV = NuFitOscCalc(hie, 1);
         testOscCPV->SetdCP(dcptest);
 
-        IChiSqExperiment *cpv_penalty = GetPenalty(hie, 1, penaltyString);
+        IExperiment *cpv_penalty = GetPenalty(hie, 1, penaltyString);
 
         cpv_thischisq =
             RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
@@ -363,10 +363,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Now octant fits -----------
     // -------------------------------------
-    osc::IOscCalculatorAdjustable *testOscOct = NuFitOscCalc(hie, -1 * oct);
+    osc::IOscCalcAdjustable *testOscOct = NuFitOscCalc(hie, -1 * oct);
 
     // No penalty on the octant, so ignore it...
-    IChiSqExperiment *oct_penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *oct_penalty = GetPenalty(hie, 1, penaltyString);
 
     double oct_chisqmin = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -412,10 +412,10 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
 
     // Force the testOsc to be in the wrong hierarchy
-    osc::IOscCalculatorAdjustable *testOscMH = NuFitOscCalc(-1 * hie, 1);
+    osc::IOscCalcAdjustable *testOscMH = NuFitOscCalc(-1 * hie, 1);
 
     // Wrong hierarchy remember
-    IChiSqExperiment *mh_penalty = GetPenalty(-1 * hie, 1, penaltyString);
+    IExperiment *mh_penalty = GetPenalty(-1 * hie, 1, penaltyString);
 
     double mh_chisqmin = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,

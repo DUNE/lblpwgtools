@@ -137,10 +137,15 @@ namespace ana {
   extern const FVCorrFDSyst kFVCorrFDSyst;
 
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   struct FDRecoSystVector: public std::vector<const ISyst*>
   {
   };
-
   FDRecoSystVector GetFDRecoSysts();
-  
+*/
+
+  std::vector<const ISyst*> GetFDRecoSysts();
+
 }

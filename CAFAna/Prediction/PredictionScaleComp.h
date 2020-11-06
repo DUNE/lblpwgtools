@@ -5,9 +5,9 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Systs/SystComponentScale.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 namespace ana
 {
@@ -46,19 +46,19 @@ namespace ana
 
     virtual ~PredictionScaleComp();
 
-    virtual Spectrum Predict(osc::IOscCalculator* osc) const override
+    virtual Spectrum Predict(osc::IOscCalc* osc) const override
     {
       return fTotal->Predict(osc);
     }
 
-    virtual Spectrum PredictSyst(osc::IOscCalculator* osc,
+    virtual Spectrum PredictSyst(osc::IOscCalc* osc,
                                  const SystShifts&    syst) const override
     {
       return PredictComponentSyst(osc, syst,
                                   Flavors::kAll, Current::kBoth, Sign::kBoth);
     }
 
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponent(osc::IOscCalc* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override
@@ -66,16 +66,16 @@ namespace ana
       return fTotal->PredictComponent(calc, flav, curr, sign);
     }
 
-    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponentSyst(osc::IOscCalc* calc,
                                           const SystShifts& syst,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const override;
 
-    Spectrum PredictCategory(osc::IOscCalculator* osc,
+    Spectrum PredictCategory(osc::IOscCalc* osc,
                              const SystComponentScale* syst) const;
 
-    static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir);
+    static std::unique_ptr<PredictionScaleComp> LoadFrom(TDirectory* dir, const std::string& name);
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
 
   protected:

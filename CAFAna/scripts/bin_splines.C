@@ -2,6 +2,16 @@
 
 using namespace ana;
 
+TH1* ProjectionX(TH1* h)
+{
+  switch(h->GetDimension()){
+  case 1: return h;
+  case 2: return ((TH2*)h)->ProjectionX();
+  case 3: return ((TH3*)h)->ProjectionX();
+  default: abort();
+  }
+}
+
 void bin_splines(std::string stateFname="common_state_mcc11v3.root",
 		 std::string outputFname="bin_splines_mcc11v3.root"){
   
@@ -33,7 +43,7 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   SaveParams(fout, systlist);
 
-  osc::IOscCalculatorAdjustable* inputOsc = NuFitOscCalc(+1);
+  osc::IOscCalcAdjustable* inputOsc = NuFitOscCalc(+1);
 
   // Loopy loopy loopy loop
   // Loop over the samples
@@ -43,7 +53,7 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
     double this_pot = std::get<2>(sample);
     
     // Get a dummy spectrum for binning...
-    TH1* fNom = std::get<1>(sample)->PredictSyst(inputOsc, kNoShift).FakeData(this_pot).ToTH1ProjectX(this_pot);
+    TH1* fNom = ProjectionX(std::get<1>(sample)->PredictSyst(inputOsc, kNoShift).ToTH1(this_pot));
     fNom->SetName("nom");
     TAxis* xBins = fNom->GetXaxis();
 
@@ -70,7 +80,7 @@ void bin_splines(std::string stateFname="common_state_mcc11v3.root",
 	
 	SystShifts thisShift(syst, thisSyst->GetYaxis()->GetBinCenter(yBin));
 	// Actually calculate the bin content
-	 TH1* thisMod = std::get<1>(sample)->PredictSyst(inputOsc, thisShift).FakeData(this_pot).ToTH1ProjectX(this_pot);
+        TH1* thisMod = ProjectionX(std::get<1>(sample)->PredictSyst(inputOsc, thisShift).ToTH1(this_pot));
 	 thisMod->SetName("thisMod");
 	 
 	// Need to loop over the bins here...
