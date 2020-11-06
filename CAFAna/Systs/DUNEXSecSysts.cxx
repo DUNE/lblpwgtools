@@ -3,7 +3,7 @@
 #include "StandardRecord/Proxy/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Core/MathUtil.h"
 

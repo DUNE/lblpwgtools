@@ -9,19 +9,15 @@
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
-#include "StandardRecord/Proxy/SRProxy.h"
-
 #include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Core/FixupRecord.h"
 
-#include "CAFAna/Core/ModeConversionUtilities.h"
-
-#include "StandardRecord/SRProxy.h"
+#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/Proxy/SRProxy.h"
 
 #include <cassert>
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 #include "TFile.h"
 #include "TH2.h"
@@ -30,33 +26,29 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::string& wildcard, DataSource src, int max)
-    : SpectrumLoaderBase(wildcard, src), max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::string& wildcard, int max)
+    : SpectrumLoaderBase(wildcard), max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames,
-                                 DataSource src, int max)
-    : SpectrumLoaderBase(fnames, src), max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames, int max)
+    : SpectrumLoaderBase(fnames), max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(DataSource src)
-    : SpectrumLoaderBase(src)
+  SpectrumLoader::SpectrumLoader()
   {
   }
 
   #ifndef DONT_USE_SAM
   //----------------------------------------------------------------------
   SpectrumLoader SpectrumLoader::FromSAMProject(const std::string& proj,
-                                               DataSource src,
-                                               int fileLimit)
+                                                int fileLimit)
   {
     SpectrumLoader ret;
-    ret.fSource = src;
-    ret.fWildcard = "project "+proj;
+    ret.fWildcard = "project " + proj;
     ret.fFileSource = std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
     return ret;
   }
@@ -69,7 +61,7 @@ namespace ana
 
   struct CompareByID
   {
-    bool operator()(const Cut& a, const Cut& b)
+    bool operator()(const Cut& a, const Cut& b) const
     {
       return a.ID() < b.ID();
     }
@@ -93,7 +85,6 @@ namespace ana
 
     fLivetimeByCut.resize(fAllCuts.size());
     fPOTByCut.resize(fAllCuts.size());
-
 
     const int Nfiles = NFiles();
 
@@ -206,9 +197,9 @@ namespace ana
       // required, let's use a RAII type here.
       caf::SRProxySystController::BeginTransaction();
 
+      double systWeight = 1;
       bool shifted = false;
 
-      double systWeight = 1;
       // Can special-case nominal to not pay cost of Shift()
       if(!shift.IsNominal()){
 	shift.Shift(sr, systWeight);
@@ -242,8 +233,8 @@ namespace ana
           for(auto& vardef: weidef.second){
             if(vardef.first.IsMulti()){
               for(double val: vardef.first.GetMultiVar()(sr)){
-                for(Spectrum* s: vardef.second.spects)
-                  s->Fill(val, wei);
+                for(Spectrum** s : vardef.second.spects)
+                  if(*s) (*s)->Fill(val, wei);
               }
               continue;
             }
@@ -262,10 +253,13 @@ namespace ana
               continue;
             }
 
-            for(Spectrum* s: vardef.second.spects) s->Fill(val, wei);
+            for(Spectrum** s : vardef.second.spects)
+              if(*s) (*s)->Fill(val, wei);
 
-            for(ReweightableSpectrum* rw: vardef.second.rwSpects){
-              const double yval = rw->ReweightVar()(sr);
+            for(auto rv: vardef.second.rwSpects){
+              ReweightableSpectrum** rw = rv.first;
+              if(!*rw) continue;
+              const double yval = rv.second(sr);
 
               if(std::isnan(yval) || std::isinf(yval)){
                 std::cerr << "Warning: Bad value: " << yval
@@ -276,7 +270,7 @@ namespace ana
 
               // TODO: ignoring events with no true neutrino etc
               if(yval != 0)
-                rw->fHist->Fill(val, yval, wei);
+                (*rw)->Fill(val, yval, wei);
             } // end for rw
           } // end for vardef
         } // end for weidef
@@ -303,16 +297,29 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void SpectrumLoader::StoreExposures()
+  void SpectrumLoader::AccumulateExposures(const caf::SRSpill *spill) {}
+
+  // cafanacore's spectra are expecting a different structure of
+  // spectrumloader. But we can easily trick it with these.
+  struct SpectrumSink
   {
+    static void FillPOT(Spectrum* s, double pot){s->fPOT += pot;}
+  };
+  struct ReweightableSpectrumSink
+  {
+    static void FillPOT(ReweightableSpectrum* rw, double pot){rw->fPOT += pot;}
+  };
+
+  //----------------------------------------------------------------------
+  void SpectrumLoader::StoreExposures() {
     for(auto& shiftdef: fHistDefs){
       for(auto& cutdef: shiftdef.second){
         for(auto& weidef: cutdef.second){
           for(auto& vardef: weidef.second){
-            for(Spectrum* s: vardef.second.spects)
-              s->fPOT += fPOT;
-            for(ReweightableSpectrum* rw: vardef.second.rwSpects)
-              rw->fPOT += fPOT;
+            for(Spectrum** s : vardef.second.spects)
+              if(*s) SpectrumSink::FillPOT(*s, fPOT);
+            for(auto rv : vardef.second.rwSpects)
+              if(*rv.first) ReweightableSpectrumSink::FillPOT(*rv.first, fPOT);
           }
         }
       }

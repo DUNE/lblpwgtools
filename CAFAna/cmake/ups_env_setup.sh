@@ -16,6 +16,6 @@ setup clhep v2_4_1_2 -q e19:prof || exit 1
 
 setup stan v2_18_0a -q e19:prof || exit 1
 
-setup srproxy v00.11 -q py2
+setup srproxy v00.11 -q py2 || exit 1
 setup osclib v00.05 -q e19:prof:stan || exit 1
 setup cafanacore v01.07 -q:e19:prof || exit 1

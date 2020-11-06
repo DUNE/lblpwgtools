@@ -95,7 +95,6 @@ set(StandardRecord_implementation_files
 
 set(StandardRecord_header_files
     ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
-    ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
 )
 
 add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
@@ -103,7 +102,7 @@ target_link_libraries(StandardRecord)
 
 install(TARGETS StandardRecord DESTINATION lib)
 
-install(FILES ${StandardRecord_header_files} DESTINATION include/StandardRecord)
+install(FILES ${StandardRecord_header_files} DESTINATION include/StandardRecord/)
 
 ## CAFAna proper
 

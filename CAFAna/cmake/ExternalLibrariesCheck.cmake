@@ -45,25 +45,25 @@ LIST(APPEND EXTRA_LIBS ${GSL_LIB_LIST})
 ################################################################################
 
 ###############################  CLHEP  ######################################
-if(NOT DEFINED CLHEP_BASE OR CLHEP_BASE STREQUAL "")
+if(NOT DEFINED CLHEP_PREFIX OR CLHEP_PREFIX STREQUAL "")
 
   SET(CLHEP_CONFIG "CLHEP_CONFIG-NOTFOUND")
   find_program(CLHEP_CONFIG clhep-config)
   if(NOT CLHEP_CONFIG STREQUAL "CONFIGAPP_LOCATION-NOTFOUND")
     execute_process (COMMAND ${CLHEP_CONFIG}
-    --prefix OUTPUT_VARIABLE CLHEP_BASE OUTPUT_STRIP_TRAILING_WHITESPACE)
+    --prefix OUTPUT_VARIABLE CLHEP_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
   else()
   endif()
 
-  if(CLHEP_BASE STREQUAL "")
-    message(FATAL_ERROR "Variable CLHEP_BASE is not defined and could not be found with clhep-config. The location of a pre-built gsl install must be defined either as $ cmake -DCLHEP_BASE=/path/to/CLHEP_BASE")
+  if(CLHEP_PREFIX STREQUAL "")
+    message(FATAL_ERROR "Variable CLHEP_PREFIX is not defined and could not be found with clhep-config. The location of a pre-built gsl install must be defined either as $ cmake -DCLHEP_PREFIX=/path/to/CLHEP_PREFIX")
   endif()
 
-  string(REPLACE "\"" "" CLHEP_BASE ${CLHEP_BASE})
+  string(REPLACE "\"" "" CLHEP_PREFIX ${CLHEP_PREFIX})
 
 endif()
 
-LIST(APPEND EXTRA_LINK_DIRS ${CLHEP_LIB_DIR})
+LIST(APPEND EXTRA_LINK_DIRS ${CLHEP_PREFIX}/lib)
 LIST(APPEND EXTRA_LIBS CLHEP)
 
 ###############################  BOOST  ######################################

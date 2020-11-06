@@ -198,6 +198,8 @@ namespace ana
                                  const Cut& cut,
                                  const SystShifts& shift,
                                  const Var& wei) override {}
+
+    void AccumulateExposures(const caf::SRSpill* spill) override {}
   };
   /// \brief Dummy loader that doesn't load any files
   ///
