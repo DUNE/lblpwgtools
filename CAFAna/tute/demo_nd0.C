@@ -28,6 +28,10 @@ void demo_nd0()
   // event record and returns a single number to plot.
   const Var kRecoEnergy([](const caf::SRProxy* sr)
                         {
+                          // TODO - why is Ev_reco NaN in a handful of the
+                          // input events?
+                          if(isnan(sr->Ev_reco)) return -1.;
+
                           return sr->Ev_reco;
                         });
 
