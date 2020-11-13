@@ -17,5 +17,7 @@ setup clhep v2_4_1_2 -q e19:prof || exit 1
 setup stan v2_18_0a -q e19:prof || exit 1
 
 setup osclib v00.05 -q e19:prof:stan || exit 1
-setup cafanacore v01.07 -q:e19:prof || exit 1
+setup cafanacore v01.07 -q e19:prof || exit 1
 
+# To get setup_fnal_security which helps reading files over xrootd
+setup duneutil v09_09_02 -q e19:prof

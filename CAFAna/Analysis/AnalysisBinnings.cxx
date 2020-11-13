@@ -136,14 +136,5 @@ AxisBlob GetAxisBlob(std::string const &blob_name) {
   } else if (blob_name == "OneBinNue") {
     AxToUse.FDAx_nue = &axRecoEnuFDnue_onebin;
   }
-  for (auto &v : AxToUse.NDAx->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : AxToUse.FDAx_numu->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : AxToUse.FDAx_nue->GetVars()) {
-    assert(v.IsValid());
-  }
   return AxToUse;
 }
