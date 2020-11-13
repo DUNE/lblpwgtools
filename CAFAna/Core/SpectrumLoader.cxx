@@ -112,12 +112,17 @@ void SpectrumLoader::Go() {
 // Helper function that can give us a friendlier error message
 template <class T>
 bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
+  static std::set<std::string> alreadyWarned;
+
   if (tr->FindBranch(bname.c_str())) {
     tr->SetBranchAddress(bname.c_str(), dest);
     return true;
   } else {
-    std::cout << "Warning: Branch '" << bname
-              << "' not found, field will not be filled" << std::endl;
+    if(!alreadyWarned.count(bname)){
+      alreadyWarned.insert(bname);
+      std::cout << "Warning: Branch '" << bname
+                << "' not found, field will not be filled" << std::endl;
+    }
   }
   return false;
 }
@@ -378,14 +383,20 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
         assert(Nuniv <= int(XSSyst_tmp[syst_it].size()));
 
+        static std::vector<bool> alreadyWarned(XSSyst_names.size(), false);
+
         if (IsDoNotIncludeSyst(syst_it)) { // Multiply CV weight back into
                                            // response splines.
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           } else {
             for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
               XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
@@ -396,9 +407,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           } else {
             sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
           }
