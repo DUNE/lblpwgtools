@@ -126,6 +126,8 @@ namespace ana
       }
     }
     else{
+      static std::vector<bool> alreadyWarned(XSSyst_names.size(), false);
+
       for(unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it){
         // Continuation of the hack from further up
         if(veto[syst_it]) continue;
@@ -135,9 +137,13 @@ namespace ana
           if(std::isnan(sr->cvwgt[syst_it]) ||
              std::isinf(sr->cvwgt[syst_it]) ||
              XSSyst_cv_tmp[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << sr->cvwgt[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << sr->cvwgt[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           }
           else{
             const int Nuniv = 7; // HACK HACK HACK sr->xsSyst_wgt[syst_it].size();
@@ -151,9 +157,13 @@ namespace ana
           if(std::isnan(sr->cvwgt[syst_it]) ||
              std::isinf(sr->cvwgt[syst_it]) ||
              sr->cvwgt[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << sr->cvwgt[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << sr->cvwgt[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           }
           else{
             sr->total_xsSyst_cv_wgt *= sr->cvwgt[syst_it];

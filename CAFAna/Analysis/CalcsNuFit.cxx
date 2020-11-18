@@ -4,8 +4,8 @@
 
 #include "CAFAna/Core/MathUtil.h"
 
-#include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcGeneral.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 
 #include "TFormula.h"
 
@@ -38,7 +38,7 @@ namespace ana
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
 
-    osc::IOscCalcAdjustable* ret = new osc::OscCalcGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
@@ -99,7 +99,7 @@ namespace ana
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
 
-    osc::IOscCalcAdjustable* ret = new osc::OscCalcGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
@@ -153,7 +153,7 @@ namespace ana
     assert(hie == +1 || hie == -1);
 
     std::cerr << "Using ThrownNuFitOscCalc, which is now somewhat deprecated (look at 32 and hierarchy)" << std::endl; 
-    osc::IOscCalcAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalcGeneral;
+    osc::IOscCalcAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalcPMNSOpt;
 
     // Throw 12 and rho within errors
     if (HasVar(oscVars, kFitRho.ShortName()))
@@ -352,7 +352,7 @@ namespace ana
   {
     assert(hie == +1 || hie == -1);
 
-    osc::IOscCalcAdjustable* ret = new osc::OscCalcGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 

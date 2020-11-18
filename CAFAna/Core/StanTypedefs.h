@@ -31,7 +31,8 @@ namespace osc
   template <typename T> class _OscCalcPMNSOpt;
   typedef _OscCalcPMNSOpt<stan::math::var> OscCalcPMNSOptStan;
 
-  template <typename T> class _OscCalcAnalytic;
+  namespace analytic{template <typename T> class _OscCalc;}
+  template<class T> using _OscCalcAnalytic = osc::analytic::_OscCalc<T>;
   typedef _OscCalcAnalytic<stan::math::var> OscCalcAnalyticStan;
 }
 
