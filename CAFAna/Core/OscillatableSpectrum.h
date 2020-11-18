@@ -98,13 +98,6 @@ namespace ana
     static std::unique_ptr<OscillatableSpectrum> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
-    // Derived classes can be trusted take care of their own construction
-    OscillatableSpectrum(const HistAxis& recoAxis,
-                         const Binning& kYBinning)
-      : ReweightableSpectrum(recoAxis, kYBinning)
-    {
-    }
-
     /// Constructor for Uninitialized()
     OscillatableSpectrum()
     {
