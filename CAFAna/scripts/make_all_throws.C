@@ -14,6 +14,7 @@ char const *def_sampleString = "ndfd";
 char const *def_throwString = "stat:fake:start";
 char const *def_penaltyString = "nopen";
 int const def_hie = 1;
+char const *def_types = "all";
 
 void make_all_throws(std::string stateFname = def_stateFname,
                      std::string outputFname = def_outputFname,
@@ -22,7 +23,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
                      std::string sampleString = def_sampleString,
                      std::string throwString = def_throwString,
                      std::string penaltyString = def_penaltyString,
-                     int hie = def_hie) {
+                     int hie = def_hie, std::string types = def_types) {
 
   gROOT->SetBatch(1);
 
@@ -45,6 +46,16 @@ void make_all_throws(std::string stateFname = def_stateFname,
   if (chk.IsCounting()) {
     nthrows = std::numeric_limits<int>::max();
   }
+
+  // Choose which types of throw to run
+  // This is sort of a hack for the low exposure throws
+  bool throw_mh = false;
+  bool throw_cpv = false;
+  bool throw_oct = false;
+
+  if (types == def_types || types == "mh") throw_mh = true;
+  if (types == def_types || types == "cpv") throw_cpv = true;
+  if (types == def_types || types == "oct") throw_oct = true;
 
   // Decide what is to be thrown
   bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
@@ -111,7 +122,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   }
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsGlobal;
-  oscSeedsGlobal[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  oscSeedsGlobal[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
   oscSeedsGlobal[&kFitSinSqTheta23] = {0.4, 0.6};
 
   // MH specific
@@ -176,7 +187,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
   oct_tree.fJobRNGSeed = gRNGSeed;
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
-  oscSeedsOct[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  oscSeedsOct[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
 
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
@@ -302,7 +313,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Now do CPV fits -----------
     // -------------------------------------
-    {
+    if (throw_cpv) {
       // Now fit several times to find the best fit when dCP = 0, pi
       double cpv_chisqmin = 99999;
       double cpv_thischisq;
@@ -340,126 +351,131 @@ void make_all_throws(std::string stateFname = def_stateFname,
       }
 
       cpv_tree.Fill();
-    }
 
-    if (chk.ShouldCheckpoint()) {
-      chk.WaitForSemaphore();
-      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-      TDirectory *odir = gDirectory;
-      fout->Write();
-      if (odir) {
-        odir->cd();
+      if (chk.ShouldCheckpoint()) {
+	chk.WaitForSemaphore();
+	std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+	TDirectory *odir = gDirectory;
+	fout->Write();
+	if (odir) {
+	  odir->cd();
+	}
+	chk.NotifyCheckpoint();
       }
-      chk.NotifyCheckpoint();
-    }
-
-    if (!chk.IsSafeToStartNewUnit()) {
-      std::cerr
+      
+      if (!chk.IsSafeToStartNewUnit()) {
+	std::cerr
           << "[CHK]: Do not have time to finish another fit, exiting early."
           << std::endl;
-      break;
-    }
-
+	break;
+      }
+    } // End MH throw
+    
     // -------------------------------------
     // --------- Now octant fits -----------
     // -------------------------------------
-    osc::IOscCalculatorAdjustable *testOscOct = NuFitOscCalc(hie, -1 * oct);
 
-    // No penalty on the octant, so ignore it...
-    IExperiment *oct_penalty = GetPenalty(hie, 1, penaltyString);
+    if (throw_oct) {
+      osc::IOscCalculatorAdjustable *testOscOct = NuFitOscCalc(hie, -1 * oct);
+      
+      // No penalty on the octant, so ignore it...
+      IExperiment *oct_penalty = GetPenalty(hie, 1, penaltyString);
+      
+      double oct_chisqmin = RunFitPoint(
+          stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
+	  oscVarsOct, systlist, testOscOct, SystShifts(fitThrowSyst), oscSeedsOct,
+	  oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
 
-    double oct_chisqmin = RunFitPoint(
-        stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
-        oscVarsOct, systlist, testOscOct, SystShifts(fitThrowSyst), oscSeedsOct,
-        oct_penalty, fit_type, nullptr, &oct_tree, &mad_spectra_yo);
-
-    std::cerr << "[THW]: Oct. throw " << i
-              << " fit found minimum chi2 = " << oct_chisqmin << " "
-              << BuildLogInfoString();
-
-    oct_dchi2 = oct_chisqmin - globalmin;
-    if (oct_dchi2 > 0) {
-      oct_significance = sqrt(oct_dchi2);
-    } else if (oct_dchi2 < -1E-4) {
-      std::cerr << "[WARN]: Octant fit dchi2 of " << oct_dchi2 << "; "
-                << oct_chisqmin << " - " << globalmin << std::endl;
-    }
-
-    oct_tree.Fill();
-    delete oct_penalty;
-    delete testOscOct;
-
-    if (chk.ShouldCheckpoint()) {
-      chk.WaitForSemaphore();
-      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-      TDirectory *odir = gDirectory;
-      fout->Write();
-      if (odir) {
-        odir->cd();
+      std::cerr << "[THW]: Oct. throw " << i
+		<< " fit found minimum chi2 = " << oct_chisqmin << " "
+		<< BuildLogInfoString();
+      
+      oct_dchi2 = oct_chisqmin - globalmin;
+      if (oct_dchi2 > 0) {
+	oct_significance = sqrt(oct_dchi2);
+      } else if (oct_dchi2 < -1E-4) {
+	std::cerr << "[WARN]: Octant fit dchi2 of " << oct_dchi2 << "; "
+		  << oct_chisqmin << " - " << globalmin << std::endl;
       }
-      chk.NotifyCheckpoint();
-    }
-
-    if (!chk.IsSafeToStartNewUnit()) {
-      std::cerr
+      
+      oct_tree.Fill();
+      delete oct_penalty;
+      delete testOscOct;
+      
+      if (chk.ShouldCheckpoint()) {
+	chk.WaitForSemaphore();
+	std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+	TDirectory *odir = gDirectory;
+	fout->Write();
+	if (odir) {
+	  odir->cd();
+	}
+	chk.NotifyCheckpoint();
+      }
+      
+      if (!chk.IsSafeToStartNewUnit()) {
+	std::cerr
           << "[CHK]: Do not have time to finish another fit, exiting early."
           << std::endl;
-      break;
-    }
+	break;
+      }
+    } // End octant throw 
 
     // -------------------------------------
     // --------- Now the MH fits -----------
     // -------------------------------------
 
-    // Force the testOsc to be in the wrong hierarchy
-    osc::IOscCalculatorAdjustable *testOscMH = NuFitOscCalc(-1 * hie, 1);
-
-    // Wrong hierarchy remember
-    IExperiment *mh_penalty = GetPenalty(-1 * hie, 1, penaltyString);
-
-    double mh_chisqmin = RunFitPoint(
-        stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
-        oscVarsMH, systlist, testOscMH, SystShifts(fitThrowSyst),
-        oscSeedsGlobal, mh_penalty, fit_type, // same seeds as a global fit
-        nullptr, &mh_tree, &mad_spectra_yo);
-
-    std::cerr << "[THW]: MH. throw " << i
-              << " fit found minimum chi2 = " << mh_chisqmin << " "
-              << BuildLogInfoString();
-
-    mh_dchi2 = mh_chisqmin - globalmin;
-    if (mh_dchi2 > 0) {
-      mh_significance = sqrt(mh_dchi2);
-    } else if (mh_dchi2 < -1E-4) {
-      std::cerr << "[WARN]: MH fit dchi2 of " << mh_dchi2 << "; " << mh_chisqmin
-                << " - " << globalmin << std::endl;
-    }
-
-    mh_tree.Fill();
-
-    delete mh_penalty;
-    delete testOscMH;
-
-    delete fakeThrowOsc;
-
-    if (chk.ShouldCheckpoint()) {
-      chk.WaitForSemaphore();
-      std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
-      TDirectory *odir = gDirectory;
-      fout->Write();
-      if (odir) {
-        odir->cd();
+    if (throw_mh) {
+      // Force the testOsc to be in the wrong hierarchy
+      osc::IOscCalculatorAdjustable *testOscMH = NuFitOscCalc(-1 * hie, 1);
+      
+      // Wrong hierarchy remember
+      IExperiment *mh_penalty = GetPenalty(-1 * hie, 1, penaltyString);
+      
+      double mh_chisqmin = RunFitPoint(
+          stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
+	  oscVarsMH, systlist, testOscMH, SystShifts(fitThrowSyst),
+	  oscSeedsGlobal, mh_penalty, fit_type, // same seeds as a global fit
+	  nullptr, &mh_tree, &mad_spectra_yo);
+      
+      std::cerr << "[THW]: MH. throw " << i
+		<< " fit found minimum chi2 = " << mh_chisqmin << " "
+		<< BuildLogInfoString();
+      
+      mh_dchi2 = mh_chisqmin - globalmin;
+      if (mh_dchi2 > 0) {
+	mh_significance = sqrt(mh_dchi2);
+      } else if (mh_dchi2 < -1E-4) {
+	std::cerr << "[WARN]: MH fit dchi2 of " << mh_dchi2 << "; " << mh_chisqmin
+		  << " - " << globalmin << std::endl;
       }
-      chk.NotifyCheckpoint();
-    }
-
-    if (!chk.IsSafeToStartNewUnit()) {
-      std::cerr
+      
+      mh_tree.Fill();
+      
+      delete mh_penalty;
+      delete testOscMH;
+      
+      delete fakeThrowOsc;
+      
+      if (chk.ShouldCheckpoint()) {
+	chk.WaitForSemaphore();
+	std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
+	TDirectory *odir = gDirectory;
+	fout->Write();
+	if (odir) {
+	  odir->cd();
+	}
+	chk.NotifyCheckpoint();
+      }
+      
+      if (!chk.IsSafeToStartNewUnit()) {
+	std::cerr
           << "[CHK]: Do not have time to finish another fit, exiting early."
           << std::endl;
-      break;
-    }
-  }
+	break;
+      }
+    } // End MH throw
+  } // End loop over throws
 
   std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
   fout->Write();
@@ -473,7 +489,8 @@ void Usage(char const *argv[]) {
   std::cout << "[USAGE]: " << argv[0]
             << " [/path/to/state_stub] [output_filename.root] [NThrows] "
                "[SystSet: e.g. noxsec:nodet] [Sample: e.g. ndfd] [Throw: e.g. "
-               "stat:fake:start] [Penalties: e.g. nopen] [Hierarchy: e.g. 1]"
+               "stat:fake:start] [Penalties: e.g. nopen] [Hierarchy: e.g. 1] "
+               "[Throws to use all/mh/cpv/oct]"
             << std::endl;
 }
 
@@ -496,9 +513,9 @@ int main(int argc, char const *argv[]) {
   std::string throwString = (argc > 6) ? argv[6] : def_throwString;
   std::string penaltyString = (argc > 7) ? argv[7] : def_penaltyString;
   int hie = (argc > 8) ? atoi(argv[8]) : def_hie;
-
+  std::string types = (argc > 9) ? argv[9] : def_types;
   make_all_throws(stateFname, outputFname, nthrows, systSet, sampleString,
-                  throwString, penaltyString, hie);
+                  throwString, penaltyString, hie, types);
 }
 #endif
 #endif
