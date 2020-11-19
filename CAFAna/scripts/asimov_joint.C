@@ -31,39 +31,51 @@ void RemovePars(std::vector<const IFitVar *> &osclist,
 
 // Function to set the binning based on the parameter short name
 void GetParameterBinning(std::string parName, int &nBins, double &min,
-                         double &max) {
+                         double &max, double trueVal) {
 
   // Defaults
-  nBins = 50;
+  nBins = 100;
   min = 0;
   max = 1;
 
   if (parName == "th13") {
-    min = 0.12;
-    max = 0.21;
-    return;
-  }
-  if (parName == "deltapi") {
+    min = 0.10;
+    max = 0.22;
+
+    // If trueVal is set and outside the nominal range, do something
+    if (abs(trueVal) < 100 && (trueVal > max || trueVal < min)){
+      double temp = std::round(trueVal*100)/100.;
+      min = temp - 0.03;
+      max = temp + 0.03;
+    }
+
+  } else if (parName == "deltapi") {
     min = -1;
     max = 1;
-  }
-  if (parName == "dmsq32scaled" or parName == "dmsq32") {
-    min = 2.25;
-    max = 2.65;
-  }
-  if (parName == "ssth23") {
+
+  } else if (parName == "dmsq32scaled" or parName == "dmsq32") {
+    min = 2.38;
+    max = 2.55;
+    // If trueVal is set and outside the nominal range, do something
+    // if (abs(trueVal) < 100 && (trueVal > max || trueVal < min)){
+    //   double temp = std::round(trueVal*100)/100.;
+    //   min = temp - 0.1;
+    //   max = temp + 0.1;
+    // }
+
+  } else if (parName == "ssth23") {
     min = 0.38;
     max = 0.62;
-  }
-  if (parName == "ss2th12") {
+
+    // Can't do much here because we need to see the octant flip
+
+  } else if (parName == "ss2th12") {
     min = 0.8;
     max = 0.9;
-  }
-  if (parName == "dmsq21") {
+  } else if (parName == "dmsq21") {
     min = 6e-5;
     max = 9e-5;
-  }
-  if (parName == "rho") {
+  } else if (parName == "rho") {
     min = 2.5;
     max = 3.2;
   }
@@ -92,18 +104,44 @@ void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
   return;
 }
 
+// This function finds OA parameters by name, and returns the value from a calculator
+double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
+
+  if (not calc) return -999;
+  if (name == "th13")
+    return calc->GetTh13();
+  else if (name == "deltapi")
+    // return a value in [-1,1]                                                                                                                                                
+    return fmod(calc->GetdCP()/TMath::Pi()+1, 2)-1;
+  else if (name == "dmsq32scaled" or name == "dmsq32")
+    return calc->GetDmsq32();
+  else if (name == "ssth23")
+    return sin(calc->GetTh23())*sin(calc->GetTh23());
+  else if (name == "ss2th12")
+    return sin(2*calc->GetTh12())*sin(2*calc->GetTh12());
+  else if (name == "dmsq21")
+    return calc->GetDmsq21();
+  else if (name == "rho")
+    return calc->GetRho();
+  return -999;
+}
+
+
 // This function unpacks the
-TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
+TH1 *GetAsimovHist(std::vector<std::string> plotVarVect, osc::IOscCalculatorAdjustable* trueOscPoint = NULL) {
   TH1 *returnHist = NULL;
 
   int nBinsX = 0, nBinsY = 0;
   double minX = 0, maxX = 0, minY = 0, maxY = 0;
 
+  // Get the true value of these parameters to help determine the histogram range
+  
+
   // Now get the binnings etc for the histograms
   if (plotVarVect.size() > 0)
-    GetParameterBinning(plotVarVect[0], nBinsX, minX, maxX);
+    GetParameterBinning(plotVarVect[0], nBinsX, minX, maxX, FindOscVal(trueOscPoint, plotVarVect[0]));
   if (plotVarVect.size() > 1)
-    GetParameterBinning(plotVarVect[1], nBinsY, minY, maxY);
+    GetParameterBinning(plotVarVect[1], nBinsY, minY, maxY, FindOscVal(trueOscPoint, plotVarVect[1]));
 
   if (plotVarVect.size() == 1) {
     returnHist = new TH1D(plotVarVect[0].c_str(),
@@ -122,27 +160,6 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
   }
 
   return returnHist;
-}
-
-// This function finds OA parameters by name, and returns the value from a calculator
-double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
-
-  if (name == "th13")
-    return calc->GetTh13();
-  else if (name == "deltapi")
-    // return a value in [-1,1]
-    return fmod(calc->GetdCP()/TMath::Pi()+1, 2)-1;
-  else if (name == "dmsq32scaled" or name == "dmsq32")
-    return calc->GetDmsq32();
-  else if (name == "ssth23")
-    return sin(calc->GetTh23())*sin(calc->GetTh23());
-  else if (name == "ss2th12")
-    return sin(2*calc->GetTh12())*sin(2*calc->GetTh12());
-  else if (name == "dmsq21")
-    return calc->GetDmsq21();
-  else if (name == "rho")
-    return calc->GetRho(); 
-  return 0;
 }
 
 TGraph* GetFitPoint(std::vector<std::string> plotVarVect, osc::IOscCalculatorAdjustable *oscCalc){
@@ -231,7 +248,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   }
 
   // Should we save the best fit information as a TGraph?
-  bool saveBestFit = true;
+  bool saveBestFit = false;
   if (xVal > 0) saveBestFit = false;
   if (isSinglePoint) saveBestFit = true;
 
@@ -245,6 +262,9 @@ void asimov_joint(std::string stateFname = def_stateFname,
 
   FitTreeBlob asimov_tree("asimov_tree", "meta_tree");
   asimov_tree.SetDirectory(fout);
+
+  FitTreeBlob global_tree("global_tree", "global_meta_tree");
+  global_tree.SetDirectory(fout);
 
   // This remains the same throughout... there is one true parameter set for
   // this Asimov set
@@ -270,13 +290,13 @@ void asimov_joint(std::string stateFname = def_stateFname,
   // For the nominal, try all octant/dCP combos (shouldn't get it wrong)
   std::map<const IFitVar *, std::vector<double>> oscSeedsAll = {};
   oscSeedsAll[&kFitSinSqTheta23] = {.4, .6};
-  oscSeedsAll[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+  oscSeedsAll[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
 
   // For the asimov, seed whatever isn't fixed
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
   if (std::find(plotVarVect.begin(), plotVarVect.end(), "deltapi") ==
       plotVarVect.end())
-    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+    oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
   if (std::find(plotVarVect.begin(), plotVarVect.end(), "ssth23") ==
       plotVarVect.end())
     oscSeeds[&kFitSinSqTheta23] = {.4, .6};
@@ -287,8 +307,8 @@ void asimov_joint(std::string stateFname = def_stateFname,
   if (isGlobal) {
     globalmin = RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,
                             oscVarsAll, systlist, testOsc, testSyst,
-                            oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr);
-    
+                            oscSeedsAll, penalty_nom, Fitter::kNormal, nullptr, &global_tree);
+    global_tree.Fill();
     // Save this info
     if (saveBestFit){
       fout->cd();
@@ -302,7 +322,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   std::cout << "Found a minimum global chi2 of: " << globalmin << std::endl;
 
   // Need to set up the histogram to fill
-  TH1 *sens_hist = GetAsimovHist(plotVarVect);
+  TH1 *sens_hist = GetAsimovHist(plotVarVect, trueOsc);
   if (!sens_hist) {
     std::cout << "ERROR: sens_hist not correctly produced!" << std::endl;
     abort();
@@ -375,6 +395,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
   // Save the histogram, and do something sensible with the name
   fout->cd();
   asimov_tree.Write();
+  global_tree.Write();
   sens_hist->Write();
   fout->Write();
   fout->Close();
