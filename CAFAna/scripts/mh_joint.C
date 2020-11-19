@@ -5,13 +5,29 @@ using namespace ana;
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
 	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
-	      std::string penaltyString="", int hie=1, std::string asimov_joint="0"){
+	      std::string penaltyString="", int hie=1, std::string asimov_joint="0",
+	      std::string fakeDataShift = "", int fitBias = 0){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
 
+  // Allow a fake data bias
+  SystShifts trueSyst = GetFakeDataSystShift(fakeDataShift);
+
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);
+
+  // Should the fake data dials be removed from the systlist?
+  if (!fitBias){
+
+    std::vector<std::string> bias_syst_names;
+    // Loop over all systs set to a non-nominal value and remove
+    for (auto syst : trueSyst.ActiveSysts()){
+      std::cout << "Removing " << syst->ShortName() <<std::endl;
+      bias_syst_names.push_back(syst->ShortName());
+      RemoveSysts(systlist, bias_syst_names);
+    }
+  }
 
   // For the global fit
   std::vector<const IFitVar*> oscVars = GetOscVars("alloscvars", hie) ;
@@ -44,11 +60,10 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
       testOsc->SetDmsq32(-1*testOsc->GetDmsq32());
 
       IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_joint);
-      SystShifts trueSyst = kNoShift;
       SystShifts testSyst = kNoShift;
 
       std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-      oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+      oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
 
       thischisq = RunFitPoint(stateFname, sampleString,
 			      trueOsc, trueSyst, false,
