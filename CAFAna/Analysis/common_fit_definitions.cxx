@@ -810,6 +810,8 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
       pot_fd_rhc_numu = 0;
 
   // Hacky McHackerson is here to stay!
+  // This is actually wrong for ND scaling, where we assume it's the full FV immediately, so only gains from doubling the beam intensity after 6 years. Oops.
+  // Each of the first 6 years is 0.125 of the 7 year value (42 kt MW year equivalent with this broken scaling)
   if (input.find("nd") != std::string::npos) {
     pot_nd_fhc = pot_nd_rhc = pot_nd * exposure_ratio;
   }
