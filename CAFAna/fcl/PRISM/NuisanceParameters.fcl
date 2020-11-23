@@ -29,10 +29,38 @@ nuisance_parameters: {
           BeRPA_D 
      ]
 
-     det: [
+     det_chargehadND: [
           ChargedHadTruthUncorrND,
           ChargedHadTruthUncorrSqrtND,
-          ChargedHadTruthUncorrInvSqrtND
+          ChargedHadTruthUncorrInvSqrtND,
+     ]
+
+     det_chargehadFD: [
+          ChargedHadTruthUncorrFD,
+          ChargedHadTruthUncorrSqrtFD,
+          ChargedHadTruthUncorrInvSqrtFD,
+     ]
+
+     det_chargehad: [
+          @sequence::nuisance_parameters.det_chargehadND,
+          @sequence::nuisance_parameters.det_chargehadFD
+     ]
+
+     det_mularND: [
+          ETruthScaleMuLArND,
+          ETruthScaleMuLArSqrtND,
+          ETruthScaleMuLArInvSqrtND
+     ]
+
+     det_mularFD: [
+          ETruthScaleMuLArFD,
+          ETruthScaleMuLArSqrtFD,
+          ETruthScaleMuLArInvSqrtFD
+     ]
+
+     det_mular: [
+          @sequence::nuisance_parameters.det_mularND,
+          @sequence::nuisance_parameters.det_mularFD,
      ]
 
      all: [

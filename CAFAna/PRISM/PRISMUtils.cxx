@@ -216,7 +216,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       LoadFrom<PredictionInterp>(f.GetDirectory("FDFluxPred_293kA_nub"));
 
 #ifdef PRISMDEBUG
-  std::cout << "PRISMSTATE: " << std::endl;
+  /*std::cout << "PRISMSTATE: " << std::endl;
   std::cout << "\tMatchPredInterps: {\n";
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
     std::cout << "\t\t" << DescribeConfig(i) << ": "
@@ -242,7 +242,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     std::cout << "\t\t" << DescribeFDConfig(i) << ": "
               << bool(blob.FarDetData_nueswap[i].get()) << std::endl;
   }
-  std::cout << "\n\t}" << std::endl;
+  std::cout << "\n\t}" << std::endl;*/
 #endif
 
   return blob;
@@ -460,10 +460,11 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 //-----------------------------------------------------
 // Class for ND and FD detector extrapolation matrices:
 // ----------------------------------------------------
+
 NDFD_Matrix::NDFD_Matrix(Spectrum ND, Spectrum FD, double pot) : fPOT(pot), 
                                                                  fPRISMExtrap(nullptr) {
-  fMatrixND = std::unique_ptr<TH2>(static_cast<TH2*>(ND.ToTH2(fPOT)));
-  fMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(FD.ToTH2(fPOT))); 
+  fMatrixND = std::unique_ptr<TH2>(static_cast<TH2*>(ND.ToTH2(1)));
+  fMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(FD.ToTH2(1))); 
 }
 
 //-----------------------------------------------------
@@ -487,7 +488,10 @@ TH1 * NDFD_Matrix::GetPRISMExtrap() const {
 //-----------------------------------------------------
 
 void NDFD_Matrix::NormaliseETrue() const {
-  auto matrix_pair = {&fMatrixND, &fMatrixFD};
+ 
+  if (!fMatrixND) std::cout << "fMatrixND ERROR" << std::endl;
+  
+  std::vector<std::unique_ptr<TH2>*> matrix_pair = {&fMatrixND, &fMatrixFD};
   for (auto &mat : matrix_pair) {
     for (int i = 1; i <= mat->get()->GetXaxis()->GetNbins(); i++) {
       std::unique_ptr<TH1D> proj = std::unique_ptr<TH1D>(
@@ -504,33 +508,58 @@ void NDFD_Matrix::NormaliseETrue() const {
 
 //-----------------------------------------------------
 
-void NDFD_Matrix::ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent, 
-                                             Spectrum> NDPRISMComp) const {
-  // Will not need fMatrixND or fMatrixND after this function
-  // call, so std::move() them here for use in Eigen 
-  std::unique_ptr<TH2> NDhist = std::move(fMatrixND);
-  std::unique_ptr<TH2> FDhist = std::move(fMatrixFD);
+void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
+  
+  std::unique_ptr<TH2>* NDhist = &fMatrixND;
+  std::unique_ptr<TH2>* FDhist = &fMatrixFD;
 
-  auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(
-                   NDPRISMComp.at(PredictionPRISM::kPRISMPred).ToTH1(fPOT)));
+  auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(NDPRISMLCComp.ToTH1(1)));
 
-  Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist.get(), 
-                                         NDhist->GetYaxis()->GetNbins(),
-                                         NDhist->GetXaxis()->GetNbins());
-  Eigen::MatrixXd FDmat = GetEigenMatrix(FDhist.get(),
-                                         FDhist->GetYaxis()->GetNbins(),
-                                         FDhist->GetXaxis()->GetNbins());
- 
+  Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist->get(), 
+                                         NDhist->get()->GetYaxis()->GetNbins(),
+                                         NDhist->get()->GetXaxis()->GetNbins());
+  Eigen::MatrixXd FDmat = GetEigenMatrix(FDhist->get(),
+                                         FDhist->get()->GetYaxis()->GetNbins(),
+                                         FDhist->get()->GetXaxis()->GetNbins());
+
+
   Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND.get());
 
-  Eigen::VectorXd NDETrue = NDmat.colPivHouseholderQr().solve(NDERec);
+  // Old OLS method
+  //Eigen::VectorXd NDETrueOLS = NDmat.colPivHouseholderQr().solve(NDERec);
+  //std::unique_ptr<TH1> NDETrueOLS_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  //FillHistFromEigenVector(NDETrueOLS_h.get(), NDETrueOLS);
+  //NDETrueOLS_h.get()->Scale(1, "width");
+  //gFile->WriteTObject(NDETrueOLS_h.get(), "NDETrueOLS_h");
+  // NDmat * ETrue(ND) = ERec(ND)
+  
+  // Use T-reg to calculate ETrue(ND)
+  const int NTrueBins = NDmat.cols();
+  const double reg = 1E-1;
+  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
+  for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
+    RegMatrix(row_it, row_it) = reg;
+    RegMatrix(row_it, row_it + 1) = -reg;
+  }
+  RegMatrix(NTrueBins - 1, NTrueBins - 1) = reg;
+  
+  Eigen::VectorXd NDETrue = ((NDmat.transpose() * NDmat +
+                             RegMatrix.transpose() * RegMatrix).inverse() *
+                             NDmat.transpose() * NDERec);
+  
+  // Output true hist
+  //std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  //FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
+  //NDETrue_h.get()->Scale(1, "width");
+  //gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
 
   Eigen::VectorXd FDERec = FDmat * NDETrue;
-  
   // Keep same binning for extrapolated prediction
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
   
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
-}
+
+}  
+  
 
 } // namespace ana
