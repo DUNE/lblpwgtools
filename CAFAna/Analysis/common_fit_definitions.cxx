@@ -505,7 +505,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     }
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name) || 
+    assert(IsFakeDataGenerationSyst(name) || //IsCrazyFluxSyst(name) || 
            IsNDdetSyst(name) || IsFDdetSyst(name)); // Might also want to do detector bias studies
     std::cout << "Fake data shift: " << name << std::endl;
     fake_data_names.push_back(name);

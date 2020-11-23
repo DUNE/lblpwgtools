@@ -327,7 +327,7 @@ namespace ana
       restore.Add(sr->LepE,
                   sr->eRecProxy);
 
-      const double scale = 0.005 * sigma;
+      const double scale = 0.02 * sigma; // was 0.005
       if (sr->isFD) {
         if (sr->isCC && abs(sr->nuPDG) == 14) {
           sr->LepE += sr->LepE * scale * pow(sr->LepE, 0.5);

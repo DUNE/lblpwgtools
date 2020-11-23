@@ -13,10 +13,14 @@
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/RunPlan.h"
+//#include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "TH3.h"
 
 namespace ana {
+
+// forward declare smearing matrix class
+class NDFD_Matrix;
 
 /// Prediction that wraps a simple Spectrum
 class PredictionPRISM : public IPrediction {
@@ -58,6 +62,8 @@ public:
 
     kNDData_unweighted_293kA = 31,
     kNDData_unweighted_280kA = 32,
+
+    kNDData_FDExtrap = 33,
 
   };
 
@@ -164,6 +170,9 @@ public:
     case kNDData_unweighted_280kA: {
       return "NDData_unweighted_280kA";
     }
+    case kNDData_FDExtrap: {
+      return "NDData_FDExtrap";
+    }
     }
     return "";
   }
@@ -200,6 +209,11 @@ public:
   PRISMExtrapolator const *fFluxMatcher;
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
     fFluxMatcher = flux_matcher;
+  }
+  //class NDFD_Matrix;
+  NDFD_Matrix const *fNDFD_Matrix;
+  void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) {
+    fNDFD_Matrix = det_extrap;
   }
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }

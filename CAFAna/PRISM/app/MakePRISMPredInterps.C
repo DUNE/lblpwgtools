@@ -6,6 +6,10 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
+#include "CAFAna/Systs/TruthEnergyFDSysts.h"
+#include "CAFAna/Systs/TruthEnergyNDSysts.h"
+#include "CAFAna/Systs/XSecSysts.h"
+
 using namespace ana;
 using namespace PRISM;
 
@@ -126,7 +130,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "uniform_fine";
+std::string truthbinningdescriptor = "uniform";
 std::vector<std::string> ND_input_numode;
 std::vector<std::string> FD_nonswap_input_numode;
 std::vector<std::string> FD_nueswap_input_numode;
@@ -425,6 +429,34 @@ int main(int argc, char const *argv[]) {
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
+  //-------------------------------------------------------
+
+  // Make sure we apply biases correctly to ND and FD data.
+  // This method is a bit of a bodge which assumes the Fake data
+  // studies will apply multiple different biases at the same time.
+  bool ProtonFakeData, NDFakeData, FDFakeData;
+  std::vector<std::string> split_input = SplitString(FakeDataShiftDescript, ':');
+  for (auto in_name : split_input){
+    std::string name = in_name;
+    if (in_name.compare(in_name.length()-4, 4, "_pos") == 0) {
+      name = in_name.substr(0, in_name.length()-4);
+    } else if (in_name.compare(in_name.length()-4, 4, "_neg") == 0) {
+      name = in_name.substr(0, in_name.length()-4);
+    }
+    // Proton fake data applied to ND and FD data - its an MC bias
+    // ND fake data only a ND bias
+    // FD fake data only a FD bias
+    if (IsFakeDataGenerationSyst(name)) ProtonFakeData = true;
+    if (IsNDdetSyst(name)) NDFakeData = true;
+    if (IsFDdetSyst(name)) FDFakeData = true;
+  }
+  
+  if (ProtonFakeData) std::cout << "Proton Fake Data" << std::endl;
+  if (NDFakeData) std::cout << "ND Data Bias" << std::endl;
+  if (FDFakeData) std::cout << "FD Data Bias" << std::endl;
+
+  //-------------------------------------------------------
+
   auto PRISM =
       std::make_unique<PredictionPRISM>(axes.XProjection, axes.OffAxisPosition,
                                         axes.OffAxis280kAPosition, MatchAxis);
@@ -468,7 +500,9 @@ int main(int argc, char const *argv[]) {
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
 
       PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
-                             AnaWeightVars[it], DataShift, chanmode);
+                             AnaWeightVars[it], // Assumes FD/ND biases not applied simultaneously!
+                             (NDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
+                             chanmode);
 
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
 
@@ -652,13 +686,15 @@ int main(int argc, char const *argv[]) {
       if (FileLoaders[non_swap_it]) {
         FarDetData_nonswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[non_swap_it], axes.XProjection, AnalysisCuts[it],
-            DataShift, AnaWeightVars[it]);
+            (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
+            AnaWeightVars[it]); //**DataShift**
       }
 
       if (FileLoaders[nue_swap_it]) {
         FarDetData_nueswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[nue_swap_it], axes.XProjection, AnalysisCuts[it],
-            DataShift, AnaWeightVars[it]);
+            (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
+            AnaWeightVars[it]); //**DataShift**
       }
 
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
