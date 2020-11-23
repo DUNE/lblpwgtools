@@ -213,8 +213,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     // TEST of smearing matrix
     auto NDMatSpec = state.NDMatrixPredInterps[NDConfig_enum]->PredictSyst(calc, shift);
+    
     auto FDMatSpec = state.FDMatrixPredInterps[FDConfig_enum]->PredictSyst(calc, shift);
+    //FDMatSpec.OverridePOT(1);    
+
     NDFD_Matrix SmearMatrices(NDMatSpec, FDMatSpec, POT_FD);
+
+    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
     // ND and FD matrices not normalised    
     auto MatrixND = SmearMatrices.GetNDMatrix();
@@ -275,12 +280,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
 
-        // Perform extrapolation to FD for comparison
+        /* Perform extrapolation to FD for comparison
         SmearMatrices.ExtrapolateNDtoFD(PRISMComponents);
         auto PRISMPred_FDExtrap = SmearMatrices.GetPRISMExtrap();
         PRISMPred_FDExtrap->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred_FDExtrap, "PRISMPred_FDExtrap");
-        PRISMPred_FDExtrap->SetDirectory(nullptr); 
+        PRISMPred_FDExtrap->SetDirectory(nullptr); */
 
         if (PRISM_write_debug) {
 

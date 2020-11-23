@@ -63,6 +63,8 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
 
   fFluxMatcher = nullptr;
 
+  fNDFD_Matrix = nullptr;
+
   fNCCorrection = true;
   fWSBCorrection = true;
   fWLBCorrection = true;
@@ -685,13 +687,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   std::pair<TH1 const *, TH1 const *> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
 
-  const TH1 *raw293LC = LinearCombination.first;
-  gFile->WriteObject(raw293LC, "rawLC_293kA");
+  //const TH1 *raw293LC = LinearCombination.first;
+  //gFile->WriteObject(raw293LC, "rawLC_293kA");
 
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
 
-  gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
+  //gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
 
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
@@ -794,6 +796,20 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
 
+  //-----------------------------
+  // Do ND to FD detector extrapolation here
+  // Normalise the ERec v ETrue ND and FD matrices
+  fNDFD_Matrix->NormaliseETrue();
+  // Extrapolate just the LC ND, not the MC
+  fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));
+  Spectrum PRISMExtrapSpec = Spectrum(fNDFD_Matrix->GetPRISMExtrap(), 
+                                      Comps.at(kPRISMPred).GetLabels(),
+                                      Comps.at(kPRISMPred).GetBinnings(), 
+                                      1/*NDPOT*/, 0);
+
+  Comps.emplace(kNDData_FDExtrap, PRISMExtrapSpec);
+  //-----------------------------
+
   // If we are doing numu -> nue propagation, need to correct for xsec
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
 
@@ -885,10 +901,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid.get()));
 
-  std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
-            << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
+  //std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
+  //          << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
 
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
+
+  // At Flux correction to extrapolated PRISM
+  Comps.at(kNDData_FDExtrap) += Comps.at(kFDFluxCorr);
+
   if (NDComps.count(kPRISMMC)) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
   }

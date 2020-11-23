@@ -125,7 +125,7 @@ public:
   TH1D *GetPred(osc::IOscCalculatorAdjustable *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     return fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
-        .at(PredictionPRISM::kPRISMPred)
+        .at(PredictionPRISM::kNDData_FDExtrap) //kPRISMPred kNDData_FDExtrap
         .ToTH1(fPOT);
   }
 

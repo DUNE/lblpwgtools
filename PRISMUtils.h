@@ -186,8 +186,7 @@ public:
   TH1 * GetPRISMExtrap() const;
 
   // Extrapolate ND PRISM pred to FD using Eigen
-  void ExtrapolateNDtoFD(std::map<PredictionPRISM::PRISMComponent, 
-                                  Spectrum>) const;  
+  void ExtrapolateNDtoFD(Spectrum) const;  
 
 protected:
 

@@ -285,7 +285,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     for (int row_it = NCoeffs_293kA; row_it < (NCoeffs - 1); ++row_it) {
       // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
       RegMatrix(row_it, row_it) = cond.RegFactor_280kA;
-      RegMatrix(row_it, row_it + 1) = 0; // 0 instead of -cond.RegFactor_280kA: no reg of 280kA
+      //RegMatrix(row_it, row_it + 1) = -cond.RegFactor_280kA; // 0 instead of -cond.RegFactor_280kA: no reg of 280kA
     }
     RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor_280kA;
   }
