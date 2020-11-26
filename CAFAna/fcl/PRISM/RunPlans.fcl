@@ -25,7 +25,7 @@ RunPlans: {
                    { xrange: [-30,-34] time: 18 } ] 
        }
     prodlike: {
-           plan: [ { xrange: [-2,0] time: 0.02 },
+           plan: [ { xrange: [0,2] time: 0.02 horn_current: 280 },
                    { xrange: [0,2] time: 0.02 },
                    { xrange: [2,6] time: 0.03 },
                    { xrange: [6,10] time: 0.035 },
