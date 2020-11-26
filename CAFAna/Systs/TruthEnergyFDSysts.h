@@ -367,6 +367,34 @@ namespace ana
 
   //---------------------------------------------------------------------------------
 
+  // Resolution systematics for ERec Proxy
+  // Only an absolute resolution syst is possible for EProxy because EProxy is made
+  // of true energy components of infinite resolution. Only take difference between
+  // EProxy and ETrue
+  
+  class AbsoluteEResFD : public ISyst {
+  public:
+    AbsoluteEResFD() : ISyst("AbsoluteEResFD", "Absolute FD Detector Resolution") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr,
+               double& weight) const override {
+  
+      restore.Add(sr->Ev,
+                  sr->eRecProxy);
+      // FD TDR sets res of muons, EM & Charged Had to be 2%
+      // So set absolute resolution to be 3.4%
+      // Quadrature sum of mu, EM & CH res systs
+      const double scale = 0.034 * sigma;
+      if (sr->isFD) { // in the FD
+        sr->eRecProxy += (sr->Ev - sr->eRecProxy) * scale;
+      }
+    }
+  };
+
+  //---------------------------------------------------------------------------------
+
   // Vector of the truth energy scale systematics
   struct TruthEnergyFDSystVector : public std::vector<const ISyst*> {};
 

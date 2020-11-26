@@ -14,6 +14,8 @@ namespace ana {
   const ETruthScaleMuLArFD kETruthScaleMuLArFD;
   const ETruthScaleMuLArSqrtFD kETruthScaleMuLArSqrtFD;
   const ETruthScaleMuLArInvSqrtFD kETruthScaleMuLArInvSqrtFD;
+  // Resolution Syst
+  const AbsoluteEResFD kAbsoluteEResFD;
 
   TruthEnergyFDSystVector GetTrueEFDSysts() {
 
@@ -30,6 +32,7 @@ namespace ana {
     vec.push_back(&kETruthScaleMuLArFD);
     vec.push_back(&kETruthScaleMuLArSqrtFD);
     vec.push_back(&kETruthScaleMuLArInvSqrtFD);
+    vec.push_back(&kAbsoluteEResFD);
 
     return vec;
   }
