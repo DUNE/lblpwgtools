@@ -321,6 +321,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
     sr.eRecProxy = sr.LepE + sr.eP + sr.ePip + sr.ePim + sr.ePi0 +
                    0.135 * sr.nipi0 + eother;
+    // If it is a NC event remove LepE, this is the neutrino evergy and is 
+    // not detected
+    if (!sr.isCC) {
+      sr.eRecProxy = sr.eRecProxy - sr.LepE;
+    }
 
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {

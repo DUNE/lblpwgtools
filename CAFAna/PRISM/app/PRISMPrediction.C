@@ -218,11 +218,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     //FDMatSpec.OverridePOT(1);    
 
     NDFD_Matrix SmearMatrices(NDMatSpec, FDMatSpec, POT_FD);
-
+    // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
     // ND and FD matrices not normalised    
-    auto MatrixND = SmearMatrices.GetNDMatrix();
+    /*auto MatrixND = SmearMatrices.GetNDMatrix();
     auto MatrixFD = SmearMatrices.GetFDMatrix();
 
     chan_dir->WriteTObject(MatrixND, "ND_Mat_ERecETrue");
@@ -238,8 +238,24 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(MatrixND2, "ND_norm");
     MatrixND2->SetDirectory(nullptr);
     chan_dir->WriteTObject(MatrixFD2, "FD_norm");
-    MatrixFD2->SetDirectory(nullptr);
+    MatrixFD2->SetDirectory(nullptr);*/
  
+    // TEST of MC efficiency correction
+    auto NDUnselectedSpec = state.NDTruePredInterps[NDConfig_enum]->PredictSyst(calc, shift);
+    std::cout << "Before FDUnselectedSpec" << std::endl;
+    if (!state.FDTruePredInterps[FDfdConfig_enum]) std::cout << "WARNING!" << std::endl;
+    TH2 *NDUnsel_h = NDUnselectedSpec.ToTH2(POT_FD);
+    NDUnsel_h->Scale(1, "width");
+    chan_dir->WriteTObject(NDUnsel_h, "Unselected_ND");
+    auto FDUnselectedSpec = state.FDTruePredInterps[FDfdConfig_enum]->PredictSyst(calc, shift);
+    std::cout << "After FDUnselectedSpec" << std::endl;
+    TH1 *FDUnsel_h = FDUnselectedSpec.ToTH1(POT_FD);
+    FDUnsel_h->Scale(1, "width");
+    chan_dir->WriteTObject(FDUnsel_h, "Unselected_FD");
+    MCEffCorrection NDFDEffCorr(NDUnselectedSpec, FDUnselectedSpec);
+    // Set PredictionPRISM to own a pointer to this MCEffCorrection
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(

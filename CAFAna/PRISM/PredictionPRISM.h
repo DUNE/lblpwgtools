@@ -21,6 +21,7 @@ namespace ana {
 
 // forward declare smearing matrix class
 class NDFD_Matrix;
+class MCEffCorrection;
 
 /// Prediction that wraps a simple Spectrum
 class PredictionPRISM : public IPrediction {
@@ -64,6 +65,7 @@ public:
     kNDData_unweighted_280kA = 32,
 
     kNDData_FDExtrap = 33,
+    kNDDataCorr_FDExtrap = 34,
 
   };
 
@@ -173,6 +175,9 @@ public:
     case kNDData_FDExtrap: {
       return "NDData_FDExtrap";
     }
+    case kNDDataCorr_FDExtrap: {
+      return "NDDataCorr_FDExtrap";
+    }
     }
     return "";
   }
@@ -214,6 +219,12 @@ public:
   NDFD_Matrix const *fNDFD_Matrix;
   void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) {
     fNDFD_Matrix = det_extrap;
+  }
+
+  // PredictionPRISM to own a pointer to a MCEffCorrection object
+  MCEffCorrection const *fMCEffCorrection;
+  void SetMC_NDFDEff(MCEffCorrection const *eff_corr) {
+    fMCEffCorrection = eff_corr;
   }
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }

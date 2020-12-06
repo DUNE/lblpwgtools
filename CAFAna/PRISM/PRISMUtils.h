@@ -75,6 +75,8 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
@@ -108,6 +110,8 @@ struct PRISMStateBlob {
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(NDTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDTruePredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
@@ -172,13 +176,14 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
 
 //-----------------------------------------------------
 // Class for ND and FD detector extrapolation matrices:
-// ----------------------------------------------------
+//----------------------------------------------------
 class NDFD_Matrix {
 public:
   NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
 
   // Normalise the ETrue column to 1 in ND and FD matrices
-  void NormaliseETrue() const;
+  void NormaliseETrue(std::vector<double> NDefficiency,
+                      std::vector<double> FDefficiency) const;
 
   TH2 * GetNDMatrix() const;
   TH2 * GetFDMatrix() const;
@@ -186,7 +191,7 @@ public:
   TH1 * GetPRISMExtrap() const;
 
   // Extrapolate ND PRISM pred to FD using Eigen
-  void ExtrapolateNDtoFD(Spectrum) const;  
+  void ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const;  
 
 protected:
 
@@ -197,5 +202,30 @@ protected:
 
 };
  
+//----------------------------------------------------
+// Class for ND and FD MC based efficiency correction:
+//----------------------------------------------------
+// brief / take unselected MC event rates at ND and FD
+// calculate the efficiency of the cuts
+// Might incorporate this into NDFD_Matrix class later
+class MCEffCorrection {
+public:
+  MCEffCorrection(Spectrum NDunsel, Spectrum FDunsel);
+  // Fills NDefficiency and FDefficiency, taking selected
+  // ND and FD event rates as argument
+  void CalcEfficiency(Spectrum NDsel, Spectrum FDsel) const;
+  std::vector<double> GetNDefficiency() const { return NDefficiency; }
+  std::vector<double> GetFDefficiency() const { return FDefficiency; }
+
+protected:
+  
+  mutable std::unique_ptr<TH2> fNDunselected;
+  mutable std::unique_ptr<TH1> fFDunselected;
+  // ND and FD efficiency in each energy bin
+  // Vec element [0] is 1st energy bin eff 
+  mutable std::vector<double> NDefficiency;
+  mutable std::vector<double> FDefficiency;
+
+};
 
 } // namespace ana
