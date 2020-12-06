@@ -34,7 +34,7 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(50, 0, 10);
   }
   if (xbinning == "uniform_coarse") {
-    return Binning::Simple(32, 0, 8); // used to be 25, 10 (bad tail going out to 10)
+    return Binning::Simple(20, 0, 8); // used to be 25, 10 (bad tail going out to 10)
   }
   if (xbinning == "testopt") {
     std::vector<double> BE = {

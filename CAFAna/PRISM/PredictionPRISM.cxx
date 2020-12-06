@@ -5,6 +5,7 @@
 
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscCurve.h"
+#include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -797,17 +798,31 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
 
   //-----------------------------
+  // Get Efficiency from MC and fold into 
+  // detector extrapolation from ND to FD
+  // NDComps.at(kNDSig_293kA).ToSpectrum()
+  fMCEffCorrection->CalcEfficiency(NDPrediction->PredictComponentSyst(
+                                       calc, shift, NDSigFlavor, 
+                                       Current::kCC, NDSigSign),
+                                   FDPrediction->PredictComponentSyst(
+                                       calc, kNoShift, FDSigFlavor, // Flavours::kAll
+                                       Current::kCC, FDSigSign)); //Sign::kBoth
+
   // Do ND to FD detector extrapolation here
   // Normalise the ERec v ETrue ND and FD matrices
-  fNDFD_Matrix->NormaliseETrue();
+  fNDFD_Matrix->NormaliseETrue(fMCEffCorrection->GetNDefficiency(),
+                               fMCEffCorrection->GetFDefficiency());
   // Extrapolate just the LC ND, not the MC
   fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));
+ 
   Spectrum PRISMExtrapSpec = Spectrum(fNDFD_Matrix->GetPRISMExtrap(), 
                                       Comps.at(kPRISMPred).GetLabels(),
                                       Comps.at(kPRISMPred).GetBinnings(), 
                                       1/*NDPOT*/, 0);
-
+  // Keep PRISM extrap prediction wihtout corrections
   Comps.emplace(kNDData_FDExtrap, PRISMExtrapSpec);
+  // For adding in MC corrections
+  Comps.emplace(kNDDataCorr_FDExtrap, PRISMExtrapSpec);
   //-----------------------------
 
   // If we are doing numu -> nue propagation, need to correct for xsec
@@ -859,6 +874,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                       calc, shift, Flavors::kAll, Current::kNC, Sign::kBoth));
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
+    Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
   }
 
   if (fWLBCorrection) {
@@ -867,6 +883,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                       calc, shift, FDWrongFlavor, Current::kCC, Sign::kBoth));
     Comps.at(kPRISMPred) += Comps.at(kFDWrongLepBkg);
     Comps.at(kPRISMMC) += Comps.at(kFDWrongLepBkg);
+    Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWrongLepBkg);
   }
 
   if (fWSBCorrection) {
@@ -875,6 +892,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                       calc, shift, FDSigFlavor, Current::kCC, FDWrongSign));
     Comps.at(kPRISMPred) += Comps.at(kFDWSBkg);
     Comps.at(kPRISMMC) += Comps.at(kFDWSBkg);
+    Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWSBkg);
   }
 
   if (fIntrinsicCorrection) {
@@ -883,6 +901,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                       calc, shift, FDIntrinsicFlavor, Current::kCC, FDSigSign));
     Comps.at(kPRISMPred) += Comps.at(kFDIntrinsicBkg);
     Comps.at(kPRISMMC) += Comps.at(kFDIntrinsicBkg);
+    Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDIntrinsicBkg);
   }
 
   Comps.emplace(kFDOscPred,
@@ -907,7 +926,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
 
   // At Flux correction to extrapolated PRISM
-  Comps.at(kNDData_FDExtrap) += Comps.at(kFDFluxCorr);
+  Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
 
   if (NDComps.count(kPRISMMC)) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);

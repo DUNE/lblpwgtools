@@ -562,6 +562,22 @@ int main(int argc, char const *argv[]) {
   // Hist axis for matrix
   HistAxis const ErecETrueAxis(Labels_matrix, Bins_matrix, Vars_matrix);  
 
+  // Slightly different HistAxis needed for MC efficiency correction
+  // True energy as variable but observed variable binning
+  std::vector<std::string> Labels_eff = MatchAxis.GetLabels(); 
+  std::vector<Binning> Bins_eff = axes.XProjection.GetBinnings();
+  std::vector<Var> Vars_eff = MatchAxis.GetVars(); // MatchAxis for true E
+  
+  Labels_eff.push_back(axes.OffAxisPosition.GetLabels().front());
+  Bins_eff.push_back(axes.OffAxisPosition.GetBinnings().front());
+  Vars_eff.push_back(axes.OffAxisPosition.GetVars().front());
+
+  HistAxis const NDTrueEnergyObsBins(Labels_eff, Bins_eff, Vars_eff);
+
+  HistAxis const FDTrueEnergyObsBins(MatchAxis.GetLabels(), 
+                                     axes.XProjection.GetBinnings(),
+                                     MatchAxis.GetVars());
+
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   FillWithNulls(MatchPredGens, kNPRISMConfigs);
@@ -571,6 +587,7 @@ int main(int argc, char const *argv[]) {
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   FillWithNulls(SelPredGens, kNPRISMConfigs);
   FillWithNulls(SelPredInterps, kNPRISMConfigs);
+  //---------------------------------------------------
   // For Smearing Matrix
   std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
@@ -580,6 +597,16 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(NDMatrixPredInterps, kNPRISMConfigs);
   FillWithNulls(FDMatrixPredGens, kNPRISMFDConfigs);
   FillWithNulls(FDMatrixPredInterps, kNPRISMFDConfigs);
+  // True ND and FD spectra for MC efficiency correction
+  std::vector<std::unique_ptr<IPredictionGenerator>> NDTruePredGens;
+  std::vector<std::unique_ptr<PredictionInterp>> NDTruePredInterps;
+  std::vector<std::unique_ptr<IPredictionGenerator>> FDTruePredGens;
+  std::vector<std::unique_ptr<PredictionInterp>> FDTruePredInterps;
+  FillWithNulls(NDTruePredGens, kNPRISMConfigs); 
+  FillWithNulls(NDTruePredInterps, kNPRISMConfigs);
+  FillWithNulls(FDTruePredGens, kNPRISMFDConfigs);
+  FillWithNulls(FDTruePredInterps, kNPRISMFDConfigs);
+  //---------------------------------------------------
 
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
@@ -657,6 +684,17 @@ int main(int argc, char const *argv[]) {
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
             los_det, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
             ); //PredictionInterp::kSplitBySign
+
+        // Add another ND unselected spectrum for MC eff correction
+        // Use the same axis as the ND DATA
+        // don't need it for 280kA, just getting the efficiency
+        NDTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+            NDTrueEnergyObsBins,
+            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+            WeightVars[it] * slice_width_weight);
+        NDTruePredInterps[it] = std::make_unique<PredictionInterp>(
+            los, &no_osc, *NDTruePredGens[it], Loaders_bm, kNoShift);
       }
     } else { // Is FD
 
@@ -708,6 +746,14 @@ int main(int argc, char const *argv[]) {
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
+
+      // True energy FD spectrum with obs binning for MC efficiency correction
+      FDTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
+          FDTrueEnergyObsBins, 
+          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
+          WeightVars[it]);
+      FDTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *FDTruePredGens[fd_it], Loaders_bm, kNoShift);   
 
       // Matrix of ERec v ETrue for FD
       FDMatrixPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
@@ -802,7 +848,10 @@ int main(int argc, char const *argv[]) {
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      if (!IsND280kA) NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      if (!IsND280kA) {
+        NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+        NDTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      }
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
@@ -814,8 +863,11 @@ int main(int argc, char const *argv[]) {
       if (!IsND280kA) {
         SaveTo(fout,
                std::string("NDMatrixInterp_ERecETrue") +
-                  (IsNu ? "_nu" : "_nub"),
+                   (IsNu ? "_nu" : "_nub"),
                NDMatrixPredInterps[it]);
+        SaveTo(fout,
+               std::string("NDUnSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
+               NDTruePredInterps[it]);
       }
     } else { // Is FD
       if (!IsNue) {
@@ -839,6 +891,10 @@ int main(int argc, char const *argv[]) {
              std::string("FDMatrixInterp_ERecETrue") +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_it]);
+
+      SaveTo(fout,
+             std::string("FDUnSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
+             FDTruePredInterps[fd_it]);
 
       if (FarDetData_nonswap[fd_it]) {
         SaveTo(fout,

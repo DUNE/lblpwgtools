@@ -149,6 +149,12 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
         if (dir) {
           blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
         }
+
+        dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
+                             (IsNu ? "_nu" : "_nub")).c_str());
+        if (dir) {
+          blob.NDTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+        }
       }
     } else { // Is FD
       if (!IsNue) {
@@ -174,6 +180,15 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
                              .c_str());
       if (dir) {
         blob.FDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+
+      dir = 
+          f.GetDirectory((std::string("FDUnSelected_ETrue") + 
+                         (IsNu ? "_nu" : "_nub")).c_str());
+      if (dir) {
+        std::cout << "Loading blob.FDTruePredInterps" << std::endl;
+        blob.FDTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
+        if (blob.FDTruePredInterps[fd_it]) std::cout << "Loaded FDTruePredInterps" << std::endl;
       } 
 
       dir =
@@ -487,20 +502,30 @@ TH1 * NDFD_Matrix::GetPRISMExtrap() const {
 
 //-----------------------------------------------------
 
-void NDFD_Matrix::NormaliseETrue() const {
+void NDFD_Matrix::NormaliseETrue(std::vector<double> NDefficiency, 
+                                 std::vector<double> FDefficiency) const {
  
   if (!fMatrixND) std::cout << "fMatrixND ERROR" << std::endl;
   
-  std::vector<std::unique_ptr<TH2>*> matrix_pair = {&fMatrixND, &fMatrixFD};
+  std::pair<std::unique_ptr<TH2>*, std::vector<double>> NDpair (&fMatrixND, NDefficiency);
+  std::pair<std::unique_ptr<TH2>*, std::vector<double>> FDpair (&fMatrixFD, FDefficiency);
+  
+  //std::vector<std::unique_ptr<TH2>*> matrix_pair = {&fMatrixND, &fMatrixFD};
+  std::vector<std::pair<std::unique_ptr<TH2>*, std::vector<double>>> matrix_pair = 
+      {NDpair, FDpair};   
+
   for (auto &mat : matrix_pair) {
-    for (int i = 1; i <= mat->get()->GetXaxis()->GetNbins(); i++) {
+    for (int i = 1; i <= mat.first->get()->GetXaxis()->GetNbins(); i++) {
       std::unique_ptr<TH1D> proj = std::unique_ptr<TH1D>(
-                                     mat->get()->ProjectionY("_proj", i, i, "e"));
-      //proj->Sumw2();
-      proj->Scale(1 / proj->Integral());
-      for (int k = 1; k <= mat->get()->GetYaxis()->GetNbins(); k++) {
-        mat->get()->SetBinContent(i, k, proj->GetBinContent(k));
-        mat->get()->SetBinError(i, k, proj->GetBinError(k));
+                                     mat.first->get()->ProjectionY("_proj", i, i, "e"));
+      // Normalise integral of true bin to 1
+      proj->Scale((1 / proj->Integral()) * mat.second.at(i - 1)); 
+      // Integral of true bin column now the efficiency in that bin
+      //proj->Scale(mat.second.at(i - 1));
+      std::cout << "True bin integral with eff = " << proj->Integral() << std::endl;
+      for (int k = 1; k <= mat.first->get()->GetYaxis()->GetNbins(); k++) {
+        mat.first->get()->SetBinContent(i, k, proj->GetBinContent(k));
+        mat.first->get()->SetBinError(i, k, proj->GetBinError(k));
       }
     }
   }
@@ -526,16 +551,16 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND.get());
 
   // Old OLS method
-  //Eigen::VectorXd NDETrueOLS = NDmat.colPivHouseholderQr().solve(NDERec);
-  //std::unique_ptr<TH1> NDETrueOLS_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  //FillHistFromEigenVector(NDETrueOLS_h.get(), NDETrueOLS);
-  //NDETrueOLS_h.get()->Scale(1, "width");
-  //gFile->WriteTObject(NDETrueOLS_h.get(), "NDETrueOLS_h");
+  Eigen::VectorXd NDETrueOLS = NDmat.colPivHouseholderQr().solve(NDERec);
+  std::unique_ptr<TH1> NDETrueOLS_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  FillHistFromEigenVector(NDETrueOLS_h.get(), NDETrueOLS);
+  NDETrueOLS_h.get()->Scale(1, "width");
+  gFile->WriteTObject(NDETrueOLS_h.get(), "NDETrueOLS_h");
   // NDmat * ETrue(ND) = ERec(ND)
   
   // Use T-reg to calculate ETrue(ND)
   const int NTrueBins = NDmat.cols();
-  const double reg = 1E-1;
+  const double reg = 0.04;
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
   for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
     RegMatrix(row_it, row_it) = reg;
@@ -548,10 +573,10 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
                              NDmat.transpose() * NDERec);
   
   // Output true hist
-  //std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  //FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
-  //NDETrue_h.get()->Scale(1, "width");
-  //gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
+  std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
+  NDETrue_h.get()->Scale(1, "width");
+  gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
 
   Eigen::VectorXd FDERec = FDmat * NDETrue;
   // Keep same binning for extrapolated prediction
@@ -559,7 +584,63 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
 
-}  
-  
+} 
+
+//----------------------------------------------------
+// Class for ND and FD MC based efficiency correction:
+//----------------------------------------------------
+MCEffCorrection::MCEffCorrection(Spectrum NDunsel, Spectrum FDunsel) {
+  NDunsel.OverridePOT(1);
+  fNDunselected = std::unique_ptr<TH2>(static_cast<TH2*>(NDunsel.ToTH2(1)));
+  fFDunselected = std::unique_ptr<TH1>(static_cast<TH1*>(FDunsel.ToTH1(1)));
+}
+
+//----------------------------------------------------
+
+void MCEffCorrection::CalcEfficiency(Spectrum NDsel, Spectrum FDsel) const {
+  std::unique_ptr<TH2> NDselected = 
+      std::unique_ptr<TH2>(static_cast<TH2*>(NDsel.ToTH2(1)));
+  std::unique_ptr<TH1> FDselected =
+      std::unique_ptr<TH1>(static_cast<TH1*>(FDsel.ToTH1(1)));
+
+  gFile->WriteTObject(NDselected.get(), "NDSelected");
+  gFile->WriteTObject(fNDunselected.get(), "NDUnselected");
+
+
+  // Calculate ND efficiency
+  // efficiency fluctuates slightly with OA position
+  // take average over for 20 OA positions
+  for (int i = 0; i < NDselected->GetXaxis()->GetNbins(); i++) { // energy axis
+    double NDbin_eff;
+    double sum(0);
+    int OAbinstart = 40; // Lots of statistical noise further OA
+    for (int j = OAbinstart; j < NDselected->GetYaxis()->GetNbins(); j++) { // OA pos axis 
+      NDbin_eff = NDselected->GetBinContent(i + 1, j + 1) /
+                  fNDunselected->GetBinContent(i + 1, j + 1);
+      //std::cout << "ND RAW BIN eff = " << NDbin_eff << std::endl;
+      sum += NDbin_eff;
+    }
+    NDefficiency.push_back(sum / 
+                           (NDselected->GetYaxis()->GetNbins() - OAbinstart));
+  }
+
+  for (auto const &ND : NDefficiency) {
+    std::cout << "ND eff = " << ND << std::endl;
+  }
+
+  // Calculate FD efficiency
+  for (int i = 0; i < FDselected->GetXaxis()->GetNbins(); i++) {
+    double FDbin_eff = FDselected->GetBinContent(i + 1) / 
+                       fFDunselected->GetBinContent(i + 1);
+    //double FDbin_eff = fFDunselected->GetBinContent(i + 1) /
+    //                   FDselected->GetBinContent(i + 1);
+    FDefficiency.push_back(FDbin_eff);
+  }
+  for (auto const &FD : FDefficiency) {
+    std::cout << "FD eff = " << FD << std::endl;
+  } 
+
+}
+
 
 } // namespace ana
