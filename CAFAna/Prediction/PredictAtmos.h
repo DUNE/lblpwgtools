@@ -29,6 +29,10 @@ namespace ana
 
     Spectrum PredictComponent(osc::IOscCalc* calc, Flavors::Flavors_t flav, Current::Current_t curr, Sign::Sign_t sign) const {abort();}
 
+    Spectrum Predict(osc::IOscCalcStan* calc) const {abort();}
+    Spectrum PredictSyst(osc::IOscCalcStan* calc, const SystShifts& shifts) const {abort();}
+    Spectrum PredictComponent(osc::IOscCalcStan* calc, Flavors::Flavors_t flav, Current::Current_t curr, Sign::Sign_t sign) const {abort();}
+
   protected:
 //    ReweightableSpectrum fTauFromMu;
     OscillatableSpectrum fTauFromMu, fAntiTauFromMu;
