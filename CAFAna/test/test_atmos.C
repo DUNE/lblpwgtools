@@ -9,7 +9,7 @@
 #include "CAFAna/Analysis/Calcs.h"
 
 #include "TCanvas.h"
-#include "TH1.h"
+#include "TH2.h"
 #include "TPad.h"
 
 using namespace ana;
@@ -25,9 +25,17 @@ void test_atmos()
   PredictAtmos patmos;
   Spectrum fake = patmos.Predict(calc).FakeData(400);//, kLivetime);
   fake.ToTH1(350/*, kLivetime*/)->Draw("hist");
-  patmos.fNC.ToTH1(350, kBlue)->Draw("hist same");
+  TH1* nc = patmos.fNC.ToTH1(350, kBlue);
+  nc->Draw("hist same");
+  TH1* cc = fake.ToTH1(350, kRed);
+  cc->Add(nc, -1);
+  cc->Draw("hist same");
   gPad->Update();
   gPad->Print("atmos_spect.png");
+
+  //  patmos.fNC.ToTH2(350)->Draw("colz text");
+  //  gPad->Print("atmos_spect_nc_2d.png");
+
   new TCanvas;
 
   SingleSampleExperiment expt(&patmos, fake);
