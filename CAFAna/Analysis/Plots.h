@@ -9,6 +9,8 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/SystShifts.h"
 
+#include "OscLib/OscCalc.h"
+
 class TLegend;
 class TGraph;
 class TGraphAsymmErrors;

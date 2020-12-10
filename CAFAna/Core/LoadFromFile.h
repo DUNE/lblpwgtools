@@ -8,6 +8,7 @@
 #include "TFile.h"
 
 #include "CAFAna/Core/FwdDeclare.h"
+#include "OscLib/OscCalc.h"
 
 class TDirectory;
 

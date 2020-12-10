@@ -5,6 +5,8 @@
 
 #include "CAFAna/Core/Ratio.h"
 
+#include "OscLib/OscCalc.h"
+
 namespace ana
 {
   /// Transition probability for any one channel as a function of energy

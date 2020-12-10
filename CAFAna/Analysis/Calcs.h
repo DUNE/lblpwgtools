@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
+#include "OscLib/IOscCalc.h"
 
 namespace osc{class OscCalcSterile;}
 

@@ -9,6 +9,8 @@
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/ThreadLocal.h"
 
+#include "OscLib/OscCalc.h"
+
 #include <string>
 
 #include "TMD5.h"

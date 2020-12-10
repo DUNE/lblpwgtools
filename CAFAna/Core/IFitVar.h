@@ -9,6 +9,8 @@
 
 #include "CAFAna/Core/StanUtils.h"
 
+#include "OscLib/OscCalc.h"
+
 namespace ana
 {
   //----------------------------------------------------------------------

@@ -18,12 +18,15 @@ set(Core_implementation_files
 
 set(Core_header_files
   Binning.h
+  Cut.h
   FitVarWithPrior.h
+  HistAxis.h
   IFitVar.h
   ISyst.h
   Loaders.h
   LoadFromFile.h
   MathUtil.h
+  MultiVar.h
   OscCurve.h
   OscillatableSpectrum.h
   Registry.h
@@ -33,6 +36,7 @@ set(Core_header_files
   StanUtils.h
   SystShifts.h
   Utilities.h
+  Var.h
   ModeConversionUtilities.h
   rootlogon.C)
 

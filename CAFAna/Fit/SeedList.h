@@ -2,6 +2,8 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 
+#include "OscLib/OscCalc.h"
+
 #include <iostream>
 #include <map>
 #include <set>
