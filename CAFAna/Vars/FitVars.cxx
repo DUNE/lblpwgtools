@@ -32,6 +32,8 @@ namespace ana
   const FitDmSq21Scaled kFitDmSq21Scaled;
   const FitRho kFitRho;
 
+  const FitDmSq31Scaled kFitDmSq31Scaled;
+
   //----------------------------------------------------------------------
   double FitTheta13::GetValue(const osc::IOscCalcAdjustable* osc) const
   {
@@ -274,6 +276,32 @@ namespace ana
   void FitRho::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc->SetRho(Clamp(val));
+  }
+
+
+  //----------------------------------------------------------------------
+  double FitDmSq31Scaled::GetValue(const osc::IOscCalcAdjustable* osc) const
+  {
+    return (osc->GetDmsq32()+osc->GetDmsq21())*1000.0;
+  }
+
+  //----------------------------------------------------------------------
+  stan::math::var FitDmSq31Scaled::GetValue(const osc::IOscCalcAdjustableStan *osc) const
+  {
+    return (osc->GetDmsq32()+osc->GetDmsq21())*1000.0;;
+  }
+
+  //----------------------------------------------------------------------
+  void FitDmSq31Scaled::SetValue(osc::IOscCalcAdjustableStan *osc, stan::math::var val) const
+  {
+    osc->SetDmsq32(this->Clamp(val)/1000.0-osc->GetDmsq21());
+  }
+
+
+  //----------------------------------------------------------------------
+  void FitDmSq31Scaled::SetValue(osc::IOscCalcAdjustable* osc, double val) const
+  {
+    osc->SetDmsq32(Clamp(val/1000.0)-osc->GetDmsq21());
   }
 
 } // namespace

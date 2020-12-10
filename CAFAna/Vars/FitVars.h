@@ -335,6 +335,32 @@ namespace ana
   /// \f$ \rho \f$
   extern const FitRho kFitRho;
 
+  //-------------------------------------------------------------------------
+
+  /// \f$ \Delta m^2_{31}\times10^3{\rm eV}^2 \f$
+  class FitDmSq31Scaled: virtual public StanFitSupport<IConstrainedFitVar>
+  {
+  public:
+      FitDmSq31Scaled()
+        : StanFitSupport<IConstrainedFitVar>("dmsq31scaled",
+                                             "#Deltam^{2}_{31} (10^{-3} eV^{2})")
+      {}
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
+
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+    void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
+
+
+    // "1eV^2 splitting should be enough for anyone"
+    // OscCalcPMNS freaks out at large splittings
+    double LowLimit() const override { return -1000; }
+    double HighLimit() const override { return +1000; }
+  };
+
+  /// \f$ \Delta m^2_{31}\times10^3{\rm eV}^2 \f$
+  extern const FitDmSq31Scaled kFitDmSq31Scaled;
+
   //----------------------------------------------------------------------
 
 } // namespace ana
