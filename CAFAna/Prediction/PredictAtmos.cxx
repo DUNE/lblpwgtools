@@ -13,8 +13,10 @@ namespace ana
 {
   const AtmosSyst kAtmosSyst;
 
-  const Binning kRecoLEBins = Binning::Simple(25, 0, 5000);
-  const Binning kRecoCosZenithBins = Binning::Simple(6, -1, .2);
+  //  const Binning kRecoLEBins = Binning::Simple(25, 0, 5000);
+  const Binning kRecoLEBins = Binning::Simple(20, 0, 3000);
+  //  const Binning kRecoCosZenithBins = Binning::Simple(6, -1, .2);
+  const Binning kRecoCosZenithBins = Binning::Simple(10, -1, .2);
 
   const HistAxis kRecoLEAxis("Reco L / E (km / GeV)", kRecoLEBins);
   const HistAxis kRecoCosZenithAxis("Reco cos(#theta_{zenith})", kRecoCosZenithBins);
@@ -39,7 +41,8 @@ namespace ana
       fNC(kNullLoader, k2DRecoAxis, kNoCut)
       */
   {
-    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/DUNEAtmos400ktyr.root");
+    //    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/DUNEAtmos400ktyr.root");
+    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/MigrationMatrixHighRes.root");
     TH2* h = (TH2*)fin.Get("hNuMu2NuTau_UnOsc");
     TH2* ah = (TH2*)fin.Get("hANuMu2ANuTau_UnOsc");
     //    h->SetDirectory(0);
@@ -83,12 +86,12 @@ namespace ana
       fNC.Fill(recoLE, .005 * h->GetBinContent(coord[0], coord[1])*prob);
     }
 
-    //    fTauFromMu.OverrideLivetime(400); // kt*yr
-    fTauFromMu.fPOT = 400;
-    fAntiTauFromMu.fPOT = 400;
-    //    fTauFromMu.fLivetime = 400;
+    //    fTauFromMu.OverrideLivetime(350); // kt*yr
+    fTauFromMu.fPOT = 350;
+    fAntiTauFromMu.fPOT = 350;
+    //    fTauFromMu.fLivetime = 350;
 
-    fNC.OverridePOT(400);
+    fNC.OverridePOT(350);
   }
 
   //---------------------------------------------------------------------------

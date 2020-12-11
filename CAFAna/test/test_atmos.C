@@ -10,6 +10,7 @@
 
 #include "TCanvas.h"
 #include "TH2.h"
+#include "TMath.h"
 #include "TPad.h"
 
 using namespace ana;
@@ -21,6 +22,21 @@ void test_atmos()
   osc::IOscCalcAdjustable* calc = DefaultOscCalc();
   calc->SetRho(0);
   //  calc->SetRho(4); // mantle-ish
+
+  // From Adam
+  const double th12  = asin(sqrt(0.310));
+  const double th13  = asin(sqrt(0.02240));
+  const double th23  = asin(sqrt(0.582));
+  const double dcp   = 217*TMath::Pi()/180.;
+  const double dm221 = 7.39e-5;
+  const double dm231 = 2.525e-3;
+
+  calc->SetTh12(th12);
+  calc->SetTh13(th13);
+  calc->SetTh23(th23);
+  calc->SetdCP(dcp);
+  calc->SetDmsq21(dm221);
+  calc->SetDmsq32(dm231-dm221);
 
   PredictAtmos patmos;
   Spectrum fake = patmos.Predict(calc).FakeData(400);//, kLivetime);
