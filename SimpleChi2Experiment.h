@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Spectrum.h"
+#include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Experiment/IChiSqExperiment.h"
 
@@ -125,7 +126,7 @@ public:
   TH1D *GetPred(osc::IOscCalculatorAdjustable *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     return fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
-        .at(PredictionPRISM::kNDData_FDExtrap) //kPRISMPred kNDData_FDExtrap
+        .at(PredictionPRISM::kNDDataCorr_FDExtrap) //kPRISMPred kNDData_FDExtrap
         .ToTH1(fPOT);
   }
 
@@ -134,7 +135,9 @@ public:
 
     TH1D *PredHist = GetPred(osc, syst);
 
-    double chi2 = 0;
+    double chi2 = LogLikelihood(PredHist, fData);
+
+    /*double chi2 = 0;
     for (int bi = fBinRange.first; bi < fBinRange.second; ++bi) {
       double pbc = PredHist->GetBinContent(bi + 1);
       double pbe =
@@ -149,7 +152,7 @@ public:
       double contrib = pow((pbc - dbc), 2) / pbe;
 
       chi2 += contrib;
-    }
+    }*/
     HistCache::Delete(PredHist);
 
     return chi2;
