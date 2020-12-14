@@ -800,17 +800,16 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   //-----------------------------
   // Get Efficiency from MC and fold into 
   // detector extrapolation from ND to FD
-  // NDComps.at(kNDSig_293kA).ToSpectrum()
-  fMCEffCorrection->CalcEfficiency(NDPrediction->PredictComponentSyst(
-                                       calc, shift, NDSigFlavor, 
-                                       Current::kCC, NDSigSign),
-                                   FDPrediction->PredictComponentSyst(
-                                       calc, kNoShift, FDSigFlavor, // Flavours::kAll
-                                       Current::kCC, FDSigSign)); //Sign::kBoth
+  // Set shift to kNoShift as we don't want systs affecting the MC efficiency correction
+  // at the moment
+  fMCEffCorrection->CalcEfficiency(calc, kNoShift, NDSigFlavor, FDSigFlavor, 
+                                   Current::kCC, NDSigSign, FDSigSign);
 
   // Do ND to FD detector extrapolation here
   // Normalise the ERec v ETrue ND and FD matrices
-  fNDFD_Matrix->NormaliseETrue(fMCEffCorrection->GetNDefficiency(),
+  fNDFD_Matrix->NormaliseETrue(calc, kNoShift, NDSigFlavor, FDSigFlavor, 
+                               Current::kCC, NDSigSign, FDSigSign,
+                               fMCEffCorrection->GetNDefficiency(),
                                fMCEffCorrection->GetFDefficiency());
   // Extrapolate just the LC ND, not the MC
   fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));

@@ -211,48 +211,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
-    // TEST of smearing matrix
-    auto NDMatSpec = state.NDMatrixPredInterps[NDConfig_enum]->PredictSyst(calc, shift);
-    
-    auto FDMatSpec = state.FDMatrixPredInterps[FDConfig_enum]->PredictSyst(calc, shift);
-    //FDMatSpec.OverridePOT(1);    
-
-    NDFD_Matrix SmearMatrices(NDMatSpec, FDMatSpec, POT_FD);
+    // Smearing matrices for ND and FD
+    // For detector and selection corrections
+    NDFD_Matrix SmearMatrices(std::move(state.NDMatrixPredInterps[NDConfig_enum]), 
+                              std::move(state.FDMatrixPredInterps[FDConfig_enum]), 
+                              POT_FD);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
-
-    // ND and FD matrices not normalised    
-    /*auto MatrixND = SmearMatrices.GetNDMatrix();
-    auto MatrixFD = SmearMatrices.GetFDMatrix();
-
-    chan_dir->WriteTObject(MatrixND, "ND_Mat_ERecETrue");
-    MatrixND->SetDirectory(nullptr);
-    chan_dir->WriteTObject(MatrixFD, "FD_Mat_ERecETrue");
-    MatrixFD->SetDirectory(nullptr);
- 
-    // Normalise the ND and FD matrices
-    SmearMatrices.NormaliseETrue();
-    auto MatrixND2 = SmearMatrices.GetNDMatrix();
-    auto MatrixFD2 = SmearMatrices.GetFDMatrix();
-
-    chan_dir->WriteTObject(MatrixND2, "ND_norm");
-    MatrixND2->SetDirectory(nullptr);
-    chan_dir->WriteTObject(MatrixFD2, "FD_norm");
-    MatrixFD2->SetDirectory(nullptr);*/
- 
-    // TEST of MC efficiency correction
-    auto NDUnselectedSpec = state.NDTruePredInterps[NDConfig_enum]->PredictSyst(calc, shift);
-    std::cout << "Before FDUnselectedSpec" << std::endl;
-    if (!state.FDTruePredInterps[FDfdConfig_enum]) std::cout << "WARNING!" << std::endl;
-    TH2 *NDUnsel_h = NDUnselectedSpec.ToTH2(POT_FD);
-    NDUnsel_h->Scale(1, "width");
-    chan_dir->WriteTObject(NDUnsel_h, "Unselected_ND");
-    auto FDUnselectedSpec = state.FDTruePredInterps[FDfdConfig_enum]->PredictSyst(calc, shift);
-    std::cout << "After FDUnselectedSpec" << std::endl;
-    TH1 *FDUnsel_h = FDUnselectedSpec.ToTH1(POT_FD);
-    FDUnsel_h->Scale(1, "width");
-    chan_dir->WriteTObject(FDUnsel_h, "Unselected_FD");
-    MCEffCorrection NDFDEffCorr(NDUnselectedSpec, FDUnselectedSpec);
+    // MC efficiency correction
+    MCEffCorrection NDFDEffCorr(std::move(state.NDUnselTruePredInterps[NDConfig_enum]), 
+                                std::move(state.NDSelTruePredInterps[NDConfig_enum]),
+                                std::move(state.FDUnselTruePredInterps[FDfdConfig_enum]),
+                                std::move(state.FDSelTruePredInterps[FDfdConfig_enum]));
+                                
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
@@ -295,13 +266,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
-
-        /* Perform extrapolation to FD for comparison
-        SmearMatrices.ExtrapolateNDtoFD(PRISMComponents);
-        auto PRISMPred_FDExtrap = SmearMatrices.GetPRISMExtrap();
-        PRISMPred_FDExtrap->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMPred_FDExtrap, "PRISMPred_FDExtrap");
-        PRISMPred_FDExtrap->SetDirectory(nullptr); */
 
         if (PRISM_write_debug) {
 

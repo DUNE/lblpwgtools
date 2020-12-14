@@ -75,8 +75,12 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDTruePredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDTruePredInterps;
+  // For MC Eff Correction
+  std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDUnselTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDSelTruePredInterps;
+  //----------------------
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
@@ -110,8 +114,10 @@ struct PRISMStateBlob {
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(NDTruePredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(FDTruePredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
@@ -179,11 +185,21 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
 //----------------------------------------------------
 class NDFD_Matrix {
 public:
-  NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
+  //NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
+  NDFD_Matrix(std::unique_ptr<PredictionInterp> ND,
+              std::unique_ptr<PredictionInterp> FD,
+              double pot);  
 
   // Normalise the ETrue column to 1 in ND and FD matrices
-  void NormaliseETrue(std::vector<double> NDefficiency,
-                      std::vector<double> FDefficiency) const;
+  void NormaliseETrue(osc::IOscCalculator *calc,
+                      ana::SystShifts shift = kNoShift,
+                      Flavors::Flavors_t NDflav = Flavors::kAll,
+                      Flavors::Flavors_t FDflav = Flavors::kAll,
+                      Current::Current_t curr = Current::kCC,
+                      Sign::Sign_t NDsign = Sign::kBoth,
+                      Sign::Sign_t FDsign = Sign::kBoth,
+                      std::vector<double> NDefficiency = {},
+                      std::vector<double> FDefficiency = {}) const;
 
   TH2 * GetNDMatrix() const;
   TH2 * GetFDMatrix() const;
@@ -195,8 +211,10 @@ public:
 
 protected:
 
-  mutable std::unique_ptr<TH2> fMatrixND;
-  mutable std::unique_ptr<TH2> fMatrixFD;
+  mutable std::unique_ptr<TH2> hMatrixND;
+  mutable std::unique_ptr<TH2> hMatrixFD;
+  mutable std::unique_ptr<PredictionInterp> fMatrixND;
+  mutable std::unique_ptr<PredictionInterp> fMatrixFD;
   const double fPOT;
   mutable std::unique_ptr<TH1> fPRISMExtrap;
 
@@ -210,17 +228,35 @@ protected:
 // Might incorporate this into NDFD_Matrix class later
 class MCEffCorrection {
 public:
-  MCEffCorrection(Spectrum NDunsel, Spectrum FDunsel);
+  //MCEffCorrection(Spectrum NDunsel, Spectrum NDsel,
+  //                Spectrum FDunsel, Spectrum FDsel);
+  MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
+                  std::unique_ptr<PredictionInterp> NDsel,
+                  std::unique_ptr<PredictionInterp> FDunsel,
+                  std::unique_ptr<PredictionInterp> FDsel);
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
-  void CalcEfficiency(Spectrum NDsel, Spectrum FDsel) const;
+  void CalcEfficiency(osc::IOscCalculator *calc, 
+                      ana::SystShifts shift = kNoShift,
+                      Flavors::Flavors_t NDflav = Flavors::kAll,
+                      Flavors::Flavors_t FDflav = Flavors::kAll,
+                      Current::Current_t curr = Current::kCC,
+                      Sign::Sign_t NDsign = Sign::kBoth,
+                      Sign::Sign_t FDsign = Sign::kBoth) const;
+
   std::vector<double> GetNDefficiency() const { return NDefficiency; }
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
 protected:
   
-  mutable std::unique_ptr<TH2> fNDunselected;
-  mutable std::unique_ptr<TH1> fFDunselected;
+  //mutable std::unique_ptr<TH2> fNDunselected;
+  //mutable std::unique_ptr<TH2> fNDselected;
+  //mutable std::unique_ptr<TH1> fFDunselected;
+  //mutable std::unique_ptr<TH1> fFDselected;
+  mutable std::unique_ptr<PredictionInterp> fNDunselected;
+  mutable std::unique_ptr<PredictionInterp> fNDselected;
+  mutable std::unique_ptr<PredictionInterp> fFDunselected;
+  mutable std::unique_ptr<PredictionInterp> fFDselected;
   // ND and FD efficiency in each energy bin
   // Vec element [0] is 1st energy bin eff 
   mutable std::vector<double> NDefficiency;
