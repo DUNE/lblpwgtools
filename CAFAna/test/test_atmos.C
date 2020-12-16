@@ -39,7 +39,15 @@ void test_atmos()
   calc->SetDmsq32(dm231-dm221);
 
   PredictAtmos patmos;
-  Spectrum fake = patmos.Predict(calc).FakeData(400);//, kLivetime);
+
+  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->Draw("colz");
+  new TCanvas;
+  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionX()->Draw("hist");
+  new TCanvas;
+  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionY()->Draw("hist");
+  //  return;
+
+  Spectrum fake = patmos.Predict(calc).FakeData(350);//, kLivetime);
   fake.ToTH1(350/*, kLivetime*/)->Draw("hist");
   TH1* nc = patmos.fNC.ToTH1(350, kBlue);
   nc->Draw("hist same");

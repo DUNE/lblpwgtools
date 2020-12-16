@@ -35,6 +35,9 @@ namespace ana
 
   protected:
     OscillatableSpectrum fTauFromMu, fAntiTauFromMu;
+    OscillatableSpectrum fTauFromE, fAntiTauFromE;
     Spectrum fNC;
+
+    ReweightableSpectrum fTauFromMuRW;
   };
 }
