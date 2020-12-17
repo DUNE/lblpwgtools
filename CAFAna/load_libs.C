@@ -46,6 +46,7 @@ void load_libs(bool MustClean = true) {
       "CAFAnaCore",       "CAFAnaVars",    "CAFAnaCuts",
       "CAFAnaExperiment", "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
       "CAFAnaPrediction", "CAFAnaFit",     "CAFAnaAnalysis",
+      "CAFAnaAtmos",
       "boost_filesystem", "boost_system"};
 
   // Actually load the libraries

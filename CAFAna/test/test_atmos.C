@@ -1,4 +1,4 @@
-#include "CAFAna/Prediction/PredictAtmos.h"
+#include "CAFAna/Atmos/PredictAtmos.h"
 
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
@@ -9,6 +9,7 @@
 #include "CAFAna/Analysis/Calcs.h"
 
 #include "TCanvas.h"
+#include "TGraph.h"
 #include "TH2.h"
 #include "TMath.h"
 #include "TPad.h"
@@ -81,6 +82,12 @@ void test_atmos()
 //  surf.Draw();
   surf.DrawContour(Gaussian68Percent2D(surf), 7, kGreen+2);
   surf.DrawContour(Gaussian3Sigma2D(surf), kSolid, kGreen+2);
+
+  TFile* fadam = new TFile("OscResultHighResPrem.root");
+  if(!fadam->IsZombie()){
+    TGraph* gadam = (TGraph*)fadam->Get("grContour90_0");
+    if(gadam) gadam->Draw("l same");
+  }
 
   gPad->Print("atmos_cont.pdf");
   gPad->Print("atmos_cont.png");

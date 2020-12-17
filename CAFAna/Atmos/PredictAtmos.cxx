@@ -1,4 +1,4 @@
-#include "CAFAna/Prediction/PredictAtmos.h"
+#include "CAFAna/Atmos/PredictAtmos.h"
 
 #include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Progress.h"
@@ -47,23 +47,23 @@ namespace ana
   //---------------------------------------------------------------------------
   PredictAtmos::PredictAtmos()
     : 
+    /*
       fTauFromMu(kNullLoader, kRecoLEAxis, kNoCut),
       fAntiTauFromMu(kNullLoader, kRecoLEAxis, kNoCut),
       fTauFromE(kNullLoader, kRecoLEAxis, kNoCut),
       fAntiTauFromE(kNullLoader, kRecoLEAxis, kNoCut),
       fNC(kNullLoader, kRecoLEAxis, kNoCut),
+    */
     /*
       fTauFromMu(kNullLoader, kRecoCosZenithAxis, kNoCut),
       fAntiTauFromMu(kNullLoader, kRecoCosZenithAxis, kNoCut),
       fNC(kNullLoader, kRecoCosZenithAxis, kNoCut),
     */
-    /*
       fTauFromMu(kNullLoader, k2DRecoAxis, kNoCut),
       fAntiTauFromMu(kNullLoader, k2DRecoAxis, kNoCut),
       fTauFromE(kNullLoader, k2DRecoAxis, kNoCut),
       fAntiTauFromE(kNullLoader, k2DRecoAxis, kNoCut),
       fNC(kNullLoader, k2DRecoAxis, kNoCut),
-    */
       fTauFromMuRW(kNullLoader, kRecoLEAxis, k2DTrueAxis, kNoCut)
   {
     //    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/DUNEAtmos400ktyr.root");
@@ -91,8 +91,8 @@ namespace ana
       const double dR = 15; // production height (guess)
       const double Lnu  = (R+dR)*(sqrt(util::sqr(1+dR/R)+cosQ*cosQ-1)-cosQ);
 
-      const double xval = recoLE;
-      //      const double xval = recoMapper.Map(recoLE, recocos);
+      //      const double xval = recoLE;
+      const double xval = recoMapper.Map(recoLE, recocos);
 
       const double yval = kRefBaseline*E/Lnu;
 
@@ -119,8 +119,8 @@ namespace ana
       const double recoLE  = smear->GetAxis(2)->GetBinCenter(bin.recoLE);
       const double recocos = smear->GetAxis(3)->GetBinCenter(bin.recoCosQ);
 
-      const double xval = recoLE;
-      //      const double xval = recoMapper.Map(recoLE, recocos);
+      //const double xval = recoLE;
+      const double xval = recoMapper.Map(recoLE, recocos);
 
       fNC.Fill(xval, kNCEff * h->GetBinContent(bin.E, bin.cosQ) * prob);
 

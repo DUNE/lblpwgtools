@@ -112,6 +112,7 @@ add_subdirectory(Fit)
 add_subdirectory(Prediction)
 add_subdirectory(Systs)
 add_subdirectory(Vars)
+add_subdirectory(Atmos)
 add_subdirectory(bin)
 
 add_subdirectory(scripts)
