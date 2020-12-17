@@ -157,10 +157,10 @@ Fitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
   for (const ISyst *s : fSysts) {
     const double val = systSeed.GetShift(s);
     // name, value, error
-    mnMin->SetVariable(mnMin->NFree(), s->ShortName(), val, 1);
+    mnMin->SetVariable(mnMin->NFree(), s->ShortName(), val, 0.1);
     fLastParamNames.push_back(s->ShortName());
     fLastPreFitValues.push_back(val);
-    fLastPreFitErrors.push_back(1);
+    fLastPreFitErrors.push_back(0.1);
     fLastCentralValues.push_back(s->Central());
   }
   // One way this can go wrong is if two variables have the same ShortName
@@ -217,14 +217,20 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
   double minchi = 1e10;
   std::vector<double> bestFitPars, bestSystPars;
 
+  // Used as a starting point for all seeds
+  SystShifts inputShift = bestSysts;
+
   for (const SeedPt &pt : pts) {
     osc::IOscCalculatorAdjustable *seed = initseed->Copy();
     osc::IOscCalculatorAdjustable *seed_orig = initseed->Copy();
 
     pt.fitvars.ResetCalc(seed);
 
-    // Need to deal with parameters that are not fit values!
+    // By default take values from the syst seed
     SystShifts shift = pt.shift;
+
+    // If there were no syst seeds, start with the input values
+    if (systSeedPts.empty()) shift = inputShift;
 
     std::unique_ptr<ROOT::Math::Minimizer> thisMin =
         FitHelperSeeded(seed, shift);

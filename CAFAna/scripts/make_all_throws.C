@@ -15,6 +15,7 @@ char const *def_throwString = "stat:fake:start";
 char const *def_penaltyString = "nopen";
 int const def_hie = 1;
 char const *def_types = "all";
+char const *def_fakeDataShift = "";
 
 void make_all_throws(std::string stateFname = def_stateFname,
                      std::string outputFname = def_outputFname,
@@ -23,7 +24,8 @@ void make_all_throws(std::string stateFname = def_stateFname,
                      std::string sampleString = def_sampleString,
                      std::string throwString = def_throwString,
                      std::string penaltyString = def_penaltyString,
-                     int hie = def_hie, std::string types = def_types) {
+                     int hie = def_hie, std::string types = def_types,
+		     std::string fakeDataShift = def_fakeDataShift) {
 
   gROOT->SetBatch(1);
 
@@ -65,7 +67,20 @@ void make_all_throws(std::string stateFname = def_stateFname,
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
 
+  // Deal with fake data shifts now, need to copy them into each throw later
+  SystShifts fakeDataSyst = GetFakeDataSystShift(fakeDataShift);
+
+  // Remove any systs which have been set as fake data from the systlist
+  std::vector<std::string> bias_syst_names;
+  // Loop over all systs set to a non-nominal value and remove                                                                                                               
+  for (auto syst : fakeDataSyst.ActiveSysts()){
+    std::cout << "Removing " << syst->ShortName() <<std::endl;
+    bias_syst_names.push_back(syst->ShortName());
+  }
+  RemoveSysts(systlist, bias_syst_names);
+
   // The global tree for all throw types
+  FitTreeBlob nd_tree("nd_fit_info", "nd_params");
   FitTreeBlob global_tree("global_fit_info", "global_params");
   double globalmin;
   double thisdcp;
@@ -180,11 +195,13 @@ void make_all_throws(std::string stateFname = def_stateFname,
   mh_tree.SetDirectory(fout);
   cpv_tree.SetDirectory(fout);
   oct_tree.SetDirectory(fout);
+  nd_tree.SetDirectory(fout);
 
   global_tree.fJobRNGSeed = gRNGSeed;
   mh_tree.fJobRNGSeed = gRNGSeed;
   cpv_tree.fJobRNGSeed = gRNGSeed;
   oct_tree.fJobRNGSeed = gRNGSeed;
+  nd_tree.fJobRNGSeed = gRNGSeed;
 
   std::map<const IFitVar *, std::vector<double>> oscSeedsOct;
   oscSeedsOct[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
@@ -197,6 +214,7 @@ void make_all_throws(std::string stateFname = def_stateFname,
     mh_tree.fLoopRNGSeed = loop_seed;
     cpv_tree.fLoopRNGSeed = loop_seed;
     oct_tree.fLoopRNGSeed = loop_seed;
+    nd_tree.fLoopRNGSeed = loop_seed;
     gRandom->SetSeed(loop_seed);
 
     auto start_loop = std::chrono::system_clock::now();
@@ -247,6 +265,12 @@ void make_all_throws(std::string stateFname = def_stateFname,
       fitThrowOsc = NuFitOscCalc(hie, 1);
     }
 
+    // Add in the fake data shift, no matter what else was selected
+    for (auto syst : fakeDataSyst.ActiveSysts()){
+      double shift = fakeDataSyst.GetShift(syst);
+      fitThrowSyst.SetShift(syst, shift);
+    }
+
     // Somebody stop him, the absolute madman!
     // Keep the same stats/syst/OA throw for all fits
     std::vector<seeded_spectra> mad_spectra_yo = {};
@@ -273,6 +297,25 @@ void make_all_throws(std::string stateFname = def_stateFname,
     // -------------------------------------
     // --------- Do the global fit ---------
     // -------------------------------------
+
+    // If the fit used the ND, run a fit with just the ND first, this the output
+    // parameter values are then used as the starting point for all subsequent seeds
+    if (sampleString.find("nd") != std::string::npos){
+      SystShifts nd_fit_systs;
+      // Hackity hack with the sample name here...
+      double nd_min = RunFitPoint(stateFname, sampleString+":ndprefit", fakeThrowOsc, fakeThrowSyst,
+                                  stats_throw, {}, systlist, fitThrowOsc,
+                                  SystShifts(fitThrowSyst), {}, nullptr,
+                                  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
+      // The best fit should be used as the input for the next fits!
+      fitThrowSyst = nd_fit_systs;
+      nd_tree.Fill();
+
+      std::cerr << "[THW]: ND throw " << i
+                << " fit found minimum chi2 = " << nd_min << " "
+                << BuildLogInfoString();
+    }
+
 
     // This actually doesn't matter unless we apply a theta23 constraint, which
     // I think we shouldn't anyway...
@@ -514,8 +557,10 @@ int main(int argc, char const *argv[]) {
   std::string penaltyString = (argc > 7) ? argv[7] : def_penaltyString;
   int hie = (argc > 8) ? atoi(argv[8]) : def_hie;
   std::string types = (argc > 9) ? argv[9] : def_types;
+  std::string fakeDataShift = (argc > 10) ? argv[10] : def_fakeDataShift;
+
   make_all_throws(stateFname, outputFname, nthrows, systSet, sampleString,
-                  throwString, penaltyString, hie, types);
+                  throwString, penaltyString, hie, types, fakeDataShift);
 }
 #endif
 #endif
