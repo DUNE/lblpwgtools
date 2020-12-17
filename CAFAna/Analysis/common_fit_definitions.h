@@ -106,7 +106,7 @@ TH2D *make_corr_from_covar(TH2D *covar);
 void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
                       double &pot_nd_rhc, double &pot_fd_fhc_nue,
                       double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
-                      double &pot_fd_rhc_numu);
+                      double &pot_fd_rhc_numu, bool &ndprefit);
 
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
                             bool &fakeNuis, bool &start, bool &central);
@@ -207,3 +207,14 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    FitTreeBlob *PostFitTreeBlob = nullptr,
                    std::vector<seeded_spectra> *spectra = nullptr,
                    ana::SystShifts &bf = ana::junkShifts);
+
+
+void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
+                             std::string parName, double parVal, int hie);
+
+double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name);
+
+std::string sanitize(std::string word);
+
+void RemovePars(std::vector<const ana::IFitVar *> &osclist,
+                std::vector<std::string> const &namesToRemove);

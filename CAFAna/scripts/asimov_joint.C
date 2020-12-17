@@ -2,33 +2,6 @@
 
 using namespace ana;
 
-// I miss python
-std::string sanitize(std::string word) {
-  uint i = 0;
-
-  while (i < word.size()) {
-    if (word[i] == '(' || word[i] == ')') {
-      word.erase(i, 1);
-      continue;
-    }
-    i++;
-  }
-  return word;
-}
-
-void RemovePars(std::vector<const IFitVar *> &osclist,
-                std::vector<std::string> const &namesToRemove) {
-
-  osclist.erase(std::remove_if(osclist.begin(), osclist.end(),
-                               [&](const IFitVar *s) {
-                                 return (std::find(namesToRemove.begin(),
-                                                   namesToRemove.end(),
-                                                   sanitize(s->ShortName())) !=
-                                         namesToRemove.end());
-                               }),
-                osclist.end());
-}
-
 // Function to set the binning based on the parameter short name
 void GetParameterBinning(std::string parName, int &nBins, double &min,
                          double &max, double trueVal) {
@@ -81,51 +54,6 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
   }
   return;
 }
-
-// Likely to have bugs in the translation between what I want to look at, and
-// what CAFAna wants to show me...
-void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
-                             std::string parName, double parVal, int hie) {
-
-  if (parName == "th13")
-    calc->SetTh13(parVal);
-  else if (parName == "deltapi")
-    calc->SetdCP(TMath::Pi() * parVal);
-  else if (parName == "dmsq32scaled" or parName == "dmsq32")
-    calc->SetDmsq32(hie < 0 ? -1 * parVal / 1000. : parVal / 1000.);
-  else if (parName == "ssth23")
-    calc->SetTh23(asin(sqrt(parVal)));
-  else if (parName == "ss2th12")
-    calc->SetTh12(asin(sqrt(parVal)) / 2);
-  else if (parName == "dmsq21")
-    calc->SetDmsq21(parVal);
-  else if (parName == "rho")
-    calc->SetRho(parVal);
-  return;
-}
-
-// This function finds OA parameters by name, and returns the value from a calculator
-double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
-
-  if (not calc) return -999;
-  if (name == "th13")
-    return calc->GetTh13();
-  else if (name == "deltapi")
-    // return a value in [-1,1]                                                                                                                                                
-    return fmod(calc->GetdCP()/TMath::Pi()+1, 2)-1;
-  else if (name == "dmsq32scaled" or name == "dmsq32")
-    return calc->GetDmsq32();
-  else if (name == "ssth23")
-    return sin(calc->GetTh23())*sin(calc->GetTh23());
-  else if (name == "ss2th12")
-    return sin(2*calc->GetTh12())*sin(2*calc->GetTh12());
-  else if (name == "dmsq21")
-    return calc->GetDmsq21();
-  else if (name == "rho")
-    return calc->GetRho();
-  return -999;
-}
-
 
 // This function unpacks the
 TH1 *GetAsimovHist(std::vector<std::string> plotVarVect, osc::IOscCalculatorAdjustable* trueOscPoint = NULL) {

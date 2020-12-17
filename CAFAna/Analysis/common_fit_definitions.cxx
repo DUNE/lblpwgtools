@@ -774,7 +774,7 @@ TH2D *make_corr_from_covar(TH2D *covar) {
 void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
                       double &pot_nd_rhc, double &pot_fd_fhc_nue,
                       double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
-                      double &pot_fd_rhc_numu) {
+                      double &pot_fd_rhc_numu, bool &ndprefit) {
 
   // Did somebody say overextend the command line arguments even further?
   // Well okay!
@@ -789,6 +789,9 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
+  // Default to false here
+  ndprefit = false;
+
   // Look for some other magic information
   for (auto str : input_vect) {
     if (str.find("full") != std::string::npos or
@@ -801,6 +804,9 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
     if (str.find("10year") != std::string::npos)
       exposure = 624;
+
+    if (str.find("ndprefit") != std::string::npos)
+      ndprefit = true;
   }
 
   double exposure_ratio = exposure / nom_exposure;
@@ -1350,8 +1356,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue,
       pot_fd_fhc_numu, pot_fd_rhc_numu;
+  bool ndprefit;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
-                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu);
+                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, ndprefit);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) {
@@ -1550,18 +1557,19 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   // Now sort out the experiment
+  // Note the horrible hack to allow an initial ND fit without messing up the seeded throws for all samples...
   MultiExperiment this_expt;
   if (pot_nd_fhc > 0)
     this_expt.Add(&nd_expt_fhc);
   if (pot_nd_rhc > 0)
     this_expt.Add(&nd_expt_rhc);
-  if (pot_fd_fhc_numu > 0)
+  if (!ndprefit && pot_fd_fhc_numu > 0)
     this_expt.Add(&dis_expt_fhc);
-  if (pot_fd_rhc_numu > 0)
+  if (!ndprefit && pot_fd_rhc_numu > 0)
     this_expt.Add(&dis_expt_rhc);
-  if (pot_fd_fhc_nue > 0)
+  if (!ndprefit && pot_fd_fhc_nue > 0)
     this_expt.Add(&app_expt_fhc);
-  if (pot_fd_rhc_nue > 0)
+  if (!ndprefit && pot_fd_rhc_nue > 0)
     this_expt.Add(&app_expt_rhc);
 
   if (turbose) {
@@ -1652,7 +1660,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   }
 
   // Add in the penalty...
-  if (penaltyTerm) {
+  if (!ndprefit && penaltyTerm) {
     this_expt.Add(penaltyTerm);
   }
 
@@ -1795,3 +1803,78 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   return thischisq;
 }
+
+
+// Likely to have bugs in the translation between what I want to look at, and
+// what CAFAna wants to show me...
+void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
+                             std::string parName, double parVal, int hie) {
+
+  if (parName == "th13")
+    calc->SetTh13(parVal);
+  else if (parName == "deltapi")
+    calc->SetdCP(TMath::Pi() * parVal);
+  else if (parName == "dmsq32scaled" or parName == "dmsq32")
+    calc->SetDmsq32(hie < 0 ? -1 * parVal / 1000. : parVal / 1000.);
+  else if (parName == "ssth23")
+    calc->SetTh23(asin(sqrt(parVal)));
+  else if (parName == "ss2th12")
+    calc->SetTh12(asin(sqrt(parVal)) / 2);
+  else if (parName == "dmsq21")
+    calc->SetDmsq21(parVal);
+  else if (parName == "rho")
+    calc->SetRho(parVal);
+  return;
+}
+
+
+// This function finds OA parameters by name, and returns the value from a calculator
+double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
+
+  if (not calc) return -999;
+  if (name == "th13")
+    return calc->GetTh13();
+  else if (name == "deltapi")
+    // return a value in [-1,1]
+    return fmod(calc->GetdCP()/TMath::Pi()+1, 2)-1;
+  else if (name == "dmsq32scaled" or name == "dmsq32")
+    return calc->GetDmsq32();
+  else if (name == "ssth23")
+    return sin(calc->GetTh23())*sin(calc->GetTh23());
+  else if (name == "ss2th12")
+    return sin(2*calc->GetTh12())*sin(2*calc->GetTh12());
+  else if (name == "dmsq21")
+    return calc->GetDmsq21();
+  else if (name == "rho")
+    return calc->GetRho();
+  return -999;
+}
+
+
+// I miss python
+std::string sanitize(std::string word) {
+  uint i = 0;
+
+  while (i < word.size()) {
+    if (word[i] == '(' || word[i] == ')') {
+      word.erase(i, 1);
+      continue;
+    }
+    i++;
+  }
+  return word;
+}
+
+void RemovePars(std::vector<const IFitVar *> &osclist,
+                std::vector<std::string> const &namesToRemove) {
+
+  osclist.erase(std::remove_if(osclist.begin(), osclist.end(),
+                               [&](const IFitVar *s) {
+                                 return (std::find(namesToRemove.begin(),
+                                                   namesToRemove.end(),
+                                                   sanitize(s->ShortName())) !=
+                                         namesToRemove.end());
+                               }),
+                osclist.end());
+}
+
