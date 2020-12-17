@@ -8,6 +8,8 @@
 
 #include "CAFAna/Core/ISyst.h"
 
+#include "CAFAna/Atmos/AtmosOscSpect.h"
+
 namespace ana
 {
   class AtmosSyst: public ISyst
@@ -22,7 +24,7 @@ namespace ana
   class PredictAtmos : public IPrediction
   {
   public:
-    PredictAtmos();
+    PredictAtmos(const std::string& fname);
 
     Spectrum Predict(osc::IOscCalc* calc) const {return PredictSyst(calc, kNoShift);}
     Spectrum PredictSyst(osc::IOscCalc* calc, const SystShifts& shifts) const;
@@ -34,10 +36,8 @@ namespace ana
     Spectrum PredictComponent(osc::IOscCalcStan* calc, Flavors::Flavors_t flav, Current::Current_t curr, Sign::Sign_t sign) const {abort();}
 
   protected:
-    OscillatableSpectrum fTauFromMu, fAntiTauFromMu;
-    OscillatableSpectrum fTauFromE, fAntiTauFromE;
+    AtmosOscSpect fTauFromMu, fAntiTauFromMu;
+    AtmosOscSpect fTauFromE, fAntiTauFromE;
     Spectrum fNC;
-
-    ReweightableSpectrum fTauFromMuRW;
   };
 }

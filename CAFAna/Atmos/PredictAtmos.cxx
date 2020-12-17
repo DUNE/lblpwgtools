@@ -1,7 +1,7 @@
 #include "CAFAna/Atmos/PredictAtmos.h"
 
 #include "CAFAna/Core/MathUtil.h"
-#include "CAFAna/Core/Progress.h"
+//#include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 
 #include "OscLib/IOscCalc.h"
@@ -45,45 +45,19 @@ namespace ana
   const Var2DMapper trueMapper(kTrueEBins, kTrueCosZenithBins);
 
   //---------------------------------------------------------------------------
-  PredictAtmos::PredictAtmos()
-    : 
-    /*
-      fTauFromMu(kNullLoader, kRecoLEAxis, kNoCut),
-      fAntiTauFromMu(kNullLoader, kRecoLEAxis, kNoCut),
-      fTauFromE(kNullLoader, kRecoLEAxis, kNoCut),
-      fAntiTauFromE(kNullLoader, kRecoLEAxis, kNoCut),
-      fNC(kNullLoader, kRecoLEAxis, kNoCut),
-    */
-    /*
-      fTauFromMu(kNullLoader, kRecoCosZenithAxis, kNoCut),
-      fAntiTauFromMu(kNullLoader, kRecoCosZenithAxis, kNoCut),
-      fNC(kNullLoader, kRecoCosZenithAxis, kNoCut),
-    */
-      fTauFromMu(kNullLoader, k2DRecoAxis, kNoCut),
-      fAntiTauFromMu(kNullLoader, k2DRecoAxis, kNoCut),
-      fTauFromE(kNullLoader, k2DRecoAxis, kNoCut),
-      fAntiTauFromE(kNullLoader, k2DRecoAxis, kNoCut),
-      fNC(kNullLoader, k2DRecoAxis, kNoCut),
-      fTauFromMuRW(kNullLoader, kRecoLEAxis, k2DTrueAxis, kNoCut)
+  void FillTauOscSpect(AtmosOscSpect& aos, const std::string& fname, const std::string& histname)
   {
-    //    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/DUNEAtmos400ktyr.root");
-    TFile fin("/pnfs/dune/persistent/users/bckhouse/atmos/MigrationMatrixHighRes.root");
-    TH2*  mh = (TH2*)fin.Get("hNuMu2NuTau_UnOsc");
-    TH2* amh = (TH2*)fin.Get("hANuMu2ANuTau_UnOsc");
-    TH2*  eh = (TH2*)fin.Get("hNuE2NuTau_UnOsc");
-    TH2* aeh = (TH2*)fin.Get("hANuE2ANuTau_UnOsc");
-    //    h->SetDirectory(0);
+    TFile fin(fname.c_str());
+    TH2* h = (TH2*)fin.Get(histname.c_str());
     
     THnSparseD* smear = (THnSparseD*)fin.Get("hMigrationMatrixNuTau");
-
-    Progress prog("Loading migration matrices");
 
     for(int i = 0; i < smear->GetNbins(); ++i){
       struct {int E, cosQ, recoLE, recoCosQ;} bin;
       const double prob = smear->GetBinContent(i, &bin.E);
 
-      const double E    = mh->GetXaxis()->GetBinCenter(bin.E);
-      const double cosQ = mh->GetYaxis()->GetBinCenter(bin.cosQ);
+      const double E    = h->GetXaxis()->GetBinCenter(bin.E);
+      const double cosQ = h->GetYaxis()->GetBinCenter(bin.cosQ);
       const double recoLE  = smear->GetAxis(2)->GetBinCenter(bin.recoLE);
       const double recocos = smear->GetAxis(3)->GetBinCenter(bin.recoCosQ);
 
@@ -96,21 +70,19 @@ namespace ana
 
       const double yval = kRefBaseline*E/Lnu;
 
-      fTauFromMu.Fill    (xval, yval, kTauEff *  mh->GetBinContent(bin.E, bin.cosQ) * prob);
-      fAntiTauFromMu.Fill(xval, yval, kTauEff * amh->GetBinContent(bin.E, bin.cosQ) * prob);
+      aos.Fill(xval, yval, kTauEff * h->GetBinContent(bin.E, bin.cosQ) * prob);
+    } // end for i
 
-      fTauFromE.Fill     (xval, yval, kTauEff *  eh->GetBinContent(bin.E, bin.cosQ) * prob);
-      fAntiTauFromE.Fill (xval, yval, kTauEff * aeh->GetBinContent(bin.E, bin.cosQ) * prob);
+    aos.fPOT = kExposure;
+  }
 
-      fTauFromMuRW.Fill(recoLE, trueMapper.Map(E, cosQ), kTauEff * mh->GetBinContent(bin.E, bin.cosQ) * prob);
+  //---------------------------------------------------------------------------
+  void FillAtmosNCSpect(Spectrum& s, const std::string& fname, const std::string& histname)
+  {
+    TFile fin(fname.c_str());
+    TH2* h = (TH2*)fin.Get(histname.c_str());
 
-      prog.SetProgress(i/(2.*smear->GetNbins()));
-    }
-
-
-    TH2* h = (TH2*)fin.Get("hNC_UnOsc");
-    h->Add((TH2*)fin.Get("hANC_UnOsc"));
-    smear = (THnSparseD*)fin.Get("hMigrationMatrixNC");
+    THnSparseD* smear = (THnSparseD*)fin.Get("hMigrationMatrixNC");
 
     for(int i = 0; i < smear->GetNbins(); ++i){
       struct {int E, cosQ, recoLE, recoCosQ;} bin;
@@ -122,21 +94,30 @@ namespace ana
       //const double xval = recoLE;
       const double xval = recoMapper.Map(recoLE, recocos);
 
-      fNC.Fill(xval, kNCEff * h->GetBinContent(bin.E, bin.cosQ) * prob);
-
-      prog.SetProgress(.5+i/(2.*smear->GetNbins()));
+      s.Fill(xval, kNCEff * h->GetBinContent(bin.E, bin.cosQ) * prob);
     }
 
-    //    fTauFromMu.OverrideLivetime(kExposure); // kt*yr
-    fTauFromMu.fPOT = kExposure;
-    fAntiTauFromMu.fPOT = kExposure;
-    //    fTauFromMu.fLivetime = kExposure;
-    fTauFromE.fPOT = kExposure;
-    fAntiTauFromE.fPOT = kExposure;
+    s.OverridePOT(kExposure);
+  }
 
-    fNC.OverridePOT(kExposure);
+  //---------------------------------------------------------------------------
+  PredictAtmos::PredictAtmos(const std::string& fname)
+    : fTauFromMu(k2DRecoAxis),
+      fAntiTauFromMu(k2DRecoAxis),
+      fTauFromE(k2DRecoAxis),
+      fAntiTauFromE(k2DRecoAxis),
+      fNC(kNullLoader, k2DRecoAxis, kNoCut)
+  {
+    FillTauOscSpect(fTauFromMu, fname, "hNuMu2NuTau_UnOsc");
+    FillTauOscSpect(fAntiTauFromMu, fname, "hANuMu2ANuTau_UnOsc");
+    FillTauOscSpect(fTauFromE, fname, "hNuE2NuTau_UnOsc");
+    FillTauOscSpect(fAntiTauFromE, fname, "hANuE2ANuTau_UnOsc");
 
-    fTauFromMuRW.fPOT = kExposure;
+    // Accumulate both into the same spectrum
+    FillAtmosNCSpect(fNC, fname, "hNC_UnOsc");
+    FillAtmosNCSpect(fNC, fname, "hANC_UnOsc");
+
+    //      fTauFromMuRW.Fill(recoLE, trueMapper.Map(E, cosQ), kTauEff * mh->GetBinContent(bin.E, bin.cosQ) * prob);
   }
 
   //---------------------------------------------------------------------------
@@ -169,8 +150,6 @@ namespace ana
     gPad->Print("oscillogram.pdf");
     abort();
     */
-
-    ((osc::IOscCalcAdjustable*)calc)->SetL(kRefBaseline);
 
     Spectrum ret = (fTauFromMu.Oscillated(calc, 14, 16) +
                     fAntiTauFromMu.Oscillated(calc, -14, -16) +

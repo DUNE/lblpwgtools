@@ -20,6 +20,8 @@ using namespace ana;
 
 void test_atmos()
 {
+  const std::string kFilename = "/pnfs/dune/persistent/users/bckhouse/atmos/MigrationMatrixHighRes.root";
+
   osc::IOscCalcAdjustable* calc = DefaultOscCalc();
   calc->SetRho(0);
   //  calc->SetRho(4); // mantle-ish
@@ -39,13 +41,13 @@ void test_atmos()
   calc->SetDmsq21(dm221);
   calc->SetDmsq32(dm231-dm221);
 
-  PredictAtmos patmos;
+  PredictAtmos patmos(kFilename);
 
-  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->Draw("colz");
-  new TCanvas;
-  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionX()->Draw("hist");
-  new TCanvas;
-  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionY()->Draw("hist");
+  //  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->Draw("colz");
+  //  new TCanvas;
+  //  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionX()->Draw("hist");
+  //  new TCanvas;
+  //  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->ProjectionY()->Draw("hist");
   //  return;
 
   Spectrum fake = patmos.Predict(calc).FakeData(350);//, kLivetime);
