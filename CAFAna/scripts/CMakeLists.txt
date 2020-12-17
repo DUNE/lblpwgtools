@@ -2,6 +2,7 @@ set(scripts_to_install
   bin_splines.C
   cpv_joint.C
   make_all_throws.C
+  make_FC_throws.C
   make_cpv_throws.C
   make_octant_throws.C
   make_mh_throws.C
@@ -17,6 +18,7 @@ set(scripts_to_build
   fit_covar
   make_all_throws
   make_all_throws_fixed_seed
+  make_FC_throws
   make_1dconstraint_plots
   make_spectra_constraint_plots
   llh_scans
