@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CAFAna/Core/ReweightableSpectrum.h"
 
 #include "CAFAna/Core/OscillatableSpectrum.h" // borrow their OscCache struct
