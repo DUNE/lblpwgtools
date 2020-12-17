@@ -88,8 +88,9 @@ std::vector<TH1 *> make_syst_throw(std::string stateFname,
 
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue,
       pot_fd_fhc_numu, pot_fd_rhc_numu;
+  bool ndprefit;
   ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
-                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu);
+                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, ndprefit);
 
   static std::vector<std::unique_ptr<PredictionInterp>> interp_list =
       GetPredictionInterps(stateFname, GetListOfSysts());
