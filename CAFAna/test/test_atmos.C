@@ -77,8 +77,8 @@ void test_atmos()
 
   FrequentistSurface surf(&expt,
                           calc,
-                          &kFitSinSqTheta23, 50, 0, 1,
-                          &kFitDmSq31Scaled, 50, 1, 6,
+                          &kFitSinSqTheta23, 10/*50*/, 0, 1,
+                          &kFitDmSq31Scaled, 10/*50*/, 1, 6,
                           {}, {&kAtmosSyst});
 
 //  surf.Draw();

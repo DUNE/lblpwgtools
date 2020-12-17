@@ -2,15 +2,21 @@
 
 #include "CAFAna/Atmos/AtmosOscillogram.h"
 
-#include "CAFAna/Core/Binning.h" // kTrueEnergyBins
-
 namespace ana
 {
+  const Binning kTrueEBins = Binning::Simple(400, 0.1, 100);
+  // TODO it's not really clear that 50 cos_zenith bins are enough. Or,
+  // shouldn't we bin evenly around the perimeter of the earth instead?
+  const Binning kTrueCosZenithBins = Binning::Simple(50, -1, +1);
+
+  const LabelsAndBins kTrueAxis({"True Energy (GeV)", "True cos(#theta_{zenith})"},
+                                {kTrueEBins, kTrueCosZenithBins});
+
   //----------------------------------------------------------------------
   AtmosOscSpect::AtmosOscSpect(const LabelsAndBins& recoAxis)
-    : ReweightableSpectrum(recoAxis, LabelsAndBins("1000 # times True E / L", kTrueEnergyBins))
+    : ReweightableSpectrum(recoAxis, kTrueAxis)
   {
-    fMat.resize(kTrueEnergyBins.NBins()+2, recoAxis.GetBins1D().NBins()+2);
+    fMat.resize(kTrueAxis.GetBins1D().NBins()+2, recoAxis.GetBins1D().NBins()+2);
     fMat.setZero();
   }
 

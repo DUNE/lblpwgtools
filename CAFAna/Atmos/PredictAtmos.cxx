@@ -61,14 +61,16 @@ namespace ana
       const double recoLE  = smear->GetAxis(2)->GetBinCenter(bin.recoLE);
       const double recocos = smear->GetAxis(3)->GetBinCenter(bin.recoCosQ);
 
-      const double R = 6371; // km
-      const double dR = 15; // production height (guess)
-      const double Lnu  = (R+dR)*(sqrt(util::sqr(1+dR/R)+cosQ*cosQ-1)-cosQ);
+      //      const double R = 6371; // km
+      //      const double dR = 15; // production height (guess)
+      //      const double Lnu  = (R+dR)*(sqrt(util::sqr(1+dR/R)+cosQ*cosQ-1)-cosQ);
 
       //      const double xval = recoLE;
       const double xval = recoMapper.Map(recoLE, recocos);
 
-      const double yval = kRefBaseline*E/Lnu;
+      //      const double yval = kRefBaseline*E/Lnu;
+
+      const double yval = trueMapper.Map(E, cosQ);
 
       aos.Fill(xval, yval, kTauEff * h->GetBinContent(bin.E, bin.cosQ) * prob);
     } // end for i
