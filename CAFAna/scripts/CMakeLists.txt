@@ -18,7 +18,8 @@ set(scripts_to_build
   fit_covar
   make_all_throws
   make_all_throws_fixed_seed
-  make_FC_throws
+  make_FC_throws	
+  make_FC_throws_fixed_seed
   make_1dconstraint_plots
   make_spectra_constraint_plots
   llh_scans
