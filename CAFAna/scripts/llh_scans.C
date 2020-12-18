@@ -112,7 +112,7 @@ void llh_scans(std::string stateFname = def_stateFname,
     spectra = BuildSpectra(&predFDNumuFHC, &predFDNueFHC, &predFDNumuRHC,
                            &predFDNueRHC, &predNDNumuFHC, &predNDNumuRHC,
                            trueOsc, shifted, false, pot_fd, pot_fd, pot_fd,
-                           pot_fd, pot_nd, pot_nd);
+                           pot_fd, pot_nd, pot_nd, {0,0,0,0,0,0});
   }
 
   SingleSampleExperiment app_expt_fhc_syst(&predFDNueFHC,
