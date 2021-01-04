@@ -553,9 +553,14 @@ int main(int argc, char const *argv[]) {
   // True axis: make the binning the same as the Rec axis so we can 
   // we don't have an underdetermined linear system
   // Convert FD ETrue to FD Rec spectrum
-  std::vector<std::string> Labels_matrixRT = MatchAxis.GetLabels();
-  std::vector<Binning> Bins_matrixRT = axes.XProjection.GetBinnings();
-  std::vector<Var> Vars_matrixRT = MatchAxis.GetVars();
+  // --> Need a axis which is the true version of the observable:
+  // --> e.g. EProxy --> ETrue
+  // Finer binning for true variable
+  HistAxis TrueObsAxis = TrueObservable(axdescriptor, truthbinningdescriptor);
+
+  std::vector<std::string> Labels_matrixRT = TrueObsAxis.GetLabels(); //MatchAxis
+  std::vector<Binning> Bins_matrixRT = TrueObsAxis.GetBinnings(); // axes.XProjection
+  std::vector<Var> Vars_matrixRT = TrueObsAxis.GetVars(); // MatchAxis
   // EProxyRec axis
   Labels_matrixRT.push_back(axes.XProjection.GetLabels().front());
   Bins_matrixRT.push_back(axes.XProjection.GetBinnings().front());
@@ -566,9 +571,9 @@ int main(int argc, char const *argv[]) {
   //----------------------------------------------------------------
   // Slightly different HistAxis needed for MC efficiency correction
   // True energy as variable but observed variable binning
-  std::vector<std::string> Labels_eff = MatchAxis.GetLabels(); 
-  std::vector<Binning> Bins_eff = axes.XProjection.GetBinnings();
-  std::vector<Var> Vars_eff = MatchAxis.GetVars(); // MatchAxis for true E
+  std::vector<std::string> Labels_eff = TrueObsAxis.GetLabels(); //MatchAxis
+  std::vector<Binning> Bins_eff = TrueObsAxis.GetBinnings(); //axes.XProjection
+  std::vector<Var> Vars_eff = TrueObsAxis.GetVars(); // MatchAxis for true E
   
   Labels_eff.push_back(axes.OffAxisPosition.GetLabels().front());
   Bins_eff.push_back(axes.OffAxisPosition.GetBinnings().front());
@@ -576,9 +581,9 @@ int main(int argc, char const *argv[]) {
 
   HistAxis const NDTrueEnergyObsBins(Labels_eff, Bins_eff, Vars_eff);
 
-  HistAxis const FDTrueEnergyObsBins(MatchAxis.GetLabels(), 
-                                     axes.XProjection.GetBinnings(),
-                                     MatchAxis.GetVars());
+  HistAxis const FDTrueEnergyObsBins(TrueObsAxis.GetLabels(), //MatchAxis
+                                     TrueObsAxis.GetBinnings(), //axes.XProjection
+                                     TrueObsAxis.GetVars()); // MatchAxis
   //----------------------------------------------------------------
 
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;

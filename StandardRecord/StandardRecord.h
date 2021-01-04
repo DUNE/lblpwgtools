@@ -47,6 +47,9 @@ namespace caf
     double RecoLepEnNumu;
     double RecoHadEnNumu;
 
+    double RecoLepE_NDFD;
+    double ProxyRecoLepE;
+
     // ND pseudo-reconstruction flags
     int reco_numu;
     int reco_nue;

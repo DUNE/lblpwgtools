@@ -6,7 +6,7 @@ for i in FHC; do # RHC; do
   #On axis is treated differently
 
   ## Standard on axis run
-  for j in 00 01 02 03 04 05 06; do
+  for j in 00 01 02 03 04 05 06 07 08 09; do
     
     OffAxisNDCAFCombiner \
       -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v7/CAF/0m/${j}/${i}*.root" \
@@ -33,7 +33,7 @@ for i in FHC; do # RHC; do
 
   for p in 2m 4m 8m 12m 16m 20m 24m 28m; do
 
-    for k in 00 01 02 03 04 05 06; do
+    for k in 00 01 02 03 04 05 06 07 08 09; do
  
       OffAxisNDCAFCombiner \
         -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v7/CAF/${p}/${k}/${i}*.root" \
@@ -52,7 +52,7 @@ for i in FHC; do # RHC; do
   # Combine them all
   OffAxisNDCAFCombiner \
     -i "./CAFv7_*_${i}.root" \
-    -o CAFv7_PRISM_Dec2020_${i}.root \
+    -o CAFv7Full_PRISM_Dec2020_${i}.root \
     -x -4000,400,25\
     -f \
     -C

@@ -490,8 +490,6 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 NDFD_Matrix::NDFD_Matrix(std::unique_ptr<PredictionInterp> ND, 
                          std::unique_ptr<PredictionInterp> FD, 
                          double pot) : fPOT(pot), fPRISMExtrap(nullptr) {
-  //fMatrixND = std::unique_ptr<TH2>(static_cast<TH2*>(ND.ToTH2(1)));
-  //fMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(FD.ToTH2(1))); 
   fMatrixND = std::move(ND);
   fMatrixFD = std::move(FD);
 }
@@ -533,8 +531,8 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
   hMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(sMatrixFD.ToTH2(1)));
 
   if (!hMatrixND) std::cout << "fMatrixND ERROR" << std::endl;
-  std::unique_ptr<TH2>* NDhist = &hMatrixND;
-  gFile->WriteTObject(NDhist->get(), "NDmatrix_noNorm"); 
+  //std::unique_ptr<TH2>* NDhist = &hMatrixND;
+  //gFile->WriteTObject(NDhist->get(), "NDmatrix_noNorm"); 
  
   std::pair<std::unique_ptr<TH2>*, std::vector<double>> NDpair (&hMatrixND, NDefficiency);
   std::pair<std::unique_ptr<TH2>*, std::vector<double>> FDpair (&hMatrixFD, FDefficiency);
@@ -566,10 +564,10 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   std::unique_ptr<TH2>* NDhist = &hMatrixND;
   std::unique_ptr<TH2>* FDhist = &hMatrixFD;
 
-  gFile->WriteTObject(NDhist->get(), "NDMatrix");
-  gFile->WriteTObject(FDhist->get(), "FDMatrix");
+  //gFile->WriteTObject(NDhist->get(), "NDMatrix");
+  //gFile->WriteTObject(FDhist->get(), "FDMatrix");
 
-  auto PRISMND = std::unique_ptr<TH1>(static_cast<TH1*>(NDPRISMLCComp.ToTH1(1)));
+  TH1D *PRISMND = NDPRISMLCComp.ToTH1(1);
 
   Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist->get(), 
                                          NDhist->get()->GetYaxis()->GetNbins(),
@@ -581,14 +579,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   const int NTrueBins = NDmat.cols();
   const int NRecoBins = NDmat.rows();
   
-  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND.get());
-
-  // Old OLS method
-  Eigen::VectorXd NDETrueOLS = NDmat.colPivHouseholderQr().solve(NDERec);
-  std::unique_ptr<TH1> NDETrueOLS_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  FillHistFromEigenVector(NDETrueOLS_h.get(), NDETrueOLS);
-  NDETrueOLS_h.get()->Scale(1, "width");
-  gFile->WriteTObject(NDETrueOLS_h.get(), "NDETrueOLS_h");
+  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND);
   
   // Use T-reg to calculate ETrue(ND)
   const double reg = 0.15;
@@ -612,9 +603,10 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   Eigen::VectorXd FDERec = FDmat * NDETrue;
   // Keep same binning for extrapolated prediction
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  
+  fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(HistCache::Copy(PRISMND))); 
+ 
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
-
+  HistCache::Delete(PRISMND);
 } 
 
 //----------------------------------------------------
@@ -624,12 +616,6 @@ MCEffCorrection::MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
                                  std::unique_ptr<PredictionInterp> NDsel,
                                  std::unique_ptr<PredictionInterp> FDunsel,
                                  std::unique_ptr<PredictionInterp> FDsel) {
-  //NDunsel.OverridePOT(1);
-  //NDsel.OverridePOT(1);
-  //fNDunselected = std::unique_ptr<TH2>(static_cast<TH2*>(NDunsel.ToTH2(1)));
-  //fNDselected = std::unique_ptr<TH2>(static_cast<TH2*>(NDsel.ToTH2(1)));
-  //fFDunselected = std::unique_ptr<TH1>(static_cast<TH1*>(FDunsel.ToTH1(1)));
-  //fFDselected = std::unique_ptr<TH1>(static_cast<TH1*>(FDsel.ToTH1(1)));
   fNDunselected = std::move(NDunsel);
   fNDselected = std::move(NDsel);
   fFDunselected = std::move(FDunsel);
@@ -646,25 +632,24 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                                      Sign::Sign_t NDsign, 
                                      Sign::Sign_t FDsign) const {
 
+  shift = kNoShift;
+
   auto sNDunselected = fNDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  std::unique_ptr<TH2> hNDunselected = std::unique_ptr<TH2>(
-                                           static_cast<TH2*>(sNDunselected.ToTH2(1))); 
+  TH2D *hNDunselected = static_cast<TH2D*>(sNDunselected.ToTH2(1));
+  
   auto sNDselected = fNDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  std::unique_ptr<TH2> hNDselected = std::unique_ptr<TH2>(
-                                           static_cast<TH2*>(sNDselected.ToTH2(1)));
-
+  TH2D *hNDselected = static_cast<TH2D*>(sNDselected.ToTH2(1));
+ 
   auto sFDunselected = fFDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  std::unique_ptr<TH1> hFDunselected = std::unique_ptr<TH1>(
-                                           static_cast<TH1*>(sFDunselected.ToTH1(1)));
+  TH1D *hFDunselected = sFDunselected.ToTH1(1);
+
   auto sFDselected = fFDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  std::unique_ptr<TH1> hFDselected = std::unique_ptr<TH1>(
-                                           static_cast<TH1*>(sFDselected.ToTH1(1)));
+  TH1D *hFDselected = sFDselected.ToTH1(1);
 
-
-  gFile->WriteTObject(hNDselected.get(), "NDSelected");
-  gFile->WriteTObject(hNDunselected.get(), "NDUnselected");
-  gFile->WriteTObject(hFDselected.get(), "FDSelected");
-  gFile->WriteTObject(hFDunselected.get(), "FDUnselected");
+  //gFile->WriteTObject(hNDselected.get(), "NDSelected");
+  //gFile->WriteTObject(hNDunselected.get(), "NDUnselected");
+  //gFile->WriteTObject(hFDselected.get(), "FDSelected");
+  //gFile->WriteTObject(hFDunselected.get(), "FDUnselected");
 
   // Calculate ND efficiency
   // efficiency fluctuates slightly with OA position
@@ -682,19 +667,17 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                            (hNDselected->GetYaxis()->GetNbins() - OAbinstart));
   }
 
-  /*for (auto const &ND : NDefficiency) {
-    std::cout << "ND eff = " << ND << std::endl;
-  }*/
-
   // Calculate FD efficiency
   for (int i = 0; i < hFDselected->GetXaxis()->GetNbins(); i++) {
     double FDbin_eff = hFDselected->GetBinContent(i + 1) / // changed from FDselected
                        hFDunselected->GetBinContent(i + 1);
     FDefficiency.push_back(FDbin_eff);
   }
-  /*for (auto const &FD : FDefficiency) {
-    std::cout << "FD eff = " << FD << std::endl;
-  } */
+
+  HistCache::Delete(hNDunselected);
+  HistCache::Delete(hNDselected);
+  HistCache::Delete(hFDunselected);
+  HistCache::Delete(hFDselected);
 
 }
 

@@ -327,6 +327,28 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       sr.eRecProxy = sr.eRecProxy - sr.LepE;
     }
 
+    // Common reco LepE variable for ND and FD
+    if (sr.isCC) {
+      if (sr.isFD) sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+      else sr.RecoLepE_NDFD = sr.Elep_reco;
+    } //else { // If a NC event lepton is a neutrino, not reconstructed
+      //sr.RecoLepE_NDFD = 0;
+    //}
+
+    if (sr.isCC) {
+      std::unique_ptr<TRandom3> rando = std::make_unique<TRandom3>();
+      double Mmuon = 0.1056583745;
+      double lepKE = sr.LepE - Mmuon;
+      double recoKE;
+      // Do slightly different ND and FD muon res to see if we can
+      // successfully correct for the differences
+      if (sr.isFD) recoKE = rando->Gaus(lepKE, 0.018);
+      else recoKE = rando->Gaus(lepKE, 0.022);
+      sr.ProxyRecoLepE = recoKE + Mmuon;
+    } else { // is NC, neutrino not reconstructed
+      sr.ProxyRecoLepE = 0;
+    }
+
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {
       if (sr.isFHC != 0 && sr.isFHC != 1) {

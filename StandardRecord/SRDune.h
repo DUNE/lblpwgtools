@@ -31,6 +31,10 @@ public:
   double RecoLepEnNumu;
   double RecoHadEnNumu;
 
+  double RecoLepE_NDFD;
+  // 'Reco' LepE which just smears LepE my detector res
+  double ProxyRecoLepE;
+
   // ND pseudo-reconstruction flags
   int reco_numu;
   int reco_nue;

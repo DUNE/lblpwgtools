@@ -21,5 +21,8 @@ extern ana::Var const kTrueEnergy;
 // FD + ND (affected by missing proton fake data)
 extern ana::Var const kProxyERec;
 
+// FD + ND (parameterised) reco lepton energy
+extern ana::Var const kLepEReco;
+
 // CV weighting
 extern ana::Var const kCVXSecWeights; // kUnweighted
