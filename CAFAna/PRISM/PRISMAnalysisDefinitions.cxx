@@ -28,10 +28,10 @@ const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
 
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {
-    return Binning::Simple(100, 0, 10);
+    return Binning::Simple(80, 0, 8);
   }
   if (xbinning == "uniform") {
-    return Binning::Simple(50, 0, 10);
+    return Binning::Simple(40, 0, 8);
   }
   if (xbinning == "uniform_coarse") {
     return Binning::Simple(20, 0, 8); // used to be 25, 10 (bad tail going out to 10)
@@ -84,6 +84,8 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
     return std::make_pair("E_{Dep.} (GeV)", kRecoE_FromDep);
+  } else if (varname == "RecoELep") {
+    return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -110,6 +112,28 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
 
   return {xax, axOffAxisPos, axOffAxis280kAPos};
+}
+
+// Return HistAxis for true energy version of observable
+HistAxis TrueObservable(std::string const &obsvarname, 
+                        std::string const &binning) {
+  //std::pair<std::string, Var> truevardef;
+  auto truevardef = GetVar("ETrue");
+
+  if (obsvarname == "EProxy") {
+    truevardef = GetVar("ETrue");
+  } else if (obsvarname == "ETrue") {
+    truevardef = GetVar("ETrue");
+  } else if (obsvarname == "RecoELep") {
+    truevardef = GetVar("ELep");
+  } else if (obsvarname == "ELep") {
+    truevardef = GetVar("ELep");
+  } else {
+    std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
+    abort();
+  }   
+
+  return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
 }
 
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
