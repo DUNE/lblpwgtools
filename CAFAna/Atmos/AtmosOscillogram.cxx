@@ -4,6 +4,8 @@
 
 #include "OscLib/EarthModel.h"
 
+#include "OscLib/OscCalcAnalytic.h"
+
 #include <iostream>
 
 namespace ana
@@ -24,8 +26,14 @@ namespace ana
   //----------------------------------------------------------------------
   /// Helper for constructors
   template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
-  AtmosToEigen(osc::_IOscCalc<T>* calc, int from, int to)
+  AtmosToEigen(osc::_IOscCalc<T>* calc2, int from, int to)
   {
+    osc::OscCalcAnalytic* calc = dynamic_cast<osc::OscCalcAnalytic*>(calc2);
+    if(!calc){
+      std::cout << "Must use OscCalcAnalytic" << std::endl;
+      abort();
+    }
+
     Eigen::Array<T, Eigen::Dynamic, 1> ret(kTrueEBins.NBins()*kTrueCosZenithBins.NBins()+2);
     ret[0] = ret[ret.size()-1] = 0;
 
@@ -39,25 +47,21 @@ namespace ana
       std::list<double> Ls, Ns;
       earth.LineProfile(dR, cosQ, 0, Ls, Ns);
 
-      double Ltot = 0;
-      double Navg = 0;
+      std::vector<osc::Layer> layers;
+      layers.reserve(Ls.size());
       for(auto itL = Ls.begin(), itN = Ns.begin(); itL != Ls.end(); ++itL, ++itN){
-        Ltot += *itL;
-        Navg += *itN * *itL;
+        if(*itL > 1e-3) layers.emplace_back(*itL, *itN * 2);
       }
-      Navg /= Ltot;
-
-      ((osc::IOscCalcAdjustable*)calc)->SetL(Ltot);
-      ((osc::IOscCalcAdjustable*)calc)->SetRho(Navg*2);
 
       for(int i = 0; i < kTrueEBins.NBins(); ++i){
         const double trueE = (kTrueEBins.Edges()[i]+kTrueEBins.Edges()[i+1])/2;
 
-        const T P = calc->P(from, to, trueE); // TODO batch?
+        const T P = calc->P(from, to, trueE, layers);
 
-        ret[trueMapper.Map(trueE, cosQ)] = P;
-      }
-    }
+        // TODO understand nans/infs
+        ret[trueMapper.Map(trueE, cosQ)+1] = (isnan(P) || isinf(P)) ? 0 : P;
+      } // end for i (trueE)
+    } // end for j (cosQ)
 
     return ret;
   }

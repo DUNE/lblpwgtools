@@ -16,10 +16,12 @@ setup clhep v2_4_1_2 -q e19:prof || exit 1
 
 setup stan v2_18_0a -q e19:prof || exit 1
 
-setup osclib v00.09 -q e19:prof:stan || exit 1
-#setup cafanacore v01.11 -q e19:prof || exit 1
 export PRODUCTS=/dune/app/users/bckhouse/products/:$PRODUCTS
-setup cafanacore v01.11-6-g1d7b843 -q e19:prof || exit
+#setup osclib v00.09 -q e19:prof:stan || exit 1
+setup osclib v00.09-4-g099cc23 -q e19:prof:stan || exit 1
+
+#setup cafanacore v01.11 -q e19:prof || exit 1
+setup cafanacore v01.11-19-g7be6dc7 -q e19:prof || exit 1
 
 # To get setup_fnal_security which helps reading files over xrootd
 setup duneutil v09_09_02 -q e19:prof

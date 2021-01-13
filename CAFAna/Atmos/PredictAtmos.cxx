@@ -118,8 +118,6 @@ namespace ana
     // Accumulate both into the same spectrum
     FillAtmosNCSpect(fNC, fname, "hNC_UnOsc");
     FillAtmosNCSpect(fNC, fname, "hANC_UnOsc");
-
-    //      fTauFromMuRW.Fill(recoLE, trueMapper.Map(E, cosQ), kTauEff * mh->GetBinContent(bin.E, bin.cosQ) * prob);
   }
 
   //---------------------------------------------------------------------------

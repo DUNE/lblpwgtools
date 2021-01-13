@@ -1,5 +1,7 @@
 #include "CAFAna/Atmos/PredictAtmos.h"
 
+#include "CAFAna/Atmos/AtmosOscillogram.h"
+
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
 #include "CAFAna/Vars/FitVars.h"
@@ -17,12 +19,13 @@
 using namespace ana;
 
 #include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalcAnalytic.h"
 
 void test_atmos()
 {
   const std::string kFilename = "/pnfs/dune/persistent/users/bckhouse/atmos/MigrationMatrixHighRes.root";
 
-  osc::IOscCalcAdjustable* calc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* calc = new osc::OscCalcAnalytic;//DefaultOscCalc();
   calc->SetRho(0);
   //  calc->SetRho(4); // mantle-ish
 
@@ -41,6 +44,12 @@ void test_atmos()
   calc->SetDmsq21(dm221);
   calc->SetDmsq32(dm231-dm221);
 
+  AtmosOscillogram oscgram(calc, 14, 16);
+  //  oscgram.ToTH1()->Draw("hist");
+  oscgram.ToTH2()->Draw("colz");
+  //  return;
+  new TCanvas;
+
   PredictAtmos patmos(kFilename);
 
   //  patmos.fTauFromMuRW.WeightingVariable().ToTH2(350)->Draw("colz");
@@ -51,6 +60,7 @@ void test_atmos()
   //  return;
 
   Spectrum fake = patmos.Predict(calc).FakeData(350);//, kLivetime);
+
   fake.ToTH1(350/*, kLivetime*/)->Draw("hist");
   TH1* nc = patmos.fNC.ToTH1(350, kBlue);
   nc->Draw("hist same");
@@ -77,13 +87,13 @@ void test_atmos()
 
   FrequentistSurface surf(&expt,
                           calc,
-                          &kFitSinSqTheta23, 10/*50*/, 0, 1,
-                          &kFitDmSq31Scaled, 10/*50*/, 1, 6,
+                          &kFitSinSqTheta23, 20/*50*/, 0, 1,
+                          &kFitDmSq31Scaled, 20/*50*/, 1, 4,
                           {}, {&kAtmosSyst});
 
 //  surf.Draw();
   surf.DrawContour(Gaussian68Percent2D(surf), 7, kGreen+2);
-  surf.DrawContour(Gaussian3Sigma2D(surf), kSolid, kGreen+2);
+  surf.DrawContour(Gaussian90Percent2D(surf), kSolid, kGreen+2);
 
   TFile* fadam = new TFile("OscResultHighResPrem.root");
   if(!fadam->IsZombie()){
