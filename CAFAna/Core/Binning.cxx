@@ -41,16 +41,22 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::vector<double> TrueEnergyBinCenters()
+  std::vector<double> BinCenters(const Binning& bins)
   {
-    std::vector<double> energies;
-    std::vector<double> edges = TrueEnergyBins().Edges();
+    std::vector<double> ret;
+    const std::vector<double> edges = bins.Edges();
 
     for(std::size_t i = 0; i < edges.size()-1; i++) {
-      energies.push_back((edges[i+1] + edges[i])/2);
+      ret.push_back((edges[i+1] + edges[i])/2);
     }
 
-    return energies;
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  std::vector<double> TrueEnergyBinCenters()
+  {
+    return BinCenters(TrueEnergyBins());
   }
 
   //----------------------------------------------------------------------

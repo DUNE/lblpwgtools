@@ -9,6 +9,8 @@ namespace ana
   /// No entries for underflow or overflow
   std::vector<double> TrueEnergyBinCenters();
 
+  std::vector<double> BinCenters(const Binning& bins);
+
   /// Default true-energy bin edges
   const Binning kTrueEnergyBins = TrueEnergyBins();
   /// No entries for underflow or overflow

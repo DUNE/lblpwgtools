@@ -26,7 +26,7 @@ void test_atmos()
   const std::string kFilename = "/pnfs/dune/persistent/users/bckhouse/atmos/MigrationMatrixHighRes.root";
 
   osc::IOscCalcAdjustable* calc = new osc::OscCalcAnalytic;//DefaultOscCalc();
-  calc->SetRho(0);
+  //  calc->SetRho(0);
   //  calc->SetRho(4); // mantle-ish
 
   // From Adam
@@ -47,6 +47,7 @@ void test_atmos()
   AtmosOscillogram oscgram(calc, 14, 16);
   //  oscgram.ToTH1()->Draw("hist");
   oscgram.ToTH2()->Draw("colz");
+  gPad->Print("oscillogram.pdf");
   //  return;
   new TCanvas;
 

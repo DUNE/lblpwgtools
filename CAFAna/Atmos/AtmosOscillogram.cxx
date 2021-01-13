@@ -15,6 +15,10 @@ namespace ana
   // shouldn't we bin evenly around the perimeter of the earth instead?
   const Binning kTrueCosZenithBins = Binning::Simple(50, -1, +1);
 
+  /*const*/ std::vector<double> kTrueECenters = BinCenters(kTrueEBins);
+
+  const Eigen::ArrayXd kTrueECentersEig = Eigen::Map<Eigen::ArrayXd>(kTrueECenters.data(), kTrueECenters.size());
+
   const HistAxis kTrueEAxis("True E (GeV)", kTrueEBins);
   const HistAxis kTrueCosZenithAxis("True cos(#theta_{zenith})", kTrueCosZenithBins);
 
@@ -34,7 +38,8 @@ namespace ana
       abort();
     }
 
-    Eigen::Array<T, Eigen::Dynamic, 1> ret(kTrueEBins.NBins()*kTrueCosZenithBins.NBins()+2);
+    using EigenArrayXT = Eigen::Array<T, Eigen::Dynamic, 1>;
+    EigenArrayXT ret(kTrueEBins.NBins()*kTrueCosZenithBins.NBins()+2);
     ret[0] = ret[ret.size()-1] = 0;
 
     for(int j = 0; j < kTrueCosZenithBins.NBins(); ++j){
@@ -53,10 +58,11 @@ namespace ana
         if(*itL > 1e-3) layers.emplace_back(*itL, *itN * 2);
       }
 
-      for(int i = 0; i < kTrueEBins.NBins(); ++i){
-        const double trueE = (kTrueEBins.Edges()[i]+kTrueEBins.Edges()[i+1])/2;
+      const EigenArrayXT Ps = calc->P(from, to, kTrueECentersEig, layers);
 
-        const T P = calc->P(from, to, trueE, layers);
+      for(int i = 0; i < kTrueEBins.NBins(); ++i){
+        const double trueE = kTrueECentersEig[i];
+        const T P = Ps[i];
 
         // TODO understand nans/infs
         ret[trueMapper.Map(trueE, cosQ)+1] = (isnan(P) || isinf(P)) ? 0 : P;
