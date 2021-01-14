@@ -8,6 +8,7 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/Exposures.h"
+#include "CAFAna/Experiment/CovarianceExperiment.h"
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/SolarConstraints.h"
@@ -25,9 +26,81 @@ struct expSpectrum
   double pot;
 };
 
+// This is a pain. There are 27 possible combinations of experiments.
+// But no one asked for numu and nue only cases, or fhc and rhc only, or matrix or no matrix. 
+MultiExperiment GetMultiExperimentLBL(std::vector<PredictionInterp*> predictions,
+                                      std::vector<Spectrum> s_fakedata, 
+                                      std::vector<TString> tags,
+                                      bool UseNDCovMat, bool TwoBeams){
 
-  // std::string fdir = "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/dmendez/CAFAnaInputs/";
-  // std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
+  // First, make sure to get the possition of the fhc nd and rhc nd predictions
+  int fhcnd_id = 0;
+  int rhcnd_id = 0;
+  for(unsigned int tagId=0; tagId<tags.size(); tagId++){
+    if(tags[tagId].Contains("nd") && tags[tagId].Contains("fhc"))
+      fhcnd_id = int(tagId);
+    if(tags[tagId].Contains("nd") && tags[tagId].Contains("rhc"))
+      rhcnd_id = int(tagId);
+  }
+  TMatrixD *this_jointmatrix = new TMatrixD();
+  TMatrixD *this_fhcmatrix   = new TMatrixD();
+  TMatrixD *this_rhcmatrix   = new TMatrixD();
+  if(UseNDCovMat){ // assume v4 is the right matrix
+    this_jointmatrix = GetNDCovMat(false, true, true);
+    this_fhcmatrix   = GetNDCovMat(false, false, true);
+    this_rhcmatrix   = GetNDCovMat(false, false, false);
+  }
+
+  MultiExperiment experiments;
+
+  for(unsigned int predId=0; predId<predictions.size(); predId++){
+    TString thistag = tags[predId];
+    SingleSampleExperiment *temp_singleexpt = new SingleSampleExperiment(predictions[predId], s_fakedata[predId]);
+    std::cout << thistag << std::endl;
+    if(thistag.Contains("fd")){ // we will always at least have the fd
+      experiments.Add(temp_singleexpt);
+    }
+    if(thistag.Contains("nd") && !UseNDCovMat){ // also simple experiments if no covariance matrix
+      experiments.Add(temp_singleexpt);
+    }
+    if(thistag.Contains("nd") && UseNDCovMat){
+      if(!TwoBeams){
+        if(thistag.Contains("fhc")){
+          CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[predId]}, {s_fakedata[predId]},
+                                                                        this_fhcmatrix, kCovMxChiSqPreInvert);
+          temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1); // also assume v4 for energy masking
+          experiments.Add(temp_covexpt);
+        }
+        else{
+          CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[predId]}, {s_fakedata[predId]},
+                                                                        this_rhcmatrix, kCovMxChiSqPreInvert);
+          temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1);
+          experiments.Add(temp_covexpt);            
+        }
+      }
+      else{
+        CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[fhcnd_id], predictions[rhcnd_id]},
+                                                                      {s_fakedata[fhcnd_id], s_fakedata[rhcnd_id]},
+                                                                      this_jointmatrix, kCovMxChiSqPreInvert);
+        temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1);
+        temp_covexpt->SetMaskHist(1, 0.5, 10, 0, -1);
+        if(thistag.Contains("fhc")){
+          experiments.Add(temp_covexpt);
+        }
+        if(thistag.Contains("rhc")){
+          continue; // avoid adding covariance experiment twice.
+        }
+      }
+    }
+  }
+
+  return experiments;
+
+}// end GetMultiExperimentLBL
+
+
+// std::string fdir = "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/dmendez/CAFAnaInputs/";
+// std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
 
 void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
 		     std::string specialTag="test",
@@ -69,7 +142,7 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
   const int nneutrino = neutrino.size();
 
   bool TwoBeams = (nhorn == 2);
-  bool isFHC = (horns.Contains("fhc"));
+  bool IsFHC = (horns.Contains("fhc"));
 
 
   // Get ND covariance matrix or not
@@ -77,26 +150,13 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
   if (getenv("CAFANA_USE_NDCOVMAT")) {
     UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
   }
-  bool UseV3NDCovMat = (AnaV == kV3);
-  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
-    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
-  }
-  TMatrixD *this_ndmatrix = new TMatrixD();
-  TMatrixD *this_fhcmatrix = new TMatrixD();
-  TMatrixD *this_rhcmatrix = new TMatrixD();
   bool use_nd = detectors.Contains("nd");
-  if(use_nd && UseNDCovMat){
-      this_ndmatrix = GetNDCovMat(UseV3NDCovMat, TwoBeams, isFHC);
-      this_fhcmatrix = GetNDCovMat(UseV3NDCovMat, false, true);
-      this_rhcmatrix = GetNDCovMat(UseV3NDCovMat, false, false);
-  }
 
   ///// Predictions my way
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
-  std::vector<std::string> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
+  std::vector<TString> tags; // I could maybe define a map to keep track of spectra types.
   std::vector<PredictionInterp*> predictions;
   std::string fdir = inPredDir;
-  int this_idx=0;
 
   for(int detId=0; detId<ndetector; detId++){
     for(int hornId=0; hornId<nhorn; hornId++){
@@ -106,11 +166,10 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
 
         std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string din = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
-        tags.push_back(din);
+        tags.push_back(detector[detId]+neutrino[nuId]+horn[hornId]);
         TFile *fin = TFile::Open(fname.c_str(), "READ");
         predictions.push_back(LoadFrom<PredictionInterp>(fin, din).release());
         fin->Close();
-        this_idx++;
         // Get nominal exposure per year from Analysis/Exposures.h
         if(horn[hornId]=="fhc"){
           if(detector[detId]=="nd") pot.push_back(kNDPOT[nom_exp] * years_fhc);
@@ -149,35 +208,18 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
     std::cout << "\nfilling prediction" << std::endl;
     std::vector<Spectrum> s_predictions;
     std::vector<Spectrum> s_fakedata;
-
-    // define the experiments for the multiexperiment
-    MultiExperiment experiments;
+    // fill the fake data in a separate loop so the covexpt doesn't try to find sth that doesn't exist 
     for(unsigned int predId=0; predId<predictions.size(); predId++){
       s_predictions.push_back(predictions[predId]->Predict(trueOsc));
       s_fakedata.push_back(s_predictions[predId].MockData(pot[predId],0)); // second argument = 0 defaults to random throw number
-      // Mask or you'll get different results to the official
-      SingleSampleExperiment *temp_singleexpt = new SingleSampleExperiment(predictions[predId], s_fakedata[predId]);
-      
-      if(mask) temp_singleexpt->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
-
-      // TO DO: Make this desition cleaner and shorter
-      if(use_nd && UseNDCovMat){
-        if(TwoBeams){
-          if(predId==0) temp_singleexpt->AddCovarianceMatrix(this_fhcmatrix, kCovMxChiSqPreInvert);
-          if(predId==1) temp_singleexpt->AddCovarianceMatrix(this_rhcmatrix, kCovMxChiSqPreInvert);
-        }
-        else{
-          if(isFHC && predId==0) temp_singleexpt->AddCovarianceMatrix(this_fhcmatrix, kCovMxChiSqPreInvert);
-          if(!isFHC && predId==0) temp_singleexpt->AddCovarianceMatrix(this_rhcmatrix, kCovMxChiSqPreInvert);          
-        } 
-      }
-
-      experiments.Add(temp_singleexpt);
-      // experiments.Add(new SingleSampleExperiment(predictions[predId], s_fakedata[predId]));
     }
+
+    // TO DO: Make this desition cleaner and shorter
+    // Determine what experiment this is. Thank you Covariance Matrix.
+    std::cout << "getting MultiExperiment" << std::endl;
+    MultiExperiment experiments = GetMultiExperimentLBL(predictions, s_fakedata, tags, UseNDCovMat, TwoBeams);
     if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
     if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
-
 
     // Still need to loop over dcp choices for the seeded Calc
     // why only have two options?
