@@ -1,11 +1,13 @@
 set(Atmos_implementation_files
   AtmosOscSpect.cxx
   AtmosOscillogram.cxx
+  AtmosOscillogramLE.cxx
   PredictAtmos.cxx)
 
 set(Atmos_header_files
   AtmosOscSpect.h
   AtmosOscillogram.h
+  AtmosOscillogramLE.h
   PredictAtmos.h)
 
 add_library(CAFAnaAtmos SHARED ${Atmos_implementation_files})
