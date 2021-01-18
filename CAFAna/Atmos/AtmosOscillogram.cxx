@@ -25,7 +25,42 @@ namespace ana
   const HistAxis k2DTrueAxis(kTrueEAxis, kTrueCosZenithAxis);
   const Var2DMapper trueMapper(kTrueEBins, kTrueCosZenithBins);
 
-  osc::EarthModel earth("PREM", .1);
+  //----------------------------------------------------------------------
+  class LayerCache
+  {
+  public:
+    static LayerCache& Instance()
+    {
+      static LayerCache lc;
+      return lc;
+    }
+
+    std::vector<std::vector<osc::Layer>> layers; // indexed by cosQ bin
+
+  protected:
+    LayerCache();
+  };
+
+  //----------------------------------------------------------------------
+  LayerCache::LayerCache()
+  {
+    osc::EarthModel earth("PREM", .1);
+
+    layers.resize(kTrueCosZenithBins.NBins());
+
+    for(int j = 0; j < kTrueCosZenithBins.NBins(); ++j){
+      const double cosQ = (kTrueCosZenithBins.Edges()[j]+kTrueCosZenithBins.Edges()[j+1])/2;
+
+      std::list<double> Ls, Ns;
+      const double dR = 15; // production height (guess)
+      earth.LineProfile(dR, cosQ, 0, Ls, Ns);
+
+      layers[j].reserve(Ls.size());
+      for(auto itL = Ls.begin(), itN = Ns.begin(); itL != Ls.end(); ++itL, ++itN){
+        if(*itL > 1e-3) layers[j].emplace_back(*itL, *itN * 2);
+      }
+    } // end for j
+  }
 
   //----------------------------------------------------------------------
   /// Helper for constructors
@@ -45,20 +80,7 @@ namespace ana
     for(int j = 0; j < kTrueCosZenithBins.NBins(); ++j){
       const double cosQ = (kTrueCosZenithBins.Edges()[j]+kTrueCosZenithBins.Edges()[j+1])/2;
 
-      //      const double R = 6371; // km
-      const double dR = 15; // production height (guess)
-      //      const double L  = (R+dR)*(sqrt(util::sqr(1+dR/R)+cosQ*cosQ-1)-cosQ);
-
-      std::list<double> Ls, Ns;
-      earth.LineProfile(dR, cosQ, 0, Ls, Ns);
-
-      std::vector<osc::Layer> layers;
-      layers.reserve(Ls.size());
-      for(auto itL = Ls.begin(), itN = Ns.begin(); itL != Ls.end(); ++itL, ++itN){
-        if(*itL > 1e-3) layers.emplace_back(*itL, *itN * 2);
-      }
-
-      const EigenArrayXT Ps = calc->P(from, to, kTrueECentersEig, layers);
+      const EigenArrayXT Ps = calc->P(from, to, kTrueECentersEig, LayerCache::Instance().layers[j]);
 
       for(int i = 0; i < kTrueEBins.NBins(); ++i){
         const double trueE = kTrueECentersEig[i];
