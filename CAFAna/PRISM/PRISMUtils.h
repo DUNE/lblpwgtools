@@ -213,8 +213,8 @@ protected:
 
   mutable std::unique_ptr<TH2> hMatrixND;
   mutable std::unique_ptr<TH2> hMatrixFD;
-  mutable std::unique_ptr<PredictionInterp> fMatrixND;
-  mutable std::unique_ptr<PredictionInterp> fMatrixFD;
+  std::unique_ptr<PredictionInterp> fMatrixND;
+  std::unique_ptr<PredictionInterp> fMatrixFD;
   const double fPOT;
   mutable std::unique_ptr<TH1> fPRISMExtrap;
 
@@ -228,8 +228,6 @@ protected:
 // Might incorporate this into NDFD_Matrix class later
 class MCEffCorrection {
 public:
-  //MCEffCorrection(Spectrum NDunsel, Spectrum NDsel,
-  //                Spectrum FDunsel, Spectrum FDsel);
   MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
                   std::unique_ptr<PredictionInterp> NDsel,
                   std::unique_ptr<PredictionInterp> FDunsel,
@@ -237,7 +235,7 @@ public:
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
   void CalcEfficiency(osc::IOscCalculator *calc, 
-                      ana::SystShifts shift = kNoShift,
+                      //ana::SystShifts shift = kNoShift,
                       Flavors::Flavors_t NDflav = Flavors::kAll,
                       Flavors::Flavors_t FDflav = Flavors::kAll,
                       Current::Current_t curr = Current::kCC,
@@ -248,15 +246,10 @@ public:
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
 protected:
-  
-  //mutable std::unique_ptr<TH2> fNDunselected;
-  //mutable std::unique_ptr<TH2> fNDselected;
-  //mutable std::unique_ptr<TH1> fFDunselected;
-  //mutable std::unique_ptr<TH1> fFDselected;
-  mutable std::unique_ptr<PredictionInterp> fNDunselected;
-  mutable std::unique_ptr<PredictionInterp> fNDselected;
-  mutable std::unique_ptr<PredictionInterp> fFDunselected;
-  mutable std::unique_ptr<PredictionInterp> fFDselected;
+  std::unique_ptr<PredictionInterp> fNDunselected;
+  std::unique_ptr<PredictionInterp> fNDselected;
+  std::unique_ptr<PredictionInterp> fFDunselected;
+  std::unique_ptr<PredictionInterp> fFDselected;
   // ND and FD efficiency in each energy bin
   // Vec element [0] is 1st energy bin eff 
   mutable std::vector<double> NDefficiency;
