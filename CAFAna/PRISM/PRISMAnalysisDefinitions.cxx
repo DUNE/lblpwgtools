@@ -120,9 +120,29 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
+  
+  std::vector<std::string> labels;
+  std::vector<Binning> bins;
+  std::vector<Var> vars;
+  if (varname == "ELepEHad") { // 2D ELep EHad Prediction
+    auto vardefLep = GetVar("ELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("EHad"); 
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefHad.second);
+  } else {
+    auto vardef = GetVar(varname);
+    labels.push_back(vardef.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardef.second);
+  }
+  //auto vardef = GetVar(varname);
+  //HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
 
-  auto vardef = GetVar(varname);
-  HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
+  HistAxis xax(labels, bins, vars); 
 
   return {xax, axOffAxisPos, axOffAxis280kAPos};
 }
@@ -132,6 +152,9 @@ HistAxis TrueObservable(std::string const &obsvarname,
                         std::string const &binning) {
   //std::pair<std::string, Var> truevardef;
   auto truevardef = GetVar("ETrue");
+  std::vector<std::string> labels;
+  std::vector<Binning> bins;
+  std::vector<Var> vars;
 
   if (obsvarname == "EProxy") {
     truevardef = GetVar("ETrue");
@@ -143,12 +166,25 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
+  } else if (obsvarname == "ELepEHad") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefLep.second);
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefHad.second);
   } else {
     std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
   }   
-
-  return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
+  
+  if (obsvarname == "ELepEHad") {
+    return HistAxis(labels, bins, vars);
+  } else {
+    return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
+  }
 }
 
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
