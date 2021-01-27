@@ -209,14 +209,15 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "POT in file: " << DataSpectra.back().POT() << std::endl
       << "Analysis FD POT: " << POT_FD << std::endl
       << "Analysis ND POT: " << POT << std::endl; 
-    TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
-    for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
+    //TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
+    auto *Data = DataSpectra.back().ToTHX(POT_FD);
+    /*for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
       Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
-    }
+    }*/
     Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
-
+    std::cout << "Done FD Data!" << std::endl;
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     NDFD_Matrix SmearMatrices(std::move(state.NDMatrixPredInterps[NDConfig_enum]), 
@@ -268,11 +269,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           dir->cd();
         }
       } else { // FD spectra prediction
+        std::cout << "PRISMPred!" << std::endl;
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-
-        TH1 *PRISMPred =
-            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        std::cout << "Done PRISMPred!" << std::endl;
+        //TH1 *PRISMPred =
+        //    PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        auto *PRISMPred = 
+              PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
@@ -285,7 +289,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               continue;
             }
 
-            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+            //TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+            auto *PRISMComp_h = comp.second.ToTHX(POT_FD);
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
@@ -301,9 +306,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       }
 
     } else {
-      TH1 *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
-                            ->PredictSyst(calc, shift)
-                            .ToTH1(POT_FD);
+      //TH1 *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
+      //                      ->PredictSyst(calc, shift)
+      //                      .ToTH1(POT_FD);
+      auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
+                              ->PredictSyst(calc, shift).ToTHX(POT_FD);
       chan_dir->WriteTObject(FarDetPred, "FarDetPred");
       FarDetPred->SetDirectory(nullptr);
     }
