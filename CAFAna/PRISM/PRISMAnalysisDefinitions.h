@@ -435,6 +435,10 @@ ana::HistAxis TrueObservable(std::string const &obsvarname = "EProxy",
 
 extern const ana::Cut kETrueLT10GeV;
 
+extern const ana::Cut kETrue8GeV;
+
+extern const ana::Cut kERecoProxy8GeV;
+
 extern const ana::Cut kIsOutOfTheDesert;
 
 // Use to weight by Exposure

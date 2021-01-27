@@ -349,6 +349,9 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       sr.ProxyRecoLepE = 0;
     }
 
+    // Variable for true hadronic energy
+    sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {
       if (sr.isFHC != 0 && sr.isFHC != 1) {

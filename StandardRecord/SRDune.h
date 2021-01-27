@@ -58,6 +58,10 @@ public:
   // Truth info
   double Ev;
   double Elep;
+
+  // True sum of hadronic energy
+  double HadE;
+
   //  float enu_truth; // so what's this one?
   int isCC;
   //    int ccnc;

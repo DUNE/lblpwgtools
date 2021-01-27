@@ -397,9 +397,12 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
     if (!FDTweaks[param_id][nucf]) {
       return kInvalidBin;
     } else {
+      std::cout << "FDTweaks OKAY" << std::endl;
+      std::cout << "FDTweaks Nbins = " << FDTweaks[param_id][nucf]->GetNbinsX() << std::endl;
       if (IsFlowBin(FDTweaks[param_id][nucf], enu_GeV)) {
         return kInvalidBin;
       }
+      std::cout << "Passed IsFlowBin(...)" << std::endl;
       return FDTweaks[param_id][nucf]->FindFixBin(enu_GeV);
     }
   }

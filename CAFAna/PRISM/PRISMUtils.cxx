@@ -54,7 +54,7 @@ ana::Var NDSliceCorrection(double reference_width_cm,
 
   for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
     double width = Edges[e_it + 1] - Edges[e_it];
-    Weights.push_back(FD_ND_FVRatio(width*1E2) * 
+    Weights.push_back(/*FD_ND_FVRatio(width*1E2) * */ 
                       ((width*1E2)/reference_width_cm));
   }
 
@@ -531,8 +531,6 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
   hMatrixFD = std::unique_ptr<TH2>(static_cast<TH2*>(sMatrixFD.ToTH2(1)));
 
   if (!hMatrixND) std::cout << "fMatrixND ERROR" << std::endl;
-  //std::unique_ptr<TH2>* NDhist = &hMatrixND;
-  //gFile->WriteTObject(NDhist->get(), "NDmatrix_noNorm"); 
  
   std::pair<std::unique_ptr<TH2>*, std::vector<double>> NDpair (&hMatrixND, NDefficiency);
   std::pair<std::unique_ptr<TH2>*, std::vector<double>> FDpair (&hMatrixFD, FDefficiency);
@@ -569,6 +567,20 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
 
   TH1D *PRISMND = NDPRISMLCComp.ToTH1(1);
 
+  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND);
+
+  // Get Covariance matrix for PRISMLC (this is just a diagonal matrix)
+  Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
+  for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
+    double frac_err = PRISMND->GetBinError(row_it + 1) / PRISMND->GetBinContent(row_it + 1);
+    CovMatRec(row_it, row_it) = pow(frac_err, 2);
+    //std::cout << "frac err bin " << row_it << " = " << frac_err <<
+    //  "; bin cont = " << PRISMND->GetBinContent(row_it + 1) << std::endl;
+  } 
+
+  // Should* be fine to take the inverse of a purely diagonal matrix
+  Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
+
   Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist->get(), 
                                          NDhist->get()->GetYaxis()->GetNbins(),
                                          NDhist->get()->GetXaxis()->GetNbins());
@@ -579,10 +591,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   const int NTrueBins = NDmat.cols();
   const int NRecoBins = NDmat.rows();
   
-  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND);
-  
   // Use T-reg to calculate ETrue(ND)
-  const double reg = 0.15;
+  const double reg = 0.2;
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
   for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
     RegMatrix(row_it, row_it) = reg;
@@ -590,22 +600,37 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   }
   RegMatrix(NTrueBins - 1, NTrueBins - 1) = reg;
   
-  Eigen::VectorXd NDETrue = ((NDmat.transpose() * NDmat +
+  Eigen::VectorXd NDETrue = ((NDmat.transpose() * invCovMatRec * NDmat) +
                              RegMatrix.transpose() * RegMatrix).inverse() *
-                             NDmat.transpose() * NDERec);
+                            NDmat.transpose() * invCovMatRec * NDERec;
+
+  // Propogate uncertainty
+  Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
+                       RegMatrix.transpose() * RegMatrix).inverse() * 
+                      NDmat.transpose() * invCovMatRec;
+  // Cov Mat for true energy, propogated through Tik reg
+  Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
 
   // Output true hist
-  std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
-  NDETrue_h.get()->Scale(1, "width");
-  gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
+  //std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
+  //FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
+  //NDETrue_h.get()->Scale(1, "width");
+  //gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
 
   Eigen::VectorXd FDERec = FDmat * NDETrue;
+  // Now get final Cov Mat for FDERec so we can get error on extrap pred
+  Eigen::MatrixXd CovMatExtrap = FDmat * CovMatTrue * FDmat.transpose();  
   // Keep same binning for extrapolated prediction
-  fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(HistCache::Copy(PRISMND))); 
  
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
+
+  for (int row_it = 0; row_it < FDERec.size(); row_it++) {
+    //double errorExtrap = pow(CovMatExtrap(row_it, row_it), 0.5);
+    double errorExtrap = pow(CovMatExtrap(row_it, row_it), 0.5) * 
+                         fPRISMExtrap->GetBinContent(row_it + 1);
+    fPRISMExtrap->SetBinError(row_it + 1, errorExtrap);
+  }
   HistCache::Delete(PRISMND);
 } 
 
@@ -625,18 +650,19 @@ MCEffCorrection::MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
 //----------------------------------------------------
 
 void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
-                                     ana::SystShifts shift,
+                                     //ana::SystShifts shift,
                                      Flavors::Flavors_t NDflav,
                                      Flavors::Flavors_t FDflav,
                                      Current::Current_t curr,
                                      Sign::Sign_t NDsign, 
                                      Sign::Sign_t FDsign) const {
 
-  shift = kNoShift;
-
+  ana::SystShifts shift = kNoShift;
+  //std::cout << "HERE1" << std::endl;
+  if (!fNDunselected) std::cout << "[WARNING] No NDunselected Pred" << std::endl;
   auto sNDunselected = fNDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   TH2D *hNDunselected = static_cast<TH2D*>(sNDunselected.ToTH2(1));
-  
+  //std::cout << "HERE2" << std::endl;
   auto sNDselected = fNDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   TH2D *hNDselected = static_cast<TH2D*>(sNDselected.ToTH2(1));
  
@@ -645,7 +671,7 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
 
   auto sFDselected = fFDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   TH1D *hFDselected = sFDselected.ToTH1(1);
-
+  //std::cout << "HERE3" << std::endl;
   //gFile->WriteTObject(hNDselected.get(), "NDSelected");
   //gFile->WriteTObject(hNDunselected.get(), "NDUnselected");
   //gFile->WriteTObject(hFDselected.get(), "FDSelected");
@@ -666,7 +692,7 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
     NDefficiency.push_back(sum / 
                            (hNDselected->GetYaxis()->GetNbins() - OAbinstart));
   }
-
+  //std::cout << "HERE3" << std::endl;
   // Calculate FD efficiency
   for (int i = 0; i < hFDselected->GetXaxis()->GetNbins(); i++) {
     double FDbin_eff = hFDselected->GetBinContent(i + 1) / // changed from FDselected

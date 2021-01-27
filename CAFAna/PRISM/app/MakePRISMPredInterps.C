@@ -413,7 +413,7 @@ int main(int argc, char const *argv[]) {
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
-  auto specrunweight =
+  /*auto specrunweight =
         ana::Var([&](const caf::StandardRecord *sr) -> double {
           if (sr->det_x > 0) {
             return 1;
@@ -424,7 +424,7 @@ int main(int argc, char const *argv[]) {
   WeightVars[kND_293kA_nu] = WeightVars[kND_293kA_nu] * specrunweight;
   WeightVars[kND_280kA_nu] = WeightVars[kND_280kA_nu] * specrunweight;
   AnaWeightVars[kND_293kA_nu] = AnaWeightVars[kND_293kA_nu] * specrunweight;
-  AnaWeightVars[kND_280kA_nu] = AnaWeightVars[kND_280kA_nu] * specrunweight;
+  AnaWeightVars[kND_280kA_nu] = AnaWeightVars[kND_280kA_nu] * specrunweight;*/
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
@@ -556,7 +556,7 @@ int main(int argc, char const *argv[]) {
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
   // Finer binning for true variable
-  HistAxis TrueObsAxis = TrueObservable(axdescriptor, truthbinningdescriptor);
+  HistAxis TrueObsAxis = TrueObservable(axdescriptor, "uniform_smallrange");
 
   std::vector<std::string> Labels_matrixRT = TrueObsAxis.GetLabels(); //MatchAxis
   std::vector<Binning> Bins_matrixRT = TrueObsAxis.GetBinnings(); // axes.XProjection
@@ -927,11 +927,13 @@ int main(int argc, char const *argv[]) {
              FDMatrixPredInterps[fd_it]);
 
       SaveTo(fout,
-             std::string("FDUnSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
+             std::string("FDUnSelected_ETrue") + 
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDUnselTruePredInterps[fd_it]);
 
       SaveTo(fout,
-             std::string("FDSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
+             std::string("FDSelected_ETrue") + 
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDSelTruePredInterps[fd_it]);
 
       if (FarDetData_nonswap[fd_it]) {

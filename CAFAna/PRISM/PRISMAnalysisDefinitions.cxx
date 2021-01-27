@@ -26,15 +26,26 @@ const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
   return (sr->Ev < 10);
 });
 
+const Cut kETrue8GeV([](const caf::StandardRecord *sr) {
+  return (sr->Ev < 8);
+});
+
+const Cut kERecoProxy8GeV([](const caf::StandardRecord *sr) {
+  return (sr->eRecProxy <= 8);
+}); 
+
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {
-    return Binning::Simple(80, 0, 8);
+    return Binning::Simple(100, 0, 10);
   }
   if (xbinning == "uniform") {
+    return Binning::Simple(75, 0, 15);
+  }
+  if (xbinning == "uniform_smallrange") {
     return Binning::Simple(40, 0, 8);
   }
   if (xbinning == "uniform_coarse") {
-    return Binning::Simple(20, 0, 8); // used to be 25, 10 (bad tail going out to 10)
+    return Binning::Simple(25, 0, 10); // used to be 25, 10 (bad tail going out to 10)
   }
   if (xbinning == "testopt") {
     std::vector<double> BE = {
@@ -80,6 +91,8 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("True E_{#nu} (GeV)", kTrueEnergy);
   } else if (varname == "ELep") {
     return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(LepE));
+  } else if (varname == "EHad") {
+    return std::make_pair("True E_{had.} (GeV)", SIMPLEVAR(HadE));
   } else if (varname == "EProxy") {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
@@ -128,6 +141,8 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "ELep") {
     truevardef = GetVar("ELep");
+  } else if (obsvarname == "EHad") {
+    truevardef = GetVar("EHad");
   } else {
     std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
@@ -189,13 +204,13 @@ Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
                 kIsOutOfTheDesert)
              : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert);
+                kIsOutOfTheDesert && kERecoProxy8GeV); //kETrue8GeV
 }
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
-                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV);
+                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV && kERecoProxy8GeV); //kETrue8GeV
 }
 
 Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {

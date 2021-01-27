@@ -29,6 +29,10 @@ nuisance_parameters: {
           BeRPA_D 
      ]
 
+     det_totalND: [ 
+          TruthEnergyScaleND,
+     ]
+
      det_chargehadND: [
           ChargedHadTruthUncorrND,
           ChargedHadTruthUncorrSqrtND,
@@ -48,14 +52,14 @@ nuisance_parameters: {
 
      det_mularND: [
           ETruthScaleMuLArND,
-          ETruthScaleMuLArSqrtND,
-          ETruthScaleMuLArInvSqrtND
+          #ETruthScaleMuLArSqrtND,
+          #ETruthScaleMuLArInvSqrtND
      ]
 
      det_mularFD: [
           ETruthScaleMuLArFD,
-          ETruthScaleMuLArSqrtFD,
-          ETruthScaleMuLArInvSqrtFD
+          #ETruthScaleMuLArSqrtFD,
+          #ETruthScaleMuLArInvSqrtFD
      ]
 
      det_mular: [
