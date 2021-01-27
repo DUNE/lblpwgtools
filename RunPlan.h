@@ -45,28 +45,46 @@ struct RunPlan {
   Spectrum Weight(Spectrum NDSpec, int kA,
                   bool SetErrorsFromPredictedRate = false) const {
 
-    /*std::cout << "kA: " << kA
-              << ", SetErrorsFromPredictedRate = " << SetErrorsFromPredictedRate
-              << std::endl;*/
+    //std::cout << "kA: " << kA
+    //          << ", SetErrorsFromPredictedRate = " << SetErrorsFromPredictedRate
+    //          << std::endl << std::endl;
     // Assume this spectrum is in per/POT
+    //std::unique_ptr<TH2> NDTEST(NDSpec.ToTH2(NDSpec.POT()));
+    //NDTEST->SetDirectory(nullptr);
+
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     NDSpec_h->SetDirectory(nullptr);
+    //std::cout << kA << " [POT] = " << NDSpec.POT() << std::endl;
+    //std::cout << "RAWpotbin = " << NDTEST->GetBinContent(1, 1) << 
+    //  ", Scalebin = " << NDSpec_h->GetBinContent(1, 1) << std::endl;
 
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
+      //double sumevent(0);
       /*std::cout << "[weight]: Stop " << stop.min << " -- " << stop.max << "("
                 << ypos << " m) weighting by " << stop.POT << " @ "
                 << stop.horn_current << " kA" << std::endl;*/
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
         double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
+        /*std::cout << "[NOScale] = " << NDSpec_h->GetBinContent(xit + 1, yit + 1) << 
+          ", [SCALE] = " << bc << std::endl;*/
         double be = SetErrorsFromPredictedRate
                         ? sqrt(bc)
                         : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
+        /*if(!SetErrorsFromPredictedRate) {
+        if (yit == 50) std::cout << "[BC] = " <<
+          bc << ", [MCErr] = " << 
+          (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT) << 
+          ", [RunPlanErr] = " << sqrt(bc) << std::endl;
+        //}*/
+        
+        //sumevent += bc;
 
         NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
         NDSpec_h->SetBinError(xit + 1, yit + 1, be);
       }
+      //std::cout << "Events at " << stop.min << " = " << sumevent << std::endl;
     }
 
     NDSpec.Clear();
