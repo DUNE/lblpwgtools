@@ -6,6 +6,7 @@
 #include "CAFAna/Analysis/Exposures.h"
 
 #include "TH2.h"
+#include "TH3.h"
 
 #include <numeric>
 #include <vector>
@@ -52,26 +53,28 @@ struct RunPlan {
     //std::unique_ptr<TH2> NDTEST(NDSpec.ToTH2(NDSpec.POT()));
     //NDTEST->SetDirectory(nullptr);
 
-    std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
+    std::unique_ptr<TH3> NDSpec_h(NDSpec.ToTH3(1));
+    //auto *NDSpec_h(NDSpec.ToTHX(1));
     NDSpec_h->SetDirectory(nullptr);
     //std::cout << kA << " [POT] = " << NDSpec.POT() << std::endl;
     //std::cout << "RAWpotbin = " << NDTEST->GetBinContent(1, 1) << 
     //  ", Scalebin = " << NDSpec_h->GetBinContent(1, 1) << std::endl;
 
-    for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
-      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
+    for (int zit = 0; zit < NDSpec_h->GetZaxis()->GetNbins(); ++zit) {
+      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(zit + 1);
       auto stop = FindStop(ypos, kA);
       //double sumevent(0);
       /*std::cout << "[weight]: Stop " << stop.min << " -- " << stop.max << "("
                 << ypos << " m) weighting by " << stop.POT << " @ "
                 << stop.horn_current << " kA" << std::endl;*/
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
-        double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
+        for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
+        double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1, zit + 1) * stop.POT;
         /*std::cout << "[NOScale] = " << NDSpec_h->GetBinContent(xit + 1, yit + 1) << 
           ", [SCALE] = " << bc << std::endl;*/
         double be = SetErrorsFromPredictedRate
                         ? sqrt(bc)
-                        : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
+                        : (NDSpec_h->GetBinError(xit + 1, yit + 1, zit + 1) * stop.POT);
         /*if(!SetErrorsFromPredictedRate) {
         if (yit == 50) std::cout << "[BC] = " <<
           bc << ", [MCErr] = " << 
@@ -81,22 +84,26 @@ struct RunPlan {
         
         //sumevent += bc;
 
-        NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
-        NDSpec_h->SetBinError(xit + 1, yit + 1, be);
+        NDSpec_h->SetBinContent(xit + 1, yit + 1, zit + 1, bc);
+        NDSpec_h->SetBinError(xit + 1, yit + 1, zit + 1, be);
+        }
       }
       //std::cout << "Events at " << stop.min << " = " << sumevent << std::endl;
     }
 
     NDSpec.Clear();
-    NDSpec.FillFromHistogram(NDSpec_h.get());
+    std::cout << "Filling from hist!" << std::endl;
+    NDSpec.FillFromHistogram(NDSpec_h.get()); // .get()
     NDSpec.OverrideLivetime(0);
     NDSpec.OverridePOT(GetPlanPOT());
+    //HistCache::Delete(NDSpec_h);
     return NDSpec;
   }
 
   ReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
                               bool SetErrorsFromPredictedRate = false) const {
     // Assume this spectrum is in per/POT
+    std::cout << "Weighting Reweightable Spec" << std::endl;
 
     Spectrum NDSpec_s =
         Weight(NDSpec.ToSpectrum(), kA, SetErrorsFromPredictedRate);
