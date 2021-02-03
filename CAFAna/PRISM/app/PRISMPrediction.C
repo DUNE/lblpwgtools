@@ -206,9 +206,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       Data_nueswap->SetDirectory(nullptr);
     }
 
-    std::cout << "POT in file: " << DataSpectra.back().POT() << std::endl
-      << "Analysis FD POT: " << POT_FD << std::endl
-      << "Analysis ND POT: " << POT << std::endl; 
     TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
     for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
       Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
@@ -230,10 +227,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                 std::move(state.FDUnselTruePredInterps[FDfdConfig_enum]),
                                 std::move(state.FDSelTruePredInterps[FDfdConfig_enum]));
                                
-    /*MCEffCorrection NDFDEffCorr(&state.NDUnselTruePredInterps[NDConfig_enum],
-                                &state.NDSelTruePredInterps[NDConfig_enum],
-                                &state.FDUnselTruePredInterps[FDfdConfig_enum],
-                                &state.FDSelTruePredInterps[FDfdConfig_enum]);*/
+    //MCEffCorrection NDFDEffCorr(&state.NDUnselTruePredInterps[NDConfig_enum],
+    //                            &state.NDSelTruePredInterps[NDConfig_enum],
+    //                            &state.FDUnselTruePredInterps[FDfdConfig_enum],
+    //                            &state.FDSelTruePredInterps[FDfdConfig_enum]);
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
@@ -270,7 +267,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       } else { // FD spectra prediction
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
         PRISMPred->Scale(1, "width");

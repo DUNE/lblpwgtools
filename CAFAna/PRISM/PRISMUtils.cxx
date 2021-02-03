@@ -190,14 +190,14 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir = 
           f.GetDirectory((std::string("FDUnSelected_ETrue") + 
-                         (IsNu ? "_nu" : "_nub")).c_str());
+                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.FDUnselTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
       }
 
       dir = 
           f.GetDirectory((std::string("FDSelected_ETrue") +
-                         (IsNu ? "_nu" : "_nub")).c_str());
+                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.FDSelTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
       } 
@@ -665,7 +665,7 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
   //std::cout << "HERE2" << std::endl;
   auto sNDselected = fNDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   TH2D *hNDselected = static_cast<TH2D*>(sNDselected.ToTH2(1));
- 
+  if (!fFDunselected) std::cout << "[WARNING] No FDunselected Pred" << std::endl; 
   auto sFDunselected = fFDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   TH1D *hFDunselected = sFDunselected.ToTH1(1);
 
