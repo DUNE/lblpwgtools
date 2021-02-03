@@ -576,8 +576,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   double NDPOT = NDRunPlan.GetPlanPOT();
   assert(NDPOT > 0);
 
-  //std::cout << "RAW ND POT = " << NDData->POT()
-  //  << ", Plan POT = " << NDPOT << std::endl;
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
   //std::cout << "!!!!!! Weighting: 293kA." << std::endl;
   NDComps.emplace(kNDData_293kA,
@@ -688,22 +686,15 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   FDUnOscWeightedSig_h->SetDirectory(nullptr);
   FDUnOscWeightedSig_TrueEnergy_h->SetDirectory(nullptr);
-
   // Linear Combination
   std::pair<TH1 const *, TH1 const *> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
 
-  //const TH1 *raw293LC = LinearCombination.first;
-  //gFile->WriteObject(raw293LC, "rawLC_293kA");
-
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
 
-  //gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
-
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
-
   // We don't want the total POT of the runplan to affect the scale of the
   // coefficients, just the shape.
   UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
@@ -829,7 +820,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
-
+  
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
   //gFile->WriteTObject(Comps.at(kNDLinearComb).ToTH1(NDPOT), "regularPRISMPred");
 
@@ -957,7 +948,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   //std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
   //          << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
-
+  
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
 
   // At Flux correction to extrapolated PRISM

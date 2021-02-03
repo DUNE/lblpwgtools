@@ -16,7 +16,6 @@ for i in FHC; do # RHC; do
       -x -4000,400,25 \
       -f \
       -s 200 \
-      -n 300  
 
     ## Special 280 kA run
   
@@ -43,7 +42,6 @@ for i in FHC; do # RHC; do
         -p \
         -x -4000,400,25\
         -f \
-        -n 100 
     
     done
 
@@ -54,7 +52,7 @@ for i in FHC; do # RHC; do
   # Combine them all
   OffAxisNDCAFCombiner \
     -i "./CAFv7_*_${i}.root" \
-    -o CAFv7small_PRISM_Dec2020_${i}.root \
+    -o CAFv7_PRISM_Dec2020_${i}.root \
     -x -4000,400,25\
     -f \
     -C
