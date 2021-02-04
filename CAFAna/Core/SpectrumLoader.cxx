@@ -130,16 +130,15 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
 //----------------------------------------------------------------------
 void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   assert(!f->IsZombie());
-  TTree *tr;
-  //    if(f->GetListOfKeys()->Contains("cafmaker")){
-  //      tr = (TTree*)f->Get("cafmaker/caf");
-  //    }
-  //    else{
-  //      tr = (TTree*)f->Get("mvaselect/MVASelection");
-  //    }
-  tr = (TTree *)f->Get("caf");
-  if (!tr) {
-    tr = (TTree *)f->Get("cafTree");
+  TTree* tr = 0;
+  // In files with both "caf" and "cafTree", "cafTree" is the correct
+  // version. "caf" is ROOT's temporary save while the file is being produced
+  // and may be incomplete.
+  tr = (TTree*)f->Get("cafTree");
+  if (!tr){
+    // Old (MCC10 era) files only have "caf"
+    tr = (TTree*)f->Get("caf");
+    if(tr) std::cout << "Warning, didn't find 'cafTree' in " << f->GetName() << " but did find 'caf' - using that" << std::endl;
   }
   assert(tr);
 
