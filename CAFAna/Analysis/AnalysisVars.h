@@ -18,6 +18,9 @@ extern ana::Var const kRecoY_FromDep;
 
 extern ana::Var const kTrueEnergy;
 
+// FD + ND 2D Var for ELep EHad prediction
+extern ana::Var const kLepHadETrue;
+
 // FD + ND (affected by missing proton fake data)
 extern ana::Var const kProxyERec;
 
