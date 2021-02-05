@@ -575,98 +575,121 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   double NDPOT = NDRunPlan.GetPlanPOT();
   assert(NDPOT > 0);
-
+  std::cout << "Start building data components." << std::endl;
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
-  //NDComps.emplace(kNDData_293kA,
-  //                NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
-  NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_unweighted_293kA)); // change kNDData_293kA
+
+  TH2 *dataUnW = NDData.get()->ToTH2(NDPOT);
+  dataUnW->SetDirectory(nullptr);
+  gFile->WriteTObject(dataUnW, "data_unweighted");
+
+  NDComps.emplace(kNDData_293kA,
+                  NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
+  NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA)); // change kNDData_293kA
 
   NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
-  //NDComps.emplace(kNDData_280kA,
-  //                NDRunPlan.Weight(*NDData_280kA, 280, fSetNDErrorsFromRate));
-  NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_unweighted_280kA)); // change kNDData_280kA
-
+  NDComps.emplace(kNDData_280kA,
+                  NDRunPlan.Weight(*NDData_280kA, 280, fSetNDErrorsFromRate));
+  NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA)); // change kNDData_280kA
+  std::cout << "Finish building data components." << std::endl;
   // Start building MC components
+  
   /*ReweightableSpectrum NDSig = ToReweightableSpectrum(
       NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
                            calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
                        293),
-      NDPOT, fAnalysisAxis);
+      NDPOT, fAnalysisAxis);*/
+  TH2 *mcUnW = ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
+                     calc, shift, NDSigFlavor, Current::kCC, NDSigSign), 
+                     NDPOT, fAnalysisAxis).ToTH2(NDPOT);
+  mcUnW->SetDirectory(nullptr);
+  gFile->WriteTObject(mcUnW, "mc_unweighted");
+
+  ReweightableSpectrum NDSig = NDRunPlan.Weight(
+      ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
+                             calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
+                             NDPOT, fAnalysisAxis), 293);
 
   NDComps.emplace(kNDSig_293kA, NDSig);
   NDComps.emplace(kNDSig2D_293kA, NDSig);
 
-  ReweightableSpectrum NDSig_280kA = ToReweightableSpectrum(
+  /*ReweightableSpectrum NDSig_280kA = ToReweightableSpectrum(
       NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
                            calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
                        280),
-      NDPOT, fAnalysisAxis);
+      NDPOT, fAnalysisAxis);*/
+
+  ReweightableSpectrum NDSig_280kA = NDRunPlan.Weight(
+      ToReweightableSpectrum(NDPrediction_280kA->PredictComponentSyst(
+                             calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
+                             NDPOT, fAnalysisAxis), 280);
 
   NDComps.emplace(kNDSig_280kA, NDSig_280kA);
-  NDComps.emplace(kNDSig2D_280kA, NDSig_280kA);*/
+  NDComps.emplace(kNDSig2D_280kA, NDSig_280kA);
 
   // ND Background subtraction
+  std::cout << "Start subtracting backgrounds." << std::endl;
   if (fNCCorrection) {
-    ReweightableSpectrum NC = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum NC = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction->PredictComponentSyst(calc, shift, Flavors::kAll,
                                                Current::kNC, Sign::kBoth),
-            293),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        293);
 
     NDComps.emplace(kNDNCBkg_293kA, NC);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDNCBkg_293kA);
+    std::cout << "Subtract NC background." << std::endl;
 
-    ReweightableSpectrum NC_280kA = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum NC_280kA = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction_280kA->PredictComponentSyst(calc, shift, Flavors::kAll,
                                                      Current::kNC, Sign::kBoth),
-            280),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        280);
 
     NDComps.emplace(kNDNCBkg_280kA, NC_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDNCBkg_280kA);
   }
 
   if (fWLBCorrection) {
-    ReweightableSpectrum WLB = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum WLB = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction->PredictComponentSyst(calc, shift, NDWrongFlavor,
                                                Current::kCC, Sign::kBoth),
-            293),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        293);
 
     NDComps.emplace(kNDWrongLepBkg_293kA, WLB);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWrongLepBkg_293kA);
 
-    ReweightableSpectrum WLB_280kA = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum WLB_280kA = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction_280kA->PredictComponentSyst(calc, shift, NDWrongFlavor,
                                                      Current::kCC, Sign::kBoth),
-            280),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        280);
 
     NDComps.emplace(kNDWrongLepBkg_280kA, WLB_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWrongLepBkg_280kA);
   }
 
   if (fWSBCorrection) {
-    ReweightableSpectrum WSB = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum WSB = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction->PredictComponentSyst(calc, shift, NDSigFlavor,
                                                Current::kCC, NDWrongSign),
-            293),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        293);
 
     NDComps.emplace(kNDWSBkg_293kA, WSB);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWSBkg_293kA);
 
-    ReweightableSpectrum WSB_280kA = ToReweightableSpectrum(
-        NDRunPlan.Weight(
+    ReweightableSpectrum WSB_280kA = NDRunPlan.Weight(
+        ToReweightableSpectrum(
             NDPrediction_280kA->PredictComponentSyst(calc, shift, NDSigFlavor,
                                                      Current::kCC, NDWrongSign),
-            280),
-        NDPOT, fAnalysisAxis);
+            NDPOT, fAnalysisAxis),
+        280);
 
     NDComps.emplace(kNDWSBkg_280kA, WSB_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWSBkg_280kA);
@@ -674,42 +697,30 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   static osc::NoOscillations no;
 
+  // FD MC spectrum with analysis axis/axes + Enu axis
   Spectrum FDUnWeightedSig_Spec =
       FDUnOscWeightedSigPrediction->PredictComponentSyst(
           &no, shift, FDSigFlavor, Current::kCC, FDSigSign);
-  std::cout << "here!!" << std::endl;
-  std::unique_ptr<TH3> FDUnOscWeightedSig_h(FDUnWeightedSig_Spec.ToTH3(NDPOT)); //CHANGE from TH2
-  //std::unique_ptr<TH1> FDUnOscWeightedSig_TrueEnergy_h(
-  //    FDUnOscWeightedSig_h->ProjectionY());
-  std::cout << "here2!!" << std::endl;
-  FDUnOscWeightedSig_h->SetDirectory(nullptr);
-  //FDUnOscWeightedSig_TrueEnergy_h->SetDirectory(nullptr);
+
+  // Convert FD MC to RWSpectrum with Enu as reweight variable
+  ReweightableSpectrum FDUnOscWeightedSig = ToReweightableSpectrum(
+                                                FDUnWeightedSig_Spec,
+                                                NDPOT, fAnalysisAxis); 
 
   // Linear Combination
   std::pair<TH1 const *, TH1 const *> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
 
-  //const TH1 *raw293LC = LinearCombination.first;
-  //gFile->WriteObject(raw293LC, "rawLC_293kA");
+  std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
+      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
 
-  //std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
-  //    std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
-  TH1 *LC293unw = static_cast<TH1 *>(LinearCombination.first->Clone("unweighted293"));
-  std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA = //(LinearCombination.first);  
-      std::unique_ptr<TH1>(LC293unw);
-  //gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
-
-  //std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
-  //    std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
-  TH1 *LC280unw = static_cast<TH1 *>(LinearCombination.second->Clone("unweighted280"));
-  std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA = //(&LinearCombination.second);
-        std::unique_ptr<TH1>(LC280unw);
-
+  std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
+      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
 
   // We don't want the total POT of the runplan to affect the scale of the
   // coefficients, just the shape.
-  //UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
-  //UnRunPlannedLinearCombination_280kA->Scale(NDPOT); 
+  UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
+  UnRunPlannedLinearCombination_280kA->Scale(NDPOT); 
 
   /*PRISMOUT("PRISM analysis axis: "
            << fNDOffAxis.GetLabels().front() << " with "
@@ -722,7 +733,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
            << fND280kAAxis.GetBinnings().front().Edges().size() << " bins from "
            << fND280kAAxis.GetBinnings().front().Edges().front() << " to "
            << fND280kAAxis.GetBinnings().front().Edges().back() << ".");*/
-  std::cout << "NDOffAxisLabels: " << fNDOffAxis.GetLabels().size() << std::endl;
+  
   Spectrum UnRunPlannedLinearCombination_293kA_s(fNDOffAxis.GetLabels(),
                                                  fNDOffAxis.GetBinnings());
   UnRunPlannedLinearCombination_293kA_s.Clear();
@@ -740,8 +751,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   UnRunPlannedLinearCombination_280kA_s.OverridePOT(NDPOT); 
   UnRunPlannedLinearCombination_280kA_s.OverrideLivetime(0);
   Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
-  std::cout << "HERE3!" << std::endl;
-  /*if (NDComps.count(kNDSig_293kA)) {
+  
+  if (NDComps.count(kNDSig_293kA)) {
     Comps.emplace(
         kNDSig_293kA,
         NDComps.at(kNDSig_293kA)
@@ -753,7 +764,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
     Comps.emplace(kPRISMMC, Comps.at(kNDSig_293kA));
     Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
-  }*/
+  }
 
   //std::cout << "WEIGHTING: kNDDataCorr_293kA" << std::endl;
   Comps.emplace(
@@ -847,7 +858,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
 
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
-  //gFile->WriteTObject(Comps.at(kNDLinearComb).ToTH1(NDPOT), "regularPRISMPred");
 
   //-----------------------------
   // Get Efficiency from MC and fold into 
@@ -875,7 +885,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // For adding in MC corrections
   Comps.emplace(kNDDataCorr_FDExtrap, PRISMExtrapSpec);*/
   //-----------------------------
-  std::cout << "HERE4!" << std::endl;
+  
   // If we are doing numu -> nue propagation, need to correct for xsec
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
 
@@ -918,7 +928,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   }
 
   // If we have the FD background predictions add them back in
-  std::cout << "HERE5!" << std::endl;
+  std::cout << "Add backgrounds in FD." << std::endl;
   if (fNCCorrection) {
     Comps.emplace(kFDNCBkg,
                   FDPrediction->PredictComponentSyst(
@@ -926,6 +936,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
+    std::cout << "Added NC backgrounds." << std::endl;
   }
 
   if (fWLBCorrection) {
@@ -959,10 +970,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                 FDPrediction->PredictComponentSyst(calc, shift, Flavors::kAll,
                                                    Current::kCC, Sign::kBoth));
 
-  /*ReweightableSpectrum FDUnOscWeightedSig(
-      ana::Constant(1), FDUnOscWeightedSig_h.get(), fAnalysisAxis.GetLabels(),
-      fAnalysisAxis.GetBinnings(), NDPOT, 0);
-
   Comps.emplace(kFDUnOscPred, FDUnOscWeightedSig.UnWeighted());
 
   std::unique_ptr<TH1> resid(static_cast<TH1 *>(
@@ -971,24 +978,26 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid.get()));
 
-  //std::cout << Comps.at(kPRISMPred).ToTH1(NDPOT)->GetMaximum() << ", "
-  //          << Comps.at(kFDFluxCorr).ToTH1(NDPOT)->GetMaximum() << std::endl;
-
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
 
   // At Flux correction to extrapolated PRISM
-  Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);*/
+  //Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
 
-  //if (NDComps.count(kPRISMMC)) {
-  //  Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
- // }
- std::cout << "HERE6!" << std::endl;
-  /*for (auto const &NDC :
+  if (NDComps.count(kPRISMMC)) {
+    Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
+  }
+ 
+  for (auto const &NDC :
        NDComps) { // If you haven't been added, project to a 2D spectrum
     if (!Comps.count(NDC.first)) {
-      Comps.emplace(NDC.first, NDC.second.ToSpectrum());
+      if (NDC.second.GetBinnings().size() < 2) {
+        Comps.emplace(NDC.first, NDC.second.ToSpectrum());
+      } else {
+        // 2D analysis axis means 3D ND data spectrum
+        // Quite annoying to do, and not particularly helpful
+      }
     }
-  }*/
+  }
   return Comps;
 }
 

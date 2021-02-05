@@ -170,7 +170,42 @@ GetListOfSysts(std::vector<std::string> const &);
 
 inline ReweightableSpectrum
 ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
-  TH2D *spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+  TH2D *spec_h;  
+
+  if (spec.NDimensions() == 2) {
+    spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+  } else if (spec.NDimensions() == 3) {
+    TH3 *spec3d_h = spec.ToTH3(POT);
+    // Reweighting axis binning
+    const Binning rwbins = Binning::FromTAxis(spec3d_h->GetZaxis());
+    // analysis axis put on to 1D
+    Binning xbins = axis.GetBinnings()[0]; 
+    int n = 1;
+    for (const Binning &b : axis.GetBinnings()) {
+      n *= b.NBins();
+      xbins = Binning::Simple(n, 0, n);
+    }
+
+    spec_h = HistCache::NewTH2D("", xbins, rwbins);
+    for (int xit = 1; xit <= spec3d_h->GetYaxis()->GetNbins(); xit++) { // EHad
+
+      for (int zit = 1; zit <= spec3d_h->GetZaxis()->GetNbins(); zit++) { // RWvar
+        // Get projection of ELep axis
+        TH1D *projY = spec3d_h->ProjectionY("", xit, xit, zit, zit);
+        // fill 2D hist with ELep*EHad x-axis
+        int NbinsY = projY->GetXaxis()->GetNbins();
+        for (int yit = 1; yit <= NbinsY; yit++) {
+          spec_h->SetBinContent(yit + ((xit - 1) * NbinsY), 
+                                zit, 
+                                projY->GetBinContent(yit));
+        }
+        HistCache::Delete(projY);
+      }
+    }
+  } else {
+    std::cout << "[ERROR] Not 2D or 3D, check input dimensions" << std::endl;
+    abort();
+  } 
 
   ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
                               axis.GetBinnings(), POT, 0);
