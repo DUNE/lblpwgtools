@@ -4,106 +4,14 @@
 // * Write function to load predictions from fixed location
 #pragma once
 
-#include "CAFAna/Analysis/AnalysisVersion.h"
-#include "CAFAna/Analysis/common_fit_definitions.h"
-#include "CAFAna/Analysis/Calcs.h"
-#include "CAFAna/Analysis/Exposures.h"
-#include "CAFAna/Experiment/CovarianceExperiment.h"
-#include "CAFAna/Experiment/ReactorExperiment.h"
-#include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Experiment/SolarConstraints.h"
-#include "CAFAna/Fit/FrequentistSurface.h"
-
-#include "CAFAna/Systs/AnaSysts.h"
+#include "helper_validation_lbl.h"
 
 using namespace ana;
 
-bool mask = true;
-
-struct expSpectrum
-{
-  Spectrum spectrum;
-  std::string name;  
-  double pot;
-};
-
-// This is a pain. There are 27 possible combinations of experiments.
-// But no one asked for numu and nue only cases, or fhc and rhc only, or matrix or no matrix. 
-MultiExperiment GetMultiExperimentLBL(std::vector<PredictionInterp*> predictions,
-                                      std::vector<Spectrum> s_fakedata, 
-                                      std::vector<TString> tags,
-                                      bool UseNDCovMat, bool TwoBeams){
-
-  // First, make sure to get the possition of the fhc nd and rhc nd predictions
-  int fhcnd_id = 0;
-  int rhcnd_id = 0;
-  for(unsigned int tagId=0; tagId<tags.size(); tagId++){
-    if(tags[tagId].Contains("nd") && tags[tagId].Contains("fhc"))
-      fhcnd_id = int(tagId);
-    if(tags[tagId].Contains("nd") && tags[tagId].Contains("rhc"))
-      rhcnd_id = int(tagId);
-  }
-  TMatrixD *this_jointmatrix = new TMatrixD();
-  TMatrixD *this_fhcmatrix   = new TMatrixD();
-  TMatrixD *this_rhcmatrix   = new TMatrixD();
-  if(UseNDCovMat){ // assume v4 is the right matrix
-    this_jointmatrix = GetNDCovMat(false, true, true);
-    this_fhcmatrix   = GetNDCovMat(false, false, true);
-    this_rhcmatrix   = GetNDCovMat(false, false, false);
-  }
-
-  MultiExperiment experiments;
-
-  for(unsigned int predId=0; predId<predictions.size(); predId++){
-    TString thistag = tags[predId];
-    SingleSampleExperiment *temp_singleexpt = new SingleSampleExperiment(predictions[predId], s_fakedata[predId]);
-    std::cout << thistag << std::endl;
-    if(thistag.Contains("fd")){ // we will always at least have the fd
-      experiments.Add(temp_singleexpt);
-    }
-    if(thistag.Contains("nd") && !UseNDCovMat){ // also simple experiments if no covariance matrix
-      experiments.Add(temp_singleexpt);
-    }
-    if(thistag.Contains("nd") && UseNDCovMat){
-      if(!TwoBeams){
-        if(thistag.Contains("fhc")){
-          CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[predId]}, {s_fakedata[predId]},
-                                                                        this_fhcmatrix, kCovMxChiSqPreInvert);
-          temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1); // also assume v4 for energy masking
-          experiments.Add(temp_covexpt);
-        }
-        else{
-          CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[predId]}, {s_fakedata[predId]},
-                                                                        this_rhcmatrix, kCovMxChiSqPreInvert);
-          temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1);
-          experiments.Add(temp_covexpt);            
-        }
-      }
-      else{
-        CovarianceExperiment* temp_covexpt = new CovarianceExperiment({predictions[fhcnd_id], predictions[rhcnd_id]},
-                                                                      {s_fakedata[fhcnd_id], s_fakedata[rhcnd_id]},
-                                                                      this_jointmatrix, kCovMxChiSqPreInvert);
-        temp_covexpt->SetMaskHist(0, 0.5, 10, 0, -1);
-        temp_covexpt->SetMaskHist(1, 0.5, 10, 0, -1);
-        if(thistag.Contains("fhc")){
-          experiments.Add(temp_covexpt);
-        }
-        if(thistag.Contains("rhc")){
-          continue; // avoid adding covariance experiment twice.
-        }
-      }
-    }
-  }
-
-  return experiments;
-
-}// end GetMultiExperimentLBL
-
-
-void make_surfprof(std::string specialTag="notag",
-  std::string systSet="nosyst", std::string asimov_set="0",
-  TString penalty="reactor", TString detectors="fdnd",
-  TString horns="fhcrhc", TString neutrinos="nuenumu",
+void make_surfprof(std::string specialTag="test",
+  std::string systSet="allsyst", std::string asimov_set="0",
+  TString penalty="", TString detectors="fdnd",
+  TString horns="rhcfhc", TString neutrinos="nuenumu",
   double years_fhc = 3.5, double years_rhc = 3.5,
   int nom_exp = 7, int hie=1){
 
@@ -148,7 +56,7 @@ void make_surfprof(std::string specialTag="notag",
     UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
   }
   bool useND = detectors.Contains("nd");
-
+  //UseNDCovMat = false;
   ///// Predictions my way
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
   std::vector<TString> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
@@ -196,8 +104,9 @@ void make_surfprof(std::string specialTag="notag",
   std::vector<Spectrum> s_fakedata;
   // fill the fake data in a separate loop so the covexpt doesn't try to find sth that doesn't exist 
   for(unsigned int predId=0; predId<predictions.size(); predId++){
+  	std::cout << "POT " << pot[predId] << std::endl;
     s_predictions.push_back(predictions[predId]->Predict(trueOsc));
-    s_fakedata.push_back(s_predictions[predId].MockData(pot[predId],0)); // second argument = 0 defaults to random throw number
+    s_fakedata.push_back(s_predictions[predId].FakeData(pot[predId])); // second argument = 0 defaults to random throw number
   }
 
   // TO DO: Make this desition cleaner and shorter
@@ -210,7 +119,7 @@ void make_surfprof(std::string specialTag="notag",
   std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
       	      	
   SystShifts trueSyst = kNoShift;
-	SystShifts testSyst = kNoShift;
+  SystShifts testSyst = kNoShift;
 	
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
  //  auto start_fit = std::chrono::system_clock::now();
@@ -227,18 +136,23 @@ void make_surfprof(std::string specialTag="notag",
  //  << BuildLogInfoString();
     
 
-  FrequentistSurface* surface = new FrequentistSurface(&experiments, testOsc, &kFitSinSqTheta23, 20, 0.3, 0.7, &kFitDmSq32Scaled, 20, 2.0, 3.0, {}, systlist);
-  TH1* hprofile_delta32 = SqrtProfile(&experiments, testOsc, &kFitDmSq32Scaled, 20, 2.0, 3.0, -1, {}, systlist);
-  TH1* hprofile_sin23   = SqrtProfile(&experiments, testOsc, &kFitSinSqTheta23, 20, 0.3, 0.7, -1, {}, systlist);
+  FrequentistSurface* surface = new FrequentistSurface(&experiments, testOsc, &kFitSinSqTheta23, 40, 0.3, 0.7, &kFitDmSq32Scaled, 40, 2.0, 3.0, {}, systlist);
+  TH1* hprofile_delta32 = SqrtProfile(&experiments, testOsc, &kFitDmSq32Scaled, 40, 2.0, 3.0, -1, {}, systlist);
+  TH1* hprofile_sin23   = SqrtProfile(&experiments, testOsc, &kFitSinSqTheta23, 40, 0.3, 0.7, -1, {}, systlist);
 
   surface->SaveTo(fout->mkdir("surface"), "mysurf");
+  fout->cd();
   hprofile_sin23->Write("profile_sin23");
-  hprofile_delta32->Write("profile_delta32");
+  fout->cd();
+  hprofile_delta32->Write("profile_dm32");
+
+  // gDirectory->WriteObject(hprofile_sin23,"profile_sin23");
+  // gDirectory->WriteObject(hprofile_delta32,"profile_dm32");
   fout->Close();
 
-  s_predictions.clear();
-  s_fakedata.clear();
-  predictions.clear();
-  // experiments.clear();
+  // s_predictions.clear();
+  // s_fakedata.clear();
+  // predictions.clear();
+  //// experiments.clear();
 
 }
