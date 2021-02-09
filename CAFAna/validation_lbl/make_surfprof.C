@@ -8,8 +8,8 @@
 
 using namespace ana;
 
-void make_surfprof(std::string specialTag="test",
-  std::string systSet="allsyst", std::string asimov_set="0",
+void make_surfprof(std::string specialTag="_FakeData",
+  std::string systSet="nosyst", std::string asimov_set="0",
   TString penalty="", TString detectors="fdnd",
   TString horns="rhcfhc", TString neutrinos="nuenumu",
   double years_fhc = 3.5, double years_rhc = 3.5,
@@ -29,7 +29,7 @@ void make_surfprof(std::string specialTag="test",
 
   std::vector<std::string> neutrino = {};
   std::vector<std::string> detector = {};
-  std::vector<std::string> horn;
+  std::vector<std::string> horn     = {};
   std::vector<float> pot = {};
 
   // Contains or use python inspired SplitString currently in AnaSysts.h
@@ -113,8 +113,8 @@ void make_surfprof(std::string specialTag="test",
   // Determine what experiment this is. Thank you Covariance Matrix.
   std::cout << "getting MultiExperiment" << std::endl;
   MultiExperiment experiments = GetMultiExperimentLBL(predictions, s_fakedata, tags, UseNDCovMat, TwoBeams);
-  if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
-  if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
+  if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintNuFit2019(hie, true));
+  if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsNuFit2019);
 
   std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
       	      	

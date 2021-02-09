@@ -11,11 +11,11 @@ using namespace ana;
 // std::string fdir = "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/dmendez/CAFAnaInputs/";
 // std::string fdir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
 void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/",
-		     std::string specialTag="_FakeData",
+		     std::string specialTag="_FakeDataNoMatrixChangedReactor",
 		     std::string systSet="nosyst",
 		     double years_fhc = 3.5, double years_rhc = 3.5,
 		     int nom_exp = 7, int hie=1,
-		     TString penalty="", std::string asimov_set="0",
+		     TString penalty="reactor", std::string asimov_set="0",
 		     TString detectors="fdnd", TString horns="fhcrhc", TString neutrinos="numunue"){
 
   gROOT->SetBatch(1);
@@ -33,7 +33,7 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
 
   std::vector<std::string> neutrino = {};
   std::vector<std::string> detector = {};
-  std::vector<std::string> horn {};
+  std::vector<std::string> horn     = {};
   std::vector<float> pot = {};
 
   // Contains or use python inspired SplitString currently in AnaSysts.h
@@ -60,6 +60,7 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
     UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
   }
   bool use_nd = detectors.Contains("nd");
+  UseNDCovMat = false;
 
   ///// Predictions my way
   ///// The joint scripts load the preds at everypoint. Avoid that. Load once.
@@ -120,14 +121,16 @@ void get_sensitivity(std::string inPredDir = "/pnfs/dune/persistent/users/dmende
     // fill the fake data in a separate loop so the covexpt doesn't try to find sth that doesn't exist 
     for(unsigned int predId=0; predId<predictions.size(); predId++){
       s_predictions.push_back(predictions[predId]->Predict(trueOsc));
-      s_fakedata.push_back(s_predictions[predId].FakeData(pot[predId],0)); // second argument = 0 defaults to random throw number
+      s_fakedata.push_back(s_predictions[predId].FakeData(pot[predId])); // second argument = 0 defaults to random throw number
     }
 
     // TO DO: Make this desition cleaner and shorter
     std::cout << "getting MultiExperiment" << std::endl;
     MultiExperiment experiments = GetMultiExperimentLBL(predictions, s_fakedata, tags, UseNDCovMat, TwoBeams);
-    if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintPDG2019());
-    if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsPDG2019);
+    if(penalty.Contains("reactor")) experiments.Add(ReactorConstraintNuFit2019(hie, true)); // Constrain using the truth value
+    if(penalty.Contains("solar")) experiments.Add(&kSolarConstraintsNuFit2019);
+    // IExperiment *penalty = GetPenalty(1, 1, "th13", asimov_set);
+    // experiments.Add(penalty);
 
     // Still need to loop over dcp choices for the seeded Calc
     // why only have two options?

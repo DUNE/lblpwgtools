@@ -6,5 +6,6 @@
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Experiment/SolarConstraints.h"
+#include "CAFAna/Fit/FrequentistSurface.h"
 
 #include "CAFAna/Systs/AnaSysts.h"
