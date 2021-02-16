@@ -1,11 +1,4 @@
-// Run after each change to CAFAna
-// Either manually or in unit test
-#pragma once
-
 #include "helper_validation_lbl.h"
-
-#include "CAFAna/Systs/EnergySysts.h"
-#include "CAFAna/Systs/FDRecoSysts.h"
 
 using namespace ana;
 
@@ -13,11 +6,14 @@ using namespace ana;
 const float maxdifference = 1e-5;
 bool passedtest = false;
 
-void main(
-  TString detectors="fdnd",
-  TString horns="rhcfhc",
-  TString neutrinos="nuenumu",
-  bool systs = false)
+// set the experiment to test against
+// currently only stats only ans systs with 2 detectors, 2 horn currents and 2 neutrino types.
+const TString detectors="fdnd";
+const TString horns="rhcfhc";
+const TString neutrinos="nuenumu";
+const bool systs = false;
+
+int main()
 {
 
   // Systematics to use: 1 or 2 for quick test
@@ -124,16 +120,18 @@ void main(
   hss23_diff->Add(hss23_test,-1);
 
   // loop through the profile bins and print a warning if difference is greater than the set threshold
-  for(unsigned int bin = 0; bin < hdcp_diff->GetNbinsX(); bin++){
+  for(int bin = 0; bin < hdcp_diff->GetNbinsX(); bin++){
     float difference = hdcp_diff->GetBinContent(bin);
-    if(difference >= maxdifference) std::cerr << "Warning\n--->>> Fit not matc in delta CP\n";
+    if(difference >= maxdifference) std::cerr << "Warning\n--->>> ";
     else passedtest = true;
+    std::cout << "SqrtProfile difference (delta CP) = " << difference << "\n";
     // else std::cout << "Passed fit test" << std::endl;
   }
-  for(unsigned int bin = 0; bin < hss23_diff->GetNbinsX(); bin++){
+  for(int bin = 0; bin < hss23_diff->GetNbinsX(); bin++){
     float difference = hss23_diff->GetBinContent(bin);
-    if(difference >= maxdifference) std::cerr << "Warning\n--->>> Fit not match in ss23\n";
+    if(difference >= maxdifference) std::cerr << "Warning\n--->>> ";
     else passedtest = true;
+    std::cout << "SqrtProfile difference (sstheta23) = " << difference << "\n";
   }
 
   if(passedtest) std::cout << "* Passed LBL fit test with flying colours *" << std::endl;
@@ -151,5 +149,7 @@ void main(
   hss23_diff ->Delete();
 
   fcomp->Close();
+
+  return 0;
 
 }

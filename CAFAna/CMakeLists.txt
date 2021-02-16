@@ -115,6 +115,7 @@ add_subdirectory(Vars)
 add_subdirectory(bin)
 
 add_subdirectory(scripts)
+add_subdirectory(validation_lbl)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)

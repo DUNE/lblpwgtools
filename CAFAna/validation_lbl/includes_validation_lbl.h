@@ -9,3 +9,8 @@
 #include "CAFAna/Fit/FrequentistSurface.h"
 
 #include "CAFAna/Systs/AnaSysts.h"
+#include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/FDRecoSysts.h"
+
+#include "OscLib/OscCalcPMNSOpt.h"
+

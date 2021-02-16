@@ -1,5 +1,3 @@
-#pragma once
-
 #include "includes_validation_lbl.h"
 
 using namespace ana;
