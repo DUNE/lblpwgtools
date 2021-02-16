@@ -7,13 +7,18 @@ const float maxdifference = 1e-5;
 bool passedtest = false;
 
 // set the experiment to test against
-// currently only stats only ans systs with 2 detectors, 2 horn currents and 2 neutrino types.
-const TString detectors="fdnd";
-const TString horns="rhcfhc";
-const TString neutrinos="nuenumu";
-const bool systs = false;
+// currently only stats only and systs with 
+// 2 detectors, 2 horn currents and 2 neutrino types.
+TString def_detectors = "fdnd";
+TString def_horns     = "rhcfhc";
+TString def_neutrinos = "nuenumu";
+bool def_systs = false;
 
-int main()
+void validate_lbl_fit(
+  TString detectors="fdnd",
+  TString horns="rhcfhc",
+  TString neutrinos="nuenumu",
+  bool systs = false)
 {
 
   // Systematics to use: 1 or 2 for quick test
@@ -150,6 +155,15 @@ int main()
 
   fcomp->Close();
 
-  return 0;
+}
+
+int main(int argc, char const *argv[]){
+
+  TString detectors = (argc > 1) ? TString(argv[1]) : def_detectors;
+  TString horns     = (argc > 2) ? TString(argv[2]) : def_horns;
+  TString neutrinos = (argc > 3) ? TString(argv[3]) : def_neutrinos;
+  bool systs  = (argc > 4) ? atoi(argv[4]) : def_systs;
+
+  validate_lbl_fit(detectors,horns,neutrinos,systs);
 
 }
