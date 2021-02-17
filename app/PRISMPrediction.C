@@ -211,9 +211,18 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       << "Analysis ND POT: " << POT << std::endl; 
     //TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
     auto *Data = DataSpectra.back().ToTHX(POT_FD);
-    /*for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
-      Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
-    }*/
+    if (DataSpectra.back().NDimensions() == 1) {
+      for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
+        Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
+      }
+    } else if (DataSpectra.back().NDimensions() == 2) {
+      for (int x_it = 1; x_it <= Data->GetXaxis()->GetNbins(); x_it++) {
+        for (int y_it = 1; y_it <= Data->GetYaxis()->GetNbins(); y_it++) {
+          double be = sqrt(Data->GetBinContent(x_it, y_it));
+          Data->SetBinError(x_it, y_it, be);
+        }
+      }
+    }
     Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
@@ -221,7 +230,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     NDFD_Matrix SmearMatrices(std::move(state.NDMatrixPredInterps[NDConfig_enum]), 
-                              std::move(state.FDMatrixPredInterps[FDConfig_enum]), 
+                              std::move(state.NDMatrixTruePredInterps[NDConfig_enum]),
+                              std::move(state.NDMatrixRecoPredInterps[NDConfig_enum]),
+                              std::move(state.FDMatrixPredInterps[FDConfig_enum]),
+                              std::move(state.FDMatrixTruePredInterps[FDConfig_enum]),
+                              std::move(state.FDMatrixRecoPredInterps[FDConfig_enum]), 
                               POT_FD);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);

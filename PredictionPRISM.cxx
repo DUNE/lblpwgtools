@@ -66,10 +66,10 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
 
   fNDFD_Matrix = nullptr;
 
-  fNCCorrection = false;
-  fWSBCorrection = false;
-  fWLBCorrection = false;
-  fIntrinsicCorrection = false;
+  fNCCorrection = true;
+  fWSBCorrection = true;
+  fWLBCorrection = true;
+  fIntrinsicCorrection = true;
 
   std::vector<std::string> OffPrediction_Labels = fAnalysisAxis.GetLabels();
   std::vector<Binning> OffPrediction_Bins = fAnalysisAxis.GetBinnings();
@@ -864,9 +864,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // detector extrapolation from ND to FD
   // Set shift to kNoShift as we don't want systs affecting the MC efficiency correction
   // at the moment
-  /*fMCEffCorrection->CalcEfficiency(calc, NDSigFlavor, FDSigFlavor, 
+  std::cout << "HERE1" << std::endl;
+  fMCEffCorrection->CalcEfficiency(calc, fAnalysisAxis, NDSigFlavor, FDSigFlavor, 
                                    Current::kCC, NDSigSign, FDSigSign);
-
+  std::cout << "HERE2" << std::endl;
   // Do ND to FD detector extrapolation here
   // Normalise the ERec v ETrue ND and FD matrices
   fNDFD_Matrix->NormaliseETrue(calc, shift, NDSigFlavor, FDSigFlavor, //kNoShift
@@ -874,8 +875,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                fMCEffCorrection->GetNDefficiency(),
                                fMCEffCorrection->GetFDefficiency());
   // Extrapolate just the LC ND, not the MC
+  std::cout << "HERE3" << std::endl;
   fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));
- 
+  gFile->WriteTObject(fNDFD_Matrix->GetPRISMExtrap(), "PRISMExtrap1D");
+  std::cout << "HERE4" << std::endl;
   Spectrum PRISMExtrapSpec = Spectrum(fNDFD_Matrix->GetPRISMExtrap(), 
                                       Comps.at(kPRISMPred).GetLabels(),
                                       Comps.at(kPRISMPred).GetBinnings(), 
@@ -883,7 +886,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // Keep PRISM extrap prediction wihtout corrections
   Comps.emplace(kNDData_FDExtrap, PRISMExtrapSpec);
   // For adding in MC corrections
-  Comps.emplace(kNDDataCorr_FDExtrap, PRISMExtrapSpec);*/
+  Comps.emplace(kNDDataCorr_FDExtrap, PRISMExtrapSpec);
   //-----------------------------
   
   // If we are doing numu -> nue propagation, need to correct for xsec
@@ -981,7 +984,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
 
   // At Flux correction to extrapolated PRISM
-  //Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
+  Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
 
   if (NDComps.count(kPRISMMC)) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
