@@ -32,6 +32,7 @@ public:
   double RecoHadEnNumu;
 
   double RecoLepE_NDFD;
+  double RecoHadE_NDFD;
   // 'Reco' LepE which just smears LepE my detector res
   double ProxyRecoLepE;
 

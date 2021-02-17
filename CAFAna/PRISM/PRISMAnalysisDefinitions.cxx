@@ -97,8 +97,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
     return std::make_pair("E_{Dep.} (GeV)", kRecoE_FromDep);
+  } else if (varname == "EVisReco") {
+    return std::make_pair("Reco E_{vis.} (GeV)", kEVisReco);
+  } else if (varname == "EVisTrue") {
+    return std::make_pair("True E_{vis.} (GeV)", kEVisTrue);
   } else if (varname == "RecoELep") {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
+  } else if (varname == "RecoEHad") {
+    return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -130,6 +136,15 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
     bins.push_back(GetBinning(xbinning));
     vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("EHad"); 
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefHad.second);
+  } else if (varname == "ELepEHadReco") {
+    auto vardefLep = GetVar("RecoELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("RecoEHad");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning(xbinning));
     vars.push_back(vardefHad.second);
@@ -166,7 +181,20 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
+  } else if (obsvarname == "RecoELep") { 
+    truevardef = GetVar("ELep");
+  } else if (obsvarname == "EVisReco") {
+    truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "ELepEHad") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefLep.second);
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefHad.second);
+  } else if (obsvarname == "ELepEHadReco") {
     auto truevardefLep = GetVar("ELep");
     labels.push_back(truevardefLep.first);
     bins.push_back(GetBinning(binning));
@@ -180,7 +208,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
     abort();
   }   
   
-  if (obsvarname == "ELepEHad") {
+  if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadReco") {
     return HistAxis(labels, bins, vars);
   } else {
     return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
@@ -240,13 +268,14 @@ Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
                 kIsOutOfTheDesert)
              : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert && kERecoProxy8GeV); //kETrue8GeV
+                kIsOutOfTheDesert); // kERecoProxy8GeV kETrue8GeV
 }
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
-                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV && kERecoProxy8GeV); //kETrue8GeV
+                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV); // kERecoProxy8GeV
+                                                                                   // kETrue8GeV
 }
 
 Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {

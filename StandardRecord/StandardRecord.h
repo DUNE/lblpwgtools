@@ -48,6 +48,7 @@ namespace caf
     double RecoHadEnNumu;
 
     double RecoLepE_NDFD;
+    double RecoHadE_NDFD;
     double ProxyRecoLepE;
 
     // ND pseudo-reconstruction flags

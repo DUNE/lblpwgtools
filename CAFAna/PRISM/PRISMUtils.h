@@ -74,7 +74,11 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixRecoPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixTruePredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixRecoPredInterps;
   // For MC Eff Correction
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
@@ -113,7 +117,11 @@ struct PRISMStateBlob {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(NDMatrixTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(NDMatrixRecoPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FDMatrixTruePredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FDMatrixRecoPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
@@ -176,6 +184,9 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
     spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
   } else if (spec.NDimensions() == 3) {
     TH3 *spec3d_h = spec.ToTH3(POT);
+    std::cout << "x title = " << spec3d_h->GetXaxis()->GetTitle()
+              << "y title = " << spec3d_h->GetYaxis()->GetTitle()
+              << "z title = " << spec3d_h->GetZaxis()->GetTitle() << std::endl;
     // Reweighting axis binning
     const Binning rwbins = Binning::FromTAxis(spec3d_h->GetZaxis());
     // analysis axis put on to 1D
@@ -222,7 +233,11 @@ class NDFD_Matrix {
 public:
   //NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
   NDFD_Matrix(std::unique_ptr<PredictionInterp> ND,
+              std::unique_ptr<PredictionInterp> NDTrue,
+              std::unique_ptr<PredictionInterp> NDReco, 
               std::unique_ptr<PredictionInterp> FD,
+              std::unique_ptr<PredictionInterp> FDTrue,
+              std::unique_ptr<PredictionInterp> FDReco,
               double pot);  
 
   // Normalise the ETrue column to 1 in ND and FD matrices
@@ -236,8 +251,8 @@ public:
                       std::vector<double> NDefficiency = {},
                       std::vector<double> FDefficiency = {}) const;
 
-  TH2 * GetNDMatrix() const;
-  TH2 * GetFDMatrix() const;
+  TH2D * GetNDMatrix() const;
+  TH2D * GetFDMatrix() const;
 
   TH1 * GetPRISMExtrap() const;
 
@@ -246,10 +261,16 @@ public:
 
 protected:
 
-  mutable std::unique_ptr<TH2> hMatrixND;
-  mutable std::unique_ptr<TH2> hMatrixFD;
+  mutable std::unique_ptr<TH2D> hMatrixND;
+  mutable std::unique_ptr<TH2D> hMatrixFD;
+  //mutable std::unique_ptr<TH1> hMatrixND;
+  //mutable std::unique_ptr<TH1> hMatrixFD;
   std::unique_ptr<PredictionInterp> fMatrixND;
+  std::unique_ptr<PredictionInterp> fMatrixTrueND;
+  std::unique_ptr<PredictionInterp> fMatrixRecoND;
   std::unique_ptr<PredictionInterp> fMatrixFD;
+  std::unique_ptr<PredictionInterp> fMatrixTrueFD;
+  std::unique_ptr<PredictionInterp> fMatrixRecoFD;
   const double fPOT;
   mutable std::unique_ptr<TH1> fPRISMExtrap;
 
@@ -270,6 +291,7 @@ public:
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
   void CalcEfficiency(osc::IOscCalculator *calc, 
+                      HistAxis const &axis,
                       //ana::SystShifts shift = kNoShift,
                       Flavors::Flavors_t NDflav = Flavors::kAll,
                       Flavors::Flavors_t FDflav = Flavors::kAll,
