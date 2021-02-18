@@ -4,7 +4,7 @@ using namespace ana;
 
 // maximum difference between profiles to test and the orifinals
 const float maxdifference = 1e-5;
-bool passedtest = false;
+int failedtest = 0;
 
 // set the experiment to test against
 // currently only stats only and systs with 
@@ -112,6 +112,7 @@ void validate_lbl_fit(
   std::cout << "Beginning fit for LBL log-likelihood test" << std::endl;
   TH1* hdcp_test  = SqrtProfile(&experiments, testOsc, &kFitDeltaInPiUnits, 4, 0.0, 2.0, -1, {}, systlist);
   TH1* hss23_test = SqrtProfile(&experiments, testOsc, &kFitSinSqTheta23,   4, 0.4, 0.6, -1, {}, systlist);
+  std::cout << "\n" << std::endl;
 
   // get the profiles to compare with
   TString fname_comp = fdir+"/test_fhcrhc_ndfd_"+systtag+"_15years.root";
@@ -127,23 +128,33 @@ void validate_lbl_fit(
   // loop through the profile bins and print a warning if difference is greater than the set threshold
   for(int bin = 0; bin < hdcp_diff->GetNbinsX(); bin++){
     float difference = hdcp_diff->GetBinContent(bin);
-    if(difference >= maxdifference) std::cerr << "Warning\n--->>> ";
-    else passedtest = true;
+    if(abs(difference) >= maxdifference){
+      failedtest++;
+      std::cerr << "WARNING! SqrtProfile difference (delta CP) = " << difference << "\n";
+    }
+    else{
     std::cout << "SqrtProfile difference (delta CP) = " << difference << "\n";
-    // else std::cout << "Passed fit test" << std::endl;
+    }
   }
   for(int bin = 0; bin < hss23_diff->GetNbinsX(); bin++){
     float difference = hss23_diff->GetBinContent(bin);
-    if(difference >= maxdifference) std::cerr << "Warning\n--->>> ";
-    else passedtest = true;
+    if(abs(difference) >= maxdifference){
+      failedtest++;
+      std::cerr << "WARNING! SqrtProfile difference (sstheta23) = " << difference << "\n";
+    }
+    else{
     std::cout << "SqrtProfile difference (sstheta23) = " << difference << "\n";
+    }
   }
 
-  if(passedtest) std::cout << "* Passed LBL fit test with flying colours *" << std::endl;
+  std::cout << "failedtest = " << failedtest << std::endl;
+  if(failedtest>0){
+    std::cout << "\n===== FAILED LBL fit test ====="   << std::endl;
+    std::cout <<   "===== FAILED LBL fit test ====="   << std::endl;
+    std::cout <<   "===== FAILED LBL fit test =====\n" << std::endl;
+  }
   else{
-    std::cout << "===== FAILED LBL fit test =====" << std::endl;
-    std::cout << "===== FAILED LBL fit test =====" << std::endl;
-    std::cout << "===== FAILED LBL fit test =====" << std::endl;
+    std::cout << "\n* Passed LBL fit test *\n" << std::endl;
   }
 
   hdcp       ->Delete();
@@ -164,6 +175,8 @@ int main(int argc, char const *argv[]){
   TString neutrinos = (argc > 3) ? TString(argv[3]) : def_neutrinos;
   bool systs  = (argc > 4) ? atoi(argv[4]) : def_systs;
 
+  std::cout << "Running validate_lbl_fit with the following settings" << std::endl;
+  std::cout << "detectors: " << detectors << ", horns: " << horns << ", neutrinos: " << neutrinos << ", systematics: " << systs << std::endl;
   validate_lbl_fit(detectors,horns,neutrinos,systs);
 
 }
