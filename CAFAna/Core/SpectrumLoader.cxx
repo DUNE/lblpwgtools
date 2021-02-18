@@ -23,6 +23,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TTree.h"
+#include "TRandom3.h"
 
 namespace ana {
 //----------------------------------------------------------------------
@@ -56,6 +57,13 @@ SpectrumLoader::~SpectrumLoader() {}
 struct CompareByID {
   bool operator()(const Cut &a, const Cut &b) { return a.ID() < b.ID(); }
 };
+
+bool SpectrumLoader::AddSmear(double &smear_val){
+  static bool add_nd_smear = getenv("CAFANA_ND_SMEAR") ? 1 : 0;
+  static double nd_smear = getenv("CAFANA_ND_SMEAR") ? atof(getenv("CAFANA_ND_SMEAR")) : 0;
+  smear_val = nd_smear;
+  return add_nd_smear;
+}
 
 //----------------------------------------------------------------------
 void SpectrumLoader::Go() {
@@ -332,6 +340,33 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         std::cout << "isFHC not set properly in ND file: " << sr.dune.isFHC
                   << std::endl;
         abort();
+      }
+
+      double nd_smear;
+      bool add_nd_smear = AddSmear(nd_smear);
+
+      // Smear the resolution... this was added for a D1ND test, don't use it unless you know what it does
+      // And if everyone's forgotten what it does, it's safe to delete it
+      if (add_nd_smear){
+	// sr.dune.Elep_reco is the variable that actually needs to be smeared
+	// sr.dune.Ev_reco needs to be modified to match
+	// sr.dune.LepE is for an alternative usage... modify it for completeness
+	
+	// Draw from a unit Gaussian
+	static TRandom3 rnd(0);
+	double this_smear = rnd.Gaus(0.0, 1.0);
+	
+	// Multiple by the resolution given by an environment variable
+	this_smear *= nd_smear;
+
+	// Modify the lepton energy by the appropriate amount
+	double old_Elep_reco = sr.dune.Elep_reco;
+	double old_LepE = sr.dune.LepE;
+	double old_Ev_reco = sr.dune.Ev_reco;
+
+	sr.dune.Elep_reco = old_Elep_reco*(1+this_smear);
+	sr.dune.LepE = old_LepE*(1+this_smear);
+	sr.dune.Ev_reco = old_Ev_reco - old_Elep_reco + sr.dune.Elep_reco;
       }
     }
 

@@ -56,6 +56,9 @@ namespace ana
     /// Prints POT/livetime info for all spectra
     virtual void ReportExposures();
 
+    bool AddSmear(double &smear_val);
+
+
     // This is all infrasture to test that the user didn't screw up their
     // systematic shifts.
     struct TestVals
