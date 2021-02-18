@@ -13,7 +13,7 @@
 namespace ana
 {
   // FD global energy scale syst
-  // Don't shift muon energies with this
+  // Don't shift muon energies with this; muons measured by range/MCS and not deposited energy
   class EnergyScaleFD: public ISyst
   {
   public:
@@ -592,6 +592,552 @@ namespace ana
 
   extern const NResFD kNResFD;
 
+  //---------------------------------------------------------------------------
+  //-----------NEAR DETECTOR---------------------------------------------------
+  //---------------------------------------------------------------------------
+  // ND-LAr global energy scale syst
+  // Don't shift muon energies with this; muons measured by range and not deposited energy
+  class EnergyScaleND: public ISyst
+  {
+  public:
+  EnergyScaleND() : ISyst("EnergyScaleND", "Global ND Energy Scale Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+
+      double scale = .02 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        double ehad_reco = sr->dune.Ev_reco - sr->dune.Elep_reco;
+        // Shift the lepton energy only for electrons
+        if (abs(sr->dune.LepPDG) == 11) {
+          sr->dune.Ev_reco *= (1. + scale);
+          sr->dune.Elep_reco *= (1. + scale);
+        } else { // scale only the hadronic component of the energy
+          sr->dune.Ev_reco += scale * ehad_reco; // shift the hadronic energy
+        }
+      }
+    }
+  };
+
+  extern const EnergyScaleND kEnergyScaleND;
+
+  // Total energy scale shape systematics
+  class UncorrNDTotSqrt: public ISyst
+  {
+  public:
+  UncorrNDTotSqrt() : ISyst("UncorrNDTotSqrt", "Uncorrelated ND Sqrt Total Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+
+      const double scale = .01 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        double ehad_reco = sr->dune.Ev_reco - sr->dune.Elep_reco;
+        // Shift the lepton energy only for electrons
+        if (abs(sr->dune.LepPDG) == 11) {
+          const double edep_scale = scale*pow(sr->dune.Ev_reco,0.5);
+          sr->dune.Ev_reco *= (1. + edep_scale);
+          sr->dune.Elep_reco *= (1. + edep_scale);
+        } else { // scale only the hadronic component of the energy
+          sr->dune.Ev_reco += scale * pow(ehad_reco,0.5); // shift the hadronic energy
+        }
+      }       
+    }
+  };
+  extern const UncorrNDTotSqrt kUncorrNDTotSqrt;
+
+  class UncorrNDTotInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDTotInvSqrt() : ISyst("UncorrNDTotInvSqrt", "Uncorrelated ND Inverse Sqrt Total Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+
+      const double scale = .02 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        double ehad_reco = sr->dune.Ev_reco - sr->dune.Elep_reco;
+        // Shift the lepton energy only for electrons
+        if (abs(sr->dune.LepPDG) == 11) {
+          const double edep_scale = scale*pow(sr->dune.Ev_reco+0.1,-0.5);
+          sr->dune.Ev_reco *= (1. + edep_scale);
+          sr->dune.Elep_reco *= (1. + edep_scale);
+        } else { // scale only the hadronic component of the energy
+          sr->dune.Ev_reco += scale * pow(ehad_reco+0.1,-0.5); // shift the hadronic energy
+        }
+      }       
+    }
+  };
+  extern const UncorrNDTotInvSqrt kUncorrNDTotInvSqrt;
+
+  // Muons; split contained vs spectrometer
+  class EScaleMuLArND: public ISyst
+  {
+  public:
+  EScaleMuLArND() : ISyst("EScaleMuLArND", "Muon Energy Scale LAr Near Detector") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      const double scale = .02 * sigma;
+      if(!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && (sr->dune.muon_contained || sr->dune.muon_ecal)) {
+        sr->dune.Ev_reco   += sr->dune.Elep_reco * scale;
+        sr->dune.Elep_reco *= (1. + scale);
+      }
+    }
+  };
+  extern const EScaleMuLArND kEScaleMuLArND;
+
+  class UncorrNDMuLArSqrt: public ISyst
+  {
+  public:
+  UncorrNDMuLArSqrt() : ISyst("UncorrNDMuLArSqrt", "Uncorrelated ND LAr Sqrt Muon Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      if (!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && (sr->dune.muon_contained || sr->dune.muon_ecal)) {
+        const double scale = .005 * sigma;
+        sr->dune.Ev_reco  += sr->dune.Elep_reco * pow(sr->dune.Elep_reco, 0.5) * scale;
+        sr->dune.Elep_reco += sr->dune.Elep_reco * pow(sr->dune.Elep_reco, 0.5) * scale;
+      }
+    }
+  };
+  extern const UncorrNDMuLArSqrt kUncorrNDMuLArSqrt;
+
+  class UncorrNDMuLArInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDMuLArInvSqrt() : ISyst("UncorrFDMuLArInvSqrt", "Uncorrelated ND LAr Inv Sqrt Muon Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      if (!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && (sr->dune.muon_contained || sr->dune.muon_ecal)) {
+        const double scale = .02 * sigma;
+        sr->dune.Ev_reco  += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+        sr->dune.Elep_reco += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+      }
+    }
+  };
+  extern const UncorrNDMuLArInvSqrt kUncorrNDMuLArInvSqrt;
+
+  // This is probably different for D1ND and GAr
+  class EScaleMuSpectND: public ISyst
+  {
+  public:
+  EScaleMuSpectND() : ISyst("EScaleMuSpectND", "Muon Energy Scale Spectrometer Near Detector") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      const double scale = .02 * sigma;
+      if(!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && sr->dune.muon_tracker) {
+        sr->dune.Ev_reco   += sr->dune.Elep_reco * scale;
+        sr->dune.Elep_reco *= (1. + scale);
+      }
+    }
+  };
+  extern const EScaleMuLArND kEScaleMuLArND;
+
+  class UncorrNDMuSpectSqrt: public ISyst
+  {
+  public:
+  UncorrNDMuSpectSqrt() : ISyst("UncorrNDMuSpectSqrt", "Uncorrelated ND Spectrometer Sqrt Muon Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      if(!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && sr->dune.muon_tracker) {
+        const double scale = .005 * sigma;
+        sr->dune.Ev_reco  += sr->dune.Elep_reco * pow(sr->dune.Elep_reco, 0.5) * scale;
+        sr->dune.Elep_reco += sr->dune.Elep_reco * pow(sr->dune.Elep_reco, 0.5) * scale;
+      }
+    }
+  };
+  extern const UncorrNDMuSpectSqrt kUncorrNDMuSpectSqrt;
+
+  class UncorrNDMuSpectInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDMuSpectInvSqrt() : ISyst("UncorrNDMuSpectInvSqrt", "Uncorrelated ND Spectrometer Inv Sqrt Muon Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      if(!sr->dune.isFD && abs(sr->dune.LepPDG) == 13 && sr->dune.muon_tracker) {
+        const double scale = .02 * sigma;
+        sr->dune.Ev_reco  += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+        sr->dune.Elep_reco += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+      }
+    }
+  };
+  extern const UncorrNDMuSpectInvSqrt kUncorrNDMuSpectInvSqrt;
+
+  // Charged hadrons
+  class ChargedHadUncorrND: public ISyst
+  {
+  public:
+  ChargedHadUncorrND() : ISyst("ChargedHadUncorrND", "Charged Hadron Uncorrelated ND Syst") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoP,
+                  sr->dune.eRecoPip,
+                  sr->dune.eRecoPim);
+      const double scale = .05 * sigma;
+      if(!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.eRecoP < 0)   sr->dune.eRecoP = 0.;
+        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
+        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
+        const double sumE = sr->dune.eRecoP + sr->dune.eRecoPim + sr->dune.eRecoPip;
+        sr->dune.eRecoP   += sr->dune.eRecoP * scale;
+        sr->dune.eRecoPim += sr->dune.eRecoPim * scale;
+        sr->dune.eRecoPip += sr->dune.eRecoPip * scale;
+        sr->dune.Ev_reco  += sumE * scale;
+      }
+    }
+  };
+  extern const ChargedHadUncorrFD kChargedHadUncorrFD;
+
+
+  class UncorrNDHadSqrt: public ISyst
+  {
+  public:
+  UncorrNDHadSqrt() : ISyst("UncorrNDHadSqrt", "Uncorrelated ND Sqrt Hadron Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoP,
+                  sr->dune.eRecoPim,
+                  sr->dune.eRecoPip);
+      const double scale = .05 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.eRecoP < 0)   sr->dune.eRecoP = 0.;
+        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
+        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
+        double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
+        sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE, 0.5);
+        sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE, 0.5);
+        sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE, 0.5);
+        sr->dune.Ev_reco += sumE * scale * pow(sumE, 0.5);
+      }
+    }
+  };
+  extern const UncorrNDHadSqrt kUncorrNDHadSqrt;
+
+  class UncorrNDHadInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDHadInvSqrt() : ISyst("UncorrNDHadInvSqrt", "Uncorrelated ND Inv Sqrt Hadron Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoP,
+                  sr->dune.eRecoPim,
+                  sr->dune.eRecoPip);
+      const double scale = .05 * sigma;
+      if (sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.RecoHadEnNue = 0.;
+        if (sr->dune.eRecoP < 0) sr->dune.eRecoP = 0.;
+        if (sr->dune.eRecoPim < 0) sr->dune.eRecoPim = 0.;
+        if (sr->dune.eRecoPip < 0) sr->dune.eRecoPip = 0.;
+        double sumE = sr->dune.eRecoP + sr->dune.eRecoPip + sr->dune.eRecoPim;
+        sr->dune.Ev_reco += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->dune.eRecoP   += sr->dune.eRecoP * scale * pow(sumE+0.1, -0.5);
+        sr->dune.eRecoPim += sr->dune.eRecoPim * scale * pow(sumE+0.1, -0.5);
+        sr->dune.eRecoPip += sr->dune.eRecoPip * scale * pow(sumE+0.1, -0.5);
+      }
+    }
+  };
+  extern const UncorrNDHadInvSqrt kUncorrNDHadInvSqrt;
+
+  //------------------------------------------------------------------------------------
+  // Electromagnetic
+  class EMUncorrND: public ISyst
+  {
+  public:
+  EMUncorrND() : ISyst("EMUncorrND", "Electromagnetic shower ND Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco,
+                  sr->dune.eRecoPi0);
+      const double scale = 0.025 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
+        sr->dune.Ev_reco  += sr->dune.eRecoPi0 * scale;
+        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale;
+        if (abs(sr->dune.LepPDG) == 11) {
+          sr->dune.Ev_reco  += sr->dune.Elep_reco * scale;
+          sr->dune.Elep_reco += sr->dune.Elep_reco * scale;
+        }
+      }
+    }
+  };
+  extern const EMUncorrND kEMUncorrND;
+
+  class UncorrNDEMSqrt: public ISyst
+  {
+  public:
+  UncorrNDEMSqrt() : ISyst("UncorrNDEMSqrt", "Uncorrelated ND Sqrt EM Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco,
+                  sr->dune.eRecoPi0);
+      const double scale = .025 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        sr->dune.Ev_reco  += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
+        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * pow(sr->dune.eRecoPi0, 0.5) * scale;
+        if (sr->dune.eRecoPi0 < 0) sr->dune.eRecoPi0 = 0.;
+        if (abs(sr->dune.LepPDG) == 11) {
+          sr->dune.Ev_reco  += sr->dune.Elep_reco*pow(sr->dune.Elep_reco, 0.5)*scale;
+          sr->dune.Elep_reco += sr->dune.Elep_reco*pow(sr->dune.Elep_reco, 0.5)*scale;
+        }
+      }
+    }
+  };
+  extern const UncorrNDEMSqrt kUncorrNDEMSqrt;
+
+  class UncorrNDEMInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDEMInvSqrt() : ISyst("UncorrNDEMInvSqrt", "Uncorrelated ND Inv Sqrt EM Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco,
+                  sr->dune.eRecoPi0);
+      const double scale = .025 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.Elep_reco < 0.) sr->dune.Elep_reco = 0.;
+        sr->dune.Ev_reco  += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
+        sr->dune.eRecoPi0 += sr->dune.eRecoPi0 * scale * pow(sr->dune.eRecoPi0+0.1, -0.5);
+        if (abs(sr->dune.LepPDG) == 11) {
+          sr->dune.Ev_reco  += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+          sr->dune.Elep_reco += sr->dune.Elep_reco * scale * pow(sr->dune.Elep_reco+0.1, -0.5);
+        }
+      }
+    }
+  };
+  extern const UncorrNDEMInvSqrt kUncorrNDEMInvSqrt;
+
+
+
+  //------------------------------------------------------------------------------------
+  //Neutrons are not the best
+  class NUncorrND: public ISyst
+  {
+  public:
+  NUncorrND() : ISyst("NUncorrND", "Neutron Energy Scale ND") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoN);
+      const double scale = .20 * sigma;
+      if(!sr->dune.isFD) {
+        if (sr->dune.Ev_reco < 0.) sr->dune.Ev_reco = 0.;
+        if (sr->dune.eRecoN < 0.)  sr->dune.eRecoN = 0.;
+        sr->dune.Ev_reco += sr->dune.eRecoN * scale;
+        sr->dune.eRecoN  += sr->dune.eRecoN * scale;
+      }
+    }
+  };
+  extern const NUncorrND kNUncorrND;
+
+  class UncorrNDNSqrt: public ISyst
+  {
+  public:
+  UncorrNDNSqrt() : ISyst("UncorrNDNSqrt", "Uncorrelated ND Sqrt Neutron Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoN);
+      const double scale = .3 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
+        sr->dune.Ev_reco += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
+        sr->dune.eRecoN  += sr->dune.eRecoN * pow(sr->dune.eRecoN, 0.5) * scale;
+      }
+    }
+  };
+  extern const UncorrNDNSqrt kUncorrNDNSqrt;
+
+  class UncorrNDNInvSqrt: public ISyst
+  {
+  public:
+  UncorrNDNInvSqrt() : ISyst("UncorrNDNInvSqrt", "Uncorrelated ND Inv Sqrt Neutron Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoN);
+      const double scale = .3 * sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
+        sr->dune.Ev_reco += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
+        sr->dune.eRecoN  += sr->dune.eRecoN * scale * pow(sr->dune.eRecoN+0.1, -0.5);
+      }
+    }
+  };
+  extern const UncorrNDNInvSqrt kUncorrNDNInvSqrt;
+
+
+  // ND resolution systematics
+  class MuonResND: public ISyst
+  {
+  public:
+  MuonResND() : ISyst("MuonResND", "Muon Near Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco);
+      const double scale = .02*sigma;
+      if (!sr->dune.isFD && abs(sr->dune.LepPDG)==13) {
+        sr->dune.Ev_reco  += (sr->dune.LepE - sr->dune.Elep_reco) * scale;
+        sr->dune.Elep_reco += (sr->dune.LepE - sr->dune.Elep_reco) * scale;
+      }
+    }
+  };
+
+  extern const MuonResND kMuonResND;
+
+  // Electron/pi0 energy resolution
+  class EMResND: public ISyst
+  {
+  public:
+  EMResND() : ISyst("EMResND", "EM shower Near Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.Elep_reco,
+                  sr->dune.eRecoPi0);
+      const double scale = .02*sigma;
+      if (!sr->dune.isFD){
+        if (sr->dune.eRecoPi0 < 0.) sr->dune.eRecoPi0 = 0.;
+        sr->dune.Ev_reco  += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
+        sr->dune.eRecoPi0 += (sr->dune.ePi0 - sr->dune.eRecoPi0) * scale;
+        if (abs(sr->dune.LepPDG)==11) {
+          sr->dune.Ev_reco  += (sr->dune.LepE - sr->dune.Elep_reco) * scale;
+          sr->dune.Elep_reco += (sr->dune.LepE - sr->dune.Elep_reco) * scale;
+        }
+      }
+    }
+  };
+
+  extern const EMResND kEMResND;
+
+  // Charged hadron energy resolution
+  class ChargedHadResND: public ISyst
+  {
+  public:
+  ChargedHadResND() : ISyst("ChargedHadResND", "Charged Hadron Near Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoP,
+                  sr->dune.eRecoPip,
+                  sr->dune.eRecoPim);
+      const double scale = .02*sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.eRecoP < 0.) sr->dune.eRecoP = 0.;
+        if (sr->dune.eRecoPip < 0.) sr->dune.eRecoPip = 0.;
+        if (sr->dune.eRecoPim < 0.) sr->dune.eRecoPim = 0.;
+        const double trueSum = sr->dune.ePip + sr->dune.ePim + sr->dune.eP;
+        const double recoSum = sr->dune.eRecoPip + sr->dune.eRecoPim + sr->dune.eRecoP;
+        sr->dune.Ev_reco   += (trueSum - recoSum) * scale;
+        sr->dune.eRecoP += (sr->dune.eP - sr->dune.eRecoP) * scale;
+        sr->dune.eRecoPip += (sr->dune.ePip - sr->dune.eRecoPip) * scale;
+        sr->dune.eRecoPim += (sr->dune.ePim - sr->dune.eRecoPim) * scale;
+      }
+    }
+  };
+
+  extern const ChargedHadResND kChargedHadResND;
+
+  // Neutron energy resolution
+  class NResND: public ISyst
+  {
+  public:
+  NResND() : ISyst("NResND", "Neutron Near Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->dune.Ev_reco,
+                  sr->dune.eRecoN);
+      const double scale = .1*sigma;
+      if (!sr->dune.isFD) {
+        if (sr->dune.eRecoN < 0.) sr->dune.eRecoN = 0.;
+        sr->dune.Ev_reco += (sr->dune.eN - sr->dune.eRecoN) * scale;
+        sr->dune.eRecoN += (sr->dune.eN - sr->dune.eRecoN) * scale;
+      }
+    }
+  };
+  extern const NResND kNResND;
+
   // Vector of energy scale systematics
   struct EnergySystVector: public std::vector<const ISyst*>
   {
@@ -600,5 +1146,5 @@ namespace ana
 
 
   EnergySystVector GetEnergySysts();
-
+  EnergySystVector GetNDEnergySysts();
 }
