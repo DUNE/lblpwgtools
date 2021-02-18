@@ -124,7 +124,7 @@ namespace ana
       if (pair.first == "th13")
       	ret->SetTh13(pair.second);
       if (pair.first == "deltapi")
-      	ret->SetdCP(pair.second);
+      	ret->SetdCP(pair.second*TMath::Pi());
       if (pair.first == "th23")
       	ret->SetTh23(pair.second);
       if (pair.first == "dmsq32")
