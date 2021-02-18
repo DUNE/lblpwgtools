@@ -24,7 +24,7 @@ void reduce_predfile()
   const int nneutrino = neutrino.size();
 
   ///// Load Predictions once
-  std::string dloc = "/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/";
+  std::string dloc = "/pnfs/dune/persistent/users/dmendez/lbl_fit_validation/";
 
   TString starget = "reduced_lbl_predictions.root";
   TFile* ftarget  = new TFile(starget, "RECREATE");
@@ -39,6 +39,7 @@ void reduce_predfile()
         std::string dname = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
         TFile* file       = TFile::Open(fname.c_str(), "READ");
         std::string objname = dname+"/pred_nom";
+        /*
         // std::string objname = "pred_nom";
         std::cout << "dname: " << dname << ", objname: " << objname << std::endl;
         TDirectoryFile* prediction = (TDirectoryFile*)file->Get(objname.c_str());
@@ -55,7 +56,10 @@ void reduce_predfile()
         ftarget->mkdir(dname.c_str(),"osc_origin");
         ftarget->cd(dname.c_str());
         gDirectory->WriteObject(prediction,"pred_nom");
-        // prediction->Write("pred_nom");
+        //file->Close();
+        */
+        ftarget->cd();
+        ftarget->WriteObject(file->GetDirectory(objname.c_str()), objname.c_str());
 
         file->Close();
 
