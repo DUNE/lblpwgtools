@@ -6,6 +6,10 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 
 project(CAFAna)
 
+#For use of CTest
+#include(CTest)
+enable_testing(CTest)
+
 #Changes default install path to be a subdirectory of the build dir.
 #Can set build dir at configure time with -DCMAKE_INSTALL_PREFIX=/install/path
 if(CMAKE_INSTALL_PREFIX STREQUAL "" OR CMAKE_INSTALL_PREFIX STREQUAL
@@ -115,7 +119,9 @@ add_subdirectory(Vars)
 add_subdirectory(bin)
 
 add_subdirectory(scripts)
+#if(BUILD_TESTING)
 add_subdirectory(validation_lbl)
+#endif()
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
@@ -154,3 +160,11 @@ install(
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
   )
+
+
+# for testing with ctest
+# if making a project, it might need separte CTestConfig.cmake and ctestrun.ctest files?
+add_test(NAME test_stats_fit
+         COMMAND validate_lbl_fit ndfd fhcrhc 0)
+add_test(NAME test_systs_fit
+         COMMAND validate_lbl_fit ndfd fhcrhc 1)
