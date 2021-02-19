@@ -79,6 +79,7 @@ namespace ana
                                   Current::Current_t curr,
                                   Sign::Sign_t sign) const override;
 
+    virtual void ReducedSaveTo(TDirectory* dir, const std::string& name, std::vector<const ISyst*> systList) const;
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
 

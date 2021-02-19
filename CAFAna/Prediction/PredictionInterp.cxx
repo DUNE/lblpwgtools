@@ -638,6 +638,66 @@ namespace ana
     return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
 
+  void PredictionInterp::ReducedSaveTo(TDirectory* dir, const std::string& name, std::vector<const ISyst*> systList) const
+  {
+    InitFits();
+
+    TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
+    dir->cd();
+
+    TObjString("PredictionInterp").Write("type");
+
+    fPredNom->SaveTo(dir, "pred_nom");
+
+    std::vector<std::string> systNames = {};
+
+    for(auto& it: fPreds){
+      const ShiftedPreds& sp = it.second;
+
+      for(auto syst : systList){
+        if(syst->ShortName() == sp.systName){
+          for(unsigned int i = 0; i < sp.shifts.size(); ++i){
+            if(!sp.preds[i]){
+              std::cout << "Can't save a PredictionInterp after MinimizeMemory()" << std::endl;
+              abort();
+            }
+            sp.preds[i]->SaveTo(dir, TString::Format("pred_%s_%+d",
+                                                     sp.systName.c_str(),
+                                                     int(sp.shifts[i])).Data());
+          } // end for i
+          systNames.push_back(syst->ShortName()); // avoid saving names of preds that weren't found
+        }  // end if short names match
+      } // end for syst
+    } // end for it
+
+    ana::SaveTo(*fOscOrigin, dir, "osc_origin");
+
+    if(!fPreds.empty()){
+      TH1F hSystNames("syst_names", ";Syst names", systNames.size(), 0, systNames.size());
+      // TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
+      int binIdx = 1;
+      // for(auto& it: fPreds){
+      //   hSystNames.GetXaxis()->SetBinLabel(binIdx++, it.second.systName.c_str());
+      // }
+      for(auto name: systNames){
+        hSystNames.GetXaxis()->SetBinLabel(binIdx++, name.c_str());
+      }
+      dir->cd();
+      hSystNames.Write("syst_names");
+    }
+
+    TObjString split_sign = fSplitBySign ? "yes" : "no";
+    dir->cd();
+    split_sign.Write("split_sign");
+
+    dir->Write();
+    delete dir;
+
+    tmp->cd();
+  }
+
   void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();
