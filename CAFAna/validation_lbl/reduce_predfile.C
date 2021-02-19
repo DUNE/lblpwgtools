@@ -11,9 +11,8 @@ using namespace ana;
 
 void reduce_predfile()
 {
-  std::vector<std::string> stdobjects  = {"osc_origin","pred_nom"};
-  std::vector<std::string> systobjects = {"pred_EnergyScale","pred_FDRecoNumuSyst"};
-  std::vector<std::string> systshifts  = {"_+0","_+1","_+2","_+3","_-1","_-2","_-3"};
+
+  std::vector<const ISyst*> systlist = {&kFDRecoNumuSyst};
 
   std::vector<std::string> neutrino = {"nue","numu"};
   std::vector<std::string> detector = {"nd","fd"};
@@ -38,29 +37,17 @@ void reduce_predfile()
         std::string fname = dloc+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string dname = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
         TFile* file       = TFile::Open(fname.c_str(), "READ");
-        std::string objname = dname+"/pred_nom";
-        /*
-        // std::string objname = "pred_nom";
-        std::cout << "dname: " << dname << ", objname: " << objname << std::endl;
-        TDirectoryFile* prediction = (TDirectoryFile*)file->Get(objname.c_str());
+        PredictionInterp* prediction = LoadFrom<PredictionInterp>(file, dname).release();
         if(prediction){
           std::cout << "found prediction" << std::endl;
+          prediction->ReducedSaveTo(ftarget, dname.c_str(), systlist);
+          std::cout << "saved!" << std::endl;
         }
         if(!prediction){
-          std::cout << "prediction not found" << std::endl;
+          std::cout << "prediction not found. skipping." << std::endl;
+          continue;
         }
-        // file->Close();
         
-        std::cout << "target file cd" << std::endl;
-        ftarget->cd();
-        ftarget->mkdir(dname.c_str(),"osc_origin");
-        ftarget->cd(dname.c_str());
-        gDirectory->WriteObject(prediction,"pred_nom");
-        //file->Close();
-        */
-        ftarget->cd();
-        ftarget->WriteObject(file->GetDirectory(objname.c_str()), objname.c_str());
-
         file->Close();
 
       } // nuId
