@@ -26,7 +26,8 @@ void validate_lbl_fit(
   std::vector<const ISyst*> systlist = {};
   if(systs){
     systtag  = "systs";
-    systlist = {&kEnergyScaleFD,&kFDRecoNumuSyst};
+    // systlist = {&kEnergyScaleFD};
+    systlist = {&kFDRecoNumuSyst};
   }
 
   std::vector<std::string> neutrino = {};
@@ -59,6 +60,8 @@ void validate_lbl_fit(
   std::vector<TString> tags; // to keep track of spectra types. I could add a Title to Spectrum or define a structure but I rather no go there atm.
   std::vector<PredictionInterp*> predictions;
   std::string fdir = "/pnfs/dune/persistent/users/dmendez/lbl_fit_validation/";
+  std::string fname = fdir+"reduced_lbl_predictions.root";
+  TFile *fin = TFile::Open(fname.c_str(), "READ");
 
   for(int detId=0; detId<ndetector; detId++){
     for(int hornId=0; hornId<nhorn; hornId++){
@@ -66,12 +69,11 @@ void validate_lbl_fit(
 
         if(detector[detId]=="nd" && neutrino[nuId]=="nue") continue; // no nd nue prediction
 
-        std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
+        // std::string fname = fdir+Form("state_%s_%s.root", detector[detId].c_str(), horn[hornId].c_str());
         std::string din = Form("%s_interp_%s_%s", detector[detId].c_str(), neutrino[nuId].c_str(), horn[hornId].c_str());
         tags.push_back(detector[detId]+neutrino[nuId]+horn[hornId]);
-        TFile *fin = TFile::Open(fname.c_str(), "READ");
         predictions.push_back(LoadFrom<PredictionInterp>(fin, din).release());
-        fin->Close();
+        std::cout << "pushed prediction" << std::endl;
         // Get nominal exposure per year from Analysis/Exposures.h
         if(horn[hornId]=="fhc"){
           if(detector[detId]=="nd") pot.push_back(kNDPOT[15] * 7.5);
@@ -85,6 +87,8 @@ void validate_lbl_fit(
       } // nuId
     } // hornId
   } // detId
+
+  TFile *fin = TFile::Open(fname.c_str(), "READ");
 
   // We could add many validation layers but let's not add one for the calculators
   // Fix the values here instead of setting them with NuFitOscCalc in case it changes.
@@ -165,6 +169,7 @@ void validate_lbl_fit(
   hss23_diff ->Delete();
 
   fcomp->Close();
+  // fin->Close();
 
 }
 
