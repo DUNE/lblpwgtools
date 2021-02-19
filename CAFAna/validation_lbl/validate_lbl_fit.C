@@ -88,8 +88,8 @@ void validate_lbl_fit(
     } // hornId
   } // detId
 
-  TFile *fin = TFile::Open(fname.c_str(), "READ");
-
+  fin->Close();
+  
   // We could add many validation layers but let's not add one for the calculators
   // Fix the values here instead of setting them with NuFitOscCalc in case it changes.
   osc::IOscCalcAdjustable* trueOsc = GetTestCalculator();
