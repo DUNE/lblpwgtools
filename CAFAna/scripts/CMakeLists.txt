@@ -1,13 +1,14 @@
 set(scripts_to_install
-  bin_splines.C
+  #bin_splines.C
   cpv_joint.C
-  make_all_throws.C
-  make_cpv_throws.C
-  make_octant_throws.C
-  make_mh_throws.C
-  mh_joint.C
-  octant_joint.C
-  spec_variations.C)
+  #cpv_joint_earlyexpreach.C
+  #make_all_throws.C
+  #make_cpv_throws.C
+  #make_octant_throws.C
+  #make_mh_throws.C
+  mh_joint.C)
+  #octant_joint.C
+  #spec_variations.C)
 
 set(scripts_to_build
   asimov_joint
