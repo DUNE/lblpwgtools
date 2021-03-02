@@ -63,6 +63,8 @@ unsigned gRNGSeed = 0;
 // POT for 3.5 years
 const double pot_fd = 3.5 * POT120 * 40 / 1.13;
 const double pot_nd = 3.5 * POT120;
+const double pot_fd_year = POT120 * 40 / 1.13;
+const double pot_nd_year = POT120;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT
 // MW yr
 const double nom_exposure = 336.;
@@ -743,7 +745,9 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   }
 
   double exposure_ratio = exposure / nom_exposure;
-
+  std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
+  std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
+  
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
       pot_fd_rhc_numu = 0;
@@ -755,6 +759,76 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   if (input.find("fd") != std::string::npos) {
     pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu =
         pot_fd * exposure_ratio;
+  }
+
+  // Now allow specific subsets
+  if (input.find("fhc") != std::string::npos) {
+    pot_nd_rhc = pot_fd_rhc_nue = pot_fd_rhc_numu = 0;
+  }
+
+  if (input.find("rhc") != std::string::npos) {
+    pot_nd_fhc = pot_fd_fhc_nue = pot_fd_fhc_numu = 0;
+  }
+
+  if (input.find("numu") != std::string::npos) {
+    pot_fd_fhc_nue = pot_fd_rhc_nue = 0;
+  }
+
+  if (input.find("nue") != std::string::npos) {
+    pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
+  }
+  return;
+}
+
+void ParseDataSamplesYears(std::string cmdLineInput, double &pot_nd_fhc,
+                           double &pot_nd_rhc, double &pot_fd_fhc_nue,
+                           double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
+                           double &pot_fd_rhc_numu,
+                           float years_fhc, float years_rhc) {
+
+  // Did somebody say overextend the command line arguments even further?
+  // Well okay!
+  std::vector<std::string> input_vect = SplitString(cmdLineInput, ':');
+
+  // Default to 7 years staged. Value is actually in kt MW yr
+  double exposure = nom_exposure;
+  if (input_vect.size() > 1)
+    exposure = stod(input_vect[1]);
+  std::string input = input_vect[0];
+
+  // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
+  std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+  // Look for some other magic information
+  for (auto str : input_vect) {
+    if (str.find("full") != std::string::npos or
+        str.find("15year") != std::string::npos)
+      exposure = 1104;
+
+    if (str.find("nom") != std::string::npos or
+        str.find("7year") != std::string::npos)
+      exposure = 336;
+
+    if (str.find("10year") != std::string::npos)
+      exposure = 624;
+  }
+
+  double exposure_ratio = exposure / nom_exposure;
+  std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
+  std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
+  
+  // Now sort out which samples to include
+  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
+      pot_fd_rhc_numu = 0;
+
+  // Hacky McHackerson is here to stay!
+  if (input.find("nd") != std::string::npos) {
+    pot_nd_fhc = years_fhc * pot_nd_year * exposure_ratio;
+    pot_nd_rhc = years_rhc * pot_nd_year * exposure_ratio;
+  }
+  if (input.find("fd") != std::string::npos) {
+    pot_fd_fhc_nue = pot_fd_fhc_numu = years_fhc * pot_fd_year * exposure_ratio;
+    pot_fd_rhc_nue = pot_fd_rhc_numu = years_rhc * pot_fd_year * exposure_ratio;
   }
 
   // Now allow specific subsets
@@ -1198,6 +1272,16 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
   return spectra;
 }
 
+// double RunFitPoint(std::string stateFileName, std::string sampleString,
+//                    osc::IOscCalculatorAdjustable *fakeDataOsc,
+//                    SystShifts fakeDataSyst, bool fakeDataStats,
+//                    std::vector<const IFitVar *> oscVars,
+//                    std::vector<const ISyst *> systlist,
+//                    osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
+//                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
+//                    Fitter::Precision fitStrategy, TDirectory *outDir,
+//                    FitTreeBlob *PostFitTreeBlob,
+//                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
 double RunFitPoint(std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
@@ -1207,7 +1291,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    Fitter::Precision fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
-                   std::vector<seeded_spectra> *spectra, SystShifts &bf) {
+                   std::vector<seeded_spectra> *spectra, SystShifts &bf,
+                   float years_fhc, float years_rhc) {
 
   assert(systlist.size() + oscVars.size());
 
@@ -1287,8 +1372,11 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   // String parsing time!
   double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue,
       pot_fd_fhc_numu, pot_fd_rhc_numu;
-  ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
-                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu);
+  // ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
+  //                  pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu);
+  ParseDataSamplesYears(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
+                        pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu,
+                        years_fhc, years_rhc);
 
   // If a directory has been given, a whole mess of stuff will be saved there.
   if (outDir) {

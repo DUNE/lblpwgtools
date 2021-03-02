@@ -105,6 +105,12 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
                       double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
                       double &pot_fd_rhc_numu);
 
+void ParseDataSamplesYears(std::string cmdLineInput, double &pot_nd_fhc,
+                           double &pot_nd_rhc, double &pot_fd_fhc_nue,
+                           double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
+                           double &pot_fd_rhc_numu,
+                           float years_fhc, years_rhc);
+
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
                             bool &fakeNuis, bool &start, bool &central);
 
@@ -203,4 +209,5 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    TDirectory *outDir = nullptr,
                    FitTreeBlob *PostFitTreeBlob = nullptr,
                    std::vector<seeded_spectra> *spectra = nullptr,
-                   ana::SystShifts &bf = ana::junkShifts);
+                   ana::SystShifts &bf = ana::junkShifts,
+                   float years_fhc, float years_rhc);
