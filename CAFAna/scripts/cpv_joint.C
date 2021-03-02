@@ -2,10 +2,15 @@
 
 using namespace ana;
 
-void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
-	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
-	       std::string systSet = "nosyst", std::string sampleString="ndfd",
-	       std::string penaltyString="nopen", int hie=1, std::string asimov_set="0"){
+// void cpv_joint(std::string stateFname="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/State",
+// 	       std::string outputFname="cpv_sens_ndfd_nosyst.root",
+// 	       std::string systSet = "nosyst", std::string sampleString="ndfd:1",
+// 	       std::string penaltyString="nopen", int hie=1, std::string asimov_set="0"){
+void cpv_joint(std::string stateFname="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/State",
+         std::string tagFname="suffix",
+         std::string systSet = "nosyst", std::string sampleString="ndfd:1",
+         std::string penaltyString="nopen", int hie=1, std::string asimov_set="0",
+         float years_fhc, float years_rhc){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -16,6 +21,11 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
 
+  std::string expfhc = Form("%0.f",years_fhc+100);
+  std::string exprhc = Form("%0.f",years_rhc+100);
+  std::string hierarchy = (hie==1 ? "nh":"ih");
+  std::string outputFname = "mh_"+sampleString+"_"+systSet+"_"+penaltyString+"_"+hierarchy+"_asimov"+asimov_joint;
+  outputFname += "__fhc"+exprhc+"_rhc"+exprhc+".root";
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
@@ -51,11 +61,17 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	SystShifts trueSyst = kNoShift;
 	SystShifts testSyst = kNoShift;
 	
-	thischisq = RunFitPoint(stateFname, sampleString,
-				trueOsc, trueSyst, false,
-				oscVars, systlist,
-				testOsc, testSyst,
-				oscSeeds, penalty, Fitter::kNormal, nullptr);
+	// thischisq = RunFitPoint(stateFname, sampleString,
+	// 			trueOsc, trueSyst, false,
+	// 			oscVars, systlist,
+	// 			testOsc, testSyst,
+	// 			oscSeeds, penalty, Fitter::kNormal, nullptr);
+  thischisq = RunFitPoint(stateFname, sampleString,
+        trueOsc, trueSyst, false,
+        oscVars, systlist,
+        testOsc, testSyst,
+        oscSeeds, penalty, Fitter::kNormal, nullptr,
+        years_fhc, years_rhc);
 	
 	chisqmin = TMath::Min(thischisq,chisqmin);
 	delete penalty;

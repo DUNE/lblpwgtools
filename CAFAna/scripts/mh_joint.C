@@ -2,10 +2,15 @@
 
 using namespace ana;
 
+// void mh_joint(std::string stateFname="common_state_mcc11v3.root",
+// 	      std::string outputFname="mh_sens_ndfd_nosyst.root",
+// 	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
+// 	      std::string penaltyString="", int hie=1, std::string asimov_joint="0"){
 void mh_joint(std::string stateFname="common_state_mcc11v3.root",
-	      std::string outputFname="mh_sens_ndfd_nosyst.root",
-	      std::string systSet = "nosyst", std::string sampleString = "ndfd",
-	      std::string penaltyString="", int hie=1, std::string asimov_joint="0"){
+        std::string tagFname="suffix",
+        std::string systSet = "nosyst", std::string sampleString = "ndfd",
+        std::string penaltyString="", int hie=1, std::string asimov_joint="0",
+        float years_fhc, float years_rhc){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -19,6 +24,11 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   // For the wrong sign fit
   std::vector<const IFitVar*> oscVarsWrong = GetOscVars("alloscvars", -1*hie) ;
 
+  std::string expfhc = Form("%0.f",years_fhc+100);
+  std::string exprhc = Form("%0.f",years_rhc+100);
+  std::string hierarchy = (hie==1 ? "nh":"ih");
+  std::string outputFname = "mh_"+sampleString+"_"+systSet+"_"+penaltyString+"_"+hierarchy+"_asimov"+asimov_joint;
+  outputFname += "__fhc"+exprhc+"_rhc"+exprhc+".root";
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
@@ -50,11 +60,17 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
       std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
       oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
+      // thischisq = RunFitPoint(stateFname, sampleString,
+			   //    trueOsc, trueSyst, false,
+			   //    oscVarsWrong, systlist,
+			   //    testOsc, testSyst,
+			   //    oscSeeds, penalty);
       thischisq = RunFitPoint(stateFname, sampleString,
-			      trueOsc, trueSyst, false,
-			      oscVarsWrong, systlist,
-			      testOsc, testSyst,
-			      oscSeeds, penalty);
+            trueOsc, trueSyst, false,
+            oscVarsWrong, systlist,
+            testOsc, testSyst,
+            oscSeeds, penalty,
+            years_fhc, years_fhc);
 
       chisqmin = TMath::Min(thischisq,chisqmin);
       delete penalty;
