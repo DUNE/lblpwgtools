@@ -237,8 +237,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
  
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction
-        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
-            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
+//        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
+//            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
+	auto PRISMComponents = state.PRISM->PredictGaussianFlux_forNDtarget(
+	    gauss_flux.first, gauss_flux.second, shift, ch.second.from);
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
@@ -266,8 +268,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           dir->cd();
         }
       } else { // FD spectra prediction
-        auto PRISMComponents =
-            state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+        //auto PRISMComponents =
+        //    state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+	auto PRISMComponents =
+	    state.PRISM->PredictPRISMComponents_forNDtarget(calc, shift, ch.second); //eran adding -- can we have this in else?
 
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);

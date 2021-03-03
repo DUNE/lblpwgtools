@@ -1,0 +1,76 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+#PRISMState_EProxy_medProd_Selection_22Nov.root
+#PRISMState_EProxy_medProd_TrueTrueEffCorr_Select_11Dec.root
+#PRISMState_v7Prod_EProxy_testopt_NoSelect_16Dec.root
+
+BasicPred: {
+	state_file: /dune/data/users/erea/PRISMPredInterps/v7smallMC_NDnumutoNDnue.root
+	output_file: [/dune/data/users/erea/PRISMPredictions/v7smallMC_NDnumutoNDnue_basic.root, "UPDATE"]
+	projection_name: EProxy
+
+	use_PRISM: true
+	POT_years: 1
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Nue_ND
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1E-14
+			reg_factor_280: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: false
+
+		RunPlans: {
+			numode: @local::RunPlans.flat
+		}
+		Use_EventRateMatching: true
+
+		write_debug: true
+	}                                                                                                
+	samples: @local::FitChannels.Nue_ND
+}
+
+
+predictions: [
+
+	{
+		@table::BasicPred
+		PRISM.Use_EventRateMatching: true
+		PRISM.match_conditioning[0].reg_factor_293kA: 2E-14
+		PRISM.match_conditioning[0].reg_factor_280kA: 0
+		output_dir: "numu_EvMatch"
+	},
+
+#	{
+#		@table::BasicPred
+#		PRISM.Use_EventRateMatching: true
+#		PRISM.match_conditioning[0].reg_factor_293kA: 5E-15
+#		PRISM.match_conditioning[0].reg_factor_280kA: 1E-17
+#		output_dir: "numu_EvMatch_DetShift"
+#		syst: {
+#			shifts: [
+#				[TruthEnergyScaleND, 3],
+#			]
+#		}
+#	},
+
+#	{
+#		@table::BasicPred
+#		PRISM.Use_EventRateMatching: false
+#		PRISM.match_conditioning[0].reg_factor_293kA: 5E-9
+#		PRISM.match_conditioning[0].reg_factor_280kA: 1E-9
+#		output_dir: "numu_FluxMatch"
+#	}
+
+]	
+
+predictions[0].output_file[1]: "RECREATE"
+

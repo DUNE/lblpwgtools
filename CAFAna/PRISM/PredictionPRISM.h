@@ -183,14 +183,21 @@ public:
   virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
   virtual Spectrum PredictSyst(osc::IOscCalculator *calc,
                                ana::SystShifts shift = kNoShift) const;
-  std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
+  //std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
+  //    osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
+  //    PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;
+  std::map<PRISMComponent, Spectrum> PredictPRISMComponents_forNDtarget( //eran! adding running other case
       osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
-      PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;
+      PRISM::MatchChan match_chan = PRISM::kNDNumutoNDNue_Numode) const;
 
+//  std::map<PRISMComponent, Spectrum>
+//  PredictGaussianFlux(double mean, double width,
+//                      ana::SystShifts shift = kNoShift,
+//                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
   std::map<PRISMComponent, Spectrum>
-  PredictGaussianFlux(double mean, double width,
+  PredictGaussianFlux_forNDtarget(double mean, double width,
                       ana::SystShifts shift = kNoShift,
-                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
+                      PRISM::BeamChan NDChannel = PRISM::kNue_I_Numode) const;
 
   virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
                                     Flavors::Flavors_t flav,
@@ -377,6 +384,11 @@ protected:
   GetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
   bool HaveFDPrediction(PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
+
+  std::unique_ptr<PredictionInterp> &
+  GetNDTargetPrediction(PRISM:: BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran adding
+
+  bool HaveNDTargetPrediction(PRISM::BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran 
 
   std::unique_ptr<PredictionInterp> &
   GetFDUnOscWeightedSigPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;

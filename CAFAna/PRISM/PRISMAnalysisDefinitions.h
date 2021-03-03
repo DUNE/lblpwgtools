@@ -66,6 +66,8 @@ static BeamChan const kNumu_Numode = {BeamMode::kNuMode,
 static BeamChan const kNumuBar_NuBarmode = {BeamMode::kNuBarMode,
                                             NuChan::kNumuBarIntrinsic};
 static BeamChan const kNue_Numode = {BeamMode::kNuMode, NuChan::kNueApp};
+static BeamChan const kNue_I_Numode = {BeamMode::kNuMode, NuChan::kNueIntrinsic};
+static BeamChan const kNue_I_NuBarmode = {BeamMode::kNuBarMode, NuChan::kNueBarIntrinsic};
 static BeamChan const kNueBar_NuBarmode = {BeamMode::kNuBarMode,
                                            NuChan::kNueBarApp};
 
@@ -76,6 +78,10 @@ inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
       return kNumu_Numode;
     } else if (descript == "numubar_nubarmode") {
       return kNumuBar_NuBarmode;
+    } else if (descript == "nue_numode") {
+      return kNue_I_Numode;
+    } else if (descript == "nuebar_nubarmode") {
+      return kNueBar_NuBarmode;
     } else {
       std::cout << "[ERROR]: Invalid ND beam-chan, currently support "
                    "\"numu_numode\" or \"numubar_nubarmode\"."
@@ -109,22 +115,24 @@ struct MatchChan {
 static MatchChan const kNumuDisappearance_Numode = {kNumu_Numode, kNumu_Numode};
 static MatchChan const kNumuBarDisappearance_NuBarmode = {kNumuBar_NuBarmode,
                                                           kNumuBar_NuBarmode};
+static MatchChan const kNDNumutoNDNue_Numode = {kNumu_Numode, kNue_I_Numode};
+static MatchChan const kNDNumutoNDNue_NuBarmode = {kNumuBar_NuBarmode, kNue_I_NuBarmode};
 static MatchChan const kNueAppearance_Numode = {kNumu_Numode, kNue_Numode};
 static MatchChan const kNueBarAppearance_NuBarmode = {kNumuBar_NuBarmode,
                                                       kNueBar_NuBarmode};
 
 inline std::string GetMatchChanShortName(MatchChan ch) {
   if (ch.to.mode == BeamMode::kNuMode) {
-    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : "NueApp";
+    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : "NueApp";// "NueI";
   } else {
-    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : "NueBarApp";
+    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : "NueBarApp";// "NueBarI";
   }
   return "UnknownChannel";
 }
 
 inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
   return {GetBeamChan(ps.get<std::string>("ND"), true),
-          GetBeamChan(ps.get<std::string>("FD"), false)};
+          GetBeamChan(ps.get<std::string>("ND"), true)}; //eran fix temp
 }
 
 // Enum-like list of Ids for use in lists of PRISM objects
@@ -441,7 +449,7 @@ extern const ana::Cut kCut280kARun;
 extern const ana::Cut kSel280kARun;
 extern const ana::Var kSpecHCRunWeight;
 
-ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true);
+ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true, bool isNuMu = true);
 ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
                         bool isNuMu = true);
 

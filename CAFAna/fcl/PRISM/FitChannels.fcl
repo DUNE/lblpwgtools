@@ -11,6 +11,10 @@ FitChannels: {
         ND: numu_numode
         FD: nue_numode
     }
+    Nue_ND: {
+	ND: numu_numode
+	ND: nue_numode
+    }
     Nuebar_app: {
         ND: numubar_nubarmode
         FD: nuebar_nubarmode

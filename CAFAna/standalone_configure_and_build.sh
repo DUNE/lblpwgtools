@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #script to build...
-FORCE_REMOVE="0"
+FORCE_REMOVE="1"
 USE_UPS="0"
 CORES=1
 USE_GPERF=0

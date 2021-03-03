@@ -159,13 +159,14 @@ const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
   return sr->perPOTWeight * sr->perFileWeight;
 });
 
-Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
+Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
 
   return UseOnAxisSelection
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
                 kIsOutOfTheDesert)
-             : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert);
+             : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+                kIsOutOfTheDesert &&
+		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection

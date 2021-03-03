@@ -387,23 +387,36 @@ int main(int argc, char const *argv[]) {
   // PRISM interp
   std::vector<Cut> AnalysisCuts(
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut(UseSel, true);
-  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut(UseSel, true);
-  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut(UseSel, false);
-  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut(UseSel, false);
+  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut(UseSel, true, true);//should be true, changing to false now to test if can get anything diff in state file! eran
+  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut(UseSel, true, true);
+  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut(UseSel, false, true);
+  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut(UseSel, false, true);
   AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
   AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
   AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
   AnalysisCuts[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
 
+  std::vector<Cut> AnalysisCuts_target(
+      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
+  AnalysisCuts_target[kND_293kA_nu] = GetNDSignalCut(UseSel, true, false);//should be true, changing to false now to test if can get anything diff in state file! eran
+  AnalysisCuts_target[kND_280kA_nu] = GetNDSignalCut(UseSel, true, false);
+  AnalysisCuts_target[kND_293kA_nub] = GetNDSignalCut(UseSel, false, false);
+  AnalysisCuts_target[kND_280kA_nub] = GetNDSignalCut(UseSel, false, false);
+  AnalysisCuts_target[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
+  AnalysisCuts_target[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
+  AnalysisCuts_target[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
+  AnalysisCuts_target[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
+
+
+
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
   std::vector<Cut> OnAxisSelectionCuts(
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  OnAxisSelectionCuts[kND_293kA_nu] = GetNDSignalCut(true, true);
-  OnAxisSelectionCuts[kND_280kA_nu] = GetNDSignalCut(true, true);
-  OnAxisSelectionCuts[kND_293kA_nub] = GetNDSignalCut(true, false);
-  OnAxisSelectionCuts[kND_280kA_nub] = GetNDSignalCut(true, false);
+  OnAxisSelectionCuts[kND_293kA_nu] = GetNDSignalCut(true, true, false);//same, should be true, false now just to test! eran
+  OnAxisSelectionCuts[kND_280kA_nu] = GetNDSignalCut(true, true, false);
+  OnAxisSelectionCuts[kND_293kA_nub] = GetNDSignalCut(true, false, false);
+  OnAxisSelectionCuts[kND_280kA_nub] = GetNDSignalCut(true, false, false);
   OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
   OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
@@ -465,10 +478,15 @@ int main(int argc, char const *argv[]) {
                                       file_lists[file_it].second, kBeam, nmax);
     if (IsND && !IsND280kA) { // Is ND, but do not need to repeat for 280 kA run
 
-      BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
+      //BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
+//	BeamChan chanmode = IsNu ? kNue_I_Numode;//test if get the ND nues into state file
 
-      PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
-                             AnaWeightVars[it], DataShift, chanmode);
+     // PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
+             //                AnaWeightVars[it], DataShift, kNumu_Numode);//
+	PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it], AnaWeightVars[it], DataShift, kNumu_Numode);	
+//	PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
+  //                           AnaWeightVars[it], DataShift, kNue_I_Numode);
+        PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts_target[it], AnaWeightVars[it], DataShift, kNue_I_Numode);
 
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
 
@@ -576,13 +594,18 @@ int main(int argc, char const *argv[]) {
     }
     if (IsND) { // Is ND
 
-      BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
+      //BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode BeamMode::kNuMode : BeamMode::kNuBarMode;  //eran add
+//	BeamChan chanmode = IsNu? kNue_I_Numode;//check if get to state file 
 
       // Only need to do this once as the PRISM prediction handles the 293, 280
       // kA runs separately
       if (!IsND280kA) {
-        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it],
-                             los, chanmode);
+        //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
+          //                   los, kNumu_Numode);
+        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los, kNumu_Numode);
+        //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
+          //                   los, kNue_I_Numode);
+	PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts_target[it], AnaWeightVars[it], los, kNue_I_Numode);
       }
 
       // Corrects for non-uniform off-axis binning
