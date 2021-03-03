@@ -8,9 +8,9 @@ using namespace ana;
 // 	       std::string penaltyString="nopen", int hie=1, std::string asimov_set="0"){
 void cpv_joint(std::string stateFname="/pnfs/dune/persistent/users/dmendez/CAFAnaInputs/State",
          std::string tagFname="suffix",
-         std::string systSet = "nosyst", std::string sampleString="ndfd:1",
+         std::string systSet = "nosyst", std::string sampleString="ndfd:7years",
          std::string penaltyString="nopen", int hie=1, std::string asimov_set="0",
-         float years_fhc, float years_rhc){
+         float years_fhc=3.5, float years_rhc=3.5){
 
   gROOT->SetBatch(1);
   gRandom->SetSeed(0);
@@ -21,10 +21,10 @@ void cpv_joint(std::string stateFname="/pnfs/dune/persistent/users/dmendez/CAFAn
   // Oscillation parameters to use
   std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
 
-  std::string expfhc = Form("%0.f",years_fhc+100);
-  std::string exprhc = Form("%0.f",years_rhc+100);
+  std::string expfhc = Form("%0.f",years_fhc*100);
+  std::string exprhc = Form("%0.f",years_rhc*100);
   std::string hierarchy = (hie==1 ? "nh":"ih");
-  std::string outputFname = "mh_"+sampleString+"_"+systSet+"_"+penaltyString+"_"+hierarchy+"_asimov"+asimov_joint;
+  std::string outputFname = "mh_"+sampleString+"_"+systSet+"_"+penaltyString+"_"+hierarchy+"_asimov"+asimov_set;
   outputFname += "__fhc"+exprhc+"_rhc"+exprhc+".root";
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
@@ -66,12 +66,12 @@ void cpv_joint(std::string stateFname="/pnfs/dune/persistent/users/dmendez/CAFAn
 	// 			oscVars, systlist,
 	// 			testOsc, testSyst,
 	// 			oscSeeds, penalty, Fitter::kNormal, nullptr);
-  thischisq = RunFitPoint(stateFname, sampleString,
+  thischisq = RunFitPoint(years_fhc, years_fhc,
+  	    stateFname, sampleString,
         trueOsc, trueSyst, false,
         oscVars, systlist,
         testOsc, testSyst,
-        oscSeeds, penalty, Fitter::kNormal, nullptr,
-        years_fhc, years_rhc);
+        oscSeeds, penalty, Fitter::kNormal, nullptr);
 	
 	chisqmin = TMath::Min(thischisq,chisqmin);
 	delete penalty;

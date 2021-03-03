@@ -196,7 +196,8 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              double pot_fd_rhc_numu = 0, double pot_nd_fhc = 0,
              double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
 
-double RunFitPoint(std::string stateFileName, std::string sampleString,
+double RunFitPoint(float years_fhc, float years_rhc,
+                   std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    ana::SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const ana::IFitVar *> oscVars,
@@ -209,5 +210,4 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    TDirectory *outDir = nullptr,
                    FitTreeBlob *PostFitTreeBlob = nullptr,
                    std::vector<seeded_spectra> *spectra = nullptr,
-                   ana::SystShifts &bf = ana::junkShifts,
-                   float years_fhc=0., float years_rhc=0.);
+                   ana::SystShifts &bf = ana::junkShifts);

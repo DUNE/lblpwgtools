@@ -745,8 +745,8 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   }
 
   double exposure_ratio = exposure / nom_exposure;
-  std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
-  std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
+  // std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
+  // std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
   
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
@@ -814,8 +814,8 @@ void ParseDataSamplesYears(std::string cmdLineInput, double &pot_nd_fhc,
   }
 
   double exposure_ratio = exposure / nom_exposure;
-  std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
-  std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
+  // std::cout << "\n\nExposure = " << exposure << " kt MW yr, Nom Exposure = " << nom_exposure << std::endl;
+  // std::cout << "Exposure ratio = " << exposure << "/" << nom_exposure << " = " << exposure_ratio << std::endl;
   
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
@@ -847,6 +847,11 @@ void ParseDataSamplesYears(std::string cmdLineInput, double &pot_nd_fhc,
   if (input.find("nue") != std::string::npos) {
     pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
   }
+  // std::cout << "\n=== Years ===";
+  // std::cout << "\nFHC=" << years_fhc << ", RHC=" << years_rhc;
+  // std::cout << "\n=== Exposure: ND,FD ===";
+  // std::cout << "\nFHC=" << pot_nd_fhc << "," << pot_fd_fhc_nue << ", RHC=" << pot_nd_rhc << "," << pot_fd_fhc_nue;
+
   return;
 }
 
@@ -1282,7 +1287,8 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
 //                    Fitter::Precision fitStrategy, TDirectory *outDir,
 //                    FitTreeBlob *PostFitTreeBlob,
 //                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
-double RunFitPoint(std::string stateFileName, std::string sampleString,
+double RunFitPoint(float years_fhc, float years_rhc,
+                   std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const IFitVar *> oscVars,
@@ -1291,8 +1297,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    Fitter::Precision fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
-                   std::vector<seeded_spectra> *spectra, SystShifts &bf,
-                   float years_fhc, float years_rhc) {
+                   std::vector<seeded_spectra> *spectra, SystShifts &bf) {
 
   assert(systlist.size() + oscVars.size());
 
