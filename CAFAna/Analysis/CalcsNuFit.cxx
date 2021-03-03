@@ -38,7 +38,7 @@ namespace ana
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
 
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
