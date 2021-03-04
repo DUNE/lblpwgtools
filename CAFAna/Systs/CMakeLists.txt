@@ -36,7 +36,12 @@ set(Systs_header_files
   GeneratorReweight_numu_ND_RHC.h
   MissingProtonFakeData_BDTRW_FHC.h
   MissingProtonFakeData_BDTRW_RHC.h
-  NuWroReweightFakeData.h)
+  NuWroReweightFakeData.h
+  NuWroReweightFakeDataOld.h
+  NEUTReweightFakeData.h
+  GENIEv3_G18_10b_00_000ReweightFakeData.h
+  GENIEv3_G18_10a_02_11aReweightFakeData.h
+  ReweightFakeDataBase.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts)

@@ -2,6 +2,11 @@
 
 #include "CAFAna/Systs/MissingProtonFakeData.h"
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
+#include "CAFAna/Systs/NuWroReweightFakeDataOld.h"
+#include "CAFAna/Systs/NEUTReweightFakeData.h"
+#include "CAFAna/Systs/GENIEv3_G18_10b_00_000ReweightFakeData.h"
+#include "CAFAna/Systs/GENIEv3_G18_10a_02_11aReweightFakeData.h"
+
 #include "CAFAna/Systs/XSecSysts.h"
 
 #include "StandardRecord/StandardRecord.h"
@@ -9,7 +14,11 @@
 namespace ana {
 
 MissingProtonFakeDataGenerator mpfd;
+NuWroReweightFakeDataOldGenerator nuwrofd_old;
 NuWroReweightFakeDataGenerator nuwrofd;
+NEUTReweightFakeDataGenerator neutfd;
+GENIEv3_G18_10b_00_000ReweightFakeDataGenerator geniev3_g18_10b_00_000fd;
+GENIEv3_G18_10a_02_11aReweightFakeDataGenerator geniev3_g18_10a_02_11afd;
 
 void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
                                  caf::StandardRecord *sr,
@@ -26,7 +35,11 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int SPPLowQ2Suppression_id = 0;
   static int FSILikeEAvailSmearing_id = 0;
   static int MissingProtonFakeData_id = 0;
+  static int NuWroReweightFakeDataOld_id = 0;
   static int NuWroReweightFakeData_id = 0;
+  static int NEUTReweightFakeData_id = 0;
+  static int GENIEv3_G18_10b_00_000ReweightFakeData_id = 0;
+  static int GENIEv3_G18_10a_02_11aReweightFakeData_id = 0;
   static int BeRPA_E_id = 0;
   static int FormZone_id = 0;
   static int MFP_pi_id = 0;
@@ -48,6 +61,10 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     FSILikeEAvailSmearing_id = GetXSecSystIndex("FSILikeEAvailSmearing");
     MissingProtonFakeData_id = GetXSecSystIndex("MissingProtonFakeData");
     NuWroReweightFakeData_id = GetXSecSystIndex("NuWroReweightFakeData");
+    NuWroReweightFakeDataOld_id = GetXSecSystIndex("NuWroReweightFakeDataOld");
+    NEUTReweightFakeData_id = GetXSecSystIndex("NEUTReweightFakeData");
+    GENIEv3_G18_10b_00_000ReweightFakeData_id = GetXSecSystIndex("GENIEv3_G18_10b_00_000ReweightFakeData");
+    GENIEv3_G18_10a_02_11aReweightFakeData_id = GetXSecSystIndex("GENIEv3_G18_10a_02_11aReweightFakeData");
     BeRPA_E_id = GetXSecSystIndex("BeRPA_E");
     FormZone_id = GetXSecSystIndex("FormZone");
     MFP_pi_id = GetXSecSystIndex("MFP_pi");
@@ -74,8 +91,16 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     weight *= sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2];
   } else if (fID == MissingProtonFakeData_id) {
     mpfd.Shift(sigma, restore, sr, weight);
+  } else if (fID == NuWroReweightFakeDataOld_id) {
+    nuwrofd_old.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
     nuwrofd.Shift(sigma, restore, sr, weight);
+  } else if (fID == NEUTReweightFakeData_id) {
+    neutfd.Shift(sigma, restore, sr, weight);
+  } else if (fID == GENIEv3_G18_10b_00_000ReweightFakeData_id) {
+    geniev3_g18_10b_00_000fd.Shift(sigma, restore, sr, weight);
+  } else if (fID == GENIEv3_G18_10a_02_11aReweightFakeData_id) {
+    geniev3_g18_10a_02_11afd.Shift(sigma, restore, sr, weight);
   } else if (fID == BeRPA_E_id) {
     weight *= sr->dune.xsSyst_wgt[BeRPA_E_id][posneg_spline_point];
   } else if (fID == FormZone_id) {
