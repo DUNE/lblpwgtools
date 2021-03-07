@@ -25,7 +25,13 @@ Var const kRecoY_FromDep =
 
 Var const kTrueEnergy = SIMPLEVAR(Ev);
 
-Var const kLepEReco = SIMPLEVAR(ProxyRecoLepE); // RecoLepE_NDFD
+Var const kLepEReco = SIMPLEVAR(RecoLepE_NDFD); // RecoLepE_NDFD
+
+Var const kHadEReco = SIMPLEVAR(RecoHadE_NDFD);
+
+Var const kEVisReco = SIMPLEVAR(RecoLepE_NDFD) + SIMPLEVAR(RecoHadE_NDFD);
+
+Var const kEVisTrue = SIMPLEVAR(HadE) + SIMPLEVAR(LepE);
 
 // CV weighting
 Var const kCVXSecWeights = SIMPLEVAR(total_xsSyst_cv_wgt); // kUnweighted

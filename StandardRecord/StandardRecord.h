@@ -48,12 +48,15 @@ namespace caf
     double RecoHadEnNumu;
 
     double RecoLepE_NDFD;
+    double RecoHadE_NDFD;
     double ProxyRecoLepE;
 
     // ND pseudo-reconstruction flags
     int reco_numu;
     int reco_nue;
     int reco_nc;
+
+    int simple_reco_numu;
 
     // CW: added for the ND cuts Chris (M) wants
     // ND containment flags
@@ -124,6 +127,8 @@ namespace caf
 
     // Near detector offset in m
     double det_x;
+    // Absolute position in ND 
+    double abspos_x;
 
     // True energy of particles by species
     double eP;

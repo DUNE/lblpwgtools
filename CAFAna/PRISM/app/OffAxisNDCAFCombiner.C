@@ -457,14 +457,22 @@ void OffAxisNDCAFCombiner() {
           //   continue;
           // }
 
-          FileExposures[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
+          // Do exposure in terms of absolute position
+          // in order to include positive position events
+          double absx = -std::abs(vtx_x_pos_cm + (det_x * detx_to_m * 1E2));
 
-          POTExposures[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
-          POTExposures_stop[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-              (det_x * detx_to_m * 1E2), file_pot);
+          //FileExposures[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
+          FileExposures[specRunId_file]->Fill(absx, nmeta_ents);
+          //POTExposures[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures[specRunId_file]->Fill(absx, file_pot);
+          //POTExposures_stop[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
+          //    (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures_stop[specRunId_file]->Fill(absx,
+                                                  (det_x * detx_to_m * 1E2),
+                                                  file_pot);
         }
 
         NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
@@ -686,9 +694,11 @@ void OffAxisNDCAFCombiner() {
         OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
 
+        double absx = -std::abs((det_x * detx_to_m * 1E2) + vtx_x);
+
         double nfiles = FileExposures[specRunId_read]->GetBinContent(
             FileExposures[specRunId_read]->FindFixBin(
-                (det_x * detx_to_m * 1E2) + vtx_x));
+                absx)); // (det_x * detx_to_m * 1E2) + vtx_x)
 
         perFile = 1.0 / nfiles;
         OffAxisWeightFriendcopy->Fill();

@@ -303,6 +303,22 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
+    //if (!sr.isFD) {
+      //if (sr.Elep_reco != 0) {
+    if (sr.LepE > 0.05) {
+      sr.simple_reco_numu = 1;
+    } else if (sr.ePip > 0.2 || sr.ePim > 0.2) {
+      sr.simple_reco_numu = 1;
+    } else {
+      sr.simple_reco_numu = 0;
+    }
+      //} else {
+      //  sr.simple_reco_numu = 0;
+      //}
+    //}
+
+    if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
+
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {
       sr.eRec_FromDep = sr.eDepP + sr.eDepN + sr.eDepPip + sr.eDepPim +
@@ -328,12 +344,17 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Common reco LepE variable for ND and FD
-    if (sr.isCC) {
-      if (sr.isFD) sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
-      else sr.RecoLepE_NDFD = sr.Elep_reco;
-    } //else { // If a NC event lepton is a neutrino, not reconstructed
+    //if (sr.isCC) {
+    if (sr.isFD) sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+    else sr.RecoLepE_NDFD = sr.Elep_reco;
+    //} //else { // If a NC event lepton is a neutrino, not reconstructed
       //sr.RecoLepE_NDFD = 0;
     //}
+    //if (sr.isFD) sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
+    if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
+                                    sr.eRecoPi0 + sr.eRecoOther;
+    else sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
+                            sr.eRecoPi0 + sr.eRecoOther;
 
     if (sr.isCC) {
       std::unique_ptr<TRandom3> rando = std::make_unique<TRandom3>();
