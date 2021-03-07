@@ -303,14 +303,21 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
-    if (!sr.isFD) { // Only for ND
-      sr.det_x = -std::abs(sr.det_x);  
-      if (sr.det_x == 0) {
-        //sr.vtx_x = -std::abs(sr.vtx_x);
-        //sr.perPOTWeight = 0.5 * sr.perPOTWeight;
-        //sr.perFileWeight = 0.5 * sr.perFileWeight;
-      } 
+    //if (!sr.isFD) {
+      //if (sr.Elep_reco != 0) {
+    if (sr.LepE > 0.05) {
+      sr.simple_reco_numu = 1;
+    } else if (sr.ePip > 0.2 || sr.ePim > 0.2) {
+      sr.simple_reco_numu = 1;
+    } else {
+      sr.simple_reco_numu = 0;
     }
+      //} else {
+      //  sr.simple_reco_numu = 0;
+      //}
+    //}
+
+    if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {

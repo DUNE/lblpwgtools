@@ -41,6 +41,8 @@ public:
   int reco_nue;
   int reco_nc;
 
+  int simple_reco_numu;
+
   // CW: added for the ND cuts Chris (M) wants
   // ND containment flags
   int muon_contained;
@@ -110,6 +112,8 @@ public:
 
   // Near detector offset in m
   double det_x;
+  // Absolute position in ND
+  double abspos_x  
 
   // True kinetic energy of particles by species
   double eP;
