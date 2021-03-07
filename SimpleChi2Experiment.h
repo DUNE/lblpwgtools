@@ -135,8 +135,6 @@ public:
 
     TH1D *PredHist = GetPred(osc, syst);
 
-    //double chi2 = LogLikelihood(PredHist, fData);
-
     double chi2 = 0;
     for (int bi = fBinRange.first; bi < fBinRange.second; ++bi) {
       double pbc = PredHist->GetBinContent(bi + 1);

@@ -6,6 +6,7 @@
 #include "CAFAna/Analysis/Exposures.h"
 
 #include "TH2.h"
+#include "TH3.h"
 
 #include <numeric>
 #include <vector>
@@ -42,76 +43,76 @@ struct RunPlan {
     return *found;
   }
 
+  // I think this Spectrum Weight function is now **redundant**.
+  // Only use the ReweightableSpectrum Weight function.
   Spectrum Weight(Spectrum NDSpec, int kA,
                   bool SetErrorsFromPredictedRate = false) const {
 
-    //std::cout << "kA: " << kA
-    //          << ", SetErrorsFromPredictedRate = " << SetErrorsFromPredictedRate
-    //          << std::endl << std::endl;
-    // Assume this spectrum is in per/POT
-    //std::unique_ptr<TH2> NDTEST(NDSpec.ToTH2(NDSpec.POT()));
-    //NDTEST->SetDirectory(nullptr);
-
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     NDSpec_h->SetDirectory(nullptr);
-    //std::cout << kA << " [POT] = " << NDSpec.POT() << std::endl;
-    //std::cout << "RAWpotbin = " << NDTEST->GetBinContent(1, 1) << 
-    //  ", Scalebin = " << NDSpec_h->GetBinContent(1, 1) << std::endl;
 
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
-      //double sumevent(0);
-      /*std::cout << "[weight]: Stop " << stop.min << " -- " << stop.max << "("
-                << ypos << " m) weighting by " << stop.POT << " @ "
-                << stop.horn_current << " kA" << std::endl;*/
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
         double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
-        /*std::cout << "[NOScale] = " << NDSpec_h->GetBinContent(xit + 1, yit + 1) << 
-          ", [SCALE] = " << bc << std::endl;*/
         double be = SetErrorsFromPredictedRate
                         ? sqrt(bc)
                         : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
-        /*if(!SetErrorsFromPredictedRate) {
-        if (yit == 50) std::cout << "[BC] = " <<
-          bc << ", [MCErr] = " << 
-          (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT) << 
-          ", [RunPlanErr] = " << sqrt(bc) << std::endl;
-        //}*/
-        
-        //sumevent += bc;
-
         NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
         NDSpec_h->SetBinError(xit + 1, yit + 1, be);
       }
-      //std::cout << "Events at " << stop.min << " = " << sumevent << std::endl;
     }
 
     NDSpec.Clear();
-    NDSpec.FillFromHistogram(NDSpec_h.get());
+    std::cout << "Filling from hist!" << std::endl;
+    NDSpec.FillFromHistogram(NDSpec_h.get()); 
     NDSpec.OverrideLivetime(0);
     NDSpec.OverridePOT(GetPlanPOT());
+    //HistCache::Delete(NDSpec_h);
     return NDSpec;
   }
 
+  // Only now using this function to run-plan weights RWSpecs.
   ReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
                               bool SetErrorsFromPredictedRate = false) const {
     // Assume this spectrum is in per/POT
-
-    Spectrum NDSpec_s =
+    /*Spectrum NDSpec_s =
         Weight(NDSpec.ToSpectrum(), kA, SetErrorsFromPredictedRate);
     std::unique_ptr<TH2> NDSpec_h(NDSpec_s.ToTH2(GetPlanPOT()));
+    NDSpec_h->SetDirectory(nullptr);*/
+
+    std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
+
     NDSpec_h->SetDirectory(nullptr);
 
-    std::vector<std::string> labels = NDSpec_s.GetLabels();
-    std::vector<Binning> bins = NDSpec_s.GetBinnings();
+    for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
+      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
+      auto stop = FindStop(ypos, kA);
+ 
+      for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
+        double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
+        double be = SetErrorsFromPredictedRate      
+                    ? sqrt(bc)
+                    : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
+         
+        NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
+        NDSpec_h->SetBinError(xit + 1, yit + 1, be);         
+      }
+    }
 
-    // Get rid of the reweightable axis.
-    labels.pop_back();
-    bins.pop_back();
+    std::vector<std::string> labels = NDSpec.GetLabels();
+    std::vector<Binning> bins = NDSpec.GetBinnings();
 
-    return ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), labels, bins,
-                                GetPlanPOT(), 0);
+    ReweightableSpectrum ret = ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), 
+                                                    labels, bins, GetPlanPOT(), 0);
+                                                   
+    //NDSpec.Clear();
+    //NDSpec.FillFromHistogram(NDSpec_h.get());
+    //NDSpec.OverrideLivetime(0);
+    //NDSpec.OverridePOT(GetPlanPOT());
+
+    return ret;
   }
 
   double GetPlanPOT() const {
