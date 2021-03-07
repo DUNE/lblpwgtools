@@ -170,7 +170,46 @@ GetListOfSysts(std::vector<std::string> const &);
 
 inline ReweightableSpectrum
 ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
-  TH2D *spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+  TH2D *spec_h;  
+
+  if (spec.NDimensions() == 2) {
+    spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+  } else if (spec.NDimensions() == 3) {
+    TH3 *spec3d_h = spec.ToTH3(POT);
+    /*std::cout << "x title = " << spec3d_h->GetXaxis()->GetTitle()
+              << "y title = " << spec3d_h->GetYaxis()->GetTitle()
+              << "z title = " << spec3d_h->GetZaxis()->GetTitle() << std::endl;*/
+    // Reweighting axis binning
+    const Binning rwbins = Binning::FromTAxis(spec3d_h->GetZaxis());
+    // analysis axis put on to 1D
+    Binning xbins = axis.GetBinnings()[0]; 
+    int n = 1;
+    for (const Binning &b : axis.GetBinnings()) {
+    //for (const Binning &b : spec.GetBinnings()) {
+      n *= b.NBins();
+      xbins = Binning::Simple(n, 0, n);
+    }
+
+    spec_h = HistCache::NewTH2D("", xbins, rwbins);
+    for (int xit = 1; xit <= spec3d_h->GetYaxis()->GetNbins(); xit++) { // EHad
+
+      for (int zit = 1; zit <= spec3d_h->GetZaxis()->GetNbins(); zit++) { // RWvar
+        // Get projection of ELep axis
+        TH1D *projY = spec3d_h->ProjectionY("", xit, xit, zit, zit);
+        // fill 2D hist with ELep*EHad x-axis
+        int NbinsY = projY->GetXaxis()->GetNbins();
+        for (int yit = 1; yit <= NbinsY; yit++) {
+          spec_h->SetBinContent(yit + ((xit - 1) * NbinsY), 
+                                zit, 
+                                projY->GetBinContent(yit));
+        }
+        HistCache::Delete(projY);
+      }
+    }
+  } else {
+    std::cout << "[ERROR] Not 2D or 3D, check input dimensions" << std::endl;
+    abort();
+  } 
 
   ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
                               axis.GetBinnings(), POT, 0);
@@ -185,10 +224,10 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
 //----------------------------------------------------
 class NDFD_Matrix {
 public:
-  //NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
-  NDFD_Matrix(std::unique_ptr<PredictionInterp> ND,
-              std::unique_ptr<PredictionInterp> FD,
-              double pot);  
+  
+  NDFD_Matrix(PredictionInterp const *ND,
+              PredictionInterp const *FD,
+              double reg);
 
   // Normalise the ETrue column to 1 in ND and FD matrices
   void NormaliseETrue(osc::IOscCalculator *calc,
@@ -201,22 +240,26 @@ public:
                       std::vector<double> NDefficiency = {},
                       std::vector<double> FDefficiency = {}) const;
 
-  TH2 * GetNDMatrix() const;
-  TH2 * GetFDMatrix() const;
+  TH2D * GetNDMatrix() const;
+  TH2D * GetFDMatrix() const;
 
   TH1 * GetPRISMExtrap() const;
 
   // Extrapolate ND PRISM pred to FD using Eigen
   void ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const;  
 
+  void Write(TDirectory *dir);
+
 protected:
 
-  mutable std::unique_ptr<TH2> hMatrixND;
-  mutable std::unique_ptr<TH2> hMatrixFD;
-  std::unique_ptr<PredictionInterp> fMatrixND;
-  std::unique_ptr<PredictionInterp> fMatrixFD;
-  const double fPOT;
+  mutable std::unique_ptr<TH2D> hMatrixND;
+  mutable std::unique_ptr<TH2D> hMatrixFD;
+  PredictionInterp const *fMatrixND;
+  PredictionInterp const *fMatrixFD;
+  const double fRegFactor;
   mutable std::unique_ptr<TH1> fPRISMExtrap;
+  mutable std::unique_ptr<TH1> hETrueUnfold;
+  mutable bool ETrueWriteOnce;
 
 };
  
@@ -228,14 +271,18 @@ protected:
 // Might incorporate this into NDFD_Matrix class later
 class MCEffCorrection {
 public:
-  MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
-                  std::unique_ptr<PredictionInterp> NDsel,
-                  std::unique_ptr<PredictionInterp> FDunsel,
-                  std::unique_ptr<PredictionInterp> FDsel);
+  MCEffCorrection(PredictionInterp const * NDunsel,
+                  PredictionInterp const * NDsel,
+                  PredictionInterp const * FDunsel,
+                  PredictionInterp const * FDsel);
+
+  ~MCEffCorrection();
+
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
   void CalcEfficiency(osc::IOscCalculator *calc, 
-                      //ana::SystShifts shift = kNoShift,
+                      HistAxis const &axis,
+                      ana::SystShifts shift = kNoShift,
                       Flavors::Flavors_t NDflav = Flavors::kAll,
                       Flavors::Flavors_t FDflav = Flavors::kAll,
                       Current::Current_t curr = Current::kCC,
@@ -245,11 +292,18 @@ public:
   std::vector<double> GetNDefficiency() const { return NDefficiency; }
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
+  void Write(TDirectory *dir);
+
 protected:
-  std::unique_ptr<PredictionInterp> fNDunselected;
-  std::unique_ptr<PredictionInterp> fNDselected;
-  std::unique_ptr<PredictionInterp> fFDunselected;
-  std::unique_ptr<PredictionInterp> fFDselected;
+  PredictionInterp const * fNDunselected;
+  PredictionInterp const * fNDselected;
+  PredictionInterp const * fFDunselected;
+  PredictionInterp const * fFDselected;
+
+  mutable TH2D *hNDunselected;
+  mutable TH2D *hNDselected;
+  mutable TH1D *hFDunselected;
+  mutable TH1D *hFDselected;
   // ND and FD efficiency in each energy bin
   // Vec element [0] is 1st energy bin eff 
   mutable std::vector<double> NDefficiency;

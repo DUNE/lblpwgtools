@@ -4,10 +4,10 @@ set(scripts_to_build
   OffAxisNDCAFCombiner
   PRISMPrediction
   PRISM_NumuDisp_dChi2Scan
+  PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
-  #  ChiSqSurfacePRISMPred
- PRISMRegOptimizer
+  PRISMRegOptimizer
  #FluxPredictionTester
 )
 

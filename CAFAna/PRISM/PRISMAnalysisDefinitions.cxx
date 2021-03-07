@@ -19,8 +19,10 @@ using namespace ana;
 
 namespace PRISM {
 
-const Var kTrueOffAxisPos_m =
-    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
+//const Var kTrueOffAxisPos_m =
+//    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
+
+const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 
 const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
   return (sr->Ev < 10);
@@ -42,7 +44,7 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(75, 0, 15);
   }
   if (xbinning == "uniform_smallrange") {
-    return Binning::Simple(40, 0, 8);
+    return Binning::Simple(50, 0, 10);
   }
   if (xbinning == "uniform_coarse") {
     return Binning::Simple(25, 0, 10); // used to be 25, 10 (bad tail going out to 10)
@@ -97,8 +99,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
     return std::make_pair("E_{Dep.} (GeV)", kRecoE_FromDep);
+  } else if (varname == "EVisReco") {
+    return std::make_pair("Reco E_{vis.} (GeV)", kEVisReco);
+  } else if (varname == "EVisTrue") {
+    return std::make_pair("True E_{vis.} (GeV)", kEVisTrue);
   } else if (varname == "RecoELep") {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
+  } else if (varname == "RecoEHad") {
+    return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -120,9 +128,38 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
+  
+  std::vector<std::string> labels;
+  std::vector<Binning> bins;
+  std::vector<Var> vars;
+  if (varname == "ELepEHad") { // 2D ELep EHad Prediction
+    auto vardefLep = GetVar("ELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("EHad"); 
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefHad.second);
+  } else if (varname == "ELepEHadReco") {
+    auto vardefLep = GetVar("RecoELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("RecoEHad");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardefHad.second);
+  } else {
+    auto vardef = GetVar(varname);
+    labels.push_back(vardef.first);
+    bins.push_back(GetBinning(xbinning));
+    vars.push_back(vardef.second);
+  }
+  //auto vardef = GetVar(varname);
+  //HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
 
-  auto vardef = GetVar(varname);
-  HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
+  HistAxis xax(labels, bins, vars); 
 
   return {xax, axOffAxisPos, axOffAxis280kAPos};
 }
@@ -132,6 +169,9 @@ HistAxis TrueObservable(std::string const &obsvarname,
                         std::string const &binning) {
   //std::pair<std::string, Var> truevardef;
   auto truevardef = GetVar("ETrue");
+  std::vector<std::string> labels;
+  std::vector<Binning> bins;
+  std::vector<Var> vars;
 
   if (obsvarname == "EProxy") {
     truevardef = GetVar("ETrue");
@@ -143,12 +183,47 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
+  } else if (obsvarname == "RecoELep") { 
+    truevardef = GetVar("ELep");
+  } else if (obsvarname == "EVisReco") {
+    truevardef = GetVar("EVisTrue");
+  } else if (obsvarname == "ELepEHad") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefLep.second);
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefHad.second);
+  } else if (obsvarname == "ELepEHadReco") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefLep.second);
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(truevardefHad.second);
   } else {
     std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
   }   
+  
+  if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadReco") {
+    return HistAxis(labels, bins, vars);
+  } else {
+    return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
+  }
+}
 
-  return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
+bool isRecoND(std::string var) {
+  if (var == "RecoELep" || var == "EVisReco" || var == "ELepEHadReco" ||
+      var == "RecoEHad") {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
@@ -160,6 +235,9 @@ const Cut kCut280kARun([](const caf::StandardRecord *sr) {
 });
 const Cut kSel280kARun([](const caf::StandardRecord *sr) {
   return (std::abs(sr->SpecialHCRunId) == 280);
+});
+const Cut kIsReco([](const caf::StandardRecord *sr) {
+  return (sr->Elep_reco != 0);
 });
 const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
   return sr->SpecialRunWeight;
@@ -200,17 +278,17 @@ const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
 
 Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
 
-  return UseOnAxisSelection
+  return UseOnAxisSelection 
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
-                kIsOutOfTheDesert)
+                kIsOutOfTheDesert) 
              : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert && kERecoProxy8GeV); //kETrue8GeV
+                kIsOutOfTheDesert); 
 }
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
-                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV && kERecoProxy8GeV); //kETrue8GeV
+                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV);
 }
 
 Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
