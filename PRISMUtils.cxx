@@ -5,6 +5,7 @@
 
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Analysis/AnalysisVars.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -150,20 +151,6 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
           blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
         }
 
-        dir = f.GetDirectory((std::string("NDMatrixTrueInterp") +
-                              (IsNu ? "_nu" : "_nub"))
-                                 .c_str());
-        if (dir) {
-          blob.NDMatrixTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
-
-        dir = f.GetDirectory((std::string("NDMatrixRecoInterp") +
-                              (IsNu ? "_nu" : "_nub"))
-                                 .c_str());
-        if (dir) {
-          blob.NDMatrixRecoPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
-
         dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
                              (IsNu ? "_nu" : "_nub")).c_str());
         if (dir) {
@@ -200,22 +187,6 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
                              .c_str());
       if (dir) {
         blob.FDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
-
-      dir =
-          f.GetDirectory((std::string("FDMatrixTrueInterp") +
-                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
-                             .c_str());
-      if (dir) { 
-        blob.FDMatrixTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
-
-      dir =
-          f.GetDirectory((std::string("FDMatrixRecoInterp") +
-                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
-                             .c_str());
-      if (dir) { 
-        blob.FDMatrixRecoPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
       }
 
       dir = 
@@ -517,19 +488,16 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 // Class for ND and FD detector extrapolation matrices:
 // ----------------------------------------------------
 
-NDFD_Matrix::NDFD_Matrix(std::unique_ptr<PredictionInterp> ND,
-                         std::unique_ptr<PredictionInterp> NDTrue,
-                         std::unique_ptr<PredictionInterp> NDReco, 
-                         std::unique_ptr<PredictionInterp> FD, 
-                         std::unique_ptr<PredictionInterp> FDTrue,
-                         std::unique_ptr<PredictionInterp> FDReco,
-                         double pot) : fPOT(pot), fPRISMExtrap(nullptr) {
-  fMatrixND = std::move(ND);
-  fMatrixTrueND = std::move(NDTrue);
-  fMatrixRecoND = std::move(NDReco);
-  fMatrixFD = std::move(FD);
-  fMatrixTrueFD = std::move(FDTrue);
-  fMatrixRecoFD = std::move(FDReco);
+NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
+                         PredictionInterp const * FD,
+                         double reg) : fRegFactor(reg), fPRISMExtrap(nullptr),
+                         hETrueUnfold(nullptr), ETrueWriteOnce(true) {
+  fMatrixND = ND;
+  fMatrixFD = FD;
+  if (!fMatrixND || !fMatrixFD) {
+    std::cout << "[WARNING] Matrices not loaded." << std::endl;
+    abort();
+  } 
 }
 
 //-----------------------------------------------------
@@ -561,43 +529,20 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
                                  Sign::Sign_t FDsign,
                                  std::vector<double> NDefficiency, 
                                  std::vector<double> FDefficiency) const {
-  std::cout << "normalising"<< std::endl;
+  
+  // Get 2D Smearing matrices for ND and FD
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
-  auto sMatrixTrueND = fMatrixTrueND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  TH1D * hMatrixTrueND = static_cast<TH1D*>(sMatrixTrueND.ToTH1(1));
-  auto sMatrixRecoND = fMatrixRecoND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  TH1D * hMatrixRecoND = static_cast<TH1D*>(sMatrixRecoND.ToTH1(1));
-  gFile->WriteTObject(hMatrixTrueND, "hMatrixTrueND_1D");
-  Binning truebin = sMatrixTrueND.GetBinnings()[0];
-  int nt(1);
-  for (const Binning &b : sMatrixTrueND.GetBinnings()) {
-    nt *= b.NBins();
-    truebin = Binning::Simple(nt, 0, nt);
-  }
-  Binning recobin = sMatrixRecoND.GetBinnings()[0];
-  int nr(1);
-  for (const Binning &b : sMatrixRecoND.GetBinnings()) {
-    nr *= b.NBins();
-    recobin = Binning::Simple(nr, 0, nr);
-  }
- 
-  HistCache::Delete(hMatrixTrueND);
-  HistCache::Delete(hMatrixRecoND);
-
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
   hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
-  auto sMatrixTrueFD = fMatrixTrueFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
-  TH1D * hMatrixTrueFD = static_cast<TH1D*>(sMatrixTrueFD.ToTH1(1));
-  auto sMatrixRecoFD = fMatrixRecoFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
-  TH1D * hMatrixRecoFD = static_cast<TH1D*>(sMatrixRecoFD.ToTH1(1));
-  HistCache::Delete(hMatrixTrueFD);
-  HistCache::Delete(hMatrixRecoFD);
 
-  gFile->WriteTObject(hMatrixND.get(), "MatrixND2D");
-  gFile->WriteTObject(hMatrixFD.get(), "MatrixFD2D");
-
-  if (!hMatrixND) std::cout << "fMatrixND ERROR" << std::endl;
+  if (!hMatrixND) {
+    std::cout << "[ERROR] No fMatrixND." << std::endl; 
+    abort();
+  } else if (!hMatrixFD) {
+    std::cout << "[ERROR] No fMatrixFD." << std::endl; 
+    abort();
+  } else { std::cout << "Good Matrices." << std::endl; }
  
   std::pair<std::unique_ptr<TH2D>*, std::vector<double>> NDpair (&hMatrixND, NDefficiency);
   std::pair<std::unique_ptr<TH2D>*, std::vector<double>> FDpair (&hMatrixFD, FDefficiency);
@@ -606,23 +551,19 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
       {NDpair, FDpair};   
 
   for (auto &mat : matrix_pair) {
-    std::cout << "No cols in mat = " << mat.first->get()->GetXaxis()->GetNbins() << std::endl;
     for (int col_it = 1; col_it <= mat.first->get()->GetXaxis()->GetNbins(); col_it++) {
 
-      std::unique_ptr<TH1D> projY = std::unique_ptr<TH1D>(
-                                     mat.first->get()->ProjectionY("_projY", col_it, col_it, "e"));
-      // Normalise integral of true bin to 1
-      projY->Scale(mat.second.at(col_it - 1) / projY->Integral()); // * mat.second.at(i - 1) 
-      //projY->Scale(mat.second.at(col_it - 1));
+      TH1D *projY = mat.first->get()->ProjectionY("_projY", col_it, col_it, "e");
+      // Normalise integral of true bin to efficiency
+      projY->Scale(1 / projY->Integral()); 
+      projY->Scale(mat.second.at(col_it - 1)); 
       for (int row_it = 1; row_it <= mat.first->get()->GetYaxis()->GetNbins(); row_it++) {
         mat.first->get()->SetBinContent(col_it, row_it, projY->GetBinContent(row_it));
         mat.first->get()->SetBinError(col_it, row_it, projY->GetBinError(row_it));
       }
+      HistCache::Delete(projY);
     }
   }
-
-  gFile->WriteTObject(hMatrixND.get(), "NormNDMat");
-  gFile->WriteTObject(hMatrixFD.get(), "NormFDMat");
 }
 
 //-----------------------------------------------------
@@ -633,7 +574,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   std::unique_ptr<TH2D>* FDhist = &hMatrixFD;
 
   TH1D *PRISMND = NDPRISMLCComp.ToTH1(1);
-  gFile->WriteTObject(PRISMND, "PRISMLC_1D");
 
   Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND);
 
@@ -641,11 +581,12 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
   for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
     double frac_err(0); 
-    if (PRISMND->GetBinContent(row_it + 1) != 0) {
+    if (std::isnormal(PRISMND->GetBinContent(row_it + 1))) { // Valid number
       frac_err = PRISMND->GetBinError(row_it + 1) / PRISMND->GetBinContent(row_it + 1);
-    } else {
-      frac_err = 0;
+    } else { // Is zero, need to change it
+      frac_err = 1E-6; // Arbitrarily small number to make calculation work. (Ugly.)
     }
+    //std::cout << "error = " << frac_err << "; var = " << pow(frac_err, 2) << std::endl;
     CovMatRec(row_it, row_it) = pow(frac_err, 2);
   } 
 
@@ -661,26 +602,19 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
 
   const int NTrueBins = NDmat.cols();
   const int NRecoBins = NDmat.rows();
-  std::cout << "True bins = " << NTrueBins << ", Reco Bins = " << NRecoBins << std::endl;
+  
   // Use T-reg to calculate ETrue(ND)
-  const double reg = 0.3; //0.2
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
   for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
-    RegMatrix(row_it, row_it) = reg;
-    RegMatrix(row_it, row_it + 1) = -reg;
+    RegMatrix(row_it, row_it) = fRegFactor;
+    RegMatrix(row_it, row_it + 1) = -fRegFactor;
   }
-  RegMatrix(NTrueBins - 1, NTrueBins - 1) = reg;
+  RegMatrix(NTrueBins - 1, NTrueBins - 1) = fRegFactor;
+
   Eigen::VectorXd NDETrue = ((NDmat.transpose() * invCovMatRec * NDmat) +
                              RegMatrix.transpose() * RegMatrix).inverse() *
-                            NDmat.transpose() * invCovMatRec * NDERec;
-
-  /*Eigen::VectorXd NDETrue = ((NDmat.transpose() * NDmat) +
-                             RegMatrix.transpose() * RegMatrix).inverse() * 
-                            NDmat.transpose() * NDERec;*/
+                            NDmat.transpose() * invCovMatRec * NDERec; 
  
-  for (int it = 0; it < NTrueBins; it++) { 
-    std::cout << "element " << it << " = " << NDETrue(it) << std::endl;
-  }
   // Propogate uncertainty
   Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
                        RegMatrix.transpose() * RegMatrix).inverse() * 
@@ -689,85 +623,121 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
   Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
 
   // Output true hist
-  std::unique_ptr<TH1> NDETrue_h = std::unique_ptr<TH1>(static_cast<TH1*>(PRISMND->Clone()));
-  FillHistFromEigenVector(NDETrue_h.get(), NDETrue);
-  NDETrue_h.get()->Scale(1, "width");
-  gFile->WriteTObject(NDETrue_h.get(), "NDETrueTik_h");
+  if (ETrueWriteOnce) {
+    TAxis *mat_xaxis = NDhist->get()->GetXaxis();
+    hETrueUnfold = std::unique_ptr<TH1>(static_cast<TH1*>(
+                                        HistCache::New("TrueE", mat_xaxis)));
+  
+    FillHistFromEigenVector(hETrueUnfold.get(), NDETrue);
+    for (int row_it = 0; row_it < NDETrue.size(); row_it++) {
+      double errorTrue = pow(CovMatTrue(row_it, row_it), 0.5) * 
+                             hETrueUnfold->GetBinContent(row_it + 1); 
+      hETrueUnfold->SetBinError(row_it + 1, errorTrue);
+      //std::cout << "true bin " << row_it << " = " << NDETrue(row_it) << std::endl;
+    }
+    hETrueUnfold->GetXaxis()->SetTitle(NDhist->get()->GetXaxis()->GetTitle());
+    hETrueUnfold.get()->Scale(1, "width");
+  }
+  ETrueWriteOnce = false;
+
   Eigen::VectorXd FDERec = FDmat * NDETrue;
   // Now get final Cov Mat for FDERec so we can get error on extrap pred
   Eigen::MatrixXd CovMatExtrap = FDmat * CovMatTrue * FDmat.transpose();  
   // Keep same binning for extrapolated prediction
   fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(HistCache::Copy(PRISMND))); 
- 
+  // Set bin errors for extrapolated prediction 
   FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
   for (int row_it = 0; row_it < FDERec.size(); row_it++) {
-    //double errorExtrap = pow(CovMatExtrap(row_it, row_it), 0.5);
     double errorExtrap = pow(CovMatExtrap(row_it, row_it), 0.5) * 
                          fPRISMExtrap->GetBinContent(row_it + 1);
     fPRISMExtrap->SetBinError(row_it + 1, errorExtrap);
   }
   HistCache::Delete(PRISMND);
+}
+
+//----------------------------------------------------
+
+void NDFD_Matrix::Write(TDirectory *dir) {
+  dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
+  dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
+  dir->WriteTObject(hETrueUnfold.get(), "Unfolded_ETrue");
 } 
 
 //----------------------------------------------------
 // Class for ND and FD MC based efficiency correction:
 //----------------------------------------------------
-MCEffCorrection::MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
-                                 std::unique_ptr<PredictionInterp> NDsel,
-                                 std::unique_ptr<PredictionInterp> FDunsel,
-                                 std::unique_ptr<PredictionInterp> FDsel) {
-  fNDunselected = std::move(NDunsel);
-  fNDselected = std::move(NDsel);
-  fFDunselected = std::move(FDunsel);
-  fFDselected = std::move(FDsel);
+
+MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel,
+                                 PredictionInterp const * NDsel,
+                                 PredictionInterp const * FDunsel,
+                                 PredictionInterp const * FDsel) : 
+                                 hNDunselected(nullptr), hNDselected(nullptr),
+                                 hFDunselected(nullptr), hFDselected(nullptr) {
+  fNDunselected = NDunsel;
+  fNDselected = NDsel;
+  fFDunselected = FDunsel;
+  fFDselected = FDsel;
+}
+
+//----------------------------------------------------
+
+MCEffCorrection::~MCEffCorrection() {
+  HistCache::Delete(hNDunselected);
+  HistCache::Delete(hNDselected);
+  HistCache::Delete(hFDunselected);
+  HistCache::Delete(hFDselected);
 }
 
 //----------------------------------------------------
 
 void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                                      HistAxis const &axis,
-                                     //ana::SystShifts shift,
+                                     ana::SystShifts shift,
                                      Flavors::Flavors_t NDflav,
                                      Flavors::Flavors_t FDflav,
                                      Current::Current_t curr,
                                      Sign::Sign_t NDsign, 
                                      Sign::Sign_t FDsign) const {
 
-  ana::SystShifts shift = kNoShift; // No systs here yet
-  
+  ana::SystShifts syst = shift; 
+  //ana::SystShifts syst = kNoShift;  
+
   if (!fNDunselected || !fNDselected) {
     std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
     abort();
   }
-  auto sNDunselected = fNDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D
-  ReweightableSpectrum rwsNDunselected = ToReweightableSpectrum(sNDunselected, 1, axis);
-  TH2D *hNDunselected = static_cast<TH2D*>(rwsNDunselected.ToTH2(1));
+  auto sNDunselected = fNDunselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  // True axis binning might be different to reco binning in fAnalysisAxis.
+  // Make sure bins in true energy efficiency correction matches
+  std::vector<std::string> Labels = sNDunselected.GetLabels();
+  Labels.pop_back(); // Remove off-axis position axis
+  std::vector<Binning> Bins = sNDunselected.GetBinnings();
+  Bins.pop_back();
+  // This is annoying, true axis will have a reco label. I can live with this though.
+  std::vector<Var> Vars = axis.GetVars();
+  HistAxis trueaxis(Labels, Bins, Vars);
+  // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
+  ReweightableSpectrum rwsNDunselected = ToReweightableSpectrum(sNDunselected, 1, trueaxis);
+  hNDunselected = static_cast<TH2D*>(rwsNDunselected.ToTH2(1));
   
-  auto sNDselected = fNDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  ReweightableSpectrum rwsNDselected = ToReweightableSpectrum(sNDselected, 1, axis);
-  TH2D *hNDselected = static_cast<TH2D*>(rwsNDselected.ToTH2(1));
+  auto sNDselected = fNDselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  ReweightableSpectrum rwsNDselected = ToReweightableSpectrum(sNDselected, 1, trueaxis);
+  hNDselected = static_cast<TH2D*>(rwsNDselected.ToTH2(1));
 
   if (!fFDunselected || !fFDselected) {
     std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
     abort();
   }
   // FD unselected
-  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  TH1D *hFDunselected_1D; TH2D *hFDunselected_2D(nullptr);
-  hFDunselected_1D = sFDunselected.ToTH1(1);
+  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  hFDunselected = sFDunselected.ToTH1(1);
   // FD selected
-  auto sFDselected = fFDselected->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  TH1D *hFDselected_1D = sFDselected.ToTH1(1);
-
-  //gFile->WriteTObject(hNDselected, "NDSelected");
-  //gFile->WriteTObject(hNDunselected, "NDUnselected");
-  //gFile->WriteTObject(hFDselected_1D, "FDSelected");
-  //gFile->WriteTObject(hFDunselected_1D, "FDUnselected");
+  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  hFDselected = sFDselected.ToTH1(1);
 
   // Calculate ND efficiency
   // efficiency fluctuates slightly with OA position
-  // take average over for 20 OA positions
+  // take average over for ~20 OA positions
   for (int i = 0; i < hNDselected->GetXaxis()->GetNbins(); i++) { // energy axis
     double NDbin_eff;
     double sum(0);
@@ -781,20 +751,22 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                            (hNDselected->GetYaxis()->GetNbins() - OAbinstart));
   }
   // Calculate FD efficiency
-  for (int i = 0; i < hFDselected_1D->GetXaxis()->GetNbins(); i++) {
-    double FDbin_eff = hFDselected_1D->GetBinContent(i + 1) / 
-                       hFDunselected_1D->GetBinContent(i + 1);
-    std::cout << "Eff FD in bin " << i << " = " << FDbin_eff << std::endl;
+  for (int i = 0; i < hFDselected->GetXaxis()->GetNbins(); i++) {
+    double FDbin_eff = hFDselected->GetBinContent(i + 1) / 
+                       hFDunselected->GetBinContent(i + 1);
     FDefficiency.push_back(FDbin_eff);
   }
-
-  //std::cout << "NDeff size = " << NDefficiency.size() << std::endl;
-  //std::cout << "FDeff size = " << FDefficiency.size() << std::endl;
-  HistCache::Delete(hNDunselected);
-  HistCache::Delete(hNDselected);
-  HistCache::Delete(hFDunselected_1D);
-  HistCache::Delete(hFDselected_1D);
 }
 
+//-----------------------------------------------------------
+
+void MCEffCorrection::Write(TDirectory *dir) {
+  dir->WriteTObject(hNDunselected, "NDUnselected");
+  dir->WriteTObject(hNDselected, "NDSelected");
+  dir->WriteTObject(hFDunselected, "FDUnselected");
+  dir->WriteTObject(hFDselected, "FDSelected"); 
+}
+
+//-----------------------------------------------------------
 
 } // namespace ana

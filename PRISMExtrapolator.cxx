@@ -325,15 +325,6 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
           .inverse() *
       NDFluxMatrix.transpose() * P * Target;
 
-  //***TEST***
-  /*std::unique_ptr<TH1> RawLCW = std::unique_ptr<TH1>(new TH1D("LC", "LC", 
-                                                     OffAxisWeights.size(), 
-                                                     0, OffAxisWeights.size()));
-  RawLCW->SetDirectory(nullptr);
-  FillHistFromEigenVector(RawLCW.get(), OffAxisWeights);
-  gFile->WriteObject(RawLCW.get(), "RawLCtest");*/                                  
-  //**********
-
   fLastMatch_293kA = std::unique_ptr<TH1>(new TH1D(
       "soln_293kA", ";OffAxisSlice;Weight", off_axis_bin_edges_293kA.size() - 1,
       off_axis_bin_edges_293kA.data()));

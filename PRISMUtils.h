@@ -74,11 +74,7 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixTruePredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixRecoPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixTruePredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixRecoPredInterps;
   // For MC Eff Correction
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
@@ -117,11 +113,7 @@ struct PRISMStateBlob {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(NDMatrixTruePredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(NDMatrixRecoPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FDMatrixTruePredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FDMatrixRecoPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
@@ -184,15 +176,16 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
     spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
   } else if (spec.NDimensions() == 3) {
     TH3 *spec3d_h = spec.ToTH3(POT);
-    std::cout << "x title = " << spec3d_h->GetXaxis()->GetTitle()
+    /*std::cout << "x title = " << spec3d_h->GetXaxis()->GetTitle()
               << "y title = " << spec3d_h->GetYaxis()->GetTitle()
-              << "z title = " << spec3d_h->GetZaxis()->GetTitle() << std::endl;
+              << "z title = " << spec3d_h->GetZaxis()->GetTitle() << std::endl;*/
     // Reweighting axis binning
     const Binning rwbins = Binning::FromTAxis(spec3d_h->GetZaxis());
     // analysis axis put on to 1D
     Binning xbins = axis.GetBinnings()[0]; 
     int n = 1;
     for (const Binning &b : axis.GetBinnings()) {
+    //for (const Binning &b : spec.GetBinnings()) {
       n *= b.NBins();
       xbins = Binning::Simple(n, 0, n);
     }
@@ -231,14 +224,10 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
 //----------------------------------------------------
 class NDFD_Matrix {
 public:
-  //NDFD_Matrix(Spectrum ND, Spectrum FD, double pot);
-  NDFD_Matrix(std::unique_ptr<PredictionInterp> ND,
-              std::unique_ptr<PredictionInterp> NDTrue,
-              std::unique_ptr<PredictionInterp> NDReco, 
-              std::unique_ptr<PredictionInterp> FD,
-              std::unique_ptr<PredictionInterp> FDTrue,
-              std::unique_ptr<PredictionInterp> FDReco,
-              double pot);  
+  
+  NDFD_Matrix(PredictionInterp const *ND,
+              PredictionInterp const *FD,
+              double reg);
 
   // Normalise the ETrue column to 1 in ND and FD matrices
   void NormaliseETrue(osc::IOscCalculator *calc,
@@ -259,20 +248,18 @@ public:
   // Extrapolate ND PRISM pred to FD using Eigen
   void ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const;  
 
+  void Write(TDirectory *dir);
+
 protected:
 
   mutable std::unique_ptr<TH2D> hMatrixND;
   mutable std::unique_ptr<TH2D> hMatrixFD;
-  //mutable std::unique_ptr<TH1> hMatrixND;
-  //mutable std::unique_ptr<TH1> hMatrixFD;
-  std::unique_ptr<PredictionInterp> fMatrixND;
-  std::unique_ptr<PredictionInterp> fMatrixTrueND;
-  std::unique_ptr<PredictionInterp> fMatrixRecoND;
-  std::unique_ptr<PredictionInterp> fMatrixFD;
-  std::unique_ptr<PredictionInterp> fMatrixTrueFD;
-  std::unique_ptr<PredictionInterp> fMatrixRecoFD;
-  const double fPOT;
+  PredictionInterp const *fMatrixND;
+  PredictionInterp const *fMatrixFD;
+  const double fRegFactor;
   mutable std::unique_ptr<TH1> fPRISMExtrap;
+  mutable std::unique_ptr<TH1> hETrueUnfold;
+  mutable bool ETrueWriteOnce;
 
 };
  
@@ -284,15 +271,18 @@ protected:
 // Might incorporate this into NDFD_Matrix class later
 class MCEffCorrection {
 public:
-  MCEffCorrection(std::unique_ptr<PredictionInterp> NDunsel,
-                  std::unique_ptr<PredictionInterp> NDsel,
-                  std::unique_ptr<PredictionInterp> FDunsel,
-                  std::unique_ptr<PredictionInterp> FDsel);
+  MCEffCorrection(PredictionInterp const * NDunsel,
+                  PredictionInterp const * NDsel,
+                  PredictionInterp const * FDunsel,
+                  PredictionInterp const * FDsel);
+
+  ~MCEffCorrection();
+
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
   void CalcEfficiency(osc::IOscCalculator *calc, 
                       HistAxis const &axis,
-                      //ana::SystShifts shift = kNoShift,
+                      ana::SystShifts shift = kNoShift,
                       Flavors::Flavors_t NDflav = Flavors::kAll,
                       Flavors::Flavors_t FDflav = Flavors::kAll,
                       Current::Current_t curr = Current::kCC,
@@ -302,11 +292,18 @@ public:
   std::vector<double> GetNDefficiency() const { return NDefficiency; }
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
+  void Write(TDirectory *dir);
+
 protected:
-  std::unique_ptr<PredictionInterp> fNDunselected;
-  std::unique_ptr<PredictionInterp> fNDselected;
-  std::unique_ptr<PredictionInterp> fFDunselected;
-  std::unique_ptr<PredictionInterp> fFDselected;
+  PredictionInterp const * fNDunselected;
+  PredictionInterp const * fNDselected;
+  PredictionInterp const * fFDunselected;
+  PredictionInterp const * fFDselected;
+
+  mutable TH2D *hNDunselected;
+  mutable TH2D *hNDselected;
+  mutable TH1D *hFDunselected;
+  mutable TH1D *hFDselected;
   // ND and FD efficiency in each energy bin
   // Vec element [0] is 1st energy bin eff 
   mutable std::vector<double> NDefficiency;

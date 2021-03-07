@@ -491,7 +491,6 @@ std::map<PredictionPRISM::PRISMComponent, Spectrum>
 PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                         SystShifts shift,
                                         MatchChan match_chan) const {
-  std::cout << "Begin PredicPRISMComponents." << std::endl;
   bool WeHaveNDData = HaveNDData(match_chan.from);
   bool WeHaveNDPrediction = HaveNDPrediction(match_chan.from);
   bool WeHaveFDPrediction = HaveFDPrediction(match_chan.to);
@@ -575,34 +574,26 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   double NDPOT = NDRunPlan.GetPlanPOT();
   assert(NDPOT > 0);
-  std::cout << "Start building data components." << std::endl;
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
 
   TH2 *dataUnW = NDData.get()->ToTH2(NDPOT);
   dataUnW->SetDirectory(nullptr);
-  gFile->WriteTObject(dataUnW, "data_unweighted");
+  //gFile->WriteTObject(dataUnW, "data_unweighted");
 
   NDComps.emplace(kNDData_293kA,
                   NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
-  NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA)); // change kNDData_293kA
+  NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA)); 
 
   NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
   NDComps.emplace(kNDData_280kA,
                   NDRunPlan.Weight(*NDData_280kA, 280, fSetNDErrorsFromRate));
-  NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA)); // change kNDData_280kA
-  std::cout << "Finish building data components." << std::endl;
+  NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA)); 
   // Start building MC components
   
-  /*ReweightableSpectrum NDSig = ToReweightableSpectrum(
-      NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
-                           calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
-                       293),
-      NDPOT, fAnalysisAxis);*/
   TH2 *mcUnW = ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
                      calc, shift, NDSigFlavor, Current::kCC, NDSigSign), 
                      NDPOT, fAnalysisAxis).ToTH2(NDPOT);
   mcUnW->SetDirectory(nullptr);
-  gFile->WriteTObject(mcUnW, "mc_unweighted");
 
   ReweightableSpectrum NDSig = NDRunPlan.Weight(
       ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
@@ -611,12 +602,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   NDComps.emplace(kNDSig_293kA, NDSig);
   NDComps.emplace(kNDSig2D_293kA, NDSig);
-
-  /*ReweightableSpectrum NDSig_280kA = ToReweightableSpectrum(
-      NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
-                           calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
-                       280),
-      NDPOT, fAnalysisAxis);*/
 
   ReweightableSpectrum NDSig_280kA = NDRunPlan.Weight(
       ToReweightableSpectrum(NDPrediction_280kA->PredictComponentSyst(
@@ -627,7 +612,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   NDComps.emplace(kNDSig2D_280kA, NDSig_280kA);
 
   // ND Background subtraction
-  std::cout << "Start subtracting backgrounds." << std::endl;
   if (fNCCorrection) {
     ReweightableSpectrum NC = NDRunPlan.Weight(
         ToReweightableSpectrum(
@@ -638,7 +622,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
     NDComps.emplace(kNDNCBkg_293kA, NC);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDNCBkg_293kA);
-    std::cout << "Subtract NC background." << std::endl;
 
     ReweightableSpectrum NC_280kA = NDRunPlan.Weight(
         ToReweightableSpectrum(
@@ -864,10 +847,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // detector extrapolation from ND to FD
   // Set shift to kNoShift as we don't want systs affecting the MC efficiency correction
   // at the moment
-  std::cout << "HERE1" << std::endl;
-  fMCEffCorrection->CalcEfficiency(calc, fAnalysisAxis, NDSigFlavor, FDSigFlavor, 
+  fMCEffCorrection->CalcEfficiency(calc, fAnalysisAxis, shift, NDSigFlavor, FDSigFlavor, 
                                    Current::kCC, NDSigSign, FDSigSign);
-  std::cout << "HERE2" << std::endl;
   // Do ND to FD detector extrapolation here
   // Normalise the ERec v ETrue ND and FD matrices
   fNDFD_Matrix->NormaliseETrue(calc, shift, NDSigFlavor, FDSigFlavor, //kNoShift
@@ -875,10 +856,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                fMCEffCorrection->GetNDefficiency(),
                                fMCEffCorrection->GetFDefficiency());
   // Extrapolate just the LC ND, not the MC
-  std::cout << "HERE3" << std::endl;
   fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));
-  gFile->WriteTObject(fNDFD_Matrix->GetPRISMExtrap(), "PRISMExtrap1D");
-  std::cout << "HERE4" << std::endl;
   Spectrum PRISMExtrapSpec = Spectrum(fNDFD_Matrix->GetPRISMExtrap(), 
                                       Comps.at(kPRISMPred).GetLabels(),
                                       Comps.at(kPRISMPred).GetBinnings(), 
@@ -931,15 +909,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   }
 
   // If we have the FD background predictions add them back in
-  std::cout << "Add backgrounds in FD." << std::endl;
   if (fNCCorrection) {
     Comps.emplace(kFDNCBkg,
                   FDPrediction->PredictComponentSyst(
                       calc, shift, Flavors::kAll, Current::kNC, Sign::kBoth));
     Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
-    Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
+    Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
-    std::cout << "Added NC backgrounds." << std::endl;
   }
 
   if (fWLBCorrection) {

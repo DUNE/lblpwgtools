@@ -19,8 +19,10 @@ using namespace ana;
 
 namespace PRISM {
 
-const Var kTrueOffAxisPos_m =
-    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
+//const Var kTrueOffAxisPos_m =
+//    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
+
+const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 
 const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
   return (sr->Ev < 10);
@@ -42,7 +44,7 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(75, 0, 15);
   }
   if (xbinning == "uniform_smallrange") {
-    return Binning::Simple(40, 0, 8);
+    return Binning::Simple(50, 0, 10);
   }
   if (xbinning == "uniform_coarse") {
     return Binning::Simple(25, 0, 10); // used to be 25, 10 (bad tail going out to 10)
@@ -215,6 +217,15 @@ HistAxis TrueObservable(std::string const &obsvarname,
   }
 }
 
+bool isRecoND(std::string var) {
+  if (var == "RecoELep" || var == "EVisReco" || var == "ELepEHadReco" ||
+      var == "RecoEHad") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 const Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
   return (fabs(sr->vtx_x) < 200);
 });
@@ -224,6 +235,9 @@ const Cut kCut280kARun([](const caf::StandardRecord *sr) {
 });
 const Cut kSel280kARun([](const caf::StandardRecord *sr) {
   return (std::abs(sr->SpecialHCRunId) == 280);
+});
+const Cut kIsReco([](const caf::StandardRecord *sr) {
+  return (sr->Elep_reco != 0);
 });
 const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
   return sr->SpecialRunWeight;
@@ -264,18 +278,17 @@ const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
 
 Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode) {
 
-  return UseOnAxisSelection
+  return UseOnAxisSelection 
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
-                kIsOutOfTheDesert)
+                kIsOutOfTheDesert) 
              : (kIsNumuCC && (isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert); // kERecoProxy8GeV kETrue8GeV
+                kIsOutOfTheDesert); 
 }
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
-                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV); // kERecoProxy8GeV
-                                                                                   // kETrue8GeV
+                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV);
 }
 
 Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {

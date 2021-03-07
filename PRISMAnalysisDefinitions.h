@@ -433,6 +433,8 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 ana::HistAxis TrueObservable(std::string const &obsvarname = "EProxy",
                              std::string const &binning = "uniform");
 
+bool isRecoND(std::string var = "ETrue");
+
 extern const ana::Cut kETrueLT10GeV;
 
 extern const ana::Cut kETrue8GeV;
@@ -440,6 +442,9 @@ extern const ana::Cut kETrue8GeV;
 extern const ana::Cut kERecoProxy8GeV;
 
 extern const ana::Cut kIsOutOfTheDesert;
+// Cut to check if it is reconstructed -> removes 
+// unreconstructed events in ND
+extern const ana::Cut kIsReco;
 
 // Use to weight by Exposure
 extern const ana::Var kRunPlanWeight;

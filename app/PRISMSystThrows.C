@@ -12,6 +12,8 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
 
+#include "TGraphErrors.h"
+
 using namespace ana;
 using namespace PRISM;
 
@@ -39,6 +41,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   (void)GetListOfSysts();
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
+
+  for (auto const &syst : shift.ActiveSysts()) {
+    std::cout << "Syst " << syst->ShortName() << std::endl; //" with shift = " << 
+      //syst.GetShift() << std::endl;
+  }
 
   SystShifts fluxshift = FilterFluxSystShifts(shift);
 
@@ -68,7 +75,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   bool PRISM_write_debug = PRISMps.get<bool>("write_debug");
 
   double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
-  std::cout << "Reg for Extrap = " << RegFactorExtrap << std::endl;
 
   osc::IOscCalculatorAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
@@ -228,7 +234,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     // Smearing matrices for ND and FD
     // For detector and selection corrections
-    NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(),
+    NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(), 
                               state.FDMatrixPredInterps[FDConfig_enum].get(),
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
@@ -268,6 +274,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           }
 
           fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
+
           dir->cd();
         }
       } else { // FD spectra prediction
@@ -279,31 +286,106 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
 
+        auto *PRISMExtrap = 
+              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+        PRISMExtrap->Scale(1, "width");
+        chan_dir->WriteTObject(PRISMExtrap, "PRISMExtrap");
+
         if (PRISM_write_debug) {
+          fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
+        }
+      
 
-          for (auto const &comp : PRISMComponents) {
-            // we always write this
-            if (comp.first == PredictionPRISM::kPRISMPred) {
-              continue;
+        //----------------------------------------------------
+        // Scan for variation due to systematics
+        //----------------------------------------------------
+
+        chan_dir->cd();
+
+        std::vector<double> AvVx, AvVy, err68pc;
+        // x points on graph are bin centers of PRISM prediction
+        for (int i = 0; i < PRISMExtrap->GetNbinsX(); i++) {
+          AvVx.push_back(PRISMExtrap->GetXaxis()->GetBinCenter(i+1));
+        }
+
+        std::vector<std::vector<double>> toGetErr;
+        SystShifts shift_throw = shift;
+
+        for (int i = 1; i <= PRISMExtrap->GetNbinsX(); i++) {
+          std::vector<double> throws;
+          std::cout << "Doing syst throws for bin " << i << std::endl;
+          for (int j = 0; j < 1000; j++) {
+      
+            for (auto const &syst : shift_throw.ActiveSysts()) {
+              //std::cout << "min = " << syst->Min() << std::endl;
+              shift_throw.SetShift(syst,
+                GetBoundedGausThrow(syst->Min() * 0.8, syst->Max() * 0.8));
             }
 
-            auto *PRISMComp_h = comp.second.ToTHX(POT_FD);
-            PRISMComp_h->Scale(1, "width");
-            if (PRISMComp_h->Integral() != 0) {
-              chan_dir->WriteTObject(
-                  PRISMComp_h,
-                  PredictionPRISM::GetComponentString(comp.first).c_str());
-            }
+            auto PRISM_ShiftedComps = state.PRISM->
+              PredictPRISMComponents(calc, shift_throw, ch.second);
+            auto PRISM_NomComps = state.PRISM->
+              PredictPRISMComponents(calc, kNoShift, ch.second);
+  
+            TH1D *PRISM_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                                    .ToTH1(POT_FD);
+            TH1D *PRISM_Nom_h = PRISM_NomComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                                    .ToTH1(POT_FD);
+            TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred) 
+                                    .ToTH1(POT_FD);
+
+            double fracDiff = (PRISM_Shift_h->GetBinContent(i) - PRISM_Nom_h->GetBinContent(i)) /
+                               PRISM_Nom_h->GetBinContent(i); // PRISM_Nom_h FDUnOsc_h
+            throws.push_back(fracDiff * 100);
+
+            HistCache::Delete(PRISM_Shift_h);
+            HistCache::Delete(PRISM_Nom_h);
+            HistCache::Delete(FDUnOsc_h);
+          }
+          toGetErr.push_back(throws);
+        } 
+
+        std::vector<double> zero_errX;
+        std::vector<std::vector<double>>::iterator row;
+        std::vector<double>::iterator col;
+        bool plot(true);   
+
+        row = toGetErr.begin();
+        int i(0);
+        for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+          double sumsq(0), sum(0);
+          int N(0);
+          i++;
+          TAxis h_axis = TAxis(50, -10, 10); // Changed to %
+          TH1D * hTest = HistCache::New("h_throw", &h_axis);
+          for (col = row->begin(); col != row->end(); col++) {
+            hTest->Fill(*col);
+            sum += *col;
+            N++;
           }
 
-          fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-          SmearMatrices.Write(chan_dir->mkdir("Unfold_Matrices"));
-          NDFDEffCorr.Write(chan_dir->mkdir("MCEfficiency"));     
+          std::string str = std::to_string(i);
+          //if (plot) hTest->Write((std::string("h_throw_") + str).c_str());
+          plot = false;
+          double average = sum / N;
+          AvVy.push_back(average);
 
-          dir->cd();
+          for (col = row->begin(); col != row->end(); col++) {
+            sumsq += std::pow((*col - average), 2);
+          }
+          double var = sumsq / N;
+          std::cout << "Var = " << var << std::endl;
+          err68pc.push_back(std::pow(var, 0.5));
+          zero_errX.push_back(0);
+
+          HistCache::Delete(hTest);
         }
-      }
 
+        std::unique_ptr<TGraphErrors> g_ShiftVar = std::make_unique<TGraphErrors>(
+          AvVx.size(), &AvVx[0], &AvVy[0], &zero_errX[0], &err68pc[0]);
+
+        chan_dir->WriteTObject(g_ShiftVar.release(), "g_ShiftVar");
+      }
     } else {
       auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
                               ->PredictSyst(calc, shift).ToTHX(POT_FD);

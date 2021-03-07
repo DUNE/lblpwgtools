@@ -141,6 +141,7 @@ bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
 bool UseSel = false;
+bool isReco = false;
 std::string anaweighters = "";
 std::string FakeDataShiftDescript = "";
 
@@ -202,6 +203,7 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-A") ||
                (std::string(argv[opt]) == "--axes")) {
       axdescriptor = argv[++opt];
+      isReco = isRecoND(axdescriptor);
     } else if ((std::string(argv[opt]) == "-o") ||
                (std::string(argv[opt]) == "--output")) {
       output_file_name = argv[++opt];
@@ -413,19 +415,6 @@ int main(int argc, char const *argv[]) {
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
-  /*auto specrunweight =
-        ana::Var([&](const caf::StandardRecord *sr) -> double {
-          if (sr->det_x > 0) {
-            return 1;
-          }
-          // All on axis events should be doubled about the x=0 symmetry axis.
-          return 2;
-        });
-  WeightVars[kND_293kA_nu] = WeightVars[kND_293kA_nu] * specrunweight;
-  WeightVars[kND_280kA_nu] = WeightVars[kND_280kA_nu] * specrunweight;
-  AnaWeightVars[kND_293kA_nu] = AnaWeightVars[kND_293kA_nu] * specrunweight;
-  AnaWeightVars[kND_280kA_nu] = AnaWeightVars[kND_280kA_nu] * specrunweight;*/
-
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
@@ -555,14 +544,14 @@ int main(int argc, char const *argv[]) {
   // Convert FD ETrue to FD Rec spectrum
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
-  // Finer binning for true variable
+  // Finer binning for true variable                   //binningdescriptor
   HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); // uniform_smallrange
   bool twoDaxis(false);
   if (TrueObsAxis.GetVars().size() == 2) twoDaxis = true; // using 2D analysis axis
 
-  std::vector<std::string> Labels_matrixRT; //= TrueObsAxis.GetLabels(); //MatchAxis
-  std::vector<Binning> Bins_matrixRT; //= TrueObsAxis.GetBinnings(); // axes.XProjection
-  std::vector<Var> Vars_matrixRT; //= TrueObsAxis.GetVars(); // MatchAxis
+  std::vector<std::string> Labels_matrixRT; 
+  std::vector<Binning> Bins_matrixRT; 
+  std::vector<Var> Vars_matrixRT; 
 
   std::string TrueLabel; 
   Var TrueVar = TrueObsAxis.GetVars().at(0);
@@ -587,9 +576,6 @@ int main(int argc, char const *argv[]) {
   Bins_matrixRT.push_back(TrueBins);
   Vars_matrixRT.push_back(TrueVar);
 
-  HistAxis const TrueMatrixAxis(Labels_matrixRT, // TrueObsAxis.GetLabels()
-                                Bins_matrixRT,
-                                Vars_matrixRT);
   // EProxyRec axis
   std::string RecoLabel;
   Var RecoVar = axes.XProjection.GetVars().at(0);
@@ -612,24 +598,15 @@ int main(int argc, char const *argv[]) {
   Bins_matrixRT.push_back(RecoBins);
   Vars_matrixRT.push_back(RecoVar);
 
-  //for (size_t bin = 0; bin < axes.XProjection.GetLabels().size(); bin++) {
-  //Labels_matrixRT.push_back(axes.XProjection.GetLabels().at(bin)); 
-  //Bins_matrixRT.push_back(axes.XProjection.GetBinnings().at(bin));
-  //Vars_matrixRT.push_back(axes.XProjection.GetVars().at(bin));
-  //}
-  HistAxis const RecoMatrixAxis(Labels_matrixRT.back(), // test for 1d construction of mat
-                                Bins_matrixRT.back(),
-                                Vars_matrixRT.back());
   // Hist axis for matrix
-  std::cout << "creating ERecETrueAxis" << std::endl;
-  HistAxis const ERecETrueAxis(Labels_matrixRT, Bins_matrixRT, Vars_matrixRT); 
-  std::cout << "created ERecETrueAxis" << std::endl;
+  // if 2D prediction this contains a 2DVar on each axis
+  HistAxis const ERecETrueAxis(Labels_matrixRT, Bins_matrixRT, Vars_matrixRT);
+ 
   //----------------------------------------------------------------
-  // Slightly different HistAxis needed for MC efficiency correction
-  // True energy as variable but observed variable binning
-  std::vector<std::string> Labels_eff = TrueObsAxis.GetLabels(); //MatchAxis
-  std::vector<Binning> Bins_eff = TrueObsAxis.GetBinnings(); //axes.XProjection
-  std::vector<Var> Vars_eff = TrueObsAxis.GetVars(); // MatchAxis for true E
+  // HistAxis needed for MC efficiency correction
+  std::vector<std::string> Labels_eff = TrueObsAxis.GetLabels(); 
+  std::vector<Binning> Bins_eff = TrueObsAxis.GetBinnings(); 
+  std::vector<Var> Vars_eff = TrueObsAxis.GetVars(); 
   
   Labels_eff.push_back(axes.OffAxisPosition.GetLabels().front());
   Bins_eff.push_back(axes.OffAxisPosition.GetBinnings().front());
@@ -637,9 +614,9 @@ int main(int argc, char const *argv[]) {
 
   HistAxis const NDTrueEnergyObsBins(Labels_eff, Bins_eff, Vars_eff);
 
-  HistAxis const FDTrueEnergyObsBins(TrueObsAxis.GetLabels(), //MatchAxis
-                                     TrueObsAxis.GetBinnings(), //axes.XProjection
-                                     TrueObsAxis.GetVars()); // MatchAxis
+  HistAxis const FDTrueEnergyObsBins(TrueObsAxis.GetLabels(), 
+                                     TrueObsAxis.GetBinnings(), 
+                                     TrueObsAxis.GetVars()); 
   //----------------------------------------------------------------
 
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;
@@ -654,29 +631,13 @@ int main(int argc, char const *argv[]) {
   //---------------------------------------------------
   // For Smearing Matrix
   std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
-  std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixTruePredGens;
-  std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixRecoPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixTruePredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixRecoPredInterps;
   std::vector<std::unique_ptr<IPredictionGenerator>> FDMatrixPredGens;
-  std::vector<std::unique_ptr<IPredictionGenerator>> FDMatrixTruePredGens;
-  std::vector<std::unique_ptr<IPredictionGenerator>> FDMatrixRecoPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixTruePredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixRecoPredInterps;
   FillWithNulls(NDMatrixPredGens, kNPRISMConfigs);
-  FillWithNulls(NDMatrixTruePredGens, kNPRISMConfigs);
-  FillWithNulls(NDMatrixRecoPredGens, kNPRISMConfigs);
   FillWithNulls(NDMatrixPredInterps, kNPRISMConfigs);
-  FillWithNulls(NDMatrixTruePredInterps, kNPRISMConfigs); 
-  FillWithNulls(NDMatrixRecoPredInterps, kNPRISMConfigs); 
   FillWithNulls(FDMatrixPredGens, kNPRISMFDConfigs);
-  FillWithNulls(FDMatrixTruePredGens, kNPRISMFDConfigs);
-  FillWithNulls(FDMatrixRecoPredGens, kNPRISMFDConfigs);
   FillWithNulls(FDMatrixPredInterps, kNPRISMFDConfigs);
-  FillWithNulls(FDMatrixTruePredInterps, kNPRISMFDConfigs); 
-  FillWithNulls(FDMatrixRecoPredInterps, kNPRISMFDConfigs); 
   // True ND and FD spectra for MC efficiency correction
   std::vector<std::unique_ptr<IPredictionGenerator>> NDUnselTruePredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
@@ -764,34 +725,23 @@ int main(int argc, char const *argv[]) {
       // Relationship between ERec and ETrue should be the same 
       // for 280kA and 293kA, right?
       if (!IsND280kA) {
-        std::cout << "making matrix pred gens" << std::endl;
-        NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-            ERecETrueAxis,  
-            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-            WeightVars[it]); 
-        std::cout << "making matrix pred interps" << std::endl;
+        if (isReco && UseSel) {
+          NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+              ERecETrueAxis,  
+              kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun) &&
+              kIsReco, // Remove events not reconstructed when using param reco
+              WeightVars[it]);
+        } else { // Not using reco variable so don't need reco cut.
+          NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+              ERecETrueAxis,
+              kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+              WeightVars[it]);
+        }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
-            los_det, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
+            los, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
             ); //PredictionInterp::kSplitBySign
-        std::cout << "done matrix pred" << std::endl;
-        // TEST construction of smearing matrix from 1D components
-        NDMatrixTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-            TrueMatrixAxis,
-            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-            WeightVars[it]);
-        NDMatrixTruePredInterps[it] = std::make_unique<PredictionInterp>(
-            los_det, &no_osc, *NDMatrixTruePredGens[it], Loaders_bm, kNoShift
-            );
-        NDMatrixRecoPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-            RecoMatrixAxis,
-            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
-            WeightVars[it]);
-        NDMatrixRecoPredInterps[it] = std::make_unique<PredictionInterp>(
-            los_det, &no_osc, *NDMatrixRecoPredGens[it], Loaders_bm, kNoShift
-            );
 
         // Add another ND unselected spectrum for MC eff correction
         // Use the same axis as the ND DATA
@@ -799,7 +749,8 @@ int main(int argc, char const *argv[]) {
         NDUnselTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
             NDTrueEnergyObsBins,
             kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), //&&
+            //kIsReco, // Remove events not reconstructed
             WeightVars[it] * slice_width_weight);
         NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
             los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift);
@@ -840,14 +791,14 @@ int main(int argc, char const *argv[]) {
         FarDetData_nonswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[non_swap_it], axes.XProjection, AnalysisCuts[it],
             (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
-            AnaWeightVars[it]); //**DataShift**
+            AnaWeightVars[it]); 
       }
 
       if (FileLoaders[nue_swap_it]) {
         FarDetData_nueswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[nue_swap_it], axes.XProjection, AnalysisCuts[it],
             (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
-            AnaWeightVars[it]); //**DataShift**
+            AnaWeightVars[it]); 
       }
 
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
@@ -862,6 +813,15 @@ int main(int argc, char const *argv[]) {
           los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
 
+      // Matrix of ERec v ETrue for FD
+      FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
+          ERecETrueAxis, 
+          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
+          AnaWeightVars[it]);
+      FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
+          ); //PredictionInterp::kSplitBySign 
+
       // True energy FD spectrum with obs binning for MC efficiency correction
       FDUnselTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           FDTrueEnergyObsBins, 
@@ -875,32 +835,6 @@ int main(int argc, char const *argv[]) {
       FDSelTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *FDSelTruePredGens[fd_it], Loaders_bm, kNoShift);
 
-      // Matrix of ERec v ETrue for FD
-      std::cout << "making matrix pred gens" << std::endl; // WAS NoExtrapPredictionGenerator
-      FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
-          ERecETrueAxis, // NoOscPredictionGenerator
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV, // Use to have Cuts!! Why??
-          AnaWeightVars[it]);
-      std::cout << "making matrix pred interps" << std::endl;
-      FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los_det, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign 
-      std::cout << "done matrix pred" << std::endl;
-      // TEST construction of smearing matrix from 1D components
-      FDMatrixTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
-          TrueMatrixAxis,
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
-          AnaWeightVars[it]);
-      FDMatrixTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los_det, &no_osc, *FDMatrixTruePredGens[fd_it], Loaders_bm, kNoShift
-          );
-      FDMatrixRecoPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
-          RecoMatrixAxis,
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
-          AnaWeightVars[it]);
-      FDMatrixRecoPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los_det, &no_osc, *FDMatrixRecoPredGens[fd_it], Loaders_bm, kNoShift
-          );
     }
   }
 
@@ -1008,14 +942,6 @@ int main(int argc, char const *argv[]) {
                    (IsNu ? "_nu" : "_nub"),
                NDMatrixPredInterps[it]);
         SaveTo(fout,
-               std::string("NDMatrixTrueInterp") +
-                   (IsNu ? "_nu" : "_nub"),
-               NDMatrixTruePredInterps[it]);
-        SaveTo(fout,
-               std::string("NDMatrixRecoInterp") +
-                   (IsNu ? "_nu" : "_nub"),
-               NDMatrixRecoPredInterps[it]);
-        SaveTo(fout,
                std::string("NDUnSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
                NDUnselTruePredInterps[it]);
         SaveTo(fout,
@@ -1044,16 +970,6 @@ int main(int argc, char const *argv[]) {
              std::string("FDMatrixInterp_ERecETrue") +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_it]);
-
-      SaveTo(fout,
-             std::string("FDMatrixTrueInterp") +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-             FDMatrixTruePredInterps[fd_it]);
-
-      SaveTo(fout,
-             std::string("FDMatrixRecoInterp") +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-             FDMatrixRecoPredInterps[fd_it]);    
 
       SaveTo(fout,
              std::string("FDUnSelected_ETrue") + 
