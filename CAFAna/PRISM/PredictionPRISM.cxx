@@ -415,6 +415,10 @@ bool PredictionPRISM::HaveFDPrediction(PRISM::BeamChan FDChannel) const {
   return bool(GetFDPrediction(FDChannel));
 }
 
+//bool PredictionPRISM::HaveNDTargetPrediction(PRISM::BeamChan NDChannel) const {
+//  return bool(GetNDPrediction(NDChannel));
+//}   //eran
+
 std::unique_ptr<PredictionInterp> &
 PredictionPRISM::GetFDUnOscWeightedSigPrediction_right_sign_numu(
     BeamMode FDBM) const {
@@ -909,7 +913,7 @@ PredictionPRISM::PredictPRISMComponents_forNDtarget(osc::IOscCalculator *calc,//
 
   bool WeHaveNDData = HaveNDData(match_chan.from);
   bool WeHaveNDPrediction = HaveNDPrediction(match_chan.from);
-  bool WeHaveNDTargetPrediction = HaveNDTargetPrediction(match_chan.to);//eran
+  bool WeHaveNDTargetPrediction = HaveNDPrediction(match_chan.to);//eran
   //bool WeHaveFDUnOscWeightedSigPrediction =
      // HaveFDUnOscWeightedSigPrediction(match_chan.to);
 
@@ -936,7 +940,7 @@ PredictionPRISM::PredictPRISMComponents_forNDtarget(osc::IOscCalculator *calc,//
   auto &NDData_280kA = GetNDData(match_chan.from, 280);
   auto &NDPrediction_280kA = GetNDPrediction(match_chan.from, 280);
 
-  auto &NDTargetPrediction = GetNDTargetPrediction(match_chan.to);
+  auto &NDTargetPrediction = GetNDPrediction(match_chan.to);
   //auto &FDPrediction = GetFDPrediction(match_chan.to);
   //auto &FDUnOscWeightedSigPrediction =
   //    GetFDUnOscWeightedSigPrediction(match_chan.to);
@@ -1110,10 +1114,10 @@ PredictionPRISM::PredictPRISMComponents_forNDtarget(osc::IOscCalculator *calc,//
 
   const TH1 *raw293LC = LinearCombination.first;
   gFile->WriteObject(raw293LC, "rawLC_293kA");
-
+  std::cout<<"before (NDRunPlan.Unweight(LinearCombination.first, 293));"<<std::endl; //eran
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
       std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
-
+  std::cout<<"after (NDRunPlan.Unweight(LinearCombination.first, 293));"<<std::endl; //eran
   gFile->WriteObject(UnRunPlannedLinearCombination_293kA.get(), "unweightedLC_293kA");
 
   std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
@@ -1372,7 +1376,7 @@ PredictionPRISM::PredictGaussianFlux_forNDtarget(double mean, double width,
 
   // // Using maps for non-default constructible classes is awful...
   // std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
-  std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
+  std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps; //wasn't commented?
   // NDComps.emplace(kNDData, *NDData);
   // NDComps.emplace(kNDDataCorr2D, NDComps.at(kNDData));
 

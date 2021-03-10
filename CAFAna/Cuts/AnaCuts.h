@@ -39,5 +39,24 @@ namespace ana
 			    sr->Ehad_veto<30);
                   });
 
+  const Cut kPassND_FHC_NUE(
+                  [](const caf::StandardRecord* sr)
+                  {
+                    return (
+                            sr->reco_nue &&
+                            //(sr->muon_contained || sr->muon_tracker) &&
+                            //sr->reco_q == -1 &&
+                            sr->Ehad_veto<30);
+                      });
+
+    const Cut kPassND_RHC_NUE(
+                  [](const caf::StandardRecord* sr)
+                  {
+                    return (
+                            sr->reco_nue &&
+                            //(sr->muon_contained || sr->muon_tracker) &&
+                            //sr->reco_q == +1 &&
+                            sr->Ehad_veto<30);
+                  });
 
 }

@@ -385,10 +385,10 @@ protected:
 
   bool HaveFDPrediction(PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
 
-  std::unique_ptr<PredictionInterp> &
-  GetNDTargetPrediction(PRISM:: BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran adding
+  //std::unique_ptr<PredictionInterp> &
+  //GetNDTargetPrediction(PRISM:: BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran adding
 
-  bool HaveNDTargetPrediction(PRISM::BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran 
+  //bool HaveNDTargetPrediction(PRISM::BeamChan NDChannel = PRISM::kNue_I_Numode) const; //eran 
 
   std::unique_ptr<PredictionInterp> &
   GetFDUnOscWeightedSigPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;

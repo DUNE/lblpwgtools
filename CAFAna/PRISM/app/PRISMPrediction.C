@@ -121,8 +121,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     for (auto const &channel_conditioning :
          PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
 
-      auto ch =
+      auto ch_orig =
           GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+      std::cout<<"ch from code as it was "<<ch_orig<<std::endl;
+      auto ch = PRISM::kNDNumutoNDNue_Numode; //eran hard-coding match_chan selection
+      std::cout<<"match_chan after assign it to kNDNumutoNDNue_Numode "<<ch<<std::endl;
 
       double chan_reg_293 =
           channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
@@ -156,11 +159,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   if (pred.is_key_to_sequence("samples")) {
     for (auto const &fs :
          pred.get<std::vector<fhicl::ParameterSet>>("samples")) {
-      auto ch = GetMatchChan(fs);
+      //auto ch = GetMatchChan(fs);
+      auto ch = PRISM::kNDNumutoNDNue_Numode; //eran hard coding to avoid sample error 
       Channels[GetMatchChanShortName(ch)] = ch;
     }
   } else {
-    auto ch = GetMatchChan(pred.get<fhicl::ParameterSet>("samples"));
+    //auto ch = GetMatchChan(pred.get<fhicl::ParameterSet>("samples"));
+    auto ch = PRISM::kNDNumutoNDNue_Numode; // eran hard coding to avoid sample error
     Channels[GetMatchChanShortName(ch)] = ch;
   }
 

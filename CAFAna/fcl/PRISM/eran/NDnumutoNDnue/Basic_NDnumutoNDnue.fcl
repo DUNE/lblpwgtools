@@ -10,7 +10,7 @@
 
 BasicPred: {
 	state_file: /dune/data/users/erea/PRISMPredInterps/v7smallMC_NDnumutoNDnue.root
-	output_file: [/dune/data/users/erea/PRISMPredictions/v7smallMC_NDnumutoNDnue_basic.root, "UPDATE"]
+	output_file: [/dune/data/users/erea/PRISMPredictions/v7smallMC_NDnumutoNDnue_basicwithsel.root, "UPDATE"]
 	projection_name: EProxy
 
 	use_PRISM: true

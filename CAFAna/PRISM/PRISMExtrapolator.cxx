@@ -133,6 +133,7 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalculator *osc, PRISM::MatchChan match_chan, SystShifts shift,
     double &soln_norm, double &resid_norm) const {
+std::cout<<"match_chan is: "<<match_chan<<std::endl;
 
   static osc::NoOscillations no;
 
