@@ -159,15 +159,26 @@ const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
   return sr->perPOTWeight * sr->perFileWeight;
 });
 
-Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
+Cut GetNDSignalCut_basis(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
 
   return UseOnAxisSelection
-             ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV &&
+             ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV && //need ot be Nue eran
                 kIsOutOfTheDesert)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
                 kIsOutOfTheDesert &&
 		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
+
+Cut GetNDSignalCut_target(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
+
+  return UseOnAxisSelection
+             ? ((isNuMode ? kPassND_FHC_NUE : kPassND_RHC_NUE) && kIsTrueFV && //need ot be Nue eran
+                kIsOutOfTheDesert)
+             : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+                kIsOutOfTheDesert &&
+                (isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
+}
+
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
@@ -360,8 +371,8 @@ bool operator==(BeamChan const &l, BeamChan const &r) {
 }
 
 bool operator<(BeamChan const &l, BeamChan const &r) {
-  if (l.mode == r.mode) {
-    return l.chan < r.chan;
+  if (l.mode == r.mode ) {
+  return l.chan < r.chan;
   }
   return l.mode < r.mode;
 }

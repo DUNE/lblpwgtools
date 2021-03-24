@@ -361,7 +361,7 @@ protected:
   std::unique_ptr<ReweightableSpectrum> &
   GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
             int kA = 293) const;
-  bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
+  bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode, //need to change here or in next section? ,
                   int kA = 293) const;
 
   std::unique_ptr<PredictionInterp> &

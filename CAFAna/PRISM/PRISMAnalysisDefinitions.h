@@ -449,7 +449,8 @@ extern const ana::Cut kCut280kARun;
 extern const ana::Cut kSel280kARun;
 extern const ana::Var kSpecHCRunWeight;
 
-ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true, bool isNuMu = true);
+ana::Cut GetNDSignalCut_basis(bool UseOnAxisSelection = true, bool isNuMode = true, bool isNuMu = true); //eran saying use sel is true
+ana::Cut GetNDSignalCut_target(bool UseOnAxisSelection = true, bool isNuMode = true, bool isNuMu = false);
 ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
                         bool isNuMu = true);
 

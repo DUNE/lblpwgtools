@@ -31,11 +31,11 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
 
   PRISMAxisBlob axes = GetPRISMAxes(varname, "testopt", "default");
 
-  Cut NDSignalCut = GetNDSignalCut(false);
-  Cut NDSignalCut_sel = GetNDSignalCut(true);
-  Cut NDSignalCut_sel_signal = GetNDSignalCut(true) && kIsNumuCC;
-  Cut NDSignalCut_sel_WSB = GetNDSignalCut(true) && kIsAntiNu && !kIsNC;
-  Cut NDSignalCut_sel_NC = GetNDSignalCut(true) && kIsNC;
+  Cut NDSignalCut = GetNDSignalCut_basis(false); //eran	
+  Cut NDSignalCut_sel = GetNDSignalCut_basis(true);
+  Cut NDSignalCut_sel_signal = GetNDSignalCut_basis(true) && kIsNumuCC;
+  Cut NDSignalCut_sel_WSB = GetNDSignalCut_basis(true) && kIsAntiNu && !kIsNC;
+  Cut NDSignalCut_sel_NC = GetNDSignalCut_basis(true) && kIsNC;
 
   Cut NDSignalCut_SpecRun = NDSignalCut && kSel280kARun;
   Cut NDSignalCut_SpecRun_sel = NDSignalCut_sel && kSel280kARun;

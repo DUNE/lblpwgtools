@@ -136,7 +136,7 @@ std::vector<std::string> FD_nueswap_input_nubmode;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
-bool UseSel = false;
+bool UseSel = true;//eran changed to true
 std::string anaweighters = "";
 std::string FakeDataShiftDescript = "";
 
@@ -385,42 +385,64 @@ int main(int argc, char const *argv[]) {
 
   // Generally these will be just selecting signal and are the ones used in the
   // PRISM interp
-  std::vector<Cut> AnalysisCuts(
+  std::vector<Cut> AnalysisCuts_basis(//AnalysisCuts_basis are numu use GetNdSignalCut_basis
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut(UseSel, true, true);//should be true, changing to false now to test if can get anything diff in state file! eran
-  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut(UseSel, true, true);
-  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut(UseSel, false, true);
-  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut(UseSel, false, true);
-  AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
-  AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
-  AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
-  AnalysisCuts[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
+  AnalysisCuts_basis[kND_293kA_nu] = GetNDSignalCut_basis(UseSel, true, true);//eran
+  AnalysisCuts_basis[kND_280kA_nu] = GetNDSignalCut_basis(UseSel, true, true);
+  AnalysisCuts_basis[kND_293kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
+  AnalysisCuts_basis[kND_280kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
+  AnalysisCuts_basis[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
+  AnalysisCuts_basis[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
+  AnalysisCuts_basis[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
+  AnalysisCuts_basis[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
 
-  std::vector<Cut> AnalysisCuts_target(
+  std::vector<Cut> AnalysisCuts_target(  //AnalysisCuts_target are nue use GetNDSignalCut_target
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts_target[kND_293kA_nu] = GetNDSignalCut(UseSel, true, false);//should be true, changing to false now to test if can get anything diff in state file! eran
-  AnalysisCuts_target[kND_280kA_nu] = GetNDSignalCut(UseSel, true, false);
-  AnalysisCuts_target[kND_293kA_nub] = GetNDSignalCut(UseSel, false, false);
-  AnalysisCuts_target[kND_280kA_nub] = GetNDSignalCut(UseSel, false, false);
+  AnalysisCuts_target[kND_293kA_nu] = GetNDSignalCut_target(UseSel, true, false);//eran changed, added third "IsNuMu" boolean. False here
+  AnalysisCuts_target[kND_280kA_nu] = GetNDSignalCut_target(UseSel, true, false);
+  AnalysisCuts_target[kND_293kA_nub] = GetNDSignalCut_target(UseSel, false, false);
+  AnalysisCuts_target[kND_280kA_nub] = GetNDSignalCut_target(UseSel, false, false);
   AnalysisCuts_target[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
   AnalysisCuts_target[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
   AnalysisCuts_target[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
   AnalysisCuts_target[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
 
+std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_basis //eran -- needed just AnalysisCuts for FD, picked ND basis?
+      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
+  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut_basis(UseSel, true, true);//eran
+  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut_basis(UseSel, true, true);
+  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
+  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
+  AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
+  AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
+  AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
+  AnalysisCuts[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
+ 
 
 
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
-  std::vector<Cut> OnAxisSelectionCuts(
+  std::vector<Cut> OnAxisSelectionCuts_basis(
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  OnAxisSelectionCuts[kND_293kA_nu] = GetNDSignalCut(true, true, false);//same, should be true, false now just to test! eran
-  OnAxisSelectionCuts[kND_280kA_nu] = GetNDSignalCut(true, true, false);
-  OnAxisSelectionCuts[kND_293kA_nub] = GetNDSignalCut(true, false, false);
-  OnAxisSelectionCuts[kND_280kA_nub] = GetNDSignalCut(true, false, false);
-  OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
-  OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
-  OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
-  OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
+  OnAxisSelectionCuts_basis[kND_293kA_nu] = GetNDSignalCut_basis(true, true, true);//for basis IsNuMu is true
+  OnAxisSelectionCuts_basis[kND_280kA_nu] = GetNDSignalCut_basis(true, true, true);
+  OnAxisSelectionCuts_basis[kND_293kA_nub] = GetNDSignalCut_basis(true, false, true);
+  OnAxisSelectionCuts_basis[kND_280kA_nub] = GetNDSignalCut_basis(true, false, true);
+  OnAxisSelectionCuts_basis[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
+  OnAxisSelectionCuts_basis[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
+  OnAxisSelectionCuts_basis[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
+  OnAxisSelectionCuts_basis[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
+
+  std::vector<Cut> OnAxisSelectionCuts_target(
+      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
+  OnAxisSelectionCuts_target[kND_293kA_nu] = GetNDSignalCut_target(true, true, false);//for ND Nue target  IsNuMu is false
+  OnAxisSelectionCuts_target[kND_280kA_nu] = GetNDSignalCut_target(true, true, false);
+  OnAxisSelectionCuts_target[kND_293kA_nub] = GetNDSignalCut_target(true, false, false);
+  OnAxisSelectionCuts_target[kND_280kA_nub] = GetNDSignalCut_target(true, false, false);
+  OnAxisSelectionCuts_target[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
+  OnAxisSelectionCuts_target[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
+  OnAxisSelectionCuts_target[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
+  OnAxisSelectionCuts_target[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
   auto specrunweight =
         ana::Var([&](const caf::StandardRecord *sr) -> double {
@@ -483,7 +505,7 @@ int main(int argc, char const *argv[]) {
 
      // PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
              //                AnaWeightVars[it], DataShift, kNumu_Numode);//
-	PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it], AnaWeightVars[it], DataShift, kNumu_Numode);	
+	PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts_basis[it], AnaWeightVars[it], DataShift, kNumu_Numode);	
 //	PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
   //                           AnaWeightVars[it], DataShift, kNue_I_Numode);
         PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts_target[it], AnaWeightVars[it], DataShift, kNue_I_Numode);
@@ -551,10 +573,17 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(MatchPredGens, kNPRISMConfigs);
   FillWithNulls(MatchPredInterps, kNPRISMConfigs);
 
-  std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
-  FillWithNulls(SelPredGens, kNPRISMConfigs);
-  FillWithNulls(SelPredInterps, kNPRISMConfigs);
+  std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens_basis;
+  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_basis;
+  FillWithNulls(SelPredGens_basis, kNPRISMConfigs);
+  FillWithNulls(SelPredInterps_basis, kNPRISMConfigs);
+ std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens_target;
+  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_target;
+  FillWithNulls(SelPredGens_target, kNPRISMConfigs);
+  FillWithNulls(SelPredInterps_target, kNPRISMConfigs);
+
+  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;//for FD, don't use for ND nue target eran
+ FillWithNulls(SelPredInterps, kNPRISMConfigs);
   // For Smearing Matrix
   std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
@@ -602,7 +631,7 @@ int main(int argc, char const *argv[]) {
       if (!IsND280kA) {
         //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
           //                   los, kNumu_Numode);
-        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los, kNumu_Numode);
+        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts_basis[it], AnaWeightVars[it], los, kNumu_Numode);
         //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
           //                   los, kNue_I_Numode);
 	PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts_target[it], AnaWeightVars[it], los, kNue_I_Numode);
@@ -625,14 +654,22 @@ int main(int argc, char const *argv[]) {
           los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign seems to fail when I include this?
 
-      SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+      SelPredGens_basis[it] = std::make_unique<NoOscPredictionGenerator>(
           NDObservedSpectraAxis,
-          OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
+          OnAxisSelectionCuts_basis[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * slice_width_weight); 
-      SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
+      SelPredInterps_basis[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign
-    
+
+      SelPredGens_target[it] = std::make_unique<NoOscPredictionGenerator>(
+          NDObservedSpectraAxis,
+          OnAxisSelectionCuts_target[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
+          AnaWeightVars[it] * slice_width_weight);
+      SelPredInterps_target[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
+          ); //PredictionInterp::kSplitBySign   
+
       // PredInterps for ND smearing matrix
       // Only need to do this for 293 kA
       // Relationship between ERec and ETrue should be the same 
@@ -690,10 +727,16 @@ int main(int argc, char const *argv[]) {
           los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
 
-      SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
-          axes.XProjection, OnAxisSelectionCuts[it], AnaWeightVars[it]);
-      SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
+      SelPredGens_basis[it] = std::make_unique<NoExtrapPredictionGenerator>(
+          axes.XProjection, OnAxisSelectionCuts_basis[it], AnaWeightVars[it]);
+      SelPredInterps_basis[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
+          ); // PredictionInterp::kSplitBySign
+
+      SelPredGens_target[it] = std::make_unique<NoExtrapPredictionGenerator>(
+          axes.XProjection, OnAxisSelectionCuts_target[it], AnaWeightVars[it]);
+      SelPredInterps_target[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens_target[it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
 
       // Matrix of ERec v ETrue for FD
@@ -788,7 +831,8 @@ int main(int argc, char const *argv[]) {
 
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      SelPredInterps_basis[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      SelPredInterps_target[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       if (!IsND280kA) NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
@@ -797,7 +841,7 @@ int main(int argc, char const *argv[]) {
       SaveTo(fout,
              std::string("NDSelectedInterp_") + axdescriptor +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
-             SelPredInterps[it]);
+             SelPredInterps_basis[it]); //eran ask Ciaran
       if (!IsND280kA) {
         SaveTo(fout,
                std::string("NDMatrixInterp_ERecETrue") +
