@@ -363,9 +363,9 @@ int main(int argc, char const *argv[]) {
   }
 
   TFile fout(output_file_name.c_str(), "RECREATE");
-
+  // I think we want to use fine binning for data for unfolding procedure
   PRISMAxisBlob axes =
-      GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor);
+      GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor); //*binningdescriptor*
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
@@ -604,15 +604,25 @@ int main(int argc, char const *argv[]) {
  
   //----------------------------------------------------------------
   // HistAxis needed for MC efficiency correction
-  std::vector<std::string> Labels_eff = TrueObsAxis.GetLabels(); 
-  std::vector<Binning> Bins_eff = TrueObsAxis.GetBinnings(); 
-  std::vector<Var> Vars_eff = TrueObsAxis.GetVars(); 
+  std::vector<std::string> Labels_eff_293kA = TrueObsAxis.GetLabels(); 
+  std::vector<Binning> Bins_eff_293kA = TrueObsAxis.GetBinnings(); 
+  std::vector<Var> Vars_eff_293kA = TrueObsAxis.GetVars(); 
   
-  Labels_eff.push_back(axes.OffAxisPosition.GetLabels().front());
-  Bins_eff.push_back(axes.OffAxisPosition.GetBinnings().front());
-  Vars_eff.push_back(axes.OffAxisPosition.GetVars().front());
+  Labels_eff_293kA.push_back(axes.OffAxisPosition.GetLabels().front());
+  Bins_eff_293kA.push_back(axes.OffAxisPosition.GetBinnings().front());
+  Vars_eff_293kA.push_back(axes.OffAxisPosition.GetVars().front());
 
-  HistAxis const NDTrueEnergyObsBins(Labels_eff, Bins_eff, Vars_eff);
+  HistAxis const NDTrueEnergyObsBins_293kA(Labels_eff_293kA, Bins_eff_293kA, Vars_eff_293kA);
+
+  std::vector<std::string> Labels_eff_280kA = TrueObsAxis.GetLabels();
+  std::vector<Binning> Bins_eff_280kA = TrueObsAxis.GetBinnings();
+  std::vector<Var> Vars_eff_280kA = TrueObsAxis.GetVars();
+
+  Labels_eff_280kA.push_back(axes.OffAxis280kAPosition.GetLabels().front());
+  Bins_eff_280kA.push_back(axes.OffAxis280kAPosition.GetBinnings().front());
+  Vars_eff_280kA.push_back(axes.OffAxis280kAPosition.GetVars().front());
+
+  HistAxis const NDTrueEnergyObsBins_280kA(Labels_eff_280kA, Bins_eff_280kA, Vars_eff_280kA);
 
   HistAxis const FDTrueEnergyObsBins(TrueObsAxis.GetLabels(), 
                                      TrueObsAxis.GetBinnings(), 
@@ -742,26 +752,26 @@ int main(int argc, char const *argv[]) {
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
             los, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
             ); //PredictionInterp::kSplitBySign
-
-        // Add another ND unselected spectrum for MC eff correction
-        // Use the same axis as the ND DATA
-        // don't need it for 280kA, just getting the efficiency
-        NDUnselTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-            NDTrueEnergyObsBins,
-            kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-            kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), //&&
-            //kIsReco, // Remove events not reconstructed
-            WeightVars[it] * slice_width_weight);
-        NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
-            los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift);
-        // ND True Selected Spectrum
-        NDSelTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-            NDTrueEnergyObsBins, AnalysisCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun), 
-            WeightVars[it] * slice_width_weight);
-        NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
-            los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift);
-            
       }
+      // Add another ND unselected spectrum for MC eff correction
+      // Use the same axis as the ND DATA
+      // don't need it for 280kA, just getting the efficiency
+      NDUnselTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+          (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
+          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), //&&
+          //kIsReco, // Remove events not reconstructed
+          WeightVars[it] * slice_width_weight);
+      NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift);
+      // ND True Selected Spectrum
+      NDSelTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+          (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA), 
+          AnalysisCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun), 
+          WeightVars[it] * slice_width_weight);
+      NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift);
+            
     } else { // Is FD
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
@@ -941,13 +951,15 @@ int main(int argc, char const *argv[]) {
                std::string("NDMatrixInterp_ERecETrue") +
                    (IsNu ? "_nu" : "_nub"),
                NDMatrixPredInterps[it]);
-        SaveTo(fout,
-               std::string("NDUnSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
-               NDUnselTruePredInterps[it]);
-        SaveTo(fout,
-               std::string("NDSelected_ETrue") + (IsNu ? "_nu" : "_nub"),
-               NDSelTruePredInterps[it]);
       }
+      SaveTo(fout,
+             std::string("NDUnSelected_ETrue") + 
+             (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
+             NDUnselTruePredInterps[it]);
+      SaveTo(fout,
+             std::string("NDSelected_ETrue") + 
+             (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
+             NDSelTruePredInterps[it]);
     } else { // Is FD
       if (!IsNue) {
         SaveTo(fout,

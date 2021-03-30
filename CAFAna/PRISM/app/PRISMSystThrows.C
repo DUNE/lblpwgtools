@@ -240,8 +240,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_enum].get(),
-                                state.NDSelTruePredInterps[NDConfig_enum].get(),
+    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
+                                state.NDSelTruePredInterps[kND_293kA_nu].get(),                                                       state.NDUnselTruePredInterps[kND_280kA_nu].get(),
+                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
@@ -305,86 +306,91 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         std::vector<double> AvVx, AvVy, err68pc;
         // x points on graph are bin centers of PRISM prediction
         for (int i = 0; i < PRISMExtrap->GetNbinsX(); i++) {
-          AvVx.push_back(PRISMExtrap->GetXaxis()->GetBinCenter(i+1));
+          AvVx.push_back(PRISMExtrap->GetXaxis()->GetBinCenter(i + 1));
         }
 
         std::vector<std::vector<double>> toGetErr;
         SystShifts shift_throw = shift;
-
-        for (int i = 1; i <= PRISMExtrap->GetNbinsX(); i++) {
+        int number_throws(5000);
+        int step_count(0);
+        std::cout << "Start syst throws. Doing " << number_throws << " throws." << std::endl;
+        for (int j = 1; j <= number_throws; j++) {
+            //step_count += (number_throws / 10);
+          //std::cout << j; 
           std::vector<double> throws;
-          std::cout << "Doing syst throws for bin " << i << std::endl;
-          for (int j = 0; j < 1000; j++) {
-      
-            for (auto const &syst : shift_throw.ActiveSysts()) {
-              //std::cout << "min = " << syst->Min() << std::endl;
-              shift_throw.SetShift(syst,
-                GetBoundedGausThrow(syst->Min() * 0.8, syst->Max() * 0.8));
-            }
-
-            auto PRISM_ShiftedComps = state.PRISM->
-              PredictPRISMComponents(calc, shift_throw, ch.second);
-            auto PRISM_NomComps = state.PRISM->
-              PredictPRISMComponents(calc, kNoShift, ch.second);
-  
-            TH1D *PRISM_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                                    .ToTH1(POT_FD);
-            TH1D *PRISM_Nom_h = PRISM_NomComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                                    .ToTH1(POT_FD);
-            TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred) 
-                                    .ToTH1(POT_FD);
-
-            double fracDiff = (PRISM_Shift_h->GetBinContent(i) - PRISM_Nom_h->GetBinContent(i)) /
-                               PRISM_Nom_h->GetBinContent(i); // PRISM_Nom_h FDUnOsc_h
-            throws.push_back(fracDiff * 100);
-
-            HistCache::Delete(PRISM_Shift_h);
-            HistCache::Delete(PRISM_Nom_h);
-            HistCache::Delete(FDUnOsc_h);
+          for (auto const &syst : shift_throw.ActiveSysts()) {
+            //std::cout << "min = " << syst->Min() << std::endl;
+            shift_throw.SetShift(syst,
+              GetBoundedGausThrow(syst->Min() * 0.8, syst->Max() * 0.8));
           }
-          toGetErr.push_back(throws);
-        } 
+
+          auto PRISM_ShiftedComps = state.PRISM->
+            PredictPRISMComponents(calc, shift_throw, ch.second);
+          auto PRISM_NomComps = state.PRISM->
+            PredictPRISMComponents(calc, kNoShift, ch.second);
+  
+          TH1D *PRISM_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                                  .ToTH1(POT_FD);
+          TH1D *PRISM_Nom_h = PRISM_NomComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                                  .ToTH1(POT_FD);
+          TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred) 
+                                  .ToTH1(POT_FD);
+
+          for (int ebin = 1; ebin <= PRISMExtrap->GetNbinsX(); ebin++) {
+            double fracDiff = (PRISM_Shift_h->GetBinContent(ebin) - 
+                               PRISM_Nom_h->GetBinContent(ebin)) /
+                               PRISM_Nom_h->GetBinContent(ebin); // PRISM_Nom_h FDUnOsc_h
+            throws.push_back(fracDiff * 100);
+          }
+          toGetErr.push_back(throws); 
+          /*if (j == 1) {
+            std::cout << "[="; 
+          } else if (j == number_throws) {
+            std::cout << "=]" << std::endl; 
+          } else {
+            std::cout << "=";
+          }*/
+          HistCache::Delete(PRISM_Shift_h);
+          HistCache::Delete(PRISM_Nom_h);
+          HistCache::Delete(FDUnOsc_h);
+        }
 
         std::vector<double> zero_errX;
         std::vector<std::vector<double>>::iterator row;
         std::vector<double>::iterator col;
         bool plot(true);   
 
-        row = toGetErr.begin();
-        int i(0);
-        for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+        std::cout << "Finished throws; now calculate std. dev." << std::endl;
+
+        for (int ebin = 0; ebin < PRISMExtrap->GetNbinsX(); ebin++) {
           double sumsq(0), sum(0);
           int N(0);
-          i++;
-          TAxis h_axis = TAxis(50, -10, 10); // Changed to %
-          TH1D * hTest = HistCache::New("h_throw", &h_axis);
-          for (col = row->begin(); col != row->end(); col++) {
-            hTest->Fill(*col);
-            sum += *col;
+          for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+          //TAxis h_axis = TAxis(50, -10, 10); // Changed to %
+          //TH1D * hTest = HistCache::New("h_throw", &h_axis);
+            sum += row->at(ebin);
             N++;
           }
-
-          std::string str = std::to_string(i);
+          //std::string str = std::to_string(i);
           //if (plot) hTest->Write((std::string("h_throw_") + str).c_str());
           plot = false;
           double average = sum / N;
           AvVy.push_back(average);
 
-          for (col = row->begin(); col != row->end(); col++) {
-            sumsq += std::pow((*col - average), 2);
+          for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+            sumsq += std::pow((row->at(ebin) - average), 2);
           }
           double var = sumsq / N;
-          std::cout << "Var = " << var << std::endl;
           err68pc.push_back(std::pow(var, 0.5));
           zero_errX.push_back(0);
 
-          HistCache::Delete(hTest);
+          //HistCache::Delete(hTest);
         }
-
         std::unique_ptr<TGraphErrors> g_ShiftVar = std::make_unique<TGraphErrors>(
           AvVx.size(), &AvVx[0], &AvVy[0], &zero_errX[0], &err68pc[0]);
 
         chan_dir->WriteTObject(g_ShiftVar.release(), "g_ShiftVar");
+      
       }
     } else {
       auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]

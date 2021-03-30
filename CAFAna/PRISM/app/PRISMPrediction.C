@@ -153,6 +153,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetNDRunPlan(run_plan_nub, BeamMode::kNuBarMode);
   }
 
+  if (PRISM_SetNDDataErrs) {
+    std::cout << "Set errors from run-plan event rate" << std::endl;
+  } else {
+    std::cout << "Set errors from MC" << std::endl;
+  }
   state.PRISM->SetNDDataErrorsFromRate(PRISM_SetNDDataErrs);
 
   std::map<std::string, MatchChan> Channels;
@@ -234,8 +239,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_enum].get(),
-                                state.NDSelTruePredInterps[NDConfig_enum].get(),
+    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
+                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
+                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
+                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
@@ -278,12 +285,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
+        auto *PRISMExtrap =
+              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+        PRISMExtrap->Scale(1, "width");
+        chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
+        PRISMExtrap->SetDirectory(nullptr);
 
         if (PRISM_write_debug) {
 
           for (auto const &comp : PRISMComponents) {
             // we always write this
             if (comp.first == PredictionPRISM::kPRISMPred) {
+              continue;
+            } else if (comp.first == PredictionPRISM::kNDDataCorr_FDExtrap) {
               continue;
             }
 

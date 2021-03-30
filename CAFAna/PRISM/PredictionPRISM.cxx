@@ -29,7 +29,7 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
                                  const HistAxis &ND280kAAxis,
                                  const HistAxis &NDFDEnergyMatchAxis) {
 
-  fSetNDErrorsFromRate = false;
+  fSetNDErrorsFromRate = true;
 
   fAnalysisAxis = AnalysisAxis;
   PRISMOUT("PRISM analysis axis: "
@@ -66,10 +66,10 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxis,
 
   fNDFD_Matrix = nullptr;
 
-  fNCCorrection = true;
-  fWSBCorrection = true;
-  fWLBCorrection = true;
-  fIntrinsicCorrection = true;
+  fNCCorrection = false;
+  fWSBCorrection = false;
+  fWLBCorrection = false;
+  fIntrinsicCorrection = false;
 
   std::vector<std::string> OffPrediction_Labels = fAnalysisAxis.GetLabels();
   std::vector<Binning> OffPrediction_Bins = fAnalysisAxis.GetBinnings();
@@ -577,9 +577,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   NDComps.emplace(kNDData_unweighted_293kA, *NDData);
 
-  TH2 *dataUnW = NDData.get()->ToTH2(NDPOT);
-  dataUnW->SetDirectory(nullptr);
-  //gFile->WriteTObject(dataUnW, "data_unweighted");
+  //TH2 *dataUnW = NDData.get()->ToTH2(NDPOT);
+  //dataUnW->SetDirectory(nullptr);
+  if (fSetNDErrorsFromRate) std::cout << "Set err from rate!!!!!!" << std::endl;
 
   NDComps.emplace(kNDData_293kA,
                   NDRunPlan.Weight(*NDData, 293, fSetNDErrorsFromRate));
@@ -591,10 +591,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA)); 
   // Start building MC components
   
-  TH2 *mcUnW = ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
-                     calc, shift, NDSigFlavor, Current::kCC, NDSigSign), 
-                     NDPOT, fAnalysisAxis).ToTH2(NDPOT);
-  mcUnW->SetDirectory(nullptr);
+  //TH2 *mcUnW = ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
+  //                   calc, shift, NDSigFlavor, Current::kCC, NDSigSign), 
+  //                   NDPOT, fAnalysisAxis).ToTH2(NDPOT);
+  //mcUnW->SetDirectory(nullptr);
 
   ReweightableSpectrum NDSig = NDRunPlan.Weight(
       ToReweightableSpectrum(NDPrediction->PredictComponentSyst(
@@ -749,7 +749,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
   }
 
-  //std::cout << "WEIGHTING: kNDDataCorr_293kA" << std::endl;
   Comps.emplace(
       kNDDataCorr_293kA,
       NDComps.at(kNDDataCorr2D_293kA)
@@ -842,30 +841,60 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
 
-  //-----------------------------
-  // Get Efficiency from MC and fold into 
-  // detector extrapolation from ND to FD
-  // Set shift to kNoShift as we don't want systs affecting the MC efficiency correction
-  // at the moment
+  //-------------------------------------------------------------
+  // Procedure for near to far extrapolation of PRISM prediction:
+  // ------------------------------------------------------------
+  
+  // 1. Calculate efficiency of selection.
   fMCEffCorrection->CalcEfficiency(calc, fAnalysisAxis, shift, NDSigFlavor, FDSigFlavor, 
                                    Current::kCC, NDSigSign, FDSigSign);
   // Do ND to FD detector extrapolation here
-  // Normalise the ERec v ETrue ND and FD matrices
-  fNDFD_Matrix->NormaliseETrue(calc, shift, NDSigFlavor, FDSigFlavor, //kNoShift
-                               Current::kCC, NDSigSign, FDSigSign,
-                               fMCEffCorrection->GetNDefficiency(),
-                               fMCEffCorrection->GetFDefficiency());
   // Extrapolate just the LC ND, not the MC
-  fNDFD_Matrix->ExtrapolateNDtoFD(Comps.at(kNDLinearComb));
-  Spectrum PRISMExtrapSpec = Spectrum(fNDFD_Matrix->GetPRISMExtrap(), 
-                                      Comps.at(kPRISMPred).GetLabels(),
-                                      Comps.at(kPRISMPred).GetBinnings(), 
-                                      1, 0); // NDPOT
-  // Keep PRISM extrap prediction wihtout corrections
-  Comps.emplace(kNDData_FDExtrap, PRISMExtrapSpec);
-  // For adding in MC corrections
-  Comps.emplace(kNDDataCorr_FDExtrap, PRISMExtrapSpec);
-  //-----------------------------
+  // 2. Extrapolate 293kA sample.
+  fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDDataCorr2D_293kA), fAnalysisAxis, 293,
+                                  calc, shift, NDSigFlavor, FDSigFlavor, Current::kCC,
+                                  NDSigSign, FDSigSign, 
+                                  fMCEffCorrection->GetNDefficiency(293),
+                                  fMCEffCorrection->GetFDefficiency());
+  // 3. Extrapolate 280kA sample.
+  fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDDataCorr2D_280kA), fAnalysisAxis, 280,
+                                  calc, shift, NDSigFlavor, FDSigFlavor, Current::kCC,
+                                  NDSigSign, FDSigSign, 
+                                  fMCEffCorrection->GetNDefficiency(280),
+                                  fMCEffCorrection->GetFDefficiency());
+
+  // 4. Get extrapolated 293kA sample.
+  ReweightableSpectrum sNDExtrap_293kA = 
+    ReweightableSpectrum(ana::Constant(1), fNDFD_Matrix->GetNDExtrap_293kA(),
+                         Comps.at(kPRISMPred).GetLabels(), Comps.at(kPRISMPred).GetBinnings(),
+                         1, 0);
+  NDComps.emplace(kNDDataExtrap2D_293kA, sNDExtrap_293kA);
+
+  // 5. Weight extrapolated 293kA ND data by linear combination coeffiecients.
+  Comps.emplace(
+      kNDDataExtrap_293kA,
+      sNDExtrap_293kA.WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));   
+
+  // 6. Get extrapolated 280kA sample.
+  ReweightableSpectrum sNDExtrap_280kA = 
+    ReweightableSpectrum(ana::Constant(1), fNDFD_Matrix->GetNDExtrap_280kA(),
+                         Comps.at(kPRISMPred).GetLabels(), Comps.at(kPRISMPred).GetBinnings(),
+                         1, 0);
+  NDComps.emplace(kNDDataExtrap2D_280kA, sNDExtrap_280kA);
+
+  // 7. Weight extrapolated 280kA ND data by linear combination coeffiecient.
+  Comps.emplace(
+      kNDDataExtrap_280kA,
+      sNDExtrap_280kA.WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+
+  // 8. Add weighted and extrapolated 293kA and 280kA samples to get
+  //    extrapolated PRISM prediction.
+  Comps.emplace(kNDData_FDExtrap, Comps.at(kNDDataExtrap_293kA));
+  Comps.at(kNDData_FDExtrap) += Comps.at(kNDDataExtrap_280kA);
+  // 9. For adding in MC corrections:
+  Comps.emplace(kNDDataCorr_FDExtrap, Comps.at(kNDData_FDExtrap));
+
+  //------------------------------------------------------------
   
   // If we are doing numu -> nue propagation, need to correct for xsec
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
