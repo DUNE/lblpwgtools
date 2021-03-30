@@ -89,16 +89,20 @@ struct RunPlan {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
- 
+      //std::cout << "===========" << std::endl;
+      double sum(0);
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
         double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
         double be = SetErrorsFromPredictedRate      
                     ? sqrt(bc)
                     : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
-         
+        //std::cout << "bc = " << bc << " ; be = " << be << " ; MCerr = " << 
+      //    (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT) << std::endl;
+        sum += bc; 
         NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
         NDSpec_h->SetBinError(xit + 1, yit + 1, be);         
       }
+      std::cout << ypos << " : " << sum << " events" << std::endl;
     }
 
     std::vector<std::string> labels = NDSpec.GetLabels();

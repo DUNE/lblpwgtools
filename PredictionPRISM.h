@@ -64,8 +64,12 @@ public:
     kNDData_unweighted_293kA = 31,
     kNDData_unweighted_280kA = 32,
 
-    kNDData_FDExtrap = 33,
-    kNDDataCorr_FDExtrap = 34,
+    kNDDataExtrap2D_293kA = 33,
+    kNDDataExtrap2D_280kA = 34,
+    kNDDataExtrap_293kA = 35,
+    kNDDataExtrap_280kA = 36,
+    kNDData_FDExtrap = 37,
+    kNDDataCorr_FDExtrap = 38,
 
   };
 
@@ -171,6 +175,18 @@ public:
     }
     case kNDData_unweighted_280kA: {
       return "NDData_unweighted_280kA";
+    }
+    case kNDDataExtrap2D_293kA: {
+      return "kNDDataExtrap2D_293kA";
+    }
+    case kNDDataExtrap2D_280kA: {
+      return "kNDDataExtrap2D_280kA";
+    }
+    case kNDDataExtrap_293kA: {
+      return "kNDDataExtrap_293kA";
+    }
+    case kNDDataExtrap_280kA: {
+      return "kNDDataExtrap_280kA";
     }
     case kNDData_FDExtrap: {
       return "NDData_FDExtrap";

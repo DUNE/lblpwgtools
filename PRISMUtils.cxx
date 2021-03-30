@@ -150,19 +150,19 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
         if (dir) {
           blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
         }
-
-        dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
-                             (IsNu ? "_nu" : "_nub")).c_str());
-        if (dir) {
-          blob.NDUnselTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
-       
-        dir = f.GetDirectory((std::string("NDSelected_ETrue") +
-                             (IsNu ? "_nu" : "_nub")).c_str());
-        if (dir) {
-          blob.NDSelTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
       }
+      dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
+                           (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub")).c_str());
+      if (dir) {
+        blob.NDUnselTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+       
+      dir = f.GetDirectory((std::string("NDSelected_ETrue") +
+                           (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub")).c_str());
+      if (dir) {
+        blob.NDSelTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      }
+      
     } else { // Is FD
       if (!IsNue) {
         dir = f.GetDirectory(
@@ -490,8 +490,10 @@ SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
 
 NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
                          PredictionInterp const * FD,
-                         double reg) : fRegFactor(reg), fPRISMExtrap(nullptr),
-                         hETrueUnfold(nullptr), ETrueWriteOnce(true) {
+                         double reg) : fRegFactor(reg), 
+                         fNDExtrap_293kA(nullptr), fNDExtrap_280kA(nullptr),
+                         hCovMat(nullptr), hETrueUnfold(nullptr), 
+                         ETrueWriteOnce(true) {
   fMatrixND = ND;
   fMatrixFD = FD;
   if (!fMatrixND || !fMatrixFD) {
@@ -514,27 +516,18 @@ TH2D * NDFD_Matrix::GetFDMatrix() const {
 
 //-----------------------------------------------------
 
-TH1 * NDFD_Matrix::GetPRISMExtrap() const {
-  return fPRISMExtrap.get();
+TH2 * NDFD_Matrix::GetNDExtrap_293kA() const {
+  return fNDExtrap_293kA.get();
+}
+TH2 * NDFD_Matrix::GetNDExtrap_280kA() const {
+  return fNDExtrap_280kA.get();
 }
 
 //-----------------------------------------------------
 
-void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
-                                 ana::SystShifts shift,
-                                 Flavors::Flavors_t NDflav,
-                                 Flavors::Flavors_t FDflav,
-                                 Current::Current_t curr,
-                                 Sign::Sign_t NDsign,
-                                 Sign::Sign_t FDsign,
-                                 std::vector<double> NDefficiency, 
+void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
+                                 std::vector<double> NDefficiency,
                                  std::vector<double> FDefficiency) const {
-  
-  // Get 2D Smearing matrices for ND and FD
-  auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
-  hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
-  auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
-  hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
 
   if (!hMatrixND) {
     std::cout << "[ERROR] No fMatrixND." << std::endl; 
@@ -542,11 +535,11 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
   } else if (!hMatrixFD) {
     std::cout << "[ERROR] No fMatrixFD." << std::endl; 
     abort();
-  } else { std::cout << "Good Matrices." << std::endl; }
+  } 
  
   std::pair<std::unique_ptr<TH2D>*, std::vector<double>> NDpair (&hMatrixND, NDefficiency);
   std::pair<std::unique_ptr<TH2D>*, std::vector<double>> FDpair (&hMatrixFD, FDefficiency);
-  
+
   std::vector<std::pair<std::unique_ptr<TH2D>*, std::vector<double>>> matrix_pair = 
       {NDpair, FDpair};   
 
@@ -555,7 +548,7 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
 
       TH1D *projY = mat.first->get()->ProjectionY("_projY", col_it, col_it, "e");
       // Normalise integral of true bin to efficiency
-      projY->Scale(1 / projY->Integral()); 
+      projY->Scale(1 / projY->Integral());
       projY->Scale(mat.second.at(col_it - 1)); 
       for (int row_it = 1; row_it <= mat.first->get()->GetYaxis()->GetNbins(); row_it++) {
         mat.first->get()->SetBinContent(col_it, row_it, projY->GetBinContent(row_it));
@@ -568,61 +561,113 @@ void NDFD_Matrix::NormaliseETrue(osc::IOscCalculator *calc,
 
 //-----------------------------------------------------
 
-void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
+void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
+                                    HistAxis const &axis, const int kA,
+                                    osc::IOscCalculator *calc, ana::SystShifts shift,
+                                    Flavors::Flavors_t NDflav, 
+                                    Flavors::Flavors_t FDflav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t NDsign, Sign::Sign_t FDsign,
+                                    std::vector<std::vector<double>> NDefficiency,
+                                    std::vector<double> FDefficiency) const {
+  std::unique_ptr<TH2>* fNDExtrap;
   
-  std::unique_ptr<TH2D>* NDhist = &hMatrixND;
-  std::unique_ptr<TH2D>* FDhist = &hMatrixFD;
+  if (kA == 293) {
+    fNDExtrap = &fNDExtrap_293kA;
+  } else if (kA == 280) {
+    fNDExtrap = &fNDExtrap_280kA;
+  } else {
+    std::cout << "[ERROR] Unknown HC." << std::endl;
+    abort();
+  }
 
-  TH1D *PRISMND = NDPRISMLCComp.ToTH1(1);
+  auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
+  hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
+  auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+  hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
 
-  Eigen::VectorXd NDERec = GetEigenFlatVector(PRISMND);
-
-  // Get Covariance matrix for PRISMLC (this is just a diagonal matrix)
-  Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
-  for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
-    double frac_err(0); 
-    if (std::isnormal(PRISMND->GetBinContent(row_it + 1))) { // Valid number
-      frac_err = PRISMND->GetBinError(row_it + 1) / PRISMND->GetBinContent(row_it + 1);
-    } else { // Is zero, need to change it
-      frac_err = 1E-6; // Arbitrarily small number to make calculation work. (Ugly.)
-    }
-    //std::cout << "error = " << frac_err << "; var = " << pow(frac_err, 2) << std::endl;
-    CovMatRec(row_it, row_it) = pow(frac_err, 2);
-  } 
-
-  // Should* be fine to take the inverse of a purely diagonal matrix
-  Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
-
-  Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist->get(), 
-                                         NDhist->get()->GetYaxis()->GetNbins(),
-                                         NDhist->get()->GetXaxis()->GetNbins());
-  Eigen::MatrixXd FDmat = GetEigenMatrix(FDhist->get(),
-                                         FDhist->get()->GetYaxis()->GetNbins(),
-                                         FDhist->get()->GetXaxis()->GetNbins());
-
-  const int NTrueBins = NDmat.cols();
-  const int NRecoBins = NDmat.rows();
-  
+  const int NTrueBins = hMatrixND->GetXaxis()->GetNbins();
   // Use T-reg to calculate ETrue(ND)
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
   for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
     RegMatrix(row_it, row_it) = fRegFactor;
     RegMatrix(row_it, row_it + 1) = -fRegFactor;
   }
-  RegMatrix(NTrueBins - 1, NTrueBins - 1) = fRegFactor;
+  RegMatrix(NTrueBins - 1, NTrueBins - 1) = fRegFactor;  
 
-  Eigen::VectorXd NDETrue = ((NDmat.transpose() * invCovMatRec * NDmat) +
-                             RegMatrix.transpose() * RegMatrix).inverse() *
-                            NDmat.transpose() * invCovMatRec * NDERec; 
- 
-  // Propogate uncertainty
-  Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
-                       RegMatrix.transpose() * RegMatrix).inverse() * 
-                      NDmat.transpose() * invCovMatRec;
-  // Cov Mat for true energy, propogated through Tik reg
-  Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
+  TH2D *PRISMND = static_cast<TH2D*>(NDDataSpec.ToTH2(1));
 
-  // Output true hist
+  *fNDExtrap = std::unique_ptr<TH2>(static_cast<TH2*>(HistCache::Copy(PRISMND)));
+
+  // Need a loop to go through each slice of off-axis ND data
+  for (int slice = 0; slice < PRISMND->GetYaxis()->GetNbins(); slice++) {
+    // Normalise matrices to efficiency for particular OA stop
+    NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.at(slice), FDefficiency);
+
+    // Get a slice of ND data and place it a Eigen Vector
+    TH1D *SliceProj = PRISMND->ProjectionX("slice", slice + 1, slice + 1, "e");
+    Eigen::VectorXd NDERec = GetEigenFlatVector(SliceProj);
+
+    // Build covariance matrix for this slice so we can propogate uncertainty:
+    Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
+    for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
+      double frac_err(0);
+      if (std::isnormal(SliceProj->GetBinContent(row_it + 1))) { // Valid number
+        frac_err = SliceProj->GetBinError(row_it + 1) / SliceProj->GetBinContent(row_it + 1);
+      } else { // Is zero, need to change it
+        frac_err = 1E-6; // Arbitrarily small number to make calculation work. (Ugly.)
+      }
+      CovMatRec(row_it, row_it) = pow(frac_err, 2);
+    }
+
+    // Should* be fine to take the inverse of a purely diagonal matrix
+    Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
+
+    std::unique_ptr<TH2D>* NDhist = &hMatrixND;
+    std::unique_ptr<TH2D>* FDhist = &hMatrixFD;
+
+    Eigen::MatrixXd NDmat = GetEigenMatrix(NDhist->get(),
+                                           NDhist->get()->GetYaxis()->GetNbins(),
+                                           NDhist->get()->GetXaxis()->GetNbins());
+    Eigen::MatrixXd FDmat = GetEigenMatrix(FDhist->get(),
+                                           FDhist->get()->GetYaxis()->GetNbins(),
+                                           FDhist->get()->GetXaxis()->GetNbins());
+
+    /*Eigen::VectorXd NDETrue = ((NDmat.transpose() * invCovMatRec * NDmat) +
+                               RegMatrix.transpose() * RegMatrix).inverse() *
+                              NDmat.transpose() * invCovMatRec * NDERec;*/
+    // Propogate uncertainty
+    Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
+                         RegMatrix.transpose() * RegMatrix).inverse() *
+                        NDmat.transpose() * invCovMatRec;
+
+    Eigen::VectorXd NDETrue = D * NDERec;
+
+    // Cov Mat for true energy, propogated through Tik reg
+    Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
+
+    Eigen::VectorXd FDERec = FDmat * NDETrue;
+
+    Eigen::MatrixXd CovMatExtrap = FDmat * CovMatTrue * FDmat.transpose();
+
+    // Only print out covariance matrix for 1 slice for debugging.
+    if ((slice + 1) == PRISMND->GetYaxis()->GetNbins() && kA == 293) {
+      TAxis *covAxis = NDhist->get()->GetXaxis();
+      hCovMat = std::unique_ptr<TH2>(static_cast<TH2*>(
+                                     HistCache::NewTH2D("SliceCovMat", covAxis, covAxis)));     
+      FillHistFromEigenMatrix(hCovMat.get(), CovMatExtrap); 
+    } 
+   
+    for (int ebin = 0; ebin < PRISMND->GetXaxis()->GetNbins(); ebin++) {   
+      fNDExtrap->get()->SetBinContent(ebin + 1, slice + 1, FDERec(ebin));
+      //std::cout << "bin " << (ebin+1) << " = " << FDERec(ebin) << std::endl;
+      double errorExtrap = pow(CovMatExtrap(ebin, ebin), 0.5) * FDERec(ebin);  
+      fNDExtrap->get()->SetBinError(ebin + 1, slice + 1, errorExtrap);
+    }
+    HistCache::Delete(SliceProj);
+  }
+
+  /* Output true hist
   if (ETrueWriteOnce) {
     TAxis *mat_xaxis = NDhist->get()->GetXaxis();
     hETrueUnfold = std::unique_ptr<TH1>(static_cast<TH1*>(
@@ -638,20 +683,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(Spectrum NDPRISMLCComp) const {
     hETrueUnfold->GetXaxis()->SetTitle(NDhist->get()->GetXaxis()->GetTitle());
     hETrueUnfold.get()->Scale(1, "width");
   }
-  ETrueWriteOnce = false;
+  ETrueWriteOnce = false;*/
 
-  Eigen::VectorXd FDERec = FDmat * NDETrue;
-  // Now get final Cov Mat for FDERec so we can get error on extrap pred
-  Eigen::MatrixXd CovMatExtrap = FDmat * CovMatTrue * FDmat.transpose();  
-  // Keep same binning for extrapolated prediction
-  fPRISMExtrap = std::unique_ptr<TH1>(static_cast<TH1*>(HistCache::Copy(PRISMND))); 
-  // Set bin errors for extrapolated prediction 
-  FillHistFromEigenVector(fPRISMExtrap.get(), FDERec);
-  for (int row_it = 0; row_it < FDERec.size(); row_it++) {
-    double errorExtrap = pow(CovMatExtrap(row_it, row_it), 0.5) * 
-                         fPRISMExtrap->GetBinContent(row_it + 1);
-    fPRISMExtrap->SetBinError(row_it + 1, errorExtrap);
-  }
   HistCache::Delete(PRISMND);
 }
 
@@ -661,20 +694,26 @@ void NDFD_Matrix::Write(TDirectory *dir) {
   dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
   dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
   dir->WriteTObject(hETrueUnfold.get(), "Unfolded_ETrue");
+  dir->WriteTObject(hCovMat.get(), "Slice_CovMatExtrap");
 } 
 
 //----------------------------------------------------
 // Class for ND and FD MC based efficiency correction:
 //----------------------------------------------------
 
-MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel,
-                                 PredictionInterp const * NDsel,
+MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel_293kA,
+                                 PredictionInterp const * NDsel_293kA,
+                                 PredictionInterp const * NDunsel_280kA,
+                                 PredictionInterp const * NDsel_280kA,
                                  PredictionInterp const * FDunsel,
                                  PredictionInterp const * FDsel) : 
-                                 hNDunselected(nullptr), hNDselected(nullptr),
+                                 hNDunselected_293kA(nullptr), hNDselected_293kA(nullptr),
+                                 hNDunselected_280kA(nullptr), hNDselected_280kA(nullptr),
                                  hFDunselected(nullptr), hFDselected(nullptr) {
-  fNDunselected = NDunsel;
-  fNDselected = NDsel;
+  fNDunselected_293kA = NDunsel_293kA;
+  fNDselected_293kA = NDsel_293kA;
+  fNDunselected_280kA = NDunsel_280kA;
+  fNDselected_280kA = NDsel_280kA;
   fFDunselected = FDunsel;
   fFDselected = FDsel;
 }
@@ -682,8 +721,10 @@ MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel,
 //----------------------------------------------------
 
 MCEffCorrection::~MCEffCorrection() {
-  HistCache::Delete(hNDunselected);
-  HistCache::Delete(hNDselected);
+  HistCache::Delete(hNDunselected_293kA);
+  HistCache::Delete(hNDselected_293kA);
+  HistCache::Delete(hNDunselected_280kA);
+  HistCache::Delete(hNDselected_280kA);
   HistCache::Delete(hFDunselected);
   HistCache::Delete(hFDselected);
 }
@@ -702,27 +743,44 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
   ana::SystShifts syst = shift; 
   //ana::SystShifts syst = kNoShift;  
 
-  if (!fNDunselected || !fNDselected) {
+  if (!fNDunselected_293kA || !fNDselected_293kA || !fNDunselected_280kA || !fNDselected_280kA) {
     std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
     abort();
   }
-  auto sNDunselected = fNDunselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  auto sNDunselected_293kA = fNDunselected_293kA->PredictComponentSyst(calc, syst, 
+                                                                       NDflav, curr, NDsign);
+  auto sNDunselected_280kA = fNDunselected_280kA->PredictComponentSyst(calc, syst,
+                                                                       NDflav, curr, NDsign);
+
   // True axis binning might be different to reco binning in fAnalysisAxis.
   // Make sure bins in true energy efficiency correction matches
-  std::vector<std::string> Labels = sNDunselected.GetLabels();
+  std::vector<std::string> Labels = sNDunselected_293kA.GetLabels();
   Labels.pop_back(); // Remove off-axis position axis
-  std::vector<Binning> Bins = sNDunselected.GetBinnings();
+  std::vector<Binning> Bins = sNDunselected_293kA.GetBinnings();
   Bins.pop_back();
   // This is annoying, true axis will have a reco label. I can live with this though.
   std::vector<Var> Vars = axis.GetVars();
   HistAxis trueaxis(Labels, Bins, Vars);
+
   // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
-  ReweightableSpectrum rwsNDunselected = ToReweightableSpectrum(sNDunselected, 1, trueaxis);
-  hNDunselected = static_cast<TH2D*>(rwsNDunselected.ToTH2(1));
-  
-  auto sNDselected = fNDselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
-  ReweightableSpectrum rwsNDselected = ToReweightableSpectrum(sNDselected, 1, trueaxis);
-  hNDselected = static_cast<TH2D*>(rwsNDselected.ToTH2(1));
+  ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
+                                                                      1, trueaxis);
+  ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
+                                                                      1, trueaxis);
+  hNDunselected_293kA = static_cast<TH2D*>(rwsNDunselected_293kA.ToTH2(1));
+  hNDunselected_280kA = static_cast<TH2D*>(rwsNDunselected_280kA.ToTH2(1));  
+   
+  // Selected ND MC
+  auto sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(calc, syst, 
+                                                                   NDflav, curr, NDsign);
+  auto sNDselected_280kA = fNDselected_280kA->PredictComponentSyst(calc, syst, 
+                                                                   NDflav, curr, NDsign);
+  ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
+                                                                    1, trueaxis);
+  ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
+                                                                    1, trueaxis);
+  hNDselected_293kA = static_cast<TH2D*>(rwsNDselected_293kA.ToTH2(1));
+  hNDselected_280kA = static_cast<TH2D*>(rwsNDselected_280kA.ToTH2(1));
 
   if (!fFDunselected || !fFDselected) {
     std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
@@ -737,23 +795,39 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
 
   // Calculate ND efficiency
   // efficiency fluctuates slightly with OA position
-  // take average over for ~20 OA positions
-  for (int i = 0; i < hNDselected->GetXaxis()->GetNbins(); i++) { // energy axis
-    double NDbin_eff;
-    double sum(0);
-    int OAbinstart = 30; // Lots of statistical noise further OA
-    for (int j = OAbinstart; j < hNDselected->GetYaxis()->GetNbins(); j++) { // OA pos axis 
-      NDbin_eff = hNDselected->GetBinContent(i + 1, j + 1) / 
-                  hNDunselected->GetBinContent(i + 1, j + 1);
-      sum += NDbin_eff;
+  // Efficiency for 293kA sampple:
+  for (int slice = 0; slice < hNDselected_293kA->GetYaxis()->GetNbins(); slice++) { // OA slice
+    std::vector<double> SliceEfficiency;
+    for (int ebin = 0; ebin < hNDselected_293kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
+      double NDbin_eff = hNDselected_293kA->GetBinContent(ebin + 1, slice + 1) /
+                         hNDunselected_293kA->GetBinContent(ebin + 1, slice + 1);
+      if (std::isnormal(NDbin_eff)) {
+        SliceEfficiency.push_back(NDbin_eff);
+      } else {
+        SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
+      }
     }
-    NDefficiency.push_back(sum / 
-                           (hNDselected->GetYaxis()->GetNbins() - OAbinstart));
+    NDefficiency_293kA.push_back(SliceEfficiency);
+  } 
+  // Efficiency for 280kA sample:
+  for (int slice = 0; slice < hNDselected_280kA->GetYaxis()->GetNbins(); slice++) { // OA slice
+    std::vector<double> SliceEfficiency;
+    for (int ebin = 0; ebin < hNDselected_280kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
+      double NDbin_eff = hNDselected_280kA->GetBinContent(ebin + 1, slice + 1) /
+                         hNDunselected_280kA->GetBinContent(ebin + 1, slice + 1);
+      if (std::isnormal(NDbin_eff)) {
+        SliceEfficiency.push_back(NDbin_eff);
+      } else {
+        SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0 
+      }
+    }
+    NDefficiency_280kA.push_back(SliceEfficiency);
   }
+
   // Calculate FD efficiency
-  for (int i = 0; i < hFDselected->GetXaxis()->GetNbins(); i++) {
-    double FDbin_eff = hFDselected->GetBinContent(i + 1) / 
-                       hFDunselected->GetBinContent(i + 1);
+  for (int ebin = 0; ebin < hFDselected->GetXaxis()->GetNbins(); ebin++) {
+    double FDbin_eff = hFDselected->GetBinContent(ebin + 1) / 
+                       hFDunselected->GetBinContent(ebin + 1);
     FDefficiency.push_back(FDbin_eff);
   }
 }
@@ -761,8 +835,10 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
 //-----------------------------------------------------------
 
 void MCEffCorrection::Write(TDirectory *dir) {
-  dir->WriteTObject(hNDunselected, "NDUnselected");
-  dir->WriteTObject(hNDselected, "NDSelected");
+  dir->WriteTObject(hNDunselected_293kA, "NDUnselected_293kA");
+  dir->WriteTObject(hNDselected_293kA, "NDSelected_293kA");
+  dir->WriteTObject(hNDunselected_280kA, "NDUnselected_280kA");
+  dir->WriteTObject(hNDselected_280kA, "NDSelected_280kA");
   dir->WriteTObject(hFDunselected, "FDUnselected");
   dir->WriteTObject(hFDselected, "FDSelected"); 
 }
