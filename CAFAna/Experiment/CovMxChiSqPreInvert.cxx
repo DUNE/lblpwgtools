@@ -35,7 +35,7 @@ namespace ana
     ApplyMask(apred, adata);
 
     // Now it's absolute it's suitable for use in the chisq calculation
-    return Chi2CovMx(apred, adata, fCovMxInv);
+    return Chi2CovMx(apred, adata, covInvM);
   }
 
   //----------------------------------------------------------------------
