@@ -108,6 +108,12 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
                       double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
                       double &pot_fd_rhc_numu, bool &ndprefit);
 
+void ParseDataSamplesYears(std::string cmdLineInput, double &pot_nd_fhc,
+                            double &pot_nd_rhc, double &pot_fd_fhc_nue,
+                            double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
+                            double &pot_fd_rhc_numu,
+                            float years_fhc, float years_rhc, bool &ndprefit);
+
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
                             bool &fakeNuis, bool &start, bool &central);
 
@@ -193,7 +199,8 @@ BuildSpectra(ana::PredictionInterp *predFDNumuFHC = nullptr,
              double pot_fd_rhc_numu = 0, double pot_nd_fhc = 0,
              double pot_nd_rhc = 0, std::vector<unsigned> const &Seeds = {});
 
-double RunFitPoint(std::string stateFileName, std::string sampleString,
+double RunFitPoint(float years_fhc, float years_rhc,
+                   std::string stateFileName, std::string sampleString,
                    osc::IOscCalculatorAdjustable *fakeDataOsc,
                    ana::SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const ana::IFitVar *> oscVars,
@@ -207,7 +214,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                    FitTreeBlob *PostFitTreeBlob = nullptr,
                    std::vector<seeded_spectra> *spectra = nullptr,
                    ana::SystShifts &bf = ana::junkShifts);
-
 
 void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
                              std::string parName, double parVal, int hie);
