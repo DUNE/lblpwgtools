@@ -250,6 +250,10 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
         GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
     KeepSysts(xseclist, GetFakeDataGenerationSystNames());
     systlist.insert(systlist.end(), xseclist.begin(), xseclist.end());
+
+    // Also add in ND energy shift dials for fake data studies
+    std::vector<const ISyst *> ndelist = GetNDEnergySysts();
+    systlist.insert(systlist.end(), ndelist.begin(), ndelist.end());
   }
 
   return systlist;
@@ -1653,11 +1657,26 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
                                     {0, 1});
     }
-    if (turbose) {
-      std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
   }
+
+  // Include option for ND FHC or RHC only                                                                                                                                   
+  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc == 0)) {
+    std::cout<< "Adding in the RHC covariance" << std::endl;
+    std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
+    this_expt.AddCovarianceMatrix(covFileName, "nd_rhc_frac_cov", true, {0});
+  }
+
+  if (UseNDCovMat && (pot_nd_rhc == 0) && (pot_nd_fhc > 0)) {
+    std::cout << "Adding in the FHC covariance" << std::endl;
+    std::string covFileName = FindCAFAnaDir() + "/Systs/det_sys_cov.root";
+    this_expt.AddCovarianceMatrix(covFileName, "nd_fhc_frac_cov", true, {0});
+  }
+
+  if (turbose) {
+    std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
+	      << std::endl;
+  }
+
 
   // Add in the penalty...
   if (!ndprefit && penaltyTerm) {
