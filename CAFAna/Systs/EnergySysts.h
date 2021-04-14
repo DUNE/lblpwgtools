@@ -728,7 +728,7 @@ namespace ana
   class UncorrNDMuLArInvSqrt: public ISyst
   {
   public:
-  UncorrNDMuLArInvSqrt() : ISyst("UncorrFDMuLArInvSqrt", "Uncorrelated ND LAr Inv Sqrt Muon Syst") {}
+  UncorrNDMuLArInvSqrt() : ISyst("UncorrNDMuLArInvSqrt", "Uncorrelated ND LAr Inv Sqrt Muon Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
