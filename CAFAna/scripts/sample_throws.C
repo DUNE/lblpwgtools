@@ -81,6 +81,54 @@ void make_1D_errors(TDirectory *saveDir, std::vector<TH1 *> nominal,
   return;
 }
 
+std::vector<TH1 *> get_nominal_breakdown(std::string stateFname,
+					 osc::IOscCalculatorAdjustable *trueOsc,
+					 std::string sampleString){
+  double pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue, pot_fd_rhc_nue,
+    pot_fd_fhc_numu, pot_fd_rhc_numu;
+  bool ndprefit;
+  ParseDataSamples(sampleString, pot_nd_fhc, pot_nd_rhc, pot_fd_fhc_nue,
+                   pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu, ndprefit);
+  
+  static std::vector<std::unique_ptr<PredictionInterp>> interp_list =
+    GetPredictionInterps(stateFname, GetListOfSysts());
+  static PredictionInterp &predFDNumuFHC = *interp_list[0].release();
+  static PredictionInterp &predFDNueFHC = *interp_list[1].release();
+  static PredictionInterp &predFDNumuRHC = *interp_list[2].release();
+  static PredictionInterp &predFDNueRHC = *interp_list[3].release();
+  static PredictionInterp &predNDNumuFHC = *interp_list[4].release();
+  static PredictionInterp &predNDNumuRHC = *interp_list[5].release();
+
+  std::vector<TH1 *> sample0 = GetMCComponents(&predFDNueFHC, trueOsc,
+					       (samples[0] + "_nom").c_str(), pot_fd_fhc_nue);
+
+  std::vector<TH1 *> sample1 = GetMCComponents(&predFDNumuFHC, trueOsc,
+                                               (samples[1] + "_nom").c_str(), pot_fd_fhc_numu);
+
+  std::vector<TH1 *> sample2 = GetMCComponents(&predFDNueRHC, trueOsc,
+                                               (samples[2] + "_nom").c_str(), pot_fd_rhc_nue);
+
+  std::vector<TH1 *> sample3 = GetMCComponents(&predFDNumuRHC, trueOsc,
+                                               (samples[3] + "_nom").c_str(), pot_fd_rhc_numu);
+
+  std::vector<TH1 *> sample4 = GetMCComponents(&predNDNumuFHC, trueOsc,
+                                               (samples[4] + "_nom").c_str(), pot_nd_fhc);
+
+  std::vector<TH1 *> sample5 = GetMCComponents(&predNDNumuRHC, trueOsc,
+                                               (samples[5] + "_nom").c_str(), pot_nd_rhc);
+
+  // Now to make one big vector
+  std::vector<TH1 *> ret = sample0;
+
+  ret.insert(ret.end(), sample1.begin(), sample1.end());
+  ret.insert(ret.end(), sample2.begin(), sample2.end());
+  ret.insert(ret.end(), sample3.begin(), sample3.end());
+  ret.insert(ret.end(), sample4.begin(), sample4.end());
+  ret.insert(ret.end(), sample5.begin(), sample5.end());
+  return ret;
+}
+
+
 std::vector<TH1 *> make_syst_throw(std::string stateFname,
                                    osc::IOscCalculatorAdjustable *trueOsc,
                                    SystShifts theseSysts,
@@ -250,6 +298,8 @@ void sample_throws(std::string stateFname = def_stateFname,
                   Fitter::kNormal | Fitter::kIncludeHesse, fout);
   delete penalty;
 
+  std::vector<TH1 *> breakdown_vect =  get_nominal_breakdown(stateFname, trueOsc, sampleString);
+
   std::vector<TH1 *> nom_vect =
       make_syst_throw(stateFname, trueOsc, kNoShift, sampleString);
 
@@ -416,6 +466,13 @@ void sample_throws(std::string stateFname = def_stateFname,
   // TDirectory *postfit_flux_xsec_dir = fout->mkdir("postfit_flux_xsec");
   // throw_errors(stateFname, sampleString, postfit_flux_xsec_dir, nom_vect,
   //              systlist, flux_xsec_list, trueOsc, dec_mat);
+
+  fout->cd();
+
+  // Save the breakdown
+  for (auto &hist : breakdown_vect)
+    hist->Write();
+
 
   // Now close the file
   fout->Close();
