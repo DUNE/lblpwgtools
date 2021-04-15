@@ -12,7 +12,7 @@ REMOVE_SOURCE="1"
 NCORES=8
 
 IMAGE_NAME="${USER}/dune_cafana"
-BRANCH_NAME="strong_and_stable"
+BRANCH_NAME="energy_shift_studies"
 REPO_URL="https://github.com/DUNE/lblpwgtools.git"
 STATE_FILE_LOC=""
 
