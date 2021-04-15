@@ -16,10 +16,10 @@ if [ ! -z ${2} ]; then
   fi
 fi
 
-if [ -z ${INPUT_TAR_FILE} ]; then
-  LOGYLOG "[ERROR]: Expected to recieve an input file."
-  exit 1
-fi
+# if [ -z ${_CONDOR_DIR_INPUT} ]; then
+#   LOGYLOG "[ERROR]: Expected to recieve an input file."
+#   exit 1
+# fi
 
 if [ ! -e CAFAna/CAFECommands.cmd ]; then
   LOGYLOG "[ERROR]: Expected to recieve a command file @ CAFAna/CAFECommands.cmd but didn't."
