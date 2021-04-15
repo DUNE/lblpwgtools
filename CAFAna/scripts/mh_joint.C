@@ -38,10 +38,11 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
-  double dcpstep = 2*TMath::Pi()/36;
+  int nsteps = 72;
+  double dcpstep = 2*TMath::Pi()/nsteps;
   TGraph* gMH = new TGraph();
 
-  for(double idcp = 0; idcp < 37; ++idcp) {
+  for(double idcp = 0; idcp < nsteps+1; ++idcp) {
 
     std::cout << "Trying idcp = " << idcp << std::endl;
 

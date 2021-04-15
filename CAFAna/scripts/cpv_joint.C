@@ -72,10 +72,11 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   std::cout << "Global chi2 at dCP=0,pi: " << glob_chisqmin << std::endl;
 
   // Now loop over all true values
-  double dcpstep = 2*TMath::Pi()/36;
+  int nsteps = 72;
+  double dcpstep = 2*TMath::Pi()/nsteps;
   TGraph* gCPV = new TGraph();
 
-  for(double idcp = 0; idcp < 37; ++idcp) {
+  for(double idcp = 0; idcp < nsteps+1; ++idcp) {
     
     std::cout << "Trying idcp = " << idcp << std::endl;
     
@@ -109,7 +110,9 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
     }
     
     chisqmin = TMath::Max(chisqmin,1e-6);
-    gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),chisqmin-glob_chisqmin);
+    double diff = chisqmin-glob_chisqmin;
+    diff = TMath::Max(diff, 0);
+    gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),sqrt(diff));
   }
 
   fout->cd();
