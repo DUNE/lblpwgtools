@@ -9,11 +9,6 @@ LOGYLOG () {
   fi
 }
 
-if [ -z ${INPUT_TAR_FILE} ]; then
-  LOGYLOG "[ERROR]: Expected to recieve an input file."
-  exit 1
-fi
-
 PNFS_PATH_APPEND=${1}
 if [ -z ${1} ]; then
   LOGYLOG "[ERROR]: Failed to find PNFS_PATH_APPEND passed on command line."
