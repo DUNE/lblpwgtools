@@ -30,7 +30,6 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   }
 
   // Oscillation parameters to use
-  //std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
   std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
 
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
@@ -111,7 +110,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
     
     chisqmin = TMath::Max(chisqmin,1e-6);
     double diff = chisqmin-glob_chisqmin;
-    diff = TMath::Max(diff, 0);
+    diff = TMath::Max(diff, 0.);
     gCPV->SetPoint(gCPV->GetN(),thisdcp/TMath::Pi(),sqrt(diff));
   }
 
