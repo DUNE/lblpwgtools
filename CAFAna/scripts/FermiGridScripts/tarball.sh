@@ -5,6 +5,12 @@ if [ -z "${CAFANA}" ]; then
   exit 1
 fi
 
+INPUT_CAFS=/dune/data/users/picker24/CAFAnaStateFiles/v4_all
+
+if [ ! -z "${SET_INPUT_CAFS}" ]; then
+    INPUT_CAFS=${SET_INPUT_CAFS}
+fi
+
 EXTRA_SCRIPT_NAME=""
 if [ ! -z "${1}" ]; then
   if [ ! -e "${1}" ]; then
@@ -17,7 +23,9 @@ fi
 
 mkdir tar_state; cd tar_state
 cp -r ${CAFANA} ./CAFAna
-cp -r /dune/data/users/picker24/CAFAnaStateFiles/v4_all/State* CAFAna/scripts/.
+
+echo "Copying input files from ${INPUT_CAFS}"
+cp -r ${INPUT_CAFS}/State* CAFAna/scripts/.
 
 if [ ! -z "${EXTRA_SCRIPT_NAME}" ]; then
   cp ${EXTRA_SCRIPT_NAME} CAFAna/scripts/
