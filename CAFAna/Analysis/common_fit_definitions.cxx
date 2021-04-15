@@ -790,6 +790,31 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
     exposure = stod(input_vect[1]);
   std::string input = input_vect[0];
 
+  // Add something special
+  std::vector<std::string> mode_frac;
+  if (input_vect.size() > 2) mode_frac.push_back(input_vect[2]);
+  if (input_vect.size() > 3) mode_frac.push_back(input_vect[3]);
+
+  // Assume equal running
+  double rhc_frac = 0.5;
+  double fhc_frac = 0.5;
+
+  for (std::string str : mode_frac) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+    size_t pos = str.find("rhc");
+    if (pos != std::string::npos){
+      str.erase(pos, 3);
+      rhc_frac = stod(str);
+    }
+    
+    pos = str.find("fhc");      
+    if (pos != std::string::npos){
+      str.erase(pos, 3);
+      fhc_frac = stod(str);
+    }
+  }
+
   // LoWeR cAsE sO i CaN bE sIlLy WiTh InPuTs
   std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
@@ -846,6 +871,14 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   if (input.find("nue") != std::string::npos) {
     pot_fd_fhc_numu = pot_fd_rhc_numu = 0;
   }
+
+  // Apply run fractions
+  pot_nd_fhc *= fhc_frac/0.5;
+  pot_fd_fhc_numu *= fhc_frac/0.5;
+  pot_fd_fhc_nue *= fhc_frac/0.5;
+  pot_nd_rhc *= rhc_frac/0.5;
+  pot_fd_rhc_numu *= rhc_frac/0.5;
+  pot_fd_rhc_nue *= rhc_frac/0.5;
   return;
 }
 
