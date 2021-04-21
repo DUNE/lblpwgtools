@@ -2,6 +2,7 @@
 
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "TDirectory.h"
 #include "TObjString.h"
 
 #include <cmath>

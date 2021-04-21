@@ -27,6 +27,7 @@ set(Core_header_files
   LoadFromFile.h
   MathUtil.h
   MultiVar.h
+  OscCalcFwdDeclare.h
   OscCurve.h
   OscillatableSpectrum.h
   Registry.h
@@ -41,7 +42,7 @@ set(Core_header_files
   rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore ${CAFANACOREEXT})
+target_link_libraries(CAFAnaCore ${CAFANACOREEXT} ${TBB})
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaCore gperftools)

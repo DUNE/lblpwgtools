@@ -1,6 +1,8 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/CalcsVars.h"
 
+#include "OscLib/IOscCalc.h"
+
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcSterile.h"
 #include "OscLib/OscCalcGeneral.h"
@@ -53,7 +55,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void ResetSterileCalcToDefault(osc::OscCalcSterile* calc)
+  void ResetSterileCalcToDefault(osc::IOscCalcSterile* calc)
   {
     osc::OscCalcPMNSOpt* tmp = new osc::OscCalcPMNSOpt();
     ResetOscCalcToDefault(tmp);
@@ -74,7 +76,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::OscCalcSterile* DefaultSterileCalc(int nflavors)
+  osc::IOscCalcSterile* DefaultSterileCalc(int nflavors)
   {
     osc::OscCalcSterile* ret = new osc::OscCalcSterile;
 

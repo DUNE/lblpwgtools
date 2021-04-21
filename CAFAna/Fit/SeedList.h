@@ -1,8 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
-
-#include "OscLib/OscCalc.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 #include <iostream>
 #include <map>

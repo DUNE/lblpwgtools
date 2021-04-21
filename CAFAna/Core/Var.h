@@ -2,11 +2,7 @@
 
 #include "CAFAnaCore/CAFAna/Core/Var.h"
 
-namespace caf{
-  template<class T> class Proxy;
-  class StandardRecord;
-  typedef Proxy<StandardRecord> SRProxy;
-}
+#include "StandardRecord/FwdDeclare.h"
 
 namespace ana
 {
@@ -15,7 +11,7 @@ namespace ana
   ///
   /// A Var consists of a function, taking a StandardRecord and returning the
   /// value of the variable (which may be some complicated function).
-  typedef _Var<caf::SRProxy> Var;
+  using Var = _Var<caf::SRProxy>;
 
   /// \brief For Vars where literally all you need is a single CAF variable
   ///

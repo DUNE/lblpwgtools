@@ -3,6 +3,7 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/Stan.h"
 
 #include "OscLib/IOscCalc.h"
 
