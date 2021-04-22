@@ -13,12 +13,6 @@
 
 class TDirectory;
 
-namespace caf{
-  template<class T> class Proxy;
-  class StandardRecord;
-  typedef Proxy<StandardRecord> SRProxy;
-}
-
 namespace ana
 {
   class ISyst;
