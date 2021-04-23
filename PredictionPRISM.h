@@ -198,12 +198,18 @@ public:
     return "";
   }
 
-  HistAxis fAnalysisAxis;
+  //HistAxis fAnalysisAxis;
+  HistAxis fAnalysisAxisND;
+  HistAxis fAnalysisAxisFD;
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fNDFDEnergyMatchAxis;
 
-  PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
+  /*PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
+                  const HistAxis &ND280kAAxis,
+                  const HistAxis &NDFDEnergyMatchAxis);*/
+  PredictionPRISM(const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD, 
+                  const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
                   const HistAxis &NDFDEnergyMatchAxis);
 
