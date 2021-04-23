@@ -41,7 +41,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
 
   auto PRISMps = reg_scan.get<fhicl::ParameterSet>("PRISM", {});
   bool Use_EventRateMatching =
-      PRISMps.get<bool>("Use_EventRateMatching", false);
+      PRISMps.get<bool>("Use_EventRateMatching", true);
 
   osc::IOscCalculatorAdjustable *calc =
       ConfigureCalc(reg_scan.get<fhicl::ParameterSet>("true_osc", {}));

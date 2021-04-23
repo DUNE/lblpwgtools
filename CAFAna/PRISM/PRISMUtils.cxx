@@ -561,8 +561,51 @@ void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_pt
 
 //-----------------------------------------------------
 
+Eigen::MatrixXd NDFD_Matrix::GetL1NormReg(int truebins, TAxis *trueaxis) const {
+  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(truebins, truebins);
+  // Reg matrix with ... 1 -1 ... pattern
+  // m cols and m-1 rows
+  for (int row_it = 0; row_it < truebins - 1; row_it++) {
+    RegMatrix(row_it, row_it) = fRegFactor;
+    RegMatrix(row_it, row_it + 1) = -fRegFactor;
+  }
+  // weight by bin width to account for non-uniform binning
+  for (int col_it = 0; col_it < truebins; col_it++) {
+    double width = trueaxis->GetBinUpEdge(col_it + 1) - 
+                   trueaxis->GetBinLowEdge(col_it + 1);
+    for (int row_it = 0; row_it < truebins - 1; row_it++) {
+      RegMatrix(row_it, col_it) *= (1/width);
+    }
+  } 
+  return RegMatrix;
+}
+
+//-----------------------------------------------------
+
+Eigen::MatrixXd NDFD_Matrix::GetL2NormReg(int truebins, TAxis *trueaxis) const {
+  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(truebins, truebins);
+  // Reg matrix with ... 1 -2 1 ... pattern
+  // m cols and m-2 rows
+  for (int row_it = 0; row_it < truebins - 2; row_it++) {
+    RegMatrix(row_it, row_it) = fRegFactor;
+    RegMatrix(row_it, row_it + 1) = (-2 * fRegFactor);
+    RegMatrix(row_it, row_it + 2) = fRegFactor; 
+  }
+  // weight by bin width to account for non-uniform binning
+  for (int col_it = 0; col_it < truebins; col_it++) {
+    double width = trueaxis->GetBinUpEdge(col_it + 1) -
+                   trueaxis->GetBinLowEdge(col_it + 1);
+    for (int row_it = 0; row_it < truebins - 2; row_it++) {
+      RegMatrix(row_it, col_it) *= (1/width);
+    }
+  }
+  return RegMatrix;
+}
+
+//-----------------------------------------------------
+
 void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
-                                    HistAxis const &axis, const int kA,
+                                    double POT, const int kA,
                                     osc::IOscCalculator *calc, ana::SystShifts shift,
                                     Flavors::Flavors_t NDflav, 
                                     Flavors::Flavors_t FDflav,
@@ -580,24 +623,23 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     std::cout << "[ERROR] Unknown HC." << std::endl;
     abort();
   }
-
+  //std::cout << "regparam = " << fRegFactor << std::endl;
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
   hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
 
-  const int NTrueBins = hMatrixND->GetXaxis()->GetNbins();
+  int NTrueBins = hMatrixND->GetXaxis()->GetNbins();
   // Use T-reg to calculate ETrue(ND)
-  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NTrueBins, NTrueBins);
-  for (int row_it = 0; row_it < NTrueBins - 1; row_it++) {
-    RegMatrix(row_it, row_it) = fRegFactor;
-    RegMatrix(row_it, row_it + 1) = -fRegFactor;
-  }
-  RegMatrix(NTrueBins - 1, NTrueBins - 1) = fRegFactor;  
+  // Can use L1 or L2 norm reg here
+  Eigen::MatrixXd RegMatrix = GetL1NormReg(NTrueBins, hMatrixND->GetXaxis()); 
 
-  TH2D *PRISMND = static_cast<TH2D*>(NDDataSpec.ToTH2(1));
+  TH2D *PRISMND = static_cast<TH2D*>(NDDataSpec.ToTH2(POT));
 
-  *fNDExtrap = std::unique_ptr<TH2>(static_cast<TH2*>(HistCache::Copy(PRISMND)));
+  *fNDExtrap = std::unique_ptr<TH2>(static_cast<TH2*>(
+                                    HistCache::NewTH2D("NDExtrap",
+                                                       hMatrixFD->GetYaxis(), 
+                                                       PRISMND->GetYaxis()))); 
 
   // Need a loop to go through each slice of off-axis ND data
   for (int slice = 0; slice < PRISMND->GetYaxis()->GetNbins(); slice++) {
@@ -613,13 +655,12 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
       double frac_err(0);
       if (std::isnormal(SliceProj->GetBinContent(row_it + 1))) { // Valid number
-        frac_err = SliceProj->GetBinError(row_it + 1) / SliceProj->GetBinContent(row_it + 1);
+        frac_err = SliceProj->GetBinError(row_it + 1);
       } else { // Is zero, need to change it
-        frac_err = 1E-6; // Arbitrarily small number to make calculation work. (Ugly.)
+        frac_err = 1E-20; // Arbitrarily small number to make calculation work. (Ugly.)
       }
       CovMatRec(row_it, row_it) = pow(frac_err, 2);
     }
-
     // Should* be fine to take the inverse of a purely diagonal matrix
     Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
 
@@ -633,40 +674,49 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
                                            FDhist->get()->GetYaxis()->GetNbins(),
                                            FDhist->get()->GetXaxis()->GetNbins());
 
-    /*Eigen::VectorXd NDETrue = ((NDmat.transpose() * invCovMatRec * NDmat) +
-                               RegMatrix.transpose() * RegMatrix).inverse() *
-                              NDmat.transpose() * invCovMatRec * NDERec;*/
     // Propogate uncertainty
     Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
                          RegMatrix.transpose() * RegMatrix).inverse() *
                         NDmat.transpose() * invCovMatRec;
 
     Eigen::VectorXd NDETrue = D * NDERec;
-
     // Cov Mat for true energy, propogated through Tik reg
     Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
+
+    // Solution and residual norm for L-curve
+    //std::cout << "regparam = " << fRegFactor << std::endl;
+    Eigen::MatrixXd reg_shape_matrix = RegMatrix / fRegFactor;
+    double soln_norm = (reg_shape_matrix * NDETrue).norm();
+    double resid_norm = (invCovMatRec * (NDmat * NDETrue - NDERec)).norm();
+    soln_norm_vector.push_back(soln_norm);
+    resid_norm_vector.push_back(resid_norm);
+    //std::cout << "resid_norm = " << resid_norm << " ; " << 
+    //    "soln_norm = " << soln_norm << std::endl;
 
     Eigen::VectorXd FDERec = FDmat * NDETrue;
 
     Eigen::MatrixXd CovMatExtrap = FDmat * CovMatTrue * FDmat.transpose();
+    // Check Cov Mat is invertible: necessary if we want to use covariance in Chi2
+    Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(CovMatExtrap);
+    if (!lu_decomp.isInvertible()) {
+      std::cout << "[WARNING] Covariance Matrix not invertible." << std::endl;
+      abort();
+    }
 
     // Only print out covariance matrix for 1 slice for debugging.
     if ((slice + 1) == PRISMND->GetYaxis()->GetNbins() && kA == 293) {
-      TAxis *covAxis = NDhist->get()->GetXaxis();
+      TAxis *covAxis = FDhist->get()->GetYaxis();
       hCovMat = std::unique_ptr<TH2>(static_cast<TH2*>(
                                      HistCache::NewTH2D("SliceCovMat", covAxis, covAxis)));     
       FillHistFromEigenMatrix(hCovMat.get(), CovMatExtrap); 
     } 
-   
-    for (int ebin = 0; ebin < PRISMND->GetXaxis()->GetNbins(); ebin++) {   
+    for (int ebin = 0; ebin < fNDExtrap->get()->GetXaxis()->GetNbins(); ebin++) {   
       fNDExtrap->get()->SetBinContent(ebin + 1, slice + 1, FDERec(ebin));
-      //std::cout << "bin " << (ebin+1) << " = " << FDERec(ebin) << std::endl;
-      double errorExtrap = pow(CovMatExtrap(ebin, ebin), 0.5) * FDERec(ebin);  
+      double errorExtrap = pow(CovMatExtrap(ebin, ebin), 0.5); 
       fNDExtrap->get()->SetBinError(ebin + 1, slice + 1, errorExtrap);
     }
     HistCache::Delete(SliceProj);
   }
-
   /* Output true hist
   if (ETrueWriteOnce) {
     TAxis *mat_xaxis = NDhist->get()->GetXaxis();
