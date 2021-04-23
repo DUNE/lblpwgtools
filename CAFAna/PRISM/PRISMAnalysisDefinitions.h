@@ -420,7 +420,9 @@ inline void TestConfigDefinitions() {
 }
 
 struct PRISMAxisBlob {
-  ana::HistAxis XProjection;
+  //ana::HistAxis XProjection;
+  ana::HistAxis XProjectionND;
+  ana::HistAxis XProjectionFD;
   ana::HistAxis OffAxisPosition;
   ana::HistAxis OffAxis280kAPosition;
 };
@@ -431,7 +433,10 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &oabinning = "default");
 
 ana::HistAxis TrueObservable(std::string const &obsvarname = "EProxy",
-                             std::string const &binning = "uniform");
+                             std::string const &binning = "uniform_smallrange");
+
+ana::HistAxis RecoObservable(std::string const &obsvarname = "EProxy",
+                             std::string const &binning = "uniform_smallrange");
 
 bool isRecoND(std::string var = "ETrue");
 

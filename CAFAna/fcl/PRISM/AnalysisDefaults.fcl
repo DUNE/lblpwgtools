@@ -68,34 +68,35 @@ DefaultRegScan: {
             {
                 chan: @local::FitChannels.Numu_disp
                 energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
+                scan: [1000,1E-18,1E-8] #1e-16
                 use_log_steps: true
                 is_fake_spec_run: true
             },
-            {
-                chan: @local::FitChannels.Numubar_disp
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::FitChannels.Nue_app
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            },
-            {
-                chan: @local::FitChannels.Nuebar_app
-                energy_range: [0, 6]
-                scan: [1000,1E-18,1E-16]
-                use_log_steps: true
-                is_fake_spec_run: true
-            }
+#            {
+#                chan: @local::FitChannels.Numubar_disp
+#                energy_range: [0, 6]
+#                scan: [1000,1E-18,1E-16]
+#                use_log_steps: true
+#                is_fake_spec_run: true
+#            },
+#            {
+#                chan: @local::FitChannels.Nue_app
+#                energy_range: [0, 6]
+#                scan: [1000,1E-18,1E-16]
+#                use_log_steps: true
+#                is_fake_spec_run: true
+#            },
+#            {
+#                chan: @local::FitChannels.Nuebar_app
+#                energy_range: [0, 6]
+#                scan: [1000,1E-18,1E-16]
+#                use_log_steps: true
+#                is_fake_spec_run: true
+#            }
         ]
     }
-    samples: @local::FitChannels.FourFlavor
+    #samples: @local::FitChannels.FourFlavor
+    samples: @local::FitChannels.Numu_disp
 }
 
 

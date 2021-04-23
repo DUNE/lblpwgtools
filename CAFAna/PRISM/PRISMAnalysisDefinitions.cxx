@@ -65,6 +65,17 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
     return binsNDEreco;
+  } else if (xbinning == "default_fine") {
+    std::vector<double> BE;
+    for (size_t e = 0; e < (binsNDEreco.Edges().size() - 1); e++) {
+      BE.push_back(binsNDEreco.Edges().at(e));
+      double binstep = (binsNDEreco.Edges().at(e + 1) - binsNDEreco.Edges().at(e)) / 2;
+      BE.push_back(binsNDEreco.Edges().at(e) + (1 * binstep));
+      //BE.push_back(binsNDEreco.Edges().at(e) + (2 * binstep));
+      //BE.push_back(binsNDEreco.Edges().at(e) + (3 * binstep));
+    }
+    BE.push_back(binsNDEreco.Edges().at(binsNDEreco.Edges().size() - 1));
+    return Binning::Custom(BE);
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -129,39 +140,12 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
   
-  std::vector<std::string> labels;
-  std::vector<Binning> bins;
-  std::vector<Var> vars;
-  if (varname == "ELepEHad") { // 2D ELep EHad Prediction
-    auto vardefLep = GetVar("ELep");
-    labels.push_back(vardefLep.first);
-    bins.push_back(GetBinning(xbinning));
-    vars.push_back(vardefLep.second);
-    auto vardefHad = GetVar("EHad"); 
-    labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning(xbinning));
-    vars.push_back(vardefHad.second);
-  } else if (varname == "ELepEHadReco") {
-    auto vardefLep = GetVar("RecoELep");
-    labels.push_back(vardefLep.first);
-    bins.push_back(GetBinning(xbinning));
-    vars.push_back(vardefLep.second);
-    auto vardefHad = GetVar("RecoEHad");
-    labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning(xbinning));
-    vars.push_back(vardefHad.second);
-  } else {
-    auto vardef = GetVar(varname);
-    labels.push_back(vardef.first);
-    bins.push_back(GetBinning(xbinning));
-    vars.push_back(vardef.second);
-  }
-  //auto vardef = GetVar(varname);
-  //HistAxis xax(vardef.first, GetBinning(xbinning), vardef.second);
+  // Seperate ND and FD axes for ND->FD extrapolation
+  // Fine binning for ND axis
+  HistAxis xaxND = RecoObservable(varname, "default_fine"); // xbinning uniform_smallrange
+  HistAxis xaxFD = RecoObservable(varname, xbinning);
 
-  HistAxis xax(labels, bins, vars); 
-
-  return {xax, axOffAxisPos, axOffAxis280kAPos};
+  return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
 }
 
 // Return HistAxis for true energy version of observable
@@ -215,6 +199,40 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else {
     return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
   }
+}
+
+HistAxis RecoObservable(std::string const &obsvarname,
+                        std::string const &binning) {              
+  std::vector<std::string> labels;
+  std::vector<Binning> bins;
+  std::vector<Var> vars;
+
+  if (obsvarname == "ELepEHad") { // 2D ELep EHad Prediction
+    auto vardefLep = GetVar("ELep");   
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefLep.second);   
+    auto vardefHad = GetVar("EHad");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefHad.second);
+  } else if (obsvarname == "ELepEHadReco") {   
+    auto vardefLep = GetVar("RecoELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefLep.second); 
+    auto vardefHad = GetVar("RecoEHad"); 
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning(binning)); 
+    vars.push_back(vardefHad.second);   
+  } else {
+    auto vardef = GetVar(obsvarname);
+    labels.push_back(vardef.first);
+    bins.push_back(GetBinning(binning));  
+    vars.push_back(vardef.second);
+  }
+
+  return HistAxis(labels, bins, vars);
 }
 
 bool isRecoND(std::string var) {

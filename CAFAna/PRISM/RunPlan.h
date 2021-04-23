@@ -102,7 +102,7 @@ struct RunPlan {
         NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
         NDSpec_h->SetBinError(xit + 1, yit + 1, be);         
       }
-      std::cout << ypos << " : " << sum << " events" << std::endl;
+      //std::cout << ypos << " : " << sum << " events" << std::endl;
     }
 
     std::vector<std::string> labels = NDSpec.GetLabels();
