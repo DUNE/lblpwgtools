@@ -129,8 +129,7 @@ namespace ana
 
     assert(tr);
 
-    long n;
-    caf::SRProxy sr(0, tr, "", n, 0);
+    caf::SRProxy sr(tr, "");
 
     FloatingExceptionOnNaN fpnan(false);
 
@@ -138,7 +137,7 @@ namespace ana
     if(max_entries != 0 && max_entries < Nentries)
       Nentries = max_entries;
 
-    for(n = 0; n < Nentries; ++n){
+    for(long n = 0; n < Nentries; ++n){
       tr->LoadTree(n); // nested mode
 
       FixupRecord(&sr);
