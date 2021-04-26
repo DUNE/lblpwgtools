@@ -8,6 +8,9 @@ namespace ana
   CovMxChiSqPreInvert::CovMxChiSqPreInvert(const Eigen::MatrixXd& mat,
                                            const Eigen::ArrayXd& pred)
   {
+    // Prediction has under/overflow and matrix does not
+    assert(pred.size() == mat.rows()+2);
+
     fCovMxInv = mat;
 
     // We add the squared fractional statistical errors to the diagonal. In
@@ -15,8 +18,8 @@ namespace ana
     // the ND using the no-syst-shifts number should be a pretty good
     // approximation, and it's much faster than needing to re-invert the matrix
     // every time.
-    for(int b = 0; b < pred.size(); ++b){
-      if(pred[b] > 0) fCovMxInv.coeffRef(b, b) += 1/pred[b];
+    for(int b = 0; b < pred.size()-2; ++b){
+      if(pred[b+1] > 0) fCovMxInv.coeffRef(b, b) += 1/pred[b+1];
     }
 
     fCovMxInv = fCovMxInv.inverse();
@@ -32,12 +35,15 @@ namespace ana
     ApplyMask(apred, adata);
 
     // Now it's absolute it's suitable for use in the chisq calculation
-    return Chi2CovMx(apred, adata, fCovMxInv);
+    return Chi2CovMx(apred, adata, covInvM);
   }
 
   //----------------------------------------------------------------------
   Eigen::MatrixXd CovMxChiSqPreInvert::GetAbsInvCovMat(const Eigen::ArrayXd& apred) const
   {
+    // Prediction has under/overflow and matrix does not
+    assert(apred.size() == fCovMxInv.rows()+2);
+
     Eigen::MatrixXd covInv = fCovMxInv;
 
     const int N = apred.size()-2; // no under/overflow
