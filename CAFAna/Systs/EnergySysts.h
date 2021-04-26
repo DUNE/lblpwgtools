@@ -50,13 +50,13 @@ namespace ana
         const double scale = .01 * sigma;
         if (sr->isFD) {
           if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
-          sr->Ev_reco_numu  += scale*pow(sr->RecoHadEnNumu, 0.5)*sr->RecoHadEnNumu;
-          sr->Ev_reco_nue   += scale*pow(sr->RecoHadEnNue, 0.5)*sr->RecoHadEnNue;
-          sr->RecoHadEnNumu += scale*pow(sr->RecoHadEnNumu, 0.5)*sr->RecoHadEnNumu;
-          sr->RecoHadEnNue  += scale*pow(sr->RecoHadEnNue, 0.5)*sr->RecoHadEnNue;
+          sr->Ev_reco_numu  += scale*sqrt(sr->RecoHadEnNumu)*sr->RecoHadEnNumu;
+          sr->Ev_reco_nue   += scale*sqrt(sr->RecoHadEnNue)*sr->RecoHadEnNue;
+          sr->RecoHadEnNumu += scale*sqrt(sr->RecoHadEnNumu)*sr->RecoHadEnNumu;
+          sr->RecoHadEnNue  += scale*sqrt(sr->RecoHadEnNue)*sr->RecoHadEnNue;
           if ( !(sr->isCC==1 && abs(sr->nuPDG) == 14) ) {
-            sr->Ev_reco_nue  += scale*pow(sr->RecoLepEnNue, 0.5)*sr->RecoLepEnNue;
-            sr->RecoLepEnNue += scale*pow(sr->RecoLepEnNue, 0.5)*sr->RecoLepEnNue;
+            sr->Ev_reco_nue  += scale*sqrt(sr->RecoLepEnNue)*sr->RecoLepEnNue;
+            sr->RecoLepEnNue += scale*sqrt(sr->RecoLepEnNue)*sr->RecoLepEnNue;
           }
         }
     }
@@ -73,13 +73,13 @@ namespace ana
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
         const double scale = .02 * sigma;
-        sr->Ev_reco_numu += sr->RecoHadEnNumu*scale*pow(sr->RecoHadEnNumu+0.1, -0.5);
-        sr->Ev_reco_nue  += sr->RecoHadEnNue*scale*pow(sr->RecoHadEnNue+0.1, -0.5);
-        sr->RecoHadEnNumu += sr->RecoHadEnNumu*scale*pow(sr->RecoHadEnNumu+0.1, -0.5);
-        sr->RecoHadEnNue  += sr->RecoHadEnNue*scale*pow(sr->RecoHadEnNue+0.1, -0.5);
+        sr->Ev_reco_numu += sr->RecoHadEnNumu*scale/sqrt(sr->RecoHadEnNumu+0.1);
+        sr->Ev_reco_nue  += sr->RecoHadEnNue*scale/sqrt(sr->RecoHadEnNue+0.1);
+        sr->RecoHadEnNumu += sr->RecoHadEnNumu*scale/sqrt(sr->RecoHadEnNumu+0.1);
+        sr->RecoHadEnNue  += sr->RecoHadEnNue*scale/sqrt(sr->RecoHadEnNue+0.1);
         if ( !(sr->isCC==1 && abs(sr->nuPDG) == 14) ) {
-          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
-          sr->RecoLepEnNue += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
+          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale / sqrt(sr->RecoLepEnNue+0.1);
+          sr->RecoLepEnNue += sr->RecoLepEnNue * scale / sqrt(sr->RecoLepEnNue+0.1);
         }
       }
     }
@@ -105,13 +105,13 @@ namespace ana
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
         if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
         double sumE = sr->eRecoP + sr->eRecoPip + sr->eRecoPim;
-        sr->eRecoP   += sr->eRecoP * scale * pow(sumE, 0.5);
-        sr->eRecoPim += sr->eRecoPim * scale * pow(sumE, 0.5);
-        sr->eRecoPip += sr->eRecoPip * scale * pow(sumE, 0.5);
-        sr->Ev_reco_numu += sumE * scale * pow(sumE, 0.5);
-        sr->Ev_reco_nue  += sumE * scale * pow(sumE, 0.5);
-        sr->RecoHadEnNumu += sumE * scale * pow(sumE, 0.5);
-        sr->RecoHadEnNue  += sumE * scale * pow(sumE, 0.5);
+        sr->eRecoP   += sr->eRecoP * scale * sqrt(sumE);
+        sr->eRecoPim += sr->eRecoPim * scale * sqrt(sumE);
+        sr->eRecoPip += sr->eRecoPip * scale * sqrt(sumE);
+        sr->Ev_reco_numu += sumE * scale * sqrt(sumE);
+        sr->Ev_reco_nue  += sumE * scale * sqrt(sumE);
+        sr->RecoHadEnNumu += sumE * scale * sqrt(sumE);
+        sr->RecoHadEnNue  += sumE * scale * sqrt(sumE);
       }
     }
   };
@@ -131,13 +131,13 @@ namespace ana
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
         if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
         double sumE = sr->eRecoP + sr->eRecoPip + sr->eRecoPim;
-        sr->Ev_reco_numu += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->Ev_reco_nue  += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->eRecoP   += sr->eRecoP * scale * pow(sumE+0.1, -0.5);
-        sr->eRecoPim += sr->eRecoPim * scale * pow(sumE+0.1, -0.5);
-        sr->eRecoPip += sr->eRecoPip * scale * pow(sumE+0.1, -0.5);
-        sr->RecoHadEnNumu += sumE * scale * pow(sumE+0.1, -0.5);
-        sr->RecoHadEnNue  += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->Ev_reco_numu += sumE * scale / sqrt(sumE+0.1);
+        sr->Ev_reco_nue  += sumE * scale / sqrt(sumE+0.1);
+        sr->eRecoP   += sr->eRecoP * scale / sqrt(sumE+0.1);
+        sr->eRecoPim += sr->eRecoPim * scale / sqrt(sumE+0.1);
+        sr->eRecoPip += sr->eRecoPip * scale / sqrt(sumE+0.1);
+        sr->RecoHadEnNumu += sumE * scale / sqrt(sumE+0.1);
+        sr->RecoHadEnNue  += sumE * scale / sqrt(sumE+0.1);
       }
     }
   };
@@ -155,8 +155,8 @@ namespace ana
     {
       if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .005 * sigma;
-        sr->Ev_reco_numu  += sr->RecoLepEnNumu * pow(sr->RecoLepEnNumu, 0.5) * scale;
-        sr->RecoLepEnNumu += sr->RecoLepEnNumu * pow(sr->RecoLepEnNumu, 0.5) * scale;
+        sr->Ev_reco_numu  += sr->RecoLepEnNumu * sqrt(sr->RecoLepEnNumu) * scale;
+        sr->RecoLepEnNumu += sr->RecoLepEnNumu * sqrt(sr->RecoLepEnNumu) * scale;
       }
     }
   };
@@ -172,8 +172,8 @@ namespace ana
     {
       if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
         const double scale = .02 * sigma;
-        sr->Ev_reco_numu  += sr->RecoLepEnNumu * scale * pow(sr->RecoLepEnNumu+0.1, -0.5);
-        sr->RecoLepEnNumu += sr->RecoLepEnNumu * scale * pow(sr->RecoLepEnNumu+0.1, -0.5);
+        sr->Ev_reco_numu  += sr->RecoLepEnNumu * scale / sqrt(sr->RecoLepEnNumu+0.1);
+        sr->RecoLepEnNumu += sr->RecoLepEnNumu * scale / sqrt(sr->RecoLepEnNumu+0.1);
       }
     }
   };
@@ -193,10 +193,10 @@ namespace ana
       const double scale = .3 * sigma;
       if (sr->isFD) {
         if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
-        sr->Ev_reco_numu += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
-        sr->Ev_reco_nue  += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
-        sr->RecoHadEnNumu += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
-        sr->RecoHadEnNue  += sr->eRecoN * pow(sr->eRecoN, 0.5) * scale;
+        sr->Ev_reco_numu += sr->eRecoN * sqrt(sr->eRecoN) * scale;
+        sr->Ev_reco_nue  += sr->eRecoN * sqrt(sr->eRecoN) * scale;
+        sr->RecoHadEnNumu += sr->eRecoN * sqrt(sr->eRecoN) * scale;
+        sr->RecoHadEnNue  += sr->eRecoN * sqrt(sr->eRecoN) * scale;
       }
     }
   };
@@ -212,10 +212,10 @@ namespace ana
       const double scale = .3 * sigma;
       if (sr->isFD) {
         if (sr->eRecoN < 0.) { sr->eRecoN = 0.; }
-        sr->Ev_reco_numu += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
-        sr->Ev_reco_nue  += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
-        sr->RecoHadEnNumu += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
-        sr->RecoHadEnNue  += sr->eRecoN * scale * pow(sr->eRecoN+0.1, -0.5);
+        sr->Ev_reco_numu += sr->eRecoN * scale / sqrt(sr->eRecoN+0.1);
+        sr->Ev_reco_nue  += sr->eRecoN * scale / sqrt(sr->eRecoN+0.1);
+        sr->RecoHadEnNumu += sr->eRecoN * scale / sqrt(sr->eRecoN+0.1);
+        sr->RecoHadEnNue  += sr->eRecoN * scale / sqrt(sr->eRecoN+0.1);
       }
     }
   };
@@ -235,15 +235,15 @@ namespace ana
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
         if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
-        sr->Ev_reco_numu += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
-        sr->Ev_reco_nue  += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
-        sr->RecoHadEnNumu += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
-        sr->RecoHadEnNue  += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
-        sr->eRecoPi0 += sr->eRecoPi0 * pow(sr->eRecoPi0, 0.5) * scale;
+        sr->Ev_reco_numu += sr->eRecoPi0 * sqrt(sr->eRecoPi0) * scale;
+        sr->Ev_reco_nue  += sr->eRecoPi0 * sqrt(sr->eRecoPi0) * scale;
+        sr->RecoHadEnNumu += sr->eRecoPi0 * sqrt(sr->eRecoPi0) * scale;
+        sr->RecoHadEnNue  += sr->eRecoPi0 * sqrt(sr->eRecoPi0) * scale;
+        sr->eRecoPi0 += sr->eRecoPi0 * sqrt(sr->eRecoPi0) * scale;
         if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
         if (sr->isCC==1 && abs(sr->nuPDG)==12) {
-          sr->Ev_reco_nue  += sr->RecoLepEnNue*pow(sr->RecoLepEnNue, 0.5)*scale;
-          sr->RecoLepEnNue += sr->RecoLepEnNue*pow(sr->RecoLepEnNue, 0.5)*scale;
+          sr->Ev_reco_nue  += sr->RecoLepEnNue*sqrt(sr->RecoLepEnNue)*scale;
+          sr->RecoLepEnNue += sr->RecoLepEnNue*sqrt(sr->RecoLepEnNue)*scale;
         }
       }
     }
@@ -261,14 +261,14 @@ namespace ana
       if (sr->isFD) {
         if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
         if (sr->eRecoPi0 < 0) sr->eRecoPi0 = 0.;
-        sr->Ev_reco_numu += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->Ev_reco_nue  += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->RecoHadEnNumu += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->RecoHadEnNue  += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->Ev_reco_numu += sr->eRecoPi0 * scale / sqrt(sr->eRecoPi0+0.1);
+        sr->Ev_reco_nue  += sr->eRecoPi0 * scale / sqrt(sr->eRecoPi0+0.1);
+        sr->RecoHadEnNumu += sr->eRecoPi0 * scale / sqrt(sr->eRecoPi0+0.1);
+        sr->RecoHadEnNue  += sr->eRecoPi0 * scale / sqrt(sr->eRecoPi0+0.1);
+        sr->eRecoPi0 += sr->eRecoPi0 * scale / sqrt(sr->eRecoPi0+0.1);
         if (sr->isCC==1 && abs(sr->nuPDG)==12) {
-          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
-          sr->RecoLepEnNue += sr->RecoLepEnNue * scale * pow(sr->RecoLepEnNue+0.1, -0.5);
+          sr->Ev_reco_nue  += sr->RecoLepEnNue * scale / sqrt(sr->RecoLepEnNue+0.1);
+          sr->RecoLepEnNue += sr->RecoLepEnNue * scale / sqrt(sr->RecoLepEnNue+0.1);
         }
       }
     }
