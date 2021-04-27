@@ -2,6 +2,8 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 
+#include "StandardRecord/FwdDeclare.h"
+
 #include <list>
 #include <string>
 

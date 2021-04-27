@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "TH1D.h"
+#include "TKey.h"
+#include "TObjString.h"
 #include "TParameter.h"
 
 #include "CAFAna/Core/IFitVar.h"

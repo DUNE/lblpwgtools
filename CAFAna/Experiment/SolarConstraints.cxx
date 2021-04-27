@@ -8,6 +8,7 @@
 #include "TObjString.h"
 
 #include <cassert>
+#include <iostream>
 
 namespace ana
 {

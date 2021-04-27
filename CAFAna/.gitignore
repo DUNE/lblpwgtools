@@ -1,6 +1,9 @@
 *_C_ACLiC_dict_rdict.pcm
 build/
-cmake/
+cmake/CMakeCache.txt
+cmake/CMakeFiles/
 *.d
 *.so
 *.root
+*.pdf
+*.png

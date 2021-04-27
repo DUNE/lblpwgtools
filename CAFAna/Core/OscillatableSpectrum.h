@@ -4,6 +4,7 @@
 
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/StanTypedefs.h"

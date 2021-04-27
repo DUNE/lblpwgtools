@@ -82,8 +82,6 @@ namespace ana
     /// Figure out if \a str is a wildcard or SAM query and return a source
     IFileSource* WildcardOrSAMQuery(const std::string& str) const;
 
-    virtual void AccumulateExposures(const caf::SRSpill* spill) = 0;
-
     /// Forwards to \ref fFileSource
     int NFiles() const;
 
@@ -200,8 +198,6 @@ namespace ana
                                  const Cut& cut,
                                  const SystShifts& shift,
                                  const Var& wei) override {}
-
-    void AccumulateExposures(const caf::SRSpill* spill) override {};
   };
   /// \brief Dummy loader that doesn't load any files
   ///

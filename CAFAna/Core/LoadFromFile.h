@@ -7,7 +7,7 @@
 
 #include "TFile.h"
 
-#include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 class TDirectory;
 

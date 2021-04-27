@@ -77,6 +77,8 @@ include_directories(
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
 
+find_library(TBB tbb $ENV{TBB_LIB})
+
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
@@ -91,6 +93,7 @@ set(StandardRecord_implementation_files
 set(StandardRecord_header_files
     ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
     ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
+    ${SRC_ROOT_PARENT}/StandardRecord/FwdDeclare.h
 )
 
 add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
