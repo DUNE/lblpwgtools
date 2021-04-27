@@ -8,6 +8,9 @@
 
 #include "OscLib/IOscCalc.h"
 
+#include "TFile.h"
+#include "TDirectory.h"
+
 namespace ana
 {
   //----------------------------------------------------------------------

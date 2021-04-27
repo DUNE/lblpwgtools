@@ -7,6 +7,8 @@
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 #pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "stan/callbacks/stream_logger.hpp"
 #include "stan/callbacks/stream_writer.hpp"
 #include "stan/io/reader.hpp"

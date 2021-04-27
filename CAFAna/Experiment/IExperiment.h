@@ -1,10 +1,8 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Core/LoadFromFile.h"
-#include "CAFAna/Core/Stan.h"
 
 class TDirectory;
 

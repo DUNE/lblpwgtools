@@ -1,8 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
-
-namespace osc{class OscCalcSterile;}
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 namespace ana
 {
@@ -15,8 +13,8 @@ namespace ana
   osc::IOscCalcAdjustable* DefaultOscCalcIH();
 
   /// Reset calculator to default assumptions for all parameters
-  void ResetSterileCalcToDefault(osc::OscCalcSterile* calc);
+  void ResetSterileCalcToDefault(osc::IOscCalcSterile* calc);
 
   /// Create a sterile calculator with default assumptions for all parameters
-  osc::OscCalcSterile* DefaultSterileCalc(int nflavors);
+  osc::IOscCalcSterile* DefaultSterileCalc(int nflavors);
 }

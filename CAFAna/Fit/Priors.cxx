@@ -1,8 +1,9 @@
 #include "CAFAna/Fit/Priors.h"
-#include "CAFAna/Core//Stan.h"
 
-#include "stan/math/prim/scal/prob/normal_lpdf.hpp"
-#include "stan/math/prim/scal/fun/erf.hpp"
+#include "CAFAna/Core/Stan.h"
+
+#include "stan/math/prim/prob/normal_lpdf.hpp"
+#include "stan/math/prim/fun/erf.hpp"
 
 namespace ana
 {

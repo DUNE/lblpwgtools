@@ -295,9 +295,6 @@ namespace ana
     std::cout << fPOT << " POT" << std::endl;
   }
 
-  //----------------------------------------------------------------------
-  void SpectrumLoader::AccumulateExposures(const caf::SRSpill *spill) {}
-
   // cafanacore's spectra are expecting a different structure of
   // spectrumloader. But we can easily trick it with these.
   struct SpectrumSink

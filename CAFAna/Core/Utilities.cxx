@@ -1,6 +1,8 @@
+// Need to get a stan include in before the eigen ones in the header
+#include "CAFAna/Core/Spectrum.h"
+
 #include "CAFAna/Core/Utilities.h"
 
-#include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Ratio.h"
 
 #include "CAFAna/Core/MathUtil.h"

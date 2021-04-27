@@ -6,8 +6,10 @@
 #include "Rtypes.h"
 
 #include "CAFAna/Core/FwdDeclare.h"
-#include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/Utilities.h"
+
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 class TLegend;
 class TGraph;

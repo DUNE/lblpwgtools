@@ -1,5 +1,6 @@
 #include "CAFAna/Experiment/IExperiment.h"
 
+#include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"

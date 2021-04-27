@@ -5,6 +5,7 @@
 #include "TH3D.h"
 #include "TFile.h"
 #include "TMap.h"
+#include "TObjString.h"
 #include "TParameter.h"
 #include "TSystem.h"
 #include "TMVA/Config.h"

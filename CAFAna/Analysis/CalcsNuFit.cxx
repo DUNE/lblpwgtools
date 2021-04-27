@@ -9,6 +9,8 @@
 
 #include "TFormula.h"
 
+#include <iostream>
+
 namespace ana
 {
   std::vector<std::pair<std::string, double> > ParseAsimovSet(std::string noApologies){
