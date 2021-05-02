@@ -4,6 +4,8 @@
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
+#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
+#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/EigenUtils.h"
 
@@ -290,7 +292,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMExtrap->Scale(1, "width");
         chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
         PRISMExtrap->SetDirectory(nullptr);
-
+        auto *PRISMExtrapCovMat = 
+              PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
+        // Careful: covariance matrix needs to be scaled by the factor squared
+        PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
+        PRISMExtrapCovMat->Scale(1, "width");
+        chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
+        PRISMExtrapCovMat->SetDirectory(nullptr);
         if (PRISM_write_debug) {
 
           for (auto const &comp : PRISMComponents) {
@@ -299,9 +307,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               continue;
             } else if (comp.first == PredictionPRISM::kNDDataCorr_FDExtrap) {
               continue;
+            } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
+              continue;
             }
 
-            auto *PRISMComp_h = comp.second.ToTHX(POT_FD);
+            auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(

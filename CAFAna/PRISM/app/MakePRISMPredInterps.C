@@ -542,86 +542,17 @@ int main(int argc, char const *argv[]) {
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
-  // This is super ugle code; I can only apologies...
   HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); 
-  bool twoDaxis(false);
-  if (TrueObsAxis.GetVars().size() == 2) twoDaxis = true; // using 2D analysis axis
 
-  std::vector<std::string> LabelsND_matrixRT; 
-  std::vector<std::string> LabelsFD_matrixRT;
-  std::vector<Binning> BinsND_matrixRT; 
-  std::vector<Binning> BinsFD_matrixRT;
-  std::vector<Var> VarsND_matrixRT; 
-  std::vector<Var> VarsFD_matrixRT;
+  std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
+  std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
 
-  std::string TrueLabel; 
-  Var TrueVar = TrueObsAxis.GetVars().at(0);
-  Binning TrueBins = TrueObsAxis.GetBinnings().at(0);
-  for (const std::string &l : TrueObsAxis.GetLabels()) TrueLabel += l + " and ";
-  TrueLabel.resize(TrueLabel.size() - 5); // drop the last "and" 
-  std::cout << "Label = " << TrueLabel << std::endl;
-  if (twoDaxis) {
-    Binning binsa = TrueObsAxis.GetBinnings().at(0);
-    Binning binsb = TrueObsAxis.GetBinnings().at(1);
-    int n = binsa.NBins() * binsb.NBins(); 
-    std::cout << "NBins TrueAxis = " << n << std::endl;
-    TrueBins = Binning::Simple(n, 0, n);
-    TrueVar = Var2D(TrueObsAxis.GetVars().at(0), binsa,
-                    TrueObsAxis.GetVars().at(1), binsb);
-  } else {
-    TrueBins = TrueObsAxis.GetBinnings().at(0);
-    TrueVar = TrueObsAxis.GetVars().at(0);
-  }
-
-  LabelsND_matrixRT.push_back(TrueLabel);
-  LabelsFD_matrixRT.push_back(TrueLabel);
-  BinsND_matrixRT.push_back(TrueBins);
-  BinsFD_matrixRT.push_back(TrueBins);
-  VarsND_matrixRT.push_back(TrueVar);
-  VarsFD_matrixRT.push_back(TrueVar);
-
-  // Reco axis
-  // The ND smearing matrix must have fine binning on the reco axis
-  std::string RecoLabel;
-  Var RecoVarND = axes.XProjectionND.GetVars().at(0);
-  Var RecoVarFD = axes.XProjectionFD.GetVars().at(0);
-  Binning RecoBinsND = axes.XProjectionND.GetBinnings().at(0);
-  Binning RecoBinsFD = axes.XProjectionFD.GetBinnings().at(0);
-  for (const std::string &l : axes.XProjectionFD.GetLabels()) RecoLabel += l + " and ";
-  RecoLabel.resize(RecoLabel.size() - 5); // drop the last "and"
-  if (twoDaxis) {
-    Binning binsaND = axes.XProjectionND.GetBinnings().at(0);
-    Binning binsbND = axes.XProjectionND.GetBinnings().at(1);
-    int nND = binsaND.NBins() * binsbND.NBins();
-    RecoBinsND = Binning::Simple(nND, 0, nND);
-    RecoVarND = Var2D(axes.XProjectionND.GetVars().at(0), binsaND,
-                      axes.XProjectionND.GetVars().at(1), binsbND);
-
-    Binning binsaFD = axes.XProjectionFD.GetBinnings().at(0);
-    Binning binsbFD = axes.XProjectionFD.GetBinnings().at(1);
-    int nFD = binsaFD.NBins() * binsbFD.NBins();
-    RecoBinsFD = Binning::Simple(nFD, 0, nFD);
-    RecoVarFD = Var2D(axes.XProjectionFD.GetVars().at(0), binsaFD, 
-                      axes.XProjectionFD.GetVars().at(1), binsbFD);
-  } else {
-    RecoBinsND = axes.XProjectionND.GetBinnings().at(0);
-    RecoVarND = axes.XProjectionND.GetVars().at(0);
-    RecoBinsFD = axes.XProjectionFD.GetBinnings().at(0); 
-    RecoVarFD = axes.XProjectionFD.GetVars().at(0); 
-  }
-
-  LabelsND_matrixRT.push_back(RecoLabel);
-  LabelsFD_matrixRT.push_back(RecoLabel);
-  BinsND_matrixRT.push_back(RecoBinsND);
-  BinsFD_matrixRT.push_back(RecoBinsFD);
-  VarsND_matrixRT.push_back(RecoVarND);
-  VarsFD_matrixRT.push_back(RecoVarFD);
-
-  // Hist axis for matrix
-  // if 2D prediction this contains a 2DVar on each axis
-  HistAxis const ERecETrueAxisND(LabelsND_matrixRT, BinsND_matrixRT, VarsND_matrixRT);
-  HistAxis const ERecETrueAxisFD(LabelsFD_matrixRT, BinsFD_matrixRT, VarsFD_matrixRT); 
-
+  // Get axes for ND and FD smearring matrices.
+  // Account for 2D predictions by projecting a 4D smearing matrix
+  // on to a 2D histogram. 
+  HistAxis const ERecETrueAxisND = GetMatrixAxis(NDAxisVec);
+  HistAxis const ERecETrueAxisFD = GetMatrixAxis(FDAxisVec);
+  
   //----------------------------------------------------------------
   // HistAxis needed for MC efficiency correction
   std::vector<std::string> Labels_eff_293kA = TrueObsAxis.GetLabels(); 

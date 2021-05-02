@@ -5,13 +5,17 @@ LIST(APPEND PRISM_implementation_files
   PredictionPRISM.cxx
   PRISMUtils.cxx
   PRISMAnalysisDefinitions.cxx
-  EigenUtils.cxx)
+  EigenUtils.cxx
+  PRISMDetectorExtrapolation.cxx
+  PRISMMCEffCorrection.cxx)
 LIST(APPEND PRISM_header_files
   PRISMExtrapolator.h
   PredictionPRISM.h
   PRISMUtils.h
   PRISMAnalysisDefinitions.h
-  EigenUtils.h)
+  EigenUtils.h
+  PRISMDetectorExtrapolation.h
+  PRISMMCEffCorrection.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 target_link_libraries(CAFAnaPRISM)
