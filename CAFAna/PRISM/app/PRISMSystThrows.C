@@ -4,6 +4,8 @@
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
+#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
+#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/EigenUtils.h"
 

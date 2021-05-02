@@ -6,14 +6,19 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
+#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
+#include "CAFAna/Core/ReweightableSpectrum.h"
+
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/RunPlan.h"
 //#include "CAFAna/PRISM/PRISMUtils.h"
+#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
+#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 
 #include "TH3.h"
 
@@ -70,6 +75,7 @@ public:
     kNDDataExtrap_280kA = 36,
     kNDData_FDExtrap = 37,
     kNDDataCorr_FDExtrap = 38,
+    kExtrapCovarMatrix = 39,
 
   };
 
@@ -194,16 +200,19 @@ public:
     case kNDDataCorr_FDExtrap: {
       return "NDDataCorr_FDExtrap";
     }
+    case kExtrapCovarMatrix: {
+      return "ExtrapCovarMatrix";
+    }
     }
     return "";
   }
 
-  //HistAxis fAnalysisAxis;
   HistAxis fAnalysisAxisND;
   HistAxis fAnalysisAxisFD;
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fNDFDEnergyMatchAxis;
+  HistAxis fCovarianceAxis;
 
   /*PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
@@ -327,6 +336,9 @@ public:
                     PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) {
     ((bm == PRISM::BeamMode::kNuMode) ? RunPlan_nu : RunPlan_nub) = rp;
   }
+
+  ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT, 
+                                             HistAxis const &axis) const;
 
 protected:
   ana::RunPlan RunPlan_nu, RunPlan_nub;

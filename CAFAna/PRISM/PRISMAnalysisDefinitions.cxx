@@ -140,9 +140,10 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
   
-  // Seperate ND and FD axes for ND->FD extrapolation
-  // Fine binning for ND axis
-  HistAxis xaxND = RecoObservable(varname, "default_fine"); // xbinning uniform_smallrange
+  // Seperate ND and FD axes for ND->FD extrapolation.
+  // Possible fine binning for ND axis, just keep them the
+  // same for now.
+  HistAxis xaxND = RecoObservable(varname, xbinning); // xbinning default_fine
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
@@ -151,7 +152,6 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 // Return HistAxis for true energy version of observable
 HistAxis TrueObservable(std::string const &obsvarname, 
                         std::string const &binning) {
-  //std::pair<std::string, Var> truevardef;
   auto truevardef = GetVar("ETrue");
   std::vector<std::string> labels;
   std::vector<Binning> bins;
