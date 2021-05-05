@@ -188,7 +188,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "nipi0", &sr.nipi0);
   SetBranchChecked(tr, "nipip", &sr.nipip);
   SetBranchChecked(tr, "nipim", &sr.nipim);
+  SetBranchChecked(tr, "nik0", &sr.nik0);
+  SetBranchChecked(tr, "nikp", &sr.nikp);
+  SetBranchChecked(tr, "nikm", &sr.nikm);
   SetBranchChecked(tr, "niem", &sr.niem);
+  SetBranchChecked(tr, "nNucleus", &sr.nNucleus);
   SetBranchChecked(tr, "Q2", &sr.Q2);
   SetBranchChecked(tr, "W", &sr.W);
   SetBranchChecked(tr, "Y", &sr.Y);
