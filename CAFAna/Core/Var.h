@@ -2,7 +2,7 @@
 
 #include "CAFAnaCore/CAFAna/Core/Var.h"
 
-#include "StandardRecord/FwdDeclare.h"
+#include "StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {

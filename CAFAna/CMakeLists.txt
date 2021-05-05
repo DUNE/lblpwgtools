@@ -73,6 +73,7 @@ include_directories(
   ${STAN_INC}
   $ENV{OSCLIB_INC}
   $ENV{CAFANACORE_INC}
+  $ENV{DUNEANAOBJ_INC}
 )
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
@@ -88,23 +89,6 @@ LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ
 
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
-
-## StandardRecord
-
-set(StandardRecord_implementation_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.cxx
-)
-
-set(StandardRecord_header_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
-)
-
-add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
-target_link_libraries(StandardRecord)
-
-install(TARGETS StandardRecord DESTINATION lib)
-
-install(FILES ${StandardRecord_header_files} DESTINATION include/StandardRecord/)
 
 ## CAFAna proper
 

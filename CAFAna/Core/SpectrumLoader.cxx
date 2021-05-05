@@ -12,7 +12,6 @@
 #include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Core/FixupRecord.h"
 
-#include "StandardRecord/StandardRecord.h"
 #include "StandardRecord/Proxy/SRProxy.h"
 
 #include <cassert>

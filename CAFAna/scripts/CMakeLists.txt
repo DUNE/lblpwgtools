@@ -50,7 +50,6 @@ foreach(SCRPT ${scripts_to_build})
     CAFAnaCuts
     CAFAnaExtrap
     CAFAnaVars
-    StandardRecord
     ${OSCLIB}
     )
 
