@@ -18,7 +18,7 @@ setup eigen v3_3_9a || exit
 setup stan v2_26_1 -q e19:prof || exit 1
 
 setup osclib v00.14 -q e19:prof:n309:stan || exit 1
-setup cafanacore v01.15 -q e19:prof:n309 || exit 1
+setup cafanacore v01.16 -q e19:prof:n309 || exit 1
 
 # To get setup_fnal_security which helps reading files over xrootd
 setup duneutil v09_21_00 -q e19:prof
