@@ -6,6 +6,8 @@ set(Systs_implementation_files
   EnergySysts.cxx
   TruthEnergyFDSysts.cxx
   TruthEnergyNDSysts.cxx
+  RecoEnergyFDSysts.cxx
+  RecoEnergyNDSysts.cxx
   FDRecoSysts.cxx
   XSecSysts.cxx
   NDRecoSysts.cxx
@@ -24,6 +26,8 @@ set(Systs_header_files
   EnergySysts.h
   TruthEnergyFDSysts.h
   TruthEnergyNDSysts.h
+  RecoEnergyFDSysts.h
+  RecoEnergyNDSysts.h
   FDRecoSysts.h
   XSecSysts.h
   NDRecoSysts.h

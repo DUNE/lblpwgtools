@@ -29,7 +29,8 @@ Var const kLepEReco = SIMPLEVAR(RecoLepE_NDFD); // RecoLepE_NDFD
 
 Var const kHadEReco = SIMPLEVAR(RecoHadE_NDFD);
 
-Var const kEVisReco = SIMPLEVAR(RecoLepE_NDFD) + SIMPLEVAR(RecoHadE_NDFD);
+//Var const kEVisReco = SIMPLEVAR(RecoLepE_NDFD) + SIMPLEVAR(RecoHadE_NDFD);
+Var const kEVisReco = SIMPLEVAR(VisReco_NDFD);
 
 Var const kEVisTrue = SIMPLEVAR(HadE) + SIMPLEVAR(LepE);
 

@@ -305,13 +305,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     //if (!sr.isFD) {
       //if (sr.Elep_reco != 0) {
-    if (sr.LepE > 0.05) {
+   /* if (sr.LepE > 0.05) {
       sr.simple_reco_numu = 1;
     } else if (sr.ePip > 0.2 || sr.ePim > 0.2) {
       sr.simple_reco_numu = 1;
     } else {
       sr.simple_reco_numu = 0;
-    }
+    }*/
       //} else {
       //  sr.simple_reco_numu = 0;
       //}
@@ -344,19 +344,17 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Common reco LepE variable for ND and FD
-    //if (sr.isCC) {
     if (sr.isFD) sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
     else sr.RecoLepE_NDFD = sr.Elep_reco;
-    //} //else { // If a NC event lepton is a neutrino, not reconstructed
-      //sr.RecoLepE_NDFD = 0;
-    //}
-    //if (sr.isFD) sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
+    
     if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
                                     sr.eRecoPi0 + sr.eRecoOther;
     else sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
                             sr.eRecoPi0 + sr.eRecoOther;
 
-    if (sr.isCC) {
+    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
+
+    /*if (sr.isCC) {
       std::unique_ptr<TRandom3> rando = std::make_unique<TRandom3>();
       double Mmuon = 0.1056583745;
       double lepKE = sr.LepE - Mmuon;
@@ -368,7 +366,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       sr.ProxyRecoLepE = recoKE + Mmuon;
     } else { // is NC, neutrino not reconstructed
       sr.ProxyRecoLepE = 0;
-    }
+    }*/
 
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;

@@ -31,6 +31,8 @@
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/TruthEnergyFDSysts.h"
 #include "CAFAna/Systs/TruthEnergyNDSysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
+#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
@@ -226,8 +228,8 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     //std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     //std::vector<const ISyst *> ndlist = GetNDRecoSysts();
     //std::vector<const ISyst *> nuelist = GetNuOnESysts();
-    std::vector<const ISyst *> elistFD = GetTrueEFDSysts();
-    std::vector<const ISyst *> elistND = GetTrueENDSysts();
+    std::vector<const ISyst *> elistFD = GetRecoEFDSysts();
+    std::vector<const ISyst *> elistND = GetRecoENDSysts();
 
     systlist.insert(systlist.end(), elistFD.begin(), elistFD.end());
     systlist.insert(systlist.end(), elistND.begin(), elistND.end());

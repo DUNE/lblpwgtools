@@ -1,3 +1,4 @@
+
 nuisance_parameters: {
      flux5: [  
           flux_Nov17_0, 
@@ -30,41 +31,48 @@ nuisance_parameters: {
      ]
 
      det_totalND: [ 
-          TruthEnergyScaleND,
+          RecoEnergyScaleND,
      ]
 
-     det_chargehadND: [
-          ChargedHadTruthUncorrND,
-          ChargedHadTruthUncorrSqrtND,
-          ChargedHadTruthUncorrInvSqrtND,
+     det_chargehadEND: [
+          ChargedHadRecoUncorrND,
+          ChargedHadRecoUncorrSqrtND,
+          ChargedHadRecoUncorrInvSqrtND,
+     ]
+     det_chargehadEFD: [
+          ChargedHadRecoUncorrFD,
+          ChargedHadRecoUncorrSqrtFD,
+          ChargedHadRecoUncorrInvSqrtFD,
+     ]
+     det_chargehadE: [
+          @sequence::nuisance_parameters.det_chargehadEND,
+          @sequence::nuisance_parameters.det_chargehadEFD
      ]
 
-     det_chargehadFD: [
-          ChargedHadTruthUncorrFD,
-          ChargedHadTruthUncorrSqrtFD,
-          ChargedHadTruthUncorrInvSqrtFD,
+     det_mularEND: [
+          ERecoScaleMuLArND,
+          #ERecoScaleMuLArSqrtND,
+          #ERecoScaleMuLArInvSqrtND
+     ]
+     det_mularEFD: [
+          ERecoScaleMuLArFD,
+          ERecoScaleMuLArSqrtFD,
+          ERecoScaleMuLArInvSqrtFD
+     ]
+     det_mularE: [
+          @sequence::nuisance_parameters.det_mularEND,
+          @sequence::nuisance_parameters.det_mularEFD,
      ]
 
-     det_chargehad: [
-          @sequence::nuisance_parameters.det_chargehadND,
-          @sequence::nuisance_parameters.det_chargehadFD
+     det_muResND: [
+          MuonRecoResND
      ]
-
-     det_mularND: [
-          ETruthScaleMuLArND,
-          #ETruthScaleMuLArSqrtND,
-          #ETruthScaleMuLArInvSqrtND
+     det_muResFD: [ 
+          MuonRecoResFD
      ]
-
-     det_mularFD: [
-          ETruthScaleMuLArFD,
-          #ETruthScaleMuLArSqrtFD,
-          #ETruthScaleMuLArInvSqrtFD
-     ]
-
-     det_mular: [
-          @sequence::nuisance_parameters.det_mularND,
-          @sequence::nuisance_parameters.det_mularFD,
+     det_muRes: [
+          @sequence::nuisance_parameters.det_muResND,
+          @sequence::nuisance_parameters.det_muResFD
      ]
 
      all: [

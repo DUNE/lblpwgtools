@@ -8,6 +8,8 @@
 
 #include "CAFAna/Systs/TruthEnergyFDSysts.h"
 #include "CAFAna/Systs/TruthEnergyNDSysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
+#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
 using namespace ana;
@@ -333,7 +335,7 @@ int main(int argc, char const *argv[]) {
   }
 
   // Sort out systematics if they've been requested
-  std::vector<ana::ISyst const *> los, los_flux, los_det;
+  std::vector<ana::ISyst const *> los, los_flux; /*los_det*/
   if (syst_descriptor.size()) {
     los = GetListOfSysts(syst_descriptor);
 
@@ -344,8 +346,8 @@ int main(int argc, char const *argv[]) {
 
     los_flux = los;
     KeepSysts(los_flux, GetListOfSysts("nov17flux:nodet:noxsec"));
-    los_det = los;
-    KeepSysts(los_det, GetListOfSysts("noflux:noxsec"));
+    //los_det = los;
+    //KeepSysts(los_det, GetListOfSysts("noflux:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
     los = GetListOfSysts(true, true, true, true, true, false, addfakedata);

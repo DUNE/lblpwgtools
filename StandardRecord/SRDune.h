@@ -33,6 +33,7 @@ public:
 
   double RecoLepE_NDFD;
   double RecoHadE_NDFD;
+  double VisReco_NDFD;
   // 'Reco' LepE which just smears LepE my detector res
   double ProxyRecoLepE;
 
