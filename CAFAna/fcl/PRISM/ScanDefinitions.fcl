@@ -2,7 +2,7 @@ ScanDefinitions: {
     ssth23_coarse: [
       {
           name: ssth23
-          scan_steps:  [30, 0.4, 0.7]
+          scan_steps:  [25, 0.4, 0.65]
       },
     ]
     dmsq23_coarse: [

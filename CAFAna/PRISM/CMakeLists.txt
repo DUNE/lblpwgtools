@@ -31,3 +31,4 @@ install(FILES ${PRISM_header_files} DESTINATION include/CAFAna/PRISM)
 
 add_subdirectory(app)
 add_subdirectory(flux)
+add_subdirectory(scripts)

@@ -1,0 +1,100 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+	output_file: [PRISMPred_Fullv7Prod_EVisRec_Sel_MuDetSyst_5May21.root, "UPDATE"]
+	#state_file: /dune/data/users/chasnip/NewCode/PredInterps/PRISMState_Fullv7Prod_EVisRec_MuNDFDResNDScale3_5May.root
+	#state_file: /pnfs/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_Fullv7Prod_EVisRec_MuLArNDFDRes_3May21.root
+	#state_file: PRISMState_Fullv7Prod_EVisRec_MuLArNDFDRes_3May21.root
+	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_Fullv7Prod_EVisRec_MuLArNDFDRes_3May21.root
+
+	projection_name: EVisReco
+
+	use_PRISM: true
+	POT_years: 1.0
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			#chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1E-14
+			reg_factor_280: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: true
+
+		RunPlans: {
+			numode: @local::RunPlans.guess
+		}
+		Use_EventRateMatching: true
+
+		write_debug: true
+
+                reg_factor_extrap: 1e-10 #1E-30
+	}                                                                                                
+	samples: @local::FitChannels.Numu_disp
+	#samples: @local::FitChannels.Nue_app
+}
+
+
+predictions: [
+
+	{
+		@table::BasicPred
+		PRISM.Use_EventRateMatching: true
+		PRISM.match_conditioning[0].reg_factor_293kA: 2.48886E-17
+		PRISM.match_conditioning[0].reg_factor_280kA: 1E-18
+		output_dir: "numu_EvMatch"
+	},
+
+	{
+		@table::BasicPred
+		PRISM.Use_EventRateMatching: true
+		PRISM.match_conditioning[0].reg_factor_293kA: 2.48886E-17
+		PRISM.match_conditioning[0].reg_factor_280kA: 0
+		output_dir: "numu_EvMatch_MuDet"
+		PRISM.set_ND_errors_from_rate: true           
+		syst: {
+			shifts: [
+				#[ERecoScaleMuLArND, 3],
+				#[ERecoScaleMuLArSqrtND, 3],
+				#[ERecoScaleMuLArInvSqrtND, 3],
+				[MuonRecoResND, 3],
+				[MuonRecoResFD, 3],
+			]
+		}
+	},
+#
+#	{
+#		@table::BasicPred
+#		PRISM.Use_EventRateMatching: true 
+#		PRISM.match_conditioning[0].reg_factor_293kA: 5E-17
+#		PRISM.match_conditioning[0].reg_factor_280kA: 0
+#		output_dir: "numu_EvMatch_NuFit"
+#		PRISM.set_ND_errors_from_rate: true
+#		syst: {
+#			shifts: [
+#				[MaCCQE, 1],
+#				[MaCCRES, 1],
+#				[MvCCRES, 1],
+#				[AhtBY, 1],
+#				[BhtBY, 1],
+#				[CV1uBY, 1],
+#				[CV2uBY, 1],
+#				[BeRPA_A, 1],
+#				[BeRPA_B, 1], 
+#				[BeRPA_D, 1],
+#			]
+#		}
+#	},
+
+]	
+
+predictions[0].output_file[1]: "RECREATE"
+
