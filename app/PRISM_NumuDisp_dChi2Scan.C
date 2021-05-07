@@ -138,12 +138,17 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    TFile fs(state_file.c_str());
+    //TFile fs(state_file.c_str());
+    TFile *fs = TFile::Open(state_file.c_str());
+    if (fs->IsZombie()) {
+      std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
+      abort();
+    }
     std::cout << "Loading " << varname << " state from " << state_file
       << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname);
+    States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs.Close();
+    fs->Close();
   }
 
   PRISMStateBlob &state = States[state_file];
