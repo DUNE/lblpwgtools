@@ -73,11 +73,13 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
 
   if (Use_EventRateMatching) {
     fluxmatcher.Initialize({
-        {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
-        {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+        {"ND_293kA_nu_numu", state.MatchPredInterps[kND_293kA_nu_numu].get()},//eran
+        {"ND_280kA_nu_numu", state.MatchPredInterps[kND_280kA_nu_numu].get()},
+        {"ND_nu_nue", state.MatchPredInterps[kND_nu_nue].get()}, ///added not sure if works?? 
         {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-        {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
-        {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+        {"ND_293kA_nub_numu", state.MatchPredInterps[kND_293kA_nub_numu].get()},
+        {"ND_280kA_nub_numu", state.MatchPredInterps[kND_280kA_nub_numu].get()},
+        {"ND_nub_nue", state.MatchPredInterps[kND_nub_nue].get()},
         {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
     });
   } else {

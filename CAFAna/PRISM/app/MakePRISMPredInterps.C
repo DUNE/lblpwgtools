@@ -364,20 +364,24 @@ int main(int argc, char const *argv[]) {
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
   std::vector<Var> WeightVars(kNPRISMConfigs, ana::Constant(1));
-  WeightVars[kND_293kA_nu] = GetNDWeight("", true);
-  WeightVars[kND_280kA_nu] = GetNDWeight("", true);
-  WeightVars[kND_293kA_nub] = GetNDWeight("", false);
-  WeightVars[kND_280kA_nub] = GetNDWeight("", false);
+  WeightVars[kND_293kA_nu_numu] = GetNDWeight("", true);
+  WeightVars[kND_280kA_nu_numu] = GetNDWeight("", true);
+  WeightVars[kND_293kA_nub_numu] = GetNDWeight("", false);
+  WeightVars[kND_280kA_nub_numu] = GetNDWeight("", false);
+  WeightVars[kND_nu_nue] = GetNDWeight("", true);//adding nue
+  WeightVars[kND_nub_nue] = GetNDWeight("", false);
   WeightVars[kFD_nu_nonswap] = GetFDWeight("", true);
   WeightVars[kFD_nu_nueswap] = GetFDWeight("", true);
   WeightVars[kFD_nub_nonswap] = GetFDWeight("", false);
   WeightVars[kFD_nub_nueswap] = GetFDWeight("", false);
 
   std::vector<Var> AnaWeightVars(kNPRISMConfigs, ana::Constant(1));
-  AnaWeightVars[kND_293kA_nu] = GetNDWeight(anaweighters, true);
-  AnaWeightVars[kND_280kA_nu] = GetNDWeight(anaweighters, true);
-  AnaWeightVars[kND_293kA_nub] = GetNDWeight(anaweighters, false);
-  AnaWeightVars[kND_280kA_nub] = GetNDWeight(anaweighters, false);
+  AnaWeightVars[kND_293kA_nu_numu] = GetNDWeight(anaweighters, true);
+  AnaWeightVars[kND_280kA_nu_numu] = GetNDWeight(anaweighters, true);
+  AnaWeightVars[kND_293kA_nub_numu] = GetNDWeight(anaweighters, false);
+  AnaWeightVars[kND_280kA_nub_numu] = GetNDWeight(anaweighters, false);
+  AnaWeightVars[kND_nu_nue] = GetNDWeight(anaweighters, true);//adding nue
+  AnaWeightVars[kND_nub_nue] = GetNDWeight(anaweighters, false);
   AnaWeightVars[kFD_nu_nonswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nu_nueswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nub_nonswap] = GetFDWeight(anaweighters, false);
@@ -385,64 +389,33 @@ int main(int argc, char const *argv[]) {
 
   // Generally these will be just selecting signal and are the ones used in the
   // PRISM interp
-  std::vector<Cut> AnalysisCuts_basis(//AnalysisCuts_basis are numu use GetNdSignalCut_basis
+  std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_basis
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts_basis[kND_293kA_nu] = GetNDSignalCut_basis(UseSel, true, true);//eran
-  AnalysisCuts_basis[kND_280kA_nu] = GetNDSignalCut_basis(UseSel, true, true);
-  AnalysisCuts_basis[kND_293kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
-  AnalysisCuts_basis[kND_280kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
-  AnalysisCuts_basis[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
-  AnalysisCuts_basis[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
-  AnalysisCuts_basis[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
-  AnalysisCuts_basis[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
-
-  std::vector<Cut> AnalysisCuts_target(  //AnalysisCuts_target are nue use GetNDSignalCut_target
-      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts_target[kND_293kA_nu] = GetNDSignalCut_target(UseSel, true, false);//eran changed, added third "IsNuMu" boolean. False here
-  AnalysisCuts_target[kND_280kA_nu] = GetNDSignalCut_target(UseSel, true, false);
-  AnalysisCuts_target[kND_293kA_nub] = GetNDSignalCut_target(UseSel, false, false);
-  AnalysisCuts_target[kND_280kA_nub] = GetNDSignalCut_target(UseSel, false, false);
-  AnalysisCuts_target[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
-  AnalysisCuts_target[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
-  AnalysisCuts_target[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
-  AnalysisCuts_target[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
-
-std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_basis //eran -- needed just AnalysisCuts for FD, picked ND basis?
-      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  AnalysisCuts[kND_293kA_nu] = GetNDSignalCut_basis(UseSel, true, true);//eran
-  AnalysisCuts[kND_280kA_nu] = GetNDSignalCut_basis(UseSel, true, true);
-  AnalysisCuts[kND_293kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
-  AnalysisCuts[kND_280kA_nub] = GetNDSignalCut_basis(UseSel, false, true);
+  AnalysisCuts[kND_293kA_nu_numu] = GetNDSignalCut(UseSel, true, true);//eran
+  AnalysisCuts[kND_280kA_nu_numu] = GetNDSignalCut(UseSel, true, true);
+  AnalysisCuts[kND_293kA_nub_numu] = GetNDSignalCut(UseSel, false, true);
+  AnalysisCuts[kND_280kA_nub_numu] = GetNDSignalCut(UseSel, false, true);//add the other configs
+  AnalysisCuts[kND_nu_nue] = GetNDSignalCut(UseSel, true, false);//adding nue
+  AnalysisCuts[kND_nub_nue] = GetNDSignalCut(UseSel, false, false);
   AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
   AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
   AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
   AnalysisCuts[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
- 
-
 
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
-  std::vector<Cut> OnAxisSelectionCuts_basis(
+  std::vector<Cut> OnAxisSelectionCuts(
       kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  OnAxisSelectionCuts_basis[kND_293kA_nu] = GetNDSignalCut_basis(true, true, true);//for basis IsNuMu is true
-  OnAxisSelectionCuts_basis[kND_280kA_nu] = GetNDSignalCut_basis(true, true, true);
-  OnAxisSelectionCuts_basis[kND_293kA_nub] = GetNDSignalCut_basis(true, false, true);
-  OnAxisSelectionCuts_basis[kND_280kA_nub] = GetNDSignalCut_basis(true, false, true);
-  OnAxisSelectionCuts_basis[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
-  OnAxisSelectionCuts_basis[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
-  OnAxisSelectionCuts_basis[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
-  OnAxisSelectionCuts_basis[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
-
-  std::vector<Cut> OnAxisSelectionCuts_target(
-      kNPRISMConfigs, Cut([](const caf::StandardRecord *) { return false; }));
-  OnAxisSelectionCuts_target[kND_293kA_nu] = GetNDSignalCut_target(true, true, false);//for ND Nue target  IsNuMu is false
-  OnAxisSelectionCuts_target[kND_280kA_nu] = GetNDSignalCut_target(true, true, false);
-  OnAxisSelectionCuts_target[kND_293kA_nub] = GetNDSignalCut_target(true, false, false);
-  OnAxisSelectionCuts_target[kND_280kA_nub] = GetNDSignalCut_target(true, false, false);
-  OnAxisSelectionCuts_target[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
-  OnAxisSelectionCuts_target[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
-  OnAxisSelectionCuts_target[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
-  OnAxisSelectionCuts_target[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
+  OnAxisSelectionCuts[kND_293kA_nu_numu] = GetNDSignalCut(true, true, true);//for basis IsNuMu is true
+  OnAxisSelectionCuts[kND_280kA_nu_numu] = GetNDSignalCut(true, true, true);
+  OnAxisSelectionCuts[kND_293kA_nub_numu] = GetNDSignalCut(true, false, true);
+  OnAxisSelectionCuts[kND_280kA_nub_numu] = GetNDSignalCut(true, false, true);
+  OnAxisSelectionCuts[kND_nu_nue] = GetNDSignalCut(true, true, false);//adding nue
+  OnAxisSelectionCuts[kND_nub_nue] = GetNDSignalCut(true, false, false);
+  OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
+  OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
+  OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
+  OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
 
   auto specrunweight =
         ana::Var([&](const caf::StandardRecord *sr) -> double {
@@ -452,17 +425,19 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
           // All on axis events should be doubled about the x=0 symmetry axis.
           return 2;
         });
-  WeightVars[kND_293kA_nu] = WeightVars[kND_293kA_nu] * specrunweight;
-  WeightVars[kND_280kA_nu] = WeightVars[kND_280kA_nu] * specrunweight;
-  AnaWeightVars[kND_293kA_nu] = AnaWeightVars[kND_293kA_nu] * specrunweight;
-  AnaWeightVars[kND_280kA_nu] = AnaWeightVars[kND_280kA_nu] * specrunweight;
+  WeightVars[kND_293kA_nu_numu] = WeightVars[kND_293kA_nu_numu] * specrunweight;
+  WeightVars[kND_nu_nue] = WeightVars[kND_nu_nue] * specrunweight; //adding configs
+  WeightVars[kND_280kA_nu_numu] = WeightVars[kND_280kA_nu_numu] * specrunweight;
+  AnaWeightVars[kND_293kA_nu_numu] = AnaWeightVars[kND_293kA_nu_numu] * specrunweight;
+  AnaWeightVars[kND_280kA_nu_numu] = AnaWeightVars[kND_280kA_nu_numu] * specrunweight;
+  AnaWeightVars[kND_nu_nue] = AnaWeightVars[kND_nu_nue] * specrunweight;//adding configs
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
   auto PRISM =
       std::make_unique<PredictionPRISM>(axes.XProjection, axes.OffAxisPosition,
-                                        axes.OffAxis280kAPosition, MatchAxis);
+                                        axes.OffAxis280kAPosition, MatchAxis);//eran
 
   Loaders Loaders_nu, Loaders_nub;
 
@@ -470,21 +445,23 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
   size_t NNDFiles_nu = 1;
 
   std::vector<std::shared_ptr<SpectrumLoader>> FileLoaders;
-  FillWithNulls(FileLoaders, 8);
+  FillWithNulls(FileLoaders, kNPRISMConfigs);//was 8 //testing back to 8, resetting all kNPRISMConfigs (in the size_t it = 0 cases) = 8
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
-    bool IsND280kA = IsND280kAConfig(it);
-    size_t IsNueSwap = IsNueConfig(it);
+    bool IsNDNue = IsNDNueConfig(it); //eran
+    bool IsND280kA = IsND280kA_numu_Config(it);
+    bool IsND293kA_numu = IsND293kA_numu_Config(it);
+    size_t IsNueSwap = IsFDNueConfig(it);
 
-    size_t file_it = 0;
+    size_t file_it = 0;//eran NOT pointing to config numbers, but intead it list for FileLoaders
     if (IsND) {
       file_it = IsNu ? 0 : 3;
     } else if (IsNu) {
       file_it = IsNueSwap ? 2 : 1;
     } else {
       file_it = IsNueSwap ? 5 : 4;
-    }
+    }  
 
     std::cout << "it: " << it << ", IsNu: " << IsNu << ", IsND: " << IsND
               << ", IsND280kA: " << IsND280kA << ", IsNueSwap: " << IsNueSwap
@@ -494,30 +471,57 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
     if (!file_lists[file_it].second.size()) {
       continue;
     }
+
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
-    FileLoaders[it] = IsND280kA ? FileLoaders[it - 1]
-                                : std::make_shared<SpectrumLoader>(
-                                      file_lists[file_it].second, kBeam, nmax);
-    if (IsND && !IsND280kA) { // Is ND, but do not need to repeat for 280 kA run
 
-      //BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
-//	BeamChan chanmode = IsNu ? kNue_I_Numode;//test if get the ND nues into state file
+    if (IsND293kA_numu) {      
+	FileLoaders[it] =  std::make_shared<SpectrumLoader>(file_lists[file_it].second, kBeam, nmax);
+     } 
+   
+    if (IsND280kA) {      
+       FileLoaders[it] = FileLoaders[it - 1];
 
-     // PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
-             //                AnaWeightVars[it], DataShift, kNumu_Numode);//
-	PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts_basis[it], AnaWeightVars[it], DataShift, kNumu_Numode);	
-//	PRISM->AddNDDataLoader(*FileLoaders[it], GetNDSignalCut(true, true, false),
-  //                           AnaWeightVars[it], DataShift, kNue_I_Numode);
-        PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts_target[it], AnaWeightVars[it], DataShift, kNue_I_Numode);
+    }  else if (IsNDNue) {     
+        FileLoaders[it] = FileLoaders[it - 2];
+    }
 
-      Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
+    if (IsND293kA_numu) {
+	BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
+   	PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
+                             AnaWeightVars[it], DataShift,
+                             chanmode);
+// Assumes FD/ND biases not applied simultaneously! //ending before luke (NDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+        Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
+
+    } if (IsNDNue) {
+        BeamChan chanmode = IsNu ? kNue_I_Numode : kNue_I_NuBarmode;
+        PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
+                             AnaWeightVars[it], DataShift, 
+                             chanmode);
+// Assumes FD/ND biases not applied simultaneously! //ending before luke (NDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+      //no Loaders here!  IsNDNue uses the same file as ND293ka_numu! (as does the ND280kA0 
 
     } else if (!IsND) { // Is FD
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, Loaders::kMC,
                            kBeam,
                            IsNueSwap ? Loaders::kNueSwap : Loaders::kNonSwap);
     }
-  }
+} //end for loop
+
+//Notes from Luke 05/25/2021 if IsND293kA_numu FileLoaders[it] = std::make_shared<SpectrumLoader>(
+////                                      file_lists[file_it].second, kBeam, nmax);
+//// (if first time reading the file, out othte config numu is first, load this up
+//// (if another config, just point at that file?  the way you do that:
+//// if ND280kA_numu FileLoaders[it] = FileLoaders[it -1]
+//// ==expanded of what is below 
+//// add another if state
+//// if IsNDNue FileLoaders[it] = FileLoaders[it - 2] because we're two configs down from the default ND293kA_numu 
+//// so
+//// way PRISM sees ND nue sort of struc same as 280kA -- not new file to load, just different analysis cut i
+////
+////eran
+////this all brand new 
+//
 
   // Make the ND prediction interp include the same off-axis axis used for
   // PRISM weighting.
@@ -573,17 +577,14 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
   FillWithNulls(MatchPredGens, kNPRISMConfigs);
   FillWithNulls(MatchPredInterps, kNPRISMConfigs);
 
-  std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens_basis;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_basis;
-  FillWithNulls(SelPredGens_basis, kNPRISMConfigs);
-  FillWithNulls(SelPredInterps_basis, kNPRISMConfigs);
- std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens_target;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_target;
-  FillWithNulls(SelPredGens_target, kNPRISMConfigs);
-  FillWithNulls(SelPredInterps_target, kNPRISMConfigs);
+  std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens; //back to before, eran
+  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
+  FillWithNulls(SelPredGens, kNPRISMConfigs);
+  FillWithNulls(SelPredInterps, kNPRISMConfigs);
 
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;//for FD, don't use for ND nue target eran
- FillWithNulls(SelPredInterps, kNPRISMConfigs);
+  //std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;//for FD, don't use for ND nue target eran
+  //FillWithNulls(SelPredInterps, kNPRISMConfigs);
+  
   // For Smearing Matrix
   std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
@@ -606,12 +607,14 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
 
   static osc::NoOscillations no_osc;
 
-  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {  //was kNPRISMConfigs
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
-    bool IsND280kA = IsND280kAConfig(it);
+    bool IsNDNue = IsNDNueConfig(it); //eran
+    bool IsND280kA = IsND280kA_numu_Config(it);
+    bool IsND293kA = IsND293kA_numu_Config(it); //eran
     size_t fd_it = 0;
-    size_t IsNueSwap = IsNueConfig(it);
+    size_t IsNueSwap = IsFDNueConfig(it);
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
@@ -620,22 +623,27 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
 
     if (!FileLoaders[it]) {
       continue;
-    }
+    }  
+
     if (IsND) { // Is ND
-
-      //BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode BeamMode::kNuMode : BeamMode::kNuBarMode;  //eran add
-//	BeamChan chanmode = IsNu? kNue_I_Numode;//check if get to state file 
-
       // Only need to do this once as the PRISM prediction handles the 293, 280
       // kA runs separately
       if (!IsND280kA) {
-        //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
-          //                   los, kNumu_Numode);
-        PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts_basis[it], AnaWeightVars[it], los, kNumu_Numode);
-        //PRISM->AddNDMCLoader(Loaders_bm, GetNDSignalCut(true, true, false), AnaWeightVars[it],
-          //                   los, kNue_I_Numode);
-	PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts_target[it], AnaWeightVars[it], los, kNue_I_Numode);
-      }
+
+        if (IsNDNue) {
+
+          PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los, kNumu_Numode);
+       
+        }
+
+        else if (!IsNDNue) { //is ND numu {
+
+          PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los, kNue_I_Numode);
+  
+        }
+//check older verison for notes, previous version eran
+      }//end !IsND280kA
+      //don't end IsND here!! below is also for IsND!!
 
       // Corrects for non-uniform off-axis binning
       auto slice_width_weight = NDSliceCorrection(
@@ -654,21 +662,21 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
           los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign seems to fail when I include this?
 
-      SelPredGens_basis[it] = std::make_unique<NoOscPredictionGenerator>(
+      SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(  //recombined SelPredGens and SelPredInterps, eran
           NDObservedSpectraAxis,
-          OnAxisSelectionCuts_basis[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
+          OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * slice_width_weight); 
-      SelPredInterps_basis[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
+      SelPredInterps[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign
 
-      SelPredGens_target[it] = std::make_unique<NoOscPredictionGenerator>(
-          NDObservedSpectraAxis,
-          OnAxisSelectionCuts_target[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
-          AnaWeightVars[it] * slice_width_weight);
-      SelPredInterps_target[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign   
+   //   SelPredGens_target[it] = std::make_unique<NoOscPredictionGenerator>(
+   //       NDObservedSpectraAxis,
+   //       OnAxisSelectionCuts_target[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
+   //       AnaWeightVars[it] * slice_width_weight);
+  //    SelPredInterps_target[it] = std::make_unique<PredictionInterp>(
+  //        los, &no_osc, *SelPredGens_target[it], Loaders_bm, kNoShift
+ //         ); //PredictionInterp::kSplitBySign   
 
       // PredInterps for ND smearing matrix
       // Only need to do this for 293 kA
@@ -684,7 +692,9 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
             los_det, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
             ); //PredictionInterp::kSplitBySign
       }
+//IsND from:628 ends below, right before else!!
     } else { // Is FD
+      continue; //eran does this work?
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
@@ -727,16 +737,10 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
           los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
 
-      SelPredGens_basis[it] = std::make_unique<NoExtrapPredictionGenerator>(
-          axes.XProjection, OnAxisSelectionCuts_basis[it], AnaWeightVars[it]);
-      SelPredInterps_basis[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens_basis[it], Loaders_bm, kNoShift
-          ); // PredictionInterp::kSplitBySign
-
-      SelPredGens_target[it] = std::make_unique<NoExtrapPredictionGenerator>(
-          axes.XProjection, OnAxisSelectionCuts_target[it], AnaWeightVars[it]);
-      SelPredInterps_target[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens_target[it], Loaders_bm, kNoShift
+      SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
+          axes.XProjection, OnAxisSelectionCuts[it], AnaWeightVars[it]);
+      SelPredInterps[it] = std::make_unique<PredictionInterp>(
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
           ); // PredictionInterp::kSplitBySign
 
       // Matrix of ERec v ETrue for FD
@@ -815,13 +819,14 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
   Loaders_nu.Go();
   Loaders_nub.Go();
 
-  for (size_t it = 0; it < kNPRISMConfigs; ++it) {
+  for (size_t it = 0; it < kNPRISMConfigs; ++it) {  //was kNPRISMConfigs
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
-    bool IsND280kA = IsND280kAConfig(it);
+    bool IsNDNue = IsNDNueConfig(it); //eran
+    bool IsND280kA = IsND280kA_numu_Config(it);
 
     size_t fd_it = 0;
-    size_t IsNue = IsNueConfig(it);
+    size_t IsNue = IsFDNueConfig(it);
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
@@ -831,9 +836,9 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
 
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SelPredInterps_basis[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SelPredInterps_target[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      if (!IsND280kA) NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1); //combine eran
+      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      if (!IsND280kA) { NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
@@ -841,7 +846,8 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
       SaveTo(fout,
              std::string("NDSelectedInterp_") + axdescriptor +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
-             SelPredInterps_basis[it]); //eran ask Ciaran
+             SelPredInterps[it]); //eran here able to save as one again because they are one!
+}//eran added loop here, bug?
       if (!IsND280kA) {
         SaveTo(fout,
                std::string("NDMatrixInterp_ERecETrue") +
@@ -849,6 +855,7 @@ std::vector<Cut> AnalysisCuts(//AnalysisCuts_basis are numu use GetNdSignalCut_b
                NDMatrixPredInterps[it]);
       }
     } else { // Is FD
+      continue; // eran skip over, need ot change? 
       if (!IsNue) {
         SaveTo(fout,
                std::string("FDMatchInterp_ETrue_numu") +

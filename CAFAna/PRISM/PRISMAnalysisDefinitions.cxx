@@ -159,8 +159,12 @@ const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
   return sr->perPOTWeight * sr->perFileWeight;
 });
 
-Cut GetNDSignalCut_basis(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
+Cut GetNDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {  //eran
 
+
+
+if (isNuMu) { 
+ 
   return UseOnAxisSelection
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV && //need ot be Nue eran
                 kIsOutOfTheDesert)
@@ -169,7 +173,7 @@ Cut GetNDSignalCut_basis(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
 		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
 
-Cut GetNDSignalCut_target(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
+else if (!isNuMu)  { //is NDNue
 
   return UseOnAxisSelection
              ? ((isNuMode ? kPassND_FHC_NUE : kPassND_RHC_NUE) && kIsTrueFV && //need ot be Nue eran
@@ -177,6 +181,15 @@ Cut GetNDSignalCut_target(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
                 kIsOutOfTheDesert &&
                 (isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
+}
+
+std::cout << "Should not enter here";//eran
+return UseOnAxisSelection //eran
+             ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV && //need ot be Nue eran
+                kIsOutOfTheDesert)
+             : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+                kIsOutOfTheDesert &&
+		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
 
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {

@@ -135,43 +135,52 @@ inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
           GetBeamChan(ps.get<std::string>("ND"), true)}; //eran fix temp
 }
 
-// Enum-like list of Ids for use in lists of PRISM objects
-size_t const kND_nu = 0;
-size_t const kND_293kA_nu = 0;
-size_t const kND_280kA_nu = 1;
+// Enum-like list of Ids for use in lists of PRISM objects //eran change whole list!
+size_t const kND_nu_numu = 0; //was kND_nu = 0 //then was kND_nu_numu 
+size_t const kND_293kA_nu_numu = 0; // was kND_293kA_nu = 0 // then was kND_293kA_numu . The specific des of 293kA was shorthand for numu, avoid for nue
+size_t const kND_280kA_nu_numu = 1; // was kND_280kA_nu = 1 // then was kND_280kA_numu
+size_t const kND_nu_nue = 2; // new //293kA // then was kND_nu_nue
 // The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index
 // position but not semantically identical. e.g. To make a full nue selection
 // prediction you need the non swap (intrinsic) and nueswap (appeared files).
 // However, both semantic meanings will not be used in the same list of objects
 // and so can be safetly mapped onto the same indices.
-size_t const kFD_nu_nonswap = 2;
-size_t const kFD_nu_numu = 2;
-size_t const kFD_nu_nueswap = 3;
-size_t const kFD_nu_nue = 3;
-size_t const kND_nub = 4;
-size_t const kND_293kA_nub = 4;
-size_t const kND_280kA_nub = 5;
-size_t const kFD_nub_nonswap = 6;
-size_t const kFD_nub_numu = 6;
-size_t const kFD_nub_nueswap = 7;
-size_t const kFD_nub_nue = 7;
+size_t const kFD_nu_nonswap = 3; //was 2
+size_t const kFD_nu_numu = 3; //was 2
+size_t const kFD_nu_nueswap = 4; //was 3
+size_t const kFD_nu_nue = 4; //was 3
+size_t const kND_nub_numu = 5;// was kND_nub = 4; //then was kND_nub_numu
+size_t const kND_293kA_nub_numu = 5; // was kND_293kA_numub = 4; //then was kND_293kA_numub = 5;
+size_t const kND_280kA_nub_numu = 6; // was kND_280kA_numub = 5; //changed back to kND_280kA_numub = 7;//was kND_280kA_numub = 7;
+size_t const kND_nub_nue = 7; //new eran // then was kND_nub_nue //was 6 first eran
+size_t const kFD_nub_nonswap = 8; //was 6
+size_t const kFD_nub_numu = 8; //was 6
+size_t const kFD_nub_nueswap = 9; //was 7
+size_t const kFD_nub_nue = 9; //was 7
 
-size_t const kNPRISMConfigs_nu = 4;
-size_t const kNPRISMConfigs = 8;
-size_t const kNPRISMNDConfigs_nu = 2;
-size_t const kNPRISMFDConfigs_nu = 2;
-size_t const kNPRISMFDConfigs = 4;
+size_t const kNPRISMConfigs_nu = 5; //was 4, was same as kND_numub//then first eran change was still 4
+size_t const kNPRISMConfigs = 10; //was 8
+size_t const kNPRISMNDConfigs_nu = 3;
+size_t const kNPRISMNDConfigs_numu = 2; //was 2 //eran changed //but isn't it also 1? 
+size_t const kNPRISMNDConfigs_nue = 1; //eran added
+size_t const kNPRISMFDConfigs_nu = 2; //was 2 
+size_t const kNPRISMFDConfigs = 4; //was 4
 
 inline bool IsNuConfig(size_t conf) { return conf < kNPRISMConfigs_nu; }
 
 inline bool IsNDConfig(size_t conf) {
-  return ((conf % kNPRISMConfigs_nu) <= 1);
+  return ((conf % kNPRISMConfigs_nu) < kNPRISMNDConfigs_nu);//eran
 }
 
-inline bool IsND293kAConfig(size_t conf) {
+inline bool IsNDNueConfig(size_t conf){  //eran
+  return ((conf % kNPRISMConfigs_nu) == 2); //was different, e
+}
+
+inline bool IsND293kA_numu_Config(size_t conf) { //was IsND293kA_numu_Config
   return ((conf % kNPRISMConfigs_nu) == 0);
 }
-inline bool IsND280kAConfig(size_t conf) {
+
+inline bool IsND280kA_numu_Config(size_t conf) { //was IsND280kA_numu_Config
   return ((conf % kNPRISMConfigs_nu) == 1);
 }
 
@@ -181,7 +190,7 @@ inline size_t GetFDConfig(size_t conf) {
               << conf << ")." << std::endl;
     abort();
   }
-  return (((conf % kNPRISMConfigs_nu) - kNPRISMNDConfigs_nu) +
+  return (((conf % kNPRISMConfigs_nu) - kNPRISMNDConfigs_nu) + //eran config name
           (!IsNuConfig(conf) * kNPRISMFDConfigs_nu));
 }
 
@@ -193,15 +202,15 @@ inline size_t GetConfigFromFD(size_t conf) {
               << ")." << std::endl;
     abort();
   }
-  return (((conf % kNPRISMFDConfigs_nu) + kNPRISMNDConfigs_nu) +
+  return (((conf % kNPRISMFDConfigs_nu) + kNPRISMNDConfigs_nu) + //eran config name
           (!IsNuFDConfig(conf) * kNPRISMConfigs_nu));
 }
 
 inline bool IsNumuConfig(size_t conf) {
-  return IsNDConfig(conf) || ((conf % kNPRISMConfigs_nu) == kFD_nu_numu);
+  return (IsNDConfig(conf) && !IsNDNueConfig(conf)) || ((conf % kNPRISMConfigs_nu) == kFD_nu_numu);
 }
 
-inline bool IsNueConfig(size_t conf) {
+inline bool IsFDNueConfig(size_t conf) {//WARNING: IsFDNueConfig (formerly IsNueConfig) is ONLY FD!! If want ND Nue, then use IsNDNueConfig!!
   return !IsNDConfig(conf) && ((conf % kNPRISMConfigs_nu) == kFD_nu_nue);
 }
 
@@ -211,7 +220,7 @@ inline size_t GetConfigNueSwap(size_t conf) {
               << conf << ")." << std::endl;
     abort();
   }
-  if (IsNueConfig(conf)) {
+  if (IsFDNueConfig(conf)) {
     return conf;
   }
   // Is a numu config
@@ -224,7 +233,7 @@ inline size_t GetConfigNonSwap(size_t conf) {
               << conf << ")." << std::endl;
     abort();
   }
-  if (IsNueConfig(conf)) {
+  if (IsFDNueConfig(conf)) {
     return conf - 1;
   }
   // Is a numu config
@@ -233,10 +242,10 @@ inline size_t GetConfigNonSwap(size_t conf) {
 
 inline std::string DescribeConfig(size_t conf) {
   switch (conf) {
-  case kND_293kA_nu: {
+  case kND_293kA_nu_numu: {
     return "ND_293kA_nu";
   }
-  case kND_280kA_nu: {
+  case kND_280kA_nu_numu: {
     return "ND_280kA_nu";
   }
   case kFD_nu_nonswap: {
@@ -245,10 +254,10 @@ inline std::string DescribeConfig(size_t conf) {
   case kFD_nu_nueswap: {
     return "FD_nu_nue";
   }
-  case kND_293kA_nub: {
+  case kND_293kA_nub_numu: {//eran
     return "ND_293kA_nub";
   }
-  case kND_280kA_nub: {
+  case kND_280kA_nub_numu: {//eran
     return "ND_280kA_nub";
   }
   case kFD_nub_nonswap: {
@@ -287,23 +296,47 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
   if (IsND) {
 
     switch (nc.mode) {
-    case BeamMode::kNuMode: {
-      return kND_nu;
+    case BeamMode::kNuMode: { //eran implemented nested switch
+         switch (nc.chan) {
+         case NuChan::kNumu: {
+           return kND_nu_numu;
+         }
+         case NuChan::kNue: {
+           return kND_nu_nue;
+         }
+         default: {
+         std::cout << "[ERROR]: Invalid beam mode and channel: eran error " << nc.mode << ", "
+         << nc.chan << std::endl;
+         abort();
+         }
+         }
     }
-    case BeamMode::kNuBarMode: {
-      return kND_nub;
+    case BeamMode::kNuBarMode: { //eran implemented nested switch
+         switch (nc.chan) {
+         case NuChan::kNumuBar: {
+           return kND_nub_numu;
+         }
+         case NuChan::kNueBar: {
+           return kND_nub_nue;
+         }
+         default: {
+         std::cout << "[ERROR]: Invalid beam mode and channel: eran error " << nc.mode << ", "
+         << nc.chan << std::endl;
+         abort();
+         }
+         }
     }
     case BeamMode::kNuMode_293kA: {
-      return kND_293kA_nu;
+      return kND_293kA_nu_numu;
     }
     case BeamMode::kNuMode_280kA: {
-      return kND_280kA_nu;
+      return kND_280kA_nu_numu;
     }
     case BeamMode::kNuBarMode_293kA: {
-      return kND_293kA_nub;
+      return kND_293kA_nub_numu;
     }
     case BeamMode::kNuBarMode_280kA: {
-      return kND_280kA_nub;
+      return kND_280kA_nub_numu;
     }
     default: {
       std::cout << "[ERROR]: Explicit Horn Current Beam Mode required when "
@@ -358,71 +391,97 @@ inline int FluxSpeciesPDG(NuChan fps) {
   }
 
 inline void TestConfigDefinitions() {
-  LOUDASSERT(IsNuConfig(kND_293kA_nu));
-  LOUDASSERT(IsNDConfig(kND_293kA_nu));
-  LOUDASSERT(IsND293kAConfig(kND_293kA_nu));
-  LOUDASSERT(!IsND280kAConfig(kND_293kA_nu));
-  LOUDASSERT(IsNumuConfig(kND_293kA_nu));
-  LOUDASSERT(!IsNueConfig(kND_293kA_nu));
+  LOUDASSERT(IsNuConfig(kND_293kA_nu_numu));
+  LOUDASSERT(IsNDConfig(kND_293kA_nu_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_293kA_nu_numu));
+  LOUDASSERT(IsND293kA_numu_Config(kND_293kA_nu_numu));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nu_numu));
+  LOUDASSERT(IsNumuConfig(kND_293kA_nu_numu));
+  LOUDASSERT(!IsFDNueConfig(kND_293kA_nu_numu));
 
-  LOUDASSERT(IsNuConfig(kND_280kA_nu));
-  LOUDASSERT(IsNDConfig(kND_280kA_nu));
-  LOUDASSERT(!IsND293kAConfig(kND_280kA_nu));
-  LOUDASSERT(IsND280kAConfig(kND_280kA_nu));
-  LOUDASSERT(IsNumuConfig(kND_280kA_nu));
-  LOUDASSERT(!IsNueConfig(kND_280kA_nu));
+  LOUDASSERT(IsNuConfig(kND_280kA_nu_numu));
+  LOUDASSERT(IsNDConfig(kND_280kA_nu_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_280kA_nu_numu));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_280kA_nu_numu));
+  LOUDASSERT(IsND280kA_numu_Config(kND_280kA_nu_numu));
+  LOUDASSERT(IsNumuConfig(kND_280kA_nu_numu));
+  LOUDASSERT(!IsFDNueConfig(kND_280kA_nu_numu));
 
-  LOUDASSERT(!IsNuConfig(kND_293kA_nub));
-  LOUDASSERT(IsNDConfig(kND_293kA_nub));
-  LOUDASSERT(IsND293kAConfig(kND_293kA_nub));
-  LOUDASSERT(!IsND280kAConfig(kND_293kA_nub));
-  LOUDASSERT(IsNumuConfig(kND_293kA_nub));
-  LOUDASSERT(!IsNueConfig(kND_293kA_nub));
+  LOUDASSERT(!IsNuConfig(kND_293kA_nub_numu));
+  LOUDASSERT(IsNDConfig(kND_293kA_nub_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_293kA_nub_numu));
+  LOUDASSERT(IsND293kA_numu_Config(kND_293kA_nub_numu));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nub_numu));
+  LOUDASSERT(IsNumuConfig(kND_293kA_nub_numu));
+  LOUDASSERT(!IsFDNueConfig(kND_293kA_nub_numu));
 
-  LOUDASSERT(!IsNuConfig(kND_280kA_nub));
-  LOUDASSERT(IsNDConfig(kND_280kA_nub));
-  LOUDASSERT(!IsND293kAConfig(kND_280kA_nub));
-  LOUDASSERT(IsND280kAConfig(kND_280kA_nub));
-  LOUDASSERT(IsNumuConfig(kND_280kA_nub));
-  LOUDASSERT(!IsNueConfig(kND_280kA_nub));
+  LOUDASSERT(!IsNuConfig(kND_280kA_nub_numu));
+  LOUDASSERT(IsNDConfig(kND_280kA_nub_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_280kA_nub_numu));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_280kA_nub_numu));
+  LOUDASSERT(IsND280kA_numu_Config(kND_280kA_nub_numu));
+  LOUDASSERT(IsNumuConfig(kND_280kA_nub_numu));
+  LOUDASSERT(!IsFDNueConfig(kND_280kA_nub_numu));
+
+//eran
+  LOUDASSERT(IsNuConfig(kND_nu_nue));
+  LOUDASSERT(IsNDConfig(kND_nu_nue));
+  LOUDASSERT(IsNDNueConfig(kND_nu_nue));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_nu_nue));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_nu_nue));
+  LOUDASSERT(!IsNumuConfig(kND_nu_nue));
+  LOUDASSERT(!IsFDNueConfig(kND_nu_nue));
+
+  LOUDASSERT(!IsNuConfig(kND_nub_nue));
+  LOUDASSERT(IsNDConfig(kND_nub_nue));
+  LOUDASSERT(IsNDNueConfig(kND_nub_nue));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_nub_nue));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_nub_nue));
+  LOUDASSERT(!IsNumuConfig(kND_nub_nue));
+  LOUDASSERT(!IsFDNueConfig(kND_nub_nue));
+//eran
 
   LOUDASSERT(IsNuConfig(kFD_nu_numu));
   LOUDASSERT(!IsNDConfig(kFD_nu_numu));
+  LOUDASSERT(!IsNDNueConfig(kFD_nu_numu));
   LOUDASSERT(GetFDConfig(kFD_nu_numu) == 0);
   LOUDASSERT(IsNuFDConfig(GetFDConfig(kFD_nu_numu)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nu_numu)) == kFD_nu_numu);
   LOUDASSERT(IsNumuConfig(kFD_nu_numu));
-  LOUDASSERT(!IsNueConfig(kFD_nu_numu));
+  LOUDASSERT(!IsFDNueConfig(kFD_nu_numu));
   LOUDASSERT(GetConfigNueSwap(kFD_nu_numu) == kFD_nu_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nu_numu) == kFD_nu_numu);
 
   LOUDASSERT(!IsNuConfig(kFD_nub_numu));
   LOUDASSERT(!IsNDConfig(kFD_nub_numu));
+  LOUDASSERT(!IsNDNueConfig(kFD_nub_numu));
   LOUDASSERT(GetFDConfig(kFD_nub_numu) == 2);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_numu)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_numu)) == kFD_nub_numu);
   LOUDASSERT(IsNumuConfig(kFD_nub_numu));
-  LOUDASSERT(!IsNueConfig(kFD_nub_numu));
+  LOUDASSERT(!IsFDNueConfig(kFD_nub_numu));
   LOUDASSERT(GetConfigNueSwap(kFD_nub_numu) == kFD_nub_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_numu) == kFD_nub_numu);
 
   LOUDASSERT(IsNuConfig(kFD_nu_nue));
   LOUDASSERT(!IsNDConfig(kFD_nu_nue));
+  LOUDASSERT(!IsNDNueConfig(kFD_nu_nue));
   LOUDASSERT(GetFDConfig(kFD_nu_nue) == 1);
   LOUDASSERT(IsNuFDConfig(GetFDConfig(kFD_nu_nue)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nu_nue)) == kFD_nu_nue);
   LOUDASSERT(!IsNumuConfig(kFD_nu_nue));
-  LOUDASSERT(IsNueConfig(kFD_nu_nue));
+  LOUDASSERT(IsFDNueConfig(kFD_nu_nue));
   LOUDASSERT(GetConfigNueSwap(kFD_nu_nue) == kFD_nu_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nu_nue) == kFD_nu_numu);
 
   LOUDASSERT(!IsNuConfig(kFD_nub_nue));
   LOUDASSERT(!IsNDConfig(kFD_nub_nue));
+  LOUDASSERT(!IsNDNueConfig(kFD_nub_nue));
   LOUDASSERT(GetFDConfig(kFD_nub_nue) == 3);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_nue)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_nue)) == kFD_nub_nue);
   LOUDASSERT(!IsNumuConfig(kFD_nub_nue));
-  LOUDASSERT(IsNueConfig(kFD_nub_nue));
+  LOUDASSERT(IsFDNueConfig(kFD_nub_nue));
   LOUDASSERT(GetConfigNueSwap(kFD_nub_nue) == kFD_nub_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_nue) == kFD_nub_numu);
 }
@@ -449,8 +508,7 @@ extern const ana::Cut kCut280kARun;
 extern const ana::Cut kSel280kARun;
 extern const ana::Var kSpecHCRunWeight;
 
-ana::Cut GetNDSignalCut_basis(bool UseOnAxisSelection = true, bool isNuMode = true, bool isNuMu = true); //eran saying use sel is true
-ana::Cut GetNDSignalCut_target(bool UseOnAxisSelection = true, bool isNuMode = true, bool isNuMu = false);
+ana::Cut GetNDSignalCut(bool UseOnAxisSelection = true, bool isNuMode = true, bool isNuMu = true); //eran combing, isNuMu prob? 
 ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
                         bool isNuMu = true);
 

@@ -99,11 +99,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     if (Use_EventRateMatching) {
       std::cout << "Using event rate matching" << std::endl;
       fluxmatcher.Initialize({
-          {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
-          {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+          {"ND_293kA_nu_numu", state.MatchPredInterps[kND_293kA_nu_numu].get()},//eran
+          {"ND_280kA_nu_numu", state.MatchPredInterps[kND_280kA_nu_numu].get()},
+	  {"ND_nu_nue", state.MatchPredInterps[kND_nu_nue].get()}, ///added not sure if works?? 
           {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-          {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
-          {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+          {"ND_293kA_nub_numu", state.MatchPredInterps[kND_293kA_nub_numu].get()},
+          {"ND_280kA_nub_numu", state.MatchPredInterps[kND_280kA_nub_numu].get()},
+	  {"ND_nub_nue", state.MatchPredInterps[kND_nub_nue].get()},
           {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
       });
     } else {
@@ -179,12 +181,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
-    if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
+    if ((NDConfig_enum == kND_nu_numu) && !run_plan_nu.GetPlanPOT()) {  //eran
       std::cout << "[ERROR]: Have ND nu channel, but no numode run plan."
                 << std::endl;
       abort();
     }
-    if ((NDConfig_enum == kND_nub) && !run_plan_nub.GetPlanPOT()) {
+    if ((NDConfig_enum == kND_nub_numu) && !run_plan_nub.GetPlanPOT()) { //eran
       std::cout << "[ERROR]: Have ND nubar channel, but no numode run plan."
                 << std::endl;
       abort();
@@ -322,7 +324,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       FarDetPred->SetDirectory(nullptr);
     }
 
-    if (NDConfig_enum == kND_nu) {
+    if (NDConfig_enum == kND_nu_numu) { //eran
       TH1D *run_plan_nu_h = run_plan_nu.AsTH1(293);
       chan_dir->WriteTObject(run_plan_nu_h, "run_plan_nu_293kA");
       run_plan_nu_h->SetDirectory(nullptr);

@@ -117,27 +117,40 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
-    bool IsND280kA = IsND280kAConfig(it);
+    bool IsNDNue = IsNDNueConfig(it);//eran
+    bool IsND280kA = IsND280kA_numu_Config(it);
 
     size_t fd_it = 0;
-    size_t IsNue = IsNueConfig(it);
+    size_t IsFDNue = IsFDNueConfig(it);
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
 
     if (IsND) { // Is ND
-      dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
+      //dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
+       //                     (IsND280kA ? "_280kA" : "_293kA") +
+       //                     (IsNu ? "_nu" : "_nub"))
+       //                        .c_str());
+
+       dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
                             (IsND280kA ? "_280kA" : "_293kA") +
-                            (IsNu ? "_nu" : "_nub"))
+                            (IsNu ? "_nu" : "_nub"))   
                                .c_str());
+
       if (dir) {
         blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
       }
 
+     // dir = f.GetDirectory((std::string("NDSelectedInterp_") +
+       //                     (IsND280kA ? "_280kA" : "_293kA") + varname +
+       //                     (IsNu ? "_nu" : "_nub"))
+       //                        .c_str());
+
       dir = f.GetDirectory((std::string("NDSelectedInterp_") +
                             (IsND280kA ? "_280kA" : "_293kA") + varname +
-                            (IsNu ? "_nu" : "_nub"))
+                            (IsNu ? "_nu" : "_nub"))//eran
                                .c_str());
+
       if (dir) {
         blob.SelPredInterps_basis[it] = LoadFrom_<PredictionInterp>(dir);
       }
@@ -148,14 +161,14 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       if (!IsND280kA) {
         dir = f.GetDirectory((std::string("NDMatrixInterp_ERecETrue") + 
-                              (IsNu ? "_nu" : "_nub"))
+                              (IsNu ? "_nu" : "_nub"))//eran
                                  .c_str());
         if (dir) {
           blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
         }
       }
     } else { // Is FD
-      if (!IsNue) {
+      if (!IsFDNue) {
         dir = f.GetDirectory(
             (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"))
                 .c_str());
@@ -166,7 +179,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir =
           f.GetDirectory((std::string("FDInterp_") + varname +
-                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                          (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
@@ -174,7 +187,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir =
           f.GetDirectory((std::string("FDMatrixInterp_ERecETrue") +
-                         (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                         (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
@@ -182,7 +195,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir =
           f.GetDirectory((std::string("FDDataNonSwap_") + varname +
-                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                          (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetData_nonswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
@@ -190,7 +203,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir =
           f.GetDirectory((std::string("FDDataNueSwap_") + varname +
-                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                          (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetData_nueswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
@@ -198,7 +211,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir =
           f.GetDirectory((std::string("FDSelectedInterp_") + varname +
-                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
+                          (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.SelPredInterps_basis[it] = LoadFrom_<PredictionInterp>(dir);

@@ -91,13 +91,13 @@ struct PRISMStateBlob {
     bool IsNu = PRISM::IsNuConfig(pc);
     bool IsND = PRISM::IsNDConfig(pc);
     size_t fd_pc = 0;
-    size_t IsNue = PRISM::IsNueConfig(pc);
+    size_t IsFDNue = PRISM::IsFDNueConfig(pc);
     if (!IsND) {
       fd_pc = PRISM::GetFDConfig(pc);
     }
 
     // Don't need MatchPredInterps for Nue (they aren't made/used)
-    return PRISM && (IsNue || bool(MatchPredInterps[pc])) &&
+    return PRISM && (IsFDNue || bool(MatchPredInterps[pc])) &&
            bool(SelPredInterps_basis[pc]) && bool(SelPredInterps_target[pc]) &&
            (IsND || (bool(FarDetPredInterps[fd_pc]) &&
                      bool(FarDetData_nonswap[fd_pc]) &&
