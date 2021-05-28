@@ -12,6 +12,7 @@ set(Systs_implementation_files
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
   Systs.cxx
+  UniverseOracle.cxx
   XSecSystList.cxx)
 
 set(Systs_header_files
@@ -42,11 +43,12 @@ set(Systs_header_files
   MissingProtonFakeData_BDTRW_RHC.h
   NuWroReweightFakeData.h
   CrazyFluxFakeData.h
+  UniverseOracle.h
   XSecSystList.h)
 
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts)
+target_link_libraries(CAFAnaSysts ${STANDARDRECORD})
 
 install(TARGETS CAFAnaSysts DESTINATION lib)
 

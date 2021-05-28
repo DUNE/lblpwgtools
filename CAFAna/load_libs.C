@@ -42,7 +42,7 @@ void load_libs(bool MustClean = true) {
 
   const std::vector<std::string> libs = {
       "Minuit2",             "Net",           "Tree",
-      "StandardRecordProxy", "OscLib",        "CAFAnaCoreExt",
+      "StandardRecordProxy", "duneanaobj_StandardRecord", "duneanaobj_StandardRecord_dict", "OscLib",        "CAFAnaCoreExt",
       "CAFAnaCore",          "CAFAnaVars",    "CAFAnaCuts",
       "CAFAnaExperiment",    "CAFAnaSysts",   "CAFAnaDecomp",   "CAFAnaExtrap",
       "CAFAnaPrediction",    "CAFAnaFit",     "CAFAnaAnalysis",

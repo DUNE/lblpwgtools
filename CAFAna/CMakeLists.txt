@@ -77,6 +77,7 @@ include_directories(
 )
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
+find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})
 
 # This is a hack so that the generated files in StandardRecord/ are locateable
 include_directories(${CMAKE_BINARY_DIR})
