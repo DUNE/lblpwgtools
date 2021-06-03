@@ -8,6 +8,7 @@
 #ifndef DONT_USE_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+#include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -93,6 +94,8 @@ void SpectrumLoader::Go() {
 
     if (Nfiles > 1 && prog)
       prog->SetProgress((fileIdx + 1.) / Nfiles);
+
+    if(CAFAnaQuitRequested()) break;
   } // end for fileIdx
 
   StoreExposures();
