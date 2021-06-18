@@ -152,11 +152,11 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
                                .c_str());
 
       if (dir) {
-        blob.SelPredInterps_basis[it] = LoadFrom_<PredictionInterp>(dir);
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir); //eran
       }
 
       if (dir) {
-        blob.SelPredInterps_target[it] = LoadFrom_<PredictionInterp>(dir);
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir); //eran
       }
 
       if (!IsND280kA) {
@@ -214,11 +214,11 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
                           (IsFDNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
-        blob.SelPredInterps_basis[it] = LoadFrom_<PredictionInterp>(dir);
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);//eran
       }
 
      if (dir) {
-        blob.SelPredInterps_target[it] = LoadFrom_<PredictionInterp>(dir);
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);//eran
       }
     }
   }
@@ -246,7 +246,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   std::cout << "\n\t}\n\tSelPredInterps: {\n";
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
     std::cout << "\t\t" << DescribeConfig(i) << ": "
-              << bool(blob.SelPredInterps_basis[i].get()) << std::endl; //eran trying one this si debug I think its okay? 
+              << bool(blob.SelPredInterps[i].get()) << std::endl; //eran trying one this si debug I think its okay? 
   }
   std::cout << "\n\t}\n\tFarDetPredInterps: {\n";
   for (size_t i = 0; i < kNPRISMFDConfigs; ++i) {

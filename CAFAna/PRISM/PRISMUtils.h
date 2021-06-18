@@ -72,8 +72,7 @@ inline void FillWithNulls(std::vector<std::shared_ptr<T>> &v, size_t n) {
 struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_basis;//eran
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps_target;//eran
+  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;//eran
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
@@ -98,7 +97,7 @@ struct PRISMStateBlob {
 
     // Don't need MatchPredInterps for Nue (they aren't made/used)
     return PRISM && (IsFDNue || bool(MatchPredInterps[pc])) &&
-           bool(SelPredInterps_basis[pc]) && bool(SelPredInterps_target[pc]) &&
+           bool(SelPredInterps[pc]) && bool(SelPredInterps[pc]) &&//eran
            (IsND || (bool(FarDetPredInterps[fd_pc]) &&
                      bool(FarDetData_nonswap[fd_pc]) &&
                      bool(FarDetData_nueswap[fd_pc])));
@@ -125,8 +124,7 @@ struct PRISMStateBlob {
 
   void Init() {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(SelPredInterps_basis, PRISM::kNPRISMConfigs);//eran
-    FillWithNulls(SelPredInterps_target, PRISM::kNPRISMConfigs);//eran
+    FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);//eran
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
