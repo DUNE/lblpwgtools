@@ -34,6 +34,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   double POT = pred.get<double>("POT_years", 1) * POT120;
   double POT_FD = POT * pot_fd_FVMassFactor;
   bool use_PRISM = pred.get<bool>("use_PRISM", true);
+  bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
 
   std::pair<double, double> gauss_flux =
       pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
@@ -77,8 +78,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    //TFile fs(state_file.c_str());
-    //TFile fs(pnfs2xrootd(state_file).c_str());
     TFile *fs = TFile::Open(state_file.c_str());
     if (fs->IsZombie()) {
       std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
@@ -88,7 +87,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               << std::endl;
     States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    //fs.Close();
     fs->Close();
   }
 
@@ -168,6 +166,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Set errors from MC" << std::endl;
   }
   state.PRISM->SetNDDataErrorsFromRate(PRISM_SetNDDataErrs);
+
+  if (vary_NDFD_MCData) {
+    std::cout << "Apply systs to ND and FD MC data. No shifts on weights." << std::endl;
+  } else {
+    std::cout << "Nominal MC as mock-data. Apply flux systs to weights." << std::endl;
+  }
+  state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
 
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {
@@ -326,6 +331,41 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                   PredictionPRISM::GetComponentString(comp.first).c_str());
             }
           }
+          bool debugflux = false;
+          if (debugflux) {
+            auto NomPRISMComponents = 
+              state.PRISM->PredictPRISMComponents(calc, kNoShift, ch.second);
+            TH1D *FDUnOscnom = dynamic_cast<TH1D*>(NomPRISMComponents
+                                 .at(PredictionPRISM::kFDUnOscPred).ToTHX(POT_FD));
+            FDUnOscnom->Scale(1, "width");
+            FDUnOscnom->SetDirectory(nullptr);
+  
+            TH1D *LCnom = dynamic_cast<TH1D*>(NomPRISMComponents
+                            .at(PredictionPRISM::kNDMC_FDExtrap).ToTHX(POT_FD));
+            LCnom->Scale(1, "width");
+            LCnom->SetDirectory(nullptr);
+            TH1D *LCvar = dynamic_cast<TH1D*>(PRISMComponents
+                            .at(PredictionPRISM::kNDMC_FDExtrap).ToTHX(POT_FD));
+            LCvar->Scale(1, "width"); 
+            LCvar->SetDirectory(nullptr);
+  
+            TH1D LCdiff = (*LCvar - *LCnom) / *LCnom;// / FDUnOscnom;
+            chan_dir->WriteTObject(&LCdiff, "LC_fracdiff");
+
+            TH1D *FDnom = dynamic_cast<TH1D*>(NomPRISMComponents
+                             .at(PredictionPRISM::kFDOscPred).ToTHX(POT_FD));
+            FDnom->Scale(1, "width");
+            FDnom->SetDirectory(nullptr);
+            TH1D *FDvar = dynamic_cast<TH1D*>(PRISMComponents
+                            .at(PredictionPRISM::kFDOscPred).ToTHX(POT_FD));
+            FDnom->Scale(1, "width"); 
+            FDnom->SetDirectory(nullptr);
+
+            TH1D FDdiff = (*FDvar - *FDnom) / *FDnom; /// FDUnOscnom;
+            chan_dir->WriteTObject(&FDdiff, "FD_fracdiff");
+          }
+          //TH1D LC_FD_diff = (LCdiff - FDdiff) / *FDnom;
+          //chan_dir->WriteTObject(&LC_FD_diff, "LC_FD_fracdiff");
 
           fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
           SmearMatrices.Write(chan_dir->mkdir("Unfold_Matrices"));

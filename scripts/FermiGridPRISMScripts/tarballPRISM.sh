@@ -20,7 +20,7 @@ cp -r ${CAFANA} ./CAFAna
 #cp -r /dune/data/users/picker24/CAFAnaStateFiles/v4_all CAFAna/scripts/.
 #ifdh cp -r /pnfs/dune/persistent/users/chasnip/CAFAnaStateFiles/ CAFAna/scripts/.
 #ifdh cp -r /pnfs/dune/persistent/users/chasnip/CAFAnaStateFiles/ CAFAna/.
-cp /dune/data/users/chasnip/NewCode/PredInterps/PRISMState_Fullv7Prod_EVisRec_MuLArNDFDRes_3May21.root CAFAna/.
+#cp /dune/data/users/chasnip/NewCode/PredInterps/PRISMState_Fullv7Prod_EVisRec_MuLArNDFDRes_3May21.root CAFAna/.
 
 if [ ! -z "${EXTRA_SCRIPT_NAME}" ]; then
   cp ${EXTRA_SCRIPT_NAME} CAFAna/scripts/

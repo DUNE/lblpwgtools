@@ -83,10 +83,10 @@ if [ $? -ne 0 ]; then
   exit 5
 fi
 
-PNFS_OUTDIR=${PNFS_OUTDIR_STUB}/${CLUSTER}.${PROCESS}/
+PNFS_OUTDIR=${PNFS_OUTDIR_STUB} #/${CLUSTER}.${PROCESS}/
 
-ifdh mkdir ${PNFS_OUTDIR}
-ifdh ls ${PNFS_OUTDIR}
+#ifdh mkdir ${PNFS_OUTDIR}
+#ifdh ls ${PNFS_OUTDIR}
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to make ${PNFS_OUTDIR}."
   exit 2

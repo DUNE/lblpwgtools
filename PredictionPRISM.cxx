@@ -31,6 +31,7 @@ PredictionPRISM::PredictionPRISM(const HistAxis &AnalysisAxisND,
                                  const HistAxis &NDFDEnergyMatchAxis) { 
 
   fSetNDErrorsFromRate = true;
+  fVaryNDFDMCData = false;
 
   fAnalysisAxisND = AnalysisAxisND;
   fAnalysisAxisFD = AnalysisAxisFD;
@@ -598,8 +599,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                              calc, shift, NDSigFlavor, Current::kCC, NDSigSign),
                              NDPOT, fAnalysisAxisND), 293);
 
-  NDComps.emplace(kNDSig_293kA, NDSig);
-  NDComps.emplace(kNDSig2D_293kA, NDSig);
+  //if (fVaryNDFDMCData) {
+    NDComps.emplace(kNDSig_293kA, NDSig); // Uncomment for MC debugging
+    NDComps.emplace(kNDSig2D_293kA, NDSig);
+  //}
 
   ReweightableSpectrum NDSig_280kA = NDRunPlan.Weight(
       ToReweightableSpectrum(NDPrediction_280kA->PredictComponentSyst(
@@ -691,7 +694,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
   // Linear combination weight calculation.
   std::pair<TH1 const *, TH1 const *> LinearCombination =
-      fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, shift);
+      fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, 
+                                            (fVaryNDFDMCData ? kNoShift : shift)); 
   // Scale relative size of the weights to account for the run-plan.
   // E.g. more data taken on-axis means a smaller weight for the 
   // on-axis position weights.
@@ -828,7 +832,105 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // 11. For adding in MC corrections:
   Comps.emplace(kNDDataCorr_FDExtrap, Comps.at(kNDData_FDExtrap));
   //------------------------------------------------------------
-  
+  //------------------------------------------------------------
+  // Repeat extrapolation for MC for debugging purposes
+  if (NDComps.count(kNDSig_293kA)) {
+    
+    fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDSig_293kA), NDPOT, 293,
+                                    UnRunPlannedLinearCombination_293kA.get(),
+                                    calc, shift, NDSigFlavor, FDSigFlavor, Current::kCC,
+                                    NDSigSign, FDSigSign,
+                                    fMCEffCorrection->GetNDefficiency(293),
+                                    fMCEffCorrection->GetFDefficiency());
+
+    fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDSig_280kA), NDPOT, 280,
+                                    UnRunPlannedLinearCombination_280kA.get(),
+                                    calc, shift, NDSigFlavor, FDSigFlavor, Current::kCC,
+                                    NDSigSign, FDSigSign,
+                                    fMCEffCorrection->GetNDefficiency(280),
+                                    fMCEffCorrection->GetFDefficiency());
+
+    ReweightableSpectrum sNDMCExtrap_293kA =
+      ReweightableSpectrum(ana::Constant(1), fNDFD_Matrix->GetNDExtrap_293kA(),
+                           fAnalysisAxisFD.GetLabels(), fAnalysisAxisFD.GetBinnings(),
+                           NDPOT, 0);
+    NDComps.emplace(kNDMCExtrap2D_293kA, sNDMCExtrap_293kA);
+    
+    Comps.emplace(
+      kNDMCExtrap_293kA,
+      sNDMCExtrap_293kA.WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
+    
+    ReweightableSpectrum sNDMCExtrap_280kA =
+      ReweightableSpectrum(ana::Constant(1), fNDFD_Matrix->GetNDExtrap_280kA(),
+                           fAnalysisAxisFD.GetLabels(), fAnalysisAxisFD.GetBinnings(),
+                           NDPOT, 0);
+    NDComps.emplace(kNDMCExtrap2D_280kA, sNDMCExtrap_280kA);
+
+    Comps.emplace(
+      kNDMCExtrap_280kA,
+      sNDMCExtrap_280kA.WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+
+    Comps.emplace(kNDMC_FDExtrap, Comps.at(kNDMCExtrap_293kA));
+    Comps.at(kNDMC_FDExtrap) += Comps.at(kNDMCExtrap_280kA);
+
+    // DEBUG TEST:
+    //-----------------------------------------------------
+    /*TH2 *bla = NDComps.at(kNDMCExtrap2D_293kA).ToSpectrum().ToTH2(NDPOT);
+    TH1D *test293kA = HistCache::Copy(Comps.at(kNDMCExtrap_293kA).ToTH1(NDPOT));
+    for (int x = 0; x < bla->GetXaxis()->GetNbins(); ++x) {
+      double sumOA(0), sumOAVar(0);
+      for (int y = 0; y < bla->GetYaxis()->GetNbins(); ++y) {
+        double bc = bla->GetBinContent(x + 1, y + 1);
+        double be = bla->GetBinError(x + 1, y + 1);
+        double bcw = bc * UnRunPlannedLinearCombination_293kA->GetBinContent(y + 1);
+        double bew = be * UnRunPlannedLinearCombination_293kA->GetBinContent(y + 1);
+        double varw = pow(UnRunPlannedLinearCombination_293kA->GetBinContent(y + 1), 2) * bc;
+        sumOA += bcw;
+        sumOAVar += varw;
+      }
+      double sumOAErr = sqrt(sumOAVar);
+      test293kA->SetBinContent(x + 1, sumOA);
+      test293kA->SetBinError(x + 1, sumOAErr);
+    }
+    TH2 *bla280 = NDComps.at(kNDMCExtrap2D_280kA).ToSpectrum().ToTH2(NDPOT);
+    TH1D *test280kA = HistCache::Copy(Comps.at(kNDMCExtrap_280kA).ToTH1(NDPOT)); 
+    for (int x = 0; x < bla280->GetXaxis()->GetNbins(); ++x) {
+      double sumOA(0), sumOAVar(0);
+      for (int y = 0; y < bla280->GetYaxis()->GetNbins(); ++y) {
+        double bc = bla280->GetBinContent(x + 1, y + 1);
+        double be = bla280->GetBinError(x + 1, y + 1);
+        double bcw = bc * UnRunPlannedLinearCombination_280kA->GetBinContent(y + 1);
+        double bew = be * UnRunPlannedLinearCombination_280kA->GetBinContent(y + 1);
+        double varw = pow(UnRunPlannedLinearCombination_280kA->GetBinContent(y + 1), 2) * bc;
+        sumOA += bcw;
+        sumOAVar += varw;
+      }
+      double sumOAErr = sqrt(sumOAVar);
+      test280kA->SetBinContent(x + 1, sumOA);
+      test280kA->SetBinError(x + 1, sumOAErr); 
+    }
+    TH1D *testPRISM = HistCache::Copy(Comps.at(kNDMC_FDExtrap).ToTH1(NDPOT));
+    for (int x = 0; x < test293kA->GetXaxis()->GetNbins(); ++x) {
+      double newbc = test293kA->GetBinContent(x + 1) +
+                     test280kA->GetBinContent(x + 1);
+      double newbe = pow(test293kA->GetBinError(x + 1), 2) +
+                     pow(test280kA->GetBinError(x + 1), 2);
+      testPRISM->SetBinContent(x + 1, newbc);
+      testPRISM->SetBinError(x + 1, sqrt(newbe));
+    }
+    //testPRISM->Scale(1, "width");
+    //test293kA->Scale(1, "width");
+    //test280kA->Scale(1, "width");
+    gFile->WriteTObject(test293kA, "test293kA");
+    gFile->WriteTObject(test280kA, "test280kA");
+    gFile->WriteTObject(testPRISM, "testPRISMPred");
+    HistCache::Delete(test293kA);
+    HistCache::Delete(test280kA);
+    HistCache::Delete(testPRISM);*/
+    // END DEBUG**
+  }
+  //----------------------------------------------------------------
+
   // If we are doing numu -> nue propagation, need to correct for xsec
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
 
@@ -897,6 +999,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
     sCovMat += GetDiagonalCovariance(Comps.at(kFDNCBkg), NDPOT, fCovarianceAxis);
+    if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDNCBkg);
   }
 
   if (fWLBCorrection) { // Add in wrong lepton background.
@@ -909,6 +1012,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWrongLepBkg);
     sCovMat += GetDiagonalCovariance(Comps.at(kFDWrongLepBkg), NDPOT, fCovarianceAxis);
+    if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWrongLepBkg);
   }
 
   if (fWSBCorrection) { // Add in wrong sign background.
@@ -921,6 +1025,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWSBkg);
     sCovMat += GetDiagonalCovariance(Comps.at(kFDWSBkg), NDPOT, fCovarianceAxis);
+    if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
   }
 
   if (fIntrinsicCorrection) { // Add in intrinsic correction.
@@ -933,6 +1038,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDIntrinsicBkg);
     sCovMat += GetDiagonalCovariance(Comps.at(kFDIntrinsicBkg), NDPOT, fCovarianceAxis);
+    if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDIntrinsicBkg);
   }
 
   Comps.emplace(kFDOscPred,
@@ -951,6 +1057,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   
   // At Flux correction to extrapolated PRISM.
   Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
+  if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
   // Final covariance matrix.
   sCovMat += GetDiagonalCovariance(Comps.at(kFDFluxCorr), NDPOT, fCovarianceAxis);
   // Convert final covariance matrix into 2D spectrum
@@ -971,6 +1078,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       }
     }
   }
+  // Try clearing cache to stop overloading memory usage
+  HistCache::ClearCache();
+
   return Comps;
 }
 
