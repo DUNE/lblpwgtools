@@ -1,83 +1,226 @@
 
 nuisance_parameters: {
-     flux5: [  
-          flux_Nov17_0, 
-          flux_Nov17_1, 
-          flux_Nov17_2, 
-          flux_Nov17_3, 
-          flux_Nov17_4,
-            ]
+	flux5: [  
+		flux_Nov17_0, 
+		flux_Nov17_1, 
+		flux_Nov17_2, 
+		flux_Nov17_3, 
+		flux_Nov17_4
+	]
 
-     flux10: [
-          @sequence::nuisance_parameters.flux5,
-          flux_Nov17_5, 
-          flux_Nov17_6, 
-          flux_Nov17_7, 
-          flux_Nov17_8, 
-          flux_Nov17_9, 
-     ]
+	flux10: [
+		@sequence::nuisance_parameters.flux5,
+		flux_Nov17_5, 
+		flux_Nov17_6, 
+		flux_Nov17_7, 
+		flux_Nov17_8, 
+		flux_Nov17_9
+	]
 
-     xsec: [
-          MaCCQE, 
-          MaCCRES, 
-          MvCCRES, 
-          AhtBY, 
-          BhtBY, 
-          CV1uBY, 
-          CV2uBY, 
-          BeRPA_A, 
-          BeRPA_B, 
-          BeRPA_D 
-     ]
+	fluxFocussing: [
+		flux_Nov17_0,
+		flux_Nov17_1,
+		flux_Nov17_2,
+		flux_Nov17_3,
+		flux_Nov17_4,
+		flux_Nov17_5,
+		flux_Nov17_6,
+		flux_Nov17_7,
+		flux_Nov17_8,
+		flux_Nov17_9,
+		flux_Nov17_10,
+		flux_Nov17_11,
+		flux_Nov17_12
+	]
 
-     det_totalND: [ 
-          RecoEnergyScaleND,
-     ]
+	fluxHadProd5: [
+		flux_Nov17_13,
+		flux_Nov17_14,
+		flux_Nov17_15,
+		flux_Nov17_16,
+		flux_Nov17_17
+	]
 
-     det_chargehadEND: [
-          ChargedHadRecoUncorrND,
-          ChargedHadRecoUncorrSqrtND,
-          ChargedHadRecoUncorrInvSqrtND,
-     ]
-     det_chargehadEFD: [
-          ChargedHadRecoUncorrFD,
-          ChargedHadRecoUncorrSqrtFD,
-          ChargedHadRecoUncorrInvSqrtFD,
-     ]
-     det_chargehadE: [
-          @sequence::nuisance_parameters.det_chargehadEND,
-          @sequence::nuisance_parameters.det_chargehadEFD
-     ]
+	fluxHadProd10: [
+		@sequence::nuisance_parameters.fluxHadProd5,
+		flux_Nov17_18,
+		flux_Nov17_19,
+		flux_Nov17_20,
+		flux_Nov17_21,
+		flux_Nov17_22
+	]
 
-     det_mularEND: [
-          ERecoScaleMuLArND,
-          #ERecoScaleMuLArSqrtND,
-          #ERecoScaleMuLArInvSqrtND
-     ]
-     det_mularEFD: [
-          ERecoScaleMuLArFD,
-          ERecoScaleMuLArSqrtFD,
-          ERecoScaleMuLArInvSqrtFD
-     ]
-     det_mularE: [
-          @sequence::nuisance_parameters.det_mularEND,
-          @sequence::nuisance_parameters.det_mularEFD,
-     ]
+	fluxalmostAll: [
+		@sequence::nuisance_parameters.fluxHadProd5,
+		@sequence::nuisance_parameters.fluxFocussing
+	]
 
-     det_muResND: [
-          MuonRecoResND
-     ]
-     det_muResFD: [ 
-          MuonRecoResFD
-     ]
-     det_muRes: [
-          @sequence::nuisance_parameters.det_muResND,
-          @sequence::nuisance_parameters.det_muResFD
-     ]
+	fluxAll: [
+		@sequence::nuisance_parameters.fluxHadProd10,
+		@sequence::nuisance_parameters.fluxFocussing
+	]
 
-     all: [
-          @sequence::nuisance_parameters.flux10,
-          @sequence::nuisance_parameters.xsec
+	xsec_small: [
+		MaCCQE, 
+		MaCCRES, 
+		MvCCRES, 
+		AhtBY, 
+		BhtBY, 
+		CV1uBY, 
+		CV2uBY, 
+		BeRPA_A, 
+		BeRPA_B, 
+		BeRPA_D 
+	]
 
-     ]
+	xsec_CCQE: [
+		MaCCQE,
+		VecFFCCQEshape,
+		CCQEPauliSupViaKF
+	]
+
+	xsec_LowW: [
+		MaCCRES,
+		MvCCRES,
+		#RDecBR1eta,
+		#RDecBR1gamma,
+		Theta_Delta2Npi
+	]
+
+	xsec_HighW: [
+		AhtBY,
+		BhtBY,
+		CV1uBY,
+		CV2uBY,
+	]
+
+	xsec_NC_other: [
+		#MaNCEL,
+		#EtaNCEL,
+		MaNCRES,
+		MvNCRES,	
+		#FormZone
+	]
+
+	xsec_IntraNuclear: [
+		FrCEx_N,
+		FrElas_N,
+		FrInel_N,
+		FrAbs_N,
+		FrPiProd_N,
+		FrCEx_pi,
+		FrElas_pi,
+		FrInel_pi,
+		FrAbs_pi,
+		FrPiProd_pi
+	]
+
+	xsec_Extra: [
+		BeRPA_A,
+		BeRPA_B,
+		BeRPA_D,
+		#BeRPA_E,
+		#Mnv2p2hGaussEnhancement,
+		#Mnv2p2hGaussEnhancement_NN,
+		#Mnv2p2hGaussEnhancement_2p2h,
+		#Mnv2p2hGaussEnhancement_1p1h,
+		C12ToAr40_2p2hScaling_nu,
+		C12ToAr40_2p2hScaling_nubar,
+		E2p2h_A_nu,
+		E2p2h_B_nu,
+		E2p2h_A_nubar,
+		E2p2h_B_nubar,
+		#SPPLowQ2Suppression,
+		#MKSPP_ReWeight,
+		NR_nu_np_CC_1Pi,
+		NR_nu_n_CC_2Pi,
+		NR_nu_n_CC_3Pi,
+		NR_nu_p_CC_2Pi,
+		NR_nu_p_CC_3Pi,
+		NR_nu_n_NC_1Pi,
+		NR_nu_n_NC_2Pi,
+		NR_nu_n_NC_3Pi,
+		NR_nu_p_NC_1Pi,
+		NR_nu_p_NC_2Pi,
+		NR_nu_p_NC_3Pi,
+		NR_nubar_n_CC_1Pi,
+		NR_nubar_n_CC_2Pi,
+		NR_nubar_n_CC_3Pi,
+		NR_nubar_p_CC_1Pi,
+		NR_nubar_p_CC_2Pi,
+		NR_nubar_p_CC_3Pi,
+		NR_nubar_n_NC_1Pi,
+		NR_nubar_n_NC_2Pi,
+		NR_nubar_n_NC_3Pi,
+		NR_nubar_p_NC_1Pi,
+		NR_nubar_p_NC_2Pi,
+		NR_nubar_p_NC_3Pi,
+		#MFP_pi,
+		#MFP_N,
+		nuenumu_xsec_ratio,
+		nuenuebar_xsec_ratio
+	]
+
+	xsec_total: [
+		@sequence::nuisance_parameters.xsec_CCQE,
+		@sequence::nuisance_parameters.xsec_LowW,
+		@sequence::nuisance_parameters.xsec_HighW,
+		@sequence::nuisance_parameters.xsec_NC_other,
+		@sequence::nuisance_parameters.xsec_IntraNuclear,
+		@sequence::nuisance_parameters.xsec_Extra
+	]
+
+	det_totalND: [ 
+		RecoEnergyScaleND,
+	]
+
+	det_chargehadEND: [
+		ChargedHadRecoUncorrND,
+		ChargedHadRecoUncorrSqrtND,
+		ChargedHadRecoUncorrInvSqrtND,
+	]
+	det_chargehadEFD: [
+		ChargedHadRecoUncorrFD,
+		ChargedHadRecoUncorrSqrtFD,
+		ChargedHadRecoUncorrInvSqrtFD,
+	]
+	det_chargehadE: [
+		@sequence::nuisance_parameters.det_chargehadEND,
+		@sequence::nuisance_parameters.det_chargehadEFD
+	]
+
+	det_mularEND: [
+		ERecoScaleMuLArND,
+		ERecoScaleMuLArSqrtND,
+		ERecoScaleMuLArInvSqrtND
+	]
+	det_mularEFD: [
+		ERecoScaleMuLArFD,
+		ERecoScaleMuLArSqrtFD,
+		ERecoScaleMuLArInvSqrtFD
+	]
+	det_mularE: [
+		@sequence::nuisance_parameters.det_mularEND,
+		@sequence::nuisance_parameters.det_mularEFD,
+	]
+
+	det_muResND: [
+		MuonRecoResND
+	]
+	det_muResFD: [ 
+		MuonRecoResFD
+	]
+	det_muRes: [
+		@sequence::nuisance_parameters.det_muResND,
+		@sequence::nuisance_parameters.det_muResFD
+	]
+
+	all: [
+		@sequence::nuisance_parameters.fluxAll,
+		@sequence::nuisance_parameters.xsec_small
+	]
+	allSmall: [
+		@sequence::nuisance_parameters.fluxHadProd10,
+		@sequence::nuisance_parameters.xsec_small
+	]
 }

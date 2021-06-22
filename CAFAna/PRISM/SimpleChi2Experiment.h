@@ -217,7 +217,7 @@ public:
     TH1D *pred_h = fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
                    .at(PredictionPRISM::kNDDataCorr_FDExtrap)
                    .ToTH1(fPOTFD);
-
+    pred_h->SetDirectory(nullptr);
     Eigen::VectorXd pred_vec = GetEigenFlatVector(pred_h);
     HistCache::Delete(pred_h);
     return pred_vec;   
@@ -229,7 +229,7 @@ public:
                   .at(PredictionPRISM::kExtrapCovarMatrix)
                   .ToTH2(fPOTND));
     cov_h->Scale(std::pow(fPOTFD/fPOTND, 2));
-
+    cov_h->SetDirectory(nullptr);
     Eigen::MatrixXd cov_mat = GetEigenMatrix(cov_h, 
                                              cov_h->GetYaxis()->GetNbins(),
                                              cov_h->GetXaxis()->GetNbins());

@@ -129,8 +129,10 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+cp -r /dune/app/users/chasnip/CH_DUNE_PRISM/OscLib OscLib
+cp -r /dune/app/users/chasnip/CH_DUNE_PRISM/Utilities Utilities
 
 cd ../
 

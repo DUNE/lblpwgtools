@@ -19,7 +19,7 @@ static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
 #include <algorithm>
 
 namespace ana {
-const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);
+const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(30);
 
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
@@ -46,21 +46,39 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     abort();
   }
 
+  bool isSpecHCRun(false);
+  if (std::abs(sr->SpecialHCRunId) != 293) isSpecHCRun = true;
+
   if (sr->OffAxisFluxBin == -1) {
-    sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
+    /*sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
         sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
-        !sr->isFD, sr->isFHC, sr->SpecialHCRunId != 0);
+        !sr->isFD, sr->isFHC, sr->SpecialHCRunId != 0);*/
+    //bool isSpecHCRun(false);
+   // if (std::abs(sr->SpecialHCRunId) == 280) isSpecHCRun = true;
+    sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
+        sr->nuPDGunosc, sr->Ev, std::fabs(sr->abspos_x * 1E-2), 0, !sr->isFD, 
+        sr->isFHC, isSpecHCRun); // sr->SpecialHCRunId != 0
   }
 
   if (sr->OffAxisFluxConfig == -1) {
-    sr->OffAxisFluxConfig =
+    /*sr->OffAxisFluxConfig =
         ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
             sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
-            !sr->isFD, sr->isFHC, std::abs(sr->SpecialHCRunId) != 293);
+            !sr->isFD, sr->isFHC, std::abs(sr->SpecialHCRunId) != 293);*/
+   // bool isSpecHCRun(false);
+   // if (std::abs(sr->SpecialHCRunId) == 280) isSpecHCRun = true;
+    sr->OffAxisFluxConfig = 
+      ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
+          sr->nuPDGunosc, sr->Ev, std::fabs(sr->abspos_x * 1E-2), 0, !sr->isFD, 
+          sr->isFHC, isSpecHCRun);
   }
 
   weight = fOffAxisFluxParamHelper->GetFluxWeight(
       fIdx, sigma, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
+
+  if (isSpecHCRun) {
+    //std::cout << sr->OffAxisFluxConfig << " bin " << sr->OffAxisFluxBin << " weight = " << weight << std::endl;
+  }
 #else
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;

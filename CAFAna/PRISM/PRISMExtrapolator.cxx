@@ -443,7 +443,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     FillHistFromEigenMatrix(fDebugFitMatrix["last_match_regmatrix"].get(),
                             RegMatrix);
   }
-
+  HistCache::ClearCache();
   return {fLastMatch_293kA.get(), fLastMatch_280kA.get()};
 }
 

@@ -354,20 +354,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
 
-    /*if (sr.isCC) {
-      std::unique_ptr<TRandom3> rando = std::make_unique<TRandom3>();
-      double Mmuon = 0.1056583745;
-      double lepKE = sr.LepE - Mmuon;
-      double recoKE;
-      // Do slightly different ND and FD muon res to see if we can
-      // successfully correct for the differences
-      if (sr.isFD) recoKE = rando->Gaus(lepKE, 0.018);
-      else recoKE = rando->Gaus(lepKE, 0.022);
-      sr.ProxyRecoLepE = recoKE + Mmuon;
-    } else { // is NC, neutrino not reconstructed
-      sr.ProxyRecoLepE = 0;
-    }*/
-
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
 

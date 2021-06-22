@@ -58,7 +58,6 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                                      Sign::Sign_t FDsign) const {
 
   ana::SystShifts syst = shift; 
-  //ana::SystShifts syst = kNoShift;  
 
   if (!fNDunselected_293kA || !fNDselected_293kA || !fNDunselected_280kA || !fNDselected_280kA) {
     std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
