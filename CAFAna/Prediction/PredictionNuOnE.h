@@ -36,11 +36,11 @@ namespace ana
                     SpectrumLoaderBase& ccBkgLoader,
                     SpectrumLoaderBase& ncBkgLoader,
                     const SystShifts& shift = kNoShift,
-                    const Var& wei = kUnweighted);
+                    const Weight& wei = kUnweighted);
 
     PredictionNuOnE(NuOnELoaders& loaders,
                     const SystShifts& shift = kNoShift,
-                    const Var& wei = kUnweighted)
+                    const Weight& wei = kUnweighted)
       : PredictionNuOnE(loaders.Signal(), loaders.CCBkg(), loaders.NCBkg(),
                         shift, wei)
     {
@@ -71,7 +71,7 @@ namespace ana
   class PredictionNuOnEGenerator: public IPredictionGenerator
   {
   public:
-    PredictionNuOnEGenerator(Var wei = kUnweighted) : fWei(wei)
+    PredictionNuOnEGenerator(Weight wei = kUnweighted) : fWei(wei)
     {
     }
 
@@ -80,6 +80,6 @@ namespace ana
              const SystShifts& shiftMC = kNoShift) const override;
 
   protected:
-    Var fWei;
+    Weight fWei;
   };
 }

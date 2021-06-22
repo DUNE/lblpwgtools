@@ -18,7 +18,7 @@ public:
   PredictionPRISM(SpectrumLoaderBase &ND_loader, const HistAxis &recoAxis,
                   const HistAxis &offAxis, const Cut &cut,
                   const SystShifts &shift = kNoShift,
-                  const Var &wei = kUnweighted,
+                  const Weight &wei = kUnweighted,
                   PRISMExtrapolator const *flux_matcher = nullptr,
                   PRISMExtrapolator::FluxPredSpecies NDFluxSpecies =
                       PRISMExtrapolator::FluxPredSpecies::kNumu_numode,
@@ -29,11 +29,11 @@ public:
 
   void AddFDMCLoader(SpectrumLoaderBase &FD_loader, const Cut &cut,
                      const SystShifts &shift = kNoShift,
-                     const Var &wei = kUnweighted);
+                     const Weight &wei = kUnweighted);
 
   void AddNDMCLoader(SpectrumLoaderBase &ND_loader, const Cut &cut,
                      const SystShifts &shift = kNoShift,
-                     const Var &wei = kUnweighted);
+                     const Weight &wei = kUnweighted);
 
   static std::unique_ptr<PredictionPRISM>
   LoadFrom(TDirectory *dir, PRISMExtrapolator const *flux_matcher = nullptr,
@@ -133,8 +133,8 @@ class PredictionPRISMGenerator : public IPredictionGenerator {
 public:
   PredictionPRISMGenerator(const HistAxis &recoAxis, const HistAxis &offAxis,
                            const Cut &cutND, const Cut &cutFD,
-                           const Var &weiND = kUnweighted,
-                           const Var &weiFD = kUnweighted,
+                           const Weight &weiND = kUnweighted,
+                           const Weight &weiFD = kUnweighted,
                            PRISMExtrapolator const *flux_matcher = nullptr,
                            PRISMExtrapolator::FluxPredSpecies NDFluxSpecies =
                                PRISMExtrapolator::FluxPredSpecies::kNumu_numode,
@@ -189,10 +189,10 @@ protected:
   HistAxis fPredictionAxis;
   HistAxis fOffAxis;
   Cut fCutND;
-  Var fWeiND;
+  Weight fWeiND;
 
   Cut fCutFD;
-  Var fWeiFD;
+  Weight fWeiFD;
 
   PRISMExtrapolator const *fFluxMatcher;
   PRISMExtrapolator::FluxPredSpecies fNDFluxSpecies;

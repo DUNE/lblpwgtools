@@ -17,7 +17,7 @@ namespace ana
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift,
-                  const Var& wei);
+                  const Weight& wei);
 
     TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
                   SpectrumLoaderBase& loaderNue,
@@ -27,7 +27,7 @@ namespace ana
                   const Var& var,
                   const Cut& cut,
                   const SystShifts& shift,
-                  const Var& wei);
+                  const Weight& wei);
 
     TrivialExtrap(Loaders& loaders,
                   std::string label,
@@ -35,13 +35,13 @@ namespace ana
                   const Var& var,
                   const Cut& cut,
                   const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
+                  const Weight& wei = kUnweighted);
 
     TrivialExtrap(Loaders& loaders,
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
+                  const Weight& wei = kUnweighted);
 
     virtual OscillatableSpectrum NueSurvComponent()       {return fNueSurv;}
     virtual OscillatableSpectrum AntiNueSurvComponent()   {return fNueSurvAnti;}

@@ -21,7 +21,7 @@ namespace ana
                                    const Var& var,
                                    const Cut& cut,
                                    const SystShifts& shift,
-                                   const Var& wei)
+                                   const Weight& wei)
     : PredictionNoOsc(loader, HistAxis(label, bins, var), cut, shift, wei)
   {
   }
@@ -31,7 +31,7 @@ namespace ana
                                    const HistAxis& axis,
                                    const Cut& cut,
                                    const SystShifts& shift,
-                                   const Var& wei)
+                                   const Weight& wei)
     : fSpectrum(       loader, axis, cut,                                        shift, wei),
       fSpectrumNC(     loader, axis, cut &&  kIsNC,                              shift, wei),
       fSpectrumNumu(   loader, axis, cut && !kIsNC && kIsNumuCC &&  !kIsAntiNu,  shift, wei),

@@ -474,7 +474,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
   // aren't grouped with the other nominal histograms. Keep track of the
   // results for nominals in these caches to speed those systs up.
   CutVarCache<bool, Cut> nomCutCache;
-  CutVarCache<double, Var> nomWeiCache;
+  CutVarCache<double, Weight> nomWeiCache;
   CutVarCache<double, Var> nomVarCache;
 
   // HACK to satisfy cafanacore which wants everything to be proxied
@@ -518,7 +518,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
         continue;
 
       for (auto &weidef : cutdef.second) {
-        const Var &weivar = weidef.first;
+        const Weight &weivar = weidef.first;
 
         double wei = shifted ? weivar(sr) : nomWeiCache.Get(weivar, sr);
 
@@ -662,7 +662,7 @@ void SpectrumLoader::StoreExposures() {
 //----------------------------------------------------------------------
 const SpectrumLoader::TestVals *SpectrumLoader::GetVals(
     const caf::SRProxy *sr,
-    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
+    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   TestVals *ret = new TestVals;
 
   // Store values for all Vars and Cuts of interest
@@ -712,7 +712,7 @@ void SpectrumLoader::ValError(const std::string &type, const std::string &shift,
 void SpectrumLoader::CheckVals(
     const TestVals *v, const caf::SRProxy* sr,
     const std::string &shiftName,
-    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
+    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   unsigned int cutIdx = 0;
   unsigned int weiIdx = 0;
   unsigned int varIdx = 0;

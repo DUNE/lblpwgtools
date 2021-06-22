@@ -63,11 +63,11 @@ namespace ana
     };
 
     const TestVals* GetVals(const caf::SRProxy* sr,
-			    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
+			    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void CheckVals(const TestVals* v,
                    const caf::SRProxy* sr,
                    const std::string& shiftName,
-		   IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
+		   IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void ValError(const std::string& type,
                   const std::string& shift,
                   const std::set<std::string>& req,

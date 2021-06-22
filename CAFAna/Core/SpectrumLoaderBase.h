@@ -11,6 +11,7 @@
 #include "CAFAna/Core/MultiVar.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 
 namespace caf{class StandardRecord;}
 
@@ -40,14 +41,14 @@ namespace ana
                              const Var& var,
                              const Cut& cut,
                              const SystShifts& shift,
-                             const Var& wei = kUnweighted);
+                             const Weight& wei = kUnweighted);
 
     /// For use by the \ref Spectrum constructor
     virtual void AddSpectrum(Spectrum& spect,
                              const MultiVar& var,
                              const Cut& cut,
                              const SystShifts& shift,
-                             const Var& wei = kUnweighted);
+                             const Weight& wei = kUnweighted);
 
     /// For use by the constructors of \ref ReweightableSpectrum subclasses
     virtual void AddReweightableSpectrum(ReweightableSpectrum& spect,
@@ -55,7 +56,7 @@ namespace ana
                                          const Var& yvar,
                                          const Cut& cut,
                                          const SystShifts& shift,
-                                         const Var& wei);
+                                         const Weight& wei);
 
     /// Load all the registered spectra
     virtual void Go() = 0;
@@ -168,7 +169,7 @@ namespace ana
     /// \brief All the spectra that need to be filled
     ///
     /// [shift][cut][wei][var]
-    IDMap<SystShifts, IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>> fHistDefs;
+    IDMap<SystShifts, IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>> fHistDefs;
   };
 
   /// \brief Dummy loader that doesn't load any files
@@ -185,19 +186,19 @@ namespace ana
                      const Var& var,
                      const Cut& cut,
                      const SystShifts& shift,
-                     const Var& wei = kUnweighted) override {}
+                     const Weight& wei = kUnweighted) override {}
     void AddSpectrum(Spectrum& spect,
                      const MultiVar& var,
                      const Cut& cut,
                      const SystShifts& shift,
-                     const Var& wei = kUnweighted) override {}
+                     const Weight& wei = kUnweighted) override {}
 
     void AddReweightableSpectrum(ReweightableSpectrum& spect,
                                  const Var& xvar,
                                  const Var& yvar,
                                  const Cut& cut,
                                  const SystShifts& shift,
-                                 const Var& wei) override {}
+                                 const Weight& wei) override {}
   };
   /// \brief Dummy loader that doesn't load any files
   ///
