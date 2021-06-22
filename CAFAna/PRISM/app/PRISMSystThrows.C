@@ -36,20 +36,46 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   double POT = pred.get<double>("POT_years", 1) * POT120;
   double POT_FD = POT * pot_fd_FVMassFactor;
   bool use_PRISM = pred.get<bool>("use_PRISM", true);
+  bool MCVarFluxSyst = pred.get<bool>("vary_NDFD_data", false);
 
   std::pair<double, double> gauss_flux =
       pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
 
-  (void)GetListOfSysts();
+  //--------------------------------------------------
+  // Get systematics to throw.
+  // Can choose to get a list of systemaitcs or look at single
+  // systematics individually.
+  std::vector<ISyst const *> freesysts;
+  std::map<ISyst const *, double> syst_map;
+  SystShifts shift;
 
-  SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
+  if (pred.has_key("free_syst_params")) {
+    std::cout << "Getting list of systematics:" << std::endl;
+    freesysts = ana::GetListOfSysts(
+      pred.get<std::vector<std::string>>("free_syst_params", {}));
+    for (auto const &s : freesysts) {
+      syst_map.emplace(s, 1);
+    }
+  } else if (pred.has_key("syst")) {
+    std::cout << "Looking at single systematics:" << std::endl;
+    shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
+  } else {
+    shift = kNoShift;
+  }
+
+  if (!syst_map.empty()) {
+    for (auto const &smap : syst_map) {
+      shift.SetShift(smap.first, smap.second);
+    }
+  }
 
   for (auto const &syst : shift.ActiveSysts()) {
-    std::cout << "Syst " << syst->ShortName() << std::endl; //" with shift = " << 
-      //syst.GetShift() << std::endl;
+    std::cout << "Syst " << syst->ShortName() << std::endl; 
   }
 
   SystShifts fluxshift = FilterFluxSystShifts(shift);
+  // Done systematics load
+  //--------------------------------------------------
 
   bool do_gauss = gauss_flux.first != 0;
 
@@ -147,9 +173,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                         chan_energy_range);
     }
 
-    if (PRISM_write_debug) {
-      fluxmatcher.SetStoreDebugMatches();
-    }
+    //if (PRISM_write_debug) {
+    //  fluxmatcher.SetStoreDebugMatches();
+    //}
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
@@ -161,7 +187,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetNDRunPlan(run_plan_nub, BeamMode::kNuBarMode);
   }
 
+  if (PRISM_SetNDDataErrs) {
+    std::cout << "Set errors from run-plan event rate" << std::endl;
+  } else {
+    std::cout << "Set errors from MC" << std::endl;
+  }
   state.PRISM->SetNDDataErrorsFromRate(PRISM_SetNDDataErrs);
+
+  if (MCVarFluxSyst) {
+    std::cout << "Apply systs to ND and FD MC data. No shifts on weights." << std::endl;
+  } else {
+    std::cout << "Nominal MC as mock-data. Apply flux systs to weights." << std::endl;
+  }
+  state.PRISM->SetVaryNDFDMCData(MCVarFluxSyst);
 
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {
@@ -234,6 +272,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
 
+    std::cout << "Filling smearing matrices and calculating efficiency." << std::endl;
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(), 
@@ -243,157 +282,194 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_293kA_nu].get(),                                                       state.NDUnselTruePredInterps[kND_280kA_nu].get(),
+                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
+                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
                                 state.NDSelTruePredInterps[kND_280kA_nu].get(),
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    std::cout << "Done. Now do syst throws." << std::endl;
 
     if (use_PRISM) {
-      if (do_gauss) { // Gaussian spectra prediction
-        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
-            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
-        TH1 *PRISMPred =
-            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-        PRISMPred->SetDirectory(nullptr);
 
-        if (PRISM_write_debug) {
+      //----------------------------------------------------
+      // Scan for variation due to systematics
+      //----------------------------------------------------
 
-          for (auto const &comp : PRISMComponents) {
-            // we always write this
-            if (comp.first == PredictionPRISM::kPRISMPred) {
-              continue;
-            }
+      chan_dir->cd();
 
-            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+      std::vector<std::vector<double>> toGetErr;
+      SystShifts shift_throw = shift;
+      int number_throws(5000);
+      int step_count(0);
+        
+      auto PRISM_NomComps = state.PRISM->
+        PredictPRISMComponents(calc, kNoShift, ch.second);
 
-            if (PRISMComp_h->Integral() > 0) {
-              chan_dir->WriteTObject(
-                  PRISMComp_h,
-                  PredictionPRISM::GetComponentString(comp.first).c_str());
-            }
+      // Nominal PRISM pred.  //kNDDataCorr_FDExtrap
+      TH1D *PRISM_Nom_h = PRISM_NomComps.at(MCVarFluxSyst ? 
+                              PredictionPRISM::kNDMC_FDExtrap : 
+                              PredictionPRISM::kNDDataCorr_FDExtrap).ToTH1(POT_FD); 
+      PRISM_Nom_h->SetDirectory(nullptr);
+
+      PRISM_Nom_h->Scale(1 / PRISM_Nom_h->Integral());
+      // Nominal FD pred.
+      TH1D *FDOsc_Nom_h = PRISM_NomComps.at(PredictionPRISM::kFDOscPred).ToTH1(POT_FD);
+      FDOsc_Nom_h->SetDirectory(nullptr);
+      FDOsc_Nom_h->Scale(1 / FDOsc_Nom_h->Integral()); 
+      // Nominal FD unoscillated pred.
+      TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred).ToTH1(POT_FD);
+      FDUnOsc_h->SetDirectory(nullptr);
+      FDUnOsc_h->Scale(1 / FDUnOsc_h->Integral());
+
+      std::vector<double> AvVx, AvVy, err68pc;
+      // x points on graph are bin centers of PRISM prediction
+      for (int i = 0; i < PRISM_Nom_h->GetNbinsX(); i++) { 
+        AvVx.push_back(PRISM_Nom_h->GetXaxis()->GetBinCenter(i + 1));
+      }
+
+      std::cout << "Start syst throws. Doing " << number_throws << " throws." << std::endl;
+      for (int j = 1; j <= number_throws; j++) {
+        std::vector<double> throws;
+        for (auto const &syst : shift_throw.ActiveSysts()) {
+          shift_throw.SetShift(syst,
+            GetBoundedGausThrow(syst->Min() * 0.8, syst->Max() * 0.8));
+        }
+
+        auto PRISM_ShiftedComps = state.PRISM->
+          PredictPRISMComponents(calc, shift_throw, ch.second);
+        // Shifted PRISM pred.
+        TH1D *PRISM_Shift_h = PRISM_ShiftedComps.at(MCVarFluxSyst ? 
+                                  PredictionPRISM::kNDMC_FDExtrap : 
+                                  PredictionPRISM::kNDDataCorr_FDExtrap).ToTH1(POT_FD);
+        PRISM_Shift_h->SetDirectory(nullptr);
+        PRISM_Shift_h->Scale(1 / PRISM_Shift_h->Integral());
+        // Shifted FD pred.
+        TH1D *FDOsc_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kFDOscPred)
+                                .ToTH1(POT_FD);
+        FDOsc_Shift_h->SetDirectory(nullptr);
+        FDOsc_Shift_h->Scale(1 / FDOsc_Shift_h->Integral());
+
+        if (MCVarFluxSyst) { // For varying ND and FD MC data
+          for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
+            double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) - 
+                                 PRISM_Nom_h->GetBinContent(ebin)) /
+                                 FDOsc_Nom_h->GetBinContent(ebin); // FDUnOsc_h FDOsc_Nom_h
+     
+            double fracDiffFD = (FDOsc_Shift_h->GetBinContent(ebin) -
+                                 FDOsc_Nom_h->GetBinContent(ebin)) / 
+                                 FDOsc_Nom_h->GetBinContent(ebin); 
+            throws.push_back(fracDiffND - fracDiffFD); // * 100 for %
           }
-
-          fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
-
-          dir->cd();
-        }
-      } else { // FD spectra prediction
-        auto PRISMComponents =
-            state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-        auto *PRISMPred = 
-              PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
-        PRISMPred->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-        PRISMPred->SetDirectory(nullptr);
-
-        auto *PRISMExtrap = 
-              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
-        PRISMExtrap->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMExtrap, "PRISMExtrap");
-
-        if (PRISM_write_debug) {
-          fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-        }
-      
-
-        //----------------------------------------------------
-        // Scan for variation due to systematics
-        //----------------------------------------------------
-
-        chan_dir->cd();
-
-        std::vector<double> AvVx, AvVy, err68pc;
-        // x points on graph are bin centers of PRISM prediction
-        for (int i = 0; i < PRISMExtrap->GetNbinsX(); i++) {
-          AvVx.push_back(PRISMExtrap->GetXaxis()->GetBinCenter(i + 1));
-        }
-
-        std::vector<std::vector<double>> toGetErr;
-        SystShifts shift_throw = shift;
-        int number_throws(5000);
-        int step_count(0);
-        std::cout << "Start syst throws. Doing " << number_throws << " throws." << std::endl;
-        for (int j = 1; j <= number_throws; j++) {
-            //step_count += (number_throws / 10);
-          //std::cout << j; 
-          std::vector<double> throws;
-          for (auto const &syst : shift_throw.ActiveSysts()) {
-            //std::cout << "min = " << syst->Min() << std::endl;
-            shift_throw.SetShift(syst,
-              GetBoundedGausThrow(syst->Min() * 0.8, syst->Max() * 0.8));
+        } else { // Don't vary ND and FD MC data
+          for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
+            double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) -
+                                 PRISM_Nom_h->GetBinContent(ebin)) /
+                                 FDOsc_Nom_h->GetBinContent(ebin); // PRISM_Nom_h FDOsc_Nom_h
+            throws.push_back(fracDiffND);
           }
-
-          auto PRISM_ShiftedComps = state.PRISM->
-            PredictPRISMComponents(calc, shift_throw, ch.second);
-          auto PRISM_NomComps = state.PRISM->
-            PredictPRISMComponents(calc, kNoShift, ch.second);
-  
-          TH1D *PRISM_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                                  .ToTH1(POT_FD);
-          TH1D *PRISM_Nom_h = PRISM_NomComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                                  .ToTH1(POT_FD);
-          TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred) 
-                                  .ToTH1(POT_FD);
-
-          for (int ebin = 1; ebin <= PRISMExtrap->GetNbinsX(); ebin++) {
-            double fracDiff = (PRISM_Shift_h->GetBinContent(ebin) - 
-                               PRISM_Nom_h->GetBinContent(ebin)) /
-                               PRISM_Nom_h->GetBinContent(ebin); // PRISM_Nom_h FDUnOsc_h
-            throws.push_back(fracDiff * 100);
-          }
-          toGetErr.push_back(throws); 
-          /*if (j == 1) {
-            std::cout << "[="; 
-          } else if (j == number_throws) {
-            std::cout << "=]" << std::endl; 
-          } else {
-            std::cout << "=";
-          }*/
-          HistCache::Delete(PRISM_Shift_h);
-          HistCache::Delete(PRISM_Nom_h);
-          HistCache::Delete(FDUnOsc_h);
         }
+        toGetErr.push_back(throws); 
+        HistCache::Delete(PRISM_Shift_h);
+        HistCache::Delete(FDOsc_Shift_h);
+        delete PRISM_Shift_h, FDOsc_Shift_h;
+      }
 
-        std::vector<double> zero_errX;
-        std::vector<std::vector<double>>::iterator row;
-        std::vector<double>::iterator col;
-        bool plot(true);   
+      std::vector<double> zero_errX;
+      std::vector<std::vector<double>>::iterator row;
+      std::vector<double>::iterator col;
+      std::cout << "Finished throws; now calculate std. dev." << std::endl;
 
-        std::cout << "Finished throws; now calculate std. dev." << std::endl;
+      // Calculate standard deviation for 1sig error band
+      for (int ebin = 0; ebin < PRISM_Nom_h->GetNbinsX(); ebin++) {
+        double sumsq(0), sum(0);
+        int N(0);
+        for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+          sum += row->at(ebin);
+          N++;
+        }
+        double average = sum / N;
+        AvVy.push_back(average);
 
-        for (int ebin = 0; ebin < PRISMExtrap->GetNbinsX(); ebin++) {
-          double sumsq(0), sum(0);
+        for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
+          sumsq += std::pow((row->at(ebin) - average), 2);
+        }
+        double var = sumsq / (N - 1);
+        err68pc.push_back(std::pow(var, 0.5));
+        zero_errX.push_back(0);
+
+      }
+      std::unique_ptr<TGraphErrors> g_ShiftVar = std::make_unique<TGraphErrors>(
+        AvVx.size(), &AvVx[0], &AvVy[0], &zero_errX[0], &err68pc[0]);
+
+      chan_dir->WriteTObject(g_ShiftVar.release(), "g_ShiftVar");      
+
+      // Do a covariance matrix for the syst throws
+      TH2D *hSystCovariance = HistCache::NewTH2D("SystCovariance", 
+                                                 PRISM_Nom_h->GetXaxis(),
+                                                 PRISM_Nom_h->GetXaxis());
+      hSystCovariance->SetDirectory(nullptr);
+      for (int ebinx = 0; ebinx < PRISM_Nom_h->GetNbinsX(); ebinx++) {
+        for (int ebiny = 0; ebiny < PRISM_Nom_h->GetNbinsX(); ebiny++) {
+          double sumx(0), sumy(0), sumsq(0);
           int N(0);
           for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
-          //TAxis h_axis = TAxis(50, -10, 10); // Changed to %
-          //TH1D * hTest = HistCache::New("h_throw", &h_axis);
-            sum += row->at(ebin);
+            sumx += row->at(ebinx);
+            sumy += row->at(ebiny);
             N++;
-          }
-          //std::string str = std::to_string(i);
-          //if (plot) hTest->Write((std::string("h_throw_") + str).c_str());
-          plot = false;
-          double average = sum / N;
-          AvVy.push_back(average);
-
+          }  
+          double averageX = sumx / N;
+          double averageY = sumy / N;
           for (row = toGetErr.begin(); row != toGetErr.end(); row++) {
-            sumsq += std::pow((row->at(ebin) - average), 2);
+            sumsq += (row->at(ebinx) - averageX) * (row->at(ebiny) - averageY);
           }
-          double var = sumsq / N;
-          err68pc.push_back(std::pow(var, 0.5));
-          zero_errX.push_back(0);
-
-          //HistCache::Delete(hTest);
+          double covvar = sumsq / (N - 1);
+             
+          hSystCovariance->SetBinContent(ebinx + 1, ebiny + 1, covvar);
         }
-        std::unique_ptr<TGraphErrors> g_ShiftVar = std::make_unique<TGraphErrors>(
-          AvVx.size(), &AvVx[0], &AvVy[0], &zero_errX[0], &err68pc[0]);
-
-        chan_dir->WriteTObject(g_ShiftVar.release(), "g_ShiftVar");
-      
       }
+
+      chan_dir->WriteTObject(hSystCovariance, "SystCovariance_Fractional");
+      HistCache::Delete(hSystCovariance);
+
+      // Write standard PRISM prediction hists.
+      auto PRISMComponents =
+          state.PRISM->PredictPRISMComponents(calc, kNoShift, ch.second);
+      auto *PRISMPred =
+            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
+      PRISMPred->Scale(1, "width");
+      chan_dir->WriteTObject(PRISMPred, "PRISMPred");
+      PRISMPred->SetDirectory(nullptr);
+      auto *PRISMExtrap =
+            PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+      PRISMExtrap->Scale(1, "width");
+      chan_dir->WriteTObject(PRISMExtrap, "PRISMExtrap");
+      PRISMExtrap->SetDirectory(nullptr);
+      // Covariance matrix will always be TH2
+      TH2D *PRISMExtrapCovMat =
+            dynamic_cast<TH2D*>(PRISMComponents
+                                .at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT));
+      // Careful: covariance matrix needs to be scaled by the factor squared
+      PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
+      PRISMExtrapCovMat->Scale(1, "width");
+      chan_dir->WriteTObject(PRISMExtrapCovMat, "StatCovariance");
+      PRISMExtrapCovMat->SetDirectory(nullptr);
+      // Make a fractional stat covariance matrix to compare to syst covariance
+      TH2D *PRISMExtrapCovMat_Frac = HistCache::Copy(PRISMExtrapCovMat);
+      PRISMExtrapCovMat_Frac->SetDirectory(nullptr);
+      for (int ebinx = 1; ebinx <= PRISMExtrapCovMat->GetNbinsX(); ebinx++) {
+        for (int ebiny = 1; ebiny <= PRISMExtrapCovMat->GetNbinsY(); ebiny++) {
+          double cov = PRISMExtrapCovMat->GetBinContent(ebinx, ebiny);
+          double fraccov = cov / 
+                           (PRISMExtrap->GetBinContent(ebinx) * 
+                            PRISMExtrap->GetBinContent(ebiny));
+          PRISMExtrapCovMat_Frac->SetBinContent(ebinx, ebiny, fraccov); 
+        }
+      }
+      chan_dir->WriteTObject(PRISMExtrapCovMat_Frac, "StatCovariance_Fractional");
+      HistCache::Delete(PRISMExtrapCovMat_Frac);
+
     } else {
       auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
                               ->PredictSyst(calc, shift).ToTHX(POT_FD);

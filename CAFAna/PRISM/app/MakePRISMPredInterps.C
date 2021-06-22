@@ -689,12 +689,14 @@ int main(int argc, char const *argv[]) {
       // for 280kA and 293kA, right?
       if (!IsND280kA) {
         if (isReco && UseSel) {
-          NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+          /*NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND,  
               kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
               kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun) &&
               kIsReco, // Remove events not reconstructed when using param reco
-              WeightVars[it]);
+              WeightVars[it]);*/ // TRY SELECTION!!
+          NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
+            ERecETrueAxisND, AnalysisCuts[it] && kCut280kARun, WeightVars[it]);
         } else { // Not using reco variable so don't need reco cut.
           NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND,
@@ -777,10 +779,12 @@ int main(int argc, char const *argv[]) {
           ); // PredictionInterp::kSplitBySign
 
       // Matrix of ERec v ETrue for FD
-      FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
+      /*FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
           ERecETrueAxisFD, 
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
-          AnaWeightVars[it]);
+          AnaWeightVars[it]);*/ // TRY SELECTION!!
+      FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
+        ERecETrueAxisFD, AnalysisCuts[it], AnaWeightVars[it]);
       FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
           ); //PredictionInterp::kSplitBySign 

@@ -41,6 +41,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::vector<std::string> const &output_file =
     scan.get<std::vector<std::string>>("output_file");
+  std::cout << "Output file: " << output_file[0] << std::endl;
+
   std::string const &output_dir = scan.get<std::string>("output_dir", "");
 
   std::string const &varname =
@@ -52,6 +54,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::cout << "POT : " << POT << ", " << POT_FD << std::endl;
 
   bool use_PRISM = scan.get<bool>("use_PRISM", true);
+  bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
 
   //auto GOFps = scan.get<fhicl::ParameterSet>("GOF", {});
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
@@ -73,7 +76,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   auto PRISMps = scan.get<fhicl::ParameterSet>("PRISM", {});
 
   auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
-  bool PRISM_write_debug = PRISMps.get<bool>("write_debug", false);
+  //bool PRISM_write_debug = PRISMps.get<bool>("write_debug", false);
   bool Use_EventRateMatching = PRISMps.get<bool>("Use_EventRateMatching", false);
   double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap");
   std::cout << "Reg for Extrap = " << RegFactorExtrap << std::endl;
@@ -156,6 +159,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   TFile f(output_file[0].c_str(),
     output_file.size() > 1 ? output_file[1].c_str() : "RECREATE");
 
+  std::cout << "Output file: " << output_file[0] << std::endl;
+
   TDirectory *dir = &f;
   if (output_dir.size()) {
     dir = f.mkdir(output_dir.c_str());
@@ -202,9 +207,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280, 
                                       chan_energy_range);
     }
-    if (PRISM_write_debug) {
-      fluxmatcher.SetStoreDebugMatches();
-    }
+    //if (PRISM_write_debug) { No need!!
+    //  fluxmatcher.SetStoreDebugMatches();
+    //}
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
@@ -217,6 +222,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
 
   state.PRISM->SetNDDataErrorsFromRate(PRISM_SetNDDataErrs);
+
+  if (vary_NDFD_MCData) {
+    std::cout << "Apply systs to ND and FD MC data. No shifts on weights." << std::endl;
+  } else {
+    std::cout << "Nominal MC as mock-data. Apply flux systs to weights." << std::endl;
+  }
+  state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
 
   std::map<std::string, MatchChan> Channels;
   if (scan.is_key_to_sequence("samples")) {
@@ -420,9 +432,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "Bestfit parameter values: " <<
         scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
       double BestLL = minchi;
-      for (int x = 0; x < scan_hist_1D->GetNbinsX(); x++) {
-          scan_hist_1D->SetBinContent(x + 1, scan_hist_1D->GetBinContent(x + 1) - BestLL);
-      }
+      //for (int x = 0; x < scan_hist_1D->GetNbinsX(); x++) {
+      //    scan_hist_1D->SetBinContent(x + 1, scan_hist_1D->GetBinContent(x + 1) - BestLL);
+      //}
       chan_dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
     }
     //-----------------------

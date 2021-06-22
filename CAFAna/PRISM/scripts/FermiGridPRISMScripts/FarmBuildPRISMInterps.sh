@@ -5,13 +5,13 @@ AXISBLOBNAME="default"
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
-LIFETIME_EXP_ND="70h"
-DISK_EXP_ND="82GB"
-MEM_EXP_ND="16GB"
+LIFETIME_EXP_ND="20h"
+DISK_EXP_ND="4GB"
+MEM_EXP_ND="10GB"
 
-LIFETIME_EXP_FD="1h"
+LIFETIME_EXP_FD="3h"
 DISK_EXP_FD="4GB"
-MEM_EXP_FD="4GB"
+MEM_EXP_FD="10GB"
 
 SYSTDESCRIPTOR=""
 NOFAKEDATA=""
@@ -288,7 +288,7 @@ fi
 
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=8 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_FHC_JID: ${ND_FHC_JID}"
   fi
 

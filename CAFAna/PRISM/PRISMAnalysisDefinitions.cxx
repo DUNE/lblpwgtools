@@ -85,7 +85,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -32, 0};
+    std::array<double, 3> OABinning = {0.5, -30, 0}; // -32
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];

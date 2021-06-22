@@ -1,0 +1,66 @@
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"  
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+
+	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_FluxFullXSecList_15Jun21.root
+
+	#PRISMState_EVisReco_FluxXSecSyst_SelMat_9Jun21.root
+
+	projection_name: EVisReco
+	use_PRISM: true
+	POT_years: 1.0
+	use_ND_stats: true
+	# Definitely want this to be false for fits!
+	vary_NDFD_data: false
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0, 6]
+			reg_factor_293kA: 1.0E-16 # 2.49E-17
+			reg_factor_280kA: 1E-18
+			}
+		]
+		set_ND_errors_from_rate: true
+
+		RunPlans: {
+			numode: @local::RunPlans.guess
+		}
+		Use_EventRateMatching: true
+                reg_factor_extrap: 1E-30
+	}
+
+	free_osc_params: [dmsq32, ssth23, th13, deltapi]
+	
+	samples: @local::FitChannels.Numu_disp 
+}
+
+# Just an example below now, not used
+
+scansEG: [
+
+	{
+		@table::BasicPred
+		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
+		scan_params: @local::ScanDefinitions.dmsq23_coarse
+		free_syst_params: @local::nuisance_parameters.all
+		output_dir: "dmsq32_all_1.0Em16"
+	},
+
+	{
+		@table::BasicPred
+		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
+		scan_params: @local::ScanDefinitions.dmsq23_coarse
+		output_dir: "dmsq32_nom_1.0Em16"
+	},
+
+]
+
+# This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
+scansEG[0].output_file[1]: "RECREATE"
+

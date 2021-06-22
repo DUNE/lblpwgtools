@@ -77,6 +77,12 @@ public:
     kNDDataCorr_FDExtrap = 38,
     kExtrapCovarMatrix = 39,
 
+    kNDMCExtrap2D_293kA = 40,
+    kNDMCExtrap2D_280kA = 41,
+    kNDMCExtrap_293kA = 42,
+    kNDMCExtrap_280kA = 43,
+    kNDMC_FDExtrap = 44,
+
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -183,16 +189,16 @@ public:
       return "NDData_unweighted_280kA";
     }
     case kNDDataExtrap2D_293kA: {
-      return "kNDDataExtrap2D_293kA";
+      return "NDDataExtrap2D_293kA";
     }
     case kNDDataExtrap2D_280kA: {
-      return "kNDDataExtrap2D_280kA";
+      return "NDDataExtrap2D_280kA";
     }
     case kNDDataExtrap_293kA: {
-      return "kNDDataExtrap_293kA";
+      return "NDDataExtrap_293kA";
     }
     case kNDDataExtrap_280kA: {
-      return "kNDDataExtrap_280kA";
+      return "NDDataExtrap_280kA";
     }
     case kNDData_FDExtrap: {
       return "NDData_FDExtrap";
@@ -202,6 +208,21 @@ public:
     }
     case kExtrapCovarMatrix: {
       return "ExtrapCovarMatrix";
+    }
+    case kNDMCExtrap2D_293kA: {
+      return "NDMCExtrap2D_293kA";
+    }
+    case kNDMCExtrap2D_280kA: { 
+      return "NDMCExtrap2D_280kA";
+    }
+    case kNDMCExtrap_293kA: {
+      return "NDMCExtrap_293kA";
+    }
+    case kNDMCExtrap_280kA: {
+      return "NDMCExtrap_280kA"; 
+    }
+    case kNDMC_FDExtrap: {
+      return "NDMC_FDExtrap";
     }
     }
     return "";
@@ -259,6 +280,7 @@ public:
   }
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
+  void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
 
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
@@ -456,6 +478,10 @@ protected:
   // Whether to use the MC stats errors or the standard error on the ND data
   // sample to set the statistical errors.
   bool fSetNDErrorsFromRate;
+  // Whether to apply shifts to MC ND & FD 'data' for debugging.
+  bool fVaryNDFDMCData;
+  
+
 }; // namespace ana
 
 } // namespace ana
