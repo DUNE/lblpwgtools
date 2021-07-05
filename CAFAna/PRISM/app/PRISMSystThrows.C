@@ -173,9 +173,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                         chan_energy_range);
     }
 
-    //if (PRISM_write_debug) {
-    //  fluxmatcher.SetStoreDebugMatches();
-    //}
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
