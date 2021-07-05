@@ -16,7 +16,6 @@
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/RunPlan.h"
-//#include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 
@@ -235,9 +234,6 @@ public:
   HistAxis fNDFDEnergyMatchAxis;
   HistAxis fCovarianceAxis;
 
-  /*PredictionPRISM(const HistAxis &AnalysisAxis, const HistAxis &NDOffAxis,
-                  const HistAxis &ND280kAAxis,
-                  const HistAxis &NDFDEnergyMatchAxis);*/
   PredictionPRISM(const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD, 
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
@@ -267,7 +263,6 @@ public:
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
     fFluxMatcher = flux_matcher;
   }
-  //class NDFD_Matrix;
   NDFD_Matrix const *fNDFD_Matrix;
   void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) {
     fNDFD_Matrix = det_extrap;
@@ -479,6 +474,10 @@ protected:
   // sample to set the statistical errors.
   bool fSetNDErrorsFromRate;
   // Whether to apply shifts to MC ND & FD 'data' for debugging.
+  // Will be false for 'standard' analysis where we have fixed data
+  // and systematics are applied to 'MC components'.
+  // Will be true if we want to do 'fake data' studies,
+  // where we use nominal MC which is ignorant of shifts in the 'data'.
   bool fVaryNDFDMCData;
   
 

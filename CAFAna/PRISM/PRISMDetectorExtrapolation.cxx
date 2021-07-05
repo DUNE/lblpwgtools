@@ -259,12 +259,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     HistCache::Delete(SliceProj);
   }
 
-  // Check Cov Mat is invertible: necessary if we want to use covariance in Chi2
-  /*Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(TotalLCCovMat);
-  if (!lu_decomp.isInvertible()) {
-    std::cout << "[WARNING] Covariance Matrix not invertible." << std::endl;
-  }*/
-
   // Full covariance matrix from linear combinations
   TAxis *covAxis = hMatrixFD->GetYaxis();
   if (kA == 293) {

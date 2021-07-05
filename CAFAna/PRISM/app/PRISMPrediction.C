@@ -331,41 +331,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                   PredictionPRISM::GetComponentString(comp.first).c_str());
             }
           }
-          bool debugflux = false;
-          if (debugflux) {
-            auto NomPRISMComponents = 
-              state.PRISM->PredictPRISMComponents(calc, kNoShift, ch.second);
-            TH1D *FDUnOscnom = dynamic_cast<TH1D*>(NomPRISMComponents
-                                 .at(PredictionPRISM::kFDUnOscPred).ToTHX(POT_FD));
-            FDUnOscnom->Scale(1, "width");
-            FDUnOscnom->SetDirectory(nullptr);
-  
-            TH1D *LCnom = dynamic_cast<TH1D*>(NomPRISMComponents
-                            .at(PredictionPRISM::kNDMC_FDExtrap).ToTHX(POT_FD));
-            LCnom->Scale(1, "width");
-            LCnom->SetDirectory(nullptr);
-            TH1D *LCvar = dynamic_cast<TH1D*>(PRISMComponents
-                            .at(PredictionPRISM::kNDMC_FDExtrap).ToTHX(POT_FD));
-            LCvar->Scale(1, "width"); 
-            LCvar->SetDirectory(nullptr);
-  
-            TH1D LCdiff = (*LCvar - *LCnom) / *LCnom;// / FDUnOscnom;
-            chan_dir->WriteTObject(&LCdiff, "LC_fracdiff");
-
-            TH1D *FDnom = dynamic_cast<TH1D*>(NomPRISMComponents
-                             .at(PredictionPRISM::kFDOscPred).ToTHX(POT_FD));
-            FDnom->Scale(1, "width");
-            FDnom->SetDirectory(nullptr);
-            TH1D *FDvar = dynamic_cast<TH1D*>(PRISMComponents
-                            .at(PredictionPRISM::kFDOscPred).ToTHX(POT_FD));
-            FDnom->Scale(1, "width"); 
-            FDnom->SetDirectory(nullptr);
-
-            TH1D FDdiff = (*FDvar - *FDnom) / *FDnom; /// FDUnOscnom;
-            chan_dir->WriteTObject(&FDdiff, "FD_fracdiff");
-          }
-          //TH1D LC_FD_diff = (LCdiff - FDdiff) / *FDnom;
-          //chan_dir->WriteTObject(&LC_FD_diff, "LC_FD_fracdiff");
 
           fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
           SmearMatrices.Write(chan_dir->mkdir("Unfold_Matrices"));

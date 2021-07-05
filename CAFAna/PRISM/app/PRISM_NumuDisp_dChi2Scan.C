@@ -405,13 +405,20 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
         std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;
         std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
-
+        std::cerr << "[INFO]: Beginning fit. ";
+        auto start_fit = std::chrono::system_clock::now();
         MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
         SystShifts bestSysts;
         //const SeedList &seedPts = SeedList(); //oscSeeds
-        double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+        double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kQuiet);
         // fill hist
         scan_hist_1D->Fill(x, chi);
+        auto end_fit = std::chrono::system_clock::now();
+        std::cerr << "[FIT]: Finished fit in "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
+                                                                      start_fit).count()
+                  << " s after " << fitter.GetNFCN() << " iterations."
+                  << std::endl;
       }
       // Get minimum ChiSq value (LL value)
       double minchi = 1e10;
