@@ -51,7 +51,7 @@ void MergeFits(TDirectory *target, TFile *source) {
         TDirectory *existdir = target->GetDirectory(keyname.c_str());
         MergeFits(existdir, source);
       }
-    } else if (keyname == "dchi2_1D" && obj->IsA()->InheritsFrom(TH1::Class())) {
+    } else if (keyname == "dChi2Scan" && obj->IsA()->InheritsFrom(TH1::Class())) {
       TH1 *h_fit = (TH1*)obj;
       h_fit->SetDirectory(nullptr);
       target->cd();
@@ -200,10 +200,10 @@ int main(int argc, char** argv) {
 
     MergeFits(Target, fin);
   }
-  double h_lowlim = 0.4;
-  //double h_lowlim = 2.30;
-  double h_highlim = 0.65;
-  //double h_highlim = 2.55;
+  //double h_lowlim = 0.4;
+  double h_lowlim = 2.30;
+  //double h_highlim = 0.65;
+  double h_highlim = 2.55;
 
   UpdateTarget = TFile::Open(outfilename.c_str(), "RECREATE");
 

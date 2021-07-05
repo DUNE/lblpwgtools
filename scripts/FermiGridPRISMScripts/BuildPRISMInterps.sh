@@ -51,7 +51,7 @@ if [ ! -z ${6} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
-PRISMFAKEDATAARG=" --PRISM-fake-data nominal"
+PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos
 SELECTIONARG=" --UseSelection"
 BINDESCRIPTORARG=" --bin-descriptor default"
 
