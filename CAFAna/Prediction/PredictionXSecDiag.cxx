@@ -51,7 +51,7 @@ namespace ana
                                          const HistAxis&     axis,
                                          Cut                 cut,
                                          const SystShifts&   shift,
-                                         const Var&          wei)
+                                         const Weight&       wei)
     : PredictionXSecDiag(new PredictionScaleComp(loader, axis, cut, GetDUNEXSecSysts(), shift, wei))
   {
   }
@@ -64,7 +64,7 @@ namespace ana
                      const HistAxis&     axis,
                      Cut                 cut,
                      const SystShifts&   shift,
-                     const Var&          wei)
+                     const Weight&       wei)
     : PredictionXSecDiag(new PredictionScaleComp(loaderNonswap, loaderNue, loaderNuTau, axis, cut, GetDUNEXSecSysts(), shift, wei))
   {
   }

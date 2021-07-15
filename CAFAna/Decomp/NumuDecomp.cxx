@@ -19,7 +19,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : NumuDecomp(loaderMC, loaderData, HistAxis(label, bins, var),
                  cut, shiftMC, shiftData, wei)
   {
@@ -32,7 +32,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : fData    (loaderData, axis, cut,                         shiftData, wei),
       fNC      (loaderMC,   axis, cut && kIsNC,                  shiftMC, wei),
       fNue     (loaderMC,   axis, cut && kIsBeamNue&&!kIsAntiNu, shiftMC, wei),
@@ -49,7 +49,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : NumuDecomp(loaders.GetLoader(caf::kNEARDET, Loaders::kMC),
                  loaders.GetLoader(caf::kNEARDET, Loaders::kData),
                  axis, cut, shiftMC, shiftData, wei)

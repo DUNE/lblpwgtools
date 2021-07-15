@@ -26,6 +26,6 @@ namespace ana
   const Var kTrueEnergy = SIMPLEVAR(Ev);
 
   // CV weighting
-  const Var kCVXSecWeights = SIMPLEVAR(total_xsSyst_cv_wgt); // kUnweighted
+  const Weight kCVXSecWeights = SIMPLEWEIGHT(total_xsSyst_cv_wgt); // kUnweighted
 
 }

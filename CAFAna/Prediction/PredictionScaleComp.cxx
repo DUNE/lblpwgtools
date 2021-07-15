@@ -21,7 +21,7 @@ namespace ana
                       Cut cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts& shift,
-                      const Var& wei)
+                      const Weight& wei)
     : fSysts(systs)
   {
     Cut complementCut = kNoCut;
@@ -44,7 +44,7 @@ namespace ana
                       Cut                 cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts&   shift,
-                      const Var&          wei)
+                      const Weight&       wei)
     : fSysts(systs)
   {
     assert(!systs.empty() && "Please give at least one systematic.");
@@ -65,7 +65,7 @@ namespace ana
                       Cut cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts& shift,
-                      const Var& wei)
+                      const Weight& wei)
   {
     assert(0 && "unimplemented");
 

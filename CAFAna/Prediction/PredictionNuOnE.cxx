@@ -10,7 +10,7 @@
 namespace ana
 {
   // Simple counting experiment
-  const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), kUnweighted);
+  const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), Constant(1));
 
   const Var kThetaReco = SIMPLEVAR(theta_reco);
   const Var kElepReco = SIMPLEVAR(Elep_reco);
@@ -23,14 +23,14 @@ namespace ana
 
   // Account for reduced efficiency of selecting photon shower as backgrounds
   // into an analysis looking for electron showers.
-  const Var kNCScaleFactor = Constant(.1);
+  const Weight kNCScaleFactor([](const caf::SRProxy* sr){return .1;});
 
   // --------------------------------------------------------------------------
   PredictionNuOnE::PredictionNuOnE(SpectrumLoaderBase& sigLoader,
                                    SpectrumLoaderBase& ccBkgLoader,
                                    SpectrumLoaderBase& ncBkgLoader,
                                    const SystShifts& shift,
-                                   const Var& wei)
+                                   const Weight& wei)
     : fSig  (  sigLoader, kNuOnEaxis, kNuOnECut, shift, wei),
       fCCBkg(ccBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei),
       fNCBkg(ncBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei * kNCScaleFactor)

@@ -11,12 +11,12 @@ class PredictionNoOsc : public IPrediction {
 public:
   PredictionNoOsc(SpectrumLoaderBase &loader, const HistAxis &axis,
                   const Cut &cut, const SystShifts &shift = kNoShift,
-                  const Var &wei = kUnweighted);
+                  const Weight &wei = kUnweighted);
 
   PredictionNoOsc(SpectrumLoaderBase &loader, const std::string &label,
                   const Binning &bins, const Var &var, const Cut &cut,
                   const SystShifts &shift = kNoShift,
-                  const Var &wei = kUnweighted);
+                  const Weight &wei = kUnweighted);
 
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
@@ -61,7 +61,7 @@ protected:
 
 class NoOscPredictionGenerator : public IPredictionGenerator {
 public:
-  NoOscPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
+  NoOscPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
       : fAxis(axis), fCut(cut), fWei(wei) {
   }
 
@@ -76,7 +76,7 @@ public:
 protected:
   HistAxis fAxis;
   Cut fCut;
-  Var fWei;
+  Weight fWei;
 };
 
 } // namespace ana

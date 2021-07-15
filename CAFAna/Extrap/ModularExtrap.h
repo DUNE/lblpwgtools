@@ -38,7 +38,7 @@ namespace ana
       //   const Cut& nueNDcut,
       //   const Cut& numuNDcut,
       //   const SystShifts& shiftMC = kNoShift,
-      //   const Var& weight = kUnweighted
+      //   const Weight& weight = kUnweighted
       // );
 
       /// Creates a numu-like extrapolation.
@@ -49,7 +49,7 @@ namespace ana
         const Cut& fdcut,
         const Cut& ndcut,
         const SystShifts& shiftMC = kNoShift,
-        const Var& weight = kUnweighted
+        const Weight& weight = kUnweighted
       );
 
       // /// Creates a nue-like extraploation with individual spectrum loaders.
@@ -68,7 +68,7 @@ namespace ana
       //   const Cut& nueNDcut,
       //   const Cut& numuNDcut,
       //   const SystShifts& shiftMC = kNoShift,
-      //   const Var& weight = kUnweighted
+      //   const Weight& weight = kUnweighted
       // );
 
       /// Creates a numu-like extrapolation with individual spectrum loaders.
@@ -83,7 +83,7 @@ namespace ana
         const Cut& fdcut,
         const Cut& ndcut,
         const SystShifts& shiftMC = kNoShift,
-        const Var& weight = kUnweighted
+        const Weight& weight = kUnweighted
       );
 
       // Prevent copying because we own objects on the free store.
@@ -138,7 +138,7 @@ namespace ana
         const HistAxis& axis,
         const Cut& fdcut,
         const SystShifts& shiftMC,
-        const Var& weight
+        const Weight& weight
       );
 
       std::unique_ptr<ModularExtrapComponent> fEEextrap;

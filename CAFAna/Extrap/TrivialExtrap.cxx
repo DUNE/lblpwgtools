@@ -16,7 +16,7 @@ namespace ana
                                const HistAxis& axis,
                                const Cut& cut,
                                const SystShifts& shift,
-                               const Var& wei)
+                               const Weight& wei)
     :
     fNueApp       (loaderNue,     axis, cut && kIsSig       && !kIsAntiNu, shift, wei),
     fNueAppAnti   (loaderNue,     axis, cut && kIsSig       &&  kIsAntiNu, shift, wei),
@@ -55,7 +55,7 @@ namespace ana
                                const Var& var,
                                const Cut& cut,
                                const SystShifts& shift,
-                               const Var& wei)
+                               const Weight& wei)
     :
     TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                   HistAxis(label, bins, var),
@@ -70,7 +70,7 @@ namespace ana
                                const Var& var,
                                const Cut& cut,
                                const SystShifts& shift,
-                               const Var& wei)
+                               const Weight& wei)
     : TrivialExtrap(loaders, HistAxis(label, bins, var), cut, shift, wei)
   {
   }
@@ -80,7 +80,7 @@ namespace ana
                                const HistAxis& axis,
                                const Cut& cut,
                                const SystShifts& shift,
-                               const Var& wei)
+                               const Weight& wei)
     : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap),
                     loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap),
                     loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap),

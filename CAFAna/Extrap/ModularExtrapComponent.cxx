@@ -165,7 +165,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     const Cut& flavors )
     : fRecoFD( loader, axis, fdcut && flavors, shiftMC, weight )
   {
@@ -200,7 +200,7 @@ namespace ana
     const HistAxis& axisND,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     std::string label,
     std::string latex,
     const Cut& ndcut,
@@ -298,7 +298,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     std::string label,
     std::string latex,
     const Cut& ndcut,

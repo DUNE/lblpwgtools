@@ -3,6 +3,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 
 #include "CAFAna/Vars/Vars.h"
 
@@ -24,6 +25,6 @@ extern const Var kRecoY_FromDep;
 extern const Var kTrueEnergy;
 
 // CV weighting
-extern const Var kCVXSecWeights; // kUnweighted
+extern const Weight kCVXSecWeights; // kUnweighted
 
 } // namespace
