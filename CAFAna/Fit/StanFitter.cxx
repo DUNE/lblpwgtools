@@ -89,7 +89,7 @@ namespace ana
     std::vector<std::vector<std::size_t>> var_sizes(names.size(), std::vector<size_t>{1});
     stan::io::array_var_context ret(names, vals, var_sizes);
 
-    return std::move(ret);
+    return ret;
   }
 
   //----------------------------------------------------------------------

@@ -123,7 +123,7 @@ namespace ana
 
     delete dir;
 
-    return std::move(surf);
+    return surf;
   }
 
   //----------------------------------------------------------------------

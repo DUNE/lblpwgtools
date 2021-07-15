@@ -75,7 +75,7 @@ namespace ana
     for (const auto & s : fSysts)
       ret->Add(new TObjString(s->ShortName().c_str()), new TParameter<double>("", Val(s)));
 
-    return std::move(ret);
+    return ret;
   }
 
   //----------------------------------------------------------------------
