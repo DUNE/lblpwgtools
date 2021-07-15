@@ -123,9 +123,8 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   } else {
     if(!alreadyWarned.count(bname)){
       alreadyWarned.insert(bname);
-      // TODO REVERT THIS CHANGE - suppressing warning for interactions school - June 2021
-      //      std::cout << "Warning: Branch '" << bname
-      //                << "' not found, field will not be filled" << std::endl;
+      std::cout << "Warning: Branch '" << bname
+                << "' not found, field will not be filled" << std::endl;
     }
   }
   return false;
@@ -142,8 +141,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   if (!tr){
     // Old (MCC10 era) files only have "caf"
     tr = (TTree*)f->Get("caf");
-    // TODO REVERT THIS CHANGE - suppressing warning for interactions school - June 2021
-    //    if(tr) std::cout << "Warning, didn't find 'cafTree' in " << f->GetName() << " but did find 'caf' - using that" << std::endl;
+    if(tr) std::cout << "Warning, didn't find 'cafTree' in " << f->GetName() << " but did find 'caf' - using that" << std::endl;
   }
   assert(tr);
 
@@ -400,11 +398,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
               XSSyst_cv_tmp[syst_it] == 0) {
             if(!alreadyWarned[syst_it]){
               alreadyWarned[syst_it] = true;
-              // TODO REVERT THIS CHANGE - suppressing warning for interactions school - June 2021
-              //              std::cout << "Warning: " << XSSyst_names[syst_it]
-              //                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-              //                        << " - will only warn once"
-              //                        << std::endl;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
             }
           } else {
             for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
@@ -418,11 +415,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
               XSSyst_cv_tmp[syst_it] == 0) {
             if(!alreadyWarned[syst_it]){
               alreadyWarned[syst_it] = true;
-              // TODO REVERT THIS CHANGE - suppressing warning for interactions school - June 2021
-              //              std::cout << "Warning: " << XSSyst_names[syst_it]
-              //                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-              //                        << " - will only warn once"
-              //                        << std::endl;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
             }
           } else {
             sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
