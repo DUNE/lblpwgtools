@@ -26,10 +26,13 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
                          hETrueUnfold(nullptr), ETrueWriteOnce(true) {
   fMatrixND = ND;
   fMatrixFD = FD;
-  if (!fMatrixND || !fMatrixFD) {
-    std::cout << "[WARNING] Matrices not loaded." << std::endl;
+  if (!fMatrixND) {
+    std::cout << "[WARNING] ND matrix not loaded." << std::endl;
     abort();
-  } 
+  } else if (!fMatrixFD) {
+    std::cout << "[WARNING] FD matrix not loaded." << std::endl;
+    abort();
+  }
 }
 
 //-----------------------------------------------------
@@ -162,10 +165,10 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     std::cout << "[ERROR] Unknown HC." << std::endl;
     abort();
   }
-  
+  std::cout << "FDFlav = " << FDflav << std::endl;
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
-  auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+  auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign); 
   hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
 
   int NTrueBins = hMatrixND->GetXaxis()->GetNbins();

@@ -196,6 +196,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
+    std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
+    std::cout << "FD Config = " << DescribeConfig(FDConfig_enum) << std::endl; 
+
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
       std::cout << "[ERROR]: Have ND nu channel, but no numode run plan."
                 << std::endl;
@@ -207,12 +210,21 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       abort();
     }
 
+    std::cout << "osc from " << osc_from << " to " << osc_to << std::endl;
+
+    // Disappearance: non_swap oscillates numus away.
+    // Appearance: non_swap looks at the intrinsic nues.
     DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc, osc_from, osc_to));
+        calc, 
+        ((FDConfig_enum == kFD_nu_nueswap || FDConfig_enum == kFD_nub_nueswap)
+        ? osc_to : osc_from),
+        osc_to)); 
 
     TDirectory *chan_dir =
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
+
+    chan_dir->WriteTObject(DataSpectra.back().ToTH1(POT_FD), "Data_nonswap_component");
 
     if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
       DataSpectra.back() +=
@@ -223,6 +235,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               ->Oscillated(calc, osc_from, osc_to)
                               .ToTH1(POT_FD);
       if (Data_nueswap->Integral() > 0) {
+        Data_nueswap->Scale(1, "width");
         chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
       }
       Data_nueswap->SetDirectory(nullptr);
@@ -248,16 +261,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(),
-                              state.FDMatrixPredInterps[FDConfig_enum].get(),
+                              state.FDMatrixPredInterps[FDConfig_enum].get(), 
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
+    std::cout << "FDfd Config = " << DescribeConfig(FDfdConfig_enum) << std::endl;
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
                                 state.NDSelTruePredInterps[kND_293kA_nu].get(),
                                 state.NDUnselTruePredInterps[kND_280kA_nu].get(),
                                 state.NDSelTruePredInterps[kND_280kA_nu].get(),
-                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
@@ -311,8 +325,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMExtrapCovMat->Scale(1, "width");
         chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
         PRISMExtrapCovMat->SetDirectory(nullptr);
+        // Get nue/numu xsec correction (don't want this bin scaled.
+        if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
+        auto *FD_NueNumuCorr = 
+              PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
+        chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
+        FD_NueNumuCorr->SetDirectory(nullptr);
+        }
         if (PRISM_write_debug) {
-
           for (auto const &comp : PRISMComponents) {
             // we always write this
             if (comp.first == PredictionPRISM::kPRISMPred) {
@@ -320,6 +340,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             } else if (comp.first == PredictionPRISM::kNDDataCorr_FDExtrap) {
               continue;
             } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
+              continue;
+            } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
               continue;
             }
 

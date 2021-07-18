@@ -298,7 +298,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
       std::vector<std::vector<double>> toGetErr;
       SystShifts shift_throw = shift;
-      int number_throws(5000);
+      int number_throws(1000);
       int step_count(0);
         
       auto PRISM_NomComps = state.PRISM->
