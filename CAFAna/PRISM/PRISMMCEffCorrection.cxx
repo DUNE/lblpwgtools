@@ -103,10 +103,10 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
     abort();
   }
   // FD unselected
-  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
   hFDunselected = sFDunselected.ToTH1(1);
   // FD selected
-  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
+  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
   hFDselected = sFDselected.ToTH1(1);
 
   // Calculate ND efficiency

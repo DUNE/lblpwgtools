@@ -7,6 +7,8 @@
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Spectrum.h"
 
+#include "CAFAna/Analysis/AnalysisVars.h"
+
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "OscLib/func/IOscCalculator.h"
@@ -228,7 +230,7 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
 /// defined by the combination ofNuChan andBeamMode.
 /// The list of valid components is given below:
 /// * NumuNumuBar, NuMode (i.e. mu-like FHC)
-/// * NumuNumuBar, NuBarMode (i.e. mu-like FHC)
+/// * NumuNumuBar, NuBarMode (i.e. mu-like RHC)
 /// * NueNueBar, NuMode (i.e. all e-like FHC)
 /// * NueNueBar, NuBarMode (i.e. all e-like RHC)
 ///
@@ -266,14 +268,32 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
   FDUnOscWeightedSigPrediction = std::make_unique<PredictionInterp>(
       systlist, &kNoOsc, *fPredGens.back(), loaders);
 
+  // Prediction to oscillate numus by appearance probability.
   std::unique_ptr<PredictionInterp> &FDNonSwapAppOscPrediction =
       GetFDNonSwapAppOscPrediction(FDChannel.mode);
-
-  fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>(
-      fFluxMatcherCorrectionAxes, cut, wei));
+  // Always want unselected numu cut for this.
+  auto kFDNumuCut = GetFDSignalCut(false, // No selection.
+                                   ((FDChannel.mode == BeamMode::kNuMode) ? true : false),
+                                   true); // Is Numu.
+  fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>( 
+      fAnalysisAxisFD, kFDNumuCut, wei));
   FDNonSwapAppOscPrediction = std::make_unique<PredictionInterp>(
       systlist, &kNoOsc, *fPredGens.back(), loaders);
+ 
+  // Prediction to get oscillate nue appearance spectrum.
+  std::unique_ptr<PredictionInterp> &FDNueSwapAppOscPrediction =
+      GetFDNueSwapAppOscPrediction(FDChannel.mode);  
+  // Always want unselected nue cut for this. 
+  auto kFDNueCut = GetFDSignalCut(false, // No selection.
+                                  ((FDChannel.mode == BeamMode::kNuMode) ? true : false), 
+                                  false); // Is Nue.
+  fPredGens.push_back(
+      std::make_unique<NoExtrapPredictionGenerator>(fAnalysisAxisFD, kFDNueCut, wei));
+  FDNueSwapAppOscPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
+                                                                 *fPredGens.back(), loaders);  
 }
+
+//-----------------------------------------------
 
 std::unique_ptr<ReweightableSpectrum> & 
 PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
@@ -478,6 +498,13 @@ PredictionPRISM::GetFDNonSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
              : Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode;
 }
 
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
+  return (FDBM == BeamMode::kNuMode)
+             ? Predictions.FD.nue_ccinc_sel_sig_apposc_numode
+             : Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode;
+}
+
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
   return PredictSyst(calc, kNoShift);
@@ -528,6 +555,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   auto &NDPrediction_280kA = GetNDPrediction(match_chan.from, 280);
 
   auto &FDPrediction = GetFDPrediction(match_chan.to);
+  auto &FDNonSwapAppOscPrediction = GetFDNonSwapAppOscPrediction(match_chan.to.mode); 
+  auto &FDNueSwapAppOscPrediction = GetFDNueSwapAppOscPrediction(match_chan.to.mode); 
   auto &FDUnOscWeightedSigPrediction =
       GetFDUnOscWeightedSigPrediction(match_chan.to);
 
@@ -562,7 +591,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   auto FDIntrinsicFlavor = (FDSigFlavor == Flavors::kNuMuToNuMu)
                                ? Flavors::kNuEToNuMu
                                : Flavors::kNuEToNuE;
-
+  
   /*PRISMOUT("\n\tNDSigFlavor: "
            << NDSigFlavor << "\n\tNDSigSign: " << NDSigSign
            << "\n\tNDWrongSign: " << NDWrongSign << "\n\tNDWrongFlavor: "
@@ -694,12 +723,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       FDUnOscWeightedSigPrediction->PredictComponentSyst(
           &no, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, 
           Current::kCC, FDSigSign);
-
+  
   // Convert FD MC to RWSpectrum with Enu as reweight variable.
   ReweightableSpectrum FDUnOscWeightedSig = ToReweightableSpectrum(
                                                 FDUnWeightedSig_Spec,
                                                 NDPOT, fAnalysisAxisFD); 
-
+  
   // Linear combination weight calculation.
   std::pair<TH1 const *, TH1 const *> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, 
@@ -892,23 +921,22 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // If we are doing numu -> nue propagation, need to correct for xsec
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
 
-    // These both contain the selection cuts currently... May or may not be what
-    // we want, depends on the efficiency correction.
-    Spectrum FD_nueapp_spectrum = FDPrediction->PredictComponentSyst(
-        calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE, 
+    // These spectra now have only true selection.
+    Spectrum FD_nueapp_spectrum = FDNueSwapAppOscPrediction->PredictComponentSyst(
+        calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE,
         Current::kCC, NDSigSign);
-
     TH1D *FD_nueapp_h = FD_nueapp_spectrum.ToTH1(NDPOT);
-
+    
     Spectrum FD_numusurv_apposc_spectrum =
-        GetFDNonSwapAppOscPrediction(match_chan.to.mode)
-            ->PredictComponentSyst(calc, shift, Flavors::kNuMuToNuE,
-                                   Current::kCC, NDSigSign);
-
+        FDNonSwapAppOscPrediction
+            ->PredictComponentSyst(calc, (fVaryNDFDMCData ? kNoShift : shift), 
+                                   Flavors::kNuMuToNuE, Current::kCC, NDSigSign);
+    
     Comps.emplace(kFD_NumuNueCorr_Nue, FD_nueapp_spectrum);
     Comps.emplace(kFD_NumuNueCorr_Numu, FD_numusurv_apposc_spectrum);
 
     TH1D *FD_numusurv_apposc_h = FD_numusurv_apposc_spectrum.ToTH1(NDPOT);
+    
     FD_nueapp_h->Divide(FD_numusurv_apposc_h);
 
     Spectrum FD_NumuNueCorr = Comps.at(kPRISMPred);
@@ -926,9 +954,27 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Comps.at(kPRISMPred).OverridePOT(NDPOT);
     Comps.at(kPRISMPred).OverrideLivetime(0);
 
+    TH1D *ExtrapPRISMCorr_h = Comps.at(kNDDataCorr_FDExtrap).ToTH1(NDPOT);
+    ExtrapPRISMCorr_h->Multiply(FD_nueapp_h);
+
+    Comps.at(kNDDataCorr_FDExtrap).Clear();
+    Comps.at(kNDDataCorr_FDExtrap).FillFromHistogram(ExtrapPRISMCorr_h);
+    Comps.at(kNDDataCorr_FDExtrap).OverridePOT(NDPOT);
+    Comps.at(kNDDataCorr_FDExtrap).OverrideLivetime(0);
+
+    TH1D *ExtrapPRISM_h = Comps.at(kNDData_FDExtrap).ToTH1(NDPOT);
+    ExtrapPRISM_h->Multiply(FD_nueapp_h);
+
+    Comps.at(kNDData_FDExtrap).Clear();
+    Comps.at(kNDData_FDExtrap).FillFromHistogram(ExtrapPRISMCorr_h);
+    Comps.at(kNDData_FDExtrap).OverridePOT(NDPOT);
+    Comps.at(kNDData_FDExtrap).OverrideLivetime(0);
+
     HistCache::Delete(FD_nueapp_h);
-    HistCache::Delete(FD_nueapp_h);
+    HistCache::Delete(FD_numusurv_apposc_h);
     HistCache::Delete(PRISMPred_h);
+    HistCache::Delete(ExtrapPRISMCorr_h);
+    HistCache::Delete(ExtrapPRISM_h);
   }
 
   // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
@@ -1307,6 +1353,10 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
             Predictions.FD.numu_ccinc_sel_sig_apposc_numode},
            {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode",
             Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode},
+           {"P_FD_nue_ccinc_sel_sig_apposc_numode",
+            Predictions.FD.nue_ccinc_sel_sig_apposc_numode},
+           {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode",
+            Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode}
        }) {
     if (meas.second.get()) {
       meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
@@ -1538,6 +1588,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
             pred->Predictions.FD.numu_ccinc_sel_sig_apposc_numode},
            {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode",
             pred->Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode},
+           {"P_FD_nue_ccinc_sel_sig_apposc_numode",
+            pred->Predictions.FD.nue_ccinc_sel_sig_apposc_numode},
+           {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode",
+            pred->Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode}
        }) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() =

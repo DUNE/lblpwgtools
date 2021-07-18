@@ -141,7 +141,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    //TFile fs(state_file.c_str());
     TFile *fs = TFile::Open(state_file.c_str());
     if (fs->IsZombie()) {
       std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
@@ -207,9 +206,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280, 
                                       chan_energy_range);
     }
-    //if (PRISM_write_debug) { No need!!
-    //  fluxmatcher.SetStoreDebugMatches();
-    //}
+    
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
@@ -273,6 +270,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
       calc, osc_from, osc_to
     ));
+
+    if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
+      DataSpectra.back() +=
+        state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from, osc_to); 
+
+    }
 
     TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
     Data->Scale(1, "width");

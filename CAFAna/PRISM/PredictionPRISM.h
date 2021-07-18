@@ -416,6 +416,9 @@ protected:
 
       std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_apposc_numode;
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_apposc_nubmode;
+
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_apposc_numode;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_apposc_nubmode;
     };
     _FD FD;
   };
@@ -464,8 +467,12 @@ protected:
   bool HaveFDUnOscWeightedSigPrediction(
       PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
 
+  // Prediction for unselected FD numus to be appearance oscillated.
   std::unique_ptr<PredictionInterp> &
   GetFDNonSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
+  // Prediction for unselected FD nues to be appearance oscillated.
+  std::unique_ptr<PredictionInterp> &
+  GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
 
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;

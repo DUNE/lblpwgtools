@@ -42,25 +42,26 @@ BasicPred: {
 
 # Just an example below now, not used
 
-scansEG: [
+scans: [
 
 	{
 		@table::BasicPred
 		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "dmsq32_all_1.0Em16"
+		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		free_syst_params: @local::nuisance_parameters.xsec_total
+		output_dir: "xsec_1.0Em16"
 	},
 
 	{
 		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		output_dir: "dmsq32_nom_1.0Em16"
+		PRISM.match_conditioning[0].reg_factor_293kA: 2.5E-17
+		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		free_syst_params: @local::nuisance_parameters.xsec_total
+		output_dir: "xsec_2.5Em17"
 	},
 
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
+scans[0].output_file[1]: "RECREATE"
 
