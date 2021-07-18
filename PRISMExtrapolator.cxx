@@ -185,9 +185,9 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
           .ToTH1(1));
   FDOsc->SetDirectory(nullptr);
 
-  std::unique_ptr<TH1> FDUnOsc(
+  std::unique_ptr<TH1> FDUnOsc( // This should (I think) always be a numu prediction.
       FDPredInterp
-          ->PredictComponentSyst(&no, shift, flav_fd, Current::kCC, sgn_fd)
+          ->PredictComponentSyst(&no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd) // flav_fd
           .ToTH1(1));
   FDUnOsc->SetDirectory(nullptr);
 
@@ -352,12 +352,15 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
 
   for (int bin_it = 0; bin_it < FDOsc->GetXaxis()->GetNbins(); ++bin_it) {
     double bc_o = FDOsc->GetBinContent(bin_it + 1);
+    // bc_u will always be 0 when matching to FD nues.
+    // There are no nues in the unoscillated flux.
     double bc_u = FDUnOsc->GetBinContent(bin_it + 1);
-
+    //std::cout << bc_o << " , " << bc_u << " , " << BestFit[bin_it] << std::endl;
     double e = (bc_o - BestFit[bin_it]) / bc_u; 
     if (!std::isnormal(e)) {
       e = 0;
     }
+    //std::cout << "resid bin " << bin_it + 1 << " = " << e << std::endl;
     fLastResidual->SetBinContent(bin_it + 1, e);
   }
 

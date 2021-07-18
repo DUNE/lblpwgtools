@@ -180,15 +180,16 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       if (dir) {
         blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
       }
-
+      
+      //if (!IsNue) {
       dir =
           f.GetDirectory((std::string("FDMatrixInterp_ERecETrue") +
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      //}
       }
-
       dir = 
           f.GetDirectory((std::string("FDUnSelected_ETrue") + 
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
@@ -197,7 +198,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       }
 
       dir = 
-          f.GetDirectory((std::string("FDSelected_ETrue") +
+          f.GetDirectory((std::string("FDSelected_ETrue") + 
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.FDSelTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
