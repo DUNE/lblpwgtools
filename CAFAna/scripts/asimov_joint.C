@@ -27,7 +27,7 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
     max = 1;
 
   } else if (parName == "dmsq32scaled" or parName == "dmsq32") {
-    min = 2.38;
+    min = 2.30;
     max = 2.55;
     // If trueVal is set and outside the nominal range, do something
     // if (abs(trueVal) < 100 && (trueVal > max || trueVal < min)){
@@ -37,8 +37,8 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
     // }
 
   } else if (parName == "ssth23") {
-    min = 0.38;
-    max = 0.62;
+    min = 0.35;
+    max = 0.65;
 
     // Can't do much here because we need to see the octant flip
 
