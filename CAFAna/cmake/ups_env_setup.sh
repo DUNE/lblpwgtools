@@ -21,4 +21,4 @@ setup osclib v00.15 -q e20:prof:n309:stan || exit 1
 setup cafanacore v01.20 -q e20:prof:n309 || exit 1
 
 # To get setup_fnal_security which helps reading files over xrootd
-setup duneutil v09_21_00 -q e20:prof
+setup duneutil v09_26_00 -q e20:prof
