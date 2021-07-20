@@ -47,13 +47,13 @@ namespace ana
                          const Var& var,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted);
+                         const Weight& wei = kUnweighted);
 
     OscillatableSpectrum(SpectrumLoaderBase& loader,
                          const HistAxis& axis,
                          const Cut& cut,
                          const SystShifts& shift = kNoShift,
-                         const Var& wei = kUnweighted);
+                         const Weight& wei = kUnweighted);
 
     OscillatableSpectrum(const Eigen::MatrixXd&& mat,
                          const HistAxis& recoAxis,

@@ -40,6 +40,7 @@ set(Core_header_files
   SystShifts.h
   Utilities.h
   Var.h
+  Weight.h
   ModeConversionUtilities.h
   rootlogon.C)
 

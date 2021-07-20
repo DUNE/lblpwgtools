@@ -31,7 +31,7 @@ namespace ana
                        const Var& var,
                        const Cut& cut,
                        const SystShifts& shift,
-                       const Var& wei)
+                       const Weight& wei)
     : ReweightableSpectrum(loader,
                            HistAxis(label, bins, var),
                            HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
@@ -44,7 +44,7 @@ namespace ana
                                              const HistAxis& axis,
                                              const Cut& cut,
                                              const SystShifts& shift,
-                                             const Var& wei)
+                                             const Weight& wei)
     : ReweightableSpectrum(loader, axis,
                            HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
                            cut, shift, wei)

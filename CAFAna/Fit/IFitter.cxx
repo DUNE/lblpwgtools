@@ -169,7 +169,7 @@ namespace ana
     for (unsigned int i = 0; i < fSysts.size(); ++i)
       bestSysts.SetShift(fSysts[i], bestSystPars[i]);
 
-    return std::move(bestFitSummary);
+    return bestFitSummary;
   }
 
   //----------------------------------------------------------------------

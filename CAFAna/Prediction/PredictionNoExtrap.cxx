@@ -21,7 +21,7 @@ namespace ana
                                          const Var& var,
                                          const Cut& cut,
                                          const SystShifts& shift,
-                                         const Var& wei)
+                                         const Weight& wei)
     : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                          label, bins, var, cut, shift, wei))
   {
@@ -34,7 +34,7 @@ namespace ana
 					 const HistAxis& axis,
                                          const Cut& cut,
                                          const SystShifts& shift,
-                                         const Var& wei)
+                                         const Weight& wei)
     : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                          axis, cut, shift, wei))
   {
@@ -52,7 +52,7 @@ namespace ana
                                          const Var& var,
                                          const Cut& cut,
                                          const SystShifts& shift,
-                                         const Var& wei)
+                                         const Weight& wei)
     : PredictionNoExtrap(loaders, HistAxis(label, bins, var), cut, shift, wei)
   {
   }
@@ -62,7 +62,7 @@ namespace ana
                                          const HistAxis& axis,
                                          const Cut& cut,
                                          const SystShifts& shift,
-                                         const Var& wei)
+                                         const Weight& wei)
     : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei))
   {
   }

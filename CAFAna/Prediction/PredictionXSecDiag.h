@@ -35,7 +35,7 @@ namespace ana
                        const HistAxis&   axis,
                        Cut               cut,
                        const SystShifts& shift = kNoShift,
-                       const Var&        wei = kUnweighted);
+                       const Weight&     wei = kUnweighted);
 
     /// PredictionScaleComp for the FD
     PredictionXSecDiag(SpectrumLoaderBase& loaderNonswap,
@@ -44,7 +44,7 @@ namespace ana
                        const HistAxis&   axis,
                        Cut               cut,
                        const SystShifts& shift = kNoShift,
-                       const Var&        wei = kUnweighted);
+                       const Weight&     wei = kUnweighted);
 
     virtual Spectrum Predict(osc::IOscCalc* calc) const override
     {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 
 class TH1;
 class TH2;
@@ -48,11 +49,11 @@ namespace ana
 
   const std::string kNeutNuWROReweightFname = "/dune/data/users/marshalc/NEUT_GENIE_ratio.root";
 
-  const Var kReweightEnuToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnu));
-  const Var kReweightEnuQ2ToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuQ2));
-  const Var kReweightEnuWToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuW));
+  const Weight kReweightEnuToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnu));
+  const Weight kReweightEnuQ2ToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuQ2));
+  const Weight kReweightEnuWToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuW));
 
-  const Var kReweightEnuToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnu));
-  const Var kReweightEnuQ2ToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuQ2));
-  const Var kReweightEnuWToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuW));
+  const Weight kReweightEnuToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnu));
+  const Weight kReweightEnuQ2ToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuQ2));
+  const Weight kReweightEnuWToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuW));
 }

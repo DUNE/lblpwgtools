@@ -28,7 +28,7 @@ const Var kRecoE_ND = SIMPLEVAR(dune.Ev_reco);
 const HistAxis axRecoEnuFDnumu("Reco energy (GeV)", kFDRecoBinning, kRecoE_numu);
 const HistAxis axRecoEnuNDnumu("Reco energy (GeV)", kFDRecoBinning, kRecoE_ND);
 
-const Var kCVXSecWeights = SIMPLEVAR(dune.total_cv_wgt);
+const Weight kCVXSecWeights = SIMPLEWEIGHT(dune.total_cv_wgt);
 
 std::vector<const ISyst*> GetListOfSysts(bool nd)
 {

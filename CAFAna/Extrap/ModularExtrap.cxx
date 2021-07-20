@@ -23,7 +23,7 @@ namespace ana
     const Cut& nueNDcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
     return ModularExtrap::Nue(
       loaders.GetLoader(
@@ -55,7 +55,7 @@ namespace ana
     const Cut& fdcut,
     const Cut& ndcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
     return ModularExtrap::Numu(
       loaders.GetLoader(
@@ -92,7 +92,7 @@ namespace ana
     const Cut& nueNDcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
 
     ModularExtrap extrap(
@@ -176,7 +176,7 @@ namespace ana
     const Cut& fdcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
 
     ModularExtrap extrap(
@@ -338,7 +338,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ) :
 
       // e -> e ----

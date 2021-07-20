@@ -29,7 +29,7 @@ namespace ana
 {
   // Apparently the existence of fHistDefs isn't enough and I need to spell
   // this out to make sure the function bodies are generated.
-  template class SpectrumLoaderBase::IDMap<SystShifts, SpectrumLoaderBase::IDMap<Cut, SpectrumLoaderBase::IDMap<Var, SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, SpectrumLoaderBase::SpectList>>>>;
+  template class SpectrumLoaderBase::IDMap<SystShifts, SpectrumLoaderBase::IDMap<Cut, SpectrumLoaderBase::IDMap<Weight, SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, SpectrumLoaderBase::SpectList>>>>;
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectList::~SpectList()
@@ -181,7 +181,7 @@ namespace ana
                                        const Var& var,
                                        const Cut& cut,
                                        const SystShifts& shift,
-                                       const Var& wei)
+                                       const Weight& wei)
   {
     if(fGone){
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
@@ -201,7 +201,7 @@ namespace ana
                                        const MultiVar& var,
                                        const Cut& cut,
                                        const SystShifts& shift,
-                                       const Var& wei)
+                                       const Weight& wei)
   {
     if(fGone){
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
@@ -222,7 +222,7 @@ namespace ana
                                                    const Var& yvar,
                                                    const Cut& cut,
                                                    const SystShifts& shift,
-                                                   const Var& wei)
+                                                   const Weight& wei)
   {
     if(fGone){
       std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;

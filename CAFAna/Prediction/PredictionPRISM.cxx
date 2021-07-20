@@ -19,7 +19,7 @@ namespace ana {
 PredictionPRISM::PredictionPRISM(
     SpectrumLoaderBase &ND_loader, const HistAxis &recoAxis,
     const HistAxis &offAxis, const Cut &cut, const SystShifts &shift,
-    const Var &wei, PRISMExtrapolator const *flux_matcher,
+    const Weight &wei, PRISMExtrapolator const *flux_matcher,
     PRISMExtrapolator::FluxPredSpecies NDFluxSpecies,
     PRISMExtrapolator::FluxPredSpecies FDFluxSpecies, TH3 const *SelectedNumuCC,
     TH3 const *AllNumuCC)
@@ -29,7 +29,7 @@ PredictionPRISM::PredictionPRISM(
   bool HaveEff = (SelectedNumuCC && AllNumuCC);
 
   // Use to weight by cheating Efficiency
-  Var kEffWeight([&](const caf::SRProxy *sr) -> double {
+  Weight kEffWeight([&](const caf::SRProxy *sr) -> double {
     int bx = AllNumuCC->GetXaxis()->FindFixBin(sr->Ev);
     int by = AllNumuCC->GetYaxis()->FindFixBin(sr->vtx_x);
     int bz = AllNumuCC->GetZaxis()->FindFixBin(sr->det_x);
@@ -44,10 +44,10 @@ PredictionPRISM::PredictionPRISM(
       ND_loader, recoAxis, offAxis, cut, shift, wei);
   fOffAxisSpectrumNumu = std::make_unique<ReweightableSpectrum>(
       ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && !kIsAntiNu,
-      shift, wei * (HaveEff ? kEffWeight : ana::Constant(1)));
+      shift, wei * (HaveEff ? kEffWeight : kUnweighted));
   fOffAxisSpectrumNumubar = std::make_unique<ReweightableSpectrum>(
       ND_loader, recoAxis, offAxis, cut && !kIsNC && kIsNumuCC && kIsAntiNu,
-      shift, wei * (HaveEff ? kEffWeight : ana::Constant(1)));
+      shift, wei * (HaveEff ? kEffWeight : kUnweighted));
 
   fNDBkg = NDBackgroundSpectra{nullptr, nullptr, nullptr};
   fHaveNDBkgPred = false;
@@ -70,7 +70,7 @@ PredictionPRISM::PredictionPRISM(
 //----------------------------------------------------------------------
 void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
                                     const Cut &cut, const SystShifts &shift,
-                                    const Var &wei) {
+                                    const Weight &wei) {
   fFarDetSpectrumNC = std::make_unique<Spectrum>(FD_loader, fPredictionAxis,
                                                  cut && kIsNC, shift, wei);
   fFarDetSpectrumNumu = std::make_unique<OscillatableSpectrum>(
@@ -85,7 +85,7 @@ void PredictionPRISM::AddFDMCLoader(SpectrumLoaderBase &FD_loader,
 //----------------------------------------------------------------------
 void PredictionPRISM::AddNDMCLoader(SpectrumLoaderBase &ND_loader,
                                     const Cut &cut, const SystShifts &shift,
-                                    const Var &wei) {
+                                    const Weight &wei) {
 
   fNDBkg.fOffAxisSpectrumNC = std::make_unique<ReweightableSpectrum>(
       ND_loader, fPredictionAxis, fOffAxis, cut && kIsNC, shift, wei);

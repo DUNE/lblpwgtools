@@ -19,8 +19,5 @@ namespace ana
   /// NB lack of quotes quotes around my.var.str
 #define SIMPLEVAR(CAFNAME) Var([](const caf::SRProxy* sr){return sr->CAFNAME;})
 
-  /// The simplest possible Var, always 1. Used as a default weight.
-  const Var kUnweighted = Unweighted<caf::SRProxy>();
-
   inline Var Constant(double v){return Var([v](const caf::SRProxy*){return v;});}
 }

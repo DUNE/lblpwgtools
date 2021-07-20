@@ -18,7 +18,7 @@ namespace ana
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     NumuDecomp(SpectrumLoaderBase& loaderMC,
                SpectrumLoaderBase& loaderData,
@@ -26,14 +26,14 @@ namespace ana
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     NumuDecomp(Loaders& loaders,
                const HistAxis& axis,
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     Spectrum NumuComponent()     const override;
     Spectrum AntiNumuComponent() const override;

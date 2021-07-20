@@ -6,6 +6,7 @@
 #ifndef DONT_USE_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+#include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -104,6 +105,8 @@ namespace ana
       HandleFile(f, Nfiles == 1 ? prog : 0);
 
       if(Nfiles > 1 && prog) prog->SetProgress((fileIdx+1.)/Nfiles);
+
+      if(CAFAnaQuitRequested()) break;
     } // end for fileIdx
 
     StoreExposures();
@@ -181,7 +184,7 @@ namespace ana
     // aren't grouped with the other nominal histograms. Keep track of the
     // results for nominals in these caches to speed those systs up.
     CutVarCache<bool, Cut> nomCutCache;
-    CutVarCache<double, Var> nomWeiCache;
+    CutVarCache<double, Weight> nomWeiCache;
     CutVarCache<double, Var> nomVarCache;
 
     for(auto& shiftdef: fHistDefs){
@@ -214,7 +217,7 @@ namespace ana
         if(!pass) continue;
 
         for(auto& weidef: cutdef.second){
-          const Var& weivar = weidef.first;
+          const Weight& weivar = weidef.first;
 
           double wei = shifted ? weivar(sr) : nomWeiCache.Get(weivar, sr);
 
