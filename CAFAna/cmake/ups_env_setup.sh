@@ -17,6 +17,7 @@ setup clhep v2_4_1_3a -q e20:prof || exit 1
 setup eigen v3_3_9a || exit
 setup stan v2_26_1 -q e20:prof || exit 1
 
+setup duneanaobj v01_00_00 -qe20:gv3:prof || exit 1
 setup srproxy v00.25 -q py3 || exit 1
 setup osclib v00.15 -q e20:prof:n309:stan || exit 1
 setup cafanacore v01.21 -q e20:prof:n309 || exit 1
