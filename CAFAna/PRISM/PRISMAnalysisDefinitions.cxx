@@ -41,7 +41,7 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(100, 0, 10);
   }
   if (xbinning == "uniform") {
-    return Binning::Simple(75, 0, 15);
+    return Binning::Simple(150, 0, 25);
   }
   if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
@@ -106,6 +106,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(LepE));
   } else if (varname == "EHad") {
     return std::make_pair("True E_{had.} (GeV)", SIMPLEVAR(HadE));
+  } else if (varname == "EP") {
+    return std::make_pair("True E_{p} (GeV)", SIMPLEVAR(eP));
+  } else if (varname == "EPipm") {
+    return std::make_pair("True E_{#pi^{+/-}} (GeV)", SIMPLEVAR(ePipm));
+  } else if (varname == "EPi0") {
+    return std::make_pair("True E_{#pi^{0}} (GeV)", SIMPLEVAR(eTotalPi0));
+  } else if (varname == "EOther") {
+    return std::make_pair("True E_{other} (GeV)", SIMPLEVAR(eOther));
   } else if (varname == "EProxy") {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
@@ -118,6 +126,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
   } else if (varname == "RecoEHad") {
     return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
+  }  else if (varname == "RecoEP") {
+    return std::make_pair("Reco E_{p} (GeV)", kPEReco);
+  }  else if (varname == "RecoEPipm") {
+    return std::make_pair("Reco E_{#pi^{+/-}} (GeV)", kPipmEReco);
+  }  else if (varname == "RecoEPi0") {
+    return std::make_pair("Reco E_{#pi^{0}} (GeV)", kPi0EReco);
+  }  else if (varname == "RecoEOther") {
+    return std::make_pair("Reco E_{other} (GeV)", SIMPLEVAR(eRecoOther));
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -167,10 +183,20 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
-  } else if (obsvarname == "RecoELep") { 
-    truevardef = GetVar("ELep");
+  } else if (obsvarname == "RecoEHad") { 
+    truevardef = GetVar("EHad");
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
+  } else if (obsvarname == "EVisTrue") {
+    truevardef = GetVar("ETrue");
+  } else if (obsvarname == "RecoEP") {
+    truevardef = GetVar("EP");
+  } else if (obsvarname == "RecoEPipm") { 
+    truevardef = GetVar("EPipm");
+  } else if (obsvarname == "RecoEPi0") {
+    truevardef = GetVar("EPi0");
+  } else if (obsvarname == "RecoEOther") {
+    truevardef = GetVar("EOther");
   } else if (obsvarname == "ELepEHad") {
     auto truevardefLep = GetVar("ELep");
     labels.push_back(truevardefLep.first);

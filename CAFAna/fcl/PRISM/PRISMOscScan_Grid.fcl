@@ -22,7 +22,7 @@ BasicPred: {
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0, 6]
-			reg_factor_293kA: 1.0E-16 # 2.49E-17
+			reg_factor_293kA: 2.5E-17 # 2.49E-17
 			reg_factor_280kA: 1E-18
 			}
 		]
@@ -42,7 +42,7 @@ BasicPred: {
 
 # Just an example below now, not used
 
-scans: [
+scansEG: [
 
 	{
 		@table::BasicPred
@@ -63,5 +63,5 @@ scans: [
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scans[0].output_file[1]: "RECREATE"
+scansEG[0].output_file[1]: "RECREATE"
 

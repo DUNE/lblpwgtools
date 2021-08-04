@@ -114,7 +114,7 @@ struct PRISMStateBlob {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);

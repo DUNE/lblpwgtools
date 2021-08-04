@@ -303,20 +303,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
-    //if (!sr.isFD) {
-      //if (sr.Elep_reco != 0) {
-   /* if (sr.LepE > 0.05) {
-      sr.simple_reco_numu = 1;
-    } else if (sr.ePip > 0.2 || sr.ePim > 0.2) {
-      sr.simple_reco_numu = 1;
-    } else {
-      sr.simple_reco_numu = 0;
-    }*/
-      //} else {
-      //  sr.simple_reco_numu = 0;
-      //}
-    //}
-
     if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
 
     // Set GENIE_ScatteringMode and eRec_FromDep
@@ -344,18 +330,35 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Common reco LepE variable for ND and FD
-    if (sr.isFD) sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
-    else sr.RecoLepE_NDFD = sr.Elep_reco;
+    if (sr.isFD && (sr.nuPDG == 14 || sr.nuPDG == -14)) // FD numu event 
+      sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+    else if (sr.isFD && (sr.nuPDG == 12 || sr.nuPDG == -12)) // FD nue event
+      sr.RecoLepE_NDFD = sr.RecoLepEnNue;
+    else 
+      sr.RecoLepE_NDFD = sr.Elep_reco;
     
-    if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
-                                    sr.eRecoPi0 + sr.eRecoOther;
-    else sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // removed neutron
-                            sr.eRecoPi0 + sr.eRecoOther;
+    //if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
+    //                                sr.eRecoPi0; //+ sr.eRecoOther;
+    //if (sr.isFD && (sr.nuPDG == 14 || sr.nuPDG == -14)) // FD numu event
+    //  sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
+    //else if (sr.isFD && (sr.nuPDG == 12 || sr.nuPDG == -12))
+    //  sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
+    if (sr.isFD) 
+      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim + 
+                         sr.eDepPi0 + sr.eDepOther;
+    else 
+      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
+                         sr.eRecoPi0 + sr.eRecoOther;
 
     sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
 
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+
+    // Sum of the true charged pion KE
+    sr.ePipm = sr.ePip + sr.ePim;
+    // True total energy of pi0 (KE + mass)
+    sr.eTotalPi0 = sr.ePi0 + (0.135 * sr.nipi0);
 
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {

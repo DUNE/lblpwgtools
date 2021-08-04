@@ -15,14 +15,14 @@ RunPlans: {
 #    guess: {
 #           plan: [ { xrange: [0,-2] time: 7 horn_current: 280 },
 #                   { xrange: [0,-2] time: 147 },
+#                   { xrange: [0,-4] time: 18 },
 #                   { xrange: [-2,-6] time: 18 },
 #                   { xrange: [-6,-10] time: 18 },
 #                   { xrange: [-10,-14] time: 18 },
 #                   { xrange: [-14,-18] time: 18 },
 #                   { xrange: [-18,-22] time: 18 },
 #                   { xrange: [-22,-26] time: 18 },
-#                   { xrange: [-26,-30] time: 18 },
-#                   { xrange: [-30,-34] time: 18 } ] 
+#                   { xrange: [-26,-30] time: 18 } ]
 #        }
 
      guess: {

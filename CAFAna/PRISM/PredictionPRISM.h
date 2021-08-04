@@ -232,12 +232,14 @@ public:
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fNDFDEnergyMatchAxis;
+  HistAxis fTrueAnalysisAxis;
   HistAxis fCovarianceAxis;
 
   PredictionPRISM(const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD, 
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
-                  const HistAxis &NDFDEnergyMatchAxis);
+                  const HistAxis &NDFDEnergyMatchAxis,
+                  const HistAxis &TrueAnalysisAxis);
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
   virtual void SaveTo(TDirectory *dir) const override;
