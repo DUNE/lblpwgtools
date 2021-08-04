@@ -193,6 +193,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
+    size_t NDConfig_293kA = (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub; 
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
@@ -224,7 +226,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
 
-    chan_dir->WriteTObject(DataSpectra.back().ToTH1(POT_FD), "Data_nonswap_component");
+    TH1 *Data_nonswap = DataSpectra.back().ToTH1(POT_FD);
+    Data_nonswap->Scale(1, "width");
+    chan_dir->WriteTObject(Data_nonswap, "Data_nonswap_component");
 
     if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
       DataSpectra.back() +=
@@ -267,10 +271,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
     std::cout << "FDfd Config = " << DescribeConfig(FDfdConfig_enum) << std::endl;
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
+    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
+                                state.NDSelTruePredInterps[NDConfig_293kA].get(),
+                                state.NDUnselTruePredInterps[NDConfig_280kA].get(),
+                                state.NDSelTruePredInterps[NDConfig_280kA].get(),
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection

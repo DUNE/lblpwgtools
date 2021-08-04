@@ -371,6 +371,8 @@ int main(int argc, char const *argv[]) {
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
+  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor);
+
   std::vector<Var> WeightVars(kNPRISMConfigs, ana::Constant(1));
   WeightVars[kND_293kA_nu] = GetNDWeight("", true);
   WeightVars[kND_280kA_nu] = GetNDWeight("", true);
@@ -451,7 +453,7 @@ int main(int argc, char const *argv[]) {
   auto PRISM =
       std::make_unique<PredictionPRISM>(axes.XProjectionND, axes.XProjectionFD, 
                                         axes.OffAxisPosition, axes.OffAxis280kAPosition, 
-                                        MatchAxis);
+                                        MatchAxis, TrueObsAxis);
 
   Loaders Loaders_nu, Loaders_nub;
 
@@ -544,7 +546,7 @@ int main(int argc, char const *argv[]) {
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
-  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); 
+  //HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); 
 
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
   std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
@@ -925,6 +927,7 @@ int main(int argc, char const *argv[]) {
                 << std::string("FDInterp_") + axdescriptor +
                        (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")
                 << " to " << it << ", " << fd_it << std::endl;
+
          
       SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +

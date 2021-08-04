@@ -74,6 +74,8 @@ public:
 
   void SetRegFactor(double reg) { fRegFactor = reg; }
 
+  void SetNumuNueCorr(TH1 *h) const { hNumuNueCorr = std::unique_ptr<TH1>(h); }
+
   // Extrapolate ND PRISM pred to FD using Eigen
   // This function is becoming slightly monsterous...
   void ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
@@ -101,6 +103,7 @@ protected:
   mutable std::unique_ptr<TH2> hCovMat_293kA;
   mutable std::unique_ptr<TH2> hCovMat_280kA;
   mutable std::unique_ptr<TH1> hETrueUnfold;
+  mutable std::unique_ptr<TH1> hNumuNueCorr;
   mutable bool ETrueWriteOnce;
   // For L-curve optimisation
   mutable std::vector<double> soln_norm_vector;
