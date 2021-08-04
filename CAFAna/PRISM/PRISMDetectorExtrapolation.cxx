@@ -23,7 +23,8 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
                          double reg) : fRegFactor(reg), 
                          fNDExtrap_293kA(nullptr), fNDExtrap_280kA(nullptr),
                          hCovMat_293kA(nullptr), hCovMat_280kA(nullptr), 
-                         hETrueUnfold(nullptr), ETrueWriteOnce(true) {
+                         hETrueUnfold(nullptr), hNumuNueCorr(nullptr), 
+                         ETrueWriteOnce(true) {
   fMatrixND = ND;
   fMatrixFD = FD;
   if (!fMatrixND) {
@@ -165,7 +166,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     std::cout << "[ERROR] Unknown HC." << std::endl;
     abort();
   }
-  std::cout << "FDFlav = " << FDflav << std::endl;
+  
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign); 
@@ -234,6 +235,13 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     // ------
     
     Eigen::VectorXd NDETrue = D * NDERec;
+    // Correct for nue/numu x-sec differences if doing appearance measurement.
+    if (hNumuNueCorr) { // If we are doing nue appearance...
+      for (int bin = 0; bin < NDETrue.size(); bin++) {
+        NDETrue(bin) *= hNumuNueCorr->GetBinContent(bin + 1);
+      }
+    }
+
     // Cov Mat for true energy, propogated through Tik reg
     Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
 
