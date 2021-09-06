@@ -5,6 +5,8 @@
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "string_parsers/from_string.hxx"
 
 #include "TChain.h"
@@ -119,15 +121,6 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
     }
   }
   return matches;
-}
-
-void pnfs_to_xrootd(std::string &dir) {
-  std::string s_xrootd_prefix = "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune";
-  std::string s_rm_prefix = "/pnfs/dune";
-  dir = dir.substr(dir.find(s_rm_prefix)+s_rm_prefix.length());
-  dir = s_xrootd_prefix + dir;
-
-  return;
 }
 
 struct fileSummary {
@@ -314,7 +307,7 @@ void OffAxisNDCAFCombiner() {
   size_t fctr = 0;
   for (auto dir_files : CAFs) {
     std::string dir = dir_files.first;
-    if(dir.find("pnfs")!=std::string::npos) pnfs_to_xrootd(dir);
+    dir = ana::pnfs2xrootd(dir, false);
     for (std::string const &file_name : dir_files.second) {
       fctr++;
 
