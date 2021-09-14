@@ -48,7 +48,7 @@ public:
   
   NDFD_Matrix(PredictionInterp const *ND,
               PredictionInterp const *FD,
-              double reg);
+              double reg, bool optreg = false);
 
   // Normalise the ETrue column to efficiency in ND and FD matrices
   void NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
@@ -102,9 +102,8 @@ protected:
   mutable std::unique_ptr<TH2> fNDExtrap_280kA;
   mutable std::unique_ptr<TH2> hCovMat_293kA;
   mutable std::unique_ptr<TH2> hCovMat_280kA;
-  mutable std::unique_ptr<TH1> hETrueUnfold;
   mutable std::unique_ptr<TH1> hNumuNueCorr;
-  mutable bool ETrueWriteOnce;
+  mutable bool fOptimizeReg;
   // For L-curve optimisation
   mutable std::vector<double> soln_norm_vector;
   mutable std::vector<double> resid_norm_vector;

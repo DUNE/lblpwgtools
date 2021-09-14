@@ -97,6 +97,8 @@ protected:
   mutable std::vector<std::vector<double>> NDefficiency_293kA;
   mutable std::vector<std::vector<double>> NDefficiency_280kA;
   mutable std::vector<double> FDefficiency;
+  // bool to state whether the calculation has been done before
+  mutable bool fDoneOnce;
 
 };
 
