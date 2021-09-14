@@ -20,11 +20,10 @@ namespace ana {
 
 NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
                          PredictionInterp const * FD,
-                         double reg) : fRegFactor(reg), 
+                         double reg, bool optreg) : fRegFactor(reg), 
                          fNDExtrap_293kA(nullptr), fNDExtrap_280kA(nullptr),
                          hCovMat_293kA(nullptr), hCovMat_280kA(nullptr), 
-                         hETrueUnfold(nullptr), hNumuNueCorr(nullptr), 
-                         ETrueWriteOnce(true) {
+                         hNumuNueCorr(nullptr), fOptimizeReg(optreg) {
   fMatrixND = ND;
   fMatrixFD = FD;
   if (!fMatrixND) {
@@ -91,7 +90,9 @@ void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_pt
 
       TH1D *projY = mat.first->get()->ProjectionY("_projY", col_it, col_it, "e");
       // Normalise integral of true bin to efficiency
-      projY->Scale(1 / projY->Integral());
+      if (std::isnormal(projY->Integral())) {
+        projY->Scale(1 / projY->Integral());
+      }
       projY->Scale(mat.second.at(col_it - 1)); 
       for (int row_it = 1; row_it <= mat.first->get()->GetYaxis()->GetNbins(); row_it++) {
         mat.first->get()->SetBinContent(col_it, row_it, projY->GetBinContent(row_it));
@@ -166,7 +167,13 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     std::cout << "[ERROR] Unknown HC." << std::endl;
     abort();
   }
-  
+ 
+  // Do not want to oscillate the MC in the FD matrix (ND is always un-oscillated).
+  // The linear combination handles the oscillation, we just want to correct for the
+  // different detector resolutions.
+  osc::NoOscillations kNoOsc; 
+  auto FDflav_mat = (FDflav == Flavors::kNuMuToNuMu) ? FDflav : Flavors::kAllNuE;
+  //
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign); 
@@ -247,11 +254,13 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
     // Solution and residual norm for L-curve
     //std::cout << "regparam = " << fRegFactor << std::endl;
-    Eigen::MatrixXd reg_shape_matrix = RegMatrix / fRegFactor;
-    double soln_norm = (reg_shape_matrix * NDETrue).norm();
-    double resid_norm = (invCovMatRec * (NDmat * NDETrue - NDERec)).norm();
-    soln_norm_vector.push_back(soln_norm);
-    resid_norm_vector.push_back(resid_norm);
+    if (fOptimizeReg) {
+      Eigen::MatrixXd reg_shape_matrix = RegMatrix / fRegFactor;
+      double soln_norm = (reg_shape_matrix * NDETrue).norm();
+      double resid_norm = (invCovMatRec * (NDmat * NDETrue - NDERec)).norm();
+      soln_norm_vector.push_back(soln_norm);
+      resid_norm_vector.push_back(resid_norm);
+    }
     //std::cout << "resid_norm = " << resid_norm << " ; " << 
     //    "soln_norm = " << soln_norm << std::endl;
 
@@ -290,7 +299,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 void NDFD_Matrix::Write(TDirectory *dir) {
   dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
   dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
-  dir->WriteTObject(hETrueUnfold.get(), "Unfolded_ETrue");
   dir->WriteTObject(hCovMat_293kA.get(), "CovMatExtrap_293kA");
   dir->WriteTObject(hCovMat_280kA.get(), "CovMatExtrap_280kA");
 }

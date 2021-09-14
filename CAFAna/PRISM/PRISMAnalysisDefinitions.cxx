@@ -19,9 +19,6 @@ using namespace ana;
 
 namespace PRISM {
 
-//const Var kTrueOffAxisPos_m =
-//    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
-
 const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 
 const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
@@ -65,16 +62,29 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
     return binsNDEreco;
-  } else if (xbinning == "default_fine") {
-    std::vector<double> BE;
-    for (size_t e = 0; e < (binsNDEreco.Edges().size() - 1); e++) {
-      BE.push_back(binsNDEreco.Edges().at(e));
-      double binstep = (binsNDEreco.Edges().at(e + 1) - binsNDEreco.Edges().at(e)) / 2;
-      BE.push_back(binsNDEreco.Edges().at(e) + (1 * binstep));
-      //BE.push_back(binsNDEreco.Edges().at(e) + (2 * binstep));
-      //BE.push_back(binsNDEreco.Edges().at(e) + (3 * binstep));
+  } else if (xbinning == "event_rate_match") {
+    std::vector<double> BE = { 0, };
+
+    while (BE.back() < 10) {
+      BE.push_back(BE.back() + 0.2);
+    }  
+
+    while (BE.back() < 20) {
+      BE.push_back(BE.back() + 1.0); 
     }
-    BE.push_back(binsNDEreco.Edges().at(binsNDEreco.Edges().size() - 1));
+
+    while (BE.back() < 50) {
+      BE.push_back(BE.back() + 5.0);   
+    }
+
+    while (BE.back() < 100) {
+      BE.push_back(BE.back() + 10.0);
+    }
+
+    while (BE.back() < 120) {
+      BE.push_back(BE.back() + 20.0);
+    }
+
     return Binning::Custom(BE);
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
@@ -283,7 +293,7 @@ const Cut kSel280kARun([](const caf::StandardRecord *sr) {
 const Cut kIsReco([](const caf::StandardRecord *sr) {
   return (sr->Elep_reco != 0);
 });
-const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
+const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) { 
   return sr->SpecialRunWeight;
 });
 
