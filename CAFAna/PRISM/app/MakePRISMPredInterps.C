@@ -132,7 +132,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "uniform";
+std::string truthbinningdescriptor = "event_rate_match"; // was uniform
 std::vector<std::string> ND_input_numode;
 std::vector<std::string> FD_nonswap_input_numode;
 std::vector<std::string> FD_nueswap_input_numode;
@@ -204,7 +204,7 @@ void handleOpts(int argc, char const *argv[]) {
       exit(0);
     } else if ((std::string(argv[opt]) == "-A") ||
                (std::string(argv[opt]) == "--axes")) {
-      axdescriptor = argv[++opt];
+      axdescriptor = argv[++opt]; 
       isReco = isRecoND(axdescriptor);
     } else if ((std::string(argv[opt]) == "-o") ||
                (std::string(argv[opt]) == "--output")) {
@@ -230,9 +230,9 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--n-max")) {
       nmax = atoi(argv[++opt]);
-    } else if (std::string(argv[opt]) == "--syst-descriptor") {
+    } else if (std::string(argv[opt]) == "--syst-descriptor") { 
       syst_descriptor = argv[++opt];
-    } else if (std::string(argv[opt]) == "--bin-descriptor") {
+    } else if (std::string(argv[opt]) == "--bin-descriptor") { 
       binningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--OA-bin-descriptor") {
       oabinningdescriptor = argv[++opt];
@@ -427,7 +427,7 @@ int main(int argc, char const *argv[]) {
   // Make sure we apply biases correctly to ND and FD data.
   // This method is a bit of a bodge which assumes the Fake data
   // studies will apply multiple different biases at the same time.
-  bool ProtonFakeData, NDFakeData, FDFakeData;
+  bool ProtonFakeData(false), NDFakeData(false), FDFakeData(false);
   std::vector<std::string> split_input = SplitString(FakeDataShiftDescript, ':');
   for (auto in_name : split_input){
     std::string name = in_name;
@@ -546,7 +546,6 @@ int main(int argc, char const *argv[]) {
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
-  //HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); 
 
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
   std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
@@ -627,6 +626,9 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetData_nonswap, kNPRISMFDConfigs);
   FillWithNulls(FarDetData_nueswap, kNPRISMFDConfigs);
 
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
+  FillWithNulls(FarDetDataPreds, kNPRISMFDConfigs);
+
   std::vector<std::unique_ptr<IPredictionGenerator>> FarDetPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
@@ -697,7 +699,7 @@ int main(int argc, char const *argv[]) {
           NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND,
               kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+              kIsOutOfTheDesert && kCut280kARun,
               WeightVars[it]);
         }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
@@ -755,12 +757,17 @@ int main(int argc, char const *argv[]) {
             AnaWeightVars[it]); 
       }
 
-      if (FileLoaders[nue_swap_it]) {
+      if (FileLoaders[nue_swap_it]) { 
         FarDetData_nueswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[nue_swap_it], axes.XProjectionFD, AnalysisCuts[it],
             (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
             AnaWeightVars[it]); 
       }
+
+      FarDetDataPreds[fd_it] = std::make_unique<DataPredictionNoExtrap>(
+          Loaders_bm, axes.XProjectionFD, AnalysisCuts[it],
+          (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+          AnaWeightVars[it]);
 
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjectionFD, AnalysisCuts[it], AnaWeightVars[it]);
@@ -956,6 +963,11 @@ int main(int argc, char const *argv[]) {
                    (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
                FarDetData_nueswap[fd_it]);
       }
+
+      SaveTo(fout,
+             std::string("FDDataPred_") + axdescriptor +
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+             FarDetDataPreds[fd_it]);
 
       SaveTo(fout,
              std::string("FDSelectedInterp_") + axdescriptor +

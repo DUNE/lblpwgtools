@@ -35,16 +35,8 @@ namespace ana
                     return (
 			    sr->reco_numu && 
 			    (sr->muon_contained || sr->muon_tracker) &&
-			    sr->reco_q == +1 && 
+			    /*sr->reco_q == +1 &&*/ 
 			    sr->Ehad_veto<30);
                   });
-
-  const Cut kSimplePassND_FHC_NUMU(
-                  [](const caf::StandardRecord* sr)
-                  {
-                    return (
-                            sr->simple_reco_numu);
-                  });
-
 
 }

@@ -7,6 +7,7 @@
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
+#include "CAFAna/Prediction/PredictionsForPRISM.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
@@ -85,6 +86,7 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
 
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nu;
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nub;
@@ -114,14 +116,15 @@ struct PRISMStateBlob {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FarDetDataPreds, PRISM::kNPRISMFDConfigs);
 
     NDFluxPred_293kA_nu = nullptr;
     NDFluxPred_293kA_nub = nullptr;

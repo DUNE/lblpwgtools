@@ -167,12 +167,12 @@ inline bool IsND280kAConfig(size_t conf) {
   return ((conf % kNPRISMConfigs_nu) == 1);
 }
 
-inline size_t GetFDConfig(size_t conf) {
+inline size_t GetFDConfig(size_t conf) { // conf = 2, 3, 6 or 7
   if (IsNDConfig(conf)) {
     std::cout << "[ERROR]: Tried to get FD sub-config from an ND config("
               << conf << ")." << std::endl;
     abort();
-  }
+  } // 2->0 ; 3->1 ; 6->2 ; 7->3
   return (((conf % kNPRISMConfigs_nu) - kNPRISMNDConfigs_nu) +
           (!IsNuConfig(conf) * kNPRISMFDConfigs_nu));
 }
