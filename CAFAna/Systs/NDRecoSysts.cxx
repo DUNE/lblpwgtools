@@ -34,7 +34,10 @@ namespace ana
     // Is ND
     if(!sr->isFD) {
       // CC event selection but is NC
-      if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && (sr->reco_q == -1 || sr->reco_q == 1) && sr->Ehad_veto<30 && !sr->isCC) {
+      /*if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && (sr->reco_q == -1 || sr->reco_q == 1) && sr->Ehad_veto<30 && !sr->isCC) {
+        weight *= 1 + .2*sigma;
+      }*/
+      if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && sr->Ehad_veto<30 && !sr->isCC) {
         weight *= 1 + .2*sigma;
       }
     }

@@ -65,7 +65,7 @@ void RemoveSysts(std::vector<const ana::ISyst *> &systlist,
 std::vector<const ana::ISyst *>
 GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
                bool detsyst = true, bool useND = true, bool useFD = true,
-               bool useNueOnE = false, bool useFakeDataDials = true,
+               bool useNueOnE = true, bool useFakeDataDials = true,
                bool fluxsyst_CDR = true,
                int NFluxSysts = NFluxParametersToAddToStatefile,
                bool removeFDNonFitDials = false);
@@ -73,12 +73,12 @@ GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
 std::vector<const ana::ISyst *> GetListOfSysts(std::string systString,
                                                bool useND = true,
                                                bool useFD = true,
-                                               bool useNueOnE = false);
+                                               bool useNueOnE = true);
 
 std::vector<const ana::ISyst *> GetListOfSysts(char const *systCString,
                                                bool useND = true,
                                                bool useFD = true,
-                                               bool useNueOnE = false);
+                                               bool useNueOnE = true);
 
 /// Put a list of systematics in the 'standard' order
 std::vector<const ana::ISyst *>

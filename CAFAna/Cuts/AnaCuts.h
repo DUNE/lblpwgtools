@@ -35,7 +35,7 @@ namespace ana
                     return (
 			    sr->reco_numu && 
 			    (sr->muon_contained || sr->muon_tracker) &&
-			    sr->reco_q == +1 && 
+			    /*sr->reco_q == +1 &&*/ 
 			    sr->Ehad_veto<30);
                   });
 

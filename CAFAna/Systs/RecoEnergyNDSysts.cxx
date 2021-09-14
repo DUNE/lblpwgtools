@@ -16,6 +16,8 @@ namespace ana {
   const ERecoScaleMuLArInvSqrtND kERecoScaleMuLArInvSqrtND;
   // Resolution Syst
   const MuonRecoResND kMuonRecoResND;
+  const EMRecoResND kEMRecoResND;
+  const ChargedHadRecoResND kChargedHadRecoResND;
 
   RecoEnergyNDSystVector GetRecoENDSysts() {
 
@@ -33,6 +35,8 @@ namespace ana {
     vec.push_back(&kERecoScaleMuLArSqrtND);
     vec.push_back(&kERecoScaleMuLArInvSqrtND);
     vec.push_back(&kMuonRecoResND);
+    vec.push_back(&kEMRecoResND);
+    vec.push_back(&kChargedHadRecoResND);
 
     return vec;
   }

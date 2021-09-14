@@ -412,6 +412,62 @@ namespace ana
 
   extern const MuonRecoResND kMuonRecoResND;
 
+  // Electron/pi0 energy resolution
+  class EMRecoResND: public ISyst
+  {
+  public:
+  EMRecoResND() : ISyst("EMRecoResND", "EM shower Near Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->RecoLepE_NDFD,
+                  sr->eRecoPi0,
+                  sr->VisReco_NDFD);
+      const double scale = .02*sigma;
+      if (!sr->isFD){
+        sr->VisReco_NDFD  += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->eRecoPi0      += (sr->ePi0 - sr->eRecoPi0) * scale;
+        if (sr->isCC && abs(sr->nuPDG)==12) {
+          sr->VisReco_NDFD  += (sr->LepE - sr->RecoLepE_NDFD) * scale;
+          sr->RecoLepE_NDFD += (sr->LepE - sr->RecoLepE_NDFD) * scale;
+        }
+      }
+    }
+  };
+
+  extern const EMRecoResND kEMRecoResND;
+
+  // Charged hadron energy resolution
+  class ChargedHadRecoResND: public ISyst
+  {
+  public:
+  ChargedHadRecoResND() : ISyst("ChargedHadRecoResND", "Charged Hadron Far Detector Resolution Syst") {}
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::StandardRecord* sr, double& weight) const override
+    {
+      restore.Add(sr->VisReco_NDFD,
+                  sr->eRecoP,
+                  sr->eRecoPip,
+                  sr->eRecoPim);
+      const double scale = .02*sigma;
+      if (!sr->isFD) {
+        if (sr->eRecoP < 0.) sr->eRecoP = 0.;
+        if (sr->eRecoPip < 0.) sr->eRecoPip = 0.;
+        if (sr->eRecoPim < 0.) sr->eRecoPim = 0.;
+        const double trueSum = sr->ePip + sr->ePim + sr->eP;
+        const double recoSum = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        sr->eRecoPip += (sr->ePip - sr->eRecoPip) * scale;
+        sr->eRecoPim += (sr->ePim - sr->eRecoPim) * scale;
+        sr->eRecoP   += (sr->eP   - sr->eRecoP)   * scale;
+        sr->VisReco_NDFD += (trueSum - recoSum)   * scale;
+      }
+    }
+  };
+
+  extern const ChargedHadRecoResND kChargedHadRecoResND;
+
   //---------------------------------------------------------------------------------
 
   // Vector of the truth energy scale systematics
