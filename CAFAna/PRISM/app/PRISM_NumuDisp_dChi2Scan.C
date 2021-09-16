@@ -274,26 +274,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
 
-    //DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-    //  calc, osc_from, osc_to
-    //));
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc,
-        ((FDConfig_enum == kFD_nu_nueswap || FDConfig_enum == kFD_nub_nueswap)
-        ? osc_to : osc_from),
-        osc_to));
-
-    if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
-      DataSpectra.back() +=
-        state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from, osc_to); 
-
-    }
-
-    TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
-    Data->Scale(1, "width");
-    chan_dir->WriteTObject(Data, "Data_Total");
-    //dir->WriteTObject(Data, "Data_Total");
-    Data->SetDirectory(nullptr);
+    // New data prediction object to compare PRISM prediction to.
+    // This is the 'correct' FD data we want to use.
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
+    DataPred->Scale(1, "width");
+    chan_dir->WriteTObject(DataPred, "DataPred_Total");
+    DataPred->SetDirectory(nullptr);
  
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
@@ -338,9 +325,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Fill Experiment objects." << std::endl;
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    DataSpectra.back().FakeData(POT_FD),
+                                                    FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second, {0, 8}));
+                                                    POT, POT_FD, ch.second, {0, 6}));
 
     //Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
     CombExpts.Add(Expts.back().get());

@@ -171,9 +171,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
   // Do not want to oscillate the MC in the FD matrix (ND is always un-oscillated).
   // The linear combination handles the oscillation, we just want to correct for the
   // different detector resolutions.
-  osc::NoOscillations kNoOsc; 
-  auto FDflav_mat = (FDflav == Flavors::kNuMuToNuMu) ? FDflav : Flavors::kAllNuE;
-  //
+  // May need to revisit osc vs. no-osc FD smearing matrices.
   auto sMatrixND = fMatrixND->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
   hMatrixND = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixND.ToTH2(1)));
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign); 

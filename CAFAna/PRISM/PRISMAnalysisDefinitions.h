@@ -128,31 +128,40 @@ inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
 }
 
 // Enum-like list of Ids for use in lists of PRISM objects
-size_t const kND_nu = 0;
-size_t const kND_293kA_nu = 0;
-size_t const kND_280kA_nu = 1;
-// The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index
+// The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index 
 // position but not semantically identical. e.g. To make a full nue selection
 // prediction you need the non swap (intrinsic) and nueswap (appeared files).
 // However, both semantic meanings will not be used in the same list of objects
-// and so can be safetly mapped onto the same indices.
+// and so can be safetly mapped onto the same indices. Indices for the tauswap
+// files have been added.
+size_t const kND_nu = 0;
+size_t const kND_293kA_nu = 0;
+size_t const kND_280kA_nu = 1;
+
 size_t const kFD_nu_nonswap = 2;
 size_t const kFD_nu_numu = 2;
 size_t const kFD_nu_nueswap = 3;
 size_t const kFD_nu_nue = 3;
-size_t const kND_nub = 4;
-size_t const kND_293kA_nub = 4;
-size_t const kND_280kA_nub = 5;
-size_t const kFD_nub_nonswap = 6;
-size_t const kFD_nub_numu = 6;
-size_t const kFD_nub_nueswap = 7;
-size_t const kFD_nub_nue = 7;
+size_t const kFD_nu_tauswap = 4;
+size_t const kFD_nu_nutau = 4;
 
-size_t const kNPRISMConfigs_nu = 4;
-size_t const kNPRISMConfigs = 8;
+size_t const kND_nub = 5;
+size_t const kND_293kA_nub = 5;
+size_t const kND_280kA_nub = 6;
+
+size_t const kFD_nub_nonswap = 7;
+size_t const kFD_nub_numu = 7;
+size_t const kFD_nub_nueswap = 8;
+size_t const kFD_nub_nue = 8;
+size_t const kFD_nub_tauswap = 9;
+size_t const kFD_nub_nutau = 9;
+
+size_t const kNPRISMConfigs_nu = 5;
+size_t const kNPRISMConfigs = 10;
 size_t const kNPRISMNDConfigs_nu = 2;
-size_t const kNPRISMFDConfigs_nu = 2;
-size_t const kNPRISMFDConfigs = 4;
+size_t const kNPRISMFDConfigs_nu = 3;
+size_t const kNPRISMFDConfigs = 6;
+
 
 inline bool IsNuConfig(size_t conf) { return conf < kNPRISMConfigs_nu; }
 
@@ -197,6 +206,10 @@ inline bool IsNueConfig(size_t conf) {
   return !IsNDConfig(conf) && ((conf % kNPRISMConfigs_nu) == kFD_nu_nue);
 }
 
+inline bool IsNutauConfig(size_t conf) {
+  return !IsNDConfig(conf) && ((conf % kNPRISMConfigs_nu) == kFD_nu_nutau);
+}
+
 inline size_t GetConfigNueSwap(size_t conf) {
   if (IsNDConfig(conf)) {
     std::cout << "[ERROR]: Tried to get FD sub-config from an ND config("
@@ -205,6 +218,9 @@ inline size_t GetConfigNueSwap(size_t conf) {
   }
   if (IsNueConfig(conf)) {
     return conf;
+  } 
+  if (IsNutauConfig(conf)) {
+    return conf - 1;
   }
   // Is a numu config
   return conf + 1;
@@ -218,6 +234,9 @@ inline size_t GetConfigNonSwap(size_t conf) {
   }
   if (IsNueConfig(conf)) {
     return conf - 1;
+  } 
+  if (IsNutauConfig(conf)) {
+    return conf - 2;
   }
   // Is a numu config
   return conf;
@@ -390,7 +409,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_numu));
   LOUDASSERT(!IsNDConfig(kFD_nub_numu));
-  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 2);
+  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 3); // Was 2! Should now be 3 with tauswap
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_numu)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_numu)) == kFD_nub_numu);
   LOUDASSERT(IsNumuConfig(kFD_nub_numu));
@@ -410,7 +429,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_nue));
   LOUDASSERT(!IsNDConfig(kFD_nub_nue));
-  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 3);
+  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 4); // Was 3! Should now be 4 with tauswap.
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_nue)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_nue)) == kFD_nub_nue);
   LOUDASSERT(!IsNumuConfig(kFD_nub_nue));
@@ -420,7 +439,6 @@ inline void TestConfigDefinitions() {
 }
 
 struct PRISMAxisBlob {
-  //ana::HistAxis XProjection;
   ana::HistAxis XProjectionND;
   ana::HistAxis XProjectionFD;
   ana::HistAxis OffAxisPosition;
