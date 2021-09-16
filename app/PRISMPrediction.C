@@ -375,6 +375,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
+            //PRISMComp_h->Sumw2();
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
