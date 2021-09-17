@@ -59,28 +59,29 @@ public:
     kFDNCBkg = 23,
     kFDWSBkg = 24,
     kFDWrongLepBkg = 25,
-    kFDIntrinsicBkg = 26,
-    kFDUnOscPred = 27,
-    kFDOscPred = 28,
-    kPRISMPred = 29,
-    kPRISMMC = 30,
+    kFDNuTauCCBkg = 26,
+    kFDIntrinsicBkg = 27,
+    kFDUnOscPred = 28,
+    kFDOscPred = 29,
+    kPRISMPred = 30,
+    kPRISMMC = 31,
 
-    kNDData_unweighted_293kA = 31,
-    kNDData_unweighted_280kA = 32,
+    kNDData_unweighted_293kA = 32,
+    kNDData_unweighted_280kA = 33,
 
-    kNDDataExtrap2D_293kA = 33,
-    kNDDataExtrap2D_280kA = 34,
-    kNDDataExtrap_293kA = 35,
-    kNDDataExtrap_280kA = 36,
-    kNDData_FDExtrap = 37,
-    kNDDataCorr_FDExtrap = 38,
-    kExtrapCovarMatrix = 39,
+    kNDDataExtrap2D_293kA = 34,
+    kNDDataExtrap2D_280kA = 35,
+    kNDDataExtrap_293kA = 36,
+    kNDDataExtrap_280kA = 37,
+    kNDData_FDExtrap = 38,
+    kNDDataCorr_FDExtrap = 39,
+    kExtrapCovarMatrix = 40,
 
-    kNDMCExtrap2D_293kA = 40,
-    kNDMCExtrap2D_280kA = 41,
-    kNDMCExtrap_293kA = 42,
-    kNDMCExtrap_280kA = 43,
-    kNDMC_FDExtrap = 44,
+    kNDMCExtrap2D_293kA = 41,
+    kNDMCExtrap2D_280kA = 42,
+    kNDMCExtrap_293kA = 43,
+    kNDMCExtrap_280kA = 44,
+    kNDMC_FDExtrap = 45,
 
   };
 
@@ -160,6 +161,9 @@ public:
     case kFDWrongLepBkg: {
       return "FDWrongLepBkg";
     }
+    case kFDNuTauCCBkg: {
+      return "FDNuTauCCBkg";
+    }
     case kFDIntrinsicBkg: {
       return "FDIntrinsicBkg";
     }
@@ -232,12 +236,14 @@ public:
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fNDFDEnergyMatchAxis;
+  HistAxis fTrueAnalysisAxis;
   HistAxis fCovarianceAxis;
 
   PredictionPRISM(const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD, 
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
-                  const HistAxis &NDFDEnergyMatchAxis);
+                  const HistAxis &NDFDEnergyMatchAxis,
+                  const HistAxis &TrueAnalysisAxis);
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
   virtual void SaveTo(TDirectory *dir) const override;
@@ -285,10 +291,12 @@ public:
   bool fNCCorrection = false;
   bool fWSBCorrection = false;
   bool fWLBCorrection = false;
+  bool fNuTauCCCorrection = false;
   bool fIntrinsicCorrection = false;
   void SetNCCorrection(bool v = true) { fNCCorrection = v; }
   void SetWrongSignBackgroundCorrection(bool v = true) { fWSBCorrection = v; }
   void SetWrongLeptonBackgroundCorrection(bool v = true) { fWLBCorrection = v; }
+  void SetNuTauCCBackgroundCorrection(bool v = true) { fNuTauCCCorrection = v; }
   void SetIntrinsicBackgroundCorrection(bool v = true) {
     fIntrinsicCorrection = v;
   }
@@ -416,6 +424,9 @@ protected:
 
       std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_apposc_numode;
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_apposc_nubmode;
+
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_apposc_numode;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_apposc_nubmode;
     };
     _FD FD;
   };
@@ -464,8 +475,12 @@ protected:
   bool HaveFDUnOscWeightedSigPrediction(
       PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
 
+  // Prediction for unselected FD numus to be appearance oscillated.
   std::unique_ptr<PredictionInterp> &
   GetFDNonSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
+  // Prediction for unselected FD nues to be appearance oscillated.
+  std::unique_ptr<PredictionInterp> &
+  GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
 
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;
@@ -480,6 +495,10 @@ protected:
   // where we use nominal MC which is ignorant of shifts in the 'data'.
   bool fVaryNDFDMCData;
   
+  // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
+  // so we only want to add MC corrections to PRISMPred (which has fAnalysisAxisND)
+  // if the axes are the same.
+  bool fAxisAgreement;
 
 }; // namespace ana
 

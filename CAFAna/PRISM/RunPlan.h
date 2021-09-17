@@ -45,7 +45,7 @@ struct RunPlan {
 
   // I think this Spectrum Weight function is now **redundant**.
   // Only use the ReweightableSpectrum Weight function.
-  Spectrum Weight(Spectrum NDSpec, int kA,
+  /*Spectrum Weight(Spectrum NDSpec, int kA,
                   bool SetErrorsFromPredictedRate = false) const {
 
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
@@ -71,16 +71,12 @@ struct RunPlan {
     NDSpec.OverridePOT(GetPlanPOT());
     //HistCache::Delete(NDSpec_h);
     return NDSpec;
-  }
+  }*/
 
   // Only now using this function to run-plan weights RWSpecs.
   ReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
                               bool SetErrorsFromPredictedRate = false) const {
     // Assume this spectrum is in per/POT
-    /*Spectrum NDSpec_s =
-        Weight(NDSpec.ToSpectrum(), kA, SetErrorsFromPredictedRate);
-    std::unique_ptr<TH2> NDSpec_h(NDSpec_s.ToTH2(GetPlanPOT()));
-    NDSpec_h->SetDirectory(nullptr);*/
 
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
 
@@ -89,20 +85,16 @@ struct RunPlan {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
-      //std::cout << "===========" << std::endl;
       double sum(0);
       for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
         double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
         double be = SetErrorsFromPredictedRate      
                     ? sqrt(bc)
                     : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
-        //std::cout << "bc = " << bc << " ; be = " << be << " ; MCerr = " << 
-      //    (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT) << std::endl;
         sum += bc; 
         NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
         NDSpec_h->SetBinError(xit + 1, yit + 1, be);         
       }
-      //std::cout << ypos << " : " << sum << " events" << std::endl;
     }
 
     std::vector<std::string> labels = NDSpec.GetLabels();
@@ -110,11 +102,6 @@ struct RunPlan {
 
     ReweightableSpectrum ret = ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), 
                                                     labels, bins, GetPlanPOT(), 0);
-                                                   
-    //NDSpec.Clear();
-    //NDSpec.FillFromHistogram(NDSpec_h.get());
-    //NDSpec.OverrideLivetime(0);
-    //NDSpec.OverridePOT(GetPlanPOT());
 
     return ret;
   }

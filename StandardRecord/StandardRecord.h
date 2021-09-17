@@ -80,6 +80,10 @@ namespace caf
 
     // True sum of hadronic energy
     double HadE;
+    // True sum of charged pion KE
+    double ePipm;
+    // True total energy of pi0 (KE + mass)
+    double eTotalPi0;
 
     //  float enu_truth; // so what's this one?
     int isCC;

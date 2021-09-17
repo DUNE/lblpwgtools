@@ -48,7 +48,7 @@ public:
   
   NDFD_Matrix(PredictionInterp const *ND,
               PredictionInterp const *FD,
-              double reg);
+              double reg, bool optreg = false);
 
   // Normalise the ETrue column to efficiency in ND and FD matrices
   void NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
@@ -73,6 +73,8 @@ public:
   Eigen::MatrixXd GetL2NormReg(int truebins, TAxis *trueaxis) const;
 
   void SetRegFactor(double reg) { fRegFactor = reg; }
+
+  void SetNumuNueCorr(TH1 *h) const { hNumuNueCorr = std::unique_ptr<TH1>(h); }
 
   // Extrapolate ND PRISM pred to FD using Eigen
   // This function is becoming slightly monsterous...
@@ -100,8 +102,8 @@ protected:
   mutable std::unique_ptr<TH2> fNDExtrap_280kA;
   mutable std::unique_ptr<TH2> hCovMat_293kA;
   mutable std::unique_ptr<TH2> hCovMat_280kA;
-  mutable std::unique_ptr<TH1> hETrueUnfold;
-  mutable bool ETrueWriteOnce;
+  mutable std::unique_ptr<TH1> hNumuNueCorr;
+  mutable bool fOptimizeReg;
   // For L-curve optimisation
   mutable std::vector<double> soln_norm_vector;
   mutable std::vector<double> resid_norm_vector;

@@ -20,9 +20,6 @@
 namespace ana
 {
 
-  // Global true energy scale syst for eRecProxy
-  // Don't shift muon energies with this
-
   class RecoEnergyScaleND : public ISyst {
   public:
     RecoEnergyScaleND() : ISyst("RecoEnergyScaleND", "Global Reco Energy Scale ND Syst") {}
@@ -470,7 +467,7 @@ namespace ana
 
   //---------------------------------------------------------------------------------
 
-  // Vector of the truth energy scale systematics
+  // Vector of the reco energy scale systematics
   struct RecoEnergyNDSystVector : public std::vector<const ISyst*> {};
 
   RecoEnergyNDSystVector GetRecoENDSysts();

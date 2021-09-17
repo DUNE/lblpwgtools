@@ -19,9 +19,6 @@ using namespace ana;
 
 namespace PRISM {
 
-//const Var kTrueOffAxisPos_m =
-//    ((SIMPLEVAR(det_x) + SIMPLEVAR(vtx_x)) * Constant(1.0E-2));
-
 const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 
 const Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
@@ -41,7 +38,7 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(100, 0, 10);
   }
   if (xbinning == "uniform") {
-    return Binning::Simple(75, 0, 15);
+    return Binning::Simple(150, 0, 25);
   }
   if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
@@ -65,16 +62,29 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
     return binsNDEreco;
-  } else if (xbinning == "default_fine") {
-    std::vector<double> BE;
-    for (size_t e = 0; e < (binsNDEreco.Edges().size() - 1); e++) {
-      BE.push_back(binsNDEreco.Edges().at(e));
-      double binstep = (binsNDEreco.Edges().at(e + 1) - binsNDEreco.Edges().at(e)) / 2;
-      BE.push_back(binsNDEreco.Edges().at(e) + (1 * binstep));
-      //BE.push_back(binsNDEreco.Edges().at(e) + (2 * binstep));
-      //BE.push_back(binsNDEreco.Edges().at(e) + (3 * binstep));
+  } else if (xbinning == "event_rate_match") {
+    std::vector<double> BE = { 0, };
+
+    while (BE.back() < 10) {
+      BE.push_back(BE.back() + 0.2);
+    }  
+
+    while (BE.back() < 20) {
+      BE.push_back(BE.back() + 1.0); 
     }
-    BE.push_back(binsNDEreco.Edges().at(binsNDEreco.Edges().size() - 1));
+
+    while (BE.back() < 50) {
+      BE.push_back(BE.back() + 5.0);   
+    }
+
+    while (BE.back() < 100) {
+      BE.push_back(BE.back() + 10.0);
+    }
+
+    while (BE.back() < 120) {
+      BE.push_back(BE.back() + 20.0);
+    }
+
     return Binning::Custom(BE);
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
@@ -106,6 +116,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("True E_{lep.} (GeV)", SIMPLEVAR(LepE));
   } else if (varname == "EHad") {
     return std::make_pair("True E_{had.} (GeV)", SIMPLEVAR(HadE));
+  } else if (varname == "EP") {
+    return std::make_pair("True E_{p} (GeV)", SIMPLEVAR(eP));
+  } else if (varname == "EPipm") {
+    return std::make_pair("True E_{#pi^{+/-}} (GeV)", SIMPLEVAR(ePipm));
+  } else if (varname == "EPi0") {
+    return std::make_pair("True E_{#pi^{0}} (GeV)", SIMPLEVAR(eTotalPi0));
+  } else if (varname == "EOther") {
+    return std::make_pair("True E_{other} (GeV)", SIMPLEVAR(eOther));
   } else if (varname == "EProxy") {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
@@ -118,6 +136,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
   } else if (varname == "RecoEHad") {
     return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
+  }  else if (varname == "RecoEP") {
+    return std::make_pair("Reco E_{p} (GeV)", kPEReco);
+  }  else if (varname == "RecoEPipm") {
+    return std::make_pair("Reco E_{#pi^{+/-}} (GeV)", kPipmEReco);
+  }  else if (varname == "RecoEPi0") {
+    return std::make_pair("Reco E_{#pi^{0}} (GeV)", kPi0EReco);
+  }  else if (varname == "RecoEOther") {
+    return std::make_pair("Reco E_{other} (GeV)", SIMPLEVAR(eRecoOther));
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -167,10 +193,20 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
-  } else if (obsvarname == "RecoELep") { 
-    truevardef = GetVar("ELep");
+  } else if (obsvarname == "RecoEHad") { 
+    truevardef = GetVar("EHad");
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
+  } else if (obsvarname == "EVisTrue") {
+    truevardef = GetVar("ETrue");
+  } else if (obsvarname == "RecoEP") {
+    truevardef = GetVar("EP");
+  } else if (obsvarname == "RecoEPipm") { 
+    truevardef = GetVar("EPipm");
+  } else if (obsvarname == "RecoEPi0") {
+    truevardef = GetVar("EPi0");
+  } else if (obsvarname == "RecoEOther") {
+    truevardef = GetVar("EOther");
   } else if (obsvarname == "ELepEHad") {
     auto truevardefLep = GetVar("ELep");
     labels.push_back(truevardefLep.first);
@@ -257,7 +293,7 @@ const Cut kSel280kARun([](const caf::StandardRecord *sr) {
 const Cut kIsReco([](const caf::StandardRecord *sr) {
   return (sr->Elep_reco != 0);
 });
-const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) {
+const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) { 
   return sr->SpecialRunWeight;
 });
 

@@ -26,7 +26,8 @@ MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel_293kA,
                                  PredictionInterp const * FDsel) : 
                                  hNDunselected_293kA(nullptr), hNDselected_293kA(nullptr),
                                  hNDunselected_280kA(nullptr), hNDselected_280kA(nullptr),
-                                 hFDunselected(nullptr), hFDselected(nullptr) {
+                                 hFDunselected(nullptr), hFDselected(nullptr), 
+                                 fDoneOnce(false) {
   fNDunselected_293kA = NDunsel_293kA;
   fNDselected_293kA = NDsel_293kA;
   fNDunselected_280kA = NDunsel_280kA;
@@ -63,6 +64,7 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
     std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
     abort();
   }
+
   auto sNDunselected_293kA = fNDunselected_293kA->PredictComponentSyst(calc, syst, 
                                                                        NDflav, curr, NDsign);
   auto sNDunselected_280kA = fNDunselected_280kA->PredictComponentSyst(calc, syst,
@@ -83,9 +85,9 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                                                                       1, trueaxis);
   ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
                                                                       1, trueaxis);
-  hNDunselected_293kA = static_cast<TH2D*>(rwsNDunselected_293kA.ToTH2(1));
-  hNDunselected_280kA = static_cast<TH2D*>(rwsNDunselected_280kA.ToTH2(1));  
-   
+  TH2D *NDunsel_293kA = static_cast<TH2D*>(rwsNDunselected_293kA.ToTH2(1));
+  TH2D *NDunsel_280kA = static_cast<TH2D*>(rwsNDunselected_280kA.ToTH2(1));  
+  
   // Selected ND MC
   auto sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(calc, syst, 
                                                                    NDflav, curr, NDsign);
@@ -95,28 +97,28 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
                                                                     1, trueaxis);
   ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
                                                                     1, trueaxis);
-  hNDselected_293kA = static_cast<TH2D*>(rwsNDselected_293kA.ToTH2(1));
-  hNDselected_280kA = static_cast<TH2D*>(rwsNDselected_280kA.ToTH2(1));
+  TH2D *NDsel_293kA = static_cast<TH2D*>(rwsNDselected_293kA.ToTH2(1));
+  TH2D *NDsel_280kA = static_cast<TH2D*>(rwsNDselected_280kA.ToTH2(1));
 
   if (!fFDunselected || !fFDselected) {
     std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
     abort();
   }
   // FD unselected
-  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
-  hFDunselected = sFDunselected.ToTH1(1);
+  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+  TH1D *FDunsel = sFDunselected.ToTH1(1);
   // FD selected
-  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, NDflav, curr, NDsign);
-  hFDselected = sFDselected.ToTH1(1);
+  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+  TH1D *FDsel = sFDselected.ToTH1(1);
 
   // Calculate ND efficiency
   // efficiency fluctuates slightly with OA position
   // Efficiency for 293kA sampple:
-  for (int slice = 0; slice < hNDselected_293kA->GetYaxis()->GetNbins(); slice++) { // OA slice
+  for (int slice = 0; slice < NDsel_293kA->GetYaxis()->GetNbins(); slice++) { // OA slice
     std::vector<double> SliceEfficiency;
-    for (int ebin = 0; ebin < hNDselected_293kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
-      double NDbin_eff = hNDselected_293kA->GetBinContent(ebin + 1, slice + 1) /
-                         hNDunselected_293kA->GetBinContent(ebin + 1, slice + 1);
+    for (int ebin = 0; ebin < NDsel_293kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
+      double NDbin_eff = NDsel_293kA->GetBinContent(ebin + 1, slice + 1) /
+                         NDunsel_293kA->GetBinContent(ebin + 1, slice + 1);
       if (std::isnormal(NDbin_eff)) {
         SliceEfficiency.push_back(NDbin_eff);
       } else {
@@ -124,13 +126,14 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
       }
     }
     NDefficiency_293kA.push_back(SliceEfficiency);
-  } 
+  }
+
   // Efficiency for 280kA sample:
-  for (int slice = 0; slice < hNDselected_280kA->GetYaxis()->GetNbins(); slice++) { // OA slice
+  for (int slice = 0; slice < NDsel_280kA->GetYaxis()->GetNbins(); slice++) { // OA slice
     std::vector<double> SliceEfficiency;
-    for (int ebin = 0; ebin < hNDselected_280kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
-      double NDbin_eff = hNDselected_280kA->GetBinContent(ebin + 1, slice + 1) /
-                         hNDunselected_280kA->GetBinContent(ebin + 1, slice + 1);
+    for (int ebin = 0; ebin < NDsel_280kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
+      double NDbin_eff = NDsel_280kA->GetBinContent(ebin + 1, slice + 1) /
+                         NDunsel_280kA->GetBinContent(ebin + 1, slice + 1);
       if (std::isnormal(NDbin_eff)) {
         SliceEfficiency.push_back(NDbin_eff);
       } else {
@@ -141,11 +144,35 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
   }
 
   // Calculate FD efficiency
-  for (int ebin = 0; ebin < hFDselected->GetXaxis()->GetNbins(); ebin++) {
-    double FDbin_eff = hFDselected->GetBinContent(ebin + 1) / 
-                       hFDunselected->GetBinContent(ebin + 1);
-    FDefficiency.push_back(FDbin_eff);
+  for (int ebin = 0; ebin < FDsel->GetXaxis()->GetNbins(); ebin++) {
+    double FDbin_eff = FDsel->GetBinContent(ebin + 1) / 
+                       FDunsel->GetBinContent(ebin + 1);
+    if (std::isnormal(FDbin_eff)) {
+      FDefficiency.push_back(FDbin_eff);
+    } else {
+      FDefficiency.push_back(1E-6);
+    }
   }
+
+  // Don't want to keep saving the same histograms.
+  // Asign the histograms once for writing.
+  if (!fDoneOnce) {
+    hNDunselected_293kA = HistCache::Copy(NDunsel_293kA);
+    hNDselected_293kA = HistCache::Copy(NDsel_293kA);
+    hNDunselected_280kA = HistCache::Copy(NDunsel_280kA);
+    hNDselected_280kA = HistCache::Copy(NDsel_280kA);
+    hFDunselected = HistCache::Copy(FDunsel);
+    hFDselected = HistCache::Copy(FDsel); 
+  }
+  fDoneOnce = true;
+
+  // Delete histograms to clear up the cache.
+  HistCache::Delete(NDunsel_293kA);
+  HistCache::Delete(NDsel_293kA);
+  HistCache::Delete(NDunsel_280kA);
+  HistCache::Delete(NDsel_280kA);
+  HistCache::Delete(FDunsel);
+  HistCache::Delete(FDsel);
 }
 
 //-----------------------------------------------------------

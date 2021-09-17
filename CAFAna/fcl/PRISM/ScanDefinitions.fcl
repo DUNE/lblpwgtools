@@ -47,4 +47,11 @@ ScanDefinitions: {
         @local::ScanDefinitions.ssth23_fine[0],
         @local::ScanDefinitions.dmsq23_fine[0]
     ]
+
+    dcp_coarse: [
+      {
+        name: deltapi
+        scan_steps: [20, -1, 1]
+      }
+    ]
 }

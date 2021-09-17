@@ -132,13 +132,15 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EProxy";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "uniform";
+std::string truthbinningdescriptor = "event_rate_match"; // was uniform
 std::vector<std::string> ND_input_numode;
 std::vector<std::string> FD_nonswap_input_numode;
 std::vector<std::string> FD_nueswap_input_numode;
+std::vector<std::string> FD_tauswap_input_numode;
 std::vector<std::string> ND_input_nubmode;
 std::vector<std::string> FD_nonswap_input_nubmode;
 std::vector<std::string> FD_nueswap_input_nubmode;
+std::vector<std::string> FD_tauswap_input_nubmode;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
@@ -164,6 +166,9 @@ void SayUsage(char const *argv[]) {
       << "\t-Fe-nu|--FD-nue-input-numode <P> : Regex pattern to search for\n"
       << "\t                            input files. Can only include pattern\n"
          "\t                            elements for files.\n"
+      << "\t-Ft-nu|--FD-nutau-input-numode <P> : Regex pattern to search for\n"
+      << "\t                            input files. Can only include pattern\n"
+         "\t                            elements for files.\n"
       << "\t-N-nub|--ND-input-nubmode <P> : Regex pattern to search for input\n"
       << "\t                            Files. Can only include pattern \n"
          "\t                            elements for files.\n"
@@ -171,6 +176,9 @@ void SayUsage(char const *argv[]) {
       << "\t                            Files. Can only include pattern \n"
          "\t                            elements for files.\n"
       << "\t-Fe-nub|--FD-nue-input-nubmode <P> : Regex pattern to search for\n"
+      << "\t                            input files. Can only include pattern\n"
+         "\t                            elements for files.\n"
+      << "\t-Ft-nub|--FD-nutau-input-nubmode <P> : Regex pattern to search for\n"
       << "\t                            input files. Can only include pattern\n"
          "\t                            elements for files.\n"
       << "\t-n|--n-max <N>            : Max number of events to read.\n"
@@ -204,7 +212,7 @@ void handleOpts(int argc, char const *argv[]) {
       exit(0);
     } else if ((std::string(argv[opt]) == "-A") ||
                (std::string(argv[opt]) == "--axes")) {
-      axdescriptor = argv[++opt];
+      axdescriptor = argv[++opt]; 
       isReco = isRecoND(axdescriptor);
     } else if ((std::string(argv[opt]) == "-o") ||
                (std::string(argv[opt]) == "--output")) {
@@ -218,6 +226,9 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-Fe-nu") ||
                (std::string(argv[opt]) == "--FD-nue-input-numode")) {
       FD_nueswap_input_numode.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-Ft-nu") ||
+               (std::string(argv[opt]) == "--FD-nutau-input-numode")) {
+      FD_tauswap_input_numode.push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-N-nub") ||
                (std::string(argv[opt]) == "--ND-input-nubmode")) {
       ND_input_nubmode.push_back(argv[++opt]);
@@ -227,12 +238,15 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-Fe-nub") ||
                (std::string(argv[opt]) == "--FD-nue-input-nubmode")) {
       FD_nueswap_input_nubmode.push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-Ft-nub") ||
+               (std::string(argv[opt]) == "--FD-nutau-input-nubmode")) {
+      FD_tauswap_input_nubmode.push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-n") ||
                (std::string(argv[opt]) == "--n-max")) {
       nmax = atoi(argv[++opt]);
-    } else if (std::string(argv[opt]) == "--syst-descriptor") {
+    } else if (std::string(argv[opt]) == "--syst-descriptor") { 
       syst_descriptor = argv[++opt];
-    } else if (std::string(argv[opt]) == "--bin-descriptor") {
+    } else if (std::string(argv[opt]) == "--bin-descriptor") { 
       binningdescriptor = argv[++opt];
     } else if (std::string(argv[opt]) == "--OA-bin-descriptor") {
       oabinningdescriptor = argv[++opt];
@@ -268,9 +282,11 @@ int main(int argc, char const *argv[]) {
            {"ND_numode", ND_input_numode},
            {"FD_nonswap_numode", FD_nonswap_input_numode},
            {"FD_nueswap_numode", FD_nueswap_input_numode},
+           {"FD_nueswap_numode", FD_tauswap_input_numode},
            {"ND_nubmode", ND_input_nubmode},
            {"FD_nonswap_nubmode", FD_nonswap_input_nubmode},
-           {"FD_nueswap_nubmode", FD_nueswap_input_nubmode}}) {
+           {"FD_nueswap_nubmode", FD_nueswap_input_nubmode},
+           {"FD_nueswap_nubmode", FD_tauswap_input_nubmode}}) {
     file_lists.emplace_back(ip.first, std::vector<std::string>{});
     for (auto InputFilePattern : ip.second) {
       size_t asterisk_loc = InputFilePattern.find_first_of('*');
@@ -365,11 +381,13 @@ int main(int argc, char const *argv[]) {
   }
 
   TFile fout(output_file_name.c_str(), "RECREATE");
-  // I think we want to use fine binning for data for unfolding procedure
+  
   PRISMAxisBlob axes =
-      GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor); //*binningdescriptor*
+      GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor); 
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
+
+  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor);
 
   std::vector<Var> WeightVars(kNPRISMConfigs, ana::Constant(1));
   WeightVars[kND_293kA_nu] = GetNDWeight("", true);
@@ -378,8 +396,10 @@ int main(int argc, char const *argv[]) {
   WeightVars[kND_280kA_nub] = GetNDWeight("", false);
   WeightVars[kFD_nu_nonswap] = GetFDWeight("", true);
   WeightVars[kFD_nu_nueswap] = GetFDWeight("", true);
+  WeightVars[kFD_nu_tauswap] = GetFDWeight("", true);
   WeightVars[kFD_nub_nonswap] = GetFDWeight("", false);
   WeightVars[kFD_nub_nueswap] = GetFDWeight("", false);
+  WeightVars[kFD_nub_tauswap] = GetFDWeight("", false);
 
   std::vector<Var> AnaWeightVars(kNPRISMConfigs, ana::Constant(1));
   AnaWeightVars[kND_293kA_nu] = GetNDWeight(anaweighters, true);
@@ -388,8 +408,10 @@ int main(int argc, char const *argv[]) {
   AnaWeightVars[kND_280kA_nub] = GetNDWeight(anaweighters, false);
   AnaWeightVars[kFD_nu_nonswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nu_nueswap] = GetFDWeight(anaweighters, true);
+  AnaWeightVars[kFD_nu_tauswap] = GetFDWeight(anaweighters, true);
   AnaWeightVars[kFD_nub_nonswap] = GetFDWeight(anaweighters, false);
   AnaWeightVars[kFD_nub_nueswap] = GetFDWeight(anaweighters, false);
+  AnaWeightVars[kFD_nub_tauswap] = GetFDWeight(anaweighters, false);
 
   // Generally these will be just selecting signal and are the ones used in the
   // PRISM interp
@@ -401,8 +423,10 @@ int main(int argc, char const *argv[]) {
   AnalysisCuts[kND_280kA_nub] = GetNDSignalCut(UseSel, false);
   AnalysisCuts[kFD_nu_nonswap] = GetFDSignalCut(UseSel, true, true);
   AnalysisCuts[kFD_nu_nueswap] = GetFDSignalCut(UseSel, true, false);
+  AnalysisCuts[kFD_nu_tauswap] = GetFDSignalCut(UseSel, true, true); // never used, see below
   AnalysisCuts[kFD_nub_nonswap] = GetFDSignalCut(UseSel, false, true);
   AnalysisCuts[kFD_nub_nueswap] = GetFDSignalCut(UseSel, false, false);
+  AnalysisCuts[kFD_nub_tauswap] = GetFDSignalCut(UseSel, false, true); // never used, see below
 
   // These are the current 'standard' analysis cuts that try to mock up a real
   // selection, these will be used for
@@ -414,8 +438,10 @@ int main(int argc, char const *argv[]) {
   OnAxisSelectionCuts[kND_280kA_nub] = GetNDSignalCut(true, false);
   OnAxisSelectionCuts[kFD_nu_nonswap] = GetFDSignalCut(true, true, true);
   OnAxisSelectionCuts[kFD_nu_nueswap] = GetFDSignalCut(true, true, false);
+  OnAxisSelectionCuts[kFD_nu_tauswap] = GetFDSignalCut(true, true, true);
   OnAxisSelectionCuts[kFD_nub_nonswap] = GetFDSignalCut(true, false, true);
   OnAxisSelectionCuts[kFD_nub_nueswap] = GetFDSignalCut(true, false, false);
+  OnAxisSelectionCuts[kFD_nub_tauswap] = GetFDSignalCut(true, false, true);
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
@@ -425,7 +451,7 @@ int main(int argc, char const *argv[]) {
   // Make sure we apply biases correctly to ND and FD data.
   // This method is a bit of a bodge which assumes the Fake data
   // studies will apply multiple different biases at the same time.
-  bool ProtonFakeData, NDFakeData, FDFakeData;
+  bool ProtonFakeData(false), NDFakeData(false), FDFakeData(false);
   std::vector<std::string> split_input = SplitString(FakeDataShiftDescript, ':');
   for (auto in_name : split_input){
     std::string name = in_name;
@@ -451,7 +477,7 @@ int main(int argc, char const *argv[]) {
   auto PRISM =
       std::make_unique<PredictionPRISM>(axes.XProjectionND, axes.XProjectionFD, 
                                         axes.OffAxisPosition, axes.OffAxis280kAPosition, 
-                                        MatchAxis);
+                                        MatchAxis, TrueObsAxis);
 
   Loaders Loaders_nu, Loaders_nub;
 
@@ -459,25 +485,31 @@ int main(int argc, char const *argv[]) {
   size_t NNDFiles_nu = 1;
 
   std::vector<std::shared_ptr<SpectrumLoader>> FileLoaders;
-  FillWithNulls(FileLoaders, 8);
+  FillWithNulls(FileLoaders, 10); // Was 8, now have two tauswap files.
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
     bool IsND = IsNDConfig(it);
     bool IsND280kA = IsND280kAConfig(it);
     size_t IsNueSwap = IsNueConfig(it);
+    size_t IsNonSwap = IsNumuConfig(it);
+    size_t IsNuTauSwap = IsNutauConfig(it);
 
     size_t file_it = 0;
-    if (IsND) {
-      file_it = IsNu ? 0 : 3;
+    if (IsND) { 
+      file_it = IsNu ? 0 : 4;
     } else if (IsNu) {
-      file_it = IsNueSwap ? 2 : 1;
-    } else {
-      file_it = IsNueSwap ? 5 : 4;
+      if (IsNueSwap) file_it = 2;
+      else if (IsNonSwap) file_it = 1;
+      else file_it = 3; // Is nu tauswap.
+    } else { 
+      if (IsNueSwap) file_it = 6;
+      else if (IsNonSwap) file_it = 5;
+      else file_it = 7; // Is nub tauswap.
     }
 
     std::cout << "it: " << it << ", IsNu: " << IsNu << ", IsND: " << IsND
               << ", IsND280kA: " << IsND280kA << ", IsNueSwap: " << IsNueSwap
-              << ", file_it: " << file_it
+              << ", IsNuTauSwap: " << IsNuTauSwap << ", file_it: " << file_it
               << ", nfiles: " << file_lists[file_it].second.size() << std::endl;
 
     if (!file_lists[file_it].second.size()) {
@@ -498,10 +530,13 @@ int main(int argc, char const *argv[]) {
 
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
 
-    } else if (!IsND) { // Is FD
-      Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, Loaders::kMC,
-                           kBeam,
-                           IsNueSwap ? Loaders::kNueSwap : Loaders::kNonSwap);
+    } else if (!IsND) { // Is FD and files either nonswap, nueswap or tauswap.
+      if (IsNonSwap) Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, 
+                                          Loaders::kMC, kBeam, Loaders::kNonSwap);
+      else if (IsNueSwap) Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET,
+                                               Loaders::kMC, kBeam, Loaders::kNueSwap);
+      else Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, 
+                                Loaders::kMC, kBeam, Loaders::kNuTauSwap);
     }
   }
 
@@ -544,7 +579,6 @@ int main(int argc, char const *argv[]) {
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
-  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor); 
 
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
   std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
@@ -625,6 +659,9 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetData_nonswap, kNPRISMFDConfigs);
   FillWithNulls(FarDetData_nueswap, kNPRISMFDConfigs);
 
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
+  FillWithNulls(FarDetDataPreds, kNPRISMFDConfigs);
+
   std::vector<std::unique_ptr<IPredictionGenerator>> FarDetPredGens;
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
@@ -638,10 +675,11 @@ int main(int argc, char const *argv[]) {
     bool IsND280kA = IsND280kAConfig(it);
     size_t fd_it = 0;
     size_t IsNueSwap = IsNueConfig(it);
+    size_t IsNuTauSwap = IsNutauConfig(it);
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
-
+    std::cout << "fd_it = " << fd_it << std::endl;
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
 
     if (!FileLoaders[it]) {
@@ -689,19 +727,13 @@ int main(int argc, char const *argv[]) {
       // for 280kA and 293kA, right?
       if (!IsND280kA) {
         if (isReco && UseSel) {
-          /*NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-              ERecETrueAxisND,  
-              kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun) &&
-              kIsReco, // Remove events not reconstructed when using param reco
-              WeightVars[it]);*/ // TRY SELECTION!!
           NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
             ERecETrueAxisND, AnalysisCuts[it] && kCut280kARun, WeightVars[it]);
         } else { // Not using reco variable so don't need reco cut.
           NDMatrixPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND,
               kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+              kIsOutOfTheDesert && kCut280kARun,
               WeightVars[it]);
         }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
@@ -727,7 +759,8 @@ int main(int argc, char const *argv[]) {
       NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift);
             
-    } else { // Is FD
+    } else if (!IsND && !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
+
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
@@ -759,12 +792,17 @@ int main(int argc, char const *argv[]) {
             AnaWeightVars[it]); 
       }
 
-      if (FileLoaders[nue_swap_it]) {
+      if (FileLoaders[nue_swap_it]) { 
         FarDetData_nueswap[fd_it] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[nue_swap_it], axes.XProjectionFD, AnalysisCuts[it],
             (FDFakeData || ProtonFakeData) ? DataShift : kNoShift, 
             AnaWeightVars[it]); 
       }
+
+      FarDetDataPreds[fd_it] = std::make_unique<DataPredictionNoExtrap>(
+          Loaders_bm, axes.XProjectionFD, AnalysisCuts[it],
+          (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+          AnaWeightVars[it]);
 
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjectionFD, AnalysisCuts[it], AnaWeightVars[it]);
@@ -779,20 +817,17 @@ int main(int argc, char const *argv[]) {
           ); // PredictionInterp::kSplitBySign
 
       // Matrix of ERec v ETrue for FD
-      /*FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
-          ERecETrueAxisFD, 
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
-          AnaWeightVars[it]);*/ // TRY SELECTION!!
       FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
-        ERecETrueAxisFD, AnalysisCuts[it], AnaWeightVars[it]);
+        ERecETrueAxisFD, AnalysisCuts[it], AnaWeightVars[it]); 
       FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign 
-
+          ); //PredictionInterp::kSplitBySign
+ 
       // True energy FD spectrum with obs binning for MC efficiency correction
       FDUnselTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           FDTrueEnergyObsBins, 
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
+          (IsNueSwap ? kIsNueApp : kIsNumuCC) && 
+          (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
           WeightVars[it]);
       FDUnselTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
           los, &no_osc, *FDUnselTruePredGens[fd_it], Loaders_bm, kNoShift);   
@@ -880,6 +915,7 @@ int main(int argc, char const *argv[]) {
 
     size_t fd_it = 0;
     size_t IsNue = IsNueConfig(it);
+    size_t IsNuTau = IsNutauConfig(it);
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
@@ -891,7 +927,6 @@ int main(int argc, char const *argv[]) {
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       if (!IsND280kA) {
-        //NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
         NDUnselTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
         NDSelTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       }
@@ -917,7 +952,8 @@ int main(int argc, char const *argv[]) {
              std::string("NDSelected_ETrue") + 
              (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              NDSelTruePredInterps[it]);
-    } else { // Is FD
+
+    } else if (!IsND && !IsNuTau) { // Is FD and not nutau.
       if (!IsNue) {
         SaveTo(fout,
                std::string("FDMatchInterp_ETrue_numu") +
@@ -934,12 +970,13 @@ int main(int argc, char const *argv[]) {
                 << std::string("FDInterp_") + axdescriptor +
                        (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")
                 << " to " << it << ", " << fd_it << std::endl;
-      
+
+         
       SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_it]);
-
+      
       SaveTo(fout,
              std::string("FDUnSelected_ETrue") + 
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
@@ -962,6 +999,11 @@ int main(int argc, char const *argv[]) {
                    (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
                FarDetData_nueswap[fd_it]);
       }
+
+      SaveTo(fout,
+             std::string("FDDataPred_") + axdescriptor +
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+             FarDetDataPreds[fd_it]);
 
       SaveTo(fout,
              std::string("FDSelectedInterp_") + axdescriptor +

@@ -39,12 +39,4 @@ namespace ana
 			    sr->Ehad_veto<30);
                   });
 
-  const Cut kSimplePassND_FHC_NUMU(
-                  [](const caf::StandardRecord* sr)
-                  {
-                    return (
-                            sr->simple_reco_numu);
-                  });
-
-
 }

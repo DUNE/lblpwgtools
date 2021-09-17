@@ -85,6 +85,42 @@ protected:
   Var fWei;
 };
 
+
+/// Class to correctly produce the FD mock 'data'. This makes sure the different
+/// components of the 'data' are being oscillated correctly, as we would see in 
+/// real data. Previously just used OscillatableSpectrum for whole nonswap or
+/// nueswap file. This led to components of FD data being oscillated incorrectly.
+///
+/// Do not need an associated IPredictionGenerator class as I never anticipate 
+/// this being used as an input to PredictionInterp objects. 
+/// (This class just re-implements the old PredictionNoExtrap prediction method.)
+class DataPredictionNoExtrap : public PredictionExtrap {
+public: 
+ 
+  DataPredictionNoExtrap(PredictionExtrap *pred); 
+  DataPredictionNoExtrap(IExtrap *extrap);
+
+  DataPredictionNoExtrap(Loaders &loaders, const HistAxis &axis,
+                         const Cut &cut, const SystShifts &shift = kNoShift,
+                         const Var &wei = kUnweighted);
+
+  virtual ~DataPredictionNoExtrap();
+
+  virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
+
+  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+                                    Flavors::Flavors_t flav, 
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override;
+
+  static std::unique_ptr<DataPredictionNoExtrap> LoadFrom(TDirectory *dir);
+
+  virtual void SaveTo(TDirectory *dir) const override;
+
+private:
+};
+
+
 /// Prediction that wraps a simple Spectrum, makes unoscillatable FD
 /// predictions, but keeping intrinsic and swap spectra separate. Needed
 /// specifically in the PRISM analysis for the flux mis-match correction, which
@@ -123,13 +159,23 @@ public:
                                     Sign::Sign_t sign) const override;
 
 protected:
-  PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
+  /*PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
                     const Spectrum &_fSpectrumNueSwap)
       : fSpectrumNonSwap(_fSpectrumNonSwap),
-        fSpectrumNueSwap(_fSpectrumNueSwap) {}
+        fSpectrumNueSwap(_fSpectrumNueSwap) {}*/
+  PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
+                    const Spectrum &_fSpectrumNueSwap,
+                    const Spectrum &_fSpectrumRHCNonSwap,
+                    const Spectrum &_fSpectrumRHCNueSwap) 
+      : fSpectrumNonSwap(_fSpectrumNonSwap),
+        fSpectrumNueSwap(_fSpectrumNueSwap),
+        fSpectrumRHCNonSwap(_fSpectrumRHCNonSwap),
+        fSpectrumRHCNueSwap(_fSpectrumRHCNueSwap) {} 
 
   Spectrum fSpectrumNonSwap;
   Spectrum fSpectrumNueSwap;
+  Spectrum fSpectrumRHCNonSwap;
+  Spectrum fSpectrumRHCNueSwap;
 };
 
 class FDNoOscPredictionGenerator : public IPredictionGenerator {
