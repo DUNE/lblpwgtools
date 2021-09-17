@@ -181,13 +181,13 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
   PredictionInterp const *FDPredInterp = GetFDPred(match_chan.to.mode); // Can be flux OR ev rate
   std::unique_ptr<TH1> FDOsc(
       FDPredInterp
-          ->PredictComponentSyst(osc, shift, flav_fd, Current::kCC, sgn_fd)
+          ->PredictComponentSyst(osc, shift, flav_fd, Current::kCC, sgn_fd) 
           .ToTH1(1));
   FDOsc->SetDirectory(nullptr);
 
-  std::unique_ptr<TH1> FDUnOsc(
+  std::unique_ptr<TH1> FDUnOsc( // This should (I think) always be a numu prediction.
       FDPredInterp
-          ->PredictComponentSyst(&no, shift, flav_fd, Current::kCC, sgn_fd)
+          ->PredictComponentSyst(&no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd) // flav_fd
           .ToTH1(1));
   FDUnOsc->SetDirectory(nullptr);
 
@@ -308,7 +308,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
   Eigen::MatrixXd P = Eigen::MatrixXd::Identity(NEBins, NEBins);
   for (int row = 0; row < NEBins; row++) {
     if (row <= col_min) { // low energy bin(s) weight
-      P(row, row) *= 0.8;
+      P(row, row) *= 0.8; 
     }
     if (row >= col_max) { // high energy bin(s) weight
       P(row, row) *= 0.0;
@@ -350,11 +350,12 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
 
   Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights; 
 
+  // Get the residual for flux miss-matching correction.
+  // Normalise by unoscillated numu event rate.
   for (int bin_it = 0; bin_it < FDOsc->GetXaxis()->GetNbins(); ++bin_it) {
     double bc_o = FDOsc->GetBinContent(bin_it + 1);
     double bc_u = FDUnOsc->GetBinContent(bin_it + 1);
-
-    double e = (bc_o - BestFit[bin_it]) / bc_u; 
+    double e = (bc_o - BestFit[bin_it]) / bc_u;  
     if (!std::isnormal(e)) {
       e = 0;
     }
@@ -443,7 +444,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     FillHistFromEigenMatrix(fDebugFitMatrix["last_match_regmatrix"].get(),
                             RegMatrix);
   }
-  HistCache::ClearCache();
+  //HistCache::ClearCache();
   return {fLastMatch_293kA.get(), fLastMatch_280kA.get()};
 }
 

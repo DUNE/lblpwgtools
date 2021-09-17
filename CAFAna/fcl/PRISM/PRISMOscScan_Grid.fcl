@@ -22,7 +22,7 @@ BasicPred: {
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0, 6]
-			reg_factor_293kA: 1.0E-16 # 2.49E-17
+			reg_factor_293kA: 2.5E-17 # 2.49E-17
 			reg_factor_280kA: 1E-18
 			}
 		]
@@ -47,16 +47,17 @@ scansEG: [
 	{
 		@table::BasicPred
 		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "dmsq32_all_1.0Em16"
+		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		free_syst_params: @local::nuisance_parameters.xsec_total
+		output_dir: "xsec_1.0Em16"
 	},
 
 	{
 		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		output_dir: "dmsq32_nom_1.0Em16"
+		PRISM.match_conditioning[0].reg_factor_293kA: 2.5E-17
+		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		free_syst_params: @local::nuisance_parameters.xsec_total
+		output_dir: "xsec_2.5Em17"
 	},
 
 ]

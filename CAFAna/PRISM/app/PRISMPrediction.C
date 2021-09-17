@@ -2,6 +2,8 @@
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "CAFAna/Prediction/IPrediction.h"
+
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
@@ -193,10 +195,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
+    size_t NDConfig_293kA = (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub; 
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
+    std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
+    std::cout << "FD Config = " << DescribeConfig(FDConfig_enum) << std::endl; 
+    std::cout << "FDfd Config = " << DescribeFDConfig(FDfdConfig_enum) << std::endl;
+
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
+
       std::cout << "[ERROR]: Have ND nu channel, but no numode run plan."
                 << std::endl;
       abort();
@@ -207,14 +216,46 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       abort();
     }
 
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc, osc_from, osc_to));
-
     TDirectory *chan_dir =
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
 
+    // New data prediction object to compare PRISM prediction to.
+    // This is the 'correct' FD data we want to use. 
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
+    if (FarDetDataPred.NDimensions() == 1) {
+      for (int bin_it = 1; bin_it <= DataPred->GetXaxis()->GetNbins(); bin_it++) {
+        DataPred->SetBinError(bin_it, sqrt(DataPred->GetBinContent(bin_it)));
+      }
+    } else if (FarDetDataPred.NDimensions() == 2) {
+      for (int x_it = 1; x_it <= DataPred->GetXaxis()->GetNbins(); x_it++) {
+        for (int y_it = 1; y_it <= DataPred->GetYaxis()->GetNbins(); y_it++) {
+          double be = sqrt(DataPred->GetBinContent(x_it, y_it));
+          DataPred->SetBinError(x_it, y_it, be);
+        }
+      }
+    }
+    DataPred->Scale(1, "width");
+    chan_dir->WriteTObject(DataPred, "DataPred_Total");
+    DataPred->SetDirectory(nullptr);
+
+    //----------------------------------------------------------
+    // Probably redundant now, may remove in the future.
+    // Disappearance: non_swap oscillates numus away.
+    // Appearance: non_swap looks at the intrinsic nues.
+    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
+        calc, 
+        (IsNueConfig(FDConfig_enum)
+        ? osc_to : osc_from),
+        osc_to)); 
+
+    TH1 *Data_nonswap = DataSpectra.back().ToTH1(POT_FD);
+    Data_nonswap->Scale(1, "width");
+    chan_dir->WriteTObject(Data_nonswap, "Data_nonswap_component");
+
     if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
+
       DataSpectra.back() +=
           state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from,
                                                                 osc_to);
@@ -223,6 +264,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               ->Oscillated(calc, osc_from, osc_to)
                               .ToTH1(POT_FD);
       if (Data_nueswap->Integral() > 0) {
+        Data_nueswap->Scale(1, "width");
         chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
       }
       Data_nueswap->SetDirectory(nullptr);
@@ -244,20 +286,21 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
+    //-------------------------------------------------------------
 
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(),
-                              state.FDMatrixPredInterps[FDConfig_enum].get(),
+                              state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
-                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
+                                state.NDSelTruePredInterps[NDConfig_293kA].get(),
+                                state.NDUnselTruePredInterps[NDConfig_280kA].get(),
+                                state.NDSelTruePredInterps[NDConfig_280kA].get(),
+                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
@@ -311,8 +354,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMExtrapCovMat->Scale(1, "width");
         chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
         PRISMExtrapCovMat->SetDirectory(nullptr);
+        // Get nue/numu xsec correction (don't want this bin scaled).
+        if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
+        auto *FD_NueNumuCorr = 
+              PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
+        chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
+        FD_NueNumuCorr->SetDirectory(nullptr);
+        }
         if (PRISM_write_debug) {
-
           for (auto const &comp : PRISMComponents) {
             // we always write this
             if (comp.first == PredictionPRISM::kPRISMPred) {
@@ -321,9 +370,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               continue;
             } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
               continue;
+            } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
+              continue;
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
+            //PRISMComp_h->Sumw2();
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(

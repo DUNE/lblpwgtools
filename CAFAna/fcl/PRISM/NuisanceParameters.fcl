@@ -51,7 +51,7 @@ nuisance_parameters: {
 	]
 
 	fluxalmostAll: [
-		@sequence::nuisance_parameters.fluxHadProd5,
+		@sequence::nuisance_parameters.fluxHadProd10,
 		@sequence::nuisance_parameters.fluxFocussing
 	]
 

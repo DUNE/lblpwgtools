@@ -158,7 +158,7 @@ constructor is:
 ```
 
 The `PredictionInterp` objects in the constructor refer to the ND and FD smearing
-matrices. Give your 'PredictionPRISM` class access to the `NDFD_Matrix` object
+matrices. Give your `PredictionPRISM` class access to the `NDFD_Matrix` object
 by calling in your executable:
 
 ```
@@ -180,7 +180,7 @@ of true event energy. Initialize with constructor:
 
 The `PredictionInterp` objects will be contained in your state file.
 
-Give your 'PredictionPRISM` class access to the `MCEffCorrection` object using
+Give your `PredictionPRISM` class access to the `MCEffCorrection` object using
 
 ```
   void SetMC_NDFDEff(MCEffCorrection const * eff_corr);
@@ -296,11 +296,10 @@ FHiCL files.
 
 The FHiCL files in the `CAFAna/fcl/PRISM/` directory contain all the inputs needed
 to run the PRISM scripts and avoids the need for many command line arguments or
-hard-coding.
+hard-coding. An example of an input in the FHiCL config file is below:
 
-E.g. `output_file:` changes the name of the output file
-E.g. `vary_NDFD_data` is a boolean that if true keeps the MC componenets at their
-nominal values and varies the 'data'. If false, the MC is varies by the inputted
+`vary_NDFD_data`: A boolean that if true keeps the MC componenets at their
+nominal values and varies the 'data'. If false, the MC is varied by the inputed
 systematics and the 'data' is constant. 
 
 

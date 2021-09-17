@@ -112,7 +112,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::string xparam_name = param_names[0];
   std::string yparam_name;
   if (param_names.size() > 1) yparam_name = param_names[1];
-  bool dmsq32_scan(false), ssth23_scan(false);
+  bool dmsq32_scan(false), ssth23_scan(false), dcp_scan(false);
 
   // vector<const IFitVar *> of parameters to scan
   std::vector<const IFitVar *> scan_vars = GetOscVars(param_names);
@@ -141,7 +141,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    //TFile fs(state_file.c_str());
     TFile *fs = TFile::Open(state_file.c_str());
     if (fs->IsZombie()) {
       std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
@@ -207,9 +206,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280, 
                                       chan_energy_range);
     }
-    //if (PRISM_write_debug) { No need!!
-    //  fluxmatcher.SetStoreDebugMatches();
-    //}
+    
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
@@ -244,8 +241,15 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::vector<Spectrum> DataSpectra;
   DataSpectra.reserve(Channels.size());
 
-  std::vector<const IChiSqExperiment*> Expts;
+  //std::vector<const IChiSqExperiment*> Expts;
+  std::vector<std::unique_ptr<IChiSqExperiment>> Expts;
   Expts.reserve(Channels.size());
+
+  Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
+
+  MultiExperiment CombExpts;
+
+  CombExpts.Add(Expts.back().get());
 
   for (auto const ch : Channels) {
 
@@ -270,14 +274,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
 
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-      calc, osc_from, osc_to
-    ));
-
-    TH1 *Data = DataSpectra.back().ToTH1(POT_FD);
-    Data->Scale(1, "width");
-    chan_dir->WriteTObject(Data, "Data_Total");
-    Data->SetDirectory(nullptr);
+    // New data prediction object to compare PRISM prediction to.
+    // This is the 'correct' FD data we want to use.
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
+    DataPred->Scale(1, "width");
+    chan_dir->WriteTObject(DataPred, "DataPred_Total");
+    DataPred->SetDirectory(nullptr);
  
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
@@ -319,21 +322,20 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       PRISMExtrapCovMat->SetDirectory(nullptr);
     }
 
-    /*Expts.emplace_back(new PRISMChi2Experiment(state.PRISM.get(),
-                                               DataSpectra.back().FakeData(POT_FD), 
-                                               use_PRISM_ND_stats, 
-                                               POT_FD, ch.second, {0, 8}));*/
-
     std::cout << "Fill Experiment objects." << std::endl;
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    DataSpectra.back().FakeData(POT_FD),
+                                                    FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second, {0, 8}));
+                                                    POT, POT_FD, ch.second, {0, 6}));
 
-    Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
+    //Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
+    CombExpts.Add(Expts.back().get());
+    //CombExpts = MultiExperiment(Expts);
+  
+  //} // Want this here eventually!  
 
-    const MultiExperiment CombExpts = MultiExperiment(Expts);
+    dir->cd();
 
     std::vector<double> x_scan;
     std::vector<double> y_scan;
@@ -379,6 +381,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     const IFitVar *ssTh23 = &kFitSinSqTheta23;
     const IFitVar *dmsq32 = &kFitDmSq32Scaled;
+    const IFitVar *dCPpi = &kFitDeltaInPiUnits; 
 
     if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSqTheta23)
         != scan_vars.end()) {
@@ -390,6 +393,11 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "found dmsq32" << std::endl;
       dmsq32_scan = true;
     }
+    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDeltaInPiUnits)
+        != scan_vars.end()) {
+      std::cout << "found dCP in pi units" << std::endl; 
+      dcp_scan = true;
+    }
 
     //-----------------------
     // Do the minimization 1D
@@ -398,19 +406,24 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       for (const auto &x : x_scan) {
         if (ssth23_scan) {
           ssTh23->SetValue(calc, x);
-        }
-        else if (dmsq32_scan) {
+        } else if (dmsq32_scan) {
           dmsq32->SetValue(calc, x);
+        } else if (dcp_scan) {
+          dCPpi->SetValue(calc, x);
         }
 
         std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;
         std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
+        std::cout << "dCP = " << calc->GetdCP() << std::endl;
+       
+        auto calc_fit = calc->Copy();
+ 
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
         MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
         SystShifts bestSysts;
         //const SeedList &seedPts = SeedList(); //oscSeeds
-        double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kQuiet);
+        double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
         // fill hist
         scan_hist_1D->Fill(x, chi);
         auto end_fit = std::chrono::system_clock::now();
@@ -436,13 +449,14 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       }
       if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
       else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+      else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
       std::cout << "Bestfit parameter values: " <<
         scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
       double BestLL = minchi;
       //for (int x = 0; x < scan_hist_1D->GetNbinsX(); x++) {
       //    scan_hist_1D->SetBinContent(x + 1, scan_hist_1D->GetBinContent(x + 1) - BestLL);
       //}
-      chan_dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
+      dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
     }
     //-----------------------
     // Do the minimization 2D
@@ -489,7 +503,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
             scan_hist_2D->GetBinContent(x + 1, y + 1) - BestLL);
         }
       }
-      chan_dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
+      dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
     }
   }
   // Write total output file

@@ -7,6 +7,7 @@
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
+#include "CAFAna/Prediction/PredictionsForPRISM.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
@@ -85,6 +86,7 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
 
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nu;
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nub;
@@ -118,10 +120,11 @@ struct PRISMStateBlob {
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMConfigs);
+    FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FarDetDataPreds, PRISM::kNPRISMFDConfigs);
 
     NDFluxPred_293kA_nu = nullptr;
     NDFluxPred_293kA_nub = nullptr;
@@ -175,7 +178,7 @@ GetListOfSysts(std::vector<std::string> const &);
 HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 
 inline ReweightableSpectrum
-ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
+  ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
   TH2D *spec_h;  
 
   if (spec.NDimensions() == 2) {
@@ -223,6 +226,22 @@ ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
   HistCache::Delete(spec_h);
 
   return rwspec;
+}
+
+inline OscillatableSpectrum
+  ToOscillatableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
+ 
+  ReweightableSpectrum srw = ToReweightableSpectrum(spec, POT, axis);
+
+  TH2D *hrw = dynamic_cast<TH2D*>(srw.ToTH2(POT));
+  std::cout << "binsx = " << hrw->GetXaxis()->GetNbins() << std::endl;
+  std::cout << "binsy = " << hrw->GetYaxis()->GetNbins() << std::endl;
+
+  OscillatableSpectrum oscspec(hrw, axis.GetLabels(), axis.GetBinnings(), POT, 0);
+
+  HistCache::Delete(hrw);
+
+  return oscspec;
 }
 
 } // namespace ana
