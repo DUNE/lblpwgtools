@@ -37,6 +37,22 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
 
 //-----------------------------------------------------
 
+NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
+                        fRegFactor(MatPred.fRegFactor),
+                        fNDExtrap_293kA(nullptr), 
+                        fNDExtrap_280kA(nullptr), 
+                        hCovMat_293kA(nullptr), 
+                        hCovMat_280kA(nullptr), 
+                        hNumuNueCorr(nullptr),  
+                        fOptimizeReg(MatPred.fOptimizeReg) {
+  std::cout<< "Calling NDFD_Matrix copy contructor!" << std::endl;
+  fMatrixND = MatPred.fMatrixND;
+  fMatrixFD = MatPred.fMatrixFD;
+
+} 
+
+//-----------------------------------------------------
+
 TH2D * NDFD_Matrix::GetNDMatrix() const {
   return hMatrixND.get();
 }

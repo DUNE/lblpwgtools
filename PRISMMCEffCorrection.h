@@ -51,6 +51,9 @@ public:
                   PredictionInterp const * FDunsel,
                   PredictionInterp const * FDsel);
 
+  // Copy constructor
+  MCEffCorrection(const MCEffCorrection &EffCorr);
+
   ~MCEffCorrection();
 
   // Fills NDefficiency and FDefficiency, taking selected
