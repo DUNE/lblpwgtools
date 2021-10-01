@@ -866,9 +866,11 @@ namespace ana
 
     if(loc.rfind("/pnfs/", 0) == 0){ // ie begins with
       if ( onsite && unauth )
-        loc = std::string("root://fndcagpvm01.fnal.gov:1095//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
+        //loc = std::string("root://fndcagpvm01.fnal.gov:1095//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
+        loc = std::string("root://fndca1.fnal.gov:1095//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
       else
-        loc = std::string("root://fndcagpvm01.fnal.gov:1094//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
+        //loc = std::string("root://fndcagpvm01.fnal.gov:1094//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
+        loc = std::string("root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
     }
     return loc;
   }

@@ -1,6 +1,6 @@
 #include "PRISMOscScan_Grid.fcl"
 
-bin_step: [1, 0.43, 0.44] 
+bin_step: [1, 0.415, 0.420] 
 
 scans: [
 
