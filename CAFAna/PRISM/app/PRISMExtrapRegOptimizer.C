@@ -195,7 +195,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
                               state.FDMatrixPredInterps[FDConfig_enum].get(),
                               RegFactorExtrap);
 
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices);
 
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
                                 state.NDSelTruePredInterps[kND_293kA_nu].get(),
@@ -204,7 +204,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
 
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr);
     //-----------------------------------
 
     std::vector<double> eta_hat, rho_hat;
