@@ -294,7 +294,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices); // rm &
     // MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
                                 state.NDSelTruePredInterps[NDConfig_293kA].get(),
@@ -303,7 +303,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr); // rm &
 
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction
@@ -375,7 +375,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
-            //PRISMComp_h->Sumw2();
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(

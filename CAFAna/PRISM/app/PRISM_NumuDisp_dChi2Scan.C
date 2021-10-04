@@ -286,9 +286,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     // Begin ND to FD extrapolation
     NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(), 
-                              state.FDMatrixPredInterps[FDConfig_enum].get(), 
+                              state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
                               RegFactorExtrap); 
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices);
     // ND to FD MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(), 
                                 state.NDSelTruePredInterps[kND_293kA_nu].get(),
@@ -297,7 +297,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr);
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
@@ -333,7 +333,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     CombExpts.Add(Expts.back().get());
     //CombExpts = MultiExperiment(Expts);
   
-  //} // Want this here eventually!  
+  } // Want this here eventually!  
 
     dir->cd();
 
@@ -467,6 +467,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
           std::cout << "x = " << x << ", y = " << y << std::endl;
           ssTh23->SetValue(calc, x);
           dmsq32->SetValue(calc, y);
+          std::cerr << "[INFO]: Beginning fit. ";
+          auto start_fit = std::chrono::system_clock::now();
 
           MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); //MinuitFitter::kNormal
           SystShifts bestSysts;
@@ -475,6 +477,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
           double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
           // fill hist
           scan_hist_2D->Fill(x, y, chi);
+          auto end_fit = std::chrono::system_clock::now();
+          std::cerr << "[FIT]: Finished fit in "
+                    << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
+                                                                        start_fit).count()
+                    << " s after " << fitter.GetNFCN() << " iterations."
+                    << std::endl;
         }
       }
       // Get minimum ChiSq value (LL value)
@@ -497,15 +505,15 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "Bestfit parameter values: " << ssTh23->GetValue(calc) <<
                 ", " << dmsq32->GetValue(calc) << std::endl;
       double BestLL = minchi;
-      for (int x = 0; x < scan_hist_2D->GetNbinsX(); x++) {
-        for (int y = 0; y < scan_hist_2D->GetNbinsY(); y++) {
-          scan_hist_2D->SetBinContent(x + 1, y + 1,
-            scan_hist_2D->GetBinContent(x + 1, y + 1) - BestLL);
-        }
-      }
+      //for (int x = 0; x < scan_hist_2D->GetNbinsX(); x++) {
+      //  for (int y = 0; y < scan_hist_2D->GetNbinsY(); y++) {
+      //    scan_hist_2D->SetBinContent(x + 1, y + 1,
+      //      scan_hist_2D->GetBinContent(x + 1, y + 1) - BestLL);
+      //  }
+      //}
       dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
     }
-  }
+  //}
   // Write total output file
   f.Write();
 }

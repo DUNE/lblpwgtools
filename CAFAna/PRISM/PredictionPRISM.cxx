@@ -280,9 +280,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
   // Prediction for MC correction. Make sure there is no WSB!
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
-      fFluxMatcherCorrectionAxes, 
-      cut /*&& ((FDChannel.mode == BeamMode::kNuMode) ? !kIsAntiNu : kIsAntiNu)*/, 
-      wei)); 
+      fFluxMatcherCorrectionAxes, cut, wei)); 
   FDUnOscWeightedSigPrediction = std::make_unique<PredictionInterp>(
       systlist, &kNoOsc, *fPredGens.back(), loaders);
 
@@ -610,13 +608,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                ? Flavors::kNuEToNuMu
                                : Flavors::kNuEToNuE;
   
-  PRISMOUT("\n\tNDSigFlavor: "
+  /*PRISMOUT("\n\tNDSigFlavor: "
            << NDSigFlavor << "\n\tNDSigSign: " << NDSigSign
            << "\n\tNDWrongSign: " << NDWrongSign << "\n\tNDWrongFlavor: "
            << NDWrongFlavor << "\n\tFDSigFlavor: " << FDSigFlavor
            << "\n\tFDSigSign: " << FDSigSign << "\n\tFDWrongSign: "
            << FDWrongSign << "\n\tFDWrongFlavor: " << FDWrongFlavor
-           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);
+           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);*/
 
   // Using maps for non-default constructible classes is awful...
   std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
@@ -928,7 +926,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   //------------------------------------------------------------
   //------------------------------------------------------------
   // Repeat extrapolation for MC for debugging & 'fake data' studies
-  if (NDComps.count(kNDSig_293kA)) {
+  if (NDComps.count(kNDSig_293kA) && fVaryNDFDMCData) {
     
     fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDSig2D_293kA), NDPOT, 293,
                                     UnRunPlannedLinearCombination_293kA.get(),
