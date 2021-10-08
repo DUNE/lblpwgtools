@@ -7,7 +7,7 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
                          double &max, double trueVal) {
 
   // Defaults
-  nBins = 100;
+  nBins = 50;
   min = 0;
   max = 1;
 
