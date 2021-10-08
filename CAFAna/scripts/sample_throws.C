@@ -6,19 +6,82 @@
 
 #include "TDecompChol.h"
 #include "TVector.h"
+#include "TMatrix.h"
 #include <numeric>
 
 using namespace ana;
 
 int nthrows = 10000;
 
-std::vector<std::string> samples = {"FD_nue_FHC",  "FD_numu_FHC", "FD_nue_RHC",
-                                    "FD_numu_RHC", "ND_FHC",      "ND_RHC"};
+std::vector<std::string> samples = {"ND_FHC", "ND_RHC", "FD_numu_FHC", \
+				    "FD_nue_FHC", "FD_numu_RHC", "FD_nue_RHC"};
 
 void make_1D_errors(TDirectory *saveDir, std::vector<TH1 *> nominal,
                     std::vector<std::vector<TH1 *>> thrown_hists) {
 
   saveDir->cd();
+
+  // Set up a sample covariance
+  int nbins_total = 0;
+  uint nthrows = thrown_hists.size();
+  for (uint s = 0; s < samples.size(); ++s) {
+    nbins_total += nominal[s]->GetNbinsX()*nominal[s]->GetNbinsY();
+  }
+
+  TVectorD tot_1D(nbins_total);
+  TMatrixD tot_2D(nbins_total, nbins_total);
+
+  // Loop over universes
+  for (uint i = 0; i < nthrows; ++i){
+    // First loop
+    int row_index = 0;
+    for (uint s1 = 0; s1 < samples.size(); ++s1) {
+      for (int x1 = 0; x1 < nominal[s1]->GetNbinsX(); ++x1) {
+	for (int y1 = 0; y1 < nominal[s1]->GetNbinsY(); ++y1) {
+	  
+	  // The business in 1D
+	  double this_row = 0;
+	  if (nominal[s1]->GetBinContent(x1+1, y1+1)) 
+	    this_row = thrown_hists[i][s1]->GetBinContent(x1+1, y1+1)/nominal[s1]->GetBinContent(x1+1, y1+1);
+	  tot_1D[row_index] += this_row;
+
+	  // Second loop
+          int col_index= 0;
+	  for (uint s2 = 0; s2 < samples.size(); ++s2) {
+	    for (int x2 = 0; x2 < nominal[s2]->GetNbinsX(); ++x2) {
+	      for (int y2 = 0; y2 < nominal[s2]->GetNbinsY(); ++y2) {
+
+		// The business in 2D
+		double this_col = 0;
+		if (nominal[s2]->GetBinContent(x2+1, y2+1))
+		  this_col = thrown_hists[i][s2]->GetBinContent(x2 + 1, y2 + 1)/nominal[s2]->GetBinContent(x2+1, y2+1);
+		tot_2D[row_index][col_index] += this_row*this_col;
+
+		col_index += 1;
+	      }
+	    }
+	  }
+	  row_index +=1;
+	}
+      }
+    }    
+  }
+
+  // Now make the covariance
+  TMatrixD cov(nbins_total, nbins_total);
+  for (int i = 0; i < nbins_total; ++i){
+    double av_i = tot_1D[i]/double(nthrows);
+    for (int j = 0; j < nbins_total; ++j){
+      double av_j = tot_1D[j]/double(nthrows);
+      cov[i][j] = (tot_2D[i][j] - av_i*tot_1D[j] - av_j*tot_1D[i] + av_i*av_j*nthrows)/double(nthrows);
+    }
+  }
+
+  TH2D cov_hist(cov);
+  cov_hist.SetNameTitle("cov_hist", "cov_hist");
+  cov_hist.SetDirectory(saveDir);
+  cov.Write("cov");
+  cov_hist.Write();
 
   for (uint s = 0; s < samples.size(); ++s) {
 
@@ -47,9 +110,6 @@ void make_1D_errors(TDirectory *saveDir, std::vector<TH1 *> nominal,
 
         for (uint i = 0; i < thrown_hists.size(); ++i)
           values.push_back(thrown_hists[i][s]->GetBinContent(x + 1, y + 1));
-
-        // double sum = std::accumulate(values.begin(), values.end(), 0.0);
-        // double mean = sum / values.size();
 
         double mean = outHist->GetBinContent(x + 1, y + 1);
 
@@ -99,23 +159,24 @@ std::vector<TH1 *> get_nominal_breakdown(std::string stateFname,
   static PredictionInterp &predNDNumuFHC = *interp_list[4].release();
   static PredictionInterp &predNDNumuRHC = *interp_list[5].release();
 
-  std::vector<TH1 *> sample0 = GetMCComponents(&predFDNueFHC, trueOsc,
-					       (samples[0] + "_nom").c_str(), pot_fd_fhc_nue);
 
-  std::vector<TH1 *> sample1 = GetMCComponents(&predFDNumuFHC, trueOsc,
-                                               (samples[1] + "_nom").c_str(), pot_fd_fhc_numu);
+  std::vector<TH1 *> sample0 = GetMCComponents(&predNDNumuFHC, trueOsc,
+                                               (samples[0] + "_nom").c_str(), pot_nd_fhc);
 
-  std::vector<TH1 *> sample2 = GetMCComponents(&predFDNueRHC, trueOsc,
-                                               (samples[2] + "_nom").c_str(), pot_fd_rhc_nue);
+  std::vector<TH1 *> sample1 = GetMCComponents(&predNDNumuRHC, trueOsc,
+                                               (samples[1] + "_nom").c_str(), pot_nd_rhc);
 
-  std::vector<TH1 *> sample3 = GetMCComponents(&predFDNumuRHC, trueOsc,
-                                               (samples[3] + "_nom").c_str(), pot_fd_rhc_numu);
+  std::vector<TH1 *> sample2 = GetMCComponents(&predFDNumuFHC, trueOsc,
+                                               (samples[2] + "_nom").c_str(), pot_fd_fhc_numu);
 
-  std::vector<TH1 *> sample4 = GetMCComponents(&predNDNumuFHC, trueOsc,
-                                               (samples[4] + "_nom").c_str(), pot_nd_fhc);
+  std::vector<TH1 *> sample3 = GetMCComponents(&predFDNueFHC, trueOsc,
+					       (samples[3] + "_nom").c_str(), pot_fd_fhc_nue);
 
-  std::vector<TH1 *> sample5 = GetMCComponents(&predNDNumuRHC, trueOsc,
-                                               (samples[5] + "_nom").c_str(), pot_nd_rhc);
+  std::vector<TH1 *> sample4 = GetMCComponents(&predFDNumuRHC, trueOsc,
+                                               (samples[4] + "_nom").c_str(), pot_fd_rhc_numu);
+
+  std::vector<TH1 *> sample5 = GetMCComponents(&predFDNueRHC, trueOsc,
+                                               (samples[5] + "_nom").c_str(), pot_fd_rhc_nue);
 
   // Now to make one big vector
   std::vector<TH1 *> ret = sample0;
@@ -152,24 +213,24 @@ std::vector<TH1 *> make_syst_throw(std::string stateFname,
   static int haXX0r = 0;
 
   std::vector<TH1 *> ret;
-  ret.push_back(GetMCSystTotal(&predFDNueFHC, trueOsc, theseSysts,
-                               (samples[0] + std::to_string(haXX0r)).c_str(),
-                               pot_fd_fhc_nue));
-  ret.push_back(GetMCSystTotal(&predFDNumuFHC, trueOsc, theseSysts,
-                               (samples[1] + std::to_string(haXX0r)).c_str(),
-                               pot_fd_fhc_numu));
-  ret.push_back(GetMCSystTotal(&predFDNueRHC, trueOsc, theseSysts,
-                               (samples[2] + std::to_string(haXX0r)).c_str(),
-                               pot_fd_rhc_nue));
-  ret.push_back(GetMCSystTotal(&predFDNumuRHC, trueOsc, theseSysts,
-                               (samples[3] + std::to_string(haXX0r)).c_str(),
-                               pot_fd_rhc_numu));
   ret.push_back(GetMCSystTotal(&predNDNumuFHC, trueOsc, theseSysts,
                                (samples[4] + std::to_string(haXX0r)).c_str(),
                                pot_nd_fhc));
   ret.push_back(GetMCSystTotal(&predNDNumuRHC, trueOsc, theseSysts,
                                (samples[5] + std::to_string(haXX0r)).c_str(),
                                pot_nd_rhc));
+  ret.push_back(GetMCSystTotal(&predFDNumuFHC, trueOsc, theseSysts,
+                               (samples[1] + std::to_string(haXX0r)).c_str(),
+                               pot_fd_fhc_numu));
+  ret.push_back(GetMCSystTotal(&predFDNueFHC, trueOsc, theseSysts,
+                               (samples[0] + std::to_string(haXX0r)).c_str(),
+                               pot_fd_fhc_nue));
+  ret.push_back(GetMCSystTotal(&predFDNumuRHC, trueOsc, theseSysts,
+                               (samples[3] + std::to_string(haXX0r)).c_str(),
+                               pot_fd_rhc_numu));
+  ret.push_back(GetMCSystTotal(&predFDNueRHC, trueOsc, theseSysts,
+                               (samples[2] + std::to_string(haXX0r)).c_str(),
+                               pot_fd_rhc_nue));
   haXX0r += 1;
 
   return ret;
@@ -223,8 +284,6 @@ void throw_errors(std::string stateFname, std::string sampleString,
     SystShifts throwSyst;
     for (int i = 0; i < nSysts; ++i) {
       throwSyst.SetShift(systlist[i], throw_vect[i]);
-      // std::cout << "Setting " << systlist[i]->ShortName() << " to " <<
-      // throw_vect[i] << std::endl;
     }
 
     fit_vect.push_back(
@@ -334,60 +393,21 @@ void sample_throws(std::string stateFname = def_stateFname,
   for (auto s : GetFDRecoSysts())
     fd_det_list.push_back(s->ShortName());
 
-  std::vector<std::string> flux_xsec_list = all_xsec_list;
-  flux_xsec_list.insert(flux_xsec_list.end(), flux_list.begin(),
-                        flux_list.end());
-
-  // std::cout << "Prefit flux uncertainties..." << std::endl;
-  // TDirectory *prefit_flux_dir = fout->mkdir("prefit_flux");
-  // throw_errors(stateFname, sampleString, prefit_flux_dir, nom_vect, systlist,
-  //              flux_list, trueOsc);
-  //
-  // std::cout << "Prefit fd_det uncertainties..." << std::endl;
-  // TDirectory *prefit_fd_det_dir = fout->mkdir("prefit_fd_det");
-  // throw_errors(stateFname, sampleString, prefit_fd_det_dir, nom_vect, systlist,
-  //              fd_det_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec_qe uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_qe_dir = fout->mkdir("prefit_xsec_qe");
-  // throw_errors(stateFname, sampleString, prefit_xsec_qe_dir, nom_vect, systlist,
-  //              xsec_qe_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec_res uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_res_dir = fout->mkdir("prefit_xsec_res");
-  // throw_errors(stateFname, sampleString, prefit_xsec_res_dir, nom_vect,
-  //              systlist, xsec_res_list, trueOsc);
-  //
-  // std::cout << "Prefit FSI uncertainties..." << std::endl;
-  // TDirectory *prefit_fsi_dir = fout->mkdir("prefit_xsec_fsi");
-  // throw_errors(stateFname, sampleString, prefit_fsi_dir, nom_vect, systlist,
-  //              xsec_fsi_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec_dis uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_dis_dir = fout->mkdir("prefit_xsec_dis");
-  // throw_errors(stateFname, sampleString, prefit_xsec_dis_dir, nom_vect,
-  //              systlist, xsec_dis_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec_NC uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_nc_dir = fout->mkdir("prefit_xsec_nc");
-  // throw_errors(stateFname, sampleString, prefit_xsec_nc_dir, nom_vect, systlist,
-  //              xsec_nc_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec_ratios uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_ratios_dir = fout->mkdir("prefit_xsec_ratios");
-  // throw_errors(stateFname, sampleString, prefit_xsec_ratios_dir, nom_vect,
-  //              systlist, xsec_ratios_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec uncertainties..." << std::endl;
-  // TDirectory *prefit_xsec_dir = fout->mkdir("prefit_xsec");
-  // throw_errors(stateFname, sampleString, prefit_xsec_dir, nom_vect, systlist,
-  //              all_xsec_list, trueOsc);
-  //
-  // std::cout << "Prefit xsec+flux uncertainties..." << std::endl;
-  // TDirectory *prefit_flux_xsec_dir = fout->mkdir("prefit_flux_xsec");
-  // throw_errors(stateFname, sampleString, prefit_flux_xsec_dir, nom_vect,
-  //              systlist, flux_xsec_list, trueOsc);
-
+  std::cout << "Prefit flux uncertainties..." << std::endl;
+  TDirectory *prefit_flux_dir = fout->mkdir("prefit_flux");
+  throw_errors(stateFname, sampleString, prefit_flux_dir, nom_vect, systlist,
+               flux_list, trueOsc);
+  
+  std::cout << "Prefit fd_det uncertainties..." << std::endl;
+  TDirectory *prefit_fd_det_dir = fout->mkdir("prefit_fd_det");
+  throw_errors(stateFname, sampleString, prefit_fd_det_dir, nom_vect, systlist,
+               fd_det_list, trueOsc);
+  
+  std::cout << "Prefit xsec uncertainties..." << std::endl;
+  TDirectory *prefit_xsec_dir = fout->mkdir("prefit_xsec");
+  throw_errors(stateFname, sampleString, prefit_xsec_dir, nom_vect, systlist,
+               all_xsec_list, trueOsc);
+  
   // Now move to postfit!
   std::cout << "Postfit uncertainties..." << std::endl;
   TDirectory *postfit_dir = fout->mkdir("postfit_all");
@@ -426,53 +446,17 @@ void sample_throws(std::string stateFname = def_stateFname,
   TDirectory *postfit_fd_det_dir = fout->mkdir("postfit_fd_det");
   throw_errors(stateFname, sampleString, postfit_fd_det_dir, nom_vect, systlist,
                fd_det_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit xsec_qe uncertainties..." << std::endl;
-  // TDirectory *postfit_xsec_qe_dir = fout->mkdir("postfit_xsec_qe");
-  // throw_errors(stateFname, sampleString, postfit_xsec_qe_dir, nom_vect,
-  //              systlist, xsec_qe_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit xsec_res uncertainties..." << std::endl;
-  // TDirectory *postfit_xsec_res_dir = fout->mkdir("postfit_xsec_res");
-  // throw_errors(stateFname, sampleString, postfit_xsec_res_dir, nom_vect,
-  //              systlist, xsec_res_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit FSI uncertainties..." << std::endl;
-  // TDirectory *postfit_fsi_dir = fout->mkdir("postfit_xsec_fsi");
-  // throw_errors(stateFname, sampleString, postfit_fsi_dir, nom_vect, systlist,
-  //              xsec_fsi_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit xsec_dis uncertainties..." << std::endl;
-  // TDirectory *postfit_xsec_dis_dir = fout->mkdir("postfit_xsec_dis");
-  // throw_errors(stateFname, sampleString, postfit_xsec_dis_dir, nom_vect,
-  //              systlist, xsec_dis_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit xsec_nc uncertainties..." << std::endl;
-  // TDirectory *postfit_xsec_nc_dir = fout->mkdir("postfit_xsec_nc");
-  // throw_errors(stateFname, sampleString, postfit_xsec_nc_dir, nom_vect,
-  //              systlist, xsec_nc_list, trueOsc, dec_mat);
-  //
-  // std::cout << "Postfit xsec_ratios uncertainties..." << std::endl;
-  // TDirectory *postfit_xsec_ratios_dir = fout->mkdir("postfit_xsec_ratios");
-  // throw_errors(stateFname, sampleString, postfit_xsec_ratios_dir, nom_vect,
-  //              systlist, xsec_ratios_list, trueOsc, dec_mat);
 
   std::cout << "Postfit xsec uncertainties..." << std::endl;
   TDirectory *postfit_xsec_dir = fout->mkdir("postfit_xsec");
   throw_errors(stateFname, sampleString, postfit_xsec_dir, nom_vect, systlist,
                all_xsec_list, trueOsc, dec_mat);
 
-  // std::cout << "Postfit xsec+flux uncertainties..." << std::endl;
-  // TDirectory *postfit_flux_xsec_dir = fout->mkdir("postfit_flux_xsec");
-  // throw_errors(stateFname, sampleString, postfit_flux_xsec_dir, nom_vect,
-  //              systlist, flux_xsec_list, trueOsc, dec_mat);
-
   fout->cd();
 
   // Save the breakdown
   for (auto &hist : breakdown_vect)
     hist->Write();
-
 
   // Now close the file
   fout->Close();
