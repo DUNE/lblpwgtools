@@ -29,9 +29,6 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
     RemoveSysts(systlist, bias_syst_names);
   }
 
-  // Oscillation parameters to use
-  std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", hie);
-
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
@@ -49,7 +46,8 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   for (int idcp = 0; idcp < 2; ++idcp) {
     for(int ihie = -1; ihie <= +1; ihie += 2) {
       double dcptest = idcp*TMath::Pi();
-      
+
+      std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", ihie);      
       osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, 1, asimov_set);
       testOsc->SetdCP(dcptest);
       
@@ -71,7 +69,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
   std::cout << "Global chi2 at dCP=0,pi: " << glob_chisqmin << std::endl;
 
   // Now loop over all true values
-  int nsteps = 72;
+  int nsteps = 36;
   double dcpstep = 2*TMath::Pi()/nsteps;
   TGraph* gCPV = new TGraph();
 
@@ -90,7 +88,8 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
       double dcptest = idcp*TMath::Pi();
       
       for(int ihie = -1; ihie <= +1; ihie += 2) {
-	
+
+	std::vector<const IFitVar*> oscVars = GetOscVars("th23:th13:dmsq32", ihie);	
 	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(ihie, 1, asimov_set);
 	testOsc->SetdCP(dcptest);
 	
