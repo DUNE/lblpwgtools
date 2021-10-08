@@ -25,6 +25,15 @@ namespace ana
     return vec;
   }
 
+  std::vector<const ISyst*> GetNDAccSysts()
+  {
+    std::vector<const ISyst*> vec;
+    vec.push_back(&kLeptonAccSyst);
+    vec.push_back(&kHadronAccSyst);
+    return vec;
+  }
+
+
   //----------------------------------------------------------------------
   void RecoNCSyst::Shift(double sigma,
                          Restorer& restore,

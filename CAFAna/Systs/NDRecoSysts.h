@@ -75,4 +75,7 @@ namespace ana
   {
   };
   NDRecoSystVector GetNDRecoSysts();
+
+  std::vector<const ISyst*> GetNDAccSysts();
+
 }
