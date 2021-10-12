@@ -74,8 +74,10 @@ namespace ana
     }
 
     if(curr & Current::kNC){
-      assert(flav == Flavors::kAll && sign == Sign::kBoth); // Don't know how to calculate anything else
-      ret += fExtrap->NCComponent();
+      assert(flav == Flavors::kAll); // Don't know how to calculate anything else
+
+      if(sign & Sign::kNu)     ret += fExtrap->NCComponent();
+      if(sign & Sign::kAntiNu) ret += fExtrap->NCAntiComponent();
     }
 
     return ret;
@@ -127,11 +129,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  // NC components:
+  Spectrum PredictionExtrap::ComponentNCTotal() const 
+  {
+    return fExtrap->NCTotalComponent();
+  }
   Spectrum PredictionExtrap::ComponentNC() const
   {
     return fExtrap->NCComponent();
   }
-
+  Spectrum PredictionExtrap::ComponentNCAnti() const
+  {
+    return fExtrap->NCAntiComponent();
+  }
+  // End NC components.
   //----------------------------------------------------------------------
   void PredictionExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {

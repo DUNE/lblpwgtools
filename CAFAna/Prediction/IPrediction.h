@@ -89,10 +89,10 @@ namespace ana
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const;
 
-    virtual OscillatableSpectrum ComponentCC(int from, int to) const
-    {std::cout << "OscillatableSpectrum::ComponentCC() unimplemented" << std::endl; abort();}
-    virtual Spectrum ComponentNC() const
-    {std::cout << "OscillatableSpectrum::ComponentNC() unimplemented" << std::endl; abort();}
+    virtual OscillatableSpectrum ComponentCC(int from, int to) const;
+    virtual Spectrum ComponentNCTotal() const;
+    virtual Spectrum ComponentNC() const;
+    virtual Spectrum ComponentNCAnti() const;
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const;
   };
