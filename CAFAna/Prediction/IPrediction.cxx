@@ -31,6 +31,7 @@ namespace ana
 
     if(tag == "PredictionNoExtrap") return PredictionNoExtrap::LoadFrom(dir);
     if(tag == "PredictionNonSwapNoExtrap") return PredictionNonSwapNoExtrap::LoadFrom(dir);
+    if(tag == "DataPredictionNoExtrap") return DataPredictionNoExtrap::LoadFrom(dir);
 
     // Backwards compatibility
     if(tag == "PredictionInterp" ||

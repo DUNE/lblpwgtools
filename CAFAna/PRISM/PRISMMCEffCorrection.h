@@ -79,7 +79,7 @@ public:
   } 
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
-  void Write(TDirectory *dir);
+  void Write(TDirectory *dir) const;
 
 protected:
   PredictionInterp const * fNDunselected_293kA;

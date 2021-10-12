@@ -187,6 +187,7 @@ Spectrum DataPredictionNoExtrap::PredictComponent(osc::IOscCalculator *calc,
   }
   if (curr & Current::kNC) {
     assert(flav == Flavors::kAll);
+    assert(sign == Sign::kBoth);
     ret += fExtrap->NCComponent();
   }
 

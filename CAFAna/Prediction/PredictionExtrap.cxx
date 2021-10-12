@@ -63,7 +63,7 @@ namespace ana
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
       assert(sign == Sign::kBoth);   // Why would you want to split NCs out by sign?
-
+      std::cout << "NC Flav = " << flav << " & Sign = " << sign << std::endl;
       ret += fExtrap->NCComponent();
     }
 
