@@ -126,6 +126,27 @@ namespace ana
     // Default implementation: no treatment of systematics
     return PredictComponent(calc, flav, curr, sign);
   }
+ 
+  //----------------------------------------------------------------------
+  OscillatableSpectrum IPrediction::ComponentCC(int from, int to) const
+  {
+    std::cout << "WARNING! ComponentCC is unimplemented in IPrediction" << std::endl; abort();
+  }
+
+  Spectrum IPrediction::ComponentNCTotal() const
+  {
+    std::cout << "WARNING! ComponentNCTotal is unimplemented in IPrediction" << std::endl; abort();
+  }
+
+  Spectrum IPrediction::ComponentNC() const
+  {
+    std::cout << "WARNING! ComponentNC is unimplemented in IPrediction" << std::endl; abort();
+  }
+
+  Spectrum IPrediction::ComponentNCAnti() const
+  {
+    std::cout << "WARNING! ComponentNCAnti is unimplemented in IPrediction" << std::endl; abort();
+  }
 
   //----------------------------------------------------------------------
   void IPrediction::SaveTo(TDirectory*, const std::string&) const
