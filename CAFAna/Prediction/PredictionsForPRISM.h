@@ -159,10 +159,6 @@ public:
                                     Sign::Sign_t sign) const override;
 
 protected:
-  /*PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
-                    const Spectrum &_fSpectrumNueSwap)
-      : fSpectrumNonSwap(_fSpectrumNonSwap),
-        fSpectrumNueSwap(_fSpectrumNueSwap) {}*/
   PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
                     const Spectrum &_fSpectrumNueSwap,
                     const Spectrum &_fSpectrumRHCNonSwap,

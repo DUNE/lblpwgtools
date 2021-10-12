@@ -188,9 +188,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Channels[GetMatchChanShortName(ch)] = ch;
   }
 
-  std::vector<Spectrum> DataSpectra;
-  DataSpectra.reserve(Channels.size());
-
   for (auto const ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
@@ -201,7 +198,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
     std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
-    std::cout << "FD Config = " << DescribeConfig(FDConfig_enum) << std::endl; 
     std::cout << "FDfd Config = " << DescribeFDConfig(FDfdConfig_enum) << std::endl;
 
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
@@ -223,8 +219,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use. 
     auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
-    //auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->
-    //    PredictComponent(calc, Flavors::kAll, Current::kNC, Sign::kBoth);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     if (FarDetDataPred.NDimensions() == 1) {
       for (int bin_it = 1; bin_it <= DataPred->GetXaxis()->GetNbins(); bin_it++) {
@@ -246,64 +240,25 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Probably redundant now, may remove in the future.
     // Disappearance: non_swap oscillates numus away.
     // Appearance: non_swap looks at the intrinsic nues.
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc, 
-        (IsNueConfig(FDConfig_enum)
-        ? osc_to : osc_from),
-        osc_to)); 
-
-    TH1 *Data_nonswap = DataSpectra.back().ToTH1(POT_FD);
+    TH1 *Data_nonswap = state.FarDetData_nonswap[FDfdConfig_enum]
+                              ->Oscillated(calc, 
+                                           (IsNueConfig(FDConfig_enum) ? osc_to : osc_from), 
+                                           osc_to).ToTHX(POT_FD);
     Data_nonswap->Scale(1, "width");
     chan_dir->WriteTObject(Data_nonswap, "Data_nonswap_component");
+    Data_nonswap->SetDirectory(nullptr); 
 
     if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
-
-      DataSpectra.back() +=
-          state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from,
-                                                                osc_to);
-
       TH1 *Data_nueswap = state.FarDetData_nueswap[FDfdConfig_enum]
                               ->Oscillated(calc, osc_from, osc_to)
-                              .ToTH1(POT_FD);
+                              .ToTHX(POT_FD);
       if (Data_nueswap->Integral() > 0) {
         Data_nueswap->Scale(1, "width");
         chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
       }
       Data_nueswap->SetDirectory(nullptr);
     }
-
-    auto *Data = DataSpectra.back().ToTHX(POT_FD);
-    if (DataSpectra.back().NDimensions() == 1) {
-      for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
-        Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
-      }
-    } else if (DataSpectra.back().NDimensions() == 2) {
-      for (int x_it = 1; x_it <= Data->GetXaxis()->GetNbins(); x_it++) {
-        for (int y_it = 1; y_it <= Data->GetYaxis()->GetNbins(); y_it++) {
-          double be = sqrt(Data->GetBinContent(x_it, y_it));
-          Data->SetBinError(x_it, y_it, be);
-        }
-      }
-    }
-    Data->Scale(1, "width");
-    chan_dir->WriteTObject(Data, "Data_Total");
-    Data->SetDirectory(nullptr);
-
-    TH1 *FDSelTest = state.FarDetPredInterps[FDfdConfig_enum]->
-                       PredictComponentSyst(calc, shift, Flavors::kAll, 
-                                            Current::kBoth, Sign::kBoth).ToTH1(POT_FD);
-    FDSelTest->SetDirectory(nullptr);
-    FDSelTest->Scale(1, "width");
-    chan_dir->WriteTObject(FDSelTest,"FDSelTest");
-
-    for (auto &systs : state.FarDetPredInterps[FDfdConfig_enum]->
-                         GetAllSysts()) {
-      std::cout << "PredInterps has syst: " << systs->ShortName() << std::endl;
-
-    }
-
-    //state.FarDetPredInterps[FDfdConfig_enum]->DebugPlots(calc, "MaCCQE", Flavors::kAll,
-    //                                                     Current::kBoth, Sign::kBoth);
+    
     //-------------------------------------------------------------
 
     // Smearing matrices for ND and FD
@@ -324,7 +279,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetMC_NDFDEff(NDFDEffCorr); 
 
     if (use_PRISM) {
-      if (do_gauss) { // Gaussian spectra prediction
+      if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
             gauss_flux.first, gauss_flux.second, shift, ch.second.from);
         TH1 *PRISMPred =
@@ -351,8 +306,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
           fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
           dir->cd();
-        }
-      } else { // FD spectra prediction
+        } // End gauss prediction
+      } else { // FD spectra prediction - IMPLEMENTED!
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
         auto *PRISMPred = 
