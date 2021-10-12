@@ -238,13 +238,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     Channels[GetMatchChanShortName(ch)] = ch;
   }
 
-  std::vector<Spectrum> DataSpectra;
-  DataSpectra.reserve(Channels.size());
-
-  //std::vector<const IChiSqExperiment*> Expts;
+  // Vector of your different experiment objects which contribute to Chi2
   std::vector<std::unique_ptr<IChiSqExperiment>> Expts;
   Expts.reserve(Channels.size());
-
+  // Use reactor contraint.
   Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
 
   MultiExperiment CombExpts;
@@ -329,113 +326,162 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second, {0, 6}));
 
-    //Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
     CombExpts.Add(Expts.back().get());
-    //CombExpts = MultiExperiment(Expts);
   
-  } // Want this here eventually!  
+  }   
 
-    dir->cd();
+  dir->cd();
 
-    std::vector<double> x_scan;
-    std::vector<double> y_scan;
-    std::unique_ptr <TH1D> scan_hist_1D;
-    std::unique_ptr <TH2D> scan_hist_2D;
+  std::vector<double> x_scan;
+  std::vector<double> y_scan;
+  std::unique_ptr <TH1D> scan_hist_1D;
+  std::unique_ptr <TH2D> scan_hist_2D;
 
-    std::cout << "Create histograms to fill with minimisation result." << std::endl;
+  std::cout << "Create histograms to fill with minimisation result." << std::endl;
 
-    if (nparams == 1) {
+  if (nparams == 1) {
+    const int NXSteps = steps.at(0).at(0);
+    const double x_low_bound = dmsq32_scale ? steps.at(0).at(1) * 1000 : steps.at(0).at(1);
+    const double x_high_bound = dmsq32_scale ? steps.at(0).at(2) * 1000 : steps.at(0).at(2);
+    std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
+    scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
+                                           NXSteps, x_low_bound, x_high_bound);
 
-      const int NXSteps = steps.at(0).at(0);
-      const double x_low_bound = dmsq32_scale ? steps.at(0).at(1) * 1000 : steps.at(0).at(1);
-      const double x_high_bound = dmsq32_scale ? steps.at(0).at(2) * 1000 : steps.at(0).at(2);
-      std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
-      scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
-        NXSteps, x_low_bound, x_high_bound);
+    // place the scan points in vector
+    for (int i = 0; i < scan_hist_1D->GetNbinsX(); i++) {
+      x_scan.emplace_back(scan_hist_1D->GetXaxis()->GetBinCenter(i + 1));
+    }
+    // else its a 2D hist
+  } else {
 
-      // place the scan points in vector
-      for (int i = 0; i < scan_hist_1D->GetNbinsX(); i++) {
-        x_scan.emplace_back(scan_hist_1D->GetXaxis()->GetBinCenter(i + 1));
+    const int NXSteps = steps.at(0).at(0);
+    const double x_low_bound = steps.at(0).at(1);
+    const double x_high_bound = steps.at(0).at(2);
+    const int NYSteps = steps.at(1).at(0);
+    const double y_low_bound = dmsq32_scale ? steps.at(1).at(1) * 1000 : steps.at(1).at(1);
+    const double y_high_bound = dmsq32_scale ? steps.at(1).at(2) * 1000 : steps.at(1).at(2);
+    std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
+    std::cout << NYSteps << ", " << y_low_bound << ", " << y_high_bound << std::endl;
+    scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
+                                          NXSteps, x_low_bound, x_high_bound,
+                                          NYSteps, y_low_bound, y_high_bound);
+
+    // place scan points in vector
+    for (int i = 0; i < scan_hist_2D->GetNbinsX(); i++)
+      x_scan.emplace_back(scan_hist_2D->GetXaxis()->GetBinCenter(i + 1));
+    for (int i = 0; i < scan_hist_2D->GetNbinsY(); i++)
+      y_scan.emplace_back(scan_hist_2D->GetYaxis()->GetBinCenter(i + 1));
+  }
+
+  const IFitVar *ssTh23 = &kFitSinSqTheta23;
+  const IFitVar *dmsq32 = &kFitDmSq32Scaled;
+  const IFitVar *dCPpi = &kFitDeltaInPiUnits; 
+  const IFitVar *ssTh13 = &kFitSinSq2Theta13;
+
+
+  if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSqTheta23)
+      != scan_vars.end()) {
+    std::cout << "found ssth23" << std::endl;
+    ssth23_scan = true;
+  }
+  if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDmSq32NHScaled)
+      != scan_vars.end()) {
+    std::cout << "found dmsq32" << std::endl;
+    dmsq32_scan = true;
+  }
+  if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDeltaInPiUnits)
+      != scan_vars.end()) {
+    std::cout << "found dCP in pi units" << std::endl; 
+    dcp_scan = true;
+  }
+  if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSq2Theta13)
+      != scan_vars.end()) {
+    std::cout << "found ssth13" << std::endl;
+    ssth13_scan = true;
+  }
+
+  //-----------------------
+  // Do the minimization 1D
+  //-----------------------
+  if (nparams == 1) {
+    for (const auto &x : x_scan) {
+      if (ssth23_scan) {
+        ssTh23->SetValue(calc, x);
+      } else if (dmsq32_scan) {
+        dmsq32->SetValue(calc, x);
+      } else if (dcp_scan) {
+        dCPpi->SetValue(calc, x);
+      } else if (ssth13_scan) {
+        ssTh13->SetValue(calc, x);
       }
-      // else its a 2D hist
-    } else {
 
-      const int NXSteps = steps.at(0).at(0);
-      const double x_low_bound = steps.at(0).at(1);
-      const double x_high_bound = steps.at(0).at(2);
-      const int NYSteps = steps.at(1).at(0);
-      const double y_low_bound = dmsq32_scale ? steps.at(1).at(1) * 1000 : steps.at(1).at(1);
-      const double y_high_bound = dmsq32_scale ? steps.at(1).at(2) * 1000 : steps.at(1).at(2);
-      std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
-      std::cout << NYSteps << ", " << y_low_bound << ", " << y_high_bound << std::endl;
-      scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
-        NXSteps, x_low_bound, x_high_bound,
-        NYSteps, y_low_bound, y_high_bound);
-
-      // place scan points in vector
-      for (int i = 0; i < scan_hist_2D->GetNbinsX(); i++)
-        x_scan.emplace_back(scan_hist_2D->GetXaxis()->GetBinCenter(i + 1));
-      for (int i = 0; i < scan_hist_2D->GetNbinsY(); i++)
-        y_scan.emplace_back(scan_hist_2D->GetYaxis()->GetBinCenter(i + 1));
+      std::cout << "dmsq32 = " << calc->GetDmsq32() << std::endl;
+      std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
+      std::cout << "dCP = " << calc->GetdCP() << std::endl;
+      std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
+ 
+      auto calc_fit = calc->Copy();
+ 
+      std::cerr << "[INFO]: Beginning fit. ";
+      auto start_fit = std::chrono::system_clock::now();
+      MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
+      SystShifts bestSysts;
+      //const SeedList &seedPts = SeedList(); //oscSeeds
+      double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+      // fill hist
+      scan_hist_1D->Fill(x, chi);
+      auto end_fit = std::chrono::system_clock::now();
+      std::cerr << "[FIT]: Finished fit in "
+                << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
+                                                                    start_fit).count()
+                << " s after " << fitter.GetNFCN() << " iterations."
+                << std::endl;
     }
-
-    const IFitVar *ssTh23 = &kFitSinSqTheta23;
-    const IFitVar *dmsq32 = &kFitDmSq32Scaled;
-    const IFitVar *dCPpi = &kFitDeltaInPiUnits; 
-    const IFitVar *ssTh13 = &kFitSinSq2Theta13;
-
-
-    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSqTheta23)
-        != scan_vars.end()) {
-      std::cout << "found ssth23" << std::endl;
-      ssth23_scan = true;
-    }
-    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDmSq32NHScaled)
-        != scan_vars.end()) {
-      std::cout << "found dmsq32" << std::endl;
-      dmsq32_scan = true;
-    }
-    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDeltaInPiUnits)
-        != scan_vars.end()) {
-      std::cout << "found dCP in pi units" << std::endl; 
-      dcp_scan = true;
-    }
-    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSq2Theta13)
-        != scan_vars.end()) {
-      std::cout << "found ssth13" << std::endl;
-      ssth13_scan = true;
-    }
-
-    //-----------------------
-    // Do the minimization 1D
-    //-----------------------
+    // Sometimes try 1D fit interactively, so keep this.
+    // Get minimum ChiSq value (LL value)
+    double minchi = 1e10;
+    int minx, miny;
     if (nparams == 1) {
-      for (const auto &x : x_scan) {
-        if (ssth23_scan) {
-          ssTh23->SetValue(calc, x);
-        } else if (dmsq32_scan) {
-          dmsq32->SetValue(calc, x);
-        } else if (dcp_scan) {
-          dCPpi->SetValue(calc, x);
-        } else if (ssth13_scan) {
-          ssTh13->SetValue(calc, x);
+      //double minchi = 1e10;
+      minx = scan_hist_1D->GetNbinsX() / 2;
+      for (int x = 1; x <= scan_hist_1D->GetNbinsX(); ++x) {
+        const double chi = scan_hist_1D->GetBinContent(x);
+        if (chi < minchi) {
+          minchi = chi;
+          minx = x;
         }
-
-        std::cout << "dmsq32 = " << calc->GetDmsq32() << std::endl;
-        std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
-        std::cout << "dCP = " << calc->GetdCP() << std::endl;
-        std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
- 
-        auto calc_fit = calc->Copy();
- 
+      }
+    }
+    if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    std::cout << "Bestfit parameter values: " <<
+      scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
+    
+    dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
+  }
+  //-----------------------
+  // Do the minimization 2D
+  //-----------------------
+  else if (param_names.size() > 1) {
+    for (const auto &x : x_scan) {
+      for (const auto &y : y_scan) {
+        std::cout << "x = " << x << ", y = " << y << std::endl;
+        if (ssth23_scan) ssTh23->SetValue(calc, x); // ssth23 always on x axis
+        if (dmsq32_scan) dmsq32->SetValue(calc, y); // dmsq32 always on y axis
+        if (dcp_scan) dCPpi->SetValue(calc, x); // dCP always on x axis
+        if (ssth13_scan) ssTh13->SetValue(calc, y); // ssth13 always on y axis
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
-        MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
+
+        MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); 
         SystShifts bestSysts;
-        //const SeedList &seedPts = SeedList(); //oscSeeds
-        double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+        //const SeedList &seedPts = SeedList();
+        
+        double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
         // fill hist
-        scan_hist_1D->Fill(x, chi);
+        scan_hist_2D->Fill(x, y, chi);
         auto end_fit = std::chrono::system_clock::now();
         std::cerr << "[FIT]: Finished fit in "
                   << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
@@ -443,90 +489,11 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                   << " s after " << fitter.GetNFCN() << " iterations."
                   << std::endl;
       }
-      // Get minimum ChiSq value (LL value)
-      double minchi = 1e10;
-      int minx, miny;
-      if (nparams == 1) {
-        //double minchi = 1e10;
-        minx = scan_hist_1D->GetNbinsX() / 2;
-        for (int x = 1; x <= scan_hist_1D->GetNbinsX(); ++x) {
-          const double chi = scan_hist_1D->GetBinContent(x);
-          if (chi < minchi) {
-            minchi = chi;
-            minx = x;
-          }
-        }
-      }
-      if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-      else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-      else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-      else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-      std::cout << "Bestfit parameter values: " <<
-        scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
-      double BestLL = minchi;
-      //for (int x = 0; x < scan_hist_1D->GetNbinsX(); x++) {
-      //    scan_hist_1D->SetBinContent(x + 1, scan_hist_1D->GetBinContent(x + 1) - BestLL);
-      //}
-      dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
     }
-    //-----------------------
-    // Do the minimization 2D
-    //-----------------------
-    else if (param_names.size() > 1) {
-      for (const auto &x : x_scan) {
-        for (const auto &y : y_scan) {
-          std::cout << "x = " << x << ", y = " << y << std::endl;
-          if (ssth23_scan) ssTh23->SetValue(calc, x); // ssth23 always on x axis
-          if (dmsq32_scan) dmsq32->SetValue(calc, y); // dmsq32 always on y axis
-          if (dcp_scan) dCPpi->SetValue(calc, x); // dCP always on x axis
-          if (ssth13_scan) ssTh13->SetValue(calc, y); // ssth13 always on y axis
-          std::cerr << "[INFO]: Beginning fit. ";
-          auto start_fit = std::chrono::system_clock::now();
+    // Simply write Chi2 2D histogram
+    dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
+  }
 
-          MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); //MinuitFitter::kNormal
-          SystShifts bestSysts;
-          const SeedList &seedPts = SeedList(); //oscSeeds
-          // , {}, MinuitFitter::kVerbose
-          double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
-          // fill hist
-          scan_hist_2D->Fill(x, y, chi);
-          auto end_fit = std::chrono::system_clock::now();
-          std::cerr << "[FIT]: Finished fit in "
-                    << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
-                                                                        start_fit).count()
-                    << " s after " << fitter.GetNFCN() << " iterations."
-                    << std::endl;
-        }
-      }
-      // Get minimum ChiSq value (LL value)
-      double minchi = 1e10;
-      int minx = scan_hist_2D->GetNbinsX() / 2;
-      int miny = scan_hist_2D->GetNbinsY() / 2;
-      for (int x = 1; x <= scan_hist_2D->GetNbinsX(); ++x) {
-        for (int y = 1; y <= scan_hist_2D->GetNbinsY(); ++y) {
-          const double chi = scan_hist_2D->GetBinContent(x, y);
-          if (chi < minchi) {
-            minchi = chi;
-            minx = x;
-            miny = y;
-          }
-        }
-      }
-
-      ssTh23->SetValue(calc, scan_hist_2D->GetXaxis()->GetBinCenter(minx));
-      dmsq32->SetValue(calc, scan_hist_2D->GetYaxis()->GetBinCenter(miny));
-      std::cout << "Bestfit parameter values: " << ssTh23->GetValue(calc) <<
-                ", " << dmsq32->GetValue(calc) << std::endl;
-      double BestLL = minchi;
-      //for (int x = 0; x < scan_hist_2D->GetNbinsX(); x++) {
-      //  for (int y = 0; y < scan_hist_2D->GetNbinsY(); y++) {
-      //    scan_hist_2D->SetBinContent(x + 1, y + 1,
-      //      scan_hist_2D->GetBinContent(x + 1, y + 1) - BestLL);
-      //  }
-      //}
-      dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
-    }
-  //}
   // Write total output file
   f.Write();
 }

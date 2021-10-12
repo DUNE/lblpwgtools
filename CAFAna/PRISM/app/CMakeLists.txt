@@ -3,7 +3,7 @@ set(scripts_to_build
   OffAxisEventRates
   OffAxisNDCAFCombiner
   PRISMPrediction
-  PRISM_NumuDisp_dChi2Scan
+  PRISM_4Flavour_dChi2Scan
   PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
