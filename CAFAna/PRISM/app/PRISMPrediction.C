@@ -223,6 +223,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use. 
     auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    //auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->
+    //    PredictComponent(calc, Flavors::kAll, Current::kNC, Sign::kBoth);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     if (FarDetDataPred.NDimensions() == 1) {
       for (int bin_it = 1; bin_it <= DataPred->GetXaxis()->GetNbins(); bin_it++) {
@@ -286,6 +288,22 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Data->Scale(1, "width");
     chan_dir->WriteTObject(Data, "Data_Total");
     Data->SetDirectory(nullptr);
+
+    TH1 *FDSelTest = state.FarDetPredInterps[FDfdConfig_enum]->
+                       PredictComponentSyst(calc, shift, Flavors::kAll, 
+                                            Current::kBoth, Sign::kBoth).ToTH1(POT_FD);
+    FDSelTest->SetDirectory(nullptr);
+    FDSelTest->Scale(1, "width");
+    chan_dir->WriteTObject(FDSelTest,"FDSelTest");
+
+    for (auto &systs : state.FarDetPredInterps[FDfdConfig_enum]->
+                         GetAllSysts()) {
+      std::cout << "PredInterps has syst: " << systs->ShortName() << std::endl;
+
+    }
+
+    //state.FarDetPredInterps[FDfdConfig_enum]->DebugPlots(calc, "MaCCQE", Flavors::kAll,
+    //                                                     Current::kBoth, Sign::kBoth);
     //-------------------------------------------------------------
 
     // Smearing matrices for ND and FD
@@ -294,7 +312,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(SmearMatrices); // rm &
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices); 
     // MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
                                 state.NDSelTruePredInterps[NDConfig_293kA].get(),
@@ -303,7 +321,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(NDFDEffCorr); // rm &
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr); 
 
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction
@@ -384,8 +402,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           }
 
           fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-          SmearMatrices.Write(chan_dir->mkdir("Unfold_Matrices"));
-          NDFDEffCorr.Write(chan_dir->mkdir("MCEfficiency"));     
+          state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"));
+          state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
 
           dir->cd();
         }

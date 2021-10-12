@@ -91,7 +91,7 @@ public:
                          std::vector<std::vector<double>> NDefficiency = {{}},
                          std::vector<double> FDefficiency = {}) const;
 
-  void Write(TDirectory *dir);
+  void Write(TDirectory *dir) const;
 
 protected:
 

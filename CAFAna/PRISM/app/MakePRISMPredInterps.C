@@ -668,6 +668,7 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
   static osc::NoOscillations no_osc;
+  static osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
@@ -679,7 +680,6 @@ int main(int argc, char const *argv[]) {
     if (!IsND) {
       fd_it = GetFDConfig(it);
     }
-    std::cout << "fd_it = " << fd_it << std::endl;
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
 
     if (!FileLoaders[it]) {
@@ -710,16 +710,16 @@ int main(int argc, char const *argv[]) {
           WeightVars[it] * slice_width_weight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign seems to fail when I include this?
+          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign); 
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           NDObservedSpectraAxis,
           OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * slice_width_weight); 
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign
+          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign); 
     
       // PredInterps for ND smearing matrix
       // Only need to do this for 293 kA
@@ -737,8 +737,8 @@ int main(int argc, char const *argv[]) {
               WeightVars[it]);
         }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
-            los, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift
-            ); //PredictionInterp::kSplitBySign
+            los, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift,
+            PredictionInterp::kSplitBySign); 
       }
       // Add another ND unselected spectrum for MC eff correction
       // Use the same axis as the ND DATA
@@ -746,18 +746,19 @@ int main(int argc, char const *argv[]) {
       NDUnselTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), //&&
-          //kIsReco, // Remove events not reconstructed
+          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift);
+          los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
       // ND True Selected Spectrum
       NDSelTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA), 
           AnalysisCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift);
+          los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign);
             
     } else if (!IsND && !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
 
@@ -778,8 +779,8 @@ int main(int argc, char const *argv[]) {
                 WeightVars[it]);
 
         MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-            los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift
-            ); // PredictionInterp::kSplitBySign
+            los_flux, calc, *MatchPredGens[it], Loaders_bm, kNoShift, 
+            PredictionInterp::kSplitBySign); 
       }
 
       size_t non_swap_it = GetConfigNonSwap(it);
@@ -807,21 +808,21 @@ int main(int argc, char const *argv[]) {
       FarDetPredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjectionFD, AnalysisCuts[it], AnaWeightVars[it]);
       FarDetPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift
-          ); // PredictionInterp::kSplitBySign
+          los, calc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift, 
+          PredictionInterp::kSplitBySign); 
 
       SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
           axes.XProjectionFD, OnAxisSelectionCuts[it], AnaWeightVars[it]);
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift
-          ); // PredictionInterp::kSplitBySign
+          los, calc, *SelPredGens[it], Loaders_bm, kNoShift, 
+          PredictionInterp::kSplitBySign); 
 
       // Matrix of ERec v ETrue for FD
       FDMatrixPredGens[fd_it] = std::make_unique<FDNoOscPredictionGenerator>(
         ERecETrueAxisFD, AnalysisCuts[it], AnaWeightVars[it]); 
       FDMatrixPredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift
-          ); //PredictionInterp::kSplitBySign
+          los, calc, *FDMatrixPredGens[fd_it], Loaders_bm, kNoShift, 
+          PredictionInterp::kSplitBySign); 
  
       // True energy FD spectrum with obs binning for MC efficiency correction
       FDUnselTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
@@ -830,12 +831,14 @@ int main(int argc, char const *argv[]) {
           (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
           WeightVars[it]);
       FDUnselTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FDUnselTruePredGens[fd_it], Loaders_bm, kNoShift);   
+          los, calc, *FDUnselTruePredGens[fd_it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign); 
       // FD Selected True Spectrum
       FDSelTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           FDTrueEnergyObsBins, AnalysisCuts[it], WeightVars[it]);
       FDSelTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *FDSelTruePredGens[fd_it], Loaders_bm, kNoShift);
+          los, calc, *FDSelTruePredGens[fd_it], Loaders_bm, kNoShift,
+          PredictionInterp::kSplitBySign); 
 
     }
   }

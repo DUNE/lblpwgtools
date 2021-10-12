@@ -109,10 +109,10 @@ if [ ${IS_FD} == "1" ]; then
       INPFILE="${INPFILE} -F-nu ${i}"
     elif echo ${i} | grep "nueswap"; then
       echo "Found nueswap file: ${i}";
-      INPFILE="${INPFILE} -e ${i}"
+      INPFILE="${INPFILE} -Fe-nu ${i}"
     elif echo ${i} | grep "tauswap"; then
       echo "Found tauswap file: ${i}";
-      INPFILE="${INPFILE} -t ${i}"
+      INPFILE="${INPFILE} -Ft-nu ${i}"
     fi;
   done
   
