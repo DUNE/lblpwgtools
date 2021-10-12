@@ -112,7 +112,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::string xparam_name = param_names[0];
   std::string yparam_name;
   if (param_names.size() > 1) yparam_name = param_names[1];
-  bool dmsq32_scan(false), ssth23_scan(false), dcp_scan(false);
+  bool dmsq32_scan(false), ssth23_scan(false), dcp_scan(false), ssth13_scan(false);
 
   // vector<const IFitVar *> of parameters to scan
   std::vector<const IFitVar *> scan_vars = GetOscVars(param_names);
@@ -382,6 +382,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     const IFitVar *ssTh23 = &kFitSinSqTheta23;
     const IFitVar *dmsq32 = &kFitDmSq32Scaled;
     const IFitVar *dCPpi = &kFitDeltaInPiUnits; 
+    const IFitVar *ssTh13 = &kFitSinSq2Theta13;
+
 
     if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSqTheta23)
         != scan_vars.end()) {
@@ -398,6 +400,11 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "found dCP in pi units" << std::endl; 
       dcp_scan = true;
     }
+    if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSq2Theta13)
+        != scan_vars.end()) {
+      std::cout << "found ssth13" << std::endl;
+      ssth13_scan = true;
+    }
 
     //-----------------------
     // Do the minimization 1D
@@ -410,12 +417,15 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
           dmsq32->SetValue(calc, x);
         } else if (dcp_scan) {
           dCPpi->SetValue(calc, x);
+        } else if (ssth13_scan) {
+          ssTh13->SetValue(calc, x);
         }
 
-        std::cout << "dMsq32 = " << calc->GetDmsq32() << std::endl;
+        std::cout << "dmsq32 = " << calc->GetDmsq32() << std::endl;
         std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
         std::cout << "dCP = " << calc->GetdCP() << std::endl;
-       
+        std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
+ 
         auto calc_fit = calc->Copy();
  
         std::cerr << "[INFO]: Beginning fit. ";
@@ -450,6 +460,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
       else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
       else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+      else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
       std::cout << "Bestfit parameter values: " <<
         scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
       double BestLL = minchi;
@@ -465,8 +476,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       for (const auto &x : x_scan) {
         for (const auto &y : y_scan) {
           std::cout << "x = " << x << ", y = " << y << std::endl;
-          ssTh23->SetValue(calc, x);
-          dmsq32->SetValue(calc, y);
+          if (ssth23_scan) ssTh23->SetValue(calc, x); // ssth23 always on x axis
+          if (dmsq32_scan) dmsq32->SetValue(calc, y); // dmsq32 always on y axis
+          if (dcp_scan) dCPpi->SetValue(calc, x); // dCP always on x axis
+          if (ssth13_scan) ssTh13->SetValue(calc, y); // ssth13 always on y axis
           std::cerr << "[INFO]: Beginning fit. ";
           auto start_fit = std::chrono::system_clock::now();
 
