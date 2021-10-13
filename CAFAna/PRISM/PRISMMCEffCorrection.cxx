@@ -38,6 +38,25 @@ MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel_293kA,
 
 //----------------------------------------------------
 
+MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) :
+                                 hNDunselected_293kA(nullptr), 
+                                 hNDselected_293kA(nullptr), 
+                                 hNDunselected_280kA(nullptr), 
+                                 hNDselected_280kA(nullptr), 
+                                 hFDunselected(nullptr), 
+                                 hFDselected(nullptr),  
+                                 fDoneOnce(EffCorr.fDoneOnce) {
+
+  fNDunselected_293kA = EffCorr.fNDunselected_293kA;
+  fNDselected_293kA = EffCorr.fNDselected_293kA;
+  fNDunselected_280kA = EffCorr.fNDunselected_280kA;
+  fNDselected_280kA = EffCorr.fNDselected_280kA;
+  fFDunselected = EffCorr.fFDunselected;
+  fFDselected = EffCorr.fFDselected;
+}
+
+//----------------------------------------------------
+
 MCEffCorrection::~MCEffCorrection() {
   HistCache::Delete(hNDunselected_293kA);
   HistCache::Delete(hNDselected_293kA);
@@ -177,7 +196,7 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
 
 //-----------------------------------------------------------
 
-void MCEffCorrection::Write(TDirectory *dir) {
+void MCEffCorrection::Write(TDirectory *dir) const {
   dir->WriteTObject(hNDunselected_293kA, "NDUnselected_293kA");
   dir->WriteTObject(hNDselected_293kA, "NDSelected_293kA");
   dir->WriteTObject(hNDunselected_280kA, "NDUnselected_280kA");

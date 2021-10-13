@@ -1,3 +1,5 @@
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 
@@ -220,7 +222,8 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
       fOffPredictionAxis, cut && kCut280kARun, wei * slice_width_weight));
 
   NDPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
-                                                    *fPredGens.back(), loaders);
+                                                    *fPredGens.back(), loaders, kNoShift, 
+                                                    PredictionInterp::kSplitBySign);
 
   std::unique_ptr<PredictionInterp> &NDPrediction_280kA =
       GetNDPrediction(NDChannel, 280);
@@ -234,8 +237,9 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
       f280kAPredictionAxis, cut && kSel280kARun,
       wei * slice_width_weight_280kA)); 
 
-  NDPrediction_280kA = std::make_unique<PredictionInterp>(
-      systlist, &kNoOsc, *fPredGens.back(), loaders);
+  NDPrediction_280kA = std::make_unique<PredictionInterp>(systlist, &kNoOsc, 
+                                                          *fPredGens.back(), loaders, kNoShift,
+                                                          PredictionInterp::kSplitBySign);
 }
 
 ///\brief Call to add a FD MC component
@@ -257,6 +261,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                                     PRISM::BeamChan FDChannel) {
 
   osc::NoOscillations kNoOsc;
+  osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
 
   std::unique_ptr<PredictionInterp> &FDPrediction = GetFDPrediction(FDChannel);
   if (&FDPrediction == &kNoSuchFDPredictionSpectrum) {
@@ -267,8 +272,9 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
   fPredGens.push_back(
       std::make_unique<NoExtrapPredictionGenerator>(fAnalysisAxisFD, cut, wei));
-  FDPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
-                                                    *fPredGens.back(), loaders);
+  FDPrediction = std::make_unique<PredictionInterp>(systlist, calc,
+                                                    *fPredGens.back(), loaders, kNoShift,
+                                                    PredictionInterp::kSplitBySign);
 
   std::unique_ptr<PredictionInterp> &FDUnOscWeightedSigPrediction =
       GetFDUnOscWeightedSigPrediction(FDChannel);
@@ -280,11 +286,9 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
   // Prediction for MC correction. Make sure there is no WSB!
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
-      fFluxMatcherCorrectionAxes, 
-      cut /*&& ((FDChannel.mode == BeamMode::kNuMode) ? !kIsAntiNu : kIsAntiNu)*/, 
-      wei)); 
+      fFluxMatcherCorrectionAxes, cut, wei)); 
   FDUnOscWeightedSigPrediction = std::make_unique<PredictionInterp>(
-      systlist, &kNoOsc, *fPredGens.back(), loaders);
+      systlist, calc, *fPredGens.back(), loaders, kNoShift, PredictionInterp::kSplitBySign); 
 
   // Prediction to oscillate numus by appearance probability.
   std::unique_ptr<PredictionInterp> &FDNonSwapAppOscPrediction =
@@ -296,7 +300,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
   fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>( 
       fTrueAnalysisAxis, kFDNumuCut, wei)); // fAnalysisAxisFD
   FDNonSwapAppOscPrediction = std::make_unique<PredictionInterp>(
-      systlist, &kNoOsc, *fPredGens.back(), loaders);
+      systlist, calc, *fPredGens.back(), loaders, kNoShift, PredictionInterp::kSplitBySign); 
  
   // Prediction to get oscillate nue appearance spectrum.
   std::unique_ptr<PredictionInterp> &FDNueSwapAppOscPrediction =
@@ -307,8 +311,8 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                                   false); // Is Nue.
   fPredGens.push_back( // fAnalysisAxisFD
       std::make_unique<NoExtrapPredictionGenerator>(fTrueAnalysisAxis, kFDNueCut, wei));
-  FDNueSwapAppOscPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
-                                                                 *fPredGens.back(), loaders);  
+  FDNueSwapAppOscPrediction = std::make_unique<PredictionInterp>(
+      systlist, calc, *fPredGens.back(), loaders, kNoShift, PredictionInterp::kSplitBySign);  
 }
 
 //-----------------------------------------------
@@ -610,13 +614,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
                                ? Flavors::kNuEToNuMu
                                : Flavors::kNuEToNuE;
   
-  PRISMOUT("\n\tNDSigFlavor: "
+  /*PRISMOUT("\n\tNDSigFlavor: "
            << NDSigFlavor << "\n\tNDSigSign: " << NDSigSign
            << "\n\tNDWrongSign: " << NDWrongSign << "\n\tNDWrongFlavor: "
            << NDWrongFlavor << "\n\tFDSigFlavor: " << FDSigFlavor
            << "\n\tFDSigSign: " << FDSigSign << "\n\tFDWrongSign: "
            << FDWrongSign << "\n\tFDWrongFlavor: " << FDWrongFlavor
-           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);
+           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);*/
 
   // Using maps for non-default constructible classes is awful...
   std::map<PredictionPRISM::PRISMComponent, ReweightableSpectrum> NDComps;
@@ -928,7 +932,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   //------------------------------------------------------------
   //------------------------------------------------------------
   // Repeat extrapolation for MC for debugging & 'fake data' studies
-  if (NDComps.count(kNDSig_293kA)) {
+  if (NDComps.count(kNDSig_293kA) && fVaryNDFDMCData) {
     
     fNDFD_Matrix->ExtrapolateNDtoFD(NDComps.at(kNDSig2D_293kA), NDPOT, 293,
                                     UnRunPlannedLinearCombination_293kA.get(),

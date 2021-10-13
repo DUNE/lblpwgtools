@@ -62,9 +62,9 @@ namespace ana
     }
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
-      assert(sign == Sign::kBoth);   // Why would you want to split NCs out by sign?
 
-      ret += fExtrap->NCComponent();
+      if(sign & Sign::kNu)     ret += fExtrap->NCComponent();
+      if(sign & Sign::kAntiNu) ret += fExtrap->NCAntiComponent();
     }
 
     return ret;
@@ -96,11 +96,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  // NC components:
+  Spectrum PredictionExtrap::ComponentNCTotal() const 
+  {
+    return fExtrap->NCTotalComponent();
+  }
   Spectrum PredictionExtrap::ComponentNC() const
   {
     return fExtrap->NCComponent();
   }
-
+  Spectrum PredictionExtrap::ComponentNCAnti() const
+  {
+    return fExtrap->NCAntiComponent();
+  }
+  // End NC components.
   //----------------------------------------------------------------------
   void PredictionExtrap::SaveTo(TDirectory* dir) const
   {

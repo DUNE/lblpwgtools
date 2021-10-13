@@ -50,6 +50,8 @@ public:
               PredictionInterp const *FD,
               double reg, bool optreg = false);
 
+  NDFD_Matrix(const NDFD_Matrix &MatPreds);
+
   // Normalise the ETrue column to efficiency in ND and FD matrices
   void NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
                       std::vector<double> NDefficiency,
@@ -89,7 +91,7 @@ public:
                          std::vector<std::vector<double>> NDefficiency = {{}},
                          std::vector<double> FDefficiency = {}) const;
 
-  void Write(TDirectory *dir);
+  void Write(TDirectory *dir) const;
 
 protected:
 

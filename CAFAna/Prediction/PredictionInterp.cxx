@@ -413,7 +413,7 @@ namespace ana
                    Sign::Sign_t sign,
                    CoeffsType type) const
   {
-    if(fSplitBySign && sign == Sign::kBoth){
+    if(fSplitBySign && sign == Sign::kBoth /*&& curr != Current::kNC*/){ // WARNING: TEST NC Cut!
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+
               ShiftedComponent(calc, hash, shift, flav, curr, Sign::kNu,     type));
     }

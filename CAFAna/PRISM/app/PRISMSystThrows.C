@@ -276,7 +276,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               state.FDMatrixPredInterps[FDConfig_enum].get(),
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices);
     // MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
                                 state.NDSelTruePredInterps[kND_293kA_nu].get(),
@@ -285,7 +285,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr);
     std::cout << "Done. Now do syst throws." << std::endl;
 
     if (use_PRISM) {

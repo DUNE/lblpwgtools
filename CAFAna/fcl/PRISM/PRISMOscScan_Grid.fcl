@@ -6,9 +6,7 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_FluxFullXSecList_15Jun21.root
-
-	#PRISMState_EVisReco_FluxXSecSyst_SelMat_9Jun21.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_4Flavour_EVisReco_Sel_tauswap_15Sep21.root
 
 	projection_name: EVisReco
 	use_PRISM: true
@@ -21,15 +19,34 @@ BasicPred: {
 		match_conditioning: [
 			{
 			chan: @local::FitChannels.Numu_disp
-			energy_range: [0, 6]
-			reg_factor_293kA: 2.5E-17 # 2.49E-17
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17 
 			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
 			}
 		]
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
 			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
 		}
 		Use_EventRateMatching: true
                 reg_factor_extrap: 1E-30
@@ -38,6 +55,7 @@ BasicPred: {
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 	
 	samples: @local::FitChannels.Numu_disp 
+	#samples: @local::FitChannels.DispJoint
 }
 
 # Just an example below now, not used
@@ -47,7 +65,7 @@ scansEG: [
 	{
 		@table::BasicPred
 		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		scan_params: @local::ScanDefinitions.dmsq23_coarse
 		free_syst_params: @local::nuisance_parameters.xsec_total
 		output_dir: "xsec_1.0Em16"
 	},
@@ -55,7 +73,7 @@ scansEG: [
 	{
 		@table::BasicPred
 		PRISM.match_conditioning[0].reg_factor_293kA: 2.5E-17
-		#scan_params: @local::ScanDefinitions.dmsq23_coarse
+		scan_params: @local::ScanDefinitions.dmsq23_coarse
 		free_syst_params: @local::nuisance_parameters.xsec_total
 		output_dir: "xsec_2.5Em17"
 	},

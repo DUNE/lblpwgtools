@@ -22,7 +22,10 @@ namespace ana
                                       Sign::Sign_t sign) const override;
 
     OscillatableSpectrum ComponentCC(int from, int to) const override;
+    // NC components:
+    Spectrum ComponentNCTotal()  const override;
     Spectrum ComponentNC() const override;
+    Spectrum ComponentNCAnti()   const override;
 
     virtual void SaveTo(TDirectory* dir) const override;
     static std::unique_ptr<PredictionExtrap> LoadFrom(TDirectory* dir);

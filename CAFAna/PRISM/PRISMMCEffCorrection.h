@@ -51,6 +51,9 @@ public:
                   PredictionInterp const * FDunsel,
                   PredictionInterp const * FDsel);
 
+  // Copy constructor
+  MCEffCorrection(const MCEffCorrection &EffCorr);
+
   ~MCEffCorrection();
 
   // Fills NDefficiency and FDefficiency, taking selected
@@ -76,7 +79,7 @@ public:
   } 
   std::vector<double> GetFDefficiency() const { return FDefficiency; }
 
-  void Write(TDirectory *dir);
+  void Write(TDirectory *dir) const;
 
 protected:
   PredictionInterp const * fNDunselected_293kA;

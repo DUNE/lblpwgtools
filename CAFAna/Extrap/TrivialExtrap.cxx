@@ -36,13 +36,19 @@ namespace ana
     fTauFromMu    (loaderNuTau,   axis, cut && kIsTauFromMu && !kIsAntiNu, shift, wei),
     fTauFromMuAnti(loaderNuTau,   axis, cut && kIsTauFromMu &&  kIsAntiNu, shift, wei),
 
-    fNC           (loaderNonswap, axis, cut && kIsNC,                      shift, wei)
+    fNCTot        (loaderNonswap, axis, cut && kIsNC                     , shift, wei),
+    fNC           (loaderNonswap, axis, cut && kIsNC        && !kIsAntiNu, shift, wei),
+    fNCAnti       (loaderNonswap, axis, cut && kIsNC        &&  kIsAntiNu, shift, wei)
   {
     // All swapped files are equally valid as a source of NCs. This
     // approximately doubles/triples our statistics. SpectrumLoader just adds
     // events and POT for both cases, which is the right thing to do.
-    loaderNue  .AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
-    loaderNuTau.AddSpectrum(fNC, axis.GetMultiDVar(), cut && kIsNC, shift, wei);
+    loaderNue  .AddSpectrum(fNCTot , axis.GetMultiDVar(), cut && kIsNC              , shift, wei);
+    loaderNue  .AddSpectrum(fNC    , axis.GetMultiDVar(), cut && kIsNC && !kIsAntiNu, shift, wei);
+    loaderNue  .AddSpectrum(fNCAnti, axis.GetMultiDVar(), cut && kIsNC &&  kIsAntiNu, shift, wei);
+    loaderNuTau.AddSpectrum(fNCTot , axis.GetMultiDVar(), cut && kIsNC              , shift, wei);
+    loaderNuTau.AddSpectrum(fNC    , axis.GetMultiDVar(), cut && kIsNC && !kIsAntiNu, shift, wei);
+    loaderNuTau.AddSpectrum(fNCAnti, axis.GetMultiDVar(), cut && kIsNC &&  kIsAntiNu, shift, wei);
   }
 
 
@@ -99,7 +105,9 @@ namespace ana
 
     fNueApp.SaveTo(dir->mkdir("nue_app"));
     fNueAppAnti.SaveTo(dir->mkdir("nue_app_anti"));
+    fNCTot.SaveTo(dir->mkdir("nc_tot"));
     fNC.SaveTo(dir->mkdir("nc"));
+    fNCAnti.SaveTo(dir->mkdir("nc_anti"));
     fNumuSurv.SaveTo(dir->mkdir("numu_surv"));
     fNumuSurvAnti.SaveTo(dir->mkdir("numu_surv_anti"));
     fNumuApp.SaveTo(dir->mkdir("numu_app"));
@@ -111,6 +119,9 @@ namespace ana
     fTauFromMu.SaveTo(dir->mkdir("nutau_from_numu"));
     fTauFromMuAnti.SaveTo(dir->mkdir("nutau_from_numu_anti"));
 
+    dir->Write();
+    delete dir;
+
     tmp->cd();
   }
 
@@ -118,6 +129,7 @@ namespace ana
   std::unique_ptr<TrivialExtrap> TrivialExtrap::LoadFrom(TDirectory* dir)
   {
     std::unique_ptr<TrivialExtrap> ret(new TrivialExtrap);
+
 
     // This is a lot of repetitive typing. Define some macros
 #define LOAD_OSC(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *OscillatableSpectrum::LoadFrom(dir->GetDirectory(LABEL));
@@ -136,7 +148,11 @@ namespace ana
     LOAD_OSC(fTauFromMu,     "nutau_from_numu");
     LOAD_OSC(fTauFromMuAnti, "nutau_from_numu_anti");
 
+    LOAD_SPECT(fNCTot, "nc_tot");
     LOAD_SPECT(fNC, "nc");
+    LOAD_SPECT(fNCAnti, "nc_anti");
+    
+    delete dir;
 
     return ret;
   }
