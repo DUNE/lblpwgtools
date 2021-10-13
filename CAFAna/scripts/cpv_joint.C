@@ -63,9 +63,10 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
       
       glob_chisqmin = TMath::Min(thischisq,glob_chisqmin);
       delete penalty;
+      delete testOsc;
     }
   }
-
+  delete trueOscGlob;
   std::cout << "Global chi2 at dCP=0,pi: " << glob_chisqmin << std::endl;
 
   // Now loop over all true values
@@ -104,7 +105,9 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	
 	chisqmin = TMath::Min(thischisq,chisqmin);
 	delete penalty;
+	delete testOsc;
       }
+      delete trueOsc;
     }
     
     chisqmin = TMath::Max(chisqmin,1e-6);
