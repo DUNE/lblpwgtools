@@ -38,21 +38,47 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
   TFile* fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
-  int nsteps = 72;
+  std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
+  oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
+
+  int nsteps = 36;
   double dcpstep = 2*TMath::Pi()/nsteps;
   TGraph* gMH = new TGraph();
 
   for(double idcp = 0; idcp < nsteps+1; ++idcp) {
 
     std::cout << "Trying idcp = " << idcp << std::endl;
-
     double thisdcp = -TMath::Pi() + idcp*dcpstep;
+
     osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_joint);
     trueOsc->SetdCP(thisdcp);
-
-    double chisqmin = 99999;
+    
+    double correct_chisqmin = 99999;
+    double wrong_chisqmin = 99999;
     double thischisq;
 
+    // First fit in the correct hierarchy
+    for(int ioct = -1; ioct <= 1; ioct += 2) {
+
+      osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_joint);
+      testOsc->SetdCP(thisdcp);
+
+
+      IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_joint);
+      SystShifts testSyst = kNoShift;
+
+      thischisq = RunFitPoint(stateFname, sampleString,
+                              trueOsc, trueSyst, false,
+                              oscVars, systlist,
+                              testOsc, testSyst,
+                              oscSeeds, penalty);
+
+      correct_chisqmin = TMath::Min(thischisq,correct_chisqmin);
+      delete penalty;
+      delete testOsc;
+    }
+
+    // Now the incorrect hierarchy
     for(int ioct = -1; ioct <= 1; ioct += 2) {
 
       osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_joint);
@@ -63,21 +89,23 @@ void mh_joint(std::string stateFname="common_state_mcc11v3.root",
       IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_joint);
       SystShifts testSyst = kNoShift;
 
-      std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
-      oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
-
       thischisq = RunFitPoint(stateFname, sampleString,
 			      trueOsc, trueSyst, false,
 			      oscVarsWrong, systlist,
 			      testOsc, testSyst,
 			      oscSeeds, penalty);
 
-      chisqmin = TMath::Min(thischisq,chisqmin);
+      wrong_chisqmin = TMath::Min(thischisq,wrong_chisqmin);
       delete penalty;
+      delete testOsc;
     }
 
-    chisqmin = TMath::Max(chisqmin,1e-6);
-    gMH->SetPoint(gMH->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(chisqmin));
+    double dchisq = wrong_chisqmin - correct_chisqmin;
+    std::cout << "dchisq = " << dchisq << " " << wrong_chisqmin << " - " << correct_chisqmin << std::endl;
+    dchisq = TMath::Max(dchisq,1e-6);
+    gMH->SetPoint(gMH->GetN(),thisdcp/TMath::Pi(),TMath::Sqrt(dchisq));
+    
+    delete trueOsc;
   }
 
   fout->cd();
