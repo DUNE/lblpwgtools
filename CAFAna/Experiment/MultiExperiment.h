@@ -12,6 +12,12 @@ namespace ana
   class MultiExperiment: public IExperiment
   {
   public:
+
+    ~MultiExperiment(){
+      for (auto & mat : fCovMx) delete mat;
+      for (auto & mat : fCovMxInv) delete mat;
+    }
+    
     MultiExperiment(std::vector<const IExperiment*> expts = {}) : fExpts(expts)
     {
       fSystCorrelations.resize(expts.size());
