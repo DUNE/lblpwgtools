@@ -141,6 +141,7 @@ namespace caf
     double sigma_Elep_reco;
     double sigma_numu_pid;
     double sigma_nue_pid;
+    std::vector<double> wgt_CrazyFlux;
 
     // First index is systematic ID
     std::vector<std::vector<double>> xsSyst_wgt;
