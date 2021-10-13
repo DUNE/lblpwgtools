@@ -35,6 +35,9 @@
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/XSecSysts.h"
+#include "CAFAna/Systs/CrazyFluxFakeData.h"
+#include "CAFAna/Systs/HighEFluxMod.h"
+#include "CAFAna/Systs/FluxWiggleFakeData.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -254,6 +257,21 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     // Also add in ND energy shift dials for fake data studies
     std::vector<const ISyst *> ndelist = GetNDEnergySysts();
     systlist.insert(systlist.end(), ndelist.begin(), ndelist.end());
+
+    // Crazy flux shifts
+    std::vector<const ISyst *> crazyfluxlist =
+      GetCrazyFluxSysts();
+    systlist.insert(systlist.end(), crazyfluxlist.begin(), crazyfluxlist.end());
+
+    // HighEFluxMod shifts
+    std::vector<const ISyst *> highefluxlist = 
+      GetHighEFluxModSysts();
+    systlist.insert(systlist.end(), highefluxlist.begin(), highefluxlist.end());
+    
+    // Flux wiggle
+    std::vector<const ISyst *> fluxwigglelist =
+      GetFluxWiggleSysts();
+    systlist.insert(systlist.end(), fluxwigglelist.begin(), fluxwigglelist.end());
   }
 
   return systlist;
@@ -494,7 +512,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } 
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name));
+    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name) || IsHighEFluxModSyst(name) || IsFluxWiggleSyst(name));
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
   }
@@ -570,6 +588,7 @@ SystShifts GetFakeDataSystShift(std::string input) {
   KeepSysts(BiasSyst, dial_names);
 
   for (uint i=0; i<BiasSyst.size(); i++){
+    std::cout << "Setting " << BiasSyst[i]->ShortName() << " to " << dial_vals[i] << std::endl;
     thisShift.SetShift(BiasSyst[i], dial_vals[i]);
   }
 

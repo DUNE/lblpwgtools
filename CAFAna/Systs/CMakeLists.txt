@@ -8,6 +8,9 @@ set(Systs_implementation_files
   XSecSysts.cxx
   NDRecoSysts.cxx
   NuOnESysts.cxx
+  CrazyFluxFakeData.cxx
+  FluxWiggleFakeData.cxx
+  HighEFluxMod.cxx
   SystComponentScale.cxx
   Systs.cxx)
 
@@ -41,6 +44,9 @@ set(Systs_header_files
   NEUTReweightFakeData.h
   GENIEv3_G18_10b_00_000ReweightFakeData.h
   GENIEv3_G18_10a_02_11aReweightFakeData.h
+  CrazyFluxFakeData.h
+  FluxWiggleFakeData.h
+  HighEFluxMod.h
   ReweightFakeDataBase.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
