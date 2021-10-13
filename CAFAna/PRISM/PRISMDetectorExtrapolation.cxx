@@ -37,6 +37,21 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
 
 //-----------------------------------------------------
 
+NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
+                        fRegFactor(MatPred.fRegFactor),
+                        fNDExtrap_293kA(nullptr), 
+                        fNDExtrap_280kA(nullptr), 
+                        hCovMat_293kA(nullptr), 
+                        hCovMat_280kA(nullptr), 
+                        hNumuNueCorr(nullptr),  
+                        fOptimizeReg(MatPred.fOptimizeReg) {
+  fMatrixND = MatPred.fMatrixND;
+  fMatrixFD = MatPred.fMatrixFD;
+
+} 
+
+//-----------------------------------------------------
+
 TH2D * NDFD_Matrix::GetNDMatrix() const {
   return hMatrixND.get();
 }
@@ -294,7 +309,7 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
 //----------------------------------------------------
 
-void NDFD_Matrix::Write(TDirectory *dir) {
+void NDFD_Matrix::Write(TDirectory *dir) const {
   dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
   dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
   dir->WriteTObject(hCovMat_293kA.get(), "CovMatExtrap_293kA");

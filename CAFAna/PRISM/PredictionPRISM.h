@@ -269,16 +269,24 @@ public:
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
     fFluxMatcher = flux_matcher;
   }
+
+  // PredictionPRISM to own a pointer to a NDFD_Matrix object
   NDFD_Matrix const *fNDFD_Matrix;
-  void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) {
-    fNDFD_Matrix = det_extrap;
+  void SetNDFDDetExtrap(NDFD_Matrix const det_extrap) { 
+    fNDFD_Matrix = &det_extrap; 
+  }
+  NDFD_Matrix const * Get_NDFD_Matrix() const {
+    return fNDFD_Matrix;
   }
 
   // PredictionPRISM to own a pointer to a MCEffCorrection object
   MCEffCorrection const *fMCEffCorrection;
-  void SetMC_NDFDEff(MCEffCorrection const *eff_corr) {
-    fMCEffCorrection = eff_corr;
+  void SetMC_NDFDEff(MCEffCorrection const eff_corr) { 
+    fMCEffCorrection = &eff_corr; 
   }
+  MCEffCorrection const * Get_MCEffCorrection() const {
+    return fMCEffCorrection;
+  } 
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }

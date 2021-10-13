@@ -188,9 +188,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Channels[GetMatchChanShortName(ch)] = ch;
   }
 
-  std::vector<Spectrum> DataSpectra;
-  DataSpectra.reserve(Channels.size());
-
   for (auto const ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
@@ -201,7 +198,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
     std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
-    std::cout << "FD Config = " << DescribeConfig(FDConfig_enum) << std::endl; 
     std::cout << "FDfd Config = " << DescribeFDConfig(FDfdConfig_enum) << std::endl;
 
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
@@ -244,48 +240,25 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // Probably redundant now, may remove in the future.
     // Disappearance: non_swap oscillates numus away.
     // Appearance: non_swap looks at the intrinsic nues.
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc, 
-        (IsNueConfig(FDConfig_enum)
-        ? osc_to : osc_from),
-        osc_to)); 
-
-    TH1 *Data_nonswap = DataSpectra.back().ToTH1(POT_FD);
+    TH1 *Data_nonswap = state.FarDetData_nonswap[FDfdConfig_enum]
+                              ->Oscillated(calc, 
+                                           (IsNueConfig(FDConfig_enum) ? osc_to : osc_from), 
+                                           osc_to).ToTHX(POT_FD);
     Data_nonswap->Scale(1, "width");
     chan_dir->WriteTObject(Data_nonswap, "Data_nonswap_component");
+    Data_nonswap->SetDirectory(nullptr); 
 
     if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
-
-      DataSpectra.back() +=
-          state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from,
-                                                                osc_to);
-
       TH1 *Data_nueswap = state.FarDetData_nueswap[FDfdConfig_enum]
                               ->Oscillated(calc, osc_from, osc_to)
-                              .ToTH1(POT_FD);
+                              .ToTHX(POT_FD);
       if (Data_nueswap->Integral() > 0) {
         Data_nueswap->Scale(1, "width");
         chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
       }
       Data_nueswap->SetDirectory(nullptr);
     }
-
-    auto *Data = DataSpectra.back().ToTHX(POT_FD);
-    if (DataSpectra.back().NDimensions() == 1) {
-      for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
-        Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
-      }
-    } else if (DataSpectra.back().NDimensions() == 2) {
-      for (int x_it = 1; x_it <= Data->GetXaxis()->GetNbins(); x_it++) {
-        for (int y_it = 1; y_it <= Data->GetYaxis()->GetNbins(); y_it++) {
-          double be = sqrt(Data->GetBinContent(x_it, y_it));
-          Data->SetBinError(x_it, y_it, be);
-        }
-      }
-    }
-    Data->Scale(1, "width");
-    chan_dir->WriteTObject(Data, "Data_Total");
-    Data->SetDirectory(nullptr);
+    
     //-------------------------------------------------------------
 
     // Smearing matrices for ND and FD
@@ -294,7 +267,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
                               RegFactorExtrap);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(SmearMatrices); 
     // MC efficiency correction
     MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
                                 state.NDSelTruePredInterps[NDConfig_293kA].get(),
@@ -303,10 +276,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                 state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
                                 state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(NDFDEffCorr); 
 
     if (use_PRISM) {
-      if (do_gauss) { // Gaussian spectra prediction
+      if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
             gauss_flux.first, gauss_flux.second, shift, ch.second.from);
         TH1 *PRISMPred =
@@ -333,8 +306,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
           fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
           dir->cd();
-        }
-      } else { // FD spectra prediction
+        } // End gauss prediction
+      } else { // FD spectra prediction - IMPLEMENTED!
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
         auto *PRISMPred = 
@@ -375,7 +348,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
-            //PRISMComp_h->Sumw2();
             PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
@@ -385,8 +357,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           }
 
           fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-          SmearMatrices.Write(chan_dir->mkdir("Unfold_Matrices"));
-          NDFDEffCorr.Write(chan_dir->mkdir("MCEfficiency"));     
+          state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"));
+          state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
 
           dir->cd();
         }
