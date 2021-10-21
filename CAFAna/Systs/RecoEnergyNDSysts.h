@@ -439,7 +439,7 @@ namespace ana
   class ChargedHadRecoResND: public ISyst
   {
   public:
-  ChargedHadRecoResND() : ISyst("ChargedHadRecoResND", "Charged Hadron Far Detector Resolution Syst") {}
+  ChargedHadRecoResND() : ISyst("ChargedHadRecoResND", "Charged Hadron Near Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
                caf::StandardRecord* sr, double& weight) const override
