@@ -224,25 +224,17 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
   }
 
   if (detsyst) {
-    //std::vector<const ISyst *> elist = GetEnergySysts();
-    //std::vector<const ISyst *> fdlist = GetFDRecoSysts();
-    //std::vector<const ISyst *> ndlist = GetNDRecoSysts();
-    //std::vector<const ISyst *> nuelist = GetNuOnESysts();
+    std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    std::vector<const ISyst *> ndlist = GetNDRecoSysts();
+    std::vector<const ISyst *> nuelist = GetNuOnESysts();
     std::vector<const ISyst *> elistFD = GetRecoEFDSysts();
     std::vector<const ISyst *> elistND = GetRecoENDSysts();
 
-    systlist.insert(systlist.end(), elistFD.begin(), elistFD.end());
-    systlist.insert(systlist.end(), elistND.begin(), elistND.end());
-    //systlist.insert(systlist.end(), elist.begin(), elist.end());
-    /*if (useFD) {
-      systlist.insert(systlist.end(), fdlist.begin(), fdlist.end());
-    }
-    if (useND) {
-      systlist.insert(systlist.end(), ndlist.begin(), ndlist.end());
-    }
-    if (useND && useNueOnE) {
-      systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
-    }*/
+    if(useFD)              systlist.insert(systlist.end(), fdlist.begin(), fdlist.end());
+    if(useND)              systlist.insert(systlist.end(), ndlist.begin(), ndlist.end());
+    if(useNueOnE && useND) systlist.insert(systlist.end(), nuelist.begin(), nuelist.end());
+    if(useFD)              systlist.insert(systlist.end(), elistFD.begin(), elistFD.end());
+    if(useND)              systlist.insert(systlist.end(), elistND.begin(), elistND.end());
   }
 
   if (xsecsyst) {
@@ -300,7 +292,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     std::vector<const ISyst *> namedList =
         GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
                        false /*no fake data*/, true /*Get CDR flux systs*/);
-    // for (auto & syst : namedList) std::cout << syst->ShortName() <<
+    //for (auto & syst : namedList) std::cout << syst->ShortName() << " ";
     // std::endl; 2) Interpret the list of short names
     std::vector<std::string> systs = SplitString(systString, ':');
 
