@@ -84,6 +84,7 @@ std::string DeGlobPattern(std::string const &pattern) {
         next_to_add = std::string::npos;
       }
     }
+    std::cout << "stuck" << std::endl;
     next_asterisk = pattern.find_first_of('*', next_to_add);
   }
 
@@ -104,6 +105,8 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
                                           bool IncDir = true) {
 
   directory = EnsureTrailingSlash(directory);
+  // Comment out as this may not suit our file format
+  std::cout << "run DeGlobPattern" << std::endl;
   pattern = DeGlobPattern(pattern);
 
   std::cout << "[INFO]: Looking for files matching: \"" << pattern
@@ -220,6 +223,7 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-N-nu") ||
                (std::string(argv[opt]) == "--ND-input-numode")) {
       ND_input_numode.push_back(argv[++opt]);
+      //ND_input_numode.push_back(pnfs2xrootd(argv[++opt]));
     } else if ((std::string(argv[opt]) == "-F-nu") ||
                (std::string(argv[opt]) == "--FD-input-numode")) {
       FD_nonswap_input_numode.push_back(argv[++opt]);
@@ -275,6 +279,9 @@ int main(int argc, char const *argv[]) {
 
   handleOpts(argc, argv);
 
+  std::cout << "ND_input_numode size = " << ND_input_numode.size() << std::endl;
+  std::cout << "FD_nonswap_input_numode size = " << FD_nonswap_input_numode.size() << std::endl;
+
   // Parse input file list patterns.
   std::vector<std::pair<std::string, std::vector<std::string>>> file_lists;
   size_t NFiles = 0;
@@ -313,7 +320,6 @@ int main(int argc, char const *argv[]) {
                                       InputFilePattern.size() - last_slash_loc);
 
       std::vector<std::string> CAFs;
-
       if ((earliest_regex == std::string::npos)) {
         CAFs.push_back(dir + pattern);
       } else {
@@ -342,6 +348,9 @@ int main(int argc, char const *argv[]) {
     }
     for (auto f : fl) {
       std::cout << "[INFO]: Reading from: " << f << std::endl;
+      // Make files pnfs friendly.
+      f = pnfs2xrootd(f);
+      std::cout << "[INFO]: XRootD: " << f << std::endl;
     }
   }
 
@@ -907,9 +916,11 @@ int main(int argc, char const *argv[]) {
       los_flux, &no_osc, *FluxPredGens[5], Loaders_nu, kNoShift,
       PredictionInterp::kSplitBySign));
 
-  std::cout << "Loaders Go()." << std::endl;
-  Loaders_nu.Go();
-  Loaders_nub.Go();
+  std::cout << "Loaders GoPRISM()." << std::endl;
+  //Loaders_nu.Go();
+  //Loaders_nub.Go();
+  Loaders_nu.GoPRISM();
+  Loaders_nub.GoPRISM();
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
