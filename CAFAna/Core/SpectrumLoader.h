@@ -33,6 +33,11 @@ namespace ana
 
     virtual void Go() override;
 
+    // New Go function for PRISM loading. Specifically, this function 
+    // lets you load in multiple ND MC files and re-calculate the perPOT 
+    // weighting correctly for a PRISM analyis.
+    virtual void GoPRISM() override;
+
   protected:
     SpectrumLoader(DataSource src = kBeam);
 
@@ -46,7 +51,8 @@ namespace ana
 
     void AccumulateExposures(const caf::SRSpill* spill) override;
 
-    virtual void HandleFile(TFile* f, Progress* prog = 0);
+    //virtual void HandleFile(TFile* f, Progress* prog = 0);
+    virtual void HandleFile(TFile* f, Progress* prog = 0, TFile *fpotfriend = nullptr);
 
     virtual void HandleRecord(caf::StandardRecord* sr);
 
@@ -81,5 +87,6 @@ namespace ana
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
     int max_entries;
+
   };
 }

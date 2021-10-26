@@ -233,11 +233,11 @@ PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
 PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
                                      SpectrumLoaderBase &loader_nue,
                                      const HistAxis &axis, const Cut &cut,
-                                     const SystShifts &shift, const Var &wei)
-    : fSpectrumNonSwap(loader_non, axis, cut && !kIsAntiNu && !kIsNC, shift, wei),
-      fSpectrumNueSwap(loader_nue, axis, cut && !kIsAntiNu && !kIsNC, shift, wei),
-      fSpectrumRHCNonSwap(loader_non, axis, cut && kIsAntiNu && !kIsNC, shift, wei),
-      fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC, shift, wei) {}
+                                     const SystShifts &shift, const Var &wei) 
+    : fSpectrumNonSwap(loader_non, axis, cut && !kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
+      fSpectrumNueSwap(loader_nue, axis, cut && !kIsAntiNu && !kIsNC && kIsNueApp, shift, wei),
+      fSpectrumRHCNonSwap(loader_non, axis, cut && kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
+      fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC && kIsNueApp, shift, wei) {}
 
 //----------------------------------------------------------------------
 Spectrum PredictionFDNoOsc::PredictComponent(osc::IOscCalculator * /*calc*/,

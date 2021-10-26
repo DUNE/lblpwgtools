@@ -71,6 +71,18 @@ inline void FillWithNulls(std::vector<std::shared_ptr<T>> &v, size_t n) {
   }
 }
 
+template <typename T>
+inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v, 
+                          size_t n1, size_t n2) {
+  for (size_t i = 0; i < n1; ++i) {
+    std::vector<std::shared_ptr<T>> tmp;
+    for (size_t j = 0; j < n2; ++j) {
+      tmp.emplace_back(nullptr);
+    }
+    v.emplace_back(tmp);
+  }
+}
+
 struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;

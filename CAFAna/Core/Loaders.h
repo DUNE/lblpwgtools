@@ -60,6 +60,9 @@ namespace ana
 
     /// Call Go() on all the loaders
     void Go();
+    /// Call GoPRISM() [short for GoGoGadgetPRISM()] on all the 
+    /// loaders for PRISM analysis.
+    void GoPRISM();
 
   protected:
     typedef std::tuple<caf::Det_t, DataMC, DataSource, SwappingConfig> Key_t;

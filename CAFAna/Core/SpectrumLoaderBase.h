@@ -67,6 +67,8 @@ namespace ana
 
     /// Load all the registered spectra
     virtual void Go() = 0;
+    /// Load all the registered spectra for off axis analysis.
+    virtual void GoPRISM() = 0;
 
     /// Indicate whether or not \ref Go has been called
     virtual bool Gone() const {return fGone;}
@@ -103,6 +105,9 @@ namespace ana
 
     /// Forwards to \ref fFileSource but also accumulates POT and livetime
     TFile* GetNextFile();
+
+    /// Returns the \ref fFileSource iterator back to the beginning.
+    void BeginAgain() { fFileSource->BeginAgain(); }
 
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
@@ -205,6 +210,8 @@ namespace ana
     ~NullLoader();
 
     virtual void Go() override;
+    virtual void GoPRISM() override;
+
     void AddSpectrum(Spectrum& spect,
                      const Var& var,
                      const Cut& cut,

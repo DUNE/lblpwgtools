@@ -18,6 +18,10 @@ namespace ana
 
     virtual TFile* GetNextFile() override;
     int NFiles() const override {return fN;}
+    
+    // Function to return file iterator to the beginning.
+    virtual void BeginAgain() { fIt = fFileNames.begin(); }
+
   protected:
     std::vector<std::string> fFileNames; ///< The list of files
     std::vector<std::string>::iterator fIt; ///< Iterator into \ref fFileNames

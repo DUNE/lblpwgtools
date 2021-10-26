@@ -17,6 +17,9 @@ namespace ana
     /// DO NOT close or delete the file that is returned.
     virtual TFile* GetNextFile() = 0;
 
+    // Returns the file iterator to the beginning.
+    virtual void BeginAgain() = 0;
+
     /// May return -1 indicating the number of files is not known
     virtual int NFiles() const {return -1;}
   };

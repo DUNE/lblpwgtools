@@ -21,6 +21,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "TChain.h"
 #include "TFile.h"
 #include "TH2.h"
 #include "TRandom3.h"
@@ -84,6 +85,7 @@ void SpectrumLoader::Go() {
   Progress *prog = 0;
 
   int fileIdx = -1;
+
   while (TFile *f = GetNextFile()) {
     ++fileIdx;
 
@@ -94,6 +96,133 @@ void SpectrumLoader::Go() {
               .Data());
 
     HandleFile(f, Nfiles == 1 ? prog : 0);
+    
+    if (Nfiles > 1 && prog)
+      prog->SetProgress((fileIdx + 1.) / Nfiles);
+  } // end for fileIdx
+
+  StoreExposures();
+
+  if (prog) {
+    prog->Done();
+    delete prog;
+  }
+
+  ReportExposures();
+
+  fHistDefs.RemoveLoader(this);
+  fHistDefs.Clear();
+}
+
+//---------------------------------------------------------
+// New Go function for PRISM loading. Specifically, this function
+// lets you load in multiple ND MC files and re-calculate the perPOT
+// weighting correctly for a PRISM analysis.
+
+void SpectrumLoader::GoPRISM() {
+  if (fGone) {
+    std::cerr << "Error: can only call Go() once on a SpectrumLoader"
+              << std::endl;
+    abort();
+  }
+  fGone = true;
+
+  // Find all the unique cuts
+  std::set<Cut, CompareByID> cuts;
+  for (auto &shiftdef : fHistDefs)
+    for (auto &cutdef : shiftdef.second)
+      cuts.insert(cutdef.first);
+  for (const Cut &cut : cuts)
+    fAllCuts.push_back(cut);
+
+  fLivetimeByCut.resize(fAllCuts.size());
+  fPOTByCut.resize(fAllCuts.size());
+
+  const int Nfiles = NFiles();
+
+  Progress *prog = 0;
+
+  double detx_to_m = 1E-2;
+  int fileIdx = -1;
+  std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
+
+  // Need to update the FileExposure weights
+  std::map<int, TH1D *> FileExposures;
+
+  while (TFile *f = GetNextFile()) {
+    ++fileIdx;
+    std::cout << "Add FileExposure from file: " << fileIdx << std::endl;
+    for (int SpecRunID_local : SpecRunIds_all) {
+      std::stringstream ss("");
+      ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+      
+      TH1D *f_FileExposure;
+      f->GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
+      if (f_FileExposure) {
+        if (fileIdx > 0) {
+          assert(FileExposures[SpecRunID_local]);
+          FileExposures[SpecRunID_local]->Add(f_FileExposure);
+        } else {
+          FileExposures[SpecRunID_local] = new TH1D(*f_FileExposure);
+          FileExposures[SpecRunID_local]->SetDirectory(nullptr);
+        }
+      }
+    }
+  }
+
+  // Full FileExposure calculated, so now begin file loop again.
+  BeginAgain();
+
+  fileIdx = -1;
+  while (TFile *f = GetNextFile()) {
+    ++fileIdx;
+    std::cout << "Next file loop " << fileIdx << std::endl;
+    double perFile;
+    double det_x, vtx_x;
+    int specRunId_read;
+    TTree *cafcopy, *OffAxisWeightFriend;
+    f->GetObject("cafTree", cafcopy);
+    f->GetObject("OffAxisWeightFriend", OffAxisWeightFriend);
+
+    // Create a new temporary file for updated OffAxisWeightFriend.
+    TFile *fnew = new TFile("temp.root", "recreate");
+  
+    if (OffAxisWeightFriend) { // If this is an ND file...
+      cafcopy->SetBranchAddress("det_x", &det_x);
+      cafcopy->SetBranchAddress("vtx_x", &vtx_x);
+      OffAxisWeightFriend->SetBranchAddress("perFile", &perFile);
+      OffAxisWeightFriend->SetBranchAddress("specRunId", &specRunId_read);
+
+
+      TTree *OffAxisWeightFriendcopy = OffAxisWeightFriend->CloneTree(0, "");
+
+      Long64_t NPOTWeightEntries = OffAxisWeightFriend->GetEntries();
+
+      for (Long64_t ent_it = 0; ent_it < NPOTWeightEntries; ++ent_it) {
+        OffAxisWeightFriend->GetEntry(ent_it);
+        cafcopy->GetEntry(ent_it);
+
+        double absx = -std::abs((det_x * detx_to_m * 1E2) + vtx_x);
+
+        double nfiles = FileExposures[specRunId_read]->GetBinContent(
+            FileExposures[specRunId_read]->FindFixBin(absx));
+        perFile = 1.0 / nfiles;
+        fnew->cd();
+        OffAxisWeightFriendcopy->Fill();
+      }
+      OffAxisWeightFriendcopy->AutoSave();
+    }
+
+    if (Nfiles >= 0 && !prog)
+      prog = new Progress(
+          TString::Format("Filling %lu spectra from %d files matching '%s'",
+                          fHistDefs.TotalSize(), Nfiles, fWildcard.c_str())
+              .Data());
+
+    HandleFile(f, Nfiles == 1 ? prog : 0, fnew);
+    // Make sure you delete this temporary TFile!    
+    fnew->Close();
+    delete fnew;
 
     if (Nfiles > 1 && prog)
       prog->SetProgress((fileIdx + 1.) / Nfiles);
@@ -119,15 +248,15 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   if (tr->FindBranch(bname.c_str())) {
     tr->SetBranchAddress(bname.c_str(), dest);
     return true;
-  } else {
+ } else {
     std::cout << "Warning: Branch '" << bname
               << "' not found, field will not be filled" << std::endl;
   }
   return false;
 }
-
+ 
 //----------------------------------------------------------------------
-void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
+void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
   assert(!f->IsZombie());
   TTree *tr;
   //    if(f->GetListOfKeys()->Contains("cafmaker")){
@@ -172,7 +301,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "muon_ecal", &sr.muon_ecal);
   SetBranchChecked(tr, "muon_tracker", &sr.muon_tracker);
   SetBranchChecked(tr, "Ehad_veto", &sr.Ehad_veto);
-
   SetBranchChecked(tr, "Ev", &sr.Ev);
   SetBranchChecked(tr, "Elep", &sr.Elep);
   //    SetBranchChecked(tr, "ccnc", &sr.ccnc);
@@ -281,24 +409,27 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   }
 
   TTree *potFriend;
-  f->GetObject("OffAxisWeightFriend", potFriend);
-  if (potFriend) {
-    tr->AddFriend(potFriend);
-    SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
-    SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
-    SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
-    SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
-    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
-    std::cout << "[INFO]: Found Off axis weight friend tree "
-                 "in input file, hooking up!"
-              << std::endl;
-  } else {
-    sr.perPOTWeight = 1;
-    sr.perFileWeight = 1;
-    sr.NDMassCorrWeight = 1;
-    sr.SpecialRunWeight = 1;
-    sr.SpecialHCRunId = 293;
-  }
+
+  if (fpotfriend) { // Only true if running GoPRISM(), not Go().
+    fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
+    if (potFriend) {
+      tr->AddFriend(potFriend);
+      SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
+      SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
+      SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
+      SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
+      SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
+      std::cout << "[INFO]: Found Off axis weight friend tree "
+                   "in input file, hooking up!"
+                << std::endl;
+    } else {
+      sr.perPOTWeight = 1;
+      sr.perFileWeight = 1;
+      sr.NDMassCorrWeight = 1;
+      sr.SpecialRunWeight = 1;
+      sr.SpecialHCRunId = 293;
+    }
+  }  
 
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
@@ -339,10 +470,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     
     //if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
     //                                sr.eRecoPi0; //+ sr.eRecoOther;
-    //if (sr.isFD && (sr.nuPDG == 14 || sr.nuPDG == -14)) // FD numu event
-    //  sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
-    //else if (sr.isFD && (sr.nuPDG == 12 || sr.nuPDG == -12))
-    //  sr.RecoHadE_NDFD = sr.RecoHadEnNumu;
     if (sr.isFD) 
       sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim + 
                          sr.eDepPi0 + sr.eDepOther;
