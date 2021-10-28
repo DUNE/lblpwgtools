@@ -469,7 +469,7 @@ ReweightableSpectrum &
 ReweightableSpectrum::PlusEqualsHelper(const ReweightableSpectrum &rhs,
                                        int sign) {
   // In this case it would be OK to have no POT/livetime
-  if (rhs.fHist && rhs.fHist->Integral(0, -1) == 0)
+  if (rhs.fHist && rhs.fHist->Integral() == 0)
     return *this;
 
   if ((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)) {
