@@ -129,8 +129,8 @@ cd build
 mkdir Ext
 cd Ext
 
-scp -r D00NGPVM:/dune/app/users/chasnip/CH_DUNE_PRISM/OscLib OscLib
-scp -r D00NGPVM:/dune/app/users/chasnip/CH_DUNE_PRISM/Utilities Utilities
+scp -r dunegpvm08.fnal.gov:/dune/app/users/chasnip/CH_DUNE_PRISM/OscLib OscLib
+scp -r dunegpvm08.fnal.gov:/dune/app/users/chasnip/CH_DUNE_PRISM/Utilities Utilities
 
 cd ../
 

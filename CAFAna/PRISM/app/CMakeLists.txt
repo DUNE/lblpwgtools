@@ -8,6 +8,7 @@ set(scripts_to_build
   #  ChiSqSurfacePRISMPred
  PRISMRegOptimizer
  #FluxPredictionTester
+ PRISMEfficiencyLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
