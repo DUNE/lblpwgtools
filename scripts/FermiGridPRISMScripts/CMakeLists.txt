@@ -1,5 +1,6 @@
 set(scripts_to_install
   tarballPRISM.sh
+  WrapperFarmBuildPredInterps.sh
   FarmBuildPRISMInterps.sh
   BuildPRISMInterps.sh
   FarmCAFPRISMNodeScript.sh
