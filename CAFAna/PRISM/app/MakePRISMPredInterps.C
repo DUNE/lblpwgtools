@@ -105,8 +105,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
                                           bool IncDir = true) {
 
   directory = EnsureTrailingSlash(directory);
-  // Comment out as this may not suit our file format
-  std::cout << "run DeGlobPattern" << std::endl;
+  
   pattern = DeGlobPattern(pattern);
 
   std::cout << "[INFO]: Looking for files matching: \"" << pattern
@@ -223,7 +222,6 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-N-nu") ||
                (std::string(argv[opt]) == "--ND-input-numode")) {
       ND_input_numode.push_back(argv[++opt]);
-      //ND_input_numode.push_back(pnfs2xrootd(argv[++opt]));
     } else if ((std::string(argv[opt]) == "-F-nu") ||
                (std::string(argv[opt]) == "--FD-input-numode")) {
       FD_nonswap_input_numode.push_back(argv[++opt]);

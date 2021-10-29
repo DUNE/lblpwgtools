@@ -27,6 +27,7 @@
 #include "TCanvas.h"
 #include "TGraph2D.h"
 #include "TMarker.h"
+#include "TSystem.h"
 #include <map>
 #include <utility>
 
@@ -431,6 +432,11 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       // fill hist
       scan_hist_1D->Fill(x, chi);
       auto end_fit = std::chrono::system_clock::now();
+      // Profile memory usage
+      ProcInfo_t procinfo;
+      gSystem->GetProcInfo(&procinfo);
+      std::cerr << "[MEM]: Resident = " << procinfo.fMemResident << std::endl
+                << "[MEM]: Virtual = " << procinfo.fMemVirtual << std::endl;
       std::cerr << "[FIT]: Finished fit in "
                 << std::chrono::duration_cast<std::chrono::seconds>(end_fit -
                                                                     start_fit).count()

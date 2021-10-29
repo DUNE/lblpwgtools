@@ -5,11 +5,11 @@ AXISBLOBNAME="default"
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
-LIFETIME_EXP_ND="20h"
+LIFETIME_EXP_ND="40h"
 DISK_EXP_ND="4GB"
 MEM_EXP_ND="10GB"
 
-LIFETIME_EXP_FD="3h"
+LIFETIME_EXP_FD="5h"
 DISK_EXP_FD="4GB"
 MEM_EXP_FD="10GB"
 
@@ -221,9 +221,9 @@ if [ "${DO_FD}" == "1" ]; then
   fi
 fi
 if [ "${DO_ND}" == "1" ]; then
-  if [ "${DO_FHC}" == "1" ]; then
-    echo "ifdh ls ${INPUT_DIR} | grep \"ND_FHC_\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "ND_FHC_" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
+  if [ "${DO_FHC}" == "1" ]; then # used to grep \"ND_FHC_\"
+    echo "ifdh ls ${INPUT_DIR} | grep \"subset\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "subset" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
     NND_FHC=$(cat InputCAFs.ND_FHC.list | wc -l)
     echo "[INFO]: Found ${NND_FHC} ND_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_FHC ))
@@ -235,9 +235,9 @@ if [ "${DO_ND}" == "1" ]; then
     echo "Will run ${NND_FHC} ND_FHC jobs."
   fi
 
-  if [ "${DO_RHC}" == "1" ]; then
-    echo "ifdh ls ${INPUT_DIR} | grep \"ND_RHC_*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "ND_RHC_*.root" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
+  if [ "${DO_RHC}" == "1" ]; then # used to grep \"ND_RHC_*.root\"
+    echo "ifdh ls ${INPUT_DIR} | grep \"subset\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "subset" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
     echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))

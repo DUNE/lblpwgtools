@@ -45,7 +45,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
 
-  SystShifts fluxshift = FilterFluxSystShifts(shift);
+  //SystShifts fluxshift = FilterFluxSystShifts(shift);
 
   bool do_gauss = gauss_flux.first != 0;
 
