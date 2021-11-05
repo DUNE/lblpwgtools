@@ -13,7 +13,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "OscLib/func/IOscCalculator.h"
+//#include "OscLib/func/IOscCalc.h"
 
 #include "TAxis.h"
 #include "TDirectory.h"
@@ -216,12 +216,12 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
     abort();
   }
 
-  osc::NoOscillations kNoOsc;
+  //osc::NoOscillations kNoOsc;
 
   fPredGens.push_back(std::make_unique<NoOscPredictionGenerator>(
       fOffPredictionAxis, cut && kCut280kARun, wei * slice_width_weight));
 
-  NDPrediction = std::make_unique<PredictionInterp>(systlist, &kNoOsc,
+  NDPrediction = std::make_unique<PredictionInterp>(systlist, (osc::IOscCalc*)0,
                                                     *fPredGens.back(), loaders, kNoShift, 
                                                     PredictionInterp::kSplitBySign);
 
@@ -237,7 +237,7 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
       f280kAPredictionAxis, cut && kSel280kARun,
       wei * slice_width_weight_280kA)); 
 
-  NDPrediction_280kA = std::make_unique<PredictionInterp>(systlist, &kNoOsc, 
+  NDPrediction_280kA = std::make_unique<PredictionInterp>(systlist, (osc::IOscCalc*)0, 
                                                           *fPredGens.back(), loaders, kNoShift,
                                                           PredictionInterp::kSplitBySign);
 }
@@ -260,8 +260,8 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                                     std::vector<ana::ISyst const *> systlist,
                                     PRISM::BeamChan FDChannel) {
 
-  osc::NoOscillations kNoOsc;
-  osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
+  //osc::NoOscillations kNoOsc;
+  osc::IOscCalc *calc = NuFitOscCalc(1);
 
   std::unique_ptr<PredictionInterp> &FDPrediction = GetFDPrediction(FDChannel);
   if (&FDPrediction == &kNoSuchFDPredictionSpectrum) {
@@ -528,12 +528,12 @@ PredictionPRISM::GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::Predict(osc::IOscCalculator *calc) const {
+Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
   return PredictSyst(calc, kNoShift);
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::PredictSyst(osc::IOscCalculator *calc,
+Spectrum PredictionPRISM::PredictSyst(osc::IOscCalc *calc,
                                       SystShifts shift) const {
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps =
       PredictPRISMComponents(calc, shift);
@@ -544,7 +544,7 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalculator *calc,
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
-PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
+PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
                                         SystShifts shift,
                                         MatchChan match_chan) const {
   bool WeHaveNDData = HaveNDData(match_chan.from);
@@ -738,12 +738,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     NDComps.at(kNDSig2D_280kA) -= NDComps.at(kNDWSBkg_280kA);
   }
 
-  static osc::NoOscillations no;
+  //static osc::NoOscillations no;
 
   // FD MC spectrum with analysis axis/axes + Enu axis.
   Spectrum FDUnWeightedSig_Spec =
       FDUnOscWeightedSigPrediction->PredictComponentSyst(
-          &no, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor,  
+          (osc::IOscCalc*)0, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor,  
           Current::kCC, FDSigSign);
   
   // Convert FD MC to RWSpectrum with Enu as reweight variable.
@@ -781,35 +781,58 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
            << fND280kAAxis.GetBinnings().front().Edges().front() << " to "
            << fND280kAAxis.GetBinnings().front().Edges().back() << ".");*/
   
-  Spectrum UnRunPlannedLinearCombination_293kA_s(fNDOffAxis.GetLabels(),
-                                                 fNDOffAxis.GetBinnings());
-  UnRunPlannedLinearCombination_293kA_s.Clear();
-  UnRunPlannedLinearCombination_293kA_s.FillFromHistogram(
-      UnRunPlannedLinearCombination_293kA.get());
+  //Spectrum UnRunPlannedLinearCombination_293kA_s(fNDOffAxis.GetLabels(),
+  //                                               fNDOffAxis.GetBinnings());
+  LabelsAndBins anaAxis = LabelsAndBins(fNDOffAxis.GetLabels()[0], fNDOffAxis.GetBinnings()[0]);
+  Eigen::VectorXd UnRunPlannedLinearCombination_293kA_vec = 
+      GetEigenFlatVector(UnRunPlannedLinearCombination_293kA);
+
+  Spectrum UnRunPlannedLinearCombination_293kA_s(
+      std::move(UnRunPlannedLinearCombination_293kA_vec.array()), anaAxis, NDPOT, 0);
+
+  //UnRunPlannedLinearCombination_293kA_s.Clear();
+  //UnRunPlannedLinearCombination_293kA_s.FillFromHistogram(
+  //    UnRunPlannedLinearCombination_293kA.get());
   UnRunPlannedLinearCombination_293kA_s.OverridePOT(NDPOT);
   UnRunPlannedLinearCombination_293kA_s.OverrideLivetime(0);
   Comps.emplace(kNDFDWeightings_293kA, UnRunPlannedLinearCombination_293kA_s);
 
-  Spectrum UnRunPlannedLinearCombination_280kA_s(fND280kAAxis.GetLabels(),
-                                                 fND280kAAxis.GetBinnings());
-  UnRunPlannedLinearCombination_280kA_s.Clear();
-  UnRunPlannedLinearCombination_280kA_s.FillFromHistogram(
-      UnRunPlannedLinearCombination_280kA.get());
+
+  LabelsAndBins anaAxis280 = LabelsAndBins(fND280kAOffAxis.GetLabels()[0], 
+                                           fND280kAOffAxis.GetBinnings()[0]);
+  Eigen::VectorXd UnRunPlannedLinearCombination_280kA_vec =
+      GetEigenFlatVector(UnRunPlannedLinearCombination_280kA);
+
+  Spectrum UnRunPlannedLinearCombination_280kA_s(
+      std::move(UnRunPlannedLinearCombination_280kA_vec.array()), anaAxis280, NDPOT, 0);
+  //Spectrum UnRunPlannedLinearCombination_280kA_s(fND280kAAxis.GetLabels(),
+  //                                               fND280kAAxis.GetBinnings());
+  //UnRunPlannedLinearCombination_280kA_s.Clear();
+  //UnRunPlannedLinearCombination_280kA_s.FillFromHistogram(
+  //    UnRunPlannedLinearCombination_280kA.get());
   UnRunPlannedLinearCombination_280kA_s.OverridePOT(NDPOT); 
   UnRunPlannedLinearCombination_280kA_s.OverrideLivetime(0);
   Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
-  
+ 
+  // Ratio objects for weighting:
+  Ratio UnRunPlannedLinearCombination_293kA_r(
+      std::move(UnRunPlannedLinearCombination_293kA_vec.array()), 
+      fNDOffAxis.GetLabels(), fNDOffAxis.GetBinnings());
+  Ratio UnRunPlannedLinearCombination_280kA_r(
+      std::move(UnRunPlannedLinearCombination_280kA_vec.array()),
+      f280kANDOffAxis.GetLabels(), f280kANDOffAxis.GetBinnings());
+ 
   // Perform linear combination on raw (i.e. not extrapolated) ND data/MC.
   // MC linear combination:
   if (NDComps.count(kNDSig_293kA)) {
     Comps.emplace(
         kNDSig_293kA,
         NDComps.at(kNDSig2D_293kA)
-            .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
+            .WeightedBy(UnRunPlannedLinearCombination_293kA_r));
     Comps.emplace(
         kNDSig_280kA,
         NDComps.at(kNDSig2D_280kA)
-            .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+            .WeightedBy(UnRunPlannedLinearCombination_280kA_r));
 
     Comps.emplace(kPRISMMC, Comps.at(kNDSig_293kA));
     Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
@@ -818,11 +841,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   Comps.emplace(
       kNDDataCorr_293kA,
       NDComps.at(kNDDataCorr2D_293kA)
-          .WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
+          .WeightedBy(UnRunPlannedLinearCombination_293kA_r));
   Comps.emplace(
       kNDDataCorr_280kA,
       NDComps.at(kNDDataCorr2D_280kA)
-          .WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+          .WeightedBy(UnRunPlannedLinearCombination_280kA_r));
 
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
@@ -834,7 +857,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Spectrum FD_nueapp_spectrum = FDNueSwapAppOscPrediction->PredictComponentSyst(
         calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE,
         Current::kCC, NDSigSign);
-    TH1D *FD_nueapp_h = FD_nueapp_spectrum.ToTH1(NDPOT);
+    //TH1D *FD_nueapp_h = FD_nueapp_spectrum.ToTH1(NDPOT);
 
     Spectrum FD_numusurv_apposc_spectrum =
         FDNonSwapAppOscPrediction
@@ -844,23 +867,25 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     Comps.emplace(kFD_NumuNueCorr_Nue, FD_nueapp_spectrum);
     Comps.emplace(kFD_NumuNueCorr_Numu, FD_numusurv_apposc_spectrum);
 
-    TH1D *FD_numusurv_apposc_h = FD_numusurv_apposc_spectrum.ToTH1(NDPOT);
+    Ratio FD_NumuNueCorr_r(FD_nueapp_spectrum, FD_numusurv_apposc_spectrum, NDPOT);
 
-    FD_nueapp_h->Divide(FD_numusurv_apposc_h);
+    //TH1D *FD_numusurv_apposc_h = FD_numusurv_apposc_spectrum.ToTH1(NDPOT);
 
-    Spectrum FD_NumuNueCorr = Comps.at(kPRISMPred);
-    FD_NumuNueCorr.Clear();
-    FD_NumuNueCorr.FillFromHistogram(FD_nueapp_h);
-    FD_NumuNueCorr.OverridePOT(NDPOT);
-    FD_NumuNueCorr.OverrideLivetime(0);
-    Comps.emplace(kFD_NumuNueCorr, FD_NumuNueCorr);
+    //FD_nueapp_h->Divide(FD_numusurv_apposc_h);
+
+    //Spectrum FD_NumuNueCorr = Comps.at(kPRISMPred);
+    //FD_NumuNueCorr.Clear();
+    //FD_NumuNueCorr.FillFromHistogram(FD_nueapp_h);
+    //FD_NumuNueCorr.OverridePOT(NDPOT);
+    //FD_NumuNueCorr.OverrideLivetime(0);
+    Comps.emplace(kFD_NumuNueCorr, FD_NumuNueCorr_r);
 
     // Give extrapolation method access to the nue/numu ratio
     // so this can be applied to the unfolded ND data.
-    fNDFD_Matrix->SetNumuNueCorr(Comps.at(kFD_NumuNueCorr).ToTH1(NDPOT));
+    fNDFD_Matrix->SetNumuNueCorr(Comps.at(kFD_NumuNueCorr_r).ToTH1(NDPOT));
 
-    HistCache::Delete(FD_nueapp_h);
-    HistCache::Delete(FD_numusurv_apposc_h);
+    //HistCache::Delete(FD_nueapp_h);
+    //HistCache::Delete(FD_numusurv_apposc_h);
   }
 
   //-------------------------------------------------------------
@@ -899,7 +924,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // 5. Weight extrapolated 293kA ND data by linear combination coeffiecients.
   Comps.emplace(
       kNDDataExtrap_293kA,
-      sNDExtrap_293kA.WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));   
+      sNDExtrap_293kA.WeightedBy(UnRunPlannedLinearCombination_293kA_r));   
   // 6. Get covariance matrix propagated through 293kA linear combination.
   ReweightableSpectrum sCovMat(ana::Constant(1), fNDFD_Matrix->GetCovMat_293kA(),
                                fCovarianceAxis.GetLabels(), fCovarianceAxis.GetBinnings(),
@@ -914,7 +939,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
   // 8. Weight extrapolated 280kA ND data by linear combination coeffiecient.
   Comps.emplace(
       kNDDataExtrap_280kA,
-      sNDExtrap_280kA.WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+      sNDExtrap_280kA.WeightedBy(UnRunPlannedLinearCombination_280kA_r));
   // 9. Get covariance matrix propagated through 280 linear combination.
   //    Only interested in the total covariance matrix, so no need to save a seperate
   //    280kA covariance matrix.
@@ -958,7 +983,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     
     Comps.emplace(
       kNDMCExtrap_293kA,
-      sNDMCExtrap_293kA.WeightedByErrors(UnRunPlannedLinearCombination_293kA.get()));
+      sNDMCExtrap_293kA.WeightedBy(UnRunPlannedLinearCombination_293kA_r));
     
     ReweightableSpectrum sNDMCExtrap_280kA =
       ReweightableSpectrum(ana::Constant(1), fNDFD_Matrix->GetNDExtrap_280kA(),
@@ -968,7 +993,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
 
     Comps.emplace(
       kNDMCExtrap_280kA,
-      sNDMCExtrap_280kA.WeightedByErrors(UnRunPlannedLinearCombination_280kA.get()));
+      sNDMCExtrap_280kA.WeightedBy(UnRunPlannedLinearCombination_280kA_r));
 
     Comps.emplace(kNDMC_FDExtrap, Comps.at(kNDMCExtrap_293kA));
     Comps.at(kNDMC_FDExtrap) += Comps.at(kNDMCExtrap_280kA);
@@ -1064,15 +1089,16 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
       fFluxMatcher->GetLastResidual()->Clone("weighted_residual")));
   resid->SetDirectory(nullptr);
   // Calculate FD flux miss-matching correction.
-  Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid.get()));
+  // TODO CHANGE TO RATIO!!
+  //Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedBy(resid.get()));
   
-  if (fAxisAgreement) Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
+  //if (fAxisAgreement) Comps.at(kPRISMPred) += Comps.at(kFDFluxCorr);
   
   // At Flux correction to extrapolated PRISM.
-  Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
-  if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
+  //Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
+  //if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
   // Final covariance matrix.
-  sCovMat += GetDiagonalCovariance(Comps.at(kFDFluxCorr), NDPOT, fCovarianceAxis);
+  //sCovMat += GetDiagonalCovariance(Comps.at(kFDFluxCorr), NDPOT, fCovarianceAxis);
   // Convert final covariance matrix into 2D spectrum
   Comps.emplace(kExtrapCovarMatrix, sCovMat.ToSpectrum());
 
@@ -1092,7 +1118,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalculator *calc,
     }
   }
   // Try clearing cache to stop overloading memory usage
-  HistCache::ClearCache();
+  //HistCache::ClearCache();
 
   return Comps;
 }
@@ -1240,7 +1266,7 @@ ReweightableSpectrum PredictionPRISM::GetDiagonalCovariance(Spectrum const &spec
 }
 
 //----------------------------------------------------------------------
-Spectrum PredictionPRISM::PredictComponent(osc::IOscCalculator *calc,
+Spectrum PredictionPRISM::PredictComponent(osc::IOscCalc *calc,
                                            Flavors::Flavors_t flav,
                                            Current::Current_t curr,
                                            Sign::Sign_t sign) const {
@@ -1262,9 +1288,10 @@ using NamedPredInterpCRefVect = std::vector<
               std::reference_wrapper<std::unique_ptr<PredictionInterp> const>>>;
 
 //----------------------------------------------------------------------
-void PredictionPRISM::SaveTo(TDirectory *dir) const {
+void PredictionPRISM::SaveTo(TDirectory *dir, const std::string& name) const {
   TDirectory *tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
 
   TObjString("PredictionPRISM").Write("type");
@@ -1296,7 +1323,7 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
             Measurements.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
     if (meas.second.get()) {
       meas.second.get()->OverridePOT(1);
-      meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
+      meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
   }
 
@@ -1327,7 +1354,7 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
             Predictions.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
     if (meas.second.get()) {
       meas.second.get()->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
+      meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
   }
 
@@ -1339,7 +1366,7 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
            {"P_FD_nuebar_ccinc_sel_nubmode",
             Predictions.FD.nuebar_ccinc_sel_nubmode}}) {
     if (meas.second.get()) {
-      meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
+      meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
   }
 
@@ -1362,50 +1389,62 @@ void PredictionPRISM::SaveTo(TDirectory *dir) const {
             Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode}
        }) {
     if (meas.second.get()) {
-      meas.second.get()->SaveTo(dir->mkdir(meas.first.c_str()));
+      meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
   }
 
   for (unsigned int i = 0; i < fAnalysisAxisND.GetBinnings().size(); ++i) {
     TObjString(fAnalysisAxisND.GetLabels()[i].c_str())  
-        .Write(TString::Format("predND_label%d", i).Data()); 
+        .Write(TString::Format("predND_label%d", i).Data());
+    std::stringstream ss("predND_bins");
+    ss << i; 
     fAnalysisAxisND.GetBinnings()[i].SaveTo( 
-        dir->mkdir(TString::Format("predND_bins%d", i)));
+        dir, ss.str()); //TString::Format("predND_bins%d", i)
   }
 
   for (unsigned int i = 0; i < fAnalysisAxisFD.GetBinnings().size(); ++i) {
     TObjString(fAnalysisAxisFD.GetLabels()[i].c_str())
         .Write(TString::Format("predFD_label%d", i).Data());
+    std::stringstream ss("predFD_label");
+    ss << i;
     fAnalysisAxisFD.GetBinnings()[i].SaveTo(
-        dir->mkdir(TString::Format("predFD_bins%d", i)));
+        dir, ss.str());
   }
 
   for (unsigned int i = 0; i < fNDOffAxis.GetBinnings().size(); ++i) {
     TObjString(fNDOffAxis.GetLabels()[i].c_str())
         .Write(TString::Format("offaxis_label%d", i).Data());
+    std::stringstream ss("offaxis_label");
+    ss << i;
     fNDOffAxis.GetBinnings()[i].SaveTo(
-        dir->mkdir(TString::Format("offaxis_bins%d", i)));
+        dir, ss.str());
   }
 
   for (unsigned int i = 0; i < fND280kAAxis.GetBinnings().size(); ++i) {
     TObjString(fND280kAAxis.GetLabels()[i].c_str())
         .Write(TString::Format("280kAaxis_label%d", i).Data());
+    std::stringstream ss("280kAaxis_label");
+    ss << i;
     fND280kAAxis.GetBinnings()[i].SaveTo(
-        dir->mkdir(TString::Format("280kAaxis_bins%d", i)));
+        dir, ss.str());
   }
 
   for (unsigned int i = 0; i < fNDFDEnergyMatchAxis.GetBinnings().size(); ++i) {
     TObjString(fNDFDEnergyMatchAxis.GetLabels()[i].c_str())
         .Write(TString::Format("ematch_label%d", i).Data());
+    std::stringstream ss("ematch_label");
+    ss << i;
     fNDFDEnergyMatchAxis.GetBinnings()[i].SaveTo(
-        dir->mkdir(TString::Format("ematch_bins%d", i)));
+        dir, ss.str());
   }
 
   for (unsigned int i = 0; i < fTrueAnalysisAxis.GetBinnings().size(); ++i) { 
     TObjString(fTrueAnalysisAxis.GetLabels()[i].c_str())
         .Write(TString::Format("predTrue_label%d", i).Data());
+    std::stringstream ss("predTrue_label");
+    ss << i;
     fTrueAnalysisAxis.GetBinnings()[i].SaveTo(
-        dir->mkdir(TString::Format("predTrue_bins%d", i)));
+        dir, ss.str());
   }
 
   tmp->cd();
@@ -1423,7 +1462,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {
       break;
     }
-    predND_bins.push_back(*Binning::LoadFrom(subdir));
+    //predND_bins.push_back(*Binning::LoadFrom(subdir));
+    std::stringstream ss;
+    ss << "predND_bins" << i;
+    predND_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label =
         (TObjString *)dir->Get(TString::Format("predND_label%d", i));
     predND_labels.push_back(label ? label->GetString().Data() : "");
@@ -1439,7 +1481,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {  
       break; 
     }
-    predFD_bins.push_back(*Binning::LoadFrom(subdir));
+    //predFD_bins.push_back(*Binning::LoadFrom(subdir));
+    std::stringstream ss;
+    ss << "predFD_bins" << i;
+    predFD_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label = 
         (TObjString *)dir->Get(TString::Format("predFD_label%d", i));
     predFD_labels.push_back(label ? label->GetString().Data() : "");
@@ -1456,7 +1501,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {
       break;
     }
-    offaxis_bins.push_back(*Binning::LoadFrom(subdir));
+    //offaxis_bins.push_back(*Binning::LoadFrom(subdir));
+    std::stringstream ss;
+    ss << "offaxis_bins" << i;
+    offaxis_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label =
         (TObjString *)dir->Get(TString::Format("offaxis_label%d", i));
     offaxis_labels.push_back(label ? label->GetString().Data() : "");
@@ -1473,7 +1521,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {
       break;
     }
-    _280kAaxis_bins.push_back(*Binning::LoadFrom(subdir));
+    //_280kAaxis_bins.push_back(*Binning::LoadFrom(subdir));
+    std::stringstream ss;
+    ss << "280kAaxis_bins" << i;
+    _280kAaxis_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label =
         (TObjString *)dir->Get(TString::Format("280kAaxis_label%d", i));
     _280kAaxis_labels.push_back(label ? label->GetString().Data() : "");
@@ -1489,7 +1540,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {
       break;
     }
-    ematch_bins.push_back(*Binning::LoadFrom(subdir));
+    //ematch_bins.push_back(*Binning::LoadFrom(subdir));
+    std::stringstream ss;
+    ss << "ematch_bins" << i;
+    ematch_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label =
         (TObjString *)dir->Get(TString::Format("ematch_label%d", i));
     ematch_labels.push_back(label ? label->GetString().Data() : "");
@@ -1505,7 +1559,10 @@ std::unique_ptr<PredictionPRISM> PredictionPRISM::LoadFrom(TDirectory *dir) {
     if (!subdir) {
       break;
     }
-    predTrue_bins.push_back(*Binning::LoadFrom(subdir)); 
+    //predTrue_bins.push_back(*Binning::LoadFrom(subdir)); 
+    std::stringstream ss;
+    ss << "predTrue_bins" << i;
+    predTrue_bins.push_back(*Binning::LoadFrom(dir, ss.str()));
     TObjString *label = 
         (TObjString *)dir->Get(TString::Format("predTrue_label%d", i));
     predTrue_labels.push_back(label ? label->GetString().Data() : "");

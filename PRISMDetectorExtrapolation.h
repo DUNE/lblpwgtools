@@ -14,7 +14,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "OscLib/func/IOscCalculator.h"
+//#include "OscLib/func/IOscCalc.h"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -82,7 +82,7 @@ public:
   // This function is becoming slightly monsterous...
   void ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
                          double POT, const int kA, const TH1 *weights,
-                         osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
+                         osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
                          Flavors::Flavors_t NDflav = Flavors::kAll,
                          Flavors::Flavors_t FDflav = Flavors::kAll,
                          Current::Current_t curr = Current::kCC,

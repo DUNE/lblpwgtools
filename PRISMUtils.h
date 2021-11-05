@@ -15,7 +15,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "OscLib/func/IOscCalculator.h"
+//#include "OscLib/func/IOscCalc.h"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -168,11 +168,11 @@ inline void SaveTo(TFile &f, std::string const &dirname,
   ty->SaveTo(f.mkdir(dirname.c_str()));
 }
 
-osc::IOscCalculatorAdjustable *
+osc::IOscCalc *
 ConfigureCalc(fhicl::ParameterSet const &ps,
-              osc::IOscCalculatorAdjustable *icalc = nullptr);
+              osc::IOscCalc *icalc = nullptr);
 
-double GetCalcValue(osc::IOscCalculatorAdjustable *icalc = nullptr,
+double GetCalcValue(osc::IOscCalc *icalc = nullptr,
                     std::string paramname = "");
 
 std::vector<const ana::IFitVar *>
@@ -191,15 +191,16 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 
 inline ReweightableSpectrum
   ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
-  TH2D *spec_h;  
+  //TH2D *spec_h;  
+  Eigen::MatrixXd spec_mat;
+  //std::unique_ptr<Eigen::MatrixXd> spec_mat;
 
   if (spec.NDimensions() == 2) {
-    spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
-  } else if (spec.NDimensions() == 3) {
+    //spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
+    //spec_mat = std::unique_ptr<Eigen::MatrixXd>(spec.GetEigen().matrix());
+    spec_mat = spec.GetEigen().matrix();
+  } /*else if (spec.NDimensions() == 3) {
     TH3 *spec3d_h = spec.ToTH3(POT);
-    /*std::cout << "x title = " << spec3d_h->GetXaxis()->GetTitle()
-              << "y title = " << spec3d_h->GetYaxis()->GetTitle()
-              << "z title = " << spec3d_h->GetZaxis()->GetTitle() << std::endl;*/
     // Reweighting axis binning
     const Binning rwbins = Binning::FromTAxis(spec3d_h->GetZaxis());
     // analysis axis put on to 1D
@@ -230,30 +231,34 @@ inline ReweightableSpectrum
   } else {
     std::cout << "[ERROR] Not 2D or 3D, check input dimensions" << std::endl;
     abort();
-  } 
+  }*/ 
 
-  ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
-                              axis.GetBinnings(), POT, 0);
+  //ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
+  //                            axis.GetBinnings(), POT, 0);
 
-  HistCache::Delete(spec_h);
+  LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels()[0], spec.GetBinnings()[0]);
+  LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels()[1], spec.GetBinnings()[1]);
+
+  ReweightableSpectrum rwspec(std::move(spec_mat), anaAxis, weightAxis, POT, 0);
+  //HistCache::Delete(spec_h);
 
   return rwspec;
 }
 
-inline OscillatableSpectrum
+/*inline OscillatableSpectrum
   ToOscillatableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
  
   ReweightableSpectrum srw = ToReweightableSpectrum(spec, POT, axis);
 
   TH2D *hrw = dynamic_cast<TH2D*>(srw.ToTH2(POT));
-  std::cout << "binsx = " << hrw->GetXaxis()->GetNbins() << std::endl;
-  std::cout << "binsy = " << hrw->GetYaxis()->GetNbins() << std::endl;
+  //std::cout << "binsx = " << hrw->GetXaxis()->GetNbins() << std::endl;
+  //std::cout << "binsy = " << hrw->GetYaxis()->GetNbins() << std::endl;
 
   OscillatableSpectrum oscspec(hrw, axis.GetLabels(), axis.GetBinnings(), POT, 0);
 
   HistCache::Delete(hrw);
 
   return oscspec;
-}
+}*/
 
 } // namespace ana
