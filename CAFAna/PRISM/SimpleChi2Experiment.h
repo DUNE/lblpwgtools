@@ -50,12 +50,12 @@ public:
 
   std::pair<int, int> fBinRange;
 
-  TH1D *GetPred(osc::IOscCalculatorAdjustable *osc,
+  TH1D *GetPred(osc::IOscCalc *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     return fPred->PredictSyst(osc, syst).ToTH1(fPOT);
   }
 
-  double ChiSq(osc::IOscCalculatorAdjustable *osc,
+  double ChiSq(osc::IOscCalc *osc,
                const SystShifts &syst = SystShifts::Nominal()) const {
 
     TH1D *PredHist = GetPred(osc, syst);
@@ -125,14 +125,14 @@ public:
   PRISM::MatchChan fMatchChannel;
   std::pair<int, int> fBinRange;
 
-  TH1D *GetPred(osc::IOscCalculatorAdjustable *osc,
+  TH1D *GetPred(osc::IOscCalc *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     return fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
         .at(PredictionPRISM::kNDDataCorr_FDExtrap) 
         .ToTH1(fPOT);
   }
 
-  double ChiSq(osc::IOscCalculatorAdjustable *osc,
+  double ChiSq(osc::IOscCalc *osc,
                const SystShifts &syst = SystShifts::Nominal()) const {
 
     TH1D *PredHist = GetPred(osc, syst);
@@ -212,7 +212,7 @@ public:
   PRISM::MatchChan fMatchChannel;
   std::pair<int, int> fBinRange;
   // Get the extrapolated PRISM prediction
-  Eigen::VectorXd GetPred(osc::IOscCalculatorAdjustable *osc,
+  Eigen::VectorXd GetPred(osc::IOscCalc *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     TH1D *pred_h = fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
                    .at(PredictionPRISM::kNDDataCorr_FDExtrap)
@@ -223,7 +223,7 @@ public:
     return pred_vec;   
   }
   // Get the PRISM covariance matrix
-  Eigen::MatrixXd GetCovariance(osc::IOscCalculatorAdjustable *osc,
+  Eigen::MatrixXd GetCovariance(osc::IOscCalc *osc,
                                 const SystShifts &syst = SystShifts::Nominal()) const {
     TH2D *cov_h = dynamic_cast<TH2D*>(fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
                   .at(PredictionPRISM::kExtrapCovarMatrix)
@@ -238,7 +238,7 @@ public:
   }
 
   // Calculate Chi2 with the option to include the full covariance
-  double ChiSq(osc::IOscCalculatorAdjustable *osc,
+  double ChiSq(osc::IOscCalc *osc,
                const SystShifts &syst = SystShifts::Nominal()) const {
 
     Eigen::VectorXd PredVec = GetPred(osc, syst);

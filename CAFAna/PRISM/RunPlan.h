@@ -79,9 +79,13 @@ struct RunPlan {
     // Assume this spectrum is in per/POT
 
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
-
     NDSpec_h->SetDirectory(nullptr);
 
+    //std::unique_ptr<Eigen::MatrixXd> NDSpec_mat = 
+    //    std::unique_ptr<Eigen::MatrixXd>(NDSpec.GetEigen(1));
+    Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
+
+    //for (int yit = 0; yit < NDSpec_mat->rows(); ++yit) {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
       auto stop = FindStop(ypos, kA);
@@ -92,17 +96,21 @@ struct RunPlan {
                     ? sqrt(bc)
                     : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
         sum += bc; 
-        NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
-        NDSpec_h->SetBinError(xit + 1, yit + 1, be);         
+        //NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
+        //NDSpec_h->SetBinError(xit + 1, yit + 1, be);      
+        NDSpec_mat(xit, yit) = bc;
       }
     }
 
-    std::vector<std::string> labels = NDSpec.GetLabels();
-    std::vector<Binning> bins = NDSpec.GetBinnings();
-
-    ReweightableSpectrum ret = ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), 
-                                                    labels, bins, GetPlanPOT(), 0);
-
+    //std::unique_ptr<Eigen::MatrixXd>
+    //std::vector<std::string> labels = NDSpec.GetLabels();
+    //std::vector<Binning> bins = NDSpec.GetBinnings();
+    LabelsAndBins anaAxis = LabelsAndBins(NDSpec.GetLabels()[0], NDSpec.GetBinnings()[0]);
+    LabelsAndBins weightAxis = LabelsAndBins(NDSpec.GetLabels()[1], NDSpec.GetBinnings()[1]);
+    //ReweightableSpectrum ret = ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), 
+    //                                                labels, bins, GetPlanPOT(), 0);
+    ReweightableSpectrum ret = ReweightableSpectrum(std::move(NDSpec_mat),
+                                                    anaAxis, weightAxis, GetPlanPOT(), 0);
     return ret;
   }
 

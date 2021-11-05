@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CAFAna/Core/SystShifts.h"
-
-#include "OscLib/func/IOscCalculator.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
+//#include "OscLib/func/IOscCalc.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 
@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-namespace osc {
-class IOscCalculator;
-}
+//namespace osc {
+//class osc::IOscCalc;
+//}
 namespace ana {
 class Binning;
 class PredictionInterp;
@@ -58,12 +58,12 @@ public:
   void SetStoreDebugMatches(bool v = true) { fStoreDebugMatches = v; }
 
   std::pair<TH1 const *, TH1 const *>
-  GetFarMatchCoefficients(osc::IOscCalculator *osc, PRISM::MatchChan chan,
+  GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
                           SystShifts shift, double &soln_norm,
                           double &resid_norm) const;
 
   std::pair<TH1 const *, TH1 const *>
-  GetFarMatchCoefficients(osc::IOscCalculator *osc, PRISM::MatchChan chan,
+  GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
                           SystShifts shift) const {
     double dummy1, dummy2;
     return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2);

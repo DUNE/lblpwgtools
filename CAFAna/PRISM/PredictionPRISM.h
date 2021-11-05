@@ -9,8 +9,7 @@
 #include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
-#include "CAFAna/Core/ReweightableSpectrum.h"
-
+//#include "CAFAna/Core/ReweightableSpectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -246,13 +245,13 @@ public:
                   const HistAxis &TrueAnalysisAxis);
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
-  virtual Spectrum Predict(osc::IOscCalculator *calc) const override;
-  virtual Spectrum PredictSyst(osc::IOscCalculator *calc,
+  virtual Spectrum Predict(osc::IOscCalc *calc) const override;
+  virtual Spectrum PredictSyst(osc::IOscCalc *calc,
                                ana::SystShifts shift = kNoShift) const;
   std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
-      osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
+      osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
       PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;
 
   std::map<PRISMComponent, Spectrum>
@@ -260,7 +259,7 @@ public:
                       ana::SystShifts shift = kNoShift,
                       PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
@@ -325,7 +324,7 @@ public:
   /// The SystShifts instance allows the 'data' to be shifted relative to the
   /// nominal
   void AddNDDataLoader(SpectrumLoaderBase &, const Cut &cut,
-                       const Var &wei = kUnweighted,
+                       const Weight &wei = kUnweighted,
                        ana::SystShifts shift = kNoShift,
                        PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
 
@@ -344,7 +343,7 @@ public:
   ///
   /// The systlist add allowable systematic shifts to the constructed PredInterp
   /// for use in fits and systematic studies.
-  void AddNDMCLoader(Loaders &, const Cut &cut, const Var &wei = kUnweighted,
+  void AddNDMCLoader(Loaders &, const Cut &cut, const Weight &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {},
                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
 
@@ -361,7 +360,7 @@ public:
   ///
   /// The systlist add allowable systematic shifts to the constructed PredInterp
   /// for use in fits and systematic studies.
-  void AddFDMCLoader(Loaders &, const Cut &cut, const Var &wei = kUnweighted,
+  void AddFDMCLoader(Loaders &, const Cut &cut, const Weight &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {},
                      PRISM::BeamChan FDChannel = PRISM::kNumu_Numode);
 

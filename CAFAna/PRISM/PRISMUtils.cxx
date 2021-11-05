@@ -283,9 +283,9 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   return blob;
 } // namespace ana
 
-osc::IOscCalculatorAdjustable *
+osc::IOscCalc *
 ConfigureCalc(fhicl::ParameterSet const &ps,
-              osc::IOscCalculatorAdjustable *calc) {
+              osc::IOscCalc *calc) {
   static std::set<std::string> keys{"th13",   "dmsq32", "ssth23", "deltapi",
                                     "dmsq21", "ssth12", "rho"};
 
@@ -325,7 +325,7 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
 
   return calc;
 }
-double GetCalcValue(osc::IOscCalculatorAdjustable *calc,
+double GetCalcValue(osc::IOscCalc *calc,
                     std::string paramname) {
   if (!calc) {
     return 0;
