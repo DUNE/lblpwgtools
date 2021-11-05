@@ -6,10 +6,10 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "Utilities/func/MathUtil.h"
+#include "OscLib/IOscCalc.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "TError.h"
 #include "TGraph.h"
@@ -32,20 +32,20 @@ namespace ana
     if(pot == 0)
       pot = obs.POT();
 
-    std::unique_ptr<TH1> oh(obs.ToTH1(pot));
-    std::unique_ptr<TH1> bh(unosc.ToTH1(pot));
-    assert(oh->GetNbinsX() == bh->GetNbinsX());
+    Eigen::ArrayXd oh(obs.GetEigen(pot));
+    Eigen::ArrayXd bh(unosc.GetEigen(pot));
+    assert(oh.size() == bh.size());
 
     double fomSq = 0;
 
     // Combine s/sqrt(s+b) in quadrature between bins
-    for(int i = 0; i < oh->GetNbinsX(); ++i){
-      const double o = oh->GetBinContent(i);
-      const double b = bh->GetBinContent(i);
+    for(int i = 0; i < oh.size(); ++i){
+      const double o = oh[i];
+      const double b = bh[i];
       const double s = o-b;
 
-    if (s <= 0){
-      continue;}
+      if (s <= 0)
+        continue;
 
       fomSq += util::sqr(s)/(s+b);
     }
@@ -54,8 +54,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Profile(const IChiSqExperiment* expt,
-               osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* Profile(const IExperiment* expt,
+               osc::IOscCalcAdjustable* calc, const IFitVar* v,
                int nbinsx, double minx, double maxx,
                double input_minchi,
                const std::vector<const IFitVar*>& profVars,
@@ -110,7 +110,7 @@ namespace ana
         profVars[i]->SetValue( calc, seedValues[i] );
 
       SystShifts systshift = SystShifts::Nominal();
-      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      const double chi = fit.Fit(calc, systshift, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       ret->Fill(x, chi);
 
@@ -137,7 +137,7 @@ namespace ana
       MinuitFitter fit(expt, allVars, profSysts, opts);
       // Seed from best grid point
       v->SetValue(calc, minpos);
-      minchi = fit.Fit(calc); // get a better value
+      minchi = fit.Fit(calc)->EvalMetricVal(); // get a better value
 
     }
     else
@@ -151,8 +151,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtProfile(const IChiSqExperiment* expt,
-                   osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* SqrtProfile(const IExperiment* expt,
+                   osc::IOscCalcAdjustable* calc, const IFitVar* v,
                    int nbinsx, double minx, double maxx, double minchi,
                    std::vector<const IFitVar*> profVars,
                    std::vector<const ISyst*> profSysts,
@@ -177,8 +177,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* Slice(const IChiSqExperiment* expt,
-             osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* Slice(const IExperiment* expt,
+             osc::IOscCalcAdjustable* calc, const IFitVar* v,
              int nbinsx, double minx, double maxx,
              double minchi,
              MinuitFitter::FitOpts opts)
@@ -188,8 +188,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TH1* SqrtSlice(const IChiSqExperiment* expt,
-                    osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* SqrtSlice(const IExperiment* expt,
+                    osc::IOscCalcAdjustable* calc, const IFitVar* v,
                     int nbinsx, double minx, double maxx, double minchi,
                     MinuitFitter::FitOpts opts)
   {
@@ -205,8 +205,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  TGraph* FindValley(const IChiSqExperiment* expt,
-                     osc::IOscCalculatorAdjustable* calc,
+  TGraph* FindValley(const IExperiment* expt,
+                     osc::IOscCalcAdjustable* calc,
                      const IFitVar& scanVar,
                      const IFitVar& fitVar,
                      int nbinsx, double xmin, double xmax,

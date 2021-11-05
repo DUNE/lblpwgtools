@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Cuts/AnaCuts.h"
+
+#include "StandardRecord/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -28,7 +30,7 @@ namespace ana
     RecoEnergyScaleFD() : ISyst("RecoEnergyScaleFD", "Global Reco Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore, 
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
   
       restore.Add(sr->VisReco_NDFD,
@@ -54,7 +56,7 @@ namespace ana
     RecoEnergySqrtFD() : ISyst("RecoEnergySqrtFD", "Sqrt Total Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
       
       restore.Add(sr->VisReco_NDFD,
@@ -82,7 +84,7 @@ namespace ana
     RecoEnergyInvSqrtFD() : ISyst("RecoEnergyInvSqrtFD", "Inv Sqrt Total Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->VisReco_NDFD,
@@ -115,7 +117,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
@@ -144,7 +146,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
       
       restore.Add(sr->RecoLepE_NDFD,
@@ -173,7 +175,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
@@ -205,7 +207,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
     
       restore.Add(sr->eRecoPip,
@@ -237,7 +239,7 @@ namespace ana
     
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->eRecoPip,
@@ -269,7 +271,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->eRecoPip,
@@ -304,7 +306,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
@@ -330,7 +332,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
@@ -356,7 +358,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
@@ -383,7 +385,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
   
       restore.Add(sr->RecoLepE_NDFD,
@@ -407,7 +409,7 @@ namespace ana
   EMRecoResFD() : ISyst("EMRecoResFD", "EM shower Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->RecoLepE_NDFD,
                   sr->eRecoPi0,
@@ -433,7 +435,7 @@ namespace ana
   ChargedHadRecoResFD() : ISyst("ChargedHadRecoResFD", "Charged Hadron Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->VisReco_NDFD,
                   sr->eRecoP,

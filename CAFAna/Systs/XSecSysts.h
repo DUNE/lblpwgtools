@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "XSecSystList.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 #include <cmath>
@@ -16,9 +16,9 @@ public:
   virtual ~XSecSyst(){};
 
   void FakeDataDialShift(double sigma, Restorer &restore,
-                         caf::StandardRecord *sr, double &weight) const;
+                         caf::SRProxy *sr, double &weight) const;
 
-  void Shift(double sigma, Restorer &restore, caf::StandardRecord *sr,
+  void Shift(double sigma, Restorer &restore, caf::SRProxy *sr,
              double &weight) const override;
 
 protected:

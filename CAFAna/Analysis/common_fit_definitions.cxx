@@ -21,6 +21,7 @@
 
 #include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Experiment/CovarianceExperiment.h"
 
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
@@ -40,15 +41,16 @@
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
+#include "OscLib/IOscCalc.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "OscLib/OscCalcGeneral.h"
 
 #include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 #include "TSystem.h"
 #include "TTree.h"
 
@@ -63,15 +65,16 @@ using namespace ana;
 
 unsigned gRNGSeed = 0;
 
+// A smaller APA geometry was used to simmulate the FD due to computational requirements.
+// Scale the simulated sample to match the actuall 40 kt detector.
+const double scale_fdmc = 40 / 1.13;
 // POT for 3.5 years
-const double pot_fd_FVMassFactor = (40 / 1.13);
-const double pot_fd = 3.5 * POT120 * pot_fd_FVMassFactor;
-const double pot_nd = 3.5 * POT120;
-// This is pretty annoying, but the above is for 7 years staged, which is 336 kT
-// MW yr
-const double nom_exposure = 336.;
+const double nom_years = 3.5;
+const double pot_fd = POT120 * nom_years * scale_fdmc;
+const double pot_nd = POT120 * nom_years;
+// This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 
-size_t NFluxParametersToAddToStatefile = 30;
+const double nom_exposure = 336.;
 
 double GetBoundedGausThrow(double min, double max) {
   double val = -999;
@@ -80,18 +83,8 @@ double GetBoundedGausThrow(double min, double max) {
   return val;
 }
 
-// I miss python...
-std::vector<std::string> SplitString(std::string input, char delim) {
-  std::vector<std::string> output;
-  std::stringstream ss(input);
-  std::string token;
-  while (std::getline(ss, token, delim))
-    output.push_back(token);
-  return output;
-}
-
 // For ease of penalty terms...
-IChiSqExperiment *GetPenalty(int hie, int oct, std::string penalty,
+IExperiment *GetPenalty(int hie, int oct, std::string penalty,
                         std::string asimov_set, bool modConstraint) {
 
   // First, decide which to use
@@ -164,6 +157,8 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
   return rtn_vars;
 }
 
+/*
+//<<<<<<< HEAD
 // Take a list of all the systs known about, and retain the named systs...
 void KeepSysts(std::vector<const ISyst *> &systlist,
                std::vector<std::string> const &systsToInclude) {
@@ -263,7 +258,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
 
 std::vector<const ISyst *> GetListOfFakeDataSysts() {
   return GetListOfSysts(false, false, false, false, false, false,
-                        true /*add fake data*/, false);
+                        true, false);
 }
 
 std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
@@ -291,7 +286,7 @@ std::vector<const ISyst *> GetListOfSysts(std::string systString, bool useND,
     // 1) Get a default list with everything
     std::vector<const ISyst *> namedList =
         GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
-                       false /*no fake data*/, true /*Get CDR flux systs*/);
+                       false, true );
     //for (auto & syst : namedList) std::cout << syst->ShortName() << " ";
     // std::endl; 2) Interpret the list of short names
     std::vector<std::string> systs = SplitString(systString, ':');
@@ -462,7 +457,9 @@ OrderListOfSysts(std::vector<const ISyst *> const &systlist) {
   }
   return retlist;
 }
-
+*/
+//=======
+//>>>>>>> origin
 /*
   The behaviour of fake data dials is a bit clunky. Instead of the multiple spline
   points used for normal dials, they have fixed values for non-zero values of the
@@ -561,16 +558,6 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                           std::vector<std::string> const &tau_swap_file_list,
                           int max) {
 
-  for (auto &v : axes.NDAx->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_numu->GetVars()) {
-    assert(v.IsValid());
-  }
-  for (auto &v : axes.FDAx_nue->GetVars()) {
-    assert(v.IsValid());
-  }
-
   bool use_cv_weights = true;
   if (getenv("CAFANA_IGNORE_CV_WEIGHT")) {
     use_cv_weights = !atoi(getenv("CAFANA_IGNORE_CV_WEIGHT"));
@@ -583,7 +570,7 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
 
   // Move to the save directory
   saveDir->cd();
-  osc::IOscCalculatorAdjustable *this_calc = NuFitOscCalc(1);
+  osc::IOscCalcAdjustable *this_calc = NuFitOscCalc(1);
 
   bool isfhc =
       ((sample == kNDFHC) || (sample == kNDFHC_OA) || (sample == kFDFHC));
@@ -592,16 +579,16 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
   if ((sample == kFDFHC) || (sample == kFDRHC)) {
 
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNue(nue_swap_file_list, kBeam, max);
-    SpectrumLoader loaderNutau(tau_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
+    SpectrumLoader loaderNue(nue_swap_file_list, max);
+    SpectrumLoader loaderNutau(tau_swap_file_list, max);
 
-    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNumu, caf::kFARDET, Loaders::kMC,
                             Loaders::kNonSwap);
-    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC, ana::kBeam,
+    these_loaders.AddLoader(&loaderNue, caf::kFARDET, Loaders::kMC,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
-                            ana::kBeam, Loaders::kNuTauSwap);
+                            Loaders::kNuTauSwap);
 
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
@@ -618,20 +605,18 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNumu.SaveTo(saveDir->mkdir(
-        (std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpFDNumu.SaveTo(saveDir,
+                            std::string("fd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"));
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpFDNue.SaveTo(saveDir->mkdir(
-        (std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpFDNue.SaveTo(saveDir,
+                           std::string("fd_interp_nue_") + std::string(isfhc ? "fhc" : "rhc"));
 
   } else if ((sample == kNDFHC) || (sample == kNDRHC) ||
              (sample == kNDFHC_OA)) {
 
     // Now ND
     Loaders these_loaders;
-    SpectrumLoader loaderNumu(non_swap_file_list, kBeam, max);
+    SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
     NoOscPredictionGenerator genNDNumu(
@@ -646,9 +631,8 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     these_loaders.Go();
 
     std::cout << "Saving " << GetSampleName(sample) << std::endl;
-    predInterpNDNumu.SaveTo(saveDir->mkdir(
-        (std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"))
-            .c_str()));
+    predInterpNDNumu.SaveTo(saveDir,
+                            std::string("nd_interp_numu_") + std::string(isfhc ? "fhc" : "rhc"));
   }
 }
 
@@ -680,8 +664,7 @@ GetPredictionInterps(std::string fileName,
     assert(fin && !fin->IsZombie());
     std::cout << "[LOAD]: Retrieving " << sample_dir_order[s_it] << " from "
               << state_fname << ":" << sample_dir_order[s_it] << std::endl;
-    return_list.emplace_back(LoadFrom<PredictionInterp>(
-        fin->GetDirectory(sample_dir_order[s_it].c_str())));
+    return_list.emplace_back(LoadFrom<PredictionInterp>(fin, sample_dir_order[s_it]));
     delete fin;
 
     std::vector<ana::ISyst const *> systs_to_remove =
@@ -715,10 +698,10 @@ TH2D *make_corr_from_covar(TH2D *covar) {
 }
 
 // Yet another string parser that does far too much. I can't be stopped!
-void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
-                      double &pot_nd_rhc, double &pot_fd_fhc_nue,
-                      double &pot_fd_rhc_nue, double &pot_fd_fhc_numu,
-                      double &pot_fd_rhc_numu) {
+void ParseDataSamples(std::string cmdLineInput, 
+                      double &pot_nd_fhc, double &pot_nd_rhc,
+                      double &pot_fd_fhc_nue, double &pot_fd_rhc_nue,
+                      double &pot_fd_fhc_numu, double &pot_fd_rhc_numu) {
 
   // Did somebody say overextend the command line arguments even further?
   // Well okay!
@@ -749,17 +732,19 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
   double exposure_ratio = exposure / nom_exposure;
 
-  // Now sort out which samples to include
-  pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =
-      pot_fd_rhc_numu = 0;
+  // Now sort out which samples to include                                                                                                             
+  pot_nd_fhc = pot_nd_rhc = 0;
+  pot_fd_fhc_nue = pot_fd_fhc_numu = 0;
+  pot_fd_rhc_nue = pot_fd_rhc_numu = 0;
 
-  // Hacky McHackerson is here to stay!
+  // Hacky McHackerson is here to stay!                                                                                                                
   if (input.find("nd") != std::string::npos) {
-    pot_nd_fhc = pot_nd_rhc = pot_nd * exposure_ratio;
+    pot_nd_fhc = pot_nd * exposure_ratio;
+    pot_nd_rhc = pot_nd * exposure_ratio;
   }
   if (input.find("fd") != std::string::npos) {
-    pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu = pot_fd_rhc_numu =
-        pot_fd * exposure_ratio;
+    pot_fd_fhc_nue = pot_fd_fhc_numu = pot_fd * exposure_ratio;
+    pot_fd_rhc_nue = pot_fd_rhc_numu = pot_fd * exposure_ratio;
   }
 
   // Now allow specific subsets
@@ -812,9 +797,76 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
   return;
 }
 
+TMatrixD *GetNDCovMat(bool UseV3NDCovMat, bool TwoBeams, bool isFHC){
+
+  auto AnaV = GetAnaVersion();
+
+  const std::string detCovPath =
+        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
+
+#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+    std::string covFileName =
+        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                    : "/det_sys_cov.root");
+#else
+    std::string covFileName =
+        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
+                                         : "/Systs/det_sys_cov.root");
+#endif
+
+  std::string this_beam = "all";
+  if(!TwoBeams){
+    if(isFHC) this_beam = "fhc";
+    else this_beam = "rhc";
+  }
+
+  // TDirectory *thisDir = gDirectory->CurrentDirectory();
+  TFile covMatFile(covFileName.c_str());
+  TString covObjectName = "nd_" + this_beam + "_frac_cov";
+  TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get(covObjectName);
+  // TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
+  if (!fake_uncorr) {
+    std::cout << "Could not obtain covariance matrix named "
+    << covObjectName <<  " from " << covFileName << std::endl;
+    abort();
+  }
+
+  if(!UseV3NDCovMat){
+    return fake_uncorr;
+  }
+  else{
+    std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
+
+    TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
+
+    assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
+
+    size_t NRows = fake_uncorr->GetNrows();
+    size_t NRows_FHC = covmx_fhc_only->GetNrows();
+
+    for (size_t row_it = 0; row_it < NRows; ++row_it) {
+      for (size_t col_it = 0; col_it < NRows; ++col_it) {
+
+      // Could use TMatrix::SetSub but I don't trust TMatrix...
+        if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
+          ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
+          (*fake_uncorr)[row_it][col_it] = 0;}
+        else {
+          size_t row_fhc_only_it = row_it % NRows_FHC;
+          size_t col_fhc_only_it = col_it % NRows_FHC;
+          (*fake_uncorr)[row_it][col_it] =
+          (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
+        }
+      }
+    }
+
+    return fake_uncorr;
+  }
+}
+
 TMatrixD *MakeCovmat(PredictionInterp const &prediction,
                      std::vector<ISyst const *> const &systs,
-                     osc::IOscCalculatorAdjustable *calc, size_t NToys,
+                     osc::IOscCalcAdjustable *calc, size_t NToys,
                      TDirectory *outdir) {
   std::vector<std::vector<double>> ThrownSpectra;
   std::vector<double> MeanSpectra;
@@ -889,7 +941,7 @@ TMatrixD *MakeCovmat(PredictionInterp const &prediction,
   return mat;
 }
 
-void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalculatorAdjustable *calc,
+void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
                       std::string tree_name) {
 
   outDir->cd();
@@ -1132,11 +1184,16 @@ std::string BuildLogInfoString() {
   return ss.str();
 }
 
+Spectrum MockOrAsimov(const Spectrum& s, bool mock, double pot, int seed)
+{
+  if(mock > 0) return s.MockData(pot, seed); else return s.AsimovData(pot);
+}
+
 std::vector<seeded_spectra>
 BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
              PredictionInterp *predFDNumuRHC, PredictionInterp *predFDNueRHC,
              PredictionInterp *predNDNumuFHC, PredictionInterp *predNDNumuRHC,
-             osc::IOscCalculatorAdjustable *fakeDataOsc,
+             osc::IOscCalcAdjustable *fakeDataOsc,
              SystShifts fakeDataSyst, bool fakeDataStats, double pot_fd_fhc_nue,
              double pot_fd_fhc_numu, double pot_fd_rhc_nue,
              double pot_fd_rhc_numu, double pot_nd_fhc, double pot_nd_rhc,
@@ -1147,56 +1204,38 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
   // Ordering of these is important
   // kFDNueFHC
   if (predFDNueFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuFHC
   if (predFDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_fhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_fhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kFDNueRHC
   if (predFDNueRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_nue, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNueRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_nue, Seeds[iseed])));
     iseed++;
   }
   // kFDNumuRHC
   if (predFDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_fd_rhc_numu, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predFDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_fd_rhc_numu, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuFHC
   if (predNDNumuFHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_fhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuFHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_fhc, Seeds[iseed])));
     iseed++;
   }
   // kNDNumuRHC
   if (predNDNumuRHC) {
-    spectra.emplace_back(
-        Seeds[iseed], std::unique_ptr<Spectrum>(new Spectrum(
-                          predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst)
-                              .MockData(pot_nd_rhc, fakeDataStats,
-                                        fakeDataStats ? Seeds[iseed] : 0))));
+    spectra.emplace_back(Seeds[iseed],
+                         std::make_unique<Spectrum>(MockOrAsimov(predNDNumuRHC->PredictSyst(fakeDataOsc, fakeDataSyst), fakeDataStats, pot_nd_rhc, Seeds[iseed])));
     iseed++;
   }
 
@@ -1204,12 +1243,12 @@ BuildSpectra(PredictionInterp *predFDNumuFHC, PredictionInterp *predFDNueFHC,
 }
 
 double RunFitPoint(std::string stateFileName, std::string sampleString,
-                   osc::IOscCalculatorAdjustable *fakeDataOsc,
+                   osc::IOscCalcAdjustable *fakeDataOsc,
                    SystShifts fakeDataSyst, bool fakeDataStats,
                    std::vector<const IFitVar *> oscVars,
                    std::vector<const ISyst *> systlist,
-                   osc::IOscCalculatorAdjustable *fitOsc, SystShifts fitSyst,
-                   ana::SeedList oscSeeds, IChiSqExperiment *penaltyTerm,
+                   osc::IOscCalcAdjustable *fitOsc, SystShifts fitSyst,
+                   ana::SeedList oscSeeds, IExperiment *penaltyTerm,
                    MinuitFitter::FitOpts fitStrategy, TDirectory *outDir,
                    FitTreeBlob *PostFitTreeBlob,
                    std::vector<seeded_spectra> *spectra, SystShifts &bf) {
@@ -1365,13 +1404,59 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
                                       *spectra->at(kFDNumuRHC).spect);
   dis_expt_rhc.SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8);
 
-  SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC,
-                                     *spectra->at(kNDNumuFHC).spect);
-  nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
+  IExperiment *nd_expt_fhc = 0, *nd_expt_rhc = 0;
+  CovarianceExperiment* nd_expt_joint = 0;
 
-  SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC,
-                                     *spectra->at(kNDNumuRHC).spect);
-  nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
+  bool UseNDCovMat = true;
+  if (getenv("CAFANA_USE_NDCOVMAT")) {
+    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
+  }
+
+  bool UseV3NDCovMat = (AnaV == kV3);
+  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
+    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
+  }
+
+  // JOINT COVARIANCE CASE HERE.
+  // The analyses were only performed with both beams when using the covariance matrix.
+  // So there was no option for joint or no joint matrix case. 
+
+  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
+    if (turbose) {
+      std::cout << "[INFO]: Opening ND covmat file for CovarianceExperiment" << BuildLogInfoString()
+                << std::endl;
+    }
+
+    TMatrixD* joint_matrix = GetNDCovMat(UseV3NDCovMat, true, true);
+
+    nd_expt_joint = new CovarianceExperiment({&predNDNumuFHC, &predNDNumuRHC},
+                                             {*spectra->at(kNDNumuFHC).spect,
+                                              *spectra->at(kNDNumuRHC).spect},
+                                             joint_matrix,
+                                             kCovMxChiSqPreInvert);
+    
+  //   //// Invert the assignation. Let's see if the old AddCovMatrix to MultiExperiment was messing thing up (?)
+  //   nd_expt_joint = new CovarianceExperiment({&predNDNumuRHC, &predNDNumuFHC},
+  //                                            {*spectra->at(kNDNumuRHC).spect,
+  //                                             *spectra->at(kNDNumuFHC).spect},
+  //                                            joint_matrix,
+  //                                            kCovMxChiSqPreInvert);
+    nd_expt_joint->SetMaskHist(0, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_joint->SetMaskHist(1, 0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+  }
+  else{
+    auto e = new SingleSampleExperiment(&predNDNumuFHC,
+                                        *spectra->at(kNDNumuFHC).spect);
+
+    e->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_fhc = e;
+
+    e = new SingleSampleExperiment(&predNDNumuRHC,
+                                   *spectra->at(kNDNumuRHC).spect);
+
+    e->SetMaskHist(0.5, (AnaV == kV4) ? 10 : 8, 0, -1);
+    nd_expt_rhc = e;
+  }
 
   if (PostFitTreeBlob) {
     // Save the seeds used to do the stats throws
@@ -1453,13 +1538,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_fhc", pot_nd_fhc);
       pre_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc->Write();
       TH1 *pre_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "prefit_nd_numu_fhc_1D", pot_nd_fhc, true);
       pre_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
@@ -1475,13 +1560,13 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *pre_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                             "prefit_nd_numu_rhc", pot_nd_rhc);
       pre_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc->Write();
       TH1 *pre_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "prefit_nd_numu_rhc_1D", pot_nd_rhc, true);
       pre_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       pre_nd_numu_rhc_1D->Write();
     }
 
@@ -1493,10 +1578,15 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   // Now sort out the experiment
   MultiExperiment this_expt;
-  if (pot_nd_fhc > 0)
-    this_expt.Add(&nd_expt_fhc);
-  if (pot_nd_rhc > 0)
-    this_expt.Add(&nd_expt_rhc);
+  if(nd_expt_joint){
+    this_expt.Add(nd_expt_joint);
+  }
+  else{
+    if (pot_nd_fhc > 0)
+      this_expt.Add(nd_expt_fhc);
+    if (pot_nd_rhc > 0)
+      this_expt.Add(nd_expt_rhc);
+  }
   if (pot_fd_fhc_numu > 0)
     this_expt.Add(&dis_expt_fhc);
   if (pot_fd_rhc_numu > 0)
@@ -1511,88 +1601,6 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
               << std::endl;
   }
 
-  bool UseNDCovMat = true;
-  if (getenv("CAFANA_USE_NDCOVMAT")) {
-    UseNDCovMat = bool(atoi(getenv("CAFANA_USE_NDCOVMAT")));
-  }
-
-  bool UseV3NDCovMat = (AnaV == kV3);
-  if (getenv("CAFANA_USE_UNCORRNDCOVMAT")) {
-    UseV3NDCovMat = bool(atoi(getenv("CAFANA_USE_UNCORRNDCOVMAT")));
-  }
-
-  // Add in the covariance matrices via the MultiExperiment
-  // idx must be in correct order to access correct part of matrix
-  // Don't use FD covmx fits
-  if (UseNDCovMat && (pot_nd_rhc > 0) && (pot_nd_fhc > 0)) {
-
-    // Get the ndCov
-    const std::string detCovPath =
-        "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/";
-#ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
-    std::string covFileName =
-        detCovPath + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                    : "/det_sys_cov.root");
-#else
-    std::string covFileName =
-        FindCAFAnaDir() + ((AnaV == kV3) ? "/Systs/det_sys_cov_v3binning.root"
-                                         : "/Systs/det_sys_cov.root");
-#endif
-
-    if (turbose) {
-      std::cout << "[INFO]: Adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
-    if (UseV3NDCovMat) {
-
-      std::cout << "[INFO]: Using v3-like ND covmat treadment." << std::endl;
-
-      TDirectory *thisDir = gDirectory->CurrentDirectory();
-      TFile covMatFile(covFileName.c_str());
-      TMatrixD *fake_uncorr = (TMatrixD *)covMatFile.Get("nd_all_frac_cov");
-      if (!fake_uncorr) {
-        std::cout << "Could not obtain covariance matrix named "
-                     "\"nd_all_frac_cov\"  from "
-                  << covFileName << std::endl;
-        abort();
-      }
-
-      TMatrixD *covmx_fhc_only = (TMatrixD *)covMatFile.Get("nd_fhc_frac_cov");
-
-      assert(fake_uncorr->GetNrows() == 2 * covmx_fhc_only->GetNrows());
-
-      size_t NRows = fake_uncorr->GetNrows();
-      size_t NRows_FHC = covmx_fhc_only->GetNrows();
-      for (size_t row_it = 0; row_it < NRows; ++row_it) {
-        for (size_t col_it = 0; col_it < NRows; ++col_it) {
-
-          // Could use TMatrix::SetSub but I don't trust TMatrix...
-          if (((row_it >= NRows_FHC) && (col_it < NRows_FHC)) ||
-              ((row_it < NRows_FHC) && (col_it >= NRows_FHC))) {
-            (*fake_uncorr)[row_it][col_it] = 0;
-          } else {
-            size_t row_fhc_only_it = row_it % NRows_FHC;
-            size_t col_fhc_only_it = col_it % NRows_FHC;
-            (*fake_uncorr)[row_it][col_it] =
-                (*covmx_fhc_only)[row_fhc_only_it][col_fhc_only_it];
-          }
-        }
-      }
-
-      this_expt.AddCovarianceMatrix(fake_uncorr, true, {0, 1});
-
-      thisDir->cd();
-
-    } else {
-      this_expt.AddCovarianceMatrix(covFileName, "nd_all_frac_cov", true,
-                                    {0, 1});
-    }
-    if (turbose) {
-      std::cout << "[INFO]: Finished adding ND covmat " << BuildLogInfoString()
-                << std::endl;
-    }
-  }
-
   // Add in the penalty...
   if (penaltyTerm) {
     this_expt.Add(penaltyTerm);
@@ -1603,7 +1611,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
   std::cerr << "[INFO]: Beginning fit. " << BuildLogInfoString();
   MinuitFitter this_fit(&this_expt, oscVars, systlist, fitStrategy);
   double thischisq =
-      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose);
+      this_fit.Fit(fitOsc, fitSyst, oscSeeds, {}, MinuitFitter::kVerbose)->EvalMetricVal();
   auto end_fit = std::chrono::system_clock::now();
   std::time_t end_fit_time = std::chrono::system_clock::to_time_t(end_fit);
   std::cerr << "[FIT]: Finished fit in "
@@ -1674,26 +1682,26 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       TH1 *post_nd_numu_fhc = GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_fhc", pot_nd_fhc);
       post_nd_numu_fhc->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc->Write();
       TH1 *post_nd_numu_fhc_1D =
           GetMCSystTotal(&predNDNumuFHC, fitOsc, fitSyst,
                          "postfit_nd_numu_fhc_1D", pot_nd_fhc, true);
       post_nd_numu_fhc_1D->SetTitle(
-          std::to_string(nd_expt_fhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_fhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_fhc_1D->Write();
     }
     if (pot_nd_rhc) {
       TH1 *post_nd_numu_rhc = GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                                              "postfit_nd_numu_rhc", pot_nd_rhc);
       post_nd_numu_rhc->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc->Write();
       TH1 *post_nd_numu_rhc_1D =
           GetMCSystTotal(&predNDNumuRHC, fitOsc, fitSyst,
                          "postfit_nd_numu_rhc_1D", pot_nd_rhc, true);
       post_nd_numu_rhc_1D->SetTitle(
-          std::to_string(nd_expt_rhc.ChiSq(fitOsc, fitSyst)).c_str());
+          std::to_string(nd_expt_rhc->ChiSq(fitOsc, fitSyst)).c_str());
       post_nd_numu_rhc_1D->Write();
     }
 

@@ -15,9 +15,9 @@
 using namespace ana;
 
 #include "StandardRecord/StandardRecord.h"
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
-#include "Utilities/rootlogon.C"
+#include "CAFAna/Core/rootlogon.C"
 
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -87,7 +87,7 @@ void test_dune()
   SaveToFile(pred, "pred_numu.root", "pred");
   SaveToFile(predNue, "pred_nue.root", "pred");
 
-  osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* calc = DefaultOscCalc();
   calc->SetL(1300);
   calc->SetdCP(TMath::Pi()*1.5);
 

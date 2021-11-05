@@ -51,7 +51,7 @@ namespace ana
                                          const HistAxis&     axis,
                                          Cut                 cut,
                                          const SystShifts&   shift,
-                                         const Var&          wei)
+                                         const Weight&       wei)
     : PredictionXSecDiag(new PredictionScaleComp(loader, axis, cut, GetDUNEXSecSysts(), shift, wei))
   {
   }
@@ -64,13 +64,13 @@ namespace ana
                      const HistAxis&     axis,
                      Cut                 cut,
                      const SystShifts&   shift,
-                     const Var&          wei)
+                     const Weight&       wei)
     : PredictionXSecDiag(new PredictionScaleComp(loaderNonswap, loaderNue, loaderNuTau, axis, cut, GetDUNEXSecSysts(), shift, wei))
   {
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionXSecDiag::PredictComponentSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionXSecDiag::PredictComponentSyst(osc::IOscCalc* calc,
                                                     const SystShifts& shift,
                                                     Flavors::Flavors_t flav,
                                                     Current::Current_t curr,
@@ -126,9 +126,9 @@ namespace ana
 
   //----------------------------------------------------------------------
   std::unique_ptr<PredictionXSecDiag> PredictionXSecDiag::
-  LoadFrom(TDirectory* dir)
+  LoadFrom(TDirectory* dir, const std::string& name)
   {
-    return std::make_unique<PredictionXSecDiag>(ana::LoadFrom<IPrediction>(dir).release());
+    return std::make_unique<PredictionXSecDiag>(ana::LoadFrom<IPrediction>(dir, name).release());
   }
 
   //----------------------------------------------------------------------

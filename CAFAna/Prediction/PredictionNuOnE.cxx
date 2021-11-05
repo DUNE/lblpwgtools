@@ -2,7 +2,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -10,7 +10,7 @@
 namespace ana
 {
   // Simple counting experiment
-  const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), kUnweighted);
+  const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), Constant(1));
 
   const Var kThetaReco = SIMPLEVAR(theta_reco);
   const Var kElepReco = SIMPLEVAR(Elep_reco);
@@ -23,14 +23,14 @@ namespace ana
 
   // Account for reduced efficiency of selecting photon shower as backgrounds
   // into an analysis looking for electron showers.
-  const Var kNCScaleFactor = Constant(.1);
+  const Weight kNCScaleFactor([](const caf::SRProxy* sr){return .1;});
 
   // --------------------------------------------------------------------------
   PredictionNuOnE::PredictionNuOnE(SpectrumLoaderBase& sigLoader,
                                    SpectrumLoaderBase& ccBkgLoader,
                                    SpectrumLoaderBase& ncBkgLoader,
                                    const SystShifts& shift,
-                                   const Var& wei)
+                                   const Weight& wei)
     : fSig  (  sigLoader, kNuOnEaxis, kNuOnECut, shift, wei),
       fCCBkg(ccBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei),
       fNCBkg(ncBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei * kNCScaleFactor)
@@ -38,13 +38,13 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  Spectrum PredictionNuOnE::Predict(osc::IOscCalculator*) const
+  Spectrum PredictionNuOnE::Predict(osc::IOscCalc*) const
   {
     return fSig+fCCBkg+fNCBkg;
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionNuOnE::PredictComponent(osc::IOscCalc* calc,
                                              Flavors::Flavors_t flav,
                                              Current::Current_t curr,
                                              Sign::Sign_t sign) const
@@ -67,35 +67,41 @@ namespace ana
   }
 
   // --------------------------------------------------------------------------
-  void PredictionNuOnE::SaveTo(TDirectory* dir) const
+  void PredictionNuOnE::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = dir;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionNuOnE").Write("type");
 
-    fSig.SaveTo(dir->mkdir("sig"));
-    fCCBkg.SaveTo(dir->mkdir("ccbkg"));
-    fNCBkg.SaveTo(dir->mkdir("ncbkg"));
+    fSig.SaveTo(dir, "sig");
+    fCCBkg.SaveTo(dir, "ccbkg");
+    fNCBkg.SaveTo(dir, "ncbkg");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionNuOnE> PredictionNuOnE::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* ptag = (TObjString*)dir->Get("type");
     assert(ptag);
     assert(ptag->GetString() == "PredictionNuOnE");
 
-    assert(dir->GetDirectory("sig"));
-    assert(dir->GetDirectory("ccbkg"));
-    assert(dir->GetDirectory("ncbkg"));
-
     PredictionNuOnE* ret = new PredictionNuOnE
-      (*Spectrum::LoadFrom(dir->GetDirectory("sig")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ccbkg")),
-       *Spectrum::LoadFrom(dir->GetDirectory("ncbkg")));
+      (*Spectrum::LoadFrom(dir, "sig"),
+       *Spectrum::LoadFrom(dir, "ccbkg"),
+       *Spectrum::LoadFrom(dir, "ncbkg"));
+
+    delete dir;
 
     return std::unique_ptr<PredictionNuOnE>(ret);
   }

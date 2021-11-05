@@ -1,7 +1,10 @@
 #include "CAFAna/Prediction/PredictionExtrap.h"
 
+#include "OscLib/IOscCalc.h"
+
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/Stan.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -22,7 +25,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionExtrap::Predict(osc::IOscCalculator* calc) const
+  Spectrum PredictionExtrap::Predict(osc::IOscCalc* calc) const
   {
     return PredictComponent(calc,
                             Flavors::kAll,
@@ -31,18 +34,27 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalculator* calc,
-                                              Flavors::Flavors_t flav,
-                                              Current::Current_t curr,
-                                              Sign::Sign_t sign) const
+  Spectrum PredictionExtrap::Predict(osc::IOscCalcStan* calc) const
+  {
+    return PredictComponent(calc,
+                            Flavors::kAll,
+                            Current::kBoth,
+                            Sign::kBoth);
+  }
+
+  //----------------------------------------------------------------------
+  // the actual implementation
+  template<typename T>
+  Spectrum PredictionExtrap::_PredictComponent(osc::_IOscCalc<T>* calc,
+                                               Flavors::Flavors_t flav,
+                                               Current::Current_t curr,
+                                               Sign::Sign_t sign) const
   {
     Spectrum ret = fExtrap->NCComponent(); // Get binning
     ret.Clear();
 
     if(curr & Current::kCC){
-      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     {
-	ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
-      }
+      if(flav & Flavors::kNuEToNuE    && sign & Sign::kNu)     ret += fExtrap->NueSurvComponent().    Oscillated(calc, +12, +12);
       if(flav & Flavors::kNuEToNuE    && sign & Sign::kAntiNu) ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
 
       if(flav & Flavors::kNuEToNuMu   && sign & Sign::kNu)     ret += fExtrap->NumuAppComponent().    Oscillated(calc, +12, +14);
@@ -60,6 +72,7 @@ namespace ana
       if(flav & Flavors::kNuMuToNuTau && sign & Sign::kNu)     ret += fExtrap->TauFromMuComponent().    Oscillated(calc, +14, +16);
       if(flav & Flavors::kNuMuToNuTau && sign & Sign::kAntiNu) ret += fExtrap->AntiTauFromMuComponent().Oscillated(calc, -14, -16);
     }
+
     if(curr & Current::kNC){
       assert(flav == Flavors::kAll); // Don't know how to calculate anything else
 
@@ -68,6 +81,26 @@ namespace ana
     }
 
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  // just call the templated guy
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalc* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
+  {
+    return _PredictComponent(calc, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  // just call the templated guy
+  Spectrum PredictionExtrap::PredictComponent(osc::IOscCalcStan* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
+  {
+    return _PredictComponent(calc, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
@@ -111,24 +144,31 @@ namespace ana
   }
   // End NC components.
   //----------------------------------------------------------------------
-  void PredictionExtrap::SaveTo(TDirectory* dir) const
+  void PredictionExtrap::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionExtrap").Write("type");
 
-    fExtrap->SaveTo(dir->mkdir("extrap"));
+    fExtrap->SaveTo(dir, "extrap");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionExtrap> PredictionExtrap::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionExtrap> PredictionExtrap::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    assert(dir->GetDirectory("extrap"));
-    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir->GetDirectory("extrap")).release();
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    IExtrap* extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
+    delete dir;
 
     return std::unique_ptr<PredictionExtrap>(new PredictionExtrap(extrap));
   }

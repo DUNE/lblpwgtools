@@ -8,14 +8,14 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "StandardRecord/StandardRecord.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+#include "StandardRecord/SRProxy.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
 // New includes required
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Analysis/Fit.h"
+#include "CAFAna/Fit/MinuitFitter.h"
 #include "CAFAna/Vars/FitVars.h"
 
 using namespace ana;
@@ -29,11 +29,11 @@ void demo2()
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
   PredictionNoExtrap pred(loaderNonSwap, loaderNueSwap, loaderTauSwap, axEnergy, kPassesCVN);
   loaderNonSwap.Go();
   loaderNueSwap.Go();
@@ -41,7 +41,7 @@ void demo2()
 
   // We make the oscillation calculator "adjustable" so the fitter can
   // manipulate it.
-  osc::IOscCalculatorAdjustable* calc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* calc = DefaultOscCalc();
 
   // To make a fit we need to have a "data" spectrum to compare to our MC
   // Prediction object
@@ -59,8 +59,8 @@ void demo2()
   // parameters given. These are FitVars from Vars/FitVars.h. They can contain
   // snippets of code to convert from the underlying angles etc to whatever
   // function you want to fit.
-  Fitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
-  const double best_chisq = fit.Fit(calc);
+  MinuitFitter fit(&expt, {&kFitDmSq32Scaled, &kFitSinSqTheta23});
+  const double best_chisq = fit.Fit(calc)->EvalMetricVal();
 
   // The osc calculator is updated in-place with the best oscillation
   // parameters

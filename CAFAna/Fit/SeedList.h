@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 #include <iostream>
 #include <map>
@@ -20,7 +20,7 @@ namespace ana
 
     void Set(const IFitVar* v, double x){fVals[v] = x;}
 
-    void ResetCalc(osc::IOscCalculatorAdjustable* calc) const;
+    void ResetCalc(osc::IOscCalcAdjustable* calc) const;
 
     const std::map<const IFitVar*, double> GetVals() const {return fVals;}
 

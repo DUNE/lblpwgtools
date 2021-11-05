@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include <cassert>
@@ -17,7 +17,7 @@ namespace ana {
   NuOnECCBkgSyst() : ISyst("NuOnECCBkgSyst", "nu_e CC background to nu+e") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only
         // apply unc. only to nu_e CC background, not NC gamma background
@@ -40,7 +40,7 @@ namespace ana {
   NuOnENCBkgSyst() : ISyst("NuOnENCBkgSyst", "NC pi0 background to nu+e") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only
         // apply unc. only to NC gamma background (and not nu-on-e)
@@ -63,7 +63,7 @@ namespace ana {
   NuOnERecoEffSyst() : ISyst("NuOnERecoEffSyst", "nu+e signal reconstruction") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       if(!sr->isFD) { // ND only
         if( sr->mode == 7 ) {
@@ -74,10 +74,15 @@ namespace ana {
   };
   extern const NuOnERecoEffSyst kNuOnERecoEffSyst;
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   struct NuOnESystVector: public std::vector<const ISyst*>
   {
-
   };
   NuOnESystVector GetNuOnESysts();
+*/
 
+  std::vector<const ISyst*> GetNuOnESysts();
+  
 }

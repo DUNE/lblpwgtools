@@ -11,9 +11,9 @@ namespace ana {
   const FVNumuFDSyst kFVNumuFDSyst;
   const FVNueFDSyst kFVNueFDSyst;
 
-  FDRecoSystVector GetFDRecoSysts()
+  std::vector<const ISyst*> GetFDRecoSysts()
   {
-    FDRecoSystVector vec = {};
+    std::vector<const ISyst*> vec = {};
     vec.push_back(&kFDRecoNumuSyst);
     vec.push_back(&kFDRecoNueSyst);
     vec.push_back(&kFVNumuFDSyst);

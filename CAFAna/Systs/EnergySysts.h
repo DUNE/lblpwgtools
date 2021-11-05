@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
@@ -20,7 +20,7 @@ namespace ana
   EnergyScaleFD() : ISyst("EnergyScaleFD", "Global FD Energy Scale Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -53,7 +53,7 @@ namespace ana
   UncorrFDTotSqrt() : ISyst("UncorrFDTotSqrt", "Uncorrelated FD Sqrt Total Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -82,7 +82,7 @@ namespace ana
   UncorrFDTotInvSqrt() : ISyst("UncorrFDTotInvSqrt", "Uncorrelated FD Inverse Sqrt Total Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -116,7 +116,7 @@ namespace ana
   UncorrFDHadSqrt() : ISyst("UncorrFDHadSqrt", "Uncorrelated FD Sqrt Hadron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -150,7 +150,7 @@ namespace ana
   UncorrFDHadInvSqrt() : ISyst("UncorrFDHadInvSqrt", "Uncorrelated FD Inv Sqrt Hadron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -187,7 +187,7 @@ namespace ana
   UncorrFDMuSqrt() : ISyst("UncorrFDMuSqrt", "Uncorrelated FD Sqrt Muon Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->RecoLepEnNumu);
@@ -207,7 +207,7 @@ namespace ana
   UncorrFDMuInvSqrt() : ISyst("UncorrFDMuInvSqrt", "Uncorrelated FD Inv Sqrt Muon Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->RecoLepEnNumu);
@@ -230,7 +230,7 @@ namespace ana
   UncorrFDNSqrt() : ISyst("UncorrFDNSqrt", "Uncorrelated FD Sqrt Neutron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -255,7 +255,7 @@ namespace ana
   UncorrFDNInvSqrt() : ISyst("UncorrFDNInvSqrt", "Uncorrelated FD Inv Sqrt Neutron Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -283,7 +283,7 @@ namespace ana
   UncorrFDEMSqrt() : ISyst("UncorrFDEMSqrt", "Uncorrelated FD Sqrt EM Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -316,7 +316,7 @@ namespace ana
   UncorrFDEMInvSqrt() : ISyst("UncorrFDEMInvSqrt", "Uncorrelated FD Inv Sqrt EM Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -352,7 +352,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->RecoLepEnNumu);
@@ -375,7 +375,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_nue,
                   sr->Ev_reco_numu,
@@ -413,7 +413,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->Ev_reco_nue,
@@ -443,7 +443,7 @@ namespace ana
   EMUncorrFD() : ISyst("EMUncorrFD", "Electromagnetic shower FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->RecoLepEnNue,
                   sr->RecoHadEnNue,
@@ -479,7 +479,7 @@ namespace ana
   MuonResFD() : ISyst("MuonResFD", "Muon Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_numu,
                   sr->RecoLepEnNumu);
@@ -501,7 +501,7 @@ namespace ana
   EMResFD() : ISyst("EMResFD", "EM shower Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_nue,
                   sr->Ev_reco_numu,
@@ -535,7 +535,7 @@ namespace ana
   ChargedHadResFD() : ISyst("ChargedHadResFD", "Charged Hadron Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_nue,
                   sr->Ev_reco_numu,
@@ -569,7 +569,7 @@ namespace ana
   NResFD() : ISyst("NResFD", "Neutron Far Detector Resolution Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, double& weight) const override
+               caf::SRProxy* sr, double& weight) const override
     {
       restore.Add(sr->Ev_reco_nue,
                   sr->Ev_reco_numu,
@@ -592,13 +592,16 @@ namespace ana
 
   extern const NResFD kNResFD;
 
+/*
+  /// why have a structure (yet) if not needed
+  /// make things simpler
   // Vector of energy scale systematics
   struct EnergySystVector: public std::vector<const ISyst*>
   {
-
   };
-
-
   EnergySystVector GetEnergySysts();
+*/
+
+  std::vector<const ISyst*> GetEnergySysts();
 
 }

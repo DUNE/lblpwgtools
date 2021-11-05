@@ -68,7 +68,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw)
@@ -94,7 +94,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
         fitThrowSyst.SetShift(
@@ -111,7 +111,7 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
 
     // Need to do the initial fit for this throw... find the minimum chi2 for
     // this throw Ignoring the possibility of a theta23 penalty here
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     globalmin = RunFitPoint(
         stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -128,10 +128,10 @@ void make_cpv_throws(std::string stateFname = "common_state_mcc11v3.root",
       double dcptest = tdcp * TMath::Pi();
 
       // Now testOsc is restricted to CP conservation
-      osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1);
+      osc::IOscCalcAdjustable *testOsc = NuFitOscCalc(hie, 1);
       testOsc->SetdCP(dcptest);
 
-      IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+      IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
       thischisq = RunFitPoint(
           stateFname, sampleString, fakeThrowOsc, fakeThrowSyst, stats_throw,

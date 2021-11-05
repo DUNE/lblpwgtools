@@ -14,7 +14,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "OscLib/func/IOscCalculator.h"
+//#include "OscLib/func/IOscCalc.h"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -58,7 +58,7 @@ public:
 
   // Fills NDefficiency and FDefficiency, taking selected
   // ND and FD event rates as argument
-  void CalcEfficiency(osc::IOscCalculator *calc, 
+  void CalcEfficiency(osc::IOscCalc *calc, 
                       HistAxis const &axis,
                       ana::SystShifts shift = kNoShift,
                       Flavors::Flavors_t NDflav = Flavors::kAll,

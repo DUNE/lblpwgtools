@@ -6,7 +6,9 @@
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/ThreadLocal.h"
 
+#include <iostream>
 #include <map>
 #include <memory>
 
@@ -38,7 +40,7 @@ namespace ana
     ///                fits can't be split out reasonably. For RHC it's
     ///                important not to conflate them.
     PredictionInterp(std::vector<const ISyst*> systs,
-                     osc::IOscCalculator* osc,
+                     osc::IOscCalc* osc,
                      const IPredictionGenerator& predGen,
                      Loaders& loaders,
                      const SystShifts& shiftMC = kNoShift,
@@ -48,55 +50,65 @@ namespace ana
 
 
 
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const override;
-    virtual Spectrum PredictSyst(osc::IOscCalculator* calc,
-                                 const SystShifts& shift) const override;
+    Spectrum Predict(osc::IOscCalc* calc) const override;
+    Spectrum Predict(osc::IOscCalcStan* calc) const override;
 
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
-                                      Flavors::Flavors_t flav,
-                                      Current::Current_t curr,
-                                      Sign::Sign_t sign) const override;
-    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
-                                          const SystShifts& shift,
-                                          Flavors::Flavors_t flav,
-                                          Current::Current_t curr,
-                                          Sign::Sign_t sign) const override;
 
-    virtual void Derivative(osc::IOscCalculator* calc,
-                            const SystShifts& shift,
-                            double pot,
-                            std::unordered_map<const ISyst*, std::vector<double>>& dp) const override;
+    Spectrum PredictSyst(osc::IOscCalc* calc,
+                         const SystShifts& shift) const override;
+    Spectrum PredictSyst(osc::IOscCalcStan* calc,
+                         const SystShifts& shift) const override;
 
-    virtual void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir);
+    Spectrum PredictComponent(osc::IOscCalc* calc,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign) const override;
+    Spectrum PredictComponent(osc::IOscCalcStan* calc,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign) const override;
+
+    Spectrum PredictComponentSyst(osc::IOscCalc* calc,
+                                  const SystShifts& shift,
+                                  Flavors::Flavors_t flav,
+                                  Current::Current_t curr,
+                                  Sign::Sign_t sign) const override;
+    Spectrum PredictComponentSyst(osc::IOscCalcStan* calc,
+                                  const SystShifts& shift,
+                                  Flavors::Flavors_t flav,
+                                  Current::Current_t curr,
+                                  Sign::Sign_t sign) const override;
+
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
 
     /// After calling this DebugPlots won't work fully and SaveTo won't work at
     /// all.
     void MinimizeMemory();
 
     void DebugPlot(const ISyst* syst,
-                   osc::IOscCalculator* calc,
+                   osc::IOscCalc* calc,
                    Flavors::Flavors_t flav = Flavors::kAll,
                    Current::Current_t curr = Current::kBoth,
                    Sign::Sign_t sign = Sign::kBoth) const;
 
     // If \a savePattern is not empty, print each pad. Must contain a "%s" to
     // contain the name of the systematic.
-    void DebugPlots(osc::IOscCalculator* calc,
-		    const std::string& savePattern = "",
-		    Flavors::Flavors_t flav = Flavors::kAll,
-		    Current::Current_t curr = Current::kBoth,
-		    Sign::Sign_t sign = Sign::kBoth) const;
+    void DebugPlots(osc::IOscCalc* calc,
+                    const std::string& savePattern = "",
+                    Flavors::Flavors_t flav = Flavors::kAll,
+                    Current::Current_t curr = Current::kBoth,
+                    Sign::Sign_t sign = Sign::kBoth) const;
 
-    void SetOscSeed(osc::IOscCalculator* oscSeed);
+    void SetOscSeed(osc::IOscCalc* oscSeed);
 
     void DebugPlotColz(const ISyst* syst,
-                       osc::IOscCalculator* calc,
+                       osc::IOscCalc* calc,
                        Flavors::Flavors_t flav = Flavors::kAll,
                        Current::Current_t curr = Current::kBoth,
                        Sign::Sign_t sign = Sign::kBoth) const;
 
-    void DebugPlotsColz(osc::IOscCalculator* calc,
+    void DebugPlotsColz(osc::IOscCalc* calc,
                         const std::string& savePattern = "",
                         Flavors::Flavors_t flav = Flavors::kAll,
                         Current::Current_t curr = Current::kBoth,
@@ -109,7 +121,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fBinning(0, {}, {}, 0, 0) {
+    PredictionInterp() : fOscOrigin(nullptr), fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
@@ -118,14 +130,14 @@ namespace ana
     }
 
     static void LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-			     std::vector<const ISyst*> veto = {});
+                             std::vector<const ISyst*> veto = {});
 
     typedef ana::PredIntKern::Coeffs Coeffs;
 
     /// Find coefficients describing this set of shifts
     std::vector<std::vector<Coeffs>>
     FitRatios(const std::vector<double>& shifts,
-              const std::vector<std::unique_ptr<TH1>>& ratios) const;
+              const std::vector<Eigen::ArrayXd>& ratios) const;
 
     /// Find coefficients describing the ratios from this component
     std::vector<std::vector<Coeffs>>
@@ -142,7 +154,7 @@ namespace ana
                            const SystShifts& shift) const;
 
     /// Helper for PredictComponentSyst
-    Spectrum ShiftedComponent(osc::IOscCalculator* calc,
+    Spectrum ShiftedComponent(osc::IOscCalc* calc,
                               const TMD5* hash,
                               const SystShifts& shift,
                               Flavors::Flavors_t flav,
@@ -150,10 +162,27 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
+    Spectrum ShiftedComponent(osc::IOscCalcStan* calc,
+                              const TMD5* hash,
+                              const SystShifts& shift,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign,
+                              CoeffsType type) const;
+
+/*<<<<<<< HEAD
     template <typename T> T *GetPredNomAs() {
       return dynamic_cast<T *>(fPredNom.get());
     }
 
+=======*/
+    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
+    void DiscardSysts(std::vector<ISyst const *>const &);
+    //Get all known about systs
+    std::vector<ISyst const *> GetAllSysts() const;
+
+  protected:
+//>>>>>>> origin
     std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
     struct ShiftedPreds
@@ -201,6 +230,7 @@ namespace ana
       }
     };
 
+/*<<<<<<< HEAD
     void SetDontUseCache(bool v=true){
       fDontUseCache = v;
     }
@@ -211,6 +241,8 @@ namespace ana
     std::vector<ISyst const *> GetAllSysts() const;
 
   protected:
+======= */
+
     using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
     mutable std::vector<PredMappedType> fPreds;
     std::vector<PredMappedType>::iterator find_pred(const ISyst *s) const {
@@ -227,7 +259,7 @@ namespace ana
     }
 
     /// The oscillation values we assume when evaluating the coefficients
-    osc::IOscCalculator* fOscOrigin;
+    osc::IOscCalc* fOscOrigin;
 
     mutable Spectrum fBinning; ///< Dummy spectrum to provide binning
 
@@ -245,9 +277,9 @@ namespace ana
     struct Val_t
     {
       TMD5 hash;
-      Spectrum nom;
+      Spectrum nom;  // todo: we can't cache stan::math::vars because they wind up getting invalidated when the Stan stack is cleared.  but keeping only a <double> version around in this cache means that we're dumping the autodiff for the oscillation calculator part, which may mean Stan won't explore the space correctly.  Not sure what to do here.
     };
-    mutable std::map<Key_t, Val_t> fNomCache;
+    mutable ThreadLocal<std::map<Key_t, Val_t>> fNomCache;
 
     bool fSplitBySign;
 
@@ -260,6 +292,7 @@ namespace ana
                         std::vector<std::vector<std::vector<Coeffs>>>& fits,
                         Sign::Sign_t sign) const;
 
+/* <<<<<<< HEAD
      /// Helper for \ref Derivative
     void ComponentDerivative(osc::IOscCalculator* calc,
                              Flavors::Flavors_t flav,
@@ -271,6 +304,33 @@ namespace ana
                              std::unordered_map<const ISyst*, std::vector<double>>& dp) const;
 
     bool fDontUseCache;
+
+======= */
+    /// Templated helper for \ref ShiftedComponent
+    template <typename T>
+    Spectrum _ShiftedComponent(osc::_IOscCalc<T>* calc,
+                               const TMD5* hash,
+                               const SystShifts& shift,
+                               Flavors::Flavors_t flav,
+                               Current::Current_t curr,
+                               Sign::Sign_t sign,
+                               CoeffsType type) const;
+
+    /// Templated helper for \ref PredictComponentSyst
+    template <typename T>
+    Spectrum _PredictComponentSyst(osc::_IOscCalc<T>* calc,
+                                   const SystShifts& shift,
+                                   Flavors::Flavors_t flav,
+                                   Current::Current_t curr,
+                                   Sign::Sign_t sign) const;
+
+    /// Helper for \ref ShiftSpectrum
+    template <typename T>
+    void ShiftBins(unsigned int N,
+                   T* arr,
+                   CoeffsType type,
+                   bool nubar,
+                   const SystShifts& shift) const;
 
   };
 

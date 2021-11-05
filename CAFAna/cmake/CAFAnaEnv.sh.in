@@ -77,6 +77,10 @@ fi
 export BOOST_INC=@BOOST_INC@
 export BOOST_LIB=@BOOST_LIB@
 
+export EIGEN_INC=@EIGEN_INC@
+export STAN_INC=@STAN_INC@
+export STAN_MATH_INC=@STAN_MATH_INC@
+
 #Recent versions of ROOT may enable omp for minuit2 by default
 if [ -z ${OMP_NUM_THREADS} ]; then
   export OMP_NUM_THREADS=@DEF_NUM_THREADS@

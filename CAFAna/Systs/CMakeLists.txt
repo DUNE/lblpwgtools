@@ -1,4 +1,5 @@
 set(Systs_implementation_files
+  AnaSysts.cxx
   DUNEFluxSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
@@ -19,6 +20,7 @@ set(Systs_implementation_files
   OffAxisFluxUncertaintyHelper.cxx)
 
 set(Systs_header_files
+  AnaSysts.h
   DUNEFluxSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h

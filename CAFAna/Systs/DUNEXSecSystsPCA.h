@@ -10,7 +10,7 @@ namespace ana
   public:
     virtual void Shift(double sigma,
                        Restorer& restore,
-                       caf::StandardRecord* sr,
+                       caf::SRProxy* sr,
                        double& weight) const override;
 
   protected:

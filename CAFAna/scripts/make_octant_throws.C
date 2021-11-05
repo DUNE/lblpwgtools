@@ -59,7 +59,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
@@ -81,7 +81,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
 	fitThrowSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.8, s->Max() * 0.8));
@@ -96,7 +96,7 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
     std::vector<std::unique_ptr<Spectrum> > mad_spectra_yo = {};
 
     // Need to find the best fit in the correct octant
-    IChiSqExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *gpenalty = GetPenalty(hie, 1, penaltyString);
 
     double globalmin = RunFitPoint(stateFname, sampleString,
 				   fakeThrowOsc, fakeThrowSyst, stats_throw,
@@ -107,10 +107,10 @@ void make_octant_throws(std::string stateFname="common_state_mcc11v3.root",
     global_tree.throw_tree->Fill();
 
     // Now force the testOsc to be in the wrong octant
-    osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, -1*oct);
+    osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(hie, -1*oct);
 
     // No penalty on the octant, so ignore it...
-    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double chisqmin = RunFitPoint(stateFname, sampleString,
 				  fakeThrowOsc, fakeThrowSyst, stats_throw, // This line is actually ignored...

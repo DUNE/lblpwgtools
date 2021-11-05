@@ -1,9 +1,11 @@
+// Need to get a stan include in before the eigen ones in the header
+#include "CAFAna/Core/Spectrum.h"
+
 #include "CAFAna/Core/Utilities.h"
 
-#include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Ratio.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "TArrayD.h"
 #include "TClass.h"
@@ -26,26 +28,6 @@
 namespace ana
 {
   double LLPerBinFracSystErr::fgErr = -1;
-
-  //----------------------------------------------------------------------
-  std::string UniqueName()
-  {
-    static int N = 0;
-    return TString::Format("cafanauniq%d", N++).Data();
-  }
-
-  //----------------------------------------------------------------------
-  DontAddDirectory::DontAddDirectory()
-  {
-    fBackup = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
-  }
-
-  //----------------------------------------------------------------------
-  DontAddDirectory::~DontAddDirectory()
-  {
-    TH1::AddDirectory(fBackup);
-  }
 
   //----------------------------------------------------------------------
   FloatingExceptionOnNaN::FloatingExceptionOnNaN(bool enable)
@@ -118,45 +100,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double LogLikelihood(double e, double o)
-  {
-    // http://www.wolframalpha.com/input/?i=d%2Fds+m*(1%2Bs)+-d+%2B+d*ln(d%2F(m*(1%2Bs)))%2Bs%5E2%2FS%5E2%3D0
-    // http://www.wolframalpha.com/input/?i=solve+-d%2F(s%2B1)%2Bm%2B2*s%2FS%5E2%3D0+for+s
-    const double S = LLPerBinFracSystErr::GetError();
-    if(S > 0){
-      const double S2 = util::sqr(S);
-      const double s = .25*(sqrt(8*o*S2+util::sqr(e*S2-2))-e*S2-2);
-      e *= 1+s;
-    }
-
-    // With this value, negative expected events and one observed
-    // event gives a chisq from this one bin of 182.
-    const double minexp = 1e-40; // Don't let expectation go lower than this
-
-    assert(o >= 0);
-    if(e < minexp){
-      if(!o) return 0;
-      e = minexp;
-    }
-
-    if(o*1000 > e){
-      // This strange form is for numerical stability when e~o
-      return 2*o*((e-o)/o + log1p((o-e)/e));
-    }
-    else{
-      // But log1p doesn't like arguments near -1 (observation much smaller
-      // than expectation), and it's better to use the usual formula in that
-      // case.
-      if(o){
-        return 2*(e-o + o*log(o/e));
-      }
-      else{
-        return 2*e;
-      }
-    }
-  }
-
-  //----------------------------------------------------------------------
   double LogLikelihood(const TH1* eh, const TH1* oh, bool useOverflow)
   {
     assert(eh->GetNbinsX() == oh->GetNbinsX());
@@ -176,131 +119,81 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  // dLL/de
-  double LogLikelihoodDerivative(double e, double o)
+  double LogLikelihood(const Eigen::ArrayXd& ea, const Eigen::ArrayXd& oa, bool useOverflow)
   {
-    assert(LLPerBinFracSystErr::GetError() == 0); // Didn't implement this case
+    assert(ea.size() == oa.size());
 
-    const double minexp = 1e-40; // Don't let expectation go lower than this
+    double chi = 0;
 
-    assert(o >= 0);
-    if(e < minexp) return 0; // e will effectively be held fixed in main calc
+    const int bufferBins = useOverflow ? 0 : -1;
 
-    return 2*(e-o)/e;
+    for(int i = 0; i < ea.size()+bufferBins; ++i){
+      chi += LogLikelihood(ea[i], oa[i]);
+    }
+
+    return chi;
   }
 
   //----------------------------------------------------------------------
-  // dLL/dx
-  double LogLikelihoodDerivative(const TH1D* eh, const TH1D* oh,
-                                 const std::vector<double>& dedx,
-                                 bool useOverflow)
+  Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat)
   {
-    assert(int(dedx.size()) == eh->GetNbinsX()+2);
-
-    const double* ea = eh->GetArray();
-    const double* oa = oh->GetArray();
-
-    int bufferBins = useOverflow? 2 : 1;
-
-    double ret = 0;
-    for(int i = 0; i < eh->GetNbinsX()+bufferBins; ++i){
-      ret += LogLikelihoodDerivative(ea[i], oa[i]) * dedx[i];
+    Eigen::MatrixXd ret(mat->GetNrows(), mat->GetNcols());
+    // TMatrixD doesn't appear to have a GetArray()
+    for(int i = 0; i < mat->GetNrows(); ++i){
+      for(int j = 0; j < mat->GetNcols(); ++j){
+        ret.coeffRef(i, j) = (*mat)(i, j);
+      }
     }
     return ret;
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv)
+  TMatrixD TMatrixDFromEigenMatrixXd(const Eigen::MatrixXd& mat)
   {
-    assert (e.GetNrows() == o.GetNrows());
-
-    const TVectorD diff = o - e;
-    return diff * (covmxinv * diff);  // operator* for two TVectorDs is the "dot product" (i.e., v1 * v2 = v1^{trans}v1)
-  }
-
-  //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TVectorD& e, const TVectorD& o, const TMatrixD& covmxinv, TVectorD dedx, bool matScales)
-  {
-    assert(e.GetNrows() == o.GetNrows());
-    assert(e.GetNrows() == dedx.GetNrows());
-
-    if(matScales){
-      // If the matrix also depends on the expectations (like M_ij/(e_i*e_j))
-      // then there's an additional term in the derivative. We attach it to the
-      // de/dx for convenience.
-      for(int i = 0; i < e.GetNrows(); ++i){
-        if(e[i] != 0){
-          dedx[i] *= o[i]/e[i];
-        }
+    TMatrixD ret(mat.rows(), mat.cols());
+    // TMatrixD doesn't appear to have a GetArray()
+    for(int i = 0; i < mat.rows(); ++i){
+      for(int j = 0; j < mat.cols(); ++j){
+        ret(i, j) = mat.coeffRef(i, j);
       }
     }
-
-    return 2*(dedx * (covmxinv * (e-o)));
+    return ret;
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMx(const TH1* e, const TH1* o, const TMatrixD& covmxinv)
+  double Chi2CovMx(const Eigen::ArrayXd& e, const Eigen::ArrayXd& o, const Eigen::MatrixXd& covmxinv)
   {
-    const unsigned int N = e->GetNbinsX();
-    TVectorD eVec(N);
-    TVectorD oVec(N);
-    for(unsigned int bin = 1; bin <= N; bin++)
-      eVec[bin-1] = e->GetBinContent(bin);
-    for(unsigned int bin = 1; bin <= N; bin++)
-      oVec[bin-1] = o->GetBinContent(bin);
+    assert(e.size() == covmxinv.rows()+2);
 
-    return Chi2CovMx(eVec, oVec, covmxinv);
+    if(e.size() != o.size()){
+      std::cout << "Chi2CovMx() mismatched expectation and observed sizes: " << e.size() << " vs " << o.size() << std::endl;
+      abort();
+    }
+
+    if(e.size() != covmxinv.rows()+2){
+      std::cout << "Chi2CovMx() expected " << e.size()-2 << "x" << e.size()-2 << " covariance matrix. Got " << covmxinv.rows() << "x" << covmxinv.cols() << std::endl;
+      abort();
+    }
+
+    Eigen::ArrayXd diff = e-o;
+    // Drop underflow and overflow bins
+    const Eigen::ArrayXd diffSub(Eigen::Map<Eigen::ArrayXd>(diff.data()+1, diff.size()-2));
+    // dot collapses things down to a single number
+    return diffSub.matrix().dot(covmxinv*diffSub.matrix());
   }
 
   //----------------------------------------------------------------------
-  double Chi2CovMxDerivative(const TH1* e, const TH1* o, const TMatrixD& covmxinv, const std::vector<double>& dedx, bool matScales)
-  {
-    assert(e->GetNbinsX() == o->GetNbinsX());
-    assert(e->GetNbinsX()+2 == int(dedx.size()));
-
-    TVectorD eVec(e->GetNbinsX());
-    TVectorD oVec(e->GetNbinsX());
-    TVectorD dedxVec(e->GetNbinsX());
-
-    for (int bin = 1; bin <= e->GetNbinsX(); bin++){
-      eVec[bin-1] = e->GetBinContent(bin);
-      oVec[bin-1] = o->GetBinContent(bin);
-      dedxVec[bin-1] = eVec[bin-1] ? dedx[bin] : 0;
-    }
-
-    return Chi2CovMxDerivative(eVec, oVec, covmxinv, dedxVec, matScales);
-  }
-
-  /// TMatrixD::operator() does various sanity checks and shows up in profiles
-  class TMatrixAccessor
-  {
-  public:
-    TMatrixAccessor(const TMatrixD& m)
-      : fN(m.GetNrows()),
-        fArray(m.GetMatrixArray())
-    {
-    }
-    inline double operator()(unsigned int i, unsigned int j) const
-    {
-      return fArray[fN*i+j];
-    }
-  protected:
-    unsigned int fN;
-    const double* fArray;
-  };
-
-  //----------------------------------------------------------------------
-  double LogLikelihoodCovMx(const TH1D* e, const TH1D* o, const TMatrixD& M2,
+  double LogLikelihoodCovMx(const Eigen::ArrayXd& e,
+                            const Eigen::ArrayXd& o,
+                            const Eigen::MatrixXd& M,
                             std::vector<double>* hint)
   {
     // Don't use under/overflow bins (the covariance matrix doesn't have them)
-    const double* m0 = e->GetArray()+1;
-    const double* d = o->GetArray()+1;
-    const unsigned int N = e->GetNbinsX();
+    const double* m0 = e.data()+1;
+    const double* d = o.data()+1;
+    const unsigned int N = e.size()-2;
 
-    assert(M2.GetNrows() == int(N));
-
-    const TMatrixAccessor M(M2); // faster access to matrix elements
+    assert(M.rows() == int(N));
 
     // We're trying to solve for the best expectation in each bin 'm'
 
@@ -496,201 +389,6 @@ namespace ana
     return invMx;
   }
 
-  // Helper functions for MakeTHND().
-  namespace{
-    // Eventually the bin parameters will all be unpacked and we just pass them
-    // on to the regular constructor.
-    template<class T, class... A> T* MakeHist(A... a)
-    {
-      DontAddDirectory guard;
-      return new T(a...);
-    }
-
-    // This function consumes bins from the start of the argument list and
-    // pushes their translations onto the list of arguments at the end.
-    template<class T, class... A> T* MakeHist(const Binning& firstBin,
-                                              A... args)
-    {
-      if(firstBin.IsSimple())
-        return MakeHist<T>(args...,
-                           firstBin.NBins(), firstBin.Min(), firstBin.Max());
-      else
-        return MakeHist<T>(args...,
-                           firstBin.NBins(), &firstBin.Edges().front());
-    }
-  }
-
-  // Concrete instantiations. MakeHist() requires us to put the bin arguments
-  // first...
-  //----------------------------------------------------------------------
-  TH1D* MakeTH1D(const char* name, const char* title, const Binning& bins)
-  {
-    return MakeHist<TH1D>(bins, name, title);
-  }
-
-  //----------------------------------------------------------------------
-  TH2D* MakeTH2D(const char* name, const char* title,
-                 const Binning& binsx,
-                 const Binning& binsy)
-  {
-    return MakeHist<TH2D>(binsx, binsy, name, title);
-  }
-
-  //----------------------------------------------------------------------
-  TH2* ToTH2(const Spectrum& s, double exposure, ana::EExposureType expotype,
-             const Binning& binsx, const Binning& binsy, ana::EBinType bintype)
-  {
-    DontAddDirectory guard;
-
-    std::unique_ptr<TH1> h1(s.ToTH1(exposure, expotype));
-    return ToTH2Helper(std::move(h1), binsx, binsy, bintype);
-  }
-
-  //----------------------------------------------------------------------
-  TH2* ToTH2(const Ratio& r,
-             const Binning& binsx, const Binning& binsy)
-  {
-    DontAddDirectory guard;
-
-    std::unique_ptr<TH1> h1(r.ToTH1());
-    return ToTH2Helper(std::move(h1), binsx, binsy);
-  }
-
-  //----------------------------------------------------------------------
-  TH2* ToTH2Helper(std::unique_ptr<TH1> h1,
-		   const Binning& binsx, const Binning& binsy,
-		   ana::EBinType bintype)
-  {
-    // Make sure it's compatible with having been made with this binning
-    assert(h1->GetNbinsX() == binsx.NBins()*binsy.NBins());
-
-    TH2* ret = MakeTH2D("", UniqueName().c_str(), binsx, binsy);
-
-    for(int i = 0; i < h1->GetNbinsX(); ++i){
-      const double val = h1->GetBinContent(i+1);
-      const double err = h1->GetBinError(i+1);
-
-      const int ix = i / binsy.NBins();
-      const int iy = i % binsy.NBins();
-
-      ret->SetBinContent(ix+1, iy+1, val);
-      ret->SetBinError  (ix+1, iy+1, err);
-    }
-
-    if(bintype == ana::EBinType::kBinDensity) ret->Scale(1, "width");
-
-    return ret;
-  }
-
-  //----------------------------------------------------------------------
-
-  TH3* ToTH3(const Spectrum& s, double exposure, ana::EExposureType expotype,
-             const Binning& binsx, const Binning& binsy, const Binning& binsz,
-	     ana::EBinType bintype)
-  {
-    DontAddDirectory guard;
-
-    std::unique_ptr<TH1> h1(s.ToTH1(exposure, expotype));
-
-    return ToTH3Helper(std::move(h1), binsx, binsy, binsz, bintype);
-  }
-
-  //----------------------------------------------------------------------
-
-  TH3* ToTH3(const Ratio& r,
-             const Binning& binsx, const Binning& binsy, const Binning& binsz)
-  {
-    DontAddDirectory guard;
-
-    std::unique_ptr<TH1> h1(r.ToTH1());
-
-    return ToTH3Helper(std::move(h1), binsx, binsy, binsz);
-  }
-
-  //----------------------------------------------------------------------
-  TH3* ToTH3Helper(std::unique_ptr<TH1> h1,
-		   const Binning& binsx,
-		   const Binning& binsy,
-		   const Binning& binsz,
-		   ana::EBinType bintype)
-  {
-
-    const int nx = binsx.NBins();
-    const int ny = binsy.NBins();
-    const int nz = binsz.NBins();
-
-    // Make sure it's compatible with having been made with this binning
-    assert(h1->GetNbinsX() == nx*ny*nz);
-
-    TH3* ret;
-
-    // If all three axes are simple, we can call a simpler constructor
-    if(binsx.IsSimple() && binsy.IsSimple() && binsz.IsSimple()){
-      ret = new TH3F(UniqueName().c_str(), "",
-                     nx, binsx.Min(), binsx.Max(),
-                     ny, binsy.Min(), binsy.Max(),
-                     nz, binsz.Min(), binsz.Max());
-
-      if(!binsx.IsSimple() || !binsy.IsSimple() || !binsz.IsSimple()){
-        // TH3 doesn't have the constructors for mixed simple and custom
-        std::cerr << "ToTH3: one or more axes is custom, but not all three. Applying Simple binning to all three axes" << std::endl;
-      }
-    }
-    else{
-      ret = new TH3F(UniqueName().c_str(), "",
-                     nx, &binsx.Edges().front(),
-                     ny, &binsy.Edges().front(),
-                     nz, &binsz.Edges().front());
-    }
-
-    for(int i = 0; i < h1->GetNbinsX(); ++i){
-      const double val = h1->GetBinContent(i+1);
-      const double err = h1->GetBinError(i+1);
-
-      const int nynz = ny*nz;
-      const int nmodnynz = i%nynz;
-      const int ix = i/nynz;
-      const int iy = nmodnynz/nz;
-      const int iz = i%nz;
-
-      ret->SetBinContent(ix+1, iy+1, iz+1, val);
-      ret->SetBinError  (ix+1, iy+1, iz+1, err);
-    }
-
-    if(bintype == ana::EBinType::kBinDensity) ret->Scale(1, "width");
-
-    return ret;
-
-  }
-
-  //----------------------------------------------------------------------
-  std::vector<std::string> Wildcard(const std::string& wildcardString)
-  {
-    // Expand environment variables and wildcards like the shell would
-    wordexp_t p;
-    const int status = wordexp(wildcardString.c_str(), &p, WRDE_SHOWERR);
-
-    if(status != 0){
-      std::cerr << "Wildcard string '" << wildcardString
-                << "' returned error " << status << " from wordexp()."
-                << std::endl;
-      return {};
-    }
-
-    std::vector<std::string> fileList;
-
-    for(unsigned int i = 0; i < p.we_wordc; ++i){
-      // Check the file exists before adding it
-      struct stat sb;
-      if(stat(p.we_wordv[i], &sb) == 0)
-        fileList.push_back(p.we_wordv[i]);
-    }
-
-    wordfree(&p);
-
-    return fileList;
-  }
-
   //----------------------------------------------------------------------
   std::string FindCAFAnaDir()
   {
@@ -832,7 +530,6 @@ namespace ana
     return (getenv("_CONDOR_SCRATCH_DIR") != 0);
   }
 
-
   //----------------------------------------------------------------------
   bool AlmostEqual(double a, double b, double eps)
   {
@@ -967,39 +664,54 @@ namespace ana
 
   //----------------------------------------------------------------------
   // Note that this does not work for 3D!
-  TH1* GetMaskHist(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
+  Eigen::ArrayXd GetMaskArray(const Spectrum& s, double xmin, double xmax, double ymin, double ymax)
   {
-    if (s.GetBinnings().size() > 2){
+    if (s.NDimensions() > 2){
       std::cout << "Error: unable to apply a mask in " << s.GetBinnings().size() << " dimensions" << std::endl;
       abort();
     }
 
-    // The exposure isn't important here
-    TH1* fMaskND  = s.ToTHX(s.POT());
-    TH1D* fMask1D = s.ToTH1(s.POT());
-    fMask1D->Reset();
+    if(s.NDimensions() == 1 && ymax > ymin){
+      std::cout << "Error: GetMaskArray(): can't specify y range for 1D spectrum" << std::endl;
+      abort();
+    }
 
-    int ybins = fMaskND->GetNbinsY();
+    const Binning* xbins = &s.GetBinnings()[0];
+    const Binning* ybins = (s.NDimensions() == 2) ? &s.GetBinnings()[1] : 0;
 
-    for(int i = 0; i < fMask1D->GetNbinsX()+2; ++i){
+    const int Nx = xbins->NBins();
+    const int Ny = ybins ? ybins->NBins() : 1;
 
-      int ix = i / ybins;
-      int iy = i % ybins;
+    // The 1D flattening of 2D binning is pretty confusing. The bins are packed
+    // densely, without under/overflow, *except* there is a single underflow at
+    // 0 and single overflow at Nx*Ny+1. So we do our calculations as if there
+    // were no under/overflow and then add 1 to the output index to account.
+
+    Eigen::ArrayXd ret(Nx*Ny+2);
+
+    // Include underflow and overflow if mask disabled, otherwise exclude
+    ret[0] = ret[Nx*Ny+1] = ((xmin < xmax || ymin < ymax) ? 0 : 1);
+
+    for(int i = 0; i < Nx*Ny; ++i){
+
+      const int ix = i / Ny;
+      const int iy = i % Ny;
 
       bool isMask = false;
 
       if (xmin < xmax){
-	if (fMaskND->GetXaxis()->GetBinLowEdge(ix+1) < xmin) isMask=true;
-	if (fMaskND->GetXaxis()->GetBinUpEdge(ix+1) > xmax) isMask=true;
+	if (xbins->Edges()[ix  ] < xmin) isMask = true;
+	if (xbins->Edges()[ix+1] > xmax) isMask = true;
       }
 
       if (ymin < ymax){
-	if (fMaskND->GetYaxis()->GetBinLowEdge(iy+1) < ymin) isMask=true;
-	if (fMaskND->GetYaxis()->GetBinUpEdge(iy+1) > ymax) isMask=true;
+	if (ybins->Edges()[iy  ] < ymin) isMask = true;
+	if (ybins->Edges()[iy+1] > ymax) isMask = true;
       }
 
-      if(!isMask) fMask1D->SetBinContent(i+1, 1);
+      ret[i+1] = isMask ? 0 : 1;
     }
-    return fMask1D;
+
+    return ret;
   }
 }

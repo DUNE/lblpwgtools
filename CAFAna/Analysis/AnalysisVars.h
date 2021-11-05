@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 
 // List of vars
 // -->FD
@@ -36,4 +37,4 @@ extern ana::Var const kEVisReco;
 extern ana::Var const kEVisTrue;
 
 // CV weighting
-extern ana::Var const kCVXSecWeights; // kUnweighted
+extern ana::Weight const kCVXSecWeights; // kUnweighted

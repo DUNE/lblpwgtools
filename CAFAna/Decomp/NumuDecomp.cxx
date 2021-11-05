@@ -19,7 +19,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : NumuDecomp(loaderMC, loaderData, HistAxis(label, bins, var),
                  cut, shiftMC, shiftData, wei)
   {
@@ -32,7 +32,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : fData    (loaderData, axis, cut,                         shiftData, wei),
       fNC      (loaderMC,   axis, cut && kIsNC,                  shiftMC, wei),
       fNue     (loaderMC,   axis, cut && kIsBeamNue&&!kIsAntiNu, shiftMC, wei),
@@ -49,7 +49,7 @@ namespace ana
                          const Cut& cut,
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
-                         const Var& wei)
+                         const Weight& wei)
     : NumuDecomp(loaders.GetLoader(caf::kNEARDET, Loaders::kMC),
                  loaders.GetLoader(caf::kNEARDET, Loaders::kData),
                  axis, cut, shiftMC, shiftData, wei)
@@ -71,40 +71,46 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void NumuDecomp::SaveTo(TDirectory* dir) const
+  void NumuDecomp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("NumuDecomp").Write("type");
 
-    fNC.SaveTo(dir->mkdir("nc_comp"));
-    fData.SaveTo(dir->mkdir("data_comp"));
-    fNue.SaveTo(dir->mkdir("nue_comp"));
-    fAntiNue.SaveTo(dir->mkdir("antinue_comp"));
-    fNumu.SaveTo(dir->mkdir("numu_comp"));
-    fAntiNumu.SaveTo(dir->mkdir("antinumu_comp"));
-    fNotNumu.SaveTo(dir->mkdir("notnumu_comp"));
+    fNC.SaveTo(dir, "nc_comp");
+    fData.SaveTo(dir, "data_comp");
+    fNue.SaveTo(dir, "nue_comp");
+    fAntiNue.SaveTo(dir, "antinue_comp");
+    fNumu.SaveTo(dir, "numu_comp");
+    fAntiNumu.SaveTo(dir, "antinumu_comp");
+    fNotNumu.SaveTo(dir, "notnumu_comp");
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<NumuDecomp> NumuDecomp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<NumuDecomp> NumuDecomp::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     std::unique_ptr<NumuDecomp> ret(new NumuDecomp);
 
-    // This is a lot of repetitive typing. Define a macro
-#define LOAD_SPECT(FIELD, LABEL) assert(dir->GetDirectory(LABEL)); ret->FIELD = *Spectrum::LoadFrom(dir->GetDirectory(LABEL));
+    ret->fNC       = *Spectrum::LoadFrom(dir, "nc_comp");
+    ret->fData     = *Spectrum::LoadFrom(dir, "data_comp");
+    ret->fNue      = *Spectrum::LoadFrom(dir, "nue_comp");
+    ret->fAntiNue  = *Spectrum::LoadFrom(dir, "antinue_comp");
+    ret->fNumu     = *Spectrum::LoadFrom(dir, "numu_comp");
+    ret->fAntiNumu = *Spectrum::LoadFrom(dir, "antinumu_comp");
+    ret->fNotNumu  = *Spectrum::LoadFrom(dir, "notnumu_comp");
 
-    LOAD_SPECT(fNC,       "nc_comp");
-    LOAD_SPECT(fData,     "data_comp");
-    LOAD_SPECT(fNue,      "nue_comp");
-    LOAD_SPECT(fAntiNue,  "antinue_comp");
-    LOAD_SPECT(fNumu,     "numu_comp");
-    LOAD_SPECT(fAntiNumu, "antinumu_comp");
-    LOAD_SPECT(fNotNumu,  "notnumu_comp");
+    delete dir;
 
     return ret;
   }

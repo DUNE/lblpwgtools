@@ -120,7 +120,11 @@ namespace caf
     int nipi0;
     int nipip;
     int nipim;
+    int nikp;
+    int nikm;
+    int nik0;
     int niem;
+    int nNucleus;
     double Q2;
     double W;
     double Y;

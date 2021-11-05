@@ -45,6 +45,6 @@ namespace ana
     virtual Spectrum NCComponent() = 0;
     virtual Spectrum NCAntiComponent() = 0;
 
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
   };
 }

@@ -5,8 +5,11 @@
 
 #include "Rtypes.h"
 
-#include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/Utilities.h"
+
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 class TLegend;
 class TGraph;
@@ -15,14 +18,11 @@ class TH1;
 class TH2;
 class THStack;
 
-namespace osc{class IOscCalculator;}
-
 namespace ana
 {
   class IPrediction;
   class ISyst;
   class Spectrum;
-  class SystShifts;
 
   /// Overlay MC spectrum with data spectrum
   ///
@@ -39,7 +39,7 @@ namespace ana
   /// \return The first histogram drawn so you can alter axis labels etc
   TH1* DataMCComparison(const Spectrum& data,
                         const IPrediction* mc,
-                        osc::IOscCalculator* calc,
+                        osc::IOscCalc* calc,
                         const SystShifts & shifts = kNoShift,
                         EBinType bintype = kBinContent);
 
@@ -48,23 +48,17 @@ namespace ana
   /// \return The first histogram drawn so you can alter axis labels etc
   TH1* DataMCComparisonComponents(const Spectrum& data,
                                   const IPrediction* mc,
-                                  osc::IOscCalculator* calc);
+                                  osc::IOscCalc* calc);
 
   TH1* GetMCSystTotal(const IPrediction* mc,
-                      osc::IOscCalculator* calc,
+                      osc::IOscCalc* calc,
                       const SystShifts& shift,
 		      std::string hist_name,
                       double pot,
                       bool force1D=false);
 
-  TH1* GetMCSystTotalProjectX(const IPrediction* mc,
-                              osc::IOscCalculator* calc,
-                              const SystShifts& shift,
-                              std::string hist_name,
-                              double pot);
-
   TH1* GetMCTotal(const IPrediction* mc,
-                  osc::IOscCalculator* calc,
+                  osc::IOscCalc* calc,
                   std::string hist_name,
                   double pot,
                   bool force1D=false);
@@ -73,13 +67,13 @@ namespace ana
   /// A vector of histograms for the MC components. Easier to manipulate elsewhere
   /// Not ideal as returned pointers probably won't get deleted... but very useful...
   std::vector<TH1*> GetMCComponents(const IPrediction* mc,
-				    osc::IOscCalculator* calc,
+				    osc::IOscCalc* calc,
 				    std::string hist_name,
 				    double pot,
 				    bool force1D = false);
   
   std::vector<TH1*> GetMCSystComponents(const IPrediction* mc,
-					osc::IOscCalculator* calc,
+					osc::IOscCalc* calc,
 					const SystShifts& shift,
 					std::string hist_name,
 					double pot,
@@ -87,7 +81,7 @@ namespace ana
 
 
   std::vector<TH1*> GetMCTotalForSystShifts(const IPrediction* mc,
-					    osc::IOscCalculator* calc,
+					    osc::IOscCalc* calc,
 					    const ISyst* syst,
 					    std::string hist_base_name,
 					    double pot,
@@ -100,7 +94,7 @@ namespace ana
   /// Plot data/MC ratio for the given spectrum. Normalize MC to Data by area
   void DataMCAreaNormalizedRatio(const Spectrum& data,
                                  const IPrediction* mc,
-                                 osc::IOscCalculator* calc,
+                                 osc::IOscCalc* calc,
                                  double miny = 0, double maxy = 3);
 
   /// Plot data/MC ratio for the given spectrum. Normalize MC to Data by POT
@@ -110,7 +104,7 @@ namespace ana
   /// Plot data/MC ratio for the given spectrum. Normalize MC to Data by POT
   void DataMCRatio(const Spectrum& data,
 		   const IPrediction* mc,
-		   osc::IOscCalculator* calc,
+		   osc::IOscCalc* calc,
                    double miny = 0, double maxy = 3);
 
   /// Plot data/expected, compared with fit/expected
@@ -132,7 +126,7 @@ namespace ana
   /// \param headroom   Fraction of maximum bin for headroom, default 30%  
   void PlotWithSystErrorBand(IPrediction* pred,
                              const std::vector<const ISyst*>& systs,
-                             osc::IOscCalculator* calc,
+                             osc::IOscCalc* calc,
                              double pot,
                              int col = -1, int errCol = -1, 
                              float headroom = 1.3,
@@ -184,4 +178,22 @@ namespace ana
 
   /// Calculate profile with error bars corresponding to specified quantiles of a 2D distribution (by default, 68% coverage)
   TGraphAsymmErrors * ProfileQuantile(const TH2 * hist, const std::string & axis_name, const std::string & graph_name="", const std::pair<double, double> & quantile_divisions={0.159, 0.841});
+
+  /// Draw a single BF point in a two dimensional space
+  void drawBFSingle(double bfX, double bfY, Color_t color, Style_t marker, double size);
+
+  /// Center histogram titles
+  void CenterTitles(TH1* histo);
+
+  void CornerLabel(std::string &s, float xCoord, float yCoord);
+
+  void FillWithDimColor(TH1* h, bool usealpha=false);
+
+  /// Pimp histogram once and for all
+  void PimpHist(TH1* hist, Style_t linestyle, Color_t linecolor, int linewidth, Style_t markerstyle, Color_t markercolor, double markersize);
+
+  void Simulation();
+
+  void SimulationSide();
+
 }

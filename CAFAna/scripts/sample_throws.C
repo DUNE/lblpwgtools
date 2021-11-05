@@ -82,7 +82,7 @@ void make_1D_errors(TDirectory *saveDir, std::vector<TH1 *> nominal,
 }
 
 std::vector<TH1 *> make_syst_throw(std::string stateFname,
-                                   osc::IOscCalculatorAdjustable *trueOsc,
+                                   osc::IOscCalcAdjustable *trueOsc,
                                    SystShifts theseSysts,
                                    std::string sampleString) {
 
@@ -131,7 +131,7 @@ void throw_errors(std::string stateFname, std::string sampleString,
                   TDirectory *saveDir, std::vector<TH1 *> nom_vect,
                   std::vector<const ISyst *> systlist,
                   std::vector<std::string> systtokeep,
-                  osc::IOscCalculatorAdjustable *trueOsc,
+                  osc::IOscCalcAdjustable *trueOsc,
                   TMatrixDSym *chol = NULL) {
 
   std::vector<std::vector<TH1 *>> fit_vect;
@@ -230,17 +230,17 @@ void sample_throws(std::string stateFname = def_stateFname,
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
   fout->cd();
 
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
   SystShifts trueSyst = kNoShift;
 
   // Move the input parameters a little, just to avoid asimov fit issues in
   // MINUIT
-  osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
   SystShifts testSyst;
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
   std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
-  IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
   // Now the good stuff
   double thischisq =

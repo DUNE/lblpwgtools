@@ -3,11 +3,11 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
-#include "Utilities/func/MathUtil.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include <algorithm>
 
@@ -38,6 +38,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  IFitter::IFitSummary::~IFitSummary()
+  {
+  }
+
+  //----------------------------------------------------------------------
   std::vector<IFitter::SeedPt>
   IFitter::ExpandSeeds(const SeedList& seedPts,
                        const std::vector<SystShifts>& systSeedPts) const
@@ -61,15 +66,18 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double IFitter::Fit(osc::IOscCalculatorAdjustable* seed,
-                      SystShifts& bestSysts,
-                      const SeedList& seedPts,
-                      const std::vector<SystShifts> &systSeedPts,
-                      Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  IFitter::Fit(osc::IOscCalcAdjustable* seed,
+               SystShifts& bestSysts,
+               const SeedList& seedPts,
+               const std::vector<SystShifts> &systSeedPts,
+               Verbosity verb) const
   {
+    fVerb = verb;
+
     ValidateSeeds(seed, seedPts, systSeedPts);
 
-    if (verb == kVerbose)
+    if (fVerb == kVerbose)
     {
       std::cout << "Finding best fit for";
       for (const auto *v: fVars) std::cout << " " << v->ShortName();
@@ -80,9 +88,9 @@ namespace ana
 
     // Do all the actual work. This wrapper function is just so we can have
     // better control of printing.
-    const double chi = FitHelper(seed, bestSysts, seedPts, systSeedPts, verb);
+    auto fitSummary = FitHelper(seed, bestSysts, seedPts, systSeedPts, verb);
 
-    if (verb == kVerbose)
+    if (fVerb == kVerbose)
     {
       std::cout << "Best fit";
       for (const auto *v: fVars)
@@ -93,7 +101,7 @@ namespace ana
       {
         std::cout << ", " << s->ShortName() << " = " << bestSysts.GetShift(s);
       }
-      std::cout << ", LL = " << chi << std::endl;
+      std::cout << ", eval metric = " << fitSummary->EvalMetricVal() << std::endl;
 
 //      std::cout << "  found with " << fNEval << " evaluations of the likelihood";
 //      if (fNEvalFiniteDiff > 0)
@@ -103,15 +111,16 @@ namespace ana
 //      std::cout << std::endl;
     }
 
-    return chi;
+    return fitSummary;
   }
 
   //----------------------------------------------------------------------
-  double IFitter::FitHelper(osc::IOscCalculatorAdjustable* initseed,
-                            SystShifts& bestSysts,
-                            const SeedList& seedPts,
-                            const std::vector<SystShifts>& systSeedPts,
-                            Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  IFitter::FitHelper(osc::IOscCalcAdjustable* initseed,
+                     SystShifts& bestSysts,
+                     const SeedList& seedPts,
+                     const std::vector<SystShifts>& systSeedPts,
+                     Verbosity verb) const
   {
     // if user passed a derived kind of SystShifts, this preserves it
     fShifts = bestSysts.Copy();
@@ -119,12 +128,12 @@ namespace ana
 
     const std::vector<SeedPt> pts = ExpandSeeds(seedPts, systSeedPts);
 
-    double minchi = 1e10;
+    std::unique_ptr<IFitSummary> bestFitSummary;
     std::vector<double> bestFitPars, bestSystPars;
 
     for (const SeedPt &pt: pts)
     {
-      osc::IOscCalculatorAdjustable* seed = nullptr;
+      osc::IOscCalcAdjustable* seed = nullptr;
       if(initseed) seed = initseed->Copy();
 
       pt.fitvars.ResetCalc(seed);
@@ -132,11 +141,13 @@ namespace ana
       // be sure to keep any derived class stuff around
       auto shift = fShifts->Copy();
       *shift = pt.shift;
-      const double chi = FitHelperSeeded(seed, *shift, verb);
-      // todo: this test doesn't make much sense for Bayes LL fitting...
-      if (chi < minchi)
+      auto fitSummary = FitHelperSeeded(seed, *shift, verb);
+      if (fitSummary->IsBetterThan(bestFitSummary.get()))
       {
-        minchi = chi;
+        bestFitSummary = std::move(fitSummary);
+
+        UpdatePostFit(bestFitSummary.get());
+
         // Store the best fit values of all the parameters we know are being
         // varied.
         bestFitPars.clear();
@@ -150,17 +161,19 @@ namespace ana
       delete seed;
     } // end for pt
 
+    assert(bestFitSummary);
+
     // Stuff the results of the actual best fit back into the seeds
     for (unsigned int i = 0; i < fVars.size(); ++i)
       fVars[i]->SetValue(initseed, bestFitPars[i]);
     for (unsigned int i = 0; i < fSysts.size(); ++i)
       bestSysts.SetShift(fSysts[i], bestSystPars[i]);
 
-    return minchi;
+    return bestFitSummary;
   }
 
   //----------------------------------------------------------------------
-  void IFitter::ValidateSeeds(osc::IOscCalculatorAdjustable* seed,
+  void IFitter::ValidateSeeds(osc::IOscCalcAdjustable* seed,
                               const SeedList& seedPts,
                               const std::vector<SystShifts>& systSeedPts) const
   {

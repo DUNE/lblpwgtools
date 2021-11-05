@@ -2,6 +2,8 @@
 
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 
+#include <set>
+
 class TFile;
 
 namespace ana
@@ -19,14 +21,12 @@ namespace ana
   class SpectrumLoader: public SpectrumLoaderBase
   {
   public:
-    SpectrumLoader(const std::string& wildcard, DataSource src = kBeam, int max = 0);
-    SpectrumLoader(const std::vector<std::string>& fnames,
-                   DataSource src = kBeam, int max = 0);
+    SpectrumLoader(const std::string& wildcard, int max = 0);
+    SpectrumLoader(const std::vector<std::string>& fnames, int max = 0);
 
 #ifndef DONT_USE_SAM
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
-					 DataSource src = kBeam,
 					 int fileLimit = -1);
 #endif
     virtual ~SpectrumLoader();
@@ -39,7 +39,7 @@ namespace ana
     virtual void GoPRISM() override;
 
   protected:
-    SpectrumLoader(DataSource src = kBeam);
+    SpectrumLoader();
 
     // Move operations
     SpectrumLoader(SpectrumLoader&&) = default;
@@ -49,10 +49,14 @@ namespace ana
     SpectrumLoader(const SpectrumLoader&) = delete;
     SpectrumLoader& operator=(const SpectrumLoader&) = delete;
 
-    void AccumulateExposures(const caf::SRSpill* spill) override;
+//<<<<<<< HEAD
+    //void AccumulateExposures(const caf::SRSpill* spill) override;
 
     //virtual void HandleFile(TFile* f, Progress* prog = 0);
     virtual void HandleFile(TFile* f, Progress* prog = 0, TFile *fpotfriend = nullptr);
+//=======
+//    virtual void HandleFile(TFile* f, Progress* prog = 0);
+//>>>>>>> origin
 
     virtual void HandleRecord(caf::StandardRecord* sr);
 
@@ -70,12 +74,12 @@ namespace ana
       std::vector<double> vars, weis;
     };
 
-    const TestVals* GetVals(const caf::StandardRecord* sr,
-			    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
+    const TestVals* GetVals(const caf::SRProxy* sr,
+			    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void CheckVals(const TestVals* v,
-                   const caf::StandardRecord* sr,
+                   const caf::SRProxy* sr,
                    const std::string& shiftName,
-		   IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
+		   IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
     void ValError(const std::string& type,
                   const std::string& shift,
                   const std::set<std::string>& req,

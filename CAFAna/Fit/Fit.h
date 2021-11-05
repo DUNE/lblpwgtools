@@ -14,13 +14,9 @@
 
 class TGraph;
 
-namespace osc {
-class IOscCalculatorAdjustable;
-}
-
 namespace ana
 {
-  class IChiSqExperiment;
+  class IExperiment;
   class IFitVar;
 
   /// \brief Figure-of-merit with no systematics, for binned data
@@ -58,8 +54,8 @@ namespace ana
   /// \param[out] systsMap    Pass empty map. Returns best values of each syst.
   ///
   /// \return The best fit delta chisq as a function of \a a
-  TH1* Profile(const IChiSqExperiment* expt,
-                  osc::IOscCalculatorAdjustable* calc,
+  TH1* Profile(const IExperiment* expt,
+                  osc::IOscCalcAdjustable* calc,
                   const IFitVar* v,
                   int nbinsx, double minx, double maxx,
                   double minchi = -1,
@@ -72,8 +68,8 @@ namespace ana
                   MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
   /// Forward to \ref Profile but sqrt the result for a crude significance
-  TH1* SqrtProfile(const IChiSqExperiment* expt,
-                   osc::IOscCalculatorAdjustable* calc,
+  TH1* SqrtProfile(const IExperiment* expt,
+                   osc::IOscCalcAdjustable* calc,
                   const IFitVar* v,
                    int nbinsx, double minx, double maxx,
                    double minchi = -1,
@@ -86,23 +82,23 @@ namespace ana
                    MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
   /// \f$\chi^2\f$ scan in one variable, holding all others constant
-  TH1* Slice(const IChiSqExperiment* expt,
-             osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* Slice(const IExperiment* expt,
+             osc::IOscCalcAdjustable* calc, const IFitVar* v,
              int nbinsx, double minx, double maxx,
              double minchi = -1,
              MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
   /// Forward to \ref Slice but sqrt the result for a crude significance
-  TH1* SqrtSlice(const IChiSqExperiment* expt,
-                 osc::IOscCalculatorAdjustable* calc, const IFitVar* v,
+  TH1* SqrtSlice(const IExperiment* expt,
+                 osc::IOscCalcAdjustable* calc, const IFitVar* v,
                  int nbinsx, double minx, double maxx, double minchi = -1,
                  MinuitFitter::FitOpts opts = MinuitFitter::kNormal);
 
   /// \brief Find the minimum in one variable as a function of another
   ///
   /// \param transpose plot \a scanVar on the y axis
-  TGraph* FindValley(const IChiSqExperiment* expt,
-		           osc::IOscCalculatorAdjustable* calc,
+  TGraph* FindValley(const IExperiment* expt,
+		           osc::IOscCalcAdjustable* calc,
 		           const IFitVar& scanVar,
 		           const IFitVar& fitVar,
 		           int nbinsx, double xmin, double xmax,

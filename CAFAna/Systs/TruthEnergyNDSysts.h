@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Cuts/AnaCuts.h"
+
+#include "StandardRecord/SRProxy.h" 
 
 #include "TFile.h"
 #include "TH1.h"
@@ -28,7 +30,7 @@ namespace ana
     TruthEnergyScaleND() : ISyst("TruthEnergyScaleND", "Global Truth Energy Scale ND Syst") {}
     void Shift(double sigma,
                Restorer& restore, 
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
   
       restore.Add(sr->eRecProxy,
@@ -54,7 +56,7 @@ namespace ana
     TruthEnergySqrtND() : ISyst("TruthEnergySqrtND", "Sqrt Total Energy Scale ND Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
       
       restore.Add(sr->eRecProxy,
@@ -82,7 +84,7 @@ namespace ana
     TruthEnergyInvSqrtND() : ISyst("TruthEnergyInvSqrtND", "Inv Sqrt Total Energy Scale ND Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->eRecProxy,
@@ -115,7 +117,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -144,7 +146,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
       
       restore.Add(sr->LepE,
@@ -173,7 +175,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -205,7 +207,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
     
       restore.Add(sr->ePip,
@@ -234,7 +236,7 @@ namespace ana
     
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->ePip,
@@ -263,7 +265,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->ePip,
@@ -295,7 +297,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -321,7 +323,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -348,7 +350,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -378,7 +380,7 @@ namespace ana
 
     void Shift(double sigma, 
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
     
       restore.Add(sr->Ev,

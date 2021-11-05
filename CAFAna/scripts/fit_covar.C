@@ -43,13 +43,13 @@ void fit_covar(std::string stateFname = def_stateFname,
   FitTreeBlob ftb("fit_info","meta_tree");
   ftb.SetDirectory(fout);
 
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
 
   // Move the input parameters a little, just to avoid asimov fit issues in
   // MINUIT
-  osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
   SystShifts testSyst;
   for (auto s : systlist)
     testSyst.SetShift(s, GetBoundedGausThrow(s->Min() * 0.05, s->Max() * 0.05));
@@ -61,7 +61,7 @@ void fit_covar(std::string stateFname = def_stateFname,
   }
 
   // Add a penalty term (maybe)
-  IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+  IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
   double thischisq =
       RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false, oscVars,

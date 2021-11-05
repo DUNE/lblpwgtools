@@ -68,7 +68,7 @@ MCEffCorrection::~MCEffCorrection() {
 
 //----------------------------------------------------
 
-void MCEffCorrection::CalcEfficiency(osc::IOscCalculator *calc,
+void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
                                      HistAxis const &axis,
                                      ana::SystShifts shift,
                                      Flavors::Flavors_t NDflav,

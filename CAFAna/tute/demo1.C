@@ -6,14 +6,14 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Cuts/TruthCuts.h"
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
 // New includes for this macro
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 
 using namespace ana;
 
@@ -26,16 +26,16 @@ void demo1()
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
-  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
+  const Var kCVNNumu = SIMPLEVAR(cvnnumu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
   // A cut is structured like a Var, but returning bool
-  const Cut kPassesCVN([](const caf::StandardRecord* sr)
+  const Cut kPassesCVN([](const caf::SRProxy* sr)
                        {
-                         return sr->dune.cvnnumu > 0.5;
+                         return sr->cvnnumu > 0.5;
                        });
 
   // In many cases it's easier to form them from existing Vars like this
@@ -55,7 +55,7 @@ void demo1()
   const Spectrum sUnosc = pred.PredictUnoscillated();
   // Or oscillated, in this case using reasonable parameters from
   // Analysis/Calcs.h
-  osc::IOscCalculator* calc = DefaultOscCalc();
+  osc::IOscCalc* calc = DefaultOscCalc();
   const Spectrum sOsc = pred.Predict(calc);
 
   // And we can break things down by flavour

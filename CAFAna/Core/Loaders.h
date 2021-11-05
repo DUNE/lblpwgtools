@@ -31,31 +31,26 @@ namespace ana
     void SetLoaderPath(const std::string& path,
                        caf::Det_t det,
                        DataMC datamc,
-                       DataSource src = kBeam,
                        SwappingConfig swap = kNonSwap);
 
     /// Configure loader via explicit file list
     void SetLoaderFiles(const std::vector<std::string>& files,
                         caf::Det_t det,
                         DataMC datamc,
-                        DataSource src = kBeam,
                         SwappingConfig swap = kNonSwap);
 
     void AddLoader(SpectrumLoaderBase*,
-                        caf::Det_t det,
-                        DataMC datamc,
-                        DataSource src = kBeam,
-                        SwappingConfig swap = kNonSwap);
+                   caf::Det_t det,
+                   DataMC datamc,
+                   SwappingConfig swap = kNonSwap);
 
     void DisableLoader(caf::Det_t det,
                        DataMC datamc,
-                       DataSource src = kBeam,
                        SwappingConfig swap = kNonSwap);
 
     /// Retrieve a specific loader
     SpectrumLoaderBase& GetLoader(caf::Det_t det,
                                   DataMC datamc,
-                                  DataSource src = kBeam,
                                   SwappingConfig swap = kNonSwap);
 
     /// Call Go() on all the loaders
@@ -65,7 +60,7 @@ namespace ana
     void GoPRISM();
 
   protected:
-    typedef std::tuple<caf::Det_t, DataMC, DataSource, SwappingConfig> Key_t;
+    typedef std::tuple<caf::Det_t, DataMC, SwappingConfig> Key_t;
 
     // Hold a list of paths that have been set
     std::map<Key_t, std::string> fLoaderPaths;

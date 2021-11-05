@@ -18,11 +18,15 @@ echo "[INFO]: Attempting to build ${INPFILE}"
 
 EXEFILE=${INPFILE/.C/.exe}
 
+#<<<<<<< HEAD
 if [ "@USE_PRISM@" == "1" ]; then
   PRISMLIB="-lCAFAnaPRISM"
 fi
 
-BCMD="g++ ${DEBUG} ${EXT} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars ${PRISMLIB} -lUtilitiesFunc -lOscLibFunc $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+#BCMD="g++ ${DEBUG} ${EXT} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars ${PRISMLIB} -lUtilitiesFunc -lOscLibFunc $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+#=======
+BCMD="g++ ${DEBUG} ${INPFILE} -o ${EXEFILE} $(root-config --cflags) -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -I${CAFANA}/include -L${CAFANA}/lib -lCAFAnaAnalysis -lCAFAnaDecomp -lCAFAnaPrediction -lCAFAnaCore -lCAFAnaExperiment -lCAFAnaSysts -lCAFAnaCuts -lStandardRecord -lCAFAnaExtrap -lCAFAnaVars ${PRISMLIB} -L${OSCLIB_LIB} -lOscLib $(root-config --glibs) -lMinuit2 -I@CLHEP_PREFIX@/include -L@CLHEP_PREFIX@/lib -lCLHEP"
+#>>>>>>> origin
 
 echo ${BCMD}
 if ! ${BCMD}; then

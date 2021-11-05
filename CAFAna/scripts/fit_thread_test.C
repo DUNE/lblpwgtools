@@ -96,7 +96,7 @@ int main(int argc, char const *argv[]) {
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw) {
@@ -122,7 +122,7 @@ int main(int argc, char const *argv[]) {
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc_1, *fitThrowOsc_1_rp,
+    osc::IOscCalcAdjustable *fitThrowOsc_1, *fitThrowOsc_1_rp,
         *fitThrowOsc_4;
     if (start_throw) {
       for (auto s : systlist)
@@ -155,7 +155,7 @@ int main(int argc, char const *argv[]) {
       fit_type = fit_type | MinuitFitter::kIncludeHesse;
     }
 
-    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     auto start_1 = std::chrono::system_clock::now();
     omp_set_num_threads(1);

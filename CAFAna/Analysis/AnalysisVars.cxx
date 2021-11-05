@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 using namespace ana;
 
@@ -39,4 +39,4 @@ Var const kEVisReco = SIMPLEVAR(VisReco_NDFD);
 Var const kEVisTrue = SIMPLEVAR(HadE) + SIMPLEVAR(LepE);
 
 // CV weighting
-Var const kCVXSecWeights = SIMPLEVAR(total_xsSyst_cv_wgt); // kUnweighted
+Weight const kCVXSecWeights = SIMPLEWEIGHT(total_xsSyst_cv_wgt); // kUnweighted

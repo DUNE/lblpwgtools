@@ -136,11 +136,11 @@ void SayUsage(char const *argv[]) {
       << "\t-i|--input-pattern <P> : Regex pattern to search for input files.\n"
       << "\t                         Can only include pattern elements for "
          "files\n"
+      << "\t                         and not within directory names.\n"
+      << "\t                         i.e. /a/b/c/nd_[0-9]*.root\n"
       << "\t-e|--nue-input-pattern : As above but specifies nueswap files.\n"
       << "\t-t|--tau-input-pattern : As above but specifies nutauswap files.\n"
       << "\t-n|--n-max <N>         : Max number of events to read.\n"
-      << "\t                         and not within directory names.\n"
-      << "\t                         i.e. /a/b/c/nd_[0-9]*.root\n"
       << "\t--syst-descriptor <str>: Only add dials matching the syst\n"
          "\t                         descriptor <str> to the state file.\n"
       << "\t--no-fakedata-dials    : Do not add the fake data dials to the\n"
@@ -237,7 +237,7 @@ int main(int argc, char const *argv[]) {
 
       std::vector<std::string> CAFs;
 
-      if ((earliest_regex == std::string::npos)) {
+      if (earliest_regex == std::string::npos) {
         CAFs.push_back(dir + pattern);
       } else {
         try {

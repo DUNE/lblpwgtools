@@ -8,7 +8,7 @@
 #include "TStyle.h"
 #include "TVectorD.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Fit/ISurface.h"
@@ -195,9 +195,10 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void ISurface::SaveTo(TDirectory *dir) const
+  void ISurface::SaveToHelper(TDirectory *dir) const
   {
     TDirectory *oldDir = gDirectory;
+
     dir->cd();
 
     TVectorD v(3);

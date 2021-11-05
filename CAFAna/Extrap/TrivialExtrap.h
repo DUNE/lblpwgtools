@@ -17,7 +17,7 @@ namespace ana
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift,
-                  const Var& wei);
+                  const Weight& wei);
 
     TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
                   SpectrumLoaderBase& loaderNue,
@@ -27,7 +27,7 @@ namespace ana
                   const Var& var,
                   const Cut& cut,
                   const SystShifts& shift,
-                  const Var& wei);
+                  const Weight& wei);
 
     TrivialExtrap(Loaders& loaders,
                   std::string label,
@@ -35,13 +35,13 @@ namespace ana
                   const Var& var,
                   const Cut& cut,
                   const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
+                  const Weight& wei = kUnweighted);
 
     TrivialExtrap(Loaders& loaders,
                   const HistAxis& axis,
                   const Cut& cut,
                   const SystShifts& shift = kNoShift,
-                  const Var& wei = kUnweighted);
+                  const Weight& wei = kUnweighted);
 
     virtual OscillatableSpectrum NueSurvComponent()       {return fNueSurv;}
     virtual OscillatableSpectrum AntiNueSurvComponent()   {return fNueSurvAnti;}
@@ -65,19 +65,26 @@ namespace ana
     virtual Spectrum NCComponent() {return fNC;}
     virtual Spectrum NCAntiComponent()  override {return fNCAnti;}
 
-    virtual void SaveTo(TDirectory* dir) const;
-    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
+    static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     TrivialExtrap()
-      : fNueApp(0, {}, {}, 0, 0),    fNueAppAnti(0, {}, {}, 0, 0),
-        fNumuSurv(0, {}, {}, 0, 0),  fNumuSurvAnti(0, {}, {}, 0, 0),
-        fNumuApp(0, {}, {}, 0, 0),   fNumuAppAnti(0, {}, {}, 0, 0),
-        fNueSurv(0, {}, {}, 0, 0),   fNueSurvAnti(0, {}, {}, 0, 0),
-        fTauFromE(0, {}, {}, 0, 0),  fTauFromEAnti(0, {}, {}, 0, 0),
-        fTauFromMu(0, {}, {}, 0, 0), fTauFromMuAnti(0, {}, {}, 0, 0),
-        fNCTot(0, {}, {}, 0, 0), 
-        fNC(0, {}, {}, 0, 0),        fNCAnti(0, {}, {}, 0, 0)
+      : fNueApp    (OscillatableSpectrum::Uninitialized()),
+        fNueAppAnti(OscillatableSpectrum::Uninitialized()),
+        fNumuSurv    (OscillatableSpectrum::Uninitialized()),
+        fNumuSurvAnti(OscillatableSpectrum::Uninitialized()),
+        fNumuApp    (OscillatableSpectrum::Uninitialized()),
+        fNumuAppAnti(OscillatableSpectrum::Uninitialized()),
+        fNueSurv    (OscillatableSpectrum::Uninitialized()),
+        fNueSurvAnti(OscillatableSpectrum::Uninitialized()),
+        fTauFromE    (OscillatableSpectrum::Uninitialized()),
+        fTauFromEAnti(OscillatableSpectrum::Uninitialized()),
+        fTauFromMu    (OscillatableSpectrum::Uninitialized()),
+        fTauFromMuAnti(OscillatableSpectrum::Uninitialized()),
+        fNCTot(Spectrum::Uninitialized()),
+        fNC(Spectrum::Uninitialized()),
+        fNCAnti(Spectrum::Uninitialized())
     {}
 
     OscillatableSpectrum fNueApp,    fNueAppAnti;

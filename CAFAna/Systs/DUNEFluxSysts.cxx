@@ -9,12 +9,13 @@ static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
 
+#include <iostream>
 #include <cassert>
 #include <algorithm>
 
@@ -32,7 +33,7 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 
 //----------------------------------------------------------------------
 void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
-                         caf::StandardRecord *sr, double &weight) const {
+                         caf::SRProxy *sr, double &weight) const {
 
   if (abs(sr->nuPDGunosc) == 16) {
     return;
@@ -80,6 +81,7 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     //std::cout << sr->OffAxisFluxConfig << " bin " << sr->OffAxisFluxBin << " weight = " << weight << std::endl;
   }
 #else
+  
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
     if (fUseCDR) {
@@ -122,7 +124,7 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   if (abs(sr->nuPDGunosc) == 16)
     return;
 
-  double const rel_weight = 1;
+  double /*const*/ rel_weight = 1;
   double const enu = sr->Ev;
 
   const int det = sr->isFD ? 0 : 1;

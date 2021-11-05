@@ -1,8 +1,11 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Core/HistCache.h"
+
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
+#include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TDirectory.h"
@@ -15,8 +18,8 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "Utilities/func/MathUtil.h"
+#include "OscLib/IOscCalc.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include "CAFAna/Core/Loaders.h"
 
@@ -31,15 +34,14 @@ namespace ana
 {
   //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
-                                     osc::IOscCalculator* osc,
+                                     osc::IOscCalc* osc,
                                      const IPredictionGenerator& predGen,
                                      Loaders& loaders,
                                      const SystShifts& shiftMC,
                                      EMode_t mode)
     : fOscOrigin(osc ? osc->Copy() : 0),
-      fBinning(0, {}, {}, 0, 0),
-      fSplitBySign(mode == kSplitBySign),
-      fDontUseCache(false)
+      fBinning(Spectrum::Uninitialized()),
+      fSplitBySign(mode == kSplitBySign)
   {
 
     if(getenv("CAFANA_PRED_MINMCSTATS")){
@@ -57,6 +59,12 @@ namespace ana
       const int x0 = std::max(-syst->PredInterpMaxNSigma(), int(trunc(syst->Min())));
       const int x1 = std::min(+syst->PredInterpMaxNSigma(), int(trunc(syst->Max())));
 
+      if(std::abs(x0 - x1) < 1){
+        std::cout << "Warning: Syst '" << syst->ShortName()
+                  << "' has less than 1sigma of allowed range.  Won't interpolate it!" << std::endl;
+        continue;
+      }
+
       for(int x = x0; x <= x1; ++x) sp.shifts.push_back(x);
 
       for(int sigma: sp.shifts){
@@ -72,20 +80,28 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  PredictionInterp::~PredictionInterp(){}
+  PredictionInterp::~PredictionInterp()
+  {
+  }
 
   //----------------------------------------------------------------------
   std::vector<std::vector<PredictionInterp::Coeffs>> PredictionInterp::
   FitRatios(const std::vector<double>& shifts,
-            const std::vector<std::unique_ptr<TH1>>& ratios) const
+            const std::vector<Eigen::ArrayXd>& ratios) const
   {
+    if(ratios.size() < 2){
+      std::cout << "PredictionInterp::FitRatios(): ratios.size() = " << ratios.size() << " - how did that happen?" << std::endl;
+
+      abort();
+    }
+
     assert(shifts.size() == ratios.size());
 
     std::vector<std::vector<Coeffs>> ret;
 
-    const int binMax = ratios[0]->GetNbinsX();
+    const int binMax = ratios[0].size();
 
-    for(int binIdx = 0; binIdx < binMax+2; ++binIdx){
+    for(int binIdx = 0; binIdx < binMax; ++binIdx){
       ret.push_back({});
 
       // This is cubic interpolation. For each adjacent set of four points we
@@ -101,17 +117,17 @@ namespace ana
 
       // Special-case for linear interpolation
       if(ratios.size() == 2){
-        const double y0 = ratios[0]->GetBinContent(binIdx);
-        const double y1 = ratios[1]->GetBinContent(binIdx);
+        const double y0 = ratios[0][binIdx];
+        const double y1 = ratios[1][binIdx];
 
         ret.back().emplace_back(0, 0, y1-y0, y0);
         continue;
       }
 
       {
-        const double y1 = ratios[0]->GetBinContent(binIdx);
-        const double y2 = ratios[1]->GetBinContent(binIdx);
-        const double y3 = ratios[2]->GetBinContent(binIdx);
+        const double y1 = ratios[0][binIdx];
+        const double y2 = ratios[1][binIdx];
+        const double y3 = ratios[2][binIdx];
         const double v[3] = {y1, y2, (y3-y1)/2};
         const double m[9] = { 1, -1,  1,
                              -2,  2, -1,
@@ -122,10 +138,10 @@ namespace ana
 
       // We're assuming here that the shifts are separated by exactly 1 sigma.
       for(unsigned int shiftIdx = 1; shiftIdx < ratios.size()-2; ++shiftIdx){
-        const double y0 = ratios[shiftIdx-1]->GetBinContent(binIdx);
-        const double y1 = ratios[shiftIdx  ]->GetBinContent(binIdx);
-        const double y2 = ratios[shiftIdx+1]->GetBinContent(binIdx);
-        const double y3 = ratios[shiftIdx+2]->GetBinContent(binIdx);
+        const double y0 = ratios[shiftIdx-1][binIdx];
+        const double y1 = ratios[shiftIdx  ][binIdx];
+        const double y2 = ratios[shiftIdx+1][binIdx];
+        const double y3 = ratios[shiftIdx+2][binIdx];
 
         const double v[4] = {y1, y2, (y2-y0)/2, (y3-y1)/2};
         const double m[16] = { 2, -2,  1,  1,
@@ -138,9 +154,9 @@ namespace ana
 
       {
         const int N = ratios.size()-3;
-        const double y0 = ratios[N  ]->GetBinContent(binIdx);
-        const double y1 = ratios[N+1]->GetBinContent(binIdx);
-        const double y2 = ratios[N+2]->GetBinContent(binIdx);
+        const double y0 = ratios[N  ][binIdx];
+        const double y1 = ratios[N+1][binIdx];
+        const double y2 = ratios[N+2][binIdx];
         const double v[3] = {y1, y2, (y2-y0)/2};
         const double m[9] = {-1,  1, -1,
                               0,  0,  1,
@@ -187,25 +203,24 @@ namespace ana
     // relative to some alternate nominal (eg Birks C where the appropriate
     // nominal is no-rock) can work.
     const Spectrum nom = pNom->PredictComponent(fOscOrigin,
-						flav, curr, sign);
+                                                flav, curr, sign);
 
-    std::vector<std::unique_ptr<TH1>> ratios;
+    std::vector<Eigen::ArrayXd> ratios;
+    ratios.reserve(preds.size());
     for(auto& p: preds){
       ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin,
                                                     flav, curr, sign),
-                                nom).ToTH1());
+                                nom).GetEigen());
 
       // Check none of the ratio values is crazy
-      std::unique_ptr<TH1>& r = ratios.back();
-      for(int i = 0; i < r->GetNbinsX()+2; ++i){
-        const double y = r->GetBinContent(i);
-        if (y > 2)
-        {
+      Eigen::ArrayXd& r = ratios.back();
+      for(int i = 0; i < r.size(); ++i){
+        if (r[i] > 2){
           // std::cout << "PredictionInterp: WARNING, ratio in bin "
           // 	    << i << " for " << shifts[&p-&preds.front()]
           //           << " sigma shift of " << systName << " is " << y
           //           << " which exceeds limit of 2. Capping." << std::endl;
-          r->SetBinContent(i, 2);
+          r[i] = 2;
         }
       }
     }
@@ -290,20 +305,26 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::SetOscSeed(osc::IOscCalculator* oscSeed){
+  void PredictionInterp::SetOscSeed(osc::IOscCalc* oscSeed){
     fOscOrigin = oscSeed->Copy();
     for(auto& it: fPreds) it.second.fits.clear();
     InitFits();
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::Predict(osc::IOscCalculator* calc) const
+  Spectrum PredictionInterp::Predict(osc::IOscCalc* calc) const
   {
     return fPredNom->Predict(calc);
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponent(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::Predict(osc::IOscCalcStan* calc) const
+  {
+    return fPredNom->Predict(calc);
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum PredictionInterp::PredictComponent(osc::IOscCalc* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
                                               Sign::Sign_t sign) const
@@ -312,7 +333,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionInterp::PredictComponent(osc::IOscCalcStan* calc,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign) const
+  {
+    return fPredNom->PredictComponent(calc, flav, curr, sign);
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum PredictionInterp::PredictSyst(osc::IOscCalc* calc,
                                          const SystShifts& shift) const
   {
     InitFits();
@@ -324,28 +354,73 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  Spectrum PredictionInterp::PredictSyst(osc::IOscCalcStan* calc,
+                                         const SystShifts& shift) const
+  {
+    InitFits();
+
+    return PredictComponentSyst(calc,
+                                shift,
+                                Flavors::kAll,
+                                Current::kBoth,
+                                Sign::kBoth);
+  }
+
+  //----------------------------------------------------------------------
   Spectrum PredictionInterp::ShiftSpectrum(const Spectrum &s, CoeffsType type,
                                            bool nubar,
-                                           const SystShifts &shift) const {
-    if (nubar)
-      assert(fSplitBySign);
+                                           const SystShifts &shift) const
+  {
+    if(s.HasStan() && (!shift.IsNominal() && !shift.HasAnyStan())){
+      std::cout << "PredictionInterp used with Stan oscillations but non-Stan syst shifts. Is that what you expected?" << std::endl;
+      std::cout << "  Systs set: " << std::endl;
+      for (const auto & syst : shift.ActiveSysts())
+        std::cout << "      " << syst->ShortName() << " = " << shift.GetShift(syst) << std::endl;
+    }
 
-    // TODO histogram operations could be too slow
-    TH1D *h = s.ToTH1(s.POT());
+    if(s.HasStan() || shift.HasAnyStan()){
+      // Need the second case for the NC component
+      Eigen::ArrayXstan vec = s.HasStan() ? s.GetEigenStan(s.POT()) : Eigen::ArrayXstan(s.GetEigen(s.POT()));
 
-    const unsigned int N = h->GetNbinsX() + 2;
+      ShiftBins(vec.size(), vec.data(), type, nubar, shift);
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
+    }
+    else{
+      Eigen::ArrayXd vec = s.GetEigen(s.POT());
+      ShiftBins(vec.size(), vec.data(), type, nubar, shift);
+      return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
+    }
+  }
+
+  //----------------------------------------------------------------------
+  template <typename T>
+  void PredictionInterp::ShiftBins(unsigned int N,
+                                   T* arr,
+                                   CoeffsType type,
+                                   bool nubar,
+                                   const SystShifts& shift) const
+  {
+    static_assert(std::is_same_v<T, double> ||
+                  std::is_same_v<T, stan::math::var>,
+                  "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
+    if(nubar) assert(fSplitBySign);
+
+
+    if(!std::is_same_v<T, stan::math::var> && shift.HasAnyStan()){
+      std::cout << "PredictionInterp: stan shifts on non-stan spectrum, something is wrong" << std::endl;
+      abort();
+    }
+
 #ifdef USE_PREDINTERP_OMP
-    double corr[4][N];
+    T corr[4][N];
     for (unsigned int i = 0; i < 4; ++i) {
       for (unsigned int j = 0; j < N; ++j) {
         corr[i][j] = 1;
       };
     }
 #else
-    double corr[N];
-    for (unsigned int i = 0; i < N; ++i) {
-      corr[i] = 1;
-    }
+    T corr[N];
+    for(unsigned int i = 0; i < N; ++i) corr[i] = 1;
 #endif
 
     size_t NPreds = fPreds.size();
@@ -355,12 +430,13 @@ namespace ana
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
 
-      double x = shift.GetShift(syst);
+      T x = shift.GetShift<T>(syst);
 
-      if (x == 0)
-        continue;
+      // need to actually do the calculation for the autodiff version
+      // to make sure the gradient is computed correctly
+      if(x == 0 && (!std::is_same_v<T, stan::math::var> || !shift.HasStan(syst))) continue;
 
-      int shiftBin = (x - sp.shifts[0]) / sp.Stride();
+      int shiftBin = (util::GetValAs<double>(x) - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
       shiftBin = std::min(shiftBin, sp.nCoeffs - 1);
 
@@ -369,8 +445,8 @@ namespace ana
 
       x -= sp.shifts[shiftBin];
 
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
+      const T x_cube = util::cube(x);
+      const T x_sqr = util::sqr(x);
 
 #ifdef USE_PREDINTERP_OMP
       ShiftSpectrumKernel(fits, N, x, x_sqr, x_cube,
@@ -388,32 +464,59 @@ namespace ana
     }
 #endif
 
-    double *arr = h->GetArray();
     for (unsigned int n = 0; n < N; ++n) {
       if (arr[n] > fMinMCStats) {
 #ifdef USE_PREDINTERP_OMP
-        arr[n] *= std::max(corr[0][n], 0.);
+        // std::max() doesn't work with stan::math::var
+        arr[n] *= (corr[0][n] > 0.) ? corr[0][n] : 0.;
 #else
-        arr[n] *= std::max(corr[n], 0.);
+        arr[n] *= (corr[n] > 0.) ? corr[n] : 0.;
 #endif
       }
     }
-
-    return Spectrum(std::unique_ptr<TH1D>(h), s.GetLabels(), s.GetBinnings(),
-                    s.POT(), s.Livetime());
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::
-  ShiftedComponent(osc::IOscCalculator* calc,
-                   const TMD5* hash,
-                   const SystShifts& shift,
-                   Flavors::Flavors_t flav,
-                   Current::Current_t curr,
-                   Sign::Sign_t sign,
-                   CoeffsType type) const
+  Spectrum PredictionInterp::ShiftedComponent(osc::IOscCalc* calc,
+                                              const TMD5* hash,
+                                              const SystShifts& shift,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign,
+                                              CoeffsType type) const
   {
-    if(fSplitBySign && sign == Sign::kBoth){ 
+    return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum PredictionInterp::ShiftedComponent(osc::_IOscCalc<stan::math::var>* calc,
+                                              const TMD5* hash,
+                                              const SystShifts& shift,
+                                              Flavors::Flavors_t flav,
+                                              Current::Current_t curr,
+                                              Sign::Sign_t sign,
+                                              CoeffsType type) const
+  {
+//<<<<<<< HEAD
+//    if(fSplitBySign && sign == Sign::kBoth){ 
+//=======
+    return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
+  }
+
+  //----------------------------------------------------------------------
+  template<typename T>
+  Spectrum PredictionInterp::_ShiftedComponent(osc::_IOscCalc<T>* calc,
+                                               const TMD5* hash,
+                                               const SystShifts& shift,
+                                               Flavors::Flavors_t flav,
+                                               Current::Current_t curr,
+                                               Sign::Sign_t sign,
+                                               CoeffsType type) const
+  {
+    static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
+                  "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
+
+    if(fSplitBySign && sign == Sign::kBoth){
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+
               ShiftedComponent(calc, hash, shift, flav, curr, Sign::kNu,     type));
     }
@@ -421,17 +524,23 @@ namespace ana
     // Must be the base case of the recursion to use the cache. Otherwise we
     // can cache systematically shifted versions of our children, which is
     // wrong. Also, some calculators won't hash themselves.
-    const bool canCache = !fDontUseCache && (hash != 0);
+//<<<<<<< HEAD
+//    const bool canCache = !fDontUseCache && (hash != 0);
+//=======
+    // Moreover, caching is not going to work with stan::math::vars
+    // since they get reset every time Stan's log_prob() is called.
+    const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
+//>>>>>>> origin
 
     const Key_t key = {flav, curr, sign};
-    auto it = fNomCache.find(key);
+    auto it = fNomCache->find(key);
 
     // Should the interpolation use the nubar fits?
     const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
 
     // We have the nominal for this exact combination of flav, curr, sign, calc
     // stored.  Shift it and return.
-    if(canCache && it != fNomCache.end() && it->second.hash == *hash){
+    if(canCache && it != fNomCache->end() && it->second.hash == *hash){
       return ShiftSpectrum(it->second.nom, type, nubar, shift);
     }
 
@@ -441,8 +550,8 @@ namespace ana
     if(canCache){
       // Insert into the cache if not already there, or update if there but
       // with old oscillation parameters.
-      if(it == fNomCache.end())
-        fNomCache.emplace(key, Val_t({*hash, nom}));
+      if(it == fNomCache->end())
+        fNomCache->emplace(key, Val_t({*hash, nom}));
       else
         it->second = {*hash, nom};
     }
@@ -459,7 +568,6 @@ namespace ana
         fPreds.erase(it);
       }
     }
-    HistCache::ClearCache();
   }
 
   std::vector<ISyst const *> PredictionInterp::GetAllSysts() const {
@@ -471,18 +579,19 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalculator* calc,
-                                                  const SystShifts& shift,
-                                                  Flavors::Flavors_t flav,
-                                                  Current::Current_t curr,
-                                                  Sign::Sign_t sign) const
+  template<typename T>
+  Spectrum PredictionInterp::_PredictComponentSyst(osc::_IOscCalc<T>* calc,
+                                                   const SystShifts& shift,
+                                                   Flavors::Flavors_t flav,
+                                                   Current::Current_t curr,
+                                                   Sign::Sign_t sign) const
   {
     InitFits();
 
-    Spectrum& ret = fBinning;
+    Spectrum ret = fBinning;
     ret.Clear();
 
-    if(ret.POT()==0) ret.OverridePOT(1e24);
+    assert (ret.POT() > 0 && "Can't PredictComponentSyst() for 0 POT");
 
     // Check that we're able to handle all the systs we were passed
     for(const ISyst* syst: shift.ActiveSysts()){
@@ -520,84 +629,24 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::
-  ComponentDerivative(osc::IOscCalculator* calc,
-                      Flavors::Flavors_t flav,
-                      Current::Current_t curr,
-                      Sign::Sign_t sign,
-                      CoeffsType type,
-                      const SystShifts& shift,
-                      double pot,
-                      std::unordered_map<const ISyst*, std::vector<double>>& dp) const
+  // can't template these directly since the interface isn't templated
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalc* calc,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
   {
-    if(fSplitBySign && sign == Sign::kBoth){
-      ComponentDerivative(calc, flav, curr, Sign::kNu,     type, shift, pot, dp);
-      ComponentDerivative(calc, flav, curr, Sign::kAntiNu, type, shift, pot, dp);
-      return;
-    }
-
-    const Spectrum snom = fPredNom->PredictComponent(calc, flav, curr, sign);
-    TH1D* hnom = snom.ToTH1(snom.POT());
-    const double* arr_nom = hnom->GetArray();
-
-    const Spectrum base = PredictComponentSyst(calc, shift, flav, curr, sign);
-    TH1D* h = base.ToTH1(pot);
-    double* arr = h->GetArray();
-    const unsigned int N = h->GetNbinsX()+2;
-
-
-    // Should the interpolation use the nubar fits?
-    const bool nubar = (fSplitBySign && sign == Sign::kAntiNu);
-
-    for(auto& it: dp){
-      const ISyst* syst = it.first;
-      std::vector<double>& diff = it.second;
-      if(diff.empty()) diff.resize(N);
-      assert(diff.size() == N);
-      assert(find_pred(syst) != fPreds.end());
-      const ShiftedPreds& sp = get_pred(syst);
-
-      double x = shift.GetShift(syst);
-
-      int shiftBin = (x - sp.shifts[0])/sp.Stride();
-      shiftBin = std::max(0, shiftBin);
-      shiftBin = std::min(shiftBin, sp.nCoeffs-1);
-
-      const Coeffs* fits = nubar ? &sp.fitsNubarRemap[type][shiftBin].front() : &sp.fitsRemap[type][shiftBin].front();
-
-      x -= sp.shifts[shiftBin];
-
-      const double x_cube = util::cube(x);
-      const double x_sqr = util::sqr(x);
-
-      for(unsigned int n = 0; n < N; ++n){
-        // Wasn't corrected, so derivative is zero
-        if(arr_nom[n] <= fMinMCStats) continue;
-
-        // Uncomment to debug crashes in this function
-        // assert(type < fits.size());
-        // assert(n < sp.fits[type].size());
-        // assert(shiftBin < int(sp.fits[type][n].size()));
-        const Coeffs& f = fits[n];
-
-        const double corr = f.a*x_cube + f.b*x_sqr + f.c*x + f.d;
-        if(corr > 0){
-          diff[n] += (3*f.a*x_sqr + 2*f.b*x + f.c)/corr*arr[n];
-        }
-      } // end for n
-    } // end for syst
-
-    HistCache::Delete(h);
-    HistCache::Delete(hnom);
+    return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::
-  Derivative(osc::IOscCalculator* calc,
-             const SystShifts& shift,
-             double pot,
-             std::unordered_map<const ISyst*, std::vector<double>>& dp) const
+  Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalcStan* calc,
+                                                  const SystShifts& shift,
+                                                  Flavors::Flavors_t flav,
+                                                  Current::Current_t curr,
+                                                  Sign::Sign_t sign) const
   {
+/*<<<<<<< HEAD
     InitFits();
 
     // Check that we're able to handle all the systs we were passed
@@ -625,7 +674,7 @@ namespace ana
 
     // Simpler (much slower) implementation in terms of finite differences for
     // test purposes
-    /*
+    
     const Spectrum p0 = PredictSyst(calc, shift);
     TH1D* h0 = p0.ToTH1(pot);
 
@@ -650,23 +699,25 @@ namespace ana
 
     HistCache::Delete(h0);
     */
+//=======
+    return _PredictComponentSyst(calc, shift, flav, curr, sign);
+//>>>>>>> origin
   }
 
-  //----------------------------------------------------------------------
-  void PredictionInterp::SaveTo(TDirectory* dir) const
+  void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();
 
     TDirectory* tmp = gDirectory;
 
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("PredictionInterp").Write("type");
 
+    fPredNom->SaveTo(dir, "pred_nom");
 
-    fPredNom->SaveTo(dir->mkdir("pred_nom"));
-
-
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       const ShiftedPreds& sp = it.second;
 
       for(unsigned int i = 0; i < sp.shifts.size(); ++i){
@@ -674,18 +725,19 @@ namespace ana
           std::cout << "Can't save a PredictionInterp after MinimizeMemory()" << std::endl;
           abort();
         }
-        sp.preds[i]->SaveTo(dir->mkdir(TString::Format("pred_%s_%+d",
-                                                       sp.systName.c_str(),
-                                                       int(sp.shifts[i])).Data()));
+
+        sp.preds[i]->SaveTo(dir, TString::Format("pred_%s_%+d",
+                                                 sp.systName.c_str(),
+                                                 int(sp.shifts[i])).Data());
       } // end for i
     } // end for it
 
-    ana::SaveTo(*fOscOrigin, dir->mkdir("osc_origin"));
+    ana::SaveTo(*fOscOrigin, dir, "osc_origin");
 
     if(!fPreds.empty()){
       TH1F hSystNames("syst_names", ";Syst names", fPreds.size(), 0, fPreds.size());
       int binIdx = 1;
-      for(auto &it: fPreds){
+      for(auto& it: fPreds){
         hSystNames.GetXaxis()->SetBinLabel(binIdx++, it.second.systName.c_str());
       }
       dir->cd();
@@ -695,16 +747,22 @@ namespace ana
     TObjString split_sign = fSplitBySign ? "yes" : "no";
     dir->cd();
     split_sign.Write("split_sign");
+
+    dir->Write();
+    delete dir;
+
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionInterp> PredictionInterp::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     TObjString* tag = (TObjString*)dir->Get("type");
     assert(tag);
-    assert(tag->GetString() == "PredictionInterp" ||
-           tag->GetString() == "PredictionInterp2"); // backwards compatibility
+    assert(tag->GetString() == "PredictionInterp");
 
     std::unique_ptr<PredictionInterp> ret(new PredictionInterp);
 
@@ -714,19 +772,20 @@ namespace ana
     // Can be missing from old files
     ret->fSplitBySign = (split_sign && split_sign->String() == "yes");
 
+    delete dir;
+
     return ret;
   }
 
   //----------------------------------------------------------------------
   void PredictionInterp::LoadFromBody(TDirectory* dir, PredictionInterp* ret,
-				      std::vector<const ISyst*> veto)
+                                      std::vector<const ISyst*> veto)
   {
-    ret->fPredNom = ana::LoadFrom<IPrediction>(dir->GetDirectory("pred_nom"));
+    ret->fPredNom = ana::LoadFrom<IPrediction>(dir, "pred_nom");
 
     TH1* hSystNames = (TH1*)dir->Get("syst_names");
     if(hSystNames){
-      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx)
-      {
+      for(int systIdx = 0; systIdx < hSystNames->GetNbinsX(); ++systIdx){
         ShiftedPreds sp;
         sp.systName = hSystNames->GetXaxis()->GetBinLabel(systIdx + 1);
 
@@ -753,23 +812,25 @@ namespace ana
 
         for (int shift = x0; shift <= x1; ++shift)
         {
-          TDirectory *preddir = dir->GetDirectory(TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data());
+          const std::string subname = TString::Format("pred_%s_%+d", sp.systName.c_str(), shift).Data();
+          TDirectory *preddir = dir->GetDirectory(subname.c_str());
           if (!preddir)
           {
-            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma " << " not found in "
+            std::cout << "PredictionInterp: " << syst->ShortName() << " " << shift << " sigma not found in "
                       << dir->GetName() << std::endl;
             continue;
           }
+          delete preddir;
 
           sp.shifts.push_back(shift);
-          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(preddir));
+          sp.preds.emplace_back(ana::LoadFrom<IPrediction>(dir, subname));
         } // end for shift
 
         ret->fPreds.emplace_back(syst, std::move(sp));
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalculator>(dir->GetDirectory("osc_origin")).release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin").release();
   }
 
   //----------------------------------------------------------------------
@@ -780,7 +841,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::DebugPlot(const ISyst* syst,
-                                   osc::IOscCalculator* calc,
+                                   osc::IOscCalc* calc,
                                    Flavors::Flavors_t flav,
                                    Current::Current_t curr,
                                    Sign::Sign_t sign) const
@@ -830,7 +891,7 @@ namespace ana
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
       std::unique_ptr<TH1> h;
-      h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+        h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);
@@ -866,7 +927,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::DebugPlots(osc::IOscCalculator* calc,
+  void PredictionInterp::DebugPlots(osc::IOscCalc* calc,
 				    const std::string& savePattern,
 				    Flavors::Flavors_t flav,
 				    Current::Current_t curr,
@@ -884,7 +945,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void PredictionInterp::DebugPlotColz(const ISyst* syst,
-                                       osc::IOscCalculator* calc,
+                                       osc::IOscCalc* calc,
                                        Flavors::Flavors_t flav,
                                        Current::Current_t curr,
                                        Sign::Sign_t sign) const
@@ -918,7 +979,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionInterp::DebugPlotsColz(osc::IOscCalculator* calc,
+  void PredictionInterp::DebugPlotsColz(osc::IOscCalc* calc,
                                         const std::string& savePattern,
                                         Flavors::Flavors_t flav,
                                         Current::Current_t curr,
@@ -926,7 +987,7 @@ namespace ana
   {
     InitFits();
 
-    for(auto &it: fPreds){
+    for(auto& it: fPreds){
       new TCanvas;
       DebugPlotColz(it.first, calc, flav, curr, sign);
 

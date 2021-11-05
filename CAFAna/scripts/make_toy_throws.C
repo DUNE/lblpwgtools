@@ -140,7 +140,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
     // Set up throws for the starting value
     SystShifts fakeThrowSyst;
-    osc::IOscCalculatorAdjustable *fakeThrowOsc;
+    osc::IOscCalcAdjustable *fakeThrowOsc;
 
     // First deal with OA parameters
     if (fakeoa_throw || central_throw)
@@ -164,7 +164,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
     // Prefit
     SystShifts fitThrowSyst;
-    osc::IOscCalculatorAdjustable *fitThrowOsc;
+    osc::IOscCalcAdjustable *fitThrowOsc;
     if (start_throw) {
       for (auto s : systlist)
         fitThrowSyst.SetShift(
@@ -194,7 +194,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fit_type = fit_type | MinuitFitter::kIncludeHesse;
     }
 
-    IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "CAFAna/Core/Binning.h"
+#include "CAFAnaCore/CAFAna/Core/HistAxis.h"
+
 #include "CAFAna/Core/Var.h"
 
-#include <string>
-
+/*<<<<<<< HEAD
 namespace ana {
 /// \brief Collect information describing the x-axis of an analysis histogram
 ///
@@ -55,3 +55,10 @@ typedef GenericHistAxis<Var> HistAxis;
 typedef GenericHistAxis<SpillVar> SpillHistAxis;
 typedef GenericHistAxis<SpillTruthVar> SpillTruthHistAxis;
 } // namespace ana
+*/
+//=======
+namespace ana
+{
+  typedef _HistAxis<Var> HistAxis;
+}
+//>>>>>>> origin

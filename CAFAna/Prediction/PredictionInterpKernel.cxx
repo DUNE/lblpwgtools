@@ -7,6 +7,8 @@
 //
 // and look at PredictionInterpKernel.s for xmm, ymm or zmm registers
 
+#include "CAFAna/Core/Stan.h"
+
 namespace ana
 {
   namespace PredIntKern
@@ -21,5 +23,21 @@ namespace ana
         corr[n] *= f.a*x3 + f.b*x2 + f.c*x + f.d;
       } // end for n
     }
+
+    void ShiftSpectrumKernel(const Coeffs* fits,
+                             unsigned int N,
+                             const stan::math::var& x,
+                             const stan::math::var& x2,
+                             const stan::math::var& x3,
+                             stan::math::var* corr)
+    {
+      for(unsigned int n = 0; n < N; ++n)
+      {
+        const Coeffs& f = fits[n];
+        corr[n] *= f.a*x3 + f.b*x2 + f.c*x + f.d;
+      } // end for n
+
+    }
+
   }
 }

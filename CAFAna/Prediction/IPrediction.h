@@ -1,12 +1,17 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
 #include "CAFAna/Core/Spectrum.h"
 
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
-namespace osc {
-  class IOscCalculator;
-}
+//<<<<<<< HEAD
+//namespace osc {
+//  class IOscCalculator;
+//}
+//=======
+#include <iostream>
 
 class TDirectory;
 
@@ -98,35 +103,40 @@ namespace ana {
   public:
     virtual ~IPrediction(){}
     virtual Spectrum PredictUnoscillated() const;
-    virtual Spectrum Predict(osc::IOscCalculator* calc) const = 0;
+    
+    virtual Spectrum Predict(osc::IOscCalc* calc) const = 0;
+    virtual Spectrum Predict(osc::IOscCalcStan* calc) const;
 
-    virtual Spectrum PredictSyst(osc::IOscCalculator* calc, const SystShifts& syst) const;
+    virtual Spectrum PredictSyst(osc::IOscCalc* calc, const SystShifts& syst) const;
+    virtual Spectrum PredictSyst(osc::IOscCalcStan* calc, const SystShifts& syst) const;
 
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponent(osc::IOscCalc* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const = 0;
-
-    virtual Spectrum PredictComponentSyst(osc::IOscCalculator* calc,
+    
+    virtual Spectrum PredictComponent(osc::IOscCalcStan* calc,
+                                      Flavors::Flavors_t flav,
+                                      Current::Current_t curr,
+                                      Sign::Sign_t sign) const;
+    
+    virtual Spectrum PredictComponentSyst(osc::IOscCalc* calc,
                                           const SystShifts& syst,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const;
-
-    virtual void Derivative(osc::IOscCalculator *calc, const SystShifts &shift, double pot,
-                            std::unordered_map<const ISyst *, std::vector<double>> &dchi) const {
-      // Implementing this function is optional. If you don't implement it,
-      // this default implementation will be used, which signals to callers
-      // that your Prediction doesn't implement this feature.
-      dchi.clear();
-    }
+    virtual Spectrum PredictComponentSyst(osc::IOscCalcStan* calc,
+                                          const SystShifts& syst,
+                                          Flavors::Flavors_t flav,
+                                          Current::Current_t curr,
+                                          Sign::Sign_t sign) const;
 
     virtual OscillatableSpectrum ComponentCC(int from, int to) const;
     virtual Spectrum ComponentNCTotal() const;
     virtual Spectrum ComponentNC() const;
     virtual Spectrum ComponentNCAnti() const;
 
-    virtual void SaveTo(TDirectory* dir) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
   };
 
 

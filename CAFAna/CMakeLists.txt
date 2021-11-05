@@ -76,14 +76,44 @@ include(${CMAKE_SOURCE_DIR}/cmake/ExternalLibrariesCheck.cmake)
 include_directories(
   ${SRC_ROOT_PARENT}
   ${CMAKE_BINARY_DIR}/Ext
-  ${BOOST_INC})
+  ${BOOST_INC}
+  ${EIGEN_INC}
+  ${SUNDIALS_INC}
+  ${STAN_MATH_INC}
+  ${STAN_INC}
+  $ENV{OSCLIB_INC}
+  $ENV{CAFANACORE_INC}
+)
+
+find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
+
+find_library(TBB tbb $ENV{TBB_LIB})
 
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1)
 
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-include(${CMAKE_SOURCE_DIR}/cmake/NOvAExternals.cmake)
+## StandardRecord
+
+set(StandardRecord_implementation_files
+    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.cxx
+)
+
+set(StandardRecord_header_files
+    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
+    ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
+    ${SRC_ROOT_PARENT}/StandardRecord/FwdDeclare.h
+)
+
+add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
+target_link_libraries(StandardRecord)
+
+install(TARGETS StandardRecord DESTINATION lib)
+
+install(FILES ${StandardRecord_header_files} DESTINATION include/StandardRecord)
+
+## CAFAna proper
 
 add_subdirectory(Analysis)
 add_subdirectory(Core)
