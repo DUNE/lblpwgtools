@@ -26,7 +26,7 @@ namespace ana
                               SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
+    if (!fND) assert(det == caf::kFARDET || swap == kNonSwap);
 
     const Key_t key(det, datamc, swap);
 
@@ -43,7 +43,7 @@ namespace ana
                                SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
+    if (!fND) assert(det == caf::kFARDET || swap == kNonSwap);
 
     const Key_t key(det, datamc, swap);
 
@@ -60,7 +60,7 @@ namespace ana
                                SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
+    if (!fND) assert(det == caf::kFARDET || swap == kNonSwap);
 
     const Key_t key(det, datamc, swap);
 
@@ -76,7 +76,7 @@ namespace ana
                               SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
+    if (!fND) assert(det == caf::kFARDET || swap == kNonSwap);
 
     const Key_t key(det, datamc, swap);
 
@@ -97,7 +97,7 @@ namespace ana
                                          SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
+    if (!fND) assert(det == caf::kFARDET || swap == kNonSwap);
 
     const Key_t key(det, datamc, swap);
 

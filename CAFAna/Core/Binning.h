@@ -13,6 +13,10 @@ namespace ana
   const Binning kTrueEnergyBins = TrueEnergyBins();
   /// No entries for underflow or overflow
   const std::vector<double> kTrueEnergyBinCenters = TrueEnergyBinCenters();
+
+  /// Default true l-over-e bin edges
+  Binning TrueLOverTrueEBins();
+  const Binning kTrueLOverTrueEBins = TrueLOverTrueEBins();
   
   /// LBL and ND analyses binnings
   const std::vector<double> kBinEdges = {0.,  0.5,  1.,  1.25, 1.5, 1.75,

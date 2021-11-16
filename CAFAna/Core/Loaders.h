@@ -53,6 +53,9 @@ namespace ana
                                   DataMC datamc,
                                   SwappingConfig swap = kNonSwap);
 
+    void SetND(bool nd) { fND = nd; }
+    bool GetND() { return fND; }
+
     /// Call Go() on all the loaders
     void Go();
 
@@ -67,5 +70,8 @@ namespace ana
 
     /// We give this back when a loader isn't set for some configuration
     NullLoader fNull;
+
+    /// Set loader as ND instead of FD
+    bool fND;
   };
 } // namespace

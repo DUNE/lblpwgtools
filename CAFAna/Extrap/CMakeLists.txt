@@ -3,12 +3,16 @@ set(Extrap_implementation_files
   ModularExtrap.cxx
   ModularExtrapComponent.cxx
   ModularExtrapComponentPlot.cxx
+  NDExtrap.cxx
+  FDExtrap.cxx
   TrivialExtrap.cxx)
 
 set(Extrap_header_files
   IExtrap.h
   ModularExtrap.h
   ModularExtrapComponent.h
+  NDExtrap.h
+  NDExtrap.h
   TrivialExtrap.h)
 
 add_library(CAFAnaExtrap SHARED ${Extrap_implementation_files})

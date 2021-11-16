@@ -64,6 +64,8 @@ namespace ana
     /// Indicate whether or not \ref Go has been called
     virtual bool Gone() const {return fGone;}
 
+    // double GetWeightedPOT();
+
   protected:
     /// Component of other constructors
     SpectrumLoaderBase();

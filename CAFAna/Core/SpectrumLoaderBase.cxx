@@ -273,6 +273,13 @@ namespace ana
     return f;
   }
 
+  // //---------------------------------------------------------------------
+  // double SpectrumLoaderBase::GetWeightedPOT() {
+  //   fWeightedPOT = ((fBeamNue/(fBeamNue+fSingleNue))*fPOT) + ((fSingleNue/(fBeamNue+fSingleNue))*fSinglePOT);
+  //   std::cout << " beam nue:  " << fBeamNue << "  single nue:  " << fSingleNue << "  fPOT:  " << fPOT << "  fSinglePOT:  " << fSinglePOT << std::endl;
+  //   return fWeightedPOT;
+  // }
+
   //----------------------------------------------------------------------
   void NullLoader::Go()
   {
