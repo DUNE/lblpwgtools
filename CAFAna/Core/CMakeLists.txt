@@ -5,10 +5,13 @@ set(Core_implementation_files
   ISyst.cxx
   Loaders.cxx
   LoadFromFile.cxx
+  NDOscCurve.cxx
+  NDOscillatableSpectrum.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
   ProfilerSupport.cxx
   Registry.cxx
+  Sample.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
@@ -27,10 +30,13 @@ set(Core_header_files
   LoadFromFile.h
   MathUtil.h
   MultiVar.h
+  NDOscCurve.h
+  NDOscillatableSpectrum.h
   OscCalcFwdDeclare.h
   OscCurve.h
   OscillatableSpectrum.h
   Registry.h
+  Sample.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

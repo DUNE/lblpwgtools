@@ -1,5 +1,6 @@
 set(Systs_implementation_files
   AnaSysts.cxx
+  CovMxSysts.cxx
   DUNEFluxSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
@@ -16,6 +17,7 @@ set(Systs_implementation_files
 
 set(Systs_header_files
   AnaSysts.h
+  CovMxSysts.h
   DUNEFluxSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h

@@ -49,4 +49,51 @@ namespace ana
     const Cut fCut;
     const Weight fWei;
   };
+
+  //---------------------------------------------------------------------------
+
+  /// Generates Near Detector predictions (which are oscillate-able)
+  class NDPredictionGenerator : public IPredictionGenerator {
+  public:
+
+    NDPredictionGenerator(const HistAxis axis,
+			  const Cut cutND,
+			  const SystShifts shiftND = kNoShift,
+			  const Var wei = kUnweighted);
+
+    std::unique_ptr<IPrediction> Generate(Loaders& loaders,
+					  const SystShifts& shiftMC = kNoShift) const override;
+
+  private:
+
+    const HistAxis fAxis;
+    const Cut fCutND;
+    const SystShifts fShiftND;
+    const Var fWei;
+
+  };
+
+  //---------------------------------------------------------------------------
+
+  /// Generates Far Detector BSM predictions
+  class FDPredictionGenerator: public IPredictionGenerator {
+  public:
+
+    FDPredictionGenerator(const HistAxis axis,
+			  const Cut cutFD,
+			  const SystShifts shiftFD = kNoShift,
+			  const Var wei = kUnweighted);
+
+    std::unique_ptr<IPrediction> Generate(Loaders& loaders,
+					  const SystShifts& shiftMC = kNoShift) const override;
+
+  private:
+
+    const HistAxis fAxis;
+    const Cut fCutFD;
+    const SystShifts fShiftFD;
+    const Var fWei;
+
+  };
+
 }

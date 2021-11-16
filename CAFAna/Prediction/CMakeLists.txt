@@ -1,5 +1,7 @@
 set(Prediction_implementation_files
   IPrediction.cxx
+  NDPredictionSterile.cxx
+  FDPredictionSterile.cxx
   PredictionExtrap.cxx
   PredictionGenerator.cxx
   PredictionInterp.cxx
@@ -8,10 +10,13 @@ set(Prediction_implementation_files
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
   PredictionNuOnE.cxx
-  PredictionInterpKernel.cxx)
+  PredictionInterpKernel.cxx
+  CovarianceMatrix.cxx)
 
 set(Prediction_header_files
   IPrediction.h
+  NDPredictionSterile.h
+  FDPredictionSterile.h
   PredictionExtrap.h
   PredictionGenerator.h
   PredictionInterp.h
@@ -20,7 +25,8 @@ set(Prediction_header_files
   PredictionScaleComp.h
   PredictionXSecDiag.h
   PredictionNuOnE.h
-  PredictionInterpKernel.h)
+  PredictionInterpKernel.h
+  CovarianceMatrix.h)
 
 if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)

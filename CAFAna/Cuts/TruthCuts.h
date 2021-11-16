@@ -17,6 +17,24 @@ namespace ana
                     return !sr->isCC;
                   });
 
+  /// \brief Is this a nue event?
+  const Cut kIsNue([](const caf::SRProxy* sr)
+		   {
+		     return (abs(sr->nuPDG) == 12);
+		   });
+
+  /// \brief Is this a numu event?
+  const Cut kIsNumu([](const caf::SRProxy* sr)
+		    {
+		      return (abs(sr->nuPDG) == 14);
+		    });
+
+  /// \brief Is this a nutau event?
+  const Cut kIsTau([](const caf::SRProxy* sr)
+		   {
+		     return (abs(sr->nuPDG) == 16);
+		   });
+
   //----------------------------------------------------------------------
   /// Helper for defining true CC event cuts
   class CCFlavSel

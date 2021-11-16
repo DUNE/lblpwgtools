@@ -60,7 +60,7 @@ namespace ana
 
     const int kNumTrueLOverTrueEBins = 2000;
     const double klow = 0.0;
-    const double khigh = 5.0;
+    const double khigh = 60.;
 
     return Binning::Simple(kNumTrueLOverTrueEBins, klow, khigh);
   }
