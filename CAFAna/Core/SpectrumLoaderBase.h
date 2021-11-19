@@ -6,8 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "CAFAnaCore/CAFAna/Core/IFileSource.h"
+
 #include "CAFAna/Core/Cut.h"
-#include "CAFAna/Core/IFileSource.h"
+//#include "CAFAna/Core/IFileSource.h"
 #include "CAFAna/Core/MultiVar.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
@@ -94,7 +96,7 @@ namespace ana
     TFile* GetNextFile();
 
     /// Returns the \ref fFileSource iterator back to the beginning.
-    void BeginAgain() { fFileSource->BeginAgain(); }
+    //void BeginAgain() { fFileSource->BeginAgain(); }
 
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;

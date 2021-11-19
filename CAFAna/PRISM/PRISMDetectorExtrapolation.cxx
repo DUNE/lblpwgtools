@@ -1,14 +1,14 @@
-#include "CAFAna/PRISM/PRISMUtils.h"
+//#include "CAFAna/PRISM/PRISMUtils.h"
 
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+//#include "CAFAna/PRISM/PredictionPRISM.h"
+//#include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 
-#include "CAFAna/Analysis/CalcsNuFit.h"
-#include "CAFAna/Analysis/common_fit_definitions.h"
-#include "CAFAna/Analysis/AnalysisVars.h"
+//#include "CAFAna/Analysis/CalcsNuFit.h"
+//#include "CAFAna/Analysis/common_fit_definitions.h"
+//#include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "CAFAna/Cuts/TruthCuts.h"
+//#include "CAFAna/Cuts/TruthCuts.h"
 
 using namespace PRISM;
 
@@ -20,9 +20,8 @@ namespace ana {
 
 NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
                          PredictionInterp const * FD,
-                         double reg, bool optreg) : fRegFactor(reg), 
-                         fNDExtrap_293kA(nullptr), fNDExtrap_280kA(nullptr),
-                         hCovMat_293kA(nullptr), hCovMat_280kA(nullptr), 
+                         double reg, bool optreg) : fRegFactor(reg),
+                         hMatrixND(nullptr), hMatrixFD(nullptr), 
                          hNumuNueCorr(nullptr), fOptimizeReg(optreg) {
   fMatrixND = ND;
   fMatrixFD = FD;
@@ -39,10 +38,6 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
 
 NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
                         fRegFactor(MatPred.fRegFactor),
-                        fNDExtrap_293kA(nullptr), 
-                        fNDExtrap_280kA(nullptr), 
-                        hCovMat_293kA(nullptr), 
-                        hCovMat_280kA(nullptr), 
                         hNumuNueCorr(nullptr),  
                         fOptimizeReg(MatPred.fOptimizeReg) {
   fMatrixND = MatPred.fMatrixND;
@@ -64,20 +59,20 @@ TH2D * NDFD_Matrix::GetFDMatrix() const {
 
 //-----------------------------------------------------
 
-TH2 * NDFD_Matrix::GetNDExtrap_293kA() const {
-  return fNDExtrap_293kA.get();
+Eigen::MatrixXd NDFD_Matrix::GetNDExtrap_293kA() const {
+  return fNDExtrap_293kA;
 }
-TH2 * NDFD_Matrix::GetNDExtrap_280kA() const {
-  return fNDExtrap_280kA.get();
+Eigen::MatrixXd NDFD_Matrix::GetNDExtrap_280kA() const {
+  return fNDExtrap_280kA;
 }
 
 //-----------------------------------------------------
 
-TH2 * NDFD_Matrix::GetCovMat_293kA() const {
-  return hCovMat_293kA.get();
+Eigen::MatrixXd NDFD_Matrix::GetCovMat_293kA() const {
+  return hCovMat_293kA;
 }
-TH2 * NDFD_Matrix::GetCovMat_280kA() const {
-  return hCovMat_280kA.get();
+Eigen::MatrixXd NDFD_Matrix::GetCovMat_280kA() const {
+  return hCovMat_280kA;
 }
 
 //-----------------------------------------------------
@@ -103,7 +98,8 @@ void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_pt
   for (auto &mat : matrix_pair) {
     for (int col_it = 1; col_it <= mat.first->get()->GetXaxis()->GetNbins(); col_it++) {
 
-      TH1D *projY = mat.first->get()->ProjectionY("_projY", col_it, col_it, "e");
+      std::unique_ptr<TH1D> projY = std::unique_ptr<TH1D>(
+          mat.first->get()->ProjectionY("_projY", col_it, col_it, "e"));
       // Normalise integral of true bin to efficiency
       if (std::isnormal(projY->Integral())) {
         projY->Scale(1 / projY->Integral());
@@ -113,7 +109,7 @@ void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_pt
         mat.first->get()->SetBinContent(col_it, row_it, projY->GetBinContent(row_it));
         mat.first->get()->SetBinError(col_it, row_it, projY->GetBinError(row_it));
       }
-      HistCache::Delete(projY);
+      //HistCache::Delete(projY);
     }
   }
 }
@@ -165,15 +161,15 @@ Eigen::MatrixXd NDFD_Matrix::GetL2NormReg(int truebins, TAxis *trueaxis) const {
 
 void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
                                     double POT, const int kA, const TH1 *weights,
-                                    osc::IOscCalculator *calc, ana::SystShifts shift,
+                                    osc::IOscCalc *calc, ana::SystShifts shift,
                                     Flavors::Flavors_t NDflav, 
                                     Flavors::Flavors_t FDflav,
                                     Current::Current_t curr,
                                     Sign::Sign_t NDsign, Sign::Sign_t FDsign,
                                     std::vector<std::vector<double>> NDefficiency,
                                     std::vector<double> FDefficiency) const {
-  std::unique_ptr<TH2>* fNDExtrap;
-  
+  //std::unique_ptr<TH2>* fNDExtrap;
+  Eigen::MatrixXd *fNDExtrap = new Eigen::MatrixXd();
   if (kA == 293) {
     fNDExtrap = &fNDExtrap_293kA;
   } else if (kA == 280) {
@@ -192,17 +188,22 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
   auto sMatrixFD = fMatrixFD->PredictComponentSyst(calc, shift, FDflav, curr, FDsign); 
   hMatrixFD = std::unique_ptr<TH2D>(static_cast<TH2D*>(sMatrixFD.ToTH2(1)));
 
-  int NTrueBins = hMatrixND->GetXaxis()->GetNbins();
+  //int NTrueBins = hMatrixND->GetXaxis()->GetNbins();
   // Use T-reg to calculate ETrue(ND)
   // Can use L1 or L2 norm reg here
-  Eigen::MatrixXd RegMatrix = GetL1NormReg(NTrueBins, hMatrixND->GetXaxis()); 
+  //Eigen::MatrixXd RegMatrix = GetL1NormReg(NTrueBins, hMatrixND->GetXaxis()); 
 
-  TH2D *PRISMND = static_cast<TH2D*>(NDDataSpec.ToTH2(POT));
+  std::unique_ptr<TH2> PRISMND = std::unique_ptr<TH2>(NDDataSpec.ToTH2(POT));
+  //static_cast<TH2D*>(NDDataSpec.ToTH2(POT));
 
-  *fNDExtrap = std::unique_ptr<TH2>(static_cast<TH2*>(
+  /**fNDExtrap = std::unique_ptr<TH2>(static_cast<TH2*>(
                                     HistCache::NewTH2D("NDExtrap",
                                                        hMatrixFD->GetYaxis(), 
-                                                       PRISMND->GetYaxis()))); 
+                                                       PRISMND->GetYaxis()))); */
+  //fNDExtrap = new Eigen::MatrixXd::Zero(PRISMND->GetXaxis()->GetNbins(),
+  //                                      PRISMND->GetYaxis()->GetNbins());
+  fNDExtrap->resize(PRISMND->GetXaxis()->GetNbins(), 
+                    PRISMND->GetYaxis()->GetNbins());
 
   Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD->GetYaxis()->GetNbins(),
                                                         hMatrixFD->GetYaxis()->GetNbins());
@@ -241,9 +242,12 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
                                            FDhist->get()->GetXaxis()->GetNbins());
 
     // Propogate uncertainty
-    Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
+    /*Eigen::MatrixXd D = ((NDmat.transpose() * invCovMatRec * NDmat) +
                          RegMatrix.transpose() * RegMatrix).inverse() *
-                        NDmat.transpose() * invCovMatRec; 
+                        NDmat.transpose() * invCovMatRec; */
+    // Don't think I need Tikhonoc reg!
+    Eigen::MatrixXd D = (NDmat.transpose() * invCovMatRec * NDmat).inverse() *
+                        NDmat.transpose() * invCovMatRec;
 
     // ** WARNING ** If there are a lot of empty bins in ND data (as there can
     // be for 2D preds) then the above equation for D inc. the covariance matrix
@@ -267,13 +271,13 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
     // Solution and residual norm for L-curve
     //std::cout << "regparam = " << fRegFactor << std::endl;
-    if (fOptimizeReg) {
+    /*if (fOptimizeReg) {
       Eigen::MatrixXd reg_shape_matrix = RegMatrix / fRegFactor;
       double soln_norm = (reg_shape_matrix * NDETrue).norm();
       double resid_norm = (invCovMatRec * (NDmat * NDETrue - NDERec)).norm();
       soln_norm_vector.push_back(soln_norm);
       resid_norm_vector.push_back(resid_norm);
-    }
+    }*/
     //std::cout << "resid_norm = " << resid_norm << " ; " << 
     //    "soln_norm = " << soln_norm << std::endl;
 
@@ -284,27 +288,25 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     // ** Get total covariance matrix of linear combination **
     TotalLCCovMat += CovMatExtrap * std::pow(weights->GetBinContent(slice + 1), 2);
 
-    for (int ebin = 0; ebin < fNDExtrap->get()->GetXaxis()->GetNbins(); ebin++) {   
-      fNDExtrap->get()->SetBinContent(ebin + 1, slice + 1, FDERec(ebin));
+    //for (int ebin = 0; ebin < fNDExtrap->get()->GetXaxis()->GetNbins(); ebin++) {   
+    for (int ebin = 0; ebin < fNDExtrap->cols(); ebin++) {  
+      //fNDExtrap->get()->SetBinContent(ebin + 1, slice + 1, FDERec(ebin));
+      (*fNDExtrap)(ebin, slice) = FDERec(ebin);
       double errorExtrap = pow(CovMatExtrap(ebin, ebin), 0.5); 
-      fNDExtrap->get()->SetBinError(ebin + 1, slice + 1, errorExtrap);
+      //fNDExtrap->get()->SetBinError(ebin + 1, slice + 1, errorExtrap);
     }
-    HistCache::Delete(SliceProj);
+    delete SliceProj;
   }
 
   // Full covariance matrix from linear combinations
   TAxis *covAxis = hMatrixFD->GetYaxis();
   if (kA == 293) {
-    hCovMat_293kA = std::unique_ptr<TH2>(static_cast<TH2*>(
-                                         HistCache::NewTH2D("CovMat_293kA", covAxis, covAxis)));
-    FillHistFromEigenMatrix(hCovMat_293kA.get(), TotalLCCovMat);
+    hCovMat_293kA = TotalLCCovMat;
   } else if (kA == 280) {
-    hCovMat_280kA = std::unique_ptr<TH2>(static_cast<TH2*>(
-                                         HistCache::NewTH2D("CovMat_280kA", covAxis, covAxis)));
-    FillHistFromEigenMatrix(hCovMat_280kA.get(), TotalLCCovMat);
+    hCovMat_280kA = TotalLCCovMat;
   }
 
-  HistCache::Delete(PRISMND);
+  delete fNDExtrap; 
 }
 
 //----------------------------------------------------
@@ -312,8 +314,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 void NDFD_Matrix::Write(TDirectory *dir) const {
   dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
   dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
-  dir->WriteTObject(hCovMat_293kA.get(), "CovMatExtrap_293kA");
-  dir->WriteTObject(hCovMat_280kA.get(), "CovMatExtrap_280kA");
+  //dir->WriteTObject(hCovMat_293kA.get(), "CovMatExtrap_293kA");
+  //dir->WriteTObject(hCovMat_280kA.get(), "CovMatExtrap_280kA");
 }
  
 } // namespace ana

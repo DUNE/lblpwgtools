@@ -8,7 +8,8 @@ set(scripts_to_install
   make_mh_throws.C
   mh_joint.C
   octant_joint.C
-  spec_variations.C)
+  spec_variations.C
+  )
 
 set(scripts_to_build
   asimov_joint
@@ -23,7 +24,7 @@ set(scripts_to_build
   llh_scans
   spec_joint
   sample_throws
-)
+  )
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   LIST(APPEND scripts_to_build pred_thread_test fit_thread_test)
 endif()
@@ -39,9 +40,7 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-#<<<<<<< HEAD
 #  target_link_libraries(${SCRPT} ${CAFANALIBS})
-#=======
   target_link_libraries(${SCRPT}
     CAFAnaAnalysis
     CAFAnaDecomp
@@ -56,7 +55,7 @@ foreach(SCRPT ${scripts_to_build})
     StandardRecord
     ${OSCLIB}
     )
-#>>>>>>> origin
+
 
   target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})
   target_link_libraries(${SCRPT} ${CAFANA_DEPEND_LIBS})

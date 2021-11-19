@@ -169,7 +169,7 @@ void SpectrumLoader::GoPRISM() {
   }
 
   // Full FileExposure calculated, so now begin file loop again.
-  BeginAgain();
+  //BeginAgain();
 
   fileIdx = -1;
   while (TFile *f = GetNextFile()) {
@@ -422,9 +422,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
   }
 
   TTree *potFriend;
+  potFriend = (TTree*)f->Get("OffAxisWeightFriend");
+  //if (fpotfriend) { // Only true if running GoPRISM(), not Go().
+    //fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
 
-  if (fpotfriend) { // Only true if running GoPRISM(), not Go().
-    fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
     if (potFriend) {
       tr->AddFriend(potFriend);
       SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
@@ -442,7 +443,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
       sr.SpecialRunWeight = 1;
       sr.SpecialHCRunId = 293;
     }
-  }  
+  //}  
 
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);

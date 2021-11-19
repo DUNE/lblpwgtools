@@ -1,8 +1,8 @@
 include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
 
 set(APPS
-  hadd_cafana
-  diff_spectra
+  #hadd_cafana
+  #diff_spectra
 )
 
 foreach(APP ${APPS})

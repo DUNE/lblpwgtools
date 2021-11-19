@@ -29,23 +29,23 @@ namespace ana
     const TString tag = ptag->GetString();
     delete ptag;
 
-    if(tag == "PredictionNonSwapNoExtrap") return PredictionNonSwapNoExtrap::LoadFrom(dir);
-    if(tag == "DataPredictionNoExtrap") return DataPredictionNoExtrap::LoadFrom(dir);
+    if(tag == "PredictionNonSwapNoExtrap") return PredictionNonSwapNoExtrap::LoadFrom(dir, name);
+    if(tag == "DataPredictionNoExtrap") return DataPredictionNoExtrap::LoadFrom(dir, name);
     if(tag == "PredictionNoExtrap") return PredictionNoExtrap::LoadFrom(dir, name);
 
     // Backwards compatibility
     if(tag == "PredictionInterp" ||
        tag == "PredictionInterp2") return PredictionInterp::LoadFrom(dir, name);
 
-    if(tag == "PredictionFDNoOsc") return PredictionFDNoOsc::LoadFrom(dir);
+    if(tag == "PredictionFDNoOsc") return PredictionFDNoOsc::LoadFrom(dir, name);
     if(tag == "PredictionNoOsc") return PredictionNoOsc::LoadFrom(dir, name);
 
     if(tag == "PredictionScaleComp") return PredictionScaleComp::LoadFrom(dir, name);
 
     if(tag == "PredictionNuOnE") return PredictionNuOnE::LoadFrom(dir, name);
 
-    if(tag == "FluxPrediction") return FluxPrediction::LoadFrom(dir);
-    if(tag == "OffAxisFluxPrediction") return OffAxisFluxPrediction::LoadFrom(dir);
+    //if(tag == "FluxPrediction") return FluxPrediction::LoadFrom(dir);
+    //if(tag == "OffAxisFluxPrediction") return OffAxisFluxPrediction::LoadFrom(dir);
 
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();

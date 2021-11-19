@@ -1,26 +1,17 @@
 #pragma once
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Core/Var.h"
-#include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Prediction/PredictionNoExtrap.h"
+//#include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
-
-#include "StandardRecord/StandardRecord.h"
-
-//#include "OscLib/func/IOscCalc.h"
+//#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
+//#include "CAFAna/PRISM/PredictionPRISM.h"
+//#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "TFile.h"
 #include "TH1D.h"
 #include "TH2D.h"
-
-#include "fhiclcpp/ParameterSet.h"
 
 #include <memory>
 #include <vector>
@@ -89,12 +80,12 @@ protected:
   PredictionInterp const * fFDunselected;
   PredictionInterp const * fFDselected;
 
-  mutable TH2D *hNDunselected_293kA;
-  mutable TH2D *hNDselected_293kA;
-  mutable TH2D *hNDunselected_280kA;
-  mutable TH2D *hNDselected_280kA;
-  mutable TH1D *hFDunselected;
-  mutable TH1D *hFDselected;
+  mutable std::unique_ptr<TH2> hNDunselected_293kA;
+  mutable std::unique_ptr<TH2> hNDselected_293kA;
+  mutable std::unique_ptr<TH2> hNDunselected_280kA;
+  mutable std::unique_ptr<TH2> hNDselected_280kA;
+  mutable std::unique_ptr<TH1> hFDunselected;
+  mutable std::unique_ptr<TH1> hFDselected;
   // ND and FD efficiency in each energy bin
   // vector of vectors to hold ND eff at each OA stop.
   mutable std::vector<std::vector<double>> NDefficiency_293kA;

@@ -1,14 +1,14 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+//#include "CAFAna/PRISM/PredictionPRISM.h"
+//#include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 
-#include "CAFAna/Analysis/CalcsNuFit.h"
-#include "CAFAna/Analysis/common_fit_definitions.h"
-#include "CAFAna/Analysis/AnalysisVars.h"
+//#include "CAFAna/Analysis/CalcsNuFit.h"
+//#include "CAFAna/Analysis/common_fit_definitions.h"
+//#include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "CAFAna/Cuts/TruthCuts.h"
+//#include "CAFAna/Cuts/TruthCuts.h"
 
 using namespace PRISM;
 
@@ -58,12 +58,12 @@ MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) :
 //----------------------------------------------------
 
 MCEffCorrection::~MCEffCorrection() {
-  HistCache::Delete(hNDunselected_293kA);
-  HistCache::Delete(hNDselected_293kA);
-  HistCache::Delete(hNDunselected_280kA);
-  HistCache::Delete(hNDselected_280kA);
-  HistCache::Delete(hFDunselected);
-  HistCache::Delete(hFDselected);
+  //HistCache::Delete(hNDunselected_293kA);
+  //HistCache::Delete(hNDselected_293kA);
+  //HistCache::Delete(hNDunselected_280kA);
+  //HistCache::Delete(hNDselected_280kA);
+  //HistCache::Delete(hFDunselected);
+  //HistCache::Delete(hFDselected);
 }
 
 //----------------------------------------------------
@@ -104,8 +104,8 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
                                                                       1, trueaxis);
   ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
                                                                       1, trueaxis);
-  TH2D *NDunsel_293kA = static_cast<TH2D*>(rwsNDunselected_293kA.ToTH2(1));
-  TH2D *NDunsel_280kA = static_cast<TH2D*>(rwsNDunselected_280kA.ToTH2(1));  
+  std::unique_ptr<TH2> NDunsel_293kA = std::unique_ptr<TH2>(rwsNDunselected_293kA.ToTH2(1));
+  std::unique_ptr<TH2> NDunsel_280kA = std::unique_ptr<TH2>(rwsNDunselected_280kA.ToTH2(1));  
   
   // Selected ND MC
   auto sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(calc, syst, 
@@ -116,8 +116,8 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
                                                                     1, trueaxis);
   ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
                                                                     1, trueaxis);
-  TH2D *NDsel_293kA = static_cast<TH2D*>(rwsNDselected_293kA.ToTH2(1));
-  TH2D *NDsel_280kA = static_cast<TH2D*>(rwsNDselected_280kA.ToTH2(1));
+  std::unique_ptr<TH2> NDsel_293kA = std::unique_ptr<TH2>(rwsNDselected_293kA.ToTH2(1));
+  std::unique_ptr<TH2> NDsel_280kA = std::unique_ptr<TH2>(rwsNDselected_280kA.ToTH2(1));
 
   if (!fFDunselected || !fFDselected) {
     std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
@@ -125,10 +125,10 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
   }
   // FD unselected
   auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-  TH1D *FDunsel = sFDunselected.ToTH1(1);
+  std::unique_ptr<TH1> FDunsel = std::unique_ptr<TH1>(sFDunselected.ToTH1(1));
   // FD selected
   auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-  TH1D *FDsel = sFDselected.ToTH1(1);
+  std::unique_ptr<TH1> FDsel = std::unique_ptr<TH1>(sFDselected.ToTH1(1));
 
   // Calculate ND efficiency
   // efficiency fluctuates slightly with OA position
@@ -176,33 +176,33 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
   // Don't want to keep saving the same histograms.
   // Asign the histograms once for writing.
   if (!fDoneOnce) {
-    hNDunselected_293kA = HistCache::Copy(NDunsel_293kA);
-    hNDselected_293kA = HistCache::Copy(NDsel_293kA);
-    hNDunselected_280kA = HistCache::Copy(NDunsel_280kA);
-    hNDselected_280kA = HistCache::Copy(NDsel_280kA);
-    hFDunselected = HistCache::Copy(FDunsel);
-    hFDselected = HistCache::Copy(FDsel); 
+    hNDunselected_293kA = std::move(NDunsel_293kA);
+    hNDselected_293kA = std::move(NDsel_293kA);
+    hNDunselected_280kA = std::move(NDunsel_280kA);
+    hNDselected_280kA = std::move(NDsel_280kA);
+    hFDunselected = std::move(FDunsel);
+    hFDselected = std::move(FDsel); 
   }
   fDoneOnce = true;
 
   // Delete histograms to clear up the cache.
-  HistCache::Delete(NDunsel_293kA);
-  HistCache::Delete(NDsel_293kA);
-  HistCache::Delete(NDunsel_280kA);
-  HistCache::Delete(NDsel_280kA);
-  HistCache::Delete(FDunsel);
-  HistCache::Delete(FDsel);
+  //HistCache::Delete(NDunsel_293kA);
+  //HistCache::Delete(NDsel_293kA);
+  //HistCache::Delete(NDunsel_280kA);
+  //HistCache::Delete(NDsel_280kA);
+  //HistCache::Delete(FDunsel);
+  //HistCache::Delete(FDsel);
 }
 
 //-----------------------------------------------------------
 
 void MCEffCorrection::Write(TDirectory *dir) const {
-  dir->WriteTObject(hNDunselected_293kA, "NDUnselected_293kA");
-  dir->WriteTObject(hNDselected_293kA, "NDSelected_293kA");
-  dir->WriteTObject(hNDunselected_280kA, "NDUnselected_280kA");
-  dir->WriteTObject(hNDselected_280kA, "NDSelected_280kA");
-  dir->WriteTObject(hFDunselected, "FDUnselected");
-  dir->WriteTObject(hFDselected, "FDSelected"); 
+  dir->WriteTObject(hNDunselected_293kA.get(), "NDUnselected_293kA");
+  dir->WriteTObject(hNDselected_293kA.get(), "NDSelected_293kA");
+  dir->WriteTObject(hNDunselected_280kA.get(), "NDUnselected_280kA");
+  dir->WriteTObject(hNDselected_280kA.get(), "NDSelected_280kA");
+  dir->WriteTObject(hFDunselected.get(), "FDUnselected");
+  dir->WriteTObject(hFDselected.get(), "FDSelected"); 
 }
 
 //-----------------------------------------------------------

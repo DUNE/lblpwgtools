@@ -67,10 +67,10 @@ unsigned gRNGSeed = 0;
 
 // A smaller APA geometry was used to simmulate the FD due to computational requirements.
 // Scale the simulated sample to match the actuall 40 kt detector.
-const double scale_fdmc = 40 / 1.13;
+const double pot_fd_FVMassFactor = 40 / 1.13;
 // POT for 3.5 years
 const double nom_years = 3.5;
-const double pot_fd = POT120 * nom_years * scale_fdmc;
+const double pot_fd = POT120 * nom_years * pot_fd_FVMassFactor;
 const double pot_nd = POT120 * nom_years;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 

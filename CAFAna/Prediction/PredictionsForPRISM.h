@@ -55,7 +55,8 @@ public:
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
-  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir);
+  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir, 
+                                                             const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
 private:
@@ -113,7 +114,7 @@ public:
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
-  static std::unique_ptr<DataPredictionNoExtrap> LoadFrom(TDirectory *dir);
+  static std::unique_ptr<DataPredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
 
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
@@ -142,7 +143,7 @@ public:
                     const SystShifts &shift = kNoShift,
                     const Weight &wei = kUnweighted);
 
-  static std::unique_ptr<PredictionFDNoOsc> LoadFrom(TDirectory *dir);
+  static std::unique_ptr<PredictionFDNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   void OverridePOT(double pot) {

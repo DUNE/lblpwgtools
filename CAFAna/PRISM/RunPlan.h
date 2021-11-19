@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ReweightableSpectrum.h"
 #include "CAFAna/Core/Spectrum.h"
 
-#include "CAFAna/Analysis/Exposures.h"
+//#include "CAFAna/Analysis/Exposures.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -43,38 +43,9 @@ struct RunPlan {
     return *found;
   }
 
-  // I think this Spectrum Weight function is now **redundant**.
-  // Only use the ReweightableSpectrum Weight function.
-  /*Spectrum Weight(Spectrum NDSpec, int kA,
-                  bool SetErrorsFromPredictedRate = false) const {
-
-    std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
-    NDSpec_h->SetDirectory(nullptr);
-
-    for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
-      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
-      auto stop = FindStop(ypos, kA);
-      for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
-        double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
-        double be = SetErrorsFromPredictedRate
-                        ? sqrt(bc)
-                        : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
-        NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
-        NDSpec_h->SetBinError(xit + 1, yit + 1, be);
-      }
-    }
-
-    NDSpec.Clear();
-    std::cout << "Filling from hist!" << std::endl;
-    NDSpec.FillFromHistogram(NDSpec_h.get()); 
-    NDSpec.OverrideLivetime(0);
-    NDSpec.OverridePOT(GetPlanPOT());
-    //HistCache::Delete(NDSpec_h);
-    return NDSpec;
-  }*/
-
   // Only now using this function to run-plan weights RWSpecs.
   ReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
+                              HistAxis const &axis, 
                               bool SetErrorsFromPredictedRate = false) const {
     // Assume this spectrum is in per/POT
 
@@ -84,7 +55,9 @@ struct RunPlan {
     //std::unique_ptr<Eigen::MatrixXd> NDSpec_mat = 
     //    std::unique_ptr<Eigen::MatrixXd>(NDSpec.GetEigen(1));
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
-
+    std::cout << "row = " << NDSpec_mat.rows() << ", cols = " << NDSpec_mat.cols() <<std::endl;
+    std::cout << "ybins = " << NDSpec_h->GetYaxis()->GetNbins() <<
+      "xbins = " << NDSpec_h->GetXaxis()->GetNbins() << std::endl;
     //for (int yit = 0; yit < NDSpec_mat->rows(); ++yit) {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
@@ -97,18 +70,15 @@ struct RunPlan {
                     : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
         sum += bc; 
         //NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
-        //NDSpec_h->SetBinError(xit + 1, yit + 1, be);      
-        NDSpec_mat(xit, yit) = bc;
+        //NDSpec_h->SetBinError(xit + 1, yit + 1, be);     
+        //std::cout << "[" << xit << ", "<<yit<<"] = " << bc << std::endl; 
+        NDSpec_mat(yit, xit) = bc;
       }
     }
 
-    //std::unique_ptr<Eigen::MatrixXd>
-    //std::vector<std::string> labels = NDSpec.GetLabels();
-    //std::vector<Binning> bins = NDSpec.GetBinnings();
-    LabelsAndBins anaAxis = LabelsAndBins(NDSpec.GetLabels()[0], NDSpec.GetBinnings()[0]);
-    LabelsAndBins weightAxis = LabelsAndBins(NDSpec.GetLabels()[1], NDSpec.GetBinnings()[1]);
-    //ReweightableSpectrum ret = ReweightableSpectrum(ana::Constant(1), NDSpec_h.get(), 
-    //                                                labels, bins, GetPlanPOT(), 0);
+    std::cout << "Labels size = " << NDSpec.GetLabels().size() << std::endl;
+    LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
+    LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
     ReweightableSpectrum ret = ReweightableSpectrum(std::move(NDSpec_mat),
                                                     anaAxis, weightAxis, GetPlanPOT(), 0);
     return ret;
@@ -178,7 +148,7 @@ struct RunPlan {
       if (s.horn_current != kA) {
         continue;
       }
-      rp->SetBinContent(i++, s.POT / POT120);
+      rp->SetBinContent(i++, s.POT / 1.1e21); // hardcode POT120 due to linker error
     }
     return rp;
   }

@@ -75,7 +75,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
   std::cout << "Reg for Extrap = " << RegFactorExtrap << std::endl;
 
-  osc::IOscCalculatorAdjustable *calc =
+  osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
 
   // Lazy load the state file

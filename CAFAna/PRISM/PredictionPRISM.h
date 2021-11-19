@@ -6,10 +6,8 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
-//#include "CAFAna/Core/ReweightableSpectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -234,17 +232,27 @@ public:
   HistAxis fAnalysisAxisFD;
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
-  HistAxis fNDFDEnergyMatchAxis;
   HistAxis fTrueAnalysisAxis;
+  HistAxis fNDFDEnergyMatchAxis;
   HistAxis fCovarianceAxis;
+  HistAxis fOffPredictionAxis;
+  HistAxis f280kAPredictionAxis;
+  HistAxis fFluxMatcherCorrectionAxes;
 
-  PredictionPRISM(const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD, 
+  PredictionPRISM(const HistAxis &AnalysisAxisND, 
+                  const HistAxis &AnalysisAxisFD, 
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
+                  const HistAxis &TrueAnalysisAxis,
                   const HistAxis &NDFDEnergyMatchAxis,
-                  const HistAxis &TrueAnalysisAxis);
+                  const HistAxis &CovarianceAxis,
+                  const HistAxis &OffPredictionAxis,
+                  const HistAxis &_280kAPredictionAxis,
+                  const HistAxis &FluxMatcherCorrectionAxes);
 
-  static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir);
+  void Initialize();
+
+  static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir, const std::string &name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   virtual Spectrum Predict(osc::IOscCalc *calc) const override;
@@ -290,9 +298,9 @@ public:
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
 
-  HistAxis fOffPredictionAxis;
-  HistAxis f280kAPredictionAxis;
-  HistAxis fFluxMatcherCorrectionAxes;
+  //HistAxis fOffPredictionAxis;
+  //HistAxis f280kAPredictionAxis;
+  //HistAxis fFluxMatcherCorrectionAxes;
   double fDefaultOffAxisPOT;
 
   bool fNCCorrection = false;
@@ -345,6 +353,7 @@ public:
   /// for use in fits and systematic studies.
   void AddNDMCLoader(Loaders &, const Cut &cut, const Weight &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {},
+                     osc::IOscCalc* calc = (osc::IOscCalc*)0, 
                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
 
   ///\brief Call to add a FD MC component
@@ -362,6 +371,7 @@ public:
   /// for use in fits and systematic studies.
   void AddFDMCLoader(Loaders &, const Cut &cut, const Weight &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {},
+                     osc::IOscCalc* calc = (osc::IOscCalc*)0,
                      PRISM::BeamChan FDChannel = PRISM::kNumu_Numode);
 
   void SetNDRunPlan(ana::RunPlan const &rp,

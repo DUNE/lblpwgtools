@@ -2,7 +2,6 @@
 
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
-//#include "OscLib/func/IOscCalc.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 
@@ -13,12 +12,12 @@
 #include <vector>
 
 //namespace osc {
-//class osc::IOscCalc;
+//  class osc::IOscCalc;
 //}
 namespace ana {
-class Binning;
-class PredictionInterp;
-class Spectrum;
+  class Binning;
+  class PredictionInterp;
+  class Spectrum;
 } // namespace ana
 
 class TH1;
