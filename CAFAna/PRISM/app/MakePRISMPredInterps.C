@@ -388,7 +388,9 @@ int main(int argc, char const *argv[]) {
   }
 
   TFile fout(output_file_name.c_str(), "RECREATE");
-  
+ 
+  //--------------------------------------
+  // Sort out the axes:  
   PRISMAxisBlob axes =
       GetPRISMAxes(axdescriptor, binningdescriptor, oabinningdescriptor); 
 
@@ -396,7 +398,15 @@ int main(int argc, char const *argv[]) {
 
   HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor);
 
-  std::vector<Var> WeightVars(kNPRISMConfigs, ana::Constant(1));
+  std::vector<HistAxis> AxisVec = { axes.XProjectionFD };
+  HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
+  
+  HistAxis _OffPredictionAxis = GetTwoDAxis(axes.XProjectionND, axes.OffAxisPosition);
+  HistAxis _280kAPredictionAxis = GetTwoDAxis(axes.XProjectionND, axes.OffAxis280kAPosition);
+  HistAxis _FluxMatcherCorrectionAxes = GetTwoDAxis(axes.XProjectionFD, MatchAxis);
+  //--------------------------------------
+
+  std::vector<Weight> WeightVars(kNPRISMConfigs, kUnweighted);
   WeightVars[kND_293kA_nu] = GetNDWeight("", true);
   WeightVars[kND_280kA_nu] = GetNDWeight("", true);
   WeightVars[kND_293kA_nub] = GetNDWeight("", false);
@@ -408,7 +418,7 @@ int main(int argc, char const *argv[]) {
   WeightVars[kFD_nub_nueswap] = GetFDWeight("", false);
   WeightVars[kFD_nub_tauswap] = GetFDWeight("", false);
 
-  std::vector<Var> AnaWeightVars(kNPRISMConfigs, ana::Constant(1));
+  std::vector<Weight> AnaWeightVars(kNPRISMConfigs, kUnweighted);
   AnaWeightVars[kND_293kA_nu] = GetNDWeight(anaweighters, true);
   AnaWeightVars[kND_280kA_nu] = GetNDWeight(anaweighters, true);
   AnaWeightVars[kND_293kA_nub] = GetNDWeight(anaweighters, false);
@@ -484,7 +494,9 @@ int main(int argc, char const *argv[]) {
   auto PRISM =
       std::make_unique<PredictionPRISM>(axes.XProjectionND, axes.XProjectionFD, 
                                         axes.OffAxisPosition, axes.OffAxis280kAPosition, 
-                                        MatchAxis, TrueObsAxis);
+                                        TrueObsAxis, MatchAxis, CovarianceAxis,
+                                        _OffPredictionAxis, _280kAPredictionAxis,
+                                        _FluxMatcherCorrectionAxes);
 
   Loaders Loaders_nu, Loaders_nub;
 
@@ -525,7 +537,7 @@ int main(int argc, char const *argv[]) {
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
     FileLoaders[it] = IsND280kA ? FileLoaders[it - 1]
                                 : std::make_shared<SpectrumLoader>(
-                                      file_lists[file_it].second, kBeam, nmax);
+                                      file_lists[file_it].second, nmax);
     if (IsND && !IsND280kA) { // Is ND, but do not need to repeat for 280 kA run
 
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
@@ -539,11 +551,11 @@ int main(int argc, char const *argv[]) {
 
     } else if (!IsND) { // Is FD and files either nonswap, nueswap or tauswap.
       if (IsNonSwap) Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, 
-                                          Loaders::kMC, kBeam, Loaders::kNonSwap);
+                                          Loaders::kMC, Loaders::kNonSwap);
       else if (IsNueSwap) Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET,
-                                               Loaders::kMC, kBeam, Loaders::kNueSwap);
+                                               Loaders::kMC, Loaders::kNueSwap);
       else Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, 
-                                Loaders::kMC, kBeam, Loaders::kNuTauSwap);
+                                Loaders::kMC, Loaders::kNuTauSwap);
     }
   }
 
@@ -674,8 +686,8 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
   FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
-  static osc::NoOscillations no_osc;
-  static osc::IOscCalculatorAdjustable *calc = NuFitOscCalc(1);
+  //static osc::NoOscCalc no_osc;
+  static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
@@ -700,7 +712,7 @@ int main(int argc, char const *argv[]) {
       // kA runs separately
       if (!IsND280kA) {
         PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it],
-                             los, chanmode);
+                             los, calc, chanmode);
       }
 
       // Corrects for non-uniform off-axis binning
@@ -717,7 +729,7 @@ int main(int argc, char const *argv[]) {
           WeightVars[it] * slice_width_weight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-          los_flux, &no_osc, *MatchPredGens[it], Loaders_bm, kNoShift,
+          los_flux, calc, *MatchPredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign); 
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
@@ -725,7 +737,7 @@ int main(int argc, char const *argv[]) {
           OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * slice_width_weight); 
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *SelPredGens[it], Loaders_bm, kNoShift,
+          los, calc, *SelPredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign); 
     
       // PredInterps for ND smearing matrix
@@ -744,7 +756,7 @@ int main(int argc, char const *argv[]) {
               WeightVars[it]);
         }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
-            los, &no_osc, *NDMatrixPredGens[it], Loaders_bm, kNoShift,
+            los, calc, *NDMatrixPredGens[it], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign); 
       }
       // Add another ND unselected spectrum for MC eff correction
@@ -756,7 +768,7 @@ int main(int argc, char const *argv[]) {
           kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
+          los, calc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
       // ND True Selected Spectrum
       NDSelTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
@@ -764,7 +776,7 @@ int main(int argc, char const *argv[]) {
           AnalysisCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no_osc, *NDSelTruePredGens[it], Loaders_bm, kNoShift,
+          los, calc, *NDSelTruePredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
             
     } else if (!IsND && !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
@@ -774,7 +786,7 @@ int main(int argc, char const *argv[]) {
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
 
       PRISM->AddFDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los,
-                           chanmode);
+                           calc, chanmode);
       // We always want to use the numus as we don't want to account for any
       // xsec differences between numu and nues, we use a special prediction
       // object to allow us to oscillate the NuMu spectrum.
@@ -834,7 +846,7 @@ int main(int argc, char const *argv[]) {
       // True energy FD spectrum with obs binning for MC efficiency correction
       FDUnselTruePredGens[fd_it] = std::make_unique<NoExtrapPredictionGenerator>(
           FDTrueEnergyObsBins, 
-          (IsNueSwap ? kIsNueApp : kIsNumuCC) && 
+          (IsNueSwap ? kIsSig : kIsNumuCC) && 
           (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
           WeightVars[it]);
       FDUnselTruePredInterps[fd_it] = std::make_unique<PredictionInterp>(
@@ -876,17 +888,17 @@ int main(int argc, char const *argv[]) {
       Labels_flux_280kA, Bins_flux_280kA, Vars_flux_280kA);
 
   // ND Flux predictions
+  /*FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
+      OffAxisFluxPredictionAxes_293kA, true,
+      false));
   FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
-      OffAxisFluxPredictionAxes_293kA, true /*Is nu mode*/,
-      false /*Is 280kA*/));
+      OffAxisFluxPredictionAxes_293kA, false,
+      false));
   FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
-      OffAxisFluxPredictionAxes_293kA, false /*Is nu mode*/,
-      false /*Is 280kA*/));
+      OffAxisFluxPredictionAxes_280kA, true, true));
   FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
-      OffAxisFluxPredictionAxes_280kA, true /*Is nu mode*/, true /*Is 280kA*/));
-  FluxPredGens.emplace_back(std::make_unique<OffAxisFluxPredictionGenerator>(
-      OffAxisFluxPredictionAxes_280kA, false /*Is nu mode*/,
-      true /*Is 280kA*/));
+      OffAxisFluxPredictionAxes_280kA, false,
+      true));
 
   FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
       los_flux, &no_osc, *FluxPredGens[0], Loaders_nu, kNoShift,
@@ -903,22 +915,22 @@ int main(int argc, char const *argv[]) {
 
   // FD Flux predictions
   FluxPredGens.emplace_back(std::make_unique<FluxPredictionGenerator>(
-      MatchAxis, true /*Is nu mode*/));
+      MatchAxis, true));
   FluxPredGens.emplace_back(std::make_unique<FluxPredictionGenerator>(
-      MatchAxis, false /*Is nu mode*/));
+      MatchAxis, false));
 
   FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
       los_flux, &no_osc, *FluxPredGens[4], Loaders_nu, kNoShift,
       PredictionInterp::kSplitBySign));
   FluxPredInterps.emplace_back(std::make_unique<PredictionInterp>(
       los_flux, &no_osc, *FluxPredGens[5], Loaders_nu, kNoShift,
-      PredictionInterp::kSplitBySign));
+      PredictionInterp::kSplitBySign));*/
 
   std::cout << "Loaders GoPRISM()." << std::endl;
-  //Loaders_nu.Go();
-  //Loaders_nub.Go();
-  Loaders_nu.GoPRISM();
-  Loaders_nub.GoPRISM();
+  Loaders_nu.Go();
+  Loaders_nub.Go();
+  //Loaders_nu.GoPRISM();
+  //Loaders_nub.GoPRISM();
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
@@ -936,11 +948,11 @@ int main(int argc, char const *argv[]) {
     }
 
     if (IsND) { // Is ND
-      MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      //MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      //SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       if (!IsND280kA) {
-        NDUnselTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-        NDSelTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+        //NDUnselTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+        //NDSelTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       }
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
@@ -1024,15 +1036,17 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  PRISM->SaveTo(fout.mkdir((std::string("PRISM_") + axdescriptor).c_str()));
+  SaveTo(fout, (std::string("PRISM_") + axdescriptor), PRISM);
+  //PRISM->SaveTo(fout, (std::string("PRISM_") + axdescriptor).c_str());
+  //PRISM->SaveTo(fout.mkdir((std::string("PRISM_") + axdescriptor).c_str()));
 
-  FluxPredInterps[0]->SaveTo(fout.mkdir("NDFluxPred_293kA_nu"));
-  FluxPredInterps[1]->SaveTo(fout.mkdir("NDFluxPred_293kA_nub"));
-  FluxPredInterps[2]->SaveTo(fout.mkdir("NDFluxPred_280kA_nu"));
-  FluxPredInterps[3]->SaveTo(fout.mkdir("NDFluxPred_280kA_nub"));
+  //FluxPredInterps[0]->SaveTo(fout.mkdir("NDFluxPred_293kA_nu"));
+  //FluxPredInterps[1]->SaveTo(fout.mkdir("NDFluxPred_293kA_nub"));
+  //FluxPredInterps[2]->SaveTo(fout.mkdir("NDFluxPred_280kA_nu"));
+  //FluxPredInterps[3]->SaveTo(fout.mkdir("NDFluxPred_280kA_nub"));
 
-  FluxPredInterps[4]->SaveTo(fout.mkdir("FDFluxPred_293kA_nu"));
-  FluxPredInterps[5]->SaveTo(fout.mkdir("FDFluxPred_293kA_nub"));
+  //FluxPredInterps[4]->SaveTo(fout.mkdir("FDFluxPred_293kA_nu"));
+  //FluxPredInterps[5]->SaveTo(fout.mkdir("FDFluxPred_293kA_nub"));
 
   fout.Write();
   fout.Close();

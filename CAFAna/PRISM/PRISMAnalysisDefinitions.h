@@ -4,6 +4,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 
 #include "fhiclcpp/ParameterSet.h"
 
@@ -470,20 +471,20 @@ extern const ana::Cut kIsOutOfTheDesert;
 extern const ana::Cut kIsReco;
 
 // Use to weight by Exposure
-extern const ana::Var kRunPlanWeight;
+extern const ana::Weight kRunPlanWeight;
 
 extern const ana::Cut kCut280kARun;
 extern const ana::Cut kSel280kARun;
-extern const ana::Var kSpecHCRunWeight;
+extern const ana::Weight kSpecHCRunWeight;
 
 ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true);
 ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
                         bool isNuMu = true);
 
-ana::Var GetNDWeight(std::string const &eweight = "", bool isNuMode = true);
-ana::Var GetFDWeight(std::string const &eweight = "", bool isNuMode = true);
+ana::Weight GetNDWeight(std::string const &eweight = "", bool isNuMode = true);
+ana::Weight GetFDWeight(std::string const &eweight = "", bool isNuMode = true);
 
 double Get280kAWeight_numu(double enu, bool isNu);
-ana::Var GetNDSpecialRun(std::string const &SRDescriptor = "");
+ana::Weight GetNDSpecialRun(std::string const &SRDescriptor = "");
 
 } // namespace PRISM

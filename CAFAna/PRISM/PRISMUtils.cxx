@@ -49,7 +49,7 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
   return fvmasscor->GetBinContent(bi_it);
 }
 
-ana::Var NDSliceCorrection(double reference_width_cm,
+ana::Weight NDSliceCorrection(double reference_width_cm,
                            std::vector<double> const &Edges) {
   std::vector<double> Weights;
 
@@ -59,7 +59,7 @@ ana::Var NDSliceCorrection(double reference_width_cm,
                       ((width*1E2)/reference_width_cm));
   }
 
-  return ana::Var([=](const caf::StandardRecord *sr) -> double {
+  return ana::Weight([=](const caf::StandardRecord *sr) -> double {
     double pos_x = (sr->det_x + sr->vtx_x) * 1E-2;
 
     for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
@@ -71,17 +71,17 @@ ana::Var NDSliceCorrection(double reference_width_cm,
   });
 }
 
-const ana::Var kMassCorrection([](const caf::StandardRecord *sr) -> double {
+const ana::Weight kMassCorrection([](const caf::StandardRecord *sr) -> double {
   return sr->NDMassCorrWeight;
 });
 
 namespace {
-template <class T> std::unique_ptr<T> LoadFrom_(TDirectory *dir) {
+template <class T> std::unique_ptr<T> LoadFrom_(TDirectory *dir, const std::string &name) {
   if (!dir) {
     std::cout << "[ERROR]: Failed to LoadFrom invalid directory. " << std::endl;
     abort();
   }
-  return T::LoadFrom(dir);
+  return T::LoadFrom(dir, name);
 }
 } // namespace
 
@@ -104,16 +104,21 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   PRISMStateBlob blob;
   blob.Init();
 
-  TDirectory *dir = f.GetDirectory((std::string("PRISM_") + varname).c_str());
+  f.cd();
+  TDirectory *dir = gDirectory;
 
-  if (!dir) {
+  //f.GetDirectory((std::string("PRISM_") + varname).c_str());
+
+  std::string path = (std::string("PRISM_") + varname);
+  std::cout << "Loading path " << path << std::endl;
+  if (!f.GetDirectory(path.c_str())) {
     std::cout << "[ERROR]: No such directory: "
               << (std::string("PRISM_") + varname)
               << " to load PRISMPrediction from." << std::endl;
-    abort();
+    abort(); 
   }
+  blob.PRISM = LoadFrom_<PredictionPRISM>(dir, path.c_str());
 
-  blob.PRISM = LoadFrom_<PredictionPRISM>(dir);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
@@ -127,128 +132,191 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     }
 
     if (IsND) { // Is ND
-      dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
+      /*dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
                             (IsND280kA ? "_280kA" : "_293kA") +
                             (IsNu ? "_nu" : "_nub"))
-                               .c_str());
-      if (dir) {
-        blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
-
-      dir = f.GetDirectory((std::string("NDSelectedInterp_") +
+                               .c_str());*/
+      //if (dir) {
+      //  blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
+      //}
+      path = (std::string("NDMatchInterp_ETrue") + 
+             (IsND280kA ? "_280kA" : "_293kA") +
+             (IsNu ? "_nu" : "_nub"));
+      std::cout << "Loading path " << path << std::endl;
+      if (f.GetDirectory(path.c_str())) 
+        blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str()); 
+      
+      /*dir = f.GetDirectory((std::string("NDSelectedInterp_") +
                             (IsND280kA ? "_280kA" : "_293kA") + varname +
                             (IsNu ? "_nu" : "_nub"))
                                .c_str());
       if (dir) {
         blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("NDSelectedInterp_") + 
+             (IsND280kA ? "_280kA" : "_293kA") + varname +
+             (IsNu ? "_nu" : "_nub"));
+      std::cout << "Loading path " << path << std::endl;
+      if (f.GetDirectory(path.c_str()))
+        blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
 
       if (!IsND280kA) {
-        dir = f.GetDirectory((std::string("NDMatrixInterp_ERecETrue") + 
+        /*dir = f.GetDirectory((std::string("NDMatrixInterp_ERecETrue") + 
                               (IsNu ? "_nu" : "_nub"))
                                  .c_str());
         if (dir) {
           blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
+        }*/
+        path = (std::string("NDMatrixInterp_ERecETrue") +
+               (IsNu ? "_nu" : "_nub"));
+        if (f.GetDirectory(path.c_str()))
+          blob.NDMatrixPredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
-      dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
+
+      /*dir = f.GetDirectory((std::string("NDUnSelected_ETrue") + 
                            (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.NDUnselTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("NDUnSelected_ETrue") +
+             (IsND280kA ? "_280kA" : "_293kA") +
+             (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.NDUnselTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
        
-      dir = f.GetDirectory((std::string("NDSelected_ETrue") +
+      /*dir = f.GetDirectory((std::string("NDSelected_ETrue") +
                            (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.NDSelTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("NDSelected_ETrue") +
+             (IsND280kA ? "_280kA" : "_293kA") +
+             (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.NDSelTruePredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       
     } else { // Is FD
       if (!IsNue) {
-        dir = f.GetDirectory(
+        /*dir = f.GetDirectory(
             (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"))
                 .c_str());
         if (dir) {
           blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-        }
+        }*/
+        path = (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"));
+        if (f.GetDirectory(path.c_str())) 
+          blob.MatchPredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
 
-      dir =
+      /*dir =
           f.GetDirectory((std::string("FDInterp_") + varname +
                           (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("FDInterp_") + varname +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FarDetPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       
-      dir =
+      /*dir =
           f.GetDirectory((std::string("FDMatrixInterp_ERecETrue") +
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FDMatrixPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("FDMatrixInterp_ERecETrue") +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FDMatrixPredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
 
-      dir = 
+      /*dir = 
           f.GetDirectory((std::string("FDUnSelected_ETrue") + 
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.FDUnselTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("FDUnSelected_ETrue") +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FDUnselTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
 
-      dir = 
+      /*dir = 
           f.GetDirectory((std::string("FDSelected_ETrue") + 
                          (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")).c_str());
       if (dir) {
         blob.FDSelTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir);
-      } 
+      } */
+      path = (std::string("FDSelected_ETrue") +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FDSelTruePredInterps[fd_it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
 
-      dir =
+      /*dir =
           f.GetDirectory((std::string("FDDataNonSwap_") + varname +
                           (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetData_nonswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
-      }
+      }*/
+      path = (std::string("FDDataNonSwap_") + varname + 
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FarDetData_nonswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir, path.c_str());
 
-      dir =
+      /*dir =
           f.GetDirectory((std::string("FDDataNueSwap_") + varname +
                           (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetData_nueswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir);
-      }
+      }*/
+      path = (std::string("FDDataNueSwap_") + varname +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FarDetData_nueswap[fd_it] = LoadFrom_<OscillatableSpectrum>(dir, path.c_str());
 
-      dir = 
+      /*dir = 
           f.GetDirectory((std::string("FDDataPred_") + varname +
                           (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.FarDetDataPreds[fd_it] = LoadFrom_<DataPredictionNoExtrap>(dir);
-      }
+      }*/
+      path = (std::string("FDDataPred_") + varname +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+        blob.FarDetDataPreds[fd_it] = LoadFrom_<DataPredictionNoExtrap>(dir, path.c_str());
 
-      dir =
+      /*dir =
           f.GetDirectory((std::string("FDSelectedInterp_") + varname +
                           (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"))
                              .c_str());
       if (dir) {
         blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir);
-      }
+      }*/
+      path = (std::string("FDSelectedInterp_") + varname +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str()))
+         blob.SelPredInterps[it] = LoadFrom_<PredictionInterp>(dir, path.c_str());
     }
   }
-
-  blob.NDFluxPred_293kA_nu =
-      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_293kA_nu"));
+  // change from LoadFrom to LoadFrom_
+  // TODO: Reimplement flux matching at some point.
+  /*blob.NDFluxPred_293kA_nu =
+      LoadFrom_<PredictionInterp>(dir, "NDFluxPred_293kA_nu");
   blob.NDFluxPred_293kA_nub =
-      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_293kA_nub"));
+      LoadFrom_<PredictionInterp>(dir, "NDFluxPred_293kA_nub");
   blob.NDFluxPred_280kA_nu =
-      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_280kA_nu"));
+      LoadFrom_<PredictionInterp>(dir, "NDFluxPred_280kA_nu");
   blob.NDFluxPred_280kA_nub =
-      LoadFrom<PredictionInterp>(f.GetDirectory("NDFluxPred_280kA_nub"));
+      LoadFrom_<PredictionInterp>(dir, "NDFluxPred_280kA_nub");
   blob.FDFluxPred_293kA_nu =
-      LoadFrom<PredictionInterp>(f.GetDirectory("FDFluxPred_293kA_nu"));
+      LoadFrom_<PredictionInterp>(dir, "FDFluxPred_293kA_nu");
   blob.FDFluxPred_293kA_nub =
-      LoadFrom<PredictionInterp>(f.GetDirectory("FDFluxPred_293kA_nub"));
+      LoadFrom_<PredictionInterp>(dir, "FDFluxPred_293kA_nub");*/
 
 #ifdef PRISMDEBUG
   /*std::cout << "PRISMSTATE: " << std::endl;
@@ -283,9 +351,9 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
   return blob;
 } // namespace ana
 
-osc::IOscCalc *
+osc::IOscCalcAdjustable *
 ConfigureCalc(fhicl::ParameterSet const &ps,
-              osc::IOscCalc *calc) {
+              osc::IOscCalcAdjustable *calc) {
   static std::set<std::string> keys{"th13",   "dmsq32", "ssth23", "deltapi",
                                     "dmsq21", "ssth12", "rho"};
 
@@ -325,7 +393,7 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
 
   return calc;
 }
-double GetCalcValue(osc::IOscCalc *calc,
+double GetCalcValue(osc::IOscCalcAdjustable *calc,
                     std::string paramname) {
   if (!calc) {
     return 0;
@@ -463,7 +531,7 @@ std::vector<ana::ISyst const *>
 GetListOfSysts(std::vector<std::string> const &systnames) {
   std::vector<ISyst const *> los;
 
-  for (auto &s : ::GetListOfSysts()) {
+  for (auto &s : ana::GetListOfSysts()) {
     if (std::find(systnames.begin(), systnames.end(), s->ShortName()) !=
         systnames.end()) {
       los.push_back(s);
@@ -473,7 +541,7 @@ GetListOfSysts(std::vector<std::string> const &systnames) {
 }
 
 SystShifts GetSystShifts(fhicl::ParameterSet const &ps) {
-  std::vector<ISyst const *> los = ::GetListOfSysts();
+  std::vector<ISyst const *> los = ana::GetListOfSysts();
 
   SystShifts shift;
 
@@ -516,8 +584,8 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec) {
       Binning binsb = axis.GetBinnings().at(1);
       int n = binsa.NBins() * binsb.NBins();
       NewBins = Binning::Simple(n, 0, n);
-      NewVar = Var2D(axis.GetVars().at(0), binsa,
-                    axis.GetVars().at(1), binsb);
+      NewVar = Var(axis.GetVars().at(0), binsa,
+                   axis.GetVars().at(1), binsb);
     } else { // 1D axis
       NewVar = axis.GetVars().at(0);
       NewBins = axis.GetBinnings().at(0); 
@@ -529,6 +597,17 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec) {
   }
 
   return HistAxis(LabelsVec, BinsVec, VarsVec);
+}
+
+HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2) {
+  std::vector<std::string> axis_Labels = axis1.GetLabels();
+  std::vector<Binning> axis_Bins = axis1.GetBinnings(); 
+  std::vector<Var> axis_Vars = axis1.GetVars(); 
+  axis_Labels.push_back(axis2.GetLabels().front());
+  axis_Bins.push_back(axis2.GetBinnings().front());
+  axis_Vars.push_back(axis2.GetVars().front()); 
+
+  return HistAxis(axis_Labels, axis_Bins, axis_Vars);
 }
 
 } // namespace ana

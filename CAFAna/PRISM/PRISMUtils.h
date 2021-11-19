@@ -1,8 +1,9 @@
 #pragma once
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
+
 #include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
@@ -15,7 +16,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-//#include "OscLib/func/IOscCalc.h"
+#include "OscLib/IOscCalc.h"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -53,9 +54,9 @@ inline double FD_ND_FVRatio(double x_slice_cm) {
   return FDFV / NDSliceFV;
 }
 
-ana::Var NDSliceCorrection(double reference_width_cm, std::vector<double> const &Edges);
+ana::Weight NDSliceCorrection(double reference_width_cm, std::vector<double> const &Edges);
 
-extern const ana::Var kMassCorrection;
+extern const ana::Weight kMassCorrection;
 
 template <typename T>
 inline void FillWithNulls(std::vector<std::unique_ptr<T>> &v, size_t n) {
@@ -155,7 +156,12 @@ inline void SaveTo(TFile &f, std::string const &dirname, T *ty) {
   if (!ty) {
     abort();
   }
-  ty->SaveTo(f.mkdir(dirname.c_str()));
+
+  f.cd();
+  TDirectory *dir = gDirectory;
+  
+  ty->SaveTo(dir, dirname.c_str());
+
 }
 
 template <typename T>
@@ -165,14 +171,18 @@ inline void SaveTo(TFile &f, std::string const &dirname,
   if (!ty) {
     abort();
   }
-  ty->SaveTo(f.mkdir(dirname.c_str()));
+
+  f.cd();
+  TDirectory *dir = gDirectory;
+
+  ty->SaveTo(dir, dirname.c_str());
 }
 
-osc::IOscCalc *
+osc::IOscCalcAdjustable *
 ConfigureCalc(fhicl::ParameterSet const &ps,
-              osc::IOscCalc *icalc = nullptr);
+              osc::IOscCalcAdjustable *icalc = nullptr);
 
-double GetCalcValue(osc::IOscCalc *icalc = nullptr,
+double GetCalcValue(osc::IOscCalcAdjustable *icalc = nullptr,
                     std::string paramname = "");
 
 std::vector<const ana::IFitVar *>
@@ -189,16 +199,27 @@ GetListOfSysts(std::vector<std::string> const &);
 // axes and covariance matrix axes, where each axis could be for multiple variables.
 HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 
+HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2);
+
 inline ReweightableSpectrum
   ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
   //TH2D *spec_h;  
   Eigen::MatrixXd spec_mat;
   //std::unique_ptr<Eigen::MatrixXd> spec_mat;
+  
 
   if (spec.NDimensions() == 2) {
+    int NRows = spec.GetBinnings().at(1).NBins();
+    int NCols = spec.GetBinnings().at(0).NBins();
     //spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
     //spec_mat = std::unique_ptr<Eigen::MatrixXd>(spec.GetEigen().matrix());
-    spec_mat = spec.GetEigen().matrix();
+    //spec_mat = spec.GetEigen().matrix();
+    Eigen::ArrayXd spec_arr = spec.GetEigen();
+    for (int row = 0; row < NRows; row++ ) {
+      for (int col = 0; col < NCols; col++ ) {
+        spec_mat(row, col) = spec_arr(col + row * NRows);     
+      }
+    }
   } /*else if (spec.NDimensions() == 3) {
     TH3 *spec3d_h = spec.ToTH3(POT);
     // Reweighting axis binning
@@ -235,9 +256,9 @@ inline ReweightableSpectrum
 
   //ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
   //                            axis.GetBinnings(), POT, 0);
-
-  LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels()[0], spec.GetBinnings()[0]);
-  LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels()[1], spec.GetBinnings()[1]);
+  std::cout << "RWrow = " << spec_mat.rows() << ", RWcols = " << spec_mat.cols() <<std::endl;
+  LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels().at(0), spec.GetBinnings().at(0));
+  LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1));
 
   ReweightableSpectrum rwspec(std::move(spec_mat), anaAxis, weightAxis, POT, 0);
   //HistCache::Delete(spec_h);
