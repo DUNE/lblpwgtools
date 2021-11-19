@@ -143,3 +143,12 @@ Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &v) {
 Eigen::VectorXd GetEigenFlatVector(TH1 const *th) {
   return GetEigenFlatVector(Getstdvector(th));
 }
+
+Eigen::ArrayXd GetEigenFlatArray(std::unique_ptr<TH1> const &h) {
+  int N = h->GetXaxis()->GetNbins();
+  Eigen::ArrayXd arr(N); //= Eigen::ArrayXd::Zero(N);
+  for (int i = 0; i < N; i++) {
+    arr(i) = h->GetBinContent(i + 1);
+  } 
+  return arr;
+}

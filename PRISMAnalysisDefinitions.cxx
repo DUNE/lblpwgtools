@@ -1,5 +1,4 @@
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-
 #include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "CAFAna/Analysis/AnalysisBinnings.h"
@@ -7,6 +6,8 @@
 
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"
+
+#include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -61,7 +62,7 @@ Binning GetBinning(std::string const &xbinning) {
 
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
-    return binsNDEreco;
+    return Binning::Simple(50, 0, 10);//binsNDEreco;
   } else if (xbinning == "event_rate_match") {
     std::vector<double> BE = { 0, };
 
@@ -293,7 +294,7 @@ const Cut kSel280kARun([](const caf::StandardRecord *sr) {
 const Cut kIsReco([](const caf::StandardRecord *sr) {
   return (sr->Elep_reco != 0);
 });
-const Var kSpecHCRunWeight([](const caf::StandardRecord *sr) { 
+const Weight kSpecHCRunWeight([](const caf::StandardRecord *sr) { 
   return sr->SpecialRunWeight;
 });
 
@@ -314,19 +315,19 @@ std::vector<double> const ND_UnGeoCorrectible_eff = {0.996, 0.996, 0.985, 0.966,
 
 TGraph FDnumuFHCSelEff(FDnumuFHCSelEff_enu.size(), FDnumuFHCSelEff_enu.data(),
                        FDnumuFHCSelEff_eff.data());
-const Var kFDEff([](const caf::StandardRecord *sr) -> double {
+const Weight kFDEff([](const caf::StandardRecord *sr) -> double {
   return FDnumuFHCSelEff.Eval(sr->Ev);
 });
 
 TGraph ND_UnGeoCorrectibleEff(ND_UnGeoCorrectible_enu.size(),
                               ND_UnGeoCorrectible_enu.data(),
                               ND_UnGeoCorrectible_eff.data());
-const Var kNDEff([](const caf::StandardRecord *sr) -> double {
+const Weight kNDEff([](const caf::StandardRecord *sr) -> double {
   return ND_UnGeoCorrectibleEff.Eval(sr->Ev);
 });
 
 // Use to weight by Exposure
-const Var kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
+const Weight kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
   return sr->perPOTWeight * sr->perFileWeight;
 });
 
@@ -342,11 +343,11 @@ Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
   return UseOnAxisSelection
              ? ((isNuMu ? kPassFD_CVN_NUMU : kPassFD_CVN_NUE) && kIsTrueFV)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) &&
-                (isNuMu ? kIsNumuCC : kIsNueApp) && kIsTrueFV);
+                (isNuMu ? kIsNumuCC : kIsSig) && kIsTrueFV);
 }
 
-Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
-  Var weight = Constant(1);
+Weight GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
+  Weight weight = kUnweighted;
 
   if (eweight.find("CVXSec") != std::string::npos) {
     weight = weight * kCVXSecWeights;
@@ -372,11 +373,11 @@ Var GetAnalysisWeighters(std::string const &eweight, bool isNuMode) {
   return weight;
 }
 
-Var GetNDWeight(std::string const &eweight, bool isNuMode) {
+Weight GetNDWeight(std::string const &eweight, bool isNuMode) {
   return kRunPlanWeight * kMassCorrection * kSpecHCRunWeight *
          GetAnalysisWeighters(eweight, isNuMode);
 }
-Var GetFDWeight(std::string const &eweight, bool isNuMode) {
+Weight GetFDWeight(std::string const &eweight, bool isNuMode) {
   return GetAnalysisWeighters(eweight, isNuMode);
 }
 
@@ -421,7 +422,7 @@ double Get280kAWeight_numu(double enu, bool isNu) {
   return whist->GetBinContent(whist->GetXaxis()->FindFixBin(enu));
 }
 
-const Var k280kAWeighter([](const caf::StandardRecord *sr) -> double {
+const Weight k280kAWeighter([](const caf::StandardRecord *sr) -> double {
   if (sr->isFD || sr->det_x || (sr->vtx_x > 0)) {
     return 1;
   }
@@ -432,10 +433,10 @@ const Var k280kAWeighter([](const caf::StandardRecord *sr) -> double {
   return Get280kAWeight_numu(sr->Ev, sr->isFHC);
 });
 
-ana::Var GetNDSpecialRun(std::string const &SRDescriptor) {
+Weight GetNDSpecialRun(std::string const &SRDescriptor) {
 
   if (!SRDescriptor.length()) {
-    return ana::Constant(1);
+    return kUnweighted;
   }
 
   if (SRDescriptor == "OnAxis280kA") {

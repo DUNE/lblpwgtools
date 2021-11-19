@@ -1,8 +1,8 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(APPS
-  hadd_state
-  hadd_fits
+  #hadd_state
+  #hadd_fits
 )
 
 foreach(APP ${APPS})

@@ -25,6 +25,8 @@ GetEigenMatrix(TH2 const *,
 Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &v);
 Eigen::VectorXd GetEigenFlatVector(TH1 const *th);
 
+Eigen::ArrayXd GetEigenFlatArray(std::unique_ptr<TH1> const &h);
+
 size_t
 FillHistFromEigenMatrix(TH2 *, Eigen::MatrixXd const &, size_t histx_offset = 0,
                         size_t histy_offset = 0,

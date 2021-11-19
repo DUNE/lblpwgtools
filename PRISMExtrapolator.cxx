@@ -1,14 +1,12 @@
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/EigenUtils.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
+//#include "CAFAna/PRISM/PRISMUtils.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
 #include "CAFAna/Core/Binning.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
-
-//#include "OscLib/func/IOscCalc.h"
 
 #include "TDirectory.h"
 #include "TFile.h"
@@ -444,7 +442,6 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     FillHistFromEigenMatrix(fDebugFitMatrix["last_match_regmatrix"].get(),
                             RegMatrix);
   }
-  //HistCache::ClearCache();
   return {fLastMatch_293kA.get(), fLastMatch_280kA.get()};
 }
 
