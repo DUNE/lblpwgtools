@@ -1,15 +1,15 @@
-#include "CAFAna/Analysis/AnalysisVars.h"
-#include "CAFAna/Analysis/Exposures.h"
+//#include "CAFAna/Analysis/AnalysisVars.h"
+//#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/Prediction/IPrediction.h"
+//#include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+//#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
@@ -33,7 +33,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       pred.get<std::string>("projection_name", "EProxy");
 
   // default to 1 year
-  double POT = pred.get<double>("POT_years", 1) * POT120;
+  double POT = pred.get<double>("POT_years", 1) * 1.1e21; //POT120 = 1.1e21
   double POT_FD = POT * pot_fd_FVMassFactor;
   bool use_PRISM = pred.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
@@ -310,32 +310,36 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       } else { // FD spectra prediction - IMPLEMENTED!
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+        std::cout << "Done predicting components." << std::endl;
         auto *PRISMPred = 
               PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
-        auto *PRISMExtrap =
-              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
-        PRISMExtrap->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
-        PRISMExtrap->SetDirectory(nullptr);
-        auto *PRISMExtrapCovMat = 
-              PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
-        // Careful: covariance matrix needs to be scaled by the factor squared
-        PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
-        PRISMExtrapCovMat->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
-        PRISMExtrapCovMat->SetDirectory(nullptr);
+        //auto *PRISMExtrap =
+        //      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+        //PRISMExtrap->Scale(1, "width");
+        //chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
+        //PRISMExtrap->SetDirectory(nullptr);
+        if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
+          auto *PRISMExtrapCovMat = 
+                PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
+          // Careful: covariance matrix needs to be scaled by the factor squared
+          PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
+          PRISMExtrapCovMat->Scale(1, "width");
+          chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
+          PRISMExtrapCovMat->SetDirectory(nullptr);
+        }
         // Get nue/numu xsec correction (don't want this bin scaled).
         if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
-        auto *FD_NueNumuCorr = 
-              PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
-        chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
-        FD_NueNumuCorr->SetDirectory(nullptr);
+          auto *FD_NueNumuCorr = 
+                PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
+          chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
+          FD_NueNumuCorr->SetDirectory(nullptr);
         }
         if (PRISM_write_debug) {
           for (auto const &comp : PRISMComponents) {
+            if (!PRISMComponents.count(comp.first)) continue;
             // we always write this
             if (comp.first == PredictionPRISM::kPRISMPred) {
               continue;
@@ -362,6 +366,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
           dir->cd();
         }
+        std::cout << "Finished writing." << std::endl;
       }
 
     } else {
@@ -389,7 +394,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       run_plan_nub_280kA_h->SetDirectory(nullptr);
     }
   }
-
+  std::cout << "Write f." << std::endl;
   f.Write();
 }
 

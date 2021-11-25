@@ -1,14 +1,4 @@
-//#include "CAFAna/PRISM/PRISMUtils.h"
-
-//#include "CAFAna/PRISM/PredictionPRISM.h"
-//#include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
-
-//#include "CAFAna/Analysis/CalcsNuFit.h"
-//#include "CAFAna/Analysis/common_fit_definitions.h"
-//#include "CAFAna/Analysis/AnalysisVars.h"
-
-//#include "CAFAna/Cuts/TruthCuts.h"
 
 using namespace PRISM;
 
@@ -18,13 +8,15 @@ namespace ana {
 // Class for ND and FD detector extrapolation matrices:
 // ----------------------------------------------------
 
-NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
-                         PredictionInterp const * FD,
+NDFD_Matrix::NDFD_Matrix(/*std::shared_ptr<PredictionInterp> const ND*/PredictionInterp const * ND, // PredictionInterp const * ND
+                         /*std::shared_ptr<PredictionInterp> const FD*/PredictionInterp const * FD, // PredictionInterp const * FD
                          double reg, bool optreg) : fRegFactor(reg),
                          hMatrixND(nullptr), hMatrixFD(nullptr), 
                          hNumuNueCorr(nullptr), fOptimizeReg(optreg) {
   fMatrixND = ND;
   fMatrixFD = FD;
+  //fMatrixND = std::make_shared<PredictionInterp>(*ND);
+  //fMatrixFD = std::make_shared<PredictionInterp>(*FD);
   if (!fMatrixND) {
     std::cout << "[WARNING] ND matrix not loaded." << std::endl;
     abort();
@@ -32,18 +24,94 @@ NDFD_Matrix::NDFD_Matrix(PredictionInterp const * ND,
     std::cout << "[WARNING] FD matrix not loaded." << std::endl;
     abort();
   }
+
+  fNDExtrap_293kA = Eigen::MatrixXd();
+  fNDExtrap_280kA = Eigen::MatrixXd();
+
 }
 
 //-----------------------------------------------------
 
 NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
                         fRegFactor(MatPred.fRegFactor),
+                        hMatrixND(nullptr),
+                        hMatrixFD(nullptr),
                         hNumuNueCorr(nullptr),  
                         fOptimizeReg(MatPred.fOptimizeReg) {
+  std::cout << "Copying NDFD_Matrix" << std::endl;
   fMatrixND = MatPred.fMatrixND;
   fMatrixFD = MatPred.fMatrixFD;
 
+  fNDExtrap_293kA = MatPred.fNDExtrap_293kA;
+  fNDExtrap_280kA = MatPred.fNDExtrap_280kA;
 } 
+
+//-----------------------------------------------------
+
+NDFD_Matrix::NDFD_Matrix(NDFD_Matrix &&MatPred) noexcept :
+                         fRegFactor(MatPred.fRegFactor),
+                         hMatrixND(nullptr),
+                         hMatrixFD(nullptr),
+                         hNumuNueCorr(nullptr),
+                         fOptimizeReg(MatPred.fOptimizeReg) {
+
+  std::cout << "Moving NDFD_Matrix" << std::endl;
+  hMatrixND = std::move(MatPred.hMatrixND);
+  hMatrixFD = std::move(MatPred.hMatrixFD);
+  hNumuNueCorr = std::move(MatPred.hNumuNueCorr);
+
+  fMatrixND = std::move(MatPred.fMatrixND);
+  fMatrixFD = std::move(MatPred.fMatrixFD);
+
+  fNDExtrap_293kA = std::move(MatPred.fNDExtrap_293kA);
+  fNDExtrap_280kA = std::move(MatPred.fNDExtrap_280kA);
+
+  MatPred.hMatrixND = nullptr;
+  MatPred.hMatrixFD = nullptr;
+  MatPred.hNumuNueCorr = nullptr;
+
+  MatPred.fMatrixND = nullptr;
+  MatPred.fMatrixFD = nullptr;
+
+  MatPred.fRegFactor = 0;
+  MatPred.fOptimizeReg = 0;
+
+  //*this = std::move(MatPred);
+}
+
+//-----------------------------------------------------
+
+NDFD_Matrix::~NDFD_Matrix() {}
+
+//-----------------------------------------------------
+
+/*NDFD_Matrix::NDFD_Matrix& operator=(NDFD_Matrix &&MatPred) noexcept {
+  if (this != &MatPred) {
+    hMatrixND = std::move(MatPred.hMatrixND);
+    hMatrixFD = std::move(MatPred.hMatrixFD);
+    hNumuNueCorr = std::move(MatPred.hNumuNueCorr); 
+
+    fMatrixND = std::move(MatPred.fMatrixND); 
+    fMatrixFD = std::move(MatPred.fMatrixFD);
+
+    fNDExtrap_293kA = std::move(MatPred.fNDExtrap_293kA);
+    fNDExtrap_280kA = std::move(MatPred.fNDExtrap_280kA);
+
+    fRegFactor = MatPred.fRegFactor;
+    fOptimizeReg = MatPred.fOptimizeReg;
+    //------
+    MatPred.hMatrixND = nullptr;
+    MatPred.hMatrixFD = nullptr;
+    MatPred.hNumuNueCorr = nullptr;
+
+    MatPred.fMatrixND = nullptr;
+    MatPred.fMatrixFD = nullptr;
+
+    MatPred.fRegFactor = 0;
+    MatPred.fOptimizeReg = 0;
+  }
+  return *this;
+}*/
 
 //-----------------------------------------------------
 
@@ -109,7 +177,6 @@ void NDFD_Matrix::NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_pt
         mat.first->get()->SetBinContent(col_it, row_it, projY->GetBinContent(row_it));
         mat.first->get()->SetBinError(col_it, row_it, projY->GetBinError(row_it));
       }
-      //HistCache::Delete(projY);
     }
   }
 }
@@ -169,7 +236,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
                                     std::vector<std::vector<double>> NDefficiency,
                                     std::vector<double> FDefficiency) const {
   //std::unique_ptr<TH2>* fNDExtrap;
-  Eigen::MatrixXd *fNDExtrap = new Eigen::MatrixXd();
+  //std::unique_ptr<Eigen::MatrixXd> fNDExtrap = std::make_unique<Eigen::MatrixXd>();
+  Eigen::MatrixXd *fNDExtrap; //= new Eigen::MatrixXd();
   if (kA == 293) {
     fNDExtrap = &fNDExtrap_293kA;
   } else if (kA == 280) {
@@ -202,8 +270,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
                                                        PRISMND->GetYaxis()))); */
   //fNDExtrap = new Eigen::MatrixXd::Zero(PRISMND->GetXaxis()->GetNbins(),
   //                                      PRISMND->GetYaxis()->GetNbins());
-  fNDExtrap->resize(PRISMND->GetXaxis()->GetNbins(), 
-                    PRISMND->GetYaxis()->GetNbins());
+  fNDExtrap->resize(PRISMND->GetYaxis()->GetNbins(), 
+                    PRISMND->GetXaxis()->GetNbins());
 
   Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD->GetYaxis()->GetNbins(),
                                                         hMatrixFD->GetYaxis()->GetNbins());
@@ -215,6 +283,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
     // Get a slice of ND data and place it a Eigen Vector
     TH1D *SliceProj = PRISMND->ProjectionX("slice", slice + 1, slice + 1, "e");
+    //std::unique_ptr<TH1D> SliceProj = std::unique_ptr<TH1D>(PRISMND->ProjectionX("slice",
+    //                                                        slice + 1, slice + 1, "e");
     Eigen::VectorXd NDERec = GetEigenFlatVector(SliceProj);
 
     // Build covariance matrix for this slice so we can propogate uncertainty:
@@ -288,25 +358,23 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
     // ** Get total covariance matrix of linear combination **
     TotalLCCovMat += CovMatExtrap * std::pow(weights->GetBinContent(slice + 1), 2);
 
-    //for (int ebin = 0; ebin < fNDExtrap->get()->GetXaxis()->GetNbins(); ebin++) {   
+    //for (int ebin = 0; ebin < fNDExtrap->get()->GetXaxis()->GetNbins(); ebin++) {  
+    std::cout << "Filling slice: " << slice << std::endl; 
     for (int ebin = 0; ebin < fNDExtrap->cols(); ebin++) {  
       //fNDExtrap->get()->SetBinContent(ebin + 1, slice + 1, FDERec(ebin));
-      (*fNDExtrap)(ebin, slice) = FDERec(ebin);
+      (*fNDExtrap)(slice, ebin) = FDERec(ebin);
       double errorExtrap = pow(CovMatExtrap(ebin, ebin), 0.5); 
       //fNDExtrap->get()->SetBinError(ebin + 1, slice + 1, errorExtrap);
     }
-    delete SliceProj;
+    //delete SliceProj;
   }
 
   // Full covariance matrix from linear combinations
-  TAxis *covAxis = hMatrixFD->GetYaxis();
   if (kA == 293) {
     hCovMat_293kA = TotalLCCovMat;
   } else if (kA == 280) {
     hCovMat_280kA = TotalLCCovMat;
   }
-
-  delete fNDExtrap; 
 }
 
 //----------------------------------------------------
@@ -314,8 +382,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 void NDFD_Matrix::Write(TDirectory *dir) const {
   dir->WriteTObject(hMatrixND.get(), "ND_SmearingMatrix");
   dir->WriteTObject(hMatrixFD.get(), "FD_SmearingMatrix");
-  //dir->WriteTObject(hCovMat_293kA.get(), "CovMatExtrap_293kA");
-  //dir->WriteTObject(hCovMat_280kA.get(), "CovMatExtrap_280kA");
 }
  
 } // namespace ana

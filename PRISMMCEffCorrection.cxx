@@ -1,14 +1,5 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
-
-//#include "CAFAna/PRISM/PredictionPRISM.h"
-//#include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
-
-//#include "CAFAna/Analysis/CalcsNuFit.h"
-//#include "CAFAna/Analysis/common_fit_definitions.h"
-//#include "CAFAna/Analysis/AnalysisVars.h"
-
-//#include "CAFAna/Cuts/TruthCuts.h"
 
 using namespace PRISM;
 
@@ -46,7 +37,7 @@ MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) :
                                  hFDunselected(nullptr), 
                                  hFDselected(nullptr),  
                                  fDoneOnce(EffCorr.fDoneOnce) {
-
+  std::cout << "Copying MCEffCorrection." << std::endl;
   fNDunselected_293kA = EffCorr.fNDunselected_293kA;
   fNDselected_293kA = EffCorr.fNDselected_293kA;
   fNDunselected_280kA = EffCorr.fNDunselected_280kA;
@@ -57,14 +48,7 @@ MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) :
 
 //----------------------------------------------------
 
-MCEffCorrection::~MCEffCorrection() {
-  //HistCache::Delete(hNDunselected_293kA);
-  //HistCache::Delete(hNDselected_293kA);
-  //HistCache::Delete(hNDunselected_280kA);
-  //HistCache::Delete(hNDselected_280kA);
-  //HistCache::Delete(hFDunselected);
-  //HistCache::Delete(hFDselected);
-}
+MCEffCorrection::~MCEffCorrection() {}
 
 //----------------------------------------------------
 
@@ -184,14 +168,6 @@ void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
     hFDselected = std::move(FDsel); 
   }
   fDoneOnce = true;
-
-  // Delete histograms to clear up the cache.
-  //HistCache::Delete(NDunsel_293kA);
-  //HistCache::Delete(NDsel_293kA);
-  //HistCache::Delete(NDunsel_280kA);
-  //HistCache::Delete(NDsel_280kA);
-  //HistCache::Delete(FDunsel);
-  //HistCache::Delete(FDsel);
 }
 
 //-----------------------------------------------------------
