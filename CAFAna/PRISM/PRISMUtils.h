@@ -88,8 +88,8 @@ struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps; //unique_ptr
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps; //unique_ptr
   // For MC Eff Correction
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
@@ -201,23 +201,21 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 
 HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2);
 
-inline ReweightableSpectrum
-  ToReweightableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
-  //TH2D *spec_h;  
+inline ReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec, 
+                                                   double POT, HistAxis const &axis) {
   Eigen::MatrixXd spec_mat;
-  //std::unique_ptr<Eigen::MatrixXd> spec_mat;
-  
 
   if (spec.NDimensions() == 2) {
     int NRows = spec.GetBinnings().at(1).NBins();
     int NCols = spec.GetBinnings().at(0).NBins();
-    //spec_h = dynamic_cast<TH2D *>(spec.ToTH2(POT));
-    //spec_mat = std::unique_ptr<Eigen::MatrixXd>(spec.GetEigen().matrix());
-    //spec_mat = spec.GetEigen().matrix();
+    spec_mat.resize(NRows, NCols);
     Eigen::ArrayXd spec_arr = spec.GetEigen();
+    std::cout << "arr size = " << spec_arr.size() <<
+      ", mat size = " << NRows * NCols << std::endl;
     for (int row = 0; row < NRows; row++ ) {
       for (int col = 0; col < NCols; col++ ) {
-        spec_mat(row, col) = spec_arr(col + row * NRows);     
+        //if ((col + row * NCols == 0) || (col + row * NCols == (spec_arr.size() - 1))) continue;
+        spec_mat(row, col) = spec_arr(col + row * NCols);     
       }
     }
   } /*else if (spec.NDimensions() == 3) {
@@ -254,32 +252,37 @@ inline ReweightableSpectrum
     abort();
   }*/ 
 
-  //ReweightableSpectrum rwspec(ana::Constant(1), spec_h, axis.GetLabels(),
-  //                            axis.GetBinnings(), POT, 0);
-  std::cout << "RWrow = " << spec_mat.rows() << ", RWcols = " << spec_mat.cols() <<std::endl;
   LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels().at(0), spec.GetBinnings().at(0));
   LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1));
 
   ReweightableSpectrum rwspec(std::move(spec_mat), anaAxis, weightAxis, POT, 0);
-  //HistCache::Delete(spec_h);
 
   return rwspec;
 }
 
-/*inline OscillatableSpectrum
-  ToOscillatableSpectrum(Spectrum const &spec, double POT, HistAxis const &axis) {
- 
-  ReweightableSpectrum srw = ToReweightableSpectrum(spec, POT, axis);
+inline Spectrum ToSpectrum(ReweightableSpectrum const &rwspec, double pot) {
+  Eigen::MatrixXd mat = rwspec.GetEigen(pot);
+  int NCols = mat.cols();
+  int NRows = mat.rows();
 
-  TH2D *hrw = dynamic_cast<TH2D*>(srw.ToTH2(POT));
-  //std::cout << "binsx = " << hrw->GetXaxis()->GetNbins() << std::endl;
-  //std::cout << "binsy = " << hrw->GetYaxis()->GetNbins() << std::endl;
+  Eigen::ArrayXd arr(NCols * NRows);
+  for (int row = 0; row < NRows; row++ ) {
+    for (int col = 0; col < NCols; col++ ) {
+      arr(col + row * NCols) = mat(row, col);
+    }
+  }
 
-  OscillatableSpectrum oscspec(hrw, axis.GetLabels(), axis.GetBinnings(), POT, 0);
+  std::vector<std::string> labels = rwspec.GetLabels();
+  std::vector<Binning> bins = rwspec.GetBinnings();
+  for (auto const &tb : rwspec.GetTrueBinnings()) {
+    bins.push_back(tb);
+    labels.push_back("");
+  } 
 
-  HistCache::Delete(hrw);
+  LabelsAndBins spec_LBs(labels, bins);
 
-  return oscspec;
-}*/
+  Spectrum ret(std::move(arr), spec_LBs, pot, 0);
+  return ret;  
+}
 
 } // namespace ana

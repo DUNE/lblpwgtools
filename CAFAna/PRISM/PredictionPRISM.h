@@ -252,6 +252,12 @@ public:
 
   void Initialize();
 
+  ~PredictionPRISM() {
+    std::cout << "Destroying PredictionPRISM." << std::endl;
+    //delete fNDFD_Matrix;
+    //delete fMCEffCorrection;
+  }
+
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir, const std::string &name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
@@ -278,20 +284,26 @@ public:
   }
 
   // PredictionPRISM to own a pointer to a NDFD_Matrix object
+  //std::unique_ptr<NDFD_Matrix> fNDFD_Matrix;
   NDFD_Matrix const *fNDFD_Matrix;
   void SetNDFDDetExtrap(NDFD_Matrix const det_extrap) { 
     fNDFD_Matrix = &det_extrap; 
+    //fNDFD_Matrix = std::move(std::make_unique<NDFD_Matrix>(*det_extrap));
   }
   NDFD_Matrix const * Get_NDFD_Matrix() const {
+  //std::unique_ptr<NDFD_Matrix> Get_NDFD_Matrix() const {
     return fNDFD_Matrix;
   }
 
   // PredictionPRISM to own a pointer to a MCEffCorrection object
+  //std::unique_ptr<MCEffCorrection> fMCEffCorrection;
   MCEffCorrection const *fMCEffCorrection;
   void SetMC_NDFDEff(MCEffCorrection const eff_corr) { 
-    fMCEffCorrection = &eff_corr; 
+    fMCEffCorrection = &eff_corr;
+    //fMCEffCorrection = std::make_unique<MCEffCorrection>(eff_corr); 
   }
   MCEffCorrection const * Get_MCEffCorrection() const {
+  //std::unique_ptr<MCEffCorrection> Get_MCEffCorrection() const {
     return fMCEffCorrection;
   } 
 
@@ -380,7 +392,8 @@ public:
   }
 
   ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT, 
-                                             HistAxis const &axis) const;
+                                             HistAxis const &RecoAxis,
+                                             HistAxis const &TrueAxis) const;
 
 protected:
   ana::RunPlan RunPlan_nu, RunPlan_nub;
