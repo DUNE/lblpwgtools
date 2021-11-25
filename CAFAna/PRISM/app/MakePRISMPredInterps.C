@@ -12,6 +12,8 @@
 #include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
+#include "OscLib/IOscCalc.h"
+
 using namespace ana;
 using namespace PRISM;
 
@@ -686,7 +688,7 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
   FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
-  //static osc::NoOscCalc no_osc;
+  static osc::NoOscillations no;
   static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
@@ -712,7 +714,7 @@ int main(int argc, char const *argv[]) {
       // kA runs separately
       if (!IsND280kA) {
         PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it],
-                             los, calc, chanmode);
+                             los, &no, chanmode);
       }
 
       // Corrects for non-uniform off-axis binning
@@ -729,7 +731,7 @@ int main(int argc, char const *argv[]) {
           WeightVars[it] * slice_width_weight); 
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
-          los_flux, calc, *MatchPredGens[it], Loaders_bm, kNoShift,
+          los_flux, &no, *MatchPredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign); 
 
       SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
@@ -737,7 +739,7 @@ int main(int argc, char const *argv[]) {
           OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
           AnaWeightVars[it] * slice_width_weight); 
       SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, calc, *SelPredGens[it], Loaders_bm, kNoShift,
+          los, &no, *SelPredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign); 
     
       // PredInterps for ND smearing matrix
@@ -756,7 +758,7 @@ int main(int argc, char const *argv[]) {
               WeightVars[it]);
         }
         NDMatrixPredInterps[it] = std::make_unique<PredictionInterp>(
-            los, calc, *NDMatrixPredGens[it], Loaders_bm, kNoShift,
+            los, &no, *NDMatrixPredGens[it], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign); 
       }
       // Add another ND unselected spectrum for MC eff correction
@@ -768,7 +770,7 @@ int main(int argc, char const *argv[]) {
           kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, calc, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
+          los, &no, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
       // ND True Selected Spectrum
       NDSelTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
@@ -776,7 +778,7 @@ int main(int argc, char const *argv[]) {
           AnalysisCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun), 
           WeightVars[it] * slice_width_weight);
       NDSelTruePredInterps[it] = std::make_unique<PredictionInterp>(
-          los, calc, *NDSelTruePredGens[it], Loaders_bm, kNoShift,
+          los, &no, *NDSelTruePredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
             
     } else if (!IsND && !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.

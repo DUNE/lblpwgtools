@@ -6,11 +6,6 @@
 
 #include "CAFAna/Core/OscillatableSpectrum.h"
 
-//<<<<<<< HEAD
-//namespace osc {
-//  class IOscCalculator;
-//}
-//=======
 #include <iostream>
 
 class TDirectory;

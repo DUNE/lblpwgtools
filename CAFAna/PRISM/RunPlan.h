@@ -57,7 +57,7 @@ struct RunPlan {
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
     std::cout << "row = " << NDSpec_mat.rows() << ", cols = " << NDSpec_mat.cols() <<std::endl;
     std::cout << "ybins = " << NDSpec_h->GetYaxis()->GetNbins() <<
-      "xbins = " << NDSpec_h->GetXaxis()->GetNbins() << std::endl;
+      ", xbins = " << NDSpec_h->GetXaxis()->GetNbins() << std::endl;
     //for (int yit = 0; yit < NDSpec_mat->rows(); ++yit) {
     for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);

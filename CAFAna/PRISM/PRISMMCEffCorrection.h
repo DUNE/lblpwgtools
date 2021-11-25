@@ -3,11 +3,6 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
-//#include "CAFAna/Prediction/PredictionNoExtrap.h"
-
-//#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-//#include "CAFAna/PRISM/PredictionPRISM.h"
-//#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "TFile.h"
 #include "TH1D.h"

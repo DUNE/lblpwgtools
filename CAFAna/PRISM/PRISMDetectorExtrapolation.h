@@ -1,23 +1,15 @@
 #pragma once
 
 #include "CAFAna/Core/SystShifts.h"
-//#include "CAFAna/Core/Var.h"
-//#include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
-//#include "CAFAna/Prediction/PredictionNoExtrap.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-//#include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/EigenUtils.h"
-
-//#include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
 #include "TH1D.h"
 #include "TH2D.h"
-
-//#include "fhiclcpp/ParameterSet.h"
 
 #include <memory>
 #include <vector>
@@ -43,11 +35,16 @@ class NDFD_Matrix {
 
 public:
   
-  NDFD_Matrix(PredictionInterp const *ND,
-              PredictionInterp const *FD,
+  NDFD_Matrix(/*std::shared_ptr<PredictionInterp> const ND*/PredictionInterp const *ND, // PredictionInterp const *ND
+              /*std::shared_ptr<PredictionInterp> const FD*/PredictionInterp const *FD, // PredictionInterp const *FD
               double reg, bool optreg = false);
 
   NDFD_Matrix(const NDFD_Matrix &MatPreds);
+  NDFD_Matrix(NDFD_Matrix &&MatPreds) noexcept;
+
+  ~NDFD_Matrix();
+
+  //NDFD_Matrix& operator=(NDFD_Matrix &&MatPred) noexcept;
 
   // Normalise the ETrue column to efficiency in ND and FD matrices
   void NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
@@ -58,18 +55,14 @@ public:
   TH2D * GetNDMatrix() const;
   TH2D * GetFDMatrix() const;
 
-  //TH2 * GetNDExtrap_293kA() const;
-  //TH2 * GetNDExtrap_280kA() const;
   Eigen::MatrixXd GetNDExtrap_293kA() const;
   Eigen::MatrixXd GetNDExtrap_280kA() const;
 
-  //TH2 * GetCovMat_293kA() const;
-  //TH2 * GetCovMat_280kA() const;
   Eigen::MatrixXd GetCovMat_293kA() const;
   Eigen::MatrixXd GetCovMat_280kA() const;
  
-  std::vector<double> GetSoln_NormVec() const { return soln_norm_vector; }
-  std::vector<double> GetResid_NormVec() const { return resid_norm_vector; }
+  //std::vector<double> GetSoln_NormVec() const { return soln_norm_vector; }
+  //std::vector<double> GetResid_NormVec() const { return resid_norm_vector; }
 
   // Get regularisation matrices
   Eigen::MatrixXd GetL1NormReg(int truebins, TAxis *trueaxis) const;
@@ -101,6 +94,8 @@ protected:
   mutable std::unique_ptr<TH2D> hMatrixFD;
   PredictionInterp const *fMatrixND;
   PredictionInterp const *fMatrixFD;
+  //std::shared_ptr<PredictionInterp> fMatrixND;
+  //std::shared_ptr<PredictionInterp> fMatrixFD;
   //mutable std::unique_ptr<TH2> fNDExtrap_293kA;
   //mutable std::unique_ptr<TH2> fNDExtrap_280kA;
   mutable Eigen::MatrixXd fNDExtrap_293kA;
@@ -112,8 +107,8 @@ protected:
   mutable std::unique_ptr<TH1> hNumuNueCorr;
   mutable bool fOptimizeReg;
   // For L-curve optimisation
-  mutable std::vector<double> soln_norm_vector;
-  mutable std::vector<double> resid_norm_vector;
+  //mutable std::vector<double> soln_norm_vector;
+  //mutable std::vector<double> resid_norm_vector;
 };
 
 } // namespace ana
