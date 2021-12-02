@@ -1,7 +1,7 @@
 add_custom_command(
     DEPENDS $ENV{DUNEANAOBJ_INC}/duneanaobj/StandardRecord/StandardRecord.h Prolog.h EpilogFwd.h WgtMapExtra.h WgtMapElemExtra.h CVMapExtra.h
     OUTPUT SRProxy.cxx SRProxy.h FwdDeclare.h
-    COMMAND gen_srproxy -i duneanaobj/StandardRecord/StandardRecord.h -o SRProxy -t caf::StandardRecord --include-path $ENV{DUNEANAOBJ_INC} --output-path StandardRecord/Proxy --prolog ${CMAKE_CURRENT_SOURCE_DIR}/Prolog.h --epilog-fwd ${CMAKE_CURRENT_SOURCE_DIR}/EpilogFwd.h # --extra WgtMap ${CMAKE_CURRENT_SOURCE_DIR}/WgtMapExtra.h --extra WgtMapElem ${CMAKE_CURRENT_SOURCE_DIR}/WgtMapElemExtra.h --extra CVMap ${CMAKE_CURRENT_SOURCE_DIR}/CVMapExtra.h
+    COMMAND gen_srproxy -i duneanaobj/StandardRecord/StandardRecord.h -o SRProxy -t caf::StandardRecord --include-path $ENV{DUNEANAOBJ_INC}:$ENV{ROOT_INC} --output-path StandardRecord/Proxy --prolog ${CMAKE_CURRENT_SOURCE_DIR}/Prolog.h --epilog-fwd ${CMAKE_CURRENT_SOURCE_DIR}/EpilogFwd.h # --extra WgtMap ${CMAKE_CURRENT_SOURCE_DIR}/WgtMapExtra.h --extra WgtMapElem ${CMAKE_CURRENT_SOURCE_DIR}/WgtMapElemExtra.h --extra CVMap ${CMAKE_CURRENT_SOURCE_DIR}/CVMapExtra.h
 )
 
 set(Proxy_implementation_files
@@ -10,10 +10,11 @@ set(Proxy_implementation_files
     )
 
 set(Proxy_header_files
-    SRProxy.h
-    FwdDeclare.h
+    ${CMAKE_CURRENT_BINARY_DIR}/SRProxy.h
+    ${CMAKE_CURRENT_BINARY_DIR}/FwdDeclare.h
     )
 
 add_library(StandardRecordProxy SHARED ${Proxy_implementation_files})
 
 install(TARGETS StandardRecordProxy DESTINATION lib)
+install(FILES ${Proxy_header_files} DESTINATION include/StandardRecord/Proxy)
