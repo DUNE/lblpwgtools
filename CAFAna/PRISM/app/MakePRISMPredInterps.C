@@ -499,6 +499,7 @@ int main(int argc, char const *argv[]) {
                                         TrueObsAxis, MatchAxis, CovarianceAxis,
                                         _OffPredictionAxis, _280kAPredictionAxis,
                                         _FluxMatcherCorrectionAxes);
+  PRISM->Initialize();
 
   Loaders Loaders_nu, Loaders_nub;
 
@@ -950,12 +951,9 @@ int main(int argc, char const *argv[]) {
     }
 
     if (IsND) { // Is ND
-      //MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      //SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      if (!IsND280kA) {
-        //NDUnselTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-        //NDSelTruePredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      }
+      MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+      
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
@@ -1040,7 +1038,6 @@ int main(int argc, char const *argv[]) {
 
   SaveTo(fout, (std::string("PRISM_") + axdescriptor), PRISM);
   //PRISM->SaveTo(fout, (std::string("PRISM_") + axdescriptor).c_str());
-  //PRISM->SaveTo(fout.mkdir((std::string("PRISM_") + axdescriptor).c_str()));
 
   //FluxPredInterps[0]->SaveTo(fout.mkdir("NDFluxPred_293kA_nu"));
   //FluxPredInterps[1]->SaveTo(fout.mkdir("NDFluxPred_293kA_nub"));
