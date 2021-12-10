@@ -5,182 +5,194 @@ using namespace PRISM;
 
 namespace ana {
 
-//----------------------------------------------------
-// Class for ND and FD MC based efficiency correction:
-//----------------------------------------------------
+  //----------------------------------------------------
+  // Class for ND and FD MC based efficiency correction:
+  //----------------------------------------------------
 
-MCEffCorrection::MCEffCorrection(PredictionInterp const * NDunsel_293kA,
-                                 PredictionInterp const * NDsel_293kA,
-                                 PredictionInterp const * NDunsel_280kA,
-                                 PredictionInterp const * NDsel_280kA,
-                                 PredictionInterp const * FDunsel,
-                                 PredictionInterp const * FDsel) : 
-                                 hNDunselected_293kA(nullptr), hNDselected_293kA(nullptr),
-                                 hNDunselected_280kA(nullptr), hNDselected_280kA(nullptr),
-                                 hFDunselected(nullptr), hFDselected(nullptr), 
-                                 fDoneOnce(false) {
-  fNDunselected_293kA = NDunsel_293kA;
-  fNDselected_293kA = NDsel_293kA;
-  fNDunselected_280kA = NDunsel_280kA;
-  fNDselected_280kA = NDsel_280kA;
-  fFDunselected = FDunsel;
-  fFDselected = FDsel;
-}
+  MCEffCorrection::MCEffCorrection() : fNDunselected_293kA(nullptr),
+                                       fNDselected_293kA(nullptr),
+                                       fNDunselected_280kA(nullptr),
+                                       fNDselected_280kA(nullptr),
+                                       fFDunselected(nullptr),
+                                       fFDselected(nullptr) 
+    {
+    }
+                                
 
-//----------------------------------------------------
+  //----------------------------------------------------
 
-MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) :
-                                 hNDunselected_293kA(nullptr), 
-                                 hNDselected_293kA(nullptr), 
-                                 hNDunselected_280kA(nullptr), 
-                                 hNDselected_280kA(nullptr), 
-                                 hFDunselected(nullptr), 
-                                 hFDselected(nullptr),  
-                                 fDoneOnce(EffCorr.fDoneOnce) {
-  std::cout << "Copying MCEffCorrection." << std::endl;
-  fNDunselected_293kA = EffCorr.fNDunselected_293kA;
-  fNDselected_293kA = EffCorr.fNDselected_293kA;
-  fNDunselected_280kA = EffCorr.fNDunselected_280kA;
-  fNDselected_280kA = EffCorr.fNDselected_280kA;
-  fFDunselected = EffCorr.fFDunselected;
-  fFDselected = EffCorr.fFDselected;
-}
-
-//----------------------------------------------------
-
-MCEffCorrection::~MCEffCorrection() {}
-
-//----------------------------------------------------
-
-void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
-                                     HistAxis const &axis,
-                                     ana::SystShifts shift,
-                                     Flavors::Flavors_t NDflav,
-                                     Flavors::Flavors_t FDflav,
-                                     Current::Current_t curr,
-                                     Sign::Sign_t NDsign, 
-                                     Sign::Sign_t FDsign) const {
-
-  ana::SystShifts syst = shift; 
-
-  if (!fNDunselected_293kA || !fNDselected_293kA || !fNDunselected_280kA || !fNDselected_280kA) {
-    std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
-    abort();
+  MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) {
+    fNDunselected_293kA = EffCorr.fNDunselected_293kA;
+    fNDselected_293kA = EffCorr.fNDselected_293kA;
+    fNDunselected_280kA = EffCorr.fNDunselected_280kA;
+    fNDselected_280kA = EffCorr.fNDselected_280kA;
+    fFDunselected = EffCorr.fFDunselected;
+    fFDselected = EffCorr.fFDselected;
   }
 
-  auto sNDunselected_293kA = fNDunselected_293kA->PredictComponentSyst(calc, syst, 
-                                                                       NDflav, curr, NDsign);
-  auto sNDunselected_280kA = fNDunselected_280kA->PredictComponentSyst(calc, syst,
-                                                                       NDflav, curr, NDsign);
+  //----------------------------------------------------
 
-  // True axis binning might be different to reco binning in fAnalysisAxis.
-  // Make sure bins in true energy efficiency correction matches
-  std::vector<std::string> Labels = sNDunselected_293kA.GetLabels();
-  Labels.pop_back(); // Remove off-axis position axis
-  std::vector<Binning> Bins = sNDunselected_293kA.GetBinnings();
-  Bins.pop_back();
-  // This is annoying, true axis will have a reco label. I can live with this though.
-  std::vector<Var> Vars = axis.GetVars();
-  HistAxis trueaxis(Labels, Bins, Vars);
+  MCEffCorrection::~MCEffCorrection() {
+    fNDunselected_293kA = nullptr;
+    fNDselected_293kA = nullptr;
+    fNDunselected_280kA = nullptr; 
+    fNDselected_280kA = nullptr;
+    fFDunselected = nullptr;
+    fFDselected = nullptr;
+  }
 
-  // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
-  ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
-                                                                      1, trueaxis);
-  ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
-                                                                      1, trueaxis);
-  std::unique_ptr<TH2> NDunsel_293kA = std::unique_ptr<TH2>(rwsNDunselected_293kA.ToTH2(1));
-  std::unique_ptr<TH2> NDunsel_280kA = std::unique_ptr<TH2>(rwsNDunselected_280kA.ToTH2(1));  
+  //----------------------------------------------------
+
+  void MCEffCorrection::Initialize(PredictionInterp const * NDunsel_293kA,
+                                   PredictionInterp const * NDsel_293kA,
+                                   PredictionInterp const * NDunsel_280kA,
+                                   PredictionInterp const * NDsel_280kA,
+                                   PredictionInterp const * FDunsel,
+                                   PredictionInterp const * FDsel) {
+
+    fNDunselected_293kA = NDunsel_293kA;
+    fNDselected_293kA = NDsel_293kA;
+    fNDunselected_280kA = NDunsel_280kA;
+    fNDselected_280kA = NDsel_280kA;
+    fFDunselected = FDunsel;
+    fFDselected = FDsel;
+  }
+
+  //----------------------------------------------------
   
-  // Selected ND MC
-  auto sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(calc, syst, 
-                                                                   NDflav, curr, NDsign);
-  auto sNDselected_280kA = fNDselected_280kA->PredictComponentSyst(calc, syst, 
-                                                                   NDflav, curr, NDsign);
-  ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
-                                                                    1, trueaxis);
-  ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
-                                                                    1, trueaxis);
-  std::unique_ptr<TH2> NDsel_293kA = std::unique_ptr<TH2>(rwsNDselected_293kA.ToTH2(1));
-  std::unique_ptr<TH2> NDsel_280kA = std::unique_ptr<TH2>(rwsNDselected_280kA.ToTH2(1));
+  void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
+                                       HistAxis const &axis,
+                                       ana::SystShifts shift,
+                                       Flavors::Flavors_t NDflav,
+                                       Flavors::Flavors_t FDflav,
+                                       Current::Current_t curr,
+                                       Sign::Sign_t NDsign, 
+                                       Sign::Sign_t FDsign) const {
 
-  if (!fFDunselected || !fFDselected) {
-    std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
-    abort();
-  }
-  // FD unselected
-  auto sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-  std::unique_ptr<TH1> FDunsel = std::unique_ptr<TH1>(sFDunselected.ToTH1(1));
-  // FD selected
-  auto sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-  std::unique_ptr<TH1> FDsel = std::unique_ptr<TH1>(sFDselected.ToTH1(1));
+    ana::SystShifts syst = shift;
+  
+    osc::NoOscillations no; 
+  
+    if (!fNDunselected_293kA || !fNDselected_293kA || !fNDunselected_280kA || !fNDselected_280kA) {
+      std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
+      abort();
+    }
 
-  // Calculate ND efficiency
-  // efficiency fluctuates slightly with OA position
-  // Efficiency for 293kA sampple:
-  for (int slice = 0; slice < NDsel_293kA->GetYaxis()->GetNbins(); slice++) { // OA slice
-    std::vector<double> SliceEfficiency;
-    for (int ebin = 0; ebin < NDsel_293kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
-      double NDbin_eff = NDsel_293kA->GetBinContent(ebin + 1, slice + 1) /
-                         NDunsel_293kA->GetBinContent(ebin + 1, slice + 1);
-      if (std::isnormal(NDbin_eff)) {
-        SliceEfficiency.push_back(NDbin_eff);
+    auto sNDunselected_293kA = fNDunselected_293kA->PredictComponentSyst(&no, syst, 
+                                                                         NDflav, curr, NDsign);
+    auto sNDunselected_280kA = fNDunselected_280kA->PredictComponentSyst(&no, syst,
+                                                                         NDflav, curr, NDsign);
+  
+    // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
+    ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
+                                                                        1);
+    ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
+                                                                        1);
+    Eigen::MatrixXd NDunsel_293kA = rwsNDunselected_293kA.GetEigen(1);
+    Eigen::MatrixXd NDunsel_280kA = rwsNDunselected_280kA.GetEigen(1);  
+  
+    // Selected ND MC
+    Spectrum sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(&no, syst, 
+                                                                         NDflav, curr, NDsign);
+    Spectrum sNDselected_280kA = fNDselected_280kA->PredictComponentSyst(&no, syst, 
+                                                                         NDflav, curr, NDsign);
+    ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
+                                                                      1);
+    ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
+                                                                      1);
+    Eigen::MatrixXd NDsel_293kA = rwsNDselected_293kA.GetEigen(1);
+    Eigen::MatrixXd NDsel_280kA = rwsNDselected_280kA.GetEigen(1);
+  
+    if (!fFDunselected || !fFDselected) {
+      std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
+      abort();
+    }
+    // FD unselected // calc!!
+    Spectrum sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+    Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1);
+    // FD selected // calc!!
+    Spectrum sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+    Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1);
+  
+    // Calculate ND efficiency
+    // efficiency fluctuates slightly with OA position
+    // Efficiency for 293kA sample:
+    for (int slice = 1; slice <= (NDsel_293kA.rows() - 2); slice++) { // OA slice
+      std::vector<double> SliceEfficiency;
+      for (int ebin = 1; ebin <= (NDsel_293kA.cols() - 2); ebin++) { // Energy bins
+        double NDbin_eff = NDsel_293kA(slice, ebin) / NDunsel_293kA(slice, ebin);
+        if (std::isnormal(NDbin_eff)) {
+          SliceEfficiency.push_back(NDbin_eff);
+        } else {
+          SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
+        }
+      }
+      NDefficiency_293kA.push_back(SliceEfficiency);
+    }
+  
+    // Efficiency for 280kA sample:
+    for (int slice = 1; slice <= (NDsel_280kA.rows() - 2); slice++) { // OA slice
+      std::vector<double> SliceEfficiency;
+      for (int ebin = 1; ebin <= (NDsel_280kA.cols() - 2); ebin++) { // Energy bins
+        double NDbin_eff = NDsel_280kA(slice, ebin) / NDunsel_280kA(slice, ebin);
+        if (std::isnormal(NDbin_eff)) {
+          SliceEfficiency.push_back(NDbin_eff);
+        } else {
+          SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0 
+        }
+      }
+      NDefficiency_280kA.push_back(SliceEfficiency);
+    }
+  
+    // Calculate FD efficiency
+    for (int ebin = 1; ebin <= (vFDselected.size() - 2); ebin++) { 
+      double FDbin_eff = vFDselected(ebin) / vFDunselected(ebin);
+      if (std::isnormal(FDbin_eff)) {
+        FDefficiency.push_back(FDbin_eff);
       } else {
-        SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
+        FDefficiency.push_back(1E-6);
       }
     }
-    NDefficiency_293kA.push_back(SliceEfficiency);
   }
 
-  // Efficiency for 280kA sample:
-  for (int slice = 0; slice < NDsel_280kA->GetYaxis()->GetNbins(); slice++) { // OA slice
-    std::vector<double> SliceEfficiency;
-    for (int ebin = 0; ebin < NDsel_280kA->GetXaxis()->GetNbins(); ebin++) { // Energy bins
-      double NDbin_eff = NDsel_280kA->GetBinContent(ebin + 1, slice + 1) /
-                         NDunsel_280kA->GetBinContent(ebin + 1, slice + 1);
-      if (std::isnormal(NDbin_eff)) {
-        SliceEfficiency.push_back(NDbin_eff);
-      } else {
-        SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0 
+  //-----------------------------------------------------------
+  
+  void MCEffCorrection::Write(TDirectory *dir) const {
+    // Don't care how ugly this is, just getting the plots.
+    // Just to get the axes.
+    osc::NoOscillations no;
+    auto NDPred = fNDunselected_293kA->Predict(&no);
+  
+    std::vector<std::string> labels = NDPred.GetLabels();
+    std::vector<Binning> bins = NDPred.GetBinnings();  
+  
+    LabelsAndBins ana_axis(labels.at(0), bins.at(0));
+    LabelsAndBins oa_axis(labels.at(1), bins.at(1));
+  
+    int NAnaElements = bins.at(0).NBins() + 2;
+    int NOAElements = bins.at(1).NBins() + 2;
+  
+    Eigen::MatrixXd NDEff293kA_mat = Eigen::MatrixXd::Zero(NOAElements,
+                                                         NAnaElements);
+   
+    for (int y = 1; y <= NDEff293kA_mat.rows() - 2; y++) {
+      for (int x = 1; x <= NDEff293kA_mat.cols() - 2; x++) {
+        NDEff293kA_mat(y, x) = NDefficiency_293kA.at(y - 1).at(x - 1);
       }
     }
-    NDefficiency_280kA.push_back(SliceEfficiency);
-  }
-
-  // Calculate FD efficiency
-  for (int ebin = 0; ebin < FDsel->GetXaxis()->GetNbins(); ebin++) {
-    double FDbin_eff = FDsel->GetBinContent(ebin + 1) / 
-                       FDunsel->GetBinContent(ebin + 1);
-    if (std::isnormal(FDbin_eff)) {
-      FDefficiency.push_back(FDbin_eff);
-    } else {
-      FDefficiency.push_back(1E-6);
+  
+    ReweightableSpectrum NDEff293kA_rws(std::move(NDEff293kA_mat), ana_axis, oa_axis, 1, 0);
+  
+    Eigen::ArrayXd FDEff_arr = Eigen::ArrayXd::Zero(NAnaElements);
+  
+    for (int x = 1; x <= FDEff_arr.size() - 2; x++) {
+      FDEff_arr(x) = FDefficiency.at(x - 1);
     }
+  
+    Spectrum FDEff_s(std::move(FDEff_arr), ana_axis, 1, 0);
+  
+    dir->WriteTObject(NDEff293kA_rws.ToTH2(1), "NDEff_293kA");
+    dir->WriteTObject(FDEff_s.ToTH1(1), "FDEff");
   }
-
-  // Don't want to keep saving the same histograms.
-  // Asign the histograms once for writing.
-  if (!fDoneOnce) {
-    hNDunselected_293kA = std::move(NDunsel_293kA);
-    hNDselected_293kA = std::move(NDsel_293kA);
-    hNDunselected_280kA = std::move(NDunsel_280kA);
-    hNDselected_280kA = std::move(NDsel_280kA);
-    hFDunselected = std::move(FDunsel);
-    hFDselected = std::move(FDsel); 
-  }
-  fDoneOnce = true;
-}
-
-//-----------------------------------------------------------
-
-void MCEffCorrection::Write(TDirectory *dir) const {
-  dir->WriteTObject(hNDunselected_293kA.get(), "NDUnselected_293kA");
-  dir->WriteTObject(hNDselected_293kA.get(), "NDSelected_293kA");
-  dir->WriteTObject(hNDunselected_280kA.get(), "NDUnselected_280kA");
-  dir->WriteTObject(hNDselected_280kA.get(), "NDSelected_280kA");
-  dir->WriteTObject(hFDunselected.get(), "FDUnselected");
-  dir->WriteTObject(hFDselected.get(), "FDSelected"); 
-}
-
-//-----------------------------------------------------------
 
 } // namespace ana

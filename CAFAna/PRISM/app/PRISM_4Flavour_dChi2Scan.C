@@ -6,11 +6,12 @@
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+
+//#include "CAFAna/Fit/MinuitFitter.h"
 
 #include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
@@ -137,7 +138,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       scan_vars.end())
     dmsq32_scale = true;
 
-  osc::IOscCalculatorAdjustable *calc =
+  osc::IOscCalcAdjustable *calc =
     ConfigureCalc(scan.get<fhicl::ParameterSet>("true_osc", {}));
 
   // Lazy load the state file
@@ -240,7 +241,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
 
   // Vector of your different experiment objects which contribute to Chi2
-  std::vector<std::unique_ptr<IChiSqExperiment>> Expts;
+  std::vector<std::unique_ptr<IExperiment>> Expts;
   Expts.reserve(Channels.size());
   // Use reactor contraint.
   Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
@@ -248,6 +249,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   MultiExperiment CombExpts;
 
   CombExpts.Add(Expts.back().get());
+
+  // Try defining extrapolator object before channel loop
+  NDFD_Matrix SmearMatrices(RegFactorExtrap);
+  MCEffCorrection NDFDEffCorr;
 
   for (auto const ch : Channels) {
 
@@ -283,19 +288,18 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
     // Begin ND to FD extrapolation
-    NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(), 
-                              state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
-                              RegFactorExtrap); 
-    state.PRISM->SetNDFDDetExtrap(SmearMatrices);
+    SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
+                              state.FDMatrixPredInterps[FDfdConfig_enum].get());
+    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // ND to FD MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(), 
-                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
-                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
-                                state.FDSelTruePredInterps[FDfdConfig_enum].get());
+    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
+                            state.NDSelTruePredInterps[kND_293kA_nu].get(),
+                            state.NDUnselTruePredInterps[kND_280kA_nu].get(), 
+                            state.NDSelTruePredInterps[kND_280kA_nu].get(),
+                            state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+                            state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
@@ -428,7 +432,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts;
       //const SeedList &seedPts = SeedList(); //oscSeeds
-      double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+      //double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+      /*std::unique_ptr<MinuitFitSummary>*/auto FitSummary = fitter.Fit(calc_fit, bestSysts, 
+                                                     oscSeeds, {}, MinuitFitter::kVerbose);
+      double chi = FitSummary->EvalMetricVal();
       // fill hist
       scan_hist_1D->Fill(x, chi);
       auto end_fit = std::chrono::system_clock::now();
@@ -485,7 +492,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         SystShifts bestSysts;
         //const SeedList &seedPts = SeedList();
         
-        double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+        //double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+        auto FitSummary = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
+        double chi = FitSummary->EvalMetricVal();
         // fill hist
         scan_hist_2D->Fill(x, y, chi);
         auto end_fit = std::chrono::system_clock::now();

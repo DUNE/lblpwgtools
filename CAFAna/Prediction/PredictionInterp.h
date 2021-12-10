@@ -170,19 +170,16 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
-/*<<<<<<< HEAD
     template <typename T> T *GetPredNomAs() {
       return dynamic_cast<T *>(fPredNom.get());
     }
 
-=======*/
     //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
     void DiscardSysts(std::vector<ISyst const *>const &);
     //Get all known about systs
     std::vector<ISyst const *> GetAllSysts() const;
 
   protected:
-//>>>>>>> origin
     std::unique_ptr<IPrediction> fPredNom; ///< The nominal prediction
 
     struct ShiftedPreds
@@ -229,19 +226,6 @@ namespace ana
         std::cout << "[INFO]: " << systName << ", with " << preds.size() << " preds." << std::endl;
       }
     };
-
-/*<<<<<<< HEAD
-    void SetDontUseCache(bool v=true){
-      fDontUseCache = v;
-    }
-    
-    //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
-    void DiscardSysts(std::vector<ISyst const *>const &);
-    //Get all known about systs
-    std::vector<ISyst const *> GetAllSysts() const;
-
-  protected:
-======= */
 
     using PredMappedType = std::pair<const ISyst *, ShiftedPreds>;
     mutable std::vector<PredMappedType> fPreds;
@@ -292,20 +276,6 @@ namespace ana
                         std::vector<std::vector<std::vector<Coeffs>>>& fits,
                         Sign::Sign_t sign) const;
 
-/* <<<<<<< HEAD
-     /// Helper for \ref Derivative
-    void ComponentDerivative(osc::IOscCalculator* calc,
-                             Flavors::Flavors_t flav,
-                             Current::Current_t curr,
-                             Sign::Sign_t sign,
-                             CoeffsType type,
-                             const SystShifts& shift,
-                             double pot,
-                             std::unordered_map<const ISyst*, std::vector<double>>& dp) const;
-
-    bool fDontUseCache;
-
-======= */
     /// Templated helper for \ref ShiftedComponent
     template <typename T>
     Spectrum _ShiftedComponent(osc::_IOscCalc<T>* calc,

@@ -30,11 +30,6 @@ public:
     fSpectrumNuebar.OverridePOT(pot);
   }
 
-  //virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
-  //  return fSpectrum;
- // }
-  //virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
-  
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;
   }

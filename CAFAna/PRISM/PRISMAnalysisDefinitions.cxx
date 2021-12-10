@@ -62,7 +62,20 @@ Binning GetBinning(std::string const &xbinning) {
 
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
-    return Binning::Simple(50, 0, 10);//binsNDEreco;
+    std::vector<double> BE = { 0, };
+    while(BE.back() < 1) {
+      BE.push_back(BE.back() + 0.5);
+    }
+    while(BE.back() < 4.0) {
+      BE.push_back(BE.back() + 0.25);
+    }
+    while(BE.back() < 6.0) { 
+      BE.push_back(BE.back() + 1.0);
+    }
+    while(BE.back() < 10.0) {
+      BE.push_back(BE.back() + 4.0);
+    }
+    return Binning::Custom(BE);
   } else if (xbinning == "event_rate_match") {
     std::vector<double> BE = { 0, };
 

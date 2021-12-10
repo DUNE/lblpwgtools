@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ReweightableSpectrum.h"
 #include "CAFAna/Core/Spectrum.h"
 
-//#include "CAFAna/Analysis/Exposures.h"
+#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -44,45 +44,74 @@ struct RunPlan {
   }
 
   // Only now using this function to run-plan weights RWSpecs.
-  ReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
+  PRISMReweightableSpectrum Weight(ReweightableSpectrum const &NDSpec, int kA,
                               HistAxis const &axis, 
                               bool SetErrorsFromPredictedRate = false) const {
     // Assume this spectrum is in per/POT
-
     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     NDSpec_h->SetDirectory(nullptr);
 
-    //std::unique_ptr<Eigen::MatrixXd> NDSpec_mat = 
-    //    std::unique_ptr<Eigen::MatrixXd>(NDSpec.GetEigen(1));
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
-    std::cout << "row = " << NDSpec_mat.rows() << ", cols = " << NDSpec_mat.cols() <<std::endl;
-    std::cout << "ybins = " << NDSpec_h->GetYaxis()->GetNbins() <<
-      ", xbins = " << NDSpec_h->GetXaxis()->GetNbins() << std::endl;
-    //for (int yit = 0; yit < NDSpec_mat->rows(); ++yit) {
-    for (int yit = 0; yit < NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
-      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit + 1);
+    Eigen::MatrixXd NDError_mat = NDSpec.GetEigen(1);
+    NDError_mat.setZero();    
+
+    for (int yit = 1; yit <= NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
+      double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit);
       auto stop = FindStop(ypos, kA);
       double sum(0);
-      for (int xit = 0; xit < NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
-        double bc = NDSpec_h->GetBinContent(xit + 1, yit + 1) * stop.POT;
-        double be = SetErrorsFromPredictedRate      
-                    ? sqrt(bc)
-                    : (NDSpec_h->GetBinError(xit + 1, yit + 1) * stop.POT);
-        sum += bc; 
-        //NDSpec_h->SetBinContent(xit + 1, yit + 1, bc);
-        //NDSpec_h->SetBinError(xit + 1, yit + 1, be);     
-        //std::cout << "[" << xit << ", "<<yit<<"] = " << bc << std::endl; 
+      for (int xit = 1; xit <= NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
+        double bc = NDSpec_h->GetBinContent(xit, yit) * stop.POT;
+        double bvar = SetErrorsFromPredictedRate      
+                    ? bc
+                    : std::pow((NDSpec_h->GetBinError(xit, yit) * stop.POT), 2);
         NDSpec_mat(yit, xit) = bc;
+        NDError_mat(yit, xit) = bvar;
       }
     }
 
-    std::cout << "Labels size = " << NDSpec.GetLabels().size() << std::endl;
     LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
     LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
-    ReweightableSpectrum ret = ReweightableSpectrum(std::move(NDSpec_mat),
-                                                    anaAxis, weightAxis, GetPlanPOT(), 0);
+    PRISMReweightableSpectrum ret(std::move(NDSpec_mat), std::move(NDError_mat),
+                                  anaAxis, weightAxis, GetPlanPOT(), 0);
     return ret;
   }
+
+   // Overload function to take Spectrums as well, still output PRISMRWSpec
+   PRISMReweightableSpectrum Weight(Spectrum const &NDSpec, int kA,
+                                    HistAxis const &axis, 
+                                    bool SetErrorsFromPredictedRate = false) const {
+     // Assume this spectrum is in per/POT
+     assert(NDSpec.NDimensions() == 2); // Only gonna work for 2D axis, 3D not implemented yet
+     std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
+     NDSpec_h->SetDirectory(nullptr);
+                                                                                                 
+     Eigen::MatrixXd NDSpec_mat = ConvertArrayToMatrix(NDSpec.GetEigen(1),
+                                                       NDSpec.GetBinnings());
+     Eigen::MatrixXd NDError_mat = Eigen::MatrixXd::Zero(NDSpec_mat.rows(),
+                                                         NDSpec_mat.cols()); 
+                                                                                                 
+     for (int yit = 1; yit <= NDSpec_h->GetYaxis()->GetNbins(); ++yit) {
+       double ypos = NDSpec_h->GetYaxis()->GetBinCenter(yit);
+       auto stop = FindStop(ypos, kA);
+       double sum(0);
+       for (int xit = 1; xit <= NDSpec_h->GetXaxis()->GetNbins(); ++xit) {
+         double bc = NDSpec_h->GetBinContent(xit, yit) * stop.POT;
+         double bvar = SetErrorsFromPredictedRate      
+                     ? bc
+                     : std::pow((NDSpec_h->GetBinError(xit, yit) * stop.POT), 2);
+         NDSpec_mat(yit, xit) = bc;
+         NDError_mat(yit, xit) = bvar;
+       }
+     }
+                                                                                                 
+     LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
+     LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
+
+     PRISMReweightableSpectrum ret(std::move(NDSpec_mat), std::move(NDError_mat),
+                                   anaAxis, weightAxis, GetPlanPOT(), 0);
+     return ret;
+  }
+
 
   double GetPlanPOT() const {
     return std::accumulate(

@@ -18,116 +18,6 @@
 #include <cassert>
 #include <memory>
 
-/*<<<<<<< HEAD
-namespace ana {
-// Duplicate here because we can't include Vars.h
-const Var kTrueE([](const caf::StandardRecord *sr) { return sr->Ev; });
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(
-    const std::string &label, const Binning &bins, SpectrumLoaderBase &loader,
-    const Var &var, const Cut &cut, const SystShifts &shift, const Var &wei)
-    : ReweightableSpectrum(label, bins, kTrueE), fCachedOsc(0, {}, {}, 0, 0),
-      fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-
-  DontAddDirectory guard;
-
-  fHist = HistCache::NewTH2D("", bins);
-
-  loader.AddReweightableSpectrum(*this, var, cut, shift, wei);
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(SpectrumLoaderBase &loader,
-                                           const HistAxis &axis, const Cut &cut,
-                                           const SystShifts &shift,
-                                           const Var &wei)
-    : ReweightableSpectrum(axis.GetLabels(), axis.GetBinnings(), kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0), fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-
-  Binning bins1D = fBins[0];
-  if (fBins.size() > 1) {
-    int n = 1;
-    for (const Binning &b : fBins)
-      n *= b.NBins();
-    bins1D = Binning::Simple(n, 0, n);
-  }
-
-  std::string label;
-  for (const std::string &l : fLabels)
-    label += l + " and ";
-  label.resize(label.size() - 5); // drop the last "and"
-
-  DontAddDirectory guard;
-
-  fHist = HistCache::NewTH2D("", bins1D);
-
-  Var multiDVar = axis.GetVars()[0];
-  if (axis.NDimensions() == 2)
-    multiDVar = Var2D(axis.GetVars()[0], axis.GetBinnings()[0],
-                      axis.GetVars()[1], axis.GetBinnings()[1]);
-  if (axis.NDimensions() == 3)
-    multiDVar =
-        Var3D(axis.GetVars()[0], axis.GetBinnings()[0], axis.GetVars()[1],
-              axis.GetBinnings()[1], axis.GetVars()[2], axis.GetBinnings()[2]);
-
-  loader.AddReweightableSpectrum(*this, multiDVar, cut, shift, wei);
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(const std::string &label,
-                                           const Binning &bins)
-    : ReweightableSpectrum(label, bins, kTrueE), fCachedOsc(0, {}, {}, 0, 0),
-      fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-
-  DontAddDirectory guard;
-
-  fPOT = 0;
-  fLivetime = 0;
-
-  fHist = HistCache::NewTH2D("", bins);
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(const std::string &label, double pot,
-                                           double livetime, const Binning &bins)
-    : ReweightableSpectrum(label, bins, kTrueE), fCachedOsc(0, {}, {}, 0, 0),
-      fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-
-  DontAddDirectory guard;
-
-  fPOT = pot;
-  fLivetime = livetime;
-
-  fHist = HistCache::NewTH2D("", bins);
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(
-    TH2 *h, const std::vector<std::string> &labels,
-    const std::vector<Binning> &bins, double pot, double livetime)
-    : ReweightableSpectrum(kTrueE, h, labels, bins, pot, livetime),
-      fCachedOsc(0, {}, {}, 0, 0), fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-  if (fHist) {
-    HistCache::Adopt(fHist);
-  }
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(
-    std::unique_ptr<TH2D> h, const std::vector<std::string> &labels,
-    const std::vector<Binning> &bins, double pot, double livetime)
-    : ReweightableSpectrum(kTrueE, std::move(h), labels, bins, pot, livetime),
-      fCachedOsc(0, {}, {}, 0, 0), fCachedHash(0) {
-  fTrueLabel = "True Energy (GeV)";
-  if (fHist) {
-    HistCache::Adopt(fHist);
-======= */
 namespace ana
 {
   // Duplicate here because we can't include Vars.h
@@ -170,77 +60,7 @@ namespace ana
                            pot, livetime)
   {
   }
-//}
 
-
-//----------------------------------------------------------------------
-/*OscillatableSpectrum::~OscillatableSpectrum() {
-  // Nulls fHist out, so it's safe that ~ReweightableSpectrum tries too
-  HistCache::Delete(fHist, Bins1DX().ID(), kTrueEnergyBins.ID());
-
-  for (SpectrumLoaderBase *loader : fLoaderCount) {
-    loader->RemoveReweightableSpectrum(this);
-  }
-
-  delete fCachedHash;
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(const OscillatableSpectrum &rhs)
-    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0), fCachedHash(0) {
-  DontAddDirectory guard;
-
-  fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
-
-  fPOT = rhs.fPOT;
-  fLivetime = rhs.fLivetime;
-
-  if (rhs.fCachedHash) {
-    fCachedOsc = rhs.fCachedOsc;
-    fCachedHash = new TMD5(*rhs.fCachedHash);
-  }
-
-  assert(rhs.fLoaderCount.empty()); // Copying with pending loads is unexpected
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum::OscillatableSpectrum(OscillatableSpectrum &&rhs)
-    : ReweightableSpectrum(rhs.fLabels, rhs.fBins, kTrueE),
-      fCachedOsc(0, {}, {}, 0, 0), fCachedHash(0) {
-  DontAddDirectory guard;
-
-  fHist = rhs.fHist;
-  rhs.fHist = 0;
-
-  fPOT = rhs.fPOT;
-  fLivetime = rhs.fLivetime;
-
-  if (rhs.fCachedHash) {
-    fCachedOsc = std::move(rhs.fCachedOsc);
-    fCachedHash = rhs.fCachedHash;
-    rhs.fCachedHash = 0;
-  }
-
-  assert(rhs.fLoaderCount.empty()); // Copying with pending loads is unexpected
-}
-
-//----------------------------------------------------------------------
-OscillatableSpectrum &OscillatableSpectrum::
-operator=(const OscillatableSpectrum &rhs) {
-  if (this == &rhs)
-    return *this;
-
-  DontAddDirectory guard;
-
-  if (fHist)
-    HistCache::Delete(fHist, Bins1DX().ID());
-  fHist = HistCache::Copy(rhs.fHist, rhs.Bins1DX(), kTrueEnergyBins);
-  fPOT = rhs.fPOT;
-  fLivetime = rhs.fLivetime;
-  fLabels = rhs.fLabels;
-  fBins = rhs.fBins;
-=======*/
   //----------------------------------------------------------------------
   OscillatableSpectrum::~OscillatableSpectrum()
   {
@@ -287,36 +107,15 @@ operator=(const OscillatableSpectrum &rhs) {
 
     assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
     assert( fReferences.empty() ); // Copying with pending loads is unexpected
-//>>>>>>> origin
-
-/*    if (rhs.fCachedHash) {
-      fCachedOsc = rhs.fCachedOsc;
-      delete fCachedHash;
-      fCachedHash = new TMD5(*rhs.fCachedHash);
-    }
-  
-    assert(rhs.fLoaderCount.empty()); // Copying with pending loads is unexpected
-    assert(fLoaderCount.empty());     // Copying with pending loads is unexpected
-*/
-//<<<<<<< HEAD
+    
     return *this;
   }
 
   //----------------------------------------------------------------------
-  OscillatableSpectrum &OscillatableSpectrum::operator=(OscillatableSpectrum &&rhs) {
+  OscillatableSpectrum &OscillatableSpectrum::operator=(OscillatableSpectrum &&rhs)
+  {
     if (this == &rhs) return *this;
 
-  /*DontAddDirectory guard;
-
-  if (fHist)
-    HistCache::Delete(fHist, Bins1DX().ID());
-  fHist = rhs.fHist;
-  rhs.fHist = 0;
-  fPOT = rhs.fPOT;
-  fLivetime = rhs.fLivetime;
-  fLabels = rhs.fLabels;
-  fBins = rhs.fBins;
-======= */
     ReweightableSpectrum::operator=(rhs);
 
     if(rhs.fCache->hash){

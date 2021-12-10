@@ -1,15 +1,10 @@
-//#include "CAFAna/Analysis/AnalysisVars.h"
-//#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
-
-//#include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
-//#include "CAFAna/PRISM/EigenUtils.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
@@ -73,7 +68,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   bool PRISM_write_debug = PRISMps.get<bool>("write_debug");
 
   double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
-  std::cout << "Reg for Extrap = " << RegFactorExtrap << std::endl;
 
   osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
@@ -89,7 +83,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               << std::endl;
     States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs->Close();
+    fs->Close(); // TEMPORARY HACK, UNCOMMENT WHEN FIXED
   }
 
   PRISMStateBlob &state = States[state_file];
@@ -188,6 +182,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     Channels[GetMatchChanShortName(ch)] = ch;
   }
 
+  bool EnabledStats = (getenv("CAFANA_STAT_ERRS") != 0);
+  if (EnabledStats) {
+    std::cout << "CAFANA_STAT_ERRS Enabled!" << std::endl;
+  } else {
+    std::cout << "CAFANA_STAT_ERRS disabled!" << std::endl;
+  }
+
+  // Try defining extrapolator object before channel loop
+  NDFD_Matrix SmearMatrices(RegFactorExtrap);
+  MCEffCorrection NDFDEffCorr;
+
   for (auto const ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
@@ -258,25 +263,25 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       }
       Data_nueswap->SetDirectory(nullptr);
     }
-    
+  
     //-------------------------------------------------------------
 
     // Smearing matrices for ND and FD
     // For detector and selection corrections
-    NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(),
-                              state.FDMatrixPredInterps[FDfdConfig_enum].get(), 
-                              RegFactorExtrap);
+    SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
+                              state.FDMatrixPredInterps[FDfdConfig_enum].get()); 
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(SmearMatrices); 
+    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+ 
     // MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
-                                state.NDSelTruePredInterps[NDConfig_293kA].get(),
-                                state.NDUnselTruePredInterps[NDConfig_280kA].get(),
-                                state.NDSelTruePredInterps[NDConfig_280kA].get(),
-                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(), 
-                                state.FDSelTruePredInterps[FDfdConfig_enum].get());
+    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
+                            state.NDSelTruePredInterps[kND_293kA_nu].get(),
+                            state.NDUnselTruePredInterps[kND_280kA_nu].get(),
+                            state.NDSelTruePredInterps[kND_280kA_nu].get(), 
+                            state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+                            state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(NDFDEffCorr); 
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr); 
 
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
@@ -316,11 +321,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
-        //auto *PRISMExtrap =
-        //      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
-        //PRISMExtrap->Scale(1, "width");
-        //chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
-        //PRISMExtrap->SetDirectory(nullptr);
+        auto *PRISMExtrap =
+              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+        PRISMExtrap->Scale(1, "width");
+        chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
+        PRISMExtrap->SetDirectory(nullptr);
         if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
           auto *PRISMExtrapCovMat = 
                 PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
@@ -352,7 +357,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
-            PRISMComp_h->Scale(1, "width");
+            //PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
                   PRISMComp_h,
