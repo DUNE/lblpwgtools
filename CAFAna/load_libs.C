@@ -33,12 +33,12 @@ void load_libs(bool MustClean = true) {
   // flags novasoft uses, but they don't seem to be in any env var.
   gSystem->SetFlagsDebug(
       TString(gSystem->GetFlagsDebug()) +
-      " -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1");
+      " -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DTBB_INTERFACE_NEW");
   gSystem->SetFlagsOpt(
       TString(gSystem->GetFlagsOpt()) +
-      " -fdiagnostics-color=auto -UNDEBUG "
-      "-DDONT_USE_FQ_HARDCODED_SYST_PATHS=1"); // match gcc's maxopt behaviour
-                                               // of retaining assert()
+      " -fdiagnostics-color=auto -UNDEBUG "   // match gcc's maxopt behaviour
+      "-DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 " // of retaining assert()
+      "-DTBB_INTERFACE_NEW");
 
   const std::vector<std::string> libs = {
       "Minuit2",          "Net",           "Tree",
