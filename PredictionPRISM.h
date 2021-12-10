@@ -8,6 +8,7 @@
 
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
+#include "CAFAna/Core/PRISMReweightableSpectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
@@ -254,8 +255,9 @@ public:
 
   ~PredictionPRISM() {
     std::cout << "Destroying PredictionPRISM." << std::endl;
-    //delete fNDFD_Matrix;
-    //delete fMCEffCorrection;
+    fFluxMatcher = nullptr;
+    fNDFD_Matrix = nullptr;
+    fMCEffCorrection = nullptr;
   }
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir, const std::string &name);
@@ -284,35 +286,26 @@ public:
   }
 
   // PredictionPRISM to own a pointer to a NDFD_Matrix object
-  //std::unique_ptr<NDFD_Matrix> fNDFD_Matrix;
   NDFD_Matrix const *fNDFD_Matrix;
-  void SetNDFDDetExtrap(NDFD_Matrix const det_extrap) { 
-    fNDFD_Matrix = &det_extrap; 
-    //fNDFD_Matrix = std::move(std::make_unique<NDFD_Matrix>(*det_extrap));
+  void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) { 
+    fNDFD_Matrix = det_extrap; 
   }
   NDFD_Matrix const * Get_NDFD_Matrix() const {
-  //std::unique_ptr<NDFD_Matrix> Get_NDFD_Matrix() const {
     return fNDFD_Matrix;
   }
 
   // PredictionPRISM to own a pointer to a MCEffCorrection object
-  //std::unique_ptr<MCEffCorrection> fMCEffCorrection;
   MCEffCorrection const *fMCEffCorrection;
-  void SetMC_NDFDEff(MCEffCorrection const eff_corr) { 
-    fMCEffCorrection = &eff_corr;
-    //fMCEffCorrection = std::make_unique<MCEffCorrection>(eff_corr); 
+  void SetMC_NDFDEff(MCEffCorrection const *eff_corr) { 
+    fMCEffCorrection = eff_corr;
   }
   MCEffCorrection const * Get_MCEffCorrection() const {
-  //std::unique_ptr<MCEffCorrection> Get_MCEffCorrection() const {
     return fMCEffCorrection;
   } 
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
 
-  //HistAxis fOffPredictionAxis;
-  //HistAxis f280kAPredictionAxis;
-  //HistAxis fFluxMatcherCorrectionAxes;
   double fDefaultOffAxisPOT;
 
   bool fNCCorrection = false;
@@ -392,8 +385,7 @@ public:
   }
 
   ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT, 
-                                             HistAxis const &RecoAxis,
-                                             HistAxis const &TrueAxis) const;
+                                             HistAxis const &RecoAxis) const;
 
 protected:
   ana::RunPlan RunPlan_nu, RunPlan_nub;
@@ -403,14 +395,14 @@ protected:
   struct _Measurements {
 
     struct _ND {
-      std::unique_ptr<ReweightableSpectrum> numu_ccinc_sel_numode;
-      std::unique_ptr<ReweightableSpectrum> numubar_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_numode;
 
-      std::unique_ptr<ReweightableSpectrum> numu_ccinc_sel_nubmode;
-      std::unique_ptr<ReweightableSpectrum> numubar_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_nubmode;
 
-      std::unique_ptr<ReweightableSpectrum> nue_ccinc_sel_numode;
-      std::unique_ptr<ReweightableSpectrum> nuebar_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> nue_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> nuebar_ccinc_sel_nubmode;
     };
     _ND ND_293kA;
     _ND ND_280kA;
@@ -462,13 +454,13 @@ protected:
   };
   mutable _Predictions Predictions;
 
-  std::unique_ptr<ReweightableSpectrum> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
-  std::unique_ptr<ReweightableSpectrum> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293) const;
-  std::unique_ptr<ReweightableSpectrum> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
-  std::unique_ptr<ReweightableSpectrum> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
             int kA = 293) const;
   bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,

@@ -11,9 +11,6 @@
 #include <string>
 #include <vector>
 
-//namespace osc {
-//  class osc::IOscCalc;
-//}
 namespace ana {
   class Binning;
   class PredictionInterp;

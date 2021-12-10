@@ -35,34 +35,33 @@ class NDFD_Matrix {
 
 public:
   
-  NDFD_Matrix(/*std::shared_ptr<PredictionInterp> const ND*/PredictionInterp const *ND, // PredictionInterp const *ND
-              /*std::shared_ptr<PredictionInterp> const FD*/PredictionInterp const *FD, // PredictionInterp const *FD
-              double reg, bool optreg = false);
+  NDFD_Matrix(double reg, bool optreg = false);
 
   NDFD_Matrix(const NDFD_Matrix &MatPreds);
   NDFD_Matrix(NDFD_Matrix &&MatPreds) noexcept;
 
   ~NDFD_Matrix();
 
-  //NDFD_Matrix& operator=(NDFD_Matrix &&MatPred) noexcept;
+  void Initialize(PredictionInterp const *ND,
+                  PredictionInterp const *FD);
 
   // Normalise the ETrue column to efficiency in ND and FD matrices
-  void NormaliseETrue(std::unique_ptr<TH2D>* MatrixND, std::unique_ptr<TH2D>* MatrixFD,
+  void NormaliseETrue(Eigen::MatrixXd* MatrixND, Eigen::MatrixXd* MatrixFD,
                       std::vector<double> NDefficiency,
                       std::vector<double> FDefficiency) const;
 
 
-  TH2D * GetNDMatrix() const;
-  TH2D * GetFDMatrix() const;
+  Eigen::MatrixXd GetNDMatrix() const;
+  Eigen::MatrixXd GetFDMatrix() const;
 
   Eigen::MatrixXd GetNDExtrap_293kA() const;
   Eigen::MatrixXd GetNDExtrap_280kA() const;
 
+  Eigen::MatrixXd GetErrorMat_293kA() const;
+  Eigen::MatrixXd GetErrorMat_280kA() const;
+
   Eigen::MatrixXd GetCovMat_293kA() const;
   Eigen::MatrixXd GetCovMat_280kA() const;
- 
-  //std::vector<double> GetSoln_NormVec() const { return soln_norm_vector; }
-  //std::vector<double> GetResid_NormVec() const { return resid_norm_vector; }
 
   // Get regularisation matrices
   Eigen::MatrixXd GetL1NormReg(int truebins, TAxis *trueaxis) const;
@@ -75,7 +74,7 @@ public:
   // Extrapolate ND PRISM pred to FD using Eigen
   // This function is becoming slightly monsterous...
   void ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
-                         double POT, const int kA, const TH1 *weights,
+                         double POT, const int kA, Eigen::ArrayXd&& weights,
                          osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
                          Flavors::Flavors_t NDflav = Flavors::kAll,
                          Flavors::Flavors_t FDflav = Flavors::kAll,
@@ -90,25 +89,19 @@ public:
 protected:
 
   double fRegFactor;
-  mutable std::unique_ptr<TH2D> hMatrixND;
-  mutable std::unique_ptr<TH2D> hMatrixFD;
+  mutable Eigen::MatrixXd hMatrixND;
+  mutable Eigen::MatrixXd hMatrixFD;
+
   PredictionInterp const *fMatrixND;
   PredictionInterp const *fMatrixFD;
-  //std::shared_ptr<PredictionInterp> fMatrixND;
-  //std::shared_ptr<PredictionInterp> fMatrixFD;
-  //mutable std::unique_ptr<TH2> fNDExtrap_293kA;
-  //mutable std::unique_ptr<TH2> fNDExtrap_280kA;
   mutable Eigen::MatrixXd fNDExtrap_293kA;
   mutable Eigen::MatrixXd fNDExtrap_280kA;
-  //mutable std::unique_ptr<TH2> hCovMat_293kA;
-  //mutable std::unique_ptr<TH2> hCovMat_280kA;
+  mutable Eigen::MatrixXd fErrorMat_293kA; // Not a covariance matrix, just a map of errors.
+  mutable Eigen::MatrixXd fErrorMat_280kA; // Not a covariance matrix, just a map of errors.
   mutable Eigen::MatrixXd hCovMat_293kA;
   mutable Eigen::MatrixXd hCovMat_280kA;
   mutable std::unique_ptr<TH1> hNumuNueCorr;
   mutable bool fOptimizeReg;
-  // For L-curve optimisation
-  //mutable std::vector<double> soln_norm_vector;
-  //mutable std::vector<double> resid_norm_vector;
 };
 
 } // namespace ana

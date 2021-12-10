@@ -146,9 +146,31 @@ Eigen::VectorXd GetEigenFlatVector(TH1 const *th) {
 
 Eigen::ArrayXd GetEigenFlatArray(std::unique_ptr<TH1> const &h) {
   int N = h->GetXaxis()->GetNbins();
-  Eigen::ArrayXd arr(N); //= Eigen::ArrayXd::Zero(N);
-  for (int i = 0; i < N; i++) {
-    arr(i) = h->GetBinContent(i + 1);
+  Eigen::ArrayXd arr(N + 2); //= Eigen::ArrayXd::Zero(N);
+  for (int i = 0; i <= N + 1; i++) {
+    arr(i) = h->GetBinContent(i);
   } 
   return arr;
+}
+
+Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr, 
+                                     std::vector<ana::Binning> const &bins) {
+  Eigen::MatrixXd ret_mat;
+
+  if (bins.size() == 2) { // 2D axiis.
+    int NRows = bins.at(1).NBins();
+    int NCols = bins.at(0).NBins();
+    ret_mat.resize(NRows + 2, NCols + 2);
+    ret_mat.setZero();
+    for (int col = 1; col <= NCols; col++) {
+      for (int row = 1; row <= NRows; row++) {
+        ret_mat(row, col) = arr(row + (col - 1) * NRows);
+      }
+    }
+  } else if (bins.size() == 3) {
+    // implement 3D axis another day.
+    std::cout << "3D axis not yet implemented." << std::endl;
+    abort();
+  }
+  return ret_mat;
 }
