@@ -47,7 +47,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   auto PRISMps = pred.get<fhicl::ParameterSet>("PRISM", {});
 
   bool PRISM_SetNDDataErrs =
-      PRISMps.get<bool>("set_ND_errors_from_rate", false);
+      PRISMps.get<bool>("set_ND_errors_from_rate", true);
 
   auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
 
@@ -357,7 +357,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             }
 
             auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
-            //PRISMComp_h->Scale(1, "width");
+            PRISMComp_h->Scale(1, "width");
             if (PRISMComp_h->Integral() != 0) {
               chan_dir->WriteTObject(
                   PRISMComp_h,

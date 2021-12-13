@@ -1,3 +1,5 @@
+#include "CAFAna/Core/PRISMReweightableSpectrum.h"
+
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 
 #include "OscLib/IOscCalc.h"
@@ -205,7 +207,7 @@ Eigen::MatrixXd NDFD_Matrix::GetL2NormReg(int truebins, TAxis *trueaxis) const {
 
 //-----------------------------------------------------
 
-void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
+void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
                                     double POT, const int kA, Eigen::ArrayXd&& weights,
                                     osc::IOscCalc *calc, ana::SystShifts shift,
                                     Flavors::Flavors_t NDflav, 
@@ -237,6 +239,8 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
   Eigen::MatrixXd PRISMND = NDDataSpec.GetEigen(POT);
   Eigen::MatrixXd PRISMND_block = PRISMND.block(1 ,1 , PRISMND.rows() - 2, PRISMND.cols() - 2); 
+  
+  Eigen::MatrixXd PRISMND_SumSq = NDDataSpec.GetSumSqEigen(POT);
 
   fNDExtrap->resize(PRISMND.rows(), PRISMND.cols());
   fErrorMat->resize(PRISMND.rows(), PRISMND.cols()); 
@@ -260,11 +264,12 @@ void NDFD_Matrix::ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec,
 
     // Build covariance matrix for this slice so we can propogate uncertainty:
     Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
-    for (int row_it = 0; row_it < CovMatRec.rows(); row_it++) {
-      if (!std::isnormal(NDERec(row_it))) {
-        CovMatRec(row_it, row_it) = 1E-5;
+    for (int col = 0; col < CovMatRec.cols(); col++) {
+      if (!std::isnormal(NDERec(col))) {
+        CovMatRec(col, col) = 1E-5;
       } else {
-        CovMatRec(row_it, row_it) = NDERec(row_it); //error = sqrtN
+        ///CovMatRec(row_it, row_it) = NDERec(row_it); //error = sqrtN
+        CovMatRec(col, col) = PRISMND_SumSq(slice + 1, col + 1);
       }
     }
     // Should* be fine to take the inverse of a purely diagonal matrix

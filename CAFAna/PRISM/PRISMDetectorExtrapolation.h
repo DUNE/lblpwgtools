@@ -73,7 +73,7 @@ public:
 
   // Extrapolate ND PRISM pred to FD using Eigen
   // This function is becoming slightly monsterous...
-  void ExtrapolateNDtoFD(ReweightableSpectrum NDDataSpec, 
+  void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
                          double POT, const int kA, Eigen::ArrayXd&& weights,
                          osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
                          Flavors::Flavors_t NDflav = Flavors::kAll,
