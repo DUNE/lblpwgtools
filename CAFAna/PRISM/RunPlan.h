@@ -68,7 +68,7 @@ struct RunPlan {
         NDError_mat(yit, xit) = bvar;
       }
     }
-
+    if (kA == 293) std::cout << "RWSpec NDSpec_mat = " << NDSpec_mat(10,10) << " , NDError_mat = " << NDError_mat(10,10) << std::endl;
     LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
     LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
     PRISMReweightableSpectrum ret(std::move(NDSpec_mat), std::move(NDError_mat),
@@ -101,9 +101,19 @@ struct RunPlan {
                      : std::pow((NDSpec_h->GetBinError(xit, yit) * stop.POT), 2);
          NDSpec_mat(yit, xit) = bc;
          NDError_mat(yit, xit) = bvar;
+         if (xit == 1 && yit == 10 && kA == 293) {
+           std::cout << "Bin content no w = " << NDSpec_h->GetBinContent(xit, yit) << std::endl;
+           std::cout << "Bin content w = " << bc << std::endl; 
+           std::cout << "Bin error no w = " << NDSpec_h->GetBinError(xit, yit) << std::endl;
+           std::cout << "Bin error w = " << NDSpec_h->GetBinError(xit, yit) * stop.POT<< std::endl;
+           std::cout << "Bin sqerr w  = " << bvar << std::endl;
+         }
        }
      }
-                                                                                                 
+     if (kA == 293) {
+      
+       std::cout << "Spec NDSpec_mat = " << NDSpec_mat(10,10) << " , NDError_mat = " << NDError_mat(10,10) << std::endl;                                                     
+     }
      LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
      LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
 

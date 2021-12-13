@@ -87,11 +87,6 @@ endif()
 LIST(APPEND EXTRA_LINK_DIRS ${BOOST_LIB})
 LIST(APPEND EXTRA_LIBS boost_filesystem boost_system)
 
-#<<<<<<< HEAD
-###############################  Eigen  ######################################
-
-#include(cmake/eigenSetup.cmake)
-
 ############################  TH2Jagged  #####################################
 
 include(cmake/TH2JaggedSetup.cmake)
@@ -99,7 +94,7 @@ include(cmake/TH2JaggedSetup.cmake)
 ############################  FHiCL  #####################################
 
 include(cmake/FHiCLSetup.cmake)
-#=======
+
 ###############################  EIGEN  ######################################
 
 if(${EIGEN_INC} STREQUAL "")
@@ -120,6 +115,16 @@ endif()
 
 PrefixList(STAN_MATH_INC_STR "-I" ${STAN_MATH_INC})
 PrefixList(STAN_INC_STR "-I" ${STAN_INC})
+
+###############################  TBB   ######################################
+
+if(${TBB_INC} STREQUAL "")
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${TBB_INC}=\"${TBB_INC}\" to an existing directory, is tbb set up in the environment?")
+elseif(NOT DEFINED TBB_INC)
+  cmessage(FATAL_ERROR "Expected to be able to evaluate \${TBB_INC}=\"${TBB_INC}\" to an existing directory, is tbb set up in the environment?")
+endif()
+
+PrefixList(TBB_INC_STR "-I" ${TBB_INC})
 
 ###############################  OSCLIB  ######################################
 

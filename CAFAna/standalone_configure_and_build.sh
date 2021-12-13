@@ -135,23 +135,8 @@ if [ -e "$BUILD_DIR" ]; then
   fi
 fi
 
-#<<<<<<< HEAD
-#mkdir build
-#cd build
-
-#mkdir Ext
-#cd Ext
-
-#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
-#cp -r /dune/app/users/chasnip/CH_DUNE_PRISM/OscLib OscLib
-#cp -r /dune/app/users/chasnip/CH_DUNE_PRISM/Utilities Utilities
-
-#cd ../
-#=======
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
-#>>>>>>> origin
 
 if [ "${USE_UPS}" == "1" ]; then
   source ../cmake/ups_env_setup.sh
@@ -202,9 +187,7 @@ else
 
 fi
 
-#<<<<<<< HEAD
-#cmake ../ -DCMAKE_CXX_STANDARD=14 -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_PRISM=${USE_PRISM} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP}
-#=======
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_PRISM=${USE_PRISM} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC}
-#>>>>>>> origin
+#cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_PRISM=${USE_PRISM} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC}
+cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DUSE_PRISM=${USE_PRISM} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC} -DTBB_INC=${TBB_INC}
+
 make install -j ${CORES}

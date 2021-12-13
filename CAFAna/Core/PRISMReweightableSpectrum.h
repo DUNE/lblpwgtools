@@ -44,6 +44,8 @@ namespace ana {
     static std::unique_ptr<PRISMReweightableSpectrum> LoadFrom(TDirectory* dir, 
                                                                const std::string& name);
 
+    Eigen::MatrixXd GetSumSqEigen(double pot) const { return fMatSumSq * pot/fPOT; }
+
     // Necessary for getting the POT scaling for PRISM correct.
     void OverridePOT(double newpot) { fPOT = newpot; }
 

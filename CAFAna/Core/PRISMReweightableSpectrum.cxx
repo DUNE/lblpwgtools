@@ -36,15 +36,7 @@ namespace ana {
 
   //-----------------------------------------------------------------------------
   Spectrum PRISMReweightableSpectrum::WeightedByErrors(Eigen::ArrayXd &w_arr) const {
-    //Hist hRet = Hist::Zero(fMat.cols() - 2);        
-    //for (int slice = 1; slice <= arr.size() - 2; slice++) {
-      //Eigen::ArrayXd row_arr = fMat.row(slice).array();
-      //Eigen::ArrayXd row_sqerrarr = fMatSumSq.row(slice).array();
-      //Hist row_h(Hist::Adopt(std::move(row_arr)));
-      //std::cout << "NDerr bin6 = " << row_h.GetBinError(6) << std::endl;
-      //hRet.Add(row_h, arr(slice));
 
-    //}
     Eigen::VectorXd w_vec = w_arr.matrix();
     Eigen::VectorXd w_vec_sq = (w_arr * w_arr).matrix();
     
@@ -59,6 +51,7 @@ namespace ana {
     PlusEqualsHelper(const PRISMReweightableSpectrum& rhs, int sign)
   {
     if(rhs.fMat.sum() == 0) return *this;
+    std::cout << "Adding or subtracting PRISMRWSpec!" << std::endl;
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum PRISMReweightableSpectrum with no POT or livetime."

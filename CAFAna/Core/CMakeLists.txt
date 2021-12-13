@@ -33,7 +33,6 @@ set(Core_header_files
   OscillatableSpectrum.h
   PRISMReweightableSpectrum.h
   Registry.h
-  Spectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h
