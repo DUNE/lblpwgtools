@@ -1,9 +1,9 @@
 set(scripts_to_build
-  #MakePRISMPredInterps
+  MakePRISMPredInterps
   #OffAxisEventRates
   #OffAxisNDCAFCombiner
-  #PRISMPrediction
-  #PRISM_4Flavour_dChi2Scan
+  PRISMPrediction
+  PRISM_4Flavour_dChi2Scan
   #PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
