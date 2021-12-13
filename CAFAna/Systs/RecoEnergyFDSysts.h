@@ -119,13 +119,16 @@ namespace ana
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
-                  sr->eRecoPi0,
+                  //sr->eRecoPi0,
+                  sr->eDepPi0,
                   sr->VisReco_NDFD);
 
       const double scale = 0.025 * sigma;
       if (sr->isFD) {
-        sr->eRecoPi0 += sr->eRecoPi0 * scale;
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale;
+        //sr->eRecoPi0 += sr->eRecoPi0 * scale;
+        sr->eDepPi0 += sr->eDepPi0 * scale;
+        //sr->VisReco_NDFD += sr->eRecoPi0 * scale;
+        sr->VisReco_NDFD += sr->eDepPi0 * scale;
         if (sr->isCC && abs(sr->nuPDG) == 12) {
           sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale;
           sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale;
@@ -148,13 +151,16 @@ namespace ana
                double& weight) const override {
       
       restore.Add(sr->RecoLepE_NDFD,
-                  sr->eRecoPi0,
+                  //sr->eRecoPi0,
+                  sr->eDepPi0,
                   sr->VisReco_NDFD);
 
       const double scale = 0.025 * sigma;
       if (sr->isFD) {
-        sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5);
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5); 
+        //sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5);
+        sr->eDepPi0 += sr->eDepPi0 * scale * pow(sr->eDepPi0, 0.5);
+        //sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5); 
+        sr->VisReco_NDFD += sr->eDepPi0 * scale * pow(sr->eDepPi0, 0.5); 
         if (sr->isCC && abs(sr->nuPDG) == 12) {
           sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
           sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
@@ -177,13 +183,16 @@ namespace ana
                double& weight) const override {
 
       restore.Add(sr->RecoLepE_NDFD,
-                  sr->eRecoPi0,
+                  //sr->eRecoPi0,
+                  sr->eDepPi0,
                   sr->VisReco_NDFD);
 
       const double scale = 0.025 * sigma;
       if (sr->isFD) {
-        sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        //sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->eDepPi0 += sr->eDepPi0 * scale * pow(sr->eDepPi0+0.1, -0.5);
+        //sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->VisReco_NDFD += sr->eDepPi0 * scale * pow(sr->eDepPi0+0.1, -0.5);
         if (sr->isCC && abs(sr->nuPDG) == 12) {
           sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
           sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
@@ -208,21 +217,32 @@ namespace ana
                caf::StandardRecord* sr,
                double& weight) const override {
     
-      restore.Add(sr->eRecoPip,
+      /*restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
-                  sr->eRecoP,
+                  sr->eRecoP,*/
+      restore.Add(sr->eDepPip,
+                  sr->eDepPim,
+                  sr->eDepP,
                   sr->VisReco_NDFD);
 
       const double scale = 0.05 * sigma;
       if (sr->isFD) {
-        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        /*if (sr->eRecoP < 0) sr->eRecoP = 0.;
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
         if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
-        const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        */
+        if (sr->eDepP < 0) sr->eDepP = 0.;
+        if (sr->eDepPim < 0) sr->eDepPim = 0.;
+        if (sr->eDepPip < 0) sr->eDepPip = 0.;
+        /*const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
         sr->eRecoPip += sr->eRecoPip * scale;
         sr->eRecoPim += sr->eRecoPim * scale;
-        sr->eRecoP += sr->eRecoP * scale;
+        sr->eRecoP += sr->eRecoP * scale;*/
+        const double sumE = sr->eDepPip + sr->eDepPim + sr->eDepP;
         sr->VisReco_NDFD += sumE * scale;
+        sr->eDepPip += sr->eDepPip * scale;
+        sr->eDepPim += sr->eDepPim * scale;
+        sr->eDepP += sr->eDepP * scale;
       }
     }
   };
@@ -240,20 +260,30 @@ namespace ana
                caf::StandardRecord* sr,
                double& weight) const override {
 
-      restore.Add(sr->eRecoPip,
+      /*restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
-                  sr->eRecoP,
+                  sr->eRecoP,*/
+      restore.Add(sr->eDepPip,
+                  sr->eDepPim,
+                  sr->eDepP,
                   sr->VisReco_NDFD);
 
       const double scale = 0.05 * sigma;
       if (sr->isFD) {
-        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        /*if (sr->eRecoP < 0) sr->eRecoP = 0.;
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
-        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
-        const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;*/
+        if (sr->eDepP < 0) sr->eDepP = 0.;
+        if (sr->eDepPim < 0) sr->eDepPim = 0.;
+        if (sr->eDepPip < 0) sr->eDepPip = 0.;
+        const double sumE = sr->eDepPip + sr->eDepPim + sr->eDepP;
+        sr->eDepPip += sr->eDepPip * scale * pow(sr->eDepPip, 0.5); // sumE before
+        sr->eDepPim += sr->eDepPim * scale * pow(sr->eDepPim, 0.5); // sumE
+        sr->eDepP += sr->eDepP * scale * pow(sr->eDepP, 0.5); // sumE
+        /*const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
         sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip, 0.5); // sumE before
         sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim, 0.5); // sumE
-        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP, 0.5); // sumE
+        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP, 0.5); // sumE*/
         sr->VisReco_NDFD += sumE * scale * pow(sumE, 0.5);
       }
     }
@@ -272,20 +302,30 @@ namespace ana
                caf::StandardRecord* sr,
                double& weight) const override {
 
-      restore.Add(sr->eRecoPip,
+      /*restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
-                  sr->eRecoP,
+                  sr->eRecoP,*/
+      restore.Add(sr->eDepPip,
+                  sr->eDepPim,
+                  sr->eDepP,
                   sr->VisReco_NDFD);
 
       const double scale = 0.05 * sigma;
       if (sr->isFD) {
-        if (sr->eRecoP < 0) sr->eRecoP = 0.;
+        /*if (sr->eRecoP < 0) sr->eRecoP = 0.;
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
-        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
-        const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        if (sr->eRecoPip < 0) sr->eRecoPip = 0.;*/
+        if (sr->eDepP < 0) sr->eDepP = 0.;
+        if (sr->eDepPim < 0) sr->eDepPim = 0.;
+        if (sr->eDepPip < 0) sr->eDepPip = 0.;
+        /*const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
         sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip+0.1, -0.5); // sumE
         sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim+0.1, -0.5); // sumE
-        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP+0.1, -0.5); // sumE
+        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP+0.1, -0.5); // sumE*/
+        const double sumE = sr->eDepPip + sr->eDepPim + sr->eDepP;
+        sr->eDepPip += sr->eDepPip * scale * pow(sr->eDepPip+0.1, -0.5); // sumE
+        sr->eDepPim += sr->eDepPim * scale * pow(sr->eDepPim+0.1, -0.5); // sumE
+        sr->eDepP += sr->eDepP * scale * pow(sr->eDepP+0.1, -0.5); // sumE
         sr->VisReco_NDFD += sumE * scale * pow(sumE+0.1, -0.5);
       }
     }
@@ -410,12 +450,15 @@ namespace ana
                caf::StandardRecord* sr, double& weight) const override
     {
       restore.Add(sr->RecoLepE_NDFD,
-                  sr->eRecoPi0,
+                  //sr->eRecoPi0,
+                  sr->eDepPi0,
                   sr->VisReco_NDFD);
       const double scale = .02*sigma;
       if (sr->isFD){
-        sr->VisReco_NDFD  += (sr->ePi0 - sr->eRecoPi0) * scale;
-        sr->eRecoPi0      += (sr->ePi0 - sr->eRecoPi0) * scale;
+        //sr->VisReco_NDFD  += (sr->ePi0 - sr->eRecoPi0) * scale;
+        //sr->eRecoPi0      += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->VisReco_NDFD  += (sr->ePi0 - sr->eDepPi0) * scale;
+        sr->eDepPi0       += (sr->ePi0 - sr->eDepPi0) * scale;
         if (sr->isCC && abs(sr->nuPDG)==12) {
           sr->VisReco_NDFD  += (sr->LepE - sr->RecoLepE_NDFD) * scale;
           sr->RecoLepE_NDFD += (sr->LepE - sr->RecoLepE_NDFD) * scale;
@@ -436,19 +479,29 @@ namespace ana
                caf::StandardRecord* sr, double& weight) const override
     {
       restore.Add(sr->VisReco_NDFD,
-                  sr->eRecoP,
+                  /*sr->eRecoP,
                   sr->eRecoPip,
-                  sr->eRecoPim);
+                  sr->eRecoPim);*/
+                  sr->eDepP,
+                  sr->eDepPip,
+                  sr->eDepPim);
       const double scale = .02*sigma;
       if (sr->isFD) {
-        if (sr->eRecoP < 0.) sr->eRecoP = 0.;
+        /*if (sr->eRecoP < 0.) sr->eRecoP = 0.;
         if (sr->eRecoPip < 0.) sr->eRecoPip = 0.;
-        if (sr->eRecoPim < 0.) sr->eRecoPim = 0.;
+        if (sr->eRecoPim < 0.) sr->eRecoPim = 0.;*/
+        if (sr->eDepP < 0.) sr->eDepP = 0.;
+        if (sr->eDepPip < 0.) sr->eDepPip = 0.;
+        if (sr->eDepPim < 0.) sr->eDepPim = 0.;
         const double trueSum = sr->ePip + sr->ePim + sr->eP;
-        const double recoSum = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
+        /*const double recoSum = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
         sr->eRecoPip += (sr->ePip - sr->eRecoPip) * scale;
         sr->eRecoPim += (sr->ePim - sr->eRecoPim) * scale;
-        sr->eRecoP   += (sr->eP   - sr->eRecoP)   * scale;
+        sr->eRecoP   += (sr->eP   - sr->eRecoP)   * scale;*/
+        const double recoSum = sr->eDepPip + sr->eDepPim + sr->eDepP;
+        sr->eDepPip += (sr->ePip - sr->eDepPip) * scale;
+        sr->eDepPim += (sr->ePim - sr->eDepPim) * scale;
+        sr->eDepP   += (sr->eP   - sr->eDepP)   * scale;
         sr->VisReco_NDFD += (trueSum - recoSum)   * scale;
       }
     }
