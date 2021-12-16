@@ -106,7 +106,7 @@ namespace ana
                   sr->RecoHadE_NDFD,
                   sr->RecoLepE_NDFD);
 
-      const double scale = 0.01 * sigma;
+      const double scale = 0.02 * sigma;
       if (sr->isFD) {
         // To match LBL TDR:
         // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
