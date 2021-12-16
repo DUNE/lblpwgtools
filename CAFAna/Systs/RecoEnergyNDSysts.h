@@ -29,15 +29,24 @@ namespace ana
                double& weight) const override {
   
       restore.Add(sr->VisReco_NDFD,
+                  sr->RecoHadE_NDFD,
                   sr->RecoLepE_NDFD);
 
       const double scale = 0.02 * sigma;
-      if (!sr->isFD) { // in the ND
-        if (sr->isCC && abs(sr->nuPDG) == 14) { // take away muon energy
-          sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale;
-        }
-        else if (sr->isCC && abs(sr->nuPDG) == 12) { // fine to include electron energy
-          sr->VisReco_NDFD += sr->VisReco_NDFD * scale; 
+      if (!sr->isFD) {
+        // To match FD:
+        // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
+        // by the "reconstructed hadronic energy".
+        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale;
+        // Also shift the hadronic energy variable, if we don't do this then shifted 
+        // plots of the reconstructed hadronic energy will not be different to nominal.
+        sr->RecoHadE_NDFD *= 1. + scale;
+        // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
+        // "reconstructed leptonic energy".
+        // Also shift the reconstructed leptonic energy itself.
+        if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
+          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale; 
+          sr->RecoLepE_NDFD *= 1. + scale;
         }
       }
     }
@@ -55,25 +64,33 @@ namespace ana
                double& weight) const override {
       
       restore.Add(sr->VisReco_NDFD,
+                  sr->RecoHadE_NDFD,
                   sr->RecoLepE_NDFD);
 
       const double scale = 0.01 * sigma;
-      if (!sr->isFD) { // in the ND
-        if (sr->isCC && abs(sr->nuPDG) == 14) { // take away muon energy
-          sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
-            pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD), 0.5);
+      if (!sr->isFD) {
+        // To match LBL TDR:
+        // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
+        // by the "reconstructed hadronic energy".
+        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
+          pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD), 0.5);
+        // Also shift the hadronic energy variable, if we don't do this then shifted 
+        // plots of the reconstructed hadronic energy will not be different to nominal.
+        sr->RecoHadE_NDFD += sr->RecoHadE_NDFD * scale * pow(sr->RecoHadE_NDFD, 0.5);
+        // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
+        // "reconstructed leptonic energy".
+        // Also shift the reconstructed leptonic energy itself.
+        if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
+          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
+          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
         }
-        else if (sr->isCC && abs(sr->nuPDG) == 12) { // fine to include electron energy
-          sr->VisReco_NDFD += (sr->VisReco_NDFD) * scale *
-            pow((sr->VisReco_NDFD), 0.5);
-        } 
       }
     }
   };
 
   extern const RecoEnergySqrtND kRecoEnergySqrtND;
 
-  // Total energy scale syst varying with sqrt of the energy
+  // Total energy scale syst varying with inverse sqrt of the energy
   class RecoEnergyInvSqrtND: public ISyst {
   public:
     RecoEnergyInvSqrtND() : ISyst("RecoEnergyInvSqrtND", "Inv Sqrt Total Energy Scale ND Syst") {}
@@ -83,17 +100,25 @@ namespace ana
                double& weight) const override {
 
       restore.Add(sr->VisReco_NDFD,
+                  sr->RecoHadE_NDFD,
                   sr->RecoLepE_NDFD);
 
-      const double scale = 0.02 * sigma;
-      if (!sr->isFD) { // in the ND
-        if (sr->isCC && abs(sr->nuPDG) == 14) { // take away muon energy
-          sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
-            pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD) + 0.1, -0.5);
-        }
-        else if (sr->isCC && abs(sr->nuPDG) == 12) { // fine to include electron energy
-          sr->VisReco_NDFD += (sr->VisReco_NDFD) * scale *
-            pow((sr->VisReco_NDFD + 0.1), -0.5);
+      const double scale = 0.01 * sigma;
+      if (!sr->isFD) {
+        // To match LBL TDR:
+        // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
+        // by the "reconstructed hadronic energy".
+        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
+          pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD+0.1), -0.5);
+        // Also shift the hadronic energy variable, if we don't do this then shifted 
+        // plots of the reconstructed hadronic energy will not be different to nominal.
+        sr->RecoHadE_NDFD += sr->RecoHadE_NDFD * scale * pow(sr->RecoHadE_NDFD+0.1, -0.5);
+        // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
+        // "reconstructed leptonic energy".
+        // Also shift the reconstructed leptonic energy itself.
+        if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
+          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
+          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
         }
       }
     }
