@@ -3,15 +3,12 @@
 //
 
 #include "CAFAna/Analysis/AnalysisVars.h"
-#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Experiment/ReactorExperiment.h"
-#include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-#include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
@@ -49,18 +46,14 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   scan.get<std::string>("projection_name", "EProxy");
   
   // default to 1 year
-  double POT = scan.get<double>("POT_years", 1) * POT120;
+  double POT = scan.get<double>("POT_years", 1) * 1.1e21; // POT120 = 1.1e21
   double POT_FD = POT * pot_fd_FVMassFactor;
   std::cout << "POT : " << POT << ", " << POT_FD << std::endl;
 
   bool use_PRISM = scan.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
 
-  //auto GOFps = scan.get<fhicl::ParameterSet>("GOF", {});
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
-
-  //bool fit_nuisance = GOFps.get<bool>("fit_nuisance", false);
-  //bool poisson_throw = GOFps.get<bool>("poisson_throw", false);
 
   std::vector<const IFitVar *> free_oscpars = GetOscVars(
     scan.get<std::vector<std::string>>("free_osc_params", {}));
@@ -337,10 +330,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::vector<double> x_scan;
   std::vector<double> y_scan;
-  //std::unique_ptr <TH1D> scan_hist_1D;
-  //std::unique_ptr <TH2D> scan_hist_2D;
-  TH1D *scan_hist_1D;
-  TH2D *scan_hist_2D;
+  std::unique_ptr<TH1D> scan_hist_1D;
+  std::unique_ptr<TH2D> scan_hist_2D;
 
   std::cout << "Create histograms to fill with minimisation result." << std::endl;
 
@@ -349,10 +340,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     const double x_low_bound = dmsq32_scale ? steps.at(0).at(1) * 1000 : steps.at(0).at(1);
     const double x_high_bound = dmsq32_scale ? steps.at(0).at(2) * 1000 : steps.at(0).at(2);
     std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
-    //scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
-    //                                       NXSteps, x_low_bound, x_high_bound);
-    scan_hist_1D = new TH1D("dchi2_1D", "dchi2_1D",
-                             NXSteps, x_low_bound, x_high_bound);
+    scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
+                                           NXSteps, x_low_bound, x_high_bound);
     scan_hist_1D->SetDirectory(nullptr);
     // place the scan points in vector
     for (int i = 0; i < scan_hist_1D->GetNbinsX(); i++) {
@@ -369,12 +358,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     const double y_high_bound = dmsq32_scale ? steps.at(1).at(2) * 1000 : steps.at(1).at(2);
     std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
     std::cout << NYSteps << ", " << y_low_bound << ", " << y_high_bound << std::endl;
-    //scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
-    //                                      NXSteps, x_low_bound, x_high_bound,
-    //                                      NYSteps, y_low_bound, y_high_bound);
-    scan_hist_2D = new TH2D("dchi2_2D", "dchi2_2D", 
-                            NXSteps, x_low_bound, x_high_bound,
-                            NYSteps, y_low_bound, y_high_bound);
+    scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
+                                          NXSteps, x_low_bound, x_high_bound,
+                                          NYSteps, y_low_bound, y_high_bound);
     scan_hist_2D->SetDirectory(nullptr);
     // place scan points in vector
     for (int i = 0; i < scan_hist_2D->GetNbinsX(); i++)
@@ -473,8 +459,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     
-    dir->WriteTObject(scan_hist_1D, "dChi2Scan");
-    //delete scan_hist_1D;
+    dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
   //-----------------------
   // Do the minimization 2D
@@ -507,15 +492,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       }
     }
     // Simply write Chi2 2D histogram
-    dir->WriteTObject(scan_hist_2D, "dChi2Scan");
-    //delete scan_hist_2D;
+    dir->WriteTObject(scan_hist_2D.get(), "dChi2Scan");
   }
 
   // Write total output file
   f.Write();
-  std::cout << "File written." << std::endl;
   f.Close();
-  std::cout << "File closed." << std::endl;
 }
 
 //-------------------------------------------

@@ -282,7 +282,6 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
 //-----------------------------------------------
 
-//std::unique_ptr<ReweightableSpectrum> &
 std::unique_ptr<PRISMReweightableSpectrum> & 
 PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
@@ -316,7 +315,6 @@ PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA) const {
   }
   return kNoSuchNDDataSpectrum;
 }
-//std::unique_ptr<ReweightableSpectrum> &
 std::unique_ptr<PRISMReweightableSpectrum> & 
 PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA) const {
   if (NDChannel.chan &
@@ -615,9 +613,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   // Start building MC components
   // Try doing background subtraction for MC as well, could be helpful for 
   // 'fake data' studies.
-  /*PRISMReweightableSpectrum NDSig = 
-    NDRunPlan.Weight(NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)),
-                     293, fOffPredictionAxis);*/
   PRISMReweightableSpectrum NDSig =
     NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictSyst(
                                        calc, (fVaryNDFDMCData ? shift : kNoShift)), 
@@ -627,9 +622,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   NDComps.emplace(kNDSig_293kA, NDSig); 
   NDComps.emplace(kNDSig2D_293kA, NDSig);
 
-  /*PRISMReweightableSpectrum NDSig_280kA = 
-    NDRunPlan.Weight(NDPrediction_280kA->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)),
-                     280, f280kAPredictionAxis);*/
   PRISMReweightableSpectrum NDSig_280kA =
     NDRunPlan.Weight(SetSpectrumErrors(NDPrediction_280kA->PredictSyst(
                                        calc, (fVaryNDFDMCData ? shift : kNoShift)),
@@ -641,11 +633,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
 
   // ND background subtraction:
   if (fNCCorrection) { // NC background subraction.
-    /*PRISMReweightableSpectrum NC = 
-      NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         Flavors::kAll, Current::kNC, Sign::kBoth),
-                       293, fOffPredictionAxis);*/
     PRISMReweightableSpectrum NC =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? shift : kNoShift),
@@ -658,11 +645,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDNCBkg_293kA);
     NDComps.at(kNDSig2D_293kA) -= NDComps.at(kNDNCBkg_293kA);
 
-    /*PRISMReweightableSpectrum NC_280kA = 
-      NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         Flavors::kAll, Current::kNC, Sign::kBoth),
-                       280, f280kAPredictionAxis);*/
     PRISMReweightableSpectrum NC_280kA =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction_280kA->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? kNoShift : shift),
@@ -676,11 +658,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   }
  
   if (fWLBCorrection) { // Wrong lepton background subraction.
-    /*PRISMReweightableSpectrum WLB = 
-      NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         NDWrongFlavor, Current::kCC, Sign::kBoth),
-                       293, fOffPredictionAxis);*/
     PRISMReweightableSpectrum WLB =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? kNoShift : shift),
@@ -692,11 +669,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWrongLepBkg_293kA);
     NDComps.at(kNDSig2D_293kA) -= NDComps.at(kNDWrongLepBkg_293kA);
 
-    /*PRISMReweightableSpectrum WLB_280kA = 
-      NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         NDWrongFlavor, Current::kCC, Sign::kBoth),
-                       280, f280kAPredictionAxis);*/
     PRISMReweightableSpectrum WLB_280kA =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction_280kA->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? kNoShift : shift),
@@ -710,11 +682,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   }
 
   if (fWSBCorrection) { // Wrong sign background subraction.
-    /*PRISMReweightableSpectrum WSB = 
-      NDRunPlan.Weight(NDPrediction->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         NDSigFlavor, Current::kCC, NDWrongSign),
-                       293, fOffPredictionAxis);*/
     PRISMReweightableSpectrum WSB =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? kNoShift : shift),
@@ -727,11 +694,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWSBkg_293kA);
     NDComps.at(kNDSig2D_293kA) -= NDComps.at(kNDWSBkg_293kA);
     
-    /*PRISMReweightableSpectrum WSB_280kA = 
-      NDRunPlan.Weight(NDPrediction_280kA->PredictComponentSyst(
-                         calc, (fVaryNDFDMCData ? kNoShift : shift),
-                         NDSigFlavor, Current::kCC, NDWrongSign),
-                       280, f280kAPredictionAxis);*/
     PRISMReweightableSpectrum WSB_280kA =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction_280kA->PredictComponentSyst(
                                          calc, (fVaryNDFDMCData ? kNoShift : shift),
@@ -986,7 +948,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
       Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
-    // Basically no contribution to stat error from FD MC.
+    // Basically no contribution to stat error from FD MC, so remove the line
+    // below from each background addition component.
     //sCovMat += GetDiagonalCovariance(Comps.at(kFDNCBkg), NDPOT, fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDNCBkg);
   }
@@ -1001,7 +964,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
       Comps.at(kPRISMMC) += Comps.at(kFDWrongLepBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWrongLepBkg);
-    //sCovMat += GetDiagonalCovariance(Comps.at(kFDWrongLepBkg), NDPOT, fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWrongLepBkg);
   }
 
@@ -1015,7 +977,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
       Comps.at(kPRISMMC) += Comps.at(kFDNuTauCCBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNuTauCCBkg);
-    //sCovMat += GetDiagonalCovariance(Comps.at(kFDNuTauCCBkg), NDPOT fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDNuTauCCBkg);
   }
 
@@ -1029,7 +990,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
       Comps.at(kPRISMMC) += Comps.at(kFDWSBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWSBkg);
-    //sCovMat += GetDiagonalCovariance(Comps.at(kFDWSBkg), NDPOT fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
   }
 
@@ -1043,7 +1003,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
       Comps.at(kPRISMMC) += Comps.at(kFDIntrinsicBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDIntrinsicBkg);
-    //sCovMat += GetDiagonalCovariance(Comps.at(kFDIntrinsicBkg), NDPOT, fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDIntrinsicBkg);
   }
 
@@ -1071,8 +1030,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   // At Flux correction to extrapolated PRISM.
   Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
   if (Comps.count(kNDMC_FDExtrap)) Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
-  // Does not contribute to error
-  //sCovMat += GetDiagonalCovariance(Comps.at(kFDFluxCorr), NDPOT, fAnalysisAxisFD);
  
   // Convert final covariance matrix into 2D spectrum
   Comps.emplace(kExtrapCovarMatrix, ToSpectrum(sCovMat, NDPOT));
