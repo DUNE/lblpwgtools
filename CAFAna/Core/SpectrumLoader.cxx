@@ -169,7 +169,7 @@ void SpectrumLoader::GoPRISM() {
   }
 
   // Full FileExposure calculated, so now begin file loop again.
-  //BeginAgain();
+  StartSecondFileLoop();
 
   fileIdx = -1;
   while (TFile *f = GetNextFile()) {

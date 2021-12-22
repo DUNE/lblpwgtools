@@ -524,13 +524,9 @@ namespace ana
     // Must be the base case of the recursion to use the cache. Otherwise we
     // can cache systematically shifted versions of our children, which is
     // wrong. Also, some calculators won't hash themselves.
-//<<<<<<< HEAD
-//    const bool canCache = !fDontUseCache && (hash != 0);
-//=======
     // Moreover, caching is not going to work with stan::math::vars
     // since they get reset every time Stan's log_prob() is called.
     const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
-//>>>>>>> origin
 
     const Key_t key = {flav, curr, sign};
     auto it = fNomCache->find(key);
@@ -646,64 +642,10 @@ namespace ana
                                                   Current::Current_t curr,
                                                   Sign::Sign_t sign) const
   {
-/*<<<<<<< HEAD
-    InitFits();
-
-    // Check that we're able to handle all the systs we were passed
-    for(auto& it: dp){
-      if(find_pred(it.first) == fPreds.end()){
-        std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << it.first->ShortName() << std::endl;
-        std::cout << "Handles: " << std::endl;
-        for(auto & p : fPreds){
-          std::cout << p.first->ShortName() << std::endl;
-        }
-        abort();
-      }
-      it.second.clear();
-    } // end for syst
-
-    ComponentDerivative(calc, Flavors::kNuEToNuE,    Current::kCC, Sign::kBoth, kNueSurv,  shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuEToNuMu,   Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuEToNuTau,  Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-
-    ComponentDerivative(calc, Flavors::kNuMuToNuE,   Current::kCC, Sign::kBoth, kNueApp,   shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuMuToNuMu,  Current::kCC, Sign::kBoth, kNumuSurv, shift, pot, dp);
-    ComponentDerivative(calc, Flavors::kNuMuToNuTau, Current::kCC, Sign::kBoth, kOther,    shift, pot, dp);
-
-    ComponentDerivative(calc, Flavors::kAll, Current::kNC, Sign::kBoth, kNC, shift, pot, dp);
-
-    // Simpler (much slower) implementation in terms of finite differences for
-    // test purposes
-    
-    const Spectrum p0 = PredictSyst(calc, shift);
-    TH1D* h0 = p0.ToTH1(pot);
-
-    const double dx = 1e-9;
-    for(auto& it: dp){
-      const ISyst* s =  it.first;
-      std::vector<double>& v = it.second;
-      SystShifts s2 = shift;
-      s2.SetShift(s, s2.GetShift(s)+dx);
-
-      const Spectrum p1 = PredictSyst(calc, s2);
-
-      TH1D* h1 = p1.ToTH1(pot);
-
-      v.resize(h1->GetNbinsX()+2);
-      for(int i = 0; i < h1->GetNbinsX()+2; ++i){
-        v[i] = (h1->GetBinContent(i) - h0->GetBinContent(i))/dx;
-      }
-
-      HistCache::Delete(h1);
-    }
-
-    HistCache::Delete(h0);
-    */
-//=======
     return _PredictComponentSyst(calc, shift, flav, curr, sign);
-//>>>>>>> origin
   }
 
+  //----------------------------------------------------------------------
   void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();

@@ -9,7 +9,6 @@
 #include "CAFAnaCore/CAFAna/Core/IFileSource.h"
 
 #include "CAFAna/Core/Cut.h"
-//#include "CAFAna/Core/IFileSource.h"
 #include "CAFAna/Core/MultiVar.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
@@ -95,19 +94,19 @@ namespace ana
     /// Forwards to \ref fFileSource but also accumulates POT and livetime
     TFile* GetNextFile();
 
-    /// Returns the \ref fFileSource iterator back to the beginning.
-    //void BeginAgain() { fFileSource->BeginAgain(); }
-
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
-
-    //DataSource fSource;
-
-    //double fThinFactor;
+    // Yeah I know... PRISM messing up the CAFAna code again
+    std::unique_ptr<IFileSource> fFileSource2;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 
     double fPOT; ///< Accumulated by calls to \ref GetNextFile
+
+    /// Flag which starts looping through the second list of the same files.
+    /// Needed for getting PRISM weightings correct.
+    bool fSecondFileLoop;
+    void StartSecondFileLoop() { fSecondFileLoop = true; }
 
     /// \brief Helper class for \ref SpectrumLoaderBase
     ///

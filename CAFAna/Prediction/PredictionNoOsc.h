@@ -3,6 +3,8 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
+//#include "CAFAna/PRISM/PRISMUtils.h"
+
 #include "CAFAna/Core/Loaders.h"
 
 namespace ana {
@@ -21,6 +23,8 @@ public:
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
+  double POT() { return fSpectrum.POT(); }
+
   void OverridePOT(double pot) {
     fSpectrum.OverridePOT(pot);
     fSpectrumNC.OverridePOT(pot);
@@ -29,6 +33,8 @@ public:
     fSpectrumNue.OverridePOT(pot);
     fSpectrumNuebar.OverridePOT(pot);
   }
+
+  void SetNoOscErrors(double pot);
 
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;

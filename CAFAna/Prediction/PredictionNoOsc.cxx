@@ -8,6 +8,8 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/PRISM/PRISMUtils.h"
+
 #include "TDirectory.h"
 #include "TObjString.h"
 
@@ -73,6 +75,16 @@ namespace ana
     if(flav & kNuEToNuE   && sign & kAntiNu) ret += fSpectrumNuebar;
 
     return ret;
+  }
+
+  //----------------------------------------------------------------------
+  void PredictionNoOsc::SetNoOscErrors(double pot) {
+    fSpectrum = SetSpectrumErrors(fSpectrum, pot);
+    fSpectrumNC = SetSpectrumErrors(fSpectrumNC, pot);  
+    fSpectrumNumu = SetSpectrumErrors(fSpectrumNumu, pot);
+    fSpectrumNumubar = SetSpectrumErrors(fSpectrumNumubar, pot);
+    fSpectrumNue = SetSpectrumErrors(fSpectrumNue, pot);
+    fSpectrumNuebar = SetSpectrumErrors(fSpectrumNuebar, pot);
   }
 
   //----------------------------------------------------------------------

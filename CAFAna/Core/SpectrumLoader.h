@@ -49,14 +49,8 @@ namespace ana
     SpectrumLoader(const SpectrumLoader&) = delete;
     SpectrumLoader& operator=(const SpectrumLoader&) = delete;
 
-//<<<<<<< HEAD
-    //void AccumulateExposures(const caf::SRSpill* spill) override;
-
-    //virtual void HandleFile(TFile* f, Progress* prog = 0);
     virtual void HandleFile(TFile* f, Progress* prog = 0, TFile *fpotfriend = nullptr);
-//=======
 //    virtual void HandleFile(TFile* f, Progress* prog = 0);
-//>>>>>>> origin
 
     virtual void HandleRecord(caf::StandardRecord* sr);
 

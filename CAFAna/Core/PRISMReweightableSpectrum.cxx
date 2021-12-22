@@ -51,7 +51,6 @@ namespace ana {
     PlusEqualsHelper(const PRISMReweightableSpectrum& rhs, int sign)
   {
     if(rhs.fMat.sum() == 0) return *this;
-    std::cout << "Adding or subtracting PRISMRWSpec!" << std::endl;
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum PRISMReweightableSpectrum with no POT or livetime."
@@ -159,19 +158,29 @@ namespace ana {
 
     TH2D* spect = (TH2D*)dir->Get("hist");
     assert(spect);
-    // Hist for SumSq matrix
-    TH2D *spect_err = (TH2D*)spect->Clone("hist_err");
-    spect_err->Clear();
-    for (int x = 1; x <= spect_err->GetXaxis()->GetNbins(); x++) {
-      for (int y = 1; y <= spect_err->GetYaxis()->GetNbins(); y++) {
-        spect_err->SetBinContent(x, y, std::pow(spect->GetBinError(x, y), 2));
-      }
-    }
 
     TH1* hPot = (TH1*)dir->Get("pot");
     assert(hPot);
     TH1* hLivetime = (TH1*)dir->Get("livetime");
     assert(hLivetime);
+
+
+    // Hist for SumSq matrix
+    std::unique_ptr<TH2D> spect_err = std::unique_ptr<TH2D>(
+                                        (TH2D*)spect->Clone("hist_err"));
+    spect_err->SetDirectory(nullptr);
+    spect_err->Scale(hPot->Integral(0, -1));
+    
+    for (int x = 1; x <= spect_err->GetXaxis()->GetNbins(); x++) {
+      for (int y = 1; y <= spect_err->GetYaxis()->GetNbins(); y++) {
+        double err = std::sqrt(spect_err->GetBinContent(x, y));
+        double frac_err;
+        if (std::isnormal(spect_err->GetBinContent(x, y))) {
+          frac_err = err / spect_err->GetBinContent(x, y);
+        } else { frac_err = 0; }
+        spect_err->SetBinContent(x, y, std::pow(frac_err * spect->GetBinContent(x, y), 2));
+      }
+    }
 
     std::vector<std::string> labels, labelsy;
     std::vector<Binning> bins, binsy;

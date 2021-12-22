@@ -208,14 +208,13 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
                                                   spec.GetBinnings());
 
   // Sadly think I need to do some stuff with ROOT to get error matrix.
-  //std::unique_ptr<TH1> h_err = std::unique_ptr<TH1>(spec.ToTH1(POT));
-  std::unique_ptr<TH2> h_err = std::unique_ptr<TH2>(spec.ToTH2(POT));
+  std::unique_ptr<TH1> h_err = std::unique_ptr<TH1>(spec.ToTH1(POT));
   Eigen::MatrixXd err_mat = Eigen::MatrixXd::Zero(spec_mat.rows(), spec_mat.cols());
   if (spec.GetBinnings().size() == 2) {
     for (int col = 1; col <= (spec_mat.cols() - 2); col++) {
       for (int row = 1; row <= (spec_mat.rows() - 2); row++) {
-     //err_mat(row, col) = std::pow(h_err->GetBinError(row + (col - 1) * (spec_mat.rows() - 2)), 2);
-        err_mat(row, col) = std::pow(h_err->GetBinError(col, row), 2);
+        double err = h_err->GetBinError(row + (col - 1) * (spec_mat.rows() - 2));
+        err_mat(row, col) = std::pow(err * (POT/spec.POT()), 2); // want error from MC
       }
     }
   } else if (spec.GetBinnings().size() == 3) {
@@ -226,7 +225,7 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
   LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1));
 
   PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(err_mat), 
-                                   anaAxis, weightAxis, POT, 0);
+                                   anaAxis, weightAxis, POT, 0); // POT
 
   return rwspec;
 }
@@ -254,7 +253,29 @@ inline Spectrum ToSpectrum(ReweightableSpectrum const &rwspec, double pot) {
   LabelsAndBins spec_LBs(labels, bins);
 
   Spectrum ret(std::move(arr), spec_LBs, pot, 0);
-  return ret.AsimovData(pot);  
+  return ret;  
+}
+
+//-----------------------------------
+inline Spectrum SetSpectrumErrors(Spectrum const &spec, double mcpot) {
+
+  Eigen::ArrayXd spec_arr = spec.GetEigen(spec.POT()); // arr for POT = 1
+  Eigen::ArrayXd spec_arr_mc = spec.GetEigen(mcpot); // arr at original pot
+  Eigen::ArrayXd spec_sumsq(spec_arr.size());
+  spec_sumsq.setZero();
+
+  for (int bin = 1; bin <= spec_arr.size() - 2; bin++) {
+    double spec_err = std::sqrt(spec_arr_mc(bin));
+    double frac_err;
+    if (std::isnormal(spec_arr_mc(bin))) {
+      frac_err = spec_err / spec_arr_mc(bin);
+    } else { frac_err = 0; }
+    spec_sumsq(bin) = std::pow(frac_err * spec_arr(bin), 2);
+  }
+
+  LabelsAndBins spec_LBs(spec.GetLabels(), spec.GetBinnings());
+  return Spectrum(std::move(spec_arr), std::move(spec_sumsq), spec_LBs, spec.POT(), 0); 
+
 }
 
 } // namespace ana
