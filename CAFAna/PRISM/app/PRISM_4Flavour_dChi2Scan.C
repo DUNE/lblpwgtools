@@ -11,8 +11,6 @@
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-//#include "CAFAna/Fit/MinuitFitter.h"
-
 #include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
@@ -251,7 +249,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   CombExpts.Add(Expts.back().get());
 
   // Try defining extrapolator object before channel loop
-  NDFD_Matrix SmearMatrices(RegFactorExtrap);
+  NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
 
   for (auto const ch : Channels) {
@@ -339,8 +337,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::vector<double> x_scan;
   std::vector<double> y_scan;
-  std::unique_ptr <TH1D> scan_hist_1D;
-  std::unique_ptr <TH2D> scan_hist_2D;
+  //std::unique_ptr <TH1D> scan_hist_1D;
+  //std::unique_ptr <TH2D> scan_hist_2D;
+  TH1D *scan_hist_1D;
+  TH2D *scan_hist_2D;
 
   std::cout << "Create histograms to fill with minimisation result." << std::endl;
 
@@ -349,9 +349,11 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     const double x_low_bound = dmsq32_scale ? steps.at(0).at(1) * 1000 : steps.at(0).at(1);
     const double x_high_bound = dmsq32_scale ? steps.at(0).at(2) * 1000 : steps.at(0).at(2);
     std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
-    scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
-                                           NXSteps, x_low_bound, x_high_bound);
-
+    //scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
+    //                                       NXSteps, x_low_bound, x_high_bound);
+    scan_hist_1D = new TH1D("dchi2_1D", "dchi2_1D",
+                             NXSteps, x_low_bound, x_high_bound);
+    scan_hist_1D->SetDirectory(nullptr);
     // place the scan points in vector
     for (int i = 0; i < scan_hist_1D->GetNbinsX(); i++) {
       x_scan.emplace_back(scan_hist_1D->GetXaxis()->GetBinCenter(i + 1));
@@ -367,10 +369,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     const double y_high_bound = dmsq32_scale ? steps.at(1).at(2) * 1000 : steps.at(1).at(2);
     std::cout << NXSteps << ", " << x_low_bound << ", " << x_high_bound << std::endl;
     std::cout << NYSteps << ", " << y_low_bound << ", " << y_high_bound << std::endl;
-    scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
-                                          NXSteps, x_low_bound, x_high_bound,
-                                          NYSteps, y_low_bound, y_high_bound);
-
+    //scan_hist_2D = std::make_unique<TH2D>("dchi2_2D", "dchi2_2D",
+    //                                      NXSteps, x_low_bound, x_high_bound,
+    //                                      NYSteps, y_low_bound, y_high_bound);
+    scan_hist_2D = new TH2D("dchi2_2D", "dchi2_2D", 
+                            NXSteps, x_low_bound, x_high_bound,
+                            NYSteps, y_low_bound, y_high_bound);
+    scan_hist_2D->SetDirectory(nullptr);
     // place scan points in vector
     for (int i = 0; i < scan_hist_2D->GetNbinsX(); i++)
       x_scan.emplace_back(scan_hist_2D->GetXaxis()->GetBinCenter(i + 1));
@@ -432,10 +437,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts;
       //const SeedList &seedPts = SeedList(); //oscSeeds
-      //double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
-      /*std::unique_ptr<MinuitFitSummary>*/auto FitSummary = fitter.Fit(calc_fit, bestSysts, 
-                                                     oscSeeds, {}, MinuitFitter::kVerbose);
-      double chi = FitSummary->EvalMetricVal();
+      double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, 
+                              {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
       scan_hist_1D->Fill(x, chi);
       auto end_fit = std::chrono::system_clock::now();
@@ -469,10 +472,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    std::cout << "Bestfit parameter values: " <<
-      scan_hist_1D->GetXaxis()->GetBinCenter(minx) << std::endl;
     
-    dir->WriteTObject(scan_hist_1D.release(), "dChi2Scan");
+    dir->WriteTObject(scan_hist_1D, "dChi2Scan");
+    //delete scan_hist_1D;
   }
   //-----------------------
   // Do the minimization 2D
@@ -492,9 +494,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         SystShifts bestSysts;
         //const SeedList &seedPts = SeedList();
         
-        //double chi = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
-        auto FitSummary = fitter.Fit(calc, bestSysts, oscSeeds, {}, MinuitFitter::kVerbose);
-        double chi = FitSummary->EvalMetricVal();
+        double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
+                                {}, MinuitFitter::kVerbose)->EvalMetricVal();
         // fill hist
         scan_hist_2D->Fill(x, y, chi);
         auto end_fit = std::chrono::system_clock::now();
@@ -506,11 +507,15 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       }
     }
     // Simply write Chi2 2D histogram
-    dir->WriteTObject(scan_hist_2D.release(), "dChi2Scan");
+    dir->WriteTObject(scan_hist_2D, "dChi2Scan");
+    //delete scan_hist_2D;
   }
 
   // Write total output file
   f.Write();
+  std::cout << "File written." << std::endl;
+  f.Close();
+  std::cout << "File closed." << std::endl;
 }
 
 //-------------------------------------------

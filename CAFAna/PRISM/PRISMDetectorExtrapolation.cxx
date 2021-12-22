@@ -12,8 +12,7 @@ namespace ana {
 // Class for ND and FD detector extrapolation matrices:
 // ----------------------------------------------------
 
-NDFD_Matrix::NDFD_Matrix(double reg, bool optreg) : fRegFactor(reg),
-                         hNumuNueCorr(nullptr), fOptimizeReg(optreg) {
+NDFD_Matrix::NDFD_Matrix() {
   fMatrixND = nullptr;
   fMatrixFD = nullptr;
 
@@ -23,16 +22,11 @@ NDFD_Matrix::NDFD_Matrix(double reg, bool optreg) : fRegFactor(reg),
   fNDExtrap_280kA = Eigen::MatrixXd();
   fErrorMat_293kA = Eigen::MatrixXd();
   fErrorMat_280kA = Eigen::MatrixXd();
-
 }
 
 //-----------------------------------------------------
 
-NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
-                        fRegFactor(MatPred.fRegFactor),
-                        hNumuNueCorr(nullptr),  
-                        fOptimizeReg(MatPred.fOptimizeReg) {
-  std::cout << "Copying NDFD_Matrix" << std::endl;
+NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) {
   fMatrixND = MatPred.fMatrixND;
   fMatrixFD = MatPred.fMatrixFD;
 
@@ -42,35 +36,8 @@ NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) :
   fNDExtrap_280kA = MatPred.fNDExtrap_280kA;
   fErrorMat_293kA = MatPred.fErrorMat_293kA;
   fErrorMat_280kA = MatPred.fErrorMat_280kA;
+  vNumuNueCorr = MatPred.vNumuNueCorr;
 } 
-
-//-----------------------------------------------------
-
-NDFD_Matrix::NDFD_Matrix(NDFD_Matrix &&MatPred) noexcept :
-                         fRegFactor(MatPred.fRegFactor),
-                         hNumuNueCorr(nullptr),
-                         fOptimizeReg(MatPred.fOptimizeReg) {
-
-  std::cout << "Moving NDFD_Matrix" << std::endl;
-  hMatrixND = std::move(MatPred.hMatrixND);
-  hMatrixFD = std::move(MatPred.hMatrixFD);
-  hNumuNueCorr = std::move(MatPred.hNumuNueCorr);
-
-  fMatrixND = std::move(MatPred.fMatrixND);
-  fMatrixFD = std::move(MatPred.fMatrixFD);
-
-  fNDExtrap_293kA = std::move(MatPred.fNDExtrap_293kA);
-  fNDExtrap_280kA = std::move(MatPred.fNDExtrap_280kA);
-
-  MatPred.hNumuNueCorr = nullptr;
-
-  MatPred.fMatrixND = nullptr;
-  MatPred.fMatrixFD = nullptr;
-
-  MatPred.fRegFactor = 0;
-  MatPred.fOptimizeReg = 0;
-
-}
 
 //-----------------------------------------------------
 
@@ -86,6 +53,7 @@ void NDFD_Matrix::Initialize(PredictionInterp const *ND,
 
   fMatrixND = ND;
   fMatrixFD = FD;
+  IsNue = false;
 }
 
 //-----------------------------------------------------
@@ -164,49 +132,6 @@ void NDFD_Matrix::NormaliseETrue(Eigen::MatrixXd* MatrixND, Eigen::MatrixXd* Mat
 
 //-----------------------------------------------------
 
-Eigen::MatrixXd NDFD_Matrix::GetL1NormReg(int truebins, TAxis *trueaxis) const {
-  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(truebins, truebins);
-  // Reg matrix with ... 1 -1 ... pattern
-  // m cols and m-1 rows
-  for (int row_it = 0; row_it < truebins - 1; row_it++) {
-    RegMatrix(row_it, row_it) = fRegFactor;
-    RegMatrix(row_it, row_it + 1) = -fRegFactor;
-  }
-  // weight by bin width to account for non-uniform binning
-  for (int col_it = 0; col_it < truebins; col_it++) {
-    double width = trueaxis->GetBinUpEdge(col_it + 1) - 
-                   trueaxis->GetBinLowEdge(col_it + 1);
-    for (int row_it = 0; row_it < truebins - 1; row_it++) {
-      RegMatrix(row_it, col_it) *= (1/width);
-    }
-  } 
-  return RegMatrix;
-}
-
-//-----------------------------------------------------
-
-Eigen::MatrixXd NDFD_Matrix::GetL2NormReg(int truebins, TAxis *trueaxis) const {
-  Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(truebins, truebins);
-  // Reg matrix with ... 1 -2 1 ... pattern
-  // m cols and m-2 rows
-  for (int row_it = 0; row_it < truebins - 2; row_it++) {
-    RegMatrix(row_it, row_it) = fRegFactor;
-    RegMatrix(row_it, row_it + 1) = (-2 * fRegFactor);
-    RegMatrix(row_it, row_it + 2) = fRegFactor; 
-  }
-  // weight by bin width to account for non-uniform binning
-  for (int col_it = 0; col_it < truebins; col_it++) {
-    double width = trueaxis->GetBinUpEdge(col_it + 1) -
-                   trueaxis->GetBinLowEdge(col_it + 1);
-    for (int row_it = 0; row_it < truebins - 2; row_it++) {
-      RegMatrix(row_it, col_it) *= (1/width);
-    }
-  }
-  return RegMatrix;
-}
-
-//-----------------------------------------------------
-
 void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
                                     double POT, const int kA, Eigen::ArrayXd&& weights,
                                     osc::IOscCalc *calc, ana::SystShifts shift,
@@ -265,10 +190,9 @@ void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
     // Build covariance matrix for this slice so we can propogate uncertainty:
     Eigen::MatrixXd CovMatRec = Eigen::MatrixXd::Zero(NDERec.size(), NDERec.size());
     for (int col = 0; col < CovMatRec.cols(); col++) {
-      if (!std::isnormal(NDERec(col))) {
-        CovMatRec(col, col) = 1E-5;
-      } else {
-        ///CovMatRec(row_it, row_it) = NDERec(row_it); //error = sqrtN
+      if (!std::isnormal(PRISMND_SumSq(slice + 1, col + 1))) {
+        CovMatRec(col, col) = 1E-10;
+      } else { 
         CovMatRec(col, col) = PRISMND_SumSq(slice + 1, col + 1);
       }
     }
@@ -279,14 +203,14 @@ void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
     // Tikhonov regularisation is uneccessary, just least square unfold!
     Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
                         MatrixND_block.transpose() * invCovMatRec;
-    
+ 
     Eigen::VectorXd NDETrue = D * NDERec;
     // Correct for nue/numu x-sec differences if doing appearance measurement.
-    if (hNumuNueCorr) { // If we are doing nue appearance...
+    if (IsNue) { // If we are doing nue appearance...
       for (int bin = 0; bin < NDETrue.size(); bin++) {
-        NDETrue(bin) *= hNumuNueCorr->GetBinContent(bin + 1);
+        NDETrue(bin) *= vNumuNueCorr(bin + 1);
       }
-    }
+    } 
 
     // Cov Mat for true energy, propogated through Tik reg
     Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
@@ -300,7 +224,6 @@ void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
 
     for (int ebin = 1; ebin <= (fNDExtrap->cols() - 2); ebin++) { 
       (*fNDExtrap)(slice + 1, ebin) = FDERec(ebin - 1);
-      //double varExtrap = pow(CovMatExtrap(ebin - 1, ebin - 1), 0.5);
       double varExtrap = CovMatExtrap(ebin - 1, ebin - 1);
       (*fErrorMat)(slice + 1, ebin) = varExtrap;
     }

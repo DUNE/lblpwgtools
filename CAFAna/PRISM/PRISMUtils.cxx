@@ -119,8 +119,6 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
-    if (!IsNu) std::cout << "Is NUB!!" << std::endl;
-    if (IsNu) std::cout << "Is Nu" << std::endl;
     bool IsND = IsNDConfig(it);
     bool IsND280kA = IsND280kAConfig(it);
 

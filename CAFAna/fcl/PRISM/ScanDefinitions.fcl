@@ -8,7 +8,7 @@ ScanDefinitions: {
     dmsq23_coarse: [
       {
           name: dmsq32
-          scan_steps:  [10, 2.30E-3, 2.55E-3]
+          scan_steps:  [1, 2.30E-3, 2.55E-3]
       }
     ]
     ssth23_dmsq23_coarse: [

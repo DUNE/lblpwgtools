@@ -35,10 +35,9 @@ class NDFD_Matrix {
 
 public:
   
-  NDFD_Matrix(double reg, bool optreg = false);
+  NDFD_Matrix();
 
   NDFD_Matrix(const NDFD_Matrix &MatPreds);
-  NDFD_Matrix(NDFD_Matrix &&MatPreds) noexcept;
 
   ~NDFD_Matrix();
 
@@ -63,13 +62,10 @@ public:
   Eigen::MatrixXd GetCovMat_293kA() const;
   Eigen::MatrixXd GetCovMat_280kA() const;
 
-  // Get regularisation matrices
-  Eigen::MatrixXd GetL1NormReg(int truebins, TAxis *trueaxis) const;
-  Eigen::MatrixXd GetL2NormReg(int truebins, TAxis *trueaxis) const;
-
-  void SetRegFactor(double reg) { fRegFactor = reg; }
-
-  void SetNumuNueCorr(TH1 *h) const { hNumuNueCorr = std::unique_ptr<TH1>(h); }
+  void SetNumuNueCorr(const Eigen::ArrayXd&& ratio) const { 
+    vNumuNueCorr = std::move(ratio);
+    IsNue = true;
+   }
 
   // Extrapolate ND PRISM pred to FD using Eigen
   // This function is becoming slightly monsterous...
@@ -88,20 +84,18 @@ public:
 
 protected:
 
-  double fRegFactor;
+  mutable bool IsNue;
   mutable Eigen::MatrixXd hMatrixND;
   mutable Eigen::MatrixXd hMatrixFD;
-
   PredictionInterp const *fMatrixND;
   PredictionInterp const *fMatrixFD;
   mutable Eigen::MatrixXd fNDExtrap_293kA;
   mutable Eigen::MatrixXd fNDExtrap_280kA;
-  mutable Eigen::MatrixXd fErrorMat_293kA; // Not a covariance matrix, just a map of errors.
-  mutable Eigen::MatrixXd fErrorMat_280kA; // Not a covariance matrix, just a map of errors.
+  mutable Eigen::MatrixXd fErrorMat_293kA; // Not a covariance matrix, just a map of sq errors.
+  mutable Eigen::MatrixXd fErrorMat_280kA; // Not a covariance matrix, just a map of sq errors.
   mutable Eigen::MatrixXd hCovMat_293kA;
   mutable Eigen::MatrixXd hCovMat_280kA;
-  mutable std::unique_ptr<TH1> hNumuNueCorr;
-  mutable bool fOptimizeReg;
+  mutable Eigen::ArrayXd vNumuNueCorr;
 };
 
 } // namespace ana
