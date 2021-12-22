@@ -56,6 +56,33 @@ namespace ana {
     fNDselected_280kA = NDsel_280kA;
     fFDunselected = FDunsel;
     fFDselected = FDsel;
+
+    osc::NoOscillations no;
+    auto NDPred = fNDunselected_293kA->Predict(&no); 
+
+    // WARNING: Not set up for 2D preds!
+    std::vector<Binning> bins = NDPred.GetBinnings();
+    int NAnaElements, NOAElements; 
+    if (NDPred.NDimensions() == 2) {
+      NAnaElements = bins.at(0).NBins();
+      NOAElements = bins.at(1).NBins();
+    } else { // is 2D pred, not done yet. 
+      abort();
+    }
+    std::vector<double> NDE_293kA, NDE_280kA;
+    int it(0);
+    while (it < NAnaElements) {
+      NDE_293kA.push_back(0);
+      NDE_280kA.push_back(0);
+      FDefficiency.push_back(0);
+      it++;
+    }
+    it = 0;
+    while (it < NOAElements) {
+      NDefficiency_293kA.push_back(NDE_293kA);
+      NDefficiency_280kA.push_back(NDE_280kA);
+      it++;
+    }
   }
 
   //----------------------------------------------------
@@ -127,7 +154,7 @@ namespace ana {
           SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
         }
       }
-      NDefficiency_293kA.push_back(SliceEfficiency);
+      NDefficiency_293kA.at(slice - 1) = SliceEfficiency;
     }
   
     // Efficiency for 280kA sample:
@@ -141,16 +168,16 @@ namespace ana {
           SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0 
         }
       }
-      NDefficiency_280kA.push_back(SliceEfficiency);
+      NDefficiency_280kA.at(slice - 1) = SliceEfficiency;
     }
   
     // Calculate FD efficiency
     for (int ebin = 1; ebin <= (vFDselected.size() - 2); ebin++) { 
       double FDbin_eff = vFDselected(ebin) / vFDunselected(ebin);
       if (std::isnormal(FDbin_eff)) {
-        FDefficiency.push_back(FDbin_eff);
+        FDefficiency.at(ebin - 1) = FDbin_eff;
       } else {
-        FDefficiency.push_back(1E-6);
+        FDefficiency.at(ebin - 1) = 1E-6;
       }
     }
   }

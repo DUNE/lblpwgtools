@@ -83,7 +83,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               << std::endl;
     States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs->Close(); // TEMPORARY HACK, UNCOMMENT WHEN FIXED
+    fs->Close(); 
   }
 
   PRISMStateBlob &state = States[state_file];
@@ -190,7 +190,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
 
   // Try defining extrapolator object before channel loop
-  NDFD_Matrix SmearMatrices(RegFactorExtrap);
+  NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
 
   for (auto const ch : Channels) {
@@ -223,49 +223,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use. 
-    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
-    if (FarDetDataPred.NDimensions() == 1) {
-      for (int bin_it = 1; bin_it <= DataPred->GetXaxis()->GetNbins(); bin_it++) {
-        DataPred->SetBinError(bin_it, sqrt(DataPred->GetBinContent(bin_it)));
-      }
-    } else if (FarDetDataPred.NDimensions() == 2) {
-      for (int x_it = 1; x_it <= DataPred->GetXaxis()->GetNbins(); x_it++) {
-        for (int y_it = 1; y_it <= DataPred->GetYaxis()->GetNbins(); y_it++) {
-          double be = sqrt(DataPred->GetBinContent(x_it, y_it));
-          DataPred->SetBinError(x_it, y_it, be);
-        }
-      }
-    }
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
-
-    //----------------------------------------------------------
-    // Probably redundant now, may remove in the future.
-    // Disappearance: non_swap oscillates numus away.
-    // Appearance: non_swap looks at the intrinsic nues.
-    TH1 *Data_nonswap = state.FarDetData_nonswap[FDfdConfig_enum]
-                              ->Oscillated(calc, 
-                                           (IsNueConfig(FDConfig_enum) ? osc_to : osc_from), 
-                                           osc_to).ToTHX(POT_FD);
-    Data_nonswap->Scale(1, "width");
-    chan_dir->WriteTObject(Data_nonswap, "Data_nonswap_component");
-    Data_nonswap->SetDirectory(nullptr); 
-
-    if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
-      TH1 *Data_nueswap = state.FarDetData_nueswap[FDfdConfig_enum]
-                              ->Oscillated(calc, osc_from, osc_to)
-                              .ToTHX(POT_FD);
-      if (Data_nueswap->Integral() > 0) {
-        Data_nueswap->Scale(1, "width");
-        chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
-      }
-      Data_nueswap->SetDirectory(nullptr);
-    }
-  
-    //-------------------------------------------------------------
-
+ 
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
@@ -274,10 +237,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
  
     // MC efficiency correction
-    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                            state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                            state.NDUnselTruePredInterps[kND_280kA_nu].get(),
-                            state.NDSelTruePredInterps[kND_280kA_nu].get(), 
+    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
+                            state.NDSelTruePredInterps[NDConfig_293kA].get(),
+                            state.NDUnselTruePredInterps[NDConfig_280kA].get(),
+                            state.NDSelTruePredInterps[NDConfig_280kA].get(), 
                             state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
                             state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection

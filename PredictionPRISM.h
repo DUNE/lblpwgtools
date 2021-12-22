@@ -6,6 +6,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
+#include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
 #include "CAFAna/Core/PRISMReweightableSpectrum.h"
@@ -239,7 +240,7 @@ public:
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
   HistAxis fFluxMatcherCorrectionAxes;
-
+  
   PredictionPRISM(const HistAxis &AnalysisAxisND, 
                   const HistAxis &AnalysisAxisFD, 
                   const HistAxis &NDOffAxis,
@@ -254,7 +255,6 @@ public:
   void Initialize();
 
   ~PredictionPRISM() {
-    std::cout << "Destroying PredictionPRISM." << std::endl;
     fFluxMatcher = nullptr;
     fNDFD_Matrix = nullptr;
     fMCEffCorrection = nullptr;
@@ -307,6 +307,8 @@ public:
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
 
   double fDefaultOffAxisPOT;
+
+  void SetDefaultOffAxisPOT(double pot) { fDefaultOffAxisPOT = pot; }
 
   bool fNCCorrection = false;
   bool fWSBCorrection = false;
