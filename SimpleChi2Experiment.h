@@ -99,15 +99,16 @@ public:
     if (fPOTFD == 0) {
       fPOTFD = Data.POT();
     }
-    fData = Data.ToTH1(fPOTFD);
-    fData_vec = GetEigenFlatVector(fData);
+    std::unique_ptr<TH1> hData = std::unique_ptr<TH1>(Data.ToTH1(fPOTFD));
+    Eigen::VectorXd fData_vecraw = Data.GetEigen(fPOTFD).matrix();
+    fData_vec = fData_vecraw.segment(1, fData_vecraw.size() - 2);
 
     fPOTND = NDPOT;
 
     fMatchChannel = match_chan;
 
     if (erange.first != -std::numeric_limits<double>::max()) {
-      fBinRange.first = fData->GetXaxis()->FindFixBin(erange.first);
+      fBinRange.first = hData->GetXaxis()->FindFixBin(erange.first);
       if (fBinRange.first < 1) {
         fBinRange.first = 1;
       }
@@ -116,17 +117,16 @@ public:
     }
 
     if (erange.second != std::numeric_limits<double>::max()) {
-      fBinRange.second = fData->GetXaxis()->FindFixBin(erange.second);
-      if (fBinRange.second > (fData->GetXaxis()->GetNbins() + 1)) {
-        fBinRange.second = (fData->GetXaxis()->GetNbins() + 1);
+      fBinRange.second = hData->GetXaxis()->FindFixBin(erange.second);
+      if (fBinRange.second > (hData->GetXaxis()->GetNbins() + 1)) {
+        fBinRange.second = (hData->GetXaxis()->GetNbins() + 1);
       }
     } else {
-      fBinRange.second = (fData->GetXaxis()->GetNbins() + 1);
+      fBinRange.second = (hData->GetXaxis()->GetNbins() + 1);
     }
   }
 
   PredictionPRISM const *fPred;
-  TH1 const *fData;
   Eigen::VectorXd fData_vec;
   double fPOTFD;
   double fPOTND;
@@ -134,6 +134,8 @@ public:
 
   PRISM::MatchChan fMatchChannel;
   std::pair<int, int> fBinRange;
+
+
   // Get the extrapolated PRISM prediction
   Eigen::VectorXd GetPred(osc::IOscCalc *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
