@@ -159,6 +159,7 @@ void SpectrumLoader::GoPRISM() {
       if (f_FileExposure) {
         if (fileIdx > 0) {
           assert(FileExposures[SpecRunID_local]);
+          //std::cout << "FileExposureInt = " << f_FileExposure->Integral() << std::endl;
           FileExposures[SpecRunID_local]->Add(f_FileExposure);
         } else {
           FileExposures[SpecRunID_local] = new TH1D(*f_FileExposure);
@@ -204,6 +205,9 @@ void SpectrumLoader::GoPRISM() {
 
         double nfiles = FileExposures[specRunId_read]->GetBinContent(
             FileExposures[specRunId_read]->FindFixBin(absx));
+        ///
+        //if (ent_it == 20) std::cout << "nfiles = " << nfiles << std::endl;
+        ///
         perFile = 1.0 / nfiles;
         fnew->cd();
         OffAxisWeightFriendcopy->Fill();
@@ -250,11 +254,6 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   if (tr->FindBranch(bname.c_str())) {
     tr->SetBranchAddress(bname.c_str(), dest);
     return true;
-//<<<<<<< HEAD
-// } else {
-//    std::cout << "Warning: Branch '" << bname
-//              << "' not found, field will not be filled" << std::endl;
-//=======
   } else {
     if(!alreadyWarned.count(bname)){
       alreadyWarned.insert(bname);
@@ -422,10 +421,9 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
   }
 
   TTree *potFriend;
-  potFriend = (TTree*)f->Get("OffAxisWeightFriend");
-  //if (fpotfriend) { // Only true if running GoPRISM(), not Go().
-    //fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
-
+  //potFriend = (TTree*)f->Get("OffAxisWeightFriend");
+  if (fpotfriend) { // Only true if running GoPRISM(), not Go().
+    fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
     if (potFriend) {
       tr->AddFriend(potFriend);
       SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
@@ -437,13 +435,21 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
                    "in input file, hooking up!"
                 << std::endl;
     } else {
+      std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
       sr.perPOTWeight = 1;
       sr.perFileWeight = 1;
       sr.NDMassCorrWeight = 1;
       sr.SpecialRunWeight = 1;
       sr.SpecialHCRunId = 293;
     }
-  //}  
+  } else {
+    std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
+    sr.perPOTWeight = 1;
+    sr.perFileWeight = 1;
+    sr.NDMassCorrWeight = 1;
+    sr.SpecialRunWeight = 1;
+    sr.SpecialHCRunId = 293;
+  }
 
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);

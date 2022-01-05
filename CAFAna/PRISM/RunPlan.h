@@ -36,8 +36,8 @@ namespace ana {
 
      double GetPlanPOT() const;
 
-     TH1 *Unweight(TH1 const *h, int kA) const;
-
+     Eigen::ArrayXd Unweight(Eigen::ArrayXd const &arr, 
+                             int kA, LabelsAndBins const &LBs) const;
 
      TH1D *AsTH1(int kA) const;
 
