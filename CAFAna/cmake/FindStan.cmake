@@ -1,11 +1,8 @@
 include(CMakeFindDependencyMacro)
 
-if(DEFINED ENV{Eigen3_ROOT})
-  find_dependency(Eigen3 REQUIRED PATHS $ENV{Eigen3_ROOT})
-else()
-  find_dependency(Eigen3 REQUIRED)
-endif()
-
+#This isn't Eigen3 because the UPS product for Eigen doesn't provide a useable Eigen3Config.cmake
+#so we sub our own
+find_dependency(Eigen3Local REQUIRED)
 find_dependency(Sundials REQUIRED)
 find_dependency(tbb REQUIRED)
 
