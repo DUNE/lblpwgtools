@@ -128,7 +128,7 @@ fi
 
 #Build linedoc
 if [ ! -e linedoc ]; then
-  git clone git@github.com:luketpickering/linedoc
+  git clone https://github.com/luketpickering/linedoc
   cd ${SUPPORT_SOFTWARE_BUILD_DIR}
 fi
 
@@ -144,7 +144,7 @@ source linedoc/build/Linux/setup.sh
 
 #Build fhiclcpp
 if [ ! -e fhiclcpp-simple ]; then
-  git clone git@github.com:luketpickering/fhiclcpp-simple
+  git clone https://github.com/luketpickering/fhiclcpp-simple
   cd ${SUPPORT_SOFTWARE_BUILD_DIR}
 fi
 
@@ -160,7 +160,7 @@ source fhiclcpp-simple/build/Linux/setup.sh
 
 #Build TH2Jagged
 if [ ! -e TH2Jagged ]; then
-  git clone git@github.com:luketpickering/TH2Jagged
+  git clone https://github.com/luketpickering/TH2Jagged
   cd ${SUPPORT_SOFTWARE_BUILD_DIR}
 fi
 
