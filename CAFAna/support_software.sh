@@ -246,23 +246,6 @@ if [ ${BUILD_UPS_REPLACEMENT_SOFTWARE} == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; th
     exit 1
   fi
 
-  if [ -z ${TBB_VERSION} ]; then # Don't have TBB version set
-(
-cat <<EOF
-#include "tbb/tbb_stddef.h"
-#include <iostream>
-int main(){ 
-  std::cout << TBB_VERSION_MAJOR << "." 
-            << TBB_VERSION_MINOR 
-            << std::endl; }
-EOF
-) > tbb_version.cxx
-    g++ tbb_version.cxx -I ${TBB_INC}
-
-    TBB_VERSION=$(./a.out)
-    rm tbb_version.cxx a.out
-  fi
-
   echo -e "export SUNDIALS_VERSION=\"${SUNDIALS_VERSION}\"" >> support_software_env.sh
   echo -e "export SUNDIALS_INC=\"${SUNDIALS_INC}\"" >> support_software_env.sh
   echo -e "export SUNDIALS_LIB=\"${SUNDIALS_LIB}\"" >> support_software_env.sh
@@ -282,7 +265,6 @@ EOF
   echo -e "export STAN_MATH_DIR=\"${STAN_MATH_DIR}\"" >> support_software_env.sh
   echo -e "export STAN_MATH_VERSION=\"${STAN_MATH_VERSION}\"" >> support_software_env.sh
 
-  echo -e "export TBB_VERSION=\"${TBB_VERSION}\"" >> support_software_env.sh
   echo -e "export TBB_INC=\"${TBB_INC}\"" >> support_software_env.sh
   echo -e "export TBB_LIB=\"${TBB_LIB}\"" >> support_software_env.sh
   echo -e "export TBB_DIR=\"${TBB_DIR}\"" >> support_software_env.sh
@@ -326,4 +308,22 @@ EOF
   echo -e "export CAFANACORE_LIB=\"${CAFANACORE_LIB}\"" >> support_software_env.sh
   echo -e "add_to_LD_LIBRARY_PATH \${CAFANACORE_LIB}" >> support_software_env.sh
 
+fi
+
+if [ -z ${TBB_VERSION} ]; then # Don't have TBB version set
+(
+cat <<EOF
+#include "tbb/tbb_stddef.h"
+#include <iostream>
+int main(){ 
+  std::cout << TBB_VERSION_MAJOR << "." 
+            << TBB_VERSION_MINOR 
+            << std::endl; }
+EOF
+) > tbb_version.cxx
+  g++ tbb_version.cxx -I ${TBB_INC}
+
+  TBB_VERSION=$(./a.out)
+  rm tbb_version.cxx a.out
+  echo -e "export TBB_VERSION=\"${TBB_VERSION}\"" >> support_software_env.sh
 fi
