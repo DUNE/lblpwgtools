@@ -721,42 +721,37 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   Comps.emplace(kFDUnOscPred, FDUnOscWeightedSig.UnWeighted());
 
   // Linear combination weight calculation.
-  // TODO: Make this function just use Eigen, not ROOT.
-  std::pair<TH1 const *, TH1 const *> LinearCombination =
+  std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombination = 
       fFluxMatcher->GetFarMatchCoefficients(calc, match_chan, 
                                             (fVaryNDFDMCData ? kNoShift : shift)); 
+
+  LabelsAndBins oaAxis(fNDOffAxis.GetLabels().at(0),
+                        fNDOffAxis.GetBinnings().at(0));
+  LabelsAndBins oaAxis280(fND280kAAxis.GetLabels().at(0),
+                           fND280kAAxis.GetBinnings().at(0));
+
   // Scale relative size of the weights to account for the run-plan.
   // E.g. more data taken on-axis means a smaller weight for the 
   // on-axis position weights.
-  std::unique_ptr<TH1> UnRunPlannedLinearCombination_293kA =
-      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.first, 293));
-  std::unique_ptr<TH1> UnRunPlannedLinearCombination_280kA =
-      std::unique_ptr<TH1>(NDRunPlan.Unweight(LinearCombination.second, 280));
+  Eigen::ArrayXd UnRunPlannedLinearCombination_293kA = 
+      NDRunPlan.Unweight(LinearCombination.first, 293, oaAxis);
+  Eigen::ArrayXd UnRunPlannedLinearCombination_280kA = 
+      NDRunPlan.Unweight(LinearCombination.second, 280, oaAxis280);
+  
   // We don't want the total POT of the runplan to affect the scale of the
   // coefficients, just the shape.
-  UnRunPlannedLinearCombination_293kA->Scale(NDPOT);
-  UnRunPlannedLinearCombination_280kA->Scale(NDPOT); 
-  
-
-  LabelsAndBins anaAxis = LabelsAndBins(fNDOffAxis.GetLabels()[0], fNDOffAxis.GetBinnings()[0]);
-  Eigen::ArrayXd UnRunPlannedLinearCombination_293kA_arr =
-      GetEigenFlatArray(UnRunPlannedLinearCombination_293kA);
+  UnRunPlannedLinearCombination_293kA *= NDPOT;
+  UnRunPlannedLinearCombination_280kA *= NDPOT;
 
   Spectrum UnRunPlannedLinearCombination_293kA_s(
-      std::move(UnRunPlannedLinearCombination_293kA_arr), anaAxis, NDPOT, 0);
+      std::move(UnRunPlannedLinearCombination_293kA), oaAxis, NDPOT, 0);
   Comps.emplace(kNDFDWeightings_293kA, UnRunPlannedLinearCombination_293kA_s);
 
-
-  LabelsAndBins anaAxis280 = LabelsAndBins(fND280kAAxis.GetLabels()[0], 
-                                           fND280kAAxis.GetBinnings()[0]);
-  Eigen::ArrayXd UnRunPlannedLinearCombination_280kA_arr = 
-      GetEigenFlatArray(UnRunPlannedLinearCombination_280kA);
-
   Spectrum UnRunPlannedLinearCombination_280kA_s(
-      std::move(UnRunPlannedLinearCombination_280kA_arr), anaAxis280, NDPOT, 0);
+      std::move(UnRunPlannedLinearCombination_280kA), oaAxis280, NDPOT, 0);
   Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
  
-  // Ratio objects for weighting:
+  // Off axis coefficients for weighting:
   Eigen::ArrayXd LinearCombinationCoeffs_293kA_arr = 
       UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT);
   Eigen::ArrayXd LinearCombinationCoeffs_280kA_arr = 
@@ -1018,10 +1013,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   //                                                 Current::kCC, FDSigSign));
 
   // Get the residual from the event rate/flux matcher.
-  std::unique_ptr<TH1> resid(static_cast<TH1 *>(
-      fFluxMatcher->GetLastResidual()->Clone("weighted_residual")));
-  resid->SetDirectory(nullptr);
-  Eigen::ArrayXd resid_arr = GetEigenFlatArray(resid);
+  Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual(); 
   // Calculate FD flux miss-matching correction.
   Comps.emplace(kFDFluxCorr, FDUnOscWeightedSig.WeightedByErrors(resid_arr)); 
  
