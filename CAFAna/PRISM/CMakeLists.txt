@@ -20,16 +20,19 @@ LIST(APPEND PRISM_header_files
   RunPlan.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
-target_link_libraries(CAFAnaPRISM)
+target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaPRISM gperftools)
-  target_link_libraries(CAFAnaPRISM ${GPERF_LINKER_FLAGS})
+set_target_properties(StandardRecord PROPERTIES
+  PUBLIC_HEADER "${PRISM_header_files}")
+
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaPRISM BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaPRISM DESTINATION lib)
+install(TARGETS CAFAnaPRISM 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/PRISM/)
 
-install(FILES ${PRISM_header_files} DESTINATION include/CAFAna/PRISM)
 
 add_subdirectory(app)
 add_subdirectory(flux)
