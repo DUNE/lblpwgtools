@@ -74,7 +74,7 @@ fi
 
 if [ -z "${BOOST_INC}" ]; then
   if [ -e /usr/include/boost ]; then
-    BOOST_INC=/usr/include
+    export BOOST_INC=/usr/include
   else
     echo "[ERROR]: Not using UPS, but couldn't find system boost (/usr/include/boost) and BOOST_INC wasn't defined in the environment."
     exit 1
@@ -84,17 +84,17 @@ fi
 
 if [ -z "${BOOST_LIB}" ]; then
   if [ -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so* ]; then
-    BOOST_LIB=/usr/lib/x86_64-linux-gnu/
+    export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
   elif [ -e /usr/lib/libboost_filesystem.so* ]; then
-    BOOST_LIB=/usr/lib/
+    export BOOST_LIB=/usr/lib/
   else
     echo "[ERROR]: Not using UPS, but couldn't find system boost libboost_filesystem.so and BOOST_LIB wasn't defined in the environment."
     exit 1
   fi
   if [ -e /usr/lib/x86_64-linux-gnu/libboost_system.so* ]; then
-    BOOST_LIB=/usr/lib/x86_64-linux-gnu/
+    export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
   elif [ -e /usr/lib/libboost_system.so* ]; then
-    BOOST_LIB=/usr/lib/
+    export BOOST_LIB=/usr/lib/
   else
     echo "[ERROR]: Not using UPS, but couldn't find system boost libboost_system.so and BOOST_LIB wasn't defined in the environment."
     exit 1
@@ -103,7 +103,7 @@ if [ -z "${BOOST_LIB}" ]; then
 fi
 
 if [ -z "${BOOST_DIR}" ]; then
-  BOOST_DIR=$(readlink -f ${BOOST_INC}/../)
+  export BOOST_DIR=$(readlink -f ${BOOST_INC}/../)
   echo -e "export BOOST_DIR=\"${BOOST_DIR}\"" >> support_software_env.sh
 fi
 
@@ -121,7 +121,7 @@ EOF
 ) > boost_version.cxx
   g++ boost_version.cxx -I ${BOOST_INC}
 
-  BOOST_VERSION=$(./a.out)
+  export BOOST_VERSION=$(./a.out)
   rm boost_version.cxx a.out
   echo -e "export BOOST_VERSION=\"${BOOST_VERSION}\"" >> support_software_env.sh
 fi
@@ -181,7 +181,7 @@ echo -e "export TH2Jagged_ROOT=\"${TH2Jagged_ROOT}\"" >> support_software_env.sh
 echo -e "add_to_LD_LIBRARY_PATH \${TH2Jagged_ROOT}/lib" >> support_software_env.sh
 
 #Build CAFAnaCore, OscLib, Stan and friends
-if [ ${BUILD_UPS_REPLACEMENT_SOFTWARE} == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; then
+if [ "${BUILD_UPS_REPLACEMENT_SOFTWARE}" == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; then
 
   if [ ! -e stan ]; then
     git clone https://github.com/stan-dev/stan.git
@@ -280,8 +280,8 @@ if [ ${BUILD_UPS_REPLACEMENT_SOFTWARE} == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; th
     cd ${SUPPORT_SOFTWARE_BUILD_DIR}
   fi
 
-  OSCLIB_INC=$(readlink -f OscLib/)
-  OSCLIB_LIB=$(readlink -f OscLib/OscLib/lib)
+  export OSCLIB_INC=$(readlink -f OscLib/)
+  export OSCLIB_LIB=$(readlink -f OscLib/OscLib/lib)
   
   echo -e "export OSCLIB_INC=\"${OSCLIB_INC}\"" >> support_software_env.sh
   echo -e "export OSCLIB_LIB=\"${OSCLIB_LIB}\"" >> support_software_env.sh
@@ -301,8 +301,8 @@ if [ ${BUILD_UPS_REPLACEMENT_SOFTWARE} == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; th
     cd ${SUPPORT_SOFTWARE_BUILD_DIR}
   fi
 
-  CAFANACORE_INC=$(readlink -f CAFAnaCore/build/inc)
-  CAFANACORE_LIB=$(readlink -f CAFAnaCore/build/lib)
+  export CAFANACORE_INC=$(readlink -f CAFAnaCore/build/inc)
+  export CAFANACORE_LIB=$(readlink -f CAFAnaCore/build/lib)
 
   echo -e "export CAFANACORE_INC=\"${CAFANACORE_INC}\"" >> support_software_env.sh
   echo -e "export CAFANACORE_LIB=\"${CAFANACORE_LIB}\"" >> support_software_env.sh
@@ -313,7 +313,7 @@ fi
 if [ -z ${TBB_VERSION} ]; then # Don't have TBB version set
 (
 cat <<EOF
-#include "tbb/tbb_stddef.h"
+#include "tbb/tbb.h"
 #include <iostream>
 int main(){ 
   std::cout << TBB_VERSION_MAJOR << "." 
@@ -321,9 +321,9 @@ int main(){
             << std::endl; }
 EOF
 ) > tbb_version.cxx
-  g++ tbb_version.cxx -I ${TBB_INC}
+  g++ tbb_version.cxx -I ${TBB_INC} -L ${TBB_LIB} -ltbb
 
-  TBB_VERSION=$(./a.out)
+  export TBB_VERSION=$(./a.out)
   rm tbb_version.cxx a.out
   echo -e "export TBB_VERSION=\"${TBB_VERSION}\"" >> support_software_env.sh
 fi
