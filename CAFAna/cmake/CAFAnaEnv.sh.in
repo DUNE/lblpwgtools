@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ ${BASH_VERSINFO[0]} -le 2 ]; then
+  echo "[ERROR]: You must source this setup script (not run it in a sub-shell). Use like $ source setup.sh"
+  exit 1
+fi
+
+if ! type add_to_PATH &> /dev/null; then
+
 ### Adapted from https://unix.stackexchange.com/questions/4965/keep-duplicates-out-of-path-on-source
 function add_to_PATH () {
   for d; do
@@ -21,6 +28,10 @@ function add_to_PATH () {
   done
 }
 
+fi
+
+if ! type add_to_LD_LIBRARY_PATH &> /dev/null; then
+
 function add_to_LD_LIBRARY_PATH () {
   for d; do
 
@@ -41,14 +52,18 @@ function add_to_LD_LIBRARY_PATH () {
   done
 }
 
+fi
+
 #If we aren't on the GRID, we won't know this.
 if [ -z "${CAFANA}" ]; then
   export CAFANA=@CMAKE_INSTALL_PREFIX@
 fi
 
-if [ "@USED_UPS@" == "1" ]; then
-  source ${CAFANA}/ups_env_setup.sh
-fi
+AUX_ENV_SCRIPTS=@BUILD_ENV_SCRIPTS@
+for script in $(echo ${AUX_ENV_SCRIPTS} | tr ";" " "); do
+  echo "Sourcing auxiliary env script: ${script}"
+  source ${script}
+done
 
 add_to_PATH "${CAFANA}/bin"
 add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
@@ -73,13 +88,6 @@ if [ -e ${CAFANA}/fcl ]; then
     add_to_FHICL_FILE_PATH "${CAFANA}/fcl/example"
   fi
 fi
-
-export BOOST_INC=@BOOST_INC@
-export BOOST_LIB=@BOOST_LIB@
-
-export EIGEN_INC=@EIGEN_INC@
-export STAN_INC=@STAN_INC@
-export STAN_MATH_INC=@STAN_MATH_INC@
 
 #Recent versions of ROOT may enable omp for minuit2 by default
 if [ -z ${OMP_NUM_THREADS} ]; then

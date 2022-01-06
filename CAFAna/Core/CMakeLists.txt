@@ -45,13 +45,25 @@ set(Core_header_files
   rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore ${CAFANACOREEXT} ${TBB})
+target_link_libraries(CAFAnaCore 
+  StandardRecord 
+  CAFAnaCore::Ext 
+  OscLib::All 
+  Stan::All 
+  Boost::filesystem)
+
+set_target_properties(StandardRecord PROPERTIES
+  PUBLIC_HEADER "${Core_header_files}")
 
 if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
   add_dependencies(CAFAnaCore gperftools)
   target_link_libraries(CAFAnaCore ${GPERF_LINKER_FLAGS})
 endif()
 
-install(TARGETS CAFAnaCore DESTINATION lib)
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaCore BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
+endif()
 
-install(FILES ${Core_header_files} DESTINATION include/CAFAna/Core)
+install(TARGETS CAFAnaCore 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Core/)

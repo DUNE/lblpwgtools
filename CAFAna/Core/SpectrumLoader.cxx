@@ -5,9 +5,11 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+
 #include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
@@ -40,7 +42,7 @@ SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames, int max)
 //----------------------------------------------------------------------
 SpectrumLoader::SpectrumLoader() : SpectrumLoaderBase() {}
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 //----------------------------------------------------------------------
 SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
                                               int fileLimit) {

@@ -12,8 +12,6 @@ setup boost v1_75_0 -q e20:prof || exit 1
 setup cmake v3_12_2 || exit 1
 setup jobsub_client || exit 1
 
-setup clhep v2_4_4_1 -q e20:prof || exit 1
-
 setup eigen v3_3_9a || exit
 setup stan v2_26_1 -q e20:prof || exit 1
 

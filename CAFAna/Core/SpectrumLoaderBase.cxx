@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMQuerySource.h"
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
@@ -12,7 +12,7 @@
 
 #include "StandardRecord/StandardRecord.h"
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 #include "ifdh.h"
 #endif
 
@@ -161,7 +161,7 @@ namespace ana
       delete ret;
     }
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
     // Maybe this the name of a SAM project?
     ifdh_ns::ifdh i;
     const std::string info = i.dumpProject(i.findProject(str, "nova"));

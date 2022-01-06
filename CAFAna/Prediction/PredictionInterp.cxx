@@ -425,7 +425,9 @@ namespace ana
 
     size_t NPreds = fPreds.size();
 
+#ifdef USE_PREDINTERP_OMP
     #pragma omp parallel for
+#endif
     for (size_t p_it = 0; p_it < NPreds; ++p_it) {
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
