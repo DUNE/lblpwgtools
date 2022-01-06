@@ -128,11 +128,12 @@ BUILD_DIR=$(pwd)
 if [ "${USE_UPS}" == "1" ]; then
   source ../cmake/ups_env_setup.sh
   source ../support_software.sh $(readlink -f ../support) USING_UPS
+  cd "$BUILD_DIR"
   cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
             -DBUILD_ENV_SCRIPTS="$(readlink -f ../cmake/ups_env_setup.sh);$(readlink -f ../support/support_software_env.sh)"
 else
   source ../support_software.sh $(readlink -f ../support) BUILD_UPS_REPLACEMENT_SOFTWARE
-  source ../support/support_software_env.sh
+  cd "$BUILD_DIR"
   cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
             -DBUILD_ENV_SCRIPTS=$(readlink -f ../support/support_software_env.sh)
 fi
