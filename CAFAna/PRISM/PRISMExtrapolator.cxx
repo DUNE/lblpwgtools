@@ -20,6 +20,7 @@ using namespace PRISM;
 
 namespace ana {
 
+//--------------------------------------------------------------------------------
 Flavors::Flavors_t GetFlavor(NuChan fps) {
   if ((fps & NuChan::kNumu) || (fps & NuChan::kNumuBar)) {
     return Flavors::kAllNuMu;
@@ -31,6 +32,7 @@ Flavors::Flavors_t GetFlavor(NuChan fps) {
   }
 }
 
+//--------------------------------------------------------------------------------
 Sign::Sign_t GetSign(NuChan fps) {
   if ((fps & NuChan::kNumu) || (fps & NuChan::kNue)) {
     return Sign::kNu;
@@ -42,6 +44,7 @@ Sign::Sign_t GetSign(NuChan fps) {
   }
 }
 
+//--------------------------------------------------------------------------------
 PRISMExtrapolator::PRISMExtrapolator()
     : fNDPredInterp_293kA_nu(nullptr), fNDPredInterp_293kA_nub(nullptr),
       fNDPredInterp_280kA_nu(nullptr), fNDPredInterp_280kA_nub(nullptr),
@@ -50,6 +53,7 @@ PRISMExtrapolator::PRISMExtrapolator()
       fLastGaussMatch_293kA(nullptr), fLastGaussMatch_280kA(nullptr),
       fStoreDebugMatches(false) {}
 
+//--------------------------------------------------------------------------------
 void PRISMExtrapolator::Initialize(
     std::map<std::string, PredictionInterp const *> const &preds) {
 
@@ -74,6 +78,7 @@ void PRISMExtrapolator::Initialize(
   }
 }
 
+//--------------------------------------------------------------------------------
 PredictionInterp const *PRISMExtrapolator::GetNDPred(BeamMode bm,
                                                      int kA) const {
   PredictionInterp const *rtn = nullptr;
@@ -101,6 +106,7 @@ PredictionInterp const *PRISMExtrapolator::GetNDPred(BeamMode bm,
   return rtn;
 }
 
+//--------------------------------------------------------------------------------
 PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
   PredictionInterp const *rtn = nullptr;
 
@@ -129,7 +135,8 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
   return rtn;
 }
 
-std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
+//--------------------------------------------------------------------------------
+std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalc *osc, PRISM::MatchChan match_chan, SystShifts shift,
     double &soln_norm, double &resid_norm) const {
 
@@ -161,109 +168,56 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
 
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
-  // 293kA at ND as TH2
-  std::unique_ptr<TH2> NDOffAxis_293kA(NDOffAxis_293kA_spec.ToTH2(1)); // 1
-  NDOffAxis_293kA->SetDirectory(nullptr);
+  // Get 293kA sample at ND.
+  // Need to remove underflow and overflow elements.
+  Eigen::MatrixXd FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec.GetEigen(1),
+                                                                NDOffAxis_293kA_spec.GetBinnings());
+  Eigen::MatrixXd NDFluxMatrix_293kA = 
+      FlowNDFluxMatrix_293kA.block(1, 1, FlowNDFluxMatrix_293kA.rows() - 2,
+                                   FlowNDFluxMatrix_293kA.cols() - 2); 
 
   PredictionInterp const *NDPredInterp_280kA =
       GetNDPred(match_chan.from.mode, 280); // Can be flux OR ev rate
 
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
-  // 280kA at ND as TH2
-  std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(1)); // 1 
-                                                                        
-  NDOffAxis_280kA->SetDirectory(nullptr);
+  // Get 280kA sample at ND.
+  Eigen::MatrixXd FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
+                                                                NDOffAxis_280kA_spec.GetBinnings());
+  Eigen::MatrixXd NDFluxMatrix_280kA = 
+      FlowNDFluxMatrix_280kA.block(1, 1, FlowNDFluxMatrix_280kA.rows() - 2,
+                                   FlowNDFluxMatrix_280kA.cols() - 2); 
 
   // Get the oscillated numu rate (either with app/disp probabiliy applied, but
   // always the nonswap so that any xsec ratios don't affect the coefficients.)
   PredictionInterp const *FDPredInterp = GetFDPred(match_chan.to.mode); // Can be flux OR ev rate
-  std::unique_ptr<TH1> FDOsc(
-      FDPredInterp
-          ->PredictComponentSyst(osc, shift, flav_fd, Current::kCC, sgn_fd) 
-          .ToTH1(1));
-  FDOsc->SetDirectory(nullptr);
+  Spectrum FDOsc_spec = FDPredInterp->PredictComponentSyst(
+      osc, shift, flav_fd, Current::kCC, sgn_fd);
+  Eigen::VectorXd FlowTarget = FDOsc_spec.GetEigen(1).matrix(); 
+  Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2); 
 
-  std::unique_ptr<TH1> FDUnOsc( // This should (I think) always be a numu prediction.
-      FDPredInterp
-          ->PredictComponentSyst(&no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd) // flav_fd
-          .ToTH1(1));
-  FDUnOsc->SetDirectory(nullptr);
-
-  if (NDOffAxis_293kA->GetXaxis()->GetNbins() !=
-      FDOsc->GetXaxis()->GetNbins()) {
-    std::cout << "\t NDOffAxis_293kA "
-              << NDOffAxis_293kA->GetXaxis()->GetNbins() << " x bins from: "
-              << NDOffAxis_293kA->GetXaxis()->GetBinLowEdge(1) << " -> "
-              << NDOffAxis_293kA->GetXaxis()->GetBinUpEdge(
-                     NDOffAxis_293kA->GetXaxis()->GetNbins())
-              << std::endl;
-    std::cout << "\t FDOsc " << FDOsc->GetXaxis()->GetNbins()
-              << " x bins from: " << FDOsc->GetXaxis()->GetBinLowEdge(1)
-              << " -> "
-              << FDOsc->GetXaxis()->GetBinUpEdge(FDOsc->GetXaxis()->GetNbins())
-              << std::endl;
-  }
+  Spectrum FDUnOsc_spec = FDPredInterp->PredictComponentSyst(
+      &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd); 
+  Eigen::VectorXd FlowFDUnOsc_vec = FDUnOsc_spec.GetEigen(1).matrix(); 
+  Eigen::VectorXd FDUnOsc_vec = FlowFDUnOsc_vec.segment(1, FlowFDUnOsc_vec.size() - 2); 
 
   // Make sure we have the same number of energy bins at ND and FD
-  assert(NDOffAxis_293kA->GetXaxis()->GetNbins() ==
-         FDOsc->GetXaxis()->GetNbins());
-
-  if (NDOffAxis_280kA->GetXaxis()->GetNbins() !=
-      FDOsc->GetXaxis()->GetNbins()) {
-    std::cout << "\t NDOffAxis_280kA "
-              << NDOffAxis_280kA->GetXaxis()->GetNbins() << " x bins from: "
-              << NDOffAxis_280kA->GetXaxis()->GetBinLowEdge(1) << " -> "
-              << NDOffAxis_280kA->GetXaxis()->GetBinUpEdge(
-                     NDOffAxis_280kA->GetXaxis()->GetNbins())
-              << std::endl;
-    std::cout << "\t FDOsc " << FDOsc->GetXaxis()->GetNbins()
-              << " x bins from: " << FDOsc->GetXaxis()->GetBinLowEdge(1)
-              << " -> "
-              << FDOsc->GetXaxis()->GetBinUpEdge(FDOsc->GetXaxis()->GetNbins())
-              << std::endl;
-  }
-
-  // Make sure we have the same number of energy bins at ND and FD
-  assert(NDOffAxis_280kA->GetXaxis()->GetNbins() ==
-         FDOsc->GetXaxis()->GetNbins());
+  assert(NDFluxMatrix_293kA.cols() == Target.size());
+  assert(NDFluxMatrix_280kA.cols() == Target.size());
 
   // Number of energy bins
-  int NEBins = FDOsc->GetXaxis()->GetNbins();
+  int NEBins = Target.size(); 
   // Number of off-axis position bins
-  int NCoeffs_293kA = NDOffAxis_293kA->GetYaxis()->GetNbins();
-  int NCoeffs_280kA = NDOffAxis_280kA->GetYaxis()->GetNbins();
+  int NCoeffs_293kA = NDFluxMatrix_293kA.rows(); 
+  int NCoeffs_280kA = NDFluxMatrix_280kA.rows(); 
   int NCoeffs = NCoeffs_293kA + NCoeffs_280kA;
+  
+  std::vector<double> off_axis_bin_edges_293kA = NDOffAxis_293kA_spec.GetBinnings().at(1).Edges();
+  
+  std::vector<double> off_axis_bin_edges_280kA = NDOffAxis_280kA_spec.GetBinnings().at(1).Edges();
 
-  std::vector<double> off_axis_bin_edges_293kA;
-  off_axis_bin_edges_293kA.push_back(
-      NDOffAxis_293kA->GetYaxis()->GetBinLowEdge(1));
-  for (int i = 0; i < NDOffAxis_293kA->GetYaxis()->GetNbins(); ++i) {
-    off_axis_bin_edges_293kA.push_back(
-        NDOffAxis_293kA->GetYaxis()->GetBinUpEdge(i + 1));
-  }
-
-  std::vector<double> off_axis_bin_edges_280kA;
-  off_axis_bin_edges_280kA.push_back(
-      NDOffAxis_280kA->GetYaxis()->GetBinLowEdge(1));
-  for (int i = 0; i < NDOffAxis_280kA->GetYaxis()->GetNbins(); ++i) {
-    off_axis_bin_edges_280kA.push_back(
-        NDOffAxis_280kA->GetYaxis()->GetBinUpEdge(i + 1));
-  }
-
-
-  Eigen::MatrixXd NDFluxMatrix_293kA =
-      GetEigenMatrix(NDOffAxis_293kA.get(), NCoeffs_293kA);
-  Eigen::MatrixXd NDFluxMatrix_280kA =
-      GetEigenMatrix(NDOffAxis_280kA.get(), NCoeffs_280kA);
   // Total ND flux matrix: combines 293kA and 280kA
   Eigen::MatrixXd NDFluxMatrix = Eigen::MatrixXd::Zero(NCoeffs, NEBins);
-  /*std::cout << "NDFluxMatrix(" << NDFluxMatrix.rows() << ", "
-            << NDFluxMatrix.cols() << ")" << std::endl;
-  std::cout << "NDFluxMatrix_293kA(" << NDFluxMatrix_293kA.rows() << ", "
-            << NDFluxMatrix_293kA.cols() << ")" << std::endl;
-  std::cout << "NDFluxMatrix_280kA(" << NDFluxMatrix_280kA.rows() << ", "
-            << NDFluxMatrix_280kA.cols() << ")" << std::endl;*/
   // Top rows of the total ND matrix is the 293kA matrix
   NDFluxMatrix.topRows(NCoeffs_293kA) = NDFluxMatrix_293kA;
   // Bottom rows of the total ND matrix is the 280kA matrix
@@ -284,20 +238,17 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     for (int row_it = NCoeffs_293kA; row_it < (NCoeffs - 1); ++row_it) {
       // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
       RegMatrix(row_it, row_it) = cond.RegFactor_280kA;
-      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_280kA; // 0 instead of -cond.RegFactor_280kA: no reg of 280kA
+      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_280kA; 
     }
     RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor_280kA;
   }
 
-  // Target spectrum
-  Eigen::VectorXd Target = GetEigenFlatVector(FDOsc.get());
-
-  int EBinLow = FDOsc->GetXaxis()->FindFixBin(cond.ENuMin);
+  int EBinLow = FDOsc_spec.GetBinnings().at(0).FindBin(cond.ENuMin);
   int col_min = 0;
   if (EBinLow != 0) {
     col_min = EBinLow - 1;
   }
-  int EBinUp = FDOsc->GetXaxis()->FindFixBin(cond.ENuMax);
+  int EBinUp = FDOsc_spec.GetBinnings().at(0).FindBin(cond.ENuMax);
   int col_max = NEBins - 1;
   if (EBinUp != NEBins) {
     col_max = EBinUp - 1;
@@ -324,44 +275,48 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
           .inverse() *
       NDFluxMatrix.transpose() * P * Target;
 
-  fLastMatch_293kA = std::unique_ptr<TH1>(new TH1D(
-      "soln_293kA", ";OffAxisSlice;Weight", off_axis_bin_edges_293kA.size() - 1,
-      off_axis_bin_edges_293kA.data()));
-  fLastMatch_293kA->SetDirectory(nullptr);
-  size_t offset =
-      FillHistFromEigenVector(fLastMatch_293kA.get(), OffAxisWeights); 
-
-  fLastMatch_280kA = std::unique_ptr<TH1>(new TH1D(
-      "soln_280kA", ";OffAxisSlice;Weight", off_axis_bin_edges_280kA.size() - 1,
-      off_axis_bin_edges_280kA.data()));
-  fLastMatch_280kA->SetDirectory(nullptr);
-  FillHistFromEigenVector(fLastMatch_280kA.get(), OffAxisWeights, offset); 
+  Eigen::VectorXd OffAxisWeights_293kA = OffAxisWeights.head(off_axis_bin_edges_293kA.size() - 1);
+  Eigen::VectorXd OffAxisWeights_280kA = OffAxisWeights.tail(off_axis_bin_edges_280kA.size() - 1);
 
   Eigen::MatrixXd reg_shape_matrix = RegMatrix / cond.RegFactor_293kA;
 
   soln_norm = (reg_shape_matrix * OffAxisWeights).norm();
   resid_norm = (P * (NDFluxMatrix * OffAxisWeights - Target)).norm();
 
-  fLastResidual =
-      std::unique_ptr<TH1>(static_cast<TH1 *>(FDOsc->Clone("LastResidual")));
-  fLastResidual->SetDirectory(nullptr);
-  fLastResidual->Clear();
+  Eigen::VectorXd Residual = Eigen::VectorXd::Zero(Target.size());
 
   Eigen::VectorXd BestFit = NDFluxMatrix * OffAxisWeights; 
 
   // Get the residual for flux miss-matching correction.
   // Normalise by unoscillated numu event rate.
-  for (int bin_it = 0; bin_it < FDOsc->GetXaxis()->GetNbins(); ++bin_it) {
-    double bc_o = FDOsc->GetBinContent(bin_it + 1);
-    double bc_u = FDUnOsc->GetBinContent(bin_it + 1);
-    double e = (bc_o - BestFit[bin_it]) / bc_u;  
+  for (int bin_it = 0; bin_it < Target.size(); ++bin_it) {
+    double bc_o = Target(bin_it); 
+    double bc_u = FDUnOsc_vec(bin_it); 
+    double e = (bc_o - BestFit(bin_it)) / bc_u;  
     if (!std::isnormal(e)) {
       e = 0;
     }
-    fLastResidual->SetBinContent(bin_it + 1, e);
+    Residual(bin_it) = e;
   }
 
+  // Residual to be outputted must have the underflow and overflow elements.
+  fLastResidual = Eigen::ArrayXd::Zero(Residual.size() + 2);
+  fLastResidual.segment(1, Residual.size()) += Residual.array();
+
   if (fStoreDebugMatches) {
+
+    fLastMatch_293kA = std::unique_ptr<TH1>(new TH1D(
+        "soln_293kA", ";OffAxisSlice;Weight", off_axis_bin_edges_293kA.size() - 1,
+        off_axis_bin_edges_293kA.data()));
+    fLastMatch_293kA->SetDirectory(nullptr);
+    FillHistFromEigenVector(fLastMatch_293kA.get(), OffAxisWeights_293kA); 
+                                                                                    
+    fLastMatch_280kA = std::unique_ptr<TH1>(new TH1D(
+        "soln_280kA", ";OffAxisSlice;Weight", off_axis_bin_edges_280kA.size() - 1,
+        off_axis_bin_edges_280kA.data()));
+    fLastMatch_280kA->SetDirectory(nullptr);
+    FillHistFromEigenVector(fLastMatch_280kA.get(), OffAxisWeights_280kA);    
+
     fDebugTarget["last_match"] = std::unique_ptr<TH1>(
         new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
     fDebugTarget["last_match"]->SetDirectory(nullptr);
@@ -372,6 +327,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     fDebugBF["last_match"]->SetDirectory(nullptr);
     FillHistFromEigenVector(fDebugBF["last_match"].get(), BestFit);
 
+    std::unique_ptr<TH2> NDOffAxis_293kA(NDOffAxis_293kA_spec.ToTH2(1));
     fDebugND_293kA["last_match"] = std::move(NDOffAxis_293kA);
     fDebugND_293kA["last_match"]->SetDirectory(nullptr);
 
@@ -395,7 +351,8 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
                 fLastMatch_293kA->GetBinContent(j + 1));
       }
     }
-    
+   
+    std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(1)); 
     fDebugND_280kA["last_match"] = std::move(NDOffAxis_280kA);
     fDebugND_280kA["last_match"]->SetDirectory(nullptr);
 
@@ -420,9 +377,10 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
       }
     }
 
-    fDebugResid["last_match"] =
-        std::unique_ptr<TH1>(dynamic_cast<TH1 *>(fLastResidual->Clone()));
+    fDebugResid["last_match"] = std::unique_ptr<TH1>(
+        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size())); 
     fDebugResid["last_match"]->SetDirectory(nullptr);
+    FillHistFromEigenVector(fDebugResid["last_match"].get(), Residual);
 
     fDebugFitMatrix["last_match"] = std::unique_ptr<TH2>(new TH2D(
         "ndmatrix", ";component;enu_bin;content", NDFluxMatrix.cols(), 0,
@@ -443,9 +401,10 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetFarMatchCoefficients(
     FillHistFromEigenMatrix(fDebugFitMatrix["last_match_regmatrix"].get(),
                             RegMatrix);
   }
-  return {fLastMatch_293kA.get(), fLastMatch_280kA.get()};
+  return {OffAxisWeights_293kA.array(), OffAxisWeights_280kA.array()};
 }
 
+//--------------------------------------------------------------------------------
 std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
     double mean, double width, PRISM::BeamChan NDbc, SystShifts shift) const {
 
@@ -620,6 +579,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
   return {fLastGaussMatch_293kA.get(), fLastGaussMatch_280kA.get()};
 }
 
+//--------------------------------------------------------------------------------
 void PRISMExtrapolator::Write(TDirectory *dir) {
   if (fLastMatch_293kA) {
     dir->WriteTObject(fLastMatch_293kA.get(), "last_match_293kA");

@@ -98,10 +98,6 @@ namespace ana
   // Start of SpectrumLoaderBase proper
 
   //----------------------------------------------------------------------
-
-  //SpectrumLoaderBase::SpectrumLoaderBase(DataSource src)
-  //  : fSource(src), fThinFactor(0), fGone(false), fPOT(0)
-
   SpectrumLoaderBase::SpectrumLoaderBase()
     : fGone(false), fPOT(0), fSecondFileLoop(false)
   {
@@ -279,7 +275,7 @@ namespace ana
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
 
-      fPOT += pot; //* (1.0 - fThinFactor);
+      fPOT += pot; 
     }
 
     return f;
