@@ -250,6 +250,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
+    size_t NDConfig_293kA = (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub;
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
@@ -270,7 +272,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use.
-    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
@@ -280,15 +282,15 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     // Begin ND to FD extrapolation
     SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
-                              state.FDMatrixPredInterps[FDfdConfig_enum].get());
+                             state.FDMatrixPredInterps[FDfdConfig_enum].get());
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // ND to FD MC efficiency correction
-    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                            state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                            state.NDUnselTruePredInterps[kND_280kA_nu].get(), 
-                            state.NDSelTruePredInterps[kND_280kA_nu].get(),
-                            state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
-                            state.FDSelTruePredInterps[FDfdConfig_enum].get());
+    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
+                           state.NDSelTruePredInterps[NDConfig_293kA].get(),
+                           state.NDUnselTruePredInterps[NDConfig_280kA].get(), 
+                           state.NDSelTruePredInterps[NDConfig_280kA].get(),
+                           state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+                           state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
