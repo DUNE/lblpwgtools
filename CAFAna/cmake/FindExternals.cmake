@@ -95,6 +95,10 @@ find_package(TH2Jagged REQUIRED)
 
 # This is the only real SO dependency if we are using CVMFS to pull in the others, 
 # so dump this in the lib/ folder to aid cluster deployment
-install(FILES ${TH2Jagged_LIB_DIR}/libTH2Jagged.so DESTINATION lib/)
+install(FILES 
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged.so 
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged_rdict.pcm
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged.rootmap
+  DESTINATION lib/)
 
 find_package(fhiclcpp REQUIRED)
