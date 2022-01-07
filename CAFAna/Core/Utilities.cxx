@@ -392,7 +392,7 @@ namespace ana
   //----------------------------------------------------------------------
   std::string FindCAFAnaDir()
   {
-    #ifndef USE_CAFANA_ENVVAR
+    #ifdef USE_SRT_CONTEXT
     const char* pub = getenv("SRT_PUBLIC_CONTEXT");
     const char* priv = getenv("SRT_PRIVATE_CONTEXT");
 

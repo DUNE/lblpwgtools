@@ -4,7 +4,6 @@
 FORCE_REMOVE="0"
 USE_UPS="0"
 CORES=1
-USE_GPERF=0
 CMAKE_BUILD_TYPE=RelWithDebInfo
 BUILD_DIR="build"
 INSTALL_DIR=""
@@ -35,12 +34,6 @@ while [[ ${#} -gt 0 ]]; do
 
       USE_UPS="1"
       echo "[OPT]: Will source dependencies from ups."
-      ;;
-
-      --use-gperftools)
-
-      USE_GPERF="1"
-      echo "[OPT]: Will compile in gperftools support."
       ;;
 
       -r|--release)

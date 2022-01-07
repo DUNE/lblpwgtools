@@ -14,11 +14,6 @@ target_link_libraries(CAFAnaVars CAFAnaCore)
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${Vars_header_files}")
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaVars gperftools)
-  target_link_libraries(CAFAnaVars ${GPERF_LINKER_FLAGS})
-endif()
-
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaVars BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()

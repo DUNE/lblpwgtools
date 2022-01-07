@@ -1,3 +1,5 @@
+find_package(perftools)
+
 find_package(GSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Stan REQUIRED)
