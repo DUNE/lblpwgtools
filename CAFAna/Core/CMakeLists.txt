@@ -55,9 +55,8 @@ target_link_libraries(CAFAnaCore
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${Core_header_files}")
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaCore gperftools)
-  target_link_libraries(CAFAnaCore ${GPERF_LINKER_FLAGS})
+if(TARGET perftools::All)
+  target_link_libraries(CAFAnaCore perftools::All)
 endif()
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

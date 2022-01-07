@@ -1,3 +1,5 @@
+find_package(perftools)
+
 find_package(GSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Stan REQUIRED)
@@ -90,4 +92,9 @@ endif()
 
 #These need to come after ROOT or they will set up ROOT themselves (with the wrong libraries required)
 find_package(TH2Jagged REQUIRED)
+
+# This is the only real SO dependency if we are using CVMFS to pull in the others, 
+# so dump this in the lib/ folder to aid cluster deployment
+install(FILES ${TH2Jagged_LIB_DIR}/libTH2Jagged.so DESTINATION lib/)
+
 find_package(fhiclcpp REQUIRED)
