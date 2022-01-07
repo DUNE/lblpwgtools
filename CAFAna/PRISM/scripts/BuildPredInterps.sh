@@ -6,20 +6,43 @@ NDRHCPNFSDIR=/pnfs/dune/persistent/users/abooth/Production/ND_CAFMaker/nd_offaxi
 
 ListOSysts="allsyst"
 FakeData="nominal"
+AnaBinning="default"
+AvaVar="EVisReco"
 
-MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_5Jan22.root \
-    -N-nu "${NDFHCPNFSDIR}/CAFv7_*.root" \
-    -N-nub "${NDRHCPNFSDIR}/CAFv7_*.root" \
+#FD
+MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_FDOnly.root \
     -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
     -F-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nonswap.root \
     -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \
     -Fe-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nueswap.root \
     -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root \
     -Ft-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_tauswap.root \
-    --bin-descriptor default \
+    --bin-descriptor ${AnaBinning} \
     --syst-descriptor ${ListOSysts} \
     --no-fakedata-dials \
-    -A EVisReco \
+    -A ${AvaVar} \
+    --PRISM-fake-data ${FakeData} \
+    --UseSelection \
+    -n 10000
+
+#ND nu
+MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_ND_nuOnly.root \
+    -N-nu "${NDFHCPNFSDIR}/CAFv7_*.root" \
+    --bin-descriptor ${AnaBinning} \
+    --syst-descriptor ${ListOSysts} \
+    --no-fakedata-dials \
+    -A ${AvaVar} \
+    --PRISM-fake-data ${FakeData} \
+    --UseSelection \
+    -n 10000
+
+#ND nub
+MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_ND_nubOnly.root \
+    -N-nub "${NDRHCPNFSDIR}/CAFv7_*.root" \
+    --bin-descriptor ${AnaBinning} \
+    --syst-descriptor ${ListOSysts} \
+    --no-fakedata-dials \
+    -A ${AvaVar} \
     --PRISM-fake-data ${FakeData} \
     --UseSelection \
     -n 10000
