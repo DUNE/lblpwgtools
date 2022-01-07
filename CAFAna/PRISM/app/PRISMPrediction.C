@@ -238,11 +238,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
  
     // MC efficiency correction
     NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
-                            state.NDSelTruePredInterps[NDConfig_293kA].get(),
-                            state.NDUnselTruePredInterps[NDConfig_280kA].get(),
-                            state.NDSelTruePredInterps[NDConfig_280kA].get(), 
-                            state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
-                            state.FDSelTruePredInterps[FDfdConfig_enum].get());
+                           state.NDSelTruePredInterps[NDConfig_293kA].get(),
+                           state.NDUnselTruePredInterps[NDConfig_280kA].get(),
+                           state.NDSelTruePredInterps[NDConfig_280kA].get(), 
+                           state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
+                           state.FDSelTruePredInterps[FDfdConfig_enum].get());
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr); 
 

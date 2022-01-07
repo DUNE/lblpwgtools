@@ -6,7 +6,7 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_Full7Yr_MultiFile_24Oct21.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_3.5YrFull_5Jan22.root
 
 	projection_name: EVisReco
 	use_PRISM: true
@@ -56,6 +56,7 @@ BasicPred: {
 	
 	#samples: @local::FitChannels.Numu_disp 
 	samples: @local::FitChannels.DispJoint
+	#samples: @local::FitChannels.FourFlavor
 }
 
 # Just an example below now, not used
