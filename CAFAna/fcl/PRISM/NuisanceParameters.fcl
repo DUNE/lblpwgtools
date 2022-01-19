@@ -56,8 +56,8 @@ nuisance_parameters: {
 	]
 
 	fluxAll: [
-		#@sequence::nuisance_parameters.fluxHadProd10,
-		#@sequence::nuisance_parameters.fluxFocussing
+		@sequence::nuisance_parameters.fluxHadProd10,
+		@sequence::nuisance_parameters.fluxFocussing
 	]
 
 	xsec_small: [
@@ -76,13 +76,13 @@ nuisance_parameters: {
 	xsec_CCQE: [
 		MaCCQE,
 		VecFFCCQEshape,
-		CCQEPauliSupViaKF
+		CCQEPauliSupViaKF 
 	]
 
 	xsec_LowW: [
-		MaCCRES,
-		MvCCRES,
-		Theta_Delta2Npi
+		MaCCRES, 
+		MvCCRES, 
+		Theta_Delta2Npi 
 	]
 
 	xsec_HighW: [
@@ -107,7 +107,7 @@ nuisance_parameters: {
 		FrElas_pi,
 		FrInel_pi,
 		FrAbs_pi,
-		FrPiProd_pi
+		FrPiProd_pi 
 	]
 
 	xsec_Extra: [
@@ -158,6 +158,13 @@ nuisance_parameters: {
 
 	det_totalND: [ 
 		RecoEnergyScaleND,
+		RecoEnergySqrtND,
+		RecoEnergyInvSqrtND
+	]
+	det_totalFD: [
+		RecoEnergyScaleFD,
+		RecoEnergySqrtFD,
+		RecoEnergyInvSqrtFD
 	]
 
 	det_chargehadEND: [
@@ -178,7 +185,7 @@ nuisance_parameters: {
 	det_mularEND: [
 		ERecoScaleMuLArND,
 		ERecoScaleMuLArSqrtND,
-		ERecoScaleMuLArInvSqrtND
+		ERecoScaleMuLArInvSqrtND 
 	]
 	det_mularEFD: [
 		ERecoScaleMuLArFD,
@@ -187,26 +194,59 @@ nuisance_parameters: {
 	]
 	det_mularE: [
 		@sequence::nuisance_parameters.det_mularEND,
-		@sequence::nuisance_parameters.det_mularEFD,
+		@sequence::nuisance_parameters.det_mularEFD
 	]
 
-	det_muResND: [
-		MuonRecoResND
+	det_EMND: [
+		EMRecoUncorrND,
+		EMRecoUncorrSqrtND,
+		EMRecoUncorrInvSqrtND 
 	]
-	det_muResFD: [ 
-		MuonRecoResFD
+	det_EMFD: [
+		EMRecoUncorrFD,
+		EMRecoUncorrSqrtFD,
+		EMRecoUncorrInvSqrtFD
 	]
-	det_muRes: [
-		@sequence::nuisance_parameters.det_muResND,
-		@sequence::nuisance_parameters.det_muResFD
+
+	det_EM: [
+		@sequence::nuisance_parameters.det_EMND,
+		@sequence::nuisance_parameters.det_EMFD
 	]
+
+	det_ResND: [
+		MuonRecoResND, 
+		EMRecoResND, 
+		ChargedHadRecoResND 
+	]
+	det_ResFD: [ 
+		MuonRecoResFD,
+		EMRecoResFD,
+		ChargedHadRecoResFD
+	]
+	det_Res: [
+		@sequence::nuisance_parameters.det_ResND,
+		@sequence::nuisance_parameters.det_ResFD
+	]
+
+	det_all: [
+		@sequence::nuisance_parameters.det_totalND,
+		@sequence::nuisance_parameters.det_totalFD,
+		@sequence::nuisance_parameters.det_chargehadE,
+		@sequence::nuisance_parameters.det_mularE,
+		@sequence::nuisance_parameters.det_EM,
+		@sequence::nuisance_parameters.det_Res
+	]			
 
 	all: [
-		#@sequence::nuisance_parameters.fluxAll,
-		#@sequence::nuisance_parameters.xsec_total
+		@sequence::nuisance_parameters.fluxAll,
+		@sequence::nuisance_parameters.xsec_total,
+		@sequence::nuisance_parameters.det_all
 	]
 	allSmall: [
 		@sequence::nuisance_parameters.fluxHadProd10,
 		@sequence::nuisance_parameters.xsec_small
 	]
 }
+
+
+

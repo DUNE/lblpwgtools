@@ -9,10 +9,10 @@ LOGYLOG () {
   fi
 }
 
-if [ -z ${INPUT_TAR_FILE} ]; then
-  LOGYLOG "[ERROR]: Expected to recieve an input file."
+#if [ -z ${INPUT_TAR_FILE} ]; then
+#  LOGYLOG "[ERROR]: Expected to recieve an input file."
   #exit 1
-fi
+#fi
 
 PNFS_PATH_APPEND=${1}
 if [ -z ${1} ]; then
@@ -29,6 +29,11 @@ fi
 IS_FD="0"
 if echo ${SAMPLE_NAME} | grep "FD"; then
   IS_FD="1"
+fi
+
+IS_FHC="0"
+if echo ${SAMPLE_NAME} | grep "FHC"; then
+  IS_FHC="1"
 fi
 
 ANAVERSION="4"
@@ -88,10 +93,8 @@ export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
 
 voms-proxy-info --all
-
 setup ifdhc
-
-ups active
+source ${CAFANA}/CAFAnaEnv.sh
 
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
@@ -105,22 +108,35 @@ if [ ${IS_FD} == "1" ]; then
   for i in $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list); do
     if echo ${i} | grep "nonswap"; then
       echo "Found nonswap file: ${i}"
-      #INPFILE="${INPFILE} -i ${i}"
-      INPFILE="${INPFILE} -F-nu ${i}"
+      if [ ${IS_FHC} == "1" ]; then
+        INPFILE="${INPFILE} -F-nu ${i}"
+      else
+        INPFILE="${INPFILE} -F-nub ${i}"
+      fi
     elif echo ${i} | grep "nueswap"; then
       echo "Found nueswap file: ${i}";
-      INPFILE="${INPFILE} -Fe-nu ${i}"
+      if [ ${IS_FHC} == "1" ]; then
+        INPFILE="${INPFILE} -Fe-nu ${i}"
+      else
+        INPFILE="${INPFILE} -Fe-nub ${i}"
+      fi
     elif echo ${i} | grep "tauswap"; then
       echo "Found tauswap file: ${i}";
-      INPFILE="${INPFILE} -Ft-nu ${i}"
+      if [ ${IS_FHC} == "1" ]; then
+        INPFILE="${INPFILE} -Ft-nu ${i}"
+      else
+        INPFILE="${INPFILE} -Ft-nub ${i}"
+      fi
     fi;
   done
   
 else
   (( LINE_N = ${PROCESS} + 1 ))
-
-  #INPFILE="-i $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)"
-  INPFILE=" -N-nu $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)"
+  if [ ${IS_FHC} == "1" ]; then
+    INPFILE=" -N-nu $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)"
+  else
+    INPFILE=" -N-nub $(cat ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list | head -${LINE_N} | tail -1)"
+  fi
 fi
 
 ifdh ls ${PNFS_OUTDIR}
@@ -144,8 +160,7 @@ LOGYLOG "Output file name: ${OUTFILENAME}"
 export CAFANA_ANALYSIS_VERSION=${ANAVERSION}
 echo "CAFANA_ANALYSIS_VERSION=${CAFANA_ANALYSIS_VERSION}"
 
-#LOGYLOG "MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}"
-#MakePredInterps ${INPFILE} -S ${SAMPLE_NAME} ${AXBLOBARG} ${SYSTDESCRIPTORARG} ${NOFAKEDATAARG} -o ${OUTFILENAME}
+source ${CAFANA}/CAFAnaEnv.sh
 
 LOGYLOG "MakePRISMPredInterps -o ${OUTFILENAME} \
                               ${INPFILE} \
@@ -163,7 +178,8 @@ MakePRISMPredInterps -o ${OUTFILENAME} \
                      ${SYSTDESCRIPTORARG} \
                      ${NOFAKEDATAARG} \
                      ${PRISMFAKEDATAARG} \
-                     ${SELECTIONARG}
+                     ${SELECTIONARG} \
+                     -n 100000 
 
 LOGYLOG "Copying output @ $(date)"
 
