@@ -1,5 +1,6 @@
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
+#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 
 using namespace PRISM;
 
@@ -9,56 +10,61 @@ namespace ana {
   // Class for ND and FD MC based efficiency correction:
   //----------------------------------------------------
 
-  MCEffCorrection::MCEffCorrection() : fNDunselected_293kA(nullptr),
-                                       fNDselected_293kA(nullptr),
-                                       fNDunselected_280kA(nullptr),
-                                       fNDselected_280kA(nullptr),
-                                       fFDunselected(nullptr),
-                                       fFDselected(nullptr) 
-    {
+  MCEffCorrection::MCEffCorrection() {
+    // Fill PredInterp vectors with nulls.
+    for (size_t conf = 0; conf < kNPRISMConfigs; conf++) {
+      NDUnselPredInterps.push_back(nullptr);
+      NDSelPredInterps.push_back(nullptr);
     }
+    for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++) {
+      FDUnselPredInterps.push_back(nullptr);
+      FDSelPredInterps.push_back(nullptr);
+    }
+
+  }
                                 
 
   //----------------------------------------------------
 
   MCEffCorrection::MCEffCorrection(const MCEffCorrection &EffCorr) {
-    fNDunselected_293kA = EffCorr.fNDunselected_293kA;
-    fNDselected_293kA = EffCorr.fNDselected_293kA;
-    fNDunselected_280kA = EffCorr.fNDunselected_280kA;
-    fNDselected_280kA = EffCorr.fNDselected_280kA;
-    fFDunselected = EffCorr.fFDunselected;
-    fFDselected = EffCorr.fFDselected;
+    for (size_t conf = 0; conf < kNPRISMConfigs; conf++) {
+      NDUnselPredInterps.at(conf) = EffCorr.NDUnselPredInterps.at(conf);
+      NDSelPredInterps.at(conf) = EffCorr.NDSelPredInterps.at(conf);
+    }
+    for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++) { 
+      FDUnselPredInterps.at(conf) = EffCorr.FDUnselPredInterps.at(conf);
+      FDSelPredInterps.at(conf) = EffCorr.FDSelPredInterps.at(conf);
+    }
   }
 
   //----------------------------------------------------
 
   MCEffCorrection::~MCEffCorrection() {
-    fNDunselected_293kA = nullptr;
-    fNDselected_293kA = nullptr;
-    fNDunselected_280kA = nullptr; 
-    fNDselected_280kA = nullptr;
-    fFDunselected = nullptr;
-    fFDselected = nullptr;
+    for (auto &pred : NDUnselPredInterps) pred = nullptr;
+    for (auto &pred : NDSelPredInterps) pred = nullptr;
+    for (auto &pred : FDUnselPredInterps) pred = nullptr;
+    for (auto &pred : FDSelPredInterps) pred = nullptr;
   }
 
   //----------------------------------------------------
 
-  void MCEffCorrection::Initialize(PredictionInterp const * NDunsel_293kA,
-                                   PredictionInterp const * NDsel_293kA,
-                                   PredictionInterp const * NDunsel_280kA,
-                                   PredictionInterp const * NDsel_280kA,
-                                   PredictionInterp const * FDunsel,
-                                   PredictionInterp const * FDsel) {
+  void MCEffCorrection::Initialize(std::pair<PredictionInterp const *, size_t> NDunsel_293kA,
+                                   std::pair<PredictionInterp const *, size_t> NDsel_293kA,
+                                   std::pair<PredictionInterp const *, size_t> NDunsel_280kA,
+                                   std::pair<PredictionInterp const *, size_t> NDsel_280kA,
+                                   std::pair<PredictionInterp const *, size_t> FDunsel,
+                                   std::pair<PredictionInterp const *, size_t> FDsel) {
 
-    fNDunselected_293kA = NDunsel_293kA;
-    fNDselected_293kA = NDsel_293kA;
-    fNDunselected_280kA = NDunsel_280kA;
-    fNDselected_280kA = NDsel_280kA;
-    fFDunselected = FDunsel;
-    fFDselected = FDsel;
+    NDUnselPredInterps.at(NDunsel_293kA.second) = NDunsel_293kA.first;
+    NDUnselPredInterps.at(NDunsel_280kA.second) = NDunsel_280kA.first;
+    NDSelPredInterps.at(NDsel_293kA.second) = NDsel_293kA.first;
+    NDSelPredInterps.at(NDsel_280kA.second) = NDsel_280kA.first;
+
+    FDUnselPredInterps.at(FDunsel.second) = FDunsel.first;
+    FDSelPredInterps.at(FDsel.second) = FDsel.first;
 
     osc::NoOscillations no;
-    auto NDPred = fNDunselected_293kA->Predict(&no); 
+    auto NDPred = NDunsel_293kA.first->Predict(&no);
 
     // WARNING: Not set up for 2D preds!
     std::vector<Binning> bins = NDPred.GetBinnings();
@@ -99,17 +105,15 @@ namespace ana {
     ana::SystShifts syst = shift;
   
     osc::NoOscillations no; 
-  
-    if (!fNDunselected_293kA || !fNDselected_293kA || !fNDunselected_280kA || !fNDselected_280kA) {
-      std::cout << "[WARNING] No NDunselected and/or NDselected Pred" << std::endl;
-      abort();
-    }
 
-    auto sNDunselected_293kA = fNDunselected_293kA->PredictComponentSyst(&no, syst, 
-                                                                         NDflav, curr, NDsign);
-    auto sNDunselected_280kA = fNDunselected_280kA->PredictComponentSyst(&no, syst,
-                                                                         NDflav, curr, NDsign);
-  
+    Spectrum sNDunselected_293kA = 
+        NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
+        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+    Spectrum sNDunselected_280kA =
+        NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
+        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);  
+
+
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
     ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
                                                                         1);
@@ -119,10 +123,13 @@ namespace ana {
     Eigen::MatrixXd NDunsel_280kA = rwsNDunselected_280kA.GetEigen(1);  
   
     // Selected ND MC
-    Spectrum sNDselected_293kA = fNDselected_293kA->PredictComponentSyst(&no, syst, 
-                                                                         NDflav, curr, NDsign);
-    Spectrum sNDselected_280kA = fNDselected_280kA->PredictComponentSyst(&no, syst, 
-                                                                         NDflav, curr, NDsign);
+    Spectrum sNDselected_293kA = 
+        NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
+        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+    Spectrum sNDselected_280kA = 
+         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
+         ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+
     ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
                                                                       1);
     ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
@@ -130,15 +137,13 @@ namespace ana {
     Eigen::MatrixXd NDsel_293kA = rwsNDselected_293kA.GetEigen(1);
     Eigen::MatrixXd NDsel_280kA = rwsNDselected_280kA.GetEigen(1);
   
-    if (!fFDunselected || !fFDselected) {
-      std::cout << "[WARNING] No FDunselected and or FDselected Pred" << std::endl; 
-      abort();
-    }
-    // FD unselected // calc!!
-    Spectrum sFDunselected = fFDunselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+    Spectrum sFDunselected = 
+        FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
+        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1);
-    // FD selected // calc!!
-    Spectrum sFDselected = fFDselected->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+    Spectrum sFDselected = 
+        FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
+        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);  
     Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1);
   
     // Calculate ND efficiency
@@ -182,14 +187,35 @@ namespace ana {
     }
   }
 
+  //----------------------------------------------------------
+  size_t MCEffCorrection::GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+                                           bool is280kA) const {
+    size_t conf;
+    assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
+    if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
+    else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
+    return conf;
+  }
+                                                                                  
+  size_t MCEffCorrection::GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
+    size_t conf;
+    if (FDflav == Flavors::kNuMuToNuMu) {
+      conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
+    } else if (FDflav == Flavors::kNuMuToNuE) {
+      conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
+    } else { abort(); }
+                                                                                  
+    return GetFDConfig(conf);
+  }                                                                                                
+
   //-----------------------------------------------------------
   
   void MCEffCorrection::Write(TDirectory *dir) const {
     // Don't care how ugly this is, just getting the plots.
     // Just to get the axes.
     osc::NoOscillations no;
-    auto NDPred = fNDunselected_293kA->Predict(&no);
-  
+    auto NDPred = NDUnselPredInterps.at(kND_293kA_nu)->Predict(&no);  
+
     std::vector<std::string> labels = NDPred.GetLabels();
     std::vector<Binning> bins = NDPred.GetBinnings();  
   

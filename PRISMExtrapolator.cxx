@@ -2,6 +2,7 @@
 #include "CAFAna/PRISM/EigenUtils.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
+#include "CAFAna/Prediction/PredictionNoOsc.h"
 
 #include "CAFAna/Core/Binning.h"
 
@@ -55,7 +56,7 @@ PRISMExtrapolator::PRISMExtrapolator()
 
 //--------------------------------------------------------------------------------
 void PRISMExtrapolator::Initialize(
-    std::map<std::string, PredictionInterp const *> const &preds) {
+    std::map<std::string, PredictionInterp *> const &preds) {
 
   if (preds.find("FD_nu") != preds.end()) {
     fFDPredInterp_nu = preds.find("FD_nu")->second;
@@ -65,16 +66,24 @@ void PRISMExtrapolator::Initialize(
   }
 
   if (preds.find("ND_293kA_nu") != preds.end()) {
+    //preds.find("ND_293kA_nu")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_293kA_nu = preds.find("ND_293kA_nu")->second;
+    //fNDPredInterp_293kA_nu->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_293kA_nub") != preds.end()) {
+   // preds.find("ND_293kA_nub")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_293kA_nub = preds.find("ND_293kA_nub")->second;
+    //fNDPredInterp_293kA_nub->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_280kA_nu") != preds.end()) {
+   // preds.find("ND_280kA_nu")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_280kA_nu = preds.find("ND_280kA_nu")->second;
+    //fNDPredInterp_280kA_nu->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_280kA_nub") != preds.end()) {
+   // preds.find("ND_280kA_nub")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_280kA_nub = preds.find("ND_280kA_nub")->second;
+    //fNDPredInterp_280kA_nub->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
 }
 
@@ -168,6 +177,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
+  NDOffAxis_293kA_spec.OverridePOT(1);
   // Get 293kA sample at ND.
   // Need to remove underflow and overflow elements.
   Eigen::MatrixXd FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec.GetEigen(1),
@@ -181,6 +191,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
+  NDOffAxis_280kA_spec.OverridePOT(1);
   // Get 280kA sample at ND.
   Eigen::MatrixXd FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
                                                                 NDOffAxis_280kA_spec.GetBinnings());
