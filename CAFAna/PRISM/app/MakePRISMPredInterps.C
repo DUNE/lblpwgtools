@@ -642,11 +642,6 @@ int main(int argc, char const *argv[]) {
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
   FillWithNulls(MatchPredGens, kNPRISMConfigs);
   FillWithNulls(MatchPredInterps, kNPRISMConfigs);
-
-  std::vector<std::unique_ptr<IPredictionGenerator>> SelPredGens;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
-  FillWithNulls(SelPredGens, kNPRISMConfigs);
-  FillWithNulls(SelPredInterps, kNPRISMConfigs);
   //---------------------------------------------------
   // For Smearing Matrix
   std::vector<std::unique_ptr<IPredictionGenerator>> NDMatrixPredGens;
@@ -733,14 +728,6 @@ int main(int argc, char const *argv[]) {
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
           los_flux, &no, *MatchPredGens[it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign); 
-
-      SelPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
-          NDObservedSpectraAxis,
-          OnAxisSelectionCuts[it] && (IsND280kA ? kSel280kARun : kCut280kARun),
-          AnaWeightVars[it] * slice_width_weight); 
-      SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, &no, *SelPredGens[it], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign); 
     
       // PredInterps for ND smearing matrix
@@ -831,12 +818,6 @@ int main(int argc, char const *argv[]) {
           axes.XProjectionFD, AnalysisCuts[it], AnaWeightVars[it]);
       FarDetPredInterps[fd_it] = std::make_unique<PredictionInterp>(
           los, calc, *FarDetPredGens[fd_it], Loaders_bm, kNoShift, 
-          PredictionInterp::kSplitBySign); 
-
-      SelPredGens[it] = std::make_unique<NoExtrapPredictionGenerator>(
-          axes.XProjectionFD, OnAxisSelectionCuts[it], AnaWeightVars[it]);
-      SelPredInterps[it] = std::make_unique<PredictionInterp>(
-          los, calc, *SelPredGens[it], Loaders_bm, kNoShift, 
           PredictionInterp::kSplitBySign); 
 
       // Matrix of ERec v ETrue for FD
@@ -951,17 +932,11 @@ int main(int argc, char const *argv[]) {
     }
 
     if (IsND) { // Is ND
-      MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       
       SaveTo(fout,
              std::string("NDMatchInterp_ETrue") +
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              MatchPredInterps[it]);
-      SaveTo(fout,
-             std::string("NDSelectedInterp_") + axdescriptor +
-                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
-             SelPredInterps[it]);
       if (!IsND280kA) {
         SaveTo(fout,
                std::string("NDMatrixInterp_ERecETrue") +
@@ -1028,22 +1003,15 @@ int main(int argc, char const *argv[]) {
              std::string("FDDataPred_") + axdescriptor +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FarDetDataPreds[fd_it]);
-
-      SaveTo(fout,
-             std::string("FDSelectedInterp_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-             SelPredInterps[it]);
     }
   }
 
   SaveTo(fout, (std::string("PRISM_") + axdescriptor), PRISM);
-  //PRISM->SaveTo(fout, (std::string("PRISM_") + axdescriptor).c_str());
 
   //FluxPredInterps[0]->SaveTo(fout.mkdir("NDFluxPred_293kA_nu"));
   //FluxPredInterps[1]->SaveTo(fout.mkdir("NDFluxPred_293kA_nub"));
   //FluxPredInterps[2]->SaveTo(fout.mkdir("NDFluxPred_280kA_nu"));
   //FluxPredInterps[3]->SaveTo(fout.mkdir("NDFluxPred_280kA_nub"));
-
   //FluxPredInterps[4]->SaveTo(fout.mkdir("FDFluxPred_293kA_nu"));
   //FluxPredInterps[5]->SaveTo(fout.mkdir("FDFluxPred_293kA_nub"));
 

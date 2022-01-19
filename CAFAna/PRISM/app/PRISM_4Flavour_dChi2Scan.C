@@ -281,16 +281,20 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
     // Begin ND to FD extrapolation
-    SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
-                             state.FDMatrixPredInterps[FDfdConfig_enum].get());
+    SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
+                             {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
     // ND to FD MC efficiency correction
-    NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
-                           state.NDSelTruePredInterps[NDConfig_293kA].get(),
-                           state.NDUnselTruePredInterps[NDConfig_280kA].get(), 
-                           state.NDSelTruePredInterps[NDConfig_280kA].get(),
-                           state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
-                           state.FDSelTruePredInterps[FDfdConfig_enum].get());
+    NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
+                           {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+
+
+
+
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 

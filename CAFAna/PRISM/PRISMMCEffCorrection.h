@@ -37,12 +37,12 @@ namespace ana {
   
     ~MCEffCorrection();
   
-    void Initialize(PredictionInterp const * NDunsel_293kA,
-                    PredictionInterp const * NDsel_293kA,
-                    PredictionInterp const * NDunsel_280kA,
-                    PredictionInterp const * NDsel_280kA, 
-                    PredictionInterp const * FDunsel, 
-                    PredictionInterp const * FDsel);
+    void Initialize(std::pair<PredictionInterp const *, size_t> NDunsel_293kA,
+                    std::pair<PredictionInterp const *, size_t> NDsel_293kA,
+                    std::pair<PredictionInterp const *, size_t> NDunsel_280kA,
+                    std::pair<PredictionInterp const *, size_t> NDsel_280kA,
+                    std::pair<PredictionInterp const *, size_t> FDunsel,
+                    std::pair<PredictionInterp const *, size_t> FDsel);
 
     // Fills NDefficiency and FDefficiency, taking selected
     // ND and FD event rates as argument
@@ -66,17 +66,20 @@ namespace ana {
       }
     } 
     std::vector<double> GetFDefficiency() const { return FDefficiency; }
-  
+ 
+    size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+                               bool is280kA = false) const;
+
+    size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const;
+ 
     void Write(TDirectory *dir) const;
 
   protected:
-    PredictionInterp const * fNDunselected_293kA;
-    PredictionInterp const * fNDselected_293kA;
-    PredictionInterp const * fNDunselected_280kA;
-    PredictionInterp const * fNDselected_280kA;
-    PredictionInterp const * fFDunselected;
-    PredictionInterp const * fFDselected;
-  
+    std::vector<PredictionInterp const *> NDUnselPredInterps;
+    std::vector<PredictionInterp const *> NDSelPredInterps;
+    std::vector<PredictionInterp const *> FDUnselPredInterps;
+    std::vector<PredictionInterp const *> FDSelPredInterps;
+
     // ND and FD efficiency in each energy bin
     // vector of vectors to hold ND eff at each OA stop.
     mutable std::vector<std::vector<double>> NDefficiency_293kA;

@@ -5,7 +5,9 @@
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
@@ -72,14 +74,18 @@ namespace ana
 
     std::vector<const ISyst*> systs = GetEnergySysts();
 
+    std::vector<const ISyst *> fdEScalelist = GetRecoEFDSysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
     std::vector<const ISyst *> ndlist = GetNDRecoSysts();
     std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     if (useFD) {
+      systs.insert(systs.end(), fdEScalelist.begin(), fdEScalelist.end());
       systs.insert(systs.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
+      systs.insert(systs.end(), ndEScalelist.begin(), ndEScalelist.end());
       systs.insert(systs.end(), ndlist.begin(), ndlist.end());
     }
     if (useND && useNueOnE) {
@@ -146,7 +152,7 @@ namespace ana
     // If using fake data dials (for state generation) add the previously removed systs back in
     if (useFakeDataDials) {
       std::vector<const ISyst *> fakedatasyst = getFakeDataSysts(fluxXsecPenalties);
-      // systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
+      systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
     }
 
     return systlist;
