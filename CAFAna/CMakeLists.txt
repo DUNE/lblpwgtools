@@ -150,10 +150,3 @@ install(
   DESTINATION
     bin
   )
-
-install(
-  FILES
-    ${CMAKE_SOURCE_DIR}/load_libs.C
-  DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/
-  )
