@@ -21,8 +21,9 @@ setup stan v2_26_1 -q e20:prof || exit 1
 echo "osclib"
 setup osclib v00.17 -q e20:prof:n311:stan || exit 1
 echo "cafanacore"
-setup cafanacore v01.23 -q e20:prof:n311 || exit 1
-echo "duneutil"
+#setup cafanacore v01.23 -q e20:prof:n311 || exit 1
+setup cafanacore v01.25 -q e20:prof:n311 || exit 1
+
 # To get setup_fnal_security which helps reading files over xrootd
 #setup duneutil v09_39_01 -q e20:prof
 echo "Finished ups setup."
