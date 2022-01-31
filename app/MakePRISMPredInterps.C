@@ -911,10 +911,10 @@ int main(int argc, char const *argv[]) {
       PredictionInterp::kSplitBySign));*/
 
   std::cout << "Loaders GoPRISM()." << std::endl;
-  //Loaders_nu.Go();
-  //Loaders_nub.Go();
-  Loaders_nu.GoPRISM();
-  Loaders_nub.GoPRISM();
+  Loaders_nu.Go();
+  Loaders_nub.Go();
+  //Loaders_nu.GoPRISM();
+  //Loaders_nub.GoPRISM();
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);

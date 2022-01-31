@@ -67,7 +67,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   bool PRISM_write_debug = PRISMps.get<bool>("write_debug");
 
-  double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
+  //double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
 
   osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
@@ -231,21 +231,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
  
     // Smearing matrices for ND and FD
     // For detector and selection corrections
-    //SmearMatrices.Initialize(state.NDMatrixPredInterps[NDConfig_enum].get(),
-    //                          state.FDMatrixPredInterps[FDfdConfig_enum].get()); 
     SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
                              {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
  
     // MC efficiency correction
-    /*NDFDEffCorr.Initialize(state.NDUnselTruePredInterps[NDConfig_293kA].get(),
-                           state.NDSelTruePredInterps[NDConfig_293kA].get(),
-                           state.NDUnselTruePredInterps[NDConfig_280kA].get(),
-                           state.NDSelTruePredInterps[NDConfig_280kA].get(), 
-                           state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
-                           state.FDSelTruePredInterps[FDfdConfig_enum].get());*/
-
     NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
                            {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
                            {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
