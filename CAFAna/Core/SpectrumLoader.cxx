@@ -118,7 +118,7 @@ void SpectrumLoader::Go() {
 // New Go function for PRISM loading. Specifically, this function
 // lets you load in multiple ND MC files and re-calculate the perPOT
 // weighting correctly for a PRISM analysis.
-
+/*
 void SpectrumLoader::GoPRISM() {
   if (fGone) {
     std::cerr << "Error: can only call Go() once on a SpectrumLoader"
@@ -146,29 +146,29 @@ void SpectrumLoader::GoPRISM() {
   std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
 
   // Need to update the FileExposure weights
-  /*std::map<int, TH1D *> FileExposures;
+  std::map<int, TH1D *> FileExposures;
 
-  while (TFile *f = GetNextFile()) {
-    ++fileIdx;
-    std::cout << "Add FileExposure from file: " << fileIdx << std::endl;
-    for (int SpecRunID_local : SpecRunIds_all) {
-      std::stringstream ss("");
-      ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
-      
-      TH1D *f_FileExposure;
-      f->GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
-      if (f_FileExposure) {
-        if (fileIdx > 0) {
-          assert(FileExposures[SpecRunID_local]);
-          //std::cout << "FileExposureInt = " << f_FileExposure->Integral() << std::endl;
-          FileExposures[SpecRunID_local]->Add(f_FileExposure);
-        } else {
-          FileExposures[SpecRunID_local] = new TH1D(*f_FileExposure);
-          FileExposures[SpecRunID_local]->SetDirectory(nullptr);
-        }
-      }
-    }
-  }*/
+  //while (TFile *f = GetNextFile()) {
+  //  ++fileIdx;
+  // std::cout << "Add FileExposure from file: " << fileIdx << std::endl;
+  //  for (int SpecRunID_local : SpecRunIds_all) {
+  //    std::stringstream ss("");
+  //    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+  //    
+  //    TH1D *f_FileExposure;
+  //    f->GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
+  //    if (f_FileExposure) {
+  //      if (fileIdx > 0) {
+  //        assert(FileExposures[SpecRunID_local]);
+  //        //std::cout << "FileExposureInt = " << f_FileExposure->Integral() << std::endl;
+  //        FileExposures[SpecRunID_local]->Add(f_FileExposure);
+  //      } else {
+  //        FileExposures[SpecRunID_local] = new TH1D(*f_FileExposure);
+  //        FileExposures[SpecRunID_local]->SetDirectory(nullptr);
+  //      }
+  //    }
+  //  }
+  //}
 
   // Full FileExposure calculated, so now begin file loop again.
   //StartSecondFileLoop();
@@ -262,6 +262,7 @@ void SpectrumLoader::GoPRISM() {
   fHistDefs.RemoveLoader(this);
   fHistDefs.Clear();
 }
+*/
 
 //----------------------------------------------------------------------
 // Helper function that can give us a friendlier error message
@@ -283,7 +284,7 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
 }
  
 //----------------------------------------------------------------------
-void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
+void SpectrumLoader::HandleFile(TFile *f, Progress *prog/*, TFile *fpotfriend*/) {
   assert(!f->IsZombie());
   TTree* tr = 0;
   // In files with both "caf" and "cafTree", "cafTree" is the correct
@@ -364,14 +365,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
   // Numu track containment flag
   SetBranchChecked(tr, "LongestTrackContNumu", &sr.LongestTrackContNumu);
 
-  //double vtx_x;
   SetBranchChecked(tr, "vtx_x", &sr.vtx_x);
-  //sr.vtx_x = vtx_x;
   SetBranchChecked(tr, "vtx_y", &sr.vtx_y);
   SetBranchChecked(tr, "vtx_z", &sr.vtx_z);
-  //double det_x;
   SetBranchChecked(tr, "det_x", &sr.det_x);
-  //sr.det_x = det_x;
 
   SetBranchChecked(tr, "eP", &sr.eP);
   SetBranchChecked(tr, "eN", &sr.eN);
@@ -441,60 +438,21 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
     Nentries = max_entries;
   }
 
-  TTree *potFriend;
-  //potFriend = (TTree*)f->Get("OffAxisWeightFriend");
-  if (fpotfriend) { // Only true if running GoPRISM(), not Go().
-    fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
-  //f->GetObject("OffAxisWeightFriend", potFriend);
-    if (potFriend) {
-      //double perFile;
-      //int SpecialHCRunId;
-
-      tr->AddFriend(potFriend);
-      SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
-      SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
-      SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
-      SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
-      SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
-      //std::cout << perFile << ", " << SpecialHCRunId << ", " << det_x <<std::endl;
-      /*std::cout << sr.perFileWeight << ", " << sr.SpecialHCRunId << ", " << sr.det_x <<std::endl; 
-      //----
-      TFile fin((FindCAFAnaDir() + "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
-      assert(fin.IsOpen());
-      std::map<int, TH1D *> FileExposures;
-      
-      std::stringstream ss("");
-      ss << ((sr.SpecialHCRunId < 0) ? "m" : "") << sr.SpecialHCRunId;
-      TH1D *fexp;
-      fin.GetObject(("FileExposure_" + ss.str()).c_str(), fexp);
-      std::cout << "FileExposure_" + ss.str() << std::endl;
-      assert(bool(fexp));
-      FileExposures[sr.SpecialHCRunId] = fexp;
-      //fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[sr.SpecialHCRunId]);
-      if (!FileExposures[sr.SpecialHCRunId]) abort(); 
-
-      double absx = -std::abs((sr.det_x) + sr.vtx_x);
-      
-      double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
-          FileExposures[sr.SpecialHCRunId]->FindFixBin(absx));        
-      //perFile *= 1 / nfiles;  
-      sr.perFileWeight *= 1 / nfiles;                                                             
-      //sr.perFileWeight = perFile;
-      //sr.SpecialHCRunId = SpecialHCRunId;
-      fin.Close();*/
-      //----
+  TTree *potFriend = 0;
+  //if (fpotfriend) { // Only true if running GoPRISM(), not Go().
+  //  fpotfriend->GetObject("OffAxisWeightFriend", potFriend);
+  f->GetObject("OffAxisWeightFriend", potFriend);
+  if (potFriend) {
+    tr->AddFriend(potFriend);
+    SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
+    SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
+    SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
+    SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
+    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
  
-      std::cout << "[INFO]: Found Off axis weight friend tree "
-                   "in input file, hooking up!"
-                << std::endl;
-    } else {
-      std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
-      sr.perPOTWeight = 1;
-      sr.perFileWeight = 1;
-      sr.NDMassCorrWeight = 1;
-      sr.SpecialRunWeight = 1;
-      sr.SpecialHCRunId = 293;
-    }
+    std::cout << "[INFO]: Found Off axis weight friend tree "
+                 "in input file, hooking up!"
+              << std::endl;
   } else {
     std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
     sr.perPOTWeight = 1;
@@ -504,10 +462,32 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
     sr.SpecialHCRunId = 293;
   }
 
+  TFile fin((FindCAFAnaDir() + "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
+  assert(fin.IsOpen());
+  std::map<int, TH1D *> FileExposures;
+  std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
+  
+  for (int SpecRunID_local : SpecRunIds_all) {
+    std::stringstream ss("");
+    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
+    if (!FileExposures[SpecRunID_local]) abort(); 
+  }                                                                                     
+
+  int Nfiles = NFiles();
+  std::cout << "Nfiles = " << Nfiles << std::endl;
+
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
     if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
+
+    // Only need to change the perFile weight if we have multiple ND files
+    if (!sr.isFD && Nfiles > 1) { 
+      double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
+          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x));
+      sr.perFileWeight = 1 / nfiles;
+    }
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {
@@ -518,8 +498,26 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
     } else {
       sr.eRec_FromDep = sr.eRecoP + sr.eRecoN + sr.eRecoPip + sr.eRecoPim +
                         sr.eRecoPi0 + sr.eRecoOther + sr.LepE;
+
       sr.GENIE_ScatteringMode = sr.mode;
     }
+
+    // Common EvisReco variable for ND and FD
+    if (sr.isFD) {
+      if (sr.nuPDG == 14 || sr.nuPDG == -14) { // FD numu event 
+        sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+      } else if (sr.nuPDG == 12 || sr.nuPDG == -12) {
+        sr.RecoLepE_NDFD = sr.RecoLepEnNue;
+      }
+      //sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0;
+      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim +
+                         sr.eDepPi0 + sr.eDepOther; 
+    } else {
+      sr.RecoLepE_NDFD = sr.Elep_reco;
+      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
+                         sr.eRecoPi0 + sr.eRecoOther;
+    }
+    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
 
     double eother = 0;
     if (std::isnormal(sr.eOther)) {
@@ -532,25 +530,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
     if (!sr.isCC) {
       sr.eRecProxy = sr.eRecProxy - sr.LepE;
     }
-
-    // Common reco LepE variable for ND and FD
-    if (sr.isFD && (sr.nuPDG == 14 || sr.nuPDG == -14)) // FD numu event 
-      sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
-    else if (sr.isFD && (sr.nuPDG == 12 || sr.nuPDG == -12)) // FD nue event
-      sr.RecoLepE_NDFD = sr.RecoLepEnNue;
-    else 
-      sr.RecoLepE_NDFD = sr.Elep_reco;
-    
-    //if (sr.isFD) sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
-    //                                sr.eRecoPi0; //+ sr.eRecoOther;
-    if (sr.isFD) 
-      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim + 
-                         sr.eDepPi0 + sr.eDepOther;
-    else 
-      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
-                         sr.eRecoPi0 + sr.eRecoOther;
-
-    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
 
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
@@ -706,6 +685,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog, TFile *fpotfriend) {
     if (prog && n % 10000 == 0)
       prog->SetProgress(double(n) / Nentries);
   } // end for n
+  fin.Close();
 }
 
 //----------------------------------------------------------------------

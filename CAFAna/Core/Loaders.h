@@ -7,7 +7,6 @@ namespace caf{
   const int kNEARDET = 1;
   const int kFARDET = 2;
 }
-//#include "StandardRecord/SRHeader.h" // For Det_t
 
 #include <map>
 
@@ -57,7 +56,7 @@ namespace ana
     void Go();
     /// Call GoPRISM() [short for GoGoGadgetPRISM()] on all the 
     /// loaders for PRISM analysis.
-    void GoPRISM();
+    //void GoPRISM();
 
   protected:
     typedef std::tuple<caf::Det_t, DataMC, SwappingConfig> Key_t;

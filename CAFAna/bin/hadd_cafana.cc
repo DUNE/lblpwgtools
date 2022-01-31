@@ -3,6 +3,8 @@
 #include <set>
 #include <iostream>
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "TClass.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -478,7 +480,7 @@ int main(int argc, char** argv)
   ++argIdx;
 
   std::vector<std::string> innames;
-  for(int i = argIdx; i < argc; ++i) innames.push_back(argv[i]);
+  for(int i = argIdx; i < argc; ++i) innames.push_back(ana::pnfs2xrootd(argv[i]));
 
   std::cout << "Adding " << innames.size() << " input files." << std::endl;
 

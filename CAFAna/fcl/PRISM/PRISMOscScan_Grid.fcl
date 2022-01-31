@@ -6,11 +6,11 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_EVisReco_NDFD_XSecFluxDetSyst_18Jan22.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHCRHC_FluxSysts_19Jan22.root
 
 	projection_name: EVisReco
 	use_PRISM: true
-	POT_years: 3.5
+	POT_years: 1.0
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false

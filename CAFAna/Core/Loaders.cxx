@@ -126,8 +126,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void Loaders::GoPRISM()
-  {
-    for(auto it: fLoaders) it.second->GoPRISM();
-  }
+  //void Loaders::GoPRISM()
+  //{
+  //  for(auto it: fLoaders) it.second->GoPRISM();
+  //}
 }

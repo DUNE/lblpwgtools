@@ -99,7 +99,6 @@ public:
     if (fPOTFD == 0) {
       fPOTFD = Data.POT();
     }
-    std::unique_ptr<TH1> hData = std::unique_ptr<TH1>(Data.ToTH1(fPOTFD));
     Eigen::VectorXd fData_vecraw = Data.GetEigen(fPOTFD).matrix();
     fData_vec = fData_vecraw.segment(1, fData_vecraw.size() - 2);
 
@@ -120,7 +119,7 @@ public:
   Eigen::VectorXd GetPred(osc::IOscCalc *osc,
                 const SystShifts &syst = SystShifts::Nominal()) const {
     Eigen::VectorXd pred_v = fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
-                             .at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                             .at(PredictionPRISM::kNDDataCorr_FDExtrap) // kFDOscPred kNDDataCorr_FDExtrap
                              .GetEigen(fPOTFD).matrix();
     // Chop off the under and over flow bins.
     Eigen::VectorXd pred_v_seg = pred_v.segment(1, pred_v.size() - 2);
@@ -133,8 +132,9 @@ public:
     auto cov_s = fPred->PredictPRISMComponents(osc, syst, fMatchChannel)
                  .at(PredictionPRISM::kExtrapCovarMatrix);
 
-    Eigen::MatrixXd cov_mat = ConvertArrayToMatrix(cov_s.GetEigen(std::pow(fPOTFD/fPOTND, 2)),
+    Eigen::MatrixXd cov_mat = ConvertArrayToMatrix(cov_s.GetEigen(fPOTND),
                                                    cov_s.GetBinnings());
+    cov_mat *= std::pow(fPOTFD/fPOTND, 2);
 
     // Chop off the under and over flow bins.
     Eigen::MatrixXd cov_mat_block = cov_mat.block(1, 1, cov_mat.rows() - 2, 
@@ -148,7 +148,7 @@ public:
                  const SystShifts &syst = kNoShift) const override {
 
     Eigen::VectorXd PredVec = GetPred(osc, syst);
-   
+    //std::cout << "SYST: " << syst.ShortName() << std::endl; 
     Eigen::MatrixXd CovMat = Eigen::MatrixXd::Zero(PredVec.size(), PredVec.size());
     for (int diag = 0; diag < CovMat.rows(); diag++) {
       // Poisson error on number of events in bin

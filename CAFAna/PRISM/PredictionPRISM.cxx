@@ -499,13 +499,13 @@ Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
 
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::PredictSyst(osc::IOscCalc *calc,
-                                      SystShifts shift) const {
+                                      const SystShifts &shift) const {
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps =
       PredictPRISMComponents(calc, shift);
 
   assert(Comps.size());
 
-  return Comps.at(kPRISMPred);
+  return Comps.at(kNDDataCorr_FDExtrap);
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
@@ -635,7 +635,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   if (fNCCorrection) { // NC background subraction.
     PRISMReweightableSpectrum NC =
       NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictComponentSyst(
-                                         calc, (fVaryNDFDMCData ? shift : kNoShift),
+                                         calc, (fVaryNDFDMCData ? kNoShift : shift),
                                          Flavors::kAll, Current::kNC, Sign::kBoth),
                                          fDefaultOffAxisPOT),
                        293, fOffPredictionAxis);
