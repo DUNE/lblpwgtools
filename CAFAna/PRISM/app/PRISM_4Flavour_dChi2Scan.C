@@ -8,6 +8,7 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Experiment/ReactorExperiment.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
@@ -327,6 +328,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                     FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second, {0, 6}));
+    /*Expts.emplace_back(new SingleSampleExperiment(state.PRISM.get(), 
+                                                  FarDetDataPred.FakeData(POT_FD)));*/
 
     CombExpts.Add(Expts.back().get());
   
@@ -427,8 +430,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
-      SystShifts bestSysts;
-      //const SeedList &seedPts = SeedList(); //oscSeeds
+      SystShifts bestSysts = kNoShift;
       double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, 
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
@@ -460,10 +462,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         }
       }
     }
-    if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
@@ -482,9 +484,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         auto start_fit = std::chrono::system_clock::now();
 
         MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); 
-        SystShifts bestSysts;
-        //const SeedList &seedPts = SeedList();
-        
+        SystShifts bestSysts = kNoShift;
         double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
         // fill hist

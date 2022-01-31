@@ -178,8 +178,7 @@ MakePRISMPredInterps -o ${OUTFILENAME} \
                      ${SYSTDESCRIPTORARG} \
                      ${NOFAKEDATAARG} \
                      ${PRISMFAKEDATAARG} \
-                     ${SELECTIONARG} \
-                     -n 100000 
+                     ${SELECTIONARG} 
 
 LOGYLOG "Copying output @ $(date)"
 
