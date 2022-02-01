@@ -301,7 +301,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
-    if (use_PRISM) {
+    //if (use_PRISM) {
       auto PRISMComponents =
         state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
       auto *PRISMPred =
@@ -320,7 +320,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       PRISMExtrapCovMat->Scale(1, "width");
       chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
       PRISMExtrapCovMat->SetDirectory(nullptr);
-    }
+    //}
+
+    auto PRISMPred_spec =
+      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
 
     std::cout << "Fill Experiment objects." << std::endl;
 
@@ -425,13 +428,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "dCP = " << calc->GetdCP() << std::endl;
       std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
  
-      auto calc_fit = calc->Copy();
+      //auto calc_fit = calc->Copy();
  
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts = kNoShift;
-      double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, 
+      double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
       scan_hist_1D->Fill(x, chi);

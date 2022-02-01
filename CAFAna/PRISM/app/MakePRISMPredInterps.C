@@ -910,11 +910,9 @@ int main(int argc, char const *argv[]) {
       los_flux, &no_osc, *FluxPredGens[5], Loaders_nu, kNoShift,
       PredictionInterp::kSplitBySign));*/
 
-  std::cout << "Loaders GoPRISM()." << std::endl;
+  std::cout << "Loaders Go()." << std::endl;
   Loaders_nu.Go();
   Loaders_nub.Go();
-  //Loaders_nu.GoPRISM();
-  //Loaders_nub.GoPRISM();
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
