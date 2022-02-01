@@ -494,7 +494,7 @@ PredictionPRISM::GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
 
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
-  return PredictSyst(calc, kNoShift);
+   return PredictSyst(calc, kNoShift);
 }
 
 //----------------------------------------------------------------------
@@ -978,7 +978,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   if (fWSBCorrection) { // Add in wrong sign background. Nue: Numu->Nue only.
     Comps.emplace(kFDWSBkg,
                   FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, 
+                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, /////!!!!
                       Current::kCC, FDWrongSign));
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDWSBkg);

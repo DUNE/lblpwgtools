@@ -8,7 +8,8 @@ LIST(APPEND PRISM_implementation_files
   EigenUtils.cxx
   PRISMDetectorExtrapolation.cxx
   PRISMMCEffCorrection.cxx
-  RunPlan.cxx)
+  RunPlan.cxx
+  SimpleChi2Experiment.cxx)
 LIST(APPEND PRISM_header_files
   PRISMExtrapolator.h
   PredictionPRISM.h
@@ -17,7 +18,8 @@ LIST(APPEND PRISM_header_files
   EigenUtils.h
   PRISMDetectorExtrapolation.h
   PRISMMCEffCorrection.h
-  RunPlan.h)
+  RunPlan.h
+  SimpleChi2Experiment.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
