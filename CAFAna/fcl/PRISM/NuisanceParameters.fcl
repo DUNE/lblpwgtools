@@ -1,7 +1,7 @@
 
 nuisance_parameters: {
 	flux5: [  
-		flux_Nov17_0, 
+		flux_Nov17_5, 
 		flux_Nov17_1, 
 		flux_Nov17_2, 
 		flux_Nov17_3, 
@@ -37,8 +37,8 @@ nuisance_parameters: {
 		flux_Nov17_13,
 		flux_Nov17_14,
 		flux_Nov17_15,
-		#flux_Nov17_16,
-		#flux_Nov17_17
+		flux_Nov17_16,
+		flux_Nov17_17
 	]
 
 	fluxHadProd10: [

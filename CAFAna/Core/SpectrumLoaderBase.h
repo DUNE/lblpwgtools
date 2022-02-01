@@ -61,8 +61,6 @@ namespace ana
 
     /// Load all the registered spectra
     virtual void Go() = 0;
-    /// Load all the registered spectra for off axis analysis.
-    //virtual void GoPRISM() = 0;
 
     /// Indicate whether or not \ref Go has been called
     virtual bool Gone() const {return fGone;}
@@ -94,17 +92,10 @@ namespace ana
 
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
-    // Yeah I know... PRISM messing up the CAFAna code again
-    //std::unique_ptr<IFileSource> fFileSource2;
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 
     double fPOT; ///< Accumulated by calls to \ref GetNextFile
-
-    /// Flag which starts looping through the second list of the same files.
-    /// Needed for getting PRISM weightings correct.
-    //bool fSecondFileLoop;
-    //void StartSecondFileLoop() { fSecondFileLoop = true; }
 
     /// \brief Helper class for \ref SpectrumLoaderBase
     ///
@@ -192,7 +183,6 @@ namespace ana
     ~NullLoader();
 
     virtual void Go() override;
-    //virtual void GoPRISM() override;
 
     void AddSpectrum(Spectrum& spect,
                      const Var& var,

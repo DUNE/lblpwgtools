@@ -33,11 +33,6 @@ namespace ana
 
     virtual void Go() override;
 
-    // New Go function for PRISM loading. Specifically, this function 
-    // lets you load in multiple ND MC files and re-calculate the perPOT 
-    // weighting correctly for a PRISM analyis.
-    //virtual void GoPRISM() override;
-
   protected:
     SpectrumLoader();
 
@@ -49,7 +44,6 @@ namespace ana
     SpectrumLoader(const SpectrumLoader&) = delete;
     SpectrumLoader& operator=(const SpectrumLoader&) = delete;
 
-    //virtual void HandleFile(TFile* f, Progress* prog = 0, TFile *fpotfriend = nullptr);
     virtual void HandleFile(TFile* f, Progress* prog = 0);
 
     virtual void HandleRecord(caf::StandardRecord* sr);

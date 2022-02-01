@@ -215,7 +215,7 @@ namespace ana {
         }
       } 
 
-      // Cov Mat for true energy, propogated through Tik reg
+      // Cov Mat for true energy, propogated through unfold.
       Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
   
       Eigen::VectorXd FDERec = MatrixFD_block * NDETrue;

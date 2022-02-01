@@ -47,8 +47,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     abort();
   }
 
-  std::cout << "Using TH2_JAGGED for flux systs." << std::endl;
-
   bool isSpecHCRun(false);
   if (std::abs(sr->SpecialHCRunId) != 293) isSpecHCRun = true;
 
@@ -83,7 +81,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
     //std::cout << sr->OffAxisFluxConfig << " bin " << sr->OffAxisFluxBin << " weight = " << weight << std::endl;
   }
 #else
-  std::cout << "Getting normal flux systs." << std::endl;  
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
     if (fUseCDR) {
@@ -170,7 +167,6 @@ DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
                                     bool useCDR) {
 
 #ifdef USE_TH2JAGGED
-  //std::cout << "Get flux off axis systs!" << std::endl;
   if (!fOffAxisFluxParamHelper) {
     fOffAxisFluxParamHelper = &ana::OffAxisFluxUncertaintyHelper::Get();
   }
