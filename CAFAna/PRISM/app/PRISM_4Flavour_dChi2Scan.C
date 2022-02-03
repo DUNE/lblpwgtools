@@ -284,7 +284,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     // Begin ND to FD extrapolation
     SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
                              {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+
     // ND to FD MC efficiency correction
     NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
                            {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
@@ -293,15 +295,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                            {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
                            {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
 
-
-
-
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
-    //if (use_PRISM) {
+    if (use_PRISM) {
       auto PRISMComponents =
         state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
       auto *PRISMPred =
@@ -320,10 +319,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       PRISMExtrapCovMat->Scale(1, "width");
       chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
       PRISMExtrapCovMat->SetDirectory(nullptr);
-    //}
+    }
 
-    auto PRISMPred_spec =
-      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
+    //auto PRISMPred_spec =
+    //  PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
 
     std::cout << "Fill Experiment objects." << std::endl;
 

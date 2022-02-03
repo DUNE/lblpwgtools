@@ -62,15 +62,15 @@ nuisance_parameters: {
 
 	xsec_small: [
 		MaCCQE,
-		MaCCRES,
+		#MaCCRES,
 		#BeRPA_A, 
 		#BeRPA_B, 
 		#BeRPA_D,
 		#MaNCRES,
 		#MvNCRES,
 		#FrCEx_N,
-		VecFFCCQEshape,
-		CCQEPauliSupViaKF,
+		#VecFFCCQEshape,
+		#CCQEPauliSupViaKF,
 		#MaCCRES 
 	]
 
