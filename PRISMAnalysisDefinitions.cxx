@@ -7,6 +7,7 @@
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/StandardRecord.h"
@@ -37,66 +38,41 @@ const Cut kERecoProxy8GeV([](const caf::StandardRecord *sr) {
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {
     return Binning::Simple(100, 0, 10);
-  }
-  if (xbinning == "uniform") {
+  } else if (xbinning == "uniform") {
     return Binning::Simple(150, 0, 25);
-  }
-  if (xbinning == "uniform_smallrange") {
+  } else if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
-  }
-  if (xbinning == "uniform_coarse") {
+  } else if (xbinning == "uniform_coarse") {
     return Binning::Simple(25, 0, 10); // used to be 25, 10 (bad tail going out to 10)
-  }
-  if (xbinning == "testopt") {
+  } else if (xbinning == "prism_noextrap") {
+    return kPRISMRecoBinning;
+  } else if (xbinning == "testopt") {
     std::vector<double> BE = {
         0,
     };
-
     while (BE.back() < 4) {
       BE.push_back(BE.back() + 0.25);
     }
-
     while (BE.back() < 8) {
       BE.push_back(BE.back() + 0.5);
     }
-
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
-    std::vector<double> BE = { 0, };
-    while(BE.back() < 1) {
-      BE.push_back(BE.back() + 0.5);
-    }
-    while(BE.back() < 4.0) {
-      BE.push_back(BE.back() + 0.25);
-    }
-    while(BE.back() < 6.0) { 
-      BE.push_back(BE.back() + 1.0);
-    }
-    while(BE.back() < 10.0) {
-      BE.push_back(BE.back() + 4.0);
-    }
-    return Binning::Custom(BE);
+    return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
-    std::vector<double> BE = { 0, };
+    //return kTrueEnergyBins;
+    std::vector<double> BE = { 0., 0.5 };
 
-    while (BE.back() < 10) {
+    while (BE.back() < 10.) {
       BE.push_back(BE.back() + 0.2);
     }  
 
-    while (BE.back() < 20) {
-      BE.push_back(BE.back() + 1.0); 
+    while (BE.back() < 20.) {
+      BE.push_back(BE.back() + 5.0);
     }
 
-    while (BE.back() < 50) {
-      BE.push_back(BE.back() + 5.0);   
-    }
-
-    while (BE.back() < 100) {
-      BE.push_back(BE.back() + 10.0);
-    }
-
-    while (BE.back() < 120) {
-      BE.push_back(BE.back() + 20.0);
+    while (BE.back() < 60.) {
+      BE.push_back(BE.back() + 40.0);
     }
 
     return Binning::Custom(BE);
@@ -183,7 +159,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   // Seperate ND and FD axes for ND->FD extrapolation.
   // Possible fine binning for ND axis, just keep them the
   // same for now.
-  HistAxis xaxND = RecoObservable(varname, xbinning); // xbinning default_fine
+  HistAxis xaxND = RecoObservable(varname, "prism_noextrap"); // xbinning default_fine
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
@@ -461,25 +437,6 @@ Weight GetNDSpecialRun(std::string const &SRDescriptor) {
   }
 }
 
-/*size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
-                                  bool is280kA) const {
-  size_t conf;
-  assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
-  if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
-  else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
-  return conf;
-}
-                                                                                
-size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
-  size_t conf;
-  if (FDflav == Flavors::kNuMuToNuMu) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
-  } else if (FDflav == Flavors::kNuMuToNuE) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
-  } else { abort(); }
-                                                                                
-  return GetFDConfig(conf);
-}*/                                                                                          
 
 bool operator&(NuChan const &l, NuChan const &r) {
   return bool(static_cast<int>(l) & static_cast<int>(r));

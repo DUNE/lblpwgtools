@@ -86,9 +86,8 @@ void MergeFilesLayer2(TDirectory *target, TFile *source) {
     TObject *obj = key->ReadObj();
     std::string keyname(key->GetName());
 
+    target->cd();
     if (obj->IsA()->InheritsFrom(TDirectory::Class())) {
-      //std::cout << "Found subdirectory " << obj->GetName() << std::endl;
-      target->cd();
       if (!target->FindObject(key->GetName())) {
         TDirectory *newdir = target->mkdir(obj->GetName(), obj->GetTitle());
         MergeFilesLayer2(newdir, source);

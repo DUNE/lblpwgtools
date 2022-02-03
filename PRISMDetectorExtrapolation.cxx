@@ -271,15 +271,24 @@ namespace ana {
 
     osc::NoOscillations no; 
     auto sMND = NDPredInterps.at(kND_293kA_nu)->Predict(&no);
+    size_t conf(0);
+    if (!FDPredInterps.at(conf)) conf = 1;
+    auto sMFD = FDPredInterps.at(conf)->Predict(&no);
 
-    std::vector<std::string> labels = sMND.GetLabels();
-    std::vector<Binning> bins = sMND.GetBinnings();
+    std::vector<std::string> labelsND = sMND.GetLabels();
+    std::vector<Binning> binsND = sMND.GetBinnings();
 
-    LabelsAndBins reco_axis(labels.at(0), bins.at(0));
-    LabelsAndBins true_axis(labels.at(1), bins.at(1));
+    std::vector<std::string> labelsFD = sMFD.GetLabels();
+    std::vector<Binning> binsFD = sMFD.GetBinnings();
 
-    ReweightableSpectrum rwND(std::move(matND), reco_axis, true_axis, 1, 0);
-    ReweightableSpectrum rwFD(std::move(matFD), reco_axis, true_axis, 1, 0);
+    LabelsAndBins reco_axisND(labelsND.at(0), binsND.at(0));
+    LabelsAndBins true_axisND(labelsND.at(1), binsND.at(1));
+
+    LabelsAndBins reco_axisFD(labelsFD.at(0), binsFD.at(0));
+    LabelsAndBins true_axisFD(labelsFD.at(1), binsFD.at(1));
+
+    ReweightableSpectrum rwND(std::move(matND), reco_axisND, true_axisND, 1, 0);
+    ReweightableSpectrum rwFD(std::move(matFD), reco_axisFD, true_axisFD, 1, 0);
 
     dir->WriteTObject(rwND.ToTH2(1), "ND_SmearingMatrix");
     dir->WriteTObject(rwFD.ToTH2(1), "FD_SmearingMatrix");
