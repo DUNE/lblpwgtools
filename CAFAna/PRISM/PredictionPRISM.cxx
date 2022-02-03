@@ -730,6 +730,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   LabelsAndBins oaAxis280(fND280kAAxis.GetLabels().at(0),
                            fND280kAAxis.GetBinnings().at(0));
 
+  //std::cout << LinearCombination.first << std::endl;
   // Scale relative size of the weights to account for the run-plan.
   // E.g. more data taken on-axis means a smaller weight for the 
   // on-axis position weights.
@@ -812,8 +813,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
   
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisND.GetLabels(), 
-                              fAnalysisAxisND.GetBinnings());
+  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), // fAnalysisAxisND
+                              fAnalysisAxisFD.GetBinnings()); // fAnalysisAxisND
   LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(), 
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),

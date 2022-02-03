@@ -133,7 +133,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 
 std::string output_file_name;
 std::string syst_descriptor = "nosyst";
-std::string axdescriptor = "EProxy";
+std::string axdescriptor = "EVisReco";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
 std::string truthbinningdescriptor = "event_rate_match"; // was uniform
@@ -398,7 +398,7 @@ int main(int argc, char const *argv[]) {
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
-  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor);
+  HistAxis TrueObsAxis = TrueObservable(axdescriptor, "prism_noextrap"); // binningdescriptor
 
   std::vector<HistAxis> AxisVec = { axes.XProjectionFD };
   HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
@@ -587,16 +587,6 @@ int main(int argc, char const *argv[]) {
 
   HistAxis const NDEventRateSpectraAxis_280kA(
       Labels_match_280kA, Bins_match_280kA, Vars_match_280kA);
-
-  std::vector<std::string> Labels_obs = axes.XProjectionND.GetLabels();
-  std::vector<Binning> Bins_obs = axes.XProjectionND.GetBinnings();
-  std::vector<Var> Vars_obs = axes.XProjectionND.GetVars();
-
-  Labels_obs.push_back(axes.OffAxisPosition.GetLabels().front());
-  Bins_obs.push_back(axes.OffAxisPosition.GetBinnings().front());
-  Vars_obs.push_back(axes.OffAxisPosition.GetVars().front());
-
-  HistAxis const NDObservedSpectraAxis(Labels_obs, Bins_obs, Vars_obs);
 
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:

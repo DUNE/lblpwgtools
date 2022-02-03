@@ -364,31 +364,6 @@ inline int FluxSpeciesPDG(NuChan fps) {
 }
 
 
-//size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
-//                           bool is280kA = false) const;
-/*inline size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
-                                  bool is280kA) const {
-  size_t conf;
-  assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
-  if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
-  else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
-  return conf;
-}*/
-                           
-//size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const;
-/*inline size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
-  size_t conf;
-  if (FDflav == Flavors::kNuMuToNuMu) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
-  } else if (FDflav == Flavors::kNuMuToNuE) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
-  } else { abort(); }
-                                                                                
-  return GetFDConfig(conf);
-}*/                                                                                               
-
-
-
 #define LOUDASSERT(a)                                                          \
   {                                                                            \
     if (!(a)) {                                                                \
@@ -474,16 +449,16 @@ struct PRISMAxisBlob {
   ana::HistAxis OffAxis280kAPosition;
 };
 
-ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "uniform");
+ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "event_rate_match");
 PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                            std::string const &xbinning = "default",
                            std::string const &oabinning = "default");
 
-ana::HistAxis TrueObservable(std::string const &obsvarname = "EProxy",
-                             std::string const &binning = "uniform_smallrange");
+ana::HistAxis TrueObservable(std::string const &obsvarname = "EVisReco",
+                             std::string const &binning = "prism_noextrap");
 
-ana::HistAxis RecoObservable(std::string const &obsvarname = "EProxy",
-                             std::string const &binning = "uniform_smallrange");
+ana::HistAxis RecoObservable(std::string const &obsvarname = "EVisReco",
+                             std::string const &binning = "prism_noextrap");
 
 bool isRecoND(std::string var = "ETrue");
 
