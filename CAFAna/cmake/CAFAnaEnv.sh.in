@@ -59,7 +59,8 @@ if [ -z "${CAFANA}" ]; then
   export CAFANA=@CMAKE_INSTALL_PREFIX@
 fi
 
-AUX_ENV_SCRIPTS=@BUILD_ENV_SCRIPTS@
+#AUX_ENV_SCRIPTS=@BUILD_ENV_SCRIPTS@
+AUX_ENV_SCRIPTS=${CAFANA}/ups_env_setup.sh
 for script in $(echo ${AUX_ENV_SCRIPTS} | tr ";" " "); do
   echo "Sourcing auxiliary env script: ${script}"
   source ${script}
@@ -85,7 +86,7 @@ if [ -e ${CAFANA}/fcl ]; then
   add_to_FHICL_FILE_PATH "${CAFANA}/fcl"
   if [ -e ${CAFANA}/fcl/PRISM ]; then
     add_to_FHICL_FILE_PATH "${CAFANA}/fcl/PRISM"
-    add_to_FHICL_FILE_PATH "${CAFANA}/fcl/example"
+    #add_to_FHICL_FILE_PATH "${CAFANA}/fcl/example"
   fi
 fi
 
@@ -98,6 +99,7 @@ fi
 export CAFANA_ANALYSIS_VERSION="4"
 # Want to propogate stat errors for PRISM
 export CAFANA_STAT_ERRS="1"
+export CAFANA_PRISMDIR=${CAFANA}/../../PRISM
 # export CAFANA_TOTALDURATION_MIN="240"
 # export CAFANA_SAFEUNITDURATION_MIN="60"
 # export CAFANA_CHKDURATION_MIN="30"

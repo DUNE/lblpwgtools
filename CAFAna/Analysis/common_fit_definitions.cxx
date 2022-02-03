@@ -509,7 +509,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   for (uint i=0; i<FDSyst.size(); i++){
     thisShift.SetShift(FDSyst[i], dial_vals[i]);
   }
-
+  std::cout << "Fake data name: " << thisShift.ShortName() << std::endl; 
   return thisShift;
 }
 

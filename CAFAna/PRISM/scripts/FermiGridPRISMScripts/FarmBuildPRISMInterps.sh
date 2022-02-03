@@ -9,7 +9,7 @@ LIFETIME_EXP_ND="40h"
 DISK_EXP_ND="4GB"
 MEM_EXP_ND="10GB"
 
-LIFETIME_EXP_FD="5h"
+LIFETIME_EXP_FD="20h"
 DISK_EXP_FD="4GB"
 MEM_EXP_FD="10GB"
 
@@ -175,6 +175,8 @@ source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
 setup jobsub_client
 setup ifdhc
+${CAFANA}/CAFAnaEnv.sh
+ups active
 
 if ! kx509; then
   echo "[ERROR]: Failed to setup kx509."
@@ -222,8 +224,8 @@ if [ "${DO_FD}" == "1" ]; then
 fi
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then # used to grep \"ND_FHC_\"
-    echo "ifdh ls ${INPUT_DIR} | grep \"subset\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "subset" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"CAFv7_\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "CAFv7_" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_FHC.list
     NND_FHC=$(cat InputCAFs.ND_FHC.list | wc -l)
     echo "[INFO]: Found ${NND_FHC} ND_FHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_FHC ))
@@ -236,8 +238,8 @@ if [ "${DO_ND}" == "1" ]; then
   fi
 
   if [ "${DO_RHC}" == "1" ]; then # used to grep \"ND_RHC_*.root\"
-    echo "ifdh ls ${INPUT_DIR} | grep \"subset\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "subset" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
+    echo "ifdh ls ${INPUT_DIR} | grep \"CAFv7_*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
+    ifdh ls ${INPUT_DIR} | grep "CAFv7_" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
     echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))
@@ -273,6 +275,9 @@ elif [ ${FORCE_REMOVE} == "1" ]; then
   rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
   mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
 fi
+
+setup jobsub_client
+${CAFANA}/CAFAnaEnv.sh
 
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then

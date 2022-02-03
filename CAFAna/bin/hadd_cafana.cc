@@ -13,6 +13,7 @@
 #include "TTree.h"
 #include "TVectorD.h"
 #include "TVector3.h"
+#include "TROOT.h"
 
 std::string ConcatPath(const std::string& a, const std::string& b)
 {
@@ -447,6 +448,8 @@ void usage()
 
 int main(int argc, char** argv)
 {
+  gROOT->SetMustClean(false);
+
   if(argc < 3 ||
      argv[1] == std::string("-h") ||
      argv[1] == std::string("--help")) usage();
