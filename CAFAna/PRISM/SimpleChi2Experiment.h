@@ -106,24 +106,6 @@ public:
     fPOTND = NDPOT;
 
     fMatchChannel = match_chan;
-
-    if (erange.first != -std::numeric_limits<double>::max()) {
-      fBinRange.first = hData->GetXaxis()->FindFixBin(erange.first);
-      if (fBinRange.first < 1) {
-        fBinRange.first = 1;
-      }
-    } else {
-      fBinRange.first = 1;
-    }
-
-    if (erange.second != std::numeric_limits<double>::max()) {
-      fBinRange.second = hData->GetXaxis()->FindFixBin(erange.second);
-      if (fBinRange.second > (hData->GetXaxis()->GetNbins() + 1)) {
-        fBinRange.second = (hData->GetXaxis()->GetNbins() + 1);
-      }
-    } else {
-      fBinRange.second = (hData->GetXaxis()->GetNbins() + 1);
-    }
   }
 
   PredictionPRISM const *fPred;
@@ -133,8 +115,6 @@ public:
   bool fUseCovariance;
 
   PRISM::MatchChan fMatchChannel;
-  std::pair<int, int> fBinRange;
-
 
   // Get the extrapolated PRISM prediction
   Eigen::VectorXd GetPred(osc::IOscCalc *osc,

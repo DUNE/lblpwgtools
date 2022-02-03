@@ -5,9 +5,9 @@ CAFE_COMMAND_FILE="CAFECommands.cmd"
 SCRIPT_TO_INCLUDE=""
 RENAME_SUBMIT_SCRIPT=""
 
-LIFETIME_EXP="60h"
-DISK_EXP="10GB"
-MEM_EXP="30GB"
+LIFETIME_EXP="40h"
+DISK_EXP="5GB"
+MEM_EXP="20GB"
 
 FORCE_REMOVE="0"
 
@@ -216,6 +216,7 @@ source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 
 setup jobsub_client
 setup ifdhc
+${CAFANA}/CAFAnaEnv.sh
 
 if ! kx509; then
   echo "[ERROR]: Failed to setup kx509."
@@ -254,6 +255,9 @@ if [ ! -z "${RENAME_SUBMIT_SCRIPT}" ]; then
     cp ${CAFANA}/scripts/FermiGridScripts/CAFPRISMNodeScript.sh ${PWD}/${RENAME_SUBMIT_SCRIPT}
     SUBMIT_SCRIPT=${PWD}/${RENAME_SUBMIT_SCRIPT}
 fi
+
+setup jobsub_client
+${CAFANA}/CAFAnaEnv.sh
 
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then

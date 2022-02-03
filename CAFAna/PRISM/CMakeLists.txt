@@ -36,4 +36,5 @@ install(TARGETS CAFAnaPRISM
 
 add_subdirectory(app)
 add_subdirectory(flux)
+add_subdirectory(FileExposures)
 add_subdirectory(scripts)

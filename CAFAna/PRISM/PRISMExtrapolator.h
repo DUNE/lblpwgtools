@@ -44,7 +44,7 @@ namespace ana {
     /// Any can be left out, which will limit the
     /// allowed combinations of PRISM::NuChan that can be passed to
     /// GetMatchCoefficients
-    void Initialize(std::map<std::string, PredictionInterp const *> const &);
+    void Initialize(std::map<std::string, PredictionInterp *> const &);
 
     PredictionInterp const *
     GetNDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode, int kA = 293) const;

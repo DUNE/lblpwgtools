@@ -6,6 +6,7 @@
 // C. Hasnip 6/5/2021
 //
 
+#include "CAFAna/Core/Utilities.h"
 
 #include <string>
 #include <iostream>
@@ -19,8 +20,10 @@
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjString.h"
+#include "TROOT.h"
 
 TFile *Target;
+//gROOT->SetMustClean(false);
 
 // TODO: do this with just one function. Two is not necessary
 void MergeFilesLayer2(TDirectory *target, TFile *source);
@@ -84,9 +87,10 @@ void MergeFilesLayer2(TDirectory *target, TFile *source) {
     TObject *obj = key->ReadObj();
     std::string keyname(key->GetName());
 
+    target->cd();
     if (obj->IsA()->InheritsFrom(TDirectory::Class())) {
       if (!target->FindObject(key->GetName())) {
-        target->cd();
+        //target->cd();
         TDirectory *newdir = target->mkdir(obj->GetName(), obj->GetTitle());
         MergeFilesLayer2(newdir, source);
       } else {
@@ -140,6 +144,8 @@ void usage() {
 
 int main(int argc, char** argv) {
 
+  gROOT->SetMustClean(false);
+
   if(argc < 3 ||
      argv[1] == std::string("-h") ||
      argv[1] == std::string("--help")) usage();
@@ -159,7 +165,8 @@ int main(int argc, char** argv) {
 
   Target = TFile::Open(outfilename.c_str(), "RECREATE");
 
-  for(const std::string& fname : infilenames) {
+  for(std::string& fname : infilenames) {
+    fname = ana::pnfs2xrootd(fname);
     TFile *fin = TFile::Open(fname.c_str());
     if (!fin || fin->IsZombie()) {
       std::cout << "[ERROR] failed to open " << fname << std::endl;
@@ -168,7 +175,8 @@ int main(int argc, char** argv) {
     std::cout << "Opened " << fname << std::endl;
 
     MergeFiles(Target, fin);
+    fin->Close();
   }
  
   return 0; 
-}
+}                                                                                              

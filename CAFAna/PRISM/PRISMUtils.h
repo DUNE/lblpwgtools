@@ -87,7 +87,6 @@ inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v,
 struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> SelPredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps; 
   std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps; 
   // For MC Eff Correction
@@ -119,7 +118,6 @@ struct PRISMStateBlob {
 
     // Don't need MatchPredInterps for Nue (they aren't made/used)
     return PRISM && (IsNue || bool(MatchPredInterps[pc])) &&
-           bool(SelPredInterps[pc]) &&
            (IsND || (bool(FarDetPredInterps[fd_pc]) &&
                      bool(FarDetData_nonswap[fd_pc]) &&
                      bool(FarDetData_nueswap[fd_pc])));
@@ -127,7 +125,6 @@ struct PRISMStateBlob {
 
   void Init() {
     FillWithNulls(MatchPredInterps, PRISM::kNPRISMConfigs);
-    FillWithNulls(SelPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(NDMatrixPredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDMatrixPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(NDUnselTruePredInterps, PRISM::kNPRISMConfigs);

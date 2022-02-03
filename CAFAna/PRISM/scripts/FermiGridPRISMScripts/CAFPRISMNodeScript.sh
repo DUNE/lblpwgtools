@@ -65,6 +65,8 @@ voms-proxy-info --all
 
 setup ifdhc
 
+source ${CAFANA}/CAFAnaEnv.sh
+
 ups active
 
 export IFDH_CP_UNLINK_ON_ERROR=1;
@@ -104,13 +106,7 @@ SCRIPT_NAME=$(echo ${LINE} | cut -f 1 -d " ")
 #OUTPUT_NAME=$(echo ${LINE} | cut -f 3 -d " ") # output contained in fcl
 FCL_NAME=$(echo ${LINE} | cut -f 2 -d " ") # fcl file is second parameter in cmd file
 
-#LOGYLOG "Running script ${SCRIPT_NAME} and expecting output ${OUTPUT_NAME}"
 LOGYLOG "Running script ${SCRIPT_NAME} using fcl file ${FCL_NAME}"
-
-#if [ ! -e  ${CAFANA}/scripts/${SCRIPT_NAME} ]; then
-#  LOGYLOG "[ERROR]: Failed to find expected script: ${CAFANA}/scripts/${SCRIPT_NAME}"
-#  exit 6
-#fi
 
 if [ ! -e  ${CAFANA}/${FCL_NAME} ]; then
   LOGYLOG "[ERROR]: Failed to find expected fcl: ${CAFANA}/${FCL_NAME}"

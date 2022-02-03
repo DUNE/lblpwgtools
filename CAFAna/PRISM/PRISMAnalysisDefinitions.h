@@ -6,6 +6,8 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Weight.h"
 
+#include "CAFAna/Prediction/PredictionInterp.h"
+
 #include "fhiclcpp/ParameterSet.h"
 
 #include <array>
@@ -360,6 +362,32 @@ inline int FluxSpeciesPDG(NuChan fps) {
   std::cout << "[ERROR]: Invalid NuChan: " << fps << std::endl;
   abort();
 }
+
+
+//size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+//                           bool is280kA = false) const;
+/*inline size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+                                  bool is280kA) const {
+  size_t conf;
+  assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
+  if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
+  else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
+  return conf;
+}*/
+                           
+//size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const;
+/*inline size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
+  size_t conf;
+  if (FDflav == Flavors::kNuMuToNuMu) {
+    conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
+  } else if (FDflav == Flavors::kNuMuToNuE) {
+    conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
+  } else { abort(); }
+                                                                                
+  return GetFDConfig(conf);
+}*/                                                                                               
+
+
 
 #define LOUDASSERT(a)                                                          \
   {                                                                            \
