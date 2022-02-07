@@ -170,8 +170,8 @@ namespace ana {
   
     Eigen::MatrixXd PRISMND_SumSq = NDDataSpec.GetSumSqEigen(POT);
 
-    fNDExtrap->resize(PRISMND.rows(), PRISMND.cols());
-    fErrorMat->resize(PRISMND.rows(), PRISMND.cols()); 
+    fNDExtrap->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
+    fErrorMat->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
 
     Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD.rows(),
                                                           hMatrixFD.rows());

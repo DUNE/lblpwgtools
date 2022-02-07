@@ -43,7 +43,7 @@ Binning GetBinning(std::string const &xbinning) {
   } else if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
   } else if (xbinning == "uniform_coarse") {
-    return Binning::Simple(25, 0, 10); // used to be 25, 10 (bad tail going out to 10)
+    return Binning::Simple(25, 0, 10); 
   } else if (xbinning == "prism_noextrap") {
     return kPRISMRecoBinning;
   } else if (xbinning == "testopt") {
@@ -60,8 +60,8 @@ Binning GetBinning(std::string const &xbinning) {
   } else if (xbinning == "default") {
     return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
-    //return kTrueEnergyBins;
-    std::vector<double> BE = { 0., 0.5 };
+    return kTrueEnergyBins; // Same as osc P binning
+    /*std::vector<double> BE = { 0., 0.5 };
 
     while (BE.back() < 10.) {
       BE.push_back(BE.back() + 0.2);
@@ -75,7 +75,7 @@ Binning GetBinning(std::string const &xbinning) {
       BE.push_back(BE.back() + 40.0);
     }
 
-    return Binning::Custom(BE);
+    return Binning::Custom(BE);*/
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -85,7 +85,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -30, 0}; // -32
+    std::array<double, 3> OABinning = {0.5, -30, 0}; 
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];

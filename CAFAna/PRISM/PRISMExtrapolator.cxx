@@ -199,10 +199,6 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   Eigen::VectorXd FlowTarget = FDOsc_spec.GetEigen(1).matrix(); 
   Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2); 
 
-  if (!std::isnormal(Target.sum())) abort();
-  std::cout << "Target sum = " << Target.sum() << std::endl;
-  std::cout << Target << std::endl;
-
   Spectrum FDUnOsc_spec = FDPredInterp->PredictComponentSyst(
       &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd); 
   Eigen::VectorXd FlowFDUnOsc_vec = FDUnOsc_spec.GetEigen(1).matrix(); 
@@ -275,7 +271,6 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   assert(NDFluxMatrix.rows() == Target.size()); 
   assert(NDFluxMatrix.rows() == P.rows());
 
-  //std::cout << Target << std::endl;
   // Do the maths
   Eigen::VectorXd OffAxisWeights =
       ((NDFluxMatrix.transpose() * P * NDFluxMatrix) +
