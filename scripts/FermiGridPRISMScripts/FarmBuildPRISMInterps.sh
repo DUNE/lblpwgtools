@@ -239,7 +239,7 @@ if [ "${DO_ND}" == "1" ]; then
 
   if [ "${DO_RHC}" == "1" ]; then # used to grep \"ND_RHC_*.root\"
     echo "ifdh ls ${INPUT_DIR} | grep \"CAFv7_*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "CAFv7_" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
+    ifdh ls ${INPUT_DIR} | grep "_0m" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
     echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))
