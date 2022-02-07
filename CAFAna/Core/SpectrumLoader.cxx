@@ -327,6 +327,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   int Nfiles = NFiles();
   // Run 1 smaller file at a time per grid job
   int grid_mfile(0);
+  // Grid submission script sets this env variable.
+  // Set manually if you wish to run a single small ND MC file with perFile correction.
   if (std::getenv("PRISM_MULTIFILE")) {
     grid_mfile = std::atoi(std::getenv("PRISM_MULTIFILE"));
   }

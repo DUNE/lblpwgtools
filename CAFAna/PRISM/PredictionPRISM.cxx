@@ -813,8 +813,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc,
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
   
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), // fAnalysisAxisND
-                              fAnalysisAxisFD.GetBinnings()); // fAnalysisAxisND
+  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), 
+                              fAnalysisAxisFD.GetBinnings()); 
   LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(), 
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),

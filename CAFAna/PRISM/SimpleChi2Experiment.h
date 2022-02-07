@@ -48,10 +48,12 @@ namespace ana {
                                                                  std::numeric_limits<double>::max()});
 
     // Get the extrapolated PRISM prediction
-    Eigen::VectorXd GetPred(osc::IOscCalcAdjustable *osc,
+    Eigen::VectorXd GetPred(osc::IOscCalc *osc,
+                            std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
                             const SystShifts &syst = SystShifts::Nominal()) const;
     // Get the PRISM covariance matrix
-    Eigen::MatrixXd GetCovariance(osc::IOscCalcAdjustable *osc,
+    Eigen::MatrixXd GetCovariance(osc::IOscCalc *osc,
+                                  std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
                                   const SystShifts &syst = SystShifts::Nominal()) const;
 
     // Calculate Chi2 with the option to include the full covariance

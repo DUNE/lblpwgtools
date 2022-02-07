@@ -67,8 +67,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   bool PRISM_write_debug = PRISMps.get<bool>("write_debug");
 
-  //double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
-
   osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
 
