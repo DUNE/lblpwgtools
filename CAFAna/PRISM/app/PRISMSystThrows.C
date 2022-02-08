@@ -225,6 +225,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
+    bool IsNue(false);
+    if (std::abs(osc_to) == 12) {
+      std::cout << "Nue/Nuebar appearance. Therefore, use FDOsc as norm." << std::endl;
+      IsNue = true;
+    } else {
+      std::cout << "Numu/Numubar appearance. Therefore, use FDUnOsc as norm." << std::endl;
+    }
+
     std::cout << "FD config = " << FDfdConfig_enum << std::endl;
 
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
@@ -277,7 +285,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
       std::vector<std::vector<double>> toGetErr;
       SystShifts shift_throw = shift;
-      int number_throws(1000);
+      int number_throws(10000);
       int step_count(0);
         
       auto PRISM_NomComps = state.PRISM->
@@ -326,18 +334,21 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
             double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) - 
                                  PRISM_Nom_h->GetBinContent(ebin)) /
-                                 FDUnOsc_h->GetBinContent(ebin); // FDUnOsc_h FDOsc_Nom_h
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
      
             double fracDiffFD = (FDOsc_Shift_h->GetBinContent(ebin) -
                                  FDOsc_Nom_h->GetBinContent(ebin)) / 
-                                 FDUnOsc_h->GetBinContent(ebin); 
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
             throws.push_back(fracDiffND - fracDiffFD); // * 100 for %
           }
         } else { // Don't vary ND and FD MC data
           for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
             double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) -
                                  PRISM_Nom_h->GetBinContent(ebin)) /
-                                 FDUnOsc_h->GetBinContent(ebin); // PRISM_Nom_h FDOsc_Nom_h
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
             throws.push_back(fracDiffND);
           }
         }
