@@ -11,7 +11,6 @@ set(Systs_implementation_files
   CrazyFluxFakeData.cxx
   FluxWiggleFakeData.cxx
   FluxWiggleSqueezeFakeData.cxx
-  HighEFluxMod.cxx
   SystComponentScale.cxx
   Systs.cxx)
 
@@ -48,7 +47,6 @@ set(Systs_header_files
   CrazyFluxFakeData.h
   FluxWiggleFakeData.h
   FluxWiggleSqueezeFakeData.h
-  HighEFluxMod.h
   ReweightFakeDataBase.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
