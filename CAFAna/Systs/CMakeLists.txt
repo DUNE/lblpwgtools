@@ -10,6 +10,7 @@ set(Systs_implementation_files
   NuOnESysts.cxx
   CrazyFluxFakeData.cxx
   FluxWiggleFakeData.cxx
+  FluxWiggleSqueezeFakeData.cxx
   HighEFluxMod.cxx
   SystComponentScale.cxx
   Systs.cxx)
@@ -46,6 +47,7 @@ set(Systs_header_files
   GENIEv3_G18_10a_02_11aReweightFakeData.h
   CrazyFluxFakeData.h
   FluxWiggleFakeData.h
+  FluxWiggleSqueezeFakeData.h
   HighEFluxMod.h
   ReweightFakeDataBase.h)
 
