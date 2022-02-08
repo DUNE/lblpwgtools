@@ -142,10 +142,14 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   //    else{
   //      tr = (TTree*)f->Get("mvaselect/MVASelection");
   //    }
-  tr = (TTree *)f->Get("caf");
+  tr = (TTree *)f->Get("cafCrazyFlux");
+  if (!tr) {
+    tr = (TTree *)f->Get("caf");
+  }
   if (!tr) {
     tr = (TTree *)f->Get("cafTree");
   }
+
   assert(tr);
 
   FloatingExceptionOnNaN fpnan(false);
