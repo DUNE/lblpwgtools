@@ -36,8 +36,8 @@
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
-#include "CAFAna/Systs/HighEFluxMod.h"
 #include "CAFAna/Systs/FluxWiggleFakeData.h"
+#include "CAFAna/Systs/FluxWiggleSqueezeFakeData.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -263,15 +263,15 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
       GetCrazyFluxSysts();
     systlist.insert(systlist.end(), crazyfluxlist.begin(), crazyfluxlist.end());
 
-    // HighEFluxMod shifts
-    std::vector<const ISyst *> highefluxlist = 
-      GetHighEFluxModSysts();
-    systlist.insert(systlist.end(), highefluxlist.begin(), highefluxlist.end());
-    
     // Flux wiggle
     std::vector<const ISyst *> fluxwigglelist =
       GetFluxWiggleSysts();
     systlist.insert(systlist.end(), fluxwigglelist.begin(), fluxwigglelist.end());
+    
+    // Alternative flux wiggle
+    std::vector<const ISyst *> fluxwigglesqueezelist =
+      GetFluxWiggleSqueezeSysts();
+    systlist.insert(systlist.end(), fluxwigglesqueezelist.begin(), fluxwigglesqueezelist.end());
   }
 
   return systlist;
@@ -512,7 +512,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } 
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name) || IsHighEFluxModSyst(name) || IsFluxWiggleSyst(name));
+    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name) || IsFluxWiggleSyst(name) || IsFluxWiggleSqueezeSyst(name));
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
   }

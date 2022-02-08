@@ -14,6 +14,8 @@
 namespace ana {
 
 MissingProtonFakeDataGenerator mpfd;
+MissingProtonFakeDataGeneratorNu mpfd_nu;
+MissingProtonFakeDataGeneratorNubar mpfd_nubar;
 NuWroReweightFakeDataOldGenerator nuwrofd_old;
 NuWroReweightFakeDataGenerator nuwrofd;
 NEUTReweightFakeDataGenerator neutfd;
@@ -35,6 +37,8 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   static int SPPLowQ2Suppression_id = 0;
   static int FSILikeEAvailSmearing_id = 0;
   static int MissingProtonFakeData_id = 0;
+  static int MissingProtonFakeDataNu_id = 0;
+  static int MissingProtonFakeDataNubar_id = 0;
   static int NuWroReweightFakeDataOld_id = 0;
   static int NuWroReweightFakeData_id = 0;
   static int NEUTReweightFakeData_id = 0;
@@ -60,6 +64,8 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     SPPLowQ2Suppression_id = GetXSecSystIndex("SPPLowQ2Suppression");
     FSILikeEAvailSmearing_id = GetXSecSystIndex("FSILikeEAvailSmearing");
     MissingProtonFakeData_id = GetXSecSystIndex("MissingProtonFakeData");
+    MissingProtonFakeDataNu_id = GetXSecSystIndex("MissingProtonFakeDataNu");
+    MissingProtonFakeDataNubar_id = GetXSecSystIndex("MissingProtonFakeDataNubar");
     NuWroReweightFakeData_id = GetXSecSystIndex("NuWroReweightFakeData");
     NuWroReweightFakeDataOld_id = GetXSecSystIndex("NuWroReweightFakeDataOld");
     NEUTReweightFakeData_id = GetXSecSystIndex("NEUTReweightFakeData");
@@ -91,6 +97,10 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     weight *= sr->dune.xsSyst_wgt[FSILikeEAvailSmearing_id][2];
   } else if (fID == MissingProtonFakeData_id) {
     mpfd.Shift(sigma, restore, sr, weight);
+  } else if (fID == MissingProtonFakeDataNu_id) {
+    mpfd_nu.Shift(sigma, restore, sr, weight);
+  } else if (fID == MissingProtonFakeDataNubar_id) {
+    mpfd_nubar.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeDataOld_id) {
     nuwrofd_old.Shift(sigma, restore, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
