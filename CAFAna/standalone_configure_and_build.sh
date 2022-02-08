@@ -120,8 +120,10 @@ cd build
 mkdir Ext
 cd Ext
 
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
-svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
+# CW: ugly way to get dependencies on FNAL machines given NOvA's SVN change
+cp -r /pnfs/dune/persistent/users/callumw/NOvASVNBackups/* .
+#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/OscLib
+#svn checkout -r 37166 https://cdcvs.fnal.gov/subversion/novaart.pkgs.svn/trunk/Utilities
 
 cd ../
 
