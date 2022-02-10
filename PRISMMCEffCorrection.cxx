@@ -102,16 +102,14 @@ namespace ana {
                                        Sign::Sign_t NDsign, 
                                        Sign::Sign_t FDsign) const {
 
-    ana::SystShifts syst = shift;
-  
     osc::NoOscillations no; 
 
     Spectrum sNDunselected_293kA = 
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
     Spectrum sNDunselected_280kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);  
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);  
 
 
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
@@ -125,10 +123,10 @@ namespace ana {
     // Selected ND MC
     Spectrum sNDselected_293kA = 
         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
     Spectrum sNDselected_280kA = 
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-         ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
     ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
                                                                       1);
@@ -139,11 +137,11 @@ namespace ana {
   
     Spectrum sFDunselected = 
         FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1);
     Spectrum sFDselected = 
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);  
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);  
     Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1);
   
     // Calculate ND efficiency
