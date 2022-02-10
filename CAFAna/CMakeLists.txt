@@ -77,14 +77,14 @@ SET(CAFAna_Libs
     CAFAnaDecomp
     CAFAnaFit
     CAFAnaPrediction
-    CAFAnaSysts
     CAFAnaExperiment
     CAFAnaPrediction
     CAFAnaPRISM
     CAFAnaCuts
     CAFAnaExtrap
     CAFAnaVars
-    CAFAnaCore)
+    CAFAnaCore
+    CAFAnaSysts)
 
 add_subdirectory(Analysis)
 add_subdirectory(Core)
@@ -107,9 +107,15 @@ configure_file(cmake/CAFAnaEnv.sh.in
 install(
   PROGRAMS
     ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh
-    ${CMAKE_SOURCE_DIR}/cmake/ups_env_setup.sh
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
+  )
+
+install(
+  PROGRAMS
+    ${BUILD_ENV_SCRIPTS}
+  DESTINATION
+    ${CMAKE_INSTALL_PREFIX}/env/
   )
 
 install(

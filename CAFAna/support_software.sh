@@ -178,136 +178,145 @@ echo -e "export linedoc_ROOT=\"${linedoc_ROOT}\"" >> support_software_env.sh
 echo -e "export fhiclcpp_ROOT=\"${fhiclcpp_ROOT}\"" >> support_software_env.sh
 echo -e "export TH2Jagged_ROOT=\"${TH2Jagged_ROOT}\"" >> support_software_env.sh
 
-echo -e "add_to_LD_LIBRARY_PATH \${TH2Jagged_ROOT}/lib" >> support_software_env.sh
-
 #Build CAFAnaCore, OscLib, Stan and friends
 if [ "${BUILD_UPS_REPLACEMENT_SOFTWARE}" == "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; then
 
-  if [ ! -e stan ]; then
-    git clone https://github.com/stan-dev/stan.git
-    cd stan
-    git checkout v2.28.2
-    cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-  fi
+  if [ -z ${STAN_INC} ] || [ ! -e ${STAN_INC} ] \
+    || [ -z ${SUNDIALS_INC} ] || [ ! -e ${SUNDIALS_INC} ]\
+    || [ -z ${EIGEN_INC} ] || [ ! -e ${EIGEN_INC} ]; then
 
-  if [ ! -e stan/lib/stan_math/make/standalone ]; then
-    cd stan
-    git submodule update --init --recursive
-    cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-  fi
+    if [ ! -e stan ]; then
+      git clone https://github.com/stan-dev/stan.git
+      cd stan
+      git checkout v2.28.2
+      cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-  #Hard coded versions for the moment
-  export SUNDIALS_VERSION=5.7.0
-  export SUNDIALS_INC=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/include)
-  export SUNDIALS_LIB=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/lib)
-  export SUNDIALS_DIR=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION})
+    export STAN_INC=$(readlink -f stan/src)
+    export STAN_VERSION=v2.28.2
 
-  if [ ! -e ${SUNDIALS_LIB}/libsundials_cvodes.a ]; then
-    cd stan
-    BOOST=${BOOST_INC} make -f lib/stan_math/make/standalone math-libs
-    cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-  fi
+    if [ ! -e stan/lib/stan_math/make/standalone ]; then
+      cd stan
+      git submodule update --init --recursive
+      cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-  export EIGEN_VERSION=3.3.9
-  export EIGEN_INC=$(readlink -f stan/lib/stan_math/lib/eigen_${EIGEN_VERSION})
-  export EIGEN_DIR=$(readlink -f stan/lib/stan_math/lib/eigen_${EIGEN_VERSION})
+    export STAN_MATH_INC=$(readlink -f stan/lib/stan_math)
+    export STAN_MATH_DIR=$(readlink -f stan/lib/stan_math)
+    export STAN_MATH_VERSION=v4.2.1
 
-  export STAN_INC=$(readlink -f stan/src)
-  export STAN_VERSION=v2.28.2
+    #Hard coded versions for the moment
+    export SUNDIALS_VERSION=5.7.0
+    export SUNDIALS_INC=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/include)
+    export SUNDIALS_LIB=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/lib)
+    export SUNDIALS_DIR=$(readlink -f stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION})
 
-  export STAN_MATH_INC=$(readlink -f stan/lib/stan_math)
-  export STAN_MATH_DIR=$(readlink -f stan/lib/stan_math)
-  export STAN_MATH_VERSION=v4.2.1
+    if [ ! -e ${SUNDIALS_LIB}/libsundials_cvodes.a ]; then
+      cd stan
+      BOOST=${BOOST_INC} make -f lib/stan_math/make/standalone math-libs
+      cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-  if [ -z ${TBB_INC} ]; then # Check if Stan built TBB
-    if [ -e stan/lib/stan_math/lib/tbb_*/include/tbb/tbb_stddef.h ]; then # Check if Stan built it
-      export TBB_INC=$(readlink -f stan/lib/stan_math/lib/tbb_*/include)
-    else
-      echo "[ERROR]: Cannot find TBB, yet Stan doesn't seem to contain it in $(readlink -f stan/lib/stan_math/lib)"
+    export EIGEN_VERSION=3.3.9
+    export EIGEN_INC=$(readlink -f stan/lib/stan_math/lib/eigen_${EIGEN_VERSION})
+    export EIGEN_DIR=$(readlink -f stan/lib/stan_math/lib/eigen_${EIGEN_VERSION})
+
+    echo -e "export SUNDIALS_VERSION=\"${SUNDIALS_VERSION}\"" >> support_software_env.sh
+    echo -e "export SUNDIALS_INC=\"${SUNDIALS_INC}\"" >> support_software_env.sh
+    echo -e "export SUNDIALS_LIB=\"${SUNDIALS_LIB}\"" >> support_software_env.sh
+    echo -e "export SUNDIALS_DIR=\"${SUNDIALS_DIR}\"" >> support_software_env.sh
+
+    echo -e "export EIGEN_VERSION=\"${EIGEN_VERSION}\"" >> support_software_env.sh
+    echo -e "export EIGEN_INC=\"${EIGEN_INC}\"" >> support_software_env.sh
+    echo -e "export EIGEN_DIR=\"${EIGEN_DIR}\"" >> support_software_env.sh
+
+    #Helps find_package
+    echo -e "export Eigen3_ROOT=\"${EIGEN_DIR}\"" >> support_software_env.sh
+
+    echo -e "export STAN_INC=\"${STAN_INC}\"" >> support_software_env.sh
+    echo -e "export STAN_VERSION=\"${STAN_VERSION}\"" >> support_software_env.sh
+
+    echo -e "export STAN_MATH_INC=\"${STAN_MATH_INC}\"" >> support_software_env.sh
+    echo -e "export STAN_MATH_DIR=\"${STAN_MATH_DIR}\"" >> support_software_env.sh
+    echo -e "export STAN_MATH_VERSION=\"${STAN_MATH_VERSION}\"" >> support_software_env.sh
+
+    if [ -z ${TBB_INC} ]; then # Check if Stan built TBB
+      if [ -e stan/lib/stan_math/lib/tbb_*/include/tbb/tbb_stddef.h ]; then # Check if Stan built it
+        export TBB_INC=$(readlink -f stan/lib/stan_math/lib/tbb_*/include)
+      else
+        echo "[ERROR]: Cannot find TBB, yet Stan doesn't seem to contain it in $(readlink -f stan/lib/stan_math/lib)"
+        exit 1
+      fi
+    fi
+
+    if [ -z ${TBB_DIR} ]; then
+      export TBB_DIR=$(readlink -f ${TBB_INC}/..)
+    fi
+
+    if [ -z ${TBB_LIB} ]; then # Check if Stan built TBB
+      if [ -e stan/lib/stan_math/lib/tbb/libtbb.so ]; then # Check if Stan built it
+        export TBB_LIB=$(readlink -f stan/lib/stan_math/lib/tbb/)
+      else
+        echo "[ERROR]: Cannot find TBB, yet Stan doesn't seem to contain it in $(readlink -f stan/lib/stan_math/lib)"
+        exit 1
+      fi
+    fi
+
+    if [ ! -e ${TBB_LIB}/libtbb.so ]; then
+      echo "[ERROR]: Cannot find libtbb.so in \$TBB_LIB=${TBB_LIB}. This requires manual intervention."
       exit 1
     fi
+
+    echo -e "export TBB_INC=\"${TBB_INC}\"" >> support_software_env.sh
+    echo -e "export TBB_LIB=\"${TBB_LIB}\"" >> support_software_env.sh
+    echo -e "export TBB_DIR=\"${TBB_DIR}\"" >> support_software_env.sh
   fi
 
-  if [ -z ${TBB_DIR} ]; then
-    export TBB_DIR=$(readlink -f ${TBB_INC}/..)
-  fi
-
-  if [ -z ${TBB_LIB} ]; then # Check if Stan built TBB
-    if [ -e stan/lib/stan_math/lib/tbb/libtbb.so ]; then # Check if Stan built it
-      export TBB_LIB=$(readlink -f stan/lib/stan_math/lib/tbb/)
-    else
-      echo "[ERROR]: Cannot find TBB, yet Stan doesn't seem to contain it in $(readlink -f stan/lib/stan_math/lib)"
-      exit 1
+  if [ -z ${OSCLIB_INC} ]|| [ ! -e ${OSCLIB_INC} ]; then
+    if [ ! -e OscLib ]; then
+      git clone https://github.com/cafana/OscLib.git
+      # checkout version
     fi
+
+    if [ ! -e OscLib/OscLib/lib/libOscLib.so ]; then
+      cd OscLib
+      make
+      cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
+
+    export OSCLIB_INC=$(readlink -f OscLib/)
+    export OSCLIB_LIB=$(readlink -f OscLib/OscLib/lib)
+    
+    echo -e "export OSCLIB_INC=\"${OSCLIB_INC}\"" >> support_software_env.sh
+    echo -e "export OSCLIB_LIB=\"${OSCLIB_LIB}\"" >> support_software_env.sh
+    echo -e "add_to_LD_LIBRARY_PATH \${OSCLIB_LIB}" >> support_software_env.sh
+
   fi
 
-  if [ ! -e ${TBB_LIB}/libtbb.so ]; then
-    echo "[ERROR]: Cannot find libtbb.so in \$TBB_LIB=${TBB_LIB}. This requires manual intervention."
-    exit 1
+  if [ -z ${CAFANACORE_INC} ]|| [ ! -e ${CAFANACORE_INC} ]; then
+
+    if [ ! -e CAFAnaCore ]; then
+      git clone https://github.com/luketpickering/CAFAnaCore.git
+      # checkout version
+    fi
+
+    if [ ! -e CAFAnaCore/build/lib/libCAFAnaCoreExt.so ]; then
+      mkdir -p CAFAnaCore/build
+      cd CAFAnaCore/build;
+      cmake ../ -DCMAKE_INSTALL_PREFIX=$(pwd) -DTBB_VERSION=${TBB_VERSION}
+      make install
+      ln -s $(readlink -f inc/) inc/CAFAnaCore
+      cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
+
+    export CAFANACORE_INC=$(readlink -f CAFAnaCore/build/inc)
+    export CAFANACORE_LIB=$(readlink -f CAFAnaCore/build/lib)
+
+    echo -e "export CAFANACORE_INC=\"${CAFANACORE_INC}\"" >> support_software_env.sh
+    echo -e "export CAFANACORE_LIB=\"${CAFANACORE_LIB}\"" >> support_software_env.sh
+    echo -e "add_to_LD_LIBRARY_PATH \${CAFANACORE_LIB}" >> support_software_env.sh
+
   fi
-
-  echo -e "export SUNDIALS_VERSION=\"${SUNDIALS_VERSION}\"" >> support_software_env.sh
-  echo -e "export SUNDIALS_INC=\"${SUNDIALS_INC}\"" >> support_software_env.sh
-  echo -e "export SUNDIALS_LIB=\"${SUNDIALS_LIB}\"" >> support_software_env.sh
-  echo -e "export SUNDIALS_DIR=\"${SUNDIALS_DIR}\"" >> support_software_env.sh
-
-  echo -e "export EIGEN_VERSION=\"${EIGEN_VERSION}\"" >> support_software_env.sh
-  echo -e "export EIGEN_INC=\"${EIGEN_INC}\"" >> support_software_env.sh
-  echo -e "export EIGEN_DIR=\"${EIGEN_DIR}\"" >> support_software_env.sh
-
-  #Helps find_package
-  echo -e "export Eigen3_ROOT=\"${EIGEN_DIR}\"" >> support_software_env.sh
-
-  echo -e "export STAN_INC=\"${STAN_INC}\"" >> support_software_env.sh
-  echo -e "export STAN_VERSION=\"${STAN_VERSION}\"" >> support_software_env.sh
-
-  echo -e "export STAN_MATH_INC=\"${STAN_MATH_INC}\"" >> support_software_env.sh
-  echo -e "export STAN_MATH_DIR=\"${STAN_MATH_DIR}\"" >> support_software_env.sh
-  echo -e "export STAN_MATH_VERSION=\"${STAN_MATH_VERSION}\"" >> support_software_env.sh
-
-  echo -e "export TBB_INC=\"${TBB_INC}\"" >> support_software_env.sh
-  echo -e "export TBB_LIB=\"${TBB_LIB}\"" >> support_software_env.sh
-  echo -e "export TBB_DIR=\"${TBB_DIR}\"" >> support_software_env.sh
-
-  if [ ! -e OscLib ]; then
-    git clone https://github.com/cafana/OscLib.git
-    # checkout version
-  fi
-
-  if [ ! -e OscLib/OscLib/lib/libOscLib.so ]; then
-    cd OscLib
-    make
-    cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-  fi
-
-  export OSCLIB_INC=$(readlink -f OscLib/)
-  export OSCLIB_LIB=$(readlink -f OscLib/OscLib/lib)
-  
-  echo -e "export OSCLIB_INC=\"${OSCLIB_INC}\"" >> support_software_env.sh
-  echo -e "export OSCLIB_LIB=\"${OSCLIB_LIB}\"" >> support_software_env.sh
-  echo -e "add_to_LD_LIBRARY_PATH \${OSCLIB_LIB}" >> support_software_env.sh
-
-  if [ ! -e CAFAnaCore ]; then
-    git clone https://github.com/luketpickering/CAFAnaCore.git
-    # checkout version
-  fi
-
-  if [ ! -e CAFAnaCore/build/lib/libCAFAnaCoreExt.so ]; then
-    mkdir -p CAFAnaCore/build
-    cd CAFAnaCore/build;
-    cmake ../ -DCMAKE_INSTALL_PREFIX=$(pwd) -DTBB_VERSION=${TBB_VERSION}
-    make install
-    ln -s $(readlink -f inc/) inc/CAFAnaCore
-    cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-  fi
-
-  export CAFANACORE_INC=$(readlink -f CAFAnaCore/build/inc)
-  export CAFANACORE_LIB=$(readlink -f CAFAnaCore/build/lib)
-
-  echo -e "export CAFANACORE_INC=\"${CAFANACORE_INC}\"" >> support_software_env.sh
-  echo -e "export CAFANACORE_LIB=\"${CAFANACORE_LIB}\"" >> support_software_env.sh
-  echo -e "add_to_LD_LIBRARY_PATH \${CAFANACORE_LIB}" >> support_software_env.sh
-
 fi
 
 if [ -z ${TBB_VERSION} ]; then # Don't have TBB version set
