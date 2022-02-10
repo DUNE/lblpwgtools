@@ -23,9 +23,9 @@
 
 TFile *Target;
 
-void MergeFits(TDirectory *target, TFile *source, std::string param);
+void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins);
 
-void MergeFits(TDirectory *target, TFile *source, std::string param) {
+void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) {
   TString path( (char*)strstr( target->GetPath(), ":" ) ); 
   path.Remove(0, 2);
   source->cd( path );
@@ -57,16 +57,16 @@ void MergeFits(TDirectory *target, TFile *source, std::string param) {
 
     if (obj->IsA()->InheritsFrom(TDirectory::Class())) {
       std::cout << "dir name will be: " << keyname << std::endl;
-
+      target->cd();
       if (!target->FindObject(keyname.c_str())) {
         std::cout << "New dir " << keyname << std::endl;
-        target->cd();
+        //target->cd();
         TDirectory *newdir = target->mkdir(keyname.c_str(), keyname.c_str());
-        MergeFits(newdir, source, param);
+        MergeFits(newdir, source, param, Nbins);
       } else {
         std::cout << "Update existing dir " << keyname << std::endl;
         TDirectory *existdir = target->GetDirectory(keyname.c_str());
-        MergeFits(existdir, source, param);
+        MergeFits(existdir, source, param, Nbins);
       }
     } else if (keyname == "dChi2Scan" && obj->IsA() == TH1D::Class()) {
       std::cout << "Found 1D scan." << std::endl;
@@ -77,13 +77,13 @@ void MergeFits(TDirectory *target, TFile *source, std::string param) {
       if (!key_g) {
         std::unique_ptr<TH1D> h_totalfit = std::make_unique<TH1D>(
                                              "Chi2_1DFit", "Chi2_1DFit",
-                                             h_fit->GetXaxis()->GetNbins(),
+                                             Nbins /*h_fit->GetXaxis()->GetNbins()*/,
                                              *lowlim, *highlim);
 
         for (int bin = 1; bin <= h_fit->GetNbinsX(); bin++) {
           double bincentre_x = h_fit->GetXaxis()->GetBinCenter(bin);
           double bincontent = h_fit->GetBinContent(bin);
-
+          std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);
           h_totalfit->SetBinContent(binx_tot, bincontent); 
         }
@@ -96,7 +96,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param) {
         for (int bin = 1; bin <= h_fit->GetNbinsX(); bin++) {
           double bincentre_x = h_fit->GetXaxis()->GetBinCenter(bin);
           double bincontent = h_fit->GetBinContent(bin);
-
+          std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_update->GetXaxis()->FindBin(bincentre_x);
           h_update->SetBinContent(binx_tot, bincontent);
         }
@@ -211,6 +211,8 @@ int main(int argc, char** argv) {
 
   Target = TFile::Open(outfilename.c_str(), "RECREATE");
 
+  int Nbins = infilenames.size();
+
   for(const std::string& fname : infilenames) {
     TFile *fin = TFile::Open(fname.c_str());
     if (!fin || fin->IsZombie()) {
@@ -219,7 +221,8 @@ int main(int argc, char** argv) {
     }
     std::cout << "Opened " << fname << std::endl;
 
-    MergeFits(Target, fin, scan_param);
+    MergeFits(Target, fin, scan_param, Nbins);
+    fin->Close();
   }
 
   Target->Close();

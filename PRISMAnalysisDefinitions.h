@@ -360,31 +360,6 @@ inline int FluxSpeciesPDG(NuChan fps) {
 }
 
 
-//size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
-//                           bool is280kA = false) const;
-/*inline size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
-                                  bool is280kA) const {
-  size_t conf;
-  assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
-  if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
-  else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
-  return conf;
-}*/
-                           
-//size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const;
-/*inline size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
-  size_t conf;
-  if (FDflav == Flavors::kNuMuToNuMu) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
-  } else if (FDflav == Flavors::kNuMuToNuE) {
-    conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
-  } else { abort(); }
-                                                                                
-  return GetFDConfig(conf);
-}*/                                                                                               
-
-
-
 #define LOUDASSERT(a)                                                          \
   {                                                                            \
     if (!(a)) {                                                                \
@@ -434,7 +409,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_numu));
   LOUDASSERT(!IsNDConfig(kFD_nub_numu));
-  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 3); // Was 2! Should now be 3 with tauswap
+  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 3); 
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_numu)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_numu)) == kFD_nub_numu);
   LOUDASSERT(IsNumuConfig(kFD_nub_numu));
@@ -454,7 +429,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_nue));
   LOUDASSERT(!IsNDConfig(kFD_nub_nue));
-  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 4); // Was 3! Should now be 4 with tauswap.
+  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 4); 
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_nue)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_nue)) == kFD_nub_nue);
   LOUDASSERT(!IsNumuConfig(kFD_nub_nue));
@@ -462,5 +437,4 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(GetConfigNueSwap(kFD_nub_nue) == kFD_nub_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_nue) == kFD_nub_numu);
 }
-
 } // namespace PRISM
