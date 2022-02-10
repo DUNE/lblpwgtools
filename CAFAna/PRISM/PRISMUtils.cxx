@@ -71,10 +71,6 @@ ana::Weight NDSliceCorrection(double reference_width_cm,
   });
 }
 
-const ana::Weight kMassCorrection([](const caf::StandardRecord *sr) -> double {
-  return sr->NDMassCorrWeight;
-});
-
 namespace {
 template <class T> std::unique_ptr<T> LoadFrom_(TDirectory *dir, const std::string &name) {
   if (!dir) {
