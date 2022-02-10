@@ -51,42 +51,6 @@ ana::IExperiment *GetPenalty(int hie, int oct, std::string penalty,
 std::vector<const ana::IFitVar *>
 GetOscVars(std::string oscVarString = "alloscvars", int hie = 0, int oct = 0);
 
-/*
-//<<<<<<< HEAD
-// Take a list of all the systs known about, and retain the named systs...
-void KeepSysts(std::vector<const ana::ISyst *> &systlist,
-               std::vector<std::string> const &systsToInclude);
-
-void KeepSysts(std::vector<const ana::ISyst *> &systlist,
-               std::vector<const ana::ISyst *> const &systsToInclude);
-
-void RemoveSysts(std::vector<const ana::ISyst *> &systlist,
-                 std::vector<std::string> const &namesToRemove);
-
-std::vector<const ana::ISyst *>
-GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
-               bool detsyst = true, bool useND = true, bool useFD = true,
-               bool useNueOnE = true, bool useFakeDataDials = true,
-               bool fluxsyst_CDR = true,
-               int NFluxSysts = NFluxParametersToAddToStatefile,
-               bool removeFDNonFitDials = false);
-
-std::vector<const ana::ISyst *> GetListOfSysts(std::string systString,
-                                               bool useND = true,
-                                               bool useFD = true,
-                                               bool useNueOnE = true);
-
-std::vector<const ana::ISyst *> GetListOfSysts(char const *systCString,
-                                               bool useND = true,
-                                               bool useFD = true,
-                                               bool useNueOnE = true);
-
-/// Put a list of systematics in the 'standard' order
-std::vector<const ana::ISyst *>
-OrderListOfSysts(std::vector<const ana::ISyst *> const &systlist);
-*/
-//=========
-///
 ana::SystShifts GetFakeDataGeneratorSystShift(std::string input);
 
 enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };

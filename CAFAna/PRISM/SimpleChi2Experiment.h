@@ -13,24 +13,20 @@
 namespace ana {
   class SimpleChi2Experiment : public IExperiment {
   public:
-    SimpleChi2Experiment(
-        IPrediction const *Pred, Spectrum const &Data, bool UseHistError = false,
-        double POT = 0,
-        std::pair<double, double> erange = {-std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::max()});
-
-    IPrediction const *fPred;
-    TH1 const *fData;
-    double fPOT;
-    bool fUseHistError;
+    SimpleChi2Experiment(IPrediction const *Pred, Spectrum const &Data, 
+                         bool UseHistError = false, double POT = 0);
   
-    std::pair<int, int> fBinRange;
-
-    TH1D *GetPred(osc::IOscCalcAdjustable *osc,
-                  const SystShifts &syst = SystShifts::Nominal()) const;
+    Eigen::ArrayXd GetPred(osc::IOscCalcAdjustable *osc,
+                           const SystShifts &syst = SystShifts::Nominal()) const;
 
     double ChiSq(osc::IOscCalcAdjustable *osc,
                  const SystShifts &syst = SystShifts::Nominal()) const;
+
+  protected:
+    IPrediction const *fPred;
+    Eigen::ArrayXd fData_arr;
+    double fPOT;
+    bool fUseHistError;
   };
 
 
@@ -43,18 +39,14 @@ namespace ana {
   public:
     PRISMChi2CovarExperiment(PredictionPRISM const *Pred, Spectrum const &Data,
                              bool UseCovariance = false, double NDPOT = 0, double FDPOT = 0,
-                             PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode,
-                             std::pair<double, double> erange = {-std::numeric_limits<double>::max(),
-                                                                 std::numeric_limits<double>::max()});
+                             PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode);
 
     // Get the extrapolated PRISM prediction
-    Eigen::VectorXd GetPred(osc::IOscCalc *osc,
-                            std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                            const SystShifts &syst = SystShifts::Nominal()) const;
+    Eigen::VectorXd GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
+                            const SystShifts &syst = kNoShift) const;
     // Get the PRISM covariance matrix
-    Eigen::MatrixXd GetCovariance(osc::IOscCalc *osc,
-                                  std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                                  const SystShifts &syst = SystShifts::Nominal()) const;
+    Eigen::MatrixXd GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
+                                  const SystShifts &syst = kNoShift) const;
 
     // Calculate Chi2 with the option to include the full covariance
     virtual double ChiSq(osc::IOscCalcAdjustable *osc,

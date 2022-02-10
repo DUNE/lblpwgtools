@@ -10,7 +10,7 @@ BasicPred: {
 
 	projection_name: EVisReco
 	use_PRISM: true
-	POT_years: 3.5
+	POT_years: 1.0
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
@@ -54,8 +54,8 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 	
-	#samples: @local::FitChannels.Numu_disp 
-	samples: @local::FitChannels.DispJoint
+	samples: @local::FitChannels.Numu_disp 
+	#samples: @local::FitChannels.DispJoint
 	#samples: @local::FitChannels.FourFlavor
 }
 

@@ -56,8 +56,8 @@ nuisance_parameters: {
 	]
 
 	fluxAll: [
-		@sequence::nuisance_parameters.fluxHadProd10,
-		@sequence::nuisance_parameters.fluxFocussing
+		#@sequence::nuisance_parameters.fluxHadProd10,
+		#@sequence::nuisance_parameters.fluxFocussing
 	]
 
 	xsec_small: [

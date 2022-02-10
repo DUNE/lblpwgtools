@@ -675,8 +675,8 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
   static osc::NoOscillations no;
-  //static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
-  static osc::IOscCalc *calc = NuFitOscCalc(1);
+  static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
+  //static osc::IOscCalc *calc = NuFitOscCalc(1);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);

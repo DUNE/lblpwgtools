@@ -1,79 +1,51 @@
 #include "CAFAna/PRISM/SimpleChi2Experiment.h"
 
-//#include "CAFAna/PRISM/PredictionPRISM.h"
-
 #include "OscLib/IOscCalc.h"
 
 namespace ana {
 
   SimpleChi2Experiment::SimpleChi2Experiment(
       IPrediction const *Pred, Spectrum const &Data, bool UseHistError,
-      double POT, std::pair<double, double> erange)
+      double POT)
       : fPred(Pred), fUseHistError(UseHistError) {
     fPOT = POT;
     if (fPOT == 0) {
       fPOT = Data.POT();
     }
-    fData = Data.ToTH1(fPOT);
 
-    if (erange.first != -std::numeric_limits<double>::max()) {
-      fBinRange.first = fData->GetXaxis()->FindFixBin(erange.first);
-      if (fBinRange.first < 1) {
-        fBinRange.first = 1;
-      }
-    } else {
-      fBinRange.first = 1;
-    }
+    Eigen::ArrayXd fData_arrraw = Data.GetEigen(fPOT);
+    fData_arr = fData_arrraw.segment(1, fData_arrraw.size() - 2); 
 
-    if (erange.second != std::numeric_limits<double>::max()) {
-      fBinRange.second = fData->GetXaxis()->FindFixBin(erange.second);
-      if (fBinRange.second > (fData->GetXaxis()->GetNbins() + 1)) {
-        fBinRange.second = (fData->GetXaxis()->GetNbins() + 1);
-      }
-    } else {
-      fBinRange.second = (fData->GetXaxis()->GetNbins() + 1);
-    }
   }
 
-  TH1D *SimpleChi2Experiment::GetPred(osc::IOscCalcAdjustable *osc, const SystShifts &syst) const {
-    return fPred->PredictSyst(osc, syst).ToTH1(fPOT);
+  Eigen::ArrayXd SimpleChi2Experiment::GetPred(osc::IOscCalcAdjustable *osc, 
+                                                const SystShifts &syst) const {
+    Eigen::ArrayXd pred_arr = fPred->PredictSyst(osc, syst).GetEigen(fPOT);
+    return pred_arr.segment(1, pred_arr.size() - 2);
   }
 
   double SimpleChi2Experiment::ChiSq(osc::IOscCalcAdjustable *osc, const SystShifts &syst) const {
 
-    TH1D *PredHist = GetPred(osc, syst);
-    double chi2 = 0;
-    for (int bi = fBinRange.first; bi < fBinRange.second; ++bi) {
-      double pbc = PredHist->GetBinContent(bi + 1);
-      double pbe =
-          (fUseHistError ? pow(PredHist->GetBinError(bi + 1), 2) : 0) + pbc;
+    Eigen::ArrayXd PredHist = GetPred(osc, syst);
 
-      if (!std::isnormal(pbe)) {
-        continue;
-      }
+    // bin by bin operations for arrays
+    Eigen::ArrayXd leastsq_arr = ((PredHist - fData_arr) * (PredHist - fData_arr)) / PredHist;
 
-      double dbc = fData->GetBinContent(bi + 1);
-
-      double contrib = pow((pbc - dbc), 2) / pbe;
-
-      chi2 += contrib;
-    }
-    delete PredHist;
+    double chi2 = leastsq_arr.sum();
 
     return chi2;
   }
 
 
-//----------------------------------------------------
+  //----------------------------------------------------
 
-// Another Chi2Experiment for Chi2 calculation using full
-// PRISM covariance
+  // Another Chi2Experiment for Chi2 calculation using full
+  // PRISM covariance
 
   PRISMChi2CovarExperiment::PRISMChi2CovarExperiment(
                            PredictionPRISM const *Pred, Spectrum const &Data,
                            bool UseCovariance, double NDPOT, double FDPOT,
-                           PRISM::MatchChan match_chan,
-                           std::pair<double, double> erange)
+                           PRISM::MatchChan match_chan)
                            : fPred(Pred), fUseCovariance(UseCovariance) {
     fPOTFD = FDPOT;
     if (fPOTFD == 0) {
@@ -89,12 +61,11 @@ namespace ana {
 
   // Get the extrapolated PRISM prediction
   Eigen::VectorXd PRISMChi2CovarExperiment::
-                      GetPred(osc::IOscCalc *osc,
-                              std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
+                      GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
                               const SystShifts &syst) const {
     
     Eigen::VectorXd pred_v = PRISMComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                             .GetEigen(fPOTFD).matrix();
+                             .GetEigen(fPOTFD).matrix(); //kNDDataCorr_FDExtrap
     // Chop off the under and over flow bins.
     Eigen::VectorXd pred_v_seg = Eigen::VectorXd::Zero(pred_v.size() - 2);
     pred_v_seg = pred_v.segment(1, pred_v.size() - 2);
@@ -104,8 +75,7 @@ namespace ana {
 
   // Get the PRISM covariance matrix
   Eigen::MatrixXd PRISMChi2CovarExperiment::
-                      GetCovariance(osc::IOscCalc *osc,
-                                    std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
+                      GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
                                     const SystShifts &syst) const {
     auto cov_s = PRISMComps.at(PredictionPRISM::kExtrapCovarMatrix);
 
@@ -126,7 +96,7 @@ namespace ana {
 
     auto PRISMComp_map = fPred->PredictPRISMComponents(osc, syst, fMatchChannel);
 
-    Eigen::VectorXd PredVec = GetPred(osc, PRISMComp_map, syst);
+    Eigen::VectorXd PredVec = GetPred(PRISMComp_map, syst);
     Eigen::MatrixXd CovMat = Eigen::MatrixXd::Zero(PredVec.size(), PredVec.size());
     for (int diag = 0; diag < CovMat.rows(); diag++) {
       // Poisson error on number of events in bin
@@ -134,7 +104,7 @@ namespace ana {
     }
     // Add Poisson errors in quadrature to covariance (if you want to)
     if (fUseCovariance) {
-      CovMat += GetCovariance(osc, PRISMComp_map, syst);
+      CovMat += GetCovariance(PRISMComp_map, syst);
     }
     double Chi2 = (PredVec - fData_vec).transpose() * CovMat.inverse() *
                   (PredVec - fData_vec);
