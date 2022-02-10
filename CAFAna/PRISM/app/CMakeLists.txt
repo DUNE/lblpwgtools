@@ -4,7 +4,7 @@ set(scripts_to_build
   #OffAxisNDCAFCombiner
   PRISMPrediction
   PRISM_4Flavour_dChi2Scan
-  #PRISMSystThrows
+  PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
   #PRISMRegOptimizer

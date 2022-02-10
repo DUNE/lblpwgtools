@@ -104,17 +104,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap"); 
 
-  osc::IOscCalculatorAdjustable *calc =
+  osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    TFile fs(state_file.c_str());
+    TFile *fs = TFile::Open(state_file.c_str());
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname);
+    States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs.Close();
+    fs->Close();
   }
 
   PRISMStateBlob &state = States[state_file];
@@ -132,7 +132,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   PRISMExtrapolator fluxmatcher;
   if (use_PRISM) {
-
     if (Use_EventRateMatching) {
       std::cout << "Using event rate matching" << std::endl;
       fluxmatcher.Initialize({
@@ -213,12 +212,28 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   std::vector<Spectrum> DataSpectra;
   DataSpectra.reserve(Channels.size());
 
+  // Try defining extrapolator object before channel loop
+  NDFD_Matrix SmearMatrices;
+  MCEffCorrection NDFDEffCorr;
+
   for (auto const ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
+    size_t NDConfig_293kA = (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub;
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
+
+    bool IsNue(false);
+    if (std::abs(osc_to) == 12) {
+      std::cout << "Nue/Nuebar appearance. Therefore, use FDOsc as norm." << std::endl;
+      IsNue = true;
+    } else {
+      std::cout << "Numu/Numubar appearance. Therefore, use FDUnOsc as norm." << std::endl;
+    }
+
+    std::cout << "FD config = " << FDfdConfig_enum << std::endl;
 
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
       std::cout << "[ERROR]: Have ND nu channel, but no numode run plan."
@@ -231,61 +246,33 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       abort();
     }
 
-    DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
-        calc, osc_from, osc_to));
-
     TDirectory *chan_dir =
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
 
-    if (state.Have(GetConfigNueSwap(FDConfig_enum))) {
-      DataSpectra.back() +=
-          state.FarDetData_nueswap[FDfdConfig_enum]->Oscillated(calc, osc_from,
-                                                                osc_to);
-
-      TH1 *Data_nueswap = state.FarDetData_nueswap[FDfdConfig_enum]
-                              ->Oscillated(calc, osc_from, osc_to)
-                              .ToTH1(POT_FD);
-      if (Data_nueswap->Integral() > 0) {
-        chan_dir->WriteTObject(Data_nueswap, "Data_nueswap_component");
-      }
-      Data_nueswap->SetDirectory(nullptr);
-    }
-
-    auto *Data = DataSpectra.back().ToTHX(POT_FD);
-    if (DataSpectra.back().NDimensions() == 1) {
-      for (int bin_it = 1; bin_it <= Data->GetXaxis()->GetNbins(); bin_it++) {
-        Data->SetBinError(bin_it, sqrt(Data->GetBinContent(bin_it)));
-      }
-    } else if (DataSpectra.back().NDimensions() == 2) {
-      for (int x_it = 1; x_it <= Data->GetXaxis()->GetNbins(); x_it++) {
-        for (int y_it = 1; y_it <= Data->GetYaxis()->GetNbins(); y_it++) {
-          double be = sqrt(Data->GetBinContent(x_it, y_it));
-          Data->SetBinError(x_it, y_it, be);
-        }
-      }
-    }
-    Data->Scale(1, "width");
-    chan_dir->WriteTObject(Data, "Data_Total");
-    Data->SetDirectory(nullptr);
+    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+    auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
+    DataPred->Scale(1, "width");
+    chan_dir->WriteTObject(DataPred, "DataPred_Total");
+    DataPred->SetDirectory(nullptr);
 
     std::cout << "Filling smearing matrices and calculating efficiency." << std::endl;
     // Smearing matrices for ND and FD
     // For detector and selection corrections
-    NDFD_Matrix SmearMatrices(state.NDMatrixPredInterps[NDConfig_enum].get(), 
-                              state.FDMatrixPredInterps[FDConfig_enum].get(),
-                              RegFactorExtrap);
+    SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum}, 
+                             {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(SmearMatrices);
+    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+
     // MC efficiency correction
-    MCEffCorrection NDFDEffCorr(state.NDUnselTruePredInterps[kND_293kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_293kA_nu].get(),
-                                state.NDUnselTruePredInterps[kND_280kA_nu].get(),
-                                state.NDSelTruePredInterps[kND_280kA_nu].get(),
-                                state.FDUnselTruePredInterps[FDfdConfig_enum].get(),
-                                state.FDSelTruePredInterps[FDfdConfig_enum].get());
+    NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
+                           {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(NDFDEffCorr);
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
     std::cout << "Done. Now do syst throws." << std::endl;
 
     if (use_PRISM) {
@@ -298,7 +285,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
       std::vector<std::vector<double>> toGetErr;
       SystShifts shift_throw = shift;
-      int number_throws(1000);
+      int number_throws(10000);
       int step_count(0);
         
       auto PRISM_NomComps = state.PRISM->
@@ -310,15 +297,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                               PredictionPRISM::kNDDataCorr_FDExtrap).ToTH1(POT_FD); 
       PRISM_Nom_h->SetDirectory(nullptr);
 
-      PRISM_Nom_h->Scale(1 / PRISM_Nom_h->Integral());
       // Nominal FD pred.
       TH1D *FDOsc_Nom_h = PRISM_NomComps.at(PredictionPRISM::kFDOscPred).ToTH1(POT_FD);
       FDOsc_Nom_h->SetDirectory(nullptr);
-      FDOsc_Nom_h->Scale(1 / FDOsc_Nom_h->Integral()); 
       // Nominal FD unoscillated pred.
       TH1D *FDUnOsc_h = PRISM_NomComps.at(PredictionPRISM::kFDUnOscPred).ToTH1(POT_FD);
       FDUnOsc_h->SetDirectory(nullptr);
-      FDUnOsc_h->Scale(1 / FDUnOsc_h->Integral());
 
       std::vector<double> AvVx, AvVy, err68pc;
       // x points on graph are bin centers of PRISM prediction
@@ -341,35 +325,34 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                   PredictionPRISM::kNDMC_FDExtrap : 
                                   PredictionPRISM::kNDDataCorr_FDExtrap).ToTH1(POT_FD);
         PRISM_Shift_h->SetDirectory(nullptr);
-        PRISM_Shift_h->Scale(1 / PRISM_Shift_h->Integral());
         // Shifted FD pred.
         TH1D *FDOsc_Shift_h = PRISM_ShiftedComps.at(PredictionPRISM::kFDOscPred)
                                 .ToTH1(POT_FD);
         FDOsc_Shift_h->SetDirectory(nullptr);
-        FDOsc_Shift_h->Scale(1 / FDOsc_Shift_h->Integral());
 
         if (MCVarFluxSyst) { // For varying ND and FD MC data
           for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
             double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) - 
                                  PRISM_Nom_h->GetBinContent(ebin)) /
-                                 FDOsc_Nom_h->GetBinContent(ebin); // FDUnOsc_h FDOsc_Nom_h
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
      
             double fracDiffFD = (FDOsc_Shift_h->GetBinContent(ebin) -
                                  FDOsc_Nom_h->GetBinContent(ebin)) / 
-                                 FDOsc_Nom_h->GetBinContent(ebin); 
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
             throws.push_back(fracDiffND - fracDiffFD); // * 100 for %
           }
         } else { // Don't vary ND and FD MC data
           for (int ebin = 1; ebin <= PRISM_Nom_h->GetNbinsX(); ebin++) {
             double fracDiffND = (PRISM_Shift_h->GetBinContent(ebin) -
                                  PRISM_Nom_h->GetBinContent(ebin)) /
-                                 FDOsc_Nom_h->GetBinContent(ebin); // PRISM_Nom_h FDOsc_Nom_h
+                                 (IsNue ? FDOsc_Nom_h->GetBinContent(ebin) :
+                                          FDUnOsc_h->GetBinContent(ebin)); 
             throws.push_back(fracDiffND);
           }
         }
         toGetErr.push_back(throws); 
-        HistCache::Delete(PRISM_Shift_h);
-        HistCache::Delete(FDOsc_Shift_h);
         delete PRISM_Shift_h, FDOsc_Shift_h;
       }
 
@@ -403,9 +386,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       chan_dir->WriteTObject(g_ShiftVar.release(), "g_ShiftVar");      
 
       // Do a covariance matrix for the syst throws
-      TH2D *hSystCovariance = HistCache::NewTH2D("SystCovariance", 
-                                                 PRISM_Nom_h->GetXaxis(),
-                                                 PRISM_Nom_h->GetXaxis());
+      TH2D *hSystCovariance = new TH2D("SystCovariance", "SystCovariance",
+                                       PRISM_Nom_h->GetXaxis()->GetNbins(), 
+                                       PRISM_Nom_h->GetXaxis()->GetXmin(),
+                                       PRISM_Nom_h->GetXaxis()->GetXmax(),
+                                       PRISM_Nom_h->GetXaxis()->GetNbins(),
+                                       PRISM_Nom_h->GetXaxis()->GetXmin(),
+                                       PRISM_Nom_h->GetXaxis()->GetXmax());
       hSystCovariance->SetDirectory(nullptr);
       for (int ebinx = 0; ebinx < PRISM_Nom_h->GetNbinsX(); ebinx++) {
         for (int ebiny = 0; ebiny < PRISM_Nom_h->GetNbinsX(); ebiny++) {
@@ -428,8 +415,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       }
 
       chan_dir->WriteTObject(hSystCovariance, "SystCovariance_Fractional");
-      HistCache::Delete(hSystCovariance);
-
+      delete hSystCovariance;
       // Write standard PRISM prediction hists.
       auto PRISMComponents =
           state.PRISM->PredictPRISMComponents(calc, kNoShift, ch.second);
@@ -453,7 +439,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       chan_dir->WriteTObject(PRISMExtrapCovMat, "StatCovariance");
       PRISMExtrapCovMat->SetDirectory(nullptr);
       // Make a fractional stat covariance matrix to compare to syst covariance
-      TH2D *PRISMExtrapCovMat_Frac = HistCache::Copy(PRISMExtrapCovMat);
+      TH2D *PRISMExtrapCovMat_Frac = new TH2D(*PRISMExtrapCovMat); 
       PRISMExtrapCovMat_Frac->SetDirectory(nullptr);
       for (int ebinx = 1; ebinx <= PRISMExtrapCovMat->GetNbinsX(); ebinx++) {
         for (int ebiny = 1; ebiny <= PRISMExtrapCovMat->GetNbinsY(); ebiny++) {
@@ -465,7 +451,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         }
       }
       chan_dir->WriteTObject(PRISMExtrapCovMat_Frac, "StatCovariance_Fractional");
-      HistCache::Delete(PRISMExtrapCovMat_Frac);
+      delete PRISMExtrapCovMat_Frac;
 
     } else {
       auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]

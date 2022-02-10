@@ -8,6 +8,7 @@
 #include "CAFAna/Core/SystShifts.h"
 
 #include "CAFAna/Experiment/ReactorExperiment.h"
+#include "CAFAna/Experiment/SingleSampleExperiment.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
@@ -283,7 +284,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     // Begin ND to FD extrapolation
     SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
                              {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+
     // ND to FD MC efficiency correction
     NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
                            {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
@@ -291,9 +294,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                            {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
                            {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
                            {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-
-
-
 
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
@@ -321,12 +321,17 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       PRISMExtrapCovMat->SetDirectory(nullptr);
     }
 
+    //auto PRISMPred_spec =
+    //  PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
+
     std::cout << "Fill Experiment objects." << std::endl;
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second, {0, 6}));
+    /*Expts.emplace_back(new SingleSampleExperiment(state.PRISM.get(), 
+                                                  FarDetDataPred.FakeData(POT_FD)));*/
 
     CombExpts.Add(Expts.back().get());
   
@@ -422,14 +427,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "dCP = " << calc->GetdCP() << std::endl;
       std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
  
-      auto calc_fit = calc->Copy();
+      //auto calc_fit = calc->Copy();
  
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
-      SystShifts bestSysts;
-      //const SeedList &seedPts = SeedList(); //oscSeeds
-      double chi = fitter.Fit(calc_fit, bestSysts, oscSeeds, 
+      SystShifts bestSysts = kNoShift;
+      double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
       scan_hist_1D->Fill(x, chi);
@@ -460,10 +464,10 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         }
       }
     }
-    if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
+    //else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
@@ -482,9 +486,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         auto start_fit = std::chrono::system_clock::now();
 
         MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); 
-        SystShifts bestSysts;
-        //const SeedList &seedPts = SeedList();
-        
+        SystShifts bestSysts = kNoShift;
         double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
         // fill hist

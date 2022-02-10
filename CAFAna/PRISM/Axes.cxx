@@ -18,74 +18,29 @@ const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {
     return Binning::Simple(100, 0, 10);
-  }
-  if (xbinning == "uniform") {
+  } else if (xbinning == "uniform") {
     return Binning::Simple(150, 0, 25);
-  }
-  if (xbinning == "uniform_smallrange") {
+  } else if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
-  }
-  if (xbinning == "uniform_coarse") {
-    return Binning::Simple(25, 0,
-                           10); // used to be 25, 10 (bad tail going out to 10)
-  }
-  if (xbinning == "testopt") {
+  } else if (xbinning == "uniform_coarse") {
+    return Binning::Simple(25, 0, 10); 
+  } else if (xbinning == "prism_noextrap") {
+    return kPRISMRecoBinning;
+  } else if (xbinning == "testopt") {
     std::vector<double> BE = {
         0,
     };
-
     while (BE.back() < 4) {
       BE.push_back(BE.back() + 0.25);
     }
-
     while (BE.back() < 8) {
       BE.push_back(BE.back() + 0.5);
     }
-
     return Binning::Custom(BE);
   } else if (xbinning == "default") {
-    std::vector<double> BE = {
-        0,
-    };
-    while (BE.back() < 1) {
-      BE.push_back(BE.back() + 0.5);
-    }
-    while (BE.back() < 4.0) {
-      BE.push_back(BE.back() + 0.25);
-    }
-    while (BE.back() < 6.0) {
-      BE.push_back(BE.back() + 1.0);
-    }
-    while (BE.back() < 10.0) {
-      BE.push_back(BE.back() + 4.0);
-    }
-    return Binning::Custom(BE);
+    return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
-    std::vector<double> BE = {
-        0,
-    };
-
-    while (BE.back() < 10) {
-      BE.push_back(BE.back() + 0.2);
-    }
-
-    while (BE.back() < 20) {
-      BE.push_back(BE.back() + 1.0);
-    }
-
-    while (BE.back() < 50) {
-      BE.push_back(BE.back() + 5.0);
-    }
-
-    while (BE.back() < 100) {
-      BE.push_back(BE.back() + 10.0);
-    }
-
-    while (BE.back() < 120) {
-      BE.push_back(BE.back() + 20.0);
-    }
-
-    return Binning::Custom(BE);
+    return kTrueEnergyBins; 
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -95,7 +50,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -30, 0}; // -32
+    std::array<double, 3> OABinning = {0.5, -30, 0}; 
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];
@@ -136,13 +91,13 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
   } else if (varname == "RecoEHad") {
     return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
-  } else if (varname == "RecoEP") {
+  }  else if (varname == "RecoEP") {
     return std::make_pair("Reco E_{p} (GeV)", kPEReco);
-  } else if (varname == "RecoEPipm") {
+  }  else if (varname == "RecoEPipm") {
     return std::make_pair("Reco E_{#pi^{+/-}} (GeV)", kPipmEReco);
-  } else if (varname == "RecoEPi0") {
+  }  else if (varname == "RecoEPi0") {
     return std::make_pair("Reco E_{#pi^{0}} (GeV)", kPi0EReco);
-  } else if (varname == "RecoEOther") {
+  }  else if (varname == "RecoEOther") {
     return std::make_pair("Reco E_{other} (GeV)", SIMPLEVAR(eRecoOther));
   } else {
     std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
@@ -165,18 +120,18 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
                              kTrueOffAxisPos_m);
-
+  
   // Seperate ND and FD axes for ND->FD extrapolation.
   // Possible fine binning for ND axis, just keep them the
   // same for now.
-  HistAxis xaxND = RecoObservable(varname, xbinning); // xbinning default_fine
+  HistAxis xaxND = RecoObservable(varname, "prism_noextrap"); // xbinning default_fine
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
 }
 
 // Return HistAxis for true energy version of observable
-HistAxis TrueObservable(std::string const &obsvarname,
+HistAxis TrueObservable(std::string const &obsvarname, 
                         std::string const &binning) {
   auto truevardef = GetVar("ETrue");
   std::vector<std::string> labels;
@@ -193,7 +148,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
-  } else if (obsvarname == "RecoEHad") {
+  } else if (obsvarname == "RecoEHad") { 
     truevardef = GetVar("EHad");
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
@@ -201,7 +156,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ETrue");
   } else if (obsvarname == "RecoEP") {
     truevardef = GetVar("EP");
-  } else if (obsvarname == "RecoEPipm") {
+  } else if (obsvarname == "RecoEPipm") { 
     truevardef = GetVar("EPipm");
   } else if (obsvarname == "RecoEPi0") {
     truevardef = GetVar("EPi0");
@@ -228,8 +183,8 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else {
     std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
-  }
-
+  }   
+  
   if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadReco") {
     return HistAxis(labels, bins, vars);
   } else {
@@ -238,33 +193,33 @@ HistAxis TrueObservable(std::string const &obsvarname,
 }
 
 HistAxis RecoObservable(std::string const &obsvarname,
-                        std::string const &binning) {
+                        std::string const &binning) {              
   std::vector<std::string> labels;
   std::vector<Binning> bins;
   std::vector<Var> vars;
 
   if (obsvarname == "ELepEHad") { // 2D ELep EHad Prediction
-    auto vardefLep = GetVar("ELep");
+    auto vardefLep = GetVar("ELep");   
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);
+    vars.push_back(vardefLep.second);   
     auto vardefHad = GetVar("EHad");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefHad.second);
-  } else if (obsvarname == "ELepEHadReco") {
+  } else if (obsvarname == "ELepEHadReco") {   
     auto vardefLep = GetVar("RecoELep");
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);
-    auto vardefHad = GetVar("RecoEHad");
+    vars.push_back(vardefLep.second); 
+    auto vardefHad = GetVar("RecoEHad"); 
     labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning(binning));
-    vars.push_back(vardefHad.second);
+    bins.push_back(GetBinning(binning)); 
+    vars.push_back(vardefHad.second);   
   } else {
     auto vardef = GetVar(obsvarname);
     labels.push_back(vardef.first);
-    bins.push_back(GetBinning(binning));
+    bins.push_back(GetBinning(binning));  
     vars.push_back(vardef.second);
   }
 
