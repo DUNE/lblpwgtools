@@ -499,18 +499,18 @@ PredictionPRISM::GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
 
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
-  return PredictSyst(calc, kNoShift);
+   return PredictSyst(calc, kNoShift);
 }
 
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::PredictSyst(osc::IOscCalc *calc,
-                                      SystShifts shift) const {
+                                      const SystShifts &shift) const {
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps =
       PredictPRISMComponents(calc, shift);
 
   assert(Comps.size());
 
-  return Comps.at(kPRISMPred);
+  return Comps.at(kNDDataCorr_FDExtrap);
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
@@ -641,12 +641,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // ND background subtraction:
   if (fNCCorrection) { // NC background subraction.
-    PRISMReweightableSpectrum NC = NDRunPlan.Weight(
-        SetSpectrumErrors(NDPrediction->PredictComponentSyst(
-                              calc, (fVaryNDFDMCData ? shift : kNoShift),
-                              Flavors::kAll, Current::kNC, Sign::kBoth),
-                          fDefaultOffAxisPOT),
-        293, fOffPredictionAxis);
+    PRISMReweightableSpectrum NC =
+      NDRunPlan.Weight(SetSpectrumErrors(NDPrediction->PredictComponentSyst(
+                                         calc, (fVaryNDFDMCData ? kNoShift : shift),
+                                         Flavors::kAll, Current::kNC, Sign::kBoth),
+                                         fDefaultOffAxisPOT),
+                       293, fOffPredictionAxis);
 
     NDComps.emplace(kNDNCBkg_293kA, NC);
 
@@ -736,6 +736,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   LabelsAndBins oaAxis280(fND280kAAxis.GetLabels().at(0),
                           fND280kAAxis.GetBinnings().at(0));
 
+  //std::cout << LinearCombination.first << std::endl;
   // Scale relative size of the weights to account for the run-plan.
   // E.g. more data taken on-axis means a smaller weight for the
   // on-axis position weights.
@@ -815,10 +816,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   //-------------------------------------------------------------
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
+  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), 
+                              fAnalysisAxisFD.GetBinnings()); 
+  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(), 
 
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisND.GetLabels(),
-                              fAnalysisAxisND.GetBinnings());
-  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(),
+
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),
                                       fND280kAAxis.GetBinnings());
@@ -980,9 +982,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   }
 
   if (fWSBCorrection) { // Add in wrong sign background. Nue: Numu->Nue only.
-    Comps.emplace(kFDWSBkg, FDPrediction->PredictComponentSyst(
-                                calc, (fVaryNDFDMCData ? kNoShift : shift),
-                                FDSigFlavor, Current::kCC, FDWrongSign));
+
+    Comps.emplace(kFDWSBkg,
+                  FDPrediction->PredictComponentSyst(
+                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, /////!!!!
+                      Current::kCC, FDWrongSign));
+
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDWSBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDWSBkg);

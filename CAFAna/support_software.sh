@@ -167,7 +167,7 @@ fi
 if [ ! -e TH2Jagged/build/Linux/setup.sh ]; then
   mkdir -p TH2Jagged/build
   cd TH2Jagged/build
-  cmake ../
+  cmake ../ 
   make install
   cd ${SUPPORT_SOFTWARE_BUILD_DIR}
 fi

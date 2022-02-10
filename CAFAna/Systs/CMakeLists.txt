@@ -55,7 +55,7 @@ set(Systs_header_files
   OffAxisFluxUncertaintyHelper.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts CAFAnaCore TH2Jagged::All)
+target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
 
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${Systs_header_files}")

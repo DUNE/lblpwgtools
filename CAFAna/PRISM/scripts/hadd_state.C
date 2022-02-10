@@ -23,7 +23,6 @@
 #include "TROOT.h"
 
 TFile *Target;
-//gROOT->SetMustClean(false);
 
 // TODO: do this with just one function. Two is not necessary
 void MergeFilesLayer2(TDirectory *target, TFile *source);

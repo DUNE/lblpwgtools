@@ -28,7 +28,7 @@ using namespace PRISM;
 
 std::string output_file_name;
 std::string syst_descriptor = "nosyst";
-std::string axdescriptor = "EProxy";
+std::string axdescriptor = "EVisReco";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
 std::string truthbinningdescriptor = "event_rate_match"; // was uniform
@@ -295,7 +295,8 @@ int main(int argc, char const *argv[]) {
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
-  HistAxis TrueObsAxis = TrueObservable(axdescriptor, binningdescriptor);
+  HistAxis TrueObsAxis =
+      TrueObservable(axdescriptor, "prism_noextrap"); // binningdescriptor
 
   std::vector<HistAxis> AxisVec = {axes.XProjectionFD};
   HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
@@ -514,16 +515,6 @@ int main(int argc, char const *argv[]) {
   HistAxis const NDEventRateSpectraAxis_280kA(
       Labels_match_280kA, Bins_match_280kA, Vars_match_280kA);
 
-  std::vector<std::string> Labels_obs = axes.XProjectionND.GetLabels();
-  std::vector<Binning> Bins_obs = axes.XProjectionND.GetBinnings();
-  std::vector<Var> Vars_obs = axes.XProjectionND.GetVars();
-
-  Labels_obs.push_back(axes.OffAxisPosition.GetLabels().front());
-  Bins_obs.push_back(axes.OffAxisPosition.GetBinnings().front());
-  Vars_obs.push_back(axes.OffAxisPosition.GetVars().front());
-
-  HistAxis const NDObservedSpectraAxis(Labels_obs, Bins_obs, Vars_obs);
-
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
   // --> e.g. EProxy --> ETrue
@@ -613,7 +604,8 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
   static osc::NoOscillations no;
-  static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
+  // static osc::IOscCalcAdjustable *calc = NuFitOscCalc(1);
+  static osc::IOscCalc *calc = NuFitOscCalc(1);
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);
@@ -656,8 +648,8 @@ int main(int argc, char const *argv[]) {
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
           los_flux, &no, *MatchPredGens[it], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign); 
-    
+          PredictionInterp::kSplitBySign);
+
       // PredInterps for ND smearing matrix
       // Only need to do this for 293 kA
       // Relationship between ERec and ETrue should be the same
@@ -800,9 +792,9 @@ int main(int argc, char const *argv[]) {
   HistAxis const OffAxisFluxPredictionAxes_280kA(
       Labels_flux_280kA, Bins_flux_280kA, Vars_flux_280kA);
 
-  std::cout << "Loaders GoPRISM()." << std::endl;
-  Loaders_nu.GoPRISM();
-  Loaders_nub.GoPRISM();
+  std::cout << "Loaders Go()." << std::endl;
+  Loaders_nu.Go();
+  Loaders_nub.Go();
 
   for (size_t it = 0; it < kNPRISMConfigs; ++it) {
     bool IsNu = IsNuConfig(it);

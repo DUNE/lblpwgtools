@@ -66,24 +66,16 @@ void PRISMExtrapolator::Initialize(
   }
 
   if (preds.find("ND_293kA_nu") != preds.end()) {
-    //preds.find("ND_293kA_nu")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_293kA_nu = preds.find("ND_293kA_nu")->second;
-    //fNDPredInterp_293kA_nu->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_293kA_nub") != preds.end()) {
-   // preds.find("ND_293kA_nub")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_293kA_nub = preds.find("ND_293kA_nub")->second;
-    //fNDPredInterp_293kA_nub->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_280kA_nu") != preds.end()) {
-   // preds.find("ND_280kA_nu")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_280kA_nu = preds.find("ND_280kA_nu")->second;
-    //fNDPredInterp_280kA_nu->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
   if (preds.find("ND_280kA_nub") != preds.end()) {
-   // preds.find("ND_280kA_nub")->second->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
     fNDPredInterp_280kA_nub = preds.find("ND_280kA_nub")->second;
-    //fNDPredInterp_280kA_nub->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
   }
 }
 

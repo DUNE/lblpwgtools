@@ -92,6 +92,7 @@ endif()
 
 #These need to come after ROOT or they will set up ROOT themselves (with the wrong libraries required)
 find_package(TH2Jagged REQUIRED)
+LIST(APPEND EXTRA_CXX_FLAGS -DUSE_TH2JAGGED)
 
 # This is the only real SO dependency if we are using CVMFS to pull in the others, 
 # so dump this in the lib/ folder to aid cluster deployment

@@ -99,7 +99,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectrumLoaderBase()
-    : fGone(false), fPOT(0), fSecondFileLoop(false)
+    : fGone(false), fPOT(0)
   {
   }
 
@@ -109,8 +109,6 @@ namespace ana
   {
     fWildcard = wildcard;
     fFileSource = std::unique_ptr<IFileSource>(WildcardOrSAMQuery(wildcard));
-
-    fFileSource2 = std::unique_ptr<IFileSource>(WildcardOrSAMQuery(wildcard));
   }
 
   //----------------------------------------------------------------------
@@ -118,8 +116,6 @@ namespace ana
   {
     fWildcard = "file list";
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));
-
-    fFileSource2 = std::unique_ptr<IFileSource>(new FileListSource(fnames));
 
     // Apparently MakePredInterps runs over empty file lists?
     //    assert(!fnames.empty());
@@ -250,12 +246,8 @@ namespace ana
   //----------------------------------------------------------------------
   TFile* SpectrumLoaderBase::GetNextFile()
   {
-    //TFile* f = fFileSource->GetNextFile();
-    //if(!f) return 0; // out of files
-    TFile *f;
-    if (!fSecondFileLoop) f = fFileSource->GetNextFile();
-    else f = fFileSource2->GetNextFile();
-    if(!f) return 0;
+    TFile* f = fFileSource->GetNextFile();
+    if(!f) return 0; // out of files
 
     TTree* trPot;
     //    if(f->GetListOfKeys()->Contains("cafmaker"))
@@ -277,17 +269,11 @@ namespace ana
 
       fPOT += pot; 
     }
-
     return f;
   }
 
   //----------------------------------------------------------------------
   void NullLoader::Go()
-  {
-  }
-
-  //----------------------------------------------------------------------
-  void NullLoader::GoPRISM()
   {
   }
 

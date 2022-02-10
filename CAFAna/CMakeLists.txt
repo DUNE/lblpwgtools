@@ -124,3 +124,10 @@ install(
   DESTINATION
     bin
   )
+
+#install(
+#  PROGRAMS
+#    ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild
+#  DESTINATION
+#    bin
+#  )
