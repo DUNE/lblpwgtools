@@ -411,6 +411,8 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
     double mean, double width, PRISM::BeamChan NDbc, SystShifts shift) const {
 
+  static osc::NoOscillations no;
+
   shift = FilterFluxSystShifts(shift);
 
   Sign::Sign_t sgn_nd = GetSign(NDbc.chan);
@@ -436,13 +438,11 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
 
   Conditioning const &cond = fConditioning.at(fake_match_chan);
 
-  //static osc::NoOscillations no;
-
   PredictionInterp const *NDPredInterp_293kA =
       GetNDPred(fake_match_chan.from.mode, 293);
 
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
-      (osc::IOscCalc*)0, shift, flav_nd, Current::kCC, sgn_nd);
+      &no, shift, flav_nd, Current::kCC, sgn_nd);
 
   std::unique_ptr<TH2> NDOffAxis_293kA(NDOffAxis_293kA_spec.ToTH2(1));
   NDOffAxis_293kA->SetDirectory(nullptr);
@@ -451,7 +451,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
       GetNDPred(fake_match_chan.from.mode, 280);
 
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
-      (osc::IOscCalc*)0, shift, flav_nd, Current::kCC, sgn_nd);
+      &no, shift, flav_nd, Current::kCC, sgn_nd);
 
   std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(1));
   NDOffAxis_280kA->SetDirectory(nullptr);

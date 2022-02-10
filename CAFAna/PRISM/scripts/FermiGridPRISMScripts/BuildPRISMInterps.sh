@@ -52,7 +52,8 @@ if [ ! -z ${6} ]; then
 fi
 
 PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos
-SELECTIONARG=" --UseSelection"
+#SELECTIONARG=" --UseSelection"
+SELECTIONARG=""
 BINDESCRIPTORARG=" --bin-descriptor default"
 
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
