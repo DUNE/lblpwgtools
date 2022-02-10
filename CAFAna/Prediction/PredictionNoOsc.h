@@ -3,8 +3,6 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
-//#include "CAFAna/PRISM/PRISMUtils.h"
-
 #include "CAFAna/Core/Loaders.h"
 
 namespace ana {

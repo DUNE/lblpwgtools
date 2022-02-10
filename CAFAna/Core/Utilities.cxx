@@ -24,6 +24,7 @@
 #include <fstream>
 #include "sys/stat.h"
 #include "wordexp.h"
+#include <dirent.h>
 
 namespace ana
 {
@@ -714,4 +715,111 @@ namespace ana
 
     return ret;
   }
+}
+
+
+std::string EnsureTrailingSlash(std::string str) {
+  if (!str.size()) {
+    return str;
+  }
+  if (str.back() != '/') {
+    return str + '/';
+  }
+  return str;
+}
+
+std::string parse_stdRegex_ErrorCode(std::regex_constants::error_type etype) {
+  switch (etype) {
+  case std::regex_constants::error_collate:
+    return "error_collate: invalid collating element request";
+  case std::regex_constants::error_ctype:
+    return "error_ctype: invalid character class";
+  case std::regex_constants::error_escape:
+    return "error_escape: invalid escape character or trailing escape";
+  case std::regex_constants::error_backref:
+    return "error_backref: invalid back reference";
+  case std::regex_constants::error_brack:
+    return "error_brack: mismatched bracket([ or ])";
+  case std::regex_constants::error_paren:
+    return "error_paren: mismatched parentheses(( or ))";
+  case std::regex_constants::error_brace:
+    return "error_brace: mismatched brace({ or })";
+  case std::regex_constants::error_badbrace:
+    return "error_badbrace: invalid range inside a { }";
+  case std::regex_constants::error_range:
+    return "erro_range: invalid character range(e.g., [z-a])";
+  case std::regex_constants::error_space:
+    return "error_space: insufficient memory to handle this regular expression";
+  case std::regex_constants::error_badrepeat:
+    return "error_badrepeat: a repetition character (*, ?, +, or {) was not "
+           "preceded by a valid regular expression";
+  case std::regex_constants::error_complexity:
+    return "error_complexity: the requested match is too complex";
+  case std::regex_constants::error_stack:
+    return "error_stack: insufficient memory to evaluate a match";
+  default:
+    return "";
+  }
+}
+
+std::string DeGlobPattern(std::string const &pattern) {
+  std::stringstream ss("");
+  size_t next_asterisk = pattern.find_first_of('*');
+  size_t next_to_add = 0;
+  bool modified = false;
+  while (next_asterisk != std::string::npos) {
+    if ((pattern[next_asterisk - 1] !=
+         ']') && // Try to allow valid uses of an asterisk without a preceding '.'
+        (pattern[next_asterisk - 1] != '.')) {
+      modified = true;
+      // Add a .
+      ss << pattern.substr(next_to_add, next_asterisk - next_to_add) << ".*";
+      next_to_add = next_asterisk + 1;
+      if (next_to_add >= pattern.size()) {
+        next_to_add = std::string::npos;
+      }
+    }
+    std::cout << "stuck" << std::endl;
+    next_asterisk = pattern.find_first_of('*', next_to_add);
+  }
+
+  if (next_to_add != std::string::npos) {
+    ss << pattern.substr(next_to_add);
+  }
+
+  if (modified) {
+    std::cout << "[INFO]: DeGlobified input pattern: " << pattern
+              << " to std::regex_friendly: " << ss.str() << std::endl;
+  }
+
+  return ss.str();
+}
+
+std::vector<std::string> GetMatchingFiles(std::string directory,
+                                          std::string pattern,
+                                          bool IncDir) {
+
+  directory = EnsureTrailingSlash(directory);
+  
+  pattern = DeGlobPattern(pattern);
+
+  std::cout << "[INFO]: Looking for files matching: \"" << pattern
+            << "\" in directory: " << directory << std::endl;
+
+  std::regex rpattern(pattern);
+
+  std::vector<std::string> matches;
+
+  DIR *dir;
+  struct dirent *ent;
+  dir = opendir(directory.c_str());
+  if (dir != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+      if (std::regex_match(ent->d_name, rpattern)) {
+        matches.push_back(IncDir ? directory + std::string(ent->d_name)
+                                 : std::string(ent->d_name));
+      }
+    }
+  }
+  return matches;
 }

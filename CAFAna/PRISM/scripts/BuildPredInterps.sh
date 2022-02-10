@@ -2,8 +2,12 @@
 
 INPUTDIR=/dune/data/users/chasnip
 OUTPUTDIR=/dune/data/users/chasnip
-NDFHCPNFSDIR=/pnfs/dune/persistent/users/abooth/Production/ND_CAFMaker/nd_offaxis/v7/CAF/Hadded/subsets/FHC
-NDRHCPNFSDIR=/pnfs/dune/persistent/users/abooth/Production/ND_CAFMaker/nd_offaxis/v7/CAF/Hadded/subsets/RHC
+
+# NDFHCPNFSDIR=/pnfs/dune/persistent/users/abooth/Production/ND_CAFMaker/nd_offaxis/v7/CAF/Hadded/subsets/FHC
+# NDRHCPNFSDIR=/pnfs/dune/persistent/users/abooth/Production/ND_CAFMaker/nd_offaxis/v7/CAF/Hadded/subsets/RHC
+
+# NDFHCPNFSDIR=/root/work/software/lblpwgtools/CAFAna/inputs/ndcafs/FHC
+# NDRHCPNFSDIR=/root/work/software/lblpwgtools/CAFAna/inputs/ndcafs/RHC
 
 #ListOSysts="allsyst"
 #ListOSysts="noxsec:nodet"
@@ -30,8 +34,8 @@ AvaVar="EVisReco"
 #    -n 10000
 
 #ND nu
-MakePRISMPredInterps -o ${OUTPUTDIR}/PRISMState_EVisReco_3.5YrFull_0m_det_ND_nuOnly.root \
-    -N-nu "${NDFHCPNFSDIR}/CAFv7_*0m*.root" \
+CPUPROFILE=MPPI.prof MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_ND_nuOnly.root \
+    -N-nu "${NDFHCPNFSDIR}/CAFv7_*.root" \
     --bin-descriptor ${AnaBinning} \
     --syst-descriptor ${ListOSysts} \
     --no-fakedata-dials \
@@ -39,6 +43,7 @@ MakePRISMPredInterps -o ${OUTPUTDIR}/PRISMState_EVisReco_3.5YrFull_0m_det_ND_nuO
     --PRISM-fake-data ${FakeData} \
     --UseSelection \
     #-n 10000
+
 
 #ND nub
 #MakePRISMPredInterps -o PRISMState_EVisReco_3.5YrFull_ND_nubOnly.root \

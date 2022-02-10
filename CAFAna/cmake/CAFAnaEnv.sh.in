@@ -59,9 +59,7 @@ if [ -z "${CAFANA}" ]; then
   export CAFANA=@CMAKE_INSTALL_PREFIX@
 fi
 
-#AUX_ENV_SCRIPTS=@BUILD_ENV_SCRIPTS@
-AUX_ENV_SCRIPTS=${CAFANA}/ups_env_setup.sh
-for script in $(echo ${AUX_ENV_SCRIPTS} | tr ";" " "); do
+for script in ${CAFANA}/env/*; do
   echo "Sourcing auxiliary env script: ${script}"
   source ${script}
 done

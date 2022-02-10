@@ -1,10 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/Cut.h"
-#include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Var.h"
-#include "CAFAna/Core/Weight.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
@@ -441,53 +437,4 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(GetConfigNueSwap(kFD_nub_nue) == kFD_nub_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_nue) == kFD_nub_numu);
 }
-
-struct PRISMAxisBlob {
-  ana::HistAxis XProjectionND;
-  ana::HistAxis XProjectionFD;
-  ana::HistAxis OffAxisPosition;
-  ana::HistAxis OffAxis280kAPosition;
-};
-
-ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "event_rate_match");
-PRISMAxisBlob GetPRISMAxes(std::string const &varname,
-                           std::string const &xbinning = "default",
-                           std::string const &oabinning = "default");
-
-ana::HistAxis TrueObservable(std::string const &obsvarname = "EVisReco",
-                             std::string const &binning = "prism_noextrap");
-
-ana::HistAxis RecoObservable(std::string const &obsvarname = "EVisReco",
-                             std::string const &binning = "prism_noextrap");
-
-bool isRecoND(std::string var = "ETrue");
-
-extern const ana::Cut kETrueLT10GeV;
-
-extern const ana::Cut kETrue8GeV;
-
-extern const ana::Cut kERecoProxy8GeV;
-
-extern const ana::Cut kIsOutOfTheDesert;
-// Cut to check if it is reconstructed -> removes 
-// unreconstructed events in ND
-extern const ana::Cut kIsReco;
-
-// Use to weight by Exposure
-extern const ana::Weight kRunPlanWeight;
-
-extern const ana::Cut kCut280kARun;
-extern const ana::Cut kSel280kARun;
-extern const ana::Weight kSpecHCRunWeight;
-
-ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true);
-ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
-                        bool isNuMu = true);
-
-ana::Weight GetNDWeight(std::string const &eweight = "", bool isNuMode = true);
-ana::Weight GetFDWeight(std::string const &eweight = "", bool isNuMode = true);
-
-double Get280kAWeight_numu(double enu, bool isNu);
-ana::Weight GetNDSpecialRun(std::string const &SRDescriptor = "");
-
 } // namespace PRISM
