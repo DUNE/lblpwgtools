@@ -107,8 +107,8 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	delete penalty;
 	delete testOsc;
       }
-      delete trueOsc;
     }
+    delete trueOsc;
     
     chisqmin = TMath::Max(chisqmin,1e-6);
     double diff = chisqmin-glob_chisqmin;
