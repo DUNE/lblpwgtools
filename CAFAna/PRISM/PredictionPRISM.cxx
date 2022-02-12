@@ -642,6 +642,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
           fDefaultOffAxisPOT),
       293, fOffPredictionAxis);
 
+  //TH2 *hsig = NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)).ToTH2(NDPOT);
+  //hsig->SetDirectory(nullptr);
+  //hsig->Scale(1, "width");
+  //gFile->WriteTObject(hsig, "NDSigMC");
+
   NDComps.emplace(kNDSig_293kA, NDSig);
   NDComps.emplace(kNDSig2D_293kA, NDSig);
 

@@ -106,42 +106,46 @@ namespace ana {
 
     Spectrum sNDunselected_293kA = 
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, kNoShift, NDflav, curr, NDsign);
     Spectrum sNDunselected_280kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);  
+        ->PredictComponentSyst(&no, kNoShift, NDflav, curr, NDsign);  
 
 
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
-    ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
-                                                                        1);
-    ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
-                                                                        1);
-    Eigen::MatrixXd NDunsel_293kA = rwsNDunselected_293kA.GetEigen(1);
-    Eigen::MatrixXd NDunsel_280kA = rwsNDunselected_280kA.GetEigen(1);  
+    //ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA, 
+    //                                                                    1);
+    //ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
+    //                                                                    1);
+    Eigen::MatrixXd NDunsel_293kA = ConvertArrayToMatrix(sNDunselected_293kA.GetEigen(1),
+                                                         sNDunselected_293kA.GetBinnings());
+    Eigen::MatrixXd NDunsel_280kA = ConvertArrayToMatrix(sNDunselected_280kA.GetEigen(1),
+                                                         sNDunselected_280kA.GetBinnings());  
   
     // Selected ND MC
     Spectrum sNDselected_293kA = 
         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, kNoShift, NDflav, curr, NDsign);
     Spectrum sNDselected_280kA = 
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
+         ->PredictComponentSyst(&no, kNoShift, NDflav, curr, NDsign);
 
-    ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
-                                                                      1);
-    ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
-                                                                      1);
-    Eigen::MatrixXd NDsel_293kA = rwsNDselected_293kA.GetEigen(1);
-    Eigen::MatrixXd NDsel_280kA = rwsNDselected_280kA.GetEigen(1);
+    //ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA, 
+    //                                                                  1);
+    //ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA, 
+    //                                                                  1);
+    Eigen::MatrixXd NDsel_293kA = ConvertArrayToMatrix(sNDselected_293kA.GetEigen(1),
+                                                       sNDselected_293kA.GetBinnings());
+    Eigen::MatrixXd NDsel_280kA = ConvertArrayToMatrix(sNDselected_280kA.GetEigen(1),
+                                                       sNDselected_280kA.GetBinnings());
   
     Spectrum sFDunselected = 
         FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);  //calc
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1);
     Spectrum sFDselected = 
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);  
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);  //calc
     Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1);
   
     // Calculate ND efficiency
