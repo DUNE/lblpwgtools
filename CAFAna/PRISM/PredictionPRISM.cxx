@@ -838,7 +838,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // 2. Extrapolate 293kA sample.
   fNDFD_Matrix->ExtrapolateNDtoFD(
       NDComps.at(kNDDataCorr2D_293kA), NDPOT, 293,
-      std::move(UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT)), calc,
+      UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT), calc,
       (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
       Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(293),
@@ -846,7 +846,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // 3. Extrapolate 280kA sample.
   fNDFD_Matrix->ExtrapolateNDtoFD(
       NDComps.at(kNDDataCorr2D_280kA), NDPOT, 280,
-      std::move(UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT)), calc,
+      UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT), calc,
       (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
       Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(280),
@@ -895,7 +895,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     fNDFD_Matrix->ExtrapolateNDtoFD(
         NDComps.at(kNDSig2D_293kA), NDPOT, 293,
-        std::move(UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT)), calc,
+        UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT), calc,
         (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
         Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(293),
@@ -903,7 +903,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     fNDFD_Matrix->ExtrapolateNDtoFD(
         NDComps.at(kNDSig2D_280kA), NDPOT, 280,
-        std::move(UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT)), calc,
+        UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT), calc,
         (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
         Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(280),
