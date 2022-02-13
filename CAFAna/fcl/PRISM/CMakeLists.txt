@@ -13,3 +13,6 @@ install(FILES ${Ssth23ScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/Sst
 
 file(GLOB Dmsq32Ssth23ScanFCL ${CMAKE_CURRENT_SOURCE_DIR}/Dmsq32_Ssth23_2DScan/*.fcl)
 install(FILES ${Dmsq32Ssth23ScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/Dmsq32_Ssth23_2DScan)
+
+file(GLOB NuisanceSystScanFCL ${CMAKE_CURRENT_SOURCE_DIR}/NuisanceSyst_Scan/*.fcl)
+install(FILES ${NuisanceSystScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/NuisanceSyst_Scan)
