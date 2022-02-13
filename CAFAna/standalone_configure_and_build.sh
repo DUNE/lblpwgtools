@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 #Adapted from
 # https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
 function abspath() { 
@@ -136,6 +138,7 @@ SCRIPT_EXE_DIR=$(pwd)
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 BUILD_DIR=$(pwd)
+mkdir -p ../support
 
 if [ "${USE_UPS}" = "1" ]; then
   source ../cmake/ups_env_setup.sh

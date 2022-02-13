@@ -24,6 +24,8 @@ if [ $(uname) = "Darwin" ]; then
   DSOEXT="dylib"
 fi
 
+echo "OPTS: ${@}"
+
 set -e
 
 SUPPORT_SOFTWARE_BUILD_DIR=$(abspath ${1})
@@ -304,9 +306,9 @@ if [ "${BUILD_UPS_REPLACEMENT_SOFTWARE}" = "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; t
 
     #Hard coded versions for the moment
     export SUNDIALS_VERSION=5.7.0
-    export SUNDIALS_INC=$(abspath stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/include)
-    export SUNDIALS_LIB=$(abspath stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION}/lib)
     export SUNDIALS_DIR=$(abspath stan/lib/stan_math/lib/sundials_${SUNDIALS_VERSION})
+    export SUNDIALS_INC=${SUNDIALS_DIR}/include
+    export SUNDIALS_LIB=${SUNDIALS_DIR}/lib
 
     if [ ! -e ${SUNDIALS_LIB}/libsundials_cvodes.a ]; then
       cd stan

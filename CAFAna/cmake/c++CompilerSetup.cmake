@@ -5,9 +5,9 @@ add_compile_options(-Werror -Wno-delete-non-virtual-dtor)
 add_compile_options(-Wno-error=unused-variable)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	add_compile_options(-Wno-error=unused-parameter)
+	add_compile_options(-Wno-unused-parameter)
 else()
-	add_compile_options(-Wno-error=unused-but-set-variable)
+	add_compile_options(-Wno-unused-but-set-variable)
 endif()
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")

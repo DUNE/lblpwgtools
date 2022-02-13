@@ -595,8 +595,11 @@ namespace ana
   //----------------------------------------------------------------------
   TF1* FitToFourier::Fit() const
   {
-    double s[fNOsc] = {0};
-    double c[fNOsc] = {0};
+    double s[fNOsc];
+    std::fill_n(s,fNOsc,0);
+    double c[fNOsc];
+    std::fill_n(c,fNOsc,0);
+    
     int nBins = 0;
     for(int i = 1; i <= fHist->GetNbinsX(); ++i){
       const double x = M_PI * fHist->GetXaxis()->GetBinCenter(i);

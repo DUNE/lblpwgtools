@@ -24,7 +24,6 @@
 #include "CAFAna/Core/Loaders.h"
 
 #include <algorithm>
-#include <malloc.h>
 
 #ifdef USE_PREDINTERP_OMP
 #include <omp.h>
@@ -834,8 +833,7 @@ namespace ana
 
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
-      std::unique_ptr<TH1> h;
-        h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+      std::unique_ptr<TH1> h(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);
