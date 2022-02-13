@@ -10,11 +10,13 @@ endif()
 
 find_path(OscLib_INC_DIR
   NAMES OscLib/IOscCalc.h
-  PATHS ${OSCLIB_INC})
+  PATHS ${OSCLIB_INC}
+  NO_DEFAULT_PATH)
 
 find_path(OscLib_LIB_DIR
-  NAMES libOscLib.so
-  PATHS ${OSCLIB_LIB})
+  NAMES libOscLib.so libOscLib.dylib
+  PATHS ${OSCLIB_LIB}
+  NO_DEFAULT_PATH)
 
 find_package_handle_standard_args(OscLib
 	REQUIRED_VARS OscLib_INC_DIR OscLib_LIB_DIR
@@ -37,5 +39,7 @@ if(OscLib_FOUND)
         INTERFACE_LINK_DIRECTORIES "${OscLib_LIB_DIRS}"
         INTERFACE_LINK_LIBRARIES "${OscLib_LIBS}"
     )
+    LIST(APPEND CMAKE_INSTALL_RPATH "${OscLib_LIB_DIR}")
+
   endif()
 endif()

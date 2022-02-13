@@ -14,11 +14,13 @@ endif()
 
 find_path(tbb_INC_DIR
   NAMES tbb/tbb.h
-  PATHS ${TBB_INC})
+  PATHS ${TBB_INC}
+  NO_DEFAULT_PATH)
 
 find_path(tbb_LIB_DIR
-  NAMES libtbb.so
-  PATHS ${TBB_LIB})
+  NAMES libtbb.so libtbb.dylib
+  PATHS ${TBB_LIB}
+  NO_DEFAULT_PATH)
 
 find_package_handle_standard_args(tbb
 	REQUIRED_VARS tbb_INC_DIR tbb_LIB_DIR TBB_VERSION
@@ -48,5 +50,6 @@ if(tbb_FOUND)
         INTERFACE_LINK_DIRECTORIES "${tbb_LIB_DIRS}"
         INTERFACE_LINK_LIBRARIES "${tbb_LIBS}"
     )
+    LIST(APPEND CMAKE_INSTALL_RPATH "${tbb_LIB_DIR}")
   endif()
 endif()

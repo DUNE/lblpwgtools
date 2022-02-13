@@ -1,5 +1,24 @@
 #!/bin/bash
 
+#Adapted from
+# https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
+function abspath() { 
+  ABS_PATH_OPWD=$(pwd)
+  if [ ! -e "${1}" ]; then
+    :
+  elif [ -d "$1" ]; then 
+    cd "$1"; pwd; 
+  else 
+    cd $(dirname \"$1\"); 
+    cur_dir=$(pwd); 
+    if [ "$cur_dir" = "/" ]; then 
+      echo "$cur_dir$(basename \"$1\")"; 
+    else echo "$cur_dir/$(basename \"$1\")"; 
+    fi; 
+  fi; 
+  cd ${ABS_PATH_OPWD}
+}
+
 #script to build...
 FORCE_REMOVE="0"
 USE_UPS="0"
@@ -104,7 +123,7 @@ while [[ ${#} -gt 0 ]]; do
 done
 
 if [ -e "$BUILD_DIR" ]; then
-  if [ "${FORCE_REMOVE}" == "1" ]; then
+  if [ "${FORCE_REMOVE}" = "1" ]; then
     rm -rf "$BUILD_DIR"
   else
     echo "[ERROR]: Extant build directory in "$BUILD_DIR", will not overwrite, remove it or rebuild within it."
@@ -118,17 +137,17 @@ mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 BUILD_DIR=$(pwd)
 
-if [ "${USE_UPS}" == "1" ]; then
+if [ "${USE_UPS}" = "1" ]; then
   source ../cmake/ups_env_setup.sh
-  source ../support_software.sh $(readlink -f ../support) USING_UPS
+  source ../support_software.sh $(abspath ../support) USING_UPS
   cd "$BUILD_DIR"
   cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DBUILD_ENV_SCRIPTS="$(readlink -f ../cmake/ups_env_setup.sh);$(readlink -f ../support/support_software_env.sh)"
+            -DBUILD_ENV_SCRIPTS="$(abspath ../cmake/ups_env_setup.sh);$(abspath ../support/support_software_env.sh)"
 else
-  source ../support_software.sh $(readlink -f ../support) BUILD_UPS_REPLACEMENT_SOFTWARE
+  source ../support_software.sh $(abspath ../support) BUILD_UPS_REPLACEMENT_SOFTWARE
   cd "$BUILD_DIR"
   cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DBUILD_ENV_SCRIPTS=$(readlink -f ../support/support_software_env.sh)
+            -DBUILD_ENV_SCRIPTS=$(abspath ../support/support_software_env.sh)
 fi
 
 make install -j ${CORES}
