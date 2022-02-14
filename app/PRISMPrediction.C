@@ -191,7 +191,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
 
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
