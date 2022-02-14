@@ -246,7 +246,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
 
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
 
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
