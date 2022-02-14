@@ -138,7 +138,7 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 
 //--------------------------------------------------------------------------------
 std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoefficients(
-    osc::IOscCalc *osc, PRISM::MatchChan match_chan, SystShifts shift,
+    osc::IOscCalc *calc, PRISM::MatchChan match_chan, SystShifts shift,
     double &soln_norm, double &resid_norm) const {
 
   static osc::NoOscillations no;
@@ -195,7 +195,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   // always the nonswap so that any xsec ratios don't affect the coefficients.)
   PredictionInterp const *FDPredInterp = GetFDPred(match_chan.to.mode); // Can be flux OR ev rate
   Spectrum FDOsc_spec = FDPredInterp->PredictComponentSyst(
-      osc, shift, flav_fd, Current::kCC, sgn_fd);
+      calc, shift, flav_fd, Current::kCC, sgn_fd);
   Eigen::VectorXd FlowTarget = FDOsc_spec.GetEigen(1).matrix(); 
   Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2); 
 

@@ -23,8 +23,7 @@ using namespace PRISM;
 
 namespace ana {
 
-//static std::unique_ptr<PRISMReweightableSpectrum> kNoSuchNDDataSpectrum{nullptr};
-static std::unique_ptr<PredictionNoOsc> kNoSuchNDDataSpectrum{nullptr};
+static std::unique_ptr<PRISMReweightableSpectrum> kNoSuchNDDataSpectrum{nullptr};
 static std::unique_ptr<PredictionInterp> kNoSuchNDPredictionSpectrum{nullptr};
 static std::unique_ptr<PredictionInterp> kNoSuchFDPredictionSpectrum{nullptr};
 
@@ -119,8 +118,7 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
                                       const Cut &cut, const Weight &wei,
                                       ana::SystShifts shift,
                                       PRISM::BeamChan NDChannel) {
-  //std::unique_ptr<PRISMReweightableSpectrum> &NDData = GetNDData(NDChannel);
-  std::unique_ptr<PredictionNoOsc> &NDData = GetNDData(NDChannel);
+  std::unique_ptr<PRISMReweightableSpectrum> &NDData = GetNDData(NDChannel);
   if (&NDData == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
@@ -133,27 +131,20 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   auto slice_width_weight_280kA =
       NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
 
-  /*NDData = std::make_unique<PRISMReweightableSpectrum>( // CHANGE PRISM
+  NDData = std::make_unique<PRISMReweightableSpectrum>( 
       ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, shift,
-      wei * slice_width_weight);*/
-  NDData = std::make_unique<PredictionNoOsc>(
-    ND_loader, fOffPredictionAxis, cut && kCut280kARun, shift,
-    wei * slice_width_weight);
+      wei * slice_width_weight);
 
-  //std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA =
-  //    GetNDData(NDChannel, 280);
-  std::unique_ptr<PredictionNoOsc>&NDData_280kA = GetNDData(NDChannel, 280);
+  std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA =
+      GetNDData(NDChannel, 280);
   if (&NDData_280kA == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
     abort();
   }
-  /*NDData_280kA = std::make_unique<PRISMReweightableSpectrum>( // CHANGE PRISM
+  NDData_280kA = std::make_unique<PRISMReweightableSpectrum>( 
       ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, shift,
-      wei * slice_width_weight_280kA);*/
-  NDData_280kA = std::make_unique<PredictionNoOsc>(
-    ND_loader, f280kAPredictionAxis, cut && kSel280kARun, shift,
-    wei * slice_width_weight_280kA);
+      wei * slice_width_weight_280kA);
 }
 
 ///\brief Call to add a ND MC component
@@ -295,8 +286,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
 //-----------------------------------------------
 
-//std::unique_ptr<PRISMReweightableSpectrum> &
-std::unique_ptr<PredictionNoOsc> &
+std::unique_ptr<PRISMReweightableSpectrum> &
 PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
     return (kA == 293) ? Measurements.ND_293kA.numu_ccinc_sel_numode
@@ -307,8 +297,7 @@ PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
   }
   return kNoSuchNDDataSpectrum;
 }
-//std::unique_ptr<PRISMReweightableSpectrum> &
-std::unique_ptr<PredictionNoOsc> &
+std::unique_ptr<PRISMReweightableSpectrum> &
 PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
     return (kA == 293) ? Measurements.ND_293kA.nue_ccinc_sel_numode
@@ -319,8 +308,7 @@ PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM, int kA) const {
   }
   return kNoSuchNDDataSpectrum;
 }
-//std::unique_ptr<PRISMReweightableSpectrum> &
-std::unique_ptr<PredictionNoOsc> &
+std::unique_ptr<PRISMReweightableSpectrum> &
 PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA) const {
   if (NDBM == BeamMode::kNuMode) {
     return (kA == 293) ? Measurements.ND_293kA.numubar_ccinc_sel_numode
@@ -331,8 +319,7 @@ PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA) const {
   }
   return kNoSuchNDDataSpectrum;
 }
-//std::unique_ptr<PRISMReweightableSpectrum> &
-std::unique_ptr<PredictionNoOsc> &
+std::unique_ptr<PRISMReweightableSpectrum> &
 PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA) const {
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
@@ -617,21 +604,18 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   assert(NDPOT > 0);
 
   // Unweighted ND data
-  //NDComps.emplace(kNDData_unweighted_293kA, *NDData);
+  NDComps.emplace(kNDData_unweighted_293kA, *NDData);
 
   // Weight the data to mock-up the proposed run-plan
   NDComps.emplace(
       kNDData_293kA,
-      NDRunPlan.Weight(NDData->Predict(calc), 293, fOffPredictionAxis, fSetNDErrorsFromRate));
-      //NDRunPlan.Weight(*NDData, 293, fOffPredictionAxis, fSetNDErrorsFromRate));
+      NDRunPlan.Weight(*NDData, 293, fOffPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA));
 
-  //NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
+  NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
   NDComps.emplace(
       kNDData_280kA,
-      NDRunPlan.Weight(NDData_280kA->Predict(calc), 280, 
-                       f280kAPredictionAxis, fSetNDErrorsFromRate));
-      //NDRunPlan.Weight(*NDData_280kA, 280, f280kAPredictionAxis, fSetNDErrorsFromRate));
+      NDRunPlan.Weight(*NDData_280kA, 280, f280kAPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA));
   // Start building MC components
   // Try doing background subtraction for MC as well, could be helpful for
@@ -641,11 +625,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
           NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)),
           fDefaultOffAxisPOT),
       293, fOffPredictionAxis);
-
-  //TH2 *hsig = NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)).ToTH2(NDPOT);
-  //hsig->SetDirectory(nullptr);
-  //hsig->Scale(1, "width");
-  //gFile->WriteTObject(hsig, "NDSigMC");
 
   NDComps.emplace(kNDSig_293kA, NDSig);
   NDComps.emplace(kNDSig2D_293kA, NDSig);
@@ -1233,12 +1212,12 @@ Spectrum PredictionPRISM::PredictComponent(osc::IOscCalc *calc,
 // I know... but makes the SaveTo/LoadFrom a lot neater
 using NamedReweightableSpectrumRefVect = std::vector<std::pair<
     std::string,
-    std::reference_wrapper<std::unique_ptr<PredictionNoOsc>>>>; //PRISMReweightableSpectrum
+    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum>>>>; 
 using NamedPredInterpRefVect = std::vector<std::pair<
     std::string, std::reference_wrapper<std::unique_ptr<PredictionInterp>>>>;
 using NamedReweightableSpectrumCRefVect = std::vector<std::pair<
     std::string,
-    std::reference_wrapper<std::unique_ptr<PredictionNoOsc> const>>>; //PRISMReweightableSpectrum
+    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum> const>>>; 
 using NamedPredInterpCRefVect = std::vector<
     std::pair<std::string,
               std::reference_wrapper<std::unique_ptr<PredictionInterp> const>>>;
@@ -1570,8 +1549,7 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
             pred->Measurements.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() =
-          PredictionNoOsc::LoadFrom(dir, meas.first.c_str());
-          //PRISMReweightableSpectrum::LoadFrom(dir, meas.first.c_str());
+          PRISMReweightableSpectrum::LoadFrom(dir, meas.first.c_str());
       double MCPOT = meas.second.get()->POT();
       pred->SetDefaultOffAxisPOT(MCPOT); // Save the default POT from ND MC file.
       meas.second.get()->OverridePOT(1);
