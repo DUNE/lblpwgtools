@@ -10,11 +10,13 @@ endif()
 
 find_path(Sundials_INC_DIR
   NAMES sundials/sundials_version.h
-  PATHS ${SUNDIALS_INC})
+  PATHS ${SUNDIALS_INC}
+  NO_DEFAULT_PATH)
 
 find_path(Sundials_LIB_DIR
   NAMES libsundials_cvodes.a
-  PATHS ${SUNDIALS_LIB})
+  PATHS ${SUNDIALS_LIB}
+  NO_DEFAULT_PATH)
 
 find_package_handle_standard_args(Sundials
 	REQUIRED_VARS Sundials_INC_DIR Sundials_LIB_DIR

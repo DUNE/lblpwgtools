@@ -10,11 +10,13 @@ endif()
 
 find_path(CAFAnaCore_INC_DIR
   NAMES CAFAnaCore/CAFAna/Core/Spectrum.h
-  PATHS ${CAFANACORE_INC})
+  PATHS ${CAFANACORE_INC}
+  NO_DEFAULT_PATH)
 
 find_path(CAFAnaCore_LIB_DIR
-  NAMES libCAFAnaCoreExt.so
-  PATHS ${CAFANACORE_LIB})
+  NAMES libCAFAnaCoreExt.so libCAFAnaCoreExt.dylib
+  PATHS ${CAFANACORE_LIB}
+  NO_DEFAULT_PATH)
 
 SET(CAFAnaCore_LIB_DIRS ${CAFAnaCore_LIB_DIR})
 SET(CAFAnaCore_INC_DIRS ${CAFAnaCore_INC_DIR})
@@ -22,7 +24,8 @@ SET(CAFAnaCore_LIBS CAFAnaCoreExt)
 
 find_path(CAFAnaCoreSAM
   NAMES CAFAnaCore/CAFAna/Core/SAMProjectSource.h
-  PATHS ${CAFANACORE_INC})
+  PATHS ${CAFANACORE_INC}
+  NO_DEFAULT_PATH)
 
 SET(CAFAnaCore_CompileOptions)
 if(NOT "${CAFAnaCoreSAM}x" STREQUAL "CAFAnaCoreSAM-NOTFOUNDx")
@@ -38,12 +41,14 @@ if(NOT "${CAFAnaCoreSAM}x" STREQUAL "CAFAnaCoreSAM-NOTFOUNDx")
   find_path(IFDHC_INC_DIR
     NAMES ifdh.h
     PATHS ${IFDHC_INC}
-    REQUIRED)
+    REQUIRED
+    NO_DEFAULT_PATH)
 
   find_path(IFDHC_LIB_DIR
     NAMES libifdh.so
     PATHS ${IFDHC_LIB}
-    REQUIRED)
+    REQUIRED
+    NO_DEFAULT_PATH)
 
   LIST(APPEND CAFAnaCore_CompileOptions -DWITH_SAM)
   LIST(APPEND CAFAnaCore_LIB_DIRS ${IFDHC_LIB_DIR})
@@ -71,5 +76,6 @@ if(CAFAnaCore_FOUND)
         INTERFACE_LINK_DIRECTORIES "${CAFAnaCore_LIB_DIRS}"
         INTERFACE_LINK_LIBRARIES "${CAFAnaCore_LIBS}"
     )
+    LIST(APPEND CMAKE_INSTALL_RPATH "${CAFAnaCore_LIB_DIR}")
   endif()
 endif()

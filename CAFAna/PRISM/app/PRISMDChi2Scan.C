@@ -298,7 +298,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   MultiExperiment MExpt;
 
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
@@ -415,7 +415,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
       if (gof < min_gof) {
         size_t ch_it = 0;
-        for (auto const ch : Channels) {
+        for (auto const &ch : Channels) {
           HistCache::Delete(MinHist[ch_it]);
           if (use_PRISM) {
             MinHist[ch_it] =
@@ -472,7 +472,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
 
   size_t ch_it = 0;
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
 
     dir->WriteTObject(DataHist[ch_it], (ch.first + "_data").c_str());
 
@@ -529,7 +529,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
 
   ch_it = 0;
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
     DataHist[ch_it]->SetDirectory(nullptr);
     InputDataHist[ch_it]->SetDirectory(nullptr);
     MinHist[ch_it]->SetDirectory(nullptr);

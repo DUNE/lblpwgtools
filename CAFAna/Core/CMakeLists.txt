@@ -48,7 +48,8 @@ add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore 
   StandardRecord 
   CAFAnaCore::Ext 
-  OscLib::All 
+  OscLib::All
+  ROOT::ROOT 
   Stan::All 
   Boost::filesystem)
 

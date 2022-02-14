@@ -144,7 +144,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
   std::vector<TGraph> Soln;
   std::vector<TGraph> DiffLCurves;
 
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
     std::cout << "Channel start" << std::endl;
     auto const &chan_scan_config = channel_conditioning_configs[ch.second];
 
