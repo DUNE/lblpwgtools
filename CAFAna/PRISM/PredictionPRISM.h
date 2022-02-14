@@ -399,20 +399,14 @@ protected:
   struct _Measurements {
 
     struct _ND {
-      //std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_numode;
-      //std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_numode;
-      std::unique_ptr<PredictionNoOsc> numu_ccinc_sel_numode;
-      std::unique_ptr<PredictionNoOsc> numubar_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_numode;
 
-      //std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_nubmode;
-      //std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_nubmode;
-      std::unique_ptr<PredictionNoOsc> numu_ccinc_sel_nubmode;
-      std::unique_ptr<PredictionNoOsc> numubar_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_nubmode;
 
-      //std::unique_ptr<PRISMReweightableSpectrum> nue_ccinc_sel_numode;
-      //std::unique_ptr<PRISMReweightableSpectrum> nuebar_ccinc_sel_nubmode;
-      std::unique_ptr<PredictionNoOsc> nue_ccinc_sel_numode;
-      std::unique_ptr<PredictionNoOsc> nuebar_ccinc_sel_nubmode;
+      std::unique_ptr<PRISMReweightableSpectrum> nue_ccinc_sel_numode;
+      std::unique_ptr<PRISMReweightableSpectrum> nuebar_ccinc_sel_nubmode;
     };
     _ND ND_293kA;
     _ND ND_280kA;
@@ -464,17 +458,13 @@ protected:
   };
   mutable _Predictions Predictions;
 
-  //std::unique_ptr<PRISMReweightableSpectrum> &
-  std::unique_ptr<PredictionNoOsc> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
-  //std::unique_ptr<PRISMReweightableSpectrum> &
-  std::unique_ptr<PredictionNoOsc> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293) const;
-  //std::unique_ptr<PRISMReweightableSpectrum> &
-  std::unique_ptr<PredictionNoOsc> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
-  //std::unique_ptr<PRISMReweightableSpectrum> &
-  std::unique_ptr<PredictionNoOsc> &
+  std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
             int kA = 293) const;
   bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,

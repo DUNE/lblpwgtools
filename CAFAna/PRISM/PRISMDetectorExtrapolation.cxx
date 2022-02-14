@@ -99,8 +99,8 @@ namespace ana {
   //-----------------------------------------------------
 
   void NDFD_Matrix::NormaliseETrue(Eigen::MatrixXd* MatrixND, Eigen::MatrixXd* MatrixFD,
-                                   std::vector<double> NDefficiency,
-                                   std::vector<double> FDefficiency) const {
+                                   Eigen::ArrayXd const &NDefficiency,
+                                   Eigen::ArrayXd const &FDefficiency) const {
 
     if (!MatrixND) {
       std::cout << "[ERROR] No fMatrixND." << std::endl; 
@@ -110,10 +110,10 @@ namespace ana {
       abort();
     } 
  
-    std::pair<Eigen::MatrixXd*, std::vector<double>> NDpair (MatrixND, NDefficiency);
-    std::pair<Eigen::MatrixXd*, std::vector<double>> FDpair (MatrixFD, FDefficiency);
+    std::pair<Eigen::MatrixXd*, Eigen::ArrayXd> NDpair (MatrixND, NDefficiency);
+    std::pair<Eigen::MatrixXd*, Eigen::ArrayXd> FDpair (MatrixFD, FDefficiency);
 
-    std::vector<std::pair<Eigen::MatrixXd*, std::vector<double>>> matrix_pair = {NDpair, FDpair};
+    std::vector<std::pair<Eigen::MatrixXd*, Eigen::ArrayXd>> matrix_pair = {NDpair, FDpair};
   
     for (auto &mat : matrix_pair) {
       for (int col_it = 1; col_it <= (mat.first->cols() - 2); col_it++) {
@@ -122,7 +122,7 @@ namespace ana {
           double integral = projY.sum();
           projY *= (1 / integral);
         }
-        double eff = mat.second.at(col_it - 1);
+        double eff = mat.second(col_it - 1);
         projY *= eff;
         for (int row_it = 1; row_it <= (mat.first->rows() - 2); row_it++) {
           (*mat.first)(row_it, col_it) = projY(row_it); 
@@ -140,8 +140,8 @@ namespace ana {
                                       Flavors::Flavors_t FDflav,
                                       Current::Current_t curr,
                                       Sign::Sign_t NDsign, Sign::Sign_t FDsign,
-                                      std::vector<std::vector<double>> NDefficiency,
-                                      std::vector<double> FDefficiency) const {
+                                      Eigen::ArrayXXd NDefficiency,
+                                      Eigen::ArrayXd FDefficiency) const {
     Eigen::MatrixXd *fNDExtrap, *fErrorMat; 
     if (kA == 293) {
       fNDExtrap = &fNDExtrap_293kA;
@@ -179,7 +179,7 @@ namespace ana {
     // Need a loop to go through each slice of off-axis ND data
     for (int slice = 0; slice < PRISMND_block.rows(); slice++) {
       // Normalise matrices to efficiency for particular OA stop
-      NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.at(slice), FDefficiency);
+      NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.row(slice), FDefficiency);
 
       // Do Linear algebra without under/over-flow bins after normalisation.
       Eigen::MatrixXd MatrixND_block = hMatrixND.block(1, 1, hMatrixND.rows() - 2,
@@ -208,6 +208,14 @@ namespace ana {
                           MatrixND_block.transpose() * invCovMatRec;
  
       Eigen::VectorXd NDETrue = D * NDERec;
+
+      //NDETrue = (NDETrue.array() / NDefficiency.row(slice).array()).matrix(); 
+      //for (int el = 0; el < NDETrue.size(); el++) {
+        //NDETrue(el) *= (1 / NDefficiency.row(slice)(el));
+        //NDETrue(el) *= FDefficiency(el);
+        //NDETrue(el) *= NDefficiency.row(slice)(el);
+      //}
+      //NDETrue = (NDETrue.array() * FDefficiency).matrix();
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...
         for (int bin = 0; bin < NDETrue.size(); bin++) {

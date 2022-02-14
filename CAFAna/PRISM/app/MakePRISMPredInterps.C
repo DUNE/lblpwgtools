@@ -642,7 +642,7 @@ int main(int argc, char const *argv[]) {
       MatchPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun) && kIsReco, // Try!
+              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), // Try!
           WeightVars[it] * slice_width_weight);
 
       MatchPredInterps[it] = std::make_unique<PredictionInterp>(
@@ -675,7 +675,7 @@ int main(int argc, char const *argv[]) {
       NDUnselTruePredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
           kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun) && kIsReco, // Try this
+          kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), // Try this
           WeightVars[it] * slice_width_weight);
       NDUnselTruePredInterps[it] = std::make_unique<PredictionInterp>(
           los, &no, *NDUnselTruePredGens[it], Loaders_bm, kNoShift,
