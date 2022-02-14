@@ -11,11 +11,11 @@ function abspath() {
   elif [ -d "$1" ]; then 
     cd "$1"; pwd; 
   else 
-    cd $(dirname \"$1\"); 
+    cd $(dirname "$1"); 
     cur_dir=$(pwd); 
     if [ "$cur_dir" = "/" ]; then 
-      echo "$cur_dir$(basename \"$1\")"; 
-    else echo "$cur_dir/$(basename \"$1\")"; 
+      echo "$cur_dir$(basename "$1")"; 
+    else echo "$cur_dir/$(basename "$1")"; 
     fi; 
   fi; 
   cd ${ABS_PATH_OPWD}
