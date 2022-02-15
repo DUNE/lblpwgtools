@@ -154,6 +154,8 @@ namespace ana {
       abort();
     }
  
+    osc::NoOscillations no; 
+
     // Do not want to oscillate the MC in the FD matrix (ND is always un-oscillated).
     // The linear combination handles the oscillation, we just want to correct for the
     // different detector resolutions.
@@ -209,13 +211,6 @@ namespace ana {
  
       Eigen::VectorXd NDETrue = D * NDERec;
 
-      //NDETrue = (NDETrue.array() / NDefficiency.row(slice).array()).matrix(); 
-      //for (int el = 0; el < NDETrue.size(); el++) {
-        //NDETrue(el) *= (1 / NDefficiency.row(slice)(el));
-        //NDETrue(el) *= FDefficiency(el);
-        //NDETrue(el) *= NDefficiency.row(slice)(el);
-      //}
-      //NDETrue = (NDETrue.array() * FDefficiency).matrix();
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...
         for (int bin = 0; bin < NDETrue.size(); bin++) {

@@ -22,7 +22,8 @@ namespace ana {
       FDUnselPredInterps.push_back(nullptr);
       FDSelPredInterps.push_back(nullptr);
     }
-
+    hNDUnselected_293kA = nullptr;
+    hNDSelected_293kA = nullptr;
   }
                                 
 
@@ -64,12 +65,6 @@ namespace ana {
 
     FDUnselPredInterps.at(FDunsel.second) = FDunsel.first;
     FDSelPredInterps.at(FDsel.second) = FDsel.first;
-
-    //---
-    //NDSelPredInterps.at(NDsel_293kA.second)->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-    //NDSelPredInterps.at(NDsel_280kA.second)->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-    //FDSelPredInterps.at(FDsel.second)->GetPredNomAs<PredictionNoExtrap>()->OverridePOT(1);
-    //---
 
     osc::NoOscillations no;
     auto NDPred_293kA = NDunsel_293kA.first->Predict(&no);
@@ -118,6 +113,7 @@ namespace ana {
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);  
 
+    hNDUnselected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDunselected_293kA.ToTH2(1)));
 
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
     Eigen::ArrayXXd NDunsel_293kA = ConvertArrayToMatrix(sNDunselected_293kA.GetEigen(1),
@@ -139,9 +135,7 @@ namespace ana {
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
          ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
-    // Override POT:
-    //sNDselected_293kA.OverridePOT(1);
-    //sNDselected_280kA.OverridePOT(1);
+    hNDSelected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDselected_293kA.ToTH2(1)));
 
     Eigen::ArrayXXd NDsel_293kA = ConvertArrayToMatrix(sNDselected_293kA.GetEigen(1),
                                                        sNDselected_293kA.GetBinnings())
@@ -161,8 +155,6 @@ namespace ana {
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
 
-    //sFDselected.OverridePOT(1);
-
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
                                    .segment(1, FDefficiency.size());
     Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1) 
@@ -173,18 +165,8 @@ namespace ana {
     // Use coefficient-wise opterations of Array objects.
     // Efficiency for 293kA sample:
     NDefficiency_293kA = NDsel_293kA / NDunsel_293kA;
-    /*for (int row = 0; row < NDefficiency_293kA.rows(); row++) {
-      for (int col = 0; col < NDefficiency_293kA.cols(); col++) {
-        NDefficiency_293kA.row(row)(col) = vFDselected(col) / NDsel_293kA.row(row)(col);
-      }
-    }*/
     // Efficiency for 280kA sample:
     NDefficiency_280kA = NDsel_280kA / NDunsel_280kA;
-    /*for (int row = 0; row < NDefficiency_280kA.rows(); row++) {
-      for (int col = 0; col < NDefficiency_280kA.cols(); col++) {
-        NDefficiency_280kA.row(row)(col) = vFDselected(col) / NDsel_280kA.row(row)(col);  
-      }
-    }*/
     // Calculate FD efficiency
     FDefficiency = vFDselected / vFDunselected;    
   }
@@ -262,14 +244,8 @@ namespace ana {
 
     Spectrum FDEff_s(std::move(FDEff_arr), ana_axis, 1, 0);
  
-    //---
-    auto NDunsel_293kA = NDUnselPredInterps.at(conf)
-                         ->PredictComponent(&no, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
-    auto NDsel_293kA = NDSelPredInterps.at(conf)
-                       ->PredictComponent(&no, Flavors::kAllNuMu, Current::kCC, Sign::kNu);
-
-    dir->WriteTObject(NDunsel_293kA.ToTH2(1), "NDUnsel_293kA");
-    dir->WriteTObject(NDsel_293kA.ToTH2(1), "NDSel_293kA"); 
+    dir->WriteTObject(hNDUnselected_293kA.get(), "NDUnsel_293kA");
+    dir->WriteTObject(hNDSelected_293kA.get(), "NDSel_293kA"); 
     dir->WriteTObject(NDEff293kA_rws.ToTH2(1), "NDEff_293kA");
     dir->WriteTObject(NDEff280kA_rws.ToTH2(1), "NDEff_280kA");
     dir->WriteTObject(FDEff_s.ToTH1(1), "FDEff");
