@@ -80,6 +80,10 @@ namespace ana {
     std::vector<PredictionInterp const *> FDUnselPredInterps;
     std::vector<PredictionInterp const *> FDSelPredInterps;
 
+    // Temporary hist output:
+    mutable std::unique_ptr<TH2D> hNDUnselected_293kA;
+    mutable std::unique_ptr<TH2D> hNDSelected_293kA;
+
     // ND and FD efficiency in each energy bin
     // vector of vectors to hold ND eff at each OA stop.
     mutable Eigen::ArrayXXd NDefficiency_293kA;
