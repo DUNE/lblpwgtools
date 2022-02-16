@@ -2,10 +2,11 @@
 
 #include "CAFAna/Core/FwdDeclare.h"
 
+#include "CAFAna/Core/INamed.h"
+
 #include "StandardRecord/FwdDeclare.h"
 
 #include <list>
-#include <string>
 
 namespace ana
 {
@@ -18,7 +19,7 @@ namespace ana
   /// associated with the event. You must be careful to add any variables you
   /// modify to \ref Restorer (before you modify them!) so that the framework
   /// can undo your systematic shift before using the record elsewhere.
-  class ISyst
+  class ISyst : public INamed
   {
   public:
     ISyst(const std::string& shortName,
@@ -33,12 +34,6 @@ namespace ana
 
     void operator=(const ISyst &) = delete;  // still no copying.
     void operator=(ISyst &&)      = delete;  // etc.
-
-    /// The name printed out to the screen
-    virtual std::string ShortName() const final {return fShortName;}
-
-    /// The name used on plots (ROOT's TLatex syntax)
-    virtual std::string LatexName() const final {return fLatexName;}
 
     virtual double Penalty(double x) const;
 
@@ -75,8 +70,6 @@ namespace ana
     }
 
   private:
-    std::string fShortName;
-    std::string fLatexName;
     bool fApplyPenalty;
     double fMin;
     double fMax;

@@ -13,7 +13,7 @@ namespace ana
 	       double min,
 	       double max,
 	       double cv)
-    : fShortName(shortName), fLatexName(latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
+    : INamed(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
   {
     Registry<ISyst>::Register(this);
   }
