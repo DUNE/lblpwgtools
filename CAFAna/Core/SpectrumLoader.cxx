@@ -312,7 +312,9 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.SpecialHCRunId = 293;
   }
 
-  TFile fin((FindCAFAnaDir() + "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
+  assert();
+
+  TFile fin(std::getenv("PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT"));
   assert(fin.IsOpen());
   std::map<int, TH1D *> FileExposures;
   std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
