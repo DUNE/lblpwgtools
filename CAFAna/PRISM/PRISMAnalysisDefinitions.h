@@ -225,6 +225,30 @@ inline size_t GetConfigNueSwap(size_t conf) {
   return conf + 1;
 }
 
+inline size_t GetND280kAConfig(size_t conf){
+  if(!IsNDConfig(conf)){
+    std::cout << "[ERROR]: Tried to get ND280kA config from an FD config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if(IsND293kAConfig(conf)){
+    return conf + 1;
+  }
+  return conf;
+}
+
+inline size_t GetND293kAConfig(size_t conf){
+  if(!IsNDConfig(conf)){
+    std::cout << "[ERROR]: Tried to get ND280kA config from an FD config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if(IsND280kAConfig(conf)){
+    return conf - 1;
+  }
+  return conf;
+}
+
 inline size_t GetConfigNonSwap(size_t conf) {
   if (IsNDConfig(conf)) {
     std::cout << "[ERROR]: Tried to get FD sub-config from an ND config("
@@ -255,6 +279,9 @@ inline std::string DescribeConfig(size_t conf) {
   case kFD_nu_nueswap: {
     return "FD_nu_nue";
   }
+  case kFD_nu_tauswap: {
+    return "FD_nu_tau";
+  }
   case kND_293kA_nub: {
     return "ND_293kA_nub";
   }
@@ -266,6 +293,9 @@ inline std::string DescribeConfig(size_t conf) {
   }
   case kFD_nub_nueswap: {
     return "FD_nub_nue";
+  }
+  case kFD_nub_tauswap: {
+    return "FD_nub_tau";
   }
   }
   std::cout << "Invalid conf: " << conf << std::endl;
@@ -373,6 +403,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_293kA_nu));
   LOUDASSERT(IsND293kAConfig(kND_293kA_nu));
   LOUDASSERT(!IsND280kAConfig(kND_293kA_nu));
+  LOUDASSERT(GetND293kAConfig(kND_293kA_nu) == kND_293kA_nu);
+  LOUDASSERT(GetND280kAConfig(kND_293kA_nu) == kND_280kA_nu);
   LOUDASSERT(IsNumuConfig(kND_293kA_nu));
   LOUDASSERT(!IsNueConfig(kND_293kA_nu));
 
@@ -380,6 +412,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_280kA_nu));
   LOUDASSERT(!IsND293kAConfig(kND_280kA_nu));
   LOUDASSERT(IsND280kAConfig(kND_280kA_nu));
+  LOUDASSERT(GetND293kAConfig(kND_280kA_nu) == kND_293kA_nu);
+  LOUDASSERT(GetND280kAConfig(kND_280kA_nu) == kND_280kA_nu);
   LOUDASSERT(IsNumuConfig(kND_280kA_nu));
   LOUDASSERT(!IsNueConfig(kND_280kA_nu));
 
@@ -387,6 +421,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_293kA_nub));
   LOUDASSERT(IsND293kAConfig(kND_293kA_nub));
   LOUDASSERT(!IsND280kAConfig(kND_293kA_nub));
+  LOUDASSERT(GetND293kAConfig(kND_293kA_nub) == kND_293kA_nub);
+  LOUDASSERT(GetND280kAConfig(kND_293kA_nub) == kND_280kA_nub);
   LOUDASSERT(IsNumuConfig(kND_293kA_nub));
   LOUDASSERT(!IsNueConfig(kND_293kA_nub));
 
@@ -394,6 +430,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_280kA_nub));
   LOUDASSERT(!IsND293kAConfig(kND_280kA_nub));
   LOUDASSERT(IsND280kAConfig(kND_280kA_nub));
+  LOUDASSERT(GetND293kAConfig(kND_280kA_nub) == kND_293kA_nub);
+  LOUDASSERT(GetND280kAConfig(kND_280kA_nub) == kND_280kA_nub);
   LOUDASSERT(IsNumuConfig(kND_280kA_nub));
   LOUDASSERT(!IsNueConfig(kND_280kA_nub));
 
