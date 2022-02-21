@@ -312,8 +312,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.SpecialHCRunId = 293;
   }
 
-  assert();
-
   TFile fin(std::getenv("PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT"));
   assert(fin.IsOpen());
   std::map<int, TH1D *> FileExposures;
