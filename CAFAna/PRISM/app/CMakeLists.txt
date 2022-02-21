@@ -10,6 +10,7 @@ set(scripts_to_build
   #PRISMRegOptimizer
   #PRISMExtrapRegOptimizer
  #FluxPredictionTester
+ EventLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
