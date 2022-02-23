@@ -16,8 +16,6 @@
 #include "TObjString.h"
 #include "TROOT.h"
 
-std::map<int, TH1D *> SumFileExposures(std::vector<std::string> infilenames);
-
 std::map<int, TH1D *> SumFileExposures(std::vector<std::string> infilenames) {
 
   std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
@@ -83,8 +81,7 @@ int main(int argc, char** argv) {
 
   std::map<int, TH1D *> SummedFileExposures = SumFileExposures(infilenames);
 
-  std::string outdir = std::string(std::getenv("CAFANA_PRISMDIR"));
-  std::string outfilename = outdir + "/FileExposures/TotalOffAxisFileExposure.root";
+  std::string outfilename = "TotalOffAxisFileExposure.root";
   std::cout << "Output file is " << outfilename << std::endl;
 
   TFile *Target = TFile::Open(outfilename.c_str(), "RECREATE");

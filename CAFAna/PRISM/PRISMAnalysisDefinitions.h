@@ -1,10 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/Cut.h"
-#include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Var.h"
-#include "CAFAna/Core/Weight.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
@@ -229,6 +225,30 @@ inline size_t GetConfigNueSwap(size_t conf) {
   return conf + 1;
 }
 
+inline size_t GetND280kAConfig(size_t conf){
+  if(!IsNDConfig(conf)){
+    std::cout << "[ERROR]: Tried to get ND280kA config from an FD config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if(IsND293kAConfig(conf)){
+    return conf + 1;
+  }
+  return conf;
+}
+
+inline size_t GetND293kAConfig(size_t conf){
+  if(!IsNDConfig(conf)){
+    std::cout << "[ERROR]: Tried to get ND280kA config from an FD config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if(IsND280kAConfig(conf)){
+    return conf - 1;
+  }
+  return conf;
+}
+
 inline size_t GetConfigNonSwap(size_t conf) {
   if (IsNDConfig(conf)) {
     std::cout << "[ERROR]: Tried to get FD sub-config from an ND config("
@@ -259,6 +279,9 @@ inline std::string DescribeConfig(size_t conf) {
   case kFD_nu_nueswap: {
     return "FD_nu_nue";
   }
+  case kFD_nu_tauswap: {
+    return "FD_nu_tau";
+  }
   case kND_293kA_nub: {
     return "ND_293kA_nub";
   }
@@ -270,6 +293,9 @@ inline std::string DescribeConfig(size_t conf) {
   }
   case kFD_nub_nueswap: {
     return "FD_nub_nue";
+  }
+  case kFD_nub_tauswap: {
+    return "FD_nub_tau";
   }
   }
   std::cout << "Invalid conf: " << conf << std::endl;
@@ -377,6 +403,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_293kA_nu));
   LOUDASSERT(IsND293kAConfig(kND_293kA_nu));
   LOUDASSERT(!IsND280kAConfig(kND_293kA_nu));
+  LOUDASSERT(GetND293kAConfig(kND_293kA_nu) == kND_293kA_nu);
+  LOUDASSERT(GetND280kAConfig(kND_293kA_nu) == kND_280kA_nu);
   LOUDASSERT(IsNumuConfig(kND_293kA_nu));
   LOUDASSERT(!IsNueConfig(kND_293kA_nu));
 
@@ -384,6 +412,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_280kA_nu));
   LOUDASSERT(!IsND293kAConfig(kND_280kA_nu));
   LOUDASSERT(IsND280kAConfig(kND_280kA_nu));
+  LOUDASSERT(GetND293kAConfig(kND_280kA_nu) == kND_293kA_nu);
+  LOUDASSERT(GetND280kAConfig(kND_280kA_nu) == kND_280kA_nu);
   LOUDASSERT(IsNumuConfig(kND_280kA_nu));
   LOUDASSERT(!IsNueConfig(kND_280kA_nu));
 
@@ -391,6 +421,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_293kA_nub));
   LOUDASSERT(IsND293kAConfig(kND_293kA_nub));
   LOUDASSERT(!IsND280kAConfig(kND_293kA_nub));
+  LOUDASSERT(GetND293kAConfig(kND_293kA_nub) == kND_293kA_nub);
+  LOUDASSERT(GetND280kAConfig(kND_293kA_nub) == kND_280kA_nub);
   LOUDASSERT(IsNumuConfig(kND_293kA_nub));
   LOUDASSERT(!IsNueConfig(kND_293kA_nub));
 
@@ -398,6 +430,8 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(IsNDConfig(kND_280kA_nub));
   LOUDASSERT(!IsND293kAConfig(kND_280kA_nub));
   LOUDASSERT(IsND280kAConfig(kND_280kA_nub));
+  LOUDASSERT(GetND293kAConfig(kND_280kA_nub) == kND_293kA_nub);
+  LOUDASSERT(GetND280kAConfig(kND_280kA_nub) == kND_280kA_nub);
   LOUDASSERT(IsNumuConfig(kND_280kA_nub));
   LOUDASSERT(!IsNueConfig(kND_280kA_nub));
 
@@ -441,53 +475,4 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(GetConfigNueSwap(kFD_nub_nue) == kFD_nub_nue);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_nue) == kFD_nub_numu);
 }
-
-struct PRISMAxisBlob {
-  ana::HistAxis XProjectionND;
-  ana::HistAxis XProjectionFD;
-  ana::HistAxis OffAxisPosition;
-  ana::HistAxis OffAxis280kAPosition;
-};
-
-ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "event_rate_match");
-PRISMAxisBlob GetPRISMAxes(std::string const &varname,
-                           std::string const &xbinning = "default",
-                           std::string const &oabinning = "default");
-
-ana::HistAxis TrueObservable(std::string const &obsvarname = "EVisReco",
-                             std::string const &binning = "prism_noextrap");
-
-ana::HistAxis RecoObservable(std::string const &obsvarname = "EVisReco",
-                             std::string const &binning = "prism_noextrap");
-
-bool isRecoND(std::string var = "ETrue");
-
-extern const ana::Cut kETrueLT10GeV;
-
-extern const ana::Cut kETrue8GeV;
-
-extern const ana::Cut kERecoProxy8GeV;
-
-extern const ana::Cut kIsOutOfTheDesert;
-// Cut to check if it is reconstructed -> removes 
-// unreconstructed events in ND
-extern const ana::Cut kIsReco;
-
-// Use to weight by Exposure
-extern const ana::Weight kRunPlanWeight;
-
-extern const ana::Cut kCut280kARun;
-extern const ana::Cut kSel280kARun;
-extern const ana::Weight kSpecHCRunWeight;
-
-ana::Cut GetNDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true);
-ana::Cut GetFDSignalCut(bool UseOnAxisSelection = false, bool isNuMode = true,
-                        bool isNuMu = true);
-
-ana::Weight GetNDWeight(std::string const &eweight = "", bool isNuMode = true);
-ana::Weight GetFDWeight(std::string const &eweight = "", bool isNuMode = true);
-
-double Get280kAWeight_numu(double enu, bool isNu);
-ana::Weight GetNDSpecialRun(std::string const &SRDescriptor = "");
-
 } // namespace PRISM
