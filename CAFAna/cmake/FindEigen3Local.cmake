@@ -6,7 +6,8 @@ endif()
 
 find_path(Eigen_INC_DIR
   NAMES Eigen/Dense
-  PATHS ${EIGEN_INC})
+  PATHS ${EIGEN_INC}
+  NO_DEFAULT_PATH)
 
 find_package_handle_standard_args(Eigen3Local
 	REQUIRED_VARS Eigen_INC_DIR

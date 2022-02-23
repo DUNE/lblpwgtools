@@ -92,10 +92,23 @@ endif()
 
 #These need to come after ROOT or they will set up ROOT themselves (with the wrong libraries required)
 find_package(TH2Jagged REQUIRED)
-LIST(APPEND EXTRA_CXX_FLAGS -DUSE_TH2JAGGED)
+add_compile_options(-DUSE_TH2JAGGED)
 
 # This is the only real SO dependency if we are using CVMFS to pull in the others, 
 # so dump this in the lib/ folder to aid cluster deployment
-install(FILES ${TH2Jagged_LIB_DIR}/libTH2Jagged.so DESTINATION lib/)
+install(FILES 
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged_rdict.pcm
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged.rootmap
+  DESTINATION lib/)
+
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+  install(FILES 
+  ${TH2Jagged_LIB_DIR}/libTH2Jagged.so
+  DESTINATION lib/)
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+  install(FILES 
+    ${TH2Jagged_LIB_DIR}/libTH2Jagged.dylib
+    DESTINATION lib/)
+endif()
 
 find_package(fhiclcpp REQUIRED)

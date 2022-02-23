@@ -51,23 +51,12 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   if (std::abs(sr->SpecialHCRunId) != 293) isSpecHCRun = true;
 
   if (sr->OffAxisFluxBin == -1) {
-    /*sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
-        sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
-        !sr->isFD, sr->isFHC, sr->SpecialHCRunId != 0);*/
-    //bool isSpecHCRun(false);
-   // if (std::abs(sr->SpecialHCRunId) == 280) isSpecHCRun = true;
     sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
         sr->nuPDGunosc, sr->Ev, std::fabs(sr->abspos_x * 1E-2), 0, !sr->isFD, //1E-2 
-        sr->isFHC, isSpecHCRun); // sr->SpecialHCRunId != 0
+        sr->isFHC, isSpecHCRun);
   }
 
   if (sr->OffAxisFluxConfig == -1) {
-    /*sr->OffAxisFluxConfig =
-        ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
-            sr->nuPDGunosc, sr->Ev, std::fabs(sr->det_x + sr->vtx_x * 1E-2), 0,
-            !sr->isFD, sr->isFHC, std::abs(sr->SpecialHCRunId) != 293);*/
-   // bool isSpecHCRun(false);
-   // if (std::abs(sr->SpecialHCRunId) == 280) isSpecHCRun = true;
     sr->OffAxisFluxConfig = 
       ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
           sr->nuPDGunosc, sr->Ev, std::fabs(sr->abspos_x * 1E-2), 0, !sr->isFD, //1E-2
@@ -77,9 +66,6 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   weight = fOffAxisFluxParamHelper->GetFluxWeight(
       fIdx, sigma, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
 
-  if (isSpecHCRun) {
-    //std::cout << sr->OffAxisFluxConfig << " bin " << sr->OffAxisFluxBin << " weight = " << weight << std::endl;
-  }
 #else
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;

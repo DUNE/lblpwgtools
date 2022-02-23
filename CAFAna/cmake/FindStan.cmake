@@ -18,11 +18,13 @@ endif()
 
 find_path(Stan_INC_DIR
   NAMES stan/version.hpp
-  PATHS ${STAN_INC})
+  PATHS ${STAN_INC}
+  NO_DEFAULT_PATH)
 
 find_path(Stan_Math_INC_DIR
   NAMES stan/math.hpp
-  PATHS ${STAN_MATH_INC})
+  PATHS ${STAN_MATH_INC}
+  NO_DEFAULT_PATH)
 
 find_package_handle_standard_args(Stan
 	REQUIRED_VARS Stan_INC_DIR Stan_Math_INC_DIR

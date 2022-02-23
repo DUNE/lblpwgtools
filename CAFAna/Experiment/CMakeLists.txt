@@ -25,7 +25,7 @@ set(Experiment_header_files
         SolarConstraints.h)
 
 add_library(CAFAnaExperiment SHARED ${Experiment_implementation_files})
-target_link_libraries(CAFAnaExperiment CAFAnaCore)
+target_link_libraries(CAFAnaExperiment CAFAnaPrediction CAFAnaVars)
 
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${Experiment_header_files}")

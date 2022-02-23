@@ -2,6 +2,8 @@
 
 #include "CAFAna/Experiment/ICovarianceMatrix.h"
 
+#include <vector>
+
 namespace ana
 {
   class CovMxLL: public ICovarianceMatrix

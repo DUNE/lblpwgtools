@@ -43,6 +43,11 @@ set(VERBOSE true)
 cmessage(STATUS "CMAKE_INSTALL_PREFIX: \"${CMAKE_INSTALL_PREFIX}\"")
 cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+  set(CMAKE_MACOSX_RPATH ON)
+  LIST(APPEND CMAKE_INSTALL_RPATH "@executable_path/../lib")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
@@ -77,14 +82,14 @@ SET(CAFAna_Libs
     CAFAnaDecomp
     CAFAnaFit
     CAFAnaPrediction
-    CAFAnaSysts
     CAFAnaExperiment
     CAFAnaPrediction
     CAFAnaPRISM
     CAFAnaCuts
     CAFAnaExtrap
     CAFAnaVars
-    CAFAnaCore)
+    CAFAnaCore
+    CAFAnaSysts)
 
 add_subdirectory(Analysis)
 add_subdirectory(Core)
@@ -107,9 +112,15 @@ configure_file(cmake/CAFAnaEnv.sh.in
 install(
   PROGRAMS
     ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh
-    ${CMAKE_SOURCE_DIR}/cmake/ups_env_setup.sh
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
+  )
+
+install(
+  PROGRAMS
+    ${BUILD_ENV_SCRIPTS}
+  DESTINATION
+    ${CMAKE_INSTALL_PREFIX}/env/
   )
 
 install(
@@ -118,10 +129,3 @@ install(
   DESTINATION
     bin
   )
-
-#install(
-#  PROGRAMS
-#    ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild
-#  DESTINATION
-#    bin
-#  )

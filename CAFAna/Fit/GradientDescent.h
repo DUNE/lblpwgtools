@@ -2,6 +2,8 @@
 
 #include "Math/Minimizer.h"
 
+#include <vector>
+
 namespace ana
 {
   /// A minimalistic gradient descent fitter to complement MINUIT's more
@@ -18,12 +20,12 @@ namespace ana
 
     virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
 
-    virtual bool Minimize();
+    virtual bool Minimize() override;
 
-    virtual double MinValue() const {return fChi;}
-    virtual const double* X() const {return fVals.data();}
-    virtual const double* Errors() const {return fErrs.data();}
-    virtual unsigned int NDim() const {return fVals.size();}
+    virtual double MinValue() const override {return fChi;}
+    virtual const double* X() const override {return fVals.data();}
+    virtual const double* Errors() const override {return fErrs.data();}
+    virtual unsigned int NDim() const override {return fVals.size();}
 
   protected:
     // Math utilities

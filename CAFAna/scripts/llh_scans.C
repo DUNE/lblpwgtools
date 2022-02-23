@@ -140,13 +140,13 @@ void llh_scans(std::string stateFname = def_stateFname,
                                         *spectra.at(kNDNumuFHC).spect,
                                         covFileName, "nd_fhc_frac_cov",
                                         kCovMxChiSqPreInvert);
-  nd_expt_fhc_syst.SetMaskHist(0.5, 10, 0, -1);
+  nd_expt_fhc_syst.SetMaskHist(0, 10, 0, -1);
 
   CovarianceExperiment nd_expt_rhc_syst(&predNDNumuRHC,
                                         *spectra.at(kNDNumuRHC).spect,
                                         covFileName, "nd_fhc_frac_cov",
                                         kCovMxChiSqPreInvert);
-  nd_expt_rhc_syst.SetMaskHist(0.5, 10, 0, -1);
+  nd_expt_rhc_syst.SetMaskHist(0, 10, 0, -1);
 
   MultiExperiment expt_ND_FHC({&nd_expt_fhc_syst});
   MultiExperiment expt_ND_RHC({&nd_expt_rhc_syst});

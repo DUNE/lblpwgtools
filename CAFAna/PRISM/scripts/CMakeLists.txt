@@ -7,7 +7,7 @@ set(APPS
 )
 
 foreach(APP ${APPS})
-  install(FILES ${APP}.C DESTINATION scipts)
+  install(FILES ${APP}.C DESTINATION scripts)
 
   add_executable(${APP} ${APP}.C)
 
