@@ -39,7 +39,8 @@ public:
     if (sr->dune.isFD) {
       sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
     } else {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
+      return;
+      // sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
     }
 
     if (!fDoWeight) {
@@ -121,7 +122,8 @@ public:
     if (sr->dune.isFD) {
       sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
     } else {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
+      return;
+      // sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
     }
 
     if (!fDoWeight) {
@@ -202,7 +204,8 @@ public:
     if (sr->dune.isFD) {
       sr->dune.eRec_FromDep -= EpFrac * sr->dune.eDepP;
     } else {
-      sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
+      return;
+      // sr->dune.eRec_FromDep -= EpFrac * sr->dune.eRecoP;
     }
 
     if (!fDoWeight) {
