@@ -36,6 +36,8 @@
 #include "CAFAna/Systs/Systs.h"
 #include "CAFAna/Systs/XSecSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
+#include "CAFAna/Systs/ProtonNeutronEnergyShiftFakeData.h"
+#include "CAFAna/Systs/ArCScaling2DFakeData.h"
 #include "CAFAna/Systs/FluxWiggleFakeData.h"
 #include "CAFAna/Systs/FluxWiggleSqueezeFakeData.h"
 
@@ -271,7 +273,18 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     // Alternative flux wiggle
     std::vector<const ISyst *> fluxwigglesqueezelist =
       GetFluxWiggleSqueezeSysts();
-    systlist.insert(systlist.end(), fluxwigglesqueezelist.begin(), fluxwigglesqueezelist.end());
+    // systlist.insert(systlist.end(), fluxwigglesqueezelist.begin(), fluxwigglesqueezelist.end());
+
+    // Proton-neutron energy shifting
+    std::vector<const ISyst *> protonneutrinoenergyshiftlist = 
+      GetProtonNeutronEnergyShiftSysts();
+    systlist.insert(systlist.end(), protonneutrinoenergyshiftlist.begin(), protonneutrinoenergyshiftlist.end());
+
+    // ArCScaling
+    std::vector<const ISyst *> arcscaling2dlist =
+      GetArCScaling2DSysts();
+    systlist.insert(systlist.end(), arcscaling2dlist.begin(), arcscaling2dlist.end());
+
   }
 
   return systlist;
@@ -512,7 +525,12 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } 
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name) || IsFluxWiggleSyst(name) || IsFluxWiggleSqueezeSyst(name));
+    assert(IsFakeDataGenerationSyst(name) || 
+	   IsCrazyFluxSyst(name) || 
+	   IsFluxWiggleSyst(name) || 
+	   IsFluxWiggleSqueezeSyst(name) || 
+           IsArCScaling2DSyst(name) ||
+	   IsProtonNeutronEnergyShiftSyst(name));
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
   }

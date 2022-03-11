@@ -9,6 +9,9 @@ set(Systs_implementation_files
   NDRecoSysts.cxx
   NuOnESysts.cxx
   CrazyFluxFakeData.cxx
+  ProtonNeutronEnergyShiftFakeData.cxx
+  ArCScalingFakeData.cxx
+  ArCScaling2DFakeData.cxx
   FluxWiggleFakeData.cxx
   FluxWiggleSqueezeFakeData.cxx
   SystComponentScale.cxx
@@ -45,6 +48,9 @@ set(Systs_header_files
   GENIEv3_G18_10b_00_000ReweightFakeData.h
   GENIEv3_G18_10a_02_11aReweightFakeData.h
   CrazyFluxFakeData.h
+  ProtonNeutronEnergyShiftFakeData.h
+  ArCScalingFakeData.h
+  ArCScaling2DFakeData.h
   FluxWiggleFakeData.h
   FluxWiggleSqueezeFakeData.h
   ReweightFakeDataBase.h)
@@ -69,6 +75,7 @@ set(SYST_INPUT_ROOT_FILES
   ND_eff_syst.root
   det_sys_cov.root
   det_sys_cov_v3binning.root
+  ArCScaling2DFakeData.root
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
