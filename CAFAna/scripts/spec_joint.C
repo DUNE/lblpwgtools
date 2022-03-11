@@ -25,7 +25,7 @@ void spec_joint(std::string stateFname = def_stateFname,
 
 
   // This function allows any dial to be set to non-nominal
-  SystShifts trueSyst = GetFakeDataSystShift(fakeDataShift);
+  SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
 
   // Get the prediction interpolators
   std::vector<std::unique_ptr<PredictionInterp>> return_list =
