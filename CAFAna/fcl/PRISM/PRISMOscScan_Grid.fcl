@@ -6,9 +6,17 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecSysts_NewBin_6Feb22.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_EVisELepReco_ProtonFD_4Apr22.root
 
-	projection_name: EVisReco
+#PRISMState_FHC_ELepEHadReco_ProtonFD_FinerHad2_1Apr22.root
+
+#PRISMState_FHC_ELepEHadReco_ProtonFD_FineHad_1Apr22.root
+
+#PRISMState_FHC_RHC_EVisReco_XSecDetFluxSyst2_1Mar22.root
+
+#PRISMState_FHC_RHC_EVisReco_XSecFluxSyst2_24Feb22.root
+
+	projection_name: EVisELepReco
 	use_PRISM: true
 	POT_years: 1.0
 	use_ND_stats: true
@@ -53,6 +61,7 @@ BasicPred: {
 	}
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
+	
 	
 	samples: @local::FitChannels.Numu_disp 
 	#samples: @local::FitChannels.DispJoint

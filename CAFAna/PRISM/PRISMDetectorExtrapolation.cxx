@@ -122,7 +122,8 @@ namespace ana {
           double integral = projY.sum();
           projY *= (1 / integral);
         }
-        double eff = mat.second(col_it - 1);
+        double eff = 0.01;
+        if (std::isnormal(mat.second(col_it - 1))) eff = mat.second(col_it - 1);
         projY *= eff;
         for (int row_it = 1; row_it <= (mat.first->rows() - 2); row_it++) {
           (*mat.first)(row_it, col_it) = projY(row_it); 
@@ -163,6 +164,7 @@ namespace ana {
     auto sMatrixND = NDPredInterps.at(GetNDConfigFromPred(NDflav, NDsign))
                      ->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
     hMatrixND = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
+
     auto sMatrixFD = FDPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
                      ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
     hMatrixFD = ConvertArrayToMatrix(sMatrixFD.GetEigen(POT), sMatrixFD.GetBinnings());
@@ -181,8 +183,8 @@ namespace ana {
     // Need a loop to go through each slice of off-axis ND data
     for (int slice = 0; slice < PRISMND_block.rows(); slice++) {
       // Normalise matrices to efficiency for particular OA stop
-      NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.row(slice), FDefficiency);
 
+      NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.row(slice), FDefficiency);
       // Do Linear algebra without under/over-flow bins after normalisation.
       Eigen::MatrixXd MatrixND_block = hMatrixND.block(1, 1, hMatrixND.rows() - 2,
                                                        hMatrixND.cols() - 2);
@@ -208,9 +210,7 @@ namespace ana {
       // Tikhonov regularisation is uneccessary, just least square unfold!
       Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
                           MatrixND_block.transpose() * invCovMatRec;
- 
       Eigen::VectorXd NDETrue = D * NDERec;
-
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...
         for (int bin = 0; bin < NDETrue.size(); bin++) {
