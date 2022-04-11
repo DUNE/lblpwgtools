@@ -18,30 +18,23 @@ const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
 
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {
-    return Binning::Simple(100, 0, 10);
+    return Binning::Simple(120, 0, 6);
   } else if (xbinning == "uniform") {
     return Binning::Simple(150, 0, 25);
   } else if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
   } else if (xbinning == "uniform_coarse") {
-    return Binning::Simple(25, 0, 10); 
+    return Binning::Simple(6, 0, 6); 
   } else if (xbinning == "prism_noextrap") {
     return kPRISMRecoBinning;
-  } else if (xbinning == "testopt") {
-    std::vector<double> BE = {
-        0,
-    };
-    while (BE.back() < 4) {
-      BE.push_back(BE.back() + 0.25);
-    }
-    while (BE.back() < 8) {
-      BE.push_back(BE.back() + 0.5);
-    }
-    return Binning::Custom(BE);
   } else if (xbinning == "default") {
     return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
-    return kTrueEnergyBins; 
+    return kLinearCombBinning; 
+  } else if (xbinning == "had_default") {
+    return kHadRecoBinning;
+  } else if (xbinning == "lep_default") {
+    return kLepRecoBinning;
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -123,9 +116,11 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
                              kTrueOffAxisPos_m);
   
   // Seperate ND and FD axes for ND->FD extrapolation.
-  // Possible fine binning for ND axis, just keep them the
-  // same for now.
-  HistAxis xaxND = RecoObservable(varname, "prism_noextrap"); // xbinning default_fine
+  // Possible fine binning for ND axis and extended energy range.
+  // Only needed for EVisReco, not ELepEHad.
+  HistAxis xaxND = RecoObservable(varname, 
+                                  (varname == "EVisReco") ? 
+                                  "prism_noextrap" : xbinning);
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
@@ -170,8 +165,26 @@ HistAxis TrueObservable(std::string const &obsvarname,
     vars.push_back(truevardefLep.second);
     auto truevardefHad = GetVar("EHad");
     labels.push_back(truevardefHad.first);
-    bins.push_back(GetBinning(binning));
+    bins.push_back(GetBinning("had_default"));
     vars.push_back(truevardefHad.second);
+  } else if (obsvarname == "EVisEHad") {
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning("had_default"));
+    vars.push_back(truevardefHad.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
+  } else if (obsvarname == "EVisELep") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning("lep_default"));
+    vars.push_back(truevardefLep.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
   } else if (obsvarname == "ELepEHadReco") {
     auto truevardefLep = GetVar("ELep");
     labels.push_back(truevardefLep.first);
@@ -179,14 +192,36 @@ HistAxis TrueObservable(std::string const &obsvarname,
     vars.push_back(truevardefLep.second);
     auto truevardefHad = GetVar("EHad");
     labels.push_back(truevardefHad.first);
-    bins.push_back(GetBinning(binning));
+    bins.push_back(GetBinning("had_default"));
     vars.push_back(truevardefHad.second);
+  } else if (obsvarname == "EVisEHadReco") {
+    auto truevardefHad = GetVar("EHad");
+    labels.push_back(truevardefHad.first);
+    bins.push_back(GetBinning("had_default"));
+    vars.push_back(truevardefHad.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
+  } else if (obsvarname == "EVisELepReco") {
+    auto truevardefLep = GetVar("ELep");
+    labels.push_back(truevardefLep.first);
+    bins.push_back(GetBinning("lep_default"));
+    vars.push_back(truevardefLep.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
   } else {
     std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
   }   
   
   if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadReco") {
+    return HistAxis(labels, bins, vars);
+  } else if (obsvarname == "EVisEHad" || obsvarname == "EVisEHadReco") {
+    return HistAxis(labels, bins, vars);
+  } else if (obsvarname == "EVisELep" || obsvarname == "EVisELepReco") {
     return HistAxis(labels, bins, vars);
   } else {
     return HistAxis(truevardef.first, GetBinning(binning), truevardef.second);
@@ -208,6 +243,24 @@ HistAxis RecoObservable(std::string const &obsvarname,
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefHad.second);
+  } else if  (obsvarname == "EVisEHad") {
+    auto vardefHad = GetVar("EHad");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning("had_default"));
+    vars.push_back(vardefHad.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
+  } else if  (obsvarname == "EVisELep") {
+    auto vardefLep = GetVar("ELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning("lep_default"));
+    vars.push_back(vardefLep.second);
+    auto vardefVis = GetVar("EVisTrue");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
   } else if (obsvarname == "ELepEHadReco") {   
     auto vardefLep = GetVar("RecoELep");
     labels.push_back(vardefLep.first);
@@ -215,8 +268,26 @@ HistAxis RecoObservable(std::string const &obsvarname,
     vars.push_back(vardefLep.second); 
     auto vardefHad = GetVar("RecoEHad"); 
     labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning(binning)); 
+    bins.push_back(GetBinning("had_default")); 
     vars.push_back(vardefHad.second);   
+  } else if  (obsvarname == "EVisEHadReco") {
+    auto vardefHad = GetVar("RecoEHad");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning("had_default"));
+    vars.push_back(vardefHad.second);
+    auto vardefVis = GetVar("EVisReco");  
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
+  } else if  (obsvarname == "EVisELepReco") {
+    auto vardefLep = GetVar("RecoELep");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning("lep_default"));
+    vars.push_back(vardefLep.second);
+    auto vardefVis = GetVar("EVisReco");
+    labels.push_back(vardefVis.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefVis.second);
   } else {
     auto vardef = GetVar(obsvarname);
     labels.push_back(vardef.first);
@@ -229,7 +300,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
 
 bool isRecoND(std::string var) {
   if (var == "RecoELep" || var == "EVisReco" || var == "ELepEHadReco" ||
-      var == "RecoEHad") {
+      var == "RecoEHad" || var == "EVisEHadReco") {
     return true;
   } else {
     return false;

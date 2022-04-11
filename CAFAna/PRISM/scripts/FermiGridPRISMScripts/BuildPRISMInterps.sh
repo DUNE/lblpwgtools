@@ -51,10 +51,10 @@ if [ ! -z ${6} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
-PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos
+PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos #MissingProtonFakeData_pos
 SELECTIONARG=" --UseSelection"
 #SELECTIONARG=""
-BINDESCRIPTORARG=" --bin-descriptor default"
+BINDESCRIPTORARG=" --bin-descriptor default" # default
 
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
