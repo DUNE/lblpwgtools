@@ -99,7 +99,7 @@ PredictionInterp const *PRISMExtrapolator::GetNDPred(BeamMode bm,
   }
 
   if (!rtn) {
-    std::cout << "[ERROR]: PRISMExtrapolator attempted to use beam mode for ND "
+    std::cout << "[ERROR]: PRISMExtrapolator attempted to use beam mode(" << bm << ") for ND "
                  "spectra that we do not have."
               << std::endl;
     abort();
