@@ -146,6 +146,7 @@ struct PRISMStateBlob {
 };
 
 PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname);
+void DumpLoadedSpectra(PRISMStateBlob const &blob);
 
 template <typename T>
 inline void SaveTo(TFile &f, std::string const &dirname, T *ty) {
