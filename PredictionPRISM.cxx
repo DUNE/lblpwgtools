@@ -823,10 +823,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),
                                       fND280kAAxis.GetBinnings());
-  LabelsAndBins CovAnaAxis(fAnalysisAxisFD.GetLabels(),
-                           fAnalysisAxisFD.GetBinnings());
-  LabelsAndBins CovWeightAxis(fAnalysisAxisFD.GetLabels(),
-                              fAnalysisAxisFD.GetBinnings());
+  LabelsAndBins CovAnaAxis(fCovarianceAxis.GetLabels(),
+                           fCovarianceAxis.GetBinnings());
+  LabelsAndBins CovWeightAxis(fCovarianceAxis.GetLabels(),
+                              fCovarianceAxis.GetBinnings());
 
   // 1. Calculate efficiency of selection.
   fMCEffCorrection->CalcEfficiency(
@@ -1017,7 +1017,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                     calc, shift, Flavors::kAll, Current::kBoth, Sign::kBoth));
   // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
   // below and comment-out above.
-  // Comps.emplace(kFDOscPred,
+  //Comps.emplace(kFDOscPred,
   //              FDPrediction->PredictComponentSyst(calc, shift, FDSigFlavor,
   //                                                 Current::kCC, FDSigSign));
 
@@ -1035,8 +1035,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
     Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
 
   // Convert final covariance matrix into 2D spectrum
+  //std::cout << "Cov bin size = " << sCovMat.GetBinnings().size() << std::endl;
   Comps.emplace(kExtrapCovarMatrix, ToSpectrum(sCovMat, NDPOT));
-
+  
   if (NDComps.count(kPRISMMC) && fAxisAgreement) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
   }

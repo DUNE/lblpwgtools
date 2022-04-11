@@ -326,14 +326,14 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     std::cout << "Fill Experiment objects." << std::endl;
 
-    /*Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
+    Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second));*/
-    Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
+                                                    POT, POT_FD, ch.second));
+    /*Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     PRISMPred_spec.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second));
+                                                    POT, POT_FD, ch.second));*/
     /*Expts.emplace_back(new SimpleChi2Experiment(state.PRISM.get(),
                                                 FarDetDataPred.FakeData(POT_FD),
                                                 use_PRISM_ND_stats, POT_FD));*/
