@@ -236,9 +236,9 @@ void OffAxisFluxUncertaintyHelper::Initialize(std::string const &filename) {
         }
       }
     }
-     std::cout << "[INFO]: For parameter " << p_it << ", found " <<
-     NHistsLoaded
-               << " inputs." << std::endl;
+     // std::cout << "[INFO]: For parameter " << p_it << ", found " <<
+     // NHistsLoaded
+     //           << " inputs." << std::endl;
     if (!NHistsLoaded) {
       NDTweaks.pop_back();
       NDSpecHCRunTweaks.pop_back();

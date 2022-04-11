@@ -45,7 +45,11 @@ namespace ana
     else
       fedisableexcept(FE_INVALID);
 #else
-    std::cerr << "WARNING: CAFAna/Core/Utilities.cxx built on OS X, no feenableexcept available" << std::endl;
+    static bool first = true;
+    if(first){
+      std::cerr << "WARNING: CAFAna/Core/Utilities.cxx built on OS X, no feenableexcept available" << std::endl;
+      first = false;
+    }
 #endif
   }
 
