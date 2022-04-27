@@ -223,7 +223,6 @@ namespace ana {
   
       Eigen::VectorXd FDERec = MatrixFD_block * NDETrue;
       Eigen::MatrixXd CovMatExtrap = MatrixFD_block * CovMatTrue * MatrixFD_block.transpose();
-
       // ** Get total covariance matrix of linear combination **
       TotalLCCovMat.block(1, 1, CovMatExtrap.rows(), CovMatExtrap.cols()) += 
           CovMatExtrap * std::pow(weights(slice + 1), 2);

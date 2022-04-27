@@ -330,15 +330,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                     FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
-    /*Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    PRISMPred_spec.FakeData(POT_FD),
-                                                    use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second));*/
-    /*Expts.emplace_back(new SimpleChi2Experiment(state.PRISM.get(),
-                                                FarDetDataPred.FakeData(POT_FD),
-                                                use_PRISM_ND_stats, POT_FD));*/
-    /*Expts.emplace_back(new SingleSampleExperiment(state.PRISM.get(), 
-                                                  FarDetDataPred.FakeData(POT_FD)));*/
 
     CombExpts.Add(Expts.back().get());
   
@@ -471,10 +462,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         }
       }
     }
-    //if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
