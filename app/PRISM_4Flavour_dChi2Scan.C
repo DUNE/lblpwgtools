@@ -300,7 +300,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
-    if (use_PRISM) {
+    //if (use_PRISM) {
       auto PRISMComponents =
         state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
       auto *PRISMPred =
@@ -319,19 +319,17 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       PRISMExtrapCovMat->Scale(1, "width");
       chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
       PRISMExtrapCovMat->SetDirectory(nullptr);
-    }
+    //}
 
-    //auto PRISMPred_spec =
-    //  PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
+    auto PRISMPred_spec =
+      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
 
     std::cout << "Fill Experiment objects." << std::endl;
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     FarDetDataPred.FakeData(POT_FD),
                                                     use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second, {0, 6}));
-    /*Expts.emplace_back(new SingleSampleExperiment(state.PRISM.get(), 
-                                                  FarDetDataPred.FakeData(POT_FD)));*/
+                                                    POT, POT_FD, ch.second));
 
     CombExpts.Add(Expts.back().get());
   
@@ -464,10 +462,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         }
       }
     }
-    //if (ssth23_scan) ssTh23->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (dmsq32_scan) dmsq32->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (dcp_scan) dCPpi->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
-    //else if (ssth13_scan) ssTh13->SetValue(calc, scan_hist_1D->GetXaxis()->GetBinCenter(minx));
     
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }

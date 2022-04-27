@@ -51,9 +51,10 @@ if [ ! -z ${6} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
-PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos
+PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos #MissingProtonFakeData_pos
 SELECTIONARG=" --UseSelection"
-BINDESCRIPTORARG=" --bin-descriptor default"
+#SELECTIONARG=""
+BINDESCRIPTORARG=" --bin-descriptor prism_default" # default
 
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
@@ -145,7 +146,7 @@ LOGYLOG "Building interps @ $(date)"
 
 OUTFILENAME=""
 if [ ${IS_FD} == "1" ]; then
-  OUTFILENAME=${SAMPLE_NAME}.State.root
+  OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
 else
   OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
 fi
