@@ -18,13 +18,13 @@ ScanDefinitions: {
     ssth23: [
       {
           name: ssth23
-          scan_steps:  [50, 0.40, 0.65]
+          scan_steps:  [75, 0.35, 0.65]
       },
     ]
     dmsq23: [
       {
           name: dmsq32
-          scan_steps:  [75, 2.35E-3, 2.6E-3]
+          scan_steps:  [50, 2.3E-3, 2.55E-3]
       }
     ]
     ssth23_dmsq23: [
@@ -40,7 +40,7 @@ ScanDefinitions: {
     dmsq23_fine: [
       {
           name: dmsq32
-          scan_steps:  [150, 2.35E-3, 2.6E-3]
+          scan_steps:  [150, 2.3E-3, 2.6E-3]
       }
     ]
     ssth23_dmsq23_fine: [

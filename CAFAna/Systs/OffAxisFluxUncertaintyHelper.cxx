@@ -353,7 +353,6 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
 
   if (nucf < kND_SpecHCRun_numu_numode) { // Is ND
     if (!NDTweaks[param_id][nucf]) {
-      std::cout << "INVALID 293kA nucf = " << nucf << std::endl;
       return kInvalidBin;
     } else if (nucf != kUnhandled) {
       switch (fNDIs2D) {
@@ -384,9 +383,7 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
       return kInvalidBin;
     }
   } else if (nucf < kFD_numu_numode) { // Is ND Spec run
-    std::cout << "280kA run! nucf = " << nucf << std::endl;
     if (!NDSpecHCRunTweaks[param_id][nucf]) {
-      std::cout << "INVALID 280kA nucf = " << nucf << std::endl;
       return kInvalidBin;
     } else if (nucf != kUnhandled) {
       switch (fNDSpecHCRunIs2D) {
@@ -406,14 +403,11 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
         return h2->GetBin(xbin, ybin);
       }
       case kTwoDJagged: {
-        std::cout << "HERE!" << std::endl;
         TH2JaggedF *h2 =
             static_cast<TH2JaggedF *>(NDSpecHCRunTweaks[param_id][nucf]);
         if (IsFlowBin(h2, enu_GeV, off_axis_pos_m)) {
-          std::cout << "Invalid bin at " << enu_GeV << " ; " << off_axis_pos_m << std::endl;
           return kInvalidBin;
         }
-        std::cout << nucf << " bin = " << h2->FindFixBin(enu_GeV, off_axis_pos_m) << std::endl;
         return h2->FindFixBin(enu_GeV, off_axis_pos_m);
       }
       }

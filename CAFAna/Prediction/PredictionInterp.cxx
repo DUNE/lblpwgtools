@@ -498,9 +498,6 @@ namespace ana
                                               Sign::Sign_t sign,
                                               CoeffsType type) const
   {
-//<<<<<<< HEAD
-//    if(fSplitBySign && sign == Sign::kBoth){ 
-//=======
     return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
 

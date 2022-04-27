@@ -35,7 +35,12 @@ namespace ana {
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
     Eigen::MatrixXd NDSumSq_mat = NDSpec.GetSumSqEigen(1);    
 
-    std::vector<double> edges = axis.GetBinnings().at(1).Edges();
+    //std::cout << "NDSpec_mat rows = " << NDSpec_mat.rows() << " ; " 
+    //  <<  "NDSpec_mat cols = " << NDSpec_mat.cols() << std::endl;
+    
+    std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
+                                axis.GetBinnings().at(1).Edges() : 
+                                axis.GetBinnings().at(2).Edges(); // Is 3D.
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);
       auto stop = FindStop(ypos, kA);
@@ -49,8 +54,17 @@ namespace ana {
         NDSumSq_mat(yit, xit) = bvar;
       }
     }
-    LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
-    LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
+
+    std::vector<std::string> anaLabels = { axis.GetLabels().at(0) };
+    std::vector<Binning> anaBins = { axis.GetBinnings().at(0) };
+    if (axis.GetBinnings().size() == 3) {
+      anaLabels.push_back(axis.GetLabels().at(1));
+      anaBins.push_back(axis.GetBinnings().at(1));
+    }
+    LabelsAndBins anaAxis = LabelsAndBins(anaLabels, anaBins);
+    LabelsAndBins weightAxis = (axis.GetBinnings().size() == 2) ?
+      LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1)) : // 2D
+      LabelsAndBins(axis.GetLabels().at(2), axis.GetBinnings().at(2)); // 3D.
 
     PRISMReweightableSpectrum ret(std::move(NDSpec_mat), std::move(NDSumSq_mat),
                                   anaAxis, weightAxis, GetPlanPOT(), 0);
@@ -63,15 +77,28 @@ namespace ana {
                                    HistAxis const &axis, 
                                    bool SetErrorsFromPredictedRate) const {
     // Assume this spectrum is in per/POT
-    assert(NDSpec.NDimensions() == 2); // Only gonna work for 2D axis, 3D not implemented yet
-    std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
+    //assert(NDSpec.NDimensions() == 2); // Only gonna work for 2D axis, 3D not implemented yet
+    //std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
+    std::unique_ptr<TH1> NDSpec_h(NDSpec.ToTH1(1));
     NDSpec_h->SetDirectory(nullptr);    
-                                               
+    Eigen::ArrayXd ErrorArr = NDSpec.GetEigen(1);
+    ErrorArr.setZero();
+    for (int el = 1; el <= ErrorArr.size() - 2; ++el) {
+      ErrorArr(el) = NDSpec_h->GetBinError(el);
+    }                      
+    Eigen::MatrixXd NDErrors_mat = ConvertArrayToMatrix(ErrorArr, 
+                                                        NDSpec.GetBinnings());
+
     Eigen::MatrixXd NDSpec_mat = ConvertArrayToMatrix(NDSpec.GetEigen(1),
                                                       NDSpec.GetBinnings());
+    //std::cout << "NDSpec_mat rows = " << NDSpec_mat.rows() << " ; "
+    //  <<  "NDSpec_mat cols = " << NDSpec_mat.cols() << std::endl; 
+
     Eigen::MatrixXd NDSumSq_mat = Eigen::MatrixXd::Zero(NDSpec_mat.rows(),
                                                         NDSpec_mat.cols()); 
-    std::vector<double> edges = axis.GetBinnings().at(1).Edges();                                                                                           
+    std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
+                                axis.GetBinnings().at(1).Edges() :
+                                axis.GetBinnings().at(2).Edges();                                                                                           
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);
       auto stop = FindStop(ypos, kA);
@@ -80,13 +107,23 @@ namespace ana {
         double bc = NDSpec_mat(yit, xit) * stop.POT;
         double bvar = SetErrorsFromPredictedRate      
                     ? bc
-                    : std::pow((NDSpec_h->GetBinError(xit, yit) * stop.POT), 2);
+                    : std::pow((NDErrors_mat(yit, xit) * stop.POT), 2);
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
     }
-    LabelsAndBins anaAxis = LabelsAndBins(axis.GetLabels().at(0), axis.GetBinnings().at(0));
-    LabelsAndBins weightAxis = LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1));
+
+    std::vector<std::string> anaLabels = { axis.GetLabels().at(0) };
+    std::vector<Binning> anaBins = { axis.GetBinnings().at(0) };
+    if (axis.GetBinnings().size() == 3) {
+      anaLabels.push_back(axis.GetLabels().at(1));
+      anaBins.push_back(axis.GetBinnings().at(1));
+    }
+
+    LabelsAndBins anaAxis = LabelsAndBins(anaLabels, anaBins);
+    LabelsAndBins weightAxis = (axis.GetBinnings().size() == 2) ?
+      LabelsAndBins(axis.GetLabels().at(1), axis.GetBinnings().at(1)) : // 2D
+      LabelsAndBins(axis.GetLabels().at(2), axis.GetBinnings().at(2)); // 3D
 
     PRISMReweightableSpectrum ret(std::move(NDSpec_mat), std::move(NDSumSq_mat),
                                   anaAxis, weightAxis, GetPlanPOT(), 0);

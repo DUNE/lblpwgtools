@@ -66,12 +66,7 @@ class NonSwapNoExtrapPredictionGenerator : public IPredictionGenerator {
 public:
   NonSwapNoExtrapPredictionGenerator(HistAxis axis, Cut cut,
                                      Weight wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-    /*for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());*/
-  }
+      : fAxis(axis), fCut(cut), fWei(wei) {}
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
@@ -178,12 +173,7 @@ protected:
 class FDNoOscPredictionGenerator : public IPredictionGenerator {
 public:
   FDNoOscPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-    /*for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());*/
-  }
+      : fAxis(axis), fCut(cut), fWei(wei) {}
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
