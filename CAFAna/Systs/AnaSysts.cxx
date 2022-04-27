@@ -72,24 +72,25 @@ namespace ana
   std::vector<const ISyst*> getDetectorSysts(bool useFD, bool useND, bool useNueOnE)
   {
 
-    std::vector<const ISyst*> systs = GetEnergySysts();
+    //std::vector<const ISyst*> systs = GetEnergySysts();
+    std::vector<const ISyst*> systs = {};
 
     std::vector<const ISyst *> fdEScalelist = GetRecoEFDSysts();
-    std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    //std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
-    std::vector<const ISyst *> ndlist = GetNDRecoSysts();
-    std::vector<const ISyst *> nuelist = GetNuOnESysts();
+    //std::vector<const ISyst *> ndlist = GetNDRecoSysts();
+    //std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     if (useFD) {
       systs.insert(systs.end(), fdEScalelist.begin(), fdEScalelist.end());
-      systs.insert(systs.end(), fdlist.begin(), fdlist.end());
+      //systs.insert(systs.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
       systs.insert(systs.end(), ndEScalelist.begin(), ndEScalelist.end());
-      systs.insert(systs.end(), ndlist.begin(), ndlist.end());
+      //systs.insert(systs.end(), ndlist.begin(), ndlist.end());
     }
     if (useND && useNueOnE) {
-      systs.insert(systs.end(), nuelist.begin(), nuelist.end());
+      //systs.insert(systs.end(), nuelist.begin(), nuelist.end());
     }
 
     return systs;

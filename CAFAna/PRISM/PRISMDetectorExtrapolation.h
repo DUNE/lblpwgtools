@@ -45,8 +45,8 @@ namespace ana {
 
     // Normalise the ETrue column to efficiency in ND and FD matrices
     void NormaliseETrue(Eigen::MatrixXd* MatrixND, Eigen::MatrixXd* MatrixFD,
-                        std::vector<double> NDefficiency,
-                        std::vector<double> FDefficiency) const;
+                        Eigen::ArrayXd const &NDefficiency,
+                        Eigen::ArrayXd const &FDefficiency) const;
 
 
     Eigen::MatrixXd GetNDMatrix() const;
@@ -76,8 +76,8 @@ namespace ana {
                            Current::Current_t curr = Current::kCC,
                            Sign::Sign_t NDsign = Sign::kBoth,
                            Sign::Sign_t FDsign = Sign::kBoth,
-                           std::vector<std::vector<double>> NDefficiency = {{}},
-                           std::vector<double> FDefficiency = {}) const;
+                           Eigen::ArrayXXd NDefficiency = {{}},
+                           Eigen::ArrayXd FDefficiency = {}) const;
 
     size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
                                bool is280kA = false) const;

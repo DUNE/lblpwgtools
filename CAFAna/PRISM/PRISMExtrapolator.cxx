@@ -138,7 +138,7 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 
 //--------------------------------------------------------------------------------
 std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoefficients(
-    osc::IOscCalc *osc, PRISM::MatchChan match_chan, SystShifts shift,
+    osc::IOscCalc *calc, PRISM::MatchChan match_chan, SystShifts shift,
     double &soln_norm, double &resid_norm) const {
 
   static osc::NoOscillations no;
@@ -195,10 +195,10 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   // always the nonswap so that any xsec ratios don't affect the coefficients.)
   PredictionInterp const *FDPredInterp = GetFDPred(match_chan.to.mode); // Can be flux OR ev rate
   Spectrum FDOsc_spec = FDPredInterp->PredictComponentSyst(
-      osc, shift, flav_fd, Current::kCC, sgn_fd);
-  // Include right sign intrinsic nue bkg in target flux matching 
+      calc, shift, flav_fd, Current::kCC, sgn_fd);
+  // Include right sign intrinsic nue bkg in target flux matching
   Spectrum FDOsc_intrinsic_nue_spec = FDPredInterp->PredictComponentSyst(
-      osc, shift, Flavors::kNuEToNuE, Current::kCC, sgn_fd);
+      calc, shift, Flavors::kNuEToNuE, Current::kCC, sgn_fd);
   Eigen::VectorXd FlowTarget;
   if ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) {
     FlowTarget = (FDOsc_spec + FDOsc_intrinsic_nue_spec).GetEigen(1).matrix();
@@ -419,6 +419,8 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
     double mean, double width, PRISM::BeamChan NDbc, SystShifts shift) const {
 
+  static osc::NoOscillations no;
+
   shift = FilterFluxSystShifts(shift);
 
   Sign::Sign_t sgn_nd = GetSign(NDbc.chan);
@@ -444,13 +446,11 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
 
   Conditioning const &cond = fConditioning.at(fake_match_chan);
 
-  //static osc::NoOscillations no;
-
   PredictionInterp const *NDPredInterp_293kA =
       GetNDPred(fake_match_chan.from.mode, 293);
 
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
-      (osc::IOscCalc*)0, shift, flav_nd, Current::kCC, sgn_nd);
+      &no, shift, flav_nd, Current::kCC, sgn_nd);
 
   std::unique_ptr<TH2> NDOffAxis_293kA(NDOffAxis_293kA_spec.ToTH2(1));
   NDOffAxis_293kA->SetDirectory(nullptr);
@@ -459,7 +459,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
       GetNDPred(fake_match_chan.from.mode, 280);
 
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
-      (osc::IOscCalc*)0, shift, flav_nd, Current::kCC, sgn_nd);
+      &no, shift, flav_nd, Current::kCC, sgn_nd);
 
   std::unique_ptr<TH2> NDOffAxis_280kA(NDOffAxis_280kA_spec.ToTH2(1));
   NDOffAxis_280kA->SetDirectory(nullptr);

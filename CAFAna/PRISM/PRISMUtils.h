@@ -207,22 +207,41 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
 
   // Sadly think I need to do some stuff with ROOT to get error matrix.
   std::unique_ptr<TH1> h_err = std::unique_ptr<TH1>(spec.ToTH1(POT));
-  Eigen::MatrixXd err_mat = Eigen::MatrixXd::Zero(spec_mat.rows(), spec_mat.cols());
+  h_err->SetDirectory(nullptr);
+  Eigen::ArrayXd ErrorArr = spec.GetEigen(1);
+  ErrorArr.setZero();
+  for (int el = 1; el <= ErrorArr.size() - 2; ++el) {
+    ErrorArr(el) = h_err->GetBinError(el);
+  }
+  Eigen::ArrayXXd Errors_mat = ConvertArrayToMatrix(ErrorArr,
+                                                    spec.GetBinnings()).array();
+
+  Eigen::MatrixXd SumSq_mat = (Errors_mat.pow(2) * 
+                               std::pow(POT/spec.POT(), 2)).matrix();
+  /*Eigen::MatrixXd err_mat = Eigen::MatrixXd::Zero(spec_mat.rows(), spec_mat.cols());
   if (spec.GetBinnings().size() == 2) {
-    for (int col = 1; col <= (spec_mat.cols() - 2); col++) {
-      for (int row = 1; row <= (spec_mat.rows() - 2); row++) {
-        double err = h_err->GetBinError(row + (col - 1) * (spec_mat.rows() - 2));
+    //for (int col = 1; col <= (spec_mat.cols() - 2); col++) {
+    //  for (int row = 1; row <= (spec_mat.rows() - 2); row++) {
+    //    double err = h_err->GetBinError(row + (col - 1) * (spec_mat.rows() - 2));
         err_mat(row, col) = std::pow(err * (POT/spec.POT()), 2); // want error from MC
       }
     }
   } else if (spec.GetBinnings().size() == 3) {
     abort();
+  }*/
+
+  std::vector<std::string> anaLabels = { spec.GetLabels().at(0) };
+  std::vector<Binning> anaBins = { spec.GetBinnings().at(0) };
+  if (spec.GetBinnings().size() == 3) {
+    anaLabels.push_back(spec.GetLabels().at(1));
+    anaBins.push_back(spec.GetBinnings().at(1)); 
   }
+  LabelsAndBins anaAxis = LabelsAndBins(anaLabels, anaBins);
+  LabelsAndBins weightAxis = (spec.GetBinnings().size() == 2) ?
+    LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1)) :
+    LabelsAndBins(spec.GetLabels().at(2), spec.GetBinnings().at(2)); // Is 3D.
 
-  LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels().at(0), spec.GetBinnings().at(0));
-  LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1));
-
-  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(err_mat), 
+  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(SumSq_mat), 
                                    anaAxis, weightAxis, POT, 0); // POT
 
   return rwspec;

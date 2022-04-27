@@ -33,10 +33,12 @@ namespace ana
                                    const Cut& cut,
                                    const SystShifts& shift,
                                    const Weight& wei)
-    : fSpectrum(       loader, axis, cut,                                        shift, wei),
-      fSpectrumNC(     loader, axis, cut &&  kIsNC,                              shift, wei),
-      fSpectrumNumu(   loader, axis, cut && !kIsNC && kIsNumuCC &&  !kIsAntiNu,  shift, wei),
-      fSpectrumNumubar(loader, axis, cut && !kIsNC && kIsNumuCC &&   kIsAntiNu,  shift, wei),
+    : fSpectrum(       loader, axis, cut                                      ,  shift, wei),
+      fSpectrumNCTot(  loader, axis, cut &&  kIsNC                            ,  shift, wei),
+      fSpectrumNC(     loader, axis, cut &&  kIsNC &&               !kIsAntiNu,  shift, wei),
+      fSpectrumNCAnti( loader, axis, cut &&  kIsNC &&                kIsAntiNu,  shift, wei),
+      fSpectrumNumu(   loader, axis, cut && !kIsNC && kIsNumuCC  && !kIsAntiNu,  shift, wei),
+      fSpectrumNumubar(loader, axis, cut && !kIsNC && kIsNumuCC  &&  kIsAntiNu,  shift, wei),
       fSpectrumNue(    loader, axis, cut && !kIsNC && kIsBeamNue && !kIsAntiNu,  shift, wei),
       fSpectrumNuebar( loader, axis, cut && !kIsNC && kIsBeamNue &&  kIsAntiNu,  shift, wei)
   {
@@ -53,17 +55,21 @@ namespace ana
        sign == Sign::kBoth)
       return fSpectrum; // Faster
 
-    if(curr & Current::kNC){
+    // For when fSplitBySign is true in PredictionInterp
+    if(curr & Current::kNC && sign == Sign::kNu) return fSpectrumNC;
+    if(curr & Current::kNC && sign == Sign::kAntiNu) return fSpectrumNCAnti;
+
+    if(curr & Current::kNC && sign & Sign::kBoth){
       // We don't have NC broken down by sign or flavour
       assert(flav & Flavors::kAll && sign & Sign::kBoth);
-      return fSpectrumNC;
+      return fSpectrumNCTot;
     }
-
-    assert(curr == Current::kCC);
 
     using namespace Flavors;
     using namespace Current;
     using namespace Sign;
+
+    assert(curr == Current::kCC);
 
     Spectrum ret = fSpectrum;
     ret.Clear();
@@ -80,7 +86,9 @@ namespace ana
   //----------------------------------------------------------------------
   void PredictionNoOsc::SetNoOscErrors(double pot) {
     fSpectrum = SetSpectrumErrors(fSpectrum, pot);
-    fSpectrumNC = SetSpectrumErrors(fSpectrumNC, pot);  
+    fSpectrumNCTot = SetSpectrumErrors(fSpectrumNC, pot);
+    fSpectrumNC = SetSpectrumErrors(fSpectrumNC, pot);
+    fSpectrumNCAnti = SetSpectrumErrors(fSpectrumNC, pot);  
     fSpectrumNumu = SetSpectrumErrors(fSpectrumNumu, pot);
     fSpectrumNumubar = SetSpectrumErrors(fSpectrumNumubar, pot);
     fSpectrumNue = SetSpectrumErrors(fSpectrumNue, pot);
@@ -98,7 +106,9 @@ namespace ana
     TObjString("PredictionNoOsc").Write("type");
     
     fSpectrum.SaveTo(dir, "spect");
+    fSpectrumNCTot.SaveTo(dir, "spect_nctot");
     fSpectrumNC.SaveTo(dir, "spect_nc");
+    fSpectrumNCAnti.SaveTo(dir, "spect_ncbar");
     fSpectrumNumu.SaveTo(dir, "spect_numu");
     fSpectrumNumubar.SaveTo(dir, "spect_numubar");
     fSpectrumNue.SaveTo(dir, "spect_nue");
@@ -118,7 +128,9 @@ namespace ana
 
     PredictionNoOsc* ret = new PredictionNoOsc(
       *ana::LoadFrom<Spectrum>(dir, "spect"),
+      *ana::LoadFrom<Spectrum>(dir, "spect_nctot"),
       *ana::LoadFrom<Spectrum>(dir, "spect_nc"),
+      *ana::LoadFrom<Spectrum>(dir, "spect_ncbar"),
       *ana::LoadFrom<Spectrum>(dir, "spect_numu"),
       *ana::LoadFrom<Spectrum>(dir, "spect_numubar"),
       *ana::LoadFrom<Spectrum>(dir, "spect_nue"),
