@@ -5,13 +5,13 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: [PRISMPred_3.5YrFHC_EVisRec_TestPred_19Jan21.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_EVisReco_NDFD_XSecFluxDetSyst_18Jan22.root
+	output_file: [PRISMPred_1Yr4Flav_EVisReco_NewState_24Apr21.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
 
 	projection_name: EVisReco
 
 	use_PRISM: true
-	POT_years: 3.5
+	POT_years: 1.0
 	vary_NDFD_data: false
 	
 
@@ -57,7 +57,8 @@ BasicPred: {
 	}                                                                                                
 	#samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.Nue_app
-	samples: @local::FitChannels.NuModeJoint
+	#samples: @local::FitChannels.NuModeJoint
+	samples: @local::FitChannels.FourFlavor
 }
 
 
@@ -70,22 +71,40 @@ predictions: [
 
 	{
 		@table::BasicPred
-		output_dir: "numu_EvMatch_Shift"
-		syst: {
-			shifts: [
-				[MaCCQE, 1],
-				[MaCCRES, 1],
-				[RecoEnergyScaleND,, 1],
-				[AhtBY, 1],
-				[BhtBY, 1],
-				[flux_Nov17_13, 1],
-				[CV2uBY, 1],
-				[BeRPA_A, 1],
-				[BeRPA_B, 1], 
-				[BeRPA_D, 1],
-			]
+		output_dir: "dmsq_238_ssth23_055"
+		true_osc: {
+			dmsq32: 0.00238
+			ssth23: 0.55
 		}
 	},
+
+	{
+		@table::BasicPred
+		output_dir: "dmsq_252_ssth23_05"
+		true_osc: {
+			dmsq32: 0.00252
+			ssth23: 0.5
+		}
+	},
+
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_Shift"
+#		syst: {
+#			shifts: [
+#				[MaCCQE, 1],
+#				[MaCCRES, 1],
+#				[RecoEnergyScaleND,, 1],
+#				[AhtBY, 1],
+#				[BhtBY, 1],
+#				[flux_Nov17_13, 1],
+#				[CV2uBY, 1],
+#				[BeRPA_A, 1],
+#				[BeRPA_B, 1], 
+#				[BeRPA_D, 1],
+#			]
+#		}
+#	},
 
 ]	
 

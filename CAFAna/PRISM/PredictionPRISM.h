@@ -264,8 +264,10 @@ public:
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   virtual Spectrum Predict(osc::IOscCalc *calc) const override;
+
   virtual Spectrum PredictSyst(osc::IOscCalc *calc,
                                const ana::SystShifts &shift) const override;
+
   std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
       osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
       PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;

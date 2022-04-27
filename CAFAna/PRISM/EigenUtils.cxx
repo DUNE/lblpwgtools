@@ -169,8 +169,23 @@ Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr,
     }
   } else if (bins.size() == 3) {
     // implement 3D axis another day.
-    std::cout << "3D axis not yet implemented." << std::endl;
-    abort();
+    // 3D means first 2 axis are the analysis axes and the third is the weighting axis,
+    // which for PRISM is typically off-axis position.
+    int NRows = bins.at(2).NBins();
+    int NCols1 = bins.at(0).NBins();
+    int NCols2 = bins.at(1).NBins();
+    int NColsTotal = bins.at(0).NBins() * bins.at(1).NBins();
+    ret_mat.resize(NRows + 2, NColsTotal + 2);
+    ret_mat.setZero();
+    for (int row = 1; row <= NRows; row++) {
+      for (int col2 = 1; col2 <= NCols2; col2++) {
+        for (int col1 = 1; col1 <= NCols1; col1++) {
+        //for (int row = 1; row <= NRows; row++) {
+          int colit = col2 + (col1 - 1) * NCols2;
+          ret_mat(row, colit) = arr(row + (colit - 1) * NRows); 
+        }
+      }
+    }
   }
   return ret_mat;
 }

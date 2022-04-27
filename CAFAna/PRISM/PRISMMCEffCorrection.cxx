@@ -1,3 +1,5 @@
+#include "CAFAna/Analysis/common_fit_definitions.h"
+
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PRISMMCEffCorrection.h"
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
@@ -20,7 +22,8 @@ namespace ana {
       FDUnselPredInterps.push_back(nullptr);
       FDSelPredInterps.push_back(nullptr);
     }
-
+    hNDUnselected_293kA = nullptr;
+    hNDSelected_293kA = nullptr;
   }
 
 
@@ -64,31 +67,30 @@ namespace ana {
     FDSelPredInterps.at(FDsel.second) = FDsel.first;
 
     osc::NoOscillations no;
-    auto NDPred = NDunsel_293kA.first->Predict(&no);
+    auto NDPred_293kA = NDunsel_293kA.first->Predict(&no);
+    auto NDPred_280kA = NDunsel_280kA.first->Predict(&no);
 
-    // WARNING: Not set up for 2D preds!
-    std::vector<Binning> bins = NDPred.GetBinnings();
-    int NAnaElements, NOAElements;
-    if (NDPred.NDimensions() == 2) {
-      NAnaElements = bins.at(0).NBins();
-      NOAElements = bins.at(1).NBins();
-    } else { // is 2D pred, not done yet.
-      abort();
+    std::vector<Binning> bins_293kA = NDPred_293kA.GetBinnings();
+    int NAnaElements, NOAElements_293kA;
+    if (NDPred_293kA.NDimensions() == 2) {
+      NAnaElements = bins_293kA.at(0).NBins();
+      NOAElements_293kA = bins_293kA.at(1).NBins();
+    } else { // is 3D pred
+      NAnaElements = bins_293kA.at(0).NBins() * bins_293kA.at(1).NBins();
+      NOAElements_293kA = bins_293kA.at(2).NBins();
     }
-    std::vector<double> NDE_293kA, NDE_280kA;
-    int it(0);
-    while (it < NAnaElements) {
-      NDE_293kA.push_back(0);
-      NDE_280kA.push_back(0);
-      FDefficiency.push_back(0);
-      it++;
+    std::vector<Binning> bins_280kA = NDPred_280kA.GetBinnings();
+    int NOAElements_280kA;
+    if (NDPred_280kA.NDimensions() == 2) {
+      NOAElements_280kA = bins_280kA.at(1).NBins();
+    } else {
+      NOAElements_280kA = bins_280kA.at(2).NBins();
     }
-    it = 0;
-    while (it < NOAElements) {
-      NDefficiency_293kA.push_back(NDE_293kA);
-      NDefficiency_280kA.push_back(NDE_280kA);
-      it++;
-    }
+
+    NDefficiency_293kA = Eigen::ArrayXXd::Zero(NOAElements_293kA, NAnaElements);
+    NDefficiency_280kA = Eigen::ArrayXXd::Zero(NOAElements_280kA, NAnaElements);
+
+    FDefficiency = Eigen::ArrayXd::Zero(NAnaElements);
   }
 
   //----------------------------------------------------
@@ -102,89 +104,73 @@ namespace ana {
                                        Sign::Sign_t NDsign,
                                        Sign::Sign_t FDsign) const {
 
-    ana::SystShifts syst = shift;
-
     osc::NoOscillations no;
 
     Spectrum sNDunselected_293kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
     Spectrum sNDunselected_280kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
+    // Maybe you want this for debugging
+    //hNDUnselected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDunselected_293kA.ToTH2(1)));
 
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
-    ReweightableSpectrum rwsNDunselected_293kA = ToReweightableSpectrum(sNDunselected_293kA,
-                                                                        1);
-    ReweightableSpectrum rwsNDunselected_280kA = ToReweightableSpectrum(sNDunselected_280kA,
-                                                                        1);
-    Eigen::MatrixXd NDunsel_293kA = rwsNDunselected_293kA.GetEigen(1);
-    Eigen::MatrixXd NDunsel_280kA = rwsNDunselected_280kA.GetEigen(1);
+    Eigen::ArrayXXd NDunsel_293kA = ConvertArrayToMatrix(sNDunselected_293kA.GetEigen(1),
+                                                         sNDunselected_293kA.GetBinnings())
+                                                        .array()
+                                                        .block(1, 1, NDefficiency_293kA.rows(),
+                                                               NDefficiency_293kA.cols());
+    Eigen::ArrayXXd NDunsel_280kA = ConvertArrayToMatrix(sNDunselected_280kA.GetEigen(1),
+                                                         sNDunselected_280kA.GetBinnings())
+                                                        .array()
+                                                        .block(1, 1, NDefficiency_280kA.rows(),
+                                                               NDefficiency_280kA.cols());
 
     // Selected ND MC
     Spectrum sNDselected_293kA =
         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
     Spectrum sNDselected_280kA =
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-         ->PredictComponentSyst(&no, syst, NDflav, curr, NDsign);
+         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
-    ReweightableSpectrum rwsNDselected_293kA = ToReweightableSpectrum(sNDselected_293kA,
-                                                                      1);
-    ReweightableSpectrum rwsNDselected_280kA = ToReweightableSpectrum(sNDselected_280kA,
-                                                                      1);
-    Eigen::MatrixXd NDsel_293kA = rwsNDselected_293kA.GetEigen(1);
-    Eigen::MatrixXd NDsel_280kA = rwsNDselected_280kA.GetEigen(1);
+    // Maybe you want this for debugging
+    //hNDSelected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDselected_293kA.ToTH2(1)));
+
+    Eigen::ArrayXXd NDsel_293kA = ConvertArrayToMatrix(sNDselected_293kA.GetEigen(1),
+                                                       sNDselected_293kA.GetBinnings())
+                                                      .array()
+                                                      .block(1, 1, NDefficiency_293kA.rows(),
+                                                             NDefficiency_293kA.cols());
+    Eigen::ArrayXXd NDsel_280kA = ConvertArrayToMatrix(sNDselected_280kA.GetEigen(1),
+                                                       sNDselected_280kA.GetBinnings())
+                                                      .array()
+                                                      .block(1, 1, NDefficiency_280kA.rows(),
+                                                             NDefficiency_280kA.cols());
 
     Spectrum sFDunselected =
         FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-    Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1);
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
     Spectrum sFDselected =
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, syst, FDflav, curr, FDsign);
-    Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1);
+        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+
+    Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
+                                   .segment(1, FDefficiency.size());
+    Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1)
+                                 .segment(1, FDefficiency.size());
 
     // Calculate ND efficiency
     // efficiency fluctuates slightly with OA position
+    // Use coefficient-wise opterations of Array objects.
     // Efficiency for 293kA sample:
-    for (int slice = 1; slice <= (NDsel_293kA.rows() - 2); slice++) { // OA slice
-      std::vector<double> SliceEfficiency;
-      for (int ebin = 1; ebin <= (NDsel_293kA.cols() - 2); ebin++) { // Energy bins
-        double NDbin_eff = NDsel_293kA(slice, ebin) / NDunsel_293kA(slice, ebin);
-        if (std::isnormal(NDbin_eff)) {
-          SliceEfficiency.push_back(NDbin_eff);
-        } else {
-          SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
-        }
-      }
-      NDefficiency_293kA.at(slice - 1) = SliceEfficiency;
-    }
-
+    NDefficiency_293kA = NDsel_293kA / NDunsel_293kA;
     // Efficiency for 280kA sample:
-    for (int slice = 1; slice <= (NDsel_280kA.rows() - 2); slice++) { // OA slice
-      std::vector<double> SliceEfficiency;
-      for (int ebin = 1; ebin <= (NDsel_280kA.cols() - 2); ebin++) { // Energy bins
-        double NDbin_eff = NDsel_280kA(slice, ebin) / NDunsel_280kA(slice, ebin);
-        if (std::isnormal(NDbin_eff)) {
-          SliceEfficiency.push_back(NDbin_eff);
-        } else {
-          SliceEfficiency.push_back(1E-6); // arbitrarily small instead of 0
-        }
-      }
-      NDefficiency_280kA.at(slice - 1) = SliceEfficiency;
-    }
-
+    NDefficiency_280kA = NDsel_280kA / NDunsel_280kA;
     // Calculate FD efficiency
-    for (int ebin = 1; ebin <= (vFDselected.size() - 2); ebin++) {
-      double FDbin_eff = vFDselected(ebin) / vFDunselected(ebin);
-      if (std::isnormal(FDbin_eff)) {
-        FDefficiency.at(ebin - 1) = FDbin_eff;
-      } else {
-        FDefficiency.at(ebin - 1) = 1E-6;
-      }
-    }
+    FDefficiency = vFDselected / vFDunselected;
   }
 
   //----------------------------------------------------------
@@ -214,37 +200,61 @@ namespace ana {
     // Don't care how ugly this is, just getting the plots.
     // Just to get the axes.
     osc::NoOscillations no;
-    auto NDPred = NDUnselPredInterps.at(kND_293kA_nu)->Predict(&no);
-
-    std::vector<std::string> labels = NDPred.GetLabels();
-    std::vector<Binning> bins = NDPred.GetBinnings();
-
-    LabelsAndBins ana_axis(labels.at(0), bins.at(0));
-    LabelsAndBins oa_axis(labels.at(1), bins.at(1));
-
-    int NAnaElements = bins.at(0).NBins() + 2;
-    int NOAElements = bins.at(1).NBins() + 2;
-
-    Eigen::MatrixXd NDEff293kA_mat = Eigen::MatrixXd::Zero(NOAElements,
-                                                         NAnaElements);
-
-    for (int y = 1; y <= NDEff293kA_mat.rows() - 2; y++) {
-      for (int x = 1; x <= NDEff293kA_mat.cols() - 2; x++) {
-        NDEff293kA_mat(y, x) = NDefficiency_293kA.at(y - 1).at(x - 1);
-      }
+    size_t conf = kND_293kA_nu;
+    if (!NDUnselPredInterps.at(conf)) conf = kND_293kA_nub;
+    if (!NDUnselPredInterps.at(conf)) {
+      std::cout << "[ERROR] Cannot write efficiency." << std::endl;
+      abort();
     }
+    auto NDPred = NDUnselPredInterps.at(conf)->Predict(&no);
+
+    size_t conf_280kA = kND_280kA_nu;
+    if (!NDUnselPredInterps.at(conf_280kA)) conf_280kA = kND_280kA_nub;
+    if (!NDUnselPredInterps.at(conf_280kA)) {
+      std::cout << "[ERROR] Cannot write efficiency." << std::endl;
+      abort();
+    }
+    auto NDPred_280kA = NDUnselPredInterps.at(conf_280kA)->Predict(&no);
+
+    std::vector<std::string> anaLabels = { NDPred.GetLabels().at(0) };
+    std::vector<Binning> anaBins = { NDPred.GetBinnings().at(0) };
+    if (NDPred.GetBinnings().size() == 3) {
+      anaLabels.push_back(NDPred.GetLabels().at(1));
+      anaBins.push_back(NDPred.GetBinnings().at(1));
+    }
+    LabelsAndBins ana_axis(anaLabels, anaBins);
+
+    LabelsAndBins oa_axis = (NDPred.GetBinnings().size() == 2) ?
+      LabelsAndBins(NDPred.GetLabels().at(1), NDPred.GetBinnings().at(1)) :
+      LabelsAndBins(NDPred.GetLabels().at(2), NDPred.GetBinnings().at(2));
+    LabelsAndBins oa280kA_axis = (NDPred_280kA.GetBinnings().size() == 2) ?
+      LabelsAndBins(NDPred_280kA.GetLabels().at(1), NDPred_280kA.GetBinnings().at(1)) :
+      LabelsAndBins(NDPred_280kA.GetLabels().at(2), NDPred_280kA.GetBinnings().at(2));
+
+    Eigen::MatrixXd NDEff293kA_mat = Eigen::MatrixXd::Zero(NDefficiency_293kA.rows() + 2,
+                                                           NDefficiency_293kA.cols() + 2);
+    NDEff293kA_mat.block(1, 1, NDefficiency_293kA.rows(),
+                         NDefficiency_293kA.cols()) = NDefficiency_293kA.matrix();
 
     ReweightableSpectrum NDEff293kA_rws(std::move(NDEff293kA_mat), ana_axis, oa_axis, 1, 0);
 
-    Eigen::ArrayXd FDEff_arr = Eigen::ArrayXd::Zero(NAnaElements);
+    Eigen::MatrixXd NDEff280kA_mat = Eigen::MatrixXd::Zero(NDefficiency_280kA.rows() + 2,
+                                                           NDefficiency_280kA.cols() + 2);
+    NDEff280kA_mat.block(1, 1, NDefficiency_280kA.rows(),
+                         NDefficiency_280kA.cols()) = NDefficiency_280kA.matrix();
 
-    for (int x = 1; x <= FDEff_arr.size() - 2; x++) {
-      FDEff_arr(x) = FDefficiency.at(x - 1);
-    }
+    ReweightableSpectrum NDEff280kA_rws(std::move(NDEff280kA_mat), ana_axis, oa280kA_axis, 1, 0);
+
+    Eigen::ArrayXd FDEff_arr = Eigen::ArrayXd::Zero(FDefficiency.size() + 2);
+
+    FDEff_arr.segment(1, FDefficiency.size()) = FDefficiency;
 
     Spectrum FDEff_s(std::move(FDEff_arr), ana_axis, 1, 0);
 
+    if (hNDUnselected_293kA.get()) dir->WriteTObject(hNDUnselected_293kA.get(), "NDUnsel_293kA");
+    if (hNDSelected_293kA.get()) dir->WriteTObject(hNDSelected_293kA.get(), "NDSel_293kA");
     dir->WriteTObject(NDEff293kA_rws.ToTH2(1), "NDEff_293kA");
+    dir->WriteTObject(NDEff280kA_rws.ToTH2(1), "NDEff_280kA");
     dir->WriteTObject(FDEff_s.ToTH1(1), "FDEff");
   }
 
