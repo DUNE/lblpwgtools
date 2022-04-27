@@ -6,8 +6,8 @@
 
 
 BasicPred: {
-	output_file: [/dune/app/users/weishi/PRISMPred/PRISMPred_EVisReco_PlaceHolder.root, "UPDATE"]
-	state_file: /dune/app/users/weishi/StateFiles/PRISMState_FHC_RHC_XSecSysts_NewBin_6Feb22.root
+	output_file: [/dune/app/users/weishi/NueIntrinsic/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_IntrinsicNue.root, "UPDATE"]
+	state_file: /pnfs/dune/persistent/users/weishi/CAFAnaInputs/StandardState/FHCIntrinsicNue/hadd_state_IntrinsicNue_file_xsec_49_to_54.root
 
 	# Variable are you using
 	projection_name: EVisReco
@@ -15,7 +15,7 @@ BasicPred: {
 	# Always use PRISM so always true
 	use_PRISM: true
 	# Exposure
-	POT_years: 3.5
+	POT_years: 1
 	# True for doing 'fake data' studies
 	vary_NDFD_data: false
 
@@ -60,7 +60,7 @@ BasicPred: {
 
                 reg_factor_extrap: 1e-30 #1E-30
 	}
-	samples: @local::FitChannels.FourFlavor
+	samples: @local::FitChannels.AppJoint
 }
 
 
@@ -69,26 +69,6 @@ predictions: [
 	{
 		@table::BasicPred
 		output_dir: "numu_EvMatch_nom"
-	},
-
-	{
-		@table::BasicPred
-		output_dir: "numu_EvMatch_PlaceHolder_-1"
-		syst: {
-		        shifts: [
-						        [PlaceHolder, -1],
-						]
-		}
-	},
-
-	{
-		@table::BasicPred
-		output_dir: "numu_EvMatch_PlaceHolder_1"
-		syst: {
-		        shifts: [
-						        [PlaceHolder, 1],
-						]
-		}
 	},
 
 ]
