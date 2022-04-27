@@ -5,8 +5,8 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: [PRISMPred_1Yr4Flav_EVisReco_DiffOsc_4Mar21.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_XSecFluxSyst2_24Feb22.root
+	output_file: [PRISMPred_1Yr4Flav_EVisReco_NewState_24Apr21.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
 
 	projection_name: EVisReco
 

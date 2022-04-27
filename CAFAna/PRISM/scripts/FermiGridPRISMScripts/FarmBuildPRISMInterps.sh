@@ -5,13 +5,13 @@ AXISBLOBNAME="default"
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
-LIFETIME_EXP_ND="40h"
+LIFETIME_EXP_ND="60h"
 DISK_EXP_ND="2GB"
-MEM_EXP_ND="8GB"
+MEM_EXP_ND="4GB"
 
-LIFETIME_EXP_FD="20h"
+LIFETIME_EXP_FD="60h"
 DISK_EXP_FD="2GB"
-MEM_EXP_FD="8GB"
+MEM_EXP_FD="40GB"
 
 SYSTDESCRIPTOR=""
 NOFAKEDATA=""
@@ -239,7 +239,7 @@ if [ "${DO_ND}" == "1" ]; then
 
   if [ "${DO_RHC}" == "1" ]; then # used to grep \"ND_RHC_*.root\"
     echo "ifdh ls ${INPUT_DIR} | grep \"CAFv7_*.root\" | sed \"s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g\""
-    ifdh ls ${INPUT_DIR} | grep "CAFv7_" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
+    ifdh ls ${INPUT_DIR} | grep "_0m" | sed "s\/pnfs\root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr\g" > InputCAFs.ND_RHC.list
     NND_RHC=$(cat InputCAFs.ND_RHC.list | wc -l)
     echo "[INFO]: Found ${NND_RHC} ND_RHC input files"
     NJOBSWITHTHIS=$(( NJOBS + NND_RHC ))

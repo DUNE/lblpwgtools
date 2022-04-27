@@ -31,7 +31,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EVisReco";
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "event_rate_match"; // was uniform
+std::string truthbinningdescriptor = "event_rate_match"; // was event_rate_match
 
 std::vector<std::vector<std::string>> input_CAF_descriptors;
 std::vector<std::vector<std::string>> input_CAF_files;
@@ -133,11 +133,11 @@ void handleOpts(int argc, char const *argv[]) {
     } else if ((std::string(argv[opt]) == "-Ft-nu") ||
                (std::string(argv[opt]) == "--FD-nutau-input-numode")) {
       input_CAF_descriptors[kFD_nu_tauswap].push_back(argv[++opt]);
-    } else if ((std::string(argv[opt]) == "-N-280-nub") ||
-               (std::string(argv[opt]) == "--ND-280kA-input-nubmode")) {
-      input_CAF_descriptors[kND_293kA_nub].push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-N-nub") ||
                (std::string(argv[opt]) == "--ND-input-nubmode")) {
+      input_CAF_descriptors[kND_293kA_nub].push_back(argv[++opt]);
+    } else if ((std::string(argv[opt]) == "-N-280-nub") ||
+               (std::string(argv[opt]) == "--ND-280kA-input-nubmode")) {
       input_CAF_descriptors[kND_280kA_nub].push_back(argv[++opt]);
     } else if ((std::string(argv[opt]) == "-F-nub") ||
                (std::string(argv[opt]) == "--FD-input-nubmode")) {
@@ -296,7 +296,7 @@ int main(int argc, char const *argv[]) {
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor, 
                      (axdescriptor == "EVisReco") ? 
-                     "prism_noextrap" : binningdescriptor);
+                     "prism_fine_default" : binningdescriptor);
 
   std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
   HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
@@ -384,10 +384,14 @@ int main(int argc, char const *argv[]) {
     size_t IsNonSwap = IsNumuConfig(config);
     size_t IsNuTauSwap = IsNutauConfig(config);
 
+    std::cout << "IsNu = " << IsNu << ", IsND = " << IsND <<
+      ", IsND280kA = " << IsND280kA <<std::endl; 
     if (!input_CAF_files[config].size()) {
+      std::cout << "[WARNING] No files loaded." << std::endl;
       continue;
     }
-
+    std::cout << "We have " << input_CAF_files[config].size() << " file loaded." << std::endl;
+    
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
     if (IsND) {
       if(IsND280kA) { continue; }
@@ -707,7 +711,7 @@ int main(int argc, char const *argv[]) {
       });
       // Matrix of ERec v ETrue for FD
       FDMatrixPredGens[fd_config] = std::make_unique<FDNoOscPredictionGenerator>(
-          ERecETrueAxisFD, FDCuts, kFDCVWeight);
+          ERecETrueAxisFD, FDCuts, kFDCVWeight * kOscWeight);
       FDMatrixPredInterps[fd_config] = std::make_unique<PredictionInterp>(
           los, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);

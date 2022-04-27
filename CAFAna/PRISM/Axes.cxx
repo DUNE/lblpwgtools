@@ -25,8 +25,10 @@ Binning GetBinning(std::string const &xbinning) {
     return Binning::Simple(50, 0, 10);
   } else if (xbinning == "uniform_coarse") {
     return Binning::Simple(6, 0, 6); 
-  } else if (xbinning == "prism_noextrap") {
+  } else if (xbinning == "prism_default") {
     return kPRISMRecoBinning;
+  } else if (xbinning == "prism_fine_default") {
+    return kPRISMFineRecoBinning;
   } else if (xbinning == "default") {
     return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
@@ -120,7 +122,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   // Only needed for EVisReco, not ELepEHad.
   HistAxis xaxND = RecoObservable(varname, 
                                   (varname == "EVisReco") ? 
-                                  "prism_noextrap" : xbinning);
+                                  "prism_fine_default" : xbinning);
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};

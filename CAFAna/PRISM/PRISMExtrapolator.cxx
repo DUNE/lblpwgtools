@@ -198,7 +198,6 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
       calc, shift, flav_fd, Current::kCC, sgn_fd);
   Eigen::VectorXd FlowTarget = FDOsc_spec.GetEigen(1).matrix(); 
   Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2); 
-
   Spectrum FDUnOsc_spec = FDPredInterp->PredictComponentSyst(
       &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd); 
   Eigen::VectorXd FlowFDUnOsc_vec = FDUnOsc_spec.GetEigen(1).matrix(); 
