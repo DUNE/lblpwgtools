@@ -816,9 +816,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   //-------------------------------------------------------------
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), 
-                              fAnalysisAxisFD.GetBinnings()); 
-  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(), 
+  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(),
+                              fAnalysisAxisFD.GetBinnings());
+  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(),
 
 
                                  fNDOffAxis.GetBinnings());
@@ -997,11 +997,12 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
   }
 
-  if (fIntrinsicCorrection) { // Add in intrinsic correction. Both signs needed!
+  if (fIntrinsicCorrection) { // Add in intrinsic correction.
+    // Right sign included in flux matching, here only include wrong sign
     Comps.emplace(kFDIntrinsicBkg,
                   FDPrediction->PredictComponentSyst(
                       calc, (fVaryNDFDMCData ? kNoShift : shift),
-                      FDIntrinsicFlavor, Current::kCC, Sign::kBoth));
+                      FDIntrinsicFlavor, Current::kCC, FDWrongSign));
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDIntrinsicBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDIntrinsicBkg);
