@@ -55,18 +55,18 @@ namespace ana {
                         Sign::Sign_t NDsign = Sign::kBoth,
                         Sign::Sign_t FDsign = Sign::kBoth) const;
 
-    std::vector<std::vector<double>> GetNDefficiency(int kA) const { 
+    Eigen::ArrayXXd GetNDefficiency(int kA) const {
       if (kA == 293) {
-        return NDefficiency_293kA; 
+        return NDefficiency_293kA;
       } else if (kA == 280) {
         return NDefficiency_280kA;
       } else {
         std::cout << "[ERROR] unrecognised HC." << std::endl;
         abort();
       }
-    } 
-    std::vector<double> GetFDefficiency() const { return FDefficiency; }
- 
+    }
+    Eigen::ArrayXd GetFDefficiency() const { return FDefficiency; } 
+
     size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
                                bool is280kA = false) const;
 
@@ -80,11 +80,15 @@ namespace ana {
     std::vector<PredictionInterp const *> FDUnselPredInterps;
     std::vector<PredictionInterp const *> FDSelPredInterps;
 
+    // Temporary hist output:
+    mutable std::unique_ptr<TH2D> hNDUnselected_293kA;
+    mutable std::unique_ptr<TH2D> hNDSelected_293kA;
+
     // ND and FD efficiency in each energy bin
     // vector of vectors to hold ND eff at each OA stop.
-    mutable std::vector<std::vector<double>> NDefficiency_293kA;
-    mutable std::vector<std::vector<double>> NDefficiency_280kA;
-    mutable std::vector<double> FDefficiency;
+    mutable Eigen::ArrayXXd NDefficiency_293kA;
+    mutable Eigen::ArrayXXd NDefficiency_280kA;
+    mutable Eigen::ArrayXd FDefficiency;
   };
 
 } // namespace ana

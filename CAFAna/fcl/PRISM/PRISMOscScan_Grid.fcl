@@ -5,12 +5,18 @@
 
 BasicPred: {
 
-	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecSysts_NewBin_6Feb22.root
+	output_file: [PRISMScan_dmsq32_4Flav_XSecFluxDetTotal_25Apr22.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecFluxOnly_24Apr22.root
+
+#PRISMState_FHC_RHC_XSecFluxDetTotal_24Apr22.root
+
+#PRISMState_FHC_RHC_XSecFluxOnly_24Apr22.root
+
+#PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
 
 	projection_name: EVisReco
 	use_PRISM: true
-	POT_years: 3.5
+	POT_years: 0.5
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
@@ -54,33 +60,62 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 	
+	
 	#samples: @local::FitChannels.Numu_disp 
-	samples: @local::FitChannels.DispJoint
-	#samples: @local::FitChannels.FourFlavor
+	#samples: @local::FitChannels.DispJoint
+	samples: @local::FitChannels.FourFlavor
 }
 
 # Just an example below now, not used
 
-scansEG: [
+EGscans: [
 
 	{
 		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		free_syst_params: @local::nuisance_parameters.xsec_total
-		output_dir: "xsec_1.0Em16"
+		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
+		output_dir: "numu_EvMatch_nom"
 	},
 
 	{
 		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 2.5E-17
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
+		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
+		free_syst_params: @local::nuisance_parameters.all
+		output_dir: "numu_EvMatch_all"
+	},
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
+		free_syst_params: @local::nuisance_parameters.fluxAll
+		output_dir: "numu_EvMatch_flux"
+	},
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
 		free_syst_params: @local::nuisance_parameters.xsec_total
-		output_dir: "xsec_2.5Em17"
+		output_dir: "numu_EvMatch_xsec"
+	},
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
+		free_syst_params: @local::nuisance_parameters.det_all
+		output_dir: "numu_EvMatch_det"
 	},
 
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
+EGscans[0].output_file[1]: "RECREATE"
 

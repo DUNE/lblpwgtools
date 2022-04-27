@@ -39,7 +39,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   (void)GetListOfSysts();
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
-
+  std::cout << "Shifts: " << shift.ShortName() << std::endl;
   //SystShifts fluxshift = FilterFluxSystShifts(shift);
 
   bool do_gauss = gauss_flux.first != 0;
@@ -69,6 +69,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
+   osc::NoOscillations no;
 
   // Lazy load the state file
   if (!States.count(state_file)) {
@@ -226,28 +227,35 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
- 
-    // Smearing matrices for ND and FD
-    // For detector and selection corrections
-    SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
-                             {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-    // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
- 
-    // MC efficiency correction
-    NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                           {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                           {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                           {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                           {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
-                           {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
 
-
-
-    // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr); 
+    auto FarDetDataUnOscPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(&no).FakeData(POT_FD);
+    auto *DataUnOscPred = FarDetDataUnOscPred.ToTHX(POT_FD);
+    DataUnOscPred->Scale(1, "width");
+    chan_dir->WriteTObject(DataUnOscPred, "DataPredUnOsc_Total");
+    DataUnOscPred->SetDirectory(nullptr); 
 
     if (use_PRISM) {
+      // Smearing matrices for ND and FD
+      // For detector and selection corrections
+      SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
+                               {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+      // Set PredictionPRISM to own a pointer to this NDFD_Matrix
+      state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+ 
+      // MC efficiency correction
+      NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                             {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                             {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                             {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                             {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
+                             {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+
+
+
+      // Set PredictionPRISM to own a pointer to this MCEffCorrection
+      state.PRISM->SetMC_NDFDEff(&NDFDEffCorr); 
+
+      //--------------------
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
             gauss_flux.first, gauss_flux.second, shift, ch.second.from);
@@ -291,8 +299,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
         PRISMExtrap->SetDirectory(nullptr);
         if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
+          std::cout << "Cov Dim = " << PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix)
+                                       .NDimensions() << std::endl;
           auto *PRISMExtrapCovMat = 
-                PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
+                PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT);
           // Careful: covariance matrix needs to be scaled by the factor squared
           PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
           PRISMExtrapCovMat->Scale(1, "width");
