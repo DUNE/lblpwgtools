@@ -309,6 +309,15 @@ namespace ana {
     fSpectrumRHCNueSwap.SaveTo(dir, "spect_RHCnueswap");
 
     dir->Write();
+/*
+    if ( name == "pred_nom" ) {
+      Eigen::ArrayXd test_nue_spec = fSpectrumNueSwap.GetEigen(1);
+      std::cout << "Printing out spect_nueswap spectrum in SaveTo "<< std::endl;
+      for ( int ibin=0; ibin < test_nue_spec.size(); ibin ++ ) {
+        std::cout << "bin "<< ibin << ": nue spec = "<< test_nue_spec(ibin) << std::endl;
+      }
+    }
+*/
     delete dir;
 
     tmp->cd();
@@ -326,7 +335,17 @@ namespace ana {
         *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
         *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
         *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"));
+/*
+    if ( name == "pred_nom" ) {
+      Spectrum test = *ana::LoadFrom<Spectrum>(dir, "spect_nueswap");
 
+      Eigen::ArrayXd test_nue_spec = test.GetEigen(1);
+      std::cout << "Printing out spect_nueswap spectrum in LoadFrom "<< std::endl;
+      for ( int ibin=0; ibin < test_nue_spec.size(); ibin ++ ) {
+        std::cout << "bin "<< ibin << ": nue spec = "<< test_nue_spec(ibin) << std::endl;
+      }
+    }
+*/
     delete dir;
 
     return std::unique_ptr<PredictionFDNoOsc>(ret);

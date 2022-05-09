@@ -52,7 +52,12 @@ PRISMExtrapolator::PRISMExtrapolator()
       fFDPredInterp_nu(nullptr), fFDPredInterp_nub(nullptr),
       fLastMatch_293kA(nullptr), fLastMatch_280kA(nullptr),
       fLastGaussMatch_293kA(nullptr), fLastGaussMatch_280kA(nullptr),
-      fStoreDebugMatches(false) {}
+      fStoreDebugMatches(false), fMatchIntrinsicNue(false) {}
+
+//--------------------------------------------------------------------------------
+PRISMExtrapolator::PRISMExtrapolator(const PRISMExtrapolator &ExtrapPreds) {
+  vNumuNueXsecRatioTrueEnu = ExtrapPreds.vNumuNueXsecRatioTrueEnu;
+}
 
 //--------------------------------------------------------------------------------
 void PRISMExtrapolator::Initialize(
@@ -200,8 +205,15 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   Spectrum FDOsc_intrinsic_nue_spec = FDPredInterp->PredictComponentSyst(
       calc, shift, Flavors::kNuEToNuE, Current::kCC, sgn_fd);
   Eigen::VectorXd FlowTarget;
-  if ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) {
-    FlowTarget = (FDOsc_spec + FDOsc_intrinsic_nue_spec).GetEigen(1).matrix();
+  if ( fMatchIntrinsicNue && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
+
+    FlowTarget = FDOsc_intrinsic_nue_spec.GetEigen(1).matrix();
+    for (int bin = 0; bin < FlowTarget.size(); bin++) {
+      FlowTarget(bin) *= vNumuNueXsecRatioTrueEnu(bin); // numu/nue xsec ratio vs true nu E applied
+      //std::cout << "bin: " << bin << ", nue intrinsic flux = "<< FlowTarget(bin) << ", numu/nue xsec r = " << vNumuNueXsecRatioTrueEnu(bin) << std::endl;
+    }
+
+    FlowTarget += FDOsc_spec.GetEigen(1).matrix();
   } else {
     FlowTarget = FDOsc_spec.GetEigen(1).matrix();
   }
