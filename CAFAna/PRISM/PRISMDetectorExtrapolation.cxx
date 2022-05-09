@@ -272,9 +272,14 @@ namespace ana {
     Eigen::MatrixXd matFD = hMatrixFD;
 
     osc::NoOscillations no;
-    auto sMND = NDPredInterps.at(kND_293kA_nu)->Predict(&no);
+    size_t confnd(kND_293kA_nu);
+    if (!NDPredInterps.at(confnd)) {
+      confnd = kND_293kA_nub;
+    }
+    auto sMND = NDPredInterps.at(confnd)->Predict(&no);
     size_t conf(0);
     if (!FDPredInterps.at(conf)) conf = 1;
+    if (!FDPredInterps.at(conf)) conf = 4;
     auto sMFD = FDPredInterps.at(conf)->Predict(&no);
 
     std::vector<std::string> labelsND = sMND.GetLabels();
