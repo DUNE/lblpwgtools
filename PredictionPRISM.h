@@ -82,6 +82,9 @@ public:
     kNDMCExtrap_280kA = 44,
     kNDMC_FDExtrap = 45,
 
+    kFD_NumuNueCorr_Numu_TrueEnu = 46,
+    kFD_NumuNueCorr_Nue_TrueEnu = 47,
+
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -214,17 +217,23 @@ public:
     case kNDMCExtrap2D_293kA: {
       return "NDMCExtrap2D_293kA";
     }
-    case kNDMCExtrap2D_280kA: { 
+    case kNDMCExtrap2D_280kA: {
       return "NDMCExtrap2D_280kA";
     }
     case kNDMCExtrap_293kA: {
       return "NDMCExtrap_293kA";
     }
     case kNDMCExtrap_280kA: {
-      return "NDMCExtrap_280kA"; 
+      return "NDMCExtrap_280kA";
     }
     case kNDMC_FDExtrap: {
       return "NDMC_FDExtrap";
+    }
+    case kFD_NumuNueCorr_Numu_TrueEnu: {
+      return "FD_NumuNueCorr_Numu_TrueEnu";
+    }
+    case kFD_NumuNueCorr_Nue_TrueEnu: {
+      return "FD_NumuNueCorr_Nue_TrueEnu";
     }
     }
     return "";
@@ -240,9 +249,9 @@ public:
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
   HistAxis fFluxMatcherCorrectionAxes;
-  
-  PredictionPRISM(const HistAxis &AnalysisAxisND, 
-                  const HistAxis &AnalysisAxisFD, 
+
+  PredictionPRISM(const HistAxis &AnalysisAxisND,
+                  const HistAxis &AnalysisAxisFD,
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
                   const HistAxis &TrueAnalysisAxis,
@@ -289,8 +298,8 @@ public:
 
   // PredictionPRISM to own a pointer to a NDFD_Matrix object
   NDFD_Matrix const *fNDFD_Matrix;
-  void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) { 
-    fNDFD_Matrix = det_extrap; 
+  void SetNDFDDetExtrap(NDFD_Matrix const *det_extrap) {
+    fNDFD_Matrix = det_extrap;
   }
   NDFD_Matrix const * Get_NDFD_Matrix() const {
     return fNDFD_Matrix;
@@ -298,15 +307,16 @@ public:
 
   // PredictionPRISM to own a pointer to a MCEffCorrection object
   MCEffCorrection const *fMCEffCorrection;
-  void SetMC_NDFDEff(MCEffCorrection const *eff_corr) { 
+  void SetMC_NDFDEff(MCEffCorrection const *eff_corr) {
     fMCEffCorrection = eff_corr;
   }
   MCEffCorrection const * Get_MCEffCorrection() const {
     return fMCEffCorrection;
-  } 
+  }
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
+  void SetIntrinsicBkgCorr(bool v = true) { fMatchIntrinsicBkg = v; }
 
   double fDefaultOffAxisPOT;
 
@@ -321,9 +331,7 @@ public:
   void SetWrongSignBackgroundCorrection(bool v = true) { fWSBCorrection = v; }
   void SetWrongLeptonBackgroundCorrection(bool v = true) { fWLBCorrection = v; }
   void SetNuTauCCBackgroundCorrection(bool v = true) { fNuTauCCCorrection = v; }
-  void SetIntrinsicBackgroundCorrection(bool v = true) {
-    fIntrinsicCorrection = v;
-  }
+  void SetIntrinsicBackgroundCorrection(bool v = true) { fIntrinsicCorrection = v; }
 
   ///\brief Call to add a ND Data component
   ///
@@ -362,7 +370,7 @@ public:
   /// for use in fits and systematic studies.
   void AddNDMCLoader(Loaders &, const Cut &cut, const Weight &wei = kUnweighted,
                      std::vector<ana::ISyst const *> systlist = {},
-                     osc::IOscCalc* calc = (osc::IOscCalc*)0, 
+                     osc::IOscCalc* calc = (osc::IOscCalc*)0,
                      PRISM::BeamChan NDChannel = PRISM::kNumu_Numode);
 
   ///\brief Call to add a FD MC component
@@ -388,7 +396,7 @@ public:
     ((bm == PRISM::BeamMode::kNuMode) ? RunPlan_nu : RunPlan_nub) = rp;
   }
 
-  ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT, 
+  ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT,
                                              HistAxis const &RecoAxis) const;
 
 protected:
@@ -453,6 +461,12 @@ protected:
 
       std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_apposc_numode;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_apposc_nubmode;
+
+      std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_apposc_numode_true_e_nu;
+      std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
+
+      std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_apposc_numode_true_e_nu;
+      std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
     };
     _FD FD;
   };
@@ -507,6 +521,12 @@ protected:
   // Prediction for unselected FD nues to be appearance oscillated.
   std::unique_ptr<PredictionInterp> &
   GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
+  // Prediction for unselected FD numus to be appearance oscillated in true nu energy
+  std::unique_ptr<PredictionInterp> &
+  GetFDNonSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const;
+  // Prediction for unselected FD nues to be appearance oscillated in true nu energy
+  std::unique_ptr<PredictionInterp> &
+  GetFDNueSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const;
 
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;
@@ -520,7 +540,13 @@ protected:
   // Will be true if we want to do 'fake data' studies,
   // where we use nominal MC which is ignorant of shifts in the 'data'.
   bool fVaryNDFDMCData;
-  
+
+  // Whether to include intrinsic nue bkg at FD in target flux matching
+  // false: use FD MC for this bkg estimation
+  // true: include in flux matching
+  // numu/nue cross section ratio correction will be needed with true option
+  bool fMatchIntrinsicBkg;
+
   // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
   // so we only want to add MC corrections to PRISMPred (which has fAnalysisAxisND)
   // if the axes are the same.
