@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PNFS_PATH_APPEND=CAFAnaInputs/StandardState
-AXISBLOBNAME="default"
+AXISBLOBNAME="uniform_coarse"
 FORCE_REMOVE="0"
 INPUT_DIR=""
 

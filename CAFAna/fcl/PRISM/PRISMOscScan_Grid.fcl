@@ -1,12 +1,12 @@
 #include "FitChannels.fcl"
 #include "RunPlans.fcl"
-#include "ScanDefinitions.fcl"  
+#include "ScanDefinitions.fcl"
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
 
-	output_file: [PRISMScan_dmsq32_XSecFlux.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecSysts_NewBin_6Feb22.root
+	output_file: [Chi2_dmsq32_ssth23_stat_only.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/FHCNuTau/hadd_state_file_xsec_49_to_54_uniform_coarse_binning.root
 
 	projection_name: EVisReco
 	use_PRISM: true
@@ -20,7 +20,7 @@ BasicPred: {
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17 
+			reg_factor_293kA: 2.5E-17
 			reg_factor_280kA: 1E-18
 			},
 			{
@@ -40,7 +40,19 @@ BasicPred: {
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
-			}
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
 		]
 		set_ND_errors_from_rate: true
 
@@ -53,34 +65,24 @@ BasicPred: {
 	}
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
-	
-	#samples: @local::FitChannels.Numu_disp 
-	samples: @local::FitChannels.DispJoint
-	#samples: @local::FitChannels.FourFlavor
+
+	samples: @local::FitChannels.Nutau_app
 }
 
-# Just an example below now, not used
+scans: [
 
-scansEG: [
-
-	{
-		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 1.0E-16
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		free_syst_params: @local::nuisance_parameters.xsec_total
-		output_dir: "xsec_1.0Em16"
+  {
+	  @table::BasicPred
+	  scan_params: @local::ScanDefinitions.dmsq23_coarse
+	  output_dir: "dmsq32_nom"
 	},
-
 	{
-		@table::BasicPred
-		PRISM.match_conditioning[0].reg_factor_293kA: 2.5E-17
-		scan_params: @local::ScanDefinitions.dmsq23_coarse
-		free_syst_params: @local::nuisance_parameters.xsec_total
-		output_dir: "xsec_2.5Em17"
+	  @table::BasicPred
+	  scan_params: @local::ScanDefinitions.ssth23_coarse
+	  output_dir: "ssth23_nom"
 	},
 
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
-
+scans[0].output_file[1]: "RECREATE"

@@ -15,6 +15,14 @@ FitChannels: {
         ND: numubar_nubarmode
         FD: nuebar_nubarmode
     }
+    Nutau_app: {
+        ND: numu_numode
+        FD: nutau_numode
+    }
+    Nutaubar_app: {
+        ND: numubar_nubarmode
+        FD: nutaubar_nubarmode
+    }
     DispJoint:[
         @local::FitChannels.Numu_disp,
         @local::FitChannels.Numubar_disp,
@@ -22,14 +30,18 @@ FitChannels: {
     AppJoint:[
         @local::FitChannels.Nue_app,
         @local::FitChannels.Nuebar_app,
+        @local::FitChannels.Nutau_app,
+        @local::FitChannels.Nutaubar_app,
     ]
     NuModeJoint:[
         @local::FitChannels.Numu_disp,
         @local::FitChannels.Nue_app,
+        @local::FitChannels.Nutau_app,
     ]
     NuBarModeJoint:[
         @local::FitChannels.Numubar_disp,
         @local::FitChannels.Nuebar_app,
+        @local::FitChannels.Nutaubar_app,
     ]
     FourFlavor: [
         @sequence::FitChannels.NuModeJoint,

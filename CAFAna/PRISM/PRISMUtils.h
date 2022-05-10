@@ -73,7 +73,7 @@ inline void FillWithNulls(std::vector<std::shared_ptr<T>> &v, size_t n) {
 }
 
 template <typename T>
-inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v, 
+inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v,
                           size_t n1, size_t n2) {
   for (size_t i = 0; i < n1; ++i) {
     std::vector<std::shared_ptr<T>> tmp;
@@ -87,8 +87,8 @@ inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v,
 struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps; 
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps; 
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
   // For MC Eff Correction
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
@@ -98,6 +98,7 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
+  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nutauswap;
   std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
 
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nu;
@@ -112,15 +113,18 @@ struct PRISMStateBlob {
     bool IsND = PRISM::IsNDConfig(pc);
     size_t fd_pc = 0;
     size_t IsNue = PRISM::IsNueConfig(pc);
+    size_t IsNuTau = PRISM::IsNutauConfig(pc);
     if (!IsND) {
       fd_pc = PRISM::GetFDConfig(pc);
     }
 
-    // Don't need MatchPredInterps for Nue (they aren't made/used)
+    // Don't need MatchPredInterps for Nue/nutau (they aren't made/used)
     return PRISM && (IsNue || bool(MatchPredInterps[pc])) &&
+                    (IsNuTau || bool(MatchPredInterps[pc])) &&
            (IsND || (bool(FarDetPredInterps[fd_pc]) &&
                      bool(FarDetData_nonswap[fd_pc]) &&
-                     bool(FarDetData_nueswap[fd_pc])));
+                     bool(FarDetData_nueswap[fd_pc]) &&
+                     bool(FarDetData_nutauswap[fd_pc])));
   }
 
   void Init() {
@@ -134,6 +138,7 @@ struct PRISMStateBlob {
     FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FarDetData_nutauswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetDataPreds, PRISM::kNPRISMFDConfigs);
 
     NDFluxPred_293kA_nu = nullptr;
@@ -157,7 +162,7 @@ inline void SaveTo(TFile &f, std::string const &dirname, T *ty) {
 
   f.cd();
   TDirectory *dir = gDirectory;
-  
+
   ty->SaveTo(dir, dirname.c_str());
 
 }
@@ -200,7 +205,7 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2);
 
 //---------------------------------
-inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec, 
+inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
                                                    double POT) {
   Eigen::MatrixXd spec_mat = ConvertArrayToMatrix(spec.GetEigen(POT),
                                                   spec.GetBinnings());
@@ -222,7 +227,7 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
   LabelsAndBins anaAxis = LabelsAndBins(spec.GetLabels().at(0), spec.GetBinnings().at(0));
   LabelsAndBins weightAxis = LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1));
 
-  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(err_mat), 
+  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(err_mat),
                                    anaAxis, weightAxis, POT, 0); // POT
 
   return rwspec;
@@ -246,12 +251,12 @@ inline Spectrum ToSpectrum(ReweightableSpectrum const &rwspec, double pot) {
   for (auto const &tb : rwspec.GetTrueBinnings()) {
     bins.push_back(tb);
     labels.push_back("");
-  } 
+  }
 
   LabelsAndBins spec_LBs(labels, bins);
 
   Spectrum ret(std::move(arr), spec_LBs, pot, 0);
-  return ret;  
+  return ret;
 }
 
 //-----------------------------------
@@ -272,7 +277,7 @@ inline Spectrum SetSpectrumErrors(Spectrum const &spec, double mcpot) {
   }
 
   LabelsAndBins spec_LBs(spec.GetLabels(), spec.GetBinnings());
-  return Spectrum(std::move(spec_arr), std::move(spec_sumsq), spec_LBs, spec.POT(), 0); 
+  return Spectrum(std::move(spec_arr), std::move(spec_sumsq), spec_LBs, spec.POT(), 0);
 
 }
 
