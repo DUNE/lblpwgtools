@@ -26,16 +26,16 @@ namespace ana {
   //-----------------------------------------------------
   // Class for ND and FD detector extrapolation matrices:
   //----------------------------------------------------
-  // brief / Extrapolation procedure for correcting for 
+  // brief / Extrapolation procedure for correcting for
   // ND/FD detector differences. Unfolds and then re-smears
-  // each slice of off-axis ND data according to the 
+  // each slice of off-axis ND data according to the
   // selection efficiency at that position.
   class NDFD_Matrix {
-  
+
   public:
-  
+
     NDFD_Matrix();
-  
+
     NDFD_Matrix(const NDFD_Matrix &MatPreds);
 
     ~NDFD_Matrix();
@@ -57,18 +57,23 @@ namespace ana {
 
     Eigen::MatrixXd GetErrorMat_293kA() const;
     Eigen::MatrixXd GetErrorMat_280kA() const;
- 
+
     Eigen::MatrixXd GetCovMat_293kA() const;
     Eigen::MatrixXd GetCovMat_280kA() const;
 
-    void SetNumuNueCorr(const Eigen::ArrayXd&& ratio) const { 
+    void SetNumuNueCorr(const Eigen::ArrayXd&& ratio) const {
       vNumuNueCorr = std::move(ratio);
       IsNue = true;
     }
 
+    void SetNumuNutauCorr(const Eigen::ArrayXd&& ratio) const {
+      vNumuNutauCorr = std::move(ratio);
+      IsNutau = true;
+    }
+
     // Extrapolate ND PRISM pred to FD using Eigen
     // This function is becoming slightly monsterous...
-    void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
+    void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
                            double POT, const int kA, Eigen::ArrayXd&& weights,
                            osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
                            Flavors::Flavors_t NDflav = Flavors::kAll,
@@ -79,7 +84,7 @@ namespace ana {
                            std::vector<std::vector<double>> NDefficiency = {{}},
                            std::vector<double> FDefficiency = {}) const;
 
-    size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+    size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign,
                                bool is280kA = false) const;
 
     size_t GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const;
@@ -87,11 +92,12 @@ namespace ana {
     void Write(TDirectory *dir) const;
 
   protected:
-  
+
     std::vector<PredictionInterp const *> NDPredInterps;
     std::vector<PredictionInterp const *> FDPredInterps;
-  
+
     mutable bool IsNue;
+    mutable bool IsNutau;
     mutable Eigen::MatrixXd hMatrixND;
     mutable Eigen::MatrixXd hMatrixFD;
     mutable Eigen::MatrixXd fNDExtrap_293kA;
@@ -101,6 +107,7 @@ namespace ana {
     mutable Eigen::MatrixXd hCovMat_293kA;
     mutable Eigen::MatrixXd hCovMat_280kA;
     mutable Eigen::ArrayXd vNumuNueCorr;
+    mutable Eigen::ArrayXd vNumuNutauCorr;
   };
 
 } // namespace ana
