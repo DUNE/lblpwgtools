@@ -325,6 +325,11 @@ int main(int argc, char const *argv[]) {
   ana::Cut kFDSelectionCuts_nueb = UseSel ? kPRISMFDSignal_Selected_nueb :
                                             kPRISMFDSignal_True_nueb;
 
+  ana::Cut kFDSelectionCuts_nutau = UseSel ? kPRISMFDSignal_Selected_nutau :
+                                           kPRISMFDSignal_True_nutau;
+  ana::Cut kFDSelectionCuts_nutaub = UseSel ? kPRISMFDSignal_Selected_nutaub :
+                                            kPRISMFDSignal_True_nutaub;
+
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
@@ -394,14 +399,14 @@ int main(int argc, char const *argv[]) {
 
       std::vector<std::string> ND_input_files;
 
-      std::copy(input_CAF_files[config].begin(), 
+      std::copy(input_CAF_files[config].begin(),
                 input_CAF_files[config].end(),
                 std::back_inserter(ND_input_files));
 
-      std::copy(input_CAF_files[GetND280kAConfig(config)].begin(), 
+      std::copy(input_CAF_files[GetND280kAConfig(config)].begin(),
                 input_CAF_files[GetND280kAConfig(config)].end(),
                 std::back_inserter(ND_input_files));
-      
+
       FileLoaders[config] = std::make_shared<SpectrumLoader>(
                                       ND_input_files, nmax);
 
@@ -411,7 +416,7 @@ int main(int argc, char const *argv[]) {
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
 
       PRISM->AddNDDataLoader(
-          *FileLoaders[GetND293kAConfig(config)], 
+          *FileLoaders[GetND293kAConfig(config)],
           IsNu ? kNDSelectionCuts_nu : kNDSelectionCuts_nub,
           kNDCVWeight, // Assumes FD/ND biases not applied simultaneously!
           (NDFakeData || ProtonFakeData) ? DataShift : kNoShift, chanmode);
@@ -538,8 +543,10 @@ int main(int argc, char const *argv[]) {
 
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
   std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
+  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nutauswap;
   FillWithNulls(FarDetData_nonswap, kNPRISMFDConfigs);
   FillWithNulls(FarDetData_nueswap, kNPRISMFDConfigs);
+  FillWithNulls(FarDetData_nutauswap, kNPRISMFDConfigs);
 
   std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
   FillWithNulls(FarDetDataPreds, kNPRISMFDConfigs);
@@ -578,7 +585,7 @@ int main(int argc, char const *argv[]) {
       // Only need to do this once as the PRISM prediction handles the 293, 280
       // kA runs separately
       if (!IsND280kA) {
-        PRISM->AddNDMCLoader(Loaders_bm, 
+        PRISM->AddNDMCLoader(Loaders_bm,
                              NDCuts, kNDCVWeight,
                              los, &no, chanmode);
       }
@@ -631,7 +638,7 @@ int main(int argc, char const *argv[]) {
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
           los, &no, *NDUnselTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
-      
+
       // ND True Selected Spectrum
       NDSelTruePredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
@@ -641,22 +648,21 @@ int main(int argc, char const *argv[]) {
           los, &no, *NDSelTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
 
-    } else if (!IsND &&
-               !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
+    } else if (!IsND) { // Is FD
 
-      ana::Cut &FDCuts = IsNu ? 
-        (IsNueSwap ? kFDSelectionCuts_nue : kFDSelectionCuts_numu) : 
-        (IsNueSwap ? kFDSelectionCuts_nueb : kFDSelectionCuts_numub);
+      ana::Cut &FDCuts = IsNu ?
+        (IsNueSwap ? kFDSelectionCuts_nue : (IsNuTauSwap ? kFDSelectionCuts_nutau : kFDSelectionCuts_numu) ) :
+        (IsNueSwap ? kFDSelectionCuts_nueb : (IsNuTauSwap ? kFDSelectionCuts_nutaub : kFDSelectionCuts_numub) );
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
-                        IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
+                        IsNueSwap ? NuChan::kNueNueBar : (IsNuTauSwap ? NuChan::kNutauNutauBar : NuChan::kNumuNumuBar)};
 
       PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los,
                            calc, chanmode);
       // We always want to use the numus as we don't want to account for any
       // xsec differences between numu and nues, we use a special prediction
       // object to allow us to oscillate the NuMu spectrum.
-      if (!IsNueSwap) {
+      if (!IsNueSwap && !IsNuTauSwap) {
         MatchPredGens[config] =
             std::make_unique<NonSwapNoExtrapPredictionGenerator>(
                 MatchAxis,
@@ -670,6 +676,7 @@ int main(int argc, char const *argv[]) {
 
       size_t non_swap_it = GetConfigNonSwap(config);
       size_t nue_swap_it = GetConfigNueSwap(config);
+      size_t nutau_swap_it = GetConfigNutauSwap(config);
 
       if (FileLoaders[non_swap_it]) {
         FarDetData_nonswap[fd_config] = std::make_unique<OscillatableSpectrum>(
@@ -681,6 +688,13 @@ int main(int argc, char const *argv[]) {
       if (FileLoaders[nue_swap_it]) {
         FarDetData_nueswap[fd_config] = std::make_unique<OscillatableSpectrum>(
             *FileLoaders[nue_swap_it], axes.XProjectionFD, FDCuts,
+            (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+            kFDCVWeight);
+      }
+
+      if (FileLoaders[nutau_swap_it]) {
+        FarDetData_nutauswap[fd_config] = std::make_unique<OscillatableSpectrum>(
+            *FileLoaders[nutau_swap_it], axes.XProjectionFD, FDCuts,
             (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
             kFDCVWeight);
       }
@@ -697,7 +711,7 @@ int main(int argc, char const *argv[]) {
           PredictionInterp::kSplitBySign);
 
       // Matrix of ERec v ETrue for FD
-      FDMatrixPredGens[fd_config] = std::make_unique<FDNoOscPredictionGenerator>(
+      FDMatrixPredGens[fd_config] = std::make_unique<NoExtrapPredictionGenerator>(
           ERecETrueAxisFD, FDCuts, kFDCVWeight);
       FDMatrixPredInterps[fd_config] = std::make_unique<PredictionInterp>(
           los, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
@@ -707,7 +721,7 @@ int main(int argc, char const *argv[]) {
       FDUnselTruePredGens[fd_config] =
           std::make_unique<NoExtrapPredictionGenerator>(
               FDTrueEnergyObsBins,
-              (IsNueSwap ? kIsSig : kIsNumuCC) &&
+              (IsNueSwap ? kIsSig : (IsNuTauSwap ? kIsTauFromMu : kIsNumuCC) ) &&
                   (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
               kFDCVWeight);
       FDUnselTruePredInterps[fd_config] = std::make_unique<PredictionInterp>(
@@ -785,8 +799,8 @@ int main(int argc, char const *argv[]) {
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              NDSelTruePredInterps[config]);
 
-    } else if (!IsND && !IsNuTau) { // Is FD and not nutau.
-      if (!IsNue) {
+    } else if (!IsND) { // Is FD
+      if (!IsNue && !IsNuTau) {
         SaveTo(fout,
                std::string("FDMatchInterp_ETrue_numu") +
                    (IsNu ? "_nu" : "_nub"),
@@ -795,47 +809,53 @@ int main(int argc, char const *argv[]) {
 
       SaveTo(fout,
              std::string("FDInterp_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FarDetPredInterps[fd_config]);
 
       std::cout << "Saving: "
                 << std::string("FDInterp_") + axdescriptor +
-                       (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")
+                       (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub")
                 << " to " << config << ", " << fd_config << std::endl;
 
       SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_config]);
 
       SaveTo(fout,
-             std::string("FDUnSelected_ETrue") + (IsNue ? "_nue" : "_numu") +
+             std::string("FDUnSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDUnselTruePredInterps[fd_config]);
 
       SaveTo(fout,
-             std::string("FDSelected_ETrue") + (IsNue ? "_nue" : "_numu") +
+             std::string("FDSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDSelTruePredInterps[fd_config]);
 
       if (FarDetData_nonswap[fd_config]) {
         SaveTo(fout,
                std::string("FDDataNonSwap_") + axdescriptor +
-                   (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                   (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
                FarDetData_nonswap[fd_config]);
       }
       if (FarDetData_nueswap[fd_config]) {
         SaveTo(fout,
                std::string("FDDataNueSwap_") + axdescriptor +
-                   (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                   (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
                FarDetData_nueswap[fd_config]);
+      }
+      if (FarDetData_nutauswap[fd_config]) {
+        SaveTo(fout,
+               std::string("FDDataNutauSwap_") + axdescriptor +
+                   (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
+               FarDetData_nutauswap[fd_config]);
       }
 
       SaveTo(fout,
              std::string("FDDataPred_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FarDetDataPreds[fd_config]);
-    }
+    } // end else
   }
 
   SaveTo(fout, (std::string("PRISM_") + axdescriptor), PRISM);

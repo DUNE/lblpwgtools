@@ -34,6 +34,12 @@ std::ostream &operator<<(std::ostream &os, NuChan const &nc) {
   case NuChan::kNueBarApp: {
     return os << "kNueBarApp";
   }
+  case NuChan::kNutauApp: {
+    return os << "kNutauApp";
+  }
+  case NuChan::kNutauBarApp: {
+    return os << "kNutauBarApp";
+  }
   case NuChan::kNumuIntrinsic: {
     return os << "kNumuIntrinsic";
   }
@@ -63,6 +69,9 @@ std::ostream &operator<<(std::ostream &os, NuChan const &nc) {
   }
   case NuChan::kNueNueBar: {
     return os << "kNueNueBar";
+  }
+  case NuChan::kNutauNutauBar: {
+    return os << "kNutauNutauBar";
   }
   }
   return os;

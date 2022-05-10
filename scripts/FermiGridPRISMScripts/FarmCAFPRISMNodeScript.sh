@@ -1,12 +1,12 @@
 #!/bin/bash
 
-PNFS_PATH_APPEND=CAFAnaOutputs/MyOutput
+PNFS_PATH_APPEND=NuTauNom
 CAFE_COMMAND_FILE="CAFECommands.cmd"
 SCRIPT_TO_INCLUDE=""
 RENAME_SUBMIT_SCRIPT=""
 
 LIFETIME_EXP="40h"
-DISK_EXP="8GB"
+DISK_EXP="1GB"
 MEM_EXP="30GB"
 
 FORCE_REMOVE="0"
@@ -262,11 +262,11 @@ ${CAFANA}/CAFAnaEnv.sh
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
     #--role=Analysis --subgroup=analysis
-      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
       echo ${JID}
   else
     #--role=Analysis --subgroup=analysis
-      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=OPPORTUNISTIC -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION})" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
       echo ${JID}
   fi
 else

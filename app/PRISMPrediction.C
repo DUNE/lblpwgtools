@@ -81,7 +81,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               << std::endl;
     States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs->Close(); 
+    fs->Close();
   }
 
   PRISMStateBlob &state = States[state_file];
@@ -196,7 +196,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
     size_t NDConfig_293kA = (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
-    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub; 
+    size_t NDConfig_280kA = (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub;
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
@@ -220,20 +220,31 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->cd();
 
     // New data prediction object to compare PRISM prediction to.
-    // This is the 'correct' FD data we want to use. 
+    // This is the 'correct' FD data we want to use.
     auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
- 
+
     // Smearing matrices for ND and FD
     // For detector and selection corrections
     SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
                              {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
- 
+
+    // printout NDConfig_293kA
+    if ( state.NDUnselTruePredInterps[NDConfig_293kA].get() ) {
+      std::cout << "Found the ND 293kA pointer: " << NDConfig_293kA << std::endl;
+    }
+    // printout NDConfig_293kA
+    if ( state.FDUnselTruePredInterps[FDfdConfig_enum].get() ) {
+      std::cout << "Found the FD config pointer: " << FDfdConfig_enum << std::endl;
+    }
+
+
+
     // MC efficiency correction
     NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
                            {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
@@ -245,7 +256,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
 
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
-    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr); 
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
     if (use_PRISM) {
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
@@ -280,7 +291,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
         std::cout << "Done predicting components." << std::endl;
-        auto *PRISMPred = 
+        auto *PRISMPred =
               PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
         PRISMPred->Scale(1, "width");
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
@@ -291,7 +302,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
         PRISMExtrap->SetDirectory(nullptr);
         if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
-          auto *PRISMExtrapCovMat = 
+          auto *PRISMExtrapCovMat =
                 PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
           // Careful: covariance matrix needs to be scaled by the factor squared
           PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
@@ -301,7 +312,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         }
         // Get nue/numu xsec correction (don't want this bin scaled).
         if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
-          auto *FD_NueNumuCorr = 
+          auto *FD_NueNumuCorr =
                 PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
           chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
           FD_NueNumuCorr->SetDirectory(nullptr);

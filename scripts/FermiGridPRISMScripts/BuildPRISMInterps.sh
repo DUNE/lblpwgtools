@@ -53,7 +53,7 @@ fi
 
 PRISMFAKEDATAARG=" --PRISM-fake-data nominal" #nominal #MaCCQE_pos
 SELECTIONARG=" --UseSelection"
-BINDESCRIPTORARG=" --bin-descriptor default"
+BINDESCRIPTORARG=" --bin-descriptor uniform_coarse"
 
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
@@ -124,7 +124,7 @@ if [ ${IS_FD} == "1" ]; then
       fi
     fi;
   done
-  
+
 else
   (( LINE_N = ${PROCESS} + 1 ))
   if [ ${IS_FHC} == "1" ]; then
@@ -176,7 +176,7 @@ MakePRISMPredInterps -o ${OUTFILENAME} \
                      ${SYSTDESCRIPTORARG} \
                      ${NOFAKEDATAARG} \
                      ${PRISMFAKEDATAARG} \
-                     ${SELECTIONARG} 
+                     ${SELECTIONARG}
 
 LOGYLOG "Copying output @ $(date)"
 
