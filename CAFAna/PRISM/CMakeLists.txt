@@ -29,7 +29,7 @@ LIST(APPEND PRISM_header_files
   SimpleChi2Experiment.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
-target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
+target_link_libraries(CAFAnaPRISM CAFAnaAnalysis fhiclcpp::Headers)
 
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${PRISM_header_files}")
