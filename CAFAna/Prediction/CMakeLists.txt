@@ -25,7 +25,7 @@ set(Prediction_header_files
   PredictionsForPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
-target_link_libraries(CAFAnaPrediction CAFAnaExtrap CAFAnaPRISM)
+target_link_libraries(CAFAnaPrediction CAFAnaExtrap fhiclcpp::Headers)
 
 set_target_properties(StandardRecord PROPERTIES
   PUBLIC_HEADER "${Prediction_header_files}")

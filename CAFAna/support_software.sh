@@ -174,7 +174,7 @@ if [ -z "${BOOST_INC}" ]; then
 fi
 
 if [ -z "${BOOST_LIB}" ]; then
-  if [ $(uname) = "Linux" ] && [ -e /usr/lib/$(arch)-linux-gnu/libboost_filesystem.${DSOEXT}* ]; then
+  if [ $(uname) = "Linux" ] && [ -e /usr/lib/$(arch)-linux-gnu/libboost_filesystem.${DSOEXT} ]; then
     export BOOST_LIB=/usr/lib/$(arch)-linux-gnu/
   elif [ -e /usr/lib/libboost_filesystem.${DSOEXT} ]; then
     export BOOST_LIB=/usr/lib/
@@ -186,7 +186,7 @@ if [ -z "${BOOST_LIB}" ]; then
     echo "[ERROR]: Not using UPS, but couldn't find system boost libboost_filesystem.${DSOEXT} and BOOST_LIB wasn't defined in the environment."
     exit 1
   fi
-  if [ $(uname) = "Linux" ] && [ -e /usr/lib/$(arch)-linux-gnu/libboost_system.${DSOEXT}* ]; then
+  if [ $(uname) = "Linux" ] && [ -e /usr/lib/$(arch)-linux-gnu/libboost_system.${DSOEXT} ]; then
     export BOOST_LIB=/usr/lib/$(arch)-linux-gnu/
   elif [ -e /usr/lib/libboost_system.${DSOEXT}* ]; then
     export BOOST_LIB=/usr/lib/

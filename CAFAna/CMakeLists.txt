@@ -83,8 +83,8 @@ SET(CAFAna_Libs
     CAFAnaFit
     CAFAnaPrediction
     CAFAnaExperiment
-    CAFAnaPrediction
     CAFAnaPRISM
+    CAFAnaPrediction
     CAFAnaCuts
     CAFAnaExtrap
     CAFAnaVars
