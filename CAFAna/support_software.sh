@@ -2,20 +2,20 @@
 
 #Adapted from
 # https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
-function abspath() { 
+function abspath() {
   ABS_PATH_OPWD=$(pwd)
   if [ ! -e "${1}" ]; then
     :
-  elif [ -d "$1" ]; then 
-    cd "$1"; pwd; 
-  else 
-    cd $(dirname "$1"); 
-    cur_dir=$(pwd); 
-    if [ "$cur_dir" = "/" ]; then 
-      echo "$cur_dir$(basename "$1")"; 
-    else echo "$cur_dir/$(basename "$1")"; 
-    fi; 
-  fi; 
+  elif [ -d "$1" ]; then
+    cd "$1"; pwd;
+  else
+    cd $(dirname "$1");
+    cur_dir=$(pwd);
+    if [ "$cur_dir" = "/" ]; then
+      echo "$cur_dir$(basename "$1")";
+    else echo "$cur_dir/$(basename "$1")";
+    fi;
+  fi;
   cd ${ABS_PATH_OPWD}
 }
 
@@ -45,20 +45,20 @@ if ! type abspath &> /dev/null; then
 
 #Adapted from
 # https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
-function abspath() { 
+function abspath() {
   ABS_PATH_OPWD=$(pwd)
   if [ ! -e "${1}" ]; then
     :
-  elif [ -d "$1" ]; then 
-    cd "$1"; pwd; 
-  else 
-    cd $(dirname "$1"); 
-    cur_dir=$(pwd); 
-    if [ "$cur_dir" = "/" ]; then 
-      echo "$cur_dir$(basename "$1")"; 
-    else echo "$cur_dir/$(basename "$1")"; 
-    fi; 
-  fi; 
+  elif [ -d "$1" ]; then
+    cd "$1"; pwd;
+  else
+    cd $(dirname "$1");
+    cur_dir=$(pwd);
+    if [ "$cur_dir" = "/" ]; then
+      echo "$cur_dir$(basename "$1")";
+    else echo "$cur_dir/$(basename "$1")";
+    fi;
+  fi;
   cd ${ABS_PATH_OPWD}
 }
 
@@ -211,10 +211,10 @@ if [ -z "${BOOST_VERSION}" ]; then
 cat <<EOF
 #include "boost/version.hpp"
 #include <iostream>
-int main(){ 
-  std::cout << BOOST_VERSION / 100000 << "." 
-            << (BOOST_VERSION / 100) % 1000 << "." 
-            << BOOST_VERSION % 100 
+int main(){
+  std::cout << BOOST_VERSION / 100000 << "."
+            << (BOOST_VERSION / 100) % 1000 << "."
+            << BOOST_VERSION % 100
             << std::endl; }
 EOF
 ) > boost_version.cxx
@@ -266,7 +266,7 @@ fi
 if [ ! -e TH2Jagged/build/$(uname)/setup.sh ]; then
   mkdir -p TH2Jagged/build
   cd TH2Jagged/build
-  cmake ../ 
+  cmake ../
   make install
   cd ${SUPPORT_SOFTWARE_BUILD_DIR}
 fi
@@ -388,13 +388,13 @@ if [ "${BUILD_UPS_REPLACEMENT_SOFTWARE}" = "BUILD_UPS_REPLACEMENT_SOFTWARE" ]; t
 cat <<EOF
 #include "tbb/tbb.h"
 #include <iostream>
-int main(){ 
-  std::cout << TBB_VERSION_MAJOR << "." 
-            << TBB_VERSION_MINOR 
+int main(){
+  std::cout << TBB_VERSION_MAJOR << "."
+            << TBB_VERSION_MINOR
             << std::endl; }
 EOF
 ) > tbb_version.cxx
-    g++ -std=c++11 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb 
+    g++ -std=c++11 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb
 
     export TBB_VERSION=$(./a.out)
     rm tbb_version.cxx a.out
@@ -407,7 +407,9 @@ EOF
 
   if [ -z ${OSCLIB_INC} ] || [ ! -e ${OSCLIB_INC} ]; then
     if [ ! -e OscLib ]; then
-      git clone https://github.com/luketpickering/OscLib.git
+      #git clone https://github.com/luketpickering/OscLib.git
+      # Add rpath to link local ROOT lib on SBU nnhome machine
+      git clone https://github.com/weishi10141993/OscLib.git
       # checkout version
     fi
 
@@ -419,7 +421,7 @@ EOF
 
     export OSCLIB_INC=$(abspath OscLib/)
     export OSCLIB_LIB=$(abspath OscLib/OscLib/lib)
-    
+
     echo -e "export OSCLIB_INC=\"${OSCLIB_INC}\"" >> support_software_env.sh
     echo -e "export OSCLIB_LIB=\"${OSCLIB_LIB}\"" >> support_software_env.sh
     [ "$(uname -s)" = "Linux" ] && echo -e "add_to_LD_LIBRARY_PATH \${OSCLIB_LIB}" >> support_software_env.sh
@@ -457,13 +459,13 @@ if [ -z ${TBB_VERSION} ]; then # Don't have TBB version set
 cat <<EOF
 #include "tbb/tbb.h"
 #include <iostream>
-int main(){ 
-  std::cout << TBB_VERSION_MAJOR << "." 
-            << TBB_VERSION_MINOR 
+int main(){
+  std::cout << TBB_VERSION_MAJOR << "."
+            << TBB_VERSION_MINOR
             << std::endl; }
 EOF
 ) > tbb_version.cxx
-  g++ -std=c++11 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb 
+  g++ -std=c++11 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb
 
   export TBB_VERSION=$(./a.out)
   rm tbb_version.cxx a.out
