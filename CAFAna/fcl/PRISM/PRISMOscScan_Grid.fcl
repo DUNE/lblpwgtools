@@ -6,7 +6,7 @@
 BasicPred: {
 
 	output_file: [Chi2_dmsq32_ssth23_stat_only.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/FHCNuTau/hadd_state_file_xsec_49_to_54_uniform_coarse_binning.root
+	state_file: /storage/shared/wshi/StateFiles/FHCNuTau/hadd_state_file_xsec_49_to_54_uniform_coarse_binning.root
 
 	projection_name: EVisReco
 	use_PRISM: true
