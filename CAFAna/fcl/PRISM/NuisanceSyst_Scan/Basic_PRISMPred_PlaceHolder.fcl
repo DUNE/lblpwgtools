@@ -6,8 +6,8 @@
 
 
 BasicPred: {
-	output_file: [/dune/app/users/weishi/NuTauDev/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_nuTauApp.root, "UPDATE"]
-	state_file: /pnfs/dune/persistent/users/weishi/CAFAnaInputs/StandardState/FHCNuTau/hadd_state_file_xsec_49_to_54_uniform_coarse_binning.root
+	output_file: [/home/wshi/nutau/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_nuTauApp.root, "UPDATE"]
+	state_file: /storage/shared/wshi/StateFiles/FHCNuTau/hadd_state_file_xsec_49_to_54_uniform_coarse_binning.root
 
 	# Variable are you using
 	projection_name: EVisReco
