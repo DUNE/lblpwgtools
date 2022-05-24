@@ -13,6 +13,7 @@
 #include "CAFAna/Core/ReweightableSpectrum.h"
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
@@ -44,13 +45,13 @@ namespace ana {
 			   const Var& var,
 			   const Cut& cut,
 			   const SystShifts& shift = kNoShift,
-			   const Var& wei = kUnweighted);
+			   const Weight& wei = kUnweighted);
 
     NDOscillatableSpectrum(SpectrumLoaderBase& loader,
 			   const HistAxis& axis,
 			   const Cut& cut,
 			   const SystShifts& shift = kNoShift,
-			   const Var& wei = kUnweighted);
+			   const Weight& wei = kUnweighted);
 
     /// The only valid thing to do with such a spectrum is to assign something
     /// else into it.

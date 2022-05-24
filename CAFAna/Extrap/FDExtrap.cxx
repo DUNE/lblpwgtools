@@ -26,7 +26,7 @@ namespace ana {
 				const HistAxis& axis,
 				const Cut& selection,
 				const SystShifts& shiftMC,
-				const Var& weight) {
+				const Weight& weight) {
     return FDExtrap::FDExtrap_c(loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap),
 				loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap),
 				loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap),
@@ -39,7 +39,7 @@ namespace ana {
 				const HistAxis& axis,
 				const Cut& selection,                    
 				const SystShifts& shiftMC,
-				const Var& weight) {
+				const Weight& weight) {
     FDExtrap extrap(nonswap, swap, tau, axis, selection, shiftMC, weight);
     return extrap;
   }
@@ -146,7 +146,7 @@ namespace ana {
                      const HistAxis& axis,
                      const Cut& selection,
                      const SystShifts& shiftMC,
-                     const Var& weight)
+                     const Weight& weight)
     : /* fPOT(0),*/
     fEEComp  (new OscillatableSpectrum(nonswap, axis, selection && kIsBeamNue   && !kIsAntiNu,          shiftMC, weight)),
     fAEAEComp(new OscillatableSpectrum(nonswap, axis, selection && kIsBeamNue   && kIsAntiNu,           shiftMC, weight)),

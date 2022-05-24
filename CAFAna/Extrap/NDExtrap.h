@@ -33,14 +33,14 @@ namespace ana {
 			       const HistAxis& axis,
 			       const Cut& selection,
 			       const SystShifts& shiftMC = kNoShift,
-			       const Var& weight = kUnweighted);
+			       const Weight& weight = kUnweighted);
 
     static NDExtrap NDExtrap_c(SpectrumLoaderBase& nonswap,
 			       SpectrumLoaderBase& swap,
 			       const HistAxis& axis,
 			       const Cut& selection,
 			       const SystShifts& shiftMC = kNoShift,
-			       const Var& weight = kUnweighted);
+			       const Weight& weight = kUnweighted);
 
     virtual ~NDExtrap(){};
 
@@ -81,7 +81,7 @@ namespace ana {
 	     const HistAxis& axis,
 	     const Cut& selection,
 	     const SystShifts& shiftMC = kNoShift,
-	     const Var& weight = kUnweighted);
+	     const Weight& weight = kUnweighted);
 
     std::unique_ptr<NDOscillatableSpectrum> fEEComp;
     std::unique_ptr<NDOscillatableSpectrum> fAEAEComp;

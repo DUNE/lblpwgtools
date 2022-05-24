@@ -30,7 +30,7 @@ namespace ana
   NDPredictionGenerator::NDPredictionGenerator(const HistAxis axis,
 					       const Cut cutND,
 					       const SystShifts shiftND,
-					       const Var wei)
+					       const Weight wei)
     : fAxis(axis), fCutND(cutND), fShiftND(shiftND), fWei(wei) {
   }
 
@@ -46,7 +46,7 @@ namespace ana
   FDPredictionGenerator::FDPredictionGenerator(const HistAxis axis,
 					       const Cut cutFD,
 					       const SystShifts shiftFD,
-					       const Var wei)
+					       const Weight wei)
     :fAxis(axis), fCutFD(cutFD), fShiftFD(shiftFD), fWei(wei) {
   }
 

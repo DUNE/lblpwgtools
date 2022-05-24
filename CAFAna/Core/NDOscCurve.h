@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Ratio.h"
 
 namespace ana {

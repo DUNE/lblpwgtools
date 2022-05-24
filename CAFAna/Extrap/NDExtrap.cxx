@@ -32,7 +32,7 @@ namespace ana {
 				const HistAxis& axis,
 				const Cut& selection,
 				const SystShifts& shiftMC,
-				const Var& weight) {
+				const Weight& weight) {
     return NDExtrap::NDExtrap_c(loaders.GetLoader(caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap),
 				loaders.GetLoader(caf::kNEARDET,  Loaders::kMC, Loaders::kNueSwap),
 				axis, selection, shiftMC, weight);
@@ -44,7 +44,7 @@ namespace ana {
 				const HistAxis& axis,
 				const Cut& selection,                    
 				const SystShifts& shiftMC,
-				const Var& weight) {
+				const Weight& weight) {
     NDExtrap extrap(nonswap, swap, axis, selection, shiftMC, weight);
     return extrap;
   }
@@ -127,7 +127,7 @@ namespace ana {
                      const HistAxis& axis,
                      const Cut& selection,                    
                      const SystShifts& shiftMC,
-                     const Var& weight)
+                     const Weight& weight)
     : fPOT(0),
       fEEComp  (new NDOscillatableSpectrum(nonswap, axis, selection && kIsBeamNue && !kIsAntiNu,          shiftMC, weight)),
       fAEAEComp(new NDOscillatableSpectrum(nonswap, axis, selection && kIsBeamNue && kIsAntiNu,           shiftMC, weight)),

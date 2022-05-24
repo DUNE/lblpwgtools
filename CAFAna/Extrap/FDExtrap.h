@@ -31,14 +31,14 @@ namespace ana {
 			       const HistAxis& axis,
 			       const Cut& selection,
 			       const SystShifts& shiftMC = kNoShift,
-			       const Var& weight = kUnweighted);
+			       const Weight& weight = kUnweighted);
 
     static FDExtrap FDExtrap_c(SpectrumLoaderBase& nonswap,
 			       SpectrumLoaderBase& swap, SpectrumLoaderBase& tau,
 			       const HistAxis& axis,
 			       const Cut& selection,
 			       const SystShifts& shiftMC = kNoShift,
-			       const Var& weight = kUnweighted);
+			       const Weight& weight = kUnweighted);
 
     virtual ~FDExtrap() {};
 
@@ -80,7 +80,7 @@ namespace ana {
 	     const HistAxis& axis,
 	     const Cut& selection,
 	     const SystShifts& shiftMC = kNoShift,
-	     const Var& weight = kUnweighted);
+	     const Weight& weight = kUnweighted);
 
     std::unique_ptr<OscillatableSpectrum> LoadSpectrum(TDirectory* dir, std::string name);
 

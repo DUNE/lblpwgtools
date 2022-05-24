@@ -61,7 +61,7 @@ namespace ana {
       return ret;
     }
 
-    osc::OscCalcSterile* scalc = osc::DowncastToSterile(calc);
+    osc::IOscCalcSterile* scalc = osc::DowncastToSterile(calc);
 
     Spectrum ret = fNDExtrap->NueCCSurvComponent().Oscillated(scalc, +12, +12);
     ret += fNDExtrap->AntiNueCCSurvComponent()    .Oscillated(scalc, -12, -12);
@@ -131,7 +131,7 @@ namespace ana {
       return ret;
     }
 
-    osc::OscCalcSterile* scalc = osc::DowncastToSterile(calc);
+    osc::IOscCalcSterile* scalc = osc::DowncastToSterile(calc);
     if (scalc) {
       if (curr & Current::kCC){
 	if (flav & Flavors::kNuEToNuE   && sign & Sign::kNu)     ret += fNDExtrap->NueCCSurvComponent()     .Oscillated(scalc, +12, +12);

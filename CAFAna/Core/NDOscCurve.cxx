@@ -9,7 +9,7 @@
 // framework
 #include "CAFAna/Core/NDOscCurve.h"
 #include "CAFAna/Core/Binning.h"
-#include "OscLib/OscCalcSterile.h"
+#include "OscLib/IOscCalcSterile.h"
 
 // root
 #include "TH1.h"
@@ -25,7 +25,7 @@ namespace ana {
   /// Helper for constructors
   Eigen::ArrayXd ToEigenSterile(osc::IOscCalc* calc, int from, int to) {
 
-    osc::OscCalcSterile* sterile = osc::DowncastToSterile(calc);
+    osc::IOscCalcSterile* sterile = osc::DowncastToSterile(calc);
 
     double lold = sterile->GetL();
     sterile->SetL(1.0);

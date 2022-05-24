@@ -59,7 +59,7 @@ namespace ana
     NDPredictionGenerator(const HistAxis axis,
 			  const Cut cutND,
 			  const SystShifts shiftND = kNoShift,
-			  const Var wei = kUnweighted);
+			  const Weight wei = kUnweighted);
 
     std::unique_ptr<IPrediction> Generate(Loaders& loaders,
 					  const SystShifts& shiftMC = kNoShift) const override;
@@ -69,7 +69,7 @@ namespace ana
     const HistAxis fAxis;
     const Cut fCutND;
     const SystShifts fShiftND;
-    const Var fWei;
+    const Weight fWei;
 
   };
 
@@ -82,7 +82,7 @@ namespace ana
     FDPredictionGenerator(const HistAxis axis,
 			  const Cut cutFD,
 			  const SystShifts shiftFD = kNoShift,
-			  const Var wei = kUnweighted);
+			  const Weight wei = kUnweighted);
 
     std::unique_ptr<IPrediction> Generate(Loaders& loaders,
 					  const SystShifts& shiftMC = kNoShift) const override;
@@ -92,7 +92,7 @@ namespace ana
     const HistAxis fAxis;
     const Cut fCutFD;
     const SystShifts fShiftFD;
-    const Var fWei;
+    const Weight fWei;
 
   };
 
