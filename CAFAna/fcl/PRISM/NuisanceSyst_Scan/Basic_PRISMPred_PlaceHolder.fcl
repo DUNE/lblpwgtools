@@ -6,8 +6,8 @@
 
 
 BasicPred: {
-	output_file: [/dune/app/users/weishi/NueIntrinsic/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_IntrinsicNue_stat_only_withxseccorr_flagoff_FHC_App.root, "UPDATE"]
-	state_file: /pnfs/dune/persistent/users/weishi/CAFAnaInputs/StandardState/FHCIntrinsicNue/hadd_FHC_state_IntrinsicNue_stat_only_withxseccorr.root
+	output_file: [/dune/app/users/weishi/NueIntrinsic/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_IntrinsicNue_nodet_withxseccorr_flagoff_FHC_App.root, "UPDATE"]
+	state_file: /pnfs/dune/persistent/users/weishi/CAFAnaInputs/StandardState/IntrinsicNue_Syst_nodet/hadd_state_IntrinsicNue_nodet_withxseccorr.root
 
 	# Variable are you using
 	projection_name: EVisReco
