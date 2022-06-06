@@ -1,14 +1,14 @@
 set(Systs_implementation_files
   AnaSysts.cxx
   DUNEFluxSysts.cxx
+  RecoEnergyFDSysts.cxx
+  RecoEnergyNDSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
   EnergySysts.cxx
   TruthEnergyFDSysts.cxx
   TruthEnergyNDSysts.cxx
-  RecoEnergyFDSysts.cxx
-  RecoEnergyNDSysts.cxx
   FDRecoSysts.cxx
   XSecSysts.cxx
   NDRecoSysts.cxx
@@ -22,14 +22,14 @@ set(Systs_implementation_files
 set(Systs_header_files
   AnaSysts.h
   DUNEFluxSysts.h
+  RecoEnergyFDSysts.h
+  RecoEnergyNDSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
   EnergySysts.h
   TruthEnergyFDSysts.h
   TruthEnergyNDSysts.h
-  RecoEnergyFDSysts.h
-  RecoEnergyNDSysts.h
   FDRecoSysts.h
   XSecSysts.h
   NDRecoSysts.h

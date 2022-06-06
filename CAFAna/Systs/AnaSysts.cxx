@@ -12,6 +12,8 @@
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
+//#include "CAFAna/Core/SystShifts.h"
+
 #include "TFile.h"
 #include "TH1.h"
 
@@ -23,7 +25,6 @@ size_t NFluxParametersToAddToStatefile = 30;
 
 namespace ana
 {
-
   // Because most particle physics is stuck in C++
   // TO DO: Define this elsewhere, in some kind of general Utilities
   std::vector<std::string> SplitString(std::string input, char delim) {

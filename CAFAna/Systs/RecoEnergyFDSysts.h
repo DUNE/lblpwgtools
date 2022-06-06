@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
+//#include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Cuts/AnaCuts.h"
 
@@ -21,6 +22,7 @@
 
 namespace ana
 {
+  //class SystShifts;
 
   // Global true energy scale syst for eRecProxy
   // Don't shift muon energies with this
@@ -544,4 +546,6 @@ namespace ana
   RecoEnergyFDSystVector GetRecoEFDSysts();
 
   bool IsFDdetRecoSyst(std::string);
+
+  std::vector<ana::ISyst const *> FilterOutFDSysts(std::vector<ana::ISyst const *> systs);
 }
