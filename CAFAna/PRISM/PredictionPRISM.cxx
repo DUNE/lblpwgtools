@@ -131,7 +131,7 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   auto slice_width_weight_280kA =
       NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
 
-  NDData = std::make_unique<PRISMReweightableSpectrum>( 
+  NDData = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, shift,
       wei * slice_width_weight);
 
@@ -142,7 +142,7 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
               << NDChannel.mode << std::endl;
     abort();
   }
-  NDData_280kA = std::make_unique<PRISMReweightableSpectrum>( 
+  NDData_280kA = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, shift,
       wei * slice_width_weight_280kA);
 }
@@ -264,7 +264,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
   // Try FDNoOscPredictionGenerator
   //fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>(
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
-      fTrueAnalysisAxis, kFDNumuCut, wei)); 
+      fTrueAnalysisAxis, kFDNumuCut, wei));
   FDNonSwapAppOscPrediction = std::make_unique<PredictionInterp>(
       systlist, calc, *fPredGens.back(), loaders, kNoShift,
       PredictionInterp::kSplitBySign);
@@ -281,6 +281,27 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
       fTrueAnalysisAxis, kFDNueCut, wei));
   FDNueSwapAppOscPrediction = std::make_unique<PredictionInterp>(
+      systlist, calc, *fPredGens.back(), loaders, kNoShift,
+      PredictionInterp::kSplitBySign);
+
+  // Numu/nue xsec corr in true neutrino energy used in including FD intrinsic nue in flux matching
+  // Copied above and used fNDFDEnergyMatchAxis instead
+
+  // Prediction to oscillate numus by appearance probability.
+  std::unique_ptr<PredictionInterp> &FDNonSwapAppOscPredictionTrueEnu =
+      GetFDNonSwapAppOscPredictionTrueEnu(FDChannel.mode);
+  fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
+      fNDFDEnergyMatchAxis, kFDNumuCut, wei)); // true neutrino energy axis
+  FDNonSwapAppOscPredictionTrueEnu = std::make_unique<PredictionInterp>(
+      systlist, calc, *fPredGens.back(), loaders, kNoShift,
+      PredictionInterp::kSplitBySign);
+
+  // Prediction to get oscillate nue appearance spectrum.
+  std::unique_ptr<PredictionInterp> &FDNueSwapAppOscPredictionTrueEnu =
+      GetFDNueSwapAppOscPredictionTrueEnu(FDChannel.mode);
+  fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
+      fNDFDEnergyMatchAxis, kFDNueCut, wei));
+  FDNueSwapAppOscPredictionTrueEnu = std::make_unique<PredictionInterp>(
       systlist, calc, *fPredGens.back(), loaders, kNoShift,
       PredictionInterp::kSplitBySign);
 }
@@ -497,6 +518,20 @@ PredictionPRISM::GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
              : Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode;
 }
 
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetFDNonSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const {
+  return (FDBM == BeamMode::kNuMode)
+             ? Predictions.FD.numu_ccinc_sel_sig_apposc_numode_true_e_nu
+             : Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
+}
+
+std::unique_ptr<PredictionInterp> &
+PredictionPRISM::GetFDNueSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const {
+  return (FDBM == BeamMode::kNuMode)
+             ? Predictions.FD.nue_ccinc_sel_sig_apposc_numode_true_e_nu
+             : Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
+}
+
 //----------------------------------------------------------------------
 Spectrum PredictionPRISM::Predict(osc::IOscCalc *calc) const {
    return PredictSyst(calc, kNoShift);
@@ -552,6 +587,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       GetFDNueSwapAppOscPrediction(match_chan.to.mode);
   auto &FDUnOscWeightedSigPrediction =
       GetFDUnOscWeightedSigPrediction(match_chan.to);
+  auto &FDNonSwapAppOscPredictionTrueEnu =
+      GetFDNonSwapAppOscPredictionTrueEnu(match_chan.to.mode);
+  auto &FDNueSwapAppOscPredictionTrueEnu =
+      GetFDNueSwapAppOscPredictionTrueEnu(match_chan.to.mode);
 
   /*PRISMOUT("Making PRISM prediction for: \n\t("
            << match_chan.from.mode << ":" << match_chan.from.chan << ") -> ("
@@ -726,6 +765,39 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // FD unoscillated prediction.
   Comps.emplace(kFDUnOscPred, FDUnOscWeightedSig.UnWeighted());
 
+  // Numu -> Nue x-section correction as a function of true energy.
+  if (FDSigFlavor == Flavors::kNuMuToNuE) {
+    // Copied from unfold and smear xsec corr below
+    // for numu/nue xsec corr when including FD intrinsic nue in flux matching
+    // Does it need to be FD spectrum? ND numu/nue spectrum should also work
+    Spectrum FD_nueapp_spectrum_True_E_nu =
+        FDNueSwapAppOscPredictionTrueEnu->PredictComponentSyst(
+            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE,
+            Current::kCC, NDSigSign);
+
+    Spectrum FD_numusurv_apposc_spectrum_True_E_nu =
+        FDNonSwapAppOscPredictionTrueEnu->PredictComponentSyst(
+            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu,
+            Current::kCC, NDSigSign);
+
+    Comps.emplace(kFD_NumuNueCorr_Nue_TrueEnu, FD_nueapp_spectrum_True_E_nu);
+    Comps.emplace(kFD_NumuNueCorr_Numu_TrueEnu, FD_numusurv_apposc_spectrum_True_E_nu);
+
+    // print out debug
+    /*Eigen::ArrayXd nue_spec = FD_nueapp_spectrum_True_E_nu.GetEigen(1);
+    Eigen::ArrayXd numu_spec = FD_numusurv_apposc_spectrum_True_E_nu.GetEigen(1);
+    std::cout << "Printing out ratio spectrum "<< std::endl;
+    for ( int ibin=0; ibin < nue_spec.size(); ibin ++ ) {
+      std::cout << "bin "<< ibin << ": nue spec = "<< nue_spec(ibin) << ", numu spec = "<< numu_spec(ibin) << std::endl;
+    }*/
+
+    Ratio FD_NumuNue_XsecRatio_TrueEnu(FD_numusurv_apposc_spectrum_True_E_nu,
+                                   FD_nueapp_spectrum_True_E_nu,
+                                   NDPOT); // numu/nue
+
+    fFluxMatcher->SetIntrinsicNueXsecRatio(std::move(FD_NumuNue_XsecRatio_TrueEnu.GetEigen()));
+  }
+
   // Linear combination weight calculation.
   std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(
@@ -816,9 +888,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   //-------------------------------------------------------------
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(), 
-                              fAnalysisAxisFD.GetBinnings()); 
-  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(), 
+  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(),
+                              fAnalysisAxisFD.GetBinnings());
+  LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(),
 
 
                                  fNDOffAxis.GetBinnings());
@@ -985,7 +1057,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     Comps.emplace(kFDWSBkg,
                   FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, 
+                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor,
                       Current::kCC, FDWrongSign));
 
     if (fAxisAgreement) {
@@ -997,11 +1069,20 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
   }
 
-  if (fIntrinsicCorrection) { // Add in intrinsic correction. Both signs needed!
-    Comps.emplace(kFDIntrinsicBkg,
-                  FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift),
-                      FDIntrinsicFlavor, Current::kCC, Sign::kBoth));
+  if (fIntrinsicCorrection) { // Add in intrinsic correction.
+
+    // Consistenet with flux matching implementation in PRISMExtrapolator
+    if ( fMatchIntrinsicBkg && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
+      Comps.emplace(kFDIntrinsicBkg,
+                    FDPrediction->PredictComponentSyst(
+                        calc, (fVaryNDFDMCData ? kNoShift : shift),
+                        FDIntrinsicFlavor, Current::kCC, FDWrongSign)); // Right sign included in flux matching, here only include wrong sign
+    } else {
+      Comps.emplace(kFDIntrinsicBkg,
+                    FDPrediction->PredictComponentSyst(
+                        calc, (fVaryNDFDMCData ? kNoShift : shift),
+                        FDIntrinsicFlavor, Current::kCC, Sign::kBoth));
+    }
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDIntrinsicBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDIntrinsicBkg);
@@ -1038,7 +1119,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // Convert final covariance matrix into 2D spectrum
   //std::cout << "Cov bin size = " << sCovMat.GetBinnings().size() << std::endl;
   Comps.emplace(kExtrapCovarMatrix, ToSpectrum(sCovMat, NDPOT));
-  
+
   if (NDComps.count(kPRISMMC) && fAxisAgreement) {
     Comps.at(kPRISMMC) += Comps.at(kFDFluxCorr);
   }
@@ -1214,12 +1295,12 @@ Spectrum PredictionPRISM::PredictComponent(osc::IOscCalc *calc,
 // I know... but makes the SaveTo/LoadFrom a lot neater
 using NamedReweightableSpectrumRefVect = std::vector<std::pair<
     std::string,
-    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum>>>>; 
+    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum>>>>;
 using NamedPredInterpRefVect = std::vector<std::pair<
     std::string, std::reference_wrapper<std::unique_ptr<PredictionInterp>>>>;
 using NamedReweightableSpectrumCRefVect = std::vector<std::pair<
     std::string,
-    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum> const>>>; 
+    std::reference_wrapper<std::unique_ptr<PRISMReweightableSpectrum> const>>>;
 using NamedPredInterpCRefVect = std::vector<
     std::pair<std::string,
               std::reference_wrapper<std::unique_ptr<PredictionInterp> const>>>;
@@ -1321,7 +1402,15 @@ void PredictionPRISM::SaveTo(TDirectory *dir, const std::string &name) const {
            {"P_FD_nue_ccinc_sel_sig_apposc_numode",
             Predictions.FD.nue_ccinc_sel_sig_apposc_numode},
            {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode",
-            Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode}}) {
+            Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode},
+           {"P_FD_numu_ccinc_sel_sig_apposc_numode_true_e_nu",
+            Predictions.FD.numu_ccinc_sel_sig_apposc_numode_true_e_nu},
+           {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu",
+            Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu},
+           {"P_FD_nue_ccinc_sel_sig_apposc_numode_true_e_nu",
+            Predictions.FD.nue_ccinc_sel_sig_apposc_numode_true_e_nu},
+           {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu",
+            Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu}}) {
     if (meas.second.get()) {
       meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
@@ -1621,9 +1710,24 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
            {"P_FD_nue_ccinc_sel_sig_apposc_numode",
             pred->Predictions.FD.nue_ccinc_sel_sig_apposc_numode},
            {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode",
-            pred->Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode}}) {
+            pred->Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode},
+           {"P_FD_numu_ccinc_sel_sig_apposc_numode_true_e_nu",
+            pred->Predictions.FD.numu_ccinc_sel_sig_apposc_numode_true_e_nu},
+           {"P_FD_numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu",
+            pred->Predictions.FD.numubar_ccinc_sel_sig_apposc_nubmode_true_e_nu},
+           {"P_FD_nue_ccinc_sel_sig_apposc_numode_true_e_nu",
+            pred->Predictions.FD.nue_ccinc_sel_sig_apposc_numode_true_e_nu},
+           {"P_FD_nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu",
+            pred->Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu}
+           }) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() = PredictionInterp::LoadFrom(dir, meas.first.c_str());
+      // debug
+      /*if ( meas.first == "P_FD_nue_ccinc_sel_sig_apposc_numode_true_e_nu" ) {
+        osc::NoOscillations kNoOsc;
+        meas.second.get()->DebugPlots(&kNoOsc);
+      }*/
+
       //meas.second.get()->MinimizeMemory();
     }
   }
