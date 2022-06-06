@@ -45,7 +45,6 @@ namespace ana
       fExpt(expt),
       fFitOpts(opts),
       fSupportsDerivatives(SupportsDerivatives()),
-      fCovar(0),
       fCovarStatus(-1)
   {
   }
@@ -310,8 +309,7 @@ namespace ana
     fEdm = thisMin->Edm();
     fIsValid = !thisMin->Status();
 
-    delete fCovar;
-    fCovar = new TMatrixDSym(thisMin->NDim());
+    fCovar.reset(new TMatrixDSym(thisMin->NDim()));
 
     for (unsigned int row = 0; row < thisMin->NDim(); ++row) {
       for (unsigned int col = 0; col < thisMin->NDim(); ++col) {
