@@ -18,5 +18,7 @@ public:
              double &weight) const override;
 
 protected:
-    std::vector<BDTReweighter*> bdt_reweighters;
+  NuWroReweightFakeDataGenerator(const NuWroReweightFakeDataGenerator&) = delete;
+
+  std::vector<BDTReweighter*> bdt_reweighters;
 };

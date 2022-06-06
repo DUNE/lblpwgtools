@@ -31,6 +31,7 @@ NuWroReweightFakeDataGenerator::NuWroReweightFakeDataGenerator()
 
 NuWroReweightFakeDataGenerator::~NuWroReweightFakeDataGenerator()
 {
+  for(BDTReweighter* rw: bdt_reweighters) delete rw;
 }
 
 void NuWroReweightFakeDataGenerator::Shift(double sigma,
