@@ -27,7 +27,9 @@ namespace ana {
   class PRISMExtrapolator {
   public:
     PRISMExtrapolator();
-  
+
+    PRISMExtrapolator(const PRISMExtrapolator &ExtrapPreds);
+
     ///\brief Initialize the matcher with PredInterps that can
     /// predict relevant event rates.
     ///
@@ -50,8 +52,13 @@ namespace ana {
     GetNDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode, int kA = 293) const;
     PredictionInterp const *
     GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
-  
+
     void SetStoreDebugMatches(bool v = true) { fStoreDebugMatches = v; }
+    void SetMatchIntrinsicNue(bool v = true) { fMatchIntrinsicNue = v; }
+
+    void SetIntrinsicNueXsecRatio(const Eigen::ArrayXd&& ratiotrueE) const {
+      vNumuNueXsecRatioTrueEnu = std::move(ratiotrueE);
+    }
 
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
@@ -64,7 +71,7 @@ namespace ana {
       double dummy1, dummy2;
       return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2);
     }
-  
+
     std::pair<TH1 const *, TH1 const *>
     GetGaussianCoefficients(double mean, double width, PRISM::BeamChan NDbc,
                             SystShifts shift) const;
@@ -91,7 +98,7 @@ namespace ana {
     }
 
     void SetChannelRegFactor(PRISM::MatchChan chan, int kA, double RegFactor) {
-  
+
       switch (kA) {
       case 280: {
         fConditioning[chan].RegFactor_280kA = RegFactor;
@@ -114,11 +121,12 @@ namespace ana {
     std::vector<std::unique_ptr<TH1>> FDUnOscPrediction;
 
     mutable Eigen::ArrayXd fLastResidual;
+    mutable Eigen::ArrayXd vNumuNueXsecRatioTrueEnu;
     mutable std::unique_ptr<TH1> fLastGaussResidual;
-  
+
     PredictionInterp const *fNDPredInterp_293kA_nu;
     PredictionInterp const *fNDPredInterp_293kA_nub;
-  
+
     PredictionInterp const *fNDPredInterp_280kA_nu;
     PredictionInterp const *fNDPredInterp_280kA_nub;
 
@@ -131,6 +139,11 @@ namespace ana {
     mutable std::unique_ptr<TH1> fLastGaussMatch_280kA;
 
     bool fStoreDebugMatches;
+    // Whether to include intrinsic nue bkg at FD in target flux matching
+    // false: use FD MC for this bkg estimation
+    // true: include in flux matching
+    // numu/nue cross section ratio correction will be needed with true option
+    bool fMatchIntrinsicNue;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
     mutable std::map<std::string, std::unique_ptr<TH2>> fDebugFitMatrix;

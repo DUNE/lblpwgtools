@@ -400,14 +400,14 @@ int main(int argc, char const *argv[]) {
 
       std::vector<std::string> ND_input_files;
 
-      std::copy(input_CAF_files[config].begin(), 
+      std::copy(input_CAF_files[config].begin(),
                 input_CAF_files[config].end(),
                 std::back_inserter(ND_input_files));
 
-      std::copy(input_CAF_files[GetND280kAConfig(config)].begin(), 
+      std::copy(input_CAF_files[GetND280kAConfig(config)].begin(),
                 input_CAF_files[GetND280kAConfig(config)].end(),
                 std::back_inserter(ND_input_files));
-      
+
       FileLoaders[config] = std::make_shared<SpectrumLoader>(
                                       ND_input_files, nmax);
 
@@ -417,7 +417,7 @@ int main(int argc, char const *argv[]) {
       BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
 
       PRISM->AddNDDataLoader(
-          *FileLoaders[GetND293kAConfig(config)], 
+          *FileLoaders[GetND293kAConfig(config)],
           IsNu ? kNDSelectionCuts_nu : kNDSelectionCuts_nub,
           kNDCVWeight, // Assumes FD/ND biases not applied simultaneously!
           (NDFakeData || ProtonFakeData) ? DataShift : kNoShift, chanmode);
@@ -583,7 +583,7 @@ int main(int argc, char const *argv[]) {
       // Only need to do this once as the PRISM prediction handles the 293, 280
       // kA runs separately
       if (!IsND280kA) {
-        PRISM->AddNDMCLoader(Loaders_bm, 
+        PRISM->AddNDMCLoader(Loaders_bm,
                              NDCuts, kNDCVWeight,
                              los, &no, chanmode);
       }
@@ -636,7 +636,7 @@ int main(int argc, char const *argv[]) {
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
           los, &no, *NDUnselTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
-      
+
       // ND True Selected Spectrum
       NDSelTruePredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
@@ -649,8 +649,8 @@ int main(int argc, char const *argv[]) {
     } else if (!IsND &&
                !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
 
-      ana::Cut &FDCuts = IsNu ? 
-        (IsNueSwap ? kFDSelectionCuts_nue : kFDSelectionCuts_numu) : 
+      ana::Cut &FDCuts = IsNu ?
+        (IsNueSwap ? kFDSelectionCuts_nue : kFDSelectionCuts_numu) :
         (IsNueSwap ? kFDSelectionCuts_nueb : kFDSelectionCuts_numub);
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
@@ -661,11 +661,12 @@ int main(int argc, char const *argv[]) {
       // We always want to use the numus as we don't want to account for any
       // xsec differences between numu and nues, we use a special prediction
       // object to allow us to oscillate the NuMu spectrum.
+      // Intrinsic nue is also added as the target flux
       if (!IsNueSwap) {
         MatchPredGens[config] =
             std::make_unique<NonSwapNoExtrapPredictionGenerator>(
                 MatchAxis,
-                kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
+                (kIsNumuCC || kIsBeamNue) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
                 kFDCVWeight);
 
         MatchPredInterps[config] = std::make_unique<PredictionInterp>(

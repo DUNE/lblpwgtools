@@ -1,6 +1,6 @@
 #include "FitChannels.fcl"
 #include "RunPlans.fcl"
-#include "ScanDefinitions.fcl"  
+#include "ScanDefinitions.fcl"
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
@@ -20,13 +20,15 @@ BasicPred: {
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
+	# True to include FD intrinsic nue in flux match
+	match_intrinsic_nue: false
 
 	PRISM: {
 		match_conditioning: [
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17 
+			reg_factor_293kA: 2.5E-17
 			reg_factor_280kA: 1E-18
 			},
 			{
@@ -59,9 +61,9 @@ BasicPred: {
 	}
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
-	
-	
-	#samples: @local::FitChannels.Numu_disp 
+
+
+	#samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.DispJoint
 	samples: @local::FitChannels.FourFlavor
 }
@@ -118,4 +120,3 @@ EGscans: [
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
 EGscans[0].output_file[1]: "RECREATE"
-
