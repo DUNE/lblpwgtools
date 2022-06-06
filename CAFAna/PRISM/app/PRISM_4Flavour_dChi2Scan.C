@@ -53,7 +53,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   bool use_PRISM = scan.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
-
+  bool use_fake_data = scan.get<bool>("use_fake_data", false); 
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
 
   std::vector<const IFitVar *> free_oscpars = GetOscVars(
@@ -221,6 +221,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
   state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
 
+  if (use_fake_data) {
+    std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
+  } else {
+    std::cout << "Use nominal MC as FD and ND 'data'." << std::endl;
+  }
+  state.PRISM->SetUseFakeData(use_fake_data);                                
+
   std::map<std::string, MatchChan> Channels;
   if (scan.is_key_to_sequence("samples")) {
     for (auto const &fs : scan.get<std::vector<fhicl::ParameterSet>>("samples")) {
@@ -278,6 +285,16 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
+
+    Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
+    if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
+      FarDetFakeDataBiasPred =
+          state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+      auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
+      FakeDataBiasPred->Scale(1, "width");
+      chan_dir->WriteTObject(FakeDataBiasPred, "FakeDataBiasPred_Total");
+      FakeDataBiasPred->SetDirectory(nullptr);
+    }
  
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
@@ -300,26 +317,24 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
-    //if (use_PRISM) {
-      auto PRISMComponents =
-        state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-      auto *PRISMPred =
-            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
-      PRISMPred->Scale(1, "width");
-      chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-      PRISMPred->SetDirectory(nullptr);
-      auto *PRISMExtrap =
-        PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
-      PRISMExtrap->Scale(1, "width");
-      chan_dir->WriteTObject(PRISMExtrap, "PRISMExtrap");
-      PRISMExtrap->SetDirectory(nullptr);
-      auto *PRISMExtrapCovMat =
-            PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
-      PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
-      PRISMExtrapCovMat->Scale(1, "width");
-      chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
-      PRISMExtrapCovMat->SetDirectory(nullptr);
-    //}
+    auto PRISMComponents =
+      state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+    auto *PRISMPred =
+          PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
+    PRISMPred->Scale(1, "width");
+    chan_dir->WriteTObject(PRISMPred, "PRISMPred");
+    PRISMPred->SetDirectory(nullptr);
+    auto *PRISMExtrap =
+      PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+    PRISMExtrap->Scale(1, "width");
+    chan_dir->WriteTObject(PRISMExtrap, "PRISMExtrap");
+    PRISMExtrap->SetDirectory(nullptr);
+    auto *PRISMExtrapCovMat =
+          PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTHX(POT);
+    PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
+    PRISMExtrapCovMat->Scale(1, "width");
+    chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
+    PRISMExtrapCovMat->SetDirectory(nullptr);    
 
     auto PRISMPred_spec =
       PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap);
@@ -327,7 +342,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Fill Experiment objects." << std::endl;
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    FarDetDataPred.FakeData(POT_FD),
+                                                    (use_fake_data ? 
+                                                     FarDetFakeDataBiasPred.FakeData(POT_FD) : 
+                                                     FarDetDataPred.FakeData(POT_FD)),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
 
