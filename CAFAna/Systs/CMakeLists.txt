@@ -9,6 +9,7 @@ set(Systs_implementation_files
   XSecSysts.cxx
   NDRecoSysts.cxx
   NuOnESysts.cxx
+  NuWroReweightFakeData.cxx
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
   Systs.cxx
