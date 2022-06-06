@@ -307,6 +307,7 @@ public:
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
+  void SetUseFakeData(bool v = true) { fUseFakeData = v; }
 
   double fDefaultOffAxisPOT;
 
@@ -402,11 +403,20 @@ protected:
       std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_numode;
       std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_numode;
 
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_numode_fd;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_numode_fd;
+
       std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_nubmode;
       std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_nubmode;
 
+      std::unique_ptr<PRISMReweightableSpectrum> numu_ccinc_sel_nubmode_fd;
+      std::unique_ptr<PRISMReweightableSpectrum> numubar_ccinc_sel_nubmode_fd;
+
       std::unique_ptr<PRISMReweightableSpectrum> nue_ccinc_sel_numode;
       std::unique_ptr<PRISMReweightableSpectrum> nuebar_ccinc_sel_nubmode;
+
+      std::unique_ptr<PRISMReweightableSpectrum> nue_ccinc_sel_numode_fd;
+      std::unique_ptr<PRISMReweightableSpectrum> nuebar_ccinc_sel_nubmode_fd;
     };
     _ND ND_293kA;
     _ND ND_280kA;
@@ -459,16 +469,16 @@ protected:
   mutable _Predictions Predictions;
 
   std::unique_ptr<PRISMReweightableSpectrum> &
-  GetNDData_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
+  GetNDData_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293, bool shift = false) const;
   std::unique_ptr<PRISMReweightableSpectrum> &
-  GetNDData_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293) const;
+  GetNDData_right_sign_nue(PRISM::BeamMode NDBM, int kA = 293, bool shift = false) const;
   std::unique_ptr<PRISMReweightableSpectrum> &
-  GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
+  GetNDData_wrong_sign_numu(PRISM::BeamMode NDBM, int kA = 293, bool shift = false) const;
   std::unique_ptr<PRISMReweightableSpectrum> &
   GetNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
-            int kA = 293) const;
+            int kA = 293, bool shift = false) const;
   bool HaveNDData(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode,
-                  int kA = 293) const;
+                  int kA = 293, bool shift = false) const;
 
   std::unique_ptr<PredictionInterp> &
   GetNDPrediction_right_sign_numu(PRISM::BeamMode NDBM, int kA = 293) const;
@@ -520,6 +530,10 @@ protected:
   // Will be true if we want to do 'fake data' studies,
   // where we use nominal MC which is ignorant of shifts in the 'data'.
   bool fVaryNDFDMCData;
+
+  // Flag for whether we want to use our fake biased data or our nominal MC as
+  // our data.
+  bool fUseFakeData;
   
   // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
   // so we only want to add MC corrections to PRISMPred (which has fAnalysisAxisND)
