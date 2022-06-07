@@ -13,7 +13,8 @@ BasicPred: {
 	use_PRISM: true
 	POT_years: 1.0
 	vary_NDFD_data: false
-	
+	match_intrinsic_nue: false
+
 
 	PRISM: {
 		match_conditioning: [
@@ -54,7 +55,7 @@ BasicPred: {
 		write_debug: true
 
                 reg_factor_extrap: 1e-10 #1E-30
-	}                                                                                                
+	}
 	#samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.Nue_app
 	#samples: @local::FitChannels.NuModeJoint
@@ -100,13 +101,12 @@ predictions: [
 #				[flux_Nov17_13, 1],
 #				[CV2uBY, 1],
 #				[BeRPA_A, 1],
-#				[BeRPA_B, 1], 
+#				[BeRPA_B, 1],
 #				[BeRPA_D, 1],
 #			]
 #		}
 #	},
 
-]	
+]
 
 predictions[0].output_file[1]: "RECREATE"
-
