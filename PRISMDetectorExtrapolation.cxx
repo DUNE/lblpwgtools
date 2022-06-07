@@ -28,7 +28,7 @@ namespace ana {
   //-----------------------------------------------------
 
   NDFD_Matrix::NDFD_Matrix(const NDFD_Matrix &MatPred) {
-    for (size_t conf = 0; conf < kNPRISMConfigs; conf++) 
+    for (size_t conf = 0; conf < kNPRISMConfigs; conf++)
       NDPredInterps.at(conf) = MatPred.NDPredInterps.at(conf);
     for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++)
       FDPredInterps.at(conf) = MatPred.FDPredInterps.at(conf);
@@ -39,7 +39,7 @@ namespace ana {
     fErrorMat_293kA = MatPred.fErrorMat_293kA;
     fErrorMat_280kA = MatPred.fErrorMat_280kA;
     vNumuNueCorr = MatPred.vNumuNueCorr;
-  } 
+  }
 
   //-----------------------------------------------------
 
@@ -83,7 +83,7 @@ namespace ana {
   Eigen::MatrixXd NDFD_Matrix::GetErrorMat_293kA() const {
     return fErrorMat_293kA;
   }
-  Eigen::MatrixXd NDFD_Matrix::GetErrorMat_280kA() const { 
+  Eigen::MatrixXd NDFD_Matrix::GetErrorMat_280kA() const {
     return fErrorMat_280kA;
   }
 
@@ -103,18 +103,18 @@ namespace ana {
                                    Eigen::ArrayXd const &FDefficiency) const {
 
     if (!MatrixND) {
-      std::cout << "[ERROR] No fMatrixND." << std::endl; 
+      std::cout << "[ERROR] No fMatrixND." << std::endl;
       abort();
     } else if (!MatrixFD) {
-      std::cout << "[ERROR] No fMatrixFD." << std::endl; 
+      std::cout << "[ERROR] No fMatrixFD." << std::endl;
       abort();
-    } 
- 
+    }
+
     std::pair<Eigen::MatrixXd*, Eigen::ArrayXd> NDpair (MatrixND, NDefficiency);
     std::pair<Eigen::MatrixXd*, Eigen::ArrayXd> FDpair (MatrixFD, FDefficiency);
 
     std::vector<std::pair<Eigen::MatrixXd*, Eigen::ArrayXd>> matrix_pair = {NDpair, FDpair};
-  
+
     for (auto &mat : matrix_pair) {
       for (int col_it = 1; col_it <= (mat.first->cols() - 2); col_it++) {
         Eigen::VectorXd projY = mat.first->col(col_it);
@@ -126,7 +126,7 @@ namespace ana {
         if (std::isnormal(mat.second(col_it - 1))) eff = mat.second(col_it - 1);
         projY *= eff;
         for (int row_it = 1; row_it <= (mat.first->rows() - 2); row_it++) {
-          (*mat.first)(row_it, col_it) = projY(row_it); 
+          (*mat.first)(row_it, col_it) = projY(row_it);
         }
       }
     }
@@ -134,16 +134,16 @@ namespace ana {
 
   //-----------------------------------------------------
 
-  void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
+  void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
                                       double POT, const int kA, Eigen::ArrayXd&& weights,
                                       osc::IOscCalc *calc, ana::SystShifts shift,
-                                      Flavors::Flavors_t NDflav, 
+                                      Flavors::Flavors_t NDflav,
                                       Flavors::Flavors_t FDflav,
                                       Current::Current_t curr,
                                       Sign::Sign_t NDsign, Sign::Sign_t FDsign,
                                       Eigen::ArrayXXd NDefficiency,
                                       Eigen::ArrayXd FDefficiency) const {
-    Eigen::MatrixXd *fNDExtrap, *fErrorMat; 
+    Eigen::MatrixXd *fNDExtrap, *fErrorMat;
     if (kA == 293) {
       fNDExtrap = &fNDExtrap_293kA;
       fErrorMat = &fErrorMat_293kA;
@@ -154,8 +154,8 @@ namespace ana {
       std::cout << "[ERROR] Unknown HC." << std::endl;
       abort();
     }
- 
-    osc::NoOscillations no; 
+
+    osc::NoOscillations no;
 
     // Do not want to oscillate the MC in the FD matrix (ND is always un-oscillated).
     // The linear combination handles the oscillation, we just want to correct for the
@@ -170,8 +170,8 @@ namespace ana {
     hMatrixFD = ConvertArrayToMatrix(sMatrixFD.GetEigen(POT), sMatrixFD.GetBinnings());
 
     Eigen::MatrixXd PRISMND = NDDataSpec.GetEigen(POT);
-    Eigen::MatrixXd PRISMND_block = PRISMND.block(1 ,1 , PRISMND.rows() - 2, PRISMND.cols() - 2); 
-  
+    Eigen::MatrixXd PRISMND_block = PRISMND.block(1 ,1 , PRISMND.rows() - 2, PRISMND.cols() - 2);
+
     Eigen::MatrixXd PRISMND_SumSq = NDDataSpec.GetSumSqEigen(POT);
 
     fNDExtrap->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
@@ -199,7 +199,7 @@ namespace ana {
       for (int col = 0; col < CovMatRec.cols(); col++) {
         if (!std::isnormal(PRISMND_SumSq(slice + 1, col + 1))) {
           CovMatRec(col, col) = 1E-10;
-        } else { 
+        } else {
           CovMatRec(col, col) = PRISMND_SumSq(slice + 1, col + 1);
         }
       }
@@ -216,18 +216,18 @@ namespace ana {
         for (int bin = 0; bin < NDETrue.size(); bin++) {
           NDETrue(bin) *= vNumuNueCorr(bin + 1);
         }
-      } 
+      }
 
       // Cov Mat for true energy, propogated through unfold.
       Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
-  
+
       Eigen::VectorXd FDERec = MatrixFD_block * NDETrue;
       Eigen::MatrixXd CovMatExtrap = MatrixFD_block * CovMatTrue * MatrixFD_block.transpose();
       // ** Get total covariance matrix of linear combination **
-      TotalLCCovMat.block(1, 1, CovMatExtrap.rows(), CovMatExtrap.cols()) += 
+      TotalLCCovMat.block(1, 1, CovMatExtrap.rows(), CovMatExtrap.cols()) +=
           CovMatExtrap * std::pow(weights(slice + 1), 2);
 
-      for (int ebin = 1; ebin <= (fNDExtrap->cols() - 2); ebin++) { 
+      for (int ebin = 1; ebin <= (fNDExtrap->cols() - 2); ebin++) {
         (*fNDExtrap)(slice + 1, ebin) = FDERec(ebin - 1);
         double varExtrap = CovMatExtrap(ebin - 1, ebin - 1);
         (*fErrorMat)(slice + 1, ebin) = varExtrap;
@@ -243,17 +243,17 @@ namespace ana {
 
   //----------------------------------------------------
 
-  size_t NDFD_Matrix::GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+  size_t NDFD_Matrix::GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign,
                                           bool is280kA) const {
     size_t conf;
-    assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
+    assert(NDflav == Flavors::kAllNuMu); // Only considering numu at ND.
     if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
     else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
     return conf;
   }
-  
+
   //----------------------------------------------------
-                                                                              
+
   size_t NDFD_Matrix::GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
     size_t conf;
     if (FDflav == Flavors::kNuMuToNuMu) {
@@ -261,9 +261,9 @@ namespace ana {
     } else if (FDflav == Flavors::kNuMuToNuE) {
       conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
     } else { abort(); }
-                                                                                
+
     return GetFDConfig(conf);
-  }                                                                                  
+  }
 
   //----------------------------------------------------
 
@@ -271,10 +271,15 @@ namespace ana {
     Eigen::MatrixXd matND = hMatrixND;
     Eigen::MatrixXd matFD = hMatrixFD;
 
-    osc::NoOscillations no; 
-    auto sMND = NDPredInterps.at(kND_293kA_nu)->Predict(&no);
+    osc::NoOscillations no;
+    size_t confnd(kND_293kA_nu);
+    if (!NDPredInterps.at(confnd)) {
+      confnd = kND_293kA_nub;
+    }
+    auto sMND = NDPredInterps.at(confnd)->Predict(&no);
     size_t conf(0);
     if (!FDPredInterps.at(conf)) conf = 1;
+    if (!FDPredInterps.at(conf)) conf = 4;
     auto sMFD = FDPredInterps.at(conf)->Predict(&no);
 
     std::vector<std::string> labelsND = sMND.GetLabels();
@@ -295,5 +300,5 @@ namespace ana {
     dir->WriteTObject(rwND.ToTH2(1), "ND_SmearingMatrix");
     dir->WriteTObject(rwFD.ToTH2(1), "FD_SmearingMatrix");
   }
- 
+
 } // namespace ana

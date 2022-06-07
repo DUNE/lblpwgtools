@@ -25,7 +25,7 @@ namespace ana {
     hNDUnselected_293kA = nullptr;
     hNDSelected_293kA = nullptr;
   }
-                                
+
 
   //----------------------------------------------------
 
@@ -34,7 +34,7 @@ namespace ana {
       NDUnselPredInterps.at(conf) = EffCorr.NDUnselPredInterps.at(conf);
       NDSelPredInterps.at(conf) = EffCorr.NDSelPredInterps.at(conf);
     }
-    for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++) { 
+    for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++) {
       FDUnselPredInterps.at(conf) = EffCorr.FDUnselPredInterps.at(conf);
       FDSelPredInterps.at(conf) = EffCorr.FDSelPredInterps.at(conf);
     }
@@ -71,7 +71,7 @@ namespace ana {
     auto NDPred_280kA = NDunsel_280kA.first->Predict(&no);
 
     std::vector<Binning> bins_293kA = NDPred_293kA.GetBinnings();
-    int NAnaElements, NOAElements_293kA; 
+    int NAnaElements, NOAElements_293kA;
     if (NDPred_293kA.NDimensions() == 2) {
       NAnaElements = bins_293kA.at(0).NBins();
       NOAElements_293kA = bins_293kA.at(1).NBins();
@@ -83,7 +83,7 @@ namespace ana {
     int NOAElements_280kA;
     if (NDPred_280kA.NDimensions() == 2) {
       NOAElements_280kA = bins_280kA.at(1).NBins();
-    } else { 
+    } else {
       NOAElements_280kA = bins_280kA.at(2).NBins();
     }
 
@@ -94,24 +94,24 @@ namespace ana {
   }
 
   //----------------------------------------------------
-  
+
   void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
                                        HistAxis const &axis,
                                        ana::SystShifts shift,
                                        Flavors::Flavors_t NDflav,
                                        Flavors::Flavors_t FDflav,
                                        Current::Current_t curr,
-                                       Sign::Sign_t NDsign, 
+                                       Sign::Sign_t NDsign,
                                        Sign::Sign_t FDsign) const {
 
-    osc::NoOscillations no; 
+    osc::NoOscillations no;
 
-    Spectrum sNDunselected_293kA = 
+    Spectrum sNDunselected_293kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
     Spectrum sNDunselected_280kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);  
+        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
     // Maybe you want this for debugging
     //hNDUnselected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDunselected_293kA.ToTH2(1)));
@@ -126,13 +126,13 @@ namespace ana {
                                                          sNDunselected_280kA.GetBinnings())
                                                         .array()
                                                         .block(1, 1, NDefficiency_280kA.rows(),
-                                                               NDefficiency_280kA.cols());  
-  
+                                                               NDefficiency_280kA.cols());
+
     // Selected ND MC
-    Spectrum sNDselected_293kA = 
+    Spectrum sNDselected_293kA =
         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
-    Spectrum sNDselected_280kA = 
+    Spectrum sNDselected_280kA =
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
          ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
 
@@ -149,19 +149,19 @@ namespace ana {
                                                       .array()
                                                       .block(1, 1, NDefficiency_280kA.rows(),
                                                              NDefficiency_280kA.cols());
-  
-    Spectrum sFDunselected = 
+
+    Spectrum sFDunselected =
         FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
-    Spectrum sFDselected = 
+    Spectrum sFDselected =
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
 
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
                                    .segment(1, FDefficiency.size());
-    Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1) 
+    Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1)
                                  .segment(1, FDefficiency.size());
-    
+
     // Calculate ND efficiency
     // efficiency fluctuates slightly with OA position
     // Use coefficient-wise opterations of Array objects.
@@ -170,19 +170,19 @@ namespace ana {
     // Efficiency for 280kA sample:
     NDefficiency_280kA = NDsel_280kA / NDunsel_280kA;
     // Calculate FD efficiency
-    FDefficiency = vFDselected / vFDunselected;    
+    FDefficiency = vFDselected / vFDunselected;
   }
 
   //----------------------------------------------------------
-  size_t MCEffCorrection::GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign, 
+  size_t MCEffCorrection::GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign,
                                            bool is280kA) const {
     size_t conf;
-    assert(NDflav == Flavors::kAllNumu); // Only considering numu at ND.
+    assert(NDflav == Flavors::kAllNuMu); // Only considering numu at ND.
     if (!is280kA) conf = (NDsign == Sign::kNu) ? kND_293kA_nu : kND_293kA_nub;
     else conf = (NDsign == Sign::kNu) ? kND_280kA_nu : kND_280kA_nub;
     return conf;
   }
-                                                                                  
+
   size_t MCEffCorrection::GetFDConfigFromPred(Flavors::Flavors_t FDflav, Sign::Sign_t FDsign) const {
     size_t conf;
     if (FDflav == Flavors::kNuMuToNuMu) {
@@ -190,12 +190,12 @@ namespace ana {
     } else if (FDflav == Flavors::kNuMuToNuE) {
       conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
     } else { abort(); }
-                                                                                  
+
     return GetFDConfig(conf);
-  }                                                                                                
+  }
 
   //-----------------------------------------------------------
-  
+
   void MCEffCorrection::Write(TDirectory *dir) const {
     // Don't care how ugly this is, just getting the plots.
     // Just to get the axes.
@@ -206,7 +206,7 @@ namespace ana {
       std::cout << "[ERROR] Cannot write efficiency." << std::endl;
       abort();
     }
-    auto NDPred = NDUnselPredInterps.at(conf)->Predict(&no);  
+    auto NDPred = NDUnselPredInterps.at(conf)->Predict(&no);
 
     size_t conf_280kA = kND_280kA_nu;
     if (!NDUnselPredInterps.at(conf_280kA)) conf_280kA = kND_280kA_nub;
@@ -229,13 +229,13 @@ namespace ana {
       LabelsAndBins(NDPred.GetLabels().at(2), NDPred.GetBinnings().at(2));
     LabelsAndBins oa280kA_axis = (NDPred_280kA.GetBinnings().size() == 2) ?
       LabelsAndBins(NDPred_280kA.GetLabels().at(1), NDPred_280kA.GetBinnings().at(1)) :
-      LabelsAndBins(NDPred_280kA.GetLabels().at(2), NDPred_280kA.GetBinnings().at(2)); 
+      LabelsAndBins(NDPred_280kA.GetLabels().at(2), NDPred_280kA.GetBinnings().at(2));
 
     Eigen::MatrixXd NDEff293kA_mat = Eigen::MatrixXd::Zero(NDefficiency_293kA.rows() + 2,
                                                            NDefficiency_293kA.cols() + 2);
     NDEff293kA_mat.block(1, 1, NDefficiency_293kA.rows(),
                          NDefficiency_293kA.cols()) = NDefficiency_293kA.matrix();
-    
+
     ReweightableSpectrum NDEff293kA_rws(std::move(NDEff293kA_mat), ana_axis, oa_axis, 1, 0);
 
     Eigen::MatrixXd NDEff280kA_mat = Eigen::MatrixXd::Zero(NDefficiency_280kA.rows() + 2,
@@ -244,15 +244,15 @@ namespace ana {
                          NDefficiency_280kA.cols()) = NDefficiency_280kA.matrix();
 
     ReweightableSpectrum NDEff280kA_rws(std::move(NDEff280kA_mat), ana_axis, oa280kA_axis, 1, 0);
-  
+
     Eigen::ArrayXd FDEff_arr = Eigen::ArrayXd::Zero(FDefficiency.size() + 2);
 
-    FDEff_arr.segment(1, FDefficiency.size()) = FDefficiency;  
+    FDEff_arr.segment(1, FDefficiency.size()) = FDefficiency;
 
     Spectrum FDEff_s(std::move(FDEff_arr), ana_axis, 1, 0);
- 
+
     if (hNDUnselected_293kA.get()) dir->WriteTObject(hNDUnselected_293kA.get(), "NDUnsel_293kA");
-    if (hNDSelected_293kA.get()) dir->WriteTObject(hNDSelected_293kA.get(), "NDSel_293kA"); 
+    if (hNDSelected_293kA.get()) dir->WriteTObject(hNDSelected_293kA.get(), "NDSel_293kA");
     dir->WriteTObject(NDEff293kA_rws.ToTH2(1), "NDEff_293kA");
     dir->WriteTObject(NDEff280kA_rws.ToTH2(1), "NDEff_280kA");
     dir->WriteTObject(FDEff_s.ToTH1(1), "FDEff");
