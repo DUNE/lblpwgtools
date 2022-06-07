@@ -45,7 +45,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   std::string const &varname =
   scan.get<std::string>("projection_name", "EProxy");
-  
+
   // default to 1 year
   double POT = scan.get<double>("POT_years", 1) * 1.1e21; // POT120 = 1.1e21
   double POT_FD = POT * pot_fd_FVMassFactor;
@@ -54,6 +54,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   bool use_PRISM = scan.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
   bool use_fake_data = scan.get<bool>("use_fake_data", false); 
+  bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
+
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
 
   std::vector<const IFitVar *> free_oscpars = GetOscVars(
@@ -196,11 +198,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::array<double, 2> chan_energy_range =
         channel_conditioning.get<std::array<double, 2>>("energy_range",
                                                         {0, 4});
-   
-      fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280, 
+
+      fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
                                       chan_energy_range);
     }
-    
+
+    if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
+
     state.PRISM->SetFluxMatcher(&fluxmatcher);
   }
 
@@ -227,6 +231,13 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Use nominal MC as FD and ND 'data'." << std::endl;
   }
   state.PRISM->SetUseFakeData(use_fake_data);                                
+
+  if (match_intrinsic_nue_bkg) {
+    std::cout << "Include FD intrinsic nue in flux matching." << std::endl;
+  } else {
+    std::cout << "Use FD MC to predict FD intrinsic nue bkg." << std::endl;
+  }
+  state.PRISM->SetIntrinsicBkgCorr(match_intrinsic_nue_bkg);
 
   std::map<std::string, MatchChan> Channels;
   if (scan.is_key_to_sequence("samples")) {
@@ -349,8 +360,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                     POT, POT_FD, ch.second));
 
     CombExpts.Add(Expts.back().get());
-  
-  }   
+
+  }
 
   dir->cd();
 
@@ -397,7 +408,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
   const IFitVar *ssTh23 = &kFitSinSqTheta23;
   const IFitVar *dmsq32 = &kFitDmSq32Scaled;
-  const IFitVar *dCPpi = &kFitDeltaInPiUnits; 
+  const IFitVar *dCPpi = &kFitDeltaInPiUnits;
   const IFitVar *ssTh13 = &kFitSinSq2Theta13;
 
 
@@ -413,7 +424,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
   if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDeltaInPiUnits)
       != scan_vars.end()) {
-    std::cout << "found dCP in pi units" << std::endl; 
+    std::cout << "found dCP in pi units" << std::endl;
     dcp_scan = true;
   }
   if (std::find(scan_vars.begin(), scan_vars.end(), &kFitSinSq2Theta13)
@@ -441,14 +452,14 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
       std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
       std::cout << "dCP = " << calc->GetdCP() << std::endl;
       std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
- 
+
       //auto calc_fit = calc->Copy();
- 
+
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
       MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts = kNoShift;
-      double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
+      double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
       scan_hist_1D->Fill(x, chi);
@@ -479,7 +490,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         }
       }
     }
-    
+
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
   //-----------------------
@@ -496,9 +507,9 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
 
-        MinuitFitter fitter(&CombExpts, free_oscpars, freesysts); 
+        MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
         SystShifts bestSysts = kNoShift;
-        double chi = fitter.Fit(calc, bestSysts, oscSeeds, 
+        double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
         // fill hist
         scan_hist_2D->Fill(x, y, chi);

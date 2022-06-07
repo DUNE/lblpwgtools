@@ -1,0 +1,82 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+
+BasicPred: {
+	output_file: [/dune/app/users/weishi/NueIntrinsic/lblpwgtools/CAFAna/PRISM/app/PRISMPred_EVisReco_IntrinsicNue_nodet_withxseccorr_flagoff_FHC_App.root, "UPDATE"]
+	state_file: /pnfs/dune/persistent/users/weishi/CAFAnaInputs/StandardState/IntrinsicNue_Syst_nodet/hadd_state_IntrinsicNue_nodet_withxseccorr.root
+
+	# Variable are you using
+	projection_name: EVisReco
+
+	# Always use PRISM so always true
+	use_PRISM: true
+	# Exposure
+	POT_years: 1
+	# True for doing 'fake data' studies
+	vary_NDFD_data: false
+	# True to include FD intrinsic nue in flux match
+	match_intrinsic_nue: false
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+		]
+		# Errors on prediction come from assumed run plan
+		set_ND_errors_from_rate: true
+		# Set the run plan from RunPan.fcl
+		RunPlans: {
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
+		}
+		# Flux matching broken, so always use event rate matching
+		Use_EventRateMatching: true
+
+		write_debug: true
+
+                reg_factor_extrap: 1e-30 #1E-30
+	}
+	samples: @local::FitChannels.Nue_app
+}
+
+
+predictions: [
+
+	{
+		@table::BasicPred
+		output_dir: "numu_EvMatch_nom"
+	},
+	{
+		@table::BasicPred
+		output_dir: "numu_EvMatch_nom_2"
+	},
+
+]
+
+predictions[0].output_file[1]: "RECREATE"
