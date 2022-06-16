@@ -97,6 +97,7 @@ add_subdirectory(Systs)
 add_subdirectory(Vars)
 
 LIST(APPEND CAFANALIBS
+    -Wl,--start-group
     CAFAnaAnalysis
     CAFAnaFit
     CAFAnaDecomp
@@ -109,6 +110,7 @@ LIST(APPEND CAFANALIBS
     CAFAnaCuts
     CAFAnaExtrap
     CAFAnaVars
+    -Wl,--end-group
     StandardRecord
     OscLibFunc
     UtilitiesFunc)

@@ -28,6 +28,28 @@ endif()
 execute_process (COMMAND root-config
   --cflags OUTPUT_VARIABLE ROOT_CXX_FLAGS_RAW OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REPLACE " " ";" ROOT_CXX_FLAGS "${ROOT_CXX_FLAGS_RAW}")
+
+#Check what ROOT thinks the standard is, set that project-wide
+# and then remove it from ROOT_CXX_FLAGS
+list (FIND ROOT_CXX_FLAGS "-std=c++11" CPP11_INDEX)
+list (FIND ROOT_CXX_FLAGS "-std=c++14" CPP14_INDEX)
+list (FIND ROOT_CXX_FLAGS "-std=c++17" CPP17_INDEX)
+list (FIND ROOT_CXX_FLAGS "-std=c++20" CPP20_INDEX)
+
+if (${CPP11_INDEX} GREATER -1)
+  SET(CMAKE_CXX_STANDARD 11)
+elseif (${CPP14_INDEX} GREATER -1)
+  SET(CMAKE_CXX_STANDARD 14)
+elseif (${CPP17_INDEX} GREATER -1)
+  SET(CMAKE_CXX_STANDARD 17)
+elseif (${CPP20_INDEX} GREATER -1)
+  SET(CMAKE_CXX_STANDARD 20)
+endif()
+list(REMOVE_ITEM ROOT_CXX_FLAGS "-std=c++11")
+list(REMOVE_ITEM ROOT_CXX_FLAGS "-std=c++14")
+list(REMOVE_ITEM ROOT_CXX_FLAGS "-std=c++17")
+list(REMOVE_ITEM ROOT_CXX_FLAGS "-std=c++20")
+
 LIST(APPEND EXTRA_CXX_FLAGS ${ROOT_CXX_FLAGS})
 
 # Get libdir from ROOT
