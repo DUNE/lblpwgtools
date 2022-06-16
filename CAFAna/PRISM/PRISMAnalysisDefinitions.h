@@ -66,8 +66,8 @@ static BeamChan const kNumu_Numode = {BeamMode::kNuMode,
 static BeamChan const kNumuBar_NuBarmode = {BeamMode::kNuBarMode,
                                             NuChan::kNumuBarIntrinsic};
 static BeamChan const kNue_Numode = {BeamMode::kNuMode, NuChan::kNueApp};
-static BeamChan const kNue_I_Numode = {BeamMode::kNuMode, NuChan::kNueIntrinsic};
-static BeamChan const kNue_I_NuBarmode = {BeamMode::kNuBarMode, NuChan::kNueBarIntrinsic};
+static BeamChan const kNue_I_Numode = {BeamMode::kNuMode, NuChan::kNueIntrinsic}; //eran
+static BeamChan const kNue_I_NuBarmode = {BeamMode::kNuBarMode, NuChan::kNueBarIntrinsic}; //eran
 static BeamChan const kNueBar_NuBarmode = {BeamMode::kNuBarMode,
                                            NuChan::kNueBarApp};
 
@@ -78,7 +78,7 @@ inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
       return kNumu_Numode;
     } else if (descript == "numubar_nubarmode") {
       return kNumuBar_NuBarmode;
-    } else if (descript == "nue_numode") {
+    } else if (descript == "nue_numode") { //eran 
       return kNue_I_Numode;
     } else if (descript == "nuebar_nubarmode") {
       return kNueBar_NuBarmode;
@@ -115,15 +115,15 @@ struct MatchChan {
 static MatchChan const kNumuDisappearance_Numode = {kNumu_Numode, kNumu_Numode};
 static MatchChan const kNumuBarDisappearance_NuBarmode = {kNumuBar_NuBarmode,
                                                           kNumuBar_NuBarmode};
-static MatchChan const kNDNumutoNDNue_Numode = {kNumu_Numode, kNue_I_Numode};
-static MatchChan const kNDNumutoNDNue_NuBarmode = {kNumuBar_NuBarmode, kNue_I_NuBarmode};
+static MatchChan const kNDNumutoNDNue_Numode = {kNumu_Numode, kNue_I_Numode}; //eran
+static MatchChan const kNDNumutoNDNue_NuBarmode = {kNumuBar_NuBarmode, kNue_I_NuBarmode}; //eran
 static MatchChan const kNueAppearance_Numode = {kNumu_Numode, kNue_Numode};
 static MatchChan const kNueBarAppearance_NuBarmode = {kNumuBar_NuBarmode,
                                                       kNueBar_NuBarmode};
 
 inline std::string GetMatchChanShortName(MatchChan ch) {
   if (ch.to.mode == BeamMode::kNuMode) {
-    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : "NueApp";// "NueI";
+    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : "NueApp";// "NueI"; //eran, never decided if needed/how	
   } else {
     return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : "NueBarApp";// "NueBarI";
   }
@@ -132,7 +132,7 @@ inline std::string GetMatchChanShortName(MatchChan ch) {
 
 inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
   return {GetBeamChan(ps.get<std::string>("ND"), true),
-          GetBeamChan(ps.get<std::string>("ND"), true)}; //eran fix temp
+          GetBeamChan(ps.get<std::string>("FD"), false)}; //was true now false//eran fix temp //back to FD
 }
 
 // Enum-like list of Ids for use in lists of PRISM objects //eran change whole list!
@@ -248,6 +248,9 @@ inline std::string DescribeConfig(size_t conf) {
   case kND_280kA_nu_numu: {
     return "ND_280kA_nu";
   }
+  case kND_nu_nue:      {  //eran
+    return "ND_nu_nue";
+  }
   case kFD_nu_nonswap: {
     return "FD_nu_numu";
   }
@@ -259,6 +262,9 @@ inline std::string DescribeConfig(size_t conf) {
   }
   case kND_280kA_nub_numu: {//eran
     return "ND_280kA_nub";
+  }
+  case kND_nub_nue: {  //eran
+    return "ND_nub_nue";
   }
   case kFD_nub_nonswap: {
     return "FD_nub_numu";
@@ -298,10 +304,10 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
     switch (nc.mode) {
     case BeamMode::kNuMode: { //eran implemented nested switch
          switch (nc.chan) {
-         case NuChan::kNumu: {
+         case NuChan::kNumuIntrinsic: {  //fixing this error?
            return kND_nu_numu;
          }
-         case NuChan::kNue: {
+         case NuChan::kNueIntrinsic: {
            return kND_nu_nue;
          }
          default: {
@@ -313,10 +319,10 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
     }
     case BeamMode::kNuBarMode: { //eran implemented nested switch
          switch (nc.chan) {
-         case NuChan::kNumuBar: {
+         case NuChan::kNumuBarIntrinsic: {
            return kND_nub_numu;
          }
-         case NuChan::kNueBar: {
+         case NuChan::kNueBarIntrinsic: {
            return kND_nub_nue;
          }
          default: {

@@ -26,7 +26,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   std::string const &output_dir = pred.get<std::string>("output_dir", "");
 
   std::string const &varname =
-      pred.get<std::string>("projection_name", "EProxy");
+      pred.get<std::string>("projection_name", "ETrue"); //now have ETrue?
 
   // default to 1 year
   double POT = pred.get<double>("POT_years", 1) * POT120;
@@ -122,10 +122,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     for (auto const &channel_conditioning :
          PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
-
-      auto ch_orig =
-          GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
-      std::cout<<"ch from code as it was "<<ch_orig<<std::endl;
+std::cout<<"is this before the problem?"<<std::endl;
+      //auto ch =//now as ch
+      //    GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+      //std::cout<<"ch from code as it was "<<ch<<std::endl;
       auto ch = PRISM::kNDNumutoNDNue_Numode; //eran hard-coding match_chan selection
       std::cout<<"match_chan after assign it to kNDNumutoNDNue_Numode "<<ch<<std::endl;
 
@@ -192,6 +192,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       abort();
     }
 
+std::cout<<"FDfdConfig_enum "<<FDfdConfig_enum<<std::endl;
+    for (auto & a : state.FarDetData_nonswap){
+
+std::cout<<a.get()<<std::endl;
+}
+
     DataSpectra.push_back(state.FarDetData_nonswap[FDfdConfig_enum]->Oscillated(
         calc, osc_from, osc_to));
 
@@ -246,7 +252,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       if (do_gauss) { // Gaussian spectra prediction
 //        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
 //            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
-	auto PRISMComponents = state.PRISM->PredictGaussianFlux_forNDtarget(
+	auto PRISMComponents = state.PRISM->PredictGaussianFlux_forNDtarget( //eran
 	    gauss_flux.first, gauss_flux.second, shift, ch.second.from);
         TH1 *PRISMPred =
             PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);

@@ -169,8 +169,8 @@ if (isNuMu) {
              ? ((isNuMode ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV && //need ot be Nue eran
                 kIsOutOfTheDesert)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
-                kIsOutOfTheDesert &&
-		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
+                kIsOutOfTheDesert && kIsNumuCC); //eran
+		//(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
 
 else if (!isNuMu)  { //is NDNue
@@ -179,6 +179,8 @@ else if (!isNuMu)  { //is NDNue
              ? ((isNuMode ? kPassND_FHC_NUE : kPassND_RHC_NUE) && kIsTrueFV && //need ot be Nue eran
                 kIsOutOfTheDesert)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+		//kIsOutOfTheDesert && !kIsNumuCC && kIsBeamNue &&i //eran
+                //kIsOutOfTheDesert && !kIsNumuCC && kActuallyIsNueCC_eran; //eran
                 kIsOutOfTheDesert &&
                 (isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
 }
@@ -189,7 +191,7 @@ return UseOnAxisSelection //eran
                 kIsOutOfTheDesert)
              : ((isNuMode ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
                 kIsOutOfTheDesert &&
-		(isNuMu ? kIsNumuCC : (!kIsNumuCC && kActuallyIsNueCC)));
+		(isNuMu ? kIsNumuCC : (!kIsNumuCC)));
 }
 
 Cut GetFDSignalCut(bool UseOnAxisSelection, bool isNuMode, bool isNuMu) {
@@ -231,6 +233,7 @@ Var GetNDWeight(std::string const &eweight, bool isNuMode) {
          GetAnalysisWeighters(eweight, isNuMode);
 }
 Var GetFDWeight(std::string const &eweight, bool isNuMode) {
+//  return Constant(1); 
   return GetAnalysisWeighters(eweight, isNuMode);
 }
 

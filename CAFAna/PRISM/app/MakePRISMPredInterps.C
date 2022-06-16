@@ -46,7 +46,7 @@ std::string parseCode(std::regex_constants::error_type etype) {
   case std::regex_constants::error_badbrace:
     return "error_badbrace: invalid range inside a { }";
   case std::regex_constants::error_range:
-    return "erro_range: invalid character range(e.g., [z-a])";
+   return "erro_range: invalid character range(e.g., [z-a])";
   case std::regex_constants::error_space:
     return "error_space: insufficient memory to handle this regular expression";
   case std::regex_constants::error_badrepeat:
@@ -123,7 +123,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
 
 std::string output_file_name;
 std::string syst_descriptor = "nosyst";
-std::string axdescriptor = "EProxy";
+std::string axdescriptor = "ETrue";//change 
 std::string binningdescriptor = "default";
 std::string oabinningdescriptor = "default";
 std::string truthbinningdescriptor = "uniform_fine";
@@ -136,7 +136,7 @@ std::vector<std::string> FD_nueswap_input_nubmode;
 bool addfakedata = true;
 bool do_no_op = false;
 unsigned nmax = 0;
-bool UseSel = true;//eran changed to true
+bool UseSel = false;//   TESTING  previously eran changed to true then changed back to false so when run option it actuallay turns it on
 std::string anaweighters = "";
 std::string FakeDataShiftDescript = "";
 
@@ -252,6 +252,8 @@ int main(int argc, char const *argv[]) {
   TestConfigDefinitions();
 
   handleOpts(argc, argv);
+  //std::cout << "selection value " <<UseSel<< std::endl;
+//	return 0;
 
   // Parse input file list patterns.
   std::vector<std::pair<std::string, std::vector<std::string>>> file_lists;
@@ -426,11 +428,11 @@ int main(int argc, char const *argv[]) {
           return 2;
         });
   WeightVars[kND_293kA_nu_numu] = WeightVars[kND_293kA_nu_numu] * specrunweight;
-  WeightVars[kND_nu_nue] = WeightVars[kND_nu_nue] * specrunweight; //adding configs
+  WeightVars[kND_nu_nue] = WeightVars[kND_nu_nue] * specrunweight; //adding configs eran
   WeightVars[kND_280kA_nu_numu] = WeightVars[kND_280kA_nu_numu] * specrunweight;
   AnaWeightVars[kND_293kA_nu_numu] = AnaWeightVars[kND_293kA_nu_numu] * specrunweight;
   AnaWeightVars[kND_280kA_nu_numu] = AnaWeightVars[kND_280kA_nu_numu] * specrunweight;
-  AnaWeightVars[kND_nu_nue] = AnaWeightVars[kND_nu_nue] * specrunweight;//adding configs
+  AnaWeightVars[kND_nu_nue] = AnaWeightVars[kND_nu_nue] * specrunweight;//adding configs  eran
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
@@ -464,7 +466,7 @@ int main(int argc, char const *argv[]) {
     }  
 
     std::cout << "it: " << it << ", IsNu: " << IsNu << ", IsND: " << IsND
-              << ", IsND280kA: " << IsND280kA << ", IsNueSwap: " << IsNueSwap
+              << ", IsND280kA: " << IsND280kA << ", IsNueSwap: " << IsNueSwap << ", IsNDNue: " << IsNDNue
               << ", file_it: " << file_it
               << ", nfiles: " << file_lists[file_it].second.size() << std::endl;
 
@@ -474,16 +476,23 @@ int main(int argc, char const *argv[]) {
 
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
 
-    if (IsND293kA_numu) {      
-	FileLoaders[it] =  std::make_shared<SpectrumLoader>(file_lists[file_it].second, kBeam, nmax);
-     } 
-   
-    if (IsND280kA) {      
-       FileLoaders[it] = FileLoaders[it - 1];
+    if (IsND) {      
+     
+    	if (IsND280kA) {      
+       		FileLoaders[it] = FileLoaders[it - 1];
 
-    }  else if (IsNDNue) {     
-        FileLoaders[it] = FileLoaders[it - 2];
-    }
+    	} else if (IsNDNue) {     
+        	FileLoaders[it] = FileLoaders[it - 2];//eran
+
+    	} else { 
+		FileLoaders[it] =  std::make_shared<SpectrumLoader>(file_lists[file_it].second, kBeam, nmax);
+ 
+    	}
+
+    } else {
+ 
+	FileLoaders[it] =  std::make_shared<SpectrumLoader>(file_lists[file_it].second, kBeam, nmax);
+}
 
     if (IsND293kA_numu) {
 	BeamChan chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
@@ -491,9 +500,11 @@ int main(int argc, char const *argv[]) {
                              AnaWeightVars[it], DataShift,
                              chanmode);
 // Assumes FD/ND biases not applied simultaneously! //ending before luke (NDFakeData || ProtonFakeData) ? DataShift : kNoShift,
+std::cout<<"adding ND file here "<<FileLoaders[it].get()<<std::endl;
+
         Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kNEARDET, Loaders::kMC);
 
-    } if (IsNDNue) {
+    } else if (IsNDNue) {
         BeamChan chanmode = IsNu ? kNue_I_Numode : kNue_I_NuBarmode;
         PRISM->AddNDDataLoader(*FileLoaders[it], AnalysisCuts[it],
                              AnaWeightVars[it], DataShift, 
@@ -502,13 +513,16 @@ int main(int argc, char const *argv[]) {
       //no Loaders here!  IsNDNue uses the same file as ND293ka_numu! (as does the ND280kA0 
 
     } else if (!IsND) { // Is FD
+
+std::cout<<"adding FD file here "<<FileLoaders[it].get()<<std::endl;
+
       Loaders_bm.AddLoader(FileLoaders[it].get(), caf::kFARDET, Loaders::kMC,
                            kBeam,
-                           IsNueSwap ? Loaders::kNueSwap : Loaders::kNonSwap);
+                           IsNueSwap ? Loaders::kNueSwap : Loaders::kNonSwap); //eran maybe to-do change? but should be ok
     }
 } //end for loop
 
-//Notes from Luke 05/25/2021 if IsND293kA_numu FileLoaders[it] = std::make_shared<SpectrumLoader>(
+//Notes from Luke if IsND293kA_numu FileLoaders[it] = std::make_shared<SpectrumLoader>(
 ////                                      file_lists[file_it].second, kBeam, nmax);
 //// (if first time reading the file, out othte config numu is first, load this up
 //// (if another config, just point at that file?  the way you do that:
@@ -625,12 +639,14 @@ int main(int argc, char const *argv[]) {
       continue;
     }  
 
+std::cout<<"IsND: "<<IsND<<"fd_it: "<<fd_it<<std::endl;
+
     if (IsND) { // Is ND
       // Only need to do this once as the PRISM prediction handles the 293, 280
       // kA runs separately
       if (!IsND280kA) {
 
-        if (IsNDNue) {
+        if (IsNDNue) {  //eran
 
           PRISM->AddNDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los, kNumu_Numode);
        
@@ -642,8 +658,8 @@ int main(int argc, char const *argv[]) {
   
         }
 //check older verison for notes, previous version eran
-      }//end !IsND280kA
-      //don't end IsND here!! below is also for IsND!!
+      }//eran notes -- here end !IsND280kA
+      //but don't end IsND here!! below is also for IsND!!
 
       // Corrects for non-uniform off-axis binning
       auto slice_width_weight = NDSliceCorrection(
@@ -654,7 +670,8 @@ int main(int argc, char const *argv[]) {
 
       MatchPredGens[it] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+	  (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) &&  //eran -- maybe check
+          (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
           kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
           WeightVars[it] * slice_width_weight); 
 
@@ -694,10 +711,13 @@ int main(int argc, char const *argv[]) {
       }
 //IsND from:628 ends below, right before else!!
     } else { // Is FD
-      continue; //eran does this work?
+       //eran does this work?
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
+
+//test see eran
+std::cout<<"BeamMode: "<<chanmode.mode <<"NuChan: "<<chanmode.chan <<std::endl;
 
       PRISM->AddFDMCLoader(Loaders_bm, AnalysisCuts[it], AnaWeightVars[it], los,
                            chanmode);
@@ -825,6 +845,10 @@ int main(int argc, char const *argv[]) {
     bool IsNDNue = IsNDNueConfig(it); //eran
     bool IsND280kA = IsND280kA_numu_Config(it);
 
+    if (IsNDNue) { std::cout<<"nue sample"<<std::endl;    
+    } else {std::cout<<"else"<<std::endl;
+    } 
+
     size_t fd_it = 0;
     size_t IsNue = IsFDNueConfig(it);
     if (!IsND) {
@@ -837,25 +861,37 @@ int main(int argc, char const *argv[]) {
     if (IsND) { // Is ND
       MatchPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1); //combine eran
-      SelPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      if (!IsND280kA) { NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
-      SaveTo(fout,
-             std::string("NDMatchInterp_ETrue") +
-                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
-             MatchPredInterps[it]);
-      SaveTo(fout,
-             std::string("NDSelectedInterp_") + axdescriptor +
-                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
-             SelPredInterps[it]); //eran here able to save as one again because they are one!
-}//eran added loop here, bug?
-      if (!IsND280kA) {
+     //eran loop fix?
+    SaveTo(fout,    
+         std::string("NDMatchInterp_ETrue") + 
+		(IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu"),
+	 MatchPredInterps[it]);
+//}
+//   if (!IsND280kA) { NDMatrixPredInterps[it]->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
+//    SaveTo(fout,
+//             std::string("NDMatchInterp_ETrue") +
+//                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
+//             MatchPredInterps[it]);
+//}
+//    if (!IsNDNue) { //eran loop fix?
+//    SaveTo(fout, 
+//         std::string("NDSelectedInterp_") + axdescriptor
+//                (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
+//         SelPredInterps[it]);
+//}
+    SaveTo(fout,    //want 280kA sample //current no NDnues
+          std::string("NDSelectedInterp_") + axdescriptor +
+                 (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu"),
+          SelPredInterps[it]); //eran here able to save as one again because they are one!
+//eran added loop here, bug?
+      if ((!IsND280kA) && (!IsNDNue)) { //for smearing matrix 
         SaveTo(fout,
                std::string("NDMatrixInterp_ERecETrue") +
                   (IsNu ? "_nu" : "_nub"),
                NDMatrixPredInterps[it]);
       }
     } else { // Is FD
-      continue; // eran skip over, need ot change? 
+      //continue; // eran skip over, need ot change? 
       if (!IsNue) {
         SaveTo(fout,
                std::string("FDMatchInterp_ETrue_numu") +

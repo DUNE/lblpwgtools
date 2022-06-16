@@ -59,9 +59,17 @@ const Cut kActuallyIsNumuCC([](const caf::StandardRecord *sr) {
 const Cut kActuallyIsNumubarCC([](const caf::StandardRecord *sr) {
   return sr->isCC && (sr->nuPDG == -14);
 });
+
 const Cut kActuallyIsNueCC([](const caf::StandardRecord *sr) {
   return sr->isCC && (sr->nuPDG == 12);
 });
+
+//const Cut kActuallyIsNueCC_eran([](const caf::StandardRecord *sr) { //eran test
+//had changed this, wouldn't work with kIsBeamNue, but also wasn't any different when ran on it, back to kActualIsNueCC
+//  return sr->isCC;
+//return sr->isCC && (sr->kIsBeamNue);
+//});
+
 
 const Cut kActuallyIsNuebarCC([](const caf::StandardRecord *sr) {
   return sr->isCC && (sr->nuPDG == -12);

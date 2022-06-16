@@ -134,7 +134,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
        dir = f.GetDirectory((std::string("NDMatchInterp_ETrue") +
                             (IsND280kA ? "_280kA" : "_293kA") +
-                            (IsNu ? "_nu" : "_nub"))   
+                            (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu")) //eran   
                                .c_str());
 
       if (dir) {
@@ -148,7 +148,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
 
       dir = f.GetDirectory((std::string("NDSelectedInterp_") +
                             (IsND280kA ? "_280kA" : "_293kA") + varname +
-                            (IsNu ? "_nu" : "_nub"))//eran
+                            (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu"))//eran
                                .c_str());
 
       if (dir) {
@@ -168,6 +168,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
         }
       }
     } else { // Is FD
+       //eran test ?
       if (!IsFDNue) {
         dir = f.GetDirectory(
             (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"))

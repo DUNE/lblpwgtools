@@ -359,7 +359,7 @@ PredictionPRISM::GetNDPrediction(PRISM::BeamChan NDChannel, int kA) const {
                                              : NuChan::kNumuBarIntrinsic)) {
     return GetNDPrediction_right_sign_numu(NDChannel.mode, kA);
   } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
-                                   ? NuChan::kNueIntrinsic
+                                   ? NuChan::kNueIntrinsic //eran
                                    : NuChan::kNueBarIntrinsic)) {
     return GetNDPrediction_right_sign_nue(NDChannel.mode, kA);
   } else if (NDChannel.chan &
