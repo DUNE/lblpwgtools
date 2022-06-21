@@ -1,0 +1,36 @@
+#include "PRISMOscScan_Grid.fcl"
+
+bin_step: [1, -0.6, -0.55]
+
+scans: [
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dcp_coarse
+ 		scan_params[0].scan_steps: @local::bin_step
+		free_syst_params: @local::nuisance_parameters.all
+		output_dir: "dcp_all"
+	},
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dcp_coarse
+		scan_params[0].scan_steps: @local::bin_step
+		free_syst_params: @local::nuisance_parameters.fluxAll
+		output_dir: "dcp_flux"
+	},
+
+	{
+		@table::BasicPred
+		scan_params: @local::ScanDefinitions.dcp_coarse
+		scan_params[0].scan_steps: @local::bin_step
+		output_dir: "dcp_nom"
+	},
+
+]
+
+# This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
+scans[0].output_file[1]: "RECREATE"
+scans[0].output_file[0]: PRISMScan_dcp_bin1.root
+scans[1].output_file[0]: PRISMScan_dcp_bin1.root
+scans[2].output_file[0]: PRISMScan_dcp_bin1.root
