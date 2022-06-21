@@ -131,14 +131,12 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) { 
         blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str()); 
-        //blob.MatchPredInterps[config]->MinimizeMemory();
       }
       if (!IsND280kA) {
         path = (std::string("NDMatrixInterp_ERecETrue") +
                (IsNu ? "_nu" : "_nub"));
         if (f.GetDirectory(path.c_str())) {
           blob.NDMatrixPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-          //blob.NDMatrixPredInterps[config]->MinimizeMemory();
         }
       }
       path = (std::string("NDUnSelected_ETrue") +
@@ -146,68 +144,50 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.NDUnselTruePredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.NDUnselTruePredInterps[config]->MinimizeMemory();
       }
       path = (std::string("NDSelected_ETrue") +
              (IsND280kA ? "_280kA" : "_293kA") +
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.NDSelTruePredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.NDSelTruePredInterps[config]->MinimizeMemory();
       }
     } else if(!IsNuTau){ // Is FD numu/nue
       if (!IsNue) {
         path = (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"));
         if (f.GetDirectory(path.c_str())) {
           blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-          //blob.MatchPredInterps[config]->MinimizeMemory();
         }
-      }
-
-      path = (std::string("FDInterp_") + varname +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
-      if (f.GetDirectory(path.c_str())) {
-        blob.FarDetPredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.FarDetPredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDMatrixInterp_ERecETrue") +
              (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDMatrixPredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.FDMatrixPredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDUnSelected_ETrue") +
              (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDUnselTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.FDUnselTruePredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDSelected_ETrue") +
              (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")); 
       if (f.GetDirectory(path.c_str())) {
         blob.FDSelTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
-        //blob.FDSelTruePredInterps[fd_config]->MinimizeMemory();
-      }
-      
-      path = (std::string("FDDataNonSwap_") + varname + 
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
-      if (f.GetDirectory(path.c_str())) {
-        blob.FarDetData_nonswap[fd_config] = LoadFrom_<OscillatableSpectrum>(dir, path.c_str());
-      }
-
-      path = (std::string("FDDataNueSwap_") + varname +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
-      if (f.GetDirectory(path.c_str())) {
-        blob.FarDetData_nueswap[fd_config] = LoadFrom_<OscillatableSpectrum>(dir, path.c_str());
       }
 
       path = (std::string("FDDataPred_") + varname +
              (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FarDetDataPreds[fd_config] = LoadFrom_<DataPredictionNoExtrap>(dir, path.c_str());
+      }
+
+      path = (std::string("FDFakeDataBiasPred_") + varname +
+             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+      if (f.GetDirectory(path.c_str())) {
+        blob.FarDetFakeDataBiasPreds[fd_config] = LoadFrom_<DataPredictionNoExtrap>(dir, 
+                                                                                    path.c_str());
       }
     }
   }
@@ -269,36 +249,20 @@ void DumpLoadedSpectra(PRISMStateBlob const &blob){
               << bool(blob.FDSelTruePredInterps[fd_i].get()) << std::endl;
   }  
   std::cout << "}" << std::endl;
-  std::cout << "FarDetPredInterps: {" << std::endl;
-  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
-    if(IsNDConfig(i)){ continue; }
-    size_t fd_i = GetFDConfig(i);
-    std::cout << "\t\t" << DescribeConfig(i) << ": "
-              << bool(blob.FarDetPredInterps[fd_i].get()) << std::endl;
-  }  
-  std::cout << "}" << std::endl;
-  std::cout << "FarDetData_nonswap: {" << std::endl;
-  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
-    if(IsNDConfig(i)){ continue; }
-    size_t fd_i = GetFDConfig(i);
-    std::cout << "\t\t" << DescribeConfig(i) << ": "
-              << bool(blob.FarDetData_nonswap[fd_i].get()) << std::endl;
-  }  
-  std::cout << "}" << std::endl;
-  std::cout << "FarDetData_nueswap: {" << std::endl;
-  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
-    if(IsNDConfig(i)){ continue; }
-    size_t fd_i = GetFDConfig(i);
-    std::cout << "\t\t" << DescribeConfig(i) << ": "
-              << bool(blob.FarDetData_nueswap[fd_i].get()) << std::endl;
-  }  
-  std::cout << "}" << std::endl;
   std::cout << "FarDetDataPreds: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
     if(IsNDConfig(i)){ continue; }
     size_t fd_i = GetFDConfig(i);
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.FarDetDataPreds[fd_i].get()) << std::endl;
+  }
+  std::cout << "}" << std::endl;
+  std::cout << "FarDetFakeDataBiasPreds: {" << std::endl;
+  for (size_t i = 0; i < kNPRISMConfigs; ++i) {
+    if(IsNDConfig(i)){ continue; }
+    size_t fd_i = GetFDConfig(i);
+    std::cout << "\t\t" << DescribeConfig(i) << ": "
+              << bool(blob.FarDetFakeDataBiasPreds[fd_i].get()) << std::endl;
   }
   std::cout << "}" << std::endl;
 }

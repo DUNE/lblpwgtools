@@ -32,6 +32,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   double POT_FD = POT * pot_fd_FVMassFactor;
   bool use_PRISM = pred.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
+  bool use_fake_data = pred.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
 
   std::pair<double, double> gauss_flux =
@@ -170,6 +171,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
   state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
 
+  if (use_fake_data) {
+    std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
+  } else {
+    std::cout << "Use nominal MC as FD and ND 'data'." << std::endl;
+  }
+  state.PRISM->SetUseFakeData(use_fake_data);                                 
+
   if (match_intrinsic_nue_bkg) {
     std::cout << "Include FD intrinsic nue in flux matching." << std::endl;
   } else {
@@ -235,6 +243,23 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
+
+    //auto FarDetFakeDataBiasPred = 
+    //    state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+    //auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
+    //FakeDataBiasPred->Scale(1, "width");
+    //chan_dir->WriteTObject(FakeDataBiasPred, "FakeDataBiasPred_Total");
+    //FakeDataBiasPred->SetDirectory(nullptr);
+
+    Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
+    if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
+      FarDetFakeDataBiasPred =
+          state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+      auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
+      FakeDataBiasPred->Scale(1, "width");
+      chan_dir->WriteTObject(FakeDataBiasPred, "FakeDataBiasPred_Total");
+      FakeDataBiasPred->SetDirectory(nullptr);
+    }
 
     auto FarDetDataUnOscPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(&no).FakeData(POT_FD);
     auto *DataUnOscPred = FarDetDataUnOscPred.ToTHX(POT_FD);
@@ -357,10 +382,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       }
 
     } else {
-      auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
-                              ->PredictSyst(calc, shift).ToTHX(POT_FD);
-      chan_dir->WriteTObject(FarDetPred, "FarDetPred");
-      FarDetPred->SetDirectory(nullptr);
+      std::cout << "Why are you running this script if you don't want PRISM?" << std::endl;
     }
 
     if (NDConfig_enum == kND_nu) {
