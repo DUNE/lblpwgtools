@@ -37,6 +37,8 @@ Binning GetBinning(std::string const &xbinning) {
     return kHadRecoBinning;
   } else if (xbinning == "lep_default") {
     return kLepRecoBinning;
+  } else if (xbinning == "true_osc_binning") {
+    return kTrueEnergyBins;
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -120,9 +122,10 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   // Seperate ND and FD axes for ND->FD extrapolation.
   // Possible fine binning for ND axis and extended energy range.
   // Only needed for EVisReco, not ELepEHad.
+  bool OneDAxis(false);
+  if (varname == "EVisReco" || varname == "EProxy") OneDAxis = true;
   HistAxis xaxND = RecoObservable(varname, 
-                                  (varname == "EVisReco") ? 
-                                  "prism_fine_default" : xbinning);
+                                  OneDAxis ? "prism_fine_default" : xbinning);
   HistAxis xaxFD = RecoObservable(varname, xbinning);
 
   return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};

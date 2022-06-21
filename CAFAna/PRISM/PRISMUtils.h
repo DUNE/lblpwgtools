@@ -95,10 +95,8 @@ struct PRISMStateBlob {
   std::vector<std::unique_ptr<PredictionInterp>> FDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> FDSelTruePredInterps;
   //----------------------
-  std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
-  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
-  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
   std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetFakeDataBiasPreds;
 
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nu;
   std::unique_ptr<PredictionInterp> NDFluxPred_293kA_nub;
@@ -118,9 +116,7 @@ struct PRISMStateBlob {
 
     // Don't need MatchPredInterps for Nue (they aren't made/used)
     return PRISM && (IsNue || bool(MatchPredInterps[pc])) &&
-           (IsND || (bool(FarDetPredInterps[fd_pc]) &&
-                     bool(FarDetData_nonswap[fd_pc]) &&
-                     bool(FarDetData_nueswap[fd_pc])));
+           (IsND || bool(FarDetDataPreds[fd_pc]));
   }
 
   void Init() {
@@ -131,10 +127,8 @@ struct PRISMStateBlob {
     FillWithNulls(NDSelTruePredInterps, PRISM::kNPRISMConfigs);
     FillWithNulls(FDUnselTruePredInterps, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FDSelTruePredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FarDetPredInterps, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FarDetData_nonswap, PRISM::kNPRISMFDConfigs);
-    FillWithNulls(FarDetData_nueswap, PRISM::kNPRISMFDConfigs);
     FillWithNulls(FarDetDataPreds, PRISM::kNPRISMFDConfigs);
+    FillWithNulls(FarDetFakeDataBiasPreds, PRISM::kNPRISMFDConfigs);
 
     NDFluxPred_293kA_nu = nullptr;
     NDFluxPred_293kA_nub = nullptr;

@@ -29,7 +29,7 @@ using namespace PRISM;
 std::string output_file_name;
 std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EVisReco";
-std::string binningdescriptor = "default";
+std::string binningdescriptor = "prism_default";
 std::string oabinningdescriptor = "default";
 std::string truthbinningdescriptor = "event_rate_match"; // was event_rate_match
 
@@ -41,7 +41,7 @@ bool do_no_op = false;
 unsigned nmax = 0;
 bool UseSel = false;
 bool isReco = false;
-std::string FakeDataShiftDescript = "";
+std::string FakeDataShiftDescript = "MissingProtonFakeData_pos";
 
 void SayUsage(char const *argv[]) {
   std::cout
@@ -293,9 +293,12 @@ int main(int argc, char const *argv[]) {
 
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
+  bool OneDAxis(false);
+  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy") 
+    OneDAxis = true;
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor, 
-                     (axdescriptor == "EVisReco") ? 
+                     OneDAxis ? 
                      "prism_fine_default" : binningdescriptor);
 
   std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
@@ -329,40 +332,6 @@ int main(int argc, char const *argv[]) {
 
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
-
-  //-------------------------------------------------------
-
-  // Make sure we apply biases correctly to ND and FD data.
-  // This method is a bit of a bodge which assumes the Fake data
-  // studies will apply multiple different biases at the same time.
-  bool ProtonFakeData(false), NDFakeData(false), FDFakeData(false);
-  std::vector<std::string> split_input =
-      SplitString(FakeDataShiftDescript, ':');
-
-  for (auto in_name : split_input) {
-    std::string name = in_name;
-    if (in_name.compare(in_name.length() - 4, 4, "_pos") == 0) {
-      name = in_name.substr(0, in_name.length() - 4);
-    } else if (in_name.compare(in_name.length() - 4, 4, "_neg") == 0) {
-      name = in_name.substr(0, in_name.length() - 4);
-    }
-    // Proton fake data applied to ND and FD data - its an MC bias
-    // ND fake data only a ND bias
-    // FD fake data only a FD bias
-    if (IsFakeDataGenerationSyst(name))
-      ProtonFakeData = true;
-    if (IsNDdetSyst(name))
-      NDFakeData = true;
-    if (IsFDdetSyst(name))
-      FDFakeData = true;
-  }
-
-  if (ProtonFakeData)
-    std::cout << "Proton Fake Data" << std::endl;
-  if (NDFakeData)
-    std::cout << "ND Data Bias" << std::endl;
-  if (FDFakeData)
-    std::cout << "FD Data Bias" << std::endl;
 
   //-------------------------------------------------------
 
@@ -419,8 +388,7 @@ int main(int argc, char const *argv[]) {
       PRISM->AddNDDataLoader(
           *FileLoaders[GetND293kAConfig(config)],
           IsNu ? kNDSelectionCuts_nu : kNDSelectionCuts_nub,
-          kNDCVWeight, // Assumes FD/ND biases not applied simultaneously!
-          (NDFakeData || ProtonFakeData) ? DataShift : kNoShift, chanmode);
+          kNDCVWeight, DataShift, chanmode);
 
       Loaders_bm.AddLoader(FileLoaders[config].get(), caf::kNEARDET, Loaders::kMC);
 
@@ -541,19 +509,11 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(FDSelTruePredGens, kNPRISMFDConfigs);
   FillWithNulls(FDSelTruePredInterps, kNPRISMFDConfigs);
   //---------------------------------------------------
-
-  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nonswap;
-  std::vector<std::unique_ptr<OscillatableSpectrum>> FarDetData_nueswap;
-  FillWithNulls(FarDetData_nonswap, kNPRISMFDConfigs);
-  FillWithNulls(FarDetData_nueswap, kNPRISMFDConfigs);
-
   std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetDataPreds;
   FillWithNulls(FarDetDataPreds, kNPRISMFDConfigs);
+  std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetFakeDataBiasPreds;
+  FillWithNulls(FarDetFakeDataBiasPreds, kNPRISMFDConfigs);
 
-  std::vector<std::unique_ptr<IPredictionGenerator>> FarDetPredGens;
-  std::vector<std::unique_ptr<PredictionInterp>> FarDetPredInterps;
-  FillWithNulls(FarDetPredGens, kNPRISMFDConfigs);
-  FillWithNulls(FarDetPredInterps, kNPRISMFDConfigs);
 
   static osc::NoOscillations no;
   static osc::IOscCalc *calc = NuFitOscCalc(1);
@@ -677,30 +637,13 @@ int main(int argc, char const *argv[]) {
       size_t non_swap_it = GetConfigNonSwap(config);
       size_t nue_swap_it = GetConfigNueSwap(config);
 
-      if (FileLoaders[non_swap_it]) {
-        FarDetData_nonswap[fd_config] = std::make_unique<OscillatableSpectrum>(
-            *FileLoaders[non_swap_it], axes.XProjectionFD, FDCuts,
-            (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
-            kFDCVWeight);
-      }
-
-      if (FileLoaders[nue_swap_it]) {
-        FarDetData_nueswap[fd_config] = std::make_unique<OscillatableSpectrum>(
-            *FileLoaders[nue_swap_it], axes.XProjectionFD, FDCuts,
-            (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
-            kFDCVWeight);
-      }
-
       FarDetDataPreds[fd_config] = std::make_unique<DataPredictionNoExtrap>(
           Loaders_bm, axes.XProjectionFD, FDCuts,
-          (FDFakeData || ProtonFakeData) ? DataShift : kNoShift,
-          kFDCVWeight);
+          kNoShift, kFDCVWeight);
 
-      FarDetPredGens[fd_config] = std::make_unique<NoExtrapPredictionGenerator>(
-          axes.XProjectionFD, FDCuts, kFDCVWeight);
-      FarDetPredInterps[fd_config] = std::make_unique<PredictionInterp>(
-          los, calc, *FarDetPredGens[fd_config], Loaders_bm, kNoShift,
-          PredictionInterp::kSplitBySign);
+      FarDetFakeDataBiasPreds[fd_config] = std::make_unique<DataPredictionNoExtrap>(
+          Loaders_bm, axes.XProjectionFD, FDCuts,
+          DataShift, kFDCVWeight);
 
       // Ugly temporary hack, hopefully we don't need this
       int from = (IsNu ? 14 : -14);
@@ -808,16 +751,6 @@ int main(int argc, char const *argv[]) {
       }
 
       SaveTo(fout,
-             std::string("FDInterp_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-             FarDetPredInterps[fd_config]);
-
-      std::cout << "Saving: "
-                << std::string("FDInterp_") + axdescriptor +
-                       (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")
-                << " to " << config << ", " << fd_config << std::endl;
-
-      SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_config]);
@@ -832,23 +765,15 @@ int main(int argc, char const *argv[]) {
                  (IsNu ? "_nu" : "_nub"),
              FDSelTruePredInterps[fd_config]);
 
-      if (FarDetData_nonswap[fd_config]) {
-        SaveTo(fout,
-               std::string("FDDataNonSwap_") + axdescriptor +
-                   (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-               FarDetData_nonswap[fd_config]);
-      }
-      if (FarDetData_nueswap[fd_config]) {
-        SaveTo(fout,
-               std::string("FDDataNueSwap_") + axdescriptor +
-                   (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
-               FarDetData_nueswap[fd_config]);
-      }
-
       SaveTo(fout,
              std::string("FDDataPred_") + axdescriptor +
                  (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
              FarDetDataPreds[fd_config]);
+
+      SaveTo(fout,
+             std::string("FDFakeDataBiasPred_") + axdescriptor +
+                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+             FarDetFakeDataBiasPreds[fd_config]);
     }
   }
 

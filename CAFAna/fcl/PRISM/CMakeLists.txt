@@ -17,5 +17,8 @@ install(FILES ${DcpScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/Dcp_1D
 file(GLOB Dmsq32Ssth23ScanFCL ${CMAKE_CURRENT_SOURCE_DIR}/Dmsq32_Ssth23_2DScan/*.fcl)
 install(FILES ${Dmsq32Ssth23ScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/Dmsq32_Ssth23_2DScan)
 
+file(GLOB Dmsq32Ssth23ScanSingleFitFCL ${CMAKE_CURRENT_SOURCE_DIR}/Dmsq32_Ssth23_2DScan_SingleFit/*.fcl)
+install(FILES ${Dmsq32Ssth23ScanSingleFitFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/Dmsq32_Ssth23_2DScan_SingleFit)
+
 file(GLOB NuisanceSystScanFCL ${CMAKE_CURRENT_SOURCE_DIR}/NuisanceSyst_Scan/*.fcl)
 install(FILES ${NuisanceSystScanFCL} DESTINATION ${CMAKE_INSTALL_PREFIX}/fcl/PRISM/NuisanceSyst_Scan)

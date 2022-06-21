@@ -5,9 +5,9 @@ CAFE_COMMAND_FILE="CAFECommands.cmd"
 SCRIPT_TO_INCLUDE=""
 RENAME_SUBMIT_SCRIPT=""
 
-LIFETIME_EXP="40h" # stat only 10h, four flavor 20h, w/ syst 40h
-DISK_EXP="1GB"
-MEM_EXP="30GB" # stat only 1GB, w/ syst 30GB
+LIFETIME_EXP="80h"
+DISK_EXP="2GB"
+MEM_EXP="25GB"
 
 FORCE_REMOVE="0"
 

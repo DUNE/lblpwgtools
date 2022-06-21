@@ -454,10 +454,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       delete PRISMExtrapCovMat_Frac;
 
     } else {
-      auto *FarDetPred = state.FarDetPredInterps[FDfdConfig_enum]
-                              ->PredictSyst(calc, shift).ToTHX(POT_FD);
-      chan_dir->WriteTObject(FarDetPred, "FarDetPred");
-      FarDetPred->SetDirectory(nullptr);
+      // Nothing.
     }
 
     if (NDConfig_enum == kND_nu) {

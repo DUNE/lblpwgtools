@@ -15,6 +15,8 @@ BasicPred: {
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
+	# Do you want to use fake data?
+	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 
@@ -62,53 +64,53 @@ BasicPred: {
 
 # Just an example below now, not used
 
-EGscans: [
+scansEG: [
+
+#	{
+#		@table::BasicPred
+#		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.ssth23
+#		scan_params: @local::ScanDefinitions.dcp
+#		output_dir: "numu_EvMatch_nom2"
+#	},
 
 	{
 		@table::BasicPred
-		scan_params: @local::ScanDefinitions.dmsq23
+#		scan_params: @local::ScanDefinitions.dmsq23
 #		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-		output_dir: "numu_EvMatch_nom"
-	},
-
-	{
-		@table::BasicPred
-		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
+		scan_params: @local::ScanDefinitions.dcp
 		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "numu_EvMatch_all"
+		output_dir: "numu_EvMatch_allxsecflux"
 	},
 
-	{
-		@table::BasicPred
-		scan_params: @local::ScanDefinitions.dmsq23
+#	{
+#		@table::BasicPred
+#		scan_params: @local::ScanDefinitions.dmsq23
 #		scan_params: @local::ScanDefinitions.ssth23
 #		scan_params: @local::ScanDefinitions.dcp
-		free_syst_params: @local::nuisance_parameters.fluxAll
-		output_dir: "numu_EvMatch_flux"
-	},
+#		free_syst_params: @local::nuisance_parameters.fluxAll
+#		output_dir: "numu_EvMatch_flux"
+#	},
 
-	{
-		@table::BasicPred
-		scan_params: @local::ScanDefinitions.dmsq23
+#	{
+#		@table::BasicPred
+#		scan_params: @local::ScanDefinitions.dmsq23
 #		scan_params: @local::ScanDefinitions.ssth23
 #		scan_params: @local::ScanDefinitions.dcp
-		free_syst_params: @local::nuisance_parameters.xsec_total
-		output_dir: "numu_EvMatch_xsec"
-	},
+#		free_syst_params: @local::nuisance_parameters.xsec_total
+#		output_dir: "numu_EvMatch_xsec"
+#	},
 
-	{
-		@table::BasicPred
-		scan_params: @local::ScanDefinitions.dmsq23
+#	{
+#		@table::BasicPred
+#		scan_params: @local::ScanDefinitions.dmsq23
 #		scan_params: @local::ScanDefinitions.ssth23
 #		scan_params: @local::ScanDefinitions.dcp
-		free_syst_params: @local::nuisance_parameters.det_all
-		output_dir: "numu_EvMatch_det"
-	},
+#		free_syst_params: @local::nuisance_parameters.det_all
+#		output_dir: "numu_EvMatch_det"
+#	},
 
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-EGscans[0].output_file[1]: "RECREATE"
+scansEG[0].output_file[1]: "RECREATE"

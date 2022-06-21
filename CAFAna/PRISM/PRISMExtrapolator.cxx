@@ -7,6 +7,7 @@
 #include "CAFAna/Core/Binning.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
 
 #include "OscLib/IOscCalc.h"
 
@@ -255,6 +256,9 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
       // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
       RegMatrix(row_it, row_it) = cond.RegFactor_293kA;
       RegMatrix(row_it, row_it + 1) = -cond.RegFactor_293kA;
+      //if (row_it > 38 && row_it < 52) { // higher reg in these bins
+      //  RegMatrix(row_it, row_it) *= 5;
+      //}
     }
     RegMatrix(NCoeffs_293kA - 1, NCoeffs_293kA - 1) = cond.RegFactor_293kA;
 
