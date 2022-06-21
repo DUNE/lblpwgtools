@@ -23,9 +23,9 @@ using namespace ana;
 void demo2()
 {
   // Repeat all of demo1.C to get us our Prediction object
-  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/obsolete/mcc11_v3/FD_FHC_nonswap.root";
-  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/obsolete/mcc11_v3/FD_FHC_nueswap.root";
-  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/obsolete/mcc11_v3/FD_FHC_tauswap.root";
+  const std::string fnameNonSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_tauswap.root";
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
