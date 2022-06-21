@@ -5,18 +5,13 @@
 
 BasicPred: {
 
-	output_file: [PRISMScan_dmsq32_4Flav_XSecFluxDetTotal_25Apr22.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecFluxOnly_24Apr22.root
-
-#PRISMState_FHC_RHC_XSecFluxDetTotal_24Apr22.root
-
-#PRISMState_FHC_RHC_XSecFluxOnly_24Apr22.root
-
-#PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
+	output_file: [Chi2_dmsq32_nodet_FHC_flagoff.root, "UPDATE"]
+	# output_file: [Chi2_dmsq32_ssth23_dcp_nodet_FourFlavor_flagoff.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/IntrinsicNue_Syst_nodet/hadd_state_IntrinsicNue_nodet_withxseccorr.root
 
 	projection_name: EVisReco
 	use_PRISM: true
-	POT_years: 0.5
+	POT_years: 1
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
@@ -62,10 +57,7 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 
-
-	#samples: @local::FitChannels.Numu_disp
-	#samples: @local::FitChannels.DispJoint
-	samples: @local::FitChannels.FourFlavor
+	samples: @local::FitChannels.NuModeJoint
 }
 
 # Just an example below now, not used
