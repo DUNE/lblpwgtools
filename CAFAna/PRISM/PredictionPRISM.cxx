@@ -14,6 +14,9 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
+#include "CAFAna/Systs/RecoEnergyFDSysts.h"
+
 #include "TAxis.h"
 #include "TDirectory.h"
 #include "TH2.h"
@@ -45,6 +48,7 @@ PredictionPRISM::PredictionPRISM(
 void PredictionPRISM::Initialize() {
   fSetNDErrorsFromRate = true;
   fVaryNDFDMCData = false;
+  fUseFakeData = false;
 
   fDefaultOffAxisPOT = 1.1E20;
 
@@ -118,8 +122,11 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
                                       const Cut &cut, const Weight &wei,
                                       ana::SystShifts shift,
                                       PRISM::BeamChan NDChannel) {
-  std::unique_ptr<PRISMReweightableSpectrum> &NDData = GetNDData(NDChannel);
-  if (&NDData == &kNoSuchNDDataSpectrum) {
+  std::unique_ptr<PRISMReweightableSpectrum> &NDData = 
+      GetNDData(NDChannel, 293);
+  std::unique_ptr<PRISMReweightableSpectrum> &NDFakeDataBias = 
+      GetNDData(NDChannel, 293, true);
+  if (&NDData == &kNoSuchNDDataSpectrum || &NDFakeDataBias == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
     abort();
@@ -131,18 +138,29 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   auto slice_width_weight_280kA =
       NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
 
-  NDData = std::make_unique<PRISMReweightableSpectrum>(
+  NDData = std::make_unique<PRISMReweightableSpectrum>( 
+      ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, kNoShift,
+      wei * slice_width_weight);
+
+  NDFakeDataBias = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, shift,
       wei * slice_width_weight);
 
-  std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA =
+  std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA = 
       GetNDData(NDChannel, 280);
-  if (&NDData_280kA == &kNoSuchNDDataSpectrum) {
+  std::unique_ptr<PRISMReweightableSpectrum> &NDFakeDataBias_280kA = 
+      GetNDData(NDChannel, 280, true);
+  if (&NDData_280kA == &kNoSuchNDDataSpectrum || 
+      &NDFakeDataBias_280kA == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
               << NDChannel.mode << std::endl;
     abort();
   }
-  NDData_280kA = std::make_unique<PRISMReweightableSpectrum>(
+  NDData_280kA = std::make_unique<PRISMReweightableSpectrum>( 
+      ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, kNoShift,
+      wei * slice_width_weight_280kA);
+
+  NDFakeDataBias_280kA = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, shift,
       wei * slice_width_weight_280kA);
 }
@@ -173,6 +191,8 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
       NDSliceCorrection(50, fNDOffAxis.GetBinnings().front().Edges());
   auto slice_width_weight_280kA =
       NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
+
+  //ana::SystShifts DataShift = GetFakeDataGeneratorSystShift("MissingProtonFakeData_pos");
 
   std::unique_ptr<PredictionInterp> &NDPrediction = GetNDPrediction(NDChannel);
   if (&NDPrediction == &kNoSuchNDPredictionSpectrum) {
@@ -225,6 +245,8 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                                     PRISM::BeamChan FDChannel) {
 
   osc::NoOscillations kNoOsc;
+
+  //ana::SystShifts DataShift = GetFakeDataGeneratorSystShift("MissingProtonFakeData_pos");
 
   std::unique_ptr<PredictionInterp> &FDPrediction = GetFDPrediction(FDChannel);
   if (&FDPrediction == &kNoSuchFDPredictionSpectrum) {
@@ -309,60 +331,72 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 //-----------------------------------------------
 
 std::unique_ptr<PRISMReweightableSpectrum> &
-PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA) const {
+PredictionPRISM::GetNDData_right_sign_numu(BeamMode NDBM, int kA, bool shift) const {
   if (NDBM == BeamMode::kNuMode) {
-    return (kA == 293) ? Measurements.ND_293kA.numu_ccinc_sel_numode
-                       : Measurements.ND_280kA.numu_ccinc_sel_numode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.numu_ccinc_sel_numode_fd : 
+                          Measurements.ND_293kA.numu_ccinc_sel_numode)
+                       : (shift ? Measurements.ND_280kA.numu_ccinc_sel_numode_fd :
+                          Measurements.ND_280kA.numu_ccinc_sel_numode);
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return (kA == 293) ? Measurements.ND_293kA.numubar_ccinc_sel_nubmode
-                       : Measurements.ND_280kA.numubar_ccinc_sel_nubmode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.numubar_ccinc_sel_nubmode_fd : 
+                          Measurements.ND_293kA.numubar_ccinc_sel_nubmode)
+                       : (shift ? Measurements.ND_280kA.numubar_ccinc_sel_nubmode_fd : 
+                          Measurements.ND_280kA.numubar_ccinc_sel_nubmode);
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<PRISMReweightableSpectrum> &
-PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM, int kA) const {
+PredictionPRISM::GetNDData_right_sign_nue(BeamMode NDBM, int kA, bool shift) const {
   if (NDBM == BeamMode::kNuMode) {
-    return (kA == 293) ? Measurements.ND_293kA.nue_ccinc_sel_numode
-                       : Measurements.ND_280kA.nue_ccinc_sel_numode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.nue_ccinc_sel_numode_fd : 
+                          Measurements.ND_293kA.nue_ccinc_sel_numode)
+                       : (shift ? Measurements.ND_280kA.nue_ccinc_sel_numode_fd : 
+                          Measurements.ND_280kA.nue_ccinc_sel_numode);
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return (kA == 293) ? Measurements.ND_293kA.nuebar_ccinc_sel_nubmode
-                       : Measurements.ND_280kA.nuebar_ccinc_sel_nubmode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.nuebar_ccinc_sel_nubmode_fd : 
+                          Measurements.ND_293kA.nuebar_ccinc_sel_nubmode)
+                       : (shift ? Measurements.ND_280kA.nuebar_ccinc_sel_nubmode_fd :
+                          Measurements.ND_280kA.nuebar_ccinc_sel_nubmode);
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<PRISMReweightableSpectrum> &
-PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA) const {
+PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA, bool shift) const {
   if (NDBM == BeamMode::kNuMode) {
-    return (kA == 293) ? Measurements.ND_293kA.numubar_ccinc_sel_numode
-                       : Measurements.ND_280kA.numubar_ccinc_sel_numode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.numubar_ccinc_sel_numode_fd :
+                          Measurements.ND_293kA.numubar_ccinc_sel_numode)
+                       : (shift ? Measurements.ND_280kA.numubar_ccinc_sel_numode_fd :
+                          Measurements.ND_280kA.numubar_ccinc_sel_numode);
   } else if (NDBM == BeamMode::kNuBarMode) {
-    return (kA == 293) ? Measurements.ND_293kA.numu_ccinc_sel_nubmode
-                       : Measurements.ND_280kA.numu_ccinc_sel_nubmode;
+    return (kA == 293) ? (shift ? Measurements.ND_293kA.numu_ccinc_sel_nubmode_fd :
+                          Measurements.ND_293kA.numu_ccinc_sel_nubmode)
+                       : (shift ? Measurements.ND_280kA.numu_ccinc_sel_nubmode_fd :
+                         Measurements.ND_280kA.numu_ccinc_sel_nubmode);
   }
   return kNoSuchNDDataSpectrum;
 }
 std::unique_ptr<PRISMReweightableSpectrum> &
-PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA) const {
+PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA, bool shift) const {
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
                                              : NuChan::kNumuBarIntrinsic)) {
-    return GetNDData_right_sign_numu(NDChannel.mode, kA);
+    return GetNDData_right_sign_numu(NDChannel.mode, kA, shift);
   } else if (NDChannel.chan & ((NDChannel.mode == BeamMode::kNuMode)
                                    ? NuChan::kNueIntrinsic
                                    : NuChan::kNueBarIntrinsic)) {
-    return GetNDData_right_sign_nue(NDChannel.mode, kA);
+    return GetNDData_right_sign_nue(NDChannel.mode, kA, shift);
   } else if (NDChannel.chan &
              ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuBarIntrinsic
                                                     : NuChan::kNumuIntrinsic)) {
-    return GetNDData_wrong_sign_numu(NDChannel.mode, kA);
+    return GetNDData_wrong_sign_numu(NDChannel.mode, kA, shift);
   }
   PRISMOUT("Invalid ND Data request: " << NDChannel.mode << ", "
                                        << NDChannel.chan);
   return kNoSuchNDDataSpectrum;
 }
 
-bool PredictionPRISM::HaveNDData(PRISM::BeamChan NDChannel, int kA) const {
-  return bool(GetNDData(NDChannel, kA));
+bool PredictionPRISM::HaveNDData(PRISM::BeamChan NDChannel, int kA, bool shift) const {
+  return bool(GetNDData(NDChannel, kA, shift));
 }
 
 std::unique_ptr<PredictionInterp> &
@@ -551,6 +585,7 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalc *calc,
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
 PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                                         MatchChan match_chan) const {
+
   bool WeHaveNDData = HaveNDData(match_chan.from);
   bool WeHaveNDPrediction = HaveNDPrediction(match_chan.from);
   bool WeHaveFDPrediction = HaveFDPrediction(match_chan.to);
@@ -574,10 +609,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   DontAddDirectory guard;
 
-  auto &NDData = GetNDData(match_chan.from);
+  auto &NDData = GetNDData(match_chan.from, 293, fUseFakeData);
   auto &NDPrediction = GetNDPrediction(match_chan.from);
 
-  auto &NDData_280kA = GetNDData(match_chan.from, 280);
+  auto &NDData_280kA = GetNDData(match_chan.from, 280, fUseFakeData);
   auto &NDPrediction_280kA = GetNDPrediction(match_chan.from, 280);
 
   auto &FDPrediction = GetFDPrediction(match_chan.to);
@@ -1319,26 +1354,50 @@ void PredictionPRISM::SaveTo(TDirectory *dir, const std::string &name) const {
             Measurements.ND_293kA.numu_ccinc_sel_numode},
            {"M_ND_numubar_ccinc_sel_numode",
             Measurements.ND_293kA.numubar_ccinc_sel_numode},
+           {"M_ND_numu_ccinc_sel_numode_fd",
+            Measurements.ND_293kA.numu_ccinc_sel_numode_fd},
+           {"M_ND_numubar_ccinc_sel_numode_fd",
+            Measurements.ND_293kA.numubar_ccinc_sel_numode_fd},
            {"M_ND_numu_ccinc_sel_nubmode",
             Measurements.ND_293kA.numu_ccinc_sel_nubmode},
            {"M_ND_numubar_ccinc_sel_nubmode",
             Measurements.ND_293kA.numubar_ccinc_sel_nubmode},
+           {"M_ND_numu_ccinc_sel_nubmode_fd",
+            Measurements.ND_293kA.numu_ccinc_sel_nubmode_fd},
+           {"M_ND_numubar_ccinc_sel_nubmode_fd",
+            Measurements.ND_293kA.numubar_ccinc_sel_nubmode_fd},
            {"M_ND_nue_ccinc_sel_numode",
             Measurements.ND_293kA.nue_ccinc_sel_numode},
            {"M_ND_nuebar_ccinc_sel_nubmode",
             Measurements.ND_293kA.nuebar_ccinc_sel_nubmode},
+           {"M_ND_nue_ccinc_sel_numode_fd",
+            Measurements.ND_293kA.nue_ccinc_sel_numode_fd},
+           {"M_ND_nuebar_ccinc_sel_nubmode_fd",
+            Measurements.ND_293kA.nuebar_ccinc_sel_nubmode_fd},
            {"M_ND_280kA_numu_ccinc_sel_numode",
             Measurements.ND_280kA.numu_ccinc_sel_numode},
            {"M_ND_280kA_numubar_ccinc_sel_numode",
             Measurements.ND_280kA.numubar_ccinc_sel_numode},
+           {"M_ND_280kA_numu_ccinc_sel_numode_fd",
+            Measurements.ND_280kA.numu_ccinc_sel_numode_fd},
+           {"M_ND_280kA_numubar_ccinc_sel_numode_fd",
+            Measurements.ND_280kA.numubar_ccinc_sel_numode_fd},
            {"M_ND_280kA_numu_ccinc_sel_nubmode",
             Measurements.ND_280kA.numu_ccinc_sel_nubmode},
            {"M_ND_280kA_numubar_ccinc_sel_nubmode",
             Measurements.ND_280kA.numubar_ccinc_sel_nubmode},
+           {"M_ND_280kA_numu_ccinc_sel_nubmode_fd",
+            Measurements.ND_280kA.numu_ccinc_sel_nubmode_fd},
+           {"M_ND_280kA_numubar_ccinc_sel_nubmode_fd",
+            Measurements.ND_280kA.numubar_ccinc_sel_nubmode_fd},
            {"M_ND_280kA_nue_ccinc_sel_numode",
             Measurements.ND_280kA.nue_ccinc_sel_numode},
            {"M_ND_280kA_nuebar_ccinc_sel_nubmode",
-            Measurements.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
+            Measurements.ND_280kA.nuebar_ccinc_sel_nubmode},
+           {"M_ND_280kA_nue_ccinc_sel_numode_fd",
+            Measurements.ND_280kA.nue_ccinc_sel_numode_fd},
+           {"M_ND_280kA_nuebar_ccinc_sel_nubmode_fd",
+            Measurements.ND_280kA.nuebar_ccinc_sel_nubmode_fd}}) {
     if (meas.second.get()) {
       meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
@@ -1618,26 +1677,50 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
             pred->Measurements.ND_293kA.numu_ccinc_sel_numode},
            {"M_ND_numubar_ccinc_sel_numode",
             pred->Measurements.ND_293kA.numubar_ccinc_sel_numode},
+           {"M_ND_numu_ccinc_sel_numode_fd",
+            pred->Measurements.ND_293kA.numu_ccinc_sel_numode_fd},
+           {"M_ND_numubar_ccinc_sel_numode_fd",
+            pred->Measurements.ND_293kA.numubar_ccinc_sel_numode_fd},
            {"M_ND_numu_ccinc_sel_nubmode",
             pred->Measurements.ND_293kA.numu_ccinc_sel_nubmode},
            {"M_ND_numubar_ccinc_sel_nubmode",
             pred->Measurements.ND_293kA.numubar_ccinc_sel_nubmode},
+           {"M_ND_numu_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_293kA.numu_ccinc_sel_nubmode_fd},
+           {"M_ND_numubar_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_293kA.numubar_ccinc_sel_nubmode_fd},
            {"M_ND_nue_ccinc_sel_numode",
             pred->Measurements.ND_293kA.nue_ccinc_sel_numode},
            {"M_ND_nuebar_ccinc_sel_nubmode",
             pred->Measurements.ND_293kA.nuebar_ccinc_sel_nubmode},
+           {"M_ND_nue_ccinc_sel_numode_fd",
+            pred->Measurements.ND_293kA.nue_ccinc_sel_numode_fd},
+           {"M_ND_nuebar_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_293kA.nuebar_ccinc_sel_nubmode_fd},
            {"M_ND_280kA_numu_ccinc_sel_numode",
             pred->Measurements.ND_280kA.numu_ccinc_sel_numode},
            {"M_ND_280kA_numubar_ccinc_sel_numode",
             pred->Measurements.ND_280kA.numubar_ccinc_sel_numode},
+           {"M_ND_280kA_numu_ccinc_sel_numode_fd",
+            pred->Measurements.ND_280kA.numu_ccinc_sel_numode_fd},
+           {"M_ND_280kA_numubar_ccinc_sel_numode_fd",
+            pred->Measurements.ND_280kA.numubar_ccinc_sel_numode_fd},
            {"M_ND_280kA_numu_ccinc_sel_nubmode",
             pred->Measurements.ND_280kA.numu_ccinc_sel_nubmode},
            {"M_ND_280kA_numubar_ccinc_sel_nubmode",
             pred->Measurements.ND_280kA.numubar_ccinc_sel_nubmode},
+           {"M_ND_280kA_numu_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_280kA.numu_ccinc_sel_nubmode_fd},
+           {"M_ND_280kA_numubar_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_280kA.numubar_ccinc_sel_nubmode_fd},
            {"M_ND_280kA_nue_ccinc_sel_numode",
             pred->Measurements.ND_280kA.nue_ccinc_sel_numode},
            {"M_ND_280kA_nuebar_ccinc_sel_nubmode",
-            pred->Measurements.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
+            pred->Measurements.ND_280kA.nuebar_ccinc_sel_nubmode},
+           {"M_ND_280kA_nue_ccinc_sel_numode_fd",
+            pred->Measurements.ND_280kA.nue_ccinc_sel_numode_fd},
+           {"M_ND_280kA_nuebar_ccinc_sel_nubmode_fd",
+            pred->Measurements.ND_280kA.nuebar_ccinc_sel_nubmode_fd}}) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() =
           PRISMReweightableSpectrum::LoadFrom(dir, meas.first.c_str());
@@ -1690,7 +1773,6 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
             pred->Predictions.FD.nuebar_ccinc_sel_nubmode}}) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() = PredictionInterp::LoadFrom(dir, meas.first.c_str());
-      //meas.second.get()->MinimizeMemory();
     }
   }
 
@@ -1722,12 +1804,6 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
            }) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() = PredictionInterp::LoadFrom(dir, meas.first.c_str());
-      // debug
-      /*if ( meas.first == "P_FD_nue_ccinc_sel_sig_apposc_numode_true_e_nu" ) {
-        osc::NoOscillations kNoOsc;
-        meas.second.get()->DebugPlots(&kNoOsc);
-      }*/
-
       //meas.second.get()->MinimizeMemory();
     }
   }

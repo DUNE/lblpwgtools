@@ -18,9 +18,12 @@
 // Implement ND energy scale uncertainties on truth information
 // for use in eRecProxy
 // LepE, eP, ePip, ePim, ePi0, eother
+class TH1;
+class TH2;
 
 namespace ana
 {
+  class SystShifts;
 
   class RecoEnergyScaleND : public ISyst {
   public:
@@ -500,4 +503,7 @@ namespace ana
   RecoEnergyNDSystVector GetRecoENDSysts();
 
   bool IsNDdetRecoSyst(std::string);
+
+  std::vector<ana::ISyst const *> FilterOutNDSysts(std::vector<ana::ISyst const *> systs);
+
 }

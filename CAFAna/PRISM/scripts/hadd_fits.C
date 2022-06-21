@@ -33,7 +33,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   TIter nextkey(current_sourcedir->GetListOfKeys()); 
   TKey *key;
 
-  double ssth23_lowlim = 0.35; // 0.35 0.4
+  double ssth23_lowlim = 0.4; // 0.35 0.4
   double dmsq32_lowlim = 2.30;
   double ssth23_highlim = 0.65;
   double dmsq32_highlim = 2.55;
