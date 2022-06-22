@@ -37,13 +37,19 @@ enum class NuChan {
   kNueIntrinsic = (1 << 6),
   kNueBarIntrinsic = (1 << 7),
 
+  kNutauApp = (1 << 8),
+  kNutauBarApp = (1 << 9),
+
   kNumu = kNumuApp | kNumuIntrinsic,
   kNumuBar = kNumuBarApp | kNumuBarIntrinsic,
   kNue = kNueApp | kNueIntrinsic,
   kNueBar = kNueBarApp | kNueBarIntrinsic,
+  kNutau = kNutauApp,
+  kNutauBar = kNutauBarApp,
 
   kNumuNumuBar = kNumu | kNumuBar,
-  kNueNueBar = kNue | kNueBar
+  kNueNueBar = kNue | kNueBar,
+  kNutauNutauBar = kNutau | kNutauBar
 };
 
 enum class BeamMode {
@@ -64,9 +70,14 @@ static BeamChan const kNumu_Numode = {BeamMode::kNuMode,
                                       NuChan::kNumuIntrinsic};
 static BeamChan const kNumuBar_NuBarmode = {BeamMode::kNuBarMode,
                                             NuChan::kNumuBarIntrinsic};
-static BeamChan const kNue_Numode = {BeamMode::kNuMode, NuChan::kNueApp};
+static BeamChan const kNue_Numode = {BeamMode::kNuMode,
+                                     NuChan::kNueApp};
 static BeamChan const kNueBar_NuBarmode = {BeamMode::kNuBarMode,
                                            NuChan::kNueBarApp};
+static BeamChan const kNutau_Numode = {BeamMode::kNuMode,
+                                       NuChan::kNutauApp};
+static BeamChan const kNutauBar_NuBarmode = {BeamMode::kNuBarMode,
+                                           NuChan::kNutauBarApp};
 
 inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
 
@@ -90,10 +101,14 @@ inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
       return kNue_Numode;
     } else if (descript == "nuebar_nubarmode") {
       return kNueBar_NuBarmode;
+    } else if (descript == "nutau_numode") {
+      return kNutau_Numode;
+    } else if (descript == "nutaubar_nubarmode") {
+      return kNutauBar_NuBarmode;
     } else {
       std::cout << "[ERROR]: Invalid ND beam-chan, currently support "
                    "\"numu_numode\", \"numubar_nubarmode\", \"nue_numode\", "
-                   "\"nuebar_nubarmode\"."
+                   "\"nuebar_nubarmode\", \"nutau_numode\", \"nutaubar_nubarmode\"."
                 << std::endl;
       abort();
     }
@@ -105,18 +120,24 @@ struct MatchChan {
   BeamChan to;
 };
 
-static MatchChan const kNumuDisappearance_Numode = {kNumu_Numode, kNumu_Numode};
+static MatchChan const kNumuDisappearance_Numode = {kNumu_Numode,
+                                                    kNumu_Numode};
 static MatchChan const kNumuBarDisappearance_NuBarmode = {kNumuBar_NuBarmode,
                                                           kNumuBar_NuBarmode};
-static MatchChan const kNueAppearance_Numode = {kNumu_Numode, kNue_Numode};
+static MatchChan const kNueAppearance_Numode = {kNumu_Numode,
+                                                kNue_Numode};
 static MatchChan const kNueBarAppearance_NuBarmode = {kNumuBar_NuBarmode,
                                                       kNueBar_NuBarmode};
+static MatchChan const kNutauAppearance_Numode = {kNumu_Numode,
+                                                  kNutau_Numode};
+static MatchChan const kNutauBarAppearance_NuBarmode = {kNumuBar_NuBarmode,
+                                                        kNutauBar_NuBarmode};
 
 inline std::string GetMatchChanShortName(MatchChan ch) {
   if (ch.to.mode == BeamMode::kNuMode) {
-    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : "NueApp";
+    return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : ( (ch.to.chan & NuChan::kNueApp) ? "NueApp" : "NutauApp" );
   } else {
-    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : "NueBarApp";
+    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : ( (ch.to.chan & NuChan::kNueApp) ? "NueBarApp" : "NutauBarApp" );
   }
   return "UnknownChannel";
 }
@@ -127,7 +148,7 @@ inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
 }
 
 // Enum-like list of Ids for use in lists of PRISM objects
-// The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index 
+// The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index
 // position but not semantically identical. e.g. To make a full nue selection
 // prediction you need the non swap (intrinsic) and nueswap (appeared files).
 // However, both semantic meanings will not be used in the same list of objects
@@ -162,7 +183,9 @@ size_t const kNPRISMFDConfigs_nu = 3;
 size_t const kNPRISMFDConfigs = 6;
 
 
-inline bool IsNuConfig(size_t conf) { return conf < kNPRISMConfigs_nu; }
+inline bool IsNuConfig(size_t conf) {
+  return conf < kNPRISMConfigs_nu;
+}
 
 inline bool IsNDConfig(size_t conf) {
   return ((conf % kNPRISMConfigs_nu) <= 1);
@@ -217,12 +240,28 @@ inline size_t GetConfigNueSwap(size_t conf) {
   }
   if (IsNueConfig(conf)) {
     return conf;
-  } 
+  }
   if (IsNutauConfig(conf)) {
     return conf - 1;
   }
   // Is a numu config
   return conf + 1;
+}
+
+inline size_t GetConfigNutauSwap(size_t conf) {
+  if (IsNDConfig(conf)) {
+    std::cout << "[ERROR]: Tried to get FD sub-config from an ND config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if (IsNutauConfig(conf)) {
+    return conf;
+  }
+  if (IsNueConfig(conf)) {
+    return conf + 1;
+  }
+  // Is a numu config
+  return conf + 2;
 }
 
 inline size_t GetND280kAConfig(size_t conf){
@@ -257,7 +296,7 @@ inline size_t GetConfigNonSwap(size_t conf) {
   }
   if (IsNueConfig(conf)) {
     return conf - 1;
-  } 
+  }
   if (IsNutauConfig(conf)) {
     return conf - 2;
   }
@@ -310,11 +349,17 @@ inline std::string DescribeFDConfig(size_t conf) {
   case kFD_nu_nueswap: {
     return "FD_nu_nue";
   }
+  case kFD_nu_tauswap: {
+    return "FD_nu_tau";
+  }
   case kFD_nub_nonswap: {
     return "FD_nub_numu";
   }
   case kFD_nub_nueswap: {
     return "FD_nub_nue";
+  }
+  case kFD_nub_tauswap: {
+    return "FD_nub_tau";
   }
   }
   std::cout << "Invalid FD conf: " << conf
@@ -353,16 +398,24 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
     }
     }
   } else {
-    if ((nc.mode == BeamMode::kNuMode) && (nc.chan & NuChan::kNumu)) {
+    if ((nc.mode == BeamMode::kNuMode) &&
+        (nc.chan & NuChan::kNumu)) {
       return kFD_nu_numu;
     } else if ((nc.mode == BeamMode::kNuBarMode) &&
                (nc.chan & NuChan::kNumuBar)) {
       return kFD_nub_numu;
-    } else if ((nc.mode == BeamMode::kNuMode) && (nc.chan & NuChan::kNue)) {
+    } else if ((nc.mode == BeamMode::kNuMode) &&
+               (nc.chan & NuChan::kNue)) {
       return kFD_nu_nue;
     } else if ((nc.mode == BeamMode::kNuBarMode) &&
                (nc.chan & NuChan::kNueBar)) {
       return kFD_nub_nue;
+    } else if ((nc.mode == BeamMode::kNuMode) &&
+               (nc.chan & NuChan::kNutau)) {
+      return kFD_nu_nutau;
+    } else if ((nc.mode == BeamMode::kNuBarMode) &&
+               (nc.chan & NuChan::kNutauBar)) {
+      return kFD_nub_nutau;
     } else {
       std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode << ", "
                 << nc.chan << std::endl;
@@ -380,10 +433,14 @@ inline int FluxSpeciesPDG(NuChan fps) {
     return 14;
   } else if (fps & NuChan::kNue) {
     return 12;
+  } else if (fps & NuChan::kNutau) {
+    return 16;
   } else if (fps & NuChan::kNumuBar) {
     return -14;
   } else if (fps & NuChan::kNueBar) {
     return -12;
+  } else if (fps & NuChan::kNutauBar) {
+    return -16;
   }
   std::cout << "[ERROR]: Invalid NuChan: " << fps << std::endl;
   abort();
@@ -442,17 +499,21 @@ inline void TestConfigDefinitions() {
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nu_numu)) == kFD_nu_numu);
   LOUDASSERT(IsNumuConfig(kFD_nu_numu));
   LOUDASSERT(!IsNueConfig(kFD_nu_numu));
+  LOUDASSERT(!IsNutauConfig(kFD_nu_numu));
   LOUDASSERT(GetConfigNueSwap(kFD_nu_numu) == kFD_nu_nue);
+  LOUDASSERT(GetConfigNutauSwap(kFD_nu_numu) == kFD_nu_nutau);
   LOUDASSERT(GetConfigNonSwap(kFD_nu_numu) == kFD_nu_numu);
 
   LOUDASSERT(!IsNuConfig(kFD_nub_numu));
   LOUDASSERT(!IsNDConfig(kFD_nub_numu));
-  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 3); 
+  LOUDASSERT(GetFDConfig(kFD_nub_numu) == 3);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_numu)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_numu)) == kFD_nub_numu);
   LOUDASSERT(IsNumuConfig(kFD_nub_numu));
   LOUDASSERT(!IsNueConfig(kFD_nub_numu));
+  LOUDASSERT(!IsNutauConfig(kFD_nub_numu));
   LOUDASSERT(GetConfigNueSwap(kFD_nub_numu) == kFD_nub_nue);
+  LOUDASSERT(GetConfigNutauSwap(kFD_nub_numu) == kFD_nub_nutau);
   LOUDASSERT(GetConfigNonSwap(kFD_nub_numu) == kFD_nub_numu);
 
   LOUDASSERT(IsNuConfig(kFD_nu_nue));
@@ -467,7 +528,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_nue));
   LOUDASSERT(!IsNDConfig(kFD_nub_nue));
-  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 4); 
+  LOUDASSERT(GetFDConfig(kFD_nub_nue) == 4);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_nue)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_nue)) == kFD_nub_nue);
   LOUDASSERT(!IsNumuConfig(kFD_nub_nue));
