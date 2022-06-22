@@ -176,7 +176,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   } else {
     std::cout << "Use nominal MC as FD and ND 'data'." << std::endl;
   }
-  state.PRISM->SetUseFakeData(use_fake_data);                                 
+  state.PRISM->SetUseFakeData(use_fake_data);
 
   if (match_intrinsic_nue_bkg) {
     std::cout << "Include FD intrinsic nue in flux matching." << std::endl;
@@ -244,7 +244,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
 
-    //auto FarDetFakeDataBiasPred = 
+    //auto FarDetFakeDataBiasPred =
     //    state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
     //auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
     //FakeDataBiasPred->Scale(1, "width");

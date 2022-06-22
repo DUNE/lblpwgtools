@@ -86,12 +86,20 @@ namespace ana {
     if ((flav & Flavors::kNuMuToNuE) && (sign & Sign::kAntiNu)) {
       ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -12);
     }
+
     // Include intrinsic nue in flux matching
     if ((flav & Flavors::kNuEToNuE) && (sign & Sign::kNu)) {
       ret += fExtrap->NueSurvComponent().Oscillated(calc, +12, +12);
     }
     if ((flav & Flavors::kNuEToNuE) && (sign & Sign::kAntiNu)) {
       ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
+    }
+
+    if ((flav & Flavors::kNuMuToNuTau) && (sign & Sign::kNu)) {
+      ret += fExtrap->NumuSurvComponent().Oscillated(calc, +14, +16);
+    }
+    if ((flav & Flavors::kNuMuToNuTau) && (sign & Sign::kAntiNu)) {
+      ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -16);
     }
     return ret;
   }
@@ -239,22 +247,26 @@ namespace ana {
   //----------------------------------------------------------------------
   PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
                                        SpectrumLoaderBase &loader_nue,
+                                       SpectrumLoaderBase &loader_nutau,
                                        const std::string &label,
                                        const Binning &bins, const Var &var,
                                        const Cut &cut, const SystShifts &shift,
                                        const Weight &wei)
-      : PredictionFDNoOsc(loader_non, loader_nue, HistAxis(label, bins, var), cut,
+      : PredictionFDNoOsc(loader_non, loader_nue, loader_nutau, HistAxis(label, bins, var), cut,
                           shift, wei) {}
 
   //----------------------------------------------------------------------
   PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
                                        SpectrumLoaderBase &loader_nue,
+                                       SpectrumLoaderBase &loader_nutau,
                                        const HistAxis &axis, const Cut &cut,
                                        const SystShifts &shift, const Weight &wei)
       : fSpectrumNonSwap(loader_non, axis, cut && !kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
         fSpectrumNueSwap(loader_nue, axis, cut && !kIsAntiNu && !kIsNC && kIsSig, shift, wei),
+        fSpectrumNutauSwap(loader_nutau, axis, cut && !kIsAntiNu && !kIsNC && kIsTauFromMu, shift, wei),
         fSpectrumRHCNonSwap(loader_non, axis, cut && kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
-        fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC && kIsSig, shift, wei) {}
+        fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC && kIsSig, shift, wei),
+        fSpectrumRHCNutauSwap(loader_nutau, axis, cut && kIsAntiNu && !kIsNC && kIsTauFromMu, shift, wei) {}
 
   //----------------------------------------------------------------------
   Spectrum PredictionFDNoOsc::PredictComponent(osc::IOscCalc * /*calc*/,
@@ -291,6 +303,12 @@ namespace ana {
     if (flav & kNuMuToNuE && sign & kAntiNu) {
       ret += fSpectrumRHCNueSwap;
     }
+    if (flav & kNuMuToNuTau && sign & kNu) {
+      ret += fSpectrumNutauSwap;
+    }
+    if (flav & kNuMuToNuTau && sign & kAntiNu) {
+      ret += fSpectrumRHCNutauSwap;
+    }
     return ret;
   }
 
@@ -305,8 +323,10 @@ namespace ana {
 
     fSpectrumNonSwap.SaveTo(dir, "spect_nonswap");
     fSpectrumNueSwap.SaveTo(dir, "spect_nueswap");
+    fSpectrumNutauSwap.SaveTo(dir, "spect_nutauswap");
     fSpectrumRHCNonSwap.SaveTo(dir, "spect_RHCnonswap");
     fSpectrumRHCNueSwap.SaveTo(dir, "spect_RHCnueswap");
+    fSpectrumRHCNutauSwap.SaveTo(dir, "spect_RHCnutauswap");
 
     dir->Write();
 /*
@@ -333,19 +353,11 @@ namespace ana {
     PredictionFDNoOsc *ret = new PredictionFDNoOsc(
         *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
         *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+        *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
         *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"));
-/*
-    if ( name == "pred_nom" ) {
-      Spectrum test = *ana::LoadFrom<Spectrum>(dir, "spect_nueswap");
+        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
+        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"));
 
-      Eigen::ArrayXd test_nue_spec = test.GetEigen(1);
-      std::cout << "Printing out spect_nueswap spectrum in LoadFrom "<< std::endl;
-      for ( int ibin=0; ibin < test_nue_spec.size(); ibin ++ ) {
-        std::cout << "bin "<< ibin << ": nue spec = "<< test_nue_spec(ibin) << std::endl;
-      }
-    }
-*/
     delete dir;
 
     return std::unique_ptr<PredictionFDNoOsc>(ret);

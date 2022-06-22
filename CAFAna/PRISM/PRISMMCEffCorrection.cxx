@@ -189,6 +189,8 @@ namespace ana {
       conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
     } else if (FDflav == Flavors::kNuMuToNuE) {
       conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
+    } else if (FDflav == Flavors::kNuMuToNuTau) {
+      conf = (FDsign == Sign::kNu) ? kFD_nu_nutau : kFD_nub_nutau;
     } else { abort(); }
 
     return GetFDConfig(conf);

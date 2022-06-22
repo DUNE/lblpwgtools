@@ -294,11 +294,11 @@ int main(int argc, char const *argv[]) {
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
   bool OneDAxis(false);
-  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy") 
+  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy")
     OneDAxis = true;
   HistAxis TrueObsAxis =
-      TrueObservable(axdescriptor, 
-                     OneDAxis ? 
+      TrueObservable(axdescriptor,
+                     OneDAxis ?
                      "prism_fine_default" : binningdescriptor);
 
   std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
@@ -330,6 +330,11 @@ int main(int argc, char const *argv[]) {
   ana::Cut kFDSelectionCuts_nueb = UseSel ? kPRISMFDSignal_Selected_nueb :
                                             kPRISMFDSignal_True_nueb;
 
+  ana::Cut kFDSelectionCuts_nutau = UseSel ? kPRISMFDSignal_Selected_nutau :
+                                           kPRISMFDSignal_True_nutau;
+  ana::Cut kFDSelectionCuts_nutaub = UseSel ? kPRISMFDSignal_Selected_nutaub :
+                                            kPRISMFDSignal_True_nutaub;
+
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
@@ -354,13 +359,13 @@ int main(int argc, char const *argv[]) {
     size_t IsNuTauSwap = IsNutauConfig(config);
 
     std::cout << "IsNu = " << IsNu << ", IsND = " << IsND <<
-      ", IsND280kA = " << IsND280kA <<std::endl; 
+      ", IsND280kA = " << IsND280kA <<std::endl;
     if (!input_CAF_files[config].size()) {
       std::cout << "[WARNING] No files loaded." << std::endl;
       continue;
     }
     std::cout << "We have " << input_CAF_files[config].size() << " file loaded." << std::endl;
-    
+
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
     if (IsND) {
       if(IsND280kA) { continue; }
@@ -606,23 +611,21 @@ int main(int argc, char const *argv[]) {
           los, &no, *NDSelTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
 
-    } else if (!IsND &&
-               !IsNuTauSwap) { // Is FD and do not need specific nutau spectra.
+    } else if (!IsND) { // Is FD
 
       ana::Cut &FDCuts = IsNu ?
-        (IsNueSwap ? kFDSelectionCuts_nue : kFDSelectionCuts_numu) :
-        (IsNueSwap ? kFDSelectionCuts_nueb : kFDSelectionCuts_numub);
+        (IsNueSwap ? kFDSelectionCuts_nue : (IsNuTauSwap ? kFDSelectionCuts_nutau : kFDSelectionCuts_numu) ) :
+        (IsNueSwap ? kFDSelectionCuts_nueb : (IsNuTauSwap ? kFDSelectionCuts_nutaub : kFDSelectionCuts_numub) );
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
-                        IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
+                        IsNueSwap ? NuChan::kNueNueBar : (IsNuTauSwap ? NuChan::kNutauNutauBar : NuChan::kNumuNumuBar)};
 
       PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los,
                            calc, chanmode);
       // We always want to use the numus as we don't want to account for any
       // xsec differences between numu and nues, we use a special prediction
       // object to allow us to oscillate the NuMu spectrum.
-      // Intrinsic nue is also added as the target flux
-      if (!IsNueSwap) {
+      if (!IsNueSwap && !IsNuTauSwap) {
         MatchPredGens[config] =
             std::make_unique<NonSwapNoExtrapPredictionGenerator>(
                 MatchAxis,
@@ -636,6 +639,7 @@ int main(int argc, char const *argv[]) {
 
       size_t non_swap_it = GetConfigNonSwap(config);
       size_t nue_swap_it = GetConfigNueSwap(config);
+      size_t nutau_swap_it = GetConfigNutauSwap(config);
 
       FarDetDataPreds[fd_config] = std::make_unique<DataPredictionNoExtrap>(
           Loaders_bm, axes.XProjectionFD, FDCuts,
@@ -664,7 +668,7 @@ int main(int argc, char const *argv[]) {
       FDUnselTruePredGens[fd_config] =
           std::make_unique<NoExtrapPredictionGenerator>(
               FDTrueEnergyObsBins,
-              (IsNueSwap ? kIsSig : kIsNumuCC) &&
+              (IsNueSwap ? kIsSig : (IsNuTauSwap ? kIsTauFromMu : kIsNumuCC) ) &&
                   (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
               kFDCVWeight);
       FDUnselTruePredInterps[fd_config] = std::make_unique<PredictionInterp>(
@@ -742,8 +746,8 @@ int main(int argc, char const *argv[]) {
                  (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub"),
              NDSelTruePredInterps[config]);
 
-    } else if (!IsND && !IsNuTau) { // Is FD and not nutau.
-      if (!IsNue) {
+    } else if (!IsND) { // Is FD
+      if (!IsNue && !IsNuTau) {
         SaveTo(fout,
                std::string("FDMatchInterp_ETrue_numu") +
                    (IsNu ? "_nu" : "_nub"),
@@ -752,27 +756,27 @@ int main(int argc, char const *argv[]) {
 
       SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_config]);
 
       SaveTo(fout,
-             std::string("FDUnSelected_ETrue") + (IsNue ? "_nue" : "_numu") +
+             std::string("FDUnSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDUnselTruePredInterps[fd_config]);
 
       SaveTo(fout,
-             std::string("FDSelected_ETrue") + (IsNue ? "_nue" : "_numu") +
+             std::string("FDSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDSelTruePredInterps[fd_config]);
 
       SaveTo(fout,
              std::string("FDDataPred_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FarDetDataPreds[fd_config]);
 
       SaveTo(fout,
              std::string("FDFakeDataBiasPred_") + axdescriptor +
-                 (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"),
+                 (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FarDetFakeDataBiasPreds[fd_config]);
     }
   }

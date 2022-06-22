@@ -32,4 +32,9 @@ extern const ana::Cut kPRISMFDSignal_Selected_nueb;
 extern const ana::Cut kPRISMFDSignal_True_nue;
 extern const ana::Cut kPRISMFDSignal_True_nueb;
 
+extern const ana::Cut kPRISMFDSignal_Selected_nutau;
+extern const ana::Cut kPRISMFDSignal_Selected_nutaub;
+extern const ana::Cut kPRISMFDSignal_True_nutau;
+extern const ana::Cut kPRISMFDSignal_True_nutaub;
+
 } // namespace PRISM
