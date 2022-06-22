@@ -39,6 +39,7 @@ namespace ana {
     fErrorMat_293kA = MatPred.fErrorMat_293kA;
     fErrorMat_280kA = MatPred.fErrorMat_280kA;
     vNumuNueCorr = MatPred.vNumuNueCorr;
+    vNumuNutauCorr = MatPred.vNumuNutauCorr;
   }
 
   //-----------------------------------------------------
@@ -55,6 +56,7 @@ namespace ana {
     NDPredInterps.at(ND.second) = ND.first;
     FDPredInterps.at(FD.second) = FD.first;
     IsNue = false;
+    IsNutau = false;
   }
 
   //-----------------------------------------------------
@@ -217,6 +219,12 @@ namespace ana {
           NDETrue(bin) *= vNumuNueCorr(bin + 1);
         }
       }
+      // Correct for nutau/numu x-sec differences if doing appearance measurement.
+      if (IsNutau) { // If we are doing nutau appearance...
+        for (int bin = 0; bin < NDETrue.size(); bin++) {
+          NDETrue(bin) *= vNumuNutauCorr(bin + 1);
+        }
+      }
 
       // Cov Mat for true energy, propogated through unfold.
       Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
@@ -260,6 +268,8 @@ namespace ana {
       conf = (FDsign == Sign::kNu) ? kFD_nu_numu : kFD_nub_numu;
     } else if (FDflav == Flavors::kNuMuToNuE) {
       conf = (FDsign == Sign::kNu) ? kFD_nu_nue : kFD_nub_nue;
+    } else if (FDflav == Flavors::kNuMuToNuTau) {
+      conf = (FDsign == Sign::kNu) ? kFD_nu_nutau : kFD_nub_nutau;
     } else { abort(); }
 
     return GetFDConfig(conf);

@@ -47,6 +47,18 @@ BasicPred: {
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
 			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
 		]
 		# Errors on prediction come from assumed run plan
 		set_ND_errors_from_rate: true
@@ -62,7 +74,7 @@ BasicPred: {
 
                 reg_factor_extrap: 1e-30 #1E-30
 	}
-	samples: @local::FitChannels.Nue_app
+	samples: @local::FitChannels.NuModeJoint
 }
 
 

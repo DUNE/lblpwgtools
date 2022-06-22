@@ -85,6 +85,10 @@ public:
     kFD_NumuNueCorr_Numu_TrueEnu = 46,
     kFD_NumuNueCorr_Nue_TrueEnu = 47,
 
+    kFD_NumuNutauCorr_Numu = 48,
+    kFD_NumuNutauCorr_Nutau = 49,
+    kFD_NumuNutauCorr = 50,
+
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -150,6 +154,15 @@ public:
     }
     case kFD_NumuNueCorr: {
       return "FD_NumuNueCorr";
+    }
+    case kFD_NumuNutauCorr_Numu: {
+      return "FD_NumuNutauCorr_Numu";
+    }
+    case kFD_NumuNutauCorr_Nutau: {
+      return "FD_NumuNutauCorr_Nutau";
+    }
+    case kFD_NumuNutauCorr: {
+      return "FD_NumuNutauCorr";
     }
     case kFDFluxCorr: {
       return "FDFluxCorr";
@@ -456,15 +469,19 @@ protected:
       // contamination themselves
       std::unique_ptr<PredictionInterp> numu_ccinc_sel_numode;
       std::unique_ptr<PredictionInterp> nue_ccinc_sel_numode;
+      std::unique_ptr<PredictionInterp> nutau_ccinc_sel_numode;
 
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_nubmode;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_nubmode;
+      std::unique_ptr<PredictionInterp> nutaubar_ccinc_sel_nubmode;
 
       std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_numode;
       std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_numode;
+      std::unique_ptr<PredictionInterp> nutau_ccinc_sel_sig_numode;
 
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_nubmode;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_nubmode;
+      std::unique_ptr<PredictionInterp> nutaubar_ccinc_sel_sig_nubmode;
 
       std::unique_ptr<PredictionInterp> numu_ccinc_sel_sig_apposc_numode;
       std::unique_ptr<PredictionInterp> numubar_ccinc_sel_sig_apposc_nubmode;
@@ -477,6 +494,10 @@ protected:
 
       std::unique_ptr<PredictionInterp> nue_ccinc_sel_sig_apposc_numode_true_e_nu;
       std::unique_ptr<PredictionInterp> nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
+
+      std::unique_ptr<PredictionInterp> nutau_ccinc_sel_sig_apposc_numode;
+      std::unique_ptr<PredictionInterp> nutaubar_ccinc_sel_sig_apposc_nubmode;
+
     };
     _FD FD;
   };
@@ -511,6 +532,8 @@ protected:
   std::unique_ptr<PredictionInterp> &
   GetFDPrediction_right_sign_nue(PRISM::BeamMode FDBM) const;
   std::unique_ptr<PredictionInterp> &
+  GetFDPrediction_right_sign_nutau(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &
   GetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const;
 
   bool HaveFDPrediction(PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
@@ -519,6 +542,8 @@ protected:
   GetFDUnOscWeightedSigPrediction_right_sign_numu(PRISM::BeamMode FDBM) const;
   std::unique_ptr<PredictionInterp> &
   GetFDUnOscWeightedSigPrediction_right_sign_nue(PRISM::BeamMode FDBM) const;
+  std::unique_ptr<PredictionInterp> &
+  GetFDUnOscWeightedSigPrediction_right_sign_nutau(PRISM::BeamMode FDBM) const;
   std::unique_ptr<PredictionInterp> &GetFDUnOscWeightedSigPrediction(
       PRISM::BeamChan FDChannel = PRISM::kNumu_Numode) const;
 
@@ -531,12 +556,17 @@ protected:
   // Prediction for unselected FD nues to be appearance oscillated.
   std::unique_ptr<PredictionInterp> &
   GetFDNueSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
+
   // Prediction for unselected FD numus to be appearance oscillated in true nu energy
   std::unique_ptr<PredictionInterp> &
   GetFDNonSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const;
   // Prediction for unselected FD nues to be appearance oscillated in true nu energy
   std::unique_ptr<PredictionInterp> &
   GetFDNueSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const;
+
+  // Prediction for unselected FD nutaus to be appearance oscillated.
+  std::unique_ptr<PredictionInterp> &
+  GetFDNutauSwapAppOscPrediction(PRISM::BeamMode FDBM) const;
 
   // Need to keep a hold of these until the loader has gone.
   std::vector<std::unique_ptr<IPredictionGenerator>> fPredGens;
@@ -554,7 +584,7 @@ protected:
   // Flag for whether we want to use our fake biased data or our nominal MC as
   // our data.
   bool fUseFakeData;
-  
+
   // Whether to include intrinsic nue bkg at FD in target flux matching
   // false: use FD MC for this bkg estimation
   // true: include in flux matching

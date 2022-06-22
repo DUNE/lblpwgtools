@@ -55,7 +55,7 @@ public:
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
-  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir, 
+  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir,
                                                              const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
@@ -83,17 +83,17 @@ protected:
 
 
 /// Class to correctly produce the FD mock 'data'. This makes sure the different
-/// components of the 'data' are being oscillated correctly, as we would see in 
+/// components of the 'data' are being oscillated correctly, as we would see in
 /// real data. Previously just used OscillatableSpectrum for whole nonswap or
 /// nueswap file. This led to components of FD data being oscillated incorrectly.
 ///
-/// Do not need an associated IPredictionGenerator class as I never anticipate 
-/// this being used as an input to PredictionInterp objects. 
+/// Do not need an associated IPredictionGenerator class as I never anticipate
+/// this being used as an input to PredictionInterp objects.
 /// (This class just re-implements the old PredictionNoExtrap prediction method.)
 class DataPredictionNoExtrap : public PredictionExtrap {
-public: 
- 
-  DataPredictionNoExtrap(PredictionExtrap *pred); 
+public:
+
+  DataPredictionNoExtrap(PredictionExtrap *pred);
   DataPredictionNoExtrap(IExtrap *extrap);
 
   DataPredictionNoExtrap(Loaders &loaders, const HistAxis &axis,
@@ -105,7 +105,7 @@ public:
   virtual Spectrum Predict(osc::IOscCalc *calc) const override;
 
   virtual Spectrum PredictComponent(osc::IOscCalc *calc,
-                                    Flavors::Flavors_t flav, 
+                                    Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
@@ -128,12 +128,14 @@ private:
 class PredictionFDNoOsc : public IPrediction {
 public:
   PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
-                    SpectrumLoaderBase &loader_nue, const HistAxis &axis,
+                    SpectrumLoaderBase &loader_nue,
+                    SpectrumLoaderBase &loader_nutau, const HistAxis &axis,
                     const Cut &cut, const SystShifts &shift = kNoShift,
                     const Weight &wei = kUnweighted);
 
   PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
-                    SpectrumLoaderBase &loader_nue, const std::string &label,
+                    SpectrumLoaderBase &loader_nue,
+                    SpectrumLoaderBase &loader_nutau, const std::string &label,
                     const Binning &bins, const Var &var, const Cut &cut,
                     const SystShifts &shift = kNoShift,
                     const Weight &wei = kUnweighted);
@@ -144,10 +146,11 @@ public:
   void OverridePOT(double pot) {
     fSpectrumNonSwap.OverridePOT(pot);
     fSpectrumNueSwap.OverridePOT(pot);
+    fSpectrumNutauSwap.OverridePOT(pot);
   }
 
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
-    return fSpectrumNonSwap + fSpectrumNueSwap;
+    return fSpectrumNonSwap + fSpectrumNueSwap + fSpectrumNutauSwap;
   }
   virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
@@ -157,17 +160,23 @@ public:
 protected:
   PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
                     const Spectrum &_fSpectrumNueSwap,
+                    const Spectrum &_fSpectrumNutauSwap,
                     const Spectrum &_fSpectrumRHCNonSwap,
-                    const Spectrum &_fSpectrumRHCNueSwap) 
+                    const Spectrum &_fSpectrumRHCNueSwap,
+                    const Spectrum &_fSpectrumRHCNutauSwap)
       : fSpectrumNonSwap(_fSpectrumNonSwap),
         fSpectrumNueSwap(_fSpectrumNueSwap),
+        fSpectrumNutauSwap(_fSpectrumNutauSwap),
         fSpectrumRHCNonSwap(_fSpectrumRHCNonSwap),
-        fSpectrumRHCNueSwap(_fSpectrumRHCNueSwap) {} 
+        fSpectrumRHCNueSwap(_fSpectrumRHCNueSwap),
+        fSpectrumRHCNutauSwap(_fSpectrumRHCNutauSwap) {}
 
   Spectrum fSpectrumNonSwap;
   Spectrum fSpectrumNueSwap;
+  Spectrum fSpectrumNutauSwap;
   Spectrum fSpectrumRHCNonSwap;
   Spectrum fSpectrumRHCNueSwap;
+  Spectrum fSpectrumRHCNutauSwap;
 };
 
 class FDNoOscPredictionGenerator : public IPredictionGenerator {
@@ -182,8 +191,10 @@ public:
         loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
     SpectrumLoaderBase &loader_nue =
         loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
+    SpectrumLoaderBase &loader_nutau =
+        loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap);
     return std::unique_ptr<IPrediction>(new PredictionFDNoOsc(
-        loader_non, loader_nue, fAxis, fCut, shiftMC, fWei));
+        loader_non, loader_nue, loader_nutau, fAxis, fCut, shiftMC, fWei));
   }
 
 protected:
