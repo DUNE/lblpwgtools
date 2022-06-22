@@ -61,4 +61,13 @@ const ana::Cut kPRISMFDSignal_True_nue =
 const ana::Cut kPRISMFDSignal_True_nueb =
     ana::kIsSig && (ana::kIsAntiNu) && ana::kIsTrueFV;
 
+const ana::Cut kPRISMFDSignal_Selected_nutau =
+    ana::kPassFD_CVN_NUTAU && ana::kIsTrueFV;
+const ana::Cut kPRISMFDSignal_Selected_nutaub =
+    ana::kPassFD_CVN_NUTAU && ana::kIsTrueFV;
+const ana::Cut kPRISMFDSignal_True_nutau =
+    ana::kIsTauFromMu && (!ana::kIsAntiNu) && ana::kIsTrueFV;
+const ana::Cut kPRISMFDSignal_True_nutaub =
+    ana::kIsTauFromMu && (ana::kIsAntiNu) && ana::kIsTrueFV;
+
 } // namespace PRISM

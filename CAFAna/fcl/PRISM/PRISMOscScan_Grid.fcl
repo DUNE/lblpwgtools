@@ -45,7 +45,19 @@ BasicPred: {
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
-			}
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
 		]
 		set_ND_errors_from_rate: true
 
@@ -59,12 +71,10 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 
-	samples: @local::FitChannels.NuModeJoint
+	samples: @local::FitChannels.Nutau_app
 }
 
-# Just an example below now, not used
-
-scansEG: [
+scans: [
 
 #	{
 #		@table::BasicPred
@@ -113,4 +123,4 @@ scansEG: [
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
+scans[0].output_file[1]: "RECREATE"
