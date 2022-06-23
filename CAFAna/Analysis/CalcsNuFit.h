@@ -87,6 +87,9 @@ namespace ana
 
   osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie);
 
+  // Throw 12 parameters and rho, but set the rest
+  osc::IOscCalculatorAdjustable* OscCalcThrowNuis(int hie, int oct, std::string asimov_str);
+
   // Add in a throw for toys
   osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set=0);
 

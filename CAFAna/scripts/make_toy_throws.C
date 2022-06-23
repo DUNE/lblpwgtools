@@ -100,9 +100,11 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   std::map<const IFitVar *, std::vector<double>> oscSeeds;
   if (sampleString.find("fd") != std::string::npos) {
     oscSeeds[&kFitSinSqTheta23] = {.4, .6}; // try both octants
-    oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
+    oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
   }
 
+  FitTreeBlob nd_tree("nd_fit_info", "nd_params");
+  nd_tree.SetDirectory(fout);
   FitTreeBlob pftree("fit_info", "param_info");
   pftree.SetDirectory(fout);
   unsigned LoopTime_s;
@@ -118,11 +120,13 @@ void make_toy_throws(std::string stateFname = def_stateFname,
 
   std::cerr << "[CLI]: " << (*CLIArgs) << std::endl;
 
+  nd_tree.fJobRNGSeed = gRNGSeed;
   pftree.fJobRNGSeed = gRNGSeed;
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
 
     unsigned loop_seed = gRandom->Integer(std::numeric_limits<unsigned>::max());
+    nd_tree.fLoopRNGSeed = loop_seed;
     pftree.fLoopRNGSeed = loop_seed;
     gRandom->SetSeed(loop_seed);
 
@@ -146,7 +150,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     if (fakeoa_throw || central_throw)
       fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
     else
-      fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
+      fakeThrowOsc = OscCalcThrowNuis(hie, 1, asimov_set);
 
     // Now deal with systematics
     if (fakenuis_throw and not central_throw) {
@@ -172,8 +176,14 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
+      fitThrowOsc = OscCalcThrowNuis(hie, 1, asimov_set);
     }
+
+
+    // Somebody stop him, the absolute madman!
+    // Keep the same stats/syst/OA throw for all fits
+    std::vector<seeded_spectra> mad_spectra_yo = {};
+
 
     Fitter::Precision fit_type = Fitter::kNormal;
     if (getenv("CAFANA_FIT_PRECISION")) {
@@ -194,12 +204,31 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
+    // If the fit used the ND, run a fit with just the ND first, this the output
+    // parameter values are then used as the starting point for all subsequent seeds
+    if (sampleString.find("nd") != std::string::npos){
+      SystShifts nd_fit_systs;
+      // Hackity hack with the sample name here...
+      double nd_min = RunFitPoint(stateFname, sampleString+":ndprefit", fakeThrowOsc, fakeThrowSyst,
+                                  stats_throw, {}, systlist, fitThrowOsc,
+                                  SystShifts(fitThrowSyst), {}, nullptr,
+                                  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
+      // The best fit should be used as the input for the next fits!
+      fitThrowSyst = nd_fit_systs;
+      nd_tree.Fill();
+
+      std::cerr << "[THW]: ND throw " << i
+                << " fit found minimum chi2 = " << nd_min << " "
+		<< BuildLogInfoString();
+    }
+
+
     IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
 
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                     stats_throw, oscVars, systlist, fitThrowOsc, fitThrowSyst,
-                    oscSeeds, penalty, fit_type, nullptr, &pftree);
+                    oscSeeds, penalty, fit_type, nullptr, &pftree, &mad_spectra_yo);
 
     pftree.Fill();
 

@@ -141,6 +141,63 @@ namespace ana
     return ret;
   }
 
+  //----------------------------------------------------------------------
+  // Same as NuFitOscCalc, but throw 12 and rho parameters
+  osc::IOscCalculatorAdjustable* OscCalcThrowNuis(int hie, int oct, std::string asimov_str)
+  {
+    // Pretty funky stuff                                                                                                                                                      
+    if (asimov_str.find("asimov") != std::string::npos)
+      return NuFitOscCalc(hie, oct, std::stoi(asimov_str.erase(0, 6)));
+    if (asimov_str.find(':') == std::string::npos)
+      return NuFitOscCalc(hie, oct, std::stoi(asimov_str));
+
+    assert(hie == +1 || hie == -1);
+    assert(oct == +1 || oct == -1);
+
+    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+    ret->SetL(kBaseline);
+
+    ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
+    ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+    ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+
+    if(hie > 0){
+      ret->SetDmsq32(kNuFitDmsq32CVNH);
+      ret->SetTh23(kNuFitTh23CVNH);
+      ret->SetTh13(kNuFitTh13CVNH);
+      ret->SetdCP(kNuFitdCPCVNH);
+    }
+    else{
+      ret->SetDmsq32(kNuFitDmsq32CVIH);
+      ret->SetTh23(kNuFitTh23CVIH);
+      ret->SetTh13(kNuFitTh13CVIH);
+      ret->SetdCP(kNuFitdCPCVIH);
+    }
+
+    auto asimov_set = ParseAsimovSet(asimov_str);
+
+    for (auto & pair : asimov_set){
+      if (pair.first == "th13")
+        ret->SetTh13(pair.second);
+      if (pair.first == "deltapi")
+	ret->SetdCP(pair.second*TMath::Pi());
+      if (pair.first == "th23")
+        ret->SetTh23(pair.second);
+      if (pair.first == "dmsq32")
+        ret->SetDmsq32(pair.second/1e3);
+      if (pair.first == "ssth23")
+        ret->SetTh23(asin(sqrt(pair.second)));
+    }
+
+    if (oct < 0) {
+      double dum = TMath::Pi()/2 - ret->GetTh23();
+      ret->SetTh23(dum);
+    }
+
+    return ret;
+  }
+  
+
   bool HasVar(std::vector<const IFitVar*> oscVars, std::string name){
     for(auto *s :oscVars ) if(s->ShortName() == name) return true;
     return false;
