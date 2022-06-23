@@ -1,0 +1,13 @@
+BEGIN_PROLOG
+
+standard_copycellhits:
+{
+  module_type: CopyCellHits
+
+  ClusterLabel: "mrdif"
+
+  OutputRawDigits: false
+  OutputCellHits: true
+}
+
+END_PROLOG

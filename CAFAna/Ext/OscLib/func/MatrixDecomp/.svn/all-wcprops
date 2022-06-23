@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp
+END
+zheevh3.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevh3.h
+END
+zhetrd3.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zhetrd3.cxx
+END
+zheevq3.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevq3.cxx
+END
+COPYING
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/COPYING
+END
+zheevc3.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevc3.cxx
+END
+zhetrd3.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zhetrd3.h
+END
+zheevq3.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevq3.h
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/README
+END
+zheevc3.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevc3.h
+END
+zheevh3.cxx
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/subversion/novaart.pkgs.svn/!svn/ver/4595/trunk/OscLib/func/MatrixDecomp/zheevh3.cxx
+END

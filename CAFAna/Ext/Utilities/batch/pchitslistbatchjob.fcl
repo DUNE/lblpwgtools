@@ -1,0 +1,123 @@
+#include "BackTracker.fcl"
+#include "PCHitsList.fcl"
+#include "services.fcl"
+
+#include "CalHit.fcl"
+#include "Slicer4D.fcl"
+#include "CosmicTrack.fcl"
+#include "MichelEFilter.fcl"
+#include "StopperSelection.fcl"
+
+#include "TimingCalibration.fcl"
+#include "FiberCalibration.fcl"
+#include "TimingCalFilter.fcl"
+#include "CosmicCalib.fcl"
+
+#include "Metadata.fcl"
+
+process_name: PCHitsList
+
+services:
+{
+  TFileService: { fileName: "pclist_hist.root" closeFileFast: false }
+  scheduler:    { wantTracer: true wantSummary: true }
+  @table::standard_services
+}
+
+# Otherwise ART holds onto all the AttenProfile objects until the end of the
+# file and we run out of memory
+# TODO: This is deprecated as of art v2.08. Need to contact artists
+services.scheduler.fileMode: MERGE
+services.BackTracker: @local::standard_backtracker
+
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  producers:
+  {
+    calhit:        @local::standard_calhit
+    slicer:        @local::standard_slicer4d
+    cosmictrack:   @local::standard_cosmictrack
+    pclist:        @local::standard_pclist # All PCHits
+    pcliststop:    @local::standard_pclist # Stopping PCHits
+    fibercal:      @local::standard_fibercalibration
+    timingcal:     @local::standard_timingcalibration
+  }
+
+  analyzers:
+  {
+    metadata:      @local::standard_metadata
+  }	
+
+  filters: 
+  {
+    dcmsum:        @local::standard_timingcalfilter
+    michelefilter: @local::standard_michelecosmic
+    stop:          @local::standard_stopper
+  }
+
+  pchits:  [ calhit, slicer, cosmictrack, pclist, michelefilter, stop, pcliststop ]
+
+  timecal: [ fibercal, timingcal, dcmsum ]
+
+  stream1:   [ out1, out2, out3, metadata ]
+
+  trigger_paths: [ pchits, timecal ]
+
+  end_paths: [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "pclist_reco.root"
+    fastCloning: false
+    outputCommands: [ "drop *",
+                      "keep caldp*_pclist_*_*", # Keep our products
+                      "keep rb::Tracks_cosmictrack_*_*", # And tracks we're associating to
+                      "keep sumdata*_*_*_*"
+                    ]
+  }
+
+  out2:
+  {
+    module_type: RootOutput
+    fileName:    "pcliststop_reco.root"
+    fastCloning: false
+    SelectEvents: [ pchits ]
+    outputCommands: [ "drop *",
+                      "keep caldp*_pcliststop_*_*", # Keep our products
+                      "keep rb::Tracks_stop_*_*", # And tracks we're associating to
+                      "keep sumdata*_*_*_*"
+                    ]
+  }
+
+  out3:
+  {
+    module_type: RootOutput
+    fileName:    "timingcal.root"
+    fastCloning: false
+    SelectEvents: [ timecal ]
+    outputCommands: [ "drop *",
+                      "keep caldp*_dcmsum_*_*", # Keep our product
+                      "keep sumdata*_*_*_*"
+                    ]
+    saveMemoryObjectThreshold: 104857600 # Drop ROOT buffers above 100MB
+  }
+}
+services.Calibrator.UseValidityDB: false
+services.Calibrator. Tag: "v1"
+
+physics.producers.pcliststop.CosmicLabel: "stop"
+physics.filters.michelefilter.ApplyEventFilter: true
+
+physics.analyzers.metadata.params.Calibration.base_release:  ""
+physics.analyzers.metadata.params.NOVA.Standard: "true"

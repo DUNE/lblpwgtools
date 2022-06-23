@@ -1,0 +1,17 @@
+BEGIN_PROLOG
+
+standard_nonemptycluster:
+{
+  module_type: NonEmptyCluster
+
+  ClusterLabel: "slicer"
+}
+
+dif_nonemptycluster:
+{
+  module_type: NonEmptyCluster
+
+  ClusterLabel: "slicerdif"
+}
+
+END_PROLOG

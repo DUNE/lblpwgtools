@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+standard_rewritespilldata:
+{
+module_type: RewriteSpillData
+
+GeneratorLabel: "generator"
+
+}
+
+END_PROLOG

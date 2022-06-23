@@ -1,0 +1,28 @@
+# Usage: nova -c concat_files.fcl -i <outfile> <infiles>
+
+# Specify this option if you have large products at the run or subrun level and
+# are having memory usage problems. Without this, ART holds onto all those
+# objects until the end of the file
+#services.scheduler.fileMode: MERGE
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+outputs:
+{
+  # Don't specify a fileName. Require user to specify output file explicitly
+  out:
+  {
+    module_type: RootOutput
+  }
+}
+
+physics:
+{
+  stream:    [ out ]
+  end_paths: [ stream ]
+}
+

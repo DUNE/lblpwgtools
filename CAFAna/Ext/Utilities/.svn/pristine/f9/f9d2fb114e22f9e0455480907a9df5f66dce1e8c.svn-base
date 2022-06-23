@@ -1,0 +1,46 @@
+#include "LEMMixer.fcl"
+#include "LEMAssociator.fcl"
+#include "Metadata.fcl"
+
+#include "services.fcl"
+
+process_name: BatchLEMMixer
+
+services:
+{
+  @table::standard_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "lemmixed.root"
+    fastCloning: false
+  }
+}
+
+physics:
+{
+  producers:{}
+
+  p1: [ lemmix, lem ]
+  stream1:  [ metadata, out1 ]
+
+  trigger_paths: [ p1 ]
+  end_paths:     [stream1]
+}
+
+physics.filters.lemmix: @local::standard_lemmixer
+physics.producers.lem: @local::standard_lemassociator
+physics.analyzers.metadata: @local::standard_metadata
+physics.analyzers.metadata.params.pid.base_release: ""       #automatically picked up at run time
+physics.analyzers.metadata.params.NOVA.Standard: "true"
+
+

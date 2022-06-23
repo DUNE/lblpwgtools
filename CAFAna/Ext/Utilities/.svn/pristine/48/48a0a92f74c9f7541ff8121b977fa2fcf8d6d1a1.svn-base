@@ -1,0 +1,11 @@
+BEGIN_PROLOG
+
+standard_fakespilldata:
+{
+  module_type: FakeSpillData
+
+  ForcePolarityForward: false
+  ForcePolarityReverse: false
+}
+
+END_PROLOG
