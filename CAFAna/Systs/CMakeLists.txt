@@ -10,8 +10,8 @@ set(Systs_implementation_files
   NuOnESysts.cxx
   CrazyFluxFakeData.cxx
   ProtonNeutronEnergyShiftFakeData.cxx
-  ArCScalingFakeData.cxx
   ArCScaling2DFakeData.cxx
+  TMSBeamMonitorFDS.cxx	
   FluxWiggleFakeData.cxx
   FluxWiggleSqueezeFakeData.cxx
   SystComponentScale.cxx
@@ -49,8 +49,8 @@ set(Systs_header_files
   GENIEv3_G18_10a_02_11aReweightFakeData.h
   CrazyFluxFakeData.h
   ProtonNeutronEnergyShiftFakeData.h
-  ArCScalingFakeData.h
   ArCScaling2DFakeData.h
+  TMSBeamMonitorFDS.cxx
   FluxWiggleFakeData.h
   FluxWiggleSqueezeFakeData.h
   ReweightFakeDataBase.h)
@@ -76,6 +76,7 @@ set(SYST_INPUT_ROOT_FILES
   det_sys_cov.root
   det_sys_cov_v3binning.root
   ArCScaling2DFakeData.root
+  tms_beamMonitoring_weights.root
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
