@@ -40,6 +40,7 @@
 #include "CAFAna/Systs/ArCScaling2DFakeData.h"
 #include "CAFAna/Systs/FluxWiggleFakeData.h"
 #include "CAFAna/Systs/FluxWiggleSqueezeFakeData.h"
+#include "CAFAna/Systs/TMSBeamMonitorFDS.h"
 
 #include "OscLib/func/IOscCalculator.h"
 #include "OscLib/func/OscCalculatorPMNSOpt.h"
@@ -273,7 +274,7 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
     // Alternative flux wiggle
     std::vector<const ISyst *> fluxwigglesqueezelist =
       GetFluxWiggleSqueezeSysts();
-    // systlist.insert(systlist.end(), fluxwigglesqueezelist.begin(), fluxwigglesqueezelist.end());
+    systlist.insert(systlist.end(), fluxwigglesqueezelist.begin(), fluxwigglesqueezelist.end());
 
     // Proton-neutron energy shifting
     std::vector<const ISyst *> protonneutrinoenergyshiftlist = 
@@ -285,6 +286,10 @@ std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
       GetArCScaling2DSysts();
     systlist.insert(systlist.end(), arcscaling2dlist.begin(), arcscaling2dlist.end());
 
+    // TMS FDS
+    std::vector<const ISyst *> tmsbeammonitoringlist =
+      GetTMSBeamMonitorFDSSysts();
+    systlist.insert(systlist.end(), tmsbeammonitoringlist.begin(), tmsbeammonitoringlist.end());
   }
 
   return systlist;
@@ -530,6 +535,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
 	   IsFluxWiggleSyst(name) || 
 	   IsFluxWiggleSqueezeSyst(name) || 
            IsArCScaling2DSyst(name) ||
+	   IsTMSBeamMonitorFDSSyst(name) ||
 	   IsProtonNeutronEnergyShiftSyst(name));
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
