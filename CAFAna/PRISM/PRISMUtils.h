@@ -73,7 +73,7 @@ inline void FillWithNulls(std::vector<std::shared_ptr<T>> &v, size_t n) {
 }
 
 template <typename T>
-inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v, 
+inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v,
                           size_t n1, size_t n2) {
   for (size_t i = 0; i < n1; ++i) {
     std::vector<std::shared_ptr<T>> tmp;
@@ -87,8 +87,8 @@ inline void FillWithNulls(std::vector<std::vector<std::shared_ptr<T>>> &v,
 struct PRISMStateBlob {
   std::unique_ptr<PredictionPRISM> PRISM;
   std::vector<std::unique_ptr<PredictionInterp>> MatchPredInterps;
-  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps; 
-  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps; 
+  std::vector<std::unique_ptr<PredictionInterp>> NDMatrixPredInterps;
+  std::vector<std::unique_ptr<PredictionInterp>> FDMatrixPredInterps;
   // For MC Eff Correction
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
   std::vector<std::unique_ptr<PredictionInterp>> NDSelTruePredInterps;
@@ -110,12 +110,14 @@ struct PRISMStateBlob {
     bool IsND = PRISM::IsNDConfig(pc);
     size_t fd_pc = 0;
     size_t IsNue = PRISM::IsNueConfig(pc);
+    size_t IsNuTau = PRISM::IsNutauConfig(pc);
     if (!IsND) {
       fd_pc = PRISM::GetFDConfig(pc);
     }
 
-    // Don't need MatchPredInterps for Nue (they aren't made/used)
+    // Don't need MatchPredInterps for Nue/nutau (they aren't made/used)
     return PRISM && (IsNue || bool(MatchPredInterps[pc])) &&
+           (IsNuTau || bool(MatchPredInterps[pc])) &&
            (IsND || bool(FarDetDataPreds[fd_pc]));
   }
 
@@ -151,7 +153,7 @@ inline void SaveTo(TFile &f, std::string const &dirname, T *ty) {
 
   f.cd();
   TDirectory *dir = gDirectory;
-  
+
   ty->SaveTo(dir, dirname.c_str());
 
 }
@@ -194,7 +196,7 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec);
 HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2);
 
 //---------------------------------
-inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec, 
+inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
                                                    double POT) {
   Eigen::MatrixXd spec_mat = ConvertArrayToMatrix(spec.GetEigen(POT),
                                                   spec.GetBinnings());
@@ -210,7 +212,7 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
   Eigen::ArrayXXd Errors_mat = ConvertArrayToMatrix(ErrorArr,
                                                     spec.GetBinnings()).array();
 
-  Eigen::MatrixXd SumSq_mat = (Errors_mat.pow(2) * 
+  Eigen::MatrixXd SumSq_mat = (Errors_mat.pow(2) *
                                std::pow(POT/spec.POT(), 2)).matrix();
   /*Eigen::MatrixXd err_mat = Eigen::MatrixXd::Zero(spec_mat.rows(), spec_mat.cols());
   if (spec.GetBinnings().size() == 2) {
@@ -228,14 +230,14 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
   std::vector<Binning> anaBins = { spec.GetBinnings().at(0) };
   if (spec.GetBinnings().size() == 3) {
     anaLabels.push_back(spec.GetLabels().at(1));
-    anaBins.push_back(spec.GetBinnings().at(1)); 
+    anaBins.push_back(spec.GetBinnings().at(1));
   }
   LabelsAndBins anaAxis = LabelsAndBins(anaLabels, anaBins);
   LabelsAndBins weightAxis = (spec.GetBinnings().size() == 2) ?
     LabelsAndBins(spec.GetLabels().at(1), spec.GetBinnings().at(1)) :
     LabelsAndBins(spec.GetLabels().at(2), spec.GetBinnings().at(2)); // Is 3D.
 
-  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(SumSq_mat), 
+  PRISMReweightableSpectrum rwspec(std::move(spec_mat), std::move(SumSq_mat),
                                    anaAxis, weightAxis, POT, 0); // POT
 
   return rwspec;
@@ -259,12 +261,12 @@ inline Spectrum ToSpectrum(ReweightableSpectrum const &rwspec, double pot) {
   for (auto const &tb : rwspec.GetTrueBinnings()) {
     bins.push_back(tb);
     labels.push_back("");
-  } 
+  }
 
   LabelsAndBins spec_LBs(labels, bins);
 
   Spectrum ret(std::move(arr), spec_LBs, pot, 0);
-  return ret;  
+  return ret;
 }
 
 //-----------------------------------
@@ -285,7 +287,7 @@ inline Spectrum SetSpectrumErrors(Spectrum const &spec, double mcpot) {
   }
 
   LabelsAndBins spec_LBs(spec.GetLabels(), spec.GetBinnings());
-  return Spectrum(std::move(spec_arr), std::move(spec_sumsq), spec_LBs, spec.POT(), 0); 
+  return Spectrum(std::move(spec_arr), std::move(spec_sumsq), spec_LBs, spec.POT(), 0);
 
 }
 

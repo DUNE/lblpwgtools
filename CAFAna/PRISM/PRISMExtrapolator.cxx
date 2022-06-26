@@ -27,7 +27,9 @@ Flavors::Flavors_t GetFlavor(NuChan fps) {
   if ((fps & NuChan::kNumu) || (fps & NuChan::kNumuBar)) {
     return Flavors::kNuMuToNuMu;
   } else if ((fps & NuChan::kNue) || (fps & NuChan::kNueBar)) {
-    return Flavors::kNuMuToNuE;
+    return Flavors::kAllNuE;
+  } else if ((fps & NuChan::kNutau) || (fps & NuChan::kNutauBar)) {
+    return Flavors::kAllNuTau;
   } else {
     std::cout << "Invalid NuChan: " << fps << std::endl;
     abort();
@@ -36,9 +38,9 @@ Flavors::Flavors_t GetFlavor(NuChan fps) {
 
 //--------------------------------------------------------------------------------
 Sign::Sign_t GetSign(NuChan fps) {
-  if ((fps & NuChan::kNumu) || (fps & NuChan::kNue)) {
+  if ( (fps & NuChan::kNumu) || (fps & NuChan::kNue) || (fps & NuChan::kNutau) ) {
     return Sign::kNu;
-  } else if ((fps & NuChan::kNumuBar) || (fps & NuChan::kNueBar)) {
+  } else if ( (fps & NuChan::kNumuBar) || (fps & NuChan::kNueBar) || (fps & NuChan::kNutauBar) ) {
     return Sign::kAntiNu;
   } else {
     std::cout << "Invalid NuChan: " << fps << std::endl;
