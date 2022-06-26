@@ -607,6 +607,7 @@ PredictionPRISM::GetFDNueSwapAppOscPredictionTrueEnu(PRISM::BeamMode FDBM) const
              ? Predictions.FD.nue_ccinc_sel_sig_apposc_numode_true_e_nu
              : Predictions.FD.nuebar_ccinc_sel_sig_apposc_nubmode_true_e_nu;
 }
+std::unique_ptr<PredictionInterp> &
 PredictionPRISM::GetFDNutauSwapAppOscPrediction(PRISM::BeamMode FDBM) const {
   return (FDBM == BeamMode::kNuMode)
              ? Predictions.FD.nutau_ccinc_sel_sig_apposc_numode
