@@ -55,7 +55,7 @@ ana::Weight NDSliceCorrection(double reference_width_cm,
 
   for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
     double width = Edges[e_it + 1] - Edges[e_it];
-    Weights.push_back(/*FD_ND_FVRatio(width*1E2) * */ 
+    Weights.push_back(/*FD_ND_FVRatio(width*1E2) * */
                       ((width*1E2)/reference_width_cm));
   }
 
@@ -108,7 +108,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     std::cout << "[ERROR]: No such directory: "
               << (std::string("PRISM_") + varname)
               << " to load PRISMPrediction from." << std::endl;
-    abort(); 
+    abort();
   }
   blob.PRISM = LoadFrom_<PredictionPRISM>(dir, path.c_str());
 
@@ -126,11 +126,11 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     }
 
     if (IsND) { // Is ND
-      path = (std::string("NDMatchInterp_ETrue") + 
+      path = (std::string("NDMatchInterp_ETrue") +
              (IsND280kA ? "_280kA" : "_293kA") +
              (IsNu ? "_nu" : "_nub"));
-      if (f.GetDirectory(path.c_str())) { 
-        blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str()); 
+      if (f.GetDirectory(path.c_str())) {
+        blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
       if (!IsND280kA) {
         path = (std::string("NDMatrixInterp_ERecETrue") +
@@ -151,8 +151,8 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       if (f.GetDirectory(path.c_str())) {
         blob.NDSelTruePredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
-    } else if(!IsNuTau){ // Is FD numu/nue
-      if (!IsNue) {
+    } else { // Is FD numu/nue/nutau
+      if (!IsNue && !IsNuTau) {
         path = (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"));
         if (f.GetDirectory(path.c_str())) {
           blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
@@ -160,36 +160,36 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       }
 
       path = (std::string("FDMatrixInterp_ERecETrue") +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+             (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDMatrixPredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
 
       path = (std::string("FDUnSelected_ETrue") +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+             (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDUnselTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
 
       path = (std::string("FDSelected_ETrue") +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub")); 
+             (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDSelTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
 
       path = (std::string("FDDataPred_") + varname +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+             (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FarDetDataPreds[fd_config] = LoadFrom_<DataPredictionNoExtrap>(dir, path.c_str());
       }
 
       path = (std::string("FDFakeDataBiasPred_") + varname +
-             (IsNue ? "_nue" : "_numu") + (IsNu ? "_nu" : "_nub"));
+             (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
-        blob.FarDetFakeDataBiasPreds[fd_config] = LoadFrom_<DataPredictionNoExtrap>(dir, 
+        blob.FarDetFakeDataBiasPreds[fd_config] = LoadFrom_<DataPredictionNoExtrap>(dir,
                                                                                     path.c_str());
       }
-    }
+    } // end else
   }
 
   return blob;
@@ -209,7 +209,7 @@ void DumpLoadedSpectra(PRISMStateBlob const &blob){
     if(!IsNDConfig(i)){ continue; }
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.NDMatrixPredInterps[i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "FDMatrixPredInterps: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
@@ -217,21 +217,21 @@ void DumpLoadedSpectra(PRISMStateBlob const &blob){
     size_t fd_i = GetFDConfig(i);
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.FDMatrixPredInterps[fd_i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "NDUnselTruePredInterps: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
     if(!IsNDConfig(i)){ continue; }
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.NDUnselTruePredInterps[i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "NDSelTruePredInterps: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
     if(!IsNDConfig(i)){ continue; }
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.NDSelTruePredInterps[i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "FDUnselTruePredInterps: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
@@ -239,7 +239,7 @@ void DumpLoadedSpectra(PRISMStateBlob const &blob){
     size_t fd_i = GetFDConfig(i);
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.FDUnselTruePredInterps[fd_i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "FDSelTruePredInterps: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
@@ -247,7 +247,7 @@ void DumpLoadedSpectra(PRISMStateBlob const &blob){
     size_t fd_i = GetFDConfig(i);
     std::cout << "\t\t" << DescribeConfig(i) << ": "
               << bool(blob.FDSelTruePredInterps[fd_i].get()) << std::endl;
-  }  
+  }
   std::cout << "}" << std::endl;
   std::cout << "FarDetDataPreds: {" << std::endl;
   for (size_t i = 0; i < kNPRISMConfigs; ++i) {
@@ -504,7 +504,7 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec) {
                    axis.GetVars().at(1), binsb);
     } else { // 1D axis
       NewVar = axis.GetVars().at(0);
-      NewBins = axis.GetBinnings().at(0); 
+      NewBins = axis.GetBinnings().at(0);
     }
 
     LabelsVec.push_back(NewLabel);
@@ -517,11 +517,11 @@ HistAxis GetMatrixAxis(const std::vector<HistAxis> &axisvec) {
 
 HistAxis GetTwoDAxis(const HistAxis &axis1, const HistAxis &axis2) {
   std::vector<std::string> axis_Labels = axis1.GetLabels();
-  std::vector<Binning> axis_Bins = axis1.GetBinnings(); 
-  std::vector<Var> axis_Vars = axis1.GetVars(); 
+  std::vector<Binning> axis_Bins = axis1.GetBinnings();
+  std::vector<Var> axis_Vars = axis1.GetVars();
   axis_Labels.push_back(axis2.GetLabels().front());
   axis_Bins.push_back(axis2.GetBinnings().front());
-  axis_Vars.push_back(axis2.GetVars().front()); 
+  axis_Vars.push_back(axis2.GetVars().front());
 
   return HistAxis(axis_Labels, axis_Bins, axis_Vars);
 }
