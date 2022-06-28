@@ -117,10 +117,10 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
     bool IsNu = IsNuConfig(config);
     bool IsNDNue = IsNDNueConfig(config);
     bool IsND = IsNDConfig(config);
-    bool IsND280kA = IsND280kAConfig(config);
+    bool IsND280kA = IsND280kA_numu_Config(config);
 
     size_t fd_config = 0;
-    size_t IsNue = IsNueConfig(config);
+    size_t IsNue = IsFDNueConfig(config);
     size_t IsNuTau = IsNutauConfig(config);
 
     if (!IsND) {
