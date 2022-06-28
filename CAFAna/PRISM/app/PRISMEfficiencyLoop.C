@@ -1,15 +1,16 @@
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/PRISM/Cuts.h"
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 
 #include "StandardRecord/StandardRecord.h"
 
-#include "TFile.h"
-#include "TTree.h"
-#include "TH2.h"
 #include "TCanvas.h"
+#include "TFile.h"
+#include "TH2.h"
 #include "TStyle.h"
+#include "TTree.h"
 
 #include <cassert>
 #include <iostream>
@@ -148,9 +149,10 @@ int main(int argc, char const *argv[]) {
   ana::Cut IsSignal = ana::kIsTrueFV && PRISM::kIsOutOfTheDesert && IsNue;
   ana::Cut IsSignalSelected = IsSignal && ana::kPassND_FHC_NUE;
 
-  TH2D *sig = new TH2D("sig", ";enu (GeV);offaxis_x (m);count", 100, 0, 10, 64*2,-2, 30);
-  TH2D *sig_sel =
-      new TH2D("sig_sel", ";enu (GeV);offaxis_x (m);count", 100, 0, 10, 64*2,-2, 30);
+  TH2D *sig = new TH2D("sig", ";enu (GeV);offaxis_x (m);count", 100, 0, 10,
+                       64 * 2, -2, 30);
+  TH2D *sig_sel = new TH2D("sig_sel", ";enu (GeV);offaxis_x (m);count", 100, 0,
+                           10, 64 * 2, -2, 30);
 
   std::cout << std::endl;
   for (Long64_t ent = 0; ent < Nent; ++ent) {
@@ -160,25 +162,29 @@ int main(int argc, char const *argv[]) {
       std::cout << "\r[READ] " << ent << "/" << Nent << std::flush;
     }
 
-    if (!IsNue(&sr)) {
+    if (!IsNue((caf::SRProxy *)&sr)) {
       continue;
     }
 
     std::cout << "\rEntry: " << ent << ", nuPDG: " << sr.nuPDG
               << ", Enu = " << sr.Ev << ", vtx_x: " << sr.vtx_x
-              << ", det_x: " << sr.det_x << "\n\tinFV: " << ana::kIsTrueFV(&sr)
-              << ", outofdesert: " << PRISM::kIsOutOfTheDesert(&sr)
-              << ", NDNueSig: " << IsSignal(&sr)
-              << ", NDNueSel: " << IsSignalSelected(&sr) << std::endl;
+              << ", det_x: " << sr.det_x
+              << "\n\tinFV: " << ana::kIsTrueFV((caf::SRProxy *)&sr)
+              << ", outofdesert: "
+              << PRISM::kIsOutOfTheDesert((caf::SRProxy *)&sr)
+              << ", NDNueSig: " << IsSignal((caf::SRProxy *)&sr)
+              << ", NDNueSel: " << IsSignalSelected((caf::SRProxy *)&sr)
+              << std::endl;
 
-    sig->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2, IsSignal(&sr));
-    sig_sel->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2, IsSignalSelected(&sr));
+    sig->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2,
+              IsSignal((caf::SRProxy *)&sr));
+    sig_sel->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2,
+                  IsSignalSelected((caf::SRProxy *)&sr));
   }
   std::cout << "\r[READ] " << Nent << "/" << Nent << std::endl;
 
-
   gStyle->SetOptStat(false);
-  TCanvas *c1 = new TCanvas("c1","");
+  TCanvas *c1 = new TCanvas("c1", "");
 
   sig_sel->Divide(sig);
   sig_sel->Draw("COLZ");
