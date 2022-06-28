@@ -67,9 +67,11 @@ static BeamChan const kNumuBar_NuBarmode = {BeamMode::kNuBarMode,
 static BeamChan const kNue_Numode = {BeamMode::kNuMode, NuChan::kNueApp};
 static BeamChan const kNue_I_Numode =
     {BeamMode::kNuMode,
-     NuChan::kNueIntrinsic} static BeamChan const kNueBar_I_NuBarmode =
+     NuChan::kNueIntrinsic};
+ static BeamChan const kNueBar_I_NuBarmode =
         {BeamMode::kNuBarMode,
-         NuChan::kNueBarIntrinsic} static BeamChan const kNueBar_NuBarmode = {
+         NuChan::kNueBarIntrinsic};
+ static BeamChan const kNueBar_NuBarmode = {
             BeamMode::kNuBarMode, NuChan::kNueBarApp};
 
 inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
