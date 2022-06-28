@@ -41,7 +41,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
 
   auto PRISMps = reg_scan.get<fhicl::ParameterSet>("PRISM", {});
   bool Use_EventRateMatching =
-      PRISMps.get<bool>("Use_EventRateMatching", false);
+      PRISMps.get<bool>("Use_EventRateMatching", true);
 
   osc::IOscCalculatorAdjustable *calc =
       ConfigureCalc(reg_scan.get<fhicl::ParameterSet>("true_osc", {}));
@@ -121,7 +121,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
   std::vector<TGraph> Soln;
   std::vector<TGraph> DiffLCurves;
 
-  for (auto const ch : Channels) {
+  for (auto const &ch : Channels) {
 
     auto const &chan_scan_config = channel_conditioning_configs[ch.second];
 

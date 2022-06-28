@@ -23,17 +23,15 @@ namespace ana
   void Loaders::SetLoaderPath(const std::string& path,
                               caf::Det_t det,
                               DataMC datamc,
-                              DataSource src,
                               SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
     assert(det == caf::kFARDET || swap == kNonSwap);
-    assert(src == kBeam || swap == kNonSwap);
 
-    const Key_t key(det, datamc, src, swap);
+    const Key_t key(det, datamc, swap);
 
     // Clear out the old one if necessary
-    DisableLoader(det, datamc, src, swap);
+    DisableLoader(det, datamc, swap);
 
     fLoaderPaths[key] = path;
   }
@@ -42,17 +40,15 @@ namespace ana
   void Loaders::SetLoaderFiles(const std::vector<std::string>& files,
                                caf::Det_t det,
                                DataMC datamc,
-                               DataSource src,
                                SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
     assert(det == caf::kFARDET || swap == kNonSwap);
-    assert(src == kBeam || swap == kNonSwap);
 
-    const Key_t key(det, datamc, src, swap);
+    const Key_t key(det, datamc, swap);
 
     // Clear out the old one if necessary
-    DisableLoader(det, datamc, src, swap);
+    DisableLoader(det, datamc, swap);
 
     fLoaderFiles[key] = files;
   }
@@ -61,17 +57,15 @@ namespace ana
   void Loaders::AddLoader(SpectrumLoaderBase* file,
                                caf::Det_t det,
                                DataMC datamc,
-                               DataSource src,
                                SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
     assert(det == caf::kFARDET || swap == kNonSwap);
-    assert(src == kBeam || swap == kNonSwap);
 
-    const Key_t key(det, datamc, src, swap);
+    const Key_t key(det, datamc, swap);
 
     // Clear out the old one if necessary
-    DisableLoader(det, datamc, src, swap);
+    DisableLoader(det, datamc, swap);
 
     fLoaders[key] = file;
   }
@@ -79,14 +73,12 @@ namespace ana
   //----------------------------------------------------------------------
   void Loaders::DisableLoader(caf::Det_t det,
                               DataMC datamc,
-                              DataSource src,
                               SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
     assert(det == caf::kFARDET || swap == kNonSwap);
-    assert(src == kBeam || swap == kNonSwap);
 
-    const Key_t key(det, datamc, src, swap);
+    const Key_t key(det, datamc, swap);
 
     // Clear out the current one if possible
     auto it = fLoaders.find(key);
@@ -102,14 +94,12 @@ namespace ana
   //----------------------------------------------------------------------
   SpectrumLoaderBase& Loaders::GetLoader(caf::Det_t det,
                                          DataMC datamc,
-                                         DataSource src,
                                          SwappingConfig swap)
   {
     assert(datamc == kMC || swap == kNonSwap);
     assert(det == caf::kFARDET || swap == kNonSwap);
-    assert(src == kBeam || swap == kNonSwap);
 
-    const Key_t key(det, datamc, src, swap);
+    const Key_t key(det, datamc, swap);
 
     // Look up and return. Use fNull if no loader is set for this config
     auto itLoader = fLoaders.find(key);
@@ -117,12 +107,12 @@ namespace ana
 
     auto itPath = fLoaderPaths.find(key);
     if(itPath != fLoaderPaths.end()){
-      fLoaders[key] = new SpectrumLoader(itPath->second, src);
+      fLoaders[key] = new SpectrumLoader(itPath->second);
       return *fLoaders[key];
     }
     auto itFiles = fLoaderFiles.find(key);
     if(itFiles != fLoaderFiles.end()){
-      fLoaders[key] = new SpectrumLoader(itFiles->second, src);
+      fLoaders[key] = new SpectrumLoader(itFiles->second);
       return *fLoaders[key];
     }
 
@@ -134,4 +124,5 @@ namespace ana
   {
     for(auto it: fLoaders) it.second->Go();
   }
+
 }

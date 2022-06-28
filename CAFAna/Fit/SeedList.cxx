@@ -5,7 +5,7 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  void Seed::ResetCalc(osc::IOscCalculatorAdjustable* calc) const
+  void Seed::ResetCalc(osc::IOscCalcAdjustable* calc) const
   {
     for(auto it: fVals) it.first->SetValue(calc, it.second);
   }

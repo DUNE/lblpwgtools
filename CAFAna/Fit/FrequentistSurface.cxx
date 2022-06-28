@@ -14,7 +14,7 @@
 #include "TObjString.h"
 #include "TCollection.h"
 
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 #include "CAFAna/Core/LoadFromFile.h"
@@ -23,13 +23,13 @@
 #include "CAFAna/Core/ThreadPool.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 namespace ana
 {
   //----------------------------------------------------------------------
-  FrequentistSurface::FrequentistSurface(const IChiSqExperiment* expt,
-                                         osc::IOscCalculatorAdjustable* calc,
+  FrequentistSurface::FrequentistSurface(const IExperiment* expt,
+                                         osc::IOscCalcAdjustable* calc,
                                          const IFitVar* xvar, int nbinsx, double xmin, double xmax,
                                          const IFitVar* yvar, int nbinsy, double ymin, double ymax,
                                          const std::vector<const IFitVar*>& profVars,
@@ -104,22 +104,14 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FillSurface(const IChiSqExperiment *expt,
-                                       osc::IOscCalculatorAdjustable *calc,
+  void FrequentistSurface::FillSurface(const IExperiment *expt,
+                                       osc::IOscCalcAdjustable *calc,
                                        const IFitVar *xvar, const IFitVar *yvar,
                                        const std::vector<const IFitVar *> &profVars,
                                        const std::vector<const ISyst *> &profSysts,
                                        const SeedList& seedPts,
                                        const std::vector<SystShifts> &systSeedPts)
   {
-    if (fParallel && !(profVars.empty() && profSysts.empty()))
-    {
-      // Minuit calls this at some point, and it creates a static. Which
-      // doesn't like happening on multiple threads at once. So do it upfront
-      // while we're still single-threaded.
-      ROOT::Minuit2::StackAllocatorHolder::Get();
-    }
-
     // Nothing created during surface filling belongs in a
     // directory. Unfortunately the local guards in Spectrum etc are racey when
     // run in parallel. But this should cover the whole lot safely.
@@ -131,8 +123,12 @@ namespace ana
     // Difficult to keep a progress bar properly up to date when threaded
     if (!fParallel) prog = new Progress(progTitle);
     ThreadPool *pool = 0;
-    if (fParallel)
-    {
+    if(fParallel){
+      // Hack/workaround needed for parallel running: Give all the constituents
+      // of the Prediction a chance to do lazy initialization, before they race
+      // themselves trying to do it in parallel.
+      expt->ChiSq(calc);
+
       pool = new ThreadPool;
       pool->ShowProgress(progTitle);
     }
@@ -174,17 +170,17 @@ namespace ana
                   << "This should never happen." << std::endl;
       }
 
-      if (fParallel)
-      {
-        pool->AddMemberTask(this, &FrequentistSurface::FillSurfacePoint,
-                            expt, calc,
-                            xvar, xv, yvar, yv,
-                            profVars, profSysts, seedPts, systSeedPts);
-      } else
-      {
+      ThreadPool::func_t task = [=](){
         FillSurfacePoint(expt, calc,
-                          xvar, xv, yvar, yv,
-                          profVars, profSysts, seedPts, systSeedPts);
+                         xvar, xv, yvar, yv,
+                         profVars, profSysts, seedPts, systSeedPts);
+      };
+
+      if(fParallel){
+        pool->AddTask(task);
+      }
+      else{
+        task(); // Just do it straight away
         ++neval;
         prog->SetProgress(neval / double(Nx * Ny));
       }
@@ -204,43 +200,9 @@ namespace ana
     }
   }
 
-  /// \brief Helper for FrequentistSurface::FillSurfacePoint
-  ///
-  /// The cacheing of the nominal done in PredictionInterp is not
-  /// threadsafe. This is an inelegant but pragmatic way of suppressing it.
-  class OscCalcNoHash: public osc::IOscCalculatorAdjustable
-  {
-  public:
-    OscCalcNoHash(osc::IOscCalculatorAdjustable* c) : fCalc(c) {}
-
-    osc::IOscCalculatorAdjustable* Copy() const override
-    {
-      std::cout << "FrequentistSurface::OscCalcNoHash not copyable." << std::endl;
-      abort();
-    }
-    double P(int a, int b, double E) override {return fCalc->P(a, b, E);}
-    /// Marks this calculator "unhashable" so the cacheing won't occur
-    TMD5* GetParamsHash() const override {return 0;}
-
-    // It's a shame we have to forward all the getters and setters explicitly,
-    // but I don't see how to avoid it. Take away some drudgery with a macro.
-#define F(v)\
-    void Set##v(double x) override {fCalc->Set##v(x);}\
-    double Get##v() const override {return fCalc->Get##v();}
-    F(L); F(Rho);
-#undef F
-#define F(v)\
-    void Set##v(double x) override {fCalc->Set##v(x);}\
-    double Get##v() const override {return fCalc->Get##v();}
-      F(Dmsq21); F(Dmsq32); F(Th12); F(Th13); F(Th23); F(dCP);
-#undef F
-  protected:
-    osc::IOscCalculatorAdjustable* fCalc;
-  };
-
   //----------------------------------------------------------------------
-  double FrequentistSurface::FillSurfacePoint(const IChiSqExperiment* expt,
-                                              osc::IOscCalculatorAdjustable* calc,
+  double FrequentistSurface::FillSurfacePoint(const IExperiment* expt,
+                                              osc::IOscCalcAdjustable* calc,
                                               const IFitVar* xvar, double x,
                                               const IFitVar* yvar, double y,
                                               const std::vector<const IFitVar*>& profVars,
@@ -248,8 +210,6 @@ namespace ana
                                               const SeedList& seedPts,
                                               const std::vector<SystShifts>& systSeedPts)
   {
-    osc::IOscCalculatorAdjustable* calcNoHash = 0; // specific to parallel mode
-
     if(fParallel){
       // Need to take our own copy so that we don't get overwritten by someone
       // else's changes.
@@ -259,22 +219,18 @@ namespace ana
     xvar->SetValue(calc, x);
     yvar->SetValue(calc, y);
 
-    if (fParallel){
-      calcNoHash = new OscCalcNoHash(calc);
-    }
-
     //Make sure that the profiled values of fitvars do not persist between steps.
     for(int i = 0; i < (int)fSeedValues.size(); ++i) profVars[i]->SetValue( calc, fSeedValues[i] );
 
     double chi;
     if(profVars.empty() && profSysts.empty()){
-      chi = expt->ChiSq(fParallel ? calcNoHash : calc);
+      chi = expt->ChiSq(calc);
     }
     else{
       MinuitFitter fitter(expt, profVars, profSysts);
       fitter.SetFitOpts(fFitOpts);
       SystShifts bestSysts;
-      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet);
+      chi = fitter.Fit(calc, bestSysts, seedPts, systSeedPts, MinuitFitter::kQuiet)->EvalMetricVal();
 
       for(unsigned int i = 0; i < profVars.size(); ++i){
         fProfHists[i]->Fill(x, y, profVars[i]->GetValue(calc));
@@ -286,17 +242,15 @@ namespace ana
 
     fHist->Fill(x, y, chi);
 
-    if(fParallel){
-      delete calc;
-      delete calcNoHash;
-    }
+    if(fParallel) delete calc;
+
     return chi;
   }
 
 
   //---------------------------------------------------------------------
-  void FrequentistSurface::FindMinimum(const IChiSqExperiment* expt,
-                                       osc::IOscCalculatorAdjustable* calc,
+  void FrequentistSurface::FindMinimum(const IExperiment* expt,
+                                       osc::IOscCalcAdjustable* calc,
                                        const IFitVar* xvar, const IFitVar* yvar,
                                        const std::vector<const IFitVar*>& profVars,
                                        const std::vector<const ISyst*>& profSysts,
@@ -327,7 +281,7 @@ namespace ana
     yvar->SetValue(calc, fHist->GetYaxis()->GetBinCenter(miny));
     for(int i = 0; i < (int)fSeedValues.size(); ++i) profVars[i]->SetValue( calc, fSeedValues[i] );
     SystShifts systSeed = SystShifts::Nominal();
-    fBestLikelihood = fit.Fit(calc, systSeed, seedPts);
+    fBestLikelihood = fit.Fit(calc, systSeed, seedPts)->EvalMetricVal();
     fBestFitX = xvar->GetValue(calc);
     fBestFitY = yvar->GetValue(calc);
 
@@ -341,13 +295,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void FrequentistSurface::SaveTo(TDirectory *dir) const
+  void FrequentistSurface::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory *tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
+
     TObjString("FrequentistSurface").Write("type");
 
-    ISurface::SaveTo(dir);
+    ISurface::SaveToHelper(dir);
 
     TDirectory *profDir = dir->mkdir("profHists");
     int idx = 0;
@@ -357,17 +314,24 @@ namespace ana
       it->Write(TString::Format("hist%d", idx++));
     }
 
+    dir->Write();
+    delete dir;
+
     tmp->cd();
   }
 
 //----------------------------------------------------------------------
-  std::unique_ptr<FrequentistSurface> FrequentistSurface::LoadFrom(TDirectory *dir)
+  std::unique_ptr<FrequentistSurface> FrequentistSurface::LoadFrom(TDirectory* dir, const std::string& name)
   {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
     DontAddDirectory guard;
 
     TObjString *tag = (TObjString *) dir->Get("type");
     assert(tag);
     assert(tag->GetString() == "FrequentistSurface");
+    delete tag;
 
     std::unique_ptr<FrequentistSurface> surf(new FrequentistSurface);
     ISurface::FillSurfObj(*surf, dir);
@@ -381,6 +345,8 @@ namespace ana
       else
         surf->fProfHists.push_back((TH2 *) dir->Get(TString::Format("margHists/hist%lu", idx)));
     }
+
+    delete dir;
 
     return surf;
   }

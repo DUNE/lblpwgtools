@@ -27,7 +27,7 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
     std::cout << "Trying idcp = " << idcp << std::endl;
     
     double thisdcp = -TMath::Pi() + idcp*dcpstep;
-    osc::IOscCalculatorAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+    osc::IOscCalcAdjustable* trueOsc = NuFitOscCalc(hie, 1, asimov_set);
     trueOsc->SetdCP(thisdcp);
 
     double chisqmin = 99999;
@@ -41,13 +41,13 @@ void cpv_joint(std::string stateFname="common_state_mcc11v3.root",
 	
       for (int ioct = -1; ioct <= 1; ioct +=2) {
 	
-	osc::IOscCalculatorAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
+	osc::IOscCalcAdjustable* testOsc = NuFitOscCalc(hie, ioct, asimov_set);
 	testOsc->SetdCP(dcptest);
 	
 	// Make a map of seed points to try (replaces the old loops)
 	std::map<const IFitVar*, std::vector<double>> oscSeeds = {};
 	
-	IChiSqExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_set);
+	IExperiment *penalty = GetPenalty(hie, ioct, penaltyString, asimov_set);
 	SystShifts trueSyst = kNoShift;
 	SystShifts testSyst = kNoShift;
 	

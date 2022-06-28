@@ -9,7 +9,7 @@ namespace ana
   NoExtrapGenerator::NoExtrapGenerator(
     const HistAxis axis,
     const Cut cut,
-    const Var wei
+    const Weight wei
   ) : fAxis(axis), fCut(cut), fWei(wei) {}
 
   std::unique_ptr<IPrediction> NoExtrapGenerator::Generate(

@@ -2,8 +2,8 @@
 
 #include "CAFAna/Core/Loaders.h"
 
+#include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Prediction/PredictionExtrap.h"
-
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
 // Here are two specialized versions of the more commonly used Predictions with
@@ -30,33 +30,34 @@ public:
                             const std::string &label, const Binning &bins,
                             const Var &var, const Cut &cut,
                             const SystShifts &shift = kNoShift,
-                            const Var &wei = kUnweighted);
+                            const Weight &wei = kUnweighted);
 
   PredictionNonSwapNoExtrap(SpectrumLoaderBase &loaderNonswap,
                             SpectrumLoaderBase &loaderNue,
                             SpectrumLoaderBase &loaderNuTau,
                             const HistAxis &axis, const Cut &cut,
                             const SystShifts &shift = kNoShift,
-                            const Var &wei = kUnweighted);
+                            const Weight &wei = kUnweighted);
 
   PredictionNonSwapNoExtrap(Loaders &loaders, const std::string &label,
                             const Binning &bins, const Var &var, const Cut &cut,
                             const SystShifts &shift = kNoShift,
-                            const Var &wei = kUnweighted);
+                            const Weight &wei = kUnweighted);
 
   PredictionNonSwapNoExtrap(Loaders &loaders, const HistAxis &axis,
                             const Cut &cut, const SystShifts &shift = kNoShift,
-                            const Var &wei = kUnweighted);
+                            const Weight &wei = kUnweighted);
 
   virtual ~PredictionNonSwapNoExtrap();
 
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
-  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
+  static std::unique_ptr<PredictionNonSwapNoExtrap> LoadFrom(TDirectory *dir, 
+                                                             const std::string& name);
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
 private:
 };
@@ -64,13 +65,8 @@ private:
 class NonSwapNoExtrapPredictionGenerator : public IPredictionGenerator {
 public:
   NonSwapNoExtrapPredictionGenerator(HistAxis axis, Cut cut,
-                                     Var wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-    for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());
-  }
+                                     Weight wei = kUnweighted)
+      : fAxis(axis), fCut(cut), fWei(wei) {}
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
@@ -82,8 +78,44 @@ public:
 protected:
   HistAxis fAxis;
   Cut fCut;
-  Var fWei;
+  Weight fWei;
 };
+
+
+/// Class to correctly produce the FD mock 'data'. This makes sure the different
+/// components of the 'data' are being oscillated correctly, as we would see in 
+/// real data. Previously just used OscillatableSpectrum for whole nonswap or
+/// nueswap file. This led to components of FD data being oscillated incorrectly.
+///
+/// Do not need an associated IPredictionGenerator class as I never anticipate 
+/// this being used as an input to PredictionInterp objects. 
+/// (This class just re-implements the old PredictionNoExtrap prediction method.)
+class DataPredictionNoExtrap : public PredictionExtrap {
+public: 
+ 
+  DataPredictionNoExtrap(PredictionExtrap *pred); 
+  DataPredictionNoExtrap(IExtrap *extrap);
+
+  DataPredictionNoExtrap(Loaders &loaders, const HistAxis &axis,
+                         const Cut &cut, const SystShifts &shift = kNoShift,
+                         const Weight &wei = kUnweighted);
+
+  virtual ~DataPredictionNoExtrap();
+
+  virtual Spectrum Predict(osc::IOscCalc *calc) const override;
+
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
+                                    Flavors::Flavors_t flav, 
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const override;
+
+  static std::unique_ptr<DataPredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
+
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
+
+private:
+};
+
 
 /// Prediction that wraps a simple Spectrum, makes unoscillatable FD
 /// predictions, but keeping intrinsic and swap spectra separate. Needed
@@ -98,57 +130,58 @@ public:
   PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
                     SpectrumLoaderBase &loader_nue, const HistAxis &axis,
                     const Cut &cut, const SystShifts &shift = kNoShift,
-                    const Var &wei = kUnweighted);
+                    const Weight &wei = kUnweighted);
 
   PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
                     SpectrumLoaderBase &loader_nue, const std::string &label,
                     const Binning &bins, const Var &var, const Cut &cut,
                     const SystShifts &shift = kNoShift,
-                    const Var &wei = kUnweighted);
+                    const Weight &wei = kUnweighted);
 
-  static std::unique_ptr<PredictionFDNoOsc> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
+  static std::unique_ptr<PredictionFDNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
+  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
   void OverridePOT(double pot) {
     fSpectrumNonSwap.OverridePOT(pot);
     fSpectrumNueSwap.OverridePOT(pot);
   }
 
-  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
+  virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrumNonSwap + fSpectrumNueSwap;
   }
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
+  virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
 protected:
   PredictionFDNoOsc(const Spectrum &_fSpectrumNonSwap,
-                    const Spectrum &_fSpectrumNueSwap)
+                    const Spectrum &_fSpectrumNueSwap,
+                    const Spectrum &_fSpectrumRHCNonSwap,
+                    const Spectrum &_fSpectrumRHCNueSwap) 
       : fSpectrumNonSwap(_fSpectrumNonSwap),
-        fSpectrumNueSwap(_fSpectrumNueSwap) {}
+        fSpectrumNueSwap(_fSpectrumNueSwap),
+        fSpectrumRHCNonSwap(_fSpectrumRHCNonSwap),
+        fSpectrumRHCNueSwap(_fSpectrumRHCNueSwap) {} 
 
   Spectrum fSpectrumNonSwap;
   Spectrum fSpectrumNueSwap;
+  Spectrum fSpectrumRHCNonSwap;
+  Spectrum fSpectrumRHCNueSwap;
 };
 
 class FDNoOscPredictionGenerator : public IPredictionGenerator {
 public:
-  FDNoOscPredictionGenerator(HistAxis axis, Cut cut, Var wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-    for (auto &v : fAxis.GetVars()) {
-      assert(v.IsValid());
-    }
-    assert(fWei.IsValid());
-  }
+  FDNoOscPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
+      : fAxis(axis), fCut(cut), fWei(wei) {}
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
            const SystShifts &shiftMC = kNoShift) const override {
     SpectrumLoaderBase &loader_non =
-        loaders.GetLoader(caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNonSwap);
+        loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
     SpectrumLoaderBase &loader_nue =
-        loaders.GetLoader(caf::kFARDET, Loaders::kMC, kBeam, Loaders::kNueSwap);
+        loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap);
     return std::unique_ptr<IPrediction>(new PredictionFDNoOsc(
         loader_non, loader_nue, fAxis, fCut, shiftMC, fWei));
   }
@@ -156,108 +189,7 @@ public:
 protected:
   HistAxis fAxis;
   Cut fCut;
-  Var fWei;
-};
-
-// A flux prediction that acts like an IPrediction
-class FluxPrediction : public IPrediction {
-
-public:
-  static std::unique_ptr<FluxPrediction> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
-  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
-    // no way to know which is the 'right' spectrum, so, don't use this.
-
-    // std::cout << "[ERROR]: Cannot call Predict on FluxPrediction. Use "
-    //              "PredictComponent instead."
-    //           << std::endl;
-    // abort();
-
-    // required to get the binning in initfits
-    return fSpectrumNumu;
-  }
-
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
-                                    Flavors::Flavors_t flav,
-                                    Current::Current_t curr,
-                                    Sign::Sign_t sign) const override;
-
-  FluxPrediction(const Spectrum &sNumu, const Spectrum &sNumubar,
-                 const Spectrum &sNue, const Spectrum &sNuebar)
-      : fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
-        fSpectrumNuebar(sNuebar) {}
-
-protected:
-  Spectrum fSpectrumNumu;
-  Spectrum fSpectrumNumubar;
-  Spectrum fSpectrumNue;
-  Spectrum fSpectrumNuebar;
-};
-
-class FluxPredictionGenerator : public IPredictionGenerator {
-public:
-  FluxPredictionGenerator(HistAxis const &axis, bool isNuMode = true)
-      : fAxis(axis), fIsNuMode(isNuMode) {}
-
-  virtual std::unique_ptr<IPrediction>
-  Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override;
-
-protected:
-  HistAxis fAxis;
-  bool fIsNuMode;
-};
-
-// A flux prediction that acts like an IPrediction
-class OffAxisFluxPrediction : public IPrediction {
-
-public:
-  static std::unique_ptr<OffAxisFluxPrediction> LoadFrom(TDirectory *dir);
-  virtual void SaveTo(TDirectory *dir) const override;
-  virtual Spectrum Predict(osc::IOscCalculator * /*calc*/) const override {
-    // no way to know which is the 'right' spectrum, so, don't use this.
-
-    // std::cout << "[ERROR]: Cannot call Predict on OffAxisFluxPrediction. Use
-    // "
-    //              "PredictComponent instead."
-    //           << std::endl;
-    // abort();
-
-    // required to get the binning in initfits
-    return fSpectrumNumu;
-  }
-
-  virtual Spectrum PredictComponent(osc::IOscCalculator *calc,
-                                    Flavors::Flavors_t flav,
-                                    Current::Current_t curr,
-                                    Sign::Sign_t sign) const override;
-
-  OffAxisFluxPrediction(const Spectrum &sNumu, const Spectrum &sNumubar,
-                        const Spectrum &sNue, const Spectrum &sNuebar)
-      : fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
-        fSpectrumNuebar(sNuebar) {}
-
-protected:
-  Spectrum fSpectrumNumu;
-  Spectrum fSpectrumNumubar;
-  Spectrum fSpectrumNue;
-  Spectrum fSpectrumNuebar;
-};
-
-class OffAxisFluxPredictionGenerator : public IPredictionGenerator {
-public:
-  OffAxisFluxPredictionGenerator(HistAxis const &axis, bool isNuMode = true,
-                                 bool isSpecRun = false)
-      : fAxis(axis), fIsNuMode(isNuMode), fIsSpecRun(isSpecRun) {}
-
-  virtual std::unique_ptr<IPrediction>
-  Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override;
-
-protected:
-  HistAxis fAxis;
-  bool fIsNuMode;
-  bool fIsSpecRun;
+  Weight fWei;
 };
 
 } // namespace ana

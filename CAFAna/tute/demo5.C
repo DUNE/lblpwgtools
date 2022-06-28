@@ -1,6 +1,7 @@
 // Make oscillated predictions with systematics
 // cafe demo5.C
 
+#include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
@@ -9,8 +10,8 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/StandardRecord.h"
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
+#include "StandardRecord/SRProxy.h"
+#include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
 
@@ -25,11 +26,11 @@ public:
 
   void Shift(double sigma,
              Restorer& restore,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
-    restore.Add(sr->dune.Ev_reco_numu);
-    sr->dune.Ev_reco_numu *= (1+.1*sigma);
+    restore.Add(sr->Ev_reco_numu);
+    sr->Ev_reco_numu *= (1+.1*sigma);
   }
 };
 const ToyEnergyScaleSyst eSyst;
@@ -43,12 +44,12 @@ public:
 
   void Shift(double sigma,
              Restorer& restore,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
     // Note I've switched this around to apply to high energy events, to more
     // clearly seperate the effects from the energy scale syst.
-    if(sr->dune.Ev_reco_numu > 7) weight *= 1+0.2*sigma;
+    if(sr->Ev_reco_numu > 7) weight *= 1+0.2*sigma;
   }
 };
 const ToyNormSyst nSyst;
@@ -56,12 +57,12 @@ const ToyNormSyst nSyst;
 void demo5()
 {
   TDRLoaders loaders(Loaders::kFHC);
-  const Var kRecoEnergy = SIMPLEVAR(dune.Ev_reco_numu);
+  const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);
   const HistAxis axEnergy("Reco energy (GeV)", binsEnergy, kRecoEnergy);
   const double pot = 3.5 * 1.47e21 * 40/1.13;
-  const Cut kPassesCVN = SIMPLEVAR(dune.cvnnumu) > .5;
-  osc::IOscCalculator* calc = DefaultOscCalc();
+  const Cut kPassesCVN = SIMPLEVAR(cvnnumu) > .5;
+  osc::IOscCalc* calc = DefaultOscCalc();
 
   PredictionNoExtrap predNom(loaders, axEnergy, kPassesCVN);
 

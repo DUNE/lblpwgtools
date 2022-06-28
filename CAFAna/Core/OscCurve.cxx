@@ -1,13 +1,10 @@
 #include "CAFAna/Core/OscCurve.h"
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/HistCache.h"
-#include "CAFAna/Core/Utilities.h"
 
-#include "OscLib/func/IOscCalculator.h"
+#include "OscLib/IOscCalc.h"
 
 #include <cassert>
-#include <iostream>
 #include <map>
 
 #include "TH1.h"
@@ -15,78 +12,47 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  OscCurve::OscCurve(osc::IOscCalculator* calc, int from, int to)
-    : fFrom(from), fTo(to)
+  /// Helper for constructors
+  template<class T> Eigen::Array<T, Eigen::Dynamic, 1>
+  ToEigen(osc::_IOscCalc<T>* calc, int from, int to)
   {
-    DontAddDirectory guard;
+    const unsigned int N = kTrueEnergyBinCenters.size();
 
-    fHist = HistCache::New(";True Energy (GeV);Probability", kTrueEnergyBins);
+    // Have to allow for underflow and overflow
+    Eigen::Array<T, Eigen::Dynamic, 1> ret(N+2);
+    ret[0] = 0; // underflow
+    ret[N+1] = (from == to || to == 0) ? 1 : 0; // overflow
 
-    for(int i = 0; i < fHist->GetNbinsX()+2; ++i){
-      const double E = fHist->GetBinCenter(i);
-      if(E > 0){
-        fHist->SetBinContent(i, calc->P(from, to, E));
-      }
-      else{
-        fHist->SetBinContent(i, 0);
-      }
-      fHist->SetBinError(i, 0);
-    }
+    const Eigen::Array<T, Eigen::Dynamic, 1> Ps = calc->P(from, to, kTrueEnergyBinCenters);
+
+    // This is clumsy, but hopefully faster than calculating oscillation probs
+    // for two dummy values.
+    for(unsigned int i = 0; i < N; ++i) ret[i+1] = Ps[i];
+
+    return ret;
   }
 
   //----------------------------------------------------------------------
-  OscCurve::OscCurve(TH1* h)
+  OscCurve::OscCurve(osc::IOscCalc* calc, int from, int to)
+    : Ratio(Hist::Adopt(ToEigen(calc, from, to)),
+            std::vector<Binning>(1, kTrueEnergyBins),
+            std::vector<std::string>(1, "True Energy (GeV)")),
+      fFrom(from), fTo(to)
   {
-    DontAddDirectory guard;
+  }
 
-    const TString className = h->ClassName();
-
-    if(className == "TH1D"){
-      // Shortcut if types match
-      fHist = HistCache::Copy((TH1D*)h);
-    }
-    else{
-      fHist = HistCache::New("", h->GetXaxis());
-      fHist->Add(h);
-    }
-
-    fHist->SetTitle(";True Energy (GeV);Probability");
+  //----------------------------------------------------------------------
+  OscCurve::OscCurve(osc::IOscCalcStan* calc, int from, int to)
+    : Ratio(Hist::AdoptStan(ToEigen(calc, from, to)),
+            std::vector<Binning>(1, kTrueEnergyBins),
+            std::vector<std::string>(1, "True Energy (GeV)")),
+      fFrom(from), fTo(to)
+  {
   }
 
   //----------------------------------------------------------------------
   OscCurve::~OscCurve()
   {
-    if(fHist && fHist->GetDirectory()){
-      static bool once = true;
-      if(once){
-        once = false;
-        std::cerr << "OscCurve's fHist is associated with a directory. How did that happen?" << std::endl;
-      }
-    }
-
-    HistCache::Delete(fHist);
-  }
-
-  //----------------------------------------------------------------------
-  OscCurve::OscCurve(const OscCurve& rhs)
-  {
-    DontAddDirectory guard;
-
-    assert(rhs.fHist);
-    fHist = HistCache::Copy(rhs.fHist);
-  }
-
-  //----------------------------------------------------------------------
-  OscCurve& OscCurve::operator=(const OscCurve& rhs)
-  {
-    if(&rhs == this) return *this;
-
-    DontAddDirectory guard;
-
-    HistCache::Delete(fHist);
-    assert(rhs.fHist);
-    fHist = HistCache::Copy(rhs.fHist);
-    return *this;
   }
 
   //----------------------------------------------------------------------
@@ -95,7 +61,8 @@ namespace ana
     // Could have a file temporarily open
     DontAddDirectory guard;
 
-    TH1D* ret = HistCache::Copy(fHist);
+    TH1D* ret = Ratio::ToTH1();
+    ret->GetYaxis()->SetTitle("Probability");
 
     if(title){
       // Don't do this work unless it's explicitly requested

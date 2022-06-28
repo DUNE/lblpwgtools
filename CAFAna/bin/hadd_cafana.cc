@@ -3,6 +3,8 @@
 #include <set>
 #include <iostream>
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "TClass.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -13,6 +15,7 @@
 #include "TTree.h"
 #include "TVectorD.h"
 #include "TVector3.h"
+#include "TROOT.h"
 
 std::string ConcatPath(const std::string& a, const std::string& b)
 {
@@ -35,6 +38,8 @@ std::string basename(const std::string& x)
 const std::vector<std::string> kSpecialTypes
 {
   "SystShifts",
+  "Hyperparameters",
+  "SamplingTime",
 };
 // don't sum a folder that corresponds to a special class we shouldn't add
 bool ShouldSumFolder(TDirectory* dir)
@@ -118,13 +123,13 @@ void CheckAndMergeNoSumObjects(std::map<std::string, TObject*>& a,
           match = (valsA->GetNbinsX() == valsB->GetNbinsX());
           if (match)
           {
+            std::map<std::string, double> pairsA, pairsB;
             for (int binIdx = 1; binIdx <= valsA->GetNbinsX(); binIdx++)
             {
-              // don't keep looping if any of the bins' labels or values differ
-              if ( !( match =    (strcmp(valsA->GetXaxis()->GetBinLabel(binIdx), valsB->GetXaxis()->GetBinLabel(binIdx)) == 0)
-                                 && (std::abs(valsA->GetBinContent(binIdx) - valsB->GetBinContent(binIdx)) < 1e-6) ) )
-                break;
+              pairsA[valsA->GetXaxis()->GetBinLabel(binIdx)] = valsA->GetBinContent(binIdx);
+              pairsB[valsB->GetXaxis()->GetBinLabel(binIdx)] = valsB->GetBinContent(binIdx);
             }
+            match = match && pairsA == pairsB;
           } // if (... GetNbinsX() matches)
         } // if (... valsA is non-null)
 
@@ -445,6 +450,8 @@ void usage()
 
 int main(int argc, char** argv)
 {
+  gROOT->SetMustClean(false);
+
   if(argc < 3 ||
      argv[1] == std::string("-h") ||
      argv[1] == std::string("--help")) usage();
@@ -473,7 +480,7 @@ int main(int argc, char** argv)
   ++argIdx;
 
   std::vector<std::string> innames;
-  for(int i = argIdx; i < argc; ++i) innames.push_back(argv[i]);
+  for(int i = argIdx; i < argc; ++i) innames.push_back(ana::pnfs2xrootd(argv[i]));
 
   std::cout << "Adding " << innames.size() << " input files." << std::endl;
 

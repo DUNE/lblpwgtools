@@ -54,57 +54,57 @@ void OffAxisEventRates(fhicl::ParameterSet const &pred) {
   Var NDWeight_Eff = GetNDWeight("NDEff");
   Var NDWeight_XSecEff = GetNDWeight("CVXSec NDEff");
 
-  Spectrum NDSpect_all(NDLoader, axes.XProjection, axes.OffAxisPosition,
+  Spectrum NDSpect_all(NDLoader, axes.XProjectionFD, axes.OffAxisPosition,
                        kCut280kARun);
-  Spectrum NDSpect_signal(NDLoader, axes.XProjection, axes.OffAxisPosition,
+  Spectrum NDSpect_signal(NDLoader, axes.XProjectionFD, axes.OffAxisPosition,
                           NDSignalCut, kNoShift);
-  Spectrum NDSpect_signal_AnaWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_signal_AnaWeighted(NDLoader, axes.XProjectionFD,
                                       axes.OffAxisPosition, NDSignalCut,
                                       kNoShift, NDWeight);
-  Spectrum NDSpect_signal_CVXSecWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_signal_CVXSecWeighted(NDLoader, axes.XProjectionFD,
                                          axes.OffAxisPosition, NDSignalCut,
                                          kNoShift, NDWeight_XSec);
-  Spectrum NDSpect_signal_EffWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_signal_EffWeighted(NDLoader, axes.XProjectionFD,
                                       axes.OffAxisPosition, NDSignalCut,
                                       kNoShift, NDWeight_Eff);
-  Spectrum NDSpect_signal_AllWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_signal_AllWeighted(NDLoader, axes.XProjectionFD,
                                       axes.OffAxisPosition, NDSignalCut,
                                       kNoShift, NDWeight_XSecEff);
 
-  Spectrum NDSpect_select(NDLoader, axes.XProjection, axes.OffAxisPosition,
+  Spectrum NDSpect_select(NDLoader, axes.XProjectionFD, axes.OffAxisPosition,
                           NDSignalCut_sel, kNoShift);
-  Spectrum NDSpect_select_AnaWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_select_AnaWeighted(NDLoader, axes.XProjectionFD,
                                       axes.OffAxisPosition, NDSignalCut_sel,
                                       kNoShift, NDWeight);
   Spectrum NDSpect_select_AnaWeighted_Sig(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_signal,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_signal,
       kNoShift, NDWeight);
   Spectrum NDSpect_select_AnaWeighted_WSB(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_WSB,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_WSB,
       kNoShift, NDWeight);
   Spectrum NDSpect_select_AnaWeighted_NC(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_NC,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_NC,
       kNoShift, NDWeight);
-  Spectrum NDSpect_select_CVXSecWeighted(NDLoader, axes.XProjection,
+  Spectrum NDSpect_select_CVXSecWeighted(NDLoader, axes.XProjectionFD,
                                          axes.OffAxisPosition, NDSignalCut_sel,
                                          kNoShift, NDWeight_XSec);
   Spectrum NDSpect_select_CVXSecWeighted_Sig(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_signal,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_signal,
       kNoShift, NDWeight_XSec);
   Spectrum NDSpect_select_CVXSecWeighted_WSB(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_WSB,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_WSB,
       kNoShift, NDWeight_XSec);
   Spectrum NDSpect_select_CVXSecWeighted_NC(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_sel_NC,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_sel_NC,
       kNoShift, NDWeight_XSec);
 
-  Spectrum NDSpect_SpecRun_all(NDLoader, axes.XProjection, axes.OffAxisPosition,
+  Spectrum NDSpect_SpecRun_all(NDLoader, axes.XProjectionFD, axes.OffAxisPosition,
                                kSel280kARun);
-  Spectrum NDSpect_SpecRun_signal(NDLoader, axes.XProjection,
+  Spectrum NDSpect_SpecRun_signal(NDLoader, axes.XProjectionFD,
                                   axes.OffAxisPosition, NDSignalCut_SpecRun,
                                   kNoShift);
   Spectrum NDSpect_SpecRun_signal_AnaWeighted(
-      NDLoader, axes.XProjection, axes.OffAxisPosition, NDSignalCut_SpecRun,
+      NDLoader, axes.XProjectionFD, axes.OffAxisPosition, NDSignalCut_SpecRun,
       kNoShift, NDWeight);
 
   TheLoaders.Go();

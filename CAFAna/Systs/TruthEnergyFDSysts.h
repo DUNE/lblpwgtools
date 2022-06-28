@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/StandardRecord.h"
 #include "CAFAna/Core/Utilities.h"
+#include "CAFAna/Cuts/AnaCuts.h"
+
+#include "StandardRecord/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -28,7 +30,7 @@ namespace ana
     TruthEnergyScaleFD() : ISyst("TruthEnergyScaleFD", "Global Truth Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore, 
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
   
       restore.Add(sr->eRecProxy,
@@ -54,7 +56,7 @@ namespace ana
     TruthEnergySqrtFD() : ISyst("TruthEnergySqrtFD", "Sqrt Total Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
       
       restore.Add(sr->eRecProxy,
@@ -82,7 +84,7 @@ namespace ana
     TruthEnergyInvSqrtFD() : ISyst("TruthEnergyInvSqrtFD", "Inv Sqrt Total Energy Scale FD Syst") {}
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->eRecProxy,
@@ -115,7 +117,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -144,7 +146,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr, 
+               caf::SRProxy* sr, 
                double& weight) const override {
       
       restore.Add(sr->LepE,
@@ -173,7 +175,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -205,7 +207,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
     
       restore.Add(sr->ePip,
@@ -234,7 +236,7 @@ namespace ana
     
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->ePip,
@@ -263,7 +265,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->ePip,
@@ -295,7 +297,7 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -321,13 +323,13 @@ namespace ana
 
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
                   sr->eRecProxy);
 
-      const double scale = 0.005 * sigma;
+      const double scale = 0.02 * sigma; // was 0.005
       if (sr->isFD) {
         if (sr->isCC && abs(sr->nuPDG) == 14) {
           sr->LepE += sr->LepE * scale * pow(sr->LepE, 0.5);
@@ -347,7 +349,7 @@ namespace ana
   
     void Shift(double sigma,
                Restorer& restore,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override {
 
       restore.Add(sr->LepE,
@@ -364,6 +366,34 @@ namespace ana
   };
 
   extern const ETruthScaleMuLArInvSqrtFD kETruthScaleMuLArInvSqrtFD;
+
+  //---------------------------------------------------------------------------------
+
+  // Resolution systematics for ERec Proxy
+  // Only an absolute resolution syst is possible for EProxy because EProxy is made
+  // of true energy components of infinite resolution. Only take difference between
+  // EProxy and ETrue
+  
+  class AbsoluteEResFD : public ISyst {
+  public:
+    AbsoluteEResFD() : ISyst("AbsoluteEResFD", "Absolute FD Detector Resolution") {}
+
+    void Shift(double sigma,
+               Restorer& restore,
+               caf::SRProxy* sr,
+               double& weight) const override {
+  
+      restore.Add(sr->Ev,
+                  sr->eRecProxy);
+      // FD TDR sets res of muons, EM & Charged Had to be 2%
+      // So set absolute resolution to be 3.4%
+      // Quadrature sum of mu, EM & CH res systs
+      const double scale = 0.034 * sigma;
+      if (sr->isFD) { // in the FD
+        sr->eRecProxy += (sr->Ev - sr->eRecProxy) * scale;
+      }
+    }
+  };
 
   //---------------------------------------------------------------------------------
 

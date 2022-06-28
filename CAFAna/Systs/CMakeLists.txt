@@ -1,5 +1,8 @@
 set(Systs_implementation_files
+  AnaSysts.cxx
   DUNEFluxSysts.cxx
+  RecoEnergyFDSysts.cxx
+  RecoEnergyNDSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
@@ -17,7 +20,10 @@ set(Systs_implementation_files
   OffAxisFluxUncertaintyHelper.cxx)
 
 set(Systs_header_files
+  AnaSysts.h
   DUNEFluxSysts.h
+  RecoEnergyFDSysts.h
+  RecoEnergyNDSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
@@ -48,18 +54,19 @@ set(Systs_header_files
   XSecSystList.h
   OffAxisFluxUncertaintyHelper.h)
 
-
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts)
+target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
 
-install(TARGETS CAFAnaSysts DESTINATION lib)
+set_target_properties(StandardRecord PROPERTIES
+  PUBLIC_HEADER "${Systs_header_files}")
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaSysts gperftools)
-  target_link_libraries(CAFAnaSysts ${GPERF_LINKER_FLAGS})
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaSysts BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
+install(TARGETS CAFAnaSysts 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Systs/)
 
 set(SYST_INPUT_ROOT_FILES
   flux_shifts_CDR.root

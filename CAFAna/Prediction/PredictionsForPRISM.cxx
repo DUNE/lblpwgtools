@@ -3,7 +3,6 @@
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Extrap/IExtrap.h"
 
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Extrap/TrivialExtrap.h"
 
@@ -12,8 +11,6 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/OffAxisFluxUncertaintyHelper.h"
 
-#include "OscLib/func/IOscCalculator.h"
-
 #include "TDirectory.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -21,180 +18,339 @@
 
 namespace ana {
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
-    SpectrumLoaderBase &loaderNonswap, SpectrumLoaderBase &loaderNue,
-    SpectrumLoaderBase &loaderNuTau, const std::string &label,
-    const Binning &bins, const Var &var, const Cut &cut,
-    const SystShifts &shift, const Var &wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
+  // PredictionNonSwapNoExtrap Class:
+
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
+      SpectrumLoaderBase &loaderNonswap, SpectrumLoaderBase &loaderNue,
+      SpectrumLoaderBase &loaderNuTau, const std::string &label,
+      const Binning &bins, const Var &var, const Cut &cut,
+      const SystShifts &shift, const Weight &wei)
+      : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
                                          label, bins, var, cut, shift, wei)) {}
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
-    SpectrumLoaderBase &loaderNonswap, SpectrumLoaderBase &loaderNue,
-    SpectrumLoaderBase &loaderNuTau, const HistAxis &axis, const Cut &cut,
-    const SystShifts &shift, const Var &wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
-                                         axis, cut, shift, wei)) {}
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
+      SpectrumLoaderBase &loaderNonswap, SpectrumLoaderBase &loaderNue,
+      SpectrumLoaderBase &loaderNuTau, const HistAxis &axis, const Cut &cut,
+      const SystShifts &shift, const Weight &wei)
+      : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
+                                           axis, cut, shift, wei)) {}
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(IExtrap *extrap)
-    : PredictionExtrap(extrap) {}
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(IExtrap *extrap)
+      : PredictionExtrap(extrap) {}
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(PredictionExtrap *pred)
-    : PredictionNonSwapNoExtrap(pred->GetExtrap()) {}
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(PredictionExtrap *pred)
+      : PredictionNonSwapNoExtrap(pred->GetExtrap()) {}
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
-    Loaders &loaders, const std::string &label, const Binning &bins,
-    const Var &var, const Cut &cut, const SystShifts &shift, const Var &wei)
-    : PredictionNonSwapNoExtrap(loaders, HistAxis(label, bins, var), cut, shift,
-                                wei) {}
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(
+      Loaders &loaders, const std::string &label, const Binning &bins,
+      const Var &var, const Cut &cut, const SystShifts &shift, const Weight &wei)
+      : PredictionNonSwapNoExtrap(loaders, HistAxis(label, bins, var), cut, shift,
+                                  wei) {}
 
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(Loaders &loaders,
-                                                     const HistAxis &axis,
-                                                     const Cut &cut,
-                                                     const SystShifts &shift,
-                                                     const Var &wei)
-    : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)) {}
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::PredictionNonSwapNoExtrap(Loaders &loaders,
+                                                       const HistAxis &axis,
+                                                       const Cut &cut,
+                                                       const SystShifts &shift,
+                                                       const Weight &wei)
+      : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)) {}
 
-//----------------------------------------------------------------------
-Spectrum PredictionNonSwapNoExtrap::PredictComponent(osc::IOscCalculator *calc,
-                                                     Flavors::Flavors_t flav,
-                                                     Current::Current_t curr,
-                                                     Sign::Sign_t sign) const {
+  //----------------------------------------------------------------------
+  Spectrum PredictionNonSwapNoExtrap::PredictComponent(osc::IOscCalc *calc,
+                                                       Flavors::Flavors_t flav,
+                                                       Current::Current_t curr,
+                                                       Sign::Sign_t sign) const {
 
-  Spectrum ret = fExtrap->NCComponent(); // Get binning
-  ret.Clear();
+    Spectrum ret = fExtrap->NCComponent(); // Get binning
+    ret.Clear();
 
-  if (!(curr & Current::kCC)) {
+    if (!(curr & Current::kCC)) {
+      return ret;
+    }
+
+    if ((flav & Flavors::kNuMuToNuMu) && (sign & Sign::kNu)) {
+      ret += fExtrap->NumuSurvComponent().Oscillated(calc, +14, +14);
+    }
+    if ((flav & Flavors::kNuMuToNuMu) && (sign & Sign::kAntiNu)) {
+      ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -14);
+    }
+
+    if ((flav & Flavors::kNuMuToNuE) && (sign & Sign::kNu)) {
+      ret += fExtrap->NumuSurvComponent().Oscillated(calc, +14, +12);
+    }
+    if ((flav & Flavors::kNuMuToNuE) && (sign & Sign::kAntiNu)) {
+      ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -12);
+    }
+    // Include intrinsic nue in flux matching
+    if ((flav & Flavors::kNuEToNuE) && (sign & Sign::kNu)) {
+      ret += fExtrap->NueSurvComponent().Oscillated(calc, +12, +12);
+    }
+    if ((flav & Flavors::kNuEToNuE) && (sign & Sign::kAntiNu)) {
+      ret += fExtrap->AntiNueSurvComponent().Oscillated(calc, -12, -12);
+    }
     return ret;
   }
 
-  if ((flav & Flavors::kNuMuToNuMu) && (sign & Sign::kNu)) {
-    ret += fExtrap->NumuSurvComponent().Oscillated(calc, +14, +14);
-  }
-  if ((flav & Flavors::kNuMuToNuMu) && (sign & Sign::kAntiNu)) {
-    ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -14);
-  }
+  //----------------------------------------------------------------------
+  void PredictionNonSwapNoExtrap::SaveTo(TDirectory *dir, const std::string& name) const {
+    TDirectory *tmp = gDirectory;
 
-  if ((flav & Flavors::kNuMuToNuE) && (sign & Sign::kNu)) {
-    ret += fExtrap->NumuSurvComponent().Oscillated(calc, +14, +12);
-  }
-  if ((flav & Flavors::kNuMuToNuE) && (sign & Sign::kAntiNu)) {
-    ret += fExtrap->AntiNumuSurvComponent().Oscillated(calc, -14, -12);
-  }
+    dir = dir->mkdir(name.c_str()); // switch to subdir
+    dir->cd();
 
-  return ret;
-}
+    TObjString("PredictionNonSwapNoExtrap").Write("type");
 
-//----------------------------------------------------------------------
-void PredictionNonSwapNoExtrap::SaveTo(TDirectory *dir) const {
-  TDirectory *tmp = gDirectory;
+    fExtrap->SaveTo(dir, "extrap");
 
-  dir->cd();
+    dir->Write();
+    delete dir;
 
-  TObjString("PredictionNonSwapNoExtrap").Write("type");
-
-  fExtrap->SaveTo(dir->mkdir("extrap"));
-
-  tmp->cd();
-}
-
-//----------------------------------------------------------------------
-std::unique_ptr<PredictionNonSwapNoExtrap>
-PredictionNonSwapNoExtrap::LoadFrom(TDirectory *dir) {
-  assert(dir->GetDirectory("extrap"));
-  IExtrap *extrap =
-      ana::LoadFrom<IExtrap>(dir->GetDirectory("extrap")).release();
-  PredictionExtrap *pred = new PredictionExtrap(extrap);
-  return std::unique_ptr<PredictionNonSwapNoExtrap>(
-      new PredictionNonSwapNoExtrap(pred));
-}
-
-//----------------------------------------------------------------------
-PredictionNonSwapNoExtrap::~PredictionNonSwapNoExtrap() {
-  // We created this in the constructor so it's our responsibility
-  delete fExtrap;
-}
-
-//----------------------------------------------------------------------
-PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
-                                     SpectrumLoaderBase &loader_nue,
-                                     const std::string &label,
-                                     const Binning &bins, const Var &var,
-                                     const Cut &cut, const SystShifts &shift,
-                                     const Var &wei)
-    : PredictionFDNoOsc(loader_non, loader_nue, HistAxis(label, bins, var), cut,
-                        shift, wei) {}
-
-//----------------------------------------------------------------------
-PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
-                                     SpectrumLoaderBase &loader_nue,
-                                     const HistAxis &axis, const Cut &cut,
-                                     const SystShifts &shift, const Var &wei)
-    : fSpectrumNonSwap(loader_non, axis, cut, shift, wei),
-      fSpectrumNueSwap(loader_nue, axis, cut, shift, wei) {}
-
-//----------------------------------------------------------------------
-Spectrum PredictionFDNoOsc::PredictComponent(osc::IOscCalculator * /*calc*/,
-                                             Flavors::Flavors_t flav,
-                                             Current::Current_t curr,
-                                             Sign::Sign_t sign) const {
-  if (flav == Flavors::kAll && curr == Current::kBoth && sign == Sign::kBoth) {
-    return Predict(0); // Faster
+    tmp->cd();
   }
 
-  Spectrum ret = fSpectrumNonSwap;
-  ret.Clear();
+  //----------------------------------------------------------------------
+  std::unique_ptr<PredictionNonSwapNoExtrap>
+  PredictionNonSwapNoExtrap::LoadFrom(TDirectory *dir, const std::string& name) {
+    dir = dir->GetDirectory(name.c_str());
+    assert(dir);
 
-  if (curr & Current::kNC) {
+    IExtrap *extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
+    PredictionExtrap *pred = new PredictionExtrap(extrap);
+
+    delete dir;
+
+    return std::unique_ptr<PredictionNonSwapNoExtrap>(new PredictionNonSwapNoExtrap(pred));
+  }
+
+  //----------------------------------------------------------------------
+  PredictionNonSwapNoExtrap::~PredictionNonSwapNoExtrap() {
+    // We created this in the constructor so it's our responsibility
+    delete fExtrap;
+  }
+
+  // DataPredictionNoExtrap Class:
+
+  //----------------------------------------------------------------------
+  DataPredictionNoExtrap::DataPredictionNoExtrap(Loaders &loaders,
+                                                 const HistAxis &axis,
+                                                 const Cut &cut,
+                                                 const SystShifts &shift,
+                                                 const Weight &wei)
+      : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei)) {}
+
+  //----------------------------------------------------------------------
+  DataPredictionNoExtrap::DataPredictionNoExtrap(IExtrap *extrap)
+      : PredictionExtrap(extrap) {}
+
+  //----------------------------------------------------------------------
+  DataPredictionNoExtrap::DataPredictionNoExtrap(PredictionExtrap *pred)
+      : DataPredictionNoExtrap(pred->GetExtrap()) {}
+
+  //----------------------------------------------------------------------
+  DataPredictionNoExtrap::~DataPredictionNoExtrap() {
+    // We created this in the constructor so it's our responsibility
+    delete fExtrap;
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum DataPredictionNoExtrap::Predict(osc::IOscCalc *calc) const {
+    return PredictComponent(calc, Flavors::kAll, Current::kBoth, Sign::kBoth);
+  }
+
+  //----------------------------------------------------------------------
+  Spectrum DataPredictionNoExtrap::PredictComponent(osc::IOscCalc *calc,
+                                           Flavors::Flavors_t flav,
+                                           Current::Current_t curr,
+                                           Sign::Sign_t sign) const {
+    Spectrum ret = fExtrap->NCComponent(); // Get binning
+    ret.Clear();
+
+    if(curr & Current::kCC){
+      if(flav & Flavors::kNuEToNuE && sign & Sign::kNu) ret += fExtrap->NueSurvComponent()
+                                                               .Oscillated(calc, +12, +12);
+      if(flav & Flavors::kNuEToNuE && sign & Sign::kAntiNu) ret += fExtrap->AntiNueSurvComponent()
+                                                                   .Oscillated(calc, -12, -12);
+      if(flav & Flavors::kNuEToNuMu && sign & Sign::kNu) ret += fExtrap->NumuAppComponent()
+                                                                .Oscillated(calc, +12, +14);
+      if(flav & Flavors::kNuEToNuMu && sign & Sign::kAntiNu) ret += fExtrap->AntiNumuAppComponent()
+                                                                    .Oscillated(calc, -12, -14);
+      if(flav & Flavors::kNuEToNuTau && sign & Sign::kNu) ret += fExtrap->TauFromEComponent()
+                                                                 .Oscillated(calc, +12, +16);
+      if(flav & Flavors::kNuEToNuTau && sign & Sign::kAntiNu) ret += fExtrap->AntiTauFromEComponent()
+                                                                     .Oscillated(calc, -12, -16);
+      if(flav & Flavors::kNuMuToNuE && sign & Sign::kNu) ret += fExtrap->NueAppComponent()
+                                                                .Oscillated(calc, +14, +12);
+      if(flav & Flavors::kNuMuToNuE && sign & Sign::kAntiNu) ret += fExtrap->AntiNueAppComponent()
+                                                                    .Oscillated(calc, -14, -12);
+      if(flav & Flavors::kNuMuToNuMu && sign & Sign::kNu) ret += fExtrap->NumuSurvComponent()
+                                                                 .Oscillated(calc, +14, +14);
+      if(flav & Flavors::kNuMuToNuMu && sign & Sign::kAntiNu) ret += fExtrap->AntiNumuSurvComponent()
+                                                                     .Oscillated(calc, -14, -14);
+      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kNu) ret += fExtrap->TauFromMuComponent()
+                                                                  .Oscillated(calc, +14, +16);
+      if(flav & Flavors::kNuMuToNuTau && sign & Sign::kAntiNu) ret += fExtrap->AntiTauFromMuComponent()
+                                                                      .Oscillated(calc, -14, -16);
+    }
+    if (curr & Current::kNC) {
+      assert(flav == Flavors::kAll);
+      assert(sign == Sign::kBoth); // Don't split NC 'data' by sign, not interpolating.
+      ret += fExtrap->NCTotalComponent();
+    }
+
     return ret;
   }
 
-  assert(curr == Current::kCC);
+  void DataPredictionNoExtrap::SaveTo(TDirectory *dir, const std::string& name) const {
+    TDirectory *tmp = gDirectory;
 
-  using namespace Flavors;
-  using namespace Current;
-  using namespace Sign;
+    dir = dir->mkdir(name.c_str()); // switch to subdir
+    dir->cd();
 
-  // Safe to assume by this point that it's 100% CC
-  if (flav & kNuMuToNuMu) {
-    ret += fSpectrumNonSwap;
+    TObjString("DataPredictionNoExtrap").Write("type");
+
+    fExtrap->SaveTo(dir, "extrap");
+
+    dir->Write();
+    delete dir;
+
+    tmp->cd();
   }
-  if (flav & kNuMuToNuE) {
-    ret += fSpectrumNueSwap;
+
+  std::unique_ptr<DataPredictionNoExtrap> DataPredictionNoExtrap::LoadFrom(TDirectory *dir,
+                                                                           const std::string& name) {
+    dir = dir->GetDirectory(name.c_str());
+    assert(dir);
+
+    IExtrap *extrap = ana::LoadFrom<IExtrap>(dir, "extrap").release();
+    PredictionExtrap *pred = new PredictionExtrap(extrap);
+
+    delete dir;
+
+    return std::unique_ptr<DataPredictionNoExtrap>(new DataPredictionNoExtrap(pred));
   }
-  return ret;
-}
 
-//----------------------------------------------------------------------
-void PredictionFDNoOsc::SaveTo(TDirectory *dir) const {
-  TDirectory *tmp = gDirectory;
+  // PredictionFDNoOsc Class:
 
-  dir->cd();
+  //----------------------------------------------------------------------
+  PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
+                                       SpectrumLoaderBase &loader_nue,
+                                       const std::string &label,
+                                       const Binning &bins, const Var &var,
+                                       const Cut &cut, const SystShifts &shift,
+                                       const Weight &wei)
+      : PredictionFDNoOsc(loader_non, loader_nue, HistAxis(label, bins, var), cut,
+                          shift, wei) {}
 
-  TObjString("PredictionFDNoOsc").Write("type");
+  //----------------------------------------------------------------------
+  PredictionFDNoOsc::PredictionFDNoOsc(SpectrumLoaderBase &loader_non,
+                                       SpectrumLoaderBase &loader_nue,
+                                       const HistAxis &axis, const Cut &cut,
+                                       const SystShifts &shift, const Weight &wei)
+      : fSpectrumNonSwap(loader_non, axis, cut && !kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
+        fSpectrumNueSwap(loader_nue, axis, cut && !kIsAntiNu && !kIsNC && kIsSig, shift, wei),
+        fSpectrumRHCNonSwap(loader_non, axis, cut && kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
+        fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC && kIsSig, shift, wei) {}
 
-  fSpectrumNonSwap.SaveTo(dir->mkdir("spect_nonswap"));
-  fSpectrumNueSwap.SaveTo(dir->mkdir("spect_nueswap"));
+  //----------------------------------------------------------------------
+  Spectrum PredictionFDNoOsc::PredictComponent(osc::IOscCalc * /*calc*/,
+                                               Flavors::Flavors_t flav,
+                                               Current::Current_t curr,
+                                               Sign::Sign_t sign) const {
+    if (flav == Flavors::kAll && curr == Current::kBoth && sign == Sign::kBoth) {
+      return Predict(0); // Faster
+    }
 
-  tmp->cd();
-}
+    Spectrum ret = fSpectrumNonSwap;
+    ret.Clear();
 
-//----------------------------------------------------------------------
-std::unique_ptr<PredictionFDNoOsc>
-PredictionFDNoOsc::LoadFrom(TDirectory *dir) {
+    if (curr & Current::kNC) {
+      return ret;
+    }
 
-  // Can't use make_unique because constructor is protected
-  return std::unique_ptr<PredictionFDNoOsc>(new PredictionFDNoOsc(
-      *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nonswap")),
-      *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nueswap"))));
-}
+    assert(curr == Current::kCC);
 
+    using namespace Flavors;
+    using namespace Current;
+    using namespace Sign;
+
+    // Safe to assume by this point that it's 100% CC
+    if (flav & kNuMuToNuMu && sign & kNu) {
+      ret += fSpectrumNonSwap;
+    }
+    if (flav & kNuMuToNuMu && sign & kAntiNu) {
+      ret += fSpectrumRHCNonSwap;
+    }
+    if (flav & kNuMuToNuE && sign & kNu) {
+      ret += fSpectrumNueSwap;
+    }
+    if (flav & kNuMuToNuE && sign & kAntiNu) {
+      ret += fSpectrumRHCNueSwap;
+    }
+    return ret;
+  }
+
+  //----------------------------------------------------------------------
+  void PredictionFDNoOsc::SaveTo(TDirectory *dir, const std::string& name) const {
+    TDirectory *tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
+    dir->cd();
+
+    TObjString("PredictionFDNoOsc").Write("type");
+
+    fSpectrumNonSwap.SaveTo(dir, "spect_nonswap");
+    fSpectrumNueSwap.SaveTo(dir, "spect_nueswap");
+    fSpectrumRHCNonSwap.SaveTo(dir, "spect_RHCnonswap");
+    fSpectrumRHCNueSwap.SaveTo(dir, "spect_RHCnueswap");
+
+    dir->Write();
+/*
+    if ( name == "pred_nom" ) {
+      Eigen::ArrayXd test_nue_spec = fSpectrumNueSwap.GetEigen(1);
+      std::cout << "Printing out spect_nueswap spectrum in SaveTo "<< std::endl;
+      for ( int ibin=0; ibin < test_nue_spec.size(); ibin ++ ) {
+        std::cout << "bin "<< ibin << ": nue spec = "<< test_nue_spec(ibin) << std::endl;
+      }
+    }
+*/
+    delete dir;
+
+    tmp->cd();
+  }
+
+  //----------------------------------------------------------------------
+  std::unique_ptr<PredictionFDNoOsc>PredictionFDNoOsc::LoadFrom(TDirectory *dir,
+                                                                const std::string& name) {
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    // Can't use make_unique because constructor is protected
+    PredictionFDNoOsc *ret = new PredictionFDNoOsc(
+        *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+        *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
+        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"));
+/*
+    if ( name == "pred_nom" ) {
+      Spectrum test = *ana::LoadFrom<Spectrum>(dir, "spect_nueswap");
+
+      Eigen::ArrayXd test_nue_spec = test.GetEigen(1);
+      std::cout << "Printing out spect_nueswap spectrum in LoadFrom "<< std::endl;
+      for ( int ibin=0; ibin < test_nue_spec.size(); ibin ++ ) {
+        std::cout << "bin "<< ibin << ": nue spec = "<< test_nue_spec(ibin) << std::endl;
+      }
+    }
+*/
+    delete dir;
+
+    return std::unique_ptr<PredictionFDNoOsc>(ret);
+  }
+/*
 struct PRISMFluxHelper {
   std::unique_ptr<TH2> fNDNumu_293kA_nu;
   std::unique_ptr<TH2> fNDNumubar_293kA_nu;
@@ -431,23 +587,27 @@ std::unique_ptr<FluxPrediction> FluxPrediction::LoadFrom(TDirectory *dir) {
       *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nue")),
       *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nuebar"))));
 }
-void FluxPrediction::SaveTo(TDirectory *dir) const {
+void FluxPrediction::SaveTo(TDirectory *dir, const std::string& name) const {
   TDirectory *tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
 
   TObjString("FluxPrediction").Write("type");
 
-  fSpectrumNumu.SaveTo(dir->mkdir("spect_numu"));
-  fSpectrumNumubar.SaveTo(dir->mkdir("spect_numubar"));
-  fSpectrumNue.SaveTo(dir->mkdir("spect_nue"));
-  fSpectrumNuebar.SaveTo(dir->mkdir("spect_nuebar"));
+  fSpectrumNumu.SaveTo(dir, "spect_numu");
+  fSpectrumNumubar.SaveTo(dir, "spect_numubar");
+  fSpectrumNue.SaveTo(dir, "spect_nue");
+  fSpectrumNuebar.SaveTo(dir, "spect_nuebar");
+
+  dir->Write();
+  delete dir;
 
   tmp->cd();
 }
 
 namespace {
-void OscHist(osc::IOscCalculator *calc, TH1 *h, int from, int to) {
+void OscHist(osc::IOscCalc *calc, TH1 *h, int from, int to) {
   for (int bi_it = 0; bi_it < h->GetXaxis()->GetNbins(); ++bi_it) {
     double bl = h->GetXaxis()->GetBinLowEdge(bi_it + 1);
     double bu = h->GetXaxis()->GetBinUpEdge(bi_it + 1);
@@ -476,7 +636,7 @@ void OscHist(osc::IOscCalculator *calc, TH1 *h, int from, int to) {
 }
 } // namespace
 
-Spectrum FluxPrediction::PredictComponent(osc::IOscCalculator *calc,
+Spectrum FluxPrediction::PredictComponent(osc::IOscCalc *calc,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t,
                                           Sign::Sign_t sign) const {
@@ -528,7 +688,8 @@ Spectrum FluxPrediction::PredictComponent(osc::IOscCalculator *calc,
 
 Spectrum FillFluxSpectrum(HistAxis const &axis, std::unique_ptr<TH1> const &fl,
                           SystShifts shiftMC, int nu_pdg, bool IsNuMode) {
-  Spectrum spec(axis.GetLabels(), axis.GetBinnings());
+  //Spectrum spec(axis.GetLabels(), axis.GetBinnings());
+  Spectrum spec(); // YOLO HACK
   spec.Clear();
 
   TH1 *spec_h = spec.ToTH1(1);
@@ -565,7 +726,7 @@ Spectrum FillFluxSpectrum(HistAxis const &axis, std::unique_ptr<TH1> const &fl,
       for (size_t si = 0; si < FluxShifts.size(); ++si) {
         shift_weight *= OffAxisFluxUncertaintyHelper::Get().GetFluxWeight(
             FluxShifts[si].first, FluxShifts[si].second, e, 0, nu_pdg,
-            false /*IsND*/, IsNuMode, false /*IsSpecRun*/);
+            false, IsNuMode, false);
       }
 
       avg_flux += fl->GetBinContent(xbi) * shift_weight;
@@ -576,8 +737,9 @@ Spectrum FillFluxSpectrum(HistAxis const &axis, std::unique_ptr<TH1> const &fl,
     avg_flux /= 10.0;
     spec_h->SetBinContent(i + 1, avg_flux);
   }
-  spec.FillFromHistogram(spec_h);
-  spec.OverridePOT(1);
+  // YOLO HACK
+  //spec.FillFromHistogram(spec_h);
+  //spec.OverridePOT(1);
   return spec;
 }
 
@@ -611,22 +773,26 @@ OffAxisFluxPrediction::LoadFrom(TDirectory *dir) {
       *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nue")),
       *ana::LoadFrom<Spectrum>(dir->GetDirectory("spect_nuebar"))));
 }
-void OffAxisFluxPrediction::SaveTo(TDirectory *dir) const {
+void OffAxisFluxPrediction::SaveTo(TDirectory *dir, const std::string& name) const {
   TDirectory *tmp = gDirectory;
 
+  dir = dir->mkdir(name.c_str()); // switch to subdir
   dir->cd();
 
   TObjString("OffAxisFluxPrediction").Write("type");
 
-  fSpectrumNumu.SaveTo(dir->mkdir("spect_numu"));
-  fSpectrumNumubar.SaveTo(dir->mkdir("spect_numubar"));
-  fSpectrumNue.SaveTo(dir->mkdir("spect_nue"));
-  fSpectrumNuebar.SaveTo(dir->mkdir("spect_nuebar"));
+  fSpectrumNumu.SaveTo(dir, "spect_numu");
+  fSpectrumNumubar.SaveTo(dir, "spect_numubar");
+  fSpectrumNue.SaveTo(dir, "spect_nue");
+  fSpectrumNuebar.SaveTo(dir, "spect_nuebar");
+
+  dir->Write();
+  delete dir;
 
   tmp->cd();
 }
 
-Spectrum OffAxisFluxPrediction::PredictComponent(osc::IOscCalculator *calc,
+Spectrum OffAxisFluxPrediction::PredictComponent(osc::IOscCalc *calc,
                                                  Flavors::Flavors_t flav,
                                                  Current::Current_t,
                                                  Sign::Sign_t sign) const {
@@ -651,7 +817,8 @@ Spectrum FillOffAxisFluxSpectrum(HistAxis const &axis,
                                  std::unique_ptr<TH2> const &fl,
                                  SystShifts shiftMC, int nu_pdg, bool IsNuMode,
                                  bool isSpecHCRun) {
-  Spectrum spec(axis.GetLabels(), axis.GetBinnings());
+  //Spectrum spec(axis.GetLabels(), axis.GetBinnings());
+  Spectrum spec(); // YOLO HACK
   spec.Clear();
 
   TH2 *spec_h = spec.ToTH2(1);
@@ -736,7 +903,7 @@ Spectrum FillOffAxisFluxSpectrum(HistAxis const &axis,
         for (size_t si = 0; si < FluxShifts.size(); ++si) {
           shift_weight *= OffAxisFluxUncertaintyHelper::Get().GetFluxWeight(
               FluxShifts[si].first, FluxShifts[si].second, e, offaxis_m, nu_pdg,
-              true /*IsND*/, IsNuMode, isSpecHCRun);
+              true, IsNuMode, isSpecHCRun);
         }
 
         avg_flux += fl->GetBinContent(xbi, ybi) * shift_weight;
@@ -748,8 +915,9 @@ Spectrum FillOffAxisFluxSpectrum(HistAxis const &axis,
       spec_h->SetBinContent(i + 1, j + 1, avg_flux);
     }
   }
-  spec.FillFromHistogram(spec_h);
-  spec.OverridePOT(1);
+  // WARNING HACK YOLO!!
+  //spec.FillFromHistogram(spec_h);
+  //spec.OverridePOT(1);
 
   return spec;
 }
@@ -779,5 +947,5 @@ OffAxisFluxPredictionGenerator::Generate(Loaders &loaders,
           fAxis, fluxhelper.GetNDFluxPred(fIsNuMode, -12, fIsSpecRun), shiftMC,
           -12, fIsNuMode, fIsSpecRun)));
 }
-
+*/
 } // namespace ana

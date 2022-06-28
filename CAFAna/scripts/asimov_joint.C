@@ -79,7 +79,7 @@ void GetParameterBinning(std::string parName, int &nBins, double &min,
 
 // Likely to have bugs in the translation between what I want to look at, and
 // what CAFAna wants to show me...
-void SetOscillationParameter(osc::IOscCalculatorAdjustable *calc,
+void SetOscillationParameter(osc::IOscCalcAdjustable *calc,
                              std::string parName, double parVal, int hie) {
 
   if (parName == "th13")
@@ -132,7 +132,7 @@ TH1 *GetAsimovHist(std::vector<std::string> plotVarVect) {
 }
 
 // This function finds OA parameters by name, and returns the value from a calculator
-double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
+double FindOscVal(osc::IOscCalcAdjustable *calc, std::string name){
 
   if (name == "th13")
     return calc->GetTh13();
@@ -152,7 +152,7 @@ double FindOscVal(osc::IOscCalculatorAdjustable *calc, std::string name){
   return 0;
 }
 
-TGraph* GetFitPoint(std::vector<std::string> plotVarVect, osc::IOscCalculatorAdjustable *oscCalc){
+TGraph* GetFitPoint(std::vector<std::string> plotVarVect, osc::IOscCalcAdjustable *oscCalc){
   
   // Get the values of the x and y co-ordinate. If this is 1-D, y=0
   double xVal = 0;
@@ -238,7 +238,7 @@ void asimov_joint(std::string stateFname = def_stateFname,
 
   // This remains the same throughout... there is one true parameter set for
   // this Asimov set
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie, 1, asimov_set);
 
   // Save the true value
   if (saveBestFit){
@@ -252,9 +252,9 @@ void asimov_joint(std::string stateFname = def_stateFname,
 
   // Start by performing a minimization across the whole space, this defines the
   // minimum chi2!
-  osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
+  osc::IOscCalcAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
 
-  IChiSqExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
+  IExperiment *penalty_nom = GetPenalty(hie, 1, penaltyString, asimov_set);
   SystShifts trueSyst = GetFakeDataGeneratorSystShift(fakeDataShift);
   SystShifts testSyst = kNoShift;
 
@@ -322,13 +322,13 @@ void asimov_joint(std::string stateFname = def_stateFname,
     for (int yBin = yMin; yBin < yMax; ++yBin) {
       double yCenter = sens_hist->GetYaxis()->GetBinCenter(yBin + 1);
 
-      osc::IOscCalculatorAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
+      osc::IOscCalcAdjustable *testOsc = NuFitOscCalc(hie, 1, asimov_set);
       if (plotVarVect.size() > 0)
         SetOscillationParameter(testOsc, plotVarVect[0], xCenter, hie);
       if (plotVarVect.size() > 1)
         SetOscillationParameter(testOsc, plotVarVect[1], yCenter, hie);
 
-      IChiSqExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
+      IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
       double chisqmin =
           RunFitPoint(stateFname, sampleString, trueOsc, trueSyst, false,

@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "BDTReweighter.h"
 #include "MissingProtonFakeData_BDTRW_FHC.h"
@@ -22,7 +22,7 @@ public:
 
   bool fDoWeight;
 
-  void Shift(double sigma, ana::Restorer &restore, caf::StandardRecord *sr,
+  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
              double &weight) const override {
 
     if (!sr->isCC) {
@@ -33,12 +33,19 @@ public:
       return;
     }
 
-    restore.Add(sr->eRec_FromDep, sr->eRecProxy);
+    restore.Add(sr->eRec_FromDep, 
+                sr->eRecProxy,
+                sr->VisReco_NDFD,
+                sr->RecoHadE_NDFD);
 
     if (sr->isFD) {
       sr->eRec_FromDep -= EpFrac * sr->eDepP;
+      sr->VisReco_NDFD -= EpFrac * sr->eDepP;
+      sr->RecoHadE_NDFD -= EpFrac * sr->eDepP; 
     } else {
       sr->eRec_FromDep -= EpFrac * sr->eRecoP;
+      sr->VisReco_NDFD -= EpFrac * sr->eRecoP;
+      sr->RecoHadE_NDFD -= EpFrac *sr->eRecoP;
     }
 
     double eother = 0;

@@ -25,17 +25,15 @@ set(Analysis_header_files
   CheckPointHelper.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
-target_link_libraries(CAFAnaAnalysis)
+target_link_libraries(CAFAnaAnalysis CAFAnaCore)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaAnalysis gperftools)
-  target_link_libraries(CAFAnaAnalysis ${GPERF_LINKER_FLAGS})
-endif()
+set_target_properties(StandardRecord PROPERTIES
+  PUBLIC_HEADER "${Analysis_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaAnalysis BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaAnalysis DESTINATION lib)
-
-install(FILES ${Analysis_header_files} DESTINATION include/CAFAna/Analysis)
+install(TARGETS CAFAnaAnalysis 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Analysis/)

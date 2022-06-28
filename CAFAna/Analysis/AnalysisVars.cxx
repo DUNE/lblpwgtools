@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 using namespace ana;
 
@@ -25,5 +25,18 @@ Var const kRecoY_FromDep =
 
 Var const kTrueEnergy = SIMPLEVAR(Ev);
 
+Var const kLepEReco = SIMPLEVAR(RecoLepE_NDFD); // RecoLepE_NDFD
+
+Var const kHadEReco = SIMPLEVAR(RecoHadE_NDFD);
+
+Var const kPEReco = SIMPLEVAR(eRecoP);
+Var const kPipmEReco = SIMPLEVAR(eRecoPip) + SIMPLEVAR(eRecoPim);
+Var const kPi0EReco = SIMPLEVAR(eRecoPi0);
+
+//Var const kEVisReco = SIMPLEVAR(RecoLepE_NDFD) + SIMPLEVAR(RecoHadE_NDFD);
+Var const kEVisReco = SIMPLEVAR(VisReco_NDFD);
+
+Var const kEVisTrue = SIMPLEVAR(HadE) + SIMPLEVAR(LepE);
+
 // CV weighting
-Var const kCVXSecWeights = SIMPLEVAR(total_xsSyst_cv_wgt); // kUnweighted
+Weight const kCVXSecWeights = SIMPLEWEIGHT(total_xsSyst_cv_wgt); // kUnweighted

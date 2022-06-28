@@ -6,10 +6,10 @@
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Experiment/IChiSqExperiment.h"
+#include "CAFAna/Experiment/IExperiment.h"
 
-#include "OscLib/func/IOscCalculator.h"
-#include "Utilities/func/MathUtil.h"
+#include "OscLib/IOscCalc.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "TError.h"
 #include "TGraph.h"
@@ -21,13 +21,23 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
+#include "Minuit2/StackAllocator.h"
+
 #include <cassert>
 #include <iostream>
 
 namespace ana
 {
+  // Minuit calls this at some point, and it creates a static. Which doesn't
+  // like happening on multiple threads at once. So do it upfront while we're
+  // still single-threaded.
+  struct MinuitStaticInit
+  {
+    MinuitStaticInit(){ROOT::Minuit2::StackAllocatorHolder::Get();}
+  } gMinuitStaticInit;
+
   //----------------------------------------------------------------------
-  MinuitFitter::MinuitFitter(const IChiSqExperiment *expt,
+  MinuitFitter::MinuitFitter(const IExperiment *expt,
                              std::vector<const IFitVar *> vars,
                              std::vector<const ISyst *> systs,
                              FitOpts opts)
@@ -48,29 +58,16 @@ namespace ana
   //----------------------------------------------------------------------
   bool MinuitFitter::SupportsDerivatives() const
   {
-    // Provide an Opt-out in case something goes wrong
-    if (getenv("CAFANA_DISABLE_DERIVATIVES") &&
-        bool(atoi(getenv("CAFANA_DISABLE_DERIVATIVES")))) {
-      return false;
-    }
-
-    // No point using derivatives for FitVars only, we do finite differences,
-    // probably worse than MINUIT would.
-    if (fSysts.empty())
-      return false;
-
-    // Otherwise, do the minimal trial to see if the experiment will return a
-    // gradient.
-    std::unordered_map<const ISyst *, double> dchi = {{fSysts[0], 0}};
-    osc::NoOscillations calc;
-    fExpt->Derivative(&calc, SystShifts::Nominal(), dchi);
-    return !dchi.empty();
+    // Most of this framework was torn out. But keep the hooks here in case we
+    // want to replace the derivatives with stan.
+    return false;
   }
 
   //----------------------------------------------------------------------
-  double MinuitFitter::FitHelperSeeded(osc::IOscCalculatorAdjustable *seed,
-                                       SystShifts &systSeed,
-                                       Verbosity verb) const
+  std::unique_ptr<IFitter::IFitSummary>
+  MinuitFitter::FitHelperSeeded(osc::IOscCalcAdjustable *seed,
+                                SystShifts &systSeed,
+                                Verbosity verb) const
   {
     fVerb = verb;
     if (fFitOpts & kIncludeSimplex)
@@ -192,7 +189,7 @@ namespace ana
       systSeed.SetShift(fSysts[j], minvec[fVars.size() + j]);
     }
 
-    return mnMin->MinValue();
+    return std::make_unique<MinuitFitSummary>(std::move(mnMin));
   }
 
   //----------------------------------------------------------------------
@@ -212,7 +209,8 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double MinuitFitter::DoEval(const double *pars) const {
+  double MinuitFitter::DoEval(const double *pars) const
+  {
     ++fNEval;
 
     DecodePars(pars); // Updates fCalc and fShifts
@@ -267,38 +265,9 @@ namespace ana
   {
     ++fNEvalGrad;
 
-    // TODO handling of FitVars including penalty terms
-
-    if (!fVars.empty())
-    {
-      // Have to use finite differences to calculate these derivatives
-      const double dx = 1e-9;
-      const double nom = DoEval(pars);
-      ++fNEvalFiniteDiff;
-      std::vector<double> parsCopy(pars, pars + NDim());
-      for (unsigned int i = 0; i < fVars.size(); ++i) {
-        parsCopy[i] += dx;
-        ret[i] = (DoEval(parsCopy.data()) - nom) / dx;
-        ++fNEvalFiniteDiff;
-        parsCopy[i] = pars[i];
-      }
-    }
-
-    // Get systematic parts analytically
-
-    DecodePars(pars); // Updates fCalc and fShifts
-
-    std::unordered_map<const ISyst *, double> dchi;
-    for (const ISyst *s : fSysts)
-      dchi[s] = 0;
-    fExpt->Derivative(fCalc, *fShifts, dchi);
-
-  for (unsigned int j = 0; j < fSysts.size(); ++j) {
-    // Get the un-truncated systematic shift
-    const double x = pars[fVars.size() + j];
-
-    ret[fVars.size() + j] = dchi[fSysts[j]] + fSysts[j]->PenaltyDerivative(x);
-    }
+    // All this logic was torn out, but this is where you would reimplement it
+    // in terms of stan.
+    abort();
   }
 
   //----------------------------------------------------------------------
@@ -317,5 +286,38 @@ namespace ana
       auto val = pars[fVars.size()+j];
       fShifts->SetShift(fSysts[j], val);
     }
+  }
+
+   //----------------------------------------------------------------------
+  void MinuitFitter::UpdatePostFit(const IFitter::IFitSummary *fitSummary) const
+  {
+    // Get them as set by the last seed fit
+    fParamNames = fLastParamNames;
+    fPreFitValues = fLastPreFitValues;
+    fPreFitErrors = fLastPreFitErrors;
+    fCentralValues = fLastCentralValues;
+
+    fMinosErrors = fTempMinosErrors;
+
+    const auto thisMin = dynamic_cast<const MinuitFitSummary*>(fitSummary)->GetMinimizer();
+
+    // Now save postfit
+    fPostFitValues =
+        std::vector<double>(thisMin->X(), thisMin->X() + thisMin->NDim());
+    fPostFitErrors = std::vector<double>(thisMin->Errors(),
+                                         thisMin->Errors() + thisMin->NDim());
+
+    fEdm = thisMin->Edm();
+    fIsValid = !thisMin->Status();
+
+    delete fCovar;
+    fCovar = new TMatrixDSym(thisMin->NDim());
+
+    for (unsigned int row = 0; row < thisMin->NDim(); ++row) {
+      for (unsigned int col = 0; col < thisMin->NDim(); ++col) {
+        (*fCovar)(row, col) = thisMin->CovMatrix(row, col);
+      }
+    }
+
   }
 }

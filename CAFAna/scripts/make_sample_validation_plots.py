@@ -1,13 +1,16 @@
-from ROOT import *
+from __future__ import print_function
+
+import ROOT
+
 import math
 import sys
 from array import array
 
-gROOT .SetBatch()
-gStyle.SetLineWidth(3)
-TGaxis.SetMaxDigits(3)
+ROOT.gROOT .SetBatch()
+ROOT.gStyle.SetLineWidth(3)
+ROOT.TGaxis.SetMaxDigits(3)
 
-can = TCanvas("can", "can", 800, 800)
+can = ROOT.TCanvas("can", "can", 800, 800)
 can .cd()
 
 
@@ -37,7 +40,7 @@ def get_round_number(hist):
 def get_hist_list(inputFileName, inHistNameList, project=""):
 
     histList  = []
-    inputFile = TFile(inputFileName)
+    inputFile = ROOT.TFile(inputFileName)
     
     ## First get the plots
     for histName in inHistNameList:
@@ -93,7 +96,7 @@ def comparison_plots(outFileName, inputFileName, inHistNameList, nameList, colzL
 
     ## Now a legend
     dim = [0.55, 0.55, 0.92, 0.90]
-    leg = TLegend(dim[0], dim[1], dim[2], dim[3], "", "NDC")
+    leg = ROOT.TLegend(dim[0], dim[1], dim[2], dim[3], "", "NDC")
     leg .SetShadowColor(0)
     leg .SetFillColor(0)
     leg .SetLineWidth(0)
@@ -160,7 +163,7 @@ def comparison_plots_ratio(outFileName, inputFileName, inHistNameList, nameList,
 
     ## Now a legend
     dim = [0.86, 0.2, 0.99, 0.8]
-    leg = TLegend(dim[0], dim[1], dim[2], dim[3], "", "NDC")
+    leg = TROOT.Legend(dim[0], dim[1], dim[2], dim[3], "", "NDC")
     leg .SetShadowColor(0)
     leg .SetFillColor(0)
     leg .SetLineWidth(0)
@@ -180,7 +183,7 @@ def comparison_plots_ratio(outFileName, inputFileName, inHistNameList, nameList,
     
 def sample_plot_2D(outFileName, inputFileName, inHistName):
 
-    inputFile = TFile(inputFileName)
+    inputFile = ROOT.TFile(inputFileName)
     hist = inputFile.Get(inHistName)
     hist .SetDirectory(0)
 
@@ -281,9 +284,9 @@ def get_total_rates(inputFileName, hie="nh", dcp="piover2"):
                       "ND_FHC_total",
                       "ND_RHC_total"]
     
-    print "Getting rates for hierarchy =", hie, "and dCP =", dcp
+    print("Getting rates for hierarchy =", hie, "and dCP =", dcp)
     ## First get the plots
-    inputFile = TFile(inputFileName)
+    inputFile = ROOT.TFile(inputFileName)
     
     for histName in inHistNameList:
         hist = inputFile.Get(histName)
@@ -294,7 +297,7 @@ def get_total_rates(inputFileName, hie="nh", dcp="piover2"):
         ## Special case for ND
         if "ND_" in histName:
             rate = "{:.2f}M".format(hist.Integral()/1e6)
-        print " -->", histName, "has", rate, "events"
+        print(" -->", histName, "has", rate, "events")
 
 def make_validation_plots(inFileName, systList):
 

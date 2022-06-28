@@ -18,7 +18,7 @@ namespace ana
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     NumuDecomp(SpectrumLoaderBase& loaderMC,
                SpectrumLoaderBase& loaderData,
@@ -26,14 +26,14 @@ namespace ana
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     NumuDecomp(Loaders& loaders,
                const HistAxis& axis,
                const Cut& cut,
                const SystShifts& shiftMC = kNoShift,
                const SystShifts& shiftData = kNoShift,
-               const Var& wei = kUnweighted);
+               const Weight& wei = kUnweighted);
 
     Spectrum NumuComponent()     const override;
     Spectrum AntiNumuComponent() const override;
@@ -45,18 +45,18 @@ namespace ana
     virtual Spectrum MC_AntiNumuComponent() const {return fAntiNumu;}
     virtual Spectrum Data_Component () const {return fData;}
 
-    void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<NumuDecomp> LoadFrom(TDirectory* dir);
+    void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<NumuDecomp> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:
     NumuDecomp()
-      : fData(0, {}, {}, 0, 0),
-        fNC  (0, {}, {}, 0, 0),
-        fNue (0, {}, {}, 0, 0),
-        fAntiNue(0, {}, {}, 0, 0),
-        fNumu(0, {}, {}, 0, 0),
-        fAntiNumu(0, {}, {}, 0, 0),
-        fNotNumu(0, {}, {}, 0, 0)
+      : fData(Spectrum::Uninitialized()),
+        fNC  (Spectrum::Uninitialized()),
+        fNue (Spectrum::Uninitialized()),
+        fAntiNue(Spectrum::Uninitialized()),
+        fNumu(Spectrum::Uninitialized()),
+        fAntiNumu(Spectrum::Uninitialized()),
+        fNotNumu(Spectrum::Uninitialized())
     {};
 
     Spectrum fData;

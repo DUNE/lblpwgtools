@@ -70,7 +70,7 @@ bool IsFlowBin(TH2 const *h, Int_t xbin_it, Int_t ybin_it) {
   return IsFlowBin(*h->GetXaxis(), xbin_it) ||
          IsFlowBin(*h->GetYaxis(), ybin_it);
 }
-bool IsFlowBin(TH1 const *h, Int_t bin_it) {
+bool IsFlowBin(TH1 const *h, int bin_it) {
   return IsFlowBin(*h->GetXaxis(), bin_it);
 }
 bool IsFlowBin(TH2JaggedF const *h, double xval, double yval) {
@@ -100,6 +100,7 @@ OffAxisFluxUncertaintyHelper const &OffAxisFluxUncertaintyHelper::Get() {
 void OffAxisFluxUncertaintyHelper::Initialize(std::string const &filename) {
 
   fNDIs2D = -1;
+  fNDSpecHCRunIs2D = -1;
   NDTweaks.clear();
   FDTweaks.clear();
 
@@ -199,7 +200,7 @@ void OffAxisFluxUncertaintyHelper::Initialize(std::string const &filename) {
                 fNDIs2D = bool(jag) ? kTwoDJagged : kTwoD;
               }
             }
-
+            
             NHistsLoaded += bool(NDTweaks.back().back());
           } else if (nucf < kFD_numu_numode) { // ND Spec Run
             // hack becasue I have been inconsistent in whether SpecRuns are
@@ -235,9 +236,9 @@ void OffAxisFluxUncertaintyHelper::Initialize(std::string const &filename) {
         }
       }
     }
-    // std::cout << "[INFO]: For parameter " << p_it << ", found " <<
-    // NHistsLoaded
-    //           << " inputs." << std::endl;
+     // std::cout << "[INFO]: For parameter " << p_it << ", found " <<
+     // NHistsLoaded
+     //           << " inputs." << std::endl;
     if (!NHistsLoaded) {
       NDTweaks.pop_back();
       NDSpecHCRunTweaks.pop_back();
@@ -283,38 +284,54 @@ int OffAxisFluxUncertaintyHelper::GetNuConfig(int nu_pdg, bool IsND,
                                                 bool isSpecHCRun) const {
 
   int nucf = kUnhandled;
-
+ 
   switch (nu_pdg) {
   case 14: {
-    nucf =
-        IsNuMode
-            ? (isSpecHCRun ? kND_SpecHCRun_numu_numode : kND_numu_numode)
-            : (isSpecHCRun ? kND_SpecHCRun_numu_nubarmode : kND_numu_nubarmode);
+    if (IsND) {
+      nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_numu_numode 
+                                     : kND_numu_numode)
+                      : (isSpecHCRun ? kND_SpecHCRun_numu_nubarmode 
+                                     : kND_numu_nubarmode);
+    } else {
+      nucf =  IsNuMode ? kFD_numu_numode : kFD_numu_nubarmode;
+    }
     break;
   }
   case -14: {
-    nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_numubar_numode
-                                   : kND_numubar_numode)
-                    : (isSpecHCRun ? kND_SpecHCRun_numubar_nubarmode
-                                   : kND_numubar_nubarmode);
+    if (IsND) {
+      nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_numubar_numode
+                                     : kND_numubar_numode)
+                      : (isSpecHCRun ? kND_SpecHCRun_numubar_nubarmode
+                                     : kND_numubar_nubarmode);
+    } else {
+      nucf = IsNuMode ? kFD_numubar_numode : kFD_numubar_nubarmode;   
+    }
     break;
   }
   case 12: {
-    nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_nue_numode : kND_nue_numode)
-                    : (isSpecHCRun ? kND_SpecHCRun_nue_nubarmode
-                                   : kND_nue_nubarmode);
+    if (IsND) {
+      nucf = IsNuMode ? (isSpecHCRun ? kND_SpecHCRun_nue_numode : kND_nue_numode)
+                      : (isSpecHCRun ? kND_SpecHCRun_nue_nubarmode
+                                     : kND_nue_nubarmode);
+    } else {
+      nucf = IsNuMode ? kFD_nue_numode : kFD_nue_nubarmode;
+    }
     break;
   }
   case -12: {
-    nucf = IsNuMode
-               ? (isSpecHCRun ? kND_SpecHCRun_nuebar_numode : kND_nuebar_numode)
-               : (isSpecHCRun ? kND_SpecHCRun_nuebar_nubarmode
-                              : kND_nuebar_nubarmode);
+    if (IsND) {
+      nucf = IsNuMode
+                 ? (isSpecHCRun ? kND_SpecHCRun_nuebar_numode : kND_nuebar_numode)
+                 : (isSpecHCRun ? kND_SpecHCRun_nuebar_nubarmode
+                                : kND_nuebar_nubarmode);
+    } else {
+      nucf = IsNuMode ? kFD_nuebar_numode : kFD_nuebar_nubarmode;
+    }
     break;
   }
   }
 
-  return nucf + (IsND ? 0 : 16);
+  return nucf; //+ (IsND ? 0 : 16);
 }
 
 int OffAxisFluxUncertaintyHelper::GetNuConfig_checked(
@@ -337,7 +354,7 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
   if (nucf < kND_SpecHCRun_numu_numode) { // Is ND
     if (!NDTweaks[param_id][nucf]) {
       return kInvalidBin;
-    } else {
+    } else if (nucf != kUnhandled) {
       switch (fNDIs2D) {
       case kOneD: {
         if (IsFlowBin(NDTweaks[param_id][nucf], enu_GeV)) {
@@ -362,11 +379,13 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
         return h2->FindFixBin(enu_GeV, off_axis_pos_m);
       }
       }
+    } else {
+      return kInvalidBin;
     }
   } else if (nucf < kFD_numu_numode) { // Is ND Spec run
     if (!NDSpecHCRunTweaks[param_id][nucf]) {
       return kInvalidBin;
-    } else {
+    } else if (nucf != kUnhandled) {
       switch (fNDSpecHCRunIs2D) {
       case kOneD: {
         if (IsFlowBin(NDSpecHCRunTweaks[param_id][nucf], enu_GeV)) {
@@ -392,15 +411,28 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
         return h2->FindFixBin(enu_GeV, off_axis_pos_m);
       }
       }
+    } else {
+      return kInvalidBin;
     }
   } else {
-    if (!FDTweaks[param_id][nucf]) {
+    if (!FDTweaks[param_id][nucf] || nucf == kUnhandled) {
       return kInvalidBin;
-    } else {
-      if (IsFlowBin(FDTweaks[param_id][nucf], enu_GeV)) {
-        return kInvalidBin;
+    } else if (nucf != kUnhandled) {
+      //std::cout << "param_id = " << param_id << " ; nucf = " << nucf << std::endl;
+      //std::cout << "FDTweaks address = " << FDTweaks[param_id][nucf] << std::endl;
+      //std::cout << "FDTweaks entries = " << FDTweaks[param_id][nucf]->GetEntries() << std::endl;
+      //std::cout << "FDTweaks OKAY" << std::endl;
+      //std::cout << "FDTweaks Nbins = " << FDTweaks[param_id][nucf]->GetNbinsX() << std::endl;
+      if (nucf != kUnhandled) {
+        //std::cout << "HERE nucf = " << nucf << std::endl;
+        if (IsFlowBin(FDTweaks[param_id][nucf], enu_GeV)) {
+          return kInvalidBin;
+        }
       }
-      return FDTweaks[param_id][nucf]->FindFixBin(enu_GeV);
+      //std::cout << "Passed IsFlowBin(...)" << std::endl;
+      if (nucf != kUnhandled) {
+        return FDTweaks[param_id][nucf]->FindFixBin(enu_GeV);
+      } else { return kInvalidBin;}
     }
   }
   throw;
@@ -438,6 +470,7 @@ int OffAxisFluxUncertaintyHelper::GetFirstEnuBin(int nu_pdg, bool IsND,
       return NDSpecHCRunTweaks[0][nucf]->GetBin(1);
     }
   } else {
+    std::cout << "FISRT FDTweaks bin." << std::endl;
     return FDTweaks[0][nucf]->GetBin(1);
   }
 }
@@ -516,10 +549,9 @@ int OffAxisFluxUncertaintyHelper::GetMatrixBin(int nu_config, double enu_GeV,
         }
       } else {
         fBinOffsets.push_back(fBinOffsets.back() + FDTweaks[0][i]->GetNbinsX());
-        // std::cout << "[INFO]: Added " << FDTweaks[0][i]->GetName() << " with
-        // "
-        //           << FDTweaks[0][i]->GetNbinsX() << " for a total of "
-        //           << fBinOffsets.back() << " bins" << std::endl;
+         std::cout << "[INFO]: Added " << FDTweaks[0][i]->GetName() << " with "
+                   << FDTweaks[0][i]->GetNbinsX() << " for a total of "
+                   << fBinOffsets.back() << " bins" << std::endl;
       }
     }
   }

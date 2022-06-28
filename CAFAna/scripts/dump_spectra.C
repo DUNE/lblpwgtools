@@ -15,7 +15,7 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
 
   TFile *fout = new TFile(outputFname.c_str(), "RECREATE");
 
-  osc::IOscCalculatorAdjustable *trueOsc = NuFitOscCalc(hie);
+  osc::IOscCalcAdjustable *trueOsc = NuFitOscCalc(hie);
 
   SystShifts trueSyst = kNoShift;
   SystShifts mcSyst = kNoShift;
@@ -51,33 +51,29 @@ void dump_spectra(std::string stateFname = "common_state_mcc11v3.root",
                    pot_fd_rhc_nue, pot_fd_fhc_numu, pot_fd_rhc_numu,
                    additional_smear);
 
-  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(trueOsc, trueSyst)
-                                    .MockData(pot_fd_fhc_nue, false);
+  const Spectrum data_nue_fhc = predFDNueFHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_fd_fhc_nue);
   SingleSampleExperiment app_expt_fhc(&predFDNueFHC, data_nue_fhc);
   app_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(trueOsc, trueSyst)
-                                     .MockData(pot_fd_fhc_numu, false);
+  const Spectrum data_numu_fhc = predFDNumuFHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_fd_fhc_numu);
   SingleSampleExperiment dis_expt_fhc(&predFDNumuFHC, data_numu_fhc);
   dis_expt_fhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(trueOsc, trueSyst)
-                                    .MockData(pot_fd_rhc_nue, false);
+  const Spectrum data_nue_rhc = predFDNueRHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_fd_rhc_nue);
   SingleSampleExperiment app_expt_rhc(&predFDNueRHC, data_nue_rhc);
   app_expt_rhc.SetMaskHist(0.5, 8);
 
-  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(trueOsc, trueSyst)
-                                     .MockData(pot_fd_rhc_numu, false);
+  const Spectrum data_numu_rhc = predFDNumuRHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_fd_rhc_numu);
   SingleSampleExperiment dis_expt_rhc(&predFDNumuRHC, data_numu_rhc);
   dis_expt_rhc.SetMaskHist(0.5, 8);
 
   const Spectrum nd_data_numu_fhc =
-      predNDNumuFHC.PredictSyst(trueOsc, trueSyst).MockData(pot_nd_fhc, false);
+      predNDNumuFHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_nd_fhc);
   SingleSampleExperiment nd_expt_fhc(&predNDNumuFHC, nd_data_numu_fhc);
   nd_expt_fhc.SetMaskHist(0.5, 10, 0, -1);
 
   const Spectrum nd_data_numu_rhc =
-      predNDNumuRHC.PredictSyst(trueOsc, trueSyst).MockData(pot_nd_rhc, false);
+      predNDNumuRHC.PredictSyst(trueOsc, trueSyst).AsimovData(pot_nd_rhc);
   SingleSampleExperiment nd_expt_rhc(&predNDNumuRHC, nd_data_numu_rhc);
   nd_expt_rhc.SetMaskHist(0.5, 10, 0, -1);
 

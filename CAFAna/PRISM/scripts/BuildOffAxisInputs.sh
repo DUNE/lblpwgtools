@@ -1,47 +1,48 @@
 #!/bin/bash
 
+# REMEMBER -f arg for FHC, -r arg for RHC!!
 
-for i in FHC; do # RHC; do
+for i in RHC; do # RHC; do
 
   #On axis is treated differently
 
   ## Standard on axis run
-  for j in 00 01 02 03 04; do
+  for j in 00 01 02 03 04 05 06 07 08 09; do
     
     OffAxisNDCAFCombiner \
-      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/0m/${j}/${i}*.root" \
-      -o CAF_0m_${j}_${i}.root \
+      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v7/CAF/0mRHC/${j}/${i}*.root" \
+      -o CAFv7_0m_${j}_${i}.root \
       -t caf \
       -p \
       -x -4000,400,25 \
-      -f \
-      -s 200
-
+      -r \
+      -s 200 \
+        
     ## Special 280 kA run
   
     OffAxisNDCAFCombiner \
-      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/0m/${j}/${i}*.root" \
-      -o CAF_280kA_0m_${j}_${i}.root \
+      -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v7/CAF/0mRHC/${j}/${i}*.root" \
+      -o CAFv7_280kA_0m_${j}_${i}.root \
       -t caf \
       -p \
       -x -4000,400,25 \
-      -f \
+      -r \
       -n 200 \
       --280kA
-  
+ 
   done
 
-  for p in 2m 4m 8m 12m 16m 20m 24m 28m; do
+  for p in 2mRHC 4mRHC 8mRHC 12mRHC 16mRHC 20mRHC 24mRHC 28mRHC; do
 
-    for k in 00 01 02 03 04; do
+    for k in 00 01 02 03 04 05 06 07 08 09; do 
  
       OffAxisNDCAFCombiner \
-        -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v5/CAF/${p}/${k}/${i}*.root" \
-        -o CAF_${p}_${k}_${i}.root \
+        -i "/pnfs/dune/persistent/users/marshalc/nd_offaxis/v7/CAF/${p}/${k}/${i}*.root" \
+        -o CAFv7_${p}_${k}_${i}.root \
         -t caf \
         -p \
         -x -4000,400,25\
-        -f \
+        -r \
     
     done
 
@@ -51,10 +52,10 @@ for i in FHC; do # RHC; do
 
   # Combine them all
   OffAxisNDCAFCombiner \
-    -i "./CAF_*_${i}.root" \
-    -o CAF_PRISM_Sep2020_${i}.root \
-    -x -4000,400,25\
-    -f \
+    -i "./CAFv7_*_${i}.root" \
+    -o ND_${i}_absxPOT_Sep21.root \
+    -x -4000,400,25 \
+    -r \
     -C
 
 done

@@ -31,10 +31,18 @@ public:
   double RecoLepEnNumu;
   double RecoHadEnNumu;
 
+  double RecoLepE_NDFD;
+  double RecoHadE_NDFD;
+  double VisReco_NDFD;
+  // 'Reco' LepE which just smears LepE my detector res
+  double ProxyRecoLepE;
+
   // ND pseudo-reconstruction flags
   int reco_numu;
   int reco_nue;
   int reco_nc;
+
+  int simple_reco_numu;
 
   // CW: added for the ND cuts Chris (M) wants
   // ND containment flags
@@ -54,6 +62,15 @@ public:
   // Truth info
   double Ev;
   double Elep;
+
+  // True sum of hadronic energy
+  double HadE;
+
+  // True sum of charged pion KE
+  double ePipm;
+  // True total energy of pi0 (KE + mass)
+  double eTotalPi0
+
   //  float enu_truth; // so what's this one?
   int isCC;
   //    int ccnc;
@@ -101,6 +118,8 @@ public:
 
   // Near detector offset in m
   double det_x;
+  // Absolute position in ND
+  double abspos_x  
 
   // True kinetic energy of particles by species
   double eP;

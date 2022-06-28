@@ -8,7 +8,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -26,13 +26,13 @@ void demo0()
 
   // A Var is a little snippet of code that takes a record representing the
   // event record and returns a single number to plot.
-  const Var kRecoEnergy([](const caf::StandardRecord* sr)
+  const Var kRecoEnergy([](const caf::SRProxy* sr)
                         {
-                          return sr->dune.Ev_reco_numu;
+                          return sr->Ev_reco_numu;
                         });
 
   // For such a simple variable you can use a shortcut like this
-  const Var kCVNNumu = SIMPLEVAR(dune.cvnnumu);
+  const Var kCVNNumu = SIMPLEVAR(cvnnumu);
 
   // Define a spectrum, ie a histogram with associated POT information
   const Binning binsEnergy = Binning::Simple(40, 0, 10);

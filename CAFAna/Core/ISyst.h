@@ -1,9 +1,11 @@
 #pragma once
 
+#include "CAFAna/Core/FwdDeclare.h"
+
+#include "StandardRecord/FwdDeclare.h"
+
 #include <list>
 #include <string>
-
-namespace caf{class StandardRecord;}
 
 namespace ana
 {
@@ -39,7 +41,6 @@ namespace ana
     virtual std::string LatexName() const final {return fLatexName;}
 
     virtual double Penalty(double x) const;
-    virtual double PenaltyDerivative(double x) const;
 
     /// Should a penalty be applied for this shift?
     virtual bool ApplyPenalty() const {return fApplyPenalty;}
@@ -62,7 +63,7 @@ namespace ana
     /// \param weight  Scale this weight for reweighting systematics
     virtual void Shift(double sigma,
                        Restorer& restore,
-                       caf::StandardRecord* sr,
+                       caf::SRProxy* sr,
                        double& weight) const = 0;
 
     /// PredictionInterp normally interpolates between spectra made at

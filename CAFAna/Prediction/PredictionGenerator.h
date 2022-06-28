@@ -5,6 +5,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Var.h"
+#include "CAFAna/Core/Weight.h"
 //#include "CAFAna/Vars/GenieWeights.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/SpectrumLoader.h"
@@ -37,7 +38,7 @@ namespace ana
     NoExtrapGenerator(
       const HistAxis axis,
       const Cut cut,
-      const Var wei = kUnweighted );
+      const Weight wei = kUnweighted );
 
     std::unique_ptr<IPrediction> Generate(
     					  Loaders& loaders,
@@ -46,6 +47,6 @@ namespace ana
     private:
     const HistAxis fAxis;
     const Cut fCut;
-    const Var fWei;
+    const Weight fWei;
   };
 }

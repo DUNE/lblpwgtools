@@ -127,6 +127,7 @@ namespace ana
 
     DontAddDirectory guard;
 
+    // TODO do this with Eigen or possibly the Ratio class?
     std::unique_ptr<TH1D> numh(num.ToTH1(1e20));
     std::unique_ptr<TH1D> denomh(denom.ToTH1(1e20));
     std::unique_ptr<TH1D> multh(mult.ToTH1(1e20));
@@ -164,7 +165,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     const Cut& flavors )
     : fRecoFD( loader, axis, fdcut && flavors, shiftMC, weight )
   {
@@ -199,7 +200,7 @@ namespace ana
     const HistAxis& axisND,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     std::string label,
     std::string latex,
     const Cut& ndcut,
@@ -297,7 +298,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight,
+    const Weight& weight,
     std::string label,
     std::string latex,
     const Cut& ndcut,

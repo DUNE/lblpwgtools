@@ -76,7 +76,7 @@ void spec_joint(std::string stateFname = def_stateFname,
 
   for (int hie = -1; hie <= +1; hie += 2) {
 
-    osc::IOscCalculatorAdjustable *inputOsc = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable *inputOsc = NuFitOscCalc(hie);
 
     const std::string hieStr = (hie > 0) ? "nh" : "ih";
 

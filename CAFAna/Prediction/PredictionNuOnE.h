@@ -36,26 +36,26 @@ namespace ana
                     SpectrumLoaderBase& ccBkgLoader,
                     SpectrumLoaderBase& ncBkgLoader,
                     const SystShifts& shift = kNoShift,
-                    const Var& wei = kUnweighted);
+                    const Weight& wei = kUnweighted);
 
     PredictionNuOnE(NuOnELoaders& loaders,
                     const SystShifts& shift = kNoShift,
-                    const Var& wei = kUnweighted)
+                    const Weight& wei = kUnweighted)
       : PredictionNuOnE(loaders.Signal(), loaders.CCBkg(), loaders.NCBkg(),
                         shift, wei)
     {
     }
 
-    virtual Spectrum Predict(osc::IOscCalculator*) const override;
+    virtual Spectrum Predict(osc::IOscCalc*) const override;
 
     /// We call signal numu CC and CC bkg nue CC for this function's purposes
-    virtual Spectrum PredictComponent(osc::IOscCalculator* calc,
+    virtual Spectrum PredictComponent(osc::IOscCalc* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const override;
 
-    virtual void SaveTo(TDirectory* dir) const override;
-    static std::unique_ptr<PredictionNuOnE> LoadFrom(TDirectory* dir);
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<PredictionNuOnE> LoadFrom(TDirectory* dir, const std::string& name);
 
     Spectrum Signal() const {return fSig;}
     Spectrum CCBkg() const {return fCCBkg;}
@@ -71,7 +71,7 @@ namespace ana
   class PredictionNuOnEGenerator: public IPredictionGenerator
   {
   public:
-    PredictionNuOnEGenerator(Var wei = kUnweighted) : fWei(wei)
+    PredictionNuOnEGenerator(Weight wei = kUnweighted) : fWei(wei)
     {
     }
 
@@ -80,6 +80,6 @@ namespace ana
              const SystShifts& shiftMC = kNoShift) const override;
 
   protected:
-    Var fWei;
+    Weight fWei;
   };
 }

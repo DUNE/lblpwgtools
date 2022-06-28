@@ -14,7 +14,7 @@
 
 using namespace ana;
 
-#include "Utilities/rootlogon.C"
+#include "CAFAna/Core/rootlogon.C"
 
 #include "StandardRecord/StandardRecord.h"
 
@@ -63,7 +63,7 @@ void Legend(const std::string& title)
 void StackPlot(const PredictionScaleComp& pred,
                const std::string& title,
                double pot,
-               osc::IOscCalculator* calc = 0)
+               osc::IOscCalc* calc = 0)
 {
   std::map<EVALORCategory, Color_t> cols;
   cols[nu_ccqe_1] = kRed;
@@ -127,7 +127,7 @@ void StackPlot(const PredictionScaleComp& pred,
   leg->Draw();
 }
 
-void PlotXSecShiftEffects(osc::IOscCalculator* osc,
+void PlotXSecShiftEffects(osc::IOscCalc* osc,
                           IPrediction& predNDFHC, IPrediction& predNDRHC,
                           IPrediction& predFDNumuFHC, IPrediction& predFDNueFHC,
                           IPrediction& predFDNumuRHC, IPrediction& predFDNueRHC)
@@ -274,12 +274,12 @@ void joint_fit(bool reload = false)
     loaderFDNueRHC.Go();
 
     TFile fout(stateFname, "RECREATE");
-    predNDFHC.SaveTo(fout.mkdir("nd_fhc"));
-    predNDRHC.SaveTo(fout.mkdir("nd_rhc"));
-    predFDNumuFHC.SaveTo(fout.mkdir("fd_numu_fhc"));
-    predFDNueFHC.SaveTo(fout.mkdir("fd_nue_fhc"));
-    predFDNumuRHC.SaveTo(fout.mkdir("fd_numu_rhc"));
-    predFDNueRHC.SaveTo(fout.mkdir("fd_nue_rhc"));
+    predNDFHC.SaveTo(&fout, "nd_fhc");
+    predNDRHC.SaveTo(&fout, "nd_rhc");
+    predFDNumuFHC.SaveTo(&fout, "fd_numu_fhc");
+    predFDNueFHC.SaveTo(&fout, "fd_nue_fhc");
+    predFDNumuRHC.SaveTo(&fout, "fd_numu_rhc");
+    predFDNueRHC.SaveTo(&fout, "fd_nue_rhc");
     std::cout << "Saved state to " << stateFname << std::endl;
   }
   else{
@@ -287,17 +287,17 @@ void joint_fit(bool reload = false)
   }
 
   TFile fin(stateFname);
-  PredictionScaleComp& predNDFHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("nd_fhc")).release();
-  PredictionScaleComp& predNDRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("nd_rhc")).release();
-  PredictionScaleComp& predFDNumuFHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_numu_fhc")).release();
-  PredictionScaleComp& predFDNueFHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_nue_fhc")).release();
-  PredictionScaleComp& predFDNumuRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_numu_rhc")).release();
-  PredictionScaleComp& predFDNueRHC = *ana::LoadFrom<PredictionScaleComp>(fin.GetDirectory("fd_nue_rhc")).release();
+  PredictionScaleComp& predNDFHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "nd_fhc").release();
+  PredictionScaleComp& predNDRHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "nd_rhc").release();
+  PredictionScaleComp& predFDNumuFHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "fd_numu_fhc").release();
+  PredictionScaleComp& predFDNueFHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "fd_nue_fhc").release();
+  PredictionScaleComp& predFDNumuRHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "fd_numu_rhc").release();
+  PredictionScaleComp& predFDNueRHC = *ana::LoadFrom<PredictionScaleComp>(&fin, "fd_nue_rhc").release();
   fin.Close();
   std::cout << "Done loading state" << std::endl;
 
   // Make matching FD Asimov fake data, plus some oscillations
-  osc::IOscCalculatorAdjustable* inputOsc = DefaultOscCalc();
+  osc::IOscCalcAdjustable* inputOsc = DefaultOscCalc();
   inputOsc->SetdCP(1.5*TMath::Pi());
 
   new TCanvas;
@@ -373,7 +373,7 @@ void joint_fit(bool reload = false)
   // Set up the fit
   Fitter fit(&expt, oscFitVars, systFitVars);
   // Where will we start our search?
-  osc::IOscCalculatorAdjustable* oscSeed = DefaultOscCalc();
+  osc::IOscCalcAdjustable* oscSeed = DefaultOscCalc();
   SystShifts systSeed = SystShifts::Nominal();
   // Do the fit - updates the "seed" variables with the best fit point
   fit.Fit(oscSeed, systSeed);

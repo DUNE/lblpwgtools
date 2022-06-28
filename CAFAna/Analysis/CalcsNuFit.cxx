@@ -1,13 +1,15 @@
 #include "CAFAna/Analysis/CalcsNuFit.h"
-
-#include "Utilities/func/MathUtil.h"
-
-#include "OscLib/func/OscCalculatorPMNSOpt.h"
-#include "OscLib/func/OscCalculatorGeneral.h"
-
+#include "CAFAna/Analysis/CalcsVars.h"
 #include "CAFAna/Vars/FitVars.h"
 
+#include "CAFAna/Core/MathUtil.h"
+
+#include "OscLib/OscCalcGeneral.h"
+#include "OscLib/OscCalcPMNSOpt.h"
+
 #include "TFormula.h"
+
+#include <iostream>
 
 namespace ana
 {
@@ -33,12 +35,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, int asimov_set)
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct, int asimov_set)
   {
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
 
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
@@ -88,7 +90,7 @@ namespace ana
   }
   
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str)
+  osc::IOscCalcAdjustable* NuFitOscCalc(int hie, int oct, std::string asimov_str)
   {
     // Pretty funky stuff
     if (asimov_str.find("asimov") != std::string::npos)
@@ -99,7 +101,7 @@ namespace ana
     assert(hie == +1 || hie == -1);
     assert(oct == +1 || oct == -1);
 
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
@@ -148,12 +150,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set)
+  osc::IOscCalcAdjustable* ThrownNuFitOscCalc(int hie, std::vector<const IFitVar*> oscVars, int asimov_set)
   {
     assert(hie == +1 || hie == -1);
 
     std::cerr << "Using ThrownNuFitOscCalc, which is now somewhat deprecated (look at 32 and hierarchy)" << std::endl; 
-    osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = NuFitOscCalc(hie);//new osc::OscCalcPMNSOpt;
 
     // Throw 12 and rho within errors
     if (HasVar(oscVars, kFitRho.ShortName()))
@@ -294,11 +296,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13)
+  osc::IOscCalcAdjustable* ThrownWideOscCalc(int hie, std::vector<const IFitVar*> oscVars, bool flatth13)
   {
     assert(hie == +1 || hie == -1);
 
-    osc::IOscCalculatorAdjustable* ret = NuFitOscCalc(hie);
+    osc::IOscCalcAdjustable* ret = NuFitOscCalc(hie);
 
     // Throw 12 and rho within errors if here
     if (HasVar(oscVars, kFitRho.ShortName()))
@@ -348,11 +350,11 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  osc::IOscCalculatorAdjustable* NuFitOscCalcPlusOneSigma(int hie)
+  osc::IOscCalcAdjustable* NuFitOscCalcPlusOneSigma(int hie)
   {
     assert(hie == +1 || hie == -1);
 
-    osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorGeneral;
+    osc::IOscCalcAdjustable* ret = new osc::OscCalcPMNSOpt;
     ret->SetL(kBaseline);
     ret->SetRho(kEarthDensity);
 
@@ -376,7 +378,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  double NuFitPenalizer::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double NuFitPenalizer::ChiSq(osc::IOscCalcAdjustable* calc,
                                const SystShifts& /*syst*/) const
   {
     double ret =
@@ -493,7 +495,7 @@ namespace ana
   }
 
   // This should be removed as it's 99% the same as other functions
-  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalculatorAdjustable* cvcalc, 
+  Penalizer_GlbLike::Penalizer_GlbLike(osc::IOscCalcAdjustable* cvcalc, 
   				       int hietrue, bool useTh13,
                                        bool useTh23, bool useDmsq) 
     : fHieTrue(hietrue), fTh13Pen(useTh13), fTh23Pen(useTh23), fDmsqPen(useDmsq){
@@ -516,7 +518,7 @@ namespace ana
   }
 
 
-  double Penalizer_GlbLike::ChiSq(osc::IOscCalculatorAdjustable* calc,
+  double Penalizer_GlbLike::ChiSq(osc::IOscCalcAdjustable* calc,
 				  const SystShifts& /*syst*/) const {
 
   //Usage: calc is the fit parameters as above

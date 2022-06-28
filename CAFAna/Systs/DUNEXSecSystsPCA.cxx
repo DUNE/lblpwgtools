@@ -1,5 +1,7 @@
 #include "CAFAna/Systs/DUNEXSecSystsPCA.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "TFile.h"
 #include "TH1.h"
 #include "TObjString.h"
@@ -23,7 +25,7 @@ namespace ana
   //----------------------------------------------------------------------
   void DUNEXSecSystPCA::Shift(double sigma,
                               Restorer& restore,
-                              caf::StandardRecord* sr,
+                              caf::SRProxy* sr,
                               double& weight) const
   {
     weight *= 1+fCoeffs[GetVALORCategory(sr)]*sigma;

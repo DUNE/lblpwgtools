@@ -5,6 +5,8 @@
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "string_parsers/from_string.hxx"
 
 #include "TChain.h"
@@ -305,21 +307,20 @@ void OffAxisNDCAFCombiner() {
   size_t fctr = 0;
   for (auto dir_files : CAFs) {
     std::string dir = dir_files.first;
+    dir = ana::pnfs2xrootd(dir, false);
     for (std::string const &file_name : dir_files.second) {
       fctr++;
 
       std::cout << "[INFO]: Opening file: " << file_name << "(" << fctr << "/"
                 << NFiles << ")" << std::endl;
 
-      TFile f((dir + file_name).c_str());
-
-      if (f.IsZombie()) {
+      TFile *f = TFile::Open((dir + file_name).c_str());
+      if (f->IsZombie()) {
         std::cout << "[WARN]: Failed." << std::endl;
         continue;
       }
 
-      TTree *f_caf;
-      f.GetObject(args::cafTreeName.c_str(), f_caf);
+      TTree *f_caf = (TTree*)f->Get(args::cafTreeName.c_str());
       if (!f_caf) {
         std::cout << "[WARN]: Failed to read " << args::cafTreeName
                   << " TTree. " << std::endl;
@@ -353,24 +354,24 @@ void OffAxisNDCAFCombiner() {
           ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
 
           TH1D *f_POTExposure;
-          f.GetObject(("POTExposure_" + ss.str()).c_str(), f_POTExposure);
+          f->GetObject(("POTExposure_" + ss.str()).c_str(), f_POTExposure);
           assert(f_POTExposure);
           POTExposures[SpecRunID_local]->Add(f_POTExposure);
 
           TH2D *f_POTExposure_stop;
-          f.GetObject(("POTExposure_stop_" + ss.str()).c_str(),
+          f->GetObject(("POTExposure_stop_" + ss.str()).c_str(),
                       f_POTExposure_stop);
           assert(f_POTExposure_stop);
           POTExposures_stop[SpecRunID_local]->Add(f_POTExposure_stop);
 
           TH1D *f_FileExposure;
-          f.GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
+          f->GetObject(("FileExposure_" + ss.str()).c_str(), f_FileExposure);
           assert(f_FileExposure);
           FileExposures[SpecRunID_local]->Add(f_FileExposure);
         }
       } else {
         TTree *f_meta;
-        f.GetObject("meta", f_meta);
+        f->GetObject("meta", f_meta);
 
         if (!f_meta) {
           std::cout << "[ERROR]: Failed to read " << args::cafTreeName
@@ -395,7 +396,8 @@ void OffAxisNDCAFCombiner() {
         FileSummaryTree->Fill();
 
         if (args::justDoSummaryTree) {
-          f.Close();
+          f->Close();
+          delete f;
           continue;
         }
 
@@ -457,14 +459,22 @@ void OffAxisNDCAFCombiner() {
           //   continue;
           // }
 
-          FileExposures[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
+          // Do exposure in terms of absolute position
+          // in order to include positive position events
+          double absx = -std::abs(vtx_x_pos_cm + (det_x * detx_to_m * 1E2));
 
-          POTExposures[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
-          POTExposures_stop[specRunId_file]->Fill(
-              vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-              (det_x * detx_to_m * 1E2), file_pot);
+          //FileExposures[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
+          FileExposures[specRunId_file]->Fill(absx, nmeta_ents);
+          //POTExposures[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures[specRunId_file]->Fill(absx, file_pot);
+          //POTExposures_stop[specRunId_file]->Fill(
+          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
+          //    (det_x * detx_to_m * 1E2), file_pot);
+          POTExposures_stop[specRunId_file]->Fill(absx,
+                                                  (det_x * detx_to_m * 1E2),
+                                                  file_pot);
         }
 
         NPrevOffAxisWeightFriendEntries = EventPOTEventFiles.size();
@@ -513,7 +523,8 @@ void OffAxisNDCAFCombiner() {
         }
       }
 
-      f.Close();
+      f->Close();
+      delete f;
 
       caf->Add((dir + file_name).c_str());
       meta->Add((dir + file_name).c_str());
@@ -686,9 +697,11 @@ void OffAxisNDCAFCombiner() {
         OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
 
+        double absx = -std::abs((det_x * detx_to_m * 1E2) + vtx_x);
+
         double nfiles = FileExposures[specRunId_read]->GetBinContent(
             FileExposures[specRunId_read]->FindFixBin(
-                (det_x * detx_to_m * 1E2) + vtx_x));
+                absx)); // (det_x * detx_to_m * 1E2) + vtx_x)
 
         perFile = 1.0 / nfiles;
         OffAxisWeightFriendcopy->Fill();

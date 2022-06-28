@@ -23,17 +23,17 @@ namespace ana
     const Cut& nueNDcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
     return ModularExtrap::Nue(
       loaders.GetLoader(
-        caf::kNEARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kFluxSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kFluxSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kTauSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kTauSwap),
       nueDecomp,
       numuDecomp,
       axis,
@@ -55,19 +55,19 @@ namespace ana
     const Cut& fdcut,
     const Cut& ndcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
     return ModularExtrap::Numu(
       loaders.GetLoader(
-        caf::kNEARDET, Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kNEARDET, Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNonSwap),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNonSwap),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNue),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNue),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kTau),
+        caf::kFARDET,  Loaders::kMC, Loaders::kTau),
       loaders.GetLoader(
-        caf::kFARDET,  Loaders::kMC, ana::kBeam, Loaders::kNC),
+        caf::kFARDET,  Loaders::kMC, Loaders::kNC),
       numuDecomp,
       axis,
       fdcut,
@@ -92,7 +92,7 @@ namespace ana
     const Cut& nueNDcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
 
     ModularExtrap extrap(
@@ -176,7 +176,7 @@ namespace ana
     const Cut& fdcut,
     const Cut& numuNDcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ){
 
     ModularExtrap extrap(
@@ -338,7 +338,7 @@ namespace ana
     const HistAxis& axis,
     const Cut& fdcut,
     const SystShifts& shiftMC,
-    const Var& weight
+    const Weight& weight
   ) :
 
       // e -> e ----

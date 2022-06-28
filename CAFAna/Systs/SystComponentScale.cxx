@@ -2,6 +2,7 @@
 
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "TDirectory.h"
 #include "TObjString.h"
 
 #include <cmath>
@@ -16,7 +17,7 @@ namespace ana
   //----------------------------------------------------------------------
   void SystComponentScale::Shift(double sigma,
                                   Restorer& /*restore*/,
-                                  caf::StandardRecord* sr,
+                                  caf::SRProxy* sr,
                                   double& weight) const
   {
     if(!fCut(sr)) return;
@@ -31,14 +32,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<SystComponentScale> SystComponentScale::LoadFrom(TDirectory* dir)
+  std::unique_ptr<SystComponentScale> SystComponentScale::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    TObjString* ptag = (TObjString*)dir->Get("type");
+    TObjString* ptag = (TObjString*)dir->Get((name+"/type").c_str());
     assert(ptag);
 
     const TString tag = ptag->GetString();
+    delete ptag;
 
-    if(tag == "DUNEXSecSyst") return DUNEXSecSyst::LoadFrom(dir);
+    if(tag == "DUNEXSecSyst") return DUNEXSecSyst::LoadFrom(dir, name);
 
     std::cerr << "Unknown SystComponentScale type '" << tag << "'" << std::endl;
     abort();

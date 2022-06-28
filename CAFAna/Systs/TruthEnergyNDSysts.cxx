@@ -14,6 +14,8 @@ namespace ana {
   const ETruthScaleMuLArND kETruthScaleMuLArND;
   const ETruthScaleMuLArSqrtND kETruthScaleMuLArSqrtND;
   const ETruthScaleMuLArInvSqrtND kETruthScaleMuLArInvSqrtND;
+  // Resolution Syst
+  const AbsoluteEResND kAbsoluteEResND;
 
   TruthEnergyNDSystVector GetTrueENDSysts() {
 
@@ -30,6 +32,7 @@ namespace ana {
     vec.push_back(&kETruthScaleMuLArND);
     vec.push_back(&kETruthScaleMuLArSqrtND);
     vec.push_back(&kETruthScaleMuLArInvSqrtND);
+    vec.push_back(&kAbsoluteEResND);
 
     return vec;
   }

@@ -11,6 +11,7 @@
 #include "Eigen/Dense"
 #endif
 
+#include "CAFAnaCore/CAFAna/Core/Binning.h"
 #include "TH1.h"
 #include "TH2.h"
 
@@ -22,8 +23,13 @@ GetEigenMatrix(TH2 const *,
                size_t max_rows = std::numeric_limits<size_t>::max(),
                size_t max_cols = std::numeric_limits<size_t>::max());
 
+// Function to convert 1D array into 2D matrix.
+Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr, std::vector<ana::Binning> const &bins); 
+
 Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &v);
 Eigen::VectorXd GetEigenFlatVector(TH1 const *th);
+
+Eigen::ArrayXd GetEigenFlatArray(std::unique_ptr<TH1> const &h);
 
 size_t
 FillHistFromEigenMatrix(TH2 *, Eigen::MatrixXd const &, size_t histx_offset = 0,

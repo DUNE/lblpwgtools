@@ -5,9 +5,12 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+
+#include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -15,12 +18,13 @@
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "StandardRecord/SRProxy.h"
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
 
+#include "TChain.h"
 #include "TFile.h"
 #include "TH2.h"
 #include "TRandom3.h"
@@ -28,24 +32,21 @@
 
 namespace ana {
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(const std::string &wildcard, DataSource src,
-                               int max)
-    : SpectrumLoaderBase(wildcard, src), max_entries(max) {}
+SpectrumLoader::SpectrumLoader(const std::string &wildcard, int max)
+    : SpectrumLoaderBase(wildcard), max_entries(max) {}
 
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames,
-                               DataSource src, int max)
-    : SpectrumLoaderBase(fnames, src), max_entries(max) {}
+SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames, int max)
+    : SpectrumLoaderBase(fnames), max_entries(max) {}
 
 //----------------------------------------------------------------------
-SpectrumLoader::SpectrumLoader(DataSource src) : SpectrumLoaderBase(src) {}
+SpectrumLoader::SpectrumLoader() : SpectrumLoaderBase() {}
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 //----------------------------------------------------------------------
 SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
-                                              DataSource src, int fileLimit) {
+                                              int fileLimit) {
   SpectrumLoader ret;
-  ret.fSource = src;
   ret.fWildcard = "project " + proj;
   ret.fFileSource =
       std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
@@ -84,6 +85,7 @@ void SpectrumLoader::Go() {
   Progress *prog = 0;
 
   int fileIdx = -1;
+
   while (TFile *f = GetNextFile()) {
     ++fileIdx;
 
@@ -94,9 +96,11 @@ void SpectrumLoader::Go() {
               .Data());
 
     HandleFile(f, Nfiles == 1 ? prog : 0);
-
+    
     if (Nfiles > 1 && prog)
       prog->SetProgress((fileIdx + 1.) / Nfiles);
+
+    if(CAFAnaQuitRequested()) break;
   } // end for fileIdx
 
   StoreExposures();
@@ -116,29 +120,33 @@ void SpectrumLoader::Go() {
 // Helper function that can give us a friendlier error message
 template <class T>
 bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
+  static std::set<std::string> alreadyWarned;
+
   if (tr->FindBranch(bname.c_str())) {
     tr->SetBranchAddress(bname.c_str(), dest);
     return true;
   } else {
-    std::cout << "Warning: Branch '" << bname
-              << "' not found, field will not be filled" << std::endl;
+    if(!alreadyWarned.count(bname)){
+      alreadyWarned.insert(bname);
+      std::cout << "Warning: Branch '" << bname
+                << "' not found, field will not be filled" << std::endl;
+    }
   }
   return false;
 }
-
+ 
 //----------------------------------------------------------------------
 void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   assert(!f->IsZombie());
-  TTree *tr;
-  //    if(f->GetListOfKeys()->Contains("cafmaker")){
-  //      tr = (TTree*)f->Get("cafmaker/caf");
-  //    }
-  //    else{
-  //      tr = (TTree*)f->Get("mvaselect/MVASelection");
-  //    }
-  tr = (TTree *)f->Get("caf");
-  if (!tr) {
-    tr = (TTree *)f->Get("cafTree");
+  TTree* tr = 0;
+  // In files with both "caf" and "cafTree", "cafTree" is the correct
+  // version. "caf" is ROOT's temporary save while the file is being produced
+  // and may be incomplete.
+  tr = (TTree*)f->Get("cafTree");
+  if (!tr){
+    // Old (MCC10 era) files only have "caf"
+    tr = (TTree*)f->Get("caf");
+    if(tr) std::cout << "Warning, didn't find 'cafTree' in " << f->GetName() << " but did find 'caf' - using that" << std::endl;
   }
   assert(tr);
 
@@ -172,7 +180,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "muon_ecal", &sr.muon_ecal);
   SetBranchChecked(tr, "muon_tracker", &sr.muon_tracker);
   SetBranchChecked(tr, "Ehad_veto", &sr.Ehad_veto);
-
   SetBranchChecked(tr, "Ev", &sr.Ev);
   SetBranchChecked(tr, "Elep", &sr.Elep);
   //    SetBranchChecked(tr, "ccnc", &sr.ccnc);
@@ -188,7 +195,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "nipi0", &sr.nipi0);
   SetBranchChecked(tr, "nipip", &sr.nipip);
   SetBranchChecked(tr, "nipim", &sr.nipim);
+  SetBranchChecked(tr, "nik0", &sr.nik0);
+  SetBranchChecked(tr, "nikp", &sr.nikp);
+  SetBranchChecked(tr, "nikm", &sr.nikm);
   SetBranchChecked(tr, "niem", &sr.niem);
+  SetBranchChecked(tr, "nNucleus", &sr.nNucleus);
   SetBranchChecked(tr, "Q2", &sr.Q2);
   SetBranchChecked(tr, "W", &sr.W);
   SetBranchChecked(tr, "Y", &sr.Y);
@@ -209,7 +220,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "vtx_x", &sr.vtx_x);
   SetBranchChecked(tr, "vtx_y", &sr.vtx_y);
   SetBranchChecked(tr, "vtx_z", &sr.vtx_z);
-
   SetBranchChecked(tr, "det_x", &sr.det_x);
 
   SetBranchChecked(tr, "eP", &sr.eP);
@@ -280,7 +290,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     Nentries = max_entries;
   }
 
-  TTree *potFriend;
+  TTree *potFriend = 0;
   f->GetObject("OffAxisWeightFriend", potFriend);
   if (potFriend) {
     tr->AddFriend(potFriend);
@@ -289,10 +299,12 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
     SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
     SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
+ 
     std::cout << "[INFO]: Found Off axis weight friend tree "
                  "in input file, hooking up!"
               << std::endl;
   } else {
+    std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
     sr.perPOTWeight = 1;
     sr.perFileWeight = 1;
     sr.NDMassCorrWeight = 1;
@@ -300,8 +312,38 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.SpecialHCRunId = 293;
   }
 
+  TFile fin(std::getenv("PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT"));
+  assert(fin.IsOpen());
+  std::map<int, TH1D *> FileExposures;
+  std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
+  
+  for (int SpecRunID_local : SpecRunIds_all) {
+    std::stringstream ss("");
+    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
+    if (!FileExposures[SpecRunID_local]) abort(); 
+  }                                                                                     
+
+  int Nfiles = NFiles();
+  // Run 1 smaller file at a time per grid job
+  int grid_mfile(0);
+  // Grid submission script sets this env variable.
+  // Set manually if you wish to run a single small ND MC file with perFile correction.
+  if (std::getenv("PRISM_MULTIFILE")) {
+    grid_mfile = std::atoi(std::getenv("PRISM_MULTIFILE"));
+  }
+
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
+
+    if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
+
+    // Change the perFile weight if we have multiple ND files
+    if (!sr.isFD && (Nfiles > 1 || grid_mfile == 1)) { 
+      double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
+          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x));
+      sr.perFileWeight = 1 / nfiles;
+    }
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {
@@ -312,8 +354,26 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     } else {
       sr.eRec_FromDep = sr.eRecoP + sr.eRecoN + sr.eRecoPip + sr.eRecoPim +
                         sr.eRecoPi0 + sr.eRecoOther + sr.LepE;
+
       sr.GENIE_ScatteringMode = sr.mode;
     }
+
+    // Common EvisReco variable for ND and FD
+    if (sr.isFD) {
+      if (sr.nuPDG == 14 || sr.nuPDG == -14) { // FD numu event 
+        sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+      } else if (sr.nuPDG == 12 || sr.nuPDG == -12) {
+        sr.RecoLepE_NDFD = sr.RecoLepEnNue;
+      }
+      //sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0;
+      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim +
+                         sr.eDepPi0 + sr.eDepOther; 
+    } else {
+      sr.RecoLepE_NDFD = sr.Elep_reco;
+      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
+                         sr.eRecoPi0 + sr.eRecoOther;
+    }
+    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
 
     double eother = 0;
     if (std::isnormal(sr.eOther)) {
@@ -321,6 +381,19 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
     sr.eRecProxy = sr.LepE + sr.eP + sr.ePip + sr.ePim + sr.ePi0 +
                    0.135 * sr.nipi0 + eother;
+    // If it is a NC event remove LepE, this is the neutrino evergy and is 
+    // not detected
+    if (!sr.isCC) {
+      sr.eRecProxy = sr.eRecProxy - sr.LepE;
+    }
+
+    // Variable for true hadronic energy
+    sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+
+    // Sum of the true charged pion KE
+    sr.ePipm = sr.ePip + sr.ePim;
+    // True total energy of pi0 (KE + mass)
+    sr.eTotalPi0 = sr.ePi0 + (0.135 * sr.nipi0);
 
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {
@@ -421,14 +494,20 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
         assert(Nuniv <= XSSyst_tmp[syst_it].size());
 
+        static std::vector<bool> alreadyWarned(XSSyst_names.size(), false);
+
         if (IsDoNotIncludeSyst(syst_it)) { // Multiply CV weight back into
                                            // response splines.
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           } else {
             for (size_t univ_it = 0; univ_it < Nuniv; ++univ_it) {
               XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
@@ -439,9 +518,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
           if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
               std::isinf(XSSyst_cv_tmp[syst_it]) ||
               XSSyst_cv_tmp[syst_it] == 0) {
-            std::cout << "Warning: " << XSSyst_names[syst_it]
-                      << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
-                      << std::endl;
+            if(!alreadyWarned[syst_it]){
+              alreadyWarned[syst_it] = true;
+              std::cout << "Warning: " << XSSyst_names[syst_it]
+                        << " has a bad CV of " << XSSyst_cv_tmp[syst_it]
+                        << " - will only warn once"
+                        << std::endl;
+            }
           } else {
             sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
           }
@@ -458,6 +541,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     if (prog && n % 10000 == 0)
       prog->SetProgress(double(n) / Nentries);
   } // end for n
+  fin.Close();
 }
 
 //----------------------------------------------------------------------
@@ -466,7 +550,7 @@ template <class T, class U> class CutVarCache {
 public:
   CutVarCache() : fVals(U::MaxID() + 1), fValsSet(U::MaxID() + 1, false) {}
 
-  inline T Get(const U &var, const caf::StandardRecord *sr) {
+  inline T Get(const U &var, const caf::SRProxy *sr) {
     const unsigned int id = var.ID();
 
     if (fValsSet[id]) {
@@ -486,19 +570,16 @@ protected:
 };
 
 //----------------------------------------------------------------------
-void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
-
-  // Can thin input...
-  if (gRandom->Uniform() <= fThinFactor) {
-    return;
-  }
-
+void SpectrumLoader::HandleRecord(caf::StandardRecord *sr2) {
   // Some shifts only adjust the weight, so they're effectively nominal, but
   // aren't grouped with the other nominal histograms. Keep track of the
   // results for nominals in these caches to speed those systs up.
   CutVarCache<bool, Cut> nomCutCache;
-  CutVarCache<double, Var> nomWeiCache;
+  CutVarCache<double, Weight> nomWeiCache;
   CutVarCache<double, Var> nomVarCache;
+
+  // HACK to satisfy cafanacore which wants everything to be proxied
+  caf::SRProxy* sr = (caf::SRProxy*)sr2;
 
   for (auto &shiftdef : fHistDefs) {
     const SystShifts &shift = shiftdef.first;
@@ -538,7 +619,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
         continue;
 
       for (auto &weidef : cutdef.second) {
-        const Var &weivar = weidef.first;
+        const Weight &weivar = weidef.first;
 
         double wei = shifted ? weivar(sr) : nomWeiCache.Get(weivar, sr);
 
@@ -549,8 +630,8 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
         for (auto &vardef : weidef.second) {
           if (vardef.first.IsMulti()) {
             for (double val : vardef.first.GetMultiVar()(sr)) {
-              for (Spectrum *s : vardef.second.spects)
-                s->Fill(val, wei);
+              for (Spectrum **s : vardef.second.spects)
+                if(*s) (*s)->Fill(val, wei);
             }
             continue;
           }
@@ -569,11 +650,13 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
             continue;
           }
 
-          for (Spectrum *s : vardef.second.spects)
-            s->Fill(val, wei);
+          for (Spectrum **s : vardef.second.spects)
+            if(*s) (*s)->Fill(val, wei);
 
-          for (ReweightableSpectrum *rw : vardef.second.rwSpects) {
-            const double yval = rw->ReweightVar()(sr);
+          for (auto rv : vardef.second.rwSpects) {
+            ReweightableSpectrum** rw = rv.first;
+            if(!*rw) continue;
+            const double yval = rv.second(sr);
 
             if (std::isnan(yval) || std::isinf(yval)) {
               std::cerr << "Warning: Bad value: " << yval
@@ -584,7 +667,7 @@ void SpectrumLoader::HandleRecord(caf::StandardRecord *sr) {
 
             // TODO: ignoring events with no true neutrino etc
             if (yval != 0)
-              rw->fHist->Fill(val, yval, wei);
+              (*rw)->Fill(val, yval, wei);
           } // end for rw
         }   // end for vardef
       }     // end for weidef
@@ -613,8 +696,16 @@ void SpectrumLoader::ReportExposures() {
   std::cout << fPOT << " POT" << std::endl;
 }
 
-//----------------------------------------------------------------------
-void SpectrumLoader::AccumulateExposures(const caf::SRSpill *spill) {}
+// cafanacore's spectra are expecting a different structure of
+// spectrumloader. But we can easily trick it with these.
+struct SpectrumSink
+{
+  static void FillPOT(Spectrum* s, double pot){s->fPOT += pot;}
+};
+struct ReweightableSpectrumSink
+{
+  static void FillPOT(ReweightableSpectrum* rw, double pot){rw->fPOT += pot;}
+};
 
 //----------------------------------------------------------------------
 void SpectrumLoader::StoreExposures() {
@@ -622,10 +713,10 @@ void SpectrumLoader::StoreExposures() {
     for (auto &cutdef : shiftdef.second) {
       for (auto &weidef : cutdef.second) {
         for (auto &vardef : weidef.second) {
-          for (Spectrum *s : vardef.second.spects)
-            s->fPOT += fPOT;
-          for (ReweightableSpectrum *rw : vardef.second.rwSpects)
-            rw->fPOT += fPOT;
+          for (Spectrum **s : vardef.second.spects)
+            if(*s) SpectrumSink::FillPOT(*s, fPOT);
+          for (auto rv : vardef.second.rwSpects)
+            if(*rv.first) ReweightableSpectrumSink::FillPOT(*rv.first, fPOT);
         }
       }
     }
@@ -671,8 +762,8 @@ void SpectrumLoader::StoreExposures() {
 
 //----------------------------------------------------------------------
 const SpectrumLoader::TestVals *SpectrumLoader::GetVals(
-    const caf::StandardRecord *sr,
-    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
+    const caf::SRProxy *sr,
+    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   TestVals *ret = new TestVals;
 
   // Store values for all Vars and Cuts of interest
@@ -720,9 +811,9 @@ void SpectrumLoader::ValError(const std::string &type, const std::string &shift,
 
 //----------------------------------------------------------------------
 void SpectrumLoader::CheckVals(
-    const TestVals *v, const caf::StandardRecord *sr,
+    const TestVals *v, const caf::SRProxy* sr,
     const std::string &shiftName,
-    IDMap<Cut, IDMap<Var, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
+    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>> &hists) const {
   unsigned int cutIdx = 0;
   unsigned int weiIdx = 0;
   unsigned int varIdx = 0;

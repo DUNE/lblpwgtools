@@ -1,7 +1,6 @@
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 
 #include "CAFAna/Core/Cut.h"
-#include "CAFAna/Core/HistCache.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -22,7 +21,7 @@ namespace ana
                       Cut cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts& shift,
-                      const Var& wei)
+                      const Weight& wei)
     : fSysts(systs)
   {
     Cut complementCut = kNoCut;
@@ -45,7 +44,7 @@ namespace ana
                       Cut                 cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts&   shift,
-                      const Var&          wei)
+                      const Weight&       wei)
     : fSysts(systs)
   {
     assert(!systs.empty() && "Please give at least one systematic.");
@@ -66,7 +65,7 @@ namespace ana
                       Cut cut,
                       const std::vector<const SystComponentScale*>& systs,
                       const SystShifts& shift,
-                      const Var& wei)
+                      const Weight& wei)
   {
     assert(0 && "unimplemented");
 
@@ -106,7 +105,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum PredictionScaleComp::PredictComponentSyst(osc::IOscCalculator* calc,
+  Spectrum PredictionScaleComp::PredictComponentSyst(osc::IOscCalc* calc,
                                                      const SystShifts& shift,
                                                      Flavors::Flavors_t flav,
                                                      Current::Current_t curr,
@@ -136,7 +135,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   Spectrum PredictionScaleComp::
-  PredictCategory(osc::IOscCalculator* osc,
+  PredictCategory(osc::IOscCalc* osc,
                   const SystComponentScale* syst) const
   {
     for(unsigned int i = 0; i < fSysts.size(); ++i){
@@ -148,46 +147,60 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void PredictionScaleComp::SaveTo(TDirectory* dir) const
+  void PredictionScaleComp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
+
+    dir = dir->mkdir(name.c_str()); // switch to subdir
     dir->cd();
 
     TObjString("PredictionScaleComp").Write("type");
 
-    fTotal->SaveTo(dir->mkdir("total"));
+    fTotal->SaveTo(dir, "total");
 
     for(unsigned int i = 0; i < fPreds.size(); ++i){
-      fPreds[i]->SaveTo(dir->mkdir(("pred"+std::to_string(i)).c_str()));
+      fPreds[i]->SaveTo(dir, "pred"+std::to_string(i));
     }
 
     for(unsigned int i = 0; i < fSysts.size(); ++i){
-      fSysts[i]->SaveTo(dir->mkdir(("syst"+std::to_string(i)).c_str()));
+      fSysts[i]->SaveTo(dir, "syst"+std::to_string(i));
     }
+
+    dir->Write();
+    delete dir;
 
     tmp->cd();
   }
 
   //----------------------------------------------------------------------
-  std::unique_ptr<PredictionScaleComp> PredictionScaleComp::LoadFrom(TDirectory* dir)
+  std::unique_ptr<PredictionScaleComp> PredictionScaleComp::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    IPrediction* total = ana::LoadFrom<IPrediction>(dir->GetDirectory("total")).release();
+    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    assert(dir);
+
+    IPrediction* total = ana::LoadFrom<IPrediction>(dir, "total").release();
 
     std::vector<const IPrediction*> preds;
     for(unsigned int i = 0; ; ++i){
-      TDirectory* di = dir->GetDirectory(("pred"+std::to_string(i)).c_str());
+      const std::string subname = "pred"+std::to_string(i);
+      TDirectory* di = dir->GetDirectory(subname.c_str());
       if(!di) break; // We got all the predictions
+      delete di;
 
-      preds.push_back(ana::LoadFrom<IPrediction>(di).release());
+      preds.push_back(ana::LoadFrom<IPrediction>(dir, subname).release());
     }
 
     std::vector<const SystComponentScale*> systs;
     for(unsigned int i = 0; ; ++i){
-      TDirectory* si = dir->GetDirectory(("syst"+std::to_string(i)).c_str());
+      const std::string subname = "syst"+std::to_string(i);
+      TDirectory* si = dir->GetDirectory(subname.c_str());
       if(!si) break; // We got all the predictions
+      delete si;
 
-      systs.push_back(ana::LoadFrom<SystComponentScale>(si).release());
+      systs.push_back(ana::LoadFrom<SystComponentScale>(dir, subname).release());
     }
+
+    delete dir;
 
     return std::unique_ptr<PredictionScaleComp>(new PredictionScaleComp(total, preds, systs));
   }

@@ -1,14 +1,17 @@
 set(scripts_to_build
   MakePRISMPredInterps
-  OffAxisEventRates
-  OffAxisNDCAFCombiner
+  #OffAxisEventRates
+  #OffAxisNDCAFCombiner
   PRISMPrediction
+  PRISM_4Flavour_dChi2Scan
+  PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
-  #  ChiSqSurfacePRISMPred
- PRISMRegOptimizer
+  #PRISMRegOptimizer
+  #PRISMExtrapRegOptimizer
  #FluxPredictionTester
  PRISMEfficiencyLoop
+ EventLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
@@ -16,15 +19,7 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-  target_link_libraries(${SCRPT} ${CAFANALIBS})
-
-    target_link_libraries(${SCRPT} ${CAFANA_LINK_DIRS})
-    target_link_libraries(${SCRPT} ${CAFANA_DEPEND_LIBS})
-
-  if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-    add_dependencies(${SCRPT} gperftools)
-    target_link_libraries(${SCRPT} ${GPERF_LINKER_FLAGS})
-  endif()
+  target_link_libraries(${SCRPT} ${CAFAna_Libs})
 
   if(DEFINED USE_OPENMP AND USE_OPENMP)
     target_compile_options(${SCRPT} BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)

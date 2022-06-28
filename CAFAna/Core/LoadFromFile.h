@@ -7,17 +7,17 @@
 
 #include "TFile.h"
 
-class TDirectory;
+#include "CAFAna/Core/OscCalcFwdDeclare.h"
 
-namespace osc{class IOscCalculator;}
+class TDirectory;
 
 namespace ana
 {
   //----------------------------------------------------------------------
   // Most classes are happy to load themselves
-  template<class T> std::unique_ptr<T> LoadFrom(TDirectory* dir)
+  template<class T> std::unique_ptr<T> LoadFrom(TDirectory* dir, const std::string& label)
   {
-    return T::LoadFrom(dir);
+    return T::LoadFrom(dir, label);
   }
 
   //----------------------------------------------------------------------
@@ -26,32 +26,32 @@ namespace ana
   // implementations of these are in the cxx files for the base classes in
   // question.
   class IDecomp;
-  template<> std::unique_ptr<IDecomp> LoadFrom<IDecomp>(TDirectory* dir);
+  template<> std::unique_ptr<IDecomp> LoadFrom<IDecomp>(TDirectory* dir, const std::string& label);
   class IExtrap;
-  template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir);
+  template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir, const std::string& label);
   class IPrediction;
-  template<> std::unique_ptr<IPrediction> LoadFrom<IPrediction>(TDirectory* dir);
-  class IChiSqExperiment;
-  template<> std::unique_ptr<IChiSqExperiment> LoadFrom<IChiSqExperiment>(TDirectory* dir);
+  template<> std::unique_ptr<IPrediction> LoadFrom<IPrediction>(TDirectory* dir, const std::string& label);
+  class IExperiment;
+  template<> std::unique_ptr<IExperiment> LoadFrom<IExperiment>(TDirectory* dir, const std::string& label);
   class ModularExtrapComponent;
   template<> std::unique_ptr<ModularExtrapComponent>
-    LoadFrom<ModularExtrapComponent>(TDirectory* dir);
+    LoadFrom<ModularExtrapComponent>(TDirectory* dir, const std::string& label);
   class IBkgdEstimator;
-  template<> std::unique_ptr<IBkgdEstimator> LoadFrom<IBkgdEstimator>(TDirectory* dir);
+  template<> std::unique_ptr<IBkgdEstimator> LoadFrom<IBkgdEstimator>(TDirectory* dir, const std::string& label);
 
   // This one is actually implemented in LoadFromFile.cxx to avoid polluting
   // OscLib with CAFAna conventions.
-  template<> std::unique_ptr<osc::IOscCalculator> LoadFrom<osc::IOscCalculator>(TDirectory* dir);
+  template<> std::unique_ptr<osc::IOscCalc> LoadFrom<osc::IOscCalc>(TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   // For symmetry
-  template<class T> void SaveTo(const T& x, TDirectory* dir)
+  template<class T> void SaveTo(const T& x, TDirectory* dir, const std::string& label)
   {
-    x.SaveTo(dir);
+    x.SaveTo(dir, label);
   }
 
   // Also in the cxx, to avoid having to put this logic into OscLib
-  template<> void SaveTo(const osc::IOscCalculator& x, TDirectory* dir);
+  template<> void SaveTo(const osc::IOscCalc& x, TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   template<class T> std::unique_ptr<T> LoadFromFile(const std::string& fname,
@@ -59,12 +59,7 @@ namespace ana
   {
     TFile fin(fname.c_str());
     assert(!fin.IsZombie());
-    TDirectory* dir = fin.GetDirectory(label.c_str());
-    if(!dir){
-      std::cerr << "Didn't find '" << label << "' in " << fname << std::endl;
-      abort();
-    }
-    return LoadFrom<T>(dir);
+    return LoadFrom<T>(&fin, label);
   }
 
   //----------------------------------------------------------------------
@@ -73,6 +68,6 @@ namespace ana
                                     const std::string& label)
   {
     TFile fout(fname.c_str(), "RECREATE");
-    x.SaveTo(fout.mkdir(label.c_str()));
+    x.SaveTo(&fout, label);
   }
 }
