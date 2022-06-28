@@ -28,8 +28,6 @@ LIST(APPEND PRISM_header_files
   Weights.h
   SimpleChi2Experiment.h)
 
-include_directories(${tbb_INC_DIR})
-cmessage(WARNING "tbb_INC_DIR: ${tbb_INC_DIR}")
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
@@ -40,8 +38,6 @@ set_target_properties(StandardRecord PROPERTIES
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaPRISM BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
-
-target_compile_options(CAFAnaPRISM BEFORE PUBLIC -I${tbb_INC_DIR})
 
 install(TARGETS CAFAnaPRISM 
   LIBRARY DESTINATION lib/

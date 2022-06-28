@@ -91,6 +91,8 @@ SET(CAFAna_Libs
     CAFAnaCore
     CAFAnaSysts)
 
+add_compile_options(-I${tbb_INC_DIR})
+
 add_subdirectory(Analysis)
 add_subdirectory(Core)
 add_subdirectory(Cuts)
