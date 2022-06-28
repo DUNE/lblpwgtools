@@ -65,14 +65,12 @@ static BeamChan const kNumu_Numode = {BeamMode::kNuMode,
 static BeamChan const kNumuBar_NuBarmode = {BeamMode::kNuBarMode,
                                             NuChan::kNumuBarIntrinsic};
 static BeamChan const kNue_Numode = {BeamMode::kNuMode, NuChan::kNueApp};
-static BeamChan const kNue_I_Numode =
-    {BeamMode::kNuMode,
-     NuChan::kNueIntrinsic};
- static BeamChan const kNueBar_I_NuBarmode =
-        {BeamMode::kNuBarMode,
-         NuChan::kNueBarIntrinsic};
- static BeamChan const kNueBar_NuBarmode = {
-            BeamMode::kNuBarMode, NuChan::kNueBarApp};
+static BeamChan const kNue_I_Numode = {BeamMode::kNuMode,
+                                       NuChan::kNueIntrinsic};
+static BeamChan const kNueBar_I_NuBarmode = {BeamMode::kNuBarMode,
+                                             NuChan::kNueBarIntrinsic};
+static BeamChan const kNueBar_NuBarmode = {BeamMode::kNuBarMode,
+                                           NuChan::kNueBarApp};
 
 inline BeamChan GetBeamChan(std::string const &descript, bool IsND) {
 
@@ -165,7 +163,7 @@ size_t const kFD_nu_nutau = 5;
 size_t const kND_nub_numub = 6;
 size_t const kND_293kA_nub_numub = 6;
 size_t const kND_280kA_nub_numub = 7;
-size_t const kND_280kA_nub_nueb = 8;
+size_t const kND_293kA_nub_nueb = 8;
 
 size_t const kFD_nub_nonswap = 9;
 size_t const kFD_nub_numub = 9;
@@ -257,7 +255,7 @@ inline size_t GetND280kAConfig(size_t conf) {
               << conf << ")." << std::endl;
     abort();
   }
-  if (IsND293kAConfig(conf)) {
+  if (IsND293kA_numu_Config(conf)) {
     return conf + 1;
   }
   return conf;
@@ -269,7 +267,7 @@ inline size_t GetND293kAConfig(size_t conf) {
               << conf << ")." << std::endl;
     abort();
   }
-  if (IsND280kAConfig(conf)) {
+  if (IsND280kA_numu_Config(conf)) {
     return conf - 1;
   }
   return conf;
@@ -317,8 +315,8 @@ inline std::string DescribeConfig(size_t conf) {
   case kND_280kA_nub_numub: {
     return "ND_280kA_nub_numub";
   }
-  case kND_280kA_nub_nueb: {
-    return "ND_280kA_nub_nueb";
+  case kND_293kA_nub_nueb: {
+    return "ND_293kA_nub_nueb";
   }
   case kFD_nub_numub: {
     return "FD_nub_numub";
@@ -371,11 +369,11 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
         return kND_nu_numu;
       }
       case NuChan::kNueIntrinsic: {
-        return kND_nu_nue;
+        return kND_293kA_nu_nue;
       }
       default: {
-        std::cout << "[ERROR]: Invalid beam mode and channel: "
-                  << nc.mode << ", " << nc.chan << std::endl;
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
         abort();
       }
       }
@@ -383,29 +381,53 @@ inline size_t GetConfigFromNuChan(BeamChan nc, bool IsND) {
     case BeamMode::kNuBarMode: {
       switch (nc.chan) {
       case NuChan::kNumuBarIntrinsic: {
-        return kND_nub_numu;
+        return kND_nub_numub;
       }
       case NuChan::kNueBarIntrinsic: {
-        return kND_nub_nueb;
+        return kND_293kA_nub_nueb;
       }
       default: {
-        std::cout << "[ERROR]: Invalid beam mode and channel: "
-                  << nc.mode << ", " << nc.chan << std::endl;
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
         abort();
       }
       }
     }
     case BeamMode::kNuMode_293kA: {
-      return kND_293kA_nu_numu;
+      if (nc.chan == NuChan::kNumuIntrinsic) {
+        return kND_293kA_nu_numu;
+      } else {
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
+        abort();
+      }
     }
     case BeamMode::kNuMode_280kA: {
-      return kND_280kA_nu_numu;
+      if (nc.chan == NuChan::kNumuIntrinsic) {
+        return kND_280kA_nu_numu;
+      } else {
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
+        abort();
+      }
     }
     case BeamMode::kNuBarMode_293kA: {
-      return kND_293kA_nub_numu;
+      if (nc.chan == NuChan::kNumuBarIntrinsic) {
+        return kND_293kA_nub_numub;
+      } else {
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
+        abort();
+      }
     }
     case BeamMode::kNuBarMode_280kA: {
-      return kND_280kA_nub_numu;
+      if (nc.chan == NuChan::kNumuBarIntrinsic) {
+        return kND_280kA_nub_numub;
+      } else {
+        std::cout << "[ERROR]: Invalid beam mode and channel: " << nc.mode
+                  << ", " << nc.chan << std::endl;
+        abort();
+      }
     }
     default: {
       std::cout << "[ERROR]: Explicit Horn Current Beam Mode required when "
@@ -463,55 +485,55 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(IsNuConfig(kND_293kA_nu_numu));
   LOUDASSERT(IsNDConfig(kND_293kA_nu_numu));
-  LOUDASSERT(IsND293kAConfig(kND_293kA_nu_numu));
-  LOUDASSERT(!IsND280kAConfig(kND_293kA_nu_numu));
+  LOUDASSERT(IsND293kA_numu_Config(kND_293kA_nu_numu));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nu_numu));
   LOUDASSERT(GetND293kAConfig(kND_293kA_nu_numu) == kND_293kA_nu_numu);
   LOUDASSERT(GetND280kAConfig(kND_293kA_nu_numu) == kND_280kA_nu_numu);
   LOUDASSERT(IsNumuConfig(kND_293kA_nu_numu));
-  LOUDASSERT(!IsNueConfig(kND_293kA_nu_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_293kA_nu_numu));
 
   LOUDASSERT(IsNuConfig(kND_280kA_nu_numu));
   LOUDASSERT(IsNDConfig(kND_280kA_nu_numu));
-  LOUDASSERT(!IsND293kAConfig(kND_280kA_nu_numu));
-  LOUDASSERT(IsND280kAConfig(kND_280kA_nu_numu));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_280kA_nu_numu));
+  LOUDASSERT(IsND280kA_numu_Config(kND_280kA_nu_numu));
   LOUDASSERT(GetND293kAConfig(kND_280kA_nu_numu) == kND_293kA_nu_numu);
   LOUDASSERT(GetND280kAConfig(kND_280kA_nu_numu) == kND_280kA_nu_numu);
   LOUDASSERT(IsNumuConfig(kND_280kA_nu_numu));
-  LOUDASSERT(!IsNueConfig(kND_280kA_nu_numu));
+  LOUDASSERT(!IsNDNueConfig(kND_280kA_nu_numu));
 
   LOUDASSERT(!IsNuConfig(kND_293kA_nub_numub));
   LOUDASSERT(IsNDConfig(kND_293kA_nub_numub));
-  LOUDASSERT(IsND293kAConfig(kND_293kA_nub_numub));
-  LOUDASSERT(!IsND280kAConfig(kND_293kA_nub_numub));
+  LOUDASSERT(IsND293kA_numu_Config(kND_293kA_nub_numub));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nub_numub));
   LOUDASSERT(GetND293kAConfig(kND_293kA_nub_numub) == kND_293kA_nub_numub);
   LOUDASSERT(GetND280kAConfig(kND_293kA_nub_numub) == kND_280kA_nub_numub);
   LOUDASSERT(IsNumuConfig(kND_293kA_nub_numub));
-  LOUDASSERT(!IsNueConfig(kND_293kA_nub_numub));
+  LOUDASSERT(!IsNDNueConfig(kND_293kA_nub_numub));
 
   LOUDASSERT(!IsNuConfig(kND_280kA_nub_numub));
   LOUDASSERT(IsNDConfig(kND_280kA_nub_numub));
-  LOUDASSERT(!IsND293kAConfig(kND_280kA_nub_numub));
-  LOUDASSERT(IsND280kAConfig(kND_280kA_nub_numub));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_280kA_nub_numub));
+  LOUDASSERT(IsND280kA_numu_Config(kND_280kA_nub_numub));
   LOUDASSERT(GetND293kAConfig(kND_280kA_nub_numub) == kND_293kA_nub_numub);
   LOUDASSERT(GetND280kAConfig(kND_280kA_nub_numub) == kND_280kA_nub_numub);
   LOUDASSERT(IsNumuConfig(kND_280kA_nub_numub));
-  LOUDASSERT(!IsNueConfig(kND_280kA_nub_numub));
+  LOUDASSERT(!IsNDNueConfig(kND_280kA_nub_numub));
 
-  LOUDASSERT(IsNuConfig(kND_nu_nue));
-  LOUDASSERT(IsNDConfig(kND_nu_nue));
-  LOUDASSERT(IsNDNueConfig(kND_nu_nue));
-  LOUDASSERT(!IsND293kA_numu_Config(kND_nu_nue));
-  LOUDASSERT(!IsND280kA_numu_Config(kND_nu_nue));
-  LOUDASSERT(!IsNumuConfig(kND_nu_nue));
-  LOUDASSERT(!IsFDNueConfig(kND_nu_nue));
+  LOUDASSERT(IsNuConfig(kND_293kA_nu_nue));
+  LOUDASSERT(IsNDConfig(kND_293kA_nu_nue));
+  LOUDASSERT(IsNDNueConfig(kND_293kA_nu_nue));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_293kA_nu_nue));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nu_nue));
+  LOUDASSERT(!IsNumuConfig(kND_293kA_nu_nue));
+  LOUDASSERT(!IsFDNueConfig(kND_293kA_nu_nue));
 
-  LOUDASSERT(!IsNuConfig(kND_nub_nueb));
-  LOUDASSERT(IsNDConfig(kND_nub_nueb));
-  LOUDASSERT(IsNDNueConfig(kND_nub_nueb));
-  LOUDASSERT(!IsND293kA_numu_Config(kND_nub_nueb));
-  LOUDASSERT(!IsND280kA_numu_Config(kND_nub_nueb));
-  LOUDASSERT(!IsNumuConfig(kND_nub_nueb));
-  LOUDASSERT(!IsFDNueConfig(kND_nub_nueb));
+  LOUDASSERT(!IsNuConfig(kND_293kA_nub_nueb));
+  LOUDASSERT(IsNDConfig(kND_293kA_nub_nueb));
+  LOUDASSERT(IsNDNueConfig(kND_293kA_nub_nueb));
+  LOUDASSERT(!IsND293kA_numu_Config(kND_293kA_nub_nueb));
+  LOUDASSERT(!IsND280kA_numu_Config(kND_293kA_nub_nueb));
+  LOUDASSERT(!IsNumuConfig(kND_293kA_nub_nueb));
+  LOUDASSERT(!IsFDNueConfig(kND_293kA_nub_nueb));
 
   LOUDASSERT(IsNuConfig(kFD_nu_numu));
   LOUDASSERT(!IsNDConfig(kFD_nu_numu));
@@ -526,7 +548,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_numub));
   LOUDASSERT(!IsNDConfig(kFD_nub_numub));
-  LOUDASSERT(GetFDConfig(kFD_nub_numub) == 3); 
+  LOUDASSERT(GetFDConfig(kFD_nub_numub) == 3);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_numub)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_numub)) == kFD_nub_numub);
   LOUDASSERT(IsNumuConfig(kFD_nub_numub));
@@ -547,7 +569,7 @@ inline void TestConfigDefinitions() {
 
   LOUDASSERT(!IsNuConfig(kFD_nub_nueb));
   LOUDASSERT(!IsNDConfig(kFD_nub_nueb));
-  LOUDASSERT(GetFDConfig(kFD_nub_nueb) == 4); 
+  LOUDASSERT(GetFDConfig(kFD_nub_nueb) == 4);
   LOUDASSERT(!IsNuFDConfig(GetFDConfig(kFD_nub_nueb)));
   LOUDASSERT(GetConfigFromFD(GetFDConfig(kFD_nub_nueb)) == kFD_nub_nueb);
   LOUDASSERT(!IsNumuConfig(kFD_nub_nueb));
