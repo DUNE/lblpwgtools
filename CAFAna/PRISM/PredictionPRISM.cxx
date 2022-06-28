@@ -619,7 +619,7 @@ PredictionPRISM::PredictGaussianFlux_forNDtarget(double mean, double width,
 }
 
 std::map<PredictionPRISM::PRISMComponent, Spectrum>
-PredictPRISMComponents_forNDtarget(osc::IOscCalc *calc,
+PredictionPRISM::PredictPRISMComponents_forNDtarget(osc::IOscCalc *calc,
                                    ana::SystShifts shift,
                                    PRISM::MatchChan match_chan) const {
   // fill this in
