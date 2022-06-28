@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/PRISMReweightableSpectrum.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 

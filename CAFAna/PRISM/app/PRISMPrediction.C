@@ -108,14 +108,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           {"ND_293kA_nu_numu",
            state.MatchPredInterps[kND_293kA_nu_numu].get()}, // eran
           {"ND_280kA_nu_numu", state.MatchPredInterps[kND_280kA_nu_numu].get()},
-          {"ND_nu_nue", state.MatchPredInterps[kND_nu_nue]
+          {"ND_nu_nue", state.MatchPredInterps[kND_293kA_nu_nue]
                             .get()}, /// added not sure if works??
           {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
           {"ND_293kA_nub_numu",
-           state.MatchPredInterps[kND_293kA_nub_numu].get()},
+           state.MatchPredInterps[kND_293kA_nub_numub].get()},
           {"ND_280kA_nub_numu",
-           state.MatchPredInterps[kND_280kA_nub_numu].get()},
-          {"ND_nub_nue", state.MatchPredInterps[kND_nub_nue].get()},
+           state.MatchPredInterps[kND_280kA_nub_numub].get()},
+          {"ND_nub_nue", state.MatchPredInterps[kND_293kA_nub_nueb].get()},
           {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
       });
     } else {
@@ -222,9 +222,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     int osc_to = FluxSpeciesPDG(ch.second.to.chan);
     size_t NDConfig_enum = GetConfigFromNuChan(ch.second.from, true);
     size_t NDConfig_293kA =
-        (NDConfig_enum == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+        (NDConfig_enum == kND_nu_numu) ? kND_293kA_nu_numu : kND_293kA_nub_numub;
     size_t NDConfig_280kA =
-        (NDConfig_enum == kND_nu) ? kND_280kA_nu : kND_280kA_nub;
+        (NDConfig_enum == kND_nu_numu) ? kND_280kA_nu_numu : kND_280kA_nub_numub;
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
@@ -238,7 +238,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                 << std::endl;
       abort();
     }
-    if ((NDConfig_enum == kND_nub_numu) && !run_plan_nub.GetPlanPOT()) { // eran
+    if ((NDConfig_enum == kND_nub_numub) && !run_plan_nub.GetPlanPOT()) { // eran
       std::cout << "[ERROR]: Have ND nubar channel, but no numode run plan."
                 << std::endl;
       abort();
@@ -306,34 +306,34 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
       //--------------------
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
-        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
-            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
+        // auto PRISMComponents = state.PRISM->PredictGaussianFlux(
+        //     gauss_flux.first, gauss_flux.second, shift, ch.second.from);
 
-        TH1 *PRISMPred =
-            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-        PRISMPred->SetDirectory(nullptr);
+        // TH1 *PRISMPred =
+        //     PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
+        // chan_dir->WriteTObject(PRISMPred, "PRISMPred");
+        // PRISMPred->SetDirectory(nullptr);
 
-        if (PRISM_write_debug) {
+        // if (PRISM_write_debug) {
 
-          for (auto const &comp : PRISMComponents) {
-            // we always write this
-            if (comp.first == PredictionPRISM::kPRISMPred) {
-              continue;
-            }
+        //   for (auto const &comp : PRISMComponents) {
+        //     // we always write this
+        //     if (comp.first == PredictionPRISM::kPRISMPred) {
+        //       continue;
+        //     }
 
-            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
+        //     TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
 
-            if (PRISMComp_h->Integral() > 0) {
-              chan_dir->WriteTObject(
-                  PRISMComp_h,
-                  PredictionPRISM::GetComponentString(comp.first).c_str());
-            }
-          }
+        //     if (PRISMComp_h->Integral() > 0) {
+        //       chan_dir->WriteTObject(
+        //           PRISMComp_h,
+        //           PredictionPRISM::GetComponentString(comp.first).c_str());
+        //     }
+        //   }
 
-          fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
-          dir->cd();
-        }      // End gauss prediction
+        //   fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
+        //   dir->cd();
+        // }      // End gauss prediction
       } else { // FD spectra prediction - IMPLEMENTED!
         auto PRISMComponents =
             state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
