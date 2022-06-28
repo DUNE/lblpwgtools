@@ -277,7 +277,7 @@ public:
                                const ana::SystShifts &shift) const override;
 
   std::map<PRISMComponent, Spectrum> PredictPRISMComponents_forNDtarget(
-      osc::IOscCalculator *calc, ana::SystShifts shift = kNoShift,
+      osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
       PRISM::MatchChan match_chan = PRISM::kNDNumutoNDNue_Numode) const;
 
   std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
