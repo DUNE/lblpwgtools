@@ -4,6 +4,8 @@ set(scripts_to_install
   FarmBuildPRISMInterps.sh
   BuildPRISMInterps.sh
   FarmCAFPRISMNodeScript.sh
-  CAFPRISMNodeScript.sh)
+  CAFPRISMNodeScript.sh
+  FarmHaddCafanaGrid.sh
+  HaddCafana.sh)
 
 install(PROGRAMS ${scripts_to_install} DESTINATION scripts/FermiGridScripts)

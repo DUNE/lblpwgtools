@@ -17,7 +17,7 @@ if [ -e ../CAFECommands.cmd ]; then
 fi
 
 cp ../InputCAFs.*.list CAFAna/
-
+cp ../InputStateFiles.list CAFAna/
 
 tar -zcvf CAFAna.Blob.tar.gz CAFAna/*
 
