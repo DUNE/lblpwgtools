@@ -1,4 +1,6 @@
-#include "CAFAna/Analysis/common_fit_definitions.h"
+ource build/Linux/CAFAnaEnv.sh
+source support/support_software_env.sh
+include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/PRISM/Cuts.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
