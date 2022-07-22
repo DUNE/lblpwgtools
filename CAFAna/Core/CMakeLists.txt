@@ -32,7 +32,6 @@ set(Core_header_files
   OscCalcFwdDeclare.h
   OscCurve.h
   OscillatableSpectrum.h
-  Registry.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

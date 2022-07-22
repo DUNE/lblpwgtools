@@ -61,7 +61,9 @@ namespace ana
     virtual OscillatableSpectrum TauFromMuComponent()     {return fTauFromMu;}
     virtual OscillatableSpectrum AntiTauFromMuComponent() {return fTauFromMuAnti;}
 
+    virtual Spectrum NCTotalComponent() override {return fNCTot;}
     virtual Spectrum NCComponent() {return fNC;}
+    virtual Spectrum NCAntiComponent()  override {return fNCAnti;}
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const;
 
@@ -81,7 +83,9 @@ namespace ana
         fTauFromEAnti(OscillatableSpectrum::Uninitialized()),
         fTauFromMu    (OscillatableSpectrum::Uninitialized()),
         fTauFromMuAnti(OscillatableSpectrum::Uninitialized()),
-        fNC(Spectrum::Uninitialized())
+        fNCTot(Spectrum::Uninitialized()),
+        fNC(Spectrum::Uninitialized()),
+        fNCAnti(Spectrum::Uninitialized())
     {}
 
     OscillatableSpectrum fNueApp,    fNueAppAnti;
@@ -90,6 +94,7 @@ namespace ana
     OscillatableSpectrum fNueSurv,   fNueSurvAnti;
     OscillatableSpectrum fTauFromE,  fTauFromEAnti;
     OscillatableSpectrum fTauFromMu, fTauFromMuAnti;
-    Spectrum fNC;
+    Spectrum fNCTot;
+    Spectrum fNC, fNCAnti;
   };
 }

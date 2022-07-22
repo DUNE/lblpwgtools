@@ -20,9 +20,9 @@ using namespace ana;
 void demo1()
 {
   // See demo0.C for explanation of these repeated parts
-  const std::string fnameNonSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
-  const std::string fnameNueSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nueswap.root";
-  const std::string fnameTauSwap = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_tauswap.root";
+  const std::string fnameNonSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
+  const std::string fnameNueSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nueswap.root";
+  const std::string fnameTauSwap = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_tauswap.root";
   SpectrumLoader loaderNonSwap(fnameNonSwap);
   SpectrumLoader loaderNueSwap(fnameNueSwap);
   SpectrumLoader loaderTauSwap(fnameTauSwap);
@@ -39,9 +39,9 @@ void demo1()
                        });
 
   // In many cases it's easier to form them from existing Vars like this
-  //  const Cut kPassesCVN = kCVNNumu > 0;
+  //  const Cut kPassesCVN = kCVNNumu > 0.5;
 
-  // A Prediction is an objects holding a variety of "OscillatableSpectrum"
+  // A Prediction is an object holding a variety of "OscillatableSpectrum"
   // objects, one for each original and final flavour combination.
   PredictionNoExtrap pred(loaderNonSwap, loaderNueSwap, loaderTauSwap,
                           axEnergy, kPassesCVN);

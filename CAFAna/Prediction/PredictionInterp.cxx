@@ -771,7 +771,17 @@ namespace ana
   //----------------------------------------------------------------------
   void PredictionInterp::MinimizeMemory()
   {
-    DiscardSysts(GetAllSysts());
+    InitFits();
+
+    for(auto& it: fPreds){
+      for(std::unique_ptr<IPrediction>& pred: it.second.preds){
+        pred.reset(0);
+      }
+    }
+
+    // We probably just freed up a lot of memory, but malloc by default hangs
+    // on to all of it as cache.
+    malloc_trim(0);
   }
 
   //----------------------------------------------------------------------

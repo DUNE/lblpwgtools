@@ -36,13 +36,19 @@ namespace ana
     fTauFromMu    (loaderNuTau,   axis, cut && kIsTauFromMu && !kIsAntiNu, shift, wei),
     fTauFromMuAnti(loaderNuTau,   axis, cut && kIsTauFromMu &&  kIsAntiNu, shift, wei),
 
-    fNC           (loaderNonswap, axis, cut && kIsNC,                      shift, wei)
+    fNCTot        (loaderNonswap, axis, cut && kIsNC                     , shift, wei),
+    fNC           (loaderNonswap, axis, cut && kIsNC        && !kIsAntiNu, shift, wei),
+    fNCAnti       (loaderNonswap, axis, cut && kIsNC        &&  kIsAntiNu, shift, wei)
   {
     // All swapped files are equally valid as a source of NCs. This
     // approximately doubles/triples our statistics. SpectrumLoader just adds
     // events and POT for both cases, which is the right thing to do.
-    loaderNue  .AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
-    loaderNuTau.AddSpectrum(fNC, axis.GetVar1D(), cut && kIsNC, shift, wei);
+    loaderNue  .AddSpectrum(fNCTot , axis.GetVar1D(), cut && kIsNC              , shift, wei);
+    loaderNue  .AddSpectrum(fNC    , axis.GetVar1D(), cut && kIsNC && !kIsAntiNu, shift, wei);
+    loaderNue  .AddSpectrum(fNCAnti, axis.GetVar1D(), cut && kIsNC &&  kIsAntiNu, shift, wei);
+    loaderNuTau.AddSpectrum(fNCTot , axis.GetVar1D(), cut && kIsNC              , shift, wei);
+    loaderNuTau.AddSpectrum(fNC    , axis.GetVar1D(), cut && kIsNC && !kIsAntiNu, shift, wei);
+    loaderNuTau.AddSpectrum(fNCAnti, axis.GetVar1D(), cut && kIsNC &&  kIsAntiNu, shift, wei);
   }
 
 
@@ -100,7 +106,9 @@ namespace ana
 
     fNueApp.SaveTo(dir, "nue_app");
     fNueAppAnti.SaveTo(dir, "nue_app_anti");
+    fNCTot.SaveTo(dir, "nc_tot");
     fNC.SaveTo(dir, "nc");
+    fNCAnti.SaveTo(dir, "nc_anti");
     fNumuSurv.SaveTo(dir, "numu_surv");
     fNumuSurvAnti.SaveTo(dir, "numu_surv_anti");
     fNumuApp.SaveTo(dir, "numu_app");
@@ -139,7 +147,9 @@ namespace ana
     ret->fTauFromMu     = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu");
     ret->fTauFromMuAnti = *OscillatableSpectrum::LoadFrom(dir, "nutau_from_numu_anti");
 
-    ret->fNC = *Spectrum::LoadFrom(dir, "nc");
+    ret->fNCTot  = *Spectrum::LoadFrom(dir, "nc_tot");
+    ret->fNC     = *Spectrum::LoadFrom(dir, "nc");
+    ret->fNCAnti = *Spectrum::LoadFrom(dir, "nc_anti");
 
     delete dir;
 

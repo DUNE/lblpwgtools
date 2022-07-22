@@ -2,9 +2,16 @@
 
 from __future__ import print_function
 
+# Welcome banner
+print('** DUNE Common Analysis Format Executor **')
+
 import os, sys
 import argparse
 import tempfile
+import getpass
+import datetime
+import subprocess
+import code
 
 
 def makeParser():
@@ -16,16 +23,14 @@ def makeParser():
                           help = 'quit at end of job')
     parser.add_argument('-bq', action = 'store_true',
                           help = 'shorthand for -b -q')
-    parser.add_argument('-nr', '--no-recompile', action = 'store_true',
-                        help = "don't unconditionally recompile, ie .C+ not .C++")
-    parser.add_argument('-mc', '--must-clean', action = 'store_true',
-                        help = "Run the script with gROOT->SetMustClean(true);")
     parser.add_argument('-e', '--env', action='append',
                         help = 'pass environment variables to set. THE HAXXMAN COMETH.')
 
     stridegroup = parser.add_argument_group('dataset modifiers')
     stridegroup.add_argument('-s', '--stride', metavar='N', type=int,
                              help = 'use only every Nth file of datasets')
+    stridegroup.add_argument('-l', '--limit', metavar='N', type=int,
+                             help = 'use only the first N files of datasets')
     stridegroup.add_argument('-o', '--offset', metavar='M', type=int,
                              help = 'skip first M files of dataset (for use with -s)')
     stridegroup.add_argument('-ss', '--snapshot', action = 'store_true',
@@ -40,6 +45,10 @@ def makeParser():
                           help = 'run root under totalview')
     dbggroup.add_argument('--valgrind', action = 'store_true',
                           help = 'run root under valgrind')
+    dbggroup.add_argument('--leakcheck', action = 'store_true',
+                          help = 'run root under valgrind with leak checking')
+    dbggroup.add_argument('--massif', action = 'store_true',
+                          help = 'run root under valgrind\'s massif memory profiler')
     dbggroup.add_argument('--prof', action = 'store_true',
                           help = 'run with google perftools profiler')
 
@@ -51,45 +60,40 @@ def makeParser():
     return parser
 
 
-def libsPath():
-    try:
-        return os.environ['CAFANA'] +'/load_libs.C'
-    except:
-        print("Environment variable CAFANA is empty. Did you set up CAFANA?")
-        sys.exit(1)
-
 
 def escapeArg(arg):
     try:
-        ## If it can be parsed as a number, pass it through
-        float(arg)
+        # If it's "true" or "false" or we can parse it as a number,
+        # pass it through.
+        arg == 'true' or arg == 'false' or float(arg)
         return arg
     except:
-        ## If it's a bool, or a string, also pass it through, otherwise pass it as a string
-        if arg == 'true' or arg == 'false' or arg.find('"') != -1:
-            return arg
-        else:
-            return '"'+arg+'"'
+        # Otherwise it must be a string, add quotes.
+        if arg.find('"') != -1: return arg
+        return '"'+arg+'"'
+
 
 def toFunctionParams(args):
     """Comma seperated list of parameters"""
-    return "("+','.join([escapeArg(a) for a in args])+")"
+    return "("+', '.join([escapeArg(a) for a in args])+")"
 
 
 if __name__ == '__main__':
-    # This is a bit of a hack. If you start cafe with no script argument,
-    # this will make it think it's opening a ROOT file. The eventual effect is
-    # just to start ROOT with the right libraries loaded.
-    sys.argv += ' '
+    # Hack to allow the case of `cafe' with no script argument
+    sys.argv += [' ']
 
     parser = makeParser()
 
     opts = vars(parser.parse_args())
 
+    script = opts['script.C']
+
+    if script != ' ': opts['args'] = opts['args'][:-1] # drop the stray space
+
     if opts['bq']:
         opts['batch'] = True
         opts['quit'] = True
-    
+
     ## Do some fun environment stuff
     if opts['env']:
         for arg in opts['env']:
@@ -100,43 +104,27 @@ if __name__ == '__main__':
             print("Setting", arg_split[0], "to", arg_split[1])
             os.environ[arg_split[0]] = arg_split[1]
 
-    # Suppress splash screen and default rootlogon (load_libs calls the
-    # official one)
-    exe = 'root'
-    rootargs = ['-l', '-n']
-    script = opts['script.C']
-    while script[-1] == '+': script = script[:-1] # Strip back to raw .C
-    # Drop the last argument, because it's the space hack from above
-    args = opts['args'][:-1]
-
-    if opts['batch']: rootargs.append('-b')
-    if opts['quit']: rootargs.append('-q')
-
-    if opts['gdb']:
-        exe = 'gdb'
-        rootargs = ['--args', 'root.exe'] + rootargs
-    if opts['valgrind']:
-        exe = 'valgrind'
-        rootargs = ['--leak-check=full',
-                    '--suppressions='+os.environ['ROOTSYS']+'/etc/valgrind-root.supp',
-                    'root.exe'] + rootargs
-    if opts['totalview']:
-        exe = 'totalview'
-        rootargs = ['root.exe', '-a'] + rootargs
-
-    if opts['gdb'] or opts['valgrind'] or opts['totalview']:
+    if opts['gdb'] or opts['valgrind'] or opts['leakcheck'] or opts['massif'] or opts['totalview']:
         # Disable the default backtrace printouts since presumably the user
         # intends to get their own
         os.environ['CAFE_NO_BACKTRACE'] = '1'
+    else:
+        # Otherwise need to opt-in, since we don't have a root.exe command line
+        os.environ['CAFE_YES_BACKTRACE'] = '1'
 
     if opts['prof']:
-        os.environ['CPUPROFILE'] = tempfile.mkstemp()[1] # 'perf/cprof.prof'
+        os.environ['CPUPROFILE'] = tempfile.mkstemp()[1]
 
     if opts['stride'] != None:
         if opts['stride'] <= 0:
             print('Illegal value for --stride:', opts['stride'])
             sys.exit(1)
         os.environ['CAFANA_STRIDE'] = str(opts['stride'])
+    if opts['limit'] != None:
+        if opts['limit'] <= 0:
+            print('Illegal value for --limit:', opts['limit'])
+            sys.exit(1)
+        os.environ['CAFANA_LIMIT'] = str(opts['limit'])
     if opts['offset'] != None:
         if opts['stride'] == None:
             print('Cannot specify --offset without --stride')
@@ -149,42 +137,140 @@ if __name__ == '__main__':
     if opts['snapshot']:
         os.environ['CAFANA_USE_SNAPSHOTS'] = 'yes'
 
-    # Take manual control of $ROOT_INCLUDE_PATH so we can decide what is and
-    # isn't accesssible. TODO this list seems a bit minimal...
-    os.environ['ROOT_INCLUDE_PATH'] = ':'.join(
-        [os.environ['CAFANA']+'/include',
-         os.environ['CAFANACORE_INC'],
-         os.environ['ROOTSYS']+'/include',
-         os.environ['STAN_INC'],
-         os.environ['STAN_MATH_INC'],
-         os.environ['EIGEN_INC'],
-         os.environ['SUNDIALS_INC'],
-         os.environ['OSCLIB_INC']
-     ])
+    path = [os.environ['CAFANA']+'/include',
+            os.environ['CAFANACORE_INC'],
+            os.environ['ROOTSYS']+'/include',
+            os.environ['STAN_INC'],
+            os.environ['STAN_MATH_INC'],
+            os.environ['EIGEN_INC'],
+            os.environ['SUNDIALS_INC'],
+            os.environ['OSCLIB_INC'],
+            os.environ['TBB_INC']]
 
-    if (script.endswith('.C') or script.endswith('.C+')):
-        # Usually use .C++ to ensure the macro will always be recompiled, with
-        # no possibility of version skew. .C+ if the speed-freak option has
-        # been enabled.
-        suffix = '+' if opts['no_recompile'] else '++'
 
-        # root, then library loading, then script, then the function parameters
 
-        must_clean = "true" if opts['must_clean'] else "false"
+    d = tempfile.TemporaryDirectory('', 'cafana_'+getpass.getuser()+'_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S')+'_')
 
-        rootargs.append(libsPath()+"(%s)" % must_clean)
-        rootargs.append(script+suffix+toFunctionParams(args))
+    # Suppress splash screen and default rootlogon
+    args = ['-l', '-n']
+    if opts['batch']: args += ['-b']
+    if opts['quit']: args += ['-q']
+
+    if script.endswith('.C'):
+        inc = os.path.abspath(script)
+        bname = os.path.basename(script)
+        fname = bname[0:bname.find('.')]
     else:
-        # Not a .C script. Maybe the user's trying to open a root file. In any
-        # case, just pass through all the arguments uninterpreted.
-        rootargs.append(libsPath())
-        if script != ' ': rootargs.append(script)
-        rootargs += args
+        inc = '/dev/null' # harmless to include
+        fname = 'void' # harmless to "execute"
+        args += [script] + opts['args']
+        opts['args'] = []
+
+    with open(d.name+'/'+fname+'.cxx', 'w') as fsrc:
+        fsrc.write('''// Autogenerated by cafe
+#include "{INC}" // the user's macro
+
+#include "TRint.h"
+#include "TROOT.h"
+#include "TSystem.h"
+
+#include <iostream>
+
+int main(int argc, char** argv)
+{{
+  // Do this at runtime so the profiler library is unloaded before our main
+  // libraries, meaning that the code in ProfilerSupport runs at the right time
+  // (after the profile file is made). This does mean that we aren't able to
+  // profile library loading/startup.
+  if(gSystem->Getenv("CPUPROFILE")){{
+    // We were passed the --prof option
+    const std::string cpuprof = gSystem->Getenv("CPUPROFILE");
+
+    std::cout << "Profiling enabled." << std::endl;
+
+    const char* pd = getenv("GPERFTOOLS_DIR");
+    if(pd){{
+      gSystem->Load((std::string(pd)+"/lib/libprofiler.so").c_str());
+      // Somehow the library load manages to corrupt the env var? Put it back.
+      gSystem->Setenv("CPUPROFILE", cpuprof.c_str());
+    }}
+    else{{
+      std::cout << "Couldn't find gperftools library" << std::endl;
+    }}
+  }}
+
+  TRint app("cafe", &argc, argv);
+  app.SetPrompt("cafe [%d] ");
+  gROOT->Macro("$CAFANA/include/CAFAna/Core/rootlogon.C");
+  gROOT->ForceStyle();
+  {FUNC}{ARGS}; // execute the user's macro
+  app.Run();
+  return 0;
+}}
+'''.format(INC = inc,
+           FUNC = fname,
+           ARGS = toFunctionParams(opts['args'])))
+
+    libdirs = [os.environ['CAFANA']+'/lib',
+               os.environ['OSCLIB_LIB'],
+               os.environ['CAFANACORE_LIB'],
+               os.environ['TBB_LIB']]
 
     os.environ['ROOT_INCLUDE_PATH'] += ':'+os.environ['SRPROXY_INC']
     os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
-    # Show the user what we're doing in case we got it wrong
-    print(exe, ' '.join(rootargs))
-    # Replace the whole process
-    os.execvp(exe, [exe]+rootargs)
+    libs = ['Minuit2', 'TMVA', 'EG',
+            'StandardRecord',   'OscLib',        'CAFAnaCoreExt',
+            'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
+            'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
+            'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
+            'boost_filesystem', 'boost_system']
+
+    print('Compiling macro...')
+    incs = ' '.join(['-I '+p for p in path])
+    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW '+incs
+#    print(compile_cmd)
+    ret = subprocess.run(compile_cmd, shell=True).returncode
+    if ret != 0: sys.exit(ret)
+
+    print('Linking macro...')
+    libdirstr = ' '.join(['-L '+l for l in libdirs])
+    libstr = ' '.join(['-l '+l for l in libs])
+    link_cmd = 'g++ '+d.name+'/'+fname+'.o'+' -o '+d.name+'/'+fname+' `root-config --libs` '+libdirstr+' '+libstr
+#    print(link_cmd)
+    ret = subprocess.run(link_cmd, shell=True).returncode
+    if ret != 0: sys.exit(ret)
+
+    cmd = [d.name+'/'+fname] + args
+
+    if opts['gdb']: cmd = ['gdb', '--args'] + cmd
+
+    # Suppressions file for various valgrind modes
+    supp = os.environ['ROOTSYS']+'/etc/valgrind-root.supp'
+
+    if opts['valgrind']:
+        cmd = ['valgrind', '--leak-check=no', '--suppressions='+supp] + cmd
+
+    if opts['leakcheck']:
+        cmd = ['valgrind', '--leak-check=full', '--suppressions='+supp] + cmd
+
+    if opts['massif']:
+        cmd = ['valgrind', '--tool=massif', '--suppressions='+supp] + cmd
+
+    if opts['totalview']: cmd = ['totalview'] + cmd
+
+    print('Executing macro...')
+
+    p = subprocess.Popen(cmd)
+    while True:
+        try:
+            p.wait()
+            break
+        except KeyboardInterrupt:
+            # We want to forward the signal to the subprocess so it can
+            # potentially be handled gracefully rather than quitting python
+            # itself.
+            p.terminate()
+
+    # Return back the script's return code to the system
+    sys.exit(p.returncode)
