@@ -214,13 +214,14 @@ int main(int argc, char** argv)
     libdirs = [os.environ['CAFANA']+'/lib',
                os.environ['OSCLIB_LIB'],
                os.environ['CAFANACORE_LIB'],
+               os.environ['DUNEANAOBJ_LIB'],
                os.environ['TBB_LIB']]
 
     os.environ['ROOT_INCLUDE_PATH'] += ':'+os.environ['SRPROXY_INC']
     os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
     libs = ['Minuit2', 'TMVA', 'EG',
-            'StandardRecord',   'OscLib',        'CAFAnaCoreExt',
+            'duneanaobj_StandardRecord',   'OscLib',        'CAFAnaCoreExt',
             'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
             'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
             'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
