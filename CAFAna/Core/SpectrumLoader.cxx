@@ -140,7 +140,7 @@ namespace ana
       Nentries = max_entries;
 
     for(long n = 0; n < Nentries; ++n){
-      tr->LoadTree(n); // nested mode
+      tr->LoadTree(n);
 
       FixupRecord(&sr);
 
