@@ -126,8 +126,12 @@ namespace ana
   void SpectrumLoader::HandleFile(TFile* f, Progress* prog)
   {
     assert(!f->IsZombie());
-    TTree* tr = (TTree*)f->Get("caf");
-    if(!tr) tr = (TTree*)f->Get("cafTree");
+
+    // In files with both "caf" and "cafTree", "cafTree" is the correct
+    // version. "caf" is ROOT's temporary save while the file is being produced
+    // and may be incomplete.
+    TTree* tr = (TTree*)f->Get("cafTree");
+    if(!tr) tr = (TTree*)f->Get("caf");
 
     assert(tr);
 
