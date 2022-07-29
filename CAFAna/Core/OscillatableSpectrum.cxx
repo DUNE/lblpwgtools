@@ -20,34 +20,15 @@
 
 namespace ana
 {
-  // Duplicate here because we can't include Vars.h
-  const Var kTrueE([](const caf::SRProxy* sr)
-                   {return sr->Ev;});
-
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::
-  OscillatableSpectrum(const std::string& label, const Binning& bins,
-                       SpectrumLoaderBase& loader,
-                       const Var& var,
-                       const Cut& cut,
-                       const SystShifts& shift,
-                       const Weight& wei)
-    : ReweightableSpectrum(loader,
-                           HistAxis(label, bins, var),
-                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
-                           cut, shift, wei)
-  {
+  namespace{
+    // Duplicate here because we can't include Vars.h
+    const Var kTrueE([](const caf::SRProxy* sr)
+                     {return sr->Ev;});
   }
 
   //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(SpectrumLoaderBase& loader,
-                                             const HistAxis& axis,
-                                             const Cut& cut,
-                                             const SystShifts& shift,
-                                             const Weight& wei)
-    : ReweightableSpectrum(loader, axis,
-                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
-                           cut, shift, wei)
+  OscillatableSpectrum::OscillatableSpectrum(IRecordSource& src, const HistAxis& axis)
+    : ReweightableSpectrum(src, axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))
   {
   }
 
@@ -246,21 +227,18 @@ namespace ana
 
     delete dir;
 
-    auto ret = std::make_unique<OscillatableSpectrum>(kNullLoader,
-                                                      HistAxis(labels, bins),
-                                                      kNoCut);
+    const HistAxis recoAxis(labels, bins);
 
     // ROOT histogram storage is row-major, but Eigen is column-major by
     // default
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
-    ret->fMat = Eigen::Map<MatRowMajor>(spect->GetArray(),
-                                        ret->fMat.rows(),
-                                        ret->fMat.cols());
+
+    auto ret = std::make_unique<OscillatableSpectrum>(Eigen::Map<MatRowMajor>(spect->GetArray(), kTrueEnergyBins.NBins()+2, recoAxis.GetBins1D().NBins()+2),
+                                                      recoAxis,
+                                                      hPot->Integral(0, -1),
+                                                      hLivetime->Integral(0, -1));
 
     delete spect;
-
-    ret->fPOT = hPot->Integral(0, -1);
-    ret->fLivetime = hLivetime->Integral(0, -1);
 
     delete hPot;
     delete hLivetime;

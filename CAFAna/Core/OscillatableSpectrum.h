@@ -4,6 +4,7 @@
 
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/FwdDeclare.h"
+#include "CAFAna/Core/IRecordSource.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
@@ -37,23 +38,7 @@ namespace ana
   class OscillatableSpectrum: public ReweightableSpectrum
   {
   public:
-    friend class SpectrumLoaderBase;
-    friend class SpectrumLoader;
-    friend class NullLoader;
-
-    OscillatableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         SpectrumLoaderBase& loader,
-                         const Var& var,
-                         const Cut& cut,
-                         const SystShifts& shift = kNoShift,
-                         const Weight& wei = kUnweighted);
-
-    OscillatableSpectrum(SpectrumLoaderBase& loader,
-                         const HistAxis& axis,
-                         const Cut& cut,
-                         const SystShifts& shift = kNoShift,
-                         const Weight& wei = kUnweighted);
+    OscillatableSpectrum(IRecordSource& src, const HistAxis& axis);
 
     OscillatableSpectrum(const Eigen::MatrixXd&& mat,
                          const HistAxis& recoAxis,

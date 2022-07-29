@@ -25,8 +25,6 @@ namespace ana
   // derived class is actually in the file and hand off to that. The
   // implementations of these are in the cxx files for the base classes in
   // question.
-  class IDecomp;
-  template<> std::unique_ptr<IDecomp> LoadFrom<IDecomp>(TDirectory* dir, const std::string& label);
   class IExtrap;
   template<> std::unique_ptr<IExtrap> LoadFrom<IExtrap>(TDirectory* dir, const std::string& label);
   class IPrediction;

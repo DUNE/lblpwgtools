@@ -15,30 +15,11 @@ namespace ana
   REGISTER_LOADFROM("PredictionNoExtrap", IPrediction, PredictionNoExtrap);
 
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
-                                         SpectrumLoaderBase& loaderNue,
-                                         SpectrumLoaderBase& loaderNuTau,
-                                         const std::string& label,
-                                         const Binning& bins,
-                                         const Var& var,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Weight& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
-                                         label, bins, var, cut, shift, wei))
-  {
-  }
-
-  //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
-                                         SpectrumLoaderBase& loaderNue,
-                                         SpectrumLoaderBase& loaderNuTau,
-					 const HistAxis& axis,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Weight& wei)
-    : PredictionExtrap(new TrivialExtrap(loaderNonswap, loaderNue, loaderNuTau,
-                                         axis, cut, shift, wei))
+  PredictionNoExtrap::PredictionNoExtrap(IRecordSource& srcNonswap,
+                                         IRecordSource& srcNue,
+                                         IRecordSource& srcNuTau,
+                                         const HistAxis& axis)
+    : PredictionExtrap(new TrivialExtrap(srcNonswap, srcNue, srcNuTau, axis))
   {
   }
 
@@ -47,18 +28,7 @@ namespace ana
   {
   }
 
-  //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(Loaders& loaders,
-                                         const std::string& label,
-                                         const Binning& bins,
-                                         const Var& var,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Weight& wei)
-    : PredictionNoExtrap(loaders, HistAxis(label, bins, var), cut, shift, wei)
-  {
-  }
-
+  /*
   //----------------------------------------------------------------------
   PredictionNoExtrap::PredictionNoExtrap(Loaders& loaders,
                                          const HistAxis& axis,
@@ -68,6 +38,7 @@ namespace ana
     : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei))
   {
   }
+  */
 
   //----------------------------------------------------------------------
   void PredictionNoExtrap::SaveTo(TDirectory* dir, const std::string& name) const

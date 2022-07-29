@@ -4,6 +4,8 @@
 
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
+#include "CAFAna/Core/IRecordSource.h"
+
 namespace ana {
 class Loaders;
 
@@ -13,28 +15,12 @@ public:
   PredictionNoExtrap(PredictionExtrap *pred);
   PredictionNoExtrap(IExtrap *extrap);
 
-  // This is the DUNE constructor
-  PredictionNoExtrap(SpectrumLoaderBase &loaderNonswap,
-                     SpectrumLoaderBase &loaderNue,
-                     SpectrumLoaderBase &loaderNuTau, const std::string &label,
-                     const Binning &bins, const Var &var, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
+  PredictionNoExtrap(IRecordSource& loaderNonswap,
+                     IRecordSource& loaderNue,
+                     IRecordSource& loaderNuTau,
+                     const HistAxis& axis);
 
-  PredictionNoExtrap(SpectrumLoaderBase &loaderNonswap,
-                     SpectrumLoaderBase &loaderNue,
-                     SpectrumLoaderBase &loaderNuTau, const HistAxis &axis,
-                     const Cut &cut, const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
-
-  PredictionNoExtrap(Loaders &loaders, const std::string &label,
-                     const Binning &bins, const Var &var, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
-
-  PredictionNoExtrap(Loaders &loaders, const HistAxis &axis, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
+  //  PredictionNoExtrap(Loaders &loaders, const HistAxis &axis);
 
   virtual ~PredictionNoExtrap();
 
@@ -42,6 +28,7 @@ public:
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 };
 
+  /* TODO think about generators
 class NoExtrapPredictionGenerator : public IPredictionGenerator {
 public:
   NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
@@ -60,5 +47,6 @@ protected:
   Cut fCut;
   Weight fWei;
 };
+  */
 
 } // namespace ana

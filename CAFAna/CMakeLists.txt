@@ -83,7 +83,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 
 ## CAFAna proper
 
-set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
+set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
 
 foreach(SUBDIR ${CAFANA_SUBDIRS})
   add_subdirectory(${SUBDIR})

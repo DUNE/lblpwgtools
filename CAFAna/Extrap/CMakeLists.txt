@@ -1,14 +1,9 @@
 set(Extrap_implementation_files
   IExtrap.cxx
-  ModularExtrap.cxx
-  ModularExtrapComponent.cxx
-  ModularExtrapComponentPlot.cxx
   TrivialExtrap.cxx)
 
 set(Extrap_header_files
   IExtrap.h
-  ModularExtrap.h
-  ModularExtrapComponent.h
   TrivialExtrap.h)
 
 add_library(CAFAnaExtrap SHARED ${Extrap_implementation_files})
