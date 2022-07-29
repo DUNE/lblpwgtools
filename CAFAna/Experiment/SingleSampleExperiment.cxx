@@ -91,9 +91,6 @@ namespace ana
     dir->Write();
     delete dir;
 
-    dir->Write();
-    delete dir;
-
     tmp->cd();
   }
 
