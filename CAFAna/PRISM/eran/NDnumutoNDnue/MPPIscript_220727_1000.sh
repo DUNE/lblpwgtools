@@ -18,7 +18,7 @@ CAFv7Fullabs="CAFv7Full_6E20OnAxis_absxPOT_Apr21_FHC.root"
 
 CAFv7RHC="ND_RHC_absxPOT_Sep21.root"
 
-CAFND_FHC_35Yr="CAFv7_*.root"
+CAFND_FHC_35Yr="CAFv7_*subset00.root"
 
 CAFND_RHC_35Yr="CAFv7_*.root"
 
@@ -32,7 +32,7 @@ FakeData="nominal"
 
 #PRISMState_Fullv7Prod_EVisRec_9May21.root
 
-MakePRISMPredInterps -n 1000 -o /dune/data/users/erea/PRISMPredInterps/v7fullMC_NDnumutoNDnue_220727_1000.root \
+gdb --args MakePRISMPredInterps -n 1000 -o /dune/data/users/erea/PRISMPredInterps/v7fullMC_NDnumutoNDnue_220727_1000.root \
     -N-nu "${NDFHCPNFSDIR}/${CAFND_FHC_35Yr}" \
     -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
     -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \

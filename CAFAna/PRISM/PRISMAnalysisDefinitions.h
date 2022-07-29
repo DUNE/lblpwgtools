@@ -257,21 +257,35 @@ inline size_t GetND280kAConfig(size_t conf) {
   }
   if (IsND293kA_numu_Config(conf)) {
     return conf + 1;
-  }
+  }//add here?
   return conf;
 }
 
 inline size_t GetND293kAConfig(size_t conf) {
   if (!IsNDConfig(conf)) {
-    std::cout << "[ERROR]: Tried to get ND280kA config from an FD config("
+    std::cout << "[ERROR]: Tried to get ND293kA config from an FD config("
               << conf << ")." << std::endl;
     abort();
   }
   if (IsND280kA_numu_Config(conf)) {
     return conf - 1;
-  }
+  }//add here?
   return conf;
 }
+
+//eran
+inline size_t GetNDNueConfig(size_t conf) {
+ if (!IsNDConfig(conf)) {
+    std::cout << "[ERROR]: Tried to get ND293kA config from an FD config("
+              << conf << ")." << std::endl;
+    abort();
+  }
+  if (IsND293kA_numu_Config(conf)) {
+   return conf + 2;//want config 0 (293kA ND numu) to fill config 2 (293kA ND nue)
+ }
+ return conf;
+}
+
 
 inline size_t GetConfigNonSwap(size_t conf) {
   if (IsNDConfig(conf)) {

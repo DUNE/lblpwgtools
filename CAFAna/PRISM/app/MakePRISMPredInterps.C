@@ -399,8 +399,9 @@ std::cout << "line 349, after kSelectionCuts" << std::endl;
 
         // Fix this up so that the 280kA config has a loader
         FileLoaders[GetND280kAConfig(config)] = FileLoaders[config];
+        //FileLoaders[GetND293kAConfig(config)] = FileLoaders[config];
         // Fix this up so that the 280kA config has a loader
-        //FileLoaders[GetNDNueConfig(config)] = FileLoaders[config]; //eran here!!
+        FileLoaders[GetNDNueConfig(config)] = FileLoaders[config]; //eran here!!
       }
 
       if (IsNDNue) {
@@ -572,7 +573,10 @@ std::cout << "line 550 after the FillWithNulls" << std::endl;
     }
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
 
+
+
     if (!FileLoaders[config]) {
+      std::cout << "config :" << config << std::endl;
       continue;
     }
 
@@ -634,16 +638,13 @@ std::cout << "IsNDNue?" << IsNDNue << std::endl;
             los_flux, &no, *MatchPredGens[config], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign);
 
-//std::cout << "MatchPredGens(config) :" << std::make_unique<NoOscPredictionGenerator>((IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis), (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), kNDCVWeight * slice_width_weight) << std::endl;
-
-
-
+std::cout << "MatchPredInterps line 637 : " << bool (MatchPredInterps[config]) << std::endl;  
 
         // PredInterps for ND smearing matrix
         // Only need to do this for 293 kA
         // Relationship between ERec and ETrue should be the same
         // for 280kA and 293kA, right?
-        if (!IsNDNue) {
+       // if (!IsNDNue) {
           if (!IsND280kA) {
             if (isReco && UseSel) {
               NDMatrixPredGens[config] =
@@ -691,13 +692,7 @@ std::cout << "line 653" << std::endl;
               los, &no, *NDSelTruePredGens[config], Loaders_bm, kNoShift,
               PredictionInterp::kSplitBySign);
   
-//std::cout << "MatchPredGens(config) :" << std::make_unique<NoOscPredictionGenerator>((IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis), (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), kNDCVWeight * slice_width_weight) << std::endl;
-
-
-
-
-
-        } //added eran )
+       // } //added eran )
 
       } else if (!IsND && !IsNuTauSwap) { // Is FD and do not need specific
                                           // nutau spectra.
@@ -728,12 +723,9 @@ std::cout << "line 653" << std::endl;
           MatchPredInterps[config] = std::make_unique<PredictionInterp>(
               los_flux, calc, *MatchPredGens[config], Loaders_bm, kNoShift,
               PredictionInterp::kSplitBySign);
-     
-//std::cout << "MatchPredGens(config) :" << std::make_unique<NoOscPredictionGenerator>((IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis), (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), kNDCVWeight * slice_width_weight) << std::endl;
-
-
-
-
+   
+std::cout << "MatchPredInterps line 723 : " << bool (MatchPredInterps[config]) << std::endl;
+  
    }
 
 std::cout << "line 713" << std::endl;
@@ -783,14 +775,6 @@ std::cout << "line 713" << std::endl;
             los, calc, *FDSelTruePredGens[fd_config], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign);
       
-//std::cout << "LOOP PRINT OUTS BEGIN" << std::endl;
-//std::cout << "MatchPredGens(config) :" << std::make_unique<NoOscPredictionGenerator>((IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis), (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun), kNDCVWeight * slice_width_weight) << std::endl;
-//std::cout << "MatchPredInterps :" << MatchPredInterps << std::endl;
-//std::cout << "NDMatrixPredGens :" << NDMatrixPredGens << std::endl;
-//std::cout << "NDMatrixPredInterps :" << NDMatrixPredInterps << std::endl;
-//std::cout << "NDUnselTruePredGens :" << NDUnselTruePredGens << std::endl;
-//std::cout << "NDUnselTruePredInterps :" << NDUnselTruePredInterps << std::endl;
-//std::cout << "END LOOP PRINT OUT" << std::endl;
         }
     }
 
@@ -822,24 +806,7 @@ std::cout << "line 713" << std::endl;
     Loaders_nu.Go();
     Loaders_nub.Go();
 
-
-//for (size_t config = 0; config < kNPRISMConfigs; ++config) {
-
-//}
-
-//std::cout << "RIGHT BEFORE SAVING LOOP PRINT OUTS BEGIN" << std::endl;
-//std::cout << "MatchPredGens :" << MatchPredGens[config] << std::endl;
-//std::cout << "MatchPredInterps :" << MatchPredInterps << std::endl;
-//std::cout << "NDMatrixPredGens :" << NDMatrixPredGens << std::endl;
-//std::cout << "NDMatrixPredInterps :" << NDMatrixPredInterps << std::endl;
-//std::cout << "NDUnselTruePredGens :" << NDUnselTruePredGens << std::endl;
-//std::cout << "NDUnselTruePredInterps :" << NDUnselTruePredInterps << std::endl;
-//std::cout << "END RIGHT BEFORE SAVING LOOP PRINT OUT" << std::endl;
-
 std::cout << "line 790 before loop where you actually fill them" << std::endl;
-
-
-
 
     for (size_t config = 0; config < kNPRISMConfigs; ++config) {
       bool IsNu = IsNuConfig(config);
@@ -861,20 +828,22 @@ std::cout << "line 790 before loop where you actually fill them" << std::endl;
       if (!IsND) {
         fd_config = GetFDConfig(config);
       }
-      if (!FileLoaders[config]) {
-        continue;
-      }
+     
 
+std::cout << "INSIDE SAVING LOOP PRINT OUTS BEGIN" << std::endl;
+std::cout << "MatchPredGens :" << bool (MatchPredGens[config]) << std::endl;
+std::cout << "MatchPredInterps :" << bool (MatchPredInterps[config]) << std::endl; 
+std::cout << "NDMatrixPredGens :" << bool (NDMatrixPredGens[config]) << std::endl;
+std::cout << "NDMatrixPredInterps :" << bool (NDMatrixPredInterps[config]) << std::endl;
+std::cout << "NDUnselTruePredGens :" << bool (NDUnselTruePredGens[config]) << std::endl;
+std::cout << "NDUnselTruePredInterps :" << bool (NDUnselTruePredInterps[config]) << std::endl;
+std::cout << "END INSIDE SAVING LOOP PRINT OUT" << std::endl;
 
-//std::cout << "INSIDE SAVING LOOP PRINT OUTS BEGIN" << std::endl;
-//std::cout << "MatchPredGens :" << MatchPredGens[config] << std::endl;
-//std::cout << "MatchPredInterps :" << MatchPredInterps << std::endl; 
-//std::cout << "NDMatrixPredGens :" << NDMatrixPredGens << std::endl;
-//std::cout << "NDMatrixPredInterps :" << NDMatrixPredInterps << std::endl;
-//std::cout << "NDUnselTruePredGens :" << NDUnselTruePredGens << std::endl;
-//std::cout << "NDUnselTruePredInterps :" << NDUnselTruePredInterps << std::endl;
-//std::cout << "END INSIDE SAVING LOOP PRINT OUT" << std::endl;
       if (IsND) { // Is ND
+
+        if (!MatchPredInterps[config]) {
+	  continue;
+       }
 
         SaveTo(fout,
                std::string("NDMatchInterp_ETrue") +
@@ -882,14 +851,12 @@ std::cout << "line 790 before loop where you actually fill them" << std::endl;
                    (IsNDNue ? "_NDnue" : "_NDnumu"),
                MatchPredInterps[config]);
 
-std::cout << std::string("NDMatchInterp_ETrue") +
-                   (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") +
-                   (IsNDNue ? "_NDnue" : "_NDnumu") << std::endl;
+//std::cout << std::string("NDMatchInterp_ETrue") + (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu") << std::endl;
 
-        if (!IsND280kA) {
+        if (NDMatrixPredInterps[config]) {
           SaveTo(fout,
                  std::string("NDMatrixInterp_ERecETrue") +
-                     (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu"),
+                     (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu"), //may need to put IsNDNue back
                  NDMatrixPredInterps[config]);
         }
 
@@ -905,7 +872,12 @@ std::cout << std::string("NDMatchInterp_ETrue") +
                NDSelTruePredInterps[config]);
 
       } else if (!IsND && !IsNuTau) { // Is FD and not nutau.
-        if (!IsFDNue) {
+        
+	if (!FDMatrixPredInterps[fd_config]) {
+          continue;
+       }
+
+	if (!IsFDNue) {
           SaveTo(fout,
                  std::string("FDMatchInterp_ETrue_numu") +
                      (IsNu ? "_nu" : "_nub"),
