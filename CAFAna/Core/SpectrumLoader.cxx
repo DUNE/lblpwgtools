@@ -207,7 +207,7 @@ namespace ana
 
       // Can special-case nominal to not pay cost of Shift()
       if(!shift.IsNominal()){
-	shift.Shift(sr, systWeight);
+        shift.Shift(sr, systWeight);
         // If there were only weighting systs applied then the cached nominal
         // values are still valid.
         shifted = caf::SRProxySystController::AnyShifted();
