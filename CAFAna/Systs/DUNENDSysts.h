@@ -13,8 +13,8 @@ namespace ana
     DUNENDEvSyst() : ISyst("NDEv", "Near Detector reco Ev") {}
 
     void Shift(double sigma,
-	       caf::SRProxy* sr,
-	       double& weight) const override
+               caf::SRProxy* sr,
+               double& weight) const override
     {
       double scale = pow( 1. + sr->sigma_Ev_reco, sigma );
       sr->Ev_reco *= scale;
@@ -31,8 +31,8 @@ namespace ana
     DUNENDPIDSyst() : ISyst("NDPID", "Near Detector lepton PID") {}
 
     void Shift(double sigma,
-	       caf::SRProxy* sr,
-	       double& weight) const override
+               caf::SRProxy* sr,
+               double& weight) const override
     {
       bool numu = ( sigma > sr->sigma_numu_pid );
       bool nue = ( sigma > sr->sigma_nue_pid );
