@@ -65,7 +65,7 @@ namespace ana
       // ND
       if(sr->isFHC == -1){
         // nu-on-e files
-        sr->isFHC = 0;
+        sr->isFHC = true;
         static bool once = true;
         if (once) {
           std::cout << "\nPatching up nu-on-e file to be considered FHC"
