@@ -25,7 +25,7 @@ public:
   }
 
   void Shift(double sigma,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
     sr->dune.Ev_reco_numu *= (1+.1*sigma);
@@ -41,7 +41,7 @@ public:
   }
 
   void Shift(double sigma,
-             caf::StandardRecord* sr,
+             caf::SRProxy* sr,
              double& weight) const override
   {
     // Note I've switched this around to apply to high energy events, to more

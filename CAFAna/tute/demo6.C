@@ -28,7 +28,7 @@ class ToyEnergyScaleSyst: public ISyst
 public:
   ToyEnergyScaleSyst() : ISyst("toyEScale", "Toy Energy Scale") {}
   void Shift(double sigma,
-             caf::StandardRecord* sr, double& weight) const override
+             caf::SRProxy* sr, double& weight) const override
   {
     sr->dune.Ev_reco_numu *= (1+.1*sigma);
   }
@@ -40,7 +40,7 @@ class ToyNormSyst: public ISyst
 public:
   ToyNormSyst() : ISyst("toyNorm", "Toy Norm Syst") {}
   void Shift(double sigma,
-             caf::StandardRecord* sr, double& weight) const override
+             caf::SRProxy* sr, double& weight) const override
   {
     if(sr->Ev_reco_numu > 7) weight *= 1+0.2*sigma;
   }

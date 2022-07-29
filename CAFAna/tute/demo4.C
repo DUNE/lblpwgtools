@@ -42,7 +42,7 @@ void demo4()
 
     // Function that will be called to actually do the shift
     void Shift(double sigma,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // Edit the event record
@@ -64,7 +64,7 @@ void demo4()
     }
 
     void Shift(double sigma,
-               caf::StandardRecord* sr,
+               caf::SRProxy* sr,
                double& weight) const override
     {
       // A systematic can also reweight events, based on whatever criteria you
