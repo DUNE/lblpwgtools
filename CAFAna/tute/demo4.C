@@ -20,7 +20,7 @@ using namespace ana;
 void demo4()
 {
   // Copying basic setup from demo0.C
-  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fname = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
   SpectrumLoader loader(fname);
   const Var kRecoEnergy = SIMPLEVAR(Ev_reco_numu);
   const Binning binsEnergy = Binning::Simple(40, 0, 10);

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-
+#include "CAFAna/Core/INamed.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/StanTypedefs.h"
@@ -13,12 +12,11 @@ namespace ana
 {
   //----------------------------------------------------------------------
   /// Interface definition for fittable variables
-  class IFitVar
+  class IFitVar : public INamed
   {
     public:
-      IFitVar(std::string shortName, std::string latexName)
-        : fShortName(std::move(shortName)),
-          fLatexName(std::move(latexName))
+      IFitVar(const std::string& shortName, const std::string& latexName)
+        : INamed(shortName, latexName)
       {
         Registry<IFitVar>::Register(this);
       }
@@ -27,16 +25,10 @@ namespace ana
       {
         Registry<IFitVar>::UnRegister(this);
       }
+
       virtual double GetValue(const osc::IOscCalcAdjustable* osc) const = 0;
       virtual void SetValue(osc::IOscCalcAdjustable* osc, double val) const = 0;
       virtual double Penalty(double, osc::IOscCalcAdjustable*) const {return 0;}
-
-      const std::string & ShortName() const { return fShortName; };
-      const std::string & LatexName() const { return fLatexName; };
-
-    private:
-      std::string fShortName;
-      std::string fLatexName;
   };
 
   //----------------------------------------------------------------------
