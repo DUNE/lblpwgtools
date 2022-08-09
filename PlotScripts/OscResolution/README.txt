@@ -1,4 +1,4 @@
-============================================================PlotScripts/OscResolutions=======================================================
+============================================================PlotScripts/OscResolution=========================================================
 Compiled and edited by Jeremy Fleishhacker
 This README contains information about the scripts used to produce the graph and histogram files for the "Prospects for Precision Measurements
 ..." paper. It subdivides the scripts by plot in the paper, and includes all of the information needed to run them.
