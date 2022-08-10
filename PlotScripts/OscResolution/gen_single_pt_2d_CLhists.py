@@ -128,23 +128,6 @@ if __name__=="__main__":
 				slist_ind += 1
 			count += 1
 		print "Num Excluded Bins at l3s: %d" % len(hbins_split[slist_ind])
-		"""cont1sl, cont90l, cont3sl = 0,0,0
-		cont_sum = 0
-		ind = 0
-		while cont_sum < l1s:
-			cont_sum += bin_contents[ind]
-			cont1sl = bin_contents[ind]
-			ind+=1
-		
-		while cont_sum < l90:
-			cont_sum += bin_contents[ind]
-			cont90l = bin_contents[ind]
-			ind+=1
-		
-		while cont_sum < l3s:
-			cont_sum += bin_contents[ind]
-			cont3sl = bin_contents[ind]
-			ind+=1"""
 
 		print "Passed 4"
 
@@ -175,3 +158,4 @@ if __name__=="__main__":
 		outf.Close()
 		hf.Close()
 		print "LOOP END"
+	print "----END----"
