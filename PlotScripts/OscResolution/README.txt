@@ -3,6 +3,9 @@ Compiled and edited by Jeremy Fleishhacker
 This README contains information about the scripts used to produce the graph and histogram files for the "Prospects for Precision Measurements
 ..." paper. It subdivides the scripts by plot in the paper, and includes all of the information needed to run them.
 
+BEFORE RUNNING ANY SCRIPTS:
+run . build_directories.sh to build all subdirectories required for script input and output locally
+
 ------------------------------------------------------------Single Point Throws Plots---------------------------------------------------------
 ORDER OF EXECUTION: python gen_single_pt_2d_hists.py
 		    python gen_single_pt_2d_CLhists.py

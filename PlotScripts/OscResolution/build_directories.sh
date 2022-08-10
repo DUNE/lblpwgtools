@@ -1,0 +1,6 @@
+mkdir "single_pt_hists"
+mkdir "2ParamPFPlots_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.25"
+mkdir "2ParamPFPlots_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5"
+mkdir "2ParamPFPlots_ndfd100_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.25"
+mkdir "2ParamPFPlots_ndfd100_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5"
+mkdir "nonunitarity_graphs"
