@@ -31,5 +31,5 @@ if __name__=="__main__":
 #	line.SetLineColor(6)
 #	line.SetLineWidth(2)
 #	line.Draw()
-	can.Print("alt_dchisq_plot_dcp=%lf_hie-1.png" % 0.)
-	can.Print("alt_dchisq_plot_dcp=%lf_hie-1.pdf" % 0.)
+	can.Print("nonunitarity_plots/alt_dchisq_plot_dcp=%lf_hie-1.png" % 0.)
+	can.Print("nonunitarity_plots/alt_dchisq_plot_dcp=%lf_hie-1.pdf" % 0.)
