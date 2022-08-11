@@ -18,7 +18,7 @@ def filldiff(up,down, diffgraph):
     return True
 
 if __name__=="__main__":
-	ssth23_vals = [0.42, 0.46, 0.50, 0.54, 0.58]
+	#ssth23_vals = [0.42, 0.46, 0.50, 0.54, 0.58]
 	level_names = ["1sigma", "90p", "3sigma"]
 	level_names.reverse()
 	legend_names = ["1#sigma", "90%", "3#sigma"]
@@ -27,24 +27,24 @@ if __name__=="__main__":
 	ops = [1,1,1]
 	cols.reverse()
 	ops.reverse()
-	#graph_pos = ["lowband","midband","upband"]
-	for ssth23 in ssth23_vals:
+	graph_pos = ["lowband","upband"]
+	for ind in range(1):
 		can = ROOT.TCanvas()
 		h = ROOT.TH2D()
-		h.SetTitle(";True #delta_{cp};Allowed #delta_{cp}")
-		h.GetXaxis().SetLimits(-1.0, 1.0)
-		h.GetYaxis().SetLimits(-1., 1.)
+		h.SetTitle(";True sin^{2}#theta_{23};Allowed sin^{2}#theta_{23}")
+		h.GetXaxis().SetLimits(0.4, 0.6)
+		h.GetYaxis().SetLimits(0.35, 0.65)
 		h.Draw()
 		leg = ROOT.TLegend(0.1,0.9,0.9,1.0)
 		leg.SetNColumns(3)
 		for i in range(len(level_names)):
-			gf = ROOT.TFile("1dscan_graphs/dcp_100/allwdreg_bandfull_graphs_ssth23=%lf_%s.root" % (ssth23,level_names[i]))
-			bands = gf.Get("BandMG").GetListOfGraphs()
-			for j in range(bands.GetSize()):
-				bands.At(j).SetFillColorAlpha(cols[i],ops[i])
-				bands.At(j).SetLineColor(0)
-				if j == 0: leg.AddEntry(bands.At(j), legend_names[i])
-				bands.At(j).Draw("F SAME")
+			gf = ROOT.TFile("1dscan_graphs/ssth23_1000/allwdreg_bandfull_graphs_%s.root" % (level_names[i]))
+			for pos in graph_pos:
+				g = gf.Get("%s" % (pos))
+				g.SetFillColorAlpha(cols[i],ops[i])
+				g.SetLineColor(0)
+				if pos == "lowband": leg.AddEntry(g, legend_names[i])
+				g.Draw("F SAME")
 		leg.Draw()
-		can.Print("allwdreg_plots/dcp_100/allwdreg_bandfull_plot_ssth23=%lf.png" % ssth23)
-		can.Print("allwdreg_plots/dcp_100/allwdreg_bandfull_plot_ssth23=%lf.pdf" % ssth23)
+		can.Print("allwdreg_plots/ssth23_1000/allwdreg_bandfull_plot.png")
+		can.Print("allwdreg_plots/ssth23_1000/allwdreg_bandfull_plot.pdf")

@@ -46,5 +46,5 @@ if __name__=="__main__":
 				if j == 0: leg.AddEntry(bands.At(j), legend_names[i])
 				bands.At(j).Draw("F SAME")
 		leg.Draw()
-		can.Print("allwdreg_plots/dcp_250/allwdreg_bandfull_plot_ssth23=%lf_bandplt.png" % ssth23)
-		can.Print("allwdreg_plots/dcp_250/allwdreg_bandfull_plot_ssth23=%lf_bandplt.pdf" % ssth23)
+		can.Print("allwdreg_plots/dcp_250/allwdreg_bandfull_plot_ssth23=%lf.png" % ssth23)
+		can.Print("allwdreg_plots/dcp_250/allwdreg_bandfull_plot_ssth23=%lf.pdf" % ssth23)
