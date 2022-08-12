@@ -17,4 +17,5 @@ mkdir "allwdreg_plots/dcp_250"
 mkdir "allwdreg_plots/dcp_100"
 mkdir "allwdreg_plots/ss2th13_1000"
 mkdir "allwdreg_plots/ssth23_1000"
-
+mkdir "2dscan_th13_th23_graphs"
+mkdir "2dscan_th13_th23_CLplots"

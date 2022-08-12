@@ -313,7 +313,7 @@ ORDER OF EXECUTION: ________________SSTH23 1000 EXP_________________
 	gen_1dscan_graphs_ssth23_1000.py
 		Generates dchisq vs ssth23 1d asimov scan TGraphs at 21 true ssth23 points at 1000 kt-MW-yrs exposure. Dchisq is the 
 		difference between the asimov and global chisqs. These graphs will be used to produce the allowed ssth23 regions.
-		Graph Names: "dchisq_vs_ssth23_[100*tr_ss2th13_val]_trss2th13"
+		Graph Names: "dchisq_vs_ssth23_[100*tr_ssth23_val]_trssth23"
 		Output File Names: 1dscan_graphs.root
 		Inputs files from: /pnfs/dune/persistent/physicsgroups/dunelbl/picker24/contrib/jfleishh/ssth23_1dscan_1000/
 				   /pnfs/dune/persistent/users/jfleishh/nopen_ssth23_scan_grid/
@@ -355,3 +355,35 @@ ORDER OF EXECUTION: ________________SSTH23 1000 EXP_________________
 		Outputs files at:  ./allwdreg_plots/ssth23_1000/
 		NOTE: Because the bands can coincide, there are plotting flaws in which bands can appear to merge when they are meant to
 		      remain separate.
+---------------------------------------------------------2D Asimov th13-th23 Scan Plots-------------------------------------------------------
+ORDER OF EXECUTION: python gen_2dscan_graphs_th13_th23.py
+		    python gen_2dscan_CLplots_th13_th23.py
+	
+	gen_2dscan_graphs_th13_th23.py
+		Generates a TGraph2D for each scanned region in ss2th13-ssth23 space. The TGraph2D gives the dchisq as a function of ssth23 
+		and ss2th13. Dchisq is the difference between the asimov and global fit chisqs. The th13-th23 space is scanned for 4 true 
+		points which produce a total of 7 scanned regions as described below:
+		"th13_low_th23_up_troct": ss2th13=0.063, ssth23=0.58, true octant (True Point 1)
+		"th13_low_th23_up_foct": ss2th13=0.063, ssth23=0.58, flipped octant (True Point 1)
+		"th13_dyb_th23_low_troct": ss2th13=0.088, ssth23=0.42, true octant (True Point 2)
+		"th13_dyb_th23_low_foct": ss2th13=0.088, ssth23=0.42, flipped octant (True Point 2)
+		"th13_dyb_th23_up_troct": ss2th13=0.088, ssth23=0.58, true octant (True Point 3)
+		"th13_dyb_th23_up_foct": ss2th13=0.088, ssth23=0.58, flipped octant (True Point 3)
+		"th13_up_th23_low_troct": ss2th13=0.113, ssth23=0.42, true octant (True Point 4)
+		Graph Names: "scan_2D_[region_name]"
+		Output File Names: 2dscan_graphs.root
+		Inputs files from: /pnfs/dune/persistent/physicsgroups/dunelbl/picker24/contrib/jfleishh/th13_ssth23_2dscan_hres/[region_name]
+				   /pnfs/dune/persistent/users/jfleishh/2D_th13_th23_scan_hres_grid/[region_name]/
+		Outputs files at:  ./2dscan_th13_th23_graphs/
+	
+	gen_2dscan_CLplots_th13_th23.py
+		Generates plots for the 4 true th13-th23 points with the 1 sigma, 90%, and 3 sigma contour lines drawn.
+		True points:
+		1: "th13_low_th23_up": ss2th13=0.063, ssth23=0.58
+		2: "th13_dyb_th23_up": ss2th13=0.088, ssth23=0.42
+		3: "th13_dyb_th23_up": ss2th13=0.088, ssth23=0.58
+		4: "th13_up_th23_low": ss2th13=0.113, ssth23=0.42
+		Output File Names: 2dscan_CLplots_[true_point].png
+				   2dscan_CLplots_[true_point].pdf
+		Inputs files from: ./2dscan_th13_th23_graphs/
+		Outputs files at:  ./2dscan_th13_th23_CLplots/
