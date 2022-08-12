@@ -447,3 +447,28 @@ ORDER OF EXECUTION: python gen_asimov_throws_comp_hists_dcp.py
 				   dcp_singlept_asimovgraph_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf
 		Inputs files from: ./asimov_throws_comp_hists/
 		Outputs files at:  ./asimov_throws_comp_plots/
+------------------------------------------------------------------jcp Plots-------------------------------------------------------------------
+ORDER OF EXECUTION: python gen_jcp_1d_hists.py
+		    python gen_jcp_1d_plots.py
+
+	gen_jcp_1d_hists.py
+		Generates bin frequency jcp TH1D from single point throws files at 100 and 1000 kt-MW-yrs.
+		Hist names: "ndfd100_jcp_freq_hist"
+			    "ndfd1000_jcp_freq_hist"
+		Output File Names: jcp_1d_hists_dcp=[dcp_val].root
+		Inputs files from: /pnfs/dune/persistent/physicsgroups/dunelbl/callumw/fixed_osc_toy_throws/
+				   /dune/data/users/jfleishh/fixed_osc_toy_throws/
+		Outputs files at: ./jcp_hists/
+		NOTE: Inputs one fixed point at 100 and 1000 kt-MW-yrs. To use a different point (i.e. for a different dcp value), the throws
+		      file name must be manually changed.
+	
+	gen_jcp_1d_plots.py
+		Generated plots for each of the histograms produced by the above script.
+		Output File Names: ndfd100_jcp_1d_plot_dcp=[dcp_val].png
+				   ndfd100_jcp_1d_plot_dcp=[dcp_val].pdf
+				   ndfd1000_jcp_1d_plot_dcp=[dcp_val].png
+				   ndfd1000_jcp_1d_plot_dcp=[dcp_val].pdf
+		Inputs files from: ./jcp_hists/
+		Outputs files at:  ./jcp_plots/
+----------------------------------------------------------------------------------------------------------------------------------------------
+==============================================================================================================================================		   
