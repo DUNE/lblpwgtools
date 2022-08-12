@@ -419,4 +419,31 @@ ORDER OF EXECUTION: root -l gen_fixed_point_prob_graphs.C
 				   fixed_point_prob_nueb_logplot.png
 				   fixed_point_prob_nueb_logplot.pdf
 		Inputs files from: ./prob_graphs/
-		Outputs files at:  ./prob_plots/ 
+		Outputs files at:  ./prob_plots/
+-------------------------------------------------------dcp Asimov Throws Comparison Plots-----------------------------------------------------
+ORDER OF EXECUTION: python gen_asimov_throws_comp_hists_dcp.py
+		    python gen_asimov_throws_comp_plots_dcp.py
+
+	gen_asimov_throws_comp_hists_dcp.py
+		Generates dchisq vs dcp 1d Asimov scan TGraph and bin frequency probability vs dcp throws TH1D for comparison at the fixed 
+		point. Dchisq is the difference between the asimov and global fit chisqs. The bin frequency probability is the fraction of
+		throws that falls in a bin. The bins are of width 0.02.
+		Graph/hist Names: "throws_hist" (TH1D)
+				  "asimov_graph" (TGraph)
+		Output File Names: dcp_singlept_asimovscan_throwshist_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.root
+		Inputs files from: /pnfs/dune/persistent/physicsgroups/dunelbl/callumw/fixed_osc_toy_throws/
+				   /dune/data/users/jfleishh/fixed_osc_toy_throws/
+				   ./1dscan_graphs/dcp_[exp]/
+		Outputs files at:  ./asimov_throws_comp_hists/
+		NOTE: Requires running gen_1dscan_graphs_dcp_[exp].py first.
+		NOTE: Inputs one fixed point, which must be manually changed to switch to a different exposure. Different points may also be
+		      used, as long as the throws and asimov fits are there. Read script for current point being used.
+	
+	gen_asimov_throws_comp_plots_dcp.py
+		Generates plots for each of the objects produced by the above script.
+		Output File Names: dcp_singlept_throwshist_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.png
+				   dcp_singlept_throwshist_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf
+				   dcp_singlept_asimovgraph_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.png
+				   dcp_singlept_asimovgraph_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf
+		Inputs files from: ./asimov_throws_comp_hists/
+		Outputs files at:  ./asimov_throws_comp_plots/
