@@ -405,8 +405,8 @@ ORDER OF EXECUTION: root -l gen_fixed_point_prob_graphs.C
 		Output File Names: fixed_point_prob_graphs.root
 		Inputs files from: NONE
 		Outputs files at:  ./prob_graphs/
-		NOTE: Requires prob3++ to run. Likely you will need to copy this script and its directory dependencies into a local prob3++
-		      installation to run.
+		NOTE: Requires prob3++ wrapper to run. Likely you will need to copy this script and its directory dependencies into a local 
+		      prob3++ wrapper installation to run.
 
 	gen_fixed_point_prob_plots.C
 		Generates plots with 6 nue and 6 nueb appearance DeltaP/P vs E curves created by script above plotted together.
