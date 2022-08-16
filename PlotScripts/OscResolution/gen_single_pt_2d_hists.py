@@ -44,7 +44,7 @@ if __name__ == "__main__":
 	for i in range(4): #Plotting relations between four parameters
 		for j in range(i+1,4): #Create 6 plots like T2K
 			#input file tf:
-			tf = ROOT.TFile("/pnfs/dune/persistent/physicsgroups/dunelbl/callumw/fixed_osc_toy_throws/toy_throws_ndfd1000_hie1_nopen_deltapi-0.5.root")
+			tf = ROOT.TFile("/pnfs/dune/persistent/physicsgroups/dunelbl/callumw/fixed_osc_toy_throws/toy_throws_ndfd1000_hie1_nopen_deltapi-0.25_th230.785.root")
 			tree = tf.Get("fit_info")
 			pf_xVals, pf_yVals = twoParamLoop(i,j,tree)
 			tf.Close()
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 	
 
 	#Write histograms to file
-	pltfile = ROOT.TFile("single_pt_hists/2ParamPFHists_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5.root","RECREATE")
+	pltfile = ROOT.TFile("single_pt_hists/2ParamPFHists_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.50_dcp=-0.25.root","RECREATE")
 	print "Writing Histograms"
 	print hists
 	print "Num hists: %d" % (len(hists))

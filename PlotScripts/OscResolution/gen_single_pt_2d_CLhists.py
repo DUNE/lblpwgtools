@@ -28,13 +28,13 @@ def GetMinDistInd(hist, comp_bin_list, targ_bin_list):
 
 
 if __name__=="__main__":
-	f = ROOT.TFile("single_pt_hists/2ParamPFCLs_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5.root", "RECREATE")
+	f = ROOT.TFile("single_pt_hists/2ParamPFCLs_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.50_dcp=-0.25.root", "RECREATE")
 	f.Close()
 	hNames = ["PFdmsq32_vs_PFss2th13","PFssth23_vs_PFss2th13","PFdcp_vs_PFss2th13","PFssth23_vs_PFdmsq32","PFdcp_vs_PFdmsq32","PFdcp_vs_PFssth23"]
 	#hNames = ["PFdcp_vs_PFss2th13"]
 	for i in range(len(hNames)):
 		print "Loop Started"
-		hf = ROOT.TFile("single_pt_hists/2ParamPFHists_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5.root")
+		hf = ROOT.TFile("single_pt_hists/2ParamPFHists_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.50_dcp=-0.25.root")
 		print "Passed 1"
 		
 		h = hf.Get(hNames[i])
@@ -153,7 +153,7 @@ if __name__=="__main__":
 					hCL.SetBinContent(hCL.GetBin(j,k), hCL.GetBinContent(hCL.GetBin(j+1,k)))	
 		print "Passed 6"
 
-		outf = ROOT.TFile("single_pt_hists/2ParamPFCLs_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.58_dcp=-0.5.root", "UPDATE")
+		outf = ROOT.TFile("single_pt_hists/2ParamPFCLs_ndfd1000_ss2th13=0.088_dmsq32=2.45_ssth23=0.50_dcp=-0.25.root", "UPDATE")
 		hCL.Write()
 		outf.Close()
 		hf.Close()
