@@ -362,7 +362,7 @@ ORDER OF EXECUTION: python gen_2dscan_graphs_th13_th23.py
 	gen_2dscan_graphs_th13_th23.py
 		Generates a TGraph2D for each scanned region in ss2th13-ssth23 space. The TGraph2D gives the dchisq as a function of ssth23 
 		and ss2th13. Dchisq is the difference between the asimov and global fit chisqs. The th13-th23 space is scanned for 4 true 
-		points which produce a total of 7 scanned regions as described below:
+		points which produce a total of 8 scanned regions as described below:
 		"th13_low_th23_up_troct": ss2th13=0.063, ssth23=0.58, true octant (True Point 1)
 		"th13_low_th23_up_foct": ss2th13=0.063, ssth23=0.58, flipped octant (True Point 1)
 		"th13_dyb_th23_low_troct": ss2th13=0.088, ssth23=0.42, true octant (True Point 2)
@@ -370,10 +370,11 @@ ORDER OF EXECUTION: python gen_2dscan_graphs_th13_th23.py
 		"th13_dyb_th23_up_troct": ss2th13=0.088, ssth23=0.58, true octant (True Point 3)
 		"th13_dyb_th23_up_foct": ss2th13=0.088, ssth23=0.58, flipped octant (True Point 3)
 		"th13_up_th23_low_troct": ss2th13=0.113, ssth23=0.42, true octant (True Point 4)
+		"th13_up_th23_low_foct": ss2th13=0.113, ssth23=0.42, flipped octant (True Point 4)
 		Graph Names: "scan_2D_[region_name]"
 		Output File Names: 2dscan_graphs.root
 		Inputs files from: /pnfs/dune/persistent/physicsgroups/dunelbl/picker24/contrib/jfleishh/th13_ssth23_2dscan_hres/[region_name]
-				   /pnfs/dune/persistent/users/jfleishh/2D_th13_th23_scan_hres_grid/[region_name]/
+				   /pnfs/dune/persistent/users/jfleishh/2D_th13_th23_scan_hres_grid2/[region_name]/
 		Outputs files at:  ./2dscan_th13_th23_graphs/
 	
 	gen_2dscan_CLplots_th13_th23.py

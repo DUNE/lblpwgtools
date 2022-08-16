@@ -4,14 +4,14 @@ import math
 from array import array
 
 if __name__=="__main__":
-	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct"]
+	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct", "th13_up_th23_low_foct"]
 	zoomed_out_names = ["th13_low_th23_up", "th13_dyb_th23_low", "th13_dyb_th23_up","th13_up_th23_low"]
 	gf = ROOT.TFile("2dscan_th13_th23_graphs/2dscan_graphs.root")
 	cl_hists = []
 	contours = array('d')
-	contours.append(1)
-	contours.append(2.7)
-	contours.append(9)
+	contours.append(2.28)
+	contours.append(4.61)
+	contours.append(11.62)
 	combo_can = ROOT.TCanvas()
 	emptyh = ROOT.TH2D()
 	emptyh.SetTitle(";sin^{2}2#theta_{13};sin^{2}#theta_{23}")
@@ -43,7 +43,7 @@ if __name__=="__main__":
 		#can.Print("2D_th13_th23_hres_scan_plots/scan_2D_%s_CLs.png"%names[i])
 		zoomed_out_can.cd(0)
 		h.Draw("cont1 same")
-		if i % 2 == 1 or i == 6:
+		if i % 2 == 1:
 			zoomed_out_can.Print("2dscan_th13_th23_CLplots/2dscan_CLplots_%s.png"% zoomed_out_names[j])
 			zoomed_out_can.Print("2dscan_th13_th23_CLplots/2dscan_CLplots_%s.pdf"% zoomed_out_names[j])
 			j+=1
