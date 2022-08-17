@@ -1,5 +1,7 @@
 #include "CAFAna/PRISM/SimpleChi2Experiment.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "OscLib/IOscCalc.h"
 
 namespace ana {
@@ -108,6 +110,10 @@ namespace ana {
     }
     double Chi2 = (PredVec - fData_vec).transpose() * CovMat.inverse() *
                   (PredVec - fData_vec);
+
+    // For low-stats and covariance matrix.
+    //double Chi2 = LogLikelihoodCovMx(PredVec.array(), fData_vec.array(), 
+    //                                 GetCovariance(PRISMComp_map, syst));
 
     return Chi2;
   }

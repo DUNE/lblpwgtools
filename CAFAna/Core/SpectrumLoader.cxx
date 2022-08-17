@@ -285,6 +285,12 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                      &XSSyst_cv_tmp[syst_it]);
   }
 
+  // If we are in the FD then these variables are nonsense.
+  if (sr.isFD) {
+    sr.muon_contained = -1;
+    sr.muon_tracker = -1;
+  }
+
   int Nentries = tr->GetEntries();
   if (max_entries != 0 && max_entries < Nentries) {
     Nentries = max_entries;
@@ -336,12 +342,14 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
-    if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
+    //if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
+    if (!sr.isFD) sr.abspos_x = sr.det_x + sr.vtx_x;
+    else sr.abspos_x = 0;
 
     // Change the perFile weight if we have multiple ND files
     if (!sr.isFD && (Nfiles > 1 || grid_mfile == 1)) { 
       double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
-          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x));
+          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x)); // -std::fabs(sr.abspos_x)
       sr.perFileWeight = 1 / nfiles;
     }
 
@@ -389,6 +397,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+
+    sr.VisTrue_NDFD = sr.LepE + sr.HadE;
 
     // Sum of the true charged pion KE
     sr.ePipm = sr.ePip + sr.ePim;

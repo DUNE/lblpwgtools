@@ -67,23 +67,24 @@ public:
 
     kNDData_unweighted_293kA = 32,
     kNDData_unweighted_280kA = 33,
+    kNDSigOnly2D_293kA = 34,
 
-    kNDDataExtrap2D_293kA = 34,
-    kNDDataExtrap2D_280kA = 35,
-    kNDDataExtrap_293kA = 36,
-    kNDDataExtrap_280kA = 37,
-    kNDData_FDExtrap = 38,
-    kNDDataCorr_FDExtrap = 39,
-    kExtrapCovarMatrix = 40,
+    kNDDataExtrap2D_293kA = 35,
+    kNDDataExtrap2D_280kA = 36,
+    kNDDataExtrap_293kA = 37,
+    kNDDataExtrap_280kA = 38,
+    kNDData_FDExtrap = 39,
+    kNDDataCorr_FDExtrap = 40,
+    kExtrapCovarMatrix = 41,
 
-    kNDMCExtrap2D_293kA = 41,
-    kNDMCExtrap2D_280kA = 42,
-    kNDMCExtrap_293kA = 43,
-    kNDMCExtrap_280kA = 44,
-    kNDMC_FDExtrap = 45,
+    kNDMCExtrap2D_293kA = 42,
+    kNDMCExtrap2D_280kA = 43,
+    kNDMCExtrap_293kA = 44,
+    kNDMCExtrap_280kA = 45,
+    kNDMC_FDExtrap = 46,
 
-    kFD_NumuNueCorr_Numu_TrueEnu = 46,
-    kFD_NumuNueCorr_Nue_TrueEnu = 47,
+    kFD_NumuNueCorr_Numu_TrueEnu = 47,
+    kFD_NumuNueCorr_Nue_TrueEnu = 48,
 
   };
 
@@ -192,6 +193,9 @@ public:
     }
     case kNDData_unweighted_280kA: {
       return "NDData_unweighted_280kA";
+    }
+    case kNDSigOnly2D_293kA: {
+      return "NDSigOnly2D_293kA";
     }
     case kNDDataExtrap2D_293kA: {
       return "NDDataExtrap2D_293kA";
@@ -399,6 +403,12 @@ public:
 
   ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT,
                                              HistAxis const &RecoAxis) const;
+
+  // Forgive me
+  std::unique_ptr<PredictionInterp> &
+  PublicGetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const { 
+    return GetFDPrediction(NDChannel);
+  }
 
 protected:
   ana::RunPlan RunPlan_nu, RunPlan_nub;

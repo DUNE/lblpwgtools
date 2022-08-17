@@ -50,6 +50,7 @@ namespace caf
     double RecoLepE_NDFD;
     double RecoHadE_NDFD;
     double VisReco_NDFD;
+    double VisTrue_NDFD;
     double ProxyRecoLepE;
 
     // ND pseudo-reconstruction flags

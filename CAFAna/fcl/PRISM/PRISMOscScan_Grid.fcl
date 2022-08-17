@@ -6,16 +6,16 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dcp_4Flav_48ktMWYr_XSecFluxCombSyst_12May22.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_XSecFluxOnly_24Apr22.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_ELepEHadReco_22June22.root
 
-	projection_name: EVisReco
+	projection_name: ELepEHadReco
 	use_PRISM: true
 	POT_years: 3.5
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
 	# Do you want to use fake data?
-	use_fake_data: false
+	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 
@@ -58,9 +58,9 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 	
-	#samples: @local::FitChannels.Numu_disp
+	samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.DispJoint
-	samples: @local::FitChannels.FourFlavor
+	#samples: @local::FitChannels.FourFlavor
 }
 
 # Just an example below now, not used

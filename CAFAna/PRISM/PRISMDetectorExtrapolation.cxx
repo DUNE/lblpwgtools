@@ -180,10 +180,13 @@ namespace ana {
     Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD.rows(),
                                                           hMatrixFD.rows());
 
+    auto binnings = NDDataSpec.GetTrueBinnings().at(0);
+    auto edges = binnings.Edges();
+    //std::cout << "NBins = " << binnings.NBins() << ", Min = " << binnings.Min()
+    //  << ", Max = " << binnings.Max() << std::endl;
     // Need a loop to go through each slice of off-axis ND data
     for (int slice = 0; slice < PRISMND_block.rows(); slice++) {
       // Normalise matrices to efficiency for particular OA stop
-
       NormaliseETrue(&hMatrixND, &hMatrixFD, NDefficiency.row(slice), FDefficiency);
       // Do Linear algebra without under/over-flow bins after normalisation.
       Eigen::MatrixXd MatrixND_block = hMatrixND.block(1, 1, hMatrixND.rows() - 2,
@@ -210,6 +213,8 @@ namespace ana {
       // Tikhonov regularisation is uneccessary, just least square unfold!
       Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
                           MatrixND_block.transpose() * invCovMatRec;
+      //Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block).inverse() *
+      //                    MatrixND_block.transpose();
       Eigen::VectorXd NDETrue = D * NDERec;
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...

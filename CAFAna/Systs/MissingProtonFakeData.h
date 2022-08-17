@@ -36,16 +36,22 @@ public:
     restore.Add(sr->eRec_FromDep, 
                 sr->eRecProxy,
                 sr->VisReco_NDFD,
-                sr->RecoHadE_NDFD);
+		sr->VisTrue_NDFD,
+                sr->RecoHadE_NDFD,
+		sr->HadE);
 
     if (sr->isFD) {
       sr->eRec_FromDep -= EpFrac * sr->eDepP;
       sr->VisReco_NDFD -= EpFrac * sr->eDepP;
-      sr->RecoHadE_NDFD -= EpFrac * sr->eDepP; 
+      sr->VisTrue_NDFD -= EpFrac * sr->eP;
+      sr->RecoHadE_NDFD -= EpFrac * sr->eDepP;
+      sr->HadE -= EpFrac * sr->eP; 
     } else {
       sr->eRec_FromDep -= EpFrac * sr->eRecoP;
       sr->VisReco_NDFD -= EpFrac * sr->eRecoP;
+      sr->VisTrue_NDFD -= EpFrac * sr->eP;
       sr->RecoHadE_NDFD -= EpFrac *sr->eRecoP;
+      sr->HadE -= EpFrac * sr->eP;
     }
 
     double eother = 0;

@@ -4,6 +4,8 @@ set(APPS
   hadd_state
   hadd_fits
   OffAxisPOTCalc
+  check_files
+  produce_flux_syst_inputs
 )
 
 foreach(APP ${APPS})

@@ -41,20 +41,24 @@ if [ ! -z ${4} ]; then
   AXBLOBARG=" -A ${4}"
 fi
 
-SYSTDESCRIPTORARG=""
+BINDESCRIPTORARG=""
 if [ ! -z ${5} ]; then
-  SYSTDESCRIPTORARG=" --syst-descriptor ${5}"
+  BINDESCRIPTORARG=" --bin-descriptor ${5}"
+fi
+
+SYSTDESCRIPTORARG=""
+if [ ! -z ${6} ]; then
+  SYSTDESCRIPTORARG=" --syst-descriptor ${6}"
 fi
 
 NOFAKEDATAARG=""
-if [ ! -z ${6} ]; then
+if [ ! -z ${7} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
 PRISMFAKEDATAARG=" --PRISM-fake-data MissingProtonFakeData_pos" # nominal MaCCQE_pos MissingProtonFakeData_pos
 SELECTIONARG=" --UseSelection"
 #SELECTIONARG=""
-BINDESCRIPTORARG=" --bin-descriptor prism_default" # default
 
 if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."

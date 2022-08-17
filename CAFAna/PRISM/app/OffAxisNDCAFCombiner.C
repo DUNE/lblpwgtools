@@ -2,6 +2,7 @@
 #include "CAFAna/Cuts/TruthCuts.h"
 
 #include "CAFAna/PRISM/PRISMUtils.h"
+#include "CAFAna/PRISM/Weights.h"
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
@@ -97,6 +98,7 @@ std::string DeGlobPattern(std::string const &pattern) {
   return ss.str();
 }
 
+/*
 std::vector<std::string> GetMatchingFiles(std::string directory,
                                           std::string pattern) {
 
@@ -121,7 +123,7 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
     }
   }
   return matches;
-}
+}*/
 
 struct fileSummary {
   fileSummary() : NEvents(0), POT(0), det_x(0), fileName(nullptr) {}
@@ -193,7 +195,7 @@ void OffAxisNDCAFCombiner() {
       files.push_back(pattern);
     } else {
       try {
-        files = GetMatchingFiles(dir, pattern);
+        files = GetMatchingFiles(dir, pattern, false);
       } catch (std::regex_error const &e) {
         std::cout << "[ERROR]: " << e.what() << ", " << parseCode(e.code())
                   << std::endl;
@@ -461,19 +463,12 @@ void OffAxisNDCAFCombiner() {
 
           // Do exposure in terms of absolute position
           // in order to include positive position events
-          double absx = -std::abs(vtx_x_pos_cm + (det_x * detx_to_m * 1E2));
+          //double absx = -std::abs(vtx_x_pos_cm + (det_x * detx_to_m * 1E2));
+          double absx = vtx_x_pos_cm + det_x;
 
-          //FileExposures[specRunId_file]->Fill(
-          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), nmeta_ents);
           FileExposures[specRunId_file]->Fill(absx, nmeta_ents);
-          //POTExposures[specRunId_file]->Fill(
-          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2), file_pot);
           POTExposures[specRunId_file]->Fill(absx, file_pot);
-          //POTExposures_stop[specRunId_file]->Fill(
-          //    vtx_x_pos_cm + (det_x * detx_to_m * 1E2),
-          //    (det_x * detx_to_m * 1E2), file_pot);
-          POTExposures_stop[specRunId_file]->Fill(absx,
-                                                  (det_x * detx_to_m * 1E2),
+          POTExposures_stop[specRunId_file]->Fill(absx, det_x,
                                                   file_pot);
         }
 
@@ -697,7 +692,8 @@ void OffAxisNDCAFCombiner() {
         OffAxisWeightFriend->GetEntry(ent_it);
         treecopy->GetEntry(ent_it);
 
-        double absx = -std::abs((det_x * detx_to_m * 1E2) + vtx_x);
+        //double absx = -std::abs((det_x * detx_to_m * 1E2) + vtx_x);
+        double absx = det_x + vtx_x;
 
         double nfiles = FileExposures[specRunId_read]->GetBinContent(
             FileExposures[specRunId_read]->FindFixBin(

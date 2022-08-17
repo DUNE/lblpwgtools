@@ -83,6 +83,8 @@ namespace ana {
     // Temporary hist output:
     mutable std::unique_ptr<TH2D> hNDUnselected_293kA;
     mutable std::unique_ptr<TH2D> hNDSelected_293kA;
+    mutable std::unique_ptr<TH1D> hFDunselected;
+    mutable std::unique_ptr<TH1D> hFDselected;
 
     // ND and FD efficiency in each energy bin
     // vector of vectors to hold ND eff at each OA stop.

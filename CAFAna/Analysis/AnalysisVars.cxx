@@ -33,10 +33,9 @@ Var const kPEReco = SIMPLEVAR(eRecoP);
 Var const kPipmEReco = SIMPLEVAR(eRecoPip) + SIMPLEVAR(eRecoPim);
 Var const kPi0EReco = SIMPLEVAR(eRecoPi0);
 
-//Var const kEVisReco = SIMPLEVAR(RecoLepE_NDFD) + SIMPLEVAR(RecoHadE_NDFD);
 Var const kEVisReco = SIMPLEVAR(VisReco_NDFD);
 
-Var const kEVisTrue = SIMPLEVAR(HadE) + SIMPLEVAR(LepE);
+Var const kEVisTrue = SIMPLEVAR(VisTrue_NDFD);
 
 // CV weighting
 Weight const kCVXSecWeights = SIMPLEWEIGHT(total_xsSyst_cv_wgt); // kUnweighted

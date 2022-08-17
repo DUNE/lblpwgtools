@@ -1,4 +1,5 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
@@ -287,6 +288,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
       // Set PredictionPRISM to own a pointer to this MCEffCorrection
       state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
+
+      //auto &FDPred = state.PRISM->PublicGetFDPrediction(ch.second.to);
+      //FDPred->DebugPlot(shift.ActiveSysts().at(0), calc, Flavors::kNuMuToNuMu, Current::kCC, Sign::kNu); 
 
       //--------------------
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!

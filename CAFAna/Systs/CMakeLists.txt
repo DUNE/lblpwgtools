@@ -17,7 +17,8 @@ set(Systs_implementation_files
   SystComponentScale.cxx
   Systs.cxx
   XSecSystList.cxx
-  OffAxisFluxUncertaintyHelper.cxx)
+  OffAxisFluxUncertaintyHelper.cxx
+  NewOffAxisFluxUncertainty2022Helper.cxx)
 
 set(Systs_header_files
   AnaSysts.h
@@ -52,7 +53,8 @@ set(Systs_header_files
   NuWroReweightFakeData.h
   CrazyFluxFakeData.h
   XSecSystList.h
-  OffAxisFluxUncertaintyHelper.h)
+  OffAxisFluxUncertaintyHelper.h
+  NewOffAxisFluxUncertainty2022Helper.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
@@ -72,6 +74,7 @@ set(SYST_INPUT_ROOT_FILES
   flux_shifts_CDR.root
   flux_shifts_Nov17.root
   flux_shifts_OffAxis.root
+  flux_shifts_OffAxis2022.root
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root

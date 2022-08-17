@@ -48,7 +48,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -30, 0}; 
+    std::array<double, 3> OABinning = {0.5, -30, +2}; // +2
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];
@@ -116,7 +116,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
                         kTrueOffAxisPos_m);
 
-  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, 0),
+  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, +2), // -2
                              kTrueOffAxisPos_m);
   
   // Seperate ND and FD axes for ND->FD extrapolation.

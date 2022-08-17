@@ -77,8 +77,6 @@ namespace ana {
                                    HistAxis const &axis, 
                                    bool SetErrorsFromPredictedRate) const {
     // Assume this spectrum is in per/POT
-    //assert(NDSpec.NDimensions() == 2); // Only gonna work for 2D axis, 3D not implemented yet
-    //std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     std::unique_ptr<TH1> NDSpec_h(NDSpec.ToTH1(1));
     NDSpec_h->SetDirectory(nullptr);    
     Eigen::ArrayXd ErrorArr = NDSpec.GetEigen(1);
@@ -91,8 +89,6 @@ namespace ana {
 
     Eigen::MatrixXd NDSpec_mat = ConvertArrayToMatrix(NDSpec.GetEigen(1),
                                                       NDSpec.GetBinnings());
-    //std::cout << "NDSpec_mat rows = " << NDSpec_mat.rows() << " ; "
-    //  <<  "NDSpec_mat cols = " << NDSpec_mat.cols() << std::endl; 
 
     Eigen::MatrixXd NDSumSq_mat = Eigen::MatrixXd::Zero(NDSpec_mat.rows(),
                                                         NDSpec_mat.cols()); 
@@ -161,6 +157,8 @@ namespace ana {
         std::cout << "[WARN]: Stop " << stop.min << " -- " << stop.max << "("
                   << xpos << " m) had bad POT: " << stop.POT << std::endl;
       }
+      //std::cout << "Stop " << stop.min << " -- " << stop.max << "("
+      //          << xpos << " m) POT: " << stop.POT << std::endl;
       unweighted(xit) = bc / stop.POT;
     }
 

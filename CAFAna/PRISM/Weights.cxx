@@ -81,7 +81,7 @@ double Get280kAWeight_numu(double enu, bool isNu) {
 }
 
 const ana::Weight k280kAWeighter([](const caf::StandardRecord *sr) -> double {
-  if (sr->isFD || sr->det_x || (sr->vtx_x > 0)) {
+  if (sr->isFD) { 
     return 1;
   }
   // Only want to weight 'signal' numu species.

@@ -15,7 +15,8 @@
 namespace ana {
 
   struct DetectorStop {
-    double min, max;
+    //double min, max;
+    double max, min;
     double POT;
     int horn_current;
   };
@@ -66,8 +67,11 @@ namespace ana {
       auto xrange = stop.get<std::array<double, 2>>("xrange");
       double rel_time = stop.get<double>("time");
       int horn_current = stop.get<int>("horn_current", 293);
-      rp.stops.push_back({std::min(xrange[0], xrange[1]),
+      /*rp.stops.push_back({std::min(xrange[0], xrange[1]),
                           std::max(xrange[0], xrange[1]), rel_time,
+                          horn_current});*/
+      rp.stops.push_back({std::max(xrange[0], xrange[1]),
+                          std::min(xrange[0], xrange[1]), rel_time,
                           horn_current});
     }
 

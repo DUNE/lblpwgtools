@@ -16,6 +16,7 @@
 
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/RecoEnergyFDSysts.h"
+#include "CAFAna/Systs/DUNEFluxSysts.h"
 
 #include "TAxis.h"
 #include "TDirectory.h"
@@ -192,8 +193,6 @@ void PredictionPRISM::AddNDMCLoader(Loaders &loaders, const Cut &cut,
   auto slice_width_weight_280kA =
       NDSliceCorrection(50, fND280kAAxis.GetBinnings().front().Edges());
 
-  //ana::SystShifts DataShift = GetFakeDataGeneratorSystShift("MissingProtonFakeData_pos");
-
   std::unique_ptr<PredictionInterp> &NDPrediction = GetNDPrediction(NDChannel);
   if (&NDPrediction == &kNoSuchNDPredictionSpectrum) {
     std::cout << "ERROR: Invalid ND MC type passed: " << NDChannel.chan << ":"
@@ -243,10 +242,6 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                                     std::vector<ana::ISyst const *> systlist,
                                     osc::IOscCalc *calc,
                                     PRISM::BeamChan FDChannel) {
-
-  osc::NoOscillations kNoOsc;
-
-  //ana::SystShifts DataShift = GetFakeDataGeneratorSystShift("MissingProtonFakeData_pos");
 
   std::unique_ptr<PredictionInterp> &FDPrediction = GetFDPrediction(FDChannel);
   if (&FDPrediction == &kNoSuchFDPredictionSpectrum) {
@@ -687,11 +682,23 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       NDRunPlan.Weight(*NDData, 293, fOffPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA));
 
+  // Unweighted 280kA component
   NDComps.emplace(kNDData_unweighted_280kA, *NDData_280kA);
+
+  // Weight 280kA component
   NDComps.emplace(
       kNDData_280kA,
       NDRunPlan.Weight(*NDData_280kA, 280, f280kAPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA));
+
+  NDComps.emplace(kNDSigOnly2D_293kA, 
+                  NDRunPlan.Weight(SetSpectrumErrors(
+                      NDPrediction->PredictComponentSyst(
+                          calc, shift, 
+                          NDSigFlavor, Current::kCC, NDSigSign), 
+                      fDefaultOffAxisPOT),
+                      293, fOffPredictionAxis));
+
   // Start building MC components
   // Try doing background subtraction for MC as well, could be helpful for
   // 'fake data' studies.
@@ -818,14 +825,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
     Comps.emplace(kFD_NumuNueCorr_Nue_TrueEnu, FD_nueapp_spectrum_True_E_nu);
     Comps.emplace(kFD_NumuNueCorr_Numu_TrueEnu, FD_numusurv_apposc_spectrum_True_E_nu);
 
-    // print out debug
-    /*Eigen::ArrayXd nue_spec = FD_nueapp_spectrum_True_E_nu.GetEigen(1);
-    Eigen::ArrayXd numu_spec = FD_numusurv_apposc_spectrum_True_E_nu.GetEigen(1);
-    std::cout << "Printing out ratio spectrum "<< std::endl;
-    for ( int ibin=0; ibin < nue_spec.size(); ibin ++ ) {
-      std::cout << "bin "<< ibin << ": nue spec = "<< nue_spec(ibin) << ", numu spec = "<< numu_spec(ibin) << std::endl;
-    }*/
-
     Ratio FD_NumuNue_XsecRatio_TrueEnu(FD_numusurv_apposc_spectrum_True_E_nu,
                                    FD_nueapp_spectrum_True_E_nu,
                                    NDPOT); // numu/nue
@@ -926,8 +925,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(),
                               fAnalysisAxisFD.GetBinnings());
   LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(),
-
-
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),
                                       fND280kAAxis.GetBinnings());
@@ -1129,14 +1126,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Always shift FDOsc pred, as this acts as our 'shifted fd data' when
   // doing fake data shifts
-  Comps.emplace(kFDOscPred,
-                FDPrediction->PredictComponentSyst(
-                    calc, shift, Flavors::kAll, Current::kBoth, Sign::kBoth));
+  //Comps.emplace(kFDOscPred,
+  //              FDPrediction->PredictComponentSyst(
+  //                  calc, shift, Flavors::kAll, Current::kBoth, Sign::kBoth));
   // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
   // below and comment-out above.
-  //Comps.emplace(kFDOscPred,
-  //              FDPrediction->PredictComponentSyst(calc, shift, FDSigFlavor,
-  //                                                 Current::kCC, FDSigSign));
+  Comps.emplace(kFDOscPred,
+                FDPrediction->PredictComponentSyst(calc, shift, Flavors::kNuMuToNuMu,
+                                                   Current::kCC, Sign::kNu));
 
   // Get the residual from the event rate/flux matcher.
   Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual();
@@ -1773,6 +1770,7 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
             pred->Predictions.FD.nuebar_ccinc_sel_nubmode}}) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() = PredictionInterp::LoadFrom(dir, meas.first.c_str());
+      //meas.second.get()->MinimizeMemory();
     }
   }
 

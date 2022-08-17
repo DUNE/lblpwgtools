@@ -157,6 +157,9 @@ namespace ana {
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
 
+    hFDunselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDunselected.ToTH1(1)));
+    hFDselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDselected.ToTH1(1)));
+
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
                                    .segment(1, FDefficiency.size());
     Eigen::ArrayXd vFDselected = sFDselected.GetEigen(1)
@@ -253,6 +256,8 @@ namespace ana {
 
     if (hNDUnselected_293kA.get()) dir->WriteTObject(hNDUnselected_293kA.get(), "NDUnsel_293kA");
     if (hNDSelected_293kA.get()) dir->WriteTObject(hNDSelected_293kA.get(), "NDSel_293kA");
+    if (hFDunselected.get()) dir->WriteTObject(hFDunselected.get(), "FDUnsel");
+    if (hFDselected.get()) dir->WriteTObject(hFDselected.get(), "FDSel");
     dir->WriteTObject(NDEff293kA_rws.ToTH2(1), "NDEff_293kA");
     dir->WriteTObject(NDEff280kA_rws.ToTH2(1), "NDEff_280kA");
     dir->WriteTObject(FDEff_s.ToTH1(1), "FDEff");
