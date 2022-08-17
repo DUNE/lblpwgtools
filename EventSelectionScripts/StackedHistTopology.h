@@ -55,7 +55,6 @@ StackedHistTopology::StackedHistTopology(std::string histname, std::string title
   // Style the histograms
   StyleHistsStack();
 
-  is2Dhists = false;
   invalid_total_x = 0.;
 }
 

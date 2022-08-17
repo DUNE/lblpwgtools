@@ -1,4 +1,5 @@
 //#include "paul_tol_colors.hpp"
+#include "StackedHistTopology.h"
 
 TFile *f = NULL;
 TTree *caf = NULL;

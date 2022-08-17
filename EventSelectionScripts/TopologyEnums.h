@@ -151,7 +151,7 @@ inline std::string topologyenum2str_coarse(NuIntTopology topology)
   case kNC:
     returnString = "NC";
     break;
-  case kCosmic;
+  case kCosmic:
     returnString = "Cosmic";
     break;
   case kMixed:
