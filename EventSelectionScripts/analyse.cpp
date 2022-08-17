@@ -1,4 +1,4 @@
-#include "paul_tol_colors.hpp"
+//#include "paul_tol_colors.hpp"
 
 TFile *f = NULL;
 TTree *caf = NULL;
@@ -128,12 +128,14 @@ void analyse(std::string name) {
   h4->SetTitle("Four LAr tracks");
   h5->SetTitle("More than four LAr tracks");
 
+  /*
   h0->SetLineColor(kBlack);
   h1->SetLineColor(tolcols::kTBriBlue);
   h2->SetLineColor(tolcols::kTBriGreen);
   h3->SetLineColor(tolcols::kTBriYellow);
   h4->SetLineColor(tolcols::kTBriRed);
   h5->SetLineColor(tolcols::kTBriPurple);
+  */
 
   h0->SetLineWidth(2);
   h1->SetLineWidth(2);
