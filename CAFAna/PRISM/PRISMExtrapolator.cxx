@@ -27,7 +27,7 @@ Flavors::Flavors_t GetFlavor(NuChan fps) {
   if ((fps & NuChan::kNumu) || (fps & NuChan::kNumuBar)) {
     return Flavors::kNuMuToNuMu;
   } else if ((fps & NuChan::kNue) || (fps & NuChan::kNueBar)) {
-    return Flavors::kAllNuE;
+    return Flavors::kNuMuToNuE;
   } else if ((fps & NuChan::kNutau) || (fps & NuChan::kNutauBar)) {
     return Flavors::kAllNuTau;
   } else {

@@ -957,7 +957,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     Spectrum FD_numusurv_apposc_spectrum =
         FDNonSwapAppOscPrediction->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu, // kNuMuToNuE,
+            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu,
             Current::kCC, NDSigSign);
 
     Comps.emplace(kFD_NumuNueCorr_Nue, FD_nueapp_spectrum);
@@ -980,7 +980,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     Spectrum FD_numusurv_apposc_spectrum =
         FDNonSwapAppOscPrediction->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuTau,
+            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu,
             Current::kCC, NDSigSign);
 
     Comps.emplace(kFD_NumuNutauCorr_Nutau, FD_nutauapp_spectrum);
