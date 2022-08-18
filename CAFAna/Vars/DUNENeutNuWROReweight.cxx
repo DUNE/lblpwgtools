@@ -1,6 +1,6 @@
 #include "CAFAna/Vars/DUNENeutNuWROReweight.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH2.h"

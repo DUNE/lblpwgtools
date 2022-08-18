@@ -4,7 +4,7 @@
 #include "CAFAna/Systs/XSecSystList.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include <cmath>
 #include <iostream>

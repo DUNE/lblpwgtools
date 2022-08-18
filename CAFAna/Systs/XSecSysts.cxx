@@ -4,7 +4,7 @@
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana {
 

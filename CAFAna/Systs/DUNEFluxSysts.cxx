@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"

@@ -5,7 +5,7 @@
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Systs/SystComponentScale.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "OscLib/IOscCalc.h"
 

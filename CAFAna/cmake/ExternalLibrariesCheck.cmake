@@ -9,10 +9,6 @@ if(NOT EXISTS ${SRC_ROOT_PARENT}/CAFAna)
   cmessage(FATAL_ERROR "Cannot resolve: SRC_ROOT_PARENT=\"${SRC_ROOT_PARENT}/CAFAna\" to a valid directory, please reconfigure with a valid path to the parent directory of CAFAna.")
 endif()
 
-if(NOT EXISTS ${SRC_ROOT_PARENT}/StandardRecord)
-  cmessage(FATAL_ERROR "Cannot resolve: SRC_ROOT_PARENT=\"${SRC_ROOT_PARENT}/StandardRecord\" to a valid directory, please reconfigure with a valid path to the parent directory of StandardRecord.")
-endif()
-
 ###############################  GSL  ######################################
 if(NOT DEFINED GSL_LIB OR GSL_LIB STREQUAL "")
   GETLIBDIR(gsl-config --libs GSL_LIB)

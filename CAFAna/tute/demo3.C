@@ -10,7 +10,7 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
 #include "OscLib/OscCalcPMNSOpt.h"
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"

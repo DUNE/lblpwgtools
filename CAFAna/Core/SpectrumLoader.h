@@ -6,7 +6,7 @@
 
 class TFile;
 
-#include "StandardRecord/Proxy/FwdDeclare.h"
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {

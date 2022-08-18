@@ -10,7 +10,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/WildcardSource.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #ifndef DONT_USE_SAM
 #include "ifdh.h"

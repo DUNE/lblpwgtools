@@ -1,6 +1,6 @@
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
  
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana {
 

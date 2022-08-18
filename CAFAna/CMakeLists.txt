@@ -79,9 +79,7 @@ include_directories(
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
 find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})
-
-# This is a hack so that the generated files in StandardRecord/ are locateable
-include_directories(${CMAKE_BINARY_DIR})
+find_library(STANDARDRECORDPROXY duneanaobj_StandardRecordProxy $ENV{DUNEANAOBJ_LIB})
 
 include_directories($ENV{SRPROXY_INC})
 
@@ -102,16 +100,6 @@ endforeach()
 
 add_subdirectory(bin)
 add_subdirectory(scripts)
-
-# This is a "sub"directory by virtue of a symlink
-add_subdirectory(StandardRecord)
-
-# Need to generate the SRProxy files before anything else
-foreach(SUBDIR ${CAFANA_SUBDIRS})
-  add_dependencies(CAFAna${SUBDIR} StandardRecordProxy)
-endforeach()
-
-# add_dependencies(scripts StandardRecordProxy)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)

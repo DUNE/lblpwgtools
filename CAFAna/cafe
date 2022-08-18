@@ -138,8 +138,8 @@ if __name__ == '__main__':
         os.environ['CAFANA_USE_SNAPSHOTS'] = 'yes'
 
     path = [os.environ['CAFANA']+'/include',
-            os.environ['CAFANA']+'/..', # for some reason this is where SRProxy generated headers end up
             os.environ['CAFANACORE_INC'],
+            os.environ['DUNEANAOBJ_INC'],
             os.environ['ROOTSYS']+'/include',
             os.environ['SRPROXY_INC'],
             os.environ['STAN_INC'],

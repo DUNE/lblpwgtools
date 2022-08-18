@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Cut.h"
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana
 {

@@ -5,7 +5,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Cuts/AnaCuts.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include <vector>
 

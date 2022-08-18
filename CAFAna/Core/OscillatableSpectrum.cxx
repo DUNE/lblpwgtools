@@ -6,7 +6,7 @@
 #include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "OscLib/IOscCalc.h"
 

@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "BDTReweighter.h"
 #include "MissingProtonFakeData_BDTRW_FHC.h"
