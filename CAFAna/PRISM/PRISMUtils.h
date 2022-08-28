@@ -212,17 +212,6 @@ inline PRISMReweightableSpectrum ToReweightableSpectrum(Spectrum const &spec,
 
   Eigen::MatrixXd SumSq_mat = (Errors_mat.pow(2) * 
                                std::pow(POT/spec.POT(), 2)).matrix();
-  /*Eigen::MatrixXd err_mat = Eigen::MatrixXd::Zero(spec_mat.rows(), spec_mat.cols());
-  if (spec.GetBinnings().size() == 2) {
-    //for (int col = 1; col <= (spec_mat.cols() - 2); col++) {
-    //  for (int row = 1; row <= (spec_mat.rows() - 2); row++) {
-    //    double err = h_err->GetBinError(row + (col - 1) * (spec_mat.rows() - 2));
-        err_mat(row, col) = std::pow(err * (POT/spec.POT()), 2); // want error from MC
-      }
-    }
-  } else if (spec.GetBinnings().size() == 3) {
-    abort();
-  }*/
 
   std::vector<std::string> anaLabels = { spec.GetLabels().at(0) };
   std::vector<Binning> anaBins = { spec.GetBinnings().at(0) };

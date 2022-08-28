@@ -5,6 +5,7 @@
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
 #include "CAFAna/Core/Binning.h"
+#include "CAFAna/Core/MathUtil.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
@@ -211,7 +212,6 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     FlowTarget = FDOsc_intrinsic_nue_spec.GetEigen(1).matrix();
     for (int bin = 0; bin < FlowTarget.size(); bin++) {
       FlowTarget(bin) *= vNumuNueXsecRatioTrueEnu(bin); // numu/nue xsec ratio vs true nu E applied
-      //std::cout << "bin: " << bin << ", nue intrinsic flux = "<< FlowTarget(bin) << ", numu/nue xsec r = " << vNumuNueXsecRatioTrueEnu(bin) << std::endl;
     }
 
     FlowTarget += FDOsc_spec.GetEigen(1).matrix();
@@ -219,6 +219,8 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     FlowTarget = FDOsc_spec.GetEigen(1).matrix();
   }
   Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2);
+
+  //Target *= 1 / Target.sum();
 
   Spectrum FDUnOsc_spec = FDPredInterp->PredictComponentSyst(
       &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd);
@@ -246,6 +248,15 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   NDFluxMatrix.topRows(NCoeffs_293kA) = NDFluxMatrix_293kA;
   // Bottom rows of the total ND matrix is the 280kA matrix
   NDFluxMatrix.bottomRows(NCoeffs_280kA) = NDFluxMatrix_280kA;
+  //NDFluxMatrix.transposeInPlace();
+
+  /*for (int row_it = 0; row_it < NDFluxMatrix.rows(); ++row_it) {
+    double sum = NDFluxMatrix.row(row_it).sum();
+    for (int col_it = 0; col_it < NDFluxMatrix.cols(); ++col_it) {
+      NDFluxMatrix(row_it, col_it) *= 1 / sum;
+    }
+  }*/
+
   NDFluxMatrix.transposeInPlace();
 
   Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(NCoeffs, NCoeffs);
@@ -254,17 +265,17 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
     for (int row_it = 0; row_it < (NCoeffs_293kA - 1); ++row_it) {
       // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
-      RegMatrix(row_it, row_it) = cond.RegFactor_293kA;
-      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_293kA;
+      RegMatrix(row_it, row_it) = cond.RegFactor_293kA;// / util::sqr(NDFluxMatrix.col(row_it).sum()); // WARNING
+      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_293kA;// / (NDFluxMatrix.col(row_it + 1).sum() * NDFluxMatrix.col(row_it).sum()); // WARNING
     }
-    RegMatrix(NCoeffs_293kA - 1, NCoeffs_293kA - 1) = cond.RegFactor_293kA;
+    RegMatrix(NCoeffs_293kA - 1, NCoeffs_293kA - 1) = cond.RegFactor_293kA;// / std::pow(NDFluxMatrix.col(NCoeffs_293kA - 1).sum(), 2); // WARNING
 
     for (int row_it = NCoeffs_293kA; row_it < (NCoeffs - 1); ++row_it) {
       // Penalize neighbouring coefficient difference by cond.CoeffRegVector[it]
-      RegMatrix(row_it, row_it) = cond.RegFactor_280kA;
-      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_280kA;
+      RegMatrix(row_it, row_it) = cond.RegFactor_280kA;// / util::sqr(NDFluxMatrix.col(row_it).sum()); // WARNING
+      RegMatrix(row_it, row_it + 1) = -cond.RegFactor_280kA;// / (NDFluxMatrix.col(row_it + 1).sum() * NDFluxMatrix.col(row_it).sum()); // WARNING
     }
-    RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor_280kA;
+    RegMatrix(NCoeffs - 1, NCoeffs - 1) = cond.RegFactor_280kA;// / util::sqr(NDFluxMatrix.col(NCoeffs - 1).sum()); // WARNING
   }
 
   int EBinLow = FDOsc_spec.GetBinnings().at(0).FindBin(cond.ENuMin);

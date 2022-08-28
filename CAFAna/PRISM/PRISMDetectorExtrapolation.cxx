@@ -1,5 +1,4 @@
-#include "CAFAna/Core/PRISMReweightableSpectrum.h"
-
+#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 
@@ -135,8 +134,9 @@ namespace ana {
   //-----------------------------------------------------
 
   void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
-                                      double POT, const int kA, Eigen::ArrayXd&& weights,
-                                      osc::IOscCalc *calc, ana::SystShifts shift,
+                                      double POT, const int kA, Eigen::ArrayXd& weights,
+                                      osc::IOscCalc *calc, ana::SystShifts shift_nd,
+                                      ana::SystShifts shift_fd,
                                       Flavors::Flavors_t NDflav,
                                       Flavors::Flavors_t FDflav,
                                       Current::Current_t curr,
@@ -162,11 +162,11 @@ namespace ana {
     // different detector resolutions.
     // May need to revisit osc vs. no-osc FD smearing matrices.
     auto sMatrixND = NDPredInterps.at(GetNDConfigFromPred(NDflav, NDsign))
-                     ->PredictComponentSyst(calc, shift, NDflav, curr, NDsign);
+                     ->PredictComponentSyst(calc, shift_nd, NDflav, curr, NDsign);
     hMatrixND = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
 
     auto sMatrixFD = FDPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-                     ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+                     ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
     hMatrixFD = ConvertArrayToMatrix(sMatrixFD.GetEigen(POT), sMatrixFD.GetBinnings());
 
     Eigen::MatrixXd PRISMND = NDDataSpec.GetEigen(POT);

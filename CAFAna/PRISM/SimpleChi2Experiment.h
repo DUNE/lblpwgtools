@@ -1,12 +1,7 @@
 #pragma once
 
-#include "CAFAna/Core/Spectrum.h"
-#include "CAFAna/Core/Utilities.h"
-
-#include "CAFAna/Experiment/IExperiment.h"
-
 #include "CAFAna/Prediction/IPrediction.h"
-
+#include "CAFAna/Experiment/IExperiment.h"
 #include "CAFAna/PRISM/EigenUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
 

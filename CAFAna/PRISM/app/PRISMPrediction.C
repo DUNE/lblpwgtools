@@ -289,9 +289,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       // Set PredictionPRISM to own a pointer to this MCEffCorrection
       state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
-      //auto &FDPred = state.PRISM->PublicGetFDPrediction(ch.second.to);
-      //FDPred->DebugPlot(shift.ActiveSysts().at(0), calc, Flavors::kNuMuToNuMu, Current::kCC, Sign::kNu); 
-
       //--------------------
       if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
         auto PRISMComponents = state.PRISM->PredictGaussianFlux(
@@ -328,6 +325,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         auto *PRISMPred =
               PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
         PRISMPred->Scale(1, "width");
+        for (int x = 1; x <= PRISMPred->GetXaxis()->GetNbins(); x++) {
+          std::cout << "prismpred = " << PRISMPred->GetBinContent(x) << std::endl;
+        }
+
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
         auto *PRISMExtrap =

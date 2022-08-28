@@ -9,10 +9,10 @@
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
-#include "CAFAna/Core/PRISMReweightableSpectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/RunPlan.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
@@ -244,26 +244,32 @@ public:
   }
 
   HistAxis fAnalysisAxisND;
-  HistAxis fAnalysisAxisFD;
+  HistAxis fAnalysisAxisFD_numu;
+  HistAxis fAnalysisAxisFD_nue;
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fTrueAnalysisAxis;
   HistAxis fNDFDEnergyMatchAxis;
-  HistAxis fCovarianceAxis;
+  HistAxis fCovarianceAxis_numu;
+  HistAxis fCovarianceAxis_nue;
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
-  HistAxis fFluxMatcherCorrectionAxes;
+  HistAxis fFluxMatcherCorrectionAxes_numu;
+  HistAxis fFluxMatcherCorrectionAxes_nue;
 
   PredictionPRISM(const HistAxis &AnalysisAxisND,
-                  const HistAxis &AnalysisAxisFD,
+                  const HistAxis &AnalysisAxisFD_numu,
+                  const HistAxis &AnalysisAxisFD_nue,
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
                   const HistAxis &TrueAnalysisAxis,
                   const HistAxis &NDFDEnergyMatchAxis,
-                  const HistAxis &CovarianceAxis,
+                  const HistAxis &CovarianceAxis_numu,
+                  const HistAxis &CovarianceAxis_nue,
                   const HistAxis &OffPredictionAxis,
                   const HistAxis &_280kAPredictionAxis,
-                  const HistAxis &FluxMatcherCorrectionAxes);
+                  const HistAxis &FluxMatcherCorrectionAxes_numu,
+                  const HistAxis &FluxMatcherCorrectionAxes_nue);
 
   void Initialize();
 

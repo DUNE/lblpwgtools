@@ -32,19 +32,25 @@ static std::unique_ptr<PredictionInterp> kNoSuchNDPredictionSpectrum{nullptr};
 static std::unique_ptr<PredictionInterp> kNoSuchFDPredictionSpectrum{nullptr};
 
 PredictionPRISM::PredictionPRISM(
-    const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD,
+    const HistAxis &AnalysisAxisND, const HistAxis &AnalysisAxisFD_numu,
+    const HistAxis &AnalysisAxisFD_nue,
     const HistAxis &NDOffAxis, const HistAxis &ND280kAAxis,
     const HistAxis &TrueAnalysisAxis, const HistAxis &NDFDEnergyMatchAxis,
-    const HistAxis &CovarianceAxis, const HistAxis &OffPredictionAxis,
+    const HistAxis &CovarianceAxis_numu, const HistAxis &CovarianceAxis_nue, 
+    const HistAxis &OffPredictionAxis,
     const HistAxis &_280kAPredictionAxis,
-    const HistAxis &FluxMatcherCorrectionAxes)
-    : fAnalysisAxisND(AnalysisAxisND), fAnalysisAxisFD(AnalysisAxisFD),
+    const HistAxis &FluxMatcherCorrectionAxes_numu,
+    const HistAxis &FluxMatcherCorrectionAxes_nue)
+    : fAnalysisAxisND(AnalysisAxisND), fAnalysisAxisFD_numu(AnalysisAxisFD_numu),
+      fAnalysisAxisFD_nue(AnalysisAxisFD_nue)
       fNDOffAxis(NDOffAxis), fND280kAAxis(ND280kAAxis),
       fTrueAnalysisAxis(TrueAnalysisAxis),
       fNDFDEnergyMatchAxis(NDFDEnergyMatchAxis),
-      fCovarianceAxis(CovarianceAxis), fOffPredictionAxis(OffPredictionAxis),
+      fCovarianceAxis_numu(CovarianceAxis_numu), fCovarianceAxis_nue(CovarianceAxis_nue),
+      fOffPredictionAxis(OffPredictionAxis),
       f280kAPredictionAxis(_280kAPredictionAxis),
-      fFluxMatcherCorrectionAxes(FluxMatcherCorrectionAxes) {}
+      fFluxMatcherCorrectionAxes_numu(FluxMatcherCorrectionAxes_numu),
+      fFluxMatcherCorrectionAxes_nue(FluxMatcherCorrectionAxes_nue) {}
 
 void PredictionPRISM::Initialize() {
   fSetNDErrorsFromRate = true;
@@ -124,8 +130,10 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
                                       ana::SystShifts shift,
                                       PRISM::BeamChan NDChannel) {
   std::unique_ptr<PRISMReweightableSpectrum> &NDData = 
+  //std::unique_ptr<Spectrum> &NDData =
       GetNDData(NDChannel, 293);
   std::unique_ptr<PRISMReweightableSpectrum> &NDFakeDataBias = 
+  //std::unique_ptr<Spectrum> &NDFakeDataBias =
       GetNDData(NDChannel, 293, true);
   if (&NDData == &kNoSuchNDDataSpectrum || &NDFakeDataBias == &kNoSuchNDDataSpectrum) {
     std::cout << "ERROR: Invalid ND data type passed: " << NDChannel.chan << ":"
@@ -142,14 +150,22 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   NDData = std::make_unique<PRISMReweightableSpectrum>( 
       ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, kNoShift,
       wei * slice_width_weight);
+  /*NDData = std::make_unique<Spectrum>(
+      ND_loader, fOffPredictionAxis, cut && kCut280kARun, kNoShift,
+      wei * slice_width_weight);*/
 
   NDFakeDataBias = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fNDOffAxis, cut && kCut280kARun, shift,
       wei * slice_width_weight);
+  /*NDFakeDataBias = std::make_unique<Spectrum>(
+      ND_loader, fOffPredictionAxis, cut && kCut280kARun, shift,
+      wei * slice_width_weight);*/
 
-  std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA = 
+  std::unique_ptr<PRISMReweightableSpectrum> &NDData_280kA =
+  //std::unique_ptr<Spectrum> &NDData_280kA = 
       GetNDData(NDChannel, 280);
   std::unique_ptr<PRISMReweightableSpectrum> &NDFakeDataBias_280kA = 
+  //std::unique_ptr<Spectrum> &NDFakeDataBias_280kA =
       GetNDData(NDChannel, 280, true);
   if (&NDData_280kA == &kNoSuchNDDataSpectrum || 
       &NDFakeDataBias_280kA == &kNoSuchNDDataSpectrum) {
@@ -160,10 +176,16 @@ void PredictionPRISM::AddNDDataLoader(SpectrumLoaderBase &ND_loader,
   NDData_280kA = std::make_unique<PRISMReweightableSpectrum>( 
       ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, kNoShift,
       wei * slice_width_weight_280kA);
+  /*NDData_280kA = std::make_unique<Spectrum>(
+      ND_loader, f280kAPredictionAxis, cut && kSel280kARun, kNoShift,
+      wei * slice_width_weight_280kA);*/
 
   NDFakeDataBias_280kA = std::make_unique<PRISMReweightableSpectrum>(
       ND_loader, fAnalysisAxisND, fND280kAAxis, cut && kSel280kARun, shift,
       wei * slice_width_weight_280kA);
+  /*NDFakeDataBias_280kA = std::make_unique<Spectrum>(
+      ND_loader, f280kAPredictionAxis, cut && kSel280kARun, shift,
+      wei * slice_width_weight_280kA);*/
 }
 
 ///\brief Call to add a ND MC component
@@ -250,8 +272,16 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
     abort();
   }
 
+  HistAxis &FDAxis = (FDChannel.chan == kNueNueBar) ? 
+                     fAnalysisAxisFD_nue : 
+                     fAnalysisAxisFD_numu;
+
+  HistAxis &FDFluxCorrAxis = (FDChannel.chan == kNueNueBar) ? 
+                             fFluxMatcherCorrectionAxes_numu :
+                             fFluxMatcherCorrectionAxes_nue;
+
   fPredGens.push_back(
-      std::make_unique<NoExtrapPredictionGenerator>(fAnalysisAxisFD, cut, wei));
+      std::make_unique<NoExtrapPredictionGenerator>(FDAxis, cut, wei));
   FDPrediction = std::make_unique<PredictionInterp>(
       systlist, calc, *fPredGens.back(), loaders, kNoShift,
       PredictionInterp::kSplitBySign);
@@ -266,7 +296,7 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
 
   // Prediction for MC correction. Make sure there is no WSB!
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
-      fFluxMatcherCorrectionAxes, cut, wei));
+      FDFluxCorrAxis, cut, wei));
   FDUnOscWeightedSigPrediction = std::make_unique<PredictionInterp>(
       systlist, calc, *fPredGens.back(), loaders, kNoShift,
       PredictionInterp::kSplitBySign);
@@ -279,7 +309,6 @@ void PredictionPRISM::AddFDMCLoader(Loaders &loaders, const Cut &cut,
                         ? kPRISMFDSignal_True_numu
                         : kPRISMFDSignal_True_numub;
   // Try FDNoOscPredictionGenerator
-  //fPredGens.push_back(std::make_unique<NonSwapNoExtrapPredictionGenerator>(
   fPredGens.push_back(std::make_unique<FDNoOscPredictionGenerator>(
       fTrueAnalysisAxis, kFDNumuCut, wei));
   FDNonSwapAppOscPrediction = std::make_unique<PredictionInterp>(
@@ -622,10 +651,6 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   auto &FDNueSwapAppOscPredictionTrueEnu =
       GetFDNueSwapAppOscPredictionTrueEnu(match_chan.to.mode);
 
-  /*PRISMOUT("Making PRISM prediction for: \n\t("
-           << match_chan.from.mode << ":" << match_chan.from.chan << ") -> ("
-           << match_chan.to.mode << ":" << match_chan.to.chan << ")");*/
-
   // Sort out the flavors and signs
   auto NDSigFlavor = (match_chan.from.chan & NuChan::kNumuNumuBar)
                          ? Flavors::kAllNuMu
@@ -654,16 +679,29 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                                ? Flavors::kNuEToNuMu
                                : Flavors::kNuEToNuE;
 
-  /*PRISMOUT("\n\tNDSigFlavor: "
-           << NDSigFlavor << "\n\tNDSigSign: " << NDSigSign
-           << "\n\tNDWrongSign: " << NDWrongSign << "\n\tNDWrongFlavor: "
-           << NDWrongFlavor << "\n\tFDSigFlavor: " << FDSigFlavor
-           << "\n\tFDSigSign: " << FDSigSign << "\n\tFDWrongSign: "
-           << FDWrongSign << "\n\tFDWrongFlavor: " << FDWrongFlavor
-           << "\n\tFDIntrinsicFlavor: " << FDIntrinsicFlavor);*/
+  // ND and FD detector systtematics are totally uncorrelated. Do not want to 
+  // try and minimise an ND prediction by varying an FD energy scale syst.
+  // ----------------------------------------------------------------
+  std::vector<ana::ISyst const *> nd_systs = FilterOutFDSysts(shift.ActiveSysts());
+  std::vector<ana::ISyst const *> fd_systs = FilterOutNDSysts(shift.ActiveSysts());
+
+  std::map <const ISyst*, double> nd_shift_map, fd_shift_map;
+  for (auto const syst : nd_systs) {
+    double shift_sig = shift.GetShift(syst);
+    nd_shift_map[syst] = shift_sig;
+  }
+  for (auto const syst : fd_systs) {
+    double shift_sig = shift.GetShift(syst);
+    fd_shift_map[syst] = shift_sig;
+  }
+ 
+  SystShifts shift_nd(nd_shift_map);
+  SystShifts shift_fd(fd_shift_map);
+  //-----------------------------------------------------------------
 
   // Using maps for non-default constructible classes is awful...
   std::map<PredictionPRISM::PRISMComponent, PRISMReweightableSpectrum> NDComps;
+  //std::map<PredictionPRISM::PRISMComponent, Spectrum> NDComps;
   std::map<PredictionPRISM::PRISMComponent, Spectrum> Comps;
 
   RunPlan const &NDRunPlan = (match_chan.from.mode == PRISM::BeamMode::kNuMode)
@@ -678,7 +716,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Weight the data to mock-up the proposed run-plan
   NDComps.emplace(
-      kNDData_293kA,
+      kNDData_293kA, //*NDData);
       NDRunPlan.Weight(*NDData, 293, fOffPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_293kA, NDComps.at(kNDData_293kA));
 
@@ -687,14 +725,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Weight 280kA component
   NDComps.emplace(
-      kNDData_280kA,
+      kNDData_280kA, //*NDData_280kA);
       NDRunPlan.Weight(*NDData_280kA, 280, f280kAPredictionAxis, fSetNDErrorsFromRate));
   NDComps.emplace(kNDDataCorr2D_280kA, NDComps.at(kNDData_280kA));
 
   NDComps.emplace(kNDSigOnly2D_293kA, 
                   NDRunPlan.Weight(SetSpectrumErrors(
                       NDPrediction->PredictComponentSyst(
-                          calc, shift, 
+                          calc, shift_nd, 
                           NDSigFlavor, Current::kCC, NDSigSign), 
                       fDefaultOffAxisPOT),
                       293, fOffPredictionAxis));
@@ -707,6 +745,10 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
           NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift : kNoShift)),
           fDefaultOffAxisPOT),
       293, fOffPredictionAxis);
+  /*PRISMReweightableSpectrum NDSig = ToReweightableSpectrum(
+      NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift_nd : kNoShift)), 
+      fDefaultOffAxisPOT);*/
+  //Spectrum NDSig = NDPrediction->PredictSyst(calc, (fVaryNDFDMCData ? shift_nd : kNoShift));
 
   NDComps.emplace(kNDSig_293kA, NDSig);
   NDComps.emplace(kNDSig2D_293kA, NDSig);
@@ -716,6 +758,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                             calc, (fVaryNDFDMCData ? shift : kNoShift)),
                         fDefaultOffAxisPOT),
       280, f280kAPredictionAxis);
+  /*PRISMReweightableSpectrum NDSig_280kA = ToReweightableSpectrum(
+      NDPrediction_280kA->PredictSyst(calc, (fVaryNDFDMCData ? shift_nd : kNoShift)), 
+      fDefaultOffAxisPOT);*/
+  /*Spectrum NDSig_280kA = NDPrediction_280kA->PredictSyst(
+                             calc, (fVaryNDFDMCData ? shift_nd : kNoShift));*/
 
   NDComps.emplace(kNDSig_280kA, NDSig_280kA);
   NDComps.emplace(kNDSig2D_280kA, NDSig_280kA);
@@ -728,6 +775,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                                          Flavors::kAll, Current::kNC, Sign::kBoth),
                                          fDefaultOffAxisPOT),
                        293, fOffPredictionAxis);
+    /*PRISMReweightableSpectrum NC = ToReweightableSpectrum(
+                                     NDPrediction->PredictComponentSyst(
+                                       calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                       Flavors::kAll, Current::kNC, Sign::kBoth), 
+                                     fDefaultOffAxisPOT);*/
+    /*Spectrum NC = NDPrediction->PredictComponentSyst(
+                      calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                      Flavors::kAll, Current::kNC, Sign::kBoth);*/
 
     NDComps.emplace(kNDNCBkg_293kA, NC);
 
@@ -740,6 +795,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                               Flavors::kAll, Current::kNC, Sign::kBoth),
                           fDefaultOffAxisPOT),
         280, f280kAPredictionAxis);
+    /*PRISMReweightableSpectrum NC_280kA = ToReweightableSpectrum(
+                                           NDPrediction_280kA->PredictComponentSyst(
+                                             calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                             Flavors::kAll, Current::kNC, Sign::kBoth),
+                                           fDefaultOffAxisPOT);*/
+    /*Spectrum NC_280kA = NDPrediction_280kA->PredictComponentSyst(
+                            calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                            Flavors::kAll, Current::kNC, Sign::kBoth);*/
 
     NDComps.emplace(kNDNCBkg_280kA, NC_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDNCBkg_280kA);
@@ -753,6 +816,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                               NDWrongFlavor, Current::kCC, Sign::kBoth),
                           fDefaultOffAxisPOT),
         293, fOffPredictionAxis);
+    /*PRISMReweightableSpectrum WLB = ToReweightableSpectrum(
+                                      NDPrediction->PredictComponentSyst(
+                                        calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                        NDWrongFlavor, Current::kCC, Sign::kBoth),
+                                      fDefaultOffAxisPOT);*/
 
     NDComps.emplace(kNDWrongLepBkg_293kA, WLB);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWrongLepBkg_293kA);
@@ -764,6 +832,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                               NDWrongFlavor, Current::kCC, Sign::kBoth),
                           fDefaultOffAxisPOT),
         280, f280kAPredictionAxis);
+    /*PRISMReweightableSpectrum WLB_280kA = ToReweightableSpectrum(
+                                            NDPrediction_280kA->PredictComponentSyst(
+                                              calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                              NDWrongFlavor, Current::kCC, Sign::kBoth),
+                                          fDefaultOffAxisPOT);*/
 
     NDComps.emplace(kNDWrongLepBkg_280kA, WLB_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWrongLepBkg_280kA);
@@ -777,6 +850,11 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                               NDSigFlavor, Current::kCC, NDWrongSign),
                           fDefaultOffAxisPOT),
         293, fOffPredictionAxis);
+    /*PRISMReweightableSpectrum WSB = ToReweightableSpectrum(
+                                      NDPrediction->PredictComponentSyst(
+                                        calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                        NDSigFlavor, Current::kCC, NDWrongSign),
+                                      fDefaultOffAxisPOT);*/
 
     NDComps.emplace(kNDWSBkg_293kA, WSB);
     NDComps.at(kNDDataCorr2D_293kA) -= NDComps.at(kNDWSBkg_293kA);
@@ -788,17 +866,36 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
                               NDSigFlavor, Current::kCC, NDWrongSign),
                           fDefaultOffAxisPOT),
         280, f280kAPredictionAxis);
+    /*PRISMReweightableSpectrum WSB_280kA = ToReweightableSpectrum(
+                                            NDPrediction_280kA->PredictComponentSyst(
+                                              calc, (fVaryNDFDMCData ? kNoShift : shift_nd),
+                                              NDSigFlavor, Current::kCC, NDWrongSign),
+                                            fDefaultOffAxisPOT);*/
 
     NDComps.emplace(kNDWSBkg_280kA, WSB_280kA);
     NDComps.at(kNDDataCorr2D_280kA) -= NDComps.at(kNDWSBkg_280kA);
     NDComps.at(kNDSig2D_280kA) -= NDComps.at(kNDWSBkg_280kA);
   }
 
-  //static osc::NoOscillations no;
+  // Now RunPlan weight here
+  //----
+  /*NDComps.at(kNDDataCorr2D_293kA) = NDRunPlan.Weight(NDComps.at(kNDDataCorr2D_293kA), 293,
+                                                     fOffPredictionAxis, fSetNDErrorsFromRate);
+  NDComps.at(kNDSig2D_293kA) = NDRunPlan.Weight(NDComps.at(kNDSig2D_293kA), 293,
+                                                fOffPredictionAxis);
+
+  NDComps.at(kNDDataCorr2D_280kA) = NDRunPlan.Weight(NDComps.at(kNDDataCorr2D_280kA), 280,
+                                                     f280kAPredictionAxis, fSetNDErrorsFromRate); 
+  NDComps.at(kNDSig2D_280kA) = NDRunPlan.Weight(NDComps.at(kNDSig2D_280kA), 280,
+                                                f280kAPredictionAxis);*/
+
+  //----
+
+
   // FD MC spectrum with analysis axis/axes + Enu axis.
   Spectrum FDUnWeightedSig_Spec =
       FDUnOscWeightedSigPrediction->PredictComponentSyst(
-          calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor, Current::kCC,
+          calc, (fVaryNDFDMCData ? kNoShift : shift_fd), FDSigFlavor, Current::kCC,
           FDSigSign);
 
   // Convert FD MC to RWSpectrum with Enu as reweight variable.
@@ -808,18 +905,18 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   Comps.emplace(kFDUnOscPred, FDUnOscWeightedSig.UnWeighted());
 
   // Numu -> Nue x-section correction as a function of true energy.
-  if (FDSigFlavor == Flavors::kNuMuToNuE) {
+  if (FDSigFlavor == Flavors::kNuMuToNuE && fMatchIntrinsicBkg) {
     // Copied from unfold and smear xsec corr below
     // for numu/nue xsec corr when including FD intrinsic nue in flux matching
     // Does it need to be FD spectrum? ND numu/nue spectrum should also work
     Spectrum FD_nueapp_spectrum_True_E_nu =
         FDNueSwapAppOscPredictionTrueEnu->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE,
+            calc, (fVaryNDFDMCData ? kNoShift : shift_fd), Flavors::kNuMuToNuE,
             Current::kCC, NDSigSign);
 
     Spectrum FD_numusurv_apposc_spectrum_True_E_nu =
         FDNonSwapAppOscPredictionTrueEnu->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu,
+            calc, (fVaryNDFDMCData ? kNoShift : shift_fd), Flavors::kNuMuToNuMu,
             Current::kCC, NDSigSign);
 
     Comps.emplace(kFD_NumuNueCorr_Nue_TrueEnu, FD_nueapp_spectrum_True_E_nu);
@@ -846,9 +943,9 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // Scale relative size of the weights to account for the run-plan.
   // E.g. more data taken on-axis means a smaller weight for the
   // on-axis position weights.
-  Eigen::ArrayXd UnRunPlannedLinearCombination_293kA =
+  Eigen::ArrayXd UnRunPlannedLinearCombination_293kA = //LinearCombination.first;
       NDRunPlan.Unweight(LinearCombination.first, 293, oaAxis);
-  Eigen::ArrayXd UnRunPlannedLinearCombination_280kA =
+  Eigen::ArrayXd UnRunPlannedLinearCombination_280kA = //LinearCombination.second;
       NDRunPlan.Unweight(LinearCombination.second, 280, oaAxis280);
 
   // We don't want the total POT of the runplan to affect the scale of the
@@ -864,11 +961,15 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       std::move(UnRunPlannedLinearCombination_280kA), oaAxis280, NDPOT, 0);
   Comps.emplace(kNDFDWeightings_280kA, UnRunPlannedLinearCombination_280kA_s);
 
+
   // Off axis coefficients for weighting:
-  Eigen::ArrayXd LinearCombinationCoeffs_293kA_arr =
+  Eigen::ArrayXd LinearCombinationCoeffs_293kA_arr = //LinearCombination.first;
       UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT);
-  Eigen::ArrayXd LinearCombinationCoeffs_280kA_arr =
+  Eigen::ArrayXd LinearCombinationCoeffs_280kA_arr = //LinearCombination.second;
       UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT);
+
+  //std::cout << "293kA Weights: " << LinearCombinationCoeffs_293kA_arr << std::endl;
+  //std::cout << "280kA Weights: " << LinearCombinationCoeffs_280kA_arr << std::endl;
 
   // Perform linear combination on raw (i.e. not extrapolated) ND data/MC.
   // MC linear combination:
@@ -894,18 +995,19 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
 
+
   Comps.emplace(kNDLinearComb, Comps.at(kPRISMPred));
 
   // Numu -> Nue x-section correction as a function of true energy.
   if (FDSigFlavor == Flavors::kNuMuToNuE) {
     Spectrum FD_nueapp_spectrum =
         FDNueSwapAppOscPrediction->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuE,
+            calc, (fVaryNDFDMCData ? kNoShift : shift_fd), Flavors::kNuMuToNuE,
             Current::kCC, NDSigSign);
 
     Spectrum FD_numusurv_apposc_spectrum =
         FDNonSwapAppOscPrediction->PredictComponentSyst(
-            calc, (fVaryNDFDMCData ? kNoShift : shift), Flavors::kNuMuToNuMu, // kNuMuToNuE,
+            calc, (fVaryNDFDMCData ? kNoShift : shift_fd), Flavors::kNuMuToNuMu, // kNuMuToNuE,
             Current::kCC, NDSigSign);
 
     Comps.emplace(kFD_NumuNueCorr_Nue, FD_nueapp_spectrum);
@@ -922,37 +1024,47 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   //-------------------------------------------------------------
   // Procedure for near to far extrapolation of PRISM prediction:
   // ------------------------------------------------------------
-  LabelsAndBins ExtrapAnaAxis(fAnalysisAxisFD.GetLabels(),
-                              fAnalysisAxisFD.GetBinnings());
+  HistAxis &FDAnaAxis = (FDSigFlavor == Flavors::kNuMuToNuE) ?
+                        fAnalysisAxisFD_nue :
+                        fAnalysisAxisFD_numu;
+  HistAxis &CovarAxis = (FDSigFlavor == Flavors::kNuMuToNuE) ?
+                        fCovarianceAxis_nue :
+                        fCovarianceAxis_numu;
+
+  LabelsAndBins ExtrapAnaAxis(FDAnaAxis.GetLabels(),
+                              FDAnaAxis.GetBinnings());
   LabelsAndBins ExtrapWeightAxis(fNDOffAxis.GetLabels(),
                                  fNDOffAxis.GetBinnings());
   LabelsAndBins Extrap280kAWeightAxis(fND280kAAxis.GetLabels(),
                                       fND280kAAxis.GetBinnings());
-  LabelsAndBins CovAnaAxis(fCovarianceAxis.GetLabels(),
-                           fCovarianceAxis.GetBinnings());
-  LabelsAndBins CovWeightAxis(fCovarianceAxis.GetLabels(),
-                              fCovarianceAxis.GetBinnings());
+  LabelsAndBins CovAnaAxis(CovarAxis.GetLabels(),
+                           CovarAxis.GetBinnings());
+  LabelsAndBins CovWeightAxis(CovarAxis.GetLabels(),
+                              CovarAxis.GetBinnings());
 
   // 1. Calculate efficiency of selection.
   fMCEffCorrection->CalcEfficiency(
-      calc, fAnalysisAxisFD, (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor,
+      calc, FDAnaAxis, (fVaryNDFDMCData ? kNoShift : shift_nd), 
+      (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
       FDSigFlavor, Current::kCC, NDSigSign, FDSigSign);
   // Do ND to FD detector extrapolation here
   // Extrapolate just the LC ND, not the MC
   // 2. Extrapolate 293kA sample.
   fNDFD_Matrix->ExtrapolateNDtoFD(
       NDComps.at(kNDDataCorr2D_293kA), NDPOT, 293,
-      UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT), calc,
-      (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
-      Current::kCC, NDSigSign, FDSigSign,
+      LinearCombinationCoeffs_293kA_arr, calc,
+      (fVaryNDFDMCData ? kNoShift : shift_nd), 
+      (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor, 
+      FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(293),
       fMCEffCorrection->GetFDefficiency());
   // 3. Extrapolate 280kA sample.
   fNDFD_Matrix->ExtrapolateNDtoFD(
       NDComps.at(kNDDataCorr2D_280kA), NDPOT, 280,
-      UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT), calc,
-      (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
-      Current::kCC, NDSigSign, FDSigSign,
+      LinearCombinationCoeffs_280kA_arr, calc,
+      (fVaryNDFDMCData ? kNoShift : shift_nd), 
+      (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor, 
+      FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(280),
       fMCEffCorrection->GetFDefficiency());
 
@@ -977,6 +1089,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       Extrap280kAWeightAxis, NDPOT, 0);
 
   NDComps.emplace(kNDDataExtrap2D_280kA, sNDExtrap_280kA);
+
   // 8. Weight extrapolated 280kA ND data by linear combination coeffiecient.
   Comps.emplace(kNDDataExtrap_280kA, sNDExtrap_280kA.WeightedByErrors(
                                          LinearCombinationCoeffs_280kA_arr));
@@ -999,17 +1112,19 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     fNDFD_Matrix->ExtrapolateNDtoFD(
         NDComps.at(kNDSig2D_293kA), NDPOT, 293,
-        UnRunPlannedLinearCombination_293kA_s.GetEigen(NDPOT), calc,
-        (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
-        Current::kCC, NDSigSign, FDSigSign,
+        LinearCombinationCoeffs_293kA_arr, calc,
+        (fVaryNDFDMCData ? kNoShift : shift_nd), 
+        (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor, 
+        FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(293),
         fMCEffCorrection->GetFDefficiency());
 
     fNDFD_Matrix->ExtrapolateNDtoFD(
         NDComps.at(kNDSig2D_280kA), NDPOT, 280,
-        UnRunPlannedLinearCombination_280kA_s.GetEigen(NDPOT), calc,
-        (fVaryNDFDMCData ? kNoShift : shift), NDSigFlavor, FDSigFlavor,
-        Current::kCC, NDSigSign, FDSigSign,
+        LinearCombinationCoeffs_280kA_arr, calc,  
+        (fVaryNDFDMCData ? kNoShift : shift_nd), 
+        (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor, 
+        FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(280),
         fMCEffCorrection->GetFDefficiency());
 
@@ -1042,17 +1157,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // Add variances of background to diagonal of covariance matrix.
   if (fNCCorrection) { // Add in NC background.
     Comps.emplace(kFDNCBkg, FDPrediction->PredictComponentSyst(
-                                calc, (fVaryNDFDMCData ? kNoShift : shift),
+                                calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                                 Flavors::kAll, Current::kNC, Sign::kBoth));
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDNCBkg);
-    // Basically no contribution to stat error from FD MC, so remove the line
-    // below from each background addition component.
-    // sCovMat += GetDiagonalCovariance(Comps.at(kFDNCBkg), NDPOT,
-    // fAnalysisAxisFD);
     if (Comps.count(kNDMC_FDExtrap))
       Comps.at(kNDMC_FDExtrap) += Comps.at(kFDNCBkg);
   }
@@ -1060,7 +1171,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   if (fWLBCorrection) { // Add in wrong lepton background.
     Comps.emplace(kFDWrongLepBkg,
                   FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDWrongFlavor,
+                      calc, (fVaryNDFDMCData ? kNoShift : shift_fd), FDWrongFlavor,
                       Current::kCC, Sign::kBoth));
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDWrongLepBkg);
@@ -1074,7 +1185,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   if (fNuTauCCCorrection) { // Miss-identified CC nu-taus always a background.
     Comps.emplace(kFDNuTauCCBkg,
                   FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift),
+                      calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                       Flavors::kAllNuTau, Current::kCC, Sign::kBoth));
     if (fAxisAgreement) {
       Comps.at(kPRISMPred) += Comps.at(kFDNuTauCCBkg);
@@ -1089,7 +1200,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
     Comps.emplace(kFDWSBkg,
                   FDPrediction->PredictComponentSyst(
-                      calc, (fVaryNDFDMCData ? kNoShift : shift), FDSigFlavor,
+                      calc, (fVaryNDFDMCData ? kNoShift : shift_fd), FDSigFlavor,
                       Current::kCC, FDWrongSign));
 
     if (fAxisAgreement) {
@@ -1104,15 +1215,16 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   if (fIntrinsicCorrection) { // Add in intrinsic correction.
 
     // Consistenet with flux matching implementation in PRISMExtrapolator
-    if ( fMatchIntrinsicBkg && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
+    if ( fMatchIntrinsicBkg && ( (match_chan.to.chan & NuChan::kNueApp) || 
+         (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
       Comps.emplace(kFDIntrinsicBkg,
                     FDPrediction->PredictComponentSyst(
-                        calc, (fVaryNDFDMCData ? kNoShift : shift),
+                        calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                         FDIntrinsicFlavor, Current::kCC, FDWrongSign)); // Right sign included in flux matching, here only include wrong sign
     } else {
       Comps.emplace(kFDIntrinsicBkg,
                     FDPrediction->PredictComponentSyst(
-                        calc, (fVaryNDFDMCData ? kNoShift : shift),
+                        calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                         FDIntrinsicFlavor, Current::kCC, Sign::kBoth));
     }
     if (fAxisAgreement) {
@@ -1132,7 +1244,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
   // below and comment-out above.
   Comps.emplace(kFDOscPred,
-                FDPrediction->PredictComponentSyst(calc, shift, Flavors::kNuMuToNuMu,
+                FDPrediction->PredictComponentSyst(calc, shift_fd, Flavors::kNuMuToNuMu,
                                                    Current::kCC, Sign::kNu));
 
   // Get the residual from the event rate/flux matcher.

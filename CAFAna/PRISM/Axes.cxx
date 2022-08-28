@@ -81,14 +81,28 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Truth proxy E_{#nu} (GeV)", kProxyERec);
   } else if (varname == "ERec") {
     return std::make_pair("E_{Dep.} (GeV)", kRecoE_FromDep);
-  } else if (varname == "EVisReco") {
-    return std::make_pair("Reco E_{vis.} (GeV)", kEVisReco);
+  } else if (varname == "EVisReco_numu") {
+    return std::make_pair("Vis. E_{rec.} (GeV)", kEVisReco_numu);
+  } else if (varname == "EVisReco_nue") {
+    return std::make_pair("Vis. E_{rec.} (GeV)", kEVisReco_nue);
+  } else if (varname == "EVisReco_ND") {
+    return std::make_pair("Vis. E_{rec.} (GeV)", kNDEVisReco);
   } else if (varname == "EVisTrue") {
     return std::make_pair("True E_{vis.} (GeV)", kEVisTrue);
-  } else if (varname == "RecoELep") {
-    return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco);
-  } else if (varname == "RecoEHad") {
-    return std::make_pair("Reco E_{had.} (GeV)", kHadEReco);
+  } else if (varname == "RecoELep_numu") {
+    return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco_numu);
+  } else if (varname == "RecoELep_nue") {
+    return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco_nue);
+  } else if (varname == "RecoELep_ND") {
+    return std::make_pair("Reco E_{lep.} (GeV)", kNDLepEReco);
+  } else if (varname == "HadEVisReco_ND") {
+    return std::make_pair("Reco E_{had.} (GeV)", SIMPLEVAR(HadEVisReco_ND));
+  } else if (varname == "HadEVisReco_FD") {
+    return std::make_pair("Reco E_{had.} (GeV)", SIMPLEVAR(HadEVisReco_FD));
+  } else if (varname == "RecoEHad_numu") {
+    return std::make_pair("Reco E_{had.} (GeV)", SIMPLEVAR(kHadEReco_numu));
+  } else if (varname == "RecoEHad_nue") {
+    return std::make_pair("Reco E_{had.} (GeV)", SIMPLEVAR(kHadEReco_nue));
   }  else if (varname == "RecoEP") {
     return std::make_pair("Reco E_{p} (GeV)", kPEReco);
   }  else if (varname == "RecoEPipm") {
@@ -124,11 +138,15 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   // Only needed for EVisReco, not ELepEHad.
   bool OneDAxis(false);
   if (varname == "EVisReco" || varname == "EProxy") OneDAxis = true;
-  HistAxis xaxND = RecoObservable(varname, 
+  //HistAxis xaxND = RecoObservable(varname, 
+  //                                OneDAxis ? "prism_fine_default" : xbinning);
+  //HistAxis xaxFD = RecoObservable(varname, xbinning);
+  HistAxis xaxND = RecoObservable((varname + "_ND").c_str(),
                                   OneDAxis ? "prism_fine_default" : xbinning);
-  HistAxis xaxFD = RecoObservable(varname, xbinning);
+  HistAxis xaxFD_numu = RecoObservable((varname + "_numu").c_str(), xbinning);
+  HistAxis xaxFD_nue = RecoObservable((varname + "_nue").c_str(), xbinning);
 
-  return {xaxND, xaxFD, axOffAxisPos, axOffAxis280kAPos};
+  return {xaxND, xaxFD_numu, xaxFD_nue, axOffAxisPos, axOffAxis280kAPos};
 }
 
 // Return HistAxis for true energy version of observable
@@ -266,14 +284,32 @@ HistAxis RecoObservable(std::string const &obsvarname,
     labels.push_back(vardefVis.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefVis.second);
-  } else if (obsvarname == "ELepEHadReco") {   
-    auto vardefLep = GetVar("RecoELep");
+  } else if (obsvarname == "ELepEHadVisReco_numu") {   
+    auto vardefLep = GetVar("RecoELep_numu");
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefLep.second); 
-    auto vardefHad = GetVar("RecoEHad"); 
+    auto vardefHad = GetVar("HadEVisReco_FD"); 
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default")); 
+    vars.push_back(vardefHad.second);
+  } else if (obsvarname == "ELepEHadVisReco_nue") {
+    auto vardefLep = GetVar("RecoELep_nue");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefLep.second); 
+    auto vardefHad = GetVar("HadEVisReco_FD");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning("had_default"));
+    vars.push_back(vardefHad.second);
+  } else if (obsvarname == "ELepEHadVisReco_ND") {
+    auto vardefLep = GetVar("RecoELep_ND");
+    labels.push_back(vardefLep.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("HadEVisReco_ND");
+    labels.push_back(vardefHad.first);
+    bins.push_back(GetBinning("had_default"));
     vars.push_back(vardefHad.second);   
   } else if  (obsvarname == "EVisEHadReco") {
     auto vardefHad = GetVar("RecoEHad");

@@ -97,7 +97,8 @@ namespace ana {
 
   void MCEffCorrection::CalcEfficiency(osc::IOscCalc *calc,
                                        HistAxis const &axis,
-                                       ana::SystShifts shift,
+                                       ana::SystShifts shift_nd,
+                                       ana::SystShifts shift_fd,
                                        Flavors::Flavors_t NDflav,
                                        Flavors::Flavors_t FDflav,
                                        Current::Current_t curr,
@@ -108,13 +109,10 @@ namespace ana {
 
     Spectrum sNDunselected_293kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
     Spectrum sNDunselected_280kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
-
-    // Maybe you want this for debugging
-    //hNDUnselected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDunselected_293kA.ToTH2(1)));
+        ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
 
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
     Eigen::ArrayXXd NDunsel_293kA = ConvertArrayToMatrix(sNDunselected_293kA.GetEigen(1),
@@ -131,13 +129,10 @@ namespace ana {
     // Selected ND MC
     Spectrum sNDselected_293kA =
         NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
-        ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
+        ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
     Spectrum sNDselected_280kA =
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
-         ->PredictComponentSyst(&no, shift, NDflav, curr, NDsign);
-
-    // Maybe you want this for debugging
-    //hNDSelected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDselected_293kA.ToTH2(1)));
+         ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
 
     Eigen::ArrayXXd NDsel_293kA = ConvertArrayToMatrix(sNDselected_293kA.GetEigen(1),
                                                        sNDselected_293kA.GetBinnings())
@@ -152,10 +147,10 @@ namespace ana {
 
     Spectrum sFDunselected =
         FDUnselPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+        ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
     Spectrum sFDselected =
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-        ->PredictComponentSyst(calc, shift, FDflav, curr, FDsign);
+        ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
 
     hFDunselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDunselected.ToTH1(1)));
     hFDselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDselected.ToTH1(1)));

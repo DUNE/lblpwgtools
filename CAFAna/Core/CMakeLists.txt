@@ -7,7 +7,6 @@ set(Core_implementation_files
   LoadFromFile.cxx
   OscCurve.cxx
   OscillatableSpectrum.cxx
-  PRISMReweightableSpectrum.cxx
   ProfilerSupport.cxx
   Registry.cxx
   SpectrumLoader.cxx
@@ -31,7 +30,6 @@ set(Core_header_files
   OscCalcFwdDeclare.h
   OscCurve.h
   OscillatableSpectrum.h
-  PRISMReweightableSpectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

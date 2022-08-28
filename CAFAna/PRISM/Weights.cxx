@@ -20,24 +20,55 @@ const ana::Weight kSpecHCRunWeight([](const caf::StandardRecord *sr) {
 
 // Use to weight by Exposure
 const ana::Weight kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
-  return sr->perPOTWeight * sr->perFileWeight;
+  return sr->perPOTWeight; //* sr->perFileWeight;
 });
 
 const ana::Weight kMassCorrection([](const caf::StandardRecord *sr) -> double {
   return sr->NDMassCorrWeight;
 });
 
+// Use to get perFile weight
+const ana::Weight kPerFileWeighter([](const caf::StandardRecord *sr) -> double {
+  if (sr->isFD) {
+    return 1;
+  }
+  return GetPerFileWeight(sr->SpecialHCRunId, sr->det_x + sr->vtx_x);  
+});                                                                             
+
 // Manual combination of the weights above
 // Reduce the number of ana::Weight object calls
 const ana::Weight
 kNDPRISMCVWeights([](const caf::StandardRecord *sr) -> double {
-  return sr->perPOTWeight * sr->perFileWeight * sr->NDMassCorrWeight *
-         sr->SpecialRunWeight;
+  //return sr->perPOTWeight * sr->perFileWeight * sr->NDMassCorrWeight *
+  //       sr->SpecialRunWeight;
+  return sr->perPOTWeight * sr->NDMassCorrWeight * sr->SpecialRunWeight;
 });
 
-ana::Weight GetNDCVWeight() { return kNDPRISMCVWeights * kCVXSecWeights; }
+ana::Weight GetNDCVWeight() { return kNDPRISMCVWeights * kCVXSecWeights * kPerFileWeighter; }
 
 ana::Weight GetFDCVWeight() { return kCVXSecWeights; }
+
+// Get per file weight
+double GetPerFileWeight(int SpecRun_ID, double abspos_x) {
+  TFile fin((ana::FindCAFAnaDir() + 
+             "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
+
+  assert(fin.IsOpen());
+  std::map<int, TH1D *> FileExposures;
+  std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
+  for (int SpecRunID_local : SpecRunIds_all) {
+    std::stringstream ss("");
+    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
+    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
+    if (!FileExposures[SpecRunID_local]) abort();
+  }
+
+  double nfiles = FileExposures[SpecRun_ID]->GetBinContent(
+      FileExposures[SpecRun_ID]->FindFixBin(abspos_x));
+
+  return 1 / nfiles;
+}
+
 
 static TH1 *numode_280kA, *nubarmode_280kA;
 

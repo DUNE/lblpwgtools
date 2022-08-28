@@ -146,7 +146,7 @@ Eigen::VectorXd GetEigenFlatVector(TH1 const *th) {
 
 Eigen::ArrayXd GetEigenFlatArray(std::unique_ptr<TH1> const &h) {
   int N = h->GetXaxis()->GetNbins();
-  Eigen::ArrayXd arr(N + 2); //= Eigen::ArrayXd::Zero(N);
+  Eigen::ArrayXd arr(N + 2); 
   for (int i = 0; i <= N + 1; i++) {
     arr(i) = h->GetBinContent(i);
   } 
@@ -180,7 +180,6 @@ Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr,
     for (int row = 1; row <= NRows; row++) {
       for (int col2 = 1; col2 <= NCols2; col2++) {
         for (int col1 = 1; col1 <= NCols1; col1++) {
-        //for (int row = 1; row <= NRows; row++) {
           int colit = col2 + (col1 - 1) * NCols2;
           ret_mat(row, colit) = arr(row + (colit - 1) * NRows); 
         }

@@ -48,7 +48,8 @@ namespace ana {
     // ND and FD event rates as argument
     void CalcEfficiency(osc::IOscCalc *calc, 
                         HistAxis const &axis,
-                        ana::SystShifts shift = kNoShift,
+                        ana::SystShifts shift_nd = kNoShift,
+                        ana::SystShifts shift_fd = kNoShift,
                         Flavors::Flavors_t NDflav = Flavors::kAll,
                         Flavors::Flavors_t FDflav = Flavors::kAll,
                         Current::Current_t curr = Current::kCC,

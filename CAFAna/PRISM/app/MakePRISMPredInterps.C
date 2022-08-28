@@ -11,8 +11,6 @@
 
 #include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
-#include "CAFAna/Systs/TruthEnergyFDSysts.h"
-#include "CAFAna/Systs/TruthEnergyNDSysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
 #include "OscLib/IOscCalc.h"
@@ -301,15 +299,24 @@ int main(int argc, char const *argv[]) {
                      OneDAxis ? 
                      "prism_fine_default" : binningdescriptor);
 
-  std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
-  HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
+  //std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
+  std::vector<HistAxis> AxisVec_numu = {axes.XProjectionFD_numu, axes.XProjectionFD_numu};
+  std::vector<HistAxis> AxisVec_nue = {axes.XProjectionFD_nue, axes.XProjectionFD_nue};
+  //HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
+  HistAxis CovarianceAxis_numu = GetMatrixAxis(AxisVec_numu);
+  HistAxis CovarianceAxis_nue = GetMatrixAxis(AxisVec_nue);
+
 
   HistAxis _OffPredictionAxis =
       GetTwoDAxis(axes.XProjectionND, axes.OffAxisPosition);
   HistAxis _280kAPredictionAxis =
       GetTwoDAxis(axes.XProjectionND, axes.OffAxis280kAPosition);
-  HistAxis _FluxMatcherCorrectionAxes =
-      GetTwoDAxis(axes.XProjectionFD, MatchAxis);
+  //HistAxis _FluxMatcherCorrectionAxes =
+  //    GetTwoDAxis(axes.XProjectionFD, MatchAxis);
+  HistAxis _FluxMatcherCorrectionAxes_numu =
+      GetTwoDAxis(axes.XProjectionFD_numu, MatchAxis);
+  HistAxis _FluxMatcherCorrectionAxes_nue =
+      GetTwoDAxis(axes.XProjectionFD_nue, MatchAxis);
   //--------------------------------------
 
   ana::Weight kNDCVWeight = GetNDCVWeight();
@@ -336,9 +343,10 @@ int main(int argc, char const *argv[]) {
   //-------------------------------------------------------
 
   auto PRISM = std::make_unique<PredictionPRISM>(
-      axes.XProjectionND, axes.XProjectionFD, axes.OffAxisPosition,
-      axes.OffAxis280kAPosition, TrueObsAxis, MatchAxis, CovarianceAxis,
-      _OffPredictionAxis, _280kAPredictionAxis, _FluxMatcherCorrectionAxes);
+      axes.XProjectionND, axes.XProjectionFD_numu, axes.XProjectionFD_nue, axes.OffAxisPosition,
+      axes.OffAxis280kAPosition, TrueObsAxis, MatchAxis, CovarianceAxis_numu, CovarianceAxis_nue,
+      _OffPredictionAxis, _280kAPredictionAxis, _FluxMatcherCorrectionAxes_numu, 
+      _FluxMatcherCorrectionAxes_nue);
   PRISM->Initialize();
 
   Loaders Loaders_nu, Loaders_nub;
@@ -440,13 +448,17 @@ int main(int argc, char const *argv[]) {
   // --> e.g. EProxy --> ETrue
 
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
-  std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
+  //std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
+  std::vector<HistAxis> FDAxisVec_numu = {TrueObsAxis, axes.XProjectionFD_numu};
+  std::vector<HistAxis> FDAxisVec_nue = {TrueObsAxis, axes.XProjectionFD_nue};
 
   // Get axes for ND and FD smearring matrices.
   // Account for 2D predictions by projecting a 4D smearing matrix
   // on to a 2D histogram.
   HistAxis const ERecETrueAxisND = GetMatrixAxis(NDAxisVec);
-  HistAxis const ERecETrueAxisFD = GetMatrixAxis(FDAxisVec);
+  //HistAxis const ERecETrueAxisFD = GetMatrixAxis(FDAxisVec);
+  HistAxis const ERecETrueAxisFD_numu = GetMatrixAxis(FDAxisVec_numu);
+  HistAxis const ERecETrueAxisFD_nue = GetMatrixAxis(FDAxisVec_nue);
 
   //----------------------------------------------------------------
   // HistAxis needed for MC efficiency correction
@@ -613,6 +625,9 @@ int main(int argc, char const *argv[]) {
         (IsNueSwap ? kFDSelectionCuts_nue : kFDSelectionCuts_numu) :
         (IsNueSwap ? kFDSelectionCuts_nueb : kFDSelectionCuts_numub);
 
+      ana::HistAxis &FDAxis = IsNueSwap ? axes.XProjectionFD_nue :
+                                          axes.XProjectionFD_numu;
+
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
 
@@ -634,15 +649,12 @@ int main(int argc, char const *argv[]) {
             PredictionInterp::kSplitBySign);
       }
 
-      size_t non_swap_it = GetConfigNonSwap(config);
-      size_t nue_swap_it = GetConfigNueSwap(config);
-
       FarDetDataPreds[fd_config] = std::make_unique<DataPredictionNoExtrap>(
-          Loaders_bm, axes.XProjectionFD, FDCuts,
+          Loaders_bm, FDAxis, FDCuts,
           kNoShift, kFDCVWeight);
 
       FarDetFakeDataBiasPreds[fd_config] = std::make_unique<DataPredictionNoExtrap>(
-          Loaders_bm, axes.XProjectionFD, FDCuts,
+          Loaders_bm, FDAxis, FDCuts,
           DataShift, kFDCVWeight);
 
       // Ugly temporary hack, hopefully we don't need this
@@ -655,7 +667,8 @@ int main(int argc, char const *argv[]) {
       });
       // Matrix of ERec v ETrue for FD
       FDMatrixPredGens[fd_config] = std::make_unique<FDNoOscPredictionGenerator>(
-          ERecETrueAxisFD, FDCuts, kFDCVWeight * kOscWeight);
+          (IsNueSwap ? ERecETrueAxisFD_nue : ERecETrueAxisFD_numu), FDCuts, 
+          kFDCVWeight * kOscWeight);
       FDMatrixPredInterps[fd_config] = std::make_unique<PredictionInterp>(
           los, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);

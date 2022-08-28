@@ -1,7 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/PRISMReweightableSpectrum.h"
-
+#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
 #include "CAFAna/PRISM/EigenUtils.h"
 
 #include "fhiclcpp/ParameterSet.h"
@@ -84,8 +83,6 @@ namespace ana {
                      });
 
     double sumtime = rp.GetPlanPOT();
-    std::cout << "total_POT = " << total_POT << ", total time = " << sumtime
-              << std::endl;
 
     for (auto &stop : rp.stops) {
       stop.POT *= (total_POT / sumtime);

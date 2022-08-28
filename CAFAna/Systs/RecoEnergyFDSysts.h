@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-//#include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Cuts/AnaCuts.h"
 
@@ -22,8 +21,6 @@
 
 namespace ana
 {
-  //class SystShifts;
-
   // Global true energy scale syst for eRecProxy
   // Don't shift muon energies with this
 
@@ -35,7 +32,8 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
   
-      restore.Add(sr->VisReco_NDFD,
+      restore.Add(sr->EVisReco_numu,
+                  sr->EVisReco_nue,
                   sr->RecoHadE_NDFD,
                   sr->RecoLepE_NDFD);
 

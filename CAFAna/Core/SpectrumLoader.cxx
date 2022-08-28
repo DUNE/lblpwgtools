@@ -318,40 +318,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.SpecialHCRunId = 293;
   }
 
-  TFile fin(std::getenv("PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT"));
-  assert(fin.IsOpen());
-  std::map<int, TH1D *> FileExposures;
-  std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
-  
-  for (int SpecRunID_local : SpecRunIds_all) {
-    std::stringstream ss("");
-    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
-    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
-    if (!FileExposures[SpecRunID_local]) abort(); 
-  }                                                                                     
-
-  int Nfiles = NFiles();
-  // Run 1 smaller file at a time per grid job
-  int grid_mfile(0);
-  // Grid submission script sets this env variable.
-  // Set manually if you wish to run a single small ND MC file with perFile correction.
-  if (std::getenv("PRISM_MULTIFILE")) {
-    grid_mfile = std::atoi(std::getenv("PRISM_MULTIFILE"));
-  }
-
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
-    //if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
     if (!sr.isFD) sr.abspos_x = sr.det_x + sr.vtx_x;
     else sr.abspos_x = 0;
-
-    // Change the perFile weight if we have multiple ND files
-    if (!sr.isFD && (Nfiles > 1 || grid_mfile == 1)) { 
-      double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
-          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x)); // -std::fabs(sr.abspos_x)
-      sr.perFileWeight = 1 / nfiles;
-    }
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {
@@ -367,21 +338,12 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Common EvisReco variable for ND and FD
-    if (sr.isFD) {
-      if (sr.nuPDG == 14 || sr.nuPDG == -14) { // FD numu event 
-        sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
-      } else if (sr.nuPDG == 12 || sr.nuPDG == -12) {
-        sr.RecoLepE_NDFD = sr.RecoLepEnNue;
-      }
-      //sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0;
-      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim +
-                         sr.eDepPi0 + sr.eDepOther; 
-    } else {
-      sr.RecoLepE_NDFD = sr.Elep_reco;
-      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
-                         sr.eRecoPi0 + sr.eRecoOther;
-    }
-    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
+    sr.HadEVisReco_ND = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0 + sr.eRecoOther;
+    sr.HadEVisReco_FD = sr.eDepP + sr.eDepPip + sr.eDepPim + sr.eDepPi0 + sr.eDepOther;
+
+    sr.EVisReco_ND = sr.HadEVisReco_ND + sr.Elep_reco;   
+    sr.EVisReco_numu = sr.HadEVisReco_FD + sr.RecoLepEnNumu;
+    sr.EVisReco_nue = sr.HadEVisReco_FD + sr.RecoHadEnNue;
 
     double eother = 0;
     if (std::isnormal(sr.eOther)) {
@@ -397,7 +359,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     // Variable for true hadronic energy
     sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
-
+    // True visible energy in the ND or FD
+    // Sum of the true lepton and true hadronic energy
     sr.VisTrue_NDFD = sr.LepE + sr.HadE;
 
     // Sum of the true charged pion KE
@@ -551,7 +514,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     if (prog && n % 10000 == 0)
       prog->SetProgress(double(n) / Nentries);
   } // end for n
-  fin.Close();
 }
 
 //----------------------------------------------------------------------

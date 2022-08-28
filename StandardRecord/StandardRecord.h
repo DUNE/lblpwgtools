@@ -47,9 +47,13 @@ namespace caf
     double RecoLepEnNumu;
     double RecoHadEnNumu;
 
-    double RecoLepE_NDFD;
-    double RecoHadE_NDFD;
-    double VisReco_NDFD;
+    double HadEVisReco_ND;
+    double HadEVisReco_FD;
+
+    double EVisReco_ND;
+    double EVisReco_numu;
+    double EVisReco_nue;
+    
     double VisTrue_NDFD;
     double ProxyRecoLepE;
 
