@@ -22,6 +22,7 @@ ORDER OF EXECUTION: python gen_single_pt_2d_hists.py
 		NOTE: Requires numpy to run
 		NOTE: Script can handle one input and output file at once. All input files will be in above directory, but input file name 
 		      must be changed in script manually. Output file name must also be changed manually.
+		NOTE: Negative dmsq32 values indicate IO.
 
 	gen_single_pt_2d_CLhists.py
 		Generates 6 TH2d histograms as above with the 68%, 90%, and 99.7% confidence levels filled in. The 4 parameters that are 
@@ -33,6 +34,7 @@ ORDER OF EXECUTION: python gen_single_pt_2d_hists.py
 		NOTE: Requires numpy to run
 		NOTE: Script can handle one input and output file at once. All input files will be in above directory, but input file name 
 		      must be changed in script manually. Output file name must also be changed manually.
+		NOTE: Negative dmsq32 values indicate IO.
 
 	gen_single_pt_2d_plots.py
 		Plotting script that produces a PNG plot file for each of the TH2Ds in a single file produced by either of the scripts above.
