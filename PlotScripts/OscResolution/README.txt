@@ -425,7 +425,8 @@ ORDER OF EXECUTION: root -l gen_fixed_point_prob_graphs.C
 		Outputs files at:  ./prob_plots/
 -------------------------------------------------------dcp Asimov Throws Comparison Plots-----------------------------------------------------
 ORDER OF EXECUTION: python gen_asimov_throws_comp_hists_dcp.py
-		    python gen_asimov_throws_comp_plots_dcp.py
+		    python gen_asimov_throws_comp_same_plot_dcp.py
+		    python gen_asimov_throws_comp_plots_dcp.py (OPTIONAL/OBSOLETE)
 
 	gen_asimov_throws_comp_hists_dcp.py
 		Generates dchisq vs dcp 1d Asimov scan TGraph and bin frequency probability vs dcp throws TH1D for comparison at the fixed 
@@ -442,8 +443,17 @@ ORDER OF EXECUTION: python gen_asimov_throws_comp_hists_dcp.py
 		NOTE: Inputs one fixed point, which must be manually changed to switch to a different exposure. Different points may also be
 		      used, as long as the throws and asimov fits are there. Read script for current point being used.
 	
+	gen_asimov_throws_comp_same_plot_dcp.py
+		Generates a single plot with both the 1d Asimov scan graph and the throws 1d histogram plotted and their 68% and 90%
+		acceptance intervals/regions shaded in black and red, respectively. The Asimov graph is in black with axis on the left and
+		the throws histogram is in red with axis on the right.
+		Output File Names: dcp_asimov_throws_comp_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.png
+				   dcp_asimov_throws_comp_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf
+		Inputs files from: ./asimov_throws_comp_hists/
+		Outputs files at:  ./asimov_throws_comp_plots/
+
 	gen_asimov_throws_comp_plots_dcp.py
-		Generates plots for each of the objects produced by the above script.
+		Generates plots for each of the objects produced by the first script in this section.
 		Output File Names: dcp_singlept_throwshist_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.png
 				   dcp_singlept_throwshist_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf
 				   dcp_singlept_asimovgraph_ndfd[exp]_hie1_th13=dyb_th23=0.58_dcp=-0.25.png
