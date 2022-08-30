@@ -2,6 +2,7 @@
 
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Extrap/TrivialExtrap.h"
@@ -12,6 +13,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionNoExtrap", IPrediction, PredictionNoExtrap);
+
   //----------------------------------------------------------------------
   PredictionNoExtrap::PredictionNoExtrap(SpectrumLoaderBase& loaderNonswap,
                                          SpectrumLoaderBase& loaderNue,

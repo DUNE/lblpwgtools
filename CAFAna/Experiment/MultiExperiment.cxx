@@ -3,6 +3,7 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/Stan.h"
 
 #include "OscLib/IOscCalc.h"
@@ -16,6 +17,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("MultiExperiment", IExperiment, MultiExperiment);
+
   //----------------------------------------------------------------------
   SystShifts MultiExperiment::TranslateShifts(const SystShifts& syst, int idx) const
   {

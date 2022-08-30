@@ -1,6 +1,8 @@
 #include "CAFAna/Experiment/SolarConstraints.h"
 
 #include "OscLib/IOscCalc.h"
+
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/MathUtil.h"
 
 #include "TDirectory.h"
@@ -12,6 +14,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("SolarConstraints", IExperiment, SolarConstraints);
+
   //----------------------------------------------------------------------
   SolarConstraints::SolarConstraints()
   {
