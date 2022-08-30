@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
@@ -32,6 +33,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionInterp", IPrediction, PredictionInterp);
+
   //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
                                      osc::IOscCalc* osc,
