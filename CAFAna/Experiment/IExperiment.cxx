@@ -1,6 +1,7 @@
 #include "CAFAna/Experiment/IExperiment.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
@@ -8,13 +9,6 @@
 
 #include <cassert>
 #include <iostream>
-
-// To implement LoadFrom()
-#include "CAFAna/Experiment/CountingExperiment.h"
-#include "CAFAna/Experiment/SingleSampleExperiment.h"
-#include "CAFAna/Experiment/SolarConstraints.h"
-#include "CAFAna/Experiment/MultiExperiment.h"
-#include "CAFAna/Experiment/ReactorExperiment.h"
 
 namespace ana
 {
@@ -28,11 +22,8 @@ namespace ana
     const TString tag = ptag->GetString();
     delete ptag;
 
-    if(tag == "CountingExperiment") return CountingExperiment::LoadFrom(dir, name);
-    if(tag == "ReactorExperiment") return ReactorExperiment::LoadFrom(dir, name);
-    if(tag == "SingleSampleExperiment") return SingleSampleExperiment::LoadFrom(dir, name);
-    if(tag == "SolarConstraints") return SolarConstraints::LoadFrom(dir, name);
-    if(tag == "MultiExperiment") return MultiExperiment::LoadFrom(dir, name);
+    const auto func = LoadFromRegistry<IExperiment>::Get(tag.Data());
+    if(func) return func(dir, name);
 
     std::cerr << "Unknown Experiment type '" << tag << "'" << std::endl;
     abort();
