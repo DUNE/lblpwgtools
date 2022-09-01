@@ -36,15 +36,6 @@ namespace ana {
     // Assume this spectrum is in per/POT
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
     Eigen::MatrixXd NDSumSq_mat = NDSpec.GetSumSqEigen(1);    
-    //----
-    /*for (int row_it = 1; row_it < NDSpec_mat.rows() - 1; ++row_it) {
-      double sum = NDSpec_mat.row(row_it).sum();
-      for (int col_it = 1; col_it < NDSpec_mat.cols() - 1; ++col_it) {
-        NDSpec_mat(row_it, col_it) *= 1 / sum;
-        NDSumSq_mat(row_it, col_it) *= util::sqr(1 / sum);
-      }
-    } */                                                                  
-    //----
     std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
                                 axis.GetBinnings().at(1).Edges() : 
                                 axis.GetBinnings().at(2).Edges(); // Is 3D.
@@ -59,9 +50,6 @@ namespace ana {
                     : NDSumSq_mat(yit, xit) * std::pow(stop.POT, 2);
         // Test alternative Chi2 covariance from [ref]
         // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
-        /*double bvar = SetErrorsFromPredictedRate
-                    ? 3 / ((1 / bc) + (2 / bc))
-                    : NDSumSq_mat(yit, xit) * std::pow(stop.POT, 2);*/
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
@@ -107,14 +95,6 @@ namespace ana {
     std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
                                 axis.GetBinnings().at(1).Edges() :
                                 axis.GetBinnings().at(2).Edges();         
-    //----
-    /*for (int row_it = 1; row_it < NDSpec_mat.rows() - 1; ++row_it) {
-      double sum = NDSpec_mat.row(row_it).sum();
-      for (int col_it = 1; col_it < NDSpec_mat.cols() - 1; ++col_it) {
-        NDSpec_mat(row_it, col_it) *= 1 / sum;
-      }
-    }*/
-    //----                                                                 
                                                                                   
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);

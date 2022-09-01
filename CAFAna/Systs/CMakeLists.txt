@@ -1,7 +1,6 @@
 set(Systs_implementation_files
   AnaSysts.cxx
   DUNEFluxSysts.cxx
-  RecoEnergyFDSysts.cxx
   RecoEnergyNDSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
@@ -21,7 +20,6 @@ set(Systs_implementation_files
 set(Systs_header_files
   AnaSysts.h
   DUNEFluxSysts.h
-  RecoEnergyFDSysts.h
   RecoEnergyNDSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h

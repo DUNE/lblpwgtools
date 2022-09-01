@@ -256,19 +256,19 @@ void ProcessFile(TFile &f, std::function<void(const caf::SRProxy& sr)> ev_proces
     // Common EvisReco variable for ND and FD
     if (sr.isFD) {
       if (sr.nuPDG == 14 || sr.nuPDG == -14) { // FD numu event 
-        sr.RecoLepE_NDFD = sr.RecoLepEnNumu;
+        sr.RecoLepEnNue = sr.RecoLepEnNumu;
       } else if (sr.nuPDG == 12 || sr.nuPDG == -12) {
-        sr.RecoLepE_NDFD = sr.RecoLepEnNue;
+        sr.RecoLepEnNue = sr.RecoLepEnNue;
       }
-      //sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0;
-      sr.RecoHadE_NDFD = sr.eDepP + sr.eDepPip + sr.eDepPim +
+      //sr.HadEVisReco_ND = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0;
+      sr.HadEVisReco_ND = sr.eDepP + sr.eDepPip + sr.eDepPim +
                          sr.eDepPi0 + sr.eDepOther; 
     } else {
-      sr.RecoLepE_NDFD = sr.Elep_reco;
-      sr.RecoHadE_NDFD = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
+      sr.RecoLepEnNue = sr.Elep_reco;
+      sr.HadEVisReco_ND = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + // no neutron
                          sr.eRecoPi0 + sr.eRecoOther;
     }
-    sr.VisReco_NDFD = sr.RecoHadE_NDFD + sr.RecoLepE_NDFD;
+    sr.EVisReco_ND = sr.HadEVisReco_ND + sr.RecoLepEnNue;
 
     double eother = 0;
     if (std::isnormal(sr.eOther)) {
@@ -426,55 +426,55 @@ int main(int argc, char const *argv[]){
         double CVWeight = 1.0E21*kNDCVWeight(&sr);
         if(TrueCut(&sr)){
           if(SelCut(&sr)){
-            Sel_ERec_off_axis->Fill(sr.VisReco_NDFD, 
+            Sel_ERec_off_axis->Fill(sr.EVisReco_ND, 
               sr.abspos_x/100.0,
               CVWeight);
 
-            if((sr.VisReco_NDFD > 0.95) && (sr.VisReco_NDFD < 1.05)){
-              Sel_EHadELep_EReco1GeV->Fill(sr.RecoLepE_NDFD, 
-                sr.RecoHadE_NDFD,
+            if((sr.EVisReco_ND > 0.95) && (sr.EVisReco_ND < 1.05)){
+              Sel_EHadELep_EReco1GeV->Fill(sr.RecoLepEnNue, 
+                sr.HadEVisReco_ND,
                 CVWeight);
             }
-            if((sr.VisReco_NDFD > 1.95) && (sr.VisReco_NDFD < 2.05)){
-              Sel_EHadELep_EReco2GeV->Fill(sr.RecoLepE_NDFD, 
-                sr.RecoHadE_NDFD,
+            if((sr.EVisReco_ND > 1.95) && (sr.EVisReco_ND < 2.05)){
+              Sel_EHadELep_EReco2GeV->Fill(sr.RecoLepEnNue, 
+                sr.HadEVisReco_ND,
                 CVWeight);
             }
           }
 
           if(((sr.muon_contained || sr.muon_tracker) && (sr.Ehad_veto<30))){
-            Sel_ERec_off_axis_no_reconumu->Fill(sr.VisReco_NDFD, 
+            Sel_ERec_off_axis_no_reconumu->Fill(sr.EVisReco_ND, 
               sr.abspos_x/100.0,
               CVWeight);
           }
           if((sr.reco_numu && (sr.muon_tracker) && (sr.Ehad_veto<30))){
-            Sel_ERec_off_axis_no_contained->Fill(sr.VisReco_NDFD, 
+            Sel_ERec_off_axis_no_contained->Fill(sr.EVisReco_ND, 
               sr.abspos_x/100.0,
               CVWeight);
           }
           if((sr.reco_numu && (sr.muon_contained) && (sr.Ehad_veto<30))){
-            Sel_ERec_off_axis_no_tracker->Fill(sr.VisReco_NDFD, 
+            Sel_ERec_off_axis_no_tracker->Fill(sr.EVisReco_ND, 
               sr.abspos_x/100.0,
               CVWeight);
           }
           if((sr.reco_numu && (sr.muon_contained || sr.muon_tracker))){
-            Sel_ERec_off_axis_no_ehad_veto->Fill(sr.VisReco_NDFD, 
+            Sel_ERec_off_axis_no_ehad_veto->Fill(sr.EVisReco_ND, 
               sr.abspos_x/100.0,
               CVWeight);
           }
 
-          True_ERec_off_axis->Fill(sr.VisReco_NDFD, 
+          True_ERec_off_axis->Fill(sr.EVisReco_ND, 
             sr.abspos_x/100.0,
             CVWeight);
 
-          if((sr.VisReco_NDFD > 0.95) && (sr.VisReco_NDFD < 1.05)){
-            True_EHadELep_EReco1GeV->Fill(sr.RecoLepE_NDFD, 
-                sr.RecoHadE_NDFD,
+          if((sr.EVisReco_ND > 0.95) && (sr.EVisReco_ND < 1.05)){
+            True_EHadELep_EReco1GeV->Fill(sr.RecoLepEnNue, 
+                sr.HadEVisReco_ND,
                 CVWeight);
           }
-          if((sr.VisReco_NDFD > 1.95) && (sr.VisReco_NDFD < 2.05)){
-            True_EHadELep_EReco2GeV->Fill(sr.RecoLepE_NDFD, 
-                sr.RecoHadE_NDFD,
+          if((sr.EVisReco_ND > 1.95) && (sr.EVisReco_ND < 2.05)){
+            True_EHadELep_EReco2GeV->Fill(sr.RecoLepEnNue, 
+                sr.HadEVisReco_ND,
                 CVWeight);
           }
         }

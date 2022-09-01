@@ -20,7 +20,7 @@ const ana::Weight kSpecHCRunWeight([](const caf::StandardRecord *sr) {
 
 // Use to weight by Exposure
 const ana::Weight kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
-  return sr->perPOTWeight; //* sr->perFileWeight;
+  return sr->perPOTWeight; 
 });
 
 const ana::Weight kMassCorrection([](const caf::StandardRecord *sr) -> double {
@@ -39,8 +39,6 @@ const ana::Weight kPerFileWeighter([](const caf::StandardRecord *sr) -> double {
 // Reduce the number of ana::Weight object calls
 const ana::Weight
 kNDPRISMCVWeights([](const caf::StandardRecord *sr) -> double {
-  //return sr->perPOTWeight * sr->perFileWeight * sr->NDMassCorrWeight *
-  //       sr->SpecialRunWeight;
   return sr->perPOTWeight * sr->NDMassCorrWeight * sr->SpecialRunWeight;
 });
 

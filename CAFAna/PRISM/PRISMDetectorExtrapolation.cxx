@@ -182,8 +182,6 @@ namespace ana {
 
     auto binnings = NDDataSpec.GetTrueBinnings().at(0);
     auto edges = binnings.Edges();
-    //std::cout << "NBins = " << binnings.NBins() << ", Min = " << binnings.Min()
-    //  << ", Max = " << binnings.Max() << std::endl;
     // Need a loop to go through each slice of off-axis ND data
     for (int slice = 0; slice < PRISMND_block.rows(); slice++) {
       // Normalise matrices to efficiency for particular OA stop

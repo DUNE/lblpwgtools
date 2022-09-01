@@ -47,4 +47,17 @@ namespace ana {
 
     return vec;
   }
+
+  std::vector<ana::ISyst const *> FilterOutFDSysts(std::vector<ana::ISyst const *> systs) {
+    std::vector<ana::ISyst const *> outs;
+    std::vector<ana::ISyst const *> fsysts = GetEnergySysts();
+
+    for (auto syst : systs) {
+      if (std::find(fsysts.begin(), fsysts.end(), syst) == fsysts.end()) {
+        outs.emplace_back(syst);
+      }
+    }
+    return outs;
+  }
+    
 } // namespace ana

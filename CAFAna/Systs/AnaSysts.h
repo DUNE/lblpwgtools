@@ -9,8 +9,6 @@ extern size_t NFluxParametersToAddToStatefile;
 
 namespace ana
 {
-  //class SystShifts;
-  //SystShifts FilterNDSystShifts(SystShifts shift);
 
   std::vector<std::string> SplitString(std::string input, char delim = ' ');
 

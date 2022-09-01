@@ -9,7 +9,7 @@
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/Weights.h"
 
-#include "CAFAna/Systs/RecoEnergyFDSysts.h"
+#include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
@@ -255,25 +255,34 @@ int main(int argc, char const *argv[]) {
   // Separate out flux systs as only flux systs are
   // needed for the PredInterps that are used to
   // determine the PRISM coefficient
-  std::vector<ana::ISyst const *> los, los_flux;
+  std::vector<ana::ISyst const *> los_nd, los_fd, los_flux;
   if (syst_descriptor.size()) {
-    los = GetListOfSysts(syst_descriptor);
+    los_nd = GetListOfSysts(syst_descriptor, true, false);
+    los_fd = GetListOfSysts(syst_descriptor, false, true);
 
     // Have to add fake data systs too.
     std::vector<ana::ISyst const *> fdlos = GetListOfSysts(
         false, false, false, false, false, false, addfakedata, false);
-    los.insert(los.end(), fdlos.begin(), fdlos.end());
+    los_nd.insert(los_nd.end(), fdlos.begin(), fdlos.end());
+    los_fd.insert(los_fd.end(), fdlos.begin(), fdlos.end());
 
-    los_flux = los;
+    los_flux = los_fd;
     KeepSysts(los_flux, GetListOfSysts("nov17flux:nodet:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
-    los = GetListOfSysts(true, true, true, true, true, false, addfakedata);
+    los_nd = GetListOfSysts(true, true, true, true, true, false, addfakedata);
+    los_fd = GetListOfSysts(true, true, true, true, true, false, addfakedata);
   }
 
-  std::cout << "[INFO]: Using " << los.size()
-            << " systematic dials: " << std::endl;
-  for (auto s : los) {
+  std::cout << "[INFO]: Using " << los_nd.size()
+            << " ND systematic dials: " << std::endl;
+  for (auto s : los_nd) {
+    std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
+  }
+
+  std::cout << "[INFO]: Using " << los_fd.size()
+            << " FD systematic dials: " << std::endl;
+  for (auto s : los_fd) {
     std::cout << "[INFO]:\t" << s->ShortName() << std::endl;
   }
 
@@ -292,17 +301,16 @@ int main(int argc, char const *argv[]) {
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
   bool OneDAxis(false);
-  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy") 
+  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy" || axdescriptor == "EnuReco") 
     OneDAxis = true;
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor, 
                      OneDAxis ? 
                      "prism_fine_default" : binningdescriptor);
 
-  //std::vector<HistAxis> AxisVec = {axes.XProjectionFD, axes.XProjectionFD};
   std::vector<HistAxis> AxisVec_numu = {axes.XProjectionFD_numu, axes.XProjectionFD_numu};
   std::vector<HistAxis> AxisVec_nue = {axes.XProjectionFD_nue, axes.XProjectionFD_nue};
-  //HistAxis CovarianceAxis = GetMatrixAxis(AxisVec);
+  
   HistAxis CovarianceAxis_numu = GetMatrixAxis(AxisVec_numu);
   HistAxis CovarianceAxis_nue = GetMatrixAxis(AxisVec_nue);
 
@@ -311,8 +319,6 @@ int main(int argc, char const *argv[]) {
       GetTwoDAxis(axes.XProjectionND, axes.OffAxisPosition);
   HistAxis _280kAPredictionAxis =
       GetTwoDAxis(axes.XProjectionND, axes.OffAxis280kAPosition);
-  //HistAxis _FluxMatcherCorrectionAxes =
-  //    GetTwoDAxis(axes.XProjectionFD, MatchAxis);
   HistAxis _FluxMatcherCorrectionAxes_numu =
       GetTwoDAxis(axes.XProjectionFD_numu, MatchAxis);
   HistAxis _FluxMatcherCorrectionAxes_nue =
@@ -448,7 +454,6 @@ int main(int argc, char const *argv[]) {
   // --> e.g. EProxy --> ETrue
 
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
-  //std::vector<HistAxis> FDAxisVec = {TrueObsAxis, axes.XProjectionFD};
   std::vector<HistAxis> FDAxisVec_numu = {TrueObsAxis, axes.XProjectionFD_numu};
   std::vector<HistAxis> FDAxisVec_nue = {TrueObsAxis, axes.XProjectionFD_nue};
 
@@ -456,7 +461,6 @@ int main(int argc, char const *argv[]) {
   // Account for 2D predictions by projecting a 4D smearing matrix
   // on to a 2D histogram.
   HistAxis const ERecETrueAxisND = GetMatrixAxis(NDAxisVec);
-  //HistAxis const ERecETrueAxisFD = GetMatrixAxis(FDAxisVec);
   HistAxis const ERecETrueAxisFD_numu = GetMatrixAxis(FDAxisVec_numu);
   HistAxis const ERecETrueAxisFD_nue = GetMatrixAxis(FDAxisVec_nue);
 
@@ -557,7 +561,7 @@ int main(int argc, char const *argv[]) {
       if (!IsND280kA) {
         PRISM->AddNDMCLoader(Loaders_bm,
                              NDCuts, kNDCVWeight,
-                             los, &no, chanmode);
+                             los_nd, &no, chanmode);
       }
 
       // Corrects for non-uniform off-axis binning
@@ -594,7 +598,7 @@ int main(int argc, char const *argv[]) {
               kNDCVWeight);
         }
         NDMatrixPredInterps[config] = std::make_unique<PredictionInterp>(
-            los, &no, *NDMatrixPredGens[config], Loaders_bm, kNoShift,
+            los_nd, &no, *NDMatrixPredGens[config], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign);
       }
       // Add another ND unselected spectrum for MC eff correction
@@ -606,7 +610,7 @@ int main(int argc, char const *argv[]) {
               kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
-          los, &no, *NDUnselTruePredGens[config], Loaders_bm, kNoShift,
+          los_nd, &no, *NDUnselTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
 
       // ND True Selected Spectrum
@@ -615,7 +619,7 @@ int main(int argc, char const *argv[]) {
           NDCuts && (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
       NDSelTruePredInterps[config] = std::make_unique<PredictionInterp>(
-          los, &no, *NDSelTruePredGens[config], Loaders_bm, kNoShift,
+          los_nd, &no, *NDSelTruePredGens[config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
 
     } else if (!IsND &&
@@ -631,7 +635,7 @@ int main(int argc, char const *argv[]) {
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
                         IsNueSwap ? NuChan::kNueNueBar : NuChan::kNumuNumuBar};
 
-      PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los,
+      PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los_fd,
                            calc, chanmode);
       // We always want to use the numus as we don't want to account for any
       // xsec differences between numu and nues, we use a special prediction
@@ -670,7 +674,7 @@ int main(int argc, char const *argv[]) {
           (IsNueSwap ? ERecETrueAxisFD_nue : ERecETrueAxisFD_numu), FDCuts, 
           kFDCVWeight * kOscWeight);
       FDMatrixPredInterps[fd_config] = std::make_unique<PredictionInterp>(
-          los, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
+          los_fd, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
 
       // True energy FD spectrum with obs binning for MC efficiency correction
@@ -681,13 +685,13 @@ int main(int argc, char const *argv[]) {
                   (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
               kFDCVWeight);
       FDUnselTruePredInterps[fd_config] = std::make_unique<PredictionInterp>(
-          los, calc, *FDUnselTruePredGens[fd_config], Loaders_bm, kNoShift,
+          los_fd, calc, *FDUnselTruePredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
       // FD Selected True Spectrum
       FDSelTruePredGens[fd_config] = std::make_unique<NoExtrapPredictionGenerator>(
           FDTrueEnergyObsBins, FDCuts, kFDCVWeight);
       FDSelTruePredInterps[fd_config] = std::make_unique<PredictionInterp>(
-          los, calc, *FDSelTruePredGens[fd_config], Loaders_bm, kNoShift,
+          los_fd, calc, *FDSelTruePredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
     }
   }

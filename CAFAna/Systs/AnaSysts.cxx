@@ -5,7 +5,7 @@
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
-#include "CAFAna/Systs/RecoEnergyFDSysts.h"
+//#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-size_t NFluxParametersToAddToStatefile = 1;
+size_t NFluxParametersToAddToStatefile = 25;
 
 namespace ana
 {
@@ -71,25 +71,24 @@ namespace ana
   std::vector<const ISyst*> getDetectorSysts(bool useFD, bool useND, bool useNueOnE)
   {
 
-    //std::vector<const ISyst*> systs = GetEnergySysts();
     std::vector<const ISyst*> systs = {};
 
-    std::vector<const ISyst *> fdEScalelist = GetRecoEFDSysts();
-    //std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    std::vector<const ISyst *> fdEScalelist = GetEnergySysts();
+    std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
-    //std::vector<const ISyst *> ndlist = GetNDRecoSysts();
-    //std::vector<const ISyst *> nuelist = GetNuOnESysts();
+    std::vector<const ISyst *> ndlist = GetNDRecoSysts();
+    std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     if (useFD) {
       systs.insert(systs.end(), fdEScalelist.begin(), fdEScalelist.end());
-      //systs.insert(systs.end(), fdlist.begin(), fdlist.end());
+      systs.insert(systs.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
       systs.insert(systs.end(), ndEScalelist.begin(), ndEScalelist.end());
-      //systs.insert(systs.end(), ndlist.begin(), ndlist.end());
+      systs.insert(systs.end(), ndlist.begin(), ndlist.end());
     }
     if (useND && useNueOnE) {
-      //systs.insert(systs.end(), nuelist.begin(), nuelist.end());
+      systs.insert(systs.end(), nuelist.begin(), nuelist.end());
     }
 
     return systs;
@@ -128,17 +127,20 @@ namespace ana
 
     std::vector<const ISyst *> systlist;
     if (fluxsyst_Nov17) {
-      std::vector<const ISyst *> fluxsyst_Nov17 = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
+      std::vector<const ISyst *> fluxsyst_Nov17 = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
       systlist.insert(systlist.end(), fluxsyst_Nov17.begin(), fluxsyst_Nov17.end());
     }
 
     if (fluxsyst_CDR) { // CHECK: GetDUNEFluxSysts loading nothing when set to true
-      std::vector<const ISyst *> fluxsyst_CDR = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
+      std::vector<const ISyst *> fluxsyst_CDR = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
       systlist.insert(systlist.end(), fluxsyst_CDR.begin(), fluxsyst_CDR.end());
     }
 
     if (fluxsyst_Sept21) {
-      std::vector<const ISyst *> fluxsyst_Sept21 = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false, true);
+      std::vector<const ISyst *> fluxsyst_Sept21 = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false, true);
       systlist.insert(systlist.end(), fluxsyst_Sept21.begin(), fluxsyst_Sept21.end());
     }
 
@@ -219,6 +221,7 @@ namespace ana
         xsecsyst = true;
         fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
         fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
+        fluxsyst_Sept21 = false;
         detsyst = true;
       }
 
@@ -234,6 +237,7 @@ namespace ana
       // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
       if (syst == "nodet") {
         detsyst = false;
+        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
       if (syst == "noflux") {
         fluxsyst_CDR = false;
@@ -273,6 +277,7 @@ namespace ana
       }
       if (syst == "noxsec") {
         xsecsyst = false;
+        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
     }
 

@@ -343,7 +343,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     sr.EVisReco_ND = sr.HadEVisReco_ND + sr.Elep_reco;   
     sr.EVisReco_numu = sr.HadEVisReco_FD + sr.RecoLepEnNumu;
-    sr.EVisReco_nue = sr.HadEVisReco_FD + sr.RecoHadEnNue;
+    sr.EVisReco_nue = sr.HadEVisReco_FD + sr.RecoLepEnNue;
 
     double eother = 0;
     if (std::isnormal(sr.eOther)) {

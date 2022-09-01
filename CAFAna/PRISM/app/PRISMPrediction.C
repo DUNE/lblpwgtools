@@ -42,8 +42,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   (void)GetListOfSysts();
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
-  std::cout << "Shifts: " << shift.ShortName() << std::endl;
-  //SystShifts fluxshift = FilterFluxSystShifts(shift);
 
   bool do_gauss = gauss_flux.first != 0;
 
@@ -244,13 +242,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
-
-    //auto FarDetFakeDataBiasPred = 
-    //    state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
-    //auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
-    //FakeDataBiasPred->Scale(1, "width");
-    //chan_dir->WriteTObject(FakeDataBiasPred, "FakeDataBiasPred_Total");
-    //FakeDataBiasPred->SetDirectory(nullptr);
 
     Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
     if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
