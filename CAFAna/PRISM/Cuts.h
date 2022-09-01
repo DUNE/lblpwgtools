@@ -3,11 +3,6 @@
 #include "CAFAna/Core/Cut.h"
 
 namespace PRISM {
-extern const ana::Cut kETrueLT10GeV;
-
-extern const ana::Cut kETrue8GeV;
-
-extern const ana::Cut kERecoProxy8GeV;
 
 extern const ana::Cut kIsOutOfTheDesert;
 // Cut to check if it is reconstructed -> removes

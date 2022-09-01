@@ -183,7 +183,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EnuReco") {
-    truevardef = GetVar("EVisTrue");
+    truevardef = GetVar("ETrue"); // EVisTrue
   } else if (obsvarname == "EVisTrue") {
     truevardef = GetVar("ETrue");
   } else if (obsvarname == "RecoEP") {

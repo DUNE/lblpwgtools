@@ -1,7 +1,7 @@
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
-#include "CAFAna/Extrap/IExtrap.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Extrap/TrivialExtrap.h"
@@ -15,6 +15,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionNoOsc", IPrediction, PredictionNoOsc);
+
   //----------------------------------------------------------------------
   PredictionNoOsc::PredictionNoOsc(SpectrumLoaderBase& loader,
                                    const std::string& label,

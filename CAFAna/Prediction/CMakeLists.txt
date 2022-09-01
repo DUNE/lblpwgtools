@@ -8,8 +8,8 @@ set(Prediction_implementation_files
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
   PredictionNuOnE.cxx
-  PredictionInterpKernel.cxx
-  PredictionsForPRISM.cxx)
+  PredictionInterpKernel.cxx)
+  #PredictionsForPRISM.cxx)
 
 set(Prediction_header_files
   IPrediction.h
@@ -21,8 +21,8 @@ set(Prediction_header_files
   PredictionScaleComp.h
   PredictionXSecDiag.h
   PredictionNuOnE.h
-  PredictionInterpKernel.h
-  PredictionsForPRISM.h)
+  PredictionInterpKernel.h)
+  #PredictionsForPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction CAFAnaExtrap CAFAnaPRISM)

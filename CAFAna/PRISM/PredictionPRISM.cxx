@@ -3,8 +3,7 @@
 #include "CAFAna/PRISM/Cuts.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
-
-#include "CAFAna/Prediction/PredictionsForPRISM.h"
+#include "CAFAna/PRISM/PredictionsForPRISM.h"
 
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscCurve.h"

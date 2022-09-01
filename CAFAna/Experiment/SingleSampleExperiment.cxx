@@ -1,6 +1,7 @@
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
@@ -13,6 +14,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("SingleSampleExperiment", IExperiment, SingleSampleExperiment);
+
   //----------------------------------------------------------------------
   SingleSampleExperiment::SingleSampleExperiment(const IPrediction* pred,
                                                  const Spectrum& data)

@@ -1,6 +1,6 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/Prediction/PredictionsForPRISM.h"
+#include "CAFAna/PRISM/PredictionsForPRISM.h"
 
 #include "CAFAna/PRISM/Axes.h"
 #include "CAFAna/PRISM/Cuts.h"
@@ -578,7 +578,7 @@ int main(int argc, char const *argv[]) {
 
       MatchPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && 
               kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
 
@@ -611,7 +611,7 @@ int main(int argc, char const *argv[]) {
       // don't need it for 280kA, just getting the efficiency
       NDUnselTruePredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && 
               kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
@@ -630,14 +630,17 @@ int main(int argc, char const *argv[]) {
     } else if (!IsND) { // Is FD
 
       ana::Cut &FDCuts = IsNu ?
-        (IsNueSwap ? kFDSelectionCuts_nue : (IsNuTauSwap ? kFDSelectionCuts_nutau : kFDSelectionCuts_numu) ) :
-        (IsNueSwap ? kFDSelectionCuts_nueb : (IsNuTauSwap ? kFDSelectionCuts_nutaub : kFDSelectionCuts_numub) );
+        (IsNueSwap ? kFDSelectionCuts_nue : 
+          (IsNuTauSwap ? kFDSelectionCuts_nutau : kFDSelectionCuts_numu) ) :
+        (IsNueSwap ? kFDSelectionCuts_nueb : 
+          (IsNuTauSwap ? kFDSelectionCuts_nutaub : kFDSelectionCuts_numub) );
 
       ana::HistAxis &FDAxis = IsNueSwap ? axes.XProjectionFD_nue :
                                           axes.XProjectionFD_numu;
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
-                        IsNueSwap ? NuChan::kNueNueBar : (IsNuTauSwap ? NuChan::kNutauNutauBar : NuChan::kNumuNumuBar)};
+                        IsNueSwap ? NuChan::kNueNueBar : 
+                        (IsNuTauSwap ? NuChan::kNutauNutauBar : NuChan::kNumuNumuBar)};
 
       PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los_fd,
                            calc, chanmode);

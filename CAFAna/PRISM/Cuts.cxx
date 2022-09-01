@@ -8,17 +8,6 @@
 #include <cmath>
 
 namespace PRISM {
-const ana::Cut kETrueLT10GeV([](const caf::StandardRecord *sr) {
-  return (sr->Ev < 10);
-});
-
-const ana::Cut kETrue8GeV([](const caf::StandardRecord *sr) {
-  return (sr->Ev < 8);
-});
-
-const ana::Cut kERecoProxy8GeV([](const caf::StandardRecord *sr) {
-  return (sr->eRecProxy <= 8);
-});
 
 const ana::Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
   return (std::fabs(sr->vtx_x) < 200);
@@ -31,7 +20,7 @@ const ana::Cut kSel280kARun([](const caf::StandardRecord *sr) {
   return (std::abs(sr->SpecialHCRunId) == 280);
 });
 const ana::Cut kIsReco([](const caf::StandardRecord *sr) {
-  return (sr->Elep_reco != 0);
+  return (sr->Elep_reco > 0);
 });
 
 const ana::Cut kPRISMNDSignal_Selected_numu =
