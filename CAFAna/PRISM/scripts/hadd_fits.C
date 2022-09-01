@@ -176,7 +176,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
 void usage() {
   std::cout << "Usage: hadd_fits scan_param output.root input1.root input2.root ..." << std::endl
-    << "Or can wildcard input files." << std::endl;;
+    << "Or can wildcard input files." << std::endl;
   exit(1);
 }
 

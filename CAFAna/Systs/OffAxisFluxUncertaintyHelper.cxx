@@ -418,21 +418,10 @@ int OffAxisFluxUncertaintyHelper::GetBin(int nu_pdg, double enu_GeV,
     if (!FDTweaks[param_id][nucf] || nucf == kUnhandled) {
       return kInvalidBin;
     } else if (nucf != kUnhandled) {
-      //std::cout << "param_id = " << param_id << " ; nucf = " << nucf << std::endl;
-      //std::cout << "FDTweaks address = " << FDTweaks[param_id][nucf] << std::endl;
-      //std::cout << "FDTweaks entries = " << FDTweaks[param_id][nucf]->GetEntries() << std::endl;
-      //std::cout << "FDTweaks OKAY" << std::endl;
-      //std::cout << "FDTweaks Nbins = " << FDTweaks[param_id][nucf]->GetNbinsX() << std::endl;
-      if (nucf != kUnhandled) {
-        //std::cout << "HERE nucf = " << nucf << std::endl;
-        if (IsFlowBin(FDTweaks[param_id][nucf], enu_GeV)) {
-          return kInvalidBin;
-        }
+      if (IsFlowBin(FDTweaks[param_id][nucf], enu_GeV)) {
+        return kInvalidBin;
       }
-      //std::cout << "Passed IsFlowBin(...)" << std::endl;
-      if (nucf != kUnhandled) {
-        return FDTweaks[param_id][nucf]->FindFixBin(enu_GeV);
-      } else { return kInvalidBin;}
+      return FDTweaks[param_id][nucf]->FindFixBin(enu_GeV);
     }
   }
   throw;

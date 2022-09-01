@@ -1,13 +1,14 @@
 #!/bin/bash
 
-PNFS_PATH_APPEND=CAFAnaInputs/StandardState/ELepEHadReco/FDRHC
-AXISBLOBNAME="default"
+PNFS_PATH_APPEND=CAFAnaInputs/StandardState/IntrinsicNue_Syst_nodet/FDRHC
+AXISBLOBNAME="EVisReco"
+BINNINGDESCRIPTOR="prism_default"
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
 LIFETIME_EXP_ND="60h"
-DISK_EXP_ND="5GB"
-MEM_EXP_ND="55GB"
+DISK_EXP_ND="2GB"
+MEM_EXP_ND="4GB"
 
 LIFETIME_EXP_FD="60h"
 DISK_EXP_FD="5GB"
@@ -57,6 +58,18 @@ while [[ ${#} -gt 0 ]]; do
 
       AXISBLOBNAME="$2"
       echo "[OPT]: Using Axis argument AXISBLOBNAME:\"${AXISBLOBNAME}\"."
+      shift # past argument
+      ;;
+
+      --bin-descriptor)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+
+      BINNINGDESCRIPTOR="$2"
+      echo "[OPT]: Using --binningdescriptor argument BINNINGDESCRIPTOR:\"${BINNINGDESCRIPTOR}\"."
       shift # past argument
       ;;
 
@@ -149,6 +162,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
       echo -e "\t-i|--input-dir             : Path to search for files in."
       echo -e "\t-a|--axis-argument         : Argument to pass to remake_inputs to specify the axes"
+      echo -e "\t--bin-descriptor          : Bin descriptor string to pass."
       echo -e "\t--syst-descriptor          : Syst descriptor string to pass."
       echo -e "\t--no-fakedata-dials        : Remove fake data dials."
       echo -e "\t--nmax                     : Will run a maximum of --nmax jobs"
@@ -281,24 +295,24 @@ ${CAFANA}/CAFAnaEnv.sh
 
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    FD_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} FD_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    FD_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} FD_FHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "FD_FHC_JID: ${FD_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    FD_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} FD_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    FD_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} FD_RHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "FD_RHC_JID: ${FD_RHC_JID}"
   fi
 fi
 
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_FHC_JID: ${ND_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_RHC_JID: ${ND_RHC_JID}"
   fi
 fi

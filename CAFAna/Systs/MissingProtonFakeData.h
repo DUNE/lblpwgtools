@@ -35,17 +35,27 @@ public:
 
     restore.Add(sr->eRec_FromDep, 
                 sr->eRecProxy,
-                sr->VisReco_NDFD,
-                sr->RecoHadE_NDFD);
+                sr->EVisReco_ND,
+                sr->EVisReco_numu,
+                sr->EVisReco_nue,
+		sr->VisTrue_NDFD,
+                sr->HadEVisReco_ND,
+                sr->HadEVisReco_FD,
+		sr->HadE);
 
     if (sr->isFD) {
       sr->eRec_FromDep -= EpFrac * sr->eDepP;
-      sr->VisReco_NDFD -= EpFrac * sr->eDepP;
-      sr->RecoHadE_NDFD -= EpFrac * sr->eDepP; 
+      sr->EVisReco_numu -= EpFrac * sr->eDepP;
+      sr->EVisReco_nue -= EpFrac * sr->eDepP;
+      sr->VisTrue_NDFD -= EpFrac * sr->eP;
+      sr->HadEVisReco_FD -= EpFrac * sr->eDepP;
+      sr->HadE -= EpFrac * sr->eP; 
     } else {
       sr->eRec_FromDep -= EpFrac * sr->eRecoP;
-      sr->VisReco_NDFD -= EpFrac * sr->eRecoP;
-      sr->RecoHadE_NDFD -= EpFrac *sr->eRecoP;
+      sr->EVisReco_ND -= EpFrac * sr->eRecoP;
+      sr->VisTrue_NDFD -= EpFrac * sr->eP;
+      sr->HadEVisReco_FD -= EpFrac *sr->eRecoP;
+      sr->HadE -= EpFrac * sr->eP;
     }
 
     double eother = 0;

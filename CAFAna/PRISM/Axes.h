@@ -8,7 +8,8 @@ namespace PRISM {
 
 struct PRISMAxisBlob {
   ana::HistAxis XProjectionND;
-  ana::HistAxis XProjectionFD;
+  ana::HistAxis XProjectionFD_numu;
+  ana::HistAxis XProjectionFD_nue;
   ana::HistAxis OffAxisPosition;
   ana::HistAxis OffAxis280kAPosition;
 };

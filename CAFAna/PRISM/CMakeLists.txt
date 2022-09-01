@@ -1,6 +1,7 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 LIST(APPEND PRISM_implementation_files
+  PRISMReweightableSpectrum.cxx
   PRISMExtrapolator.cxx
   PredictionPRISM.cxx
   PRISMUtils.cxx
@@ -15,6 +16,7 @@ LIST(APPEND PRISM_implementation_files
   Weights.cxx)
 
 LIST(APPEND PRISM_header_files
+  PRISMReweightableSpectrum.h
   PRISMExtrapolator.h
   PredictionPRISM.h
   PRISMUtils.h

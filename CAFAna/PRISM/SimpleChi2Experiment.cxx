@@ -1,5 +1,7 @@
 #include "CAFAna/PRISM/SimpleChi2Experiment.h"
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "OscLib/IOscCalc.h"
 
 namespace ana {
@@ -100,7 +102,10 @@ namespace ana {
     Eigen::MatrixXd CovMat = Eigen::MatrixXd::Zero(PredVec.size(), PredVec.size());
     for (int diag = 0; diag < CovMat.rows(); diag++) {
       // Poisson error on number of events in bin
-      CovMat(diag, diag) = PredVec(diag);
+      // CovMat(diag, diag) = PredVec(diag);
+      // Test alternative Chi2 covariance from [ref]
+      // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
+      CovMat(diag, diag) = 3 / ((1 / fData_vec(diag)) + (2 / PredVec(diag))); 
     }
     // Add Poisson errors in quadrature to covariance (if you want to)
     if (fUseCovariance) {
@@ -108,6 +113,9 @@ namespace ana {
     }
     double Chi2 = (PredVec - fData_vec).transpose() * CovMat.inverse() *
                   (PredVec - fData_vec);
+
+    // For low-stats.
+    //double Chi2 = ana::LogLikelihood(PredVec.array(), fData_vec.array());
 
     return Chi2;
   }

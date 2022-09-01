@@ -48,7 +48,8 @@ namespace ana {
     // ND and FD event rates as argument
     void CalcEfficiency(osc::IOscCalc *calc, 
                         HistAxis const &axis,
-                        ana::SystShifts shift = kNoShift,
+                        ana::SystShifts shift_nd = kNoShift,
+                        ana::SystShifts shift_fd = kNoShift,
                         Flavors::Flavors_t NDflav = Flavors::kAll,
                         Flavors::Flavors_t FDflav = Flavors::kAll,
                         Current::Current_t curr = Current::kCC,
@@ -83,6 +84,8 @@ namespace ana {
     // Temporary hist output:
     mutable std::unique_ptr<TH2D> hNDUnselected_293kA;
     mutable std::unique_ptr<TH2D> hNDSelected_293kA;
+    mutable std::unique_ptr<TH1D> hFDunselected;
+    mutable std::unique_ptr<TH1D> hFDselected;
 
     // ND and FD efficiency in each energy bin
     // vector of vectors to hold ND eff at each OA stop.

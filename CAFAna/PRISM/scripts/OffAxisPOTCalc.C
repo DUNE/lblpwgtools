@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 
   std::map<int, TH1D *> SummedFileExposures = SumFileExposures(infilenames);
 
-  std::string outfilename = "TotalOffAxisFileExposure.root";
+  std::string outfilename = ana::FindCAFAnaDir() + "/../../PRISM/FileExposures/TotalOffAxisFileExposure.root";
   std::cout << "Output file is " << outfilename << std::endl;
 
   TFile *Target = TFile::Open(outfilename.c_str(), "RECREATE");

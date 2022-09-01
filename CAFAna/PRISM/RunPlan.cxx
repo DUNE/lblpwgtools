@@ -1,5 +1,7 @@
 #include "CAFAna/PRISM/RunPlan.h"
 
+#include "CAFAna/Core/MathUtil.h"
+
 namespace ana {
 
   //------------------------------------------------------------------------------
@@ -34,10 +36,6 @@ namespace ana {
     // Assume this spectrum is in per/POT
     Eigen::MatrixXd NDSpec_mat = NDSpec.GetEigen(1);
     Eigen::MatrixXd NDSumSq_mat = NDSpec.GetSumSqEigen(1);    
-
-    //std::cout << "NDSpec_mat rows = " << NDSpec_mat.rows() << " ; " 
-    //  <<  "NDSpec_mat cols = " << NDSpec_mat.cols() << std::endl;
-    
     std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
                                 axis.GetBinnings().at(1).Edges() : 
                                 axis.GetBinnings().at(2).Edges(); // Is 3D.
@@ -50,6 +48,8 @@ namespace ana {
         double bvar = SetErrorsFromPredictedRate      
                     ? bc
                     : NDSumSq_mat(yit, xit) * std::pow(stop.POT, 2);
+        // Test alternative Chi2 covariance from [ref]
+        // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
@@ -77,8 +77,6 @@ namespace ana {
                                    HistAxis const &axis, 
                                    bool SetErrorsFromPredictedRate) const {
     // Assume this spectrum is in per/POT
-    //assert(NDSpec.NDimensions() == 2); // Only gonna work for 2D axis, 3D not implemented yet
-    //std::unique_ptr<TH2> NDSpec_h(NDSpec.ToTH2(1));
     std::unique_ptr<TH1> NDSpec_h(NDSpec.ToTH1(1));
     NDSpec_h->SetDirectory(nullptr);    
     Eigen::ArrayXd ErrorArr = NDSpec.GetEigen(1);
@@ -91,14 +89,13 @@ namespace ana {
 
     Eigen::MatrixXd NDSpec_mat = ConvertArrayToMatrix(NDSpec.GetEigen(1),
                                                       NDSpec.GetBinnings());
-    //std::cout << "NDSpec_mat rows = " << NDSpec_mat.rows() << " ; "
-    //  <<  "NDSpec_mat cols = " << NDSpec_mat.cols() << std::endl; 
 
     Eigen::MatrixXd NDSumSq_mat = Eigen::MatrixXd::Zero(NDSpec_mat.rows(),
                                                         NDSpec_mat.cols()); 
     std::vector<double> edges = (axis.GetBinnings().size() == 2) ? 
                                 axis.GetBinnings().at(1).Edges() :
-                                axis.GetBinnings().at(2).Edges();                                                                                           
+                                axis.GetBinnings().at(2).Edges();         
+                                                                                  
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);
       auto stop = FindStop(ypos, kA);

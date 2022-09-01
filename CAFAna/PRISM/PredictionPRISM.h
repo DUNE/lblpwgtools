@@ -9,10 +9,10 @@
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscillatableSpectrum.h"
-#include "CAFAna/Core/PRISMReweightableSpectrum.h"
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
+#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/RunPlan.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
@@ -67,27 +67,28 @@ public:
 
     kNDData_unweighted_293kA = 32,
     kNDData_unweighted_280kA = 33,
+    kNDSigOnly2D_293kA = 34,
 
-    kNDDataExtrap2D_293kA = 34,
-    kNDDataExtrap2D_280kA = 35,
-    kNDDataExtrap_293kA = 36,
-    kNDDataExtrap_280kA = 37,
-    kNDData_FDExtrap = 38,
-    kNDDataCorr_FDExtrap = 39,
-    kExtrapCovarMatrix = 40,
+    kNDDataExtrap2D_293kA = 35,
+    kNDDataExtrap2D_280kA = 36,
+    kNDDataExtrap_293kA = 37,
+    kNDDataExtrap_280kA = 38,
+    kNDData_FDExtrap = 39,
+    kNDDataCorr_FDExtrap = 40,
+    kExtrapCovarMatrix = 41,
 
-    kNDMCExtrap2D_293kA = 41,
-    kNDMCExtrap2D_280kA = 42,
-    kNDMCExtrap_293kA = 43,
-    kNDMCExtrap_280kA = 44,
-    kNDMC_FDExtrap = 45,
+    kNDMCExtrap2D_293kA = 42,
+    kNDMCExtrap2D_280kA = 43,
+    kNDMCExtrap_293kA = 44,
+    kNDMCExtrap_280kA = 45,
+    kNDMC_FDExtrap = 46,
 
-    kFD_NumuNueCorr_Numu_TrueEnu = 46,
-    kFD_NumuNueCorr_Nue_TrueEnu = 47,
+    kFD_NumuNueCorr_Numu_TrueEnu = 47,
+    kFD_NumuNueCorr_Nue_TrueEnu = 48,
 
-    kFD_NumuNutauCorr_Numu = 48,
-    kFD_NumuNutauCorr_Nutau = 49,
-    kFD_NumuNutauCorr = 50,
+    kFD_NumuNutauCorr_Numu = 49,
+    kFD_NumuNutauCorr_Nutau = 50,
+    kFD_NumuNutauCorr = 51,
 
   };
 
@@ -155,15 +156,6 @@ public:
     case kFD_NumuNueCorr: {
       return "FD_NumuNueCorr";
     }
-    case kFD_NumuNutauCorr_Numu: {
-      return "FD_NumuNutauCorr_Numu";
-    }
-    case kFD_NumuNutauCorr_Nutau: {
-      return "FD_NumuNutauCorr_Nutau";
-    }
-    case kFD_NumuNutauCorr: {
-      return "FD_NumuNutauCorr";
-    }
     case kFDFluxCorr: {
       return "FDFluxCorr";
     }
@@ -205,6 +197,9 @@ public:
     }
     case kNDData_unweighted_280kA: {
       return "NDData_unweighted_280kA";
+    }
+    case kNDSigOnly2D_293kA: {
+      return "NDSigOnly2D_293kA";
     }
     case kNDDataExtrap2D_293kA: {
       return "NDDataExtrap2D_293kA";
@@ -248,31 +243,46 @@ public:
     case kFD_NumuNueCorr_Nue_TrueEnu: {
       return "FD_NumuNueCorr_Nue_TrueEnu";
     }
+    case kFD_NumuNutauCorr_Numu: {
+      return "FD_NumuNutauCorr_Numu";
+    }
+    case kFD_NumuNutauCorr_Nutau: {
+      return "FD_NumuNutauCorr_Nutau"; 
+    }
+    case kFD_NumuNutauCorr: {
+      return "FD_NumuNutauCorr";
+    }
     }
     return "";
   }
 
   HistAxis fAnalysisAxisND;
-  HistAxis fAnalysisAxisFD;
+  HistAxis fAnalysisAxisFD_numu;
+  HistAxis fAnalysisAxisFD_nue;
   HistAxis fNDOffAxis;
   HistAxis fND280kAAxis;
   HistAxis fTrueAnalysisAxis;
   HistAxis fNDFDEnergyMatchAxis;
-  HistAxis fCovarianceAxis;
+  HistAxis fCovarianceAxis_numu;
+  HistAxis fCovarianceAxis_nue;
   HistAxis fOffPredictionAxis;
   HistAxis f280kAPredictionAxis;
-  HistAxis fFluxMatcherCorrectionAxes;
+  HistAxis fFluxMatcherCorrectionAxes_numu;
+  HistAxis fFluxMatcherCorrectionAxes_nue;
 
   PredictionPRISM(const HistAxis &AnalysisAxisND,
-                  const HistAxis &AnalysisAxisFD,
+                  const HistAxis &AnalysisAxisFD_numu,
+                  const HistAxis &AnalysisAxisFD_nue,
                   const HistAxis &NDOffAxis,
                   const HistAxis &ND280kAAxis,
                   const HistAxis &TrueAnalysisAxis,
                   const HistAxis &NDFDEnergyMatchAxis,
-                  const HistAxis &CovarianceAxis,
+                  const HistAxis &CovarianceAxis_numu,
+                  const HistAxis &CovarianceAxis_nue,
                   const HistAxis &OffPredictionAxis,
                   const HistAxis &_280kAPredictionAxis,
-                  const HistAxis &FluxMatcherCorrectionAxes);
+                  const HistAxis &FluxMatcherCorrectionAxes_numu,
+                  const HistAxis &FluxMatcherCorrectionAxes_nue);
 
   void Initialize();
 
@@ -412,6 +422,12 @@ public:
 
   ReweightableSpectrum GetDiagonalCovariance(Spectrum const &spec, double POT,
                                              HistAxis const &RecoAxis) const;
+
+  // Forgive me
+  std::unique_ptr<PredictionInterp> &
+  PublicGetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const { 
+    return GetFDPrediction(NDChannel);
+  }
 
 protected:
   ana::RunPlan RunPlan_nu, RunPlan_nub;

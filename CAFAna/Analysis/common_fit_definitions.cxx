@@ -30,10 +30,8 @@
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
-#include "CAFAna/Systs/TruthEnergyFDSysts.h"
-#include "CAFAna/Systs/TruthEnergyNDSysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
-#include "CAFAna/Systs/RecoEnergyFDSysts.h"
+//#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"

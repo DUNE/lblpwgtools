@@ -73,9 +73,10 @@ namespace ana {
 
     // Extrapolate ND PRISM pred to FD using Eigen
     // This function is becoming slightly monsterous...
-    void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
-                           double POT, const int kA, Eigen::ArrayXd&& weights,
-                           osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
+    void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
+                           double POT, const int kA, Eigen::ArrayXd& weights,
+                           osc::IOscCalc *calc, ana::SystShifts shift_nd = kNoShift,
+                           ana::SystShifts shift_fd = kNoShift,
                            Flavors::Flavors_t NDflav = Flavors::kAll,
                            Flavors::Flavors_t FDflav = Flavors::kAll,
                            Current::Current_t curr = Current::kCC,

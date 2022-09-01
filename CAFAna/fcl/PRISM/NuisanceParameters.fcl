@@ -56,8 +56,8 @@ nuisance_parameters: {
 	]
 
 	fluxAll: [
-		@sequence::nuisance_parameters.fluxHadProd10,
-		@sequence::nuisance_parameters.fluxFocussing
+		#@sequence::nuisance_parameters.fluxHadProd10,
+		#@sequence::nuisance_parameters.fluxFocussing
 	]
 
 	xsec_small: [
@@ -164,9 +164,9 @@ nuisance_parameters: {
 		RecoEnergyInvSqrtND
 	]
 	det_totalFD: [
-		RecoEnergyScaleFD,
-		RecoEnergySqrtFD,
-		RecoEnergyInvSqrtFD
+		EnergyScaleFD,
+		UncorrFDTotSqrt,
+		UncorrFDTotInvSqrt
 	]
 
 	det_chargehadEND: [
@@ -175,9 +175,9 @@ nuisance_parameters: {
 		ChargedHadRecoUncorrInvSqrtND,
 	]
 	det_chargehadEFD: [
-		ChargedHadRecoUncorrFD,
-		ChargedHadRecoUncorrSqrtFD,
-		ChargedHadRecoUncorrInvSqrtFD,
+		ChargedHadUncorrFD,
+		UncorrFDHadSqrt,
+		UncorrFDHadInvSqrt,
 	]
 	det_chargehadE: [
 		@sequence::nuisance_parameters.det_chargehadEND,
@@ -190,9 +190,9 @@ nuisance_parameters: {
 		ERecoScaleMuLArInvSqrtND 
 	]
 	det_mularEFD: [
-		ERecoScaleMuLArFD,
-		ERecoScaleMuLArSqrtFD,
-		ERecoScaleMuLArInvSqrtFD
+		EScaleMuLArFD,
+		#UncorrFDMuSqrt,
+		#UncorrFDMuInvSqrt
 	]
 	det_mularE: [
 		@sequence::nuisance_parameters.det_mularEND,
@@ -205,9 +205,9 @@ nuisance_parameters: {
 		EMRecoUncorrInvSqrtND 
 	]
 	det_EMFD: [
-		EMRecoUncorrFD,
-		EMRecoUncorrSqrtFD,
-		EMRecoUncorrInvSqrtFD
+		EMUncorrFD,
+		UncorrFDEMSqrt,
+		UncorrFDEMInvSqrt
 	]
 
 	det_EM: [
@@ -221,9 +221,9 @@ nuisance_parameters: {
 		ChargedHadRecoResND 
 	]
 	det_ResFD: [ 
-		MuonRecoResFD,
-		EMRecoResFD,
-		ChargedHadRecoResFD
+		MuonResFD,
+		EMResFD,
+		ChargedHadResFD
 	]
 	det_Res: [
 		@sequence::nuisance_parameters.det_ResND,
@@ -240,9 +240,9 @@ nuisance_parameters: {
 	]			
 
 	all: [
-		@sequence::nuisance_parameters.fluxAll,
-		@sequence::nuisance_parameters.xsec_total,
-		@sequence::nuisance_parameters.det_all
+		#@sequence::nuisance_parameters.fluxAll,
+		#@sequence::nuisance_parameters.xsec_total,
+		#@sequence::nuisance_parameters.det_all
 	]
 	allSmall: [
 		@sequence::nuisance_parameters.fluxHadProd10,

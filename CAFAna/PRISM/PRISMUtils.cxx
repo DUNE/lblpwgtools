@@ -50,13 +50,12 @@ double FVMassCorrection::GetWeight(double vtx_x_cm) {
 }
 
 ana::Weight NDSliceCorrection(double reference_width_cm,
-                           std::vector<double> const &Edges) {
+                              std::vector<double> const &Edges) {
   std::vector<double> Weights;
 
   for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {
-    double width = Edges[e_it + 1] - Edges[e_it];
-    Weights.push_back(/*FD_ND_FVRatio(width*1E2) * */
-                      ((width*1E2)/reference_width_cm));
+    double width = std::fabs(Edges[e_it + 1] - Edges[e_it]);
+    Weights.push_back((width*1E2) / reference_width_cm);
   }
 
   return ana::Weight([=](const caf::StandardRecord *sr) -> double {
@@ -129,7 +128,7 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
       path = (std::string("NDMatchInterp_ETrue") +
              (IsND280kA ? "_280kA" : "_293kA") +
              (IsNu ? "_nu" : "_nub"));
-      if (f.GetDirectory(path.c_str())) {
+      if (f.GetDirectory(path.c_str())) { 
         blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
       }
       if (!IsND280kA) {

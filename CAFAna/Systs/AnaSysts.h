@@ -9,8 +9,6 @@ extern size_t NFluxParametersToAddToStatefile;
 
 namespace ana
 {
-  //class SystShifts;
-  //SystShifts FilterNDSystShifts(SystShifts shift);
 
   std::vector<std::string> SplitString(std::string input, char delim = ' ');
 
@@ -30,7 +28,7 @@ namespace ana
   std::vector<const ana::ISyst *> GetListOfSysts(bool fluxsyst_Nov17 = true, bool xsecsyst = true,
 						 bool detsyst = true, bool useND = true, bool useFD = true,
 						 bool useNueOnE = false, bool useFakeDataDials = true,
-						 bool fluxsyst_CDR = true,
+						 bool fluxsyst_CDR = true, bool fluxsyst_Sept21 = false,
 						 int NFluxSysts = NFluxParametersToAddToStatefile,
 						 bool removeFDNonFitDials = false);
 

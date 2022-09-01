@@ -33,25 +33,25 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
   
-      restore.Add(sr->VisReco_NDFD,
-                  sr->RecoHadE_NDFD,
-                  sr->RecoLepE_NDFD);
+      restore.Add(sr->EVisReco_ND,
+                  sr->HadEVisReco_ND,
+                  sr->Elep_reco);
 
       const double scale = 0.02 * sigma;
       if (!sr->isFD) {
         // To match FD:
         // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
         // by the "reconstructed hadronic energy".
-        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale;
+        sr->EVisReco_ND += (sr->EVisReco_ND - sr->Elep_reco) * scale;
         // Also shift the hadronic energy variable, if we don't do this then shifted 
         // plots of the reconstructed hadronic energy will not be different to nominal.
-        sr->RecoHadE_NDFD *= 1. + scale;
+        sr->HadEVisReco_ND *= 1. + scale;
         // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
         // "reconstructed leptonic energy".
         // Also shift the reconstructed leptonic energy itself.
         if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale; 
-          sr->RecoLepE_NDFD *= 1. + scale;
+          sr->EVisReco_ND += sr->Elep_reco * scale; 
+          sr->Elep_reco *= 1. + scale;
         }
       }
     }
@@ -68,26 +68,26 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
       
-      restore.Add(sr->VisReco_NDFD,
-                  sr->RecoHadE_NDFD,
-                  sr->RecoLepE_NDFD);
+      restore.Add(sr->EVisReco_ND,
+                  sr->HadEVisReco_ND,
+                  sr->Elep_reco);
 
       const double scale = 0.01 * sigma;
       if (!sr->isFD) {
         // To match LBL TDR:
         // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
         // by the "reconstructed hadronic energy".
-        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
-          pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD), 0.5);
+        sr->EVisReco_ND += (sr->EVisReco_ND - sr->Elep_reco) * scale *
+          pow((sr->EVisReco_ND - sr->Elep_reco), 0.5);
         // Also shift the hadronic energy variable, if we don't do this then shifted 
         // plots of the reconstructed hadronic energy will not be different to nominal.
-        sr->RecoHadE_NDFD += sr->RecoHadE_NDFD * scale * pow(sr->RecoHadE_NDFD, 0.5);
+        sr->HadEVisReco_ND += sr->HadEVisReco_ND * scale * pow(sr->HadEVisReco_ND, 0.5);
         // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
         // "reconstructed leptonic energy".
         // Also shift the reconstructed leptonic energy itself.
         if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
         }
       }
     }
@@ -104,26 +104,26 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
 
-      restore.Add(sr->VisReco_NDFD,
-                  sr->RecoHadE_NDFD,
-                  sr->RecoLepE_NDFD);
+      restore.Add(sr->EVisReco_ND,
+                  sr->HadEVisReco_ND,
+                  sr->Elep_reco);
 
       const double scale = 0.02 * sigma;
       if (!sr->isFD) {
         // To match LBL TDR:
         // Whether NC or CC, Numu or Nue, we want to shift total "reconstructed neutrino energy"
         // by the "reconstructed hadronic energy".
-        sr->VisReco_NDFD += (sr->VisReco_NDFD - sr->RecoLepE_NDFD) * scale *
-          pow((sr->VisReco_NDFD - sr->RecoLepE_NDFD+0.1), -0.5);
+        sr->EVisReco_ND += (sr->EVisReco_ND - sr->Elep_reco) * scale *
+          pow((sr->EVisReco_ND - sr->Elep_reco+0.1), -0.5);
         // Also shift the hadronic energy variable, if we don't do this then shifted 
         // plots of the reconstructed hadronic energy will not be different to nominal.
-        sr->RecoHadE_NDFD += sr->RecoHadE_NDFD * scale * pow(sr->RecoHadE_NDFD+0.1, -0.5);
+        sr->HadEVisReco_ND += sr->HadEVisReco_ND * scale * pow(sr->HadEVisReco_ND+0.1, -0.5);
         // If it isn't Numu-CC, also shift the "reconstructed neutrino energy" by the
         // "reconstructed leptonic energy".
         // Also shift the reconstructed leptonic energy itself.
         if (!(sr->isCC && abs(sr->nuPDG) == 14)) {
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
         }
       }
     }
@@ -145,17 +145,17 @@ namespace ana
                caf::SRProxy* sr, 
                double& weight) const override {
 
-      restore.Add(sr->RecoLepE_NDFD,
+      restore.Add(sr->Elep_reco,
                   sr->eRecoPi0,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND);
 
       const double scale = 0.025 * sigma;
       if (!sr->isFD) { // in the ND
         sr->eRecoPi0 += sr->eRecoPi0 * scale;
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale;
+        sr->EVisReco_ND += sr->eRecoPi0 * scale;
         if (sr->isCC && abs(sr->nuPDG) == 12) {
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale;
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale;
+          sr->Elep_reco += sr->Elep_reco * scale;
+          sr->EVisReco_ND += sr->Elep_reco * scale;
         }
       }
     }
@@ -174,17 +174,17 @@ namespace ana
                caf::SRProxy* sr, 
                double& weight) const override {
       
-      restore.Add(sr->RecoLepE_NDFD,
+      restore.Add(sr->Elep_reco,
                   sr->eRecoPi0,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND);
 
       const double scale = 0.025 * sigma;
       if (!sr->isFD) { // in the ND
         sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5);
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5); 
+        sr->EVisReco_ND += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5); 
         if (sr->isCC && abs(sr->nuPDG) == 12) {
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
         }
       }
     }
@@ -203,17 +203,17 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
 
-      restore.Add(sr->RecoLepE_NDFD,
+      restore.Add(sr->Elep_reco,
                   sr->eRecoPi0,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND);
 
       const double scale = 0.025 * sigma;
       if (!sr->isFD) { // in the ND
         sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
-        sr->VisReco_NDFD += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
+        sr->EVisReco_ND += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
         if (sr->isCC && abs(sr->nuPDG) == 12) {
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
         }
       }
     }
@@ -238,7 +238,8 @@ namespace ana
       restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
                   sr->eRecoP,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND,
+                  sr->HadEVisReco_ND);
 
       const double scale = 0.05 * sigma;
       if (!sr->isFD) { // in the ND
@@ -249,7 +250,8 @@ namespace ana
         sr->eRecoPip += sr->eRecoPip * scale;
         sr->eRecoPim += sr->eRecoPim * scale;
         sr->eRecoP += sr->eRecoP * scale;
-        sr->VisReco_NDFD += sumE * scale;
+        sr->EVisReco_ND += sumE * scale;
+        sr->HadEVisReco_ND += sumE * scale;
       }
     }
   };
@@ -270,7 +272,8 @@ namespace ana
       restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
                   sr->eRecoP,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND,
+                  sr->HadEVisReco_ND);
 
       const double scale = 0.05 * sigma;
       if (!sr->isFD) { // in the ND
@@ -278,10 +281,11 @@ namespace ana
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
         if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
         const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
-        sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip, 0.5); // sumE in sqrt previously!
-        sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim, 0.5); // sumE
-        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP, 0.5); // sumE
-        sr->VisReco_NDFD += sumE * scale * pow(sumE, 0.5);
+        sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip, 0.5);
+        sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim, 0.5);
+        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP, 0.5);
+        sr->EVisReco_ND += sumE * scale * pow(sumE, 0.5);
+        sr->HadEVisReco_ND += sumE * scale * pow(sumE, 0.5);
       }
     }
   };
@@ -302,7 +306,8 @@ namespace ana
       restore.Add(sr->eRecoPip,
                   sr->eRecoPim,
                   sr->eRecoP,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND,
+                  sr->HadEVisReco_ND);
 
       const double scale = 0.05 * sigma;
       if (!sr->isFD) { // in the ND
@@ -310,10 +315,11 @@ namespace ana
         if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
         if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
         const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
-        sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip+0.1, -0.5); // sumE in sqrt 
-        sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim+0.1, -0.5); // sumE
-        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP+0.1, -0.5); // sumE
-        sr->VisReco_NDFD += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip+0.1, -0.5);
+        sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim+0.1, -0.5);
+        sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP+0.1, -0.5);
+        sr->EVisReco_ND += sumE * scale * pow(sumE+0.1, -0.5);
+        sr->HadEVisReco_ND += sumE * scale * pow(sumE+0.1, -0.5);
       }
     }
   };
@@ -334,8 +340,8 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
 
-      restore.Add(sr->RecoLepE_NDFD,
-                  sr->VisReco_NDFD);
+      restore.Add(sr->Elep_reco,
+                  sr->EVisReco_ND);
       // Different EScale uncertainty for reconstruction by range or in
       // GAr tracker
       double var(0);
@@ -345,8 +351,8 @@ namespace ana
       const double scale = var * sigma;
       if (!sr->isFD) { // in the ND
         if (sr->isCC && abs(sr->nuPDG) == 14) { 
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale;
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale;
+          sr->Elep_reco += sr->Elep_reco * scale;
+          sr->EVisReco_ND += sr->Elep_reco * scale;
         }
       }
     } 
@@ -365,8 +371,8 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
 
-      restore.Add(sr->RecoLepE_NDFD,
-                  sr->VisReco_NDFD);
+      restore.Add(sr->Elep_reco,
+                  sr->EVisReco_ND);
  
       double var(0);
       if (sr->muon_contained) var = 0.02;
@@ -375,8 +381,8 @@ namespace ana
       const double scale = var * sigma; // is 0.005 in FD
       if (!sr->isFD) { // in the ND
         if (sr->isCC && abs(sr->nuPDG) == 14) {
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD, 0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
         }
       }
     }
@@ -395,8 +401,8 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
 
-      restore.Add(sr->RecoLepE_NDFD,
-                  sr->VisReco_NDFD);
+      restore.Add(sr->Elep_reco,
+                  sr->EVisReco_ND);
 
       double var(0);
       if (sr->muon_contained) var = 0.02;
@@ -405,8 +411,8 @@ namespace ana
       const double scale = var * sigma;
       if (!sr->isFD) { // in the ND
         if (sr->isCC && abs(sr->nuPDG) == 14) {
-          sr->RecoLepE_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
-          sr->VisReco_NDFD += sr->RecoLepE_NDFD * scale * pow(sr->RecoLepE_NDFD+0.1, -0.5);
+          sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
+          sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
         }
       }
     }
@@ -426,13 +432,13 @@ namespace ana
                caf::SRProxy* sr,
                double& weight) const override {
     
-      restore.Add(sr->RecoLepE_NDFD,
-                  sr->VisReco_NDFD);
+      restore.Add(sr->Elep_reco,
+                  sr->EVisReco_ND);
       
       const double scale = 0.02 * sigma;
       if (!sr->isFD) { // in the ND
-        sr->RecoLepE_NDFD += (sr->LepE - sr->RecoLepE_NDFD) * scale;
-        sr->VisReco_NDFD += (sr->LepE - sr->RecoLepE_NDFD) * scale;          
+        sr->Elep_reco += (sr->LepE - sr->Elep_reco) * scale;
+        sr->EVisReco_ND += (sr->LepE - sr->Elep_reco) * scale;          
       }
     }
   }; 
@@ -448,16 +454,16 @@ namespace ana
                Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->RecoLepE_NDFD,
+      restore.Add(sr->Elep_reco,
                   sr->eRecoPi0,
-                  sr->VisReco_NDFD);
+                  sr->EVisReco_ND);
       const double scale = .02*sigma;
       if (!sr->isFD){
-        sr->VisReco_NDFD  += (sr->ePi0 - sr->eRecoPi0) * scale;
+        sr->EVisReco_ND  += (sr->ePi0 - sr->eRecoPi0) * scale;
         sr->eRecoPi0      += (sr->ePi0 - sr->eRecoPi0) * scale;
         if (sr->isCC && abs(sr->nuPDG)==12) {
-          sr->VisReco_NDFD  += (sr->LepE - sr->RecoLepE_NDFD) * scale;
-          sr->RecoLepE_NDFD += (sr->LepE - sr->RecoLepE_NDFD) * scale;
+          sr->EVisReco_ND  += (sr->LepE - sr->Elep_reco) * scale;
+          sr->Elep_reco += (sr->LepE - sr->Elep_reco) * scale;
         }
       }
     }
@@ -474,10 +480,11 @@ namespace ana
                Restorer& restore,
                caf::SRProxy* sr, double& weight) const override
     {
-      restore.Add(sr->VisReco_NDFD,
+      restore.Add(sr->EVisReco_ND,
                   sr->eRecoP,
                   sr->eRecoPip,
-                  sr->eRecoPim);
+                  sr->eRecoPim,
+                  sr->HadEVisReco_ND);
       const double scale = .02*sigma;
       if (!sr->isFD) {
         if (sr->eRecoP < 0.) sr->eRecoP = 0.;
@@ -488,7 +495,8 @@ namespace ana
         sr->eRecoPip += (sr->ePip - sr->eRecoPip) * scale;
         sr->eRecoPim += (sr->ePim - sr->eRecoPim) * scale;
         sr->eRecoP   += (sr->eP   - sr->eRecoP)   * scale;
-        sr->VisReco_NDFD += (trueSum - recoSum)   * scale;
+        sr->EVisReco_ND += (trueSum - recoSum)   * scale;
+        sr->HadEVisReco_ND += (trueSum - recoSum)   * scale;
       }
     }
   };

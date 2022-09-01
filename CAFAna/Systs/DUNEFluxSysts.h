@@ -18,23 +18,27 @@ public:
                      double &weight) const override;
 
 protected:
-  friend const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int, bool, bool);
-  DUNEFluxSyst(int i, bool applyPenalty, bool useCDR)
-      : ISyst(TString::Format("flux_%s_%i", useCDR ? "CDR" : "Nov17", i).Data(),
-              TString::Format("Flux #%i (%s)", i, useCDR ? "CDR" : "Nov17")
-                  .Data(),
+  friend const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int, bool, bool, bool);
+  DUNEFluxSyst(int i, bool applyPenalty, bool useCDR, bool useSept21)
+      : ISyst(TString::Format("flux_%s_%i", 
+                              useCDR ? "CDR" : 
+                              (useSept21 ? "Sept21" : "Nov17"), i).Data(),
+              TString::Format("Flux #%i (%s)", i, 
+                              useCDR ? "CDR" : 
+                              (useSept21 ? "Sept21" : "Nov17")).Data(),
               applyPenalty),
-        fIdx(i), fScale(), fUseCDR(useCDR) {}
+        fIdx(i), fScale(), fUseCDR(useCDR), fUseSept21(useSept21) {}
 
   int fIdx;
 
   mutable TH1 *fScale[2][2][2][2]; // ND/FD, numu/nue, bar, FHC/RHC
 
   bool fUseCDR;
+  bool fUseSept21;
 };
 
 const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty = true,
-                                    bool useCDR = true);
+                                    bool useCDR = true, bool useSept21 = false);
 
 // Because vector<T*> won't automatically convert to vector<U*> even when U
 // inherits from V.
@@ -45,7 +49,7 @@ struct DUNEFluxSystVector : public std::vector<const DUNEFluxSyst *> {
 };
 
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty = true,
-                                    bool useCDR = true);
+                                    bool useCDR = true, bool useSept21 = false);
 
 // instantiate them all at global scope so that they can be found in the
 // Registry

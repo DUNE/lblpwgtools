@@ -5,18 +5,17 @@
 
 BasicPred: {
 
-	output_file: [Chi2_dmsq32_nodet_FHC_flagoff.root, "UPDATE"]
-	# output_file: [Chi2_dmsq32_ssth23_dcp_nodet_FourFlavor_flagoff.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/IntrinsicNue_Syst_nodet/hadd_state_IntrinsicNue_nodet_withxseccorr.root
+	output_file: [PRISMScan_dcp_4Flav_48ktMWYr_XSecFluxCombSyst_12May22.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_ELepEHadReco_22June22.root
 
-	projection_name: EVisReco
+	projection_name: ELepEHadReco
 	use_PRISM: true
 	POT_years: 1
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
 	# Do you want to use fake data?
-	use_fake_data: false
+	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 
@@ -71,7 +70,7 @@ BasicPred: {
 
 	free_osc_params: [dmsq32, ssth23, th13, deltapi]
 
-	samples: @local::FitChannels.Nutau_app
+	samples: @local::FitChannels.FourFlavor
 }
 
 scans: [
