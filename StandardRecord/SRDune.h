@@ -177,7 +177,6 @@ public:
 
   // For correctly combining off axis samples
   double perPOTWeight;
-  double perFileWeight;
   double NDMassCorrWeight;
   double SpecialRunWeight;
   int SpecialHCRunId;

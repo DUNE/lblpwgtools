@@ -147,8 +147,13 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   std::string varname_ND(varname);
   std::string varname_numu(varname);
   std::string varname_nue(varname);
-  if (varname == "EVisReco" || varname == "ELepEHadVisReco" || varname == "EnuReco") {
+  if (varname == "EVisReco" || varname == "ELepEHadVisReco") {
     varname_ND   += "_ND";
+    varname_numu += "_numu";
+    varname_nue  += "_nue";
+  }
+  if (varname == "EnuReco") { // Want Enu_reco FD prediction still unfold in EVis
+    varname_ND = "EVisReco_ND";
     varname_numu += "_numu";
     varname_nue  += "_nue";
   }
@@ -183,7 +188,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EnuReco") {
-    truevardef = GetVar("ETrue"); // EVisTrue
+    truevardef = GetVar("EVisTrue"); 
   } else if (obsvarname == "EVisTrue") {
     truevardef = GetVar("ETrue");
   } else if (obsvarname == "RecoEP") {
@@ -336,7 +341,8 @@ HistAxis RecoObservable(std::string const &obsvarname,
 
 bool isRecoND(std::string var) {
   if (var == "RecoELep" || var == "EVisReco" || var == "EVisEHadReco" ||
-      var == "RecoEHad" || var == "EVisEHadReco") {
+      var == "RecoEHad" || var == "EVisEHadReco" || var == "EnuReco" ||
+      var == "ELepEHadVisReco") {
     return true;
   } else {
     return false;

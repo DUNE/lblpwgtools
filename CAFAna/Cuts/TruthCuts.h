@@ -1,10 +1,6 @@
 #pragma once
 
 #include "CAFAna/Core/Cut.h"
-//#include "StandardRecord/StandardRecord.h"
-//#include <cassert>
-//
-//namespace ana {
 #include "StandardRecord/SRProxy.h"
 
 namespace ana

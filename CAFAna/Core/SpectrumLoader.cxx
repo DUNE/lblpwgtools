@@ -24,10 +24,8 @@
 #include <cmath>
 #include <iostream>
 
-#include "TChain.h"
 #include "TFile.h"
 #include "TH2.h"
-#include "TRandom3.h"
 #include "TTree.h"
 
 namespace ana {
@@ -301,18 +299,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   if (potFriend) {
     tr->AddFriend(potFriend);
     SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
-    SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
     SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
     SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
-    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
- 
+    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId); 
     std::cout << "[INFO]: Found Off axis weight friend tree "
-                 "in input file, hooking up!"
-              << std::endl;
+                 "in input file, hooking up!"<< std::endl;
   } else {
-    std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
     sr.perPOTWeight = 1;
-    sr.perFileWeight = 1;
     sr.NDMassCorrWeight = 1;
     sr.SpecialRunWeight = 1;
     sr.SpecialHCRunId = 293;

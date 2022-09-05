@@ -34,8 +34,6 @@ public:
     fSpectrumNuebar.OverridePOT(pot);
   }
 
-  void SetNoOscErrors(double pot);
-
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;
   }

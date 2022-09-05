@@ -191,7 +191,6 @@ void ProcessFile(TFile &f, std::function<void(const caf::SRProxy& sr)> ev_proces
   if (potFriend) {
     tr->AddFriend(potFriend);
     SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
-    SetBranchChecked(potFriend, "perFile", &sr.perFileWeight);
     SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
     SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
     SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId);
@@ -202,23 +201,10 @@ void ProcessFile(TFile &f, std::function<void(const caf::SRProxy& sr)> ev_proces
   } else {
     std::cout << "[WARNING]: Off axis weightings NOT being set." << std::endl;
     sr.perPOTWeight = 1;
-    sr.perFileWeight = 1;
     sr.NDMassCorrWeight = 1;
     sr.SpecialRunWeight = 1;
     sr.SpecialHCRunId = 293;
   }
-
-  TFile fin(std::getenv("PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT"));
-  assert(fin.IsOpen());
-
-  std::map<int, TH1D *> FileExposures;
-  
-  for (int SpecRunID_local : {-293, -280, 280, 293}) {
-    std::stringstream ss("");
-    ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
-    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
-    if (!FileExposures[SpecRunID_local]) abort(); 
-  } 
 
   Long64_t Nentries = tr->GetEntries();
 
@@ -232,13 +218,6 @@ void ProcessFile(TFile &f, std::function<void(const caf::SRProxy& sr)> ev_proces
     }
 
     if (!sr.isFD) sr.abspos_x = -std::abs(sr.det_x + sr.vtx_x);
-
-    // Change the perFile weight if we have multiple ND files
-    if (!sr.isFD && multi_file) { 
-      double nfiles = FileExposures[sr.SpecialHCRunId]->GetBinContent(
-          FileExposures[sr.SpecialHCRunId]->FindFixBin(sr.abspos_x));
-      sr.perFileWeight = 1 / nfiles;
-    }
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {

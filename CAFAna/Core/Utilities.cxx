@@ -536,46 +536,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  bool AlmostEqual(double a, double b, double eps)
-  {
-    if(a == 0 && b == 0) return true;
-
-    return fabs(a-b) <= eps * std::max(fabs(a), fabs(b));
-  }
-
-
-  //----------------------------------------------------------------------
-  std::string pnfs2xrootd(std::string loc, bool unauth)
-  {
-    static bool first = true;
-    static bool onsite = false;
-
-    if (first && unauth) {
-      first = false;
-      char chostname[255];
-      gethostname(chostname, 255);
-      std::string hostname = chostname;
-
-      if ( hostname.find("fnal.gov") != std::string::npos ){
-        onsite = true;
-        std::cout << "Using unauthenticated xrootd access (port 1095) while on-site, hostname: " << hostname << std::endl;
-      }
-      else {
-        onsite = false;
-        std::cout << "Using authenticated xrootd access (port 1094) access while off-site, hostname: " << hostname << std::endl;
-      }
-    }
-
-    if(loc.rfind("/pnfs/", 0) == 0){ // ie begins with
-      if ( onsite && unauth )
-        loc = std::string("root://fndca1.fnal.gov:1095//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
-      else
-        loc = std::string("root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/")+&loc.c_str()[6];
-    }
-    return loc;
-  }
-
-  //----------------------------------------------------------------------
   FitToFourier::FitToFourier(TH1* h, double xlo, double xhi, int NOsc)
     : fHist(h), fxlo(xlo), fxhi(xhi), fNOsc(NOsc)
   {

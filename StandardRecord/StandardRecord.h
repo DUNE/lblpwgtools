@@ -197,7 +197,6 @@ namespace caf
     double total_xsSyst_cv_wgt;
     // For correctly combining off axis samples
     double perPOTWeight;
-    double perFileWeight;
     double NDMassCorrWeight;
 
     // For fakeing/consuming non-standard HC runs.
