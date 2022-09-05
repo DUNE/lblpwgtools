@@ -4,9 +4,9 @@ import math
 from array import array
 
 if __name__=="__main__":
-	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct", "th13_up_th23_low_foct"]
-	zoomed_out_names = ["th13_low_th23_up", "th13_dyb_th23_low", "th13_dyb_th23_up","th13_up_th23_low"]
-	tr_pts = [(0.063,0.58), (0.088, 0.42), (0.088, 0.58), (0.113, 0.42)]
+	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct", "th13_up_th23_low_foct", "th13_dyb_th23_max_troct"]
+	zoomed_out_names = ["th13_low_th23_up", "th13_dyb_th23_low", "th13_dyb_th23_up","th13_up_th23_low", "th13_dyb_th23_max"]
+	tr_pts = [(0.063,0.58), (0.088, 0.42), (0.088, 0.58), (0.113, 0.42), (0.088, 0.50)]
 	gf = ROOT.TFile("2dscan_th13_th23_graphs/2dscan_graphs.root")
 	cl_hists = []
 	contours = array('d')
@@ -44,8 +44,9 @@ if __name__=="__main__":
 		#print trcont_1s_list.First()
 		trcont_90p_list = troct_conts[i].At(1)
 		trcont_3s_list = troct_conts[i].At(2)
-		fcont_1_list = foct_conts[i].At(0)
-		fcont_2_list = foct_conts[i].At(1)
+		if i < 4:
+			fcont_1_list = foct_conts[i].At(0)
+			fcont_2_list = foct_conts[i].At(1)
 
 		trcont_1s_graph = trcont_1s_list.First()
 		trcont_1s_graph.SetLineColor(2)
@@ -61,14 +62,14 @@ if __name__=="__main__":
 		trcont_90p_graph.Draw("C")
 		trcont_3s_graph.Draw("C")
 		
-		if fcont_2_list.GetSize()>0:
+		if i < 4 and fcont_2_list.GetSize()>0:
 			fcont_90p_graph = fcont_1_list.First()
 			fcont_90p_graph.SetLineColor(6)
 			fcont_90p_graph.Draw("C")
 			fcont_3s_graph = fcont_2_list.First()
 			fcont_3s_graph.SetLineColor(4)
 			fcont_3s_graph.Draw("C")
-		else:
+		elif i < 4:
 			fcont_3s_graph= fcont_1_list.First()
 			fcont_3s_graph.SetLineColor(4)
 			fcont_3s_graph.Draw("C")
