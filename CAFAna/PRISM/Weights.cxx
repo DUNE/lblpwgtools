@@ -14,6 +14,8 @@
 
 namespace PRISM {
 
+std::map<int, TH1D *> fFileExposures;
+
 const ana::Weight kSpecHCRunWeight([](const caf::StandardRecord *sr) {
   return sr->SpecialRunWeight;
 });
@@ -46,24 +48,31 @@ ana::Weight GetNDCVWeight() { return kNDPRISMCVWeights * kCVXSecWeights * kPerFi
 
 ana::Weight GetFDCVWeight() { return kCVXSecWeights; }
 
-// Get per file weight
-double GetPerFileWeight(int SpecRun_ID, double abspos_x) {
-  TFile fin((ana::FindCAFAnaDir() + 
-             "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
 
+void SetFileExposuresMap() {
+  TFile fin((ana::FindCAFAnaDir() +
+            "/PRISM/FileExposures/TotalOffAxisFileExposure.root").c_str());
   assert(fin.IsOpen());
-  std::map<int, TH1D *> FileExposures;
+
   std::vector<int> SpecRunIds_all = {-293, -280, 280, 293};
   for (int SpecRunID_local : SpecRunIds_all) {
     std::stringstream ss("");
     ss << ((SpecRunID_local < 0) ? "m" : "") << SpecRunID_local;
-    fin.GetObject(("FileExposure_" + ss.str()).c_str(), FileExposures[SpecRunID_local]);
-    if (!FileExposures[SpecRunID_local]) abort();
+    fin.GetObject(("FileExposure_" + ss.str()).c_str(), fFileExposures[SpecRunID_local]);
+    if (!fFileExposures[SpecRunID_local]) abort();
+    fFileExposures.find(SpecRunID_local)->second->SetDirectory(nullptr);
   }
 
-  double nfiles = FileExposures[SpecRun_ID]->GetBinContent(
-      FileExposures[SpecRun_ID]->FindFixBin(abspos_x));
+  fin.Close();
+}
 
+// Get per file weight
+double GetPerFileWeight(int SpecRun_ID, double abspos_x) {
+  double nfiles(1);
+  if (fFileExposures[SpecRun_ID]) {
+    nfiles = fFileExposures[SpecRun_ID]->GetBinContent(
+        fFileExposures[SpecRun_ID]->FindFixBin(abspos_x));
+  }
   return 1 / nfiles;
 }
 

@@ -325,7 +325,12 @@ int main(int argc, char const *argv[]) {
       GetTwoDAxis(axes.XProjectionFD_nue, MatchAxis);
   //--------------------------------------
 
+  // Very important to get the file number weighting from here:
+  //********************
+  SetFileExposuresMap();
+  //********************
   ana::Weight kNDCVWeight = GetNDCVWeight();
+
   ana::Weight kFDCVWeight = GetFDCVWeight();
 
   ana::Cut kNDSelectionCuts_nu = UseSel ? kPRISMNDSignal_Selected_numu :
