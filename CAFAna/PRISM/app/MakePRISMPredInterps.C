@@ -107,8 +107,6 @@ void SayUsage(char const *argv[]) {
       << std::endl;
 }
 
-//std::cout << "line 110" << std::endl;
-
 void handleOpts(int argc, char const *argv[]) {
   int opt = 1;
   while (opt < argc) {
@@ -237,8 +235,6 @@ int main(int argc, char const *argv[]) {
   }
   // Have lists of files.
 
-std::cout << "line 240" << std::endl;
-
   for (size_t config = 0; config < kNPRISMConfigs; ++config) {
     if (!input_CAF_files[config].size()) {
       std::cout << "[WARN]: Failed to find any " << DescribeConfig(config)
@@ -294,8 +290,6 @@ std::cout << "line 240" << std::endl;
 
   TFile fout(output_file_name.c_str(), "RECREATE");
 
-std::cout << "line 297" << std::endl;
-
   //--------------------------------------
   // Sort out the axes:
   PRISMAxisBlob axes =
@@ -345,8 +339,6 @@ std::cout << "line 297" << std::endl;
   ana::SystShifts DataShift =
       GetFakeDataGeneratorSystShift(FakeDataShiftDescript);
 
-
-std::cout << "line 349, after kSelectionCuts" << std::endl;
   //-------------------------------------------------------
 
   auto PRISM = std::make_unique<PredictionPRISM>(
@@ -376,7 +368,7 @@ std::cout << "line 349, after kSelectionCuts" << std::endl;
       continue;
     }
     std::cout << "We have " << input_CAF_files[config].size() << " file loaded."
-              << std::endl;
+              << "Describe Config :" << DescribeConfig(config) << std::endl;
 
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
     if (IsND) {
@@ -404,13 +396,7 @@ std::cout << "line 349, after kSelectionCuts" << std::endl;
         FileLoaders[GetNDNueConfig(config)] = FileLoaders[config]; //eran here!!
       }
 
-      if (IsNDNue) {
-        PRISM->AddNDDataLoader(
-            *FileLoaders[GetND293kAConfig(config)],
-            IsNu ? kNDSelectionCuts_nue : kNDSelectionCuts_nueb, kNDCVWeight,
-            DataShift, IsNu ? kNue_I_Numode : kNueBar_I_NuBarmode);
-
-      } else if (!IsND280kA) { // 293kA covers 280kA samples
+       if (!IsND280kA) { // 293kA covers 280kA samples
 
         PRISM->AddNDDataLoader(
             *FileLoaders[GetND293kAConfig(config)],
@@ -418,8 +404,14 @@ std::cout << "line 349, after kSelectionCuts" << std::endl;
             DataShift, IsNu ? kNumu_Numode : kNumuBar_NuBarmode);
         Loaders_bm.AddLoader(FileLoaders[config].get(), caf::kNEARDET,
                              Loaders::kMC);
-      }
-std::cout << "line 421 after the loader stuff" << std::endl;
+   
+		if (IsNDNue) {
+	PRISM->AddNDDataLoader(
+            *FileLoaders[GetND293kAConfig(config)],
+            IsNu ? kNDSelectionCuts_nue : kNDSelectionCuts_nueb, kNDCVWeight,
+            DataShift, IsNu ? kNue_I_Numode : kNueBar_I_NuBarmode);      
+}
+}
 
     } else if (!IsND) { // Is FD and files either nonswap, nueswap or tauswap.
       FileLoaders[config] =
@@ -438,8 +430,6 @@ std::cout << "line 421 after the loader stuff" << std::endl;
     }
   } // end for loop
 
-std::cout << "line 440 after all loaders, inculding FD loaders" << std::endl;
-
   // Make the ND prediction interp include the same off-axis axis used for
   // PRISM weighting.
   // Match axis is in true neutrino energy
@@ -453,6 +443,10 @@ std::cout << "line 440 after all loaders, inculding FD loaders" << std::endl;
   Bins_match.push_back(axes.OffAxisPosition.GetBinnings().front());
   Vars_match.push_back(axes.OffAxisPosition.GetVars().front());
 
+std::cout<< "Labels_match size:" <<Labels_match.size()<<std::endl;
+std::cout<< "Bins_match size:" <<Bins_match.size()<<std::endl;
+std::cout<< "Vars_match size:" <<Vars_match.size()<<std::endl;
+
   HistAxis const NDEventRateSpectraAxis(Labels_match, Bins_match, Vars_match);
 
   std::vector<std::string> Labels_match_280kA = MatchAxis.GetLabels();
@@ -464,7 +458,7 @@ std::cout << "line 440 after all loaders, inculding FD loaders" << std::endl;
   Vars_match_280kA.push_back(axes.OffAxis280kAPosition.GetVars().front());
 
   HistAxis const NDEventRateSpectraAxis_280kA(
-      Labels_match_280kA, Bins_match_280kA, Vars_match_280kA);
+  Labels_match_280kA, Bins_match_280kA, Vars_match_280kA);
 
   // HistAxis for Erec vs ETrue smearing matrix predictions
   // --> Need a axis which is the true version of the observable:
@@ -507,7 +501,6 @@ std::cout << "line 440 after all loaders, inculding FD loaders" << std::endl;
                                      TrueObsAxis.GetBinnings(),
                                      TrueObsAxis.GetVars());
   //----------------------------------------------------------------
-std::cout << "line 509 after all hist creation stuff" << std::endl;
 
 
   std::vector<std::unique_ptr<IPredictionGenerator>> MatchPredGens;
@@ -548,8 +541,6 @@ std::cout << "line 509 after all hist creation stuff" << std::endl;
   std::vector<std::unique_ptr<DataPredictionNoExtrap>> FarDetFakeDataBiasPreds;
   FillWithNulls(FarDetFakeDataBiasPreds, kNPRISMFDConfigs);
 
-std::cout << "line 550 after the FillWithNulls" << std::endl;
-
   static osc::NoOscillations no;
   static osc::IOscCalc *calc = NuFitOscCalc(1);
 
@@ -561,18 +552,17 @@ std::cout << "line 550 after the FillWithNulls" << std::endl;
     size_t fd_config = 0;
     size_t IsNueSwap = IsFDNueConfig(config); //eran
     size_t IsNuTauSwap = IsNutauConfig(config);
-    std::cout << "config :" << config << std::endl;
-    std::cout << "IsNu :" << IsNu << std::endl;
-    std::cout << "IsNDNue :" << IsNDNue << std::endl;
-    std::cout << "IsND280kA :" << IsND280kA << std::endl;
-    std::cout << "IsNueSwap :" << IsNueSwap << std::endl;
-    std::cout << "IsNuTauSwap :" << IsNuTauSwap << std::endl;
-    std::cout << "END END" << std::endl;
+    //std::cout << "config :" << config << std::endl;
+    //std::cout << "IsNu :" << IsNu << std::endl;
+    //std::cout << "IsNDNue :" << IsNDNue << std::endl;
+    //std::cout << "IsND280kA :" << IsND280kA << std::endl;
+    //std::cout << "IsNueSwap :" << IsNueSwap << std::endl;
+    //std::cout << "IsNuTauSwap :" << IsNuTauSwap << std::endl;
+    //std::cout << "END END" << std::endl;
     if (!IsND) {
       fd_config = GetFDConfig(config);
     }
     Loaders &Loaders_bm = IsNu ? Loaders_nu : Loaders_nub;
-
 
 
     if (!FileLoaders[config]) {
@@ -583,9 +573,6 @@ std::cout << "line 550 after the FillWithNulls" << std::endl;
     if (IsND) { // Is ND
 
      ana::Cut * NDCuts;//eran
-     // std::unique_ptr<ana::Cut> NDCuts;
-     //std::unique_ptr<ana::Cut> NDCuts = std::make_unique<ana::Cut>(
-      //std::unique_ptr<ana::Cut> NDCuts (new ana::Cut); 
 
       BeamChan chanmode;
 
@@ -599,7 +586,6 @@ std::cout << "line 550 after the FillWithNulls" << std::endl;
         chanmode = IsNu ? kNumu_Numode : kNumuBar_NuBarmode;
       }
 //)
-std::cout << "line 591 after the ND beamchan stuff added" << std::endl;
 
      // eran think error  if (IsND)  // Is ND
         // Only need to do this once as the PRISM prediction handles the 293,
@@ -612,8 +598,6 @@ std::cout << "line 591 after the ND beamchan stuff added" << std::endl;
         }
 
 //)
-std::cout << "line 604 after the NDMCLoader added/changed" << std::endl;
-std::cout << "IsNDNue?" << IsNDNue << std::endl;
 
         // Corrects for non-uniform off-axis binning
         auto slice_width_weight = NDSliceCorrection(
@@ -637,8 +621,6 @@ std::cout << "IsNDNue?" << IsNDNue << std::endl;
         MatchPredInterps[config] = std::make_unique<PredictionInterp>(
             los_flux, &no, *MatchPredGens[config], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign);
-
-std::cout << "MatchPredInterps line 637 : " << bool (MatchPredInterps[config]) << std::endl;  
 
         // PredInterps for ND smearing matrix
         // Only need to do this for 293 kA
@@ -664,7 +646,6 @@ std::cout << "MatchPredInterps line 637 : " << bool (MatchPredInterps[config]) <
                 PredictionInterp::kSplitBySign);
           }
 
-std::cout << "line 653" << std::endl;
           // Add another ND unselected spectrum for MC eff correction
           // Use the same axis as the ND DATA
           // don't need it for 280kA, just getting the efficiency
@@ -722,13 +703,9 @@ std::cout << "line 653" << std::endl;
 
           MatchPredInterps[config] = std::make_unique<PredictionInterp>(
               los_flux, calc, *MatchPredGens[config], Loaders_bm, kNoShift,
-              PredictionInterp::kSplitBySign);
-   
-std::cout << "MatchPredInterps line 723 : " << bool (MatchPredInterps[config]) << std::endl;
+              PredictionInterp::kSplitBySign); 
   
    }
-
-std::cout << "line 713" << std::endl;
 
         size_t non_swap_it = GetConfigNonSwap(config);
         size_t nue_swap_it = GetConfigNueSwap(config);
@@ -806,8 +783,6 @@ std::cout << "line 713" << std::endl;
     Loaders_nu.Go();
     Loaders_nub.Go();
 
-std::cout << "line 790 before loop where you actually fill them" << std::endl;
-
     for (size_t config = 0; config < kNPRISMConfigs; ++config) {
       bool IsNu = IsNuConfig(config);
       bool IsNDNue = IsNDNueConfig(config);
@@ -816,29 +791,11 @@ std::cout << "line 790 before loop where you actually fill them" << std::endl;
       size_t fd_config = 0;
       size_t IsFDNue = IsFDNueConfig(config);
       size_t IsNuTau = IsNutauConfig(config);
-     std::cout << "BEGIN BEGIN " << std::endl;
-     std::cout << "config :" << config << std::endl;
-     std::cout << "IsNu :" << IsNu << std::endl;
-    std::cout << "IsNDNue :" << IsNDNue << std::endl;
-    std::cout << "IsND :" << IsND << std::endl;
-    std::cout << "IsFDNue :" << IsFDNue << std::endl;
-    std::cout << "IsNuTau :" << IsNuTau << std::endl;
-    std::cout << "END END" << std::endl;
 
       if (!IsND) {
         fd_config = GetFDConfig(config);
       }
      
-
-std::cout << "INSIDE SAVING LOOP PRINT OUTS BEGIN" << std::endl;
-std::cout << "MatchPredGens :" << bool (MatchPredGens[config]) << std::endl;
-std::cout << "MatchPredInterps :" << bool (MatchPredInterps[config]) << std::endl; 
-std::cout << "NDMatrixPredGens :" << bool (NDMatrixPredGens[config]) << std::endl;
-std::cout << "NDMatrixPredInterps :" << bool (NDMatrixPredInterps[config]) << std::endl;
-std::cout << "NDUnselTruePredGens :" << bool (NDUnselTruePredGens[config]) << std::endl;
-std::cout << "NDUnselTruePredInterps :" << bool (NDUnselTruePredInterps[config]) << std::endl;
-std::cout << "END INSIDE SAVING LOOP PRINT OUT" << std::endl;
-
       if (IsND) { // Is ND
 
         if (!MatchPredInterps[config]) {
@@ -850,9 +807,7 @@ std::cout << "END INSIDE SAVING LOOP PRINT OUT" << std::endl;
                    (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") +
                    (IsNDNue ? "_NDnue" : "_NDnumu"),
                MatchPredInterps[config]);
-
-//std::cout << std::string("NDMatchInterp_ETrue") + (IsND280kA ? "_280kA" : "_293kA") + (IsNu ? "_nu" : "_nub") + (IsNDNue ? "_NDnue" : "_NDnumu") << std::endl;
-
+  
         if (NDMatrixPredInterps[config]) {
           SaveTo(fout,
                  std::string("NDMatrixInterp_ERecETrue") +
@@ -910,8 +865,6 @@ std::cout << "END INSIDE SAVING LOOP PRINT OUT" << std::endl;
                FarDetFakeDataBiasPreds[fd_config]);
       }
     }
-
-std::cout << "line 870 right before the save to LAST ONE" << std::endl;
 
     SaveTo(fout, (std::string("PRISM_") + axdescriptor), PRISM);
 

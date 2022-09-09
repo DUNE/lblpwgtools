@@ -32,12 +32,24 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
 
 int main(int argc, char const *argv[]) {
 
-  if (argc != 2) {
-    std::cout << "[ERROR]: Expected to be passed a single input CAFFile"
-              << std::endl;
-  }
+// old error, from when running over a single ND CAF file rather then a whole bunch of ND CAf files.  Need to input several input CAFFiles. 
+//  if (argc != 2) {
+//    std::cout << "[ERROR]: Expected to be passed a single input CAFFile"
+//              << std::endl;
+//  }
 
-  TFile *f = TFile::Open(argv[1]);
+// from ciaran
+//  std::vector<std::string> infilenames;
+//  for (int i = 1; i < argc; i++) {
+//    std::string str(argv[i]);
+//    infilenames.push_back(str);
+//  }
+
+    std::vector<std::string> infilenames;
+    for (int i = 1; i < argc; i++) {
+      std::string str(argv[i]);
+      infilenames.push_back(str);
+         TFile *f = TFile::Open(argv[i]);
 
   TTree *tr;
   tr = (TTree *)f->Get("caf");
@@ -49,6 +61,9 @@ int main(int argc, char const *argv[]) {
   Long64_t Nent = tr->GetEntries();
 
   caf::StandardRecord sr;
+  std::cout<<"end of caf loop line 65"<<std::endl;
+
+
   SetBranchChecked(tr, "Ev_reco", &sr.Ev_reco);
   SetBranchChecked(tr, "Ev_reco_nue", &sr.Ev_reco_nue);
   SetBranchChecked(tr, "Ev_reco_numu", &sr.Ev_reco_numu);
@@ -144,17 +159,24 @@ int main(int argc, char const *argv[]) {
   SetBranchChecked(tr, "sigma_Elep_reco", &sr.sigma_Elep_reco);
   SetBranchChecked(tr, "sigma_numu_pid", &sr.sigma_numu_pid);
   SetBranchChecked(tr, "sigma_nue_pid", &sr.sigma_nue_pid);
+  std::cout<<"after SetBrachCheckeds"<<std::endl;
+  } // previous end of for loop 
+
+
+//  ana::Cut IsNue = ana::kActuallyIsNueCC;
+//  ana::Cut IsSignal = ana::kIsTrueFV && PRISM::kIsOutOfTheDesert && IsNue; //
+//  ana::Cut IsSignalSelected = IsSignal && ana::kPassND_FHC_NUE;
+//eran need add here IsNDNue, IsNDNueSignal??  not ana::Cut though???
 
   ana::Cut IsNue = ana::kActuallyIsNueCC;
-  ana::Cut IsSignal = ana::kIsTrueFV && PRISM::kIsOutOfTheDesert && IsNue;
-  ana::Cut IsSignalSelected = IsSignal && ana::kPassND_FHC_NUE;
-
+  ana::Cut IsSignal = ana::kIsTrueFV && PRISM::kIsOutOfTheDesert && IsNue; //all nues, total true nues //like unselected 
+  ana::Cut IsSignalSelected = IsSignal && ana::kPassND_FHC_NUE; //selected nues  // compare to selected in state file one
+  
   TH2D *sig = new TH2D("sig", ";enu (GeV);offaxis_x (m);count", 100, 0, 10,
                        64 * 2, -2, 30);
   TH2D *sig_sel = new TH2D("sig_sel", ";enu (GeV);offaxis_x (m);count", 100, 0,
                            10, 64 * 2, -2, 30);
 
-  std::cout << std::endl;
   for (Long64_t ent = 0; ent < Nent; ++ent) {
     tr->GetEntry(ent);
 
@@ -176,20 +198,26 @@ int main(int argc, char const *argv[]) {
               << ", NDNueSel: " << IsSignalSelected((caf::SRProxy *)&sr)
               << std::endl;
 
+//maybe do if IsSignal, then Fill the histogram, only do it once becuse all of this in the for loop for the nbumber of entries.  If passes the cut, then fill in the histogram 
+//last part of Fill is usually weight?
+//sr.Ev energy, sr.det_x position of the center OA  vtx_x, is vertex x so together abs. off axis postion, 
     sig->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2,
               IsSignal((caf::SRProxy *)&sr));
     sig_sel->Fill(sr.Ev, sr.det_x + sr.vtx_x * 1.0E-2,
                   IsSignalSelected((caf::SRProxy *)&sr));
   }
   std::cout << "\r[READ] " << Nent << "/" << Nent << std::endl;
-
+  // new end of for loop
   gStyle->SetOptStat(false);
   TCanvas *c1 = new TCanvas("c1", "");
 
   sig_sel->Divide(sig);
   sig_sel->Draw("COLZ");
 
-  c1->Print("nue_eff.pdf");
-
+  std::cout<<"right before rename plot"<<std::endl;
+  c1->Print("nue_eff_test_eran.pdf");
+  std::cout<<"right after rename plot"<<std::endl;
   f->Close();
+
+  //}// don't put end here // new of for loop
 }

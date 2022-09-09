@@ -137,8 +137,9 @@ inline std::string GetMatchChanShortName(MatchChan ch) {
 
 inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
   return {GetBeamChan(ps.get<std::string>("ND"), true),
-          GetBeamChan(ps.get<std::string>("FD"),
-                      false)}; // was true now false//eran fix temp //back to FD
+          GetBeamChan(ps.get<std::string>("ND"),
+                      false)}; // was true now false//eran fix temp //back to FD -- need to allow BUT NOT REQUIRE it to be ND to ND
+ //testing breaking it by REQURING ND to ND again 220831
 }
 
 // Enum-like list of Ids for use in lists of PRISM objects

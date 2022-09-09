@@ -389,6 +389,8 @@ PredictionPRISM::GetNDData_wrong_sign_numu(BeamMode NDBM, int kA,
 std::unique_ptr<PRISMReweightableSpectrum> &
 PredictionPRISM::GetNDData(PRISM::BeamChan NDChannel, int kA,
                            bool shift) const {
+PRISMOUT("Printing GetNDData: " << NDChannel.mode << ", "
+                                             << NDChannel.chan);
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
                                              : NuChan::kNumuBarIntrinsic)) {
@@ -447,6 +449,8 @@ PredictionPRISM::GetNDPrediction_wrong_sign_numu(BeamMode NDBM, int kA) const {
 }
 std::unique_ptr<PredictionInterp> &
 PredictionPRISM::GetNDPrediction(PRISM::BeamChan NDChannel, int kA) const {
+PRISMOUT("Printing GetNDPrediction: " << NDChannel.mode << ", "
+                                             << NDChannel.chan);
   if (NDChannel.chan &
       ((NDChannel.mode == BeamMode::kNuMode) ? NuChan::kNumuIntrinsic
                                              : NuChan::kNumuBarIntrinsic)) {
@@ -733,7 +737,9 @@ void PredictionPRISM::SaveTo(TDirectory *dir, const std::string &name) const {
             Measurements.ND_280kA.nue_ccinc_sel_numode_fd},
            {"M_ND_280kA_nuebar_ccinc_sel_nubmode_fd",
             Measurements.ND_280kA.nuebar_ccinc_sel_nubmode_fd}}) {
-    if (meas.second.get()) {
+std::cout << " meas.first.c_str before if: " << meas.first.c_str() << std::endl;
+     if (meas.second.get()) {
+std::cout << " meas.first.c_str inside if: " << meas.first.c_str() << std::endl;
       meas.second.get()->SaveTo(dir, meas.first.c_str());
     }
   }
