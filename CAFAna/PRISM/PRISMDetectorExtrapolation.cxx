@@ -208,13 +208,13 @@ namespace ana {
       }
       // Should* be fine to take the inverse of a purely diagonal matrix
 
-      Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
+      //Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
 
       // Tikhonov regularisation is uneccessary, just least square unfold!
-      Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
-                          MatrixND_block.transpose() * invCovMatRec;
-      //Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block).inverse() *
-      //                    MatrixND_block.transpose();
+      //Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
+      //                    MatrixND_block.transpose() * invCovMatRec;
+      Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block).inverse() *
+                          MatrixND_block.transpose();
       Eigen::VectorXd NDETrue = D * NDERec;
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...

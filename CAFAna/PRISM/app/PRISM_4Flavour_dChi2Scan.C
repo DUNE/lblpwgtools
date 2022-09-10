@@ -354,8 +354,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     (use_fake_data ? 
-                                                     FarDetFakeDataBiasPred.FakeData(POT_FD) : 
-                                                     FarDetDataPred.FakeData(POT_FD)),
+                                                    FarDetFakeDataBiasPred.FakeData(POT_FD) : 
+                                                    FarDetDataPred.FakeData(POT_FD)),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
 

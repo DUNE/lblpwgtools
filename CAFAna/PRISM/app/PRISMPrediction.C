@@ -316,9 +316,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         auto *PRISMPred =
               PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
         PRISMPred->Scale(1, "width");
-        for (int x = 1; x <= PRISMPred->GetXaxis()->GetNbins(); x++) {
-          std::cout << "prismpred = " << PRISMPred->GetBinContent(x) << std::endl;
-        }
 
         chan_dir->WriteTObject(PRISMPred, "PRISMPred");
         PRISMPred->SetDirectory(nullptr);
@@ -328,8 +325,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
         PRISMExtrap->SetDirectory(nullptr);
         if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
-          std::cout << "Cov Dim = " << PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix)
-                                       .NDimensions() << std::endl;
           auto *PRISMExtrapCovMat =
                 PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT);
           // Careful: covariance matrix needs to be scaled by the factor squared

@@ -1173,7 +1173,8 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
       Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWrongLepBkg);
   }
 
-  if (fNuTauCCCorrection && (FDSigFlavor != Flavors::kNuMuToNuTau) ) { // Miss-identified CC nu-taus always a background for nue and numu signal
+  if (fNuTauCCCorrection && (FDSigFlavor != Flavors::kNuMuToNuTau) ) { 
+    // Miss-identified CC nu-taus always a background for nue and numu signal
     Comps.emplace(kFDNuTauCCBkg,
                   FDPrediction->PredictComponentSyst(
                       calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
@@ -1229,14 +1230,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Always shift FDOsc pred, as this acts as our 'shifted fd data' when
   // doing fake data shifts
-  //Comps.emplace(kFDOscPred,
-  //              FDPrediction->PredictComponentSyst(
-  //                  calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
+  Comps.emplace(kFDOscPred,
+                FDPrediction->PredictComponentSyst(
+                    calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
   // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
   // below and comment-out above.
-  Comps.emplace(kFDOscPred,
-                FDPrediction->PredictComponentSyst(calc, shift_fd, Flavors::kNuMuToNuMu,
-                                                   Current::kCC, Sign::kNu));
+  //Comps.emplace(kFDOscPred,
+  //              FDPrediction->PredictComponentSyst(calc, shift_fd, Flavors::kNuMuToNuMu,
+  //                                                 Current::kCC, Sign::kNu));
 
   // Get the residual from the event rate/flux matcher.
   Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual();

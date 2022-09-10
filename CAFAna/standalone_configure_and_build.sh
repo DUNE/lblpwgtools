@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 #Adapted from
 # https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
 function abspath() { 

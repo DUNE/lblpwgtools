@@ -6,11 +6,11 @@
 BasicPred: {
 
 	output_file: [PRISMScan_dcp_4Flav_48ktMWYr_XSecFluxCombSyst_12May22.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_ELepEHadReco_22June22.root
+	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSec_8Sep22.root 
 
-	projection_name: ELepEHadReco
+	projection_name: EVisReco
 	use_PRISM: true
-	POT_years: 1
+	POT_years: 0.5
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
@@ -73,7 +73,7 @@ BasicPred: {
 	samples: @local::FitChannels.FourFlavor
 }
 
-scans: [
+scansEG: [
 
 #	{
 #		@table::BasicPred
@@ -122,4 +122,4 @@ scans: [
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scans[0].output_file[1]: "RECREATE"
+scansEG[0].output_file[1]: "RECREATE"

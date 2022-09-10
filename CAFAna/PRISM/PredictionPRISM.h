@@ -89,7 +89,6 @@ public:
     kFD_NumuNutauCorr_Numu = 49,
     kFD_NumuNutauCorr_Nutau = 50,
     kFD_NumuNutauCorr = 51,
-
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
