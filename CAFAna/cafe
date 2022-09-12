@@ -214,6 +214,7 @@ int main(int argc, char** argv)
     libdirs = [os.environ['CAFANA']+'/lib',
                os.environ['OSCLIB_LIB'],
                os.environ['CAFANACORE_LIB'],
+               os.environ['BOOST_LIB'],
                os.environ['TBB_LIB']]
 
 
