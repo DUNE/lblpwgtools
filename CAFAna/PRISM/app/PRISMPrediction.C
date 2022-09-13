@@ -401,6 +401,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
+  setenv("CAFANA_STAT_ERRS", "1", 1);
   gROOT->SetMustClean(false);
 
   if (argc != 2) {

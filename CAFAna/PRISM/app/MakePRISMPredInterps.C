@@ -176,6 +176,8 @@ void handleOpts(int argc, char const *argv[]) {
 
 int main(int argc, char const *argv[]) {
 
+  setenv("CAFANA_STAT_ERRS", "1", 1);
+
   TestConfigDefinitions();
 
   input_CAF_descriptors.resize(kNPRISMConfigs);
