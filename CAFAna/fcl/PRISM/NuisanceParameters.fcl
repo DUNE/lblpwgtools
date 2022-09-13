@@ -22,10 +22,10 @@ nuisance_parameters: {
 		flux_Nov17_1,
 		flux_Nov17_2,
 		flux_Nov17_3,
-		flux_Nov17_4,
+		#flux_Nov17_4,
 		flux_Nov17_5,
 		flux_Nov17_6,
-		flux_Nov17_7,
+		#flux_Nov17_7,
 		flux_Nov17_8,
 		flux_Nov17_9,
 		flux_Nov17_10,
@@ -242,7 +242,7 @@ nuisance_parameters: {
 	all: [
 		@sequence::nuisance_parameters.fluxAll,
 		@sequence::nuisance_parameters.xsec_total,
-		#@sequence::nuisance_parameters.det_all
+		@sequence::nuisance_parameters.det_all
 	]
 	allSmall: [
 		@sequence::nuisance_parameters.fluxHadProd10,

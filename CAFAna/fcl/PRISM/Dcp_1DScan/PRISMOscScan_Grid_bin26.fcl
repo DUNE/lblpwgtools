@@ -31,6 +31,6 @@ scans: [
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
 scans[0].output_file[1]: "RECREATE"
-scans[0].output_file[0]: PRISMScan_dcp_bin1.root
-scans[1].output_file[0]: PRISMScan_dcp_bin1.root
-scans[2].output_file[0]: PRISMScan_dcp_bin1.root
+scans[0].output_file[0]: PRISMScan_dcp_bin26.root
+scans[1].output_file[0]: PRISMScan_dcp_bin26.root
+scans[2].output_file[0]: PRISMScan_dcp_bin26.root

@@ -35,8 +35,10 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
   double ssth23_lowlim = 0.4; // 0.35 0.4
   double dmsq32_lowlim = 2.30;
+  double dcp_lowlim = -1;
   double ssth23_highlim = 0.65;
   double dmsq32_highlim = 2.55;
+  double dcp_highlim = 1;
 
   double *lowlim, *highlim;
   if (param == "dmsq32") {
@@ -45,6 +47,9 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   } else if (param == "ssth23") {
     lowlim = &ssth23_lowlim;
     highlim = &ssth23_highlim;
+  } else if (param == "dcp") { 
+    lowlim = &dcp_lowlim;
+    highlim = &dcp_highlim;
   } else {
     std::cout << "[ERROR] Unknown parameter." << std::endl;
     abort();
@@ -85,7 +90,11 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
           double bincontent = h_fit->GetBinContent(bin);
           std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);
-          h_totalfit->SetBinContent(binx_tot, bincontent); 
+          if (std::isnormal(bincontent)) {
+            h_totalfit->SetBinContent(binx_tot, bincontent); 
+          } else {
+            h_totalfit->SetBinContent(binx_tot, 0);
+          }
         }
         h_totalfit.release()->Write("h_dChi2_Total");
       } else {  
@@ -98,7 +107,11 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
           double bincontent = h_fit->GetBinContent(bin);
           std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_update->GetXaxis()->FindBin(bincentre_x);
-          h_update->SetBinContent(binx_tot, bincontent);
+          if (std::isnormal(bincontent)) {
+            h_update->SetBinContent(binx_tot, bincontent);
+          } else {
+            h_update->SetBinContent(binx_tot, 0);
+          }
         }
 
         target->cd();
@@ -190,6 +203,8 @@ int main(int argc, char** argv) {
   if (scan_param == "dmsq32") {
     std::cout << "Scan parameter is " << scan_param << std::endl;
   } else if (scan_param == "ssth23") {
+    std::cout << "Scan parameter is " << scan_param << std::endl;
+  } else if (scan_param == "dcp") {
     std::cout << "Scan parameter is " << scan_param << std::endl;
   } else {
     std::cout << "[ERROR] Do not recognise this scan parameter." << std::endl;
