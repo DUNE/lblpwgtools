@@ -50,7 +50,7 @@ target_link_libraries(CAFAnaCore
   Stan::All 
   Boost::filesystem)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaCore PROPERTIES
   PUBLIC_HEADER "${Core_header_files}")
 
 if(TARGET perftools::All)

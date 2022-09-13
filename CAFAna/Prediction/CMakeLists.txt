@@ -27,7 +27,7 @@ set(Prediction_header_files
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction CAFAnaExtrap CAFAnaPRISM)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaPrediction PROPERTIES
   PUBLIC_HEADER "${Prediction_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

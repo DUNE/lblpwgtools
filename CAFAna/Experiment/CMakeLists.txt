@@ -27,7 +27,7 @@ set(Experiment_header_files
 add_library(CAFAnaExperiment SHARED ${Experiment_implementation_files})
 target_link_libraries(CAFAnaExperiment CAFAnaPrediction CAFAnaVars)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaExperiment PROPERTIES
   PUBLIC_HEADER "${Experiment_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

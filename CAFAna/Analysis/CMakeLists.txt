@@ -27,7 +27,7 @@ set(Analysis_header_files
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis CAFAnaCore)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaAnalysis PROPERTIES
   PUBLIC_HEADER "${Analysis_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

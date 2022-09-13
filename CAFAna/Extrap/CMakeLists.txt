@@ -14,7 +14,7 @@ set(Extrap_header_files
 add_library(CAFAnaExtrap SHARED ${Extrap_implementation_files})
 target_link_libraries(CAFAnaExtrap CAFAnaCore)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaExtrap PROPERTIES
   PUBLIC_HEADER "${Extrap_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

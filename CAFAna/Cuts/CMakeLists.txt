@@ -9,7 +9,7 @@ set(Cuts_header_files
 add_library(CAFAnaCuts SHARED ${Cuts_implementation_files})
 target_link_libraries(CAFAnaCuts CAFAnaCore)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaCuts PROPERTIES
   PUBLIC_HEADER "${Cuts_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

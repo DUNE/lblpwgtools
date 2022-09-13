@@ -11,7 +11,7 @@ set(Vars_header_files
 add_library(CAFAnaVars SHARED ${Vars_implementation_files})
 target_link_libraries(CAFAnaVars CAFAnaCore)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaVars PROPERTIES
   PUBLIC_HEADER "${Vars_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

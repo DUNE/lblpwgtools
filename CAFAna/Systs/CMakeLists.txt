@@ -53,7 +53,7 @@ set(Systs_header_files
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaSysts PROPERTIES
   PUBLIC_HEADER "${Systs_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

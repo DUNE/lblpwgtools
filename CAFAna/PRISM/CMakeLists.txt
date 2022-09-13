@@ -33,7 +33,7 @@ LIST(APPEND PRISM_header_files
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaPRISM PROPERTIES
   PUBLIC_HEADER "${PRISM_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

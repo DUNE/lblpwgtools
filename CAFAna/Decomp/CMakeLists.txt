@@ -9,7 +9,7 @@ set(Decomp_header_files
 add_library(CAFAnaDecomp SHARED ${Decomp_implementation_files})
 target_link_libraries(CAFAnaDecomp CAFAnaCore)
 
-set_target_properties(StandardRecord PROPERTIES
+set_target_properties(CAFAnaDecomp PROPERTIES
   PUBLIC_HEADER "${Decomp_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)

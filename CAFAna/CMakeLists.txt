@@ -75,7 +75,7 @@ set_target_properties(StandardRecord PROPERTIES
 
 install(TARGETS StandardRecord 
     LIBRARY DESTINATION lib/
-    PUBLIC_HEADER DESTINATION include/)
+    PUBLIC_HEADER DESTINATION include/StandardRecord/)
 
 SET(CAFAna_Libs
     CAFAnaAnalysis
