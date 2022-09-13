@@ -31,8 +31,6 @@ endif()
 
 install(FILES ${scripts_to_install} DESTINATION scripts)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
 find_library(OSCLIB OscLib $ENV{OSCLIB_LIB})
 
 foreach(SCRPT ${scripts_to_build})
