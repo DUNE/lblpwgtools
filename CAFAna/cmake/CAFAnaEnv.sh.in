@@ -118,8 +118,6 @@ fi
 
 #Env vars used in the code
 export CAFANA_ANALYSIS_VERSION="4"
-# Want to propogate stat errors for PRISM
-export CAFANA_STAT_ERRS="1"
 # export CAFANA_TOTALDURATION_MIN="240"
 # export CAFANA_SAFEUNITDURATION_MIN="60"
 # export CAFANA_CHKDURATION_MIN="30"
