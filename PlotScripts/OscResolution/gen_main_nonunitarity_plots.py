@@ -14,16 +14,16 @@ if __name__=="__main__":
 	
 	can = ROOT.TCanvas()
 	h = ROOT.TH2D()
-	leg = ROOT.TLegend(0.1,0.9,0.9,1.0)
+	leg = ROOT.TLegend(0.1,0.9,0.9,0.98)
 	leg.SetNColumns(3)
-	h.SetTitle(";Effective True sin^{2}2#theta_{13};#Delta#chi^{2}")
+	h.SetTitle(";Long-baseline effective sin^{2}2#theta_{13};#chi^{2}_{DUNE + reactor} - #chi^{2}_{DUNE only}")
 	h.GetXaxis().SetLimits(0.05,0.15)
 	h.GetYaxis().SetLimits(0.,50)
 	h.Draw()
-	cols = [1,2,4,6,8]
+	cols = [ROOT.kRed, ROOT.kRed+2, ROOT.kBlack, ROOT.kBlue+2, ROOT.kBlue]
 	i = 0
 	for g in dchisqGs:
-		leg.AddEntry(g, "sin^{2}#theta_{23} = %s"%leg_names[i])
+		leg.AddEntry(g, "sin^{2}#theta_{23} = %s"%leg_names[i], "L")
 		g.SetLineColor(cols[i])
 		g.SetLineWidth(2)
 		g.Draw("c")
@@ -33,15 +33,15 @@ if __name__=="__main__":
 	can.Print("nonunitarity_plots/main_dchisq_plot.pdf")
 	can.Clear()
 	h = ROOT.TH2D()
-	leg = ROOT.TLegend(0.1,0.9,0.9,1.0)
+	leg = ROOT.TLegend(0.1,0.9,0.9,0.98)
 	leg.SetNColumns(3)
-	h.SetTitle(";True sin^{2}2#theta_{13};Best Fit sin^{2}2#theta_{13}")
+	h.SetTitle(";Long-baseline effective sin^{2}2#theta_{13};Best Fit sin^{2}2#theta_{13}")
 	h.GetXaxis().SetLimits(0.05,0.15)
 	h.GetYaxis().SetLimits(0.07,0.12)
 	h.Draw()
 	i = 0
 	for g in bfGs:
-		leg.AddEntry(g,"sin^{2}#theta_{23} = %s"%leg_names[i])
+		leg.AddEntry(g,"sin^{2}#theta_{23} = %s"%leg_names[i], "L")
 		g.SetLineColor(cols[i])
 		g.SetLineWidth(2)
 		g.Draw("c")

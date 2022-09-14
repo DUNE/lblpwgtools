@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
@@ -14,6 +15,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionScaleComp", IPrediction, PredictionScaleComp);
+
   //----------------------------------------------------------------------
   PredictionScaleComp::
   PredictionScaleComp(SpectrumLoaderBase& loader,

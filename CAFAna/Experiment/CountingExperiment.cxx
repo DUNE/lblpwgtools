@@ -3,6 +3,7 @@
 #include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "OscLib/IOscCalc.h"
@@ -11,8 +12,12 @@
 #include "TObjString.h"
 #include "TH1.h"
 
+#include <memory>
+
 namespace ana
 {
+  REGISTER_LOADFROM("CountingExperiment", IExperiment, CountingExperiment);
+
   //----------------------------------------------------------------------
   CountingExperiment::CountingExperiment(const IPrediction* p,
                                          const Spectrum& d)

@@ -7,18 +7,17 @@ if [ -z "${UPS_SHELL}" ]; then
   exit 1
 fi
 
+setup root v6_22_08d -q e20:prof:p392 || exit 1
 setup boost v1_75_0 -q e20:prof || exit 1
 setup cmake v3_22_2 || exit 1
 setup jobsub_client || exit 1
-
+setup eigen v3_3_9a || exit 1
 setup stan v2_26_1 -q e20:prof || exit 1
-
-setup clhep v2_4_4_1 -q e20:prof || exit 1
-
-setup duneanaobj v02_01_00 -qe20:prof || exit 1
-
 setup osclib v00.21 -q e20:prof:n311:stan || exit 1
 setup cafanacore v01.29 -q e20:prof:n311 || exit 1
+setup duneanaobj v02_01_00 -qe20:prof || exit 1
+setup fhiclcpp v4_15_03 -q e20:prof || exit 1 # for prism
 
 # To get setup_fnal_security which helps reading files over xrootd
-setup duneutil v09_53_00d02 -q e20:prof
+#setup duneutil v09_53_00d02 -q e20:prof
+echo "Finished ups setup."

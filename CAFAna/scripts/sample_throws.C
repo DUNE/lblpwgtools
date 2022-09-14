@@ -55,7 +55,7 @@ void make_1D_errors(TDirectory *saveDir, std::vector<TH1 *> nominal,
 
         std::vector<double> diff(values.size());
         std::transform(values.begin(), values.end(), diff.begin(),
-                       std::bind2nd(std::minus<double>(), mean));
+                       [=](double const &v){ return v - mean; });
         double sq_sum =
             std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
         double stdev = std::sqrt(sq_sum / values.size());

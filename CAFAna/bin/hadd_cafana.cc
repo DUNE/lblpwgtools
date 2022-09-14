@@ -3,6 +3,8 @@
 #include <set>
 #include <iostream>
 
+#include "CAFAna/Core/Utilities.h"
+
 #include "TClass.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -13,6 +15,7 @@
 #include "TTree.h"
 #include "TVectorD.h"
 #include "TVector3.h"
+#include "TROOT.h"
 
 std::string ConcatPath(const std::string& a, const std::string& b)
 {
@@ -447,6 +450,8 @@ void usage()
 
 int main(int argc, char** argv)
 {
+  gROOT->SetMustClean(false);
+
   if(argc < 3 ||
      argv[1] == std::string("-h") ||
      argv[1] == std::string("--help")) usage();
@@ -475,7 +480,7 @@ int main(int argc, char** argv)
   ++argIdx;
 
   std::vector<std::string> innames;
-  for(int i = argIdx; i < argc; ++i) innames.push_back(argv[i]);
+  for(int i = argIdx; i < argc; ++i) innames.push_back(ana::pnfs2xrootd(argv[i]));
 
   std::cout << "Adding " << innames.size() << " input files." << std::endl;
 

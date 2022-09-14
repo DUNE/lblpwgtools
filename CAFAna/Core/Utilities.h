@@ -6,6 +6,7 @@
 #include <cfenv>
 #include <map>
 #include <set>
+#include <regex>
 #include <string>
 
 // these are templated types.
@@ -262,3 +263,16 @@ namespace ana
                               double xmin=0, double xmax=-1,
                               double ymin=0, double ymax=-1);
 }
+
+/// \brief Like Ronseal, does exactly what it says on the tin
+std::string EnsureTrailingSlash(std::string str);
+
+std::string parse_stdRegex_ErrorCode(std::regex_constants::error_type etype);
+
+/// \brief Expand a glob-like search string into a list of files.
+///
+/// \details N.B. asterisks can only appear in file search 
+///          patterns and not directory search patterns.
+std::vector<std::string> GetMatchingFiles(std::string directory,
+                                          std::string pattern,
+                                          bool IncDir = true);

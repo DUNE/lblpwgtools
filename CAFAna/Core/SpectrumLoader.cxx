@@ -3,9 +3,11 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+
 #include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
@@ -42,17 +44,18 @@ namespace ana
   {
   }
 
-  #ifndef DONT_USE_SAM
+#ifdef WITH_SAM
   //----------------------------------------------------------------------
   SpectrumLoader SpectrumLoader::FromSAMProject(const std::string& proj,
                                                 int fileLimit)
   {
     SpectrumLoader ret;
     ret.fWildcard = "project " + proj;
-    ret.fFileSource = std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
+    ret.fFileSource =
+      std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
     return ret;
   }
-  #endif
+#endif
 
   //----------------------------------------------------------------------
   SpectrumLoader::~SpectrumLoader()

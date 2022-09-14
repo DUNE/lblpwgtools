@@ -13,8 +13,8 @@ namespace ana
 
   //----------------------------------------------------------------------
   DUNEXSecDiagSyst::DUNEXSecDiagSyst(int i)
-    : ISyst(TString::Format("xsec_diag%d", fIdx).Data(),
-            TString::Format("Diagonalized xsec #%d", fIdx).Data()),
+    : ISyst(TString::Format("xsec_diag%d", i).Data(),
+            TString::Format("Diagonalized xsec #%d", i).Data()),
     fIdx(i)
   {
   }

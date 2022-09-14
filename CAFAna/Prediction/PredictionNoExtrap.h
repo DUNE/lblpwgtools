@@ -11,6 +11,7 @@ class Loaders;
 class PredictionNoExtrap : public PredictionExtrap {
 public:
   PredictionNoExtrap(PredictionExtrap *pred);
+  PredictionNoExtrap(IExtrap *extrap);
 
   // This is the DUNE constructor
   PredictionNoExtrap(SpectrumLoaderBase &loaderNonswap,
@@ -59,4 +60,5 @@ protected:
   Cut fCut;
   Weight fWei;
 };
+
 } // namespace ana

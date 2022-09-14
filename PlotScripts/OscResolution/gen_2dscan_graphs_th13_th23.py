@@ -3,9 +3,9 @@ ROOT.gROOT.SetBatch(1)
 import math
 
 if __name__=="__main__":
-	tr_ssth23_vals = [0.58,0.58,0.42, 0.42, 0.58,0.58, 0.42,0.42]
-	tr_th13_vals = [0.126855,0.126855,0.150590,0.150590,0.150590,0.150590,0.171415,0.171415]
-	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct", "th13_up_th23_low_foct"]
+	tr_ssth23_vals = [0.58,0.58,0.42, 0.42, 0.58,0.58, 0.42,0.42,0.50]
+	tr_th13_vals = [0.126855,0.126855,0.150590,0.150590,0.150590,0.150590,0.171415,0.171415,0.150590]
+	names = ["th13_low_th23_up_troct","th13_low_th23_up_foct","th13_dyb_th23_low_troct","th13_dyb_th23_low_foct","th13_dyb_th23_up_troct","th13_dyb_th23_up_foct","th13_up_th23_low_troct", "th13_up_th23_low_foct", "th13_dyb_th23_max_troct"]
 	graphs = []
 	for i in range(len(tr_ssth23_vals)):
 		graphs.append(ROOT.TGraph2D())

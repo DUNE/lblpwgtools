@@ -43,29 +43,29 @@ namespace ana
                   const SystShifts& shift = kNoShift,
                   const Weight& wei = kUnweighted);
 
-    virtual OscillatableSpectrum NueSurvComponent()       {return fNueSurv;}
-    virtual OscillatableSpectrum AntiNueSurvComponent()   {return fNueSurvAnti;}
+    virtual OscillatableSpectrum NueSurvComponent() override       {return fNueSurv;}
+    virtual OscillatableSpectrum AntiNueSurvComponent() override   {return fNueSurvAnti;}
 
-    virtual OscillatableSpectrum NumuSurvComponent()      {return fNumuSurv;}
-    virtual OscillatableSpectrum AntiNumuSurvComponent()  {return fNumuSurvAnti;}
+    virtual OscillatableSpectrum NumuSurvComponent() override      {return fNumuSurv;}
+    virtual OscillatableSpectrum AntiNumuSurvComponent() override  {return fNumuSurvAnti;}
 
-    virtual OscillatableSpectrum NueAppComponent()        {return fNueApp;}
-    virtual OscillatableSpectrum AntiNueAppComponent()    {return fNueAppAnti;}
+    virtual OscillatableSpectrum NueAppComponent() override        {return fNueApp;}
+    virtual OscillatableSpectrum AntiNueAppComponent() override    {return fNueAppAnti;}
 
-    virtual OscillatableSpectrum NumuAppComponent()       {return fNumuApp;}
-    virtual OscillatableSpectrum AntiNumuAppComponent()   {return fNumuAppAnti;}
+    virtual OscillatableSpectrum NumuAppComponent() override       {return fNumuApp;}
+    virtual OscillatableSpectrum AntiNumuAppComponent() override   {return fNumuAppAnti;}
 
-    virtual OscillatableSpectrum TauFromEComponent()      {return fTauFromE;}
-    virtual OscillatableSpectrum AntiTauFromEComponent()  {return fTauFromEAnti;}
+    virtual OscillatableSpectrum TauFromEComponent() override      {return fTauFromE;}
+    virtual OscillatableSpectrum AntiTauFromEComponent() override  {return fTauFromEAnti;}
 
-    virtual OscillatableSpectrum TauFromMuComponent()     {return fTauFromMu;}
-    virtual OscillatableSpectrum AntiTauFromMuComponent() {return fTauFromMuAnti;}
+    virtual OscillatableSpectrum TauFromMuComponent() override     {return fTauFromMu;}
+    virtual OscillatableSpectrum AntiTauFromMuComponent() override {return fTauFromMuAnti;}
 
     virtual Spectrum NCTotalComponent() override {return fNCTot;}
-    virtual Spectrum NCComponent() {return fNC;}
+    virtual Spectrum NCComponent()  override{return fNC;}
     virtual Spectrum NCAntiComponent()  override {return fNCAnti;}
 
-    virtual void SaveTo(TDirectory* dir, const std::string& name) const;
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
 
     static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 

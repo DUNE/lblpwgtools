@@ -24,7 +24,10 @@ namespace ana
     // Is ND
     if(!sr->isFD) {
       // CC event selection but is NC
-      if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && (sr->reco_q == -1 || sr->reco_q == 1) && sr->Ehad_veto<30 && !sr->isCC) {
+      /*if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && (sr->reco_q == -1 || sr->reco_q == 1) && sr->Ehad_veto<30 && !sr->isCC) {
+        weight *= 1 + .2*sigma;
+      }*/
+      if((sr->reco_numu || sr->reco_nue) && (sr->muon_contained || sr->muon_tracker) && sr->Ehad_veto<30 && !sr->isCC) {
         weight *= 1 + .2*sigma;
       }
     }
@@ -38,7 +41,7 @@ namespace ana
     // Load hist if it hasn't been loaded already
     const double m_mu = 0.105658;
     if (!fHist) {
-      #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+      #ifdef USE_FQ_HARDCODED_SYST_PATHS
       TFile f("/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
       #else
       TFile f((FindCAFAnaDir()+"/Systs/ND_eff_syst.root").c_str());
@@ -64,7 +67,7 @@ namespace ana
   {
     // Load hist if it hasn't been loaded already
     if (!fHist) {
-      #ifndef DONT_USE_FQ_HARDCODED_SYST_PATHS
+      #ifdef USE_FQ_HARDCODED_SYST_PATHS
       TFile f("/app/users/marshalc/ND_syst/ND_eff_syst.root", "read");
       #else
       TFile f((FindCAFAnaDir()+"/Systs/ND_eff_syst.root").c_str());

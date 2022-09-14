@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
@@ -24,6 +25,7 @@
 #include "CAFAna/Core/Loaders.h"
 
 #include <algorithm>
+
 #include <malloc.h>
 
 #ifdef USE_PREDINTERP_OMP
@@ -32,6 +34,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionInterp", IPrediction, PredictionInterp);
+
   //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
                                      osc::IOscCalc* osc,
@@ -425,7 +429,9 @@ namespace ana
 
     size_t NPreds = fPreds.size();
 
+#ifdef USE_PREDINTERP_OMP
     #pragma omp parallel for
+#endif
     for (size_t p_it = 0; p_it < NPreds; ++p_it) {
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
@@ -590,6 +596,10 @@ namespace ana
     for(const ISyst* syst: shift.ActiveSysts()){
       if(find_pred(syst) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << syst->ShortName() << std::endl;
+        std::cout << "Handles: " << std::endl;
+        for(auto & p : fPreds){
+          std::cout << p.first->ShortName() << std::endl;
+        }
         abort();
       }
     } // end for syst
@@ -835,8 +845,7 @@ namespace ana
 
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
-      std::unique_ptr<TH1> h;
-        h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+      std::unique_ptr<TH1> h(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);

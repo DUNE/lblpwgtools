@@ -1,14 +1,12 @@
 #include "CAFAna/Extrap/IExtrap.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
 
 #include <iostream>
-
-// To implement LoadFrom()
-#include "CAFAna/Extrap/TrivialExtrap.h"
 
 namespace ana
 {
@@ -20,8 +18,10 @@ namespace ana
     assert(ptag);
 
     const TString tag = ptag->GetString();
+    delete ptag;
 
-    if(tag == "TrivialExtrap") return TrivialExtrap::LoadFrom(dir, name);
+    const auto func = LoadFromRegistry<IExtrap>::Get(tag.Data());
+    if(func) return func(dir, name);
 
     std::cerr << "Unknown Extrap type '" << tag << "'" << std::endl;
     abort();

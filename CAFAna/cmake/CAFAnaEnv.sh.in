@@ -1,4 +1,32 @@
-#!/bin/bash
+if [ ! -z ${BASH_VERSINFO} ] && (( BASH_VERSINFO[0] < 2 )); then
+  echo "[ERROR]: You must source this setup script (not run it in a sub-shell). Use like $ source setup.sh"
+  exit 1
+fi
+
+if ! type abspath &> /dev/null; then
+
+#Adapted from
+# https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
+function abspath() { 
+  ABS_PATH_OPWD=$(pwd)
+  if [ ! -e "${1}" ]; then
+    :
+  elif [ -d "$1" ]; then 
+    cd "$1"; pwd; 
+  else 
+    cd $(dirname \"$1\"); 
+    cur_dir=$(pwd); 
+    if [ "$cur_dir" = "/" ]; then 
+      echo "$cur_dir$(basename \"$1\")"; 
+    else echo "$cur_dir/$(basename \"$1\")"; 
+    fi; 
+  fi; 
+  cd ${ABS_PATH_OPWD}
+}
+
+fi
+
+if ! type add_to_PATH &> /dev/null; then
 
 ### Adapted from https://unix.stackexchange.com/questions/4965/keep-duplicates-out-of-path-on-source
 function add_to_PATH () {
@@ -7,7 +35,7 @@ function add_to_PATH () {
     d=$(cd -- "$d" && { pwd -P || pwd; }) 2>/dev/null  # canonicalize symbolic links
     if [ -z "$d" ]; then continue; fi  # skip nonexistent directory
 
-    if [ "$d" == "/usr/bin" ] || [ "$d" == "/usr/bin64" ] || [ "$d" == "/usr/local/bin" ] || [ "$d" == "/usr/local/bin64" ]; then
+    if [ "$d" = "/usr/bin" ] || [ "$d" = "/usr/bin64" ] || [ "$d" = "/usr/local/bin" ] || [ "$d" = "/usr/local/bin64" ]; then
       case ":$PATH:" in
         *":$d:"*) :;;
         *) export PATH=$PATH:$d;;
@@ -21,13 +49,17 @@ function add_to_PATH () {
   done
 }
 
+fi
+
+if ! type add_to_LD_LIBRARY_PATH &> /dev/null; then
+
 function add_to_LD_LIBRARY_PATH () {
   for d; do
 
     d=$(cd -- "$d" && { pwd -P || pwd; }) 2>/dev/null  # canonicalize symbolic links
     if [ -z "$d" ]; then continue; fi  # skip nonexistent directory
 
-    if [ "$d" == "/usr/lib" ] || [ "$d" == "/usr/lib64" ] || [ "$d" == "/usr/local/lib" ] || [ "$d" == "/usr/local/lib64" ]; then
+    if [ "$d" = "/usr/lib" ] || [ "$d" = "/usr/lib64" ] || [ "$d" = "/usr/local/lib" ] || [ "$d" = "/usr/local/lib64" ]; then
       case ":$LD_LIBRARY_PATH:" in
         *":$d:"*) :;;
         *) export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$d;;
@@ -41,24 +73,43 @@ function add_to_LD_LIBRARY_PATH () {
   done
 }
 
+fi
+
 #If we aren't on the GRID, we won't know this.
 if [ -z "${CAFANA}" ]; then
   export CAFANA=@CMAKE_INSTALL_PREFIX@
 fi
 
-if [ "@USED_UPS@" == "1" ]; then
-  source ${CAFANA}/ups_env_setup.sh
+ls ${CAFANA}/env/* &> /dev/null
+if [ "$?" = "0" ]; then
+  for script in ${CAFANA}/env/*; do
+    echo "Sourcing auxiliary env script: ${script}"
+    source ${script}
+  done
 fi
 
 add_to_PATH "${CAFANA}/bin"
-add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
+[ $(uname -s) = "Linux" ] && add_to_LD_LIBRARY_PATH "${CAFANA}/lib"
 
-export BOOST_INC=@BOOST_INC@
-export BOOST_LIB=@BOOST_LIB@
+if [ -e ${CAFANA}/fcl ]; then
 
-export EIGEN_INC=@EIGEN_INC@
-export STAN_INC=@STAN_INC@
-export STAN_MATH_INC=@STAN_MATH_INC@
+  function add_to_FHICL_FILE_PATH () {
+    for d; do
+
+      d=$(cd -- "$d" && { pwd -P || pwd; }) 2>/dev/null  # canonicalize symbolic links
+      if [ -z "$d" ]; then continue; fi  # skip nonexistent directory
+      case ":$FHICL_FILE_PATH:" in
+        *":$d:"*) :;;
+        *) export FHICL_FILE_PATH=$d:$FHICL_FILE_PATH;;
+      esac
+    done
+  }
+
+  add_to_FHICL_FILE_PATH "${CAFANA}/fcl"
+  if [ -e ${CAFANA}/fcl/PRISM ]; then
+    add_to_FHICL_FILE_PATH "${CAFANA}/fcl/PRISM"
+  fi
+fi
 
 #Recent versions of ROOT may enable omp for minuit2 by default
 if [ -z ${OMP_NUM_THREADS} ]; then
@@ -80,3 +131,5 @@ export CAFANA_DONT_CLAMP_SYSTS="0"
 export CAFANA_FIT_TURBOSE="0"
 export CAFANA_FIT_FORCE_HESSE="1"
 export CAFANA_PRED_MINMCSTATS="50"
+
+export PRISM_TOTAL_OFFAXIS_EXPOSURE_INPUT="${CAFANA}/PRISM/FileExposures/TotalOffAxisFileExposure.root"

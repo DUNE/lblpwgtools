@@ -2,7 +2,7 @@
 
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMQuerySource.h"
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
@@ -12,7 +12,7 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 #include "ifdh.h"
 #endif
 
@@ -27,9 +27,6 @@
 
 namespace ana
 {
-  // Apparently the existence of fHistDefs isn't enough and I need to spell
-  // this out to make sure the function bodies are generated.
-  template class SpectrumLoaderBase::IDMap<SystShifts, SpectrumLoaderBase::IDMap<Cut, SpectrumLoaderBase::IDMap<Weight, SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, SpectrumLoaderBase::SpectList>>>>;
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::SpectList::~SpectList()
@@ -153,7 +150,7 @@ namespace ana
       delete ret;
     }
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
     // Maybe this the name of a SAM project?
     ifdh_ns::ifdh i;
     const std::string info = i.dumpProject(i.findProject(str, "nova"));
@@ -267,9 +264,8 @@ namespace ana
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
 
-      fPOT += pot;
+      fPOT += pot; 
     }
-
     return f;
   }
 
@@ -282,5 +278,13 @@ namespace ana
   NullLoader::~NullLoader()
   {
   }
+
+  // Apparently the existence of fHistDefs isn't enough and I need to spell
+  // this out to make sure the function bodies are generated.
+  template struct SpectrumLoaderBase::IDMap<SystShifts, 
+    SpectrumLoaderBase::IDMap<Cut, 
+      SpectrumLoaderBase::IDMap<Weight, 
+        SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, 
+          SpectrumLoaderBase::SpectList>>>>;
 
 } // namespace

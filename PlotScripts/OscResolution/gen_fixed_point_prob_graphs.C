@@ -24,7 +24,7 @@ bool FillProbGraphs(TGraph * nue_graph, TGraph * nueb_graph, double osc_params[6
 	return true;
 }
 
-void gen_fixed_point_graphs() {
+void gen_fixed_point_prob_graphs() {
 	double nom_osc_params[] = {0.310, pow(sin(asin(sqrt(0.088))/2),2), 0.50, 7.39E-5, 2.4511E-3, 0.};
 	double L_km = 1285;
 	double osc_params_array[6][6] = {{0.310, pow(sin(asin(sqrt(0.088))/2),2), 0.50, 7.39E-5, -2.4511E-3, 0.},

@@ -21,6 +21,19 @@ public:
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 
+  double POT() { return fSpectrum.POT(); }
+
+  void OverridePOT(double pot) {
+    fSpectrum.OverridePOT(pot);
+    fSpectrumNCTot.OverridePOT(pot);
+    fSpectrumNC.OverridePOT(pot);
+    fSpectrumNCAnti.OverridePOT(pot);
+    fSpectrumNumu.OverridePOT(pot);
+    fSpectrumNumubar.OverridePOT(pot);
+    fSpectrumNue.OverridePOT(pot);
+    fSpectrumNuebar.OverridePOT(pot);
+  }
+
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {
     return fSpectrum;
   }
@@ -43,16 +56,19 @@ public:
   }
 
 protected:
-  PredictionNoOsc(const Spectrum &s, const Spectrum &sNC, const Spectrum &sNumu,
+  PredictionNoOsc(const Spectrum &s, const Spectrum &sNCTot, const Spectrum &sNC, 
+                  const Spectrum &sNCbar, const Spectrum &sNumu,
                   const Spectrum &sNumubar, const Spectrum &sNue,
                   const Spectrum &sNuebar)
-      : fSpectrum(s), fSpectrumNC(sNC), fSpectrumNumu(sNumu),
-        fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
+      : fSpectrum(s), fSpectrumNCTot(sNCTot), fSpectrumNC(sNC), fSpectrumNCAnti(sNCbar), 
+        fSpectrumNumu(sNumu), fSpectrumNumubar(sNumubar), fSpectrumNue(sNue),
         fSpectrumNuebar(sNuebar) {}
 
   Spectrum fSpectrum;
 
-  Spectrum fSpectrumNC;
+  Spectrum fSpectrumNCTot;
+  Spectrum fSpectrumNC; 
+  Spectrum fSpectrumNCAnti;
   Spectrum fSpectrumNumu;
   Spectrum fSpectrumNumubar;
   Spectrum fSpectrumNue;

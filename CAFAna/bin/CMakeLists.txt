@@ -1,5 +1,3 @@
-include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
-
 set(APPS
   hadd_cafana
   diff_spectra
@@ -10,7 +8,7 @@ foreach(APP ${APPS})
 
   add_executable(${APP} ${APP}.cc)
 
-  target_link_libraries(${APP} "-L ${ROOT_LIBDIR}" ${ROOT_LIBS})
+  target_link_libraries(${APP} ${CAFAna_Libs})
 
   install(TARGETS ${APP} DESTINATION bin)
 endforeach()

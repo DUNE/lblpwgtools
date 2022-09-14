@@ -1,0 +1,49 @@
+#include "AnalysisDefaults.fcl"
+
+scans: [
+    {
+        @table::DefaultPRISMScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint"
+    },
+    {
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_min"
+    },
+    {
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        GOF.free_syst_params: @local::nuisance_parameters.flux5
+
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_minflux5"
+    },
+     {
+        @table::DefaultPRISMFitScan
+
+        state_file: /statefiles/PRISMState.EProxy_protonFD.FakeHCRun_allchans.fluxxsec.root
+
+        GOF.free_syst_params: @local::nuisance_parameters.flux10
+
+
+        samples: @local::FitChannels.DispJoint
+        scan_params: @local::ScanDefinitions.dmsq23_fine
+        output_dir: "dmsq23_protonFD_PRISM_dispjoint_minflux10"
+    },
+  ]
+
+# This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
+scans[0].output_file[1]: "RECREATE"

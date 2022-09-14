@@ -26,7 +26,7 @@ namespace ana
     SpectrumLoader(const std::string& wildcard, int max = 0);
     SpectrumLoader(const std::vector<std::string>& fnames, int max = 0);
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
 					 int fileLimit = -1);
@@ -61,5 +61,6 @@ namespace ana
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
     int max_entries;
+
   };
 }
