@@ -35,6 +35,8 @@ def makeParser():
                              help = 'skip first M files of dataset (for use with -s)')
     stridegroup.add_argument('-ss', '--snapshot', action = 'store_true',
                              help = 'use latest snapshot instead of requerying')
+    stridegroup.add_argument('-se', '--staterrs', action = 'store_true',
+                             help = 'switch on statistical error propogation')
 
     # Have to nest like this to be able to provide a title
     dbggroup2 = parser.add_argument_group('debugging options')
@@ -136,6 +138,9 @@ if __name__ == '__main__':
 
     if opts['snapshot']:
         os.environ['CAFANA_USE_SNAPSHOTS'] = 'yes'
+
+    if opts['staterrs']:
+        os.environ["CAFANA_STAT_ERRS"] = 'yes'
 
     path = [os.environ['CAFANA']+'/include',
             os.environ['CAFANACORE_INC'],

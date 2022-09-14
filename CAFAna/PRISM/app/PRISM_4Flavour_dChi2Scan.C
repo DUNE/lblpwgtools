@@ -437,6 +437,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   // Do the minimization 1D
   //-----------------------
   if (nparams == 1) {
+    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
     for (const auto &x : x_scan) {
       if (ssth23_scan) {
         ssTh23->SetValue(calc, x);
@@ -457,7 +458,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
-      MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
+      //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts = kNoShift;
       double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
@@ -497,6 +498,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   // Do the minimization 2D
   //-----------------------
   else if (param_names.size() > 1) {
+    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
     for (const auto &x : x_scan) {
       for (const auto &y : y_scan) {
         std::cout << "x = " << x << ", y = " << y << std::endl;
@@ -507,7 +509,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
 
-        MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
+        //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
         SystShifts bestSysts = kNoShift;
         double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
@@ -537,6 +539,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
+  setenv("CAFANA_STAT_ERRS", "1", 1);
   gROOT->SetMustClean(false);
 
   if (argc != 2) {
