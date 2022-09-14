@@ -37,7 +37,7 @@ list(REMOVE_ITEM ROOT_CXX_FLAGS "-fPIC")
 if(NOT TARGET ROOT::ROOT)
   add_library(ROOT::ROOT INTERFACE IMPORTED)
 
-  LIST(APPEND ROOT_LIB_NAMES 
+  LIST(APPEND ROOT_LIB_NAMES
     Core
     RIO
     Net
@@ -94,21 +94,29 @@ endif()
 find_package(TH2Jagged REQUIRED)
 add_compile_options(-DUSE_TH2JAGGED)
 
-# This is the only real SO dependency if we are using CVMFS to pull in the others, 
+# This is the only real SO dependency if we are using CVMFS to pull in the others,
 # so dump this in the lib/ folder to aid cluster deployment
-install(FILES 
+install(FILES
   ${TH2Jagged_LIB_DIR}/libTH2Jagged_rdict.pcm
   ${TH2Jagged_LIB_DIR}/libTH2Jagged.rootmap
   DESTINATION lib/)
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-  install(FILES 
+  install(FILES
   ${TH2Jagged_LIB_DIR}/libTH2Jagged.so
   DESTINATION lib/)
 elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
-  install(FILES 
+  install(FILES
     ${TH2Jagged_LIB_DIR}/libTH2Jagged.dylib
     DESTINATION lib/)
 endif()
 
-find_package(fhiclcpp REQUIRED)
+if(DEFINED ENV{FHICLCPP_FQ_DIR})
+  # If fhiclcpp comes from ups, then look for it in this path
+  find_package(fhiclcpp REQUIRED PATHS $ENV{FHICLCPP_FQ_DIR})
+  # and find tbb which apparently doesn't happen by default
+  find_package(TBB REQUIRED PATHS $ENV{TBB_FQ_DIR})
+else()
+  # Otherise it comes from support/
+  find_package(fhiclcpp REQUIRED)
+endif()

@@ -31,7 +31,14 @@ LIST(APPEND PRISM_header_files
   Weights.h)
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
-target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
+
+if(DEFINED ENV{FHICLCPP_FQ_DIR})
+  # fhiclcpp from ups
+  target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::fhiclcpp)
+else()
+  # need different target name for fhiclcpp from support/
+  target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
+endif()
 
 set_target_properties(CAFAnaPRISM PROPERTIES
   PUBLIC_HEADER "${PRISM_header_files}")

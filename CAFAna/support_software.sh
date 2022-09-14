@@ -225,37 +225,39 @@ EOF
   echo -e "export BOOST_VERSION=\"${BOOST_VERSION}\"" >> support_software_env.sh
 fi
 
-#Build linedoc
-if [ ! -e linedoc ]; then
-  git clone https://github.com/luketpickering/linedoc
-  cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-fi
+if [ -z "${FHICLCPP_DIR}" ]; then
+    #Build linedoc
+    if [ ! -e linedoc ]; then
+        git clone https://github.com/luketpickering/linedoc
+        cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-if [ ! -e linedoc/build/$(uname)/setup.sh ]; then
-  mkdir -p linedoc/build
-  cd linedoc/build
-  cmake ../
-  make install
-  cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-fi
+    if [ ! -e linedoc/build/$(uname)/setup.sh ]; then
+        mkdir -p linedoc/build
+        cd linedoc/build
+        cmake ../
+        make install
+        cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-source linedoc/build/$(uname)/setup.sh
+    source linedoc/build/$(uname)/setup.sh
 
-#Build fhiclcpp
-if [ ! -e fhiclcpp-simple ]; then
-  git clone https://github.com/luketpickering/fhiclcpp-simple
-  cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-fi
+    #Build fhiclcpp
+    if [ ! -e fhiclcpp-simple ]; then
+        git clone https://github.com/luketpickering/fhiclcpp-simple
+        cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-if [ ! -e fhiclcpp-simple/build/$(uname)/setup.sh ]; then
-  mkdir -p fhiclcpp-simple/build
-  cd fhiclcpp-simple/build
-  cmake ../
-  make install
-  cd ${SUPPORT_SOFTWARE_BUILD_DIR}
-fi
+    if [ ! -e fhiclcpp-simple/build/$(uname)/setup.sh ]; then
+        mkdir -p fhiclcpp-simple/build
+        cd fhiclcpp-simple/build
+        cmake ../
+        make install
+        cd ${SUPPORT_SOFTWARE_BUILD_DIR}
+    fi
 
-source fhiclcpp-simple/build/$(uname)/setup.sh
+    source fhiclcpp-simple/build/$(uname)/setup.sh
+fi # end if no ups fhiclcpp
 
 #Build TH2Jagged
 if [ ! -e TH2Jagged ]; then
