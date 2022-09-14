@@ -9,6 +9,7 @@ set(Prediction_implementation_files
   PredictionXSecDiag.cxx
   PredictionNuOnE.cxx
   PredictionInterpKernel.cxx)
+  #PredictionsForPRISM.cxx)
 
 set(Prediction_header_files
   IPrediction.h
@@ -21,24 +22,18 @@ set(Prediction_header_files
   PredictionXSecDiag.h
   PredictionNuOnE.h
   PredictionInterpKernel.h)
-
-if(DEFINED USE_EIGEN AND USE_EIGEN)
-  LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
-  LIST(APPEND Prediction_header_files PredictionPRISM.h)
-endif()
+  #PredictionsForPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
-target_link_libraries(CAFAnaPrediction)
+target_link_libraries(CAFAnaPrediction CAFAnaExtrap CAFAnaPRISM)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaPrediction gperftools)
-  target_link_libraries(CAFAnaPrediction ${GPERF_LINKER_FLAGS})
-endif()
+set_target_properties(CAFAnaPrediction PROPERTIES
+  PUBLIC_HEADER "${Prediction_header_files}")
 
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaPrediction BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaPrediction DESTINATION lib)
-
-install(FILES ${Prediction_header_files} DESTINATION include/CAFAna/Prediction)
+install(TARGETS CAFAnaPrediction 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Prediction/)

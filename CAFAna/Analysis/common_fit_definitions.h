@@ -30,6 +30,9 @@
 
 extern unsigned gRNGSeed;
 
+// Factor to account for simulated LAr mass/expected FV, pot_fd = pot_nd *
+// pot_fd_FVMassFactor
+extern double const pot_fd_FVMassFactor;
 // POT for 3.5 years
 extern double const pot_fd;
 extern double const pot_nd;
@@ -51,6 +54,7 @@ GetOscVars(std::string oscVarString = "alloscvars", int hie = 0, int oct = 0);
 ana::SystShifts GetFakeDataGeneratorSystShift(std::string input);
 
 enum SampleType { kFDFHC, kFDRHC, kNDFHC, kNDRHC, kNDNue, kNDFHC_OA, kUnknown };
+std::string GetSampleName(SampleType sample);
 SampleType GetSampleType(std::string const &sample);
 
 void MakePredictionInterp(

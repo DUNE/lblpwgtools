@@ -107,14 +107,14 @@ namespace ana
 
     assert( rhs.fReferences.empty() ); // Copying with pending loads is unexpected
     assert( fReferences.empty() ); // Copying with pending loads is unexpected
-
+    
     return *this;
   }
 
   //----------------------------------------------------------------------
-  OscillatableSpectrum& OscillatableSpectrum::operator=(OscillatableSpectrum&& rhs)
+  OscillatableSpectrum &OscillatableSpectrum::operator=(OscillatableSpectrum &&rhs)
   {
-    if(this == &rhs) return *this;
+    if (this == &rhs) return *this;
 
     ReweightableSpectrum::operator=(rhs);
 
@@ -177,14 +177,14 @@ namespace ana
     return *this;
   }
 
-  //----------------------------------------------------------------------
+  //---------------------------------------------------------------------- 
   OscillatableSpectrum OscillatableSpectrum::operator+(const OscillatableSpectrum& rhs) const
   {
     OscillatableSpectrum ret = *this;
     ret += rhs;
     return ret;
   }
-
+ 
   //----------------------------------------------------------------------
   OscillatableSpectrum& OscillatableSpectrum::operator-=(const OscillatableSpectrum& rhs)
   {
@@ -267,4 +267,4 @@ namespace ana
 
     return ret;
   }
-}
+} // namespace ana

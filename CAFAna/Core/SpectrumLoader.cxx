@@ -5,9 +5,11 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
-#ifndef DONT_USE_SAM
+
+#ifdef WITH_SAM
 #include "CAFAna/Core/SAMProjectSource.h"
 #endif
+
 #include "CAFAna/Core/SignalHandlers.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Utilities.h"
@@ -38,7 +40,7 @@ SpectrumLoader::SpectrumLoader(const std::vector<std::string> &fnames, int max)
 //----------------------------------------------------------------------
 SpectrumLoader::SpectrumLoader() : SpectrumLoaderBase() {}
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
 //----------------------------------------------------------------------
 SpectrumLoader SpectrumLoader::FromSAMProject(const std::string &proj,
                                               int fileLimit) {
@@ -81,6 +83,7 @@ void SpectrumLoader::Go() {
   Progress *prog = 0;
 
   int fileIdx = -1;
+
   while (TFile *f = GetNextFile()) {
     ++fileIdx;
 
@@ -91,7 +94,7 @@ void SpectrumLoader::Go() {
               .Data());
 
     HandleFile(f, Nfiles == 1 ? prog : 0);
-
+    
     if (Nfiles > 1 && prog)
       prog->SetProgress((fileIdx + 1.) / Nfiles);
 
@@ -129,7 +132,7 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   }
   return false;
 }
-
+ 
 //----------------------------------------------------------------------
 void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   assert(!f->IsZombie());
@@ -175,7 +178,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "muon_ecal", &sr.muon_ecal);
   SetBranchChecked(tr, "muon_tracker", &sr.muon_tracker);
   SetBranchChecked(tr, "Ehad_veto", &sr.Ehad_veto);
-
   SetBranchChecked(tr, "Ev", &sr.Ev);
   SetBranchChecked(tr, "Elep", &sr.Elep);
   //    SetBranchChecked(tr, "ccnc", &sr.ccnc);
@@ -216,7 +218,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "vtx_x", &sr.vtx_x);
   SetBranchChecked(tr, "vtx_y", &sr.vtx_y);
   SetBranchChecked(tr, "vtx_z", &sr.vtx_z);
-
   SetBranchChecked(tr, "det_x", &sr.det_x);
 
   SetBranchChecked(tr, "eP", &sr.eP);
@@ -253,11 +254,11 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   SetBranchChecked(tr, "wgt_CrazyFlux", &crazy_tmp);
 
   // XSec uncertainties and CVs
-  std::vector<std::array<double, 100>> XSSyst_tmp;
+  std::vector<std::array<double, caf::kMaxSystUniverses>> XSSyst_tmp;
   std::vector<double> XSSyst_cv_tmp;
   std::vector<int> XSSyst_size_tmp;
 
-  std::vector<std::string> const &XSSyst_names = GetAllXSecSystNames();
+  std::vector<std::string> const XSSyst_names = GetAllXSecSystNames();
   XSSyst_tmp.resize(XSSyst_names.size());
   XSSyst_cv_tmp.resize(XSSyst_names.size());
   XSSyst_size_tmp.resize(XSSyst_names.size());
@@ -265,9 +266,12 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   sr.xsSyst_wgt.resize(XSSyst_names.size());
 
   for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
+
+    sr.xsSyst_wgt[syst_it].resize(caf::kMaxSystUniverses);
+
     if (!SetBranchChecked(tr, "wgt_" + XSSyst_names[syst_it],
                           &XSSyst_tmp[syst_it])) {
-      std::fill_n(XSSyst_tmp[syst_it].begin(), 100, 1);
+      std::fill_n(XSSyst_tmp[syst_it].begin(), caf::kMaxSystUniverses, 1);
       XSSyst_cv_tmp[syst_it] = 1;
       XSSyst_size_tmp[syst_it] = 1;
       continue;
@@ -279,34 +283,88 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                      &XSSyst_cv_tmp[syst_it]);
   }
 
+  // If we are in the FD then these variables are nonsense.
+  if (sr.isFD) {
+    sr.muon_contained = -1;
+    sr.muon_tracker = -1;
+  }
+
   int Nentries = tr->GetEntries();
-  if (max_entries != 0 && max_entries < Nentries)
+  if (max_entries != 0 && max_entries < Nentries) {
     Nentries = max_entries;
+  }
+
+  TTree *potFriend = 0;
+  f->GetObject("OffAxisWeightFriend", potFriend);
+  if (potFriend) {
+    tr->AddFriend(potFriend);
+    SetBranchChecked(potFriend, "perPOT", &sr.perPOTWeight);
+    SetBranchChecked(potFriend, "massCorr", &sr.NDMassCorrWeight);
+    SetBranchChecked(potFriend, "specRunWght", &sr.SpecialRunWeight);
+    SetBranchChecked(potFriend, "specRunId", &sr.SpecialHCRunId); 
+    std::cout << "[INFO]: Found Off axis weight friend tree "
+                 "in input file, hooking up!"<< std::endl;
+  } else {
+    sr.perPOTWeight = 1;
+    sr.NDMassCorrWeight = 1;
+    sr.SpecialRunWeight = 1;
+    sr.SpecialHCRunId = 293;
+  }
 
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
 
+    if (!sr.isFD) sr.abspos_x = sr.det_x + sr.vtx_x;
+    else sr.abspos_x = 0;
+
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.isFD) {
-      sr.eRec_FromDep = sr.eDepP + sr.eDepN + sr.eDepPip +
-                        sr.eDepPim + sr.eDepPi0 +
-                        sr.eDepOther + sr.LepE;
+      sr.eRec_FromDep = sr.eDepP + sr.eDepN + sr.eDepPip + sr.eDepPim +
+                        sr.eDepPi0 + sr.eDepOther + sr.LepE;
 
-      sr.GENIE_ScatteringMode =
-          ana::GetGENIEModeFromSimbMode(sr.mode);
+      sr.GENIE_ScatteringMode = ana::GetGENIEModeFromSimbMode(sr.mode);
     } else {
-      sr.eRec_FromDep = sr.eRecoP + sr.eRecoN +
-                        sr.eRecoPip + sr.eRecoPim +
-                        sr.eRecoPi0 + sr.eRecoOther +
-                        sr.LepE;
+      sr.eRec_FromDep = sr.eRecoP + sr.eRecoN + sr.eRecoPip + sr.eRecoPim +
+                        sr.eRecoPi0 + sr.eRecoOther + sr.LepE;
+
       sr.GENIE_ScatteringMode = sr.mode;
     }
+
+    // Common EvisReco variable for ND and FD
+    sr.HadEVisReco_ND = sr.eRecoP + sr.eRecoPip + sr.eRecoPim + sr.eRecoPi0 + sr.eRecoOther;
+    sr.HadEVisReco_FD = sr.eDepP + sr.eDepPip + sr.eDepPim + sr.eDepPi0 + sr.eDepOther;
+
+    sr.EVisReco_ND = sr.HadEVisReco_ND + sr.Elep_reco;   
+    sr.EVisReco_numu = sr.HadEVisReco_FD + sr.RecoLepEnNumu;
+    sr.EVisReco_nue = sr.HadEVisReco_FD + sr.RecoLepEnNue;
+
+    double eother = 0;
+    if (std::isnormal(sr.eOther)) {
+      eother = sr.eOther;
+    }
+    sr.eRecProxy = sr.LepE + sr.eP + sr.ePip + sr.ePim + sr.ePi0 +
+                   0.135 * sr.nipi0 + eother;
+    // If it is a NC event remove LepE, this is the neutrino evergy and is 
+    // not detected
+    if (!sr.isCC) {
+      sr.eRecProxy = sr.eRecProxy - sr.LepE;
+    }
+
+    // Variable for true hadronic energy
+    sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+    // True visible energy in the ND or FD
+    // Sum of the true lepton and true hadronic energy
+    sr.VisTrue_NDFD = sr.LepE + sr.HadE;
+
+    // Sum of the true charged pion KE
+    sr.ePipm = sr.ePip + sr.ePim;
+    // True total energy of pi0 (KE + mass)
+    sr.eTotalPi0 = sr.ePi0 + (0.135 * sr.nipi0);
 
     // Patch up isFD which isn't set properly in FD CAFs
     if (sr.isFD) {
       if (sr.isFHC != 0 && sr.isFHC != 1) {
-        if (sr.run == 20000001 || sr.run == 20000002 ||
-            sr.run == 20000003) {
+        if (sr.run == 20000001 || sr.run == 20000002 || sr.run == 20000003) {
           sr.isFHC = true;
           static bool once = true;
           if (once) {
@@ -348,6 +406,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       }
     }
 
+#ifdef USE_TH2JAGGED
+    sr.OffAxisFluxConfig = -1;
+    sr.OffAxisFluxBin = -1;
+#endif
     // Get the crazy flux info properly
     sr.wgt_CrazyFlux.resize(7);
     for (int i = 0; i < 7; ++i) {
@@ -360,9 +422,9 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     static auto AnaV = GetAnaVersion();
     if (AnaV == kV3) {
       for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
-        const int Nuniv = XSSyst_tmp[syst_it].size();
-        assert((Nuniv >= 0) && (Nuniv <= int(XSSyst_tmp[syst_it].size())));
-        sr.xsSyst_wgt[syst_it].resize(Nuniv);
+
+        const size_t Nuniv = XSSyst_tmp[syst_it].size();
+        assert((Nuniv > 0) && (Nuniv <= XSSyst_tmp[syst_it].size()));
 
         // Do some error checking here
         if (std::isnan(XSSyst_cv_tmp[syst_it]) ||
@@ -374,20 +436,29 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         } else {
           sr.total_xsSyst_cv_wgt *= XSSyst_cv_tmp[syst_it];
         }
-
-        for (int u_it = 0; u_it < Nuniv; ++u_it) {
+        for (size_t u_it = 0; u_it < Nuniv; ++u_it) {
           sr.xsSyst_wgt[syst_it][u_it] = XSSyst_tmp[syst_it][u_it];
         }
       }
     } else {
 
-      for (unsigned int syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
-        const int Nuniv = XSSyst_size_tmp[syst_it];
+      for (size_t syst_it = 0; syst_it < XSSyst_names.size(); ++syst_it) {
+        const size_t Nuniv = XSSyst_size_tmp[syst_it];
         if (!Nuniv) {
           continue;
         }
 
-        assert(Nuniv <= int(XSSyst_tmp[syst_it].size()));
+        if (caf::kMaxSystUniverses < Nuniv) {
+          std::cout << "[ERROR]: Syst weight array in standard record "
+                       "(kMaxSystUniverses = "
+                    << caf::kMaxSystUniverses
+                    << ") is too small to hold this syst: "
+                    << XSSyst_names[syst_it] << " which requires " << Nuniv
+                    << " universes." << std::endl;
+          abort();
+        }
+
+        assert(Nuniv <= XSSyst_tmp[syst_it].size());
 
         static std::vector<bool> alreadyWarned(XSSyst_names.size(), false);
 
@@ -404,7 +475,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
                         << std::endl;
             }
           } else {
-            for (int univ_it = 0; univ_it < Nuniv; ++univ_it) {
+            for (size_t univ_it = 0; univ_it < Nuniv; ++univ_it) {
               XSSyst_tmp[syst_it][univ_it] *= XSSyst_cv_tmp[syst_it];
             }
           }
@@ -426,9 +497,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
         }
 
         // Copy the spline in
-        sr.xsSyst_wgt[syst_it].clear();
-        std::copy(XSSyst_tmp[syst_it].begin(), XSSyst_tmp[syst_it].end(),
-                  std::back_inserter(sr.xsSyst_wgt[syst_it]));
+        std::copy_n(XSSyst_tmp[syst_it].begin(), caf::kMaxSystUniverses,
+                    sr.xsSyst_wgt[syst_it].begin());
       }
     } // end version switch
 

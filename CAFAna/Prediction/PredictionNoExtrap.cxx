@@ -1,6 +1,5 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"
 
@@ -111,3 +110,5 @@ namespace ana
     delete fExtrap;
   }
 }
+
+

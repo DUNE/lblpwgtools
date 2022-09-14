@@ -7,6 +7,8 @@
 #include "TObjString.h"
 #include "TVectorD.h"
 
+#include <memory>
+
 namespace ana
 {
   // Can we give trueE bin a special ID?

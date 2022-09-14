@@ -9,13 +9,15 @@ set(Vars_header_files
   Vars.h)
 
 add_library(CAFAnaVars SHARED ${Vars_implementation_files})
-target_link_libraries(CAFAnaVars)
+target_link_libraries(CAFAnaVars CAFAnaCore)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaVars gperftools)
-  target_link_libraries(CAFAnaVars ${GPERF_LINKER_FLAGS})
+set_target_properties(CAFAnaVars PROPERTIES
+  PUBLIC_HEADER "${Vars_header_files}")
+
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaVars BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaVars DESTINATION lib)
-
-install(FILES ${Vars_header_files} DESTINATION include/CAFAna/Vars)
+install(TARGETS CAFAnaVars 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Vars/)

@@ -12,6 +12,8 @@
 #include "TObjString.h"
 #include "TH1.h"
 
+#include <memory>
+
 namespace ana
 {
   REGISTER_LOADFROM("CountingExperiment", IExperiment, CountingExperiment);

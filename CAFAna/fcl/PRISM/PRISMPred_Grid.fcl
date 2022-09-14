@@ -1,0 +1,112 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+	output_file: [PRISMPred_1Yr4Flav_EVisReco_NewState_24Apr21.root, "UPDATE"]
+	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
+
+	projection_name: EVisReco
+
+	use_PRISM: true
+	POT_years: 1.0
+	vary_NDFD_data: false
+	match_intrinsic_nue: false
+
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: true
+
+		RunPlans: {
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
+		}
+		Use_EventRateMatching: true
+
+		write_debug: true
+
+                reg_factor_extrap: 1e-10 #1E-30
+	}
+	#samples: @local::FitChannels.Numu_disp
+	#samples: @local::FitChannels.Nue_app
+	#samples: @local::FitChannels.NuModeJoint
+	samples: @local::FitChannels.FourFlavor
+}
+
+
+predictions: [
+
+	{
+		@table::BasicPred
+		output_dir: "numu_EvMatch"
+	},
+
+	{
+		@table::BasicPred
+		output_dir: "dmsq_238_ssth23_055"
+		true_osc: {
+			dmsq32: 0.00238
+			ssth23: 0.55
+		}
+	},
+
+	{
+		@table::BasicPred
+		output_dir: "dmsq_252_ssth23_05"
+		true_osc: {
+			dmsq32: 0.00252
+			ssth23: 0.5
+		}
+	},
+
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_Shift"
+#		syst: {
+#			shifts: [
+#				[MaCCQE, 1],
+#				[MaCCRES, 1],
+#				[RecoEnergyScaleND,, 1],
+#				[AhtBY, 1],
+#				[BhtBY, 1],
+#				[flux_Nov17_13, 1],
+#				[CV2uBY, 1],
+#				[BeRPA_A, 1],
+#				[BeRPA_B, 1],
+#				[BeRPA_D, 1],
+#			]
+#		}
+#	},
+
+]
+
+predictions[0].output_file[1]: "RECREATE"

@@ -22,7 +22,7 @@ if [ -z "${CAFANA}" ]; then
 fi
 
 while [[ ${#} -gt 0 ]]; do
-    
+
   key="$1"
   case $key in
 
@@ -202,15 +202,19 @@ NJOBSTORUN=$(cat CAFECommands.cmd | wc -l)
 
 LN=0
 # for i in $(cat CAFECommands.cmd | cut -f 1 -d " "); do
-# 
+#
 #   if ! tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts/${i}; then
 #     echo -e "[ERROR]: In CAFECommands.cmd on line ${LN}:\n  $(cat CAFECommands.cmd | head -$(( LN + 1 )) | tail -1)\n[ERROR]: Trying to run job for script ${i}. But it doesn't exist in the tarball at CAFAna/scripts/ and wasn't passed with -S. The script needs to be installed with CAFAna or passed to this submission script to run."
 #     echo -e "[INFO]: tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts:\n$(tar -tf CAFAna.Blob.tar.gz | grep CAFAna/scripts | grep -v FermiGridScripts)"
 #     exit
 #   fi
-# 
+#
 #   LN=$(( LN + 1 ))
 # done
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/strong_and_stable
 
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 

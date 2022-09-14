@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include "CAFAna/Core/Cut.h"
 #include "StandardRecord/SRProxy.h"
 
@@ -62,6 +61,24 @@ namespace ana
             pos_z_cm < 1244);
   }
 
+
+  // Based just on PDG code and not on oscillation channel
+  const Cut kActuallyIsNumuCC([](const caf::StandardRecord *sr) {
+    return sr->isCC && (sr->nuPDG == 14);
+  });
+
+  const Cut kActuallyIsNumubarCC([](const caf::StandardRecord *sr) {
+    return sr->isCC && (sr->nuPDG == -14);
+  });
+
+  const Cut kActuallyIsNueCC([](const caf::StandardRecord *sr) {
+    return sr->isCC && (sr->nuPDG == 12);
+  });
+
+  const Cut kActuallyIsNuebarCC([](const caf::StandardRecord *sr) {
+    return sr->isCC && (sr->nuPDG == -12);
+  });
+
   inline bool IsInNDFV(double pos_x_cm, double pos_y_cm, double pos_z_cm) {
     bool inDeadRegion = false;
     for (int i = -3; i <= 3; ++i) {
@@ -69,14 +86,14 @@ namespace ana
       double cathode_center = i * 102.1;
       if (pos_x_cm > cathode_center - 0.75 && pos_x_cm < cathode_center + 0.75)
         inDeadRegion = true;
-
+  
       // 1.6cm dead region between modules (0.5cm module wall and 0.3cm pixel
       // plane, x2) don't worry about outer boundary because events are only
       // generated in active Ar + insides
       double module_boundary = i * 102.1 + 51.05;
       if (i <= 2 && pos_x_cm > module_boundary - 1.3 &&
           pos_x_cm < module_boundary + 1.3)
-        inDeadRegion = true;
+            inDeadRegion = true;
     }
     for (int i = 1; i <= 4; ++i) {
       // module boundaries in z are 1.8cm (0.4cm ArCLight plane + 0.5cm module
@@ -92,12 +109,13 @@ namespace ana
       if (pos_z_cm > module_boundary - 1.7 && pos_z_cm < module_boundary + 1.7)
         inDeadRegion = true;
     }
-
-    return (abs(pos_x_cm) < 300 && abs(pos_y_cm) < 100 && pos_z_cm > 50 &&
+  
+    return (abs(pos_x_cm) < 200 && abs(pos_y_cm) < 100 && pos_z_cm > 50 &&
             pos_z_cm < 350 && !inDeadRegion);
   }
 
-  inline bool IsInFV(bool IsFD, double pos_x_cm, double pos_y_cm, double pos_z_cm) {
+  inline bool IsInFV(bool IsFD, double pos_x_cm, double pos_y_cm,
+                     double pos_z_cm) {
     return IsFD ? IsInFDFV(pos_x_cm, pos_y_cm, pos_z_cm)
                 : IsInNDFV(pos_x_cm, pos_y_cm, pos_z_cm);
   }
@@ -116,4 +134,4 @@ namespace ana
                            return ( sr->mvanumu > -1 );
                          });
 
-}
+} // namespace ana

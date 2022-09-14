@@ -15,6 +15,8 @@
 namespace caf
 {
   
+  static std::size_t const kMaxSystUniverses = 10;
+
   /// \brief   The StandardRecord is the primary top-level object in the 
   ///          Common Analysis File trees.   
   
@@ -45,10 +47,22 @@ namespace caf
     double RecoLepEnNumu;
     double RecoHadEnNumu;
 
+    double HadEVisReco_ND;
+    double HadEVisReco_FD;
+
+    double EVisReco_ND;
+    double EVisReco_numu;
+    double EVisReco_nue;
+    
+    double VisTrue_NDFD;
+    double ProxyRecoLepE;
+
     // ND pseudo-reconstruction flags
     int reco_numu;
     int reco_nue;
     int reco_nc;
+
+    int simple_reco_numu;
 
     // CW: added for the ND cuts Chris (M) wants
     // ND containment flags
@@ -68,6 +82,14 @@ namespace caf
     // Truth info
     double Ev;
     double Elep;
+
+    // True sum of hadronic energy
+    double HadE;
+    // True sum of charged pion KE
+    double ePipm;
+    // True total energy of pi0 (KE + mass)
+    double eTotalPi0;
+
     //  float enu_truth; // so what's this one?
     int isCC;
     //    int ccnc;
@@ -119,6 +141,8 @@ namespace caf
 
     // Near detector offset in m
     double det_x;
+    // Absolute position in ND 
+    double abspos_x;
 
     // True energy of particles by species
     double eP;
@@ -127,6 +151,9 @@ namespace caf
     double ePim;
     double ePi0;
     double eOther;
+    
+    // A true-defined calorimetric erec (Elep + TProt + Epi0 + TPiChg + Tother)
+    double eRecProxy;
 
     // Reconstructed energy of particles by species
     double eRecoP;
@@ -168,6 +195,20 @@ namespace caf
     // First index is systematic ID
     std::vector<std::vector<double>> xsSyst_wgt;
     double total_xsSyst_cv_wgt;
+    // For correctly combining off axis samples
+    double perPOTWeight;
+    double NDMassCorrWeight;
+
+    // For fakeing/consuming non-standard HC runs.
+    double SpecialRunWeight;
+    // Allows for multiple special runs to be included, but we will likely only use one @ 280kA.
+    int SpecialHCRunId;
+
+#ifdef USE_TH2JAGGED
+    // Cache the ND flux bin when using off-axis flux matrices.
+    int OffAxisFluxBin;
+    int OffAxisFluxConfig;
+#endif
   };
   
 } // end namespace

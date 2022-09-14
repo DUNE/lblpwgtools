@@ -1,13 +1,31 @@
 #!/bin/bash
 
+#Adapted from
+# https://superuser.com/questions/205127/how-to-retrieve-the-absolute-path-of-an-arbitrary-file-from-the-os-x/218684#218684
+function abspath() { 
+  ABS_PATH_OPWD=$(pwd)
+  if [ ! -e "${1}" ]; then
+    :
+  elif [ -d "$1" ]; then 
+    cd "$1"; pwd; 
+  else 
+    cd $(dirname "$1"); 
+    cur_dir=$(pwd); 
+    if [ "$cur_dir" = "/" ]; then 
+      echo "$cur_dir$(basename "$1")"; 
+    else echo "$cur_dir/$(basename "$1")"; 
+    fi; 
+  fi; 
+  cd ${ABS_PATH_OPWD}
+}
+
+#script to build...
 FORCE_REMOVE="0"
 USE_UPS="0"
 CORES=1
-USE_GPERF=0
-CMAKE_BUILD_TYPE=DEBUG
+CMAKE_BUILD_TYPE=RelWithDebInfo
 BUILD_DIR="build"
 INSTALL_DIR=""
-USE_KNL="0"
 USE_OMP="0"
 
 while [[ ${#} -gt 0 ]]; do
@@ -37,28 +55,16 @@ while [[ ${#} -gt 0 ]]; do
       echo "[OPT]: Will source dependencies from ups."
       ;;
 
-      --use-gperftools)
-
-      USE_GPERF="1"
-      echo "[OPT]: Will compile in gperftools support."
-      ;;
-
       -r|--release)
 
-      CMAKE_BUILD_TYPE="RELEASE"
-      echo "[OPT]: Will compile release build type."
+      CMAKE_BUILD_TYPE="Release"
+      echo "[OPT]: Will compile Release build type."
       ;;
 
-      --rdb)
+      --db)
 
-      CMAKE_BUILD_TYPE="RELWITHDEBINFO"
-      echo "[OPT]: Will compile release with debug build type."
-      ;;
-
-      --knl)
-
-      USE_KNL="1"
-      echo "[OPT]: Will compile for KNL arch."
+      CMAKE_BUILD_TYPE="Debug"
+      echo "[OPT]: Will compile the Debug build type."
       ;;
 
       -O|--omp)
@@ -95,12 +101,11 @@ while [[ ${#} -gt 0 ]]; do
       echo "[RUNLIKE] ${SCRIPTNAME}"
       echo -e "\t-b|--build-dir         : Build directory"
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
-      echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=RELEASE"
-      echo -e "\t--rdb                  : Compile with CMAKE_BUILD_TYPE=RELWITHDEBINFO"
-      echo -e "\t--knl                  : Build with -march=knl"
+      echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=Release"
+      echo -e "\t--db                   : Compile with CMAKE_BUILD_TYPE=Debug"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
-
-      echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, rather than assuming they exist on the local system."
+      echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, "
+      echo -e "\t                         rather than assuming they exist on the local system."
       echo -e "\t-j|--n-cores           : Number of cores to pass to make install."
       echo -e "\t-O|--omp               : Enable OMP features of CAFAna."
       echo -e "\t-I|--install-to        : Directory to install to."
@@ -118,7 +123,7 @@ while [[ ${#} -gt 0 ]]; do
 done
 
 if [ -e "$BUILD_DIR" ]; then
-  if [ "${FORCE_REMOVE}" == "1" ]; then
+  if [ "${FORCE_REMOVE}" = "1" ]; then
     rm -rf "$BUILD_DIR"
   else
     echo "[ERROR]: Extant build directory in "$BUILD_DIR", will not overwrite, remove it or rebuild within it."
@@ -126,57 +131,24 @@ if [ -e "$BUILD_DIR" ]; then
   fi
 fi
 
+SCRIPT_EXE_DIR=$(pwd)
+
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
+BUILD_DIR=$(pwd)
+mkdir -p ../support
 
-if [ "${USE_UPS}" == "1" ]; then
+if [ "${USE_UPS}" = "1" ]; then
   source ../cmake/ups_env_setup.sh
+  source ../support_software.sh $(abspath ../support) USING_UPS
+  cd "$BUILD_DIR"
+  cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DBUILD_ENV_SCRIPTS="$(abspath ../cmake/ups_env_setup.sh);$(abspath ../support/support_software_env.sh)"
 else
-  if ! hash clhep-config; then
-    echo "[ERROR]: Not using UPS, but cannot find clhep-config in the path. Is libclhep-dev installed?"
-    exit 1
-  fi
-
-  if ! hash root-config; then
-    echo "[ERROR]: Not using UPS, but cannot find root-config in the path. Is root installed?"
-    exit 1
-  fi
-
-  if ! hash gsl-config; then
-    echo "[ERROR]: Not using UPS, but cannot find gsl-config in the path. Is gsl installed?"
-    exit 1
-  fi
-
-  if [ -z "${BOOST_INC}" ]; then
-    if [ -e /usr/include/boost ]; then
-      export BOOST_INC=/usr/include
-    else
-      echo "[ERROR]: Not using UPS, but couldn't find system boost (/usr/include/boost) and BOOST_INC wasn't defined in the environment."
-      exit 1
-    fi
-  fi
-
-  if [ -z "${BOOST_LIB}" ]; then
-    if [ -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so* ]; then
-      export BOOST_LIB=/usr/lib/x86_64-linux-gnu/
-    else
-      echo "[ERROR]: Not using UPS, but couldn't find system boost libraries and BOOST_LIB wasn't defined in the environment."
-      exit 1
-    fi
-  fi
-
-  if [ -z "${EIGEN_INC}" ]; then
-    echo "[ERROR]: Not using UPS, but couldn't find Eigen (EIGEN_INC) wasn't defined in the environment."
-    exit 1
-  fi
-
-  if [ -z "${STAN_INC}" -o -z "${STAN_MATH_INC}" ]; then
-    echo "[ERROR]: Not using UPS, but couldn't find Stan or Stan-math (STAN_INC or STAN_MATH_INC) wasn't defined in the environment."
-    exit 1
-  fi
-
-
+  source ../support_software.sh $(abspath ../support) BUILD_UPS_REPLACEMENT_SOFTWARE
+  cd "$BUILD_DIR"
+  cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+            -DBUILD_ENV_SCRIPTS=$(abspath ../support/support_software_env.sh)
 fi
 
-cmake ../ -DSRC_ROOT_PARENT=$(readlink -f ../../) -DUSED_UPS=${USE_UPS} -DUSE_GPERFTOOLS=${USE_GPERF} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DKNL=${USE_KNL} -DBOOST_INC=${BOOST_INC} -DBOOST_LIB=${BOOST_LIB} -DUSE_OPENMP=${USE_OMP} -DSUNDIALS_INC=${SUNDIALS_INC} -DEIGEN_INC=${EIGEN_INC} -DSTAN_INC=${STAN_INC} -DSTAN_MATH_INC=${STAN_MATH_INC} -DTBB_INC=${TBB_INC}
 make install -j ${CORES}

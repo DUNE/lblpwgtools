@@ -1,6 +1,7 @@
 set(Systs_implementation_files
   AnaSysts.cxx
   DUNEFluxSysts.cxx
+  RecoEnergyNDSysts.cxx
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
@@ -12,11 +13,14 @@ set(Systs_implementation_files
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
   Systs.cxx
-  XSecSystList.cxx)
+  XSecSystList.cxx
+  OffAxisFluxUncertaintyHelper.cxx
+  NewOffAxisFluxUncertainty2022Helper.cxx)
 
 set(Systs_header_files
   AnaSysts.h
   DUNEFluxSysts.h
+  RecoEnergyNDSysts.h
   DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
@@ -42,29 +46,35 @@ set(Systs_header_files
   MissingProtonFakeData_BDTRW_RHC.h
   NuWroReweightFakeData.h
   CrazyFluxFakeData.h
-  XSecSystList.h)
-
+  XSecSystList.h
+  OffAxisFluxUncertaintyHelper.h
+  NewOffAxisFluxUncertainty2022Helper.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts)
+target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
 
-install(TARGETS CAFAnaSysts DESTINATION lib)
+set_target_properties(CAFAnaSysts PROPERTIES
+  PUBLIC_HEADER "${Systs_header_files}")
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaSysts gperftools)
-  target_link_libraries(CAFAnaSysts ${GPERF_LINKER_FLAGS})
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaSysts BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(FILES ${Systs_header_files} DESTINATION include/CAFAna/Systs)
+install(TARGETS CAFAnaSysts 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Systs/)
 
 set(SYST_INPUT_ROOT_FILES
   flux_shifts_CDR.root
   flux_shifts_Nov17.root
+  flux_shifts_OffAxis.root
+  flux_shifts_OffAxis2022.root
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root
   det_sys_cov.root
   det_sys_cov_v3binning.root
+  OnAxis4m280kAWeights.root
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)

@@ -19,13 +19,19 @@ namespace ana
                     return (sr->cvnnumu > 0.5 && sr->cvnnue < 0.85);
                   });
 
+  const Cut kPassFD_CVN_NUTAU(
+                  [](const caf::SRProxy* sr)
+                  {
+                    return (sr->cvnnue < 0.85 && sr->cvnnumu < 0.5);
+                  });
+
   const Cut kPassND_FHC_NUMU(
                   [](const caf::SRProxy* sr)
                   {
                     return (
-			    sr->reco_numu && 
+			    sr->reco_numu &&
 			    (sr->muon_contained || sr->muon_tracker) &&
-			    sr->reco_q == -1 && 
+			    /*sr->reco_q == -1 &&*/
 			    sr->Ehad_veto<30);
 		      });
 
@@ -33,11 +39,10 @@ namespace ana
                   [](const caf::SRProxy* sr)
                   {
                     return (
-			    sr->reco_numu && 
+			    sr->reco_numu &&
 			    (sr->muon_contained || sr->muon_tracker) &&
-			    sr->reco_q == +1 && 
+			    /*sr->reco_q == +1 &&*/
 			    sr->Ehad_veto<30);
                   });
-
 
 }

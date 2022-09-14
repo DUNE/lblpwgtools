@@ -6,6 +6,7 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
 #include "CAFAna/Systs/XSecSysts.h"
@@ -17,11 +18,10 @@
 #include <string>
 #include <vector>
 
-size_t NFluxParametersToAddToStatefile = 30;
+size_t NFluxParametersToAddToStatefile = 25;
 
 namespace ana
 {
-
   // Because most particle physics is stuck in C++
   // TO DO: Define this elsewhere, in some kind of general Utilities
   std::vector<std::string> SplitString(std::string input, char delim) {
@@ -70,16 +70,20 @@ namespace ana
   std::vector<const ISyst*> getDetectorSysts(bool useFD, bool useND, bool useNueOnE)
   {
 
-    std::vector<const ISyst*> systs = GetEnergySysts();
+    std::vector<const ISyst*> systs = {};
 
+    std::vector<const ISyst *> fdEScalelist = GetEnergySysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+    std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
     std::vector<const ISyst *> ndlist = GetNDRecoSysts();
     std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     if (useFD) {
+      systs.insert(systs.end(), fdEScalelist.begin(), fdEScalelist.end());
       systs.insert(systs.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
+      systs.insert(systs.end(), ndEScalelist.begin(), ndEScalelist.end());
       systs.insert(systs.end(), ndlist.begin(), ndlist.end());
     }
     if (useND && useNueOnE) {
@@ -112,23 +116,31 @@ namespace ana
   }
 
   std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
-                                          bool detsyst, bool useND, bool useFD,
-                                          bool useNueOnE, bool useFakeDataDials,
-                                          bool fluxsyst_CDR, int NFluxSysts,
-                                          bool removeFDNonFitDials) {
+                                            bool detsyst, bool useND, bool useFD,
+                                            bool useNueOnE, bool useFakeDataDials,
+                                            bool fluxsyst_CDR, bool fluxsyst_Sept21, 
+                                            int NFluxSysts, bool removeFDNonFitDials) {
 
     // This doesn't need to be an argument because I basically never change it:
     bool fluxXsecPenalties = true;
 
     std::vector<const ISyst *> systlist;
     if (fluxsyst_Nov17) {
-      std::vector<const ISyst *> fluxsyst_Nov17 = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
+      std::vector<const ISyst *> fluxsyst_Nov17 = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
       systlist.insert(systlist.end(), fluxsyst_Nov17.begin(), fluxsyst_Nov17.end());
     }
 
     if (fluxsyst_CDR) { // CHECK: GetDUNEFluxSysts loading nothing when set to true
-      std::vector<const ISyst *> fluxsyst_CDR = GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
+      std::vector<const ISyst *> fluxsyst_CDR = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
       systlist.insert(systlist.end(), fluxsyst_CDR.begin(), fluxsyst_CDR.end());
+    }
+
+    if (fluxsyst_Sept21) {
+      std::vector<const ISyst *> fluxsyst_Sept21 = 
+          GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false, true);
+      systlist.insert(systlist.end(), fluxsyst_Sept21.begin(), fluxsyst_Sept21.end());
     }
 
     if (detsyst) {
@@ -146,7 +158,7 @@ namespace ana
     // If using fake data dials (for state generation) add the previously removed systs back in
     if (useFakeDataDials) {
       std::vector<const ISyst *> fakedatasyst = getFakeDataSysts(fluxXsecPenalties);
-      // systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
+      systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
     }
 
     return systlist;
@@ -157,13 +169,14 @@ namespace ana
 
     if (systString == "fakedata") {
       return GetListOfSysts(false, false, false, false, false, false,
-                            true /*add fake data*/, false);
+                            true /*add fake data*/, false, false);
     }
 
     // Now defaults to true!
     bool detsyst = true;
     bool fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
     bool fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
+    bool fluxsyst_Sept21 = true;
     bool xsecsyst = true;
     bool useFakeData = false;
     int NFluxSysts =
@@ -178,7 +191,8 @@ namespace ana
       // 1) Get a default list with everything
       std::vector<const ISyst *> namedList =
           GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
-                         false /*no fake data*/, true /*Get CDR flux systs*/);
+                         false /*no fake data*/, true /*Get CDR flux systs*/,
+                         true /*Get Sept 21 flux systs*/);
       // for (auto & syst : namedList) std::cout << syst->ShortName() <<
       // std::endl; 2) Interpret the list of short names
       std::vector<std::string> systs = SplitString(systString, ':');
@@ -206,6 +220,7 @@ namespace ana
         xsecsyst = true;
         fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
         fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
+        fluxsyst_Sept21 = false;
         detsyst = true;
       }
 
@@ -213,6 +228,7 @@ namespace ana
         xsecsyst = false;
         fluxsyst_Nov17 = false;
         fluxsyst_CDR = false;
+        fluxsyst_Sept21 = false;
         detsyst = false;
       }
 
@@ -220,18 +236,27 @@ namespace ana
       // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
       if (syst == "nodet") {
         detsyst = false;
+        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
       if (syst == "noflux") {
         fluxsyst_CDR = false;
         fluxsyst_Nov17 = false;
+        fluxsyst_Sept21 = false;
       }
       if (syst == "cdrflux") {
         fluxsyst_CDR = true;
         fluxsyst_Nov17 = false;
+        fluxsyst_Sept21 = false;
       }
       if (syst == "nov17flux") {
         fluxsyst_CDR = false;
         fluxsyst_Nov17 = true;
+        fluxsyst_Sept21 = false;
+      }
+      if (syst == "sept21flux") {
+        fluxsyst_CDR = false;
+        fluxsyst_Nov17 = false;
+        fluxsyst_Sept21 = true;
       }
       if (syst == "fakedata") {
         useFakeData = true;
@@ -251,13 +276,14 @@ namespace ana
       }
       if (syst == "noxsec") {
         xsecsyst = false;
+        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
     }
 
     // Okay, now get the list, and start from there...
     std::vector<const ISyst *> namedList =
         GetListOfSysts(fluxsyst_Nov17, xsecsyst, detsyst, useND, useFD, useNueOnE,
-                       useFakeData, fluxsyst_CDR, NFluxSysts);
+                       useFakeData, fluxsyst_CDR, fluxsyst_Sept21, NFluxSysts);
 
     // Now do something REALLY FUNKY. Remove specific dials from the list we
     // already have Need to allow single dials, and a few specific groups...

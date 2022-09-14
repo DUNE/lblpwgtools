@@ -170,6 +170,10 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
+    template <typename T> T *GetPredNomAs() {
+      return dynamic_cast<T *>(fPredNom.get());
+    }
+
     //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
     void DiscardSysts(std::vector<ISyst const *>const &);
     //Get all known about systs
@@ -297,6 +301,7 @@ namespace ana
                    CoeffsType type,
                    bool nubar,
                    const SystShifts& shift) const;
+
   };
 
 }
