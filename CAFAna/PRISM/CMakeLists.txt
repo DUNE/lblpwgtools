@@ -32,12 +32,16 @@ LIST(APPEND PRISM_header_files
 
 add_library(CAFAnaPRISM SHARED ${PRISM_implementation_files})
 
+include_directories($ENV{SRPROXY_INC})
+
+target_link_libraries(CAFAnaPRISM CAFAnaCore CAFAnaCore::Ext Stan::All)
+
 if(DEFINED ENV{FHICLCPP_FQ_DIR})
   # fhiclcpp from ups
-  target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::fhiclcpp)
+  target_link_libraries(CAFAnaPRISM fhiclcpp::fhiclcpp)
 else()
   # need different target name for fhiclcpp from support/
-  target_link_libraries(CAFAnaPRISM CAFAnaCore fhiclcpp::Headers)
+  target_link_libraries(CAFAnaPRISM fhiclcpp::Headers)
 endif()
 
 set_target_properties(CAFAnaPRISM PROPERTIES

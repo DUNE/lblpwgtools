@@ -1,6 +1,6 @@
 #include "common_fit_definitions.C"
 
-const Var kCMToM({}, [](const caf::StandardRecord *) { return 1.0E-2; });
+const Var kCMToM({}, [](const caf::SRProxy *) { return 1.0E-2; });
 
 const Var kTrueDetPos_m = SIMPLEVAR(dune.det_x);
 const Var kTrueVtxPos_m = SIMPLEVAR(dune.vtx_x);

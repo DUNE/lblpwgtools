@@ -3,23 +3,23 @@
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include <cmath>
 
 namespace PRISM {
 
-const ana::Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
+const ana::Cut kIsOutOfTheDesert([](const caf::SRProxy *sr) {
   return (std::fabs(sr->vtx_x) < 200);
 });
 
-const ana::Cut kCut280kARun([](const caf::StandardRecord *sr) {
+const ana::Cut kCut280kARun([](const caf::SRProxy *sr) {
   return (std::abs(sr->SpecialHCRunId) == 293);
 });
-const ana::Cut kSel280kARun([](const caf::StandardRecord *sr) {
+const ana::Cut kSel280kARun([](const caf::SRProxy *sr) {
   return (std::abs(sr->SpecialHCRunId) == 280);
 });
-const ana::Cut kIsReco([](const caf::StandardRecord *sr) {
+const ana::Cut kIsReco([](const caf::SRProxy *sr) {
   return (sr->Elep_reco > 0);
 });
 

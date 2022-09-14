@@ -114,8 +114,6 @@ endif()
 if(DEFINED ENV{FHICLCPP_FQ_DIR})
   # If fhiclcpp comes from ups, then look for it in this path
   find_package(fhiclcpp REQUIRED PATHS $ENV{FHICLCPP_FQ_DIR})
-  # and find tbb which apparently doesn't happen by default
-  find_package(TBB REQUIRED PATHS $ENV{TBB_FQ_DIR})
 else()
   # Otherise it comes from support/
   find_package(fhiclcpp REQUIRED)
