@@ -6,42 +6,7 @@
 
 namespace ana {
 
-  SimpleChi2Experiment::SimpleChi2Experiment(
-      IPrediction const *Pred, Spectrum const &Data, bool UseHistError,
-      double POT)
-      : fPred(Pred), fUseHistError(UseHistError) {
-    fPOT = POT;
-    if (fPOT == 0) {
-      fPOT = Data.POT();
-    }
-
-    Eigen::ArrayXd fData_arrraw = Data.GetEigen(fPOT);
-    fData_arr = fData_arrraw.segment(1, fData_arrraw.size() - 2); 
-
-  }
-
-  Eigen::ArrayXd SimpleChi2Experiment::GetPred(osc::IOscCalcAdjustable *osc, 
-                                                const SystShifts &syst) const {
-    Eigen::ArrayXd pred_arr = fPred->PredictSyst(osc, syst).GetEigen(fPOT);
-    return pred_arr.segment(1, pred_arr.size() - 2);
-  }
-
-  double SimpleChi2Experiment::ChiSq(osc::IOscCalcAdjustable *osc, const SystShifts &syst) const {
-
-    Eigen::ArrayXd PredHist = GetPred(osc, syst);
-
-    // bin by bin operations for arrays
-    Eigen::ArrayXd leastsq_arr = ((PredHist - fData_arr) * (PredHist - fData_arr)) / PredHist;
-
-    double chi2 = leastsq_arr.sum();
-
-    return chi2;
-  }
-
-
-  //----------------------------------------------------
-
-  // Another Chi2Experiment for Chi2 calculation using full
+  // Chi2Experiment for Chi2 calculation using full
   // PRISM covariance
 
   PRISMChi2CovarExperiment::PRISMChi2CovarExperiment(
@@ -61,13 +26,14 @@ namespace ana {
     fMatchChannel = match_chan;
   }
 
+  //-------------------------------------------------------
   // Get the extrapolated PRISM prediction
   Eigen::VectorXd PRISMChi2CovarExperiment::
                       GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
                               const SystShifts &syst) const {
     
     Eigen::VectorXd pred_v = PRISMComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                             .GetEigen(fPOTFD).matrix(); //kNDDataCorr_FDExtrap
+                             .GetEigen(fPOTFD).matrix(); 
     // Chop off the under and over flow bins.
     Eigen::VectorXd pred_v_seg = Eigen::VectorXd::Zero(pred_v.size() - 2);
     pred_v_seg = pred_v.segment(1, pred_v.size() - 2);
@@ -75,6 +41,7 @@ namespace ana {
     return pred_v_seg;   
   }
 
+  //-------------------------------------------------------
   // Get the PRISM covariance matrix
   Eigen::MatrixXd PRISMChi2CovarExperiment::
                       GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
@@ -92,6 +59,7 @@ namespace ana {
     return cov_mat_block;
   }
 
+  //-------------------------------------------------------
   // Calculate Chi2 with the option to include the full covariance
   double PRISMChi2CovarExperiment::ChiSq(osc::IOscCalcAdjustable *osc,
                                          const SystShifts &syst) const {

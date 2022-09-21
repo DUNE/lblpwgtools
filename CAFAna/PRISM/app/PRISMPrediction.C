@@ -411,7 +411,11 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1]);
+  // Allow the fhiclcpp to lookup the included fcl scripts
+  cet::filepath_first_absolute_or_lookup_with_dot 
+    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+
+  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(std::string(argv[1]), f_maker);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("predictions")) {

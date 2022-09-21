@@ -6,28 +6,8 @@
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
 namespace ana {
-  class SimpleChi2Experiment : public IExperiment {
-  public:
-    SimpleChi2Experiment(IPrediction const *Pred, Spectrum const &Data, 
-                         bool UseHistError = false, double POT = 0);
-  
-    Eigen::ArrayXd GetPred(osc::IOscCalcAdjustable *osc,
-                           const SystShifts &syst = SystShifts::Nominal()) const;
 
-    double ChiSq(osc::IOscCalcAdjustable *osc,
-                 const SystShifts &syst = SystShifts::Nominal()) const;
-
-  protected:
-    IPrediction const *fPred;
-    Eigen::ArrayXd fData_arr;
-    double fPOT;
-    bool fUseHistError;
-  };
-
-
-  //----------------------------------------------------
-
-  // Another Chi2Experiment for Chi2 calculation using full
+  // Chi2Experiment for Chi2 calculation using full
   // PRISM covariance
 
   class PRISMChi2CovarExperiment : public IExperiment {
@@ -54,7 +34,7 @@ namespace ana {
     bool fUseCovariance;
 
     PRISM::MatchChan fMatchChannel;
-};
+  };
 
 
 

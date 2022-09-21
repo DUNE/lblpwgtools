@@ -72,10 +72,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   auto PRISMps = scan.get<fhicl::ParameterSet>("PRISM", {});
 
   auto RunPlans = PRISMps.get<fhicl::ParameterSet>("RunPlans", {});
-  //bool PRISM_write_debug = PRISMps.get<bool>("write_debug", false);
   bool Use_EventRateMatching = PRISMps.get<bool>("Use_EventRateMatching", false);
-  double RegFactorExtrap = PRISMps.get<double>("reg_factor_extrap");
-  std::cout << "Reg for Extrap = " << RegFactorExtrap << std::endl;
 
   bool PRISM_SetNDDataErrs =
     PRISMps.get<bool>("set_ND_errors_from_rate", false);
@@ -458,7 +455,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
-      //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
       SystShifts bestSysts = kNoShift;
       double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
@@ -509,7 +505,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
 
-        //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
         SystShifts bestSysts = kNoShift;
         double chi = fitter.Fit(calc, bestSysts, oscSeeds,
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
@@ -549,7 +544,11 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1]);
+  // Allow the fhiclcpp to lookup the included fcl scripts
+  cet::filepath_first_absolute_or_lookup_with_dot
+    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+
+  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1], f_maker);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("scans")) {
