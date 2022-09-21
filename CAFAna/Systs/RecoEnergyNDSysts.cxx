@@ -270,7 +270,7 @@ namespace ana {
   void EMRecoResND::Shift(double sigma,
                           caf::SRProxy* sr, 
                           double& weight) const {
-      
+
     const double scale = .02*sigma;
     if (!sr->isFD){
       sr->EVisReco_ND  += (sr->ePi0 - sr->eRecoPi0) * scale;

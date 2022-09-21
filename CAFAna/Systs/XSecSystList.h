@@ -249,8 +249,7 @@ inline bool SystNameIsInList(std::string const &name,
 bool IsExtrapolateOffToOnSyst(std::string const &);
 bool IsExtrapolateOffToOnSyst(int);
 
-inline bool IsDoNotIncludeSyst(std::string const & name)
-{
+inline bool IsDoNotIncludeSyst(std::string const &name) {
   static std::map<std::string, bool> cache;
   if (!cache.count(name)) {
     cache[name] = SystNameIsInList(name, GetDoNotIncludeSystNames());
@@ -289,10 +288,15 @@ inline bool IsDoNotIncludeSyst(unsigned int index)
   /*
   static std::unordered_map<int, bool> cache;
 
+=======
+inline bool IsDoNotIncludeSyst(int index) {
+  static std::map<int, bool> cache;
+>>>>>>> master
   if (!cache.count(index)) {
     cache[index] = IsDoNotIncludeSyst(GetXSecSystName(index));
   }
   return cache[index];
+<<<<<<< HEAD
   */
 }
 

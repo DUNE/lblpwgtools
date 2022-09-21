@@ -6,7 +6,6 @@ if [ -z "${UPS_SHELL}" ]; then
   echo "[ERROR]: Is UPS set up?"
   exit 1
 fi
-
 setup root v6_22_08d -q e20:prof:p392 || exit 1
 setup boost v1_75_0 -q e20:prof || exit 1
 setup cmake v3_22_2 || exit 1
