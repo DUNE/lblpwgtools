@@ -5,7 +5,7 @@
 
 #include "CAFAna/Analysis/AnalysisVars.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include <iostream>
 #include <array>

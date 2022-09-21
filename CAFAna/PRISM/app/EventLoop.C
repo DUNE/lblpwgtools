@@ -23,6 +23,8 @@ using namespace ana;
 
 bool multi_file = false;
 
+namespace caf{static std::size_t const kMaxSystUniverses = 10;}
+
 template <class T>
 bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   static std::set<std::string> alreadyWarned;
@@ -41,7 +43,7 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
 }
 
 //Essentially a copy of SpectrumLoader::HandleFile
-void ProcessFile(TFile &f, std::function<void(const caf::SRProxy& sr)> ev_processor){
+void ProcessFile(TFile &f, std::function<void(const caf::StandardRecord& sr)> ev_processor){
 
   assert(!f.IsZombie());
   TTree* tr = 0;
@@ -396,7 +398,7 @@ int main(int argc, char const *argv[]){
                        kCut280kARun;
     ana::Weight kNDCVWeight = GetNDCVWeight();
 
-    ProcessFile(f,[&](const caf::SRProxy& sr){ 
+    ProcessFile(f,[&](const caf::StandardRecord& sr){
 
         if(!sr.isCC || (sr.LepPDG != 13)){
           return;

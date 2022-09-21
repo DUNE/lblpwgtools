@@ -58,7 +58,7 @@ ana::Weight NDSliceCorrection(double reference_width_cm,
     Weights.push_back((width*1E2) / reference_width_cm);
   }
 
-  return ana::Weight([=](const caf::StandardRecord *sr) -> double {
+  return ana::Weight([=](const caf::SRProxy *sr) -> double {
     double pos_x = (sr->det_x + sr->vtx_x) * 1E-2;
 
     for (size_t e_it = 0; e_it < (Edges.size() - 1); ++e_it) {

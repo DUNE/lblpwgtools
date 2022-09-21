@@ -10,7 +10,7 @@ set(scripts_to_build
   #PRISMRegOptimizer
   #PRISMExtrapRegOptimizer
  #FluxPredictionTester
- EventLoop
+ #EventLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
@@ -18,7 +18,7 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-  target_link_libraries(${SCRPT} ${CAFAna_Libs} CAFAnaCore::Ext Stan::All ${StandardRecordProxy})
+  target_link_libraries(${SCRPT} CAFAnaCore CAFAnaPRISM CAFAnaCuts CAFAnaVars CAFAnaPrediction CAFAnaSysts CAFAnaAnalysis ${STANDARDRECORD} ${StandardRecordProxy})
 
   if(DEFINED ENV{FHICLCPP_FQ_DIR})
     # fhiclcpp from ups

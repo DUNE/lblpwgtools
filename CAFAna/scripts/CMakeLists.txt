@@ -38,7 +38,7 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-  target_link_libraries(${SCRPT} ${CAFAna_Libs})
+  target_link_libraries(${SCRPT} CAFAnaCore CAFAnaCuts CAFAnaVars CAFAnaSysts CAFAnaAnalysis ${STANDARDRECORD} ${STANDARDRECORDPROXY})
 
   if(DEFINED USE_OPENMP AND USE_OPENMP)
     target_compile_options(${SCRPT} BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)

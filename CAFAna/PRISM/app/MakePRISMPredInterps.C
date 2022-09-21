@@ -15,6 +15,8 @@
 
 #include "OscLib/IOscCalc.h"
 
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+
 using namespace ana;
 using namespace PRISM;
 
@@ -677,7 +679,7 @@ int main(int argc, char const *argv[]) {
       // Ugly temporary hack, hopefully we don't need this
       int from = (IsNu ? 14 : -14);
       int to = (IsNu ? (IsNueSwap ? 12 : 14) : (IsNueSwap ? -12 : -14));
-      const ana::Weight kOscWeight([from, to](const caf::StandardRecord *sr) -> double {
+      const ana::Weight kOscWeight([from, to](const caf::SRProxy *sr) -> double {
         osc::IOscCalc *osc = NuFitOscCalc(1);
         const auto Ps = osc->P(from, to, sr->Ev);
         return Ps;

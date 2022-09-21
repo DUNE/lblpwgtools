@@ -46,8 +46,6 @@ set(Core_header_files
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore
   ${STANDARDRECORDPROXY}
-  ${TBB}
-  StandardRecord 
   CAFAnaCore::Ext 
   OscLib::All
   ROOT::ROOT 

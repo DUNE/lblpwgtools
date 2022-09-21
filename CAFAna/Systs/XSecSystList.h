@@ -249,8 +249,52 @@ inline bool SystNameIsInList(std::string const &name,
 bool IsExtrapolateOffToOnSyst(std::string const &);
 bool IsExtrapolateOffToOnSyst(int);
 
-bool IsDoNotIncludeSyst(std::string const &);
-bool IsDoNotIncludeSyst(unsigned int);
+inline bool IsDoNotIncludeSyst(std::string const & name)
+{
+  static std::map<std::string, bool> cache;
+  if (!cache.count(name)) {
+    cache[name] = SystNameIsInList(name, GetDoNotIncludeSystNames());
+  }
+  return cache[name];
+}
+
+inline bool IsDoNotIncludeSyst(unsigned int index)
+{
+  // This function is very hot from FixupRecord(), and since we know all the
+  // indices are small, this arrangement is more efficient than using any sort
+  // of map.
+
+  enum class Tristate{
+    kUnknown = 0, // must be zero so it's the default
+    kTrue,
+    kFalse
+  };
+
+  static std::vector<Tristate> cache;
+  // Common case
+  if(index < cache.size() && cache[index] != Tristate::kUnknown){
+    return cache[index] == Tristate::kTrue;
+  }
+
+  // Otherwise, we have to look up the answer
+  const bool ret = IsDoNotIncludeSyst(GetXSecSystName(index));
+
+  // And store it in the cache for next time
+  if(cache.size() <= index){cache.resize(index+1);}
+  cache[index] = ret ? Tristate::kTrue : Tristate::kFalse;
+
+  return ret;
+
+  // Old, straightforward code:
+  /*
+  static std::unordered_map<int, bool> cache;
+
+  if (!cache.count(index)) {
+    cache[index] = IsDoNotIncludeSyst(GetXSecSystName(index));
+  }
+  return cache[index];
+  */
+}
 
 bool IsFakeDataGenerationSyst(std::string const &);
 bool IsFakeDataGenerationSyst(int);
