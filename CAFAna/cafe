@@ -229,7 +229,8 @@ int main(int argc, char** argv)
     os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
     libs = ['Minuit2', 'TMVA', 'EG',
-            'duneanaobj_StandardRecord',   'OscLib',        'CAFAnaCoreExt',
+            'duneanaobj_StandardRecord', 'duneanaobj_StandardRecordProxy',
+            'OscLib',           'CAFAnaCoreExt',
             'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
             'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
             'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
