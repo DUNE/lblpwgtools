@@ -286,17 +286,11 @@ inline bool IsDoNotIncludeSyst(unsigned int index)
 
   // Old, straightforward code:
   /*
-  static std::unordered_map<int, bool> cache;
-
-=======
-inline bool IsDoNotIncludeSyst(int index) {
   static std::map<int, bool> cache;
->>>>>>> master
   if (!cache.count(index)) {
     cache[index] = IsDoNotIncludeSyst(GetXSecSystName(index));
   }
   return cache[index];
-<<<<<<< HEAD
   */
 }
 
