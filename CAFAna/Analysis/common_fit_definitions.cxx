@@ -1333,8 +1333,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
 
-    TMatrixDSym *covar = (TMatrixDSym *)this_fit.GetCovariance();
-    TH2D hist_covar = TH2D(*covar);
+    TMatrixDSym covar = this_fit.GetCovariance();
+    TH2D hist_covar = TH2D(covar);
     hist_covar.SetName("covar");
     TH2D hist_corr = *make_corr_from_covar(&hist_covar);
 
@@ -1403,7 +1403,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     // Save information
     hist_covar.Write();
     hist_corr.Write();
-    covar->Write("covar_mat");
+    covar.Write("covar_mat");
   }
 
   if (PostFitTreeBlob) {

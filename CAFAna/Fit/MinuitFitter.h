@@ -6,7 +6,7 @@
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Experiment/IExperiment.h"
 
-#include "TMatrixDSymfwd.h"
+#include "TMatrixDSym.h"
 #include "Math/Minimizer.h"
 
 #include <chrono>
@@ -55,7 +55,7 @@ namespace ana
       ~MinuitFitter();
 
       /// Return the fit covariance
-      TMatrixDSym *GetCovariance() { return this->fCovar; }
+      TMatrixDSym GetCovariance() { return *fCovar; }
 
       /// covariance matrix status (0 = not valid, 1 approximate, 2, full but made
       /// pos def, 3 accurate and not pos def)
@@ -179,7 +179,7 @@ namespace ana
       // Some information for post-fit evaluation if necessary
       mutable double fEdm = -1;
       mutable bool fIsValid = false;
-      mutable TMatrixDSym *fCovar;
+      mutable std::unique_ptr<TMatrixDSym> fCovar;
       mutable bool fCovarStatus;
       mutable std::vector<std::string> fParamNames;
       mutable std::vector<double> fPreFitValues;
