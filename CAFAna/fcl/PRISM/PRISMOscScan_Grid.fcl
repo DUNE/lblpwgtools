@@ -73,7 +73,7 @@ BasicPred: {
 		Use_EventRateMatching: true
 	}
 
-	free_osc_params: [dmsq32, ssth23, th13, deltapi]
+	free_osc_params: [dmsq32, ssth23, th13, deltapi, dmsq21, ssth12, rho]
 
 	samples: @local::JointFitChannels.FourFlavor
 }

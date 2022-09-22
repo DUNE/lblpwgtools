@@ -188,3 +188,39 @@ Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr,
   }
   return ret_mat;
 }
+
+Eigen::ArrayXXd ConvertArrayTo2DArray(Eigen::ArrayXd const &arr, 
+                                      std::vector<ana::Binning> const &bins) {
+  Eigen::ArrayXXd ret_mat;
+
+  if (bins.size() == 2) { // 2D axiis.
+    int NRows = bins.at(1).NBins();
+    int NCols = bins.at(0).NBins();
+    ret_mat.resize(NRows + 2, NCols + 2);
+    ret_mat.setZero();
+    for (int col = 1; col <= NCols; col++) {
+      for (int row = 1; row <= NRows; row++) {
+        ret_mat(row, col) = arr(row + (col - 1) * NRows);
+      }
+    }
+  } else if (bins.size() == 3) {
+    // implement 3D axis another day.
+    // 3D means first 2 axis are the analysis axes and the third is the weighting axis,
+    // which for PRISM is typically off-axis position.
+    int NRows = bins.at(2).NBins();
+    int NCols1 = bins.at(0).NBins();
+    int NCols2 = bins.at(1).NBins();
+    int NColsTotal = bins.at(0).NBins() * bins.at(1).NBins();
+    ret_mat.resize(NRows + 2, NColsTotal + 2);
+    ret_mat.setZero();
+    for (int row = 1; row <= NRows; row++) {
+      for (int col2 = 1; col2 <= NCols2; col2++) {
+        for (int col1 = 1; col1 <= NCols1; col1++) {
+          int colit = col2 + (col1 - 1) * NCols2;
+          ret_mat(row, colit) = arr(row + (colit - 1) * NRows); 
+        }
+      }
+    }
+  }
+  return ret_mat;
+}

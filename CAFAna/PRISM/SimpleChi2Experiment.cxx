@@ -13,13 +13,11 @@ namespace ana {
                            PredictionPRISM const *Pred, Spectrum const &Data,
                            bool UseCovariance, double NDPOT, double FDPOT,
                            PRISM::MatchChan match_chan)
-                           : fPred(Pred), fUseCovariance(UseCovariance) {
+                           : fPred(Pred), fData(Data), fUseCovariance(UseCovariance) {
     fPOTFD = FDPOT;
     if (fPOTFD == 0) {
       fPOTFD = Data.POT();
     }
-    Eigen::VectorXd fData_vecraw = Data.GetEigen(fPOTFD).matrix();
-    fData_vec = fData_vecraw.segment(1, fData_vecraw.size() - 2);
 
     fPOTND = NDPOT;
 
@@ -28,35 +26,72 @@ namespace ana {
 
   //-------------------------------------------------------
   // Get the extrapolated PRISM prediction
-  Eigen::VectorXd PRISMChi2CovarExperiment::
-                      GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                              const SystShifts &syst) const {
+  Eigen::ArrayXd PRISMChi2CovarExperiment::GetPred(
+      std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps) const {
     
-    Eigen::VectorXd pred_v = PRISMComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                             .GetEigen(fPOTFD).matrix(); 
+    Eigen::ArrayXd pred_arr = PRISMComps.at(PredictionPRISM::kNDDataCorr_FDExtrap)
+                              .GetEigen(fPOTFD); 
     // Chop off the under and over flow bins.
-    Eigen::VectorXd pred_v_seg = Eigen::VectorXd::Zero(pred_v.size() - 2);
-    pred_v_seg = pred_v.segment(1, pred_v.size() - 2);
-    
-    return pred_v_seg;   
+    //Eigen::ArrayXd pred_v_seg = Eigen::ArrayXd::Zero(pred_v.size() - 2);
+    //pred_v_seg = pred_v.segment(1, pred_v.size() - 2);
+    return pred_arr;
+    //return pred_v_seg;   
   }
 
   //-------------------------------------------------------
   // Get the PRISM covariance matrix
-  Eigen::MatrixXd PRISMChi2CovarExperiment::
-                      GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                                    const SystShifts &syst) const {
+  Eigen::ArrayXd PRISMChi2CovarExperiment::GetCovariance(
+      std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps) const {
     auto cov_s = PRISMComps.at(PredictionPRISM::kExtrapCovarMatrix);
 
-    Eigen::MatrixXd cov_mat = ConvertArrayToMatrix(cov_s.GetEigen(fPOTND),
-                                                   cov_s.GetBinnings());
+    //Eigen::ArrayXXd cov_mat = ConvertArrayTo2DArray(cov_s.GetEigen(fPOTND), 
+    //                                                cov_s.GetBinnings());
+    Eigen::ArrayXd cov_mat = cov_s.GetEigen(fPOTND);
     cov_mat *= std::pow(fPOTFD/fPOTND, 2);
 
     // Chop off the under and over flow bins.
-    Eigen::MatrixXd cov_mat_block = cov_mat.block(1, 1, cov_mat.rows() - 2, 
-                                                  cov_mat.cols() - 2);
+    //Eigen::MatrixXd cov_mat_block = cov_mat.block(1, 1, cov_mat.rows() - 2, 
+    //                                              cov_mat.cols() - 2);
+    return cov_mat;
+    //return cov_mat_block;
+  }
 
-    return cov_mat_block;
+  //-------------------------------------------------------
+  Eigen::ArrayXd PRISMChi2CovarExperiment::Concatenate(const std::vector<Eigen::ArrayXd>& arrs) {
+    // Drop under/overflow from each argument, but include dummy
+    // under/overflows as expected by fCov
+    int N = 2;
+    for(const Eigen::ArrayXd& arr: arrs) N += arr.size()-2;
+    Eigen::ArrayXd ret(N);
+    ret[0] = 0;
+    ret[N-1] = 0;
+
+    double* p = &ret.data()[1]; // start writing at first non-underflow bin
+
+    for(const Eigen::ArrayXd& arr: arrs){
+      for(int i = 1; i < arr.size()-1; ++i) *p++ = arr[i];
+    }
+
+    return ret;
+  }
+
+  //-------------------------------------------------------
+  void PRISMChi2CovarExperiment::SetMaskArray(double xmin, double xmax, 
+                                              double ymin, double ymax) {
+    fMaskA = GetMaskArray(fData, xmin, xmax, ymin, ymax);
+    fMaskCov = Concatenate({fMaskA, fMaskA});
+  }
+
+  //-------------------------------------------------------
+  void PRISMChi2CovarExperiment::ApplyMask(Eigen::ArrayXd& a,
+                                           Eigen::ArrayXd& b,
+                                           Eigen::ArrayXd& cov) const {
+    if (fMaskA.size() == 0) return;
+    if (fMaskCov.size() == 0) return;
+
+    a *= fMaskA;
+    b *= fMaskA;
+    cov *= fMaskCov;
   }
 
   //-------------------------------------------------------
@@ -66,21 +101,37 @@ namespace ana {
 
     auto PRISMComp_map = fPred->PredictPRISMComponents(osc, syst, fMatchChannel);
 
-    Eigen::VectorXd PredVec = GetPred(PRISMComp_map, syst);
-    Eigen::MatrixXd CovMat = Eigen::MatrixXd::Zero(PredVec.size(), PredVec.size());
-    for (int diag = 0; diag < CovMat.rows(); diag++) {
+    Eigen::ArrayXd pred = GetPred(PRISMComp_map);
+    Eigen::ArrayXd data = fData.GetEigen(fPOTFD);
+    
+    //Eigen::ArrayXXd CovMat = Eigen::ArrayXXd::Zero(data.size(), data.size());
+    Eigen::ArrayXd CovMat = Eigen::ArrayXd::Zero(((data.size() - 2) * (data.size() - 2)) + 2);
+    //for (int diag = 0; diag < CovMat.rows(); diag++) {
+    for (int x = 1; x < data.size() - 2; x++) {
+      //for (int y = 1; y < data.size() - 2; y++) {
       // Poisson error on number of events in bin
       // CovMat(diag, diag) = PredVec(diag);
       // Test alternative Chi2 covariance from [ref]
       // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
-      CovMat(diag, diag) = 3 / ((1 / fData_vec(diag)) + (2 / PredVec(diag))); 
+      //CovMat(diag, diag) = 3 / ((1 / fData_vec(diag)) + (2 / PredVec(diag))); 
+      //CovMat(y + (x - 1) * data.size()) = 3 / ((1 / data(x)) + (2 / pred(x)));
+      CovMat(x * x) = 3 / ((1 / data(x)) + (2 / pred(x)));
     }
     // Add Poisson errors in quadrature to covariance (if you want to)
     if (fUseCovariance) {
-      CovMat += GetCovariance(PRISMComp_map, syst);
+      CovMat += GetCovariance(PRISMComp_map);
     }
-    double Chi2 = (PredVec - fData_vec).transpose() * CovMat.inverse() *
-                  (PredVec - fData_vec);
+
+    ApplyMask(pred, data, CovMat);
+
+    Eigen::MatrixXd CovMat_mat = 
+        ConvertArrayToMatrix(CovMat,
+                             PRISMComp_map.at(PredictionPRISM::kExtrapCovarMatrix).GetBinnings());
+
+    //double Chi2 = (PredVec - fData_vec).transpose() * CovMat.inverse() *
+    //              (PredVec - fData_vec);
+    double Chi2 = (pred.matrix() = data.matrix()).transpose() * CovMat_mat.inverse() *
+                  (pred.matrix() = data.matrix());
 
     // For low-stats.
     //double Chi2 = ana::LogLikelihood(PredVec.array(), fData_vec.array());

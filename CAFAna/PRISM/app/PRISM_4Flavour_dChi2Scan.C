@@ -63,8 +63,12 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   std::vector<ISyst const *> freesysts = ana::GetListOfSysts(
     scan.get<std::vector<std::string>>("free_syst_params", {}));
 
+  for (auto &o : free_oscpars) {
+    std::cout << "\t" << o->ShortName() << " free osc." << std::endl;
+  }
+
   for (auto &s : freesysts) {
-    std::cout << "\t" << s->ShortName() << " free." << std::endl;
+    std::cout << "\t" << s->ShortName() << " free syst." << std::endl;
   }
 
   SystShifts shift = kNoShift;
@@ -119,18 +123,29 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     &kFitDeltaInPiUnits) != free_oscpars.end()) {
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   }
-  if (std::find(free_oscpars.begin(), free_oscpars.end(), &kFitSinSqTheta23) !=
+  /*if (std::find(free_oscpars.begin(), free_oscpars.end(), &kFitSinSqTheta23) !=
     free_oscpars.end()) {
     oscSeeds[&kFitSinSqTheta23] = {0.4, 0.6};
-  }
+  }*/
+
+  SeedList oscSeedsList(oscSeeds);
 
   bool dmsq32_scale = false;
   if (std::find(scan_vars.begin(), scan_vars.end(), &kFitDmSq32NHScaled) !=
       scan_vars.end())
     dmsq32_scale = true;
 
-  osc::IOscCalcAdjustable *calc =
+  // True oscillation point
+  osc::IOscCalcAdjustable *calc_true =
     ConfigureCalc(scan.get<fhicl::ParameterSet>("true_osc", {}));
+  // Oscillation calculator for fitter
+  // For this script it is the same as the true -> asimov-like fitting
+  osc::IOscCalcAdjustable *calc_fit = calc_true->Copy();
+
+  std::vector<double> seedValues;
+  for (auto &o : free_oscpars) {
+    seedValues.push_back(o->GetValue(calc_fit));
+  }
 
   // Lazy load the state file
   if (!States.count(state_file)) {
@@ -248,18 +263,26 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   }
 
   // Vector of your different experiment objects which contribute to Chi2
-  std::vector<std::unique_ptr<IExperiment>> Expts;
-  Expts.reserve(Channels.size());
-  // Use reactor contraint.
-  Expts.emplace_back(new ReactorExperiment(0.088, 0.003));
+  //std::vector<std::unique_ptr<IExperiment>> Expts;
+  //Expts.reserve(Channels.size());
+  // Get penalties for other oscillation terms
+  //Expts.emplace_back(new Penalizer_GlbLike(1 /*hie*/, 1 /*oct*/, true /*th13*/, 
+  //                                         false /*th23*/, false /*dmsq32*/, 0/*asimov*/));
 
   MultiExperiment CombExpts;
 
-  CombExpts.Add(Expts.back().get());
+  Penalizer_GlbLike glob_penal_exp(1 /*hie*/, 1 /*oct*/, true /*th13*/,
+                                   false /*th23*/, false /*dmsq32*/, 0/*asimov*/);
+
+  CombExpts.Add(&glob_penal_exp);
+  //CombExpts.Add(Expts.back().get());
 
   // Try defining extrapolator object before channel loop
   NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
+
+  // Keep PRISM experiment objects in scope
+  std::vector<std::unique_ptr<PRISMChi2CovarExperiment>> Expts;
 
   for (auto const &ch : Channels) {
 
@@ -288,7 +311,8 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use.
-    auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+    auto FarDetDataPred = 
+        state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc_true).FakeData(POT_FD);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
@@ -297,7 +321,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
     if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
       FarDetFakeDataBiasPred =
-          state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
+          state.FarDetFakeDataBiasPreds[FDfdConfig_enum]->Predict(calc_true).FakeData(POT_FD);
       auto *FakeDataBiasPred = FarDetFakeDataBiasPred.ToTHX(POT_FD);
       FakeDataBiasPred->Scale(1, "width");
       chan_dir->WriteTObject(FakeDataBiasPred, "FakeDataBiasPred_Total");
@@ -326,7 +350,7 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     std::cout << "Calculate nominal PRISM prediction." << std::endl;
 
     auto PRISMComponents =
-      state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+      state.PRISM->PredictPRISMComponents(calc_true, shift, ch.second);
     auto *PRISMPred =
           PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
     PRISMPred->Scale(1, "width");
@@ -349,6 +373,18 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
 
     std::cout << "Fill Experiment objects." << std::endl;
 
+    /*std::unique_ptr<PRISMChi2CovarExperiment> PRISM_exp_ch = 
+        std::make_unique<PRISMChi2CovarExperiment>(state.PRISM.get(),
+                                      (use_fake_data ?
+                                      FarDetFakeDataBiasPred.FakeData(POT_FD) :
+                                      FarDetDataPred.FakeData(POT_FD)),
+                                      use_PRISM_ND_stats,
+                                      POT, POT_FD, ch.second);
+
+    PRISM_exp_ch->SetMaskArray(0.5, 10);
+
+    Expts.emplace_back(PRISM_exp_ch);*/
+
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     (use_fake_data ? 
                                                     FarDetFakeDataBiasPred.FakeData(POT_FD) : 
@@ -356,6 +392,16 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
 
+    Expts.back().get()->SetMaskArray(0.5, 10);
+    /*PRISMChi2CovarExperiment PRISM_exp_ch(state.PRISM.get(),
+                                          (use_fake_data ?
+                                          FarDetFakeDataBiasPred.FakeData(POT_FD) :
+                                          FarDetDataPred.FakeData(POT_FD)),
+                                          use_PRISM_ND_stats,
+                                          POT, POT_FD, ch.second);*/
+    //PRISM_exp_ch.SetMaskArray(0.5, 10);
+
+    //CombExpts.Add(&PRISM_exp_ch);
     CombExpts.Add(Expts.back().get());
 
   }
@@ -436,30 +482,34 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
   if (nparams == 1) {
     MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
     for (const auto &x : x_scan) {
+
+      // Put oscillation values back to their seed position each iteration
+      for(unsigned int i = 0; i < seedValues.size(); ++i)
+        free_oscpars.at(i)->SetValue(calc_fit, seedValues.at(i));
+
       if (ssth23_scan) {
-        ssTh23->SetValue(calc, x);
+        ssTh23->SetValue(calc_fit, x);
       } else if (dmsq32_scan) {
-        dmsq32->SetValue(calc, x);
+        dmsq32->SetValue(calc_fit, x);
       } else if (dcp_scan) {
-        dCPpi->SetValue(calc, x);
+        dCPpi->SetValue(calc_fit, x);
       } else if (ssth13_scan) {
-        ssTh13->SetValue(calc, x);
+        ssTh13->SetValue(calc_fit, x);
       }
 
-      std::cout << "dmsq32 = " << calc->GetDmsq32() << std::endl;
-      std::cout << "ssth23 = " << calc->GetTh23() << std::endl;
-      std::cout << "dCP = " << calc->GetdCP() << std::endl;
-      std::cout << "ssth13 = " << calc->GetTh13() << std::endl;
-
-      //auto calc_fit = calc->Copy();
+      std::cout << "dmsq32 = " << calc_fit->GetDmsq32() << std::endl;
+      std::cout << "ssth23 = " << calc_fit->GetTh23() << std::endl;
+      std::cout << "dCP = " << calc_fit->GetdCP() << std::endl;
+      std::cout << "ssth13 = " << calc_fit->GetTh13() << std::endl;
 
       std::cerr << "[INFO]: Beginning fit. ";
       auto start_fit = std::chrono::system_clock::now();
       SystShifts bestSysts = kNoShift;
-      double chi = fitter.Fit(calc, bestSysts, oscSeeds,
+      double chi = fitter.Fit(calc_fit, bestSysts, oscSeedsList,
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
       // fill hist
-      scan_hist_1D->Fill(x, chi);
+      double minchi = TMath::Max(chi, 1e-6);
+      scan_hist_1D->Fill(x, minchi);
       auto end_fit = std::chrono::system_clock::now();
       // Profile memory usage
       ProcInfo_t procinfo;
@@ -472,21 +522,6 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
                 << " s after " << fitter.GetNFCN() << " iterations."
                 << std::endl;
     }
-    // Sometimes try 1D fit interactively, so keep this.
-    // Get minimum ChiSq value (LL value)
-    double minchi = 1e10;
-    int minx, miny;
-    if (nparams == 1) {
-      //double minchi = 1e10;
-      minx = scan_hist_1D->GetNbinsX() / 2;
-      for (int x = 1; x <= scan_hist_1D->GetNbinsX(); ++x) {
-        const double chi = scan_hist_1D->GetBinContent(x);
-        if (chi < minchi) {
-          minchi = chi;
-          minx = x;
-        }
-      }
-    }
 
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
   }
@@ -497,19 +532,25 @@ void PRISMScan(fhicl::ParameterSet const &scan) {
     MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
     for (const auto &x : x_scan) {
       for (const auto &y : y_scan) {
+
+        // Put oscillation values back to their seed position each iteration
+        for(unsigned int i = 0; i < seedValues.size(); ++i)
+          free_oscpars.at(i)->SetValue(calc_fit, seedValues.at(i));
+
         std::cout << "x = " << x << ", y = " << y << std::endl;
-        if (ssth23_scan) ssTh23->SetValue(calc, x); // ssth23 always on x axis
-        if (dmsq32_scan) dmsq32->SetValue(calc, y); // dmsq32 always on y axis
-        if (dcp_scan) dCPpi->SetValue(calc, x); // dCP always on x axis
-        if (ssth13_scan) ssTh13->SetValue(calc, y); // ssth13 always on y axis
+        if (ssth23_scan) ssTh23->SetValue(calc_fit, x); // ssth23 always on x axis
+        if (dmsq32_scan) dmsq32->SetValue(calc_fit, y); // dmsq32 always on y axis
+        if (dcp_scan) dCPpi->SetValue(calc_fit, x); // dCP always on x axis
+        if (ssth13_scan) ssTh13->SetValue(calc_fit, y); // ssth13 always on y axis
         std::cerr << "[INFO]: Beginning fit. ";
         auto start_fit = std::chrono::system_clock::now();
 
         SystShifts bestSysts = kNoShift;
-        double chi = fitter.Fit(calc, bestSysts, oscSeeds,
+        double chi = fitter.Fit(calc_fit, bestSysts, oscSeedsList,
                                 {}, MinuitFitter::kVerbose)->EvalMetricVal();
         // fill hist
-        scan_hist_2D->Fill(x, y, chi);
+        double minchi = TMath::Max(chi, 1e-6);
+        scan_hist_2D->Fill(x, y, minchi);
         auto end_fit = std::chrono::system_clock::now();
         std::cerr << "[FIT]: Finished fit in "
                   << std::chrono::duration_cast<std::chrono::seconds>(end_fit -

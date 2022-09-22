@@ -24,7 +24,11 @@ GetEigenMatrix(TH2 const *,
                size_t max_cols = std::numeric_limits<size_t>::max());
 
 // Function to convert 1D array into 2D matrix.
-Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr, std::vector<ana::Binning> const &bins); 
+Eigen::MatrixXd ConvertArrayToMatrix(Eigen::ArrayXd const &arr, 
+                                     std::vector<ana::Binning> const &bins); 
+
+Eigen::ArrayXXd ConvertArrayTo2DArray(Eigen::ArrayXd const &arr,
+                      std::vector<ana::Binning> const &bins);
 
 Eigen::VectorXd GetEigenFlatVector(std::vector<double> const &v);
 Eigen::VectorXd GetEigenFlatVector(TH1 const *th);

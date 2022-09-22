@@ -96,8 +96,8 @@ namespace ana
       // ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
       mnMin->SetStrategy(int(fFitOpts & kPrecisionMask));
     }
-    mnMin->SetMaxFunctionCalls(1E8);
-    mnMin->SetMaxIterations(1E8);
+    mnMin->SetMaxFunctionCalls(1E9);
+    mnMin->SetMaxIterations(1E9);
 
     static double tol =
       getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;

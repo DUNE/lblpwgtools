@@ -34,7 +34,7 @@ ScanDefinitions: {
 	dmsq23: [
 		{
 			name: dmsq32
-			scan_steps:  [50, 2.3E-3, 2.55E-3]
+			scan_steps:  [1, 2.3E-3, 2.55E-3]
 		}
 	]
 

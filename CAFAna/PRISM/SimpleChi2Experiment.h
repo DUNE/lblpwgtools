@@ -17,21 +17,27 @@ namespace ana {
                              PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode);
 
     // Get the extrapolated PRISM prediction
-    Eigen::VectorXd GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                            const SystShifts &syst = kNoShift) const;
+    Eigen::ArrayXd GetPred(
+        std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps) const;
     // Get the PRISM covariance matrix
-    Eigen::MatrixXd GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                                  const SystShifts &syst = kNoShift) const;
+    Eigen::ArrayXd GetCovariance(
+        std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps) const;
+
+    Eigen::ArrayXd Concatenate(const std::vector<Eigen::ArrayXd>& arrs);
+    void SetMaskArray(double xmin=0, double xmax=-1, double ymin=0, double ymax=-1);
+    void ApplyMask(Eigen::ArrayXd& a, Eigen::ArrayXd& b, Eigen::ArrayXd& cov) const;
 
     // Calculate Chi2 with the option to include the full covariance
     virtual double ChiSq(osc::IOscCalcAdjustable *osc,
                          const SystShifts &syst = kNoShift) const override;
   protected:
     PredictionPRISM const *fPred;
-    Eigen::VectorXd fData_vec;
+    Spectrum fData;
     double fPOTFD;
     double fPOTND;
     bool fUseCovariance;
+    Eigen::ArrayXd fMaskA;
+    Eigen::ArrayXd fMaskCov;
 
     PRISM::MatchChan fMatchChannel;
   };

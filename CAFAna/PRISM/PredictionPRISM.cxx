@@ -905,7 +905,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(
           calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift));
-
+  //std::cout << "Calc dmsq32 = " << calc->GetDmsq32()<< std::endl;
   LabelsAndBins oaAxis(fNDOffAxis.GetLabels().at(0),
                        fNDOffAxis.GetBinnings().at(0));
   LabelsAndBins oaAxis280(fND280kAAxis.GetLabels().at(0),
