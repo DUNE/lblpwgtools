@@ -6,12 +6,14 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
+#include "TTree.h"
+
 #include <cmath>
 #include <iostream>
 
 namespace ana
 {
-  void FixupRecord(caf::SRProxy* sr)
+  void FixupRecord(caf::SRProxy* sr, TTree* tr)
   {
     // Set GENIE_ScatteringMode and eRec_FromDep
     if(sr->isFD){
@@ -78,6 +80,15 @@ namespace ana
                   << std::endl;
         abort();
       }
+    }
+
+    if(tr->GetNbranches() == 302 || tr->GetNbranches() == 280 /*ndgas*/){
+      static bool once = true;
+      if(once){
+        once = false;
+        std::cout << "Detected TDR-era file. Skipping CV weights, which aren't going to work" << std::endl;
+      }
+      return;
     }
 
     // These aren't going to change during the job, so do it once up-front.
