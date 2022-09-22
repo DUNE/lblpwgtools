@@ -206,13 +206,13 @@ namespace ana
     // Do it this way rather than via fPredNom so that systematics evaluated
     // relative to some alternate nominal (eg Birks C where the appropriate
     // nominal is no-rock) can work.
-    const Spectrum nom = pNom->PredictComponent(fOscOrigin,
+    const Spectrum nom = pNom->PredictComponent(fOscOrigin.get(),
                                                 flav, curr, sign);
 
     std::vector<Eigen::ArrayXd> ratios;
     ratios.reserve(preds.size());
     for(auto& p: preds){
-      ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin,
+      ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin.get(),
                                                     flav, curr, sign),
                                 nom).GetEigen());
 
@@ -304,13 +304,13 @@ namespace ana
     }
 
     // Predict something, anything, so that we can know what binning to use
-    fBinning = fPredNom->Predict(fOscOrigin);
+    fBinning = fPredNom->Predict(fOscOrigin.get());
     fBinning.Clear();
   }
 
   //----------------------------------------------------------------------
   void PredictionInterp::SetOscSeed(osc::IOscCalc* oscSeed){
-    fOscOrigin = oscSeed->Copy();
+    fOscOrigin.reset(oscSeed->Copy());
     for(auto& it: fPreds) it.second.fits.clear();
     InitFits();
   }
@@ -775,7 +775,7 @@ namespace ana
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin").release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin");
   }
 
   //----------------------------------------------------------------------
