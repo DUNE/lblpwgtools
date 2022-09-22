@@ -28,7 +28,7 @@ public:
              caf::SRProxy* sr,
              double& weight) const override
   {
-    sr->dune.Ev_reco_numu *= (1+.1*sigma);
+    sr->Ev_reco_numu *= (1+.1*sigma);
   }
 };
 const ToyEnergyScaleSyst eSyst;
