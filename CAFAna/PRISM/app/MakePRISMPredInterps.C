@@ -405,12 +405,11 @@ int main(int argc, char const *argv[]) {
         Loaders_bm.AddLoader(FileLoaders[config].get(), caf::kNEARDET,
                              Loaders::kMC);
    
-		if (IsNDNue) {
 	PRISM->AddNDDataLoader(
             *FileLoaders[GetND293kAConfig(config)],
             IsNu ? kNDSelectionCuts_nue : kNDSelectionCuts_nueb, kNDCVWeight,
             DataShift, IsNu ? kNue_I_Numode : kNueBar_I_NuBarmode);      
-}
+
 }
 
     } else if (!IsND) { // Is FD and files either nonswap, nueswap or tauswap.
@@ -653,7 +652,8 @@ std::cout<< "Vars_match size:" <<Vars_match.size()<<std::endl;
               std::make_unique<NoOscPredictionGenerator>(
                   (IsND280kA ? NDTrueEnergyObsBins_280kA
                              : NDTrueEnergyObsBins_293kA),
-                  kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
+                   (IsNDNue ? kActuallyIsNueCC : kIsNumuCC) &&  //eran added 
+			(IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV &&
                       kIsOutOfTheDesert &&
                       (IsND280kA ? kSel280kARun : kCut280kARun),
                   kNDCVWeight * slice_width_weight);

@@ -227,7 +227,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         (NDConfig_enum == kND_nu_numu) ? kND_280kA_nu_numu : kND_280kA_nub_numub;
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
-
+//notes -- need change above so that the ch.second.to is GetConfigFromNuChan, not GetFDConfigFrom NuChan (think there isn't a GetNDConfigFromNuChan)???
     std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
     std::cout << "FDfd Config = " << DescribeFDConfig(FDfdConfig_enum)
               << std::endl;
@@ -243,10 +243,12 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                 << std::endl;
       abort();
     }
-
+// ERAN  DELETE eran THREE LINES BELOW have to uncomment right now to get it to build
     TDirectory *chan_dir =
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
     chan_dir->cd();
+    //notes -- above outputs the FD stuff a particular directory in the ouput of PP, need to rewrite it to output ND???
+    //then below delete?
 
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use.
@@ -281,7 +283,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     DataUnOscPred->Scale(1, "width");
     chan_dir->WriteTObject(DataUnOscPred, "DataPredUnOsc_Total");
     DataUnOscPred->SetDirectory(nullptr);
-
+// notes -- this smearing below, delete? bc getting output of state file to be ETrue (supposed to be ETrue AFTER selection), so then don't need it 
     if (use_PRISM) {
       // Smearing matrices for ND and FD
       // For detector and selection corrections
@@ -405,7 +407,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         }
         std::cout << "Finished writing." << std::endl;
       }
-
+//or maybe commend out til here? ls
     } else {
       std::cout << "Why are you running this script if you don't want PRISM?"
                 << std::endl;
@@ -432,7 +434,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   std::cout << "Write f." << std::endl;
   f.Write();
 }
-
+//possibly can comment out until here?  But def need some of the above -- ask Ciaran?? 
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
