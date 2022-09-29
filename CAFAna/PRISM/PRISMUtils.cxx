@@ -344,8 +344,8 @@ GetOscVars(std::vector<std::string> const &osc_vars, int hie, int oct) {
   std::vector<const IFitVar *> rtn_vars;
 
   for (auto &v : osc_vars) {
-    if (v == "th13" || v == "alloscvars") {
-      rtn_vars.push_back(&kFitTheta13);
+    if (v == "ss2th13" || v == "alloscvars") {
+      rtn_vars.push_back(&kFitSinSq2Theta13);
     }
     // Deal with bounded dmsq32
     if (v == "dmsq32" || v == "alloscvars") {

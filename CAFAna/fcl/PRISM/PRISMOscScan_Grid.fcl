@@ -5,7 +5,7 @@
 
 BasicPred: {
 
-	output_file: ["PRISMScan_dcp_4Flav_48ktMWYr_XSecFluxCombSyst_12May22.root", "UPDATE"]
+	output_file: ["dmsq32_ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
 	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
 
 	# Analysis variable name - must match variable in state file
@@ -22,6 +22,8 @@ BasicPred: {
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
+	# Do you want the reactor th13 constraint?
+	reactor_constraint: true
 
 	PRISM: {
 		match_conditioning: [
@@ -73,31 +75,35 @@ BasicPred: {
 		Use_EventRateMatching: true
 	}
 
-	free_osc_params: [dmsq32, ssth23, th13, deltapi, dmsq21, ssth12, rho]
-
+	# Oscillation parameters to include in fit
+	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
+	# Parameter(s) to scan over in fit
+	scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
 
-scansEG: [
-
-#	{
-#		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-#		output_dir: "numu_EvMatch_nom2"
-#	},
-
+scans: [
 	{
 		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-		scan_params: @local::ScanDefinitions.dcp
 		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "numu_EvMatch_allxsecflux"
+		output_dir: "fit_xsecfluxdet"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.xsecflux
+		output_dir: "fit_xsecflux"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.fluxAll
+		output_dir: "fit_flux"
+	},
+	{
+		@table::BasicPred
+		output_dir: "fit_nom"
 	}
-
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
+scans[0].output_file[1]: "RECREATE"

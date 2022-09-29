@@ -1,13 +1,20 @@
+#include "CAFAna/PRISM/PredictionPRISM.h"
+
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/PRISM/Cuts.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/PredictionsForPRISM.h"
 
+#include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Spectrum.h"
+#include "CAFAna/Core/Stan.h"
+
+#include "OscLib/IOscCalc.h"
+#include "CAFAna/Core/StanUtils.h"
 
 #include "CAFAna/Analysis/AnalysisVars.h"
 
@@ -25,6 +32,8 @@
 using namespace PRISM;
 
 namespace ana {
+
+REGISTER_LOADFROM("PredictionPRISM", IPrediction, PredictionPRISM);
 
 static std::unique_ptr<PRISMReweightableSpectrum> kNoSuchNDDataSpectrum{nullptr};
 static std::unique_ptr<PredictionInterp> kNoSuchNDPredictionSpectrum{nullptr};

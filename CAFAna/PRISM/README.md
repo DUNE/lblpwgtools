@@ -275,21 +275,23 @@ Only one command line input is needed: a FHiCL file, which contains all input in
 needed for the script to run. E.g.:
 
 ``` 
-  PRISMPrediction fcl/PRISM/Basic_NumuDisp.fcl
+  PRISMPrediction --fcl fcl/PRISM/PRISMPred_Grid.fcl
 ```
 
 All FHiCL files are conained in the directory CAFAna/fcl/PRISM/.
 
-It is possible in principle to setup the PRISM code to run with the `cafe` command by 
-adding the PRISM libraries to the `load_libraries` script, although this has not been
-implemented. Scripts can lso be compiled with `CAFBuild` like:
+### PRISM\_4Flavour\_dChi2Scan.C
+
+
+`PRISM_4Flavour_dChi2Scan.C` is a an executable and functions similarly to `PRISMPrediction.C`.
 
 ```
-  CAFBuild -O3 -I ${CAFANA}/../Ext/src/eigen/ -I ${CAFANA}/scripts PRISMPrediction.C 
+  PRISM_4Flavour_dChi2Scan.C --fcl fcl/PRISM/PRISMOscScan_Grid.fcl --binx [x] --biny [y]
 ``` 
 
-However, it is recommended to use the compiled executables in conjunction with the
-FHiCL files.
+The fcl file is required for the script to run, however the `--binx` and `--biny` inputs are
+optional and are usually only needed when running fits on the grid that require the fit to split
+into jobs for each fit point.
 
 ### FHiCL files
 

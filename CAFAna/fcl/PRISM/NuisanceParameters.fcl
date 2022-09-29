@@ -245,7 +245,18 @@ nuisance_parameters: {
 		@sequence::nuisance_parameter_sets.det_mularE,
 		@sequence::nuisance_parameter_sets.det_EM,
 		@sequence::nuisance_parameter_sets.det_Res
-	]			
+	]
+
+	xsecflux: [		
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxFocussing,
+		@sequence::nuisance_parameter_sets.xsec_CCQE,
+		@sequence::nuisance_parameter_sets.xsec_LowW,
+		@sequence::nuisance_parameter_sets.xsec_HighW,
+		@sequence::nuisance_parameter_sets.xsec_NC_other,
+		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
+		@sequence::nuisance_parameter_sets.xsec_Extra
+	]
 
 	all: [
 		@sequence::nuisance_parameter_sets.det_totalND,

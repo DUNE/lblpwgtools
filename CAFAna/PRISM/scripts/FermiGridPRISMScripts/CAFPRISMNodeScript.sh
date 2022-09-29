@@ -58,6 +58,7 @@ cd $_CONDOR_SCRATCH_DIR
 
 export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
+export CAFANA_STAT_ERRS=1
 
 LOGYLOG "CAFANA dir = ${CAFANA}"
 
@@ -85,10 +86,8 @@ if [ $? -ne 0 ]; then
   exit 5
 fi
 
-PNFS_OUTDIR=${PNFS_OUTDIR_STUB} #/${CLUSTER}.${PROCESS}/
+PNFS_OUTDIR=${PNFS_OUTDIR_STUB} 
 
-#ifdh mkdir ${PNFS_OUTDIR}
-#ifdh ls ${PNFS_OUTDIR}
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to make ${PNFS_OUTDIR}."
   exit 2
@@ -102,28 +101,32 @@ LINE=$(cat ${CAFANA}/CAFECommands.cmd | head -${LINE_N} | tail -1)
 
 LOGYLOG "Running command: ${LINE}"
 
-SCRIPT_NAME=$(echo ${LINE} | cut -f 1 -d " ")
-#OUTPUT_NAME=$(echo ${LINE} | cut -f 3 -d " ") # output contained in fcl
-FCL_NAME=$(echo ${LINE} | cut -f 2 -d " ") # fcl file is second parameter in cmd file
+BIN_X_CMD=""
+BIN_X=""
+BIN_Y_CMD=""
+BIN_Y=""
 
-LOGYLOG "Running script ${SCRIPT_NAME} using fcl file ${FCL_NAME}"
+SCRIPT_NAME=$(echo ${LINE} | cut -f 1 -d " ")
+FCL_NAME=$(echo ${LINE} | cut -f 3 -d " ") # fcl file is third parameter in cmd file
+BIN_X_CMD=$(echo ${LINE} | cut -f 4 -d " ")
+BIN_X=$(echo ${LINE} | cut -f 5 -d " ")
+BIN_Y_CMD=$(echo ${LINE} | cut -f 6 -d " ")
+BIN_Y=$(echo ${LINE} | cut -f 7 -d " ")
+
+LOGYLOG "Running script ${SCRIPT_NAME} using fcl file ${FCL_NAME} and bins x=${BIN_X} and y=${BIN_Y}"
 
 if [ ! -e  ${CAFANA}/${FCL_NAME} ]; then
   LOGYLOG "[ERROR]: Failed to find expected fcl: ${CAFANA}/${FCL_NAME}"
   exit 6
 fi
 
-#cp ${CAFANA}/scripts/common_fit_definitions.C .
-#cp ${CAFANA}/scripts/${SCRIPT_NAME} .
 cp ${CAFANA}/${FCL_NAME} .
 
 LOGYLOG "Running script @ $(date)"
 
-#LOGYLOG "cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.log"
-LOGYLOG "Running ${SCRIPT_NAME} ${CAFANA}/${FCL_NAME}"
+LOGYLOG "Running --fcl ${SCRIPT_NAME} ${CAFANA}/${FCL_NAME} ${BIN_X_CMD} ${BIN_X} ${BIN_Y_CMD} ${BIN_Y}"
 
-${SCRIPT_NAME} ${CAFANA}/${FCL_NAME}
-#cafe -q -b ${CAFANA}/scripts/${SCRIPT_NAME} $(echo ${LINE} | cut -f 2- -d " ") &> ${SCRIPT_NAME}.log
+${SCRIPT_NAME} --fcl ${CAFANA}/${FCL_NAME} ${BIN_X_CMD} ${BIN_X} ${BIN_Y_CMD} ${BIN_Y}
 
 LOGYLOG "Copying output @ $(date)"
 
