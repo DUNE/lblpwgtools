@@ -5,11 +5,11 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EnuReco_Sep22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EnuReco_Sel_nosyst_2Sep22.root"
+	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EVisReco_1mNDFV_Sep22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_1mNDFV_29Sep22.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EnuReco
+	projection_name: EVisReco
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years

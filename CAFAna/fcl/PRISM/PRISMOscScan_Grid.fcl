@@ -5,7 +5,7 @@
 
 BasicPred: {
 
-	output_file: ["dmsq32_ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
+	output_file: ["ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
 	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
 
 	# Analysis variable name - must match variable in state file
@@ -78,7 +78,7 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	scan_params: @local::ScanDefinitions.ssth23
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }

@@ -141,6 +141,8 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
       steps.at(1).at(1) = first_stepy + (fit_biny - 1) * scan_stepy;
       steps.at(1).at(2) = first_stepy + (fit_biny) * scan_stepy;
       steps.at(1).at(0) = 1;   
+  } else if (fit_binx == -1 && fit_biny == -1) {
+    // do nothing - we are not specifying bins
   } else {
     std::cout << "[ERROR] Make sure you are defining bins correctly for given ScanDefinitions."
       << std::endl;
