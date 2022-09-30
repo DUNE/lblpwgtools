@@ -13,7 +13,7 @@ setup jobsub_client || exit 1
 setup eigen v3_3_9a || exit 1
 setup stan v2_26_1 -q e20:prof || exit 1
 setup osclib v00.21 -q e20:prof:n311:stan || exit 1
-setup cafanacore v01.29 -q e20:prof:n311 || exit 1
+setup cafanacore v02.00 -q e20:prof:n311 || exit 1
 setup duneanaobj v02_02_00 -qe20:prof || exit 1
 setup fhiclcpp v4_15_03 -q e20:prof || exit 1 # for prism
 

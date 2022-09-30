@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 
     print('Compiling macro...')
     incs = ' '.join(['-I '+p for p in path])
-    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW '+incs
+    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW -DCAFANACORE_SPECTRUMLOADERBASE '+incs
 #    print(compile_cmd)
     ret = subprocess.run(compile_cmd, shell=True).returncode
     if ret != 0: sys.exit(ret)
