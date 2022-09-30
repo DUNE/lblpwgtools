@@ -4,45 +4,40 @@
 
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
-#include "CAFAna/Core/Loaders.h"
+#include "CAFAna/Core/IRecordSource.h"
 
 namespace ana
 {
   /// Jam the necessary loaders into approximately the expected structure
-  class NuOnELoaders: public Loaders
+  class NuOnELoaders // : public Loaders
   {
   public:
-    NuOnELoaders(SpectrumLoaderBase& sig,
-                 SpectrumLoaderBase& ccBkg,
-                 SpectrumLoaderBase& ncBkg)
+    NuOnELoaders(IRecordSource& sig,
+                 IRecordSource& ccBkg,
+                 IRecordSource& ncBkg)
       : fSig(sig), fCCBkg(ccBkg), fNCBkg(ncBkg)
     {
     }
 
-    SpectrumLoaderBase& Signal() {return fSig;}
-    SpectrumLoaderBase& CCBkg() {return fCCBkg;}
-    SpectrumLoaderBase& NCBkg() {return fNCBkg;}
+    IRecordSource& Signal() {return fSig;}
+    IRecordSource& CCBkg() {return fCCBkg;}
+    IRecordSource& NCBkg() {return fNCBkg;}
 
-    void Go() {fSig.Go(); fCCBkg.Go(); fNCBkg.Go();}
+    // TODO TODO TODO    void Go() {fSig.Go(); fCCBkg.Go(); fNCBkg.Go();}
   protected:
-    SpectrumLoaderBase &fSig, &fCCBkg, &fNCBkg;
+    IRecordSource &fSig, &fCCBkg, &fNCBkg;
   };
 
 
   class PredictionNuOnE: public IPrediction
   {
   public:
-    PredictionNuOnE(SpectrumLoaderBase& sigLoader,
-                    SpectrumLoaderBase& ccBkgLoader,
-                    SpectrumLoaderBase& ncBkgLoader,
-                    const SystShifts& shift = kNoShift,
-                    const Weight& wei = kUnweighted);
+    PredictionNuOnE(IRecordSource& sigSrc,
+                    IRecordSource& ccBkgSrc,
+                    IRecordSource& ncBkgSrc);
 
-    PredictionNuOnE(NuOnELoaders& loaders,
-                    const SystShifts& shift = kNoShift,
-                    const Weight& wei = kUnweighted)
-      : PredictionNuOnE(loaders.Signal(), loaders.CCBkg(), loaders.NCBkg(),
-                        shift, wei)
+    PredictionNuOnE(NuOnELoaders& loaders)
+      : PredictionNuOnE(loaders.Signal(), loaders.CCBkg(), loaders.NCBkg())
     {
     }
 
@@ -67,7 +62,7 @@ namespace ana
     Spectrum fSig, fCCBkg, fNCBkg;
   };
 
-
+  /* TODO think about generators
   class PredictionNuOnEGenerator: public IPredictionGenerator
   {
   public:
@@ -82,4 +77,5 @@ namespace ana
   protected:
     Weight fWei;
   };
+  */
 }

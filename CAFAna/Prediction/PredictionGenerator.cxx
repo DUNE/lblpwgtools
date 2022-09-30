@@ -5,7 +5,7 @@ namespace ana
 {
 
   //--------------------------------------------------------------------------
-
+  /* TODO TODO think about generators
   NoExtrapGenerator::NoExtrapGenerator(
     const HistAxis axis,
     const Cut cut,
@@ -19,5 +19,5 @@ namespace ana
     return std::unique_ptr<IPrediction>( new PredictionNoExtrap(
 								loaders, fAxis, fCut, shiftMC, fWei ) );
   }
-
+  */
 }

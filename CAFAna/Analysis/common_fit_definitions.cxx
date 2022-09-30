@@ -1,3 +1,5 @@
+#if 0 // TODO TODO TODO
+
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Analysis/AnalysisVersion.h"
 
@@ -1437,3 +1439,5 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
 
   return thischisq;
 }
+
+#endif

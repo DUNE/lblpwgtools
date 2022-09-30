@@ -1,7 +1,6 @@
 set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
-  Instantiations.cxx
   FixupRecord.cxx
   ISyst.cxx
   Loaders.cxx
@@ -24,6 +23,7 @@ set(Core_header_files
   FixupRecord.h
   HistAxis.h
   IFitVar.h
+  IRecordSource.h
   ISyst.h
   Loaders.h
   LoadFromFile.h
