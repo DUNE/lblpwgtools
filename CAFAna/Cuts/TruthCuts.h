@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/Cut.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana
 {
@@ -63,19 +63,19 @@ namespace ana
 
 
   // Based just on PDG code and not on oscillation channel
-  const Cut kActuallyIsNumuCC([](const caf::StandardRecord *sr) {
+  const Cut kActuallyIsNumuCC([](const caf::SRProxy *sr) {
     return sr->isCC && (sr->nuPDG == 14);
   });
 
-  const Cut kActuallyIsNumubarCC([](const caf::StandardRecord *sr) {
+  const Cut kActuallyIsNumubarCC([](const caf::SRProxy *sr) {
     return sr->isCC && (sr->nuPDG == -14);
   });
 
-  const Cut kActuallyIsNueCC([](const caf::StandardRecord *sr) {
+  const Cut kActuallyIsNueCC([](const caf::SRProxy *sr) {
     return sr->isCC && (sr->nuPDG == 12);
   });
 
-  const Cut kActuallyIsNuebarCC([](const caf::StandardRecord *sr) {
+  const Cut kActuallyIsNuebarCC([](const caf::SRProxy *sr) {
     return sr->isCC && (sr->nuPDG == -12);
   });
 

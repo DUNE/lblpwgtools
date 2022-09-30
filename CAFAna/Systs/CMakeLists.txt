@@ -14,6 +14,7 @@ set(Systs_implementation_files
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
   Systs.cxx
+  UniverseOracle.cxx
   XSecSystList.cxx
   OffAxisFluxUncertaintyHelper.cxx
   NewOffAxisFluxUncertainty2022Helper.cxx)
@@ -47,6 +48,7 @@ set(Systs_header_files
   MissingProtonFakeData_BDTRW_RHC.h
   NuWroReweightFakeData.h
   CrazyFluxFakeData.h
+  UniverseOracle.h
   XSecSystList.h
   OffAxisFluxUncertaintyHelper.h
   NewOffAxisFluxUncertainty2022Helper.h)

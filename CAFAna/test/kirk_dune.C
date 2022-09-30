@@ -16,7 +16,6 @@
 #include "CAFAna/Analysis/Fit.h"
 using namespace ana;
 
-#include "StandardRecord/StandardRecord.h"
 #include "OscLib/IOscCalc.h"
 
 #include "CAFAna/Core/rootlogon.C"

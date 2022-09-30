@@ -7,8 +7,6 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
-
 #include "TGraph.h"
 
 #include <cmath>

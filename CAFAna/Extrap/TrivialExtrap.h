@@ -66,6 +66,7 @@ namespace ana
     virtual Spectrum NCAntiComponent()  override {return fNCAnti;}
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+
     static std::unique_ptr<TrivialExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
   protected:

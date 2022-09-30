@@ -2,6 +2,7 @@ set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
   Instantiations.cxx
+  FixupRecord.cxx
   ISyst.cxx
   Loaders.cxx
   LoadFromFile.cxx
@@ -20,6 +21,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FitVarWithPrior.h
+  FixupRecord.h
   HistAxis.h
   IFitVar.h
   ISyst.h
@@ -42,8 +44,8 @@ set(Core_header_files
   rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore 
-  StandardRecord 
+target_link_libraries(CAFAnaCore
+  ${STANDARDRECORDPROXY}
   CAFAnaCore::Ext 
   OscLib::All
   ROOT::ROOT 

@@ -35,7 +35,6 @@ NuWroReweightFakeDataGenerator::~NuWroReweightFakeDataGenerator()
 }
 
 void NuWroReweightFakeDataGenerator::Shift(double sigma,
-                                           ana::Restorer& restore,
                                            caf::SRProxy* sr,
                                            double& weight) const
 {

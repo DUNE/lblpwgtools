@@ -153,12 +153,12 @@ namespace ana
   stan::math::var SystShifts::LogPrior() const { return log(Prior()); }
 
   //----------------------------------------------------------------------
-  void SystShifts::Shift(Restorer &restore, caf::SRProxy *sr,
+  void SystShifts::Shift(caf::SRProxy *sr,
                          double &weight) const
   {
     // always fSystsDbl here because this is only used in the event loop, not in fitting
     // (so the autodiff'd version is not needed)
-    for(auto it: fSystsDbl) it.first->Shift(it.second, restore, sr, weight);
+    for(auto it: fSystsDbl) it.first->Shift(it.second, sr, weight);
   }
 
   //----------------------------------------------------------------------

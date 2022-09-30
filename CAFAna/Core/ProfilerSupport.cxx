@@ -38,10 +38,13 @@ namespace ana
         const int ret = system(cmd1.c_str());
         if(ret != 0) return;
 
+        std::cout << "Wrote profile to " << tmp << std::endl;
+        /*
         std::cout << "Displaying profile..." << std::endl;
         const std::string cmd2 = "evince "+std::string(tmp);
         std::cout << cmd2 << std::endl;
         system(cmd2.c_str());
+        */
       }
     }
   };

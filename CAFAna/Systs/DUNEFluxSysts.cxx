@@ -11,7 +11,7 @@ static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertaint
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -34,7 +34,7 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 }
 
 //----------------------------------------------------------------------
-void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
+void DUNEFluxSyst::Shift(double sigma,
                          caf::SRProxy *sr, double &weight) const {
 
   if (abs(sr->nuPDGunosc) == 16) {

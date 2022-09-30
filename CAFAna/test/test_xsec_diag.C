@@ -19,7 +19,7 @@ using namespace ana;
 
 #include "CAFAna/Core/MathUtil.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TGraph.h"

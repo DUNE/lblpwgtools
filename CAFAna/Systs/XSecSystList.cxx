@@ -3,6 +3,7 @@
 #include "CAFAna/Systs/XSecSysts.h"
 
 #include <iostream>
+#include <unordered_map>
 #include <utility>
 
 namespace ana {
@@ -112,14 +113,14 @@ int GetXSecSystIndex(std::string const &name) {
 
 /// Convenience method for checking if a dial is
 bool IsExtrapolateOffToOnSyst(std::string const &name) {
-  static std::map<std::string, bool> cache;
+  static std::unordered_map<std::string, bool> cache;
   if (!cache.count(name)) {
     cache[name] = SystNameIsInList(name, GetExtrapolateOffToOnSystNames());
   }
   return cache[name];
 }
 bool IsExtrapolateOffToOnSyst(int index) {
-  static std::map<int, bool> cache;
+  static std::unordered_map<int, bool> cache;
   if (!cache.count(index)) {
     cache[index] = IsExtrapolateOffToOnSyst(GetXSecSystName(index));
   }
@@ -127,14 +128,14 @@ bool IsExtrapolateOffToOnSyst(int index) {
 }
 
 bool IsFakeDataGenerationSyst(std::string const &name) {
-  static std::map<std::string, bool> cache;
+  static std::unordered_map<std::string, bool> cache;
   if (!cache.count(name)) {
     cache[name] = SystNameIsInList(name, GetFakeDataGenerationSystNames());
   }
   return cache[name];
 }
 bool IsFakeDataGenerationSyst(int index) {
-  static std::map<int, bool> cache;
+  static std::unordered_map<int, bool> cache;
   if (!cache.count(index)) {
     cache[index] = IsFakeDataGenerationSyst(GetXSecSystName(index));
   }

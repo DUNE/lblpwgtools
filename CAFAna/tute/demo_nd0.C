@@ -8,7 +8,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -26,7 +26,7 @@ void demo_nd0()
 
   // A Var is a little snippet of code that takes a record representing the
   // event record and returns a single number to plot.
-  const Var kRecoEnergy([](const caf::SRProxy* sr)
+  const Var kRecoEnergy([](const caf::SRProxy* sr) -> float
                         {
                           // TODO - why is Ev_reco NaN in a handful of the
                           // input events?

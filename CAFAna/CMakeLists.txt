@@ -43,6 +43,34 @@ set(VERBOSE true)
 cmessage(STATUS "CMAKE_INSTALL_PREFIX: \"${CMAKE_INSTALL_PREFIX}\"")
 cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 
+################################################################################
+#                            Check Dependencies
+################################################################################
+
+include_directories(
+  ${SRC_ROOT_PARENT}
+  ${CMAKE_BINARY_DIR}/Ext
+  ${BOOST_INC}
+  ${EIGEN_INC}
+  ${SUNDIALS_INC}
+  ${STAN_MATH_INC}
+  ${STAN_INC}
+  ${TBB_INC}
+  $ENV{OSCLIB_INC}
+  $ENV{CAFANACORE_INC}
+  $ENV{DUNEANAOBJ_INC}
+)
+
+find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
+find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})
+find_library(STANDARDRECORDPROXY duneanaobj_StandardRecordProxy $ENV{DUNEANAOBJ_LIB})
+
+include_directories($ENV{SRPROXY_INC})
+
+include_directories(..) # allow paths starting CAFAna/ to work
+
+LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1 -DTBB_INTERFACE_NEW)
+
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
   set(CMAKE_MACOSX_RPATH ON)
   LIST(APPEND CMAKE_INSTALL_RPATH "@executable_path/../lib")
@@ -53,58 +81,13 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-## StandardRecord
-get_filename_component(SRC_ROOT_PARENT ${CMAKE_SOURCE_DIR}/../ ABSOLUTE)
+## CAFAna proper
 
-include_directories(${SRC_ROOT_PARENT})
+set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
 
-set(StandardRecord_implementation_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.cxx
-)
-
-set(StandardRecord_header_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
-    ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
-    ${SRC_ROOT_PARENT}/StandardRecord/FwdDeclare.h
-)
-
-add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
-
-set_target_properties(StandardRecord PROPERTIES
-  PUBLIC_HEADER "${StandardRecord_header_files}")
-
-install(TARGETS StandardRecord 
-    LIBRARY DESTINATION lib/
-    PUBLIC_HEADER DESTINATION include/StandardRecord/)
-
-SET(CAFAna_Libs
-    CAFAnaAnalysis
-    CAFAnaDecomp
-    CAFAnaFit
-    CAFAnaPrediction
-    CAFAnaExperiment
-    CAFAnaPrediction
-    CAFAnaPRISM
-    CAFAnaCuts
-    CAFAnaExtrap
-    CAFAnaVars
-    CAFAnaCore
-    CAFAnaSysts)
-
-add_subdirectory(Analysis)
-add_subdirectory(Core)
-add_subdirectory(Cuts)
-add_subdirectory(Decomp)
-add_subdirectory(Experiment)
-add_subdirectory(Extrap)
-add_subdirectory(Fit)
-add_subdirectory(Prediction)
-add_subdirectory(Systs)
-add_subdirectory(Vars)
-add_subdirectory(PRISM)
-add_subdirectory(bin)
-add_subdirectory(scripts)
-add_subdirectory(fcl)
+foreach(SUBDIR ${CAFANA_SUBDIRS})
+  add_subdirectory(${SUBDIR})
+endforeach()
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)

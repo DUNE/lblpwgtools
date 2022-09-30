@@ -1,16 +1,13 @@
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
 
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+
 namespace ana {
 
   void RecoEnergyScaleND::Shift(double sigma,
-                                Restorer& restore, 
                                 caf::SRProxy* sr,
                                 double& weight) const {
   
-    restore.Add(sr->EVisReco_ND,
-                sr->HadEVisReco_ND,
-                sr->Elep_reco);
-
     const double scale = 0.02 * sigma;
     if (!sr->isFD) {
       // To match FD:
@@ -33,13 +30,8 @@ namespace ana {
   const RecoEnergyScaleND kRecoEnergyScaleND;
 
   void RecoEnergySqrtND::Shift(double sigma,
-                               Restorer& restore,
                                caf::SRProxy* sr,
                                double& weight) const {
-    
-    restore.Add(sr->EVisReco_ND,
-                sr->HadEVisReco_ND,
-                sr->Elep_reco);
 
     const double scale = 0.01 * sigma;
     if (!sr->isFD) {
@@ -64,13 +56,8 @@ namespace ana {
   const RecoEnergySqrtND kRecoEnergySqrtND;
 
   void RecoEnergyInvSqrtND::Shift(double sigma,
-                                  Restorer& restore,
                                   caf::SRProxy* sr,
                                   double& weight) const {
-
-    restore.Add(sr->EVisReco_ND,
-                sr->HadEVisReco_ND,
-                sr->Elep_reco);
 
     const double scale = 0.02 * sigma;
     if (!sr->isFD) {
@@ -96,13 +83,8 @@ namespace ana {
 
 
   void EMRecoUncorrND::Shift(double sigma,
-             Restorer& restore,
              caf::SRProxy* sr, 
              double& weight) const {
-
-    restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
-                sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
@@ -118,13 +100,8 @@ namespace ana {
   const EMRecoUncorrND kEMRecoUncorrND;
 
   void EMRecoUncorrSqrtND::Shift(double sigma,
-                                 Restorer& restore,
                                  caf::SRProxy* sr, 
                                  double& weight) const {
-      
-    restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
-                sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
@@ -140,13 +117,8 @@ namespace ana {
   const EMRecoUncorrSqrtND kEMRecoUncorrSqrtND;
 
   void EMRecoUncorrInvSqrtND::Shift(double sigma,
-                                    Restorer& restore,
                                     caf::SRProxy* sr,
                                     double& weight) const {
-
-    restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
-                sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
@@ -162,15 +134,8 @@ namespace ana {
   const EMRecoUncorrInvSqrtND kEMRecoUncorrInvSqrtND;
 
   void ChargedHadRecoUncorrND::Shift(double sigma,
-                                     Restorer& restore,
                                      caf::SRProxy* sr,
                                      double& weight) const {
-    
-    restore.Add(sr->eRecoPip,
-                sr->eRecoPim,
-                sr->eRecoP,
-                sr->EVisReco_ND,
-                sr->HadEVisReco_ND);
 
     const double scale = 0.05 * sigma;
     if (!sr->isFD) { // in the ND
@@ -189,15 +154,8 @@ namespace ana {
   const ChargedHadRecoUncorrND kChargedHadRecoUncorrND;
 
   void ChargedHadRecoUncorrSqrtND::Shift(double sigma,
-                                         Restorer& restore,
                                          caf::SRProxy* sr,
                                          double& weight) const {
-
-    restore.Add(sr->eRecoPip,
-                sr->eRecoPim,
-                sr->eRecoP,
-                sr->EVisReco_ND,
-                sr->HadEVisReco_ND);
 
     const double scale = 0.05 * sigma;
     if (!sr->isFD) { // in the ND
@@ -216,15 +174,8 @@ namespace ana {
   const ChargedHadRecoUncorrSqrtND kChargedHadRecoUncorrSqrtND;
 
   void ChargedHadRecoUncorrInvSqrtND::Shift(double sigma,
-                                            Restorer& restore,
                                             caf::SRProxy* sr,
                                             double& weight) const {
-
-    restore.Add(sr->eRecoPip,
-                sr->eRecoPim,
-                sr->eRecoP,
-                sr->EVisReco_ND,
-                sr->HadEVisReco_ND);
 
     const double scale = 0.05 * sigma;
     if (!sr->isFD) { // in the ND
@@ -243,12 +194,9 @@ namespace ana {
   const ChargedHadRecoUncorrInvSqrtND kChargedHadRecoUncorrInvSqrtND;
 
   void ERecoScaleMuLArND::Shift(double sigma,
-                                Restorer& restore,
                                 caf::SRProxy* sr,
                                 double& weight) const {
 
-    restore.Add(sr->Elep_reco,
-                sr->EVisReco_ND);
     // Different EScale uncertainty for reconstruction by range or in
     // GAr tracker
     double var(0);
@@ -267,13 +215,9 @@ namespace ana {
   const ERecoScaleMuLArND kERecoScaleMuLArND;
 
   void ERecoScaleMuLArSqrtND::Shift(double sigma,
-                                    Restorer& restore,
                                     caf::SRProxy* sr,
                                     double& weight) const {
 
-    restore.Add(sr->Elep_reco,
-                sr->EVisReco_ND);
- 
     double var(0);
     if (sr->muon_contained) var = 0.02;
     else if (sr->muon_tracker) var = 0.01;
@@ -290,12 +234,8 @@ namespace ana {
   const ERecoScaleMuLArSqrtND kERecoScaleMuLArSqrtND;
 
   void ERecoScaleMuLArInvSqrtND::Shift(double sigma,
-                                       Restorer& restore,
                                        caf::SRProxy* sr,
                                        double& weight) const {
-
-    restore.Add(sr->Elep_reco,
-                sr->EVisReco_ND);
 
     double var(0);
     if (sr->muon_contained) var = 0.02;
@@ -315,13 +255,9 @@ namespace ana {
   // Resolution Syst
   
   void MuonRecoResND::Shift(double sigma, 
-                            Restorer& restore,
                             caf::SRProxy* sr,
                             double& weight) const {
-    
-    restore.Add(sr->Elep_reco,
-                sr->EVisReco_ND);
-      
+
     const double scale = 0.02 * sigma;
     if (!sr->isFD) { // in the ND
       sr->Elep_reco += (sr->LepE - sr->Elep_reco) * scale;
@@ -332,13 +268,9 @@ namespace ana {
   const MuonRecoResND kMuonRecoResND;
 
   void EMRecoResND::Shift(double sigma,
-                          Restorer& restore,
                           caf::SRProxy* sr, 
                           double& weight) const {
-      
-    restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
-                sr->EVisReco_ND);
+
     const double scale = .02*sigma;
     if (!sr->isFD){
       sr->EVisReco_ND  += (sr->ePi0 - sr->eRecoPi0) * scale;
@@ -354,15 +286,9 @@ namespace ana {
 
 
    void ChargedHadRecoResND::Shift(double sigma,
-                                   Restorer& restore,
                                    caf::SRProxy* sr, 
                                    double& weight) const {
 
-    restore.Add(sr->EVisReco_ND,
-                sr->eRecoP,
-                sr->eRecoPip,
-                sr->eRecoPim,
-                sr->HadEVisReco_ND);
     const double scale = .02*sigma;
     if (!sr->isFD) {
       if (sr->eRecoP < 0.) sr->eRecoP = 0.;

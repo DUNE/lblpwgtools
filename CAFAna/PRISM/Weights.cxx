@@ -4,8 +4,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/StandardRecord.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -16,21 +15,21 @@ namespace PRISM {
 
 std::map<int, TH1D *> fFileExposures;
 
-const ana::Weight kSpecHCRunWeight([](const caf::StandardRecord *sr) {
+const ana::Weight kSpecHCRunWeight([](const caf::SRProxy *sr) {
   return sr->SpecialRunWeight;
 });
 
 // Use to weight by Exposure
-const ana::Weight kRunPlanWeight([](const caf::StandardRecord *sr) -> double {
+const ana::Weight kRunPlanWeight([](const caf::SRProxy *sr) -> double {
   return sr->perPOTWeight; 
 });
 
-const ana::Weight kMassCorrection([](const caf::StandardRecord *sr) -> double {
+const ana::Weight kMassCorrection([](const caf::SRProxy *sr) -> double {
   return sr->NDMassCorrWeight;
 });
 
 // Use to get perFile weight
-const ana::Weight kPerFileWeighter([](const caf::StandardRecord *sr) -> double {
+const ana::Weight kPerFileWeighter([](const caf::SRProxy *sr) -> double {
   if (sr->isFD) {
     return 1;
   }
@@ -40,7 +39,7 @@ const ana::Weight kPerFileWeighter([](const caf::StandardRecord *sr) -> double {
 // Manual combination of the weights above
 // Reduce the number of ana::Weight object calls
 const ana::Weight
-kNDPRISMCVWeights([](const caf::StandardRecord *sr) -> double {
+kNDPRISMCVWeights([](const caf::SRProxy *sr) -> double {
   return sr->perPOTWeight * sr->NDMassCorrWeight * sr->SpecialRunWeight;
 });
 
@@ -118,7 +117,7 @@ double Get280kAWeight_numu(double enu, bool isNu) {
   return whist->GetBinContent(whist->GetXaxis()->FindFixBin(enu));
 }
 
-const ana::Weight k280kAWeighter([](const caf::StandardRecord *sr) -> double {
+const ana::Weight k280kAWeighter([](const caf::SRProxy *sr) -> double {
   if (sr->isFD) { 
     return 1;
   }

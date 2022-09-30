@@ -24,7 +24,6 @@ namespace ana
 
   //----------------------------------------------------------------------
   void DUNEXSecSystPCA::Shift(double sigma,
-                              Restorer& restore,
                               caf::SRProxy* sr,
                               double& weight) const
   {

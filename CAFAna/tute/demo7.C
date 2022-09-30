@@ -12,7 +12,7 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"

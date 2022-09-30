@@ -14,8 +14,6 @@
 #include "CAFAna/PRISM/PredictionPRISM.h"
 #include "CAFAna/PRISM/EigenUtils.h"
 
-#include "StandardRecord/StandardRecord.h"
-
 #include "OscLib/IOscCalc.h"
 
 #include "TFile.h"

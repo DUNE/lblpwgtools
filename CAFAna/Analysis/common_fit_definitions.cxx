@@ -42,8 +42,6 @@
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcGeneral.h"
 
-#include "StandardRecord/StandardRecord.h"
-
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"

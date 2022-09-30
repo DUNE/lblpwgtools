@@ -10,7 +10,7 @@ set(scripts_to_build
   #PRISMRegOptimizer
   #PRISMExtrapRegOptimizer
  #FluxPredictionTester
- EventLoop
+ #EventLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
@@ -18,7 +18,15 @@ foreach(SCRPT ${scripts_to_build})
 
   add_executable(${SCRPT} ${SCRPT}.C)
 
-  target_link_libraries(${SCRPT} ${CAFAna_Libs})
+  target_link_libraries(${SCRPT} CAFAnaCore CAFAnaPRISM CAFAnaCuts CAFAnaVars CAFAnaPrediction CAFAnaSysts CAFAnaAnalysis ${STANDARDRECORD} ${StandardRecordProxy})
+
+  if(DEFINED ENV{FHICLCPP_FQ_DIR})
+    # fhiclcpp from ups
+    target_link_libraries(${SCRPT} fhiclcpp::fhiclcpp)
+  else()
+    # need different target name for fhiclcpp from support/
+    target_link_libraries(${SCRPT} fhiclcpp::Headers)
+  endif()
 
   if(DEFINED USE_OPENMP AND USE_OPENMP)
     target_compile_options(${SCRPT} BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)

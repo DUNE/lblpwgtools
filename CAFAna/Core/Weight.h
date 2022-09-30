@@ -2,7 +2,7 @@
 
 #include "CAFAnaCore/CAFAna/Core/Weight.h"
 
-#include "StandardRecord/FwdDeclare.h"
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {

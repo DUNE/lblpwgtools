@@ -134,7 +134,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IPrediction::SaveTo(TDirectory*, const std::string&) const
+  void IPrediction::SaveTo(TDirectory* dir, const std::string& name) const
   {
     assert(0 && "Not implemented");
   }

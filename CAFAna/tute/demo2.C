@@ -9,7 +9,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/OscCalcPMNSOpt.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "TCanvas.h"
 #include "TH1.h"
 

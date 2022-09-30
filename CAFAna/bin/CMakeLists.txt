@@ -8,7 +8,7 @@ foreach(APP ${APPS})
 
   add_executable(${APP} ${APP}.cc)
 
-  target_link_libraries(${APP} ${CAFAna_Libs})
+  target_link_libraries(${APP} CAFAnaCore)
 
   install(TARGETS ${APP} DESTINATION bin)
 endforeach()

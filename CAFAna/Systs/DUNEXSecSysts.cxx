@@ -1,8 +1,9 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Core/MathUtil.h"
 

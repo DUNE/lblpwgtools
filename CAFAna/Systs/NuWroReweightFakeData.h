@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Systs/BDTReweighter.h"
 
@@ -14,7 +14,7 @@ public:
   NuWroReweightFakeDataGenerator();
   virtual ~NuWroReweightFakeDataGenerator();
 
-  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
+  void Shift(double sigma, caf::SRProxy *sr,
              double &weight) const override;
 
 protected:

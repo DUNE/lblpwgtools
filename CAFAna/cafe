@@ -144,7 +144,9 @@ if __name__ == '__main__':
 
     path = [os.environ['CAFANA']+'/include',
             os.environ['CAFANACORE_INC'],
+            os.environ['DUNEANAOBJ_INC'],
             os.environ['ROOTSYS']+'/include',
+            os.environ['SRPROXY_INC'],
             os.environ['STAN_INC'],
             os.environ['STAN_MATH_INC'],
             os.environ['EIGEN_INC'],
@@ -219,12 +221,16 @@ int main(int argc, char** argv)
     libdirs = [os.environ['CAFANA']+'/lib',
                os.environ['OSCLIB_LIB'],
                os.environ['CAFANACORE_LIB'],
+               os.environ['DUNEANAOBJ_LIB'],
                os.environ['BOOST_LIB'],
                os.environ['TBB_LIB']]
 
+    os.environ['ROOT_INCLUDE_PATH'] += ':'+os.environ['SRPROXY_INC']
+    os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
     libs = ['Minuit2', 'TMVA', 'EG',
-            'StandardRecord',   'OscLib',        'CAFAnaCoreExt',
+            'duneanaobj_StandardRecord', 'duneanaobj_StandardRecordProxy',
+            'OscLib',           'CAFAnaCoreExt',
             'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
             'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
             'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',

@@ -3,17 +3,7 @@
 namespace ana {
 
   void EnergyScaleFD::Shift(double sigma,
-                            Restorer& restore,
                             caf::SRProxy* sr, double& weight) const {
-      
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue);
 
     double scale = .02 * sigma;
     if (sr->isFD) {
@@ -37,17 +27,8 @@ namespace ana {
   const EnergyScaleFD kEnergyScaleFD;
 
   void UncorrFDTotSqrt::Shift(double sigma,
-                              Restorer& restore,
                               caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue);
+
     const double scale = .01 * sigma;
     if (sr->isFD) {
       if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -69,17 +50,8 @@ namespace ana {
   const UncorrFDTotSqrt kUncorrFDTotSqrt;
 
   void UncorrFDTotInvSqrt::Shift(double sigma,
-                                 Restorer& restore,
                                  caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue);
+
     if (sr->isFD) {
       if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
       const double scale = .02 * sigma;
@@ -100,22 +72,8 @@ namespace ana {
   const UncorrFDTotInvSqrt kUncorrFDTotInvSqrt;
 
   void UncorrFDHadSqrt::Shift(double sigma,
-                              Restorer& restore,
                               caf::SRProxy* sr, double& weight) const {
-  
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->eRecoP,
-                sr->eRecoPim,
-                sr->eRecoPip,
-                sr->eDepP,
-                sr->eDepPip,
-                sr->eDepPim);
+
     const double scale = .05 * sigma;
     if (sr->isFD) {
       if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -140,22 +98,8 @@ namespace ana {
   const UncorrFDHadSqrt kUncorrFDHadSqrt;
 
   void UncorrFDHadInvSqrt::Shift(double sigma,
-                                 Restorer& restore,
                                  caf::SRProxy* sr, double& weight) const {
-   
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->eRecoP,
-                sr->eRecoPim,
-                sr->eRecoPip,
-                sr->eDepP,
-                sr->eDepPip,
-                sr->eDepPim);
+
     const double scale = .05 * sigma;
     if (sr->isFD) {
       if (sr->RecoHadEnNue < 0.) sr->RecoHadEnNue = 0.;
@@ -180,12 +124,7 @@ namespace ana {
   const UncorrFDHadInvSqrt kUncorrFDHadInvSqrt;
 
   void UncorrFDMuSqrt::Shift(double sigma,
-                             Restorer& restore,
                              caf::SRProxy* sr, double& weight) const {
-   
-    restore.Add(sr->Ev_reco_numu,
-                sr->EVisReco_numu,               
-                sr->RecoLepEnNumu);
 
     if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
       const double scale = .005 * sigma;
@@ -198,12 +137,7 @@ namespace ana {
   const UncorrFDMuSqrt kUncorrFDMuSqrt;
 
   void UncorrFDMuInvSqrt::Shift(double sigma,
-                                Restorer& restore,
                                 caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->EVisReco_numu,
-                sr->RecoLepEnNumu);
 
     if (sr->isFD && sr->isCC==1 && abs(sr->nuPDG)==14) {
       const double scale = .02 * sigma;
@@ -216,14 +150,7 @@ namespace ana {
   const UncorrFDMuInvSqrt kUncorrFDMuInvSqrt;
 
   void UncorrFDNSqrt::Shift(double sigma,
-                            Restorer& restore,
                             caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->eRecoN);
 
     const double scale = .3 * sigma;
     if (sr->isFD) {
@@ -238,14 +165,7 @@ namespace ana {
   const UncorrFDNSqrt kUncorrFDNSqrt;
 
   void UncorrFDNInvSqrt::Shift(double sigma,
-                               Restorer& restore,
                                caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->eRecoN);
 
     const double scale = .3 * sigma;
     if (sr->isFD) {
@@ -260,19 +180,7 @@ namespace ana {
   const UncorrFDNInvSqrt kUncorrFDNInvSqrt;
 
   void UncorrFDEMSqrt::Shift(double sigma,
-                             Restorer& restore,
                              caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue,
-                sr->eRecoPi0,
-                sr->eDepPi0);
 
     const double scale = .025 * sigma;
     if (sr->isFD) {
@@ -299,19 +207,7 @@ namespace ana {
 
 
   void UncorrFDEMInvSqrt::Shift(double sigma,
-                                Restorer& restore,
                                 caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue,
-                sr->eRecoPi0,
-                sr->eDepPi0);
 
     const double scale = .025 * sigma;
     if (sr->isFD) {
@@ -336,12 +232,7 @@ namespace ana {
   const UncorrFDEMInvSqrt kUncorrFDEMInvSqrt;
 
   void EScaleMuLArFD::Shift(double sigma,
-                            Restorer& restore,
                             caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->EVisReco_numu,
-                sr->RecoLepEnNumu);
 
     const double scale = .02 * sigma;
     // Checks if FD  and select only CC muon neutrino events
@@ -355,22 +246,7 @@ namespace ana {
   const EScaleMuLArFD kEScaleMuLArFD;
 
   void ChargedHadUncorrFD::Shift(double sigma,
-                                 Restorer& restore,
                                  caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_nue,
-                sr->Ev_reco_numu,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->eRecoP,
-                sr->eRecoPip,
-                sr->eRecoPim,
-                sr->eDepP,
-                sr->eDepPip,
-                sr->eDepPim);
 
     const double scale = .05 * sigma;
     if(sr->isFD) {
@@ -396,14 +272,7 @@ namespace ana {
   const ChargedHadUncorrFD kChargedHadUncorrFD;
 
   void NUncorrFD::Shift(double sigma,
-                        Restorer& restore,
                         caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->Ev_reco_nue,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->eRecoN);
 
     const double scale = .20 * sigma;
     if(sr->isFD) {
@@ -420,19 +289,7 @@ namespace ana {
   const NUncorrFD kNUncorrFD;
 
   void EMUncorrFD::Shift(double sigma,
-                         Restorer& restore,
                          caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->RecoLepEnNue,
-                sr->RecoHadEnNue,
-                sr->RecoHadEnNumu,
-                sr->HadEVisReco_FD,
-                sr->Ev_reco_nue,
-                sr->Ev_reco_numu,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-                sr->eRecoPi0,
-                sr->eDepPi0);
 
     const double scale = 0.025 * sigma;
     if (sr->isFD) {
@@ -457,12 +314,7 @@ namespace ana {
   const EMUncorrFD kEMUncorrFD;
 
   void MuonResFD::Shift(double sigma,
-                        Restorer& restore,
                         caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_numu,
-                sr->EVisReco_numu,
-                sr->RecoLepEnNumu);
 
     const double scale = .02*sigma;
     // FD charged current numus only
@@ -476,19 +328,7 @@ namespace ana {
   const MuonResFD kMuonResFD;
 
   void EMResFD::Shift(double sigma,
-                      Restorer& restore,
                       caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_nue,
-                sr->Ev_reco_numu,
-                sr->EVisReco_nue,
-                sr->EVisReco_numu,
-                sr->RecoHadEnNumu,
-                sr->RecoHadEnNue,
-                sr->HadEVisReco_FD,
-                sr->RecoLepEnNue,
-                sr->eRecoPi0,
-                sr->eDepPi0);
 
     const double scale = .02*sigma;
     if (sr->isFD){
@@ -513,19 +353,7 @@ namespace ana {
   const EMResFD kEMResFD;
 
   void ChargedHadResFD::Shift(double sigma,
-                              Restorer& restore,
                               caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_nue,
-                sr->Ev_reco_numu,
-                sr->EVisReco_nue,
-                sr->EVisReco_numu,
-                sr->RecoHadEnNue,
-                sr->RecoHadEnNumu,
-                sr->HadEVisReco_FD,
-                sr->eRecoP,
-                sr->eRecoPip,
-                sr->eRecoPim);
 
     const double scale = .02*sigma;
     if (sr->isFD) {
@@ -549,15 +377,8 @@ namespace ana {
   const ChargedHadResFD kChargedHadResFD;
 
   void NResFD::Shift(double sigma,
-                     Restorer& restore,
                      caf::SRProxy* sr, double& weight) const {
-    
-    restore.Add(sr->Ev_reco_nue,
-                sr->Ev_reco_numu,
-                sr->RecoHadEnNue,
-                sr->RecoHadEnNumu,
-                sr->eRecoN);
- 
+
    const double scale = .1*sigma;
     // FD charged current numus only
     if (sr->isFD) {

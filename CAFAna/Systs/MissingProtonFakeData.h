@@ -3,7 +3,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "BDTReweighter.h"
 #include "MissingProtonFakeData_BDTRW_FHC.h"
@@ -22,7 +22,7 @@ public:
 
   bool fDoWeight;
 
-  void Shift(double sigma, ana::Restorer &restore, caf::SRProxy *sr,
+  void Shift(double sigma,  caf::SRProxy *sr,
              double &weight) const override {
 
     if (!sr->isCC) {
@@ -32,16 +32,6 @@ public:
     if (sigma != 1) {
       return;
     }
-
-    restore.Add(sr->eRec_FromDep, 
-                sr->eRecProxy,
-                sr->EVisReco_ND,
-                sr->EVisReco_numu,
-                sr->EVisReco_nue,
-		sr->VisTrue_NDFD,
-                sr->HadEVisReco_ND,
-                sr->HadEVisReco_FD,
-		sr->HadE);
 
     if (sr->isFD) {
       sr->eRec_FromDep -= EpFrac * sr->eDepP;

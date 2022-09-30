@@ -10,7 +10,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Core/WildcardSource.h"
 
-#include "StandardRecord/StandardRecord.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #ifdef WITH_SAM
 #include "ifdh.h"
@@ -246,12 +246,12 @@ namespace ana
     TFile* f = fFileSource->GetNextFile();
     if(!f) return 0; // out of files
 
-    TTree* trPot;
-    //    if(f->GetListOfKeys()->Contains("cafmaker"))
-    //      trPot = (TTree*)f->Get("mvaselectnumu/pottree");
-    //    else
-    //      trPot = (TTree*)f->Get("mvaselect/pottree");
+    if(f->IsZombie()){
+      std::cout << "Bad file (zombie): " << f->GetName() << std::endl;
+      abort();
+    }
 
+    TTree* trPot = 0;
     if (f->GetListOfKeys()->Contains("meta"))
       trPot = (TTree*)f->Get("meta");
     else

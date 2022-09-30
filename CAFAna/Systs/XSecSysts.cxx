@@ -4,14 +4,14 @@
 #include "CAFAna/Systs/NuWroReweightFakeData.h"
 #include "CAFAna/Systs/XSecSysts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana {
 
 MissingProtonFakeDataGenerator mpfd;
 NuWroReweightFakeDataGenerator nuwrofd;
 
-void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
+void XSecSyst::FakeDataDialShift(double sigma,
                                  caf::SRProxy *sr,
                                  double &weight) const {
 
@@ -73,9 +73,9 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
   } else if (fID == FSILikeEAvailSmearing_id) {
     weight *= sr->xsSyst_wgt[FSILikeEAvailSmearing_id][2];
   } else if (fID == MissingProtonFakeData_id) {
-    mpfd.Shift(sigma, restore, sr, weight);
+    mpfd.Shift(sigma, sr, weight);
   } else if (fID == NuWroReweightFakeData_id) {
-    nuwrofd.Shift(sigma, restore, sr, weight);
+    nuwrofd.Shift(sigma, sr, weight);
   } else if (fID == BeRPA_E_id) {
     weight *= sr->xsSyst_wgt[BeRPA_E_id][posneg_spline_point];
   } else if (fID == FormZone_id) {
@@ -88,7 +88,8 @@ void XSecSyst::FakeDataDialShift(double sigma, Restorer &restore,
     weight *= sr->xsSyst_wgt[MaNCEL_id][posneg_spline_point];
   }
 }
-void XSecSyst::Shift(double sigma, Restorer &restore, caf::SRProxy *sr,
+
+void XSecSyst::Shift(double sigma,caf::SRProxy *sr,
                      double &weight) const {
   // No xs weights in this event, skip reweighting it
   if (sr->xsSyst_wgt.empty()) {
@@ -103,7 +104,7 @@ void XSecSyst::Shift(double sigma, Restorer &restore, caf::SRProxy *sr,
 
   if (IsFakeDataGenerationSyst(
           fID)) { // Separate out hard coded logic for fake data dials.
-    FakeDataDialShift(sigma, restore, sr, weight);
+    FakeDataDialShift(sigma, sr, weight);
     return;
   }
 

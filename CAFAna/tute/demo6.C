@@ -10,7 +10,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -27,10 +27,9 @@ class ToyEnergyScaleSyst: public ISyst
 {
 public:
   ToyEnergyScaleSyst() : ISyst("toyEScale", "Toy Energy Scale") {}
-  void Shift(double sigma, Restorer& restore,
+  void Shift(double sigma,
              caf::SRProxy* sr, double& weight) const override
   {
-    restore.Add(sr->Ev_reco_numu);
     sr->Ev_reco_numu *= (1+.1*sigma);
   }
 };
@@ -40,7 +39,7 @@ class ToyNormSyst: public ISyst
 {
 public:
   ToyNormSyst() : ISyst("toyNorm", "Toy Norm Syst") {}
-  void Shift(double sigma, Restorer& restore,
+  void Shift(double sigma,
              caf::SRProxy* sr, double& weight) const override
   {
     if(sr->Ev_reco_numu > 7) weight *= 1+0.2*sigma;

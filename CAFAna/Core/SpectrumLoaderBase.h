@@ -14,8 +14,6 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Weight.h"
 
-namespace caf{class StandardRecord;}
-
 class TFile;
 class TH1;
 class TTree;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
@@ -18,7 +18,6 @@ namespace ana
   public:
     EnergyScaleFD() : ISyst("EnergyScaleFD", "Global FD Energy Scale Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -29,7 +28,6 @@ namespace ana
   public:
     UncorrFDTotSqrt() : ISyst("UncorrFDTotSqrt", "Uncorrelated FD Sqrt Total Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -39,7 +37,6 @@ namespace ana
   public:
     UncorrFDTotInvSqrt() : ISyst("UncorrFDTotInvSqrt", "Uncorrelated FD Inverse Sqrt Total Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -54,7 +51,6 @@ namespace ana
   public:
     UncorrFDHadSqrt() : ISyst("UncorrFDHadSqrt", "Uncorrelated FD Sqrt Hadron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -64,7 +60,6 @@ namespace ana
   public:
     UncorrFDHadInvSqrt() : ISyst("UncorrFDHadInvSqrt", "Uncorrelated FD Inv Sqrt Hadron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -77,7 +72,6 @@ namespace ana
   public:
     UncorrFDMuSqrt() : ISyst("UncorrFDMuSqrt", "Uncorrelated FD Sqrt Muon Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -87,7 +81,6 @@ namespace ana
   public:
     UncorrFDMuInvSqrt() : ISyst("UncorrFDMuInvSqrt", "Uncorrelated FD Inv Sqrt Muon Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -101,7 +94,6 @@ namespace ana
   public:
     UncorrFDNSqrt() : ISyst("UncorrFDNSqrt", "Uncorrelated FD Sqrt Neutron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -111,7 +103,6 @@ namespace ana
   public:
     UncorrFDNInvSqrt() : ISyst("UncorrFDNInvSqrt", "Uncorrelated FD Inv Sqrt Neutron Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -124,7 +115,6 @@ namespace ana
   public:
     UncorrFDEMSqrt() : ISyst("UncorrFDEMSqrt", "Uncorrelated FD Sqrt EM Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -134,7 +124,6 @@ namespace ana
   public:
     UncorrFDEMInvSqrt() : ISyst("UncorrFDEMInvSqrt", "Uncorrelated FD Inv Sqrt EM Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -147,7 +136,6 @@ namespace ana
     EScaleMuLArFD() : ISyst("EScaleMuLArFD", "Muon Energy Scale LAr Far Detector") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -159,7 +147,6 @@ namespace ana
     ChargedHadUncorrFD() : ISyst("ChargedHadUncorrFD", "Charged Hadron Uncorrelated FD Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -172,7 +159,6 @@ namespace ana
     NUncorrFD() : ISyst("NUncorrFD", "Neutron Energy Scale FD") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -184,7 +170,6 @@ namespace ana
   public:
     EMUncorrFD() : ISyst("EMUncorrFD", "Electromagnetic shower FD Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -197,7 +182,6 @@ namespace ana
   public:
     MuonResFD() : ISyst("MuonResFD", "Muon Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -208,7 +192,6 @@ namespace ana
   public:
     EMResFD() : ISyst("EMResFD", "EM shower Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -219,7 +202,6 @@ namespace ana
   public:
     ChargedHadResFD() : ISyst("ChargedHadResFD", "Charged Hadron Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 
@@ -230,7 +212,6 @@ namespace ana
   public:
     NResFD() : ISyst("NResFD", "Neutron Far Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   };
 

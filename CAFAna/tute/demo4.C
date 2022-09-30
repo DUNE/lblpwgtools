@@ -9,7 +9,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -42,15 +42,10 @@ void demo4()
 
     // Function that will be called to actually do the shift
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override
     {
-      // First - register all the variables that will need to be restored to
-      // return the record to nominal
-      restore.Add(sr->Ev_reco_numu);
-
-      // Then edit the event record
+      // Edit the event record
       const double scale = 1 + .1*sigma;
       sr->Ev_reco_numu *= scale;
     }
@@ -69,7 +64,6 @@ void demo4()
     }
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override
     {

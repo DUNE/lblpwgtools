@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CAFAna/Core/FwdDeclare.h"
-#include "StandardRecord/FwdDeclare.h"
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
 #include "CAFAna/Core/StanVar.h"
 
@@ -74,8 +74,7 @@ namespace ana
     virtual stan::math::var LogPrior() const;
 
 
-    void Shift(Restorer& restore,
-               caf::SRProxy* sr,
+    void Shift(caf::SRProxy* sr,
                double& weight) const;
 
     /// Brief description of component shifts, for printing to screen

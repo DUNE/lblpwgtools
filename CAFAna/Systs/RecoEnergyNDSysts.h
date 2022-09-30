@@ -4,7 +4,7 @@
 #include "CAFAna/Core/Utilities.h"
 #include "CAFAna/Cuts/AnaCuts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -29,7 +29,6 @@ namespace ana
   public:
     RecoEnergyScaleND() : ISyst("RecoEnergyScaleND", "Global Reco Energy Scale ND Syst") {}
     void Shift(double sigma,
-               Restorer& restore, 
                caf::SRProxy* sr,
                double& weight) const override;
   
@@ -42,7 +41,6 @@ namespace ana
   public:
     RecoEnergySqrtND() : ISyst("RecoEnergySqrtND", "Sqrt Reco Energy Scale ND Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override; 
       
@@ -55,7 +53,6 @@ namespace ana
   public:
     RecoEnergyInvSqrtND() : ISyst("RecoEnergyInvSqrtND", "Inv Sqrt Total Energy Scale ND Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -73,7 +70,6 @@ namespace ana
     EMRecoUncorrND() : ISyst("EMRecoUncorrND", "EM Shower Uncorrelated ND Syst") {}
   
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, 
                double& weight) const override;
 
@@ -88,7 +84,6 @@ namespace ana
     EMRecoUncorrSqrtND() : ISyst("EMRecoUncorrSqrtND", "EM Shower Uncorrelated ND Syst Sqrt") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, 
                double& weight) const override;
       
@@ -103,7 +98,6 @@ namespace ana
     EMRecoUncorrInvSqrtND() : ISyst("EMRecoUncorrInvSqrtND", "EM Shower Uncorrelated ND Syst Inv Sqrt") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -121,7 +115,6 @@ namespace ana
     ChargedHadRecoUncorrND() : ISyst("ChargedHadRecoUncorrND", "Charged Hadron Uncorrelated ND Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
     
@@ -136,7 +129,6 @@ namespace ana
     ChargedHadRecoUncorrSqrtND() : ISyst("ChargedHadRecoUncorrSqrtND", "Charged Had Uncorrelated Sqrt ND Syst") {}
     
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -151,7 +143,6 @@ namespace ana
     ChargedHadRecoUncorrInvSqrtND() : ISyst("ChargedHadRecoUncorrInvSqrtND", "Charged Had Uncorrelated Inv Sqrt ND Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -169,7 +160,6 @@ namespace ana
     ERecoScaleMuLArND() : ISyst("ERecoScaleMuLArND", "Muon Energy Scale ND Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -184,7 +174,6 @@ namespace ana
     ERecoScaleMuLArSqrtND() : ISyst("ERecoScaleMuLArSqrtND", "Muon E Scale Sqrt ND Syst") {}
 
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -199,7 +188,6 @@ namespace ana
     ERecoScaleMuLArInvSqrtND() : ISyst("ERecoScaleMuLArInvSqrtND", "Muon E Scale Inv Sqrt ND Syst") {}
   
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
 
@@ -215,7 +203,6 @@ namespace ana
     MuonRecoResND() : ISyst("MuonRecoResND", "Muon Near Detector Resolution") {}
 
     void Shift(double sigma, 
-               Restorer& restore,
                caf::SRProxy* sr,
                double& weight) const override;
     
@@ -229,7 +216,6 @@ namespace ana
   public:
   EMRecoResND() : ISyst("EMRecoResND", "EM shower Near Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
     
   };
@@ -242,7 +228,6 @@ namespace ana
   public:
   ChargedHadRecoResND() : ISyst("ChargedHadRecoResND", "Charged Hadron Near Detector Resolution Syst") {}
     void Shift(double sigma,
-               Restorer& restore,
                caf::SRProxy* sr, double& weight) const override;
   
   };
