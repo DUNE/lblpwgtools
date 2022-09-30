@@ -121,7 +121,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fOscOrigin(nullptr), fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
+    PredictionInterp() : fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
@@ -243,7 +243,7 @@ namespace ana
     }
 
     /// The oscillation values we assume when evaluating the coefficients
-    osc::IOscCalc* fOscOrigin;
+    std::unique_ptr<osc::IOscCalc> fOscOrigin;
 
     mutable Spectrum fBinning; ///< Dummy spectrum to provide binning
 

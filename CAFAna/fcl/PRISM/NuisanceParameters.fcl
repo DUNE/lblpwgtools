@@ -1,21 +1,5 @@
 
-nuisance_parameters: {
-	flux5: [  
-		flux_Nov17_0, 
-		flux_Nov17_1, 
-		flux_Nov17_2, 
-		flux_Nov17_3, 
-		flux_Nov17_4
-	]
-
-	flux10: [
-		@sequence::nuisance_parameters.flux5,
-		flux_Nov17_5, 
-		flux_Nov17_6, 
-		flux_Nov17_7, 
-		flux_Nov17_8, 
-		flux_Nov17_9
-	]
+nuisance_parameter_sets: {
 
 	fluxFocussing: [
 		flux_Nov17_0,
@@ -42,7 +26,11 @@ nuisance_parameters: {
 	]
 
 	fluxHadProd10: [
-		@sequence::nuisance_parameters.fluxHadProd5,
+		flux_Nov17_13,
+		flux_Nov17_14,
+		flux_Nov17_15,
+		flux_Nov17_16,
+		flux_Nov17_17,
 		flux_Nov17_18,
 		flux_Nov17_19,
 		flux_Nov17_20,
@@ -50,29 +38,19 @@ nuisance_parameters: {
 		flux_Nov17_22
 	]
 
-	fluxalmostAll: [
-		@sequence::nuisance_parameters.fluxHadProd5,
-		@sequence::nuisance_parameters.fluxFocussing
-	]
-
-	fluxAll: [
-		@sequence::nuisance_parameters.fluxHadProd10,
-		@sequence::nuisance_parameters.fluxFocussing
-	]
-
 	xsec_small: [
 		MaCCQE,
 		NR_nu_n_CC_3Pi,
-		#MaCCRES,
-		#BeRPA_A, 
-		#BeRPA_B, 
-		#BeRPA_D,
-		#MaNCRES,
-		#MvNCRES,
-		#FrCEx_N,
-		#VecFFCCQEshape,
-		#CCQEPauliSupViaKF,
-		#MaCCRES 
+		MaCCRES,
+		BeRPA_A, 
+		BeRPA_B, 
+		BeRPA_D,
+		MaNCRES,
+		MvNCRES,
+		FrCEx_N,
+		VecFFCCQEshape,
+		CCQEPauliSupViaKF,
+		MaCCRES 
 	]
 
 	xsec_CCQE: [
@@ -91,12 +69,12 @@ nuisance_parameters: {
 		AhtBY,
 		BhtBY,
 		CV1uBY,
-		CV2uBY,
+		CV2uBY
 	]
 
 	xsec_NC_other: [
 		MaNCRES,
-		MvNCRES,	
+		MvNCRES
 	]
 
 	xsec_IntraNuclear: [
@@ -148,16 +126,7 @@ nuisance_parameters: {
 		nuenumu_xsec_ratio,
 		nuenuebar_xsec_ratio
 	]
-
-	xsec_total: [
-		@sequence::nuisance_parameters.xsec_CCQE,
-		@sequence::nuisance_parameters.xsec_LowW,
-		@sequence::nuisance_parameters.xsec_HighW,
-		@sequence::nuisance_parameters.xsec_NC_other,
-		@sequence::nuisance_parameters.xsec_IntraNuclear,
-		@sequence::nuisance_parameters.xsec_Extra
-	]
-
+	
 	det_totalND: [ 
 		RecoEnergyScaleND,
 		RecoEnergySqrtND,
@@ -172,16 +141,20 @@ nuisance_parameters: {
 	det_chargehadEND: [
 		ChargedHadRecoUncorrND,
 		ChargedHadRecoUncorrSqrtND,
-		ChargedHadRecoUncorrInvSqrtND,
+		ChargedHadRecoUncorrInvSqrtND
 	]
 	det_chargehadEFD: [
 		ChargedHadUncorrFD,
 		UncorrFDHadSqrt,
-		UncorrFDHadInvSqrt,
+		UncorrFDHadInvSqrt
 	]
 	det_chargehadE: [
-		@sequence::nuisance_parameters.det_chargehadEND,
-		@sequence::nuisance_parameters.det_chargehadEFD
+		ChargedHadUncorrFD,
+		UncorrFDHadSqrt,
+		UncorrFDHadInvSqrt,
+		ChargedHadRecoUncorrND,
+		ChargedHadRecoUncorrSqrtND,
+		ChargedHadRecoUncorrInvSqrtND
 	]
 
 	det_mularEND: [
@@ -191,12 +164,16 @@ nuisance_parameters: {
 	]
 	det_mularEFD: [
 		EScaleMuLArFD,
-		#UncorrFDMuSqrt,
-		#UncorrFDMuInvSqrt
+		UncorrFDMuSqrt,
+		UncorrFDMuInvSqrt
 	]
 	det_mularE: [
-		@sequence::nuisance_parameters.det_mularEND,
-		@sequence::nuisance_parameters.det_mularEFD
+		EScaleMuLArFD,
+		UncorrFDMuSqrt,
+		UncorrFDMuInvSqrt,
+		ERecoScaleMuLArND,
+		ERecoScaleMuLArSqrtND,
+		ERecoScaleMuLArInvSqrtND 
 	]
 
 	det_EMND: [
@@ -211,8 +188,12 @@ nuisance_parameters: {
 	]
 
 	det_EM: [
-		@sequence::nuisance_parameters.det_EMND,
-		@sequence::nuisance_parameters.det_EMFD
+		EMUncorrFD,
+		UncorrFDEMSqrt,
+		UncorrFDEMInvSqrt,
+		EMRecoUncorrND,
+		EMRecoUncorrSqrtND,
+		EMRecoUncorrInvSqrtND 
 	]
 
 	det_ResND: [
@@ -226,29 +207,79 @@ nuisance_parameters: {
 		ChargedHadResFD
 	]
 	det_Res: [
-		@sequence::nuisance_parameters.det_ResND,
-		@sequence::nuisance_parameters.det_ResFD
+		MuonResFD,
+		EMResFD,
+		ChargedHadResFD,
+		MuonRecoResND, 
+		EMRecoResND, 
+		ChargedHadRecoResND 
 	]
 
-	det_all: [
-		@sequence::nuisance_parameters.det_totalND,
-		@sequence::nuisance_parameters.det_totalFD,
-		@sequence::nuisance_parameters.det_chargehadE,
-		@sequence::nuisance_parameters.det_mularE,
-		@sequence::nuisance_parameters.det_EM,
-		@sequence::nuisance_parameters.det_Res
-	]			
-
-	all: [
-		@sequence::nuisance_parameters.fluxAll,
-		@sequence::nuisance_parameters.xsec_total,
-		@sequence::nuisance_parameters.det_all
-	]
-	allSmall: [
-		@sequence::nuisance_parameters.fluxHadProd10,
-		@sequence::nuisance_parameters.xsec_small
-	]
 }
 
+nuisance_parameters: {
 
+	fluxalmostAll: [
+		@sequence::nuisance_parameter_sets.fluxHadProd5,
+		@sequence::nuisance_parameter_sets.fluxFocussing
+	]
+
+	fluxAll: [
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxFocussing
+	]
+	
+	xsec_total: [
+		@sequence::nuisance_parameter_sets.xsec_CCQE,
+		@sequence::nuisance_parameter_sets.xsec_LowW,
+		@sequence::nuisance_parameter_sets.xsec_HighW,
+		@sequence::nuisance_parameter_sets.xsec_NC_other,
+		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
+		@sequence::nuisance_parameter_sets.xsec_Extra
+	]
+	
+	det_all: [
+		@sequence::nuisance_parameter_sets.det_totalND,
+		@sequence::nuisance_parameter_sets.det_totalFD,
+		@sequence::nuisance_parameter_sets.det_chargehadE,
+		@sequence::nuisance_parameter_sets.det_mularE,
+		@sequence::nuisance_parameter_sets.det_EM,
+		@sequence::nuisance_parameter_sets.det_Res
+	]
+
+	xsecflux: [		
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxFocussing,
+		@sequence::nuisance_parameter_sets.xsec_CCQE,
+		@sequence::nuisance_parameter_sets.xsec_LowW,
+		@sequence::nuisance_parameter_sets.xsec_HighW,
+		@sequence::nuisance_parameter_sets.xsec_NC_other,
+		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
+		@sequence::nuisance_parameter_sets.xsec_Extra
+	]
+
+	all: [
+		@sequence::nuisance_parameter_sets.det_totalND,
+		@sequence::nuisance_parameter_sets.det_totalFD,
+		@sequence::nuisance_parameter_sets.det_chargehadE,
+		@sequence::nuisance_parameter_sets.det_mularE,
+		@sequence::nuisance_parameter_sets.det_EM,
+		@sequence::nuisance_parameter_sets.det_Res,
+		@sequence::nuisance_parameter_sets.xsec_CCQE,
+		@sequence::nuisance_parameter_sets.xsec_LowW,
+		@sequence::nuisance_parameter_sets.xsec_HighW,
+		@sequence::nuisance_parameter_sets.xsec_NC_other,
+		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
+		@sequence::nuisance_parameter_sets.xsec_Extra,
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxFocussing
+
+	]
+
+	allSmall: [
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.xsec_small
+	]
+
+}
 

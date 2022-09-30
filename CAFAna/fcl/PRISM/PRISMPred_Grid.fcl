@@ -5,14 +5,20 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: [PRISMPred_1Yr4Flav_EVisReco_NewState_24Apr21.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_FluxXSecDetSyst_24Apr22.root
+	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EnuReco_Sep22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EnuReco_Sel_nosyst_2Sep22.root"
 
-	projection_name: EVisReco
-
+	# Analysis variable name - must match variable in state file
+	projection_name: EnuReco
+	# Always true - why do we even have this?
 	use_PRISM: true
+	# Set exposure in years
 	POT_years: 1.0
+	# Useful for fake data studies
 	vary_NDFD_data: false
+	# Do you want to do a fake data prediction?
+	use_fake_data: false
+	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 
 
@@ -44,6 +50,7 @@ BasicPred: {
 			}
 		]
 
+		# Normally true - you want a realistic stat error
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
@@ -53,13 +60,14 @@ BasicPred: {
 		Use_EventRateMatching: true
 
 		write_debug: true
-
-                reg_factor_extrap: 1e-10 #1E-30
 	}
+
+	# Choose how many channels you want to make predictions for
+
 	#samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.Nue_app
 	#samples: @local::FitChannels.NuModeJoint
-	samples: @local::FitChannels.FourFlavor
+	samples: @local::JointFitChannels.FourFlavor
 }
 
 
@@ -86,7 +94,7 @@ predictions: [
 			dmsq32: 0.00252
 			ssth23: 0.5
 		}
-	},
+	}
 
 #	{
 #		@table::BasicPred

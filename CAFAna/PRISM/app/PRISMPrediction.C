@@ -398,20 +398,46 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   f.Write();
 }
 
+//-------------------------------------------
+
+void SayUsage(char const *argv[]) {
+  std::cout
+      << "[USAGE]: " << argv[0] << "\n"
+      << "\t--fcl <file>    : Input fcl file - always needed.\n"
+      << std::endl;
+}
+
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
   setenv("CAFANA_STAT_ERRS", "1", 1);
   gROOT->SetMustClean(false);
 
-  if (argc != 2) {
-    std::cout << "[ERROR]: Expected to be passed the location of a single "
-                 "configuration FHiCL file."
-              << std::endl;
-    return 1;
+  std::string fcl("");
+  int opt(1);
+
+  while (opt < argc) {
+    if (std::string(argv[opt]) == "-?" || std::string(argv[opt]) == "--help") {
+      SayUsage(argv);
+      exit(0);
+    } else if (std::string(argv[opt]) == "--fcl") {
+      fcl = argv[++opt];
+    } else {
+      std::cout << "[ERROR] Unknown option." << std::endl;
+      exit(1);
+    }
+    opt++;
   }
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1]);
+  if (fcl == "") {
+    std::cout << "[ERROR] Need a fcl file." << std::endl;
+    exit(1);
+  }
+  // Allow the fhiclcpp to lookup the included fcl scripts
+  cet::filepath_first_absolute_or_lookup_with_dot 
+    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+
+  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("predictions")) {

@@ -5,12 +5,16 @@
 
 BasicPred: {
 
-	output_file: [PRISMScan_dcp_4Flav_48ktMWYr_XSecFluxCombSyst_12May22.root, "UPDATE"]
-	state_file: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root 
+	output_file: ["dmsq32_ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
 
+	# Analysis variable name - must match variable in state file
 	projection_name: EVisReco
+	# Always true - why do we even have this?
 	use_PRISM: true
+	# Set exposure in years
 	POT_years: 3.5
+	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
@@ -18,6 +22,8 @@ BasicPred: {
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
+	# Do you want the reactor th13 constraint?
+	reactor_constraint: true
 
 	PRISM: {
 		match_conditioning: [
@@ -56,70 +62,48 @@ BasicPred: {
 			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
-			},
+			}
 		]
+		# Will probably want this to be true - set ND errors from sqrt(N)
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
 			numode: @local::RunPlans.guess
 			nubmode: @local::RunPlans.guess
 		}
+		# Almost always true for now
 		Use_EventRateMatching: true
-                reg_factor_extrap: 1E-30
 	}
 
-	free_osc_params: [dmsq32, ssth23, th13, deltapi]
-
-	samples: @local::FitChannels.FourFlavor
+	# Oscillation parameters to include in fit
+	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
+	# Parameter(s) to scan over in fit
+	scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	# Number of samples to include
+	samples: @local::JointFitChannels.FourFlavor
 }
 
-scansEG: [
-
-#	{
-#		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-#		output_dir: "numu_EvMatch_nom2"
-#	},
-
+scans: [
 	{
 		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-		scan_params: @local::ScanDefinitions.dcp
 		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "numu_EvMatch_allxsecflux"
+		output_dir: "fit_xsecfluxdet"
 	},
-
-#	{
-#		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-#		free_syst_params: @local::nuisance_parameters.fluxAll
-#		output_dir: "numu_EvMatch_flux"
-#	},
-
-#	{
-#		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-#		free_syst_params: @local::nuisance_parameters.xsec_total
-#		output_dir: "numu_EvMatch_xsec"
-#	},
-
-#	{
-#		@table::BasicPred
-#		scan_params: @local::ScanDefinitions.dmsq23
-#		scan_params: @local::ScanDefinitions.ssth23
-#		scan_params: @local::ScanDefinitions.dcp
-#		free_syst_params: @local::nuisance_parameters.det_all
-#		output_dir: "numu_EvMatch_det"
-#	},
-
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.xsecflux
+		output_dir: "fit_xsecflux"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.fluxAll
+		output_dir: "fit_flux"
+	},
+	{
+		@table::BasicPred
+		output_dir: "fit_nom"
+	}
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
-scansEG[0].output_file[1]: "RECREATE"
+scans[0].output_file[1]: "RECREATE"

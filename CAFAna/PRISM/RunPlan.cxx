@@ -48,8 +48,6 @@ namespace ana {
         double bvar = SetErrorsFromPredictedRate      
                     ? bc
                     : NDSumSq_mat(yit, xit) * std::pow(stop.POT, 2);
-        // Test alternative Chi2 covariance from [ref]
-        // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
@@ -152,6 +150,7 @@ namespace ana {
                      "bin content: "
                   << bc << " @ "
                   << xpos << std::endl;
+        abort();
       }
 
       if (!std::isnormal(stop.POT)) {

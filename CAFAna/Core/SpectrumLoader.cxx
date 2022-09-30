@@ -149,7 +149,7 @@ namespace ana
     for(long n = 0; n < Nentries; ++n){
       tr->LoadTree(n);
 
-      FixupRecord(&sr);
+      FixupRecord(&sr, tr);
 
       HandleRecord(&sr);
 

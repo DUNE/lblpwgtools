@@ -31,7 +31,6 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
-//#include "CAFAna/Systs/RecoEnergyFDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
@@ -189,8 +188,8 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     }
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name) || //IsCrazyFluxSyst(name) || 
-           IsNDdetSyst(name) || IsFDdetSyst(name)); // Might also want to do detector bias studies
+    //assert(IsFakeDataGenerationSyst(name) || //IsCrazyFluxSyst(name) || 
+    //       IsNDdetSyst(name) || IsFDdetSyst(name)); // Might also want to do detector bias studies
     std::cout << "Fake data shift: " << name << std::endl;
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
@@ -1331,8 +1330,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
 
-    TMatrixDSym *covar = (TMatrixDSym *)this_fit.GetCovariance();
-    TH2D hist_covar = TH2D(*covar);
+    TMatrixDSym covar = this_fit.GetCovariance();
+    TH2D hist_covar = TH2D(covar);
     hist_covar.SetName("covar");
     TH2D hist_corr = *make_corr_from_covar(&hist_covar);
 
@@ -1401,7 +1400,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     // Save information
     hist_covar.Write();
     hist_corr.Write();
-    covar->Write("covar_mat");
+    covar.Write("covar_mat");
   }
 
   if (PostFitTreeBlob) {

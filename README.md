@@ -16,7 +16,7 @@ rely on relevant dependencies from FNAL scisoft by add in the `-u`
 option:
 
 ```
-./standalone_configure_and_build.sh -r -u
+./standalone_configure_and_build.sh -r -u -j 4
 ```
 
 If you don't, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies

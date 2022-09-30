@@ -1,50 +1,51 @@
 FitChannels: {
-    Numu_disp: {
-        ND: numu_numode
-        FD: numu_numode
-    }
-    Numubar_disp: {
-        ND: numubar_nubarmode
-        FD: numubar_nubarmode
-    }
-    Nue_app: {
-        ND: numu_numode
-        FD: nue_numode
-    }
-    Nuebar_app: {
-        ND: numubar_nubarmode
-        FD: nuebar_nubarmode
-    }
-    Nutau_app: {
-        ND: numu_numode
-        FD: nutau_numode
-    }
-    Nutaubar_app: {
-        ND: numubar_nubarmode
-        FD: nutaubar_nubarmode
-    }
-    DispJoint:[
-        @local::FitChannels.Numu_disp,
-        @local::FitChannels.Numubar_disp,
-    ]
-    AppJoint:[
-        @local::FitChannels.Nue_app,
-        @local::FitChannels.Nuebar_app,
-        #@local::FitChannels.Nutau_app,
-        #@local::FitChannels.Nutaubar_app,
-    ]
-    NuModeJoint:[
-        @local::FitChannels.Numu_disp,
-        @local::FitChannels.Nue_app,
-        #@local::FitChannels.Nutau_app,
-    ]
-    NuBarModeJoint:[
-        @local::FitChannels.Numubar_disp,
-        @local::FitChannels.Nuebar_app,
-        #@local::FitChannels.Nutaubar_app,
-    ]
-    FourFlavor: [
-        @sequence::FitChannels.NuModeJoint,
-        @sequence::FitChannels.NuBarModeJoint,
-    ]
+	Numu_disp: {
+		ND: numu_numode
+		FD: numu_numode
+	}
+	Numubar_disp: {
+		ND: numubar_nubarmode
+		FD: numubar_nubarmode
+	}
+	Nue_app: {
+		ND: numu_numode
+		FD: nue_numode
+	}
+	Nuebar_app: {
+		ND: numubar_nubarmode
+		FD: nuebar_nubarmode
+	}
+	Nutau_app: {
+		ND: numu_numode
+		FD: nutau_numode
+	}
+	Nutaubar_app: {
+		ND: numubar_nubarmode
+		FD: nutaubar_nubarmode
+	}
+}
+
+JointFitChannels: {
+	DispJoint: [
+		@local::FitChannels.Numu_disp,
+		@local::FitChannels.Numubar_disp
+	]
+	AppJoint: [
+		@local::FitChannels.Nue_app,
+		@local::FitChannels.Nuebar_app
+	]
+	NuModeJoint: [
+		@local::FitChannels.Numu_disp,
+		@local::FitChannels.Nue_app
+	]
+	NuBarModeJoint: [
+		@local::FitChannels.Numubar_disp,
+		@local::FitChannels.Nuebar_app
+	]
+	FourFlavor: [
+		@local::FitChannels.Numu_disp,
+		@local::FitChannels.Nue_app,
+		@local::FitChannels.Numubar_disp,
+		@local::FitChannels.Nuebar_app
+	]
 }

@@ -6,56 +6,53 @@
 #include "CAFAna/PRISM/PredictionPRISM.h"
 
 namespace ana {
-  class SimpleChi2Experiment : public IExperiment {
-  public:
-    SimpleChi2Experiment(IPrediction const *Pred, Spectrum const &Data, 
-                         bool UseHistError = false, double POT = 0);
-  
-    Eigen::ArrayXd GetPred(osc::IOscCalcAdjustable *osc,
-                           const SystShifts &syst = SystShifts::Nominal()) const;
 
-    double ChiSq(osc::IOscCalcAdjustable *osc,
-                 const SystShifts &syst = SystShifts::Nominal()) const;
-
-  protected:
-    IPrediction const *fPred;
-    Eigen::ArrayXd fData_arr;
-    double fPOT;
-    bool fUseHistError;
-  };
-
-
-  //----------------------------------------------------
-
-  // Another Chi2Experiment for Chi2 calculation using full
+  // Chi2Experiment for Chi2 calculation using full
   // PRISM covariance
 
-  class PRISMChi2CovarExperiment : public IExperiment {
+  class PRISMChi2CovarExperiment: public IExperiment
+  {
   public:
-    PRISMChi2CovarExperiment(PredictionPRISM const *Pred, Spectrum const &Data,
-                             bool UseCovariance = false, double NDPOT = 0, double FDPOT = 0,
+    /// \param pred   Source of oscillated MC beam predictions
+    /// \param data   Data spectrum to compare to
+    PRISMChi2CovarExperiment(const PredictionPRISM* pred,
+                             const Spectrum& data, bool UseCovariance = false,
+                             double NDPOT = 0, double FDPOT = 0,
                              PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode);
 
-    // Get the extrapolated PRISM prediction
-    Eigen::VectorXd GetPred(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                            const SystShifts &syst = kNoShift) const;
-    // Get the PRISM covariance matrix
-    Eigen::MatrixXd GetCovariance(std::map<PredictionPRISM::PRISMComponent, Spectrum> &PRISMComps,
-                                  const SystShifts &syst = kNoShift) const;
+    virtual ~PRISMChi2CovarExperiment();
 
-    // Calculate Chi2 with the option to include the full covariance
-    virtual double ChiSq(osc::IOscCalcAdjustable *osc,
-                         const SystShifts &syst = kNoShift) const override;
+    virtual double ChiSq(osc::IOscCalcAdjustable* osc,
+                         const SystShifts& syst = kNoShift) const override;
+
+    virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
+    static std::unique_ptr<PRISMChi2CovarExperiment> LoadFrom(TDirectory* dir, const std::string& name);
+
+    // Didn't make provisions for copying fPred
+    PRISMChi2CovarExperiment(const PRISMChi2CovarExperiment&) = delete;
+    PRISMChi2CovarExperiment& operator=(const PRISMChi2CovarExperiment&) = delete;
+
+    // need to explicitly declare move constructor since copy constructor is deleted
+    PRISMChi2CovarExperiment(PRISMChi2CovarExperiment&& s)
+      : fPred(s.fPred), fData(std::move(s.fData))
+    {
+      s.fPred = nullptr;
+    }
+
+    // Set boundaries of fit. We remove bins we don't want rather than
+    // setting them to zero. This prevents us calculating nonsense Chi2
+    void SetFitBoundaries(double xmin=0, double xmax=-1, 
+		          double ymin=0, double ymax=-1);
+
   protected:
-    PredictionPRISM const *fPred;
-    Eigen::VectorXd fData_vec;
-    double fPOTFD;
-    double fPOTND;
+    const PredictionPRISM* fPred;
+    Spectrum fData;
     bool fUseCovariance;
-
+    double fPOTND;
+    double fPOTFD;
     PRISM::MatchChan fMatchChannel;
-};
 
-
+    std::pair<double, double> pFitBoundry;
+  };
 
 } // namespace ana
