@@ -9,8 +9,8 @@
 #PRISMState_v7Prod_EProxy_testopt_NoSelect_16Dec.root
 
 BasicPred: {
-	state_file: /dune/data/users/erea/PRISMPredInterps/v7smallMC_NDnumutoNDnue.root
-	output_file: [/dune/data/users/erea/PRISMPredictions/v7smallMC_NDnumutoNDnue_basicwithsel.root, "UPDATE"]
+	state_file: /dune/data/users/erea/PRISMPredInterps/v7smallMC_NDnumutoNDnue_withsel_ETrue_06242021.root
+	output_file: [/dune/data/users/erea/PRISMPredictions/v7smallMC_NDnumutoNDnue_PRISMPred_06282021.root, "UPDATE"]
 	projection_name: EProxy
 
 	use_PRISM: true
