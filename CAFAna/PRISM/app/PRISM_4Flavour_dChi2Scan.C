@@ -322,6 +322,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
 
   // Keep PRISM experiment objects in scope
   std::vector<std::unique_ptr<PRISMChi2CovarExperiment>> Expts;
+  //std::vector<std::unique_ptr<SingleSampleExperiment>> Expts;
 
   for (auto const &ch : Channels) {
 
@@ -419,11 +420,11 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
 
-    /*Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    PRISMPred_spec.FakeData(POT_FD), 
-                                                    use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second));*/
+    //Expts.emplace_back(new SingleSampleExperiment(state.PRISM.get(), FarDetDataPred.FakeData(POT_FD)));
+
     Expts.back().get()->SetFitBoundaries(0.5, 10);
+
+    //Expts.back().get()->SetMaskHist(0.5, 10);
 
     CombExpts.Add(Expts.back().get());
 

@@ -29,7 +29,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EVisReco";
 std::string binningdescriptor = "prism_default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "event_rate_match"; // was event_rate_match
+std::string truthbinningdescriptor = "true_osc_binning"; // was event_rate_match
 
 std::vector<std::vector<std::string>> input_CAF_descriptors;
 std::vector<std::vector<std::string>> input_CAF_files;
@@ -308,7 +308,7 @@ int main(int argc, char const *argv[]) {
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor,
                      OneDAxis ?
-                     "prism_fine_default" : binningdescriptor);
+                     "coarse_true_binning" : binningdescriptor); // coarse_true_binning
 
   std::vector<HistAxis> AxisVec_numu = {axes.XProjectionFD_numu, axes.XProjectionFD_numu};
   std::vector<HistAxis> AxisVec_nue = {axes.XProjectionFD_nue, axes.XProjectionFD_nue};

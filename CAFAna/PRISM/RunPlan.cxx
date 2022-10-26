@@ -150,7 +150,6 @@ namespace ana {
                      "bin content: "
                   << bc << " @ "
                   << xpos << std::endl;
-        abort();
       }
 
       if (!std::isnormal(stop.POT)) {

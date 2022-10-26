@@ -1,3 +1,5 @@
+#include "CAFAnaCore/CAFAna/Core/Ratio.h"
+
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
@@ -75,7 +77,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   // Lazy load the state file
   if (!States.count(state_file)) {
     TFile *fs = TFile::Open(state_file.c_str());
-    if (fs->IsZombie()) {
+    if (fs->IsZombie() || !fs) {
       std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
       abort();
     }
@@ -243,6 +245,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
 
+    // Data prediction with satistical error from MC rather than made up exposure 
+    // stat error
+    auto FarDetPred_MCErrs = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto *DataPredMCErrs = FarDetPred_MCErrs.ToTHX(POT_FD);
+    DataPredMCErrs->Scale(1, "width");
+    chan_dir->WriteTObject(DataPredMCErrs, "DataPred_MCErrs");
+    DataPredMCErrs->SetDirectory(nullptr);
+
     Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
     if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
       FarDetFakeDataBiasPred =
@@ -324,6 +334,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         PRISMExtrap->Scale(1, "width");
         chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
         PRISMExtrap->SetDirectory(nullptr);
+
         if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
           auto *PRISMExtrapCovMat =
                 PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT);
@@ -340,6 +351,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
           FD_NueNumuCorr->SetDirectory(nullptr);
         }
+
+        if (PRISMComponents.count(PredictionPRISM::kFDRecMCCorr)) {
+          auto *PRISMFDRecMCCorr =
+                PRISMComponents.at(PredictionPRISM::kFDRecMCCorr).ToTHX(POT_FD);
+          chan_dir->WriteTObject(PRISMFDRecMCCorr, "FDRecMCCorr");
+          PRISMFDRecMCCorr->SetDirectory(nullptr);
+        }
+
         if (PRISM_write_debug) {
           for (auto const &comp : PRISMComponents) {
             if (!PRISMComponents.count(comp.first)) continue;
@@ -351,6 +370,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
             } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
               continue;
             } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
+              continue;
+            } else if (comp.first == PredictionPRISM::kFDRecMCCorr) {
               continue;
             }
 

@@ -5,8 +5,8 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EVisReco_1mNDFV_Sep22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_1mNDFV_29Sep22.root"
+	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EVisReco_FineFD_25Oct22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_FineFD_25Oct22.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EVisReco
@@ -51,7 +51,7 @@ BasicPred: {
 		]
 
 		# Normally true - you want a realistic stat error
-		set_ND_errors_from_rate: true
+		set_ND_errors_from_rate: false
 
 		RunPlans: {
 			numode: @local::RunPlans.guess
@@ -66,8 +66,8 @@ BasicPred: {
 
 	#samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.Nue_app
-	#samples: @local::FitChannels.NuModeJoint
-	samples: @local::JointFitChannels.FourFlavor
+	#samples: @local::JointFitChannels.FourFlavor
+	samples: @local::JointFitChannels.NuModeJoint
 }
 
 

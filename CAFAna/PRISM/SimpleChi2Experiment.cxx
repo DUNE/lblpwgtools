@@ -40,7 +40,7 @@ namespace ana {
     auto PRISMComp_map = fPred->PredictPRISMComponents(calc, syst, fMatchChannel);
 
     Eigen::ArrayXd pred = PRISMComp_map.at(PredictionPRISM::kNDDataCorr_FDExtrap)
-                              .GetEigen(fPOTFD); 
+                              .GetEigen(fPOTFD); //kNDDataCorr_FDExtrap 
     Eigen::ArrayXd data = fData.GetEigen(fPOTFD);
   
     Eigen::VectorXd vpred = pred.segment(pFitBoundry.first, pFitBoundry.second).matrix();

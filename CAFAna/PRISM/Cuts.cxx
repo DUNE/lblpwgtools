@@ -10,7 +10,7 @@
 namespace PRISM {
 
 const ana::Cut kIsOutOfTheDesert([](const caf::StandardRecord *sr) {
-  return (std::fabs(sr->vtx_x) < 200);
+  return (std::fabs(sr->vtx_x) < 200); // WARNING 200
 });
 
 const ana::Cut kCut280kARun([](const caf::StandardRecord *sr) {

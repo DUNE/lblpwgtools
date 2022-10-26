@@ -125,8 +125,8 @@ protected:
   int NYbins;
   double lowY, highY;
 
-  const double minstats_numu = 5E-6;
-  const double minstats_nue = 5E-7;
+  const double minstats_numu = 3E-5;
+  const double minstats_nue = 3E-6;
 
   std::unique_ptr<TAxis> OffAxisPos;
   std::unique_ptr<TH2D> h_nom;
@@ -195,8 +195,8 @@ public:
 
 protected:
 
-  const double minstats_numu = 7E-12;
-  const double minstats_nue = 5E-14;
+  const double minstats_numu = 2E-11;
+  const double minstats_nue = 2E-13;
 
   std::unique_ptr<TH1D> FDnom;
   std::unique_ptr<TH1D> FDshift;
@@ -209,14 +209,16 @@ protected:
 
 int main(int argc, char** argv) {
 
-  std::string fluxdir("/dune/data/users/pweather/fluxfiles/g4lbne/v3r5p9/QGSP_BERT/");
+  std::string fluxdir("/pnfs/dune/persistent/users/pweather/fluxfiles/g4lbne/v3r5p9/QGSP_BERT/");
 
   std::string nominal_flux_dir("OfficialEngDesignSept2021");
 
   std::vector<std::string> shift_flux_dirs{"OEDS21_HornADisplaceTransverseX_pos_1_sigma",
                                            "OEDS21_HornBDisplaceTransverseX_pos_1_sigma",
+                                           "OEDS21_HornCDisplaceTransverseX_pos_1_sigma",
                                            "OEDS21_HornADisplaceTransverseY_pos_1_sigma",
                                            "OEDS21_HornBDisplaceTransverseY_pos_1_sigma",
+                                           "OEDS21_HornCDisplaceTransverseY_pos_1_sigma",
                                            "OEDS21_DecayPipe3SegmentBowingX_pos_1_sigma",
                                            "OEDS21_DecayPipe3SegmentBowingY_pos_1_sigma",
                                            "OEDS21_DecayPipeDisplaceTransverseX_pos_1_sigma",
@@ -234,13 +236,11 @@ int main(int argc, char** argv) {
                                            "OEDS21_HornATiltTransverseX_pos_1_sigma",
                                            "OEDS21_HornATiltTransverseY_pos_1_sigma",
                                            "OEDS21_HornBDisplaceLongitudinalZ_pos_1_sigma",
-                                           "OEDS21_HornBEccentricityXInducedBField_pos_1_sigma",
+                                           //"OEDS21_HornBEccentricityXInducedBField_pos_1_sigma",
                                            "OEDS21_HornBEllipticityXInducedBField_pos_1_sigma",
                                            "OEDS21_HornBTiltTransverseX_pos_1_sigma",
                                            "OEDS21_HornBTiltTransverseY_pos_1_sigma",
                                            "OEDS21_HornCDisplaceLongitudinalZ_pos_1_sigma",
-                                           "OEDS21_HornCDisplaceTransverseX_pos_1_sigma",
-                                           "OEDS21_HornCDisplaceTransverseY_pos_1_sigma",
                                            "OEDS21_HornCEccentricityXInducedBField_pos_1_sigma",
                                            "OEDS21_HornCEllipticityXInducedBField_pos_1_sigma",
                                            "OEDS21_HornCTiltTransverseX_pos_1_sigma",
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
                                            "OEDS21_TargetUpstreamDegredation_pos_1_sigma"};
 
   std::vector<std::string> vflavors{"numu", "numubar", "nue", "nuebar"};
-  std::vector<std::string> vsign{"neutrino"/*, "antineutrino"*/};
+  std::vector<std::string> vsign{"neutrino", "antineutrino"};
   std::vector<std::string> vspecrun{"_", "_specrun_"};
 
   std::string outfile = ana::FindCAFAnaDir() + "/../../Systs/flux_shifts_OffAxis2022.root";
@@ -293,13 +293,16 @@ int main(int argc, char** argv) {
         // Load ND fluxes
         std::string nominal_file_ND = fluxdir + nominal_flux_dir + "/" + sign + "/flux/" +
                                    "histos_g4lbne_v3r5p9_QGSP_BERT_" + nominal_flux_dir +
-                                   "_neutrino_LAr_center.root";
+                                   "_" + sign + "_LAr_center.root";
 
         std::string shift_file_ND = fluxdir + shiftname + "/" + sign + "/flux/" +
                                  "histos_g4lbne_v3r5p9_QGSP_BERT_" + shiftname +
-                                 "_neutrino_LAr_center.root";           
-  
-        TFile *fnom_ND = TFile::Open(nominal_file_ND.c_str());
+                                 "_" + sign + "_LAr_center.root";           
+
+        //std::cout << "Shift file: " << shift_file_ND << std::endl; 
+        //std::cout << "Shift xrootd file: " << ana::pnfs2xrootd(shift_file_ND) << std::endl;
+   
+        TFile *fnom_ND = TFile::Open(ana::pnfs2xrootd(nominal_file_ND).c_str());
 
         if (!fnom_ND || fnom_ND->IsZombie()) abort();
         TDirectory *current_dir = gDirectory;
@@ -308,7 +311,7 @@ int main(int argc, char** argv) {
           (TH2D*)current_dir->Get(("Unosc_" + flavor + "_flux_DUNEPRISM_LAr_center").c_str());
         h_nom_ND->SetDirectory(nullptr);
 
-        TFile *fshift_ND = TFile::Open(shift_file_ND.c_str());
+        TFile *fshift_ND = TFile::Open(ana::pnfs2xrootd(shift_file_ND).c_str());
 
         if (!fshift_ND || fshift_ND->IsZombie()) abort();
         current_dir = gDirectory;
@@ -358,11 +361,11 @@ int main(int argc, char** argv) {
         // Load FD fluxes
         std::string nominal_file_FD = fluxdir + nominal_flux_dir + "/" + sign + "/flux/" +
                                    "histos_g4lbne_v3r5p9_QGSP_BERT_" + nominal_flux_dir +
-                                   "_neutrino_finemc.root";
+                                   "_" + sign + "_finemc.root";
 
         std::string shift_file_FD = fluxdir + shiftname + "/" + sign + "/flux/" +
                                  "histos_g4lbne_v3r5p9_QGSP_BERT_" + shiftname +
-                                 "_neutrino_finemc.root";
+                                 "_" + sign + "_finemc.root";
 
         TFile *fnom_FD = TFile::Open(nominal_file_FD.c_str());
 

@@ -1261,6 +1261,13 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   if (Comps.count(kNDMC_FDExtrap))
     Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
 
+  //------------------------------------------------------------
+  // Hack to make prediction perfect - will like to remove this!
+  Spectrum FDRecMCCorr = Comps.at(kFDOscPred) - Comps.at(kNDDataCorr_FDExtrap);
+  //Comps.at(kNDDataCorr_FDExtrap) += FDRecMCCorr;
+  Comps.emplace(kFDRecMCCorr, FDRecMCCorr);
+  //------------------------------------------------------------
+
   // Convert final covariance matrix into 2D spectrum
   Comps.emplace(kExtrapCovarMatrix, ToSpectrum(sCovMat, NDPOT));
 

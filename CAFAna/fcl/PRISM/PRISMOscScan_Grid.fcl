@@ -5,17 +5,17 @@
 
 BasicPred: {
 
-	output_file: ["ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
+	output_file: ["dmsq32_ELepEHad_4Flav_th13_336_Stats_19Oct22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepeHad_19Oct22.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EVisReco
-	# Always true - why do we even have this?
+	projection_name: ELepEHad
+        # Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
 	POT_years: 3.5
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
-	use_ND_stats: true
+	use_ND_stats: false
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
 	# Do you want to use fake data?
@@ -78,27 +78,27 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23
+	scan_params: @local::ScanDefinitions.dmsq32
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
 
 scans: [
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "fit_xsecfluxdet"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.xsecflux
-		output_dir: "fit_xsecflux"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.fluxAll
-		output_dir: "fit_flux"
-	},
+#	{
+#		@table::BasicPred
+#		free_syst_params: @local::nuisance_parameters.all
+#		output_dir: "fit_xsecfluxdet"
+#	},
+#	{
+#		@table::BasicPred
+#		free_syst_params: @local::nuisance_parameters.xsecflux
+#		output_dir: "fit_xsecflux"
+#	},
+#	{
+#		@table::BasicPred
+#		free_syst_params: @local::nuisance_parameters.fluxAll
+#		output_dir: "fit_flux"
+#	},
 	{
 		@table::BasicPred
 		output_dir: "fit_nom"

@@ -89,6 +89,8 @@ public:
     kFD_NumuNutauCorr_Numu = 49,
     kFD_NumuNutauCorr_Nutau = 50,
     kFD_NumuNutauCorr = 51,
+
+    kFDRecMCCorr = 52
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -250,6 +252,9 @@ public:
     }
     case kFD_NumuNutauCorr: {
       return "FD_NumuNutauCorr";
+    }
+    case kFDRecMCCorr: {
+      return "FDRecMCCorr";
     }
     }
     return "";

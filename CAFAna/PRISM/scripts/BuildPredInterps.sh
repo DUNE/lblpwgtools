@@ -19,7 +19,7 @@ AnaBinning="prism_default"
 AvaVar="EVisReco"
 
 #FD
-MakePRISMPredInterps -o ${OUTPUTDIR}/PRISMState_EVisReco_3.5YrFull_FDOnly.root \
+MakePRISMPredInterps -o ${OUTPUTDIR}/PRISMState_EVisReco_NoFDMatSel_FDOnly_26Oct22.root \
     -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
     -F-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nonswap.root \
     -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \

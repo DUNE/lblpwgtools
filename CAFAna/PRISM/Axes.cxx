@@ -39,6 +39,8 @@ Binning GetBinning(std::string const &xbinning) {
     return kLepRecoBinning;
   } else if (xbinning == "true_osc_binning") {
     return kTrueEnergyBins;
+  } else if (xbinning == "coarse_true_binning") {
+    return kTrueEnergyCoarseBins;
   } else {
     std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
@@ -48,7 +50,7 @@ Binning GetBinning(std::string const &xbinning) {
 
 Binning GetOABinning(std::string const &oabinning) {
   if (oabinning == "default") {
-    std::array<double, 3> OABinning = {0.5, -30, +2}; // +2
+    std::array<double, 3> OABinning = {0.5, -30.5, +2}; // -30, +2
     double OA_bin_width_m = OABinning[0];
     double OA_min_m = OABinning[1];
     double OA_max_m = OABinning[2];
@@ -94,7 +96,7 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
   } else if (varname == "EnuReco_ND") {
     return std::make_pair("Neutrino E_{rec.} (GeV)", kRecoEnergyND);
   } else if (varname == "EVisTrue") {
-    return std::make_pair("True E_{vis.} (GeV)", kEVisTrue);
+    return std::make_pair("Vis. E_{true} (GeV)", kEVisTrue);
   } else if (varname == "RecoELep_numu") {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepEReco_numu);
   } else if (varname == "RecoELep_nue") {
@@ -136,7 +138,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   HistAxis axOffAxisPos("Off axis position (m)", GetOABinning(oabinning),
                         kTrueOffAxisPos_m);
 
-  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, +2), 
+  HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, +2), //-2, +2 
                              kTrueOffAxisPos_m);
   
   // Seperate ND and FD axes for ND->FD extrapolation.
@@ -152,13 +154,13 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
     varname_numu += "_numu";
     varname_nue  += "_nue";
   }
-  if (varname == "EnuReco") { // Want Enu_reco FD prediction still unfold in EVis
-    varname_ND = "EVisReco_ND";
+  if (varname == "EnuReco") { 
+    varname_ND = "EnuReco_ND";
     varname_numu += "_numu";
     varname_nue  += "_nue";
   }
-  HistAxis xaxND      = RecoObservable(varname_ND.c_str(),
-                                       OneDAxis ? "prism_fine_default" : xbinning);
+  HistAxis xaxND = RecoObservable(varname_ND.c_str(),
+                                  OneDAxis ? "true_osc_binning" : xbinning); //prism_fine_binning
   HistAxis xaxFD_numu = RecoObservable(varname_numu.c_str(), xbinning);
   HistAxis xaxFD_nue  = RecoObservable(varname_nue.c_str(), xbinning);
 
@@ -188,9 +190,9 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EnuReco") {
-    truevardef = GetVar("EVisTrue"); 
+    truevardef = GetVar("ETrue"); 
   } else if (obsvarname == "EVisTrue") {
-    truevardef = GetVar("ETrue");
+    truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "RecoEP") {
     truevardef = GetVar("EP");
   } else if (obsvarname == "RecoEPipm") { 
@@ -226,7 +228,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
     labels.push_back(vardefVis.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefVis.second);
-  } else if (obsvarname == "ELepEHadReco") {
+  } else if (obsvarname == "ELepEHadVisReco") {
     auto truevardefLep = GetVar("ELep");
     labels.push_back(truevardefLep.first);
     bins.push_back(GetBinning(binning));
@@ -258,7 +260,7 @@ HistAxis TrueObservable(std::string const &obsvarname,
     abort();
   }   
   
-  if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadReco") {
+  if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadVisReco") {
     return HistAxis(labels, bins, vars);
   } else if (obsvarname == "EVisEHad" || obsvarname == "EVisEHadReco") {
     return HistAxis(labels, bins, vars);
@@ -282,7 +284,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     vars.push_back(vardefLep.second);   
     auto vardefHad = GetVar("EHad");
     labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning(binning));
+    bins.push_back(GetBinning("had_default"));
     vars.push_back(vardefHad.second);
   } else if  (obsvarname == "EVisEHad") {
     auto vardefHad = GetVar("EHad");
