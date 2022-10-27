@@ -3,6 +3,7 @@ set(scripts_to_install
   cpv_joint.C
   make_all_throws.C
   make_FC_throws.C
+  make_FC_throws_th13_test.C
   make_cpv_throws.C
   make_octant_throws.C
   make_mh_throws.C
@@ -20,6 +21,8 @@ set(scripts_to_build
   make_all_throws_fixed_seed
   make_FC_throws	
   make_FC_throws_fixed_seed
+  make_FC_throws_th13_test
+  make_FC_throws_th13_test_fixed_seed
   make_1dconstraint_plots
   make_spectra_constraint_plots
   llh_scans
