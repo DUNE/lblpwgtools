@@ -13,6 +13,10 @@ osc::IOscCalculatorAdjustable* ThrownWideOscCalcWithAsimov(int hie, std::vector<
   osc::IOscCalculatorAdjustable *ret =
     ThrownWideOscCalc(hie, oscVars);
 
+  // Need to set th13 to the value the penalty pulls to...
+  if (hie>0) ret->SetTh13(kNuFitTh13CVNH);
+  else ret->SetTh13(kNuFitTh13CVIH);
+
   // Nope out if the usual default value is given
   if (asimov_set.find("asimov0") != std::string::npos) return ret;
 
@@ -320,7 +324,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
     IExperiment *th13_penalty = GetPenalty(hie, 1, "th13");
 
-    double th13_chisqmin =
+    th13_chisqmin =
       RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
 		  stats_throw, oscVars, systlist, fitThrowOsc2,
 		  SystShifts(fitThrowSyst), oscSeeds, th13_penalty,
