@@ -7,7 +7,6 @@ namespace caf{
   const int kNEARDET = 1;
   const int kFARDET = 2;
 }
-//#include "StandardRecord/SRHeader.h" // For Det_t
 
 #include <map>
 

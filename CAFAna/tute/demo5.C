@@ -10,7 +10,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "CAFAna/Analysis/TDRLoaders.h"
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -25,11 +25,9 @@ public:
   }
 
   void Shift(double sigma,
-             Restorer& restore,
              caf::SRProxy* sr,
              double& weight) const override
   {
-    restore.Add(sr->Ev_reco_numu);
     sr->Ev_reco_numu *= (1+.1*sigma);
   }
 };
@@ -43,7 +41,6 @@ public:
   }
 
   void Shift(double sigma,
-             Restorer& restore,
              caf::SRProxy* sr,
              double& weight) const override
   {

@@ -1,14 +1,18 @@
 #include "CAFAna/Prediction/PredictionNuOnE.h"
 
+#include "CAFAna/Core/LoadFromRegistry.h"
+
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TDirectory.h"
 #include "TObjString.h"
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionNuOnE", IPrediction, PredictionNuOnE);
+
   // Simple counting experiment
   const HistAxis kNuOnEaxis("Dummy nu-on-e axis", Binning::Simple(1, 0, 2), Constant(1));
 

@@ -2,7 +2,7 @@
 
 #include "CAFAnaCore/CAFAna/Core/Cut.h"
 
-#include "StandardRecord/FwdDeclare.h"
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
 namespace ana
 {

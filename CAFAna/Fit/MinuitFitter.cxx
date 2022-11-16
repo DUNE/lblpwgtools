@@ -45,7 +45,6 @@ namespace ana
       fExpt(expt),
       fFitOpts(opts),
       fSupportsDerivatives(SupportsDerivatives()),
-      fCovar(0),
       fCovarStatus(-1)
   {
   }
@@ -96,8 +95,8 @@ namespace ana
       // ROOT::Math::Factory::CreateMinimizer("GSLMultiMin", "BFGS2"));
       mnMin->SetStrategy(int(fFitOpts & kPrecisionMask));
     }
-    mnMin->SetMaxFunctionCalls(1E8);
-    mnMin->SetMaxIterations(1E8);
+    mnMin->SetMaxFunctionCalls(1E9);
+    mnMin->SetMaxIterations(1E9);
 
     static double tol =
       getenv("FIT_TOLERANCE") != 0 ? atof(getenv("FIT_TOLERANCE")) : 1;
@@ -310,8 +309,7 @@ namespace ana
     fEdm = thisMin->Edm();
     fIsValid = !thisMin->Status();
 
-    delete fCovar;
-    fCovar = new TMatrixDSym(thisMin->NDim());
+    fCovar.reset(new TMatrixDSym(thisMin->NDim()));
 
     for (unsigned int row = 0; row < thisMin->NDim(); ++row) {
       for (unsigned int col = 0; col < thisMin->NDim(); ++col) {

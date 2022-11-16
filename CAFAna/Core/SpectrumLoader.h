@@ -6,6 +6,8 @@
 
 class TFile;
 
+#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
+
 namespace ana
 {
   class Progress;
@@ -24,7 +26,7 @@ namespace ana
     SpectrumLoader(const std::string& wildcard, int max = 0);
     SpectrumLoader(const std::vector<std::string>& fnames, int max = 0);
 
-#ifndef DONT_USE_SAM
+#ifdef WITH_SAM
     /// Named constructor for SAM projects
     static SpectrumLoader FromSAMProject(const std::string& proj,
 					 int fileLimit = -1);
@@ -46,7 +48,7 @@ namespace ana
 
     virtual void HandleFile(TFile* f, Progress* prog = 0);
 
-    virtual void HandleRecord(caf::StandardRecord* sr);
+    virtual void HandleRecord(caf::SRProxy* sr);
 
     /// Save results of AccumulateExposures into the individual spectra
     virtual void StoreExposures();
@@ -54,30 +56,11 @@ namespace ana
     /// Prints POT/livetime info for all spectra
     virtual void ReportExposures();
 
-    // This is all infrasture to test that the user didn't screw up their
-    // systematic shifts.
-    struct TestVals
-    {
-      std::vector<bool> cuts;
-      std::vector<double> vars, weis;
-    };
-
-    const TestVals* GetVals(const caf::SRProxy* sr,
-			    IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
-    void CheckVals(const TestVals* v,
-                   const caf::SRProxy* sr,
-                   const std::string& shiftName,
-		   IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>& hists) const;
-    void ValError(const std::string& type,
-                  const std::string& shift,
-                  const std::set<std::string>& req,
-                  double orig, double now) const;
-
-
     /// All unique cuts contained in fHistDefs
     std::vector<Cut> fAllCuts;
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
     int max_entries;
+
   };
 }

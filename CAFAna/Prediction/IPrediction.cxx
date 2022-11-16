@@ -1,6 +1,7 @@
 #include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 
 #include "OscLib/IOscCalc.h"
 
@@ -9,13 +10,6 @@
 
 #include "TDirectory.h"
 #include "TObjString.h"
-
-// To implement LoadFrom()
-#include "CAFAna/Prediction/PredictionNoExtrap.h"
-#include "CAFAna/Prediction/PredictionInterp.h"
-#include "CAFAna/Prediction/PredictionNoOsc.h"
-#include "CAFAna/Prediction/PredictionScaleComp.h"
-#include "CAFAna/Prediction/PredictionNuOnE.h"
 
 namespace ana
 {
@@ -28,17 +22,8 @@ namespace ana
     const TString tag = ptag->GetString();
     delete ptag;
 
-    if(tag == "PredictionNoExtrap") return PredictionNoExtrap::LoadFrom(dir, name);
-
-    // Backwards compatibility
-    if(tag == "PredictionInterp" ||
-       tag == "PredictionInterp2") return PredictionInterp::LoadFrom(dir, name);
-
-    if(tag == "PredictionNoOsc") return PredictionNoOsc::LoadFrom(dir, name);
-
-    if(tag == "PredictionScaleComp") return PredictionScaleComp::LoadFrom(dir, name);
-
-    if(tag == "PredictionNuOnE") return PredictionNuOnE::LoadFrom(dir, name);
+    const auto func = LoadFromRegistry<IPrediction>::Get(tag.Data());
+    if(func) return func(dir, name);
 
     std::cerr << "Unknown Prediction type '" << tag << "'" << std::endl;
     abort();
@@ -126,7 +111,7 @@ namespace ana
     // Default implementation: no treatment of systematics
     return PredictComponent(calc, flav, curr, sign);
   }
- 
+
   //----------------------------------------------------------------------
   OscillatableSpectrum IPrediction::ComponentCC(int from, int to) const
   {
@@ -149,7 +134,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  void IPrediction::SaveTo(TDirectory*, const std::string&) const
+  void IPrediction::SaveTo(TDirectory* dir, const std::string& name) const
   {
     assert(0 && "Not implemented");
   }

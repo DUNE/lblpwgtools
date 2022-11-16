@@ -21,6 +21,7 @@ namespace ana
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<SolarConstraints> LoadFrom(TDirectory* dir, const std::string& name);
+
   protected:
     double fCentralDmsq, fErrorDmsq;
     double fCentralAngle, fErrorAngle;

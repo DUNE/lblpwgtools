@@ -30,6 +30,7 @@
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
+#include "CAFAna/Systs/RecoEnergyNDSysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/NDRecoSysts.h"
 #include "CAFAna/Systs/NuOnESysts.h"
@@ -40,8 +41,6 @@
 #include "OscLib/IOscCalc.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 #include "OscLib/OscCalcGeneral.h"
-
-#include "StandardRecord/StandardRecord.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -63,12 +62,13 @@ unsigned gRNGSeed = 0;
 
 // A smaller APA geometry was used to simmulate the FD due to computational requirements.
 // Scale the simulated sample to match the actuall 40 kt detector.
-const double scale_fdmc = 40 / 1.13;
+const double pot_fd_FVMassFactor = 40 / 1.13;
 // POT for 3.5 years
 const double nom_years = 3.5;
-const double pot_fd = POT120 * nom_years * scale_fdmc;
+const double pot_fd = POT120 * nom_years * pot_fd_FVMassFactor;
 const double pot_nd = POT120 * nom_years;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
+
 const double nom_exposure = 336.;
 
 double GetBoundedGausThrow(double min, double max) {
@@ -153,13 +153,13 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
 }
 
 /*
-  The behaviour os fake data dials is a bit clunky. Instead of the multiple spline 
-  points used for normal dials, they have fixed values for non-zero values of the 
-  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same 
-  value. Some are set so all negative (positive) values give a -3 (+3) sigma 
+  The behaviour of fake data dials is a bit clunky. Instead of the multiple spline
+  points used for normal dials, they have fixed values for non-zero values of the
+  dial. So, for some, +/-3, +/-2, +/-1 values of the dial will all give the same
+  value. Some are set so all negative (positive) values give a -3 (+3) sigma
   variation, which is why there's some messing around in the function below.
-  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift, 
-  which is called only when creating the input CAFs. This is almost certainly not 
+  The spline behaviour is forced (for XSec dials) in XSecSyst::FakeDataDialShift,
+  which is called only when creating the input CAFs. This is almost certainly not
   optimal, but is easy to extend for other dials.
  */
 SystShifts GetFakeDataGeneratorSystShift(std::string input) {
@@ -170,7 +170,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   if (input.empty() || input == "nominal")
     return thisShift;
 
-  // Allow _pos and _neg endings 
+  // Allow _pos and _neg endings
   std::vector<std::string> split_input = SplitString(input, ':');
   std::vector<std::string> fake_data_names;
   std::vector<int> dial_vals;
@@ -185,10 +185,12 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     } else if (in_name.compare(in_name.length()-4, 4, "_neg") == 0){
       name = in_name.substr(0, in_name.length()-4);
       val  = -1;
-    } 
+    }
 
     // Check nobody did anything dumb...
-    assert(IsFakeDataGenerationSyst(name) || IsCrazyFluxSyst(name));
+    //assert(IsFakeDataGenerationSyst(name) || //IsCrazyFluxSyst(name) || 
+    //       IsNDdetSyst(name) || IsFDdetSyst(name)); // Might also want to do detector bias studies
+    std::cout << "Fake data shift: " << name << std::endl;
     fake_data_names.push_back(name);
     dial_vals.push_back(val);
   }
@@ -199,7 +201,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
   for (uint i=0; i<FDSyst.size(); i++){
     thisShift.SetShift(FDSyst[i], dial_vals[i]);
   }
-
+  std::cout << "Fake data name: " << thisShift.ShortName() << std::endl; 
   return thisShift;
 }
 
@@ -1328,8 +1330,8 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     double fEDM = this_fit.GetEDM();
     bool fIsValid = this_fit.GetIsValid();
 
-    TMatrixDSym *covar = (TMatrixDSym *)this_fit.GetCovariance();
-    TH2D hist_covar = TH2D(*covar);
+    TMatrixDSym covar = this_fit.GetCovariance();
+    TH2D hist_covar = TH2D(covar);
     hist_covar.SetName("covar");
     TH2D hist_corr = *make_corr_from_covar(&hist_covar);
 
@@ -1398,7 +1400,7 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
     // Save information
     hist_covar.Write();
     hist_corr.Write();
-    covar->Write("covar_mat");
+    covar.Write("covar_mat");
   }
 
   if (PostFitTreeBlob) {

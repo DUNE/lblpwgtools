@@ -1,17 +1,28 @@
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 
+#ifdef USE_TH2JAGGED
+#include "CAFAna/Systs/OffAxisFluxUncertaintyHelper.h"
+static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
+    nullptr;
+#include "CAFAna/Systs/NewOffAxisFluxUncertainty2022Helper.h"
+static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertainty2022Helper = nullptr;
+#endif
+
+#include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Utilities.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
 
+#include <iostream>
 #include <cassert>
+#include <algorithm>
 
 namespace ana {
-  const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(10);
+const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(30);
 
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
@@ -23,8 +34,58 @@ DUNEFluxSyst::~DUNEFluxSyst() {
 }
 
 //----------------------------------------------------------------------
-void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
+void DUNEFluxSyst::Shift(double sigma,
                          caf::SRProxy *sr, double &weight) const {
+
+  if (abs(sr->nuPDGunosc) == 16) {
+    return;
+  }
+
+#ifdef USE_TH2JAGGED
+  if (fUseCDR) {
+    std::cout
+        << "[ERROR]: Off axis flux uncertainties did not exist for the CDR."
+        << std::endl;
+    abort();
+  }
+
+  bool isSpecHCRun(false);
+  if (std::abs(sr->SpecialHCRunId) != 293) isSpecHCRun = true;
+
+  if (sr->OffAxisFluxBin == -1) {
+    if (fUseSept21) {
+      sr->OffAxisFluxBin = ana::NewOffAxisFluxUncertainty2022Helper::Get().GetBin(
+          sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, fIdx, !sr->isFD,
+          sr->isFHC, isSpecHCRun);
+    } else {
+      sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
+          sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, 0, !sr->isFD,
+          sr->isFHC, isSpecHCRun);
+      }
+  }
+
+  if (sr->OffAxisFluxConfig == -1) {
+    if (fUseSept21) {
+      sr->OffAxisFluxConfig = 
+        ana::NewOffAxisFluxUncertainty2022Helper::Get().GetNuConfig_checked(
+            sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, fIdx, !sr->isFD,
+            sr->isFHC, isSpecHCRun); 
+    } else {
+      sr->OffAxisFluxConfig = 
+        ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
+            sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, 0, !sr->isFD,
+            sr->isFHC, isSpecHCRun);
+    }
+  }
+
+  if (fUseSept21) {
+    weight = fNewOffAxisFluxUncertainty2022Helper->GetFluxWeight(
+        fIdx, sigma, sr->abspos_x * 1E-2, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
+  } else {
+    weight = fOffAxisFluxParamHelper->GetFluxWeight(
+        fIdx, sigma, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
+  }
+#else
   if (!fScale[0][0][0][0]) {
     std::string InputFileName;
     if (fUseCDR) {
@@ -67,27 +128,31 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   if (abs(sr->nuPDGunosc) == 16)
     return;
 
+  double /*const*/ rel_weight = 1;
+  double const enu = sr->Ev;
+
   const int det = sr->isFD ? 0 : 1;
   const int pdg = (abs(sr->nuPDGunosc) == 12) ? 0 : 1;
   const int anti = (sr->nuPDGunosc > 0) ? 0 : 1;
   const int hc = sr->isFHC ? 0 : 1;
 
-  double rel_weight = 1;
-
   TH1 *h = fScale[det][pdg][anti][hc];
   assert(h);
-  const int bin = h->FindBin(sr->Ev);
+
+  const int bin = h->FindBin(enu);
+
   if (bin == 0 || bin == h->GetNbinsX() + 1) {
     return;
   }
   rel_weight = h->GetBinContent(bin);
 
   weight *= 1 + rel_weight * sigma;
+#endif
 }
 
 //----------------------------------------------------------------------
 const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
-                                    bool useCDR) {
+                                    bool useCDR, bool useSept21) {
   // Make sure we always give the same one back
   static std::vector<const DUNEFluxSyst *> cache_CDR;
   static std::vector<const DUNEFluxSyst *> cache_Nov17;
@@ -97,18 +162,62 @@ const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
     c->resize(i + 1);
   }
   if (!c->at(i)) {
-    c->at(i) = new DUNEFluxSyst(i, applyPenalty, useCDR);
+    c->at(i) = new DUNEFluxSyst(i, applyPenalty, useCDR, useSept21);
   }
   return c->at(i);
 }
 
 //----------------------------------------------------------------------
 DUNEFluxSystVector GetDUNEFluxSysts(unsigned int N, bool applyPenalty,
-                                    bool useCDR) {
+                                    bool useCDR, bool useSept21) {
+
+#ifdef USE_TH2JAGGED
+  if (!fOffAxisFluxParamHelper) {
+    fOffAxisFluxParamHelper = &ana::OffAxisFluxUncertaintyHelper::Get();
+  }
+  if (!fNewOffAxisFluxUncertainty2022Helper) {
+    fNewOffAxisFluxUncertainty2022Helper = 
+      &ana::NewOffAxisFluxUncertainty2022Helper::Get();
+  }
+#endif
+
   DUNEFluxSystVector ret;
-  for (unsigned int i = 0; i < N; ++i)
-    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR));
+  for (unsigned int i = 0; i < N; ++i) {
+    ret.push_back(GetDUNEFluxSyst(i, applyPenalty, useCDR, useSept21));
+  }
   return ret;
+}
+
+SystShifts FilterFluxSystShifts(SystShifts shift) {
+  SystShifts outs;
+  std::vector<ana::ISyst const *> fsysts =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false, false);
+  std::vector<ana::ISyst const *> fsysts_sept21 =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false, true);
+  fsysts.insert(fsysts.end(), fsysts_sept21.begin(), fsysts_sept21.end());
+
+  for (auto syst : shift.ActiveSysts()) {
+    if (std::find(fsysts.begin(), fsysts.end(), syst) != fsysts.end()) {
+      outs.SetShift(syst, shift.GetShift(syst));
+    }
+  }
+  return outs;
+}
+
+size_t GetFluxSystIndex(const ana::ISyst *syst) {
+  std::vector<ana::ISyst const *> fsysts =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false, false);
+  std::vector<ana::ISyst const *> fsysts_sept21 =
+      ana::GetDUNEFluxSysts(ana::kFluxSysts.size(), true, false, true);
+  fsysts.insert(fsysts.end(), fsysts_sept21.begin(), fsysts_sept21.end());
+
+  for (size_t i = 0; i < fsysts.size(); ++i) {
+    if (fsysts[i] == syst) {
+      return i;
+    }
+  }
+
+  return kNotValidFluxSyst;
 }
 
 } // namespace ana

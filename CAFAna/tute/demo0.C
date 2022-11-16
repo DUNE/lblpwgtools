@@ -8,7 +8,7 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "StandardRecord/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
@@ -19,7 +19,7 @@ using namespace ana;
 void demo0()
 {
   // Environment variables and wildcards work. As do SAM datasets.
-  const std::string fname = "/dune/data/users/marshalc/CAFs/mcc11_v3/FD_FHC_nonswap.root";
+  const std::string fname = "/pnfs/dune/persistent/users/LBL_TDR/CAFs/v4/FD_FHC_nonswap.root";
 
   // Source of events
   SpectrumLoader loader(fname);

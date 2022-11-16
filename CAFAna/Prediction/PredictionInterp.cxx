@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
@@ -24,6 +25,7 @@
 #include "CAFAna/Core/Loaders.h"
 
 #include <algorithm>
+
 #include <malloc.h>
 
 #ifdef USE_PREDINTERP_OMP
@@ -32,6 +34,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("PredictionInterp", IPrediction, PredictionInterp);
+
   //----------------------------------------------------------------------
   PredictionInterp::PredictionInterp(std::vector<const ISyst*> systs,
                                      osc::IOscCalc* osc,
@@ -202,13 +206,13 @@ namespace ana
     // Do it this way rather than via fPredNom so that systematics evaluated
     // relative to some alternate nominal (eg Birks C where the appropriate
     // nominal is no-rock) can work.
-    const Spectrum nom = pNom->PredictComponent(fOscOrigin,
+    const Spectrum nom = pNom->PredictComponent(fOscOrigin.get(),
                                                 flav, curr, sign);
 
     std::vector<Eigen::ArrayXd> ratios;
     ratios.reserve(preds.size());
     for(auto& p: preds){
-      ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin,
+      ratios.emplace_back(Ratio(p->PredictComponent(fOscOrigin.get(),
                                                     flav, curr, sign),
                                 nom).GetEigen());
 
@@ -300,13 +304,13 @@ namespace ana
     }
 
     // Predict something, anything, so that we can know what binning to use
-    fBinning = fPredNom->Predict(fOscOrigin);
+    fBinning = fPredNom->Predict(fOscOrigin.get());
     fBinning.Clear();
   }
 
   //----------------------------------------------------------------------
   void PredictionInterp::SetOscSeed(osc::IOscCalc* oscSeed){
-    fOscOrigin = oscSeed->Copy();
+    fOscOrigin.reset(oscSeed->Copy());
     for(auto& it: fPreds) it.second.fits.clear();
     InitFits();
   }
@@ -425,7 +429,9 @@ namespace ana
 
     size_t NPreds = fPreds.size();
 
+#ifdef USE_PREDINTERP_OMP
     #pragma omp parallel for
+#endif
     for (size_t p_it = 0; p_it < NPreds; ++p_it) {
       const ISyst *syst = fPreds[p_it].first;
       const ShiftedPreds &sp = fPreds[p_it].second;
@@ -590,6 +596,10 @@ namespace ana
     for(const ISyst* syst: shift.ActiveSysts()){
       if(find_pred(syst) == fPreds.end()){
         std::cerr << "This PredictionInterp is not set up to handle the requested systematic: " << syst->ShortName() << std::endl;
+        std::cout << "Handles: " << std::endl;
+        for(auto & p : fPreds){
+          std::cout << p.first->ShortName() << std::endl;
+        }
         abort();
       }
     } // end for syst
@@ -638,6 +648,7 @@ namespace ana
     return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
 
+  //----------------------------------------------------------------------
   void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
   {
     InitFits();
@@ -764,13 +775,23 @@ namespace ana
       } // end for systIdx
     } // end if hSystNames
 
-    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin").release();
+    ret->fOscOrigin = ana::LoadFrom<osc::IOscCalc>(dir, "osc_origin");
   }
 
   //----------------------------------------------------------------------
   void PredictionInterp::MinimizeMemory()
   {
-    DiscardSysts(GetAllSysts());
+    InitFits();
+
+    for(auto& it: fPreds){
+      for(std::unique_ptr<IPrediction>& pred: it.second.preds){
+        pred.reset(0);
+      }
+    }
+
+    // We probably just freed up a lot of memory, but malloc by default hangs
+    // on to all of it as cache.
+    malloc_trim(0);
   }
 
   //----------------------------------------------------------------------
@@ -824,8 +845,7 @@ namespace ana
 
     for(unsigned int shiftIdx = 0; shiftIdx < it->second.shifts.size(); ++shiftIdx){
       if(!it->second.preds[shiftIdx]) continue; // Probably MinimizeMemory()
-      std::unique_ptr<TH1> h;
-        h = std::move(std::unique_ptr<TH1>(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20)));
+      std::unique_ptr<TH1> h(it->second.preds[shiftIdx]->PredictComponent(calc, flav, curr, sign).ToTH1(18e20));
 
       for(int bin = 0; bin < nbins; ++bin){
         const double ratio = h->GetBinContent(bin+1)/hnom->GetBinContent(bin+1);

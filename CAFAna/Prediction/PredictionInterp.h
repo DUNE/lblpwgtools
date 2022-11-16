@@ -121,7 +121,7 @@ namespace ana
       kNCoeffTypes
     };
 
-    PredictionInterp() : fOscOrigin(nullptr), fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
+    PredictionInterp() : fBinning(Spectrum::Uninitialized()), fSplitBySign(false) {
       if(getenv("CAFANA_PRED_MINMCSTATS")){
         fMinMCStats = atoi(getenv("CAFANA_PRED_MINMCSTATS"));
       } else {
@@ -169,6 +169,10 @@ namespace ana
                               Current::Current_t curr,
                               Sign::Sign_t sign,
                               CoeffsType type) const;
+
+    template <typename T> T *GetPredNomAs() {
+      return dynamic_cast<T *>(fPredNom.get());
+    }
 
     //Memory saving feature, if you know you wont need any systs that were loaded in, can discard them.
     void DiscardSysts(std::vector<ISyst const *>const &);
@@ -239,7 +243,7 @@ namespace ana
     }
 
     /// The oscillation values we assume when evaluating the coefficients
-    osc::IOscCalc* fOscOrigin;
+    std::unique_ptr<osc::IOscCalc> fOscOrigin;
 
     mutable Spectrum fBinning; ///< Dummy spectrum to provide binning
 
@@ -297,6 +301,7 @@ namespace ana
                    CoeffsType type,
                    bool nubar,
                    const SystShifts& shift) const;
+
   };
 
 }

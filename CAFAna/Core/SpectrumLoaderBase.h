@@ -6,14 +6,13 @@
 #include <string>
 #include <vector>
 
+#include "CAFAnaCore/CAFAna/Core/IFileSource.h"
+
 #include "CAFAna/Core/Cut.h"
-#include "CAFAna/Core/IFileSource.h"
 #include "CAFAna/Core/MultiVar.h"
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Weight.h"
-
-namespace caf{class StandardRecord;}
 
 class TFile;
 class TH1;
@@ -184,6 +183,7 @@ namespace ana
     ~NullLoader();
 
     virtual void Go() override;
+
     void AddSpectrum(Spectrum& spect,
                      const Var& var,
                      const Cut& cut,

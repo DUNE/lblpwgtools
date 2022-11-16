@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.14 FATAL_ERROR)
 
 #Use the compilers found in the path
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
@@ -8,28 +8,19 @@ project(CAFAna)
 
 #Changes default install path to be a subdirectory of the build dir.
 #Can set build dir at configure time with -DCMAKE_INSTALL_PREFIX=/install/path
-if(CMAKE_INSTALL_PREFIX STREQUAL "" OR CMAKE_INSTALL_PREFIX STREQUAL
-  "/usr/local")
+if(NOT DEFINED CMAKE_INSTALL_PREFIX OR 
+    "${CMAKE_INSTALL_PREFIX}x" STREQUAL "x" OR 
+    "${CMAKE_INSTALL_PREFIX}x" STREQUAL "/usr/localx")
   set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}")
-elseif(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}")
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "")
-  set(CMAKE_BUILD_TYPE DEBUG)
-elseif(NOT DEFINED CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE DEBUG)
+if(NOT DEFINED CMAKE_BUILD_TYPE OR 
+    "${CMAKE_BUILD_TYPE}x" STREQUAL "x")
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(KNL STREQUAL "")
-  set(KNL FALSE)
-elseif(NOT DEFINED KNL)
-  set(KNL FALSE)
-endif()
-
-if(USE_OPENMP STREQUAL "")
-  set(USE_OPENMP FALSE)
-elseif(NOT DEFINED USE_OPENMP)
+if(NOT DEFINED USE_OPENMP OR 
+    "${USE_OPENMP}x" STREQUAL "x")
   set(USE_OPENMP FALSE)
 endif()
 
@@ -40,8 +31,6 @@ endif()
 
 SET(BUILD_DEBUG_MSGS TRUE)
 include(${CMAKE_SOURCE_DIR}/cmake/cmessage.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/parseConfigApp.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/StringAndListUtils.cmake)
 
 if(USED_UPS STREQUAL "")
   set(USED_UPS "0")
@@ -58,11 +47,6 @@ cmessage(STATUS "CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
 #                            Check Dependencies
 ################################################################################
 
-##################################  ROOT  ######################################
-include(${CMAKE_SOURCE_DIR}/cmake/ROOTSetup.cmake)
-############################## GSL/BOOST/CLEHP #################################
-include(${CMAKE_SOURCE_DIR}/cmake/ExternalLibrariesCheck.cmake)
-################################## COMPILER ####################################
 include_directories(
   ${SRC_ROOT_PARENT}
   ${CMAKE_BINARY_DIR}/Ext
@@ -74,79 +58,57 @@ include_directories(
   ${TBB_INC}
   $ENV{OSCLIB_INC}
   $ENV{CAFANACORE_INC}
+  $ENV{DUNEANAOBJ_INC}
 )
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
+find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})
+find_library(STANDARDRECORDPROXY duneanaobj_StandardRecordProxy $ENV{DUNEANAOBJ_LIB})
 
-find_library(TBB tbb $ENV{TBB_LIB})
+include_directories($ENV{SRPROXY_INC})
+
+include_directories(..) # allow paths starting CAFAna/ to work
 
 LIST(APPEND EXTRA_CXX_FLAGS -DDONT_USE_SAM=1 -DUSE_CAFANA_ENVVAR=1 -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -DALLOW_XROOTD_PATH_THROUGH_WILDCARDSOURCE=1 -DTBB_INTERFACE_NEW)
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+  set(CMAKE_MACOSX_RPATH ON)
+  LIST(APPEND CMAKE_INSTALL_RPATH "@executable_path/../lib")
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-## StandardRecord
-
-set(StandardRecord_implementation_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.cxx
-)
-
-set(StandardRecord_header_files
-    ${SRC_ROOT_PARENT}/StandardRecord/StandardRecord.h
-    ${SRC_ROOT_PARENT}/StandardRecord/SRProxy.h
-    ${SRC_ROOT_PARENT}/StandardRecord/FwdDeclare.h
-)
-
-add_library(StandardRecord SHARED ${StandardRecord_implementation_files})
-target_link_libraries(StandardRecord)
-
-install(TARGETS StandardRecord DESTINATION lib)
-
-install(FILES ${StandardRecord_header_files} DESTINATION include/StandardRecord)
-
 ## CAFAna proper
 
-add_subdirectory(Analysis)
-add_subdirectory(Core)
-add_subdirectory(Cuts)
-add_subdirectory(Decomp)
-add_subdirectory(Experiment)
-add_subdirectory(Extrap)
-add_subdirectory(Fit)
-add_subdirectory(Prediction)
-add_subdirectory(Systs)
-add_subdirectory(Vars)
-add_subdirectory(bin)
+set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
 
-add_subdirectory(scripts)
+foreach(SUBDIR ${CAFANA_SUBDIRS})
+  add_subdirectory(${SUBDIR})
+endforeach()
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
-configure_file(cmake/CAFBuild.in
-${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild @ONLY)
-configure_file(cmake/CAFEnvWrapper.sh.in
-${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFEnvWrapper.sh @ONLY)
 
 install(
   PROGRAMS
     ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh
-    ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFEnvWrapper.sh
-    ${CMAKE_SOURCE_DIR}/cmake/ups_env_setup.sh
   DESTINATION
     ${CMAKE_INSTALL_PREFIX}/
   )
 
-
 install(
   PROGRAMS
-    ${CMAKE_SOURCE_DIR}/cafe
+    ${BUILD_ENV_SCRIPTS}
   DESTINATION
-    bin
+    ${CMAKE_INSTALL_PREFIX}/env/
   )
 
 install(
   PROGRAMS
-    ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFBuild
+    ${CMAKE_SOURCE_DIR}/cafe
   DESTINATION
     bin
   )

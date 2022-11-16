@@ -1,0 +1,109 @@
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+
+	output_file: ["ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
+
+	# Analysis variable name - must match variable in state file
+	projection_name: EVisReco
+	# Always true - why do we even have this?
+	use_PRISM: true
+	# Set exposure in years
+	POT_years: 3.5
+	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
+	use_ND_stats: true
+	# Definitely want this to be false for fits!
+	vary_NDFD_data: false
+	# Do you want to use fake data?
+	use_fake_data: false
+	# True to include FD intrinsic nue in flux match
+	match_intrinsic_nue: false
+	# Do you want the reactor th13 constraint?
+	reactor_constraint: true
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			}
+		]
+		# Will probably want this to be true - set ND errors from sqrt(N)
+		set_ND_errors_from_rate: true
+
+		RunPlans: {
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
+		}
+		# Almost always true for now
+		Use_EventRateMatching: true
+	}
+
+	# Oscillation parameters to include in fit
+	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
+	# Parameter(s) to scan over in fit
+	scan_params: @local::ScanDefinitions.ssth23
+	# Number of samples to include
+	samples: @local::JointFitChannels.FourFlavor
+}
+
+scans: [
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.all
+		output_dir: "fit_xsecfluxdet"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.xsecflux
+		output_dir: "fit_xsecflux"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameters.fluxAll
+		output_dir: "fit_flux"
+	},
+	{
+		@table::BasicPred
+		output_dir: "fit_nom"
+	}
+]
+
+# This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
+scans[0].output_file[1]: "RECREATE"

@@ -35,6 +35,8 @@ def makeParser():
                              help = 'skip first M files of dataset (for use with -s)')
     stridegroup.add_argument('-ss', '--snapshot', action = 'store_true',
                              help = 'use latest snapshot instead of requerying')
+    stridegroup.add_argument('-se', '--staterrs', action = 'store_true',
+                             help = 'switch on statistical error propogation')
 
     # Have to nest like this to be able to provide a title
     dbggroup2 = parser.add_argument_group('debugging options')
@@ -137,9 +139,14 @@ if __name__ == '__main__':
     if opts['snapshot']:
         os.environ['CAFANA_USE_SNAPSHOTS'] = 'yes'
 
+    if opts['staterrs']:
+        os.environ["CAFANA_STAT_ERRS"] = 'yes'
+
     path = [os.environ['CAFANA']+'/include',
             os.environ['CAFANACORE_INC'],
+            os.environ['DUNEANAOBJ_INC'],
             os.environ['ROOTSYS']+'/include',
+            os.environ['SRPROXY_INC'],
             os.environ['STAN_INC'],
             os.environ['STAN_MATH_INC'],
             os.environ['EIGEN_INC'],
@@ -214,11 +221,16 @@ int main(int argc, char** argv)
     libdirs = [os.environ['CAFANA']+'/lib',
                os.environ['OSCLIB_LIB'],
                os.environ['CAFANACORE_LIB'],
+               os.environ['DUNEANAOBJ_LIB'],
+               os.environ['BOOST_LIB'],
                os.environ['TBB_LIB']]
 
+    os.environ['ROOT_INCLUDE_PATH'] += ':'+os.environ['SRPROXY_INC']
+    os.environ['ROOT_INCLUDE_PATH'] += ':build/' # TODO gross
 
     libs = ['Minuit2', 'TMVA', 'EG',
-            'StandardRecord',   'OscLib',        'CAFAnaCoreExt',
+            'duneanaobj_StandardRecord', 'duneanaobj_StandardRecordProxy',
+            'OscLib',           'CAFAnaCoreExt',
             'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
             'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
             'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
@@ -226,7 +238,7 @@ int main(int argc, char** argv)
 
     print('Compiling macro...')
     incs = ' '.join(['-I '+p for p in path])
-    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW '+incs
+    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW -DCAFANACORE_SPECTRUMLOADERBASE '+incs
 #    print(compile_cmd)
     ret = subprocess.run(compile_cmd, shell=True).returncode
     if ret != 0: sys.exit(ret)

@@ -2,6 +2,7 @@
 
 #include "CAFAna/Vars/FitVars.h"
 
+#include "CAFAna/Core/LoadFromRegistry.h"
 #include "CAFAna/Core/MathUtil.h"
 
 #include "TDirectory.h"
@@ -12,6 +13,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("ReactorExperiment", IExperiment, ReactorExperiment);
+
   //----------------------------------------------------------------------
   double ReactorExperiment::ChiSq(osc::IOscCalcAdjustable* osc,
                                   const SystShifts& /*syst*/) const

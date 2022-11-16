@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Experiment/IExperiment.h"
 

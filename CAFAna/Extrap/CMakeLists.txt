@@ -16,13 +16,15 @@ set(Extrap_header_files
   TrivialExtrap.h)
 
 add_library(CAFAnaExtrap SHARED ${Extrap_implementation_files})
-target_link_libraries(CAFAnaExtrap)
+target_link_libraries(CAFAnaExtrap CAFAnaCore)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaExtrap gperftools)
-  target_link_libraries(CAFAnaExtrap ${GPERF_LINKER_FLAGS})
+set_target_properties(CAFAnaExtrap PROPERTIES
+  PUBLIC_HEADER "${Extrap_header_files}")
+
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaExtrap BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaExtrap DESTINATION lib)
-
-install(FILES ${Extrap_header_files} DESTINATION include/CAFAna/Extrap)
+install(TARGETS CAFAnaExtrap 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Extrap/)

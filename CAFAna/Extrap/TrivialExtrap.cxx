@@ -1,5 +1,7 @@
 #include "CAFAna/Extrap/TrivialExtrap.h"
 
+#include "CAFAna/Core/LoadFromRegistry.h"
+
 #include "CAFAna/Cuts/TruthCuts.h"
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/SpectrumLoader.h"
@@ -9,6 +11,8 @@
 
 namespace ana
 {
+  REGISTER_LOADFROM("TrivialExtrap", IExtrap, TrivialExtrap);
+
   //----------------------------------------------------------------------
   TrivialExtrap::TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
                                SpectrumLoaderBase& loaderNue,

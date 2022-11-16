@@ -2,6 +2,7 @@ set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
   Instantiations.cxx
+  FixupRecord.cxx
   ISyst.cxx
   Loaders.cxx
   LoadFromFile.cxx
@@ -23,6 +24,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FitVarWithPrior.h
+  FixupRecord.h
   HistAxis.h
   IFitVar.h
   ISyst.h
@@ -48,13 +50,25 @@ set(Core_header_files
   rootlogon.C)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
-target_link_libraries(CAFAnaCore ${CAFANACOREEXT} ${TBB})
+target_link_libraries(CAFAnaCore
+  ${STANDARDRECORDPROXY}
+  CAFAnaCore::Ext 
+  OscLib::All
+  ROOT::ROOT 
+  Stan::All 
+  Boost::filesystem)
 
-if(DEFINED USE_GPERFTOOLS AND USE_GPERFTOOLS)
-  add_dependencies(CAFAnaCore gperftools)
-  target_link_libraries(CAFAnaCore ${GPERF_LINKER_FLAGS})
+set_target_properties(CAFAnaCore PROPERTIES
+  PUBLIC_HEADER "${Core_header_files}")
+
+if(TARGET perftools::All)
+  target_link_libraries(CAFAnaCore perftools::All)
 endif()
 
-install(TARGETS CAFAnaCore DESTINATION lib)
+if(DEFINED USE_OPENMP AND USE_OPENMP)
+  target_compile_options(CAFAnaCore BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
+endif()
 
-install(FILES ${Core_header_files} DESTINATION include/CAFAna/Core)
+install(TARGETS CAFAnaCore 
+  LIBRARY DESTINATION lib/
+  PUBLIC_HEADER DESTINATION include/CAFAna/Core/)
