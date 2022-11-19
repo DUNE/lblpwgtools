@@ -281,7 +281,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       SystShifts nd_fit_systs;
       // Hackity hack with the sample name here...
       double nd_min = RunFitPoint(stateFname, sampleString+":ndprefit", fakeThrowOsc, fakeThrowSyst,
-				  stats_throw, {}, systlist, nullptr,
+				  stats_throw, {}, systlist, NuFitOscCalc(hie, 1),
 				  SystShifts(fitThrowSyst), {}, nullptr,
 				  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
       // The best fit should be used as the input for the next fits!
