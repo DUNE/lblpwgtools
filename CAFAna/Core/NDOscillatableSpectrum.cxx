@@ -12,8 +12,10 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/NDOscCurve.h"
 #include "CAFAna/Core/Utilities.h"
-#include "StandardRecord/SRProxy.h"
 #include "OscLib/IOscCalc.h"
+
+// dune
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 // root
 #include "TDirectory.h"

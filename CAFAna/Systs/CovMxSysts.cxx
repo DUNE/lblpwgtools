@@ -134,7 +134,7 @@ namespace ana {
   }
 
   // -------------------------------------------------------------------------------------
-  void covmx::NormSyst::Shift(double sigma, Restorer& restore, caf::SRProxy* sr, double& weight) const {
+  void covmx::NormSyst::Shift(double sigma, caf::SRProxy* sr, double& weight) const {
     weight *= 1 + (sigma * fScale);
     if (weight < 0) weight = 0;
   }

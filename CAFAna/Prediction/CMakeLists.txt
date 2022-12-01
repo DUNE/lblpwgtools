@@ -12,7 +12,6 @@ set(Prediction_implementation_files
   PredictionNuOnE.cxx
   PredictionInterpKernel.cxx
   CovarianceMatrix.cxx)
-  PredictionInterpKernel.cxx)
   #PredictionsForPRISM.cxx)
 
 set(Prediction_header_files
@@ -34,9 +33,6 @@ if(DEFINED USE_EIGEN AND USE_EIGEN)
   LIST(APPEND Prediction_implementation_files PredictionPRISM.cxx)
   LIST(APPEND Prediction_header_files PredictionPRISM.h)
 endif()
-=======
-  PredictionInterpKernel.h)
-  #PredictionsForPRISM.h)
 
 add_library(CAFAnaPrediction SHARED ${Prediction_implementation_files})
 target_link_libraries(CAFAnaPrediction CAFAnaExtrap CAFAnaPRISM)

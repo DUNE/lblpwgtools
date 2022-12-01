@@ -60,7 +60,7 @@ namespace ana {
       NormSyst(std::string shortName, std::string latexName, double scale)
         : ISyst("Norm"+shortName, "Norm. "+latexName), fScale(scale) {
       };
-      virtual void Shift(double sigma, Restorer& restore, caf::SRProxy* sr, double& weight) const override;
+      virtual void Shift(double sigma, caf::SRProxy* sr, double& weight) const override;
     protected:
       double fScale;
     };
