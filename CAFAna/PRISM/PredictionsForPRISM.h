@@ -147,6 +147,9 @@ public:
     fSpectrumNonSwap.OverridePOT(pot);
     fSpectrumNueSwap.OverridePOT(pot);
     fSpectrumNutauSwap.OverridePOT(pot);
+    fSpectrumRHCNonSwap.OverridePOT(pot);
+    fSpectrumRHCNueSwap.OverridePOT(pot);
+    fSpectrumRHCNutauSwap.OverridePOT(pot);
   }
 
   virtual Spectrum Predict(osc::IOscCalc * /*calc*/) const override {

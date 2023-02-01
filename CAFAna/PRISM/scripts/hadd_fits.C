@@ -16,7 +16,7 @@
 #include "TGraph2D.h"
 #include "TTree.h"
 #include "TKey.h"
-#include "Riostream.h"
+//#include "Riostream.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjString.h"
@@ -144,7 +144,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
             int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);       
             int biny_tot = h_totalfit->GetYaxis()->FindBin(bincentre_y);
-
+            //std::cout << "Chi2 = " << bincontent << std::endl;
             h_totalfit->SetBinContent(binx_tot, biny_tot, bincontent);
           }
         }

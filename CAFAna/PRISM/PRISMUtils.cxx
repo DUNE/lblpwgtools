@@ -130,12 +130,14 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) { 
         blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.MatchPredInterps[config]->MinimizeMemory();
       }
       if (!IsND280kA) {
         path = (std::string("NDMatrixInterp_ERecETrue") +
                (IsNu ? "_nu" : "_nub"));
         if (f.GetDirectory(path.c_str())) {
           blob.NDMatrixPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+          blob.NDMatrixPredInterps[config]->MinimizeMemory();
         }
       }
       path = (std::string("NDUnSelected_ETrue") +
@@ -143,18 +145,21 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.NDUnselTruePredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.NDUnselTruePredInterps[config]->MinimizeMemory();
       }
       path = (std::string("NDSelected_ETrue") +
              (IsND280kA ? "_280kA" : "_293kA") +
              (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.NDSelTruePredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.NDSelTruePredInterps[config]->MinimizeMemory();
       }
     } else { // Is FD numu/nue/nutau
       if (!IsNue && !IsNuTau) {
         path = (std::string("FDMatchInterp_ETrue_numu") + (IsNu ? "_nu" : "_nub"));
         if (f.GetDirectory(path.c_str())) {
           blob.MatchPredInterps[config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+          blob.MatchPredInterps[config]->MinimizeMemory();
         }
       }
 
@@ -162,18 +167,21 @@ PRISMStateBlob LoadPRISMState(TFile &f, std::string const &varname) {
              (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDMatrixPredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.FDMatrixPredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDUnSelected_ETrue") +
              (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDUnselTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.FDUnselTruePredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDSelected_ETrue") +
              (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"));
       if (f.GetDirectory(path.c_str())) {
         blob.FDSelTruePredInterps[fd_config] = LoadFrom_<PredictionInterp>(dir, path.c_str());
+        blob.FDSelTruePredInterps[fd_config]->MinimizeMemory();
       }
 
       path = (std::string("FDDataPred_") + varname +

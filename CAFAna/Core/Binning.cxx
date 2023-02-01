@@ -75,6 +75,7 @@ namespace ana
     // Same binning style just halved in size:
     std::vector<double> coarse_edges;
     coarse_edges.push_back(0); // First edge at 0.
+    //coarse_edges.push_back(edges[1] / 2);
     coarse_edges.push_back(edges[1]); // should be 0.5
     int x(0);
     for (size_t i = 2; i < edges.size(); ++i) {
@@ -88,4 +89,28 @@ namespace ana
 
     return Binning::Custom(coarse_edges);
   }
+
+  //----------------------------------------------------------------------
+  Binning TrueEnergyExtraCoarseBins()
+  {
+    std::vector<double> edges = TrueEnergyCoarseBins().Edges();
+
+    // Same binning style just halved in size:
+    std::vector<double> coarse_edges;
+    coarse_edges.push_back(0); // First edge at 0.
+    //coarse_edges.push_back(edges[1] / 2);
+    coarse_edges.push_back(edges[1]); // should be 0.5
+    int x(0);
+    for (size_t i = 2; i < edges.size(); ++i) {
+      x++;
+      if (x == 2) {
+        coarse_edges.push_back(edges.at(i));
+        x = 0;
+      }
+    }
+    coarse_edges.push_back(120);
+
+    return Binning::Custom(coarse_edges);
+  }
+
 }

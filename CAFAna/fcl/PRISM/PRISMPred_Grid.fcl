@@ -5,17 +5,18 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2022/PRISMPred_1Yr4Flav_EVisReco_FineFD_25Oct22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_FineFD_25Oct22.root"
+	output_file: ["/dune/data/users/chasnip/PRISMPreds_2023/PRISMPred_1YrFHC_EVisReco_AddPiMass_4Flav_30Jan23.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_EVisTrueAddPiMass_1Feb23.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EVisReco
-	# Always true - why do we even have this?
-	use_PRISM: true
 	# Set exposure in years
 	POT_years: 1.0
 	# Useful for fake data studies
 	vary_NDFD_data: false
+	# Extra plots for more histograms in PRISMPrediction
+	# Should be false for fitting
+	prism_debugplots: false
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
@@ -51,7 +52,7 @@ BasicPred: {
 		]
 
 		# Normally true - you want a realistic stat error
-		set_ND_errors_from_rate: false
+		set_ND_errors_from_rate: true
 
 		RunPlans: {
 			numode: @local::RunPlans.guess
@@ -63,11 +64,8 @@ BasicPred: {
 	}
 
 	# Choose how many channels you want to make predictions for
-
-	#samples: @local::FitChannels.Numu_disp
-	#samples: @local::FitChannels.Nue_app
-	#samples: @local::JointFitChannels.FourFlavor
-	samples: @local::JointFitChannels.NuModeJoint
+	samples: @local::JointFitChannels.FourFlavor
+	#samples: @local::JointFitChannels.NuModeJoint
 }
 
 
@@ -76,45 +74,29 @@ predictions: [
 	{
 		@table::BasicPred
 		output_dir: "numu_EvMatch"
-	},
-
-	{
-		@table::BasicPred
-		output_dir: "dmsq_238_ssth23_055"
-		true_osc: {
-			dmsq32: 0.00238
-			ssth23: 0.55
-		}
-	},
-
-	{
-		@table::BasicPred
-		output_dir: "dmsq_252_ssth23_05"
-		true_osc: {
-			dmsq32: 0.00252
-			ssth23: 0.5
-		}
 	}
+
+# Below is how you add in osc param changes and syst shifts:
 
 #	{
 #		@table::BasicPred
-#		output_dir: "numu_EvMatch_Shift"
-#		syst: {
-#			shifts: [
-#				[MaCCQE, 1],
-#				[MaCCRES, 1],
-#				[RecoEnergyScaleND,, 1],
-#				[AhtBY, 1],
-#				[BhtBY, 1],
-#				[flux_Nov17_13, 1],
-#				[CV2uBY, 1],
-#				[BeRPA_A, 1],
-#				[BeRPA_B, 1],
-#				[BeRPA_D, 1],
-#			]
+#		output_dir: "dmsq_242_ssth23_050"
+#		true_osc: {
+#			dmsq32: 0.0025
+#			ssth23: 0.52
 #		}
 #	},
-
+#
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_Horn1X"
+#		syst: {
+#			shifts: [
+#				#[flux_Nov17_5, 1]
+#			]
+#		}
+#	}
+	
 ]
 
 predictions[0].output_file[1]: "RECREATE"

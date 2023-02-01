@@ -27,9 +27,10 @@ public:
 
     lowY = std::ceil(h_nom->GetYaxis()->GetXmin());
     highY = std::floor(h_nom->GetYaxis()->GetXmax());
-    NYbins = (highY - lowY) / 0.5; // 50cm bin width
+    //NYbins = (highY - lowY) / 0.5; // 50cm bin width
+    NYbins = (highY - lowY) / 1.0; // 1m bin width
     OffAxisPos = std::make_unique<TAxis>(NYbins, lowY, highY);
-
+    std::cout << "Low OA = " << lowY << ", High OA = " << highY << ", N OA bins = " << NYbins << std::endl;
     std::vector<double> bin_edges;
     for (int binx = 1; binx <= h_nom->GetXaxis()->GetNbins(); binx++) { 
       bin_edges.emplace_back(h_nom->GetXaxis()->GetBinLowEdge(binx));
@@ -69,6 +70,7 @@ public:
   void CalculateUncertaintyBinning(std::string flavor) {
     for (int i = 0; i < NYbins; i++) {
       std::vector<double> bin_edges;
+      bin_edges.emplace_back(0);
       double sumx(0);
       for (int binx = 1; binx <= NDnoms.at(i)->GetXaxis()->GetNbins(); binx++) {
         sumx += NDnoms.at(i)->GetBinContent(binx);
@@ -152,6 +154,7 @@ public:
 
   void CalculateUncertaintyBinning(std::string flavor) {
     std::vector<double> bin_edges;
+    bin_edges.emplace_back(0);
     double sumx(0);
     for (int binx = 1; binx <= FDnom->GetXaxis()->GetNbins(); binx++) {
       sumx += FDnom->GetBinContent(binx);
@@ -195,8 +198,8 @@ public:
 
 protected:
 
-  const double minstats_numu = 2E-11;
-  const double minstats_nue = 2E-13;
+  const double minstats_numu = 5E-12;
+  const double minstats_nue = 1E-13;
 
   std::unique_ptr<TH1D> FDnom;
   std::unique_ptr<TH1D> FDshift;

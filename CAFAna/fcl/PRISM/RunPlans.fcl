@@ -8,7 +8,7 @@ RunPlans: {
 		{ xrange: [-14,-18] time: 1 },
 		{ xrange: [-18,-22] time: 1 },
 		{ xrange: [-22,-26] time: 1 },
-		{ xrange: [-26,-30] time: 1 }]
+		{ xrange: [-26,-30.5] time: 1 }]
 	}
 
 	guess: {

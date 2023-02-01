@@ -22,6 +22,9 @@ const ana::Cut kSel280kARun([](const caf::StandardRecord *sr) {
 const ana::Cut kIsReco([](const caf::StandardRecord *sr) {
   return (sr->Elep_reco > 0);
 });
+const ana::Cut kIsParamReco([](const caf::StandardRecord *sr) {
+  return (sr->ELep_param > 0);
+});
 
 const ana::Cut kPRISMNDSignal_Selected_numu =
     ana::kPassND_FHC_NUMU && ana::kIsTrueFV && kIsOutOfTheDesert;

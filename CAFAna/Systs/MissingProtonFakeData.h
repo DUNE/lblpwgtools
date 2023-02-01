@@ -41,23 +41,21 @@ public:
 		sr->VisTrue_NDFD,
                 sr->HadEVisReco_ND,
                 sr->HadEVisReco_FD,
-		sr->HadE);
+		sr->HadE,
+                sr->HadE_param);
 
     if (sr->isFD) {
       sr->eRec_FromDep -= EpFrac * sr->eDepP;
       sr->EVisReco_numu -= EpFrac * sr->eDepP;
       sr->EVisReco_nue -= EpFrac * sr->eDepP;
-      sr->VisTrue_NDFD -= EpFrac * sr->eP;
       sr->HadEVisReco_FD -= EpFrac * sr->eDepP;
-      sr->HadE -= EpFrac * sr->eP; 
     } else {
       sr->eRec_FromDep -= EpFrac * sr->eRecoP;
       sr->EVisReco_ND -= EpFrac * sr->eRecoP;
-      sr->VisTrue_NDFD -= EpFrac * sr->eP;
-      sr->HadEVisReco_FD -= EpFrac *sr->eRecoP;
-      sr->HadE -= EpFrac * sr->eP;
+      sr->HadEVisReco_ND -= EpFrac *sr->eRecoP;
     }
 
+    // Variables common to ND and FD
     double eother = 0;
     if (std::isnormal(sr->eOther)) {
       eother = sr->eOther;
@@ -65,6 +63,15 @@ public:
     sr->eRecProxy = sr->LepE + (1.0 - EpFrac) * sr->eP +
                          sr->ePip + sr->ePim + sr->ePi0 +
                          0.135 * sr->nipi0 + eother;
+
+    sr->HadE = (1.0 - EpFrac) * sr->eP + sr->ePip + sr->ePim +
+               (0.13957 * (sr->nipip + sr->nipim)) +
+               sr->ePi0 + (0.135 * sr->nipi0) + eother;
+
+    sr->HadE_param = (1.0 - EpFrac) * sr->eP_param + sr->ePip_param + 
+                     sr->ePim_param + sr->ePi0_param + sr->eOther_param;
+
+    sr->VisTrue_NDFD = sr->LepE + sr->HadE;
 
     if (!fDoWeight) {
       return;
