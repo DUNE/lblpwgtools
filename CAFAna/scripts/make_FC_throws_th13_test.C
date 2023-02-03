@@ -171,7 +171,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
   // Manually try different octants, so don't seed ssth23
   std::map<const IFitVar *, std::vector<double>> oscSeeds;
-  oscSeeds[&kFitDeltaInPiUnits] = {-0.66, 0, 0.66};
+  oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
   // Fixed par throw
   FitTreeBlob th13_tree("th13_fit_info", "th13_params");
