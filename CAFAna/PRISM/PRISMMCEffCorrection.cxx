@@ -114,6 +114,8 @@ namespace ana {
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
         ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
 
+    //hNDUnselected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDunselected_293kA.ToTH2(1)));
+
     // Analysis axis could be 2D, so put into RWSpec so we can have it projected into 1D trueaxis
     Eigen::ArrayXXd NDunsel_293kA = ConvertArrayToMatrix(sNDunselected_293kA.GetEigen(1),
                                                          sNDunselected_293kA.GetBinnings())
@@ -134,6 +136,8 @@ namespace ana {
          NDSelPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, true))
          ->PredictComponentSyst(&no, shift_nd, NDflav, curr, NDsign);
 
+    //hNDSelected_293kA = std::unique_ptr<TH2D>(dynamic_cast<TH2D*>(sNDselected_293kA.ToTH2(1)));
+
     Eigen::ArrayXXd NDsel_293kA = ConvertArrayToMatrix(sNDselected_293kA.GetEigen(1),
                                                        sNDselected_293kA.GetBinnings())
                                                       .array()
@@ -152,8 +156,8 @@ namespace ana {
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
 
-    hFDunselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDunselected.ToTH1(1)));
-    hFDselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDselected.ToTH1(1)));
+    //hFDunselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDunselected.ToTH1(1)));
+    //hFDselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDselected.ToTH1(1)));
 
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
                                    .segment(1, FDefficiency.size());

@@ -5,7 +5,8 @@
 static ana::OffAxisFluxUncertaintyHelper const *fOffAxisFluxParamHelper =
     nullptr;
 #include "CAFAna/Systs/NewOffAxisFluxUncertainty2022Helper.h"
-static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertainty2022Helper = nullptr;
+static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertainty2022Helper = 
+    nullptr;
 #endif
 
 #include "CAFAna/Core/SystShifts.h"
@@ -22,7 +23,7 @@ static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertaint
 #include <algorithm>
 
 namespace ana {
-const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(30);
+const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(23);
 
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
@@ -52,36 +53,30 @@ void DUNEFluxSyst::Shift(double sigma, Restorer &restore,
   bool isSpecHCRun(false);
   if (std::abs(sr->SpecialHCRunId) != 293) isSpecHCRun = true;
 
-  if (sr->OffAxisFluxBin == -1) {
-    if (fUseSept21) {
-      sr->OffAxisFluxBin = ana::NewOffAxisFluxUncertainty2022Helper::Get().GetBin(
-          sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, fIdx, !sr->isFD,
-          sr->isFHC, isSpecHCRun);
-    } else {
-      sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
-          sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, 0, !sr->isFD,
-          sr->isFHC, isSpecHCRun);
-      }
-  }
-
-  if (sr->OffAxisFluxConfig == -1) {
-    if (fUseSept21) {
-      sr->OffAxisFluxConfig = 
-        ana::NewOffAxisFluxUncertainty2022Helper::Get().GetNuConfig_checked(
-            sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, fIdx, !sr->isFD,
-            sr->isFHC, isSpecHCRun); 
-    } else {
-      sr->OffAxisFluxConfig = 
-        ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
-            sr->nuPDGunosc, sr->Ev, sr->abspos_x * 1E-2, 0, !sr->isFD,
-            sr->isFHC, isSpecHCRun);
-    }
-  }
-
   if (fUseSept21) {
+    sr->OffAxis2022FluxBin = ana::NewOffAxisFluxUncertainty2022Helper::Get().GetBin(
+        sr->nuPDGunosc, sr->Ev, sr->abspos_x * -1E-2, fIdx, !sr->isFD,
+        sr->isFHC, isSpecHCRun);
+    if (sr->OffAxis2022FluxConfig == -1) {
+      sr->OffAxis2022FluxConfig = 
+          ana::NewOffAxisFluxUncertainty2022Helper::Get().GetNuConfig_checked(
+              sr->nuPDGunosc, sr->Ev, sr->abspos_x * -1E-2, fIdx, !sr->isFD,
+              sr->isFHC, isSpecHCRun); 
+    } 
     weight = fNewOffAxisFluxUncertainty2022Helper->GetFluxWeight(
-        fIdx, sigma, sr->abspos_x * 1E-2, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
+        fIdx, sigma, sr->abspos_x * -1E-2, sr->OffAxis2022FluxBin, sr->OffAxis2022FluxConfig);
   } else {
+    if (sr->OffAxisFluxBin == -1) {
+      sr->OffAxisFluxBin = ana::OffAxisFluxUncertaintyHelper::Get().GetBin(
+          sr->nuPDGunosc, sr->Ev, sr->abspos_x * -1E-2, 0, !sr->isFD,
+          sr->isFHC, isSpecHCRun);
+    }
+    if (sr->OffAxisFluxConfig == -1) {
+      sr->OffAxisFluxConfig = 
+          ana::OffAxisFluxUncertaintyHelper::Get().GetNuConfig_checked(
+              sr->nuPDGunosc, sr->Ev, sr->abspos_x * -1E-2, 0, !sr->isFD,
+              sr->isFHC, isSpecHCRun);
+    }
     weight = fOffAxisFluxParamHelper->GetFluxWeight(
         fIdx, sigma, sr->OffAxisFluxBin, sr->OffAxisFluxConfig);
   }
@@ -156,8 +151,9 @@ const DUNEFluxSyst *GetDUNEFluxSyst(unsigned int i, bool applyPenalty,
   // Make sure we always give the same one back
   static std::vector<const DUNEFluxSyst *> cache_CDR;
   static std::vector<const DUNEFluxSyst *> cache_Nov17;
+  static std::vector<const DUNEFluxSyst *> cache_Sept21;
 
-  auto c = useCDR ? &cache_CDR : &cache_Nov17;
+  auto c = useCDR ? &cache_CDR : (useSept21 ? &cache_Sept21 : &cache_Nov17);
   if (i >= c->size()) {
     c->resize(i + 1);
   }

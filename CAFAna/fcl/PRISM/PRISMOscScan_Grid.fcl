@@ -5,19 +5,22 @@
 
 BasicPred: {
 
-	output_file: ["ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
+	output_file: ["dmsq32_ssth23_dcp_EnuReco_FineNDBin_100_4Flav_Jan23.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EnuReco_FineNDBin_30Jan23.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EVisReco
-	# Always true - why do we even have this?
+	projection_name: EnuReco
+        # Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 3.5
+	POT_years: 0.5 # 1.04 for 100MWktYrs
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
+        # Extra plots for more histograms in PRISMPrediction
+        # Should be false for fitting
+        prism_debugplots: false
 	# Do you want to use fake data?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
@@ -37,31 +40,31 @@ BasicPred: {
 			chan: @local::FitChannels.Numubar_disp
 			energy_range: [0.5, 6]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-20
+			reg_factor_280kA: 1E-20
 			},
 			{
 			chan: @local::FitChannels.Nue_app
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nutau_app
 			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nutaubar_app
 			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			}
 		]
 		# Will probably want this to be true - set ND errors from sqrt(N)
@@ -78,7 +81,8 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23
+	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	scan_params: @local::ScanDefinitions.dmsq32
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
@@ -98,6 +102,16 @@ scans: [
 		@table::BasicPred
 		free_syst_params: @local::nuisance_parameters.fluxAll
 		output_dir: "fit_flux"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameter_sets.fluxHadProd10
+		output_dir: "fit_hadprod"
+	},
+	{
+		@table::BasicPred
+		free_syst_params: @local::nuisance_parameter_sets.fluxFocussing
+		output_dir: "fit_focus"
 	},
 	{
 		@table::BasicPred

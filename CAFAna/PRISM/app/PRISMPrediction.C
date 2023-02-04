@@ -1,3 +1,5 @@
+#include "CAFAnaCore/CAFAna/Core/Ratio.h"
+
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
@@ -11,6 +13,8 @@
 
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
+
+#include "TSystem.h"
 
 using namespace ana;
 using namespace PRISM;
@@ -31,10 +35,16 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   // default to 1 year
   double POT = pred.get<double>("POT_years", 1) * 1.1e21; //POT120 = 1.1e21
   double POT_FD = POT * pot_fd_FVMassFactor;
-  bool use_PRISM = pred.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
+  bool prism_debugplots = pred.get<bool>("prism_debugplots", false);
   bool use_fake_data = pred.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
+
+  if (vary_NDFD_MCData == true && prism_debugplots == false) {
+    std::cout << "[ERROR] you can have just 'prism_debugplots', "
+              << "but you cannot have just 'vary_NDFD_data'" << std::endl;
+    abort();
+  }
 
   std::pair<double, double> gauss_flux =
       pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
@@ -72,10 +82,15 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
    osc::NoOscillations no;
 
+  // Profile memory usage
+  ProcInfo_t procinfo;
+  gSystem->GetProcInfo(&procinfo);
+  std::cerr << "[MEM]: Resident = " << procinfo.fMemResident << std::endl;
+
   // Lazy load the state file
   if (!States.count(state_file)) {
     TFile *fs = TFile::Open(state_file.c_str());
-    if (fs->IsZombie()) {
+    if (fs->IsZombie() || !fs) {
       std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
       abort();
     }
@@ -85,9 +100,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Done!" << std::endl;
     fs->Close();
   }
-
   PRISMStateBlob &state = States[state_file];
-
   TFile f(output_file[0].c_str(),
           output_file.size() > 1 ? output_file[1].c_str() : "RECREATE");
 
@@ -98,55 +111,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
 
   dir->cd();
-
-  PRISMExtrapolator fluxmatcher;
-  if (use_PRISM) {
-
-    if (Use_EventRateMatching) {
-      std::cout << "Using event rate matching" << std::endl;
-      fluxmatcher.Initialize({
-          {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
-          {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
-          {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-          {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
-          {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
-          {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
-      });
-    } else {
-      std::cout << "Using flux matching" << std::endl;
-      fluxmatcher.Initialize({
-          {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
-          {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
-          {"FD_nu", state.FDFluxPred_293kA_nu.get()},
-          {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
-          {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
-          {"FD_nub", state.FDFluxPred_293kA_nub.get()},
-      });
-    }
-
-    for (auto const &channel_conditioning :
-         PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
-
-      auto ch =
-          GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
-
-      double chan_reg_293 =
-          channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
-      double chan_reg_280 =
-          channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
-      std::array<double, 2> chan_energy_range =
-          channel_conditioning.get<std::array<double, 2>>("energy_range",
-                                                          {0, 4});
-
-      fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
-                                        chan_energy_range);
-    }
-
-    if ( PRISM_write_debug )       fluxmatcher.SetStoreDebugMatches();
-    if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
-
-    state.PRISM->SetFluxMatcher(&fluxmatcher);
-  }
 
   if (run_plan_nu.GetPlanPOT() > 0) {
     state.PRISM->SetNDRunPlan(run_plan_nu, BeamMode::kNuMode);
@@ -169,6 +133,13 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Nominal MC as mock-data. Apply flux systs to weights." << std::endl;
   }
   state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
+
+  if (prism_debugplots) {
+    std::cout << "Add extra plots to output file for histogram studies." << std::endl;
+  } else {
+    std::cout << "No extra histograms, only do what is necessary for linear combination" << std::endl;
+  }
+  state.PRISM->SetVaryPRISMDebugPlots(prism_debugplots);
 
   if (use_fake_data) {
     std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
@@ -203,7 +174,57 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "CAFANA_STAT_ERRS disabled!" << std::endl;
   }
 
-  // Try defining extrapolator object before channel loop
+  //-------------
+  // Create flux matcher object
+  PRISMExtrapolator fluxmatcher;
+
+  if (Use_EventRateMatching) {
+    std::cout << "Using event rate matching" << std::endl;
+    fluxmatcher.Initialize({
+        {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
+        {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+        {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
+        {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+    });
+  } else {
+    std::cout << "Using flux matching" << std::endl;
+    fluxmatcher.Initialize({
+        {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
+        {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
+        {"FD_nu", state.FDFluxPred_293kA_nu.get()},
+        {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
+        {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
+        {"FD_nub", state.FDFluxPred_293kA_nub.get()},
+    });
+  }
+
+  for (auto const &channel_conditioning :
+       PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
+
+    auto ch =
+        GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+
+    double chan_reg_293 =
+        channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
+    double chan_reg_280 =
+        channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
+    std::array<double, 2> chan_energy_range =
+        channel_conditioning.get<std::array<double, 2>>("energy_range",
+                                                        {0, 4});
+
+    fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
+                                        chan_energy_range);
+  }
+
+  if ( PRISM_write_debug )       fluxmatcher.SetStoreDebugMatches();
+  if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
+
+  state.PRISM->SetFluxMatcher(&fluxmatcher);
+  //-------------
+
+  // Define extrapolator object before channel loop
   NDFD_Matrix SmearMatrices;
   MCEffCorrection NDFDEffCorr;
 
@@ -243,6 +264,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
 
+    // Data prediction with satistical error from MC rather than made up exposure 
+    // stat error
+    auto FarDetPred_MCErrs = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
+    auto *DataPredMCErrs = FarDetPred_MCErrs.ToTHX(POT_FD);
+    DataPredMCErrs->Scale(1, "width");
+    chan_dir->WriteTObject(DataPredMCErrs, "DataPred_MCErrs");
+    DataPredMCErrs->SetDirectory(nullptr);
+
     Spectrum FarDetFakeDataBiasPred = Spectrum::Uninitialized();
     if (state.FarDetFakeDataBiasPreds[FDfdConfig_enum]) {
       FarDetFakeDataBiasPred =
@@ -259,123 +288,79 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     chan_dir->WriteTObject(DataUnOscPred, "DataPredUnOsc_Total");
     DataUnOscPred->SetDirectory(nullptr);
 
-    if (use_PRISM) {
-      // Smearing matrices for ND and FD
-      // For detector and selection corrections
-      SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
-                               {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-      // Set PredictionPRISM to own a pointer to this NDFD_Matrix
-      state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
+    // Smearing matrices for ND and FD
+    // For detector and selection corrections
+    SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
+                             {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+    // Set PredictionPRISM to own a pointer to this NDFD_Matrix
+    state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
-      // MC efficiency correction
-      NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                             {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                             {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                             {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                             {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
-                             {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-
+    // MC efficiency correction
+    NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+                           {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+                           {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
+                           {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
 
 
-      // Set PredictionPRISM to own a pointer to this MCEffCorrection
-      state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
-      //--------------------
-      if (do_gauss) { // Gaussian spectra prediction - NOT IMPLEMENTED!
-        auto PRISMComponents = state.PRISM->PredictGaussianFlux(
-            gauss_flux.first, gauss_flux.second, shift, ch.second.from);
-        TH1 *PRISMPred =
-            PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTH1(POT_FD);
-        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-        PRISMPred->SetDirectory(nullptr);
+    // Set PredictionPRISM to own a pointer to this MCEffCorrection
+    state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
-        if (PRISM_write_debug) {
+    //--------------------
+    auto PRISMComponents =
+        state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
+    std::cout << "Done predicting components." << std::endl;
+    auto *PRISMExtrap =
+          PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
+    PRISMExtrap->Scale(1, "width");
+    chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
+    PRISMExtrap->SetDirectory(nullptr);
 
-          for (auto const &comp : PRISMComponents) {
-            // we always write this
-            if (comp.first == PredictionPRISM::kPRISMPred) {
-              continue;
-            }
-
-            TH1 *PRISMComp_h = comp.second.ToTHX(POT_FD);
-
-            if (PRISMComp_h->Integral() > 0) {
-              chan_dir->WriteTObject(
-                  PRISMComp_h,
-                  PredictionPRISM::GetComponentString(comp.first).c_str());
-            }
-          }
-
-          fluxmatcher.Write(chan_dir->mkdir("Gauss_matcher"));
-          dir->cd();
-        } // End gauss prediction
-      } else { // FD spectra prediction - IMPLEMENTED!
-        auto PRISMComponents =
-            state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
-        std::cout << "Done predicting components." << std::endl;
-        auto *PRISMPred =
-              PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
-        PRISMPred->Scale(1, "width");
-
-        chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-        PRISMPred->SetDirectory(nullptr);
-        auto *PRISMExtrap =
-              PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
-        PRISMExtrap->Scale(1, "width");
-        chan_dir->WriteTObject(PRISMExtrap, "NDDataCorr_FDExtrap");
-        PRISMExtrap->SetDirectory(nullptr);
-        if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
-          auto *PRISMExtrapCovMat =
-                PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT);
-          // Careful: covariance matrix needs to be scaled by the factor squared
-          PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
-          PRISMExtrapCovMat->Scale(1, "width");
-          chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
-          PRISMExtrapCovMat->SetDirectory(nullptr);
-        }
-        // Get nue/numu xsec correction (don't want this bin scaled).
-        if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
-          auto *FD_NueNumuCorr =
-                PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
-          chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
-          FD_NueNumuCorr->SetDirectory(nullptr);
-        }
-        if (PRISM_write_debug) {
-          for (auto const &comp : PRISMComponents) {
-            if (!PRISMComponents.count(comp.first)) continue;
-            // we always write this
-            if (comp.first == PredictionPRISM::kPRISMPred) {
-              continue;
-            } else if (comp.first == PredictionPRISM::kNDDataCorr_FDExtrap) {
-              continue;
-            } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
-              continue;
-            } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
-              continue;
-            }
-
-            auto *PRISMComp_h = comp.second.ToTHX(POT_FD); // POT_FD
-            PRISMComp_h->Scale(1, "width");
-            if (PRISMComp_h->Integral() != 0) {
-              chan_dir->WriteTObject(
-                  PRISMComp_h,
-                  PredictionPRISM::GetComponentString(comp.first).c_str());
-            }
-          }
-
-          fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-          state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"));
-          state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
-
-          dir->cd();
-        }
-        std::cout << "Finished writing." << std::endl;
-      }
-
-    } else {
-      std::cout << "Why are you running this script if you don't want PRISM?" << std::endl;
+    if (PRISMComponents.count(PredictionPRISM::kExtrapCovarMatrix)) {
+      auto *PRISMExtrapCovMat =
+            PRISMComponents.at(PredictionPRISM::kExtrapCovarMatrix).ToTH2(POT);
+      // Careful: covariance matrix needs to be scaled by the factor squared
+      PRISMExtrapCovMat->Scale(std::pow(POT_FD/POT, 2));
+      PRISMExtrapCovMat->Scale(1, "width");
+      chan_dir->WriteTObject(PRISMExtrapCovMat, "ExtrapCovarMatrix");
+      PRISMExtrapCovMat->SetDirectory(nullptr);
+    }
+    // Get nue/numu xsec correction (don't want this bin scaled).
+    if (PRISMComponents.count(PredictionPRISM::kFD_NumuNueCorr)) {
+      auto *FD_NueNumuCorr =
+            PRISMComponents.at(PredictionPRISM::kFD_NumuNueCorr).ToTHX(POT);
+      chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
+      FD_NueNumuCorr->SetDirectory(nullptr);
     }
 
+    if (PRISM_write_debug) {
+      for (auto const &comp : PRISMComponents) {
+        if (!PRISMComponents.count(comp.first)) continue;
+        // we always write this
+        if (comp.first == PredictionPRISM::kNDDataCorr_FDExtrap) {
+          continue;
+        } else if (comp.first == PredictionPRISM::kExtrapCovarMatrix) {
+          continue;
+        } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
+          continue;
+        }
+
+        auto *PRISMComp_h = comp.second.ToTHX(POT_FD); 
+        PRISMComp_h->Scale(1, "width");
+        if (PRISMComp_h->Integral() != 0) {
+          chan_dir->WriteTObject(
+              PRISMComp_h,
+              PredictionPRISM::GetComponentString(comp.first).c_str());
+        }
+      }
+      fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
+      state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"));
+      state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
+      dir->cd();
+    }
+    std::cout << "Finished writing." << std::endl;
     if (NDConfig_enum == kND_nu) {
       TH1D *run_plan_nu_h = run_plan_nu.AsTH1(293);
       chan_dir->WriteTObject(run_plan_nu_h, "run_plan_nu_293kA");

@@ -56,7 +56,9 @@ if [ ! -z ${7} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
+# ERecoScaleMuLArND
 PRISMFAKEDATAARG=" --PRISM-fake-data MissingProtonFakeData_pos" # nominal MaCCQE_pos MissingProtonFakeData_pos
+#PRISMFAKEDATAARG=" --PRISM-fake-data ERecoScaleMuLArND_neg"
 SELECTIONARG=" --UseSelection"
 #SELECTIONARG=""
 

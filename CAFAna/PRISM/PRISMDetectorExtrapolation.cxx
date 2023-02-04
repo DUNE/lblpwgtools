@@ -213,6 +213,8 @@ namespace ana {
       // Tikhonov regularisation is uneccessary, just least square unfold!
       //Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
       //                    MatrixND_block.transpose() * invCovMatRec;
+
+      // Covariance matrix of NDreco should have no impact on unfolded result 
       Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block).inverse() *
                           MatrixND_block.transpose();
       Eigen::VectorXd NDETrue = D * NDERec;

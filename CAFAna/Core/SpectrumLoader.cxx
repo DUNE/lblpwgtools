@@ -27,6 +27,7 @@
 #include "TFile.h"
 #include "TH2.h"
 #include "TTree.h"
+#include "TRandom.h"
 
 namespace ana {
 //----------------------------------------------------------------------
@@ -351,7 +352,35 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Variable for true hadronic energy
-    sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.135 * sr.nipi0) + eother;
+    // Including pion masses gets closer to actualy deposited energy
+    sr.HadE = sr.eP + sr.ePip + sr.ePim + (0.13957 * (sr.nipip + sr.nipim)) + sr.ePi0 + (0.134977 * sr.nipi0) + eother;
+
+    // Smear true energy variables to get parameterised reco
+    // Guess resolution of 10% for muons, EM showers and charged hadrons
+    sr.eP_param = gRandom->Gaus(sr.eP, sr.eP*0.1);
+    sr.ePip_param = gRandom->Gaus(sr.ePip, sr.ePip*0.1) + (0.13957 * sr.nipip);
+    sr.ePim_param = gRandom->Gaus(sr.ePim, sr.ePim*0.1) + (0.13957 * sr.nipim);
+    sr.ePi0_param = gRandom->Gaus(sr.ePi0, sr.ePi0*0.1) + (0.134977 * sr.nipi0);
+    sr.eOther_param = 0;
+    if (std::isnormal(sr.eOther)) {
+      sr.eOther_param = gRandom->Gaus(eother, eother*0.1);
+    }
+    // Smear the kinetic energy of lepton
+    const double mmu = 0.1056583745;
+    const double mtau = 1.77686;
+    // electron mass negligible
+    sr.ELep_param = 0; // No lepton energy if NC and Lep is a neutrino
+    if (sr.isCC && abs(sr.nuPDG) == 14) { // Smear lepton kinetic energy
+      sr.ELep_param = gRandom->Gaus((sr.LepE - mmu), (sr.LepE - mmu)*0.05) + mmu;
+    } else if (sr.isCC && abs(sr.nuPDG) == 12) {
+      sr.ELep_param = gRandom->Gaus(sr.LepE, sr.LepE*(0.03 + 0.1/sqrt(sr.LepE)));
+    } else if (sr.isCC && abs(sr.nuPDG) == 16) {
+      sr.ELep_param = gRandom->Gaus((sr.LepE - mtau), (sr.LepE - mtau)*0.05) + mtau;
+    }
+
+    sr.HadE_param = sr.eP_param + sr.ePip_param + sr.ePim_param + sr.ePi0_param + sr.eOther_param;
+    //sr.HadE_param = gRandom->Gaus(sr.HadE, sr.HadE*0.15); // From TDR guess 15% res for hadrons
+
     // True visible energy in the ND or FD
     // Sum of the true lepton and true hadronic energy
     sr.VisTrue_NDFD = sr.LepE + sr.HadE;
@@ -406,10 +435,13 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       }
     }
 
+    // For flux uncertainties
 #ifdef USE_TH2JAGGED
     sr.OffAxisFluxConfig = -1;
     sr.OffAxisFluxBin = -1;
 #endif
+    sr.OffAxis2022FluxConfig = -1;
+    sr.OffAxis2022FluxBin = -1;
     // Get the crazy flux info properly
     sr.wgt_CrazyFlux.resize(7);
     for (int i = 0; i < 7; ++i) {

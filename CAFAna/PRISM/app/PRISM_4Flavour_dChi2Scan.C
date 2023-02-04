@@ -64,8 +64,8 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   double POT_FD = POT * pot_fd_FVMassFactor;
   std::cout << "POT : " << POT << ", " << POT_FD << std::endl;
 
-  bool use_PRISM = scan.get<bool>("use_PRISM", true);
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
+  bool prism_debugplots = scan.get<bool>("prism_debugplots", false); // should always be false
   bool use_fake_data = scan.get<bool>("use_fake_data", false); 
   bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
   bool th13_constraint = scan.get<bool>("reactor_constraint", true);
@@ -220,52 +220,6 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   }
   dir->cd();
 
-  PRISMExtrapolator fluxmatcher;
-
-  if(use_PRISM) {
-    if (Use_EventRateMatching) {
-      std::cout << "Using event rate matching" << std::endl;
-      fluxmatcher.Initialize({
-        {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
-        {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
-        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
-        {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
-        {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
-        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
-      });
-      std::cout << "Using event rate matching" << std::endl;
-    } else {
-     std::cout << "Using flux matching" << std::endl;
-      fluxmatcher.Initialize({
-        {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
-        {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
-        {"FD_nu", state.FDFluxPred_293kA_nu.get()},
-        {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
-        {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
-        {"FD_nub", state.FDFluxPred_293kA_nub.get()},
-      });
-    }
-    std::cout << "Done filling fluxmatcher." << std::endl;
-    for (auto const &channel_conditioning :
-      PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
-
-      auto ch = GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
-
-      double chan_reg_293 = channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
-      double chan_reg_280 = channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
-      std::array<double, 2> chan_energy_range =
-        channel_conditioning.get<std::array<double, 2>>("energy_range",
-                                                        {0, 4});
-
-      fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
-                                      chan_energy_range);
-    }
-
-    if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
-
-    state.PRISM->SetFluxMatcher(&fluxmatcher);
-  }
-
   if (run_plan_nu.GetPlanPOT() > 0) {
     state.PRISM->SetNDRunPlan(run_plan_nu, BeamMode::kNuMode);
   }
@@ -282,6 +236,13 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::cout << "Nominal MC as mock-data. Apply flux systs to weights." << std::endl;
   }
   state.PRISM->SetVaryNDFDMCData(vary_NDFD_MCData);
+
+  if (prism_debugplots) {
+    std::cout << "Add extra plots to output file for histogram studies." << std::endl;
+  } else {
+    std::cout << "No extra histograms, only do what is necessary for linear combination" << std::endl;
+  }
+  state.PRISM->SetVaryPRISMDebugPlots(prism_debugplots);
 
   if (use_fake_data) {
     std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
@@ -307,6 +268,53 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     auto ch = GetMatchChan(scan.get<fhicl::ParameterSet>("samples"));
     Channels[GetMatchChanShortName(ch)] = ch;
   }
+
+  //-------------
+  // Create flux matcher object
+  PRISMExtrapolator fluxmatcher;
+
+  if (Use_EventRateMatching) {
+    std::cout << "Using event rate matching" << std::endl;
+    fluxmatcher.Initialize({
+      {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
+      {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+      {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+      {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
+      {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+      {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+    });
+    std::cout << "Using event rate matching" << std::endl;
+  } else {
+    std::cout << "Using flux matching" << std::endl;
+    fluxmatcher.Initialize({
+      {"ND_293kA_nu", state.NDFluxPred_293kA_nu.get()},
+      {"ND_280kA_nu", state.NDFluxPred_280kA_nu.get()},
+      {"FD_nu", state.FDFluxPred_293kA_nu.get()},
+      {"ND_293kA_nub", state.NDFluxPred_293kA_nub.get()},
+      {"ND_280kA_nub", state.NDFluxPred_280kA_nub.get()},
+      {"FD_nub", state.FDFluxPred_293kA_nub.get()},
+    });
+  }
+  std::cout << "Done filling fluxmatcher." << std::endl;
+  for (auto const &channel_conditioning :
+    PRISMps.get<std::vector<fhicl::ParameterSet>>("match_conditioning")) {
+
+    auto ch = GetMatchChan(channel_conditioning.get<fhicl::ParameterSet>("chan"));
+
+    double chan_reg_293 = channel_conditioning.get<double>("reg_factor_293kA", 1E-16);
+    double chan_reg_280 = channel_conditioning.get<double>("reg_factor_280kA", 1E-16);
+    std::array<double, 2> chan_energy_range =
+      channel_conditioning.get<std::array<double, 2>>("energy_range",
+                                                      {0, 4});
+
+    fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
+                                     chan_energy_range);
+  }
+
+  if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
+
+  state.PRISM->SetFluxMatcher(&fluxmatcher);
+  //-------------
 
   // Create a multi experiment
   MultiExperiment CombExpts;
@@ -370,18 +378,20 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::cout << "Set up matrices and efficiency correction." << std::endl;
 
     // Begin ND to FD extrapolation
-    SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
-                             {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+    SmearMatrices.Initialize(
+        {state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
+        {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
 
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
     // ND to FD MC efficiency correction
-    NDFDEffCorr.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                           {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
-                           {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                           {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
-                           {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
-                           {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+    NDFDEffCorr.Initialize(
+        {state.NDUnselTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+        {state.NDSelTruePredInterps[NDConfig_293kA].get(), NDConfig_293kA},
+        {state.NDUnselTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+        {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
+        {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
+        {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
 
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
@@ -390,11 +400,6 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
 
     auto PRISMComponents =
       state.PRISM->PredictPRISMComponents(calc_true, shift, ch.second);
-    auto *PRISMPred =
-          PRISMComponents.at(PredictionPRISM::kPRISMPred).ToTHX(POT_FD);
-    PRISMPred->Scale(1, "width");
-    chan_dir->WriteTObject(PRISMPred, "PRISMPred");
-    PRISMPred->SetDirectory(nullptr);
     auto *PRISMExtrap =
       PRISMComponents.at(PredictionPRISM::kNDDataCorr_FDExtrap).ToTHX(POT_FD);
     PRISMExtrap->Scale(1, "width");
@@ -412,21 +417,17 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
 
     std::cout << "Fill Experiment objects." << std::endl;
 
+    // FarDetFakeDataBiasPred FarDetDataPred
     Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
                                                     (use_fake_data ? 
-                                                    FarDetFakeDataBiasPred.FakeData(POT_FD) : 
+                                                    FarDetFakeDataBiasPred.FakeData(POT_FD) :
                                                     FarDetDataPred.FakeData(POT_FD)),
                                                     use_PRISM_ND_stats,
                                                     POT, POT_FD, ch.second));
-
-    /*Expts.emplace_back(new PRISMChi2CovarExperiment(state.PRISM.get(),
-                                                    PRISMPred_spec.FakeData(POT_FD), 
-                                                    use_PRISM_ND_stats,
-                                                    POT, POT_FD, ch.second));*/
-    Expts.back().get()->SetFitBoundaries(0.5, 10);
-
+    if (PRISMPred_spec.NDimensions() == 1) {
+      Expts.back().get()->SetFitBoundaries(0.5, 10);
+    }
     CombExpts.Add(Expts.back().get());
-
   }
 
   dir->cd();

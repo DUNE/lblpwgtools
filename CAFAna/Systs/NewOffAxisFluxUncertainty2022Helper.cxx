@@ -45,12 +45,12 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
   static std::string const location_tags[] = {
         ND_detector_tag, FD_detector_tag};
   static std::string const beam_mode_tags[] = {
-        nu_mode_beam_tag/*, nubar_mode_beam_tag*/}; // waiting for 280kA uncertainties
+        nu_mode_beam_tag, nubar_mode_beam_tag}; 
   static std::string const species_tags[] = {
       numu_species_tag, nue_species_tag, numubar_species_tag,
       nuebar_species_tag};
   static std::string const spec_run_tags[] = {
-      "_", ND_SpecHCRun_detector_tag}; // waiting for nubar uncertainties
+      "_", ND_SpecHCRun_detector_tag};
 
   std::string input_dir = "FluxParameters";
 
@@ -61,7 +61,6 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
   }
 
   TDirectory *d = inpF->GetDirectory(input_dir.c_str());
-  //d->cd();
   TIter nextkey(d->GetListOfKeys());
   TKey *key;
 
@@ -69,7 +68,7 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
 
   while ((key = (TKey*)nextkey())) {
     std::string param_name(key->GetName());
-    int nucf = kND_numu_numode;
+    int nucf = kND_numu_numode; // = 0
 
     std::string syst = param_name.substr(param_name.find("_") + 1, std::string::npos);
     //std::cout << "Syst name = " << syst << std::endl;    
@@ -92,7 +91,7 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
 
     for (size_t lt_it = 0; lt_it < 2; ++lt_it) {
       std::string const &location_tag = location_tags[lt_it];
-      for (size_t bm_it = 0; bm_it < 1 /*2*/; ++bm_it) {
+      for (size_t bm_it = 0; bm_it < 2; ++bm_it) {
         std::string const &beam_mode_tag = beam_mode_tags[bm_it];
         for (size_t sr_it = 0; sr_it < 2; ++sr_it) {
           std::string const &spec_run_tag = spec_run_tags[sr_it];
@@ -110,8 +109,7 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
               std::string nd_dir = input_dir_i.str() + hname;
               std::vector<std::unique_ptr<TH1D>> AllOffAxisShifts = 
                 GetNDOffAxisShifts(inpF, nd_dir, hname);
-              //param_NDuncerts.emplace_back(std::move(AllOffAxisShifts));
-              NDuncerts.back().back() = std::move(AllOffAxisShifts);
+              NDuncerts.back().at(nucf) = std::move(AllOffAxisShifts);
               nucf += 1;
             } else if (spec_run_tag == "_") { // Is FD and not 280kA run
               std::unique_ptr<TH1D> h_in = 
@@ -120,21 +118,21 @@ void NewOffAxisFluxUncertainty2022Helper::Initialize(std::string const &filename
                 std::cout << "[WARN] Cannot find " << hname << std::endl;
                 continue;
               }
-              
-              h_in->SetDirectory(nullptr);       
+                            
+              h_in->SetDirectory(nullptr);
+              //std::cout << hname << "; nucf = " << nucf << std::endl;       
               //std::cout << "FD uncert nbins: " << 
-                //h_in->GetXaxis()->GetNbins() << std::endl; 
+              //  h_in->GetXaxis()->GetNbins() << std::endl; 
               //std::cout << "FD uncert integral = " << h_in->Integral() << std::endl;     
               //param_FDuncerts.emplace_back(std::move(h_in));
-              FDuncerts.back().back() = std::move(h_in);
+              //FDuncerts.back().back() = std::move(h_in);
+              FDuncerts.back().at(nucf) = std::move(h_in);
               nucf += 1;
             }
           }
         }
       }
     }
-    //NDuncerts.emplace_back(std::move(param_NDuncerts));
-    //FDuncerts.emplace_back(std::move(param_FDuncerts));
     param_id += 1;
   }
 }
@@ -191,7 +189,7 @@ int NewOffAxisFluxUncertainty2022Helper::GetNuConfig(int nu_pdg, bool IsND,
   }
   }
 
-  return nucf; //+ (IsND ? 0 : 16);
+  return nucf;
 }
 
 
@@ -241,18 +239,20 @@ int NewOffAxisFluxUncertainty2022Helper::GetBin(int nu_pdg, double enu_GeV,
 
   int bin_oa(1);
   int bin_e(1); 
-  //std::cout << "param = " << param_id << ", nucf = " << nucf << 
+  //std::cout << "param = " << param_id << ", nucf = " << nucf << ", OA m = " << off_axis_pos_m << 
   //    ", enu_GeV = " << enu_GeV << std::endl;
+  //std::cout << "NDuncerts param size = " << NDuncerts.size() << ", nucf size = " << NDuncerts.at(param_id).size() <<
+  //  ", OA bin size = " << NDuncerts.at(param_id).at(nucf).size() << std::endl;
   if (IsND) {
     // Sign flip in off axis position
-    bin_oa = OffAxisTAxes.at(param_id)->FindFixBin(off_axis_pos_m * -1);
+    bin_oa = OffAxisTAxes.at(param_id)->FindFixBin(off_axis_pos_m);
     bin_e = NDuncerts.at(param_id).at(nucf).at(bin_oa - 1)->FindFixBin(enu_GeV);
   } else {
     if (FDuncerts.at(param_id).size()<1) {
       std::cout << "[WARN] no param_id" << std::endl;
     }
     if (!FDuncerts.at(param_id).at(nucf)) {
-      std::cout << "[WARN] no nucf" << std::endl;
+      std::cout << "[WARN] no nucf = " << nucf << std::endl;
     }
     //std::cout << "FDuncerts.at(param_id) size: " << 
     //  FDuncerts.at(param_id).size() << std::endl;    
@@ -279,17 +279,17 @@ double NewOffAxisFluxUncertainty2022Helper::GetFluxWeight(size_t param_id,
 
   if (nucf < kFD_numu_numode) {
     // Sign flip in off axis position
-    int bin_oa = OffAxisTAxes.at(param_id)->FindFixBin(off_axis_pos_m * -1);
+    int bin_oa = OffAxisTAxes.at(param_id)->FindFixBin(off_axis_pos_m);
     return 1 + 
            param_val * 
            NDuncerts.at(param_id).at(nucf).at(bin_oa - 1)->GetBinContent(bin);
   } else {
     //std::cout << "param_id: " << param_id << ", param_val = " << param_val << ", bin = " << bin << 
-    //  ", bincont = " << FDuncerts.at(param_id).at(nucf)->GetBinContent(bin) << std::endl;
-    //std::cout << "NBins = " << FDuncerts.at(param_id).at(nucf)->GetXaxis()->GetNbins() << std::endl;
-    //std::cout << "Bin Integral = " << FDuncerts.at(param_id).at(nucf)->Integral() << std::endl;
+    //  ", bincont = " << FDuncerts.at(param_id - 1).at(nucf)->GetBinContent(bin) << std::endl;
+    //std::cout << "NBins = " << FDuncerts.at(param_id - 1).at(nucf)->GetXaxis()->GetNbins() << std::endl;
+    //std::cout << "Bin Integral = " << FDuncerts.at(param_id - 1).at(nucf)->Integral() << std::endl;
     //std::cout << "Weight = " << 
-    //  1 + param_val * FDuncerts.at(param_id).at(nucf)->GetBinContent(bin) << std::endl;
+    //  1 + param_val * FDuncerts.at(param_id - 1).at(nucf)->GetBinContent(bin) << std::endl;
     return 1 + param_val * FDuncerts.at(param_id).at(nucf)->GetBinContent(bin);
   }
 }

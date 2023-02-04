@@ -16,7 +16,7 @@
 #include "TGraph2D.h"
 #include "TTree.h"
 #include "TKey.h"
-#include "Riostream.h"
+//#include "Riostream.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjString.h"
@@ -131,7 +131,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
       if (!key_g) {
         std::unique_ptr<TH2D> h_totalfit = std::make_unique<TH2D>(
                                              "Chi2_2DFit", "Chi2_2DFit",
-                                             h_fit->GetXaxis()->GetNbins(),
+                                             50, //h_fit->GetXaxis()->GetNbins(),
                                              ssth23_lowlim, ssth23_highlim,
                                              50,
                                              dmsq32_lowlim, dmsq32_highlim);
@@ -144,7 +144,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
             int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);       
             int biny_tot = h_totalfit->GetYaxis()->FindBin(bincentre_y);
-
+            //std::cout << "Chi2 = " << bincontent << std::endl;
             h_totalfit->SetBinContent(binx_tot, biny_tot, bincontent);
           }
         }

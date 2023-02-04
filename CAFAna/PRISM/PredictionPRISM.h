@@ -88,7 +88,8 @@ public:
 
     kFD_NumuNutauCorr_Numu = 49,
     kFD_NumuNutauCorr_Nutau = 50,
-    kFD_NumuNutauCorr = 51,
+    kFD_NumuNutauCorr = 51
+
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -338,6 +339,7 @@ public:
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
+  void SetVaryPRISMDebugPlots(bool v = true) { fDebugPlots = v; }
   void SetUseFakeData(bool v = true) { fUseFakeData = v; }
   void SetIntrinsicBkgCorr(bool v = true) { fMatchIntrinsicBkg = v; }
 
@@ -595,6 +597,8 @@ protected:
   // Will be true if we want to do 'fake data' studies,
   // where we use nominal MC which is ignorant of shifts in the 'data'.
   bool fVaryNDFDMCData;
+
+  bool fDebugPlots;
 
   // Flag for whether we want to use our fake biased data or our nominal MC as
   // our data.
