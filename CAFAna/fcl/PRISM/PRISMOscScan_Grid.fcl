@@ -5,11 +5,14 @@
 
 BasicPred: {
 
-	output_file: ["ssth23_4Flav_th13_336_XSecFluxDet_28Sep22.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_FHC_RHC_EVisReco_FluxXSecDet_9Sep22.root "
+	output_file: ["ssth23_dmsq32_FourFlavor_ELepEHadVisReco_flux_Nov17_2.root", "UPDATE"]
+	# Read state file from persistent pool, this may slow down jobs
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/fluxsyst_Nov17/ELepEHadVisReco_lep_default_HalfHadbins_all_flux_systs_flux_Nov17_0-25_Hadded_State.root"
+	# Read state file from local work dir (use this when you want to ship state file to worker node on grid)
+	#state_file: "ELepEHadVisReco_lep_default_HalfHadbins_all_flux_systs_flux_Nov17_0-25_Hadded_State.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EVisReco
+	projection_name: ELepEHadVisReco
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
@@ -78,29 +81,19 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23
+	scan_params: @local::ScanDefinitions.ssth23_dmsq32
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
 
 scans: [
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "fit_xsecfluxdet"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.xsecflux
-		output_dir: "fit_xsecflux"
-	},
+	#{
+	#	@table::BasicPred
+	#	output_dir: "fit_nom"
+	#},
 	{
 		@table::BasicPred
 		free_syst_params: @local::nuisance_parameters.fluxAll
-		output_dir: "fit_flux"
-	},
-	{
-		@table::BasicPred
 		output_dir: "fit_nom"
 	}
 ]

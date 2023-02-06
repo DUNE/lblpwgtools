@@ -118,7 +118,7 @@ namespace ana
   std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
                                             bool detsyst, bool useND, bool useFD,
                                             bool useNueOnE, bool useFakeDataDials,
-                                            bool fluxsyst_CDR, bool fluxsyst_Sept21, 
+                                            bool fluxsyst_CDR, bool fluxsyst_Sept21,
                                             int NFluxSysts, bool removeFDNonFitDials) {
 
     // This doesn't need to be an argument because I basically never change it:
@@ -126,19 +126,19 @@ namespace ana
 
     std::vector<const ISyst *> systlist;
     if (fluxsyst_Nov17) {
-      std::vector<const ISyst *> fluxsyst_Nov17 = 
+      std::vector<const ISyst *> fluxsyst_Nov17 =
           GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
       systlist.insert(systlist.end(), fluxsyst_Nov17.begin(), fluxsyst_Nov17.end());
     }
 
     if (fluxsyst_CDR) { // CHECK: GetDUNEFluxSysts loading nothing when set to true
-      std::vector<const ISyst *> fluxsyst_CDR = 
+      std::vector<const ISyst *> fluxsyst_CDR =
           GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, true);
       systlist.insert(systlist.end(), fluxsyst_CDR.begin(), fluxsyst_CDR.end());
     }
 
     if (fluxsyst_Sept21) {
-      std::vector<const ISyst *> fluxsyst_Sept21 = 
+      std::vector<const ISyst *> fluxsyst_Sept21 =
           GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false, true);
       systlist.insert(systlist.end(), fluxsyst_Sept21.begin(), fluxsyst_Sept21.end());
     }
@@ -151,7 +151,7 @@ namespace ana
     if (xsecsyst) {
       // This function removes some dials. Don't know why it has to be so
       // Those will need to be added again if using fake data. So always add fake data last
-      std::vector<const ISyst *> xsecsyst = getReducedXSecSysts(fluxXsecPenalties); 
+      std::vector<const ISyst *> xsecsyst = getReducedXSecSysts(fluxXsecPenalties);
       systlist.insert(systlist.end(), xsecsyst.begin(), xsecsyst.end());
     }
 
@@ -192,9 +192,9 @@ namespace ana
       std::vector<const ISyst *> namedList =
           GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
                          false /*no fake data*/, true /*Get CDR flux systs*/,
-                         true /*Get Sept 21 flux systs*/);
-      // for (auto & syst : namedList) std::cout << syst->ShortName() <<
-      // std::endl; 2) Interpret the list of short names
+                         false /* Default to Nov17 flux systs for now*/);
+
+      // 2) Interpret the list of short names
       std::vector<std::string> systs = SplitString(systString, ':');
 
       // 3) Don't include "list"

@@ -8,7 +8,7 @@ RunPlans: {
 		{ xrange: [-14,-18] time: 1 },
 		{ xrange: [-18,-22] time: 1 },
 		{ xrange: [-22,-26] time: 1 },
-		{ xrange: [-26,-30] time: 1 }]
+		{ xrange: [-26,-30.5] time: 1 }]
 	}
 
 	guess: {
@@ -20,7 +20,7 @@ RunPlans: {
 		{ xrange: [-14,-18] time: 20 },
 		{ xrange: [-18,-22] time: 20 },
 		{ xrange: [-22,-26] time: 20 },
-		{ xrange: [-26,-30] time: 20 } ]
+		{ xrange: [-26,-30.5] time: 20 } ]
 	}
 
 	prodlike: {
@@ -32,7 +32,7 @@ RunPlans: {
 		{ xrange: [-14,-18] time: 0.08 },
 		{ xrange: [-18,-22] time: 0.08 },
 		{ xrange: [-22,-26] time: 0.155 },
-		{ xrange: [-26,-30] time: 0.1625 },
-		{ xrange: [-30,-34] time: 0.17 } ]
+		{ xrange: [-26,-30.5] time: 0.1625 },
+		{ xrange: [-30.5,-34] time: 0.17 } ]
 	}
 }
