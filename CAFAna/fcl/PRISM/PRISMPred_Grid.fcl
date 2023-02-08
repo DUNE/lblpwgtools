@@ -5,8 +5,8 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2023/PRISMPred_1YrFHC_EVisReco_AddPiMass_4Flav_30Jan23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_EVisTrueAddPiMass_1Feb23.root"
+	output_file: ["/dune/data/users/chasnip/PRISMPreds_2023/PRISMPred_1YrFHC_EVisReco_NoPionMass_4Flav_4Feb23.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_NoPionMass_3Feb23.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EVisReco
@@ -65,7 +65,7 @@ BasicPred: {
 
 	# Choose how many channels you want to make predictions for
 	samples: @local::JointFitChannels.FourFlavor
-	#samples: @local::JointFitChannels.NuModeJoint
+	#samples: @local::JointFitChannels.NuBarModeJoint
 }
 
 

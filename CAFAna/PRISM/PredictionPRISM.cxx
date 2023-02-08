@@ -1242,16 +1242,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Always shift FDOsc pred, as this acts as our 'shifted fd data' when
   // doing fake data shifts
-  if (fDebugPlots) {
-    Comps.emplace(kFDOscPred,
-                  FDPrediction->PredictComponentSyst(
-                      calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
-    // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
-    // below and comment-out above.
-    //Comps.emplace(kFDOscPred,
-    //              FDPrediction->PredictComponentSyst(
-    //                  calc, shift_fd, Flavors::kNuMuToNuMu, Current::kCC, Sign::kNu));
-  }
+  Comps.emplace(kFDOscPred,
+                FDPrediction->PredictComponentSyst(
+                    calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
+  // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
+  // below and comment-out above.
+  //Comps.emplace(kFDOscPred,
+  //              FDPrediction->PredictComponentSyst(
+  //                  calc, shift_fd, Flavors::kNuMuToNuMu, Current::kCC, Sign::kNu));
 
   // Get the residual from the event rate/flux matcher.
   Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual();

@@ -36,9 +36,11 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   double ssth23_lowlim = 0.4; // 0.35 0.4
   double dmsq32_lowlim = 2.30;
   double dcp_lowlim = -1;
+  double ss2th13_lowlim = 0.05;
   double ssth23_highlim = 0.65;
   double dmsq32_highlim = 2.55;
   double dcp_highlim = 1;
+  double ss2th13_highlim = 0.15;
 
   double *lowlim, *highlim;
   if (param == "dmsq32") {
@@ -50,6 +52,9 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   } else if (param == "dcp") { 
     lowlim = &dcp_lowlim;
     highlim = &dcp_highlim;
+  } else if (param == "ss2th13") {
+    lowlim = &ss2th13_lowlim;
+    highlim = &ss2th13_highlim; 
   } else {
     std::cout << "[ERROR] Unknown parameter." << std::endl;
     abort();
