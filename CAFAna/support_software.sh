@@ -143,9 +143,10 @@ else
   fi
   if [ -z ${ROOT_LIB} ]; then
     if [ -e ${ROOTSYS}/lib/libCore.so ]; then
-      export ROOT_INC=${ROOTSYS}/lib
+      export ROOT_LIB=${ROOTSYS}/lib # export ROOT_INC=${ROOTSYS}/lib
     elif [ -e ${ROOTSYS}/lib/root/libCore.so ]; then
-      export ROOT_INC=${ROOTSYS}/lib/root
+      export ROOT_LIB=${ROOTSYS}/lib/root # export ROOT_INC=${ROOTSYS}/lib/root
+      
     else
       echo "[ERROR]: ROOTSYS is defined: \"${ROOTSYS}\", but cannot find expected lib dir. Checked for \${ROOTSYS}/lib/libCore.so and \${ROOTSYS}/root/lib/libCore.so"
       exit 1
@@ -157,10 +158,16 @@ else
   if [ -z ${ROOT_ROOT} ]; then
     export ROOT_ROOT=${ROOTSYS}
   fi
+  echo -e "export ROOTSYS=\"${ROOTSYS}\"" >> support_software_env.sh
+  echo -e "export ROOT_INC=\"${ROOT_INC}\"" >> support_software_env.sh
+  echo -e "export ROOT_LIB=\"${ROOT_LIB}\"" >> support_software_env.sh
+  echo -e "ROOT_CXX_STANDARD=\"${ROOT_CXX_STANDARD}\"" >> support_software_env.sh
+  echo -e "CMAKE_CXX_STANDARD=\"${CMAKE_CXX_STANDARD}\"" >> support_software_env.sh
+
 fi #end if have ROOTSYS
 
 if [ -z "${BOOST_INC}" ]; then
-  if [ -e /usr/include/boost ]; then
+  if [ -e /usr/include/boost ]; then # -e
     export BOOST_INC=/usr/include
   elif hash brew; then #check homebrew if it exists
     if brew --prefix boost &> /dev/null; then
@@ -178,24 +185,14 @@ if [ -z "${BOOST_LIB}" ]; then
     export BOOST_LIB=/usr/lib/$(arch)-linux-gnu/
   elif [ -e /usr/lib/libboost_filesystem.${DSOEXT} ]; then
     export BOOST_LIB=/usr/lib/
+  elif [ -e /usr/lib64/libboost_filesystem.${DSOEXT} ]; then
+    export BOOST_LIB=/usr/lib64/
   elif hash brew; then #check homebrew if it exists
     if brew --prefix boost &> /dev/null && [ -e $(brew --prefix boost)/lib/libboost_filesystem.${DSOEXT} ]; then
       export BOOST_LIB=$(brew --prefix boost)/lib
     fi
   else
     echo "[ERROR]: Not using UPS, but couldn't find system boost libboost_filesystem.${DSOEXT} and BOOST_LIB wasn't defined in the environment."
-    exit 1
-  fi
-  if [ $(uname) = "Linux" ] && [ -e /usr/lib/$(arch)-linux-gnu/libboost_system.${DSOEXT}* ]; then
-    export BOOST_LIB=/usr/lib/$(arch)-linux-gnu/
-  elif [ -e /usr/lib/libboost_system.${DSOEXT}* ]; then
-    export BOOST_LIB=/usr/lib/
-  elif hash brew; then #check homebrew if it exists
-    if brew --prefix boost &> /dev/null && [ -e $(brew --prefix boost)/lib/libboost_system.${DSOEXT} ]; then
-      export BOOST_LIB=$(brew --prefix boost)/lib
-    fi
-  else
-    echo "[ERROR]: Not using UPS, but couldn't find system boost libboost_system.${DSOEXT} and BOOST_LIB wasn't defined in the environment."
     exit 1
   fi
   echo -e "export BOOST_LIB=\"${BOOST_LIB}\"" >> support_software_env.sh
@@ -231,7 +228,6 @@ if [ -z "${FHICLCPP_DIR}" ]; then
         git clone https://github.com/luketpickering/linedoc
         cd ${SUPPORT_SOFTWARE_BUILD_DIR}
     fi
-
     if [ ! -e linedoc/build/$(uname)/setup.sh ]; then
         mkdir -p linedoc/build
         cd linedoc/build
@@ -396,7 +392,7 @@ int main(){
             << std::endl; }
 EOF
 ) > tbb_version.cxx
-    g++ -std=c++11 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb 
+    g++ -std=c++14 tbb_version.cxx -I ${TBB_INC} -Wl,-rpath,${TBB_LIB} -L ${TBB_LIB} -ltbb
 
     export TBB_VERSION=$(./a.out)
     rm tbb_version.cxx a.out
@@ -412,6 +408,8 @@ EOF
       git clone https://github.com/luketpickering/OscLib.git
       # checkout version
     fi
+   
+    #export QUALIFIER=e20:prof
 
     if [ ! -e OscLib/OscLib/lib/libOscLib.so ]; then
       cd OscLib
@@ -431,7 +429,8 @@ EOF
   if [ -z ${CAFANACORE_INC} ] || [ ! -e ${CAFANACORE_INC} ]; then
 
     if [ ! -e CAFAnaCore ]; then
-      git clone https://github.com/luketpickering/CAFAnaCore.git
+      #git clone https://github.com/luketpickering/CAFAnaCore.git
+      git clone https://github.com/cafana/CAFAnaCore.git --branch=v01.26
       # checkout version
     fi
 
