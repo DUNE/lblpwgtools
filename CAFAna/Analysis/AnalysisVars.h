@@ -33,6 +33,11 @@ extern ana::Var const kNDEVisReco;
 extern ana::Var const kTrueEnergy;
 extern ana::Var const kProxyERec;
 extern ana::Var const kEVisTrue;
+
+extern ana::Var const kHadE_param;
+extern ana::Var const kLepE_param;
+extern ana::Var const kEVis_param;
+
 extern ana::Var const kPEReco; // proton
 extern ana::Var const kPipmEReco; // charged pion
 extern ana::Var const kPi0EReco; // neutral pion

@@ -29,7 +29,7 @@ std::string syst_descriptor = "nosyst";
 std::string axdescriptor = "EVisReco";
 std::string binningdescriptor = "prism_default";
 std::string oabinningdescriptor = "default";
-std::string truthbinningdescriptor = "event_rate_match"; // was event_rate_match
+std::string truthbinningdescriptor = "fine_prism"; // was extra_fine_prism
 
 std::vector<std::vector<std::string>> input_CAF_descriptors;
 std::vector<std::vector<std::string>> input_CAF_files;
@@ -264,16 +264,16 @@ int main(int argc, char const *argv[]) {
 
     // Have to add fake data systs too.
     std::vector<ana::ISyst const *> fdlos = GetListOfSysts(
-        false, false, false, false, false, false, addfakedata, false);
+        false, false, false, false, false, false, addfakedata, false, false);
     los_nd.insert(los_nd.end(), fdlos.begin(), fdlos.end());
     los_fd.insert(los_fd.end(), fdlos.begin(), fdlos.end());
 
     los_flux = los_fd;
-    KeepSysts(los_flux, GetListOfSysts("nov17flux:nodet:noxsec"));
+    KeepSysts(los_flux, GetListOfSysts("allflux:nodet:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
-    los_nd = GetListOfSysts(true, true, true, true, true, false, addfakedata);
-    los_fd = GetListOfSysts(true, true, true, true, true, false, addfakedata);
+    los_nd = GetListOfSysts(true, true, true, true, true, false, addfakedata, false, false);
+    los_fd = GetListOfSysts(true, true, true, true, true, false, addfakedata, false, false);
   }
 
   std::cout << "[INFO]: Using " << los_nd.size()
@@ -308,7 +308,7 @@ int main(int argc, char const *argv[]) {
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor,
                      OneDAxis ?
-                     "prism_fine_default" : binningdescriptor);
+                     "fine_prism" : binningdescriptor); 
 
   std::vector<HistAxis> AxisVec_numu = {axes.XProjectionFD_numu, axes.XProjectionFD_numu};
   std::vector<HistAxis> AxisVec_nue = {axes.XProjectionFD_nue, axes.XProjectionFD_nue};
@@ -335,20 +335,20 @@ int main(int argc, char const *argv[]) {
 
   ana::Weight kFDCVWeight = GetFDCVWeight();
 
-  ana::Cut kNDSelectionCuts_nu = UseSel ? kPRISMNDSignal_Selected_numu :
-                                          kPRISMNDSignal_True_numu;
-  ana::Cut kNDSelectionCuts_nub = UseSel ? kPRISMNDSignal_Selected_numub :
-                                           kPRISMNDSignal_True_numub;
+  ana::Cut kNDSelectionCuts_nu = (UseSel ? kPRISMNDSignal_Selected_numu :
+                                          kPRISMNDSignal_True_numu);
+  ana::Cut kNDSelectionCuts_nub = (UseSel ? kPRISMNDSignal_Selected_numub :
+                                           kPRISMNDSignal_True_numub);
 
-  ana::Cut kFDSelectionCuts_numu = UseSel ? kPRISMFDSignal_Selected_numu :
-                                            kPRISMFDSignal_True_numu;
-  ana::Cut kFDSelectionCuts_numub = UseSel ? kPRISMFDSignal_Selected_numub :
-                                             kPRISMFDSignal_True_numub;
+  ana::Cut kFDSelectionCuts_numu = (UseSel ? kPRISMFDSignal_Selected_numu :
+                                            kPRISMFDSignal_True_numu);
+  ana::Cut kFDSelectionCuts_numub = (UseSel ? kPRISMFDSignal_Selected_numub :
+                                             kPRISMFDSignal_True_numub);
 
-  ana::Cut kFDSelectionCuts_nue = UseSel ? kPRISMFDSignal_Selected_nue :
-                                           kPRISMFDSignal_True_nue;
-  ana::Cut kFDSelectionCuts_nueb = UseSel ? kPRISMFDSignal_Selected_nueb :
-                                            kPRISMFDSignal_True_nueb;
+  ana::Cut kFDSelectionCuts_nue = (UseSel ? kPRISMFDSignal_Selected_nue :
+                                           kPRISMFDSignal_True_nue);
+  ana::Cut kFDSelectionCuts_nueb = (UseSel ? kPRISMFDSignal_Selected_nueb :
+                                            kPRISMFDSignal_True_nueb);
 
   ana::Cut kFDSelectionCuts_nutau = UseSel ? kPRISMFDSignal_Selected_nutau :
                                            kPRISMFDSignal_True_nutau;
@@ -585,8 +585,8 @@ int main(int argc, char const *argv[]) {
 
       MatchPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && 
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) && 
+          (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
 
       MatchPredInterps[config] = std::make_unique<PredictionInterp>(
@@ -600,7 +600,7 @@ int main(int argc, char const *argv[]) {
       if (!IsND280kA) {
         if (isReco && UseSel) {
           NDMatrixPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
-              ERecETrueAxisND, NDCuts && kCut280kARun,
+              ERecETrueAxisND, NDCuts && kCut280kARun, // && kIsParamReco
               kNDCVWeight);
         } else { // Not using reco variable so don't need reco cut.
           NDMatrixPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
@@ -618,8 +618,8 @@ int main(int argc, char const *argv[]) {
       // don't need it for 280kA, just getting the efficiency
       NDUnselTruePredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
-          kIsNumuCC && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV && 
-              kIsOutOfTheDesert && (IsND280kA ? kSel280kARun : kCut280kARun),
+          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) && 
+          (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
           los_nd, &no, *NDUnselTruePredGens[config], Loaders_bm, kNoShift,
@@ -684,7 +684,7 @@ int main(int argc, char const *argv[]) {
       });
       // Matrix of ERec v ETrue for FD
       FDMatrixPredGens[fd_config] = std::make_unique<FDNoOscPredictionGenerator>(
-          (IsNueSwap ? ERecETrueAxisFD_nue : ERecETrueAxisFD_numu), FDCuts, 
+          (IsNueSwap ? ERecETrueAxisFD_nue : ERecETrueAxisFD_numu), FDCuts, // && kIsParamReco
           kFDCVWeight * kOscWeight);
       FDMatrixPredInterps[fd_config] = std::make_unique<PredictionInterp>(
           los_fd, calc, *FDMatrixPredGens[fd_config], Loaders_bm, kNoShift,
@@ -778,22 +778,26 @@ int main(int argc, char const *argv[]) {
                std::string("FDMatchInterp_ETrue_numu") +
                    (IsNu ? "_nu" : "_nub"),
                MatchPredInterps[config]);
+        MatchPredInterps[config]->MinimizeMemory();
       }
 
       SaveTo(fout,
              std::string("FDMatrixInterp_ERecETrue") +
                  (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) + (IsNu ? "_nu" : "_nub"),
              FDMatrixPredInterps[fd_config]);
+      FDMatrixPredInterps[fd_config]->MinimizeMemory();
 
       SaveTo(fout,
              std::string("FDUnSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDUnselTruePredInterps[fd_config]);
+      FDUnselTruePredInterps[fd_config]->MinimizeMemory();
 
       SaveTo(fout,
              std::string("FDSelected_ETrue") + (IsNue ? "_nue" : (IsNuTau ? "_nutau" : "_numu") ) +
                  (IsNu ? "_nu" : "_nub"),
              FDSelTruePredInterps[fd_config]);
+      FDSelTruePredInterps[fd_config]->MinimizeMemory();
 
       SaveTo(fout,
              std::string("FDDataPred_") + axdescriptor +

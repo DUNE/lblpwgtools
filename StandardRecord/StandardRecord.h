@@ -163,6 +163,15 @@ namespace caf
     double eRecoPi0;
     double eRecoOther;
 
+    // Parameterised reconstruction at ND or FD
+    double eP_param;
+    double ePip_param;
+    double ePim_param;
+    double ePi0_param;
+    double eOther_param;
+    double HadE_param;
+    double ELep_param;
+
     //At FD
     double eDepP;
     double eDepN;
@@ -209,6 +218,8 @@ namespace caf
     int OffAxisFluxBin;
     int OffAxisFluxConfig;
 #endif
+    int OffAxis2022FluxBin;
+    int OffAxis2022FluxConfig;
   };
   
 } // end namespace

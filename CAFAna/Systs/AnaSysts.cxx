@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-size_t NFluxParametersToAddToStatefile = 25;
+size_t NFluxParametersToAddToStatefile = 23;
 
 namespace ana
 {
@@ -176,7 +176,7 @@ namespace ana
     bool detsyst = true;
     bool fluxsyst_Nov17 = (GetAnaVersion() == kV3) ? false : true;
     bool fluxsyst_CDR = (GetAnaVersion() == kV3) ? true : false;
-    bool fluxsyst_Sept21 = true;
+    bool fluxsyst_Sept21 = (GetAnaVersion() == kV3) ? false : true;
     bool xsecsyst = true;
     bool useFakeData = false;
     int NFluxSysts =
@@ -236,7 +236,6 @@ namespace ana
       // But, if you do something stupid, YOU ONLY HAVE YOURSELF TO BLAME
       if (syst == "nodet") {
         detsyst = false;
-        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
       if (syst == "noflux") {
         fluxsyst_CDR = false;
@@ -258,6 +257,11 @@ namespace ana
         fluxsyst_Nov17 = false;
         fluxsyst_Sept21 = true;
       }
+      if (syst == "allflux") {
+        fluxsyst_CDR = false;
+        fluxsyst_Nov17 = true;
+        fluxsyst_Sept21 = true;
+      }
       if (syst == "fakedata") {
         useFakeData = true;
       } // LOOK MA, I GOT BRACES!
@@ -276,7 +280,6 @@ namespace ana
       }
       if (syst == "noxsec") {
         xsecsyst = false;
-        fluxsyst_Sept21 = false; // Default to getting the Nov17 flux systs for now
       }
     }
 

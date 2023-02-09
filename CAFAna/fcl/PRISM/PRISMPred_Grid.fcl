@@ -19,6 +19,9 @@ BasicPred: {
 	POT_years: 1.0
 	# Useful for fake data studies
 	vary_NDFD_data: false
+	# Extra plots for more histograms in PRISMPrediction
+	# Should be false for fitting
+	prism_debugplots: false
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
@@ -78,24 +81,38 @@ BasicPred: {
 	}
 
 	# Choose how many channels you want to make predictions for
-	samples: @local::FitChannels.Numu_disp
+	samples: @local::JointFitChannels.FourFlavor
+	#samples: @local::JointFitChannels.NuBarModeJoint
 }
 
 
 predictions: [
-  {
-	  @table::BasicPred
-	  output_dir: "numu_EvMatch_nom"
-  }
 
-	#{
-	#	@table::BasicPred
-	#	output_dir: "dmsq_252_ssth23_05"
-	#	true_osc: {
-	#		dmsq32: 0.00252
-	#		ssth23: 0.5
-	#	}
-	#}
+	{
+		@table::BasicPred
+		output_dir: "numu_EvMatch"
+	}
+
+# Below is how you add in osc param changes and syst shifts:
+
+#	{
+#		@table::BasicPred
+#		output_dir: "dmsq_242_ssth23_050"
+#		true_osc: {
+#			dmsq32: 0.0025
+#			ssth23: 0.52
+#		}
+#	},
+#
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_Horn1X"
+#		syst: {
+#			shifts: [
+#				#[flux_Nov17_5, 1]
+#			]
+#		}
+#	}
 
 ]
 

@@ -16,7 +16,7 @@
 #include "TGraph2D.h"
 #include "TTree.h"
 #include "TKey.h"
-#include "Riostream.h"
+//#include "Riostream.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjString.h"
@@ -36,9 +36,11 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   double ssth23_lowlim = 0.4; // 0.35 0.4
   double dmsq32_lowlim = 2.30;
   double dcp_lowlim = -1;
+  double ss2th13_lowlim = 0.05;
   double ssth23_highlim = 0.65;
   double dmsq32_highlim = 2.55;
   double dcp_highlim = 1;
+  double ss2th13_highlim = 0.15;
 
   double *lowlim, *highlim;
   if (param == "dmsq32") {
@@ -50,6 +52,9 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
   } else if (param == "dcp") { 
     lowlim = &dcp_lowlim;
     highlim = &dcp_highlim;
+  } else if (param == "ss2th13") {
+    lowlim = &ss2th13_lowlim;
+    highlim = &ss2th13_highlim; 
   } else {
     std::cout << "[ERROR] Unknown parameter." << std::endl;
     abort();
@@ -131,7 +136,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
       if (!key_g) {
         std::unique_ptr<TH2D> h_totalfit = std::make_unique<TH2D>(
                                              "Chi2_2DFit", "Chi2_2DFit",
-                                             h_fit->GetXaxis()->GetNbins(),
+                                             50, //h_fit->GetXaxis()->GetNbins(),
                                              ssth23_lowlim, ssth23_highlim,
                                              50,
                                              dmsq32_lowlim, dmsq32_highlim);
@@ -144,7 +149,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
             int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);       
             int biny_tot = h_totalfit->GetYaxis()->FindBin(bincentre_y);
-
+            //std::cout << "Chi2 = " << bincontent << std::endl;
             h_totalfit->SetBinContent(binx_tot, biny_tot, bincontent);
           }
         }
