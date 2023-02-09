@@ -5,12 +5,15 @@
 
 BasicPred: {
 
-	output_file: ["dmsq32_ssth23_ELepHADParam_NoPionMass_100_4Flav_Feb23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepEHadParam_NoPionMass_4Flav_6Feb23.root"
+	output_file: ["ssth23_dmsq32_FourFlavor_ELepEHadVisReco_flux_Nov17_2.root", "UPDATE"]
+	# Read state file from persistent pool, this may slow down jobs
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/fluxsyst_Nov17/ELepEHadVisReco_lep_default_HalfHadbins_all_flux_systs_flux_Nov17_0-25_Hadded_State.root"
+	# Read state file from local work dir (use this when you want to ship state file to worker node on grid)
+	#state_file: "ELepEHadVisReco_lep_default_HalfHadbins_all_flux_systs_flux_Nov17_0-25_Hadded_State.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHad_param
-        # Always true - why do we even have this?
+	projection_name: ELepEHadVisReco
+	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
 	POT_years: 1.04 # 1.04 for 100MWktYrs

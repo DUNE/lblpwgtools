@@ -5,11 +5,16 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2023/PRISMPred_1YrFHC_EVisReco_NoPionMass_4Flav_4Feb23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_NoPionMass_3Feb23.root"
+	output_file: ["ELepEHadVisReco_StatOnly_PRISMPred_Numu_disp.root", "UPDATE"]
+	# Read state file from persistent pool, this may slow down jobs
+	#state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/StatOnly/ELepEHadVisReco_lep_default_HalfHadbins_StatOnly_Hadded_State.root"
+	# Read state file from local work dir (use this when you want to ship state file to worker node on grid)
+	state_file: "ELepEHadVisReco_lep_default_HalfHadbins_StatOnly_Hadded_State.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EVisReco
+	projection_name: ELepEHadVisReco
+	# Always true - why do we even have this?
+	use_PRISM: true
 	# Set exposure in years
 	POT_years: 1.0
 	# Useful for fake data studies
@@ -46,6 +51,18 @@ BasicPred: {
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
 			}
@@ -96,7 +113,7 @@ predictions: [
 #			]
 #		}
 #	}
-	
+
 ]
 
 predictions[0].output_file[1]: "RECREATE"

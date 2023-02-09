@@ -35,13 +35,13 @@ namespace ana
                                               2.,  2.25, 2.5, 2.75, 3.,  3.25,
                                               3.5, 3.75, 4.,  5.,   6.,  10., 100.};
 
-  const std::vector<double> kPRISMFineBinEdges = {0., 0.5, 0.625, 0.75, 0.875, 1., 
+  const std::vector<double> kPRISMFineBinEdges = {0., 0.5, 0.625, 0.75, 0.875, 1.,
                                                   1.125, 1.25, 1.375, 1.5,
                                                   1.625, 1.75, 1.875, 2., 2.125,  2.25,
                                                   2.375, 2.5, 2.625, 2.75, 2.875, 3., 3.125,
                                                   3.25, 3.375, 3.5, 3.625, 3.75, 3.875, 4.,
                                                   5., 6., 10., 100.};
-  /*const std::vector<double> kHadBinEdges = {0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 
+  /*const std::vector<double> kHadBinEdges = {0., 0.05, 0.1, 0.15, 0.2, 0.25, 0.3,
                                             0.4, 1., 20.};*/
   const std::vector<double> kHadBinEdges = {0., 0.1, 0.2, 0.3, 0.4, 0.5, 1., 2., 20.};
   const std::vector<double> kLepBinEdges = {0., 0.5, 0.75, 1., 1.25,

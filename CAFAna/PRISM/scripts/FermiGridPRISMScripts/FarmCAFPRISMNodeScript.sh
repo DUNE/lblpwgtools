@@ -1,13 +1,14 @@
 #!/bin/bash
 
-PNFS_PATH_APPEND=IntrinsicNueFit/RHC
+PNFS_PATH_APPEND=Fit_ELepEHadVisReco_lep_default_HalfHadbins/fluxsyst_Nov17/flux_Nov17_2/ssth23_dmsq32/FourFlavor
 CAFE_COMMAND_FILE="CAFECommands.cmd"
+INPUT_STATE_FILE=""
 SCRIPT_TO_INCLUDE=""
 RENAME_SUBMIT_SCRIPT=""
 
-LIFETIME_EXP="60h"
-DISK_EXP="2GB"
-MEM_EXP="20GB"
+LIFETIME_EXP="48h"
+DISK_EXP="1GB"
+MEM_EXP="35GB"
 
 FORCE_REMOVE="0"
 
@@ -47,6 +48,18 @@ while [[ ${#} -gt 0 ]]; do
 
       CAFE_COMMAND_FILE="$(readlink -f $2)"
       echo "[OPT]: Running jobs for each line in \"${CAFE_COMMAND_FILE}\"."
+      shift # past argument
+      ;;
+
+      -i|--input-state-file)
+
+      if [[ ${#} -lt 2 ]]; then
+        echo "[WARNING]: ${1} expected a value. Pass state file to tarball may speed up your jobs."
+        exit 1
+      fi
+
+      INPUT_STATE_FILE="$2"
+      echo "[OPT]: Will read file:\"${INPUT_STATE_FILE}\"."
       shift # past argument
       ;;
 
@@ -141,6 +154,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-c|--cafe-command-file     : File containing '<script name>  [arg1 [arg2 [...]]]'. One job is submitted per line in the input file."
       echo -e "\t--cafe-commands            : All arguments passed after this will be passed to cafe on the node."
       echo -e "\t-n|--rename-submit-script  : Rename the submission script for easier diagnostics."
+      echo -e "\t-i|--input-state-file      : Input state file with full directory for fit."
       echo -e "\t-S|--cafe-script           : Path to non-standard (i.e. not in \${CAFANA}/scripts) cafe script that should be included in the tarball."
       echo -e "\t-f|--force-remove          : Removes output directory before starting."
       echo -e "\t-d|--dry-run               : Will not submit anything to the grid."
@@ -188,9 +202,9 @@ fi
 
 if [ ! -z "${SCRIPT_TO_INCLUDE}" ]; then
   SCRIPT_NAME=${SCRIPT_TO_INCLUDE##*/}
-  ${CAFANA}/scripts/FermiGridScripts/tarballPRISM.sh ${SCRIPT_TO_INCLUDE}
+  ${CAFANA}/scripts/FermiGridScripts/tarballPRISM.sh ${INPUT_STATE_FILE} ${SCRIPT_TO_INCLUDE}
 else
-  ${CAFANA}/scripts/FermiGridScripts/tarballPRISM.sh
+  ${CAFANA}/scripts/FermiGridScripts/tarballPRISM.sh ${INPUT_STATE_FILE}
 fi
 
 if [ ! -e CAFAna.Blob.tar.gz ]; then
@@ -262,11 +276,11 @@ ${CAFANA}/CAFAnaEnv.sh
 if [ ${DRY_RUN} -eq 0 ]; then
   if [ ${NJOBSTORUN} -eq 1 ]; then
     #--role=Analysis --subgroup=analysis
-      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION}&&TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION}&&TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
       echo ${JID}
   else
     #--role=Analysis --subgroup=analysis
-      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION}&&TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
+      JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.CVMFS_dune_osgstorage_org_REVISION>=${OSG_STORAGE_VERSION}&&TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -N ${NJOBSTORUN} --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${SUBMIT_SCRIPT} ${PNFS_PATH_APPEND} ${LOG_TO_IFDH} )
       echo ${JID}
   fi
 else
