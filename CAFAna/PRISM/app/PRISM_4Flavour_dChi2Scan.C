@@ -504,7 +504,8 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   // Do the minimization 1D
   //-----------------------
   if (nparams == 1) {
-    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
+    //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
+    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kFast);
     for (const auto &x : x_scan) {
 
       // Put oscillation values back to their seed position each iteration
@@ -553,7 +554,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   // Do the minimization 2D
   //-----------------------
   else if (param_names.size() > 1) {
-    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts);
+    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kFast);
     for (const auto &x : x_scan) {
       for (const auto &y : y_scan) {
 
@@ -642,10 +643,11 @@ int main(int argc, char const *argv[]) {
   }
 
   // Allow the fhiclcpp to lookup the included fcl scripts
-  cet::filepath_first_absolute_or_lookup_with_dot
-    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+  //cet::filepath_first_absolute_or_lookup_with_dot
+  //  f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
+  //fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
+  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(fcl);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("scans")) {

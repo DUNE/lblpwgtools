@@ -5,18 +5,18 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/dune/data/users/chasnip/PRISMPreds_2023/PRISMPred_1YrFHC_EVisReco_AddPiMass_4Flav_30Jan23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EVisReco_EVisTrueAddPiMass_1Feb23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_1YrFHC_EnuReco_NoPiMass_4Flav_7Feb23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NoPionMass_AllSysts_4Flav_Feb23.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: EVisReco
+	projection_name: EnuReco
 	# Set exposure in years
 	POT_years: 1.0
 	# Useful for fake data studies
 	vary_NDFD_data: false
 	# Extra plots for more histograms in PRISMPrediction
 	# Should be false for fitting
-	prism_debugplots: false
+	prism_debugplots: true
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
@@ -74,28 +74,15 @@ predictions: [
 	{
 		@table::BasicPred
 		output_dir: "numu_EvMatch"
+	},
+	{
+		@table::BasicPred
+		output_dir: "dmsq_242_ssth23_050"
+		true_osc: {
+			dmsq32: 0.0025
+			ssth23: 0.52
+		}
 	}
-
-# Below is how you add in osc param changes and syst shifts:
-
-#	{
-#		@table::BasicPred
-#		output_dir: "dmsq_242_ssth23_050"
-#		true_osc: {
-#			dmsq32: 0.0025
-#			ssth23: 0.52
-#		}
-#	},
-#
-#	{
-#		@table::BasicPred
-#		output_dir: "numu_EvMatch_Horn1X"
-#		syst: {
-#			shifts: [
-#				#[flux_Nov17_5, 1]
-#			]
-#		}
-#	}
 	
 ]
 

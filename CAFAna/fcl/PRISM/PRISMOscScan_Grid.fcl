@@ -5,15 +5,15 @@
 
 BasicPred: {
 
-	output_file: ["dmsq32_ssth23_dcp_EnuReco_FineNDBin_100_4Flav_Jan23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_EnuReco_FineNDBin_30Jan23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/Dcp_Ss2th13_EnuReco_100_NoPionMass_AllSyst_Feb23/PRISMScan_dcp_ss2th13_EnuReco_100_4Flav_Feb23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NoPionMass_AllSysts_4Flav_Feb23.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EnuReco
         # Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 0.5 # 1.04 for 100MWktYrs
+	POT_years: 1.042 # 1.042 for 100MWktYrs
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
@@ -81,8 +81,8 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
-	scan_params: @local::ScanDefinitions.dmsq32
+	scan_params: @local::ScanDefinitions.dcp_sstth13
+	#scan_params: @local::ScanDefinitions.dmsq32
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
@@ -91,27 +91,17 @@ scans: [
 	{
 		@table::BasicPred
 		free_syst_params: @local::nuisance_parameters.all
-		output_dir: "fit_xsecfluxdet"
+		output_dir: "fit_fluxxsecdet"
 	},
 	{
 		@table::BasicPred
 		free_syst_params: @local::nuisance_parameters.xsecflux
-		output_dir: "fit_xsecflux"
+		output_dir: "fit_fluxxsec"
 	},
 	{
 		@table::BasicPred
 		free_syst_params: @local::nuisance_parameters.fluxAll
 		output_dir: "fit_flux"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameter_sets.fluxHadProd10
-		output_dir: "fit_hadprod"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameter_sets.fluxFocussing
-		output_dir: "fit_focus"
 	},
 	{
 		@table::BasicPred

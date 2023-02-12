@@ -491,7 +491,8 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1]);
+  //fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(argv[1]);
+  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(argv[1]);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("predictions")) {

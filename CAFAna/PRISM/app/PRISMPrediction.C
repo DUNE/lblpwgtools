@@ -419,10 +419,11 @@ int main(int argc, char const *argv[]) {
     exit(1);
   }
   // Allow the fhiclcpp to lookup the included fcl scripts
-  cet::filepath_first_absolute_or_lookup_with_dot 
-    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+  //cet::filepath_first_absolute_or_lookup_with_dot 
+  //  f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
 
-  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
+  //fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
+  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(fcl);
 
   for (fhicl::ParameterSet const &pred :
        ps.get<std::vector<fhicl::ParameterSet>>("predictions")) {
