@@ -7,9 +7,10 @@
 BasicPred: {
 	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_1YrFHC_EnuReco_NoPiMass_4Flav_7Feb23.root", "UPDATE"]
 	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NoPionMass_AllSysts_4Flav_Feb23.root"
-
 	# Analysis variable name - must match variable in state file
 	projection_name: EnuReco
+	# Always true - why do we even have this?
+	use_PRISM: true
 	# Set exposure in years
 	POT_years: 1.0
 	# Useful for fake data studies
@@ -48,6 +49,18 @@ BasicPred: {
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
 			}
 		]
 
@@ -65,7 +78,7 @@ BasicPred: {
 
 	# Choose how many channels you want to make predictions for
 	samples: @local::JointFitChannels.FourFlavor
-	#samples: @local::JointFitChannels.NuModeJoint
+	#samples: @local::JointFitChannels.NuBarModeJoint
 }
 
 
@@ -83,7 +96,7 @@ predictions: [
 			ssth23: 0.52
 		}
 	}
-	
+
 ]
 
 predictions[0].output_file[1]: "RECREATE"

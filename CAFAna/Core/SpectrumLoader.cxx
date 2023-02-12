@@ -352,15 +352,17 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Variable for true hadronic energy
-    // Including pion masses gets closer to actualy deposited energy
-    sr.HadE = sr.eP + sr.ePip + sr.ePim + (0.13957 * (sr.nipip + sr.nipim)) + sr.ePi0 + (0.134977 * sr.nipi0) + eother;
+    // I think this variable is closer to the deposited energy when we DON'T include the pion masses.
+    // sr.HadE = sr.eP + sr.ePip + sr.ePim + (0.13957 * (sr.nipip + sr.nipim)) + sr.ePi0 + (0.134977 * sr.nipi0) + eother;
+    // sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + (0.134977 * sr.nipi0) + eother;
+    sr.HadE = sr.eP + sr.ePip + sr.ePim + sr.ePi0 + eother;
 
     // Smear true energy variables to get parameterised reco
     // Guess resolution of 10% for muons, EM showers and charged hadrons
     sr.eP_param = gRandom->Gaus(sr.eP, sr.eP*0.1);
-    sr.ePip_param = gRandom->Gaus(sr.ePip, sr.ePip*0.1) + (0.13957 * sr.nipip);
-    sr.ePim_param = gRandom->Gaus(sr.ePim, sr.ePim*0.1) + (0.13957 * sr.nipim);
-    sr.ePi0_param = gRandom->Gaus(sr.ePi0, sr.ePi0*0.1) + (0.134977 * sr.nipi0);
+    sr.ePip_param = gRandom->Gaus(sr.ePip, sr.ePip*0.1); //+ (0.13957 * sr.nipip);
+    sr.ePim_param = gRandom->Gaus(sr.ePim, sr.ePim*0.1); //+ (0.13957 * sr.nipim);
+    sr.ePi0_param = gRandom->Gaus(sr.ePi0, sr.ePi0*0.1); //+ (0.134977 * sr.nipi0);
     sr.eOther_param = 0;
     if (std::isnormal(sr.eOther)) {
       sr.eOther_param = gRandom->Gaus(eother, eother*0.1);

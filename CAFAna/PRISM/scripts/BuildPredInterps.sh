@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INPUTDIR=/dune/data/users/chasnip
-OUTPUTDIR=/dune/data/users/chasnip/StateFiles_2022
+OUTPUTDIR=/dune/data/users/chasnip/StateFiles_2023
 
 NDFHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC
 NDRHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/RHC
@@ -11,21 +11,18 @@ NDRHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/RHC
 
 #ListOSysts="allsyst"
 #ListOSysts="noxsec:nodet"
-#ListOSysts="noflux:nodet"
+ListOSysts="noflux:nodet"
 #ListOSysts="noxsec:noflux"
-ListOSysts="nosyst"
+#ListOSysts="nosyst"
 #ListOSysts="nov17flux:nodet:noxsec"
 #ListOSysts="list:MissingProtonFakeData"
 #ListOSysts="list:flux_Nov17_5"
 FakeData="MissingProtonFakeData_pos"
 AnaBinning="prism_default"
-AvaVar="EVisReco"
+AvaVar="EnuReco"
 
 #FD
-MakePRISMPredInterps -o ${OUTPUTDIR}/FDSystStateFiles_Feb23/PRISMState_EVisReco_EVisTrueAddPiMass_FDOnly_31Jan23.root \
-    -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
-    -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \
-    -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root \
+MakePRISMPredInterps -o ${OUTPUTDIR}/FDSystStateFiles_NoPionMass_Feb23/PRISMState_EnuReco_NoPionMass_XSecSyst_RHC_FDOnly_3Feb23.root \
     -F-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nonswap.root \
     -Fe-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nueswap.root \
     -Ft-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_tauswap.root \
