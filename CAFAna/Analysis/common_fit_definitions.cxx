@@ -123,11 +123,11 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
   std::vector<const IFitVar *> rtn_vars;
 
   for (auto &v : osc_vars) {
-    if (v == "th13" || v == "alloscvars") {
+    if (v == "th13" || v == "alloscvars" || v == "bigoscvars") {
       rtn_vars.push_back(&kFitTheta13);
     }
     // Deal with bounded dmsq32
-    if (v == "dmsq32" || v == "alloscvars") {
+    if (v == "dmsq32" || v == "alloscvars" || v == "bigoscvars") {
       if (hie == -1)
         rtn_vars.push_back(&kFitDmSq32IHScaled);
       else if (hie == 1)
@@ -137,7 +137,7 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
     }
 
     // Deal with octant boundaries
-    if (v == "th23" || v == "alloscvars") {
+    if (v == "th23" || v == "alloscvars" || v == "bigoscvars") {
       if (oct == -1)
         rtn_vars.push_back(&kFitSinSqTheta23LowerOctant);
       else if (oct == 1)
@@ -145,7 +145,7 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
       else
         rtn_vars.push_back(&kFitSinSqTheta23);
     }
-    if (v == "deltapi" || v == "alloscvars") {
+    if (v == "deltapi" || v == "alloscvars" || v == "bigoscvars") {
       rtn_vars.push_back(&kFitDeltaInPiUnits);
     }
 

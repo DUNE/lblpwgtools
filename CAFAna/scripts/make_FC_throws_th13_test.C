@@ -58,7 +58,8 @@ char const *def_sampleString = "ndfd";
 char const *def_throwString = "stat:fake:start";
 int const def_hie = 1;
 char const *def_asimov_set = "0";
-char const *def_fakeDataShift = "";
+char const *def_fakeDataShift = "nominal";
+char const *def_oscParString = "alloscpars";
 
 void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 				std::string outputFname = def_outputFname,
@@ -68,7 +69,8 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 				std::string throwString = def_throwString,
 				int hie = def_hie,
 				std::string asimov_set = def_asimov_set,
-				std::string fakeDataShift = def_fakeDataShift) {
+			        std::string fakeDataShift = def_fakeDataShift,
+			        std::string oscParString = def_oscParString) {
 
   gROOT->SetBatch(1);
 
@@ -133,7 +135,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   nopen_tree.throw_tree->Branch("LoopTime_s", &LoopTime_s);
 
   // Fit in the correct hierarchy and octant for nopen throw
-  std::vector<const IFitVar *> oscVars = GetOscVars("alloscvars", hie);
+  std::vector<const IFitVar *> oscVars = GetOscVars(oscParString, hie);
 
   std::cerr << "[FIT]: Osc Parameters: \n\t";
   for (auto s : oscVars) {
@@ -269,8 +271,11 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
+    // Test to see if I'm passing prefit parameter values correctly...
+    std::map<std::string, double> prefit_pars;
+
     // -------------------------------------
-    // --------- Do the nopen fit ---------
+    // -------- Do the ND-only fit --------
     // -------------------------------------
 
     IExperiment *gpenalty = GetPenalty(hie, 1, "nopen");
@@ -286,12 +291,23 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 				  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
       // The best fit should be used as the input for the next fits!
       fitThrowSyst = nd_fit_systs;
+
       nd_tree.Fill();
       
       std::cerr << "[THW]: ND throw " << i
 		<< " fit found minimum chi2 = " << nd_min << " "
 		<< BuildLogInfoString();
     }
+
+    // Keep track of the parameter values
+    for (auto syst : fitThrowSyst.ActiveSysts()){
+      prefit_pars[syst->ShortName()] = fitThrowSyst.GetShift(syst);
+
+    }
+
+    // -------------------------------------
+    // --------- Do the nopen fit ---------
+    // -------------------------------------
 
     // This is temporary to keep track of what is saved
     FitTreeBlob min_nopen_blob("min_nopen_info", "min_nopen_params");
@@ -339,6 +355,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     std::cerr << "[THW]: Nopen throw " << i
               << " fit found minimum chi2 = " << nopen_chisqmin << " "
               << BuildLogInfoString();
+
+    // Load the prefit parameter values back in
+    for (auto syst : fitThrowSyst.ActiveSysts()){
+      std::cout << "Par " << syst->ShortName() << " " << fitThrowSyst.GetShift(syst) << " " << prefit_pars[syst->ShortName()] << std::endl;
+      fitThrowSyst.SetShift(syst, prefit_pars[syst->ShortName()]);
+    }
 
     // -------------------------------------
     // --------- Now do th13 fits ----------

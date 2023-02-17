@@ -37,8 +37,9 @@ int main(int argc, char const *argv[]) {
   int hie = (argc > 7) ? atoi(argv2[7]) : def_hie;
   std::string asimov_set = (argc > 8) ? argv2[8] : def_asimov_set;
   std::string fakeDataShift = (argc > 9) ? argv2[9] : def_fakeDataShift;
+  std::string oscParString = (argc > 10) ? argv2[10] : def_oscParString;
 
   make_FC_throws_th13_test(stateFname, outputFname, nthrows, systSet, sampleString,
-                           throwString, hie, asimov_set, fakeDataShift);
+                           throwString, hie, asimov_set, fakeDataShift, oscParString);
 
 }
