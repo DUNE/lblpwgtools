@@ -86,7 +86,7 @@ if [ $? -ne 0 ]; then
   exit 5
 fi
 
-PNFS_OUTDIR=${PNFS_OUTDIR_STUB} 
+PNFS_OUTDIR=${PNFS_OUTDIR_STUB}
 
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to make ${PNFS_OUTDIR}."
@@ -121,10 +121,12 @@ if [ ! -e  ${CAFANA}/${FCL_NAME} ]; then
 fi
 
 cp ${CAFANA}/${FCL_NAME} .
+# If the state file is in the tarball, it will be copied to the work area on the node
+cp ${CAFANA}/*.root .
 
 LOGYLOG "Running script @ $(date)"
 
-LOGYLOG "Running --fcl ${SCRIPT_NAME} ${CAFANA}/${FCL_NAME} ${BIN_X_CMD} ${BIN_X} ${BIN_Y_CMD} ${BIN_Y}"
+LOGYLOG "Running ${SCRIPT_NAME} --fcl ${CAFANA}/${FCL_NAME} ${BIN_X_CMD} ${BIN_X} ${BIN_Y_CMD} ${BIN_Y}"
 
 ${SCRIPT_NAME} --fcl ${CAFANA}/${FCL_NAME} ${BIN_X_CMD} ${BIN_X} ${BIN_Y_CMD} ${BIN_Y}
 

@@ -24,7 +24,7 @@ Binning GetBinning(std::string const &xbinning) {
   } else if (xbinning == "uniform_smallrange") {
     return Binning::Simple(50, 0, 10);
   } else if (xbinning == "uniform_coarse") {
-    return Binning::Simple(6, 0, 6); 
+    return Binning::Simple(6, 0, 6);
   } else if (xbinning == "prism_default") {
     return kPRISMRecoBinning;
   } else if (xbinning == "prism_fine_default") {
@@ -32,7 +32,7 @@ Binning GetBinning(std::string const &xbinning) {
   } else if (xbinning == "default") {
     return kFDRecoBinning;
   } else if (xbinning == "event_rate_match") {
-    return kLinearCombBinning; 
+    return kLinearCombBinning;
   } else if (xbinning == "had_default") {
     return kHadRecoBinning;
   } else if (xbinning == "lep_default") {
@@ -84,7 +84,7 @@ Binning GetBinning(std::string const &xbinning) {
     edges.emplace_back(120.);
     return Binning::Custom(edges);
   } else {
-    std::cout << "[ERROR]: Unknown PRISM binning definition: " << xbinning
+    std::cout << "[Axes ERROR]: Unknown PRISM binning definition: " << xbinning
               << std::endl;
     abort();
   }
@@ -99,7 +99,7 @@ Binning GetOABinning(std::string const &oabinning) {
     size_t NOABins = (OA_max_m - OA_min_m) / OA_bin_width_m;
     return Binning::Simple(NOABins, OA_min_m, OA_max_m);
   } else {
-    std::cout << "[ERROR]: Unknown PRISM OA binning definition: " << oabinning
+    std::cout << "[Axes ERROR]: Unknown PRISM OA binning definition: " << oabinning
               << std::endl;
     abort();
   }
@@ -161,14 +161,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Reco E_{#pi^{0}} (GeV)", kPi0EReco);
   } else if (varname == "RecoEOther") {
     return std::make_pair("Reco E_{other} (GeV)", SIMPLEVAR(eRecoOther));
-  } else if (varname == "HadE_param") {  
+  } else if (varname == "HadE_param") {
     return std::make_pair("Reco E_{had.} (GeV)", kHadE_param);
-  } else if (varname == "LepE_param") { 
+  } else if (varname == "LepE_param") {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepE_param);
   } else if (varname == "EVis_param") {
     return std::make_pair("Param. Vis. E_{rec.} (GeV)", kEVis_param);
   } else {
-    std::cout << "[ERROR]: Unknown PRISM var definition: " << varname
+    std::cout << "[Axes ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
     abort();
   }
@@ -188,12 +188,12 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 
   HistAxis axOffAxis280kAPos("Off axis position (m)", Binning::Simple(1, -2, +2),
                              kTrueOffAxisPos_m);
-  
+
   // Seperate ND and FD axes for ND->FD extrapolation.
   // Possible fine binning for ND axis and extended energy range.
   // Only needed for EVisReco, not ELepEHad.
   bool OneDAxis(false);
-  if (varname == "EVisReco" || varname == "EProxy" || 
+  if (varname == "EVisReco" || varname == "EProxy" ||
       varname == "EnuReco" || varname == "EVis_param") OneDAxis = true;
   std::string varname_ND(varname);
   std::string varname_numu(varname);
@@ -213,7 +213,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
 }
 
 // Return HistAxis for true energy version of observable
-HistAxis TrueObservable(std::string const &obsvarname, 
+HistAxis TrueObservable(std::string const &obsvarname,
                         std::string const &binning) {
   auto truevardef = GetVar("ETrue");
   std::vector<std::string> labels;
@@ -230,19 +230,19 @@ HistAxis TrueObservable(std::string const &obsvarname,
     truevardef = GetVar("ELep");
   } else if (obsvarname == "EHad") {
     truevardef = GetVar("EHad");
-  } else if (obsvarname == "RecoEHad") { 
+  } else if (obsvarname == "RecoEHad") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EnuReco") {
-    truevardef = GetVar("EVisTrue"); 
+    truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EVisTrue") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EVis_param") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "RecoEP") {
     truevardef = GetVar("EP");
-  } else if (obsvarname == "RecoEPipm") { 
+  } else if (obsvarname == "RecoEPipm") {
     truevardef = GetVar("EPipm");
   } else if (obsvarname == "RecoEPi0") {
     truevardef = GetVar("EPi0");
@@ -312,10 +312,10 @@ HistAxis TrueObservable(std::string const &obsvarname,
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefVis.second);
   } else {
-    std::cout << "[ERROR] Unknown var name: " << obsvarname << std::endl;
+    std::cout << "[Axes ERROR] Unknown var name: " << obsvarname << std::endl;
     abort();
-  }   
-  
+  }
+
   if (obsvarname == "ELepEHad" || obsvarname == "ELepEHadVisReco" || obsvarname == "ELepEHad_param") {
     return HistAxis(labels, bins, vars);
   } else if (obsvarname == "EVisEHad" || obsvarname == "EVisEHadReco") {
@@ -328,16 +328,16 @@ HistAxis TrueObservable(std::string const &obsvarname,
 }
 
 HistAxis RecoObservable(std::string const &obsvarname,
-                        std::string const &binning) {              
+                        std::string const &binning) {
   std::vector<std::string> labels;
   std::vector<Binning> bins;
   std::vector<Var> vars;
 
   if (obsvarname == "ELepEHad") { // 2D ELep EHad Prediction
-    auto vardefLep = GetVar("ELep");   
+    auto vardefLep = GetVar("ELep");
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);   
+    vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("EHad");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
@@ -346,7 +346,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefLep = GetVar("LepE_param");
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);   
+    vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("HadE_param");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
@@ -355,7 +355,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefLep = GetVar("LepE_param");
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);   
+    vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("HadE_param");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
@@ -364,7 +364,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefLep = GetVar("ELep"); // LepE_param
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second);   
+    vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("HadE_param");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
@@ -387,20 +387,20 @@ HistAxis RecoObservable(std::string const &obsvarname,
     labels.push_back(vardefVis.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefVis.second);
-  } else if (obsvarname == "ELepEHadVisReco_numu") {   
+  } else if (obsvarname == "ELepEHadVisReco_numu") {
     auto vardefLep = GetVar("RecoELep_numu"); // RecoELep_numu / LepE_param
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second); 
-    auto vardefHad = GetVar("HadEVisReco_FD"); 
+    vars.push_back(vardefLep.second);
+    auto vardefHad = GetVar("HadEVisReco_FD");
     labels.push_back(vardefHad.first);
-    bins.push_back(GetBinning("had_default")); 
+    bins.push_back(GetBinning("had_default"));
     vars.push_back(vardefHad.second);
   } else if (obsvarname == "ELepEHadVisReco_nue") {
     auto vardefLep = GetVar("RecoELep_nue"); // RecoELep_nue / LepE_param
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
-    vars.push_back(vardefLep.second); 
+    vars.push_back(vardefLep.second);
     auto vardefHad = GetVar("HadEVisReco_FD");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
@@ -413,8 +413,8 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefHad = GetVar("HadEVisReco_ND");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
-    vars.push_back(vardefHad.second);   
-  } else if (obsvarname == "EVisEHadReco_numu") { 
+    vars.push_back(vardefHad.second);
+  } else if (obsvarname == "EVisEHadReco_numu") {
     auto vardefVis = GetVar("EVisReco_numu");
     labels.push_back(vardefVis.first);
     bins.push_back(GetBinning(binning));
@@ -422,7 +422,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefHad = GetVar("HadEVisReco_FD");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
-    vars.push_back(vardefHad.second);   
+    vars.push_back(vardefHad.second);
   } else if (obsvarname == "EVisEHadReco_nue") {
     auto vardefVis = GetVar("EVisReco_nue");
     labels.push_back(vardefVis.first);
@@ -431,8 +431,8 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefHad = GetVar("HadEVisReco_FD");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
-    vars.push_back(vardefHad.second);   
-  } else if (obsvarname == "EVisEHadReco_ND") { 
+    vars.push_back(vardefHad.second);
+  } else if (obsvarname == "EVisEHadReco_ND") {
     auto vardefVis = GetVar("EVisReco_ND");
     labels.push_back(vardefVis.first);
     bins.push_back(GetBinning(binning));
@@ -440,11 +440,11 @@ HistAxis RecoObservable(std::string const &obsvarname,
     auto vardefHad = GetVar("HadEVisReco_ND");
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
-    vars.push_back(vardefHad.second);   
+    vars.push_back(vardefHad.second);
   } else {
     auto vardef = GetVar(obsvarname);
     labels.push_back(vardef.first);
-    bins.push_back(GetBinning(binning));  
+    bins.push_back(GetBinning(binning));
     vars.push_back(vardef.second);
   }
 

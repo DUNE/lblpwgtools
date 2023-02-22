@@ -7,10 +7,9 @@ BasicPred: {
 
 	output_file: ["dmsq32_ssth23_ELepEHadParam_NoPionMass_100_4Flav_Feb23.root", "UPDATE"]
 	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepEHadParam_NoPionMass_4Flav_9Feb23.root"
-
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHad_param
-        # Always true - why do we even have this?
+	projection_name: ELepEHadVisReco
+	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
 	POT_years: 1.042 # 1.042 for 100MWktYrs

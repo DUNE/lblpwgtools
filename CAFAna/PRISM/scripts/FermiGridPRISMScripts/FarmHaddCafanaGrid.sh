@@ -1,12 +1,12 @@
 #!/bin/bash
 
-PNFS_PATH_APPEND=CAFAnaInputs/StandardState/ELepEHadReco/Hadded
+PNFS_PATH_APPEND=CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/fluxsyst_Nov17
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
-LIFETIME_EXP_FD="60h"
-DISK_EXP_FD="5GB"
-MEM_EXP_FD="65GB"
+LIFETIME_EXP="60h"
+DISK_EXP="3GB"
+MEM_EXP="30GB"
 
 ANAVERSION="4"
 
@@ -132,6 +132,6 @@ fi
 setup jobsub_client
 ${CAFANA}/CAFAnaEnv.sh
 
-Hadd_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --expected-lifetime=${LIFETIME_EXP_FD} --disk=${DISK_EXP_FD} --memory=${MEM_EXP_FD} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/HaddCafana.sh ${PNFS_PATH_APPEND} ${ANAVERSION})
+Hadd_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/HaddCafana.sh ${PNFS_PATH_APPEND} ${ANAVERSION})
 
 echo "Hadd_JID: ${Hadd_JID}"
