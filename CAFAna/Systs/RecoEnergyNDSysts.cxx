@@ -101,16 +101,14 @@ namespace ana {
              double& weight) const {
 
     restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
                 sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
-      sr->eRecoPi0 += sr->eRecoPi0 * scale;
       sr->EVisReco_ND += sr->eRecoPi0 * scale;
       if (sr->isCC && abs(sr->nuPDG) == 12) {
-        sr->Elep_reco += sr->Elep_reco * scale;
         sr->EVisReco_ND += sr->Elep_reco * scale;
+        sr->Elep_reco += sr->Elep_reco * scale;
       }
     }
   }
@@ -123,16 +121,14 @@ namespace ana {
                                  double& weight) const {
       
     restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
                 sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
-      sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5);
-      sr->EVisReco_ND += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5); 
+      sr->EVisReco_ND += sr->eRecoPi0 * scale * pow(sr->eRecoPi0, 0.5);
       if (sr->isCC && abs(sr->nuPDG) == 12) {
-        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
         sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
+        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
       }
     }
   }
@@ -145,16 +141,14 @@ namespace ana {
                                     double& weight) const {
 
     restore.Add(sr->Elep_reco,
-                sr->eRecoPi0,
                 sr->EVisReco_ND);
 
     const double scale = 0.025 * sigma;
     if (!sr->isFD) { // in the ND
-      sr->eRecoPi0 += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
       sr->EVisReco_ND += sr->eRecoPi0 * scale * pow(sr->eRecoPi0+0.1, -0.5);
       if (sr->isCC && abs(sr->nuPDG) == 12) {
-        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
         sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
+        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
       }
     }
   }
@@ -178,9 +172,6 @@ namespace ana {
       if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
       if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
       const double sumE = sr->eRecoP + sr->eRecoPim + sr->eRecoPip;
-      sr->eRecoPip += sr->eRecoPip * scale;
-      sr->eRecoPim += sr->eRecoPim * scale;
-      sr->eRecoP += sr->eRecoP * scale;
       sr->EVisReco_ND += sumE * scale;
       sr->HadEVisReco_ND += sumE * scale;
     }
@@ -205,9 +196,6 @@ namespace ana {
       if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
       if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
       const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
-      sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip, 0.5);
-      sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim, 0.5);
-      sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP, 0.5);
       sr->EVisReco_ND += sumE * scale * pow(sumE, 0.5);
       sr->HadEVisReco_ND += sumE * scale * pow(sumE, 0.5);
     }
@@ -232,9 +220,6 @@ namespace ana {
       if (sr->eRecoPim < 0) sr->eRecoPim = 0.;
       if (sr->eRecoPip < 0) sr->eRecoPip = 0.;
       const double sumE = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
-      sr->eRecoPip += sr->eRecoPip * scale * pow(sr->eRecoPip+0.1, -0.5);
-      sr->eRecoPim += sr->eRecoPim * scale * pow(sr->eRecoPim+0.1, -0.5);
-      sr->eRecoP += sr->eRecoP * scale * pow(sr->eRecoP+0.1, -0.5);
       sr->EVisReco_ND += sumE * scale * pow(sumE+0.1, -0.5);
       sr->HadEVisReco_ND += sumE * scale * pow(sumE+0.1, -0.5);
     }
@@ -258,8 +243,8 @@ namespace ana {
     const double scale = var * sigma;
     if (!sr->isFD) { // in the ND
       if (sr->isCC && abs(sr->nuPDG) == 14) { 
-        sr->Elep_reco += sr->Elep_reco * scale;
         sr->EVisReco_ND += sr->Elep_reco * scale;
+        sr->Elep_reco += sr->Elep_reco * scale;
       }
     }
   } 
@@ -274,15 +259,16 @@ namespace ana {
     restore.Add(sr->Elep_reco,
                 sr->EVisReco_ND);
  
+    // This parameter blows up in fits - reduce it in line with FD
     double var(0);
-    if (sr->muon_contained) var = 0.02;
-    else if (sr->muon_tracker) var = 0.01;
-    else var = 0.02; // selection requires muon to be inLAr or GAr so never get here
-    const double scale = var * sigma; // is 0.005 in FD
+    if (sr->muon_contained) var = 0.005;
+    else if (sr->muon_tracker) var = 0.005;
+    else var = 0.005; // selection requires muon to be inLAr or GAr so never get here
+    const double scale = var * sigma;
     if (!sr->isFD) { // in the ND
       if (sr->isCC && abs(sr->nuPDG) == 14) {
-        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
         sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
+        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco, 0.5);
       }
     }
   }
@@ -304,8 +290,8 @@ namespace ana {
     const double scale = var * sigma;
     if (!sr->isFD) { // in the ND
       if (sr->isCC && abs(sr->nuPDG) == 14) {
-        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
         sr->EVisReco_ND += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
+        sr->Elep_reco += sr->Elep_reco * scale * pow(sr->Elep_reco+0.1, -0.5);
       }
     }
   }
@@ -324,8 +310,8 @@ namespace ana {
       
     const double scale = 0.02 * sigma;
     if (!sr->isFD) { // in the ND
+      sr->EVisReco_ND += (sr->LepE - sr->Elep_reco) * scale;
       sr->Elep_reco += (sr->LepE - sr->Elep_reco) * scale;
-      sr->EVisReco_ND += (sr->LepE - sr->Elep_reco) * scale;          
     }
   }
 
@@ -341,10 +327,9 @@ namespace ana {
                 sr->EVisReco_ND);
     const double scale = .02*sigma;
     if (!sr->isFD){
-      sr->EVisReco_ND  += (sr->ePi0 - sr->eRecoPi0) * scale;
-      sr->eRecoPi0      += (sr->ePi0 - sr->eRecoPi0) * scale;
+      sr->EVisReco_ND += (sr->ePi0 - sr->eRecoPi0) * scale;
       if (sr->isCC && abs(sr->nuPDG)==12) {
-        sr->EVisReco_ND  += (sr->LepE - sr->Elep_reco) * scale;
+        sr->EVisReco_ND += (sr->LepE - sr->Elep_reco) * scale;
         sr->Elep_reco += (sr->LepE - sr->Elep_reco) * scale;
       }
     }
@@ -370,9 +355,6 @@ namespace ana {
       if (sr->eRecoPim < 0.) sr->eRecoPim = 0.;
       const double trueSum = sr->ePip + sr->ePim + sr->eP;
       const double recoSum = sr->eRecoPip + sr->eRecoPim + sr->eRecoP;
-      sr->eRecoPip += (sr->ePip - sr->eRecoPip) * scale;
-      sr->eRecoPim += (sr->ePim - sr->eRecoPim) * scale;
-      sr->eRecoP   += (sr->eP   - sr->eRecoP)   * scale;
       sr->EVisReco_ND += (trueSum - recoSum)   * scale;
       sr->HadEVisReco_ND += (trueSum - recoSum)   * scale;
     }

@@ -5,6 +5,7 @@ set(Systs_implementation_files
   DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
+  CorrEnergySysts.cxx
   EnergySysts.cxx
   FDRecoSysts.cxx
   XSecSysts.cxx
@@ -25,6 +26,7 @@ set(Systs_header_files
   DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
+  CorrEnergySysts.h 
   EnergySysts.h
   FDRecoSysts.h
   XSecSysts.h

@@ -272,8 +272,8 @@ int main(int argc, char const *argv[]) {
     KeepSysts(los_flux, GetListOfSysts("allflux:nodet:noxsec"));
   } else {
     // Default but allow fake data dials to be turned off
-    los_nd = GetListOfSysts(true, true, true, true, true, false, addfakedata, false, false);
-    los_fd = GetListOfSysts(true, true, true, true, true, false, addfakedata, false, false);
+    los_nd = GetListOfSysts(true, true, true, true, false, false, addfakedata, false, false);
+    los_fd = GetListOfSysts(true, true, true, false, true, false, addfakedata, false, false);
   }
 
   std::cout << "[INFO]: Using " << los_nd.size()

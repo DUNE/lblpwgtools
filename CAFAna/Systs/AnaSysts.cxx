@@ -4,6 +4,7 @@
 #include "CAFAna/Systs/AnaSysts.h"
 #include "CAFAna/Systs/CrazyFluxFakeData.h"
 #include "CAFAna/Systs/DUNEFluxSysts.h"
+#include "CAFAna/Systs/CorrEnergySysts.h"
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/FDRecoSysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"
@@ -70,14 +71,14 @@ namespace ana
   std::vector<const ISyst*> getDetectorSysts(bool useFD, bool useND, bool useNueOnE)
   {
 
-    std::vector<const ISyst*> systs = {};
+    std::vector<const ISyst*> systs = GetCorrEnergySysts();
 
     std::vector<const ISyst *> fdEScalelist = GetEnergySysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
     std::vector<const ISyst *> ndlist = GetNDRecoSysts();
     std::vector<const ISyst *> nuelist = GetNuOnESysts();
-
+    
     if (useFD) {
       systs.insert(systs.end(), fdEScalelist.begin(), fdEScalelist.end());
       systs.insert(systs.end(), fdlist.begin(), fdlist.end());

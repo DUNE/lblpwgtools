@@ -5,24 +5,24 @@
 
 BasicPred: {
 
-	output_file: ["dmsq32_ssth23_ELepHADParam_NoPionMass_100_4Flav_Feb23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepEHadParam_NoPionMass_4Flav_6Feb23.root"
+	output_file: ["dmsq32_ssth23_ELepEHadParam_NoPionMass_100_4Flav_Feb23.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepEHadParam_NoPionMass_4Flav_9Feb23.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: ELepEHad_param
         # Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 1.04 # 1.04 for 100MWktYrs
+	POT_years: 1.042 # 1.042 for 100MWktYrs
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
-	use_ND_stats: false
+	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
         # Extra plots for more histograms in PRISMPrediction
         # Should be false for fitting
         prism_debugplots: false
 	# Do you want to use fake data?
-	use_fake_data: false
+	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 	# Do you want the reactor th13 constraint?
@@ -117,16 +117,6 @@ scans: [
 		@table::BasicPred
 		output_dir: "fit_nom"
 	}
-#	{
-#		@table::BasicPred
-#		output_dir: "fit_ssth23"
-#		scan_params: @local::ScanDefinitions.ssth23
-#	},
-#	{
-#		@table::BasicPred
-#		output_dir: "fit_dcp"
-#		scan_params: @local::ScanDefinitions.dcp
-#	}
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
