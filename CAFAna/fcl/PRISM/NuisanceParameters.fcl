@@ -6,10 +6,10 @@ nuisance_parameter_sets: {
 		flux_Nov17_1,
 		flux_Nov17_2,
 		flux_Nov17_3,
-		flux_Nov17_4,
+		#flux_Nov17_4,
 		flux_Nov17_5,
 		flux_Nov17_6,
-		flux_Nov17_7,
+		#flux_Nov17_7,
 		flux_Nov17_8,
 		flux_Nov17_9,
 		flux_Nov17_10,
@@ -159,7 +159,7 @@ nuisance_parameter_sets: {
 
 	det_mularEND: [
 		ERecoScaleMuLArND,
-		ERecoScaleMuLArSqrtND,
+		#ERecoScaleMuLArSqrtND,
 		ERecoScaleMuLArInvSqrtND 
 	]
 	det_mularEFD: [
@@ -172,7 +172,7 @@ nuisance_parameter_sets: {
 		UncorrFDMuSqrt,
 		UncorrFDMuInvSqrt,
 		ERecoScaleMuLArND,
-		ERecoScaleMuLArSqrtND,
+		#ERecoScaleMuLArSqrtND,
 		ERecoScaleMuLArInvSqrtND 
 	]
 
@@ -213,6 +213,17 @@ nuisance_parameter_sets: {
 		MuonRecoResND, 
 		EMRecoResND, 
 		ChargedHadRecoResND 
+	]
+	det_Corr: [
+		CorrHadSqrt,
+		CorrHadInvSqrt,
+		CorrMuSqrt,
+		CorrMuInvSqrt,
+		CorrEMSqrt,
+		CorrEMInvSqrt,
+		EScaleMuLAr,
+		ChargedHadCorr,
+		EMCorr
 	]
 
 }
@@ -264,6 +275,22 @@ nuisance_parameters: {
 		@sequence::nuisance_parameter_sets.det_chargehadE,
 		@sequence::nuisance_parameter_sets.det_mularE,
 		@sequence::nuisance_parameter_sets.det_EM,
+		@sequence::nuisance_parameter_sets.det_Res,
+		@sequence::nuisance_parameter_sets.xsec_CCQE,
+		@sequence::nuisance_parameter_sets.xsec_LowW,
+		@sequence::nuisance_parameter_sets.xsec_HighW,
+		@sequence::nuisance_parameter_sets.xsec_NC_other,
+		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
+		@sequence::nuisance_parameter_sets.xsec_Extra,
+		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxFocussing
+
+	]
+
+	allCorr: [
+		@sequence::nuisance_parameter_sets.det_totalND,
+		@sequence::nuisance_parameter_sets.det_totalFD,
+		@sequence::nuisance_parameter_sets.det_Corr,
 		@sequence::nuisance_parameter_sets.det_Res,
 		@sequence::nuisance_parameter_sets.xsec_CCQE,
 		@sequence::nuisance_parameter_sets.xsec_LowW,

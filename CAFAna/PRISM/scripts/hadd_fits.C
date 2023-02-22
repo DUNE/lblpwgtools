@@ -87,7 +87,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
       if (!key_g) {
         std::unique_ptr<TH1D> h_totalfit = std::make_unique<TH1D>(
                                              "Chi2_1DFit", "Chi2_1DFit",
-                                             Nbins /*h_fit->GetXaxis()->GetNbins()*/,
+                                             Nbins,
                                              *lowlim, *highlim);
 
         for (int bin = 1; bin <= h_fit->GetNbinsX(); bin++) {
@@ -95,7 +95,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
           double bincontent = h_fit->GetBinContent(bin);
           std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);
-          if (std::isnormal(bincontent)) {
+          if (std::isnormal(bincontent) && bincontent >= 0) {
             h_totalfit->SetBinContent(binx_tot, bincontent); 
           } else {
             h_totalfit->SetBinContent(binx_tot, 0);
@@ -112,7 +112,7 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
           double bincontent = h_fit->GetBinContent(bin);
           std::cout << "Chi2 = " << bincontent << std::endl;
           int binx_tot = h_update->GetXaxis()->FindBin(bincentre_x);
-          if (std::isnormal(bincontent)) {
+          if (std::isnormal(bincontent) && bincontent >= 0) {
             h_update->SetBinContent(binx_tot, bincontent);
           } else {
             h_update->SetBinContent(binx_tot, 0);
@@ -134,13 +134,20 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
       TKey *key_g = (TKey*)gDirectory->GetListOfKeys()->FindObject("h_dChi2_Total");
       // 2D graph not yet made, so make a new one
       if (!key_g) {
-        std::unique_ptr<TH2D> h_totalfit = std::make_unique<TH2D>(
-                                             "Chi2_2DFit", "Chi2_2DFit",
-                                             50, //h_fit->GetXaxis()->GetNbins(),
-                                             ssth23_lowlim, ssth23_highlim,
-                                             50,
-                                             dmsq32_lowlim, dmsq32_highlim);
- 
+        std::unique_ptr<TH2D> h_totalfit;
+        if (param == "ssth23" || param == "dmsq32") {
+          h_totalfit = std::make_unique<TH2D>("Chi2_2DFit", "Chi2_2DFit",
+                                              sqrt(Nbins), 
+                                              ssth23_lowlim, ssth23_highlim,
+                                              sqrt(Nbins),
+                                              dmsq32_lowlim, dmsq32_highlim);
+        } else if (param == "ss2th13" || param == "dcp") {
+          h_totalfit = std::make_unique<TH2D>("Chi2_2DFit", "Chi2_2DFit",
+                                              sqrt(Nbins), 
+                                              dcp_lowlim, dcp_highlim,
+                                              sqrt(Nbins),
+                                              ss2th13_lowlim, ss2th13_highlim);
+        }
         for (int binx = 1; binx <= h_fit->GetNbinsX(); binx++) {
           for (int biny = 1; biny <= h_fit->GetNbinsY(); biny++) {
             double bincentre_x = h_fit->GetXaxis()->GetBinCenter(binx);
@@ -149,8 +156,11 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
 
             int binx_tot = h_totalfit->GetXaxis()->FindBin(bincentre_x);       
             int biny_tot = h_totalfit->GetYaxis()->FindBin(bincentre_y);
-            //std::cout << "Chi2 = " << bincontent << std::endl;
-            h_totalfit->SetBinContent(binx_tot, biny_tot, bincontent);
+            if (std::isnormal(bincontent) && bincontent >= 0) {
+              h_totalfit->SetBinContent(binx_tot, biny_tot, bincontent);
+            } else {
+              h_totalfit->SetBinContent(binx_tot, biny_tot, 0);
+            }
           }
         }
         h_totalfit.release()->Write("h_dChi2_Total");
@@ -159,17 +169,17 @@ void MergeFits(TDirectory *target, TFile *source, std::string param, int Nbins) 
         TH2D *h_update = (TH2D*)target->Get("h_dChi2_Total");
         for (int binx = 1; binx <= h_fit->GetNbinsX(); binx++) {
           for (int biny = 1; biny <= h_fit->GetNbinsY(); biny++) {
-            //std::cout << h_fit->GetXaxis()->GetBinCenter(binx) 
-            //  << " ; " << h_fit->GetYaxis()->GetBinCenter(biny) 
-            //  << " ; " << h_fit->GetBinContent(binx, biny) << std::endl; 
             double bincentre_x = h_fit->GetXaxis()->GetBinCenter(binx);
             double bincentre_y = h_fit->GetYaxis()->GetBinCenter(biny);
             double bincontent = h_fit->GetBinContent(binx, biny);
 
             int binx_tot = h_update->GetXaxis()->FindBin(bincentre_x);
             int biny_tot = h_update->GetYaxis()->FindBin(bincentre_y);
-
-            h_update->SetBinContent(binx_tot, biny_tot, bincontent);
+            if (std::isnormal(bincontent) && bincontent >= 0) {
+              h_update->SetBinContent(binx_tot, biny_tot, bincontent);
+            } else {
+              h_update->SetBinContent(binx_tot, biny_tot, 0);
+            }
           }
         }
         target->cd();

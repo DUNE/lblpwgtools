@@ -77,6 +77,12 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   std::vector<ISyst const *> freesysts = ana::GetListOfSysts(
     scan.get<std::vector<std::string>>("free_syst_params", {}));
 
+  // If you want to do N-1 syst studies you can ask to remove one syst at a time
+  std::string const &rm_syst = scan.get<std::string>("rm_syst", "");
+  if (!rm_syst.empty()) {
+    RemoveSysts(freesysts, {rm_syst});
+  }
+
   for (auto &o : free_oscpars) {
     std::cout << "\t" << o->ShortName() << " free osc." << std::endl;
   }
@@ -169,10 +175,10 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     &kFitDeltaInPiUnits) != free_oscpars.end()) {
     oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
   }
-  //if (std::find(free_oscpars.begin(), free_oscpars.end(), &kFitSinSqTheta23) !=
-  //  free_oscpars.end()) {
-  //  oscSeeds[&kFitSinSqTheta23] = {0.4, 0.6};
-  //}
+  if (std::find(free_oscpars.begin(), free_oscpars.end(), &kFitSinSqTheta23) !=
+    free_oscpars.end()) {
+    oscSeeds[&kFitSinSqTheta23] = {0.4, 0.6};
+  }
 
   SeedList oscSeedsList(oscSeeds);
 
@@ -505,7 +511,8 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   //-----------------------
   if (nparams == 1) {
     //MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kNormal);
-    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, MinuitFitter::kFast);
+    MinuitFitter::FitOpts prism_fitopts = MinuitFitter::kFast; //| MinuitFitter::kPrefitSysts;
+    MinuitFitter fitter(&CombExpts, free_oscpars, freesysts, prism_fitopts);
     for (const auto &x : x_scan) {
 
       // Put oscillation values back to their seed position each iteration
@@ -549,6 +556,12 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     }
 
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
+    TMatrixDSym covar = fitter.GetCovariance();
+    TH2D hist_covar = TH2D(covar);
+    hist_covar.SetName("covar");
+    TH2D hist_corr = *make_corr_from_covar(&hist_covar);
+    hist_covar.Write();
+    hist_corr.Write();
   }
   //-----------------------
   // Do the minimization 2D
@@ -610,6 +623,12 @@ int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
   setenv("CAFANA_STAT_ERRS", "1", 1);
+  // Fit env variables
+  setenv("FIT_TOLERANCE", "1", 1);
+  setenv("FIT_PRECISION", "1e-12", 1);
+
+  std::cout << "FIT_TOLERANCE = " << getenv("FIT_TOLERANCE") << 
+    "; FIT_PRECISION = " << getenv("FIT_PRECISION") << std::endl;
   gROOT->SetMustClean(false);
 
   int fit_binx(-1), fit_biny(-1), opt(1);

@@ -5,16 +5,14 @@
 
 BasicPred: {
 
-	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/Dcp_Ss2th13_EnuReco_100_NoPionMass_AllSyst_Feb23/PRISMScan_dcp_ss2th13_EnuReco_100_4Flav_Feb23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NoPionMass_AllSysts_4Flav_Feb23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/Ssth23_EnuReco_100_CorrDet_rmBadFlux_Feb23/PRISMScan_ssth23_EnuReco_100_4Flav_Feb23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NewCorrDet_AllSysts_4Flav_Feb23.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHadVisReco
-	# Always true - why do we even have this?
-	use_PRISM: true
+	projection_name: EnuReco
 	# Set exposure in years
 	POT_years: 1.042 # 1.042 for 100MWktYrs
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
-	use_ND_stats: false
+	use_ND_stats: true
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: false
         # Extra plots for more histograms in PRISMPrediction
@@ -80,9 +78,8 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.dcp_sstth13
 	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
-	#scan_params: @local::ScanDefinitions.dmsq32
+	scan_params: @local::ScanDefinitions.ssth23
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
@@ -90,7 +87,7 @@ BasicPred: {
 scans: [
 	{
 		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.all
+		free_syst_params: @local::nuisance_parameters.allCorr
 		output_dir: "fit_fluxxsecdet"
 	},
 	{

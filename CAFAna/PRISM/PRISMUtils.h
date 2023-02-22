@@ -185,8 +185,7 @@ void ScrubOscVars(std::vector<const IFitVar *> &oscvars,
                   std::vector<std::string> const &names_to_scrub);
 
 SystShifts GetSystShifts(fhicl::ParameterSet const &ps);
-std::vector<ana::ISyst const *>
-GetListOfSysts(std::vector<std::string> const &);
+std::vector<ana::ISyst const *> GetListOfSysts(std::vector<std::string> const &);
 
 // Function to take a HistAxis with potentially multiple binnings
 // and convert e.g. 2 binnings into 1 binning. Useful for the smearing matrix
