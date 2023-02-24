@@ -20,9 +20,9 @@ if [ ! -z ${2} ]; then
   ANAVERSION="${2}"
 fi
 
-if [ ! -e CAFAna/InputStateFiles.list ]; then
+if [ ! -e ${INPUT_TAR_DIR_LOCAL}/CAFAna/InputStateFiles.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputStateFiles.list but didn't."
-  ls CAFAna
+  ls ${INPUT_TAR_DIR_LOCAL}/CAFAna
   exit 2
 fi
 
@@ -45,7 +45,8 @@ if [ -z ${GRID_USER} ]; then
   exit 2
 fi
 
-mv CAFAna $_CONDOR_SCRATCH_DIR/
+echo "Start to move files, but will see warning mv: cannot remove ${INPUT_TAR_DIR_LOCAL}/CAFAna/*': Read-only file system (ignore for now)"
+mv ${INPUT_TAR_DIR_LOCAL}/CAFAna $_CONDOR_SCRATCH_DIR/
 
 cd $_CONDOR_SCRATCH_DIR
 
@@ -60,7 +61,7 @@ export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
 ifdh ls ${PNFS_OUTDIR}
-PNFS_OUTDIR=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+PNFS_OUTDIR=/pnfs/dune/scratch/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 
 INPFILE=""

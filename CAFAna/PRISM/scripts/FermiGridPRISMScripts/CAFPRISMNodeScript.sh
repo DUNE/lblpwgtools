@@ -16,14 +16,10 @@ if [ ! -z ${2} ]; then
   fi
 fi
 
-if [ -z ${INPUT_TAR_FILE} ]; then
-  LOGYLOG "[ERROR]: Expected to recieve an input file."
-  #exit 1
-fi
 
-if [ ! -e CAFAna/CAFECommands.cmd ]; then
+if [ ! -e ${INPUT_TAR_DIR_LOCAL}/CAFAna/CAFECommands.cmd ]; then
   LOGYLOG "[ERROR]: Expected to recieve a command file @ CAFAna/CAFECommands.cmd but didn't."
-  ls CAFAna
+  ls ${INPUT_TAR_DIR_LOCAL}/CAFAna
   exit 2
 fi
 
@@ -52,7 +48,8 @@ if [ -z ${GRID_USER} ]; then
   exit 4
 fi
 
-mv CAFAna $_CONDOR_SCRATCH_DIR/
+echo "Start to move files, but will see warning mv: cannot remove ${INPUT_TAR_DIR_LOCAL}/CAFAna/*': Read-only file system (ignore for now)"
+mv ${INPUT_TAR_DIR_LOCAL}/CAFAna $_CONDOR_SCRATCH_DIR/
 
 cd $_CONDOR_SCRATCH_DIR
 
@@ -73,13 +70,20 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
-PNFS_OUTDIR_STUB=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+PNFS_OUTDIR_STUB=/pnfs/dune/scratch/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output stub dir is ${PNFS_OUTDIR_STUB}"
 
+echo "Can we see this dir on grid?"
 ifdh ls ${PNFS_OUTDIR_STUB}
+echo "Yes we can see this dir on grid!"
+
+echo "See where are at: pwd (this should be _CONDOR_SCRATCH_DIR)"
+pwd
 
 LOGYLOG "Current directory ls:"
 ifdh ls
+
+echo "PNFS_OUTDIR: ${PNFS_OUTDIR}"
 
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to read ${PNFS_OUTDIR}. Make sure that you have created this directory and given it group write permission (chmod g+w ${PNFS_OUTDIR})."
@@ -87,6 +91,8 @@ if [ $? -ne 0 ]; then
 fi
 
 PNFS_OUTDIR=${PNFS_OUTDIR_STUB}
+
+echo "Again PNFS_OUTDIR: ${PNFS_OUTDIR}"
 
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to make ${PNFS_OUTDIR}."

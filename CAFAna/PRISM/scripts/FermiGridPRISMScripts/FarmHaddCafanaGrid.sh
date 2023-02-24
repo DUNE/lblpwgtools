@@ -1,12 +1,12 @@
 #!/bin/bash
 
-PNFS_PATH_APPEND=CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/fluxsyst_Nov17
+PNFS_PATH_APPEND=PRISMStateFile
 FORCE_REMOVE="0"
 INPUT_DIR=""
 
 LIFETIME_EXP="60h"
 DISK_EXP="3GB"
-MEM_EXP="30GB"
+MEM_EXP="10GB"
 
 ANAVERSION="4"
 
@@ -28,7 +28,7 @@ while [[ ${#} -gt 0 ]]; do
       fi
 
       PNFS_PATH_APPEND="$2"
-      echo "[OPT]: Writing output to /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}"
+      echo "[OPT]: Writing output to /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}"
       shift # past argument
       ;;
 
@@ -64,7 +64,7 @@ while [[ ${#} -gt 0 ]]; do
 
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
-      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
+      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/scratch/users/${USER}/"
       echo -e "\t-i|--input-dir             : Path to search for files in."
       echo -e "\t-f|--force-remove          : If files are found in the output directory, remove them."
       echo -e "\t-v|--analysis-version <v=4>: Set analysis version, (3 or 4)."
@@ -114,24 +114,24 @@ if [ ! -e CAFAna.Blob.tar.gz ]; then
   exit 2
 fi
 
-ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 
 if [ $? -ne 0 ]; then
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+  ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
   if [ $? -ne 0 ]; then
-    echo "Unable to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}."
+    echo "Unable to make /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}."
     exit 2
   fi
 elif [ ${FORCE_REMOVE} == "1" ]; then
-  echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
-  rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}\" "
+  rm -rf /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+  mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 fi
 
 setup jobsub_client
 ${CAFANA}/CAFAnaEnv.sh
 
-Hadd_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/HaddCafana.sh ${PNFS_PATH_APPEND} ${ANAVERSION})
+Hadd_JID=$(jobsub_submit --group=${EXPERIMENT} --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED --expected-lifetime=${LIFETIME_EXP} --disk=${DISK_EXP} --memory=${MEM_EXP} --cpu=1 --OS=SL7 --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/HaddCafana.sh ${PNFS_PATH_APPEND} ${ANAVERSION})
 
 echo "Hadd_JID: ${Hadd_JID}"
