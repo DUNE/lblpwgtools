@@ -56,28 +56,13 @@ if [ ! -z ${7} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
-if [ -z ${INPUT_TAR_FILE} ]; then
-  LOGYLOG "[ERROR]: Expected to recieve an input file in INPUT_TAR_FILE."
-  if [ -z ${$INPUT_TAR_DIR_LOCAL} ]; then
-    LOGYLOG "[ERROR]: Expected to recieve an input file in INPUT_TAR_DIR_LOCAL."
-    exit 1
-  fi
-fi
-
-LOGYLOG "INPUT_TAR_FILE: ${INPUT_TAR_FILE}"
-LOGYLOG "INPUT_TAR_DIR_LOCAL: ${INPUT_TAR_DIR_LOCAL}"
-LOGYLOG "CONDOR_DIR_INPUT: ${CONDOR_DIR_INPUT}"
-LOGYLOG "_CONDOR_JOB_IWD: $_CONDOR_JOB_IWD"
-
-# This is the untarred directory all your stuff lives
-cd ${CONDOR_DIR_INPUT}/CAFAna.Blob.gz
-
 PRISMFAKEDATAARG=" --PRISM-fake-data MissingProtonFakeData_pos" # nominal MaCCQE_pos MissingProtonFakeData_pos
 SELECTIONARG=" --UseSelection"
+#SELECTIONARG=""
 
-if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
+if [ ! -e ${INPUT_TAR_DIR_LOCAL}/CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
-  ls CAFAna
+  ls ${INPUT_TAR_DIR_LOCAL}/CAFAna
   exit 2
 fi
 
@@ -100,8 +85,12 @@ if [ -z ${GRID_USER} ]; then
   exit 2
 fi
 
+echo "Start to move files, but will see warning mv: cannot remove ${INPUT_TAR_DIR_LOCAL}/CAFAna/*': Read-only file system (ignore for now)"
+mv ${INPUT_TAR_DIR_LOCAL}/CAFAna $_CONDOR_SCRATCH_DIR/
+
+cd $_CONDOR_SCRATCH_DIR
+
 export CAFANA=$(readlink -f CAFAna)
-LOGYLOG "CAFAna: $CAFAna"
 source ${CAFANA}/CAFAnaEnv.sh
 
 voms-proxy-info --all
@@ -155,7 +144,7 @@ ifdh ls ${PNFS_OUTDIR}
 
 if [ $? -ne 0 ]; then
   LOGYLOG "Unable to read ${PNFS_OUTDIR}. Make sure that you have created this directory and given it group write permission (chmod g+w ${PNFS_OUTDIR})."
-  #exit 10
+  exit 10
 fi
 
 LOGYLOG "Building interps @ $(date)"
@@ -167,9 +156,15 @@ else
   OUTFILENAME=${SAMPLE_NAME}.State.${CLUSTER}.${PROCESS}.root
 fi
 
-OUTFILENAME=${_CONDOR_SCRATCH_DIR}/${OUTFILENAME}
-
 LOGYLOG "Output file name: ${OUTFILENAME}"
+
+export CAFANA_ANALYSIS_VERSION=${ANAVERSION}
+echo "CAFANA_ANALYSIS_VERSION=${CAFANA_ANALYSIS_VERSION}"
+
+source ${CAFANA}/CAFAnaEnv.sh
+
+export PRISM_MULTIFILE="1"
+echo "PRISM_MULTIFILE=${PRISM_MULTIFILE}"
 
 LOGYLOG "MakePRISMPredInterps -o ${OUTFILENAME} \
                               ${INPFILE} \
