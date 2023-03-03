@@ -356,7 +356,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         }
       }
       fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
-      state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"));
+      state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"), ch.second);
       state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
       dir->cd();
     }
