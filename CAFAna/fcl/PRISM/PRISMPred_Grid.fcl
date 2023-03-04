@@ -9,10 +9,10 @@ BasicPred: {
 	# Read state file from persistent pool, this may slow down jobs
 	#state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/StatOnly/ELepEHadVisReco_lep_default_HalfHadbins_StatOnly_Hadded_State.root"
 	# Read state file from local work dir (use this when you want to ship state file to worker node on grid)
-	state_file: "ELepEHadVisReco_lep_default_HalfHadbins_StatOnly_Hadded_State.root"
+	state_file: "/dune/app/users/icaracas/DunePRISM/smallStateFiles/PRISMState_EVisReco_1mOutDes_4Oct22.root"
 
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHadVisReco
+	projection_name: EVisReco
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
@@ -81,6 +81,8 @@ BasicPred: {
 	}
 
 	# Choose how many channels you want to make predictions for
+	#samples: @local::FitChannels.Numubar_disp
+	#samples: @local::FitChannels.Nuebar_app
 	samples: @local::JointFitChannels.FourFlavor
 	#samples: @local::JointFitChannels.NuBarModeJoint
 }
