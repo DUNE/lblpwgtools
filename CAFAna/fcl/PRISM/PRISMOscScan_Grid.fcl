@@ -5,14 +5,14 @@
 
 BasicPred: {
 
-	output_file: ["dmsq32_ssth23_ELepEHadParam_NoPionMass_100_4Flav_Feb23.root", "UPDATE"]
-	state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/chasnip/CAFAnaStateFiles/PRISMState_ELepEHadParam_NoPionMass_4Flav_9Feb23.root"
+	output_file: ["/dune/app/users/icaracas/DunePRISM/smallOutFiles/OutputFile_OscParam_4FitChannels_1yr_OscPars_ssTh23_NoSysts_with_WSbkgCheckGitNew.root", "UPDATE"]
+	state_file: "/dune/app/users/icaracas/DunePRISM/smallStateFiles/StateFileAllAntiNuAndNuInfoInBothMatchPredAndFDUnselAndPredictionFDNoOsc_BothNDAndFD_NoSysts.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHadVisReco
+	projection_name: EVisReco
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 1.042 # 1.042 for 100MWktYrs
+	POT_years: 0.5
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
@@ -23,7 +23,9 @@ BasicPred: {
 	# Do you want to use fake data?
 	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
-	match_intrinsic_nue: false
+	match_intrinsic_nue: true
+	# True to include FD Wron Sign background on a data-driven approach
+        match_ws: true
 	# Do you want the reactor th13 constraint?
 	reactor_constraint: true
 
@@ -80,7 +82,7 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	scan_params: @local::ScanDefinitions.ssth23
 	#scan_params: @local::ScanDefinitions.dmsq32
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor

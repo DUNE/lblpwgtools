@@ -166,13 +166,17 @@ protected:
                     const Spectrum &_fSpectrumNutauSwap,
                     const Spectrum &_fSpectrumRHCNonSwap,
                     const Spectrum &_fSpectrumRHCNueSwap,
-                    const Spectrum &_fSpectrumRHCNutauSwap)
+                    const Spectrum &_fSpectrumRHCNutauSwap,
+                    const Spectrum &_fSpectrumNonSwapNues,
+                    const Spectrum &_fSpectrumRHCNonSwapNues)
       : fSpectrumNonSwap(_fSpectrumNonSwap),
         fSpectrumNueSwap(_fSpectrumNueSwap),
         fSpectrumNutauSwap(_fSpectrumNutauSwap),
         fSpectrumRHCNonSwap(_fSpectrumRHCNonSwap),
         fSpectrumRHCNueSwap(_fSpectrumRHCNueSwap),
-        fSpectrumRHCNutauSwap(_fSpectrumRHCNutauSwap) {}
+        fSpectrumRHCNutauSwap(_fSpectrumRHCNutauSwap),
+        fSpectrumNonSwapNues(_fSpectrumNonSwapNues),
+        fSpectrumRHCNonSwapNues(_fSpectrumRHCNonSwapNues) {}
 
   Spectrum fSpectrumNonSwap;
   Spectrum fSpectrumNueSwap;
@@ -180,6 +184,8 @@ protected:
   Spectrum fSpectrumRHCNonSwap;
   Spectrum fSpectrumRHCNueSwap;
   Spectrum fSpectrumRHCNutauSwap;
+  Spectrum fSpectrumNonSwapNues;
+  Spectrum fSpectrumRHCNonSwapNues;
 };
 
 class FDNoOscPredictionGenerator : public IPredictionGenerator {

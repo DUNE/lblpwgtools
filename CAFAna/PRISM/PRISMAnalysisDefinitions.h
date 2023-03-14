@@ -137,7 +137,7 @@ inline std::string GetMatchChanShortName(MatchChan ch) {
   if (ch.to.mode == BeamMode::kNuMode) {
     return (ch.to.chan & NuChan::kNumu) ? "NumuDisp" : ( (ch.to.chan & NuChan::kNueApp) ? "NueApp" : "NutauApp" );
   } else {
-    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : ( (ch.to.chan & NuChan::kNueApp) ? "NueBarApp" : "NutauBarApp" );
+    return (ch.to.chan & NuChan::kNumuBar) ? "NumuBarDisp" : ( (ch.to.chan & NuChan::kNueBarApp) ? "NueBarApp" : "NutauBarApp" );
   }
   return "UnknownChannel";
 }
@@ -147,6 +147,37 @@ inline MatchChan GetMatchChan(fhicl::ParameterSet const &ps) {
           GetBeamChan(ps.get<std::string>("FD"), false)};
 }
 
+//Get the anti-match channel, so one can access both the nominal (i.e FHC/RHC) as well as the reverses (i.e RHC/FHC) Data
+inline MatchChan GetAntiChannel(MatchChan ch){
+  MatchChan antich;
+  //from
+  if(ch.from.chan == NuChan::kNumuIntrinsic)
+    antich.from.chan = NuChan::kNumuBarIntrinsic;
+  else
+    antich.from.chan = NuChan::kNumuIntrinsic;
+
+  if(ch.from.mode == BeamMode::kNuMode)
+    antich.from.mode = BeamMode::kNuBarMode;
+  else
+    antich.from.mode = BeamMode::kNuMode;
+
+  //To
+  if(ch.to.chan == NuChan::kNumuIntrinsic)
+    antich.to.chan = NuChan::kNumuBarIntrinsic;
+  if(ch.to.chan == NuChan::kNumuBarIntrinsic)
+    antich.to.chan = NuChan::kNumuIntrinsic;
+  if(ch.to.chan == NuChan::kNueBarApp)
+    antich.to.chan = NuChan::kNueApp;
+  if(ch.to.chan == NuChan::kNueApp)
+    antich.to.chan = NuChan::kNueBarApp;
+
+  if(ch.to.mode == BeamMode::kNuMode)
+    antich.to.mode = BeamMode::kNuBarMode;
+  else
+    antich.to.mode = BeamMode::kNuMode;
+
+  return antich;
+}
 // Enum-like list of Ids for use in lists of PRISM objects
 // The pairs of nonswap/numu and nueswap/nue are equivalent in terms of index
 // position but not semantically identical. e.g. To make a full nue selection
