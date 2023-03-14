@@ -177,8 +177,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
            << match_chan.to.mode << ", " << match_chan.to.chan);*/
 
 // define anti channel -> for WSbkg pred
-  MatchChan antimatch_chan = GetAntiChannel(match_chan);;// for the wrong sign background we always take the FD prediction from the opposite=anti channel
-                                //i.e if ND in FHC then the FD component to be used as target is from RHC and viceversa
+  MatchChan antimatch_chan = GetAntiChannel(match_chan);;// for the wrong sign background we always used ND data the opposite/anti channel
 
 //usual ND prediction from the channel of interest -> for FD oscillated spectrum
   PredictionInterp const *NDPredInterp_293kA =
