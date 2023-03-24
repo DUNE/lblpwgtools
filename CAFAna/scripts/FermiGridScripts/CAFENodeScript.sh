@@ -16,14 +16,11 @@ if [ ! -z ${2} ]; then
   fi
 fi
 
-# if [ -z ${_CONDOR_DIR_INPUT} ]; then
-#   LOGYLOG "[ERROR]: Expected to recieve an input file."
-#   exit 1
-# fi
+export CAFANA=${INPUT_TAR_DIR_LOCAL}/CAFAna
 
-if [ ! -e CAFAna/CAFECommands.cmd ]; then
+if [ ! -e ${CAFANA}/CAFECommands.cmd ]; then
   LOGYLOG "[ERROR]: Expected to recieve a command file @ CAFAna/CAFECommands.cmd but didn't."
-  ls CAFAna
+  ls ${CAFANA}
   exit 2
 fi
 
@@ -52,11 +49,7 @@ if [ -z ${GRID_USER} ]; then
   exit 4
 fi
 
-mv CAFAna $_CONDOR_SCRATCH_DIR/
-
 cd $_CONDOR_SCRATCH_DIR
-
-export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
 
 voms-proxy-info --all
@@ -68,7 +61,7 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
-PNFS_OUTDIR_STUB=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+PNFS_OUTDIR_STUB=/pnfs/dune/scratch/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output stub dir is ${PNFS_OUTDIR_STUB}"
 
 ifdh ls ${PNFS_OUTDIR_STUB}
@@ -104,9 +97,6 @@ if [ ! -e  ${CAFANA}/scripts/${SCRIPT_NAME} ]; then
   LOGYLOG "[ERROR]: Failed to find expected script: ${CAFANA}/scripts/${SCRIPT_NAME}"
   exit 6
 fi
-
-cp ${CAFANA}/scripts/common_fit_definitions.C .
-cp ${CAFANA}/scripts/${SCRIPT_NAME} .
 
 LOGYLOG "Running script @ $(date)"
 

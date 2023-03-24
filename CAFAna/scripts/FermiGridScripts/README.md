@@ -65,7 +65,7 @@ job clusters for execution. The latest help text is copied here:
 
 ```
 [RUNLIKE]  [opts] --cafe-comands <args>
-        -p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/
+        -p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/scratch/users/${USER}/
         -c|--cafe-command-file     : File containing <script name>: [arg1 [arg2 [...]]]. One job is submitted per line in the input file.
         --cafe-commands            : All arguments passed after this will be passed to cafe on the node.
         -S|--cafe-script           : Path to non-standard (i.e. not in ${CAFANA}/scripts) cafe script that should be included in the tarball.
@@ -79,7 +79,7 @@ job clusters for execution. The latest help text is copied here:
 
 Hopefully most of the options are self-explanatory. Those in need of further explanation are detailed here:
 
-* `-p|--pnfs-path-append`: All output files copied back on success will end up in `/pnfs/dune/persistent/users/${USER}/<-p argument>`.
+* `-p|--pnfs-path-append`: All output files copied back on success will end up in `/pnfs/dune/scratch/users/${USER}/<-p argument>`.
 * `-c|--cafe-command-file`: Path to a CAFE command file which contains a newline-delimited list of cafe commands to submit jobs for. A single cluster of jobs will be submitted, with n processes, each of which will run one line from the input file.
 * `--cafe-commands`: Can be used to pass a single CAFE command on the command line rather than in a single-line CAFE command file.
 * `-S|--cafe-script`: Not all of the CAFAna source is tar'ed up and shipped off to the grid nodes, all of the CAFE scripts that you will want to run need to be available, this allows you to pass a single script to be added to the tarball.
@@ -109,7 +109,7 @@ CAFAna/scripts/remake_inputs.C
 CAFAna/scripts/asimov_joint_coarse.C
 ```
 
-If it did, it would submit a single cluster of 4 jobs, requesting 1 Gb of disk space, 2 Gb of memory, and 4h walltime, writing the output files to `/pnfs/dune/persistent/users/${USER}/myoutput/$CLUSTERID.$JOBID/`.
+If it did, it would submit a single cluster of 4 jobs, requesting 1 Gb of disk space, 2 Gb of memory, and 4h walltime, writing the output files to `/pnfs/dune/scratch/users/${USER}/myoutput/$CLUSTERID.$JOBID/`.
 
 ### CAFE Scripts
 

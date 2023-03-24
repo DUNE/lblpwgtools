@@ -9,10 +9,7 @@ LOGYLOG () {
   fi
 }
 
-# if [ -z ${INPUT_TAR_FILE} ]; then
-#   LOGYLOG "[ERROR]: Expected to recieve an input file."
-#   exit 1
-# fi
+export CAFANA=${INPUT_TAR_DIR_LOCAL}/CAFAna
 
 PNFS_PATH_APPEND=${1}
 if [ -z ${1} ]; then
@@ -51,9 +48,9 @@ if [ ! -z ${6} ]; then
   NOFAKEDATAARG=" --no-fakedata-dials"
 fi
 
-if [ ! -e CAFAna/InputCAFs.${SAMPLE_NAME}.list ]; then
+if [ ! -e ${CAFANA}/InputCAFs.${SAMPLE_NAME}.list ]; then
   LOGYLOG "[ERROR]: Expected to recieve a CAF file list @ CAFAna/InputCAFs.${SAMPLE_NAME}.list but didn't."
-  ls CAFAna
+  ls ${CAFANA}
   exit 2
 fi
 
@@ -76,11 +73,7 @@ if [ -z ${GRID_USER} ]; then
   exit 2
 fi
 
-mv CAFAna $_CONDOR_SCRATCH_DIR/
-
 cd $_CONDOR_SCRATCH_DIR
-
-export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
 
 voms-proxy-info --all
@@ -92,7 +85,7 @@ ups active
 export IFDH_CP_UNLINK_ON_ERROR=1;
 export IFDH_CP_MAXRETRIES=2;
 
-PNFS_OUTDIR=/pnfs/dune/persistent/users/${GRID_USER}/${PNFS_PATH_APPEND}
+PNFS_OUTDIR=/pnfs/dune/scratch/users/${GRID_USER}/${PNFS_PATH_APPEND}
 LOGYLOG "Output dir is ${PNFS_OUTDIR}"
 
 INPFILE=""
