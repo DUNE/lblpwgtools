@@ -271,14 +271,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
-    // Test to see if I'm passing prefit parameter values correctly...
-    std::map<std::string, double> prefit_pars;
-
     // -------------------------------------
     // -------- Do the ND-only fit --------
     // -------------------------------------
-
-    IExperiment *gpenalty = GetPenalty(hie, 1, "nopen");
 
     // If the fit used the ND, run a fit with just the ND first, this the output 
     // parameter values are then used as the starting point for all subsequent seeds
@@ -299,15 +294,55 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 		<< BuildLogInfoString();
     }
 
-    // Keep track of the parameter values
-    for (auto syst : fitThrowSyst.ActiveSysts()){
-      prefit_pars[syst->ShortName()] = fitThrowSyst.GetShift(syst);
+    // -------------------------------------
+    // ------ Start with the th13 fit ------
+    // -------------------------------------    
+    IExperiment *th13_penalty = GetPenalty(hie, 1, "th13");
 
+    // This is temporary to keep track of what is saved
+    FitTreeBlob min_th13_blob("min_th13_info", "min_th13_params");
+    double this_th13_chisqmin = 1E6;
+    th13_oct = 0;
+
+    // Loop over ssth23
+    for (int oct = -1; oct <= 1; oct++){
+
+      // Get parameters that are limited to specific regions of parameter space
+      std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
+
+      osc::IOscCalculatorAdjustable *tempFitThrowOsc;
+      if (start_throw) {
+        tempFitThrowOsc = ThrownWideOscCalc(hie, oscVars);
+      } else {
+        tempFitThrowOsc = NuFitOscCalc(hie, 1, oct);
+      }
+
+      // Temporary place to save the best fit info
+      FitTreeBlob temp_blob("temp_blob", "temp_blob");
+
+      // Manually set the seed position for ssth23
+      double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
+                                      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
+                                      fitThrowSyst, oscSeeds, th13_penalty,
+                                      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
+
+      // Save if this is a better minimum
+      if (temp_chisq < this_th13_chisqmin){
+        this_th13_chisqmin = temp_chisq;
+        th13_oct = oct;
+        min_th13_blob.CopyVals(temp_blob);
+      }
     }
+    delete th13_penalty;
+
+    std::cerr << "[THW]: th13 throw " << i
+              << " fit found minimum chi2 = " << th13_chisqmin << " "
+              << BuildLogInfoString();
 
     // -------------------------------------
-    // --------- Do the nopen fit ---------
+    // --------- Now the nopen fit ---------
     // -------------------------------------
+    IExperiment *gpenalty = GetPenalty(hie, 1, "nopen");
 
     // This is temporary to keep track of what is saved
     FitTreeBlob min_nopen_blob("min_nopen_info", "min_nopen_params");
@@ -333,7 +368,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       // Manually set the seed position for ssth23
       double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
 				      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-				      SystShifts(fitThrowSyst), oscSeeds, gpenalty,
+				      fitThrowSyst, oscSeeds, gpenalty,
 				      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
       // Save if this is a better minimum
@@ -343,79 +378,23 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 	min_nopen_blob.CopyVals(temp_blob);
       }
     }
-
-    // Copy temp tree blob into output file
-    // Record which fit was saved
-    nopen_chisqmin = this_nopen_chisqmin;
-    nopen_tree.CopyVals(min_nopen_blob);
-
     delete gpenalty;
-    nopen_tree.Fill();
 
     std::cerr << "[THW]: Nopen throw " << i
               << " fit found minimum chi2 = " << nopen_chisqmin << " "
               << BuildLogInfoString();
 
-    // Load the prefit parameter values back in
-    for (auto syst : fitThrowSyst.ActiveSysts()){
-      std::cout << "Par " << syst->ShortName() << " " << fitThrowSyst.GetShift(syst) << " " << prefit_pars[syst->ShortName()] << std::endl;
-      fitThrowSyst.SetShift(syst, prefit_pars[syst->ShortName()]);
-    }
+    // Save info for both fits
+    nopen_chisqmin = this_nopen_chisqmin;
+    nopen_tree.CopyVals(min_nopen_blob);
+    nopen_tree.Fill();
 
-    // -------------------------------------
-    // --------- Now do th13 fits ----------
-    // -------------------------------------
-
-    IExperiment *th13_penalty = GetPenalty(hie, 1, "th13");
-
-    // This is temporary to keep track of what is saved
-    FitTreeBlob min_th13_blob("min_th13_info", "min_th13_params");
-    double this_th13_chisqmin = 1E6;
-    th13_oct = 0;
-
-    // Loop over ssth23
-    for (int oct = -1; oct <= 1; oct++){
-
-      // Get parameters that are limited to specific regions of parameter space
-      std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
-
-      osc::IOscCalculatorAdjustable *tempFitThrowOsc;
-      if (start_throw) {
-	tempFitThrowOsc = ThrownWideOscCalc(hie, oscVars);
-      } else {
-        tempFitThrowOsc = NuFitOscCalc(hie, 1, oct);
-      }
-
-      // Temporary place to save the best fit info
-      FitTreeBlob temp_blob("temp_blob", "temp_blob");
-
-      // Manually set the seed position for ssth23
-      double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
-                                      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-                                      SystShifts(fitThrowSyst), oscSeeds, th13_penalty,
-                                      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
-
-      // Save if this is a better minimum
-      if (temp_chisq < this_th13_chisqmin){
-	this_th13_chisqmin = temp_chisq;
-        th13_oct = oct;
-        min_th13_blob.CopyVals(temp_blob);
-      }
-    }
-
-    // Copy temp tree blob into output file
-    // Record which fit was saved
     th13_chisqmin = this_th13_chisqmin;
     th13_tree.CopyVals(min_th13_blob);
     dchisq = th13_chisqmin - nopen_chisqmin;
-
-    delete th13_penalty;
     th13_tree.Fill();
 
-    std::cerr << "[THW]: th13 throw " << i
-	      << " fit found minimum chi2 = " << th13_chisqmin << " "
-	      << BuildLogInfoString();
-    
+    // Checkpointing
     if (chk.ShouldCheckpoint()) {
       chk.WaitForSemaphore();
       std::cerr << "[OUT]: Writing output file:" << outputFname << std::endl;
