@@ -351,17 +351,29 @@ namespace ana {
     dir = dir->GetDirectory(name.c_str()); // switch to subdir
     assert(dir);
 
-    // Can't use make_unique because constructor is protected
-    PredictionFDNoOsc *ret = new PredictionFDNoOsc(
-        *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spec_nonswap_nue"),
-        *ana::LoadFrom<Spectrum>(dir, "spec_RHCnonswap_nue"));
-
+    PredictionFDNoOsc *ret;
+       if(!dir->FindObjectAny("spec_nonswap_nue")){ //for older FD state files not including the itrinsic nue spectra         
+          ret = new PredictionFDNoOsc(
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"));
+       } else{ //new FD state files	
+       // Can't use make_unique because constructor is protected
+          ret = new PredictionFDNoOsc(
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spec_nonswap_nue"),
+              *ana::LoadFrom<Spectrum>(dir, "spec_RHCnonswap_nue"));
+     }
 
     delete dir;
 
