@@ -1,5 +1,3 @@
-#include "CAFAnaCore/CAFAna/Core/Ratio.h"
-
 #include "CAFAna/Analysis/common_fit_definitions.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
@@ -39,12 +37,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   bool prism_debugplots = pred.get<bool>("prism_debugplots", false);
   bool use_fake_data = pred.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
+  bool match_ws_bkg = pred.get<bool>("match_ws", false);
 
   if (vary_NDFD_MCData == true && prism_debugplots == false) {
-    std::cout << "[ERROR] you can have just 'prism_debugplots', "
-              << "but you cannot have just 'vary_NDFD_data'" << std::endl;
-    abort();
-  }
+   std::cout << "[ERROR] you can have just 'prism_debugplots', "
+             << "but you cannot have just 'vary_NDFD_data'" << std::endl;
+   abort();
+ }
+
 
   std::pair<double, double> gauss_flux =
       pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
@@ -80,7 +80,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   osc::IOscCalcAdjustable *calc =
       ConfigureCalc(pred.get<fhicl::ParameterSet>("true_osc", {}));
-   osc::NoOscillations no;
+  osc::NoOscillations no;
 
   // Profile memory usage
   ProcInfo_t procinfo;
@@ -155,6 +155,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
   state.PRISM->SetIntrinsicBkgCorr(match_intrinsic_nue_bkg);
 
+  if(match_ws_bkg){
+    std::cout <<" include FD WS bkg in PRISM Pred." << std::endl;
+  }
+  else{
+    std::cout<<" Use FD MC to predict FD WS bkg." << std::endl;
+  }
+  state.PRISM->SetWSBkgCorr(match_ws_bkg);
+
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {
     for (auto const &fs :
@@ -175,12 +183,21 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
 
   //-------------
-  // Create flux matcher object
+  // Create flux matcher objects
   PRISMExtrapolator fluxmatcher;
+  PRISMExtrapolator fluxmatcherWSB;
 
   if (Use_EventRateMatching) {
     std::cout << "Using event rate matching" << std::endl;
     fluxmatcher.Initialize({
+        {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
+        {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
+        {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
+        {"ND_293kA_nub", state.MatchPredInterps[kND_293kA_nub].get()},
+        {"ND_280kA_nub", state.MatchPredInterps[kND_280kA_nub].get()},
+        {"FD_nub", state.MatchPredInterps[kFD_nub_nonswap].get()},
+    });
+    fluxmatcherWSB.Initialize({
         {"ND_293kA_nu", state.MatchPredInterps[kND_293kA_nu].get()},
         {"ND_280kA_nu", state.MatchPredInterps[kND_280kA_nu].get()},
         {"FD_nu", state.MatchPredInterps[kFD_nu_nonswap].get()},
@@ -216,17 +233,26 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
                                         chan_energy_range);
+    fluxmatcherWSB.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
+                                        chan_energy_range); //same targetting condition
   }
 
-  if ( PRISM_write_debug )       fluxmatcher.SetStoreDebugMatches();
+  if ( PRISM_write_debug ){
+    fluxmatcher.SetStoreDebugMatches();
+    fluxmatcherWSB.SetStoreDebugMatches();
+  }
   if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
 
   state.PRISM->SetFluxMatcher(&fluxmatcher);
+  state.PRISM->SetFluxMatcherWSB(&fluxmatcherWSB);
   //-------------
 
   // Define extrapolator object before channel loop
   NDFD_Matrix SmearMatrices;
+  NDFD_Matrix SmearMatricesWSB; // the smearing matrices are taken from the anti channel
+
   MCEffCorrection NDFDEffCorr;
+  MCEffCorrection NDFDEffCorrWSB; //efficinecy correction also from anti channel
 
   for (auto const &ch : Channels) {
     int osc_from = FluxSpeciesPDG(ch.second.from.chan);
@@ -239,6 +265,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     std::cout << "ND Config = " << DescribeConfig(NDConfig_enum) << std::endl;
     std::cout << "FDfd Config = " << DescribeFDConfig(FDfdConfig_enum) << std::endl;
+
+    MatchChan AntiChannel = GetAntiChannel(ch.second);
+
+    size_t NDConfig_enum_antich = GetConfigFromNuChan(AntiChannel.from, true);
+    size_t NDConfig_293kA_antich = (NDConfig_enum_antich == kND_nu) ? kND_293kA_nu : kND_293kA_nub;
+    size_t NDConfig_280kA_antich = (NDConfig_enum_antich == kND_nu) ? kND_280kA_nu : kND_280kA_nub;
+    size_t FDConfig_enum_antich = GetConfigFromNuChan(AntiChannel.to, false);
+    size_t FDfdConfig_enum_antich = GetFDConfigFromNuChan(AntiChannel.to);
+
+    if(match_ws_bkg){
+      std::cout<<" for WSB prediction, the anti channel ND Config = "<< DescribeConfig(NDConfig_enum_antich)<< std::endl;
+      std::cout<<" for WSB prediction, the anti channel FD Config = "<< DescribeFDConfig(FDfdConfig_enum_antich) << std::endl;
+    }
 
     if ((NDConfig_enum == kND_nu) && !run_plan_nu.GetPlanPOT()) {
 
@@ -263,8 +302,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     DataPred->Scale(1, "width");
     chan_dir->WriteTObject(DataPred, "DataPred_Total");
     DataPred->SetDirectory(nullptr);
-
-    // Data prediction with satistical error from MC rather than made up exposure 
+    // Data prediction with satistical error from MC rather than made up exposure
     // stat error
     auto FarDetPred_MCErrs = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc);
     auto *DataPredMCErrs = FarDetPred_MCErrs.ToTHX(POT_FD);
@@ -302,13 +340,25 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                            {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
                            {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
                            {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-
-
-
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
 
-    //--------------------
+   if(match_ws_bkg){ // smearing matrices and efficiency correction for WSBkg prediction
+     SmearMatricesWSB.Initialize({state.NDMatrixPredInterps[NDConfig_enum_antich].get(), NDConfig_enum_antich},
+                              {state.FDMatrixPredInterps[FDfdConfig_enum_antich].get(), FDfdConfig_enum_antich});
+     state.PRISM->SetNDFDDetExtrapAntiChannel(&SmearMatricesWSB);
+
+     // MC efficiency correction
+     NDFDEffCorrWSB.Initialize({state.NDUnselTruePredInterps[NDConfig_293kA_antich].get(), NDConfig_293kA_antich},
+                            {state.NDSelTruePredInterps[NDConfig_293kA_antich].get(), NDConfig_293kA_antich},
+                            {state.NDUnselTruePredInterps[NDConfig_280kA_antich].get(), NDConfig_280kA_antich},
+                            {state.NDSelTruePredInterps[NDConfig_280kA_antich].get(), NDConfig_280kA_antich},
+                            {state.FDUnselTruePredInterps[FDfdConfig_enum_antich].get(), FDfdConfig_enum_antich},
+                            {state.FDSelTruePredInterps[FDfdConfig_enum_antich].get(), FDfdConfig_enum_antich});
+     state.PRISM->SetMC_NDFDEffAntiChannel(&NDFDEffCorrWSB);
+  }
+
+
     auto PRISMComponents =
         state.PRISM->PredictPRISMComponents(calc, shift, ch.second);
     std::cout << "Done predicting components." << std::endl;
@@ -334,6 +384,36 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       chan_dir->WriteTObject(FD_NueNumuCorr, "FD_NumuNueCorr");
       FD_NueNumuCorr->SetDirectory(nullptr);
     }
+    // write the NDFD weightings without any scaling => coefficients shouldn't be scaled to "width"
+    // for 293kA
+    if (PRISMComponents.count(PredictionPRISM::kNDFDWeightings_293kA)) {
+       auto *NDFDWeightings_293kA =
+             PRISMComponents.at(PredictionPRISM::kNDFDWeightings_293kA).ToTH1(POT);
+       chan_dir->WriteTObject(NDFDWeightings_293kA, "NDFDWeightings_293kA");
+       NDFDWeightings_293kA->SetDirectory(nullptr);
+    }
+    //for 280kA
+    if (PRISMComponents.count(PredictionPRISM::kNDFDWeightings_280kA)) {
+       auto *NDFDWeightings_280kA =
+             PRISMComponents.at(PredictionPRISM::kNDFDWeightings_280kA).ToTH1(POT);
+
+       chan_dir->WriteTObject(NDFDWeightings_280kA, "NDFDWeightings_280kA");
+       NDFDWeightings_280kA->SetDirectory(nullptr);
+    }
+    if (PRISMComponents.count(PredictionPRISM::kNDFDWeightings_293kAWSB)) {
+       auto *NDFDWeightings_293kAWSB =
+             PRISMComponents.at(PredictionPRISM::kNDFDWeightings_293kAWSB).ToTH1(POT);
+       chan_dir->WriteTObject(NDFDWeightings_293kAWSB, "NDFDWeightings_293kAWSB");
+       NDFDWeightings_293kAWSB->SetDirectory(nullptr);
+    }
+    //for 280kA
+    if (PRISMComponents.count(PredictionPRISM::kNDFDWeightings_280kAWSB)) {
+       auto *NDFDWeightings_280kAWSB =
+             PRISMComponents.at(PredictionPRISM::kNDFDWeightings_280kAWSB).ToTH1(POT);
+
+       chan_dir->WriteTObject(NDFDWeightings_280kAWSB, "NDFDWeightings_280kAWSB");
+       NDFDWeightings_280kAWSB->SetDirectory(nullptr);
+    }
 
     if (PRISM_write_debug) {
       for (auto const &comp : PRISMComponents) {
@@ -345,9 +425,17 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           continue;
         } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
           continue;
-        }
+        } else if(comp.first == PredictionPRISM::kNDFDWeightings_293kA){
+  	      continue;
+  	    } else if(comp.first == PredictionPRISM::kNDFDWeightings_280kA){
+  	      continue;
+  	    } else if(comp.first == PredictionPRISM::kNDFDWeightings_293kAWSB){
+  	      continue;
+  	    } else if(comp.first == PredictionPRISM::kNDFDWeightings_280kAWSB){
+  	      continue;
+  	    }
 
-        auto *PRISMComp_h = comp.second.ToTHX(POT_FD); 
+        auto *PRISMComp_h = comp.second.ToTHX(POT_FD);
         PRISMComp_h->Scale(1, "width");
         if (PRISMComp_h->Integral() != 0) {
           chan_dir->WriteTObject(
@@ -355,9 +443,16 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
               PredictionPRISM::GetComponentString(comp.first).c_str());
         }
       }
+
       fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
       state.PRISM->Get_NDFD_Matrix()->Write(chan_dir->mkdir("Unfold_Matrices"), ch.second);
       state.PRISM->Get_MCEffCorrection()->Write(chan_dir->mkdir("MCEfficiency"));
+      if(match_ws_bkg){
+        fluxmatcherWSB.Write(chan_dir->mkdir("NDFD_matcher_WSBPrediction"));
+    	  state.PRISM->Get_NDFD_Matrix_AntiChannel()->Write(chan_dir->mkdir("Unfold_MatricesWSB"),AntiChannel);
+    	  state.PRISM->Get_MCEffCorrection_AntiChannel()->Write(chan_dir->mkdir("MCEfficiencyWSB"));
+      }
+
       dir->cd();
     }
     std::cout << "Finished writing." << std::endl;
@@ -419,7 +514,7 @@ int main(int argc, char const *argv[]) {
     exit(1);
   }
   // Allow the fhiclcpp to lookup the included fcl scripts
-  cet::filepath_first_absolute_or_lookup_with_dot 
+  cet::filepath_first_absolute_or_lookup_with_dot
     f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
 
   fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);

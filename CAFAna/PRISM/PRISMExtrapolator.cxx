@@ -56,11 +56,12 @@ PRISMExtrapolator::PRISMExtrapolator()
       fFDPredInterp_nu(nullptr), fFDPredInterp_nub(nullptr),
       fLastMatch_293kA(nullptr), fLastMatch_280kA(nullptr),
       fLastGaussMatch_293kA(nullptr), fLastGaussMatch_280kA(nullptr),
-      fStoreDebugMatches(false), fMatchIntrinsicNue(false) {}
+      fStoreDebugMatches(false), fMatchIntrinsicNue(false), fMatchWSBkg(false) {}
 
 //--------------------------------------------------------------------------------
 PRISMExtrapolator::PRISMExtrapolator(const PRISMExtrapolator &ExtrapPreds) {
   vNumuNueXsecRatioTrueEnu = ExtrapPreds.vNumuNueXsecRatioTrueEnu;
+  vNumuNueXsecRatioTrueEnuAntiChannel = ExtrapPreds.vNumuNueXsecRatioTrueEnuAntiChannel;
 }
 
 //--------------------------------------------------------------------------------
@@ -148,7 +149,7 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 //--------------------------------------------------------------------------------
 std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalc *calc, PRISM::MatchChan match_chan, SystShifts shift,
-    double &soln_norm, double &resid_norm) const {
+    double &soln_norm, double &resid_norm, bool MatchWSBkg) const {
 
   static osc::NoOscillations no;
 
@@ -168,34 +169,66 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
                sgn_fd = GetSign(match_chan.to.chan);
   Flavors::Flavors_t flav_nd = GetFlavor(match_chan.from.chan);
   Flavors::Flavors_t flav_fd = GetFlavor(match_chan.to.chan);
-
+  //define wrong sign for both ND and FD
+  Sign::Sign_t wrong_sgn_nd = (sgn_nd == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
+  Sign::Sign_t wrong_sgn_fd = (sgn_fd == Sign::kNu) ? Sign::kAntiNu : Sign::kNu;
   /*PRISMOUT("GetFarMatchCoefficients: "
            << match_chan.from.mode << ", " << match_chan.from.chan << ", "
            << match_chan.to.mode << ", " << match_chan.to.chan);*/
 
+// define anti channel -> for WSbkg pred
+  MatchChan antimatch_chan = GetAntiChannel(match_chan);// for the wrong sign background we always used ND data the opposite/anti channel
+
+//usual ND prediction from the channel of interest -> for FD oscillated spectrum
   PredictionInterp const *NDPredInterp_293kA =
       GetNDPred(match_chan.from.mode, 293); // Can be flux OR ev rate
-
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
   NDOffAxis_293kA_spec.OverridePOT(1);
   // Get 293kA sample at ND.
-  // Need to remove underflow and overflow elements.
-  Eigen::MatrixXd FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec.GetEigen(1),
-                                                                NDOffAxis_293kA_spec.GetBinnings());
-  Eigen::MatrixXd NDFluxMatrix_293kA =
-      FlowNDFluxMatrix_293kA.block(1, 1, FlowNDFluxMatrix_293kA.rows() - 2,
-                                   FlowNDFluxMatrix_293kA.cols() - 2);
 
   PredictionInterp const *NDPredInterp_280kA =
       GetNDPred(match_chan.from.mode, 280); // Can be flux OR ev rate
-
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
   NDOffAxis_280kA_spec.OverridePOT(1);
   // Get 280kA sample at ND.
-  Eigen::MatrixXd FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
-                                                                NDOffAxis_280kA_spec.GetBinnings());
+
+//get ND prediction from the anti channel
+  PredictionInterp const *NDPredInterp_293kA_AntiChannel =
+      GetNDPred(antimatch_chan.from.mode, 293); // Can be flux OR ev rate
+  Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
+      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+  NDOffAxis_293kA_spec_AntiChannel.OverridePOT(1);
+  // Get 293kA sample at ND.
+
+  PredictionInterp const *NDPredInterp_280kA_AntiChannel =
+      GetNDPred(antimatch_chan.from.mode, 280); // Can be flux OR ev rate
+  Spectrum NDOffAxis_280kA_spec_AntiChannel = NDPredInterp_280kA_AntiChannel->PredictComponentSyst(
+      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+  NDOffAxis_280kA_spec_AntiChannel.OverridePOT(1);
+  // Get 280kA sample
+
+  // Need to remove underflow and overflow elements.
+  Eigen::MatrixXd FlowNDFluxMatrix_293kA;
+  Eigen::MatrixXd FlowNDFluxMatrix_280kA;
+
+  if(!MatchWSBkg){
+    FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec.GetEigen(1),
+                                                  NDOffAxis_293kA_spec.GetBinnings());
+    FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
+                                                  NDOffAxis_280kA_spec.GetBinnings());
+  }
+  else if(MatchWSBkg){
+    FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec_AntiChannel.GetEigen(1),
+                                                  NDOffAxis_293kA_spec_AntiChannel.GetBinnings());
+    FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec_AntiChannel.GetEigen(1),
+                                                  NDOffAxis_280kA_spec_AntiChannel.GetBinnings());
+  }
+
+  Eigen::MatrixXd NDFluxMatrix_293kA =
+      FlowNDFluxMatrix_293kA.block(1, 1, FlowNDFluxMatrix_293kA.rows() - 2,
+                                   FlowNDFluxMatrix_293kA.cols() - 2);
   Eigen::MatrixXd NDFluxMatrix_280kA =
       FlowNDFluxMatrix_280kA.block(1, 1, FlowNDFluxMatrix_280kA.rows() - 2,
                                    FlowNDFluxMatrix_280kA.cols() - 2);
@@ -208,24 +241,63 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   // Include right sign intrinsic nue bkg in target flux matching
   Spectrum FDOsc_intrinsic_nue_spec = FDPredInterp->PredictComponentSyst(
       calc, shift, Flavors::kNuEToNuE, Current::kCC, sgn_fd);
+  //1. define wrong sing intrinsic nue bkg spectrum
+  Spectrum FDOsc_intrinsic_WS_nue_spec = FDPredInterp->PredictComponentSyst(
+      calc, shift, Flavors::kNuEToNuE, Current::kCC, wrong_sgn_fd);
+  //2.define wrong sign background (muons ) from beam contamination spectrum;
+  Spectrum FDOsc_WSBkg = FDPredInterp->PredictComponentSyst(
+      calc, shift, flav_fd, Current::kCC, wrong_sgn_fd);
   Eigen::VectorXd FlowTarget;
-  if ( fMatchIntrinsicNue && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
 
-    FlowTarget = FDOsc_intrinsic_nue_spec.GetEigen(1).matrix();
-    for (int bin = 0; bin < FlowTarget.size(); bin++) {
-      FlowTarget(bin) *= vNumuNueXsecRatioTrueEnu(bin); // numu/nue xsec ratio vs true nu E applied
+  if(!MatchWSBkg){ // the matchWSB flag is always off for the standard prediction
+    if ( fMatchIntrinsicNue && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) ) {
+
+      FlowTarget = FDOsc_intrinsic_nue_spec.GetEigen(1).matrix();
+      for (int bin = 0; bin < FlowTarget.size(); bin++) {
+        FlowTarget(bin) *= vNumuNueXsecRatioTrueEnu(bin); // numu/nue xsec ratio vs true nu E applied
+      }
+
+      FlowTarget += FDOsc_spec.GetEigen(1).matrix();
+    } else {
+        FlowTarget = FDOsc_spec.GetEigen(1).matrix();
     }
-
-    FlowTarget += FDOsc_spec.GetEigen(1).matrix();
-  } else {
-    FlowTarget = FDOsc_spec.GetEigen(1).matrix();
   }
+  else if(MatchWSBkg == true){ //MatchWSBkg prediction
+    if((match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ){
+
+      FlowTarget = FDOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();
+      for (int bin = 0; bin < FlowTarget.size(); bin++) {
+        FlowTarget(bin) *= vNumuNueXsecRatioTrueEnuAntiChannel(bin); // numu/nue xsec ratio vs true nu E applied for anti channel
+      }
+      FlowTarget += FDOsc_WSBkg.GetEigen(1).matrix(); //no cross section correction since we deal with mu_nu here
+    }
+    else{ //if disappearance channel only WSBkg from nu_mu beam contamination -> intrinsic WS from MC
+      FlowTarget = FDOsc_WSBkg.GetEigen(1).matrix();
+    }
+  }
+
   Eigen::VectorXd Target = FlowTarget.segment(1, FlowTarget.size() - 2);
 
   Spectrum FDUnOsc_spec = FDPredInterp->PredictComponentSyst(
-      &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd);
+        &no, shift, Flavors::kNuMuToNuMu, Current::kCC, sgn_fd);
+  Spectrum FDUnOsc_intrinsic_RS_nue_spec =  FDPredInterp->PredictComponentSyst(
+        &no, shift, Flavors::kNuEToNuE, Current::kCC, sgn_fd);
+  Spectrum FDUnOsc_intrinsic_WS_nue_spec =  FDPredInterp->PredictComponentSyst(
+        &no, shift, Flavors::kNuEToNuE, Current::kCC, wrong_sgn_fd);
+  Spectrum FDUnosc_WSBkg = FDPredInterp->PredictComponentSyst(
+        &no, shift, Flavors::kNuMuToNuMu, Current::kCC, wrong_sgn_fd);
 
-  Eigen::VectorXd FlowFDUnOsc_vec = FDUnOsc_spec.GetEigen(1).matrix();
+  Eigen::VectorXd FlowFDUnOsc_vec;
+  if(!MatchWSBkg ){
+    FlowFDUnOsc_vec = FDUnOsc_spec.GetEigen(1).matrix();
+    if( fMatchIntrinsicNue && ( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ) )
+      FlowFDUnOsc_vec += FDUnOsc_intrinsic_RS_nue_spec.GetEigen(1).matrix();  //include the intrinsic RS to residual calculation as well
+  }
+  else if(MatchWSBkg){
+    FlowFDUnOsc_vec = FDUnosc_WSBkg.GetEigen(1).matrix();
+    if( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) )
+      FlowFDUnOsc_vec += FDUnOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();
+  }
   Eigen::VectorXd FDUnOsc_vec = FlowFDUnOsc_vec.segment(1, FlowFDUnOsc_vec.size() - 2);
 
   // Make sure we have the same number of energy bins at ND and FD

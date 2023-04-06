@@ -5,11 +5,11 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["ELepEHadVisReco_StatOnly_PRISMPred_Numu_disp.root", "UPDATE"]
+	output_file: ["/dune/app/users/icaracas/DunePRISM/smallOutFiles/PRISMPredWSBkSumOfWSBAndIntrinsicWSTrueAndRSIntrinsicTrue_ClassicPRISM_4Channels_CheckNewGitNewStateFile.root", "UPDATE"]
 	# Read state file from persistent pool, this may slow down jobs
 	#state_file: "root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/persistent/users/weishi/CAFAnaInputs/StandardState/ELepEHadVisReco_lep_default_HalfHadbins/StatOnly/ELepEHadVisReco_lep_default_HalfHadbins_StatOnly_Hadded_State.root"
 	# Read state file from local work dir (use this when you want to ship state file to worker node on grid)
-	state_file: "/dune/app/users/icaracas/DunePRISM/smallStateFiles/PRISMState_EVisReco_1mOutDes_4Oct22.root"
+	state_file: "/dune/app/users/icaracas/DunePRISM/smallStateFiles/StateFileAllAntiNuAndNuInfoInBothMatchPredAndFDUnselAndPredictionFDNoOsc_BothNDAndFD_NoSysts.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EVisReco
@@ -21,11 +21,13 @@ BasicPred: {
 	vary_NDFD_data: false
 	# Extra plots for more histograms in PRISMPrediction
 	# Should be false for fitting
-	prism_debugplots: false
+	prism_debugplots: true
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
-	match_intrinsic_nue: false
+	match_intrinsic_nue: true
+	# True to include FD Wrong Sign background on a data-driven approach
+        match_ws: true
 
 
 	PRISM: {
