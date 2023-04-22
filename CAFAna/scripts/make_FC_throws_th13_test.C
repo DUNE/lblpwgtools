@@ -196,6 +196,21 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   th13_tree.fJobRNGSeed = gRNGSeed;
   nd_tree.fJobRNGSeed = gRNGSeed;
 
+  // Add a forest to understand the weird fit results
+  FitTreeBlob th13_LO_tree("th13_LO_fit_info", "th13_LO_params");
+  FitTreeBlob th13_BOTH_tree("th13_BOTH_fit_info", "th13_BOTH_params");
+  FitTreeBlob th13_UO_tree("th13_UO_fit_info", "th13_UO_params");
+  FitTreeBlob nopen_LO_tree("nopen_LO_fit_info", "nopen_LO_params");
+  FitTreeBlob nopen_BOTH_tree("nopen_BOTH_fit_info", "nopen_BOTH_params");
+  FitTreeBlob nopen_UO_tree("nopen_UO_fit_info", "nopen_UO_params");
+
+  th13_LO_tree.SetDirectory(fout);
+  th13_BOTH_tree.SetDirectory(fout);
+  th13_UO_tree.SetDirectory(fout);
+  nopen_LO_tree.SetDirectory(fout);
+  nopen_BOTH_tree.SetDirectory(fout);
+  nopen_UO_tree.SetDirectory(fout);
+
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
 
@@ -203,6 +218,14 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     nopen_tree.fLoopRNGSeed = loop_seed;
     th13_tree.fLoopRNGSeed = loop_seed;
     nd_tree.fLoopRNGSeed = loop_seed;
+    
+    th13_LO_tree.fLoopRNGSeed = loop_seed;
+    th13_BOTH_tree.fLoopRNGSeed = loop_seed;
+    th13_UO_tree.fLoopRNGSeed = loop_seed;
+    nopen_LO_tree.fLoopRNGSeed = loop_seed;
+    nopen_BOTH_tree.fLoopRNGSeed = loop_seed;
+    nopen_UO_tree.fLoopRNGSeed = loop_seed;
+
     gRandom->SetSeed(loop_seed);
 
     auto start_loop = std::chrono::system_clock::now();
@@ -326,6 +349,11 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
                                       fitThrowSyst, oscSeeds, th13_penalty,
                                       fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
+      // Save all fit info in relevant trees
+      if (oct == -1) th13_LO_tree .CopyVals(temp_blob);
+      if (oct == 0) th13_BOTH_tree.CopyVals(temp_blob);
+      if (oct == 1) th13_UO_tree .CopyVals(temp_blob);
+
       // Save if this is a better minimum
       if (temp_chisq < this_th13_chisqmin){
         this_th13_chisqmin = temp_chisq;
@@ -371,6 +399,11 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 				      fitThrowSyst, oscSeeds, gpenalty,
 				      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
+      // Save all fit info in relevant trees
+      if (oct == -1) nopen_LO_tree .CopyVals(temp_blob);
+      if (oct == 0) nopen_BOTH_tree.CopyVals(temp_blob);
+      if (oct == 1) nopen_UO_tree .CopyVals(temp_blob);
+
       // Save if this is a better minimum
       if (temp_chisq < this_nopen_chisqmin){
 	this_nopen_chisqmin = temp_chisq;
@@ -393,6 +426,14 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     th13_tree.CopyVals(min_th13_blob);
     dchisq = th13_chisqmin - nopen_chisqmin;
     th13_tree.Fill();
+
+    // Fill everything
+    nopen_LO_tree .Fill();
+    nopen_BOTH_tree .Fill();
+    nopen_UO_tree .Fill();
+    th13_LO_tree .Fill();
+    th13_BOTH_tree .Fill();
+    th13_UO_tree .Fill();
 
     // Checkpointing
     if (chk.ShouldCheckpoint()) {
