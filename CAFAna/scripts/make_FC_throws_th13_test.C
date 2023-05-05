@@ -300,21 +300,22 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
     // If the fit used the ND, run a fit with just the ND first, this the output 
     // parameter values are then used as the starting point for all subsequent seeds
+    SystShifts nd_fit_systs;
     if (sampleString.find("nd") != std::string::npos){
-      SystShifts nd_fit_systs;
       // Hackity hack with the sample name here...
       double nd_min = RunFitPoint(stateFname, sampleString+":ndprefit", fakeThrowOsc, fakeThrowSyst,
 				  stats_throw, {}, systlist, NuFitOscCalc(hie, 1),
 				  SystShifts(fitThrowSyst), {}, nullptr,
 				  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
-      // The best fit should be used as the input for the next fits!
-      fitThrowSyst = nd_fit_systs;
 
       nd_tree.Fill();
       
       std::cerr << "[THW]: ND throw " << i
 		<< " fit found minimum chi2 = " << nd_min << " "
 		<< BuildLogInfoString();
+    } else {
+      // If no ND is included, use the prefit throw as the input to all subsequent fits
+      nd_fit_systs = fitThrowSyst;
     }
 
     // -------------------------------------
@@ -346,7 +347,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       // Manually set the seed position for ssth23
       double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
                                       stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-                                      fitThrowSyst, oscSeeds, th13_penalty,
+                                      SystShifts(nd_fit_systs), oscSeeds, th13_penalty,
                                       fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
       // Save all fit info in relevant trees
@@ -396,7 +397,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       // Manually set the seed position for ssth23
       double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
 				      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-				      fitThrowSyst, oscSeeds, gpenalty,
+				      SystShifts(nd_fit_systs), oscSeeds, gpenalty,
 				      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
       // Save all fit info in relevant trees
