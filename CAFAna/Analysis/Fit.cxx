@@ -218,7 +218,7 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
   std::vector<double> bestFitPars, bestSystPars;
 
   // Used as a starting point for all seeds
-  SystShifts inputShift = bestSysts;
+  SystShifts inputShift = SystShifts(bestSysts);
 
   for (const SeedPt &pt : pts) {
     osc::IOscCalculatorAdjustable *seed = initseed->Copy();
@@ -230,7 +230,7 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
     SystShifts shift = pt.shift;
 
     // If there were no syst seeds, start with the input values
-    if (systSeedPts.empty()) shift = inputShift;
+    if (systSeedPts.empty()) shift = SystShifts(inputShift);
 
     std::unique_ptr<ROOT::Math::Minimizer> thisMin =
         FitHelperSeeded(seed, shift);
@@ -238,6 +238,9 @@ double Fitter::FitHelper(osc::IOscCalculatorAdjustable *initseed,
     // Check whether this is the best minimum we've found so far
     if (thisMin->MinValue() < minchi) {
       minchi = thisMin->MinValue();
+
+      // Copy back best systs (this is a bit dodgy)
+      bestSysts = shift;
 
       // Get them as set by the last seed fit
       fParamNames = fLastParamNames;
