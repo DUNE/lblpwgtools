@@ -15,6 +15,13 @@ int SystShifts::fgNextID = 1;
 SystShifts::SystShifts() : fID(0) {}
 
 //----------------------------------------------------------------------
+SystShifts::SystShifts(const SystShifts& rhs) {
+  for (auto syst : rhs.ActiveSysts()){
+    fSysts.emplace(syst, Clamp(rhs.GetShift(syst), syst));
+  }
+}
+
+//----------------------------------------------------------------------
 SystShifts::SystShifts(const ISyst *syst, double shift) : fID(fgNextID++) {
   if (shift != 0)
     fSysts.emplace(syst, Clamp(shift, syst));

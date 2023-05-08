@@ -294,6 +294,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
+    std::cout << "Fit throw syst values:" << std::endl;
+    for (auto s : fitThrowSyst.ActiveSysts()) {
+      std::cout << s->ShortName() << " " << fitThrowSyst.GetShift(s) << "; ";
+    }
+    std::cout << std::endl;
+
     // -------------------------------------
     // -------- Do the ND-only fit --------
     // -------------------------------------
@@ -315,8 +321,14 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 		<< BuildLogInfoString();
     } else {
       // If no ND is included, use the prefit throw as the input to all subsequent fits
-      nd_fit_systs = fitThrowSyst;
+      nd_fit_systs = SystShifts(fitThrowSyst);
     }
+
+    std::cout << "Post ND fit syst values 1:" <<std::endl;
+    for (auto s : nd_fit_systs.ActiveSysts()) {
+      std::cout << s->ShortName() << " " << nd_fit_systs.GetShift(s) << "; ";
+    }
+    std::cout << std::endl;
 
     // -------------------------------------
     // ------ Start with the th13 fit ------
@@ -367,6 +379,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     std::cerr << "[THW]: th13 throw " << i
               << " fit found minimum chi2 = " << th13_chisqmin << " "
               << BuildLogInfoString();
+
+    std::cout << "Post ND fit syst values 2:" <<std::endl;
+    for (auto s : nd_fit_systs.ActiveSysts()) {
+      std::cout << s->ShortName() << " " << nd_fit_systs.GetShift(s) << "; ";
+    }
+    std::cout << std::endl;
 
     // -------------------------------------
     // --------- Now the nopen fit ---------

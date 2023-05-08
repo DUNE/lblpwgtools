@@ -14,6 +14,7 @@ namespace ana
   {
   public:
     SystShifts();
+    SystShifts(const SystShifts& rhs);
     SystShifts(const ISyst* syst, double shift);
     SystShifts(const std::map<const ISyst*, double>& shifts);
 
