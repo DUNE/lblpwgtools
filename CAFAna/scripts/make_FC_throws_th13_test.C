@@ -1,5 +1,5 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
-
+#include "OscLib/func/OscCalculatorPMNSOpt.h"
 #include "CAFAna/Analysis/CheckPointHelper.h"
 
 #include "TFormula.h"
@@ -48,8 +48,34 @@ osc::IOscCalculatorAdjustable* ThrownWideOscCalcWithAsimov(int hie, std::vector<
   return ret;
 }
 
-// Function to decide which oscillation parameters to throw
+// Copy a calculator for playing with
+osc::IOscCalculatorAdjustable* SmartCalc(osc::IOscCalculatorAdjustable *incalc, int oct, double dcp_shift=0){
 
+  osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
+  ret->SetL(incalc->GetL());
+  ret->SetRho(incalc->GetRho());
+  ret->SetDmsq21(incalc->GetDmsq21());
+  ret->SetTh12(incalc->GetTh12());
+  ret->SetTh23(incalc->GetTh23());
+  ret->SetDmsq32(incalc->GetDmsq32());
+  ret->SetTh13(incalc->GetTh13());
+
+  // If the true value is in the wrong octant, try the reflected value...                                                                                                                                    
+  double dth23 = incalc->GetTh23() - TMath::Pi()/4;
+  if (oct < 0 && dth23 > 0) {
+    ret ->SetTh23(TMath::Pi()/4 - abs(dth23));
+  }
+  if (oct > 0 && dth23 < 0) {
+    ret ->SetTh23(TMath::Pi()/4 + abs(dth23));
+  }
+
+  // Now try adding values to dcp and forcing to be between +/-1
+  ret ->SetdCP( fmod(incalc->GetdCP()+dcp_shift+1,2) -1);
+
+  return ret;
+}
+
+// Function to decide which oscillation parameters to throw
 char const *def_stateFname = "common_state_mcc11v3.root";
 char const *def_outputFname = "sens_ndfd_nosyst.root";
 int const def_nthrows = 100;
@@ -173,7 +199,6 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
   // Manually try different octants, so don't seed ssth23
   std::map<const IFitVar *, std::vector<double>> oscSeeds;
-  oscSeeds[&kFitDeltaInPiUnits] = {-1, -0.5, 0, 0.5};
 
   // Fixed par throw
   FitTreeBlob th13_tree("th13_fit_info", "th13_params");
@@ -346,32 +371,33 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       // Get parameters that are limited to specific regions of parameter space
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
-      osc::IOscCalculatorAdjustable *tempFitThrowOsc;
-      if (start_throw) {
-        tempFitThrowOsc = ThrownWideOscCalc(hie, oscVars);
-      } else {
-        tempFitThrowOsc = NuFitOscCalc(hie, 1, oct);
-      }
+      // Explicitly loop over dcp so I can control the starting value
+      for (double dcp = -1; dcp < -1; dcp += 0.5){
 
-      // Temporary place to save the best fit info
-      FitTreeBlob temp_blob("temp_blob", "temp_blob");
-
-      // Manually set the seed position for ssth23
-      double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
-                                      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-                                      SystShifts(nd_fit_systs), oscSeeds, th13_penalty,
-                                      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
-
-      // Save all fit info in relevant trees
-      if (oct == -1) th13_LO_tree .CopyVals(temp_blob);
-      if (oct == 0) th13_BOTH_tree.CopyVals(temp_blob);
-      if (oct == 1) th13_UO_tree .CopyVals(temp_blob);
-
-      // Save if this is a better minimum
-      if (temp_chisq < this_th13_chisqmin){
-        this_th13_chisqmin = temp_chisq;
-        th13_oct = oct;
-        min_th13_blob.CopyVals(temp_blob);
+	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
+	
+	// Temporary place to save the best fit info
+	FitTreeBlob temp_blob("temp_blob", "temp_blob");
+	
+	// Manually set the seed position for ssth23
+	double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
+					stats_throw, tempOscVars, systlist, tempFitThrowOsc,
+					SystShifts(nd_fit_systs), oscSeeds, th13_penalty,
+					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
+	
+	// Save all fit info in relevant trees
+	if (oct == -1) th13_LO_tree .CopyVals(temp_blob);
+	if (oct == 0) th13_BOTH_tree.CopyVals(temp_blob);
+	if (oct == 1) th13_UO_tree .CopyVals(temp_blob);
+	
+	// Save if this is a better minimum
+	if (temp_chisq < this_th13_chisqmin){
+	  this_th13_chisqmin = temp_chisq;
+	  th13_oct = oct;
+	  min_th13_blob.CopyVals(temp_blob);
+	}
+	
+	delete tempFitThrowOsc;
       }
     }
     delete th13_penalty;
@@ -401,33 +427,33 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
       // Get parameters that are limited to specific regions of parameter space
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
-      
-      osc::IOscCalculatorAdjustable *tempFitThrowOsc;
-      if (start_throw) {
-	tempFitThrowOsc = ThrownWideOscCalc(hie, oscVars);
-      } else {
-	tempFitThrowOsc = NuFitOscCalc(hie, 1, oct);
-      }
 
-      // Temporary place to save the best fit info
-      FitTreeBlob temp_blob("temp_blob", "temp_blob");
+      // Explicitly loop over dcp so I can control the starting value
+      for (double dcp = -1; dcp < -1; dcp += 0.5){
 
-      // Manually set the seed position for ssth23
-      double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
-				      stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-				      SystShifts(nd_fit_systs), oscSeeds, gpenalty,
-				      fit_type, nullptr, &temp_blob, &mad_spectra_yo);
-
-      // Save all fit info in relevant trees
-      if (oct == -1) nopen_LO_tree .CopyVals(temp_blob);
-      if (oct == 0) nopen_BOTH_tree.CopyVals(temp_blob);
-      if (oct == 1) nopen_UO_tree .CopyVals(temp_blob);
-
-      // Save if this is a better minimum
-      if (temp_chisq < this_nopen_chisqmin){
-	this_nopen_chisqmin = temp_chisq;
-	nopen_oct = oct;
-	min_nopen_blob.CopyVals(temp_blob);
+	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
+	
+	// Temporary place to save the best fit info
+	FitTreeBlob temp_blob("temp_blob", "temp_blob");
+	
+	// Manually set the seed position for ssth23
+	double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
+					stats_throw, tempOscVars, systlist, tempFitThrowOsc,
+					SystShifts(nd_fit_systs), oscSeeds, gpenalty,
+					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
+	
+	// Save all fit info in relevant trees
+	if (oct == -1) nopen_LO_tree .CopyVals(temp_blob);
+	if (oct == 0) nopen_BOTH_tree.CopyVals(temp_blob);
+	if (oct == 1) nopen_UO_tree .CopyVals(temp_blob);
+	
+	// Save if this is a better minimum
+	if (temp_chisq < this_nopen_chisqmin){
+	  this_nopen_chisqmin = temp_chisq;
+	  nopen_oct = oct;
+	  min_nopen_blob.CopyVals(temp_blob);
+	}
+	delete tempFitThrowOsc;
       }
     }
     delete gpenalty;
