@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+# source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+source /cvmfs/fermilab.opensciencegrid.org/products/genie/bootstrap_genie_ups.sh
 
 if [ -z "${UPS_SHELL}" ]; then
   echo "[ERROR]: Is UPS set up?"
