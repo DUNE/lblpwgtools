@@ -198,7 +198,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   }
 
   // Manually try different octants, so don't seed ssth23
-  std::map<const IFitVar *, std::vector<double>> oscSeeds;
+  std::map<const IFitVar *, std::vector<double>> oscSeeds = {};
 
   // Fixed par throw
   FitTreeBlob th13_tree("th13_fit_info", "th13_params");
@@ -341,19 +341,13 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
       nd_tree.Fill();
       
-      std::cerr << "[THW]: ND throw " << i
+      std::cout << "[THW]: ND throw " << i
 		<< " fit found minimum chi2 = " << nd_min << " "
 		<< BuildLogInfoString();
     } else {
       // If no ND is included, use the prefit throw as the input to all subsequent fits
       nd_fit_systs = SystShifts(fitThrowSyst);
     }
-
-    std::cout << "Post ND fit syst values 1:" <<std::endl;
-    for (auto s : nd_fit_systs.ActiveSysts()) {
-      std::cout << s->ShortName() << " " << nd_fit_systs.GetShift(s) << "; ";
-    }
-    std::cout << std::endl;
 
     // -------------------------------------
     // ------ Start with the th13 fit ------
@@ -363,6 +357,10 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     // This is temporary to keep track of what is saved
     FitTreeBlob min_th13_blob("min_th13_info", "min_th13_params");
     double this_th13_chisqmin = 1E6;
+    double this_BOTH_th13_chisqmin = 1E6;
+    double this_UO_th13_chisqmin = 1E6;
+    double this_LO_th13_chisqmin = 1E6;
+
     th13_oct = 0;
 
     // Loop over ssth23
@@ -372,7 +370,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
       // Explicitly loop over dcp so I can control the starting value
-      for (double dcp = -1; dcp < -1; dcp += 0.5){
+      for (double dcp = -1; dcp < 1; dcp += 0.5){
+
+	std::cout << "Running a th13 fit with oct = " << oct << " and dcp = " << dcp << std::endl;
 
 	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
 	
@@ -386,9 +386,18 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 	
 	// Save all fit info in relevant trees
-	if (oct == -1) th13_LO_tree .CopyVals(temp_blob);
-	if (oct == 0) th13_BOTH_tree.CopyVals(temp_blob);
-	if (oct == 1) th13_UO_tree .CopyVals(temp_blob);
+	if (oct == -1) {
+	  if (temp_chisq < this_LO_th13_chisqmin)
+	    th13_LO_tree .CopyVals(temp_blob);
+	}
+	if (oct == 0) {
+	  if (temp_chisq < this_BOTH_th13_chisqmin)
+	    th13_BOTH_tree.CopyVals(temp_blob);
+	}
+	if (oct == 1) {
+	  if (temp_chisq < this_UO_th13_chisqmin)
+	    th13_UO_tree .CopyVals(temp_blob);
+	}
 	
 	// Save if this is a better minimum
 	if (temp_chisq < this_th13_chisqmin){
@@ -406,12 +415,6 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
               << " fit found minimum chi2 = " << th13_chisqmin << " "
               << BuildLogInfoString();
 
-    std::cout << "Post ND fit syst values 2:" <<std::endl;
-    for (auto s : nd_fit_systs.ActiveSysts()) {
-      std::cout << s->ShortName() << " " << nd_fit_systs.GetShift(s) << "; ";
-    }
-    std::cout << std::endl;
-
     // -------------------------------------
     // --------- Now the nopen fit ---------
     // -------------------------------------
@@ -420,6 +423,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     // This is temporary to keep track of what is saved
     FitTreeBlob min_nopen_blob("min_nopen_info", "min_nopen_params");
     double this_nopen_chisqmin = 1E6;
+    double this_BOTH_nopen_chisqmin = 1E6;
+    double this_UO_nopen_chisqmin = 1E6;
+    double this_LO_nopen_chisqmin = 1E6;
     nopen_oct = 0;
 
     // Loop over ssth23
@@ -429,7 +435,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
       // Explicitly loop over dcp so I can control the starting value
-      for (double dcp = -1; dcp < -1; dcp += 0.5){
+      for (double dcp = -1; dcp < 1; dcp += 0.5){
+
+	std::cout << "Running a nopen fit with oct = " << oct << " and dcp = " << dcp<< std::endl;
 
 	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
 	
@@ -443,9 +451,18 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 	
 	// Save all fit info in relevant trees
-	if (oct == -1) nopen_LO_tree .CopyVals(temp_blob);
-	if (oct == 0) nopen_BOTH_tree.CopyVals(temp_blob);
-	if (oct == 1) nopen_UO_tree .CopyVals(temp_blob);
+	if (oct == -1) {
+          if (temp_chisq < this_LO_nopen_chisqmin)
+            nopen_LO_tree .CopyVals(temp_blob);
+        }
+        if (oct == 0) {
+          if (temp_chisq < this_BOTH_nopen_chisqmin)
+            nopen_BOTH_tree.CopyVals(temp_blob);
+        }
+        if (oct == 1) {
+          if (temp_chisq < this_UO_nopen_chisqmin)
+            nopen_UO_tree .CopyVals(temp_blob);
+        }
 	
 	// Save if this is a better minimum
 	if (temp_chisq < this_nopen_chisqmin){
