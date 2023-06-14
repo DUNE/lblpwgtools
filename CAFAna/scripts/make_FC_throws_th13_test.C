@@ -205,12 +205,14 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   double th13_chisqmin;
   int th13_oct;
   double dchisq;
+  bool iseithervalid;
   th13_tree.throw_tree->Branch("th13_chisqmin", &th13_chisqmin);
   th13_tree.throw_tree->Branch("nopen_chisqmin", &nopen_chisqmin);
   th13_tree.throw_tree->Branch("nopen_oct", &nopen_oct);
   th13_tree.throw_tree->Branch("th13_oct", &th13_oct);
   th13_tree.throw_tree->Branch("hie", &hie);
   th13_tree.throw_tree->Branch("dchisq", &dchisq);
+  th13_tree.throw_tree->Branch("IsEitherValid", &iseithervalid);
   th13_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   nopen_tree.SetDirectory(fout);
@@ -487,6 +489,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     th13_chisqmin = this_th13_chisqmin;
     th13_tree.CopyVals(min_th13_blob);
     dchisq = th13_chisqmin - nopen_chisqmin;
+
+    // Check if the fits were both valid
+    iseithervalid = true;
+    if (!min_th13_blob.fIsValid) iseithervalid = false;
+    if (!min_nopen_blob.fIsValid) iseithervalid = false;
+
     th13_tree.Fill();
 
     // Fill everything
