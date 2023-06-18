@@ -5,10 +5,10 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_ELepEHadParam_EffBias_4Flav_MPFD_Jun23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_EnuReco_4Flav_Nom_Jun23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_Nom_4Flav_StatsOnly_30May23.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHad_param
+	projection_name: EnuReco
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
@@ -20,13 +20,13 @@ BasicPred: {
 	# Should be false for fitting
 	prism_debugplots: true
 	# Do you want to do a fake data prediction?
-	use_fake_data: true
+	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 	# Regularisation parameter for unfolding - greater stability in fits
-	unfold_reg_param: 0.3
+	unfold_reg_param: 0.0003
 	# True to include FD Wrong Sign background on a data-driven approach
-        match_ws: true
+        match_ws: false
 
 	PRISM: {
 		match_conditioning: [
@@ -95,8 +95,8 @@ predictions: [
 	},
 	{
 		@table::BasicPred
-		output_dir: "numu_EvMatch_nompfd"
-		use_fake_data: false
+		output_dir: "numu_EvMatch_wsbkgd"
+		match_ws: false
 	}
 ]
 
