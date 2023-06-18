@@ -22,7 +22,9 @@ BasicPred: {
 	# Do you want to use fake data?
 	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
-	match_intrinsic_nue: false
+	match_intrinsic_nue: true
+	# True to include FD Wron Sign background on a data-driven approach
+        match_ws: true
 	# Do you want the reactor th13 constraint?
 	reactor_constraint: true
 	# Regularisation parameter for unfolding - greater stability in fits

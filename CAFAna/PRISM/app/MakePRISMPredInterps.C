@@ -303,16 +303,16 @@ int main(int argc, char const *argv[]) {
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
   bool OneDAxis(false);
-  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy" || axdescriptor == "EnuReco") 
+  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy" || axdescriptor == "EnuReco")
     OneDAxis = true;
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor,
                      OneDAxis ?
-                     "fine_prism" : binningdescriptor); 
+                     "fine_prism" : binningdescriptor);
 
   std::vector<HistAxis> AxisVec_numu = {axes.XProjectionFD_numu, axes.XProjectionFD_numu};
   std::vector<HistAxis> AxisVec_nue = {axes.XProjectionFD_nue, axes.XProjectionFD_nue};
-  
+
   HistAxis CovarianceAxis_numu = GetMatrixAxis(AxisVec_numu);
   HistAxis CovarianceAxis_nue = GetMatrixAxis(AxisVec_nue);
 
@@ -363,7 +363,7 @@ int main(int argc, char const *argv[]) {
   auto PRISM = std::make_unique<PredictionPRISM>(
       axes.XProjectionND, axes.XProjectionFD_numu, axes.XProjectionFD_nue, axes.OffAxisPosition,
       axes.OffAxis280kAPosition, TrueObsAxis, MatchAxis, CovarianceAxis_numu, CovarianceAxis_nue,
-      _OffPredictionAxis, _280kAPredictionAxis, _FluxMatcherCorrectionAxes_numu, 
+      _OffPredictionAxis, _280kAPredictionAxis, _FluxMatcherCorrectionAxes_numu,
       _FluxMatcherCorrectionAxes_nue);
   PRISM->Initialize();
 
@@ -585,7 +585,7 @@ int main(int argc, char const *argv[]) {
 
       MatchPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDEventRateSpectraAxis_280kA : NDEventRateSpectraAxis),
-          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) && 
+          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) &&
           (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
 
@@ -618,7 +618,7 @@ int main(int argc, char const *argv[]) {
       // don't need it for 280kA, just getting the efficiency
       NDUnselTruePredGens[config] = std::make_unique<NoOscPredictionGenerator>(
           (IsND280kA ? NDTrueEnergyObsBins_280kA : NDTrueEnergyObsBins_293kA),
-          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) && 
+          (IsNu ? kPRISMNDSignal_True_numu : kPRISMNDSignal_True_numub) &&
           (IsND280kA ? kSel280kARun : kCut280kARun),
           kNDCVWeight * slice_width_weight);
       NDUnselTruePredInterps[config] = std::make_unique<PredictionInterp>(
@@ -637,16 +637,16 @@ int main(int argc, char const *argv[]) {
     } else if (!IsND) { // Is FD
 
       ana::Cut &FDCuts = IsNu ?
-        (IsNueSwap ? kFDSelectionCuts_nue : 
+        (IsNueSwap ? kFDSelectionCuts_nue :
           (IsNuTauSwap ? kFDSelectionCuts_nutau : kFDSelectionCuts_numu) ) :
-        (IsNueSwap ? kFDSelectionCuts_nueb : 
+        (IsNueSwap ? kFDSelectionCuts_nueb :
           (IsNuTauSwap ? kFDSelectionCuts_nutaub : kFDSelectionCuts_numub) );
 
       ana::HistAxis &FDAxis = IsNueSwap ? axes.XProjectionFD_nue :
                                           axes.XProjectionFD_numu;
 
       BeamChan chanmode{IsNu ? BeamMode::kNuMode : BeamMode::kNuBarMode,
-                        IsNueSwap ? NuChan::kNueNueBar : 
+                        IsNueSwap ? NuChan::kNueNueBar :
                         (IsNuTauSwap ? NuChan::kNutauNutauBar : NuChan::kNumuNumuBar)};
 
       PRISM->AddFDMCLoader(Loaders_bm, FDCuts, kFDCVWeight, los_fd,
@@ -658,7 +658,7 @@ int main(int argc, char const *argv[]) {
         MatchPredGens[config] =
             std::make_unique<NonSwapNoExtrapPredictionGenerator>(
                 MatchAxis,
-                (kIsNumuCC || kIsBeamNue) && (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
+                (kIsNumuCC || kIsBeamNue) && kIsTrueFV,
                 kFDCVWeight);
 
         MatchPredInterps[config] = std::make_unique<PredictionInterp>(

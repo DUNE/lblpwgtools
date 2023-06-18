@@ -266,7 +266,9 @@ namespace ana {
         fSpectrumNutauSwap(loader_nutau, axis, cut && !kIsAntiNu && !kIsNC && kIsTauFromMu, shift, wei),
         fSpectrumRHCNonSwap(loader_non, axis, cut && kIsAntiNu && !kIsNC && kIsNumuCC, shift, wei),
         fSpectrumRHCNueSwap(loader_nue, axis, cut && kIsAntiNu && !kIsNC && kIsSig, shift, wei),
-        fSpectrumRHCNutauSwap(loader_nutau, axis, cut && kIsAntiNu && !kIsNC && kIsTauFromMu, shift, wei) {}
+        fSpectrumRHCNutauSwap(loader_nutau, axis, cut && kIsAntiNu && !kIsNC && kIsTauFromMu, shift, wei),
+        fSpectrumNonSwapNues(loader_non, axis, cut && !kIsAntiNu && !kIsNC && kIsBeamNue, shift, wei), //intrinsic nue
+        fSpectrumRHCNonSwapNues(loader_non, axis, cut && kIsAntiNu && !kIsNC && kIsBeamNue, shift, wei) {} //intrinsic anti nue
 
   //----------------------------------------------------------------------
   Spectrum PredictionFDNoOsc::PredictComponent(osc::IOscCalc * /*calc*/,
@@ -309,6 +311,12 @@ namespace ana {
     if (flav & kNuMuToNuTau && sign & kAntiNu) {
       ret += fSpectrumRHCNutauSwap;
     }
+    if (flav & kNuEToNuE && sign & kNu){
+      ret += fSpectrumNonSwapNues;
+    }
+    if (flav & kNuEToNuE && sign & kAntiNu){
+      ret += fSpectrumRHCNonSwapNues;
+    }
     return ret;
   }
 
@@ -327,9 +335,11 @@ namespace ana {
     fSpectrumRHCNonSwap.SaveTo(dir, "spect_RHCnonswap");
     fSpectrumRHCNueSwap.SaveTo(dir, "spect_RHCnueswap");
     fSpectrumRHCNutauSwap.SaveTo(dir, "spect_RHCnutauswap");
+    fSpectrumNonSwapNues.SaveTo(dir, "spec_nonswap_nue");
+    fSpectrumRHCNonSwapNues.SaveTo(dir, "spec_RHCnonswap_nue");
 
     dir->Write();
-    
+
     delete dir;
 
     tmp->cd();
@@ -341,14 +351,29 @@ namespace ana {
     dir = dir->GetDirectory(name.c_str()); // switch to subdir
     assert(dir);
 
-    // Can't use make_unique because constructor is protected
-    PredictionFDNoOsc *ret = new PredictionFDNoOsc(
-        *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
-        *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"));
+    PredictionFDNoOsc *ret;
+       if(!dir->FindObjectAny("spec_nonswap_nue")){ //for older FD state files not including the itrinsic nue spectra         
+          ret = new PredictionFDNoOsc(
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"));
+       } else{ //new FD state files	
+       // Can't use make_unique because constructor is protected
+          ret = new PredictionFDNoOsc(
+              *ana::LoadFrom<Spectrum>(dir, "spect_nonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_nutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnonswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnueswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spect_RHCnutauswap"),
+              *ana::LoadFrom<Spectrum>(dir, "spec_nonswap_nue"),
+              *ana::LoadFrom<Spectrum>(dir, "spec_RHCnonswap_nue"));
+     }
 
     delete dir;
 

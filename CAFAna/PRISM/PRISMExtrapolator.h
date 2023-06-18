@@ -60,16 +60,20 @@ namespace ana {
       vNumuNueXsecRatioTrueEnu = std::move(ratiotrueE);
     }
 
-    std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
-    GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
-                            SystShifts shift, double &soln_norm,
-                            double &resid_norm) const;
+    void SetIntrinsicNueXsecRatioAntiChannel(const Eigen::ArrayXd&& ratiotrueE) const {
+      vNumuNueXsecRatioTrueEnuAntiChannel = std::move(ratiotrueE);
+    }
 
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
-                            SystShifts shift) const {
+                            SystShifts shift, double &soln_norm,
+                            double &resid_norm, bool MatchWSBkg) const;
+
+    std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
+    GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
+                            SystShifts shift, bool MatchWSBkg) const {
       double dummy1, dummy2;
-      return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2);
+      return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2, MatchWSBkg);
     }
 
     std::pair<TH1 const *, TH1 const *>
@@ -122,6 +126,7 @@ namespace ana {
 
     mutable Eigen::ArrayXd fLastResidual;
     mutable Eigen::ArrayXd vNumuNueXsecRatioTrueEnu;
+    mutable Eigen::ArrayXd vNumuNueXsecRatioTrueEnuAntiChannel;
     mutable std::unique_ptr<TH1> fLastGaussResidual;
 
     PredictionInterp const *fNDPredInterp_293kA_nu;
@@ -139,11 +144,15 @@ namespace ana {
     mutable std::unique_ptr<TH1> fLastGaussMatch_280kA;
 
     bool fStoreDebugMatches;
+
     // Whether to include intrinsic nue bkg at FD in target flux matching
     // false: use FD MC for this bkg estimation
     // true: include in flux matching
     // numu/nue cross section ratio correction will be needed with true option
     bool fMatchIntrinsicNue;
+    //this is for including the wrong sign background in FD target flux
+    bool fMatchWSBkg;
+
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugOscTarget;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugUnOsc;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;

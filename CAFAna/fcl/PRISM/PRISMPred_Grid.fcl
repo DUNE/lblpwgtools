@@ -25,6 +25,8 @@ BasicPred: {
 	match_intrinsic_nue: false
 	# Regularisation parameter for unfolding - greater stability in fits
 	unfold_reg_param: 0.3
+	# True to include FD Wrong Sign background on a data-driven approach
+        match_ws: true
 
 	PRISM: {
 		match_conditioning: [
@@ -79,6 +81,8 @@ BasicPred: {
 	}
 
 	# Choose how many channels you want to make predictions for
+	#samples: @local::FitChannels.Numubar_disp
+	#samples: @local::FitChannels.Nuebar_app
 	samples: @local::JointFitChannels.FourFlavor
 	#samples: @local::JointFitChannels.NuBarModeJoint
 }

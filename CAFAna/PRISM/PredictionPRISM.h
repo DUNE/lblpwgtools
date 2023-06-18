@@ -56,7 +56,7 @@ public:
     kFD_NumuNueCorr = 21,
     kFDFluxCorr = 22,
     kFDNCBkg = 23,
-    kFDWSBkg = 24,
+    kFDWSBkg = 24, //if fMatchWSBkg = true -> this will save the WS bkg (WS+ intrinsic WS nu_e) prediction
     kFDWrongLepBkg = 25,
     kFDNuTauCCBkg = 26,
     kFDIntrinsicBkg = 27,
@@ -88,8 +88,25 @@ public:
 
     kFD_NumuNutauCorr_Numu = 49,
     kFD_NumuNutauCorr_Nutau = 50,
-    kFD_NumuNutauCorr = 51
-
+    kFD_NumuNutauCorr = 51,
+    //detailed info about intrinsic background
+    kFDIntrinsicNuEBkgRightSign = 52,
+    kFDIntrinsicNuEBkgWrongSign = 53,
+    kFDIntrinsicNuEBkgMC = 54,
+    // data related to WSB prediction
+    kNDDataCorr_293kAWSB = 55,
+    kNDDataCorr_280kAWSB = 56,
+    kPRISMPredWSB = 57,
+    kNDDataExtrap_293kAWSB = 58,
+    kNDDataExtrap_280kAWSB = 59,
+    kFDUnOscPredWSB = 60,
+    kFDFluxCorrWSB = 61,
+    kPRISMPredFinalWSB = 62,
+    kFDWSBkgMC = 63, //save the MC prediction
+    kExtrapCovarMatrixOscSpectrum = 64,
+    kExtrapCovarMatrix_WSB = 65,
+    kNDFDWeightings_293kAWSB = 66,
+    kNDFDWeightings_280kAWSB = 67,
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -247,11 +264,60 @@ public:
       return "FD_NumuNutauCorr_Numu";
     }
     case kFD_NumuNutauCorr_Nutau: {
-      return "FD_NumuNutauCorr_Nutau"; 
+      return "FD_NumuNutauCorr_Nutau";
     }
     case kFD_NumuNutauCorr: {
       return "FD_NumuNutauCorr";
     }
+    case kFDIntrinsicNuEBkgRightSign: {
+      return "FDIntrinsicNuEBkgRightSignMC";
+    }
+    case kFDIntrinsicNuEBkgWrongSign: {
+      return "FDIntrinsicNuEBkgWrongSignMC";
+    }
+    case kFDIntrinsicNuEBkgMC: {
+      return "FDIntrinsicNuEBkgMC";
+    }
+    case kNDDataCorr_293kAWSB: {
+      return "NDDataCorr_293kAWSB";
+    }
+    case kNDDataCorr_280kAWSB: {
+      return "NDDataCorr_280kAWSB";
+    }
+    case kPRISMPredWSB: {
+      return "PRISMPredWSB";
+    }
+    case kNDDataExtrap_293kAWSB: {
+      return "NDDataExtrap_293kAWSB";
+    }
+    case kNDDataExtrap_280kAWSB: {
+      return "NDDataExtrap_280kAWSB";
+    }
+    case kFDUnOscPredWSB: {
+      return "FDUnOscPredWSB";
+    }
+    case kFDFluxCorrWSB: {
+      return "FDFluxCorrWSB";
+    }
+    case kPRISMPredFinalWSB: {
+      return "PRISMPredFinalWSB";
+    }
+    case kFDWSBkgMC: {
+      return "FDWSBkgMC";
+    }
+    case kExtrapCovarMatrixOscSpectrum: {
+      return "ExtrapCovarMatrixPRISMOscSpectrum";
+    }
+    case kExtrapCovarMatrix_WSB: {
+      return "ExtrapCovarMatrix_WSBPred";
+    }
+    case kNDFDWeightings_293kAWSB: {
+      return "NDFDWeightings_293kAWSB";
+    }
+    case kNDFDWeightings_280kAWSB: {
+      return "NDFDWeightings_280kWSB";
+    }
+
     }
     return "";
   }
@@ -288,8 +354,11 @@ public:
 
   ~PredictionPRISM() {
     fFluxMatcher = nullptr;
+    fFluxMatcherWSB = nullptr;
     fNDFD_Matrix = nullptr;
+    fNDFD_Matrix_WSB = nullptr;
     fMCEffCorrection = nullptr;
+    fMCEffCorrection_WSB = nullptr;
   }
 
   static std::unique_ptr<PredictionPRISM> LoadFrom(TDirectory *dir, const std::string &name);
@@ -299,6 +368,14 @@ public:
 
   virtual Spectrum PredictSyst(osc::IOscCalc *calc,
                                const ana::SystShifts &shift) const override;
+
+ std::map<PRISMComponent, PRISMReweightableSpectrum>
+      NDDataMinusBackground(osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
+        PRISM::MatchChan match_chan = PRISM::kNumuDisappearance_Numode) const;
+
+  virtual Spectrum LinearCombinationCoefficientsSpectrun(
+    PRISM::MatchChan match_chan, std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombinationFromExtrapolator,
+    LabelsAndBins oaAxisBins, int kA) const;
 
   std::map<PRISMComponent, Spectrum> PredictPRISMComponents(
       osc::IOscCalc *calc, ana::SystShifts shift = kNoShift,
@@ -318,6 +395,10 @@ public:
   void SetFluxMatcher(PRISMExtrapolator const *flux_matcher) {
     fFluxMatcher = flux_matcher;
   }
+  PRISMExtrapolator const *fFluxMatcherWSB;
+  void SetFluxMatcherWSB(PRISMExtrapolator const *flux_matcher) {
+    fFluxMatcherWSB = flux_matcher;
+  }
 
   // PredictionPRISM to own a pointer to a NDFD_Matrix object
   NDFD_Matrix const *fNDFD_Matrix;
@@ -328,6 +409,16 @@ public:
     return fNDFD_Matrix;
   }
 
+  // PredictionPRISM to own a pointer to a NDFD_Matrix object to be used simoulatnously for the ND anti channel
+  NDFD_Matrix const *fNDFD_Matrix_WSB;
+  void SetNDFDDetExtrapAntiChannel(NDFD_Matrix const *det_extrap2) {
+    fNDFD_Matrix_WSB = det_extrap2;
+  }
+  NDFD_Matrix const * Get_NDFD_Matrix_AntiChannel() const {
+    return fNDFD_Matrix_WSB;
+  }
+
+
   // PredictionPRISM to own a pointer to a MCEffCorrection object
   MCEffCorrection const *fMCEffCorrection;
   void SetMC_NDFDEff(MCEffCorrection const *eff_corr) {
@@ -336,12 +427,22 @@ public:
   MCEffCorrection const * Get_MCEffCorrection() const {
     return fMCEffCorrection;
   }
+// PredictionPRISM to own a pointer to a MCEffCorrection object to be used simoulatnously for the ND anti channel
+
+  MCEffCorrection const *fMCEffCorrection_WSB;
+  void SetMC_NDFDEffAntiChannel(MCEffCorrection const *eff_corr) {
+    fMCEffCorrection_WSB = eff_corr;
+  }
+  MCEffCorrection const * Get_MCEffCorrection_AntiChannel() const {
+    return fMCEffCorrection_WSB;
+  }
 
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
   void SetVaryPRISMDebugPlots(bool v = true) { fDebugPlots = v; }
   void SetUseFakeData(bool v = true) { fUseFakeData = v; }
   void SetIntrinsicBkgCorr(bool v = true) { fMatchIntrinsicBkg = v; }
+  void SetWSBkgCorr(bool v = true) {fMatchWSBkg = v; }
 
   double fDefaultOffAxisPOT;
 
@@ -426,7 +527,7 @@ public:
 
   // Forgive me
   std::unique_ptr<PredictionInterp> &
-  PublicGetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const { 
+  PublicGetFDPrediction(PRISM::BeamChan NDChannel = PRISM::kNumu_Numode) const {
     return GetFDPrediction(NDChannel);
   }
 
@@ -609,6 +710,10 @@ protected:
   // true: include in flux matching
   // numu/nue cross section ratio correction will be needed with true option
   bool fMatchIntrinsicBkg;
+
+  // Whether to include Wrong Sign background (as sum of IntrinsicWS + WS)
+  // in the PRISMPrediction. this is done via separate PRISM extrapoltation between NDRHC to FDFHC-WS MC background
+  bool fMatchWSBkg;
 
   // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
   // so we only want to add MC corrections to PRISMPred (which has fAnalysisAxisND)

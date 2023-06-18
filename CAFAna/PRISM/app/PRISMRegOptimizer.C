@@ -182,7 +182,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
 
       double soln_norm, resid_norm;
       (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift,
-                                                soln_norm, resid_norm);
+                                                soln_norm, resid_norm, false);
 
       rho_hat.push_back(std::log(resid_norm));
       eta_hat.push_back(std::log(soln_norm));
@@ -239,7 +239,8 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
     fluxmatcher.SetChannelRegFactor(ch.second, 293, best_reg);
     fluxmatcher.SetChannelRegFactor(ch.second, 280, best_reg);
 
-    (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift);
+    double sol, res;
+    (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift, sol, res, false);
     fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
     fluxmatcher.SetStoreDebugMatches(false);
 

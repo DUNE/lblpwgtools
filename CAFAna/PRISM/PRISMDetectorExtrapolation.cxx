@@ -172,7 +172,7 @@ namespace ana {
     hMatrixND = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
     
     auto sMatrixFD = FDPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-                     ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign); // shift_fd
+                     ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
     hMatrixFD = ConvertArrayToMatrix(sMatrixFD.GetEigen(POT), sMatrixFD.GetBinnings());
 
     Eigen::MatrixXd PRISMND = NDDataSpec.GetEigen(POT);
@@ -221,7 +221,7 @@ namespace ana {
       }
       RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 2) = reg_param;
       RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 1) = -2 * reg_param;
-      //RegMatrix(RegMatrix.rows() - 1, RegMatrix.rows() - 1) = reg_param;
+      // Final two rows are zero when doing curvature reg.
       Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block + 
                            RegMatrix.transpose() * RegMatrix).inverse() * 
                           MatrixND_block.transpose();
@@ -292,19 +292,32 @@ namespace ana {
 
   //----------------------------------------------------
 
-  void NDFD_Matrix::Write(TDirectory *dir) const {
+  void NDFD_Matrix::Write(TDirectory *dir, PRISM::MatchChan match_chan) const {
     Eigen::MatrixXd matND = hMatrixND;
     Eigen::MatrixXd matFD = hMatrixFD;
 
+    // Sort out the flavors and signs
+    auto NDSigFlavor = (match_chan.from.chan & NuChan::kNumuNumuBar)
+                           ? Flavors::kAllNuMu
+                           : Flavors::kAllNuE;
+    auto NDSigSign = ((match_chan.from.chan & NuChan::kNumu) ||
+                      (match_chan.from.chan & NuChan::kNue))
+                         ? Sign::kNu
+                         : Sign::kAntiNu;
+    auto FDSigFlavor = (match_chan.to.chan & NuChan::kNumuNumuBar)
+                          ? Flavors::kNuMuToNuMu
+                          : ( (match_chan.to.chan & NuChan::kNueNueBar) ? Flavors::kNuMuToNuE : Flavors::kNuMuToNuTau);
+    auto FDSigSign = ((match_chan.to.chan & NuChan::kNumu) ||
+                     (match_chan.to.chan & NuChan::kNue)  ||
+                     (match_chan.to.chan & NuChan::kNutau))
+                        ? Sign::kNu
+                        : Sign::kAntiNu;
+    size_t confnd = GetNDConfigFromPred(NDSigFlavor, NDSigSign);
+    size_t conf = GetFDConfigFromPred(FDSigFlavor, FDSigSign);
+
     osc::NoOscillations no;
-    size_t confnd(kND_293kA_nu);
-    if (!NDPredInterps.at(confnd)) {
-      confnd = kND_293kA_nub;
-    }
+ 
     auto sMND = NDPredInterps.at(confnd)->Predict(&no);
-    size_t conf(0);
-    if (!FDPredInterps.at(conf)) conf = 1;
-    if (!FDPredInterps.at(conf)) conf = 4;
     auto sMFD = FDPredInterps.at(conf)->Predict(&no);
 
     std::vector<std::string> labelsND = sMND.GetLabels();
