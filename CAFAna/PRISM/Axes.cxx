@@ -361,7 +361,7 @@ HistAxis RecoObservable(std::string const &obsvarname,
     bins.push_back(GetBinning("had_default"));
     vars.push_back(vardefHad.second);
   } else if  (obsvarname == "ELepEHad_param_ND") {
-    auto vardefLep = GetVar("LepE_param");
+    auto vardefLep = GetVar("ELep"); // LepE_param
     labels.push_back(vardefLep.first);
     bins.push_back(GetBinning(binning));
     vars.push_back(vardefLep.second);

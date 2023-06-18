@@ -171,6 +171,7 @@ namespace caf
     double eOther_param;
     double HadE_param;
     double ELep_param;
+    double EVis_param;
 
     //At FD
     double eDepP;

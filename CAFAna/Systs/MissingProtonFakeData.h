@@ -38,6 +38,7 @@ public:
                 sr->EVisReco_ND,
                 sr->EVisReco_numu,
                 sr->EVisReco_nue,
+                sr->EVis_param,
 		sr->VisTrue_NDFD,
                 sr->HadEVisReco_ND,
                 sr->HadEVisReco_FD,
@@ -65,11 +66,12 @@ public:
                          0.135 * sr->nipi0 + eother;
 
     sr->HadE = (1.0 - EpFrac) * sr->eP + sr->ePip + sr->ePim +
-               (0.13957 * (sr->nipip + sr->nipim)) +
-               sr->ePi0 + (0.135 * sr->nipi0) + eother;
+               sr->ePi0 + eother;
 
     sr->HadE_param = (1.0 - EpFrac) * sr->eP_param + sr->ePip_param + 
                      sr->ePim_param + sr->ePi0_param + sr->eOther_param;
+
+    sr->EVis_param = sr->ELep_param + sr->HadE_param;
 
     sr->VisTrue_NDFD = sr->LepE + sr->HadE;
 

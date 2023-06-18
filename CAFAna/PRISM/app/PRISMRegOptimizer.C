@@ -5,6 +5,9 @@
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
 #include "CAFAna/PRISM/PRISMUtils.h"
 #include "CAFAna/PRISM/PredictionPRISM.h"
+#include "CAFAna/Prediction/IPrediction.h"
+
+#include "CAFAna/Systs/DUNEFluxSysts.h"
 
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"
@@ -43,17 +46,21 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
   bool Use_EventRateMatching =
       PRISMps.get<bool>("Use_EventRateMatching", true);
 
-  osc::IOscCalculatorAdjustable *calc =
+  osc::IOscCalcAdjustable *calc =
       ConfigureCalc(reg_scan.get<fhicl::ParameterSet>("true_osc", {}));
 
   // Lazy load the state file
   if (!States.count(state_file)) {
-    TFile fs(state_file.c_str());
+    TFile *fs = TFile::Open(state_file.c_str());
+    if (fs->IsZombie() || !fs) {
+      std::cout << "[ERROR]: Failed to read file " << state_file << std::endl;
+      abort();
+    }
     std::cout << "Loading " << varname << " state from " << state_file
               << std::endl;
-    States[state_file] = LoadPRISMState(fs, varname);
+    States[state_file] = LoadPRISMState(*fs, varname);
     std::cout << "Done!" << std::endl;
-    fs.Close();
+    fs->Close();
   }
 
   PRISMStateBlob &state = States[state_file];
@@ -114,12 +121,16 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
                                       chan_energy_range);
   }
 
-  std::vector<TGraph> LCurves;
-  std::vector<TGraph> Resid;
-  std::vector<TGraph> Soln;
-  std::vector<TGraph> DiffLCurves;
+  std::vector<std::unique_ptr<TGraph>> LCurves;
+  std::vector<std::unique_ptr<TGraph>> Resid;
+  std::vector<std::unique_ptr<TGraph>> Soln;
+  std::vector<std::unique_ptr<TGraph>> DiffLCurves;
 
   for (auto const &ch : Channels) {
+    LCurves.emplace_back(std::make_unique<TGraph>());
+    Resid.emplace_back(std::make_unique<TGraph>());
+    Soln.emplace_back(std::make_unique<TGraph>());
+    DiffLCurves.emplace_back(std::make_unique<TGraph>());
 
     auto const &chan_scan_config = channel_conditioning_configs[ch.second];
 
@@ -149,15 +160,15 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
     size_t FDConfig_enum = GetConfigFromNuChan(ch.second.to, false);
     size_t FDfdConfig_enum = GetFDConfigFromNuChan(ch.second.to);
 
-    LCurves.emplace_back(steps.size());
-    LCurves.back().SetTitle(
+    //LCurves.emplace_back(steps.size());
+    LCurves.back()->SetTitle(
         ";|P(#Phi_{ND} #times c - #Phi_{FD})|;|A #times c|");
 
-    Resid.emplace_back(steps.size());
-    Resid.back().SetTitle(";p_{reg};|P(#Phi_{ND} #times c - #Phi_{FD})|");
+    //Resid.emplace_back(steps.size());
+    Resid.back()->SetTitle(";p_{reg};|P(#Phi_{ND} #times c - #Phi_{FD})|");
 
-    Soln.emplace_back(steps.size());
-    Soln.back().SetTitle(";p_{reg};|A #times c|");
+    //Soln.emplace_back(steps.size());
+    Soln.back()->SetTitle(";p_{reg};|A #times c|");
 
     TDirectory *chan_dir =
         dir->mkdir(DescribeFDConfig(FDfdConfig_enum).c_str());
@@ -181,12 +192,12 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
         continue;
       }
 
-      LCurves.back().SetPoint(sit, resid_norm, soln_norm);
-      Resid.back().SetPoint(sit, steps[sit], resid_norm);
-      Soln.back().SetPoint(sit, steps[sit], soln_norm);
+      LCurves.back()->SetPoint(sit, resid_norm, soln_norm);
+      Resid.back()->SetPoint(sit, steps[sit], resid_norm);
+      Soln.back()->SetPoint(sit, steps[sit], soln_norm);
     }
 
-    DiffLCurves.emplace_back(steps.size() - 8);
+    //DiffLCurves.emplace_back(steps.size() - 8);
 
     double max_curv = -std::numeric_limits<double>::max();
     double best_reg = 0;
@@ -204,7 +215,7 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
         continue;
       }
 
-      DiffLCurves.back().SetPoint(sit - 4, steps[sit], curv);
+      DiffLCurves.back()->SetPoint(sit - 4, steps[sit], curv);
 
       if (curv > max_curv) {
         max_curv = curv;
@@ -216,12 +227,12 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
     std::stringstream ss("");
 
     ss << "(best reg = " << best_reg << ");#lambda;L-curvature";
-    DiffLCurves.back().SetTitle(ss.str().c_str());
+    DiffLCurves.back()->SetTitle(ss.str().c_str());
 
-    chan_dir->WriteTObject(&LCurves.back(), "LCurve");
-    chan_dir->WriteTObject(&Resid.back(), "Resid");
-    chan_dir->WriteTObject(&Soln.back(), "Soln");
-    chan_dir->WriteTObject(&DiffLCurves.back(), "DiffLCurve");
+    chan_dir->WriteTObject(LCurves.back().get(), "LCurve");
+    chan_dir->WriteTObject(Resid.back().get(), "Resid");
+    chan_dir->WriteTObject(Soln.back().get(), "Soln");
+    chan_dir->WriteTObject(DiffLCurves.back().get(), "DiffLCurve");
 
     fluxmatcher.SetStoreDebugMatches();
 
@@ -231,14 +242,16 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
     (void)fluxmatcher.GetFarMatchCoefficients(calc, ch.second, kNoShift);
     fluxmatcher.Write(chan_dir->mkdir("NDFD_matcher"));
     fluxmatcher.SetStoreDebugMatches(false);
+
   }
 
   f.Write();
+  
 }
 
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
-  setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
+  setenv("CAFANA_PRED_MINMCSTATS", "20", 1);
   gROOT->SetMustClean(false);
 
   if (argc != 2) {

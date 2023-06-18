@@ -382,6 +382,7 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
 
     sr.HadE_param = sr.eP_param + sr.ePip_param + sr.ePim_param + sr.ePi0_param + sr.eOther_param;
     //sr.HadE_param = gRandom->Gaus(sr.HadE, sr.HadE*0.15); // From TDR guess 15% res for hadrons
+    sr.EVis_param = sr.ELep_param + sr.HadE_param;
 
     // True visible energy in the ND or FD
     // Sum of the true lepton and true hadronic energy

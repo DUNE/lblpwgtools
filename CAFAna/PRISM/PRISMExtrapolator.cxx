@@ -178,7 +178,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   Spectrum NDOffAxis_293kA_spec = NDPredInterp_293kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
-  NDOffAxis_293kA_spec.OverridePOT(1);
+
   // Get 293kA sample at ND.
   // Need to remove underflow and overflow elements.
   Eigen::MatrixXd FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec.GetEigen(1),
@@ -192,7 +192,6 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   Spectrum NDOffAxis_280kA_spec = NDPredInterp_280kA->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, sgn_nd);
-  NDOffAxis_280kA_spec.OverridePOT(1);
   // Get 280kA sample at ND.
   Eigen::MatrixXd FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
                                                                 NDOffAxis_280kA_spec.GetBinnings());
@@ -345,15 +344,26 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     fLastMatch_280kA->SetDirectory(nullptr);
     FillHistFromEigenVector(fLastMatch_280kA.get(), OffAxisWeights_280kA);
 
+    std::unique_ptr<TH1> FDOscTarget_h(FDOsc_spec.ToTH1(1));
+    fDebugOscTarget["last_match"] = std::move(FDOscTarget_h);
+    fDebugOscTarget["last_match"]->SetDirectory(nullptr);
     fDebugTarget["last_match"] = std::unique_ptr<TH1>(
-        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+      static_cast<TH1 *>(fDebugOscTarget["last_match"]->Clone()));
     fDebugTarget["last_match"]->SetDirectory(nullptr);
-    FillHistFromEigenVector(fDebugTarget["last_match"].get(), Target);
+    for (int i = 0; i < fDebugTarget["last_match"]->GetXaxis()->GetNbins(); i++) {
+      fDebugTarget["last_match"]->SetBinContent(i + 1, Target(i));
+    }
+
+    std::unique_ptr<TH1> FDUnOsc_h(FDUnOsc_spec.ToTH1(1));
+    fDebugUnOsc["last_match"] = std::move(FDUnOsc_h);
+    fDebugUnOsc["last_match"]->SetDirectory(nullptr);
 
     fDebugBF["last_match"] = std::unique_ptr<TH1>(
-        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+      static_cast<TH1 *>(fDebugOscTarget["last_match"]->Clone()));
     fDebugBF["last_match"]->SetDirectory(nullptr);
-    FillHistFromEigenVector(fDebugBF["last_match"].get(), BestFit);
+    for (int i = 0; i < fDebugBF["last_match"]->GetXaxis()->GetNbins(); i++) {
+      fDebugBF["last_match"]->SetBinContent(i + 1, BestFit(i));
+    }
 
     std::unique_ptr<TH2> NDOffAxis_293kA(NDOffAxis_293kA_spec.ToTH2(1));
     fDebugND_293kA["last_match"] = std::move(NDOffAxis_293kA);
@@ -406,9 +416,11 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     }
 
     fDebugResid["last_match"] = std::unique_ptr<TH1>(
-        new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
+      static_cast<TH1 *>(fDebugOscTarget["last_match"]->Clone()));
     fDebugResid["last_match"]->SetDirectory(nullptr);
-    FillHistFromEigenVector(fDebugResid["last_match"].get(), Residual);
+    for (int i = 0; i < fDebugResid["last_match"]->GetXaxis()->GetNbins(); i++) {
+      fDebugResid["last_match"]->SetBinContent(i + 1, Residual(i));
+    }
 
     fDebugFitMatrix["last_match"] = std::unique_ptr<TH2>(new TH2D(
         "ndmatrix", ";component;enu_bin;content", NDFluxMatrix.cols(), 0,
@@ -624,6 +636,14 @@ void PRISMExtrapolator::Write(TDirectory *dir) {
   }
 
   if (fStoreDebugMatches) {
+
+    for (auto &fit : fDebugOscTarget) {
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugOscTarget").c_str());
+    }
+
+    for (auto &fit : fDebugUnOsc) {
+      dir->WriteTObject(fit.second.get(), (fit.first + "_DebugUnOsc").c_str());
+    }
 
     for (auto &fit : fDebugTarget) {
       dir->WriteTObject(fit.second.get(), (fit.first + "_DebugTarget").c_str());

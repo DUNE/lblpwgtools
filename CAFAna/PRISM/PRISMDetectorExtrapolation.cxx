@@ -2,6 +2,9 @@
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 #include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
 
+//#include "CAFAna/Core/SystShifts.h"
+//#include "CAFAna/Systs/AnaSysts.h"
+
 #include "OscLib/IOscCalc.h"
 
 using namespace PRISM;
@@ -56,6 +59,7 @@ namespace ana {
     FDPredInterps.at(FD.second) = FD.first;
     IsNue = false;
     IsNutau = false;
+    reg_param = 0.0001;
   }
 
   //-----------------------------------------------------
@@ -164,11 +168,11 @@ namespace ana {
     // different detector resolutions.
     // May need to revisit osc vs. no-osc FD smearing matrices.
     auto sMatrixND = NDPredInterps.at(GetNDConfigFromPred(NDflav, NDsign))
-                     ->PredictComponentSyst(calc, shift_nd, NDflav, curr, NDsign);
+                     ->PredictComponentSyst(calc, shift_nd, NDflav, curr, NDsign); // shift_nd
     hMatrixND = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
-
+    
     auto sMatrixFD = FDPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
-                     ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
+                     ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign); // shift_fd
     hMatrixFD = ConvertArrayToMatrix(sMatrixFD.GetEigen(POT), sMatrixFD.GetBinnings());
 
     Eigen::MatrixXd PRISMND = NDDataSpec.GetEigen(POT);
@@ -206,18 +210,24 @@ namespace ana {
           CovMatRec(col, col) = PRISMND_SumSq(slice + 1, col + 1);
         }
       }
-      // Should* be fine to take the inverse of a purely diagonal matrix
 
-      //Eigen::MatrixXd invCovMatRec = CovMatRec.inverse();
-
-      // Tikhonov regularisation is uneccessary, just least square unfold!
-      //Eigen::MatrixXd D = (MatrixND_block.transpose() * invCovMatRec * MatrixND_block).inverse() *
-      //                    MatrixND_block.transpose() * invCovMatRec;
-
-      // Covariance matrix of NDreco should have no impact on unfolded result 
-      Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block).inverse() *
+      // Regularisation matrix for unfolding - this makes unfolding more stable in fits with detector
+      // systematics. Use L2 reg, penalising large changes in curvature.
+      Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(MatrixND_block.rows(), MatrixND_block.rows());
+      for (int row_it = 0; row_it < (RegMatrix.rows() - 2); ++row_it) {
+        RegMatrix(row_it, row_it) = reg_param;
+        RegMatrix(row_it, row_it + 1) = -2 * reg_param;
+        RegMatrix(row_it, row_it + 2) = reg_param;
+      }
+      RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 2) = reg_param;
+      RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 1) = -2 * reg_param;
+      //RegMatrix(RegMatrix.rows() - 1, RegMatrix.rows() - 1) = reg_param;
+      Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block + 
+                           RegMatrix.transpose() * RegMatrix).inverse() * 
                           MatrixND_block.transpose();
+
       Eigen::VectorXd NDETrue = D * NDERec;
+      
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...
         for (int bin = 0; bin < NDETrue.size(); bin++) {

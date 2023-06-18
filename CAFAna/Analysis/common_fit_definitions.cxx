@@ -65,6 +65,8 @@ unsigned gRNGSeed = 0;
 // A smaller APA geometry was used to simmulate the FD due to computational requirements.
 // Scale the simulated sample to match the actuall 40 kt detector.
 const double pot_fd_FVMassFactor = 40 / 1.13;
+const double pot_fd3_FVMassFactor = 30 / 1.13;
+const double pot_fd2_FVMassFactor = 20 / 1.13;
 // POT for 3.5 years
 const double nom_years = 3.5;
 const double pot_fd = POT120 * nom_years * pot_fd_FVMassFactor;
@@ -72,6 +74,119 @@ const double pot_nd = POT120 * nom_years;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT / MW yr
 
 const double nom_exposure = 336.;
+
+std::pair<double, double> ExposureScale(double &years, std::string staging_plan) {
+
+  std::vector<std::string> allowed_stages {"nostage", "tdr", "ace"};
+
+  if (std::find(allowed_stages.begin(), allowed_stages.end(), 
+                staging_plan) == allowed_stages.end()) {
+    std::cout << "[ERROR] Staging plan not recognised" << std::endl;
+    abort();
+  }
+
+  // Assume a 40 kt mass and 1.2 MW for whole data taking process
+  if (staging_plan == "nostage") {
+    return {years * pot_fd_FVMassFactor, years * 40 * 1.2};
+  }
+
+  double yrs_20kt(1), yrs_30kt(1), yrs_40kt(1);
+  if (staging_plan == "tdr") {
+    yrs_20kt = 1.;
+    yrs_30kt = 3.;
+    yrs_40kt = 6.;
+    // 2.4 MW beam after 6 yrs
+  } else if (staging_plan == "ace") {
+    yrs_20kt = 3.;
+    yrs_30kt = 5.;
+    yrs_40kt = 6.;
+    // 2.4 MW beam after 6 yrs
+  } 
+
+  std::vector<std::pair<double, double>> vec_years;
+  double ityr(1.);
+  while (ityr <= years) {
+    vec_years.push_back({ityr, 1});
+    ityr += 1.;
+  }
+  if (years < 1) {
+    vec_years.push_back({years, years});
+  } else if (years > 1 && (ityr - years) < 1.) {
+    vec_years.push_back({years, years - (ityr - 1)});
+  }
+
+  double sumexp(0);
+  double ktmwyrs(0);
+  for (const auto &yr : vec_years) {
+    if (yr.first <= yrs_20kt) { // 20 kt
+      sumexp += yr.second * pot_fd2_FVMassFactor;
+      ktmwyrs += yr.second * 1.2 * 20;
+    } else if (yr.first <= yrs_30kt) { // 30 kt
+      sumexp += yr.second * pot_fd3_FVMassFactor;
+      ktmwyrs += yr.second * 1.2 * 30;
+    } else if (yr.first <= yrs_40kt) { // 40 kt
+      sumexp += yr.second * pot_fd_FVMassFactor;
+      ktmwyrs += yr.second * 1.2 * 40;
+    } else { // 2.4 MW beam
+      sumexp += yr.second * 2 * pot_fd_FVMassFactor;
+      ktmwyrs += yr.second * 2.4 * 40;
+    }
+  }
+
+  return {sumexp, ktmwyrs};
+}
+
+// Exposure scaling for ND accounts for beam upgrade to 2.4 MW
+std::pair<double, double> ExposureScaleND(double &years, std::string staging_plan) {
+
+  std::vector<std::string> allowed_stages {"nostage", "tdr", "ace"};
+
+  if (std::find(allowed_stages.begin(), allowed_stages.end(), 
+                staging_plan) == allowed_stages.end()) {
+    std::cout << "[ERROR] Staging plan not recognised" << std::endl;
+    abort();
+  }
+
+  // Assume a 1.2 MW beam for whole data taking process
+  if (staging_plan == "nostage") {
+    return {years, years * 1.2};
+  }
+
+  double yrs_PIPII(0);
+  if (staging_plan == "tdr") {
+    yrs_PIPII = 6.;
+    // 2.4 MW beam after 6 yrs
+  } else if (staging_plan == "ace") {
+    yrs_PIPII = 6.;
+    // 2.4 MW beam after 6 yrs
+  } 
+
+  std::vector<std::pair<double, double>> vec_years;
+  double ityr(1.);
+  while (ityr <= years) {
+    vec_years.push_back({ityr, 1});
+    ityr += 1.;
+  }
+  if (years < 1) {
+    vec_years.push_back({years, years});
+  } else if (years > 1 && (ityr - years) < 1.) {
+    vec_years.push_back({years, years - (ityr - 1)});
+  }
+
+  double sumexp(0);
+  double mwyrs(0);
+  for (const auto &yr : vec_years) {
+    if (yr.first <= yrs_PIPII) { // 20 kt
+      sumexp += yr.second;
+      mwyrs += yr.second * 1.2;
+    } else { // 2.4 MW beam
+      sumexp += yr.second * 2;
+      mwyrs += yr.second * 2.4;
+    }
+  }
+
+  return {sumexp, mwyrs};
+}
 
 double GetBoundedGausThrow(double min, double max) {
   double val = -999;

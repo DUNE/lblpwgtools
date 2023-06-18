@@ -5,50 +5,53 @@
 
 BasicPred: {
 
-	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/Ssth23_EnuReco_100_CorrDet_rmBadFlux_Feb23/PRISMScan_ssth23_EnuReco_100_4Flav_Feb23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NewCorrDet_AllSysts_4Flav_Feb23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/MPFDResults/Dmsq32_Ssth23_ELepEHadParam_100_NDEffBias_MPFD_26May23/PRISMScan_dmsq32_ssth23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: EnuReco
+	projection_name: ELepEHad_param
 	# Set exposure in years
-	POT_years: 1.042 # 1.042 for 100MWktYrs
+	POT_years: 2.084 # 1.042 for 100MWktYrs
+	POT_staging: nostage
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	# Definitely want this to be false for fits!
-	vary_NDFD_data: false
+	vary_NDFD_data: true
         # Extra plots for more histograms in PRISMPrediction
         # Should be false for fitting
         prism_debugplots: false
 	# Do you want to use fake data?
-	use_fake_data: false
+	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
 	# Do you want the reactor th13 constraint?
 	reactor_constraint: true
+	# Regularisation parameter for unfolding - greater stability in fits
+	unfold_reg_param: 0.003
 
 	PRISM: {
 		match_conditioning: [
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 5.6E-17
 			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Numubar_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17
-			reg_factor_280kA: 1E-20
+			reg_factor_293kA: 1.9E-17
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nue_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 3.4E-17
 			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 9.9E-18
 			reg_factor_280kA: 1E-18
 			},
 			{
@@ -68,8 +71,8 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			numode: @local::RunPlans.guess
-			nubmode: @local::RunPlans.guess
+			numode: @local::RunPlans.guess_fine
+			nubmode: @local::RunPlans.guess_fine
 		}
 		# Almost always true for now
 		Use_EventRateMatching: true
@@ -78,8 +81,8 @@ BasicPred: {
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
 	# Parameter(s) to scan over in fit
-	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
-	scan_params: @local::ScanDefinitions.ssth23
+	scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	#scan_params: @local::ScanDefinitions.dcp_sstth13
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
@@ -87,22 +90,7 @@ BasicPred: {
 scans: [
 	{
 		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.allCorr
-		output_dir: "fit_fluxxsecdet"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.xsecflux
-		output_dir: "fit_fluxxsec"
-	},
-	{
-		@table::BasicPred
-		free_syst_params: @local::nuisance_parameters.fluxAll
-		output_dir: "fit_flux"
-	},
-	{
-		@table::BasicPred
-		output_dir: "fit_nom"
+		output_dir: "fit_mpfd_100"
 	}
 ]
 

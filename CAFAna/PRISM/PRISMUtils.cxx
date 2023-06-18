@@ -278,7 +278,7 @@ osc::IOscCalcAdjustable *
 ConfigureCalc(fhicl::ParameterSet const &ps,
               osc::IOscCalcAdjustable *calc) {
   static std::set<std::string> keys{"th13",   "dmsq32", "ssth23", "deltapi",
-                                    "dmsq21", "ssth12", "rho"};
+                                    "dmsq21", "ssth12", "rho", "ss2th13"};
 
   for (std::string const &k : ps.get_names()) {
     if (!keys.count(k)) {
@@ -309,6 +309,9 @@ ConfigureCalc(fhicl::ParameterSet const &ps,
   }
   if (ps.has_key("ssth23")) {
     calc->SetTh23(asin(sqrt(ps.get<double>("ssth23"))));
+  }
+  if (ps.has_key("ss2th13")) {
+    calc->SetTh13(asin(sqrt(ps.get<double>("ss2th13"))) / 2);
   }
   if (ps.has_key("deltapi")) {
     calc->SetdCP(ps.get<double>("deltapi") * M_PI);
@@ -423,6 +426,11 @@ void ScrubOscVars(std::vector<const IFitVar *> &oscvars,
                     oscvars.end());
       oscvars.erase(
           std::remove(oscvars.begin(), oscvars.end(), &kFitSinSqTheta23),
+          oscvars.end());
+    }
+    if (v == "ss2th13") {
+      oscvars.erase(
+          std::remove(oscvars.begin(), oscvars.end(), &kFitSinSq2Theta13),
           oscvars.end());
     }
     if (v == "deltapi") {

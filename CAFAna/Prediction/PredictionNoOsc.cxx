@@ -114,7 +114,35 @@ namespace ana
     dir = dir->GetDirectory(name.c_str()); // switch to subdir
     assert(dir);
 
+    auto spect = ana::LoadFrom<Spectrum>(dir, "spect");
+    auto spect_nctot = ana::LoadFrom<Spectrum>(dir, "spect_nctot");
+    auto spect_nc = ana::LoadFrom<Spectrum>(dir, "spect_nc");
+    auto spect_ncbar = ana::LoadFrom<Spectrum>(dir, "spect_ncbar");
+    auto spect_numu = ana::LoadFrom<Spectrum>(dir, "spect_numu");
+    auto spect_numubar = ana::LoadFrom<Spectrum>(dir, "spect_numubar");
+    auto spect_nue = ana::LoadFrom<Spectrum>(dir, "spect_nue");
+    auto spect_nuebar = ana::LoadFrom<Spectrum>(dir, "spect_nuebar");
+
+    spect->Scale(spect->POT()); 
+    spect_nctot->Scale(spect_nctot->POT());
+    spect_nc->Scale(spect_nc->POT());
+    spect_ncbar->Scale(spect_ncbar->POT());
+    spect_numu->Scale(spect_numu->POT());
+    spect_numubar->Scale(spect_numubar->POT());
+    spect_nue->Scale(spect_nue->POT());
+    spect_nuebar->Scale(spect_nuebar->POT());
+
     PredictionNoOsc* ret = new PredictionNoOsc(
+      *spect,
+      *spect_nctot,
+      *spect_nc,
+      *spect_ncbar,
+      *spect_numu,
+      *spect_numubar,
+      *spect_nue,
+      *spect_nuebar);
+
+    /*PredictionNoOsc* ret = new PredictionNoOsc(
       *ana::LoadFrom<Spectrum>(dir, "spect"),
       *ana::LoadFrom<Spectrum>(dir, "spect_nctot"),
       *ana::LoadFrom<Spectrum>(dir, "spect_nc"),
@@ -122,11 +150,9 @@ namespace ana
       *ana::LoadFrom<Spectrum>(dir, "spect_numu"),
       *ana::LoadFrom<Spectrum>(dir, "spect_numubar"),
       *ana::LoadFrom<Spectrum>(dir, "spect_nue"),
-      *ana::LoadFrom<Spectrum>(dir, "spect_nuebar"));
+      *ana::LoadFrom<Spectrum>(dir, "spect_nuebar"));*/
 
     delete dir;
-
-
     // Can't use make_unique because constructor is protected
     return std::unique_ptr<PredictionNoOsc>(ret);
   }

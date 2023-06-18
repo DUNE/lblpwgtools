@@ -6,6 +6,9 @@
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
+#include "CAFAna/Core/SystShifts.h"
+#include "CAFAna/Systs/AnaSysts.h"
+
 #include "OscLib/IOscCalc.h"
 
 namespace ana {
@@ -37,11 +40,17 @@ namespace ana {
   double PRISMChi2CovarExperiment::ChiSq(osc::IOscCalcAdjustable* calc,
                                          const SystShifts& syst) const
   {
+    
+    //auto faked_syst = getFakeDataSysts(true);
+    //KeepSysts(faked_syst, {"MissingProtonFakeData"});
+    //SystShifts mpfdshift(faked_syst.at(0), +1);
+
     auto PRISMComp_map = fPred->PredictPRISMComponents(calc, syst, fMatchChannel);
 
     Eigen::ArrayXd pred = PRISMComp_map.at(PredictionPRISM::kNDDataCorr_FDExtrap)
                               .GetEigen(fPOTFD); // kNDDataCorr_FDExtrap 
     Eigen::ArrayXd data = fData.GetEigen(fPOTFD);
+    //Eigen::ArrayXd data = PRISMComp_map.at(PredictionPRISM::kFDOscPred).GetEigen(fPOTFD);
   
     Eigen::VectorXd vpred = pred.segment(pFitBoundry.first, pFitBoundry.second).matrix();
     Eigen::VectorXd vdata = data.segment(pFitBoundry.first, pFitBoundry.second).matrix();
@@ -54,6 +63,7 @@ namespace ana {
       // Nucl. Instrum. Meth. A, vol. 961, p. P163677, 2020.
       CovMat(x, x) = 3 / ((1 / vdata(x)) + (2 / vpred(x)));
     }
+    //CovMat = (3 / ((1 / vdata) + (2 / vpred))).asDiagonal();
     // Add Poisson errors in quadrature to covariance (if you want to)
     if (fUseCovariance) {
       auto cov_s = PRISMComp_map.at(PredictionPRISM::kExtrapCovarMatrix);
@@ -67,8 +77,22 @@ namespace ana {
       CovMat += cov_lc;
     }
 
+    //return ValidChiSq(vdata, vpred, CovMat, syst);
     return (vpred - vdata).transpose() * CovMat.inverse() * (vpred - vdata);
   }
+
+  //----------------------------------------------------------------------
+  double PRISMChi2CovarExperiment::ValidChiSq(Eigen::VectorXd &obs, 
+                                              Eigen::VectorXd &exp,
+                                              Eigen::MatrixXd &cov,
+                                              const SystShifts& syst) const {
+    for (int x = 0; x < exp.size(); x++) {
+      if (exp(x) < 0 || !std::isnormal(exp(x))) {
+        exp(x) = (exp(x+1) + exp(x-1)) / 2;
+      }
+    }
+    return (exp - obs).transpose() * cov.inverse() * (exp - obs);
+  }                                          
 
   //----------------------------------------------------------------------
   void PRISMChi2CovarExperiment::SaveTo(TDirectory* dir, const std::string& name) const

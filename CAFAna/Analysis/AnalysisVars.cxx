@@ -43,7 +43,8 @@ Var const kEVisTrue = SIMPLEVAR(VisTrue_NDFD);
 
 Var const kHadE_param = SIMPLEVAR(HadE_param);
 Var const kLepE_param = SIMPLEVAR(ELep_param);
-Var const kEVis_param = SIMPLEVAR(ELep_param) + SIMPLEVAR(HadE_param);
+Var const kEVis_param = SIMPLEVAR(EVis_param);
+//Var const kEVis_param = SIMPLEVAR(ELep_param) + SIMPLEVAR(HadE_param);
 
 Var const kPEReco = SIMPLEVAR(eRecoP);
 Var const kPipmEReco = SIMPLEVAR(eRecoPip) + SIMPLEVAR(eRecoPim); 

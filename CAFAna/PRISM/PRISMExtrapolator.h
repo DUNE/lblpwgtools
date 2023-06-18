@@ -144,6 +144,8 @@ namespace ana {
     // true: include in flux matching
     // numu/nue cross section ratio correction will be needed with true option
     bool fMatchIntrinsicNue;
+    mutable std::map<std::string, std::unique_ptr<TH1>> fDebugOscTarget;
+    mutable std::map<std::string, std::unique_ptr<TH1>> fDebugUnOsc;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugTarget;
     mutable std::map<std::string, std::unique_ptr<TH1>> fDebugBF;
     mutable std::map<std::string, std::unique_ptr<TH2>> fDebugFitMatrix;

@@ -22,6 +22,26 @@ RunPlans: {
 		{ xrange: [-22,-26] time: 20 },
 		{ xrange: [-26,-30.5] time: 20 } ]
 	}
+	
+	guess_fine: {
+	plan: [ { xrange: [2,-2] time: 1 horn_current: 280 },
+		{ xrange: [2,-2] time: 12 }, # run 1
+		{ xrange: [0,-4] time: 1 }, # run 2
+		{ xrange: [-2,-6] time: 1 }, # run 1
+		{ xrange: [-4,-8] time: 1 }, # run 2
+		{ xrange: [-6,-10] time: 1 }, # run 1
+		{ xrange: [-8,-12] time: 1 }, # run 2
+		{ xrange: [-10,-14] time: 1 }, # run 1
+		{ xrange: [-12,-16] time: 1 }, # run 2
+		{ xrange: [-14,-18] time: 1 }, # run 1
+		{ xrange: [-16,-20] time: 1 }, # run 2 
+		{ xrange: [-18,-22] time: 1 }, # run 1
+		{ xrange: [-20,-24] time: 1 }, # run 2
+		{ xrange: [-22,-26] time: 1 }, # run 1
+		{ xrange: [-24,-28] time: 1 }, # run 2
+		{ xrange: [-26,-30] time: 1 }, # run 1
+		{ xrange: [-26.5,-30.5] time: 1 } ] # run 2
+	}
 
 	prodlike: {
 	plan: [ { xrange: [0,-2] time: 0.02 horn_current: 280 },

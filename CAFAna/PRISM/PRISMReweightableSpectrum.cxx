@@ -163,6 +163,9 @@ namespace ana {
     TH1* hLivetime = (TH1*)dir->Get("livetime");
     assert(hLivetime);
 
+    // ND data has been weighted to be per POT
+    // Scale it back up again
+    spect->Scale(hPot->Integral(0, -1));
 
     // Hist for SumSq matrix
     std::unique_ptr<TH2D> spect_err = std::unique_ptr<TH2D>(

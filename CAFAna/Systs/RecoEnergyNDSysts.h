@@ -178,7 +178,7 @@ namespace ana
   extern const ERecoScaleMuLArND kERecoScaleMuLArND;
 
   // true energy of muon from CC numu event
-  // Sqrt param 2% for LArTPC
+  // Sqrt param 0.5% for LArTPC
   class ERecoScaleMuLArSqrtND : public ISyst {
   public:
     ERecoScaleMuLArSqrtND() : ISyst("ERecoScaleMuLArSqrtND", "Muon E Scale Sqrt ND Syst") {}

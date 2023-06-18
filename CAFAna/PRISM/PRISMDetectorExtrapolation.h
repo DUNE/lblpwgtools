@@ -71,6 +71,10 @@ namespace ana {
       IsNutau = true;
     }
 
+    void SetUnfoldRegParam(double reg) const {
+      reg_param = reg;
+    }
+
     // Extrapolate ND PRISM pred to FD using Eigen
     // This function is becoming slightly monsterous...
     void ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec, 
@@ -99,6 +103,7 @@ namespace ana {
 
     mutable bool IsNue;
     mutable bool IsNutau;
+    mutable double reg_param;
     mutable Eigen::MatrixXd hMatrixND;
     mutable Eigen::MatrixXd hMatrixFD;
     mutable Eigen::MatrixXd fNDExtrap_293kA;

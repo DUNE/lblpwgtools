@@ -1,31 +1,16 @@
 #include "CAFAna/PRISM/RunPlan.h"
-
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Core/MathUtil.h"
 
 namespace ana {
 
   //------------------------------------------------------------------------------
-  DetectorStop const &RunPlan::FindStop(double offaxis_m, int kA) const {
-    static DetectorStop dummy{0, 0, 0, 0};
-
-    auto found =
-        std::find_if(stops.cbegin(), stops.cend(), [=](DetectorStop const &st) {
-          return (st.horn_current == kA) && (offaxis_m >= st.min) &&
-                 (offaxis_m < st.max);
-        });
-
-    if (found == stops.cend()) {
-      std::cout << "[ERROR]: Failed to find stop for " << offaxis_m << ", "
-                << kA << " kA" << std::endl;
-
-      for (auto s : stops) {
-        std::cout << "\t[" << s.min << ", " << s.max << "], POT: " << s.POT
-                  << ", HC: " << s.horn_current << " kA" << std::endl;
+  void RunPlan::FindStop(double offaxis_m, int kA, std::vector<DetectorStop> &ret_stops) const {
+    std::for_each(stops.cbegin(), stops.cend(), [=, &ret_stops](DetectorStop const &st) {
+      if ((st.horn_current == kA) && (offaxis_m >= st.min) && (offaxis_m < st.max)) {
+        ret_stops.push_back(st);
       }
-
-      abort();
-    }
-    return *found;
+    });
   }
 
   //------------------------------------------------------------------------------
@@ -41,13 +26,18 @@ namespace ana {
                                 axis.GetBinnings().at(2).Edges(); // Is 3D.
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);
-      auto stop = FindStop(ypos, kA);
+      std::vector<DetectorStop> ret_stops;
+      FindStop(ypos, kA, ret_stops);
+      double yPOT(0);
+      for (const auto &st : ret_stops) {
+        yPOT += st.POT;
+      }
       double sum(0);
       for (int xit = 1; xit <= NDSpec_mat.cols() - 2; ++xit) {
-        double bc = NDSpec_mat(yit, xit) * stop.POT;
+        double bc = NDSpec_mat(yit, xit) * yPOT;
         double bvar = SetErrorsFromPredictedRate      
                     ? bc
-                    : NDSumSq_mat(yit, xit) * std::pow(stop.POT, 2);
+                    : NDSumSq_mat(yit, xit) * std::pow(yPOT, 2);
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
@@ -96,13 +86,18 @@ namespace ana {
                                                                                   
     for (int yit = 1; yit <= NDSpec_mat.rows() - 2; ++yit) {
       double ypos = edges.at(yit - 1) + ((edges.at(yit) - edges.at(yit - 1)) / 2);
-      auto stop = FindStop(ypos, kA);
+      std::vector<DetectorStop> ret_stops;
+      FindStop(ypos, kA, ret_stops);
+      double yPOT(0);
+      for (const auto &st : ret_stops) {
+        yPOT += st.POT;
+      }
       double sum(0);
       for (int xit = 1; xit <= NDSpec_mat.cols() - 2; ++xit) {
-        double bc = NDSpec_mat(yit, xit) * stop.POT;
+        double bc = NDSpec_mat(yit, xit) * yPOT;
         double bvar = SetErrorsFromPredictedRate      
                     ? bc
-                    : std::pow((NDErrors_mat(yit, xit) * stop.POT), 2);
+                    : std::pow((NDErrors_mat(yit, xit) * yPOT), 2);
         NDSpec_mat(yit, xit) = bc;
         NDSumSq_mat(yit, xit) = bvar;
       }
@@ -143,7 +138,12 @@ namespace ana {
     for (int xit = 1; xit <= unweighted.size() - 2; ++xit) {
       // A bit ugly, but no ROOT!
       double xpos = edges.at(xit - 1) + ((edges.at(xit) - edges.at(xit - 1)) / 2);
-      auto stop = FindStop(xpos, kA);
+      std::vector<DetectorStop> ret_stops;
+      FindStop(xpos, kA, ret_stops);
+      double xPOT(0);
+      for (const auto &st : ret_stops) {
+        xPOT += st.POT;
+      }
       double bc = unweighted(xit); 
       if (!std::isnormal(bc)) {
         std::cout << "[WARN]: When un-runplan weighting histogram found bad "
@@ -152,11 +152,11 @@ namespace ana {
                   << xpos << std::endl;
       }
 
-      if (!std::isnormal(stop.POT)) {
-        std::cout << "[WARN]: Stop " << stop.min << " -- " << stop.max << "("
-                  << xpos << " m) had bad POT: " << stop.POT << std::endl;
+      if (!std::isnormal(xPOT)) {
+        std::cout << "[WARN]: "
+                  << xpos << " m) had bad POT: " << xPOT << std::endl;
       }
-      unweighted(xit) = bc / stop.POT;
+      unweighted(xit) = bc / xPOT;
     }
 
     return unweighted;
@@ -166,15 +166,19 @@ namespace ana {
   TH1D *RunPlan::AsTH1(int kA) const {
     std::vector<double> bins;
 
+    double previous_max(0);
     for (auto const &s : stops) {
       if (s.horn_current != kA) {
         continue;
       }
-      if (!bins.size()) {
-        bins.push_back(s.min);
-      }
+      // Fill vector with all bin max and min
+      bins.push_back(s.min);
       bins.push_back(s.max);
     }
+    // Remove duplicate bin edges
+    std::sort(bins.begin(), bins.end());
+    auto last = std::unique(bins.begin(), bins.end());
+    bins.erase(last, bins.end());
 
     if (!bins.size()) {
       std::cout << "[ERROR]: Found no run plan bins with horn_current = " << kA
@@ -184,13 +188,20 @@ namespace ana {
 
     TH1D *rp = new TH1D("run_plan", ";Off axis (m);POT-years", bins.size() - 1,
                         bins.data());
-    int i = 1;
-    for (auto const &s : stops) {
-      if (s.horn_current != kA) {
-        continue;
+
+    double offaxis_m(bins.at(0));
+    while (offaxis_m < rp->GetXaxis()->GetBinUpEdge(bins.size() - 1)) {
+      std::vector<DetectorStop> ret_stops;
+      FindStop(offaxis_m, kA, ret_stops);
+      double yPOT(0);
+      for (const auto &st : ret_stops) {
+        yPOT += st.POT;
       }
-      rp->SetBinContent(i++, s.POT / 1.1e21); // hardcode POT120 due to linker error
-    }
+      int bin = rp->FindBin(offaxis_m);
+      rp->SetBinContent(bin, yPOT / POT120);
+      offaxis_m += 0.5;
+    }    
+
     return rp;
   }
 

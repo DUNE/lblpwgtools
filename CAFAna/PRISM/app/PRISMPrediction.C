@@ -1,6 +1,7 @@
 #include "CAFAnaCore/CAFAna/Core/Ratio.h"
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/PRISM/PRISMExtrapolator.h"
@@ -33,12 +34,20 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
       pred.get<std::string>("projection_name", "EProxy");
 
   // default to 1 year
-  double POT = pred.get<double>("POT_years", 1) * 1.1e21; //POT120 = 1.1e21
-  double POT_FD = POT * pot_fd_FVMassFactor;
+  double POT_yrs = pred.get<double>("POT_years", 1);
+  std::string POT_staging = pred.get<std::string>("POT_staging", "nostage");
+  auto exp_scale_FD = ExposureScale(POT_yrs, POT_staging);
+  auto exp_scale_ND = ExposureScaleND(POT_yrs, POT_staging);
+  double POT = exp_scale_ND.first * POT120;
+  double POT_FD = exp_scale_FD.first * POT120;
+  std::cout << POT_staging << ": Yrs = " << POT_yrs << ", MWYrs = " << exp_scale_ND.second <<
+    ", ktMWYrs = " << exp_scale_FD.second << std::endl;
+
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
   bool prism_debugplots = pred.get<bool>("prism_debugplots", false);
   bool use_fake_data = pred.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
+  double unfold_reg_param = pred.get<double>("unfold_reg_param", 0.0001);
 
   if (vary_NDFD_MCData == true && prism_debugplots == false) {
     std::cout << "[ERROR] you can have just 'prism_debugplots', "
@@ -46,14 +55,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     abort();
   }
 
-  std::pair<double, double> gauss_flux =
-      pred.get<std::pair<double, double>>("gauss_flux", {0, 0});
-
   (void)GetListOfSysts();
 
   SystShifts shift = GetSystShifts(pred.get<fhicl::ParameterSet>("syst", {}));
-
-  bool do_gauss = gauss_flux.first != 0;
 
   auto PRISMps = pred.get<fhicl::ParameterSet>("PRISM", {});
 
@@ -100,7 +104,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "Done!" << std::endl;
     fs->Close();
   }
+  
   PRISMStateBlob &state = States[state_file];
+  
   TFile f(output_file[0].c_str(),
           output_file.size() > 1 ? output_file[1].c_str() : "RECREATE");
 
@@ -258,6 +264,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
     // New data prediction object to compare PRISM prediction to.
     // This is the 'correct' FD data we want to use.
+    std::cout << "POT_FD = " << POT_FD << ", norm = " << POT_FD / POT120 << std::endl;
     auto FarDetDataPred = state.FarDetDataPreds[FDfdConfig_enum]->Predict(calc).FakeData(POT_FD);
     auto *DataPred = FarDetDataPred.ToTHX(POT_FD);
     DataPred->Scale(1, "width");
@@ -292,6 +299,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     // For detector and selection corrections
     SmearMatrices.Initialize({state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
                              {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+    SmearMatrices.SetUnfoldRegParam(unfold_reg_param);
     // Set PredictionPRISM to own a pointer to this NDFD_Matrix
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
@@ -302,8 +310,6 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                            {state.NDSelTruePredInterps[NDConfig_280kA].get(), NDConfig_280kA},
                            {state.FDUnselTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum},
                            {state.FDSelTruePredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
-
-
 
     // Set PredictionPRISM to own a pointer to this MCEffCorrection
     state.PRISM->SetMC_NDFDEff(&NDFDEffCorr);
@@ -347,7 +353,10 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
           continue;
         }
 
-        auto *PRISMComp_h = comp.second.ToTHX(POT_FD); 
+        double POT_NDFD = POT_FD;
+        if (comp.second.NDimensions() > 1) POT_NDFD = POT;
+
+        auto *PRISMComp_h = comp.second.ToTHX(POT_NDFD); 
         PRISMComp_h->Scale(1, "width");
         if (PRISMComp_h->Integral() != 0) {
           chan_dir->WriteTObject(
@@ -394,7 +403,7 @@ void SayUsage(char const *argv[]) {
 
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
-  setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
+  //setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
   setenv("CAFANA_STAT_ERRS", "1", 1);
   gROOT->SetMustClean(false);
 

@@ -5,49 +5,51 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_1YrFHC_EnuReco_NoPiMass_4Flav_7Feb23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_NoPionMass_AllSysts_4Flav_Feb23.root"
+	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_ELepEHadParam_EffBias_4Flav_MPFD_Jun23.root", "UPDATE"]
+	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: EnuReco
+	projection_name: ELepEHad_param
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 1.0
+	POT_years: 2.084 #1.042
+        POT_staging: nostage
 	# Useful for fake data studies
 	vary_NDFD_data: false
 	# Extra plots for more histograms in PRISMPrediction
 	# Should be false for fitting
 	prism_debugplots: true
 	# Do you want to do a fake data prediction?
-	use_fake_data: false
+	use_fake_data: true
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: false
-
+	# Regularisation parameter for unfolding - greater stability in fits
+	unfold_reg_param: 0.3
 
 	PRISM: {
 		match_conditioning: [
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 5.6E-17
 			reg_factor_280: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Numubar_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 1.9E-17
 			reg_factor_280: 1E-20
 			},
 			{
 			chan: @local::FitChannels.Nue_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 3.4E-17
 			reg_factor_280: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 2.5E-17
+			reg_factor_293kA: 9.9E-18
 			reg_factor_280: 1E-18
 			},
 			{
@@ -68,8 +70,8 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			numode: @local::RunPlans.guess
-			nubmode: @local::RunPlans.guess
+			numode: @local::RunPlans.guess_fine
+			nubmode: @local::RunPlans.guess_fine
 		}
 		Use_EventRateMatching: true
 
@@ -83,20 +85,15 @@ BasicPred: {
 
 
 predictions: [
-
 	{
 		@table::BasicPred
-		output_dir: "numu_EvMatch"
+		output_dir: "numu_EvMatch_nom"
 	},
 	{
 		@table::BasicPred
-		output_dir: "dmsq_242_ssth23_050"
-		true_osc: {
-			dmsq32: 0.0025
-			ssth23: 0.52
-		}
+		output_dir: "numu_EvMatch_nompfd"
+		use_fake_data: false
 	}
-
 ]
 
 predictions[0].output_file[1]: "RECREATE"

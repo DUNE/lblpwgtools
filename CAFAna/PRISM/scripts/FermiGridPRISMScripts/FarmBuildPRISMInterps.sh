@@ -7,8 +7,8 @@ FORCE_REMOVE="0"
 INPUT_DIR=""
 
 LIFETIME_EXP_ND="60h"
-DISK_EXP_ND="4GB"
-MEM_EXP_ND="8GB"
+DISK_EXP_ND="2GB"
+MEM_EXP_ND="4GB"
 
 LIFETIME_EXP_FD="60h"
 DISK_EXP_FD="5GB"
@@ -45,7 +45,7 @@ while [[ ${#} -gt 0 ]]; do
       fi
 
       PNFS_PATH_APPEND="$2"
-      echo "[OPT]: Writing output to /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}"
+      echo "[OPT]: Writing output to /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}"
       shift # past argument
       ;;
 
@@ -159,7 +159,7 @@ while [[ ${#} -gt 0 ]]; do
 
       -?|--help)
       echo "[RUNLIKE] ${SCRIPTNAME}"
-      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/persistent/users/${USER}/"
+      echo -e "\t-p|--pnfs-path-append      : Path to append to output path: /pnfs/dune/scratch/users/${USER}/"
       echo -e "\t-i|--input-dir             : Path to search for files in."
       echo -e "\t-a|--axis-argument         : Argument to pass to remake_inputs to specify the axes"
       echo -e "\t--bin-descriptor          : Bin descriptor string to pass."
@@ -275,23 +275,20 @@ if [ ! -e CAFAna.Blob.tar.gz ]; then
   exit 2
 fi
 
-ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 
 if [ $? -ne 0 ]; then
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  ifdh ls /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+  ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
   if [ $? -ne 0 ]; then
-    echo "Unable to make /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}."
+    echo "Unable to make /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}."
     exit 2
   fi
 elif [ ${FORCE_REMOVE} == "1" ]; then
-  echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}\" "
-  rm -rf /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
-  mkdir -p /pnfs/dune/persistent/users/${USER}/${PNFS_PATH_APPEND}
+  echo "[INFO]: Force removing previous existant output directories: \"/pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}\" "
+  rm -rf /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
+  mkdir -p /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 fi
-
-setup jobsub_client
-${CAFANA}/CAFAnaEnv.sh
 
 if [ "${DO_FD}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
@@ -307,12 +304,12 @@ fi
 
 if [ "${DO_ND}" == "1" ]; then
   if [ "${DO_FHC}" == "1" ]; then
-    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_FHC_JID=$(jobsub_submit --group=${EXPERIMENT} --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_FHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz --use-cvmfs-dropbox file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_FHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_FHC_JID: ${ND_FHC_JID}"
   fi
 
   if [ "${DO_RHC}" == "1" ]; then
-    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --jobid-output-only --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
+    ND_RHC_JID=$(jobsub_submit --group=${EXPERIMENT} --append_condor_requirements="(TARGET.HAS_CVMFS_fifeuser1_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser2_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser3_opensciencegrid_org==true&&TARGET.HAS_CVMFS_fifeuser4_opensciencegrid_org==true)" --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=${LIFETIME_EXP_ND} --disk=${DISK_EXP_ND} --memory=${MEM_EXP_ND} -l 'FERMIHTC_AutoRelease==True' -l 'FERMIHTC_GraceLifetime==36000' --cpu=1 --OS=SL7 -N ${NND_RHC} --tar_file_name=dropbox://CAFAna.Blob.tar.gz file://${CAFANA}/scripts/FermiGridScripts/BuildPRISMInterps.sh ${PNFS_PATH_APPEND} ND_RHC ${ANAVERSION} ${AXISBLOBNAME} ${BINNINGDESCRIPTOR} ${SYSTDESCRIPTOR} ${NOFAKEDATA})
     echo "ND_RHC_JID: ${ND_RHC_JID}"
   fi
 fi

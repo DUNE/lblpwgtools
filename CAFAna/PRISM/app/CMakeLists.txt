@@ -7,7 +7,7 @@ set(scripts_to_build
   PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
-  #PRISMRegOptimizer
+  PRISMRegOptimizer
   #PRISMExtrapRegOptimizer
  #FluxPredictionTester
  EventLoop

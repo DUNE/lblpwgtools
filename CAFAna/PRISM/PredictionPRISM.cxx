@@ -916,7 +916,7 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
   // Linear combination weight calculation.
   std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(
-          calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift));
+          calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift)); // right goes shift
   LabelsAndBins oaAxis(fNDOffAxis.GetLabels().at(0),
                        fNDOffAxis.GetBinnings().at(0));
   LabelsAndBins oaAxis280(fND280kAAxis.GetLabels().at(0),
@@ -1242,14 +1242,14 @@ PredictionPRISM::PredictPRISMComponents(osc::IOscCalc *calc, SystShifts shift,
 
   // Always shift FDOsc pred, as this acts as our 'shifted fd data' when
   // doing fake data shifts
-  Comps.emplace(kFDOscPred,
-                FDPrediction->PredictComponentSyst(
-                    calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
-  // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
-  // below and comment-out above.
   //Comps.emplace(kFDOscPred,
   //              FDPrediction->PredictComponentSyst(
-  //                  calc, shift_fd, Flavors::kNuMuToNuMu, Current::kCC, Sign::kNu));
+  //                  calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
+  // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
+  // below and comment-out above.
+  Comps.emplace(kFDOscPred,
+                FDPrediction->PredictComponentSyst(
+                    calc, shift_fd, FDSigFlavor, Current::kCC, FDSigSign));
 
   // Get the residual from the event rate/flux matcher.
   Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual();
@@ -1879,7 +1879,6 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
           PRISMReweightableSpectrum::LoadFrom(dir, meas.first.c_str());
       double MCPOT = meas.second.get()->POT();
       pred->SetDefaultOffAxisPOT(MCPOT); // Save the default POT from ND MC file.
-      meas.second.get()->OverridePOT(1);
     }
   }
 
@@ -1910,7 +1909,6 @@ PredictionPRISM::LoadFrom(TDirectory *dir, const std::string &name) {
             pred->Predictions.ND_280kA.nuebar_ccinc_sel_nubmode}}) {
     if (dir->GetDirectory(meas.first.c_str())) {
       meas.second.get() = PredictionInterp::LoadFrom(dir, meas.first.c_str());
-      meas.second.get()->GetPredNomAs<PredictionNoOsc>()->OverridePOT(1);
       meas.second.get()->MinimizeMemory();
     }
   }

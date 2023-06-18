@@ -4,6 +4,7 @@
 
 #include "CAFAna/Analysis/AnalysisVars.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
+#include "CAFAna/Analysis/Exposures.h"
 
 #include "CAFAna/Core/SystShifts.h"
 
@@ -59,17 +60,54 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   std::string const &varname =
   scan.get<std::string>("projection_name", "EProxy");
 
-  // default to 1 year
-  double POT = scan.get<double>("POT_years", 1) * 1.1e21; // POT120 = 1.1e21
-  double POT_FD = POT * pot_fd_FVMassFactor;
-  std::cout << "POT : " << POT << ", " << POT_FD << std::endl;
+  // Get Match channels here to inform exposure scaling
+  bool haveFHC(false), haveRHC(false);
+  std::map<std::string, MatchChan> Channels;
+  if (scan.is_key_to_sequence("samples")) {
+    for (auto const &fs : scan.get<std::vector<fhicl::ParameterSet>>("samples")) {
+      auto ch = GetMatchChan(fs);
+      Channels[GetMatchChanShortName(ch)] = ch;
+      if (GetMatchChanShortName(ch) == "NumuDisp" || GetMatchChanShortName(ch) == "NueApp") {
+        haveFHC = true;
+      }
+      if (GetMatchChanShortName(ch) == "NumuBarDisp" || GetMatchChanShortName(ch) == "NueBarApp") {
+        haveRHC = true;
+      }
+    }
+  } else {
+    auto ch = GetMatchChan(scan.get<fhicl::ParameterSet>("samples"));
+    Channels[GetMatchChanShortName(ch)] = ch;
+  }
+
+  // If we are doing a joint FHC + RHC fit we assume 50% exposure for each horn mode
+  // Therefore, half the exposure scaling
+  // Only need to do this for fitting script really
+  bool JointFit(false);
+  if (haveFHC && haveRHC) {
+    JointFit = true; 
+    std::cout << "[NOTE] You are doing a joint fit assuming 50% FHC and 50% RHC" << std::endl;
+  } else {
+    std::cout << "[NOTE] Doing a fit at a single horn polarity sample, FHC or RHC." << std::endl;
+  }
+
+  // Exposure now accounts for FD staging
+  // Choose which staging plan you want
+  // Staging options: "nostage", "tdr", "ace" 
+  double POT_yrs = scan.get<double>("POT_years", 1);
+  std::string POT_staging = scan.get<std::string>("POT_staging", "nostage");
+  auto exp_scale_FD = ExposureScale(POT_yrs, POT_staging);
+  auto exp_scale_ND = ExposureScaleND(POT_yrs, POT_staging);
+  double POT = exp_scale_ND.first * POT120 * (JointFit ? 0.5 : 1.);
+  double POT_FD = exp_scale_FD.first * POT120 * (JointFit ? 0.5 : 1.);
+  std::cout << POT_staging << ": Yrs = " << POT_yrs << ", MWYrs = " << exp_scale_ND.second <<
+    ", ktMWYrs = " << exp_scale_FD.second << std::endl;
 
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
   bool prism_debugplots = scan.get<bool>("prism_debugplots", false); // should always be false
   bool use_fake_data = scan.get<bool>("use_fake_data", false); 
   bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
   bool th13_constraint = scan.get<bool>("reactor_constraint", true);
-
+  double unfold_reg_param = scan.get<double>("unfold_reg_param", 0.0001);
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
 
   std::vector<const IFitVar *> free_oscpars = GetOscVars(
@@ -81,6 +119,13 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   std::string const &rm_syst = scan.get<std::string>("rm_syst", "");
   if (!rm_syst.empty()) {
     RemoveSysts(freesysts, {rm_syst});
+  }
+  std::vector<std::string> rm_syst_list = scan.get<std::vector<std::string>>("rm_syst_params", {});
+  if (!rm_syst_list.empty()) {
+    for (const auto &rmsyst : rm_syst_list) {
+      std::cout << "Removing: " << rmsyst << std::endl;
+    } 
+    RemoveSysts(freesysts, rm_syst_list);
   }
 
   for (auto &o : free_oscpars) {
@@ -264,7 +309,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   }
   state.PRISM->SetIntrinsicBkgCorr(match_intrinsic_nue_bkg);
 
-  std::map<std::string, MatchChan> Channels;
+  /*std::map<std::string, MatchChan> Channels;
   if (scan.is_key_to_sequence("samples")) {
     for (auto const &fs : scan.get<std::vector<fhicl::ParameterSet>>("samples")) {
       auto ch = GetMatchChan(fs);
@@ -273,7 +318,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   } else {
     auto ch = GetMatchChan(scan.get<fhicl::ParameterSet>("samples"));
     Channels[GetMatchChanShortName(ch)] = ch;
-  }
+  }*/
 
   //-------------
   // Create flux matcher object
@@ -387,6 +432,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     SmearMatrices.Initialize(
         {state.NDMatrixPredInterps[NDConfig_enum].get(), NDConfig_enum},
         {state.FDMatrixPredInterps[FDfdConfig_enum].get(), FDfdConfig_enum});
+    SmearMatrices.SetUnfoldRegParam(unfold_reg_param);
 
     state.PRISM->SetNDFDDetExtrap(&SmearMatrices);
 
@@ -556,12 +602,12 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     }
 
     dir->WriteTObject(scan_hist_1D.get(), "dChi2Scan");
-    TMatrixDSym covar = fitter.GetCovariance();
-    TH2D hist_covar = TH2D(covar);
-    hist_covar.SetName("covar");
-    TH2D hist_corr = *make_corr_from_covar(&hist_covar);
-    hist_covar.Write();
-    hist_corr.Write();
+    std::vector<std::string> fParamNames = fitter.GetParamNames();
+    std::vector<double> fPostFitValues = fitter.GetPostFitValues();
+    std::vector<double> fPostFitErrors = fitter.GetPostFitErrors();
+    for (size_t i = 0; i < fParamNames.size(); i++) {
+      std::cout << fParamNames[i] << " = " << fPostFitValues[i] << "+/-" << fPostFitErrors[i] << ";" << std::endl;
+    }
   }
   //-----------------------
   // Do the minimization 2D
@@ -621,12 +667,13 @@ void SayUsage(char const *argv[]) {
 
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
-  setenv("CAFANA_PRED_MINMCSTATS", "0", 1);
+  setenv("CAFANA_PRED_MINMCSTATS", "20", 1);
   setenv("CAFANA_STAT_ERRS", "1", 1);
   // Fit env variables
   setenv("FIT_TOLERANCE", "1", 1);
-  setenv("FIT_PRECISION", "1e-12", 1);
+  setenv("FIT_PRECISION", "1e-8", 1);
 
+  std::cout << "CAFANA_PRED_MINMCSTATS = " << getenv("CAFANA_PRED_MINMCSTATS") << std::endl;
   std::cout << "FIT_TOLERANCE = " << getenv("FIT_TOLERANCE") << 
     "; FIT_PRECISION = " << getenv("FIT_PRECISION") << std::endl;
   gROOT->SetMustClean(false);

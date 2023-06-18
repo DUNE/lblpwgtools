@@ -21,7 +21,7 @@ namespace ana {
 
   struct RunPlan {
   
-    DetectorStop const &FindStop(double offaxis_m, int kA) const;
+    void FindStop(double offaxis_m, int kA, std::vector<DetectorStop> &ret_stops) const;
 
     // Only now using this function to run-plan weights RWSpecs.
     PRISMReweightableSpectrum Weight(PRISMReweightableSpectrum const &NDSpec, int kA,
@@ -45,16 +45,16 @@ namespace ana {
 
   inline RunPlan make_RunPlan(fhicl::ParameterSet const &ps, double total_POT) {
     // flat: {
-    //        plan: [ { xrange: [-2,2] time: 1, horn_current: 280 },
-    //                { xrange: [-2,2] time: 1 },
-    //                { xrange: [2,6] time: 1 },
-    //                { xrange: [6,10] time: 1 },
-    //                { xrange: [10,14] time: 1 },
-    //                { xrange: [14,18] time: 1 },
-    //                { xrange: [18,22] time: 1 },
-    //                { xrange: [22,26] time: 1 },
-    //                { xrange: [26,30] time: 1 },
-    //                { xrange: [30,34] time: 1 } ]
+    //        plan: [ { xrange: [2,-2] time: 1, horn_current: 280 },
+    //                { xrange: [2,-2] time: 1 },
+    //                { xrange: [-2,-6] time: 1 },
+    //                { xrange: [-6,-10] time: 1 },
+    //                { xrange: [-10,-14] time: 1 },
+    //                { xrange: [-14,-18] time: 1 },
+    //                { xrange: [-18,-22] time: 1 },
+    //                { xrange: [-22,-26] time: 1 },
+    //                { xrange: [-26,-30] time: 1 },
+    //                { xrange: [-30,-34] time: 1 } ]
     //    }
 
     RunPlan rp;

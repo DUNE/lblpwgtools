@@ -259,9 +259,9 @@ inline Spectrum ToSpectrum(ReweightableSpectrum const &rwspec, double pot) {
 
 //-----------------------------------
 inline Spectrum SetSpectrumErrors(Spectrum const &spec, double mcpot) {
-
   Eigen::ArrayXd spec_arr = spec.GetEigen(spec.POT()); // arr for POT = 1
-  Eigen::ArrayXd spec_arr_mc = spec.GetEigen(mcpot); // arr at original pot
+  Eigen::ArrayXd spec_arr_mc = spec.GetEigen(spec.POT());
+
   Eigen::ArrayXd spec_sumsq(spec_arr.size());
   spec_sumsq.setZero();
 

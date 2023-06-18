@@ -33,6 +33,8 @@ extern unsigned gRNGSeed;
 // Factor to account for simulated LAr mass/expected FV, pot_fd = pot_nd *
 // pot_fd_FVMassFactor
 extern double const pot_fd_FVMassFactor;
+extern double const pot_fd2_FVMassFactor;
+extern double const pot_fd3_FVMassFactor;
 // POT for 3.5 years
 extern double const pot_fd;
 extern double const pot_nd;
@@ -40,6 +42,11 @@ extern double const pot_nd;
 // This is pretty annoying, but the above is for 7 years staged, which is 336 kT
 // MW yr
 extern double const nom_exposure;
+
+// Exposure scaling for FD accounting for number of modules and beam upgrade
+std::pair<double, double> ExposureScale(double &years, std::string staging_plan = "nostage");
+// Exposure scaling for ND accounts for beam upgrade to 2.4 MW
+std::pair<double, double> ExposureScaleND(double &years, std::string staging_plan = "nostage");
 
 double GetBoundedGausThrow(double min, double max);
 

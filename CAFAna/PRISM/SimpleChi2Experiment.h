@@ -25,6 +25,7 @@ namespace ana {
     virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = kNoShift) const override;
 
+    double ValidChiSq(Eigen::VectorXd &obs, Eigen::VectorXd &exp, Eigen::MatrixXd &cov, const SystShifts& syst = kNoShift) const;
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PRISMChi2CovarExperiment> LoadFrom(TDirectory* dir, const std::string& name);
 
