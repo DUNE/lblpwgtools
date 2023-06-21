@@ -186,7 +186,7 @@ namespace ana
       if (pair.first == "dmsq32")
         ret->SetDmsq32(pair.second/1e3);
       if (pair.first == "ssth23")
-        ret->SetTh23(asin(sqrt(pair.second)));
+        ret->SetTh23(asin(sqrt(pair.second)));      
     }
 
     if (oct < 0) {
@@ -546,6 +546,14 @@ namespace ana
           fDmsq32 = pair.second/1e3;
 	if (pair.first == "ssth23")
           fTh23 = asin(sqrt(pair.second));
+
+	// Add options to change the priors...
+	if (pair.first == "rho_err")
+	  fRhoErr = pair.second*kEarthDensity;
+	if (pair.first == "th12_err")
+	  fTh12Err = pair.second*kNuFitTh12Err;
+	if (pair.first == "dmsq12_err")
+	  fDmsq21 = pair.second*kNuFitDmsq21Err;
       }
     }
   }
