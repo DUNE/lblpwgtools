@@ -223,7 +223,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     }
 
 
-    IExperiment *penalty = GetPenalty(hie, 1, penaltyString);
+    IExperiment *penalty = GetPenalty(hie, 1, penaltyString, asimov_set);
 
     double thischisq =
         RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
