@@ -157,9 +157,15 @@ namespace ana
     osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
     ret->SetL(kBaseline);
 
-    ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
-    ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
-    ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+    if (asimov_str.find("nothrow") != std::string::npos){
+      ret->SetRho(kEarthDensity*(1+0.02*gRandom->Gaus()));
+      ret->SetDmsq21(kNuFitDmsq21CV*(1+kNuFitDmsq21Err*gRandom->Gaus()));
+      ret->SetTh12(kNuFitTh12CV*(1+kNuFitTh12Err*gRandom->Gaus()));
+    } else {
+      ret->SetRho(kEarthDensity);
+      ret->SetDmsq21(kNuFitDmsq21CV);
+      ret->SetTh12(kNuFitTh12CV);
+    }
 
     if(hie > 0){
       ret->SetDmsq32(kNuFitDmsq32CVNH);
