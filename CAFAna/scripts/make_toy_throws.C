@@ -49,9 +49,9 @@ void make_toy_throws(std::string stateFname = def_stateFname,
   }
 
   // Decide what is to be thrown
-  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  bool stats_throw, fakeoa_throw, fakenuis_throw, fakenuisoa_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw,
-                         start_throw, central_throw);
+                         start_throw, central_throw, fakenuisoa_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
@@ -149,8 +149,10 @@ void make_toy_throws(std::string stateFname = def_stateFname,
     // First deal with OA parameters
     if (fakeoa_throw || central_throw)
       fakeThrowOsc = ThrownWideOscCalc(hie, oscVars);
-    else
+    else if (fakenuisoa_throw)
       fakeThrowOsc = OscCalcThrowNuis(hie, 1, asimov_set);
+    else
+      fakeThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
 
     // Now deal with systematics
     if (fakenuis_throw and not central_throw) {
@@ -176,7 +178,7 @@ void make_toy_throws(std::string stateFname = def_stateFname,
       fitThrowOsc = ThrownWideOscCalc(hie, oscVars);
     } else {
       fitThrowSyst = kNoShift;
-      fitThrowOsc = OscCalcThrowNuis(hie, 1, asimov_set);
+      fitThrowOsc = NuFitOscCalc(hie, 1, asimov_set);
     }
 
 
