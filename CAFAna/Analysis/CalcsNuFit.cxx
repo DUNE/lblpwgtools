@@ -559,7 +559,7 @@ namespace ana
 	if (pair.first == "th12_err")
 	  fTh12Err = pair.second*kNuFitTh12Err;
 	if (pair.first == "dmsq12_err")
-	  fDmsq21 = pair.second*kNuFitDmsq21Err;
+	  fDmsq21Err = pair.second*kNuFitDmsq21Err;
       }
     }
   }
