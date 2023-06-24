@@ -109,7 +109,7 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
                       double &pot_fd_rhc_numu, bool &ndprefit);
 
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
-                            bool &fakeNuis, bool &start, bool &central);
+                            bool &fakeNuis, bool &start, bool &central, bool &fakeNuisOA);
 
 TMatrixD *MakeCovmat(ana::PredictionInterp const &prediction,
                      std::vector<ana::ISyst const *> const &systs,

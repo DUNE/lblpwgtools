@@ -926,13 +926,14 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 }
 
 void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
-                            bool &fakeNuis, bool &start, bool &central) {
+                            bool &fakeNuis, bool &start, bool &central, bool &fakeNuisOA) {
 
   std::vector<std::string> instructions = SplitString(throwString, ':');
 
   stats = false;
   fakeOA = false;
   fakeNuis = false;
+  fakeNuisOA = false;
   start = false;
   central = false;
 
@@ -943,11 +944,13 @@ void ParseThrowInstructions(std::string throwString, bool &stats, bool &fakeOA,
     if (str == "stat" || str == "all")
       stats = true;
     if (str == "fake" || str == "all")
-      fakeOA = fakeNuis = true;
+      fakeOA = fakeNuis = fakeNuisOA = true;
     if (str == "fakeoa" || str == "all")
-      fakeOA = true;
+      fakeOA = fakeNuisOA = true;
     if (str == "fakenuis" || str == "all")
       fakeNuis = true;
+    if (str == "fakenuisoa" || str == "all")
+      fakeNuisOA = fakeNuis = true;
     if (str == "start" || str == "all")
       start = true;
     if (str == "central" || str == "all")
