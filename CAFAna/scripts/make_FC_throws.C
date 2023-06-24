@@ -77,9 +77,9 @@ void make_FC_throws(std::string stateFname = def_stateFname,
   }
 
   // Decide what is to be thrown
-  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  bool stats_throw, fakeoa_throw, fakenuis_throw, fakenuisoa_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw,
-                         start_throw, central_throw);
+                         start_throw, central_throw, fakenuisoa_throw);
 
   auto fixVarVect = ParseFixPar(fixVar);
 

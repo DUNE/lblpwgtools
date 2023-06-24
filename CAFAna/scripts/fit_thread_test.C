@@ -33,9 +33,9 @@ int main(int argc, char const *argv[]) {
   gRandom->SetSeed(gRNGSeed);
 
   // Decide what is to be thrown
-  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  bool stats_throw, fakeoa_throw, fakenuis_throw, fakenuisoa_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw,
-                         start_throw, central_throw);
+                         start_throw, central_throw, fakenuisoa_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);

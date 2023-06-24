@@ -13,8 +13,8 @@ void make_mh_throws(std::string stateFname="common_state_mcc11v3.root",
   gRandom->SetSeed(0);
 
   // Decide what is to be thrown
-  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
-  ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw);
+  bool stats_throw, fakeoa_throw, fakenuis_throw, fakenuisoa_throw, start_throw, central_throw;
+  ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw, fakenuisoa_throw);
 
   // Get the systematics to use
   std::vector<const ISyst*> systlist = GetListOfSysts(systSet);

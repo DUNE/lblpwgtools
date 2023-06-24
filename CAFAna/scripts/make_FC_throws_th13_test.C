@@ -121,9 +121,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   }
 
   // Decide what is to be thrown
-  bool stats_throw, fakeoa_throw, fakenuis_throw, start_throw, central_throw;
+  bool stats_throw, fakeoa_throw, fakenuis_throw, fakenuisoa_throw, start_throw, central_throw;
   ParseThrowInstructions(throwString, stats_throw, fakeoa_throw, fakenuis_throw,
-                         start_throw, central_throw);
+                         start_throw, central_throw, fakenuisoa_throw);
 
   // Get the systematics to use
   std::vector<const ISyst *> systlist = GetListOfSysts(systSet);
