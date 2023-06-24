@@ -205,14 +205,15 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   double th13_chisqmin;
   int th13_oct;
   double dchisq;
-  bool iseithervalid;
+  bool allvalid;
+
   th13_tree.throw_tree->Branch("th13_chisqmin", &th13_chisqmin);
   th13_tree.throw_tree->Branch("nopen_chisqmin", &nopen_chisqmin);
   th13_tree.throw_tree->Branch("nopen_oct", &nopen_oct);
   th13_tree.throw_tree->Branch("th13_oct", &th13_oct);
   th13_tree.throw_tree->Branch("hie", &hie);
   th13_tree.throw_tree->Branch("dchisq", &dchisq);
-  th13_tree.throw_tree->Branch("IsEitherValid", &iseithervalid);
+  th13_tree.throw_tree->Branch("allValid", &allvalid);
   th13_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   nopen_tree.SetDirectory(fout);
@@ -240,6 +241,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
   auto lap = std::chrono::system_clock::now();
   for (int i = 0; i < nthrows; ++i) {
+
+    // Default to fits being valid
+    allvalid = true;
 
     unsigned loop_seed = gRandom->Integer(std::numeric_limits<unsigned>::max());
     nopen_tree.fLoopRNGSeed = loop_seed;
@@ -351,6 +355,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       nd_fit_systs = SystShifts(fitThrowSyst);
     }
 
+    // Skip this throw and try again if the ND fit fails (why bother)
+    if (!nd_tree.fIsValid) continue;
+
     // -------------------------------------
     // ------ Start with the th13 fit ------
     // -------------------------------------    
@@ -386,7 +393,10 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					stats_throw, tempOscVars, systlist, tempFitThrowOsc,
 					SystShifts(nd_fit_systs), oscSeeds, th13_penalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
-	
+
+	// We want to know if any fits fail
+	if (!temp_blob.fIsValid) allvalid = false;
+
 	// Save all fit info in relevant trees
 	if (oct == -1) {
 	  if (temp_chisq < this_LO_th13_chisqmin)
@@ -452,6 +462,9 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					SystShifts(nd_fit_systs), oscSeeds, gpenalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 	
+	// We want to know if any fits fail
+	if (!temp_blob.fIsValid) allvalid = false;
+
 	// Save all fit info in relevant trees
 	if (oct == -1) {
           if (temp_chisq < this_LO_nopen_chisqmin)
@@ -489,12 +502,6 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     th13_chisqmin = this_th13_chisqmin;
     th13_tree.CopyVals(min_th13_blob);
     dchisq = th13_chisqmin - nopen_chisqmin;
-
-    // Check if the fits were both valid
-    iseithervalid = true;
-    if (!min_th13_blob.fIsValid) iseithervalid = false;
-    if (!min_nopen_blob.fIsValid) iseithervalid = false;
-
     th13_tree.Fill();
 
     // Fill everything
