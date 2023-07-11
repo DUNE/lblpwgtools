@@ -49,29 +49,17 @@ osc::IOscCalculatorAdjustable* ThrownWideOscCalcWithAsimov(int hie, std::vector<
 }
 
 // Copy a calculator for playing with
-osc::IOscCalculatorAdjustable* SmartCalc(osc::IOscCalculatorAdjustable *incalc, int oct, double dcp_shift=0){
+osc::IOscCalculatorAdjustable* SmartCalc(osc::IOscCalculatorAdjustable *incalc, int th23, double dcp){
 
   osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
   ret->SetL(incalc->GetL());
   ret->SetRho(incalc->GetRho());
   ret->SetDmsq21(incalc->GetDmsq21());
   ret->SetTh12(incalc->GetTh12());
-  ret->SetTh23(incalc->GetTh23());
+  ret->SetTh23(th23);
   ret->SetDmsq32(incalc->GetDmsq32());
   ret->SetTh13(incalc->GetTh13());
-
-  // If the true value is in the wrong octant, try the reflected value...                                                                                                                                    
-  double dth23 = incalc->GetTh23() - TMath::Pi()/4;
-  if (oct < 0 && dth23 > 0) {
-    ret ->SetTh23(TMath::Pi()/4 - abs(dth23));
-  }
-  if (oct > 0 && dth23 < 0) {
-    ret ->SetTh23(TMath::Pi()/4 + abs(dth23));
-  }
-
-  // Now try adding values to dcp and forcing to be between +/-1
-  ret ->SetdCP( fmod(incalc->GetdCP()+dcp_shift+1,2) -1);
-
+  ret->SetdCP(dcp);
   return ret;
 }
 
@@ -278,6 +266,20 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     osc::IOscCalculatorAdjustable *fakeThrowOsc =
       ThrownWideOscCalcWithAsimov(hie, oscVars, asimov_set);
 
+    // Get the intelligent seed points
+    double this_th23 = fakeThrowOsc->GetTh23();
+    double dth23 = this_th23 - TMath::Pi()/4;
+    std::vector<double> th23_seeds;
+    if (dth23 > 0) {
+      th23_seeds = {TMath::Pi()/4 - abs(dth23), this_th23, this_th23}; 
+    }
+    if (dth23 < 0) {
+      th23_seeds = {this_th23, this_th23, TMath::Pi()/4 - abs(dth23)};
+    }
+
+    double this_dcp = fakeThrowOsc->GetdCP();
+    std::vector<double> dcp_seeds = {this_dcp, TMath::Pi()-this_dcp};
+
     // Now deal with systematics
     if (fakenuis_throw) {
       for (auto s : systlist)
@@ -337,22 +339,20 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
     // If the fit used the ND, run a fit with just the ND first, this the output 
     // parameter values are then used as the starting point for all subsequent seeds
-    SystShifts nd_fit_systs;
     if (sampleString.find("nd") != std::string::npos){
+      SystShifts nd_fit_systs;
       // Hackity hack with the sample name here...
       double nd_min = RunFitPoint(stateFname, sampleString+":ndprefit", fakeThrowOsc, fakeThrowSyst,
 				  stats_throw, {}, systlist, NuFitOscCalc(hie, 1),
 				  SystShifts(fitThrowSyst), {}, nullptr,
 				  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
 
+      fitThrowSyst = nd_fit_systs;
       nd_tree.Fill();
       
       std::cout << "[THW]: ND throw " << i
 		<< " fit found minimum chi2 = " << nd_min << " "
 		<< BuildLogInfoString();
-    } else {
-      // If no ND is included, use the prefit throw as the input to all subsequent fits
-      nd_fit_systs = SystShifts(fitThrowSyst);
     }
 
     // Skip this throw and try again if the ND fit fails (why bother)
@@ -379,11 +379,11 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
       // Explicitly loop over dcp so I can control the starting value
-      for (double dcp = -1; dcp < 1; dcp += 0.5){
+      for (auto dcp : dcp_seeds){
 
-	std::cout << "Running a th13 fit with oct = " << oct << " and dcp = " << dcp << std::endl;
+	std::cout << "Running a th13 fit with th23 = " << th23_seeds[oct+1] << " and dcp = " << dcp << std::endl;
 
-	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
+	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, th23_seeds[oct+1], dcp);
 	
 	// Temporary place to save the best fit info
 	FitTreeBlob temp_blob("temp_blob", "temp_blob");
@@ -391,7 +391,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 	// Manually set the seed position for ssth23
 	double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
 					stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-					SystShifts(nd_fit_systs), oscSeeds, th13_penalty,
+					SystShifts(fitThrowSyst), oscSeeds, th13_penalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
 	// We want to know if any fits fail
@@ -447,11 +447,11 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
       // Explicitly loop over dcp so I can control the starting value
-      for (double dcp = -1; dcp < 1; dcp += 0.5){
+      for (auto dcp : dcp_seeds){
 
-	std::cout << "Running a nopen fit with oct = " << oct << " and dcp = " << dcp<< std::endl;
+	std::cout << "Running a th13 fit with th23 = " << th23_seeds[oct+1] << " and dcp = " << dcp << std::endl;
 
-	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, oct, dcp);
+	osc::IOscCalculatorAdjustable *tempFitThrowOsc = SmartCalc(fakeThrowOsc, th23_seeds[oct+1], dcp);
 	
 	// Temporary place to save the best fit info
 	FitTreeBlob temp_blob("temp_blob", "temp_blob");
@@ -459,7 +459,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 	// Manually set the seed position for ssth23
 	double temp_chisq = RunFitPoint(stateFname, sampleString, fakeThrowOsc, fakeThrowSyst,
 					stats_throw, tempOscVars, systlist, tempFitThrowOsc,
-					SystShifts(nd_fit_systs), oscSeeds, gpenalty,
+					SystShifts(fitThrowSyst), oscSeeds, gpenalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 	
 	// We want to know if any fits fail
