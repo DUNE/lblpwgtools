@@ -268,14 +268,8 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
     // Get the intelligent seed points
     double this_th23 = fakeThrowOsc->GetTh23();
-    double dth23 = this_th23 - TMath::Pi()/4;
-    std::vector<double> th23_seeds;
-    if (dth23 > 0) {
-      th23_seeds = {TMath::Pi()/4 - abs(dth23), this_th23, this_th23}; 
-    }
-    if (dth23 < 0) {
-      th23_seeds = {this_th23, this_th23, TMath::Pi()/4 - abs(dth23)};
-    }
+    double dth23 = this_th23 - TMath::Pi()/2;
+    std::vector<double> th23_seeds = {TMath::Pi()/2-abs(dth23), this_th23, TMath::Pi()/2+abs(dth23)}; 
 
     double this_dcp = fakeThrowOsc->GetdCP();
     std::vector<double> dcp_seeds = {this_dcp, TMath::Pi()-this_dcp};
