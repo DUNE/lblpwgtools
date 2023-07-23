@@ -268,11 +268,13 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 
     // Get the intelligent seed points
     double this_th23 = fakeThrowOsc->GetTh23();
-    double dth23 = this_th23 - TMath::Pi()/2;
-    std::vector<double> th23_seeds = {TMath::Pi()/2-abs(dth23), this_th23, TMath::Pi()/2+abs(dth23)}; 
+    double dth23 = this_th23 - TMath::Pi()/4;
+    std::vector<double> th23_seeds = {TMath::Pi()/4-abs(dth23), this_th23, TMath::Pi()/4+abs(dth23)}; 
+    std::cout << "th23 = " << this_th23 << " will try {" << TMath::Pi()/4-abs(dth23) << " " << this_th23 << " " << TMath::Pi()/4+abs(dth23) << "}" << std::endl;
 
     double this_dcp = fakeThrowOsc->GetdCP();
     std::vector<double> dcp_seeds = {this_dcp, TMath::Pi()-this_dcp};
+    std::cout << "dcp = " << this_dcp << " will try {" << this_dcp << " " << TMath::Pi()-this_dcp << "}" << std::endl;
 
     // Now deal with systematics
     if (fakenuis_throw) {
@@ -293,10 +295,10 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     }
 
     // Add in the fake data shift, no matter what else was selected
-    for (auto syst : fakeDataSyst.ActiveSysts()){
-      double shift = fakeDataSyst.GetShift(syst);
-      fitThrowSyst.SetShift(syst, shift);
-    }
+    // for (auto syst : fakeDataSyst.ActiveSysts()){
+    //   double shift = fakeDataSyst.GetShift(syst);
+    //   fitThrowSyst.SetShift(syst, shift);
+    // }
 
     // Somebody stop him, the absolute madman!
     // Keep the same stats/syst/OA throw for all fits
@@ -321,12 +323,6 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
       fit_type = fit_type | Fitter::kIncludeHesse;
     }
 
-    std::cout << "Fit throw syst values:" << std::endl;
-    for (auto s : fitThrowSyst.ActiveSysts()) {
-      std::cout << s->ShortName() << " " << fitThrowSyst.GetShift(s) << "; ";
-    }
-    std::cout << std::endl;
-
     // -------------------------------------
     // -------- Do the ND-only fit --------
     // -------------------------------------
@@ -340,7 +336,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 				  stats_throw, {}, systlist, NuFitOscCalc(hie, 1),
 				  SystShifts(fitThrowSyst), {}, nullptr,
 				  fit_type, nullptr, &nd_tree, &mad_spectra_yo, nd_fit_systs);
-
+      
       fitThrowSyst = nd_fit_systs;
       nd_tree.Fill();
       
