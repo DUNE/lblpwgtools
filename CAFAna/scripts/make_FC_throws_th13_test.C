@@ -193,7 +193,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   double th13_chisqmin;
   int th13_oct;
   double dchisq;
-  bool allvalid;
+  bool bothvalid;
 
   th13_tree.throw_tree->Branch("th13_chisqmin", &th13_chisqmin);
   th13_tree.throw_tree->Branch("nopen_chisqmin", &nopen_chisqmin);
@@ -201,7 +201,7 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   th13_tree.throw_tree->Branch("th13_oct", &th13_oct);
   th13_tree.throw_tree->Branch("hie", &hie);
   th13_tree.throw_tree->Branch("dchisq", &dchisq);
-  th13_tree.throw_tree->Branch("allValid", &allvalid);
+  th13_tree.throw_tree->Branch("bothValid", &bothvalid);
   th13_tree.meta_tree->Branch("CLI", &CLIArgs);
 
   nopen_tree.SetDirectory(fout);
@@ -231,8 +231,6 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
   for (int i = 0; i < nthrows; ++i) {
 
     // Default to fits being valid
-    allvalid = true;
-
     unsigned loop_seed = gRandom->Integer(std::numeric_limits<unsigned>::max());
     nopen_tree.fLoopRNGSeed = loop_seed;
     th13_tree.fLoopRNGSeed = loop_seed;
@@ -365,11 +363,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     // Loop over ssth23
     for (int oct = -1; oct <= 1; oct++){
 
-      // Get parameters that are limited to specific regions of parameter space
-      std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
-
       // Explicitly loop over dcp so I can control the starting value
       for (auto dcp : dcp_seeds){
+
+	// Get parameters that are limited to specific regions of parameter space
+	// Make a new one each time, as this remembers the value it was last set to!
+	std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
 	std::cout << "Running a th13 fit with th23 = " << th23_seeds[oct+1] << " and dcp = " << dcp << std::endl;
 
@@ -384,21 +383,24 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					SystShifts(fitThrowSyst), oscSeeds, th13_penalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 
-	// We want to know if any fits fail
-	if (!temp_blob.fIsValid) allvalid = false;
-
 	// Save all fit info in relevant trees
 	if (oct == -1) {
-	  if (temp_chisq < this_LO_th13_chisqmin)
+	  if (temp_chisq < this_LO_th13_chisqmin){
+	    this_LO_th13_chisqmin = temp_chisq;
 	    th13_LO_tree .CopyVals(temp_blob);
+	  }
 	}
 	if (oct == 0) {
-	  if (temp_chisq < this_BOTH_th13_chisqmin)
+	  if (temp_chisq < this_BOTH_th13_chisqmin){
+	    this_BOTH_th13_chisqmin = temp_chisq;
 	    th13_BOTH_tree.CopyVals(temp_blob);
+	  }
 	}
 	if (oct == 1) {
-	  if (temp_chisq < this_UO_th13_chisqmin)
+	  if (temp_chisq < this_UO_th13_chisqmin){
+	    this_UO_th13_chisqmin = temp_chisq;
 	    th13_UO_tree .CopyVals(temp_blob);
+	  }
 	}
 	
 	// Save if this is a better minimum
@@ -433,11 +435,12 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     // Loop over ssth23
     for (int oct = -1; oct <= 1; oct++){
 
-      // Get parameters that are limited to specific regions of parameter space
-      std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
-
       // Explicitly loop over dcp so I can control the starting value
       for (auto dcp : dcp_seeds){
+
+        // Get parameters that are limited to specific regions of parameter space
+        // Make a new one each time, as this remembers the value it was last set to!
+	std::vector<const IFitVar *> tempOscVars = GetOscVars("alloscvars", hie, oct);
 
 	std::cout << "Running a th13 fit with th23 = " << th23_seeds[oct+1] << " and dcp = " << dcp << std::endl;
 
@@ -452,21 +455,24 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
 					SystShifts(fitThrowSyst), oscSeeds, gpenalty,
 					fit_type, nullptr, &temp_blob, &mad_spectra_yo);
 	
-	// We want to know if any fits fail
-	if (!temp_blob.fIsValid) allvalid = false;
-
 	// Save all fit info in relevant trees
 	if (oct == -1) {
-          if (temp_chisq < this_LO_nopen_chisqmin)
+          if (temp_chisq < this_LO_nopen_chisqmin){
+	    this_LO_nopen_chisqmin = temp_chisq;
             nopen_LO_tree .CopyVals(temp_blob);
+	  }
         }
         if (oct == 0) {
-          if (temp_chisq < this_BOTH_nopen_chisqmin)
+          if (temp_chisq < this_BOTH_nopen_chisqmin){
+	    this_BOTH_nopen_chisqmin = temp_chisq;
             nopen_BOTH_tree.CopyVals(temp_blob);
+	  }
         }
         if (oct == 1) {
-          if (temp_chisq < this_UO_nopen_chisqmin)
+          if (temp_chisq < this_UO_nopen_chisqmin){
+	    this_UO_nopen_chisqmin = temp_chisq;
             nopen_UO_tree .CopyVals(temp_blob);
+	  }
         }
 	
 	// Save if this is a better minimum
@@ -483,6 +489,13 @@ void make_FC_throws_th13_test(std::string stateFname = def_stateFname,
     std::cerr << "[THW]: Nopen throw " << i
               << " fit found minimum chi2 = " << nopen_chisqmin << " "
               << BuildLogInfoString();
+
+    // Check that both fits are valid
+    if (min_nopen_blob.fIsValid &&
+	min_th13_blob.fIsValid)
+      bothvalid = true;
+    else
+      bothvalid = false;
 
     // Save info for both fits
     nopen_chisqmin = this_nopen_chisqmin;
