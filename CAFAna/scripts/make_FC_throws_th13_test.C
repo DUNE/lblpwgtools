@@ -49,8 +49,10 @@ osc::IOscCalculatorAdjustable* ThrownWideOscCalcWithAsimov(int hie, std::vector<
 }
 
 // Copy a calculator for playing with
-osc::IOscCalculatorAdjustable* SmartCalc(osc::IOscCalculatorAdjustable *incalc, int th23, double dcp){
+osc::IOscCalculatorAdjustable* SmartCalc(osc::IOscCalculatorAdjustable *incalc, double th23, double dcp){
 
+  std::cout << "Copying fake OA values with th23 = " << th23 << " and " << " dcp = " << dcp << std::endl;
+  std::cout << incalc->GetDmsq32() << " " << incalc->GetTh13() << " " << incalc->GetDmsq21() << std::endl;
   osc::IOscCalculatorAdjustable* ret = new osc::OscCalculatorPMNSOpt;
   ret->SetL(incalc->GetL());
   ret->SetRho(incalc->GetRho());
