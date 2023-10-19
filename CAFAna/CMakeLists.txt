@@ -81,9 +81,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-## CAFAna proper
-
-set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
+## CAFAna proper (ignore PRISM for the moment)
+## Also remove scripts (second to last)
+set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Vars bin fcl)
 
 foreach(SUBDIR ${CAFANA_SUBDIRS})
   add_subdirectory(${SUBDIR})
