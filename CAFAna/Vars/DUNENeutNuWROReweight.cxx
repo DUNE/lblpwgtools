@@ -21,10 +21,10 @@ namespace ana
   {
     if(!fHistNu && !fHist2DNu) LoadHists();
 
-    const double x = sr->Ev;
+    const double x = sr->mc.nu[0].E;//sr->Ev;
     if(x < 0) return 1; // How?
 
-    const bool anti = (sr->nuPDG < 0);
+    const bool anti = ( sr->mc.nu[0].pdg<0);//(sr->nuPDG < 0);
 
     if(fVars == kEnu){
       TH1* h = (anti ? fHistAnu : fHistNu);
@@ -35,7 +35,7 @@ namespace ana
     }
     else{
       TH2* h = (anti ? fHist2DAnu : fHist2DNu);
-      const double y = (fVars == kEnuQ2) ? sr->Q2 : sr->W;
+      const double y = (fVars == kEnuQ2) ? sr->mc.nu[0].Q2 : sr->mc.nu[0].W;//sr->Q2 : sr->W;
       if(x > h->GetXaxis()->GetXmax()) return 1; // overflow bin
       if(y < 0) return 1; // underflow bin
       if(y > h->GetYaxis()->GetXmax()) return 1; // overflow bin

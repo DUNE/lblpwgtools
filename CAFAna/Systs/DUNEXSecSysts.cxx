@@ -100,12 +100,12 @@ namespace ana
   //----------------------------------------------------------------------
   EVALORCategory GetVALORCategory(const caf::SRProxy* sr)
   {
-    int lep = sr->LepPDG;
-    int scat = sr->mode;
-    const int npiz = sr->nipi0;
-    const int npic = sr->nipip + sr->nipim;
-    const float Enu = sr->Ev;
-    const float Q2 = sr->Q2;
+    int lep = sr->mc.nu[0].pdg;// this is probs wrong LepPDG;
+    int scat = sr->mc.nu[0].mode;//mode;
+    const int npiz = sr->mc.nu[0].npi0;//nipi0;
+    const int npic = sr->mc.nu[0].npip+sr->mc.nu[0].npim;//nipip + sr->nipim;
+    const float Enu = sr->mc.nu[0].E;//Ev;
+    const float Q2 = sr->mc.nu[0].Q2;//Q2;
 
     // These are the FD codes
     // kUnknownMode               = -1
@@ -142,7 +142,7 @@ namespace ana
     // 14 IMD annihilation
 
     // Different conventions ND (weird (new?)) and FD (like NOvA)
-    if(sr->isFD){
+    /*if(sr->isFD){
       switch(scat){
       case 0: scat = 1; break; // QE -> QE
       case 1: scat = 4; break; // RES -> RES
@@ -161,7 +161,7 @@ namespace ana
         std::cout << "Unhandled GENIE FD code " << scat << std::endl;
         abort();
       }
-    }
+    }*/
 
     // Treat nutaus as if they were numus for now
     if(lep == -16) lep = -14;

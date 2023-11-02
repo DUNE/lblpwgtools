@@ -22,7 +22,10 @@ namespace ana
 {
   // Duplicate here because we can't include Vars.h
   const Var kTrueE([](const caf::SRProxy* sr)
-                   {return sr->Ev;});
+                   {
+                     assert(sr->mc.nnu == 1);
+                     return sr->mc.nu[0].E;
+                   });
 
   //----------------------------------------------------------------------
   OscillatableSpectrum::

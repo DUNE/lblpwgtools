@@ -1,23 +1,57 @@
 #pragma once
 
 #include "CAFAna/Core/Cut.h"
-#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+
 
 namespace ana
 {
+
+
+
 
   /// \brief Is this a Neutral %Current event?
   ///
   /// We use uniform-initializer syntax to concisely pass the list of necessary
   /// branches. In this case the selection function is simple enough that we
   /// can include it inline as a lambda function.
-  const Cut kIsNC([](const caf::SRProxy* sr)
-                  {
-                    return !sr->isCC;
-                  });
+//  const Cut kIsNC([](const caf::SRProxy* sr)
+//                  {
+//                    return !sr->isCC;
+//                  });
 
-  //----------------------------------------------------------------------
-  /// Helper for defining true CC event cuts
+  extern const Cut kIsNC;
+  extern const Cut kIsNue;
+  extern const Cut kIsNumu;
+
+//  const NuTruthCut kIsTau_NT([](const caf::SRNeutrinoProxy* truth){
+//                                return (abs(truth->pdg) == 16);});
+//
+//  const Cut kIsTau = CutFromNuTruthCut(kIsTau_NT);
+//
+//  const NuTruthCut kIsNC_NT([](const caf::SRNeutrinoProxy* truth)
+//                               {
+//                                 return !truth->iscc;
+//                               });
+
+
+//  //----------------------------------------------------------------------
+//  /// Helper for defining true CC event cuts
+//  class CCFlavSel
+//  {
+//  public:
+//    CCFlavSel(int pdg, int pdgorig) : fPdg(pdg), fPdgOrig(pdgorig)
+//    {
+//    }
+//
+//    bool operator()(const caf::SRProxy* sr) const
+//    {
+//      return sr->isCC && abs(sr->nuPDGunosc) == fPdgOrig && abs(sr->nuPDG) == fPdg;
+//    }
+//  protected:
+//    int fPdg, fPdgOrig;
+//  };
+
+// Nova version
   class CCFlavSel
   {
   public:
@@ -25,10 +59,7 @@ namespace ana
     {
     }
 
-    bool operator()(const caf::SRProxy* sr) const
-    {
-      return sr->isCC && abs(sr->nuPDGunosc) == fPdgOrig && abs(sr->nuPDG) == fPdg;
-    }
+    bool operator()(const caf::SRProxy* sr) const;
   protected:
     int fPdg, fPdgOrig;
   };
@@ -50,6 +81,23 @@ namespace ana
   /// Select CC \f$ \nu_e\to\nu_\tau \f$
   const Cut kIsTauFromE(CCFlavSel(16, 12));
 
+
+
+
+//// Commenting out DUNE cafana, and porting Nova cuts here
+  /// Is this truly an antineutrino?
+  extern const Cut kIsAntiNu;
+  extern const Cut kIsNu;
+
+  extern const Cut kHasNu;
+
+
+  /// Check if MC slice has neutrino information (useful for in-and-out tests)
+  extern const Cut kHasNeutrino;
+
+
+
+/*
   /// Is this truly an antineutrino?
   const Cut kIsAntiNu([](const caf::SRProxy* sr)
                       {
@@ -133,5 +181,5 @@ namespace ana
                          {
                            return ( sr->mvanumu > -1 );
                          });
-
+*/
 } // namespace ana

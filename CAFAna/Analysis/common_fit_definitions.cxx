@@ -195,7 +195,7 @@ SystShifts GetFakeDataGeneratorSystShift(std::string input) {
     dial_vals.push_back(val);
   }
 
-  std::vector<ISyst const *> FDSyst = GetListOfSysts();
+  std::vector<ISyst const *> FDSyst = {};//GetListOfSysts();
   KeepSysts(FDSyst, fake_data_names);
 
   for (uint i=0; i<FDSyst.size(); i++){
@@ -281,15 +281,19 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
                             Loaders::kNueSwap);
     these_loaders.AddLoader(&loaderNutau, caf::kFARDET, Loaders::kMC,
                             Loaders::kNuTauSwap);
-
+    // Todo --- use correct cuts and weights heree
     NoExtrapPredictionGenerator genFDNumu(
         *axes.FDAx_numu,
-        use_selection ? kPassFD_CVN_NUMU && kIsTrueFV : kIsTrueFV,
-        use_cv_weights ? kCVXSecWeights : kUnweighted);
+	kIsNumu,
+        //use_selection ? kPassFD_CVN_NUMU && kIsTrueFV : kIsTrueFV,
+        kUnweighted);
+	//use_cv_weights ? kCVXSecWeights : kUnweighted);
     NoExtrapPredictionGenerator genFDNue(
         *axes.FDAx_nue,
-        use_selection ? kPassFD_CVN_NUE && kIsTrueFV : kIsTrueFV,
-        use_cv_weights ? kCVXSecWeights : kUnweighted);
+        kIsNue,
+	//use_selection ? kPassFD_CVN_NUE && kIsTrueFV : kIsTrueFV,
+        kUnweighted);
+	//use_cv_weights ? kCVXSecWeights : kUnweighted);
     PredictionInterp predInterpFDNumu(systlist, this_calc, genFDNumu,
                                       these_loaders);
     PredictionInterp predInterpFDNue(systlist, this_calc, genFDNue,
@@ -311,12 +315,15 @@ void MakePredictionInterp(TDirectory *saveDir, SampleType sample,
     SpectrumLoader loaderNumu(non_swap_file_list, max);
     these_loaders.AddLoader(&loaderNumu, caf::kNEARDET, Loaders::kMC);
 
+// Same with the weights and cuts here
     NoOscPredictionGenerator genNDNumu(
         *axes.NDAx,
-        use_selection
-            ? (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV
-            : kIsTrueFV,
-        use_cv_weights ? kCVXSecWeights : kUnweighted);
+//        use_selection
+//            ? (isfhc ? kPassND_FHC_NUMU : kPassND_RHC_NUMU) && kIsTrueFV
+//            : kIsTrueFV,
+	 kIsNumu,
+//        use_cv_weights ? kCVXSecWeights : kUnweighted);
+	kUnweighted);
 
     PredictionInterp predInterpNDNumu(systlist, this_calc, genNDNumu,
                                       these_loaders);
@@ -340,7 +347,7 @@ GetPredictionInterps(std::string fileName,
 
   // Make sure the syst registry has been populated with all the systs we could
   // want to use
-  static std::vector<const ISyst *> systs = GetListOfSysts();
+  static std::vector<const ISyst *> systs = {};//GetListOfSysts();
 
   // Hackity hackity hack hack
   bool fileNameIsStub = (fileName.find(".root") == std::string::npos);
@@ -994,9 +1001,9 @@ double RunFitPoint(std::string stateFileName, std::string sampleString,
       }
     }
 
-    std::vector<ana::ISyst const *> fdlos =
-        GetListOfSysts(false, false, false, false, false, false,
-                       true /*add fake data*/, false);
+    std::vector<ana::ISyst const *> fdlos = {};
+    //    GetListOfSysts(false, false, false, false, false, false,
+     //                  true /*add fake data*/, false);
     syststoload.insert(syststoload.end(), fdlos.begin(), fdlos.end());
     PI_load = false;
   }

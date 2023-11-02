@@ -4,6 +4,7 @@
 
 namespace ana
 {
+  /*
 const Cut kPassFD_CVN_NUE(
                           [](const caf::SRProxy* sr)
                           {
@@ -41,4 +42,6 @@ const Cut kPassND_RHC_NUMU(
                                      //                                     sr->reco_q == +1 && 
                                      sr->Ehad_veto<30);
                            });
+                           */
+
 }

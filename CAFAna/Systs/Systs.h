@@ -10,6 +10,9 @@
 
 namespace ana
 {
+
+// Just leaving everything at a flat 5% normalization shift because I'm too lazy to actually update these
+
   ///ETW Rework of Normalization Systematics
 
   //Signal normalization
@@ -23,7 +26,9 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000001) weight *= 1 + .05*sigma;
+      //if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000001) weight *= 1 + .05*sigma;
+     // if(sr->mc.nu[0].iscc && abs(sr->mc.nu[0].pdg)==14 && sr->run==20000001) weight *= 1 + .05*sigma;
+       weight *= 1 + .05*sigma;
     }
   };
 
@@ -38,7 +43,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000004) weight *= 1 + .05*sigma;
+      //if(sr->isCC && abs(sr->nuPDG)==14 && sr->run==20000004) weight *= 1 + .05*sigma;
+       weight *= 1 + .05*sigma;
     }
   };
 
@@ -53,7 +59,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000002) weight *= 1 + .02*sigma;
+      //if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000002) weight *= 1 + .02*sigma;
+       weight *= 1 + .05*sigma;
     }
   };
 
@@ -68,7 +75,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000005) weight *= 1 + .02*sigma;
+      //if(sr->isCC && abs(sr->nuPDG)==12 && sr->run==20000005) weight *= 1 + .02*sigma;
+       weight *= 1 + .05*sigma;
     }
   };
 
@@ -85,7 +93,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(!sr->isCC && sr->cvnnumu > 0.5 && sr->cvnnue < 0.5) weight *= 1 + .1*sigma;
+      //if(!sr->isCC && sr->cvnnumu > 0.5 && sr->cvnnue < 0.5) weight *= 1 + .1*sigma;
+      weight *= 1 + .05*sigma;
     }
   };
 
@@ -100,7 +109,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if((!sr->isCC && sr->cvnnue > 0.5 && sr->cvnnumu < 0.5) || (sr->isCC && abs(sr->nuPDG)==14)) weight *= 1 + .05*sigma;
+      //if((!sr->isCC && sr->cvnnue > 0.5 && sr->cvnnumu < 0.5) || (sr->isCC && abs(sr->nuPDG)==14)) weight *= 1 + .05*sigma;
+      weight *= 1 + .05*sigma;
     }
   };
 
@@ -115,7 +125,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG)==16) weight *= 1 + .2*sigma;
+      //if(sr->isCC && abs(sr->nuPDG)==16) weight *= 1 + .2*sigma;
+      weight *= 1 + .05*sigma;
     }
   };
 
@@ -130,7 +141,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && sr->run<20000004) weight *= 1 + .05*sigma;
+      //if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && sr->run<20000004) weight *= 1 + .05*sigma;
+       weight *= 1 + .05*sigma;
     }
   };
 
@@ -145,7 +157,8 @@ namespace ana
     void Shift(double sigma,
                caf::SRProxy* sr, double& weight) const override
     {
-      if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && !(sr->run<20000004)) weight *= 1 + .05*sigma;
+      //if(sr->isCC && abs(sr->nuPDG) == 12 && abs(sr->nuPDGunosc) == 12 && !(sr->run<20000004)) weight *= 1 + .05*sigma;
+      weight *= 1 + .05*sigma;
     }
   };
 
