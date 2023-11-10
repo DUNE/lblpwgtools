@@ -249,20 +249,53 @@ void PRISMRegOptimizer(fhicl::ParameterSet const &reg_scan) {
   f.Write();
   
 }
+void SayUsage(char const *argv[]) {
+  std::cout
+      << "[USAGE]: " << argv[0] << "\n"
+      << "\t--fcl <file>    : Input fcl file - always needed.\n"
+      << std::endl;
+}
 
 int main(int argc, char const *argv[]) {
   // Make sure systs are applied to ND distributions which are per 1 POT.
   setenv("CAFANA_PRED_MINMCSTATS", "20", 1);
   gROOT->SetMustClean(false);
+  std::string fcl("");
+  int opt(1);
 
-  if (argc != 2) {
-    std::cout << "[ERROR]: Expected to be passed the location of a single "
-                 "configuration FHiCL file."
-              << std::endl;
-    return 1;
+  while (opt < argc) {
+    if (std::string(argv[opt]) == "-?" || std::string(argv[opt]) == "--help") {
+      SayUsage(argv);
+      exit(0);
+    } else if (std::string(argv[opt]) == "--fcl") {
+      fcl = argv[++opt];
+    } else {
+      std::cout << "[ERROR] Unknown option." << std::endl;
+      exit(1);
+    }
+    opt++;
   }
 
-  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(argv[1]);
+  if (fcl == "") {
+    std::cout << "[ERROR] Need a fcl file." << std::endl;
+    exit(1);
+  }
+
+
+//  if (argc != 2) {
+//    std::cout << "[ERROR]: Expected to be passed the location of a single "
+//                 "configuration FHiCL file."
+//              << std::endl;
+//    return 1;
+//  }
+
+//  fhicl::ParameterSet const &ps = fhicl::make_ParameterSet(argv[1]);
+
+  // Allow the fhiclcpp to lookup the included fcl scripts
+  cet::filepath_first_absolute_or_lookup_with_dot
+    f_maker((ana::FindCAFAnaDir() + "/fcl/PRISM/").c_str());
+  
+  fhicl::ParameterSet const &ps = fhicl::ParameterSet::make(fcl, f_maker);
 
   for (fhicl::ParameterSet const &reg_scan :
        ps.get<std::vector<fhicl::ParameterSet>>("reg_scans")) {

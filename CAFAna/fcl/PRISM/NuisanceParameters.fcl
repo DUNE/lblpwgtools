@@ -324,7 +324,7 @@ nuisance_parameters: {
 
 	fluxSeptNovComb: [
 		@sequence::nuisance_parameter_sets.fluxSept21Focussing,
-		@sequence::nuisance_parameter_sets.fluxHadProd10,
+		@sequence::nuisance_parameter_sets.fluxHadProd10
 	]
 	
 	xsec_total: [

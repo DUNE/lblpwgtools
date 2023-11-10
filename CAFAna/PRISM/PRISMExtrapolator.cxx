@@ -198,14 +198,12 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
       GetNDPred(antimatch_chan.from.mode, 293); // Can be flux OR ev rate
   Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
-  NDOffAxis_293kA_spec_AntiChannel.OverridePOT(1);
   // Get 293kA sample at ND.
 
   PredictionInterp const *NDPredInterp_280kA_AntiChannel =
       GetNDPred(antimatch_chan.from.mode, 280); // Can be flux OR ev rate
   Spectrum NDOffAxis_280kA_spec_AntiChannel = NDPredInterp_280kA_AntiChannel->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
-  NDOffAxis_280kA_spec_AntiChannel.OverridePOT(1);
   // Get 280kA sample
 
   // Need to remove underflow and overflow elements.
