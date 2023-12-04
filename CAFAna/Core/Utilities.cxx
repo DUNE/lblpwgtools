@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cmath>
 #include <fstream>
+#include <iostream>
 #include "sys/stat.h"
 #include "wordexp.h"
 #include <dirent.h>
@@ -788,5 +789,20 @@ std::vector<std::string> GetMatchingFiles(std::string directory,
       }
     }
   }
+  return matches;
+}
+
+std::vector<std::string> GetCAFFilesFromInputList(std::string InputFilePattern){
+
+  std::string line;
+  std::ifstream Inputfile(InputFilePattern.c_str());
+  std::vector<std::string> matches;
+
+  if(Inputfile.is_open()){
+    while(getline(Inputfile, line)){
+      matches.push_back(line);
+    }
+  }
+
   return matches;
 }

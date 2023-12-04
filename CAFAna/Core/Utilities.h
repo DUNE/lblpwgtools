@@ -276,3 +276,6 @@ std::string parse_stdRegex_ErrorCode(std::regex_constants::error_type etype);
 std::vector<std::string> GetMatchingFiles(std::string directory,
                                           std::string pattern,
                                           bool IncDir = true);
+
+//get input root files from an input file containging a list with the desired input files
+std::vector<std::string> GetCAFFilesFromInputList (std::string InputFilePattern);

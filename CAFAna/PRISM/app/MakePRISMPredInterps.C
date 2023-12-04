@@ -193,6 +193,7 @@ int main(int argc, char const *argv[]) {
       size_t class_loc = InputFilePattern.find_first_of('[');
       size_t earliest_regex = std::min(asterisk_loc, class_loc);
       size_t last_slash_loc = InputFilePattern.find_last_of('/');
+      size_t root_loc = InputFilePattern.find("root");
 
       if ((asterisk_loc != std::string::npos) &&
           (last_slash_loc != std::string::npos) &&
@@ -214,7 +215,15 @@ int main(int argc, char const *argv[]) {
 
       std::vector<std::string> CAFs;
       if (earliest_regex == std::string::npos) {
-        CAFs.push_back(dir + pattern);
+                    
+        if(root_loc != earliest_regex){
+          std::cout<<" we have a root file in the input"<<std::endl;
+          CAFs.push_back(dir + pattern);
+        }
+        else{
+          std::cout<<" no root file in the input. please specify the txt/list file containing your desired root file locations"<<std::endl;
+          CAFs = GetCAFFilesFromInputList(InputFilePattern);
+        }
       } else {
         try {
           CAFs = GetMatchingFiles(dir, pattern);
@@ -258,6 +267,7 @@ int main(int argc, char const *argv[]) {
   // needed for the PredInterps that are used to
   // determine the PRISM coefficient
   std::vector<ana::ISyst const *> los_nd, los_fd, los_flux;
+
   if (syst_descriptor.size()) {
     los_nd = GetListOfSysts(syst_descriptor, true, false);
     los_fd = GetListOfSysts(syst_descriptor, false, true);

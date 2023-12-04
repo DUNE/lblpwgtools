@@ -1,0 +1,6 @@
+This directory contains scripts used for submitting jobs that will produce state files containing more than 1 input CAF file/ job 
+-> default is 1 state with 1 input CAF file / job and can be run by using the ./FarmBuildPRISMInterps.sh from /PRSIM/scripts/FermiGridPRISMScripts driectory
+
+This script (more specifically BuildPRISMInterpsMoreStateFilesPerJobs.sh) is reading the first (here 100) n lines from an input file (i.e InputCAFS.ND_FHC.list) containing a list with all FHC/RHC CAF files. It then submits a job which will create a stat file containing the info from the 100 CAF files.
+
+As a result, by running this script only 9 jobs are submitted and 9 state files(8 state files containing 100 input CAFs + the 9th state file corresponding to the last 67 input CAFS) are created for the RHC case (total input RHC CAF files = 867), as opposed to before where 867 jobs were submitted and 867 state files were obtained for the RHC case. Similarly now for FHC case we submit 8 jobs and obtain 8 state files (7 state files containing 100 input files + 1 state file containing the las 50 input CAFS) for the total of 750 FHC input CAFs. Before 750 jobs were submitted and 750 state files were produced for the FHC case
