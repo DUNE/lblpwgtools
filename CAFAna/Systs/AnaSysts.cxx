@@ -19,7 +19,8 @@
 #include <string>
 #include <vector>
 
-size_t NFluxParametersToAddToStatefile = 43;
+size_t NFluxParametersToAddToStatefile = 45; //change this when switchig from Nov17 (=23 pars) to Sept21 (=45pars)
+//size_t NFluxParametersToAddToStatefile = 23;
 
 namespace ana
 {

@@ -186,6 +186,7 @@ inline std::vector<XSecDialDescriptor> const &GetAllXSecDials() {
       fslilikesmear->IsFitSyst = kFitSyst;
       fslilikesmear->IsExtrapolateOffToOnSyst = kExtrapolated;
       fslilikesmear->FitLimits = kStandardRange;
+
     }
   }
 

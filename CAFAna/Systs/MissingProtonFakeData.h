@@ -67,7 +67,7 @@ public:
 
     sr->HadE = (1.0 - EpFrac) * sr->eP + sr->ePip + sr->ePim +
                sr->ePi0 + eother;
-
+               
     sr->HadE_param = (1.0 - EpFrac) * sr->eP_param + sr->ePip_param + 
                      sr->ePim_param + sr->ePi0_param + sr->eOther_param;
 
