@@ -23,8 +23,8 @@ static ana::NewOffAxisFluxUncertainty2022Helper const *fNewOffAxisFluxUncertaint
 #include <algorithm>
 
 namespace ana {
-const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(43);
-
+const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(45); //was 23 for Nov17
+//const DUNEFluxSystVector kFluxSysts = GetDUNEFluxSysts(23);
 //----------------------------------------------------------------------
 DUNEFluxSyst::~DUNEFluxSyst() {
   for (int i : {0, 1})
