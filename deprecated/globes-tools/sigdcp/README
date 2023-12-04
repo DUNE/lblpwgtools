@@ -1,0 +1,15 @@
+
+
+*Compile*
+If your environment variables are set correctly (see /lbne/app/users/lblpwg_tools/globes_setup.sh on lbnegpvm01) then you should just be able to run "make sigdcp"
+
+
+*Running*
+An example command:
+~/lbne-lblpwgtools/trunk/code/globes-tools/sigdcp/sigdcp -p '0.593,0.154,0.705,0,0.0000758,0.00235' -E '0.03,0.03,0.11,0,0.03,0.05' -T3 numi810_v2.glb numi810_anti_v2glb ~/lbne-lblpwgtools/trunk/code/globes-tools/sigdcp/altsAnalysis_mh/alts_ashriver_30kt.dat&
+
+-T3 specificies that mass hiearchy sensitivities are to be generated. For now, read the source for other options.
+
+
+
+More to follow...

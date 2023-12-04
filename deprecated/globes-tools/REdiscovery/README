@@ -1,0 +1,18 @@
+REdiscovery
+
+This is a modified version of discovery.c from the official globes distribution. It adds:
+
+*references to customChi functions
+*ability to output chi-squared spectra for particular values of osc parameters
+*s22q13 vs dcp confidence regions for the input q13 value and pi/2,0,-pi/2 (with correlations)
+*options to change the chi function without modifying the glb file
+*changes to the test option; test will cause all minimizations to use glbChiSys instead of the usual projection
+*options to print out the final values of systematic nuissance parameters
+
+
+To build it:
+make REdiscovery
+
+To run it:
+
+./REdiscovery -p '0.57964,0.160875277,0.785398,0,0.000079,0.0024' -s0.04 -a0.1 -d0.02 -T0.1 --Resolution=1,30 --Xrange=-0.793095,-0.793095 exp_la_nu_v3.glb exp_la_anu_v3.glb outputFile

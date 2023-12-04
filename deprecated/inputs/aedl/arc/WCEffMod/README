@@ -1,0 +1,58 @@
+
+This file is a description of the files contained in the WCEFFMod branch. 
+In general, the latest version should be the most "correct" and up to date.
+The older versions are kept just for reference/comparisons.
+
+
+Key:
+	T2KK refers to the paper: "Further study of neutrino oscillation with two detectors in Kamioka and Korea", F. Dufour, T. Jajita, E. Kearns, and K. Okumura, Phys Rev D 81, 093001 (2010)
+	Chiaki refers to private communications from Mary Bishai and the paper: "Background Study on $\nu_{e}$ Appearance from a $\nu{e}$ Beam in Very Long Baseline Neutrino Oscillation Experiments with a Large Water Cherenkov Detector", C. Yanagisawa, C.K. Jung, P.T. Le, 8/1/2010, arXiv:1008.1019v1
+	BNL Flux refers to 30Gev LBNE beam flux files at http://lbne2-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=2463.
+	LBNE Flux refers to 120Gev LBNE beam flux files at http://lbne2-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=2511.
+	ver2 refers to using Cubic Spline interpolation rather than a linear interpolation .
+	ver3 corrects a mistake where CC cross sections were used instead of CCNonQE.
+	ver4 uses no interpolation. It just uses bin by bin values from T2KK
+	ver5 updates ver3 to use new (interpolated) pre-cut efficiencies presented by Ed Kearns on 2/7/2011 (docdb 3400)
+	ver5p1 fixes ver5 to use interpolated values on postcuts.
+
+Descriptions of the various files:
+BNL_anti_ORIGpost40.glb: 						PWG anu pre/post with BNL Flux
+BNL_anti_T2KKishpost80.glb: 					T2KK anu pre/post efficiencies that are scaled up from nu mode with BNL flux
+BNL_nu_ORIGpost40.glb							PWG nu pre/post with BNL Flux
+BNL_nu_T2KKpost80cov20.glb						T2KK nu pre/post efficiencies with post efficiencies for 20% coverage; with BNL flux
+BNL_nu_T2KKpost80.glb							T2KK nu pre/post efficiencies with post efficiencies for 40% coverage; with BNL flux
+
+LBNE_anti_CDR_ORIGpost40.glb					PWG anu pre/post with LBNE Flux
+LBNE_anti_CDR_T2KKishpost80.glb					T2KK anu pre/post efficiencies that are scaled up from nu mode with LBNE flux
+LBNE_nu_CDR_ORIGpost40.glb						PWG nu pre/post with LBNE Flux
+LBNE_nu_CDR_T2KKpost80cov20.glb					T2KK nu pre/post efficiencies with post efficiencies for 20% coverage; with LBNE flux
+LBNE_nu_CDR_T2KKpost80.glb						T2KK nu pre/post efficiencies with post efficiencies for 40% coverage; with LBNE flux
+
+ver2_LBNE_anti_Chiakis_precov40.glb				Chiaki anu post; T2KK pre; with QE and CC separated; LBNE flux
+ver2_LBNE_anti_Chiakis_precov40_nueavg.glb		Chiaki anu post; T2KK pre; using nu_e avg efficiencies; LBNE flux
+ver2_LBNE_anti_Chiakis_prePWG_nueavg.glb		Chiaki anu post; PWG pre; using nu_e avg efficiencies; LBNE flux
+ver2_LBNE_anti_T2KK_precov40.glb				T2KK anu post; T2KK pre; with QE and CC separated; LBNE flux
+ver2_LBNE_anti_T2KK_precov40_nueavg.glb			T2KK anu post; T2KK pre; using nu_e avg efficiencies; LBNE flux
+ver2_LBNE_nu_Chiakis_precov40.glb				Chiaki nu post; T2KK pre; with QE and CC separated; LBNE flux
+ver2_LBNE_nu_Chiakis_precov40_nueavg.glb		Chiaki nu post; T2KK pre; using nu_e avg efficiencies; LBNE flux
+ver2_LBNE_nu_Chiakis_prePWG_nueavg.glb			Chiaki nu post; PWG pre; using nu_e avg efficiencies; LBNE flux
+ver2_LBNE_nu_T2KK_precov40.glb					T2KK nu post; T2KK pre; with QE and CC separated; LBNE flux
+ver2_LBNE_nu_T2KK_precov40_nueavg.glb			T2KK nu post; T2KK pre; using nu_e avg efficiencies; LBNE flux
+
+ver3_LBNE_anti_T2KK_precov40.glb				LBNE anu flux; Uses CCNonQE instead of (incorrect) CC cross sections for appropriate channels; T2KK precuts/postcuts
+ver3_LBNE_nu_T2KK_precov40.glb					LBNE anu flux; Uses CCNonQE instead of (incorrect) CC cross sections for appropriate channels; T2KK precuts/postcuts
+
+ver4_LBNE_anti_T2KK_precov40.glb				LBNE anu flux; A non-interpolated version of the pre/post efficiencies from the T2KK paper.
+ver4_LBNE_nu_T2KK_precov40.glb					LBNE nu flux; A non-interpolated version of the pre/post efficiencies from the T2KK paper.
+
+ver5_LBNE_nu_T2KK_sk1.glb						LBNE nu flux; interpolated 2/7 updated pre-cut efficiencies; 40% coverage
+ver5_LBNE_anu_T2KK_sk1.glb						LBNE anu flux; interpolated 2/7 updated pre-cut efficiencies; 40% coverage
+ver5_LBNE_nu_T2KK_sk2.glb						LBNE nu flux; interpolated 2/7 updated pre-cut efficiencies; 20% coverage
+ver5_LBNE_anu_T2KK_sk2.glb						LBNE anu flux; interpolated 2/7 updated pre-cut efficiencies; 20% coverage
+
+ver5p1_LBNE_nu_T2KK_sk2.glb						LBNE nu flux; interpolated 2/7 updated pre-cut efficiencies; 20% coverage; corrected post-cuts to use interpolated values
+ver5p1_LBNE_anu_T2KK_sk2.glb					LBNE anu flux; interpolated 2/7 updated pre-cut efficiencies; 20% coverage; corrected post-cuts to use interpolated values
+
+BGTILT_*										first attempts at independent BG systs; ignore for now...
+
+

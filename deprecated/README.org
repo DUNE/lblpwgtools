@@ -1,0 +1,106 @@
+#+TITLE: Long baseline physics working group tools
+
+This repository contains code and documents writing by the DUNE
+long-baseline physics working group.
+
+* Code
+
+** MGT
+
+My Globes Tool
+
+*** Prerequisites
+
+Install the version of Globes from:
+
+  https://dune.bnl.gov/globes/globes-3.2.13-dune1.tar.gz
+
+#+BEGIN_EXAMPLE
+  $ tar -xvf globes-3.2.13-dune1.tar.gz
+  $ cd globes-3.2.13-dune1
+  $ ./configure --prefix=/path/to/install/globes-3.2.13-dune1
+  $ make install
+#+END_EXAMPLE
+
+Notes:
+
+- This is version 3.2.13 with some additional, required files from 3.1.11.
+
+*** Get Source
+
+#+BEGIN_EXAMPLE
+  $ git clone https://github.com/DUNE/lblpwgtools.git
+  $ cd lblpwgtools
+  $ git checkout X.Y.Z
+#+END_EXAMPLE
+
+Notes:
+
+- use =git tag= to see what tags are available
+- releases can also be download from https://github.com/DUNE/lblpwgtools/releases
+
+*** Build =mgt=
+
+#+BEGIN_EXAMPLE
+  $ cd code/mgt
+  $ ./waf \
+     --with-globes=/path/to/install/globes-3.2.13-dune1 \
+     --with-gsl=/path/to/install/gsl-1.16 \
+     --prefix=/path/to/install/mgt-X.Y.Z \
+       configure build install
+#+END_EXAMPLE
+
+Notes:
+
+- the =--with-globes= can be omitted if the =globes-config= scriopt is in your =PATH=, likewise for GSL.
+- the =--prefix= and =install= can be omitted if you just want to copy the resulting =tmp/mgt= program somewhere
+
+*** Build under Fermilab UPS
+
+Fermilab doesn't have GSL installed as a system package.  Instead if provides it through the Unintelligible Packaging Schizophrenia.  So, first corrupt your environment with some action like:
+
+#+BEGIN_EXAMPLE
+  $ source /nusoft/app/externals/setup
+  $ setup gsl v1_16 -q prof
+#+END_EXAMPLE
+
+Note, you *must* do this.  Simply knowing where the GSL UPS "product"
+is installed and pointing waf at the =gsl-config= will not work as
+Fermilab messes with =gsl-config= to force it to depend on UPS
+environment.
+
+Now build GLoBES:
+
+#+BEGIN_EXAMPLE
+  $ cd /lbne/app/users/bv/
+  $ wget https://dune.bnl.gov/globes/globes-3.2.13-dune1.tar.gz
+  $ tar -xvf globes-3.2.13-dune1.tar.gz
+  $ cd globes-3.2.13-dune1
+  $ ./configure --prefix=/lbne/app/users/bv/opt
+  $ make install
+#+END_EXAMPLE
+
+Now build MGT.  This example installs it along side GLoBES but one may chose another location if desired.
+
+#+BEGIN_EXAMPLE
+  $ cd /lbne/app/users/bv/
+  $ git clone git@github.com:DUNE/lblpwgtools.git
+  $ cd lblpwgtools/code/mgt/
+  $ ./waf --prefix=/lbne/app/users/bv/opt \
+              --with-globes=/lbne/app/users/bv/opt \
+                configure build install
+#+END_EXAMPLE
+
+If developing, this is your loop:
+
+#+BEGIN_EXAMPLE
+  $ ./waf
+  $ ./tmp/mgt [...]
+#+END_EXAMPLE
+
+Or, you can do a full =waf install= and add the installation =bin/= directory to your =PATH=.
+
+* History
+
+This repository is a fork of and older [[https://cdcvs.fnal.gov/redmine/projects/lbne-lblpwgtools][redmine]].
+

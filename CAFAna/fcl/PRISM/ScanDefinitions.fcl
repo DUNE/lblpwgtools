@@ -1,0 +1,52 @@
+ScanDefinitions: {
+	ssth23: [
+		{	
+			name: ssth23
+			scan_steps:  [50, 0.40, 0.65]
+		}
+	]
+
+	dmsq32: [
+		{
+			name: dmsq32
+			scan_steps:  [50, 2.3E-3, 2.55E-3]
+		}
+	]
+
+	ssth23_dmsq32: [
+		{
+			name: ssth23
+			scan_steps:  [50, 0.40, 0.65]
+		},
+		{
+			name: dmsq32
+			scan_steps:  [50, 2.3E-3, 2.55E-3]
+		}
+	]
+
+	dcp: [
+		{
+			name: deltapi
+			scan_steps: [50, -1, 1]
+		}
+	]
+
+	ss2th13: [
+		{
+			name: ss2th13
+			scan_steps: [50, 0.05, 0.15]
+		}
+	]
+
+	dcp_sstth13: [
+		{
+			name: deltapi
+			scan_steps: [50, -1, 1]
+		},
+		{
+			name: ss2th13
+			scan_steps: [50, 0.05, 0.15]
+		}
+	]
+}
+

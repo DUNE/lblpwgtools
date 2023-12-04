@@ -1,0 +1,13 @@
+dusel120e250(n)i002dr280dz_tgtz30_1300km_0kmoa_flux.txt:
+	See http://lbne2-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=2511
+dusel030e250(n)i002dr280dz_1300km_0kmoa_flux:
+	See http://lbne2-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=2463
+
+For all the rest, see:
+LBNE-doc-2463
+	
+
+
+dusel090e250(n)i002dr280dz_tac1b_1300km_0kmoa_flux.txt:
+    90GeV beam with a fully embedded hybrid carbon-tantalum target
+

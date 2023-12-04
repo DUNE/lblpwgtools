@@ -1,0 +1,20 @@
+import ROOT
+ROOT.gROOT.SetBatch(1)
+
+if __name__ == "__main__":
+	f = ROOT.TFile("asimov_throws_comp_hists/dcp_singlept_asimovscan_throwshist_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.root")
+	throws_hist = f.Get("throws_hist")
+	can = ROOT.TCanvas()
+	f.Draw("HIST")
+	can.Print("asimov_throws_comp_plots/dcp_singlept_throwshist_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.png")
+	can.Print("asimov_throws_comp_plots/dcp_singlept_throwshist_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf")
+	can.Clear()
+	asimov_graph = f.Get("asimov_graph")
+	h = ROOT.TH2D()
+	h.SetTitle(";Scan #delta_{CP};#Delta#chi^{2}")
+	h.GetXaxis().SetLimits(-1,1)
+	h.GetYaxis().SetLimits(0,20)
+	h.Draw()
+	asimov_graph.Draw("C")
+	can.Print("asimov_throws_comp_plots/dcp_singlept_asimovgraph_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.png")
+	can.Print("asimov_throws_comp_plots/dcp_singlept_asimovgraph_ndfd100_hie1_th13=dyb_th23=0.58_dcp=-0.25.pdf")
