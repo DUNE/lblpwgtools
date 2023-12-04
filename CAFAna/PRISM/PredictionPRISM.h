@@ -107,6 +107,11 @@ public:
     kExtrapCovarMatrix_WSB = 65,
     kNDFDWeightings_293kAWSB = 66,
     kNDFDWeightings_280kAWSB = 67,
+    kPRISMMCWSB = 68,
+    kNDMCExtrap_293kAWSB = 69,
+    kNDMCExtrap_280kAWSB = 70,
+    kNDMC_FDExtrapWSB = 71,
+    kFDOscPredWSB = 72,
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -317,6 +322,22 @@ public:
     case kNDFDWeightings_280kAWSB: {
       return "NDFDWeightings_280kWSB";
     }
+    case kPRISMMCWSB: {
+      return "PRISMMCWSB";
+    }
+    case kNDMCExtrap_293kAWSB: {
+      return "NDMCExtrap_293kAWSB";
+    }
+    case kNDMCExtrap_280kAWSB: {
+      return "NDMCExtrap_280kAWSB";
+    }
+    case kNDMC_FDExtrapWSB: {
+      return "NDMC_FDExtrapWSB";
+    }
+    case kFDOscPredWSB: {
+      return "FDOscPredWSB";
+    }
+ 
 
     }
     return "";

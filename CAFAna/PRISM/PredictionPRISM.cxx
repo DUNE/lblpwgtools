@@ -1248,6 +1248,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   // 8. Weight extrapolated 280kA ND data by linear combination coeffiecient.
   Comps.emplace(kNDDataExtrap_280kA, sNDExtrap_280kA.WeightedByErrors(
                                          LinearCombinationCoeffs_280kA_arr));
+
   // 9. Get covariance matrix propagated through 280 linear combination.
   //    Only interested in the total covariance matrix, so no need to save a
   //    seperate 280kA covariance matrix.
@@ -1333,6 +1334,22 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
     Eigen::ArrayXd LinearCombinationCoeffs_280kA_arr_WSB =
     LinearCombinationCoefficientsSpectrun(match_chan, LinearCombinationWSB, oaAxis280, 280).GetEigen(NDPOT);
 
+   // Add the option of shifting the data for WSB as well
+   // Perform linear combination on raw (i.e. not extrapolated) ND data/MC.
+   // WSB MC linear combination:
+    if (NDCompsAntiChannel.count(kNDSig_293kA) && fDebugPlots) {
+      Comps.emplace(kNDSig_293kA,
+                    NDCompsAntiChannel.at(kNDSig2D_293kA)
+                        .WeightedByErrors(LinearCombinationCoeffs_293kA_arr_WSB));
+      Comps.emplace(kNDSig_280kA,
+                    NDCompsAntiChannel.at(kNDSig2D_280kA)
+                        .WeightedByErrors(LinearCombinationCoeffs_280kA_arr_WSB));
+
+      Comps.emplace(kPRISMMCWSB, Comps.at(kNDSig_293kA));
+      Comps.at(kPRISMMCWSB) += Comps.at(kNDSig_280kA);
+    }
+
+
    // Data linear combination WSB:
     Comps.emplace(kNDDataCorr_293kAWSB,
                   NDCompsAntiChannel.at(kNDDataCorr2D_293kA)
@@ -1349,6 +1366,13 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
         calc, FDAnaAxis, (fVaryNDFDMCData ? kNoShift : shift_nd),
         (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
         FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign);
+
+    //---this is for checking the results with no efficiency systematic shift for WSB -> just for testing
+    //--->comment below and uncomment above for correct results
+    //fMCEffCorrection_WSB->CalcEfficiency(
+    //      calc, FDAnaAxis, kNoShift,
+    //      kNoShift, NDSigFlavor,
+    //      FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign);
 
     fNDFD_Matrix_WSB->ExtrapolateNDtoFD(
         NDCompsAntiChannel.at(kNDDataCorr2D_293kA), NDPOT, 293,
@@ -1417,8 +1441,52 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
 
     // Convert final covariance matrix into 2D spectrum
     Comps.emplace(kExtrapCovarMatrix_WSB, ToSpectrum(sCovMat_AntiChannel, NDPOT));
- }
 
+    //------------------------------------------------------------
+    // Repeat extrapolation for MC for debugging & 'fake data' studies --> for WSB
+    if (NDCompsAntiChannel.count(kNDSig_293kA) && fVaryNDFDMCData && fDebugPlots) {
+
+      fNDFD_Matrix_WSB->ExtrapolateNDtoFD(
+          NDCompsAntiChannel.at(kNDSig2D_293kA), NDPOT, 293,
+          LinearCombinationCoeffs_293kA_arr_WSB, calc,
+          (fVaryNDFDMCData ? kNoShift : shift_nd),
+          (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
+          FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
+          fMCEffCorrection_WSB->GetNDefficiency(293),
+          fMCEffCorrection_WSB->GetFDefficiency());
+
+      fNDFD_Matrix_WSB->ExtrapolateNDtoFD(
+          NDCompsAntiChannel.at(kNDSig2D_280kA), NDPOT, 280,
+          LinearCombinationCoeffs_280kA_arr_WSB, calc,
+          (fVaryNDFDMCData ? kNoShift : shift_nd),
+          (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
+          FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
+          fMCEffCorrection_WSB->GetNDefficiency(280),
+          fMCEffCorrection_WSB->GetFDefficiency());
+
+      PRISMReweightableSpectrum sNDMCExtrap_293kA_AntiChannel(
+        std::move(fNDFD_Matrix_WSB->GetNDExtrap_293kA()),
+        std::move(fNDFD_Matrix_WSB->GetErrorMat_293kA()), ExtrapAnaAxis,
+        ExtrapWeightAxis, NDPOT, 0);
+
+      Comps.emplace(kNDMCExtrap_293kAWSB, sNDMCExtrap_293kA_AntiChannel.WeightedByErrors(
+                                            LinearCombinationCoeffs_293kA_arr_WSB));
+
+      PRISMReweightableSpectrum sNDMCExtrap_280kA_AntiChannel(
+        std::move(fNDFD_Matrix_WSB->GetNDExtrap_280kA()),
+        std::move(fNDFD_Matrix_WSB->GetErrorMat_280kA()), ExtrapAnaAxis,
+        Extrap280kAWeightAxis, NDPOT, 0);
+
+      Comps.emplace(kNDMCExtrap_280kAWSB, sNDMCExtrap_280kA_AntiChannel.WeightedByErrors(
+                                           LinearCombinationCoeffs_280kA_arr_WSB));
+
+      Comps.emplace(kNDMC_FDExtrapWSB, Comps.at(kNDMCExtrap_293kAWSB));
+      Comps.at(kNDMC_FDExtrapWSB) += Comps.at(kNDMCExtrap_280kAWSB);
+      Comps.at(kNDMC_FDExtrapWSB) += Comps.at(kFDFluxCorrWSB);
+    }
+
+
+ }
 
   // If we have the FD background predictions add them back in.
   // Add variances of background to diagonal of covariance matrix.
@@ -1485,8 +1553,12 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
       Comps.at(kPRISMMC) += Comps.at(kFDWSBkg);
     }
     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDWSBkg);
-    if (Comps.count(kNDMC_FDExtrap) && fDebugPlots)
-      Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
+    if (Comps.count(kNDMC_FDExtrap) && fDebugPlots){
+      if(!fMatchWSBkg)
+         Comps.at(kNDMC_FDExtrap) += Comps.at(kFDWSBkg);
+      else
+         Comps.at(kNDMC_FDExtrap) += Comps.at(kNDMC_FDExtrapWSB);
+    }
   }
 
   if (fIntrinsicCorrection) { // Add in intrinsic correction: here we only add the RS intrinsic, as the WS intrinsic is already handled by the WS flag and added in FDWSBKg)
@@ -1541,9 +1613,14 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   // Always shift FDOsc pred, as this acts as our 'shifted fd data' when
   // doing fake data shifts
   if (fDebugPlots) {
+    
     Comps.emplace(kFDOscPred,
                   FDPrediction->PredictComponentSyst(
                       calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth));
+    //save FDOsc pred for WSbkg
+    Comps.emplace(kFDOscPredWSB, FDPrediction->PredictComponentSyst(
+                     calc, shift_fd, FDSigFlavor, Current::kCC, FDWrongSign));
+
     // Sometimes may want to look just at Numu CC FD prediction, if so, un-comment
     // below and comment-out above.
     //Comps.emplace(kFDOscPred,

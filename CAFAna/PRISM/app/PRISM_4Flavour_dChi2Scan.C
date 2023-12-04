@@ -364,11 +364,20 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::array<double, 2> chan_energy_range =
       channel_conditioning.get<std::array<double, 2>>("energy_range",
                                                       {0, 4});
+    // //different fit range for WSB as optained from RegOptimizer
+    double chan_reg_293_WSB =
+      channel_conditioning.get<double>("reg_factor_293kA_WSB", 1E-16);
+    double chan_reg_280_WSB =
+      channel_conditioning.get<double>("reg_factor_280kA_WSB", 1E-16);
+    std::array<double, 2> chan_energy_range_WSB = {0.5, 4.5};
 
     fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
-                                     chan_energy_range);
+                                     chan_energy_range); 
+
     fluxmatcherWSB.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
-                                       chan_energy_range); //same targetting condition
+                                     chan_energy_range); // same targetting cond for WSB as for PRISM classic
+    //fluxmatcherWSB.SetTargetConditioning(ch, chan_reg_293_WSB, chan_reg_280_WSB,
+    //                               chan_energy_range_WSB); // different targetting condition for WSB, params set within fc
   }
 
   if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
@@ -524,6 +533,11 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   std::vector<double> y_scan;
   std::unique_ptr<TH1D> scan_hist_1D;
   std::unique_ptr<TH2D> scan_hist_2D;
+  int nSystsPars = freesysts.size();
+  int CountSysts = 0;
+  std::unique_ptr<TH1D> SystShift_1D[nSystsPars]; // histogram with syst shift corresponding to best fit
+  std::unique_ptr<TH2D> SystShift_2D[nSystsPars];
+
 
   std::cout << "Create histograms to fill with minimisation result." << std::endl;
 
@@ -535,6 +549,14 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     scan_hist_1D = std::make_unique<TH1D>("dchi2_1D", "dchi2_1D",
                                            NXSteps, x_low_bound, x_high_bound);
     scan_hist_1D->SetDirectory(nullptr);
+
+    for (auto *s : freesysts){
+      SystShift_1D[CountSysts] = std::make_unique<TH1D>(s->ShortName().c_str(), s->ShortName().c_str(),
+                                             NXSteps, x_low_bound, x_high_bound);
+      SystShift_1D[CountSysts]->SetDirectory(nullptr);
+      CountSysts += 1;
+    }
+
     // place the scan points in vector
     for (int i = 0; i < scan_hist_1D->GetNbinsX(); i++) {
       x_scan.emplace_back(scan_hist_1D->GetXaxis()->GetBinCenter(i + 1));
@@ -621,6 +643,13 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
       SystShifts bestSysts = kNoShift;
       double chi = fitter.Fit(calc_fit, bestSysts, oscSeedsList,
                               {}, MinuitFitter::kVerbose)->EvalMetricVal();
+
+      CountSysts = 0;
+      for (auto *s : freesysts) {
+        SystShift_1D[CountSysts]->Fill(x, bestSysts.GetShift(s));
+        CountSysts += 1;
+      }
+
       // fill hist
       double minchi = TMath::Max(chi, 1e-6);
       scan_hist_1D->Fill(x, minchi);
@@ -643,6 +672,12 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::vector<double> fPostFitErrors = fitter.GetPostFitErrors();
     for (size_t i = 0; i < fParamNames.size(); i++) {
       std::cout << fParamNames[i] << " = " << fPostFitValues[i] << "+/-" << fPostFitErrors[i] << ";" << std::endl;
+    }
+    // write histogram with best fit values of syst parameters
+    CountSysts = 0;
+    for (auto *s : freesysts) {
+      dir->WriteTObject(SystShift_1D[CountSysts].get(), s->ShortName().c_str());
+      CountSysts += 1;
     }
   }
   //-----------------------
@@ -711,7 +746,7 @@ int main(int argc, char const *argv[]) {
 
   std::cout << "CAFANA_PRED_MINMCSTATS = " << getenv("CAFANA_PRED_MINMCSTATS") << std::endl;
   std::cout << "FIT_TOLERANCE = " << getenv("FIT_TOLERANCE") << 
-    "; FIT_PRECISION = " << getenv("FIT_PRECISION") << std::endl;
+    "; FIT_PRECISION = " << getenv("FIT_PRECISION") << std::endl;    
   gROOT->SetMustClean(false);
 
   int fit_binx(-1), fit_biny(-1), opt(1);

@@ -183,6 +183,10 @@ namespace ana {
     fNDExtrap->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
     fErrorMat->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
 
+    //initialize matrices
+    fNDExtrap->setZero();
+    fErrorMat->setZero();
+
     Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD.rows(),
                                                           hMatrixFD.rows());
 

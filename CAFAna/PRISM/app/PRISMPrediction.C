@@ -236,11 +236,22 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::array<double, 2> chan_energy_range =
         channel_conditioning.get<std::array<double, 2>>("energy_range",
                                                         {0, 4});
+    //different fit range for WSB as optained from RegOptimizer
+    double chan_reg_293_WSB =
+      channel_conditioning.get<double>("reg_factor_293kA_WSB", 1E-16);
+    double chan_reg_280_WSB =
+      channel_conditioning.get<double>("reg_factor_280kA_WSB", 1E-16);
+    std::array<double, 2> chan_energy_range_WSB = {0.5, 4.5};
+
+    std::cout<<" for classic PRISM prediction: lambda 293 = "<<chan_reg_293<<" Elow = "<<chan_energy_range[0]<<" Emax = "<<chan_energy_range[1]<<std::endl;
+    std::cout<<" for WSB PRISM prediction: lambda 293 = "<<chan_reg_293_WSB<<" Elow = "<<chan_energy_range_WSB[0]<<" Emax = "<<chan_energy_range_WSB[1]<<std::endl;
 
     fluxmatcher.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
                                         chan_energy_range);
+    //fluxmatcherWSB.SetTargetConditioning(ch, chan_reg_293_WSB, chan_reg_280_WSB,
+       //                                    chan_energy_range_WSB); // different targetting condition for WSB, params set within fc
     fluxmatcherWSB.SetTargetConditioning(ch, chan_reg_293, chan_reg_280,
-                                        chan_energy_range); //same targetting condition
+                                          chan_energy_range); // same targetting cond for WSB as for PRISM classic
   }
 
   if ( PRISM_write_debug ){
@@ -434,11 +445,11 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
         } else if (comp.first == PredictionPRISM::kFD_NumuNueCorr) {
           continue;
         } else if(comp.first == PredictionPRISM::kNDFDWeightings_293kA){
-  	    continue;
-  	} else if(comp.first == PredictionPRISM::kNDFDWeightings_280kA){
-  	    continue;
+  	  continue;
+        } else if(comp.first == PredictionPRISM::kNDFDWeightings_280kA){
+  	  continue;
   	} else if(comp.first == PredictionPRISM::kNDFDWeightings_293kAWSB){
-  	    continue;
+  	  continue;
   	} else if(comp.first == PredictionPRISM::kNDFDWeightings_280kAWSB){
   	    continue;
   	}

@@ -3,6 +3,7 @@ set(APPS
   hadd_fits
   OffAxisPOTCalc
   produce_flux_syst_inputs
+  hadd_fitsWithFluxSystShift
 )
 
 foreach(APP ${APPS})
