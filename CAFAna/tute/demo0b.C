@@ -44,13 +44,12 @@ void demo0b()
   const Cut kIsMuon([](const caf::SRRecoParticleProxy* sr)
                       {
                         //todo
-                        return (sr->truth.iscc &&
-                                abs(sr->truth.pdg) == 13);
+                        return abs(sr->pdg) == 13 ;
                       });
 
-// where the magic happens
-  Spectrum sEnergySig(loader.Interactions()[kIsNumuCC].Particles()[kIsMuon], axEnergy);
-
+// where the magic happens //   .dlp or .pandora ...
+  Spectrum sEnergySig(loader.Interactions()[kIsNumuCC].dlp.Particles()[kIsMuon], axEnergy);
+// or InteractionsDLP/Pandora
   // Fill in the spectrum
   loader.Go();
 
