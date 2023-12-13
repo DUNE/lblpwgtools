@@ -23,6 +23,7 @@ set(Core_header_files
   FixupRecord.h
   HistAxis.h
   IFitVar.h
+  IRecordSink.h
   IRecordSource.h
   ISyst.h
   Loaders.h
