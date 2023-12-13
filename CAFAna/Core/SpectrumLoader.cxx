@@ -163,7 +163,7 @@ namespace ana
     assert(tr);
 
     // I think this is ok
-    caf::SRProxy sr(tr, "");
+    caf::SRProxy sr(tr, "rec");
 
     FloatingExceptionOnNaN fpnan(false);
 
