@@ -41,7 +41,8 @@ namespace ana
 *  }
 */
 // This is all deleagted to cafanacore??
-  // Work around ReweightableSpectrum's friend requirements
+// Work around ReweightableSpectrum's friend requirements
+
 /*  struct ReweightableSpectrumSink
 *  {
 *    static void AddLoader(ReweightableSpectrum** rw){(*rw)->AddLoader(rw);}
