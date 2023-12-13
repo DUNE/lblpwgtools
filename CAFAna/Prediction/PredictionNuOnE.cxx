@@ -30,14 +30,12 @@ namespace ana
   const Weight kNCScaleFactor([](const caf::SRProxy* sr){return .1;});
 
   // --------------------------------------------------------------------------
-  PredictionNuOnE::PredictionNuOnE(SpectrumLoaderBase& sigLoader,
-                                   SpectrumLoaderBase& ccBkgLoader,
-                                   SpectrumLoaderBase& ncBkgLoader,
-                                   const SystShifts& shift,
-                                   const Weight& wei)
-    : fSig  (  sigLoader, kNuOnEaxis, kNuOnECut, shift, wei),
-      fCCBkg(ccBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei),
-      fNCBkg(ncBkgLoader, kNuOnEaxis, kNuOnECut, shift, wei * kNCScaleFactor)
+  PredictionNuOnE::PredictionNuOnE(IRecordSource& sigSrc,
+                                   IRecordSource& ccBkgSrc,
+                                   IRecordSource& ncBkgSrc)
+    : fSig  (  sigSrc[kNuOnECut], kNuOnEaxis),
+      fCCBkg(ccBkgSrc[kNuOnECut], kNuOnEaxis),
+      fNCBkg(ncBkgSrc[kNuOnECut].Weighted(kNCScaleFactor), kNuOnEaxis)
   {
   }
 
@@ -110,6 +108,7 @@ namespace ana
     return std::unique_ptr<PredictionNuOnE>(ret);
   }
 
+  /* TODO TODO
   //----------------------------------------------------------------------
   std::unique_ptr<IPrediction> PredictionNuOnEGenerator::
   Generate(Loaders& loaders, const SystShifts& shiftMC) const
@@ -124,5 +123,5 @@ namespace ana
       (new PredictionNuOnE(noel->Signal(), noel->CCBkg(), noel->NCBkg(),
                            shiftMC, fWei));
   }
-
+  */
 }

@@ -8,6 +8,8 @@ class TFile;
 
 #include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
+#include "cafanacore/Passthrough.h"
+
 namespace ana
 {
   class Progress;
@@ -20,7 +22,7 @@ namespace ana
   /// need. They will register with this loader. Finally, calling \ref Go will
   /// cause all the spectra to be filled at once. After this the loader may not
   /// be used again.
-  class SpectrumLoader: public SpectrumLoaderBase
+  class SpectrumLoader: public SpectrumLoaderBase, public Passthrough<caf::SRProxy> 
   {
   public:
     SpectrumLoader(const std::string& wildcard, int max = 0);
@@ -48,7 +50,8 @@ namespace ana
 
     virtual void HandleFile(TFile* f, Progress* prog = 0);
 
-    virtual void HandleRecord(caf::SRProxy* sr);
+    // This is handed off to 
+    //virtual void HandleRecord(caf::SRProxy* sr);
 
     /// Save results of AccumulateExposures into the individual spectra
     virtual void StoreExposures();
@@ -56,11 +59,27 @@ namespace ana
     /// Prints POT/livetime info for all spectra
     virtual void ReportExposures();
 
+    // int max_exntries; //this is in sbn, unsure if we need it
+  };
+  
+
+ class NullLoader: public SpectrumLoader
+  {
+  public:
+    virtual void Go() override {}
+  };
+  static NullLoader kNullLoader;
+
+  // SBN had null spill/slice sources, I guess we need both a StandardRecord and Interaction one?
+  static NullSource<caf::SRProxy> kNullSRSource;
+  static NullSource<caf::SRInteractionProxy> kNullInteractionSource;
+
+  /* We dont need this info here
     /// All unique cuts contained in fHistDefs
     std::vector<Cut> fAllCuts;
     std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
     std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
     int max_entries;
 
-  };
+  */
 }

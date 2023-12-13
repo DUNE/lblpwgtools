@@ -16,31 +16,15 @@ namespace ana
   REGISTER_LOADFROM("PredictionNoOsc", IPrediction, PredictionNoOsc);
 
   //----------------------------------------------------------------------
-  PredictionNoOsc::PredictionNoOsc(SpectrumLoaderBase& loader,
-                                   const std::string& label,
-                                   const Binning& bins,
-                                   const Var& var,
-                                   const Cut& cut,
-                                   const SystShifts& shift,
-                                   const Weight& wei)
-    : PredictionNoOsc(loader, HistAxis(label, bins, var), cut, shift, wei)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  PredictionNoOsc::PredictionNoOsc(SpectrumLoaderBase& loader,
-                                   const HistAxis& axis,
-                                   const Cut& cut,
-                                   const SystShifts& shift,
-                                   const Weight& wei)
-    : fSpectrum(       loader, axis, cut                                      ,  shift, wei),
-      fSpectrumNCTot(  loader, axis, cut &&  kIsNC                            ,  shift, wei),
-      fSpectrumNC(     loader, axis, cut &&  kIsNC &&               !kIsAntiNu,  shift, wei),
-      fSpectrumNCAnti( loader, axis, cut &&  kIsNC &&                kIsAntiNu,  shift, wei),
-      fSpectrumNumu(   loader, axis, cut && !kIsNC && kIsNumuCC  && !kIsAntiNu,  shift, wei),
-      fSpectrumNumubar(loader, axis, cut && !kIsNC && kIsNumuCC  &&  kIsAntiNu,  shift, wei),
-      fSpectrumNue(    loader, axis, cut && !kIsNC && kIsBeamNue && !kIsAntiNu,  shift, wei),
-      fSpectrumNuebar( loader, axis, cut && !kIsNC && kIsBeamNue &&  kIsAntiNu,  shift, wei)
+  PredictionNoOsc::PredictionNoOsc(IRecordSource& src, const HistAxis& axis)
+    : fSpectrum       (src, axis),
+      fSpectrumNCTot  (src[ kIsNC], axis),
+      fSpectrumNC     (src[ kIsNC][!kIsAntiNu], axis),
+      fSpectrumNCAnti(src[ kIsNC][ kIsAntiNu], axis),
+      fSpectrumNumu   (src[!kIsNC][kIsNumuCC ][!kIsAntiNu], axis),
+      fSpectrumNumubar(src[!kIsNC][kIsNumuCC ][ kIsAntiNu], axis),
+      fSpectrumNue    (src[!kIsNC][kIsBeamNue][!kIsAntiNu], axis),
+      fSpectrumNuebar (src[!kIsNC][kIsBeamNue][ kIsAntiNu], axis)
   {
   }
 

@@ -232,13 +232,13 @@ int main(int argc, char** argv)
             'duneanaobj_StandardRecord', 'duneanaobj_StandardRecordProxy',
             'OscLib',           'CAFAnaCoreExt',
             'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
-            'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaDecomp',   'CAFAnaExtrap',
+            'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaExtrap',
             'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
             'boost_filesystem', 'boost_system']
 
     print('Compiling macro...')
     incs = ' '.join(['-I '+p for p in path])
-    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW -DCAFANACORE_SPECTRUMLOADERBASE '+incs
+    compile_cmd = 'g++ -c -g '+d.name+'/'+fname+'.cxx -o '+d.name+'/'+fname+'.o' + ' -pthread -std=c++17 -m64 -UNDEBUG -fdiagnostics-color=auto -DDONT_USE_FQ_HARDCODED_SYST_PATHS=1 -UNDEBUG -DTBB_INTERFACE_NEW '+incs
 #    print(compile_cmd)
     ret = subprocess.run(compile_cmd, shell=True).returncode
     if ret != 0: sys.exit(ret)

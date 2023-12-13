@@ -72,6 +72,7 @@ namespace ana
 
     std::vector<const ISyst*> systs = {};
 
+/*
     std::vector<const ISyst *> fdEScalelist = GetEnergySysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
     std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
@@ -100,10 +101,10 @@ namespace ana
     // TO DO: Only add the dials to actually use and avoid the need of RemoveSysts
     // Then we won't have to worry about systs addition ordering
     RemoveSysts(systs, GetDoNotIncludeSystNames());
-
+*/
     return systs;
   }
-
+/*
   std::vector<const ISyst*> getFakeDataSysts(bool fluxXsecPenalties){
 
     std::vector<const ISyst*> systs = GetCrazyFluxSysts();
@@ -169,7 +170,8 @@ namespace ana
 
     if (systString == "fakedata") {
       return GetListOfSysts(false, false, false, false, false, false,
-                            true /*add fake data*/, false, false);
+                            true, //add fake data
+			     false, false);
     }
 
     // Now defaults to true!
@@ -191,8 +193,9 @@ namespace ana
       // 1) Get a default list with everything
       std::vector<const ISyst *> namedList =
           GetListOfSysts(true, true, true, useND, useFD, useNueOnE,
-                         false /*no fake data*/, true /*Get CDR flux systs*/,
-                         true /*Get Sept 21 flux systs*/);
+                         false, //no fake data 
+			 true, //Get CDR flux systs
+                         true );//Get Sept 21 flux systs
       // for (auto & syst : namedList) std::cout << syst->ShortName() <<
       // std::endl; 2) Interpret the list of short names
       std::vector<std::string> systs = SplitString(systString, ':');
@@ -371,6 +374,7 @@ namespace ana
       retlist.emplace_back(s);
     }
     return retlist;
+   
   }
-
+*/
 }
