@@ -18,7 +18,7 @@ namespace ana
   //----------------------------------------------------------------------
   // Introduce some aliases so we can express ourselves more succinctly
 
-  using ISRSource = _IRecordSource<caf::SRSProxy>;
+  using ISRSource = _IRecordSource<caf::SRProxy>;
   using IInteractionSource = _IRecordSource<caf::SRTrueInteractionProxy>;
 //  using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
 
