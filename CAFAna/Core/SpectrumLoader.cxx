@@ -174,7 +174,11 @@ namespace ana
     for(long n = 0; n < Nentries; ++n){
       tr->LoadTree(n);
 
-      // I think this was a thing 
+      // SBN here has fPOT and fNReadouts accounting... 
+      // dont know what to do about that
+      // at the moment, I left fPOT to be handled in SpectrumLoaderBase same as fPOTFromHist
+
+      // I think this was a thing used for old dune files??
       //FixupRecord(&sr, tr);
 
       HandleRecord(&sr);

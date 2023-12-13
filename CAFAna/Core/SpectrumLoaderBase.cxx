@@ -256,26 +256,31 @@ namespace ana
       abort();
     }
 // Im not sure this will still be valid in the source/sink world...
-/*    
-*    TTree* trPot = 0;
-*    if (f->GetListOfKeys()->Contains("meta"))
-*      trPot = (TTree*)f->Get("meta");
-*    else
-*      trPot = (TTree*)f->Get("pottree");
-*    assert(trPot);
-*
-*    double pot;
-*    trPot->SetBranchAddress("pot", &pot);
-*
-*    for(int n = 0; n < trPot->GetEntries(); ++n){
-*      trPot->GetEntry(n);
-*
-*      fPOT += pot; 
-*    }
-*/
-    TH1* hPOT = (TH1*)f->Get("TotalPOT");
-    assert(hPOT);
-    fPOTFromHist  += hPOT->Integral(0, -1);
+    
+    TTree* trPot = 0;
+    if (f->GetListOfKeys()->Contains("meta"))
+      trPot = (TTree*)f->Get("meta");
+    else
+      trPot = (TTree*)f->Get("pottree");
+    assert(trPot);
+
+    double pot;
+    trPot->SetBranchAddress("pot", &pot);
+
+    for(int n = 0; n < trPot->GetEntries(); ++n){
+      trPot->GetEntry(n);
+
+      //unsure if this shoulf be fPOT or fPOTFromHist
+      // I think fPOT is accounted for in HandleFile in the SBN version
+      //fPOT += pot; 
+      fPOTFromHist += pot;
+      fPOT += pot;
+    }
+
+    // This is from the SBN version... 
+    //TH1* hPOT = (TH1*)f->Get("TotalPOT");
+    //assert(hPOT);
+    //fPOTFromHist  += hPOT->Integral(0, -1);
 
     return f;
   }

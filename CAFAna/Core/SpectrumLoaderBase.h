@@ -98,7 +98,8 @@ namespace ana
 
     // new additions 
     double fPOTFromHist; ///< Accumulated by calls to \ref GetNextFile
-    int fNReadouts;
+    // Do we really need this?
+    int fNReadouts; 
 
 // we dont need helper classes?? Spectrums don need to be registered, source/sink machinery takes care of that?
 /*    /// \brief Helper class for \ref SpectrumLoaderBase
