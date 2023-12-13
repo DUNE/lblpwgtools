@@ -21,11 +21,13 @@
 namespace ana
 {
   namespace{
-    // Duplicate here because we can't include Vars.h
-    const Var kTrueE([](const caf::SRProxy* sr)
-                     {return sr->Ev;});
-  }
-
+  // Duplicate here because we can't include Vars.h
+  const Var kTrueE([](const caf::SRProxy* sr)
+                   {
+                     assert(sr->mc.nnu == 1);
+                     return sr->mc.nu[0].E;
+                   });
+   }
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(IRecordSource& src, const HistAxis& axis)
     : ReweightableSpectrum(src, axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))

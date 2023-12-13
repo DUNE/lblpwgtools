@@ -10,21 +10,21 @@
 namespace ana
 {
 
-extern const Var kRecoE_nue;
-extern const Var kRecoE_numu;
-extern const Var kRecoE_FromDep;
-extern const Var kFDNumuPid;
-extern const Var kFDNuePid;
-extern const Var kMVANUMU;
-
-// -->ND
-extern const Var kRecoEnergyND;
-extern const Var kRecoYND;
-extern const Var kRecoY_FromDep;
-
+//extern const Var kRecoE_nue;
+//extern const Var kRecoE_numu;
+//extern const Var kRecoE_FromDep;
+//extern const Var kFDNumuPid;
+//extern const Var kFDNuePid;
+//extern const Var kMVANUMU;
+//
+//// -->ND
+//extern const Var kRecoEnergyND;
+//extern const Var kRecoYND;
+//extern const Var kRecoY_FromDep;
+//
 extern const Var kTrueEnergy;
-
-// CV weighting
-extern const Weight kCVXSecWeights; // kUnweighted
+//
+//// CV weighting
+//extern const Weight kCVXSecWeights; // kUnweighted
 
 } // namespace
