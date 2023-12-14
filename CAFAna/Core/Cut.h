@@ -6,8 +6,33 @@
 
 namespace ana
 {
-  using Cut = _Cut<caf::SRProxy>;
+//  using Cut = _Cut<caf::SRProxy>;
+
+  /// \brief Representation of a cut (selection) to be applied to a \ref
+  /// caf::StandardRecord object
+  ///
+  /// A Cut consists of a function, taking a StandardRecord and returning a
+  /// boolean indicating if that event passes the cut.
+  ///
+  /// Cut objects may be combined with the standard boolean operations && ||
+  /// and !
+  typedef _Cut<caf::SRInteractionProxy> InteractionCut;
+  typedef _Cut<caf::SRInteractionProxy> Cut;
+
+  /// \brief Equivalent of \ref Cut acting on \ref caf::StandardRecord. For use in
+  /// spill-by-spill data quality cuts ????
+  typedef _Cut<caf::SRProxy> SRCut;
+
 
   /// The simplest possible cut: pass everything, used as a default
-  const Cut kNoCut(NoCut<caf::SRProxy>{});
+  const Cut kNoCut(NoCut<caf::SRInteractionProxy>{});
+
+  /// The simplest possible cut: pass everything, used as a default
+  const SRCut kNoSRCut(NoCut<caf::SRProxy>{});
+
+
+  typedef _Cut<caf::SRRecoParticleProxy> RecoPartCut;
+
+  const RecoPartCut kNoPartCut(NoCut<caf::SRRecoParticleProxy>{});
+
 }

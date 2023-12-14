@@ -11,13 +11,21 @@ namespace ana
   ///
   /// A Var consists of a function, taking a StandardRecord and returning the
   /// value of the variable (which may be some complicated function).
-  using Var = _Var<caf::SRProxy>;
+  typedef _Var<caf::SRInteractionProxy>  Var;
+
+  /// \brief Equivalent of \ref Var acting on \ref caf::SRSpill
+  typedef _Var<caf::SRProxy> SRVar;
 
   /// \brief For Vars where literally all you need is a single CAF variable
   ///
   /// eg Var myVar = SIMPLEVAR(my.var.str);
   /// NB lack of quotes quotes around my.var.str
-#define SIMPLEVAR(CAFNAME) Var([](const caf::SRProxy* sr){return sr->CAFNAME;})
+#define SIMPLEVAR(CAFNAME) Var([](const caf::SRInteractionProxy* sr){return sr->CAFNAME;})
 
-  inline Var Constant(double v){return Var([v](const caf::SRProxy*){return v;});}
+
+  inline Var Constant(double v){return Var([v](const caf::SRInteractionProxy*){return v;});}
+
+
+    typedef _Var<caf::SRRecoParticleProxy> RecoPartVar;
+
 }
