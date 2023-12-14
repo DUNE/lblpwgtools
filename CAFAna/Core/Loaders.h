@@ -1,12 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/SpectrumLoaderBase.h"
-
-namespace caf{
-  typedef int Det_t;
-  const int kNEARDET = 1;
-  const int kFARDET = 2;
-}
+#include "CAFAna/Core/SpectrumLoader.h"
 
 #include <map>
 
@@ -14,57 +8,76 @@ namespace ana
 {
   class SpectrumLoader;
 
+  // TODO should these be in some sort of namespace?
+  enum DataMC{kData, kMC, kNumDataMCs};
+  enum SwappingConfig{kNonSwap, kNueSwap, kNuTauSwap, kIntrinsic, kNumSwappingConfigs};
+
   /// \brief Collection of SpectrumLoaders for many configurations
-  class Loaders
+  template<class SrcT> class Sources
   {
   public:
-    enum DataMC{kData, kMC};
-    enum SwappingConfig{kNonSwap, kNueSwap, kNuTauSwap};
-    enum FluxType{kFHC, kRHC};
-
     /// No loaders initialized. Use \ref SetLoaderPath to configure
-    Loaders();
-    virtual ~Loaders();
+    Sources();
+    ~Sources();
 
-    /// Configure loader via wildcard \a path
-    void SetLoaderPath(const std::string& path,
-                       caf::Det_t det,
-                       DataMC datamc,
-                       SwappingConfig swap = kNonSwap);
-
-    /// Configure loader via explicit file list
-    void SetLoaderFiles(const std::vector<std::string>& files,
-                        caf::Det_t det,
-                        DataMC datamc,
-                        SwappingConfig swap = kNonSwap);
-
-    void AddLoader(SpectrumLoaderBase*,
-                   caf::Det_t det,
+    void AddLoader(SrcT*,
                    DataMC datamc,
                    SwappingConfig swap = kNonSwap);
 
-    void DisableLoader(caf::Det_t det,
-                       DataMC datamc,
+    void DisableLoader(DataMC datamc,
                        SwappingConfig swap = kNonSwap);
 
     /// Retrieve a specific loader
-    SpectrumLoaderBase& GetLoader(caf::Det_t det,
-                                  DataMC datamc,
-                                  SwappingConfig swap = kNonSwap);
+    SrcT& GetLoader(DataMC datamc,
+                    SwappingConfig swap = kNonSwap);
 
-    /// Call Go() on all the loaders
-    void Go();
+    template<class T> auto& operator[](const T& x)
+    {
+      auto ret = new Sources<std::remove_reference_t<decltype((*fSources.begin()->second)[x])>>;
+
+      for(int dmc = 0; dmc < kNumDataMCs; ++dmc){
+        for(int swap = 0; swap < kNumSwappingConfigs; ++swap){
+          if(dmc == kData && swap != kNonSwap) continue;
+          ret->AddLoader(&GetLoader(DataMC(dmc), SwappingConfig(swap))[x],
+                         DataMC(dmc), SwappingConfig(swap));
+        }
+      }
+
+      return *ret;
+    }
 
   protected:
-    typedef std::tuple<caf::Det_t, DataMC, SwappingConfig> Key_t;
+    typedef std::tuple<DataMC, SwappingConfig> Key_t;
 
-    // Hold a list of paths that have been set
-    std::map<Key_t, std::string> fLoaderPaths;
-    std::map<Key_t, std::vector<std::string>> fLoaderFiles;
-    // Only reify them when someone actually calls GetLoader()
-    std::map<Key_t, SpectrumLoaderBase*> fLoaders;
-
-    /// We give this back when a loader isn't set for some configuration
-    NullLoader fNull;
+    std::map<Key_t, SrcT*> fSources;
   };
+
+
+  using SRSources = Sources<ISRSource>;
+  using InteractionSources = Sources<IInteractionSource>;
+
+  class Loaders: public Sources<SpectrumLoader>
+  {
+  public:
+    operator InteractionSources&()
+    {
+      InteractionSources* ret = new InteractionSources;
+      for(int dmc = 0; dmc < kNumDataMCs; ++dmc){
+        for(int swap = 0; swap < kNumSwappingConfigs; ++swap){
+          if(dmc == kData && swap != kNonSwap) continue;
+          ret->AddLoader(&GetLoader(DataMC(dmc), SwappingConfig(swap)).Interactions(),
+                         DataMC(dmc), SwappingConfig(swap));
+        }
+      }
+      return *ret;
+    }
+    // I guess we will need an operator for Particles.. and soo on as we add more nested levels?
+
+    /// Call Go() on all the loaders
+    void Go()
+    {
+      for(auto it: fSources) it.second->Go();
+    }
+  };
+
 } // namespace
