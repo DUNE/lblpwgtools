@@ -1,10 +1,10 @@
-#include "sbnana/CAFAna/Core/IRecordSource.h"
+#include "CAFAna/Core/IRecordSource.h"
 
-#include "sbnana/CAFAna/Core/Multiverse.h"
+#include "CAFAna/Core/Multiverse.h"
 
-#include "sbnana/CAFAna/Core/SystShifts.h"
+#include "CAFAna/Core/SystShifts.h"
 
-#include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/Proxy/StandardRecord.h"
 
 namespace ana
 {
