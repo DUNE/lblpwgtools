@@ -8,7 +8,7 @@ set(Core_implementation_files
   OscCurve.cxx
 #  OscillatableSpectrum.cxx
   ProfilerSupport.cxx
-#  Registry.cxx
+  Registry.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
