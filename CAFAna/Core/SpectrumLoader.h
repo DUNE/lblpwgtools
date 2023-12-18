@@ -4,11 +4,15 @@
 
 #include <set>
 
-class TFile;
-
 #include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
 
+#include "CAFAna/Core/IRecordSource.h"
+#include "CAFAna/Core/IRecordSink.h"
+
 #include "cafanacore/Passthrough.h"
+
+class TFile;
+
 
 namespace ana
 {
