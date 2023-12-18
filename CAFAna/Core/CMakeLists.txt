@@ -6,13 +6,13 @@ set(Core_implementation_files
   Loaders.cxx
   LoadFromFile.cxx
   OscCurve.cxx
-  OscillatableSpectrum.cxx
+#  OscillatableSpectrum.cxx
   ProfilerSupport.cxx
-  Registry.cxx
+#  Registry.cxx
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
-  SystShifts.cxx
+#  SystShifts.cxx
   Utilities.cxx
   )
 
@@ -32,12 +32,12 @@ set(Core_header_files
   MultiVar.h
   OscCalcFwdDeclare.h
   OscCurve.h
-  OscillatableSpectrum.h
+#  OscillatableSpectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h
   StanUtils.h
-  SystShifts.h
+#  SystShifts.h
   Utilities.h
   Var.h
   Weight.h

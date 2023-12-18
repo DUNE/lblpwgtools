@@ -7,6 +7,7 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+#include "duneanaobj/StandardRecord/SRInteraction.h"
 #include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
@@ -21,12 +22,13 @@ namespace ana
 {
   namespace{
   // Duplicate here because we can't include Vars.h
+  // These should be true informations, but I think we only have recoparticle atm 
   const Var kTrueE([](const caf::SRInteractionProxy* ixn)
                    {
                      //assert(sr->mc.nnu == 1);
                      assert(ixn->truth.size()>0);
                      /// uuumm what do we
-                     return ixn->Enu;
+                     return ixn->Enu.calo;
                    });
      const Cut kHasNu([](const caf::SRInteractionProxy* ixn)
                      {
