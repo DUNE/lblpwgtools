@@ -21,6 +21,7 @@ namespace ana
   /// eg Var myVar = SIMPLEVAR(my.var.str);
   /// NB lack of quotes quotes around my.var.str
 #define SIMPLEVAR(CAFNAME) Var([](const caf::SRInteractionProxy* sr){return sr->CAFNAME;})
+#define SIMPLESRVAR(CAFNAME) SRVar([](const caf::SRProxy* sr){return sr->CAFNAME;})
 
 
   inline Var Constant(double v){return Var([v](const caf::SRInteractionProxy*){return v;});}

@@ -28,14 +28,14 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::string& wildcard, int max)
-    : SpectrumLoaderBase(wildcard), max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::string& wildcard)//, int max)
+    : SpectrumLoaderBase(wildcard)//, max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames, int max)
-    : SpectrumLoaderBase(fnames), max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames)//, int max)
+    : SpectrumLoaderBase(fnames)//, max_entries(max)
   {
   }
 
@@ -46,13 +46,12 @@ namespace ana
 
 #ifdef WITH_SAM
   //----------------------------------------------------------------------
-  SpectrumLoader SpectrumLoader::FromSAMProject(const std::string& proj,
+  SpectrumLoader* SpectrumLoader::FromSAMProject(const std::string& proj,
                                                 int fileLimit)
   {
-    SpectrumLoader ret;
-    ret.fWildcard = "project " + proj;
-    ret.fFileSource =
-      std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
+    SpectrumLoader* ret = new SpectrumLoader;
+    ret->fWildcard = "project "+proj;
+    ret->fFileSource = std::unique_ptr<IFileSource>(new SAMProjectSource(proj, fileLimit));
     return ret;
   }
 #endif
@@ -106,7 +105,7 @@ namespace ana
 // need to find ISpillSink
    if(Nfiles >= 0 && !prog){
         unsigned int totsinks = 0;
-        for(const ISpillSink* s: fSinks) totsinks += s->NSinks();
+        for(const ISRSink* s: fSinks) totsinks += s->NSinks();
 
         prog = new Progress(TString::Format("Filling %u spectra from %d files matching '%s'", totsinks, Nfiles, fWildcard.c_str()).Data());
       }
@@ -131,7 +130,7 @@ namespace ana
     //fHistDefs.RemoveLoader(this);
     //fHistDefs.Clear();
     //Replace these histdefs with Sinks 
-    for(ISpillSink* sink: fSinks) sink->RemoveSource(this);
+    for(ISRSink* sink: fSinks) sink->RemoveSource(this);
     fSinks.clear();
   }
 
@@ -140,7 +139,7 @@ namespace ana
   {
     os << "digraph{" << std::endl;
     os << "comment = \"Render me with a command like: dot -Tpdf graph.dot > graph.pdf\"" << std::endl << std::endl;
-    Passthrough<caf::SRSpillProxy>::PrintGraph(os);
+    Passthrough<caf::SRProxy>::PrintGraph(os);
     os << "}";
   }
 
@@ -168,8 +167,8 @@ namespace ana
     FloatingExceptionOnNaN fpnan(false);
 
     long Nentries = tr->GetEntries();
-    if(max_entries != 0 && max_entries < Nentries)
-      Nentries = max_entries;
+    //if(max_entries != 0 && max_entries < Nentries)
+    //  Nentries = max_entries;
 
     for(long n = 0; n < Nentries; ++n){
       tr->LoadTree(n);
@@ -181,7 +180,7 @@ namespace ana
       // I think this was a thing used for old dune files??
       //FixupRecord(&sr, tr);
 
-      HandleRecord(&sr);
+      HandleRecord(&sr, 1);
 
       if(prog) prog->SetProgress(double(n)/Nentries);
     } // end for n
