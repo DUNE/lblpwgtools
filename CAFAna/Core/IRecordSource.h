@@ -8,7 +8,7 @@
 
 namespace ana
 {
-  //using IRecordSource = _IRecordSource<caf::SRProxy>;
+
   class ISyst;
   template<class SystT> class _Multiverse;
   using Multiverse = _Multiverse<ISyst>;
@@ -22,18 +22,12 @@ namespace ana
   using IInteractionSource = _IRecordSource<caf::SRInteractionProxy>;
 
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
-//  using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
+
 
 /*// no ensemble stuff yet
 *  using ISpillEnsembleSource = _IRecordEnsembleSource<caf::SRSpillProxy>;
 *  using ISliceEnsembleSource = _IRecordEnsembleSource<caf::SRSliceProxy>;
 *  using INuTruthEnsembleSource = _IRecordEnsembleSource<caf::SRTrueInteractionProxy>;
-*
-*  //----------------------------------------------------------------------
-*
-*  using ITrackSource = _IRecordSource<caf::SRTrackProxy>;
-*  using IShowerSource = _IRecordSource<caf::SRShowerProxy>;
-*  using IStubSource = _IRecordSource<caf::SRStubProxy>;
 *
 *  //----------------------------------------------------------------------
 *
@@ -64,6 +58,7 @@ namespace ana
   const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
 
   const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn);
+  
 //  const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRSpillProxy* spill);
 //  const caf::Proxy<std::vector<caf::SRTrack>>& GetTracks(const caf::SRSliceProxy* reco);
 //  const caf::Proxy<std::vector<caf::SRShower>>& GetShowers(const caf::SRSliceProxy* reco);
@@ -76,15 +71,14 @@ namespace ana
   {
   public:
     // Weight-based ensembles are still supported
-    using _IRecordSourceDefaultImpl::Ensemble;
+    //using _IRecordSourceDefaultImpl::Ensemble;
 
     // But also support an ensemble based on SystShifts
     //ISliceEnsembleSource& Ensemble(const Multiverse& multiverse);
 
     IParticleSource& RecoParticles() {return fParticle;}
 
-  protected:
-    
+  protected:    
     //IDDict<const FitMultiverse*, ISliceEnsembleSource> fEnsembleSources;
     VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle> fParticle{*this, GetRecoParticles};
 

@@ -66,7 +66,7 @@ namespace ana
     virtual void StoreExposures();
 
     /// Prints POT/livetime info for all spectra
-    virtual void ReportExposures();
+    //virtual void ReportExposures();
 
     // int max_exntries; //this is in sbn, unsure if we need it
   };
