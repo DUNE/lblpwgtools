@@ -1,6 +1,7 @@
 set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
+  IRecordSource.cxx
   FixupRecord.cxx
   ISyst.cxx
   Loaders.cxx
@@ -12,7 +13,7 @@ set(Core_implementation_files
   SpectrumLoader.cxx
   SpectrumLoaderBase.cxx
   StanUtils.cxx
-#  SystShifts.cxx
+  SystShifts.cxx
   Utilities.cxx
   )
 
@@ -37,7 +38,7 @@ set(Core_header_files
   SpectrumLoaderBase.h
   StanTypedefs.h
   StanUtils.h
-#  SystShifts.h
+  SystShifts.h
   Utilities.h
   Var.h
   Weight.h
