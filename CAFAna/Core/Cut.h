@@ -19,6 +19,10 @@ namespace ana
   typedef _Cut<caf::SRInteractionProxy> InteractionCut;
   typedef _Cut<caf::SRInteractionProxy> Cut;
 
+//Commented things: I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
+//  typedef _Cut<caf::SRInteractionBranchProxy> InteractionCut;
+//  typedef _Cut<caf::SRInteractionBranchProxy> Cut;
+
   /// \brief Equivalent of \ref Cut acting on \ref caf::StandardRecord. For use in
   /// spill-by-spill data quality cuts ????
   typedef _Cut<caf::SRProxy> SRCut;
@@ -26,6 +30,7 @@ namespace ana
 
   /// The simplest possible cut: pass everything, used as a default
   const Cut kNoCut(NoCut<caf::SRInteractionProxy>{});
+//  const Cut kNoCut(NoCut<caf::SRInteractionBranchProxy>{});
 
   /// The simplest possible cut: pass everything, used as a default
   const SRCut kNoSRCut(NoCut<caf::SRProxy>{});
@@ -34,5 +39,9 @@ namespace ana
   typedef _Cut<caf::SRRecoParticleProxy> RecoPartCut;
 
   const RecoPartCut kNoPartCut(NoCut<caf::SRRecoParticleProxy>{});
+
+//  typedef _Cut<caf::SRRecoParticlesBranchProxy> RecoPartCut;
+//  const RecoPartCut kNoPartCut(NoCut<caf::SRRecoParticlesBranchProxy>{});
+
 
 }
