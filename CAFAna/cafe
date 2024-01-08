@@ -231,9 +231,10 @@ int main(int argc, char** argv)
     libs = ['Minuit2', 'TMVA', 'EG',
             'duneanaobj_StandardRecord', 'duneanaobj_StandardRecordProxy',
             'OscLib',           'CAFAnaCoreExt',
-            'CAFAnaCore',       'CAFAnaVars',    'CAFAnaCuts',
-            'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaExtrap',
-            'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
+            'CAFAnaCore',       
+            #'CAFAnaVars',    'CAFAnaCuts',
+            #'CAFAnaExperiment', 'CAFAnaSysts',   'CAFAnaExtrap',
+            #'CAFAnaPrediction', 'CAFAnaFit',     'CAFAnaAnalysis',
             'boost_filesystem', 'boost_system']
 
     print('Compiling macro...')
