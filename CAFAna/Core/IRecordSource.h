@@ -55,9 +55,11 @@ namespace ana
 
   // Accessors needed by VectorAdaptor
 
-  const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const RecoType kRType,const caf::SRProxy* sr);
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
 
-  const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const RecoType kRType, const caf::SRInteractionProxy* ixn);
+  template <RecoType PartType>
+  const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn);
 
 //Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
 //    const caf::Proxy<caf::SRInteractionBranch>& GetInteractions(const caf::SRProxy* sr);
@@ -75,11 +77,16 @@ namespace ana
     // But also support an ensemble based on SystShifts
     //ISliceEnsembleSource& Ensemble(const Multiverse& multiverse);
 
-    IParticleSource& RecoParticles( const RecoType kRType) {return fParticle;}
+    IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections[kRType];}
 
   protected:    
     //IDDict<const FitMultiverse*, ISliceEnsembleSource> fEnsembleSources;
-    VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle> fParticle{*this, GetRecoParticles(kRType)};
+    std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections
+    {
+        { RecoType::kDLP,     {*this, GetRecoParticles<RecoType::kDLP>} },
+        { RecoType::kPandora, {*this, GetRecoParticles<RecoType::kPandora>} },
+        { RecoType::kPIDA,    {*this, GetRecoParticles<RecoType::kPIDA>} },
+    };
 
   };
 
@@ -90,11 +97,15 @@ namespace ana
     : public _IRecordSourceDefaultImpl<caf::SRProxy>
   {
   public:
-    IInteractionSource& Interactions( const RecoType kRType ) {return fInteractions;}
+    IInteractionSource& Interactions( const RecoType kRType ) {return fInteractionCollections[kRType];}
     //INuTruthSource& NuTruths() {return fNuTruths;}
 
   protected:
-    VectorAdaptor<caf::StandardRecord, caf::SRInteraction> fInteractions{*this, GetInteractions(kRType)};
+    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections
+    {
+        { RecoType::kDLP,     {*this, GetInteractions<RecoType::kDLP>} },
+        { RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>} },
+    };
   };
   //----------------------------------------------------------------------
 

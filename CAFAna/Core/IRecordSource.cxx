@@ -64,6 +64,31 @@ namespace ana
 //  {
 //    return ixn->part; // then .dlp or .pandora or .ida
 //  }
+
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRInteraction>> & GetInteractions(const caf::SRProxy* sr)
+  {
+    if constexpr (IntType == RecoType::kDLP)
+      return sr->common.ixn.dlp;
+    else if (IntType == RecoType::kPandora)
+      return sr->common.ixn.pandora;
+    else
+      static_assert(false, "GetInteractions() is currently uninstrumented for RecoType '" + std::string(IntType));
+  }
+
+  template <RecoType PartType>
+  const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn)
+  {
+    if constexpr (PartType == RecoType::kDLP)
+      return ixn->part.dlp;
+    else if (PartType == RecoType::kPandora)
+      return ixn->part.pandora;
+    else if (PartType == RecoType::kPIDA)
+      return ixn->part.pida;
+    else
+      static_assert(false, "GetRecoParticles() is currently uninstrumented for RecoType '" + std::to_string(PartType));
+  }
+
 //  //----------------------------------------------------------------------
 
   // Instantiations
