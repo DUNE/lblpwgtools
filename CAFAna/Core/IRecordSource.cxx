@@ -74,8 +74,8 @@ namespace ana
       return ixn->part.pandora;
     else if (PartType == RecoType::kPIDA)
       return ixn->part.pida;
-    else
-      static_assert(false, "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
+    //else
+    //  static_assert(false, "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
         //or RecoType " + std::to_string(PartType));
   }
 
@@ -86,8 +86,8 @@ namespace ana
       return sr->common.ixn.dlp;
     else if (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
-    else
-      static_assert(false, "GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
+  //  else
+  //    static_assert(false, "GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
     //+ std::string(IntType));
   }
 
