@@ -71,22 +71,19 @@ namespace ana
     : public _IRecordSourceDefaultImpl<caf::SRInteractionProxy>
   {
   public:
+    _IRecordSource();
+
     // Weight-based ensembles are still supported
     //using _IRecordSourceDefaultImpl::Ensemble;
 
     // But also support an ensemble based on SystShifts
     //ISliceEnsembleSource& Ensemble(const Multiverse& multiverse);
 
-    IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections[kRType];}
+    IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
 
   protected:    
     //IDDict<const FitMultiverse*, ISliceEnsembleSource> fEnsembleSources;
-    std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections
-    {
-        { RecoType::kDLP,     {*this, GetRecoParticles<RecoType::kDLP>} },
-        { RecoType::kPandora, {*this, GetRecoParticles<RecoType::kPandora>} },
-        { RecoType::kPIDA,    {*this, GetRecoParticles<RecoType::kPIDA>} },
-    };
+    std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
   };
 
@@ -103,8 +100,8 @@ namespace ana
   protected:
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections
     {
-        { RecoType::kDLP,     {*this, GetInteractions<RecoType::kDLP>} },
-        { RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>} },
+         {RecoType::kDLP, {*this, GetInteractions<RecoType::kDLP>}},
+         {RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>}},
     };
   };
   //----------------------------------------------------------------------
