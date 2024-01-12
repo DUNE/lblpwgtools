@@ -29,24 +29,24 @@ namespace ana
         sink->HandleRecord(&to, weight);
   }
 
-  //----------------------------------------------------------------------
-  const caf::Proxy<std::vector<caf::SRInteraction>>&
-  GetInteractions(const RecoType kRType,const caf::SRProxy* sr)
-  {
-	  if(kRType==RecoType::kDLP)  return sr->common.ixn.dlp;
-    if(kRType==RecoType::kPandora) return sr->common.ixn.pandora;
-    // error you have to specify which type of reconstruction "kPandora or kDLP" 
-  }
-
-  // specifically for deep learning, a generic dlp or pandora implementation is a TO DO
-  const caf::Proxy<std::vector<caf::SRRecoParticle>>&
-  GetRecoParticles(const RecoType kRType, const caf::SRInteractionProxy* ixn)
-  {
-     if (kRType==RecoType::kDLP) return ixn->part.dlp;
-     if (kRType==RecoType::kPandora) return ixn->part.pandora;
-     if (kRType==RecoType::kPIDA) return ixn->part.pida;
-    // error you have to specify which type of reconstruction "kPandora or kDLP" 
-  }
+//  //----------------------------------------------------------------------
+//  const caf::Proxy<std::vector<caf::SRInteraction>>&
+//  GetInteractions(const caf::SRProxy* sr)
+//  {
+//	  if(kRType==RecoType::kDLP)  return sr->common.ixn.dlp;
+//    if(kRType==RecoType::kPandora) return sr->common.ixn.pandora;
+//    // error you have to specify which type of reconstruction "kPandora or kDLP" 
+//  }
+//
+//  // specifically for deep learning, a generic dlp or pandora implementation is a TO DO
+//  const caf::Proxy<std::vector<caf::SRRecoParticle>>&
+//  GetRecoParticles(const caf::SRInteractionProxy* ixn)
+//  {
+//     if (kRType==RecoType::kDLP) return ixn->part.dlp;
+//     if (kRType==RecoType::kPandora) return ixn->part.pandora;
+//     if (kRType==RecoType::kPIDA) return ixn->part.pida;
+//    // error you have to specify which type of reconstruction "kPandora or kDLP" 
+//  }
 
 //Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
 //  //----------------------------------------------------------------------
@@ -65,18 +65,7 @@ namespace ana
 //    return ixn->part; // then .dlp or .pandora or .ida
 //  }
 
-  template <RecoType IntType>
-  const caf::Proxy<std::vector<caf::SRInteraction>> & GetInteractions(const caf::SRProxy* sr)
-  {
-    if constexpr (IntType == RecoType::kDLP)
-      return sr->common.ixn.dlp;
-    else if (IntType == RecoType::kPandora)
-      return sr->common.ixn.pandora;
-    else
-      static_assert(false, "GetInteractions() is currently uninstrumented for RecoType '" + std::string(IntType));
-  }
-
-  template <RecoType PartType>
+    template <RecoType PartType>
   const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn)
   {
     if constexpr (PartType == RecoType::kDLP)
@@ -86,8 +75,22 @@ namespace ana
     else if (PartType == RecoType::kPIDA)
       return ixn->part.pida;
     else
-      static_assert(false, "GetRecoParticles() is currently uninstrumented for RecoType '" + std::to_string(PartType));
+      static_assert(false, "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
+        //or RecoType " + std::to_string(PartType));
   }
+
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRInteraction>> & GetInteractions(const caf::SRProxy* sr)
+  {
+    if constexpr(IntType == RecoType::kDLP)
+      return sr->common.ixn.dlp;
+    else if (IntType == RecoType::kPandora)
+      return sr->common.ixn.pandora;
+    else
+      static_assert(false, "GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
+    //+ std::string(IntType));
+  }
+
 
 //  //----------------------------------------------------------------------
 

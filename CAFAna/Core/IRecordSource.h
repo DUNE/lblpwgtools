@@ -88,7 +88,6 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-
   // Standard Record sources also provide a  source (which loops over the interactions)
   template<> class _IRecordSource<caf::SRProxy>
     : public _IRecordSourceDefaultImpl<caf::SRProxy>
@@ -104,6 +103,7 @@ namespace ana
          {RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>}},
     };
   };
+
   //----------------------------------------------------------------------
 
 //Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
