@@ -85,13 +85,12 @@ namespace ana
     {
         { RecoType::kDLP,     {*this, GetRecoParticles<RecoType::kDLP>} },
         { RecoType::kPandora, {*this, GetRecoParticles<RecoType::kPandora>} },
-        { RecoType::kPIDA,    {*this, GetRecoParticles<RecoType::kPIDA>} },
+        { RecoType::kPIDA,    {*this, GetRecoParticles<RecoType::kPIDA>} }
     };
 
   };
 
   //----------------------------------------------------------------------
-
   // Standard Record sources also provide a  source (which loops over the interactions)
   template<> class _IRecordSource<caf::SRProxy>
     : public _IRecordSourceDefaultImpl<caf::SRProxy>
@@ -101,12 +100,13 @@ namespace ana
     //INuTruthSource& NuTruths() {return fNuTruths;}
 
   protected:
-    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections
+    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction> > fInteractionCollections
     {
         { RecoType::kDLP,     {*this, GetInteractions<RecoType::kDLP>} },
-        { RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>} },
+        { RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>} }
     };
   };
+
   //----------------------------------------------------------------------
 
 //Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
