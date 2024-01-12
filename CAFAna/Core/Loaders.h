@@ -65,7 +65,8 @@ namespace ana
       for(int dmc = 0; dmc < kNumDataMCs; ++dmc){
         for(int swap = 0; swap < kNumSwappingConfigs; ++swap){
           if(dmc == kData && swap != kNonSwap) continue;
-          ret->AddLoader(&GetLoader(DataMC(dmc), SwappingConfig(swap)).Interactions(),
+          // using only DLP, but I guess we should have an option to use Pandora?
+          ret->AddLoader(&GetLoader(DataMC(dmc), SwappingConfig(swap)).Interactions(RecoType::kDLP),
                          DataMC(dmc), SwappingConfig(swap));
         }
       }
