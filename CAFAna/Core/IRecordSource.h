@@ -27,8 +27,6 @@ namespace ana
 //  using ISRSource = _IRecordSource<caf::SRProxy>;
 //  using IInteractionSource = _IRecordSource<caf::SRInteractionBranchProxy>;
 //  using IParticleSource = _IRecordSource<caf::SRRecoParticlesBranchProxy>;
-
-
   //----------------------------------------------------------------------
 	
   enum class RecoType {
@@ -93,15 +91,12 @@ namespace ana
     : public _IRecordSourceDefaultImpl<caf::SRProxy>
   {
   public:
-    IInteractionSource& Interactions( const RecoType kRType ) {return fInteractionCollections[kRType];}
+    
+    IInteractionSource& Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}
     //INuTruthSource& NuTruths() {return fNuTruths;}
 
   protected:
-    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections
-    {
-         {RecoType::kDLP, {*this, GetInteractions<RecoType::kDLP>}},
-         {RecoType::kPandora, {*this, GetInteractions<RecoType::kPandora>}},
-    };
+    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections;
   };
 
   //----------------------------------------------------------------------

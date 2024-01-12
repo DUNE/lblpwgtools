@@ -120,4 +120,19 @@ namespace ana
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
   }
 
+
+  // -----------------------------------------------------------------------
+  _IRecordSource<caf::SRProxy>::_IRecordSource()
+  {
+    // it would be better (lots less boilerplate) to do this in the initializers section,
+    // but I can't work out why it won't compile when the items are written
+    // in initializer list format
+    fInteractionCollections.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RecoType::kDLP),
+                                 std::forward_as_tuple(*this, GetInteractions<RecoType::kDLP>));
+    fInteractionCollections.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RecoType::kPandora),
+                                 std::forward_as_tuple(*this, GetInteractions<RecoType::kPandora>));
+  }
+
 }
