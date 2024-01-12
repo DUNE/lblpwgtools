@@ -91,7 +91,8 @@ namespace ana
     : public _IRecordSourceDefaultImpl<caf::SRProxy>
   {
   public:
-    
+    _IRecordSource();
+
     IInteractionSource& Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}
     //INuTruthSource& NuTruths() {return fNuTruths;}
 
