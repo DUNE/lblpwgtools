@@ -6,6 +6,8 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
+# include <assert.h>
+
 namespace ana
 {
 
@@ -74,9 +76,9 @@ namespace ana
       return ixn->part.pandora;
     else if (PartType == RecoType::kPIDA)
       return ixn->part.pida;
-    //else
-    //  static_assert(false, "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
-        //or RecoType " + std::to_string(PartType));
+    else
+      assert(false && "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
+        //static_assertor RecoType " + std::to_string(PartType));
   }
 
   template <RecoType IntType>
@@ -86,8 +88,8 @@ namespace ana
       return sr->common.ixn.dlp;
     else if (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
-  //  else
-  //    static_assert(false, "GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
+    else
+      assert(false &&"GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
     //+ std::string(IntType));
   }
 
