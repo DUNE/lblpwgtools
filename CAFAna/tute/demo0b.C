@@ -1,5 +1,3 @@
-// Make a simple spectrum plot
-// cafe demo0.C
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
@@ -10,8 +8,6 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
 
-//#include "CAFAna/Cuts/TruthCuts.h"
-
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -19,16 +15,9 @@
 
 using namespace ana;
 
-// A more generic selection on the pdg of the particle 
-
- const RecoPartCut kPartCut(int pdg){
-    const RecoPartCut kIsPDG([pdg](const caf::SRRecoParticleProxy* sr)
-                      {
-                        return abs(sr->pdg) == pdg ;
-                      });
-    return kIsPDG;
-  }
-
+// Make a few basic spectra of reconstructed info from the cafs
+// One with Interaction Level vars/cuts
+// One with particle-level vars/cuts
 void demo0b()
 {
   // Environment variables and wildcards work. As do SAM datasets.
@@ -37,24 +26,32 @@ void demo0b()
   // Source of events
   SpectrumLoader loader(fname);
 
-  // We will also use two different Vars. For such simple ones we can use this
-  // Variables at the level of Particles
+  // Reco-Particles (SRRecoParticleProxy)  level vars and cuts
   const RecoPartVar kRecoParticleEnergy = SIMPLEPARTVAR(E);
-  const RecoPartVar kRecoParticlePDG = SIMPLEPARTVAR(pdg);
-
   // Define axes for the spectra we'll make
   const RecoPartHistAxis axEnergy("Muon energy (GeV)", Binning::Simple(50, 0, 1), kRecoParticleEnergy);
-  const RecoPartHistAxis axPDG("PDG of reco particle", Binning::Simple(14, 0, 14), kRecoParticlePDG);
-
-
-// Select particles that have a pdg of muon 
+  // Select particles that have a pdg of muon, 
   const RecoPartCut kIsMuon([](const caf::SRRecoParticleProxy* sr)
                       {
                         return abs(sr->pdg) == 13 ;
                       });
 
-// A simple selection cut at the level of vertices: i.e. containment
-const Cut kContainment([](const caf::SRInteractionProxy* sr)
+  // Interaction level (SRInteractionProxy)  vars 
+  const Var kVtxX = SIMPLEVAR(vtx.x);
+  //  we can also write vars with additional logic/operations
+  const Var kVtxZOffset([](const caf::SRInteractionProxy* sr)
+                      {                        
+                        double z = sr-> vtx.z-1300;
+                        // you could do more operations here
+                        return z;
+                      });
+  // note this particular var is actually simple so it can also be written as SIMPLEVAR(vtx.z-1300)
+
+  //2D histaxis with interaction level variables
+  const HistAxis vtxPosition( "x(cm)", Binning::Simple(70,-70,70), kVtxX, 
+                              "z(cm)", Binning::Simple(70,-70,70), kVtxZOffset);
+  // A simple selection cut at the level of vertices: i.e. containment
+  const Cut kContainment([](const caf::SRInteractionProxy* sr)
                       {
 
                         double x = sr->vtx.x;
@@ -67,57 +64,35 @@ const Cut kContainment([](const caf::SRInteractionProxy* sr)
                                      abs(z-1300)<50 ;
                         return cont;
                       });
-  //2D histaxis with interaction level variables
-  const HistAxis vtxPosition( "x(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.x), 
-                              "z(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.z-1300));
 
-//  ~~~~**** where the magic happens *****~~~~
-  // we use kNoCut at interactions level, meaning no selection on vertices
-  Spectrum sEnergyMuon(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
-  Spectrum sEnergyMuonContX(loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
-  Spectrum sEnergyElectron(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(11)], axEnergy);
- 
-  Spectrum sVtxPositionAll(loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
+//  ~~~~**** now actually make some histograms  *****~~~~
+  // we use kNoCut at interactions level, meaning no selection on vertices, then with containment
+  // You can select RecoType::kDLP,kPandora at vtx/interaction level and kPIDA as well for particles
+  Spectrum sEnergyMuon(     loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(      RecoType::kDLP)[kIsMuon], axEnergy);
+  Spectrum sEnergyMuonCont( loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
+  // Interaction level vars
+  Spectrum sVtxPositionAll( loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
   Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition);
-
-  // This will be empty because the files are still empty
-  //Spectrum sEnergySigPandora(loader.Interactions(RecoType::kPandora)[kNoCut].RecoParticles(RecoType::kPandora)[kIsMuon], axEnergy);
- 
-  // This will break the macro because there is no pida reconstruction for interactions. Still need a more explicit error message to pop out here
-  //Spectrum sEnergySigPIDA(loader.Interactions(RecoType::kPIDA)[kNoCut].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
-
-  Spectrum sPDGMuon(  loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kIsMuon], axPDG);
-  Spectrum sPDGAll(   loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kNoPartCut], axPDG);
-//  ~~~~**** -.-.-.-.-.-.-.-.-.-.-.- *****~~~~
+  
   // Fill in the spectrum
   loader.Go();
 
-  // We are forcing the pot value because cafs dont have this information yet
   // POT/yr * 3.5yrs * mass correction for the workspace geometry
   const double pot = 3.5 * 1.47e21 * 40/1.13;
 
+  // We are forcing the pot value because cafs dont have this information yet
   sEnergyMuon.OverridePOT(pot);
-  sEnergyMuonContX.OverridePOT(pot);
-  sEnergyElectron.OverridePOT(pot);
-
+  sEnergyMuonCont.OverridePOT(pot);
   sVtxPositionAll.OverridePOT(pot);
   sVtxPositionCont.OverridePOT(pot);
-  //sEnergySigPandora.OverridePOT(pot);
-  sPDGMuon.OverridePOT(pot);
-  sPDGAll.OverridePOT(pot);
 
-  //ta da!
+  //ta da! Draw tour histograms
   sEnergyMuon.ToTH1(pot)->Draw("hist");
-  sEnergyMuonContX.ToTH1(pot,kMagenta+2)->Draw("hist same");
-  sEnergyElectron.ToTH1(pot,kGreen+1)->Draw("hist same");
-  //sEnergySigPandora.ToTH1(pot, kRed)->Draw("hist same");
+  sEnergyMuonCont.ToTH1(pot,kMagenta+2)->Draw("hist same");
+
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
   new TCanvas; 
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
-  new TCanvas;
-  sPDGAll.ToTH1(pot,kBlue)->Draw("hist");
-  sPDGMuon.ToTH1(pot,kRed)->Draw("hist same");
-
 
 }
