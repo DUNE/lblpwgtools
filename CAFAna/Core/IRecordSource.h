@@ -21,18 +21,18 @@ namespace ana
   using ISRSource = _IRecordSource<caf::SRProxy>;
   using IInteractionSource = _IRecordSource<caf::SRInteractionProxy>;
 
+  using INDLarInteractionSource = _IRecordSource<caf::SRNDLArIntProxy>;
+
+  using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
+
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
 
-//Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
-//  using ISRSource = _IRecordSource<caf::SRProxy>;
-//  using IInteractionSource = _IRecordSource<caf::SRInteractionBranchProxy>;
-//  using IParticleSource = _IRecordSource<caf::SRRecoParticlesBranchProxy>;
   //----------------------------------------------------------------------
 	
   enum class RecoType {
-	kDLP,
-	kPandora,
-	kPIDA
+                      	kDLP,
+                      	kPandora,
+                      	kPIDA
 	};
 
   /// Helper class for implementing looping over slices, tracks, etc
@@ -50,18 +50,19 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-
   // Accessors needed by VectorAdaptor
-
-  template <RecoType IntType>
-  const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
 
   template <RecoType PartType>
   const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn);
 
-//Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
-//    const caf::Proxy<caf::SRInteractionBranch>& GetInteractions(const caf::SRProxy* sr);
-//    const caf::Proxy<caf::SRRecoParticlesBranch>& GetRecoParticles(const caf::SRInteractionProxy* ixn);
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
+
+  const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRProxy* sr);
+
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRNDLArInt>>& GetNDLarInteractions(const caf::SRProxy* sr);
+
 
   //----------------------------------------------------------------------
 
@@ -71,16 +72,9 @@ namespace ana
   public:
     _IRecordSource();
 
-    // Weight-based ensembles are still supported
-    //using _IRecordSourceDefaultImpl::Ensemble;
-
-    // But also support an ensemble based on SystShifts
-    //ISliceEnsembleSource& Ensemble(const Multiverse& multiverse);
-
     IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
 
   protected:    
-    //IDDict<const FitMultiverse*, ISliceEnsembleSource> fEnsembleSources;
     std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
   };
@@ -93,46 +87,18 @@ namespace ana
   public:
     _IRecordSource();
 
-    IInteractionSource& Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}
-    //INuTruthSource& NuTruths() {return fNuTruths;}
+    IInteractionSource&       Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}
+    INDLarInteractionSource&  NDLarInteractions(  const RecoType kRType ) {return fNDLarInteractionCollections.at(kRType);}
+    INuTruthSource& NuTruths() {return fNuTruths;}
 
   protected:
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections;
+    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>> fNDLarInteractionCollections;
+    VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction> fNuTruths{*this, GetNuTruths};
+
   };
 
   //----------------------------------------------------------------------
 
-//Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
-//  template<> class _IRecordSource<caf::SRInteractionProxy>
-//    : public _IRecordSourceDefaultImpl<caf::SRInteractionProxy>
-//  {
-//  public:
-//    // Weight-based ensembles are still supported
-//    //using _IRecordSourceDefaultImpl::Ensemble;
-//
-//    // But also support an ensemble based on SystShifts
-//    //ISliceEnsembleSource& Ensemble(const Multiverse& multiverse);
-//
-//    IParticleSource& RecoParticles() {return fParticle;}
-//
-//  protected:    
-//    //IDDict<const FitMultiverse*, ISliceEnsembleSource> fEnsembleSources;
-//    VectorAdaptor<caf::SRInteraction, caf::SRRecoParticlesBranch> fParticle{*this, GetRecoParticles};
-//
-//  };
-//  //----------------------------------------------------------------------
-//
-//  
-//  template<> class _IRecordSource<caf::SRProxy>
-//    : public _IRecordSourceDefaultImpl<caf::SRProxy>
-//  {
-//  public:
-//    IInteractionSource& Interactions() {return fInteractions;}
-//    //INuTruthSource& NuTruths() {return fNuTruths;}
-//
-//  protected:
-//    VectorAdaptor<caf::StandardRecord, caf::SRInteractionBranch> fInteractions{*this, GetInteractions};
-//  };
-//  //---
 
 }

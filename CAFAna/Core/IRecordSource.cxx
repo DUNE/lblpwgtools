@@ -11,7 +11,6 @@
 namespace ana
 {
 
-
   //----------------------------------------------------------------------
 
   template<class FromT, class ToT> VectorAdaptor<FromT, ToT>::
@@ -31,43 +30,9 @@ namespace ana
         sink->HandleRecord(&to, weight);
   }
 
-//  //----------------------------------------------------------------------
-//  const caf::Proxy<std::vector<caf::SRInteraction>>&
-//  GetInteractions(const caf::SRProxy* sr)
-//  {
-//	  if(kRType==RecoType::kDLP)  return sr->common.ixn.dlp;
-//    if(kRType==RecoType::kPandora) return sr->common.ixn.pandora;
-//    // error you have to specify which type of reconstruction "kPandora or kDLP" 
-//  }
-//
-//  // specifically for deep learning, a generic dlp or pandora implementation is a TO DO
-//  const caf::Proxy<std::vector<caf::SRRecoParticle>>&
-//  GetRecoParticles(const caf::SRInteractionProxy* ixn)
-//  {
-//     if (kRType==RecoType::kDLP) return ixn->part.dlp;
-//     if (kRType==RecoType::kPandora) return ixn->part.pandora;
-//     if (kRType==RecoType::kPIDA) return ixn->part.pida;
-//    // error you have to specify which type of reconstruction "kPandora or kDLP" 
-//  }
+  //----------------------------------------------------------------------
 
-//Things I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
-//  //----------------------------------------------------------------------
-////  const caf::Proxy<std::vector<caf::SRInteractionBranch>>&
-//  const caf::Proxy<caf::SRInteractionBranch>&
-//  GetInteractions(const caf::SRProxy* sr)
-//  {
-//    return sr->common.ixn; // then .dlp or .pandora
-//  }
-//
-//  // specifically for deep learning, a generic dlp or pandora implementation is a TO DO
-////  const caf::Proxy<std::vector<caf::SRRecoParticlesBranch>>&
-//  const caf::Proxy<caf::SRRecoParticlesBranch>&
-//  GetRecoParticles(const caf::SRInteractionProxy* ixn)
-//  {
-//    return ixn->part; // then .dlp or .pandora or .ida
-//  }
-
-    template <RecoType PartType>
+  template <RecoType PartType>
   const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn)
   {
     if constexpr (PartType == RecoType::kDLP)
@@ -77,7 +42,7 @@ namespace ana
     else if (PartType == RecoType::kPIDA)
       return ixn->part.pida;
     else
-      assert(false && "GetRecoParticles() is currently uninstrumented only for kDLP, kPandora or kPIDA");
+      assert(false && "GetRecoParticles() is currently instrumented only for kDLP, kPandora or kPIDA only");
         //static_assertor RecoType " + std::to_string(PartType));
   }
 
@@ -89,21 +54,37 @@ namespace ana
     else if (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
     else
-      assert(false &&"GetInteractions() is currently uninstrumented for RecoType kDLP or kPandora" );
-    //+ std::string(IntType));
+      assert(false &&"GetInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
   }
 
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRNDLArInt>> & GetNDLarInteractions(const caf::SRProxy* sr)
+  {
+    if constexpr(IntType == RecoType::kDLP)
+      return sr->nd.lar.dlp;
+    else if (IntType == RecoType::kPandora)
+      return sr->nd.lar.pandora;
+    else
+      assert(false &&"GetNDLarInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
+  }
 
-//  //----------------------------------------------------------------------
+  const caf::Proxy<std::vector<caf::SRTrueInteraction>>&
+  GetNuTruths(const caf::SRProxy* sr)
+  {
+    return sr->mc.nu;
+  }
+
+  //----------------------------------------------------------------------
 
   // Instantiations
-  template class VectorAdaptor<caf::StandardRecord, caf::SRInteraction>;
-
   template class VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>;
 
-  // Instantiations
-  //template class VectorAdaptor<caf::StandardRecord, caf::SRInteractionBranch>;
-  //template class VectorAdaptor<caf::SRInteraction, caf::SRRecoParticlesBranch>;
+  template class VectorAdaptor<caf::StandardRecord, caf::SRInteraction>;
+
+  template class VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>;
+
+  template class VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction>;
+
 
   // -----------------------------------------------------------------------
   _IRecordSource<caf::SRInteractionProxy>::_IRecordSource()
@@ -126,15 +107,19 @@ namespace ana
   // -----------------------------------------------------------------------
   _IRecordSource<caf::SRProxy>::_IRecordSource()
   {
-    // it would be better (lots less boilerplate) to do this in the initializers section,
-    // but I can't work out why it won't compile when the items are written
-    // in initializer list format
     fInteractionCollections.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RecoType::kDLP),
-                                 std::forward_as_tuple(*this, GetInteractions<RecoType::kDLP>));
+                                    std::forward_as_tuple(RecoType::kDLP),
+                                    std::forward_as_tuple(*this, GetInteractions<RecoType::kDLP>));
     fInteractionCollections.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RecoType::kPandora),
-                                 std::forward_as_tuple(*this, GetInteractions<RecoType::kPandora>));
+                                    std::forward_as_tuple(RecoType::kPandora),
+                                    std::forward_as_tuple(*this, GetInteractions<RecoType::kPandora>));
+    fNDLarInteractionCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RecoType::kDLP),
+                                    std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kDLP>));
+    fNDLarInteractionCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RecoType::kPandora),
+                                    std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kPandora>));
   }
+
 
 }
