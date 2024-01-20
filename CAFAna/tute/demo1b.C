@@ -126,7 +126,7 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 
   // We are forcing the pot value because cafs dont have this information yet
   // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 1e17;///3.5 * 1.47e21 * 40/1.13;
+  const double pot = 1e17;
 
   sEnergyMuon.OverridePOT(pot);
   sEnergyMuonContX.OverridePOT(pot);
