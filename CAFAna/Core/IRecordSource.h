@@ -27,6 +27,12 @@ namespace ana
 
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
 
+
+  //----------------------------------------------------------------------
+
+  using IInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRInteractionProxy>;
+  using IParticleEnsembleSource = _IRecordEnsembleSource<caf::SRRecoParticleProxy>;
+
   //----------------------------------------------------------------------
 	
   enum class RecoType {
@@ -71,10 +77,17 @@ namespace ana
   {
   public:
     _IRecordSource();
+     
+    // Weight-based ensembles are still supported
+    using _IRecordSourceDefaultImpl::Ensemble;
+    // But also support an ensemble based on SystShifts
+    IInteractionEnsembleSource& Ensemble(const Multiverse& multiverse);
 
     IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
 
   protected:    
+    IDDict<const FitMultiverse*, IInteractionEnsembleSource> fEnsembleSources;
+ 
     std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
   };
@@ -101,4 +114,51 @@ namespace ana
   //----------------------------------------------------------------------
 
 
+
+  /// Helper class for implementing looping over interactions, particles, etc
+  template<class FromT, class ToT> class EnsembleVectorAdaptor:
+    public PassthroughExposure<_IRecordEnsembleSink<caf::Proxy<FromT>>,
+                               _IRecordEnsembleSource<caf::Proxy<ToT>>>
+  {
+  public:
+    using Source_t = _IRecordEnsembleSource<caf::Proxy<FromT>>;
+    using Func_t = std::function<const caf::Proxy<std::vector<ToT>>&(const caf::Proxy<FromT>*)>;
+
+    EnsembleVectorAdaptor(Source_t& src, Func_t vecGetter);
+
+    virtual void HandleSingleRecord(const caf::Proxy<FromT>* rec,
+                                    double weight,
+                                    int universeIdx) override;
+
+    virtual void HandleEnsemble(const caf::Proxy<FromT>* rec,
+                                const std::vector<double>& weight) override;
+
+    virtual const ana::FitMultiverse* GetMultiverse() const {return fSource->GetMultiverse();}
+
+  protected:
+    const Source_t* fSource;
+    Func_t fVecGetter;
+  };
+
+  //----------------------------------------------------------------------
+
+
+  // Provide ability to get particle sources from the reco branch
+  // ensemble source.
+
+  template<> class _IRecordEnsembleSource<caf::SRInteractionProxy>
+    : public _IRecordEnsembleSourceDefaultImpl<caf::SRInteractionProxy>
+  {
+  public:
+    _IRecordEnsembleSource();
+  //IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
+    IParticleEnsembleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
+    
+  protected:
+     std::unordered_map<RecoType, EnsembleVectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
+
+    
+  };
+ /// Still missing the analogous StandardRecord sources (which loop over interactions)
+  // SR->Interactions, SR->NDLARInte, SR->TrueInteraction
 }
