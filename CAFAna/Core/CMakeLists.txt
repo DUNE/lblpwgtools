@@ -1,10 +1,10 @@
 set(Core_implementation_files
   Binning.cxx
   IFitVar.cxx
-  Multiverse.cxx
   IRecordSource.cxx
   FixupRecord.cxx
   ISyst.cxx
+  Multiverse.cxx
   Loaders.cxx
   LoadFromFile.cxx
   OscCurve.cxx
@@ -25,11 +25,11 @@ set(Core_header_files
   FixupRecord.h
   HistAxis.h
   IFitVar.h
-  FitMultiverse.h
-  Multiverse.h
   IRecordSink.h
   IRecordSource.h
   ISyst.h
+  FitMultiverse.h
+  Multiverse.h
   Loaders.h
   LoadFromFile.h
   MathUtil.h
