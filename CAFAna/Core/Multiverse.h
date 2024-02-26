@@ -40,6 +40,7 @@ namespace ana
     {
       // TODO I think this cast is safe because the layout is identical?
       return *((const _Universe<SystT>*)&fUnivs[i]);
+      //return fUnivs[i];
     }
 
   protected:

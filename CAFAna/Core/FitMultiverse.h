@@ -58,7 +58,8 @@ namespace ana
     static const FitMultiverse* LoadFrom(TDirectory* dir, const std::string& name);
 
     /// Enum that specifies the type of multiverse
-    const EMultiverseType MultiverseType() const {return fMultiverseType;};
+    // remove const?
+    EMultiverseType MultiverseType() const {return fMultiverseType;};
 
   protected:
     FitMultiverse(const std::string& shortName,
@@ -74,7 +75,7 @@ namespace ana
     std::string Checksum() const;
 
     std::vector<FitUniverse> fUnivs;
-
+    
     EMultiverseType fMultiverseType;
   };
 
