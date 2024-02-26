@@ -37,7 +37,8 @@ namespace ana
 
     // Turn the universes into concrete SystShifts objects up-front
     fShifts.reserve(multiverse.NUniv());
-    for(unsigned int i = 0; i < multiverse.NUniv(); ++i) fShifts.emplace_back(multiverse.GetUniverse(i));
+    // This next line is not working...
+    for(unsigned int i = 0; i < multiverse.NUniv(); ++i) fShifts.emplace_back( (SystShifts)multiverse.GetUniverse(i));
   }
 
   //----------------------------------------------------------------------
