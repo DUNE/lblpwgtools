@@ -9,11 +9,10 @@ namespace ana
   //----------------------------------------------------------------------
   ISyst::ISyst(const std::string& shortName,
                const std::string& latexName,
-	       bool applyPenalty,
-	       double min,
-	       double max,
-	       double cv)
-    : INamed(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
+         bool applyPenalty,
+         double min,
+         double max)
+    : _ISyst(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
   {
     Registry<ISyst>::Register(this);
   }
@@ -31,8 +30,9 @@ namespace ana
   {
     if(fApplyPenalty){
       // Regular quadratic penalty term
-      // Error is always 1, so can ignore that
-      return (x-fCentral)*(x-fCentral);
+      return x*x;
+      // Error is always 1, so can ignore that (are we doing that??)
+      //return (x-fCentral)*(x-fCentral);
     }
     else{
       // Otherwise, no penalty within range, but still apply one outside
