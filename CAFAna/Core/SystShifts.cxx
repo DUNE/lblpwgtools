@@ -27,7 +27,8 @@ namespace ana
   SystShifts::SystShifts() : fID(0) {}
 
   //----------------------------------------------------------------------
-  SystShifts::SystShifts(const ISyst *syst, double shift) : fID(fgNextID++)
+  SystShifts::SystShifts(const ISyst *syst, double shift) 
+    : fID(fgNextID++)
   {
     if (shift != 0)
       fSystsDbl.emplace(syst, Clamp(shift, syst));
@@ -60,6 +61,13 @@ namespace ana
       fSystsStan.emplace(it.first, it.second);
       fSystsDbl.emplace(it.first, util::GetValAs<double>(it.second));
     }
+  }
+  //----------------------------------------------------------------------
+  SystShifts SystShifts::RandomThrow(const std::vector<const ISyst*>& systs)
+  {
+    SystShifts ret;
+    for(const ISyst* s: systs) ret.SetShift(s, gRandom->Gaus(0, 1));
+    return ret;
   }
 
   //----------------------------------------------------------------------

@@ -34,7 +34,8 @@ namespace ana
     int ID() const {return fID;}
 
     static SystShifts Nominal() {return SystShifts();}
-
+    static SystShifts RandomThrow(const std::vector<const ISyst*>& systs);
+    
     std::vector<const ISyst*> ActiveSysts() const;
 
     /// Allow derived classes to overload so they can copy themselves
@@ -74,7 +75,9 @@ namespace ana
     virtual stan::math::var LogPrior() const;
 
 
-    void Shift(caf::SRProxy* sr,
+    //not sure if this is the right change
+    //void Shift(caf::SRProxy* sr,
+    void Shift(caf::SRInteractionProxy* sr,
                double& weight) const;
 
     /// Brief description of component shifts, for printing to screen
