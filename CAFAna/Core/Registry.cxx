@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/ISyst.h"
+#include "CAFAna/Core/FitMultiverse.h"
 
 namespace ana
 {
