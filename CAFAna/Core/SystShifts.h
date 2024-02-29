@@ -1,7 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/FwdDeclare.h"
-#include "duneanaobj/StandardRecord/Proxy/FwdDeclare.h"
+#include "CAFAna/Core/ISyst.h"
 
 #include "CAFAna/Core/StanVar.h"
 
@@ -15,9 +14,6 @@ class TDirectory;
 
 namespace ana
 {
-  class ISyst;
-  class Restorer;
-
   /// Simple record of shifts applied to systematic parameters
   class SystShifts
   {
@@ -26,22 +22,12 @@ namespace ana
     SystShifts(const ISyst* syst, double shift);
     SystShifts(const ISyst* syst, stan::math::var shift);
     SystShifts(const std::map<const ISyst*, double>& shifts);
+    SystShifts(const std::unordered_map<const ISyst*, double>& shifts);
     SystShifts(const std::map<const ISyst*, stan::math::var>& shifts);
-
-    virtual ~SystShifts() = default;
-
-    /// SystShifts with the same set of systs should have the same ID
-    int ID() const {return fID;}
+    //virtual ~SystShifts() = default;
 
     static SystShifts Nominal() {return SystShifts();}
     static SystShifts RandomThrow(const std::vector<const ISyst*>& systs);
-    
-    std::vector<const ISyst*> ActiveSysts() const;
-
-    /// Allow derived classes to overload so they can copy themselves
-    /// in case they overload Penalty().  Used in IFitter.
-    /// Note that you own the copy...
-    virtual std::unique_ptr<SystShifts> Copy() const;
 
     bool IsNominal() const {return fSystsDbl.empty(); }  // since there's always a 'double' copy of any stan ones too
 
@@ -49,7 +35,7 @@ namespace ana
     /// set force=true to insert a syst even if the shift is 0
     void SetShift(const ISyst* syst, double shift, bool force=false);
     void SetShift(const ISyst* syst, stan::math::var shift);
-
+    
     /// Templated so that Stan- and not-stan versions have the same interface.
     /// If you don't specify anything it'll just give you back the double,
     /// which is probably what you want anyway.
@@ -59,11 +45,29 @@ namespace ana
 
     void ResetToNominal();
 
-    bool HasStan(const ISyst* s) const {return fSystsStan.count(s);}
-    bool HasAnyStan() const {return !fSystsStan.empty();}
-
     /// Penalty term for (frequentist) chi-squared fits
     double Penalty() const;
+
+
+    //not sure if this is the right change
+    //void Shift(caf::SRProxy* sr,
+    void Shift(caf::SRInteractionProxy* sr,
+               double& weight) const;
+
+
+    /// Brief description of component shifts, for printing to screen
+    std::string ShortName() const;
+    /// Long description of component shifts, for plot labels
+    std::string LatexName() const;
+
+
+    /// Allow derived classes to overload so they can copy themselves
+    /// in case they overload Penalty().  Used in IFitter.
+    /// Note that you own the copy...
+    virtual std::unique_ptr<SystShifts> Copy() const;
+
+    bool HasStan(const ISyst* s) const {return fSystsStan.count(s);}
+    bool HasAnyStan() const {return !fSystsStan.empty();}
 
     /// Prior used in Bayesian fitting.  Override as needed.
     /// If it's more efficient to calculate log(prior)
@@ -74,16 +78,10 @@ namespace ana
     /// override this
     virtual stan::math::var LogPrior() const;
 
+    /// SystShifts with the same set of systs should have the same ID
+    int ID() const {return fID;}
 
-    //not sure if this is the right change
-    //void Shift(caf::SRProxy* sr,
-    void Shift(caf::SRInteractionProxy* sr,
-               double& weight) const;
-
-    /// Brief description of component shifts, for printing to screen
-    std::string ShortName() const;
-    /// Long description of component shifts, for plot labels
-    std::string LatexName() const;
+    std::vector<const ISyst*> ActiveSysts() const;
 
     void SaveTo(TDirectory* dir, const std::string& name) const;
     static std::unique_ptr<SystShifts> LoadFrom(TDirectory* dir, const std::string& name);
