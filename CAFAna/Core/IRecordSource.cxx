@@ -24,7 +24,7 @@ namespace ana
     virtual const ana::FitMultiverse* GetMultiverse() const override {return fMultiverse;}
 
   protected:
-    const Multiverse* fMultiverse;
+    const ana::FitMultiverse* fMultiverse;
     std::vector<SystShifts> fShifts;
   };
 
@@ -38,7 +38,7 @@ namespace ana
     // Turn the universes into concrete SystShifts objects up-front
     fShifts.reserve(multiverse.NUniv());
     // This next line is not working...
-    for(unsigned int i = 0; i < multiverse.NUniv(); ++i) fShifts.emplace_back( (SystShifts)multiverse.GetUniverse(i));
+    for(unsigned int i = 0; i < multiverse.NUniv(); ++i) fShifts.emplace_back(multiverse.GetUniverse(i));
   }
 
   //----------------------------------------------------------------------
