@@ -1,6 +1,6 @@
 #include "CAFAna/Core/ISyst.h"
 
-#include "CAFAna/Core/Registry.h"
+#include "cafanacore/Registry.h"
 
 #include "CAFAna/Core/MathUtil.h"
 
