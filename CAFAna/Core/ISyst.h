@@ -1,7 +1,8 @@
 #pragma once
 
-
 #include "cafanacore/ISyst.h"
+
+#include <string>
 
 #include <list>
 
