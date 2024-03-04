@@ -31,8 +31,8 @@ namespace ana
     }
 
     virtual ~EnsembleReweightableSpectrum();
-
-    EnsembleReweightableSpectrum(const EnsembleReweightableSpectrum& rhs);
+    // why is copy constructor not working?
+    //EnsembleReweightableSpectrum(const EnsembleReweightableSpectrum& rhs);
     EnsembleReweightableSpectrum& operator=(const EnsembleReweightableSpectrum& rhs);
 
     virtual void FillSingle(double x, double y, double w, int universeId) override;

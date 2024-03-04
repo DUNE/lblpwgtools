@@ -48,17 +48,17 @@ namespace ana
   EnsembleReweightableSpectrum::~EnsembleReweightableSpectrum()
   {
   }
-
+  // why is copy constructor not working?
   //----------------------------------------------------------------------
-  EnsembleReweightableSpectrum::EnsembleReweightableSpectrum(const EnsembleReweightableSpectrum& rhs)
-    : fMultiverse(rhs.fMultiverse),
-      fMat(rhs.fMat),
-      fPOT(rhs.fPOT),
-      fLivetime(rhs.fLivetime),
-      fAxisX(rhs.fAxisX),
-      fAxisY(rhs.fAxisY)
-  {
-  }
+  //EnsembleReweightableSpectrum::EnsembleReweightableSpectrum(const EnsembleReweightableSpectrum& rhs)
+  //  : fMultiverse(rhs.fMultiverse),
+  //    fMat(rhs.fMat),
+  //    fPOT(rhs.fPOT),
+  //    fLivetime(rhs.fLivetime),
+  //    fAxisX(rhs.fAxisX),
+  //    fAxisY(rhs.fAxisY)
+  //{
+  //}
 
   //----------------------------------------------------------------------
   EnsembleReweightableSpectrum& EnsembleReweightableSpectrum::operator=(const EnsembleReweightableSpectrum& rhs)
