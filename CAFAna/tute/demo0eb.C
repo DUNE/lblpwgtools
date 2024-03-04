@@ -7,76 +7,100 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
+#include "CAFAna/Core/Multiverse.h"
+#include "CAFAna/Core/ISyst.h"
 
+#include "TFile.h"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TPad.h"
 
+#include <iostream>
+
 using namespace ana;
 
+// Setup a dummy systematic that shifts Particle (Muon) Enegy by +/- 10 percent
+
+ class EnergyScaleMu: public ISyst {
+ public:
+   EnergyScaleMu() : ISyst("EnergyScaleMu", "Muon Energy Scale Syst") {}
+   void Shift(double sigma,
+              caf::SRInteractionProxy* ixn, double& weight) const override;
+ };
+  void EnergyScaleMu::Shift(double sigma,
+                            caf::SRInteractionProxy* ixn, double& weight) const {
+   double scale = .1 * sigma;
+
+   // loop through interactions and 
+    for (int i=0; i<ixn->part.ndlp; i++){
+       if ( abs(ixn->part.dlp[i].pdg)==13) {
+          ixn->part.dlp[i].E *= 1. + scale;
+        }
+    }
+ }
+ 
+ const EnergyScaleMu kEnergyScaleMu;
+
+//// A second dummy syst to make a multiverse make sense
+
+
+
+
 // Make a basic ensemble spectrum?
+// based on https://github.com/SBNSoftware/sbnana/blob/feature/ext_cafanacore/sbnana/CAFAna/test/test_ensemble.C 
 void demo0eb()
 {
  
-  const std::string fname = "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
 
-  // Source of events
-  SpectrumLoader loader(fname);
+ // test multiverse
 
-  // Reco-Particles (SRRecoParticleProxy)  level vars and cuts
-  const RecoPartVar kRecoParticleEnergy = SIMPLEPARTVAR(E);
-  // Define axes for the spectra we'll make
-  const RecoPartHistAxis axEnergy("Muon energy (GeV)", Binning::Simple(50, 0, 1), kRecoParticleEnergy);
-  // Select particles that have a pdg of muon, 
-  const RecoPartCut kIsMuon([](const caf::SRRecoParticleProxy* sr)
-                      {
-                        return abs(sr->pdg) == 13 ;
-                      });
+  std::vector<const ISyst*> systs;
+  systs.push_back(&kEnergyScaleMu);
 
-  // Interaction level (SRInteractionProxy)  vars 
-  const Var kVtxX = SIMPLEVAR(vtx.x);
-  //  we can also write vars with additional logic/operations
-  const Var kVtxZOffset([](const caf::SRInteractionProxy* sr)
-                      {                        
-                        double z = sr-> vtx.z-1300;
-                        // you could do more operations here
-                        return z;
-                      });
-  // note this particular var is actually simple so it can also be written as SIMPLEVAR(vtx.z-1300)
+  const Multiverse& gas = Multiverse::RandomGas(systs, 100, 42);//Multiverse::kTrulyRandom);
 
-  // Histaxis with interaction level variables
-  // Note you can setup a 2D axis 
-  const HistAxis vtxPosition( "x(cm)", Binning::Simple(70,-70,70), kVtxX, 
-                              "z(cm)", Binning::Simple(70,-70,70), kVtxZOffset);
-  // A simple selection cut at the level of vertices: i.e. containment
-  const Cut kContainment([](const caf::SRInteractionProxy* sr)
-                      {
+  std::cout << gas.LatexName() << std::endl << gas.ShortName() << std::endl;
 
-                        double x = sr->vtx.x;
-                        double y = sr->vtx.y;
-                        double z = sr->vtx.z;
-                        bool cont =  abs(x)<50 && 
-                                     abs(x)>10 && 
-                                     abs(y+310)<50 &&
-                                     abs(z-1300)>10 && 
-                                     abs(z-1300)<50 ;
-                        return cont;
-                      });
+  TFile fout("test_multiverse.root", "RECREATE");
 
-  ////////////// actually setup the ensemble spectra
+  gas.SaveTo(&fout, "gas");
+
+  fout.Close();
+  
+
+  TFile fin("test_multiverse.root");
+  const FitMultiverse& gas2 = *Multiverse::LoadFrom(&fin, "gas");
+
+  std::cout << gas2.LatexName() << std::endl << gas2.ShortName() << std::endl;
+
+  //----------------------------------------------------------------------//
+  // now try to figure out how to make ensemble spectra
+  const Var kTrueE = SIMPLEVAR(truth.E);
+
+  const Cut kNumuSel = kSlcNuScoreCut && kInFV && kSlcFlashMatchTimeCut && kSlcFlashMatchScoreCut;
+
+  const Binning binsEnergy = Binning::Simple(30, 0, 3);
+
+  const HistAxis axEnergy("True energy (GeV)", binsEnergy, kTrueE);
+
+  std::vector<Weight> weis;
+  weis.reserve(101);
+
+  weis.push_back(kUnweighted); // nominal
+  // TO DO: generate multiverse weights
+  for(int i = 0; i < 99; ++i) weis.push_back(GetUniverseWeight("multisim_Genie", i));
+
+  // This is the key line 
+  EnsembleSpectrum sCC(loader.Slices().Ensemble(weis)[kNumuSel][kIsNumuCC], axEnergy);
 
 
-  // Fill in the spectra
   loader.Go();
 
-  // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 3.5 * 1.47e21 * 40/1.13;
+  TFile fout(state_fname.c_str(), "RECREATE");
+  sCC.SaveTo(&fout, "cc");
 
-  // We are forcing the pot value because cafs dont have this information yet
-  sEnergyMuon.OverridePOT(pot);
-
-  new TCanvas; 
-  sVtxPositionCont.ToTH2(pot)->Draw("colz");
+  //----------------------------------------------------------------------//
+  // Reopen file and plot a systematic error band. 
 
 }
