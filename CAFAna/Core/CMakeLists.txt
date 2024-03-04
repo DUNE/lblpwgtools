@@ -8,6 +8,9 @@ set(Core_implementation_files
   Loaders.cxx
   LoadFromFile.cxx
   OscCurve.cxx
+  EnsembleRatio.cxx
+  EnsembleSpectrum.cxx
+  EnsembleReweightableSpectrum.cxx 
 #  OscillatableSpectrum.cxx
   ProfilerSupport.cxx
   Registry.cxx
@@ -36,6 +39,9 @@ set(Core_header_files
   MultiVar.h
   OscCalcFwdDeclare.h
   OscCurve.h
+  EnsembleRatio.h
+  EnsembleSpectrum.h
+  EnsembleReweightableSpectrum.h
 #  OscillatableSpectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
