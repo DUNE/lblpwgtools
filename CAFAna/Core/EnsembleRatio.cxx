@@ -10,6 +10,8 @@
 #include "TEfficiency.h"
 #include "TGraphAsymmErrors.h"
 
+#include <iostream>
+
 namespace ana
 {
   //----------------------------------------------------------------------
@@ -156,7 +158,7 @@ namespace ana
     for(unsigned int univIdx = 1; univIdx < NUniverses(); ++univIdx)
       histVec.push_back(arr.segment(nbins*univIdx, nbins));
 
-    return ana::CalcCovMx(histVec);
+    return ana::CalcCovMx(histVec);// returns TMatrixD
   }
 
   //----------------------------------------------------------------------
