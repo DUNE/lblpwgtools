@@ -7,4 +7,6 @@ cmake/CMakeFiles/
 *.root
 *.pdf
 *.png
+._*
+.DS_*
 support/
