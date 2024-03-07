@@ -67,6 +67,9 @@ namespace ana
 
     virtual void FillPOT(double pot) override;
 
+     /// DO NOT USE UNLESS YOU ARE 110% CERTAIN THERE ISN'T A BETTER WAY!
+    void OverridePOT(double newpot) {fPOT = newpot;}
+
     virtual void FillLivetime(double livetime) override;
 
     void Scale(double c);
