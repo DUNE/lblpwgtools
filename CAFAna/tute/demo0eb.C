@@ -24,7 +24,7 @@
 
 using namespace ana;
 
-// Setup a dummy systematic that shifts Particle (Muon) Enegy by +/- 10 percent
+// Setup a dummy systematic that shifts Particle (Muon) Enegy by a +/-  percent
 
  class EnergyScaleMu: public ISyst {
  public:
@@ -34,7 +34,7 @@ using namespace ana;
  };
   void EnergyScaleMu::Shift(double sigma,
                             caf::SRInteractionProxy* ixn, double& weight) const {
-   double scale = .1 * sigma;
+   double scale = .05 * sigma;
 
    // loop through particles and change record to shift energy 
     for (int i=0; i<ixn->part.ndlp; i++){
@@ -74,39 +74,6 @@ const Var kEnergyInteractionMu([](const caf::SRInteractionProxy* ixn)
       return e;     
   });
 
-
-// Make a basic ensemble spectrum?
-// based on https://github.com/SBNSoftware/sbnana/blob/feature/ext_cafanacore/sbnana/CAFAna/test/test_ensemble.C 
-void demo0eb()
-{
- 
-
- // test multiverse
-
-  std::vector<const ISyst*> systs;
-  systs.push_back(&kEnergyScaleMu);
-
-  const Multiverse& gas = Multiverse::RandomGas(systs, 100, 42);//Multiverse::kTrulyRandom);
-
-  std::cout << gas.LatexName() << std::endl << gas.ShortName() << std::endl;
-
-  TFile fout("test_multiverse.root", "RECREATE");
-
-  gas.SaveTo(&fout, "gas");
-
-  fout.Close();
-  
-
-  TFile fin("test_multiverse.root");
-  const FitMultiverse& gas2 = *Multiverse::LoadFrom(&fin, "gas");
-
-  std::cout << gas2.LatexName() << std::endl << gas2.ShortName() << std::endl;
-  fin.Close();
-  //----------------------------------------------------------------------//
-  // now try to figure out how to make ensemble spectra
-  // SBN Vars and Cuts still
- // const Var kTrueE = SIMPLEVAR(truth.E);
-
   //  const Cut kNumuSel = kSlcNuScoreCut && kInFV && kSlcFlashMatchTimeCut && kSlcFlashMatchScoreCut;
   // A simple selection cut at the level of vertices: i.e. containment
   const Cut kContainment([](const caf::SRInteractionProxy* sr)
@@ -124,7 +91,46 @@ void demo0eb()
                       });
 
 
-  const Binning binsEnergy = Binning::Simple(30, 0, 3);
+// Make a basic ensemble spectrum?
+// based on https://github.com/SBNSoftware/sbnana/blob/feature/ext_cafanacore/sbnana/CAFAna/test/test_ensemble.C 
+void demo0eb()
+{
+ 
+
+ // test multiverse
+
+  std::vector<const ISyst*> systs;
+  systs.push_back(&kEnergyScaleMu);
+
+  const Multiverse& gas = Multiverse::RandomGas(systs, 200, 42);//Multiverse::kTrulyRandom);
+  // scans from -n to n sigma shifts, we'll do only the 1 sigma
+  const Multiverse& cross = Multiverse::Hypercross(systs,1);
+
+  std::cout << gas.LatexName() << std::endl << gas.ShortName() << std::endl;
+  std::cout << cross.LatexName() << std::endl << cross.ShortName() << std::endl;
+
+  TFile fout("test_multiverse.root", "RECREATE");
+
+  gas.SaveTo(&fout, "gas");
+  cross.SaveTo(&fout, "cross");
+
+  fout.Close();
+  
+
+  TFile fin("test_multiverse.root");
+  const FitMultiverse& gas2 = *Multiverse::LoadFrom(&fin, "gas");
+  const FitMultiverse& cross2 = *Multiverse::LoadFrom(&fin, "cross");
+  std::cout << gas2.LatexName() << std::endl << gas2.ShortName() << std::endl;
+  std::cout << cross.LatexName() << std::endl << cross.ShortName() << std::endl;
+  fin.Close();
+  //----------------------------------------------------------------------//
+  // now try to figure out how to make ensemble spectra
+  // SBN Vars and Cuts still
+ // const Var kTrueE = SIMPLEVAR(truth.E);
+
+
+
+  const Binning binsEnergy = Binning::Simple(30, 0, 1.5);
 
   const HistAxis axMuEnergy("Muon energy (GeV)", binsEnergy, kEnergyInteractionMu);
 
@@ -143,7 +149,7 @@ void demo0eb()
   // weis is a vector of weights that come from GetUniverseWeight
   // or whatever multiverse object, in this case randomly generated gaussian shifts
   EnsembleSpectrum sCC(loader.Interactions(RecoType::kDLP).Ensemble(gas)[kNoCut][kNoCut], axMuEnergy);
-
+  EnsembleSpectrum sCCx(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kNoCut][kNoCut], axMuEnergy);
   //Spectrum sMuE(loader.Interactions(RecoType::kDLP)[kNoCut], axMuEnergy);
   //Spectrum sMuEcont(loader.Interactions(RecoType::kDLP)[kContainment], axMuEnergy);
 
@@ -153,6 +159,7 @@ void demo0eb()
  const double pot = 3.5 * 1.47e21 * 40/1.13;
   // We are forcing the pot value because cafs dont have this information yet
   sCC.OverridePOT(pot);
+  sCCx.OverridePOT(pot);
   //sMuE.OverridePOT(pot);
   //sMuEcont.OverridePOT(pot);
 
@@ -162,6 +169,7 @@ void demo0eb()
   new TCanvas;
   TH1 * hsCC =  sCC.Nominal().ToTH1(pot, kRed);
   hsCC->Draw("hist");
+
 
   // a vector to store ratios to nominal
   std::vector<TH1*> hratios;
@@ -179,10 +187,37 @@ void demo0eb()
     hratios[i]->Draw("hist same");
 
 
+  //  new TCanvas;
+  TH1 * hsCCx =  sCCx.Nominal().ToTH1(pot, kBlue);
+  hsCC->Draw("hist same");
+
+    // a vector to store ratios to nominal
+  std::vector<TH1*> hratiosx;
+  std::cout<< "cross has "<<sCCx.NUniverses()<< " universes\n";
+  for(unsigned int i = 0; i < sCCx.NUniverses(); ++i){
+    hratiosx.push_back( (TH1*)hsCCx->Clone( ("ratio_"+std::to_string(i)).c_str() ) );
+    sCCx.Universe(i).ToTH1(pot, kBlue-10)->Draw("hist same");    
+    hratiosx.back()->Divide(sCCx.Universe(i).ToTH1(pot, kBlue-10));
+  }  
+  hsCCx->Draw("hist same");
+  
+  hratiosx[0]->SetMinimum(.8);
+  hratiosx[0]->SetMaximum(1.2);
+  new TCanvas;
+  for (unsigned int i = 0; i < sCCx.NUniverses(); ++i)
+    hratiosx[i]->Draw("hist same");
+
+
+
+
   new TCanvas;
   TGraphAsymmErrors* eBand =sCC.ErrorBand(pot);
   DrawErrorBand(hsCC, eBand);
 
+  TGraphAsymmErrors* eBandx =sCCx.ErrorBand(pot);
+  // draw in the same canvas with half transparency
+  DrawErrorBand(hsCCx, eBandx, kBlue-10, 0.5);
+  gPad->SaveAs("multiverse_ErrorBand.pdf");
 
 
   //TFile fout(state_fname.c_str(), "RECREATE");
