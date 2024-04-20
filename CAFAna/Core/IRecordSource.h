@@ -17,22 +17,15 @@ namespace ana
 
   //----------------------------------------------------------------------
   // Introduce some aliases so we can express ourselves more succinctly
-
   using ISRSource = _IRecordSource<caf::SRProxy>;
   using IInteractionSource = _IRecordSource<caf::SRInteractionProxy>;
-
   using INDLarInteractionSource = _IRecordSource<caf::SRNDLArIntProxy>;
-
-  using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
-
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
-
-
+  using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
+  using INuTruthParticleSource = _IRecordSource<caf::SRTrueParticleProxy>;
   //----------------------------------------------------------------------
-
   using IInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRInteractionProxy>;
   using IParticleEnsembleSource = _IRecordEnsembleSource<caf::SRRecoParticleProxy>;
-
   //----------------------------------------------------------------------
 	
   enum class RecoType {
@@ -40,6 +33,11 @@ namespace ana
                       	kPandora,
                       	kPIDA
 	};
+  enum class TruePType{
+                        kPrim,
+                        kSec,
+                        kPreFSI
+  };
 
   /// Helper class for implementing looping over slices, tracks, etc
   template<class FromT, class ToT> class VectorAdaptor:
@@ -64,11 +62,15 @@ namespace ana
   template <RecoType IntType>
   const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
 
-  const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRProxy* sr);
-
   template <RecoType IntType>
   const caf::Proxy<std::vector<caf::SRNDLArInt>>& GetNDLarInteractions(const caf::SRProxy* sr);
 
+  const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRProxy* sr);
+
+  template <TruePType PartType>
+  const caf::Proxy<std::vector<caf::SRTrueParticle>>& GetNuTruthParticles(const caf::SRTrueInteractionProxy* nu);  
+    //  template <RecoType IntType>
+    //  const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr);
 
   //----------------------------------------------------------------------
 
@@ -92,6 +94,20 @@ namespace ana
 
   };
 
+  template<> class _IRecordSource<caf::SRTrueInteractionProxy>
+    : public _IRecordSourceDefaultImpl<caf::SRTrueInteractionProxy>
+  {
+  public:
+    _IRecordSource();
+
+   INuTruthParticleSource& TruthParticles(const TruePType kPType) {return fNuTruthParticleCollections.at(kPType);}
+
+  protected:
+    std::unordered_map<TruePType, VectorAdaptor<caf::SRTrueInteraction, caf::SRTrueParticle>> fNuTruthParticleCollections;
+
+  };
+
+
   //----------------------------------------------------------------------
   // Standard Record sources also provide a  source (which loops over the interactions)
   template<> class _IRecordSource<caf::SRProxy>
@@ -111,10 +127,27 @@ namespace ana
 
   };
 
+
+//  // --------------------------------- ********
+//  // attempt to connect the nu tree with the reco / common tree
+// 
+//  template<> class _IRecordSource<caf::SRProxy>
+//    : public _IRecordSourceDefaultImpl<caf::SRProxy>
+//  {
+//  public:
+//    _IRecordSource();
+//
+//    IInteractionSource&   Interactions( const RecoType kRType ) {return fRecoTrueInteractionCollections.at(kRType);}    
+//
+//  protected:
+//    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fRecoTrueInteractionCollections;
+//
+//  };
+//
+//
+//  
+
   //----------------------------------------------------------------------
-
-
-
   /// Helper class for implementing looping over interactions, particles, etc
   template<class FromT, class ToT> class EnsembleVectorAdaptor:
     public PassthroughExposure<_IRecordEnsembleSink<caf::Proxy<FromT>>,
@@ -141,8 +174,6 @@ namespace ana
   };
 
   //----------------------------------------------------------------------
-
-
   // Provide ability to get particle sources from the reco branch
   // ensemble source.
 
@@ -157,7 +188,6 @@ namespace ana
   protected:
      std::unordered_map<RecoType, EnsembleVectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
-    
   };
  /// Still missing the analogous StandardRecord sources (which loop over interactions)
   // SR->Interactions, SR->NDLARInte, SR->TrueInteraction
