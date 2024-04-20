@@ -21,7 +21,7 @@ using namespace ana;
 void demo0b()
 {
  
-  const std::string fname ="/pnfs/dune/scratch/users/mkramer/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  const std::string fname ="/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
   //pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
 //
 
@@ -132,9 +132,11 @@ void demo0b()
   const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 0, 8, {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","other"}), kTruePartPDG);
 
   const HistAxis ixnId( "id", Binning::Simple(20,-1,19), SIMPLEVAR(id));
+  
   Spectrum SixnId(loader.Interactions(RecoType::kDLP)[kNoCut], ixnId);
   Spectrum SixnIdTrue(loader.NuTruths()[kNoTruthCut], myHistTruthAxis);
   Spectrum PDGTrue(loader.NuTruths()[kNoTruthCut], myHistTruthAxisPDG);
+  
   Spectrum PDGTruePrims(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kPrim)[kNoTruthPartCut], myHistTruthPartAxisPDG);
   Spectrum PDGTrueSecs(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kSec)[kNoTruthPartCut], myHistTruthPartAxisPDG);
   Spectrum PDGTruePreFSI(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kPreFSI)[kNoTruthPartCut], myHistTruthPartAxisPDG);
