@@ -99,41 +99,38 @@ namespace ana{
                   });
   const TruthCut kIsArgonTarget([](const caf::SRTrueInteractionProxy* mc)
                   {
-                    return mc->targetPDG ==   100018040;
+                    return mc->targetPDG == 1000180400;
                   });
   const TruthCut kIsMuonAntinu([](const caf::SRTrueInteractionProxy* mc)
                   {
                     return mc->pdg ==   -14;
                   });
-  // const TruthCut kTrueMesonlessSelection([](const caf::SRTrueInteractionProxy* mc)
-  //     {
-  //             int num_muons = 0;
-  //             int num_prtns = 0;
-  //             int num_pions = 0;
-  //             int num_kaons = 0;
-  //             // loop over particles and count each type
-  //             for (const auto & part : sr->prim ){
-  //                 if(abs(part.pdg) == 13)
-  //                     num_muons++;
-  //                 if(abs(part.pdg) == 211)
-  //                     num_pions++;
-  //                 if(abs(part.pdg) == 321)
-  //                     num_kaons++;
-  //
-  //             }
-  //           return ( num_muons==1 && num_pions<1 && num_kaons<1 && num_prtns>0 );
-  //     });
+  
+  const TruthCut kTrueMesonlessSelection([](const caf::SRTrueInteractionProxy* mc)
+       {
+               int num_pions = 0;
+               int num_kaons = 0;
+               // loop over particles and count each type
+               for (const auto & part : mc->prim ){
+                   if(abs(part.pdg) == 211)
+                       num_pions++;
+                   if(abs(part.pdg) == 321)
+                       num_kaons++;
+  
+               }
+             return ( num_pions<1 && num_kaons<1);
+       });
 
 
 
 
-  // // A  generic selection on the pdg of the particle
-  // const TruePartCut kTruePartCut(int PDG){
-  //     const TruePartCut kIsPDG([PDG](const caf::SRTrueParticleProxy* part)
-  //                       {
-  //                         return abs(part->pdg) == PDG ;
-  //                       });
-  //     return kIsPDG;
-  // }
+   // A  generic selection on the pdg of the particle
+   const TruthPartCut kTruthPartCut(int PDG){
+       const TruthPartCut kIsPDG([PDG](const caf::SRTrueParticleProxy* part)
+                         {
+                           return abs(part->pdg) == PDG ;
+                         });
+       return kIsPDG;
+   }
 
 }

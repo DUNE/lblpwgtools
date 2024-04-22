@@ -54,14 +54,14 @@ void mesonless_main()
 
   //Candidate = primary protons in selected interactions
   // All
- Spectrum CandidateProtonMomentum(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
- Spectrum AllProtonMomentum(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
+  Spectrum CandidateProtonMomentum(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
+  Spectrum AllProtonMomentum(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
 
   Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart],axPartMomentum );
   Spectrum CandidateMuonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon&&kContainedPart],axPartMomentum );
 
-//  Spectrum TrueCandidateProtonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TrueParticles(PartNature::kPrim)[kTruePartCut(2212)],axPartMomentum );
-//  Spectrum TrueCandidateMuonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TrueParticles(PartNature::kPrim)[kTruePartCut(13)],axPartMomentum );
+  Spectrum TrueCandidateProtonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartMomentum );
+  Spectrum TrueCandidateMuonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartMomentum );
 
 
   Spectrum AllProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartMomentum );
@@ -73,8 +73,8 @@ void mesonless_main()
   Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart],axPartAngle);
   Spectrum CandidateMuonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon&&kContainedPart],axPartAngle);
 
-  //Spectrum TrueCandidateProtonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TrueParticles(PartNature::kPrim)[kTruePartCut(2212)],axPartAngle );
-//  Spectrum TrueCandidateMuonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TrueParticles(PartNature::kPrim)[kTruePartCut(13)],axPartAngle );
+   Spectrum TrueCandidateProtonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartAngle );
+   Spectrum TrueCandidateMuonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartAngle );
 
    Spectrum AllProtonAngleCont(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartAngle );
   //
@@ -91,7 +91,7 @@ void mesonless_main()
 
   // We are forcing the pot value because cafs dont have this information yet
   // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 1e17;///3.5 * 1.47e21 * 40/1.13;
+  const double pot = 1e19;///3.5 * 1.47e21 * 40/1.13;
 
   sEnergyMuon.OverridePOT(pot);
   sEnergyMuonContX.OverridePOT(pot);
@@ -111,6 +111,8 @@ void mesonless_main()
   CandidateProtonMomentum.OverridePOT(pot);
   CandidateProtonMomentumCont.OverridePOT(pot);
   CandidateMuonMomentumCont.OverridePOT(pot);
+  TrueCandidateProtonMomentumCont.OverridePOT(pot);
+  TrueCandidateMuonMomentumCont.OverridePOT(pot);
 
   AllProtonMomentum.OverridePOT(pot);
   AllProtonMomentumCont.OverridePOT(pot);
@@ -118,6 +120,8 @@ void mesonless_main()
   CandidateProtonAngle.OverridePOT(pot);
   CandidateProtonAngleCont.OverridePOT(pot);
   CandidateMuonAngleCont.OverridePOT(pot);
+  TrueCandidateProtonAngleCont.OverridePOT(pot);
+  TrueCandidateMuonAngleCont.OverridePOT(pot);
 
   AllProtonAngle.OverridePOT(pot);
   AllProtonAngleCont.OverridePOT(pot);
@@ -163,12 +167,14 @@ void mesonless_main()
 //
   new TCanvas;
   //CandidateProtonMomentum.ToTH1(pot)->Draw("hist");
+  TrueCandidateProtonMomentumCont.ToTH1(pot,kBlue)->Draw("hist");
   CandidateProtonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
   gPad->SaveAs("mesonless_mesonless_CandidateProtonMomentum.png");
 
   new TCanvas;
   //CandidateProtonMomentum.ToTH1(pot)->Draw("hist");
-  CandidateMuonMomentumCont.ToTH1(pot,kRed)->Draw("hist");
+  TrueCandidateMuonMomentumCont.ToTH1(pot,kBlue)->Draw("hist");
+  CandidateMuonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
   gPad->SaveAs("mesonless_mesonless_CandidateMuonMomentum.png");
 
   // new TCanvas;
@@ -178,11 +184,13 @@ void mesonless_main()
 
   new TCanvas;
   //CandidateProtonAngle.ToTH1(pot)->Draw("hist");
-  CandidateProtonAngleCont.ToTH1(pot,kRed)->Draw("hist");
+  TrueCandidateProtonAngleCont.ToTH1(pot,kBlue)->Draw("hist");
+  CandidateProtonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
   gPad->SaveAs("mesonless_mesonless_CandidateProtonAngle.png");
 
   new TCanvas;
-  CandidateMuonAngleCont.ToTH1(pot,kRed)->Draw("hist");
+  TrueCandidateMuonAngleCont.ToTH1(pot,kBlue)->Draw("hist");
+  CandidateMuonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
   gPad->SaveAs("mesonless_mesonless_CandidateMuonAngle.png");
 
   // new TCanvas;
@@ -197,13 +205,19 @@ void mesonless_main()
   // PrimPhotons.ToTH1(pot, kGreen)->Draw("hist same");
   // PrimElectrons.ToTH1(pot, kYellow)->Draw("hist same");
   // save to file
-  TFile file( "mesonless_output.root", "recreate" );
-  file.cd();
-  CandidateMuonMomentumCont.SaveTo( &file, "CandidateMuonMomentumCont");
-  CandidateProtonMomentumCont.SaveTo( &file, "CandidateProtonMomentumCont");
-  CandidateMuonAngleCont.SaveTo( &file, "CandidateMuonAngleCont");
-  CandidateProtonAngleCont.SaveTo( &file, "CandidateProtonAngleCont");
-  file.Close();
+ // TFile file( "mesonless_output.root", "recreate" );
+ // file.cd();
+ // CandidateMuonMomentumCont.SaveTo( &file, "CandidateMuonMomentumCont");
+ // CandidateProtonMomentumCont.SaveTo( &file, "CandidateProtonMomentumCont");
+ // CandidateMuonAngleCont.SaveTo( &file, "CandidateMuonAngleCont");
+ // CandidateProtonAngleCont.SaveTo( &file, "CandidateProtonAngleCont");
+ // file.Close();
+  std::cout<< "No. of reco protons "<< CandidateProtonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
 
+  std::cout<< "No. of reco muons "<< CandidateMuonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
+  
+  std::cout<< "No. of true protons "<< TrueCandidateProtonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
+
+  std::cout<< "No. of true muons "<< TrueCandidateMuonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
 
 }

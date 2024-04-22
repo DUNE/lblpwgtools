@@ -34,8 +34,8 @@ namespace ana{
   const RecoPartHistAxis axPartMomentum("Momentum (GeV)", Binning::Simple(50, 0.0, 1.0), kPartMomentum);
   const RecoPartHistAxis axPartAngle("angle(deg)",Binning::Simple(60, 0.0, 180),kPartAngle);
 
-  //const TruePartHistAxis axTruePartMomentum("Momentum (GeV)", Binning::Simple(50, 0.0, 1.0), kTruePartMomentum);
-  //const TruePartHistAxis axTruePartAngle("angle(deg)",Binning::Simple(60, 0.0, 180),kTruePartAngle);
+  const TruthPartHistAxis axTruthPartMomentum("Momentum (GeV)", Binning::Simple(50, 0.0, 1.0), kTruthPartMomentum);
+  const TruthPartHistAxis axTruthPartAngle("angle(deg)",Binning::Simple(60, 0.0, 180),kTruthPartAngle);
   const TruthHistAxis TruevtxPosition( "x(cm)", Binning::Simple(60,-60,60), SIMPLETRUTHVAR(vtx.x),
                                        "z(cm)", Binning::Simple(60,-60,60), SIMPLETRUTHVAR(vtx.z));
 

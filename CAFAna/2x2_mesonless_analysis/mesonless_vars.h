@@ -95,30 +95,31 @@ namespace ana{
       const RecoPartVar kRecoParticlePDG = SIMPLEPARTVAR(pdg);
 
 
-      // const TruePartVar kTruePartMomentum([](const caf::SRTrueParticleProxy* part)
-      // {
-      //   float p = std::sqrt( (part->p.x * part->p.x) + (part->p.y * part->p.y) + (part->p.z * part->p.z));
-      //   return p;
-      // }
-      //
-      // TVector3 TruePartDir(const caf::SRTrueParticleProxy* part){
-      //   if(part->pdg == 22 || part->pdg == 11){ //end points of showers are -inf
-      //     TVector3 ret = TVector3(-11111., -11111., -11111.);
-      //     return ret;
-      //   }
-      //   else{
-      //     TVector3 ret = TVector3(part->end.x,  part->end.y,  part->end.z) -
-      //                  TVector3(part->start.x,part->start.y,part->start.z);
-      //     return ret;
-      //   }
-      // }
-      //
-      // const TruePartVar kTruePartAngle([](const caf::SRTrueParticleProxy* part)
-      //   {
-      //             auto angle = TruePartDir(part).Angle(beam_dir) * 180.0 / TMath::Pi();
-      //             //auto angle =  TVector3(part->p.x,part->p.y,part->p.z).Angle(beam_dir) * 180.0 / TMath::Pi();
-      //             return angle;
-      //   });
+      const TruthPartVar kTruthPartMomentum([](const caf::SRTrueParticleProxy* part)
+      {
+        float p = std::sqrt( (part->p.px * part->p.px) + (part->p.py * part->p.py) + (part->p.pz * part->p.pz));
+        return p;
+      });
+      
+      TVector3 TruthPartDir(const caf::SRTrueParticleProxy* part)
+      {
+        if(part->pdg == 22 || part->pdg == 11){ //end points of showers are -inf
+          TVector3 ret = TVector3(-11111., -11111., -11111.);
+          return ret;
+        }
+        else{
+          TVector3 ret = TVector3(part->end_pos.x, part->end_pos.y,  part->end_pos.z) -
+                       TVector3(part->start_pos.x, part->start_pos.y, part->start_pos.z);
+          return ret;
+        }
+      }
+      
+      const TruthPartVar kTruthPartAngle([](const caf::SRTrueParticleProxy* part)
+        {
+                 // auto angle = PartDir(part).Angle(beam_dir) * 180.0 / TMath::Pi();
+                  auto angle =  TVector3(part->p.px,part->p.py,part->p.pz).Angle(beam_dir) * 180.0 / TMath::Pi();
+                  return angle;
+        });
 
 
 
