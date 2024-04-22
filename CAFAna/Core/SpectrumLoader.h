@@ -82,6 +82,7 @@ namespace ana
   // SBN had null spill/slice sources, I guess we need both a StandardRecord and Interaction one?
   static NullSource<caf::SRProxy> kNullSRSource;
   static NullSource<caf::SRInteractionProxy> kNullInteractionSource;
+  static NullSource<caf::SRTrueInteractionProxy> kNullTrueIntSource;
 
   /* We dont need this info here
     /// All unique cuts contained in fHistDefs

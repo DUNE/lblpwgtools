@@ -178,8 +178,7 @@ namespace ana
 
     if((!fPOT && !fLivetime) || (!rhs.fPOT && !rhs.fLivetime)){
       std::cout << "Error: can't sum Spectrum with no POT or livetime: "
-                << fPOT << " " << rhs.fPOT << " " << fLivetime << " " << rhs.fL\
-ivetime
+                << fPOT << " " << rhs.fPOT << " " << fLivetime << " " << rhs.fLivetime
                 << std::endl;
       abort();
     }

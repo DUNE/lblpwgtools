@@ -19,6 +19,7 @@ namespace ana
   typedef _Cut<caf::SRInteractionProxy> InteractionCut;
   typedef _Cut<caf::SRInteractionProxy> Cut;
   typedef _Cut<caf::SRTrueInteractionProxy> TruthCut;
+  typedef _Cut<caf::SRTrueParticleProxy> TruthPartCut;
   typedef _Cut<caf::SRNDLArIntProxy> NDCut;
 
   /// \brief Equivalent of \ref Cut acting on \ref caf::StandardRecord. For use in
@@ -28,6 +29,7 @@ namespace ana
   /// The simplest possible cut: pass everything, used as a default
   const Cut kNoCut(NoCut<caf::SRInteractionProxy>{});
   const TruthCut kNoTruthCut(NoCut<caf::SRTrueInteractionProxy>{});
+  const TruthPartCut kNoTruthPartCut(NoCut<caf::SRTrueParticleProxy>{});
   const NDCut kNoNDCut(NoCut<caf::SRNDLArIntProxy>{});
   const SRCut kNoSRCut(NoCut<caf::SRProxy>{});
 

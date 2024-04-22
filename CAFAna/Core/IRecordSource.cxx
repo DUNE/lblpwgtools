@@ -205,6 +205,39 @@ namespace ana
     return sr->mc.nu;
   }
 
+  template <TruePType PartType>
+  const caf::Proxy<std::vector<caf::SRTrueParticle>> &  GetNuTruthParticles(const caf::SRTrueInteractionProxy* nu)
+  {
+    if constexpr(PartType == TruePType::kPrim)
+      return nu->prim;
+    else if (PartType == TruePType::kSec)
+       return nu->sec;
+    else if (PartType == TruePType::kPreFSI)
+       return nu->prefsi;
+    else
+     assert(false &&"GetNuTruthParticles() is currently instrumented for TruePType kPrim, kSec or kPreFSI only" );
+  }
+
+
+//  // From True interactions to recointeractions
+//  // usage: apply cuts on truth branch but get records from common branch
+//  template <RecoType IntType>
+//  const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr){
+//   ///< Interaction ID == 'vertexID' from edep-sim (ND) or GENIE record id (FD)
+//    int index = sr->mc.nu.id;
+//   ///< Indices of SRTrueInteraction(s), if relevant (use this index in SRTruthBranch::nu to get them)
+//    std::vector<std::size_t> truths = sr->common.ixn.truth;
+//
+//    if constexpr(IntType == RecoType::kDLP){
+//          sr->common.ixn.dlp.id;
+//          return sr->common.ixn.dlp;}
+//    else if (IntType == RecoType::kPandora)
+//          sr->common.ixn.pandora.id;
+//      return sr->common.ixn.pandora;
+//    else
+//      assert(false &&"GetRecoInteractionsFromTruths() is currently instrumented for RecoType kDLP or kPandora only" );
+//  }
+
   //----------------------------------------------------------------------
 
   // Instantiations
@@ -215,6 +248,8 @@ namespace ana
   template class VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>;
 
   template class VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction>;
+
+//  template class VectorAdaptor<caf::SRTrueInteraction, caf::SRTrueParticle>;
 
   template class EnsembleVectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>;
   // -----------------------------------------------------------------------
@@ -234,7 +269,6 @@ namespace ana
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
   }
 
-
   // -----------------------------------------------------------------------
    _IRecordSource<caf::SRProxy>::_IRecordSource()
   {
@@ -251,7 +285,21 @@ namespace ana
                                     std::forward_as_tuple(RecoType::kPandora),
                                     std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kPandora>));
   }
+ // -----------------------------------------------------------------------
+   _IRecordSource<caf::SRTrueInteractionProxy>::_IRecordSource()
+  {
+    fNuTruthParticleCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(TruePType::kPrim),
+                                    std::forward_as_tuple(*this, GetNuTruthParticles<TruePType::kPrim>));
+    fNuTruthParticleCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(TruePType::kSec),
+                                    std::forward_as_tuple(*this, GetNuTruthParticles<TruePType::kSec>));
+    fNuTruthParticleCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(TruePType::kPreFSI),
+                                    std::forward_as_tuple(*this, GetNuTruthParticles<TruePType::kPreFSI>));
+  }
 
+// -----------------------------------------------------------------------
    _IRecordEnsembleSource<caf::SRInteractionProxy>::_IRecordEnsembleSource()
   {
     // it would be better (lots less boilerplate) to do this in the initializers section,
@@ -267,6 +315,7 @@ namespace ana
                                  std::forward_as_tuple(RecoType::kPIDA),
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
   }
+
 
 
 
