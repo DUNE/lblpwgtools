@@ -14,7 +14,7 @@ setup eigen v3_3_9a || exit 1
 setup stan v2_26_1 -q e20:prof || exit 1
 setup osclib v00.21 -q e20:prof:n311:stan || exit 1
 setup cafanacore v02.00 -q e20:prof:n311 || exit 1
-setup duneanaobj v03_01_00 -q e20:prof || exit 1
+setup duneanaobj v03_02_01 -q e20:prof || exit 1
 setup fhiclcpp v4_15_03 -q e20:prof || exit 1 # for prism
 
 # To get setup_fnal_security which helps reading files over xrootd
