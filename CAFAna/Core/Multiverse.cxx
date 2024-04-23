@@ -112,6 +112,8 @@ namespace ana
 
     for(const std::string& name: names){
       ret.push_back(Registry<ISyst>::ShortNameToPtr(name, true));
+      //ret.push_back(Registry<ISyst<caf::SRInteractionProxy>>::ShortNameToPtr(name, true));
+      //ret.push_back(Registry<ISyst<caf::SRTrueInteractionProxy>>::ShortNameToPtr(name, true));
       if(!ret.back()){
         std::cout << "FitMultiverse::LoadFrom(): couldn't find any syst with short name '" << name << "'" << std::endl;
         abort();

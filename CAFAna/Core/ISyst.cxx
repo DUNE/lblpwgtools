@@ -6,26 +6,33 @@
 
 namespace ana
 {
+
   //----------------------------------------------------------------------
+  //template<class RecT> ISyst<RecT>::ISyst(const std::string& shortName,
   ISyst::ISyst(const std::string& shortName,
                const std::string& latexName,
          bool applyPenalty,
          double min,
          double max)
+    //: _ISyst<RecT>(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
     : _ISyst(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
   {
+    //Registry<ISyst<RecT>>::Register(this);
     Registry<ISyst>::Register(this);
   }
 
   //----------------------------------------------------------------------
+  //template<class RecT> ISyst<RecT>::~ISyst<RecT>()
   ISyst::~ISyst()
   {
     // Normally ISysts should last for the life of the process, but in case one
     // is deleted it's best not to leave a dangling pointer in Registry.
+    //Registry<ISyst<RecT>>::UnRegister(this);
     Registry<ISyst>::UnRegister(this);
   }
 
   //----------------------------------------------------------------------
+  //template<class RecT> double ISyst<RecT>::Penalty(double x ) const
   double ISyst::Penalty(double x) const
   {
     if(fApplyPenalty){
@@ -45,4 +52,7 @@ namespace ana
       return util::sqr((x-mean)/rad)-1;
     }
   }
+
+  //template class ISyst<caf::SRInteractionProxy>;
+  //template class ISyst<caf::SRTrueInteractionProxy>;
 }

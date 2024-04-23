@@ -9,8 +9,10 @@ Also some information is duplicated from a directory above, but gathered here fo
 
 Clone this branch of the repository:
 ```
+
 git clone -b feature/2x2-tutorial  git@github.com:DUNE/lblpwgtools.git
 cd lblpwgtools
+
 ```
 
 A helper build script lives in this `CAFAna` subdirectory. You can build and install the code like:
@@ -32,5 +34,14 @@ Once CAFAna has been built, to set up the environment you will need to `source /
 
 Once CAFAna is built and the environment setup, proceed to run an example scripts doing:
 ```
-cafe tute/demo0b.C
+cafe -l 10 tute/demo0b.C
 ```
+The `-l` option limits the number of files read by the script so you can obtain plots faster. See other options with `cafe --help`.
+
+The three example scripts have the following content:
+
+# demo0b 
+
+# demo1b
+
+# demo0eb

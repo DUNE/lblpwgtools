@@ -77,6 +77,12 @@ namespace ana
     }
   };
 
+//  using Universe = _Universe<ISyst<caf::SRInteractionProxy>>;
+//  using Multiverse = _Multiverse<ISyst<caf::SRInteractionProxy>>;
+//
+//  using UniverseTrue = _Universe<ISyst<caf::SRTrueInteractionProxy>>;
+//  using MultiverseTrue = _Multiverse<ISyst<caf::SRTrueInteractionProxy>>;
+
   using Universe = _Universe<ISyst>;
   using Multiverse = _Multiverse<ISyst>;
 }

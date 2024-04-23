@@ -13,6 +13,7 @@ namespace ana
   /// value of the variable (which may be some complicated function).
   typedef _Var<caf::SRInteractionProxy>  Var;
   typedef _Var<caf::SRTrueInteractionProxy> TruthVar;
+  typedef _Var<caf::SRTrueParticleProxy> TruthPartVar;
 //Commented things: I was trying so we could write loader.Interactions()[IntCut].{dlp,pandora}.RecoParticles().{dlp,pandora}[PartiCut]
   //  typedef _Var<caf::SRInteractionBranchProxy>  Var;
 

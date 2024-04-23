@@ -15,6 +15,8 @@ namespace ana
   ///
   /// The Shift() function alters the \ref caf::StandardRecord or the weight
   /// associated with the event.
+  //template<class RecT>
+  //class ISyst: public _ISyst<RecT>
   class ISyst: public _ISyst<caf::SRInteractionProxy>
   {
   public:
