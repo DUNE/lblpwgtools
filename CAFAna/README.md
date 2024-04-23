@@ -30,13 +30,13 @@ Once CAFAna has been built, to set up the environment you will need to `source /
 
 ## Examples 
 
-Once CAFAna is built and the environment setup, proceed to run an example scripts doing:
+Once CAFAna is built and the environment setup, proceed to run an example script:
 ```
 cafe -l 10 tute/demo0b.C
 ```
 The `-l` option limits the number of files read by the script so you can obtain plots faster. See other options with `cafe --help`.
 
-The three example scripts have the following content:
+The three example scripts in the `tute` directory have the following content:
 
 ### demo0b 
 Basic distributions in 1D and 2D of variables from the ` SRCommonRecoBranch`.
@@ -53,3 +53,7 @@ Examples of systematic variations applied to distributions from ` SRCommonRecoBr
 - Missing truth to reco piping (More complex than I imagined ...)
 - Add a feature to count number of events read (without having to convert to histogram and compute integral)
 - More realistic examples of systematics
+
+##
+
+Last updated on Apr 23, 2024, by Maria Martinez-Casales (mcasales@fnal.gov)
