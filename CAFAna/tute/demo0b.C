@@ -15,15 +15,21 @@
 
 using namespace ana;
 
-// Make a few basic spectra of reconstructed info from the cafs
-// One with Interaction Level vars/cuts
-// One with particle-level vars/cuts
+// Make a few basic spectra from the cafs
+// Reconstructed 
+//    - One with Interaction Level vars/cuts
+//    - One with particle-level vars/cuts
+// Truth 
+//   - True interaction Level Vars/Cuts
+//   - True particles Level Vars/Cuts
+
+
 void demo0b()
 {
  
   const std::string fname ="/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  //pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
-//
+  //() still figuring out the problem with flatcafs)
+  //"/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC*";
 
   // Source of events
   SpectrumLoader loader(fname);
@@ -58,7 +64,7 @@ void demo0b()
   const HistAxis vtxPosition2("y(cm)", Binning::Simple(70,-70,70), kVtxY, 
                               "z(cm)", Binning::Simple(70,-70,70), kVtxZ);
   // A simple selection cut at the level of vertices: i.e. containment
-  const Cut kContainment([](const caf::SRInteractionProxy* sr)
+  const Cut kContainedVertex([](const caf::SRInteractionProxy* sr)
                       {
 
                         double x = sr->vtx.x;
@@ -76,18 +82,18 @@ void demo0b()
   // we use kNoCut at interactions level, meaning no selection on vertices, then with containment
   // You can select RecoType::kDLP,kPandora at vtx/interaction level and kPIDA as well for particles
   Spectrum sEnergyMuon(     loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(      RecoType::kDLP)[kIsMuon], axEnergy);
-  Spectrum sEnergyMuonCont( loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
+  Spectrum sEnergyMuonCont( loader.Interactions(RecoType::kDLP)[kContainedVertex].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
   // Interaction level vars
   Spectrum sVtxPositionAll( loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
-  Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition);
+  Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainedVertex], vtxPosition);
 
   // You need the histaxis to match the Cut level (i.e: the next one will not work becausePosition is an SRInteraction entry
   // but your spectrumLoader points to entries from SRRecoParticle
-  // Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], vtxPosition);
+  // Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainedVertex].RecoParticles(RecoType::kDLP)[kIsMuon], vtxPosition);
   
   // try plottingwhatever to see what ge get from the indices in SRInteraction.truth
   Spectrum sVtxPositionAll2( loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition2);
-  Spectrum sVtxPositionAllCont2( loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition2);
+  Spectrum sVtxPositionAllCont2( loader.Interactions(RecoType::kDLP)[kContainedVertex], vtxPosition2);
 
 
  const TruthVar kTrueId([](const caf::SRTrueInteractionProxy* nu){return nu->id;});
@@ -104,7 +110,7 @@ void demo0b()
                                          return cont;
     });
 
- // This could be prefsi, primaries or secondaries
+ // This can be used for prefsi, primary or secondary particles. See spectrum constructor later.
  const TruthPartVar kTruePartPDG([](const caf::SRTrueParticleProxy* part){ 
     int pdg = part->pdg;
     // recast in a different way 
@@ -126,10 +132,11 @@ void demo0b()
       return 8;
     // (8) anything else
   });
+ std::vector<std::string> PDGlabels = {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","other"};
 
   const TruthHistAxis myHistTruthAxis("true id", Binning::Simple(100, 0, 100), kTrueId);
   const TruthHistAxis myHistTruthAxisPDG("true pdg", Binning::Simple(100, 0, 100), SIMPLETRUTHVAR(pdg));
-  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 0, 8, {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","other"}), kTruePartPDG);
+  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 0, 8), kTruePartPDG);
 
   const HistAxis ixnId( "id", Binning::Simple(20,-1,19), SIMPLEVAR(id));
   
@@ -137,10 +144,20 @@ void demo0b()
   Spectrum SixnIdTrue(loader.NuTruths()[kNoTruthCut], myHistTruthAxis);
   Spectrum PDGTrue(loader.NuTruths()[kNoTruthCut], myHistTruthAxisPDG);
   
-  Spectrum PDGTruePrims(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kPrim)[kNoTruthPartCut], myHistTruthPartAxisPDG);
+  Spectrum PDGTruePrims(loader.NuTruths().TruthParticles(TruePType::kPrim)[kNoTruthPartCut], myHistTruthPartAxisPDG);
   Spectrum PDGTrueSecs(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kSec)[kNoTruthPartCut], myHistTruthPartAxisPDG);
   Spectrum PDGTruePreFSI(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kPreFSI)[kNoTruthPartCut], myHistTruthPartAxisPDG);
 
+  // lets try a reco histaxis wuth truth selection ...
+   const TruthCut kIsTrueNuMu ([](const caf::SRTrueInteractionProxy* nu){
+                        int pdg = nu->pdg;
+                         return pdg==14;
+    });
+
+
+  Spectrum sTrueNumuEnergy( loader.NuTruths(), TruthHistAxis("True energy [GeV]", Binning::Simple(20,0,5),SIMPLETRUTHVAR(E)) );
+  // double check that the SR cut is actually cutting the right thing 
+  Spectrum sTrueNumuPDGtest(loader.NuTruths()[kIsTrueNuMu], myHistTruthAxisPDG);
   // Fill in the spectrum
   loader.Go();
 
@@ -164,10 +181,16 @@ void demo0b()
 
   new TCanvas;
   PDGTrue.ToTH1(pot,kBlue)->Draw("hist");
+  sTrueNumuPDGtest.ToTH1(pot,kRed)->Draw("hist same");
  new TCanvas;
-  PDGTruePrims.ToTH1(pot,kRed)->Draw("hist");
+  TH1* prims = PDGTruePrims.ToTH1(pot,kRed);
+  for (unsigned int i  = 0; i<PDGlabels.size(); i++)  prims->GetXaxis()->SetBinLabel(i+1,PDGlabels[i].c_str());
+  prims->Draw("hist");
   PDGTrueSecs.ToTH1(pot,kBlue)->Draw("hist same");
   PDGTruePreFSI.ToTH1(pot,kGreen+2)->Draw("hist same");
+
+  new TCanvas;
+  sTrueNumuEnergy.ToTH1(pot)->Draw("hist");
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");

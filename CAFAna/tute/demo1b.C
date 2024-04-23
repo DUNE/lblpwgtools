@@ -58,6 +58,7 @@ const Cut kMesonlessSelection([](const caf::SRInteractionProxy* sr)
 const  RecoPartCut kContainedPart([](const caf::SRRecoParticleProxy* part){return part->contained;});
 
 TVector3 RecoPartDir(const caf::SRRecoParticleProxy* part){
+
   TVector3 ret = TVector3(part->end.x,  part->end.y,  part->end.z) - 
                  TVector3(part->start.x,part->start.y,part->start.z);
   return ret;
@@ -65,13 +66,18 @@ TVector3 RecoPartDir(const caf::SRRecoParticleProxy* part){
 
 const  RecoPartCut kPartLenCut([](const caf::SRRecoParticleProxy* part)
       {
-        auto len = RecoPartDir(part).Mag();
+        auto len=-5.;
+        // prevent showers to be accounted 
+        if (part->E_method  != caf::PartEMethod::kCalorimetry) len = RecoPartDir(part).Mag();        
         return len>2;
        });
 
 const  RecoPartVar kPartLen([](const caf::SRRecoParticleProxy* part)
       {
-        return RecoPartDir(part).Mag();
+        auto len=-5.;
+        // prevent trying to calculate shw lenght, as they have infinity end-point
+        if (part->E_method  != caf::PartEMethod::kCalorimetry) len = RecoPartDir(part).Mag();   
+        return len;
        });
 
 // A  generic selection on the pdg of the particle 
@@ -136,8 +142,10 @@ const Var kNumberOfTrkShw([](const caf::SRInteractionProxy* ixn)
 void demo1b()
 {
   // Environment variables and wildcards work. As do SAM datasets.
-  // older files 
-  const std::string fname = "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
+  const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
+  //"/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.2/flat/PicoRun4.2_1E17_RHC.flow.0000*";
+  /// "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
   //  "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.2/PicoRun4.2_1E17_RHC.flow*";
 //   "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.1/PicoRun4.1_1E17_RHC.flow*";
   
@@ -164,15 +172,14 @@ void demo1b()
 // A simple selection cut at the level of vertices: i.e. containment
 const Cut kContainment([](const caf::SRInteractionProxy* ixn)
                       {
-
                         double x = ixn->vtx.x;
                         double y = ixn->vtx.y;
                         double z = ixn->vtx.z;
                         bool cont =  abs(x)<50 && 
                                      abs(x)>10 && 
-                                     abs(y+310)<50 &&
-                                     abs(z-1300)>10 && 
-                                     abs(z-1300)<50 ;
+                                     abs(y)<50 &&
+                                     abs(z)>10 && 
+                                     abs(z)<50 ;
                         return cont;
                       });
 
@@ -187,7 +194,7 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 
   //2D histaxis with interaction level variables
   const HistAxis vtxPosition( "x(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.x), 
-                              "z(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.z-1300));
+                              "z(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.z));
 
 //  Multiplicity of all particles reconstructed from selected vertices
   // tracks 
@@ -202,11 +209,11 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 
 //  ~~~~**** where the magic happens *****~~~~
   // we use kNoCut at interactions level, meaning no selection on vertices
-  Spectrum sEnergyMuon(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
+  Spectrum sEnergyMuon(loader.Interactions(RecoType::kDLP).RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
   Spectrum sEnergyMuonContX(loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
-  Spectrum sEnergyElectron(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(11)], axEnergy);
+  Spectrum sEnergyElectron(loader.Interactions(RecoType::kDLP).RecoParticles(RecoType::kDLP)[kPartCut(11)], axEnergy);
  
-  Spectrum sVtxPositionAll(loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
+  Spectrum sVtxPositionAll(loader.Interactions(RecoType::kDLP), vtxPosition);
   Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition);
 //
 //// This wont work with a cut because the information of number of tracks 
@@ -242,8 +249,7 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
   loader.Go();
 
   // We are forcing the pot value because cafs dont have this information yet
-  // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 1e17;///3.5 * 1.47e21 * 40/1.13;
+  const double pot = 1e17;
 
   sEnergyMuon.OverridePOT(pot);
   sEnergyMuonContX.OverridePOT(pot);
