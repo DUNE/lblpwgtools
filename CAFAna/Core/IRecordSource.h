@@ -8,9 +8,12 @@
 
 namespace ana
 {
-
+ // template<class RecT>  class ISyst;
   class ISyst;
+  
   template<class SystT> class _Multiverse;
+ // using Multiverse = _Multiverse<ISyst<caf::SRInteractionProxy>>;
+  //using MultiverseTrue = _Multiverse<ISyst<caf::SRTrueInteractionProxy>>;
   using Multiverse = _Multiverse<ISyst>;
 
   class SystShifts;
@@ -25,7 +28,9 @@ namespace ana
   using INuTruthParticleSource = _IRecordSource<caf::SRTrueParticleProxy>;
   //----------------------------------------------------------------------
   using IInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRInteractionProxy>;
+  using ITrueInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRTrueInteractionProxy>;
   using IParticleEnsembleSource = _IRecordEnsembleSource<caf::SRRecoParticleProxy>;
+  using INuTruthParticleEnsembleSource = _IRecordEnsembleSource<caf::SRTrueParticleProxy>;
   //----------------------------------------------------------------------
 	
   enum class RecoType {
@@ -59,6 +64,12 @@ namespace ana
   template <RecoType PartType>
   const caf::Proxy<std::vector<caf::SRRecoParticle>>& GetRecoParticles(const caf::SRInteractionProxy* ixn);
 
+//  template <RecoType PartType>
+//  const caf::Proxy<std::vector<caf::SRTrack>>& GetTracks(const caf::SRInteractionProxy* ixn);
+//
+//  template <RecoType PartType>
+//  const caf::Proxy<std::vector<caf::SRTrack>>& GetShowers(const caf::SRInteractionProxy* ixn);// or caf::SRProxy* sr? 
+
   template <RecoType IntType>
   const caf::Proxy<std::vector<caf::SRInteraction>>& GetInteractions(const caf::SRProxy* sr);
 
@@ -71,7 +82,8 @@ namespace ana
   const caf::Proxy<std::vector<caf::SRTrueParticle>>& GetNuTruthParticles(const caf::SRTrueInteractionProxy* nu);  
     //  template <RecoType IntType>
     //  const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr);
-
+  //  // usage: apply cuts on truth branch but get records from common branch
+  //const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr);
   //----------------------------------------------------------------------
 
   template<> class _IRecordSource<caf::SRInteractionProxy>
@@ -100,9 +112,12 @@ namespace ana
   public:
     _IRecordSource();
 
+  //using _IRecordSourceDefaultImpl::Ensemble;
+   //ITrueInteractionEnsembleSource& Ensemble(const Multiverse& multiverse);
    INuTruthParticleSource& TruthParticles(const TruePType kPType) {return fNuTruthParticleCollections.at(kPType);}
 
   protected:
+    //IDDict<const FitMultiverse*, ITrueInteractionEnsembleSource> fEnsembleSources;
     std::unordered_map<TruePType, VectorAdaptor<caf::SRTrueInteraction, caf::SRTrueParticle>> fNuTruthParticleCollections;
 
   };
@@ -116,14 +131,15 @@ namespace ana
   public:
     _IRecordSource();
 
-    IInteractionSource&       Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}
+    IInteractionSource&       Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}    
     INDLarInteractionSource&  NDLarInteractions(  const RecoType kRType ) {return fNDLarInteractionCollections.at(kRType);}
     INuTruthSource& NuTruths() {return fNuTruths;}
-
+    //IInteractionSource&       InteractionsTruthFiltered(){return fFilteredInteractions;}
   protected:
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections;
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>> fNDLarInteractionCollections;
     VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction> fNuTruths{*this, GetNuTruths};
+    //VectorAdaptor<caf::StandardRecord,caf::SRInteraction> fFilteredInteractions{*this,GetRecoInteractionsFromTruths};
 
   };
 
@@ -182,13 +198,26 @@ namespace ana
   {
   public:
     _IRecordEnsembleSource();
-  //IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
+
     IParticleEnsembleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
-    
+
   protected:
      std::unordered_map<RecoType, EnsembleVectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
   };
+
+  // the analogous for truth branch
+  template<> class _IRecordEnsembleSource<caf::SRTrueInteractionProxy>
+    : public _IRecordEnsembleSourceDefaultImpl<caf::SRTrueInteractionProxy>
+  {
+  public:
+    _IRecordEnsembleSource();
+
+    INuTruthParticleEnsembleSource& TruthParticles(const TruePType kPType) {return fNuTruthParticleCollections.at(kPType);}
+  protected:    
+     std::unordered_map<TruePType, EnsembleVectorAdaptor<caf::SRTrueInteraction, caf::SRTrueParticle>> fNuTruthParticleCollections;
+  };
+
  /// Still missing the analogous StandardRecord sources (which loop over interactions)
   // SR->Interactions, SR->NDLARInte, SR->TrueInteraction
 }

@@ -31,14 +31,21 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+//  SystShifts(const ISyst<caf::SRInteractionProxy>* syst, double shift);
   SystShifts::SystShifts(const ISyst *syst, double shift) 
     : fID(fgNextID++)
   {
     if (shift != 0)
       fSystsDbl.emplace(syst, Clamp(shift, syst));
   }
-
+//  SystShifts(const ISyst<caf::SRTrueInteractionProxy>* syst, double shift);
+//    : fID(fgNextID++)
+//  {
+//    if (shift != 0)
+//      fSystsDbl.emplace(syst, Clamp(shift, syst));
+//  }
   //----------------------------------------------------------------------
+  //SystShifts::SystShifts(const ISyst<caf::SRInteractionProxy>* syst, stan::math::var shift)
   SystShifts::SystShifts(const ISyst* syst, stan::math::var shift)
       : fID(fgNextID++)
   {
@@ -47,15 +54,31 @@ namespace ana
     // so that when the Stan cache gets invalidated we can still return something usable.
     fSystsDbl.emplace(syst, Clamp(util::GetValAs<double>(shift), syst));
   }
-
+//  SystShifts::SystShifts(const ISyst<caf::SRTrueInteractionProxy>* syst, stan::math::var shift)
+//      : fID(fgNextID++)
+//  {
+//    fSystsStan.emplace(syst, Clamp(shift, syst));
+//    // we're always going to maintain a "double" copy
+//    // so that when the Stan cache gets invalidated we can still return something usable.
+//    fSystsDbl.emplace(syst, Clamp(util::GetValAs<double>(shift), syst));
+//  }
   //----------------------------------------------------------------------
+  //SystShifts::SystShifts(const std::map<const ISyst<caf::SRInteractionProxy> *, double> &shifts)
   SystShifts::SystShifts(const std::map<const ISyst *, double> &shifts)
       : fID(fgNextID++) {
     for (auto it : shifts)
       if (it.second != 0)
         fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
   }
+//    SystShifts::SystShifts(const std::map<const ISyst<caf::SRTrueInteractionProxy> *, double> &shifts)
+////  SystShifts::SystShifts(const std::map<const ISyst *, double> &shifts)
+//      : fID(fgNextID++) {
+//    for (auto it : shifts)
+//      if (it.second != 0)
+//        fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
+//  }
   //----------------------------------------------------------------------
+  //SystShifts(const std::unordered_map<const ISyst<caf::SRInteractionProxy>*, double>& shifts)
   SystShifts::SystShifts(const std::unordered_map<const ISyst*, double>& shifts)
     : fID(fgNextID++)
   {
@@ -64,7 +87,17 @@ namespace ana
         fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
       //fSystsDbl.emplace(it.first, it.second);
   }
+//  SystShifts(const std::unordered_map<const ISyst<caf::SRTrueInteractionProxy>*, double>& shifts)
+//  //SystShifts::SystShifts(const std::unordered_map<const ISyst*, double>& shifts)
+//    : fID(fgNextID++)
+//  {
+//    for(auto it: shifts) 
+//      if(it.second != 0) //should I be clamping?
+//        fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
+//      //fSystsDbl.emplace(it.first, it.second);
+//  }
   //----------------------------------------------------------------------
+  //SystShifts(const std::map<const ISyst<caf::SRInteractionProxy>*, stan::math::var>& shifts)
   SystShifts::SystShifts(const std::map<const ISyst*, stan::math::var>& shifts)
       : fID(fgNextID++)
   {
@@ -74,14 +107,31 @@ namespace ana
       fSystsDbl.emplace(it.first, util::GetValAs<double>(it.second));
     }
   }
+//   SystShifts(const std::map<const ISyst<caf::SRTrueInteractionProxy>*, stan::math::var>& shifts)
+//  //SystShifts::SystShifts(const std::map<const ISyst*, stan::math::var>& shifts)
+//      : fID(fgNextID++)
+//  {
+//    for(auto it: shifts)
+//    {
+//      fSystsStan.emplace(it.first, it.second);
+//      fSystsDbl.emplace(it.first, util::GetValAs<double>(it.second));
+//    }
+//  }
   //----------------------------------------------------------------------
+//  SystShifts SystShifts::RandomThrow(const std::vector<const ISyst<caf::SRInteractionProxy>*>& systs)
   SystShifts SystShifts::RandomThrow(const std::vector<const ISyst*>& systs)
   {
     SystShifts ret;
     for(const ISyst* s: systs) ret.SetShift(s, gRandom->Gaus(0, 1));
     return ret;
   }
-
+//  SystShifts SystShifts::RandomThrow(const std::vector<const ISyst<caf::SRTrueInteractionProxy>*>& systs)
+////  SystShifts SystShifts::RandomThrow(const std::vector<const ISyst*>& systs)
+//  {
+//    SystShifts ret;
+//    for(const ISyst* s: systs) ret.SetShift(s, gRandom->Gaus(0, 1));
+//    return ret;
+//  }
   //----------------------------------------------------------------------
   std::unique_ptr<SystShifts> SystShifts::Copy() const
   {
@@ -89,6 +139,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  //void SetShift(const ISyst<caf::SRInteractionProxy>* syst, double shift, bool force)
   void SystShifts::SetShift(const ISyst* syst, double shift, bool force)
   {
     fID = fgNextID++;
@@ -108,6 +159,26 @@ namespace ana
     fSystsDbl.erase(syst);
     if(force || shift != 0.) fSystsDbl.emplace(syst, Clamp(shift, syst));
   }
+//  void SetShift(const ISyst<caf::SRTrueInteractionProxy>* syst, double shift, bool force)
+//  //void SystShifts::SetShift(const ISyst* syst, double shift, bool force)
+//  {
+//    fID = fgNextID++;
+//
+//    // if this slot already exists in the Stan systs, and we're not setting the same value,
+//    // some shenanigans are going on that we need to figure out.  abort.
+//    auto itStan = fSystsStan.find(syst);
+//    if(itStan != fSystsStan.end() && (itStan->second != shift && std::isnan(shift) != std::isnan(itStan->second)))
+//    {
+//      std::cerr << "Error Syst '" << syst->ShortName() << " already has a Stan pull set (" << itStan->second << ") "
+//                << "and you're trying to set a different double one (" << shift << ")." << std::endl;
+//      std::cerr << "You almost certainly didn't mean to do that." << std::endl;
+//      std::cerr << "Abort." << std::endl;
+//      abort();
+//    }
+//
+//    fSystsDbl.erase(syst);
+//    if(force || shift != 0.) fSystsDbl.emplace(syst, Clamp(shift, syst));
+//  }
 
   //----------------------------------------------------------------------
   void SystShifts::SetShift(const ISyst* syst, stan::math::var shift)
