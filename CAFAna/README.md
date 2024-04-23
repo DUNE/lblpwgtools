@@ -46,3 +46,10 @@ More distributions, more manipulations of variables/cuts, now of variables from 
 
 ### demo0eb
 Examples of systematic variations applied to distributions from ` SRCommonRecoBranch` variables. 
+
+## To do's / caveats / wishlist
+- These examples work perfectly with `caf` files. `flatcaf`s are showing errors, needs to be resolved.
+- Systematic variations are not implemented in truth branches yet
+- Missing truth to reco piping (More complex than I imagined ...)
+- Add a feature to count number of events read (without having to convert to histogram and compute integral)
+- More realistic examples of systematics
