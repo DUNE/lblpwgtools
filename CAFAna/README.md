@@ -9,10 +9,8 @@ Also some information is duplicated from a directory above, but gathered here fo
 
 Clone this branch of the repository:
 ```
-
 git clone -b feature/2x2-tutorial  git@github.com:DUNE/lblpwgtools.git
 cd lblpwgtools
-
 ```
 
 A helper build script lives in this `CAFAna` subdirectory. You can build and install the code like:
@@ -40,8 +38,11 @@ The `-l` option limits the number of files read by the script so you can obtain 
 
 The three example scripts have the following content:
 
-# demo0b 
+### demo0b 
+Basic distributions in 1D and 2D of variables from the ` SRCommonRecoBranch`.
 
-# demo1b
+### demo1b
+More distributions, more manipulations of variables/cuts, now of variables from the `SRTruthBranch`. Also showing how to open/read files.
 
-# demo0eb
+### demo0eb
+Examples of systematic variations applied to distributions from ` SRCommonRecoBranch` variables. 
