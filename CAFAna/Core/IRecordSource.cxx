@@ -335,7 +335,9 @@ namespace ana
                                  std::forward_as_tuple(RecoType::kPIDA),
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
   }
+
 // -----------------------------------------------------------------------
+// Ensemble versions
    _IRecordEnsembleSource<caf::SRTrueInteractionProxy>::_IRecordEnsembleSource()
   {
     fNuTruthParticleCollections.emplace(std::piecewise_construct,
@@ -348,23 +350,6 @@ namespace ana
                                     std::forward_as_tuple(TruePType::kPreFSI),
                                     std::forward_as_tuple(*this, GetNuTruthParticles<TruePType::kPreFSI>));
   }
-
-   _IRecordEnsembleSource<caf::SRInteractionProxy>::_IRecordEnsembleSource()
-  {
-    // it would be better (lots less boilerplate) to do this in the initializers section,
-    // but I can't work out why it won't compile when the items are written
-    // in initializer list format
-    fParticleCollections.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RecoType::kDLP),
-                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kDLP>));
-    fParticleCollections.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RecoType::kPandora),
-                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPandora>));
-    fParticleCollections.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RecoType::kPIDA),
-                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
-  }
-
 
 
 }
