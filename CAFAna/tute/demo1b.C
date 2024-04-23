@@ -3,16 +3,16 @@
 
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
-#include "demo1b.h"
+//#include "demo1b.h"
 
 
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TPad.h"
-
+#include "TVector3.h"
 #include "TFile.h"
-
+#include "TStyle.h"
 using namespace ana;
 
 
@@ -61,7 +61,7 @@ const  RecoPartCut kPartLenCut([](const caf::SRRecoParticleProxy* part)
       {
         auto len=-5.;
         // prevent showers to be accounted 
-        if (part->E_method  != caf::PartEMethod::kCalorimetry) len = RecoPartDir(part).Mag();        
+        if (part->E_method != caf::PartEMethod::kCalorimetry) len = RecoPartDir(part).Mag();        
         return len>2;
        });
 
@@ -131,10 +131,19 @@ const Var kNumberOfTrkShw([](const caf::SRInteractionProxy* ixn)
   });
 
 
-void demo1b()
+void demo1b( std::string option="caf")
 {
+
+  gStyle->SetOptStat(11);
   // Environment variables and wildcards work. As do SAM datasets.
-  const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  std::string fname;
+  if(option=="caf") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  // "/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000";
+  if (option=="flat") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
+    //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF.flat/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
+
+  //"/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  
   //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
   //"/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.2/flat/PicoRun4.2_1E17_RHC.flow.0000*";
   /// "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
@@ -240,29 +249,8 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
   // Fill in the spectrum
   loader.Go();
 
-  const double pot = 1e17;
+  const double pot = sEnergyMuon.POT();
 
-  sEnergyMuon.OverridePOT(pot);
-  sEnergyMuonContX.OverridePOT(pot);
-  sEnergyElectron.OverridePOT(pot);
-
-  sVtxPositionAll.OverridePOT(pot);
-  sVtxPositionCont.OverridePOT(pot);
-
-  sTrackMultContained.OverridePOT(pot);
-  sShowerMultContained.OverridePOT(pot);
-  sAllMultContained.OverridePOT(pot);
-
-  sTrackLen.OverridePOT(pot);
-//  CandidateProtonMomentum.OverridePOT(pot);
-//  CandidateProtonMomentumCont.OverridePOT(pot);
-//  AllProtonMomentum.OverridePOT(pot);
-//  AllProtonMomentumCont.OverridePOT(pot);
-//
-//  CandidateProtonAngle.OverridePOT(pot);
-//  CandidateProtonAngleCont.OverridePOT(pot);
-//  AllProtonAngle.OverridePOT(pot);
-//  AllProtonAngleCont.OverridePOT(pot);
   //ta da!
   sEnergyMuon.ToTH1(pot)->Draw("hist");
   sEnergyMuonContX.ToTH1(pot,kMagenta+2)->Draw("hist same");
@@ -270,40 +258,40 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs("demo1b_AllVtxPosition.pdf");
+  gPad->SaveAs(("demo1b_AllVtxPosition"+option+".pdf").c_str());
   new TCanvas; 
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs("demo1b_ContainedVtxPosition.pdf");
+  gPad->SaveAs(("demo1b_ContainedVtxPosition"+option+".pdf").c_str());
   
   new TCanvas;
   sTrackMultContained.ToTH1(pot,kBlue,kDashed)->Draw("hist same");
    sAllMultContained.ToTH1(pot,kRed,kDotted)->Draw("hist same");
 //  sShowerMultContained.ToTH1(pot,kRed,kDotted)->Draw("hist same");  
-  gPad->SaveAs("demo1b_ContainedMultiplicity.pdf");
+  gPad->SaveAs(("demo1b_ContainedMultiplicity"+option+".pdf").c_str());
 
   new TCanvas;
   sTrackLen.ToTH1(pot,kRed,kDotted)->Draw("hist same");
-  gPad->SaveAs("demo1b_ContainedTrackLen.pdf");
+  gPad->SaveAs(("demo1b_ContainedTrackLen"+option+".pdf").c_str());
 //
 //  new TCanvas;
 //  CandidateProtonMomentum.ToTH1(pot)->Draw("hist");
 //  CandidateProtonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_mesonless_CandidateProtonMomentum.pdf");
+//  gPad->SaveAs(("demo1b_mesonless_CandidateProtonMomentum"+option+".pdf").c_str());
 //
 //  new TCanvas;
 //  AllProtonMomentum.ToTH1(pot)->Draw("hist");
 //  AllProtonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_All_CandidateProtonMomentum.pdf");
+//  gPad->SaveAs(("demo1b_All_CandidateProtonMomentum"+option+".pdf").c_str());
 //
 //  new TCanvas;
 //  CandidateProtonAngle.ToTH1(pot)->Draw("hist");
 //  CandidateProtonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_mesonless_CandidateProtonAngle.pdf");
+//  gPad->SaveAs(("demo1b_mesonless_CandidateProtonAngle"+option+".pdf").c_str());
 //
 //  new TCanvas;
 //  AllProtonAngle.ToTH1(pot)->Draw("hist");
 //  AllProtonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_All_CandidateProtonAngle.pdf");
+//  gPad->SaveAs(("demo1b_All_CandidateProtonAngle"+option+".pdf").c_str());
 
   // save to file
   TFile file( "demo1b_output.root", "recreate" );
@@ -322,7 +310,7 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
    htemp->GetXaxis()->CenterTitle();
    new TCanvas;
    htemp->Draw("colz");
-   gPad->SaveAs("vtxPos.pdf");
+   gPad->SaveAs(("vtxPos"+option+".pdf").c_str());
   inFile->Close();
 
 }
