@@ -18,7 +18,7 @@ void mesonless_main()
 {
   // Environment variables and wildcards work. As do SAM datasets.
   // older files
-  const std::string fname = "/pnfs/dune/scratch/users/mkramer/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.*"; //"/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
+  const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.*";//"/pnfs/dune/scratch/users/mkramer/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.00001*"; //"/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
   //  "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.2/PicoRun4.2_1E17_RHC.flow*";
 //   "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.1/PicoRun4.1_1E17_RHC.flow*";
 
@@ -37,8 +37,8 @@ void mesonless_main()
 
 
   Spectrum sVtxPositionAll(loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
-  Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition);
-  Spectrum sTrueVtxPositionCont(loader.NuTruths()[kTrueContainment], TruevtxPosition);
+  Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment&&kMesonlessSelection], vtxPosition);
+  Spectrum sTrueVtxPositionCont(loader.NuTruths()[kTrueContainment&&kTrueMesonlessSelection&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget], TruevtxPosition);
   Spectrum sTrueVtxPositionAll(loader.NuTruths()[kNoTruthCut], TruevtxPosition);
   // we use kNoCut at interactions level, meaning no selection on vertices
   Spectrum sEnergyMuon(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
@@ -57,8 +57,8 @@ void mesonless_main()
   Spectrum CandidateProtonMomentum(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
   Spectrum AllProtonMomentum(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
 
-  Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart],axPartMomentum );
-  Spectrum CandidateMuonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon&&kContainedPart],axPartMomentum );
+  Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
+  Spectrum CandidateMuonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon],axPartMomentum );
 
   Spectrum TrueCandidateProtonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartMomentum );
   Spectrum TrueCandidateMuonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartMomentum );
@@ -70,8 +70,8 @@ void mesonless_main()
   Spectrum CandidateProtonAngle(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
   Spectrum AllProtonAngle(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
 
-  Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart],axPartAngle);
-  Spectrum CandidateMuonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon&&kContainedPart],axPartAngle);
+  Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle);
+  Spectrum CandidateMuonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon],axPartAngle);
 
    Spectrum TrueCandidateProtonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartAngle );
    Spectrum TrueCandidateMuonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartAngle );
@@ -212,6 +212,10 @@ void mesonless_main()
  // CandidateMuonAngleCont.SaveTo( &file, "CandidateMuonAngleCont");
  // CandidateProtonAngleCont.SaveTo( &file, "CandidateProtonAngleCont");
  // file.Close();
+  std::cout<< "No. of reco interactions "<< sVtxPositionCont.ToTH2(pot)->Integral(1, 60, 1, 60) <<std::endl;
+
+  std::cout<< "No. of true interactions "<< sTrueVtxPositionCont.ToTH2(pot)->Integral(1, 60, 1, 60) <<std::endl;
+  
   std::cout<< "No. of reco protons "<< CandidateProtonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
 
   std::cout<< "No. of reco muons "<< CandidateMuonMomentumCont.ToTH1(pot)->Integral() <<std::endl;
