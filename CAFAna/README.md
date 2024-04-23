@@ -10,6 +10,7 @@ Also some information is duplicated from a directory above, but gathered here fo
 Clone this branch of the repository:
 ```
 git clone git@github.com:DUNE/lblpwgtools.git
+cd lblpwgtools
 checkout feature/source-sink-overhaul
 ```
 
