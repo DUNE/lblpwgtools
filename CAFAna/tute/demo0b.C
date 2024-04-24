@@ -120,28 +120,28 @@ void demo0b( std::string option = "caf")
     int pdg = part->pdg;
     // recast in a different way 
     //(1) muon
-    if ( abs(pdg)==13) return 1;
+    if ( abs(pdg)==13) return 1.;
     //(2) electron
-    if ( abs(pdg)==11) return 2;
+    if ( abs(pdg)==11) return 2.;
     //(3) proton
-    if ( pdg==2212) return 3;
+    if ( pdg==2212) return 3.;
     // (4) neutron
-    if ( pdg==2112) return 4;
+    if ( pdg==2112) return 4.;
     // (5) pi +
-    if ( pdg==211) return 5;
+    if ( pdg==211) return 5.;
     // (6) pi -
-    if ( pdg==-211) return 6;
+    if ( pdg==-211) return 6.;
     // (7) pi0
-    if ( pdg==111) return 7;
+    if ( pdg==111) return 7.;
     else
-      return 8;
+      return 8.;
     // (8) anything else
   });
  std::vector<std::string> PDGlabels = {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","other"};
 
   // you'll see this one wont be very useful...
   const TruthHistAxis myHistTruthAxisPDG("true pdg", Binning::Simple(100, 0, 100), SIMPLETRUTHVAR(pdg));
-  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 0, 8), kTruePartPDG);
+  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 1, 9), kTruePartPDG);
 
   Spectrum PDGTrue(loader.NuTruths(), myHistTruthAxisPDG);
   //  check that the SR cut is actually cutting the right thing 
@@ -171,16 +171,11 @@ void demo0b( std::string option = "caf")
   //ta da! Draw tour histograms
   sEnergyMuon.ToTH1(pot)->Draw("hist");
   sEnergyMuonCont.ToTH1(pot,kMagenta+2)->Draw("hist same");
-
-
-  new TCanvas;
-  sTrueVtxPositionAll.ToTH2(pot)->Draw("colz");
-  new TCanvas;
-  sTrueVtxPositionCont.ToTH2(pot)->Draw("colz");
+  gPad->SaveAs(("demo0_sEnergyMuon"+option+".pdf").c_str());
 
   new TCanvas;
-  PDGTrue.ToTH1(pot,kBlue,kDashed)->Draw("hist same");
-  sTrueNumuPDGtest.ToTH1(pot,kRed)->Draw("hist same");
+  PDGTrue.ToTH1(pot,kBlue)->Draw("hist same");
+  sTrueNumuPDGtest.ToTH1(pot,kRed, kDashed)->Draw("hist same");
 
   new TCanvas;
   // you can also retrieve the TH1 * object and manipulate as usual in root
@@ -191,13 +186,24 @@ void demo0b( std::string option = "caf")
   prims->Draw("hist");
   PDGTrueSecs.ToTH1(pot,kBlue)->Draw("hist same");
   PDGTruePreFSI.ToTH1(pot,kGreen+2)->Draw("hist same");
+ gPad->SaveAs(("demo0_PDGprims_"+option+".pdf").c_str());
 
   new TCanvas;
-  sTrueNumuEnergy.ToTH1(pot)->Draw("hist");
+  sTrueNumuEnergy.ToTH1(sTrueNumuEnergy.POT())->Draw("hist");
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
+   gPad->SaveAs(("demo0_vtxPosAll_"+option+".pdf").c_str());
   new TCanvas; 
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
+  gPad->SaveAs(("demo0_vtxPosCont_"+option+".pdf").c_str());
+
+
+  new TCanvas;
+  sTrueVtxPositionAll.ToTH2(sTrueVtxPositionAll.POT())->Draw("colz");
+   gPad->SaveAs(("demo0_TruevtxPosAll_"+option+".pdf").c_str());
+  new TCanvas;
+  sTrueVtxPositionCont.ToTH2(sTrueVtxPositionCont.POT())->Draw("colz");
+  gPad->SaveAs(("demo0_TruevtxPosCont_"+option+".pdf").c_str());
 
 }

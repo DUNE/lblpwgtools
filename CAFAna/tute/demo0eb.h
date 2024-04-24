@@ -31,6 +31,34 @@ namespace ana{
  
  const EnergyScaleMu kEnergyScaleMu;
 
+/// this systematic modifies the muon energy as a function of neutrino energy 
+  class LinearEnergyScaleMu: public ISyst {
+ public:
+   LinearEnergyScaleMu() : ISyst("LinearEnergyScaleMu", "Muon Energy Linear scale Syst") {}
+   void Shift(double sigma,
+              caf::SRInteractionProxy* ixn, double& weight) const override;
+ };
+  void LinearEnergyScaleMu::Shift(double sigma,
+                            caf::SRInteractionProxy* ixn, double& weight) const {
+  	// scale could be whatever you want.
+   double scale = .05 * sigma;
+   // this is a one sided syst...
+   if (sigma < 0 ) scale = 0;
+
+   double x; 
+   // loop through particles and change record to shift energy 
+    for (int i=0; i<ixn->part.ndlp; i++){
+       if ( abs(ixn->part.dlp[i].pdg)==13) {
+       	 // grab energy before weighting
+       		x = ixn->part.dlp[i].E;
+          ixn->part.dlp[i].E *= 1. + scale * x;
+        }
+    }
+ }
+ 
+ const LinearEnergyScaleMu kLinearEnergyScaleMu;
+
+
 //----------------------------------------------------------------------
 //// A second dummy syst to have a multiverse with multiple systs
 // A reweight systematic... multiply times [x] all events that pass [ some ] criteria
@@ -68,7 +96,7 @@ namespace ana{
 
 // Some cuts and vars used in example
 
-  
+
 // Var that takes energy of the most energetic muon in interaction
 const Var kEnergyInteractionMu([](const caf::SRInteractionProxy* ixn)
   { 
@@ -96,7 +124,6 @@ const Var kEnergyInteractionMu([](const caf::SRInteractionProxy* ixn)
   });
 
 // Var that sums up Energy of all tracks
-// Var that takes energy of the most energetic muon in interaction
 const Var kEnergyInteractionAll([](const caf::SRInteractionProxy* ixn)
   { 
       double e = 0.;
