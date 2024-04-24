@@ -13,6 +13,8 @@
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/ISyst.h"
 
+#include "demo0eb.h"
+
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -23,150 +25,13 @@
 
 using namespace ana;
 
-// Setup a dummy systematic that shifts Particle (Muon) Enegy by a +/-  percent
-
- class EnergyScaleMu: public ISyst {
- public:
-   EnergyScaleMu() : ISyst("EnergyScaleMu", "Muon Energy Scale Syst") {}
-   void Shift(double sigma,
-              caf::SRInteractionProxy* ixn, double& weight) const override;
- };
-  void EnergyScaleMu::Shift(double sigma,
-                            caf::SRInteractionProxy* ixn, double& weight) const {
-   double scale = .05 * sigma;
-
-   // loop through particles and change record to shift energy 
-    for (int i=0; i<ixn->part.ndlp; i++){
-       if ( abs(ixn->part.dlp[i].pdg)==13) {
-          ixn->part.dlp[i].E *= 1. + scale;
-        }
-    }
- }
- 
- const EnergyScaleMu kEnergyScaleMu;
-
-
-//// A second dummy syst to have a multiverse with multiple systs
-// A reweight systematic... multiply times [x] all events that pass [ some ] criteria
-  class MuonRwgtSyst : public ISyst
-  {
-  public :
-    MuonRwgtSyst(double scale, const std::string shortName, const std::string latexName)
-       : ISyst( shortName , latexName ), fScale(scale) {}
-
-     void Shift( double sigma,  caf::SRInteractionProxy* ixn, double& weight ) const override;
-    
-  private:
-    double fScale;
-
-  };
-  void MuonRwgtSyst::Shift( double sigma, caf::SRInteractionProxy* ixn, double& weight ) const
-   {
-    bool hasMuon = false;
-   // loop through particles see if theres a muon
-    for (int i=0; i<ixn->part.ndlp; i++){
-       if ( abs(ixn->part.dlp[i].pdg)==13) {
-           hasMuon= true;
-        }
-    }
-    if (hasMuon){
-        weight = 1 + sigma * fScale; 
-        //std::cout<< " Found a Muon, wgt = "<<weight<<std::endl;
-      }
-     else
-      weight = 1;
-  }
-  const MuonRwgtSyst kMuonRwgtSyst(0.10, "MuonRwgtSyst", "Muon weight Scale Syst" );
-
-
-// Var that takes energy of the most energetic muon in interaction
-const Var kEnergyInteractionMu([](const caf::SRInteractionProxy* ixn)
-  { 
-      double e = -5.;
-
-      int numMuons = 0;
-      for (int i=0; i<ixn->part.ndlp; i++){
-        // check if muon
-        //std::cout<< "we are in particle "<< i<<std::endl;
-        if ( abs(ixn->part.dlp[i].pdg)==13) {
-          numMuons ++;          
-          //this muons energy
-          double tempE = ixn->part.dlp[i].E;
-          //std::cout<< "found muon # "<< numMuons<< ", idx "<<i<<" with energy "<< tempE<<std::endl;
-          // in case there is another muon,           
-          if( numMuons>1 ){
-            // check which one has more energy
-            if (tempE>e)
-              e=tempE; // store if this muon has more energy
-          }else{ e = tempE;}
-        }
-                    
-      }              
-      return e;     
-  });
-
-// Var that sums up Energy of all tracks
-// Var that takes energy of the most energetic muon in interaction
-const Var kEnergyInteractionAll([](const caf::SRInteractionProxy* ixn)
-  { 
-      double e = 0.;
-      for (int i=0; i<ixn->part.ndlp; i++){
-          double tempE = ixn->part.dlp[i].E;  
-          e = e + tempE;                              
-      }// in the weird case interaction had nothing??              
-      //if (e == 0) return -5.;
-      return e;     
-  });
-// Var that takes energy of the most energetic muon in interaction
-const Var kEnergyInteractionButMu([](const caf::SRInteractionProxy* ixn)
-  { 
-      return    kEnergyInteractionAll(ixn) - kEnergyInteractionMu(ixn);
-  });
-
-
-  // A simple selection cut at the level of vertices: i.e. containment
-  const Cut kContainment([](const caf::SRInteractionProxy* ixn)
-                      {
-
-                        double x = ixn->vtx.x;
-                        double y = ixn->vtx.y;
-                        double z = ixn->vtx.z;
-                        bool cont =  abs(x)<50 && 
-                                     abs(x)>10 && 
-                                     abs(y+310)<50 &&
-                                     abs(z-1300)>10 && 
-                                     abs(z-1300)<50 ;
-                        return cont;
-                      });
-
-// Has only one muon 
-  const Cut kHas1RecoMuon([](const caf::SRInteractionProxy* ixn)
-                      {
-                        int nMuons= 0;
-                        for (int i=0; i<ixn->part.ndlp; i++){
-                           if ( abs(ixn->part.dlp[i].pdg)==13) {
-                               nMuons++;
-                            }
-                        }
-                        return (nMuons==1);
-                      });
-
-
- const RecoPartVar kRecoParticleEnergy = SIMPLEPARTVAR(E);
- // Select particles that have a pdg of muon 
-  const RecoPartCut kIsMuon([](const caf::SRRecoParticleProxy* sr)
-                      {
-                        return abs(sr->pdg) == 13 ;
-                      });
-
-
-// Make a basic ensemble spectrum?
+// Make a few basic ensemble spectrum
 // based on https://github.com/SBNSoftware/sbnana/blob/feature/ext_cafanacore/sbnana/CAFAna/test/test_ensemble.C 
-void demo0eb()
+void demo0eb(std::string option="caf")
 {
  
  // test multiverse
-  std::vector<const ISyst*> systs;            //,systs2;
+  std::vector<const ISyst*> systs;        
   systs.push_back(&kEnergyScaleMu);
   systs.push_back(&kMuonRwgtSyst);
   //systs.push_back(&kDummyRwgtSyst);
@@ -217,37 +82,38 @@ void demo0eb()
 
   const RecoPartHistAxis axRecoPartEnergy("Reco Particle Energy", binsEnergy, kRecoParticleEnergy);
 
-  //std::vector<Weight> weis;
-  //weis.reserve(101);
-  //weis.push_back(kUnweighted); // nominal
-  // TO DO: generate multiverse weights
-  //for(int i = 0; i < 99; ++i) weis.push_back(GetUniverseWeight("multisim_Genie", i));
-
-  const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
-
-  // Source of events
+  std::string fname;
+  if(option=="caf") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
+  // "/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000";
+  if (option=="flat") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
+  //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF.flat/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
+  
   SpectrumLoader loader(fname);
-  // This is another key line // dont know what is the 2nd [cut] applied to...
-  //EnsembleSpectrum sMuonEnsembleGauss(loader.Interactions(RecoType::kDLP).Ensemble(weis)[kContainment][kIsNumuCC], axEnergy);
-  // weis is a vector of weights that come from GetUniverseWeight
 
-  // or whatever multiverse object, in this case randomly generated gaussian shifts
+  // Use multiverse object in Ensemble() , in this case randomly generated gaussian shifts
   EnsembleSpectrum sMuonEnsembleGauss(loader.Interactions(RecoType::kDLP).Ensemble(gas)[kHas1RecoMuon],    axMuEnergy);
   EnsembleSpectrum sMuonEnsembleX(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kHas1RecoMuon], axMuEnergy);
-
-  // Another way to access the same information from the reco particles branch 
-  EnsembleSpectrum sMuonEnsemblePartX(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kHas1RecoMuon].RecoParticles(RecoType::kDLP)[kIsMuon], axRecoPartEnergy);
-  // Doing the same for other particles to verify our systematic is working as expected
-  EnsembleSpectrum sOtherEnsemblePartX(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kHas1RecoMuon].RecoParticles(RecoType::kDLP)[!kIsMuon], axRecoPartEnergy);
- 
 
   // The same but for a different variable  
   EnsembleSpectrum sAllEnsembleX(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kHas1RecoMuon], axEnergy);
   EnsembleSpectrum sNoMuEnsembleX(loader.Interactions(RecoType::kDLP).Ensemble(cross)[kHas1RecoMuon], axNoMuEnergy);
+  
+  // Another way to access the same information from the reco particles branch 
+  //seems longer to write but it saves you from writing 3 different histaxis (axMuEnergy,axEnergy,axNoMuEnergy)
+  EnsembleSpectrum sMuonEnsemblePartX(loader
+    .Interactions(RecoType::kDLP)
+    .Ensemble(cross)[kHas1RecoMuon]
+    .RecoParticles(RecoType::kDLP)[kIsMuon], 
+    axRecoPartEnergy);
+  // Doing the same for other particles  (not muon) to verify our systematic is working as expected
+  EnsembleSpectrum sOtherEnsemblePartX(loader
+    .Interactions(RecoType::kDLP)
+    .Ensemble(cross)[kHas1RecoMuon]
+    .RecoParticles(RecoType::kDLP)[ !kIsMuon ], 
+    axRecoPartEnergy);
+ 
 
-
-  //  some true distributions of MEC things
+  //  some true distributions of MEC sytematic
   //EnsembleSpectrum sAllMECEnsemble(loader.NuTruths().Ensemble(crossMEC)[kIsMEC], axTrueEnergy);
   //EnsembleSpectrum sAllnonMECEnsemble(loader.NuTruths().Ensemble(crossMEC)[!kIsMEC], axTrueEnergy);
 
