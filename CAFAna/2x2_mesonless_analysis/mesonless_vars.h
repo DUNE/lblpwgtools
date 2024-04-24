@@ -28,14 +28,14 @@ namespace ana{
          {
                    //auto dir = TVector3(part->end.x,  part->end.y,  part->end.z) -
                    //           TVector3(part->start.x,part->start.y,part->start.z);
-                   //auto angle = RecoPartDir(part).Angle(beam_dir) * 180.0 / TMath::Pi();
-                   auto angle =  TVector3(part->p.x,part->p.y,part->p.z).Angle(beam_dir) * 180.0 / TMath::Pi();
+             //      auto angle = RecoPartDir(part).Angle(beam_dir) * 180.0 / TMath::Pi();
+                   auto angle =  TVector3(part->p.x, part->p.y, part->p.z).Angle(beam_dir) * 180.0 / TMath::Pi();
                    return angle;
          });
          //  momentum
        const RecoPartVar kPartMomentum([](const caf::SRRecoParticleProxy* part)
          {
-                   float p = std::sqrt( (part->p.x * part->p.x) + (part->p.y * part->p.y) + (part->p.z * part->p.z));
+                   float p = std::sqrt((part->p.x * part->p.x) + (part->p.y * part->p.y) + (part->p.z * part->p.z));
                    return p;
          });
 

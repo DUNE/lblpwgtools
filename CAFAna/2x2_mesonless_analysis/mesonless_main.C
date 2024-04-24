@@ -57,8 +57,8 @@ void mesonless_main()
   Spectrum CandidateProtonMomentum(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
   Spectrum AllProtonMomentum(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
 
-  Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
-  Spectrum CandidateMuonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon],axPartMomentum );
+  Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPrimary && kPartCut(2212)],axPartMomentum );
+  Spectrum CandidateMuonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPrimary && kIsMuon],axPartMomentum );
 
   Spectrum TrueCandidateProtonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartMomentum );
   Spectrum TrueCandidateMuonMomentumCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartMomentum );
@@ -70,8 +70,8 @@ void mesonless_main()
   Spectrum CandidateProtonAngle(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
   Spectrum AllProtonAngle(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
 
-  Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle);
-  Spectrum CandidateMuonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kIsMuon],axPartAngle);
+  Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPrimary && kPartCut(2212)],axPartAngle);
+  Spectrum CandidateMuonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection&&kContainment].RecoParticles(RecoType::kDLP)[kPrimary && kIsMuon],axPartAngle);
 
    Spectrum TrueCandidateProtonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(2212)],axTruthPartAngle );
    Spectrum TrueCandidateMuonAngleCont(loader.NuTruths()[kTrueMesonlessSelection&&kTrueContainment&&kIsCC&&kIsMuonAntinu&&kIsArgonTarget].TruthParticles(TruePType::kPrim)[kTruthPartCut(13)],axTruthPartAngle );
@@ -91,7 +91,7 @@ void mesonless_main()
 
   // We are forcing the pot value because cafs dont have this information yet
   // POT/yr * 3.5yrs * mass correction for the workspace geometry
-  const double pot = 1e19;///3.5 * 1.47e21 * 40/1.13;
+  const double pot = 1.;//1e19;///3.5 * 1.47e21 * 40/1.13;
 
   sEnergyMuon.OverridePOT(pot);
   sEnergyMuonContX.OverridePOT(pot);
@@ -134,10 +134,10 @@ void mesonless_main()
   // PrimElectrons.OverridePOT(pot);
 
 
-  //ta da!
-  // sEnergyMuon.ToTH1(pot)->Draw("hist");
-  // sEnergyMuonContX.ToTH1(pot,kMagenta+2)->Draw("hist same");
-  // sEnergyElectron.ToTH1(pot,kGreen+1)->Draw("hist same");
+ // ta da!
+   sEnergyMuon.ToTH1(pot)->Draw("hist");
+   sEnergyMuonContX.ToTH1(pot,kMagenta+2)->Draw("hist same");
+   sEnergyElectron.ToTH1(pot,kGreen+1)->Draw("hist same");
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
