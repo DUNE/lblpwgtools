@@ -255,17 +255,18 @@ namespace ana
       std::cout << "Bad file (zombie): " << f->GetName() << std::endl;
       abort();
     }
-// Im not sure this will still be valid in the source/sink world...
-    
-    TTree* trPot = 0;
-    if (f->GetListOfKeys()->Contains("meta"))
+
+   TTree* trPot = 0;
+    if (f->GetListOfKeys()->Contains("cafTree"))
+      trPot = (TTree*)f->Get("cafTree");
+    else // this actually might break things...
       trPot = (TTree*)f->Get("meta");
-    else
-      trPot = (TTree*)f->Get("pottree");
+
     assert(trPot);
 
-    double pot;
-    trPot->SetBranchAddress("pot", &pot);
+    //double
+    float pot;
+    trPot->SetBranchAddress("rec.beam.pulsepot", &pot);//"pot", &pot);
 
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
