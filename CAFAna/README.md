@@ -31,7 +31,7 @@ Once CAFAna has been built, to set up the environment you will need to `source /
 
 ## Examples 
 
-Once CAFAna is built and the environment setup, proceed to run an example scripts doing:
+Once CAFAna is built and the environment setup, proceed to run an example script doing:
 ```
 cafe tute/demo0b.C
 ```
