@@ -28,9 +28,10 @@ void demo0b( std::string option = "caf")
 {
  
   std::string fname;
-   if(option=="caf") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  // "/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000";
-  if (option=="flat") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
+ if(option=="caf") 
+    fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root"; 
+  if (option=="flat") 
+    fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
   //() still figuring out the problem with flatcafs)
 
 
@@ -84,7 +85,9 @@ void demo0b( std::string option = "caf")
   // we use kNoCut at interactions level, meaning no selection on vertices, then with containment
   // You can select RecoType::kDLP,kPandora at vtx/interaction level and kPIDA as well for particles
   Spectrum sEnergyMuon(     loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(      RecoType::kDLP)[kIsMuon], axEnergy);
+  
   Spectrum sEnergyMuonCont( loader.Interactions(RecoType::kDLP)[kContainedVertex].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
+  
   // Interaction level vars
   Spectrum sVtxPositionAll( loader.Interactions(RecoType::kDLP)[kNoCut], vtxPosition);
   Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainedVertex], vtxPosition);
@@ -148,6 +151,7 @@ void demo0b( std::string option = "caf")
   Spectrum sTrueNumuPDGtest(loader.NuTruths()[kIsTrueNuMu], myHistTruthAxisPDG);
   
   Spectrum PDGTruePrims(loader.NuTruths().TruthParticles(TruePType::kPrim)[kNoTruthPartCut], myHistTruthPartAxisPDG);
+  
   Spectrum PDGTrueSecs(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kSec)[kNoTruthPartCut], myHistTruthPartAxisPDG);
   Spectrum PDGTruePreFSI(loader.NuTruths()[kNoTruthCut].TruthParticles(TruePType::kPreFSI)[kNoTruthPartCut], myHistTruthPartAxisPDG);
 
