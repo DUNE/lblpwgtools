@@ -3,7 +3,7 @@ name: Doxygen GitHub Pages Deploy Action
 on:
   push:
     branches:
-      - feature/source-sink-overhaul
+      - feature/2x2_doxygen
   workflow_dispatch:
 
 jobs:
