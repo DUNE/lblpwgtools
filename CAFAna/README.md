@@ -1,5 +1,5 @@
 
-# Making your first plot in CAFAna
+# Making your first plots in CAFAna
 
 This is a simplified guide on how to install and run `CAFAna` to make your first plot . A lot more information can be found in [this tutorial](https://github.com/chenel/dune-nd-lar-reco/blob/main/tute/2021-12-02%20CAFAna-NDLAr-Howto.md) by Jeremy Wolcott.
 
