@@ -6,11 +6,14 @@
 namespace ana{
 
     double tpc_dist = 8.0; //distance from the tpc walls for containtment cuts
+    double xbound = 63.931
+    double ybound = 62.076
+    double zbound = 64.3163
+
     //Reco interaction cuts
     const Cut kMesonlessSelection([](const caf::SRInteractionProxy* sr)
       {
               int num_muons = 0;
-              int num_prtns = 0;
               int num_pions = 0;
               int num_kaons = 0;
               // loop over particles and count each type
@@ -23,11 +26,9 @@ namespace ana{
                       num_pions++;
                   if(abs(part.pdg) == 321)
                       num_kaons++;
-                  if(abs(part.pdg) == 2212)
-                      num_prtns++;
 
               }
-            return ( num_muons==1 && num_pions<1 && num_kaons<1 && num_prtns>0 );
+            return ( num_muons==1 && num_pions<1 && num_kaons<1);
       });
 
     // A simple selection cut at the level of vertices: i.e. containment
@@ -37,11 +38,11 @@ namespace ana{
                             double x = ixn->vtx.x;
                             double y = ixn->vtx.y;
                             double z = ixn->vtx.z;
-                            bool cont =  abs(x)<60-tpc_dist &&
+                            bool cont =  abs(x)<xbound-tpc_dist &&
                                          abs(x)>tpc_dist &&
-                                         abs(y)<60-tpc_dist &&
+                                         abs(y)<ybound-tpc_dist &&
                                          abs(z)>tpc_dist &&
-                                         abs(z)<60-tpc_dist ;
+                                         abs(z)<zbound-tpc_dist ;
                             return cont;
                           });
 
@@ -86,11 +87,11 @@ namespace ana{
                             double x = mc_ixn->vtx.x;
                             double y = mc_ixn->vtx.y;
                             double z = mc_ixn->vtx.z;
-                            bool cont =  abs(x)<60-tpc_dist &&
+                            bool cont =  abs(x)<xbound-tpc_dist &&
                                          abs(x)>tpc_dist &&
-                                         abs(y)<60-tpc_dist &&
+                                         abs(y)<ybound-tpc_dist &&
                                          abs(z)>tpc_dist &&
-                                         abs(z)<60-tpc_dist ;
+                                         abs(z)<zbound-tpc_dist ;
                             return cont;
                   });
   const TruthCut kIsCC([](const caf::SRTrueInteractionProxy* mc)
@@ -103,7 +104,7 @@ namespace ana{
                   });
   const TruthCut kIsMuonAntinu([](const caf::SRTrueInteractionProxy* mc)
                   {
-                    return mc->pdg ==   -14;
+                    return abs(mc->pdg) == 14;
                   });
   
   const TruthCut kTrueMesonlessSelection([](const caf::SRTrueInteractionProxy* mc)
@@ -112,13 +113,13 @@ namespace ana{
                int num_kaons = 0;
                // loop over particles and count each type
                for (const auto & part : mc->prim ){
-                   if(abs(part.pdg) == 211)
+                   if(abs(part.pdg) == 211 || abs(part.pdg) == 111)
                        num_pions++;
-                   if(abs(part.pdg) == 321)
+                   if(abs(part.pdg) == 321 || abs(part.pdg) == 130 || abs(part.pdg) == 310 || abs(part.pdg) == 311)
                        num_kaons++;
   
                }
-             return ( num_pions<1 && num_kaons<1);
+             return (num_pions<1 && num_kaons<1);
        });
 
 
