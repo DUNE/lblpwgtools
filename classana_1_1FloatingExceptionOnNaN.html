@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>CAFAna: CAFAna Directory Reference</title>
+<title>CAFAna: ana::FloatingExceptionOnNaN Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,18 +61,43 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_dfe1c1809761fc1c8048ccf630929e88.html">CAFAna</a></li>  </ul>
+<li class="navelem"><b>ana</b></li><li class="navelem"><a class="el" href="classana_1_1FloatingExceptionOnNaN.html">FloatingExceptionOnNaN</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="classana_1_1FloatingExceptionOnNaN-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">CAFAna Directory Reference</div>  </div>
+<div class="title">ana::FloatingExceptionOnNaN Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Alter floating-point exception flag.  
+ <a href="classana_1_1FloatingExceptionOnNaN.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="Utilities_8h_source.html">Utilities.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="subdirs"></a>
-Directories</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a0b88025251be485909f2ced4f471c00e"><td class="memItemLeft" align="right" valign="top"><a id="a0b88025251be485909f2ced4f471c00e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>FloatingExceptionOnNaN</b> (bool enable=true)</td></tr>
+<tr class="separator:a0b88025251be485909f2ced4f471c00e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a42c203de85286519db6ee469bff14f8e"><td class="memItemLeft" align="right" valign="top"><a id="a42c203de85286519db6ee469bff14f8e"></a>
+fexcept_t&#160;</td><td class="memItemRight" valign="bottom"><b>fBackup</b></td></tr>
+<tr class="separator:a42c203de85286519db6ee469bff14f8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Alter floating-point exception flag. </p>
+<p>Upon going out of scope, restores the previous setting </p>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
+<li>CAFAna/Core/<a class="el" href="Utilities_8h_source.html">Utilities.h</a></li>
+<li>CAFAna/Core/Utilities.cxx</li>
+</ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
