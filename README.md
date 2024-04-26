@@ -63,3 +63,4 @@ $ ./standalone_configure_and_build.sh -?
 Once CAFAna has been built, to set up the environment you will need to `source /path/to/install/CAFAnaEnv.sh`. If `standalone_configure_and_build.sh` was not passed a `-I` argument, then this will be `/path/to/repo/CAFAna/build/Linux/CAFAnaEnv.sh` by default.
 
 ## For NOvAns
+:)
