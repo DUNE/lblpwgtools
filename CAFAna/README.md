@@ -5,6 +5,19 @@ This is a simplified guide on how to install and run `CAFAna` to make your first
 
 Also some information is duplicated from a directory above, but gathered here for your easy access.
 
+## Setup a container
+
+As you may know, we are living now in AL9 world, but I don't know how to use spack to build CAFAna. Instead you can setup this standard container provided for us as in https://wiki.dunescience.org/wiki/SL7_to_Alma9_conversion 
+
+```
+/cvmfs/oasis.opensciencegrid.org/mis/apptainer/current/bin/apptainer shell --shell=/bin/bash \
+-B /cvmfs,/exp,/nashome,/pnfs/dune,/opt,/run/user,/etc/hostname,/etc/hosts,/etc/krb5.conf --ipc --pid \
+/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest
+```
+The reccommendation is that you use `dunebuild03` instead of a gpvm to build your code. Remove `/pnfs/dune/` when setting up the container, otherwise it will complain. Later on, you can run code and access `pnfs` on a regular gpvm. 
+
+Now you can go ahead and install.
+
 ## How to install
 
 Clone this branch of the repository:
