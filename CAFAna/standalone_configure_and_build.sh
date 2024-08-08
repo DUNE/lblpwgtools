@@ -133,22 +133,28 @@ fi
 
 SCRIPT_EXE_DIR=$(pwd)
 
+TOP_SOURCE_DIR="$( cd $(dirname $0); pwd)"
+SUPPORT_DIR=$INSTALL_DIR/support
+
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 BUILD_DIR=$(pwd)
-mkdir -p ../support
+mkdir -p $SUPPORT_DIR
+
+echo "\$CAFANACORE_INC = $CAFANACORE_INC"
 
 if [ "${USE_UPS}" = "1" ]; then
-  source ../cmake/ups_env_setup.sh
-  source ../support_software.sh $(abspath ../support) USING_UPS
+  source ${TOP_SOURCE_DIR}/cmake/ups_env_setup.sh
+  source ${TOP_SOURCE_DIR}/support_software.sh $(abspath $SUPPORT_DIR) USING_UPS
   cd "$BUILD_DIR"
-  cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DBUILD_ENV_SCRIPTS="$(abspath ../cmake/ups_env_setup.sh);$(abspath ../support/support_software_env.sh)"
+  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
+            -DBUILD_ENV_SCRIPTS="$(abspath ${TOP_SOURCE_DIR}/cmake/ups_env_setup.sh);$(abspath $SUPPORT_DIR/support_software_env.sh)"
 else
-  source ../support_software.sh $(abspath ../support) BUILD_UPS_REPLACEMENT_SOFTWARE
+  source ${TOP_SOURCE_DIR}/support_software.sh $(abspath $SUPPORT_DIR) BUILD_UPS_REPLACEMENT_SOFTWARE
   cd "$BUILD_DIR"
-  cmake ../ -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-            -DBUILD_ENV_SCRIPTS=$(abspath ../support/support_software_env.sh)
+  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
+            -DBUILD_ENV_SCRIPTS=$(abspath $SUPPORT_DIR/support_software_env.sh)
 fi
 
+echo "Building in and installing from $PWD:"
 make install -j ${CORES}
