@@ -152,6 +152,7 @@ if __name__ == '__main__':
             os.environ['EIGEN_INC'],
             os.environ['SUNDIALS_INC'],
             os.environ['OSCLIB_INC'],
+            os.environ['BOOST_INC'],
             os.environ['TBB_INC']]
 
 
