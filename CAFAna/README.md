@@ -27,6 +27,11 @@ cd lblpwgtools
 checkout feature/source-sink-overhaul
 ```
 
+We currently don't have official versions of `cafanacore` ,`duneanaobj`,`osclib`, and `srproxy` , that have truth-reco matching, so we need this extra step to fetch working versions:
+```
+export PRODUCTS="/exp/dune/app/users/jwolcott/ups:$PRODUCTS"
+```
+
 A helper build script lives in this `CAFAna` subdirectory. You can build and install the code like:
 
 ```
