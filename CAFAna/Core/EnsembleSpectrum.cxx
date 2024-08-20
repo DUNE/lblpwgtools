@@ -26,6 +26,57 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  EnsembleSpectrum EnsembleSpectrum::MergeSpectra(const std::vector<Spectrum> specs, 
+                                                  const FitMultiverse* multiverse)
+  { 
+    // verify it is the same size
+    //for (auto spec : specs){
+    //  assert(spec.GetLabels().size()==axis.size() && "one of the spectra has a different axis!");
+    //}
+    LabelsAndBins labelsAndBins = LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings());
+    double pot = specs[0].POT();
+    double livetime = specs[0].Livetime();
+
+    long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
+
+    // are these two extrabins overflow and underflow?
+    //Eigen::ArrayXd data(bins+2, 1);
+    // not sure why this one works but not hte one above
+    Eigen::ArrayXd data = specs[0].GetEigen().replicate(multiverse->NUniv(), 1);
+    for ( unsigned int i = 0; i<multiverse->NUniv(); i++){
+      // sanity checks
+      assert(specs[i].ToTH1(pot).GetNbinsX()==bins && "one of the spectra has  different nbins!");
+      assert(specs[i].POT() == pot && "one of the spectra has a different POT!");
+      assert(specs[i].Livetime() == livetime && "one of the spectra has a different livetime!");
+
+      // get this universe spectra eigenarray
+      Eigen::ArrayXd spec = specs[i].GetEigen();
+      // copy into new array
+      for (unsigned int b = 0; b <= bins ; b++){
+        data[ b + (bins+2)*i ] = spec[b]; 
+        //fHist.Fill(b + (bins+2)*i, spec[b]);
+      }
+    }
+  
+    assert( data.rows() == fHist.GetEigen().rows() && "data and hist are diffesrent size");
+   
+    return EnsembleSpectrum(multiverse, Hist::Adopt(std::move(data)), specs[0].POT(), specs[0].Livetime(),
+                            LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings()));
+  }
+
+//  //----------------------------------------------------------------------
+//  EnsembleSpectrum EnsembleSpectrum::MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
+//                                                     const std::vector<FitMultiverse*> multiverses)
+//  {
+//    need something that stitches together the different multiverses
+  //  loop over ensembles 
+///     construct a vector of spectra, where first entry is ensembles[0].Nominal()
+  //    the rest of the vector will be ensembles[0..end].Universe(1..end)
+  //   return EnsembleSpectrum::MergeSpectra( specs, multiverse, axis );
+//  }
+
+
+  //----------------------------------------------------------------------
   EnsembleSpectrum EnsembleSpectrum::ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse)
   {
     Eigen::ArrayXd data = spec.GetEigen().replicate(multiverse->NUniv(), 1);

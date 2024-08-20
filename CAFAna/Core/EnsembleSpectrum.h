@@ -34,11 +34,28 @@ namespace ana
     {
     }
 
-    /// \brief Creates an ensemble spectrum for "data" from an input \ref Spectrum
-    //         which is replicated nUniverse times from the multiverse which it adopts.
-    //         Note that this is a temporary workaround for now
+
+    static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
+    //, const LabelsAndBins& axis);
+
+    //static EnsembleSpectrum MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
+    //                                        const std::vector<FitMultiverse*> multiverses)
+
+//    // The only valid thing to do with such a spectrum is to assign something
+//    /// else into it.
+//    static EnsembleSpectrum Uninitialized(){return EnsembleSpectrum();}
+//    virtual ~EnsembleSpectrum();
+//    /// \brief Creates an ensemble spectrum for "data" from an input \ref Spectrum
+//    //         which is replicated nUniverse times from the multiverse which it adopts.
+//    //         Note that this is a temporary workaround for now
     static EnsembleSpectrum ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse);
 
+
+
+    
+   // static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
+   
+  
     Spectrum Nominal() const {return Universe(0);}
     unsigned int NUniverses() const;
     Spectrum Universe(unsigned int i) const;
@@ -96,6 +113,7 @@ namespace ana
 
   protected:
     friend class EnsembleReweightableSpectrum;
+    //friend class EnsembleSpectrumMerger;
 
     /// Helper for LoadFrom()
     EnsembleSpectrum(const FitMultiverse* multiverse,
@@ -113,10 +131,10 @@ namespace ana
 
     const FitMultiverse* fMultiverse;
 
-    Hist fHist;
-    double fPOT;
-    double fLivetime;
-    LabelsAndBins fAxis;
+    mutable Hist fHist;
+    mutable double fPOT;
+    mutable double fLivetime;
+    mutable LabelsAndBins fAxis;
   };
 
   // Commutative
