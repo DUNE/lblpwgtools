@@ -258,14 +258,19 @@ namespace ana
 // Im not sure this will still be valid in the source/sink world...
     
     TTree* trPot = 0;
-    if (f->GetListOfKeys()->Contains("meta"))
+    if (f->GetListOfKeys()->Contains("cafTree"))
+      trPot = (TTree*)f->Get("cafTree");
+    else // this actually might break things...
       trPot = (TTree*)f->Get("meta");
-    else
-      trPot = (TTree*)f->Get("pottree");
+//    if (f->GetListOfKeys()->Contains("meta"))
+//      trPot = (TTree*)f->Get("meta");
+//    else
+//      trPot = (TTree*)f->Get("pottree");
     assert(trPot);
 
-    double pot;
-    trPot->SetBranchAddress("pot", &pot);
+    float pot; //double
+    trPot->SetBranchAddress("rec.beam.pulsepot", &pot);
+    //trPot->SetBranchAddress("pot", &pot);
 
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
