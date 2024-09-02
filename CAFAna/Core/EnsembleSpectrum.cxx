@@ -64,16 +64,58 @@ namespace ana
                             LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings()));
   }
 
-//  //----------------------------------------------------------------------
-//  EnsembleSpectrum EnsembleSpectrum::MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
-//                                                     const std::vector<FitMultiverse*> multiverses)
-//  {
-//    need something that stitches together the different multiverses
-  //  loop over ensembles 
-///     construct a vector of spectra, where first entry is ensembles[0].Nominal()
-  //    the rest of the vector will be ensembles[0..end].Universe(1..end)
-  //   return EnsembleSpectrum::MergeSpectra( specs, multiverse, axis );
-//  }
+  //----------------------------------------------------------------------
+  EnsembleSpectrum EnsembleSpectrum::MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
+                                                     const FitMultiverse* multiverse)
+  {
+    LabelsAndBins labelsAndBins = LabelsAndBins(ensembles[0].Nominal().GetLabels(), ensembles[0].GetBinnings());
+    double pot = ensembles[0].Nominal().POT();
+    double livetime = ensembles[0].Nominal().Livetime();
+    long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
+    
+ 
+    unsigned int nunivs = 0;
+    for (auto & ensemble : ensembles) nunivs += ensemble.NUniverses()-1; // count universes minus the nominal...  
+    nunivs += 1; // add one more for the nominal (we just need one)
+
+    //fMultiverse = 
+    // need something that stitches together the different multiverses
+    // in the meantime user has to make sure the multiverse provided matches the ensembles given... 
+    assert(multiverse->NUniv()== nunivs && "The FitMultiverse provided does not match the size of EnsembleSpectrum");
+
+    //we will store data here
+    Eigen::ArrayXd data = ensembles[0].Nominal().GetEigen().replicate(nunivs, 1);
+    // first copy the nominal of first ensemble, assuming they are all the same
+    Eigen::ArrayXd nom = ensembles[0].Nominal().GetEigen();
+    for (unsigned int b = 0; b <= bins ; b++){
+        data[ b ] = nom[b]; 
+    }
+
+    // now the rest of the universes 
+    unsigned int univcount = 1; 
+    for (unsigned int i = 0;  i<ensembles.size(); i++){
+      // we start from 1 to skip first universe, which is the nominal
+      for ( unsigned int j = 1; j<ensembles[i].NUniverses(); j++){
+        // sanity checks
+        assert(ensembles[i].Universe(j).ToTH1(pot).GetNbinsX()==bins && "one of the ensembles has  different nbins!");
+        assert(ensembles[i].Universe(j).POT() == pot && "one of the ensembles has a different POT!");
+        assert(ensembles[i].Universe(j).Livetime() == livetime && "one of the ensembles has a different livetime!");
+
+        // get this universe spectra eigenarray
+        Eigen::ArrayXd spec = ensembles[i].Universe(j).GetEigen();
+        // copy into new array
+        for (unsigned int b = 0; b <= bins ; b++){
+          data[ b + (bins+2)*univcount ] = spec[b]; 
+        }
+        univcount++;
+      }
+    }
+
+    return EnsembleSpectrum(multiverse, Hist::Adopt(std::move(data)), ensembles[0].Nominal().POT(), ensembles[0].Nominal().Livetime(),
+                            LabelsAndBins(ensembles[0].Nominal().GetLabels(), ensembles[0].Nominal().GetBinnings()));
+
+
+  }
 
 
   //----------------------------------------------------------------------

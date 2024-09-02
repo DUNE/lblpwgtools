@@ -33,13 +33,13 @@ namespace ana
       : EnsembleSpectrum(src[axis.GetVar1D()], axis)
     {
     }
-
-
+    
+    /// Construct an ensemble spectrum from  a set of spectrum which correspond to the given multiverse    
     static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
-    //, const LabelsAndBins& axis);
 
-    //static EnsembleSpectrum MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
-    //                                        const std::vector<FitMultiverse*> multiverses)
+    /// Construct an ensemble spectrum merging several ensemble spectrum. 
+    /// user has to make sure the multiverse provided matches the ensembles given
+    static EnsembleSpectrum MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, const FitMultiverse* multiverse);
 
 //    // The only valid thing to do with such a spectrum is to assign something
 //    /// else into it.
@@ -50,10 +50,7 @@ namespace ana
 //    //         Note that this is a temporary workaround for now
     static EnsembleSpectrum ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse);
 
-
-
-    
-   // static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
+       // static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
    
   
     Spectrum Nominal() const {return Universe(0);}
@@ -113,7 +110,6 @@ namespace ana
 
   protected:
     friend class EnsembleReweightableSpectrum;
-    //friend class EnsembleSpectrumMerger;
 
     /// Helper for LoadFrom()
     EnsembleSpectrum(const FitMultiverse* multiverse,
