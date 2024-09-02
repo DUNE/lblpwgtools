@@ -52,6 +52,9 @@ namespace ana
     /// Details of a particular universe
     const FitUniverse& GetUniverse(int i) const {return fUnivs[i];}
 
+    // TO DO: a member that returns the systematic shifts used to create this Multiverse
+    //  std::vector<const IFitSyst*> GetSysts(){return }
+
     void SaveTo(TDirectory* dir, const std::string& name) const;
 
     /// Usually these return unique_ptr, but Multiverses are globally managed
