@@ -57,5 +57,28 @@ Once CAFAna is built and the environment setup, proceed to run an example script
 ```
 cafe tute/demo0b.C
 ```
+```
+cafe -l 10 tute/demo0b.C
+```
+The `-l` option limits the number of files read by the script so you can obtain plots faster. See other options with `cafe --help`.
 
-Note: If you run into issues accessing files, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You will probably need to re-complie your code after doing this. I am working on adding a detailed instruction on this. 
+The three example scripts in the `tute` directory have the following content:
+
+### demo0b 
+Basic distributions in 1D and 2D of variables from the ` SRCommonRecoBranch`.
+
+### demo1b
+More distributions, more manipulations of variables/cuts, now of variables from the `SRTruthBranch`. Also showing how to open/read files.
+
+### demo0eb
+Examples of systematic variations applied to distributions from ` SRCommonRecoBranch` variables. 
+
+## To do's / caveats / wishlist
+- Systematic variations are not implemented in truth branches yet
+- More realistic examples of systematics
+- Note: If you run into issues accessing files, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You might need to re-build after doing this. I am working on adding a detailed instruction on this. Remember to source `CAFAnaEnv.sh` after building. 
+##
+
+Last updated September 4, 2024, by Maria Martinez-Casales (mcasales@fnal.gov)
+
+
