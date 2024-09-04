@@ -16,6 +16,10 @@ As you may know, we are living now in AL9 world, but I don't know how to use spa
 ```
 The reccommendation is that you use `dunebuild03` instead of a gpvm to build your code. Remove `/pnfs/dune/` when setting up the container, otherwise it will complain. Later on, you can run code and access `pnfs` on a regular gpvm. 
 
+```
+# before anything else, set up UPS
+source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+```
 Now you can go ahead and install.
 
 ## How to install
@@ -53,3 +57,5 @@ Once CAFAna is built and the environment setup, proceed to run an example script
 ```
 cafe tute/demo0b.C
 ```
+
+Note: If you run into issues accessing files, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You will probably need to re-complie your code after doing this. I am working on adding a detailed instruction on this. 
