@@ -45,13 +45,10 @@ namespace ana
 //    /// else into it.
 //    static EnsembleSpectrum Uninitialized(){return EnsembleSpectrum();}
 //    virtual ~EnsembleSpectrum();
-//    /// \brief Creates an ensemble spectrum for "data" from an input \ref Spectrum
-//    //         which is replicated nUniverse times from the multiverse which it adopts.
-//    //         Note that this is a temporary workaround for now
+    /// \brief Creates an ensemble spectrum for "data" from an input \ref Spectrum
+    //         which is replicated nUniverse times from the multiverse which it adopts.
+    //         Note that this is a temporary workaround for now
     static EnsembleSpectrum ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse);
-
-       // static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
-   
   
     Spectrum Nominal() const {return Universe(0);}
     unsigned int NUniverses() const;

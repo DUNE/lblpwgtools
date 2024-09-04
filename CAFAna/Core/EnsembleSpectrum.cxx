@@ -29,19 +29,17 @@ namespace ana
   EnsembleSpectrum EnsembleSpectrum::MergeSpectra(const std::vector<Spectrum> specs, 
                                                   const FitMultiverse* multiverse)
   { 
-    // verify it is the same size
-    //for (auto spec : specs){
-    //  assert(spec.GetLabels().size()==axis.size() && "one of the spectra has a different axis!");
-    //}
+
+    // we take characteristics from the first spectrum
     LabelsAndBins labelsAndBins = LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings());
     double pot = specs[0].POT();
     double livetime = specs[0].Livetime();
-
     long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
 
     // are these two extrabins overflow and underflow?
     //Eigen::ArrayXd data(bins+2, 1);
-    // not sure why this one works but not hte one above
+    // not sure why this one works but not the one above
+    // we will replace contents here with that of th edifferent spectra
     Eigen::ArrayXd data = specs[0].GetEigen().replicate(multiverse->NUniv(), 1);
     for ( unsigned int i = 0; i<multiverse->NUniv(); i++){
       // sanity checks
@@ -54,11 +52,10 @@ namespace ana
       // copy into new array
       for (unsigned int b = 0; b <= bins ; b++){
         data[ b + (bins+2)*i ] = spec[b]; 
-        //fHist.Fill(b + (bins+2)*i, spec[b]);
       }
     }
   
-    assert( data.rows() == fHist.GetEigen().rows() && "data and hist are diffesrent size");
+    assert( data.rows() == fHist.GetEigen().rows() && "data and hist are different size");
    
     return EnsembleSpectrum(multiverse, Hist::Adopt(std::move(data)), specs[0].POT(), specs[0].Livetime(),
                             LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings()));
@@ -73,7 +70,6 @@ namespace ana
     double livetime = ensembles[0].Nominal().Livetime();
     long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
     
- 
     unsigned int nunivs = 0;
     for (auto & ensemble : ensembles) nunivs += ensemble.NUniverses()-1; // count universes minus the nominal...  
     nunivs += 1; // add one more for the nominal (we just need one)
@@ -111,12 +107,12 @@ namespace ana
       }
     }
 
+    assert(nunivs == univcount && "uh-oh, we miscounted universes");
+
     return EnsembleSpectrum(multiverse, Hist::Adopt(std::move(data)), ensembles[0].Nominal().POT(), ensembles[0].Nominal().Livetime(),
                             LabelsAndBins(ensembles[0].Nominal().GetLabels(), ensembles[0].Nominal().GetBinnings()));
 
-
   }
-
 
   //----------------------------------------------------------------------
   EnsembleSpectrum EnsembleSpectrum::ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse)
