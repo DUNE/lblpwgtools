@@ -141,9 +141,9 @@ void demoPions()
   auto h2 = sEnergyMatchedTrueMu.ToTH1(pot, kRed);
   auto h3 = sEnergyTruthPions.ToTH1(pot, kBlue);
   h2->Draw("hist same");
-  h3->Draw("hist same");
+ // h3->Draw("hist same");
   leg.AddEntry(h2, "+ matched to true pions");
-  leg.AddEntry(h3, "all true pions energy");
+  //leg.AddEntry(h3, "all true pions energy");
   leg.Draw();
   c.SaveAs("recoPion_matchedTrueE.png");
 

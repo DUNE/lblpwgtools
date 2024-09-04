@@ -25,16 +25,13 @@ using namespace ana;
 //   - True particles Level Vars/Cuts
 
 
-void demo0b( std::string option = "caf")
+void demo0b( std::string option = "flat")
 {
  
   std::string fname;
   if(option=="caf") fname = "/exp/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/MR5_beta2a_flash/test_flash.root";
-  //"/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  // "/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000";
-  if (option=="flat") fname ="/exp/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/MR5_beta2a_flash/test_flash.flat.root";
-  // "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
-  //() still figuring out the problem with flatcafs)
+
+  if (option=="flat")  fname = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
 
 
   // Source of events
@@ -175,7 +172,8 @@ void demo0b( std::string option = "caf")
   // Fill in the spectra
   loader.Go();
 
-
+  std::cout<< "Spectrum sTrueNumuPDGtest has"<< sTrueNumuPDGtest.ToTH1(sTrueNumuPDGtest.POT())->GetNbinsX() << "bins, and the axis "<< sTrueNumuPDGtest.GetBinnings()[0].NBins()<< " NBins\n";
+  std::cout<< "eigen has size: "<< sTrueNumuPDGtest.GetEigen().rows() << "," << sTrueNumuPDGtest.GetEigen().cols()<<std::endl;
   // grab pot from any
   const double pot = sEnergyMuon.POT();
 

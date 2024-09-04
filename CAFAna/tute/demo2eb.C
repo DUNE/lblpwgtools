@@ -71,7 +71,7 @@ void demo2eb()
 
  // test multiverse
   std::vector<const ISyst*> systs;            //,systs2;
-  systs.push_back(&kWIonSyst);
+  systs.push_back(& );
 
 
   // scans from -n to n sigma shifts, we'll do only the 1 sigma
@@ -110,10 +110,9 @@ void demo2eb()
 
   //const std::string fname_nom = "/exp/dune/data/users/mcasales/test_cafs/MiniRun5_1E19_RHC.caf.0001013.CAF.root";
   // also beta2a
-  const std::string fname_nom = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/MiniRun5_1E19_RHC.caf.0000*";
-  //const std::string fname_up =  "/exp/dune/data/users/mcasales/test_cafs/MiniRun5_Systematics_W_ION_22.7.caf.0001013.CAF.root";
+  const std::string fname_nom = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
+//"/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/MiniRun5_1E19_RHC.caf.0000*";
   const std::string fname_up = "/pnfs/dune/persistent/users/cuddandr/2x2_production/MiniRun5_Systematics_W_ION_22.7/MiniRun5_Systematics_W_ION_22.7.caf/CAF/0000000/MiniRun5_Systematics_W_ION_22.7.caf.*";
-  //const std::string fname_down = "/exp/dune/data/users/mcasales/test_cafs/MiniRun5_Systematics_W_ION_25.1.caf.0001013.CAF.root";
   const std::string fname_down = "/pnfs/dune/persistent/users/cuddandr/2x2_production/MiniRun5_Systematics_W_ION_25.1/MiniRun5_Systematics_W_ION_25.1.caf/CAF/0000000/MiniRun5_Systematics_W_ION_25.1.caf.*";
 
   // Source of events
@@ -204,27 +203,17 @@ void demo2eb()
   Eigen::MatrixXd m= sEnergyMatchedWIon2.CovarianceMatrix(pot);
   std::cout << "The matrix m is of size "  << m.rows() << "x" << m.cols() << std::endl;
   // convert to th2 for drawing 
-  // This eventually should be placed in a header          
-  TH2F* hCov = new TH2F("covariance", "covariance;x;y", m.rows(), 0, m.rows(),  m.cols() , 0 ,  m.cols() );  
-  for (int x = 0 ; x< m.rows();x++)
-    for (int y = 0 ; y< m.rows();y++)
-      hCov->SetBinContent(x,y,m(x,y));
-
+  TH2F* hCov = EigenMatrixToTH2(m);  
   new TCanvas;
   hCov->Draw("colz");
   gPad->SaveAs("cov_mx_ion.pdf");
 
-
-
-
-
   /// Drawing the spectra directly 
  new TCanvas; 
-TH1 * hsMuonEnsembleX2 = sEnergyMatchedTrueMu_nom.ToTH1(pot, kBlack);
-hsMuonEnsembleX2->SetMaximum(1.3*hsMuonEnsembleX2->GetMaximum());
-hsMuonEnsembleX2->Draw("hist");
-sEnergyMatchedTrueMu_up.ToTH1(pot, kBlue)->Draw("hist same");;
-sEnergyMatchedTrueMu_down.ToTH1(pot, kPink)->Draw("hist same");;
-
+ TH1 * hsMuonEnsembleX2 = sEnergyMatchedTrueMu_nom.ToTH1(pot, kBlack);
+ hsMuonEnsembleX2->SetMaximum(1.3*hsMuonEnsembleX2->GetMaximum());
+ hsMuonEnsembleX2->Draw("hist");
+ sEnergyMatchedTrueMu_up.ToTH1(pot, kBlue)->Draw("hist same");;
+ sEnergyMatchedTrueMu_down.ToTH1(pot, kPink)->Draw("hist same");;
 
 }
