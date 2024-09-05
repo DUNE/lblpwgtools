@@ -15,6 +15,7 @@
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
 #include "demo0eb.C"
+#include "CAFAna/tute/demo_systs.h"
 
 #include "TFile.h"
 #include "TCanvas.h"
@@ -25,7 +26,6 @@
 #include <iostream>
 
 using namespace ana;
-
 
 
 void demo_systs()

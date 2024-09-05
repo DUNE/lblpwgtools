@@ -24,6 +24,11 @@ Now you can go ahead and install.
 
 ## How to install
 
+I recommend building in your `/app/` area. 
+```
+cd /exd/dune/app/users/{you}
+mkdir tutorial-sep24
+```
 Clone this branch of the repository:
 ```
 git clone -b feature/2x2-tutorial  git@github.com:DUNE/lblpwgtools.git
@@ -51,6 +56,8 @@ If you are in a DUNE `gpvm` and therefore have `cvmfs` access, you can rely on r
 
 Once CAFAna has been built, to set up the environment you will need to `source /path/to/install/CAFAnaEnv.sh`. If `standalone_configure_and_build.sh` was not passed a `-I` argument, then this will be `/path/to/repo/CAFAna/build/Linux/CAFAnaEnv.sh` by default. 
 
+Note: everytime you make a change make sure to remove the build area (`rm -rf build`) before building again. And source `CAFAnaEnv.sh` again.
+
 ## Examples 
 
 Once CAFAna is built and the environment setup, proceed to run an example script doing:
@@ -76,8 +83,8 @@ Examples of systematic variations applied to distributions from ` SRCommonRecoBr
 
 - Systematic variations are not implemented in truth branches yet
 - More realistic examples of systematics
-- Note: If you run into issues accessing files, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You might need to re-build after doing this. I am working on adding a detailed instruction on this. Remember to source `CAFAnaEnv.sh` after building. 
+- Note: If you run into issues accessing files from `/pnfs`, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You can then `unsetup duneutil` right after. You might need to re-build after. Sorry this is ugly. Remember to source `CAFAnaEnv.sh` after building. 
 ##
 
-Last updated September 4, 2024, by Maria Martinez-Casales (mcasales@fnal.gov)
+Last updated September 5, 2024, by Maria Martinez-Casales (mcasales@fnal.gov)
 

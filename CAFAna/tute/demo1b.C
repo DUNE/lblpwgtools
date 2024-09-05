@@ -41,12 +41,6 @@ void demo1b( std::string option="caf")
   const RecoPartHistAxis axEnergy("Muon energy (GeV)", Binning::Simple(50, 0, 1), kRecoParticleEnergy);
   const RecoPartHistAxis axPDG("PDG of reco particle", Binning::Simple(14, 0, 14), kRecoParticlePDG);
 
-  // The same but with truth information
-// Not sure why this variable is not working
-//  const TruthPartVar kTruePartEnergy( [](const caf::SRTrueParticleProxy* part){
-//    TLorentzVector m( part->p.x, part->p.y, part->p.z, part->p.E);
-//    return m.E();
-//  });
 
   const TruthPartVar kTruePartPDG([](const caf::SRTrueParticleProxy* part){return part->pdg;});
 
