@@ -28,12 +28,13 @@
 using namespace ana;
 
 
-void demo_systs()
+void demo_systs_file()
 {
  
 
   std::vector<const ISyst*> systs;     
   systs.push_back(&kWIonSyst);
+
   std::vector<const ISyst*> systs2;
   systs2.push_back(&kEnergyScaleTrueMu);
   systs2.push_back(&kMECScaleSyst);
@@ -41,43 +42,19 @@ void demo_systs()
   // scans from -n to n sigma shifts, we'll do only the 1 sigma
   const Multiverse& cross = Multiverse::Hypercross(systs,1);
   const Multiverse& cross_rwgt = Multiverse::Hypercross(systs2,1);
-
-  // we can save our multiverses to file
-  TFile fout("test_multiverse.root", "RECREATE");
-  cross.SaveTo(&fout, "cross");
-  cross_rwgt.SaveTo(&fout, "cross_rwgt");
-  fout.Close();
   
-  // and then retrieve multiverses from file
-  TFile fin("test_multiverse.root");
-  const FitMultiverse& cross2 = *Multiverse::LoadFrom(&fin, "cross");
-  const FitMultiverse& cross_rwgt2 = *Multiverse::LoadFrom(&fin, "cross_rwgt");
-
-
-  // you can print the hypercross universe to see what is going on
-    std::cout << cross.LatexName() << ",   "<< cross.ShortName() << std::endl;
+  std::cout << cross.LatexName() << ",   "<< cross.ShortName() << std::endl;
   for (int i = 0; i< cross.NUniv(); i++){
       for (const auto & [ key, value ] : cross.GetUniverse(i)) {
       std::cout << key->ShortName() << ": " << value << std::endl;
       } 
   }
-    std::cout << cross_rwgt.LatexName() << ",   "<< cross_rwgt.ShortName() << std::endl;
-  for (int i = 0; i< cross_rwgt.NUniv(); i++){
-      for (const auto & [ key, value ] : cross_rwgt.GetUniverse(i)) {
-      std::cout << key->ShortName() << ": " << value << std::endl;
-      } 
-  }
-
-    fin.Close();
   //----------------------------------------------------------------------//
   // now  make ensemble spectra
 
   const Binning binsEnergy = Binning::Simple(10, 0, 1);
 
   const HistAxis axMuEnergy("Muon energy (GeV)", binsEnergy, kEnergyInteractionMu);
-
-  //const std::string fname_nom = "/exp/dune/data/users/mcasales/test_cafs/MiniRun5_1E19_RHC.caf.0001013.CAF.root";
-  // also beta2a 
 
  // const std::string fname_nom = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
   const std::string fname_nom = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.*";
@@ -90,9 +67,9 @@ void demo_systs()
   SpectrumLoader loader_down(fname_down);
 
   // Fill various spectra with these...
-  Spectrum sEnergyMatchedTrueMu_nom(loader_nom.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
-  Spectrum sEnergyMatchedTrueMu_up(loader_up.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
-  Spectrum sEnergyMatchedTrueMu_down(loader_down.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
+  Spectrum sEnergyMatchedTrueMu_nom(  loader_nom.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
+  Spectrum sEnergyMatchedTrueMu_up(   loader_up.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
+  Spectrum sEnergyMatchedTrueMu_down( loader_down.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
 
   // other ensemble with two reweight systematics
   EnsembleSpectrum sMuonEnegyEnsemble(loader_nom.Interactions(RecoType::kDLP).Ensemble(cross_rwgt)[kHas1RecoMuon], axMuEnergy );
@@ -119,30 +96,29 @@ void demo_systs()
   specs.push_back(*Spectrum::LoadFrom(fIn, "sEnergyMatchedTrueMu_down").release());
   specs.push_back(*Spectrum::LoadFrom(fIn, "sEnergyMatchedTrueMu_up").release() );
 
-  // get from file
-  const FitMultiverse& cross22 = *Multiverse::LoadFrom(fIn, "cross");
- 
-  EnsembleSpectrum sEnergyMatchedWIon = EnsembleSpectrum::MergeSpectra(specs, &cross22);//, axMuEnergy );
+  // get from file and merge into a single specEnsmbl
+  const FitMultiverse& crossFile = *Multiverse::LoadFrom(fIn, "cross");
+  EnsembleSpectrum sEnergyMatchedWIon = EnsembleSpectrum::MergeSpectra(specs, &crossFile);
 
-//----------------------------------------------------------------------
-  // These lines dont crash but I dont know if they are working properly
-  const FitMultiverse& crossCombined = Multiverse::Hypercross({&kWIonSyst, &kEnergyScaleTrueMu, &kMECScaleSyst},1);
-  std::cout<< "sMuonEnegyEnsemble has "<< sMuonEnegyEnsemble.NUniverses()<< "sEnergyMatchedWIon has "<< sEnergyMatchedWIon.NUniverses()<<
-   " and crossCombined has "<<  crossCombined.NUniv() <<std::endl;  // should be the same...
-  EnsembleSpectrum sEnergyMatchedIonandEnergyScale = EnsembleSpectrum::MergeEnsembles( 
+  //----------------------------------------------------------------------
+  //Merge ensembles. This Multiverse has to have the systs in proper order 
+  //(same as the ensembles you're gvign it)
+  const FitMultiverse& crossCombined = Multiverse::Hypercross(
+    {&kWIonSyst, &kEnergyScaleTrueMu, &kMECScaleSyst},1);
+  EnsembleSpectrum sEnsembleMerged = EnsembleSpectrum::MergeEnsembles( 
                                                       {sEnergyMatchedWIon,sMuonEnegyEnsemble}, &crossCombined);
 //----------------------------------------------------------------------
 
   TFile fout3("multiverse_ensemble_spec_2.root", "RECREATE");
-  sEnergyMatchedWIon.SaveTo(&fout3, "sEnergyMatchedWIon");
+  sEnergyMatchedWIon.SaveTo( &fout3, "sEnergyMatchedWIon");
   sMuonEnegyEnsemble.SaveTo( &fout3, "sMuonEnegyEnsemble");
-  sEnergyMatchedIonandEnergyScale.SaveTo( &fout3, "sEnergyMatchedIonandEnergyScale");
+  sEnsembleMerged.SaveTo(    &fout3, "sEnsembleMerged");
   fout3.Close();
 
   // Read spectra from file
   TFile fin2("multiverse_ensemble_spec_2.root");
   EnsembleSpectrum sEnergyMatchedWIon2  =*EnsembleSpectrum::LoadFrom(&fin2, "sEnergyMatchedWIon");
-  EnsembleSpectrum sEnergyMatchedIonandEnergyScale2  =*EnsembleSpectrum::LoadFrom(&fin2, "sEnergyMatchedIonandEnergyScale");
+  EnsembleSpectrum sEnsembleMerged2  =*EnsembleSpectrum::LoadFrom(&fin2, "sEnsembleMerged");
 
  // -- draw various histograms
   double pot = sEnergyMatchedTrueMu_nom.POT();
@@ -152,8 +128,6 @@ void demo_systs()
   hsMuonEnsembleX->Draw("hist");
 
   // you can draw the individual spectra for each universe 
-  // in this case our spectra from different files
-  std::cout<< "\ncross has "<<sEnergyMatchedWIon2.NUniverses()<< " universes\n";
   for(unsigned int i = 0; i < sEnergyMatchedWIon2.NUniverses(); ++i){
     // using different colors per systematic
     Color_t color = kBlue;
@@ -162,11 +136,24 @@ void demo_systs()
     // if you draw either of these they should look the same,
     // Univ 1 and 2 of the 2nd ensemble are the same as the ones in sEnergyMatchedWIon2
     sEnergyMatchedWIon2.Universe(i).ToTH1(pot, color,kDashed)->Draw("hist same");     
-    //sEnergyMatchedIonandEnergyScale2.Universe(i).ToTH1(pot, color+1,kDotted)->Draw("hist same");     
+    sEnsembleMerged2.Universe(i).ToTH1(pot, color+1,kDotted)->Draw("hist same");     
   }  
   gPad->SaveAs("spec_ensemble_test.pdf");
   
+  // for the systematics
+  new TCanvas;
+  for(unsigned int i = 0; i < sEnsembleMerged2.NUniverses(); ++i){
+    // using different colors per shift
+    Color_t color = kBlue;
+    if (i==0) color = kBlue;
+    if (i== 1 || i== 2) color = kViolet +1;
+    if (i==3 || i==4 ) color = kPink;
+    if (i==5 || i==6 ) color = kRed;
+    sEnsembleMerged2.Universe(i).ToTH1(pot, color,kDashed)->Draw("hist same");     
+  }  
+  gPad->SaveAs("ion_rwgt_ensemble_test.png");
   
+
   // or draw as TGraph 
   new TCanvas;
   // Error band summing in quadrature
@@ -174,8 +161,16 @@ void demo_systs()
   DrawErrorBand(hsMuonEnsembleX, eBand);
   gPad->SaveAs("spec_ensemble_test_ErrorBand.pdf");  
 
-  // Draw covariance matrix
+
   new TCanvas;
+  // Error band summing in quadrature
+  TGraphAsymmErrors* eBand2 =sEnsembleMerged2.ErrorBand(pot);
+  TH1 * hsMuonEnsembleMerged =  sEnsembleMerged2.Nominal().ToTH1(pot, kBlue);
+  DrawErrorBand( hsMuonEnsembleMerged , eBand2);
+  gPad->SaveAs("spec_ensemble_test_ion_rwgt_ErrorBand.pdf");  
+
+
+  // Draw covariance matrix
   Eigen::MatrixXd m= sEnergyMatchedWIon2.CovarianceMatrix(pot);
   std::cout << "The matrix m is of size "  << m.rows() << "x" << m.cols() << std::endl;
   // convert to th2 for drawing         
@@ -184,8 +179,16 @@ void demo_systs()
   hCov->Draw("colz");
   gPad->SaveAs("cov_mx_ion.pdf");
 
+  // Draw full cov 
+  Eigen::MatrixXd m_full= sEnsembleMerged2.CovarianceMatrix(pot);
+  TH2F* hCovFull = EigenMatrixToTH2(m_full);
+  new TCanvas;
+  hCovFull->Draw("colz");
+  gPad->SaveAs("cov_mx_ion_rwgt.pdf");
 
-  /// Drawing the spectra directly 
+
+  /// Drawing the spectra directly to check ensemble spec did the correc thing
+  /*
   new TCanvas; 
   TH1 * hsMuonEnsembleX2 = sEnergyMatchedTrueMu_nom.ToTH1(pot, kBlue);
   hsMuonEnsembleX2->SetMaximum(1.3*hsMuonEnsembleX2->GetMaximum());
@@ -194,7 +197,7 @@ void demo_systs()
   sEnergyMatchedTrueMu_down.ToTH1(pot, kViolet+1)->Draw("hist same");;
   gPad->SaveAs("specs_non-ensemble_test.png");
   
-  // check differences
+  // check differences to verify they do what they should
   new TCanvas; 
   TH1* hdiffNom = sEnergyMatchedTrueMu_nom.ToTH1(pot, kBlue);
   hdiffNom->Divide(  sEnergyMatchedWIon2.Universe(0).ToTH1(pot));
@@ -208,18 +211,7 @@ void demo_systs()
   hdiffDown->Draw("hist same");
   gPad->SaveAs("specs_ensembe_diff.png");
   
-  new TCanvas;
- EnsembleSpectrum sMuonEnegyEnsemble2  =*EnsembleSpectrum::LoadFrom(&fin2, "sMuonEnegyEnsemble");
-  for(unsigned int i = 0; i < sMuonEnegyEnsemble2.NUniverses(); ++i){
-    // using different colors per shift
-    Color_t color = kBlue;
-    if (i==0) color = kBlue;
-    if (i== 1 ) color = kViolet +1;
-    if (i==2 ) color = kPink;
-    sMuonEnegyEnsemble2.Universe(i).ToTH1(pot, color,kDashed)->Draw("hist same");     
-  }  
-  gPad->SaveAs("rwgt_ensemble_test.png");
-  
+
   new TCanvas;
     // Grab covariance matrix
   Eigen::MatrixXd m2= sMuonEnegyEnsemble2.CovarianceMatrix(pot);
@@ -231,5 +223,5 @@ void demo_systs()
   hCov2->Draw("colz");
   gPad->SaveAs("cov_mx_rwgt.pdf");
 
-
+  */
 }
