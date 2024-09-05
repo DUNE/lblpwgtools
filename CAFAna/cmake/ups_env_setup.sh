@@ -25,7 +25,10 @@ setup eigen v3_4_0 || exit 1
 setup stan v2_26_1 -q e20:prof || exit 1
 setup osclib testing -q e20:prof:stanfree || exit 1
 setup cafanacore testing -q e20:prof || exit 1
-setup duneanaobj vtesting -q e20:debug || exit 1 #v03_02_01 v03_01_00
+#my v
+setup duneanaobj vtestingm -q e20:debug || exit 1 
+#Jeremys v
+#setup duneanaobj vtesting -q e20:debug || exit 1 #v03_02_01 v03_01_00
 
 
 
