@@ -33,12 +33,23 @@ namespace ana
       : EnsembleSpectrum(src[axis.GetVar1D()], axis)
     {
     }
+    
+    /// Construct an ensemble spectrum from  a set of spectrum which correspond to the given multiverse    
+    static EnsembleSpectrum MergeSpectra(const std::vector<Spectrum> specs, const FitMultiverse* multiverse);
 
+    /// Construct an ensemble spectrum merging several ensemble spectrum. 
+    /// user has to make sure the multiverse provided matches the ensembles given
+    static EnsembleSpectrum MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, const FitMultiverse* multiverse);
+
+//    // The only valid thing to do with such a spectrum is to assign something
+//    /// else into it.
+//    static EnsembleSpectrum Uninitialized(){return EnsembleSpectrum();}
+//    virtual ~EnsembleSpectrum();
     /// \brief Creates an ensemble spectrum for "data" from an input \ref Spectrum
     //         which is replicated nUniverse times from the multiverse which it adopts.
     //         Note that this is a temporary workaround for now
     static EnsembleSpectrum ReplicatedData(const Spectrum& spec, const FitMultiverse* multiverse);
-
+  
     Spectrum Nominal() const {return Universe(0);}
     unsigned int NUniverses() const;
     Spectrum Universe(unsigned int i) const;
@@ -113,10 +124,10 @@ namespace ana
 
     const FitMultiverse* fMultiverse;
 
-    Hist fHist;
-    double fPOT;
-    double fLivetime;
-    LabelsAndBins fAxis;
+    mutable Hist fHist;
+    mutable double fPOT;
+    mutable double fLivetime;
+    mutable LabelsAndBins fAxis;
   };
 
   // Commutative

@@ -12,7 +12,8 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TPad.h"
-
+#include "TLegend.h"
+#include <iostream>
 using namespace ana;
 
 // Make a few basic spectra from the cafs
@@ -24,15 +25,13 @@ using namespace ana;
 //   - True particles Level Vars/Cuts
 
 
-void demo0b( std::string option = "caf")
+void demo0b( std::string option = "flat")
 {
  
   std::string fname;
-   if(option=="caf") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  // "/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000";
-  if (option=="flat") fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF.flat/0000000/MiniRun5_1E19_RHC.caf.0000*root";
-  //() still figuring out the problem with flatcafs)
+  if(option=="caf") fname = "/exp/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/MR5_beta2a_flash/test_flash.root";
 
+  if (option=="flat")  fname = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
 
   // Source of events
   SpectrumLoader loader(fname);
@@ -133,18 +132,25 @@ void demo0b( std::string option = "caf")
     if ( pdg==-211) return 6.;
     // (7) pi0
     if ( pdg==111) return 7.;
-    else
-      return 8.;
-    // (8) anything else
+    // (8) photon
+    if (pdg==22) return 8.;
+    // (9) Any K0S, K0L K0 or K+/-
+    if (abs(pdg)==321 || pdg== 311|| pdg== 310|| pdg== 130) return 9.;
+    else{
+      //std::cout<<pdg<<std::endl;
+      return 10.;
+    }
+    // (9) anything else
   });
- std::vector<std::string> PDGlabels = {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","other"};
+ std::vector<std::string> PDGlabels = {"#mu", "e","p","n","#pi^{+}","#pi^{-}","#pi^{0}","#gamma","K","other"};
 
-  // you'll see this one wont be very useful...
+
   const TruthHistAxis myHistTruthAxisPDG("true pdg", Binning::Simple(100, 0, 100), SIMPLETRUTHVAR(pdg));
-  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(8, 1, 9), kTruePartPDG);
+  const TruthPartHistAxis myHistTruthPartAxisPDG("true particles pdg", Binning::Simple(10, 1, 11), kTruePartPDG);
 
+  ///////////////////////////////////////////////////////////////// 
+  //  ~~~~**** now  make some more histograms  *****~~~~
   Spectrum PDGTrue(loader.NuTruths(), myHistTruthAxisPDG);
-  //  check that the SR cut is actually cutting the right thing 
   Spectrum sTrueNumuPDGtest(loader.NuTruths()[kIsTrueNuMu], myHistTruthAxisPDG);
   
   Spectrum PDGTruePrims(loader.NuTruths().TruthParticles(TruePType::kPrim)[kNoTruthPartCut], myHistTruthPartAxisPDG);
@@ -160,17 +166,22 @@ void demo0b( std::string option = "caf")
 
   Spectrum sTrueNumuEnergy( loader.NuTruths(), TruthHistAxis("True neutrino energy [GeV]", Binning::Simple(50,0,10),SIMPLETRUTHVAR(E)) );
   
-   ///////////////////////////////////////////////////////////////// 
 
-  // Fill in the spectrum
+  ///////////////////////////////////////////////////////////////// 
+  // Fill in the spectra
   loader.Go();
 
   // grab pot from any
   const double pot = sEnergyMuon.POT();
 
   //ta da! Draw tour histograms
-  sEnergyMuon.ToTH1(pot)->Draw("hist");
-  sEnergyMuonCont.ToTH1(pot,kMagenta+2)->Draw("hist same");
+  // you can retrieve the TH1 * object and manipulate as usual in root
+  TH1 * emu = sEnergyMuon.ToTH1(pot); emu->Draw("hist");
+  TH1 *emuCont=sEnergyMuonCont.ToTH1(pot,kMagenta+2); emuCont->Draw("hist same");
+  auto *lege = new TLegend(.55,.5,.88,.88);    
+  lege->AddEntry(emu, "All #mu energy","L");
+  lege->AddEntry(emuCont, "Cont. #mu energy","L");
+  lege->Draw();
   gPad->SaveAs(("demo0_sEnergyMuon"+option+".pdf").c_str());
 
   new TCanvas;
@@ -178,22 +189,28 @@ void demo0b( std::string option = "caf")
   sTrueNumuPDGtest.ToTH1(pot,kRed, kDashed)->Draw("hist same");
 
   new TCanvas;
-  // you can also retrieve the TH1 * object and manipulate as usual in root
   TH1* prims = PDGTruePrims.ToTH1(pot,kRed);
   for (unsigned int i  = 0; i<PDGlabels.size(); i++)  
-    prims->GetXaxis()->SetBinLabel(i+1,PDGlabels[i].c_str());
+  prims->GetXaxis()->SetBinLabel(i+1,PDGlabels[i].c_str());
   prims->SetTitle("True particles ID");
   prims->Draw("hist");
-  PDGTrueSecs.ToTH1(pot,kBlue)->Draw("hist same");
-  PDGTruePreFSI.ToTH1(pot,kGreen+2)->Draw("hist same");
- gPad->SaveAs(("demo0_PDGprims_"+option+".pdf").c_str());
+  TH1* secs = PDGTrueSecs.ToTH1(pot,kBlue); secs->Draw("hist same");
+  TH1 *prefsi=  PDGTruePreFSI.ToTH1(pot,kGreen+2); prefsi->Draw("hist same");
+  auto *leg = new TLegend(.55,.7,.88,.88);    
+  leg->AddEntry(prims, "Primaries","L");
+  leg->AddEntry(secs, "Secondaries","L");
+  leg->AddEntry(prefsi, "Pre-FSI","L");
+  leg->SetFillStyle(0);
+  leg->Draw();
+  gPad->SaveAs(("demo0_PDGprims_"+option+".pdf").c_str());
 
   new TCanvas;
   sTrueNumuEnergy.ToTH1(sTrueNumuEnergy.POT())->Draw("hist");
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
-   gPad->SaveAs(("demo0_vtxPosAll_"+option+".pdf").c_str());
+  gPad->SaveAs(("demo0_vtxPosAll_"+option+".pdf").c_str());
+
   new TCanvas; 
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
   gPad->SaveAs(("demo0_vtxPosCont_"+option+".pdf").c_str());
@@ -201,7 +218,8 @@ void demo0b( std::string option = "caf")
 
   new TCanvas;
   sTrueVtxPositionAll.ToTH2(sTrueVtxPositionAll.POT())->Draw("colz");
-   gPad->SaveAs(("demo0_TruevtxPosAll_"+option+".pdf").c_str());
+  gPad->SaveAs(("demo0_TruevtxPosAll_"+option+".pdf").c_str());
+
   new TCanvas;
   sTrueVtxPositionCont.ToTH2(sTrueVtxPositionCont.POT())->Draw("colz");
   gPad->SaveAs(("demo0_TruevtxPosCont_"+option+".pdf").c_str());
