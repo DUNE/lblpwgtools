@@ -65,19 +65,23 @@ namespace ana
   EnsembleSpectrum EnsembleSpectrum::MergeEnsembles( const std::vector<EnsembleSpectrum> ensembles, 
                                                      const FitMultiverse* multiverse)
   {
+
+    unsigned int nunivs = 0;
+    for (auto & ensemble : ensembles){
+      nunivs += ensemble.NUniverses(); 
+    }
+    nunivs -= ensembles.size(); // subtract all nominals (number of ensembles), 
+    nunivs += 1; // and add one more (we just need one nom)
+   
+    // need something that stitches together the different multiverses
+    // in the meantime user has to make sure the multiverse provided matches the ensembles given... 
+    assert(multiverse->NUniv() == nunivs && "The FitMultiverse provided does not match the size of EnsembleSpectrum");
+
     LabelsAndBins labelsAndBins = LabelsAndBins(ensembles[0].Nominal().GetLabels(), ensembles[0].GetBinnings());
     double pot = ensembles[0].Nominal().POT();
     double livetime = ensembles[0].Nominal().Livetime();
     long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
     
-    unsigned int nunivs = 0;
-    for (auto & ensemble : ensembles) nunivs += ensemble.NUniverses()-1; // count universes minus the nominal...  
-    nunivs += 1; // add one more for the nominal (we just need one)
-
-    //fMultiverse = 
-    // need something that stitches together the different multiverses
-    // in the meantime user has to make sure the multiverse provided matches the ensembles given... 
-    assert(multiverse->NUniv()== nunivs && "The FitMultiverse provided does not match the size of EnsembleSpectrum");
 
     //we will store data here
     Eigen::ArrayXd data = ensembles[0].Nominal().GetEigen().replicate(nunivs, 1);
