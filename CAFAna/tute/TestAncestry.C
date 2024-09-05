@@ -58,20 +58,13 @@ const Var kMatchedTrueInteractionEnergy([](const caf::SRInteractionProxy * ixn) 
 
 });
 
-  // cut on true interaction mode
-  //    kQE                        = 1,
-  //    kSingleKaon                = 2,
-  //    kDIS                       = 3,
-  //    kRes                       = 4,
-  //    kCoh                       = 5,
-  //    kDiffractive               = 6,
-  const Cut kMatchedToTrueRES([](const caf::SRInteractionProxy * ixn) 
+// cut on true interaction mode as defined in StandardRecord/SREnums.h
+const Cut kMatchedToTrueRES([](const caf::SRInteractionProxy * ixn) 
 {
   if (ixn->truth.empty())
     return false;
   
   const caf::SRProxy * top = ixn->Ancestor<caf::SRProxy>();
-  // should be a number...
   return caf::FindInteraction(top->mc, ixn->truth[0])->mode == caf::ScatteringMode::kRes;
 });
 

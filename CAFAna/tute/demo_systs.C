@@ -1,6 +1,7 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "duneanaobj/StandardRecord/Navigate.h"
+#include "duneanaobj/StandardRecord/SREnums.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/Binning.h"
@@ -27,100 +28,6 @@ using namespace ana;
 
 
 
- class DummySyst: public ISyst
-  {
-  public:
-  DummySyst(const std::string& shortName, const std::string& longName)
-      :ISyst(shortName, longName) {}
-      virtual void Shift(double, caf::SRInteractionProxy*, double&) const {}
-  };
-
-
-  // declare a particular systematic and names
-  // varied the ionization potential (W_ion) parameter in larnd-sim to +/-3 sigma 
-  // (to 25.1 and 22.7 eV respectively) from its nominal value (23.6 eV).
-  extern const DummySyst kWIonSyst("WIon", "Ionization Potential"); 
-  extern const DummySyst kDummyNominalSyst("Nominal","Nominal");
-
-  std::vector<int> GetDummyShifts(const ISyst* s)
-  {
-    // do for each different file syst, some may be one-sided, etc...
-    // not sure if should label it as +/- 1 or 3.. anyways it is easily changed
-    if (s == &kWIonSyst ) return {-1,0,1};
-    else return {0};
-  };
-
-struct ShiftedSpec
-{
-  Spectrum spec;
-  SystShifts shift;
-};
-
-
-
-// Modify the record of reconstructed muon particles that match with a true muon
-// scale by say 5% at 1 sigma.
- class EnergyScaleTrueMu: public ISyst {
- public:
-   EnergyScaleTrueMu() : ISyst("EnergyScaleTrueMu", "Muon Energy Scale Syst") {}
-   void Shift(double sigma,
-              caf::SRInteractionProxy* ixn, double& weight) const override;
- };
-  void EnergyScaleTrueMu::Shift(double sigma,
-                            caf::SRInteractionProxy* ixn, double& weight) const {
-   double scale = .05 * sigma;
-
-   // loop through particles and change record to shift energy
-   // only if there is a matched true muon
-    for (int i=0; i<ixn->part.ndlp; i++){
-      if (! ixn->part.dlp[0].truth.empty()){ 
-             // get top level ancestpr of this particle
-             const caf::SRProxy * top = ixn->part.Ancestor<caf::SRProxy>();
-             if ( abs(ixn->part.dlp[i].pdg)==13 &&   // check if identified as a muon
-                  // we scale only if the top match has the same pdg as reco particle
-                  (caf::FindParticle(top->mc, ixn->part.dlp[0].truth[0]) ->pdg == ixn->part.dlp[i].pdg) ) 
-              {         
-                ixn->part.dlp[i].E *= 1. + scale;
-              }
-            }
-    }
- }
- 
- const EnergyScaleTrueMu kEnergyScaleTrueMu;
-
-
-//// lets think about a MEC scaling systematic...
-/////// Lets try a systematic that can affect both true and reco:: i.e. MEC flat scale
-//class MECScaleSyst : public ISyst//<caf::SRTrueInteractionProxy>
-//{
-//public: 
-//  MECScaleSyst(double scale, const std::string shortName, const std::string latexName)
-//    : ISyst(shortName, latexName), fScale(scale) {}
-//
-//    void Shift( double sigma, caf::SRInteractionProxy* ixn, double& weight) const override;
-//
-//  private:
-//  double fScale;
-//};
-//void MECScaleSyst::Shift(double sigma, caf::SRInteractionProxy* ixn, double& weight) const
-//{
-//  
-//  const caf::SRProxy * top = ixn->Ancestor<caf::SRProxy>();
-//  if ((caf::FindInteraction(top->mc, ixn->truth[0]) )->mode == ScatteringMode::kMEC)
-//    weight = 1 + sigma * fScale;
-//  else 
-//    weight=1;
-//}
-//const MECScaleSyst kMECScaleSyst(0.10, "MECScaleSyst", "MEC scale systematic");
-
-// Script to make a basic ensemble spectrum 
-// Based on file systematics
-// So fill up a nominal
-// Fill Plus and minus 1 sigma versions
-// This is a cross systematic type I guess
-// Instantiate a dummy systematic to construct Multiverse
-// Get a wrapper that merges various spectra into a simgle ensemble spectrum thing...
-
 void demo_systs()
 {
  
@@ -129,6 +36,7 @@ void demo_systs()
   systs.push_back(&kWIonSyst);
   std::vector<const ISyst*> systs2;
   systs2.push_back(&kEnergyScaleTrueMu);
+  systs2.push_back(&kMECScaleSyst);
 
   // scans from -n to n sigma shifts, we'll do only the 1 sigma
   const Multiverse& cross = Multiverse::Hypercross(systs,1);
@@ -167,11 +75,6 @@ void demo_systs()
   const Binning binsEnergy = Binning::Simple(10, 0, 1);
 
   const HistAxis axMuEnergy("Muon energy (GeV)", binsEnergy, kEnergyInteractionMu);
-  const HistAxis axEnergy("Interaction energy (GeV)", binsEnergy, kEnergyInteractionAll);
-  const HistAxis axNoMuEnergy("non-muon energy (GeV)", binsEnergy,kEnergyInteractionButMu);
-
-  const RecoPartHistAxis axRecoPartEnergy("Reco Particle Energy", binsEnergy, kRecoParticleEnergy);
-
 
   //const std::string fname_nom = "/exp/dune/data/users/mcasales/test_cafs/MiniRun5_1E19_RHC.caf.0001013.CAF.root";
   // also beta2a 
@@ -191,7 +94,7 @@ void demo_systs()
   Spectrum sEnergyMatchedTrueMu_up(loader_up.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
   Spectrum sEnergyMatchedTrueMu_down(loader_down.Interactions(RecoType::kDLP)[kHas1RecoMuon],    axMuEnergy);
 
-  // Another way to access the same information from the reco particles branch 
+  // other ensemble with two reweight systematics
   EnsembleSpectrum sMuonEnegyEnsemble(loader_nom.Interactions(RecoType::kDLP).Ensemble(cross_rwgt)[kHas1RecoMuon], axMuEnergy );
 
   loader_nom.Go();
@@ -223,7 +126,9 @@ void demo_systs()
 
 //----------------------------------------------------------------------
   // These lines dont crash but I dont know if they are working properly
-  const FitMultiverse& crossCombined = Multiverse::Hypercross({&kWIonSyst, &kEnergyScaleTrueMu},1);
+  const FitMultiverse& crossCombined = Multiverse::Hypercross({&kWIonSyst, &kEnergyScaleTrueMu, &kMECScaleSyst},1);
+  std::cout<< "sMuonEnegyEnsemble has "<< sMuonEnegyEnsemble.NUniverses()<< "sEnergyMatchedWIon has "<< sEnergyMatchedWIon.NUniverses()<<
+   " and crossCombined has "<<  crossCombined.NUniv() <<std::endl;  // should be the same...
   EnsembleSpectrum sEnergyMatchedIonandEnergyScale = EnsembleSpectrum::MergeEnsembles( 
                                                       {sEnergyMatchedWIon,sMuonEnegyEnsemble}, &crossCombined);
 //----------------------------------------------------------------------
@@ -248,7 +153,7 @@ void demo_systs()
 
   // you can draw the individual spectra for each universe 
   // in this case our spectra from different files
-  std::cout<< "cross has "<<sEnergyMatchedWIon2.NUniverses()<< " universes\n";
+  std::cout<< "\ncross has "<<sEnergyMatchedWIon2.NUniverses()<< " universes\n";
   for(unsigned int i = 0; i < sEnergyMatchedWIon2.NUniverses(); ++i){
     // using different colors per systematic
     Color_t color = kBlue;
