@@ -35,5 +35,5 @@ setup duneanaobj vtestingm -q e20:debug || exit 1
 
 # To get setup_fnal_security which helps reading files over xrootd
 #setup duneutil v09_53_00d02 -q e20:prof
-#setup duneutil v09_89_01d01 -q e26:prof
+setup duneutil v09_89_01d01 -q e26:prof
 echo "Finished ups setup."
