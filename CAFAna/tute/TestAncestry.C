@@ -10,63 +10,13 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
+#include "truth_matched.h"
 
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TLegend.h"
 
 using namespace ana;
-
-
-const RecoPartVar kMatchedTruePartE([](const caf::SRRecoParticleProxy * part) -> float
-{
-  if (part->truth.empty())
-    return -999.;
-
-  // Ancestor() returns the closest ancestor in the SR hierarchy with the template type.
-  // Once we have the top-level object, we then can connect its
-  const caf::SRProxy * top = part->Ancestor<caf::SRProxy>();
-  return caf::FindParticle(top->mc, part->truth[0])->p.E;
-});
-
-// reco particles whose best-match particle is a true muon
-const RecoPartCut kMatchedToTrueMuon([](const caf::SRRecoParticleProxy * part) -> float
-{
-  if (part->truth.empty())
-    return false;
-
-  const caf::SRProxy * top = part->Ancestor<caf::SRProxy>();
-  return std::abs(caf::FindParticle(top->mc, part->truth[0])->pdg) == 13;
-});
-
-// Select reco particles that have a pdg of muon
-const RecoPartCut kIsMuon([](const caf::SRRecoParticleProxy* sr)
-                          {
-                            return abs(sr->pdg) == 13 ;
-                          });
-
-const Var kMatchedTrueInteractionEnergy([](const caf::SRInteractionProxy * ixn) -> float
-{
-  if (ixn->truth.empty())
-    return -999.;
-
-  // Ancestor() returns the closest ancestor in the SR hierarchy with the template type.
-  // Once we have the top-level object, we then can connect its
-  const caf::SRProxy * top = ixn->Ancestor<caf::SRProxy>();
-  // should be a number...
-  return caf::FindInteraction(top->mc, ixn->truth[0])->E;
-
-});
-
-// cut on true interaction mode as defined in StandardRecord/SREnums.h
-const Cut kMatchedToTrueRES([](const caf::SRInteractionProxy * ixn) 
-{
-  if (ixn->truth.empty())
-    return false;
-  
-  const caf::SRProxy * top = ixn->Ancestor<caf::SRProxy>();
-  return caf::FindInteraction(top->mc, ixn->truth[0])->mode == caf::ScatteringMode::kRes;
-});
 
 void TestAncestry()
 {
