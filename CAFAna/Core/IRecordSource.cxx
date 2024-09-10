@@ -175,6 +175,8 @@ namespace ana
       return ixn->part.pandora;
     else if (PartType == RecoType::kPIDA)
       return ixn->part.pida;
+    else if (PartType == RecoType::kGArSoft)
+      return ixn->part.gsft;
     else
       assert(false && "GetRecoParticles() is currently instrumented only for kDLP, kPandora or kPIDA only");
         //static_assertor RecoType " + std::to_string(PartType));
@@ -191,6 +193,8 @@ namespace ana
       return sr->common.ixn.dlp;
     else if (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
+    else if (IntType == RecoType::kGArSoft)
+      return sr->common.ixn.gsft;
     else
       assert(false &&"GetInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
   }
@@ -204,6 +208,15 @@ namespace ana
       return sr->nd.lar.pandora;
     else
       assert(false &&"GetNDLarInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
+  }
+
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRGArInt>> & GetGArInteractions(const caf::SRProxy* sr)
+  {
+    if constexpr(IntType == RecoType::kGArSoft)
+      return sr->nd.gar.ixn;
+     else
+      assert(false &&"GetGArInteractions() is currently instrumented for RecoType kGArSoft only" );
   }
 
   const caf::Proxy<std::vector<caf::SRTrueInteraction>>&
@@ -287,6 +300,9 @@ namespace ana
     fParticleCollections.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(RecoType::kPIDA),
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
+    fParticleCollections.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RecoType::kGArSoft),
+                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kGArSoft>));
   }
 
   // -----------------------------------------------------------------------
@@ -298,12 +314,19 @@ namespace ana
     fInteractionCollections.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(RecoType::kPandora),
                                     std::forward_as_tuple(*this, GetInteractions<RecoType::kPandora>));
+    fInteractionCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RecoType::kGArSoft),
+                                    std::forward_as_tuple(*this, GetInteractions<RecoType::kGArSoft>));
     fNDLarInteractionCollections.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(RecoType::kDLP),
                                     std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kDLP>));
     fNDLarInteractionCollections.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(RecoType::kPandora),
                                     std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kPandora>));
+    fGArInteractionCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RecoType::kGArSoft),
+                                    std::forward_as_tuple(*this,
+                                    GetGArInteractions<RecoType::kGArSoft>));
   }
  // -----------------------------------------------------------------------
    _IRecordSource<caf::SRTrueInteractionProxy>::_IRecordSource()
@@ -334,6 +357,9 @@ namespace ana
     fParticleCollections.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(RecoType::kPIDA),
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
+    fParticleCollections.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RecoType::kGArSoft),
+                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kGArSoft>));
   }
 
 // -----------------------------------------------------------------------

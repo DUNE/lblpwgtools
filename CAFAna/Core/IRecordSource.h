@@ -23,6 +23,7 @@ namespace ana
   using ISRSource = _IRecordSource<caf::SRProxy>;
   using IInteractionSource = _IRecordSource<caf::SRInteractionProxy>;
   using INDLarInteractionSource = _IRecordSource<caf::SRNDLArIntProxy>;
+  using IGArInteractionSource = _IRecordSource<caf::SRGArIntProxy>;
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
   using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
   using INuTruthParticleSource = _IRecordSource<caf::SRTrueParticleProxy>;
@@ -36,7 +37,8 @@ namespace ana
   enum class RecoType {
                       	kDLP,
                       	kPandora,
-                      	kPIDA
+                      	kPIDA,
+                        kGArSoft
 	};
   enum class TruePType{
                         kPrim,
@@ -75,6 +77,9 @@ namespace ana
 
   template <RecoType IntType>
   const caf::Proxy<std::vector<caf::SRNDLArInt>>& GetNDLarInteractions(const caf::SRProxy* sr);
+
+  template <RecoType IntType>
+  const caf::Proxy<std::vector<caf::SRGArInt>>& GetGArInteractions(const caf::SRProxy* sr);
 
   const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRProxy* sr);
 
@@ -133,11 +138,13 @@ namespace ana
 
     IInteractionSource&       Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}    
     INDLarInteractionSource&  NDLarInteractions(  const RecoType kRType ) {return fNDLarInteractionCollections.at(kRType);}
+    IGArInteractionSource&    GArInteractions(  const RecoType kRType ) {return fGArInteractionCollections.at(kRType);}
     INuTruthSource& NuTruths() {return fNuTruths;}
     //IInteractionSource&       InteractionsTruthFiltered(){return fFilteredInteractions;}
   protected:
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections;
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>> fNDLarInteractionCollections;
+    std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRGArInt>> fGArInteractionCollections;
     VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction> fNuTruths{*this, GetNuTruths};
     //VectorAdaptor<caf::StandardRecord,caf::SRInteraction> fFilteredInteractions{*this,GetRecoInteractionsFromTruths};
 

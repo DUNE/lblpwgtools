@@ -86,6 +86,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ## Also remove scripts (second to last)
 #set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin fcl)
 #ok we are doing the most basic, removing aaal cuts vars etx.
+#set(CAFANA_SUBDIRS Core GArAna bin fcl)
 set(CAFANA_SUBDIRS Core bin fcl)
 foreach(SUBDIR ${CAFANA_SUBDIRS})
 

@@ -20,6 +20,7 @@ namespace ana
   /// \brief Equivalent of \ref Var acting on \ref caf::SRSpill
   typedef _Var<caf::SRProxy> SRVar;
   typedef _Var<caf::SRNDLArIntProxy> NDVar;
+  typedef _Var<caf::SRGArIntProxy> GArVar;
   /// \brief For Vars where literally all you need is a single CAF variable
   ///
   /// eg Var myVar = SIMPLEVAR(my.var.str);
@@ -29,6 +30,8 @@ namespace ana
 #define SIMPLETRUTHVAR(CAFNAME) TruthVar([](const caf::SRTrueInteractionProxy* nu){return nu->CAFNAME;})
 
 #define SIMPLENDVAR(CAFNAME) NDVar([](const caf::SRNDLArIntProxy* sr){return sr->CAFNAME;})
+
+#define SIMPLEGARVAR(CAFNAME) GArVar([](const caf::SRGArIntProxy* sr){return sr->CAFNAME;})
 
 #define SIMPLESRVAR(CAFNAME) SRVar([](const caf::SRProxy* sr){return sr->CAFNAME;})
 
