@@ -89,8 +89,13 @@ namespace ana
     const int nbins = fAxis.GetBins1D().NBins()+2;
 
     if(fHist.HasStan()){
+#ifdef STAN_ENABLED
       return Ratio(std::move(Eigen::ArrayXstan(fHist.GetEigenStan().segment(nbins*univIdx, nbins))),
                    fAxis.GetLabels(), fAxis.GetBinnings());
+#else
+      std::cerr << "CAFAna was compiled without Stan support, but received a Stan-enabled histogram!  Abort.\n";
+      abort();
+#endif
     }
     else{
       Eigen::ArrayXd arr(fHist.GetEigen().segment(nbins*univIdx, nbins));
