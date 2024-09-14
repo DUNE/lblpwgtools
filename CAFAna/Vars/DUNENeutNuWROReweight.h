@@ -8,6 +8,8 @@ class TH2;
 
 namespace ana
 {
+  class SRTrueInteractionProxy;
+
   class DUNENeutNuWROReweight
   {
   public:
@@ -33,7 +35,7 @@ namespace ana
 
     ~DUNENeutNuWROReweight();
 
-    double operator()(const caf::SRProxy* sr);
+    double operator()(const caf::SRTrueInteractionProxy* nu);
 
   protected:
     void LoadHists();
@@ -49,11 +51,11 @@ namespace ana
 
   const std::string kNeutNuWROReweightFname = "/dune/data/users/marshalc/NEUT_GENIE_ratio.root";
 
-  const Weight kReweightEnuToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnu));
-  const Weight kReweightEnuQ2ToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuQ2));
-  const Weight kReweightEnuWToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuW));
+  const NuTruthWeight kReweightEnuToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnu));
+  const NuTruthWeight kReweightEnuQ2ToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuQ2));
+  const NuTruthWeight kReweightEnuWToNeut(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNeut, DUNENeutNuWROReweight::kEnuW));
 
-  const Weight kReweightEnuToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnu));
-  const Weight kReweightEnuQ2ToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuQ2));
-  const Weight kReweightEnuWToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuW));
+  const NuTruthWeight kReweightEnuToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnu));
+  const NuTruthWeight kReweightEnuQ2ToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuQ2));
+  const NuTruthWeight kReweightEnuWToNuWRO(DUNENeutNuWROReweight(kNeutNuWROReweightFname, DUNENeutNuWROReweight::kNuWRO, DUNENeutNuWROReweight::kEnuW));
 }
