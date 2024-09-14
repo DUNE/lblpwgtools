@@ -19,7 +19,7 @@ namespace ana
 
   /// \brief Equivalent of \ref Weight acting on \ref caf::SRSpill
   typedef _Weight<caf::SRInteractionProxy> Weight;
-  //  typedef _Weight<caf::SRTrueInteractionProxy> NuTruthWeight;
+  typedef _Weight<caf::SRTrueInteractionProxy> NuTruthWeight;
 
   /// The simplest possible Weight, always 1. Used as a default weight.
   const SRWeight kSRUnweighted = Unweighted<caf::SRProxy>();
