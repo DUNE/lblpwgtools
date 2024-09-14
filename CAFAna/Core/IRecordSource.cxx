@@ -171,9 +171,9 @@ namespace ana
   {
     if constexpr (PartType == RecoType::kDLP)
       return ixn->part.dlp;
-    else if (PartType == RecoType::kPandora)
+    else if constexpr (PartType == RecoType::kPandora)
       return ixn->part.pandora;
-    else if (PartType == RecoType::kPIDA)
+    else if constexpr (PartType == RecoType::kPIDA)
       return ixn->part.pida;
     else
       assert(false && "GetRecoParticles() is currently instrumented only for kDLP, kPandora or kPIDA only");
@@ -189,7 +189,7 @@ namespace ana
   {
     if constexpr(IntType == RecoType::kDLP)
       return sr->common.ixn.dlp;
-    else if (IntType == RecoType::kPandora)
+    else if constexpr (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
     else
       assert(false &&"GetInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
