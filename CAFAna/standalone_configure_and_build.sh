@@ -27,6 +27,7 @@ CMAKE_BUILD_TYPE=RelWithDebInfo
 BUILD_DIR="build"
 INSTALL_DIR=""
 USE_OMP="0"
+EXTRA_CMAKE_ARGS=""
 
 while [[ ${#} -gt 0 ]]; do
 
@@ -40,6 +41,16 @@ while [[ ${#} -gt 0 ]]; do
       fi
       BUILD_DIR="$2"
       echo "[OPT]: Will build in directory $BUILD_DIR."
+      shift
+      ;;
+
+      -e|--extra-arg)
+      if [[ ${#} -lt 2 ]]; then
+        echo "[ERROR]: ${1} expected a value."
+        exit 1
+      fi
+      echo "[OPT]: will pass '${2}' to CMake."
+      EXTRA_CMAKE_ARGS="$EXTRA_CMAKE_ARGS $2"
       shift
       ;;
 
@@ -103,6 +114,7 @@ while [[ ${#} -gt 0 ]]; do
       echo -e "\t-f|--force-remove      : Remove previous build directory if it exists."
       echo -e "\t-r|--release           : Compile with CMAKE_BUILD_TYPE=Release"
       echo -e "\t--db                   : Compile with CMAKE_BUILD_TYPE=Debug"
+      echo -e "\t-e|--extra-arg         : Add the following as an extra argument to the CMake invocation"
       echo -e "\t--use-gperftools       : Compile libunwind and gperftools"
       echo -e "\t-u|--use-UPS           : Try and use ups to set up required packages, "
       echo -e "\t                         rather than assuming they exist on the local system."
@@ -147,12 +159,12 @@ if [ "${USE_UPS}" = "1" ]; then
   source ${TOP_SOURCE_DIR}/cmake/ups_env_setup.sh
   source ${TOP_SOURCE_DIR}/support_software.sh $(abspath $SUPPORT_DIR) USING_UPS
   cd "$BUILD_DIR"
-  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
+  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ${EXTRA_CMAKE_ARGS} \
             -DBUILD_ENV_SCRIPTS="$(abspath ${TOP_SOURCE_DIR}/cmake/ups_env_setup.sh);$(abspath $SUPPORT_DIR/support_software_env.sh)"
 else
   source ${TOP_SOURCE_DIR}/support_software.sh $(abspath $SUPPORT_DIR) BUILD_UPS_REPLACEMENT_SOFTWARE
   cd "$BUILD_DIR"
-  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
+  cmake ${TOP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}  ${EXTRA_CMAKE_ARGS} \
             -DBUILD_ENV_SCRIPTS=$(abspath $SUPPORT_DIR/support_software_env.sh)
 fi
 
