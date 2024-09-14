@@ -147,6 +147,7 @@ if __name__ == '__main__':
             os.environ['DUNEANAOBJ_INC'],
             os.environ['ROOTSYS']+'/include',
             os.environ['SRPROXY_INC'],
+            os.environ['BOOST_INC'],
             os.environ['STAN_INC'],
             os.environ['STAN_MATH_INC'],
             os.environ['EIGEN_INC'],
