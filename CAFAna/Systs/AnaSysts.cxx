@@ -72,11 +72,12 @@ namespace ana
 
     std::vector<const ISyst*> systs = {};
 
-/*
     std::vector<const ISyst *> fdEScalelist = GetEnergySysts();
     std::vector<const ISyst *> fdlist = GetFDRecoSysts();
+#ifdef BUILD_ADHOCND_SYSTS
     std::vector<const ISyst *> ndEScalelist = GetRecoENDSysts();
     std::vector<const ISyst *> ndlist = GetNDRecoSysts();
+#endif
     std::vector<const ISyst *> nuelist = GetNuOnESysts();
 
     if (useFD) {
@@ -84,8 +85,10 @@ namespace ana
       systs.insert(systs.end(), fdlist.begin(), fdlist.end());
     }
     if (useND) {
+#ifdef BUILD_ADHOCND_SYSTS
       systs.insert(systs.end(), ndEScalelist.begin(), ndEScalelist.end());
       systs.insert(systs.end(), ndlist.begin(), ndlist.end());
+#endif
     }
     if (useND && useNueOnE) {
       systs.insert(systs.end(), nuelist.begin(), nuelist.end());
@@ -94,6 +97,7 @@ namespace ana
     return systs;
   }
 
+#ifdef BUILD_XSEC_SYSTS
   std::vector<const ISyst*> getReducedXSecSysts(bool fluxXsecPenalties){
 
     std::vector<const ISyst*> systs = GetXSecSysts(GetAllXSecSystNames(), fluxXsecPenalties);
@@ -101,10 +105,11 @@ namespace ana
     // TO DO: Only add the dials to actually use and avoid the need of RemoveSysts
     // Then we won't have to worry about systs addition ordering
     RemoveSysts(systs, GetDoNotIncludeSystNames());
-*/
     return systs;
   }
-/*
+#endif
+
+#ifdef BUILD_FDS_SYSTS
   std::vector<const ISyst*> getFakeDataSysts(bool fluxXsecPenalties){
 
     std::vector<const ISyst*> systs = GetCrazyFluxSysts();
@@ -115,7 +120,7 @@ namespace ana
 
     return systs;
   }
-
+#endif
   std::vector<const ISyst *> GetListOfSysts(bool fluxsyst_Nov17, bool xsecsyst,
                                             bool detsyst, bool useND, bool useFD,
                                             bool useNueOnE, bool useFakeDataDials,
@@ -126,6 +131,8 @@ namespace ana
     bool fluxXsecPenalties = true;
 
     std::vector<const ISyst *> systlist;
+
+#ifdef BUILD_FLUX_SYSTS
     if (fluxsyst_Nov17) {
       std::vector<const ISyst *> fluxsyst_Nov17 = 
           GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false);
@@ -143,23 +150,40 @@ namespace ana
           GetDUNEFluxSysts(NFluxSysts, fluxXsecPenalties, false, true);
       systlist.insert(systlist.end(), fluxsyst_Sept21.begin(), fluxsyst_Sept21.end());
     }
-
+#else
+    if (fluxsyst_Nov17 || fluxsyst_CDR || fluxsyst_Sept21)
+      std::cerr << "You requested flux systematics, but BUILD_FLUX_SYSTS was false, so none are available.\n"
+                << "Pass -DBUILD_FLUX_SYSTS to the 'extra CMake args' argument of standalone_configure_and_build.sh to enable them.\n"
+                << "Abort.\n";
+#endif
     if (detsyst) {
       std::vector<const ISyst *> detsyst = getDetectorSysts(useFD,useND,useNueOnE);
       systlist.insert(systlist.end(), detsyst.begin(), detsyst.end());
     }
 
     if (xsecsyst) {
+#ifdef BUILD_XSEC_SYSTS
       // This function removes some dials. Don't know why it has to be so
       // Those will need to be added again if using fake data. So always add fake data last
       std::vector<const ISyst *> xsecsyst = getReducedXSecSysts(fluxXsecPenalties); 
       systlist.insert(systlist.end(), xsecsyst.begin(), xsecsyst.end());
+#else
+      std::cerr << "You requested xsec systematics, but BUILD_XSEC_SYSTS was false, so none are available.\n"
+                << "Pass -DBUILD_XSEC_SYSTS to the 'extra CMake args' argument of standalone_configure_and_build.sh to enable them.\n"
+                << "Abort.\n";
+#endif
     }
 
     // If using fake data dials (for state generation) add the previously removed systs back in
     if (useFakeDataDials) {
-      std::vector<const ISyst *> fakedatasyst = getFakeDataSysts(fluxXsecPenalties);
+#ifdef BUILD_FDS_SYSTS
+     std::vector<const ISyst *> fakedatasyst = getFakeDataSysts(fluxXsecPenalties);
       systlist.insert(systlist.end(), fakedatasyst.begin(), fakedatasyst.end());
+#else
+       std::cerr << "You requested the FDS systematics, but BUILD_FDS_SYSTS was false, so none are available.\n"
+                << "Pass -DBUILD_FDS_SYSTS to the 'extra CMake args' argument of standalone_configure_and_build.sh to enable them.\n"
+                << "Abort.\n";
+#endif
     }
 
     return systlist;
@@ -376,5 +400,5 @@ namespace ana
     return retlist;
    
   }
-*/
+
 }

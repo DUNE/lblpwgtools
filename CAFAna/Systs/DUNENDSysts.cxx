@@ -2,6 +2,8 @@
 
 namespace ana
 {
-//  const DUNENDEvSyst kNDEvSyst;
-//  const DUNENDPIDSyst kNDPIDSyst;
+#ifdef BUILD_ADHOCND_SYSTS
+  const DUNENDEvSyst kNDEvSyst;
+  const DUNENDPIDSyst kNDPIDSyst;
+#endif
 } // namespace

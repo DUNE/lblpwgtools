@@ -81,12 +81,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-#set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
-## CAFAna proper (ignore PRISM for the moment)
-## Also remove scripts (second to last)
-#set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin fcl)
-#ok we are doing the most basic, removing aaal cuts vars etx.
-set(CAFANA_SUBDIRS Core bin fcl)
+set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
+if(DEFINED BUILD_PRISM)
+  set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
+else()
+  message(WARNING "Not building PRISM.  Pass '-DBUILD_PRISM' using '-e BUILD_PRISM' in standalone_configure_and_build.sh to change this.")
+endif()
 foreach(SUBDIR ${CAFANA_SUBDIRS})
 
   add_subdirectory(${SUBDIR})

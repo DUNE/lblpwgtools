@@ -56,6 +56,22 @@ set(Systs_header_files
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
 target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
 
+if(NOT DEFINED BUILD_FLUX_SYSTS)
+  message(WARNING "Not building flux systematics code.  Include `-DBUILD_FLUX_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
+if(NOT DEFINED BUILD_XSEC_SYSTS)
+  message(WARNING "Not building xsec systematics code.  Include `-DBUILD_XSEC_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
+if(NOT DEFINED BUILD_FDS_SYSTS)
+  message(WARNING "Not building fake data systematics code.  Include `-DBUILD_XSEC_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
+if(NOT DEFINED BUILD_ADHOCND_SYSTS)
+  message(WARNING "Not building ND parameterized systematics code.  Include `-DBUILD_ADHOCND_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
 set_target_properties(CAFAnaSysts PROPERTIES
   PUBLIC_HEADER "${Systs_header_files}")
 
