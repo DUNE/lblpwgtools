@@ -13,7 +13,6 @@ set(Systs_implementation_files
   NuWroReweightFakeData.cxx
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
-  Systs.cxx
   UniverseOracle.cxx
   XSecSystList.cxx
   OffAxisFluxUncertaintyHelper.cxx
@@ -32,7 +31,6 @@ set(Systs_header_files
   NDRecoSysts.h
   NuOnESysts.h
   SystComponentScale.h
-  Systs.h
   MissingProtonFakeData.h
   BDTReweighter.h
   GeneratorReweight_nuebar_FD_RHC.h

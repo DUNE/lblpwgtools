@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CAFAna/Core/ISyst.h"
-#include "CAFAna/Systs/Systs.h"
 
 class TH1D;
 
