@@ -194,16 +194,17 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   // Get 280kA sample at ND.
 
 //get ND prediction from the anti channel
-  PredictionInterp const *NDPredInterp_293kA_AntiChannel =
+  /*PredictionInterp const *NDPredInterp_293kA_AntiChannel =
       GetNDPred(antimatch_chan.from.mode, 293); // Can be flux OR ev rate
-  Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
-      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+  
+  //Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
+    //  &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
   // Get 293kA sample at ND.
 
   PredictionInterp const *NDPredInterp_280kA_AntiChannel =
       GetNDPred(antimatch_chan.from.mode, 280); // Can be flux OR ev rate
   Spectrum NDOffAxis_280kA_spec_AntiChannel = NDPredInterp_280kA_AntiChannel->PredictComponentSyst(
-      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);*/
   // Get 280kA sample
 
   // Need to remove underflow and overflow elements.
@@ -216,12 +217,14 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
                                                   NDOffAxis_280kA_spec.GetBinnings());
   }
-  else if(MatchWSBkg){
-    FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec_AntiChannel.GetEigen(1),
-                                                  NDOffAxis_293kA_spec_AntiChannel.GetBinnings());
-    FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec_AntiChannel.GetEigen(1),
-                                                  NDOffAxis_280kA_spec_AntiChannel.GetBinnings());
-  }
+ // else if(MatchWSBkg){
+ //   Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
+ //     &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+ //   FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec_AntiChannel.GetEigen(1),
+ //                                                 NDOffAxis_293kA_spec_AntiChannel.GetBinnings());
+ //   FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec_AntiChannel.GetEigen(1),
+ //                                                 NDOffAxis_280kA_spec_AntiChannel.GetBinnings());
+ // }
 
   Eigen::MatrixXd NDFluxMatrix_293kA =
       FlowNDFluxMatrix_293kA.block(1, 1, FlowNDFluxMatrix_293kA.rows() - 2,
