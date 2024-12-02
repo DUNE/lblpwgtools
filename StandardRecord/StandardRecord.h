@@ -214,6 +214,26 @@ namespace caf
     // Allows for multiple special runs to be included, but we will likely only use one @ 280kA.
     int SpecialHCRunId;
 
+    //for ND->FDExtrapolation from cvns
+    //cvn scores
+    float pred_fd_nc_score;
+    float pred_fd_nue_score;
+    float pred_fd_numu_score;
+    float pred_fd_nutau_score;
+    //cvn values for FD reco energy
+    float pred_fd_nue_lep_E;
+    float pred_fd_nue_nu_E;
+    float pred_fd_numu_lep_E;
+    float pred_fd_numu_nu_E;
+    //vtxs
+    float pred_fd_vtx_x;
+    float pred_fd_vtx_y;
+    float pred_fd_vtx_z;
+    //for Resolution matrix NDFDExtrap
+    float pred_numu_nu_E;
+    float pairedData_numu_nu_E;
+
+
 #ifdef USE_TH2JAGGED
     // Cache the ND flux bin when using off-axis flux matrices.
     int OffAxisFluxBin;
