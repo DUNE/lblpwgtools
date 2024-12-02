@@ -12,6 +12,8 @@ struct PRISMAxisBlob {
   ana::HistAxis XProjectionFD_nue;
   ana::HistAxis OffAxisPosition;
   ana::HistAxis OffAxis280kAPosition;
+  ana::HistAxis XPairedData_numu_E;
+  ana::HistAxis YPred_numu_E;
 };
 
 ana::HistAxis GetEventRateMatchAxes(std::string const &binning = "event_rate_match");

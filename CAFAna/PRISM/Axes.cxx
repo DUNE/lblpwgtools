@@ -135,8 +135,14 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Neutrino E_{rec.} (GeV)", kRecoE_numu);
   } else if (varname == "EnuReco_nue") {
     return std::make_pair("Neutrino E_{rec.} (GeV)", kRecoE_nue);
+  } else if (varname == "EnuRecoFDExtrap_numu"){
+    return std::make_pair("FDExtrapPred Neutrino E_{rec.} (GeV)", kRecoE_FDExtrapPred_numu);
+ // } else if (varname == "EnuRecoFDExtrap_nue"){
+   // return std::make_pair("FDExtrapPred Neutrino E_{rec.} (GeV)", kRecoE_FDExtrapPred_nue);
   } else if (varname == "EnuReco_ND") {
     return std::make_pair("Neutrino E_{rec.} (GeV)", kNDEVisReco); // ND uses EVis
+  } else if (varname == "EnuReco_ND_FDExtrap"){
+    return std::make_pair("Neutrino E_{rec.} From ExtrapPred (GeV)", kRecoE_FDExtrapPred_numu); // show events in ND vs Ereco from Pred
   } else if (varname == "EVisTrue") {
     return std::make_pair("Vis. E_{true} (GeV)", kEVisTrue);
   } else if (varname == "RecoELep_numu") {
@@ -167,6 +173,10 @@ std::pair<std::string, Var> GetVar(std::string const &varname) {
     return std::make_pair("Reco E_{lep.} (GeV)", kLepE_param);
   } else if (varname == "EVis_param") {
     return std::make_pair("Param. Vis. E_{rec.} (GeV)", kEVis_param);
+  } else if (varname == "pairedData_numu_nu_E"){
+    return std::make_pair("Paired Data E_{rec} (GeV)", kpairedData_numu_nu_E);
+  } else if (varname == "pred_numu_nu_E"){
+    return std::make_pair("Predicted E_{rec} (GeV)", kEnuReco_Pred);
   } else {
     std::cout << "[Axes ERROR]: Unknown PRISM var definition: " << varname
               << std::endl;
@@ -194,7 +204,7 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
   // Only needed for EVisReco, not ELepEHad.
   bool OneDAxis(false);
   if (varname == "EVisReco" || varname == "EProxy" ||
-      varname == "EnuReco" || varname == "EVis_param") OneDAxis = true;
+      varname == "EnuReco" || varname == "EVis_param" || varname == "EnuRecoFDExtrapPred") OneDAxis = true;
   std::string varname_ND(varname);
   std::string varname_numu(varname);
   std::string varname_nue(varname);
@@ -204,12 +214,29 @@ PRISMAxisBlob GetPRISMAxes(std::string const &varname,
     varname_numu += "_numu";
     varname_nue  += "_nue";
   }
+  if (varname == "EnuRecoFDExtrapPred"){
+    varname_ND   = "EnuReco_ND_FDExtrap"; //this is the reco energy (inFD) from FDExtrap -> use this for first EtrueVsErecoPred histos 
+    varname_numu = "EnuReco_numu";
+    varname_nue = "EnuReco_nue";
+  
+  }
   HistAxis xaxND = RecoObservable(varname_ND.c_str(),
                                   OneDAxis ? "fine_prism" :  xbinning);
+				  //OneDAxis ? "prism_default" :  xbinning);
   HistAxis xaxFD_numu = RecoObservable(varname_numu.c_str(), xbinning);
   HistAxis xaxFD_nue  = RecoObservable(varname_nue.c_str(), xbinning);
+ 
+  std::string varname_PairedData(varname);
+  std::string varname_PredEnergy(varname);
+  if(varname == "EnuRecoFDExtrapPred"){
+     varname_PairedData = "Erec_PairedData";
+     varname_PredEnergy = "EnuReco_Pred";
+  }
 
-  return {xaxND, xaxFD_numu, xaxFD_nue, axOffAxisPos, axOffAxis280kAPos};
+  HistAxis xaxPairedData = RecoObservable(varname_PairedData.c_str(), "fine_prism"); //want it same as the binning used in the analysis
+  HistAxis yaxPredEnergy = RecoObservable(varname_PredEnergy.c_str(), "fine_prism");
+
+  return {xaxND, xaxFD_numu, xaxFD_nue, axOffAxisPos, axOffAxis280kAPos, xaxPairedData, yaxPredEnergy};
 }
 
 // Return HistAxis for true energy version of observable
@@ -235,6 +262,9 @@ HistAxis TrueObservable(std::string const &obsvarname,
   } else if (obsvarname == "EVisReco") {
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EnuReco") {
+    truevardef = GetVar("EVisTrue");
+  } else if (obsvarname == "EnuRecoFDExtrapPred"){ // need FDEreco VS Etrue
+    //truevardef = GetVar("ETrue");
     truevardef = GetVar("EVisTrue");
   } else if (obsvarname == "EVisTrue") {
     truevardef = GetVar("EVisTrue");
@@ -441,6 +471,16 @@ HistAxis RecoObservable(std::string const &obsvarname,
     labels.push_back(vardefHad.first);
     bins.push_back(GetBinning("had_default"));
     vars.push_back(vardefHad.second);
+  } else if (obsvarname == "Erec_PairedData"){
+    auto vardefErecPairData = GetVar("pairedData_numu_nu_E");
+    labels.push_back(vardefErecPairData.first);
+    bins.push_back(GetBinning(binning));
+    vars.push_back(vardefErecPairData.second);
+  } else if (obsvarname == "EnuReco_Pred"){
+    auto vardefEnuRecoPred = GetVar("pred_numu_nu_E");
+    labels.push_back(vardefEnuRecoPred.first);
+    bins.push_back(GetBinning(binning));  
+    vars.push_back(vardefEnuRecoPred.second);
   } else {
     auto vardef = GetVar(obsvarname);
     labels.push_back(vardef.first);
@@ -455,7 +495,7 @@ bool isRecoND(std::string var) {
   if (var == "RecoELep" || var == "EVisReco" || var == "EVisEHadReco" ||
       var == "RecoEHad" || var == "EVisEHadReco" || var == "EnuReco" ||
       var == "ELepEHadVisReco" || var == "ELepEHad_param" ||
-      var == "EVis_param") {
+      var == "EVis_param" || var == "EnuRecoFDExtrapPred") {
     return true;
   } else {
     return false;
