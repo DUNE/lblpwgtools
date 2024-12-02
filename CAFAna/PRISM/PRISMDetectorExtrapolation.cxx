@@ -20,6 +20,7 @@ namespace ana {
     for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++) FDPredInterps.push_back(nullptr);
 
     hMatrixND = Eigen::MatrixXd();
+    hMatrixNDEfficiency1 = Eigen::MatrixXd();
     hMatrixFD = Eigen::MatrixXd();
     fNDExtrap_293kA = Eigen::MatrixXd();
     fNDExtrap_280kA = Eigen::MatrixXd();
@@ -35,6 +36,7 @@ namespace ana {
     for (size_t conf = 0; conf < kNPRISMFDConfigs; conf++)
       FDPredInterps.at(conf) = MatPred.FDPredInterps.at(conf);
     hMatrixND = MatPred.hMatrixND;
+    hMatrixNDEfficiency1 = MatPred.hMatrixNDEfficiency1;
     hMatrixFD = MatPred.hMatrixFD;
     fNDExtrap_293kA = MatPred.fNDExtrap_293kA;
     fNDExtrap_280kA = MatPred.fNDExtrap_280kA;
@@ -66,6 +68,9 @@ namespace ana {
 
   Eigen::MatrixXd NDFD_Matrix::GetNDMatrix() const {
     return hMatrixND;
+  }
+  Eigen::MatrixXd NDFD_Matrix::GetNDMatrixFor100perCentEfficiency() const {
+    return hMatrixNDEfficiency1;
   }
 
   //-----------------------------------------------------
@@ -137,6 +142,28 @@ namespace ana {
     }
   }
 
+
+  // normalize to Etrue with 100% efficiency -> to transform from Generated(Etrue) to Generated(Erec)
+  void NDFD_Matrix::NormaliseETrue100PerCentEfficiency(Eigen::MatrixXd* MatrixND) const {
+
+    if (!MatrixND) {
+      std::cout << "[ERROR] No fMatrixND." << std::endl;
+      abort();
+    }
+
+    for (int col_it = 1; col_it <= (MatrixND->cols() - 2); col_it++) {
+      Eigen::VectorXd projY = MatrixND->col(col_it);
+        if (std::isnormal(projY.sum())) {
+          double integral = projY.sum();
+          projY *= (1 / integral);
+        }
+        for (int row_it = 1; row_it <= (MatrixND->rows() - 2); row_it++) {
+          (*MatrixND)(row_it, col_it) = projY(row_it);
+        }
+    }
+
+  }
+
   //-----------------------------------------------------
 
   void NDFD_Matrix::ExtrapolateNDtoFD(PRISMReweightableSpectrum NDDataSpec,
@@ -148,7 +175,7 @@ namespace ana {
                                       Current::Current_t curr,
                                       Sign::Sign_t NDsign, Sign::Sign_t FDsign,
                                       Eigen::ArrayXXd NDefficiency,
-                                      Eigen::ArrayXd FDefficiency) const {
+                                      Eigen::ArrayXd FDefficiency, bool UseNDFDExtrapPred) const {
     Eigen::MatrixXd *fNDExtrap, *fErrorMat;
     if (kA == 293) {
       fNDExtrap = &fNDExtrap_293kA;
@@ -163,6 +190,12 @@ namespace ana {
 
     osc::NoOscillations no;
 
+    //Freeze systematics for unfolding for NDFDExtrapolation-> would eventually have no unfolding(no systs) for NDFDExtrap + NDEffCorr
+    if(UseNDFDExtrapPred){
+      shift_nd = kNoShift;
+      shift_fd = kNoShift;
+    }
+
     // Do not want to oscillate the MC in the FD matrix (ND is always un-oscillated).
     // The linear combination handles the oscillation, we just want to correct for the
     // different detector resolutions.
@@ -170,6 +203,7 @@ namespace ana {
     auto sMatrixND = NDPredInterps.at(GetNDConfigFromPred(NDflav, NDsign))
                      ->PredictComponentSyst(calc, shift_nd, NDflav, curr, NDsign); // shift_nd
     hMatrixND = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
+    hMatrixNDEfficiency1 = ConvertArrayToMatrix(sMatrixND.GetEigen(POT), sMatrixND.GetBinnings());
     
     auto sMatrixFD = FDPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
                      ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign);
@@ -179,19 +213,42 @@ namespace ana {
     Eigen::MatrixXd PRISMND_block = PRISMND.block(1 ,1 , PRISMND.rows() - 2, PRISMND.cols() - 2);
 
     Eigen::MatrixXd PRISMND_SumSq = NDDataSpec.GetSumSqEigen(POT);
+    Eigen::MatrixXd TotalLCCovMat;
 
-    fNDExtrap->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
-    fErrorMat->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
+    if(UseNDFDExtrapPred){
+      fNDExtrap->resize(PRISMND.rows(), hMatrixND.rows()); //FD Energy axis same as hmatixND.rows() for the NDFDExtrapolation from Pred
+      fErrorMat->resize(PRISMND.rows(), hMatrixND.rows()); // FD energy axis same as hmatixND.rows() for the NDFDExtrapolation from Pred
 
+      TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixND.rows(),
+                                          hMatrixND.rows()); //for NDFDExtrapolation from Pred
+
+    }
+    else{ //standard PRISM NDFD Extrapolation
+      fNDExtrap->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
+      fErrorMat->resize(PRISMND.rows(), hMatrixFD.rows()); // FD energy axis
+
+      TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD.rows(),
+                                          hMatrixFD.rows());
+    }
     //initialize matrices
     fNDExtrap->setZero();
     fErrorMat->setZero();
 
-    Eigen::MatrixXd TotalLCCovMat = Eigen::MatrixXd::Zero(hMatrixFD.rows(),
-                                                          hMatrixFD.rows());
-
-    auto binnings = NDDataSpec.GetTrueBinnings().at(0);
+    auto binnings = NDDataSpec.GetBinnings().at(0);
     auto edges = binnings.Edges();
+    std::vector<double> BinWidthVector;
+    std::vector<double> BinCentersVector;
+    for(int iEdge = 1; iEdge < (int) edges.size(); iEdge++){
+      BinWidthVector.push_back(edges[iEdge] - edges[iEdge-1]);
+      BinCentersVector.push_back(0.5* (edges[iEdge] - edges[iEdge-1]) + edges[iEdge-1]);
+    }
+
+    double AverageBinWidth = 0;
+    for(unsigned int iEdge = 0; iEdge<BinWidthVector.size()-1; iEdge++){
+      AverageBinWidth += BinWidthVector[iEdge] / BinWidthVector.size();
+    }
+    //AverageBinWidth = 0.04;
+
     // Need a loop to go through each slice of off-axis ND data
     for (int slice = 0; slice < PRISMND_block.rows(); slice++) {
       // Normalise matrices to efficiency for particular OA stop
@@ -218,6 +275,7 @@ namespace ana {
       // Regularisation matrix for unfolding - this makes unfolding more stable in fits with detector
       // systematics. Use L2 reg, penalising large changes in curvature.
       Eigen::MatrixXd RegMatrix = Eigen::MatrixXd::Zero(MatrixND_block.rows(), MatrixND_block.rows());
+      //====Ciaran's reg: first derviative for equal bins
       for (int row_it = 0; row_it < (RegMatrix.rows() - 2); ++row_it) {
         RegMatrix(row_it, row_it) = reg_param;
         RegMatrix(row_it, row_it + 1) = -2 * reg_param;
@@ -225,13 +283,39 @@ namespace ana {
       }
       RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 2) = reg_param;
       RegMatrix(RegMatrix.rows() - 2, RegMatrix.rows() - 1) = -2 * reg_param;
+      //====best data-pred match for variable binning (equal bins 0.4-20) - doesn't change for default binning -> uncomment below and comment above if you want this improved unfolding
+      //==first derivative regularization for first Etrue bin
+      /*for (int row_it = 0; row_it < 1; ++row_it) {
+        RegMatrix(row_it, row_it) = -1* reg_param * 1/( (BinCentersVector[row_it+1] - BinCentersVector[row_it])) *AverageBinWidth ;
+        RegMatrix(row_it, row_it + 1) = 1 * reg_param * 1/( (BinCentersVector[row_it+1] - BinCentersVector[row_it])) *AverageBinWidth;
+      }
+      //regularization matrix - 2nd derivative - for variable bin widtths
+      for (int row_it = 1; row_it < (RegMatrix.rows() - 2); ++row_it) {
+        RegMatrix(row_it, row_it) = reg_param * pow(AverageBinWidth,2) * 1/ BinWidthVector[row_it] *
+                       ( 1/( (BinCentersVector[row_it+1] - BinCentersVector[row_it]) * (BinCentersVector[row_it+1] - BinCentersVector[row_it] + BinCentersVector[row_it+2] -BinCentersVector[row_it+1] ) ) );
+        RegMatrix(row_it, row_it + 1) = -1 * reg_param * pow(AverageBinWidth,2) * 1/ BinWidthVector[row_it+1] *
+                       1/( (BinCentersVector[row_it+1] - BinCentersVector[row_it]) * (BinCentersVector[row_it+2] - BinCentersVector[row_it+1]) ) ;
+
+        RegMatrix(row_it, row_it + 2) = reg_param * pow(AverageBinWidth,2) * 1/ BinWidthVector[row_it+2] *
+                       1 / ( (BinCentersVector[row_it+2] - BinCentersVector[row_it+1]) * (BinCentersVector[row_it+2] - BinCentersVector[row_it+1] + BinCentersVector[row_it+1] - BinCentersVector[row_it] )  );
+      }*/
       // Final two rows are zero when doing curvature reg.
       Eigen::MatrixXd D = (MatrixND_block.transpose() * MatrixND_block + 
                            RegMatrix.transpose() * RegMatrix).inverse() * 
                           MatrixND_block.transpose();
 
-      Eigen::VectorXd NDETrue = D * NDERec;
-      
+      Eigen::VectorXd NDETrue = D * NDERec; //Generated Events Vs Etrue
+      hArrayGenNDETrue = NDETrue.array();
+
+      //normalize smear mat ND to ETrue(efficieny = 1)
+      NormaliseETrue100PerCentEfficiency(&hMatrixNDEfficiency1);
+      Eigen::MatrixXd MatrixNDForEfficinecyOne_block = hMatrixNDEfficiency1.block(1, 1, hMatrixNDEfficiency1.rows() - 2,
+                                                                             hMatrixNDEfficiency1.cols() - 2);
+
+
+      //get GenEvents Vs NDErec -> for this one needs efficiency =1
+      Eigen::VectorXd GenNDErec =  MatrixNDForEfficinecyOne_block * NDETrue;
+      hArrayGenNDErec = GenNDErec.array();
       // Correct for nue/numu x-sec differences if doing appearance measurement.
       if (IsNue) { // If we are doing nue appearance...
         for (int bin = 0; bin < NDETrue.size(); bin++) {
@@ -249,16 +333,31 @@ namespace ana {
       Eigen::MatrixXd CovMatTrue = D * CovMatRec * D.transpose();
 
       Eigen::VectorXd FDERec = MatrixFD_block * NDETrue;
-      Eigen::MatrixXd CovMatExtrap = MatrixFD_block * CovMatTrue * MatrixFD_block.transpose();
+
+      Eigen::MatrixXd CovMatExtrap;
+      if(UseNDFDExtrapPred){
+        CovMatExtrap = MatrixNDForEfficinecyOne_block  * CovMatTrue * MatrixNDForEfficinecyOne_block.transpose(); //for NDFDExtrapolation from Pred
+      }
+      else{
+        CovMatExtrap = MatrixFD_block * CovMatTrue * MatrixFD_block.transpose();
+      }
+
       // ** Get total covariance matrix of linear combination **
       TotalLCCovMat.block(1, 1, CovMatExtrap.rows(), CovMatExtrap.cols()) +=
           CovMatExtrap * std::pow(weights(slice + 1), 2);
 
       for (int ebin = 1; ebin <= (fNDExtrap->cols() - 2); ebin++) {
-        (*fNDExtrap)(slice + 1, ebin) = FDERec(ebin - 1);
+        if(UseNDFDExtrapPred){
+	  (*fNDExtrap)(slice + 1, ebin) = GenNDErec(ebin - 1); //for NDFDExtrapolation from Pred
+          (*fNDExtrap)(slice + 1, ebin) *= FDefficiency(ebin - 1);
+        }
+        else{
+          (*fNDExtrap)(slice + 1, ebin) = FDERec(ebin - 1);
+        }
         double varExtrap = CovMatExtrap(ebin - 1, ebin - 1);
         (*fErrorMat)(slice + 1, ebin) = varExtrap;
       }
+
     }
 
     if (kA == 293) {
@@ -266,6 +365,7 @@ namespace ana {
     } else if (kA == 280) {
       hCovMat_280kA = TotalLCCovMat;
     }
+ // std::cout<<" end of NDFDExtrapolation "<<std::endl;
   }
 
   //----------------------------------------------------
@@ -299,6 +399,7 @@ namespace ana {
   void NDFD_Matrix::Write(TDirectory *dir, PRISM::MatchChan match_chan) const {
     Eigen::MatrixXd matND = hMatrixND;
     Eigen::MatrixXd matFD = hMatrixFD;
+    Eigen::MatrixXd matNDEff1 = hMatrixNDEfficiency1;
 
     // Sort out the flavors and signs
     auto NDSigFlavor = (match_chan.from.chan & NuChan::kNumuNumuBar)
@@ -336,11 +437,18 @@ namespace ana {
     LabelsAndBins reco_axisFD(labelsFD.at(0), binsFD.at(0));
     LabelsAndBins true_axisFD(labelsFD.at(1), binsFD.at(1));
 
+    Spectrum GenETrueSpectrum(std::move(hArrayGenNDETrue), reco_axisND, 1, 0);
+    Spectrum GenErecSpectrum(std::move(hArrayGenNDErec), reco_axisND, 1, 0);
+
     ReweightableSpectrum rwND(std::move(matND), reco_axisND, true_axisND, 1, 0);
+    ReweightableSpectrum rwNDEff1(std::move(matNDEff1), reco_axisND, true_axisND, 1, 0);
     ReweightableSpectrum rwFD(std::move(matFD), reco_axisFD, true_axisFD, 1, 0);
 
     dir->WriteTObject(rwND.ToTH2(1), "ND_SmearingMatrix");
+    dir->WriteTObject(rwNDEff1.ToTH2(1), "ND_SmearingMatrixEff1");
     dir->WriteTObject(rwFD.ToTH2(1), "FD_SmearingMatrix");
+    dir->WriteTObject(GenETrueSpectrum.ToTH1(1), "GenNDETrue");
+    dir->WriteTObject(GenErecSpectrum.ToTH1(1), "GenNDErec");
   }
 
 } // namespace ana

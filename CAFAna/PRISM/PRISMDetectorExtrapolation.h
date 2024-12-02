@@ -48,8 +48,11 @@ namespace ana {
                         Eigen::ArrayXd const &NDefficiency,
                         Eigen::ArrayXd const &FDefficiency) const;
 
+    //Normalize ETrue column to 1 -> for transform from NDGeneratedEvents(Etrue) to NDGeneratedEvents(Erec)
+    void NormaliseETrue100PerCentEfficiency(Eigen::MatrixXd* MatrixND) const;
 
     Eigen::MatrixXd GetNDMatrix() const;
+    Eigen::MatrixXd GetNDMatrixFor100perCentEfficiency() const;
     Eigen::MatrixXd GetFDMatrix() const;
 
     Eigen::MatrixXd GetNDExtrap_293kA() const;
@@ -87,7 +90,7 @@ namespace ana {
                            Sign::Sign_t NDsign = Sign::kBoth,
                            Sign::Sign_t FDsign = Sign::kBoth,
                            Eigen::ArrayXXd NDefficiency = {{}},
-                           Eigen::ArrayXd FDefficiency = {}) const;
+                           Eigen::ArrayXd FDefficiency = {}, bool UseNDFDExtrapPred=true) const;
 
     size_t GetNDConfigFromPred(Flavors::Flavors_t NDflav, Sign::Sign_t NDsign,
                                bool is280kA = false) const;
@@ -105,6 +108,7 @@ namespace ana {
     mutable bool IsNutau;
     mutable double reg_param;
     mutable Eigen::MatrixXd hMatrixND;
+    mutable Eigen::MatrixXd hMatrixNDEfficiency1;
     mutable Eigen::MatrixXd hMatrixFD;
     mutable Eigen::MatrixXd fNDExtrap_293kA;
     mutable Eigen::MatrixXd fNDExtrap_280kA;
@@ -114,6 +118,9 @@ namespace ana {
     mutable Eigen::MatrixXd hCovMat_280kA;
     mutable Eigen::ArrayXd vNumuNueCorr;
     mutable Eigen::ArrayXd vNumuNutauCorr;
+    mutable Eigen::ArrayXd hArrayGenNDETrue;
+    mutable Eigen::ArrayXd hArrayGenNDErec;
+    mutable Eigen::ArrayXd hArraySelFDErec;
   };
 
 } // namespace ana
