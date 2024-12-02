@@ -311,6 +311,52 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     sr.SpecialRunWeight = 1;
     sr.SpecialHCRunId = 293;
   }
+  
+  //tree for ND->FD Extrapolation
+  TTree *treeNDFDExtrapCVNs = 0;
+  f->GetObject("FDRecoNumuPredFriend", treeNDFDExtrapCVNs);
+  if(treeNDFDExtrapCVNs){
+    tr->AddFriend(treeNDFDExtrapCVNs);
+    //SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_nc_score", &sr.pred_fd_nc_score);
+    //SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_nue_score", &sr.pred_fd_nue_score);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_numu_score", &sr.pred_fd_numu_score);
+    //SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_nutau_score", &sr.pred_fd_nutau_score);
+    //SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_nue_lep_E", &sr.pred_fd_nue_lep_E);
+    //SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_nue_nu_E", &sr.pred_fd_nue_nu_E);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_numu_lep_E", &sr.pred_fd_numu_lep_E);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_numu_nu_E", &sr.pred_fd_numu_nu_E);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_vtx_x", &sr.pred_fd_vtx_x);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_vtx_y", &sr.pred_fd_vtx_y);
+    SetBranchChecked(treeNDFDExtrapCVNs, "pred_fd_vtx_z", &sr.pred_fd_vtx_z);
+    std::cout << "[INFO]: Found ND->FDExtrapolation from CVN tree "
+                 "in input file"<<f->GetName()<<", hooking up!"<< std::endl;
+  } else { //these values are redundant
+    //sr.pred_fd_nc_score = -99999999999999.0;
+    //sr.pred_fd_nue_score = -99999999999999.0;
+    sr.pred_fd_numu_score = -99999999999999.0;
+    //sr.pred_fd_nutau_score = -99999999999999.0;
+    //sr.pred_fd_nue_lep_E = -99999999999999.0;
+   // sr.pred_fd_nue_nu_E = -99999999999999.0;
+    sr.pred_fd_numu_lep_E = -99999999999999.0;
+    sr.pred_fd_numu_nu_E = -99999999999999.0;
+    sr.pred_fd_vtx_x = -99999999999999.0;
+    sr.pred_fd_vtx_y = -99999999999999.0;
+    sr.pred_fd_vtx_z = -99999999999999.0;
+    std::cout<<" ************file without FDRecoNumuPredFriend tree"<<f->GetName()<<std::endl;
+  }
+  //read int from different tree with EnuRecPred Vs TrueEnuRec Pair Data -> this is not a friend tree
+  TTree* trResNetwork = 0;
+  trResNetwork = (TTree*)f->Get("FDModelTestPreds");
+  if (trResNetwork){
+    std::cout<<" Network resolution info for this CAF. Will be further used for Network smearing matrix "<<std::endl;
+    SetBranchChecked(trResNetwork, "pred_fd_numu_nu_E", &sr.pred_numu_nu_E);
+    SetBranchChecked(trResNetwork, "true_fd_numu_nu_E", &sr.pairedData_numu_nu_E);
+
+    int NentriesNetworkRes = trResNetwork->GetEntries();
+    for (int nEv = 0; nEv < NentriesNetworkRes; ++nEv){
+      trResNetwork->GetEntry(nEv);
+    }
+  }
 
   for (int n = 0; n < Nentries; ++n) {
     tr->GetEntry(n);
