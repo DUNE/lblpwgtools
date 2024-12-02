@@ -10,6 +10,9 @@ extern const ana::Cut kIsOutOfTheDesert;
 extern const ana::Cut kIsReco;
 extern const ana::Cut kIsParamReco;
 
+//cut for the FDExtrapPred - model sometimes fails so then cvn score = -999.0
+extern const ana::Cut kPassCVNNDFDExtrap;
+
 extern const ana::Cut kCut280kARun;
 extern const ana::Cut kSel280kARun;
 

@@ -25,6 +25,9 @@ const ana::Cut kIsReco([](const caf::StandardRecord *sr) {
 const ana::Cut kIsParamReco([](const caf::StandardRecord *sr) {
   return (sr->ELep_param > 0);
 });
+const ana::Cut kPassCVNNDFDExtrap([](const caf::StandardRecord *sr) {
+  return (sr->pred_fd_numu_score != -999.0);
+});
 
 const ana::Cut kPRISMNDSignal_Selected_numu =
     ana::kPassND_FHC_NUMU && ana::kIsTrueFV && kIsOutOfTheDesert;
