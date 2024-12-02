@@ -23,7 +23,18 @@ Var const kEVisReco_numu = SIMPLEVAR(EVisReco_numu);
 Var const kEVisReco_nue = SIMPLEVAR(EVisReco_nue);
 //Var const kEVisReco_numu = SIMPLEVAR(ELep_param) + SIMPLEVAR(HadEVisReco_FD);
 //Var const kEVisReco_nue = SIMPLEVAR(ELep_param) + SIMPLEVAR(HadEVisReco_FD);;
+//==FD from FDExtrapPred
+//Var const kRecoE_FDExtrapPred_nue = SIMPLEVAR(pred_fd_nue_nu_E);
+Var const kRecoE_FDExtrapPred_numu = SIMPLEVAR(pred_fd_numu_nu_E);
+//Vars for NDFD Extrapolation Resolution Matrix
+Var const kpairedData_numu_nu_E = SIMPLEVAR(pairedData_numu_nu_E);
+Var const kEnuReco_Pred = SIMPLEVAR(pred_numu_nu_E);
 
+Var const kLepEreco_FDExtrapPred_nue = SIMPLEVAR(pred_fd_nue_lep_E);
+Var const kLepEreco_FDExtrapPred_numu = SIMPLEVAR(pred_fd_numu_lep_E);
+
+//Var const kHadEreco_FDExtrapPred_nue = SIMPLEVAR(pred_fd_nue_nu_E) - SIMPLEVAR(pred_fd_nue_lep_E);
+Var const kHadEreco_FDExtrapPred_numu = SIMPLEVAR(pred_fd_numu_nu_E) - SIMPLEVAR(pred_fd_numu_lep_E);
 // -->ND
 Var const kRecoEnergyND = SIMPLEVAR(Ev_reco);
 Var const kRecoYND = (SIMPLEVAR(Ev_reco) - SIMPLEVAR(Elep_reco)) /

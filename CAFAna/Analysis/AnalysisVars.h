@@ -20,6 +20,16 @@ extern ana::Var const kHadEReco_nue;
 
 extern ana::Var const kEVisReco_numu;
 extern ana::Var const kEVisReco_nue;
+//-->FD from FDExtrapPred
+extern ana::Var const kRecoE_FDExtrapPred_nue;
+extern ana::Var const kRecoE_FDExtrapPred_numu;
+extern ana::Var const kLepEreco_FDExtrapPred_nue;
+extern ana::Var const kLepEreco_FDExtrapPred_numu;
+extern ana::Var const kHadEreco_FDExtrapPred_nue;
+extern ana::Var const kHadEreco_FDExtrapPred_numu;
+// for network resolution
+extern ana::Var const kpairedData_numu_nu_E;
+extern ana::Var const kEnuReco_Pred; 
 
 // -->ND
 extern ana::Var const kRecoEnergyND;
