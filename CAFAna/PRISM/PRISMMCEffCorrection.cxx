@@ -106,6 +106,8 @@ namespace ana {
                                        Sign::Sign_t FDsign) const {
 
     osc::NoOscillations no;
+    //if want to mimic data-driven efficiency: no shift for ND efficiency case. comment below if you don't want this (i.e real systs for this procedure)
+    shift_nd = kNoShift;
 
     Spectrum sNDunselected_293kA =
         NDUnselPredInterps.at(GetNDConfigFromPred(NDflav, NDsign, false))
@@ -151,6 +153,9 @@ namespace ana {
     Spectrum sFDselected =
         FDSelPredInterps.at(GetFDConfigFromPred(FDflav, FDsign))
         ->PredictComponentSyst(calc, shift_fd, FDflav, curr, FDsign); // shift_fd
+
+    hFDunselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDunselected.ToTH1(1)));
+    hFDselected = std::unique_ptr<TH1D>(dynamic_cast<TH1D*>(sFDselected.ToTH1(1)));
 
     Eigen::ArrayXd vFDunselected = sFDunselected.GetEigen(1)
                                    .segment(1, FDefficiency.size());
