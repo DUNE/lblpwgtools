@@ -5,15 +5,17 @@
 #include "NuisanceParameters.fcl"
 
 BasicPred: {
-	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_EnuReco_4Flav_Nom_Jun23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_Nom_4Flav_StatsOnly_30May23.root"
+
+	output_file: ["PRISMPred_EnuRecoFDExtrap_Minus1p5Sigma_BeRPA_A_ssTh23_Point3p5yrs_NoShiftInUnfolding_NoNDEffShift.root", "UPDATE"]
+	state_file: "root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/icaracas/StateFiles/PRISMState_OnlyNuMu_EnuRecoFDExtrapPred_FDEfficiencyVSErecMC_XsecSysts_SameBinningFDAndND.root"
 	# Analysis variable name - must match variable in state file
-	projection_name: EnuReco
+	#projection_name: EnuReco
+	projection_name: EnuRecoFDExtrapPred
 	# Always true - why do we even have this?
 	use_PRISM: true
 	# Set exposure in years
-	POT_years: 2.084 #1.042
-        POT_staging: nostage
+	POT_years: 3.5
+	POT_staging: nostage
 	# Useful for fake data studies
 	vary_NDFD_data: false
 	# Extra plots for more histograms in PRISMPrediction
@@ -22,37 +24,49 @@ BasicPred: {
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
 	# True to include FD intrinsic nue in flux match
-	match_intrinsic_nue: false
-	# Regularisation parameter for unfolding - greater stability in fits
-	unfold_reg_param: 0.0003
-	# True to include FD Wrong Sign background on a data-driven approach
+	match_intrinsic_nue: true
+        # Regularisation parameter for unfolding - greater stability in fits
+        unfold_reg_param: 0.1
+        # True to include FD Wrong Sign background on a data-driven approach
         match_ws: false
+	# True to use the NDFDExtrap from NN
+	useNDFDExtrapPred: true
 
 	PRISM: {
 		match_conditioning: [
 			{
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
+			#reg_factor_293kA: 2.5E-17
 			reg_factor_293kA: 5.6E-17
-			reg_factor_280: 1E-18
+                        reg_factor_280kA: 1E-18
+			#reg_factor_280: 1E-18
+			reg_factor_293kA_WSB: 5.62341e-17
+			reg_factor_280_WSB: 1E-20
 			},
 			{
 			chan: @local::FitChannels.Numubar_disp
 			energy_range: [0.5, 6]
-			reg_factor_293kA: 1.9E-17
+			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-20
+			reg_factor_293kA_WSB: 9.81748e-17
+			reg_factor_280_WSB: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nue_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 3.4E-17
+			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
+			reg_factor_293kA_WSB: 5.42001e-17
+			reg_factor_280_WSB: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
-			reg_factor_293kA: 9.9E-18
+			reg_factor_293kA: 2.5E-17
 			reg_factor_280: 1E-18
+			reg_factor_293kA_WSB: 9.81748e-17
+			reg_factor_280_WSB: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nutau_app
@@ -72,8 +86,8 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			numode: @local::RunPlans.guess_fine
-			nubmode: @local::RunPlans.guess_fine
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
 		}
 		Use_EventRateMatching: true
 
@@ -81,23 +95,18 @@ BasicPred: {
 	}
 
 	# Choose how many channels you want to make predictions for
-	#samples: @local::FitChannels.Numubar_disp
+	samples: @local::FitChannels.Numu_disp
 	#samples: @local::FitChannels.Nuebar_app
-	samples: @local::JointFitChannels.FourFlavor
+	#samples: @local::JointFitChannels.FourFlavor
 	#samples: @local::JointFitChannels.NuBarModeJoint
 }
 
 
 predictions: [
-	{
-		@table::BasicPred
-		output_dir: "numu_EvMatch_nom"
-	},
-	{
-		@table::BasicPred
-		output_dir: "numu_EvMatch_wsbkgd"
-		match_ws: false
-	}
+	  {
+                @table::BasicPred
+                output_dir: "numu_EvMatch"
+          }
 ]
 
 predictions[0].output_file[1]: "RECREATE"
