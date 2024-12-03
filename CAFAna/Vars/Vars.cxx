@@ -18,6 +18,9 @@ namespace ana
   const Var kFDNumuPid = SIMPLEVAR(cvnnumu);
   const Var kFDNuePid = SIMPLEVAR(cvnnue);
   const Var kMVANUMU = SIMPLEVAR(mvanumu);
+  //FD from NDFDExtrapPred
+//  const Var kRecoE_FDExtrapPred_nue = SIMPLEVAR(pred_fd_nue_nu_E);
+  const Var kRecoE_FDExtrapPred_numu = SIMPLEVAR(pred_fd_numu_nu_E);
 
   // -->ND
   const Var kRecoEnergyND = SIMPLEVAR(Ev_reco);
