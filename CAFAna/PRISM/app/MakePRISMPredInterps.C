@@ -313,7 +313,7 @@ int main(int argc, char const *argv[]) {
   HistAxis MatchAxis = GetEventRateMatchAxes(truthbinningdescriptor);
 
   bool OneDAxis(false);
-  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy" || axdescriptor == "EnuReco")
+  if (axdescriptor == "EVisReco" || axdescriptor == "EProxy" || axdescriptor == "EnuReco" || axdescriptor == "EnuRecoFDExtrapPred")
     OneDAxis = true;
   HistAxis TrueObsAxis =
       TrueObservable(axdescriptor,
@@ -345,8 +345,9 @@ int main(int argc, char const *argv[]) {
 
   ana::Weight kFDCVWeight = GetFDCVWeight();
 
-  ana::Cut kNDSelectionCuts_nu = (UseSel ? kPRISMNDSignal_Selected_numu :
-                                          kPRISMNDSignal_True_numu);
+  ana::Cut kNDSelectionCuts_nu = (UseSel ? (kPRISMNDSignal_Selected_numu && kPassCVNNDFDExtrap) :
+                                          kPRISMNDSignal_True_numu); // remember to comment the kPassCVNNDFDExtrap cut
+                                                                     //if not interested in NDFDextrap from cvn
   ana::Cut kNDSelectionCuts_nub = (UseSel ? kPRISMNDSignal_Selected_numub :
                                            kPRISMNDSignal_True_numub);
 
@@ -478,6 +479,8 @@ int main(int argc, char const *argv[]) {
   std::vector<HistAxis> NDAxisVec = {TrueObsAxis, axes.XProjectionND};
   std::vector<HistAxis> FDAxisVec_numu = {TrueObsAxis, axes.XProjectionFD_numu};
   std::vector<HistAxis> FDAxisVec_nue = {TrueObsAxis, axes.XProjectionFD_nue};
+  //for ND->FD exrapolation network resolution
+  std::vector<HistAxis> PredResolutionAxisVect = {axes.XPairedData_numu_E, axes.YPred_numu_E};
 
   // Get axes for ND and FD smearring matrices.
   // Account for 2D predictions by projecting a 4D smearing matrix
@@ -485,6 +488,8 @@ int main(int argc, char const *argv[]) {
   HistAxis const ERecETrueAxisND = GetMatrixAxis(NDAxisVec);
   HistAxis const ERecETrueAxisFD_numu = GetMatrixAxis(FDAxisVec_numu);
   HistAxis const ERecETrueAxisFD_nue = GetMatrixAxis(FDAxisVec_nue);
+  //for ND->FD exrapolation network resolution
+  HistAxis const ErecPredErecPairedDataAxis = GetMatrixAxis(PredResolutionAxisVect);
 
   //----------------------------------------------------------------
   // HistAxis needed for MC efficiency correction
@@ -529,6 +534,12 @@ int main(int argc, char const *argv[]) {
   FillWithNulls(NDMatrixPredInterps, kNPRISMConfigs);
   FillWithNulls(FDMatrixPredGens, kNPRISMFDConfigs);
   FillWithNulls(FDMatrixPredInterps, kNPRISMFDConfigs);
+  // For ND->FD extrapolation matrix resolution
+  std::vector<std::unique_ptr<IPredictionGenerator>> MartixNDFDNetworkResPredGens;
+  std::vector<std::unique_ptr<PredictionInterp>>  MartixNDFDNetworkResPredInterps;
+  FillWithNulls(MartixNDFDNetworkResPredGens, kNPRISMConfigs);
+  FillWithNulls(MartixNDFDNetworkResPredInterps, kNPRISMConfigs);
+
   // True ND and FD spectra for MC efficiency correction
   std::vector<std::unique_ptr<IPredictionGenerator>> NDUnselTruePredGens;
   std::vector<std::unique_ptr<PredictionInterp>> NDUnselTruePredInterps;
@@ -612,6 +623,10 @@ int main(int argc, char const *argv[]) {
           NDMatrixPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND, NDCuts && kCut280kARun, // && kIsParamReco
               kNDCVWeight);
+          MartixNDFDNetworkResPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
+              ErecPredErecPairedDataAxis, NDCuts && kCut280kARun, //kNoCut --> kNoCut for having same selection as Alex);// && kIsParamReco
+              kNDCVWeight);
+
         } else { // Not using reco variable so don't need reco cut.
           NDMatrixPredGens[config] = std::make_unique<NoOscPredictionGenerator>(
               ERecETrueAxisND,
@@ -621,6 +636,9 @@ int main(int argc, char const *argv[]) {
         }
         NDMatrixPredInterps[config] = std::make_unique<PredictionInterp>(
             los_nd, &no, *NDMatrixPredGens[config], Loaders_bm, kNoShift,
+            PredictionInterp::kSplitBySign);
+        MartixNDFDNetworkResPredInterps[config] = std::make_unique<PredictionInterp>(
+            los_nd, &no, *MartixNDFDNetworkResPredGens[config], Loaders_bm, kNoShift,
             PredictionInterp::kSplitBySign);
       }
       // Add another ND unselected spectrum for MC eff correction
@@ -703,7 +721,8 @@ int main(int argc, char const *argv[]) {
       // True energy FD spectrum with obs binning for MC efficiency correction
       FDUnselTruePredGens[fd_config] =
           std::make_unique<NoExtrapPredictionGenerator>(
-              FDTrueEnergyObsBins,
+              FDAxis, // save FDEfficiency Vs FDErec for NDFDExtrap. if not interested in NDFDExtrap from Pred comment this line and uncomment below
+              //FDTrueEnergyObsBins,
               (IsNueSwap ? kIsSig : (IsNuTauSwap ? kIsTauFromMu : kIsNumuCC) ) &&
                   (IsNu ? !kIsAntiNu : kIsAntiNu) && kIsTrueFV,
               kFDCVWeight);
@@ -712,7 +731,9 @@ int main(int argc, char const *argv[]) {
           PredictionInterp::kSplitBySign);
       // FD Selected True Spectrum
       FDSelTruePredGens[fd_config] = std::make_unique<NoExtrapPredictionGenerator>(
-          FDTrueEnergyObsBins, FDCuts, kFDCVWeight);
+          FDAxis, // save FDEfficiency Vs FDErec for NDFDExtrap. if not interested in NDFDExtrap from Pred comment this line and uncomment below
+          //FDTrueEnergyObsBins,
+          FDCuts, kFDCVWeight);
       FDSelTruePredInterps[fd_config] = std::make_unique<PredictionInterp>(
           los_fd, calc, *FDSelTruePredGens[fd_config], Loaders_bm, kNoShift,
           PredictionInterp::kSplitBySign);
@@ -772,6 +793,11 @@ int main(int argc, char const *argv[]) {
                std::string("NDMatrixInterp_ERecETrue") +
                    (IsNu ? "_nu" : "_nub"),
                NDMatrixPredInterps[config]);
+        SaveTo(fout,
+               std::string("NDFDExtrapMatrixNetworkRest_ERecPredERecPairedData") +
+                   (IsNu ? "_nu" : "_nub"),
+               MartixNDFDNetworkResPredInterps[config]);
+
       }
       SaveTo(fout,
              std::string("NDUnSelected_ETrue") +
