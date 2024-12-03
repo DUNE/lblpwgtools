@@ -107,6 +107,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   bool use_fake_data = scan.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
   bool match_ws_bkg = scan.get<bool>("match_ws", false);
+  bool use_NDFDExtrapolation_NetworkPred = scan.get<bool>("useNDFDExtrapPred", false);
   bool th13_constraint = scan.get<bool>("reactor_constraint", true);
   double unfold_reg_param = scan.get<double>("unfold_reg_param", 0.0001);
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
@@ -316,7 +317,19 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   else{
     std::cout<<" Use FD MC to predict FD WS bkg." << std::endl;
   }
+  if(use_NDFDExtrapolation_NetworkPred){
+    std::cout<<" Use NDFD Extrapolation from Network Pred."<<std::endl;
+  }
+  else{
+    std::cout<<" standard PRISM NDFD Extrapolation."<<std::endl;
+  }
+  if(use_NDFDExtrapolation_NetworkPred && varname!="EnuRecoFDExtrapPred"){
+    std::cout<<" can not use NDFD Extrapolation with "<<varname<<". Rerun with EnuRecoFDExtrapPred"<<std::endl;
+    abort();
+  }
+
   state.PRISM->SetWSBkgCorr(match_ws_bkg);
+  state.PRISM->SetNDFDExtrapFromPred(use_NDFDExtrapolation_NetworkPred);
 
   //-------------
   // Create flux matcher object
