@@ -16,6 +16,8 @@ extern const Var kRecoE_FromDep;
 extern const Var kFDNumuPid;
 extern const Var kFDNuePid;
 extern const Var kMVANUMU;
+extern const Var kRecoE_FDExtrapPred_nue;
+extern const Var kRecoE_FDExtrapPred_numu;
 
 // -->ND
 extern const Var kRecoEnergyND;
