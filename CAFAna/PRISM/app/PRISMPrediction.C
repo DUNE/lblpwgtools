@@ -38,7 +38,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   auto exp_scale_ND = ExposureScaleND(POT_yrs, POT_staging);
   double POT = exp_scale_ND.first * POT120;
   double POT_FD = exp_scale_FD.first * POT120;
-  std::cout << POT_staging << ": Yrs = " << POT_yrs << ", MWYrs = " << exp_scale_ND.second <<
+  std::cout <<"POT = "<<POT<< POT_staging << ": Yrs = " << POT_yrs << ", MWYrs = " << exp_scale_ND.second <<
     ", ktMWYrs = " << exp_scale_FD.second << std::endl;
 
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
@@ -47,6 +47,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
   double unfold_reg_param = pred.get<double>("unfold_reg_param", 0.0001);
   bool match_ws_bkg = pred.get<bool>("match_ws", false);
+  bool use_NDFDExtrapolation_NetworkPred = pred.get<bool>("useNDFDExtrapPred", false);
 
   if (vary_NDFD_MCData == true && prism_debugplots == false) {
    std::cout << "[ERROR] you can have just 'prism_debugplots', "
@@ -167,7 +168,19 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   else{
     std::cout<<" Use FD MC to predict FD WS bkg." << std::endl;
   }
+  if(use_NDFDExtrapolation_NetworkPred){
+    std::cout<<" Use NDFD Extrapolation from Network Pred."<<std::endl;
+  }
+  else{
+    std::cout<<" standard PRISM NDFD Extrapolation."<<std::endl;
+  }
+  if(use_NDFDExtrapolation_NetworkPred && varname!="EnuRecoFDExtrapPred"){
+    std::cout<<" can not use NDFD Extrapolation with "<<varname<<". Rerun with EnuRecoFDExtrapPred"<<std::endl;
+    abort();
+  }
+
   state.PRISM->SetWSBkgCorr(match_ws_bkg);
+  state.PRISM->SetNDFDExtrapFromPred(use_NDFDExtrapolation_NetworkPred);
 
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {
