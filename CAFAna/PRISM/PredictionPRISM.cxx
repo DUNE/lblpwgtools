@@ -653,6 +653,9 @@ Spectrum PredictionPRISM::PredictSyst(osc::IOscCalc *calc,
   return Comps.at(kNDDataCorr_FDExtrap);
 }
 
+
+
+
 // Function to extract ND background -> further use in in PredictPRISMComponents
 std::map<PredictionPRISM::PRISMComponent, PRISMReweightableSpectrum>
 PredictionPRISM::NDDataMinusBackground(osc::IOscCalc *calc, SystShifts shift_nd, MatchChan match_chan) const {
@@ -1212,7 +1215,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
       (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
       FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(293),
-      fMCEffCorrection->GetFDefficiency());
+      fMCEffCorrection->GetFDefficiency(), fUseNDFDExtrapPred);
   // 3. Extrapolate 280kA sample.
   fNDFD_Matrix->ExtrapolateNDtoFD(
       NDComps.at(kNDDataCorr2D_280kA), NDPOT, 280,
@@ -1221,7 +1224,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
       (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
       FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
       fMCEffCorrection->GetNDefficiency(280),
-      fMCEffCorrection->GetFDefficiency());
+      fMCEffCorrection->GetFDefficiency(), fUseNDFDExtrapPred);
 
   // 4. Get extrapolated 293kA sample.
   PRISMReweightableSpectrum sNDExtrap_293kA(
@@ -1273,7 +1276,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
         (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
         FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(293),
-        fMCEffCorrection->GetFDefficiency());
+        fMCEffCorrection->GetFDefficiency(), fUseNDFDExtrapPred);
 
     fNDFD_Matrix->ExtrapolateNDtoFD(
         NDComps.at(kNDSig2D_280kA), NDPOT, 280,
@@ -1282,7 +1285,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
         (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
         FDSigFlavor, Current::kCC, NDSigSign, FDSigSign,
         fMCEffCorrection->GetNDefficiency(280),
-        fMCEffCorrection->GetFDefficiency());
+        fMCEffCorrection->GetFDefficiency(), fUseNDFDExtrapPred);
 
     PRISMReweightableSpectrum sNDMCExtrap_293kA(
         std::move(fNDFD_Matrix->GetNDExtrap_293kA()),
@@ -1381,7 +1384,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
         (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
         FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
         fMCEffCorrection_WSB->GetNDefficiency(293),
-        fMCEffCorrection_WSB->GetFDefficiency());
+        fMCEffCorrection_WSB->GetFDefficiency(), fUseNDFDExtrapPred);
 
     fNDFD_Matrix_WSB->ExtrapolateNDtoFD(
         NDCompsAntiChannel.at(kNDDataCorr2D_280kA), NDPOT, 280,
@@ -1390,7 +1393,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
         (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
         FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
         fMCEffCorrection_WSB->GetNDefficiency(280),
-        fMCEffCorrection_WSB->GetFDefficiency());
+        fMCEffCorrection_WSB->GetFDefficiency(), fUseNDFDExtrapPred);
 
     PRISMReweightableSpectrum sNDExtrap_293kA_AntiChannel(
       std::move(fNDFD_Matrix_WSB->GetNDExtrap_293kA()),
@@ -1453,7 +1456,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
           (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
           FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
           fMCEffCorrection_WSB->GetNDefficiency(293),
-          fMCEffCorrection_WSB->GetFDefficiency());
+          fMCEffCorrection_WSB->GetFDefficiency(), fUseNDFDExtrapPred);
 
       fNDFD_Matrix_WSB->ExtrapolateNDtoFD(
           NDCompsAntiChannel.at(kNDSig2D_280kA), NDPOT, 280,
@@ -1462,7 +1465,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
           (fVaryNDFDMCData ? kNoShift : shift_fd), NDSigFlavor,
           FDSigFlavor, Current::kCC, NDWrongSign, FDWrongSign,
           fMCEffCorrection_WSB->GetNDefficiency(280),
-          fMCEffCorrection_WSB->GetFDefficiency());
+          fMCEffCorrection_WSB->GetFDefficiency(), fUseNDFDExtrapPred);
 
       PRISMReweightableSpectrum sNDMCExtrap_293kA_AntiChannel(
         std::move(fNDFD_Matrix_WSB->GetNDExtrap_293kA()),
@@ -1637,6 +1640,49 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   if (Comps.count(kNDMC_FDExtrap) && fDebugPlots)
     Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
 
+  //this is the standard PRISM prediction as used before, i.e no MC correction
+  Comps.emplace(kPRISMPredBeforeMCCorr, Comps.at(kNDDataCorr_FDExtrap));
+
+  //want to add MCcorection as difference between final prediction and FD osc data to the standard case as well as to NDFDExtrap case
+
+  //first define the FD osc data for the nominal and systs case
+  Spectrum FDDataWithSysts = FDPrediction->PredictComponentSyst(
+                          calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth);
+  Spectrum FDDataNoSysts = FDPrediction->PredictComponentSyst(
+                          calc, kNoShift, Flavors::kAll, Current::kBoth, Sign::kBoth);
+
+  // if we are in the nominal (no systs case) then the MC corr is PRISMPred - FDDataNoSyst: no systs need to be applied, all good so far
+   if(shift_fd.ShortName() == "nominal" && shift_nd.ShortName() == "nominal"){
+     Spectrum PRISMPredMinusFDData = FDDataNoSysts - Comps.at(kPRISMPredBeforeMCCorr);
+     //MC correction for nominal case
+     Comps.emplace(kMCCorrPRISMPredMinusDataNom, PRISMPredMinusFDData);
+     //final PRISM prediction after the MC pred is added: by construction in the nominal case this will perfectly fit FD osc data
+     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kMCCorrPRISMPredMinusDataNom);
+   }
+   //in the case where systs are applied, the MC correction has to be properly shifted
+   if(shift_fd.ShortName() != "nominal" && shift_nd.ShortName() != "nominal"){
+     //first get the nominal MC correction spectrum
+     Spectrum MCCorrectionNominal = PredictionPRISM::PredictPRISMComponents(calc, kNoShift, match_chan).at(PredictionPRISM::kMCCorrPRISMPredMinusDataNom);
+     Comps.emplace(kMCCorrPRISMPredMinusDataNom,MCCorrectionNominal);
+
+     //---want to apply systs to this MCCorrection = PRISMPredMinusFDData (i.e to the "nominal difference" only)
+     Eigen::ArrayXd ArrayPRISMPredMinusFDDataNominal = MCCorrectionNominal.GetEigen(FDDataWithSysts.POT());
+     Eigen::ArrayXd ArrayFDDataNoSysts = FDDataNoSysts.GetEigen(FDDataWithSysts.POT());
+     Eigen::ArrayXd ArrayFDDataWithSysts = FDDataWithSysts.GetEigen(FDDataWithSysts.POT());
+
+     //-- set same fractional shift as the FD: (MCSysts-MCNoSysts)/MCNoSysts = (FDOscSyst - FDOscNoSysts)/FDOscNoSysts
+     Eigen::ArrayXd ArrayMCCorrWithSysts = ArrayPRISMPredMinusFDDataNominal.array() * ArrayFDDataWithSysts.array() / ArrayFDDataNoSysts.array();
+     ArrayMCCorrWithSysts[0] = 0;
+     ArrayMCCorrWithSysts[ArrayMCCorrWithSysts.size()-1] = 0;
+     Eigen::ArrayXd ArrayMCCorrWithSystsSq = ArrayMCCorrWithSysts * ArrayMCCorrWithSysts;
+
+     //===create the new systs ShiftMCCorrSpectrum
+     Spectrum MCCorrectionWithSysts = Spectrum(std::move(ArrayMCCorrWithSysts), std::move(ArrayMCCorrWithSystsSq),
+                                                         ExtrapAnaAxis, FDDataWithSysts.POT(), FDDataWithSysts.Livetime());
+     Comps.emplace(kMCCorrPRISMPredMinusData, MCCorrectionWithSysts);
+     Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kMCCorrPRISMPredMinusData);
+
+  }
   // Convert final covariance matrix into 2D spectrum
   Comps.emplace(kExtrapCovarMatrixOscSpectrum, ToSpectrum(sCovMat, NDPOT)); // if WSB flag is false this will be the same as kExtrapCovarMatrix
   Comps.emplace(kExtrapCovarMatrix, ToSpectrum(sCovMat, NDPOT));

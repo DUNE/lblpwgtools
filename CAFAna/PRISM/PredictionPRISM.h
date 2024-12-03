@@ -112,6 +112,10 @@ public:
     kNDMCExtrap_280kAWSB = 70,
     kNDMC_FDExtrapWSB = 71,
     kFDOscPredWSB = 72,
+    kMCCorrPRISMPredMinusData = 73,
+    kPRISMPredBeforeMCCorr = 74,
+    kMCCorrPRISMPredMinusDataNom = 75,
+    kPRISMPredBeforeMCCorrNominal = 76,
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -337,7 +341,18 @@ public:
     case kFDOscPredWSB: {
       return "FDOscPredWSB";
     }
- 
+    case kMCCorrPRISMPredMinusData: {
+      return "MCCorrPRISMPredMinusData";
+    }
+    case kPRISMPredBeforeMCCorr: {
+      return "PRISMPredBeforeMCCorr";
+    }
+    case kMCCorrPRISMPredMinusDataNom: {
+      return "MCCorrPRISMPredMinusDataNom";
+    }
+    case kPRISMPredBeforeMCCorrNominal:{
+      return "PRISMPredBeforeMCCorrNominal";
+    }
 
     }
     return "";
@@ -479,6 +494,7 @@ public:
   void SetWrongLeptonBackgroundCorrection(bool v = true) { fWLBCorrection = v; }
   void SetNuTauCCBackgroundCorrection(bool v = true) { fNuTauCCCorrection = v; }
   void SetIntrinsicBackgroundCorrection(bool v = true) { fIntrinsicCorrection = v; }
+  void SetNDFDExtrapFromPred(bool v = true) { fUseNDFDExtrapPred = v; }
 
   ///\brief Call to add a ND Data component
   ///
@@ -735,6 +751,9 @@ protected:
   // Whether to include Wrong Sign background (as sum of IntrinsicWS + WS)
   // in the PRISMPrediction. this is done via separate PRISM extrapoltation between NDRHC to FDFHC-WS MC background
   bool fMatchWSBkg;
+
+  //choose if you want to use NDFDExtrapolation from NN prediction
+  bool fUseNDFDExtrapPred;
 
   // fAnalysisAxisFD and fAnalysisAxisND are not necessarily the same anymore,
   // so we only want to add MC corrections to PRISMPred (which has fAnalysisAxisND)
