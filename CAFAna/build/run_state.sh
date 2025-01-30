@@ -1,0 +1,3 @@
+MakePredInterps -i /exp/dune/data/users/gyang/cafana_state/FD_FHC_nonswap.root -e /exp/dune/data/users/gyang/cafana_state/FD_FHC_nueswap.root -t /exp/dune/data/users/gyang/cafana_state/FD_FHC_tauswap.root -S FD_FHC -A default_axes -o /exp/dune/data/users/gyang/cafana_state/toy_2perEnergy_test_FD_FHC.root
+
+MakePredInterps -i /exp/dune/data/users/gyang/cafana_state/FD_RHC_nonswap.root -e /exp/dune/data/users/gyang/cafana_state/FD_RHC_nueswap.root -t /exp/dune/data/users/gyang/cafana_state/FD_RHC_tauswap.root -S FD_RHC -A default_axes -o /exp/dune/data/users/gyang/cafana_state/toy_2perEnergy_test_FD_RHC.root

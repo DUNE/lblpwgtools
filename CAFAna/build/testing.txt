@@ -1,0 +1,756 @@
+0
+nosyst
+Running: cpv_joint /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test myown_reweighting_test_nosyst_624ktmwyr_icp_9_movingtest.root nosyst 9
+GetFakeDataSystShift got: 
+[ENV]: CAFANA_ANALYSIS_VERSION = 4
+[ENV]: CAFANA_USE_UNCORRNDCOVMAT = 0
+[ENV]: CAFANA_USE_NDCOVMAT = 1
+[ENV]: CAFANA_IGNORE_CV_WEIGHT = 0
+[ENV]: CAFANA_IGNORE_SELECTION = 0
+[ENV]: CAFANA_DISABLE_DERIVATIVES = 1
+[ENV]: CAFANA_DONT_CLAMP_SYSTS = 0
+[ENV]: CAFANA_FIT_TURBOSE = 0
+[ENV]: CAFANA_FIT_FORCE_HESSE = 1
+[ENV]: CAFANA_PRED_MINMCSTATS = 50
+[LOAD]: Retrieving fd_interp_numu_fhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_FD_FHC.root:fd_interp_numu_fhc
+[LOAD]: Retrieving fd_interp_nue_fhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_FD_FHC.root:fd_interp_nue_fhc
+[LOAD]: Retrieving fd_interp_numu_rhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_FD_RHC.root:fd_interp_numu_rhc
+[LOAD]: Retrieving fd_interp_nue_rhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_FD_RHC.root:fd_interp_nue_rhc
+[LOAD]: Retrieving nd_interp_numu_fhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_ND_FHC.root:nd_interp_numu_fhc
+[LOAD]: Retrieving nd_interp_numu_rhc from /exp/dune/data/users/gyang/cafana_state/myown_reweighting_test_ND_RHC.root:nd_interp_numu_rhc
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.449927
+	th13 = 0.200002
+	dmsq32IHscaled = -2.51762
+[FIT]: What up in the LHood = 804.391
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579994
+	th13 = 0.150297
+	dmsq32NHscaled = 2.45113
+[FIT]: What up in the LHood = 0.00047097
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.449872
+	th13 = 0.195628
+	dmsq32IHscaled = -2.48956
+[FIT]: What up in the LHood = 798.025
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.581388
+	th13 = 0.150299
+	dmsq32NHscaled = 2.4825
+[FIT]: What up in the LHood = 69.3167
+	found with 2 osc seeds and 121 evaluations of the likelihood
+Global chi2 at dCP=0,pi: 0.00047097
+Trying idcp = 0
+ ---- the true and test dcp values: -3.14159 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447037
+	th13 = 0.188565
+	dmsq32IHscaled = -2.47491
+[FIT]: What up in the LHood = 509.846
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578525
+	th13 = 0.141722
+	dmsq32NHscaled = 2.43497
+[FIT]: What up in the LHood = 48.248
+	found with 2 osc seeds and 119 evaluations of the likelihood
+ ---- current chi2 48.248
+Trying idcp = 1
+ ---- the true and test dcp values: -2.96706 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447197
+	th13 = 0.190415
+	dmsq32IHscaled = -2.47465
+[FIT]: What up in the LHood = 559.697
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578685
+	th13 = 0.143253
+	dmsq32NHscaled = 2.43528
+[FIT]: What up in the LHood = 35.3222
+	found with 2 osc seeds and 121 evaluations of the likelihood
+ ---- current chi2 35.3222
+Trying idcp = 2
+ ---- the true and test dcp values: -2.79253 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447356
+	th13 = 0.19222
+	dmsq32IHscaled = -2.47485
+[FIT]: What up in the LHood = 608.319
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578863
+	th13 = 0.144718
+	dmsq32NHscaled = 2.43606
+[FIT]: What up in the LHood = 24.9833
+	found with 2 osc seeds and 121 evaluations of the likelihood
+ ---- current chi2 24.9833
+Trying idcp = 3
+ ---- the true and test dcp values: -2.61799 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.44751
+	th13 = 0.193925
+	dmsq32IHscaled = -2.4755
+[FIT]: What up in the LHood = 653.688
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.57896
+	th13 = 0.146068
+	dmsq32NHscaled = 2.43726
+[FIT]: What up in the LHood = 17.0272
+	found with 2 osc seeds and 131 evaluations of the likelihood
+ ---- current chi2 17.0272
+Trying idcp = 4
+ ---- the true and test dcp values: -2.44346 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447652
+	th13 = 0.19548
+	dmsq32IHscaled = -2.47659
+[FIT]: What up in the LHood = 693.797
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579252
+	th13 = 0.147321
+	dmsq32NHscaled = 2.43896
+[FIT]: What up in the LHood = 11.1136
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 11.1136
+Trying idcp = 5
+ ---- the true and test dcp values: -2.26893 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447779
+	th13 = 0.196838
+	dmsq32IHscaled = -2.47807
+[FIT]: What up in the LHood = 726.791
+	found with 2 osc seeds and 121 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579436
+	th13 = 0.148361
+	dmsq32NHscaled = 2.44094
+[FIT]: What up in the LHood = 6.83492
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 6.83492
+Trying idcp = 6
+ ---- the true and test dcp values: -2.0944 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447884
+	th13 = 0.19796
+	dmsq32IHscaled = -2.47991
+[FIT]: What up in the LHood = 751.094
+	found with 2 osc seeds and 123 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579617
+	th13 = 0.149197
+	dmsq32NHscaled = 2.44324
+[FIT]: What up in the LHood = 3.80707
+	found with 2 osc seeds and 126 evaluations of the likelihood
+ ---- current chi2 3.80707
+Trying idcp = 7
+ ---- the true and test dcp values: -1.91986 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447964
+	th13 = 0.198815
+	dmsq32IHscaled = -2.48206
+[FIT]: What up in the LHood = 765.523
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579752
+	th13 = 0.149804
+	dmsq32NHscaled = 2.44572
+[FIT]: What up in the LHood = 1.73275
+	found with 2 osc seeds and 124 evaluations of the likelihood
+ ---- current chi2 1.73275
+Trying idcp = 8
+ ---- the true and test dcp values: -1.74533 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.448017
+	th13 = 0.199378
+	dmsq32IHscaled = -2.48443
+[FIT]: What up in the LHood = 769.365
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579886
+	th13 = 0.150176
+	dmsq32NHscaled = 2.44839
+[FIT]: What up in the LHood = 0.458457
+	found with 2 osc seeds and 124 evaluations of the likelihood
+ ---- current chi2 0.458457
+Trying idcp = 9
+ ---- the true and test dcp values: -1.5708 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.448041
+	th13 = 0.199634
+	dmsq32IHscaled = -2.48697
+[FIT]: What up in the LHood = 762.437
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579994
+	th13 = 0.150297
+	dmsq32NHscaled = 2.45112
+[FIT]: What up in the LHood = 0.000476427
+	found with 2 osc seeds and 124 evaluations of the likelihood
+ ---- current chi2 0.000476427
+Trying idcp = 10
+ ---- the true and test dcp values: -1.39626 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.448034
+	th13 = 0.199577
+	dmsq32IHscaled = -2.48959
+[FIT]: What up in the LHood = 745.089
+	found with 2 osc seeds and 124 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.580074
+	th13 = 0.150168
+	dmsq32NHscaled = 2.45386
+[FIT]: What up in the LHood = 0.548823
+	found with 2 osc seeds and 124 evaluations of the likelihood
+ ---- current chi2 0.548823
+Trying idcp = 11
+ ---- the true and test dcp values: -1.22173 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447997
+	th13 = 0.199209
+	dmsq32IHscaled = -2.49221
+[FIT]: What up in the LHood = 718.183
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.580122
+	th13 = 0.149791
+	dmsq32NHscaled = 2.45649
+[FIT]: What up in the LHood = 2.44105
+	found with 2 osc seeds and 124 evaluations of the likelihood
+ ---- current chi2 2.44105
+Trying idcp = 12
+ ---- the true and test dcp values: -1.0472 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447932
+	th13 = 0.19854
+	dmsq32IHscaled = -2.49476
+[FIT]: What up in the LHood = 683.03
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.580138
+	th13 = 0.149166
+	dmsq32NHscaled = 2.4589
+[FIT]: What up in the LHood = 6.11213
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 6.11213
+Trying idcp = 13
+ ---- the true and test dcp values: -0.872665 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447842
+	th13 = 0.197592
+	dmsq32IHscaled = -2.49716
+[FIT]: What up in the LHood = 641.295
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.580121
+	th13 = 0.148324
+	dmsq32NHscaled = 2.46108
+[FIT]: What up in the LHood = 12.0259
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 12.0259
+Trying idcp = 14
+ ---- the true and test dcp values: -0.698132 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447728
+	th13 = 0.19639
+	dmsq32IHscaled = -2.49933
+[FIT]: What up in the LHood = 594.882
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.58007
+	th13 = 0.147278
+	dmsq32NHscaled = 2.46295
+[FIT]: What up in the LHood = 20.5941
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 20.5941
+Trying idcp = 15
+ ---- the true and test dcp values: -0.523599 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447609
+	th13 = 0.194971
+	dmsq32IHscaled = -2.50119
+[FIT]: What up in the LHood = 545.802
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579985
+	th13 = 0.146058
+	dmsq32NHscaled = 2.46444
+[FIT]: What up in the LHood = 32.0948
+	found with 2 osc seeds and 123 evaluations of the likelihood
+ ---- current chi2 32.0948
+Trying idcp = 16
+ ---- the true and test dcp values: -0.349066 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447468
+	th13 = 0.193376
+	dmsq32IHscaled = -2.50272
+[FIT]: What up in the LHood = 496.047
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.57987
+	th13 = 0.144695
+	dmsq32NHscaled = 2.4655
+[FIT]: What up in the LHood = 46.5993
+	found with 2 osc seeds and 121 evaluations of the likelihood
+ ---- current chi2 46.5993
+Trying idcp = 17
+ ---- the true and test dcp values: -0.174533 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447319
+	th13 = 0.19165
+	dmsq32IHscaled = -2.50385
+[FIT]: What up in the LHood = 447.459
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579728
+	th13 = 0.143226
+	dmsq32NHscaled = 2.46611
+[FIT]: What up in the LHood = 63.9169
+	found with 2 osc seeds and 121 evaluations of the likelihood
+ ---- current chi2 63.9169
+Trying idcp = 18
+ ---- the true and test dcp values: 0 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447166
+	th13 = 0.189845
+	dmsq32IHscaled = -2.50455
+[FIT]: What up in the LHood = 401.641
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579565
+	th13 = 0.141692
+	dmsq32NHscaled = 2.46625
+[FIT]: What up in the LHood = 83.5684
+	found with 2 osc seeds and 119 evaluations of the likelihood
+ ---- current chi2 83.5684
+Trying idcp = 19
+ ---- the true and test dcp values: 0.174533 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447014
+	th13 = 0.188013
+	dmsq32IHscaled = -2.5048
+[FIT]: What up in the LHood = 359.878
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579385
+	th13 = 0.140139
+	dmsq32NHscaled = 2.46592
+[FIT]: What up in the LHood = 104.791
+	found with 2 osc seeds and 119 evaluations of the likelihood
+ ---- current chi2 104.791
+Trying idcp = 20
+ ---- the true and test dcp values: 0.349066 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446868
+	th13 = 0.186209
+	dmsq32IHscaled = -2.50459
+[FIT]: What up in the LHood = 323.114
+	found with 2 osc seeds and 126 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.579193
+	th13 = 0.138612
+	dmsq32NHscaled = 2.46511
+[FIT]: What up in the LHood = 126.582
+	found with 2 osc seeds and 119 evaluations of the likelihood
+ ---- current chi2 126.582
+Trying idcp = 21
+ ---- the true and test dcp values: 0.523599 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446732
+	th13 = 0.184488
+	dmsq32IHscaled = -2.50393
+[FIT]: What up in the LHood = 291.951
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578997
+	th13 = 0.137162
+	dmsq32NHscaled = 2.46387
+[FIT]: What up in the LHood = 147.766
+	found with 2 osc seeds and 118 evaluations of the likelihood
+ ---- current chi2 147.766
+Trying idcp = 22
+ ---- the true and test dcp values: 0.698132 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446609
+	th13 = 0.182902
+	dmsq32IHscaled = -2.50284
+[FIT]: What up in the LHood = 266.695
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578803
+	th13 = 0.135834
+	dmsq32NHscaled = 2.46223
+[FIT]: What up in the LHood = 167.099
+	found with 2 osc seeds and 118 evaluations of the likelihood
+ ---- current chi2 167.099
+Trying idcp = 23
+ ---- the true and test dcp values: 0.872665 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446503
+	th13 = 0.181501
+	dmsq32IHscaled = -2.50134
+[FIT]: What up in the LHood = 247.417
+	found with 2 osc seeds and 127 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578615
+	th13 = 0.134676
+	dmsq32NHscaled = 2.46024
+[FIT]: What up in the LHood = 183.374
+	found with 2 osc seeds and 118 evaluations of the likelihood
+ ---- current chi2 183.374
+Trying idcp = 24
+ ---- the true and test dcp values: 1.0472 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446416
+	th13 = 0.18033
+	dmsq32IHscaled = -2.4995
+[FIT]: What up in the LHood = 234.041
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578441
+	th13 = 0.133728
+	dmsq32NHscaled = 2.45797
+[FIT]: What up in the LHood = 195.531
+	found with 2 osc seeds and 116 evaluations of the likelihood
+ ---- current chi2 195.531
+Trying idcp = 25
+ ---- the true and test dcp values: 1.22173 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446349
+	th13 = 0.179426
+	dmsq32IHscaled = -2.49735
+[FIT]: What up in the LHood = 226.428
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578285
+	th13 = 0.133024
+	dmsq32NHscaled = 2.45547
+[FIT]: What up in the LHood = 202.764
+	found with 2 osc seeds and 116 evaluations of the likelihood
+ ---- current chi2 202.764
+Trying idcp = 26
+ ---- the true and test dcp values: 1.39626 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446305
+	th13 = 0.178819
+	dmsq32IHscaled = -2.49498
+[FIT]: What up in the LHood = 224.454
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578152
+	th13 = 0.132592
+	dmsq32NHscaled = 2.45283
+[FIT]: What up in the LHood = 204.597
+	found with 2 osc seeds and 116 evaluations of the likelihood
+ ---- current chi2 204.597
+Trying idcp = 27
+ ---- the true and test dcp values: 1.5708 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446283
+	th13 = 0.178531
+	dmsq32IHscaled = -2.49245
+[FIT]: What up in the LHood = 228.066
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578046
+	th13 = 0.132448
+	dmsq32NHscaled = 2.45012
+[FIT]: What up in the LHood = 200.937
+	found with 2 osc seeds and 116 evaluations of the likelihood
+ ---- current chi2 200.937
+Trying idcp = 28
+ ---- the true and test dcp values: 1.74533 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446284
+	th13 = 0.178571
+	dmsq32IHscaled = -2.48983
+[FIT]: What up in the LHood = 237.308
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.57797
+	th13 = 0.132598
+	dmsq32NHscaled = 2.44743
+[FIT]: What up in the LHood = 192.085
+	found with 2 osc seeds and 120 evaluations of the likelihood
+ ---- current chi2 192.085
+Trying idcp = 29
+ ---- the true and test dcp values: 1.91986 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446309
+	th13 = 0.178938
+	dmsq32IHscaled = -2.48721
+[FIT]: What up in the LHood = 252.298
+	found with 2 osc seeds and 117 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.577926
+	th13 = 0.133036
+	dmsq32NHscaled = 2.44483
+[FIT]: What up in the LHood = 178.708
+	found with 2 osc seeds and 120 evaluations of the likelihood
+ ---- current chi2 178.708
+Trying idcp = 30
+ ---- the true and test dcp values: 2.0944 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446357
+	th13 = 0.179622
+	dmsq32IHscaled = -2.48467
+[FIT]: What up in the LHood = 273.176
+	found with 2 osc seeds and 117 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.577916
+	th13 = 0.133746
+	dmsq32NHscaled = 2.44241
+[FIT]: What up in the LHood = 161.762
+	found with 2 osc seeds and 120 evaluations of the likelihood
+ ---- current chi2 161.762
+Trying idcp = 31
+ ---- the true and test dcp values: 2.26893 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446428
+	th13 = 0.180601
+	dmsq32IHscaled = -2.48228
+[FIT]: What up in the LHood = 300.009
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.577879
+	th13 = 0.134663
+	dmsq32NHscaled = 2.44018
+[FIT]: What up in the LHood = 142.392
+	found with 2 osc seeds and 127 evaluations of the likelihood
+ ---- current chi2 142.392
+Trying idcp = 32
+ ---- the true and test dcp values: 2.44346 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446519
+	th13 = 0.181844
+	dmsq32IHscaled = -2.48011
+[FIT]: What up in the LHood = 332.7
+	found with 2 osc seeds and 118 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.577926
+	th13 = 0.135824
+	dmsq32NHscaled = 2.43831
+[FIT]: What up in the LHood = 121.818
+	found with 2 osc seeds and 125 evaluations of the likelihood
+ ---- current chi2 121.818
+Trying idcp = 33
+ ---- the true and test dcp values: 2.61799 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.44663
+	th13 = 0.183311
+	dmsq32IHscaled = -2.47824
+[FIT]: What up in the LHood = 370.891
+	found with 2 osc seeds and 125 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578009
+	th13 = 0.137157
+	dmsq32NHscaled = 2.43681
+[FIT]: What up in the LHood = 101.209
+	found with 2 osc seeds and 127 evaluations of the likelihood
+ ---- current chi2 101.209
+Trying idcp = 34
+ ---- the true and test dcp values: 2.79253 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446757
+	th13 = 0.184955
+	dmsq32IHscaled = -2.47671
+[FIT]: What up in the LHood = 413.899
+	found with 2 osc seeds and 115 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.57812
+	th13 = 0.138613
+	dmsq32NHscaled = 2.43573
+[FIT]: What up in the LHood = 81.5874
+	found with 2 osc seeds and 127 evaluations of the likelihood
+ ---- current chi2 81.5874
+Trying idcp = 35
+ ---- the true and test dcp values: 2.96706 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.446899
+	th13 = 0.186724
+	dmsq32IHscaled = -2.47558
+[FIT]: What up in the LHood = 460.682
+	found with 2 osc seeds and 117 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578257
+	th13 = 0.140145
+	dmsq32NHscaled = 2.4351
+[FIT]: What up in the LHood = 63.755
+	found with 2 osc seeds and 127 evaluations of the likelihood
+ ---- current chi2 63.755
+Trying idcp = 36
+ ---- the true and test dcp values: 3.14159 -1.5708
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.447037
+	th13 = 0.188565
+	dmsq32IHscaled = -2.47491
+[FIT]: What up in the LHood = 509.846
+	found with 2 osc seeds and 116 evaluations of the likelihood
+:::::::: exposure and input :::::::::: 10 ndfd
+::::::::: set_exposure and nom_exposure :::::::: 624 336
+[FIT]: Best fit:
+	ssth23 = 0.578525
+	th13 = 0.141722
+	dmsq32NHscaled = 2.43497
+[FIT]: What up in the LHood = 48.248
+	found with 2 osc seeds and 119 evaluations of the likelihood
+ ---- current chi2 48.248

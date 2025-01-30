@@ -829,8 +829,10 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
 
   // Default to 7 years staged. Value is actually in kt MW yr
   double exposure = nom_exposure;
-  if (input_vect.size() > 1)
+  if (input_vect.size() > 1){
     exposure = stod(input_vect[1]);
+    std::cout<<":::::::: exposure and input :::::::::: "<<exposure<<" "<<input_vect[0]<<std::endl;
+  }
   std::string input = input_vect[0];
 
   // Add something special
@@ -882,6 +884,8 @@ void ParseDataSamples(std::string cmdLineInput, double &pot_nd_fhc,
   }
 
   double exposure_ratio = exposure / nom_exposure;
+  if (exposure_ratio != 1)
+      std::cout<<"::::::::: set_exposure and nom_exposure :::::::: "<<exposure<<" "<<nom_exposure<<std::endl;
 
   // Now sort out which samples to include
   pot_nd_fhc = pot_nd_rhc = pot_fd_fhc_nue = pot_fd_rhc_nue = pot_fd_fhc_numu =

@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services
+END
+OscCalcPMNSOptService.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/subversion/novaart.pkgs.svn/!svn/ver/5520/trunk/OscLib/services/OscCalcPMNSOptService.h
+END
+OscCalcGenService_service.cc
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services/OscCalcGenService_service.cc
+END
+GNUmakefile
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/subversion/novaart.pkgs.svn/!svn/ver/5520/trunk/OscLib/services/GNUmakefile
+END
+OscCalcGenService.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/subversion/novaart.pkgs.svn/!svn/ver/5520/trunk/OscLib/services/OscCalcGenService.h
+END
+OscCalcPMNSService_service.cc
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services/OscCalcPMNSService_service.cc
+END
+OscCalcPMNSService.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/subversion/novaart.pkgs.svn/!svn/ver/5520/trunk/OscLib/services/OscCalcPMNSService.h
+END
+OscCalcService_service.cc
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services/OscCalcService_service.cc
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services/CMakeLists.txt
+END
+OscCalcPMNSOptService_service.cc
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/subversion/novaart.pkgs.svn/!svn/ver/30259/trunk/OscLib/services/OscCalcPMNSOptService_service.cc
+END
+OscCalcService.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/subversion/novaart.pkgs.svn/!svn/ver/5520/trunk/OscLib/services/OscCalcService.h
+END

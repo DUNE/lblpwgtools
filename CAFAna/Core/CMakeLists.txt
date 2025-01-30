@@ -27,6 +27,7 @@ set(Core_implementation_files
   Utilities.cxx
   Var.cxx
   WildcardSource.cxx
+  FitqunConverter.cxx
   Hist.cxx)
 
 set(Core_header_files
@@ -59,6 +60,7 @@ set(Core_header_files
   WildcardSource.h
   IFileSource.h
   ModeConversionUtilities.h
+  FitqunConverter.h
   Hist.h)
 
 add_library(CAFAnaCore SHARED ${Core_implementation_files})

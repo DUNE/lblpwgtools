@@ -1,6 +1,7 @@
 set(scripts_to_install
   bin_splines.C
   cpv_joint.C
+  cpv_joint_2d.C
   make_all_throws.C
   make_FC_throws.C
   make_FC_throws_th13_test.C
@@ -28,6 +29,8 @@ set(scripts_to_build
   llh_scans
   spec_joint
   sample_throws
+  cpv_joint
+  cpv_joint_2d
 )
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   LIST(APPEND scripts_to_build pred_thread_test fit_thread_test)

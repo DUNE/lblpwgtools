@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/subversion/novaart.pkgs.svn/!svn/ver/20204/trunk/OscLib/test
+END
+GNUmakefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/subversion/novaart.pkgs.svn/!svn/ver/13832/trunk/OscLib/test/GNUmakefile
+END
+testEarthModel.cc
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/subversion/novaart.pkgs.svn/!svn/ver/2801/trunk/OscLib/test/testEarthModel.cc
+END
+testOsc.cc
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/subversion/novaart.pkgs.svn/!svn/ver/15812/trunk/OscLib/test/testOsc.cc
+END
+testOscRndm.cc
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/subversion/novaart.pkgs.svn/!svn/ver/15812/trunk/OscLib/test/testOscRndm.cc
+END
+testSterile.cc
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/subversion/novaart.pkgs.svn/!svn/ver/20204/trunk/OscLib/test/testSterile.cc
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/subversion/novaart.pkgs.svn/!svn/ver/9118/trunk/OscLib/test/CMakeLists.txt
+END

@@ -11,6 +11,7 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "CAFAna/Analysis/XSecSystList.h"
+#include "CAFAna/Core/FitqunConverter.h"
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 
@@ -64,7 +65,316 @@ bool SpectrumLoader::AddSmear(double &smear_val){
   smear_val = nd_smear;
   return add_nd_smear;
 }
+/////////////////////////////////////////////////////////////// hacked by Guang Yang
 
+// Function to sample from histogram data based on its bin contents
+double SpectrumLoader::sampleFromHistogram(const std::vector<double>& histogram, const std::vector<double>& binEdges, TRandom3* gRandom) {
+    // Create CDF from histogram
+    std::vector<double> cdf(histogram.size());
+    double sum = 0.0;
+    for (size_t i = 0; i < histogram.size(); ++i) {
+        sum += histogram[i];
+        cdf[i] = sum;
+    }
+
+    // Normalize CDF to ensure it ranges from 0 to 1
+    for (size_t i = 0; i < cdf.size(); ++i) {
+        cdf[i] /= sum;
+    }
+
+    // Sample from the CDF
+    double randomValue = gRandom->Uniform();  // Uniform random number between 0 and 1
+    auto it = std::lower_bound(cdf.begin(), cdf.end(), randomValue);
+    size_t index = std::distance(cdf.begin(), it);
+
+    // Return the corresponding bin center value
+    if (index == 0) {
+        return binEdges[0];
+    } else if (index >= binEdges.size()) {
+        return binEdges.back();
+    } else {
+        return binEdges[index - 1];
+    }
+}
+
+// Function to load smearing histograms into vectors and create CDFs
+void SpectrumLoader::loadSmearingVectors(std::vector<double>& nu_had_smear_vector, std::vector<double>& antinu_had_smear_vector,
+                         std::vector<double>& nu_bin_edges, std::vector<double>& antinu_bin_edges) {
+    // Load neutrino smearing histogram
+    std::string neutrinoSmearFilePath = "/exp/dune/app/users/gyang/ratpac_analyzer/swap0_neutrino.root";
+    std::string antineutrinoSmearFilePath = "/exp/dune/app/users/gyang/ratpac_analyzer/swap0_antineutrino.root";
+
+    TFile f_nu_smear(neutrinoSmearFilePath.c_str());
+    if (!f_nu_smear.IsOpen()) {
+        std::cerr << "[ERROR] Failed to open " << neutrinoSmearFilePath << std::endl;
+        exit(1);
+    }
+    TH1F* nu_had_smear_hist = (TH1F*)f_nu_smear.Get("h1_mus_projection");
+    if (!nu_had_smear_hist) {
+        std::cerr << "[ERROR] Failed to load h1_mus_projection from " << neutrinoSmearFilePath << std::endl;
+        exit(1);
+    }
+
+    // Convert TH1F to vector and then to CDF
+    for (int i = 1; i <= nu_had_smear_hist->GetNbinsX(); ++i) {
+        nu_had_smear_vector.push_back(nu_had_smear_hist->GetBinContent(i));
+        nu_bin_edges.push_back(nu_had_smear_hist->GetBinCenter(i));
+    }
+
+    // Load antineutrino smearing histogram
+    TFile f_antinu_smear(antineutrinoSmearFilePath.c_str());
+    if (!f_antinu_smear.IsOpen()) {
+        std::cerr << "[ERROR] Failed to open " << antineutrinoSmearFilePath << std::endl;
+        exit(1);
+    }
+    TH1F* antinu_had_smear_hist = (TH1F*)f_antinu_smear.Get("h1_mus_projection");
+    if (!antinu_had_smear_hist) {
+        std::cerr << "[ERROR] Failed to load h1_mus_projection from " << antineutrinoSmearFilePath << std::endl;
+        exit(1);
+    }
+
+    // Convert TH1F to vector and then to CDF
+    for (int i = 1; i <= antinu_had_smear_hist->GetNbinsX(); ++i) {
+        antinu_had_smear_vector.push_back(antinu_had_smear_hist->GetBinContent(i));
+        antinu_bin_edges.push_back(antinu_had_smear_hist->GetBinCenter(i));
+    }
+
+    f_nu_smear.Close();
+    f_antinu_smear.Close();
+}
+
+
+// Function to load graph errors from external files
+void SpectrumLoader::loadGraphErrors(std::vector<std::vector<TGraphErrors*>>& graphError) {
+    std::string graphErrorBaseFilePath = "/exp/dune/app/users/gyang/ratpac_analyzer/";
+    for (int i = 0; i < 3; i++) {
+        graphError.emplace_back(); // Add new vector for each set
+        for (int j = 1; j < 11; j++) {
+            std::string filePath = graphErrorBaseFilePath + Form("sub_e%d_sample%d.root", j, i);
+            TFile ff(filePath.c_str());
+            if (!ff.IsOpen()) {
+                std::cerr << "[ERROR] Failed to open " << filePath << std::endl;
+                exit(1);
+            }
+            TGraphErrors* gErr = (TGraphErrors*)ff.Get(Form("sb_ratio_e%d_sample%d", j, i));
+            if (!gErr) {
+                std::cerr << "[ERROR] Failed to load sb_ratio_e" << j << "_sample" << i << std::endl;
+                exit(1);
+            }
+            graphError[i].push_back(gErr);
+            ff.Close();
+        }
+    }
+}
+
+// Function to compute reconstructed energy based on lepton and hadron energies
+std::pair<double, double> SpectrumLoader::computeRecoE(int particleType, int absPdg, int status, double lepE_tr, double Ev, 
+                                       const std::vector<double>& nu_had_smear_vector, const std::vector<double>& antinu_had_smear_vector,
+                                       const std::vector<double>& nu_bin_edges, const std::vector<double>& antinu_bin_edges,
+                                       TRandom3* gRandom, std::vector<std::vector<TGraphErrors*>>& graphError, 
+                                       double res_emu_factor) {
+    double lepE = lepE_tr; // Initial lepton energy
+    double recoE = 0.0;
+    double hadE = 0.0;
+
+    // Smearing logic based on particle type (neutrino/antineutrino)
+    if ((absPdg == 13 && status == 1) || (absPdg == 11 && status == 1)) {
+        int energyBin = std::min(static_cast<int>((lepE_tr - 0.1057) * 1000. / 200.), 9); // Adjust for muon mass
+
+        // Calculate smearing factors based on the graphs
+        double yfluc = graphError[0][energyBin]->GetErrorY(10) / graphError[0][energyBin]->GetY()[10];
+        double yfluc2 = graphError[1][energyBin]->GetErrorY(10) / graphError[1][energyBin]->GetY()[10];
+        double yfluc3 = graphError[2][energyBin]->GetErrorY(10) / graphError[2][energyBin]->GetY()[10];
+
+        // Smear lepE based on particle type
+        if (absPdg == 13) { // Muon neutrino or antineutrino
+            lepE = lepE_tr * (1 + gRandom->Gaus(0, yfluc));
+        } else if (absPdg == 11) { // Electron neutrino or antineutrino
+            lepE = lepE_tr * (1 + gRandom->Gaus(0, yfluc * res_emu_factor));
+        }
+
+        // For neutrinos
+        if (particleType == 14) {
+            hadE = (Ev - lepE) * (1 + sampleFromHistogram(nu_had_smear_vector, nu_bin_edges, gRandom)); // Neutrino smearing
+            recoE = hadE + lepE; // Reconstructed energy
+        }
+        // For antineutrinos
+        else if (particleType == -14) {
+            hadE = (Ev - lepE) * (1 + sampleFromHistogram(antinu_had_smear_vector, antinu_bin_edges, gRandom)); // Antineutrino smearing
+            recoE = hadE + lepE; // Reconstructed energy
+        }
+        else if (particleType == 12) {
+            hadE = (Ev - lepE) * (1 + sampleFromHistogram(nu_had_smear_vector, nu_bin_edges, gRandom)); // Electron neutrino smearing
+            recoE = hadE + lepE;
+        }
+        else if (particleType == -12) {
+            hadE = (Ev - lepE) * (1 + sampleFromHistogram(antinu_had_smear_vector, antinu_bin_edges, gRandom)); // Electron antineutrino smearing
+            recoE = hadE + lepE;
+        }
+    }
+    else if (absPdg == 16 || absPdg == -16) { // Tau neutrinos or antineutrinos
+        recoE = lepE_tr; // No smearing for tau neutrinos
+    }
+
+    // Return both lepE and recoE
+    return std::make_pair(lepE, recoE);
+}
+
+// Function to load data and perform computation, to be called within another program
+std::pair<double, double> SpectrumLoader::processEvent(int particleType, int absPdg, int status, double lepE_tr, double Ev) {
+    // Initialize random number generator
+    TRandom3 gRandom;
+
+    // Load smearing vectors
+    std::vector<double> nu_had_smear_vector;
+    std::vector<double> antinu_had_smear_vector;
+    std::vector<double> nu_bin_edges;
+    std::vector<double> antinu_bin_edges;
+
+    loadSmearingVectors(nu_had_smear_vector, antinu_had_smear_vector, nu_bin_edges, antinu_bin_edges);
+
+    // Load graph errors
+    std::vector<std::vector<TGraphErrors*>> graphError;
+    loadGraphErrors(graphError);
+
+    // Compute reconstructed energy and smeared lepton energy
+    auto result = computeRecoE(particleType, absPdg, status, lepE_tr, Ev,                                nu_had_smear_vector, antinu_had_smear_vector,
+                               nu_bin_edges, antinu_bin_edges, &gRandom, graphError);
+
+    // Clean up
+    for (auto& vec : graphError) {
+        for (auto& graph : vec) {
+            delete graph;
+        }
+    }
+
+    return result; // Return lepE and recoE
+}
+
+// Function to process each ratioMap3D and save it as a TH2 in the output file
+void SpectrumLoader::saveRatioMapsToTH2(
+      const std::vector<std::vector<std::vector<double>>>& ratioMap3D,
+      int pdgCode,
+      const TString& outputFileName)
+    {
+      // Open the output ROOT file (create or update)
+      TFile* outputFile = TFile::Open(outputFileName, "UPDATE");
+      if (!outputFile || outputFile->IsZombie()) {
+        std::cerr << "Error creating or updating output file: " << outputFileName << std::endl;
+        return;
+      }
+
+      // Loop over the outer layer (index for different energy bins or other layers)
+      for (size_t i = 0; i < ratioMap3D.size(); ++i) {
+        // Get the inner two layers for each map
+        const std::vector<std::vector<double>>& innerData = ratioMap3D[i];
+
+        // Determine the number of bins for the TH2 histogram
+        int nBinsX = innerData.size();          // Number of x bins (size of the first dimension)
+        int nBinsY = innerData[0].size();       // Number of y bins (size of the second dimension)
+
+        // Create a new TH2 histogram
+        TH2D* hist = new TH2D(TString::Format("ratioMap3D_%d_%lu", pdgCode, i),
+                              TString::Format("Ratio Map PDG %d Index %lu", pdgCode, i),
+                              nBinsX, 0, nBinsX,
+                              nBinsY, 0, nBinsY);
+
+        // Fill the histogram with data from the inner two layers
+        for (int x = 0; x < nBinsX; ++x) {
+            for (int y = 0; y < nBinsY; ++y) {
+                hist->SetBinContent(x + 1, y + 1, innerData[x][y]);  // ROOT bins start at 1
+            }
+        }
+
+        // Write the TH2 histogram to the output file
+        outputFile->cd();
+        hist->Write();
+
+        // Print confirmation
+        std::cout << "Saved 2D histogram for PDG " << pdgCode << " with index " << i << " to file." << std::endl;
+      }
+
+      // Close the output file
+      outputFile->Close();
+}
+
+
+
+// Function to create a 3D map of ratios (total energy, lepton energy, neutron number)
+std::vector<std::vector<std::vector<double>>> SpectrumLoader::processMaps(int neutrinoPDG) {
+    // Open the TH3 histograms file
+    TFile* histFile = TFile::Open("/exp/dune/app/users/gyang/ratpac_analyzer/weighting_output_histograms.root");
+
+    // Energy bin range from 0.5 GeV to 8 GeV with 0.5 GeV steps
+    double energyMin = 0.5;
+    double energyMax = 8.0;
+    double energyStep = 0.5;
+    int nEnergyBins = static_cast<int>((energyMax - energyMin) / energyStep) + 1;
+
+    // Create a 3D vector (totalEnergy, neutronNumber, leptonEnergy)
+    std::vector<std::vector<std::vector<double>>> ratioMap3D(nEnergyBins);
+
+    // Loop over total energy bins
+    for (int energyBin = 0; energyBin < nEnergyBins; ++energyBin) {
+        // Compute the corresponding total energy for this bin
+        double totalEnergy = energyMin + energyBin * energyStep;
+
+        // Construct histogram names for water and argon cases
+        TString waterHistName = TString::Format("water_nu_%d_energy_%.1f", neutrinoPDG, totalEnergy);
+        TString argonHistName = TString::Format("argon_nu_%d_energy_%.1f", neutrinoPDG, totalEnergy);
+
+        // Retrieve the TH3 histograms
+        TH3* waterHist = dynamic_cast<TH3*>(histFile->Get(waterHistName));
+        TH3* argonHist = dynamic_cast<TH3*>(histFile->Get(argonHistName));
+
+        if (!waterHist || !argonHist) {
+            std::cerr << "Error: Histograms for energy " << totalEnergy << " GeV not found!" << std::endl;
+            continue; // Skip this energy bin if histograms are not found
+        }
+
+        // Project the TH3 onto the x (neutron number) and y (lepton energy) axes
+        TH2* waterHist2D = static_cast<TH2*>(waterHist->Project3D("yx"));
+        TH2* argonHist2D = static_cast<TH2*>(argonHist->Project3D("yx"));
+
+        // Get the number of bins for neutron number and lepton energy
+        int nBinsX = waterHist2D->GetNbinsX();  // Neutron number bins
+        int nBinsY = waterHist2D->GetNbinsY();  // Lepton energy bins
+
+        // Create a 2D vector for this energy bin (neutronNumber, leptonEnergy)
+        std::vector<std::vector<double>> ratioMap2D(nBinsX, std::vector<double>(nBinsY, 0));
+
+        // Loop over all bins and compute the ratio for this total energy bin
+        for (int xBin = 1; xBin <= nBinsX; ++xBin) {
+            for (int yBin = 1; yBin <= nBinsY; ++yBin) {
+                double waterValue = waterHist2D->GetBinContent(xBin, yBin);
+                double argonValue = argonHist2D->GetBinContent(xBin, yBin);
+
+                // Compute the ratio and handle cases where argonValue is 0
+                if (argonValue != 0) {
+                    ratioMap2D[xBin - 1][yBin - 1] = waterValue / argonValue;
+                } else {
+                    ratioMap2D[xBin - 1][yBin - 1] = 0;
+                }
+            }
+        }
+
+        // Store the 2D ratio map in the 3D map
+        ratioMap3D[energyBin] = ratioMap2D;
+
+        // Clean up
+        delete waterHist2D;
+        delete argonHist2D;
+    }
+
+    // Close the histogram file
+    histFile->Close();
+
+    // Return the 3D ratio map
+    return ratioMap3D;
+}
+
+
+/////////////////////////////////////////////////////////////// End hacking Guang Yang
 //----------------------------------------------------------------------
 void SpectrumLoader::Go() {
   if (fGone) {
@@ -132,8 +442,48 @@ bool SetBranchChecked(TTree *tr, const std::string &bname, T *dest) {
   return false;
 }
 
+/////////////////////////////////////////////////////////////////////Guang's function
+std::string SpectrumLoader::GetFitQunOutputFile(TFile* f) {
+    if (!f || f->IsZombie()) {
+        std::cerr << "Error: Input file is not valid or corrupted!" << std::endl;
+        return "";
+    }
+
+    std::string keyName = f->GetName();
+    std::cout << "Input file name: " << keyName << std::endl;
+
+    std::string swapType = "";
+        std::cout << "Found key: " << keyName << std::endl;
+        if (keyName.find("nonswap") != std::string::npos) {
+            std::cout << "Detected swap type: nonswap" << std::endl;
+            swapType =  "nonswap";
+        } else if (keyName.find("nueswap") != std::string::npos) {
+            std::cout << "Detected swap type: nueswap" << std::endl;
+            swapType =  "nueswap";
+        } else if (keyName.find("tauswap") != std::string::npos) {
+            std::cout << "Detected swap type: tauswap" << std::endl;
+            swapType =  "tauswap";
+        }
+        else {
+          std::cerr << "Error: Unable to determine swap type from the file!" << std::endl;
+          return "";
+        }
+
+    // Construct the outputTest file path
+    std::string basePath = "/pnfs/dune/scratch/users/gyang/CAFAna/";
+    std::string fileName = "outputTest_extra_FHC_" + swapType + ".root";
+    //return basePath + fileName;
+    std::string okok = "/pnfs/dune/scratch/users/gyang/wc/outputTest_extra_allswap_allhc_root6_12.root";
+    return okok;
+}
+/////////////////////////////////////////////////////////////////// End Guang's function
+
+
 //----------------------------------------------------------------------
 void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
+
+  std::cout<<"Let's handleFile"<<std::endl;
+
   assert(!f->IsZombie());
   TTree *tr;
   //    if(f->GetListOfKeys()->Contains("cafmaker")){
@@ -153,6 +503,8 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   assert(tr);
 
   FloatingExceptionOnNaN fpnan(false);
+
+  std::cout<<"Let's getbranch info."<<std::endl;
 
   caf::StandardRecord sr;
   SetBranchChecked(tr, "Ev_reco", &sr.dune.Ev_reco);
@@ -255,7 +607,6 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   std::array<double, 7> crazy_tmp;
   SetBranchChecked(tr, "wgt_CrazyFlux", &crazy_tmp);
 
-
   // XSec uncertainties and CVs
   std::vector<std::array<double, 100>> XSSyst_tmp;
   std::vector<double> XSSyst_cv_tmp;
@@ -286,9 +637,238 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
   int Nentries = tr->GetEntries();
   if (max_entries != 0 && max_entries < Nentries)
     Nentries = max_entries;
+/*
+  //////////////////////////////////////// Guang's hacking again
+    // Precompute the 3D ratio maps for the four possible neutrino PDG codes
+    std::vector<std::vector<std::vector<double>>> ratioMap3D_14 = processMaps(14);
+    std::vector<std::vector<std::vector<double>>> ratioMap3D_12 = processMaps(12);
+    std::vector<std::vector<std::vector<double>>> ratioMap3D_neg14 = processMaps(-14);
+    std::vector<std::vector<std::vector<double>>> ratioMap3D_neg12 = processMaps(-12);
 
-  for (int n = 0; n < Nentries; ++n) {
+    // Open the histograms file to get binning information
+    TFile* histFile = TFile::Open("/exp/dune/app/users/gyang/ratpac_analyzer/weighting_output_histograms.root");
+    if (!histFile) {
+        std::cerr << "Error: Failed to open output_histograms.root" << std::endl;
+        exit(0);
+    }
+
+    // Retrieve a TH3 histogram to extract binning info for neutron number and lepton energy
+    TString waterHistName = TString::Format("water_nu_14_energy_%.1f", 0.5); // Example using 0.5 GeV
+    TH3* waterHist = dynamic_cast<TH3*>(histFile->Get(waterHistName));
+
+    if (!waterHist) {
+        std::cerr << "Error: Failed to retrieve TH3 histogram for binning info" << std::endl;
+        exit(0);
+    }
+
+    // Project the TH3 to 2D (neutron number and lepton energy axes)
+    TH2* waterHist2D = static_cast<TH2*>(waterHist->Project3D("yx"));
+
+    // Get the binning information for neutron number (x-axis) and lepton energy (y-axis)
+    int nBinsX = waterHist2D->GetNbinsX();  // Neutron number bins
+    double xMin = waterHist2D->GetXaxis()->GetXmin();
+    double xMax = waterHist2D->GetXaxis()->GetXmax();
+
+    int nBinsY = waterHist2D->GetNbinsY();  // Lepton energy bins
+    double yMin = waterHist2D->GetYaxis()->GetXmin();
+    double yMax = waterHist2D->GetYaxis()->GetXmax();  
+
+    std::cout<<":::::::::::::::::::::::"<<std::endl;
+    std::cout<<"xMin, xMax, yMin, yMax, nBinsX, nBinsY "<<xMin<<" "<< xMax<<" "<< yMin<<" "<< yMax<<" "<< nBinsX<<" "<< nBinsY<<std::endl;
+    // Output ROOT file name
+    TString outputFileName = "test2d_output_ratio_maps.root";
+
+    // Save the ratio maps for each PDG code
+    saveRatioMapsToTH2(ratioMap3D_14, 14, outputFileName);
+    saveRatioMapsToTH2(ratioMap3D_12, 12, outputFileName);
+    saveRatioMapsToTH2(ratioMap3D_neg14, -14, outputFileName);
+    saveRatioMapsToTH2(ratioMap3D_neg12, -12, outputFileName);
+
+  ///////////////////////////////////////// Guang's hacking end
+*/
+
+
+///////////////////////////////////////////////  Another Guang's hacking
+
+    std::cout<<"Let's do our fitqun hacking"<<std::endl;
+
+    // Open the FITQUN file
+    //TFile * ff = new TFile("/pnfs/dune/scratch/users/gyang/wc/outputTest_extra_allswap_allhc_root6_12.root");
+    //std::string input_fitqun = GetFitQunOutputFile(ff);
+    //TFile* fitqunFile = TFile::Open(input_fitqun.c_str(), "READ");
+
+    TFile* fitqunFile = new TFile("/pnfs/dune/scratch/users/gyang/wc/outputTest_extra_allswap_allhc_root6_12.root");
+    if (!fitqunFile || fitqunFile->IsZombie()) {
+        std::cerr << "Error: Unable to open FITQUN file " << std::endl;
+        exit(0);
+    }
+
+    //std::cout<<"1"<<std::endl;
+    // Get the tree
+    TTree* tree2 = static_cast<TTree*>(fitqunFile->Get("h1")); // Replace "fitqun_tree2" with the actual TTree name
+    if (!tree2) {
+        std::cerr << "Error: TTree 'fitqun_tree2' not found in fitqun file" << std::endl;
+        fitqunFile->Close();
+        exit(0);
+    }
+
+    std::cout<<"***************************************************"<<std::endl;
+    std::cout<<"***************************************************"<<std::endl;
+    std::cout<<"********** Doing fitqun mixing hacking ************"<<std::endl;
+    //std::cout<<"*** "<< input_fitqun.c_str()<<" ***"<<std::endl;
+    std::cout<<"entries in caf and fitqun: "<<Nentries<<" "<<tree2->GetEntries()<<std::endl;
+    std::cout<<"***************************************************"<<std::endl;
+    std::cout<<"***************************************************"<<std::endl;
+
+
+    // Branch variables
+    int fqmrpcflg[50];
+    int fqmrnring[50];
+    int fqmrpid[50][6];
+    float fqmrmom[50][6];
+    float fqmrdir[50][6][3];
+    int ipnu[50];
+    float pnu[50];
+    float dirnu[3][50];
+    int numnu;
+    int mode2;
+    int fqnmrfit;
+    double fluxWeight[2] = {};          // Flux weights for FHC and RHC
+    double fluxWeight2[2] = {};          // Flux weights for FHC and RHC
+    double fluxWeight3[2] = {};          // Flux weights for FHC and RHC
+
+	// Declare variables
+	float EvReco_fitqun;
+	float EvRecoNue_fitqun;
+	float EvRecoNumu_fitqun;
+	float ElepReco_fitqun;
+	float ThetaReco_fitqun;
+	float RecoLepEnNue_fitqun;
+	float RecoHadEnNue_fitqun;
+	float RecoLepEnNumu_fitqun;
+	float RecoHadEnNumu_fitqun;
+
+	float EvTrue_fitqun;
+	float ElepTrue_fitqun;
+	int NuPDG_fitqun;
+	int LepPDG_fitqun;
+	int IsCC_fitqun;
+
+	ParticleCounts particleCounts_fitqun;
+	ParticleEnergies particleEnergies_fitqun;
+
+	float thetaAng_fitqun;
+	TrueMomentums trueMomenta_fitqun;
+
+	float Q2_fitqun;
+	float W_fitqun;
+	float X_fitqun;
+	float Y_fitqun;
+
+	int RunNumber_fitqun;
+	int IsFD_fitqun;
+	int IsFHC_fitqun;
+
+
+    //std::cout<<"2nnn"<<std::endl;
+    // Set branch addresses
+    tree2->SetBranchAddress("fqnmrfit", &fqnmrfit);
+
+    tree2->SetBranchAddress("fqmrpcflg", fqmrpcflg);
+
+    tree2->SetBranchAddress("fqmrnring", fqmrnring);
+
+    tree2->SetBranchAddress("fqmrpid", fqmrpid);
+    tree2->SetBranchAddress("fqmrmom", fqmrmom);
+
+    //tree2->SetBranchAddress("fqmrdir", fqmrdir);
+    tree2->SetBranchAddress("ipnu", ipnu);
+
+    tree2->SetBranchAddress("pnu", pnu);
+    tree2->SetBranchAddress("dirnu", dirnu);
+    tree2->SetBranchAddress("numnu", &numnu);
+    tree2->SetBranchAddress("mode", &mode2);
+    tree2->SetBranchAddress("fluxWeight", fluxWeight);
+    tree2->SetBranchAddress("fluxWeight2", fluxWeight2);
+    tree2->SetBranchAddress("fluxWeight3", fluxWeight3);
+
+    int nEntries2 = tree2->GetEntries();
+    //std::cout<<"3"<<std::endl;
+/////////////////////////////////////////////// End of another Guang's hacking
+
+
+  //for (int n = 0; n < Nentries; ++n) {
+  for (int n = 0; n < 100; ++n) {
     tr->GetEntry(n);
+/*
+    /////////////////////////////////////// Guang's hacking again
+    int neutrinoPDG = sr.dune.nuPDG;
+    double totalEnergy = sr.dune.Ev;
+    int neutronNumber = sr.dune.nN;
+    double leptonEnergy = sr.dune.LepE;
+
+        // Compute the total energy bin index based on the event total energy
+        int energyBin = static_cast<int>((totalEnergy - 0.5) / 0.5);
+
+        // Check if the total energy is within the valid range
+        if (energyBin < 0 || energyBin >= static_cast<int>(ratioMap3D_14.size())) {
+            //std::cerr << "Skipping event: Total energy " << totalEnergy << " GeV is out of range." << std::endl;
+            continue;
+        }
+
+        // Select the appropriate ratio map based on the neutrino PDG
+        std::vector<std::vector<std::vector<double>>>* ratioMap3D;
+        switch (neutrinoPDG) {
+            case 14:
+                ratioMap3D = &ratioMap3D_14;
+                break;
+            case 12:
+                ratioMap3D = &ratioMap3D_12;
+                break;
+            case -14:
+                ratioMap3D = &ratioMap3D_neg14;
+                break;
+            case -12:
+                ratioMap3D = &ratioMap3D_neg12;
+                break;
+            default:
+                //std::cerr << "Skipping event: Invalid neutrino PDG " << neutrinoPDG << std::endl;
+                continue;
+        }
+
+        // Get the corresponding 2D ratio map for this energy bin
+        std::vector<std::vector<double>>& ratioMap2D = (*ratioMap3D)[energyBin];
+
+        // Get the bin index for neutron number and lepton energy
+        int xBin = getBinIndex(neutronNumber, nBinsX, xMin, xMax);
+        int yBin = getBinIndex(leptonEnergy, nBinsY, yMin, yMax);
+
+        double ratio = 1;
+        // Check that the bin indices are valid
+        if (xBin >= 0 && yBin >= 0) {
+            // Get the ratio from the 2D ratio map
+            ratio = ratioMap2D[xBin][yBin];
+
+            // Output the ratio for this event
+            //std::cout << "Event " << n << " - Total Energy: " << totalEnergy
+            //          << " GeV, Neutron Number: " << neutronNumber
+            //          << ", Lepton Energy: " << leptonEnergy
+            //          << " GeV, Ratio (Water/Argon): " << ratio << " ; xBin and yBin "<< xBin<<" -- "<<yBin<<std::endl;
+        } else {
+            //std::cerr << "Skipping event: Bin index out of range for neutron number or lepton energy." << std::endl;
+        }
+
+ 
+    //sr.dune.Ev_reco = processEvent(sr.dune.nuPDG, abs(sr.dune.LepPDG) , 1, sr.dune.LepE, sr.dune.Ev).second;
+    //sr.dune.Ev_reco_nue = sr.dune.Ev_reco;
+    //sr.dune.Ev_reco_numu = sr.dune.Ev_reco;
+    sr.dune.Ev_reco = sr.dune.Ev + gRandom->Gaus(0, sr.dune.Ev*0.02);
+    sr.dune.Ev_reco_nue = sr.dune.Ev + gRandom->Gaus(0, sr.dune.Ev*0.02);
+    sr.dune.Ev_reco_numu = sr.dune.Ev + gRandom->Gaus(0, sr.dune.Ev*0.02);
+    //std::cout<<"have it checked, nuPDG, lepPDG, lepE, Ev and Ev_reco "<<std::endl;
+    //std::cout<<"--------------- "<< sr.dune.nuPDG<<" "<<sr.dune.LepPDG<<" "<<sr.dune.LepE<<" "<<sr.dune.Ev<<" "<<sr.dune.Ev_reco<<" "<<std::endl;
+    ///////////////////////////////////////////////////// Guang's hacking ends again
+*/
 
     // Set GENIE_ScatteringMode and eRec_FromDep
     if (sr.dune.isFD) {
@@ -386,7 +966,10 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
     }
 
     // Reformat the genie systs
-    sr.dune.total_xsSyst_cv_wgt = 1;
+    //if (ratio != 0)
+      //sr.dune.total_xsSyst_cv_wgt = 1 * ratio;
+    //else
+      sr.dune.total_xsSyst_cv_wgt = 1;
 
     static auto AnaV = GetAnaVersion();
     if (AnaV == kV3) {
@@ -453,11 +1036,187 @@ void SpectrumLoader::HandleFile(TFile *f, Progress *prog) {
       }
     } // end version switch
 
+////////////////////////////////////////////////////// Continue another Guang's hacking
+    std::cout<<"nEntries2 "<<nEntries2<<" i "<<n<<std::endl;
+
+    if ( n < nEntries2 ){
+        tree2->GetEntry(n);
+
+        //std::cout<<"mmmarker 5: "<<n<<std::endl;
+	//std::cout<<"fqnmrfit, fqmrnring[0] "<<fqnmrfit<<" "<<fqmrnring[0]<<std::endl;
+	if (fqmrnring[0] == 0 || fqnmrfit == 0) continue;
+        // Reconstruction variables
+        EvReco_fitqun = FitqunConverter::GetEvReco(fqmrpcflg, fqmrnring[0], fqmrmom, fqmrpid);
+	//std::cout<<EvReco_fitqun<<std::endl;
+        float EvRecoNue_fitqun = FitqunConverter::GetEvRecoNue(fqnmrfit, fqmrpcflg, fqmrnring, fqmrpid, fqmrmom);
+        //EvRecoNue_fitqun = EvReco_fitqun;
+	//std::cout<<EvRecoNue_fitqun<<std::endl;
+        float EvRecoNumu_fitqun = FitqunConverter::GetEvRecoNumu(fqnmrfit, fqmrpcflg, fqmrnring, fqmrpid, fqmrmom);
+        //EvRecoNumu_fitqun = EvReco_fitqun;
+	//std::cout<<EvRecoNumu_fitqun<<std::endl;
+        ElepReco_fitqun = FitqunConverter::GetElepReco(fqmrpcflg, fqmrnring[0], fqmrpid[0], fqmrmom[0]);
+	//std::cout<<ElepReco_fitqun<<std::endl;
+        //ThetaReco_fitqun = FitqunConverter::GetThetaReco(fqmrpcflg, fqmrnring[0], fqmrpid[0], fqmrdir[0], fqmrmom[0]);
+        RecoLepEnNue_fitqun = FitqunConverter::GetRecoLepEnNue(fqnmrfit, fqmrpcflg, fqmrpid, fqmrmom);
+        RecoHadEnNue_fitqun = FitqunConverter::GetRecoHadEnNue(EvReco_fitqun, 50, fqmrpcflg, fqmrpid, fqmrmom);
+	//std::cout<<RecoHadEnNue_fitqun<<std::endl;
+        RecoLepEnNumu_fitqun = FitqunConverter::GetRecoLepEnNumu(fqnmrfit, fqmrpcflg, fqmrpid, fqmrmom);
+        RecoHadEnNumu_fitqun = FitqunConverter::GetRecoHadEnNumu(EvReco_fitqun, 50, fqmrpcflg, fqmrpid, fqmrmom);
+
+	//std::cout<<RecoHadEnNumu_fitqun<<std::endl;
+        // True energy and PDG values
+        EvTrue_fitqun = FitqunConverter::GetEvTrue(pnu);
+        ElepTrue_fitqun = FitqunConverter::GetElepTrue(pnu);
+        NuPDG_fitqun = FitqunConverter::GetNuPDG(ipnu);
+        LepPDG_fitqun = FitqunConverter::GetLepPDG(ipnu);
+
+	//std::cout<<LepPDG_fitqun<<std::endl;
+        // GENIE interaction mode
+        IsCC_fitqun = FitqunConverter::GetIsCC(mode2);
+
+        // Particle counts
+        particleCounts_fitqun = FitqunConverter::CountOutgoingParticles(numnu, ipnu);
+
+        // Particle energies
+        particleEnergies_fitqun = FitqunConverter::CalculateParticleEnergies(numnu, ipnu, pnu);
+        thetaAng_fitqun = FitqunConverter::CalculateTrueThetaAngle(dirnu, 0, 2);
+
+	ThetaReco_fitqun = thetaAng_fitqun;
+
+        // Derived quantities
+	//std::cout<<"lep, Ev, theta "<<ElepTrue_fitqun<<" "<<EvTrue_fitqun<<" "<<thetaAng_fitqun<<std::endl;
+        float Q2_fitqun = FitqunConverter::GetQ2(ElepTrue_fitqun, EvTrue_fitqun, thetaAng_fitqun);
+        float W_fitqun = FitqunConverter::GetW(EvTrue_fitqun, ElepTrue_fitqun, thetaAng_fitqun);
+        float X_fitqun = FitqunConverter::GetX(Q2_fitqun, EvTrue_fitqun, ElepTrue_fitqun);
+        float Y_fitqun = FitqunConverter::GetY(EvTrue_fitqun, ElepTrue_fitqun);
+	//std::cout<<"Q2 and W "<<Q2_fitqun<<" "<<W_fitqun<<std::endl;
+	//if (W_fitqun< 1e6 && W_fitqun>-1e6) {W_fitqun = W_fitqun;}
+	//else {W_fitqun = 0;}
+
+        // True momentums
+        TrueMomentums trueMomenta_fitqun = FitqunConverter::CalculateTrueMomentums(numnu, pnu, dirnu, ipnu);
+
+        // Fixed values
+        RunNumber_fitqun = FitqunConverter::GetRunNumber();
+        IsFD_fitqun = FitqunConverter::GetIsFD();
+        IsFHC_fitqun = FitqunConverter::GetIsFHC();
+
+	int pid_fitqun  = FitqunConverter::CalculatePID(fqmrpcflg, fqmrnring[0], fqmrpid[0], fqmrmom[0]);
+
+	if (abs(NuPDG_fitqun) != 12 && abs(NuPDG_fitqun) != 14 && abs(NuPDG_fitqun) != 16){
+	  continue;
+	}
+
+
+	// Assign FitQuN variables to CAF variables
+	sr.dune.Ev_reco = EvReco_fitqun;                              // Reconstructed total neutrino energy (GeV)
+	sr.dune.Ev_reco_nue = EvRecoNue_fitqun;                       // Reconstructed energy assuming a νe interaction (GeV)
+	sr.dune.Ev_reco_numu = EvRecoNumu_fitqun;                     // Reconstructed energy assuming a νμ interaction (GeV)
+	sr.dune.Elep_reco = ElepReco_fitqun;                          // Reconstructed energy of the outgoing lepton (GeV)
+	sr.dune.theta_reco = ThetaReco_fitqun;                        // Reconstructed lepton scattering angle (radians)
+	sr.dune.mvaresult = -999;                                     // Multivariate analysis result score (default)
+	sr.dune.mvanue = -999;                                        // MVA score for νe signal classification (default)
+	sr.dune.mvanumu = -999;                                       // MVA score for νμ signal classification (default)
+	sr.dune.cvnnue = (pid_fitqun == 1) ? 1.0 : -1.0; // CNN output for νe identification
+	sr.dune.cvnnumu = (pid_fitqun == 2) ? 1.0 : -1.0;  // CNN output for νμ identification
+	// Ignore numu_pid, nue_pid, reco_q
+	sr.dune.RecoLepEnNue = RecoLepEnNue_fitqun;                   // Lepton energy for νe (GeV)
+	sr.dune.RecoHadEnNue = RecoHadEnNue_fitqun;                   // Hadronic energy for νe (GeV)
+	sr.dune.RecoLepEnNumu = RecoLepEnNumu_fitqun;                 // Lepton energy for νμ (GeV)
+	sr.dune.RecoHadEnNumu = RecoHadEnNumu_fitqun;                 // Hadronic energy for νμ (GeV)
+	// Ignore reco_numu, reco_nue, reco_nc, muon_exit, muon_contained, muon_ecal, muon_tracker, Ehad_veto
+	sr.dune.Ev = EvTrue_fitqun;                                   // True neutrino energy (GeV)
+	sr.dune.Elep = ElepTrue_fitqun;                               // True lepton energy (GeV)
+	sr.dune.isCC = IsCC_fitqun;                                   // Is CC interaction (1 for CC, 0 for NC)
+	sr.dune.nuPDG = NuPDG_fitqun;                                 // True neutrino PDG
+	sr.dune.nuPDGunosc = NuPDG_fitqun;                            // True neutrino PDG before oscillation
+	sr.dune.LepPDG = LepPDG_fitqun;                               // True lepton PDG
+	sr.dune.mode = FitqunConverter::ConvertInteractionMode(mode2);
+	sr.dune.nP = particleCounts_fitqun.nP;                        // Number of outgoing protons
+	sr.dune.nN = particleCounts_fitqun.nN;                        // Number of outgoing neutrons
+	sr.dune.nipi0 = particleCounts_fitqun.nipi0;                  // Number of outgoing π0 particles
+	sr.dune.nipip = particleCounts_fitqun.nipip;                  // Number of outgoing π+ particles
+	sr.dune.nipim = particleCounts_fitqun.nipim;                  // Number of outgoing π− particles
+	sr.dune.niem = particleCounts_fitqun.niem;                    // Number of outgoing EM particles
+	sr.dune.Q2 = Q2_fitqun;                                       // Four-momentum transfer squared (GeV^2)
+	sr.dune.W = W_fitqun;                                         // Invariant mass of the hadronic system (GeV)
+	sr.dune.Y = Y_fitqun;                                         // Inelasticity (dimensionless)
+	sr.dune.X = X_fitqun;                                         // Bjorken x (dimensionless)
+	sr.dune.NuMomX = trueMomenta_fitqun.NuMomX;                   // True x-component of the neutrino momentum (GeV/c)
+	sr.dune.NuMomY = trueMomenta_fitqun.NuMomY;                   // True y-component of the neutrino momentum (GeV/c)
+	sr.dune.NuMomZ = trueMomenta_fitqun.NuMomZ;                   // True z-component of the neutrino momentum (GeV/c)
+	sr.dune.LepMomX = trueMomenta_fitqun.LepMomX;                 // True x-component of the lepton momentum (GeV/c)
+	sr.dune.LepMomY = trueMomenta_fitqun.LepMomY;                 // True y-component of the lepton momentum (GeV/c)
+	sr.dune.LepMomZ = trueMomenta_fitqun.LepMomZ;                 // True z-component of the lepton momentum (GeV/c)
+	sr.dune.LepE = trueMomenta_fitqun.LepE;                       // True energy of the lepton (GeV)
+	sr.dune.LepNuAngle = trueMomenta_fitqun.LepNuAngle;           // Angle between lepton and neutrino (radians)
+	sr.dune.LongestTrackContNumu = 1;
+	sr.dune.vtx_x = 0;                                            // Vertex x-coordinate
+	sr.dune.vtx_y = 0;                                            // Vertex y-coordinate
+	sr.dune.vtx_z = 0;                                            // Vertex z-coordinate
+	// Ignore det_x
+	sr.dune.eP = particleEnergies_fitqun.eP;                      // Energy of outgoing protons (GeV)
+	sr.dune.eN = particleEnergies_fitqun.eN;                      // Energy of outgoing neutrons (GeV)
+	sr.dune.ePip = particleEnergies_fitqun.ePip;                  // Energy of outgoing π+ (GeV)
+	sr.dune.ePim = particleEnergies_fitqun.ePim;                  // Energy of outgoing π− (GeV)
+	sr.dune.ePi0 = particleEnergies_fitqun.ePi0;                  // Energy of outgoing π0 (GeV)
+	sr.dune.eOther = particleEnergies_fitqun.eOther;              // Energy of other particles (GeV)
+	// Ignore eRecoP, eRecoN, eRecoPip, eRecoPim, eRecoPi0, eRecoOther, eDepP, eDepN, eDepPip, eDepPim, eDepPi0, eDepOther
+	sr.dune.run = RunNumber_fitqun;                               // Run number
+	sr.dune.isFD = IsFD_fitqun;                                   // Is Far Detector
+	sr.dune.isFHC = IsFHC_fitqun;                                 // Is Forward Horn Current mode
+	sr.dune.sigma_Ev_reco = FitqunConverter::GetDefaultValue();   // Default value
+	sr.dune.sigma_Elep_reco = FitqunConverter::GetDefaultValue(); // Default value
+	sr.dune.sigma_numu_pid = FitqunConverter::GetDefaultValue();  // Default value
+	sr.dune.sigma_nue_pid = FitqunConverter::GetDefaultValue();   // Default value
+
+	sr.dune.eRec_FromDep = EvReco_fitqun;
+
+	// need to add flux weight
+        if (sr.dune.run == 20000001)
+	  sr.dune.total_xsSyst_cv_wgt = fluxWeight[0];
+	if (sr.dune.run == 20000002)
+	  sr.dune.total_xsSyst_cv_wgt = fluxWeight2[0];
+	if (sr.dune.run == 20000003)		
+	  sr.dune.total_xsSyst_cv_wgt = fluxWeight3[0];
+
+	//if (abs(sr.dune.nuPDG) != 12 && abs(sr.dune.nuPDG) != 14 && abs(sr.dune.nuPDG) != 16){
+        // Example output
+/*
+        std::cout << "Event " << n << ":\n"
+                  << "  EvReco: " << EvReco_fitqun << " GeV\n"
+                  << "  EvRecoNue: " << EvRecoNue_fitqun << " GeV\n"
+                  << "  EvRecoNumu: " << EvRecoNumu_fitqun << " GeV\n"
+                  << "  ElepReco: " << ElepReco_fitqun << " GeV\n"
+                  << "  ThetaReco: " << ThetaReco_fitqun << " radians\n"
+                  << "  RecoLepEnNue: " << RecoLepEnNue_fitqun << " GeV\n"
+                  << "  RecoHadEnNue: " << RecoHadEnNue_fitqun << " GeV\n"
+                  << "  RecoLepEnNumu: " << RecoLepEnNumu_fitqun << " GeV\n"
+                  << "  RecoHadEnNumu: " << RecoHadEnNumu_fitqun << " GeV\n"
+                  << "  EvTrue: " << EvTrue_fitqun << " GeV\n"
+                  << "  ElepTrue: " << ElepTrue_fitqun << " GeV\n"
+                  << "  NuPDG: " << NuPDG_fitqun << "\n"
+                  << "  LepPDG: " << LepPDG_fitqun << "\n"
+                  << "  IsCC: " << IsCC_fitqun << "\n"  
+                  << "  Q2: " << Q2_fitqun << " GeV^2\n"
+                  << "  W: " << W_fitqun << " GeV\n"
+                  << "  X: " << X_fitqun << "\n"
+                  << "  Y: " << Y_fitqun << "\n"
+		  << "  flux weight: "<<fluxWeight[0]<<" "<<fluxWeight[1]<< std::endl;
+*/
+	//}
+
+    }
+
+///////////////////////////////////////////////////// End continue another Guang's hacking
+    
     HandleRecord(&sr);
 
     if (prog && n % 10000 == 0)
       prog->SetProgress(double(n) / Nentries);
-  } // end for n
+  } // end for n    
+  fitqunFile->Close();
+  std::cout<<" ------------------------ one run completed --------------------"<<std::endl;
 }
 
 //----------------------------------------------------------------------

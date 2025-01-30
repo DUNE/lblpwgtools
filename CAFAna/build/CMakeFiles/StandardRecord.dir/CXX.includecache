@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/exp/dune/app/users/gyang/lblpwgtools/StandardRecord/SRDune.h
+vector
+-
+
+/exp/dune/app/users/gyang/lblpwgtools/StandardRecord/StandardRecord.cxx
+StandardRecord/StandardRecord.h
+/exp/dune/app/users/gyang/lblpwgtools/StandardRecord/StandardRecord/StandardRecord.h
+
+/exp/dune/app/users/gyang/lblpwgtools/StandardRecord/StandardRecord.h
+StandardRecord/SRDune.h
+/exp/dune/app/users/gyang/lblpwgtools/StandardRecord/StandardRecord/SRDune.h
+

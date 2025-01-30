@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/hadd_cafana.cc
+cassert
+-
+map
+-
+set
+-
+iostream
+-
+TClass.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TClass.h
+TFile.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TFile.h
+TH1.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TH1.h
+THnSparse.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/THnSparse.h
+TObject.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TObject.h
+TObjString.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TObjString.h
+TParameter.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TParameter.h
+TVectorD.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TVectorD.h
+TVector3.h
+/exp/dune/app/users/gyang/lblpwgtools/CAFAna/bin/TVector3.h
+
