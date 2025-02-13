@@ -1,6 +1,7 @@
 #include "CAFAna/Core/ISyst.h"
 
 #include "cafanacore/Registry.h"
+#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Core/MathUtil.h"
 
@@ -13,9 +14,10 @@ namespace ana
                const std::string& latexName,
          bool applyPenalty,
          double min,
-         double max)
+         double max,
+         double cv)
     //: _ISyst<RecT>(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
-    : _ISyst(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max)
+    : _ISyst<caf::SRInteractionProxy>(shortName, latexName), fApplyPenalty(applyPenalty), fMin(min), fMax(max), fCentral(cv)
   {
     //Registry<ISyst<RecT>>::Register(this);
     Registry<ISyst>::Register(this);
@@ -37,9 +39,8 @@ namespace ana
   {
     if(fApplyPenalty){
       // Regular quadratic penalty term
-      return x*x;
-      // Error is always 1, so can ignore that (are we doing that??)
-      //return (x-fCentral)*(x-fCentral);
+      // Error is always 1, so can ignore that
+      return (x-fCentral)*(x-fCentral);
     }
     else{
       // Otherwise, no penalty within range, but still apply one outside
@@ -52,7 +53,4 @@ namespace ana
       return util::sqr((x-mean)/rad)-1;
     }
   }
-
-  //template class ISyst<caf::SRInteractionProxy>;
-  //template class ISyst<caf::SRTrueInteractionProxy>;
 }

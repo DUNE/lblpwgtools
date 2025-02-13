@@ -1,16 +1,24 @@
 #pragma once
 
+#include "CAFAna/Core/IRecordSource.h"
 #include "CAFAna/Core/SpectrumLoader.h"
 
 #include <map>
+
+namespace caf
+{
+  typedef int Det_t;
+  const int kNEARDET = 1;
+  const int kFARDET = 2;
+}
 
 namespace ana
 {
   class SpectrumLoader;
 
-  // TODO should these be in some sort of namespace?
   enum DataMC{kData, kMC, kNumDataMCs};
   enum SwappingConfig{kNonSwap, kNueSwap, kNuTauSwap, kIntrinsic, kNumSwappingConfigs};
+  enum FluxType{kFHC, kRHC};
 
   /// \brief Collection of SpectrumLoaders for many configurations
   template<class SrcT> class Sources
@@ -52,7 +60,6 @@ namespace ana
     std::map<Key_t, SrcT*> fSources;
   };
 
-
   using SRSources = Sources<ISRSource>;
   using InteractionSources = Sources<IInteractionSource>;
 
@@ -61,6 +68,7 @@ namespace ana
   public:
     operator InteractionSources&()
     {
+      // fixme:  this pointer is leaked every time!
       InteractionSources* ret = new InteractionSources;
       for(int dmc = 0; dmc < kNumDataMCs; ++dmc){
         for(int swap = 0; swap < kNumSwappingConfigs; ++swap){
