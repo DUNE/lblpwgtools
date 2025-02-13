@@ -8,9 +8,8 @@
 
 namespace ana
 {
- // template<class RecT>  class ISyst;
   class ISyst;
-  
+
   template<class SystT> class _Multiverse;
  // using Multiverse = _Multiverse<ISyst<caf::SRInteractionProxy>>;
   //using MultiverseTrue = _Multiverse<ISyst<caf::SRTrueInteractionProxy>>;
