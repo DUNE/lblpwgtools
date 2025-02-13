@@ -3,7 +3,6 @@ set(Analysis_implementation_files
   CalcsNuFit.cxx
   Plots.cxx
   Resolution.cxx
-  TDRLoaders.cxx
   AnalysisBinnings.cxx
   AnalysisVars.cxx
   common_fit_definitions.cxx)
@@ -13,7 +12,6 @@ set(Analysis_header_files
   CalcsNuFit.h
   Plots.h
   Resolution.h
-  TDRLoaders.h
   Exposures.h
   Style.h
   AnalysisBinnings.h
