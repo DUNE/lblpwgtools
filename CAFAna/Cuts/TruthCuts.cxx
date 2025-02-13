@@ -5,56 +5,49 @@
 // more complex cut logic in the future.
 namespace ana 
 {
-
-// NOvA cuts
-  const Cut kIsNC([](const caf::SRProxy* sr)
+  const TruthCut kIsNC([](const caf::SRTrueInteractionProxy* nu)
                   {
-                    if(sr->mc.nnu == 0) return false;
-                    assert(sr->mc.nnu == 1);
-                    return !sr->mc.nu[0].iscc;
+                    return !nu->iscc;
                   });
 
-  const Cut kIsNue([](const caf::SRProxy* sr){
-         return (sr->mc.nnu == 1 && abs(sr->mc.nu[0].pdg) ==12);});
+  const TruthCut kIsNue([](const caf::SRTrueInteractionProxy* nu)
+                   {
+                     return abs(nu->pdg) == 12;
+                   });
 
-  const Cut kIsNumu([](const caf::SRProxy* sr){
-         return (sr->mc.nnu == 1 && abs(sr->mc.nu[0].pdg) ==14);});
+  const TruthCut kIsNumu([](const caf::SRTrueInteractionProxy* nu)
+                    {
+                      return abs(nu->pdg) == 14;
+                    });
 
 
-  bool CCFlavSel::operator()(const caf::SRProxy* sr) const
+  const TruthCut kIsNutau([](const caf::SRTrueInteractionProxy* nu)
+                    {
+                      return abs(nu->pdg) == 16;
+                    });
+
+
+  bool CCFlavSel::operator()(const caf::SRTrueInteractionProxy* nu) const
   {
-    if(sr->mc.nnu == 0) return false;
-    assert(sr->mc.nnu == 1);
-    return (sr->mc.nu[0].iscc &&
-            abs(sr->mc.nu[0].pdg) == fPdg &&
-            abs(sr->mc.nu[0].pdgorig) == fPdgOrig);
+    return (nu->iscc &&
+            abs(nu->pdg) == fPdg &&
+            abs(nu->pdgorig) == fPdgOrig);
   }
 
 
-  const Cut kIsAntiNu([](const caf::SRProxy* sr)
+  const TruthCut kIsAntiNu([](const caf::SRTrueInteractionProxy* nu)
                       {
-                        if(sr->mc.nnu == 0) return false;
-                        assert(sr->mc.nnu == 1);
-                        return sr->mc.nu[0].pdg < 0;
+                        return nu->pdg < 0;
                       });
 
-  const Cut kIsNu([](const caf::SRProxy* sr)
-                      {
-                        if(sr->mc.nnu == 0) return false;
-                        assert(sr->mc.nnu == 1);
-                        return sr->mc.nu[0].pdg > 0;
-                      });
-
-  const Cut kHasNu([](const caf::SRProxy* sr)
-                      {
-                        if(sr->mc.nnu == 0) return false;
-                        assert(sr->mc.nnu == 1);
-                        return true;
-                      });
+  const TruthCut kIsNu([](const caf::SRTrueInteractionProxy* nu)
+                  {
+                    return nu->pdg > 0;
+                  });
 
   const Cut kHasNeutrino(
-    [](const caf::SRProxy* sr)
-      { return (sr->mc.nnu != 0); }
+      [](const caf::SRInteractionProxy* sr)
+      { return (sr->truth.size() > 0); }
   );
 
 
