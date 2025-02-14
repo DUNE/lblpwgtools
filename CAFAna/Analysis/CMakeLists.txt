@@ -2,10 +2,7 @@ set(Analysis_implementation_files
   Calcs.cxx
   CalcsNuFit.cxx
   Plots.cxx
-  Resolution.cxx
-  AnalysisBinnings.cxx
-  AnalysisVars.cxx
-  common_fit_definitions.cxx)
+  Resolution.cxx)
 
 set(Analysis_header_files
   Calcs.h
@@ -14,11 +11,6 @@ set(Analysis_header_files
   Resolution.h
   Exposures.h
   Style.h
-  AnalysisBinnings.h
-  AnalysisDialGroups.h
-  AnalysisVars.h
-  common_fit_definitions.h
-  AnalysisVersion.h
   ExtraHeaders.h
   CheckPointHelper.h)
 
