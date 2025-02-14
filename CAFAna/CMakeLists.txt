@@ -81,7 +81,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
-set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars PRISM bin scripts fcl)
+set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin scripts fcl)
 if(DEFINED BUILD_PRISM)
   set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
 else()
