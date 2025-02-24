@@ -13,14 +13,10 @@ namespace ana
 {
   REGISTER_LOADFROM("TrivialExtrap", IExtrap, TrivialExtrap);
 
-  namespace{
-    const Var kTrueE([](const caf::SRProxy* sr){return sr->Ev;});
-  }
-
   //----------------------------------------------------------------------
-  TrivialExtrap::TrivialExtrap(IRecordSource& nonswapSrc,
-                               IRecordSource& nueSrc,
-                               IRecordSource& tauSrc,
+  TrivialExtrap::TrivialExtrap(IInteractionSource& nonswapSrc,
+                               IInteractionSource& nueSrc,
+                               IInteractionSource& tauSrc,
                                const HistAxis& axis)
     :
     fNueApp       (nueSrc    [kIsNueApp    && !kIsAntiNu], axis),

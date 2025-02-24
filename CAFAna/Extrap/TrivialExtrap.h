@@ -1,5 +1,7 @@
 #pragma once
 
+#include <CAFAna/Core/IRecordSource.h>
+
 #include "CAFAna/Extrap/IExtrap.h"
 
 #include "CAFAna/Core/IRecordSource.h"
@@ -12,9 +14,9 @@ namespace ana
   class TrivialExtrap: public IExtrap
   {
   public:
-    TrivialExtrap(IRecordSource& nonswapSrc,
-                  IRecordSource& nueSrc,
-                  IRecordSource& tauSrc,
+    TrivialExtrap(IInteractionSource& nonswapSrc,
+                  IInteractionSource& nueSrc,
+                  IInteractionSource& tauSrc,
                   const HistAxis& axis);
 
     //    TrivialExtrap(SliceSources& srcs, const HistAxis& axis);
