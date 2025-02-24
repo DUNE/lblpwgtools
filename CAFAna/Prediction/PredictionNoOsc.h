@@ -10,7 +10,7 @@ namespace ana {
 /// Prediction that wraps a simple Spectrum
 class PredictionNoOsc : public IPrediction {
 public:
-  PredictionNoOsc(IRecordSource& src, const HistAxis& axis);
+  PredictionNoOsc(IInteractionSource& src, const HistAxis& axis);
 
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;

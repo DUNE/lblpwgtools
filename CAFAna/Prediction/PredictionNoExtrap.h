@@ -15,9 +15,9 @@ public:
   PredictionNoExtrap(PredictionExtrap *pred);
   PredictionNoExtrap(IExtrap *extrap);
 
-  PredictionNoExtrap(IRecordSource& loaderNonswap,
-                     IRecordSource& loaderNue,
-                     IRecordSource& loaderNuTau,
+  PredictionNoExtrap(IInteractionSource& loaderNonswap,
+                     IInteractionSource& loaderNue,
+                     IInteractionSource& loaderNuTau,
                      const HistAxis& axis);
 
   //  PredictionNoExtrap(Loaders &loaders, const HistAxis &axis);

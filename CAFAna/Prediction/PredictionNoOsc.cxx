@@ -16,7 +16,7 @@ namespace ana
   REGISTER_LOADFROM("PredictionNoOsc", IPrediction, PredictionNoOsc);
 
   //----------------------------------------------------------------------
-  PredictionNoOsc::PredictionNoOsc(IRecordSource& src, const HistAxis& axis)
+  PredictionNoOsc::PredictionNoOsc(IInteractionSource& src, const HistAxis& axis)
     : fSpectrum       (src, axis),
       fSpectrumNCTot  (src[ kIsNC], axis),
       fSpectrumNC     (src[ kIsNC][!kIsAntiNu], axis),

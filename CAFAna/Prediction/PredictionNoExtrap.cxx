@@ -15,9 +15,9 @@ namespace ana
   REGISTER_LOADFROM("PredictionNoExtrap", IPrediction, PredictionNoExtrap);
 
   //----------------------------------------------------------------------
-  PredictionNoExtrap::PredictionNoExtrap(IRecordSource& srcNonswap,
-                                         IRecordSource& srcNue,
-                                         IRecordSource& srcNuTau,
+  PredictionNoExtrap::PredictionNoExtrap(IInteractionSource& srcNonswap,
+                                         IInteractionSource& srcNue,
+                                         IInteractionSource& srcNuTau,
                                          const HistAxis& axis)
     : PredictionExtrap(new TrivialExtrap(srcNonswap, srcNue, srcNuTau, axis))
   {
