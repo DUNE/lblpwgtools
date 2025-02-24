@@ -1,5 +1,6 @@
 set(Core_implementation_files
   Binning.cxx
+  Cut.cxx
   IFitVar.cxx
   IRecordSource.cxx
   FixupRecord.cxx
