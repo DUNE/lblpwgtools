@@ -1,7 +1,6 @@
 #include "CAFAna/Fit/MinuitFitter.h"
 
 #include "CAFAna/Fit/GradientDescent.h"
-#include "CAFAna/Analysis/common_fit_definitions.h"
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
@@ -252,7 +251,6 @@ namespace ana
                   << " s. ";
       }
 
-      std::cout << BuildLogInfoString();
       fLastTP = now;
     }
 

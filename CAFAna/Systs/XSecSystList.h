@@ -1,7 +1,5 @@
 #pragma once
 
-#include "CAFAna/Analysis/AnalysisVersion.h"
-
 #include <algorithm>
 #include <cassert>
 #include <map>

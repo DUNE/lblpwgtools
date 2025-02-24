@@ -2,7 +2,6 @@
 
 #include "CAFAna/Core/ModeConversionUtilities.h"
 #include "CAFAna/Systs/XSecSystList.h"
-#include "CAFAna/Analysis/AnalysisVersion.h"
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 

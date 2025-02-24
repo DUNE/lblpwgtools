@@ -6,8 +6,6 @@
 
 namespace ana
 {
-//  using Cut = _Cut<caf::SRProxy>;
-
   /// \brief Representation of a cut (selection) to be applied to a \ref
   /// caf::StandardRecord object
   ///
@@ -43,6 +41,5 @@ namespace ana
 
 //  typedef _Cut<caf::SRRecoParticlesBranchProxy> RecoPartCut;
 //  const RecoPartCut kNoPartCut(NoCut<caf::SRRecoParticlesBranchProxy>{});
-
 
 }
