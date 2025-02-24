@@ -7,7 +7,6 @@ set(Prediction_implementation_files
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
   PredictionXSecDiag.cxx
-  PredictionNuOnE.cxx
   PredictionInterpKernel.cxx)
   #PredictionsForPRISM.cxx)
 
@@ -20,7 +19,6 @@ set(Prediction_header_files
   PredictionNoOsc.h
   PredictionScaleComp.h
   PredictionXSecDiag.h
-  PredictionNuOnE.h
   PredictionInterpKernel.h)
   #PredictionsForPRISM.h)
 
