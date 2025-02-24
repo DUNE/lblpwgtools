@@ -26,6 +26,10 @@ namespace ana
   /// spill-by-spill data quality cuts ????
   typedef _Cut<caf::SRProxy> SRCut;
 
+  /// Convert a Cut over a true interaction to one over a reco interaction with associated truth.
+  Cut TruthCutToCut(const TruthCut & truthcut);
+
+
   /// The simplest possible cut: pass everything, used as a default
   const Cut kNoCut(NoCut<caf::SRInteractionProxy>{});
   const TruthCut kNoTruthCut(NoCut<caf::SRTrueInteractionProxy>{});
