@@ -9,7 +9,7 @@ namespace ana
   class DUNEXSecDiagSyst: public ISyst
   {
   public:
-    virtual void Shift(double, caf::SRProxy*, double&) const
+    virtual void Shift(double, caf::SRInteractionProxy *, double&) const
     {
       assert(0 && "unimplemented");
     }

@@ -1,9 +1,9 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "duneanaobj/StandardRecord/Navigate.h"
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+#include "CAFAna/Core/TruthMatching.h"
 #include "CAFAna/Core/Utilities.h"
-
-#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Core/MathUtil.h"
 
@@ -98,14 +98,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  EVALORCategory GetVALORCategory(const caf::SRProxy* sr)
+  EVALORCategory GetVALORCategory(const caf::SRInteractionProxy *sr)
   {
-    int lep = sr->mc.nu[0].pdg;// this is probs wrong LepPDG;
-    int scat = sr->mc.nu[0].mode;//mode;
-    const int npiz = sr->mc.nu[0].npi0;//nipi0;
-    const int npic = sr->mc.nu[0].npip+sr->mc.nu[0].npim;//nipip + sr->nipim;
-    const float Enu = sr->mc.nu[0].E;//Ev;
-    const float Q2 = sr->mc.nu[0].Q2;//Q2;
+    const caf::SRTrueInteractionProxy * srtrueint = MatchedTrueInteraction(sr);
+    int lep = srtrueint->pdg;// this is probs wrong LepPDG;
+    int scat = srtrueint->mode;//mode;
+    const int npiz = srtrueint->npi0;//nipi0;
+    const int npic = srtrueint->npip+srtrueint->npim;//nipip + sr->nipim;
+    const float Enu = srtrueint->E;//Ev;
+    const float Q2 = srtrueint->Q2;//Q2;
 
     // These are the FD codes
     // kUnknownMode               = -1

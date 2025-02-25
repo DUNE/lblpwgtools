@@ -51,7 +51,7 @@ namespace ana
   std::string VALORCategoryName(EVALORCategory c);
   std::string VALORCategoryLatexName(EVALORCategory c);
 
-  EVALORCategory GetVALORCategory(const caf::SRProxy* sr);
+  EVALORCategory GetVALORCategory(const caf::SRInteractionProxy *sr);
 
   const Var kVALORCategory(GetVALORCategory);
 

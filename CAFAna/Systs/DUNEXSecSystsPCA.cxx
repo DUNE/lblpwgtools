@@ -24,7 +24,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void DUNEXSecSystPCA::Shift(double sigma,
-                              caf::SRProxy* sr,
+                              caf::SRInteractionProxy* sr,
                               double& weight) const
   {
     weight *= 1+fCoeffs[GetVALORCategory(sr)]*sigma;
