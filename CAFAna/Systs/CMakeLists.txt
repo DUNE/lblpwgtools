@@ -1,15 +1,9 @@
 set(Systs_implementation_files
   AnaSysts.cxx
   DUNEFluxSysts.cxx
-  RecoEnergyNDSysts.cxx
-  DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
-  EnergySysts.cxx
-  FDRecoSysts.cxx
   XSecSysts.cxx
-  NDRecoSysts.cxx
-  NuOnESysts.cxx
   NuWroReweightFakeData.cxx
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
@@ -21,15 +15,9 @@ set(Systs_implementation_files
 set(Systs_header_files
   AnaSysts.h
   DUNEFluxSysts.h
-  RecoEnergyNDSysts.h
-  DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
-  EnergySysts.h
-  FDRecoSysts.h
   XSecSysts.h
-  NDRecoSysts.h
-  NuOnESysts.h
   SystComponentScale.h
   MissingProtonFakeData.h
   BDTReweighter.h
@@ -64,10 +52,6 @@ endif()
 
 if(NOT DEFINED BUILD_FDS_SYSTS)
   message(WARNING "Not building fake data systematics code.  Include `-DBUILD_XSEC_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
-endif()
-
-if(NOT DEFINED BUILD_ADHOCND_SYSTS)
-  message(WARNING "Not building ND parameterized systematics code.  Include `-DBUILD_ADHOCND_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
 endif()
 
 set_target_properties(CAFAnaSysts PROPERTIES
