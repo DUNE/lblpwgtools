@@ -3,7 +3,6 @@ set(Core_implementation_files
   Cut.cxx
   IFitVar.cxx
   IRecordSource.cxx
-  FixupRecord.cxx
   ISyst.cxx
   Multiverse.cxx
   Loaders.cxx
@@ -27,8 +26,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FitVarWithPrior.h
-  FixupRecord.h
-  HistAxis.h
+        HistAxis.h
   IFitVar.h
   IRecordSink.h
   IRecordSource.h
