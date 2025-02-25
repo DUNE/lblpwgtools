@@ -3,9 +3,7 @@
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include <cassert>
 #include <stdexcept>
-#include <CAFAna/Core/Cut.h>
-#include <CAFAna/Core/Cut.h>
-#include <CAFAna/Core/Cut.h>
+#include "CAFAna/Core/TruthMatching.h"
 
 // Just make sure that the cuts get built on a regular basis. Could contain
 // more complex cut logic in the future.
@@ -51,7 +49,7 @@ namespace ana
     if (srint->truthOverlap[0] < 0.5)
       throw std::runtime_error("CCFlavSel::operator(): best-matched neutrino is < 50% of interaction, can't determine true flavor");
 
-    return (*this)(caf::FindInteraction(srint->truth, srint->truth[0]));
+    return (*this)(MatchedTrueInteraction(srint));
   }
 
   const Cut kIsNueApp    = TruthCutToCut(kIsNueApp_NT);

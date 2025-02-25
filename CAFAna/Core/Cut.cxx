@@ -1,6 +1,8 @@
 #include "CAFAna/Core/Cut.h"
+
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
-#include "duneanaobj/StandardRecord/Navigate.h"
+
+#include "CAFAna/Core/TruthMatching.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -23,7 +25,7 @@ namespace ana
         throw std::runtime_error("No best-matched neutrino");
       }
 
-      return truthcut(caf::FindInteraction(sri->truth, sri->truth[0]));
+      return truthcut(MatchedTrueInteraction(sri));
     });
   }
 
