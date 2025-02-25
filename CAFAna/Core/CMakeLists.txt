@@ -19,6 +19,7 @@ set(Core_implementation_files
   SpectrumLoaderBase.cxx
   StanUtils.cxx
   SystShifts.cxx
+  TruthMatching.cxx
   Utilities.cxx
   )
 
@@ -49,6 +50,7 @@ set(Core_header_files
   StanTypedefs.h
   StanUtils.h
   SystShifts.h
+  TruthMatching.h
   Utilities.h
   Var.h
   Weight.h
