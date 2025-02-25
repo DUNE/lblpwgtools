@@ -37,7 +37,8 @@ namespace ana
     static SpectrumLoader *FromSAMProject(const std::string& proj,
 					 int fileLimit = -1);
 #endif
-    virtual ~SpectrumLoader();
+
+    virtual ~SpectrumLoader() = default;
 
     virtual void Go() override;
 
