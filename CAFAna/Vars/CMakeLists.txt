@@ -18,6 +18,9 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaVars BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaVars 
+install(TARGETS CAFAnaVars
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Vars/)
+
+add_cafana_lib(CAFAnaVars)

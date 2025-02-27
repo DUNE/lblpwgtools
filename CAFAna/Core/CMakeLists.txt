@@ -75,6 +75,9 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaCore BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaCore 
+install(TARGETS CAFAnaCore
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Core/)
+
+add_cafana_lib(CAFAnaCore)

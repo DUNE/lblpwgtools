@@ -34,7 +34,7 @@ set(Fit_header_files
   StanFitter.h)
 
 add_library(CAFAnaFit SHARED ${Fit_implementation_files})
-target_link_libraries(CAFAnaFit CAFAnaCore)
+target_link_libraries(CAFAnaFit CAFAnaCore OscLib::All)
 
 set_target_properties(CAFAnaFit PROPERTIES
   PUBLIC_HEADER "${Fit_header_files}")
@@ -43,6 +43,9 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaFit BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaFit 
+install(TARGETS CAFAnaFit
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Fit/)
+
+add_cafana_lib(CAFAnaFit)

@@ -34,6 +34,9 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaExperiment BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaExperiment 
+install(TARGETS CAFAnaExperiment
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Experiment/)
+
+add_cafana_lib(CAFAnaExperiment)

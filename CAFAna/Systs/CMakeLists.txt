@@ -40,7 +40,7 @@ set(Systs_header_files
   NewOffAxisFluxUncertainty2022Helper.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
+target_link_libraries(CAFAnaSysts ${STANDARDRECORD} CAFAnaExperiment TH2Jagged::All)
 
 if(NOT DEFINED BUILD_FLUX_SYSTS)
   message(WARNING "Not building flux systematics code.  Include `-DBUILD_FLUX_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
@@ -61,7 +61,8 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaSysts BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaSysts 
+install(TARGETS CAFAnaSysts
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Systs/)
 
@@ -79,3 +80,5 @@ set(SYST_INPUT_ROOT_FILES
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
+
+add_cafana_lib(CAFAnaSysts)

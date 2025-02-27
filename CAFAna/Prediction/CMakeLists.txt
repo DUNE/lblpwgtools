@@ -36,6 +36,9 @@ if (NOT DEFINED BUILD_ADHOC_PREDS)
   message(WARNING "Not building PredictionScaleComponent and friends.  Pass '-DBUILD_ADHOC_PREDS' using '-e BUILD_ADHOC_PREDS' in standalone_configure_and_build.sh to change this.")
 endif()
 
-install(TARGETS CAFAnaPrediction 
+install(TARGETS CAFAnaPrediction
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Prediction/)
+
+add_cafana_lib(CAFAnaPrediction)

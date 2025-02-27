@@ -81,6 +81,16 @@ include(${CMAKE_SOURCE_DIR}/cmake/FindExternals.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 ################################################################################
 
+# we're going to create an interface library that bundles all the CAFAna libs together
+# easier if we don't have to know all their names in advance...
+macro(add_cafana_lib newlib)
+  list(APPEND CAFANA_LIBS ${newlib})
+  set(CAFANA_LIBS ${CAFANA_LIBS} PARENT_SCOPE)
+#  message(STATUS "   $CAFANA_LIBS now contains: '${CAFANA_LIBS}'")
+endmacro()
+
+################################################################################
+
 set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin scripts fcl)
 if(DEFINED BUILD_PRISM)
   set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
@@ -91,6 +101,31 @@ foreach(SUBDIR ${CAFANA_SUBDIRS})
 
   add_subdirectory(${SUBDIR})
 endforeach()
+
+# add an 'interface' (= no actual file) library
+# that one can import in another CMake project
+# to be able to link against all of the CAFAna libs
+add_library(All INTERFACE)
+message(STATUS "$CAFANA_LIBS contains: '${CAFANA_LIBS}'")
+target_link_libraries(All INTERFACE ${CAFANA_LIBS})
+target_include_directories(All INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+################################################################################
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/CAFAnaConfigVersion.cmake"
+  VERSION ${CMAKE_PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+        "${PROJECT_SOURCE_DIR}/cmake/templates/CAFAnaConfig.cmake.in"
+        "${PROJECT_BINARY_DIR}/CAFAnaConfig.cmake"
+        INSTALL_DESTINATION lib/cmake/CAFAna
+)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)
@@ -115,3 +150,21 @@ install(
   DESTINATION
     bin
   )
+
+# install our CMake files so that others can crib them too
+file(GLOB cmake_files ${CMAKE_SOURCE_DIR}/cmake/*.cmake)
+install(
+  FILES
+    ${cmake_files}
+  DESTINATION
+    cmake
+)
+
+install(TARGETS All
+    EXPORT CAFAnaTargets
+)
+
+install(EXPORT CAFAnaTargets NAMESPACE CAFAna:: DESTINATION lib/cmake/CAFAna)
+install(FILES "${PROJECT_BINARY_DIR}/CAFAnaConfigVersion.cmake"
+              "${PROJECT_BINARY_DIR}/CAFAnaConfig.cmake"
+        DESTINATION lib/cmake/CAFAna)
