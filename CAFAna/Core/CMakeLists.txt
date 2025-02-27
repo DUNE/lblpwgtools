@@ -11,7 +11,7 @@ set(Core_implementation_files
   EnsembleRatio.cxx
   EnsembleSpectrum.cxx
   EnsembleReweightableSpectrum.cxx 
-#  OscillatableSpectrum.cxx
+  OscillatableSpectrum.cxx
   ProfilerSupport.cxx
   Registry.cxx
   SpectrumLoader.cxx
@@ -42,7 +42,7 @@ set(Core_header_files
   EnsembleRatio.h
   EnsembleSpectrum.h
   EnsembleReweightableSpectrum.h
-#  OscillatableSpectrum.h
+  OscillatableSpectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h
