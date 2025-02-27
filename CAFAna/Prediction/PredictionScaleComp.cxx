@@ -1,4 +1,4 @@
-#if 0 // TODO TODO TODO
+#ifdef BUILD_ADHOC_PREDS // TODO TODO TODO
 
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 

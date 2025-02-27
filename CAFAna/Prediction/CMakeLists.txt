@@ -32,6 +32,10 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaPrediction BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
+if (NOT DEFINED BUILD_ADHOC_PREDS)
+  message(WARNING "Not building PredictionScaleComponent and friends.  Pass '-DBUILD_ADHOC_PREDS' using '-e BUILD_ADHOC_PREDS' in standalone_configure_and_build.sh to change this.")
+endif()
+
 install(TARGETS CAFAnaPrediction 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Prediction/)

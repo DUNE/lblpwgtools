@@ -1,3 +1,5 @@
+#ifdef BUILD_ADHOC_PREDS
+
 #include "CAFAna/Prediction/PredictionXSecDiag.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
@@ -176,3 +178,5 @@ namespace ana
     }
   }
 }
+
+#endif
