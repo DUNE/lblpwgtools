@@ -19,7 +19,8 @@ namespace ana
         std::cerr << "No matched truth for this reco interaction, can't convert Cut to TruthCut\n";
         throw std::runtime_error("Truth is empty");
       }
-      if (sri->truthOverlap[0] < 0.5)
+      // todo: FD CAFs apparently aren't filling truthOverlap, but they should be...
+      if (sri->truthOverlap.size() > 0 && sri->truthOverlap[0] < 0.5)
       {
         std::cerr << "TruthCutToCut(): best-matched neutrino is < 50% of interaction, can't determine true flavor";
         throw std::runtime_error("No best-matched neutrino");

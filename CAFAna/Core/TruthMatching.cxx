@@ -10,19 +10,27 @@ namespace ana
     if (srint->truth.size() < 1)
       return nullptr;
 
-    // would prefer to use std::find_if, but caf::Proxy<std::vector>::iterator doesn't have all the right traits,
-    // and I'm not in the mood to fix it at the moment
     int matchIdx = -1;
-    for (std::size_t idx = 0; idx < srint->truthOverlap.size(); ++idx)
+
+    // todo: FD CAFs aren't filling the truthOverlap at the moment, but should be.
+    //       for now, just take the first entry in the match list...
+    if (srint->truthOverlap.empty())
+      matchIdx = srint->truth[0];
+    else
     {
-      if (srint->truthOverlap[idx] > minOverlap)
+      // would prefer to use std::find_if, but caf::Proxy<std::vector>::iterator doesn't have all the right traits,
+      // and I'm not in the mood to fix it at the moment
+      for (std::size_t idx = 0; idx < srint->truthOverlap.size(); ++idx)
       {
-        matchIdx = idx;
-        break;
+        if (srint->truthOverlap[idx] > minOverlap)
+        {
+          matchIdx = idx;
+          break;
+        }
       }
+      if (matchIdx < 0)
+        return nullptr;
     }
-    if (matchIdx < 0)
-      return nullptr;
 
     return caf::FindInteraction(srint->Ancestor<caf::SRProxy>()->mc, matchIdx);
   }
