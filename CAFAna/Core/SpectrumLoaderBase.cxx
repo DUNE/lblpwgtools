@@ -28,74 +28,6 @@
 namespace ana
 {
 
-/*  //----------------------------------------------------------------------
-*  SpectrumLoaderBase::SpectList::~SpectList()
-*  {
-*    // We don't seem to be able to do this - maybe SpectList gets copied?
-*    // Let's just bite the bullet and leak a few pointers. This all works
-*    // completely differently in NOvA CAFAna with refactored SpectrumLoader.
-*    //
-*    // Clean up the memory allocated for the pointers themselves
-*    //    for(Spectrum** s: spects) delete *s;
-*    //    for(auto rv: rwSpects) delete *rv.first;
-*  }
-*/
-// This is all deleagted to cafanacore??
-// Work around ReweightableSpectrum's friend requirements
-
-/*  struct ReweightableSpectrumSink
-*  {
-*    static void AddLoader(ReweightableSpectrum** rw){(*rw)->AddLoader(rw);}
-*    static void RemoveLoader(ReweightableSpectrum** rw){(*rw)->RemoveLoader(rw);}
-*  };
-*  //----------------------------------------------------------------------
-*  void SpectrumLoaderBase::SpectList::RemoveLoader(SpectrumLoaderBase* l)
-*  {
-*    for(Spectrum** s: spects) if(*s) (*s)->RemoveLoader(s);
-*    for(auto rv: rwSpects) if(*rv.first) ReweightableSpectrumSink::RemoveLoader(rv.first);
-*  }
-*
-*  //----------------------------------------------------------------------
-*  size_t SpectrumLoaderBase::SpectList::TotalSize() const
-*  {
-*    return spects.size() + rwSpects.size();
-*  }
-*
-*  //----------------------------------------------------------------------
-*  template<class T, class U> U& SpectrumLoaderBase::IDMap<T, U>::
-*  operator[](const T& key)
-*  {
-*    for(auto& it: fElems){
-*      if(it.first.ID() == key.ID()) return it.second;
-*    }
-*    fElems.push_back(std::make_pair(key, U()));
-*    return fElems.back().second;
-*  }
-*
-*  //----------------------------------------------------------------------
-*  template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::
-*  RemoveLoader(SpectrumLoaderBase* l)
-*  {
-*    for(auto& it: fElems) it.second.RemoveLoader(l);
-*  }
-*
-*  //----------------------------------------------------------------------
-*  template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::Clear()
-*  {
-*    fElems.clear();
-*  }
-*
-*  //----------------------------------------------------------------------
-*  template<class T, class U> size_t SpectrumLoaderBase::IDMap<T, U>::
-*  TotalSize()
-*  {
-*    size_t ret = 0;
-*    for(auto& it: fElems) ret += it.second.TotalSize();
-*    return ret;
-*  }
-*/
-  // Start of SpectrumLoaderBase proper
-
   //----------------------------------------------------------------------
   // adding fPOTFromHist and fNReadouts 
   SpectrumLoaderBase::SpectrumLoaderBase()
@@ -124,10 +56,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::~SpectrumLoaderBase()
-  {
-    //fHistDefs.RemoveLoader(this);
-    //fHistDefs.Clear();
-  }
+  {}
 
   //----------------------------------------------------------------------
   IFileSource* SpectrumLoaderBase::
@@ -175,70 +104,6 @@ namespace ana
     abort();
 #endif
   }
-
-
-// I think this is keeping track of what spectrums are registered, that should be taken care of by sink/source??  
-/*  //----------------------------------------------------------------------
-*  void SpectrumLoaderBase::AddSpectrum(Spectrum& spect,
-*                                       const Var& var,
-*                                       const Cut& cut,
-*                                       const SystShifts& shift,
-*                                       const Weight& wei)
-*  {
-*    if(fGone){
-*      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-*      abort();
-*    }
-*
-*    Spectrum** ps = new Spectrum*;
-*    *ps = &spect;
-*    fHistDefs[shift][cut][wei][var].spects.push_back(ps);
-*
-*    // Remember we have a Go() pending
-*    spect.AddLoader(ps);
-*  }
-*
-*  //----------------------------------------------------------------------
-*  void SpectrumLoaderBase::AddSpectrum(Spectrum& spect,
-*                                       const MultiVar& var,
-*                                       const Cut& cut,
-*                                       const SystShifts& shift,
-*                                       const Weight& wei)
-*  {
-*    if(fGone){
-*      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-*      abort();
-*    }
-*
-*    Spectrum** ps = new Spectrum*;
-*    *ps = &spect;
-*    fHistDefs[shift][cut][wei][var].spects.push_back(ps);
-*
-*    // Remember we have a Go() pending
-*    spect.AddLoader(ps);
-*  }
-*
-*  //----------------------------------------------------------------------
-*  void SpectrumLoaderBase::AddReweightableSpectrum(ReweightableSpectrum& spect,
-*                                                   const Var& xvar,
-*                                                   const Var& yvar,
-*                                                   const Cut& cut,
-*                                                   const SystShifts& shift,
-*                                                   const Weight& wei)
-*  {
-*    if(fGone){
-*      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-*      abort();
-*    }
-*
-*    ReweightableSpectrum** prw = new ReweightableSpectrum*;
-*    *prw = &spect;
-*    fHistDefs[shift][cut][wei][xvar].rwSpects.emplace_back(prw, yvar);
-*
-*    // Remember we have a Go() pending
-*    ReweightableSpectrumSink::AddLoader(prw);
-*  }
-*/
   //----------------------------------------------------------------------
   int SpectrumLoaderBase::NFiles() const
   {
