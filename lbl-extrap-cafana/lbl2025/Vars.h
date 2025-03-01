@@ -6,6 +6,7 @@
 
 namespace lbl2025
 {
+	const ana::Var kNumuCVNScore = ana::SIMPLEVAR(nuhyp.cvn.numu);
 	const ana::RecoPartVar kRecoParticleScore = ana::SIMPLEPARTVAR(score);
 }
 

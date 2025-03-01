@@ -7,6 +7,8 @@
 
 namespace lbl2025
 {
+	inline const ana::HistAxis ax_NumuScore("CVN numu score", ana::Binning::Simple(50, 0, 1), kNumuCVNScore);
+
 	inline const ana::RecoPartHistAxis ax_PartScore("Particle score", ana::Binning::Simple(50, 0, 1), kRecoParticleScore);
 
 }
