@@ -29,8 +29,8 @@ namespace ana
   class SpectrumLoader: public SpectrumLoaderBase, public Passthrough<caf::SRProxy> 
   {
   public:
-    SpectrumLoader(const std::string& wildcard);//, int max = 0);
-    SpectrumLoader(const std::vector<std::string>& fnames);//, int max = 0);
+    SpectrumLoader(const std::string& wildcard, const std::string& pathInFile="");//, int max = 0);
+    SpectrumLoader(const std::vector<std::string>& fnames, const std::string& pathInFile="");//, int max = 0);
 
 #ifdef WITH_SAM
     /// Named constructor for SAM projects

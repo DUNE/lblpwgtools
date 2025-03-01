@@ -25,14 +25,14 @@
 namespace ana
 {
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::string& wildcard)//, int max)
-    : SpectrumLoaderBase(wildcard)//, max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::string& wildcard, const std::string& pathInFile)//, int max)
+    : SpectrumLoaderBase(wildcard, pathInFile)//, max_entries(max)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames)//, int max)
-    : SpectrumLoaderBase(fnames)//, max_entries(max)
+  SpectrumLoader::SpectrumLoader(const std::vector<std::string>& fnames, const std::string& pathInFile)//, int max)
+    : SpectrumLoaderBase(fnames, pathInFile)//, max_entries(max)
   {
   }
 
@@ -122,11 +122,9 @@ namespace ana
     // In files with both "caf" and "cafTree", "cafTree" is the correct
     // version. "caf" is ROOT's temporary save while the file is being produced
     // and may be incomplete.
-    TTree* tr = (TTree*)f->Get("cafTree");
-    //if(!tr) tr = (TTree*)f->Get("caf");
+    auto tr = GetDirectoryFile(f)->Get<TTree>("cafTree");
     assert(tr);
 
-    // I think this is ok
     caf::SRProxy sr(tr, "rec");
 
     FloatingExceptionOnNaN fpnan(false);
@@ -142,7 +140,7 @@ namespace ana
       // dont know what to do about that
       // at the moment, I left fPOT to be handled in SpectrumLoaderBase same as fPOTFromHist
 
-      // I think this was a thing used for old dune files??
+      // todo: we'll resurrect this if we have to...
       //FixupRecord(&sr, tr);
 
       HandleRecord(&sr, 1);

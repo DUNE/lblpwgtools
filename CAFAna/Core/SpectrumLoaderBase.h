@@ -14,6 +14,7 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Weight.h"
 
+class TDirectoryFile;
 class TFile;
 class TH1;
 class TTree;
@@ -45,9 +46,9 @@ namespace ana
     /// Component of other constructors
     SpectrumLoaderBase();
     /// Construct from a filename, wildcard, SAM definition, or SAM query
-    SpectrumLoaderBase(const std::string& wildcard);
+    SpectrumLoaderBase(const std::string& wildcard, const std::string& pathInFile="");
     /// Construct from an explicit list of files
-    SpectrumLoaderBase(const std::vector<std::string>& fnames);
+    SpectrumLoaderBase(const std::vector<std::string>& fnames, const std::string& pathInFile="");
 
     // Move operations
     SpectrumLoaderBase(SpectrumLoaderBase&&) = default;
@@ -66,8 +67,13 @@ namespace ana
     /// Forwards to \ref fFileSource but also accumulates POT and livetime
     TFile* GetNextFile();
 
+    /// the relevant trees inside a CAF may be nested in a subdir.
+    /// this is a simple utility function to centralize that
+    TDirectoryFile *GetDirectoryFile(TFile *f) const;
+
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
+    std::string fPathInFile;  ///< are the various trees we need in some sub-folder?
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 

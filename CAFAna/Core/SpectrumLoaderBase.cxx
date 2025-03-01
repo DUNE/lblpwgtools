@@ -36,17 +36,20 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard)
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard, const std::string& pathInFile)
     : SpectrumLoaderBase()
   {
     fWildcard = wildcard;
+    fPathInFile = pathInFile;
     fFileSource = std::unique_ptr<IFileSource>(WildcardOrSAMQuery(wildcard));
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames) : SpectrumLoaderBase()
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames, const std::string& pathInFile)
+    : SpectrumLoaderBase()
   {
     fWildcard = "file list";
+    fPathInFile = pathInFile;
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));
 
     // Apparently MakePredInterps runs over empty file lists?
@@ -123,10 +126,11 @@ namespace ana
 // Im not sure this will still be valid in the source/sink world...
     
     TTree* trPot = 0;
-    if (f->GetListOfKeys()->Contains("meta"))
-      trPot = (TTree*)f->Get("meta");
+    TDirectoryFile * df = GetDirectoryFile(f);
+    if (df->GetListOfKeys()->Contains("meta"))
+      trPot = df->Get<TTree>("meta");
     else
-      trPot = (TTree*)f->Get("pottree");
+      trPot = df->Get<TTree>("pottree");
     assert(trPot);
 
     double pot;
@@ -148,6 +152,15 @@ namespace ana
     //fPOTFromHist  += hPOT->Integral(0, -1);
 
     return f;
+  }
+
+  //----------------------------------------------------------------------
+  TDirectoryFile *SpectrumLoaderBase::GetDirectoryFile(TFile *f) const
+  {
+    if (fPathInFile.empty())
+      return f;
+
+    return f->Get<TDirectoryFile>(fPathInFile.c_str());
   }
 
 //  //----------------------------------------------------------------------
