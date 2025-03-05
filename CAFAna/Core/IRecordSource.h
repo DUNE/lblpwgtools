@@ -32,7 +32,7 @@ namespace ana
   using INuTruthParticleEnsembleSource = _IRecordEnsembleSource<caf::SRTrueParticleProxy>;
   //----------------------------------------------------------------------
 	
-  enum class RecoType {
+  enum class RecoType { kUnknown,
                       	kDLP,
                       	kPandora,
                       	kPIDA
