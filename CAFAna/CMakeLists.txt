@@ -87,7 +87,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/c++CompilerSetup.cmake)
 #set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin fcl)
 #ok we are doing the most basic, removing aaal cuts vars etx.
 #set(CAFANA_SUBDIRS Core GArAna bin fcl)
-set(CAFANA_SUBDIRS Core bin fcl)
+#set(CAFANA_SUBDIRS Core bin fcl)
+set(CAFANA_SUBDIRS Core GAr GArTKI bin fcl)
 foreach(SUBDIR ${CAFANA_SUBDIRS})
 
   add_subdirectory(${SUBDIR})
