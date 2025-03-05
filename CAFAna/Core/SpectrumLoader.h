@@ -84,13 +84,4 @@ namespace ana
   static NullSource<caf::SRProxy> kNullSRSource;
   static NullSource<caf::SRInteractionProxy> kNullInteractionSource;
   static NullSource<caf::SRTrueInteractionProxy> kNullTrueIntSource;
-
-  /* We dont need this info here
-    /// All unique cuts contained in fHistDefs
-    std::vector<Cut> fAllCuts;
-    std::vector<double> fLivetimeByCut; ///< Indexing matches fAllCuts
-    std::vector<double> fPOTByCut;      ///< Indexing matches fAllCuts
-    int max_entries;
-
-  */
 }
