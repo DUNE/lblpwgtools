@@ -91,7 +91,7 @@ endmacro()
 
 ################################################################################
 
-set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Vars bin scripts fcl)
+set(CAFANA_SUBDIRS Analysis Core Cuts Experiment Extrap Fit Prediction Systs Utils Vars bin scripts fcl)
 if(DEFINED BUILD_PRISM)
   set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
 else()
