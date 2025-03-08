@@ -53,9 +53,7 @@ namespace ana
     {
       const Key_t key(kt...);
 
-      // Clear out the old one if necessary
-      DisableSource(kt...);
-
+      // we don't own anything here, so we don't need to worry about disabling first, just overwrite
       fSourceViews[key] = src;
     }
 
