@@ -5,12 +5,14 @@ include_directories(${LBL_CAFANA_INCDIRS})
 set(headers
 	Axes.h
 	Cuts.h
+	Loaders.h
 	Vars.h
 )
 
 set(sources
 	Axes.cxx
 	Cuts.cxx
+	Loaders.cxx
 	Vars.cxx
 )
 
