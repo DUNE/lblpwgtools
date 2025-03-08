@@ -28,14 +28,14 @@ namespace ana
   {
   }
 
-  /*
   //----------------------------------------------------------------------
   PredictionNoExtrap::PredictionNoExtrap(Loaders& loaders,
                                          const HistAxis& axis,
                                          const Cut& cut,
+                                         ana::RecoType recoIxnType,
                                          const SystShifts& shift,
                                          const Weight& wei)
-    : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei))
+    : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, recoIxnType, shift, wei))
   {
   }
 

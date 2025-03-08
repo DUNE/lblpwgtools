@@ -6,27 +6,35 @@
 
 #include "CAFAna/Core/IRecordSource.h"
 
-namespace ana {
-class Loaders;
+namespace ana
+{
+  class Loaders;
 
-/// Prediction that just uses FD MC, with no extrapolation
-class PredictionNoExtrap : public PredictionExtrap {
-public:
-  PredictionNoExtrap(PredictionExtrap *pred);
-  PredictionNoExtrap(IExtrap *extrap);
+  /// Prediction that just uses FD MC, with no extrapolation
+  class PredictionNoExtrap : public PredictionExtrap
+  {
+    public:
+      PredictionNoExtrap(PredictionExtrap *pred);
+      PredictionNoExtrap(IExtrap *extrap);
 
-  PredictionNoExtrap(IInteractionSource& loaderNonswap,
-                     IInteractionSource& loaderNue,
-                     IInteractionSource& loaderNuTau,
-                     const HistAxis& axis);
+      PredictionNoExtrap(IInteractionSource& loaderNonswap,
+                         IInteractionSource& loaderNue,
+                         IInteractionSource& loaderNuTau,
+                         const HistAxis& axis);
 
-  //  PredictionNoExtrap(Loaders &loaders, const HistAxis &axis);
 
-  virtual ~PredictionNoExtrap();
+    PredictionNoExtrap(Loaders& loaders,
+                       const HistAxis &axis,
+                       const Cut &cut,
+                       ana::RecoType recoIxnType,
+                       const SystShifts &shift,
+                       const Weight &wei);
 
-  static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
-  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
-};
+      virtual ~PredictionNoExtrap();
+
+      static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
+      virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
+  };
 
 
   //---------------------------------------------------------------------------

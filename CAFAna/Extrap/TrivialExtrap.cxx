@@ -48,20 +48,19 @@ namespace ana
     tauSrc[kIsNC &&  kIsAntiNu].GetVar(axis.GetVar1D()).Register(&fNCAnti);
   }
 
-  /*
   //----------------------------------------------------------------------
   TrivialExtrap::TrivialExtrap(Loaders& loaders,
                                const HistAxis& axis,
                                const Cut& cut,
+                               ana::RecoType recoIxnType,
                                const SystShifts& shift,
                                const Weight& wei)
-    : TrivialExtrap(loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNueSwap),
-                    loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNuTauSwap),
+    : TrivialExtrap(loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNonSwap).Interactions(recoIxnType),
+                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNueSwap).Interactions(recoIxnType),
+                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNuTauSwap).Interactions(recoIxnType),
                     axis)
   {
   }
-  */
 
   //----------------------------------------------------------------------
   void TrivialExtrap::SaveTo(TDirectory* dir, const std::string& name) const

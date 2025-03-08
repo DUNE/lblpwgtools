@@ -1,10 +1,9 @@
 #pragma once
 
-#include <CAFAna/Core/IRecordSource.h>
-
 #include "CAFAna/Extrap/IExtrap.h"
 
 #include "CAFAna/Core/IRecordSource.h"
+#include "CAFAna/Core/Loaders.h"
 
 namespace ana
 {
@@ -19,7 +18,14 @@ namespace ana
                   IInteractionSource& tauSrc,
                   const HistAxis& axis);
 
-    //    TrivialExtrap(SliceSources& srcs, const HistAxis& axis);
+    TrivialExtrap(InteractionSources& srcs, const HistAxis& axis);
+
+    TrivialExtrap(Loaders &loaders,
+                  const HistAxis &axis,
+                  const Cut &cut,
+                  ana::RecoType recoIxnType,
+                  const SystShifts &shift,
+                  const Weight &wei);
 
     virtual OscillatableSpectrum NueSurvComponent() override       {return fNueSurv;}
     virtual OscillatableSpectrum AntiNueSurvComponent() override   {return fNueSurvAnti;}
