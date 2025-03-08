@@ -29,7 +29,7 @@ namespace ana
 {
 
   //----------------------------------------------------------------------
-  // adding fPOTFromHist and fNReadouts 
+  // adding fPOTFromHist and fNReadouts
   SpectrumLoaderBase::SpectrumLoaderBase()
     : fGone(false), fPOT(0),  fPOTFromHist(0), fNReadouts(0)
   {
@@ -124,14 +124,20 @@ namespace ana
       abort();
     }
 // Im not sure this will still be valid in the source/sink world...
-    
+
     TTree* trPot = 0;
     TDirectoryFile * df = GetDirectoryFile(f);
     if (df->GetListOfKeys()->Contains("meta"))
       trPot = df->Get<TTree>("meta");
     else
       trPot = df->Get<TTree>("pottree");
-    assert(trPot);
+    if (!trPot)
+    {
+      std::cerr << "Couldn't find the 'meta' or 'pottree' tree in your CAF file for POT accounting.\n"
+                << "(Are your TTrees in a subfolder in the file?  Pass that as an argument to the SpectrumLoader constructor.)\n"
+                << "Can't proceed.  Abort.\n";
+      abort();
+    }
 
     double pot;
     trPot->SetBranchAddress("pot", &pot);
@@ -141,12 +147,12 @@ namespace ana
 
       //unsure if this shoulf be fPOT or fPOTFromHist
       // I think fPOT is accounted for in HandleFile in the SBN version
-      //fPOT += pot; 
+      //fPOT += pot;
       fPOTFromHist += pot;
       fPOT += pot;
     }
 
-    // This is from the SBN version... 
+    // This is from the SBN version...
     //TH1* hPOT = (TH1*)f->Get("TotalPOT");
     //assert(hPOT);
     //fPOTFromHist  += hPOT->Integral(0, -1);
@@ -175,10 +181,10 @@ namespace ana
 //
 //  // Apparently the existence of fHistDefs isn't enough and I need to spell
 //  // this out to make sure the function bodies are generated.
-//  template struct SpectrumLoaderBase::IDMap<SystShifts, 
-//    SpectrumLoaderBase::IDMap<Cut, 
-//      SpectrumLoaderBase::IDMap<Weight, 
-//        SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, 
+//  template struct SpectrumLoaderBase::IDMap<SystShifts,
+//    SpectrumLoaderBase::IDMap<Cut,
+//      SpectrumLoaderBase::IDMap<Weight,
+//        SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar,
 //          SpectrumLoaderBase::SpectList>>>>;
 
 } // namespace
