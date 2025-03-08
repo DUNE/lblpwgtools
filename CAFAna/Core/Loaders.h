@@ -158,41 +158,10 @@ namespace ana
 
       // todo: relying on a pre-configured Interaction type is probably not the endpoint solution
       //       (what if ND & FD use different recos?  what if I want to compare multiple? etc.)
-      operator InteractionSources&()
-      {
-        if (fRecoIxnType == RecoType::kUnknown)
-        {
-          std::cerr << "You must configure a Reco Interaction type when you build your Loaders in order to iterate over Interactions!\n";
-          throw std::runtime_error("Reco Interaction type unspecified");
-        }
+      operator InteractionSources&();
 
-        static std::unique_ptr<InteractionSources> ret;
-        if (!ret)
-        {
-          for(const ana::DataMC & dmc : enum_range(static_cast<ana::DataMC>(0), ana::DataMC::kNumDataMCs))
-          {
-            for(const caf::Det_t & det : enum_range(static_cast<caf::Det_t>(0), caf::Det_t::kNumDet_ts))
-            {
-              for(const ana::FluxType & ft : enum_range(static_cast<ana::FluxType>(0), ana::FluxType::kNumFluxTypes))
-              {
-                for(const ana::SwappingConfig & swap : enum_range(static_cast<ana::SwappingConfig>(0), ana::SwappingConfig::kNumSwappingConfigs))
-                {
-                  if(dmc == DataMC::kData && swap != SwappingConfig::kNonSwap) continue;
-                  ret->AddSource(&GetSource(dmc, det, ft, swap).Interactions(fRecoIxnType),
-                                 dmc, det, ft, swap);
-                }
-              }
-            }
-          }
-        }
-        return *ret;
-      } // operator InteractionSources&()
-
-    /// Call Go() on all the loaders
-    void Go()
-    {
-      for(auto it: fSourceViews) it.second->Go();
-    }
+      /// Call Go() on all the loaders
+      void Go();
 
     private:
       ana::RecoType fRecoIxnType;  ///< which reco interactions will be passed to spectra?

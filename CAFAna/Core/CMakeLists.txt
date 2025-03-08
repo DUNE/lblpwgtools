@@ -5,7 +5,8 @@ set(Core_implementation_files
   IRecordSource.cxx
   ISyst.cxx
   Multiverse.cxx
-        LoadFromFile.cxx
+  Loaders.cxx
+  LoadFromFile.cxx
   OscCurve.cxx
   EnsembleRatio.cxx
   EnsembleSpectrum.cxx
