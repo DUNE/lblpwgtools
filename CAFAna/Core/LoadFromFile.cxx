@@ -87,6 +87,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  template<> void SaveTo(const osc::IOscCalcAdjustable& x, TDirectory* dir, const std::string& name)
+  {
+    SaveTo(dynamic_cast<const osc::IOscCalc&>(x), dir, name);
+  }
+
+  //----------------------------------------------------------------------
   template<> void SaveTo(const osc::IOscCalc& x, TDirectory* dir, const std::string& name)
   {
     TDirectory* tmp = gDirectory;

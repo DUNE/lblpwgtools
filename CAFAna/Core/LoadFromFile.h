@@ -40,6 +40,7 @@ namespace ana
   // This one is actually implemented in LoadFromFile.cxx to avoid polluting
   // OscLib with CAFAna conventions.
   template<> std::unique_ptr<osc::IOscCalc> LoadFrom<osc::IOscCalc>(TDirectory* dir, const std::string& label);
+  template<> std::unique_ptr<osc::IOscCalc> LoadFrom<osc::IOscCalc>(TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   // For symmetry
@@ -50,6 +51,9 @@ namespace ana
 
   // Also in the cxx, to avoid having to put this logic into OscLib
   template<> void SaveTo(const osc::IOscCalc& x, TDirectory* dir, const std::string& label);
+
+  // The general template version gets called rather than the IOscCalc specialization unless we handle it explicitly
+  template<> void SaveTo(const osc::IOscCalcAdjustable& x, TDirectory* dir, const std::string& label);
 
   //----------------------------------------------------------------------
   template<class T> std::unique_ptr<T> LoadFromFile(const std::string& fname,
