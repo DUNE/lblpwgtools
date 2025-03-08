@@ -40,8 +40,14 @@ namespace ana
     /// Hand over ownership of a new source
     void AddSource(std::unique_ptr<SrcT>&& src, KeyTypes ... kt)
     {
-      this->fOwnedSources.emplace(std::make_tuple(kt...), std::move(src));
-      this->AddSource(src.get(), kt...);
+      const Key_t key(kt...);
+      auto successPair = this->fOwnedSources.try_emplace(std::make_tuple(kt...), std::move(src));
+      if (!successPair.second)
+      {
+        std::cerr << "Sources::AddSource(): attempt to add source with same key as already existing source!  Abort.\n";
+        throw std::runtime_error("Duplicate source");
+      }
+      this->AddSource(successPair.first->second.get(), kt...);
     }
 
     /// Add a new non-owned source
