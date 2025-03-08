@@ -1,3 +1,13 @@
+/*
+*  MakePred.C:
+ *
+ *    Demonstration prediction generation for a proof-of-principle LBL analysis w/ FD VD 2024 files.
+ *
+ *   Original author:  J. Wolcott <jwolcott@fnal.gov>
+ *                     March 2025
+ *
+ */
+
 #include "argparse/argparse.hpp"
 
 #include "TFile.h"

@@ -1,3 +1,13 @@
+/*
+ *  MakeFakeData.C:
+ *
+ *    Create fake data spectrum using pre-generated prediction file(s) as input.
+ *
+ *   Original author:  J. Wolcott <jwolcott@fnal.gov>
+ *                     March 2025
+ *
+ */
+
 #include "argparse/argparse.hpp"
 
 #include "TFile.h"
