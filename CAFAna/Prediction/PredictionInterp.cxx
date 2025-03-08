@@ -41,6 +41,7 @@ namespace ana
                                      osc::IOscCalc* osc,
                                      const IPredictionGenerator& predGen,
                                      Loaders& loaders,
+                                     const ana::RecoType & ixnRecoType,
                                      const SystShifts& shiftMC,
                                      EMode_t mode)
     : fOscOrigin(osc ? osc->Copy() : 0),
@@ -74,13 +75,13 @@ namespace ana
       for(int sigma: sp.shifts){
         SystShifts shiftHere = shiftMC;
         shiftHere.SetShift(syst, sigma);
-        sp.preds.emplace_back(predGen.Generate(loaders, shiftHere));
+        sp.preds.emplace_back(predGen.Generate(loaders, ixnRecoType, shiftHere));
       }
 
       fPreds.emplace_back(syst, std::move(sp));
     } // end for syst
 
-    fPredNom = predGen.Generate(loaders, shiftMC);
+    fPredNom = predGen.Generate(loaders, ixnRecoType, shiftMC);
   }
 
   //----------------------------------------------------------------------

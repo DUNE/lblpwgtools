@@ -70,7 +70,7 @@ public:
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override {
+           const ana::RecoType & ixnRecoType, const SystShifts &shiftMC = kNoShift) const override {
     return std::unique_ptr<IPrediction>(
         new PredictionNonSwapNoExtrap(loaders, fAxis, fCut, shiftMC, fWei));
   }
@@ -186,7 +186,7 @@ public:
 
   virtual std::unique_ptr<IPrediction>
   Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override {
+           const ana::RecoType & ixnRecoType, const SystShifts &shiftMC = kNoShift) const override {
     SpectrumLoaderBase &loader_non =
         loaders.GetLoader(caf::kFARDET, Loaders::kMC, Loaders::kNonSwap);
     SpectrumLoaderBase &loader_nue =

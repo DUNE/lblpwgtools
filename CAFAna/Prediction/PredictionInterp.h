@@ -33,6 +33,7 @@ namespace ana
     /// \param predGen Construct an IPrediction from the following
     ///                information.
     /// \param loaders The loaders to be passed on to the underlying prediction
+    /// \param ixnRecoType  Which group of reco interactions should be used for making predictions?
     /// \param shiftMC Underlying shift. Use with care. Mostly for
     ///                PredictionNumuFAHadE. Should not contain any of of
     ///                \a systs
@@ -43,6 +44,7 @@ namespace ana
                      osc::IOscCalc* osc,
                      const IPredictionGenerator& predGen,
                      Loaders& loaders,
+                     const ana::RecoType & ixnRecoType,
                      const SystShifts& shiftMC = kNoShift,
                      EMode_t mode = kCombineSigns);
 
