@@ -17,8 +17,6 @@ namespace caf
 
 namespace ana
 {
-  class SpectrumLoader;
-
   // these need to start at 0 or the Sources::operator[] thing below won't work
   // similarly, last element needs to be named `kNum[data type]s`
   enum class DataMC : unsigned short { kData = 0, kMC, kNumDataMCs };
