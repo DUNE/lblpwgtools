@@ -28,19 +28,16 @@ public:
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
 };
 
-  /* TODO think about generators
-class NoExtrapPredictionGenerator : public IPredictionGenerator {
-public:
-  NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-  }
 
-  virtual std::unique_ptr<IPrediction>
-  Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override {
-    return std::unique_ptr<IPrediction>(
-        new PredictionNoExtrap(loaders, fAxis, fCut, shiftMC, fWei));
-  }
+  //---------------------------------------------------------------------------
+
+  /// Generates FD-only predictions (no extrapolation)
+  class NoExtrapGenerator: public IPredictionGenerator
+  {
+    public:
+    NoExtrapGenerator(const HistAxis axis, const Cut cut, const Weight wei = kUnweighted );
+
+    std::unique_ptr<IPrediction> Generate(Loaders& loaders, const ana::RecoType & ixnRecoType, const SystShifts& shiftMC = kNoShift) const override;
 
 protected:
   HistAxis fAxis;
@@ -48,5 +45,10 @@ protected:
   Weight fWei;
 };
   */
+    private:
+    const HistAxis fAxis;
+    const Cut fCut;
+    const Weight fWei;
+  };
 
 } // namespace ana

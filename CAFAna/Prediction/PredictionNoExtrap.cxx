@@ -38,7 +38,6 @@ namespace ana
     : PredictionExtrap(new TrivialExtrap(loaders, axis, cut, shift, wei))
   {
   }
-  */
 
   //----------------------------------------------------------------------
   void PredictionNoExtrap::SaveTo(TDirectory* dir, const std::string& name) const
@@ -80,6 +79,23 @@ namespace ana
     // We created this in the constructor so it's our responsibility
     delete fExtrap;
   }
+
+
+  //--------------------------------------------------------------------------
+  NoExtrapGenerator::NoExtrapGenerator(
+    const HistAxis axis,
+    const Cut cut,
+    const Weight wei
+  ) : fAxis(axis), fCut(cut), fWei(wei) {}
+
+  //--------------------------------------------------------------------------
+  std::unique_ptr<IPrediction> NoExtrapGenerator::Generate(
+    Loaders& loaders,
+    const ana::RecoType & ixnRecoType, const SystShifts& shiftMC
+  ) const {
+    return std::make_unique<PredictionNoExtrap>(loaders, fAxis, fCut, ixnRecoType, shiftMC, fWei );
+  }
+
 }
 
 

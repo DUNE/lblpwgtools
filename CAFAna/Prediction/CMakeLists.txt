@@ -1,8 +1,7 @@
 set(Prediction_implementation_files
   IPrediction.cxx
   PredictionExtrap.cxx
-  PredictionGenerator.cxx
-  PredictionInterp.cxx
+        PredictionInterp.cxx
   PredictionNoExtrap.cxx
   PredictionNoOsc.cxx
   PredictionScaleComp.cxx
