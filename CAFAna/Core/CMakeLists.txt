@@ -43,6 +43,8 @@ set(Core_header_files
   EnsembleSpectrum.h
   EnsembleReweightableSpectrum.h
   OscillatableSpectrum.h
+  Sources.h
+  Sources.ixx
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanTypedefs.h

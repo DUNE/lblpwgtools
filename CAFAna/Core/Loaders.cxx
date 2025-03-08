@@ -1,7 +1,12 @@
 #include "CAFAna/Core/Loaders.h"
+#include "CAFAna/Core/Sources.ixx"
 
 namespace ana
 {
+  // instantiate the Sources template with a Loaders type
+  template class Sources<SpectrumLoader, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
+
+  // ---------------------------------------------------------------------------------
   Loaders::operator InteractionSources&()
   {
     if (fRecoIxnType == RecoType::kUnknown)
