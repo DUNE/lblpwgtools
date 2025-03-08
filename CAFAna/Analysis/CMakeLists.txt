@@ -24,6 +24,9 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaAnalysis BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaAnalysis 
+install(TARGETS CAFAnaAnalysis
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Analysis/)
+
+add_cafana_lib(CAFAnaAnalysis)

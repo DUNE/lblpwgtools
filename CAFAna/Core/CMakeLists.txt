@@ -26,7 +26,7 @@ set(Core_header_files
   Binning.h
   Cut.h
   FitVarWithPrior.h
-        HistAxis.h
+  HistAxis.h
   IFitVar.h
   IRecordSink.h
   IRecordSource.h
