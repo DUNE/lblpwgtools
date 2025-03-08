@@ -9,7 +9,7 @@
 #include "lbl2025/Cuts.h"
 #include "lbl2025/Loaders.h"
 
-void MakePred(TFile & f);
+void MakePred(TFile & outfile);
 
 int main(int argc, char **argv)
 {
