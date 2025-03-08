@@ -39,12 +39,6 @@ public:
 
     std::unique_ptr<IPrediction> Generate(Loaders& loaders, const ana::RecoType & ixnRecoType, const SystShifts& shiftMC = kNoShift) const override;
 
-protected:
-  HistAxis fAxis;
-  Cut fCut;
-  Weight fWei;
-};
-  */
     private:
     const HistAxis fAxis;
     const Cut fCut;
