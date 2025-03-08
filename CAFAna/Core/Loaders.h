@@ -150,10 +150,11 @@ namespace ana
     std::map<Key_t, std::unique_ptr<SrcT>> fOwnedSources;
   };
 
-  using SRSources = Sources<ISRSource, ana::DataMC, caf::Det_t, ana::FluxType, ana::SwappingConfig>;
-  using InteractionSources = Sources<IInteractionSource, ana::DataMC, caf::Det_t, ana::FluxType, ana::SwappingConfig>;
+  using SRSources = Sources<ISRSource, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
+  using InteractionSources = Sources<IInteractionSource, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
 
-  class Loaders: public Sources<SpectrumLoader, ana::DataMC, caf::Det_t, ana::FluxType, ana::SwappingConfig>
+  /// A bundle of SpectrumLoaders that have the same neutrino source configuration (e.g., FHC) but differ over data/MC, detector type, swap, etc.
+  class Loaders: public Sources<SpectrumLoader, ana::DataMC, caf::Det_t, ana::SwappingConfig>
   {
     public:
       Loaders(ana::RecoType ixnType = RecoType::kUnknown)
