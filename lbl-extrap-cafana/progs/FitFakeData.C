@@ -10,8 +10,6 @@
 
 #include "argparse/argparse.hpp"
 
-#include "DUNEStyle.h"
-
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
@@ -85,9 +83,9 @@ int main(int argc, char** argv)
 	ana::SingleSampleExperiment expt(pred.get(), *fakedata);
 	ana::FrequentistSurface surface(&expt, calc,
 		                            &ana::kFitSinSq2Theta23, 50, 0.5, 1,
-		                            &ana::kFitDmSq32Scaled, 100, 2, 3);
+		                            &ana::kFitDmSq32Scaled, 100, 2.2, 2.65);
 
-	surface.SaveTo(outFile.get(), "calc");
+	surface.SaveTo(outFile.get(), "ss2th23-dm32");
 
 	std::cout << "Best fit point: (" << surface.GetBestFitX() << ", " << surface.GetBestFitY() << ")\n";
 	std::cout << "Truth point: (" << ana::kFitSinSq2Theta23.GetValue(calc) << ", " << ana::kFitDmSq32Scaled.GetValue(calc) << ")\n";
