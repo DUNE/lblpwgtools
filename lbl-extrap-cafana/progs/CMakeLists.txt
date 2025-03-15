@@ -4,6 +4,7 @@ list(APPEND MACROS_TO_BUILD
 		Test_Spectrum.C
 		MakePred.C
 		MakeFakeData.C
+		FitFakeData.C
 )
 
 # use external argparse
