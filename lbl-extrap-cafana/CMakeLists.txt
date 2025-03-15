@@ -25,6 +25,8 @@ if (NOT CAFAna_FOUND)
 	message(FATAL_ERROR "Could not find CAFAna!")
 endif()
 
+find_package(DUNEPlotStyle)
+
 set(LBL_CAFANA_INCDIRS
 	# CAFAna itself
 	$ENV{CAFANA}/include
