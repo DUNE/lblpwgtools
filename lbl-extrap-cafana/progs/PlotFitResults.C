@@ -21,11 +21,17 @@
 #include "DUNEStyle.h"
 #endif
 
+#include "../../../../../../../../cvmfs/nova-development.opensciencegrid.org/novasoft/releases/development/include/CAFAna/Core/OscCurve.h"
+#include "CAFAna/Analysis/Plots.h"
+#include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
+#include "CAFAna/Prediction/PredictionNoExtrap.h"
 
 #include "OscLib/OscCalcPMNSOpt.h"
 
+// -------------------------------------------------------------------
 void SaveSurfacePlot(ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir)
 {
 
@@ -103,6 +109,109 @@ void SaveSurfacePlot(ana::FrequentistSurface * surface, const osc::IOscCalcAdjus
 	}
 }
 
+// -------------------------------------------------------------------
+void Save1DChi2Scans(const ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir)
+{
+	std::unique_ptr<TH2> h(surface->ToTH2());
+	const std::vector axes {h->GetXaxis(), h->GetYaxis()};
+
+	for (std::size_t idx = 0; idx < axes.size(); ++idx)
+	{
+		TAxis * axis = axes[idx];
+		TCanvas c;
+		TH1D prof(axis->GetTitle(), Form(";%s;#Delta #chi^{2}", axis->GetTitle()),
+		          axis->GetNbins(), axis->GetXmin(), axis->GetXmax());
+		for (int bin = 1; bin <= axis->GetNbins(); ++bin)
+		{
+			double min = std::numeric_limits<double>::infinity();
+			for (int otherbin = 1; otherbin <= axes[int(idx == 0)]->GetNbins(); ++otherbin)
+				min = std::min(min, h->GetBinContent(idx == 0 ? bin : otherbin, idx == 0 ? otherbin : bin));
+			prof.SetBinContent(bin, min);
+		}
+		prof.Draw("hist");
+		dunestyle::CenterTitles(&prof);
+		c.SaveAs(Form("%s/%s.png", plotdir.c_str(), axis->GetTitle()));
+	}
+
+}
+
+// -------------------------------------------------------------------
+void SaveSpectrumComparisons(const ana::Spectrum * fakedata, const ana::IPrediction * pred, osc::IOscCalcAdjustable * bfCalc, const std::string & plotdir)
+{
+	osc::NoOscillations noOscCalc;
+
+	ana::Spectrum bfPred = pred->Predict(bfCalc);
+	ana::Spectrum noOscPred = pred->Predict(&noOscCalc);
+
+	TCanvas c;
+	std::vector<TPad> ps(2);
+	TPad * p1 = &ps[0];
+	TPad * p2 = &ps[1];
+	dunestyle::SplitCanvas(&c, 0.4, p1, p2);
+	p1->cd();
+	std::unique_ptr<TH1> h_noOscPred(noOscPred.ToTH1(fakedata->POT(), kBlack, kDashed));
+	TH1 * h = ana::DataMCComparisonComponents(*fakedata, pred, bfCalc);
+	h->GetXaxis()->SetTitle(""); // this is the upper panel, don't need an x-axis label
+	h->GetXaxis()->SetLabelSize(0);
+	dunestyle::CenterTitles(h);
+	h_noOscPred->Draw("hist same");
+	h->SetMaximum(h_noOscPred->GetMaximum() * 1.2);
+
+	// have to recreate the lines by hand, since they're not given back to me
+	TLegend leg(0.55, 0.65, 0.85, 0.9);
+	leg.SetFillStyle(0);
+	TMarker m;
+	m.SetMarkerStyle(kFullCircle);
+	leg.AddEntry(&m, "Fake data", "pe");
+	leg.AddEntry(h_noOscPred.get(), "Total no osc.", "l");
+	std::vector<TLine> lines(4);
+
+	// this ordering is from CAFAna/Analysis/Plots.cxx in the DataMCComparisonComponents() method.
+	// obviously we'd want to do this differently in a more extensive plotting suite,
+	// but this is just an example
+	std::vector lineColors {ana::kTotalMCColor, ana::kNumuBackgroundColor, ana::kNCBackgroundColor, ana::kBeamNueBackgroundColor};
+	std::vector<std::string> labels {"Total best fit", "   #nu_{#mu} sig", "   NC bkgd", "   Beam #nu_{e} bkgd"};
+	for (std::size_t idx = 0; idx < lines.size(); idx++)
+	{
+		lines[idx].SetLineWidth(2);
+		lines[idx].SetLineColor(lineColors[idx]);
+		leg.AddEntry(&lines[idx], labels[idx].c_str(), "l");
+	}
+	leg.Draw();
+
+	p2->cd();
+	ana::DataMCRatio(*fakedata, noOscPred, 0, 1);
+	// I hate you ROOT
+	for (const auto o : *p2->GetListOfPrimitives())
+	{
+		if ( (h = dynamic_cast<TH1*>(o)) )
+		{
+			h->GetYaxis()->SetTitle("#splitline{Ratio to}{no osc.}");
+			dunestyle::CenterTitles(h);
+			break;
+		}
+	}
+
+	ana::OscCurve oscCurve(bfCalc, 14, 14);
+	std::unique_ptr<TH1> h_osc(oscCurve.ToTH1());
+	h_osc->SetLineColor(kRed);
+	h_osc->SetLineStyle(kDashed);
+	h_osc->Draw("hist same");
+
+	p2->cd();
+	TLegend legLower(0.43, 0.33, 0.84, 0.38);
+	legLower.SetFillStyle(0);
+	legLower.SetNColumns(2);
+	legLower.AddEntry(h, "Total reco.", "l");
+	legLower.AddEntry(h_osc.get(), "True #nu_{#mu} (in true E_{#nu})", "l");
+	legLower.Draw();
+
+	c.SaveAs(Form("%s/spectrum.png", plotdir.c_str()));
+}
+
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+
 int main(int argc, char** argv)
 {
 	argparse::ArgumentParser program("FitFakeData");
@@ -111,9 +220,22 @@ int main(int argc, char** argv)
 	       .required()
 	       .help("Path to file with fit results to use as input");
 
+
+	program.add_argument("--predfile")
+		   .required()
+		   .help("Path to prediction file to use as input");
+
+	program.add_argument("--predname")
+	   .default_value("pred")
+	   .help("Name of prediction object within prediction files");
+
 	program.add_argument("--fdfile")
 	   .required()
 	   .help("Path to fake data file to use as input (for truth info)");
+
+	program.add_argument("--fdname")
+	   .default_value("fake-data")
+	   .help("Name of Spectrum object within fake data file");
 
 	program.add_argument("--calcname")
 	   .default_value("calc")
@@ -135,12 +257,28 @@ int main(int argc, char** argv)
 	}
 
 	std::unique_ptr<ana::FrequentistSurface> surface = ana::LoadFromFile<ana::FrequentistSurface>(program.get<std::string>("fitfile"), "ss2th23-dm32");
-	std::unique_ptr<osc::IOscCalc> _c = ana::LoadFromFile<osc::IOscCalc>(program.get<std::string>("fdfile"), program.get<std::string>("calcname"));
-	auto calc = dynamic_cast<osc::IOscCalcAdjustable*>(_c.get());
+	std::unique_ptr<TFile> fdFile(TFile::Open(program.get<std::string>("fdfile").c_str()));
+	if (!fdFile)
+	{
+		std::cerr << "Could not open fake data file: '" << fdFile->GetName() << "'.  Abort\n";
+		exit(1);
+	}
+
+	std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>(program.get<std::string>("predfile"),
+																						program.get<std::string>("predname"));
+
+	std::unique_ptr<osc::IOscCalc> c = ana::LoadFrom<osc::IOscCalc>(fdFile.get(), program.get<std::string>("calcname"));
+	auto calc = dynamic_cast<osc::IOscCalcAdjustable*>(c.get());
+
+	std::unique_ptr<ana::Spectrum> fakedata = ana::LoadFrom<ana::Spectrum>(fdFile.get(),
+																			   program.get<std::string>("fdname"));
+
 
 	auto plotdir = program.get<std::string>("plotdir");
 
 	SaveSurfacePlot(surface.get(), calc, plotdir);
+	Save1DChi2Scans(surface.get(), calc, plotdir);
+	SaveSpectrumComparisons(fakedata.get(), pred.get(), calc, plotdir);
 
 	return 0;
 }
