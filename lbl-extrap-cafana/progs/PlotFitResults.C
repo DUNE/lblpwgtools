@@ -21,10 +21,10 @@
 #include "DUNEStyle.h"
 #endif
 
-#include "../../../../../../../../cvmfs/nova-development.opensciencegrid.org/novasoft/releases/development/include/CAFAna/Core/OscCurve.h"
 #include "CAFAna/Analysis/Plots.h"
 #include "CAFAna/Analysis/Style.h"
 #include "CAFAna/Core/LoadFromFile.h"
+#include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
@@ -206,7 +206,8 @@ void SaveSpectrumComparisons(const ana::Spectrum * fakedata, const ana::IPredict
 	legLower.AddEntry(h_osc.get(), "True #nu_{#mu} (in true E_{#nu})", "l");
 	legLower.Draw();
 
-	c.SaveAs(Form("%s/spectrum.png", plotdir.c_str()));
+	c.SaveAs(Form("%s/postfit_spectrum.svg", plotdir.c_str()));
+
 }
 
 // -------------------------------------------------------------------
@@ -264,6 +265,14 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
+	auto plotdir = program.get<std::string>("plotdir");
+	if (! std::filesystem::is_directory(plotdir))
+	{
+		std::cerr << "Output plot directory '" << plotdir << "' is not a directory\n";
+		exit(1);
+	}
+
+
 	std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>(program.get<std::string>("predfile"),
 																						program.get<std::string>("predname"));
 
@@ -274,7 +283,6 @@ int main(int argc, char** argv)
 																			   program.get<std::string>("fdname"));
 
 
-	auto plotdir = program.get<std::string>("plotdir");
 
 	SaveSurfacePlot(surface.get(), calc, plotdir);
 	Save1DChi2Scans(surface.get(), calc, plotdir);
