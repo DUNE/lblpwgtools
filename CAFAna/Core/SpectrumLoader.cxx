@@ -77,6 +77,9 @@ namespace ana
         unsigned int totsinks = 0;
         for(const ISRSink* s: fSinks) totsinks += s->NSinks();
 
+        if (totsinks < 1)
+          continue;
+
         prog = new Progress(TString::Format("Filling %u spectra from %d files matching '%s'", totsinks, Nfiles, fWildcard.c_str()).Data());
       }
 
