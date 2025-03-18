@@ -2,6 +2,7 @@
 #define LBL2025_CUTS_H
 
 #include "CAFAna/Core/Cut.h"
+#include "CAFAna/Vars/Vars.h"
 #include "lbl2025/Vars.h"
 
 namespace lbl2025
@@ -10,9 +11,14 @@ namespace lbl2025
 
 	// cribbed from https://indico.fnal.gov/event/58097/contributions/276228/attachments/171330/231102/9_26_23_fdsim_cm.pdf
 	// supposedly these are 70cm from the walls
-	inline const ana::Cut kRecoVtxInFid =    (kRecoVtxX > -300 && kRecoVtxX < 300)
-	                                      && (kRecoVtxY > -600 && kRecoVtxY < 600)
+	inline const ana::Cut kRecoVtxInFid =    (kRecoVtxX > -275 && kRecoVtxX < 325)
+	                                      && (kRecoVtxY > -550 && kRecoVtxY < 550)
 	                                      && (kRecoVtxZ > 100 && kRecoVtxZ < 800);
+
+	inline const ana::TruthCut kTrueVtxInFid_NT =    (ana::kTrueVtxX_NT > -350 && ana::kTrueVtxX_NT < 350)
+	                                              && (ana::kTrueVtxY_NT > -650 && ana::kTrueVtxY_NT < 650)
+	                                              && (ana::kTrueVtxZ_NT > 50 && ana::kTrueVtxZ_NT < 850);
+	inline const ana::Cut kTrueVtxInFid = ana::TruthCutToCut(kTrueVtxInFid_NT);
 
 	extern const ana::RecoPartCut kPartIsMuon;
 }
