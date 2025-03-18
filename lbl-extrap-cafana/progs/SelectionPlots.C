@@ -16,6 +16,8 @@
 
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Spectrum.h"
+#include "CAFAna/Cuts/TruthCuts.h"
+#include "CAFAna/Analysis/SpectrumComponents.h"
 
 #include "DUNEStyle.h"
 
@@ -26,56 +28,103 @@
 
 namespace lbl2025
 {
-	const std::map<std::string, ana::HistAxis> vtxAxes
+	const std::map<std::string, ana::SpectrumComponents::Component> kOscComponents
+	{
+		{"1_numuCC", {lbl2025::kTrueVtxInFid && ana::kIsNumuCC, "True #nu_{#mu} CC", dunestyle::colors::kOkabeItoSkyBlue}},
+		{"2_NC", {lbl2025::kTrueVtxInFid && ana::kIsNC, "True NC", dunestyle::colors::kOkabeItoRedPurple}},
+		{"3_OOFV", {!lbl2025::kTrueVtxInFid, "True non-fiducial", kGray}},
+		{"4_Other", {lbl2025::kTrueVtxInFid && !(ana::kIsNC || ana::kIsNumuCC), "Other", kBlack}},
+	};
+
+	const std::map<std::string, ana::HistAxis> kRecoVtxAxes
 	{
 			{"X", {"Reco. vertex x (cm)", 100, -400, 400, lbl2025::kRecoVtxX}},
 			{"Y", {"Reco. vertex y (cm)", 100, -750, 750, lbl2025::kRecoVtxY}},
 			{"Z", {"Reco. vertex z (cm)", 100, -50, 1050, lbl2025::kRecoVtxZ}},
 	};
 
-	const ana::HistAxis CVNAxis {"#nu_{#mu} CVN score", 100, 0, 1, lbl2025::kNumuCVNScore};
+	const std::map<std::string, ana::HistAxis> kTrueVtxAxes
+	{
+		{"X", {"True vertex x (cm)", 100, -400, 400, ana::kTrueVtxX}},
+		{"Y", {"True vertex y (cm)", 100, -750, 750, ana::kTrueVtxY}},
+		{"Z", {"True vertex z (cm)", 100, -50, 1050, ana::kTrueVtxZ}},
+	};
+
+	const ana::HistAxis kCVNAxis {"#nu_{#mu} CVN score", 100, 0, 1, lbl2025::kNumuCVNScore};
+
+	const ana::HistAxis kXYVtxAxis
+	{
+		{"Reco vertex X (cm)", "Reco vertex Y (cm)"},
+		{ana::Binning::Simple(100, -400, 400), ana::Binning::Simple(100, -750, 750)},
+		{lbl2025::kRecoVtxX, lbl2025::kRecoVtxY}
+	};
 }
 
 
 void MakePlots(const std::string & plotdir)
 {
 	lbl2025::Loaders loaders(ana::RecoType::kPandora);
-	ana::SpectrumLoader & fhc_nd_nonswap_loader = loaders.GetLoaders(ana::FluxType::kFHC)->GetSource(ana::DataMC::kMC, caf::Det_t::kFARDET, ana::SwappingConfig::kNonSwap);
+	ana::IInteractionSource & fhc_nd_nonswap_pandoraIxns = loaders.GetLoaders(ana::FluxType::kFHC)->GetSource(ana::DataMC::kMC, caf::Det_t::kFARDET, ana::SwappingConfig::kNonSwap).Interactions(ana::RecoType::kPandora);
 
-	std::map<std::string, ana::Spectrum> specs_vtx;
-	for (const auto & vtxVarPair : lbl2025::vtxAxes)
+	std::map<std::string, ana::SpectrumComponents> specs_recoVtx;
+	for (const auto & vtxVarPair : lbl2025::kRecoVtxAxes)
 	{
-		specs_vtx.emplace(std::piecewise_construct,
+		specs_recoVtx.emplace(std::piecewise_construct,
 		                  std::forward_as_tuple(vtxVarPair.first),
-		                  std::forward_as_tuple(fhc_nd_nonswap_loader.Interactions(ana::RecoType::kPandora), vtxVarPair.second));
+		                  std::forward_as_tuple(ana::kNoCut, vtxVarPair.second, fhc_nd_nonswap_pandoraIxns, lbl2025::kOscComponents));
 	}
-	ana::Spectrum spec_numuCVN(fhc_nd_nonswap_loader.Interactions(ana::RecoType::kPandora)[lbl2025::kRecoVtxInFid], lbl2025::CVNAxis);
+	std::map<std::string, ana::SpectrumComponents> specs_trueVtx;
+	for (const auto & vtxVarPair : lbl2025::kTrueVtxAxes)
+	{
+		specs_trueVtx.emplace(std::piecewise_construct,
+						  std::forward_as_tuple(vtxVarPair.first),
+						  std::forward_as_tuple(ana::kNoCut, vtxVarPair.second, fhc_nd_nonswap_pandoraIxns, lbl2025::kOscComponents));
+	}
+
+	ana::SpectrumComponents spec_numuCVN(lbl2025::kRecoVtxInFid, lbl2025::kCVNAxis, fhc_nd_nonswap_pandoraIxns, lbl2025::kOscComponents);
+
+	ana::Spectrum spec_nonFid(fhc_nd_nonswap_pandoraIxns[lbl2025::kRecoVtxInFid && !lbl2025::kTrueVtxInFid], lbl2025::kXYVtxAxis);
 
 	loaders.Go();
 
 	dunestyle::SetDuneStyle();
 
-	for (const auto & vtxSpecPair : specs_vtx)
+	for (const auto & vtxSpecPair : specs_recoVtx)
 	{
 		TCanvas c;
-		std::unique_ptr<TH1> h(vtxSpecPair.second.ToTH1(vtxSpecPair.second.POT()));
-		h->Draw("hist");
-		dunestyle::CenterTitles(h.get());
+		vtxSpecPair.second.DrawComponents(true, ana::kBinContent, 0, false);
+		vtxSpecPair.second.DrawLegend();
 		TLatex l(0.6, 0.8, "All events");
 		l.SetNDC(true);
 		l.Draw();
-		c.SaveAs( Form("%s/Vtx%s.png", plotdir.c_str(), vtxSpecPair.first.c_str()) );
+		c.SaveAs( Form("%s/RecoVtx%s.png", plotdir.c_str(), vtxSpecPair.first.c_str()) );
+	}
+	for (const auto & vtxSpecPair : specs_trueVtx)
+	{
+		TCanvas c;
+		vtxSpecPair.second.DrawComponents(true, ana::kBinContent, 0, false);
+		vtxSpecPair.second.DrawLegend();
+		TLatex l(0.6, 0.8, "All events");
+		l.SetNDC(true);
+		l.Draw();
+		c.SaveAs( Form("%s/TrueVtx%s.png", plotdir.c_str(), vtxSpecPair.first.c_str()) );
 	}
 
 	{
 		TCanvas c;
-		std::unique_ptr<TH1> h(spec_numuCVN.ToTH1(spec_numuCVN.POT()));
-		h->Draw("hist");
-		dunestyle::CenterTitles(h.get());
+		spec_numuCVN.DrawComponents(true, ana::kBinContent, 0, false);
+		spec_numuCVN.DrawLegend();
 		TLatex l(0.6, 0.8, "Fid. vtx. events");
 		l.SetNDC(true);
 		l.Draw();
 		c.SaveAs( Form("%s/NumuCVN_FidVtxEvts.png", plotdir.c_str()) );
+	}
+
+	{
+		TCanvas c;
+		std::unique_ptr<TH2> h(spec_nonFid.ToTH2(spec_nonFid.POT()));
+		h->Draw("colz");
+		c.SaveAs(Form("%s/RecoFid_TrueNonFid.png", plotdir.c_str()) );
 	}
 }
 
