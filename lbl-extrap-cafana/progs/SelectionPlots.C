@@ -24,6 +24,7 @@
 #include "lbl2025/Cuts.h"
 #include "lbl2025/Vars.h"
 #include "lbl2025/Loaders.h"
+#include "lbl2025/Util.h"
 
 
 namespace lbl2025
@@ -97,7 +98,7 @@ void MakePlots(const std::string & plotdir)
 		TLatex l(0.6, 0.8, "All events");
 		l.SetNDC(true);
 		l.Draw();
-		c.SaveAs( Form("%s/RecoVtx%s.png", plotdir.c_str(), vtxSpecPair.first.c_str()) );
+		lbl2025::SaveCanvas(c,  Form("%s/RecoVtx%s", plotdir.c_str(), vtxSpecPair.first.c_str()) );
 	}
 	for (const auto & vtxSpecPair : specs_trueVtx)
 	{
@@ -107,7 +108,7 @@ void MakePlots(const std::string & plotdir)
 		TLatex l(0.6, 0.8, "All events");
 		l.SetNDC(true);
 		l.Draw();
-		c.SaveAs( Form("%s/TrueVtx%s.png", plotdir.c_str(), vtxSpecPair.first.c_str()) );
+		lbl2025::SaveCanvas(c,  Form("%s/TrueVtx%s", plotdir.c_str(), vtxSpecPair.first.c_str()) );
 	}
 
 	{
@@ -117,14 +118,14 @@ void MakePlots(const std::string & plotdir)
 		TLatex l(0.6, 0.8, "Fid. vtx. events");
 		l.SetNDC(true);
 		l.Draw();
-		c.SaveAs( Form("%s/NumuCVN_FidVtxEvts.png", plotdir.c_str()) );
+		lbl2025::SaveCanvas(c,  Form("%s/NumuCVN_FidVtxEvts", plotdir.c_str()) );
 	}
 
 	{
 		TCanvas c;
 		std::unique_ptr<TH2> h(spec_nonFid.ToTH2(spec_nonFid.POT()));
 		h->Draw("colz");
-		c.SaveAs(Form("%s/RecoFid_TrueNonFid.png", plotdir.c_str()) );
+		lbl2025::SaveCanvas(c, Form("%s/RecoFid_TrueNonFid", plotdir.c_str()) );
 	}
 }
 
