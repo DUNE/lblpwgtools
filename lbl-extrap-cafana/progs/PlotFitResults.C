@@ -31,8 +31,10 @@
 
 #include "OscLib/OscCalcPMNSOpt.h"
 
+#include "lbl2025/Util.h"
+
 // -------------------------------------------------------------------
-void SaveSurfacePlot(ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir)
+void SaveSurfacePlot(ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir, const std::vector<std::string> & plottypes)
 {
 
 #ifdef LBL2025_USE_DUNESTYLE
@@ -98,19 +100,19 @@ void SaveSurfacePlot(ana::FrequentistSurface * surface, const osc::IOscCalcAdjus
 		if (auto h = dynamic_cast<TH2F*>(o))
 			h->GetZaxis()->SetTitle("#Delta #chi^{2}");  // avert thine eyes
 	}
-	c.SaveAs( Form("%s/surface.png", plotdir.c_str()));
+	lbl2025::SaveCanvas(c, Form("%s/surface", plotdir.c_str()), plottypes);
 
 	std::vector<TH2*> hists = surface->GetProfiledHists();
 	for (unsigned int i = 0; i < hists.size(); ++i)
 	{
 		c.Clear();
 		hists[i]->Draw();
-		c.SaveAs(Form("%s/%s.png", plotdir.c_str(), fitVars[i]->ShortName().c_str()));
+		lbl2025::SaveCanvas(c,Form("%s/%s", plotdir.c_str(), fitVars[i]->ShortName().c_str()), plottypes);
 	}
 }
 
 // -------------------------------------------------------------------
-void Save1DChi2Scans(const ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir)
+void Save1DChi2Scans(const ana::FrequentistSurface * surface, const osc::IOscCalcAdjustable * calc, const std::string & plotdir, const std::vector<std::string> & plottypes)
 {
 	std::unique_ptr<TH2> h(surface->ToTH2());
 	const std::vector axes {h->GetXaxis(), h->GetYaxis()};
@@ -130,13 +132,13 @@ void Save1DChi2Scans(const ana::FrequentistSurface * surface, const osc::IOscCal
 		}
 		prof.Draw("hist");
 		dunestyle::CenterTitles(&prof);
-		c.SaveAs(Form("%s/%s.png", plotdir.c_str(), axis->GetTitle()));
+		lbl2025::SaveCanvas(c,Form("%s/%s", plotdir.c_str(), axis->GetTitle()), plottypes);
 	}
 
 }
 
 // -------------------------------------------------------------------
-void SaveSpectrumComparisons(const ana::Spectrum * fakedata, const ana::IPrediction * pred, osc::IOscCalcAdjustable * bfCalc, const std::string & plotdir)
+void SaveSpectrumComparisons(const ana::Spectrum * fakedata, const ana::IPrediction * pred, osc::IOscCalcAdjustable * bfCalc, const std::string & plotdir, const std::vector<std::string> & plottypes)
 {
 	osc::NoOscillations noOscCalc;
 
@@ -206,7 +208,7 @@ void SaveSpectrumComparisons(const ana::Spectrum * fakedata, const ana::IPredict
 	legLower.AddEntry(h_osc.get(), "True #nu_{#mu} (in true E_{#nu})", "l");
 	legLower.Draw();
 
-	c.SaveAs(Form("%s/postfit_spectrum.svg", plotdir.c_str()));
+	lbl2025::SaveCanvas(c,Form("%s/postfit_spectrum", plotdir.c_str()), plottypes);
 
 }
 
@@ -246,6 +248,11 @@ int main(int argc, char** argv)
 	       .required()
 	       .help("Path to file where output plots should be stored");
 
+	program.add_argument("--plottypes")
+			.default_value<std::vector<std::string>>({"png", "svg"})
+			.append()
+			.help("Output plot file types");
+
 	try
 	{
 		program.parse_args(argc, argv);
@@ -272,6 +279,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
+	auto plottypes = program.get<std::vector<std::string>>("plottypes");
 
 	std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>(program.get<std::string>("predfile"),
 																						program.get<std::string>("predname"));
@@ -284,9 +292,9 @@ int main(int argc, char** argv)
 
 
 
-	SaveSurfacePlot(surface.get(), calc, plotdir);
-	Save1DChi2Scans(surface.get(), calc, plotdir);
-	SaveSpectrumComparisons(fakedata.get(), pred.get(), calc, plotdir);
+	SaveSurfacePlot(surface.get(), calc, plotdir, plottypes);
+	Save1DChi2Scans(surface.get(), calc, plotdir, plottypes);
+	SaveSpectrumComparisons(fakedata.get(), pred.get(), calc, plotdir, plottypes);
 
 	return 0;
 }
