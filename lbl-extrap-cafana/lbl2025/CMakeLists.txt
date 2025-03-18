@@ -6,6 +6,7 @@ set(headers
 	Axes.h
 	Cuts.h
 	Loaders.h
+	Util.h
 	Vars.h
 )
 
@@ -13,6 +14,7 @@ set(sources
 	Axes.cxx
 	Cuts.cxx
 	Loaders.cxx
+	Util.cxx
 	Vars.cxx
 )
 
@@ -22,5 +24,9 @@ target_include_directories(lbl2025 PUBLIC ${LBL_CAFANA_INCDIRS})
 set_target_properties(lbl2025 PROPERTIES PUBLIC_HEADER "${headers}")
 #target_link_libraries(lbl2025 CAFAna::All)
 link_all_libs(lbl2025)
+
+if(DUNEPlotStyle_FOUND)
+	target_link_libraries(lbl2025 DUNEPlotStyle)
+endif()
 
 install(TARGETS lbl2025)

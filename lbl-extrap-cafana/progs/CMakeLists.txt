@@ -6,11 +6,13 @@ list(APPEND MACROS_TO_BUILD
 		MakeFakeData.C
 		FitFakeData.C
 		PlotFitResults.C
+		SelectionPlots.C
 )
 
-if(DUNEPlotStyle_FOUND)
-	add_compile_options(-DLBL2025_USE_DUNESTYLE)
-endif()
+list(APPEND DUNE_STYLE_MACROS
+		PlotFitResults.C
+		SelectionPlots.C
+)
 
 # use external argparse
 include(FetchContent)
@@ -32,5 +34,8 @@ foreach (macro IN LISTS MACROS_TO_BUILD)
 endforeach ()
 
 if(DUNEPlotStyle_FOUND)
-	target_link_libraries(PlotFitResults DUNEPlotStyle)
+	foreach (macro IN LISTS DUNE_STYLE_MACROS)
+		get_filename_component(exc ${macro} NAME_WE)
+		target_link_libraries(${exc} DUNEPlotStyle)
+	endforeach()
 endif()

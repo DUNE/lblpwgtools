@@ -26,6 +26,9 @@ if (NOT CAFAna_FOUND)
 endif()
 
 find_package(DUNEPlotStyle)
+if(DUNEPlotStyle_FOUND)
+	add_compile_options(-DLBL2025_USE_DUNESTYLE)
+endif()
 
 set(LBL_CAFANA_INCDIRS
 	# CAFAna itself
