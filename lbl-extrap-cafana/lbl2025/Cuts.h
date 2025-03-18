@@ -11,11 +11,11 @@ namespace lbl2025
 
 	// cribbed from https://indico.fnal.gov/event/58097/contributions/276228/attachments/171330/231102/9_26_23_fdsim_cm.pdf
 	// supposedly these are 70cm from the walls
-	inline const ana::Cut kRecoVtxInFid =    (kRecoVtxX > -275 && kRecoVtxX < 325)
+	inline const ana::Cut kRecoVtxInFid =    (kRecoVtxX > -275 && kRecoVtxX < 300)
 	                                      && (kRecoVtxY > -550 && kRecoVtxY < 550)
-	                                      && (kRecoVtxZ > 100 && kRecoVtxZ < 800);
+	                                      && (kRecoVtxZ > 50 && kRecoVtxZ < 850);
 
-	inline const ana::TruthCut kTrueVtxInFid_NT =    (ana::kTrueVtxX_NT > -350 && ana::kTrueVtxX_NT < 350)
+	inline const ana::TruthCut kTrueVtxInFid_NT =    (ana::kTrueVtxX_NT > -300 && ana::kTrueVtxX_NT < 300)
 	                                              && (ana::kTrueVtxY_NT > -650 && ana::kTrueVtxY_NT < 650)
 	                                              && (ana::kTrueVtxZ_NT > 50 && ana::kTrueVtxZ_NT < 850);
 	inline const ana::Cut kTrueVtxInFid = ana::TruthCutToCut(kTrueVtxInFid_NT);
