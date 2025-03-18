@@ -20,6 +20,7 @@ set(Core_implementation_files
   SystShifts.cxx
   TruthMatching.cxx
   Utilities.cxx
+  Var.cxx
   )
 
 set(Core_header_files

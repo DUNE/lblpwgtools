@@ -40,5 +40,8 @@ namespace ana
 
 #define SIMPLEPARTVAR(CAFNAME) RecoPartVar([](const caf::SRRecoParticleProxy* sr){return sr->CAFNAME;})
 
+  /// Convert a Var over a true interaction to one over a reco interaction with associated truth.
+  Var TruthVarToVar(const TruthVar & truthvar);
+
 
 }
