@@ -139,8 +139,9 @@ namespace ana
       abort();
     }
 
-    double pot;
-    trPot->SetBranchAddress("pot", &pot);
+    float pot; //double
+    trPot->SetBranchAddress("rec.beam.pulsepot", &pot);
+    //trPot->SetBranchAddress("pot", &pot);
 
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);

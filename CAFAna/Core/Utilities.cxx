@@ -179,6 +179,16 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+  TH2F * EigenMatrixToTH2(Eigen::MatrixXd m)
+  {
+    TH2F* h = new TH2F("", "", m.rows(), 0, m.rows(),  m.cols() , 0 ,  m.cols() );  
+    for (int x = 0 ; x< m.rows();x++)
+      for (int y = 0 ; y< m.rows();y++)
+        h->SetBinContent(x,y,m(x,y));
+
+    return h;
+  }
+  //----------------------------------------------------------------------
   double Chi2CovMx(const Eigen::ArrayXd& e, const Eigen::ArrayXd& o, const Eigen::MatrixXd& covmxinv)
   {
     assert(e.size() == covmxinv.rows()+2);

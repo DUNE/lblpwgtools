@@ -12,6 +12,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/ISyst.h"
+#include "CAFAna/Core/Utilities.h"
 
 #include "TFile.h"
 #include "TCanvas.h"
@@ -202,6 +203,8 @@ void demo0eb()
   std::cout << gas.LatexName() << std::endl << gas.ShortName() << std::endl;
   std::cout << cross.LatexName() << std::endl << cross.ShortName() << std::endl;
 
+  std::cout << "gas has "<< gas.NUniv() << "universes from NUniv()\n";
+ std::cout << "cross has "<< cross.NUniv() << "universes from NUniv()\n";
   // we can save our multiverses to file
   TFile fout("test_multiverse.root", "RECREATE");
   gas.SaveTo(&fout, "gas");
@@ -244,8 +247,8 @@ void demo0eb()
   // TO DO: generate multiverse weights
   //for(int i = 0; i < 99; ++i) weis.push_back(GetUniverseWeight("multisim_Genie", i));
 
-  const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
-  //"/pnfs/dune/persistent/users/mkramer/productions/MiniRun4.5_1E19_RHC/CAF_beta3/CAF/0000000/MiniRun4.5_1E19_RHC.caf.0000*";
+  const std::string fname =  "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
+
   // Source of events
   SpectrumLoader loader(fname);
   // This is another key line // dont know what is the 2nd [cut] applied to...
@@ -276,23 +279,30 @@ void demo0eb()
 
 
   //----------- save to file
-  TFile fout2("multiverse_ensemble_spec.root", "RECREATE");
+  TFile fout2("multiverse_ensemble_test.root", "RECREATE");
   sMuonEnsembleGauss.SaveTo(&fout2, "sMuonEnsembleGauss");
   sMuonEnsembleX.SaveTo(&fout2, "sMuonEnsembleX");
   fout2.Close();
 
 
   //----------- Display things in canvases for the gaussian random multiverse
+  // exercise load from file as well
+
+  TFile fin2("multiverse_ensemble_test.root");
+  EnsembleSpectrum sMuonEnsembleGaussFile= *EnsembleSpectrum::LoadFrom(&fin2, "sMuonEnsembleGauss");
+  EnsembleSpectrum sMuonEnsembleXFile= *EnsembleSpectrum::LoadFrom(&fin2, "sMuonEnsembleX");
+
+
   new TCanvas;
-  TH1 * hsMuonEnsembleGauss =  sMuonEnsembleGauss.Nominal().ToTH1(pot, kRed);
+  TH1 * hsMuonEnsembleGauss =  sMuonEnsembleGaussFile.Nominal().ToTH1(pot, kRed);
   hsMuonEnsembleGauss->Draw("hist");
 
   // a vector to store ratios to nominal
   std::vector<TH1*> hratios;
-  for(unsigned int i = 0; i < sMuonEnsembleGauss.NUniverses(); ++i){
-    hratios.push_back(sMuonEnsembleGauss.Universe(i).ToTH1(pot, kRed-10));
+  for(unsigned int i = 0; i < sMuonEnsembleGaussFile.NUniverses(); ++i){
+    hratios.push_back(sMuonEnsembleGaussFile.Universe(i).ToTH1(pot, kRed-10));
 
-    sMuonEnsembleGauss.Universe(i).ToTH1(pot, kRed-10)->Draw("hist same");    
+    sMuonEnsembleGaussFile.Universe(i).ToTH1(pot, kRed-10)->Draw("hist same");    
     
     hratios.back()->Divide(hsMuonEnsembleGauss);
   }  
@@ -302,59 +312,51 @@ void demo0eb()
   hratios[0]->SetMinimum(.6);
   hratios[0]->SetMaximum(1.4);
   new TCanvas;
-  for (unsigned int i = 0; i < sMuonEnsembleGauss.NUniverses(); ++i)
+  for (unsigned int i = 0; i < sMuonEnsembleGaussFile.NUniverses(); ++i)
     hratios[i]->Draw("hist same");
   gPad->SaveAs("multiverse_gauss_ratios.pdf");
   
   new TCanvas;
   // Error band summing in quadrature
-  TGraphAsymmErrors* eBand =sMuonEnsembleGauss.ErrorBand(pot);
+  TGraphAsymmErrors* eBand =sMuonEnsembleGaussFile.ErrorBand(pot);
   DrawErrorBand(hsMuonEnsembleGauss, eBand);
 
   gPad->SaveAs("multiverse_ErrorBand.pdf");
 
 
   // Grab covariance matrix
-  Eigen::MatrixXd m= sMuonEnsembleGauss.CovarianceMatrix(pot);
+  Eigen::MatrixXd m= sMuonEnsembleGaussFile.CovarianceMatrix(pot);
   std::cout << "The matrix m is of size "  << m.rows() << "x" << m.cols() << std::endl;
-  // convert to th2 for drawing 
-  // This eventually should be placed in a header          
-  TH2F* hCov = new TH2F("covariance", "covariance;x;y", m.rows(), 0, m.rows(),  m.cols() , 0 ,  m.cols() );  
-  for (int x = 0 ; x< m.rows();x++)
-    for (int y = 0 ; y< m.rows();y++)
-      hCov->SetBinContent(x,y,m(x,y));
-
+  // convert to th2 for drawing         
+  TH2F* hCov = EigenMatrixToTH2(m);  
   new TCanvas;
   hCov->Draw("colz");
   gPad->SaveAs("cov_mx.pdf");
-  // grab bias matrix
-  Eigen::MatrixXd mb= sMuonEnsembleGauss.BiasMatrix(pot);
-  TH2F* hBias = new TH2F("bias", "bias;x;y", mb.rows(), 0, mb.rows(),  mb.cols() , 0 ,  m.cols() );  
-  for (int x = 0 ; x< mb.rows();x++)
-    for (int y = 0 ; y< mb.rows();y++)
-      hBias->SetBinContent(x,y,mb(x,y));
 
+  // grab bias matrix
+  Eigen::MatrixXd mb= sMuonEnsembleGaussFile.BiasMatrix(pot);
+  TH2F* hBias = EigenMatrixToTH2(mb);
   new TCanvas;
   hBias->Draw("colz");
   gPad->SaveAs("bias_mx.pdf");
 
  // ------- More canvases for the hypercross univ
   new TCanvas;
-  TH1 * hsMuonEnsembleX =  sMuonEnsembleX.Nominal().ToTH1(pot, kBlue);
+  TH1 * hsMuonEnsembleX =  sMuonEnsembleXFile.Nominal().ToTH1(pot, kBlue);
   hsMuonEnsembleX->SetMaximum(1.3*hsMuonEnsembleX->GetMaximum());
   hsMuonEnsembleX->Draw("hist");
   // a vector to store ratios to nominal
   std::vector<TH1*> hratiosx;
-  std::cout<< "cross has "<<sMuonEnsembleX.NUniverses()<< " universes\n";
-  for(unsigned int i = 0; i < sMuonEnsembleX.NUniverses(); ++i){
+  std::cout<< "cross has "<<sMuonEnsembleXFile.NUniverses()<< " universes\n";
+  for(unsigned int i = 0; i < sMuonEnsembleXFile.NUniverses(); ++i){
     // using different colors per systematic
     Color_t color = kBlue;
     if (i==0) color = kBlue;
     if (i== 1 || i==2) color = kViolet +1;
     if (i==3 || i==4) color = kPink;
 
-    sMuonEnsembleX.Universe(i).ToTH1(pot, color,kDashed)->Draw("hist same");     
-    hratiosx.push_back(sMuonEnsembleX.Universe(i).ToTH1(pot, color,kDashed));
+    sMuonEnsembleXFile.Universe(i).ToTH1(pot, color,kDashed)->Draw("hist same");     
+    hratiosx.push_back(sMuonEnsembleXFile.Universe(i).ToTH1(pot, color,kDashed));
     hratiosx.back()->Divide(hsMuonEnsembleX); 
 
   }  
@@ -364,7 +366,7 @@ void demo0eb()
   hratiosx[0]->SetMinimum(.6);
   hratiosx[0]->SetMaximum(1.4);
   new TCanvas;
-  for (unsigned int i = 0; i < sMuonEnsembleX.NUniverses(); ++i)
+  for (unsigned int i = 0; i < sMuonEnsembleXFile.NUniverses(); ++i)
     hratiosx[i]->Draw("hist same");
   gPad->SaveAs("multiverse_x_ratios.pdf");
   // we dont get covariance out of this one

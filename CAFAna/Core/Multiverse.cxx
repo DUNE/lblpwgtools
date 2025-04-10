@@ -217,6 +217,15 @@ namespace ana
     return *gFitMultiverses.back();
   }
 
+  // TO DO: a member that creates a new multiverse from a vector of multiverses 
+  // care has to be put in making sure they are compatible
+  //----------------------------------------------------------------------  
+  //  const FitMultiverse& FitMultiverse::MergeMultiverse( std::vector<Multiverse> multiverses ){ 
+  //      
+  //    GetUniverse 
+  //  
+  //  }
+
   //----------------------------------------------------------------------
   void FitMultiverse::SaveTo(TDirectory* dir, const std::string& name) const
   {

@@ -73,6 +73,8 @@ namespace ana
   **/
   Eigen::MatrixXd CalcBiasMx(const Eigen::ArrayXd& nom, const std::vector<Eigen::ArrayXd>& binSets);
 
+  /// Returns a TH2 to visualize matrix easily
+  //  TH2* EigenMatrixToTH2( )
 
   class LLPerBinFracSystErr
   {
@@ -164,6 +166,9 @@ namespace ana
   Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat);
 
   TMatrixD TMatrixDFromEigenMatrixXd(const Eigen::MatrixXd& mat);
+
+  TH2F * EigenMatrixToTH2(Eigen::MatrixXd m);
+
 
   /**  \brief Chi-squared calculation using a covariance matrix.
 
