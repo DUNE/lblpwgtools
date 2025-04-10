@@ -20,3 +20,5 @@ add_compile_options(-Wno-unused "-D__FILENAME__=\"$(subst ${CMAKE_SOURCE_DIR}/,,
 # We probably don't need these but they exist in the source
 # add_compile_options(-DUSE_FQ_HARDCODED_SYST_PATHS)
 # add_compile_options(-DUSE_SRT_CONTEXT)
+
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
