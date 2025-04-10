@@ -2,7 +2,9 @@ set(Analysis_implementation_files
   Calcs.cxx
   CalcsNuFit.cxx
   Plots.cxx
-  Resolution.cxx)
+  Resolution.cxx
+  SpectrumComponents.cxx
+)
 
 set(Analysis_header_files
   Calcs.h
@@ -12,7 +14,9 @@ set(Analysis_header_files
   Exposures.h
   Style.h
   ExtraHeaders.h
-  CheckPointHelper.h)
+  CheckPointHelper.h
+  SpectrumComponents.h
+)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
 target_link_libraries(CAFAnaAnalysis CAFAnaCore CAFAnaFit)
