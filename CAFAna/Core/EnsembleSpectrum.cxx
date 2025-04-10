@@ -34,29 +34,27 @@ namespace ana
     LabelsAndBins labelsAndBins = LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings());
     double pot = specs[0].POT();
     double livetime = specs[0].Livetime();
-    long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
+    int bins = labelsAndBins.GetBins1D().NBins();
 
     // are these two extrabins overflow and underflow?
     //Eigen::ArrayXd data(bins+2, 1);
     // not sure why this one works but not the one above
-    // we will replace contents here with that of th edifferent spectra
+    // we will replace contents here with that of the different spectra
     Eigen::ArrayXd data = specs[0].GetEigen().replicate(multiverse->NUniv(), 1);
     for ( unsigned int i = 0; i<multiverse->NUniv(); i++){
       // sanity checks
-      assert(specs[i].ToTH1(pot).GetNbinsX()==bins && "one of the spectra has  different nbins!");
+      assert(specs[i].ToTH1(pot)->GetNbinsX()==bins && "one of the spectra has  different nbins!");
       assert(specs[i].POT() == pot && "one of the spectra has a different POT!");
       assert(specs[i].Livetime() == livetime && "one of the spectra has a different livetime!");
 
       // get this universe spectra eigenarray
       Eigen::ArrayXd spec = specs[i].GetEigen();
       // copy into new array
-      for (unsigned int b = 0; b <= bins ; b++){
+      for (int b = 0; b <= bins ; b++){
         data[ b + (bins+2)*i ] = spec[b]; 
       }
     }
-  
-    assert( data.rows() == fHist.GetEigen().rows() && "data and hist are different size");
-   
+
     return EnsembleSpectrum(multiverse, Hist::Adopt(std::move(data)), specs[0].POT(), specs[0].Livetime(),
                             LabelsAndBins(specs[0].GetLabels(), specs[0].GetBinnings()));
   }
@@ -80,14 +78,14 @@ namespace ana
     LabelsAndBins labelsAndBins = LabelsAndBins(ensembles[0].Nominal().GetLabels(), ensembles[0].GetBinnings());
     double pot = ensembles[0].Nominal().POT();
     double livetime = ensembles[0].Nominal().Livetime();
-    long unsigned int bins = labelsAndBins.GetBins1D().NBins(); 
+    int bins = labelsAndBins.GetBins1D().NBins();
     
 
     //we will store data here
     Eigen::ArrayXd data = ensembles[0].Nominal().GetEigen().replicate(nunivs, 1);
     // first copy the nominal of first ensemble, assuming they are all the same
     Eigen::ArrayXd nom = ensembles[0].Nominal().GetEigen();
-    for (unsigned int b = 0; b <= bins ; b++){
+    for (int b = 0; b <= bins ; b++){
         data[ b ] = nom[b]; 
     }
 
@@ -97,14 +95,14 @@ namespace ana
       // we start from 1 to skip first universe, which is the nominal
       for ( unsigned int j = 1; j<ensembles[i].NUniverses(); j++){
         // sanity checks
-        assert(ensembles[i].Universe(j).ToTH1(pot).GetNbinsX()==bins && "one of the ensembles has  different nbins!");
+        assert(ensembles[i].Universe(j).ToTH1(pot)->GetNbinsX()==bins && "one of the ensembles has  different nbins!");
         assert(ensembles[i].Universe(j).POT() == pot && "one of the ensembles has a different POT!");
         assert(ensembles[i].Universe(j).Livetime() == livetime && "one of the ensembles has a different livetime!");
 
         // get this universe spectra eigenarray
         Eigen::ArrayXd spec = ensembles[i].Universe(j).GetEigen();
         // copy into new array
-        for (unsigned int b = 0; b <= bins ; b++){
+        for (int b = 0; b <= bins ; b++){
           data[ b + (bins+2)*univcount ] = spec[b]; 
         }
         univcount++;
