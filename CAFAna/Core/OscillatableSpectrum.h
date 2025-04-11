@@ -1,14 +1,19 @@
 #pragma once
 
-#include "CAFAna/Core/ReweightableSpectrum.h"
+#include "cafanacore/ReweightableSpectrum.h"
+#include "cafanacore/FwdDeclare.h"
+#include "cafanacore/Spectrum.h"
+#include "cafanacore/ThreadLocal.h"
 
 #include "CAFAna/Core/Binning.h"
-#include "CAFAna/Core/FwdDeclare.h"
+//#include "CAFAna/Core/FwdDeclare.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
-#include "CAFAna/Core/Spectrum.h"
+//#include "CAFAna/Core/Spectrum.h"
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 #include "CAFAna/Core/StanTypedefs.h"
-#include "CAFAna/Core/ThreadLocal.h"
+//#include "CAFAna/Core/ThreadLocal.h"
+
+#include "CAFAna/Core/IRecordSource.h"
 
 #include <string>
 
@@ -17,7 +22,7 @@
 class TH2;
 class TH2D;
 
-#include "CAFAna/Core/FwdDeclare.h"
+//#include "CAFAna/Core/FwdDeclare.h"
 
 namespace ana
 {
@@ -37,23 +42,7 @@ namespace ana
   class OscillatableSpectrum: public ReweightableSpectrum
   {
   public:
-    friend class SpectrumLoaderBase;
-    friend class SpectrumLoader;
-    friend class NullLoader;
-
-    OscillatableSpectrum(const std::string& label,
-                         const Binning& bins,
-                         SpectrumLoaderBase& loader,
-                         const Var& var,
-                         const Cut& cut,
-                         const SystShifts& shift = kNoShift,
-                         const Weight& wei = kUnweighted);
-
-    OscillatableSpectrum(SpectrumLoaderBase& loader,
-                         const HistAxis& axis,
-                         const Cut& cut,
-                         const SystShifts& shift = kNoShift,
-                         const Weight& wei = kUnweighted);
+    OscillatableSpectrum(ana::IInteractionSource& src, const HistAxis& axis);
 
     OscillatableSpectrum(const Eigen::MatrixXd&& mat,
                          const HistAxis& recoAxis,

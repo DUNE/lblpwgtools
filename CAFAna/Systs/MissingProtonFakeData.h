@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#ifdef BUILD_FDS_SYSTS
+
 class MissingProtonFakeDataGenerator : public ana::ISyst {
 public:
   virtual ~MissingProtonFakeDataGenerator(){};
@@ -39,7 +41,7 @@ public:
       sr->EVisReco_nue -= EpFrac * sr->eDepP;
       sr->VisTrue_NDFD -= EpFrac * sr->eP;
       sr->HadEVisReco_FD -= EpFrac * sr->eDepP;
-      sr->HadE -= EpFrac * sr->eP; 
+      sr->HadE -= EpFrac * sr->eP;
     } else {
       sr->eRec_FromDep -= EpFrac * sr->eRecoP;
       sr->EVisReco_ND -= EpFrac * sr->eRecoP;
@@ -111,3 +113,5 @@ public:
   }
   double EpFrac;
 };
+
+#endif   // BUILD_FDS_SYSTS

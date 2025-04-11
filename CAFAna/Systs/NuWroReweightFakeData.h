@@ -9,6 +9,8 @@
 
 #include <vector>
 
+#ifdef BUILD_FDS_SYSTS
+
 class NuWroReweightFakeDataGenerator : public ana::ISyst {
 public:
   NuWroReweightFakeDataGenerator();
@@ -22,3 +24,5 @@ protected:
 
   std::vector<BDTReweighter*> bdt_reweighters;
 };
+
+#endif   // BUILD_FDS_SYSTS

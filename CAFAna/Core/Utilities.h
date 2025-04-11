@@ -60,7 +60,21 @@ namespace ana
       Note TH1D is a child class of TArrayD -- so you can pass a vector
       of TH1D* to this method.
   **/
-  std::unique_ptr<TMatrixD> CalcCovMx(const std::vector<TArrayD*> & binSets, int firstBin=0, int lastBin=-1);
+  //std::unique_ptr<TMatrixD> CalcCovMx(const std::vector<TArrayD*> & binSets, int firstBin=0, int lastBin=-1);
+  Eigen::MatrixXd CalcCovMx(const std::vector<Eigen::ArrayXd>& binSets);
+  
+  /** \brief Compute bias from a collection of sets of bin contents.
+
+      \param nom     Bins corresponding to the nominal universe from which the bias is calculated
+      \param binSets Collection of sets of bins from which bias from the nominal is calculated
+
+      \returns  Eigen::MatrixXD containing computed bias matrix unless binSets.size() < 2,
+                in which case an 0*0 matric is returned
+  **/
+  Eigen::MatrixXd CalcBiasMx(const Eigen::ArrayXd& nom, const std::vector<Eigen::ArrayXd>& binSets);
+
+  /// Returns a TH2 to visualize matrix easily
+  //  TH2* EigenMatrixToTH2( )
 
   class LLPerBinFracSystErr
   {
@@ -152,6 +166,9 @@ namespace ana
   Eigen::MatrixXd EigenMatrixXdFromTMatrixD(const TMatrixD* mat);
 
   TMatrixD TMatrixDFromEigenMatrixXd(const Eigen::MatrixXd& mat);
+
+  TH2F * EigenMatrixToTH2(Eigen::MatrixXd m);
+
 
   /**  \brief Chi-squared calculation using a covariance matrix.
 
@@ -262,6 +279,10 @@ namespace ana
   Eigen::ArrayXd GetMaskArray(const Spectrum& s,
                               double xmin=0, double xmax=-1,
                               double ymin=0, double ymax=-1);
+
+  /// /param frac Quantile to find, eg 0.9
+  /// /param xs Values to search in -- this will be sorted
+  double FindQuantile(double frac, std::vector<double>& xs);
 }
 
 /// \brief Like Ronseal, does exactly what it says on the tin

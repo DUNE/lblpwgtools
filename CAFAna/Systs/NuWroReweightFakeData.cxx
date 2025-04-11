@@ -14,6 +14,8 @@
 #include <sstream>
 #include <string>
 
+#ifdef BUILD_FDS_SYSTS
+
 NuWroReweightFakeDataGenerator::NuWroReweightFakeDataGenerator()
   : ana::ISyst("NuWroReweightFakeDataGenerator",
                "NuWroReweightFakeDataGenerator", false, 0, 1)
@@ -38,10 +40,10 @@ void NuWroReweightFakeDataGenerator::Shift(double sigma,
                                            caf::SRProxy* sr,
                                            double& weight) const
 {
-  if(!sr->isCC) return; // only reweight CC's
+  if(!sr->mc.nu[0].iscc /*isCC*/) return; // only reweight CC's
 
   // To be on the safe side. BDT does not know about taus.
-  if(abs(sr->nuPDG) == 16) return;
+  if(abs(sr->mc.nu[0].pdg /*nuPDG*/) == 16) return;
 
   // Reweighting only applied up to 8 GeV
   if(sr->Ev > 8.) return;
@@ -148,3 +150,5 @@ void NuWroReweightFakeDataGenerator::Shift(double sigma,
   }
 
 }
+
+#endif  // BUILD_FDS_SYSTS

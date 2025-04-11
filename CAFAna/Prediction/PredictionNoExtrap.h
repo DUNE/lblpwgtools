@@ -4,61 +4,53 @@
 
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
-namespace ana {
-class Loaders;
+#include "CAFAna/Core/IRecordSource.h"
 
-/// Prediction that just uses FD MC, with no extrapolation
-class PredictionNoExtrap : public PredictionExtrap {
-public:
-  PredictionNoExtrap(PredictionExtrap *pred);
-  PredictionNoExtrap(IExtrap *extrap);
+namespace ana
+{
+  class Loaders;
 
-  // This is the DUNE constructor
-  PredictionNoExtrap(SpectrumLoaderBase &loaderNonswap,
-                     SpectrumLoaderBase &loaderNue,
-                     SpectrumLoaderBase &loaderNuTau, const std::string &label,
-                     const Binning &bins, const Var &var, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
+  /// Prediction that just uses FD MC, with no extrapolation
+  class PredictionNoExtrap : public PredictionExtrap
+  {
+    public:
+      PredictionNoExtrap(PredictionExtrap *pred);
+      PredictionNoExtrap(IExtrap *extrap);
 
-  PredictionNoExtrap(SpectrumLoaderBase &loaderNonswap,
-                     SpectrumLoaderBase &loaderNue,
-                     SpectrumLoaderBase &loaderNuTau, const HistAxis &axis,
-                     const Cut &cut, const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
+      PredictionNoExtrap(IInteractionSource& loaderNonswap,
+                         IInteractionSource& loaderNue,
+                         IInteractionSource& loaderNuTau,
+                         const HistAxis& axis);
 
-  PredictionNoExtrap(Loaders &loaders, const std::string &label,
-                     const Binning &bins, const Var &var, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
 
-  PredictionNoExtrap(Loaders &loaders, const HistAxis &axis, const Cut &cut,
-                     const SystShifts &shift = kNoShift,
-                     const Weight &wei = kUnweighted);
+    PredictionNoExtrap(Loaders& loaders,
+                       const HistAxis &axis,
+                       const Cut &cut,
+                       ana::RecoType recoIxnType,
+                       const SystShifts &shift,
+                       const Weight &wei);
 
-  virtual ~PredictionNoExtrap();
+      virtual ~PredictionNoExtrap();
 
-  static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
-  virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
-};
+      static std::unique_ptr<PredictionNoExtrap> LoadFrom(TDirectory *dir, const std::string& name);
+      virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
+  };
 
-class NoExtrapPredictionGenerator : public IPredictionGenerator {
-public:
-  NoExtrapPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
-      : fAxis(axis), fCut(cut), fWei(wei) {
-  }
 
-  virtual std::unique_ptr<IPrediction>
-  Generate(Loaders &loaders,
-           const SystShifts &shiftMC = kNoShift) const override {
-    return std::unique_ptr<IPrediction>(
-        new PredictionNoExtrap(loaders, fAxis, fCut, shiftMC, fWei));
-  }
+  //---------------------------------------------------------------------------
 
-protected:
-  HistAxis fAxis;
-  Cut fCut;
-  Weight fWei;
-};
+  /// Generates FD-only predictions (no extrapolation)
+  class NoExtrapGenerator: public IPredictionGenerator
+  {
+    public:
+    NoExtrapGenerator(const HistAxis axis, const Cut cut, const Weight wei = kUnweighted );
+
+    std::unique_ptr<IPrediction> Generate(Loaders& loaders, const ana::RecoType & ixnRecoType, const SystShifts& shiftMC = kNoShift) const override;
+
+    private:
+    const HistAxis fAxis;
+    const Cut fCut;
+    const Weight fWei;
+  };
 
 } // namespace ana

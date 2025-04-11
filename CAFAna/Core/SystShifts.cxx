@@ -1,8 +1,9 @@
 #include "CAFAna/Core/SystShifts.h"
-#include "CAFAna/Core/ISyst.h"
-#include "CAFAna/Core/Registry.h"
 
 #include "CAFAna/Core/MathUtil.h"
+
+#include "cafanacore/Registry.h"
+
 #include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/StanUtils.h"
 
@@ -14,6 +15,7 @@
 #include "TH1D.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TRandom3.h"
 #include "TString.h"
 
 namespace ana
@@ -24,15 +26,17 @@ namespace ana
   const SystShifts kNoShift = SystShifts::Nominal();
 
   //----------------------------------------------------------------------
-  SystShifts::SystShifts() : fID(0) {}
+  SystShifts::SystShifts() : fID(0) 
+  {
+  }
 
   //----------------------------------------------------------------------
-  SystShifts::SystShifts(const ISyst *syst, double shift) : fID(fgNextID++)
+  SystShifts::SystShifts(const ISyst *syst, double shift)
+    : fID(fgNextID++)
   {
     if (shift != 0)
       fSystsDbl.emplace(syst, Clamp(shift, syst));
   }
-
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const ISyst* syst, stan::math::var shift)
       : fID(fgNextID++)
@@ -42,7 +46,6 @@ namespace ana
     // so that when the Stan cache gets invalidated we can still return something usable.
     fSystsDbl.emplace(syst, Clamp(util::GetValAs<double>(shift), syst));
   }
-
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst *, double> &shifts)
       : fID(fgNextID++) {
@@ -50,7 +53,15 @@ namespace ana
       if (it.second != 0)
         fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
   }
-
+  //----------------------------------------------------------------------
+  SystShifts::SystShifts(const std::unordered_map<const ISyst*, double>& shifts)
+    : fID(fgNextID++)
+  {
+    for(auto it: shifts) 
+      if(it.second != 0) //should I be clamping?
+        fSystsDbl.emplace(it.first, Clamp(it.second, it.first));
+      //fSystsDbl.emplace(it.first, it.second);
+  }
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst*, stan::math::var>& shifts)
       : fID(fgNextID++)
@@ -61,7 +72,13 @@ namespace ana
       fSystsDbl.emplace(it.first, util::GetValAs<double>(it.second));
     }
   }
-
+  //----------------------------------------------------------------------
+  SystShifts SystShifts::RandomThrow(const std::vector<const ISyst*>& systs)
+  {
+    SystShifts ret;
+    for(const ISyst* s: systs) ret.SetShift(s, gRandom->Gaus(0, 1));
+    return ret;
+  }
   //----------------------------------------------------------------------
   std::unique_ptr<SystShifts> SystShifts::Copy() const
   {
@@ -153,7 +170,7 @@ namespace ana
   stan::math::var SystShifts::LogPrior() const { return log(Prior()); }
 
   //----------------------------------------------------------------------
-  void SystShifts::Shift(caf::SRProxy *sr,
+  void SystShifts::Shift(caf::SRInteractionProxy* sr,
                          double &weight) const
   {
     // always fSystsDbl here because this is only used in the event loop, not in fitting

@@ -2,6 +2,9 @@
 
 #include "CAFAna/Extrap/IExtrap.h"
 
+#include "CAFAna/Core/IRecordSource.h"
+#include "CAFAna/Core/Loaders.h"
+
 namespace ana
 {
   class Loaders;
@@ -10,38 +13,19 @@ namespace ana
   class TrivialExtrap: public IExtrap
   {
   public:
-    // This is the DUNE constructor
-    TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
-                  SpectrumLoaderBase& loaderNue,
-                  SpectrumLoaderBase& loaderNuTau,
-                  const HistAxis& axis,
-                  const Cut& cut,
-                  const SystShifts& shift,
-                  const Weight& wei);
+    TrivialExtrap(IInteractionSource& nonswapSrc,
+                  IInteractionSource& nueSrc,
+                  IInteractionSource& tauSrc,
+                  const HistAxis& axis);
 
-    TrivialExtrap(SpectrumLoaderBase& loaderNonswap,
-                  SpectrumLoaderBase& loaderNue,
-                  SpectrumLoaderBase& loaderNuTau,
-                  std::string label,
-                  const Binning& bins,
-                  const Var& var,
-                  const Cut& cut,
-                  const SystShifts& shift,
-                  const Weight& wei);
+    TrivialExtrap(InteractionSources& srcs, const HistAxis& axis);
 
-    TrivialExtrap(Loaders& loaders,
-                  std::string label,
-                  const Binning& bins,
-                  const Var& var,
-                  const Cut& cut,
-                  const SystShifts& shift = kNoShift,
-                  const Weight& wei = kUnweighted);
-
-    TrivialExtrap(Loaders& loaders,
-                  const HistAxis& axis,
-                  const Cut& cut,
-                  const SystShifts& shift = kNoShift,
-                  const Weight& wei = kUnweighted);
+    TrivialExtrap(Loaders &loaders,
+                  const HistAxis &axis,
+                  const Cut &cut,
+                  ana::RecoType recoIxnType,
+                  const SystShifts &shift,
+                  const Weight &wei);
 
     virtual OscillatableSpectrum NueSurvComponent() override       {return fNueSurv;}
     virtual OscillatableSpectrum AntiNueSurvComponent() override   {return fNueSurvAnti;}

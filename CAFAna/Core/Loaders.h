@@ -1,70 +1,37 @@
 #pragma once
 
-#include "CAFAna/Core/SpectrumLoaderBase.h"
+#include "CAFAna/Core/Sources.h"
 
-namespace caf{
-  typedef int Det_t;
-  const int kNEARDET = 1;
-  const int kFARDET = 2;
+namespace caf
+{
+  // this needs to start at 0 or the Sources::operator[] thing below won't work.
+  // similarly, last element needs to be named `kNum[data type]s`
+  enum class Det_t : unsigned short { kNEARDET = 0, kFARDET, kNumDet_ts };
 }
-
-#include <map>
 
 namespace ana
 {
-  class SpectrumLoader;
 
-  /// \brief Collection of SpectrumLoaders for many configurations
-  class Loaders
+  using SRSources = Sources<ISRSource, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
+  using InteractionSources = Sources<IInteractionSource, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
+
+  /// A bundle of SpectrumLoaders that have the same neutrino source configuration (e.g., FHC) but differ over data/MC, detector type, swap, etc.
+  class Loaders: public Sources<SpectrumLoader, ana::DataMC, caf::Det_t, ana::SwappingConfig>
   {
-  public:
-    enum DataMC{kData, kMC};
-    enum SwappingConfig{kNonSwap, kNueSwap, kNuTauSwap};
-    enum FluxType{kFHC, kRHC};
+    public:
+      Loaders(ana::RecoType ixnType = RecoType::kUnknown)
+        : fRecoIxnType(ixnType)
+      {}
 
-    /// No loaders initialized. Use \ref SetLoaderPath to configure
-    Loaders();
-    virtual ~Loaders();
+      // todo: relying on a pre-configured Interaction type is probably not the endpoint solution
+      //       (what if ND & FD use different recos?  what if I want to compare multiple? etc.)
+      operator InteractionSources&();
 
-    /// Configure loader via wildcard \a path
-    void SetLoaderPath(const std::string& path,
-                       caf::Det_t det,
-                       DataMC datamc,
-                       SwappingConfig swap = kNonSwap);
+      /// Call Go() on all the loaders
+      void Go();
 
-    /// Configure loader via explicit file list
-    void SetLoaderFiles(const std::vector<std::string>& files,
-                        caf::Det_t det,
-                        DataMC datamc,
-                        SwappingConfig swap = kNonSwap);
+    private:
+      ana::RecoType fRecoIxnType;  ///< which reco interactions will be passed to spectra?
+  }; // class Loaders
 
-    void AddLoader(SpectrumLoaderBase*,
-                   caf::Det_t det,
-                   DataMC datamc,
-                   SwappingConfig swap = kNonSwap);
-
-    void DisableLoader(caf::Det_t det,
-                       DataMC datamc,
-                       SwappingConfig swap = kNonSwap);
-
-    /// Retrieve a specific loader
-    SpectrumLoaderBase& GetLoader(caf::Det_t det,
-                                  DataMC datamc,
-                                  SwappingConfig swap = kNonSwap);
-
-    /// Call Go() on all the loaders
-    void Go();
-
-  protected:
-    typedef std::tuple<caf::Det_t, DataMC, SwappingConfig> Key_t;
-
-    // Hold a list of paths that have been set
-    std::map<Key_t, std::string> fLoaderPaths;
-    std::map<Key_t, std::vector<std::string>> fLoaderFiles;
-    // Only reify them when someone actually calls GetLoader()
-    std::map<Key_t, SpectrumLoaderBase*> fLoaders;
-
-    /// We give this back when a loader isn't set for some configuration
-    NullLoader fNull;
-  };
 } // namespace

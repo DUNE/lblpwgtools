@@ -35,7 +35,7 @@ namespace ana
     const Cut& GetCut() const {return fCut;}
 
     void Shift(double sigma,
-               caf::SRProxy* sr,
+               caf::SRInteractionProxy* sr,
                double& weight) const override;
 
     // Some derived classes might have a back-channel allowing them to

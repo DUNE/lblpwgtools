@@ -1,128 +1,43 @@
 #include "CAFAna/Core/Loaders.h"
-
-#include "CAFAna/Core/SpectrumLoader.h"
-#include "CAFAna/Core/Utilities.h"
-
-#include <cassert>
-#include <iostream>
+#include "CAFAna/Core/Sources.ixx"
 
 namespace ana
 {
-  //----------------------------------------------------------------------
-  Loaders::Loaders()
+  // instantiate the Sources template with a Loaders type
+  template class Sources<SpectrumLoader, ana::DataMC, caf::Det_t, ana::SwappingConfig>;
+
+  // ---------------------------------------------------------------------------------
+  Loaders::operator InteractionSources&()
   {
-  }
-
-  //----------------------------------------------------------------------
-  Loaders::~Loaders()
-  {
-    // for(auto it: fLoaders) delete it.second;
-  }
-
-  //----------------------------------------------------------------------
-  void Loaders::SetLoaderPath(const std::string& path,
-                              caf::Det_t det,
-                              DataMC datamc,
-                              SwappingConfig swap)
-  {
-    assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
-
-    const Key_t key(det, datamc, swap);
-
-    // Clear out the old one if necessary
-    DisableLoader(det, datamc, swap);
-
-    fLoaderPaths[key] = path;
-  }
-
-  //----------------------------------------------------------------------
-  void Loaders::SetLoaderFiles(const std::vector<std::string>& files,
-                               caf::Det_t det,
-                               DataMC datamc,
-                               SwappingConfig swap)
-  {
-    assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
-
-    const Key_t key(det, datamc, swap);
-
-    // Clear out the old one if necessary
-    DisableLoader(det, datamc, swap);
-
-    fLoaderFiles[key] = files;
-  }
-
-  //----------------------------------------------------------------------
-  void Loaders::AddLoader(SpectrumLoaderBase* file,
-                               caf::Det_t det,
-                               DataMC datamc,
-                               SwappingConfig swap)
-  {
-    assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
-
-    const Key_t key(det, datamc, swap);
-
-    // Clear out the old one if necessary
-    DisableLoader(det, datamc, swap);
-
-    fLoaders[key] = file;
-  }
-
-  //----------------------------------------------------------------------
-  void Loaders::DisableLoader(caf::Det_t det,
-                              DataMC datamc,
-                              SwappingConfig swap)
-  {
-    assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
-
-    const Key_t key(det, datamc, swap);
-
-    // Clear out the current one if possible
-    auto it = fLoaders.find(key);
-    if(it != fLoaders.end()){
-      delete it->second;
-      fLoaders.erase(it);
+    if (fRecoIxnType == RecoType::kUnknown)
+    {
+      std::cerr << "You must configure a Reco Interaction type when you build your Loaders in order to iterate over Interactions!\n";
+      throw std::runtime_error("Reco Interaction type unspecified");
     }
 
-    fLoaderPaths.erase(key);
-    fLoaderFiles.erase(key);
-  }
-
-  //----------------------------------------------------------------------
-  SpectrumLoaderBase& Loaders::GetLoader(caf::Det_t det,
-                                         DataMC datamc,
-                                         SwappingConfig swap)
-  {
-    assert(datamc == kMC || swap == kNonSwap);
-    assert(det == caf::kFARDET || swap == kNonSwap);
-
-    const Key_t key(det, datamc, swap);
-
-    // Look up and return. Use fNull if no loader is set for this config
-    auto itLoader = fLoaders.find(key);
-    if(itLoader != fLoaders.end()) return *itLoader->second;
-
-    auto itPath = fLoaderPaths.find(key);
-    if(itPath != fLoaderPaths.end()){
-      fLoaders[key] = new SpectrumLoader(itPath->second);
-      return *fLoaders[key];
+    static std::unique_ptr<InteractionSources> ret;
+    if (!ret)
+    {
+      for(const ana::DataMC & dmc : enum_range(static_cast<ana::DataMC>(0), ana::DataMC::kNumDataMCs))
+      {
+        for(const caf::Det_t & det : enum_range(static_cast<caf::Det_t>(0), caf::Det_t::kNumDet_ts))
+        {
+          for(const ana::SwappingConfig & swap : enum_range(static_cast<ana::SwappingConfig>(0), ana::SwappingConfig::kNumSwappingConfigs))
+          {
+            if(dmc == DataMC::kData && swap != SwappingConfig::kNonSwap) continue;
+            ret->AddSource(&GetSource(dmc, det, swap).Interactions(fRecoIxnType),
+                           dmc, det, swap);
+          }
+        }
+      }
     }
-    auto itFiles = fLoaderFiles.find(key);
-    if(itFiles != fLoaderFiles.end()){
-      fLoaders[key] = new SpectrumLoader(itFiles->second);
-      return *fLoaders[key];
-    }
+    return *ret;
+  } // operator InteractionSources&()
 
-    return fNull;
-  }
-
-  //----------------------------------------------------------------------
   void Loaders::Go()
   {
-    for(auto it: fLoaders) it.second->Go();
+    for (auto it: this->fSourceViews) it.second->Go();
   }
+
 
 }

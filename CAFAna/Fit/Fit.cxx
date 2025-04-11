@@ -1,8 +1,6 @@
 #include "CAFAna/Fit/Fit.h"
 #include "CAFAna/Fit/MinuitFitter.h"
 
-#include "CAFAna/Analysis/common_fit_definitions.h"
-
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/Utilities.h"

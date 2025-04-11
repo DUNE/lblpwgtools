@@ -29,89 +29,27 @@ namespace ana
 {
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectList::~SpectList()
-  {
-    // We don't seem to be able to do this - maybe SpectList gets copied?
-    // Let's just bite the bullet and leak a few pointers. This all works
-    // completely differently in NOvA CAFAna with refactored SpectrumLoader.
-    //
-    // Clean up the memory allocated for the pointers themselves
-    //    for(Spectrum** s: spects) delete *s;
-    //    for(auto rv: rwSpects) delete *rv.first;
-  }
-
-  // Work around ReweightableSpectrum's friend requirements
-  struct ReweightableSpectrumSink
-  {
-    static void AddLoader(ReweightableSpectrum** rw){(*rw)->AddLoader(rw);}
-    static void RemoveLoader(ReweightableSpectrum** rw){(*rw)->RemoveLoader(rw);}
-  };
-  //----------------------------------------------------------------------
-  void SpectrumLoaderBase::SpectList::RemoveLoader(SpectrumLoaderBase* l)
-  {
-    for(Spectrum** s: spects) if(*s) (*s)->RemoveLoader(s);
-    for(auto rv: rwSpects) if(*rv.first) ReweightableSpectrumSink::RemoveLoader(rv.first);
-  }
-
-  //----------------------------------------------------------------------
-  size_t SpectrumLoaderBase::SpectList::TotalSize() const
-  {
-    return spects.size() + rwSpects.size();
-  }
-
-  //----------------------------------------------------------------------
-  template<class T, class U> U& SpectrumLoaderBase::IDMap<T, U>::
-  operator[](const T& key)
-  {
-    for(auto& it: fElems){
-      if(it.first.ID() == key.ID()) return it.second;
-    }
-    fElems.push_back(std::make_pair(key, U()));
-    return fElems.back().second;
-  }
-
-  //----------------------------------------------------------------------
-  template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::
-  RemoveLoader(SpectrumLoaderBase* l)
-  {
-    for(auto& it: fElems) it.second.RemoveLoader(l);
-  }
-
-  //----------------------------------------------------------------------
-  template<class T, class U> void SpectrumLoaderBase::IDMap<T, U>::Clear()
-  {
-    fElems.clear();
-  }
-
-  //----------------------------------------------------------------------
-  template<class T, class U> size_t SpectrumLoaderBase::IDMap<T, U>::
-  TotalSize()
-  {
-    size_t ret = 0;
-    for(auto& it: fElems) ret += it.second.TotalSize();
-    return ret;
-  }
-
-  // Start of SpectrumLoaderBase proper
-
-  //----------------------------------------------------------------------
+  // adding fPOTFromHist and fNReadouts
   SpectrumLoaderBase::SpectrumLoaderBase()
-    : fGone(false), fPOT(0)
+    : fGone(false), fPOT(0),  fPOTFromHist(0), fNReadouts(0)
   {
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard)
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::string& wildcard, const std::string& pathInFile)
     : SpectrumLoaderBase()
   {
     fWildcard = wildcard;
+    fPathInFile = pathInFile;
     fFileSource = std::unique_ptr<IFileSource>(WildcardOrSAMQuery(wildcard));
   }
 
   //----------------------------------------------------------------------
-  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames) : SpectrumLoaderBase()
+  SpectrumLoaderBase::SpectrumLoaderBase(const std::vector<std::string>& fnames, const std::string& pathInFile)
+    : SpectrumLoaderBase()
   {
     fWildcard = "file list";
+    fPathInFile = pathInFile;
     fFileSource = std::unique_ptr<IFileSource>(new FileListSource(fnames));
 
     // Apparently MakePredInterps runs over empty file lists?
@@ -121,10 +59,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   SpectrumLoaderBase::~SpectrumLoaderBase()
-  {
-    fHistDefs.RemoveLoader(this);
-    fHistDefs.Clear();
-  }
+  {}
 
   //----------------------------------------------------------------------
   IFileSource* SpectrumLoaderBase::
@@ -172,68 +107,6 @@ namespace ana
     abort();
 #endif
   }
-
-  //----------------------------------------------------------------------
-  void SpectrumLoaderBase::AddSpectrum(Spectrum& spect,
-                                       const Var& var,
-                                       const Cut& cut,
-                                       const SystShifts& shift,
-                                       const Weight& wei)
-  {
-    if(fGone){
-      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-      abort();
-    }
-
-    Spectrum** ps = new Spectrum*;
-    *ps = &spect;
-    fHistDefs[shift][cut][wei][var].spects.push_back(ps);
-
-    // Remember we have a Go() pending
-    spect.AddLoader(ps);
-  }
-
-  //----------------------------------------------------------------------
-  void SpectrumLoaderBase::AddSpectrum(Spectrum& spect,
-                                       const MultiVar& var,
-                                       const Cut& cut,
-                                       const SystShifts& shift,
-                                       const Weight& wei)
-  {
-    if(fGone){
-      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-      abort();
-    }
-
-    Spectrum** ps = new Spectrum*;
-    *ps = &spect;
-    fHistDefs[shift][cut][wei][var].spects.push_back(ps);
-
-    // Remember we have a Go() pending
-    spect.AddLoader(ps);
-  }
-
-  //----------------------------------------------------------------------
-  void SpectrumLoaderBase::AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                                   const Var& xvar,
-                                                   const Var& yvar,
-                                                   const Cut& cut,
-                                                   const SystShifts& shift,
-                                                   const Weight& wei)
-  {
-    if(fGone){
-      std::cerr << "Error: can't add Spectra after the call to Go()" << std::endl;
-      abort();
-    }
-
-    ReweightableSpectrum** prw = new ReweightableSpectrum*;
-    *prw = &spect;
-    fHistDefs[shift][cut][wei][xvar].rwSpects.emplace_back(prw, yvar);
-
-    // Remember we have a Go() pending
-    ReweightableSpectrumSink::AddLoader(prw);
-  }
-
   //----------------------------------------------------------------------
   int SpectrumLoaderBase::NFiles() const
   {
@@ -250,41 +123,69 @@ namespace ana
       std::cout << "Bad file (zombie): " << f->GetName() << std::endl;
       abort();
     }
+// Im not sure this will still be valid in the source/sink world...
 
     TTree* trPot = 0;
-    if (f->GetListOfKeys()->Contains("meta"))
-      trPot = (TTree*)f->Get("meta");
+    TDirectoryFile * df = GetDirectoryFile(f);
+    if (df->GetListOfKeys()->Contains("meta"))
+      trPot = df->Get<TTree>("meta");
     else
-      trPot = (TTree*)f->Get("pottree");
-    assert(trPot);
+      trPot = df->Get<TTree>("pottree");
+    if (!trPot)
+    {
+      std::cerr << "Couldn't find the 'meta' or 'pottree' tree in your CAF file for POT accounting.\n"
+                << "(Are your TTrees in a subfolder in the file?  Pass that as an argument to the SpectrumLoader constructor.)\n"
+                << "Can't proceed.  Abort.\n";
+      abort();
+    }
 
-    double pot;
-    trPot->SetBranchAddress("pot", &pot);
+    float pot; //double
+    trPot->SetBranchAddress("rec.beam.pulsepot", &pot);
+    //trPot->SetBranchAddress("pot", &pot);
 
     for(int n = 0; n < trPot->GetEntries(); ++n){
       trPot->GetEntry(n);
 
-      fPOT += pot; 
+      //unsure if this shoulf be fPOT or fPOTFromHist
+      // I think fPOT is accounted for in HandleFile in the SBN version
+      //fPOT += pot;
+      fPOTFromHist += pot;
+      fPOT += pot;
     }
+
+    // This is from the SBN version...
+    //TH1* hPOT = (TH1*)f->Get("TotalPOT");
+    //assert(hPOT);
+    //fPOTFromHist  += hPOT->Integral(0, -1);
+
     return f;
   }
 
   //----------------------------------------------------------------------
-  void NullLoader::Go()
+  TDirectoryFile *SpectrumLoaderBase::GetDirectoryFile(TFile *f) const
   {
+    if (fPathInFile.empty())
+      return f;
+
+    return f->Get<TDirectoryFile>(fPathInFile.c_str());
   }
 
-  //----------------------------------------------------------------------
-  NullLoader::~NullLoader()
-  {
-  }
-
-  // Apparently the existence of fHistDefs isn't enough and I need to spell
-  // this out to make sure the function bodies are generated.
-  template struct SpectrumLoaderBase::IDMap<SystShifts, 
-    SpectrumLoaderBase::IDMap<Cut, 
-      SpectrumLoaderBase::IDMap<Weight, 
-        SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar, 
-          SpectrumLoaderBase::SpectList>>>>;
+//  //----------------------------------------------------------------------
+//  void NullLoader::Go()
+//  {
+//  }
+//
+//  //----------------------------------------------------------------------
+//  NullLoader::~NullLoader()
+//  {
+//  }
+//
+//  // Apparently the existence of fHistDefs isn't enough and I need to spell
+//  // this out to make sure the function bodies are generated.
+//  template struct SpectrumLoaderBase::IDMap<SystShifts,
+//    SpectrumLoaderBase::IDMap<Cut,
+//      SpectrumLoaderBase::IDMap<Weight,
+//        SpectrumLoaderBase::IDMap<SpectrumLoaderBase::VarOrMultiVar,
+//          SpectrumLoaderBase::SpectList>>>>;
 
 } // namespace

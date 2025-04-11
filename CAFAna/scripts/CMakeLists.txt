@@ -11,19 +11,8 @@ set(scripts_to_install
   spec_variations.C
   )
 
+# 2025-02-25 JW: the scripts are left as legacy examples as to what one might want to do, but they won't build any more
 set(scripts_to_build
-  asimov_joint
-  make_toy_throws
-  make_toy_throws_fixed_seed
-  MakePredInterps
-  fit_covar
-  make_all_throws
-  make_all_throws_fixed_seed
-  make_1dconstraint_plots
-  make_spectra_constraint_plots
-  llh_scans
-  spec_joint
-  sample_throws
   )
 if(DEFINED USE_OPENMP AND USE_OPENMP)
   LIST(APPEND scripts_to_build pred_thread_test fit_thread_test)

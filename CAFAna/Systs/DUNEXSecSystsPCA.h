@@ -9,7 +9,7 @@ namespace ana
   {
   public:
     virtual void Shift(double sigma,
-                       caf::SRProxy* sr,
+                       caf::SRInteractionProxy* sr,
                        double& weight) const override;
 
   protected:

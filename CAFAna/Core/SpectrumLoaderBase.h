@@ -14,6 +14,7 @@
 #include "CAFAna/Core/Var.h"
 #include "CAFAna/Core/Weight.h"
 
+class TDirectoryFile;
 class TFile;
 class TH1;
 class TTree;
@@ -27,35 +28,13 @@ namespace ana
   class SpectrumLoaderBase
   {
   public:
-
-    friend class ReweightableSpectrum;
-    friend class NDOscillatableSpectrum;
-    friend class OscillatableSpectrum;
-    friend class Spectrum;
+// Dow we need these friends??
+//    friend class ReweightableSpectrum;
+//    friend class NDOscillatableSpectrum;
+//    friend class OscillatableSpectrum;
+//    friend class Spectrum;
 
     virtual ~SpectrumLoaderBase();
-
-    /// For use by the \ref Spectrum constructor
-    virtual void AddSpectrum(Spectrum& spect,
-                             const Var& var,
-                             const Cut& cut,
-                             const SystShifts& shift,
-                             const Weight& wei = kUnweighted);
-
-    /// For use by the \ref Spectrum constructor
-    virtual void AddSpectrum(Spectrum& spect,
-                             const MultiVar& var,
-                             const Cut& cut,
-                             const SystShifts& shift,
-                             const Weight& wei = kUnweighted);
-
-    /// For use by the constructors of \ref ReweightableSpectrum subclasses
-    virtual void AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                         const Var& xvar,
-                                         const Var& yvar,
-                                         const Cut& cut,
-                                         const SystShifts& shift,
-                                         const Weight& wei);
 
     /// Load all the registered spectra
     virtual void Go() = 0;
@@ -67,9 +46,9 @@ namespace ana
     /// Component of other constructors
     SpectrumLoaderBase();
     /// Construct from a filename, wildcard, SAM definition, or SAM query
-    SpectrumLoaderBase(const std::string& wildcard);
+    SpectrumLoaderBase(const std::string& wildcard, const std::string& pathInFile="");
     /// Construct from an explicit list of files
-    SpectrumLoaderBase(const std::vector<std::string>& fnames);
+    SpectrumLoaderBase(const std::vector<std::string>& fnames, const std::string& pathInFile="");
 
     // Move operations
     SpectrumLoaderBase(SpectrumLoaderBase&&) = default;
@@ -88,120 +67,23 @@ namespace ana
     /// Forwards to \ref fFileSource but also accumulates POT and livetime
     TFile* GetNextFile();
 
+    /// the relevant trees inside a CAF may be nested in a subdir.
+    /// this is a simple utility function to centralize that
+    TDirectoryFile *GetDirectoryFile(TFile *f) const;
+
     std::string fWildcard;
     std::unique_ptr<IFileSource> fFileSource;
+    std::string fPathInFile;  ///< are the various trees we need in some sub-folder?
 
     bool fGone; ///< Has Go() been called? Can't add more histograms after that
 
     double fPOT; ///< Accumulated by calls to \ref GetNextFile
 
-    /// \brief Helper class for \ref SpectrumLoaderBase
-    ///
-    /// List of Spectrum and OscillatableSpectrum, some utility functions
-    struct SpectList
-    {
-      ~SpectList();
-      void RemoveLoader(SpectrumLoaderBase* l);
-      size_t TotalSize() const;
 
-      // Doubled pointers are sadly necessary as we need the locations of the
-      // nodes to be constant so Spectrum can re-register itself if moved.
-      std::vector<Spectrum**> spects;
-      std::vector<std::pair<ReweightableSpectrum**, Var>> rwSpects;
-    };
-
-    /// \brief Helper class for \ref SpectrumLoaderBase
-    ///
-    /// Functions like std::map<T, U> except it should be faster to iterate
-    /// through the elements (while slower to fill) and it knows to compare Ts
-    /// via their ID() function. Various methods that forward through to the
-    /// \ref SpectList at the end of the chain.
-    template<class T, class U> struct IDMap
-    {
-      U& operator[](const T& key);
-
-      // Make class iterable. Keep inline for speed
-      typedef typename std::vector<std::pair<T, U>>::iterator it_t;
-      inline it_t begin(){return fElems.begin();}
-      inline it_t end(){return fElems.end();}
-
-      void RemoveLoader(SpectrumLoaderBase* l);
-      void Clear();
-      size_t TotalSize();
-    protected:
-      std::vector<std::pair<T, U>> fElems;
-    };
-
-    class VarOrMultiVar
-    {
-    public:
-      // v could easily be a temporary, have to make a copy
-      VarOrMultiVar(const Var& v) : fVar(new Var(v)), fMultiVar(0) {}
-      VarOrMultiVar(const MultiVar& v) : fVar(0), fMultiVar(new MultiVar(v)) {}
-      ~VarOrMultiVar() {delete fVar; delete fMultiVar;}
-
-      VarOrMultiVar(const VarOrMultiVar& v)
-        : fVar(v.fVar ? new Var(*v.fVar) : 0),
-          fMultiVar(v.fMultiVar ? new MultiVar(*v.fMultiVar) : 0)
-      {
-      }
-
-      VarOrMultiVar(VarOrMultiVar&& v)
-      {
-        fVar = v.fVar;
-        fMultiVar = v.fMultiVar;
-        v.fVar = 0;
-        v.fMultiVar = 0;
-      }
-
-      bool IsMulti() const {return fMultiVar;}
-      const Var& GetVar() const {assert(fVar); return *fVar;}
-      const MultiVar& GetMultiVar() const {assert(fMultiVar); return *fMultiVar;}
-
-      int ID() const {return fVar ? fVar->ID() : fMultiVar->ID();}
-
-    protected:
-      const Var* fVar;
-      const MultiVar* fMultiVar;
-    };
-
-    /// \brief All the spectra that need to be filled
-    ///
-    /// [shift][cut][wei][var]
-    IDMap<SystShifts, IDMap<Cut, IDMap<Weight, IDMap<VarOrMultiVar, SpectList>>>> fHistDefs;
+    // new additions 
+    double fPOTFromHist; ///< Accumulated by calls to \ref GetNextFile
+    // Do we really need this?
+    int fNReadouts; 
   };
 
-  /// \brief Dummy loader that doesn't load any files
-  ///
-  /// Useful when a loader is required for a component you want to ignore
-  class NullLoader: public SpectrumLoaderBase
-  {
-  public:
-    NullLoader() {}
-    ~NullLoader();
-
-    virtual void Go() override;
-
-    void AddSpectrum(Spectrum& spect,
-                     const Var& var,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Weight& wei = kUnweighted) override {}
-    void AddSpectrum(Spectrum& spect,
-                     const MultiVar& var,
-                     const Cut& cut,
-                     const SystShifts& shift,
-                     const Weight& wei = kUnweighted) override {}
-
-    void AddReweightableSpectrum(ReweightableSpectrum& spect,
-                                 const Var& xvar,
-                                 const Var& yvar,
-                                 const Cut& cut,
-                                 const SystShifts& shift,
-                                 const Weight& wei) override {}
-  };
-  /// \brief Dummy loader that doesn't load any files
-  ///
-  /// Useful when a loader is required for a component you want to ignore
-  static NullLoader kNullLoader;
 }

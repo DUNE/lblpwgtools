@@ -1,9 +1,9 @@
 #include "CAFAna/Systs/DUNEXSecSysts.h"
 
+#include "duneanaobj/StandardRecord/Navigate.h"
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
+#include "CAFAna/Core/TruthMatching.h"
 #include "CAFAna/Core/Utilities.h"
-
-#include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 #include "CAFAna/Core/MathUtil.h"
 
@@ -98,14 +98,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  EVALORCategory GetVALORCategory(const caf::SRProxy* sr)
+  EVALORCategory GetVALORCategory(const caf::SRInteractionProxy *sr)
   {
-    int lep = sr->LepPDG;
-    int scat = sr->mode;
-    const int npiz = sr->nipi0;
-    const int npic = sr->nipip + sr->nipim;
-    const float Enu = sr->Ev;
-    const float Q2 = sr->Q2;
+    const caf::SRTrueInteractionProxy * srtrueint = MatchedTrueInteraction(sr);
+    int lep = srtrueint->pdg;// this is probs wrong LepPDG;
+    int scat = srtrueint->mode;//mode;
+    const int npiz = srtrueint->npi0;//nipi0;
+    const int npic = srtrueint->npip+srtrueint->npim;//nipip + sr->nipim;
+    const float Enu = srtrueint->E;//Ev;
+    const float Q2 = srtrueint->Q2;//Q2;
 
     // These are the FD codes
     // kUnknownMode               = -1
@@ -142,7 +143,7 @@ namespace ana
     // 14 IMD annihilation
 
     // Different conventions ND (weird (new?)) and FD (like NOvA)
-    if(sr->isFD){
+    /*if(sr->isFD){
       switch(scat){
       case 0: scat = 1; break; // QE -> QE
       case 1: scat = 4; break; // RES -> RES
@@ -161,7 +162,7 @@ namespace ana
         std::cout << "Unhandled GENIE FD code " << scat << std::endl;
         abort();
       }
-    }
+    }*/
 
     // Treat nutaus as if they were numus for now
     if(lep == -16) lep = -14;

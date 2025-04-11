@@ -3,6 +3,7 @@
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 namespace ana {
+#ifdef BUILD_FLUX_SYSTS
 
   std::vector<std::string> GetCrazyFluxDialNames(){
     static std::vector<std::string> ret = {"CrazyFlux_FHC",
@@ -33,13 +34,13 @@ namespace ana {
     if (fName == GetCrazyFluxDialNames()[1] && sr->isFHC){
       return;
     }
-    
+
     // If you get this far, apply a weight
     // All values in the array except [3], the nominal, should be the same
     weight *= sr->wgt_CrazyFlux[0];
   }
 
-  
+
   CrazyFluxDial::CrazyFluxDial(std::string name, bool applyPenalty)
     : ISyst(name, name, applyPenalty),
       fName(name) {}
@@ -47,7 +48,7 @@ namespace ana {
   std::vector<const ISyst *> GetCrazyFluxSysts(std::vector<std::string> names,
 					       bool applyPenalty) {
     static std::vector<const ISyst *> ret;
-    
+
     if (names.empty()) {
       names = GetCrazyFluxDialNames();
     }
@@ -60,5 +61,5 @@ namespace ana {
     return ret;
   }
 
-
+#endif   // BUILD_FLUX_SYSTS
 }

@@ -16,7 +16,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   void SystComponentScale::Shift(double sigma,
-                                 caf::SRProxy* sr,
+                                 caf::SRInteractionProxy* sr,
                                  double& weight) const
   {
     if(!fCut(sr)) return;

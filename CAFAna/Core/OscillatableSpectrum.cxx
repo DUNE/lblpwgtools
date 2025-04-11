@@ -7,7 +7,7 @@
 #include "CAFAna/Core/Utilities.h"
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
-
+#include "duneanaobj/StandardRecord/SRInteraction.h"
 #include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
@@ -20,34 +20,27 @@
 
 namespace ana
 {
+  namespace{
   // Duplicate here because we can't include Vars.h
-  const Var kTrueE([](const caf::SRProxy* sr)
-                   {return sr->Ev;});
-
+  // These should be true informations, but I think we only have recoparticle atm 
+  const Var kTrueE([](const caf::SRInteractionProxy* ixn)
+                   {
+                     //assert(sr->mc.nnu == 1);
+                     assert(ixn->truth.size()>0);
+                     /// uuumm what do we
+                     return ixn->Enu.calo;
+                   });
+     const Cut kHasNu([](const caf::SRInteractionProxy* ixn)
+                     {
+                       //return sr->truth.index >= 0;
+                      // this should return something at the true level, 
+                      //in the meantime just check there's interaction or whatever placeholder cut
+                        return ixn->truth.size()>0;//dlp.size()>0;
+                     });
+   }
   //----------------------------------------------------------------------
-  OscillatableSpectrum::
-  OscillatableSpectrum(const std::string& label, const Binning& bins,
-                       SpectrumLoaderBase& loader,
-                       const Var& var,
-                       const Cut& cut,
-                       const SystShifts& shift,
-                       const Weight& wei)
-    : ReweightableSpectrum(loader,
-                           HistAxis(label, bins, var),
-                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
-                           cut, shift, wei)
-  {
-  }
-
-  //----------------------------------------------------------------------
-  OscillatableSpectrum::OscillatableSpectrum(SpectrumLoaderBase& loader,
-                                             const HistAxis& axis,
-                                             const Cut& cut,
-                                             const SystShifts& shift,
-                                             const Weight& wei)
-    : ReweightableSpectrum(loader, axis,
-                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
-                           cut, shift, wei)
+  OscillatableSpectrum::OscillatableSpectrum(IInteractionSource& src, const HistAxis& axis)
+    : ReweightableSpectrum(src[kHasNu], axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))
   {
   }
 
@@ -246,21 +239,18 @@ namespace ana
 
     delete dir;
 
-    auto ret = std::make_unique<OscillatableSpectrum>(kNullLoader,
-                                                      HistAxis(labels, bins),
-                                                      kNoCut);
+    const HistAxis recoAxis(labels, bins);
 
     // ROOT histogram storage is row-major, but Eigen is column-major by
     // default
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
-    ret->fMat = Eigen::Map<MatRowMajor>(spect->GetArray(),
-                                        ret->fMat.rows(),
-                                        ret->fMat.cols());
+
+    auto ret = std::make_unique<OscillatableSpectrum>(Eigen::Map<MatRowMajor>(spect->GetArray(), kTrueEnergyBins.NBins()+2, recoAxis.GetBins1D().NBins()+2),
+                                                      recoAxis,
+                                                      hPot->Integral(0, -1),
+                                                      hLivetime->Integral(0, -1));
 
     delete spect;
-
-    ret->fPOT = hPot->Integral(0, -1);
-    ret->fLivetime = hLivetime->Integral(0, -1);
 
     delete hPot;
     delete hLivetime;

@@ -4,19 +4,13 @@
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
 #include "CAFAna/Core/Loaders.h"
+#include "CAFAna/Core/IRecordSource.h"
 
 namespace ana {
 /// Prediction that wraps a simple Spectrum
 class PredictionNoOsc : public IPrediction {
 public:
-  PredictionNoOsc(SpectrumLoaderBase &loader, const HistAxis &axis,
-                  const Cut &cut, const SystShifts &shift = kNoShift,
-                  const Weight &wei = kUnweighted);
-
-  PredictionNoOsc(SpectrumLoaderBase &loader, const std::string &label,
-                  const Binning &bins, const Var &var, const Cut &cut,
-                  const SystShifts &shift = kNoShift,
-                  const Weight &wei = kUnweighted);
+  PredictionNoOsc(IInteractionSource& src, const HistAxis& axis);
 
   static std::unique_ptr<PredictionNoOsc> LoadFrom(TDirectory *dir, const std::string& name);
   virtual void SaveTo(TDirectory *dir, const std::string& name) const override;
@@ -75,6 +69,7 @@ protected:
   Spectrum fSpectrumNuebar;
 };
 
+  /* TODO think about generators
 class NoOscPredictionGenerator : public IPredictionGenerator {
 public:
   NoOscPredictionGenerator(HistAxis axis, Cut cut, Weight wei = kUnweighted)
@@ -94,5 +89,6 @@ protected:
   Cut fCut;
   Weight fWei;
 };
+  */
 
 } // namespace ana

@@ -1,3 +1,5 @@
+#ifdef BUILD_ADHOC_PREDS // TODO TODO TODO
+
 #include "CAFAna/Prediction/PredictionScaleComp.h"
 
 #include "CAFAna/Core/Cut.h"
@@ -209,3 +211,5 @@ namespace ana
   }
 
 }
+
+#endif

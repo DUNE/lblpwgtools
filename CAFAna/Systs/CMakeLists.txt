@@ -1,19 +1,12 @@
 set(Systs_implementation_files
   AnaSysts.cxx
   DUNEFluxSysts.cxx
-  RecoEnergyNDSysts.cxx
-  DUNENDSysts.cxx
   DUNEXSecSysts.cxx
   DUNEXSecSystsPCA.cxx
-  EnergySysts.cxx
-  FDRecoSysts.cxx
   XSecSysts.cxx
-  NDRecoSysts.cxx
-  NuOnESysts.cxx
   NuWroReweightFakeData.cxx
   CrazyFluxFakeData.cxx
   SystComponentScale.cxx
-  Systs.cxx
   UniverseOracle.cxx
   XSecSystList.cxx
   OffAxisFluxUncertaintyHelper.cxx
@@ -22,17 +15,10 @@ set(Systs_implementation_files
 set(Systs_header_files
   AnaSysts.h
   DUNEFluxSysts.h
-  RecoEnergyNDSysts.h
-  DUNENDSysts.h
   DUNEXSecSysts.h
   DUNEXSecSystsPCA.h
-  EnergySysts.h
-  FDRecoSysts.h
   XSecSysts.h
-  NDRecoSysts.h
-  NuOnESysts.h
   SystComponentScale.h
-  Systs.h
   MissingProtonFakeData.h
   BDTReweighter.h
   GeneratorReweight_nuebar_FD_RHC.h
@@ -54,7 +40,19 @@ set(Systs_header_files
   NewOffAxisFluxUncertainty2022Helper.h)
 
 add_library(CAFAnaSysts SHARED ${Systs_implementation_files})
-target_link_libraries(CAFAnaSysts CAFAnaExperiment TH2Jagged::All)
+target_link_libraries(CAFAnaSysts ${STANDARDRECORD} CAFAnaExperiment TH2Jagged::All)
+
+if(NOT DEFINED BUILD_FLUX_SYSTS)
+  message(WARNING "Not building flux systematics code.  Include `-DBUILD_FLUX_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
+if(NOT DEFINED BUILD_XSEC_SYSTS)
+  message(WARNING "Not building xsec systematics code.  Include `-DBUILD_XSEC_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
+
+if(NOT DEFINED BUILD_FDS_SYSTS)
+  message(WARNING "Not building fake data systematics code.  Include `-DBUILD_XSEC_SYSTS` in the 'extra CMake arguments' passed to `standalone_configure_and_build.sh` to include it.")
+endif()
 
 set_target_properties(CAFAnaSysts PROPERTIES
   PUBLIC_HEADER "${Systs_header_files}")
@@ -63,7 +61,8 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaSysts BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaSysts 
+install(TARGETS CAFAnaSysts
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Systs/)
 
@@ -81,3 +80,5 @@ set(SYST_INPUT_ROOT_FILES
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
+
+add_cafana_lib(CAFAnaSysts)

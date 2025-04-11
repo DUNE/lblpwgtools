@@ -15,6 +15,7 @@ namespace ana
 
   class Loaders;
   class IPrediction;
+  enum class RecoType;
 
   /** \brief Given loaders and an MC shift, Generate() generates an IPrediction
 
@@ -24,29 +25,7 @@ namespace ana
   class IPredictionGenerator
   {
     public:
-    virtual std::unique_ptr<IPrediction> Generate(
-    						  Loaders& loaders, const SystShifts& shiftMC = kNoShift ) const = 0;
+      virtual std::unique_ptr<IPrediction> Generate(Loaders& loaders, const ana::RecoType & ixnRecoType, const SystShifts& shiftMC = kNoShift) const = 0;
 
-  };
-
-  //---------------------------------------------------------------------------
-
-  /// Generates FD-only predictions (no extrapolation)
-  class NoExtrapGenerator: public IPredictionGenerator
-  {
-    public:
-    NoExtrapGenerator(
-      const HistAxis axis,
-      const Cut cut,
-      const Weight wei = kUnweighted );
-
-    std::unique_ptr<IPrediction> Generate(
-    					  Loaders& loaders,
-					  const SystShifts& shiftMC = kNoShift ) const override;
-
-    private:
-    const HistAxis fAxis;
-    const Cut fCut;
-    const Weight fWei;
   };
 }
