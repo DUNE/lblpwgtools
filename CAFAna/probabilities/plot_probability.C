@@ -15,7 +15,10 @@
 #include "TPaveText.h"
 #include "TMath.h"
 
+#include <string>
+
 using namespace ana;
+using namespace std;
 
 bool DianaIsLazy = true;
 double baseline = 1295.;
@@ -37,8 +40,9 @@ void plot_probability(bool plotLE = false)
 
 
   std::string tag = "E";
-  char titles = ";Neutrino Energy (GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
-  if(LE){
+  const char* labels  = "";
+  const char* titles = ";Neutrino Energy (GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
+  if(plotLE){
     tag = "LE";
     labels = ";Baseline / Neutrino Energy (km/GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
   }
@@ -127,7 +131,7 @@ void plot_probability(bool plotLE = false)
       	  const double Pmutau = calc[sinId][rhoId][deltaId]->P(14, 16, E);
 
       	  double x=E;
-      	  if(LE) x=baseline/E;
+      	  if(plotLE) x=baseline/E;
       	  gmue[sinId][rhoId][deltaId]->SetPoint(gmue[sinId][rhoId][deltaId]->GetN(), x, Pmue);
       	  gmumu[sinId][rhoId][deltaId]->SetPoint(gmumu[sinId][rhoId][deltaId]->GetN(), x, Pmumu);
       	  gmutau[sinId][rhoId][deltaId]->SetPoint(gmutau[sinId][rhoId][deltaId]->GetN(), x, Pmutau);
@@ -165,14 +169,14 @@ void plot_probability(bool plotLE = false)
 
 	double xmin = 0.1, xmax = 3.;
 	double ymin = -0.01, ymax = 0.2;
-	if(LE){
+	if(plotLE){
 	  	xmin = baseline/xmin;
 		xmax = baseline/xmax;
 	}
 
     //std::string thisLabel = "numutoe__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
     TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
-    CenterTitles(axes);
+    //CenterTitles(axes);
     axes->Draw();
 
     gPad->SetFillStyle(0);
@@ -190,8 +194,8 @@ void plot_probability(bool plotLE = false)
         leg->Draw("same");
         CornerLabel(thisLabel);
 	*/
-    gPad->Print("oscprob_numutoe_"+tag+".png");
-    gPad->Print("oscprob_numutoe_"+tag+".pdf");
+    gPad->Print(("oscprob_numutoe_"+tag+".png").c_str());
+    gPad->Print(("oscprob_numutoe_"+tag+".pdf").c_str());
 	//}
 	//}
   }
@@ -203,14 +207,14 @@ void plot_probability(bool plotLE = false)
 
 	double xmin = 0.1, xmax = 3.;
 	double ymin = -0.01, ymax = 1.01;
-	if(LE){
+	if(plotLE){
 	  	xmin = baseline/xmin;
 		xmax = baseline/xmax;
 	}
 
     //std::string thisLabel = "numutomu__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
     TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
-    CenterTitles(axes);
+    //CenterTitles(axes);
     axes->Draw();
 
     gPad->SetFillStyle(0);
@@ -229,8 +233,8 @@ void plot_probability(bool plotLE = false)
         leg->Draw("same");
         CornerLabel(thisLabel);
 	*/
-        gPad->Print("oscprob_numutomu_"+tag+".png");
-        gPad->Print("oscprob_numutomu_"+tag+".pdf");
+        gPad->Print(("oscprob_numutomu_"+tag+".png").c_str());
+	gPad->Print(("oscprob_numutomu_"+tag+".pdf").c_str());
 	//}
 	//}
   }
@@ -240,13 +244,13 @@ void plot_probability(bool plotLE = false)
 
 	double xmin = 0.1, xmax = 3.;
 	double ymin = -0.01, ymax = 1.01;
-	if(LE){
+	if(plotLE){
 	  	xmin = baseline/xmin;
 		xmax = baseline/xmax;
 	}
     //std::string thisLabel = "both__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
     TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
-    CenterTitles(axes);
+    //CenterTitles(axes);
     axes->Draw();
 
     gPad->SetFillStyle(0);
@@ -264,8 +268,8 @@ void plot_probability(bool plotLE = false)
     leg->Draw("same");
     //CornerLabel(thisLabel);
 
-    gPad->Print("oscprob_both_"+tag+".png");
-    gPad->Print("oscprob_both_"+tag+".pdf");
+    gPad->Print(("oscprob_both_"+tag+".png").c_str());
+    gPad->Print(("oscprob_both_"+tag+".pdf").c_str());
   }
 
 

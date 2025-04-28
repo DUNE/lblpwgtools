@@ -1,4 +1,5 @@
 #include "CAFAna/Experiment/ICovarianceMatrix.h"
+#include <cassert>
 
 namespace ana
 {

@@ -1,5 +1,5 @@
 #include "CAFAna/Experiment/CovMxChiSqPreInvert.h"
-
+#include <cassert>
 #include "CAFAna/Core/Utilities.h"
 
 namespace ana

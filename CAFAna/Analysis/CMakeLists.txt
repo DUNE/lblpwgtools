@@ -15,7 +15,7 @@ set(Analysis_header_files
   CheckPointHelper.h)
 
 add_library(CAFAnaAnalysis SHARED ${Analysis_implementation_files})
-target_link_libraries(CAFAnaAnalysis CAFAnaCore CAFAnaFit)
+target_link_libraries(CAFAnaAnalysis CAFAnaCore)
 
 set_target_properties(CAFAnaAnalysis PROPERTIES
   PUBLIC_HEADER "${Analysis_header_files}")
