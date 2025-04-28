@@ -76,7 +76,9 @@ namespace ana
     Spectrum TrueEnergy() const {return WeightingVariable();}
 
     Spectrum Oscillated(osc::IOscCalc* calc, int from, int to) const;
+#ifdef CAFANA_USE_STAN
     Spectrum Oscillated(osc::IOscCalcStan* calc, int from, int to) const;
+#endif
 
     OscillatableSpectrum& operator+=(const OscillatableSpectrum& rhs);
     OscillatableSpectrum operator+(const OscillatableSpectrum& rhs) const;

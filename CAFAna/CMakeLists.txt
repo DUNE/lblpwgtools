@@ -6,6 +6,11 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 
 project(CAFAna VERSION 2.00.00)
 
+set(CAFANA_USE_STAN False CACHE BOOL "Build against Stan?")
+if(CAFANA_USE_STAN)
+  add_compile_options(-DCAFANA_USE_STAN)
+endif()
+
 #Changes default install path to be a subdirectory of the build dir.
 #Can set build dir at configure time with -DCMAKE_INSTALL_PREFIX=/install/path
 if(NOT DEFINED CMAKE_INSTALL_PREFIX OR 
@@ -52,14 +57,18 @@ include_directories(
   ${CMAKE_BINARY_DIR}/Ext
   ${BOOST_INC}
   ${EIGEN_INC}
-  ${SUNDIALS_INC}
-  ${STAN_MATH_INC}
-  ${STAN_INC}
   ${TBB_INC}
   $ENV{OSCLIB_INC}
   $ENV{CAFANACORE_INC}
   $ENV{DUNEANAOBJ_INC}
 )
+if(CAFANA_USE_STAN)
+  include_directories(
+          ${SUNDIALS_INC}
+          ${STAN_MATH_INC}
+          ${STAN_INC}
+  )
+endif()
 
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
 find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})

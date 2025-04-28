@@ -1,7 +1,11 @@
 #include "CAFAna/Core/IFitVar.h"
 
 #include "CAFAna/Core/MathUtil.h"
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
+#include "CAFAna/Core/StanUtils.h"
 
 #include <cmath>
 
@@ -29,6 +33,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+
+#ifdef CAFANA_USE_STAN
   stan::math::var StanExp(const stan::math::var& x){return exp(x);}
   stan::math::var StanLog(const stan::math::var& x){return log(x);}
+#endif
 } // namespace

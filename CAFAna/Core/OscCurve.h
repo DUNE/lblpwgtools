@@ -12,7 +12,9 @@ namespace ana
   {
   public:
     OscCurve(osc::IOscCalc* calc, int from, int to);
+#ifdef CAFANA_USE_STAN
     OscCurve(osc::IOscCalcStan* calc, int from, int to);
+#endif
     virtual ~OscCurve();
 
     OscCurve(const OscCurve& rhs) = default;

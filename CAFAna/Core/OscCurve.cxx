@@ -42,6 +42,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   OscCurve::OscCurve(osc::IOscCalcStan* calc, int from, int to)
     : Ratio(Hist::AdoptStan(ToEigen(calc, from, to)),
             std::vector<Binning>(1, kTrueEnergyBins),
@@ -49,6 +50,7 @@ namespace ana
       fFrom(from), fTo(to)
   {
   }
+#endif
 
   //----------------------------------------------------------------------
   OscCurve::~OscCurve()

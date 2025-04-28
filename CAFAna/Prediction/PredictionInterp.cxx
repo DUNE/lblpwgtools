@@ -6,7 +6,12 @@
 #include "CAFAna/Core/MathUtil.h"
 #include "CAFAna/Core/Ratio.h"
 #include "CAFAna/Core/Registry.h"
+
+#ifdef CAFANA_USE_STAN
+// this one is from CAFAnaCore
 #include "CAFAna/Core/Stan.h"
+#endif
+
 #include "CAFAna/Core/Utilities.h"
 
 #include "TDirectory.h"
@@ -323,10 +328,12 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionInterp::Predict(osc::IOscCalcStan* calc) const
   {
     return fPredNom->Predict(calc);
   }
+#endif
 
   //----------------------------------------------------------------------
   Spectrum PredictionInterp::PredictComponent(osc::IOscCalc* calc,
@@ -338,6 +345,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionInterp::PredictComponent(osc::IOscCalcStan* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
@@ -345,7 +353,7 @@ namespace ana
   {
     return fPredNom->PredictComponent(calc, flav, curr, sign);
   }
-
+#endif
   //----------------------------------------------------------------------
   Spectrum PredictionInterp::PredictSyst(osc::IOscCalc* calc,
                                          const SystShifts& shift) const
@@ -359,6 +367,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionInterp::PredictSyst(osc::IOscCalcStan* calc,
                                          const SystShifts& shift) const
   {
@@ -370,6 +379,7 @@ namespace ana
                                 Current::kBoth,
                                 Sign::kBoth);
   }
+#endif
 
   //----------------------------------------------------------------------
   Spectrum PredictionInterp::ShiftSpectrum(const Spectrum &s, CoeffsType type,
@@ -384,11 +394,16 @@ namespace ana
     }
 
     if(s.HasStan() || shift.HasAnyStan()){
-      // Need the second case for the NC component
+#ifdef CAFANA_USE_STAN      // Need the second case for the NC component
       Eigen::ArrayXstan vec = s.HasStan() ? s.GetEigenStan(s.POT()) : Eigen::ArrayXstan(s.GetEigen(s.POT()));
 
       ShiftBins(vec.size(), vec.data(), type, nubar, shift);
       return Spectrum(std::move(vec), HistAxis(s.GetLabels(), s.GetBinnings()), s.POT(), s.Livetime());
+#else
+      std::string err = "PredictionInterp::ShiftSpectrum(): Attempt to use Stan-aware Spectrum without Stan support built into CAFAna!  Abort.";
+      std::cerr << err << "\n";
+      throw std::runtime_error(err);
+#endif
     }
     else{
       Eigen::ArrayXd vec = s.GetEigen(s.POT());
@@ -405,16 +420,19 @@ namespace ana
                                    bool nubar,
                                    const SystShifts& shift) const
   {
-    static_assert(std::is_same_v<T, double> ||
-                  std::is_same_v<T, stan::math::var>,
+    static_assert(std::is_same_v<T, double>
+#ifdef CAFANA_USE_STAN
+    || std::is_same_v<T, stan::math::var>
+#endif,
                   "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
     if(nubar) assert(fSplitBySign);
 
-
+#ifdef CAFANA_USE_STAN
     if(!std::is_same_v<T, stan::math::var> && shift.HasAnyStan()){
       std::cout << "PredictionInterp: stan shifts on non-stan spectrum, something is wrong" << std::endl;
       abort();
     }
+#endif
 
 #ifdef USE_PREDINTERP_OMP
     T corr[4][N];
@@ -441,7 +459,11 @@ namespace ana
 
       // need to actually do the calculation for the autodiff version
       // to make sure the gradient is computed correctly
-      if(x == 0 && (!std::is_same_v<T, stan::math::var> || !shift.HasStan(syst))) continue;
+      if(x == 0
+#ifdef CAFANA_USE_STAN
+         && (!std::is_same_v<T, stan::math::var> || !shift.HasStan(syst))
+#endif
+         ) continue;
 
       int shiftBin = (util::GetValAs<double>(x) - sp.shifts[0])/sp.Stride();
       shiftBin = std::max(0, shiftBin);
@@ -496,6 +518,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionInterp::ShiftedComponent(osc::_IOscCalc<stan::math::var>* calc,
                                               const TMD5* hash,
                                               const SystShifts& shift,
@@ -506,6 +529,7 @@ namespace ana
   {
     return _ShiftedComponent(calc, hash, shift, flav, curr, sign, type);
   }
+#endif
 
   //----------------------------------------------------------------------
   template<typename T>
@@ -530,7 +554,11 @@ namespace ana
     // wrong. Also, some calculators won't hash themselves.
     // Moreover, caching is not going to work with stan::math::vars
     // since they get reset every time Stan's log_prob() is called.
-    const bool canCache = (hash != 0) && !std::is_same<T, stan::math::var>::value;
+    const bool canCache = (hash != 0)
+#ifdef CAFANA_USE_STAN
+                          && !std::is_same<T, stan::math::var>::value
+#endif
+    ;
 
     const Key_t key = {flav, curr, sign};
     auto it = fNomCache->find(key);
@@ -640,6 +668,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionInterp::PredictComponentSyst(osc::IOscCalcStan* calc,
                                                   const SystShifts& shift,
                                                   Flavors::Flavors_t flav,
@@ -648,6 +677,7 @@ namespace ana
   {
     return _PredictComponentSyst(calc, shift, flav, curr, sign);
   }
+#endif
 
   //----------------------------------------------------------------------
   void PredictionInterp::SaveTo(TDirectory* dir, const std::string& name) const
