@@ -19,20 +19,10 @@ namespace ana
   {
   public:
     SystShifts();
-//    SystShifts(const ISyst<caf::SRInteractionProxy>* syst, double shift);
-//    SystShifts(const ISyst<caf::SRTrueInteractionProxy>* syst, double shift);
   SystShifts(const ISyst* syst, double shift);
-//    SystShifts(const ISyst<caf::SRInteractionProxy>*syst, stan::math::var shift);
-//    SystShifts(const ISyst<caf::SRTrueInteractionProxy>*, stan::math::var shift);
     SystShifts(const ISyst* syst, stan::math::var shift);
-//    SystShifts(const std::map<const ISyst<caf::SRInteractionProxy>*, double>& shifts);
-//    SystShifts(const std::map<const ISyst<caf::SRTrueInteractionProxy>*, double>& shifts);
     SystShifts(const std::map<const ISyst*, double>& shifts);
-//    SystShifts(const std::unordered_map<const ISyst<caf::SRInteractionProxy>*, double>& shifts);
-//    SystShifts(const std::unordered_map<const ISyst<caf::SRTrueInteractionProxy>*, double>& shifts);
     SystShifts(const std::unordered_map<const ISyst*, double>& shifts);
-//    SystShifts(const std::map<const ISyst<caf::SRInteractionProxy>*, stan::math::var>& shifts);
-//    SystShifts(const std::map<const ISyst<caf::SRTrueInteractionProxy>*, stan::math::var>& shifts);
     SystShifts(const std::map<const ISyst*, stan::math::var>& shifts);
     //virtual ~SystShifts() = default;
 
@@ -45,10 +35,6 @@ namespace ana
 
     /// shift: 0 = nominal; +-1 = 1sigma shifts etc. Arbitrary shifts allowed
     /// set force=true to insert a syst even if the shift is 0
-    //void SetShift(const ISyst<caf::SRInteractionProxy>* syst, double shift, bool force=false);
-    //void SetShift(const ISyst<caf::SRTrueInteractionProxy>* syst, double shift, bool force=false);
-    //void SetShift(const ISyst<caf::SRInteractionProxy>* syst, stan::math::var shift);
-    //void SetShift(const ISyst<caf::SRTrueInteractionProxy>* syst, stan::math::var shift);
     void SetShift(const ISyst* syst, double shift, bool force=false);
     void SetShift(const ISyst* syst, stan::math::var shift);
     
