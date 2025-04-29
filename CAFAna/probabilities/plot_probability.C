@@ -37,7 +37,7 @@ void plot_probability(bool plotLE = false)
 
 
   std::string tag = "E";
-  char titles = ";Neutrino Energy (GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
+  std::string labels = ";Neutrino Energy (GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
   if(LE){
     tag = "LE";
     labels = ";Baseline / Neutrino Energy (km/GeV); P(#nu_{#mu} #rightarrow #nu_{e})";
