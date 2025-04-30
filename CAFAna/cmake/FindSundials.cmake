@@ -14,7 +14,7 @@ find_path(Sundials_INC_DIR
   NO_DEFAULT_PATH)
 
 find_path(Sundials_LIB_DIR
-  NAMES libsundials_cvodes.a
+  NAMES libsundials_cvodes.so
   PATHS ${SUNDIALS_LIB}
   NO_DEFAULT_PATH)
 
