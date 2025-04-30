@@ -23,7 +23,7 @@ setup osclib v00.27 -q e26:n319:prof:stan || exit 1
 #setup cafanacore v02.03 -q e26:n319:prof || exit 1
 
 export PRODUCTS="/exp/dune/app/users/jwolcott/ups"
-setup cafanacore testing -q e26:prof || exit 1
+setup cafanacore testing -q e26:prof:stanfree || exit 1
 
 
 setup duneanaobj v03_07_00 -q e26:prof || exit 1
