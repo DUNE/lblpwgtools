@@ -423,8 +423,8 @@ namespace ana
     static_assert(std::is_same_v<T, double>
 #ifdef CAFANA_USE_STAN
     || std::is_same_v<T, stan::math::var>
-#endif,
-                  "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
+#endif
+                  , "PredictionInterp::ShiftBins() can only be called using doubles or stan::math::vars");
     if(nubar) assert(fSplitBySign);
 
 #ifdef CAFANA_USE_STAN
@@ -541,8 +541,11 @@ namespace ana
                                                Sign::Sign_t sign,
                                                CoeffsType type) const
   {
-    static_assert(std::is_same<T, double>::value || std::is_same<T, stan::math::var>::value,
-                  "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
+    static_assert(std::is_same<T, double>::value
+#ifdef CAFANA_USE_STAN
+    || std::is_same<T, stan::math::var>::value
+#endif
+    , "PredictionInterp::ShiftedComponent() can only be called using doubles or stan::math::vars");
 
     if(fSplitBySign && sign == Sign::kBoth){
       return (ShiftedComponent(calc, hash, shift, flav, curr, Sign::kAntiNu, type)+

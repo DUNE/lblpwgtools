@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
 
 #ifdef CAFANA_USE_STAN

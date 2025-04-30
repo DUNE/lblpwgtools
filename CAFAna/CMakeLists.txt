@@ -6,9 +6,9 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 
 project(CAFAna VERSION 2.00.00)
 
-set(CAFANA_USE_STAN False CACHE BOOL "Build against Stan?")
+option(CAFANA_USE_STAN "Build against Stan?" False)
 if(CAFANA_USE_STAN)
-  add_compile_options(-DCAFANA_USE_STAN)
+  add_compile_options(CAFANA_USE_STAN)
 endif()
 
 #Changes default install path to be a subdirectory of the build dir.

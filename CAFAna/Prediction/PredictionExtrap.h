@@ -21,16 +21,19 @@ namespace ana
     using IPrediction::PredictSyst;
 
     Spectrum Predict(osc::IOscCalc* calc) const override;
-    Spectrum Predict(osc::IOscCalcStan* calc) const override;
 
     Spectrum PredictComponent(osc::IOscCalc* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
+
+#ifdef CAFANA_USE_STAN
+    Spectrum Predict(osc::IOscCalcStan* calc) const override;
     Spectrum PredictComponent(osc::IOscCalcStan* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
+#endif
 
     OscillatableSpectrum ComponentCC(int from, int to) const override;
     // NC components:

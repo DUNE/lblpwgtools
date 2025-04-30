@@ -32,15 +32,15 @@ public:
     return fSpectrum;
   }
 
-  virtual Spectrum Predict(osc::IOscCalcStan* /*calc*/) const override {
-    return fSpectrum;
-  }
-
   virtual Spectrum PredictComponent(osc::IOscCalc *calc,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
                                     Sign::Sign_t sign) const override;
 
+#ifdef CAFANA_USE_STAN
+  virtual Spectrum Predict(osc::IOscCalcStan* /*calc*/) const override {
+    return fSpectrum;
+  }
   virtual Spectrum PredictComponent(osc::IOscCalcStan* /*calc*/,
                                     Flavors::Flavors_t flav,
                                     Current::Current_t curr,
@@ -48,6 +48,7 @@ public:
   {
     return PredictComponent((osc::IOscCalc*)0, flav, curr, sign);
   }
+#endif
 
 protected:
   PredictionNoOsc(const Spectrum &s, const Spectrum &sNCTot, const Spectrum &sNC, 

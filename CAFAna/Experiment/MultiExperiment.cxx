@@ -41,7 +41,7 @@ namespace ana
 #ifdef CAFANA_USE_STAN
             localShifts.SetShift(sec, syst.GetShift<stan::math::var>(prim));
 #else
-            NoStanError();
+            util::NoStanError();
 #endif
           }
           else{

@@ -87,8 +87,8 @@ namespace ana
     /// override this
     virtual stan::math::var LogPrior() const;
 #else
-    constexpr bool HasStan(const ISyst* s) { return false; }
-    constexpr bool HasAnyStan() {return false; }
+    constexpr bool HasStan(const ISyst* s) const { return false; }
+    constexpr bool HasAnyStan() const {return false; }
 #endif
 
     /// SystShifts with the same set of systs should have the same ID

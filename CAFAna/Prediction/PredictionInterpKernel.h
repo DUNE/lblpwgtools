@@ -27,6 +27,6 @@ namespace ana
                              unsigned int N,
                              const stan::math::var& x, const stan::math::var& x2, const stan::math::var& x3,
                              stan::math::var* corr);
-  }
 #endif
+  }
 }

@@ -1,7 +1,5 @@
 #include "CAFAna/Core/Binning.h"
 
-#include <cassert>
-
 #include "TDirectory.h"
 #include "TH1.h"
 #include "TObjString.h"
