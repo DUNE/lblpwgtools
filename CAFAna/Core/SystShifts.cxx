@@ -4,7 +4,10 @@
 
 #include "cafanacore/Registry.h"
 
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
+
 #include "CAFAna/Core/StanUtils.h"
 
 #include <cassert>
