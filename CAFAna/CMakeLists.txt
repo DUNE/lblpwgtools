@@ -61,6 +61,8 @@ include_directories(
   $ENV{DUNEANAOBJ_INC}
 )
 
+include_directories(shoehorn)
+
 find_library(CAFANACOREEXT CAFAnaCoreExt $ENV{CAFANACORE_LIB})
 find_library(STANDARDRECORD duneanaobj_StandardRecord $ENV{DUNEANAOBJ_LIB})
 find_library(STANDARDRECORDPROXY duneanaobj_StandardRecordProxy $ENV{DUNEANAOBJ_LIB})
