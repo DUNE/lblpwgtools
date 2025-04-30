@@ -15,10 +15,10 @@ setup boost v1_82_0 -q e26:prof || exit 1
 setup fhiclcpp v4_18_04 -q e26:prof || exit 1 # for prism
 
 setup eigen v23_08_01_66e8f || exit 1
-setup sundials v6_5_0 || exit 1
-setup stan v2_35_0a || exit 1
+#setup sundials v6_5_0 || exit 1
+#setup stan v2_35_0a || exit 1
 
-setup osclib v00.27 -q e26:n319:prof:stan || exit 1
+setup osclib v00.27 -q e26:n319:prof:stanfree || exit 1
 
 #setup cafanacore v02.03 -q e26:n319:prof || exit 1
 
