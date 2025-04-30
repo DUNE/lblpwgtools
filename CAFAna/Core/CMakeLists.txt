@@ -73,8 +73,14 @@ target_link_libraries(CAFAnaCore
   CAFAnaCore::Ext 
   OscLib::All
   ROOT::ROOT 
-  Stan::All 
   Boost::filesystem)
+if(CAFANA_USE_STAN)
+  target_link_libraries(CAFAnaCore Stan::All)
+else()
+  # normally Stan would also drag in Eigen, but we can't count on that if we're not using Stan
+  target_link_libraries(CAFAnaCore Eigen3::Eigen)
+endif()
+
 
 set_target_properties(CAFAnaCore PROPERTIES
   PUBLIC_HEADER "${Core_header_files}")
