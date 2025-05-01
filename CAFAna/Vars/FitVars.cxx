@@ -1,8 +1,11 @@
 #include "CAFAna/Vars/FitVars.h"
 
 #include "CAFAna/Core/MathUtil.h"
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
 #include "CAFAna/Core/StanVar.h"
+#endif
 
 #include "OscLib/IOscCalc.h"
 
@@ -79,20 +82,24 @@ namespace ana
   {
     return dcP_GetVal_Helper(osc);
   }
+#ifdef CAFANA_USE_STAN
   stan::math::var FitDeltaInPiUnits::GetValue(const osc::IOscCalcAdjustableStan* osc) const
   {
     return dcP_GetVal_Helper(osc);
   }
+#endif
 
   //----------------------------------------------------------------------
   void FitDeltaInPiUnits::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc->SetdCP(M_PI*val);
   }
+#ifdef CAFANA_USE_STAN
   void FitDeltaInPiUnits::SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const
   {
     osc->SetdCP(M_PI*val);
   }
+#endif
 
   //----------------------------------------------------------------------
   double FitTheta23::GetValue(const osc::IOscCalcAdjustable* osc) const
@@ -113,12 +120,13 @@ namespace ana
   {
     return util::sqr(sin(osc->GetTh23()));
   }
-
+#ifdef CAFANA_USE_STAN
   //----------------------------------------------------------------------
   stan::math::var FitSinSqTheta23::GetValue(const osc::IOscCalcAdjustableStan *osc) const
   {
     return util::sqr(sin(osc->GetTh23()));
   }
+#endif
 
   //----------------------------------------------------------------------
   void FitSinSqTheta23::SetValue(osc::IOscCalcAdjustable* osc, double val) const
@@ -128,10 +136,12 @@ namespace ana
 
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   void FitSinSqTheta23::SetValue(osc::IOscCalcAdjustableStan *osc, stan::math::var val) const
   {
     osc->SetTh23(asin(sqrt(this->Clamp(val))));
   }
+#endif
 
   //----------------------------------------------------------------------
   double FitSinSqTheta23Symmetry::
@@ -199,6 +209,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   stan::math::var FitDmSq32Scaled::GetValue(const osc::IOscCalcAdjustableStan *osc) const
   {
     return osc->GetDmsq32()*1000.0;;
@@ -209,7 +220,7 @@ namespace ana
   {
     osc->SetDmsq32(this->Clamp(val)/1000.0);
   }
-
+#endif
 
   //----------------------------------------------------------------------
   void FitDmSq32Scaled::SetValue(osc::IOscCalcAdjustable* osc, double val) const

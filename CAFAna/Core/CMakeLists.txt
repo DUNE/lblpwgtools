@@ -22,11 +22,15 @@ set(Core_implementation_files
   Utilities.cxx
   Var.cxx
   )
+if(CAFANA_USE_STAN)
+  set(Core_implementation_files ${Core_implementation_files}
+
+  )
+endif()
 
 set(Core_header_files
   Binning.h
   Cut.h
-  FitVarWithPrior.h
   HistAxis.h
   IFitVar.h
   IRecordSink.h
@@ -48,7 +52,6 @@ set(Core_header_files
   Sources.ixx
   SpectrumLoader.h
   SpectrumLoaderBase.h
-  StanTypedefs.h
   StanUtils.h
   SystShifts.h
   TruthMatching.h
@@ -56,16 +59,28 @@ set(Core_header_files
   Var.h
   Weight.h
   ModeConversionUtilities.h
-  rootlogon.C)
-
+  rootlogon.C
+)
+if(CAFANA_USE_STAN)
+  set(Core_header_files ${Core_header_files}
+      StanTypedefs.h
+      FitVarWithPrior.h
+  )
+endif()
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
 target_link_libraries(CAFAnaCore
   ${STANDARDRECORDPROXY}
   CAFAnaCore::Ext 
   OscLib::All
   ROOT::ROOT 
-  Stan::All 
   Boost::filesystem)
+if(CAFANA_USE_STAN)
+  target_link_libraries(CAFAnaCore Stan::All)
+else()
+  # normally Stan would also drag in Eigen, but we can't count on that if we're not using Stan
+  target_link_libraries(CAFAnaCore Eigen3::Eigen)
+endif()
+
 
 set_target_properties(CAFAnaCore PROPERTIES
   PUBLIC_HEADER "${Core_header_files}")

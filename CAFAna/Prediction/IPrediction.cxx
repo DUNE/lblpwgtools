@@ -38,12 +38,15 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   // placeholder method that should be overridden by Stan-aware concrete Prediction classes
   Spectrum IPrediction::Predict(osc::IOscCalcStan *calc) const
   {
     std::cout << "This Prediction hasn't implemented a Stan-aware Predict()!" << std::endl;
     abort();
   }
+#endif
+
   //----------------------------------------------------------------------
   Spectrum IPrediction::PredictSyst(osc::IOscCalc* calc,
                                     const SystShifts& syst) const
@@ -57,6 +60,23 @@ namespace ana
     return Predict(calc);
   }
 
+  //----------------------------------------------------------------------
+  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalc* calc,
+                                             const SystShifts& syst,
+                                             Flavors::Flavors_t flav,
+                                             Current::Current_t curr,
+                                             Sign::Sign_t sign) const
+  {
+    if(!syst.IsNominal()){
+      std::cout << "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?" << std::endl;
+      abort();
+    }
+
+    // Default implementation: no treatment of systematics
+    return PredictComponent(calc, flav, curr, sign);
+  }
+
+#ifdef CAFANA_USE_STAN
   //----------------------------------------------------------------------
   Spectrum IPrediction::PredictSyst(osc::IOscCalcStan* calc,
                                     const SystShifts& syst) const
@@ -82,22 +102,6 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
-  Spectrum IPrediction::PredictComponentSyst(osc::IOscCalc* calc,
-                                             const SystShifts& syst,
-                                             Flavors::Flavors_t flav,
-                                             Current::Current_t curr,
-                                             Sign::Sign_t sign) const
-  {
-    if(!syst.IsNominal()){
-      std::cout << "This Prediction doesn't support PredictSyst(). Did you just mean Predict()?" << std::endl;
-      abort();
-    }
-
-    // Default implementation: no treatment of systematics
-    return PredictComponent(calc, flav, curr, sign);
-  }
-
-  //----------------------------------------------------------------------
   Spectrum IPrediction::PredictComponentSyst(osc::IOscCalcStan* calc,
                                              const SystShifts& syst,
                                              Flavors::Flavors_t flav,
@@ -111,6 +115,7 @@ namespace ana
     // Default implementation: no treatment of systematics
     return PredictComponent(calc, flav, curr, sign);
   }
+#endif
 
   //----------------------------------------------------------------------
   OscillatableSpectrum IPrediction::ComponentCC(int from, int to) const

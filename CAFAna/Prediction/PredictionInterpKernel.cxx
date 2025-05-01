@@ -7,7 +7,9 @@
 //
 // and look at PredictionInterpKernel.s for xmm, ymm or zmm registers
 
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 
 namespace ana
 {
@@ -24,6 +26,7 @@ namespace ana
       } // end for n
     }
 
+#ifdef CAFANA_USE_STAN
     void ShiftSpectrumKernel(const Coeffs* fits,
                              unsigned int N,
                              const stan::math::var& x,
@@ -38,6 +41,7 @@ namespace ana
       } // end for n
 
     }
+#endif
 
   }
 }

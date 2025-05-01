@@ -169,8 +169,12 @@ namespace ana
   {
     const int nbins = fAxis.GetBins1D().NBins()+2;
     if(fHist.HasStan()){
+#ifdef CAFANA_USE_STAN
       return Spectrum(Eigen::ArrayXstan(fHist.GetEigenStan().segment(nbins*univIdx, nbins)),
                       fAxis, fPOT, fLivetime);
+#else
+      throw std::runtime_error("EnsembleSpectrum::Universe(): attempt to use Stan-aware EnsembleSpectrum, but Stan support was not enabled in lblpwgtools.  Abort");
+#endif
     }
     else{
       return Spectrum(Eigen::ArrayXd(fHist.GetEigen().segment(nbins*univIdx, nbins)),

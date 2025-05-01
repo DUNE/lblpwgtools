@@ -4,7 +4,10 @@
 
 #include "cafanacore/Registry.h"
 
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
+
 #include "CAFAna/Core/StanUtils.h"
 
 #include <cassert>
@@ -38,6 +41,7 @@ namespace ana
       fSystsDbl.emplace(syst, Clamp(shift, syst));
   }
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   SystShifts::SystShifts(const ISyst* syst, stan::math::var shift)
       : fID(fgNextID++)
   {
@@ -46,6 +50,7 @@ namespace ana
     // so that when the Stan cache gets invalidated we can still return something usable.
     fSystsDbl.emplace(syst, Clamp(util::GetValAs<double>(shift), syst));
   }
+#endif
   //----------------------------------------------------------------------
   SystShifts::SystShifts(const std::map<const ISyst *, double> &shifts)
       : fID(fgNextID++) {
@@ -63,6 +68,7 @@ namespace ana
       //fSystsDbl.emplace(it.first, it.second);
   }
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   SystShifts::SystShifts(const std::map<const ISyst*, stan::math::var>& shifts)
       : fID(fgNextID++)
   {
@@ -72,6 +78,7 @@ namespace ana
       fSystsDbl.emplace(it.first, util::GetValAs<double>(it.second));
     }
   }
+#endif
   //----------------------------------------------------------------------
   SystShifts SystShifts::RandomThrow(const std::vector<const ISyst*>& systs)
   {
@@ -90,6 +97,7 @@ namespace ana
   {
     fID = fgNextID++;
 
+#ifdef CAFANA_USE_STAN
     // if this slot already exists in the Stan systs, and we're not setting the same value,
     // some shenanigans are going on that we need to figure out.  abort.
     auto itStan = fSystsStan.find(syst);
@@ -101,12 +109,14 @@ namespace ana
       std::cerr << "Abort." << std::endl;
       abort();
     }
+#endif
 
     fSystsDbl.erase(syst);
     if(force || shift != 0.) fSystsDbl.emplace(syst, Clamp(shift, syst));
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   void SystShifts::SetShift(const ISyst* syst, stan::math::var shift)
   {
     fSystsStan.erase(syst);
@@ -115,7 +125,7 @@ namespace ana
     fSystsStan.emplace(syst, shift);
     SetShift(syst, util::GetValAs<double>(shift), true);
   }
-
+#endif
   //----------------------------------------------------------------------
   template <>
   double SystShifts::GetShift(const ISyst* syst) const
@@ -127,6 +137,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   template <>
   stan::math::var SystShifts::GetShift(const ISyst* syst) const
   {
@@ -147,14 +158,16 @@ namespace ana
     }
     return (it == fSystsStan.end()) ? 0 : it->second;
   }
-
+#endif
   //----------------------------------------------------------------------
   void SystShifts::ResetToNominal()
   {
     fID = 0;
 
     fSystsDbl.clear();
+#ifdef CAFANA_USE_STAN
     fSystsStan.clear();
+#endif
   }
 
   //----------------------------------------------------------------------
@@ -167,7 +180,9 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   stan::math::var SystShifts::LogPrior() const { return log(Prior()); }
+#endif
 
   //----------------------------------------------------------------------
   void SystShifts::Shift(caf::SRInteractionProxy* sr,
@@ -242,7 +257,9 @@ namespace ana
 
   // manually instantiate the template for the correct types
   template double SystShifts::Clamp<double>(const double&, const ISyst*);
+#ifdef CAFANA_USE_STAN
   template stan::math::var SystShifts::Clamp<stan::math::var>(const stan::math::var&, const ISyst*);
+#endif
 
   //----------------------------------------------------------------------
   void SystShifts::SaveTo(TDirectory* dir, const std::string& name) const
@@ -310,6 +327,7 @@ namespace ana
     return std::make_unique<GaussianPriorSystShifts>(*this);
   }
 
+#ifdef CAFANA_USE_STAN
   //----------------------------------------------------------------------
   stan::math::var GaussianPriorSystShifts::LogPrior() const
   {
@@ -325,4 +343,6 @@ namespace ana
   {
     return exp(LogPrior());
   }
+#endif
+
 } // namespace ana

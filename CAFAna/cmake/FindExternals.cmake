@@ -2,7 +2,13 @@ find_package(perftools)
 
 find_package(GSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
+
+if (CAFANACORE_USE_STAN)
 find_package(Stan REQUIRED)
+else()
+  # Stan would normally drag Eigen in, but if we're not using Stan, we can't count on that
+  find_package(Eigen3Local REQUIRED)
+endif()
 
 find_package(OscLib REQUIRED)
 find_package(CAFAnaCore REQUIRED)

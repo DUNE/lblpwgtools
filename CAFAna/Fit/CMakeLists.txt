@@ -10,10 +10,15 @@ set(Fit_implementation_files
   MCMCSample.cxx
   MCMCSamples.cxx
   MinuitFitter.cxx
-  Priors.cxx
   RefineSeeds.cxx
   SeedList.cxx
-  StanFitter.cxx)
+)
+if(CAFANA_USE_STAN)
+  set(Fit_implementation_files ${Fit_implementation_files}
+      Priors.cxx
+      StanFitter.cxx
+  )
+endif()
 
 set(Fit_header_files
   Bayesian1DMarginal.h
@@ -27,11 +32,16 @@ set(Fit_header_files
   MCMCSample.h
   MCMCSamples.h
   MinuitFitter.h
-  Priors.h
   RefineSeeds.h
   SeedList.h
   StanConfig.h
-  StanFitter.h)
+)
+if(CAFANA_USE_STAN)
+  set(Fit_header_files ${Fit_header_files}
+    StanFitter.h
+    Priors.h
+  )
+endif()
 
 add_library(CAFAnaFit SHARED ${Fit_implementation_files})
 target_link_libraries(CAFAnaFit CAFAnaCore OscLib::All)
