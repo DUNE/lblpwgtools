@@ -8,7 +8,7 @@
 
 #include "CAFAna/Core/Utilities.h"
 
-namespace ana
+namespace util
 {
   //----------------------------------------------------------------------
 
