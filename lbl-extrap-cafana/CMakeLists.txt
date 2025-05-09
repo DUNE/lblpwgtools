@@ -30,6 +30,14 @@ if(DUNEPlotStyle_FOUND)
 	add_compile_options(-DLBL2025_USE_DUNESTYLE)
 endif()
 
+set(LBL_CAFANA_USE_STAN True)
+if ("$ENV{CAFANA_USE_STAN}" STREQUAL "0")
+	message(WARNING "CAFAna was built with Stan support disabled.  Propagating that to LBL...")
+	set(LBL_CAFANA_USE_STAN False)
+elseif (DEFINED ENV{CAFANA_USE_STAN})
+	message(WARNING "\$CAFANA_USE_STAN has value '$ENV{CAFANA_USE_STAN}', which I interpret to mean I *should* depend on Stan.  Here goes...")
+endif()
+
 set(LBL_CAFANA_INCDIRS
 	# CAFAna itself
 	$ENV{CAFANA}/include
@@ -38,10 +46,6 @@ set(LBL_CAFANA_INCDIRS
 	$ENV{ROOT_INC}
 	$ENV{BOOST_INC}
 	$ENV{EIGEN_INC}
-	$ENV{SUNDIALS_INC}
-	$ENV{STAN_MATH_INC}
-	$ENV{STAN_INC}
-	$ENV{TBB_INC}
 	$ENV{OSCLIB_INC}
 	$ENV{SRPROXY_INC}
 	$ENV{CAFANACORE_INC}
@@ -49,9 +53,23 @@ set(LBL_CAFANA_INCDIRS
 
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
+if(LBL_CAFANA_USE_STAN)
+	set(LBL_CAFANA_INCDIRS ${LBL_CAFANA_INCDIRS}
+		$ENV{SUNDIALS_INC}
+		$ENV{STAN_MATH_INC}
+		$ENV{STAN_INC}
+		$ENV{TBB_INC}
+	)
+endif()
+
 
 # otherwise we will get errors about TBB
 add_compile_options(-DTBB_INTERFACE_NEW)
+set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed" )
+
+if(NOT LBL_CAFANA_USE_STAN)
+	remove_definitions(-DCAFANA_USE_STAN)
+endif()
 
 include_directories(${LBL_CAFANA_INCDIRS})
 
@@ -74,11 +92,15 @@ function(link_all_libs tgt)
 			CAFAnaCore::Ext
 			OscLib::All
 			ROOT::ROOT
-			Stan::All
 			Boost::filesystem
 			CAFAna::All
+			-Wl,--no-as-needed
 	)
+	if(LBL_CAFANA_USE_STAN)
+		target_link_libraries(${tgt} Stan::All)
+	endif()
 endfunction()
+
 
 add_subdirectory(lbl2025)
 add_subdirectory(progs)
