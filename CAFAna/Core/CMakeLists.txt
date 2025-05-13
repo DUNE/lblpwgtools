@@ -53,6 +53,7 @@ set(Core_header_files
   SpectrumLoader.h
   SpectrumLoaderBase.h
   StanUtils.h
+  StanTypedefs.h
   SystShifts.h
   TruthMatching.h
   Utilities.h
@@ -63,7 +64,6 @@ set(Core_header_files
 )
 if(CAFANA_USE_STAN)
   set(Core_header_files ${Core_header_files}
-      StanTypedefs.h
       FitVarWithPrior.h
   )
 endif()
