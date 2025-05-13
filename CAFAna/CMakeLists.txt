@@ -9,6 +9,9 @@ project(CAFAna VERSION 2.00.00)
 option(CAFANA_USE_STAN "Build against Stan?" False)
 if(CAFANA_USE_STAN)
   add_compile_options(CAFANA_USE_STAN)
+  set(CAFANA_STAN_ENV 1)
+else()
+  set(CAFANA_STAN_ENV 0)
 endif()
 
 #Changes default install path to be a subdirectory of the build dir.
