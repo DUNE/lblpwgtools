@@ -175,9 +175,11 @@ void plot_probability(bool plotLE = false)
 	}
 
     //std::string thisLabel = "numutoe__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
-    TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
+    TH2* axes = new TH2F("", titles, 60, xmin, xmax, 100, ymin, ymax);
     //CenterTitles(axes);
     axes->Draw();
+axes->GetXaxis()->CenterTitle();
+axes->GetYaxis()->CenterTitle();
 
     gPad->SetFillStyle(0);
     gmue[0][0][0]->Draw("l same");
@@ -213,9 +215,11 @@ void plot_probability(bool plotLE = false)
 	}
 
     //std::string thisLabel = "numutomu__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
-    TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
+    TH2* axes = new TH2F("", titles, 60, xmin, xmax, 100, ymin, ymax);
     //CenterTitles(axes);
     axes->Draw();
+axes->GetXaxis()->CenterTitle();
+axes->GetYaxis()->CenterTitle();
 
     gPad->SetFillStyle(0);
   	gmumu[0][0][0]->Draw("l same");   
@@ -249,9 +253,12 @@ void plot_probability(bool plotLE = false)
 		xmax = baseline/xmax;
 	}
     //std::string thisLabel = "both__rho"+rhoLabel[rhoId]+"_sin"+sinLabel[sinId];
-    TH2* axes = new TH2F("", labels, 60, xmin, xmax, 100, ymin, ymax);
+    TH2* axes = new TH2F("", titles, 60, xmin, xmax, 100, ymin, ymax);
     //CenterTitles(axes);
     axes->Draw();
+axes->GetXaxis()->CenterTitle();
+axes->GetYaxis()->CenterTitle();
+
 
     gPad->SetFillStyle(0);
 
