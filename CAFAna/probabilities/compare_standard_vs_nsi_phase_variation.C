@@ -13,8 +13,8 @@
 void compare_standard_vs_nsi_phase_variation()
 {
     const int nPts = 200;
-    const double Emin = 0.1, Emax = 10.0;   // GeV
-    const double baseline = 1300;         // km
+    const double Emin = 1, Emax = 10.0;   // GeV
+    const double baseline = 1295;         // km
     const double rho = 2.8;               // g/cm^3
     
     std::vector<double> delta_vals = {0, M_PI/2, M_PI, 3*M_PI/2};
@@ -46,7 +46,7 @@ void compare_standard_vs_nsi_phase_variation()
     c->Clear();
     
     gStd->SetTitle("Transition probability  #nu_{#mu} #rightarrow #nu_{e};E (GeV);P(#nu_{#mu} #rightarrow #nu_{e})");
-    gStd->GetYaxis()->SetRangeUser(0.0, 0.4);  // Set Y-axis range from 0 to 1
+    gStd->GetYaxis()->SetRangeUser(0.0, 0.6);  // Set Y-axis range from 0 to 1
     
     gStd->Draw("AL");
     
@@ -69,8 +69,8 @@ void compare_standard_vs_nsi_phase_variation()
         calc_nsi->SetdCP(0);
         
         // Set NSI parameters
-        calc_nsi->SetEps_etau(0.5);
-        calc_nsi->SetDelta_etau(delta);
+       calc_nsi->SetEps_emu(0.25);
+        calc_nsi->SetDelta_emu(delta);
         // calc_nsi->UpdateOscCalc(); // Ensure changes are applied
         
         // Fill graph for current delta_etau
@@ -104,28 +104,5 @@ void compare_standard_vs_nsi_phase_variation()
         c->SaveAs("nsi_phase_variation.pdf");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
