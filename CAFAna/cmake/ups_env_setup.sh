@@ -15,16 +15,13 @@ setup boost v1_82_0 -q e26:prof || exit 1
 setup fhiclcpp v4_18_04 -q e26:prof || exit 1 # for prism
 
 setup eigen v23_08_01_66e8f || exit 1
+
+# until we resurrect the Stan interface, see lblpwgtools GitHub issue #63
 #setup sundials v6_5_0 || exit 1
 #setup stan v2_35_0a || exit 1
 
 setup osclib v00.27 -q e26:n319:prof:stanfree || exit 1
-
-#setup cafanacore v02.03 -q e26:n319:prof || exit 1
-
-export PRODUCTS="/exp/dune/app/users/jwolcott/ups:$PRODUCTS"
-setup cafanacore testing -q e26:prof:stanfree || exit 1
-
+setup cafanacore v02.05 -q e26:prof:n319:stanfree || exit 1
 
 setup duneanaobj v03_07_00 -q e26:prof || exit 1
 
