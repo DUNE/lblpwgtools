@@ -25,17 +25,17 @@ using namespace ana;
 //   - True particles Level Vars/Cuts
 
 
-void demo0b( std::string option = "flat")
+void demo_cutsvars()
 {
- 
-  std::string fname;
-  if(option=="caf") fname = "/exp/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/MR5_beta2a_flash/test_flash.root";
 
-  if (option=="flat")  fname = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
-
-
-  // Source of events
+  // Sample ND-LAr file
+  const std::string fname = "/pnfs/dune/persistent/physicsgroups/dunendsim/abooth/nd-production/MicroProdN4p1/run-cafmaker/MicroProdN4p1_NDComplex_FHC.caf.full.spineonly/CAF.flat/0002000/0002400/MicroProdN4p1_NDComplex_FHC.caf.full.spineonly.0002459.CAF.flat.root";
   SpectrumLoader loader(fname);
+
+  // Sample FD VD file
+  // const std::string fname = "/pnfs/dune/persistent/staging/fardet-vd/6d/35/fardet-vd_mc_list-merge_physics_cafmaker_dunevd10kt_1x8x6_3view_30deg_runreco-nuenergy_geov3_root-tuple_merged_skip000000_lim000060_final_20241024T024241.root";
+  // SpectrumLoader loader(fname, "cafmaker");
+
 
   /////////////////////////////////////////////////////////////////
   // Reco-Particles (SRRecoParticleProxy)  level vars and cuts
@@ -172,8 +172,6 @@ void demo0b( std::string option = "flat")
   // Fill in the spectra
   loader.Go();
 
-  std::cout<< "Spectrum sTrueNumuPDGtest has"<< sTrueNumuPDGtest.ToTH1(sTrueNumuPDGtest.POT())->GetNbinsX() << "bins, and the axis "<< sTrueNumuPDGtest.GetBinnings()[0].NBins()<< " NBins\n";
-  std::cout<< "eigen has size: "<< sTrueNumuPDGtest.GetEigen().rows() << "," << sTrueNumuPDGtest.GetEigen().cols()<<std::endl;
   // grab pot from any
   const double pot = sEnergyMuon.POT();
 
@@ -184,7 +182,7 @@ void demo0b( std::string option = "flat")
   lege->AddEntry(emu, "All #mu energy","L");
   lege->AddEntry(emuCont, "Cont. #mu energy","L");
   lege->Draw();
-  gPad->SaveAs(("demo0_sEnergyMuon"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_sEnergyMuon.pdf");
 
   new TCanvas;
   PDGTrue.ToTH1(pot,kBlue)->Draw("hist same");
@@ -205,24 +203,24 @@ void demo0b( std::string option = "flat")
   leg->AddEntry(prefsi, "Pre-FSI","L");
   leg->SetFillStyle(0);
   leg->Draw();
-  gPad->SaveAs(("demo0_PDGprims_"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_PDGprims.pdf");
 
   new TCanvas;
   sTrueNumuEnergy.ToTH1(sTrueNumuEnergy.POT())->Draw("hist");
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs(("demo0_vtxPosAll_"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_vtxPosAll.pdf");
   new TCanvas; 
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs(("demo0_vtxPosCont_"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_vtxPosCont.pdf");
 
 
   new TCanvas;
   sTrueVtxPositionAll.ToTH2(sTrueVtxPositionAll.POT())->Draw("colz");
-  gPad->SaveAs(("demo0_TruevtxPosAll_"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_TruevtxPosAll.pdf");
   new TCanvas;
   sTrueVtxPositionCont.ToTH2(sTrueVtxPositionCont.POT())->Draw("colz");
-  gPad->SaveAs(("demo0_TruevtxPosCont_"+option+".pdf").c_str());
+  gPad->SaveAs("demo0_TruevtxPosCont.pdf");
 
 }

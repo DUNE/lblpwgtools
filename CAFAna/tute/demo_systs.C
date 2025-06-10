@@ -14,7 +14,7 @@
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/ISyst.h"
 #include "CAFAna/Core/Utilities.h"
-#include "demo0eb.C"
+#include "demo_ensemble.C"
 
 #include "TFile.h"
 #include "TCanvas.h"

@@ -12,7 +12,7 @@
 #include "CAFAna/Core/Cut.h"
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/ISyst.h"
-#include "demo0eb.C"
+#include "demo_ensemble.C"
 
 #include "TFile.h"
 #include "TCanvas.h"
@@ -64,7 +64,7 @@ struct ShiftedSpec
 // Instantiate a dummy systematic to construct Multiverse
 // Get a wrapper that merges various spectra into a simgle ensemble spectrum thing...
 
-void demo2eb()
+void demo_2x2_nomeson_ensemble()
 {
  
 

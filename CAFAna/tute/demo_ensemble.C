@@ -181,7 +181,7 @@ const Var kEnergyInteractionButMu([](const caf::SRInteractionProxy* ixn)
 
 // Make a basic ensemble spectrum?
 // based on https://github.com/SBNSoftware/sbnana/blob/feature/ext_cafanacore/sbnana/CAFAna/test/test_ensemble.C 
-void demo0eb()
+void demo_ensemble()
 {
  
  // test multiverse

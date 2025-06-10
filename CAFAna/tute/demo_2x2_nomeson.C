@@ -139,7 +139,7 @@ const Var kNumberOfTrkShw([](const caf::SRInteractionProxy* ixn)
 
 
 
-void demo1b()
+void demo_2x2_nomeson()
 {
   // Environment variables and wildcards work. As do SAM datasets.
   const std::string fname = "/exp/dune/data/users/noeroy/prod/MiniRun5_1E19_RHC/MiniRun5_1E19_RHC.caf.beta1/CAF/0000000/*.root";
@@ -148,7 +148,7 @@ void demo1b()
   /// "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/minirun4/notruth/outputCAF_notruth_*";
   //  "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.2/PicoRun4.2_1E17_RHC.flow*";
 //   "/dune/data/users/skumara/Datafiles_2x2/CAF_rootfiles/Picorun4.1/PicoRun4.1_1E17_RHC.flow*";
-  
+
 
   // Source of events
   SpectrumLoader loader(fname);
@@ -163,7 +163,7 @@ void demo1b()
   const RecoPartHistAxis axPDG("PDG of reco particle", Binning::Simple(14, 0, 14), kRecoParticlePDG);
 
 
-// Select particles that have a pdg of muon 
+// Select particles that have a pdg of muon
   const RecoPartCut kIsMuon([](const caf::SRRecoParticleProxy* sr)
                       {
                         return abs(sr->pdg) == 13 ;
@@ -175,10 +175,10 @@ const Cut kContainment([](const caf::SRInteractionProxy* ixn)
                         double x = ixn->vtx.x;
                         double y = ixn->vtx.y;
                         double z = ixn->vtx.z;
-                        bool cont =  abs(x)<50 && 
-                                     abs(x)>10 && 
+                        bool cont =  abs(x)<50 &&
+                                     abs(x)>10 &&
                                      abs(y)<50 &&
-                                     abs(z)>10 && 
+                                     abs(z)>10 &&
                                      abs(z)<50 ;
                         return cont;
                       });
@@ -186,18 +186,18 @@ const Cut kContainment([](const caf::SRInteractionProxy* ixn)
 
 const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
                       {
-                      //Vertex must have more than one shower and 0 tracks.                          
+                      //Vertex must have more than one shower and 0 tracks.
                            return !(kNumberOfShowers(ixn)==1 &&  kNumberOfTracks(ixn)==0 ) ;
                       });
 
 
 
   //2D histaxis with interaction level variables
-  const HistAxis vtxPosition( "x(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.x), 
+  const HistAxis vtxPosition( "x(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.x),
                               "z(cm)", Binning::Simple(60,-60,60), SIMPLEVAR(vtx.z));
 
 //  Multiplicity of all particles reconstructed from selected vertices
-  // tracks 
+  // tracks
   // showers
   const HistAxis trackMult("Number of particles", Binning::Simple(20,0,20), kNumberOfTracks);
   const HistAxis shwMult("Number of particles", Binning::Simple(20,0,20), kNumberOfShowers);
@@ -212,11 +212,11 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
   Spectrum sEnergyMuon(loader.Interactions(RecoType::kDLP).RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
   Spectrum sEnergyMuonContX(loader.Interactions(RecoType::kDLP)[kContainment].RecoParticles(RecoType::kDLP)[kIsMuon], axEnergy);
   Spectrum sEnergyElectron(loader.Interactions(RecoType::kDLP).RecoParticles(RecoType::kDLP)[kPartCut(11)], axEnergy);
- 
+
   Spectrum sVtxPositionAll(loader.Interactions(RecoType::kDLP), vtxPosition);
   Spectrum sVtxPositionCont(loader.Interactions(RecoType::kDLP)[kContainment], vtxPosition);
 //
-//// This wont work with a cut because the information of number of tracks 
+//// This wont work with a cut because the information of number of tracks
 //// is in a different branch than the vtx position information
   Spectrum sTrackMultContained( loader.Interactions(RecoType::kDLP)[kContainment && kShwCut], trackMult);
   Spectrum sShowerMultContained(loader.Interactions(RecoType::kDLP)[kContainment && kShwCut], shwMult);
@@ -229,20 +229,20 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 //  const RecoPartHistAxis axPartMomentum("Momentum (GeV)", Binning::Simple(50, 0.0, 1.0), kPartMomentum);
 //  const RecoPartHistAxis axPartAngle("angle(deg)",Binning::Simple(60, 0.0, 180),kPartAngle);
 //  //Candidate = primary protons in selected interactions
-//  // All 
+//  // All
 //  Spectrum CandidateProtonMomentum(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
 //  Spectrum AllProtonMomentum(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartMomentum );
 //
 //  Spectrum CandidateProtonMomentumCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartMomentum );
 //  Spectrum AllProtonMomentumCont(      loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartMomentum );
-//  
+//
 //
 //  Spectrum CandidateProtonAngle(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
 //  Spectrum AllProtonAngle(loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)],axPartAngle );
 //
 //  Spectrum CandidateProtonAngleCont(loader.Interactions(RecoType::kDLP)[kMesonlessSelection].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartAngle );
 //  Spectrum AllProtonAngleCont(      loader.Interactions(RecoType::kDLP)[kNoCut].RecoParticles(RecoType::kDLP)[kPartCut(2212)&&kContainedPart&&kPartLenCut],axPartAngle );
-//  
+//
 
 //  ~~~~**** -.-.-.-.-.-.-.-.-.-.-.- *****~~~~
   // Fill in the spectrum
@@ -279,39 +279,39 @@ const Cut kShwCut([](const caf::SRInteractionProxy* ixn)
 
   new TCanvas;
   sVtxPositionAll.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs("demo1b_AllVtxPosition.pdf");
-  new TCanvas; 
+  gPad->SaveAs("demo_2x2_nomeson_AllVtxPosition.pdf");
+  new TCanvas;
   sVtxPositionCont.ToTH2(pot)->Draw("colz");
-  gPad->SaveAs("demo1b_ContainedVtxPosition.pdf");
-  
+  gPad->SaveAs("demo_2x2_nomeson_ContainedVtxPosition.pdf");
+
   new TCanvas;
   sTrackMultContained.ToTH1(pot,kBlue,kDashed)->Draw("hist same");
    sAllMultContained.ToTH1(pot,kRed,kDotted)->Draw("hist same");
-//  sShowerMultContained.ToTH1(pot,kRed,kDotted)->Draw("hist same");  
-  gPad->SaveAs("demo1b_ContainedMultiplicity.pdf");
+//  sShowerMultContained.ToTH1(pot,kRed,kDotted)->Draw("hist same");
+  gPad->SaveAs("demo_2x2_nomeson_ContainedMultiplicity.pdf");
 
   new TCanvas;
   sTrackLen.ToTH1(pot,kRed,kDotted)->Draw("hist same");
-  gPad->SaveAs("demo1b_ContainedTrackLen.pdf");
+  gPad->SaveAs("demo_2x2_nomeson_ContainedTrackLen.pdf");
 //
 //  new TCanvas;
 //  CandidateProtonMomentum.ToTH1(pot)->Draw("hist");
 //  CandidateProtonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_mesonless_CandidateProtonMomentum.pdf");
+//  gPad->SaveAs("demo_2x2_nomeson_mesonless_CandidateProtonMomentum.pdf");
 //
 //  new TCanvas;
 //  AllProtonMomentum.ToTH1(pot)->Draw("hist");
 //  AllProtonMomentumCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_All_CandidateProtonMomentum.pdf");
+//  gPad->SaveAs("demo_2x2_nomeson_All_CandidateProtonMomentum.pdf");
 //
 //  new TCanvas;
 //  CandidateProtonAngle.ToTH1(pot)->Draw("hist");
 //  CandidateProtonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_mesonless_CandidateProtonAngle.pdf");
+//  gPad->SaveAs("demo_2x2_nomeson_mesonless_CandidateProtonAngle.pdf");
 //
 //  new TCanvas;
 //  AllProtonAngle.ToTH1(pot)->Draw("hist");
 //  AllProtonAngleCont.ToTH1(pot,kRed)->Draw("hist same");
-//  gPad->SaveAs("demo1b_All_CandidateProtonAngle.pdf");
+//  gPad->SaveAs("demo_2x2_nomeson_All_CandidateProtonAngle.pdf");
 
 }
