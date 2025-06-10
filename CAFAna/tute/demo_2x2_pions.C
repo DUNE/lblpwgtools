@@ -97,7 +97,7 @@ const TruthPartCut kIsPionPrim([](const  caf::SRTrueParticleProxy * part){
 });
 
  
-void demoPions()
+void demo_2x2_pions()
 {
 
   const std::string fname = "/exp/dune/data/users/noeroy/mywork/MiniRun5_Fixed_truth/MiniRun5_1E19_RHC.caf/CAF.flat/0000000/*.flat.root";
