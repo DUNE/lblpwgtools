@@ -1,85 +1,173 @@
+# CAFAna: README
+Last updated: June 2025, Jeremy Wolcott [[jwolcott@fnal.gov](jwolcott@fnal.gov)].
 
-# Making your first plots in CAFAna
+Other contributors:
+* Maria Martinez-Casales
 
-This is a simplified guide on how to install and run `CAFAna` to make your first plot . A lot more information can be found in [this tutorial](https://github.com/chenel/dune-nd-lar-reco/blob/main/tute/2021-12-02%20CAFAna-NDLAr-Howto.md) by Jeremy Wolcott.
+## What is CAFAna?
 
-Also some information is duplicated from a directory above, but gathered here for your easy access.
+CAFAna is an analysis framework designed to work with CAFs ("Common Analysis Format" files).
+You can read more about the toolkit itself in its dedicated GitHub organization: https://github.com/cafana.
+You've landed onto DUNE's adaptation of CAFAna, which was first introduced for work in the Long Baseline physics working group
+(hence the repository name `lblpwgtools`).
 
-## Setup a container
+In a nutshell, CAFAna does the following things:
+* Wraps **loops over analysis ntuples** in a user-friendly way
+* Provides a user-friendly interface for **aggregating histograms** (and many more complex structures built from histograms) during the aforementioned loops
+* Offers extensive tools for **fitting models** to reference data via minimizers or MCMC sampling
 
-As you may know, we are living now in AL9 world, but I don't know how to use spack to build CAFAna. Instead you can setup this standard container provided for us as in https://wiki.dunescience.org/wiki/SL7_to_Alma9_conversion 
 
-```
+## Installing CAFAna
+
+CAFAna is a C++ library that needs to be compiled & linked in order to use it.
+Currently, the `lblpwgtools` edition of CAFAna only compiles inside a Scientific Linux 7 environment
+with DUNE software products available via CVMFS.
+**The only official support for this environment is using a DUNE GPVM** (though if you are knowledgable about CVMFS and containers you may be able
+to make it work locally).
+Alma Linux 9 support will be introduced soon.
+
+### Setting up the container
+
+DUNE computing has instructions on how to work with the SL7 containers
+on GPVMS here: https://wiki.dunescience.org/wiki/SL7_to_Alma9_conversion 
+
+* Note: for initial installation and other instances where you want to _compile_ code,
+  you should use one of the `dunebuild0X` nodes instead of a GPVM.
+  In that case, remove `/pnfs/dune/` from the incantation below.
+
+* You can start the container on a GPVM this way (see previous bullet if you're compiling instead of running CAFAna):
+
+```bash
 /cvmfs/oasis.opensciencegrid.org/mis/apptainer/current/bin/apptainer shell --shell=/bin/bash \
 -B /cvmfs,/exp,/nashome,/pnfs/dune,/opt,/run/user,/etc/hostname,/etc/hosts,/etc/krb5.conf --ipc --pid \
 /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest
 ```
-The reccommendation is that you use `dunebuild03` instead of a gpvm to build your code. Remove `/pnfs/dune/` when setting up the container, otherwise it will complain. Later on, you can run code and access `pnfs` on a regular gpvm. 
 
-```
+
+* You will also need to have the UPS areas ready for use:  
+```bash
 # before anything else, set up UPS
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 ```
-Now you can go ahead and install.
 
-## How to install
+### CAFAna installation
 
-Clone this branch of the repository:
-```
-git clone git@github.com:DUNE/lblpwgtools.git
-cd lblpwgtools
-checkout feature/source-sink-overhaul
-```
+* Clone the repository from GitHub.  In general, the default branch should produce usable results,
+  but if desired or directed, you can use a specific tag instead.
 
-We currently don't have official versions of `cafanacore` ,`duneanaobj`,`osclib`, and `srproxy` , that have truth-reco matching, so we need this extra step to fetch working versions (eventually these should be published):
-```
-export PRODUCTS="/exp/dune/app/users/jwolcott/ups:$PRODUCTS"
-export PRODUCTS="/exp/dune/app/users/mcasales/ups:$PRODUCTS" 
-```
+```basjh
+source_dir=/exp/dune/app/users/$USER/src  # or wherever you like
 
-A helper build script lives in this `CAFAna` subdirectory. You can build and install the code like:
+cd $source_dir && git clone git@github.com:DUNE/lblpwgtools.git
+cd $source_dir/lblpwgtools/CAFAna
 
-```
-cd CAFAna
-./standalone_configure_and_build.sh -r
+# if a different branch is needed
+git switch <branchname>
 ```
 
-If you are in a DUNE `gpvm` and therefore have `cvmfs` access, you can rely on relevant dependencies from FNAL scisoft by add in the `-u` option:
+* A helper build script lives in this `CAFAna` subdirectory that will build everything for you:
 
-```
-./standalone_configure_and_build.sh -r -u -j 4
+```bash
+build_dir=/exp/dune/app/users/$USER/build/cafana      # or wherever you like
+install_dir=/exp/dune/app/users/$USER/install/cafana  # or wherever you like
+
+cd $source_dir/lblpwgtools/CAFAna
+./standalone_configure_and_build.sh -u -b $build_dir -I $install_dir
 ```
 
-Once CAFAna has been built, to set up the environment you will need to `source /path/to/install/CAFAnaEnv.sh`. If `standalone_configure_and_build.sh` was not passed a `-I` argument, then this will be `/path/to/repo/CAFAna/build/Linux/CAFAnaEnv.sh` by default. 
+You can add a `-j N` arguments to use N cores on the build machine (just verify that you aren't clobbering someone else by doing so).
 
-## Examples 
+**Note:** as of June 2025, you'll see some warnings during the build process about CAFAna components that are currently disabled.
+This is normal and expected.  You don't need those pieces unless you know you need them. :)
 
-Once CAFAna is built and the environment setup, proceed to run an example script doing:
-```
-cafe tute/demo0b.C
-```
-```
-cafe -l 10 tute/demo0b.C
-```
-The `-l` option limits the number of files read by the script so you can obtain plots faster. See other options with `cafe --help`.
+### Subsequent use
 
-The three example scripts in the `tute` directory have the following content:
+A setup script called `CAFAnaEnv.sh` is installed into the install area.  Source it to begin every CAFAna session!
+```bash
+# obviously you can hard-code whatever $install_dir corresponds to in a setup script/.bashrc if you prefer 
+source $install_dir/CAFAnaEnv.sh
+``` 
 
-### demo0b 
+**There are two ways to run CAFAna scripts**.  Examples of how to do each are below.
+
+#### Using `cafe`
+
+The `cafe` executable is installed with CAFAna.  
+This compiles a supplied ROOT C++ script into an executable using `gcc`.
+You can examine its options with `cafe --help`, but the general idea is:
+```
+# if you haven't already
+source /path/to/CAFAna/CAFAnaEnv.sh
+
+cafe /path/to/your/script.C [arguments] [passed] [to] [your] [script]
+```
+
+This method of operation is straightforward, requires no extra infrastructure, and can work well for simple analysis tests.
+
+However, for larger analysis projects that develop shared centralized code,
+we recommend constructing a standalone project that depends on `lblpwgtools`.
+This way you can build your own shared libraries, compile your scripts into standalone executables, etc.
+
+#### Building a CMake project using `lblpwgtools`
+
+`lblpwgtools` exports enough CMake information into its installation that it can be used as a CMake package.
+
+Simply ensure that `CAFAnaEnv.sh` is sourced before attempting to run `cmake` on your project.
+
+The `tute` directory can be built as an example standalone project:
+
+```bash
+source /path/to/CAFAna/CAFAnaEnv.sh
+
+# or whatever you like
+tute_src_dir=/exp/dune/app/users/$USER/src/lblpwgtools/CAFAna/tute
+tute_build_dir=/exp/dune/app/users/$USER/build/cafana-tute
+tute_install_dir=/exp/dune/app/users/$USER/install/cafana-tute
+
+cd $tute_build_dir
+cmake -DCMAKE_INSTALL_PREFIX=$tute_install_dir $tute_src_dir
+make install
+```
+
+after which the `demo0` executable should be available in `$tute_install_dir`.
+
+## Plotting examples 
+
+The examples below are all written with the `cafe` style,
+but could equally be written in the CMake style described above.
+
+#### Assumptions
+These examples assume you are running them from a Fermilab GPVM.
+
+Further, they assume you have the appropriate credentials to read files form PNFS.
+As of June 2025, this means you need a "token."
+See the DUNE Computing wiki on [Getting a token](https://wiki.dunescience.org/wiki/DUNE_Computing/Using_the_Physics_Groups_Persistent_Space_at_Fermilab#Getting_a_token).
+
+#### Included examples
+
+The CAFAna source contains a `tute` directory with some examples.  They can all be invoked like this:
+```
+cafe -bq -l 10 /path/to/CAFAna/tute/<name_of_demo>.C
+```
+(The `-l` option limits the number of files read by the script so you can obtain plots faster. 
+See other options with `cafe --help`.)
+
+The example scripts in the `tute` directory have the following content:
+
+##### demo_cutsvars.C
 Basic distributions in 1D and 2D of variables from the ` SRCommonRecoBranch`.
 
-### demo1b
-More distributions, more manipulations of variables/cuts, now of variables from the `SRTruthBranch`. Also showing how to open/read files.
+##### demo_systs.C
+Demonstration how systematic shifts can be managed
 
-### demo0eb
-Examples of systematic variations applied to distributions from ` SRCommonRecoBranch` variables. 
+##### demo_ensemble.C
+Show how to create "ensembles" of systematics and manipulate them together 
+
+##### demo_2x2_*.C
+Worked examples reproducing various 2x2 analyses (as of late 2024). 
 
 ## To do's / caveats / wishlist
 - Systematic variations are not implemented in truth branches yet
 - More realistic examples of systematics
-- Note: If you run into issues accessing files, which looks like ```Error in <TNetXNGFile::Open>: [FATAL] Auth failed: No protocols left to try```, you probably need to `setup duneutil v09_89_01d01 -q e26:prof` in order to do  `setup_fnal_security`. You might need to re-build after doing this. I am working on adding a detailed instruction on this. Remember to source `CAFAnaEnv.sh` after building. 
 ##
-
-Last updated September 4, 2024, by Maria Martinez-Casales (mcasales@fnal.gov)
-
 
