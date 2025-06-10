@@ -1,5 +1,7 @@
 #include "CAFAna/Core/SpectrumLoaderBase.h"
 
+#include <variant>
+
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Core/ReweightableSpectrum.h"
 #ifdef WITH_SAM
@@ -123,40 +125,69 @@ namespace ana
       std::cout << "Bad file (zombie): " << f->GetName() << std::endl;
       abort();
     }
-// Im not sure this will still be valid in the source/sink world...
 
-    TTree* trPot = 0;
     TDirectoryFile * df = GetDirectoryFile(f);
-    if (df->GetListOfKeys()->Contains("meta"))
-      trPot = df->Get<TTree>("meta");
-    else
-      trPot = df->Get<TTree>("pottree");
-    if (!trPot)
+
+    // CAF-making is in flux.
+    // In principle, beam.pulsepot in the cafTree should have per-entry POT,
+    // but that's not currently always filled correctly.
+    // Try that first, but fall back on meta tree if not...
+    std::variant<float, double> pot;  // sometimes we have double, sometimes float <facepalm>
+    double filePOT = 0;
+    for (const auto & treeVarPair : std::vector<std::pair<std::string, std::string>>{{"cafTree", "rec.beam.pulsepot"}, {"meta", "pot"}})
     {
-      std::cerr << "Couldn't find the 'meta' or 'pottree' tree in your CAF file for POT accounting.\n"
+      bool perReadout = treeVarPair.first == "cafTree";
+
+      TTree* trPot = df->Get<TTree>(treeVarPair.first.c_str());
+
+      TClass * klass;
+      EDataType expType;
+      trPot->GetBranch(treeVarPair.second.c_str())->GetExpectedType(klass, expType);
+      if (expType == kFloat_t)
+      {
+        pot = 0.f;
+        // return value is 0 when match was achieved
+        if (trPot->SetBranchAddress(treeVarPair.second.c_str(), &std::get<float>(pot)))
+          continue;
+      }
+      else if (expType == kDouble_t)
+      {
+        pot = 0.;
+        // return value is 0 when match was achieved
+        if (trPot->SetBranchAddress(treeVarPair.second.c_str(), &std::get<double>(pot)))
+          continue;
+      }
+
+      for(int n = 0; n < trPot->GetEntries(); ++n)
+      {
+        trPot->GetEntry(n);
+        filePOT += (expType == kFloat_t) ? std::get<float>(pot) : std::get<double>(pot);
+
+        // don't mindlessly add up tons of 0s
+        if (n > 100 && filePOT <= 0)
+          break;
+
+        if (perReadout)
+          fNReadouts++;
+      }
+
+      if (filePOT > 0)
+        break;
+    }
+
+    // did we successfully count POT at all?
+    if (filePOT > 0)
+    {
+      fPOTFromHist += filePOT;
+      fPOT += filePOT;
+    }
+    else
+    {
+      std::cerr << "Couldn't find the appropriate branch in your CAF file for POT accounting.\n"
                 << "(Are your TTrees in a subfolder in the file?  Pass that as an argument to the SpectrumLoader constructor.)\n"
                 << "Can't proceed.  Abort.\n";
       abort();
     }
-
-    float pot; //double
-    trPot->SetBranchAddress("rec.beam.pulsepot", &pot);
-    //trPot->SetBranchAddress("pot", &pot);
-
-    for(int n = 0; n < trPot->GetEntries(); ++n){
-      trPot->GetEntry(n);
-
-      //unsure if this shoulf be fPOT or fPOTFromHist
-      // I think fPOT is accounted for in HandleFile in the SBN version
-      //fPOT += pot;
-      fPOTFromHist += pot;
-      fPOT += pot;
-    }
-
-    // This is from the SBN version...
-    //TH1* hPOT = (TH1*)f->Get("TotalPOT");
-    //assert(hPOT);
-    //fPOTFromHist  += hPOT->Integral(0, -1);
 
     return f;
   }
