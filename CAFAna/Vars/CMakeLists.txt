@@ -21,3 +21,5 @@ endif()
 install(TARGETS CAFAnaVars 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Vars/)
+
+add_cafana_lib(CAFAnaVars)

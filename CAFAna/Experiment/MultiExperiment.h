@@ -26,8 +26,10 @@ namespace ana
                          const SystShifts& syst = SystShifts::Nominal()) const override;
 
     /// Sum up log-likelihoods of sub-expts.  N.b.: covariance matrix business not currently supported for Stan.
+#ifdef CAFANA_USE_STAN
     stan::math::var LogLikelihood(osc::IOscCalcAdjustableStan* osc,
                                   const SystShifts& syst) const override;
+#endif
 
     /// \brief For the subexperiment \a idx, set up a mapping between
     /// systematics

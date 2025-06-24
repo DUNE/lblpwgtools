@@ -24,3 +24,5 @@ endif()
 install(TARGETS CAFAnaExtrap 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Extrap/)
+
+add_cafana_lib(CAFAnaExtrap)

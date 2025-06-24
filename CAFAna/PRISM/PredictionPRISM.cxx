@@ -11,7 +11,9 @@
 #include "CAFAna/Core/Loaders.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Spectrum.h"
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 
 #include "OscLib/IOscCalc.h"
 #include "CAFAna/Core/StanUtils.h"

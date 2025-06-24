@@ -279,6 +279,7 @@ std::vector<const IFitVar *> GetOscVars(std::string oscVarString, int hie,
   which is called only when creating the input CAFs. This is almost certainly not
   optimal, but is easy to extend for other dials.
  */
+ 
 SystShifts GetFakeDataGeneratorSystShift(std::string input) {
 
   // Default to nominal
@@ -776,6 +777,7 @@ void SaveTrueOAParams(TDirectory *outDir, osc::IOscCalcAdjustable *calc,
   tree->Branch("deltapi", &deltapi);
   tree->Fill();
   tree->Write();
+  delete tree;
   return;
 }
 
@@ -891,6 +893,9 @@ FitTreeBlob::~FitTreeBlob() {
   delete fEnvVarNames;
   delete fEnvVarValues;
   delete fSpectraRNGSeeds;
+
+  delete throw_tree; 
+  delete meta_tree;
 }
 void FitTreeBlob::CopyVals(FitTreeBlob const &fb) {
   (*fFakeDataVals) = (*fb.fFakeDataVals);

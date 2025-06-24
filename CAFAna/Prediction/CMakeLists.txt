@@ -37,3 +37,7 @@ endif()
 install(TARGETS CAFAnaPrediction 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Prediction/)
+
+add_cafana_lib(CAFAnaPrediction)
+add_cafana_lib(CAFAnaExtrap)
+add_cafana_lib(CAFAnaPRISM)

@@ -3,7 +3,9 @@
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/OscCurve.h"
 #include "CAFAna/Core/Ratio.h"
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 #include "CAFAna/Core/Utilities.h"
 
 #include "StandardRecord/SRProxy.h"
@@ -160,11 +162,13 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum OscillatableSpectrum::Oscillated(osc::IOscCalcStan* calc,
                                             int from, int to) const
   {
     return _Oscillated(calc, from, to);
   }
+#endif
 
   //----------------------------------------------------------------------
   OscillatableSpectrum& OscillatableSpectrum::operator+=(const OscillatableSpectrum& rhs)

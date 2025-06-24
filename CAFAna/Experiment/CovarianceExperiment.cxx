@@ -119,12 +119,14 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   stan::math::var CovarianceExperiment::LogLikelihood(osc::IOscCalcAdjustableStan *osc,
                                                       const SystShifts &syst) const
   {
     std::cout << "CovarianceExperiment doesn't yet support OscCalcStan" << std::endl;
     abort();
   }
+#endif
 
   //----------------------------------------------------------------------
   void CovarianceExperiment::SetMaskHist(int idx, double xmin, double xmax, double ymin, double ymax)

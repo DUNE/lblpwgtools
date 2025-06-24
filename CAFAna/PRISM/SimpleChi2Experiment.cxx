@@ -2,7 +2,9 @@
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 

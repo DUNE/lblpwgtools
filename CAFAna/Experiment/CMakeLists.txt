@@ -37,3 +37,5 @@ endif()
 install(TARGETS CAFAnaExperiment 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Experiment/)
+
+add_cafana_lib(CAFAnaExperiment)

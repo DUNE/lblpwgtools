@@ -2,7 +2,9 @@
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 #include "CAFAna/Core/StanUtils.h"
 #include "CAFAna/Core/Utilities.h"
 
@@ -57,6 +59,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   stan::math::var SingleSampleExperiment::LogLikelihood(osc::IOscCalcAdjustableStan *osc,
                                                         const SystShifts &syst) const
   {
@@ -76,7 +79,7 @@ namespace ana
       return ana::LogLikelihood(pred.GetEigen(fData.POT()), data) / -2.;
     }
   }
-
+#endif
 
   //----------------------------------------------------------------------
   void SingleSampleExperiment::SaveTo(TDirectory* dir, const std::string& name) const

@@ -61,8 +61,10 @@ namespace ana
     virtual double ChiSq(osc::IOscCalcAdjustable* osc,
                          const SystShifts& syst = kNoShift) const override;
 
+#ifdef CAFANA_USE_STAN
     stan::math::var LogLikelihood(osc::_IOscCalcAdjustable<stan::math::var> *osc,
                                   const SystShifts &syst = kNoShift) const override;
+#endif
 
     // Didn't make provisions for copying fMC
     CovarianceExperiment(const CovarianceExperiment&) = delete;

@@ -100,30 +100,30 @@ namespace ana {
     virtual Spectrum PredictUnoscillated() const;
     
     virtual Spectrum Predict(osc::IOscCalc* calc) const = 0;
-    virtual Spectrum Predict(osc::IOscCalcStan* calc) const;
-
     virtual Spectrum PredictSyst(osc::IOscCalc* calc, const SystShifts& syst) const;
-    virtual Spectrum PredictSyst(osc::IOscCalcStan* calc, const SystShifts& syst) const;
-
     virtual Spectrum PredictComponent(osc::IOscCalc* calc,
                                       Flavors::Flavors_t flav,
                                       Current::Current_t curr,
                                       Sign::Sign_t sign) const = 0;
-    virtual Spectrum PredictComponent(osc::IOscCalcStan* calc,
-                                      Flavors::Flavors_t flav,
-                                      Current::Current_t curr,
-                                      Sign::Sign_t sign) const;
-    
     virtual Spectrum PredictComponentSyst(osc::IOscCalc* calc,
                                           const SystShifts& syst,
                                           Flavors::Flavors_t flav,
                                           Current::Current_t curr,
                                           Sign::Sign_t sign) const;
+
+#ifdef CAFANA_USE_STAN
+    virtual Spectrum Predict(osc::IOscCalcStan* calc) const;
+    virtual Spectrum PredictSyst(osc::IOscCalcStan* calc, const SystShifts& syst) const;
+    virtual Spectrum PredictComponent(osc::IOscCalcStan* calc,
+                                    Flavors::Flavors_t flav,
+                                    Current::Current_t curr,
+                                    Sign::Sign_t sign) const;
     virtual Spectrum PredictComponentSyst(osc::IOscCalcStan* calc,
-                                          const SystShifts& syst,
-                                          Flavors::Flavors_t flav,
-                                          Current::Current_t curr,
-                                          Sign::Sign_t sign) const;
+                                        const SystShifts& syst,
+                                        Flavors::Flavors_t flav,
+                                        Current::Current_t curr,
+                                        Sign::Sign_t sign) const;
+#endif
 
     virtual OscillatableSpectrum ComponentCC(int from, int to) const;
     virtual Spectrum ComponentNCTotal() const;

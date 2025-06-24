@@ -82,3 +82,5 @@ set(SYST_INPUT_ROOT_FILES
 )
 
 install(FILES ${SYST_INPUT_ROOT_FILES} DESTINATION Systs)
+
+add_cafana_lib(CAFAnaSysts)

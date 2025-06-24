@@ -499,6 +499,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
   std::cout << "Write f." << std::endl;
   f.Write();
+  f.Close();
 }
 
 //-------------------------------------------

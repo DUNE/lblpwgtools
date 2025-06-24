@@ -4,7 +4,10 @@
 
 #include "CAFAna/Extrap/IExtrap.h"
 #include "CAFAna/Core/LoadFromFile.h"
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
 
 #include "TDirectory.h"
 #include "TObjString.h"
@@ -34,6 +37,7 @@ namespace ana
   }
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionExtrap::Predict(osc::IOscCalcStan* calc) const
   {
     return PredictComponent(calc,
@@ -41,6 +45,7 @@ namespace ana
                             Current::kBoth,
                             Sign::kBoth);
   }
+#endif
 
   //----------------------------------------------------------------------
   // the actual implementation
@@ -95,6 +100,7 @@ namespace ana
 
   //----------------------------------------------------------------------
   // just call the templated guy
+#ifdef CAFANA_USE_STAN
   Spectrum PredictionExtrap::PredictComponent(osc::IOscCalcStan* calc,
                                               Flavors::Flavors_t flav,
                                               Current::Current_t curr,
@@ -102,6 +108,7 @@ namespace ana
   {
     return _PredictComponent(calc, flav, curr, sign);
   }
+#endif
 
   //----------------------------------------------------------------------
   OscillatableSpectrum PredictionExtrap::ComponentCC(int from, int to) const

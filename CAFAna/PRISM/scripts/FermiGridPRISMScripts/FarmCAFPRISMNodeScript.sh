@@ -232,14 +232,6 @@ setup jobsub_client
 setup ifdhc
 ${CAFANA}/CAFAnaEnv.sh
 
-if ! kx509; then
-  echo "[ERROR]: Failed to setup kx509."
-  exit 1
-fi
-if ! voms-proxy-info -exists; then
-  voms-proxy-init -rfc -noregen -voms dune:/dune/Role=Analysis
-  voms-proxy-info --all
-fi
 
 ifdh ls /pnfs/dune/scratch/users/${USER}/${PNFS_PATH_APPEND}
 

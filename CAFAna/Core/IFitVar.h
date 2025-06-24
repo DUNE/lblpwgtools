@@ -4,8 +4,11 @@
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/StanTypedefs.h"
-#include "CAFAna/Core/StanVar.h"
 
+
+#ifdef CAFANA_USE_STAN
+#include "CAFAna/Core/StanVar.h"
+#endif
 #include "CAFAna/Core/StanUtils.h"
 
 namespace ana
@@ -51,6 +54,7 @@ namespace ana
       }
   };
 
+#ifdef CAFANA_USE_STAN
   // We want the callers of these to be inlined below so the class can work
   // templated over any type, but we need the implementation in the .cxx so we
   // don't have to include the full Stan.h here. This is ugly :(
@@ -88,4 +92,11 @@ namespace ana
       /// but this can be overridden if there optimizations that speed up the calculation.
       virtual stan::math::var LogPrior(const stan::math::var& var, const osc::IOscCalcAdjustableStan* calc) const {return StanLog(Prior(var, calc));}
   };
+#else
+  template <typename VarClass>
+  class StanFitSupport : public VarClass
+  {
+    using VarClass::VarClass;
+  };
+#endif
 } // namespace

@@ -18,6 +18,7 @@ namespace ana
                              double x, double x2, double x3,
                              double* corr);
 
+#ifdef CAFANA_USE_STAN
     /// Normally I'd make the <double> variant templated,
     /// but this function is so short that it makes more sense
     /// to leave the one with <double> arguments pass-by-value
@@ -26,5 +27,6 @@ namespace ana
                              unsigned int N,
                              const stan::math::var& x, const stan::math::var& x2, const stan::math::var& x3,
                              stan::math::var* corr);
+#endif
   }
 }

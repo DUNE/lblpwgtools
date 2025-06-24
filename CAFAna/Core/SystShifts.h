@@ -3,7 +3,10 @@
 #include "CAFAna/Core/FwdDeclare.h"
 #include "StandardRecord/FwdDeclare.h"
 
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/StanVar.h"
+#endif
 
 #include <map>
 #include <memory>
@@ -24,9 +27,12 @@ namespace ana
   public:
     SystShifts();
     SystShifts(const ISyst* syst, double shift);
-    SystShifts(const ISyst* syst, stan::math::var shift);
     SystShifts(const std::map<const ISyst*, double>& shifts);
-    SystShifts(const std::map<const ISyst*, stan::math::var>& shifts);
+   
+   #ifdef CAFANA_USE_STAN
+      SystShifts(const ISyst* syst, stan::math::var shift);
+      SystShifts(const std::map<const ISyst*, stan::math::var>& shifts);
+   #endif
 
     virtual ~SystShifts() = default;
 
@@ -47,7 +53,9 @@ namespace ana
     /// shift: 0 = nominal; +-1 = 1sigma shifts etc. Arbitrary shifts allowed
     /// set force=true to insert a syst even if the shift is 0
     void SetShift(const ISyst* syst, double shift, bool force=false);
+#ifdef CAFANA_USE_STAN
     void SetShift(const ISyst* syst, stan::math::var shift);
+#endif
 
     /// Templated so that Stan- and not-stan versions have the same interface.
     /// If you don't specify anything it'll just give you back the double,
@@ -58,11 +66,9 @@ namespace ana
 
     void ResetToNominal();
 
+#ifdef CAFANA_USE_STAN
     bool HasStan(const ISyst* s) const {return fSystsStan.count(s);}
     bool HasAnyStan() const {return !fSystsStan.empty();}
-
-    /// Penalty term for (frequentist) chi-squared fits
-    double Penalty() const;
 
     /// Prior used in Bayesian fitting.  Override as needed.
     /// If it's more efficient to calculate log(prior)
@@ -72,6 +78,13 @@ namespace ana
     /// If it's more efficient to implement log(prior) directly,
     /// override this
     virtual stan::math::var LogPrior() const;
+#else
+    constexpr bool HasStan(const ISyst* s) const { return false; }
+    constexpr bool HasAnyStan() const {return false; }
+#endif
+
+    /// Penalty term for (frequentist) chi-squared fits
+    double Penalty() const;
 
 
     void Shift(Restorer& restore,
@@ -91,7 +104,9 @@ namespace ana
     T Clamp(const T & t, const ISyst* s);
 
     std::unordered_map<const ISyst*, double> fSystsDbl;
+#ifdef CAFANA_USE_STAN
     mutable std::unordered_map<const ISyst*, stan::math::var> fSystsStan;
+#endif
 
   private:
     int fID;
@@ -109,9 +124,10 @@ namespace ana
       using SystShifts::SystShifts;
 
       std::unique_ptr<SystShifts> Copy() const override;
-
+#ifdef CAFANA_USE_STAN
       stan::math::var LogPrior() const override;
       stan::math::var Prior() const override;
+#endif
   };
 
   //----------------------------------------------------------------------

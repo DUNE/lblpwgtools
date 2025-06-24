@@ -6,15 +6,24 @@ if [ -z "${UPS_SHELL}" ]; then
   echo "[ERROR]: Is UPS set up?"
   exit 1
 fi
-setup root v6_22_08d -q e20:prof:p392 || exit 1
-setup boost v1_75_0 -q e20:prof || exit 1
-setup cmake v3_14_3 || exit 1
-setup jobsub_client || exit 1
-setup eigen v3_3_9a || exit 1
-setup stan v2_26_1 -q e20:prof || exit 1
-setup osclib v00.17 -q e20:prof:n311:stan || exit 1
-setup cafanacore v01.26 -q e20:prof:n311 || exit 1
-setup fhiclcpp v4_15_03 -q e20:prof || exit 1 # for prism
+
+setup cmake v3_22_2 || exit 1
+
+setup root v6_28_12  -q e26:p3915:prof || exit 1
+setup boost v1_82_0 -q e26:prof || exit 1
+
+setup fhiclcpp v4_18_04 -q e26:prof || exit 1 # for prism
+
+setup eigen v23_08_01_66e8f || exit 1
+
+# until we resurrect the Stan interface, see lblpwgtools GitHub issue #63
+#setup sundials v6_5_0 || exit 1
+#setup stan v2_35_0a || exit 1
+setup osclib v00.27 -q e26:n319:prof:stanfree || exit 1
+setup cafanacore v02.05 -q e26:prof:n319:stanfree || exit 1
+
+setup duneanaobj v03_07_00 -q e26:prof || exit 1
+
 
 # To get setup_fnal_security which helps reading files over xrootd
 #setup duneutil v09_39_01 -q e20:prof

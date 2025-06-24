@@ -4,7 +4,10 @@
 
 #include "CAFAna/Core/IFitVar.h"
 #include "CAFAna/Core/StanTypedefs.h"
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/StanVar.h"
+#endif
 
 namespace ana
 {
@@ -45,10 +48,12 @@ namespace ana
     public:
       FitDeltaInPiUnits() : StanFitSupport<IFitVar>("delta(pi)", "#delta / #pi") {};
 
-      stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
       double GetValue(const osc::IOscCalcAdjustable* osc) const override;
       void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+#ifdef CAFANA_USE_STAN
+      stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
       void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
+#endif
  };
 
   /// \f$ \delta_{CP}/\pi \f$
@@ -78,9 +83,11 @@ namespace ana
     {}
 
     double GetValue(const osc::IOscCalcAdjustable* osc) const override;
-    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
     void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+#ifdef CAFANA_USE_STAN
+    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
     void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
+#endif
 
     double LowLimit() const override { return 0; }
     double HighLimit() const override { return 1; }
@@ -196,11 +203,12 @@ namespace ana
                                              "#Deltam^{2}_{32} (10^{-3} eV^{2})")
       {}
     double GetValue(const osc::IOscCalcAdjustable* osc) const override;
-    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
-
     void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
-    void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
 
+#ifdef CAFANA_USE_STAN
+    stan::math::var GetValue(const osc::IOscCalcAdjustableStan* osc) const override;
+    void SetValue(osc::IOscCalcAdjustableStan* osc, stan::math::var val) const override;
+#endif
 
     // "1eV^2 splitting should be enough for anyone"
     // OscCalcPMNS freaks out at large splittings

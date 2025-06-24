@@ -6,8 +6,6 @@
 #include "TTree.h"
 
 #include "CAFAna/Core/IFitVar.h"
-#include "CAFAna/Core/ISyst.h"
-#include "CAFAna/Core/StanTypedefs.h"
 #include "CAFAna/Fit/BayesianMarginal.h"   // for MarginalMode enum
 #include "CAFAna/Fit/MCMCSample.h"
 #include "CAFAna/Fit/StanConfig.h"
@@ -17,6 +15,7 @@ namespace ana
   // forward declaration
   class Bayesian1DMarginal;
   class BayesianSurface;
+  class ISyst;
 
   /// Storage for a list of MCMC samples.
   ///

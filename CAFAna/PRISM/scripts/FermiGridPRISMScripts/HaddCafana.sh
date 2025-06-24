@@ -53,7 +53,7 @@ cd $_CONDOR_SCRATCH_DIR
 export CAFANA=$(readlink -f CAFAna)
 source ${CAFANA}/CAFAnaEnv.sh
 
-voms-proxy-info --all
+#voms-proxy-info --all
 setup ifdhc
 source ${CAFANA}/CAFAnaEnv.sh
 

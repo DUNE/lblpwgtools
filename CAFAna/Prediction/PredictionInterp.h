@@ -51,19 +51,11 @@ namespace ana
 
 
     Spectrum Predict(osc::IOscCalc* calc) const override;
-    Spectrum Predict(osc::IOscCalcStan* calc) const override;
-
 
     Spectrum PredictSyst(osc::IOscCalc* calc,
                          const SystShifts& shift) const override;
-    Spectrum PredictSyst(osc::IOscCalcStan* calc,
-                         const SystShifts& shift) const override;
 
     Spectrum PredictComponent(osc::IOscCalc* calc,
-                              Flavors::Flavors_t flav,
-                              Current::Current_t curr,
-                              Sign::Sign_t sign) const override;
-    Spectrum PredictComponent(osc::IOscCalcStan* calc,
                               Flavors::Flavors_t flav,
                               Current::Current_t curr,
                               Sign::Sign_t sign) const override;
@@ -73,11 +65,21 @@ namespace ana
                                   Flavors::Flavors_t flav,
                                   Current::Current_t curr,
                                   Sign::Sign_t sign) const override;
+
+#ifdef CAFANA_USE_STAN
+    Spectrum Predict(osc::IOscCalcStan* calc) const override;
+    Spectrum PredictSyst(osc::IOscCalcStan* calc,
+                           const SystShifts& shift) const override;
+    Spectrum PredictComponent(osc::IOscCalcStan* calc,
+                              Flavors::Flavors_t flav,
+                              Current::Current_t curr,
+                              Sign::Sign_t sign) const override;
     Spectrum PredictComponentSyst(osc::IOscCalcStan* calc,
                                   const SystShifts& shift,
                                   Flavors::Flavors_t flav,
                                   Current::Current_t curr,
                                   Sign::Sign_t sign) const override;
+#endif
 
     virtual void SaveTo(TDirectory* dir, const std::string& name) const override;
     static std::unique_ptr<PredictionInterp> LoadFrom(TDirectory* dir, const std::string& name);
@@ -162,6 +164,7 @@ namespace ana
                               Sign::Sign_t sign,
                               CoeffsType type) const;
 
+#ifdef CAFANA_USE_STAN
     Spectrum ShiftedComponent(osc::IOscCalcStan* calc,
                               const TMD5* hash,
                               const SystShifts& shift,
@@ -169,6 +172,7 @@ namespace ana
                               Current::Current_t curr,
                               Sign::Sign_t sign,
                               CoeffsType type) const;
+#endif
 
     template <typename T> T *GetPredNomAs() {
       return dynamic_cast<T *>(fPredNom.get());

@@ -16,10 +16,13 @@ set(Core_implementation_files
   Utilities.cxx
   )
 
+if(CAFANA_USE_STAN)
+  set(Core_implementation_files ${Core_implementation_files} )
+endif()
+
 set(Core_header_files
   Binning.h
   Cut.h
-  FitVarWithPrior.h
   HistAxis.h
   IFitVar.h
   ISyst.h
@@ -32,8 +35,8 @@ set(Core_header_files
   OscillatableSpectrum.h
   SpectrumLoader.h
   SpectrumLoaderBase.h
-  StanTypedefs.h
   StanUtils.h
+  StanTypedefs.h
   SystShifts.h
   Utilities.h
   Var.h
@@ -41,14 +44,27 @@ set(Core_header_files
   ModeConversionUtilities.h
   rootlogon.C)
 
+if(CAFANA_USE_STAN)
+  set(Core_header_files ${Core_header_files}
+      FitVarWithPrior.h
+  )
+endif()
+
 add_library(CAFAnaCore SHARED ${Core_implementation_files})
+# Define this macro so the constructor in Spectrum.h is visible
+target_compile_definitions(CAFAnaCore PUBLIC CAFANACORE_SPECTRUMLOADERBASE)
 target_link_libraries(CAFAnaCore 
   StandardRecord 
   CAFAnaCore::Ext 
   OscLib::All
   ROOT::ROOT 
-  Stan::All 
   Boost::filesystem)
+if(CAFANA_USE_STAN)
+  target_link_libraries(CAFAnaCore Stan::All)
+else()
+  # normally Stan would also drag in Eigen, but we can't count on that if we're not using Stan
+  target_link_libraries(CAFAnaCore Eigen3::Eigen)
+endif()
 
 set_target_properties(CAFAnaCore PROPERTIES
   PUBLIC_HEADER "${Core_header_files}")
@@ -61,6 +77,10 @@ if(DEFINED USE_OPENMP AND USE_OPENMP)
   target_compile_options(CAFAnaCore BEFORE PUBLIC -DUSE_PREDINTERP_OMP -fopenmp)
 endif()
 
-install(TARGETS CAFAnaCore 
+install(TARGETS CAFAnaCore
+  EXPORT CAFAnaTargets
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Core/)
+
+add_cafana_lib(CAFAnaCore)
+

@@ -56,3 +56,11 @@ add_subdirectory(app)
 add_subdirectory(flux)
 add_subdirectory(FileExposures)
 add_subdirectory(scripts)
+
+add_cafana_lib(CAFAnaPRISM)
+
+if(DEFINED ENV{FHICLCPP_FQ_DIR})
+  add_cafana_lib(fhiclcpp::fhiclcpp)
+else()
+  add_cafana_lib(fhiclcpp::Headers)
+endif()

@@ -32,13 +32,13 @@ namespace ana
   // This is for the nominal exposure, which is 7 years staged 
   const double kNominalExposure = kExposure7Years;
 
-  std::map<int,float> kFDPOT = {
+  inline const std::map<int,float> kFDPOT = {
     {7,  kFakeFDPOT},
     {10, kFakeFDPOT * kExposure10Years / kNominalExposure},
     {15, kFakeFDPOT * kExposure15Years / kNominalExposure}
   };
 
-  std::map<int,float> kNDPOT = {
+  inline const std::map<int,float> kNDPOT = {
     {7,  kFakeNDPOT},
     {10, kFakeNDPOT * kExposure10Years / kNominalExposure},
     {15, kFakeNDPOT * kExposure15Years / kNominalExposure}

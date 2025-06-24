@@ -4,7 +4,11 @@
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"
+
+#ifdef CAFANA_USE_STAN
 #include "CAFAna/Core/Stan.h"
+#endif
+#include "CAFAna/Core/StanUtils.h"
 
 #include "OscLib/IOscCalc.h"
 
@@ -34,7 +38,11 @@ namespace ana
         // of prim in the sub-experiment.
         if(sec){
           if(syst.HasStan(prim)){
+#ifdef CAFANA_USE_STAN
             localShifts.SetShift(sec, syst.GetShift<stan::math::var>(prim));
+#else
+            util::NoStanError();
+#endif
           }
           else{
             localShifts.SetShift(sec, syst.GetShift(prim));
@@ -90,6 +98,7 @@ namespace ana
 
 
   //----------------------------------------------------------------------
+#ifdef CAFANA_USE_STAN
   stan::math::var
   MultiExperiment::LogLikelihood(osc::IOscCalcAdjustableStan* osc, const SystShifts &syst) const
   {
@@ -99,7 +108,7 @@ namespace ana
     }
     return ret;
   }
-
+#endif
   //----------------------------------------------------------------------
   void MultiExperiment::SaveTo(TDirectory* dir, const std::string& name) const
   {

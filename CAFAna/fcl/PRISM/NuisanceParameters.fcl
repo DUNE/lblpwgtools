@@ -1,5 +1,15 @@
 
 nuisance_parameter_sets: {
+	XsecWeightShift: [
+		ShiftTotalXSecByWeight
+	]
+	XsecWeightShiftMaCCQE: [
+		MaCCQE
+	]
+	XsecWeightShiftFrInel_pi: [
+		FrInel_pi
+	]
+
 
 	fluxFocussing: [
 		flux_Nov17_0,
@@ -9,79 +19,12 @@ nuisance_parameter_sets: {
 		flux_Nov17_4,
 		flux_Nov17_5,
 		flux_Nov17_6,
-		#flux_Nov17_7,
+		flux_Nov17_7,
 		flux_Nov17_8,
 		flux_Nov17_9,
 		flux_Nov17_10,
 		flux_Nov17_11,
 		flux_Nov17_12
-	]
-
-	fluxSmallFocus: [
-		flux_Nov17_4,
-		flux_Nov17_9,
-		flux_Nov17_10,
-		flux_Nov17_11,
-		flux_Nov17_12
-	]
-
-	fluxBeamAlign: [
-		flux_Nov17_0,
-		flux_Nov17_1,
-		flux_Nov17_2,
-		flux_Nov17_3
-	]
-
-	fluxHornAlign: [
-		flux_Nov17_5,
-		flux_Nov17_6,
-		#flux_Nov17_7,
-		flux_Nov17_8
-	]
-
-	fluxSept21Focussing: [
-		flux_Sept21_0,
-		flux_Sept21_2,
-		flux_Sept21_3,
-		flux_Sept21_4,
-		flux_Sept21_5,
-		flux_Sept21_6,
-		flux_Sept21_7,
-		flux_Sept21_8,
-		flux_Sept21_9,
-		flux_Sept21_10,
-		flux_Sept21_11,
-		flux_Sept21_12,
-		flux_Sept21_13,
-		flux_Sept21_14,
-		flux_Sept21_15,
-		flux_Sept21_16,
-		flux_Sept21_17,
-		flux_Sept21_18,
-		flux_Sept21_19,
-		flux_Sept21_20,
-		flux_Sept21_21,
-		flux_Sept21_22,
-		flux_Sept21_23,
-		flux_Sept21_24,
-		flux_Sept21_25,
-		flux_Sept21_26,
-		flux_Sept21_27,
-		flux_Sept21_28,
-		flux_Sept21_29,
-		flux_Sept21_30,
-		flux_Sept21_31,
-		flux_Sept21_32,
-		flux_Sept21_33,
-		flux_Sept21_34,
-		flux_Sept21_35,
-		flux_Sept21_36,
-		flux_Sept21_37,
-		flux_Sept21_38,
-		flux_Sept21_39,
-		flux_Sept21_40,
-		flux_Sept21_41,
-		flux_Sept21_42
 	]
 
 	fluxHadProd5: [
@@ -105,31 +48,313 @@ nuisance_parameter_sets: {
 		flux_Nov17_22
 	]
 
+
+	fluxNov17_0: [
+                flux_Nov17_0
+        ]
+
+        fluxNov17_1: [
+                flux_Nov17_1
+        ]
+
+        fluxNov17_2: [
+                flux_Nov17_2
+        ]
+
+        fluxNov17_3: [
+                flux_Nov17_3
+        ]
+
+        fluxNov17_4: [
+                flux_Nov17_4
+        ]
+
+	fluxNov17_5: [
+                flux_Nov17_5
+        ]
+
+        fluxNov17_6: [
+                flux_Nov17_6
+        ]
+
+        fluxNov17_7: [
+                flux_Nov17_7
+        ]
+
+        fluxNov17_8: [
+                flux_Nov17_8
+        ]
+
+        fluxNov17_9: [
+                flux_Nov17_9
+        ]
+
+        fluxNov17_10: [
+                flux_Nov17_10
+        ]
+
+        fluxNov17_11: [
+                flux_Nov17_11
+        ]
+
+        fluxNov17_12: [
+                flux_Nov17_12
+        ]
+
+	
+	fluxSept21_0: [
+		flux_Sept21_0
+	]
+
+        fluxSept21_1: [
+                flux_Sept21_1
+        ]
+
+        fluxSept21_2: [
+                flux_Sept21_2
+        ]
+
+        fluxSept21_3: [
+                flux_Sept21_3
+        ]
+
+	fluxSept21_4: [
+                flux_Sept21_4
+        ]
+	
+	fluxSept21_5: [
+                flux_Sept21_5
+        ]
+
+        fluxSept21_6: [
+                flux_Sept21_6
+        ]
+
+        fluxSept21_7: [
+                flux_Sept21_7
+        ]
+
+        fluxSept21_8: [
+                flux_Sept21_8
+        ]
+
+        fluxSept21_9: [
+                flux_Sept21_9
+        ]
+
+        fluxSept21_10: [
+                flux_Sept21_10
+        ]
+
+        fluxSept21_11: [
+                flux_Sept21_11
+        ]
+
+        fluxSept21_12: [
+                flux_Sept21_12
+        ]
+
+        fluxSept21_13: [
+                flux_Sept21_13
+        ]
+
+        fluxSept21_14: [
+                flux_Sept21_14
+        ]
+
+        fluxSept21_15: [
+                flux_Sept21_15
+        ]
+
+        fluxSept21_16: [
+                flux_Sept21_16
+        ]
+
+        fluxSept21_17: [
+                flux_Sept21_17
+        ]
+
+        fluxSept21_18: [
+                flux_Sept21_18
+        ]
+
+        fluxSept21_19: [
+                flux_Sept21_19
+        ]
+
+        fluxSept21_20: [
+                flux_Sept21_20
+        ]
+
+        fluxSept21_21: [
+                flux_Sept21_21
+        ]
+
+        fluxSept21_22: [
+                flux_Sept21_22
+        ]
+
+        fluxSept21_23: [
+                flux_Sept21_23
+        ]
+
+        fluxSept21_24: [
+                flux_Sept21_24
+        ]
+
+        fluxSept21_25: [
+                flux_Sept21_25
+        ]
+
+        fluxSept21_26: [
+                flux_Sept21_26
+        ]
+
+        fluxSept21_27: [
+                flux_Sept21_27
+        ]
+
+        fluxSept21_28: [
+                flux_Sept21_28
+        ]
+
+        fluxSept21_29: [
+                flux_Sept21_29
+        ]
+
+        fluxSept21_30: [
+                flux_Sept21_30
+        ]
+
+        fluxSept21_31: [
+                flux_Sept21_31
+        ]
+
+        fluxSept21_32: [
+                flux_Sept21_32
+        ]
+
+        fluxSept21_33: [
+                flux_Sept21_33
+        ]
+
+        fluxSept21_34: [
+                flux_Sept21_34
+        ]
+
+        fluxSept21_35: [
+                flux_Sept21_35
+        ]
+
+        fluxSept21_36: [
+                flux_Sept21_36
+        ]
+
+        fluxSept21_37: [
+                flux_Sept21_37
+        ]
+
+        fluxSept21_38: [
+                flux_Sept21_38
+        ]
+
+        fluxSept21_39: [
+                flux_Sept21_39
+        ]
+
+        fluxSept21_40: [
+                flux_Sept21_40
+        ]
+
+        fluxSept21_41: [
+                flux_Sept21_41
+        ]
+
+        fluxSept21_42: [
+                flux_Sept21_42
+        ]
+
+        fluxSept21_43: [
+                flux_Sept21_43
+        ]
+
+        fluxSept21_44: [
+                flux_Sept21_44
+        ]
+
+	fluxSept21: [
+		flux_Sept21_0,
+		flux_Sept21_1,
+		flux_Sept21_2,
+		flux_Sept21_3,
+		flux_Sept21_4,
+		flux_Sept21_5,
+		flux_Sept21_6,
+		flux_Sept21_7,
+		flux_Sept21_8,
+		flux_Sept21_9,
+		flux_Sept21_10,
+		flux_Sept21_11,
+		flux_Sept21_12,
+		flux_Sept21_13,
+		flux_Sept21_14,
+		flux_Sept21_15,
+		flux_Sept21_16,
+		flux_Sept21_17,
+		flux_Sept21_18,
+		flux_Sept21_19,
+		flux_Sept21_20,
+		flux_Sept21_21,
+		flux_Sept21_22,
+		flux_Sept21_23,
+                flux_Sept21_24,
+                flux_Sept21_25,
+                flux_Sept21_26,
+                flux_Sept21_27,
+                flux_Sept21_28,
+                flux_Sept21_29,
+                flux_Sept21_30,
+                flux_Sept21_31,
+                flux_Sept21_32,
+                flux_Sept21_33,
+                flux_Sept21_34,
+                flux_Sept21_35,
+                flux_Sept21_36,
+                flux_Sept21_37,
+                flux_Sept21_38,
+                flux_Sept21_39,
+                flux_Sept21_40,
+                flux_Sept21_41,
+                flux_Sept21_42,
+                flux_Sept21_43,
+                flux_Sept21_44	
+	]
+
 	xsec_small: [
 		MaCCQE,
 		NR_nu_n_CC_3Pi,
 		MaCCRES,
-		BeRPA_A, 
-		BeRPA_B, 
+		BeRPA_A,
+		BeRPA_B,
 		BeRPA_D,
 		MaNCRES,
 		MvNCRES,
 		FrCEx_N,
 		VecFFCCQEshape,
 		CCQEPauliSupViaKF,
-		MaCCRES 
+		MaCCRES
 	]
 
 	xsec_CCQE: [
 		MaCCQE,
 		VecFFCCQEshape,
-		CCQEPauliSupViaKF 
+		CCQEPauliSupViaKF
 	]
 
 	xsec_LowW: [
-		MaCCRES, 
-		MvCCRES, 
-		Theta_Delta2Npi 
+		MaCCRES,
+		MvCCRES,
+		Theta_Delta2Npi
 	]
 
 	xsec_HighW: [
@@ -154,7 +379,7 @@ nuisance_parameter_sets: {
 		FrElas_pi,
 		FrInel_pi,
 		FrAbs_pi,
-		FrPiProd_pi 
+		FrPiProd_pi
 	]
 
 	xsec_Extra: [
@@ -193,21 +418,13 @@ nuisance_parameter_sets: {
 		nuenumu_xsec_ratio,
 		nuenuebar_xsec_ratio
 	]
-	
-	det_totalND: [ 
+
+	det_totalND: [
 		RecoEnergyScaleND,
 		RecoEnergySqrtND,
 		RecoEnergyInvSqrtND
 	]
 	det_totalFD: [
-		EnergyScaleFD,
-		UncorrFDTotSqrt,
-		UncorrFDTotInvSqrt
-	]
-	det_total: [ 
-		RecoEnergyScaleND,
-		RecoEnergySqrtND,
-		RecoEnergyInvSqrtND,
 		EnergyScaleFD,
 		UncorrFDTotSqrt,
 		UncorrFDTotInvSqrt
@@ -235,7 +452,7 @@ nuisance_parameter_sets: {
 	det_mularEND: [
 		ERecoScaleMuLArND,
 		ERecoScaleMuLArSqrtND,
-		ERecoScaleMuLArInvSqrtND 
+		ERecoScaleMuLArInvSqrtND
 	]
 	det_mularEFD: [
 		EScaleMuLArFD,
@@ -248,13 +465,13 @@ nuisance_parameter_sets: {
 		UncorrFDMuInvSqrt,
 		ERecoScaleMuLArND,
 		ERecoScaleMuLArSqrtND,
-		ERecoScaleMuLArInvSqrtND 
+		ERecoScaleMuLArInvSqrtND
 	]
 
 	det_EMND: [
 		EMRecoUncorrND,
 		EMRecoUncorrSqrtND,
-		EMRecoUncorrInvSqrtND 
+		EMRecoUncorrInvSqrtND
 	]
 	det_EMFD: [
 		EMUncorrFD,
@@ -268,22 +485,15 @@ nuisance_parameter_sets: {
 		UncorrFDEMInvSqrt,
 		EMRecoUncorrND,
 		EMRecoUncorrSqrtND,
-		EMRecoUncorrInvSqrtND 
-	]
-
-	det_NFD: [
-		NUncorrFD,
-		UncorrFDNSqrt,
-		UncorrFDNInvSqrt,
-		NResFD
+		EMRecoUncorrInvSqrtND
 	]
 
 	det_ResND: [
-		MuonRecoResND, 
-		EMRecoResND, 
-		ChargedHadRecoResND 
+		MuonRecoResND,
+		EMRecoResND,
+		ChargedHadRecoResND
 	]
-	det_ResFD: [ 
+	det_ResFD: [
 		MuonResFD,
 		EMResFD,
 		ChargedHadResFD
@@ -292,25 +502,29 @@ nuisance_parameter_sets: {
 		MuonResFD,
 		EMResFD,
 		ChargedHadResFD,
-		MuonRecoResND, 
-		EMRecoResND, 
-		ChargedHadRecoResND 
-	]
-	det_Corr: [
-		CorrHadSqrt,
-		CorrHadInvSqrt,
-		CorrMuSqrt,
-		CorrMuInvSqrt,
-		CorrEMSqrt,
-		CorrEMInvSqrt,
-		EScaleMuLAr,
-		ChargedHadCorr,
-		EMCorr
+		MuonRecoResND,
+		EMRecoResND,
+		ChargedHadRecoResND
 	]
 
 }
 
 nuisance_parameters: {
+	fluxSept21All: [
+		@sequence::nuisance_parameter_sets.fluxSept21
+	]
+
+	xsecShiftByWeight: [
+		@sequence::nuisance_parameter_sets.XsecWeightShift
+	]
+
+	xsecShiftMaCCQEByWeight: [
+		@sequence::nuisance_parameter_sets.XsecWeightShiftMaCCQE
+	]
+
+	xsecShiftFrIntel_piByWeight: [
+		@sequence::nuisance_parameter_sets.XsecWeightShiftFrInel_pi
+	]
 
 	fluxalmostAll: [
 		@sequence::nuisance_parameter_sets.fluxHadProd5,
@@ -322,11 +536,6 @@ nuisance_parameters: {
 		@sequence::nuisance_parameter_sets.fluxFocussing
 	]
 
-	fluxSeptNovComb: [
-		@sequence::nuisance_parameter_sets.fluxSept21Focussing,
-		@sequence::nuisance_parameter_sets.fluxHadProd10
-	]
-	
 	xsec_total: [
 		@sequence::nuisance_parameter_sets.xsec_CCQE,
 		@sequence::nuisance_parameter_sets.xsec_LowW,
@@ -335,7 +544,7 @@ nuisance_parameters: {
 		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
 		@sequence::nuisance_parameter_sets.xsec_Extra
 	]
-	
+
 	det_all: [
 		@sequence::nuisance_parameter_sets.det_totalND,
 		@sequence::nuisance_parameter_sets.det_totalFD,
@@ -345,14 +554,7 @@ nuisance_parameters: {
 		@sequence::nuisance_parameter_sets.det_Res
 	]
 
-	det_corr_all: [
-		@sequence::nuisance_parameter_sets.det_totalND,
-		@sequence::nuisance_parameter_sets.det_totalFD,
-		@sequence::nuisance_parameter_sets.det_Corr,
-		@sequence::nuisance_parameter_sets.det_Res
-	]
-
-	xsecflux: [		
+	xsecflux: [
 		@sequence::nuisance_parameter_sets.fluxHadProd10,
 		@sequence::nuisance_parameter_sets.fluxFocussing,
 		@sequence::nuisance_parameter_sets.xsec_CCQE,
@@ -381,55 +583,8 @@ nuisance_parameters: {
 
 	]
 
-	allCorr: [
-		@sequence::nuisance_parameter_sets.det_totalND,
-		@sequence::nuisance_parameter_sets.det_totalFD,
-		@sequence::nuisance_parameter_sets.det_Corr,
-		@sequence::nuisance_parameter_sets.det_Res,
-		@sequence::nuisance_parameter_sets.xsec_CCQE,
-		@sequence::nuisance_parameter_sets.xsec_LowW,
-		@sequence::nuisance_parameter_sets.xsec_HighW,
-		@sequence::nuisance_parameter_sets.xsec_NC_other,
-		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
-		@sequence::nuisance_parameter_sets.xsec_Extra,
-		@sequence::nuisance_parameter_sets.fluxHadProd10,
-		@sequence::nuisance_parameter_sets.fluxFocussing
-	]
-
-	allCorr_Ndet: [
-		@sequence::nuisance_parameter_sets.det_totalND,
-		@sequence::nuisance_parameter_sets.det_totalFD,
-		@sequence::nuisance_parameter_sets.det_Corr,
-		@sequence::nuisance_parameter_sets.det_NFD,
-		@sequence::nuisance_parameter_sets.det_Res,
-		@sequence::nuisance_parameter_sets.xsec_CCQE,
-		@sequence::nuisance_parameter_sets.xsec_LowW,
-		@sequence::nuisance_parameter_sets.xsec_HighW,
-		@sequence::nuisance_parameter_sets.xsec_NC_other,
-		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
-		@sequence::nuisance_parameter_sets.xsec_Extra,
-		@sequence::nuisance_parameter_sets.fluxHadProd10,
-		@sequence::nuisance_parameter_sets.fluxFocussing
-	]
-
-	allCorrSept21Flux: [
-		@sequence::nuisance_parameter_sets.det_totalND,
-		@sequence::nuisance_parameter_sets.det_totalFD,
-		@sequence::nuisance_parameter_sets.det_Corr,
-		@sequence::nuisance_parameter_sets.det_Res,
-		@sequence::nuisance_parameter_sets.xsec_CCQE,
-		@sequence::nuisance_parameter_sets.xsec_LowW,
-		@sequence::nuisance_parameter_sets.xsec_HighW,
-		@sequence::nuisance_parameter_sets.xsec_NC_other,
-		@sequence::nuisance_parameter_sets.xsec_IntraNuclear,
-		@sequence::nuisance_parameter_sets.xsec_Extra,
-		@sequence::nuisance_parameter_sets.fluxHadProd10,
-		@sequence::nuisance_parameter_sets.fluxSept21Focussing
-	]
-
 	allSmall: [
 		@sequence::nuisance_parameter_sets.xsec_small
 	]
 
 }
-

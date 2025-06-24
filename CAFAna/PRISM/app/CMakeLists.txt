@@ -1,16 +1,29 @@
+message(STATUS "CAFAna_Libs = ${CAFAna_Libs}")
+foreach(lib ${CAFAna_Libs})
+  find_library(lib_path NAMES ${lib})
+  if(lib_path)
+    message(STATUS "Found library ${lib} at ${lib_path}")
+  else()
+    message(WARNING "Library ${lib} not found!")
+  endif()
+endforeach()
+
+message(STATUS "USE_OPENMP is set to: ${USE_OPENMP}")
+
+
 set(scripts_to_build
   MakePRISMPredInterps
   #OffAxisEventRates
   #OffAxisNDCAFCombiner
   PRISMPrediction
   PRISM_4Flavour_dChi2Scan
-  PRISMSystThrows
+  #PRISMSystThrows
   #PRISMDChi2Scan
   #DumpEventRateTable
-  PRISMRegOptimizer
+  #PRISMRegOptimizer
   #PRISMExtrapRegOptimizer
  #FluxPredictionTester
- EventLoop
+ #EventLoop
 )
 
 foreach(SCRPT ${scripts_to_build})
@@ -26,3 +39,5 @@ foreach(SCRPT ${scripts_to_build})
 
   install(TARGETS ${SCRPT} DESTINATION bin)
 endforeach()
+
+add_cafana_lib(${CAFAna_Libs})

@@ -19,3 +19,5 @@ endif()
 install(TARGETS CAFAnaCuts 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Cuts/)
+
+add_cafana_lib(CAFAnaCuts)

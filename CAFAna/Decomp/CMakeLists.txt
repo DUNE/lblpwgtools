@@ -19,3 +19,5 @@ endif()
 install(TARGETS CAFAnaDecomp 
   LIBRARY DESTINATION lib/
   PUBLIC_HEADER DESTINATION include/CAFAna/Decomp/)
+
+add_cafana_lib(CAFAnaDecomp)
