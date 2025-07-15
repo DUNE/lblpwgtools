@@ -12,4 +12,6 @@ namespace ana
   typedef _HistAxis<TruthPartVar> TruthPartHistAxis;
   typedef _HistAxis<RecoPartVar> RecoPartHistAxis;
   typedef _HistAxis<NDVar> NDHistAxis;
+  typedef _HistAxis<TMSVar> TMSHistAxis;
+  typedef _HistAxis<TrackVar> TrackHistAxis;
 }
