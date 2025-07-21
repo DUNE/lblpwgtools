@@ -20,6 +20,8 @@ namespace ana
   /// \brief Equivalent of \ref Var acting on \ref caf::SRSpill
   typedef _Var<caf::SRProxy> SRVar;
   typedef _Var<caf::SRNDLArIntProxy> NDVar;
+  typedef _Var<caf::SRTrackProxy> TrackVar;
+  typedef _Var<caf::SRTMSIntProxy> TMSVar;
   /// \brief For Vars where literally all you need is a single CAF variable
   ///
   /// eg Var myVar = SIMPLEVAR(my.var.str);
@@ -28,10 +30,15 @@ namespace ana
 
 #define SIMPLETRUTHVAR(CAFNAME) TruthVar([](const caf::SRTrueInteractionProxy* nu){return nu->CAFNAME;})
 
+#define SIMPLETRUTHPARTVAR(CAFNAME) TruthPartVar([](const caf::SRTrueParticleProxy* p){return p->CAFNAME;})
+
 #define SIMPLENDVAR(CAFNAME) NDVar([](const caf::SRNDLArIntProxy* sr){return sr->CAFNAME;})
+
+#define SIMPLETMSVAR(CAFNAME) TMSVar([](const caf::SRTMSIntProxy* sr){return sr->CAFNAME;})
 
 #define SIMPLESRVAR(CAFNAME) SRVar([](const caf::SRProxy* sr){return sr->CAFNAME;})
 
+#define SIMPLETRACKVAR(CAFNAME) TrackVar([](const caf::SRTrackProxy* sr){return sr->CAFNAME;})
 
   inline Var Constant(double v){return Var([v](const caf::SRInteractionProxy*){return v;});}
 //  inline Var Constant(double v){return Var([v](const caf::SRInteractionBranchProxy*){return v;});}

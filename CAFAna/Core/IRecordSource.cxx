@@ -205,6 +205,20 @@ namespace ana
     else
       assert(false &&"GetNDLarInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
   }
+  const caf::Proxy<std::vector<caf::SRTrack>> & GetNDLarIntTracks(const caf::SRNDLArIntProxy* sr)
+  {
+    return sr->tracks;
+  }
+
+  const caf::Proxy<std::vector<caf::SRTMSInt>> & GetTMSInteractions(const caf::SRProxy* sr)
+  {
+    return sr->nd.tms.ixn;
+  }
+
+  const caf::Proxy<std::vector<caf::SRTrack>> & GetTMSIntTracks(const caf::Proxy<caf::SRTMSInt>* sr)
+  {
+    return sr->tracks;
+  }
 
   const caf::Proxy<std::vector<caf::SRTrueInteraction>>&
   GetNuTruths(const caf::SRProxy* sr)
@@ -264,6 +278,12 @@ namespace ana
   template class VectorAdaptor<caf::StandardRecord, caf::SRInteraction>;
 
   template class VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>;
+
+  template class VectorAdaptor<caf::SRNDLArInt, caf::SRTrack>;
+
+  template class VectorAdaptor<caf::StandardRecord, caf::SRTMSInt>;
+
+  template class VectorAdaptor<caf::SRTMSInt, caf::SRTrack>;
 
   template class VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction>;
 

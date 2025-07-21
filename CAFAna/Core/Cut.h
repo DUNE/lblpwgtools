@@ -19,6 +19,8 @@ namespace ana
   typedef _Cut<caf::SRTrueInteractionProxy> TruthCut;
   typedef _Cut<caf::SRTrueParticleProxy> TruthPartCut;
   typedef _Cut<caf::SRNDLArIntProxy> NDCut;
+  typedef _Cut<caf::SRTMSIntProxy> TMSCut;
+  typedef _Cut<caf::SRTrackProxy> TrackCut;
 
   /// \brief Equivalent of \ref Cut acting on \ref caf::StandardRecord. For use in
   /// spill-by-spill data quality cuts ????
@@ -33,6 +35,8 @@ namespace ana
   const TruthCut kNoTruthCut(NoCut<caf::SRTrueInteractionProxy>{});
   const TruthPartCut kNoTruthPartCut(NoCut<caf::SRTrueParticleProxy>{});
   const NDCut kNoNDCut(NoCut<caf::SRNDLArIntProxy>{});
+  const TMSCut kNoTMSCut(NoCut<caf::SRTMSIntProxy>{});
+  const TrackCut kNoTrackCut(NoCut<caf::SRTrackProxy>{});
   const SRCut kNoSRCut(NoCut<caf::SRProxy>{});
 
   typedef _Cut<caf::SRRecoParticleProxy> RecoPartCut;
