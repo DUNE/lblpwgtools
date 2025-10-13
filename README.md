@@ -4,22 +4,20 @@ As of the TDR analysis (2019) this now mostly comprises just CAFAna.
 
 ## Build
 
-A helper build script lives in the CAFAna subdirectory. You can build and install the code like:
+A helper build script lives in the CAFAna subdirectory. You can build and install the code as follows using the FNAL sl7 container:
 
 ```
-cd CAFAna
-./standalone_configure_and_build.sh -r
+/cvmfs/oasis.opensciencegrid.org/mis/apptainer/current/bin/apptainer shell --shell=/bin/bash -B /cvmfs,/exp,/nashome,/pnfs/dune,/opt,/run/user,/etc/hostname,/etc/hosts,/etc/krb5.conf --ipc --pid /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest
+source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+cd /exp/dune/app/users/${USER}/SomeDir
+git clone https://github.com/DUNE/lblpwgtools.git
+cd lblpwgtools/CAFAna/
+export CAFANA_USE_STAN=0
+./standalone_configure_and_build.sh -r -u -I `pwd`
+source CAFAnaEnv.sh
 ```
 
-If you are on a CENTOS6/7 machine and have `cvmfs` access, you can
-rely on relevant dependencies from FNAL scisoft by add in the `-u`
-option:
-
-```
-./standalone_configure_and_build.sh -r -u -j 4
-```
-
-If you don't, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies
+If you don't use the helper build script, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies
 via relevant XXX-config helpers or some poor guesswork in the case of
 BOOST. Most of these dependencies should be available from distribution package managers. Some details follow:
 
