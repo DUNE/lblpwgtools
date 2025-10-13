@@ -21,13 +21,13 @@ git clone https://github.com/DUNE/lblpwgtools.git
 cd lblpwgtools/CAFAna/
 ```
 
-The build cannot currently involve Stan, so switch that off. Then use helper script configure and build script. 
+The build cannot currently involve Stan, so switch that off. Then use the helper configure and build script provided. 
 ```
 export CAFANA_USE_STAN=0
 ./standalone_configure_and_build.sh -r -u -I `pwd`
 ```
 
-If you don't use the helper build script, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies
+If you don't use the helper script, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies
 via relevant XXX-config helpers or some poor guesswork in the case of
 BOOST. Most of these dependencies should be available from distribution package managers. Some details follow:
 
