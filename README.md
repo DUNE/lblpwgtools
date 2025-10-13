@@ -7,14 +7,24 @@ As of the TDR analysis (2019) this now mostly comprises just CAFAna.
 A helper build script lives in the CAFAna subdirectory. You can build and install the code as follows using the FNAL sl7 container:
 
 ```
-/cvmfs/oasis.opensciencegrid.org/mis/apptainer/current/bin/apptainer shell --shell=/bin/bash -B /cvmfs,/exp,/nashome,/pnfs/dune,/opt,/run/user,/etc/hostname,/etc/hosts,/etc/krb5.conf --ipc --pid /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest
+/cvmfs/oasis.opensciencegrid.org/mis/apptainer/current/bin/apptainer shell --shell=/bin/bash \
+   -B /cvmfs,/exp,/nashome,/pnfs/dune,/opt,/run/user,/etc/hostname,/etc/hosts,/etc/krb5.conf \
+   --ipc --pid /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+```
+
+Make a directory in your `app` area where you will clone the `lblpwgtools` directory.
+```
+mkdir -p /exp/dune/app/users/${USER}/SomeDir
 cd /exp/dune/app/users/${USER}/SomeDir
 git clone https://github.com/DUNE/lblpwgtools.git
 cd lblpwgtools/CAFAna/
+```
+
+The build cannot currently involve Stan, so switch that off. Then use helper script configure and build script. 
+```
 export CAFANA_USE_STAN=0
 ./standalone_configure_and_build.sh -r -u -I `pwd`
-source CAFAnaEnv.sh
 ```
 
 If you don't use the helper build script, then you will need ROOT, GSL, CLHEP, and some BOOST components to build. The above script will check these dependencies
@@ -58,6 +68,6 @@ $ ./standalone_configure_and_build.sh -?
 
 ## Getting started
 
-Once CAFAna has been built, to set up the environment you will need to `source /path/to/install/CAFAnaEnv.sh`. If `standalone_configure_and_build.sh` was not passed a `-I` argument, then this will be `/path/to/repo/CAFAna/build/Linux/CAFAnaEnv.sh` by default.
+Once CAFAna has been built, to set up the environment you will need to `source /path/to/install/CAFAnaEnv.sh`. If `standalone_configure_and_build.sh` was not passed a `-I` argument, then this will be `/path/to/repo/CAFAna/build/Linux/CAFAnaEnv.sh` by default. You will also need to `export CAFANA_USE_STAN=0`.
 
 ## For NOvAns
