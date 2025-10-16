@@ -30,16 +30,113 @@ namespace ana
       return NoReweight::LoadFrom(dir, name);
     if(tag == "TruthReweight")
       return TruthReweight::LoadFrom(dir, name);
-    if(tag == "RecoReweight")
-      return RecoReweight::LoadFrom(dir, name);
+    // TODO: Bring back when RecoReweight is implemented.
+    //if(tag == "RecoReweight")
+    //  return RecoReweight::LoadFrom(dir, name);
 
     std::cerr << "Unknown Component Extrapolation type '"
               << tag << "'" << std::endl;
     abort();
   }
 
+  bool ModularExtrapComponent::fQuiet = false;
+  
   //---------------------------------------------------------------------------
+  const OscillatableSpectrum& ModularExtrapComponent::Return() const
+  {
+    if (!fEvaluated)
+    {
+      fCache = Eval();
+      fEvaluated = true;
+    }
+    return fCache;
+  }
 
+  //---------------------------------------------------------------------------
+  std::string ModularExtrapComponent::DRToString(
+    const DecompResult decompresult
+  ){
+    switch (decompresult){
+      case DecompResult::nue     : return "Nue";
+      case DecompResult::numu    : return "Numu";
+      case DecompResult::nuebar  : return "NueBar";
+      case DecompResult::numubar : return "NumuBar";
+      case DecompResult::NC      : return "NC";
+      case DecompResult::NCbar   : return "NCbar";
+      case DecompResult::NCtot   : return "NCtot";
+    }
+    assert( 0 && "Bad DecompResult" );
+    throw;
+  }
+
+  //---------------------------------------------------------------------------
+  Ratio ModularExtrapComponent::FormSmartRatio(
+    const Spectrum& num,
+    const Spectrum& denom,
+    const std::string component,
+    const std::string location,
+    const Spectrum& mult)
+  {
+    const Eigen::ArrayXd numa = num.GetEigen(1e20);
+    const Eigen::ArrayXd denoma = denom.GetEigen(1e20);
+    const Eigen::ArrayXd multa = mult.GetEigen(1e20);
+
+    Eigen::ArrayXd ratioa = numa;
+    ratioa.setZero();
+
+    assert((numa.size() == denoma.size()) && "Bin Mismatch");
+    assert((numa.size() == multa.size()) && "Bin Mismatch");
+
+    static DivByZeroCounter counter;
+    for (int bin = 0; bin < numa.size(); ++bin)
+    {
+      if ( denoma[bin] != 0 ){
+        ratioa[bin] = numa[bin] / denoma[bin];
+      } else {
+        ratioa[bin] = 1;
+        if (    numa[bin] != 0
+             || multa[bin] != 0 )
+          counter.fBins.insert(std::make_tuple(component, location, bin));
+      }
+    }
+
+    return Ratio(std::move(ratioa), num.GetLabels(), num.GetBinnings());
+  }
+
+  //---------------------------------------------------------------------------
+  Spectrum ModularExtrapComponent::GetDecompResult(
+    const IDecomp& decomp,
+    const DecompResult decompresult
+  ){
+    switch (decompresult){
+      case DecompResult::nue     : return decomp.NueComponent();
+      case DecompResult::numu    : return decomp.NumuComponent();
+      case DecompResult::nuebar  : return decomp.AntiNueComponent();
+      case DecompResult::numubar : return decomp.AntiNumuComponent();
+      case DecompResult::NCtot   : return decomp.NCTotalComponent();
+      case DecompResult::NCbar   : return decomp.NCAntiComponent();
+      case DecompResult::NC      : return decomp.NCComponent();
+    }
+    assert( 0 && "Bad DecompResult" );
+    throw;
+  }
+
+  //---------------------------------------------------------------------------
+  DecompResult ModularExtrapComponent::StringToDR(
+    const std::string str
+  ){
+    if      (str=="Nue")     return DecompResult::nue;
+    else if (str=="Numu")    return DecompResult::numu;
+    else if (str=="NueBar")  return DecompResult::nuebar;
+    else if (str=="NumuBar") return DecompResult::numubar;
+    else if (str=="NC")      return DecompResult::NC;
+    else if (str=="NCbar")      return DecompResult::NCbar;
+    else if (str=="NCtot")      return DecompResult::NCtot;
+    else assert( 0 && "Bad DecompResult String" );
+    throw;
+  }
+
+  //---------------------------------------------------------------------------
   ModularExtrapComponent::DivByZeroCounter::~DivByZeroCounter()
   {
     if (fQuiet)
@@ -59,110 +156,7 @@ namespace ana
                 << "\t\t Bin Index: " << std::get<2>(tuple)
                 << std::endl;
     }
-
   }
-
-  //---------------------------------------------------------------------------
-
-  const OscillatableSpectrum& ModularExtrapComponent::Return() const
-  {
-    if (!fEvaluated)
-    {
-      fCache = Eval();
-      fEvaluated = true;
-    }
-    return fCache;
-  }
-
-  //---------------------------------------------------------------------------
-
-  Spectrum ModularExtrapComponent::GetDecompResult(
-    const IDecomp& decomp,
-    const DecompResult dr
-  ){
-    switch (dr){
-      case DecompResult::nue     : return decomp.NueComponent();
-      case DecompResult::numu    : return decomp.NumuComponent();
-      case DecompResult::nuebar  : return decomp.AntiNueComponent();
-      case DecompResult::numubar : return decomp.AntiNumuComponent();
-      case DecompResult::NCtot      : return decomp.NCTotalComponent();
-      case DecompResult::NCbar      : return decomp.NCAntiComponent();
-      case DecompResult::NC      : return decomp.NCComponent();
-    }
-    assert( 0 && "Bad DecompResult" );
-    throw;
-  }
-
-  //---------------------------------------------------------------------------
-
-  std::string ModularExtrapComponent::DRToString(
-    const DecompResult dr
-  ){
-    switch (dr){
-      case DecompResult::nue     : return "Nue";
-      case DecompResult::numu    : return "Numu";
-      case DecompResult::nuebar  : return "NueBar";
-      case DecompResult::numubar : return "NumuBar";
-      case DecompResult::NC      : return "NC";
-      case DecompResult::NCbar      : return "NCbar";
-      case DecompResult::NCtot      : return "NCtot";
-    }
-    assert( 0 && "Bad DecompResult" );
-    throw;
-  }
-
-  //---------------------------------------------------------------------------
-
-  DecompResult ModularExtrapComponent::StringToDR(
-    const std::string str
-  ){
-    if      (str=="Nue")     return DecompResult::nue;
-    else if (str=="Numu")    return DecompResult::numu;
-    else if (str=="NueBar")  return DecompResult::nuebar;
-    else if (str=="NumuBar") return DecompResult::numubar;
-    else if (str=="NC")      return DecompResult::NC;
-    else if (str=="NCbar")      return DecompResult::NCbar;
-    else if (str=="NCtot")      return DecompResult::NCtot;
-    else assert( 0 && "Bad DecompResult String" );
-    throw;
-  }
-
-  //---------------------------------------------------------------------------
-
-  Ratio ModularExtrapComponent::FormSmartRatio(
-    const Spectrum& num,
-    const Spectrum& denom,
-    const std::string component,
-    const std::string location,
-    const Spectrum& mult
-  ){
-    const Eigen::ArrayXd numa = num.GetEigen(1e20);
-    const Eigen::ArrayXd denoma = denom.GetEigen(1e20);
-    const Eigen::ArrayXd multa = mult.GetEigen(1e20);
-
-    Eigen::ArrayXd ratioa = numa;
-    ratioa.setZero();
-
-    assert( (numa.size() == denoma.size()) && "Bin Mismatch" );
-    assert( (numa.size() == multa.size()) && "Bin Mismatch" );
-
-    static DivByZeroCounter counter;
-    for (int bin = 0; bin < numa.size(); ++bin)
-    {
-      if ( denoma[bin] != 0 ){
-        ratioa[bin] = numa[bin] / denoma[bin];
-      } else {
-        ratioa[bin] = 1;
-        if (    numa[bin] != 0
-             || multa[bin] != 0 )
-          counter.fBins.insert(std::make_tuple(component, location, bin));
-      }
-    }
-
-    return Ratio( std::move(ratioa), num.GetLabels(), num.GetBinnings() );
-  }
-
-  bool ModularExtrapComponent::fQuiet = false;
 
   //---------------------------------------------------------------------------
   NoReweight::NoReweight(IInteractionSource& src,
@@ -213,31 +207,27 @@ namespace ana
   }
 
   //---------------------------------------------------------------------------
-  TruthReweight::TruthReweight(
-    SpectrumLoader& ndloader,
-    const HistAxis& axisFD,
-    const HistAxis& axisND,
-    const Cut& fdcut,
-    ana::RecoType recoFDIxnType,
-    const SystShifts& shiftMC,
-    const Weight& weight,
-    std::string label,
-    std::string latex,
-    const Cut& ndcut,
-    ana::RecoType recoNDIxnType,
-    const IDecomp& decomposition,
-    const DecompResult dr,
-    const Cut& ndflavor,
-    SpectrumLoader& fdloader,
-    const Cut& fdflavors
-  )
-    : fRecoToTrueND( ndloader.Interactions(recoNDIxnType)[ndcut && ndflavor], axisND ),
-      fTrueToRecoFD( fdloader.Interactions(recoFDIxnType)[fdcut && fdflavors], axisFD ),
-      fDecomp(decomposition),
-      fOwnDecomp(false),
-      fDecompRes(dr),
+  TruthReweight::TruthReweight(IInteractionSource& nearDetSrc,
+                               const HistAxis& axisFD,
+                               const HistAxis& axisND,
+                               const Cut& fdcut,
+                               const SystShifts& shiftMC,
+                               const Weight& weight,
+                               std::string label,
+                               std::string latex,
+                               const Cut& ndcut,
+                               const IDecomp& decomp,
+                               const DecompResult& decompres,
+                               const Cut& ndflavors,
+                               IInteractionSource& farDetSrc,
+                               const Cut& fdflavors)
+    : fRecoToTrueND(nearDetSrc[ndcut && ndflavors], axisND),
+      fTrueToRecoFD(farDetSrc[fdcut && fdflavors], axisFD),
       fLabel(label),
-      fLatex(latex)
+      fLatex(latex),
+      fDecomp(decomp),
+      fDecompRes(decompres),
+      fOwnDecomp(false)
   {}
 
   TruthReweight::~TruthReweight()
@@ -247,42 +237,39 @@ namespace ana
 
   OscillatableSpectrum TruthReweight::Eval() const
   {
-
-    //Copy to local variables because reweighting is in-place
+    // Copy to local variables because reweighting is in-place
     OscillatableSpectrum recoToTrueND(fRecoToTrueND);
     OscillatableSpectrum trueToRecoFD(fTrueToRecoFD);
 
-    //Get ND data from Decomp
+    // Get ND data from Decomp
     Spectrum decompresult(GetDecompResult(fDecomp,fDecompRes));
 
-    //Compute Data/MC Ratio in reco energy bins to get divide-by-zero warnings
+    // Compute Data/MC ratio in reco energy bins to get divide-by-zero warnings
     FormSmartRatio(
       decompresult, fRecoToTrueND.Unoscillated(),
       fLabel, "MC ND Reco",
-      fRecoToTrueND.Unoscillated() );
+      fRecoToTrueND.Unoscillated());
 
-    //ND Reco->True
-    recoToTrueND.ReweightToRecoSpectrum( decompresult );
+    // ND reco -> true
+    recoToTrueND.ReweightToRecoSpectrum(decompresult);
 
-    //Compute Data/MC Ratio in true energy bins
+    // Compute Data/MC ratio in true energy bins
     Ratio dataMCtrue = FormSmartRatio(
       recoToTrueND.TrueEnergy(), fRecoToTrueND.TrueEnergy(),
       fLabel, "MC ND Truth",
-      fTrueToRecoFD.TrueEnergy() );
+      fTrueToRecoFD.TrueEnergy());
 
-    // Multiply by Data/MC Ratio and add in FD truth information
-    trueToRecoFD.ReweightToTrueSpectrum(   fTrueToRecoFD.TrueEnergy()
-                                         * dataMCtrue );
+    // Multiply by Data/MC ratio and add in FD truth information
+    trueToRecoFD.ReweightToTrueSpectrum(fTrueToRecoFD.TrueEnergy()*dataMCtrue);
 
     return trueToRecoFD;
-
   }
 
   void TruthReweight::SaveTo(TDirectory* dir, const std::string& name) const
   {
     TDirectory* tmp = gDirectory;
 
-    dir = dir->mkdir(name.c_str()); // switch to subdir
+    dir = dir->mkdir(name.c_str()); 
     dir->cd();
 
     TObjString("TruthReweight").Write("type");
@@ -299,14 +286,13 @@ namespace ana
     tmp->cd();
   }
 
-  std::unique_ptr<TruthReweight>
-    TruthReweight::LoadFrom(TDirectory* dir, const std::string& name)
+  std::unique_ptr<TruthReweight> TruthReweight::LoadFrom(TDirectory* dir, const std::string& name)
   {
-    dir = dir->GetDirectory(name.c_str()); // switch to subdir
+    dir = dir->GetDirectory(name.c_str()); 
     assert(dir);
 
-    TObjString* dr = (TObjString*)dir->Get("DecompRes");
-    assert(dr);
+    TObjString* decompresult = (TObjString*)dir->Get("DecompRes");
+    assert(decompresult);
     TObjString* label = (TObjString*)dir->Get("Label");
     TObjString* latex = (TObjString*)dir->Get("Latex");
     assert(label);
@@ -316,23 +302,21 @@ namespace ana
       *(OscillatableSpectrum::LoadFrom(dir, "RecoToTrueND")),
       *(OscillatableSpectrum::LoadFrom(dir, "TrueToRecoFD")),
       *(ana::LoadFrom<IDecomp>(dir, "Decomp").release()),
-      StringToDR(dr->GetString().Data()),
+      StringToDR(decompresult->GetString().Data()),
       label->GetString().Data(),
-      latex->GetString().Data()
-    );
+      latex->GetString().Data());
     // We know we have the only copy because we just loaded it
     ret->fOwnDecomp = true;
 
     delete dir;
-
     delete label;
     delete latex;
-    delete dr;
+    delete decompresult;
     return std::unique_ptr<TruthReweight>(ret);
   }
 
+  /*
   //---------------------------------------------------------------------------
-
   RecoReweight::RecoReweight(
     SpectrumLoader& ndloader,
     const HistAxis& axis,
@@ -361,12 +345,10 @@ namespace ana
       fLatex(latex)
   {
     // TODO: Reintroduce.
-    /*
-    extrafdloaderswap.AddReweightableSpectrum(
-      fTrueToRecoFD, axis.GetVar1D(), kTrueE, fdcut && fdflavors, shiftMC, weight);
-    extrafdloadertau.AddReweightableSpectrum(
-      fTrueToRecoFD, axis.GetVar1D(), kTrueE, fdcut && fdflavors, shiftMC, weight);
-    */
+    //extrafdloaderswap.AddReweightableSpectrum(
+    //  fTrueToRecoFD, axis.GetVar1D(), kTrueE, fdcut && fdflavors, shiftMC, weight);
+    //extrafdloadertau.AddReweightableSpectrum(
+    //  fTrueToRecoFD, axis.GetVar1D(), kTrueE, fdcut && fdflavors, shiftMC, weight);
   }
 
   RecoReweight::~RecoReweight()
@@ -449,5 +431,5 @@ namespace ana
     delete dir;
     return std::unique_ptr<RecoReweight>(ret);
   }
-  
+  */
 }
