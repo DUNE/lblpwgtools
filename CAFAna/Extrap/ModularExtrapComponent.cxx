@@ -165,30 +165,24 @@ namespace ana
   bool ModularExtrapComponent::fQuiet = false;
 
   //---------------------------------------------------------------------------
-
-  NoReweight::NoReweight(
-    SpectrumLoader& loader,
-    const HistAxis& axis,
-    const Cut& fdcut,
-    ana::RecoType recoIxnType,
-    const SystShifts& shiftMC,
-    const Weight& weight,
-    const Cut& flavors,
-    SpectrumLoader& extraloaderswap,
-    SpectrumLoader& extraloadertau )
-    : fRecoFD( loader.Interactions(recoIxnType)[fdcut && flavors], axis )
+  NoReweight::NoReweight(IInteractionSource& src,
+                         const HistAxis& axis,
+                         const Cut& fdcut,
+                         const SystShifts& shiftMC,
+                         const Weight& weight,
+                         const Cut& flavors,
+                         IInteractionSource& srcExtra1,
+                         IInteractionSource& srcExtra2)
+   : fRecoFD(src[fdcut && flavors], axis)
   {
     // TODO: Reintroduce.
     /*
     extraloaderswap.AddReweightableSpectrum(
-      fRecoFD,     axis.GetVar1D(), kTrueE, fdcut && flavors, shiftMC, weight );
+      fRecoFD,     axis.GetVar1D(), kTrueE, fdcut && flavors, kNoShift, kUnweighted );
     extraloadertau.AddReweightableSpectrum(
-      fRecoFD,     axis.GetVar1D(), kTrueE, fdcut && flavors, shiftMC, weight );
+      fRecoFD,     axis.GetVar1D(), kTrueE, fdcut && flavors, kNoShift, kUnweighted );
     */
   }
-
-  OscillatableSpectrum NoReweight::Eval() const
-    {return fRecoFD;}
 
   void NoReweight::SaveTo(TDirectory* dir, const std::string& name) const
   {
@@ -206,8 +200,7 @@ namespace ana
     tmp->cd();
   }
 
-  std::unique_ptr<NoReweight>
-    NoReweight::LoadFrom(TDirectory* dir, const std::string& name)
+  std::unique_ptr<NoReweight> NoReweight::LoadFrom(TDirectory* dir, const std::string& name)
   {
     dir = dir->GetDirectory(name.c_str()); // switch to subdir
     assert(dir);
@@ -220,7 +213,6 @@ namespace ana
   }
 
   //---------------------------------------------------------------------------
-
   TruthReweight::TruthReweight(
     SpectrumLoader& ndloader,
     const HistAxis& axisFD,

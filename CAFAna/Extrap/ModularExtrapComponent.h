@@ -25,7 +25,6 @@ namespace ana
       ModularExtrapComponent() : fEvaluated(false), fCache(OscillatableSpectrum::Uninitialized()) {}
       virtual ~ModularExtrapComponent() {};
       virtual void SaveTo(TDirectory* dir, const std::string& name) const = 0;
-      virtual void SavePlots(TDirectory* dir, double potFD) const=0;
       static void SetQuiet(bool quiet = true){ fQuiet = quiet; }
 
       /// Interface so that result of Eval() is called only once and cached.
@@ -99,28 +98,25 @@ namespace ana
   {
 
     public:
-      NoReweight(
-        SpectrumLoader& loader,
-        const HistAxis& axis,
-        const Cut& fdcut,
-        ana::RecoType recoIxnType,
-        const SystShifts& shiftMC,
-        const Weight& weight,
-        const Cut& flavors,
-        SpectrumLoader& extraloaderswap = kNullLoader, // for NC
-        SpectrumLoader& extraloadertau  = kNullLoader  // for NC
-      );
-      OscillatableSpectrum Eval() const override;
+      NoReweight(IInteractionSource& src,
+                 const HistAxis& axis,
+                 const Cut& fdcut,
+                 const SystShifts& shiftMC,
+                 const Weight& weight,
+                 const Cut& flavors,
+                 IInteractionSource& srcExtra1 = kNullInteractionSource,  // for NC
+                 IInteractionSource& srcExtra2 = kNullInteractionSource); // for NC
+
+      OscillatableSpectrum Eval() const override {return fRecoFD;}
+      const IDecomp* GetDecomp() const override {return 0;}
       void SaveTo(TDirectory* dir, const std::string& name) const override;
-      void SavePlots(TDirectory* dir, double potFD) const override;
+
       static std::unique_ptr<NoReweight> LoadFrom(TDirectory* dir, const std::string& name);
 
-      const IDecomp* GetDecomp() const override {return 0;}
     private:
       NoReweight(const OscillatableSpectrum& recoFD) : fRecoFD(recoFD) {}
 
       OscillatableSpectrum fRecoFD;
-
   };
 
   /// Extrapolates component using truth-over-truth method.
@@ -149,7 +145,6 @@ namespace ana
       ~TruthReweight();
       OscillatableSpectrum Eval() const override;
       void SaveTo(TDirectory* dir, const std::string& name) const override;
-      void SavePlots(TDirectory* dir, double potFD) const override;
       static std::unique_ptr<TruthReweight> LoadFrom(TDirectory* dir, const std::string& name);
 
       const IDecomp* GetDecomp() const override {return &fDecomp;}
@@ -202,7 +197,6 @@ namespace ana
       ~RecoReweight();
       OscillatableSpectrum Eval() const override;
       void SaveTo(TDirectory* dir, const std::string& name) const override;
-      void SavePlots(TDirectory* dir, double potFD) const override;
       static std::unique_ptr<RecoReweight> LoadFrom(TDirectory* dir, const std::string& name);
 
       /// Uses MC spectra and target MC stats to estimate optimal binning.

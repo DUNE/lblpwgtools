@@ -9,107 +9,88 @@ class TDirectory;
 
 namespace ana
 {
-
   class Loaders;
   class SpectrumLoader;
   class IDecomp;
   class OscillatableSpectrum;
   class FluxDecomp;
 
-  /// \brief Extrapolate each component using a separate ModularExtrapComponent
-  ///
-  /// This class is not constructable directly.  Use one of its subclasses.
-  /// N.b.: only extrapolates one sample.
+  // Extrapolate each component using a separate ModularExtrapComponent. This
+  // class is not constructable directly, go via one of its dervied classes.
   class ModularExtrap: public IExtrap
   {
 
     public:
-
-      // Prevent copying because we own objects on the free store.
+      // ModularExtrap owns objects on the heap through unique_ptr. We want to be able to transfer
+      // ownership but not copy since this could lead to duplicate ownership of the same heap-allocated
+      // objects.
       ModularExtrap(const ModularExtrap&) = delete;
       ModularExtrap& operator=(const ModularExtrap&) = delete;
       ModularExtrap(ModularExtrap&&) = default;
       ModularExtrap& operator=(ModularExtrap&&) = default;
       virtual ~ModularExtrap() = default;
 
+      OscillatableSpectrum NueSurvComponent() override       {return fNueSurv->Return();};
+      OscillatableSpectrum AntiNueSurvComponent() override   {return fNueSurvAnti->Return();}; 
+
+      OscillatableSpectrum NumuSurvComponent() override      {return fNumuSurv->Return();};
+      OscillatableSpectrum AntiNumuSurvComponent() override  {return fNumuSurvAnti->Return();};
+
+      OscillatableSpectrum NueAppComponent() override        {return fNueApp->Return();};
+      OscillatableSpectrum AntiNueAppComponent() override    {return fNueAppAnti->Return();};
+
+      OscillatableSpectrum NumuAppComponent() override       {return fNumuApp->Return();};
+      OscillatableSpectrum AntiNumuAppComponent() override   {return fNumuAppAnti->Return();};
+
+      OscillatableSpectrum TauFromEComponent() override      {return fTauFromE->Return();};
+      OscillatableSpectrum AntiTauFromEComponent() override  {return fTauFromEAnti->Return();};
+
+      OscillatableSpectrum TauFromMuComponent() override     {return fTauFromMu->Return();};
+      OscillatableSpectrum AntiTauFromMuComponent() override {return fTauFromMuAnti->Return();};
+
+      Spectrum NCTotalComponent() override {return fNCTot->Return().Unoscillated();};
+      Spectrum NCComponent() override      {return fNC->Return().Unoscillated();};
+      Spectrum NCAntiComponent() override  {return fNCAnti->Return().Unoscillated();};
+
       void SaveTo(TDirectory* dir, const std::string& name) const override;
-      void SavePlotsNue( TDirectory* dir, double potFD ) const;
-      void SavePlotsNueRHC( TDirectory* dir, double potFD ) const;
-      void SavePlotsNumu( TDirectory* dir, double potFD ) const;
+
       static std::unique_ptr<ModularExtrap> LoadFrom(TDirectory* dir, const std::string& name);
 
-      // Override abstract methods.
-      OscillatableSpectrum NueSurvComponent()       override;
-      OscillatableSpectrum AntiNueSurvComponent()   override;
-      OscillatableSpectrum NumuSurvComponent()      override;
-      OscillatableSpectrum AntiNumuSurvComponent()  override;
-      OscillatableSpectrum NueAppComponent()        override;
-      OscillatableSpectrum AntiNueAppComponent()    override;
-      OscillatableSpectrum NumuAppComponent()       override;
-      OscillatableSpectrum AntiNumuAppComponent()   override;
-      OscillatableSpectrum TauFromMuComponent()     override;
-      OscillatableSpectrum AntiTauFromMuComponent() override;
-      OscillatableSpectrum TauFromEComponent()      override;
-      OscillatableSpectrum AntiTauFromEComponent()  override;
-      // nc:
-      Spectrum             NCTotalComponent()       override;
-      Spectrum             NCComponent()            override;
-      Spectrum             NCAntiComponent()        override;
-      //end nc
-
-      std::vector<ModularExtrapComponent*> GetModExtrapComponents() const
-      {
-        return {
-            fEEextrap.get(), fEEAntiextrap.get(),
-            fMMextrap.get(), fMMAntiextrap.get(),
-            fMEextrap.get(), fMEAntiextrap.get(),
-            fEMextrap.get(), fEMAntiextrap.get(),
-            //nc
-            fNCTotalextrap.get(), fNCextrap.get(), fNCAntiextrap.get(),
-            //end nc
-            fMTextrap.get(), fMTAntiextrap.get(),
-            fETextrap.get(), fETAntiextrap.get()
-        };
-      }
+      std::vector<ModularExtrapComponent*> GetModularExtrapComponents() const;
 
     protected:
+      // Sets up all components to use FD MC, use a
+      // derived class to create a ModularExtrap.
+      ModularExtrap(IInteractionSource& farDetMCnonswapSrc,
+                    IInteractionSource& farDetMCfluxswapSrc,
+                    IInteractionSource& farDetMCtauswapSrc,
+                    const HistAxis& axis,
+                    const Cut& fdcut);
 
-      /// Sets up all components to use FD MC--internal use only.
-      /// Use a derived class to create a ModularExtrap.
-      /// This function is protected.
-      ModularExtrap(
-        SpectrumLoader& farMCswapLoader,
-        SpectrumLoader& farMCnonswapLoader,
-        SpectrumLoader& farMCtauswapLoader,
-        const HistAxis& axis,
-        const Cut& fdcut,
-        ana::RecoType recoIxnType,
-        const SystShifts& shiftMC,
-        const Weight& weight
-      );
+      std::unique_ptr<ModularExtrapComponent> fNueSurv;
+      std::unique_ptr<ModularExtrapComponent> fNueSurvAnti;
 
-      std::unique_ptr<ModularExtrapComponent> fEEextrap;
-      std::unique_ptr<ModularExtrapComponent> fEEAntiextrap;
-      std::unique_ptr<ModularExtrapComponent> fMMextrap;
-      std::unique_ptr<ModularExtrapComponent> fMMAntiextrap;
-      std::unique_ptr<ModularExtrapComponent> fMEextrap;
-      std::unique_ptr<ModularExtrapComponent> fMEAntiextrap;
-      std::unique_ptr<ModularExtrapComponent> fEMextrap;
-      std::unique_ptr<ModularExtrapComponent> fEMAntiextrap;
-      //nc
-      std::unique_ptr<ModularExtrapComponent> fNCTotalextrap;
-      std::unique_ptr<ModularExtrapComponent> fNCextrap;
-      std::unique_ptr<ModularExtrapComponent> fNCAntiextrap;
-      //end nc
-      std::unique_ptr<ModularExtrapComponent> fMTextrap;
-      std::unique_ptr<ModularExtrapComponent> fMTAntiextrap;
-      std::unique_ptr<ModularExtrapComponent> fETextrap;
-      std::unique_ptr<ModularExtrapComponent> fETAntiextrap;
+      std::unique_ptr<ModularExtrapComponent> fNumuSurv;
+      std::unique_ptr<ModularExtrapComponent> fNumuSurvAnti;
+
+      std::unique_ptr<ModularExtrapComponent> fNueApp;
+      std::unique_ptr<ModularExtrapComponent> fNueAppAnti;
+
+      std::unique_ptr<ModularExtrapComponent> fNumuApp;
+      std::unique_ptr<ModularExtrapComponent> fNumuAppAnti;
+
+      std::unique_ptr<ModularExtrapComponent> fTauFromMu;
+      std::unique_ptr<ModularExtrapComponent> fTauFromMuAnti;
+
+      std::unique_ptr<ModularExtrapComponent> fTauFromE;
+      std::unique_ptr<ModularExtrapComponent> fTauFromEAnti;
+
+      std::unique_ptr<ModularExtrapComponent> fNCTot;
+      std::unique_ptr<ModularExtrapComponent> fNC;
+      std::unique_ptr<ModularExtrapComponent> fNCAnti;
 
     private:
-
+      // Prevent user from default constructing.
       ModularExtrap(){};
-
   };
-
 }
