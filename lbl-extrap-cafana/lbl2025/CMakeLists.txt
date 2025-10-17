@@ -8,6 +8,9 @@ set(headers
 	Loaders.h
 	Util.h
 	Vars.h
+ NumuDecomp.h
+ NumuExtrap.h
+ PredictionGenerator3Flavor.h
 )
 
 set(sources
@@ -16,6 +19,9 @@ set(sources
 	Loaders.cxx
 	Util.cxx
 	Vars.cxx
+ NumuDecomp.cxx
+ NumuExtrap.cxx
+ PredictionGenerator3Flavor.cxx
 )
 
 add_library(lbl2025 SHARED ${sources})
