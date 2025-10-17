@@ -16,7 +16,7 @@ namespace lbl2025
                           const ana::Cut cutFD,
                           const ana::Cut cutND);
 
-      std::unique_ptr<ana::IPrediction> Generate(ana::Loaders& loaders, const ana::RecoType & ixnRecoType) const;
+      std::unique_ptr<ana::IPrediction> Generate(ana::Loaders& loaders, const ana::RecoType& ixnRecoType, const ana::SystShifts& shiftMC = ana::kNoShift) const override;
 
     private:
       const ana::HistAxis fAxis;

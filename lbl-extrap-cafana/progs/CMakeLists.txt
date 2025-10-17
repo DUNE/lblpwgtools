@@ -3,6 +3,7 @@ include_directories(${LBL_CAFANA_INCDIRS})
 list(APPEND MACROS_TO_BUILD
 		Test_Spectrum.C
 		MakePred.C
+  MakePredExtrapNumu.C
 		MakeFakeData.C
 		FitFakeData.C
 		PlotFitResults.C

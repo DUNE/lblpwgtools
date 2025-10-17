@@ -9,7 +9,7 @@ namespace lbl2025
                                            : fAxis(axis), fCutFD(cutFD), fCutND(cutND)
   {}
 
-  std::unique_ptr<ana::IPrediction> NumuExtrapGenerator::Generate(ana::Loaders& loaders, const ana::RecoType& ixnRecoType) const
+  std::unique_ptr<ana::IPrediction> NumuExtrapGenerator::Generate(ana::Loaders& loaders, const ana::RecoType& ixnRecoType, const ana::SystShifts& shiftMC) const
   {
     auto decomp = new ana::NumuDecomp(loaders, fAxis, fCutND, ixnRecoType);
     auto extrap = std::make_unique<ana::NumuExtrap>(loaders, *decomp, fAxis, fCutFD, fCutND, ixnRecoType);
