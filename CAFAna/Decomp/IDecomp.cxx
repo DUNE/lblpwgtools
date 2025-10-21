@@ -15,7 +15,7 @@ namespace ana
   //----------------------------------------------------------------------
   Spectrum IDecomp::Data_Component() const
   { 
-    std::cout<<"IDecomp::Data_Componet() is not implemented for this class, check your Decomp"<<std::endl;
+    std::cout<<"IDecomp::Data_Component() is not implemented for this class, check your Decomp"<<std::endl;
     abort();
   }
 
