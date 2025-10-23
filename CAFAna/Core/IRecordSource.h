@@ -22,9 +22,11 @@ namespace ana
   using ISRSource = _IRecordSource<caf::SRProxy>;
   using IInteractionSource = _IRecordSource<caf::SRInteractionProxy>;
   using INDLarInteractionSource = _IRecordSource<caf::SRNDLArIntProxy>;
+  using ITMSInteractionSource = _IRecordSource<caf::Proxy<caf::SRTMSInt>>;
   using IParticleSource = _IRecordSource<caf::SRRecoParticleProxy>;
   using INuTruthSource = _IRecordSource<caf::SRTrueInteractionProxy>;
   using INuTruthParticleSource = _IRecordSource<caf::SRTrueParticleProxy>;
+  using ITrackSource = _IRecordSource<caf::SRTrackProxy>;
   //----------------------------------------------------------------------
   using IInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRInteractionProxy>;
   using ITrueInteractionEnsembleSource = _IRecordEnsembleSource<caf::SRTrueInteractionProxy>;
@@ -75,6 +77,12 @@ namespace ana
   template <RecoType IntType>
   const caf::Proxy<std::vector<caf::SRNDLArInt>>& GetNDLarInteractions(const caf::SRProxy* sr);
 
+  const caf::Proxy<std::vector<caf::SRTrack>>& GetNDLarIntTracks(const caf::SRNDLArIntProxy* sr);
+
+  const caf::Proxy<std::vector<caf::SRTMSInt>>& GetTMSInteractions(const caf::SRProxy* sr);
+
+  const caf::Proxy<std::vector<caf::SRTrack>>& GetTMSIntTracks(const caf::Proxy<caf::SRTMSInt>* sr);
+
   const caf::Proxy<std::vector<caf::SRTrueInteraction>>& GetNuTruths(const caf::SRProxy* sr);
 
   template <TruePType PartType>
@@ -83,6 +91,32 @@ namespace ana
     //  const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr);
   //  // usage: apply cuts on truth branch but get records from common branch
   //const caf::Proxy<std::vector<caf::SRInteraction>>& GetRecoInteractionsFromTruths(const caf::SRProxy* sr);
+  //----------------------------------------------------------------------
+  // NDLarInt source provides a source of Tracks
+  template<> class _IRecordSource<caf::SRNDLArIntProxy>
+    : public _IRecordSourceDefaultImpl<caf::SRNDLArIntProxy>
+  {
+  public:
+    _IRecordSource() = default;
+
+    ITrackSource& Tracks() {return fTracks;}
+  protected:
+    VectorAdaptor<caf::SRNDLArInt, caf::SRTrack> fTracks{*this, GetNDLarIntTracks};
+  };
+
+  //-----------------------------------------------------------------------
+  // TMSInt source provides a source of Tracks
+  template<> class _IRecordSource<caf::Proxy<caf::SRTMSInt>>
+    : public _IRecordSourceDefaultImpl<caf::Proxy<caf::SRTMSInt>>
+  {
+  public:
+    _IRecordSource() = default;
+
+    ITrackSource& Tracks() {return fTracks;}
+  protected:
+    VectorAdaptor<caf::SRTMSInt, caf::SRTrack> fTracks{*this, GetTMSIntTracks};
+  };
+
   //----------------------------------------------------------------------
 
   template<> class _IRecordSource<caf::SRInteractionProxy>
@@ -132,11 +166,13 @@ namespace ana
 
     IInteractionSource&       Interactions( const RecoType kRType ) {return fInteractionCollections.at(kRType);}    
     INDLarInteractionSource&  NDLarInteractions(  const RecoType kRType ) {return fNDLarInteractionCollections.at(kRType);}
+    ITMSInteractionSource&    TMSInteractions() {return fTMSInteractions;}
     INuTruthSource& NuTruths() {return fNuTruths;}
     //IInteractionSource&       InteractionsTruthFiltered(){return fFilteredInteractions;}
   protected:
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRInteraction>> fInteractionCollections;
     std::unordered_map<RecoType, VectorAdaptor<caf::StandardRecord, caf::SRNDLArInt>> fNDLarInteractionCollections;
+    VectorAdaptor<caf::StandardRecord, caf::SRTMSInt> fTMSInteractions{*this, GetTMSInteractions};
     VectorAdaptor<caf::StandardRecord, caf::SRTrueInteraction> fNuTruths{*this, GetNuTruths};
     //VectorAdaptor<caf::StandardRecord,caf::SRInteraction> fFilteredInteractions{*this,GetRecoInteractionsFromTruths};
 

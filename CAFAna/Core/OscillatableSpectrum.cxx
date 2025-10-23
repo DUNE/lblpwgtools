@@ -34,7 +34,7 @@ namespace ana
                      /// uuumm what do we
                      return ixn->Enu.calo;
                    });
-     const Cut kHasNu([](const caf::SRInteractionProxy* ixn)
+     const Cut kHasNeutrino([](const caf::SRInteractionProxy* ixn)
                      {
                        //return sr->truth.index >= 0;
                       // this should return something at the true level, 
@@ -44,7 +44,7 @@ namespace ana
    }
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(IInteractionSource& src, const HistAxis& axis)
-    : ReweightableSpectrum(src[kHasNu], axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))
+    : ReweightableSpectrum(src[kHasNeutrino], axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))
   {
   }
 

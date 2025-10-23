@@ -1,8 +1,9 @@
 # CAFAna: README
-Last updated: June 2025, Jeremy Wolcott [[jwolcott@fnal.gov](jwolcott@fnal.gov)].
+Last updated: June 2025 (JW)
 
-Other contributors:
-* Maria Martinez-Casales
+Contributors:
+* Maria Martinez-Casales [[mcasales@fnal.gov](mcasales@fnal.gov)]
+* Jeremy Wolcott [[jwolcott@fnal.gov](jwolcott@fnal.gov)]
 
 ## What is CAFAna?
 
