@@ -26,7 +26,7 @@ namespace ana
     fNueSurvAnti->SaveTo(dir, "nue_surv_anti");
 
     fNumuSurv->SaveTo(dir, "numu_surv");
-    fNumuSurvAnti->SaveTo(dir, "nue_surv_anti");
+    fNumuSurvAnti->SaveTo(dir, "numu_surv_anti");
 
     fNueApp->SaveTo(dir, "nue_app");
     fNueAppAnti->SaveTo(dir, "nue_app_anti");
