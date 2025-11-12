@@ -54,8 +54,10 @@ void MakePredExtrapNumu(TFile & outfile)
 {
   lbl2025::Loaders loaders(ana::RecoType::kPandora);
 
-  //lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid && lbl2025::kRecoNumuFD, lbl2025::kRecoVtxInFid && lbl2025::kRecoNumuND);
-  lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid && lbl2025::kRecoNumuFD, lbl2025::kRecoVtxInFid);
+  //lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid && lbl2025::kRecoNumuFD, lbl2025::kRecoVtxInFidND && lbl2025::kRecoNumuND);
+  //lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid && lbl2025::kRecoNumuFD, lbl2025::kRecoVtxInFidND);
+  //lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid, lbl2025::kRecoVtxInFidND);
+  lbl2025::NumuExtrapGenerator predGen(lbl2025::ax_RecoEnu, lbl2025::kRecoVtxInFid, ana::kNoCut);
   std::unique_ptr<ana::IPrediction> pred = predGen.Generate(*loaders.GetLoaders(ana::FluxType::kFHC), ana::RecoType::kPandora);
 
   loaders.Go();

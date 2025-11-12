@@ -42,7 +42,9 @@ namespace ana
                          const SystShifts& shiftData,
                          const Weight& weight)
     : NumuDecomp(loaders.GetSource(DataMC::kMC, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(ixnRecoType),
-                 loaders.GetSource(DataMC::kData, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(ixnRecoType),
+                 // TODO: FUDGE!!!
+                 loaders.GetSource(DataMC::kMC, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(ixnRecoType),
+                 //loaders.GetSource(DataMC::kData, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(ixnRecoType),
                  axis, cut, shiftMC, shiftData, weight)
   {
   }
