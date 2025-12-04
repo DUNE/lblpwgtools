@@ -4,7 +4,7 @@ if (NOT DEFINED CMAKE_MINIMUM_REQUIRED_VERSION)
 endif()
 
 if (NOT DEFINED PROJECT_NAME)
-	project(lbl-cafana-revival  LANGUAGES CXX)
+	project(lbl-extrap-cafana  LANGUAGES CXX)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
