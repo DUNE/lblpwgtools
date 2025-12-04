@@ -15,6 +15,11 @@ namespace lbl2025
 	                                      && (kRecoVtxY > -550 && kRecoVtxY < 550)
 	                                      && (kRecoVtxZ > 50 && kRecoVtxZ < 850);
 
+ // TODO: Currently set to correspond ~ to 2x2.
+	inline const ana::Cut kRecoVtxInFidND =    (kRecoVtxX > -60 && kRecoVtxX < 60)
+	                                        && (kRecoVtxY > -60 && kRecoVtxY < 60)
+	                                        && (kRecoVtxZ > -60 && kRecoVtxZ < 60);
+
 	inline const ana::TruthCut kTrueVtxInFid_NT =    (ana::kTrueVtxX_NT > -300 && ana::kTrueVtxX_NT < 300)
 	                                              && (ana::kTrueVtxY_NT > -650 && ana::kTrueVtxY_NT < 650)
 	                                              && (ana::kTrueVtxZ_NT > 50 && ana::kTrueVtxZ_NT < 850);
