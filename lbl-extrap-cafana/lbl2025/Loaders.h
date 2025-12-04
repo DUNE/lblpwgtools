@@ -8,14 +8,15 @@ namespace lbl2025
 {
 	class Loaders
 	{
-        public:
+		public:
 			explicit Loaders(const ana::RecoType & recoType);
+			Loaders(const std::map<caf::Det_t, ana::RecoType> & recoTypeMap);
 
 			ana::Loaders * GetLoaders(const ana::FluxType & flux);
 
 			void Go();
 
-        private:
+		private:
 			std::unique_ptr<ana::Loaders> fFHC;
 			std::unique_ptr<ana::Loaders> fRHC;
 	};

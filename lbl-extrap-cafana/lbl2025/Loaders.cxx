@@ -20,7 +20,12 @@ namespace lbl2025
 
 	// -----------------------------------------------------------------------
 	Loaders::Loaders(const ana::RecoType & recoType)
-		: fFHC(std::make_unique<ana::Loaders>(recoType)), fRHC(std::make_unique<ana::Loaders>(recoType))
+		: Loaders({{caf::Det_t::kNEARDET, recoType}, {caf::Det_t::kFARDET, recoType}})
+	{}
+
+	// -----------------------------------------------------------------------
+	Loaders::Loaders(const std::map<caf::Det_t, ana::RecoType> & recoTypeMap)
+		: fFHC(std::make_unique<ana::Loaders>(recoTypeMap)), fRHC(std::make_unique<ana::Loaders>(recoTypeMap))
 	{
 		// I miss Python
 		for (const auto & hcPair : std::map<ana::Loaders*, decltype(kLoaderPaths_FHC)*>{{fFHC.get(), &kLoaderPaths_FHC}, {fRHC.get(), &kLoaderPaths_RHC}})

@@ -20,7 +20,11 @@ namespace ana
   {
     public:
       Loaders(ana::RecoType ixnType = RecoType::kUnknown)
-        : fRecoIxnType(ixnType)
+        : fRecoIxnTypes({{caf::Det_t::kNEARDET, ixnType}, {caf::Det_t::kFARDET, ixnType}})
+      {}
+
+      Loaders(std::map<caf::Det_t, ana::RecoType> ixnTypeMap)
+        : fRecoIxnTypes(std::move(ixnTypeMap))
       {}
 
       // todo: relying on a pre-configured Interaction type is probably not the endpoint solution
@@ -31,7 +35,8 @@ namespace ana
       void Go();
 
     private:
-      ana::RecoType fRecoIxnType;  ///< which reco interactions will be passed to spectra?
+      std::map<caf::Det_t, ana::RecoType> fRecoIxnTypes;
+      // ana::RecoType fRecoIxnType;  ///< which reco interactions will be passed to spectra?
   }; // class Loaders
 
 } // namespace
