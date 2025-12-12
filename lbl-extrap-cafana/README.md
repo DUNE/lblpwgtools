@@ -8,11 +8,11 @@ You've should already have a copy of `lblpwgtools` in some directory. In this `R
 
 ```
 export BASE_DIR=/exp/dune/app/users/abooth/ExtrapAna
-cd ${BASE_DIR}
 ```
 
 `lbl-extrap-cafana` depends on the `dune_plot_style` package so we need to grab that and, build and install it.
 ```
+cd ${BASE_DIR}
 git clone https://github.com/DUNE/dune_plot_style.git
 
 export SOURCE_DIR_DPS=${BASE_DIR}/dune_plot_style
