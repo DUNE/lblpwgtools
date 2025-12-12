@@ -4,7 +4,7 @@ Written December 2025, Alex B.
 
 Before building `lbl-extrap-cafana`, make sure that you have followed the steps [here](https://github.com/DUNE/lblpwgtools/tree/main/CAFAna#cafana-readme) to set up `CAFAna` and have `source`-ed `CAFAnaEnv.sh`.
 
-You've should already have a copy of `lblpwgtools` in some directory. In this `README`, that directory is assumed to be set as the environment variable `BASE_DIR`. For example:
+You should already have a copy of `lblpwgtools` in some directory. In this `README`, that directory is assumed to be set as the environment variable `BASE_DIR`. For example:
 
 ```
 export BASE_DIR=/exp/dune/app/users/abooth/ExtrapAna
