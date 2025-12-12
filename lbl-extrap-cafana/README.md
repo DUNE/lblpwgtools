@@ -39,3 +39,8 @@ cd ${BUILD_DIR_EXTRAP}
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR_EXTRAP} ${SOURCE_DIR_EXTRAP}
 make install
 ```
+
+You should now find that, for example, the macro `$SOURCE_DIR_EXTRAP/progs/MakePred.C` has an executable inside `$INSTALL_DIR_EXTRAP/bin`. As a final step, you need to add the `lib64` directory to the `LD_LIBRARY_PATH`:
+```
+export LD_LIBRARY_PATH=${INSTALL_DIR_EXTRAP}/lib64:${LD_LIBRARY_PATH}
+```
