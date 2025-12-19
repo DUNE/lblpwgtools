@@ -48,7 +48,7 @@ namespace ana
                          const Cut& fdcut,
                          const Cut& ndcut,
                          ana::RecoType recoIxnType)
-      : NumuExtrap(loaders.GetSource(DataMC::kMC, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(ana::RecoType::kDLP),
+      : NumuExtrap(loaders.GetSource(DataMC::kMC, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(recoIxnType),
                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNonSwap).Interactions(recoIxnType),
                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNueSwap).Interactions(recoIxnType),
                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNuTauSwap).Interactions(recoIxnType),
