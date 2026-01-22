@@ -71,6 +71,23 @@ if(NOT LBL_CAFANA_USE_STAN)
 	remove_definitions(-DCAFANA_USE_STAN)
 endif()
 
+# import duneanasel
+
+include(FetchContent)
+
+SET(duneanasel_USE_SRProxy ON)
+
+FetchContent_Declare(
+		duneanasel
+		GIT_REPOSITORY https://github.com/luketpickering/duneanasel.git
+		GIT_TAG main
+)
+
+SET(duneanasel_USE_UPS_duneanaobj ON)   # CAFAna will have set up UPS packages for stuff
+FetchContent_MakeAvailable(duneanasel)
+
+################################################
+
 include_directories(${LBL_CAFANA_INCDIRS})
 
 #get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
@@ -85,7 +102,7 @@ find_library(STANDARDRECORDPROXY duneanaobj_StandardRecordProxy $ENV{DUNEANAOBJ_
 #------------------------------------------------------------------------
 
 # this is extremely lazy, but probably doesn't hurt anything.
-# just link *all* the CAFAna dependencies and all the CAFAna libraries themselves
+# just link *all* the libraries (including CAFAna dependencies and all the CAFAna libraries themselves)
 function(link_all_libs tgt)
 	target_link_libraries(${tgt}
 			${STANDARDRECORDPROXY}
@@ -94,6 +111,7 @@ function(link_all_libs tgt)
 			ROOT::ROOT
 			Boost::filesystem
 			CAFAna::All
+			duneanasel::all
 			-Wl,--no-as-needed
 	)
 	if(LBL_CAFANA_USE_STAN)
