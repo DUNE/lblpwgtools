@@ -26,6 +26,9 @@ namespace lbl2025
 	inline const ana::Cut kTrueVtxInFid = ana::TruthCutToCut(kTrueVtxInFid_NT);
 
 	extern const ana::RecoPartCut kPartIsMuon;
+
+	// testing duneanaobjsel
+	extern const ana::Cut kNumuCCLikeCont;
 }
 
 #endif // LBL2025_CUTS_H
