@@ -3,11 +3,18 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "CAFAna/Core/Var.h"
+#include <iostream>
 
 namespace lbl2025
 {
 	const ana::Var kNumuCVNScore = ana::SIMPLEVAR(nuhyp.cvn.numu);
-	const ana::Var kRecoEnu_lepCalo = ana::SIMPLEVAR(Enu.lep_calo);
+	extern const ana::Var kRecoEnu_lepCalo;
+	//const ana::Var kRecoEnu_lepCalo = ana::SIMPLEVAR(Enu.calo);
+ /*
+ const ana::Var kRecoEnu_lepCalo([](const caf::SRInteractionProxy* sri) {
+     std::cout << sri->Enu.calo << std::endl;
+     return sri->Enu.calo;
+ });*/
 
 	const ana::Var kRecoVtxX = ana::SIMPLEVAR(vtx.x);
 	const ana::Var kRecoVtxY = ana::SIMPLEVAR(vtx.y);

@@ -7,6 +7,7 @@
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
 # include <assert.h>
+#include <iostream>
 
 namespace ana
 {
@@ -45,6 +46,7 @@ namespace ana
   void ShiftedInteractionEnsembleSource::HandleRecord(const caf::SRInteractionProxy* slc,
                                                 double weight)
   {
+    std::cout << "Handling a record in ShiftedInteractionEnsembleSource" << std::endl;
     if(weight == 0) return;
 
     std::vector<double> weights(fShifts.size(), weight);
@@ -129,9 +131,26 @@ namespace ana
   template<class FromT, class ToT> void VectorAdaptor<FromT, ToT>::
   HandleRecord(const caf::Proxy<FromT>* rec, double weight)
   {
-    for(const caf::Proxy<ToT>& to: fVecGetter(rec))
-      for(auto& sink: _IRecordSource<caf::Proxy<ToT>>::fSinks)
+    /*
+    std::cout << "Handling a record in VectorAdaptor" << std::endl;
+    std::cout << "DEBUG: Number of ToT elements extracted: " 
+      << fVecGetter(rec).size() << std::endl;
+      */
+    for(const caf::Proxy<ToT>& to: fVecGetter(rec)){
+      /*
+      std::cout << "First for" << std::endl;
+      std::cout << "DEBUG: Number of sinks: " 
+                  << _IRecordSource<caf::Proxy<ToT>>::fSinks.size() << std::endl;
+                  */
+      for(auto& sink: _IRecordSource<caf::Proxy<ToT>>::fSinks) {
+        std::cout << "DEBUG: Sink address - " << sink 
+                        << ", Type: " << typeid(*sink).name() << std::endl;
+        //std::cout << "Second for" << std::endl;
+
         sink->HandleRecord(&to, weight);
+        //std::cout << "DEBUG: Passed to sink->HandleRecord, Weight: " << weight << std::endl;
+      }
+    }
   }
   //----------------------------------------------------------------------
   template<class FromT, class ToT> EnsembleVectorAdaptor<FromT, ToT>::

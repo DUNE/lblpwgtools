@@ -45,12 +45,16 @@ namespace ana
 
     // Look up and return. Use kNullLoader if no loader is set for this config
     auto itLoader = fSourceViews.find(key);
+    //std::cout << "In GetSource before first return " << std::endl;
     if(itLoader != fSourceViews.end()) return *itLoader->second;
+    //std::cout << "In GetSource after first return " << std::endl;
 
     if constexpr(std::is_same_v<SrcT, SpectrumLoader>){
+      //std::cout << "Returning null loader" << std::endl;
       return kNullLoader;
     }
     else{
+      //std::cout << "Returning null" << std::endl;
       static NullSource<typename SrcT::Record_t> null;
       return null;
     }

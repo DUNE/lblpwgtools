@@ -26,6 +26,8 @@ namespace lbl2025
 	inline const ana::Cut kTrueVtxInFid = ana::TruthCutToCut(kTrueVtxInFid_NT);
 
 	extern const ana::RecoPartCut kPartIsMuon;
+
+	extern const ana::Cut kHasOverlap;
 }
 
 #endif // LBL2025_CUTS_H

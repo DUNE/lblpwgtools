@@ -23,6 +23,7 @@ namespace ana
                          const SystShifts& shiftMC,
                          const SystShifts& shiftData,
                          const Weight& weight)
+    /*
     : fData    (nearDetDatasrc[cut], axis),
       fNue     (nearDetMCsrc[cut &&  kIsBeamNue && !kIsAntiNu], axis),
       fAntiNue (nearDetMCsrc[cut &&  kIsBeamNue &&  kIsAntiNu], axis),
@@ -30,7 +31,25 @@ namespace ana
       fAntiNumu(nearDetMCsrc[cut &&  kIsNumuCC  &&  kIsAntiNu], axis),
       fNCTot   (nearDetMCsrc[cut && kIsNC],                     axis),
       fNotNumu (nearDetMCsrc[cut && !kIsNumuCC  &&  kHasNeutrino], axis)
+      */
+    /*
+    : fData    (nearDetDatasrc[kHasNeutrino], axis),
+      fNue     (nearDetMCsrc[kHasNeutrino], axis),
+      fAntiNue (nearDetMCsrc[kHasNeutrino], axis),
+      fNumu    (nearDetMCsrc[kHasNeutrino], axis),
+      fAntiNumu(nearDetMCsrc[kHasNeutrino], axis),
+      fNCTot   (nearDetMCsrc[kHasNeutrino], axis),
+      fNotNumu (nearDetMCsrc[kHasNeutrino], axis)
+      */
+    : fData    (nearDetDatasrc[kNoCut], axis),
+      fNue     (nearDetMCsrc[kNoCut], axis),
+      fAntiNue (nearDetMCsrc[kNoCut], axis),
+      fNumu    (nearDetMCsrc[kNoCut], axis),
+      fAntiNumu(nearDetMCsrc[kNoCut], axis),
+      fNCTot   (nearDetMCsrc[kNoCut], axis),
+      fNotNumu (nearDetMCsrc[kNoCut], axis)
   {
+    std::cout << "Getting past the setup of the spectra" << std::endl;
   }
 
   //----------------------------------------------------------------------
