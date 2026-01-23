@@ -3,6 +3,8 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 
+#include "duneanasel/nd/ndlar/Selections.h"
+
 namespace lbl2025
 {
 	const ana::RecoPartCut kPartIsMuon([](const caf::SRRecoParticleProxy * part)
@@ -15,5 +17,9 @@ namespace lbl2025
    if(!sri->truthOverlap.size()) return false;
    //std::cout << sri->truthOverlap[0] << std::endl;
 		 return !(sri->truthOverlap[0] < 0.5);
+	});
+	const ana::Cut kNumuCCLikeCont([](const caf::SRInteractionProxy * sr)
+	{
+		return sel::beam::ndlar::numode::NuMuCCLikeContained(*sr);
 	});
 }

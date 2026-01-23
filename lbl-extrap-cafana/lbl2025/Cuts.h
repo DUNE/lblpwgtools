@@ -28,6 +28,8 @@ namespace lbl2025
 	extern const ana::RecoPartCut kPartIsMuon;
 
 	extern const ana::Cut kHasOverlap;
+	// testing duneanaobjsel
+	extern const ana::Cut kNumuCCLikeCont;
 }
 
 #endif // LBL2025_CUTS_H
