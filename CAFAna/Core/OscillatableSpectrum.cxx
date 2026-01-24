@@ -12,6 +12,7 @@
 
 #include "duneanaobj/StandardRecord/Proxy/SRProxy.h"
 #include "duneanaobj/StandardRecord/SRInteraction.h"
+#include "CAFAna/Core/TruthMatching.h"
 #include "OscLib/IOscCalc.h"
 
 #include "TDirectory.h"
@@ -31,15 +32,14 @@ namespace ana
                    {
                      //assert(sr->mc.nnu == 1);
                      assert(ixn->truth.size()>0);
-                     /// uuumm what do we
-                     return ixn->Enu.calo;
+                     return MatchedTrueInteraction(ixn)->E;
                    });
      const Cut kHasNeutrino([](const caf::SRInteractionProxy* ixn)
                      {
                        //return sr->truth.index >= 0;
                       // this should return something at the true level, 
                       //in the meantime just check there's interaction or whatever placeholder cut
-                        return ixn->truth.size()>0;//dlp.size()>0;
+                        return ixn->truth.size()>0;
                      });
    }
   //----------------------------------------------------------------------
