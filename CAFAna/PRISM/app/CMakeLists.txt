@@ -16,6 +16,7 @@ set(scripts_to_build
   #OffAxisEventRates
   #OffAxisNDCAFCombiner
   PRISMPrediction
+  PRISMPredictionWithGaussMonoEnergeticFluxes
   PRISM_4Flavour_dChi2Scan
   #PRISMSystThrows
   #PRISMDChi2Scan

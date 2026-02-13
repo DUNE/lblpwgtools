@@ -61,7 +61,7 @@ PRISMExtrapolator::PRISMExtrapolator()
 //--------------------------------------------------------------------------------
 PRISMExtrapolator::PRISMExtrapolator(const PRISMExtrapolator &ExtrapPreds) {
   vNumuNueXsecRatioTrueEnu = ExtrapPreds.vNumuNueXsecRatioTrueEnu;
-  vNumuNueXsecRatioTrueEnuAntiChannel = ExtrapPreds.vNumuNueXsecRatioTrueEnuAntiChannel;
+  //vNumuNueXsecRatioTrueEnuAntiChannel = ExtrapPreds.vNumuNueXsecRatioTrueEnuAntiChannel;
 }
 
 //--------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   // Get 280kA sample at ND.
 
 //get ND prediction from the anti channel
-  PredictionInterp const *NDPredInterp_293kA_AntiChannel =
+  /*PredictionInterp const *NDPredInterp_293kA_AntiChannel =
       GetNDPred(antimatch_chan.from.mode, 293); // Can be flux OR ev rate
   Spectrum NDOffAxis_293kA_spec_AntiChannel = NDPredInterp_293kA_AntiChannel->PredictComponentSyst(
       &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
@@ -203,7 +203,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   PredictionInterp const *NDPredInterp_280kA_AntiChannel =
       GetNDPred(antimatch_chan.from.mode, 280); // Can be flux OR ev rate
   Spectrum NDOffAxis_280kA_spec_AntiChannel = NDPredInterp_280kA_AntiChannel->PredictComponentSyst(
-      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);
+      &no, shift, flav_nd, Current::kCC, wrong_sgn_nd);*/
   // Get 280kA sample
 
   // Need to remove underflow and overflow elements.
@@ -216,12 +216,12 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec.GetEigen(1),
                                                   NDOffAxis_280kA_spec.GetBinnings());
   }
-  else if(MatchWSBkg){
+ /* else if(MatchWSBkg){
     FlowNDFluxMatrix_293kA = ConvertArrayToMatrix(NDOffAxis_293kA_spec_AntiChannel.GetEigen(1),
                                                   NDOffAxis_293kA_spec_AntiChannel.GetBinnings());
     FlowNDFluxMatrix_280kA = ConvertArrayToMatrix(NDOffAxis_280kA_spec_AntiChannel.GetEigen(1),
                                                   NDOffAxis_280kA_spec_AntiChannel.GetBinnings());
-  }
+  }*/
 
   Eigen::MatrixXd NDFluxMatrix_293kA =
       FlowNDFluxMatrix_293kA.block(1, 1, FlowNDFluxMatrix_293kA.rows() - 2,
@@ -262,10 +262,10 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   else if(MatchWSBkg == true){ //MatchWSBkg prediction
     if((match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) ){
 
-      FlowTarget = FDOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();
-      for (int bin = 0; bin < FlowTarget.size(); bin++) {
+      //FlowTarget = FDOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();
+      /*for (int bin = 0; bin < FlowTarget.size(); bin++) {
         FlowTarget(bin) *= vNumuNueXsecRatioTrueEnuAntiChannel(bin); // numu/nue xsec ratio vs true nu E applied for anti channel
-      }
+      }*/
       FlowTarget += FDOsc_WSBkg.GetEigen(1).matrix(); //no cross section correction since we deal with mu_nu here
     }
     else{ //if disappearance channel only WSBkg from nu_mu beam contamination -> intrinsic WS from MC
@@ -292,8 +292,8 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   }
   else if(MatchWSBkg){
     FlowFDUnOsc_vec = FDUnosc_WSBkg.GetEigen(1).matrix();
-    if( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) )
-      FlowFDUnOsc_vec += FDUnOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();
+    /*if( (match_chan.to.chan & NuChan::kNueApp) || (match_chan.to.chan & NuChan::kNueBarApp) )
+      FlowFDUnOsc_vec += FDUnOsc_intrinsic_WS_nue_spec.GetEigen(1).matrix();*/
   }
   Eigen::VectorXd FDUnOsc_vec = FlowFDUnOsc_vec.segment(1, FlowFDUnOsc_vec.size() - 2);
 
@@ -515,7 +515,8 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 }
 
 //--------------------------------------------------------------------------------
-std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
+//std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
+  std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetGaussianCoefficients(
     double mean, double width, PRISM::BeamChan NDbc, SystShifts shift) const {
 
   static osc::NoOscillations no;
@@ -646,7 +647,7 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
 
   fLastGaussMatch_280kA = std::unique_ptr<TH1>(
       new TH1D("soln_280kA", ";OffAxisSlice;Weight", OffAxisWeights.size(), 0,
-               OffAxisWeights.size()));
+              OffAxisWeights.size()));
   fLastGaussMatch_280kA->SetDirectory(nullptr);
   FillHistFromEigenVector(fLastGaussMatch_280kA.get(), OffAxisWeights);
 
@@ -674,8 +675,12 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
   }
 
   if (fStoreDebugMatches) {
-    fDebugTarget["last_gauss_match"] = std::unique_ptr<TH1>(
-        static_cast<TH1 *>(fLastGaussResidual->Clone("target")));
+    TH1D* hTarget = new TH1D("target", ";E;count",bins.size()-1, bins.data());
+    hTarget->SetDirectory(nullptr);
+    /*fDebugTarget["last_gauss_match"] = std::unique_ptr<TH1>(
+        static_cast<TH1 *>(fLastGaussResidual->Clone("target")));*/
+    fDebugTarget["last_gauss_match"] = std::unique_ptr<TH1>(hTarget);
+        //new TH1D("soln", ";enu_bin;norm", Target.size(), 0, Target.size()));
     fDebugTarget["last_gauss_match"]->Clear();
     fDebugTarget["last_gauss_match"]->SetDirectory(nullptr);
     FillHistFromEigenVector(fDebugTarget["last_gauss_match"].get(), Target);
@@ -686,7 +691,14 @@ std::pair<TH1 const *, TH1 const *> PRISMExtrapolator::GetGaussianCoefficients(
     FillHistFromEigenVector(fDebugBF["last_match"].get(), BestFit);
   }
 
-  return {fLastGaussMatch_293kA.get(), fLastGaussMatch_280kA.get()};
+  Eigen::ArrayXd coeff_293kA =
+      OffAxisWeights.head(NCoeffs_293kA);
+
+  Eigen::ArrayXd coeff_280kA =
+      OffAxisWeights.tail(NCoeffs_280kA);
+
+  return{coeff_293kA, coeff_280kA};
+  //return {fLastGaussMatch_293kA.get(), fLastGaussMatch_280kA.get()};
 }
 
 //--------------------------------------------------------------------------------

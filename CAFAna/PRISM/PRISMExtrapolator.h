@@ -60,9 +60,9 @@ namespace ana {
       vNumuNueXsecRatioTrueEnu = std::move(ratiotrueE);
     }
 
-    void SetIntrinsicNueXsecRatioAntiChannel(const Eigen::ArrayXd&& ratiotrueE) const {
+    /*void SetIntrinsicNueXsecRatioAntiChannel(const Eigen::ArrayXd&& ratiotrueE) const {
       vNumuNueXsecRatioTrueEnuAntiChannel = std::move(ratiotrueE);
-    }
+    }*/
 
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
@@ -76,7 +76,8 @@ namespace ana {
       return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2, MatchWSBkg);
     }
 
-    std::pair<TH1 const *, TH1 const *>
+    //std::pair<TH1 const *, TH1 const *>
+    std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetGaussianCoefficients(double mean, double width, PRISM::BeamChan NDbc,
                             SystShifts shift) const;
 
