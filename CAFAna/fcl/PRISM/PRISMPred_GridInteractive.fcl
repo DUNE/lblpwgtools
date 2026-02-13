@@ -1,0 +1,157 @@
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+	
+	##---up to 16m off axis
+	#output_file: ["/exp/dune/app/users/icaracas/DunePRISM/smallOutFiles/PRISMPred_EnuReco_NoSysts_upto16m_prismfinebinning_FHC_dcp392Deg.root", "UPDATE"]
+	#state_file: "/exp/dune/data/users/icaracas/StateFiles/NDStateFiles/ForEachOAPos/ForDOE/PRISMState_FHC_EnuReco_prismfinebinning_UpTo16m_NoSysts.root"
+	
+	## up to 9.75 m off axis
+	#output_file: ["/exp/dune/app/users/icaracas/DunePRISM/smallOutFiles/PRISMPred_EnuReco_NoSysts_UpTo9p75m_prismfinebinning_FHC_dcp215Deg.root", "UPDATE"]
+  	#state_file: "/exp/dune/data/users/icaracas/StateFiles/NDStateFiles/ForEachOAPos/ForDOE/PRISMState_EnuReco_prismfinebinning_NoSysts_UpTo9p75m.root"
+
+	## all OA Pos
+	output_file: ["/exp/dune/app/users/icaracas/DunePRISM/smallOutFiles/PRISMPred_EnuReco_NoSysts_AllOAPos_FHC_TestMonoEnergeticFluxed", "UPDATE"]
+	state_file: "/exp/dune/data/users/icaracas/StateFiles/NDStateFiles/ForEachOAPos/ForDOE/PRISMState_FHC_EnuReco_prismfinebinning_AllOAPos_NoSysts.root"
+
+	#state_file: "/exp/dune/data/users/icaracas/StateFiles/PRISMState_EvisTruePlusEneutron_NoSysts.root"
+	#state_file: "/exp/dune/data/users/icaracas/StateFiles/PRISMState_ERecFromDepWithNeutronEnergyAndTrueEmu_NDEffVsEreco_AllOAPos.root"
+	
+	
+	# Analysis variable name - must match variable in state file
+	#projection_name: EVisTrue
+#	projection_name: ERec
+	projection_name: EnuReco
+	#projection_name: ETrue
+	# Always true - why do we even have this?
+	use_PRISM: true
+	# Set exposure in years
+	POT_years: 3.5 #1.042
+        POT_staging: nostage
+	# Useful for fake data studies
+	vary_NDFD_data: false
+	# Extra plots for more histograms in PRISMPrediction
+	# Should be false for fitting
+	prism_debugplots: true
+	# Do you want to do a fake data prediction?
+	use_fake_data: false
+	# True to include FD intrinsic nue in flux match
+	match_intrinsic_nue: false
+	# Regularisation parameter for unfolding - greater stability in fits
+	unfold_reg_param: 0.0003
+	# True to include FD Wrong Sign background on a data-driven approach
+        match_ws: false
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 5.6E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1.9E-17
+			reg_factor_280: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 3.4E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 9.9E-18
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280: 1E-18
+			}
+		]
+
+		# Normally true - you want a realistic stat error
+		set_ND_errors_from_rate: true
+
+		RunPlans: {
+			numode: @local::RunPlans.flat
+			nubmode: @local::RunPlans.flat
+		}
+		Use_EventRateMatching: true
+
+		write_debug: true
+	}
+
+	# Choose how many channels you want to make predictions for
+	#samples: @local::FitChannels.Nue_app
+	#samples: @local::FitChannels.Numu_disp
+	#samples: @local::FitChannels.Nue_app
+	#samples: @local::FitChannels.Nuebar_app
+	#samples: @local::JointFitChannels.FourFlavor
+	samples: @local::JointFitChannels.NuModeJoint
+	#samples: @local::JointFitChannels.NuBarModeJoint
+}
+
+
+predictions: [
+	  {
+                @table::BasicPred
+                output_dir: "numu_EvMatch_nom"
+		true_osc: {
+			#deltapi: 0.6944 #for dcp = 125 deg
+			#deltapi: 2.178 # for dcp = 392 deg
+		}
+	  },
+	  {
+		@table::BasicPred
+		output_dir: "numu_EvMatch_nomExtremeValsPlus3Sigmadmsq32ssth23"
+		true_osc: {
+			dmsq32: 0.0025481000
+			ssth23: 0.624 #th23=0.797
+			#ssth12: 0.30699966 #th12=0.587252
+			#th13: 0.14189
+			#dmsq21: 7.53e-05
+			#deltapi: 0.6944 #for dcp = 125 deg
+			#deltapi: 2.178 #for dcp = 392 deg
+		}
+	  },
+          {
+                @table::BasicPred
+                output_dir: "numu_EvMatch_nomExtremeValsMinus3Sigmadmsq32ssth23"
+                true_osc: {
+                        dmsq32: 0.0023571000
+                        ssth23: 0.428
+			#deltapi: 0.6944 #for dcp = 125 deg
+			#deltapi: 2.178 # for dcp = 392 deg
+		}
+	  }
+	
+	#{
+        #        @table::BasicPred
+        #        syst: {shifts: [
+        #                [flux_Sept21_0, 1]
+        #               ]
+        #        }
+        #        output_dir: "numu_EvMatch_shift"
+        #}
+
+	
+]
+
+predictions[0].output_file[1]: "RECREATE"
