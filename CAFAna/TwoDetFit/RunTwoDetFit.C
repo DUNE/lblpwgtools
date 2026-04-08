@@ -22,7 +22,7 @@ void RunTwoDetFit( std::string variable  = "prof_deltaCP"
 
  // create a root file to store contours
  TFile* RootFile;
- RootFile = new TFile( "./test-fit.root", "recreate" );
+ RootFile = new TFile( "./test-fit_NO.root", "recreate" );
 
 
  // Load predictions
@@ -42,15 +42,15 @@ void RunTwoDetFit( std::string variable  = "prof_deltaCP"
  
  // Fit!
  ana::FrequentistSurface surface(&expt, calc,
-		                            &ana::kFitSinSq2Theta23, 50, 0.5, 1,
-		                            &ana::kFitDmSq32Scaled, 100, 2.2, 2.65);
+		                         &ana::kFitDeltaInPiUnits, 50, 0.0, 2.0,
+		                         &ana::kFitSinSq2Theta23, 50, 0.5, 1.0);
 
  RootFile->cd();  
  surface.SaveTo(RootFile, std::string("surface"));
  RootFile->Close();
 
  std::cout << "Best fit point: (" << surface.GetBestFitX() << ", " << surface.GetBestFitY() << ")\n";
- std::cout << "Truth point: (" << ana::kFitSinSq2Theta23.GetValue(calc) << ", " << ana::kFitDmSq32Scaled.GetValue(calc) << ")\n";
+ std::cout << "Truth point: (" << ana::kFitDeltaInPiUnits.GetValue(calc) << ", " << ana::kFitSinSq2Theta23.GetValue(calc) << ")\n";
 
  std::cout << "\nDone with the fit!";
 
