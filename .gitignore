@@ -1,3 +1,60 @@
+# SRT test release files/dirs
+.base_release
+bin/
+doc/
+include/
+job/
+lib/
+man/
+tmp/
+env/
+
+# For ROOT
+*.pcm
+*.d
+*.so
+*_dict.cc
+
+# Likely job outputs
+*.root
+*.pdf
+*.png
+*.eps
+
+# For VIM
+*.swp
+
+# For EMACS
+*~
+
+# For SVN
+.svn
+
+# For python
+__pycache__
+*.pyc
+
+# For test releases
+*.tar.bz2
+*.tar
+
+# These appear when running art interactively if the job is stopped
+TFileService*.root
+RootOutput*.root
+
+# For VSCode
+*.vscode*
+*.code-workspace
+
+# For MacOS
+**._*
+**.DS*
+.DS_Store
+._.DS_Store
+
+# For Jupyter
+.ipynb_checkpoints
+
 *~
 .lock-waf*
 .waf*
