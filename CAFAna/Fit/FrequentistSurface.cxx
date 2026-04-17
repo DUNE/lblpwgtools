@@ -359,6 +359,8 @@ namespace ana
   TH2* Gaussian2Sigma2D   (const FrequentistSurface& s){return Flat(6.18, s);}
   TH2* Gaussian99Percent2D(const FrequentistSurface& s){return Flat(9.21, s);}
   TH2* Gaussian3Sigma2D   (const FrequentistSurface& s){return Flat(11.83, s);}
+  TH2* Gaussian4Sigma2D   (const FrequentistSurface& s){return Flat(19.33, s);}
+  TH2* Gaussian5Sigma2D   (const FrequentistSurface& s){return Flat(28.74, s);}
 
   TH2* Gaussian68Percent1D(const FrequentistSurface& s){return Flat(1.00, s);}
   TH2* Gaussian90Percent1D(const FrequentistSurface& s){return Flat(2.71, s);}
@@ -366,6 +368,8 @@ namespace ana
   TH2* Gaussian2Sigma1D   (const FrequentistSurface& s){return Flat(4.00, s);}
   TH2* Gaussian99Percent1D(const FrequentistSurface& s){return Flat(6.63, s);}
   TH2* Gaussian3Sigma1D   (const FrequentistSurface& s){return Flat(9.00, s);}
+  TH2* Gaussian4Sigma1D   (const FrequentistSurface& s){return Flat(16.00, s);}
+  TH2* Gaussian5Sigma1D   (const FrequentistSurface& s){return Flat(25.00, s);}
 
 
 } // namespace

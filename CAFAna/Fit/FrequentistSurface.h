@@ -119,6 +119,10 @@ namespace ana
   TH2* Gaussian99Percent2D(const FrequentistSurface& s);
   /// Up-value surface for 3 sigma confidence in 2D in gaussian approximation
   TH2* Gaussian3Sigma2D   (const FrequentistSurface& s);
+  /// Up-value surface for 4 sigma confidence in 2D in gaussian approximation
+  TH2* Gaussian4Sigma2D   (const FrequentistSurface& s);
+  /// Up-value surface for 5 sigma confidence in 2D in gaussian approximation
+  TH2* Gaussian5Sigma2D   (const FrequentistSurface& s);
 
   // First approximation of the correct up-values to use for ss2th13 vs delta
 
@@ -134,4 +138,8 @@ namespace ana
   TH2* Gaussian99Percent1D(const FrequentistSurface& s);
   /// Up-value surface for 3 sigma confidence in 1D in gaussian approximation
   TH2* Gaussian3Sigma1D   (const FrequentistSurface& s);
+  /// Up-value surface for 4 sigma confidence in 1D in gaussian approximation
+  TH2* Gaussian4Sigma1D   (const FrequentistSurface& s);
+  /// Up-value surface for 5 sigma confidence in 1D in gaussian approximation
+  TH2* Gaussian5Sigma1D   (const FrequentistSurface& s);
 }
