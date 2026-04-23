@@ -2,6 +2,7 @@
 //  Script to run a DUNE Two-Detector Fit. Initially 3F, soon w/ BSM  //
 //                                                                    //
 //  Luiz Prais - praislo@ucmail.uc.edu                                //
+//  Silvio Motta - smotta93.fis@gmail.com                             //
 ////////////////////////////////////////////////////////////////////////
 
 #include <string>
