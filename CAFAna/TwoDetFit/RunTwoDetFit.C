@@ -18,7 +18,7 @@ using namespace ana;
 
 void RunTwoDetFit( std::string variable    = "surf_ssth23_deltaCP",
                    TString     exp_options = "onlyNO_UOLO",  // RunJoint line 119
-                   std::string model       = "3Flavor"       // "3Flavor" or "simple" (no profiling)
+                   std::string model       = "simple"       // "3Flavor" or "simple" (no profiling)
                  )
 {
 
@@ -27,14 +27,14 @@ void RunTwoDetFit( std::string variable    = "surf_ssth23_deltaCP",
   RootFile = new TFile( "./test-fit_NO_marg.root", "recreate" );
 
   // Load predictions
-  std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>("my_no_extrap_pred.root",
+  std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred.root",
                                                                                       "pred");
 
   // osc calculator. Will need a switch to BSM versions
   auto calc = DefaultOscCalc();
 
   // fake data file
-  std::unique_ptr<TFile> fdFile(TFile::Open("MakeFakeData.root"));
+  std::unique_ptr<TFile> fdFile(TFile::Open("fakeData.root"));
   std::unique_ptr<ana::Spectrum> fakedata = ana::LoadFrom<ana::Spectrum>(fdFile.get(), "fake-data");
 
   // construct experiment
@@ -54,7 +54,7 @@ void RunTwoDetFit( std::string variable    = "surf_ssth23_deltaCP",
   const ana::IFitVar* varX = nullptr;
   const ana::IFitVar* varY = nullptr;
   double xmin, xmax, ymin, ymax;
-  int Xsteps = 50, Ysteps = 50;
+  int Xsteps = 30, Ysteps = 30;
 
   bool understood_variable = false;
   bool MakeSurface         = false;
