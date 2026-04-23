@@ -111,7 +111,7 @@ inline void SetSurfaceType(const TString& SurfName) {
  //#*****************#
  if (SurfName.Contains("surf_ssth23_deltaCP")) {
   Xmin = 0.0,   Xmax = 2.0;  // deltaCP range
-  Ymin = 0.35,  Ymax = 0.65; // ssth23 range
+  Ymin = 0.25,  Ymax = 0.75; // ssth23 range
 
   AxisLabel = ";#delta_{CP} / #pi;sin^{2}(2#theta_{23})";
 
@@ -121,8 +121,8 @@ inline void SetSurfaceType(const TString& SurfName) {
  //#  ssth23_dmsq32  #
  //#*****************#
  if (SurfName.Contains("surf_ssth23_dmsq32")) {
-  Xmin = 0.35, Xmax = 0.65; // ssth23 range
-  Ymin = 2.3,  Ymax = 2.6; // dmsq32 range
+  Xmin = 0.25, Xmax = 0.75; // ssth23 range
+  Ymin = 2.2,  Ymax = 2.7; // dmsq32 range
 
   AxisLabel = ";sin^{2}(#theta_{23});#Deltam_{32}^{2} (10^{-3} eV^{2})";
 
