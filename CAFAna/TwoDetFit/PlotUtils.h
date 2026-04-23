@@ -109,13 +109,24 @@ inline void SetSurfaceType(const TString& SurfName) {
  //#*****************#
  //#  ssth23_deltaCP #
  //#*****************#
- if (SurfName.Contains("test-fit")) { // todo changes this to surf_ssth23_deltaCP
-  Xmin = 0.0,   Xmax = 2.0; // deltaCP range
-  Ymin = 0.5,   Ymax = 1.0; // ss2th23 range
+ if (SurfName.Contains("surf_ssth23_deltaCP")) {
+  Xmin = 0.0,   Xmax = 2.0;  // deltaCP range
+  Ymin = 0.35,  Ymax = 0.65; // ssth23 range
 
   AxisLabel = ";#delta_{CP} / #pi;sin^{2}(2#theta_{23})";
 
  }
+
+ //#*****************#
+ //#  ssth23_dmsq32  #
+ //#*****************#
+ if (SurfName.Contains("surf_ssth23_dmsq32")) {
+  Xmin = 0.35, Xmax = 0.65; // ssth23 range
+  Ymin = 2.3,  Ymax = 2.6; // dmsq32 range
+
+  AxisLabel = ";sin^{2}(#theta_{23});#Deltam_{32}^{2} (10^{-3} eV^{2})";
+
+ } 
 
 } // end SetSurfaceType
 
@@ -143,7 +154,8 @@ inline void SetSurfaceType(const TString& SurfName) {
   Axis->GetXaxis()->SetLabelOffset(.005);
   Axis->GetYaxis()->SetLabelOffset(.005);
   Axis->GetXaxis()->CenterTitle();
-  Axis->GetYaxis()->CenterTitle(); 
+  Axis->GetYaxis()->CenterTitle();
+  Axis->Draw("Axis");
  }
   
 
