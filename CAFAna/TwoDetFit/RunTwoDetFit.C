@@ -14,6 +14,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Analysis/Calcs.h"
+#include "OscLib/IOscCalc.h"
 
 using namespace ana;
 
@@ -22,21 +23,27 @@ void RunTwoDetFit( std::string variable    = "surf_ssth23_deltaCP",
                    std::string model       = "simple"       // "3Flavor" or "simple" (no profiling)
                  )
 {
+  
+  TString TagName = variable + "_" + exp_options + "_" + model + ".root";
 
   // create a root file to store contours
   TFile* RootFile;
-  RootFile = new TFile( "./test-fit_NO_marg.root", "recreate" );
+  RootFile = new TFile(TagName, "recreate" );
 
   // Load predictions
   std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred.root",
                                                                                       "pred");
 
   // osc calculator. Will need a switch to BSM versions
-  auto calc = DefaultOscCalc();
+  //auto calc = DefaultOscCalc();
 
   // fake data file
   std::unique_ptr<TFile> fdFile(TFile::Open("fakeData.root"));
   std::unique_ptr<ana::Spectrum> fakedata = ana::LoadFrom<ana::Spectrum>(fdFile.get(), "fake-data");
+
+  // while tmp using the lbl-extrap files as placeholders, better to pull the calc from those files anyway
+  std::unique_ptr<osc::IOscCalc> c = ana::LoadFrom<osc::IOscCalc>(fdFile.get(), "calc");
+  auto calc = dynamic_cast<osc::IOscCalcAdjustable*>(c.get());
 
   // construct experiment
   ana::SingleSampleExperiment expt(pred.get(), *fakedata);
