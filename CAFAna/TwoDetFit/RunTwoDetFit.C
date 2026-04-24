@@ -10,10 +10,12 @@
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
+#include "CAFAna/Experiment/MultiExperiment.h"
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Analysis/Calcs.h"
+#include "CAFAna/Analysis/CalcsNuFit.h"
 #include "OscLib/IOscCalc.h"
 #include "CalcsTwoDetFit.h"
 
@@ -21,6 +23,40 @@
 
 using namespace ana;
 using namespace FitUtils;
+using namespace std;
+
+// All of this must go on externals!
+
+  struct predictions {
+        string name = "";
+        const IPrediction * pred = 0;
+        std::pair <Spectrum*, double> cos = {0,0};
+        double pot = 0;
+        double livetime = 0;
+  };
+
+SingleSampleExperiment* PackExperiment(predictions Preds, Spectrum* DataToUse, osc::IOscCalcAdjustable* calc) {
+   
+    bool PoissonError  = true;
+    double POT = Preds.pot;
+    std::string name = Preds.name;
+    std::cout<<"\nSingle sample experiment " << name << " made with " << " POT " << POT << " tot MC " << Preds.pred->Predict(calc).Integral(POT) << " analyze data " << DataToUse->Integral(DataToUse->POT()) << std::endl;
+    return new SingleSampleExperiment(Preds.pred, *DataToUse); 
+}
+
+Spectrum * GetFakeData(const IPrediction * pred,
+			     osc::IOscCalc * calc,
+			     const double pot,
+			     const Spectrum * cosmics = 0,
+			     const double livetime = 0 
+  )
+{
+  //Total prediction at oscillation params in calc, 
+  //scaled to pot; need livetime to get scale cosmics correctly
+  auto ret = new Spectrum(pred->Predict(calc).FakeData(pot, livetime));
+  if(cosmics) *ret += *cosmics;
+  return ret;
+}
 
 void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
                    TString     FitOptions  = "onlyNO_UOLO",
@@ -34,20 +70,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   TFile* RootFile;
   RootFile = new TFile(TagName, "recreate" );
 
-  // Load predictions
-  std::unique_ptr<ana::IPrediction> pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred.root",
-                                                                                      "pred");
-
-  // osc calculator. Will need a switch to BSM versions
-  //auto calc = DefaultOscCalc();
-
-  // fake data file
-  std::unique_ptr<TFile> fdFile(TFile::Open("fakeData.root"));
-  std::unique_ptr<ana::Spectrum> fakedata = ana::LoadFrom<ana::Spectrum>(fdFile.get(), "fake-data");
-
-  // while tmp using the lbl-extrap files as placeholders, better to pull the calc from those files anyway
-  std::unique_ptr<osc::IOscCalc> c = ana::LoadFrom<osc::IOscCalc>(fdFile.get(), "calc");
-  auto calc = dynamic_cast<osc::IOscCalcAdjustable*>(c.get());
+  auto calc = NuFitOscCalc(1);
 
   // overwriting for NSI, but need a better mechanism to switch calcs
   if (Model == "nsi") {
@@ -57,8 +80,34 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   PrintOscCalc(calc);
 
-  // construct experiment
-  ana::SingleSampleExperiment expt(pred.get(), *fakedata);
+  Spectrum*               FakeData;
+  std::vector <Spectrum*> DataToUse;
+
+  predictions fPred_NumuFHC;
+
+  std::vector<predictions> preds;
+  predictions tmp;
+  tmp.pot  = 3.8938e22;  // this REALLY should come from the pred file...
+  tmp.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred.root", "pred").release();
+  preds.push_back(tmp);
+
+
+  fPred_NumuFHC = preds[0];   // only one for now, more to come
+  
+  for (int i = 0; i < int(preds.size()); ++i){
+
+         double POT = preds[i].pot;
+         DataToUse.push_back(FakeData = GetFakeData(preds[i].pred, calc, POT));
+         std::cout << "--> " << preds[i].name << " POT " << POT << " tot MC " << preds[i].pred->Predict(calc).Integral(POT) << " analyze data " << DataToUse[i]->Integral(DataToUse[i]->POT()) << std::endl;
+  }
+
+  // todo: creating here a loop for multi-sample loading
+  // what we REALLY REALLY need here is a class just like in NOvA like:
+  //Ana2024_3Flavor preds(exp_options, data_options, calc);
+  //MultiExperiment* exptThis = preds.Experiment2024(exp_options, calc);
+
+  auto MultiExpt = new MultiExperiment();
+  MultiExpt->Add(PackExperiment(fPred_NumuFHC, DataToUse[0], calc));
   
   int Xbins = 30, Ybins = 30;
 
@@ -71,7 +120,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   FitUtils::SetVariableType(Variable, FitOptions);
   FitUtils::SetModelType(Model);
 
-  ana::FrequentistSurface surface(&expt, calc,
+  ana::FrequentistSurface surface(MultiExpt, calc,
                                   VarX, Xbins, xmin, xmax,
                                   VarY, Ybins, ymin, ymax,
                                   VarsToFit);
