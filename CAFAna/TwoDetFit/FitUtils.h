@@ -15,6 +15,7 @@
 #include "CAFAna/Fit/FrequentistSurface.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Vars/FitVars.h"
+#include "CAFAna/Vars/FitVarsNSI.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/IOscCalc.h"
 
@@ -170,7 +171,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
  }
  
  ////////////////////////////////////////////////////////////////////
- //                       2D Surfaces                              //
+ //               2D Surfaces - Std Osc 3 Flavor                   //
  ////////////////////////////////////////////////////////////////////
 
  //#*******************************#
@@ -203,6 +204,53 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
 
   }
 
+
+ ////////////////////////////////////////////////////////////////////
+ //                     2D Surfaces - NSI                          //
+ ////////////////////////////////////////////////////////////////////
+
+ //#*******************************#
+ //#         epsemu_deltaemu       #
+ //#*******************************#
+
+  if (Variable == "surf_epsemu_deltaemu") {
+
+   VarX = &kFitDeltaEMuInPiUnits;
+   xmin = 0; xmax = 2;
+   VarY = &kFitEpsEMu;
+   ymin = 0; ymax = 2;
+   UnderstoodVariable = true;
+
+  }
+
+ //#*******************************#
+ //#       epsetau_deltaetau       #
+ //#*******************************#
+
+  if (Variable == "surf_epsetau_deltaetau") {
+
+   VarX = &kFitDeltaETauInPiUnits;
+   xmin = 0; xmax = 2;
+   VarY = &kFitEpsETau;
+   ymin = 0; ymax = 2;
+   UnderstoodVariable = true;
+
+  }
+
+ //#*******************************#
+ //#     epsmutau_deltamutau       #
+ //#*******************************#
+
+  if (Variable == "surf_epsmutau_deltamutau") {
+
+   VarX = &kFitDeltaMuTauInPiUnits;
+   xmin = 0; xmax = 2;
+   VarY = &kFitEpsMuTau;
+   ymin = 0; ymax = 2;
+   UnderstoodVariable = true;
+
+  } 
+
  if (!UnderstoodVariable) {
 
   std::cout << "\nCouldn't understand Variable: " << Variable << std::endl;
@@ -222,7 +270,8 @@ inline void SetModelType(const std::string model) {
 
  bool UnderstoodModel = false;
 
- if (model == "3Flavor"){
+ // all BSM models need the PMNS parameters anyway...
+ if (model == "3Flavor" || model == "nsi"){
 
       if (VarX != &ana::kFitSinSq2Theta13 && VarY != &ana::kFitSinSq2Theta13)
           VarsToFit.push_back(&ana::kFitSinSq2Theta13);
@@ -248,6 +297,13 @@ inline void SetModelType(const std::string model) {
       for (auto v : VarsToFit) std::cout << v->ShortName() << "  ";
       std::cout << std::endl;
 
+      UnderstoodModel = true;
+  }
+
+  if (model == "nsi") {
+      std::cout << "Selected the NSI model, so pulling epsilons and deltas...<ToDo>" << std::endl;
+      // hacking here the VarsToFit to just do nothing rn for quick tests
+      VarsToFit = {};
       UnderstoodModel = true;
   }
 

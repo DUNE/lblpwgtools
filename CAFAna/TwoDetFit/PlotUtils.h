@@ -106,6 +106,10 @@ inline void SetSurfaceStyle(const TString& SurfName) {
 // Here we figure out the variables being plotted
 inline void SetSurfaceType(const TString& SurfName) {
 
+ ////////////////////////////////////////////////////////////////////
+ //               2D Surfaces - Std Osc 3 Flavor                   //
+ ////////////////////////////////////////////////////////////////////
+
  //#*****************#
  //#  ssth23_deltaCP #
  //#*****************#
@@ -126,7 +130,29 @@ inline void SetSurfaceType(const TString& SurfName) {
 
   AxisLabel = ";sin^{2}(#theta_{23});#Deltam_{32}^{2} (10^{-3} eV^{2})";
 
- } 
+ }
+
+ ////////////////////////////////////////////////////////////////////
+ //                     2D Surfaces - NSI                          //
+ ////////////////////////////////////////////////////////////////////
+ 
+ if (SurfName.Contains("surf_epsemu_deltaemu")) {
+   Xmin = 0.0, Xmax = 2.0;
+   Ymin = 0.0, Ymax = 1.0;
+   AxisLabel = ";#delta_{e#mu} / #pi;#left|#varepsilon_{e#mu}#right|";
+}
+
+if (SurfName.Contains("surf_epsetau_deltaetau")) {
+   Xmin = 0.0, Xmax = 2.0;
+   Ymin = 0.0, Ymax = 1.0;
+   AxisLabel = ";#delta_{e#tau} / #pi;#left|#varepsilon_{e#tau}#right|";
+}
+
+if (SurfName.Contains("surf_epsmutau_deltamutau")) {
+   Xmin = 0.0, Xmax = 2.0;
+   Ymin = 0.0, Ymax = 1.0;
+   AxisLabel = ";#delta_{#mu#tau} / #pi;#left|#varepsilon_{#mu#tau}#right|";
+} 
 
 } // end SetSurfaceType
 
