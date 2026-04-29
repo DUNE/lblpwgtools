@@ -75,7 +75,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   // Lets tmp define the POT exposure here, eventually placing it elsewhere
   // 7 years staged for now..
-  const double kFD3p5yrFHCPOT = 1.36283e+23;  // from TDR-era studies: 3.5 * (1.1e20) * 40 / 1.13
+  const double kFD3p5yrFHCPOT = 1.36283e+23;  // from TDR-era studies: 3.5 * (1.1e21) * 40 / 1.13
   const double kFD3p5yrRHCPOT = 1.36283e+23;
   
   TString TagName = Variable + "_" + FitOptions + "_" + Model + ".root";
