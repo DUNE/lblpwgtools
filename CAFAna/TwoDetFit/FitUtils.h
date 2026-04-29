@@ -273,8 +273,8 @@ inline void SetModelType(const std::string model) {
  // all BSM models need the PMNS parameters anyway...
  if (model == "3Flavor" || model == "nsi"){
 
-      if (VarX != &ana::kFitSinSq2Theta13 && VarY != &ana::kFitSinSq2Theta13)
-          VarsToFit.push_back(&ana::kFitSinSq2Theta13);
+      if (VarX != &ana::kFitSinSqTheta13 && VarY != &ana::kFitSinSqTheta13)
+          VarsToFit.push_back(&ana::kFitSinSqTheta13);
 
       if (VarX != &ana::kFitDeltaInPiUnits && VarY != &ana::kFitDeltaInPiUnits)
           VarsToFit.push_back(&ana::kFitDeltaInPiUnits);

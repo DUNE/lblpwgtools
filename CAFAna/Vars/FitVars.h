@@ -25,6 +25,23 @@ namespace ana
 
   //----------------------------------------------------------------------
 
+  /// \f$ \sin^2\theta_{13} \f$
+  class FitSinSqTheta13: virtual public IConstrainedFitVar
+  {
+  public:
+    FitSinSqTheta13() : IConstrainedFitVar("ssth13", "sin^{2}#theta_{13}") {};
+    double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+    void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+
+  double LowLimit() const override { return 0; }
+  double HighLimit() const override { return 0.5; }
+};
+
+  /// \f$ \sin^2\theta_{13} \f$
+  extern const FitSinSqTheta13 kFitSinSqTheta13;
+
+  //----------------------------------------------------------------------
+
   /// \f$ \sin^22\theta_{13} \f$
   class FitSinSq2Theta13: virtual public IConstrainedFitVar
   {
