@@ -198,7 +198,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    VarX = &kFitSinSqTheta23;
    xmin = 0.25; xmax = 0.75;
    VarY = FitDmSq32;
-   ymin = 2.2; ymax = 2.8;
+   ymin = 2.4; ymax = 2.5;
    MakeSurface = true;
    UnderstoodVariable = true;
 
