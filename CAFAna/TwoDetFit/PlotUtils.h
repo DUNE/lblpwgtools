@@ -269,7 +269,7 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
 
  void DrawLegendExposure(){
 
-   TLegend *LegendExposure = new TLegend(0.520,0.75,0.870,0.95,NULL,"brNDC");
+   TLegend *LegendExposure = new TLegend(0.58,0.75,0.93,0.95,NULL,"brNDC");
             LegendExposure->SetTextSize(0.040);
             LegendExposure->SetBorderSize(0);
             LegendExposure->SetLineColor(1);
@@ -280,8 +280,8 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
           
  
    TLegendEntry *EntryExposure = LegendExposure->AddEntry("NULL","","h");
-                 EntryExposure = LegendExposure->AddEntry("NULL","??.?#times10^{23} POT #nu-beam","h");
-                 EntryExposure = LegendExposure->AddEntry("NULL","??.?#times10^{23} POT #bar{#nu}-beam","h");
+                 EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #nu-beam","h");
+                 //EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #bar{#nu}-beam","h");
    LegendExposure->Draw();
 
  } // end DrawLegendExposure
