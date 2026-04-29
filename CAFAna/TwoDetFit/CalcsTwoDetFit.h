@@ -6,20 +6,21 @@
 #include "OscLib/IOscCalcSterile.h"
 #include "OscLib/OscCalcSterile.h"
 
+#include "CAFAna/Core/MathUtil.h"
+
 using namespace osc;
 using namespace ana;
 
   void PrintOscCalc(osc::IOscCalcAdjustable* calc) {
-
-    std::cout << "\n---------- OSCILLATION PARAMETERS ----------" << std::endl
-              << "Dm21:          " << calc->GetDmsq21()          << std::endl
-              << "Dm32:          " << calc->GetDmsq32()          << std::endl
-              << "Theta 12       " << calc->GetTh12()            << std::endl
-              << "Theta 13:      " << calc->GetTh13()            << std::endl
-              << "Theta 23:      " << calc->GetTh23()            << std::endl
-              << "Delta CP (pi): " << calc->GetdCP()/M_PI << std::endl
-              << "Rho:           " << calc->GetRho()             << std::endl
-              << "--------------------------------------------\n" << std::endl;
+    std::cout << "\n---------- OSCILLATION PARAMETERS ----------"          << std::endl
+              << "DmSq21:        " << calc->GetDmsq21()                    << std::endl
+              << "DmSq32:        " << calc->GetDmsq32()                    << std::endl
+              << "SinSq(Th12):   " << util::sqr(std::sin(calc->GetTh12())) << std::endl
+              << "SinSq(Th13):   " << util::sqr(std::sin(calc->GetTh13())) << std::endl
+              << "SinSq(Th23):   " << util::sqr(std::sin(calc->GetTh23())) << std::endl
+              << "Delta CP (pi): " << calc->GetdCP()/M_PI                  << std::endl
+              << "Rho:           " << calc->GetRho()                       << std::endl
+              << "--------------------------------------------\n"          << std::endl;
   }
 
 
