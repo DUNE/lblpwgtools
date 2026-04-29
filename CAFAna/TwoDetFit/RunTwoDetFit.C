@@ -63,6 +63,11 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
                    std::string Model       = "simple"       // "3Flavor", "nsi", "simple"
                  )
 {
+
+  // Lets tmp define the POT exposure here, eventually placing it elsewhere
+  // 7 years staged for now..
+  const double kFD3p5yrFHCPOT = 1.36283e+23;  // from TDR-era studies: 3.5 * (1.1e20) * 40 / 1.13
+  const double kFD3p5yrRHCPOT = 1.36283e+23;
   
   TString TagName = Variable + "_" + FitOptions + "_" + Model + ".root";
 
@@ -87,7 +92,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   std::vector<predictions> preds;
   predictions tmp;
-  tmp.pot  = 3.8938e22;  // this REALLY should come from the pred file...
+  tmp.pot  = kFD3p5yrFHCPOT;
   tmp.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred.root", "pred").release();
   preds.push_back(tmp);
 
