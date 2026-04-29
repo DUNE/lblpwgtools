@@ -281,7 +281,7 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
  
    TLegendEntry *EntryExposure = LegendExposure->AddEntry("NULL","","h");
                  EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #nu-beam","h");
-                 //EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #bar{#nu}-beam","h");
+                 EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #bar{#nu}-beam","h");
    LegendExposure->Draw();
 
  } // end DrawLegendExposure
