@@ -18,6 +18,7 @@
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "OscLib/IOscCalc.h"
 #include "CalcsTwoDetFit.h"
+#include "CAFAna/Experiment/ReactorExperiment.h"
 
 #include "FitUtils.h"
 
@@ -26,6 +27,14 @@ using namespace FitUtils;
 using namespace std;
 
 // All of this must go on externals!
+
+const ReactorExperiment* Th13ConstraintPDG2025()
+{
+    // https://pdg.lbl.gov/2025/web/viewer.html?file=../tables/rpp2025-sum-leptons.pdf
+    // This annoying, but to use this func one must convert
+    // ssth13=0.0216+/-0.0006 -> ss2th13=0.0845+/-0.0023
+    return new ReactorExperiment(0.0845, 0.0023);
+}  
 
   struct predictions {
         string name = "";
@@ -114,6 +123,10 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   auto MultiExpt = new MultiExperiment();
   MultiExpt->Add(PackExperiment(fPred_NumuFHC, DataToUse[0], calc));
+
+  // put a constraint on Th13. Must move this elsewhere
+  std::cout << "\nPlacing a PDG 2025 constraint on Th13.." << std::endl;
+  MultiExpt->Add(Th13ConstraintPDG2025());
   
   int Xbins = 30, Ybins = 30;
 
