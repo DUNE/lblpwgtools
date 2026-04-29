@@ -20,8 +20,29 @@ using namespace ana;
               << "SinSq(Th23):   " << util::sqr(std::sin(calc->GetTh23())) << std::endl
               << "Delta CP (pi): " << calc->GetdCP()/M_PI                  << std::endl
               << "Rho:           " << calc->GetRho()                       << std::endl
+              << "L (km):        " << calc->GetL()                         << std::endl
               << "--------------------------------------------\n"          << std::endl;
   }
+
+
+// Specific asimov points of interest
+void ResetOscCalcToAsimovPoint(std::string const &s_asimov_point, osc::IOscCalcAdjustable* calc) {
+
+ResetOscCalcToDefault(calc);
+
+ if(s_asimov_point == "pdg2025"){ // https://pdg.lbl.gov/2025/web/viewer.html?file=../tables/rpp2025-sum-leptons.pdf
+      calc->SetDmsq21(7.50e-5);
+      calc->SetDmsq32(2.451e-3);        // NO
+      calc->SetTh12(asin(sqrt(0.307)));
+      calc->SetTh13(asin(sqrt(0.0216)));
+      calc->SetTh23(asin(sqrt(0.534))); // NO
+      calc->SetdCP(1.21*M_PI);
+ }
+  else {
+      std::cout << "\n\n Oooops! Asimov point << " << s_asimov_point << " not supported, exiting..." << std::endl;
+      std::exit(0);
+    }
+}
 
 
 // NSI

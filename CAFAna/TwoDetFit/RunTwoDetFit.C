@@ -76,6 +76,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   RootFile = new TFile(TagName, "recreate" );
 
   auto calc = NuFitOscCalc(1);
+  ResetOscCalcToAsimovPoint("pdg2025", calc);
 
   // overwriting for NSI, but need a better mechanism to switch calcs
   if (Model == "nsi") {
