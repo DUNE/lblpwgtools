@@ -7,26 +7,35 @@
 BasicPred: {
 	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_EnuReco_4Flav_Nom_Jun23.root", "UPDATE"]
 	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_Nom_4Flav_StatsOnly_30May23.root"
+
 	# Analysis variable name - must match variable in state file
 	projection_name: EnuReco
+
 	# Always true - why do we even have this?
 	use_PRISM: true
+
 	# Set exposure in years
-	POT_years: 2.084 #1.042
-        POT_staging: nostage
+	POT_years: 3.5 # 2.084, 1.042
+    POT_staging: nostage
+
 	# Useful for fake data studies
 	vary_NDFD_data: false
+
 	# Extra plots for more histograms in PRISMPrediction
 	# Should be false for fitting
 	prism_debugplots: true
+
 	# Do you want to do a fake data prediction?
 	use_fake_data: false
+
 	# True to include FD intrinsic nue in flux match
-	match_intrinsic_nue: false
+	match_intrinsic_nue: true
+
 	# Regularisation parameter for unfolding - greater stability in fits
-	unfold_reg_param: 0.0003
+	#unfold_reg_param: 0.0003 # default is 0.0001
+
 	# True to include FD Wrong Sign background on a data-driven approach
-        match_ws: false
+    match_ws: false
 
 	PRISM: {
 		match_conditioning: [
@@ -72,8 +81,10 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			numode: @local::RunPlans.guess_fine
-			nubmode: @local::RunPlans.guess_fine
+			#numode: @local::RunPlans.guess_fine
+			#nubmode: @local::RunPlans.guess_fine
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
 		}
 		Use_EventRateMatching: true
 
@@ -93,6 +104,18 @@ predictions: [
 		@table::BasicPred
 		output_dir: "numu_EvMatch_nom"
 	},
+
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_{}_1sigma"
+#    	syst: { shifts: [["flux_Sept21_0", +1]] }
+#	},
+#	{
+#		@table::BasicPred
+#		output_dir: "numu_EvMatch_{}_1sigma"
+#		syst: { shifts: [["flux_Sept21_0", -1]] }
+#	},
+
 	{
 		@table::BasicPred
 		output_dir: "numu_EvMatch_wsbkgd"
