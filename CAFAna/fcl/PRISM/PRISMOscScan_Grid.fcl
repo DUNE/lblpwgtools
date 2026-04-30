@@ -7,28 +7,38 @@ BasicPred: {
 
 	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/MPFDResults/Dmsq32_Ssth23_ELepEHadParam_100_NDEffBias_MPFD_26May23/PRISMScan_dmsq32_ssth23.root", "UPDATE"]
 	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
+	
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHad_param
+	projection_name: ELepEHad_param # EnuReco
+	
 	# Set exposure in years
-	POT_years: 2.084 # 1.042 for 100MWktYrs
+	POT_years: 2.084 # 1.042 for 100 MWktYrs, 7 for 336 MWktYrs
 	POT_staging: nostage
+	
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
+	
 	# Definitely want this to be false for fits!
 	vary_NDFD_data: true
-        # Extra plots for more histograms in PRISMPrediction
-        # Should be false for fitting
-        prism_debugplots: false
+        
+	# Extra plots for more histograms in PRISMPrediction
+    # Should be false for fitting
+    prism_debugplots: false
+	
 	# Do you want to use fake data?
 	use_fake_data: true
+	
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: true
+	
 	# True to include FD Wron Sign background on a data-driven approach
-        match_ws: true
+    match_ws: true
+	
 	# Do you want the reactor th13 constraint?
 	reactor_constraint: true
+	
 	# Regularisation parameter for unfolding - greater stability in fits
-	unfold_reg_param: 0.003
+	#unfold_reg_param: 0.003 # default is 0.0001
 
 	PRISM: {
 		match_conditioning: [
@@ -73,8 +83,10 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			numode: @local::RunPlans.guess_fine
-			nubmode: @local::RunPlans.guess_fine
+			#numode: @local::RunPlans.guess_fine
+			#nubmode: @local::RunPlans.guess_fine
+			numode: @local::RunPlans.guess
+			nubmode: @local::RunPlans.guess
 		}
 		# Almost always true for now
 		Use_EventRateMatching: true
@@ -82,9 +94,12 @@ BasicPred: {
 
 	# Oscillation parameters to include in fit
 	free_osc_params: [dmsq32, ssth23, ss2th13, deltapi, dmsq21, ssth12, rho]
+	
 	# Parameter(s) to scan over in fit
-	scan_params: @local::ScanDefinitions.ssth23_dmsq32
-	#scan_params: @local::ScanDefinitions.dcp_sstth13
+	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
+	#scan_params: @local::ScanDefinitions.dcp_ss2th13
+	scan_params: @local::ScanDefinitions.ssth23
+	
 	# Number of samples to include
 	samples: @local::JointFitChannels.FourFlavor
 }
@@ -92,8 +107,14 @@ BasicPred: {
 scans: [
 	{
 		@table::BasicPred
-		output_dir: "fit_mpfd_100"
-	}
+		#output_dir: "fit_mpfd_100"
+		output_dir: "fit_nom"
+	}#,
+#	{
+#		@table::BasicPred
+#		free_syst_params: @local::nuisance_parameter_sets.fluxSept21_0
+#		output_dir: "fit_flux_Sept21_0"
+#	}
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.
