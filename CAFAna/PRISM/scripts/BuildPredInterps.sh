@@ -17,7 +17,7 @@ NDRHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/RHC
 ListOSysts="nosyst"
 #ListOSysts="sept21flux:noxsec:nodet"
 #ListOSysts="nov17flux:noxsec:nodet"
-#ListOSysts="nov17flux:nodet:noxsec"
+#ListOSysts="nov17flux:nodet:noxsec" # hadron included
 #ListOSysts="list:MissingProtonFakeData"
 #ListOfSyst="noxsec:nodet"
 #ListOSysts="list:flux_Nov17_5"
@@ -34,7 +34,20 @@ AvaVar="EnuReco"
 #AvaVar="EnuRecoFDExtrapPred"
 #AvaVar="ETrue"
 
-#FD
+#FD nu
+#MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_ECELmX_OffAxis2026_FD_nu.root \
+#    -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
+#    -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \
+#    -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root \
+#   --bin-descriptor ${AnaBinning} \
+#   --syst-descriptor ${ListOSysts} \
+#    -A ${AvaVar} \
+#    --PRISM-fake-data ${FakeData} \
+#    --no-fakedata-dials \
+#    --UseSelection \
+#    #-n 10000
+
+#FD nub
 #MakePRISMPredInterps -o ${OUTPUTDIR}/FDState_OnlyNu_RHC_EnuReco_NoSyts_TestNEWTokenPRISM.root \
 #    -F-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nonswap.root \
 #    -Fe-nub ${INPUTDIR}/OffAxisCAFs/FD_RHC_nueswap.root \
@@ -56,7 +69,7 @@ AvaVar="EnuReco"
 #    -A ${AvaVar} \
 #    --PRISM-fake-data ${FakeData} \
 #    --UseSelection \
-    #-n 10000
+#    #-n 10000
 
 #ND nu
 #MakePRISMPredInterps -o ${OUTPUTDIR}/ND_FHC_Etrue_NoSysts_sameBinsAsErec.root \
@@ -64,7 +77,7 @@ AvaVar="EnuReco"
 #MakePRISMPredInterps -o ${OUTPUTDIR}/ND_FHC._EnuReco_VisEtrue_NoSysts_standardSameFDBinningasND.root \
 #    -N-nu "/pnfs/dune/persistent/users/awilkins/ND_CAF_fdrecopreds/chasnip-NDCAF_OnAxisHadd-FHC_fdrecopreds_muresim_nolognorm_nocausalnearmask_seed38/CAFv7*" \
 MakePRISMPredInterps -o ${OUTPUTDIR}/TestNewToken_NoSysts_8m.root \
-    -N-nu "/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC//CAFv7_CM_8m_subset09.root" \
+    -N-nu "/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC//CAFv7_*" \
     --bin-descriptor ${AnaBinning} \
     --syst-descriptor ${ListOSysts} \
     --no-fakedata-dials \
@@ -76,7 +89,7 @@ MakePRISMPredInterps -o ${OUTPUTDIR}/TestNewToken_NoSysts_8m.root \
 
 #ND nub
 #MakePRISMPredInterps -o ${OUTPUTDIR}/ND_RHC_EnuReco_VisETrue_NoSysts_28p5m.root \
-#    -N-nub "${NDRHCPNFSDIR}/*_28.5m*.root" \
+#    -N-nub "${NDRHCPNFSDIR}/CAFv7_*.root" \
 #    --bin-descriptor ${AnaBinning} \
 #    --syst-descriptor ${ListOSysts} \
 #    --no-fakedata-dials \
