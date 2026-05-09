@@ -19,6 +19,7 @@
 #include "OscLib/IOscCalc.h"
 #include "CalcsTwoDetFit.h"
 #include "CAFAna/Experiment/ReactorExperiment.h"
+#include "CAFAna/Analysis/Exposures.h"
 
 #include "FitUtils.h"
 
@@ -85,13 +86,24 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   RootFile = new TFile(TagName, "recreate" );
 
   auto calc = NuFitOscCalc(1);
-  ResetOscCalcToAsimovPoint("pdg2025", calc);
 
   // overwriting for NSI, but need a better mechanism to switch calcs
   if (Model == "nsi") {
     std::cout << "\nSelected NSI model, switching to NSI calculator" << std::endl;
     calc = DefaultOscCalcNSI();
   }
+
+  if (Model == "sterile") {
+    std::cout << "\nSelected sterile model, switching to sterile calculator" << std::endl;
+    calc = ana::DefaultSterileCalc(4);
+  }
+
+  if(Model == "sterile"){
+   ResetOscCalcSterileToAsimovPoint("pdg2025", calc);
+  }
+   else{
+    ResetOscCalcToAsimovPoint("pdg2025", calc);
+   }
 
   PrintOscCalc(calc);
 

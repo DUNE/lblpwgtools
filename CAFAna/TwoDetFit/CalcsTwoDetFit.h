@@ -45,6 +45,20 @@ ResetOscCalcToDefault(calc);
 }
 
 
+void ResetOscCalcSterileToAsimovPoint(std::string const &s_asimov_point_nsi, osc::IOscCalcAdjustable* osc_calc) {
+
+    auto* calc = dynamic_cast<osc::OscCalcSterile*>(osc_calc);
+    if(!calc){
+        throw std::runtime_error( "\nOops: osc_calc is not of OscCalcPMNS_NSI type. Aborting...");
+        exit(1);
+    }
+
+    // always goes with sterile = 0 for defaults
+    ResetSterileCalcToDefault(calc);
+
+  }    
+
+
 // NSI
 
 void ResetOscCalcNSIToDefault(osc::OscCalcPMNS_NSI* calc){

@@ -16,6 +16,7 @@
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 #include "CAFAna/Vars/FitVars.h"
 #include "CAFAna/Vars/FitVarsNSI.h"
+#include "CAFAna/Vars/FitVarsSterile.h"
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/IOscCalc.h"
 
@@ -249,7 +250,25 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    ymin = 0; ymax = 2;
    UnderstoodVariable = true;
 
-  } 
+  }
+  
+ ////////////////////////////////////////////////////////////////////
+ //                     2D Surfaces - Sterile                      //
+ ////////////////////////////////////////////////////////////////////
+
+ //#*******************************#
+ //#         ssth14_dmsq41         #
+ //#*******************************#
+
+  if (Variable == "surf_ssth14_dmsq41") {
+
+   VarX = &kFitSinSqTheta14Sterile;
+   xmin = 1e-4; xmax = 1.0;
+   VarY = &kFitDmSq41Sterile;
+   ymin = 1e-4; ymax = 1e2;
+   UnderstoodVariable = true;
+
+  }  
 
  if (!UnderstoodVariable) {
 
@@ -306,6 +325,13 @@ inline void SetModelType(const std::string model) {
       VarsToFit = {};
       UnderstoodModel = true;
   }
+
+  if (model == "sterile") {
+      std::cout << "Selected the sterile model, so pulling the other vars to fit...<ToDo>" << std::endl;
+      // hacking here the VarsToFit to just do nothing rn for quick tests
+      VarsToFit = {};
+      UnderstoodModel = true;
+  }  
 
   // for cases where we skip profiling entirely (pass empty vector).
   if (model == "simple"){

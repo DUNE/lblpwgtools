@@ -29,12 +29,12 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
   FileInput.erase(FileInput.length() - 5);
  }
 
- auto Canvas = MakeCanvas();
-
  // Read the file name and use that to pass the plotting style
  TString SurfName = FileInput;
  PlotUtils::SetSurfaceStyle(SurfName);
  PlotUtils::SetSurfaceType(SurfName); 
+
+ auto Canvas = MakeCanvas();
 
  PlotUtils::DrawAxis();
 

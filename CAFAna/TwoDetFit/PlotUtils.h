@@ -71,6 +71,9 @@ namespace PlotUtils {
 
  TString Xtitle, Ytitle;
 
+ bool UseLogX = false;
+ bool UseLogY = false;
+
 // This handles all the contours colors, and switches between NO and IO style preferences
 inline void SetSurfaceStyle(const TString& SurfName) {
 
@@ -154,6 +157,19 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
    AxisLabel = ";#delta_{#mu#tau} / #pi;#left|#varepsilon_{#mu#tau}#right|";
 } 
 
+ ////////////////////////////////////////////////////////////////////
+ //                     2D Surfaces - Sterile                      //
+ ////////////////////////////////////////////////////////////////////
+ 
+ if (SurfName.Contains("surf_ssth14_dmsq41")) {
+   Xmin = 1e-4, Xmax = 1.0;
+   Ymin = 1e-4, Ymax = 1e2;
+   AxisLabel = ";sin^{2}(#theta_{14});#Deltam_{41}^{2} (eV^{2})";
+
+   UseLogX = true;
+   UseLogY = true;
+}
+
 } // end SetSurfaceType
 
 
@@ -165,6 +181,8 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
   auto Canvas = new TCanvas(ana::UniqueName().c_str());
   Canvas->SetLeftMargin(0.11);
   Canvas->SetBottomMargin(0.13);
+  if (UseLogX) Canvas->SetLogx();
+  if (UseLogY) Canvas->SetLogy();
   return Canvas;
  }
 
