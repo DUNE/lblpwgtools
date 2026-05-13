@@ -112,10 +112,13 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   predictions fPred_NumuFHC;
   predictions fPred_NumuRHC;
+  predictions fPred_NueFHC;
+  predictions fPred_NueRHC;  
 
   // this must (and will!) become a loop
 
   std::vector<predictions> preds;
+
   predictions tmp_fhc;
   tmp_fhc.pot  = kFD3p5yrFHCPOT;
   tmp_fhc.name = "Numu FHC";
@@ -128,9 +131,23 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   tmp_rhc.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-numu-rhc.root", "pred").release();
   preds.push_back(tmp_rhc);
 
+  predictions tmp_fhc_nue;
+  tmp_fhc_nue.pot  = kFD3p5yrFHCPOT;
+  tmp_fhc_nue.name = "Nue FHC";
+  tmp_fhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-nue-fhc.root", "pred").release();
+  preds.push_back(tmp_fhc_nue);
+
+  predictions tmp_rhc_nue;
+  tmp_rhc_nue.pot  = kFD3p5yrRHCPOT;
+  tmp_rhc_nue.name = "Nue RHC";
+  tmp_rhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-nue-rhc.root", "pred").release();
+  preds.push_back(tmp_rhc_nue);
+
   fPred_NumuFHC = preds[0];
   fPred_NumuRHC = preds[1];
-  
+  fPred_NueFHC  = preds[2];
+  fPred_NueRHC  = preds[3];
+
   for (int i = 0; i < int(preds.size()); ++i){
 
          double POT = preds[i].pot;
@@ -146,6 +163,8 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   auto MultiExpt = new MultiExperiment();
   MultiExpt->Add(PackExperiment(fPred_NumuFHC, DataToUse[0], calc));
   MultiExpt->Add(PackExperiment(fPred_NumuRHC, DataToUse[1], calc));
+  MultiExpt->Add(PackExperiment(fPred_NueFHC,  DataToUse[2], calc));
+  MultiExpt->Add(PackExperiment(fPred_NueRHC,  DataToUse[3], calc));
 
   // put a constraint on Th13. Must move this elsewhere
   std::cout << "\nPlacing a PDG 2025 constraint on Th13.." << std::endl;
