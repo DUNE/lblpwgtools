@@ -268,7 +268,21 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    ymin = 1e-4; ymax = 1e2;
    UnderstoodVariable = true;
 
-  }  
+  }
+  
+ //#*******************************#
+ //#         ssth24_dmsq41         #
+ //#*******************************#
+
+  if (Variable == "surf_ssth24_dmsq41") {
+
+   VarX = &kFitSinSqTheta24Sterile;
+   xmin = 1e-4; xmax = 1.0;
+   VarY = &kFitDmSq41Sterile;
+   ymin = 1e-4; ymax = 1e2;
+   UnderstoodVariable = true;
+
+  }    
 
  if (!UnderstoodVariable) {
 
@@ -290,7 +304,7 @@ inline void SetModelType(const std::string model) {
  bool UnderstoodModel = false;
 
  // all BSM models need the PMNS parameters anyway...
- if (model == "3Flavor" || model == "nsi"){
+ if (model == "3Flavor" || model == "nsi") {
 
       if (VarX != &ana::kFitSinSqTheta13 && VarY != &ana::kFitSinSqTheta13)
           VarsToFit.push_back(&ana::kFitSinSqTheta13);
@@ -326,10 +340,31 @@ inline void SetModelType(const std::string model) {
       UnderstoodModel = true;
   }
 
+  // steriles have their own PMNS-like vars
   if (model == "sterile") {
+
       std::cout << "Selected the sterile model, so pulling the other vars to fit...<ToDo>" << std::endl;
+        if (VarX != &ana::kFitSinSqTheta13Sterile && VarY != &ana::kFitSinSqTheta13Sterile)
+          VarsToFit.push_back(&ana::kFitSinSqTheta13Sterile);
+
+      //if (VarX != &ana::kFitDelta14InPiUnitsSterile && VarY != &ana::kFitDelta14InPiUnitsSterile)
+      //    VarsToFit.push_back(&ana::kFitDelta14InPiUnitsSterile);
+      if (VarX != &ana::kFitDelta13InPiUnitsSterile && VarY != &ana::kFitDelta13InPiUnitsSterile)
+          VarsToFit.push_back(&ana::kFitDelta13InPiUnitsSterile);
+
+      if (DmSq32Space ==  0 && VarX != &ana::kFitDmSq32Sterile   && VarY != &ana::kFitDmSq32Sterile)
+          VarsToFit.push_back(&ana::kFitDmSq32Sterile);
+      if (DmSq32Space ==  1 && VarX != &ana::kFitDmSq32NHSterile && VarY != &ana::kFitDmSq32NHSterile)
+          VarsToFit.push_back(&ana::kFitDmSq32NHSterile);
+      if (DmSq32Space == -1 && VarX != &ana::kFitDmSq32IHSterile && VarY != &ana::kFitDmSq32IHSterile)
+          VarsToFit.push_back(&ana::kFitDmSq32IHSterile);
+
+      if (SinSqTh23Space ==  0 && VarX != &ana::kFitSinSqTheta23Sterile  && VarY != &ana::kFitSinSqTheta23Sterile)
+          VarsToFit.push_back(&ana::kFitSinSqTheta23Sterile);
+
       // hacking here the VarsToFit to just do nothing rn for quick tests
       VarsToFit = {};
+
       UnderstoodModel = true;
   }  
 
