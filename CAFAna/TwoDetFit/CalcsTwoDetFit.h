@@ -49,14 +49,27 @@ void ResetOscCalcSterileToAsimovPoint(std::string const &s_asimov_point_nsi, osc
 
     auto* calc = dynamic_cast<osc::OscCalcSterile*>(osc_calc);
     if(!calc){
-        throw std::runtime_error( "\nOops: osc_calc is not of OscCalcPMNS_NSI type. Aborting...");
+        throw std::runtime_error( "\nOops: osc_calc is not of OscCalcSterile type. Aborting...");
         exit(1);
     }
 
-    // always goes with sterile = 0 for defaults
+    // Set to default first
     ResetSterileCalcToDefault(calc);
 
-  }    
+    // Now pass any asimov point of interest
+    if(s_asimov_point_nsi == "pdg2025"){ // https://pdg.lbl.gov/2025/web/viewer.html?file=../tables/rpp2025-sum-leptons.pdf
+        calc->SetDm(2, 7.50e-5);
+        calc->SetDm(3, 7.50e-5 + 2.451e-3);  // DmSq32 = 2.451e-3 for NO
+        calc->SetAngle(1, 2, asin(sqrt(0.307)));
+        calc->SetAngle(1, 3, asin(sqrt(0.0216)));
+        calc->SetAngle(2, 3, asin(sqrt(0.534)));  // NO
+        calc->SetDelta(1, 3, 1.21*M_PI);
+    }
+    else {
+        std::cout << "\n\n Oooops! Asimov point '" << s_asimov_point_nsi << "' not supported for sterile, using default..." << std::endl;
+    }
+
+}    
 
 
 // NSI
