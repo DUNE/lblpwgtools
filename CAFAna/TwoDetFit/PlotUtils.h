@@ -141,19 +141,19 @@ inline void SetSurfaceType(const TString& SurfName) {
  
  if (SurfName.Contains("surf_epsemu_deltaemu")) {
    Xmin = 0.0, Xmax = 2.0;
-   Ymin = 0.0, Ymax = 1.0;
+   Ymin = 0.0, Ymax = 0.25;
    AxisLabel = ";#delta_{e#mu} / #pi;#left|#varepsilon_{e#mu}#right|";
 }
 
 if (SurfName.Contains("surf_epsetau_deltaetau")) {
    Xmin = 0.0, Xmax = 2.0;
-   Ymin = 0.0, Ymax = 1.0;
+   Ymin = 0.0, Ymax = 0.25;
    AxisLabel = ";#delta_{e#tau} / #pi;#left|#varepsilon_{e#tau}#right|";
 }
 
 if (SurfName.Contains("surf_epsmutau_deltamutau")) {
    Xmin = 0.0, Xmax = 2.0;
-   Ymin = 0.0, Ymax = 1.0;
+   Ymin = 0.0, Ymax = 0.25;
    AxisLabel = ";#delta_{#mu#tau} / #pi;#left|#varepsilon_{#mu#tau}#right|";
 } 
 
@@ -165,6 +165,15 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
    Xmin = 1e-4, Xmax = 1.0;
    Ymin = 1e-4, Ymax = 1e2;
    AxisLabel = ";sin^{2}(#theta_{14});#Deltam_{41}^{2} (eV^{2})";
+
+   UseLogX = true;
+   UseLogY = true;
+}
+
+ if (SurfName.Contains("surf_ssth24_dmsq41")) {
+   Xmin = 1e-4, Xmax = 1.0;
+   Ymin = 1e-4, Ymax = 1e2;
+   AxisLabel = ";sin^{2}(#theta_{24});#Deltam_{41}^{2} (eV^{2})";
 
    UseLogX = true;
    UseLogY = true;
@@ -269,10 +278,10 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
   TString MassOrderingInfo;
 
    if(SurfName.Contains("NO")){
-           MassOrderingInfo = "#bf{DUNE NO}";  
+           MassOrderingInfo = "#bf{DUNE NO - Work In Progress}";  
    }
    if(SurfName.Contains("IO")){
-           MassOrderingInfo = "#bf{DUNE IO}";  
+           MassOrderingInfo = "#bf{DUNE IO - Work In Progress}";  
    }
 
   // now yes, add the info

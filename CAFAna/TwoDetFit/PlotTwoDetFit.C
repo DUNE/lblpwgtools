@@ -85,6 +85,6 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
  std::cout << "\n" << std::endl;
  gPad->Print(PlotOutput + ".pdf");
- gPad->Print(PlotOutput + ".png");
+ //gPad->Print(PlotOutput + ".png");
 
 } // end of code
