@@ -216,6 +216,34 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
  //#                          Legends                                  #
  //#*******************************************************************#
  
+ //#***********************#
+ //#     Leg for 90CL      #
+ //#***********************#
+ void DrawLegend90CL(){
+
+   TLegend *Legend90CL = new TLegend(0.13,0.72,0.44,0.90,NULL,"brNDC");
+            Legend90CL->SetNColumns(3);
+            Legend90CL->SetMargin(0.6);
+            Legend90CL->SetColumnSeparation(0.1);
+            Legend90CL->SetTextSize(0.040);
+            Legend90CL->SetBorderSize(0);
+            Legend90CL->SetLineColor(1);
+            Legend90CL->SetLineStyle(1);
+            Legend90CL->SetLineWidth(0);
+            Legend90CL->SetFillColor(10);
+            Legend90CL->SetFillStyle(0);
+  
+   TLegendEntry *EntryLegend90CL = Legend90CL->AddEntry("NULL","","h");
+                 EntryLegend90CL = Legend90CL->AddEntry("h","90% CL","f");
+                 EntryLegend90CL->SetLineColor(kFillColor90);
+                 EntryLegend90CL->SetLineStyle(kLine90CL);
+                 EntryLegend90CL->SetLineWidth(3);
+                 EntryLegend90CL->SetTextFont(42);
+
+   Legend90CL->Draw();               
+
+ } // end DrawLegend90CL
+
  
  //#***********************#
  //#  Leg for 1,2,3 sigmas #
