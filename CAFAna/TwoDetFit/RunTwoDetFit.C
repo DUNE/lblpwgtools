@@ -70,7 +70,7 @@ Spectrum * GetFakeData(const IPrediction * pred,
 
 void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
                    TString     FitOptions  = "onlyNO_UOLO",
-                   std::string Model       = "simple"       // "3Flavor", "nsi", "simple"
+                   std::string Model       = "simple"       // "3Flavor", "nsi", "sterile", "simple"
                  )
 {
 
@@ -100,12 +100,13 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   if(Model == "sterile"){
    ResetOscCalcSterileToAsimovPoint("pdg2025", calc);
+   PrintOscCalcSterile(calc);
   }
    else{
     ResetOscCalcToAsimovPoint("pdg2025", calc);
    }
 
-  PrintOscCalc(calc);
+  //PrintOscCalc(calc);
 
   Spectrum*               FakeData;
   std::vector <Spectrum*> DataToUse;

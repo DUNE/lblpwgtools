@@ -24,6 +24,28 @@ using namespace ana;
               << "--------------------------------------------\n"          << std::endl;
   }
 
+  void PrintOscCalcSterile(osc::IOscCalcAdjustable* osc_calc) {
+
+    auto* calc = dynamic_cast<osc::OscCalcSterile*>(osc_calc);
+    std::cout << "\n---------- STERILE OSCILLATION PARAMETERS ----------"      << std::endl
+              << "DmSq21:        " << calc->GetDm(2)                           << std::endl
+              << "DmSq32:        " << (calc->GetDm(3) - calc->GetDm(2))        << std::endl
+              << "DmSq41:        " << calc->GetDm(4)                           << std::endl
+              << "SinSq(Th12):   " << util::sqr(std::sin(calc->GetTh12()))     << std::endl
+              << "SinSq(Th13):   " << util::sqr(std::sin(calc->GetTh13()))     << std::endl
+              << "SinSq(Th23):   " << util::sqr(std::sin(calc->GetTh23()))     << std::endl
+              << "SinSq(Th14):   " << util::sqr(std::sin(calc->GetAngle(1,4))) << std::endl
+              << "SinSq(Th24):   " << util::sqr(std::sin(calc->GetAngle(2,4))) << std::endl
+              << "SinSq(Th34):   " << util::sqr(std::sin(calc->GetAngle(3,4))) << std::endl
+              << "Delta14 (pi):  " << calc->GetDelta(1, 4)/M_PI                << std::endl
+              << "Delta24 (pi):  " << calc->GetDelta(2, 4)/M_PI                << std::endl
+              << "Delta34 (pi):  " << calc->GetDelta(3, 4)/M_PI                << std::endl
+              << "Delta CP (pi): " << calc->GetdCP()/M_PI                      << std::endl
+              << "Rho:           " << calc->GetRho()                           << std::endl
+              << "L (km):        " << calc->GetL()                             << std::endl
+              << "-----------------------------------------------------\n"     << std::endl;
+  }  
+
 
 // Specific asimov points of interest
 void ResetOscCalcToAsimovPoint(std::string const &s_asimov_point, osc::IOscCalcAdjustable* calc) {
