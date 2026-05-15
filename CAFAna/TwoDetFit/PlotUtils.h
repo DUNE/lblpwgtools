@@ -171,7 +171,7 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
 }
 
  if (SurfName.Contains("surf_ssth24_dmsq41")) {
-   Xmin = 1e-4, Xmax = 1.0;
+   Xmin = 1e-5, Xmax = 1.0;
    Ymin = 1e-4, Ymax = 1e2;
    AxisLabel = ";sin^{2}(#theta_{24});#Deltam_{41}^{2} (eV^{2})";
 
@@ -306,10 +306,10 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
   TString MassOrderingInfo;
 
    if(SurfName.Contains("NO")){
-           MassOrderingInfo = "#bf{DUNE NO - Work In Progress}";  
+           MassOrderingInfo = "#bf{DUNE Work In Progress}";  
    }
    if(SurfName.Contains("IO")){
-           MassOrderingInfo = "#bf{DUNE IO - Work In Progress}";  
+           MassOrderingInfo = "#bf{DUNE Work In Progress}";  
    }
 
   // now yes, add the info
@@ -324,7 +324,7 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
 
  void DrawLegendExposure(){
 
-   TLegend *LegendExposure = new TLegend(0.58,0.75,0.93,0.95,NULL,"brNDC");
+   TLegend *LegendExposure = new TLegend(0.510,0.75,0.860,0.95,NULL,"brNDC");
             LegendExposure->SetTextSize(0.040);
             LegendExposure->SetBorderSize(0);
             LegendExposure->SetLineColor(1);
@@ -334,9 +334,11 @@ if (SurfName.Contains("surf_epsmutau_deltamutau")) {
             LegendExposure->SetFillStyle(0);
           
  
-   TLegendEntry *EntryExposure = LegendExposure->AddEntry("NULL","","h");
-                 EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #nu-beam","h");
-                 EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #bar{#nu}-beam","h");
+   TLegendEntry //*EntryExposure = LegendExposure->AddEntry("NULL","","h");
+                *EntryExposure = LegendExposure->AddEntry("NULL","336 kt-MW-years (7 yrs staged)","h");
+                 //EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #nu-beam","h");
+                 //EntryExposure = LegendExposure->AddEntry("NULL","1.36#times10^{23} POT #bar{#nu}-beam","h");
+                 
    LegendExposure->Draw();
 
  } // end DrawLegendExposure

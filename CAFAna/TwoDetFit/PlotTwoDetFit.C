@@ -101,6 +101,7 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
  DrawLegendBestFit(SurfName);
  DrawLegendExposure();
  Simulation();
+ CornerLabel("No Systematics");
 
  std::cout << "\n" << std::endl;
  gPad->Print(PlotOutput + "_" + PlotCL + ".pdf");
