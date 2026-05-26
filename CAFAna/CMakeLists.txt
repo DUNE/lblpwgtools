@@ -103,6 +103,35 @@ endmacro()
 
 ################################################################################
 
+
+################################################################################
+#                         duneanasel
+################################################################################
+include(FetchContent)
+
+FetchContent_Declare(
+  duneanasel
+  GIT_REPOSITORY https://github.com/DUNE/duneanasel.git
+  GIT_TAG        main
+)
+
+set(duneanasel_build_examples OFF CACHE BOOL "" FORCE)
+set(duneanasel_USE_UPS_duneanaobj ON  CACHE BOOL "" FORCE)
+set(duneanasel_USE_SRProxy        OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(duneanasel)
+
+include_directories(${duneanasel_SOURCE_DIR})
+
+# Install duneanasel headers
+install(
+  DIRECTORY ${duneanasel_SOURCE_DIR}/duneanasel
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+)
+##################################################################################
+
+
 set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Utils Vars bin scripts fcl)
 if(DEFINED BUILD_PRISM)
   set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
