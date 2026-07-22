@@ -6,39 +6,54 @@
 BasicPred: {
 
 	output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMScans/MPFDResults/Dmsq32_Ssth23_ELepEHadParam_100_NDEffBias_MPFD_26May23/PRISMScan_dmsq32_ssth23.root", "UPDATE"]
-	state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
+	
+	#output_file: ["prism_oscfit_ssth23_v3r5p10-37-g0f2b8dc_HornCEccentricityInducedBField_OffAxis2026-amc1.root", "UPDATE"]
+	#output_file: ["prism_oscfit_dmsq32_v3r5p10-37-g0f2b8dc_HornCEccentricityInducedBField_OffAxis2026-amc1.root", "UPDATE"]
+	
+	#output_file: ["prism_oscfit_ssth23_v3r5p10-37-g0f2b8dc_HornCEllipticityInducedBField_OffAxis2026-amc1.root", "UPDATE"]
+	#output_file: ["prism_oscfit_dmsq32_v3r5p10-37-g0f2b8dc_HornCEllipticityInducedBField_OffAxis2026-amc1.root", "UPDATE"]
+	
+	#output_file: ["prism_oscfit_ssth23_v3r5p10-37-g0f2b8dc_nom_OffAxis2026-amc1.root", "UPDATE"]
+	#output_file: ["prism_oscfit_dmsq32_v3r5p10-37-g0f2b8dc_nom_OffAxis2026-amc1.root", "UPDATE"]
+
+	#state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_ELepEHadParam_EffBias_4Flav_TrueLepCoarseHad_13Jun23.root"
+	#state_file:"/exp/dune/data/users/yuribae/prism/state/PRISMStateFile_EnuReco_NewFluxSystSep21_AllFocusingPars.root"
+	#state_file: "/exp/dune/data/users/yuribae/prism/state/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026.root"
 	
 	# Analysis variable name - must match variable in state file
-	projection_name: ELepEHad_param # EnuReco
+	projection_name: EnuReco # ELepEHad_param, ETrue, etc.
 	
 	# Set exposure in years
-	POT_years: 2.084 # 1.042 for 100 MWktYrs, 7 for 336 MWktYrs
+	POT_years: 7 # 2.084 # 1.042 for 100 MWktYrs, 7 for 336 MWktYrs
 	POT_staging: nostage
 	
 	# Use ND stat covariance in fitting? Typically true for full PRISM stat error
 	use_ND_stats: true
 	
 	# Definitely want this to be false for fits!
-	vary_NDFD_data: true
+	vary_NDFD_data: false
         
 	# Extra plots for more histograms in PRISMPrediction
-    # Should be false for fitting
-    prism_debugplots: false
+	# Should be false for fitting
+	prism_debugplots: false
 	
 	# Do you want to use fake data?
-	use_fake_data: true
+	use_fake_data: false
 	
 	# True to include FD intrinsic nue in flux match
 	match_intrinsic_nue: true
 	
 	# True to include FD Wron Sign background on a data-driven approach
-    match_ws: true
+    match_ws: false
 	
 	# Do you want the reactor th13 constraint?
 	reactor_constraint: true
 	
 	# Regularisation parameter for unfolding - greater stability in fits
 	#unfold_reg_param: 0.003 # default is 0.0001
+
+	# Add MC Correction
+	apply_MC_correction: true
 
 	PRISM: {
 		match_conditioning: [
@@ -98,6 +113,7 @@ BasicPred: {
 	# Parameter(s) to scan over in fit
 	#scan_params: @local::ScanDefinitions.ssth23_dmsq32
 	#scan_params: @local::ScanDefinitions.dcp_ss2th13
+	#scan_params: @local::ScanDefinitions.dmsq32
 	scan_params: @local::ScanDefinitions.ssth23
 	
 	# Number of samples to include
@@ -105,16 +121,19 @@ BasicPred: {
 }
 
 scans: [
-	{
-		@table::BasicPred
-		#output_dir: "fit_mpfd_100"
-		output_dir: "fit_nom"
-	}#,
 #	{
 #		@table::BasicPred
-#		free_syst_params: @local::nuisance_parameter_sets.fluxSept21_0
-#		output_dir: "fit_flux_Sept21_0"
+#		#output_dir: "fit_mpfd_100"
 #	}
+
+	{
+		@table::BasicPred
+		#free_syst_params: @local::nuisance_parameter_sets.fluxSept21_0
+		#free_syst_params: @local::nuisance_parameter_sets.fluxSept21_1
+		output_dir: "fit_nom"
+		#output_dir: "fit_flux_Sept21_0_HornAEccentricityInducedBField"
+		#output_dir: "fit_flux_Sept21_1_HornAEllipticityInducedBField"
+	}
 ]
 
 # This means that it overwrites the outputfile for the first scan and then appends subsequent scans.

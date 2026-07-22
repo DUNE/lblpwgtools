@@ -107,6 +107,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
   bool use_fake_data = scan.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
   bool match_ws_bkg = scan.get<bool>("match_ws", false);
+  bool apply_MC_correction = scan.get<bool>("apply_MC_correction", false);
   bool th13_constraint = scan.get<bool>("reactor_constraint", true);
   double unfold_reg_param = scan.get<double>("unfold_reg_param", 0.0001);
   bool use_PRISM_ND_stats = scan.get<bool>("use_ND_stats", true);
@@ -317,6 +318,14 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::cout<<" Use FD MC to predict FD WS bkg." << std::endl;
   }
   state.PRISM->SetWSBkgCorr(match_ws_bkg);
+
+  if (apply_MC_correction) {
+    std::cout << "Apply MC correction (FD osc MC - PRISM pred at nominal) "
+                 "to the final prediction." << std::endl;
+  } else {
+    std::cout << "No MC correction on the final prediction." << std::endl;
+  }
+  state.PRISM->SetApplyMCCorrection(apply_MC_correction);
 
   //-------------
   // Create flux matcher object

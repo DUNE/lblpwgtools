@@ -31,6 +31,8 @@
 #include "TH2.h"
 #include "TObjString.h"
 
+#include <cmath>
+
 using namespace PRISM;
 
 namespace ana {
@@ -1638,6 +1640,52 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kFDFluxCorr);
   if (Comps.count(kNDMC_FDExtrap) && fDebugPlots)
     Comps.at(kNDMC_FDExtrap) += Comps.at(kFDFluxCorr);
+
+  // Add MC correction:
+  // corr(calc) = FD oscillated MC - PRISM prediction, computed at
+  // nominal systematics for the current oscillation parameters. Added onto
+  // the final prediction, so the nominal prediction closes exactly onto FD
+  // osc MC by construction. Under systematic shifts the nominal correction
+  // is rescaled bin-by-bin by the FD systematic/nominal ratio so it carries
+  // the same fractional response as the total FD spectrum.
+  if (fApplyMCCorrection) {
+    Comps.emplace(kPRISMPredBeforeMCCorr, Comps.at(kNDDataCorr_FDExtrap));
+
+    Spectrum FDDataWithSysts = FDPrediction->PredictComponentSyst(
+        calc, shift_fd, Flavors::kAll, Current::kBoth, Sign::kBoth);
+    Spectrum FDDataNoSysts = FDPrediction->PredictComponentSyst(
+        calc, kNoShift, Flavors::kAll, Current::kBoth, Sign::kBoth);
+
+    if (shift_fd.ShortName() == "nominal" &&
+        shift_nd.ShortName() == "nominal") {
+      Spectrum MCCorrectionNominal = FDDataNoSysts;
+      MCCorrectionNominal -= Comps.at(kPRISMPredBeforeMCCorr);
+      Comps.emplace(kMCCorrPRISMPredMinusDataNom, MCCorrectionNominal);
+      Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kMCCorrPRISMPredMinusDataNom);
+    } else {
+      Spectrum MCCorrectionNominal =
+          PredictPRISMComponents(calc, kNoShift, match_chan)
+              .at(kMCCorrPRISMPredMinusDataNom);
+      Comps.emplace(kMCCorrPRISMPredMinusDataNom, MCCorrectionNominal);
+
+      double CorrPOT = FDDataWithSysts.POT();
+      Eigen::ArrayXd ArrayMCCorrWithSysts =
+          MCCorrectionNominal.GetEigen(CorrPOT) *
+          FDDataWithSysts.GetEigen(CorrPOT) / FDDataNoSysts.GetEigen(CorrPOT);
+      for (int bin = 0; bin < ArrayMCCorrWithSysts.size(); ++bin) {
+        if (!std::isfinite(ArrayMCCorrWithSysts[bin]))
+          ArrayMCCorrWithSysts[bin] = 0;
+      }
+      ArrayMCCorrWithSysts[0] = 0;
+      ArrayMCCorrWithSysts[ArrayMCCorrWithSysts.size() - 1] = 0;
+
+      Spectrum MCCorrectionWithSysts(std::move(ArrayMCCorrWithSysts),
+                                     ExtrapAnaAxis, CorrPOT,
+                                     FDDataWithSysts.Livetime());
+      Comps.emplace(kMCCorrPRISMPredMinusData, MCCorrectionWithSysts);
+      Comps.at(kNDDataCorr_FDExtrap) += Comps.at(kMCCorrPRISMPredMinusData);
+    }
+  }
 
   // Convert final covariance matrix into 2D spectrum
   Comps.emplace(kExtrapCovarMatrixOscSpectrum, ToSpectrum(sCovMat, NDPOT)); // if WSB flag is false this will be the same as kExtrapCovarMatrix

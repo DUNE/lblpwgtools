@@ -73,6 +73,7 @@ set(SYST_INPUT_ROOT_FILES
   flux_shifts_OffAxis.root
   flux_shifts_OffAxis2022.root
   flux_shifts_OffAxis2023.root
+  flux_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026.root
   xsec_shifts.root
   modelComp.root
   ND_eff_syst.root

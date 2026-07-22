@@ -47,6 +47,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
   double unfold_reg_param = pred.get<double>("unfold_reg_param", 0.0001);
   bool match_ws_bkg = pred.get<bool>("match_ws", false);
+  bool apply_MC_correction = pred.get<bool>("apply_MC_correction", false);
 
   if (vary_NDFD_MCData == true && prism_debugplots == false) {
    std::cout << "[ERROR] you can have just 'prism_debugplots', "
@@ -168,6 +169,14 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout<<" Use FD MC to predict FD WS bkg." << std::endl;
   }
   state.PRISM->SetWSBkgCorr(match_ws_bkg);
+
+  if (apply_MC_correction) {
+    std::cout << "Apply MC correction (FD osc MC - PRISM pred at nominal) "
+                 "to the final prediction." << std::endl;
+  } else {
+    std::cout << "No MC correction on the final prediction." << std::endl;
+  }
+  state.PRISM->SetApplyMCCorrection(apply_MC_correction);
 
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {

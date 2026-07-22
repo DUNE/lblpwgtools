@@ -112,6 +112,9 @@ public:
     kNDMCExtrap_280kAWSB = 70,
     kNDMC_FDExtrapWSB = 71,
     kFDOscPredWSB = 72,
+    kMCCorrPRISMPredMinusData = 73,
+    kPRISMPredBeforeMCCorr = 74,
+    kMCCorrPRISMPredMinusDataNom = 75,
   };
 
   static std::string GetComponentString(PRISMComponent pc) {
@@ -337,6 +340,15 @@ public:
     case kFDOscPredWSB: {
       return "FDOscPredWSB";
     }
+    case kMCCorrPRISMPredMinusData: {
+      return "MCCorrPRISMPredMinusData";
+    }
+    case kPRISMPredBeforeMCCorr: {
+      return "PRISMPredBeforeMCCorr";
+    }
+    case kMCCorrPRISMPredMinusDataNom: {
+      return "MCCorrPRISMPredMinusDataNom";
+    }
  
 
     }
@@ -464,6 +476,8 @@ public:
   void SetUseFakeData(bool v = true) { fUseFakeData = v; }
   void SetIntrinsicBkgCorr(bool v = true) { fMatchIntrinsicBkg = v; }
   void SetWSBkgCorr(bool v = true) {fMatchWSBkg = v; }
+  bool fApplyMCCorrection = false;
+  void SetApplyMCCorrection(bool v = true) { fApplyMCCorrection = v; }
 
   double fDefaultOffAxisPOT;
 
