@@ -41,7 +41,7 @@ BasicPred: {
 	# True to include FD Wrong Sign background on a data-driven approach
 	match_ws: false
 
-	# Add MC correction
+	# Add "final" NDFD residual MC correction
 	apply_MC_correction: true
 
 	PRISM: {

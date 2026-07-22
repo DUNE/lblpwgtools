@@ -52,7 +52,7 @@ BasicPred: {
 	# Regularisation parameter for unfolding - greater stability in fits
 	#unfold_reg_param: 0.003 # default is 0.0001
 
-	# Add MC Correction
+	# Add "final" NDFD residual MC Correction
 	apply_MC_correction: true
 
 	PRISM: {
