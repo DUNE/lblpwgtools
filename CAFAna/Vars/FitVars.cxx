@@ -35,6 +35,7 @@ namespace ana
   const FitDmSq21 kFitDmSq21;
   const FitDmSq21Scaled kFitDmSq21Scaled;
   const FitRho kFitRho;
+  const FitVarForProf1D kFitVarForProf1D;
 
   //----------------------------------------------------------------------
   double FitTheta13::GetValue(const osc::IOscCalcAdjustable* osc) const
@@ -298,6 +299,17 @@ namespace ana
   void FitRho::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc->SetRho(Clamp(val));
+  }
+
+  //---------------------------------------------------------------------------                   
+  double FitVarForProf1D::GetValue(const osc::IOscCalcAdjustable* osc) const
+  {
+    return 0;
+  }
+
+  //----------------------------------------------------------------------
+  void FitVarForProf1D::SetValue(osc::IOscCalcAdjustable* osc, double val) const
+  {
   }
 
 } // namespace

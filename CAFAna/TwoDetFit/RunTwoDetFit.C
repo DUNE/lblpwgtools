@@ -173,6 +173,10 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   
   int Xbins = 30, Ybins = 30;
 
+  // ToDo: fix Utilities.cxx to handle the 1-bin case. Then must have this
+  //if(Variable.find("prof") != std::string::npos) Ybins = 1;
+  // so we produce the 1D profiles reliably
+
 
   //#*******************************************************************#
   //#                                                                   #

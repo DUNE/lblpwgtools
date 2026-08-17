@@ -172,6 +172,52 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
  }
  
  ////////////////////////////////////////////////////////////////////
+ //              1D Profiles - Std Osc 3 Flavor                    //
+ ////////////////////////////////////////////////////////////////////
+
+ //#*******************************#
+ //#         prof_deltaCP          #
+ //#*******************************#  
+
+  if (Variable == "prof_deltaCP") {
+
+   VarX = &kFitDeltaInPiUnits;
+   xmin = 0.0; xmax = 2.0;
+   VarY = &kFitVarForProf1D;
+   ymin = -1; ymax = 1;
+   UnderstoodVariable = true;
+
+  }
+
+ //#*******************************#
+ //#         prof_ssth23           #
+ //#*******************************#  
+
+  if (Variable == "prof_ssth23") {
+
+   VarX = &kFitSinSqTheta23;
+   xmin = 0.25; xmax = 0.75;
+   VarY = &kFitVarForProf1D;
+   ymin = -1; ymax = 1;
+   UnderstoodVariable = true;
+
+  }
+
+ //#*******************************#
+ //#         prof_dmsq32           #
+ //#*******************************#  
+
+  if (Variable == "prof_dmsq32") {
+
+   VarX = FitDmSq32;
+   xmin = 2.4; xmax = 2.5;
+   VarY = &kFitVarForProf1D;
+   ymin = -1; ymax = 1;
+   UnderstoodVariable = true;
+
+  }
+
+ ////////////////////////////////////////////////////////////////////
  //               2D Surfaces - Std Osc 3 Flavor                   //
  ////////////////////////////////////////////////////////////////////
 
@@ -219,7 +265,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    VarX = &kFitDeltaEMuInPiUnits;
    xmin = 0; xmax = 2;
    VarY = &kFitEpsEMu;
-   ymin = 0; ymax = 2;
+   ymin = 0; ymax = 0.5;
    UnderstoodVariable = true;
 
   }
@@ -233,7 +279,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    VarX = &kFitDeltaETauInPiUnits;
    xmin = 0; xmax = 2;
    VarY = &kFitEpsETau;
-   ymin = 0; ymax = 2;
+   ymin = 0; ymax = 0.5;
    UnderstoodVariable = true;
 
   }
@@ -247,10 +293,28 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    VarX = &kFitDeltaMuTauInPiUnits;
    xmin = 0; xmax = 2;
    VarY = &kFitEpsMuTau;
-   ymin = 0; ymax = 2;
+   ymin = 0; ymax = 0.5;
    UnderstoodVariable = true;
 
   }
+
+ ////////////////////////////////////////////////////////////////////
+ //                     1D Profiles - Sterile                      //
+ ////////////////////////////////////////////////////////////////////
+
+ //#*******************************#
+ //#         prof_ssth24           #
+ //#*******************************#  
+
+  if (Variable == "prof_ssth24") {
+
+   VarX = &kFitSinSqTheta24Sterile;
+   xmin = 1e-4; xmax = 1.0;
+   VarY = &kFitVarForProf1D;
+   ymin = -1; ymax = 1;
+   UnderstoodVariable = true;
+
+  }  
   
  ////////////////////////////////////////////////////////////////////
  //                     2D Surfaces - Sterile                      //
@@ -336,7 +400,7 @@ inline void SetModelType(const std::string model) {
   if (model == "nsi") {
       std::cout << "Selected the NSI model, so pulling epsilons and deltas...<ToDo>" << std::endl;
       // hacking here the VarsToFit to just do nothing rn for quick tests
-      VarsToFit = {};
+      //VarsToFit = {};
       UnderstoodModel = true;
   }
 

@@ -362,4 +362,23 @@ namespace ana
 
   //----------------------------------------------------------------------
 
+  // 1-bin fitvar used to produce 1D slices/profiles as a "2D surface method"
+  // This produces a projection of the parameter of interest onto the
+  // deltaChiSquare axis  
+
+  /// \f$ FitVarForProf1D \f$
+  class FitVarForProf1D: virtual public IFitVar
+  {
+    public:
+      FitVarForProf1D() : IFitVar("FitVarForProf1D", "null") {};
+
+      double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+      void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+  };
+
+  /// \f$ FitVarForProf1D \f$
+  extern const FitVarForProf1D kFitVarForProf1D;
+
+  //----------------------------------------------------------------------
+
 } // namespace ana

@@ -110,6 +110,36 @@ inline void SetSurfaceStyle(const TString& SurfName) {
 inline void SetSurfaceType(const TString& SurfName) {
 
  ////////////////////////////////////////////////////////////////////
+ //                1D Profiles - Std Osc 3 Flavor                  //
+ ////////////////////////////////////////////////////////////////////
+ 
+ if (SurfName.Contains("prof_deltaCP")) {
+   Xmin = 0.0, Xmax = 2.0;
+   Ymin = 0, Ymax = 10;
+   Xtitle = "#delta_{CP}";
+   //Ytitle = "Significance ( #sqrt{#Delta#chi^{2}} )";
+   Ytitle = "#Delta#chi^{2}";
+   //AxisLabel = "Significance ( #sqrt{#Delta#chi^{2}} );sin^{2}(#theta_{24});#Deltam_{41}^{2} (eV^{2})";
+}  
+
+if (SurfName.Contains("prof_ssth23")) {
+   Xmin = 0.25, Xmax = 0.75;
+   Ymin = 0, Ymax = 10;
+   Xtitle = "sin^{2}(#theta_{23})";
+   //Ytitle = "Significance ( #sqrt{#Delta#chi^{2}} )";
+   Ytitle = "#Delta#chi^{2}";
+}  
+
+if (SurfName.Contains("prof_dmsq32")) {
+   Xmin = 2.4, Xmax = 2.5;
+   Ymin = 0, Ymax = 10;
+   Xtitle = "#Deltam_{32}^{2} (10^{-3} eV^{2})";
+   //Ytitle = "Significance ( #sqrt{#Delta#chi^{2}} )";
+   Ytitle = "#Delta#chi^{2}";
+   //AxisLabel = "Significance ( #sqrt{#Delta#chi^{2}} );sin^{2}(#theta_{24});#Deltam_{41}^{2} (eV^{2})";
+}  
+
+ ////////////////////////////////////////////////////////////////////
  //               2D Surfaces - Std Osc 3 Flavor                   //
  ////////////////////////////////////////////////////////////////////
 
@@ -153,9 +183,25 @@ if (SurfName.Contains("surf_epsetau_deltaetau")) {
 
 if (SurfName.Contains("surf_epsmutau_deltamutau")) {
    Xmin = 0.0, Xmax = 2.0;
-   Ymin = 0.0, Ymax = 0.25;
+   Ymin = 0.0, Ymax = 0.60;
    AxisLabel = ";#delta_{#mu#tau} / #pi;#left|#varepsilon_{#mu#tau}#right|";
 } 
+
+ ////////////////////////////////////////////////////////////////////
+ //                     1D Profiles - Sterile                      //
+ ////////////////////////////////////////////////////////////////////
+ 
+ if (SurfName.Contains("prof_ssth24")) {
+   Xmin = 1e-4, Xmax = 1.0;
+   Ymin = 0, Ymax = 10;
+   Xtitle = "sin^{2}(#theta_{24})";
+   //Ytitle = "Significance ( #sqrt{#Delta#chi^{2}} )";
+   Ytitle = "#Delta#chi^{2}";
+   //AxisLabel = "Significance ( #sqrt{#Delta#chi^{2}} );sin^{2}(#theta_{24});#Deltam_{41}^{2} (eV^{2})";
+
+   UseLogX = true;
+   UseLogY = false;
+}
 
  ////////////////////////////////////////////////////////////////////
  //                     2D Surfaces - Sterile                      //
