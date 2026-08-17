@@ -1,25 +1,36 @@
+#include "CAFAna/Fit/ISurface.h"
+
+#include "CAFAna/Core/Utilities.h"
+#include "OscLib/IOscCalc.h"
+
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TKey.h"
 #include "TMarker.h"
 #include "TH2.h"
+#include "TObjString.h"
 #include "TPad.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TVectorD.h"
 
-#include "OscLib/IOscCalc.h"
-
-#include "CAFAna/Core/Utilities.h"
-#include "CAFAna/Fit/ISurface.h"
+#include <iostream>
 
 namespace ana
 {
+  //---------------------------------------------------------------------
+  void ISurface::DrawAxes() const
+  {
+    EnsureAxes(fHist);
+  }
 
-//---------------------------------------------------------------------
+  //---------------------------------------------------------------------
   void ISurface::Draw() const
   {
-    EnsureAxes();
+    // Can be useful to draw a partial surface for debugging
+    //    CheckMask();
+
+    EnsureAxes(fHist);
 
     fHist->Draw("colz same");
 
@@ -29,10 +40,11 @@ namespace ana
     gPad->Update();
   }
 
-//---------------------------------------------------------------------
+  //---------------------------------------------------------------------
   void ISurface::DrawBestFit(Color_t color, Int_t marker) const
   {
-    EnsureAxes();
+    CheckMask("DrawBestFit");
+    EnsureAxes(fHist);
 
     TMarker *mark = new TMarker(fBestFitX, fBestFitY, marker);
     mark->SetMarkerSize(1.5);
@@ -41,11 +53,12 @@ namespace ana
     gPad->Update();
   }
 
-//----------------------------------------------------------------------
+  //----------------------------------------------------------------------
   void ISurface::DrawContour(TH2 *fc, Style_t style, Color_t color,
-                                  double minchi)
+                             double minchi) const
   {
-    EnsureAxes();
+    CheckMask("DrawContour");
+    EnsureAxes(fHist);
 
     std::vector<TGraph *> gs = GetGraphs(fc, minchi);
 
@@ -61,7 +74,7 @@ namespace ana
   }
 
   //---------------------------------------------------------------------
-  void ISurface::EnsureAxes() const
+  void ISurface::EnsureAxes(TH2* h) const
   {
     // Could have a file temporarily open
     DontAddDirectory guard;
@@ -69,20 +82,8 @@ namespace ana
     // If this pad has already been drawn in, already has axes
     if (gPad && !gPad->GetListOfPrimitives()->IsEmpty()) return;
 
-    // Old, hackier solution
-    /*
-    std::cout << gPad->GetListOfPrimitives()->GetEntries() << std::endl;
-    // Which pads have we already drawn axes in? Never draw axes in them
-    // again. Unfortunately UniqueID() never seems to be set. If that's the
-    // case, set it to a random value and hope...
-    static std::set<UInt_t> already;
-    if(already.count(gPad->GetUniqueID())) return;
-    if(gPad->GetUniqueID() == 0) gPad->SetUniqueID(rand());
-    already.insert(gPad->GetUniqueID());
-    */
-
-    const TAxis *ax = fHist->GetXaxis();
-    const TAxis *ay = fHist->GetYaxis();
+    const TAxis *ax = h->GetXaxis();
+    const TAxis *ay = h->GetYaxis();
     const double Nx = ax->GetNbins();
     const double Ny = ay->GetNbins();
 
@@ -91,29 +92,35 @@ namespace ana
     TH2 *axes = new TH2C(UniqueName().c_str(),
                          TString::Format(";%s;%s",
                                          ax->GetTitle(), ay->GetTitle()),
-                         Nx - 1, ax->GetBinCenter(1), ax->GetBinCenter(Nx),
-                         Ny - 1, ay->GetBinCenter(1), ay->GetBinCenter(Ny));
+                         Nx - 1, BinCenterX(1), BinCenterX(Nx),
+                         Ny - 1, BinCenterY(1), BinCenterY(Ny));
     axes->Draw();
 
-    if(fHist){
+    if(h){
       // "colz same" will reuse axis's min and max, so set them helpfully here
-      axes->SetMinimum(fHist->GetMinimum());
-      axes->SetMaximum(fHist->GetMaximum());
+      axes->SetMinimum(h->GetMinimum());
+      axes->SetMaximum(h->GetMaximum());
     }
 
-    axes->SetTitle(fHist->GetTitle());
+    axes->SetTitle(h->GetTitle());
     axes->GetXaxis()->SetLabelSize(ax->GetLabelSize());
     axes->GetYaxis()->SetLabelSize(ay->GetLabelSize());
     axes->GetXaxis()->SetLabelOffset(ax->GetLabelOffset());
     axes->GetYaxis()->SetLabelOffset(ay->GetLabelOffset());
     axes->GetXaxis()->CenterTitle();
     axes->GetYaxis()->CenterTitle();
+
+    gPad->SetLogx(fLogX);
+    gPad->SetLogy(fLogY);
+
     gPad->Update();
   }
 
   //----------------------------------------------------------------------
-  std::vector<TGraph*> ISurface::GetGraphs(TH2* fc, double minchi)
+  std::vector<TGraph*> ISurface::GetGraphs(TH2* fc, double minchi) const
   {
+    CheckMask("GetGraphs");
+
     std::vector<TGraph*> ret;
 
     if(minchi < 0) minchi = fBestLikelihood;
@@ -180,7 +187,9 @@ namespace ana
       {
         for (int y = 0; y < ret->GetNbinsY() + 2; ++y)
         {
-          ret->SetBinContent(x, y, ret->GetBinContent(x, y) + fBestLikelihood - minchi);
+          double this_bin_content = ret->GetBinContent(x, y) - minchi;
+          if (!isnan(fBestLikelihood)) this_bin_content += fBestLikelihood;
+          ret->SetBinContent(x, y, this_bin_content);
         }
       }
     }
@@ -212,6 +221,15 @@ namespace ana
     TVectorD s(fSeedValues.size(), &fSeedValues[0]);
     s.Write("seeds");
 
+    if (!fBinMask.empty()) {
+      std::vector<double> tmp(fBinMask.begin(), fBinMask.end());
+      TVectorD m(tmp.size(), &tmp[0]);
+      m.Write("mask");
+    }
+
+    TObjString(fLogX ? "yes" : "no").Write("logx");
+    TObjString(fLogY ? "yes" : "no").Write("logy");
+
     if (oldDir)
       oldDir->cd();
   }
@@ -222,6 +240,7 @@ namespace ana
 
     const TVectorD v = *(TVectorD *) dir->Get("minValues");
     const TVectorD s = *(TVectorD *) dir->Get("seeds");
+    TVectorD* m = (TVectorD *) dir->Get("mask");
 
     surf.fHist = (TH2F *) dir->Get("hist");
     surf.fBestLikelihood = v[0];
@@ -231,13 +250,18 @@ namespace ana
     for (int idx = 0; idx < s.GetNrows(); ++idx)
       surf.fSeedValues.push_back(s[idx]);
 
+    if (m) {
+      for (int idx = 0; idx < m->GetNrows(); ++idx)
+        surf.fBinMask.push_back((*m)[idx]);
+    }
+
   }
 
   //----------------------------------------------------------------------
   /// Helper function for the gaussian approximation surfaces
   TH2* Flat(double level, const ISurface& s)
   {
-    TH2* h = s.ToTH2();
+    TH2* h = new TH2F(*s.fHist);
 
     for(int x = 0; x < h->GetNbinsX()+2; ++x)
       for(int y = 0; y < h->GetNbinsY()+2; ++y)
@@ -246,5 +270,27 @@ namespace ana
     return h;
   }
 
+  //----------------------------------------------------------------------
+  double ISurface::BinCenterX(int bin) const
+  {
+    const TAxis* ax = fHist->GetXaxis();
+    return fLogX ? ax->GetBinCenterLog(bin) : ax->GetBinCenter(bin);
+  }
+
+  //----------------------------------------------------------------------
+  double ISurface::BinCenterY(int bin) const
+  {
+    const TAxis* ax = fHist->GetYaxis();
+    return fLogY ? ax->GetBinCenterLog(bin) : ax->GetBinCenter(bin);
+  }
+
+  //----------------------------------------------------------------------
+  void ISurface::CheckMask(const std::string& func) const
+  {
+    if(!fBinMask.empty()) {
+      std::cout << "Cannot call " << func << "() on a partial surface!" << std::endl;
+      abort();
+    }
+  }
 
 } // namespace ana
