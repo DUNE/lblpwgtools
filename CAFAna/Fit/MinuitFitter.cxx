@@ -83,6 +83,7 @@ namespace ana
     // Why, when this is called for each seed?
     fCalc = seed;
     *fShifts = systSeed;
+    fExpt->Reset();
 
     std::unique_ptr<ROOT::Math::Minimizer> mnMin;
 
