@@ -36,6 +36,39 @@ using namespace ana;
 
 namespace PlotUtils {
 
+//
+
+// to convert 1-bin surfaces into a 1D profile
+TGraph* MakeTGraphFromSurface(TH2* hist, double best_fit = -999999) {
+
+ assert(hist->GetYaxis()->GetNbins() == 1); // Expecting 1xN 2d hist
+
+
+ auto tgraph_as_hist = hist->ProjectionX("hist", 1, 1);
+
+ std::cout << "\nProjected the X-axis..." << std::endl;
+
+ tgraph_as_hist->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+ tgraph_as_hist->GetYaxis()->SetTitle(hist->GetZaxis()->GetTitle());
+
+ auto out = new TGraph();
+
+ std::cout << "The TGraph object was created..." << std::endl;
+    
+ double nbins = tgraph_as_hist->GetXaxis()->GetNbins();
+
+ for (int i = 1; i <= nbins; i++) {
+      double x = tgraph_as_hist->GetXaxis()->GetBinCenter(i);
+      double y = tgraph_as_hist->GetBinContent(i);
+      out->SetPoint(out->GetN(), x, y);
+    }
+    
+ out->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+ out->GetYaxis()->SetTitle(hist->GetZaxis()->GetTitle());
+
+ return out;
+}
+
 //#**************************************#
 //#                Colors                #
 //#**************************************#

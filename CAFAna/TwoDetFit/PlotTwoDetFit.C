@@ -16,41 +16,6 @@ using namespace PlotUtils;
 using std::string;
 using std::vector;
 
-// THIS GOTTA GO ELSEWHERE
-// to convert 1-bin surfaces into a 1D profile
-TGraph* MakeTGraphFromSurface(TH2* hist, double best_fit = -999999) {
-
- // It would be very nice to make this assert condition work again 
- // First need to fiz Utilities.cxx to handle the 1-bin case
- // Then this here will work
- //assert(hist->GetYaxis()->GetNbins() == 1); // Expecting 1xN 2d hist
-
-
- auto tgraph_as_hist = hist->ProjectionX("hist", 1, 1);
-
- std::cout << "\nProjected the X-axis..." << std::endl;
-
- tgraph_as_hist->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
- tgraph_as_hist->GetYaxis()->SetTitle(hist->GetZaxis()->GetTitle());
-
- auto out = new TGraph();
-
- std::cout << "The TGraph object was created..." << std::endl;
-    
- double nbins = tgraph_as_hist->GetXaxis()->GetNbins();
-
- for (int i = 1; i <= nbins; i++) {
-      double x = tgraph_as_hist->GetXaxis()->GetBinCenter(i);
-      double y = tgraph_as_hist->GetBinContent(i);
-      out->SetPoint(out->GetN(), x, y);
-    }
-    
- out->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
- out->GetYaxis()->SetTitle(hist->GetZaxis()->GetTitle());
-
- return out;
-}
-
 void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
                     std::string FileInput2  = "",     // full/path/to/file (optional, to compare w/ FileInput)
                     std::string FileInput3  = ""
@@ -61,7 +26,7 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
  // this really can be improved, but not now.... 
  bool UnderstoodCL = false; 
- std::string PlotCL  = "123Sigmas"; // "1D" or "90CL" or "123Sigmas" 
+ std::string PlotCL  = "90CL"; // "1D" or "90CL" or "123Sigmas" 
  
  if(FileInput.find("prof") != std::string::npos){
   PlotCL  = "1D";
@@ -134,10 +99,9 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
   profile = MakeTGraphFromSurface(hist, surface.GetBestFitX());
 
+  // This is ToDo
   //std::cout << "\nNow taking the sqrt() of the profiles for a significance curve in sigmas..\n" << std::endl;
   //profile = SqrtProfile(profile);
-
-  // this should eventually move to PlotUtils
 
   profile[0].Draw("AC");
   profile[0].SetLineStyle(kSolid);
@@ -195,6 +159,6 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
  std::cout << "\n" << std::endl;
  gPad->Print(PlotOutput + "_" + PlotCL + ".pdf");
- //gPad->Print(PlotOutput + ".png");
+ gPad->Print(PlotOutput + ".png");
 
 } // end of code
