@@ -170,8 +170,6 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   // put a constraint on Th13. Must move this elsewhere
   std::cout << "\nPlacing a PDG 2025 constraint on Th13.." << std::endl;
   MultiExpt->Add(Th13ConstraintPDG2025());
-  
-  int Xbins = 30, Ybins = 30;
 
   // ToDo: fix Utilities.cxx to handle the 1-bin case. Then must have this
   //if(Variable.find("prof") != std::string::npos) Ybins = 1;
@@ -186,9 +184,11 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   FitUtils::SetVariableType(Variable, FitOptions);
   FitUtils::SetModelType(Model);
 
+  const FitAxis kFitAxisX(VarX, Xbins, xmin, xmax, IsLogX);
+  const FitAxis kFitAxisY(VarY, Ybins, ymin, ymax, IsLogY);
+
   ana::FrequentistSurface surface(MultiExpt, calc,
-                                  VarX, Xbins, xmin, xmax,
-                                  VarY, Ybins, ymin, ymax,
+                                  kFitAxisX, kFitAxisY,
                                   VarsToFit);
 
   RootFile->cd();

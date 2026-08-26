@@ -29,8 +29,15 @@ namespace FitUtils {
  const ana::IFitVar* VarX = nullptr;
  const ana::IFitVar* VarY = nullptr;
 
+ // Parameter space binning
+ int Xbins = 30, Ybins = 30;
+
  // Fit limits
  double xmin, xmax, ymin, ymax;
+
+ // Needed for sterile spaces
+ bool IsLogX = false;
+ bool IsLogY = false;
 
  // Osc parameters to be fittted/profiled over
  std::vector<const ana::IFitVar*> VarsToFit;
@@ -185,6 +192,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 0.0; xmax = 2.0;
    VarY = &kFitVarForProf1D;
    ymin = -1; ymax = 1;
+   Ybins = 1;
    UnderstoodVariable = true;
 
   }
@@ -199,6 +207,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 0.25; xmax = 0.75;
    VarY = &kFitVarForProf1D;
    ymin = -1; ymax = 1;
+   Ybins = 1;
    UnderstoodVariable = true;
 
   }
@@ -213,6 +222,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 2.4; xmax = 2.5;
    VarY = &kFitVarForProf1D;
    ymin = -1; ymax = 1;
+   Ybins = 1;
    UnderstoodVariable = true;
 
   }
@@ -312,6 +322,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 1e-4; xmax = 1.0;
    VarY = &kFitVarForProf1D;
    ymin = -1; ymax = 1;
+   Ybins = 1;
    UnderstoodVariable = true;
 
   }  
@@ -330,6 +341,8 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 1e-4; xmax = 1.0;
    VarY = &kFitDmSq41Sterile;
    ymin = 1e-4; ymax = 1e2;
+   IsLogX = true;
+   IsLogY = true;
    UnderstoodVariable = true;
 
   }
@@ -344,6 +357,8 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 1e-4; xmax = 1.0;
    VarY = &kFitDmSq41Sterile;
    ymin = 1e-4; ymax = 1e2;
+   IsLogX = true;
+   IsLogY = true;
    UnderstoodVariable = true;
 
   }    
