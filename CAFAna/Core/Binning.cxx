@@ -5,6 +5,7 @@
 #include "TObjString.h"
 #include "TVectorD.h"
 
+#include <iostream>
 #include <memory>
 
 namespace ana
@@ -56,12 +57,8 @@ namespace ana
   //----------------------------------------------------------------------
   Binning TrueLOverTrueEBins()
   {
-    // constant binnig
-
-    const int kNumTrueLOverTrueEBins = 2000;
-    const double klow = 0.0;
-    const double khigh = 5.0;
-
-    return Binning::Simple(kNumTrueLOverTrueEBins, klow, khigh);
+    return Binning::LogUniform(400, 0.005, 5.);
+    // previous linear scale
+    // return Binning::Simple(2000, 0.0, 5.0);
   }
 }
