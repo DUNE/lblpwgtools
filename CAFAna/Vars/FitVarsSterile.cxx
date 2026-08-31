@@ -11,6 +11,7 @@ namespace ana
   const FitDmSq32NHSterile kFitDmSq32NHSterile;
   const FitDmSq32IHSterile kFitDmSq32IHSterile;
   const FitDmSq41Sterile kFitDmSq41Sterile;
+  const FitLog10DmSq41 kFitLog10DmSq41;
   const FitDmSq43Sterile kFitDmSq43Sterile;
   const FitDelta13InPiUnitsSterile kFitDelta13InPiUnitsSterile;
   const FitDelta14InPiUnitsSterile kFitDelta14InPiUnitsSterile;
@@ -103,6 +104,21 @@ namespace ana
   void FitDmSq41Sterile::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc::DowncastToSterile(osc)->SetDm(4, Clamp(val));
+  }
+
+  //---------------------------------------------------------------------------
+  double FitLog10DmSq41::GetValue(const osc::IOscCalcAdjustable* osc) const
+  {
+    double val = std::log10(osc::DowncastToSterile(osc)->GetDm(4));
+    if (val == -std::numeric_limits<double>::infinity())
+      val = LowLimit();
+    return val;
+  }
+
+  //---------------------------------------------------------------------------
+  void FitLog10DmSq41::SetValue(osc::IOscCalcAdjustable* osc, double val) const
+  {
+    osc::DowncastToSterile(osc)->SetDm(4, pow(10, Clamp(val)));
   }
 
   //---------------------------------------------------------------------------

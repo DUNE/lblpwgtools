@@ -9,13 +9,16 @@ namespace ana
   //----------------------------------------------------------------------
 
   /// \f$ \Delta m^2_{32} \f$
-  class FitDmSq32Sterile: public IFitVar
+  class FitDmSq32Sterile: public IConstrainedFitVar
   {
     public:
-      FitDmSq32Sterile() : IFitVar("dmsq32_sterile", "#Deltam^{2}_{32}") {};
+      FitDmSq32Sterile() : IConstrainedFitVar("dmsq32_sterile", "#Deltam^{2}_{32}") {};
 
       double GetValue(const osc::IOscCalcAdjustable* osc) const override;
       void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+
+      double LowLimit() const override {return -1e-2;}
+      double HighLimit() const override {return 1e-2;}
   };
 
   /// \f$ \Delta m^2_{32} \f$
@@ -33,7 +36,7 @@ namespace ana
       void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
       double LowLimit() const override {return 0;}
-      double HighLimit() const override {return 1e6;}
+      double HighLimit() const override {return 1e-2;}
   };
 
   /// \f$ \Delta m^2_{32} NH \f$
@@ -50,7 +53,7 @@ namespace ana
       double GetValue(const osc::IOscCalcAdjustable* osc) const override;
       void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
-      double LowLimit() const override {return -1e6;}
+      double LowLimit() const override {return -1e-2;}
       double HighLimit() const override {return 0;}
   };
 
@@ -68,12 +71,30 @@ namespace ana
       double GetValue(const osc::IOscCalcAdjustable* osc) const override;
       void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
 
-      double LowLimit() const override {return 0;}
-      double HighLimit() const override {return 1e6;}
+      double LowLimit() const override {return 1e-4;}
+      double HighLimit() const override {return 1e2;}
   };
 
   /// \f$ \Delta m^2_{41} \f$
   extern const FitDmSq41Sterile kFitDmSq41Sterile;
+
+  //----------------------------------------------------------------------
+
+  /// \f$ \log_{10} \Delta m^2_{41} \f$
+  class FitLog10DmSq41: public IConstrainedFitVar
+  {
+    public:
+      FitLog10DmSq41() : IConstrainedFitVar("log10(dmsq41)", "log_{10} #Deltam^{2}_{41}") {};
+
+      double GetValue(const osc::IOscCalcAdjustable* osc) const override;
+      void SetValue(osc::IOscCalcAdjustable* osc, double val) const override;
+
+      double LowLimit() const override {return -3;}
+      double HighLimit() const override {return 2;}
+  };
+
+  /// \f$ \Delta m^2_{41} \f$
+  extern const FitLog10DmSq41 kFitLog10DmSq41;
 
   //----------------------------------------------------------------------
 
