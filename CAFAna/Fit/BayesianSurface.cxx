@@ -12,47 +12,48 @@ namespace ana
   BayesianSurface::BayesianSurface(const MCMCSamples &samples,
                                    const IFitVar * xvar, int nbinsx, double xmin, double xmax,
                                    const IFitVar * yvar, int nbinsy, double ymin, double ymax,
-                                   MarginalMode mode)
+                                   MarginalMode mode, bool xlog, bool ylog)
       : BayesianMarginal(samples, {xvar, yvar}, mode)
   {
-    BuildHist(samples, xvar, nbinsx, xmin, xmax, yvar, nbinsy, ymin, ymax);
+    BuildHist(samples, xvar, nbinsx, xmin, xmax, yvar, nbinsy, ymin, ymax, xlog, ylog);
   }
 
   //----------------------------------------------------------------------
   BayesianSurface::BayesianSurface(const MCMCSamples &samples,
                                    const ISyst * xsyst, int nbinsx, double xmin, double xmax,
                                    const IFitVar * yvar, int nbinsy, double ymin, double ymax,
-                                   MarginalMode mode)
+                                   MarginalMode mode, bool xlog, bool ylog)
       : BayesianMarginal(samples, {xsyst, yvar}, mode)
   {
-    BuildHist(samples, xsyst, nbinsx, xmin, xmax, yvar, nbinsy, ymin, ymax);
+    BuildHist(samples, xsyst, nbinsx, xmin, xmax, yvar, nbinsy, ymin, ymax, xlog, ylog);
   }
 
   //----------------------------------------------------------------------
   BayesianSurface::BayesianSurface(const MCMCSamples &samples,
                                    const IFitVar *xvar, int nbinsx, double xmin, double xmax,
                                    const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                                   MarginalMode mode)
+                                   MarginalMode mode, bool xlog, bool ylog)
       : BayesianMarginal(samples, {xvar, ysyst}, mode)
   {
-    BuildHist(samples, xvar, nbinsx, xmin, xmax, ysyst, nbinsy, ymin, ymax);
+    BuildHist(samples, xvar, nbinsx, xmin, xmax, ysyst, nbinsy, ymin, ymax, xlog, ylog);
   }
 
   //----------------------------------------------------------------------
   BayesianSurface::BayesianSurface(const MCMCSamples &samples,
                                    const ISyst *xsyst, int nbinsx, double xmin, double xmax,
                                    const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                                   MarginalMode mode)
+                                   MarginalMode mode, bool xlog, bool ylog)
       : BayesianMarginal(samples, {xsyst, ysyst}, mode)
   {
-    BuildHist(samples, xsyst, nbinsx, xmin, xmax, ysyst, nbinsy, ymin, ymax);
+    BuildHist(samples, xsyst, nbinsx, xmin, xmax, ysyst, nbinsy, ymin, ymax, xlog, ylog);
   }
 
   //----------------------------------------------------------------------
   template <typename SystOrVar1, typename SystOrVar2>
   void BayesianSurface::BuildHist(const MCMCSamples &samples,
                                   const SystOrVar1 *x, int nbinsx, double xmin, double xmax,
-                                  const SystOrVar2 *y, int nbinsy, double ymin, double ymax)
+                                  const SystOrVar2 *y, int nbinsy, double ymin, double ymax,
+                                  bool xlog, bool ylog)
   {
     static_assert( (   (std::is_same<SystOrVar1, IFitVar>::value || std::is_same<SystOrVar1, ISyst>::value)
                     && (std::is_same<SystOrVar2, IFitVar>::value || std::is_same<SystOrVar2, ISyst>::value)),
@@ -64,13 +65,13 @@ namespace ana
     fBestFitY = samples.SampleValue(y, bestSampleIdx);
 
     fHist = ExpandedHistogram(";"+x->LatexName()+";"+y->LatexName(),
-                              nbinsx, xmin, xmax,
-                              nbinsy, ymin, ymax);
+                              nbinsx, xmin, xmax, xlog,
+                              nbinsy, ymin, ymax, ylog);
 
     std::unique_ptr<TH1> tmpHist;
     if (fMode == MarginalMode::kHistogram || fMode == MarginalMode::kLLWgtdHistogram)
-      tmpHist = ToHistogram({Binning::Simple(nbinsx, xmin, xmax),
-                             Binning::Simple(nbinsy, ymin, ymax)});
+      tmpHist = ToHistogram({xlog ? Binning::LogUniform(nbinsx, xmin, xmax) : Binning::Simple(nbinsx, xmin, xmax),
+                             ylog ? Binning::LogUniform(nbinsy, ymin, ymax) : Binning::Simple(nbinsy, ymin, ymax)});
     for (int xBin = 0; xBin < fHist->GetNbinsX() + 2; xBin++)
     {
       for (int yBin = 0; yBin < fHist->GetNbinsY() + 2; yBin++)
@@ -91,16 +92,20 @@ namespace ana
   // explicitly instantiate the ones we need
   template void BayesianSurface::BuildHist(const MCMCSamples & samples,
                                            const IFitVar * x, int nbinsx, double xmin, double xmax,
-                                           const IFitVar * y, int nbinsy, double ymin, double ymax);
+                                           const IFitVar * y, int nbinsy, double ymin, double ymax,
+                                           bool xlog, bool ylog);
   template void BayesianSurface::BuildHist(const MCMCSamples & samples,
                                            const IFitVar * x, int nbinsx, double xmin, double xmax,
-                                           const ISyst * y, int nbinsy, double ymin, double ymax);
+                                           const ISyst * y, int nbinsy, double ymin, double ymax,
+                                           bool xlog, bool ylog);
   template void BayesianSurface::BuildHist(const MCMCSamples & samples,
                                            const ISyst * x, int nbinsx, double xmin, double xmax,
-                                           const IFitVar * y, int nbinsy, double ymin, double ymax);
+                                           const IFitVar * y, int nbinsy, double ymin, double ymax,
+                                           bool xlog, bool ylog);
   template void BayesianSurface::BuildHist(const MCMCSamples & samples,
                                            const ISyst * x, int nbinsx, double xmin, double xmax,
-                                           const ISyst * y, int nbinsy, double ymin, double ymax);
+                                           const ISyst * y, int nbinsy, double ymin, double ymax,
+                                           bool xlog, bool ylog);
 
   //----------------------------------------------------------------------
   std::unique_ptr<BayesianSurface> BayesianSurface::LoadFrom(TDirectory *dir, const std::string& name)
