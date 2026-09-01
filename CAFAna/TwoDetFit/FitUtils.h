@@ -42,6 +42,8 @@ namespace FitUtils {
  // Osc parameters to be fittted/profiled over
  std::vector<const ana::IFitVar*> VarsToFit;
 
+ std::string RequiredCalc = "3Flavor";
+
  // Some globals to switch the mass ordering or the octant of th23
  int  DmSq32Space;
  int  SinSqTh23Space;
@@ -59,6 +61,9 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
 
  bool UnderstoodVariable = false;
  bool MakeSurface        = false;
+
+ // Default assumption; overridden below for NSI/sterile variables.
+ RequiredCalc = "3Flavor";
 
  //#*******************************#
  //#  Select mass ordering space   #
@@ -276,6 +281,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 0; xmax = 2;
    VarY = &kFitEpsEMu;
    ymin = 0; ymax = 0.5;
+   RequiredCalc = "nsi";
    UnderstoodVariable = true;
 
   }
@@ -290,6 +296,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 0; xmax = 2;
    VarY = &kFitEpsETau;
    ymin = 0; ymax = 0.5;
+   RequiredCalc = "nsi";
    UnderstoodVariable = true;
 
   }
@@ -304,6 +311,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    xmin = 0; xmax = 2;
    VarY = &kFitEpsMuTau;
    ymin = 0; ymax = 0.5;
+   RequiredCalc = "nsi";
    UnderstoodVariable = true;
 
   }
@@ -323,9 +331,10 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    VarY = &kFitVarForProf1D;
    ymin = -1; ymax = 1;
    Ybins = 1;
+   RequiredCalc = "sterile";
    UnderstoodVariable = true;
 
-  }  
+  }
   
  ////////////////////////////////////////////////////////////////////
  //                     2D Surfaces - Sterile                      //
@@ -343,10 +352,11 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    ymin = 1e-4; ymax = 1e2;
    IsLogX = true;
    IsLogY = true;
+   RequiredCalc = "sterile";
    UnderstoodVariable = true;
 
   }
-  
+
  //#*******************************#
  //#         ssth24_dmsq41         #
  //#*******************************#
@@ -359,9 +369,10 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
    ymin = 1e-4; ymax = 1e2;
    IsLogX = true;
    IsLogY = true;
+   RequiredCalc = "sterile";
    UnderstoodVariable = true;
 
-  }    
+  }
 
  if (!UnderstoodVariable) {
 
@@ -382,9 +393,18 @@ inline void SetModelType(const std::string model) {
 
  bool UnderstoodModel = false;
 
- // all BSM models need the PMNS parameters anyway...
- if (model == "3Flavor" || model == "nsi") {
+ VarsToFit = {};
 
+ // for cases where we skip profiling entirely.
+ if (model == "simple") {
+
+      std::cout << "Model: simple — no profiling" << std::endl;
+      UnderstoodModel = true;
+
+ }
+  else if (model == "3Flavor" || model == "nsi") {
+
+      // all BSM models need the PMNS parameters anyway...
       if (VarX != &ana::kFitSinSqTheta13 && VarY != &ana::kFitSinSqTheta13)
           VarsToFit.push_back(&ana::kFitSinSqTheta13);
 
@@ -405,25 +425,21 @@ inline void SetModelType(const std::string model) {
       if (SinSqTh23Space == -1 && VarX != &ana::kFitSinSqTheta23LowerOctant && VarY != &ana::kFitSinSqTheta23LowerOctant)
           VarsToFit.push_back(&ana::kFitSinSqTheta23LowerOctant);
 
-      std::cout << "Using the 3Flavor model with " << VarsToFit.size() << " nuisance param(s): ";  // RunJoint line 559
+      if (model == "nsi")
+          std::cout << "Selected the NSI model, so pulling epsilons and deltas...<ToDo, only PMNS params for now>" << std::endl;
+
+      std::cout << "Using the " << model << " model with " << VarsToFit.size() << " nuisance param(s): ";
       for (auto v : VarsToFit) std::cout << v->ShortName() << "  ";
       std::cout << std::endl;
 
       UnderstoodModel = true;
+
   }
+   else if (model == "sterile") {
 
-  if (model == "nsi") {
-      std::cout << "Selected the NSI model, so pulling epsilons and deltas...<ToDo>" << std::endl;
-      // hacking here the VarsToFit to just do nothing rn for quick tests
-      //VarsToFit = {};
-      UnderstoodModel = true;
-  }
-
-  // steriles have their own PMNS-like vars
-  if (model == "sterile") {
-
-      std::cout << "Selected the sterile model, so pulling the other vars to fit...<ToDo>" << std::endl;
-        if (VarX != &ana::kFitSinSqTheta13Sterile && VarY != &ana::kFitSinSqTheta13Sterile)
+      // steriles have their own PMNS-like vars
+      std::cout << "Selected the sterile model, so pulling the other vars to fit..." << std::endl;
+      if (VarX != &ana::kFitSinSqTheta13Sterile && VarY != &ana::kFitSinSqTheta13Sterile)
           VarsToFit.push_back(&ana::kFitSinSqTheta13Sterile);
 
       //if (VarX != &ana::kFitDelta14InPiUnitsSterile && VarY != &ana::kFitDelta14InPiUnitsSterile)
@@ -441,23 +457,19 @@ inline void SetModelType(const std::string model) {
       if (SinSqTh23Space ==  0 && VarX != &ana::kFitSinSqTheta23Sterile  && VarY != &ana::kFitSinSqTheta23Sterile)
           VarsToFit.push_back(&ana::kFitSinSqTheta23Sterile);
 
-      // hacking here the VarsToFit to just do nothing rn for quick tests
-      VarsToFit = {};
+      std::cout << "Using the sterile model with " << VarsToFit.size() << " nuisance param(s): ";
+      for (auto v : VarsToFit) std::cout << v->ShortName() << "  ";
+      std::cout << std::endl;
 
       UnderstoodModel = true;
-  }  
 
-  // for cases where we skip profiling entirely (pass empty vector).
-  if (model == "simple"){
-      std::cout << "Model: simple — no profiling" << std::endl;
-      UnderstoodModel = true;
-  }
+ }
 
   if (!UnderstoodModel){
       std::cout << "ERROR: didn't understand model: " << model << std::endl;
       exit(1);
   }
 
-} // end SetModelType    
+} // end SetModelType
 
 } // end namespace FitUtils    

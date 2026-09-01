@@ -85,20 +85,22 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   TFile* RootFile;
   RootFile = new TFile(TagName, "recreate" );
 
+  FitUtils::SetVariableType(Variable, FitOptions);
+
   auto calc = NuFitOscCalc(1);
 
-  // overwriting for NSI, but need a better mechanism to switch calcs
-  if (Model == "nsi") {
-    std::cout << "\nSelected NSI model, switching to NSI calculator" << std::endl;
+  // overwriting for NSI/sterile, but need a better mechanism to switch calcs
+  if (FitUtils::RequiredCalc == "nsi") {
+    std::cout << "\nSelected NSI variable, switching to NSI calculator" << std::endl;
     calc = DefaultOscCalcNSI();
   }
 
-  if (Model == "sterile") {
-    std::cout << "\nSelected sterile model, switching to sterile calculator" << std::endl;
+  if (FitUtils::RequiredCalc == "sterile") {
+    std::cout << "\nSelected sterile variable, switching to sterile calculator" << std::endl;
     calc = ana::DefaultSterileCalc(4);
   }
 
-  if(Model == "sterile"){
+  if(FitUtils::RequiredCalc == "sterile"){
    ResetOscCalcSterileToAsimovPoint("pdg2025", calc);
    PrintOscCalcSterile(calc);
   }
@@ -181,7 +183,6 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   //#                          SURFACE                                  #
   //#                                                                   #
   //#*******************************************************************#
-  FitUtils::SetVariableType(Variable, FitOptions);
   FitUtils::SetModelType(Model);
 
   const FitAxis kFitAxisX(VarX, Xbins, xmin, xmax, IsLogX);
