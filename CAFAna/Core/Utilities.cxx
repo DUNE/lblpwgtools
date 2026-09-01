@@ -10,6 +10,7 @@
 #include "TArrayD.h"
 #include "TClass.h"
 #include "TDirectory.h"
+#include "TFile.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TF1.h"
@@ -579,6 +580,20 @@ namespace ana
   {
     return (getenv("_CONDOR_SCRATCH_DIR") != 0);
   }
+
+  //----------------------------------------------------------------------
+  std::unique_ptr<TFile> ROOTFile(std::string const& fname,
+                                  std::string const& opt,
+                                  bool xroot)
+  {
+    TFile* f;
+    if (xroot) {
+      f = TFile::Open(pnfs2xrootd(fname).c_str(), opt.c_str());
+    } else {
+      f = TFile::Open(fname.c_str(), opt.c_str());
+    }
+    return std::unique_ptr<TFile>(f);
+  } // function ROOTFile
 
   //----------------------------------------------------------------------
   FitToFourier::FitToFourier(TH1* h, double xlo, double xhi, int NOsc)

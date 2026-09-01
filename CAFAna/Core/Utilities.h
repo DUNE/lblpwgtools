@@ -19,6 +19,7 @@
 
 class TArrayD;
 class TDirectory;
+class TFile;
 class TH1;
 class TH2;
 class TH3;
@@ -252,6 +253,11 @@ namespace ana
 
   /// Is this a grid (condor) job?
   bool RunningOnGrid();
+
+  /// C++ wrapper for opening ROOT files that accepts strings
+  std::unique_ptr<TFile> ROOTFile(std::string const& fname,
+                                  std::string const& opt="read",
+                                  bool xroot=true);
 
   // Calling this function will return a Fourier series, fit to the input
   // histogram.  Assumes x-axis covers one period
