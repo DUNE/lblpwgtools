@@ -31,7 +31,9 @@ namespace ana
     if (scalc) {
       for (unsigned int i = 1; i <= N; ++i) {
         double eLo = TrueEnergyBins().Edges()[i-1];
-        if (eLo <= 0) eLo = 1e-5;
+        // Hacky hack: to avoid a huge L/E gap on the first bin, bump its lower edge from 0
+        // This can (and needs to) be improved
+        if (eLo <= 0) eLo = 0.49;
         double eHi = TrueEnergyBins().Edges()[i];
         if (eHi <= 0) eHi = 1e-5;
         const double xLo = scalc->GetL() / eHi;
