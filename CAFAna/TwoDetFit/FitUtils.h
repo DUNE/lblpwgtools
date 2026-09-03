@@ -20,9 +20,52 @@
 #include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/IOscCalc.h"
 
+#include <random> 
+
 using namespace ana;
 
 namespace FitUtils {
+
+ // Seeding mechanism. Samples a random mix of seeds, but caps the max number so the fit doesn't blow up in time
+ SeedList GetSeedList(std::map<const IFitVar*, std::vector<double>> seeds_to_use, size_t n_seeds, int random_seed = 54321)
+ {
+  
+  std::default_random_engine generator(random_seed);
+  std::vector<Seed> v;
+  std::vector<int> quick_hash;
+  
+  
+  const int MaxInterations = n_seeds * 5;
+  int iter = 0;
+  while (v.size() < n_seeds && iter < MaxInterations) {
+    
+    std::map<const IFitVar*, std::vector<double>> candidate_seed_map;
+    int hash = 0;
+    int offset = 0;
+    for (auto it : seeds_to_use) {
+      size_t n_possible_seeds = it.second.size();
+      std::uniform_int_distribution<int> distribution(0,n_possible_seeds-1);
+      int seed_index = distribution(generator);
+      hash += seed_index * offset;
+      offset += n_seeds;
+      double seed_value = it.second[seed_index];
+      std::vector<double> foo;
+      foo.push_back(seed_value);
+      candidate_seed_map[it.first] = foo; 
+    }
+    // Only add a seed if it's not already in the list
+    if (std::find(quick_hash.begin(), quick_hash.end(), hash) == quick_hash.end()) {
+      SeedList* temp = new SeedList(candidate_seed_map);
+      Seed bar = temp->GetSeeds()[0];
+      v.push_back(bar);
+      quick_hash.push_back(hash);
+    }
+    iter += 1;
+  }
+  SeedList out(v);
+  
+  return out;
+ } // end GetSeedList
 
 
  // Osc parameters to be display and fit
@@ -41,6 +84,9 @@ namespace FitUtils {
 
  // Osc parameters to be fittted/profiled over
  std::vector<const ana::IFitVar*> VarsToFit;
+
+ // Seeds to use for the fits
+ std::map<const IFitVar*, std::vector<double>> SeedsToUse;
 
  std::string RequiredCalc = "3Flavor";
 
@@ -469,6 +515,101 @@ inline void SetModelType(const std::string model) {
       std::cout << "ERROR: didn't understand model: " << model << std::endl;
       exit(1);
   }
+
+//#*******************************************************************#
+//#                                                                   #
+//#                               Seeds                               #
+//#                                                                   #
+//#*******************************************************************#
+
+
+ //#*******************************#
+ //#            3Flavor            #
+ //#*******************************#
+  const std::vector<double> dmsq32_seedsNO   = { 2.35,  2.55};
+  const std::vector<double> dmsq32_seedsIO   = {-2.35, -2.55};
+  const std::vector<double> dmsq32_seeds     = {-2.44,  2.41};
+  const std::vector<double> th23_seeds       = {0.45, 0.50, 0.55};
+  const std::vector<double> th23_seedsUO     = {0.55, 0.60};
+  const std::vector<double> th23_seedsLO     = {0.40, 0.45};
+  const std::vector<double> th13_seeds       = {0.0822, 0.0868}; // +/- 1-sigma from PDG 2025 ss2th13 = 0.0845+/-0.0023
+  const std::vector<double> deltaCP_seeds    = {0, 0.5, 1., 1.5};
+
+
+  // ssth23 vars
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSqTheta23) != VarsToFit.end()) 
+    SeedsToUse[&kFitSinSqTheta23] = th23_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSqTheta23UpperOctant) != VarsToFit.end()) 
+    SeedsToUse[&kFitSinSqTheta23UpperOctant] = th23_seedsUO;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSqTheta23LowerOctant) != VarsToFit.end()) 
+    SeedsToUse[&kFitSinSqTheta23LowerOctant] = th23_seedsLO;
+  
+  // reactor angle
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSq2Theta13) != VarsToFit.end())  
+    SeedsToUse[&kFitSinSq2Theta13] = th13_seeds;
+
+  // dmsq32 vars
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32Scaled) != VarsToFit.end()) 
+    SeedsToUse[&kFitDmSq32Scaled] = dmsq32_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32NHScaled) != VarsToFit.end()) 
+    SeedsToUse[&kFitDmSq32NHScaled] = dmsq32_seedsNO;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32IHScaled) != VarsToFit.end()) 
+    SeedsToUse[&kFitDmSq32IHScaled] = dmsq32_seedsIO;
+
+  // deltaCP
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDeltaInPiUnits) != VarsToFit.end())
+    SeedsToUse[&kFitDeltaInPiUnits] = deltaCP_seeds;
+
+ //#*******************************#
+ //#             NSI               #
+ //#*******************************#
+ // To do. Will need to split into epsemu, epsetau, and epsmutau cases
+ // Need first to finish the model == "nsi" part of it so the actual
+ // fitvars are called in the fit.
+
+
+
+ //#*******************************#
+ //#            sterile            #
+ //#*******************************#
+
+  const std::vector<double> ssth13_seeds_sterile    = {0.0210, 0.0222};
+  const std::vector<double> dmsq32_seedsNO_sterile  = { 2.35e-3,  2.55e-3};
+  const std::vector<double> dmsq32_seedsIO_sterile  = {-2.35e-3, -2.55e-3};
+  const std::vector<double> dmsq32_seeds_sterile    = {-2.44e-3,  2.41e-3};
+  const std::vector<double> th23_seeds_sterile      = {0.45, 0.50, 0.55};
+  const std::vector<double> delta13_seeds_sterile   = {0, 0.5, 1., 1.5};
+
+  // sterile vars are named differently, so...
+
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSqTheta13Sterile) != VarsToFit.end())
+    SeedsToUse[&kFitSinSqTheta13Sterile] = ssth13_seeds_sterile;
+
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDelta13InPiUnitsSterile) != VarsToFit.end())
+    SeedsToUse[&kFitDelta13InPiUnitsSterile] = delta13_seeds_sterile;
+
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32Sterile) != VarsToFit.end())
+    SeedsToUse[&kFitDmSq32Sterile] = dmsq32_seeds_sterile;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32NHSterile) != VarsToFit.end())
+    SeedsToUse[&kFitDmSq32NHSterile] = dmsq32_seedsNO_sterile;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDmSq32IHSterile) != VarsToFit.end())
+    SeedsToUse[&kFitDmSq32IHSterile] = dmsq32_seedsIO_sterile;
+
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitSinSqTheta23Sterile) != VarsToFit.end())
+    SeedsToUse[&kFitSinSqTheta23Sterile] = th23_seeds_sterile;
+
+  // Now map out those seeds to go
+  size_t n_seeds = 1;
+  for (auto var : SeedsToUse) {
+    n_seeds *= var.second.size();
+  }
+  std::cout<<"Total number of possible seeds: "<<n_seeds<<std::endl;
+  
+  const int MAX_N_SEEDS = 500;
+  SeedList seedlist;
+  if (n_seeds > MAX_N_SEEDS * 5) seedlist = GetSeedList(SeedsToUse, MAX_N_SEEDS);
+  else seedlist = SeedList(SeedsToUse);
+  std::cout<<"Total number of seeds in seedlist: "<<seedlist.GetSeeds().size()<<std::endl;  
 
 } // end SetModelType
 
