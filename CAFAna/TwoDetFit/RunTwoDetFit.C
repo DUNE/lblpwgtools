@@ -122,28 +122,31 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
 
   std::vector<predictions> preds;
 
+  std::string PredDir = "/pnfs/dune/persistent/users/lrprais/FitInputs/";
+  std::cout << "\nLoading predictions from: " << PredDir << std::endl;
+
   predictions tmp_fhc;
   tmp_fhc.pot  = kFD3p5yrFHCPOT;
   tmp_fhc.name = "Numu FHC";
-  tmp_fhc.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-numu-fhc.root", "pred").release();
+  tmp_fhc.pred = ana::LoadFromFile<ana::PredictionNoExtrap>(PredDir + "pred-numu-fhc.root", "pred").release();
   preds.push_back(tmp_fhc);
 
   predictions tmp_rhc;
   tmp_rhc.pot  = kFD3p5yrRHCPOT;
   tmp_rhc.name = "Numu RHC";
-  tmp_rhc.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-numu-rhc.root", "pred").release();
+  tmp_rhc.pred = ana::LoadFromFile<ana::PredictionNoExtrap>(PredDir + "pred-numu-rhc.root", "pred").release();
   preds.push_back(tmp_rhc);
 
   predictions tmp_fhc_nue;
   tmp_fhc_nue.pot  = kFD3p5yrFHCPOT;
   tmp_fhc_nue.name = "Nue FHC";
-  tmp_fhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-nue-fhc.root", "pred").release();
+  tmp_fhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>(PredDir + "pred-nue-fhc.root", "pred").release();
   preds.push_back(tmp_fhc_nue);
 
   predictions tmp_rhc_nue;
   tmp_rhc_nue.pot  = kFD3p5yrRHCPOT;
   tmp_rhc_nue.name = "Nue RHC";
-  tmp_rhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>("pred-nue-rhc.root", "pred").release();
+  tmp_rhc_nue.pred = ana::LoadFromFile<ana::PredictionNoExtrap>(PredDir + "pred-nue-rhc.root", "pred").release();
   preds.push_back(tmp_rhc_nue);
 
   fPred_NumuFHC = preds[0];
