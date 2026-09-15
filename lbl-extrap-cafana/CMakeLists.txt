@@ -86,6 +86,15 @@ FetchContent_Declare(
 SET(duneanasel_USE_UPS_duneanaobj ON)   # CAFAna will have set up UPS packages for stuff
 FetchContent_MakeAvailable(duneanasel)
 
+# duneanasel's CMakeLists.txt only ever sets the CMake option
+# 'duneanasel_USE_SRProxy'; it never propagates that choice to consumers as
+# the preprocessor macro 'duneanasel_USE_SRPROXY' that
+# duneanasel/common/type_traits.h actually checks. Without this define, the
+# macro is implicitly 0 and Proxyable<...> static_asserts out for any
+# caf::Proxy<T> argument, even though SRProxy support is otherwise enabled
+# and available (SRPROXY_INC). Define it explicitly for our own build.
+add_compile_definitions(duneanasel_USE_SRPROXY=1)
+
 ################################################
 
 include_directories(${LBL_CAFANA_INCDIRS})
