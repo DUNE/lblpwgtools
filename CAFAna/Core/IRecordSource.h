@@ -130,11 +130,22 @@ namespace ana
     // But also support an ensemble based on SystShifts
     IInteractionEnsembleSource& Ensemble(const Multiverse& multiverse);
 
+    // Non-ensemble analogue of Ensemble(): applies a single, fixed
+    // SystShifts to each record in-place before forwarding it downstream,
+    // yielding a plain (single) IInteractionSource rather than an ensemble
+    // one. This is the primitive needed by code that wants one concrete
+    // shifted result at a time (eg building one shifted Spectrum per
+    // systematic/sigma point, as PredictionInterp does), as opposed to the
+    // many-universe machinery provided by Ensemble()/EnsembleSpectrum.
+    IInteractionSource& Shifted(const SystShifts& shift);
+
     IParticleSource& RecoParticles( const RecoType kRType) {return fParticleCollections.at(kRType);}
 
   protected:    
     IDDict<const FitMultiverse*, IInteractionEnsembleSource> fEnsembleSources;
- 
+
+    IDDict<int, IInteractionSource> fShiftSources;
+
     std::unordered_map<RecoType, VectorAdaptor<caf::SRInteraction, caf::SRRecoParticle>> fParticleCollections;
 
   };

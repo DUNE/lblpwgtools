@@ -167,7 +167,7 @@ namespace ana
                          const Cut& flavors,
                          IInteractionSource& srcExtra1,
                          IInteractionSource& srcExtra2)
-   : fRecoFD(src[fdcut && flavors], axis)
+   : fRecoFD(src[fdcut && flavors].Shifted(shiftMC).Weighted(weight), axis)
   {
     // TODO: Reintroduce.
     /*
@@ -221,8 +221,8 @@ namespace ana
                                const Cut& ndflavors,
                                IInteractionSource& farDetSrc,
                                const Cut& fdflavors)
-    : fRecoToTrueND(nearDetSrc[ndcut && ndflavors], axisND),
-      fTrueToRecoFD(farDetSrc[fdcut && fdflavors], axisFD),
+    : fRecoToTrueND(nearDetSrc[ndcut && ndflavors].Shifted(shiftMC).Weighted(weight), axisND),
+      fTrueToRecoFD(farDetSrc[fdcut && fdflavors].Shifted(shiftMC).Weighted(weight), axisFD),
       fLabel(label),
       fLatex(latex),
       fDecomp(decomp),

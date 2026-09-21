@@ -1,5 +1,6 @@
 #include "CAFAna/Core/HistAxis.h"
 #include "CAFAna/Core/Cut.h"
+#include "CAFAna/Core/Weight.h"
 #include "CAFAna/Prediction/PredictionExtrap.h"
 #include "CAFAna/Prediction/PredictionGenerator.h"
 
@@ -9,12 +10,13 @@
 
 namespace lbl2025
 {
-  // TODO: Add ND data shifts and weights.
+  // TODO: Add ND data shifts.
   class NumuExtrapGenerator : public ana::IPredictionGenerator {
     public:
       NumuExtrapGenerator(const ana::HistAxis axis,
                           const ana::Cut cutFD,
-                          const ana::Cut cutND);
+                          const ana::Cut cutND,
+                          const ana::Weight wei = ana::kUnweighted);
 
       std::unique_ptr<ana::IPrediction> Generate(ana::Loaders& loaders, const ana::RecoType& ixnRecoType, const ana::SystShifts& shiftMC = ana::kNoShift) const override;
 
@@ -22,5 +24,6 @@ namespace lbl2025
       const ana::HistAxis fAxis;
       const ana::Cut fCutFD;
       const ana::Cut fCutND;
+      const ana::Weight fWei;
   };
 }

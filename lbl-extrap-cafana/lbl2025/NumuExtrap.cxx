@@ -8,7 +8,6 @@
 
 namespace ana
 {
-  // TODO: Add back in SystShifts and Weights
   NumuExtrap::NumuExtrap(IInteractionSource &nearDetSrc,
                          IInteractionSource &farDetMCnonswapSrc,
                          IInteractionSource &farDetMCfluxswapSrc,
@@ -16,16 +15,20 @@ namespace ana
                          const IDecomp& numuDecomp,
                          const HistAxis& axis,
                          const Cut& fdcut,
-                         const Cut& ndcut)
+                         const Cut& ndcut,
+                         const SystShifts& shiftMC,
+                         const Weight& weight)
     : ModularExtrap(farDetMCnonswapSrc,
                     farDetMCfluxswapSrc,
                     farDetMCtauswapSrc,
                     axis,
-                    fdcut)
+                    fdcut,
+                    shiftMC,
+                    weight)
   {
     // mu -> mu ----
     fNumuSurv = std::unique_ptr<ModularExtrapComponent>(
-       new TruthReweight(nearDetSrc, axis, axis, fdcut, kNoShift, kUnweighted,
+       new TruthReweight(nearDetSrc, axis, axis, fdcut, shiftMC, weight,
             "mu -> mu", "#nu_{#mu} #rightarrow #nu_{#mu}",
             ndcut, numuDecomp,                           // numu selection in ND
             DecompResult::numu, kIsNumuCC && !kIsAntiNu, // numu truth in ND
@@ -33,7 +36,7 @@ namespace ana
     );
     // mubar -> mubar ---
     fNumuSurvAnti = std::unique_ptr<ModularExtrapComponent>(
-       new TruthReweight(nearDetSrc, axis, axis, fdcut, kNoShift, kUnweighted,
+       new TruthReweight(nearDetSrc, axis, axis, fdcut, shiftMC, weight,
                          "mubar -> mubar", "#bar{#nu}_{#mu} #rightarrow #bar{#nu}_{#mu}",
                          ndcut, numuDecomp,                             // numu selection in ND
                          DecompResult::numubar, kIsNumuCC && kIsAntiNu, // numubar truth in ND
@@ -47,7 +50,9 @@ namespace ana
                          const HistAxis& axis,
                          const Cut& fdcut,
                          const Cut& ndcut,
-                         ana::RecoType recoIxnType)
+                         ana::RecoType recoIxnType,
+                         const SystShifts& shiftMC,
+                         const Weight& weight)
       : NumuExtrap(loaders.GetSource(DataMC::kMC, caf::Det_t::kNEARDET, SwappingConfig::kNonSwap).Interactions(recoIxnType),
                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNonSwap).Interactions(recoIxnType),
                    loaders.GetSource(DataMC::kMC, caf::Det_t::kFARDET, SwappingConfig::kNueSwap).Interactions(recoIxnType),
@@ -55,7 +60,9 @@ namespace ana
                    numuDecomp,
                    axis,
                    fdcut,
-                   ndcut)
+                   ndcut,
+                   shiftMC,
+                   weight)
   {
   }
 }

@@ -65,7 +65,9 @@ namespace ana
                     IInteractionSource& farDetMCfluxswapSrc,
                     IInteractionSource& farDetMCtauswapSrc,
                     const HistAxis& axis,
-                    const Cut& fdcut);
+                    const Cut& fdcut,
+                    const SystShifts& shiftMC,
+                    const Weight& weight);
 
       std::unique_ptr<ModularExtrapComponent> fNueSurv;
       std::unique_ptr<ModularExtrapComponent> fNueSurvAnti;

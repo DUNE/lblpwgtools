@@ -115,34 +115,36 @@ namespace ana
                                IInteractionSource &farDetMCfluxswapSrc,
                                IInteractionSource &farDetMCtauswapSrc,
                                const HistAxis &axis,
-                               const Cut &fdcut) :
+                               const Cut &fdcut,
+                               const SystShifts &shiftMC,
+                               const Weight &weight) :
     // e -> e ----
-    fNueSurv(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsBeamNue&&!kIsAntiNu)),
-    fNueSurvAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsBeamNue&&kIsAntiNu)),
+    fNueSurv(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsBeamNue&&!kIsAntiNu)),
+    fNueSurvAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsBeamNue&&kIsAntiNu)),
 
     // mu -> mu  ----
-    fNumuSurv(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNumuCC&&!kIsAntiNu)),
-    fNumuSurvAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNumuCC&&kIsAntiNu)),
+    fNumuSurv(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsNumuCC&&!kIsAntiNu)),
+    fNumuSurvAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsNumuCC&&kIsAntiNu)),
 
     // mu -> e ----
-    fNueApp(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNueApp&&!kIsAntiNu)),
-    fNueAppAnti(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNueApp&&kIsAntiNu)),
+    fNueApp(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, shiftMC, weight, kIsNueApp&&!kIsAntiNu)),
+    fNueAppAnti(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, shiftMC, weight, kIsNueApp&&kIsAntiNu)),
 
     // e -> mu ----
-    fNumuApp(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNumuApp&&!kIsAntiNu)),
-    fNumuAppAnti(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNumuApp&&kIsAntiNu)),
+    fNumuApp(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, shiftMC, weight, kIsNumuApp&&!kIsAntiNu)),
+    fNumuAppAnti(new NoReweight(farDetMCfluxswapSrc, axis, fdcut, shiftMC, weight, kIsNumuApp&&kIsAntiNu)),
 
     // mu -> tau ----
-    fTauFromMu(new NoReweight(farDetMCtauswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsTauFromMu&&!kIsAntiNu)),
-    fTauFromMuAnti(new NoReweight(farDetMCtauswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsTauFromMu&&kIsAntiNu)),
+    fTauFromMu(new NoReweight(farDetMCtauswapSrc, axis, fdcut, shiftMC, weight, kIsTauFromMu&&!kIsAntiNu)),
+    fTauFromMuAnti(new NoReweight(farDetMCtauswapSrc, axis, fdcut, shiftMC, weight, kIsTauFromMu&&kIsAntiNu)),
 
     // e -> tau ----
-    fTauFromE(new NoReweight(farDetMCtauswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsTauFromE&&!kIsAntiNu)),
-    fTauFromEAnti(new NoReweight(farDetMCtauswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsTauFromE&&kIsAntiNu)),
+    fTauFromE(new NoReweight(farDetMCtauswapSrc, axis, fdcut, shiftMC, weight, kIsTauFromE&&!kIsAntiNu)),
+    fTauFromEAnti(new NoReweight(farDetMCtauswapSrc, axis, fdcut, shiftMC, weight, kIsTauFromE&&kIsAntiNu)),
 
     // NC -> NC ----
-    fNCTot(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNC, farDetMCfluxswapSrc, farDetMCtauswapSrc)),
-    fNC(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNC&&!kIsAntiNu, farDetMCfluxswapSrc, farDetMCtauswapSrc)),
-    fNCAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, kNoShift, kUnweighted, kIsNC&&kIsAntiNu, farDetMCfluxswapSrc, farDetMCtauswapSrc))
+    fNCTot(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsNC, farDetMCfluxswapSrc, farDetMCtauswapSrc)),
+    fNC(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsNC&&!kIsAntiNu, farDetMCfluxswapSrc, farDetMCtauswapSrc)),
+    fNCAnti(new NoReweight(farDetMCnonswapSrc, axis, fdcut, shiftMC, weight, kIsNC&&kIsAntiNu, farDetMCfluxswapSrc, farDetMCtauswapSrc))
   {}
 }

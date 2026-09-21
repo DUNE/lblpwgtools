@@ -113,6 +113,64 @@ namespace ana
   {
     return fEnsembleSources.template Get<ShiftedInteractionEnsembleSource>(&multiverse, *this, multiverse);
   }
+
+  //----------------------------------------------------------------------
+  // Non-ensemble analogue of ShiftedInteractionEnsembleSource above: applies
+  // a single, fixed SystShifts to each record in-place before forwarding it
+  // downstream, rather than fanning it out across many universes.
+  class ShiftedInteractionSource: public Passthrough<caf::SRInteractionProxy>
+  {
+  public:
+    ShiftedInteractionSource(IInteractionSource& src, const SystShifts& shift);
+
+    virtual void HandleRecord(const caf::SRInteractionProxy* ixn, double weight) override;
+
+  protected:
+    SystShifts fShift;
+  };
+
+  //----------------------------------------------------------------------
+  ShiftedInteractionSource::
+  ShiftedInteractionSource(IInteractionSource& src, const SystShifts& shift)
+    : fShift(shift)
+  {
+    src.Register(this);
+  }
+
+  //----------------------------------------------------------------------
+  void ShiftedInteractionSource::HandleRecord(const caf::SRInteractionProxy* ixn,
+                                              double weight)
+  {
+    if(weight == 0) return;
+
+    // Nominal shift: nothing to mutate, so skip the BeginTransaction/Shift/
+    // Rollback dance and just forward the record unmodified.
+    if(fShift.IsNominal()){
+      Passthrough<caf::SRInteractionProxy>::HandleRecord(ixn, weight);
+      return;
+    }
+
+    // Provide a clean slate to shift from, then revert once we're done so
+    // the record is left unmodified for anything else that uses it
+    // downstream (mirrors ShiftedInteractionEnsembleSource's approach).
+    caf::SRProxySystController::BeginTransaction();
+
+    double w = weight;
+    // const_cast is naughty, but we always put the record back afterwards.
+    fShift.Shift(const_cast<caf::SRInteractionProxy*>(ixn), w);
+
+    if(w != 0) Passthrough<caf::SRInteractionProxy>::HandleRecord(ixn, w);
+
+    caf::SRProxySystController::Rollback();
+  }
+
+  //----------------------------------------------------------------------
+  IInteractionSource& IInteractionSource::
+  Shifted(const SystShifts& shift)
+  {
+    return fShiftSources.template Get<ShiftedInteractionSource>(shift.ID(), *this, shift);
+  }
+
   //----------------------------------------------------------------------
   // Truth branch version of ensembles??
 

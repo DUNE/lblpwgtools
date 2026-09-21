@@ -15,7 +15,6 @@ namespace ana
   REGISTER_LOADFROM("NumuDecomp", IDecomp, NumuDecomp);
 
   //----------------------------------------------------------------------
-  // TODO: Add shifts and weights.
   NumuDecomp::NumuDecomp(IInteractionSource& nearDetMCsrc,
                          IInteractionSource& nearDetDatasrc,
                          const HistAxis& axis,
@@ -41,13 +40,13 @@ namespace ana
       fNCTot   (nearDetMCsrc[kHasNeutrino], axis),
       fNotNumu (nearDetMCsrc[kHasNeutrino], axis)
       */
-    : fData    (nearDetDatasrc[kNoCut], axis),
-      fNue     (nearDetMCsrc[kNoCut], axis),
-      fAntiNue (nearDetMCsrc[kNoCut], axis),
-      fNumu    (nearDetMCsrc[kNoCut], axis),
-      fAntiNumu(nearDetMCsrc[kNoCut], axis),
-      fNCTot   (nearDetMCsrc[kNoCut], axis),
-      fNotNumu (nearDetMCsrc[kNoCut], axis)
+    : fData    (nearDetDatasrc[kNoCut].Shifted(shiftData).Weighted(weight), axis),
+      fNue     (nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis),
+      fAntiNue (nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis),
+      fNumu    (nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis),
+      fAntiNumu(nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis),
+      fNCTot   (nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis),
+      fNotNumu (nearDetMCsrc[kNoCut].Shifted(shiftMC).Weighted(weight), axis)
   {
     std::cout << "Getting past the setup of the spectra" << std::endl;
   }
