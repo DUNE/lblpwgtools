@@ -37,7 +37,8 @@ namespace ana
   enum class RecoType { kUnknown,
                       	kDLP,
                       	kPandora,
-                      	kPIDA
+                      	kPIDA,
+                        kSandreco
 	};
   enum class TruePType{
                         kPrim,

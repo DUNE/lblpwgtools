@@ -175,6 +175,8 @@ namespace ana
       return ixn->part.pandora;
     else if constexpr (PartType == RecoType::kPIDA)
       return ixn->part.pida;
+    else if constexpr (PartType == RecoType::kSandreco)
+      return ixn->part.sandreco;
     else
       assert(false && "GetRecoParticles() is currently instrumented only for kDLP, kPandora or kPIDA only");
         //static_assertor RecoType " + std::to_string(PartType));
@@ -191,6 +193,8 @@ namespace ana
       return sr->common.ixn.dlp;
     else if constexpr (IntType == RecoType::kPandora)
       return sr->common.ixn.pandora;
+    else if constexpr (IntType == RecoType::kSandreco)
+      return sr->common.ixn.sandreco;
     else
       assert(false &&"GetInteractions() is currently instrumented for RecoType kDLP or kPandora only" );
   }
@@ -307,6 +311,9 @@ namespace ana
     fParticleCollections.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(RecoType::kPIDA),
                                  std::forward_as_tuple(*this, GetRecoParticles<RecoType::kPIDA>));
+    fParticleCollections.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RecoType::kSandreco),
+                                 std::forward_as_tuple(*this, GetRecoParticles<RecoType::kSandreco>));
   }
 
   // -----------------------------------------------------------------------
@@ -318,6 +325,9 @@ namespace ana
     fInteractionCollections.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(RecoType::kPandora),
                                     std::forward_as_tuple(*this, GetInteractions<RecoType::kPandora>));
+    fInteractionCollections.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RecoType::kSandreco),
+                                    std::forward_as_tuple(*this, GetInteractions<RecoType::kSandreco>));
     fNDLarInteractionCollections.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(RecoType::kDLP),
                                     std::forward_as_tuple(*this, GetNDLarInteractions<RecoType::kDLP>));

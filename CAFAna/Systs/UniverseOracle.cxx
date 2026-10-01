@@ -58,7 +58,7 @@ namespace ana
     std::cout << global.wgts.params.size() << " parameter sets:" << std::endl;
     for(unsigned int i = 0; i < global.wgts.params.size(); ++i){
       const caf::SRSystParamHeader& hdr = global.wgts.params[i];
-      std::cout << "  " << i << ": " << hdr.name << ", " << hdr.nshifts << " shifts" << std::endl;
+      std::cout << "  " << i << ": " << hdr.name << ", " << hdr.vals.size() << " shifts" << std::endl;
     }
   }
 
