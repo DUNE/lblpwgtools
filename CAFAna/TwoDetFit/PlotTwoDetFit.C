@@ -17,12 +17,18 @@ using std::string;
 using std::vector;
 
 void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
-                    std::string FileInput2  = "",     // full/path/to/file (optional, to compare w/ FileInput)
-                    std::string FileInput3  = ""
-                       
+                    std::string FileInput2  = ""      // full/path/to/file (optional, to compare w/ FileInput)     
 )
 
 {
+
+ // when called a second/third file, compare them
+ bool ComparePlots = false;
+
+ if((FileInput2.find(".root") != std::string::npos)){
+  FileInput2.erase(FileInput2.length() - 5);
+  ComparePlots = true;
+ }
 
  // this really can be improved, but not now.... 
  bool UnderstoodCL = false; 
@@ -63,10 +69,23 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
  // create here a folder to store plots
  TString FileDir      = "plots/";
  gSystem->MakeDirectory(FileDir);
- TString PlotOutput  = FileDir+FileInput;
+ TString PlotOutput  = FileDir+FileInput+"_"+PlotCL;
+
+ if(ComparePlots){
+  PlotOutput = FileDir + "compare"; 
+ }
 
  TString Input;
+ TString Input2;
+ TString Input3;
+
  TFile *File;
+ TFile *File2;
+ TFile *File3;
+
+ std::unique_ptr<FrequentistSurface> surface;
+ std::unique_ptr<FrequentistSurface> surface2;
+ std::unique_ptr<FrequentistSurface> surface3;
 
 
 //#*************************************************#
@@ -78,9 +97,16 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
  std::cout << "\nLoading input files" << std::endl;
 
- Input        = FileInput + ".root";
- File         = new TFile (Input,"read");
- auto surface = *FrequentistSurface::LoadFrom(File, ("surface"));
+ Input   = FileInput + ".root";
+ File    = new TFile (Input,"read");
+ surface = FrequentistSurface::LoadFrom(File, ("surface"));
+
+ if(ComparePlots){
+  Input2  = FileInput2 + ".root";
+  File2   = new TFile (Input2,"read");
+  surface2 = FrequentistSurface::LoadFrom(File2, ("surface"));
+
+ }
 
  //#****************************************#
  //#                                        #
@@ -95,9 +121,9 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
 
   std::cout << "\nStarting the process of converting the FitVarForProf1D 'Surface' into a 1D Profile..." << std::endl;
 
-  auto hist = surface.ToTH2(surface.BestLikelihood());
+  auto hist = surface->ToTH2(surface->BestLikelihood());
 
-  profile = MakeTGraphFromSurface(hist, surface.GetBestFitX());
+  profile = MakeTGraphFromSurface(hist, surface->GetBestFitX());
 
   // This is ToDo
   //std::cout << "\nNow taking the sqrt() of the profiles for a significance curve in sigmas..\n" << std::endl;
@@ -128,19 +154,24 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
  if(PlotCL=="90CL"){
   std::cout << "\nPlotting a 90% CL contour..." << std::endl;
 
-  surface.DrawContour(Gaussian90Percent2D(surface), kLine90CL, kFillColor90, -1);
+  surface->DrawContour(Gaussian90Percent2D(*surface), kLine90CL, kFillColor90, -1);
+
+  if(ComparePlots){
+   surface2->DrawContour(Gaussian90Percent2D(*surface2), kDashed, kBlack, -1);
+  }
+
  }
   else if(PlotCL=="123Sigmas"){
    std::cout << "\nPlotting 1,2,3 sigma contours..." << std::endl;
 
-   surface.DrawContour(Gaussian68Percent2D(surface), kLine1Sigma, kFillColor1Sigma, -1);
-   surface.DrawContour(Gaussian2Sigma2D(surface),    kLine2Sigma, kFillColor2Sigma, -1);
-   surface.DrawContour(Gaussian3Sigma2D(surface),    kLine3Sigma, kFillColor3Sigma, -1);
+   surface->DrawContour(Gaussian68Percent2D(*surface), kLine1Sigma, kFillColor1Sigma, -1);
+   surface->DrawContour(Gaussian2Sigma2D(*surface),    kLine2Sigma, kFillColor2Sigma, -1);
+   surface->DrawContour(Gaussian3Sigma2D(*surface),    kLine3Sigma, kFillColor3Sigma, -1);
  }
- 
+
 
  //if(SurfName.Contains("NO")){
-  surface.DrawBestFit(kBestFitColor, kBestFitMark);
+  surface->DrawBestFit(kBestFitColor, kBestFitMark);
  //}
 
  Canvas->cd();        
@@ -158,7 +189,7 @@ void PlotTwoDetFit( std::string FileInput   = "",     // full/path/to/file
  CornerLabel("No Systs. FD-only");
 
  std::cout << "\n" << std::endl;
- gPad->Print(PlotOutput + "_" + PlotCL + ".pdf");
+ gPad->Print(PlotOutput + ".pdf");
  gPad->Print(PlotOutput + ".png");
 
 } // end of code
