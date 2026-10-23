@@ -26,24 +26,29 @@ namespace ana
     ret[0] = 0; // underflow
     ret[N+1] = (from == to || to == 0) ? 1 : 0; // overflow
 
-    // If we're working with steriles, average over rapid dmsq41 oscillations (see docDB-15433)
+    // If we're working with steriles, average over rapid dmsq41 oscillations (NOvA docDB-15433)
+    // This does not affect standard oscillations fits
     auto scalc = dynamic_cast<osc::IOscCalcSterile*>(calc);
     if (scalc) {
+      const std::vector<double> edges = TrueEnergyBins().Edges();
+      const double L = scalc->GetL();
       for (unsigned int i = 1; i <= N; ++i) {
-        double eLo = TrueEnergyBins().Edges()[i-1];
-        // Hacky hack: to avoid a huge L/E gap on the first bin, bump its lower edge from 0
-        // This can (and needs to) be improved
-        if (eLo <= 0) eLo = 0.49;
-        double eHi = TrueEnergyBins().Edges()[i];
-        if (eHi <= 0) eHi = 1e-5;
-        const double xLo = scalc->GetL() / eHi;
-        const double xHi = scalc->GetL() / eLo;
+        double xLo = L / edges[i];
+        double xHi = L / edges[i-1];
+        // A bin starting at E=0 extends to infinite L/E, where this average is undefined
+        // Give it the L/E width of its neighbour, centred on the bin center
+        if (edges[i-1] <= 0) {
+          const double xMid = L / (0.5 * (edges[i-1] + edges[i]));
+          const double halfWidth = 0.5 * (L / edges[i] - L / edges[i+1]);
+          xLo = xMid - halfWidth;
+          xHi = xMid + halfWidth;
+        }
         double LOverE = 0.5 * (xLo + xHi);
         double f = 2 * 1.27 * scalc->GetDm(4);
         double delta = xHi - xLo;
         double dLoE = f == 0 ? 0 : TMath::ACos(TMath::Sin(0.5*f*delta)/(0.5*f*delta))/f;
-        double eplus = scalc->GetL() / (LOverE + dLoE);
-        double eminus = scalc->GetL() / (LOverE - dLoE);
+        double eplus = L / (LOverE + dLoE);
+        double eminus = L / (LOverE - dLoE);
         ret[i] = 0.5 * (scalc->P(from, to, eminus) + scalc->P(from, to, eplus));
       } // for i
     } else {
