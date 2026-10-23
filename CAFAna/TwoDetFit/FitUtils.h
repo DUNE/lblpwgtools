@@ -109,7 +109,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
  bool MakeSurface        = false;
 
  // Default assumption; overridden below for NSI/sterile variables.
- RequiredCalc = "3Flavor";
+ RequiredCalc = "nsi"; //3Flavor
 
  //#*******************************#
  //#  Select mass ordering space   #
@@ -435,7 +435,7 @@ inline void SetVariableType(const std::string Variable, const TString  FitOption
 //#                                                                   #
 //#*******************************************************************#
 
-inline void SetModelType(const std::string model) {
+inline void SetModelType(const std::string model, const std::string Variable) {
 
  bool UnderstoodModel = false;
 
@@ -471,8 +471,33 @@ inline void SetModelType(const std::string model) {
       if (SinSqTh23Space == -1 && VarX != &ana::kFitSinSqTheta23LowerOctant && VarY != &ana::kFitSinSqTheta23LowerOctant)
           VarsToFit.push_back(&ana::kFitSinSqTheta23LowerOctant);
 
-      if (model == "nsi")
-          std::cout << "Selected the NSI model, so pulling epsilons and deltas...<ToDo, only PMNS params for now>" << std::endl;
+      if (model == "nsi"){
+        std::cout << "Selected the NSI model with a PMNS parameter space. This will add NSI parameters to the fit" << std::endl;
+
+        // emu sector
+        /*
+        if (Variable.find("emu") != std::string::npos) {
+         if (VarX != &kFitEpsEMu && VarY != &kFitEpsEMu) VarsToFit.push_back(&kFitEpsEMu);
+         if (VarX != &kFitDeltaEMuInPiUnits && VarY != &kFitDeltaEMuInPiUnits)
+          VarsToFit.push_back(&kFitDeltaEMuInPiUnits);   
+        }
+        */
+
+        // actually testing the full NSI model here!
+        if (VarX != &kFitEpsEMu && VarY != &kFitEpsEMu) VarsToFit.push_back(&kFitEpsEMu);
+        if (VarX != &kFitDeltaEMuInPiUnits && VarY != &kFitDeltaEMuInPiUnits)
+         VarsToFit.push_back(&kFitDeltaEMuInPiUnits);
+
+        if (VarX != &kFitEpsETau && VarY != &kFitEpsETau) VarsToFit.push_back(&kFitEpsETau);
+        if (VarX != &kFitDeltaETauInPiUnits && VarY != &kFitDeltaETauInPiUnits)
+         VarsToFit.push_back(&kFitDeltaETauInPiUnits);
+
+        if (VarX != &kFitEpsMuTau && VarY != &kFitEpsMuTau) VarsToFit.push_back(&kFitEpsMuTau);
+        if (VarX != &kFitDeltaMuTauInPiUnits && VarY != &kFitDeltaMuTauInPiUnits)
+         VarsToFit.push_back(&kFitDeltaMuTauInPiUnits); 
+      
+      }
+          
 
       std::cout << "Using the " << model << " model with " << VarsToFit.size() << " nuisance param(s): ";
       for (auto v : VarsToFit) std::cout << v->ShortName() << "  ";
@@ -563,9 +588,24 @@ inline void SetModelType(const std::string model) {
  //#*******************************#
  //#             NSI               #
  //#*******************************#
- // To do. Will need to split into epsemu, epsetau, and epsmutau cases
- // Need first to finish the model == "nsi" part of it so the actual
- // fitvars are called in the fit.
+
+ const std::vector<double> nsi_seeds      = {0.02, 0.15, 0.2};
+ const std::vector<double> deltaNSI_seeds = {0, 0.5, 1., 1.5};
+
+ // Off-diagonal NSI
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitEpsETau) != VarsToFit.end()) 
+    SeedsToUse[&kFitEpsETau] = nsi_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitEpsMuTau) != VarsToFit.end()) 
+    SeedsToUse[&kFitEpsMuTau] = nsi_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitEpsEMu) != VarsToFit.end()) 
+    SeedsToUse[&kFitEpsEMu] = nsi_seeds;
+
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDeltaETauInPiUnits) != VarsToFit.end()) 
+    SeedsToUse[&kFitDeltaETauInPiUnits] = deltaNSI_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDeltaMuTauInPiUnits) != VarsToFit.end()) 
+    SeedsToUse[&kFitDeltaMuTauInPiUnits] = deltaNSI_seeds;
+  if (std::find(VarsToFit.begin(), VarsToFit.end(), &kFitDeltaEMuInPiUnits) != VarsToFit.end()) 
+    SeedsToUse[&kFitDeltaEMuInPiUnits] = deltaNSI_seeds;
 
 
 
