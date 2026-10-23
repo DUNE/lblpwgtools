@@ -69,6 +69,7 @@ const Var kEnergyRes([](const caf::SRInteractionProxy* recoint)
                   });
 
 const RecoPartVar kRecoParticleEnergy = SIMPLEPARTVAR(E);
+
 const RecoPartVar kRecoParticleMomentum([](const caf::SRRecoParticleProxy* recopart)
                   {
                     double p = 0.;
@@ -80,19 +81,19 @@ const Cut kMatchedNuMuCC([](const caf::SRInteractionProxy* recoint)
                   {
                     const caf::SRProxy *top = recoint->Ancestor<caf::SRProxy>();
                     const caf::SRTrueInteractionProxy* matched_int = caf::FindInteraction(top->mc, recoint->truth[0]);
-                    return abs(matched_int->pdg) == 14 && matched_int->iscc;
+                    return matched_int->iscc && abs(matched_int->pdg) == 14;
                   });
 
 const RecoPartCut kIsRecoMuon([](const caf::SRRecoParticleProxy* recopart)
                   {
-                    return abs(recopart->pdg) == 13;
+                    return abs(recopart->pdg) == 13 && recopart->primary == 1;
                   });
 
 void my_analysis()
 {
 
-  const std::string fname_n = "/pnfs/dune/persistent/users/gsantoni/beam_monitoring/data/fast_reco/nominal/*.root";
-  const std::string fname_v = "/pnfs/dune/persistent/users/gsantoni/beam_monitoring/data/fast_reco/varied/horn_current_neg/*.root";
+  const std::string fname_n = "/pnfs/dune/persistent/users/gsantoni/beam_monitoring/data/fast_reco/nominal/CAF.flat/*.root";
+  const std::string fname_v = "/pnfs/dune/persistent/users/gsantoni/beam_monitoring/data/fast_reco/varied/horn_current_neg/CAF.flat/*.root";
 
   SpectrumLoader loader_n(fname_n);
 
@@ -100,6 +101,7 @@ void my_analysis()
 
   // true histo
   const TruthHistAxis axTrueNuEnergy("True Nu Energy (GeV)", Binning::Simple(50,0,20), kTrueNuEnergy);
+  const TruthPartHistAxis axTrueMuonMomentum("True Muon Momentum (GeV)", Binning::Simple(50,0,20), kTrueMuMomentum);
 
   // reco histo
   const HistAxis axRecoNuEnergy("Reco Nu Energy (GeV)", Binning::Simple(200,0,20), kRecoNuEnergy);
@@ -110,8 +112,8 @@ void my_analysis()
   const HistAxis axRecoVtxPositionZX( "z(m)", Binning::Simple(100, 20, 28), kRecoZVertex, 
                                       "x(m)", Binning::Simple(100,-5,5), kRecoXVertex);
   const HistAxis axEnergyRes("Energy Resolution", Binning::Simple(50,-1,1), kEnergyRes);
-  const RecoPartHistAxis axRecoMuonsEnergy("Reco Muons Energy (MeV)", Binning::Simple(50,0,20000), kRecoParticleEnergy);
-  const RecoPartHistAxis axRecoMuonsMomentum("Reco Muons Momentum (MeV)", Binning::Simple(50,0,20000), kRecoParticleMomentum);
+  const RecoPartHistAxis axRecoMuonEnergy("Reco Muons Energy (GeV)", Binning::Simple(50,0,20), kRecoParticleEnergy);
+  const RecoPartHistAxis axRecoMuonsMomentum("Reco Muons Momentum (GeV)", Binning::Simple(200,0,20), kRecoParticleMomentum);
   const HistAxis axFine("Reco Nu Energy (GeV)", Binning::Simple(1000,0,20), kRecoNuEnergy);
 
   // nominal
@@ -120,12 +122,13 @@ void my_analysis()
   Spectrum sRecoEnergyNuMuCCFine(loader_n.Interactions(RecoType::kSandreco)[kMatchedNuMuCC], axFine);
   Spectrum sTruthNuEnergy(loader_n.NuTruths(), axTrueNuEnergy);
   Spectrum sTruthNuEnergyCC(loader_n.NuTruths()[kIsNuMuCC], axTrueNuEnergy);
+  Spectrum sTrueMuonTrueMomentum(loader_n.NuTruths().TruthParticles(TruePType::kPrim)[kIsTrueMuon], axTrueMuonMomentum);
   Spectrum sRecoVtxPositionYZ(loader_n.Interactions(RecoType::kSandreco), axRecoVtxPositionYZ);
   Spectrum sRecoVtxPositionXY(loader_n.Interactions(RecoType::kSandreco), axRecoVtxPositionXY);
   Spectrum sRecoVtxPositionZX(loader_n.Interactions(RecoType::kSandreco), axRecoVtxPositionZX);
-  // Spectrum sEnergyRes(loader_n.Interactions(RecoType::kSandreco), axEnergyRes);
-  // Spectrum sRecoEnergy(loader_n.Interactions(RecoType::kSandreco).RecoParticles(RecoType::kSandreco), axRecoMuonsEnergy);
-  // Spectrum sRecoMuonRecoMomentum(loader_n.Interactions(RecoType::kSandreco).RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonsMomentum);
+  Spectrum sEnergyRes(loader_n.Interactions(RecoType::kSandreco), axEnergyRes);
+  Spectrum sRecoMuonEnergy(loader_n.Interactions(RecoType::kSandreco)[kMatchedNuMuCC].RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonEnergy);
+  Spectrum sRecoMuonRecoMomentum(loader_n.Interactions(RecoType::kSandreco)[kMatchedNuMuCC].RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonsMomentum);
   
   //varied
   Spectrum sRecoNuEnergyVaried(loader_v.Interactions(RecoType::kSandreco), axRecoNuEnergy);
@@ -133,19 +136,20 @@ void my_analysis()
   Spectrum sRecoEnergyNuMuCCVariedFine(loader_v.Interactions(RecoType::kSandreco)[kMatchedNuMuCC], axFine);
   Spectrum sTruthNuEnergyVaried(loader_v.NuTruths(), axTrueNuEnergy);
   Spectrum sTruthNuEnergyVariedCC(loader_v.NuTruths()[kIsNuMuCC], axTrueNuEnergy);
+  Spectrum sTrueMuonTrueMomentumVaried(loader_v.NuTruths().TruthParticles(TruePType::kPrim)[kIsTrueMuon], axTrueMuonMomentum);
   Spectrum sRecoVtxPositionYZVaried(loader_v.Interactions(RecoType::kSandreco), axRecoVtxPositionYZ);
   Spectrum sRecoVtxPositionXYVaried(loader_v.Interactions(RecoType::kSandreco), axRecoVtxPositionXY);
   Spectrum sRecoVtxPositionZXVaried(loader_v.Interactions(RecoType::kSandreco), axRecoVtxPositionZX);
-  // Spectrum sRecoEnergyVaried(loader_v.Interactions(RecoType::kSandreco).RecoParticles(RecoType::kSandreco), axRecoMuonsEnergy);
-  // Spectrum sRecoMuonRecoMomentumVaried(loader_v.Interactions(RecoType::kSandreco).RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonsMomentum);
+  Spectrum sRecoMuonEnergyVaried(loader_v.Interactions(RecoType::kSandreco)[kMatchedNuMuCC].RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonEnergy);
+  Spectrum sRecoMuonRecoMomentumVaried(loader_v.Interactions(RecoType::kSandreco)[kMatchedNuMuCC].RecoParticles(RecoType::kSandreco)[kIsRecoMuon], axRecoMuonsMomentum);
 
 
   loader_n.Go();
   loader_v.Go();
 
 
-  const double pot_n = sRecoNuEnergy.POT();
-  const double pot_v = sRecoNuEnergyVaried.POT();
+  const double pot_n = sRecoMuonRecoMomentum.POT();
+  const double pot_v = sRecoMuonRecoMomentumVaried.POT();
 
   // gStyle->SetOptStat(1111);
 
@@ -429,57 +433,81 @@ void my_analysis()
   std::cout << std::endl;
 
 
-  // // ************ ENERGY RESOLUTION
-  // auto c1_res = std::make_unique<TCanvas>("c1_res", "c1_res");
+  // ************ ENERGY RESOLUTION
+  auto c1_res = std::make_unique<TCanvas>("c1_res", "c1_res");
 
-  // auto h1_n_res = sEnergyRes.ToTH1(pot_n, kBlue);
-  // h1_n_res->Draw("hist");
-  // c1_res->SaveAs("workspace/bm_results/energy_res.png");
+  auto h1_n_res = sEnergyRes.ToTH1(pot_n, kBlue);
+  h1_n_res->Draw("hist");
+  c1_res->SaveAs("workspace/bm_results/energy_res.png");
 
 
   // ************ MUON RECO ENERGY
-  // auto c2 = std::make_unique<TCanvas>("c2", "c2");
-  // auto h2_n = sRecoEnergy.ToTH1(pot_n, kBlue);
-  // auto h2_v = sRecoEnergyVaried.ToTH1(pot_n, kRed);
+  auto c2 = std::make_unique<TCanvas>("c2", "c2");
+  auto h2_n = sRecoMuonEnergy.ToTH1(pot_n, kBlue);
+  auto h2_v = sRecoMuonEnergyVaried.ToTH1(pot_n, kRed);
 
-  // auto muons_en_ratio = new TRatioPlot(h2_n, h2_v);
-  // muons_en_ratio->SetH1DrawOpt("hist");
-  // muons_en_ratio->SetH2DrawOpt("hist");
-  // muons_en_ratio->Draw();
-  // c2->Update();
-  // // Ratio axis range
-  // muons_en_ratio->GetLowerRefGraph()->SetMinimum(0);
-  // muons_en_ratio->GetLowerRefGraph()->SetMaximum(2);
-  // muons_en_ratio->GetLowYaxis()->SetNdivisions(505);
-  // // Legend on the upper pad
-  // muons_en_ratio->GetUpperPad()->cd();
-  // leg = new TLegend(0.65, 0.75, 0.88, 0.88);
-  // leg->AddEntry(h2_n, "Nominal", "l");
-  // leg->AddEntry(h2_v, "Horn current neg", "l");
-  // leg->Draw();
-  // c2->SaveAs("bm_plots/horn_current_neg/reco_muons_energy.png");
+  auto muons_en_ratio = new TRatioPlot(h2_n, h2_v);
+  muons_en_ratio->SetH1DrawOpt("hist");
+  muons_en_ratio->SetH2DrawOpt("hist");
+  muons_en_ratio->Draw();
+  c2->Update();
+  // Ratio axis range
+  muons_en_ratio->GetLowerRefGraph()->SetMinimum(0);
+  muons_en_ratio->GetLowerRefGraph()->SetMaximum(2);
+  muons_en_ratio->GetLowYaxis()->SetNdivisions(505);
+  // Legend on the upper pad
+  muons_en_ratio->GetUpperPad()->cd();
+  auto leg = new TLegend(0.65, 0.75, 0.88, 0.88);
+  leg->AddEntry(h2_n, "Nominal", "l");
+  leg->AddEntry(h2_v, "Horn current neg", "l");
+  leg->Draw();
+  c2->SaveAs("workspace/bm_results/horn_current_neg/plots/reco_muons_energy_numuCC.png");
 
-  // // ************ MUON RECO MOMENTUM
-  // auto c3 = std::make_unique<TCanvas>("c3", "c3");
-  // auto h3_n = sRecoMuonRecoMomentum.ToTH1(pot, kBlue);
-  // auto h3_v = sRecoMuonRecoMomentumVaried.ToTH1(pot, kRed);
+  // ************************ MUON RECO MOMENTUM
+  auto c3 = std::make_unique<TCanvas>("c3", "c3");
 
-  // auto muons_mom_ratio = new TRatioPlot(h3_n, h3_v);
-  // muons_mom_ratio->SetH1DrawOpt("hist");
-  // muons_mom_ratio->SetH2DrawOpt("hist");
-  // muons_mom_ratio->Draw();
-  // c3->Update();
-  // // Ratio axis range
-  // muons_mom_ratio->GetLowerRefGraph()->SetMinimum(0);
-  // muons_mom_ratio->GetLowerRefGraph()->SetMaximum(2);
-  // muons_mom_ratio->GetLowYaxis()->SetNdivisions(505);
-  // // Legend on the upper pad
-  // muons_mom_ratio->GetUpperPad()->cd();
-  // leg = new TLegend(0.65, 0.75, 0.88, 0.88);
-  // leg->AddEntry(h3_n, "Nominal", "l");
-  // leg->AddEntry(h3_v, "Horn current neg", "l");
-  // leg->Draw();
-  // c3->SaveAs("bm_plots/horn_current_neg/reco_muons_momentum.png");
+  // histograms rescaled to the same nominal POT (rescaling for nominal is 1, for varied is pot_n/pot_v)
+  // since I want to see the nr of events that would be expected in the varied case if the POT was the same as the nominal case
+  auto h3_n = sRecoMuonRecoMomentum.ToTH1(pot_n, kBlue);
+  auto h3_v = sRecoMuonRecoMomentumVaried.ToTH1(pot_n, kRed);
+  std::cout << "pot nominal reco muon mom " << pot_n << std::endl;
+  std::cout << "pot varied reco muon mom " << pot_v << std::endl;
+  std::cout << "ratio varied reco muon mom " << pot_n / pot_v << std::endl;
+
+  // statistical errors: sqrt(sumw2), since it is after rescaling they are sqrt(N_raw)*rescaling_factor
+  // so for the nominal case they are sqrt(N_raw)*1 = sqrt(N_raw), for the varied case they are sqrt(N_raw)*pot_n/pot_v
+  if (h3_n->GetSumw2N() == 0) h3_n->Sumw2();
+  if (h3_v->GetSumw2N() == 0) h3_v->Sumw2();
+  h3_n->SetLineWidth(2);
+  h3_v->SetLineWidth(2);
+
+  // raw counts (exposure = own spectrum POT, rescaling == 1)
+  auto h3_n_raw = sRecoMuonRecoMomentum.ToTH1(pot_n);
+  auto h3_v_raw = sRecoMuonRecoMomentumVaried.ToTH1(pot_v);
+
+  // ratio plot (varied / nominal)
+  auto muons_mom_ratio = new TRatioPlot(h3_v, h3_n);
+  muons_mom_ratio->SetH1DrawOpt("hist E");
+  muons_mom_ratio->SetH2DrawOpt("hist E");
+  muons_mom_ratio->Draw();
+  c3->Update();
+  // Ratio axis range
+  muons_mom_ratio->GetLowerRefGraph()->SetMinimum(0.5);
+  muons_mom_ratio->GetLowerRefGraph()->SetMaximum(1.5);
+  muons_mom_ratio->GetLowYaxis()->SetNdivisions(505);
+  // Legend on the upper pad
+  muons_mom_ratio->GetUpperPad()->cd();
+  auto leg3 = new TLegend(0.65, 0.75, 0.88, 0.88);
+  leg3->AddEntry((TObject*)0, Form("POT = %.3g", pot_n), "");
+  leg3->AddEntry(h3_n, Form("Nominal (%.0f ev)", h3_n->Integral()), "le");
+  leg3->AddEntry(h3_v, Form("Horn current neg (%.0f ev)", h3_v->Integral()), "le");
+  leg3->SetTextFont(42);
+  leg3->SetTextSize(0.03);
+  leg3->SetBorderSize(0);
+  leg3->SetFillStyle(1);
+  leg3->Draw();
+  c3->SaveAs("workspace/bm_results/horn_current_neg/plots/reco_muons_momentum.png");
+  // *********************************************************************************
 
   // auto c4_n = std::make_unique<TCanvas>("c4n", "c4n");
   // auto h4_n = sRecoVtxPositionYZ.ToTH2(pot);
@@ -534,25 +562,25 @@ void my_analysis()
   std::ofstream outfile("workspace/bm_results/horn_current_neg/tests/test-statistics-results.txt", std::ios::app);
 
   // Kolmogorov-Smirnov
-  double pKS = fA->KolmogorovTest(fB);          // p-value
-  double dKS = fA->KolmogorovTest(fB, "M");     // distanza massima D
-  double pKSmc = fA->KolmogorovTest(fB, "X");   // p-value con pseudo-esperimenti (consigliato)
-  double pKSnorm = fA->KolmogorovTest(fB, "N");   // p-value normalized
+  double pKS = h3_n->KolmogorovTest(h3_v);          // p-value
+  double dKS = h3_n->KolmogorovTest(h3_v, "M");     // distanza massima D
+  double pKSmc = h3_n->KolmogorovTest(h3_v, "X");   // p-value con pseudo-esperimenti (consigliato)
+  double pKSnorm = h3_n->KolmogorovTest(h3_v, "N");   // p-value normalized
 
   // Anderson-Darling (2 campioni, binnato)
-  double pAD = fA->AndersonDarlingTest(fB);          // p-value
-  double tAD = fA->AndersonDarlingTest(fB, "T"); 
+  double pAD = h3_n->AndersonDarlingTest(h3_v);          // p-value
+  double tAD = h3_n->AndersonDarlingTest(h3_v, "T"); 
   
   outfile << "=============== POT " << pot_n << " ===============" << std::endl;
 
-  outfile << "Nominal POT: "<< sRecoNuEnergy.POT() << '\n';
-  outfile << "Varied POT: " << sRecoNuEnergyVaried.POT() << '\n';
+  outfile << "Nominal POT: "<< sRecoMuonRecoMomentum.POT() << '\n';
+  outfile << "Varied POT: " << sRecoMuonRecoMomentumVaried.POT() << '\n';
   
   outfile << "Nominal POT used to rescale histograms: " << pot_n << '\n';
-  outfile << "Nominal POT / Varied POT: " << pot_n/sRecoNuEnergyVaried.POT() << std::endl;
+  outfile << "Nominal POT / Varied POT: " << pot_n/sRecoMuonRecoMomentumVaried.POT() << std::endl;
 
-  outfile << "Nominal: int=" << fA->Integral() << " entries=" << fA->GetEntries() << " eff=" << fA->GetEffectiveEntries() << '\n';
-  outfile << "Varied: int=" << fB->Integral() << " entries=" << fB->GetEntries() << " eff=" << fB->GetEffectiveEntries() << '\n';
+  outfile << "Nominal: int=" << h3_n->Integral() << " entries=" << h3_n->GetEntries() << " eff=" << h3_n->GetEffectiveEntries() << '\n';
+  outfile << "Varied: int=" << h3_v->Integral() << " entries=" << h3_v->GetEntries() << " eff=" << h3_v->GetEffectiveEntries() << '\n';
 
   outfile << "Kolmogorov-Smirnov p-value: " << pKS << " Kolmogorov-Smirnov distance (D): " << dKS << " Kolmogorov-Smirnov pseudo-experiment: " << pKSmc << " Kolmogorov-Smirnov normalized: " << pKSnorm << std::endl;
   outfile << "Anderson-Darling p-value: " << pAD << " Anderson-Darling test statistic (T): " << tAD << std::endl;
