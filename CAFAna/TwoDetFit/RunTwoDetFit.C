@@ -181,7 +181,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   //#                          SURFACE                                  #
   //#                                                                   #
   //#*******************************************************************#
-  FitUtils::SetModelType(Model);
+  FitUtils::SetModelType(Model, Variable);
 
   const FitAxis kFitAxisX(VarX, Xbins, xmin, xmax, IsLogX);
   const FitAxis kFitAxisY(VarY, Ybins, ymin, ymax, IsLogY);
@@ -189,7 +189,7 @@ void RunTwoDetFit( std::string Variable    = "surf_ssth23_deltaCP",
   ana::FrequentistSurface surface(MultiExpt, calc,
                                   kFitAxisX, kFitAxisY,
                                   VarsToFit,
-                                  {}/*systs*/, SeedsToUse);
+                                  {}/*systs*/, {}/*SeedsToUse*/);
 
   RootFile->cd();
   surface.SaveTo(RootFile, std::string("surface"));
