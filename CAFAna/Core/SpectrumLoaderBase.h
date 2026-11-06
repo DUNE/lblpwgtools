@@ -28,11 +28,11 @@ namespace ana
   class SpectrumLoaderBase
   {
   public:
-  
-    friend class ReweightableSpectrum;
-    friend class NDOscillatableSpectrum;
-    friend class OscillatableSpectrum;
-    friend class Spectrum;
+// Dow we need these friends??
+//    friend class ReweightableSpectrum;
+//    friend class NDOscillatableSpectrum;
+//    friend class OscillatableSpectrum;
+//    friend class Spectrum;
 
     virtual ~SpectrumLoaderBase();
 
