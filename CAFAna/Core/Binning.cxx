@@ -61,4 +61,7 @@ namespace ana
     // previous linear scale
     // return Binning::Simple(2000, 0.0, 5.0);
   }
+
+  //----------------------------------------------------------------------
+  const Binning kTrueLOverTrueEBins = TrueLOverTrueEBins();
 }

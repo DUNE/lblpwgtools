@@ -6,15 +6,12 @@ namespace ana
 {
   /// Default true-energy bin edges
   Binning TrueEnergyBins();
-  /// Default true-L/E bin edges
+  /// Default true-L/E bin edges (km/GeV)
   Binning TrueLOverTrueEBins();
   /// No entries for underflow or overflow
   std::vector<double> TrueEnergyBinCenters();
-  
-  /// Default trueL Over true-energy bin edges
-  Binning TrueLOverTrueEBins();
 
-  /// Default true-energy bin edges
+  /// Default true-L/E bin edges (km/GeV), the same as TrueLOverTrueEBins()
   extern const Binning kTrueLOverTrueEBins;
 
   /// LBL and ND analyses binnings
