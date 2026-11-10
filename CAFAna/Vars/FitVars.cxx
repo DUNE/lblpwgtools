@@ -16,6 +16,7 @@ namespace ana
 {
   // declared as 'extern' in FitVars.h
   const FitTheta13 kFitTheta13;
+  const FitSinSqTheta13 kFitSinSqTheta13;
   const FitSinSq2Theta13 kFitSinSq2Theta13;
   const FitDeltaInPiUnits kFitDeltaInPiUnits;
   const FitTheta23 kFitTheta23;
@@ -34,6 +35,7 @@ namespace ana
   const FitDmSq21 kFitDmSq21;
   const FitDmSq21Scaled kFitDmSq21Scaled;
   const FitRho kFitRho;
+  const FitVarForProf1D kFitVarForProf1D;
 
   //----------------------------------------------------------------------
   double FitTheta13::GetValue(const osc::IOscCalcAdjustable* osc) const
@@ -45,6 +47,18 @@ namespace ana
   void FitTheta13::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc->SetTh13(val);
+  }
+
+  //----------------------------------------------------------------------
+  double FitSinSqTheta13::GetValue(const osc::IOscCalcAdjustable* osc) const
+  {
+    return util::sqr(sin(osc->GetTh13()));
+  }
+
+  //----------------------------------------------------------------------
+  void FitSinSqTheta13::SetValue(osc::IOscCalcAdjustable* osc, double val) const
+  {
+    osc->SetTh13(asin(sqrt(Clamp(val))));
   }
 
   //----------------------------------------------------------------------
@@ -285,6 +299,17 @@ namespace ana
   void FitRho::SetValue(osc::IOscCalcAdjustable* osc, double val) const
   {
     osc->SetRho(Clamp(val));
+  }
+
+  //---------------------------------------------------------------------------                   
+  double FitVarForProf1D::GetValue(const osc::IOscCalcAdjustable* osc) const
+  {
+    return 0;
+  }
+
+  //----------------------------------------------------------------------
+  void FitVarForProf1D::SetValue(osc::IOscCalcAdjustable* osc, double val) const
+  {
   }
 
 } // namespace

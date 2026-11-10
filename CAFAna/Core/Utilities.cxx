@@ -10,6 +10,7 @@
 #include "TArrayD.h"
 #include "TClass.h"
 #include "TDirectory.h"
+#include "TFile.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TF1.h"
@@ -310,22 +311,44 @@ namespace ana
 
   //----------------------------------------------------------------------
   TH2F* ExpandedHistogram(const std::string& title,
-                          int nbinsx, double xmin, double xmax,
-                          int nbinsy, double ymin, double ymax)
+                          int nbinsx, double xmin, double xmax, bool xlog,
+                          int nbinsy, double ymin, double ymax, bool ylog)
   {
     DontAddDirectory guard;
 
-    // How wide the bins will be once we're done
-    const double xwidth = (xmax-xmin)/(nbinsx-1);
-    const double ywidth = (ymax-ymin)/(nbinsy-1);
+    if(xlog){xmin = log(xmin); xmax = log(xmax);}
+    if(ylog){ymin = log(ymin); ymax = log(ymax);}
 
-    // Move the bin edges so that the limits occur at the centres
-    xmin -= xwidth/2; ymin -= ywidth/2;
-    xmax += xwidth/2; ymax += ywidth/2;
+    // Only move the bin edges if there are at least two bins. 
+    if (nbinsx > 1) {
+      // How wide the bins will be once we're done
+      const double xwidth = (xmax-xmin)/(nbinsx-1);
+      // Move the bin edges so that the limits occur at the centres
+      xmin -= xwidth/2; xmax += xwidth/2;
+    }
+    // Only move the bin edges if there are at least two bins. 
+    if (nbinsy > 1) {
+      // How wide the bins will be once we're done
+      const double ywidth = (ymax-ymin)/(nbinsy-1);
+      // Move the bin edges so that the limits occur at the centres
+      ymin -= ywidth/2; ymax += ywidth/2;
+    }
+    
+    std::vector<double> xedges(nbinsx+1);
+    std::vector<double> yedges(nbinsy+1);
+
+    for(int i = 0; i <= nbinsx; ++i){
+      xedges[i] = xmin + (xmax-xmin)*i/double(nbinsx);
+      if(xlog) xedges[i] = exp(xedges[i]);
+    }
+    for(int i = 0; i <= nbinsy; ++i){
+      yedges[i] = ymin + (ymax-ymin)*i/double(nbinsy);
+      if(ylog) yedges[i] = exp(yedges[i]);
+    }
 
     return new TH2F(UniqueName().c_str(), title.c_str(),
-                    nbinsx, xmin, xmax,
-                    nbinsy, ymin, ymax);
+                    nbinsx, &xedges.front(),
+                    nbinsy, &yedges.front());
   }
 
 
@@ -557,6 +580,20 @@ namespace ana
   {
     return (getenv("_CONDOR_SCRATCH_DIR") != 0);
   }
+
+  //----------------------------------------------------------------------
+  std::unique_ptr<TFile> ROOTFile(std::string const& fname,
+                                  std::string const& opt,
+                                  bool xroot)
+  {
+    TFile* f;
+    if (xroot) {
+      f = TFile::Open(pnfs2xrootd(fname).c_str(), opt.c_str());
+    } else {
+      f = TFile::Open(fname.c_str(), opt.c_str());
+    }
+    return std::unique_ptr<TFile>(f);
+  } // function ROOTFile
 
   //----------------------------------------------------------------------
   FitToFourier::FitToFourier(TH1* h, double xlo, double xhi, int NOsc)

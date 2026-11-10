@@ -103,7 +103,7 @@ endmacro()
 
 ################################################################################
 
-set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Utils Vars bin scripts fcl)
+set(CAFANA_SUBDIRS Analysis Core Cuts Decomp Experiment Extrap Fit Prediction Systs Utils Vars bin scripts fcl TwoDetFit)
 if(DEFINED BUILD_PRISM)
   set(CAFANA_SUBDIRS ${CAFANA_SUBDIRS} PRISM)
 else()

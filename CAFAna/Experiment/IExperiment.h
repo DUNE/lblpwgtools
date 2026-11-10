@@ -41,6 +41,8 @@ namespace ana
       };
 #endif
 
+      virtual void Reset() const {};
+
       virtual void SaveTo(TDirectory *dir, const std::string &name) const;
   };
 }

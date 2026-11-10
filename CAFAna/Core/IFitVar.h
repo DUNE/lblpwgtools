@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CAFAna/Core/INamed.h"
+#include "CAFAna/Core/IFittable.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
 #include "CAFAna/Core/Registry.h"
 #include "CAFAna/Core/StanTypedefs.h"
@@ -15,11 +15,11 @@ namespace ana
 {
   //----------------------------------------------------------------------
   /// Interface definition for fittable variables
-  class IFitVar : public INamed
+  class IFitVar : public IFittable
   {
     public:
       IFitVar(const std::string& shortName, const std::string& latexName)
-        : INamed(shortName, latexName)
+        : IFittable(shortName, latexName)
       {
         Registry<IFitVar>::Register(this);
       }

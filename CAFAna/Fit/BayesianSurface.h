@@ -25,24 +25,30 @@ namespace ana
       /// \param nbinsy Number of bins along y axis
       /// \param ymin Minimum value of y axis
       /// \param ymax Maximum value of y axis
+      /// \param xlog Use log-spaced bins along the x axis
+      /// \param ylog Use log-spaced bins along the y axis
       BayesianSurface(const MCMCSamples &samples, const IFitVar *xvar, int nbinsx, double xmin, double xmax,
                       const IFitVar *yvar, int nbinsy, double ymin, double ymax,
-                      MarginalMode mode=MarginalMode::kHistogram);
+                      MarginalMode mode=MarginalMode::kHistogram,
+                      bool xlog=false, bool ylog=false);
 
       /// Same as other constructors, but with one IFitVar and one ISyst
       BayesianSurface(const MCMCSamples &samples, const IFitVar *xsyst, int nbinsx, double xmin, double xmax,
                       const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                      MarginalMode mode=MarginalMode::kHistogram);
+                      MarginalMode mode=MarginalMode::kHistogram,
+                      bool xlog=false, bool ylog=false);
 
       /// Same as other constructors, but with one ISyst and one IFitVar
       BayesianSurface(const MCMCSamples &samples, const ISyst *xsyst, int nbinsx, double xmin, double xmax,
                       const IFitVar *ysyst, int nbinsy, double ymin, double ymax,
-                      MarginalMode mode=MarginalMode::kHistogram);
+                      MarginalMode mode=MarginalMode::kHistogram,
+                      bool xlog=false, bool ylog=false);
 
       /// Same as other constructors, but with two ISysts
       BayesianSurface(const MCMCSamples &samples, const ISyst *xsyst, int nbinsx, double xmin, double xmax,
                       const ISyst *ysyst, int nbinsy, double ymin, double ymax,
-                      MarginalMode mode=MarginalMode::kHistogram);
+                      MarginalMode mode=MarginalMode::kHistogram,
+                      bool xlog=false, bool ylog=false);
 
       /// Up-value surface for a given quantile (e.g. 90%)
       /// Idea: Traditional 'highest posterior density' (HPD) estimate using the PDF of the LL we made in FillSurface.
@@ -83,7 +89,8 @@ namespace ana
       template <typename SystOrVar1, typename SystOrVar2>
       void BuildHist(const MCMCSamples &samples,
                      const SystOrVar1 *x, int nbinsx, double xmin, double xmax,
-                     const SystOrVar2 *y, int nbinsy, double ymin, double ymax);
+                     const SystOrVar2 *y, int nbinsy, double ymin, double ymax,
+                     bool xlog=false, bool ylog=false);
 
   };
 

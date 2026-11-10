@@ -3,6 +3,7 @@ set(Fit_implementation_files
   BayesianMarginal.cxx
   BayesianSurface.cxx
   Fit.cxx
+  FitAxis.cxx
   FrequentistSurface.cxx
   GradientDescent.cxx
   IFitter.cxx
@@ -25,6 +26,7 @@ set(Fit_header_files
   BayesianMarginal.h
   BayesianSurface.h
   Fit.h
+  FitAxis.h
   FrequentistSurface.h
   GradientDescent.h
   IFitter.h

@@ -1,11 +1,17 @@
 set(Vars_implementation_files
   DUNENeutNuWROReweight.cxx
   FitVars.cxx
+  FitVarsNSI.cxx
+  FitVarsSterile.cxx
+  FitVarsProduct.cxx
   Vars.cxx)
 
 set(Vars_header_files
   DUNENeutNuWROReweight.h
   FitVars.h
+  FitVarsNSI.h
+  FitVarsSterile.h
+  FitVarsProduct.h
   Vars.h)
 
 add_library(CAFAnaVars SHARED ${Vars_implementation_files})

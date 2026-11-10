@@ -96,6 +96,10 @@ namespace ana
     fSystCorrelations[idx] = corrs;
   }
 
+  //----------------------------------------------------------------------
+  void MultiExperiment::Reset() const {
+    for (auto expt : fExpts) expt->Reset();
+  }
 
   //----------------------------------------------------------------------
 #ifdef CAFANA_USE_STAN

@@ -21,14 +21,20 @@ namespace ana
         : fBestLikelihood(std::numeric_limits<double>::signaling_NaN()),
           fBestFitX(std::numeric_limits<double>::signaling_NaN()),
           fBestFitY(std::numeric_limits<double>::signaling_NaN()),
-          fHist(nullptr)
+          fHist(nullptr), fLogX(false), fLogY(false)
       {}
 
-      virtual ~ISurface() {};
+      virtual ~ISurface() {}
+
+      bool LogX() const {return fLogX;}
+      bool LogY() const {return fLogY;}
 
       double BestLikelihood() const {return fBestLikelihood;}
       double GetBestFitX() const {return fBestFitX;}
       double GetBestFitY() const {return fBestFitY;}
+
+      /// Draw the surface axes
+      void DrawAxes() const;
 
       /// Draw the surface itself
       void Draw() const;
@@ -42,17 +48,23 @@ namespace ana
       /// \param minchi \f$\chi^2\f$ of best fit to compare against.
       ///               Default: best fit from this surface.
       void DrawContour(TH2* fc, Style_t style, Color_t color,
-                       double minchi = -1);
+                       double minchi = -1) const;
 
       /// For expert use, custom painting of contours
-      std::vector<TGraph*> GetGraphs(TH2* fc, double minchi = -1);
+      std::vector<TGraph*> GetGraphs(TH2* fc, double minchi = -1) const;
 
 
       TH2* ToTH2(double minchi = -1) const;
 
       void SetTitle(const char* str);
 
+      friend TH2* Flat(double, const ISurface&);
+
+      double BinCenterX(int bin) const;
+      double BinCenterY(int bin) const;
+
     protected:
+
       /// \a dir should already be the appropriate sub-directory
       void SaveToHelper(TDirectory* dir) const;
       static void FillSurfObj(ISurface & surf, TDirectory * dir);
@@ -61,9 +73,12 @@ namespace ana
       double fBestFitX;
       double fBestFitY;
       TH2F* fHist;
+      bool fLogX, fLogY;
       std::vector<double> fSeedValues;
+      std::vector<int> fBinMask;
 
-      void EnsureAxes() const;
+      void EnsureAxes(TH2* h) const;
+      void CheckMask(const std::string& func) const;
   };
 
   /// Helper function for the gaussian approximation surfaces

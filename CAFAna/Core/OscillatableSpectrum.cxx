@@ -44,7 +44,7 @@ namespace ana
    }
   //----------------------------------------------------------------------
   OscillatableSpectrum::OscillatableSpectrum(IInteractionSource& src, const HistAxis& axis)
-    : ReweightableSpectrum(src[kHasNeutrino], axis, HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE))
+    : ReweightableSpectrum(src[kHasNeutrino], axis, HistAxis("True Energy (GeV)", TrueEnergyBins(), kTrueE))
   {
   }
 
@@ -53,7 +53,7 @@ namespace ana
                                              const HistAxis& recoAxis,
                                              double pot, double livetime)
     : ReweightableSpectrum(std::move(mat), recoAxis,
-                           HistAxis("True Energy (GeV)", kTrueEnergyBins, kTrueE),
+                           HistAxis("True Energy (GeV)", TrueEnergyBins(), kTrueE),
                            pot, livetime)
   {
   }
@@ -251,7 +251,7 @@ namespace ana
     // default
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen:: Dynamic, Eigen::RowMajor> MatRowMajor;
 
-    auto ret = std::make_unique<OscillatableSpectrum>(Eigen::Map<MatRowMajor>(spect->GetArray(), kTrueEnergyBins.NBins()+2, recoAxis.GetBins1D().NBins()+2),
+    auto ret = std::make_unique<OscillatableSpectrum>(Eigen::Map<MatRowMajor>(spect->GetArray(), TrueEnergyBins().NBins()+2, recoAxis.GetBins1D().NBins()+2),
                                                       recoAxis,
                                                       hPot->Integral(0, -1),
                                                       hLivetime->Integral(0, -1));
