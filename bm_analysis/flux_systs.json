@@ -1,0 +1,464 @@
+{
+  "TargetUpstreamDegredation": {
+    "id": 3000,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetTiltTransverseY": {
+    "id": 3001,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetTiltTransverseX": {
+    "id": 3002,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetLength": {
+    "id": 3003,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetDisplaceTransverseY": {
+    "id": 3004,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetDisplaceTransverseX": {
+    "id": 3005,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "TargetDensity": {
+    "id": 3006,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "ProtonBeamTransverseY": {
+    "id": 3007,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "ProtonBeamTransverseX": {
+    "id": 3008,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "ProtonBeamRadius": {
+    "id": 3009,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "ProtonBeamAngleY": {
+    "id": 3010,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "ProtonBeamAngleX": {
+    "id": 3011,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornWaterLayerThickness": {
+    "id": 3012,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCurrent": {
+    "id": 3013,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCTiltTransverseY": {
+    "id": 3014,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCTiltTransverseX": {
+    "id": 3015,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCEllipticityXInducedBField": {
+    "id": 3016,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCEccentricityXInducedBField": {
+    "id": 3017,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCDisplaceLongitudinalZ": {
+    "id": 3018,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBTiltTransverseY": {
+    "id": 3019,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBTiltTransverseX": {
+    "id": 3020,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBEllipticityXInducedBField": {
+    "id": 3021,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBDisplaceLongitudinalZ": {
+    "id": 3022,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornATiltTransverseY": {
+    "id": 3023,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornATiltTransverseX": {
+    "id": 3024,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornAEllipticityXInducedBField": {
+    "id": 3025,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornAEccentricityXInducedBField": {
+    "id": 3026,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornADisplaceLongitudinalZ": {
+    "id": 3027,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeTiltY": {
+    "id": 3028,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeTiltX": {
+    "id": 3029,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeRadius": {
+    "id": 3030,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeLength": {
+    "id": 3031,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeGeoBField": {
+    "id": 3032,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeEllipticalCrossSectionYB": {
+    "id": 3033,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeEllipticalCrossSectionXA": {
+    "id": 3034,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeDisplaceTransverseY": {
+    "id": 3035,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipeDisplaceTransverseX": {
+    "id": 3036,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipe3SegmentBowingY": {
+    "id": 3037,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "DecayPipe3SegmentBowingX": {
+    "id": 3038,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCDisplaceTransverseY": {
+    "id": 3039,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBDisplaceTransverseY": {
+    "id": 3040,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornADisplaceTransverseY": {
+    "id": 3041,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornCDisplaceTransverseX": {
+    "id": 3042,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornBDisplaceTransverseX": {
+    "id": 3043,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "HornADisplaceTransverseX": {
+    "id": 3044,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_0": {
+    "id": 3500,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_1": {
+    "id": 3501,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_2": {
+    "id": 3502,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_3": {
+    "id": 3503,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_4": {
+    "id": 3504,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_5": {
+    "id": 3505,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_6": {
+    "id": 3506,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_7": {
+    "id": 3507,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_8": {
+    "id": 3508,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_9": {
+    "id": 3509,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_10": {
+    "id": 3510,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_11": {
+    "id": 3511,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_12": {
+    "id": 3512,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_13": {
+    "id": 3513,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_14": {
+    "id": 3514,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_15": {
+    "id": 3515,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_16": {
+    "id": 3516,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_17": {
+    "id": 3517,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_18": {
+    "id": 3518,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_19": {
+    "id": 3519,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  },
+  "FluxHadronProductionPCAComponent_20": {
+    "id": 3520,
+    "vals": [
+      0.0,
+      1.0
+    ]
+  }
+}
