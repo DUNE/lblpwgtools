@@ -129,8 +129,8 @@ void my_analysis_syst()
   // build the systematics object in CAFAna
   const FluxDialSyst* kHornCurrentSyst = new FluxDialSyst("HornCurrent", "Horn Current", idx);
   std::vector<const ISyst*> systs = {kHornCurrentSyst};
-  const Multiverse& cross = Multiverse::Hypercross(systs, 1);
-  
+  const Multiverse& cross = Multiverse::Hypercross(systs, 2);
+
   SpectrumLoader loader_n(fname_n);
 
   const HistAxis axRecoNuEnergy("Reco Nu Energy (GeV)", Binning::Simple(50,0,20), kRecoNuEnergy);
@@ -141,12 +141,14 @@ void my_analysis_syst()
 
   const double pot_n = sMuonEnsembleX.POT();
 
+  const auto n_universes = sMuonEnsembleX.NUniverses();
+  std::cout<< "nr universes: " << sMuonEnsembleX.NUniverses() << std::endl;
+
+  // merge all spectra from all systematics
   std::vector<ana::Spectrum> specs;
-
-  specs.push_back(sMuonEnsembleX.Nominal());
-  specs.push_back(sMuonEnsembleX.Universe(1));
-  specs.push_back(sMuonEnsembleX.Universe(2));
-
+  for (unsigned int i = 0; i < n_universes; ++i) {
+    specs.push_back(sMuonEnsembleX.Universe(i));
+  }
   auto ensemble = EnsembleSpectrum::MergeSpectra(specs, &cross);
 
   // ************ ENERGY RECO SYSTS
@@ -154,36 +156,42 @@ void my_analysis_syst()
   auto c1_n = std::make_unique<TCanvas>("c1_n", "c1_n");
 
   auto h1_n = sMuonEnsembleX.Nominal().ToTH1(pot_n, kBlack);
-  std::cout<< "nr universes: " << sMuonEnsembleX.NUniverses() << std::endl;
-  auto h1_up = sMuonEnsembleX.Universe(1).ToTH1(pot_n, kRed);
-  auto h1_down = sMuonEnsembleX.Universe(2).ToTH1(pot_n, kBlue);
-  auto band = sMuonEnsembleX.ErrorBand(pot_n, kPOT);
-  
-  // Drawing
   h1_n->SetLineColor(kBlack);
   h1_n->SetLineStyle(1);
   h1_n->SetLineWidth(1);
 
-  h1_up->SetLineColor(kRed);
-  h1_up->SetLineStyle(1);
-  h1_up->SetLineWidth(1);
+  gStyle->SetPalette(kRainBow);
+  const int nShifted = n_universes - 1;
 
-  h1_down->SetLineColor(kBlue);
-  h1_down->SetLineStyle(1);
-  h1_down->SetLineWidth(1);
+  std::vector<TH1*> hs;
+  hs.reserve(nShifted);
+  for (unsigned int i = 1; i < n_universes; ++i) {
+    const int ncol = TColor::GetNumberOfColors();
+    const int idx  = (nShifted > 1) ? (i - 1) * (ncol - 1) / (nShifted - 1) : 0;
+    const int col  = TColor::GetColorPalette(idx);
 
-  // Make room for all histograms
-  double ymax = std::max({
-      h1_n->GetMaximum(),
-      h1_up->GetMaximum(),
-      h1_down->GetMaximum()
-  });
+    TH1* h = sMuonEnsembleX.Universe(i).ToTH1(pot_n, col);
+    h->SetLineColor(col);
+    h->SetLineWidth(1);
+    hs.push_back(h);
+  }
 
-  h1_n->SetMaximum(ymax * 1.2);
+  // Spazio per tutti gli istogrammi
+  double ymax = h1_n->GetMaximum();
+  for (auto* h : hs) ymax = std::max(ymax, h->GetMaximum());
+  h1_n->SetMaximum(ymax * 1.3);
+
+  // Disegno + legenda
+  auto leg = std::make_unique<TLegend>(0.65, 0.50, 0.89, 0.89);
+  leg->SetBorderSize(0);
+  leg->AddEntry(h1_n, "Nominal", "l");
 
   h1_n->Draw("HIST");
-  h1_up->Draw("HIST SAME");
-  h1_down->Draw("HIST SAME");
+  for (unsigned int i = 1; i < n_universes; ++i) {
+    hs[i - 1]->Draw("HIST SAME");
+    leg->AddEntry(hs[i - 1], Form("Universe %u", i), "l");
+  }
+  leg->Draw();
 
   c1_n->SaveAs("workspace/energy_reco_systs.png");
 
