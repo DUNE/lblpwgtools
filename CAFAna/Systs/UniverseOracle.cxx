@@ -55,9 +55,9 @@ namespace ana
   // --------------------------------------------------------------------------
   void PrintSRGlobal(const caf::SRGlobal& global)
   {
-    std::cout << global.wgts.params.size() << " parameter sets:" << std::endl;
-    for(unsigned int i = 0; i < global.wgts.params.size(); ++i){
-      const caf::SRSystParamHeader& hdr = global.wgts.params[i];
+    std::cout << global.wgts.flux_params.size() << " parameter sets:" << std::endl;
+    for(unsigned int i = 0; i < global.wgts.flux_params.size(); ++i){
+      const caf::SRSystParamHeader& hdr = global.wgts.flux_params[i];
       std::cout << "  " << i << ": " << hdr.name << ", " << hdr.vals.size() << " shifts" << std::endl;
     }
   }
@@ -76,8 +76,8 @@ namespace ana
     std::cout << "\nSystematic weights in file:" << std::endl;
     PrintSRGlobal(global);
 
-    for(unsigned int i = 0; i < global.wgts.params.size(); ++i){
-      const caf::SRSystParamHeader& hdr = global.wgts.params[i];
+    for(unsigned int i = 0; i < global.wgts.flux_params.size(); ++i){
+      const caf::SRSystParamHeader& hdr = global.wgts.flux_params[i];
       // Save which position in the vector this was
       fSystIdxs[hdr.name] = i;
       // For now all systs are structured like this

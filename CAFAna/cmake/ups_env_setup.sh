@@ -24,7 +24,7 @@ setup osclib v00.27 -q e26:n319:prof:stanfree || exit 1
 setup cafanacore v02.05 -q e26:prof:n319:stanfree || exit 1
 
 # setup duneanaobj v03_07_00 -q e26:prof || exit 1
-setup duneanaobj v04_00_00 -q e26:prof || exit 1
+setup duneanaobj v04_02_01 -q e26:prof || exit 1
 
 
 
