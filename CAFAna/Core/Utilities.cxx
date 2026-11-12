@@ -13,6 +13,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TF1.h"
+#include "TFile.h"
 #include "TMatrixD.h"
 #include "TObjString.h"
 #include "TString.h"
@@ -798,10 +799,45 @@ std::vector<std::string> GetCAFFilesFromInputList(std::string InputFilePattern){
   std::ifstream Inputfile(InputFilePattern.c_str());
   std::vector<std::string> matches;
 
-  if(Inputfile.is_open()){
-    while(getline(Inputfile, line)){
-      matches.push_back(line);
+  if (!Inputfile.is_open()) {
+    std::cout << "[WARN]: Could not open input file list: " << InputFilePattern
+              << std::endl;
+    return matches;
+  }
+
+  while (std::getline(Inputfile, line)) {
+    size_t first = line.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+      continue;
     }
+
+    size_t last = line.find_last_not_of(" \t\r\n");
+    line = line.substr(first, last - first + 1);
+
+    if (line.empty() || line[0] == '#' || line[0] == ';') {
+      continue;
+    }
+
+    size_t comment = line.find('#');
+    if (comment != std::string::npos) {
+      line = line.substr(0, comment);
+      size_t trailing = line.find_last_not_of(" \t\r\n");
+      if (trailing == std::string::npos) {
+        continue;
+      }
+      line = line.substr(0, trailing + 1);
+    }
+
+    if (line.empty()) {
+      continue;
+    }
+
+    matches.push_back(line);
+  }
+
+  if (matches.empty()) {
+    std::cout << "[WARN]: Input file list contained no usable files: "
+              << InputFilePattern << std::endl;
   }
 
   return matches;

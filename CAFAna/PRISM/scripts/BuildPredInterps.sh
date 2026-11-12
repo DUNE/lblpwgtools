@@ -3,12 +3,12 @@
 INPUTDIR=/exp/dune/data/users/icaracas/CAFFiles/FDCAFs
 
 #OUTPUTDIR=/exp/dune/data/users/icaracas/StateFiles/NDStateFiles
-OUTPUTDIR=/exp/dune/data/users/yuribae/prism/state
+OUTPUTDIR=/exp/dune/data/users/lorenzog/prism/state
 
-#NDFHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC
-NDFHCDATADIR=/exp/dune/data/users/yuribae/NDCAF_OnAxisHadd/FHC
-#NDRHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/RHC
-NDRHCDATADIR=/exp/dune/data/users/yuribae/NDCAF_OnAxisHadd/RHC
+NDFHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC
+# NDFHCDATADIR=/exp/dune/data/users/yuribae/NDCAF_OnAxisHadd/FHC
+NDRHCPNFSDIR=/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/RHC
+# NDRHCDATADIR=/exp/dune/data/users/yuribae/NDCAF_OnAxisHadd/RHC
 
 # NDFHCPNFSDIR=/root/work/software/lblpwgtools/CAFAna/inputs/ndcafs/FHC
 # NDRHCPNFSDIR=/root/work/software/lblpwgtools/CAFAna/inputs/ndcafs/RHC
@@ -37,18 +37,18 @@ AvaVar="EnuReco"
 #AvaVar="EnuRecoFDExtrapPred"
 #AvaVar="ETrue"
 
-#FD nu
-#MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_FDnu.root \
-#    -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
-#    -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \
-#    -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root \
-#   --bin-descriptor ${AnaBinning} \
-#   --syst-descriptor ${ListOSysts} \
-#    -A ${AvaVar} \
-#    --PRISM-fake-data ${FakeData} \
-#    --no-fakedata-dials \
-#    --UseSelection \
-#    #-n 10000
+# #FD nu
+MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_FDnu.root \
+   -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root \
+   -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root \
+   -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root \
+  --bin-descriptor ${AnaBinning} \
+  --syst-descriptor ${ListOSysts} \
+   -A ${AvaVar} \
+   --PRISM-fake-data ${FakeData} \
+   --no-fakedata-dials \
+   --UseSelection \
+   #-n 10000
 
 #FD nub
 #MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_FDnub.root \
@@ -79,15 +79,15 @@ AvaVar="EnuReco"
 #    -N-nu "/pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC/CAFv7_*.root" \
 #MakePRISMPredInterps -o ${OUTPUTDIR}/ND_FHC._EnuReco_VisEtrue_NoSysts_standardSameFDBinningasND.root \
 #    -N-nu "/pnfs/dune/persistent/users/awilkins/ND_CAF_fdrecopreds/chasnip-NDCAF_OnAxisHadd-FHC_fdrecopreds_muresim_nolognorm_nocausalnearmask_seed38/CAFv7*" \
-MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_NDnu.root \
-    -N-nu "${NDFHCDATADIR}/CAFv7_*" \
-    --bin-descriptor ${AnaBinning} \
-    --syst-descriptor ${ListOSysts} \
-    --no-fakedata-dials \
-    -A ${AvaVar} \
-    --PRISM-fake-data ${FakeData} \
-    --UseSelection \
-    #-n 10000
+# MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_NDnu.root \
+#     -N-nu "${NDFHCDATADIR}/CAFv7_*" \
+#     --bin-descriptor ${AnaBinning} \
+#     --syst-descriptor ${ListOSysts} \
+#     --no-fakedata-dials \
+#     -A ${AvaVar} \
+#     --PRISM-fake-data ${FakeData} \
+#     --UseSelection \
+#     #-n 10000
 
 
 #ND nub

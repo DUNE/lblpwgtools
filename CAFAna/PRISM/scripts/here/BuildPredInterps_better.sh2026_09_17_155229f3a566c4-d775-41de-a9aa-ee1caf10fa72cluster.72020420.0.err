@@ -1,0 +1,79 @@
+Thu Sep 17 22:53:38 CEST 2026 72020420.0@jobsub03.fnal.gov BEGIN EXECUTION BuildPredInterps_better.sh fd_nu
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2TypeTraits
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type JBinId
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2Jagged
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedD
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedF
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedI
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedC
+SysError in <TFile::TFile>: file /exp/dune/data/users/lorenzog/prism/state/prism_state_FD_nu.root can not be opened No such file or directory
+Error in <TFile::TFile>: file /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root does not exist
+Error in <TFile::TFile>: file /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root does not exist
+Error in <TFile::TFile>: file /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root does not exist
+Error in <TFile::TFile>: file /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root does not exist
+Error in <TFile::TFile>: file /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root does not exist
+./BuildPredInterps_better.sh: line 32:  2402 Aborted                 (core dumped) MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_FD_nu.root -F-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nonswap.root -Fe-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_nueswap.root -Ft-nu ${INPUTDIR}/OffAxisCAFs/FD_FHC_tauswap.root --bin-descriptor ${ANA_BINNING} --syst-descriptor ${LIST_OSYSTS} -A ${AVA_VAR} --PRISM-fake-data ${FAKE_DATA} --no-fakedata-dials --UseSelection
+
+==========================
+Below are CVMFS log details for expert debugging purposes only.  The job may have failed for unrelated reasons
+
+cvmfs info repo: dune.opensciencegrid.org
+Attribute "revision" had a 4 byte value for /cvmfs/dune.opensciencegrid.org/:
+4107
+Attribute "logbuffer" had a 810 byte value for /cvmfs/dune.opensciencegrid.org/:
+[17 Sep 2026 15:10:31 CEST] (manager 'standard') switching proxy from (none) to http://193.109.175.52:3128 (squid04.pic.es). Reason: set random start proxy from the first proxy group [Current host: http://cvmfs-egi.gridpp.rl.ac.uk:8000/cvmfs/dune.opensciencegrid.org]
+[17 Sep 2026 15:10:31 CEST] (manager 'standard') geographic order of servers retrieved from cvmfs-s1.hpc.swin.edu.au
+[17 Sep 2026 15:10:31 CEST] (manager 'external') switching proxy from (none) to http://193.109.175.52:3128 (squid04.pic.es). Reason: cloned [Current host: http://cvmfs-egi.gridpp.rl.ac.uk:8000/cvmfs/dune.opensciencegrid.org]
+[17 Sep 2026 15:10:31 CEST] (manager 'external') switching proxy from http://193.109.175.52:3128 (squid04.pic.es) to DIRECT. Reason: set random start proxy from the first proxy group [Current host: ]
+
+cvmfs info repo: larsoft.opensciencegrid.org
+Attribute "revision" had a 4 byte value for /cvmfs/larsoft.opensciencegrid.org/:
+1182
+[17 Sep 2026 21:48:48 CEST] switched to catalog revision 1182
+
+cvmfs info repo: dune.osgstorage.org
+Attribute "revision" had a 6 byte value for /cvmfs/dune.osgstorage.org/:
+242045
+Attribute "logbuffer" had a 1220 byte value for /cvmfs/dune.osgstorage.org/:
+[17 Sep 2026 21:52:30 CEST] (manager 'standard') switching proxy from (none) to http://193.109.175.53:3128 (squid05.pic.es). Reason: set random start proxy from the first proxy group [Current host: http://cvmfs-egi.gridpp.rl.ac.uk:8000/cvmfs/dune.osgstorage.org]
+[17 Sep 2026 21:52:30 CEST] (manager 'standard') geographic order of servers retrieved from cvmfs-s1goc.opensciencegrid.org
+[17 Sep 2026 21:52:30 CEST] (manager 'standard') switching proxy from http://193.109.175.53:3128 (squid05.pic.es) to http://193.109.175.53:3129 (squid05.pic.es). Reason: geosort [Current host: http://cvmfs-egi.gridpp.rl.ac.uk:8000/cvmfs/dune.osgstorage.org]
+[17 Sep 2026 21:52:30 CEST] (manager 'external') switching proxy from (none) to http://193.109.175.53:3128 (squid05.pic.es). Reason: cloned [Current host: http://cvmfs-egi.gridpp.rl.ac.uk:8000/cvmfs/dune.osgstorage.org]
+[17 Sep 2026 21:52:30 CEST] (manager 'standard') geographic order of servers retrieved from cvmfs-s1goc.opensciencegrid.org
+[17 Sep 2026 21:52:30 CEST] (manager 'external') switching proxy from http://193.109.175.53:3128 (squid05.pic.es) to DIRECT. Reason: set random start proxy from the first proxy group [Current host: http://xcachevirgo.pic.es:8000/]
+
+cvmfs info repo: fifeuser1.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser1.opensciencegrid.org/:
+2871672
+[17 Sep 2026 22:55:14 CEST] switched to catalog revision 2871672
+
+cvmfs info repo: fifeuser2.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser2.opensciencegrid.org/:
+2869862
+[17 Sep 2026 22:53:48 CEST] switched to catalog revision 2869862
+
+cvmfs info repo: fifeuser3.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser3.opensciencegrid.org/:
+3015645
+[17 Sep 2026 22:55:27 CEST] switched to catalog revision 3015645
+
+cvmfs info repo: fifeuser4.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser4.opensciencegrid.org/:
+3013204
+[17 Sep 2026 22:55:32 CEST] switched to catalog revision 3013204
+==========================
+Thu Sep 17 22:55:39 CEST 2026 BuildPredInterps_better.sh COMPLETED with exit status 134

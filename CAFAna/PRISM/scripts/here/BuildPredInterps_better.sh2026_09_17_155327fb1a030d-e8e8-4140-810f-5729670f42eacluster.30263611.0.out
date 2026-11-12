@@ -1,0 +1,28 @@
+Looking for directory /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Try 1 of 40
+Found file /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Setting environment variables and links in job.
+Thu Sep 17 20:54:00 UTC 2026 30263611.0@jobsub05.fnal.gov BEGIN EXECUTION BuildPredInterps_better.sh nd_nu
+[debug] INPUT_TAR_DIR_LOCAL=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/CAFAnaEnv.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/support_software_env.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/ups_env_setup.sh
+Setting up larsoft UPS area... /cvmfs/larsoft.opensciencegrid.org
+Setting up DUNE UPS area... /cvmfs/dune.opensciencegrid.org/products/dune/
+Finished ups setup.
+If running interactively, run 'source /nashome/l/lorenzog/PRISM_SW/lblpwgtools/CAFAna/build/Linux/CAFAnaEnv.sh' first.
+[debug] CAFANA=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+>>> Running ND nu...
+stuck
+[INFO]: DeGlobified input pattern: CAFv7_* to std::regex_friendly: CAFv7_.*
+[INFO]: Looking for files matching: "CAFv7_.*" in directory: /pnfs/dune/persistent/users/chasnip/NDCAF_OnAxisHadd/FHC/
+[WARN]: Failed to find any ND_293kA_nu files.
+[WARN]: Failed to find any ND_280kA_nu files.
+[WARN]: Failed to find any FD_nu_numu files.
+[WARN]: Failed to find any FD_nu_nue files.
+[WARN]: Failed to find any FD_nu_tau files.
+[WARN]: Failed to find any ND_293kA_nub files.
+[WARN]: Failed to find any ND_280kA_nub files.
+[WARN]: Failed to find any FD_nub_numu files.
+[WARN]: Failed to find any FD_nub_nue files.
+[WARN]: Failed to find any FD_nub_tau files.
+[ERROR]: Found no files.
+Thu Sep 17 20:55:10 UTC 2026 BuildPredInterps_better.sh COMPLETED with exit status 134

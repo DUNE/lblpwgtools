@@ -375,6 +375,23 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   Eigen::VectorXd OffAxisWeights_293kA = OffAxisWeights.head(off_axis_bin_edges_293kA.size() - 1);
   Eigen::VectorXd OffAxisWeights_280kA = OffAxisWeights.tail(off_axis_bin_edges_280kA.size() - 1);
 
+  std::cerr << "[PRISM DEBUG] coefficients for " << match_chan << ":\n"
+            << "  293kA = " << OffAxisWeights_293kA.transpose() << "\n"
+            << "  280kA = " << OffAxisWeights_280kA.transpose() << std::endl;
+
+  for (int i = 0; i < OffAxisWeights_293kA.size(); ++i) {
+    if (!std::isfinite(OffAxisWeights_293kA(i))) {
+      std::cerr << "[PRISM DEBUG] non-finite 293kA coefficient at bin " << i
+                << ": " << OffAxisWeights_293kA(i) << std::endl;
+    }
+  }
+  for (int i = 0; i < OffAxisWeights_280kA.size(); ++i) {
+    if (!std::isfinite(OffAxisWeights_280kA(i))) {
+      std::cerr << "[PRISM DEBUG] non-finite 280kA coefficient at bin " << i
+                << ": " << OffAxisWeights_280kA(i) << std::endl;
+    }
+  }
+
   Eigen::MatrixXd reg_shape_matrix = RegMatrix / cond.RegFactor_293kA;
 
   soln_norm = (reg_shape_matrix * OffAxisWeights).norm();
@@ -389,11 +406,28 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   for (int bin_it = 0; bin_it < Target.size(); ++bin_it) {
     double bc_o = Target(bin_it);
     double bc_u = FDUnOsc_vec(bin_it);
-    double e = (bc_o - BestFit(bin_it)) / bc_u;
+    double fit_val = BestFit(bin_it);
+    double e = (bc_o - fit_val) / bc_u;
+    if (!std::isfinite(bc_o) || !std::isfinite(bc_u) || !std::isfinite(fit_val) || !std::isfinite(e)) {
+      std::cerr << "[PRISM DEBUG] non-finite residual factor at bin " << bin_it
+                << ": bc_o=" << bc_o << ", bc_u=" << bc_u
+                << ", bestFit=" << fit_val << ", residual=" << e
+                << std::endl;
+    }
     if (!std::isnormal(e)) {
       e = 0;
     }
     Residual(bin_it) = e;
+  }
+
+  std::cerr << "[PRISM DEBUG] Target bins:" << std::endl;
+  for (int i = 0; i < Target.size(); ++i) {
+    std::cerr << "  bin " << i << ": target=" << Target(i)
+              << ", bestFit=" << BestFit(i)
+              << ", FDUnOsc=" << FDUnOsc_vec(i)
+              << ", residual=" << Residual(i)
+              << ", finite=" << (std::isfinite(Target(i)) && std::isfinite(BestFit(i)) && std::isfinite(FDUnOsc_vec(i)) && std::isfinite(Residual(i)) ? "yes" : "NO")
+              << std::endl;
   }
 
   // Residual to be outputted must have the underflow and overflow elements.

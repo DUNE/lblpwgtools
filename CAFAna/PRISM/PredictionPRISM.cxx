@@ -35,6 +35,26 @@
 
 using namespace PRISM;
 
+namespace {
+
+void DumpArrayFiniteCheck(std::string const &label, Eigen::ArrayXd const &arr) {
+  std::cerr << "[PRISM DEBUG] " << label << " bin contents:" << std::endl;
+  for (int i = 0; i < arr.size(); ++i) {
+    double v = arr(i);
+    std::cerr << "  bin " << i << ": value=" << v
+              << " finite=" << (std::isfinite(v) ? "yes" : "NO")
+              << std::endl;
+  }
+}
+
+template <typename T>
+void DumpSpectrumFiniteCheck(std::string const &label, T const &spec) {
+  auto arr = spec.GetEigen(1);
+  DumpArrayFiniteCheck(label, arr);
+}
+
+} // namespace
+
 namespace ana {
 
 REGISTER_LOADFROM("PredictionPRISM", IPrediction, PredictionPRISM);
@@ -1093,23 +1113,35 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   // Perform linear combination on raw (i.e. not extrapolated) ND data/MC.
   // MC linear combination:
   if (NDComps.count(kNDSig_293kA) && fDebugPlots) {
+    DumpArrayFiniteCheck("LinearCombinationCoeffs_293kA", LinearCombinationCoeffs_293kA_arr);
+    DumpSpectrumFiniteCheck("NDSig2D_293kA", NDComps.at(kNDSig2D_293kA));
     Comps.emplace(kNDSig_293kA,
                   NDComps.at(kNDSig2D_293kA)
                       .WeightedByErrors(LinearCombinationCoeffs_293kA_arr));
+    DumpSpectrumFiniteCheck("kNDSig_293kA_after_weighting", Comps.at(kNDSig_293kA));
+    DumpArrayFiniteCheck("LinearCombinationCoeffs_280kA", LinearCombinationCoeffs_280kA_arr);
+    DumpSpectrumFiniteCheck("NDSig2D_280kA", NDComps.at(kNDSig2D_280kA));
     Comps.emplace(kNDSig_280kA,
                   NDComps.at(kNDSig2D_280kA)
                       .WeightedByErrors(LinearCombinationCoeffs_280kA_arr));
+    DumpSpectrumFiniteCheck("kNDSig_280kA_after_weighting", Comps.at(kNDSig_280kA));
 
     Comps.emplace(kPRISMMC, Comps.at(kNDSig_293kA));
     Comps.at(kPRISMMC) += Comps.at(kNDSig_280kA);
   }
   // Data linear combination:
+  DumpArrayFiniteCheck("LinearCombinationCoeffs_293kA", LinearCombinationCoeffs_293kA_arr);
+  DumpSpectrumFiniteCheck("NDDataCorr2D_293kA", NDComps.at(kNDDataCorr2D_293kA));
   Comps.emplace(kNDDataCorr_293kA,
                 NDComps.at(kNDDataCorr2D_293kA)
                     .WeightedByErrors(LinearCombinationCoeffs_293kA_arr));
+  DumpSpectrumFiniteCheck("kNDDataCorr_293kA_after_weighting", Comps.at(kNDDataCorr_293kA));
+  DumpArrayFiniteCheck("LinearCombinationCoeffs_280kA", LinearCombinationCoeffs_280kA_arr);
+  DumpSpectrumFiniteCheck("NDDataCorr2D_280kA", NDComps.at(kNDDataCorr2D_280kA));
   Comps.emplace(kNDDataCorr_280kA,
                 NDComps.at(kNDDataCorr2D_280kA)
                     .WeightedByErrors(LinearCombinationCoeffs_280kA_arr));
+  DumpSpectrumFiniteCheck("kNDDataCorr_280kA_after_weighting", Comps.at(kNDDataCorr_280kA));
 
   Comps.emplace(kPRISMPred, Comps.at(kNDDataCorr_293kA));
   Comps.at(kPRISMPred) += Comps.at(kNDDataCorr_280kA);
@@ -1262,8 +1294,11 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
 
   // 10. Add weighted and extrapolated 293kA and 280kA samples to get
   //     extrapolated PRISM prediction.
+  DumpSpectrumFiniteCheck("kNDDataExtrap_293kA", Comps.at(kNDDataExtrap_293kA));
+  DumpSpectrumFiniteCheck("kNDDataExtrap_280kA", Comps.at(kNDDataExtrap_280kA));
   Comps.emplace(kNDData_FDExtrap, Comps.at(kNDDataExtrap_293kA));
   Comps.at(kNDData_FDExtrap) += Comps.at(kNDDataExtrap_280kA);
+  DumpSpectrumFiniteCheck("kNDData_FDExtrap_before_backgrounds", Comps.at(kNDData_FDExtrap));
   // 11. For adding in MC corrections:
   Comps.emplace(kNDDataCorr_FDExtrap, Comps.at(kNDData_FDExtrap));
   //------------------------------------------------------------
@@ -1498,6 +1533,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
     Comps.emplace(kFDNCBkg, FDPrediction->PredictComponentSyst(
                                 calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                                 Flavors::kAll, Current::kNC, Sign::kBoth));
+    DumpSpectrumFiniteCheck("kFDNCBkg", Comps.at(kFDNCBkg));
     if (fAxisAgreement && fDebugPlots) {
       Comps.at(kPRISMPred) += Comps.at(kFDNCBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDNCBkg);
@@ -1512,6 +1548,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
                   FDPrediction->PredictComponentSyst(
                       calc, (fVaryNDFDMCData ? kNoShift : shift_fd), FDWrongFlavor,
                       Current::kCC, Sign::kBoth));
+    DumpSpectrumFiniteCheck("kFDWrongLepBkg", Comps.at(kFDWrongLepBkg));
     if (fAxisAgreement && fDebugPlots) {
       Comps.at(kPRISMPred) += Comps.at(kFDWrongLepBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDWrongLepBkg);
@@ -1551,6 +1588,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
     else{ //if the WSBkg correction is on ALL (including the WS intrinsic bkg) WS bkg will be added to FDWSBkg as obtained from the WSbkg prediction
       Comps.emplace(kFDWSBkg, Comps.at(kPRISMPredFinalWSB));
     }
+    DumpSpectrumFiniteCheck("kFDWSBkg", Comps.at(kFDWSBkg));
 
     if (fAxisAgreement && fDebugPlots) {
       Comps.at(kPRISMPred) += Comps.at(kFDWSBkg);
@@ -1596,6 +1634,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
                         calc, (fVaryNDFDMCData ? kNoShift : shift_fd),
                         FDIntrinsicFlavor, Current::kCC, Sign::kBoth));
     }
+    DumpSpectrumFiniteCheck("kFDIntrinsicBkg", Comps.at(kFDIntrinsicBkg));
     if (fAxisAgreement && fDebugPlots) {
       Comps.at(kPRISMPred) += Comps.at(kFDIntrinsicBkg);
       Comps.at(kPRISMMC) += Comps.at(kFDIntrinsicBkg);

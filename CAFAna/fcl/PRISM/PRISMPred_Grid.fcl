@@ -6,11 +6,9 @@
 
 BasicPred: {
 	#output_file: ["/home/vol06/scarf1206/PRISM_Thesis/PRISMPreds/PRISMPred_EnuReco_4Flav_Nom_Jun23.root", "UPDATE"]
-	#output_file: ["PRISMPred_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026_35-amc1.root", "UPDATE"]
+	output_file: ["/exp/dune/data/users/lorenzog/prism/pred/test_batch_tryrunplan.root", "UPDATE"]
 	
-	#state_file: "/home/vol06/scarf1206/PRISM_Thesis/PRISMStateFiles/PRISMState_EnuReco_Nom_4Flav_StatsOnly_30May23.root"
-	#state_file: "/exp/dune/data/users/yuribae/prism/state/PRISMStateFile_EnuReco_NewFluxSystSep21_AllFocusingPars.root"
-	#state_file: "/exp/dune/data/users/yuribae/prism/state/prism_state_v3r5p10-37-g0f2b8dc_HornDeformInducedBField_OffAxis2026.root"
+	state_file: "/pnfs/dune/scratch/users/lorenzog/prism/state/prism_state_all_batch.root"
 
 	# Analysis variable name - must match variable in state file
 	projection_name: EnuReco # ELepEHad_param, ETrue, etc.
@@ -36,7 +34,7 @@ BasicPred: {
 	match_intrinsic_nue: true
 
 	# Regularisation parameter for unfolding - greater stability in fits
-	#unfold_reg_param: 0.0003 # default is 0.0001
+	#unfold_reg_param: 0.0001 # default is 0.0001
 
 	# True to include FD Wrong Sign background on a data-driven approach
 	match_ws: false
@@ -50,37 +48,37 @@ BasicPred: {
 			chan: @local::FitChannels.Numu_disp
 			energy_range: [0.5, 6]
 			reg_factor_293kA: 5.6E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Numubar_disp
 			energy_range: [0.5, 6]
 			reg_factor_293kA: 1.9E-17
-			reg_factor_280: 1E-20
+			reg_factor_280kA: 1E-20
 			},
 			{
 			chan: @local::FitChannels.Nue_app
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 3.4E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nuebar_app
 			energy_range: [0.5, 5]
 			reg_factor_293kA: 9.9E-18
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nutau_app
 			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			},
 			{
 			chan: @local::FitChannels.Nutaubar_app
 			energy_range: [3.35, 10]
 			reg_factor_293kA: 2.5E-17
-			reg_factor_280: 1E-18
+			reg_factor_280kA: 1E-18
 			}
 		]
 
@@ -88,10 +86,24 @@ BasicPred: {
 		set_ND_errors_from_rate: true
 
 		RunPlans: {
-			#numode: @local::RunPlans.guess_fine
-			#nubmode: @local::RunPlans.guess_fine
-			numode: @local::RunPlans.guess
-			nubmode: @local::RunPlans.guess
+			numode: { plan: [ 	{ xrange: [2,-2]  time: 9  horn_current: 280 },
+                     			{ xrange: [2,-2]  time: 149 },
+                    			{ xrange: [-2,-6] time: 5 }, 
+                    			{ xrange: [-6,-10] time: 10 }, 
+                    			{ xrange: [-16,-20] time: 30 }, 
+                    			{ xrange: [-26,-30] time: 40 } 
+							] 
+					}
+
+			nubmode: { plan: [ 	{ xrange: [2,-2]  time: 9  horn_current: 280 },
+                     			{ xrange: [2,-2]  time: 149 },
+                    			{ xrange: [-2,-6] time: 5 }, 
+                    			{ xrange: [-6,-10] time: 10 }, 
+                    			{ xrange: [-16,-20] time: 30 }, 
+                    			{ xrange: [-26,-30] time: 40 } 
+							] 
+					}  
+
 		}
 		Use_EventRateMatching: true
 

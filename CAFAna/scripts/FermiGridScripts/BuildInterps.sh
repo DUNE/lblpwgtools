@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 LOG_TO_IFDH=0
 
 LOGYLOG () {
@@ -71,7 +73,7 @@ if [ -z ${GRID_USER} ]; then
   exit 2
 fi
 
-mv CAFAna $_CONDOR_SCRATCH_DIR/
+# mv CAFAna $_CONDOR_SCRATCH_DIR/
 
 cd $_CONDOR_SCRATCH_DIR
 

@@ -1,0 +1,112 @@
+Looking for directory /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Try 1 of 40
+Found file /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Setting environment variables and links in job.
+Fri Sep 18 09:49:52 BST 2026 86675253.0@jobsub01.fnal.gov BEGIN EXECUTION BuildPredInterps_batch.sh fd_nu
+Setting up larsoft UPS area... /cvmfs/larsoft.opensciencegrid.org
+Setting up DUNE UPS area... /cvmfs/dune.opensciencegrid.org/products/dune/
+[debug] INPUT_TAR_DIR_LOCAL=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/CAFAnaEnv.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/support_software_env.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/ups_env_setup.sh
+Setting up larsoft UPS area... /cvmfs/larsoft.opensciencegrid.org
+Setting up DUNE UPS area... /cvmfs/dune.opensciencegrid.org/products/dune/
+Finished ups setup.
+If running interactively, run 'source /nashome/l/lorenzog/PRISM_SW/lblpwgtools/CAFAna/build/Linux/CAFAnaEnv.sh' first.
+[debug] CAFANA=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+>>> Running FD nu...
+ we have a root file in the input
+ we have a root file in the input
+ we have a root file in the input
+[WARN]: Failed to find any ND_293kA_nu files.
+[WARN]: Failed to find any ND_280kA_nu files.
+[INFO]: Reading from: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/scratch/users/lorenzog/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root
+[INFO]: Reading from: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/scratch/users/lorenzog/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nueswap.root
+[INFO]: Reading from: root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/dune/scratch/users/lorenzog/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_tauswap.root
+[WARN]: Failed to find any ND_293kA_nub files.
+[WARN]: Failed to find any ND_280kA_nub files.
+[WARN]: Failed to find any FD_nub_numu files.
+[WARN]: Failed to find any FD_nub_nue files.
+[WARN]: Failed to find any FD_nub_tau files.
+[INFO]: Using 0 ND systematic dials: 
+[INFO]: Using 0 FD systematic dials: 
+Fake data shift: MissingProtonFakeData
+Fake data name: MissingProtonFakeData=+1
+PRISM analysis axis: Neutrino E_{rec.} (GeV) with 19 bins from 0 to 100.
+PRISM Off axis axis: Off axis position (m) with 66 bins from -30.5 to 2.
+PRISM 280 kA axis: Off axis position (m) with 2 bins from -2 to 2.
+PRISM NDFDEnergyMatchAxis axis: True E_{#nu} (GeV) with 68 bins from 0 to 120.
+IsNu = 1, IsND = 1, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 1, IsND = 1, IsND280kA = 1
+[WARNING] No files loaded.
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 0, IsND = 1, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 1, IsND280kA = 1
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+Filling 205 spectra from 1 files matching 'file list'...
+Warning: Branch 'Ev_reco' not found, field will not be filled
+Warning: Branch 'Elep_reco' not found, field will not be filled
+Warning: Branch 'theta_reco' not found, field will not be filled
+Warning: Branch 'numu_pid' not found, field will not be filled
+Warning: Branch 'nue_pid' not found, field will not be filled
+Warning: Branch 'reco_q' not found, field will not be filled
+Warning: Branch 'reco_numu' not found, field will not be filled
+Warning: Branch 'reco_nue' not found, field will not be filled
+Warning: Branch 'reco_nc' not found, field will not be filled
+Warning: Branch 'muon_exit' not found, field will not be filled
+Warning: Branch 'muon_contained' not found, field will not be filled
+Warning: Branch 'muon_ecal' not found, field will not be filled
+Warning: Branch 'muon_tracker' not found, field will not be filled
+Warning: Branch 'Ehad_veto' not found, field will not be filled
+Warning: Branch 'Elep' not found, field will not be filled
+Warning: Branch 'det_x' not found, field will not be filled
+Warning: Branch 'sigma_Ev_reco' not found, field will not be filled
+Warning: Branch 'sigma_Elep_reco' not found, field will not be filled
+Warning: Branch 'sigma_numu_pid' not found, field will not be filled
+Warning: Branch 'sigma_nue_pid' not found, field will not be filled
+Warning: Branch 'wgt_CrazyFlux' not found, field will not be filled
+Warning: Branch 'wgt_Mnv2p2hGaussEnhancement_NN' not found, field will not be filled
+Warning: Branch 'wgt_Mnv2p2hGaussEnhancement_2p2h' not found, field will not be filled
+Warning: Branch 'wgt_Mnv2p2hGaussEnhancement_1p1h' not found, field will not be filled
+Warning: Branch 'wgt_MissingProtonFakeData' not found, field will not be filled
+Warning: Branch 'wgt_NuWroReweightFakeData' not found, field will not be filled
+
+Patching up FD file to be considered FHC
+CAFAna: Propagation of statistical uncertainties enabled
+
+1.62824e+24 POT
+1.64546e+24 POT
+5.18551e+24 POT
+Saving 0xa8a0500to FDMatchInterp_ETrue_numu_nu
+Saving 0xa968eb0to FDMatrixInterp_ERecETrue_numu_nu
+Saving 0xaaadfc0to FDUnSelected_ETrue_numu_nu
+Saving 0xaa1f6e0to FDSelected_ETrue_numu_nu
+Saving 0x9e54c60to FDDataPred_EnuReco_numu_nu
+Saving 0x946ac80to FDFakeDataBiasPred_EnuReco_numu_nu
+Saving 0xa91afb0to FDMatrixInterp_ERecETrue_nue_nu
+Saving 0xa8c1bf0to FDUnSelected_ETrue_nue_nu
+Saving 0xade23e0to FDSelected_ETrue_nue_nu
+Saving 0x998be80to FDDataPred_EnuReco_nue_nu
+Saving 0x8a48bb0to FDFakeDataBiasPred_EnuReco_nue_nu
+Saving 0xad2c950to FDMatrixInterp_ERecETrue_nutau_nu
+Saving 0xacd0370to FDUnSelected_ETrue_nutau_nu
+Saving 0xb057fd0to FDSelected_ETrue_nutau_nu
+Saving 0x76370a0to FDDataPred_EnuReco_nutau_nu
+Saving 0x9fc25e0to FDFakeDataBiasPred_EnuReco_nutau_nu
+Saving 0xa8225e0to PRISM_EnuReco
+>>> FD nu completed.
+Fri Sep 18 09:56:52 BST 2026 BuildPredInterps_batch.sh COMPLETED with exit status 0

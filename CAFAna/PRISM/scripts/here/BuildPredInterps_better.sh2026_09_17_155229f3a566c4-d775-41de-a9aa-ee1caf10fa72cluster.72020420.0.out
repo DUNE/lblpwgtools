@@ -1,0 +1,67 @@
+Looking for directory /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Try 1 of 40
+Found file /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09 on RCDS.  Setting environment variables and links in job.
+Thu Sep 17 22:53:38 CEST 2026 72020420.0@jobsub03.fnal.gov BEGIN EXECUTION BuildPredInterps_better.sh fd_nu
+[debug] INPUT_TAR_DIR_LOCAL=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/CAFAnaEnv.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/support_software_env.sh
+Sourcing auxiliary env script: /cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09/env/ups_env_setup.sh
+Setting up larsoft UPS area... /cvmfs/larsoft.opensciencegrid.org
+Setting up DUNE UPS area... /cvmfs/dune.opensciencegrid.org/products/dune/
+Finished ups setup.
+If running interactively, run 'source /nashome/l/lorenzog/PRISM_SW/lblpwgtools/CAFAna/build/Linux/CAFAnaEnv.sh' first.
+[debug] CAFANA=/cvmfs/fifeuser2.opensciencegrid.org/sw/dune/75c391da3ba3df73dde7f89c796cf8e7a812352643a8e51b537c9644512d5d09
+>>> Running FD nu...
+ we have a root file in the input
+ we have a root file in the input
+ we have a root file in the input
+[WARN]: Failed to find any ND_293kA_nu files.
+[WARN]: Failed to find any ND_280kA_nu files.
+[INFO]: Reading from: /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root
+[INFO]: Reading from: /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nueswap.root
+[INFO]: Reading from: /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_tauswap.root
+[WARN]: Failed to find any ND_293kA_nub files.
+[WARN]: Failed to find any ND_280kA_nub files.
+[WARN]: Failed to find any FD_nub_numu files.
+[WARN]: Failed to find any FD_nub_nue files.
+[WARN]: Failed to find any FD_nub_tau files.
+[INFO]: Using 0 ND systematic dials: 
+[INFO]: Using 0 FD systematic dials: 
+Fake data shift: MissingProtonFakeData
+Fake data name: MissingProtonFakeData=+1
+PRISM analysis axis: Neutrino E_{rec.} (GeV) with 19 bins from 0 to 100.
+PRISM Off axis axis: Off axis position (m) with 66 bins from -30.5 to 2.
+PRISM 280 kA axis: Off axis position (m) with 2 bins from -2 to 2.
+PRISM NDFDEnergyMatchAxis axis: True E_{#nu} (GeV) with 68 bins from 0 to 120.
+IsNu = 1, IsND = 1, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 1, IsND = 1, IsND280kA = 1
+[WARNING] No files loaded.
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 1, IsND = 0, IsND280kA = 0
+We have 1 file loaded.
+Loading from 1 files
+IsNu = 0, IsND = 1, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 1, IsND280kA = 1
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+IsNu = 0, IsND = 0, IsND280kA = 0
+[WARNING] No files loaded.
+Unable to open /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root
+Will skip this file and try again later.
+Retrying /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root which was previously deferred...
+Failed to open. Will retry 3 more times
+Attempt 0
+Attempt 1
+Attempt 2
+Still unable to read /exp/dune/data/users/icaracas/CAFFiles/FDCAFs/OffAxisCAFs/FD_FHC_nonswap.root
+Aborting
+Thu Sep 17 22:55:38 CEST 2026 BuildPredInterps_better.sh COMPLETED with exit status 134

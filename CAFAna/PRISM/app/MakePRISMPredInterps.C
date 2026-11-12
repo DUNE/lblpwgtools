@@ -193,7 +193,7 @@ int main(int argc, char const *argv[]) {
       size_t class_loc = InputFilePattern.find_first_of('[');
       size_t earliest_regex = std::min(asterisk_loc, class_loc);
       size_t last_slash_loc = InputFilePattern.find_last_of('/');
-      size_t root_loc = InputFilePattern.find("root");
+      size_t root_loc = InputFilePattern.find(".root");
 
       if ((asterisk_loc != std::string::npos) &&
           (last_slash_loc != std::string::npos) &&
@@ -215,13 +215,18 @@ int main(int argc, char const *argv[]) {
 
       std::vector<std::string> CAFs;
       if (earliest_regex == std::string::npos) {
-                    
-        if(root_loc != earliest_regex){
-          std::cout<<" we have a root file in the input"<<std::endl;
+        const bool is_explicit_root_file =
+            (root_loc != std::string::npos) &&
+            ((root_loc + 5 == InputFilePattern.size()) ||
+             (InputFilePattern.compare(root_loc, 5, ".root") == 0));
+
+        if (is_explicit_root_file) {
+          std::cout << "[INFO]: Single ROOT file supplied: " << InputFilePattern
+                    << std::endl;
           CAFs.push_back(dir + pattern);
-        }
-        else{
-          std::cout<<" no root file in the input. please specify the txt/list file containing your desired root file locations"<<std::endl;
+        } else {
+          std::cout << "[INFO]: Treating input as a text file list: "
+                    << InputFilePattern << std::endl;
           CAFs = GetCAFFilesFromInputList(InputFilePattern);
         }
       } else {
@@ -246,7 +251,7 @@ int main(int argc, char const *argv[]) {
                 << " files." << std::endl;
     }
     for (auto &f : input_CAF_files[config]) {
-      std::cout << "[INFO]: Reading from: " << f << std::endl;
+      std::cout << "[INFO]: " << DescribeConfig(config) << " - Reading from: " << f << std::endl;
 
       // Make files pnfs friendly.
       std::string xrootd_f = pnfs2xrootd(f);

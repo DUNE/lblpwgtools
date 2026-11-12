@@ -1,0 +1,63 @@
+Thu Sep 17 20:54:00 UTC 2026 30263611.0@jobsub05.fnal.gov BEGIN EXECUTION BuildPredInterps_better.sh nd_nu
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2TypeTraits
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type JBinId
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2Jagged
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedD
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedF
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedI
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TH2Jagged.h
+   requested to autoload type TH2JaggedC
+./BuildPredInterps_better.sh: line 62:  2219 Aborted                 (core dumped) MakePRISMPredInterps -o ${OUTPUTDIR}/prism_state_ND_nu.root -N-nu "${NDFHCPNFSDIR}/CAFv7_*" --bin-descriptor ${ANA_BINNING} --syst-descriptor ${LIST_OSYSTS} --no-fakedata-dials -A ${AVA_VAR} --PRISM-fake-data ${FAKE_DATA} --UseSelection
+
+==========================
+Below are CVMFS log details for expert debugging purposes only.  The job may have failed for unrelated reasons
+
+cvmfs info repo: dune.opensciencegrid.org
+Attribute "revision" had a 4 byte value for /cvmfs/dune.opensciencegrid.org/:
+4107
+[9 Sep 2026 15:32:31 CDT] switched to catalog revision 4107
+
+cvmfs info repo: larsoft.opensciencegrid.org
+Attribute "revision" had a 4 byte value for /cvmfs/larsoft.opensciencegrid.org/:
+1182
+[17 Sep 2026 14:49:00 CDT] switched to catalog revision 1182
+
+cvmfs info repo: dune.osgstorage.org
+Attribute "revision" had a 6 byte value for /cvmfs/dune.osgstorage.org/:
+242045
+[16 Sep 2026 12:14:39 CDT] switched to catalog revision 242045
+
+cvmfs info repo: fifeuser1.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser1.opensciencegrid.org/:
+2871672
+[17 Sep 2026 15:53:02 CDT] switched to catalog revision 2871672
+
+cvmfs info repo: fifeuser2.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser2.opensciencegrid.org/:
+2869862
+[17 Sep 2026 15:53:50 CDT] switched to catalog revision 2869862
+
+cvmfs info repo: fifeuser3.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser3.opensciencegrid.org/:
+3015646
+[17 Sep 2026 15:54:04 CDT] switched to catalog revision 3015646
+
+cvmfs info repo: fifeuser4.opensciencegrid.org
+Attribute "revision" had a 7 byte value for /cvmfs/fifeuser4.opensciencegrid.org/:
+3013207
+[17 Sep 2026 15:53:33 CDT] switched to catalog revision 3013207
+==========================
+Thu Sep 17 20:55:10 UTC 2026 BuildPredInterps_better.sh COMPLETED with exit status 134
