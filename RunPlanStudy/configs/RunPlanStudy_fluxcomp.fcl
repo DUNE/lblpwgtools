@@ -1,0 +1,173 @@
+# Self-contained config for the run-plan study: plan = fluxcomp
+# (PRISMPrediction only searches build/Linux/fcl/PRISM for includes, so the
+#  shared block is inlined; edit RunPlanStudy_Base.fcl + regenerate if needed)
+
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+# Shared settings for the run-plan study. Copied from
+# CAFAna/fcl/PRISM/PRISMPred_Grid.fcl (commit 4baa0214); only RunPlans and
+# output_file are changed by the individual RunPlanStudy_*.fcl files.
+#
+# Run-plan convention (CAFAna/PRISM/RunPlan.h): "time" is a relative weight.
+# All stops (both horn currents) are renormalised so their sum = POT_years.
+# ND off-axis bins are 0.5 m wide from -30.5 m to +2 m; bins not covered
+# by any stop get zero POT; overlapping stops add.
+#
+# Every plan in this study keeps:
+#   280 kA on-axis : 9    (unchanged)
+#   293 kA on-axis : 149  (unchanged)
+# and changes only how the off-axis time is distributed (sum 85, except
+# plan D which uses 170).
+
+BasicPred: {
+	output_file: ["SET_IN_EACH_CONFIG.root", "RECREATE"]
+
+	state_file: "/pnfs/dune/scratch/users/lorenzog/prism/state/prism_state_all_batch.root"
+
+	projection_name: EnuReco
+	use_PRISM: true
+
+	POT_years: 3.5
+	POT_staging: nostage
+
+	vary_NDFD_data: false
+	prism_debugplots: true
+	use_fake_data: false
+	match_intrinsic_nue: true
+	match_ws: false
+	apply_MC_correction: true
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 5.6E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1.9E-17
+			reg_factor_280kA: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 3.4E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 9.9E-18
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: true
+
+		RunPlans: {}  # set in each config
+
+		Use_EventRateMatching: true
+		write_debug: true
+	}
+
+	samples: @local::JointFitChannels.FourFlavor
+}
+
+# ---------------------------------------------------------------------------
+# Run plans used in the study (numode and nubmode use the same plan).
+# ---------------------------------------------------------------------------
+RunPlanStudy: {
+
+	# 0) Your current plan from PRISMPred_Grid.fcl: 4 off-axis stops with
+	#    gaps at -10..-16 and -20..-26 m, and time growing with distance.
+	baseline: { plan: [
+		{ xrange: [2,-2]      time: 9  horn_current: 280 },
+		{ xrange: [2,-2]      time: 149 },
+		{ xrange: [-2,-6]     time: 5 },
+		{ xrange: [-6,-10]    time: 10 },
+		{ xrange: [-16,-20]   time: 30 },
+		{ xrange: [-26,-30]   time: 40 } ] }
+
+	# A) Full contiguous coverage to -30.5 m, equal time in each of the 7 stops.
+	uniform: { plan: [
+		{ xrange: [2,-2]      time: 9  horn_current: 280 },
+		{ xrange: [2,-2]      time: 149 },
+		{ xrange: [-2,-6]     time: 12.142857 },
+		{ xrange: [-6,-10]    time: 12.142857 },
+		{ xrange: [-10,-14]   time: 12.142857 },
+		{ xrange: [-14,-18]   time: 12.142857 },
+		{ xrange: [-18,-22]   time: 12.142857 },
+		{ xrange: [-22,-26]   time: 12.142857 },
+		{ xrange: [-26,-30.5] time: 12.142857 } ] }
+
+	# B) Full contiguous coverage, time growing with off-axis distance
+	#    to partly offset the falling flux (and so the falling ND rate).
+	fluxcomp: { plan: [
+		{ xrange: [2,-2]      time: 9  horn_current: 280 },
+		{ xrange: [2,-2]      time: 149 },
+		{ xrange: [-2,-6]     time: 4 },
+		{ xrange: [-6,-10]    time: 6 },
+		{ xrange: [-10,-14]   time: 8 },
+		{ xrange: [-14,-18]   time: 10 },
+		{ xrange: [-18,-22]   time: 13 },
+		{ xrange: [-22,-26]   time: 18 },
+		{ xrange: [-26,-30.5] time: 26 } ] }
+
+	# C) Shorter reach: same total off-axis time as A, all of it inside
+	#    -2..-18 m (nothing beyond -18 m). Tests how much the far off-axis
+	#    (low-energy) fluxes matter for the match.
+	nearonly: { plan: [
+		{ xrange: [2,-2]      time: 9  horn_current: 280 },
+		{ xrange: [2,-2]      time: 149 },
+		{ xrange: [-2,-6]     time: 21.25 },
+		{ xrange: [-6,-10]    time: 21.25 },
+		{ xrange: [-10,-14]   time: 21.25 },
+		{ xrange: [-14,-18]   time: 21.25 } ] }
+
+	# D) Same shape as B but off-axis time doubled (170 instead of 85):
+	#    off-axis share goes from ~35% to ~52% of the total, and on-axis
+	#    gets less. Tests the on-axis/off-axis split.
+	fluxcomp_moreoffaxis: { plan: [
+		{ xrange: [2,-2]      time: 9  horn_current: 280 },
+		{ xrange: [2,-2]      time: 149 },
+		{ xrange: [-2,-6]     time: 8 },
+		{ xrange: [-6,-10]    time: 12 },
+		{ xrange: [-10,-14]   time: 16 },
+		{ xrange: [-14,-18]   time: 20 },
+		{ xrange: [-18,-22]   time: 26 },
+		{ xrange: [-22,-26]   time: 36 },
+		{ xrange: [-26,-30.5] time: 52 } ] }
+}
+
+
+BasicPred.PRISM.RunPlans: {
+	numode:  @local::RunPlanStudy.fluxcomp
+	nubmode: @local::RunPlanStudy.fluxcomp
+}
+BasicPred.output_file: ["/nashome/l/lorenzog/PRISM_SW/lblpwgtools/RunPlanStudy/output/PRISMPred_RunPlan_fluxcomp.root", "RECREATE"]
+
+predictions: [
+	{
+		@table::BasicPred
+		output_dir: "runplan_fluxcomp"
+	}
+]

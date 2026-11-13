@@ -1,0 +1,8 @@
+[Thu Nov 12 10:23:57 CST 2026] starting uniform
+[Thu Nov 12 10:24:04 CST 2026] finished uniform: EXIT CODE: 0
+[Thu Nov 12 10:24:04 CST 2026] starting fluxcomp
+[Thu Nov 12 10:24:11 CST 2026] finished fluxcomp: EXIT CODE: 0
+[Thu Nov 12 10:24:11 CST 2026] starting nearonly
+[Thu Nov 12 10:24:19 CST 2026] finished nearonly: EXIT CODE: 0
+[Thu Nov 12 10:24:19 CST 2026] starting fluxcomp_moreoffaxis
+[Thu Nov 12 10:24:26 CST 2026] finished fluxcomp_moreoffaxis: EXIT CODE: 0
