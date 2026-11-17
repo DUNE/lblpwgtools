@@ -156,7 +156,14 @@ namespace ana {
         std::cout << "[WARN]: "
                   << xpos << " m) had bad POT: " << xPOT << std::endl;
       }
-      unweighted(xit) = bc / xPOT;
+      // change to not divide by 0 id a slice is not in the runplan
+      // unweighted(xit) = bc / xPOT;
+
+      if (xPOT > 0) {
+        unweighted(xit) = bc / xPOT;
+      } else {
+        unweighted(xit) = 0; // this slice is not exposed so should not contribute
+      }
     }
 
     return unweighted;

@@ -1,0 +1,236 @@
+# Narrow-stop run plans for the run-plan study.
+# Paste these entries inside the RunPlanStudy: { ... } table of
+# RunPlanStudy_Base.fcl (or the self-contained configs).
+#
+# Same structure as "uniform": 280 kA on-axis (9) + 293 kA on-axis (149)
+# + 7 off-axis stops with equal time (12.142857 each, sum 85).
+# Only the WIDTH of each stop changes; the number of positions stays 7 + on-axis.
+#
+# State-file ND off-axis bins are 0.5 m wide with edges at multiples of 0.5 m
+# (-30.5 ... +2), so all xrange edges below sit exactly on bin edges:
+#   1 m stop   -> 2 bins
+#   0.5 m stop -> 1 bin
+# Stop centres follow the uniform plan's spacing (every 4 m).
+
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+	output_file: ["SET_IN_EACH_CONFIG.root", "RECREATE"]
+
+	state_file: "/pnfs/dune/scratch/users/lorenzog/prism/state/prism_state_all_batch.root"
+
+	projection_name: EnuReco
+	use_PRISM: true
+
+	POT_years: 3.5
+	POT_staging: nostage
+
+	vary_NDFD_data: false
+	prism_debugplots: true
+	use_fake_data: false
+	match_intrinsic_nue: true
+	match_ws: false
+	apply_MC_correction: true
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 5.6E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1.9E-17
+			reg_factor_280kA: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 3.4E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 9.9E-18
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: true
+
+		RunPlans: {}  # set in each config
+
+		Use_EventRateMatching: true
+		write_debug: true
+	}
+
+	samples: @local::JointFitChannels.FourFlavor
+}
+
+
+# ---------------------------------------------------------------------------
+# Run plans used in the study (numode and nubmode use the same plan).
+# ---------------------------------------------------------------------------
+RunPlanStudy: {
+
+	# E) 1 m wide stops, centres at 0, -4, -8, ..., -28 m
+	uniform_1m: { plan: [
+		{ xrange: [0.5,-0.5]    time: 9  horn_current: 280 },
+		{ xrange: [0.5,-0.5]    time: 149 },
+		{ xrange: [-3.5,-4.5]   time: 12.142857 },
+		{ xrange: [-7.5,-8.5]   time: 12.142857 },
+		{ xrange: [-11.5,-12.5] time: 12.142857 },
+		{ xrange: [-15.5,-16.5] time: 12.142857 },
+		{ xrange: [-19.5,-20.5] time: 12.142857 },
+		{ xrange: [-23.5,-24.5] time: 12.142857 },
+		{ xrange: [-27.5,-28.5] time: 12.142857 } ] }
+
+	# F) 0.5 m wide stops (one ND bin each), same positions as E
+	uniform_halfm: { plan: [
+		{ xrange: [0,-0.5]      time: 9  horn_current: 280 },
+		{ xrange: [0,-0.5]      time: 149 },
+		{ xrange: [-4,-4.5]     time: 12.142857 },
+		{ xrange: [-8,-8.5]     time: 12.142857 },
+		{ xrange: [-12,-12.5]   time: 12.142857 },
+		{ xrange: [-16,-16.5]   time: 12.142857 },
+		{ xrange: [-20,-20.5]   time: 12.142857 },
+		{ xrange: [-24,-24.5]   time: 12.142857 },
+		{ xrange: [-28,-28.5]   time: 12.142857 } ] }
+
+	# G) 1 m stops pushed to the far edge (last stop at -30.5..-29.5),
+	#    to keep the lowest-energy flux in the match
+	uniform_1m_far: { plan: [
+		{ xrange: [0.5,-0.5]    time: 9  horn_current: 280 },
+		{ xrange: [0.5,-0.5]    time: 149 },
+		{ xrange: [-4,-5]       time: 12.142857 },
+		{ xrange: [-8.5,-9.5]   time: 12.142857 },
+		{ xrange: [-13,-14]     time: 12.142857 },
+		{ xrange: [-17,-18]     time: 12.142857 },
+		{ xrange: [-21.5,-22.5] time: 12.142857 },
+		{ xrange: [-25.5,-26.5] time: 12.142857 },
+		{ xrange: [-29.5,-30.5] time: 12.142857 } ] }
+
+	# H) 0.5 m stops with the flux-compensating times of plan B
+	fluxcomp_halfm: { plan: [
+		{ xrange: [0,-0.5]      time: 9  horn_current: 280 },
+		{ xrange: [0,-0.5]      time: 149 },
+		{ xrange: [-4,-4.5]     time: 4 },
+		{ xrange: [-8,-8.5]     time: 6 },
+		{ xrange: [-12,-12.5]   time: 8 },
+		{ xrange: [-16,-16.5]   time: 10 },
+		{ xrange: [-20,-20.5]   time: 13 },
+		{ xrange: [-24,-24.5]   time: 18 },
+		{ xrange: [-28,-28.5]   time: 26 } ] }
+	
+	
+	# I) 0.5 m slices from +2 to -30 m, flux-compensating times of plan B spread evenly
+	full_range_halfmslice: { plan: [
+		{ xrange: [2,1.5]       time: 1.125  horn_current: 280},
+		{ xrange: [1.5,1]       time: 1.125  horn_current: 280},
+		{ xrange: [1,0.5]       time: 1.125  horn_current: 280},
+		{ xrange: [0.5,0]       time: 1.125  horn_current: 280},
+		{ xrange: [0,-0.5]      time: 1.125  horn_current: 280},
+		{ xrange: [-0.5,-1]     time: 1.125  horn_current: 280},
+		{ xrange: [-1,-1.5]     time: 1.125  horn_current: 280},
+		{ xrange: [-1.5,-2]     time: 1.125  horn_current: 280},
+		{ xrange: [2,1.5]       time: 18.625 },
+		{ xrange: [1.5,1]       time: 18.625 },
+		{ xrange: [1,0.5]       time: 18.625 },
+		{ xrange: [0.5,0]       time: 18.625 },
+		{ xrange: [0,-0.5]      time: 18.625 },
+		{ xrange: [-0.5,-1]     time: 18.625 },
+		{ xrange: [-1,-1.5]     time: 18.625 },
+		{ xrange: [-1.5,-2]     time: 18.625 },
+		{ xrange: [-2,-2.5]     time: 18.625 },
+		{ xrange: [-2.5,-3]     time: 18.625 },
+		{ xrange: [-3,-3.5]     time: 18.625 },
+		{ xrange: [-3.5,-4]     time: 18.625 },
+		{ xrange: [-4,-4.5]     time: 0.5 },
+		{ xrange: [-4.5,-5]     time: 0.5 },
+		{ xrange: [-5,-5.5]     time: 0.5 },
+		{ xrange: [-5.5,-6]     time: 0.5 },
+		{ xrange: [-6,-6.5]     time: 0.5 },
+		{ xrange: [-6.5,-7]     time: 0.5 },
+		{ xrange: [-7,-7.5]     time: 0.5 },
+		{ xrange: [-7.5,-8]     time: 0.5 },
+		{ xrange: [-8,-8.5]     time: 0.75 },
+		{ xrange: [-8.5,-9]     time: 0.75 },
+		{ xrange: [-9,-9.5]     time: 0.75 },
+		{ xrange: [-9.5,-10]    time: 0.75 },
+		{ xrange: [-10,-10.5]   time: 0.75 },
+		{ xrange: [-10.5,-11]   time: 0.75 },
+		{ xrange: [-11,-11.5]   time: 0.75 },
+		{ xrange: [-11.5,-12]   time: 0.75 },
+		{ xrange: [-12,-12.5]   time: 1 },
+		{ xrange: [-12.5,-13]   time: 1 },
+		{ xrange: [-13,-13.5]   time: 1 },
+		{ xrange: [-13.5,-14]   time: 1 },
+		{ xrange: [-14,-14.5]   time: 1 },
+		{ xrange: [-14.5,-15]   time: 1 },
+		{ xrange: [-15,-15.5]   time: 1 },
+		{ xrange: [-15.5,-16]   time: 1 },
+		{ xrange: [-16,-16.5]   time: 1.25 },
+		{ xrange: [-16.5,-17]   time: 1.25 },
+		{ xrange: [-17,-17.5]   time: 1.25 },
+		{ xrange: [-17.5,-18]   time: 1.25 },
+		{ xrange: [-18,-18.5]   time: 1.25 },
+		{ xrange: [-18.5,-19]   time: 1.25 },
+		{ xrange: [-19,-19.5]   time: 1.25 },
+		{ xrange: [-19.5,-20]   time: 1.25 },
+		{ xrange: [-20,-20.5]   time: 1.625 },
+		{ xrange: [-20.5,-21]   time: 1.625 },
+		{ xrange: [-21,-21.5]   time: 1.625 },
+		{ xrange: [-21.5,-22]   time: 1.625 },
+		{ xrange: [-22,-22.5]   time: 1.625 },
+		{ xrange: [-22.5,-23]   time: 1.625 },
+		{ xrange: [-23,-23.5]   time: 1.625 },
+		{ xrange: [-23.5,-24]   time: 1.625 },
+		{ xrange: [-24,-24.5]   time: 2.25 },
+		{ xrange: [-24.5,-25]   time: 2.25 },
+		{ xrange: [-25,-25.5]   time: 2.25 },
+		{ xrange: [-25.5,-26]   time: 2.25 },
+		{ xrange: [-26,-26.5]   time: 2.25 },
+		{ xrange: [-26.5,-27]   time: 2.25 },
+		{ xrange: [-27,-27.5]   time: 2.25 },
+		{ xrange: [-27.5,-28]   time: 2.25 },
+		{ xrange: [-28,-28.5]   time: 3.25 },
+		{ xrange: [-28.5,-29]   time: 3.25 },
+		{ xrange: [-29,-29.5]   time: 3.25 },
+		{ xrange: [-29.5,-30]   time: 3.25 },
+		{ xrange: [-30,-30.5]   time: 3.25 } ] }
+}
+
+# To use one, in a self-contained config:
+ BasicPred.PRISM.RunPlans: {
+ 	numode:  @local::RunPlanStudy.full_range_halfmslice
+ 	nubmode: @local::RunPlanStudy.full_range_halfmslice
+ }
+
+BasicPred.output_file: ["/exp/dune/app/users/mlopusza/lblpwgtools/RunPlanStudy/output_2/PRISMPred_RunPlan_SmallSlices_full_range_halfmslice.root", "RECREATE"]
+
+predictions: [
+	{
+		@table::BasicPred
+		output_dir: "runplan_full_range_halfmslice"
+	}
+]

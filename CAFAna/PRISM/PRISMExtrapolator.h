@@ -2,6 +2,7 @@
 
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
+#include "CAFAna/PRISM/RunPlan.h"
 
 #include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
 
@@ -67,13 +68,14 @@ namespace ana {
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
                             SystShifts shift, double &soln_norm,
-                            double &resid_norm, bool MatchWSBkg) const;
+                            double &resid_norm, bool MatchWSBkg, RunPlan const *NDRunPlan = nullptr) const; // added RunPlan
 
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd>
     GetFarMatchCoefficients(osc::IOscCalc *osc, PRISM::MatchChan chan,
-                            SystShifts shift, bool MatchWSBkg) const {
+                            SystShifts shift, bool MatchWSBkg,
+                          RunPlan const *NDRunPlan = nullptr) const {
       double dummy1, dummy2;
-      return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2, MatchWSBkg);
+      return GetFarMatchCoefficients(osc, chan, shift, dummy1, dummy2, MatchWSBkg, NDRunPlan);
     }
 
     std::pair<TH1 const *, TH1 const *>

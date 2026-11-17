@@ -1,0 +1,159 @@
+# Narrow-stop run plans for the run-plan study.
+# Paste these entries inside the RunPlanStudy: { ... } table of
+# RunPlanStudy_Base.fcl (or the self-contained configs).
+#
+# Same structure as "uniform": 280 kA on-axis (9) + 293 kA on-axis (149)
+# + 7 off-axis stops with equal time (12.142857 each, sum 85).
+# Only the WIDTH of each stop changes; the number of positions stays 7 + on-axis.
+#
+# State-file ND off-axis bins are 0.5 m wide with edges at multiples of 0.5 m
+# (-30.5 ... +2), so all xrange edges below sit exactly on bin edges:
+#   1 m stop   -> 2 bins
+#   0.5 m stop -> 1 bin
+# Stop centres follow the uniform plan's spacing (every 4 m).
+
+#include "AsimovPoints.fcl"
+#include "FitChannels.fcl"
+#include "RunPlans.fcl"
+#include "ScanDefinitions.fcl"
+#include "NuisanceParameters.fcl"
+
+BasicPred: {
+	output_file: ["SET_IN_EACH_CONFIG.root", "RECREATE"]
+
+	state_file: "/pnfs/dune/scratch/users/lorenzog/prism/state/prism_state_all_batch.root"
+
+	projection_name: EnuReco
+	use_PRISM: true
+
+	POT_years: 3.5
+	POT_staging: nostage
+
+	vary_NDFD_data: false
+	prism_debugplots: true
+	use_fake_data: false
+	match_intrinsic_nue: true
+	match_ws: false
+	apply_MC_correction: true
+
+	PRISM: {
+		match_conditioning: [
+			{
+			chan: @local::FitChannels.Numu_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 5.6E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Numubar_disp
+			energy_range: [0.5, 6]
+			reg_factor_293kA: 1.9E-17
+			reg_factor_280kA: 1E-20
+			},
+			{
+			chan: @local::FitChannels.Nue_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 3.4E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nuebar_app
+			energy_range: [0.5, 5]
+			reg_factor_293kA: 9.9E-18
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutau_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			},
+			{
+			chan: @local::FitChannels.Nutaubar_app
+			energy_range: [3.35, 10]
+			reg_factor_293kA: 2.5E-17
+			reg_factor_280kA: 1E-18
+			}
+		]
+
+		set_ND_errors_from_rate: true
+
+		RunPlans: {}  # set in each config
+
+		Use_EventRateMatching: true
+		write_debug: true
+	}
+
+	samples: @local::JointFitChannels.FourFlavor
+}
+
+
+# ---------------------------------------------------------------------------
+# Run plans used in the study (numode and nubmode use the same plan).
+# ---------------------------------------------------------------------------
+RunPlanStudy: {
+
+	# E) 1 m wide stops, centres at 0, -4, -8, ..., -28 m
+	uniform_1m: { plan: [
+		{ xrange: [0.5,-0.5]    time: 9  horn_current: 280 },
+		{ xrange: [0.5,-0.5]    time: 149 },
+		{ xrange: [-3.5,-4.5]   time: 12.142857 },
+		{ xrange: [-7.5,-8.5]   time: 12.142857 },
+		{ xrange: [-11.5,-12.5] time: 12.142857 },
+		{ xrange: [-15.5,-16.5] time: 12.142857 },
+		{ xrange: [-19.5,-20.5] time: 12.142857 },
+		{ xrange: [-23.5,-24.5] time: 12.142857 },
+		{ xrange: [-27.5,-28.5] time: 12.142857 } ] }
+
+	# F) 0.5 m wide stops (one ND bin each), same positions as E
+	uniform_halfm: { plan: [
+		{ xrange: [0,-0.5]      time: 9  horn_current: 280 },
+		{ xrange: [0,-0.5]      time: 149 },
+		{ xrange: [-4,-4.5]     time: 12.142857 },
+		{ xrange: [-8,-8.5]     time: 12.142857 },
+		{ xrange: [-12,-12.5]   time: 12.142857 },
+		{ xrange: [-16,-16.5]   time: 12.142857 },
+		{ xrange: [-20,-20.5]   time: 12.142857 },
+		{ xrange: [-24,-24.5]   time: 12.142857 },
+		{ xrange: [-28,-28.5]   time: 12.142857 } ] }
+
+	# G) 1 m stops pushed to the far edge (last stop at -30.5..-29.5),
+	#    to keep the lowest-energy flux in the match
+	uniform_1m_far: { plan: [
+		{ xrange: [0.5,-0.5]    time: 9  horn_current: 280 },
+		{ xrange: [0.5,-0.5]    time: 149 },
+		{ xrange: [-4,-5]       time: 12.142857 },
+		{ xrange: [-8.5,-9.5]   time: 12.142857 },
+		{ xrange: [-13,-14]     time: 12.142857 },
+		{ xrange: [-17,-18]     time: 12.142857 },
+		{ xrange: [-21.5,-22.5] time: 12.142857 },
+		{ xrange: [-25.5,-26.5] time: 12.142857 },
+		{ xrange: [-29.5,-30.5] time: 12.142857 } ] }
+
+	# H) 0.5 m stops with the flux-compensating times of plan B
+	fluxcomp_halfm: { plan: [
+		{ xrange: [0,-0.5]      time: 9  horn_current: 280 },
+		{ xrange: [0,-0.5]      time: 149 },
+		{ xrange: [-4,-4.5]     time: 4 },
+		{ xrange: [-8,-8.5]     time: 6 },
+		{ xrange: [-12,-12.5]   time: 8 },
+		{ xrange: [-16,-16.5]   time: 10 },
+		{ xrange: [-20,-20.5]   time: 13 },
+		{ xrange: [-24,-24.5]   time: 18 },
+		{ xrange: [-28,-28.5]   time: 26 } ] }
+}
+
+# To use one, in a self-contained config:
+ BasicPred.PRISM.RunPlans: {
+ 	numode:  @local::RunPlanStudy.uniform_halfm
+ 	nubmode: @local::RunPlanStudy.uniform_halfm
+ }
+
+BasicPred.output_file: ["/exp/dune/app/users/mlopusza/lblpwgtools/RunPlanStudy/output_2/PRISMPred_RunPlan_SmallSlices_uniform_halfm.root", "RECREATE"]
+
+predictions: [
+	{
+		@table::BasicPred
+		output_dir: "runplan_uniform_halfm"
+	}
+]

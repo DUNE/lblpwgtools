@@ -1084,7 +1084,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   // linear combination for PRSIM prediction - oscillated spectrum
   std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombination =
       fFluxMatcher->GetFarMatchCoefficients(
-          calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift), flagPredictionWSBkg);
+          calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift), flagPredictionWSBkg, &NDRunPlan);
 
   // Get the residual from the event rate/flux matcher.
   Eigen::ArrayXd resid_arr = fFluxMatcher->GetLastResidual();
@@ -1362,7 +1362,7 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
     //define the Linear Combination for WSB
     std::pair<Eigen::ArrayXd, Eigen::ArrayXd> LinearCombinationWSB =
         fFluxMatcherWSB->GetFarMatchCoefficients(
-            calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift), fMatchWSBkg);
+            calc, match_chan, (fVaryNDFDMCData ? kNoShift : shift), fMatchWSBkg, &NDRunPlan);
     // save coefficients vs off axis position - WSB prediction
     Comps.emplace(kNDFDWeightings_293kAWSB, LinearCombinationCoefficientsSpectrun(match_chan, LinearCombinationWSB, oaAxis, 293));
     Comps.emplace(kNDFDWeightings_280kAWSB, LinearCombinationCoefficientsSpectrun(match_chan, LinearCombinationWSB, oaAxis280, 280));

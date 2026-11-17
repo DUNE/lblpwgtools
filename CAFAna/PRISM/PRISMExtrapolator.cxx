@@ -149,7 +149,7 @@ PredictionInterp const *PRISMExtrapolator::GetFDPred(BeamMode bm) const {
 //--------------------------------------------------------------------------------
 std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoefficients(
     osc::IOscCalc *calc, PRISM::MatchChan match_chan, SystShifts shift,
-    double &soln_norm, double &resid_norm, bool MatchWSBkg) const {
+    double &soln_norm, double &resid_norm, bool MatchWSBkg, RunPlan const *NDRunPlan) const {
 
   static osc::NoOscillations no;
 
@@ -312,6 +312,33 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   std::vector<double> off_axis_bin_edges_280kA = NDOffAxis_280kA_spec.GetBinnings().at(1).Edges();
 
+  // exclude bins that are not exposed by the runplan
+  // POT of a slice in the run plan (same logic as RunPlan::Unweight)
+  auto slicePOT = [&](double xlow, double xup, int kA) {
+    if (!NDRunPlan) return 1.0;                    // no run plan -> treat as exposed
+    std::vector<DetectorStop> stops;
+    NDRunPlan->FindStop(0.5 * (xlow + xup), kA, stops);
+    double pot = 0;
+    for (auto const &st : stops) pot += st.POT;
+    return pot;
+  };
+
+  // Remove unexposed slices from the fit by zeroing their ND flux
+  std::vector<bool> unexposed_293kA(NDFluxMatrix_293kA.rows(), false);
+  for (int i = 0; i < NDFluxMatrix_293kA.rows(); ++i) {
+    if (slicePOT(off_axis_bin_edges_293kA[i], off_axis_bin_edges_293kA[i + 1], 293) <= 0) {
+      NDFluxMatrix_293kA.row(i).setZero();
+      unexposed_293kA[i] = true;
+    }
+  }
+  std::vector<bool> unexposed_280kA(NDFluxMatrix_280kA.rows(), false);
+  for (int i = 0; i < NDFluxMatrix_280kA.rows(); ++i) {
+    if (slicePOT(off_axis_bin_edges_280kA[i], off_axis_bin_edges_280kA[i + 1], 280) <= 0) {
+      NDFluxMatrix_280kA.row(i).setZero();
+      unexposed_280kA[i] = true;
+    }
+  }
+
   // Total ND flux matrix: combines 293kA and 280kA
   Eigen::MatrixXd NDFluxMatrix = Eigen::MatrixXd::Zero(NCoeffs, NEBins);
   // Top rows of the total ND matrix is the 293kA matrix
@@ -374,6 +401,11 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
 
   Eigen::VectorXd OffAxisWeights_293kA = OffAxisWeights.head(off_axis_bin_edges_293kA.size() - 1);
   Eigen::VectorXd OffAxisWeights_280kA = OffAxisWeights.tail(off_axis_bin_edges_280kA.size() - 1);
+ 
+  for (int i = 0; i < OffAxisWeights_293kA.size(); ++i)
+    if (unexposed_293kA[i]) OffAxisWeights_293kA(i) = 0;
+  for (int i = 0; i < OffAxisWeights_280kA.size(); ++i)
+    if (unexposed_280kA[i]) OffAxisWeights_280kA(i) = 0;
 
   std::cerr << "[PRISM DEBUG] coefficients for " << match_chan << ":\n"
             << "  293kA = " << OffAxisWeights_293kA.transpose() << "\n"
