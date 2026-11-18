@@ -1,6 +1,6 @@
-#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
+#include "PRISM/PRISMReweightableSpectrum.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMDetectorExtrapolation.h"
 
 //#include "CAFAna/Core/SystShifts.h"
 //#include "CAFAna/Systs/AnaSysts.h"

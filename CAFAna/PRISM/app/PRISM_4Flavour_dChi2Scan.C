@@ -11,12 +11,12 @@
 #include "CAFAna/Experiment/ReactorExperiment.h"
 #include "CAFAna/Experiment/SingleSampleExperiment.h"
 
-#include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
-#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/SimpleChi2Experiment.h"
+#include "PRISM/PRISMExtrapolator.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/PRISMDetectorExtrapolation.h"
+#include "PRISM/PRISMMCEffCorrection.h"
+#include "PRISM/PredictionPRISM.h"
+#include "PRISM/SimpleChi2Experiment.h"
 
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/make_ParameterSet.h"

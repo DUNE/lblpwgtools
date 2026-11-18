@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/EigenUtils.h"
 
 #include <iostream>
 

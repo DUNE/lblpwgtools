@@ -278,7 +278,7 @@ needed for the script to run. E.g.:
   PRISMPrediction --fcl fcl/PRISM/PRISMPred_Grid.fcl
 ```
 
-All FHiCL files are conained in the directory CAFAna/fcl/PRISM/.
+All FHiCL files are conained in the directory CAFAna/PRISM/fcl/.
 
 ### PRISM\_4Flavour\_dChi2Scan.C
 
@@ -296,7 +296,7 @@ into jobs for each fit point.
 ### FHiCL files
 
 
-The FHiCL files in the `CAFAna/fcl/PRISM/` directory contain all the inputs needed
+The FHiCL files in the `CAFAna/PRISM/fcl/` directory contain all the inputs needed
 to run the PRISM scripts and avoids the need for many command line arguments or
 hard-coding. An example of an input in the FHiCL config file is below:
 

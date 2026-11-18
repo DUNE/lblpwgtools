@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/SimpleChi2Experiment.h"
+#include "PRISM/SimpleChi2Experiment.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"

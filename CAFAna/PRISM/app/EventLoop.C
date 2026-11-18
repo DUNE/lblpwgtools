@@ -6,8 +6,8 @@
 
 #include "CAFAna/Systs/XSecSystList.h"
 
-#include "CAFAna/PRISM/Cuts.h"
-#include "CAFAna/PRISM/Weights.h"
+#include "PRISM/Cuts.h"
+#include "PRISM/Weights.h"
 
 #include "TFile.h"
 #include "TTree.h"

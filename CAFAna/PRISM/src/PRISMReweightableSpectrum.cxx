@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
+#include "PRISM/PRISMReweightableSpectrum.h"
 #include "CAFAna/Core/Weight.h"
 
 #include "TDirectory.h"

@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/PredictionsForPRISM.h"
+#include "PRISM/PredictionsForPRISM.h"
 
 #include "CAFAna/Core/LoadFromFile.h"
 #include "CAFAna/Core/LoadFromRegistry.h"

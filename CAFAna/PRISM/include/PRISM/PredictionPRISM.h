@@ -12,11 +12,11 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
-#include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/RunPlan.h"
-#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
-#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
+#include "PRISM/PRISMReweightableSpectrum.h"
+#include "PRISM/PRISMExtrapolator.h"
+#include "PRISM/RunPlan.h"
+#include "PRISM/PRISMDetectorExtrapolation.h"
+#include "PRISM/PRISMMCEffCorrection.h"
 
 #include "TH3.h"
 

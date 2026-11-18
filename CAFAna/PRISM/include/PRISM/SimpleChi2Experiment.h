@@ -2,8 +2,8 @@
 
 #include "CAFAna/Prediction/IPrediction.h"
 #include "CAFAna/Experiment/IExperiment.h"
-#include "CAFAna/PRISM/EigenUtils.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
+#include "PRISM/EigenUtils.h"
+#include "PRISM/PredictionPRISM.h"
 
 namespace ana {
 

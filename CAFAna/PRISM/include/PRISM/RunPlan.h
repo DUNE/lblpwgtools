@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CAFAna/PRISM/PRISMReweightableSpectrum.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/PRISMReweightableSpectrum.h"
+#include "PRISM/EigenUtils.h"
 
 #include "fhiclcpp/ParameterSet.h"
 #include "TH2.h"

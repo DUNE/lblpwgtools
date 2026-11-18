@@ -3,8 +3,8 @@
 
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMUtils.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"
 
 #include "fhiclcpp/ParameterSet.h"

@@ -9,10 +9,10 @@
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoExtrap.h"
 
-#include "CAFAna/PRISM/PredictionsForPRISM.h"
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/PredictionsForPRISM.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PredictionPRISM.h"
+#include "PRISM/EigenUtils.h"
 
 #include "StandardRecord/StandardRecord.h"
 

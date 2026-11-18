@@ -2,9 +2,9 @@
 
 #include "CAFAna/Core/SystShifts.h"
 #include "CAFAna/Core/OscCalcFwdDeclare.h"
-#include "CAFAna/PRISM/RunPlan.h"
+#include "PRISM/RunPlan.h"
 
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
 
 #include <limits>
 #include <map>

@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/Cuts.h"
+#include "PRISM/Cuts.h"
 
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"

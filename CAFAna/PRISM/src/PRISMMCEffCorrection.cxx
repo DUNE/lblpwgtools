@@ -1,8 +1,8 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/PRISMMCEffCorrection.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
 
 using namespace PRISM;
 

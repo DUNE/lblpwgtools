@@ -1,5 +1,5 @@
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMUtils.h"
 
 #include "CAFAna/Cuts/AnaCuts.h"
 #include "CAFAna/Cuts/TruthCuts.h"

@@ -4,7 +4,7 @@
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/EigenUtils.h"
 
 #include "TFile.h"
 #include "TH1D.h"

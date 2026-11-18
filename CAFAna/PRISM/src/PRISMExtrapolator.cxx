@@ -1,5 +1,5 @@
-#include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/PRISMExtrapolator.h"
+#include "PRISM/EigenUtils.h"
 
 #include "CAFAna/Prediction/PredictionInterp.h"
 #include "CAFAna/Prediction/PredictionNoOsc.h"

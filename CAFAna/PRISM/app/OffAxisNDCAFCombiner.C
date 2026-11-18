@@ -1,8 +1,8 @@
 #include "CAFAna/Core/Progress.h"
 #include "CAFAna/Cuts/TruthCuts.h"
 
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/Weights.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/Weights.h"
 
 #include "CAFAna/Analysis/common_fit_definitions.h"
 

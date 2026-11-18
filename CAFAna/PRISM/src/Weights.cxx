@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/Weights.h"
+#include "PRISM/Weights.h"
 
 #include "CAFAna/Analysis/AnalysisVars.h"
 

@@ -1,13 +1,13 @@
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/PRISM/PredictionsForPRISM.h"
+#include "PRISM/PredictionsForPRISM.h"
 
-#include "CAFAna/PRISM/Axes.h"
-#include "CAFAna/PRISM/Cuts.h"
-#include "CAFAna/PRISM/PRISMAnalysisDefinitions.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/Weights.h"
+#include "PRISM/Axes.h"
+#include "PRISM/Cuts.h"
+#include "PRISM/PRISMAnalysisDefinitions.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/PredictionPRISM.h"
+#include "PRISM/Weights.h"
 
 #include "CAFAna/Systs/EnergySysts.h"
 #include "CAFAna/Systs/RecoEnergyNDSysts.h"

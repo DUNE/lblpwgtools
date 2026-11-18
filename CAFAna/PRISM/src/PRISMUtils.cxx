@@ -1,7 +1,7 @@
-#include "CAFAna/PRISM/PRISMUtils.h"
+#include "PRISM/PRISMUtils.h"
 
-#include "CAFAna/PRISM/PredictionPRISM.h"
-#include "CAFAna/PRISM/EigenUtils.h"
+#include "PRISM/PredictionPRISM.h"
+#include "PRISM/EigenUtils.h"
 
 #include "CAFAna/Analysis/CalcsNuFit.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"

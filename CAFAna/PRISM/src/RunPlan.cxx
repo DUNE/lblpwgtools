@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/RunPlan.h"
+#include "PRISM/RunPlan.h"
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Core/MathUtil.h"
 

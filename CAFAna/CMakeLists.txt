@@ -146,7 +146,6 @@ add_subdirectory(Vars)
 add_subdirectory(PRISM)
 add_subdirectory(bin)
 add_subdirectory(scripts)
-add_subdirectory(fcl)
 
 configure_file(cmake/CAFAnaEnv.sh.in
   ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CAFAnaEnv.sh @ONLY)

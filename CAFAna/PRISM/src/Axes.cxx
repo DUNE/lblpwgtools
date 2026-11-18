@@ -1,4 +1,4 @@
-#include "CAFAna/PRISM/Axes.h"
+#include "PRISM/Axes.h"
 
 #include "CAFAna/Core/Binning.h"
 #include "CAFAna/Core/Var.h"
@@ -15,6 +15,21 @@ using namespace ana;
 namespace PRISM {
 
 const Var kTrueOffAxisPos_m = SIMPLEVAR(abspos_x) * Constant(1.0E-2);
+
+// PRISM-specific reco binnings (moved here from CAFAna/Core/Binning.h)
+const std::vector<double> kPRISMBinEdges = {0.,  0.5,  1.,  1.25, 1.5, 1.75,
+                                            2.,  2.25, 2.5, 2.75, 3.,  3.25,
+                                            3.5, 3.75, 4.,  5.,   6.,  10., 100.};
+
+const std::vector<double> kPRISMFineBinEdges = {0., 0.5, 0.625, 0.75, 0.875, 1.,
+                                                1.125, 1.25, 1.375, 1.5,
+                                                1.625, 1.75, 1.875, 2., 2.125,  2.25,
+                                                2.375, 2.5, 2.625, 2.75, 2.875, 3., 3.125,
+                                                3.25, 3.375, 3.5, 3.625, 3.75, 3.875, 4.,
+                                                5., 6., 10., 100.};
+
+const Binning kPRISMRecoBinning = Binning::Custom(kPRISMBinEdges);
+const Binning kPRISMFineRecoBinning = Binning::Custom(kPRISMFineBinEdges);
 
 Binning GetBinning(std::string const &xbinning) {
   if (xbinning == "uniform_fine") {

@@ -5,10 +5,10 @@
 #include "NuisanceParameters.fcl"
 
 # Shared settings for the run-plan study. Copied from
-# CAFAna/fcl/PRISM/PRISMPred_Grid.fcl (commit 4baa0214); only RunPlans and
+# CAFAna/PRISM/fcl/PRISMPred_Grid.fcl (commit 4baa0214); only RunPlans and
 # output_file are changed by the individual RunPlanStudy_*.fcl files.
 #
-# Run-plan convention (CAFAna/PRISM/RunPlan.h): "time" is a relative weight.
+# Run-plan convention (CAFAna/PRISM/include/PRISM/RunPlan.h): "time" is a relative weight.
 # All stops (both horn currents) are renormalised so their sum = POT_years.
 # ND off-axis bins are 0.5 m wide from -30.5 m to +2 m; bins not covered
 # by any stop get zero POT; overlapping stops add.

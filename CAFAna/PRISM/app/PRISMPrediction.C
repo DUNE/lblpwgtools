@@ -2,11 +2,11 @@
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
-#include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PRISMDetectorExtrapolation.h"
-#include "CAFAna/PRISM/PRISMMCEffCorrection.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
+#include "PRISM/PRISMExtrapolator.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/PRISMDetectorExtrapolation.h"
+#include "PRISM/PRISMMCEffCorrection.h"
+#include "PRISM/PredictionPRISM.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
 

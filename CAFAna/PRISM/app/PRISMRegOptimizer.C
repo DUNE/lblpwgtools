@@ -2,9 +2,9 @@
 #include "CAFAna/Analysis/Exposures.h"
 #include "CAFAna/Analysis/common_fit_definitions.h"
 
-#include "CAFAna/PRISM/PRISMExtrapolator.h"
-#include "CAFAna/PRISM/PRISMUtils.h"
-#include "CAFAna/PRISM/PredictionPRISM.h"
+#include "PRISM/PRISMExtrapolator.h"
+#include "PRISM/PRISMUtils.h"
+#include "PRISM/PredictionPRISM.h"
 #include "CAFAna/Prediction/IPrediction.h"
 
 #include "CAFAna/Systs/DUNEFluxSysts.h"
