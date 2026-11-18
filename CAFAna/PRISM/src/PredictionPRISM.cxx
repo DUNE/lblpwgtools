@@ -1369,7 +1369,9 @@ MatchChan antimatch_chan = GetAntiChannel(match_chan);
   //----------------------------------------------------------------
 
   //if no WSB prediction then the prediction will be empty
-  Eigen::ArrayXd EmptyArray = Eigen::ArrayXd::Zero(FDUnOscWeightedSig_IntrinsicWSB.GetEigen(1).matrix().size());
+  // One zero weight per row (true-energy bin) of the 2D matrix; .size() would
+  // give rows*cols and trigger an Eigen 'invalid matrix product' assertion.
+  Eigen::ArrayXd EmptyArray = Eigen::ArrayXd::Zero(FDUnOscWeightedSig_IntrinsicWSB.GetEigen(1).rows());
   //define an empty spectrum (could be any other spectrum weighted by the Empty array )
   Spectrum EmptySpectrum = FDUnOscWeightedSig_IntrinsicWSB.WeightedByErrors(EmptyArray);
   if(!fMatchWSBkg){
