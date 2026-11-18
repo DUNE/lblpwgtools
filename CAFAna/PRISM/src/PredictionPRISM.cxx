@@ -47,10 +47,29 @@ void DumpArrayFiniteCheck(std::string const &label, Eigen::ArrayXd const &arr) {
   }
 }
 
+// Works for both Spectrum (GetEigen -> 1D ArrayXd) and
+// ReweightableSpectrum/PRISMReweightableSpectrum (GetEigen -> 2D MatrixXd).
+// Converting the 2D matrix to an ArrayXd is invalid (Eigen asserts), so
+// iterate over rows/cols instead.
 template <typename T>
 void DumpSpectrumFiniteCheck(std::string const &label, T const &spec) {
-  auto arr = spec.GetEigen(1);
-  DumpArrayFiniteCheck(label, arr);
+  auto const mat = spec.GetEigen(1).eval();
+  std::cerr << "[PRISM DEBUG] " << label << " bin contents ("
+            << mat.rows() << " x " << mat.cols() << "):" << std::endl;
+  for (Eigen::Index c = 0; c < mat.cols(); ++c) {
+    for (Eigen::Index r = 0; r < mat.rows(); ++r) {
+      double v = mat(r, c);
+      std::cerr << "  bin ";
+      if (mat.cols() == 1) {
+        std::cerr << r;
+      } else {
+        std::cerr << "(" << r << "," << c << ")";
+      }
+      std::cerr << ": value=" << v
+                << " finite=" << (std::isfinite(v) ? "yes" : "NO")
+                << std::endl;
+    }
+  }
 }
 
 } // namespace
