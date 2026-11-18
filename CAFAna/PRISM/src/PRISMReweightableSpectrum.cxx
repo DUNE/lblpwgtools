@@ -5,6 +5,7 @@
 #include "TH2.h"
 #include "TObjString.h"
 
+#include <cstdlib>
 #include <iostream>
 
 namespace ana {
@@ -36,6 +37,18 @@ namespace ana {
 
   //-----------------------------------------------------------------------------
   Spectrum PRISMReweightableSpectrum::WeightedByErrors(Eigen::ArrayXd &w_arr) const {
+
+    // Weights are applied along the rows (true/off-axis axis) of the matrix.
+    // Catch size mismatches here with a readable message instead of an
+    // Eigen "invalid matrix product" assertion deep inside Product.h.
+    if (w_arr.size() != fMat.rows() || w_arr.size() != fMatSumSq.rows()) {
+      std::cerr << "[PRISMReweightableSpectrum::WeightedByErrors] size mismatch: "
+                << "weights=" << w_arr.size()
+                << ", fMat=" << fMat.rows() << "x" << fMat.cols()
+                << ", fMatSumSq=" << fMatSumSq.rows() << "x" << fMatSumSq.cols()
+                << std::endl;
+      abort();
+    }
 
     Eigen::VectorXd w_vec = w_arr.matrix();
     Eigen::VectorXd w_vec_sq = (w_arr * w_arr).matrix();
