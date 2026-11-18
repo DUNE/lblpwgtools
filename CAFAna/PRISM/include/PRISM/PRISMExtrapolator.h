@@ -55,6 +55,8 @@ namespace ana {
     GetFDPred(PRISM::BeamMode bm = PRISM::BeamMode::kNuMode) const;
 
     void SetStoreDebugMatches(bool v = true) { fStoreDebugMatches = v; }
+    // Verbose [PRISM DEBUG] printouts of coefficients/residuals. Off by default.
+    void SetDebugPrints(bool v = true) { fDebugPrints = v; }
     void SetMatchIntrinsicNue(bool v = true) { fMatchIntrinsicNue = v; }
 
     void SetIntrinsicNueXsecRatio(const Eigen::ArrayXd&& ratiotrueE) const {
@@ -146,6 +148,7 @@ namespace ana {
     mutable std::unique_ptr<TH1> fLastGaussMatch_280kA;
 
     bool fStoreDebugMatches;
+    bool fDebugPrints = false;
 
     // Whether to include intrinsic nue bkg at FD in target flux matching
     // false: use FD MC for this bkg estimation

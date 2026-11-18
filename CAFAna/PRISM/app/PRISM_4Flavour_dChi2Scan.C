@@ -104,6 +104,8 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
 
   bool vary_NDFD_MCData = scan.get<bool>("vary_NDFD_data", false);
   bool prism_debugplots = scan.get<bool>("prism_debugplots", false); // should always be false
+  // Verbose [PRISM DEBUG] bin-by-bin printouts (independent of debug plots)
+  bool prism_debugprints = scan.get<bool>("prism_debugprints", false);
   bool use_fake_data = scan.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = scan.get<bool>("match_intrinsic_nue", false);
   bool match_ws_bkg = scan.get<bool>("match_ws", false);
@@ -296,6 +298,7 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
     std::cout << "No extra histograms, only do what is necessary for linear combination" << std::endl;
   }
   state.PRISM->SetVaryPRISMDebugPlots(prism_debugplots);
+  state.PRISM->SetDebugPrints(prism_debugprints);
 
   if (use_fake_data) {
     std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
@@ -391,7 +394,9 @@ void PRISMScan(fhicl::ParameterSet const &scan, int fit_binx, int fit_biny) {
 
   if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
 
+  fluxmatcher.SetDebugPrints(prism_debugprints);
   state.PRISM->SetFluxMatcher(&fluxmatcher);
+  fluxmatcherWSB.SetDebugPrints(prism_debugprints);
   state.PRISM->SetFluxMatcherWSB(&fluxmatcherWSB);
 
   // Create a multi experiment

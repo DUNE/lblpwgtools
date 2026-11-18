@@ -407,20 +407,22 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
   for (int i = 0; i < OffAxisWeights_280kA.size(); ++i)
     if (unexposed_280kA[i]) OffAxisWeights_280kA(i) = 0;
 
-  std::cerr << "[PRISM DEBUG] coefficients for " << match_chan << ":\n"
-            << "  293kA = " << OffAxisWeights_293kA.transpose() << "\n"
-            << "  280kA = " << OffAxisWeights_280kA.transpose() << std::endl;
+  if (fDebugPrints) {
+    std::cerr << "[PRISM DEBUG] coefficients for " << match_chan << ":\n"
+              << "  293kA = " << OffAxisWeights_293kA.transpose() << "\n"
+              << "  280kA = " << OffAxisWeights_280kA.transpose() << std::endl;
 
-  for (int i = 0; i < OffAxisWeights_293kA.size(); ++i) {
-    if (!std::isfinite(OffAxisWeights_293kA(i))) {
-      std::cerr << "[PRISM DEBUG] non-finite 293kA coefficient at bin " << i
-                << ": " << OffAxisWeights_293kA(i) << std::endl;
+    for (int i = 0; i < OffAxisWeights_293kA.size(); ++i) {
+      if (!std::isfinite(OffAxisWeights_293kA(i))) {
+        std::cerr << "[PRISM DEBUG] non-finite 293kA coefficient at bin " << i
+                  << ": " << OffAxisWeights_293kA(i) << std::endl;
+      }
     }
-  }
-  for (int i = 0; i < OffAxisWeights_280kA.size(); ++i) {
-    if (!std::isfinite(OffAxisWeights_280kA(i))) {
-      std::cerr << "[PRISM DEBUG] non-finite 280kA coefficient at bin " << i
-                << ": " << OffAxisWeights_280kA(i) << std::endl;
+    for (int i = 0; i < OffAxisWeights_280kA.size(); ++i) {
+      if (!std::isfinite(OffAxisWeights_280kA(i))) {
+        std::cerr << "[PRISM DEBUG] non-finite 280kA coefficient at bin " << i
+                  << ": " << OffAxisWeights_280kA(i) << std::endl;
+      }
     }
   }
 
@@ -440,7 +442,7 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     double bc_u = FDUnOsc_vec(bin_it);
     double fit_val = BestFit(bin_it);
     double e = (bc_o - fit_val) / bc_u;
-    if (!std::isfinite(bc_o) || !std::isfinite(bc_u) || !std::isfinite(fit_val) || !std::isfinite(e)) {
+    if (fDebugPrints && (!std::isfinite(bc_o) || !std::isfinite(bc_u) || !std::isfinite(fit_val) || !std::isfinite(e))) {
       std::cerr << "[PRISM DEBUG] non-finite residual factor at bin " << bin_it
                 << ": bc_o=" << bc_o << ", bc_u=" << bc_u
                 << ", bestFit=" << fit_val << ", residual=" << e
@@ -452,14 +454,16 @@ std::pair<Eigen::ArrayXd, Eigen::ArrayXd> PRISMExtrapolator::GetFarMatchCoeffici
     Residual(bin_it) = e;
   }
 
-  std::cerr << "[PRISM DEBUG] Target bins:" << std::endl;
-  for (int i = 0; i < Target.size(); ++i) {
-    std::cerr << "  bin " << i << ": target=" << Target(i)
-              << ", bestFit=" << BestFit(i)
-              << ", FDUnOsc=" << FDUnOsc_vec(i)
-              << ", residual=" << Residual(i)
-              << ", finite=" << (std::isfinite(Target(i)) && std::isfinite(BestFit(i)) && std::isfinite(FDUnOsc_vec(i)) && std::isfinite(Residual(i)) ? "yes" : "NO")
-              << std::endl;
+  if (fDebugPrints) {
+    std::cerr << "[PRISM DEBUG] Target bins:" << std::endl;
+    for (int i = 0; i < Target.size(); ++i) {
+      std::cerr << "  bin " << i << ": target=" << Target(i)
+                << ", bestFit=" << BestFit(i)
+                << ", FDUnOsc=" << FDUnOsc_vec(i)
+                << ", residual=" << Residual(i)
+                << ", finite=" << (std::isfinite(Target(i)) && std::isfinite(BestFit(i)) && std::isfinite(FDUnOsc_vec(i)) && std::isfinite(Residual(i)) ? "yes" : "NO")
+                << std::endl;
+    }
   }
 
   // Residual to be outputted must have the underflow and overflow elements.

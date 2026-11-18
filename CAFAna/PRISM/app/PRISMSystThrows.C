@@ -46,6 +46,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   bool MCVarFluxSyst = pred.get<bool>("vary_NDFD_data", false);
   bool prism_debugplots = pred.get<bool>("prism_debugplots", false);
+  // Verbose [PRISM DEBUG] bin-by-bin printouts (independent of debug plots)
+  bool prism_debugprints = pred.get<bool>("prism_debugprints", false);
   double unfold_reg_param = pred.get<double>("unfold_reg_param", 0.0001);
 
   if (MCVarFluxSyst == true && prism_debugplots == false) {
@@ -178,6 +180,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
                                       chan_energy_range);
   }
 
+  fluxmatcher.SetDebugPrints(prism_debugprints);
   state.PRISM->SetFluxMatcher(&fluxmatcher);
 
   if (run_plan_nu.GetPlanPOT() > 0) {
@@ -208,6 +211,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "No extra histograms, only do what is necessary for linear combination" << std::endl;
   }
   state.PRISM->SetVaryPRISMDebugPlots(prism_debugplots);
+  state.PRISM->SetDebugPrints(prism_debugprints);
 
   std::map<std::string, MatchChan> Channels;
   if (pred.is_key_to_sequence("samples")) {

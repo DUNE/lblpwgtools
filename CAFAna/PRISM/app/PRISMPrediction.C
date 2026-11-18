@@ -43,6 +43,8 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
 
   bool vary_NDFD_MCData = pred.get<bool>("vary_NDFD_data", false);
   bool prism_debugplots = pred.get<bool>("prism_debugplots", false);
+  // Verbose [PRISM DEBUG] bin-by-bin printouts (independent of debug plots)
+  bool prism_debugprints = pred.get<bool>("prism_debugprints", false);
   bool use_fake_data = pred.get<bool>("use_fake_data", false);
   bool match_intrinsic_nue_bkg = pred.get<bool>("match_intrinsic_nue", false);
   double unfold_reg_param = pred.get<double>("unfold_reg_param", 0.0001);
@@ -147,6 +149,7 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
     std::cout << "No extra histograms, only do what is necessary for linear combination" << std::endl;
   }
   state.PRISM->SetVaryPRISMDebugPlots(prism_debugplots);
+  state.PRISM->SetDebugPrints(prism_debugprints);
 
   if (use_fake_data) {
     std::cout << "Use fake data biased MC as FD and ND 'data'." << std::endl;
@@ -269,7 +272,9 @@ void PRISMPrediction(fhicl::ParameterSet const &pred) {
   }
   if ( match_intrinsic_nue_bkg ) fluxmatcher.SetMatchIntrinsicNue();
 
+  fluxmatcher.SetDebugPrints(prism_debugprints);
   state.PRISM->SetFluxMatcher(&fluxmatcher);
+  fluxmatcherWSB.SetDebugPrints(prism_debugprints);
   state.PRISM->SetFluxMatcherWSB(&fluxmatcherWSB);
   //-------------
 

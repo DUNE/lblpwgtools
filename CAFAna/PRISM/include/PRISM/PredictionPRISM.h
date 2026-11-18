@@ -473,6 +473,8 @@ public:
   void SetNDDataErrorsFromRate(bool v = true) { fSetNDErrorsFromRate = v; }
   void SetVaryNDFDMCData(bool v = true) { fVaryNDFDMCData = v; }
   void SetVaryPRISMDebugPlots(bool v = true) { fDebugPlots = v; }
+  // Verbose [PRISM DEBUG] bin-by-bin printouts (fcl: prism_debugprints)
+  void SetDebugPrints(bool v = true) { fDebugPrints = v; }
   void SetUseFakeData(bool v = true) { fUseFakeData = v; }
   void SetIntrinsicBkgCorr(bool v = true) { fMatchIntrinsicBkg = v; }
   void SetWSBkgCorr(bool v = true) {fMatchWSBkg = v; }
@@ -735,6 +737,9 @@ protected:
   bool fVaryNDFDMCData;
 
   bool fDebugPlots;
+
+  // Print [PRISM DEBUG] bin-by-bin dumps. Off by default.
+  bool fDebugPrints = false;
 
   // Flag for whether we want to use our fake biased data or our nominal MC as
   // our data.
