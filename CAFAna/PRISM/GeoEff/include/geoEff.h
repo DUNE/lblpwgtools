@@ -1,7 +1,6 @@
 #ifndef GEOEFF_H
 #define GEOEFF_H
 
-#include <Python.h> // Need this before including std to avoid _POSIX_C_SOURCE redefinition warning
 
 #include <vector>
 #include <random>

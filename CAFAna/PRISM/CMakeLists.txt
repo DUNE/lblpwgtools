@@ -74,6 +74,7 @@ add_subdirectory(scripts)
 add_subdirectory(fcl)
 add_subdirectory(flux)
 add_subdirectory(FileExposures)
+add_subdirectory(GeoEff)
 
 add_cafana_lib(CAFAnaPRISM)
 
