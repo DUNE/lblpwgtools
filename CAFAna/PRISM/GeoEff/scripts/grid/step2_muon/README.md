@@ -3,6 +3,10 @@
 >[!WARNING]
 >This method may be subject to change depending on the current submission system.
 
+All commands below are run from `lblpwgtools/CAFAna/PRISM/GeoEff`. Jobs run from a
+prebuilt runtime bundle made by `scripts/grid/make_bundle.sh`; worker nodes do not
+compile anything.
+
 Put paths of Hadron efficiency files in `FDCAFs.txt` file:
 
 ```bash
@@ -20,14 +24,14 @@ Create the runtime bundle:
 bash scripts/grid/make_bundle.sh step2 FD_work.tar.gz FDCAFs.txt
 ```
 
-The flat `app/` directory is included automatically. Worker jobs use the bundle directly and do not copy the repository.
+The Python sources from `app/` (`*.py` and `assets/muonEff30.nn`) are included automatically. Worker jobs use the bundle directly and do not copy the repository.
 
 To avoid installing Python dependencies in every job, create a reusable target directory and embed it in the bundle:
 
 ```bash
 bash scripts/env/setup_python_env.sh /path/to/ndgeoeff-pyenv
 export NDGEOEFF_PYTHON_ENV=/path/to/ndgeoeff-pyenv
-scripts/grid/make_bundle.sh step2 FD_work.tar.gz FDCAFs.txt
+bash scripts/grid/make_bundle.sh step2 FD_work.tar.gz FDCAFs.txt
 ```
 
 `setup_python_env.sh` installs CPU-only Torch by default, which is all

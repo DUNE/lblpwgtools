@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Install the step 2 third-party Python dependencies into my_python_env.
+# Install the step 2 third-party Python dependencies into
+# lblpwgtools/CAFAna/PRISM/GeoEff/my_python_env (or the directory given as $1).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

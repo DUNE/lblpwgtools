@@ -3,12 +3,23 @@
 >[!WARNING]
 >This method may be subject to change depending on the current submission system.
 
-Build the runtime files once in the same `fnal-wn-sl7` Singularity image used for submission:
+All commands below are run from `lblpwgtools/CAFAna/PRISM/GeoEff`. Jobs run from a
+prebuilt runtime bundle made by `scripts/grid/make_bundle.sh`; worker nodes do not
+compile anything.
+
+Build the runtime files once, with the standalone GeoEff build, in the same
+`fnal-wn-sl7` Singularity image used for submission and with the environment the
+job will use:
 
 ```bash
-cmake -S . -B build -DNDGEOEFF_BUILD_STEP1=ON
-cmake --build build --target runGeoEffFDEvtSim -j
+source scripts/env/setup_step1.sh
+cmake -S . -B build-step1 -DGEOEFF_BUILD_STEP3_OSC=OFF
+cmake --build build-step1 --target runGeoEffFDEvtSim -j
 ```
+
+>[!NOTE]
+>Do not bundle the binaries from the full CAFAna build: they link the CAFAna
+>shared libraries, which are not shipped. `make_bundle.sh` refuses them.
 
 Make `myFDntuples.txt` with the inputs to be processed using:
 
@@ -30,7 +41,7 @@ mkdir /pnfs/dune/scratch/users/path/to/output
 Create the runtime bundle:
 
 ```bash
-source scripts/grid/make_bundle.sh step1 NDEff.tar.gz myFDntuples.txt
+bash scripts/grid/make_bundle.sh step1 NDEff.tar.gz myFDntuples.txt
 ```
 
 The bundle contains `bin/runGeoEffFDEvtSim`, `lib/libgeoEff.so`, the setup scripts, and the input list. Worker jobs do not compile the code or copy the full repository.

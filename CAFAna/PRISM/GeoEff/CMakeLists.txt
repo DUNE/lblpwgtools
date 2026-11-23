@@ -12,7 +12,8 @@
 #
 # Two ways to build:
 #   * as part of CAFAna (CAFAna/PRISM/CMakeLists.txt does add_subdirectory)
-#   * standalone, without building CAFAna (used by the grid scripts):
+#   * standalone, without building CAFAna (used to build the grid bundles,
+#     see scripts/grid/make_bundle.sh):
 #       cmake -S CAFAna/PRISM/GeoEff -B build && cmake --build build -j
 #     ROOT + Eigen are required; OscLib (OSCLIB_INC/OSCLIB_LIB) is needed for
 #     the oscillated step 3 apps, which then compile CAFAna/Analysis/Calcs.cxx

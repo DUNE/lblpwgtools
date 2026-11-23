@@ -6,7 +6,7 @@
 
 echo "Running on $(hostname) at ${GLIDEIN_Site}. GLIDEIN_DUNESite = ${GLIDEIN_DUNESite}"
 
-BUNDLE_DIR="${INPUT_TAR_DIR_LOCAL}/DUNE_ND_GeoEff"
+BUNDLE_DIR="${INPUT_TAR_DIR_LOCAL}/GeoEff"
 INPUT_DIR="${BUNDLE_DIR}/inputs"
 SETUP_SCRIPT="${BUNDLE_DIR}/scripts/grid/step3_etrim/setupNDEff-grid.sh"
 

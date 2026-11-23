@@ -1,11 +1,25 @@
 # Grid submissions on FNAL machines
 
-Build the runtime files once in the same `fnal-wn-sl7` Singularity image used for submission:
+All commands below are run from `lblpwgtools/CAFAna/PRISM/GeoEff`. Jobs run from a
+prebuilt runtime bundle made by `scripts/grid/make_bundle.sh`; worker nodes do not
+compile anything.
+
+Build the runtime files once, with the standalone GeoEff build, in the same
+`fnal-wn-sl7` Singularity image used for submission and with the environment the
+job will use:
 
 ```bash
-cmake -S . -B build-step3 -DNDGEOEFF_BUILD_STEP1=OFF -DNDGEOEFF_BUILD_STEP3=ON
+source scripts/env/setup_step3.sh
+cmake -S . -B build-step3
 cmake --build build-step3 -j
 ```
+
+The oscillated apps compile `lblpwgtools/CAFAna/Analysis/Calcs.cxx` statically, so
+the binaries only need OscLib/ROOT from CVMFS at run time.
+
+>[!NOTE]
+>Do not bundle the binaries from the full CAFAna build: they link the CAFAna
+>shared libraries, which are not shipped. `make_bundle.sh` refuses them.
 
 Write input file paths into `.txt` files:
 
@@ -17,11 +31,17 @@ ls -d "/pnfs/dune/persistent/users/path/to/muon/files"/* | sed "s\/pnfs\root://f
 Create the runtime bundle:
 
 ```bash
-export NDGEOEFF_BUILD_DIR=build-step3
-source scripts/grid/make_bundle.sh step3 TarEtrimAnalysis.tar.gz myOutputFDGeoEffHadron.txt myOutputFDGeoEffMu.txt
+bash scripts/grid/make_bundle.sh step3 TarEtrimAnalysis.tar.gz myOutputFDGeoEffHadron.txt myOutputFDGeoEffMu.txt
 ```
 
-The bundle contains the step 3 binaries, `data/step3`, the setup scripts, and the input lists. Worker jobs do not compile the code or copy the full repository. At run time the job creates a `data` symlink to the bundle so the fixed `data/step3/...` paths continue to work.
+The bundle contains the step 3 binaries, the `data/step3` files the apps open
+(found automatically from the `"data/step3/..."` paths in `app/NtupleOutVetoAndTrimE_*.C`),
+the setup scripts, and the input lists.
+
+>[!IMPORTANT]
+>The `data/step3/*.root` files are ignored by git (`CAFAna/.gitignore`); make sure
+>they are present in your working copy, otherwise `make_bundle.sh` stops with
+>"Missing required file". Worker jobs do not compile the code or copy the full repository. At run time the job creates a `data` symlink to the bundle so the fixed `data/step3/...` paths continue to work.
 
 Submit jobs:
 
@@ -51,7 +71,7 @@ cp /pnfs/dune/scratch/users/amunoz1/test/FDGeoEffinND/Etrim/NoOsc/* /pnfs/dune/p
 Sum Etrim histos, when you have multiple output files from the previous step:
 
 ```bash
-root -q 'SumEtrimHistos.C("/pnfs/dune/persistent/users/path/to/outputs/",{"hist_visEnuFDEnergy", "hist_EnuFDEnergy", "Oschist_EnuFDEnergy", "LepMomTot","hist_FDTotEnergy","hist_muEdep","hist_muTrackLength","AllThrownEventsVsOAPosVsTotalETrim_FDEvt_","SelectedEventsTwoDHisto_FDEvt_"})'
+root -q 'macros/step3_etrim/SumEtrimHistos.C("/pnfs/dune/persistent/users/path/to/outputs/",{"hist_visEnuFDEnergy", "hist_EnuFDEnergy", "Oschist_EnuFDEnergy", "LepMomTot","hist_FDTotEnergy","hist_muEdep","hist_muTrackLength","AllThrownEventsVsOAPosVsTotalETrim_FDEvt_","SelectedEventsTwoDHisto_FDEvt_"})'
 ```
 
 ## Comparison PRISM prediction

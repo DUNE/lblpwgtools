@@ -50,7 +50,7 @@ There are two ways to build the code (see [Build](#build)):
   `source CAFAna/build/Linux/CAFAnaEnv.sh`).
 - **standalone**: only this directory is built, using the per-step environment
   scripts in `scripts/env/`. These set up CMake, GCC, Eigen, ROOT 6.28, and Python 3
-  (plus OscLib for step 3). This is what the grid jobs do.
+  (plus OscLib for step 3). Grid bundles are built this way (see [Grid submission](#grid-submission)).
 
 >[!NOTE]
 >Run every step from an Apptainer with their respective environment scripts for the purpose having a consistent environment for testing and debugging.
@@ -140,6 +140,10 @@ to `PYTHONPATH`):
 bash scripts/env/setup_python_env.sh
 ```
 
+This installs CPU-only Torch by default, which is sufficient for both step 2
+scripts. Set `NDGEOEFF_TORCH_INDEX_URL` to a CUDA wheel index if GPU support is
+needed.
+
 Run the FD or ND code with:
 ```bash
 python app/make_tree_fd.py InputRootFile.root
@@ -194,6 +198,31 @@ Available executables:
 - `NtupleOutVetoAndTrimE_AllOApos_WithOscSpectrumNOCAFAna_FDRateAtND`
 
 Analysis macros are in `macros/step3_etrim/`. Grid submission scripts are [here](scripts/grid/step3_etrim/).
+
+## Grid submission
+
+Grid jobs run from a prebuilt, self-contained runtime bundle instead of compiling
+on the worker node:
+
+```bash
+# step 1 / step 3: standalone build in the fnal-wn-sl7 image, with that step's env
+source scripts/env/setup_step3.sh
+cmake -S . -B build-step3 && cmake --build build-step3 -j
+bash scripts/grid/make_bundle.sh step3 TarEtrimAnalysis.tar.gz myOutputFDGeoEffHadron.txt myOutputFDGeoEffMu.txt
+```
+
+| Step | Bundle contents |
+|---|---|
+| 1 | `bin/runGeoEffFDEvtSim`, `lib/libgeoEff.so`, input list |
+| 2 | `app/*.py`, `app/assets/`, optionally a preinstalled CPU-torch `python_env/`, input list |
+| 3 | `bin/NtupleOutVetoAndTrimE_*`, the `data/step3` files the apps open, input lists |
+
+Each bundle also contains that step's `scripts/env/setup_stepN.sh` and
+`scripts/grid/<step>/` and unpacks to `${INPUT_TAR_DIR_LOCAL}/GeoEff` on the worker.
+Bundle only binaries from the standalone build (`build-step1/`, `build-step3/`):
+the full CAFAna build links CAFAna shared libraries that are not shipped, and
+`make_bundle.sh` refuses those. Step-specific instructions and `jobsub_submit`
+commands are in the READMEs linked below.
 
 ## Macros
 

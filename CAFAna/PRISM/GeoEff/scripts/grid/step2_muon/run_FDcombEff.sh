@@ -8,7 +8,7 @@ echo "pwd: $(pwd)"
 echo "ls -l INPUT_TAR_DIR_LOCAL: ${INPUT_TAR_DIR_LOCAL}"
 ls -l "${INPUT_TAR_DIR_LOCAL}"
 
-BUNDLE_DIR=${INPUT_TAR_DIR_LOCAL}/DUNE_ND_GeoEff
+BUNDLE_DIR=${INPUT_TAR_DIR_LOCAL}/GeoEff
 INPUT_DIR=${BUNDLE_DIR}/inputs
 SETUP_SCRIPT=${BUNDLE_DIR}/scripts/grid/step2_muon/setup_FDcombEff.sh
 

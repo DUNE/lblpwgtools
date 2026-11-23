@@ -4,4 +4,4 @@ export OUTDIR=/pnfs/dune/scratch/users/${GRID_USER}/EtrimAnalysis_FromFDGeoEffin
 export APP=NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_NOOscSpectrumNOCAFAna_FDRateAtND
 export OUTPUT_BASENAME=FileWithHistEtrim_MuAndHaddEff_VisEtrim_FDEvRateAtND_NDFV4m_NoOsc_NoCoeffsApplied_2DHistosWithSelectedAndThrownEvents_WithCAFLikeMuCut.root
 
-source "${INPUT_TAR_DIR_LOCAL}/DUNE_ND_GeoEff/scripts/grid/step3_etrim/run_common.sh"
+source "${INPUT_TAR_DIR_LOCAL}/GeoEff/scripts/grid/step3_etrim/run_common.sh"
